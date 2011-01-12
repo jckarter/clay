@@ -1,15 +1,46 @@
 import newclay.ast as ast;
+import newclay.analysis.*;
+import newclay.optimizer.*;
 import newclay.core.*;
 import newclay.common.*;
+import newclay.hooks.*;
 import maybe.*;
 import printer.formatter.*;
 
+record CodegenFunction (
+    mangledName:String,
+    signature:Maybe[String],
+    definition:Maybe[String],
+);
+overload CodegenFunction(mangledName)
+    = CodegenFunction(mangledName, nothing(String), nothing(String));
+
+enum CompoundKind { PRIMITIVE_TYPE, UNION_TYPE, STRUCT_TYPE }
+
+record CodegenType (
+    mangledName:String,
+    compoundKind:CompoundKind,
+    definition:Maybe[String],
+    dependencies:Vector[Value],
+);
+overload CodegenType(mangledName, compoundKind)
+    = CodegenType(mangledName, compoundKind, nothing(String), Vector[Value]());
+
+// TODO type codegen
+
 record CodegenContext (
-    types: HashMap[Value, String],
-    functions: HashMap[Specialization, String],
+    types: HashMap[Value, CodegenType],
+    typeOrder: Vector[Value],
+    functions: HashMap[Specialization, CodegenFunction],
+    functionOrder: Vector[Specialization],
 );
 
 alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
+
+
+//
+// name mangling
+//
 
 mangleString(name) {
     var mangled = String();
@@ -44,23 +75,49 @@ mangleFunction(s:Specialization) {
     return mangleGlobal(identifier);
 }
 
-private typeName(c:CodegenContext, type:Value) {
-    var namep = lookup(c.types, type);
+private getType(c:CodegenContext, typeValue:Value) {
+    var namep = lookup(c.types, typeValue);
     if (null?(namep)) {
-        c.types[type] = mangleType(type);
-        return c.types[type];
+        c.types[typeValue] = CodegenType(mangleType(typeValue), typeCompoundKind(typeValue));
+        push(c.typeOrder, typeValue);
+        return ref c.types[typeValue];
     } else
-        return namep^;
+        return ref namep^;
 }
 
-private functionName(c:CodegenContext, function:Specialization) {
-    var namep = lookup(c.functions, function);
-    if (null?(namep)) {
-        c.functions[function] = mangleFunction(function);
-        return c.functions[function];
-    } else
-        return namep^;
+private typeName(c, type) = getType(c, type).mangledName;
+
+private typeKindedName(c, typeValue) {
+    ref type = getType(c, typeValue);
+    switch (type.compoundKind) {
+    case PRIMITIVE_TYPE:
+        return type.mangledName;
+    case STRUCT_TYPE:
+        return "struct " + type.mangledName;
+    case UNION_TYPE:
+        return "union " + type.mangledName;
+    default:
+        assert(false, "invalid type compound kind");
+        return String();
+    }
 }
+
+private getFunction(c:CodegenContext, s:Specialization) {
+    var namep = lookup(c.functions, s);
+    if (null?(namep)) {
+        c.functions[s] = CodegenFunction(mangleFunction(s));
+        push(c.functionOrder, s);
+        return ref c.functions[s];
+    } else
+        return ref namep^;
+}
+
+private functionName(c, type) = getFunction(c, type).mangledName;
+
+
+//
+// function codegen
+//
 
 record CodegenBodyContext (
     s:Specialization,
@@ -116,13 +173,13 @@ private localResultRef(bc:CodegenBodyContext, variable) {
     return "&" + name;
 }
 
-codegenSpecialization(c:CodegenContext, s:Specialization) {
+codegenFunction(c:CodegenContext, s:Specialization) {
     ref body = just(s.body);
     var bc = CodegenBodyContext(s);
 
     for (node in body)
         codegenNode(c, bc, *node);
-    return finalizeSpecialization(c, bc);
+    finalizeSpecialization(c, bc);
 }
 
 private printLocalDefinitionTo(stream, c, bc, a) {
@@ -139,15 +196,16 @@ private printResultDefinitionTo(stream, c, bc, a) {
     printTo(stream, localName(bc, a));
 }
 
-private finalizeSpecialization(c, bc) {
-    var result = String();
+private finalizeFunctionSignature(c, bc, function) {
+    function.signature = Maybe(String());
+    ref signature = just(function.signature);
 
-    printTo(result, "static void ", functionName(c, bc.s), "(");
+    printTo(signature, "static void ", functionName(c, bc.s), "(");
 
     interleave(bc.s.args,
-        () ref=> { printTo(result, ", "); },
+        () ref=> { printTo(signature, ", "); },
         a  ref=> {
-            printLocalDefinitionTo(result, c, bc, a);
+            printLocalDefinitionTo(signature, c, bc, a);
             remove(bc.bodyVars, a);
         },
     );
@@ -156,50 +214,59 @@ private finalizeSpecialization(c, bc) {
         results ref=> {
             if (not empty?(bc.s.internalNamedResults)) {
                 if (not empty?(bc.s.args))
-                    printTo(result, ", ");
+                    printTo(signature, ", ");
                 
                 interleave(bc.s.internalNamedResults,
-                    () ref=> { printTo(result, ", "); },
+                    () ref=> { printTo(signature, ", "); },
                     r  ref=> {
-                        printLocalDefinitionTo(result, c, bc, r);
+                        printLocalDefinitionTo(signature, c, bc, r);
                         remove(bc.bodyVars, r);
                     },
                 );
             } else if (not empty?(results)) {
                 if (not empty?(bc.s.args))
-                    printTo(result, ", ");
+                    printTo(signature, ", ");
 
                 interleave(results,
-                    () ref=> { printTo(result, ", "); },
+                    () ref=> { printTo(signature, ", "); },
                     r  ref=> {
-                        printResultDefinitionTo(result, c, bc, r);
+                        printResultDefinitionTo(signature, c, bc, r);
                         remove(bc.bodyVars, r);
                     },
                 );
             } else if (empty?(bc.s.args))
-                printTo(result, "void");
+                printTo(signature, "void");
         },
         () ref=> {
             if (empty?(bc.s.args))
-                printTo(result, "void");
+                printTo(signature, "void");
         },
     );
 
-    printTo(result, ") {\n");
+    printTo(signature, ")");
+}
+
+private finalizeFunctionDefinition(c, bc, function) {
+    function.definition = Maybe(String());
+    ref definition = just(function.definition);
 
     for (variable in bc.bodyVarOrder) {
         if (not null?(lookup(bc.bodyVars, variable))) {
-            printToIndented(result, 1);
-            printLocalDefinitionTo(result, c, bc, variable);
-            printTo(result, ";\n");
+            printToIndented(definition, 1);
+            printLocalDefinitionTo(definition, c, bc, variable);
+            printTo(definition, ";\n");
         }
     }
 
-    printlnTo(result);
-    printTo(result, bc.bodyCode);
-    printTo(result, "}\n");
+    printlnTo(definition);
+    printTo(definition, bc.bodyCode);
+}
 
-    return move(result);
+private finalizeSpecialization(c, bc) {
+    ref function = getFunction(c, bc.s);
+
+    finalizeFunctionSignature(c, bc, function);
+    finalizeFunctionDefinition(c, bc, function);
 }
 
 private printToIndented(stream, indent, forward ...args) {
@@ -232,9 +299,9 @@ overload codegenNode(c, bc, node:SpecializedValueList) {
 }
 
 overload codegenNode(c, bc, node:SpecializedCall) {
-    var function = functionName(c, node.specialization);
+    var name = functionName(c, node.specialization);
 
-    printToIndented(bc, function, "(");
+    printToIndented(bc, name, "(");
     
     interleave(node.inputs,
         () ref=> { printTo(bc, ", "); },
@@ -336,5 +403,354 @@ overload codegenNode(c, bc, node:SpecializedNop) {
 private cValue(value:Value) = match(value,
     BoolValue, bv ref=> if (bv.value) String("1") else String("0"),
     IntValue,  iv ref=> printString(iv),
-    MatchDefault, x ref=> { assert(false, "value type not yet supported"); return String(); },
+    MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
 );
+
+
+//
+// type codegen
+//
+
+codegenType(c:CodegenContext, typeValue:Value) {
+    ref type = getType(c, typeValue);
+    type.definition = Maybe(String());
+    ref definition = just(type.definition);
+    
+    var llType = lowLevelType(typeValue);
+
+    if (ofLowLevelType?(llType, getHooks().LLBoolType))
+        codegenBoolType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLIntegerType))
+        codegenIntegerType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLFloatType))
+        codegenFloatType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLPointerType))
+        codegenPointerType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLArrayType))
+        codegenArrayType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLTupleType))
+        codegenTupleType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLUnionType))
+        codegenUnionType(c, type, llType, definition);
+    else
+        genericError("invalid low-level type ", llType);
+}
+
+typeCompoundKind(typeValue:Value) {
+    var llType = lowLevelType(typeValue);
+    if (ofLowLevelType?(llType, getHooks().LLArrayType) or ofLowLevelType?(llType, getHooks().LLTupleType))
+        return STRUCT_TYPE;
+    if (ofLowLevelType?(llType, getHooks().LLUnionType))
+        return UNION_TYPE;
+    return PRIMITIVE_TYPE;
+}
+
+private codegenBoolType(c, type, llType, definition) {
+    assert(type.compoundKind == PRIMITIVE_TYPE, "bool type must have PRIMITIVE_TYPE compound kind");
+
+    if (not empty?(llType.params))
+        genericError("low-level bool type ", llType, " must have no symbol parameters");
+    printTo(definition, cIntegerType(true, 8));
+}
+
+private codegenIntegerType(c, type, llType, definition) {
+    assert(type.compoundKind == PRIMITIVE_TYPE, "integer type must have PRIMITIVE_TYPE compound kind");
+
+    if (size(llType.params) != 2)
+        genericError("low-level integer type ", llType, " must have two symbol parameters");
+
+    var signed? = false;
+    if (llType.params[0] == getHooks().LLSigned)
+        signed? = true;
+    else if (llType.params[0] == getHooks().LLUnsigned)
+        signed? = false;
+    else
+        genericError("first symbol parameter of low-level integer type ", llType, " must be ", getHooks().LLSigned, " or ", getHooks().LLUnsigned);
+
+    var bits = match(llType.params[1],
+        IntValue, v => v.value,
+        MatchDefault, x => {
+            genericError("second symbol parameter of low-level integer type ", llType, " must be integer value");
+            return 0;
+        }
+    );
+
+    printTo(definition, cIntegerType(signed?, bits));
+}
+
+private codegenFloatType(c, type, llType, definition) {
+    assert(type.compoundKind == PRIMITIVE_TYPE, "float type must have PRIMITIVE_TYPE compound kind");
+
+    if (size(llType.params) != 1)
+        genericError("low-level float type ", llType, " must have one symbol parameter");
+
+    var bits = match(llType.params[0],
+        IntValue, v => v.value,
+        MatchDefault, x => {
+            genericError("symbol parameter of low-level float type ", llType, " must be integer value");
+            return 0;
+        },
+    );
+
+    printTo(definition, cFloatType(bits));
+}
+
+private codegenPointerType(c, type, llType, definition) {
+    assert(type.compoundKind == PRIMITIVE_TYPE, "pointer type must have PRIMITIVE_TYPE compound kind");
+
+    if (size(llType.params) != 1)
+        genericError("low-level pointer type ", llType, " must have one symbol parameter");
+
+    var targetType = llType.params[0];
+
+    if (getType(c, llType.params[0]).compoundKind == PRIMITIVE_TYPE)
+        push(type.dependencies, targetType);
+
+    printTo(definition, typeKindedName(c, targetType), " *");
+}
+
+private codegenArrayType(c, type, llType, definition) {
+    assert(type.compoundKind == STRUCT_TYPE, "array type must have STRUCT_TYPE compound kind");
+
+    if (size(llType.params) != 2)
+        genericError("low-level array type ", llType, " must have two symbol parameters");
+
+    var arraySize = match(llType.params[1],
+        IntValue, v => v.value,
+        MatchDefault, x => {
+            genericError("second symbol parameter of low-level array type ", llType, " must be integer value");
+            return 0;
+        },
+    );
+
+    push(type.dependencies, llType.params[0]);
+
+    printlnTo(definition, "struct ", type.mangledName, " {");
+    printToIndented(definition, 1, typeKindedName(c, llType.params[0]),
+        " array[", arraySize, "];\n",
+    );
+    printlnTo(definition, "}");
+}
+
+private aggregateMemberError(llType) {
+    genericError("members of low-level aggregate type ", llType, " must be types or \"name:type\" pairs");
+}
+
+private aggregateMember(llType:Symbol, member:Value, index) {
+    return ...match(member,
+        Symbol, s ref=> {
+            return printString("field", index), member;
+        },
+        TupleValue, tv ref=> {
+            if (size(tv.elements) != 2)
+                aggregateMemberError(llType);
+
+            return ...match(tv.elements[0],
+                StringValue, name ref=> {
+                    return name.value, tv.elements[1];
+                },
+                MatchDefault, x ref=> {
+                    aggregateMemberError(llType);
+                    return String(), Value();
+                },
+            );
+        },
+        MatchDefault, x ref=> {
+            aggregateMemberError(llType);
+            return String(), Value();
+        },
+    );
+}
+
+private codegenTupleType(c, type, llType, definition) {
+    assert(type.compoundKind == STRUCT_TYPE, "tuple type must have STRUCT_TYPE compound kind");
+
+    printlnTo(definition, "struct ", type.mangledName, " {");
+
+    for (member, i in zipped(llType.params, range(size(llType.params)))) {
+        var name, memberType = ...aggregateMember(llType, member, i);
+
+        push(type.dependencies, memberType);
+        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
+    }
+
+    printlnTo(definition, "}");
+}
+
+private codegenUnionType(c, type, llType, definition) {
+    assert(type.compoundKind == UNION_TYPE, "union type must have UNION_TYPE compound kind");
+
+    printlnTo(definition, "union ", type.mangledName, " {");
+
+    for (member, i in zipped(llType.params, range(size(llType.params)))) {
+        var name, memberType = ...aggregateMember(llType, member, i);
+
+        push(type.dependencies, memberType);
+        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
+    }
+
+    printlnTo(definition, "}");
+}
+
+private cIntegerType(signed?:Bool, bits) {
+    // XXX assumes LP32, LP64, or LLP64 type system
+    switch (bits) {
+    case 8:
+        return withSigned(signed?, "char");
+    case 16:
+        return withSigned(signed?, "short int");
+    case 32:
+        return withSigned(signed?, "int");
+    case 64:
+        // XXX in msvc flavor long long is __int64
+        // XXX strict ansi flavor?
+        return withSigned(signed?, "long long int");
+    default:
+        genericError("integer type with ", bits, " bits not supported");
+        return String();
+    }
+}
+
+private withSigned(signed?, name) = (if (signed?) "signed " else "unsigned ") + name;
+
+private cFloatType(bits) {
+    // XXX assumes IEEE 754 single and double floats
+    switch (bits) {
+    case 32:
+        return String("float");
+    case 64:
+        return String("double");
+    default:
+        genericError("float type with ", bits, " bits not supported");
+        return String();
+    }
+}
+
+
+//
+// printCodegenTo
+//
+
+printCodegenTo(stream, c:CodegenContext) {
+    printCodegenHeaderTo(stream, c);
+    printTypeForwardDeclarationsTo(stream, c);
+    printTypeDefinitionsTo(stream, c);
+    printFunctionForwardDeclarationsTo(stream, c);
+    printFunctionDefinitionsTo(stream, c);
+}
+
+private printCodegenHeaderTo(stream, c:CodegenContext) {
+    printlnTo(stream, "/* Generated by newclay */");
+    printlnTo(stream);
+}
+
+private printTypeForwardDeclarationsTo(stream, c:CodegenContext) {
+    for (typeValue in c.typeOrder) {
+        ref type = getType(c, typeValue);
+        if (type.compoundKind != PRIMITIVE_TYPE)
+            printlnTo(stream, typeKindedName(c, typeValue), ";");
+    }
+    printlnTo(stream);
+}
+
+private printTypeDefinitionsTo(stream, c:CodegenContext) {
+    var printedMap = HashMap[Value, Bool]();
+    printTypeDefinitionsTo2(stream, printedMap, c, c.typeOrder);
+    printlnTo(stream);
+}
+
+private printTypeDefinitionsTo2(stream, printedMap:HashMap[Value,Bool], c:CodegenContext, types) {
+    for (typeValue in types) {
+        var printedp = lookup(printedMap, typeValue);
+        if (null?(printedp)) {
+            printedMap[typeValue] = false;
+            printTypeDefinitionTo(stream, printedMap, c, typeValue);
+            printedMap[typeValue] = true;
+        } else if (not printedp^) {
+            genericError("recursive type dependency on ", typeValue);
+        }
+    }
+}
+
+private printTypeDefinitionTo(stream, printedMap:HashMap[Value,Bool], c:CodegenContext, typeValue:Value) {
+    ref type = getType(c, typeValue);
+    printTypeDefinitionsTo2(stream, printedMap, c, type.dependencies);
+    printlnTo(stream, "typedef ", just(type.definition), " ", type.mangledName, ";");
+}
+
+private printFunctionForwardDeclarationsTo(stream, c:CodegenContext) {
+    for (s in c.functionOrder) {
+        ref function = getFunction(c,s);
+        printlnTo(stream, just(function.signature), ";");
+    }
+    printlnTo(stream);
+}
+
+private printFunctionDefinitionsTo(stream, c:CodegenContext) {
+    for (s in c.functionOrder) {
+        ref function = getFunction(c,s);
+        printlnTo(stream, just(function.signature), " {");
+        printTo(stream, just(function.definition));
+        printlnTo(stream, "}");
+    }
+    printlnTo(stream);
+}
+
+
+//
+// codegenFromEntryPoints
+//
+
+codegenFromEntryPoints(entryPoints:Vector[Specialization]) {
+    var c = CodegenContext();
+
+    codegenFunctionsToFixedPoint(c, entryPoints);
+    codegenTypesToFixedPoint(c);
+
+    return move(c);
+}
+
+private codegenFunctionsToFixedPoint(c, entryPoints) {
+    var functionsToCodegen = entryPoints;
+    while (not empty?(functionsToCodegen)) {
+        for (s in functionsToCodegen)
+            analyzeAndCodegenFunction(c, s);
+
+        var oldFunctionsToCodegen = move(functionsToCodegen);
+        functionsToCodegen = filter(
+            s ref=> nothing?(c.functions[s].definition),
+            c.functionOrder
+        );
+
+        if (oldFunctionsToCodegen == functionsToCodegen)
+            genericError("unable to propagate all functions");
+    }
+}
+
+private codegenTypesToFixedPoint(c) {
+    var typesToCodegen = c.typeOrder;
+    while (not empty?(typesToCodegen)) {
+        for (t in typesToCodegen)
+            codegenType(c, t);
+
+        var oldTypesToCodegen = move(typesToCodegen);
+        typesToCodegen = filter(
+            t ref=> nothing?(c.types[t].definition),
+            c.typeOrder
+        );
+
+        if (oldTypesToCodegen == typesToCodegen)
+            genericError("unable to generate all types");
+    }
+}
+
+private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
+    if (nothing?(s.body))
+        if (not analyzeCallableBody(s)) {
+            getFunction(c, s); // add to function list and try again later
+            return;
+        }
+    optimizeSpecialization(s);
+    codegenFunction(c, s);
+}
+

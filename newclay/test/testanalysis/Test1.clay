@@ -1,3 +1,2 @@
-symbol main = NewProcedure();
-overload main() = 0;
+main() = 0;
 

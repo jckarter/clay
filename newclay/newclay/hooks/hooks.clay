@@ -79,6 +79,35 @@ typeSymbol(type:Value) Symbol {
 
 
 //
+// lowLevelType
+//
+
+lowLevelTypeSymbol(type:Value) Symbol {
+    return match(type,
+        Symbol, y => y,
+        MatchDefault, y => {
+            genericError("invalid low-level type: ", y);
+            return Symbol();
+        },
+    );
+}
+
+lowLevelType(type:Value) Symbol
+    = lowLevelTypeSymbol(evaluateCallWithOneResult(getHooks().ToLowLevelType, ValueList(type)));
+
+ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
+    return match(llTypeValue,
+        Symbol, s ref=> llType == s,
+        SymbolHead, sh ref=> llType.head == sh,
+        MatchDefault, x ref=> {
+            genericError("invalid low-level type: ", x);
+            return false;
+        },
+    );
+}
+
+
+//
 // boolType, intType
 //
 

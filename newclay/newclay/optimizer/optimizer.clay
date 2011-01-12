@@ -184,3 +184,6 @@ coalesceSpecialization(s:Specialization) {
     );
 }
 
+optimizeSpecialization(s:Specialization) {
+    coalesceSpecialization(s);
+}
