@@ -98,7 +98,7 @@ private analyzeReturn(
             break;
         case ast.RETURN_EXPR_RVALUE:
             if (source.value?)
-                genericError("cannot return temporary as ref reference");
+                genericError("cannot return temporary as rvalue reference");
             if (source.kind == RT_VARIABLE_CONST)
                 genericError("cannot return const as rvalue reference");
             if (source.kind != RT_VARIABLE_RVALUE)
@@ -1161,14 +1161,16 @@ private analyzeCallableReturns(s:Specialization, env, o:Overload) {
     if (not empty?(o.ast.definition.returns))
         s.results = computeReturnSpec(o.ast.definition.returns, env);
     else {
-        analyzeCallableBody(s, env, o);
+        analyzeCallableBody2(s, env, o);
     }
 }
 
-private analyzeCallableBody(s:Specialization, env, o:Overload) {
+overload analyzeCallableReturns(s) { analyzeCallableReturns(s, s.env, s.matchedOverload); }
+
+private analyzeCallableBody2(s:Specialization, env, o:Overload) {
     s.body = Maybe(Vector[SpecializedNode]());
     try {
-        withLocation(o.ast.definition, () ref=> {
+        return withLocation(o.ast.definition, () ref=> {
             var declaredReturns? = not empty?(o.ast.definition.returns);
             var namedReturns? = just?(o.ast.definition.returnedNames);
 
@@ -1211,12 +1213,18 @@ private analyzeCallableBody(s:Specialization, env, o:Overload) {
                 });
             }
             s.results = analyzedResults;
+            return complete?;
         });
     } catch (ex) {
         s.body = nothing(Vector[SpecializedNode]);
         throw ex; 
     }
 }
+
+overload analyzeCallableBody2(s) = analyzeCallableBody2(s, s.env, s.matchedOverload);
+
+analyzeCallableBody(s)
+    = withCallAnalysis(s.callable, s.args, () ref=> analyzeCallableBody2(s));
 
 private entrySpecialization(entry:InvokeEntry) {
     return maybe(entry.specialization,
@@ -1275,7 +1283,7 @@ analyzeCallable2(callable:Value, args:VariableList) Specialization {
     }
     try {
         alias s = specialization;
-        analyzeCallableReturns(s, s.env, s.matchedOverload);
+        analyzeCallableReturns(s);
     }
     catch (e) {
         remove(invokeTable, ArgumentList(args));
