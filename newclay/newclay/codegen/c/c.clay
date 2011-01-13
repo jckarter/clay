@@ -314,7 +314,7 @@ overload codegenNode(c, bc, node:SpecializedLiteralCodeBody) {
     if (node.ast.kind == ast.LITERAL_ASM)
         genericError("__asm__ procedures are not yet supported");
 
-    printTo(bc.bodyCode, '\n', node.ast.code, '\n');
+    printToIndented(bc, node.code, '\n');
 }
 
 overload codegenNode(c, bc, node:SpecializedValueList) {
