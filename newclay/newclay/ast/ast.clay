@@ -170,8 +170,11 @@ variant Expr = BoolLiteral
              | Indexing
              | AndExpr
              | OrExpr
+             | NotExpr
              | LambdaExpr
              | IfExpr
+             | UnaryOpExpr
+             | BinaryOpExpr
              ;
 
 overload Expr() = Expr(BoolLiteral());
@@ -234,6 +237,39 @@ record AndExpr = ast(
 );
 
 record OrExpr = ast(
+    expr1: Expr,
+    expr2: Expr,
+);
+
+record NotExpr = ast(
+    expr: Expr,
+);
+
+enum OperatorKind {
+    OP_PLUS,
+    OP_MINUS,
+    OP_ADDRESS_OF,
+    OP_DEREFERENCE,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_REMAINDER,
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_LESSER?,
+    OP_LESSER_EQUALS?,
+    OP_GREATER?,
+    OP_GREATER_EQUALS?,
+    OP_EQUALS?,
+    OP_NOT_EQUALS?,
+}
+
+record UnaryOpExpr = ast(
+    operator: OperatorKind,
+    expr: Expr,
+);
+
+record BinaryOpExpr = ast(
+    operator: OperatorKind,
     expr1: Expr,
     expr2: Expr,
 );
@@ -512,6 +548,11 @@ record MultipleBindingList = ast(
 
 enum AssignmentKind {
     ASSIGNMENT_ASSIGN,
+    ASSIGNMENT_ADD,
+    ASSIGNMENT_SUBTRACT,
+    ASSIGNMENT_MULTIPLY,
+    ASSIGNMENT_DIVIDE,
+    ASSIGNMENT_REMAINDER,
     ASSIGNMENT_INITIALIZE,
 }
 

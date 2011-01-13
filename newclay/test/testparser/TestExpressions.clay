@@ -1,0 +1,70 @@
+foo() {
+    x[y, z];
+    x(y, z);
+    x^;
+
+    x[y, z]^;
+    x[y, z](w, v)^;
+    x[y, z]^(w, v)^;
+
+    &x;
+    +x;
+    -x;
+
+    &x[y, z]^(w, v)^;
+
+    a * b;
+    a / b;
+    a % b;
+
+    -a * b[c];
+    a[b] * -c;
+
+    a + b;
+    a - b;
+
+    a * b + c / d;
+    a * b - c % d;
+
+    a < b;
+    a <= b;
+    a >= b;
+    a > b;
+
+    a + b < c - d;
+    a + b <= c - d;
+    a + b >= c - d;
+    a + b > c - d;
+
+    a == b;
+    a != b;
+
+    a < b != a > b;
+    a <= b == a >= b;
+
+    not a;
+
+    not &a[b]^;
+    not a == b;
+    not a != b;
+
+    a and b;
+    not a and b;
+    a and not b;
+
+    a or b;
+    not a and b or c and not d;
+
+    x -> y;
+    (x, y) -> z;
+
+    x -> ...(y, z);
+
+    x -> a or b;
+
+    x -> { a; };
+
+    if (a) b else c;
+    if (a) b or c else d or e;
+    if (a) b -> c or d else e -> f or g;
+}

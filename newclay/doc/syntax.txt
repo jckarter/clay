@@ -109,14 +109,33 @@ PatternNameRef -> "'" Identifier
 BracketedExpr -> "(" Expr ")"
 TupleExpr -> "(" ExprList? ")"
 
+PrefixExpr -> SignExpr
+            | AddressOfExpr
+            | SuffixExpr
+
+SignExpr -> ("+" | "-") SuffixExpr
+AddressOfExpr -> "&" SuffixExpr
+
 SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexingSuffix
         | CallSuffix
+        | DereferenceSuffix
 
 IndexingSuffix -> "[" ExprList? "]"
 CallSuffix -> "(" ExprList? ")"
+DereferenceSuffix -> "^"
 
-AndExpr -> SuffixExpr ("and" SuffixExpr)*
+MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*
+
+AddSubExpr -> MulDivExpr (("+" | "-") MulDivExpr)*
+
+CompareExpr -> AddSubExpr (("<" | "<=" | ">=" | ">") AddSubExpr)?
+
+EqualityExpr -> CompareExpr (("==" | "!=") CompareExpr)?
+
+NotExpr -> "not"? EqualityExpr
+
+AndExpr -> NotExpr ("and" NotExpr)*
 
 OrExpr -> AndExpr ("or" AndExpr)*
 
@@ -162,7 +181,7 @@ LabelDef -> Identifier ":"
 BindingStatement -> BindingKind BindingList ";"
 
 Assignment -> ExprList AssignmentOp ExprList ";"
-AssignmentOp -> "<--" | "="             // | "+=" | "-=" | "*=" | "/=" | "%="
+AssignmentOp -> "<--" | "=" | "+=" | "-=" | "*=" | "/=" | "%="
 
 GotoStatement -> "goto" Identifier ";"
 
