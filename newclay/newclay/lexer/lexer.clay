@@ -47,15 +47,22 @@ record SourceTokens = referenceType(
 //
 
 var punctuations = [
-    "...",
-    "=>", "->", ":",
+    "...", "<--",
+    "=>", "->",
+    "<=", ">=", "<", ">",
+    "!=", "==",
+    "+=", "-=", "*=", "/=", "%=",
+    ":",
     "(", ")", "[", "]",
     "|",
-    "=", "<--",
+    "=", 
     "'",
     ";", ",",
     "*", ".",
     "{", "}",
+    "+", "-",
+    "/", "%",
+    "&", "^",
 ];
 
 var keywords = [
@@ -65,7 +72,7 @@ var keywords = [
     "var", "const", "ref", "rvalue", "forward", "alias",
     "true", "false",
     "if", "else",
-    "and", "or",
+    "and", "or", "not",
     "public", "private",
     "goto", "return", "break", "continue",
     "try", "catch", "throw",
