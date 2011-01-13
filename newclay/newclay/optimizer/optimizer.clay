@@ -40,6 +40,17 @@ coalesceBinding(cmap:CoalescingMap, from:RTVariable, to:RTVariable) {
     }
 }
 
+coalesceInitialize(cmap:CoalescingMap, from:RTVariable, to:RTVariable) {
+    assert(to.type == from.type, "coalescing invariant: initialize types must match");
+
+    var cFrom = coalesced(cmap, from);
+
+    // if initialized from an rvalue, we can steal the rvalue's identity
+    if (cFrom.kind == RT_VARIABLE_RVALUE and cFrom.value?) {
+        cmap[cFrom] = to;
+    }
+}
+
 coalesced(cmap:CoalescingMap, rtVar:RTVariable) {
     var cVar = rtVar;
     var cVarp = lookup(cmap, cVar);
@@ -64,6 +75,9 @@ coalesceBody(body:Vector[SpecializedNode]) {
 private coalesceNode(cmap:CoalescingMap, node) {}
 overload coalesceNode(cmap:CoalescingMap, node:SpecializedBind) {
     coalesceBinding(cmap, node.input, node.output);
+}
+overload coalesceNode(cmap:CoalescingMap, node:SpecializedInitialize) {
+    coalesceInitialize(cmap, node.input, node.output);
 }
 overload coalesceNode(cmap:CoalescingMap, node:SpecializedIf) {
     for (subnode in node.thenBody)
@@ -159,12 +173,15 @@ overload coalescedNode(cmap:CoalescingMap, node:SpecializedBindReturn) {
     return SpecializedBindReturn(node.ast, cInput, cOutput);
 }
 
-overload coalescedNode(cmap:CoalescingMap, node:SpecializedInitialize)
-    = SpecializedInitialize(
-        node.ast,
-        coalesced(cmap, node.input),
-        coalesced(cmap, node.output),
-    );
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedInitialize) {
+    var cInput = coalesced(cmap, node.input);
+    var cOutput = coalesced(cmap, node.output);
+
+    if (isNot?(node.input, node.output) and is?(cInput, cOutput))
+        return SpecializedNode(SpecializedNop());
+    else
+        return SpecializedNode(SpecializedInitialize(node.ast, cInput, cOutput));
+}
 
 overload coalescedNode(cmap:CoalescingMap, node:SpecializedBreak) = node;
 overload coalescedNode(cmap:CoalescingMap, node:SpecializedContinue) = node;
