@@ -91,8 +91,12 @@ overload coalesceNode(cmap:CoalescingMap, node:SpecializedPhi) {
 
 private coalescedVars(cmap:CoalescingMap, vs:VariableList)
     = map(v ref=> coalesced(cmap, v), vs);
-overload coalescedVars(cmap:CoalescingMap, mvs:Maybe[VariableList])
+overload coalescedVars(cmap:CoalescingMap, vs:Vector[OutputVariable])
+    = map(o ref=> OutputVariable(coalesced(cmap, o.value), o.returnByRef?), vs);
+[T]
+overload coalescedVars(cmap:CoalescingMap, mvs:Maybe[T])
     = maybe(mvs, vs ref=> Maybe(coalescedVars(cmap, vs)));
+
 
 private coalescedNodes(cmap:CoalescingMap, nodes:Vector[SpecializedNode])
     = map(n ref=> coalescedSpecializedNode(cmap, *n), nodes);

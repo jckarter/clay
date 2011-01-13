@@ -904,9 +904,12 @@ addSpecializedCall(
     inputs:VariableList,
     specialization:Specialization
 ) {
-    var outputs = cloneVariables(specialization.results);
+    var mResults = cloneVariables(specialization.results);
+    var outputs = maybe(mResults,
+        results ref=> Maybe(map(r ref=> OutputVariable(r, not r.value?), results))
+    );
     addSpecializedNode(s, SpecializedCall(ASTNode(ast), inputs, outputs, specialization));
-    return outputs;
+    return mResults;
 }
 
 addSpecializedPhi(
