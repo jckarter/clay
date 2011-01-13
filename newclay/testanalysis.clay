@@ -50,7 +50,18 @@ overload printNodeData(depth, node:SpecializedCall) {
         " specialization ", asPtr(node.specialization),
         " ", node.specialization.callable
     );
-    printInputsOutputs(depth+1, node.inputs, node.outputs);
+    printVars(depth+1, "in  ", node.inputs);
+    maybe(node.outputs,
+        outputs ref=> {
+            for (v in outputs) {
+                printDepth(depth+1);
+                print("out ");
+                print(if (v.returnByRef?) "ref   " else "value ");
+                printVar(v.value);
+            }
+        },
+        () ref=> { printDepth(depth); println("nonterminating"); }
+    );
 }
 
 overload printNodeData(depth, node:SpecializedIf) {

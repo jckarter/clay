@@ -924,10 +924,15 @@ record SpecializedValueList = referenceType(
     outputs: VariableList,
 );
 
+record OutputVariable (
+    value:RTVariable,
+    returnByRef?:Bool,
+);
+
 record SpecializedCall = referenceType(
     ast: ASTNode,
     inputs: VariableList,
-    outputs: Maybe[VariableList],
+    outputs: Maybe[Vector[OutputVariable]],
     specialization: Specialization, // XXX how to evaluate recursive reference?
 );
 

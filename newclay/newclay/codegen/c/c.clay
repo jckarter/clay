@@ -335,10 +335,15 @@ overload codegenNode(c, bc, node:SpecializedCall) {
 
     maybe(node.outputs, outputs ref=> {
         if (not empty?(node.inputs)) printTo(bc, ", ");
-        // XXX handle by-value/by-ref return when we support call result coalescing
         interleave(outputs,
             () ref=> { printTo(bc, ", "); },
-            o  ref=> { printTo(bc, localResultRef(bc, o)); },
+            o  ref=> {
+                if (o.returnByRef?) {
+                    assert(not o.value.value?, "value cannot be returned by reference");
+                    printTo(bc, localResultRef(bc, o.value));
+                } else
+                    printTo(bc, localRef(bc, o.value));
+            },
         );
     });
 
