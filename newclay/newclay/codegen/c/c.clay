@@ -54,25 +54,50 @@ mangleString(name) {
 
 mangleGlobal(name) = "_clay__" + mangleString(name);
 
-symbolIdentifier(symbol:Value) {
-    var moduleName = match(symbol,
-        SymbolHead, s => s.module.name,
-        Symbol, s => s.head.module.name,
-        MatchDefault, x => {
-            assert(false, "non-symbol value used as type or callable");
-            return ModuleName();
+printIdentifierTo(stream, value:Value) {
+    match(value,
+        SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.ast.name.name.str); },
+        Symbol, s ref=> {
+            printTo(stream, s.head.module.name, '.', s.head.ast.name.name.str);
+            if (not empty?(s.params)) {
+                printTo(stream, '[');
+                interleave(s.params,
+                    () ref=> { printTo(stream, ","); },
+                    p  ref=> { printIdentifierTo(stream, p); },
+                );
+                printTo(stream, ']');
+            }
         },
+        Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
+        MatchDefault, v ref=> { printTo(stream, v); },
     );
+}
 
-    return printString(moduleName, '.', symbol);
+symbolIdentifier(symbol:Value) {
+    var ident = String();
+    printIdentifierTo(ident, symbol);
+    return move(ident);
 }
 
 mangleType(type:Value) = mangleGlobal(symbolIdentifier(type));
 
-mangleFunction(s:Specialization) {
+functionIdentifier(s:Specialization) {
     var identifier = symbolIdentifier(s.callable);
-    printTo(identifier, ArgumentList(s.args));
-    return mangleGlobal(identifier);
+    printTo(identifier, '(');
+    interleave(s.args,
+        () ref=> { printTo(identifier, ","); },
+        a  ref=> {
+            printVariableKindTo(identifier, a.kind);
+            printIdentifierTo(identifier, a.type);
+        },
+    );
+    printTo(identifier, ')');
+
+    return move(identifier);
+}
+
+mangleFunction(s:Specialization) {
+    return mangleGlobal(functionIdentifier(s));
 }
 
 private getType(c:CodegenContext, typeValue:Value) {

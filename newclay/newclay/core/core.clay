@@ -1000,25 +1000,29 @@ overload equals?(a:ArgumentList, b:ArgumentList)
 overload hash(a:ArgumentList)
     = hash(map(arg => (arg.kind, arg.type), a.args));
 
+printVariableKindTo(stream, kind) {
+    switch (kind) {
+    case RT_VARIABLE_REF:
+        printTo(stream, "ref ");
+        break;
+    case RT_VARIABLE_RVALUE:
+        printTo(stream, "rvalue ");
+        break;
+    case RT_VARIABLE_CONST:
+        printTo(stream, "const ");
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
 overload printTo(stream, a:ArgumentList) {
     printTo(stream, "(");
     interleave(a.args,
         () ref=> { printTo(stream, ", "); },
         v ref=> {
-            switch(v.kind) {
-            case RT_VARIABLE_REF:
-                printTo(stream, "ref ");
-                break;
-            case RT_VARIABLE_RVALUE:
-                printTo(stream, "rvalue ");
-                break;
-            case RT_VARIABLE_CONST:
-                printTo(stream, "const ");
-                break;
-            default:
-                assert(false);
-                break;
-            }
+            printVariableKindTo(stream, v.kind);
             printTo(stream, v.type);
         }
     );
