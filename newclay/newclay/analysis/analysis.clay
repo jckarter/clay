@@ -874,8 +874,15 @@ addSpecializedNodes(s:SpecializationContext, node:Vector[SpecializedNode]) {
     push(s.body^, node);
 }
 
+private literalCodeWhiteSpace?(c) = inValues?(c, ' ', '\t', '\r', '\n');
+
+private parseLiteralCodeBody(code) {
+    assert(sliceUpto(code, 3) == "\"\"\"" and sliceFrom(code, size(code) - 3) == "\"\"\"");
+    return trim(sliced(code, 3, size(code) - 3), literalCodeWhiteSpace?);
+}
+
 addSpecializedLiteralCodeBody(s:SpecializationContext, body:ast.LiteralCodeBody) {
-    addSpecializedNode(s, SpecializedLiteralCodeBody(body));
+    addSpecializedNode(s, SpecializedLiteralCodeBody(body, parseLiteralCodeBody(body.code)));
     return Maybe(VariableList());
 }
 

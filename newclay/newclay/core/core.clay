@@ -915,6 +915,7 @@ overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
 record SpecializedLiteralCodeBody = referenceType(
     ast: ast.LiteralCodeBody,
+    code: String,
 );
 
 record SpecializedValueList = referenceType(
