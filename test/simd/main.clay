@@ -57,9 +57,8 @@ main() {
     println();
     println("v5: ", v5);
     println("v6: ", v6);
-    println("v7: ", v7);
-    println("bitwiseNot v7: ", bitwiseNot(v7));
     println("bitwiseBlend v7, v5, v6: ", bitwiseBlend(v7, v5, v6));
+    println("bitwiseBlend bitwiseNot(v7), v5, v6: ", bitwiseBlend(bitwiseNot(v7), v5, v6));
     println("v8: ", v8);
     println("bitwiseBlend v8, v5, v6: ", bitwiseBlend(v8, v5, v6));
 }
