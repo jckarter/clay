@@ -182,6 +182,8 @@ overload Overload(x:ast.Overload, module:Module) =
 
 enum PrimitiveKind {
     PRIM_StaticInt?,
+    PRIM_StaticPlus,
+    PRIM_StaticMinus,
     PRIM_StaticAdd,
     PRIM_StaticSubtract,
     PRIM_StaticMultiply,
@@ -191,7 +193,11 @@ enum PrimitiveKind {
 
     PRIM_StaticBool?,
     PRIM_StaticEquals?,
+    PRIM_StaticNotEquals?,
     PRIM_StaticLesser?,
+    PRIM_StaticLesserEquals?,
+    PRIM_StaticGreater?,
+    PRIM_StaticGreaterEquals?,
 
     PRIM_StaticString?,
     PRIM_StaticStringSize,
