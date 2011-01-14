@@ -189,7 +189,6 @@ evaluateBoolCall(callable:Value, args:ValueList) {
     return variantAs(result, BoolValue).value;
 }
 
-
 
 //
 // evaluateExpr
@@ -228,6 +227,9 @@ overload evaluateExpr(x:ast.Indexing, env) {
     var args = evaluateExprList(x.args, env);
     return evaluateIndexing(indexable, args);
 }
+overload evaluateExpr(x:ast.NotExpr, env) {
+    return Value(BoolValue(not evaluateBool(x.expr, env)));
+}
 overload evaluateExpr(x:ast.AndExpr, env) {
     if (evaluateBool(x.expr1, env))
         return evaluateExpr(x.expr2, env);
@@ -250,6 +252,50 @@ overload evaluateExpr(x:ast.IfExpr, env) {
         return evaluateExpr(x.elsePart, env);
 }
 
+overload evaluateExpr(x:ast.UnaryOpExpr, env) {
+    var operands = ValueList(evaluateExpr(x.expr, env));
+    switch (x.operator) {
+    case ast.OP_PLUS:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticPlus, operands);
+    case ast.OP_MINUS:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticMinus, operands);
+    default:
+        genericError("operator not allowed in static context");
+        return Value();
+    }
+}
+
+overload evaluateExpr(x:ast.BinaryOpExpr, env) {
+    var operands = ValueList(evaluateExpr(x.expr1, env), evaluateExpr(x.expr2, env));
+
+    switch (x.operator) {
+    case ast.OP_MULTIPLY:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticMultiply, operands);
+    case ast.OP_DIVIDE:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticDivide, operands);
+    case ast.OP_REMAINDER:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticRemainder, operands);
+    case ast.OP_ADD:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticAdd, operands);
+    case ast.OP_SUBTRACT:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticSubtract, operands);
+    case ast.OP_LESSER?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticLesser?, operands);
+    case ast.OP_LESSER_EQUALS?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticLesserEquals?, operands);
+    case ast.OP_GREATER?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticGreater?, operands);
+    case ast.OP_GREATER_EQUALS?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticGreaterEquals?, operands);
+    case ast.OP_EQUALS?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticEquals?, operands);
+    case ast.OP_NOT_EQUALS?:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticNotEquals?, operands);
+    default:
+        genericError("operator not allowed in static context");
+        return Value();
+    }
+}
 
 
 //
@@ -1033,11 +1079,43 @@ private moduleString(args) {
     return variantAs(moduleValue, ModuleValue), variantAs(stringValue, StringValue);
 }
 
+evaluatePrimitiveWithOneResult(kind, args) {
+    var results = evaluatePrimitive(kind, move(args));
+    ensureArity(1, size(results));
+    return move(results[0]);
+}
+
+private evaluateStaticCompareEquality(a:Value, b:Value, op) = ValueList(BoolValue(op(a, b)));
+
+private evaluateStaticCompare(a, b, op) {
+    genericError(op, " is only applicable to Bool,Bool; Int,Int; String,String; or Tuple,Tuple arguments");
+    return ValueList();
+}
+
+[T | inValues?(T, BoolValue, IntValue, StringValue)]
+overload evaluateStaticCompare(a:T, b:T, op) = ValueList(BoolValue(op(a.value, b.value)));
+
+overload evaluateStaticCompare(a:TupleValue, b:TupleValue, op) {
+    for (av, bv in zipped(a.elements, b.elements)) {
+        if (av != bv)
+            return evaluateStaticCompare(*av, *bv, op);
+    }
+    return ValueList(BoolValue(op(size(a.elements), size(b.elements))));
+}
+
 evaluatePrimitive(kind, args) {
     switch (kind) {
     case PRIM_StaticInt? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, IntValue)));
+    }
+    case PRIM_StaticPlus : {
+        var a = oneInt(args);
+        return ValueList(IntValue(+a));
+    }
+    case PRIM_StaticMinus : {
+        var a = oneInt(args);
+        return ValueList(IntValue(-a));
     }
     case PRIM_StaticAdd : {
         var a, b = ...twoInts(args);
@@ -1072,22 +1150,27 @@ evaluatePrimitive(kind, args) {
     }
     case PRIM_StaticEquals? : {
         var a, b = ...twoValues(args);
-        return ValueList(BoolValue(a == b));
+        return evaluateStaticCompareEquality(a, b, equals?);
+    }
+    case PRIM_StaticNotEquals? : {
+        var a, b = ...twoValues(args);
+        return evaluateStaticCompareEquality(a, b, notEquals?);
     }
     case PRIM_StaticLesser? : {
         var a, b = ...twoValues(args);
-        if (variantIs?(a, BoolValue) and variantIs?(b, BoolValue)) {
-            var x, y = ...mapValues(v => variantAs(v, BoolValue).value, a, b);
-            return ValueList(BoolValue(x < y));
-        }
-        else if (variantIs?(a, IntValue) and variantIs?(b, IntValue)) {
-            var x, y = ...mapValues(v => variantAs(v, IntValue).value, a, b);
-            return ValueList(BoolValue(x < y));
-        }
-        else {
-            genericError("lesser? is only applicable to Int,Int or Bool,Bool");
-            return ValueList();
-        }
+        return evaluateStaticCompare(*a, *b, lesser?);
+    }
+    case PRIM_StaticLesserEquals? : {
+        var a, b = ...twoValues(args);
+        return evaluateStaticCompare(*a, *b, lesserEquals?);
+    }
+    case PRIM_StaticGreater? : {
+        var a, b = ...twoValues(args);
+        return evaluateStaticCompare(*a, *b, greater?);
+    }
+    case PRIM_StaticGreaterEquals? : {
+        var a, b = ...twoValues(args);
+        return evaluateStaticCompare(*a, *b, greaterEquals?);
     }
 
     case PRIM_StaticString? : {
