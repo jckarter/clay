@@ -897,6 +897,8 @@ overload Specialization(o:Overload, callable:Value) {
 variant SpecializedNode = SpecializedLiteralCodeBody
                         | SpecializedValueList
                         | SpecializedCall
+                        | SpecializedNot
+                        | SpecializedAddressOf
                         | SpecializedIf
                         | SpecializedWhile
                         | SpecializedInitialize
@@ -947,6 +949,18 @@ record SpecializedIf = referenceType(
     condition: RTVariable,
     thenBody: Vector[SpecializedNode],
     elseBody: Vector[SpecializedNode],
+);
+
+record SpecializedNot = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record SpecializedAddressOf = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
 );
 
 record SpecializedWhile = referenceType(
@@ -1066,6 +1080,8 @@ withProgram(program:Program, f) =
 
 getProgram() = ref stackTop(_programStack);
 getProgramMainModule() = ref mainModule(getProgram());
+getProgramPreludeModule() = ref preludeModule(getProgram());
+
 getHooks() = ref getProgram().hooks;
 
 

@@ -1,0 +1,22 @@
+main() {
+    var x = 1;
+    var xp = &x;
+    var y = xp^;
+
+    var a1 = x * y;
+    var a2 = x / y;
+    var a3 = x % y;
+
+    var b1 = x + y;
+    var b2 = x - y;
+
+    var c1 = x < y;
+    var c2 = x > y;
+    var c3 = x <= y;
+    var c4 = x >= y;
+
+    var d1 = x == y;
+    var d2 = x != y;
+
+    var e1 = not d1;
+}

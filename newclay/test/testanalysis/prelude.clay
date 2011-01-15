@@ -125,24 +125,61 @@ static overload TupleWithTag?('x, 'tag) =
 
 
 //
-// lesser?, subtract, multiply
+// operators
 //
 
 
-symbol lesser? = NewProcedure();
-overload lesser?(a:Int, b:Int) returned:Bool __c__ """
-    *returned = *a < *b;
+plus(a:Int) = a;
+
+minus(a:Int) returned:Int __c__ """
+    *returned_ = -*a_;
 """;
 
-symbol subtract = NewProcedure();
-overload subtract(a:Int, b:Int) returned:Int __c__ """
-    *returned = *a - *b;
+dereference(a:Pointer['T]) ref returned:'T __c__ """
+    *returned_ = *a_;
 """;
 
-symbol multiply = NewProcedure();
-overload multiply(a:Int, b:Int) returned:Int __c__ """
-    *returned = *a * *b;
+multiply(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ * *b_;
 """;
 
+divide(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ / *b_;
+""";
 
+remainder(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ % *b_;
+""";
+
+add(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ + *b_;
+""";
+
+subtract(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ - *b_;
+""";
+
+lesser?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ < *b_;
+""";
+
+lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ <= *b_;
+""";
+
+greater?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ > *b_;
+""";
+
+greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ >= *b_;
+""";
+
+equals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ == *b_;
+""";
+
+notEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ != *b_;
+""";
 

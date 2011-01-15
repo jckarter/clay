@@ -323,6 +323,14 @@ overload codegenNode(c, bc, node:SpecializedValueList) {
     }
 }
 
+overload codegenNode(c, bc, node:SpecializedNot) {
+    printToIndented(bc, localDeref(bc, node.output), " = !(", localDeref(bc, node.input), ");\n");
+}
+
+overload codegenNode(c, bc, node:SpecializedAddressOf) {
+    printToIndented(bc, localDeref(bc, node.output), " = &(", localDeref(bc, node.input), ");\n");
+}
+
 overload codegenNode(c, bc, node:SpecializedCall) {
     var name = functionName(c, node.specialization);
 

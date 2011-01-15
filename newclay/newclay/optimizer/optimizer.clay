@@ -165,6 +165,20 @@ overload coalescedNode(cmap:CoalescingMap, node:SpecializedBind) {
         return SpecializedNode(SpecializedNop());
 }
 
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedNot)
+    = SpecializedNot(
+        node.ast,
+        coalesced(cmap, node.input),
+        coalesced(cmap, node.output),
+    );
+
+overload coalescedNode(cmap:CoalescingMap, node:SpecializedAddressOf)
+    = SpecializedAddressOf(
+        node.ast,
+        coalesced(cmap, node.input),
+        coalesced(cmap, node.output),
+    );
+
 overload coalescedNode(cmap:CoalescingMap, node:SpecializedBindReturn) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);

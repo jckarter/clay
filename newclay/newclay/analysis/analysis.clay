@@ -186,16 +186,16 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call) {
 
     if (runtimeCallable?(callable)) {
         var maybeInputs = analyzeNode(s, env, expr.args);
-        return maybe(maybeInputs,
-            inputs ref=> addSpecializedCall(s, expr, inputs,
-                analyzeCallableWithOneResult(callable, inputs)
-            ),
-        );
+        return maybe(maybeInputs, inputs ref=> analyzeCallWithOneResult(s, expr, callable, inputs));
     } else {
         var args = evaluateExprList(expr.args, env);
         var result = evaluateCallWithOneResult(callable, args);
         return addSpecializedValue(s, expr, result);
     }
+}
+
+private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:VariableList) {
+    return addSpecializedCall(s, ast, args, analyzeCallableWithOneResult(callable, args));
 }
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
@@ -235,6 +235,13 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.AndExpr)
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.OrExpr)
     = analyzeShortCircuit(s, env, expr, #thenBody, #elseBody);
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
+    = maybe(analyzeBoolSubnode(s, env, expr.expr), input ref=> {
+        var output = newValue(boolType());
+        addSpecializedNode(s, SpecializedNot(ASTNode(expr), singleVariable(input), output));
+        return Maybe(VariableList(output));
+    });
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
     = genericAnalysisError("lambda expressions are not yet supported");
@@ -303,6 +310,65 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
             () ref=> thenResult,
         ),
         () ref=> elseResult,
+    );
+
+private preludeLookup(name) = envEntryToValue(publicLookup(getProgramPreludeModule(), name));
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
+    = maybe(analyzeSubnode(s, env, expr.expr), operands ref=> {
+        switch (expr.operator) {
+        case ast.OP_ADDRESS_OF: {
+            var operand = singleVariable(operands);
+            if (operand.kind == RT_VARIABLE_RVALUE)
+                genericError("cannot take the address of an rvalue");
+            var output = newValue(pointerType(operand.type));
+            addSpecializedNode(s, SpecializedAddressOf(ASTNode(expr), operand, output));
+            return Maybe(VariableList(output));
+        }
+        case ast.OP_PLUS:
+            return analyzeCallWithOneResult(s, expr, preludeLookup("plus"), operands);
+        case ast.OP_MINUS:
+            return analyzeCallWithOneResult(s, expr, preludeLookup("minus"), operands);
+        case ast.OP_DEREFERENCE:
+            return analyzeCallWithOneResult(s, expr, preludeLookup("dereference"), operands);
+        default:
+            assert(false, "invalid unary operator");
+            return nothing(VariableList);
+        }
+    });
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
+    = maybe(analyzeSubnode(s, env, expr.expr1), operands1 ref=>
+        maybe(analyzeSubnode(s, env, expr.expr2), operands2 ref=> {
+            var operands = VariableList(singleVariable(operands1), singleVariable(operands2));
+            switch (expr.operator) {
+            case ast.OP_MULTIPLY:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("multiply"), operands);
+            case ast.OP_DIVIDE:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("divide"), operands);
+            case ast.OP_REMAINDER:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("remainder"), operands);
+            case ast.OP_ADD:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("add"), operands);
+            case ast.OP_SUBTRACT:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("subtract"), operands);
+            case ast.OP_LESSER?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("lesser?"), operands);
+            case ast.OP_LESSER_EQUALS?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("lesserEquals?"), operands);
+            case ast.OP_GREATER?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("greater?"), operands);
+            case ast.OP_GREATER_EQUALS?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("greaterEquals?"), operands);
+            case ast.OP_EQUALS?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("equals?"), operands);
+            case ast.OP_NOT_EQUALS?:
+                return analyzeCallWithOneResult(s, expr, preludeLookup("notEquals?"), operands);
+            default:
+                assert(false, "invalid binary operator");
+                return nothing(VariableList);
+            }
+        })
     );
 
 
