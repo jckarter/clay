@@ -183,3 +183,9 @@ notEquals?(a:Int, b:Int) returned:Bool __c__ """
     *returned_ = *a_ != *b_;
 """;
 
+assign(ref a, b)                  { a <-- b; }
+addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
+subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
+multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
+divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
+remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }

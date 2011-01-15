@@ -67,4 +67,12 @@ foo() {
     if (a) b else c;
     if (a) b or c else d or e;
     if (a) b -> c or d else e -> f or g;
+
+    x = y;
+    x <-- y;
+    x += y;
+    x -= y;
+    x *= y;
+    x /= y;
+    x %= y;
 }

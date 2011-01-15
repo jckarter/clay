@@ -198,6 +198,10 @@ private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, a
     return addSpecializedCall(s, ast, args, analyzeCallableWithOneResult(callable, args));
 }
 
+private analyzeCall(s:SpecializationContext, ast, callable:Value, args:VariableList) {
+    return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
+}
+
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = addSpecializedValue(s, expr, evaluateExpr(expr, env));
 
@@ -316,6 +320,7 @@ private preludeLookup(name) = envEntryToValue(publicLookup(getProgramPreludeModu
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
     = maybe(analyzeSubnode(s, env, expr.expr), operands ref=> {
+        var operatorCallable = Value();
         switch (expr.operator) {
         case ast.OP_ADDRESS_OF: {
             var operand = singleVariable(operands);
@@ -326,48 +331,66 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
             return Maybe(VariableList(output));
         }
         case ast.OP_PLUS:
-            return analyzeCallWithOneResult(s, expr, preludeLookup("plus"), operands);
+            operatorCallable = preludeLookup("plus");
+            break;
         case ast.OP_MINUS:
-            return analyzeCallWithOneResult(s, expr, preludeLookup("minus"), operands);
+            operatorCallable = preludeLookup("minus");
+            break;
         case ast.OP_DEREFERENCE:
-            return analyzeCallWithOneResult(s, expr, preludeLookup("dereference"), operands);
+            operatorCallable = preludeLookup("dereference");
+            break;
         default:
             assert(false, "invalid unary operator");
-            return nothing(VariableList);
+            break;
         }
+        return analyzeCallWithOneResult(s, expr, operatorCallable, operands);
     });
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
     = maybe(analyzeSubnode(s, env, expr.expr1), operands1 ref=>
         maybe(analyzeSubnode(s, env, expr.expr2), operands2 ref=> {
             var operands = VariableList(singleVariable(operands1), singleVariable(operands2));
+            var operatorCallable = Value();
+
             switch (expr.operator) {
             case ast.OP_MULTIPLY:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("multiply"), operands);
+                operatorCallable = preludeLookup("multiply");
+                break;
             case ast.OP_DIVIDE:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("divide"), operands);
+                operatorCallable = preludeLookup("divide");
+                break;
             case ast.OP_REMAINDER:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("remainder"), operands);
+                operatorCallable = preludeLookup("remainder");
+                break;
             case ast.OP_ADD:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("add"), operands);
+                operatorCallable = preludeLookup("add");
+                break;
             case ast.OP_SUBTRACT:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("subtract"), operands);
+                operatorCallable = preludeLookup("subtract");
+                break;
             case ast.OP_LESSER?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("lesser?"), operands);
+                operatorCallable = preludeLookup("lesser?");
+                break;
             case ast.OP_LESSER_EQUALS?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("lesserEquals?"), operands);
+                operatorCallable = preludeLookup("lesserEquals?");
+                break;
             case ast.OP_GREATER?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("greater?"), operands);
+                operatorCallable = preludeLookup("greater?");
+                break;
             case ast.OP_GREATER_EQUALS?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("greaterEquals?"), operands);
+                operatorCallable = preludeLookup("greaterEquals?");
+                break;
             case ast.OP_EQUALS?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("equals?"), operands);
+                operatorCallable = preludeLookup("equals?");
+                break;
             case ast.OP_NOT_EQUALS?:
-                return analyzeCallWithOneResult(s, expr, preludeLookup("notEquals?"), operands);
+                operatorCallable = preludeLookup("notEquals?");
+                break;
             default:
                 assert(false, "invalid binary operator");
-                return nothing(VariableList);
+                break;
             }
+            return analyzeCallWithOneResult(s, expr, operatorCallable, operands);
         })
     );
 
@@ -473,24 +496,28 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
 
-private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprList:ast.ExprList) {
-    try {
-        return maybe(analyzeNode(s, env, toExprList),
-            toValues ref=> maybe(analyzeNode(s, env, fromExprList),
-                fromValues ref=> {
-                    if (size(toValues) != size(fromValues))
-                        genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
-                    for (toValue, fromValue in zipped(toValues, fromValues)) {
-                        if (toValue.kind != RT_VARIABLE_REF)
-                            genericError("values on left side of <-- must be lvalues");
-                        addSpecializedInitialize(s, stmt, fromValue, toValue);
-                    }
-                    return false;
-                },
-                () ref=> true,
-            ),
+private withAssignmentValues(s, env, stmt, fn)
+    = maybe(analyzeNode(s, env, stmt.to),
+        toValues ref=> maybe(analyzeNode(s, env, stmt.from),
+            fromValues ref=> fn(toValues, fromValues),
             () ref=> true,
-        );
+        ),
+        () ref=> true,
+    );
+
+
+private analyzeInitialize(s, env:Env, stmt) {
+    try {
+        return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
+            if (size(toValues) != size(fromValues))
+                genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
+            for (toValue, fromValue in zipped(toValues, fromValues)) {
+                if (toValue.kind != RT_VARIABLE_REF)
+                    genericError("values on left side of <-- must be lvalues");
+                addSpecializedInitialize(s, stmt, fromValue, toValue);
+            }
+            return false;
+        });
     } catch (e:RecursiveAnalysisError) {
     // XXX recursive analysis will need to be an error if it influences delayed propagation of var
     // bindings
@@ -499,18 +526,67 @@ private analyzeInitialize(s, env:Env, stmt, toExprList:ast.ExprList, fromExprLis
     }
 }
 
+private singleAssign(s, stmt, op, toValue, fromValue) {
+    return nothing?(analyzeCall(s, stmt, op, VariableList(toValue, fromValue)));
+}
+
+private multiAssign(s, stmt, op, toValues, fromValues) {
+    genericError("assignment of multiple values not yet supported");
+    return false;
+}
+
+private analyzeAssign(s, env, stmt) {
+    try {
+        return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
+            if (size(toValues) != size(fromValues))
+                genericError("got ", size(toValues), " values on left side of assignment but ", size(fromValues), " values on right side");
+
+            var operatorCallable = Value();
+            switch (stmt.kind) {
+            case ast.ASSIGNMENT_ASSIGN:
+                operatorCallable = preludeLookup("assign");
+                break;
+            case ast.ASSIGNMENT_ADD:
+                operatorCallable = preludeLookup("addAssign");
+                break;
+            case ast.ASSIGNMENT_SUBTRACT:
+                operatorCallable = preludeLookup("subtractAssign");
+                break;
+            case ast.ASSIGNMENT_MULTIPLY:
+                operatorCallable = preludeLookup("multiplyAssign");
+                break;
+            case ast.ASSIGNMENT_DIVIDE:
+                operatorCallable = preludeLookup("divideAssign");
+                break;
+            case ast.ASSIGNMENT_REMAINDER:
+                operatorCallable = preludeLookup("remainderAssign");
+                break;
+            default:
+                assert(false, "invalid assignment operator");
+                break;
+            }
+
+            switch (size(toValues)) {
+            case 0:
+                return false;
+            case 1:
+                return singleAssign(s, stmt, operatorCallable, singleVariable(toValues), singleVariable(fromValues));
+            default:
+                return multiAssign(s, stmt, operatorCallable, toValues, fromValues);
+            }
+        });
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+        return false;
+    }
+}
+
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
     switch (stmt.kind) {
-    case ast.ASSIGNMENT_ASSIGN:
-        genericError("assignment with = not yet supported");
-        // NOTE will need to support parallel assignment when assigning multiple values.
-        // eg x, y = y, x;
-        return false;
     case ast.ASSIGNMENT_INITIALIZE:
-        return analyzeInitialize(s, bc.env, stmt, stmt.to, stmt.from);
+        return analyzeInitialize(s, bc.env, stmt);
     default:
-        assert(false);
-        return false;
+        return analyzeAssign(s, bc.env, stmt);
     }
 }
 
