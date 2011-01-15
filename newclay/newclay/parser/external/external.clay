@@ -1041,8 +1041,13 @@ private var multipleBindingList = modify(
 );
 
 private var assignmentOp = choice(
-    modify(x => ASSIGNMENT_ASSIGN, punc(#"=")),
+    modify(x => ASSIGNMENT_ASSIGN,     punc(#"=")),
     modify(x => ASSIGNMENT_INITIALIZE, punc(#"<--")),
+    modify(x => ASSIGNMENT_MULTIPLY,   punc(#"*=")),
+    modify(x => ASSIGNMENT_DIVIDE,     punc(#"/=")),
+    modify(x => ASSIGNMENT_REMAINDER,  punc(#"%=")),
+    modify(x => ASSIGNMENT_ADD,        punc(#"+=")),
+    modify(x => ASSIGNMENT_SUBTRACT,   punc(#"-=")),
 );
 
 private var assignmentStatement = statementParser(
