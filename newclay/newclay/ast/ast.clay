@@ -175,6 +175,7 @@ variant Expr = BoolLiteral
              | IfExpr
              | UnaryOpExpr
              | BinaryOpExpr
+             | StaticExpr
              ;
 
 overload Expr() = Expr(BoolLiteral());
@@ -263,6 +264,10 @@ enum OperatorKind {
     OP_NOT_EQUALS?,
 }
 
+record StaticExpr = ast(
+    expr: Expr,
+);
+
 record UnaryOpExpr = ast(
     operator: OperatorKind,
     expr: Expr,
@@ -295,7 +300,6 @@ record IfExpr = ast(
     thenPart: Expr,
     elsePart: Expr,
 );
-
 
 
 //
