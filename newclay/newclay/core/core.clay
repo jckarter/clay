@@ -68,6 +68,7 @@ record ClayHooks (
     Pointer: Value,
 
     Procedure?: Value,
+    PODType?: Value,
 );
 
 

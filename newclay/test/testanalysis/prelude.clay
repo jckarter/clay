@@ -45,6 +45,12 @@ symbol LLArrayType['T, 'n] = ();
 symbol LLTupleType[...'T] = ();
 symbol LLUnionType[...'T] = ();
 
+
+//
+// PODType?
+//
+
+static PODType?('T) = true;
 
 
 //
