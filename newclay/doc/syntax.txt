@@ -112,9 +112,11 @@ TupleExpr -> "(" ExprList? ")"
 PrefixExpr -> SignExpr
             | AddressOfExpr
             | SuffixExpr
+            | StaticExpr
 
 SignExpr -> ("+" | "-") SuffixExpr
 AddressOfExpr -> "&" SuffixExpr
+StaticExpr -> "#" PrefixExpr
 
 SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexingSuffix
