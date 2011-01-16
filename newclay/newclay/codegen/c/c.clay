@@ -328,7 +328,7 @@ overload codegenNode(c, bc, node:SpecializedNot) {
 }
 
 overload codegenNode(c, bc, node:SpecializedAddressOf) {
-    printToIndented(bc, localDeref(bc, node.output), " = &(", localDeref(bc, node.input), ");\n");
+    printToIndented(bc, localDeref(bc, node.output), " = ", localRef(bc, node.input), ";\n");
 }
 
 overload codegenNode(c, bc, node:SpecializedCall) {

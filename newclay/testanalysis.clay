@@ -249,9 +249,9 @@ printInvokeTable(name, table) {
             s => {
                 printSpecialization(1, s);
                 maybe(s.body, body ref=> {
-                    println("optimized:");
-                    coalesceSpecialization(s);
-                    printSpecialization(1, s);
+                    println("  optimized:");
+                    optimizeSpecialization(s);
+                    printSpecialization(2, s);
                 });
             },
             () => { println("  <no specialization!>"); },
