@@ -319,6 +319,8 @@ overload codegenNode(c, bc, node:SpecializedLiteralCodeBody) {
 
 overload codegenNode(c, bc, node:SpecializedValueList) {
     for (value, output in zipped(node.valueList, node.outputs)) {
+        if (staticType?(output.type))
+            continue;
         printToIndented(bc, localDeref(bc, output), " = ", cValue(value), ";\n");
     }
 }
@@ -567,7 +569,7 @@ private codegenArrayType(c, type, llType, definition) {
     printToIndented(definition, 1, typeKindedName(c, llType.params[0]),
         " array[", arraySize, "];\n",
     );
-    printlnTo(definition, "}");
+    printTo(definition, "}");
 }
 
 private aggregateMemberError(llType) {
@@ -612,7 +614,7 @@ private codegenTupleType(c, type, llType, definition) {
         printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
     }
 
-    printlnTo(definition, "}");
+    printTo(definition, "}");
 }
 
 private codegenUnionType(c, type, llType, definition) {
@@ -627,7 +629,7 @@ private codegenUnionType(c, type, llType, definition) {
         printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
     }
 
-    printlnTo(definition, "}");
+    printTo(definition, "}");
 }
 
 private cIntegerType(signed?:Bool, bits) {
