@@ -252,6 +252,10 @@ overload evaluateExpr(x:ast.IfExpr, env) {
         return evaluateExpr(x.elsePart, env);
 }
 
+overload evaluateExpr(x:ast.StaticExpr, env) {
+    return evaluateExpr(x.expr, env);
+}
+
 overload evaluateExpr(x:ast.UnaryOpExpr, env) {
     var operands = ValueList(evaluateExpr(x.expr, env));
     switch (x.operator) {

@@ -394,6 +394,17 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
         })
     );
 
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
+    var value = evaluateExpr(expr.expr, env);
+    var outputs = VariableList(newValue(staticType(value)));
+    addSpecializedNode(s, SpecializedValueList(
+        ASTNode(expr),
+        ValueList(value),
+        outputs
+    ));
+    return Maybe(outputs);
+}
+
 
 //
 // analyzeBlockCodeBody, analyzeStatement
