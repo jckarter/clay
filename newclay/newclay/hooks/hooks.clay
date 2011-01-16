@@ -33,6 +33,8 @@ initializeClayHooks() {
         lookup("Pointer"),
 
         lookup("Procedure?"),
+
+        lookup("PODType?"),
     );
 }
 
@@ -162,4 +164,13 @@ pointerTargetType(x:Value) Value {
         genericError("not a pointer type: ", x);
     assert(size(sym.params) == 1);
     return sym.params[0];
+}
+
+
+//
+// podType?
+//
+
+podType?(x:Value) {
+    return evaluateBoolCall(getHooks().PODType?, ValueList(x));
 }
