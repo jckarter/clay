@@ -70,6 +70,27 @@ record ClayHooks (
 
     Procedure?: Value,
     PODType?: Value,
+
+    plus: Value,
+    minus: Value,
+    dereference: Value,
+    multiply: Value,
+    divide: Value,
+    remainder: Value,
+    add: Value,
+    subtract: Value,
+    lesser?: Value,
+    lesserEquals?: Value,
+    greater?: Value,
+    greaterEquals?: Value,
+    equals?: Value,
+    notEquals?: Value,
+    assign: Value,
+    addAssign: Value,
+    subtractAssign: Value,
+    multiplyAssign: Value,
+    divideAssign: Value,
+    remainderAssign: Value,
 );
 
 
