@@ -227,7 +227,7 @@ private finalizeFunctionSignature(c, bc, function) {
 
     printTo(signature, "static void ", functionName(c, bc.s), "(");
 
-    interleave(bc.s.args,
+    interleave(bc.s.internalArgs,
         () ref=> { printTo(signature, ", "); },
         a  ref=> {
             printLocalDefinitionTo(signature, c, bc, a);
@@ -238,7 +238,7 @@ private finalizeFunctionSignature(c, bc, function) {
     maybe(bc.s.results,
         results ref=> {
             if (not empty?(bc.s.internalNamedResults)) {
-                if (not empty?(bc.s.args))
+                if (not empty?(bc.s.internalArgs))
                     printTo(signature, ", ");
                 
                 interleave(bc.s.internalNamedResults,
@@ -249,7 +249,7 @@ private finalizeFunctionSignature(c, bc, function) {
                     },
                 );
             } else if (not empty?(results)) {
-                if (not empty?(bc.s.args))
+                if (not empty?(bc.s.internalArgs))
                     printTo(signature, ", ");
 
                 interleave(results,
@@ -259,11 +259,11 @@ private finalizeFunctionSignature(c, bc, function) {
                         remove(bc.bodyVars, r);
                     },
                 );
-            } else if (empty?(bc.s.args))
+            } else if (empty?(bc.s.internalArgs))
                 printTo(signature, "void");
         },
         () ref=> {
-            if (empty?(bc.s.args))
+            if (empty?(bc.s.internalArgs))
                 printTo(signature, "void");
         },
     );
