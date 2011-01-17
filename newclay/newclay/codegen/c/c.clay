@@ -642,8 +642,8 @@ private cIntegerType(signed?:Bool, bits) {
     case 32:
         return withSigned(signed?, "int");
     case 64:
-        // XXX in msvc flavor long long is __int64
-        // XXX strict ansi flavor?
+        // XXX in msvc dialect long long is __int64
+        // XXX strict ansi dialect?
         return withSigned(signed?, "long long int");
     default:
         genericError("integer type with ", bits, " bits not supported");

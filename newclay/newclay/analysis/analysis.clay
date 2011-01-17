@@ -802,6 +802,14 @@ private maybeAnalyzeBinding(s, env, stmt, kind, binding)
         () ref=> true,
     );
 
+private analyzeBindingVar(s, stmt, kind, name, value) {
+    var variableKind = bindingVariableKind(kind, value.kind);
+    var variableValue? = kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE;
+    var result = RTVariable(variableKind, value.type, variableValue?, name);
+    addSpecializedBind(s, stmt, value, result);
+    return result;
+}
+
 private analyzeBinding(
     s,
     env,
@@ -819,11 +827,7 @@ private analyzeBinding(
             );
     });
 
-    var variableKind = bindingVariableKind(kind, value.kind);
-    var variableValue? = kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE;
-    var result = RTVariable(variableKind, value.type, variableValue?, bindingName.name.str);
-    addSpecializedBind(s, stmt, value, result);
-    envAdd(env, bindingName.name, result);
+    envAdd(env, bindingName.name, analyzeBindingVar(s, stmt, kind, bindingName.name.str, value));
 }
 
 private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKind) {
@@ -869,9 +873,16 @@ overload analyzeBindings(
                     genericError("incorrect number of values for variable binding");
                 for (binding, value in zipped(bindingList.names.items, values))
                     analyzeBinding(s, env, stmt, kind, binding, value);
-                // XXX variadic item
-                if (just?(bindingList.names.variadicItem))
-                    genericError("variadic variable binding not yet supported");
+
+                maybe(bindingList.names.variadicItem, varItem ref=> {
+                    var variadicVars = map(
+                        value ref=> analyzeBindingVar(s, stmt, kind, varItem.name.str, value),
+                        slicedFrom(values, size(bindingList.names.items))
+                    );
+
+                    envAdd(env, varItem.name, RTListVariable(variadicVars, varItem.name));
+                });
+
                 return env, false;
             },
             () ref=> ...(env, true),
