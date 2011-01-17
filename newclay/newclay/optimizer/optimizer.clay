@@ -1,4 +1,5 @@
 import newclay.ast as ast;
+import newclay.ir as ir;
 import newclay.core.*;
 import newclay.hooks.*;
 import maybe.*;
@@ -67,7 +68,9 @@ coalesced(cmap:VariableMap, rtVar:RTVariable) {
 
 // coalesce pass
 
-coalesceBody(body:Vector[SpecializedNode]) {
+
+
+coalesceBody(body:Vector[ir.Node]) {
     var coalescingMap = VariableMap();
 
     for (node in body)
@@ -77,167 +80,163 @@ coalesceBody(body:Vector[SpecializedNode]) {
 }
 
 private coalesceNode(cmap:VariableMap, node) {}
-overload coalesceNode(cmap:VariableMap, node:SpecializedBind) {
+overload coalesceNode(cmap:VariableMap, node:ir.Bind) {
     coalesceBinding(cmap, node.input, node.output);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedInitialize) {
+overload coalesceNode(cmap:VariableMap, node:ir.Initialize) {
     coalesceInitialize(cmap, node.input, node.output);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedIf) {
+overload coalesceNode(cmap:VariableMap, node:ir.If) {
+    var thenCmap = cmap;
     var elseCmap = cmap;
+
     for (subnode in node.thenBody)
-        coalesceNode(cmap, *subnode);
+        coalesceNode(thenCmap, *subnode);
     for (subnode in node.elseBody)
         coalesceNode(elseCmap, *subnode);
-    unifyBranchCoalescing(cmap, elseCmap);
+    unifyBranchCoalescing(cmap, thenCmap, elseCmap);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedWhile) {
+overload coalesceNode(cmap:VariableMap, node:ir.While) {
     for (subnode in node.conditionBody)
         coalesceNode(cmap, *subnode);
     for (subnode in node.body)
         coalesceNode(cmap, *subnode);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedBlock) {
+overload coalesceNode(cmap:VariableMap, node:ir.Block) {
     for (subnode in node.body)
         coalesceNode(cmap, *subnode);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedStatement) {
+overload coalesceNode(cmap:VariableMap, node:ir.Statement) {
     for (subnode in node.body)
         coalesceNode(cmap, *subnode);
 }
-overload coalesceNode(cmap:VariableMap, node:SpecializedPhi) {
+overload coalesceNode(cmap:VariableMap, node:ir.Phi) {
     for (branch in node.branches) {
-        assert(size(branch) == size(node.outputs), "coalescing invariant: SpecializedPhi branches must be of equal length");
+        assert(size(branch) == size(node.outputs), "coalescing invariant: ir.Phi branches must be of equal length");
         for (branchOutput, phiOutput in zipped(branch, node.outputs)) {
-            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: SpecializedPhi branches must match in type and kind");
+            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: ir.Phi branches must match in type and kind");
             cmap[branchOutput] = phiOutput;
         }
     }
 }
 
-unifyBranchCoalescing(cmap:VariableMap, elseCmap:VariableMap) {
-    for (from, x in items(elseCmap)) {
-        var cFrom = coalesced(cmap, from);
-        var elseCFrom = coalesced(elseCmap, from);
-        unifyBranchCoalescingEntry(cmap, from, cFrom, elseCFrom);
-    }
-}
-
-unifyBranchCoalescingEntry(cmap, from, c1, c2) {
-    if (c1 != c2)
-        remove(cmap, from);
-    // XXX can rvalue coalescing be safely combined across branches?
+private unifyBranchCoalescing(cmap:VariableMap, thenCmap, elseCmap) {
+    for (from, to in items(thenCmap))
+        if (null?(lookup(cmap, from)) and null?(lookup(elseCmap, from)))
+            cmap[from] = to;
+    for (from, to in items(elseCmap))
+        if (null?(lookup(cmap, from)) and null?(lookup(thenCmap, from)))
+            cmap[from] = to;
 }
 
 // coalescing application pass
 
 private coalescedVars(cmap:VariableMap, vs:VariableList)
     = map(v ref=> coalesced(cmap, v), vs);
-overload coalescedVars(cmap:VariableMap, vs:Vector[OutputVariable])
-    = map(o ref=> OutputVariable(coalesced(cmap, o.value), o.returnByRef?), vs);
+overload coalescedVars(cmap:VariableMap, vs:Vector[ir.OutputVariable])
+    = map(o ref=> ir.OutputVariable(coalesced(cmap, o.value), o.returnByRef?), vs);
 [T]
 overload coalescedVars(cmap:VariableMap, mvs:Maybe[T])
     = maybe(mvs, vs ref=> Maybe(coalescedVars(cmap, vs)));
 
 
-private coalescedNodes(cmap:VariableMap, nodes:Vector[SpecializedNode])
-    = map(n ref=> coalescedSpecializedNode(cmap, *n), nodes);
+private coalescedNodes(cmap:VariableMap, nodes:Vector[ir.Node])
+    = map(n ref=> makeCoalescedNode(cmap, *n), nodes);
 
-private coalescedSpecializedNode(cmap:VariableMap, node)
-    = SpecializedNode(coalescedNode(cmap, node));
+private makeCoalescedNode(cmap, n) = ir.Node(coalescedNode(cmap, n));
 
 private procedure coalescedNode;
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedLiteralCodeBody) = node;
+overload coalescedNode(cmap:VariableMap, node:ir.LiteralCodeBody) = node;
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedValueList)
-    = SpecializedValueList(
+overload coalescedNode(cmap:VariableMap, node:ir.ValueList)
+    = ir.ValueList(
         node.ast,
         node.valueList,
         coalescedVars(cmap, node.outputs),
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedCall)
-    = SpecializedCall(
+overload coalescedNode(cmap:VariableMap, node:ir.Call)
+    = ir.Call(
         node.ast,
         coalescedVars(cmap, node.inputs),
         coalescedVars(cmap, node.outputs),
         node.specialization,
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedBlock) SpecializedBlock
-    = SpecializedBlock(coalescedNodes(cmap, node.body));
+overload coalescedNode(cmap:VariableMap, node:ir.Block) ir.Block
+    = ir.Block(coalescedNodes(cmap, node.body));
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedStatement) SpecializedStatement
-    = SpecializedStatement(coalescedNodes(cmap, node.body));
+overload coalescedNode(cmap:VariableMap, node:ir.Statement) ir.Statement
+    = ir.Statement(coalescedNodes(cmap, node.body));
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedIf) SpecializedIf
-    = SpecializedIf(
+overload coalescedNode(cmap:VariableMap, node:ir.If) ir.If
+    = ir.If(
         node.ast,
         coalesced(cmap, node.condition),
         coalescedNodes(cmap, node.thenBody),
         coalescedNodes(cmap, node.elseBody),
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedWhile) SpecializedWhile
-    = SpecializedWhile(
+overload coalescedNode(cmap:VariableMap, node:ir.While) ir.While
+    = ir.While(
         node.ast,
         coalescedNodes(cmap, node.conditionBody),
         coalesced(cmap, node.condition),
         coalescedNodes(cmap, node.body),
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedPhi)
-    = SpecializedNop();
+overload coalescedNode(cmap:VariableMap, node:ir.Phi)
+    = ir.Nop();
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedBind) {
+overload coalescedNode(cmap:VariableMap, node:ir.Bind) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
     if (isNot?(cInput, cOutput))
-        return SpecializedNode(SpecializedBind(node.ast, cInput, cOutput));
+        return ir.Node(ir.Bind(node.ast, cInput, cOutput));
     else
-        return SpecializedNode(SpecializedNop());
+        return ir.Node(ir.Nop());
 }
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedNot)
-    = SpecializedNot(
+overload coalescedNode(cmap:VariableMap, node:ir.Not)
+    = ir.Not(
         node.ast,
         coalesced(cmap, node.input),
         coalesced(cmap, node.output),
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedAddressOf)
-    = SpecializedAddressOf(
+overload coalescedNode(cmap:VariableMap, node:ir.AddressOf)
+    = ir.AddressOf(
         node.ast,
         coalesced(cmap, node.input),
         coalesced(cmap, node.output),
     );
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedBindReturn) {
+overload coalescedNode(cmap:VariableMap, node:ir.BindReturn) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
 
     assert(isNot?(cInput, cOutput), "coalescing invariant: return value cannot be coalesced with input");
-    return SpecializedBindReturn(node.ast, cInput, cOutput);
+    return ir.BindReturn(node.ast, cInput, cOutput);
 }
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedInitialize) {
+overload coalescedNode(cmap:VariableMap, node:ir.Initialize) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
 
     if (isNot?(node.input, node.output) and is?(cInput, cOutput))
-        return SpecializedNode(SpecializedNop());
+        return ir.Node(ir.Nop());
     else
-        return SpecializedNode(SpecializedInitialize(node.ast, cInput, cOutput));
+        return ir.Node(ir.Initialize(node.ast, cInput, cOutput));
 }
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedBreak) = node;
-overload coalescedNode(cmap:VariableMap, node:SpecializedContinue) = node;
-overload coalescedNode(cmap:VariableMap, node:SpecializedReturn) = node;
-overload coalescedNode(cmap:VariableMap, node:SpecializedNop) = node;
+overload coalescedNode(cmap:VariableMap, node:ir.Break) = node;
+overload coalescedNode(cmap:VariableMap, node:ir.Continue) = node;
+overload coalescedNode(cmap:VariableMap, node:ir.Return) = node;
+overload coalescedNode(cmap:VariableMap, node:ir.Nop) = node;
 
-overload coalescedNode(cmap:VariableMap, node:SpecializedThrow)
-    = SpecializedThrow(node.ast, coalesced(cmap, node.exception));
+overload coalescedNode(cmap:VariableMap, node:ir.Throw)
+    = ir.Throw(node.ast, coalesced(cmap, node.exception));
 
 coalesceSpecialization(s:Specialization) {
     var coalescingMap, coalescedBody = ...coalesceBody(just(s.body));
@@ -291,38 +290,38 @@ private asNamedReturnVariable(result) = RTVariable(
 );
 
 private procedure namedReturnConvertNode;
-overload namedReturnConvertNode(nmap:VariableMap, node) = SpecializedNode(node);
+overload namedReturnConvertNode(nmap:VariableMap, node) = ir.Node(node);
 
-overload namedReturnConvertNode(nmap:VariableMap, node:SpecializedBindReturn) {
+overload namedReturnConvertNode(nmap:VariableMap, node:ir.BindReturn) {
     assert(not null?(lookup(nmap, node.output)), "named return conversion invariant: return expression value must have corresponding named return");
     if (node.output.value?)
-        return SpecializedNode(SpecializedInitialize(node.ast, node.input, nmap[node.output]));
+        return ir.Node(ir.Initialize(node.ast, node.input, nmap[node.output]));
     else
-        return SpecializedNode(SpecializedAddressOf(node.ast, node.input, nmap[node.output]));
+        return ir.Node(ir.AddressOf(node.ast, node.input, nmap[node.output]));
 }
 
-overload namedReturnConvertNode(nmap:VariableMap, node:SpecializedIf) SpecializedNode
-    = SpecializedNode(SpecializedIf(
+overload namedReturnConvertNode(nmap:VariableMap, node:ir.If) ir.Node
+    = ir.Node(ir.If(
         node.ast,
         node.condition,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.thenBody),
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.elseBody),
     ));
 
-overload namedReturnConvertNode(nmap:VariableMap, node:SpecializedWhile) SpecializedNode
-    = SpecializedNode(SpecializedWhile(
+overload namedReturnConvertNode(nmap:VariableMap, node:ir.While) ir.Node
+    = ir.Node(ir.While(
         node.ast,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.conditionBody),
         node.condition,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
-overload namedReturnConvertNode(node:SpecializedBlock) SpecializedNode
-    = SpecializedNode(SpecializedBlock(
-        map(subnode ref=> namedReturnConvertNode(*subnode), node.body),
+overload namedReturnConvertNode(nmap:VariableMap, node:ir.Block) ir.Node
+    = ir.Node(ir.Block(
+        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
-overload namedReturnConvertNode(node:SpecializedStatement) SpecializedNode
-    = SpecializedNode(SpecializedStatement(
-        map(subnode ref=> namedReturnConvertNode(*subnode), node.body),
+overload namedReturnConvertNode(nmap:VariableMap, node:ir.Statement) ir.Node
+    = ir.Node(ir.Statement(
+        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
 
 
@@ -336,29 +335,29 @@ private noReturnConvertSpecialization(s:Specialization) {
 }
 
 private procedure noReturnConvertNode;
-overload noReturnConvertNode(node) = SpecializedNode(node);
-overload noReturnConvertNode(node:SpecializedBindReturn)
-    = SpecializedNode(SpecializedNop());
-overload noReturnConvertNode(node:SpecializedIf) SpecializedNode
-    = SpecializedNode(SpecializedIf(
+overload noReturnConvertNode(node) = ir.Node(node);
+overload noReturnConvertNode(node:ir.BindReturn)
+    = ir.Node(ir.Nop());
+overload noReturnConvertNode(node:ir.If) ir.Node
+    = ir.Node(ir.If(
         node.ast,
         node.condition,
         map(subnode ref=> noReturnConvertNode(*subnode), node.thenBody),
         map(subnode ref=> noReturnConvertNode(*subnode), node.elseBody),
     ));
-overload noReturnConvertNode(node:SpecializedWhile) SpecializedNode
-    = SpecializedNode(SpecializedWhile(
+overload noReturnConvertNode(node:ir.While) ir.Node
+    = ir.Node(ir.While(
         node.ast,
         map(subnode ref=> noReturnConvertNode(*subnode), node.conditionBody),
         node.condition,
         map(subnode ref=> noReturnConvertNode(*subnode), node.body),
     ));
-overload noReturnConvertNode(node:SpecializedBlock) SpecializedNode
-    = SpecializedNode(SpecializedBlock(
+overload noReturnConvertNode(node:ir.Block) ir.Node
+    = ir.Node(ir.Block(
         map(subnode ref=> noReturnConvertNode(*subnode), node.body),
     ));
-overload noReturnConvertNode(node:SpecializedStatement) SpecializedNode
-    = SpecializedNode(SpecializedStatement(
+overload noReturnConvertNode(node:ir.Statement) ir.Node
+    = ir.Node(ir.Statement(
         map(subnode ref=> noReturnConvertNode(*subnode), node.body),
     ));
 

@@ -3,6 +3,7 @@ import maybe.*;
 import newclay.common.*;
 import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
+import newclay.ir as ir;
 import newclay.diagnostics.*;
 
 
@@ -873,7 +874,7 @@ record RTLabel = referenceType(
 
 
 //
-// Specialization, SpecializedNode, InvokeTable
+// Specialization, InvokeTable
 //
 
 alias VariableList = Vector[RTVariable];
@@ -884,7 +885,7 @@ record Specialization = referenceType(
     args: VariableList,
     results: Maybe[VariableList],
     env: Env,
-    body: Maybe[Vector[SpecializedNode]],
+    body: Maybe[Vector[ir.Node]],
     internalArgs: VariableList,
     internalNamedResults: VariableList,
 );
@@ -896,139 +897,16 @@ overload Specialization(o:Overload, callable:Value) {
     return move(s);
 }
 
-variant SpecializedNode = SpecializedLiteralCodeBody
-                        | SpecializedValueList
-                        | SpecializedCall
-                        | SpecializedNot
-                        | SpecializedAddressOf
-                        | SpecializedIf
-                        | SpecializedWhile
-                        | SpecializedInitialize
-                        | SpecializedBind
-                        | SpecializedBindReturn
-                        | SpecializedPhi
-                        | SpecializedBreak
-                        | SpecializedContinue
-                        | SpecializedReturn
-                        | SpecializedThrow
-                        | SpecializedNop
-                        | SpecializedBlock
-                        | SpecializedStatement;
-
-variant ASTNode = ast.ExprListItem
-                | ast.ReturnExprListItem
-                | ast.Statement;
-    // CodeBody or ExprListItem or ReturnExprListItem or Statement
-overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
-[E | VariantMember?(ast.Expr, E)]
-overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
-[S | VariantMember?(ast.Statement, S)]
-overload ASTNode(x:S) = ASTNode(ast.Statement(x));
-
-record SpecializedLiteralCodeBody = referenceType(
-    ast: ast.LiteralCodeBody,
-    code: String,
-);
-
-record SpecializedValueList = referenceType(
-    ast: ASTNode,
-    valueList: ValueList,
-    outputs: VariableList,
-);
-
-record OutputVariable (
-    value:RTVariable,
-    returnByRef?:Bool,
-);
-
-record SpecializedBlock = referenceType(
-    body: Vector[SpecializedNode],
-);
-
-record SpecializedStatement = referenceType(
-    body: Vector[SpecializedNode],
-);
-
-record SpecializedCall = referenceType(
-    ast: ASTNode,
-    inputs: VariableList,
-    outputs: Maybe[Vector[OutputVariable]],
-    specialization: Specialization, // XXX how to evaluate recursive reference?
-);
-
-record SpecializedIf = referenceType(
-    ast: ASTNode,
-    condition: RTVariable,
-    thenBody: Vector[SpecializedNode],
-    elseBody: Vector[SpecializedNode],
-);
-
-record SpecializedNot = referenceType(
-    ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
-);
-
-record SpecializedAddressOf = referenceType(
-    ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
-);
-
-record SpecializedWhile = referenceType(
-    ast: ast.WhileStatement,
-    conditionBody: Vector[SpecializedNode],
-    condition: RTVariable,
-    body: Vector[SpecializedNode],
-);
-
-record SpecializedPhi = referenceType(
-    branches: Vector[VariableList],
-    outputs: VariableList,
-);
-
-record SpecializedBind = referenceType(
-    ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
-);
-
-record SpecializedBindReturn = referenceType(
-    ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
-);
-
-record SpecializedInitialize = referenceType(
-    ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
-);
-
-record SpecializedBreak = referenceType(
-    ast: ast.BreakStatement,
-);
-
-record SpecializedContinue = referenceType(
-    ast: ast.ContinueStatement,
-);
-
-record SpecializedReturn = referenceType(
-    ast: ast.ReturnStatement,
-);
-
-record SpecializedThrow = referenceType(
-    ast: ast.ThrowStatement,
-    exception: RTVariable,
-);
-
-record SpecializedNop();
-
 record InvokeEntry(
     specialization: Maybe[Specialization],
 );
 
 alias InvokeTable = HashMap[ArgumentList, InvokeEntry];
+
+
+//
+// ArgumentList equality adapter
+//
 
 record ArgumentList(args:VariableList);
 
