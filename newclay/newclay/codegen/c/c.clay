@@ -1,4 +1,5 @@
 import newclay.ast as ast;
+import newclay.ir as ir;
 import newclay.analysis.*;
 import newclay.optimizer.*;
 import newclay.core.*;
@@ -235,38 +236,19 @@ private finalizeFunctionSignature(c, bc, function) {
         },
     );
 
-    maybe(bc.s.results,
-        results ref=> {
-            if (not empty?(bc.s.internalNamedResults)) {
-                if (not empty?(bc.s.internalArgs))
-                    printTo(signature, ", ");
-                
-                interleave(bc.s.internalNamedResults,
-                    () ref=> { printTo(signature, ", "); },
-                    r  ref=> {
-                        printLocalDefinitionTo(signature, c, bc, r);
-                        remove(bc.bodyVars, r);
-                    },
-                );
-            } else if (not empty?(results)) {
-                if (not empty?(bc.s.internalArgs))
-                    printTo(signature, ", ");
-
-                interleave(results,
-                    () ref=> { printTo(signature, ", "); },
-                    r  ref=> {
-                        printResultDefinitionTo(signature, c, bc, r);
-                        remove(bc.bodyVars, r);
-                    },
-                );
-            } else if (empty?(bc.s.internalArgs))
-                printTo(signature, "void");
-        },
-        () ref=> {
-            if (empty?(bc.s.internalArgs))
-                printTo(signature, "void");
-        },
-    );
+    if (not empty?(bc.s.internalNamedResults)) {
+        if (not empty?(bc.s.internalArgs))
+            printTo(signature, ", ");
+        
+        interleave(bc.s.internalNamedResults,
+            () ref=> { printTo(signature, ", "); },
+            r  ref=> {
+                printLocalDefinitionTo(signature, c, bc, r);
+                remove(bc.bodyVars, r);
+            },
+        );
+    } else if (empty?(bc.s.internalArgs))
+        printTo(signature, "void");
 
     printTo(signature, ")");
 }
@@ -308,7 +290,7 @@ overload printTo(bc:CodegenBodyContext, forward ...args) {
 
 private procedure codegenNode;
 
-overload codegenNode(c, bc, node:SpecializedLiteralCodeBody) {
+overload codegenNode(c, bc, node:ir.LiteralCodeBody) {
     if (node.ast.kind == ast.LITERAL_LLVM)
         genericError("__llvm__ procedures are not yet supported");
     if (node.ast.kind == ast.LITERAL_ASM)
@@ -317,7 +299,7 @@ overload codegenNode(c, bc, node:SpecializedLiteralCodeBody) {
     printToIndented(bc, node.code, '\n');
 }
 
-overload codegenNode(c, bc, node:SpecializedValueList) {
+overload codegenNode(c, bc, node:ir.ValueList) {
     for (value, output in zipped(node.valueList, node.outputs)) {
         if (staticType?(output.type))
             continue;
@@ -325,15 +307,15 @@ overload codegenNode(c, bc, node:SpecializedValueList) {
     }
 }
 
-overload codegenNode(c, bc, node:SpecializedNot) {
+overload codegenNode(c, bc, node:ir.Not) {
     printToIndented(bc, localDeref(bc, node.output), " = !(", localDeref(bc, node.input), ");\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedAddressOf) {
+overload codegenNode(c, bc, node:ir.AddressOf) {
     printToIndented(bc, localDeref(bc, node.output), " = ", localRef(bc, node.input), ";\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedCall) {
+overload codegenNode(c, bc, node:ir.Call) {
     var name = functionName(c, node.specialization);
 
     printToIndented(bc, name, "(");
@@ -360,7 +342,7 @@ overload codegenNode(c, bc, node:SpecializedCall) {
     printTo(bc, ");\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedIf) {
+overload codegenNode(c, bc, node:ir.If) {
     printToIndented(bc, "if (", localDeref(bc, node.condition), ") {\n"); 
     bc.indent += 1;
 
@@ -378,17 +360,17 @@ overload codegenNode(c, bc, node:SpecializedIf) {
     printToIndented(bc, "}\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedStatement) {
+overload codegenNode(c, bc, node:ir.Statement) {
     for (subnode in node.body)
         codegenNode(c, bc, *subnode);
 }
 
-overload codegenNode(c, bc, node:SpecializedBlock) {
+overload codegenNode(c, bc, node:ir.Block) {
     for (subnode in node.body)
         codegenNode(c, bc, *subnode);
 }
 
-overload codegenNode(c, bc, node:SpecializedWhile) {
+overload codegenNode(c, bc, node:ir.While) {
     printToIndented(bc, "for (;;) {\n");
     bc.indent += 1;
 
@@ -404,11 +386,11 @@ overload codegenNode(c, bc, node:SpecializedWhile) {
     printToIndented(bc, "}\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedPhi) {
-    assert(false, "SpecializedPhi must be eliminated by coalescing");
+overload codegenNode(c, bc, node:ir.Phi) {
+    assert(false, "ir.Phi must be eliminated by optimization");
 }
 
-overload codegenNode(c, bc, node:SpecializedBind) {
+overload codegenNode(c, bc, node:ir.Bind) {
     if (node.output.value?) {
         // XXX should initializeFrom other value rather than bitwise assign
         printToIndented(bc, localName(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
@@ -417,37 +399,32 @@ overload codegenNode(c, bc, node:SpecializedBind) {
     }
 }
 
-overload codegenNode(c, bc, node:SpecializedBindReturn) {
-    if (node.output.value?) {
-        // XXX should initializeFrom other value rather than bitwise assign
-        printToIndented(bc, "*", localName(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
-    } else {
-        printToIndented(bc, "*", localName(bc, node.output), " = ", localRef(bc, node.input), ";\n");
-    }
+overload codegenNode(c, bc, node:ir.BindReturn) {
+    assert(false, "ir.BindReturn must be eliminated by optimization");
 }
 
-overload codegenNode(c, bc, node:SpecializedInitialize) {
+overload codegenNode(c, bc, node:ir.Initialize) {
     // XXX should initializeFrom other value rather than bitwise assign
     printToIndented(bc, localDeref(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedBreak) {
+overload codegenNode(c, bc, node:ir.Break) {
     printToIndented(bc, "break;\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedContinue) {
+overload codegenNode(c, bc, node:ir.Continue) {
     printToIndented(bc, "continue;\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedReturn) {
+overload codegenNode(c, bc, node:ir.Return) {
     printToIndented(bc, "return;\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedThrow) {
+overload codegenNode(c, bc, node:ir.Throw) {
     printToIndented(bc, "abort();\n");
 }
 
-overload codegenNode(c, bc, node:SpecializedNop) {
+overload codegenNode(c, bc, node:ir.Nop) {
 }
 
 private cValue(value:Value) = match(value,

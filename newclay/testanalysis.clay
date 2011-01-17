@@ -8,6 +8,7 @@ import newclay.loader.*;
 import newclay.hooks.*;
 import newclay.analysis.*;
 import newclay.optimizer.*;
+import newclay.ir as ir;
 import maybe.*;
 
 [T]
@@ -36,16 +37,16 @@ asPtr(x) = referencePtr(x).ptr;
 
 procedure printNodeData;
 
-overload printNodeData(depth, node:SpecializedLiteralCodeBody) {
+overload printNodeData(depth, node:ir.LiteralCodeBody) {
     println();
 }
 
-overload printNodeData(depth, node:SpecializedValueList) {
+overload printNodeData(depth, node:ir.ValueList) {
     println(LeafTypeName(node.ast), " ", node.valueList);
     printVars(depth+1, "out ", node.outputs);
 }
 
-overload printNodeData(depth, node:SpecializedCall) {
+overload printNodeData(depth, node:ir.Call) {
     println(LeafTypeName(node.ast),
         " specialization ", asPtr(node.specialization),
         " ", node.specialization.callable
@@ -64,7 +65,7 @@ overload printNodeData(depth, node:SpecializedCall) {
     );
 }
 
-overload printNodeData(depth, node:SpecializedIf) {
+overload printNodeData(depth, node:ir.If) {
     println(LeafTypeName(node.ast));
     printDepth(depth+1);
     print("condition ");
@@ -79,7 +80,7 @@ overload printNodeData(depth, node:SpecializedIf) {
         printNode(depth+2, elseNode);
 }
 
-overload printNodeData(depth, node:SpecializedWhile) {
+overload printNodeData(depth, node:ir.While) {
     println(LeafTypeName(node.ast));
     printDepth(depth+1);
     print("condition ");
@@ -95,19 +96,19 @@ overload printNodeData(depth, node:SpecializedWhile) {
         printNode(depth+2, bodyNode);
 }
 
-overload printNodeData(depth, node:SpecializedBlock) {
+overload printNodeData(depth, node:ir.Block) {
     println();
     for (bodyNode in node.body)
         printNode(depth+1, bodyNode);
 }
 
-overload printNodeData(depth, node:SpecializedStatement) {
+overload printNodeData(depth, node:ir.Statement) {
     println();
     for (bodyNode in node.body)
         printNode(depth+1, bodyNode);
 }
 
-overload printNodeData(depth, node:SpecializedInitialize) {
+overload printNodeData(depth, node:ir.Initialize) {
     println(LeafTypeName(node.ast));
 
     printDepth(depth+1);
@@ -119,7 +120,7 @@ overload printNodeData(depth, node:SpecializedInitialize) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:SpecializedBind) {
+overload printNodeData(depth, node:ir.Bind) {
     println(LeafTypeName(node.ast));
 
     printDepth(depth+1);
@@ -131,7 +132,7 @@ overload printNodeData(depth, node:SpecializedBind) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:SpecializedAddressOf) {
+overload printNodeData(depth, node:ir.AddressOf) {
     println(LeafTypeName(node.ast));
 
     printDepth(depth+1);
@@ -143,7 +144,7 @@ overload printNodeData(depth, node:SpecializedAddressOf) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:SpecializedNot) {
+overload printNodeData(depth, node:ir.Not) {
     println(LeafTypeName(node.ast));
 
     printDepth(depth+1);
@@ -155,7 +156,7 @@ overload printNodeData(depth, node:SpecializedNot) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:SpecializedBindReturn) {
+overload printNodeData(depth, node:ir.BindReturn) {
     println(LeafTypeName(node.ast));
 
     printDepth(depth+1);
@@ -167,7 +168,7 @@ overload printNodeData(depth, node:SpecializedBindReturn) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:SpecializedPhi) {
+overload printNodeData(depth, node:ir.Phi) {
     println();
     for (inputs in node.branches) {
         printDepth(depth+1);
@@ -179,23 +180,23 @@ overload printNodeData(depth, node:SpecializedPhi) {
     printVars(depth+2, "out ", node.outputs);
 }
 
-overload printNodeData(depth, node:SpecializedNop) {
+overload printNodeData(depth, node:ir.Nop) {
     println();
 }
 
-overload printNodeData(depth, node:SpecializedBreak) {
+overload printNodeData(depth, node:ir.Break) {
     println(LeafTypeName(node.ast));
 }
 
-overload printNodeData(depth, node:SpecializedContinue) {
+overload printNodeData(depth, node:ir.Continue) {
     println(LeafTypeName(node.ast));
 }
 
-overload printNodeData(depth, node:SpecializedReturn) {
+overload printNodeData(depth, node:ir.Return) {
     println(LeafTypeName(node.ast));
 }
 
-overload printNodeData(depth, node:SpecializedThrow) {
+overload printNodeData(depth, node:ir.Throw) {
     println(LeafTypeName(node.ast));
     printDepth(depth+1);
     print("exception ");

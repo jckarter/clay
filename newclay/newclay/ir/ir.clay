@@ -1,0 +1,151 @@
+import newclay.ast as ast;
+import newclay.core.(
+    RTVariable,
+    Specialization,
+    VariableList,
+    ValueList as CoreValueList
+);
+import maybe.*;
+
+record OutputVariable (
+    value:RTVariable,
+    returnByRef?:Bool,
+);
+
+variant Node = LiteralCodeBody
+             | ValueList
+             | Call
+             | Not
+             | AddressOf
+             | If
+             | While
+             | Initialize
+             | Bind
+             | BindReturn
+             | Phi
+             | Break
+             | Continue
+             | Return
+             | Throw
+             | Nop
+             | Block
+             | Statement;
+
+variant ASTNode = ast.ExprListItem
+                | ast.ReturnExprListItem
+                | ast.Statement;
+    // CodeBody or ExprListItem or ReturnExprListItem or Statement
+overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
+[E | VariantMember?(ast.Expr, E)]
+overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
+[S | VariantMember?(ast.Statement, S)]
+overload ASTNode(x:S) = ASTNode(ast.Statement(x));
+
+record LiteralCodeBody = referenceType(
+    ast: ast.LiteralCodeBody,
+    code: String,
+);
+
+record ValueList = referenceType(
+    ast: ASTNode,
+    valueList: CoreValueList,
+    outputs: VariableList,
+);
+
+record Block = referenceType(
+    body: Vector[Node],
+);
+
+record Statement = referenceType(
+    body: Vector[Node],
+);
+
+record Call = referenceType(
+    ast: ASTNode,
+    inputs: VariableList,
+    outputs: Maybe[Vector[OutputVariable]],
+    specialization: Specialization, // XXX how to evaluate recursive reference?
+);
+
+record If = referenceType(
+    ast: ASTNode,
+    condition: RTVariable,
+    thenBody: Vector[Node],
+    elseBody: Vector[Node],
+);
+
+record Not = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record AddressOf = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record While = referenceType(
+    ast: ast.WhileStatement,
+    conditionBody: Vector[Node],
+    condition: RTVariable,
+    body: Vector[Node],
+);
+
+record Phi = referenceType(
+    branches: Vector[VariableList],
+    outputs: VariableList,
+);
+
+record Bind = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record BindReturn = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record Initialize = referenceType(
+    ast: ASTNode,
+    input: RTVariable,
+    output: RTVariable,
+);
+
+record Break = referenceType(
+    ast: ast.BreakStatement,
+);
+
+record Continue = referenceType(
+    ast: ast.ContinueStatement,
+);
+
+record Return = referenceType(
+    ast: ast.ReturnStatement,
+);
+
+record Throw = referenceType(
+    ast: ast.ThrowStatement,
+    exception: RTVariable,
+);
+
+record Nop();
+
+
+//
+// nodeOutputs
+//
+
+procedure nodeOutputs;
+
+overload nodeOutputs(node) = VariableList();
+overload nodeOutputs(node:ValueList) = node.outputs;
+overload nodeOutputs(node:Call) = maybe(node.outputs, outputs => outputs, () => VariableList());
+overload nodeOutputs(node:Not) = VariableList(node.output);
+overload nodeOutputs(node:AddressOf) = VariableList(node.output);
+overload nodeOutputs(node:Phi) = node.outputs;
+overload nodeOutputs(node:Bind) = VariableList(node.output);
