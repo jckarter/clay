@@ -489,6 +489,8 @@ private analyzeStatement(
 ) Bool = withLocation(stmt, () ref=> analyzeStatement(s, pc, bc, lc, *stmt));
 
 overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
+    var blockNode = allocateRef(SpecializedBlock);
+    var blockS = subContext(s, blockNode.body);
     var subbc = BlockContext(newEnv(bc.env));
     // introduce labels
     for (stmt in block.statements)
@@ -499,10 +501,18 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
             MatchDefault, x ref=> {},
         );
     // analyze substatements
-    for (stmt in block.statements)
-        if (analyzeStatement(s, pc, subbc, lc, stmt))
-            return true;
-    return false;
+    var returns? = false;
+    for (stmt in block.statements) {
+        var statementNode = allocateRef(SpecializedStatement);
+        var statementS = subContext(blockS, statementNode.body);
+        returns? = analyzeStatement(statementS, pc, subbc, lc, stmt);
+        addSpecializedNode(blockS, statementNode);
+        if (returns?)
+            break;
+    }
+
+    addSpecializedNode(s, blockNode);
+    return returns?;
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;

@@ -95,6 +95,18 @@ overload printNodeData(depth, node:SpecializedWhile) {
         printNode(depth+2, bodyNode);
 }
 
+overload printNodeData(depth, node:SpecializedBlock) {
+    println();
+    for (bodyNode in node.body)
+        printNode(depth+1, bodyNode);
+}
+
+overload printNodeData(depth, node:SpecializedStatement) {
+    println();
+    for (bodyNode in node.body)
+        printNode(depth+1, bodyNode);
+}
+
 overload printNodeData(depth, node:SpecializedInitialize) {
     println(LeafTypeName(node.ast));
 
