@@ -20,6 +20,7 @@ set(SOURCES
     printer.cpp
     types.cpp
     hirestimer.cpp
+    profiler.cpp
 )
 
 # version info is only updated when cmake is run
