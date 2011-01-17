@@ -378,6 +378,16 @@ overload codegenNode(c, bc, node:SpecializedIf) {
     printToIndented(bc, "}\n");
 }
 
+overload codegenNode(c, bc, node:SpecializedStatement) {
+    for (subnode in node.body)
+        codegenNode(c, bc, *subnode);
+}
+
+overload codegenNode(c, bc, node:SpecializedBlock) {
+    for (subnode in node.body)
+        codegenNode(c, bc, *subnode);
+}
+
 overload codegenNode(c, bc, node:SpecializedWhile) {
     printToIndented(bc, "for (;;) {\n");
     bc.indent += 1;
