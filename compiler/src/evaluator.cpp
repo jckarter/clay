@@ -3142,7 +3142,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (!callable) {
             EValuePtr evCall = staticEValue(prelude_call());
             MultiEValuePtr args2 = new MultiEValue(evCall);
-            args2->add(args);
+            args2->add(staticEValue(args->values[0]->type.ptr()));
+            for (unsigned i = 1; i < args->size(); ++i)
+                args2->add(args->values[i]);
             evalPrimOp(x, args2, out);
             break;
         }
