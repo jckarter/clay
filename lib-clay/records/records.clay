@@ -38,12 +38,17 @@ RecordFields(R) {
     return ...mapValues(f, ...staticIntegers(static n));
 }
 
+RecordFieldNames(R) = ...mapValues(
+    i => RecordFieldName(R, i),
+    ...staticIntegers(static RecordFieldCount(R))
+);
+
 
 
 //
 // RegularRecord?
 //
-// true if record's value semantics is defined in terms of it's fields
+// true if record's value semantics is defined in terms of its fields
 //
 
 [T]
