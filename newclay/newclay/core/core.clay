@@ -850,6 +850,8 @@ record RTVariable = referenceType(
 equalArgument?(v:RTVariable, w:RTVariable) = v.kind == w.kind and v.type == w.type;
 
 equalArguments?(vs:VariableList, ws:VariableList) {
+    if (size(vs) != size(ws))
+        return false;
     for (v, w in zipped(vs, ws))
         if (not equalArgument?(v, w))
             return false;
@@ -860,6 +862,8 @@ equalResult?(v:RTVariable, w:RTVariable)
     = v.kind == w.kind and v.type == w.type and v.value? == w.value?;
 
 equalResults?(vs:VariableList, ws:VariableList) {
+    if (size(vs) != size(ws))
+        return false;
     for (v, w in zipped(vs, ws))
         if (not equalResult?(v, w))
             return false;
