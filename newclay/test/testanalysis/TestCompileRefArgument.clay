@@ -5,6 +5,6 @@ symbol id = NewProcedure();
 overload id(ref x) = ref x;
 
 symbol main = NewProcedure();
-overload main() r:Int {
+overload main() Int {
     return id(refReturn());
 }

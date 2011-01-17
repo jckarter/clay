@@ -317,8 +317,6 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
         () ref=> elseResult,
     );
 
-private preludeLookup(name) = envEntryToValue(publicLookup(getProgramPreludeModule(), name));
-
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
     = maybe(analyzeSubnode(s, env, expr.expr), operands ref=> {
         var operatorCallable = Value();
@@ -332,13 +330,13 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
             return Maybe(VariableList(output));
         }
         case ast.OP_PLUS:
-            operatorCallable = preludeLookup("plus");
+            operatorCallable = getHooks().plus;
             break;
         case ast.OP_MINUS:
-            operatorCallable = preludeLookup("minus");
+            operatorCallable = getHooks().minus;
             break;
         case ast.OP_DEREFERENCE:
-            operatorCallable = preludeLookup("dereference");
+            operatorCallable = getHooks().dereference;
             break;
         default:
             assert(false, "invalid unary operator");
@@ -355,37 +353,37 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
 
             switch (expr.operator) {
             case ast.OP_MULTIPLY:
-                operatorCallable = preludeLookup("multiply");
+                operatorCallable = getHooks().multiply;
                 break;
             case ast.OP_DIVIDE:
-                operatorCallable = preludeLookup("divide");
+                operatorCallable = getHooks().divide;
                 break;
             case ast.OP_REMAINDER:
-                operatorCallable = preludeLookup("remainder");
+                operatorCallable = getHooks().remainder;
                 break;
             case ast.OP_ADD:
-                operatorCallable = preludeLookup("add");
+                operatorCallable = getHooks().add;
                 break;
             case ast.OP_SUBTRACT:
-                operatorCallable = preludeLookup("subtract");
+                operatorCallable = getHooks().subtract;
                 break;
             case ast.OP_LESSER?:
-                operatorCallable = preludeLookup("lesser?");
+                operatorCallable = getHooks().lesser?;
                 break;
             case ast.OP_LESSER_EQUALS?:
-                operatorCallable = preludeLookup("lesserEquals?");
+                operatorCallable = getHooks().lesserEquals?;
                 break;
             case ast.OP_GREATER?:
-                operatorCallable = preludeLookup("greater?");
+                operatorCallable = getHooks().greater?;
                 break;
             case ast.OP_GREATER_EQUALS?:
-                operatorCallable = preludeLookup("greaterEquals?");
+                operatorCallable = getHooks().greaterEquals?;
                 break;
             case ast.OP_EQUALS?:
-                operatorCallable = preludeLookup("equals?");
+                operatorCallable = getHooks().equals?;
                 break;
             case ast.OP_NOT_EQUALS?:
-                operatorCallable = preludeLookup("notEquals?");
+                operatorCallable = getHooks().notEquals?;
                 break;
             default:
                 assert(false, "invalid binary operator");
@@ -566,22 +564,22 @@ private analyzeAssign(s, env, stmt) {
             var operatorCallable = Value();
             switch (stmt.kind) {
             case ast.ASSIGNMENT_ASSIGN:
-                operatorCallable = preludeLookup("assign");
+                operatorCallable = getHooks().assign;
                 break;
             case ast.ASSIGNMENT_ADD:
-                operatorCallable = preludeLookup("addAssign");
+                operatorCallable = getHooks().addAssign;
                 break;
             case ast.ASSIGNMENT_SUBTRACT:
-                operatorCallable = preludeLookup("subtractAssign");
+                operatorCallable = getHooks().subtractAssign;
                 break;
             case ast.ASSIGNMENT_MULTIPLY:
-                operatorCallable = preludeLookup("multiplyAssign");
+                operatorCallable = getHooks().multiplyAssign;
                 break;
             case ast.ASSIGNMENT_DIVIDE:
-                operatorCallable = preludeLookup("divideAssign");
+                operatorCallable = getHooks().divideAssign;
                 break;
             case ast.ASSIGNMENT_REMAINDER:
-                operatorCallable = preludeLookup("remainderAssign");
+                operatorCallable = getHooks().remainderAssign;
                 break;
             default:
                 assert(false, "invalid assignment operator");

@@ -283,6 +283,7 @@ main(args) {
             initializeClayHooks();
 
             var s = analyzeMain();
+            analyzeCallableBody(s);
 
             for (symbolHead in program.allSymbolHeads) {
                 printInvokeTable(symbolHead.ast.name.name.str, symbolHead.invokeTable);
