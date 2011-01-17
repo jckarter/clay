@@ -1273,6 +1273,7 @@ matchOverload(o:Overload, callable:Value, args:VariableList) Maybe[Specializatio
     if (not unifyArguments(s, formalArgs, args))
         return nothing(Specialization);
     assert(size(s.args) == size(args));
+    s.internalArgs = s.args;
     bindNamedReturns(s);
     verifyPatternVars(pvars, s.env);
     if (not testPredicate(o.ast.definition.predicate, s.env))
