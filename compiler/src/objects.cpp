@@ -126,6 +126,7 @@ ObjectPtr &ObjectTable::lookup(const vector<ObjectPtr> &key)
             return bucket[i].value;
     }
     bucket.push_back(ObjectTableNode(key, NULL));
+    ++this->size;
     return bucket.back().value;
 }
 
