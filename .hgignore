@@ -9,6 +9,9 @@ syntax: regexp
 cscope.out
 tags
 .*\.o$
+^newclay/test[^/.]+$
+.*\.claycache$
+.*\.s$
 .*\.pyc$
 .*\.out$
 .*bin/*$
