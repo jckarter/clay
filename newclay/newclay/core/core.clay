@@ -911,7 +911,9 @@ variant SpecializedNode = SpecializedLiteralCodeBody
                         | SpecializedContinue
                         | SpecializedReturn
                         | SpecializedThrow
-                        | SpecializedNop;
+                        | SpecializedNop
+                        | SpecializedBlock
+                        | SpecializedStatement;
 
 variant ASTNode = ast.ExprListItem
                 | ast.ReturnExprListItem
@@ -937,6 +939,14 @@ record SpecializedValueList = referenceType(
 record OutputVariable (
     value:RTVariable,
     returnByRef?:Bool,
+);
+
+record SpecializedBlock = referenceType(
+    body: Vector[SpecializedNode],
+);
+
+record SpecializedStatement = referenceType(
+    body: Vector[SpecializedNode],
 );
 
 record SpecializedCall = referenceType(
