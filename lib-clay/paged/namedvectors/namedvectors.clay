@@ -98,7 +98,12 @@ overload Vector?(static NamedVector[T]) = true;
 overload vectorData(a:NamedVector[T]) = &(a.data^);
 
 [T]
-overload vectorSize(a:NamedVector[T]) = ref a.header^.size;
+overload vectorSize(a:NamedVector[T]) = a.header^.size;
+
+[T]
+overload vectorSetSize(a:NamedVector[T], n:SizeT) {
+    a.header^.size = n;
+}
 
 [T]
 overload vectorCapacity(a:NamedVector[T]) = a.header^.capacity;
