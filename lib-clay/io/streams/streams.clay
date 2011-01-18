@@ -1,4 +1,5 @@
 
+import vectors.generic.*;
 
 //
 // read, write, flush - byte stream operations
@@ -16,9 +17,15 @@ procedure write;
 procedure flush;
 
 
+[T]
+ByteLike?(static T) = ByteSizedInteger?(T) or (T == Char);
+
+[T]
+ByteVector?(static T) = Vector?(T) and ByteLike?(SequenceElementType(T));
+
 
 //
-// readByte, readChar, readLine
+// readByte, readChar
 //
 
 readByte(stream, b:Byte) Bool {
@@ -32,35 +39,71 @@ readChar(stream, c:Char) Bool {
     return result == 1;
 }
 
-readUpto(stream, upto) String {
-    var v = String();
-    var c = Char();
-    while (readChar(stream, c)) {
-        push(v, c);
-        if (c == upto)
+
+//
+// readUpto, readLine
+//
+
+procedure readUpto;
+
+[T, V | ByteLike?(T) and ByteVector?(V)]
+overload readUpto(stream, upto:T, buf:V) {
+    alias ElementType = SequenceElementType(V);
+    var b = Byte();
+    var uptoByte = Byte(upto);
+    while (readByte(stream, b)) {
+        push(buf, ElementType(b));
+        if (b == uptoByte)
             break;
     }
+}
+
+[T | ByteLike?(T)]
+overload readUpto(stream, upto:T) String {
+    var v = String();
+    readUpto(stream, upto, v);
     return move(v);
 }
 
-readLine(stream) = readUpto(stream, '\n');
 
-readAll(stream) String {
-    var buf = String();
-    var total, space = SizeT(0), SizeT(4096);
-    resize(buf, space);
+procedure readLine;
+
+[V | ByteVector?(V)]
+overload readLine(stream, buf:V) {
+    readUpto(stream, '\n', buf);
+}
+
+overload readLine(stream) = readUpto(stream, '\n');
+
+
+//
+// readAll
+//
+
+procedure readAll;
+
+[V | ByteVector?(V)]
+overload readAll(stream, chunkSize:SizeT, buf:V) {
     while (true) {
-        while (space - total < 4096) {
-            space *= 2;
-            resize(buf, space);
-        }
-        var ptr = Pointer[Byte](&buf[0] + total);
-        var numRead = read(stream, ptr, 4096);
+        var n = size(buf);
+        resize(buf, n+chunkSize);
+        var ptr = Pointer[Byte](begin(buf) + n);
+        var numRead = read(stream, ptr, chunkSize);
+        if (numRead < chunkSize)
+            resize(buf, n + numRead);
         if (numRead == 0)
             break;
-        total += numRead;
     }
-    resize(buf, total);
+}
+
+[V | ByteVector?(V)]
+overload readAll(stream, buf:V) {
+    readAll(stream, SizeT(4096), buf);
+}
+
+overload readAll(stream) String {
+    var buf = String();
+    readAll(stream, buf);
     return move(buf);
 }
 
