@@ -3965,7 +3965,9 @@ void codegenPrimOp(PrimOpPtr x,
         if (!callable) {
             CValuePtr cvCall = staticCValue(prelude_call(), ctx);
             MultiCValuePtr args2 = new MultiCValue(cvCall);
-            args2->add(args);
+            args2->add(staticCValue(args->values[0]->type.ptr(), ctx));
+            for (unsigned i = 1; i < args->size(); ++i)
+                args2->add(args->values[i]);
             codegenPrimOp(x, args2, ctx, out);
             break;
         }
