@@ -1,0 +1,8 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    while (true) {
+        rvalue x = 2;
+        eatRvalue(x);
+    }
+}

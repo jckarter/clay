@@ -1,0 +1,9 @@
+foo(x) {}
+
+main() {
+    rvalue x = 5;
+    var x1 = 0;
+    foo(x1);
+    x1 <-- x;
+    foo(x1);
+}

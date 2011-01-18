@@ -1,0 +1,15 @@
+foo(x) {}
+
+main() {
+    rvalue x = 5;
+    var x1 = 0;
+    foo(x1);
+    var x2 = 0;
+    if (true) {
+        x1 <-- x;
+        foo(x1);
+    } else {
+        x2 <-- x;
+        foo(x2);
+    }
+}

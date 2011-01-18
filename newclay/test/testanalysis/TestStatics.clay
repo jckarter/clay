@@ -1,0 +1,8 @@
+main() {
+    var x1 = 2;
+    var y1 = main;
+    var x2 = #2;
+    var y2 = #main;
+
+    return x1, y1, x2, y2;
+}

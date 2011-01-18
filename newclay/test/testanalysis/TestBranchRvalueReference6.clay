@@ -1,0 +1,11 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = 5;
+    if (true) {
+        var x1 = x;
+        return x1;
+    } else {
+        return 4;
+    }
+}

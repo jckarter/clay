@@ -1,0 +1,7 @@
+main() {
+    rvalue x = 5;
+    var x1 = x;
+    var x2 = x;
+
+    return x1, x2;
+}

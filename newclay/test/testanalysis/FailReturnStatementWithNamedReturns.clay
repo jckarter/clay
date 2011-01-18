@@ -1,0 +1,3 @@
+main() r:Int {
+    return 1;
+}
