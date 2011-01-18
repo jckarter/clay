@@ -23,6 +23,9 @@ ByteLike?(static T) = ByteSizedInteger?(T) or (T == Char);
 [T]
 ByteVector?(static T) = Vector?(T) and ByteLike?(SequenceElementType(T));
 
+[T]
+ByteBuffer?(static T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
+
 
 //
 // readByte, readChar
@@ -110,7 +113,7 @@ overload readAll(stream) String {
 
 
 //
-// writeByte
+// writeByte, writeBytes
 //
 
 [I | Integer?(I)]
@@ -123,6 +126,10 @@ overload writeByte(stream, x:Char) {
     writeByte(stream, Byte(x));
 }
 
+[V | ByteBuffer?(V)]
+writeBytes(stream, x:V) {
+    write(stream, Pointer[Byte](begin(x)), size(x));
+}
 
 
 //

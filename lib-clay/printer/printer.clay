@@ -164,7 +164,7 @@ overload printTo(stream, x:S) {
 
 [S | ContiguousString?(S)]
 overload printTo(stream, x:S) {
-    write(stream, Pointer[Byte](&x[0]), size(x));
+    writeBytes(stream, x);
 }
 
 
@@ -443,9 +443,6 @@ printlnString(...x) {
 //
 // printBuffer
 //
-
-private ByteLike?(x) = ByteSizedInteger?(x) or (x == Char);
-private ByteBuffer?(x) = ContiguousSequence?(x) and ByteLike?(SequenceElementType(x));
 
 [S | ByteBuffer?(S)]
 printBuffer(buf:S, ...args) {
