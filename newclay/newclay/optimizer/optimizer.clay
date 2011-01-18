@@ -4,17 +4,33 @@ import newclay.core.*;
 import newclay.hooks.*;
 import maybe.*;
 
+alias VariableMap = HashMap[RTVariable, RTVariable];
+alias VariableSet = HashMap[RTVariable, Tuple[]];
+
 
 //
 // bind coalescing
 //
 
-alias VariableMap = HashMap[RTVariable, RTVariable];
+record CoalesceContext (
+    map:Pointer[VariableMap],
+    statementRvalues:VariableSet,
+);
 
-coalesceBinding(cmap:VariableMap, from:RTVariable, to:RTVariable) {
+overload CoalesceContext(map) = CoalesceContext(&map, VariableSet());
+
+private addStatementRvalues(cc:CoalesceContext, node) {
+    for (input in ir.nodeInputs(node))
+        remove(cc.statementRvalues, input);
+
+    for (output in ir.nodeOutputs(node))
+        cc.statementRvalues[output] = ();
+}
+
+coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     assert(to.type == from.type, "coalescing invariant: binding types must match");
 
-    var cFrom = coalesced(cmap, from);
+    var cFrom = coalesced(cc.map^, from);
 
     // rvalues can merge with previous rvalues.
     // permanent values can merge with previous rvalues (even if rvalue is a ref!)
@@ -27,34 +43,104 @@ coalesceBinding(cmap:VariableMap, from:RTVariable, to:RTVariable) {
         );
 
         if (to.kind == RT_VARIABLE_RVALUE)
-            cmap[to] = cFrom;
+            cc.map^[to] = cFrom;
         else {
             var newVar = RTVariable(to.kind, to.type, cFrom.value?,
                 maybe(to.name, x => to.name, () => cFrom.name)
             );
 
-            cmap[cFrom] = newVar;
-            cmap[to] = newVar;
+            cc.map^[cFrom] = newVar;
+            cc.map^[to] = newVar;
         }
     // references can merge with previous references or values of the same kind
     } else if (not to.value? and to.kind == from.kind) {
-        cmap[to] = cFrom;
+        cc.map^[to] = cFrom;
     }
 }
 
-coalesceInitialize(cmap:VariableMap, from:RTVariable, to:RTVariable) {
-    // XXX we can only steal an rvalue if it was introduced immediately before the initialize
-    /*
+coalesceInitialize(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     assert(to.type == from.type, "coalescing invariant: initialize types must match");
 
-    var cFrom = coalesced(cmap, from);
+    var cFrom = coalesced(cc.map^, from);
+
+    // only coalesce initializations from rvalues introduced by the same statement
+    if (null?(lookup(cc.statementRvalues, cFrom)))
+        return;
 
     // if initialized from an rvalue, we can steal the rvalue's identity
     if (cFrom.kind == RT_VARIABLE_RVALUE and cFrom.value?) {
-        cmap[cFrom] = to;
+        cc.map^[cFrom] = to;
     }
-    */
 }
+
+// coalesce pass
+
+coalesceBody(body:Vector[ir.Node]) {
+    var coalescingMap = VariableMap();
+    var cc = CoalesceContext(coalescingMap);
+
+    for (node in body)
+        coalesceSubnode(cc, *node);
+
+    return coalescingMap, coalescedNodes(coalescingMap, body);
+}
+
+private coalesceSubnode(cc:CoalesceContext, node) {
+    coalesceNode(cc, node);
+    addStatementRvalues(cc, node);
+}
+
+private coalesceNode(cc:CoalesceContext, node) { }
+overload coalesceNode(cc:CoalesceContext, node:ir.Bind) {
+    coalesceBinding(cc, node.input, node.output);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.Initialize) {
+    coalesceInitialize(cc, node.input, node.output);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.If) {
+    var thenCmap = cc.map^;
+    var elseCmap = cc.map^;
+
+    for (subnode in node.thenBody)
+        coalesceSubnode(CoalesceContext(thenCmap), *subnode);
+    for (subnode in node.elseBody)
+        coalesceSubnode(CoalesceContext(elseCmap), *subnode);
+    unifyBranchCoalescing(cc.map^, thenCmap, elseCmap);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.While) {
+    for (subnode in node.conditionBody)
+        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+    for (subnode in node.body)
+        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.Block) {
+    for (subnode in node.body)
+        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.Statement) {
+    for (subnode in node.body)
+        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+}
+overload coalesceNode(cc:CoalesceContext, node:ir.Phi) {
+    for (branch in node.branches) {
+        assert(size(branch) == size(node.outputs), "coalescing invariant: ir.Phi branches must be of equal length");
+        for (branchOutput, phiOutput in zipped(branch, node.outputs)) {
+            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: ir.Phi branches must match in type and kind");
+            cc.map^[branchOutput] = phiOutput;
+        }
+    }
+}
+
+private unifyBranchCoalescing(cmap:VariableMap, thenCmap:VariableMap, elseCmap:VariableMap) {
+    for (from, to in items(thenCmap))
+        if (null?(lookup(cmap, from)) and null?(lookup(elseCmap, from)))
+            cmap[from] = to;
+    for (from, to in items(elseCmap))
+        if (null?(lookup(cmap, from)) and null?(lookup(thenCmap, from)))
+            cmap[from] = to;
+}
+
+// coalescing application pass
 
 coalesced(cmap:VariableMap, rtVar:RTVariable) {
     var cVar = rtVar;
@@ -65,71 +151,6 @@ coalesced(cmap:VariableMap, rtVar:RTVariable) {
     }
     return cVar;
 }
-
-// coalesce pass
-
-
-
-coalesceBody(body:Vector[ir.Node]) {
-    var coalescingMap = VariableMap();
-
-    for (node in body)
-        coalesceNode(coalescingMap, *node);
-
-    return coalescingMap, coalescedNodes(coalescingMap, body);
-}
-
-private coalesceNode(cmap:VariableMap, node) {}
-overload coalesceNode(cmap:VariableMap, node:ir.Bind) {
-    coalesceBinding(cmap, node.input, node.output);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.Initialize) {
-    coalesceInitialize(cmap, node.input, node.output);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.If) {
-    var thenCmap = cmap;
-    var elseCmap = cmap;
-
-    for (subnode in node.thenBody)
-        coalesceNode(thenCmap, *subnode);
-    for (subnode in node.elseBody)
-        coalesceNode(elseCmap, *subnode);
-    unifyBranchCoalescing(cmap, thenCmap, elseCmap);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.While) {
-    for (subnode in node.conditionBody)
-        coalesceNode(cmap, *subnode);
-    for (subnode in node.body)
-        coalesceNode(cmap, *subnode);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.Block) {
-    for (subnode in node.body)
-        coalesceNode(cmap, *subnode);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.Statement) {
-    for (subnode in node.body)
-        coalesceNode(cmap, *subnode);
-}
-overload coalesceNode(cmap:VariableMap, node:ir.Phi) {
-    for (branch in node.branches) {
-        assert(size(branch) == size(node.outputs), "coalescing invariant: ir.Phi branches must be of equal length");
-        for (branchOutput, phiOutput in zipped(branch, node.outputs)) {
-            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: ir.Phi branches must match in type and kind");
-            cmap[branchOutput] = phiOutput;
-        }
-    }
-}
-
-private unifyBranchCoalescing(cmap:VariableMap, thenCmap, elseCmap) {
-    for (from, to in items(thenCmap))
-        if (null?(lookup(cmap, from)) and null?(lookup(elseCmap, from)))
-            cmap[from] = to;
-    for (from, to in items(elseCmap))
-        if (null?(lookup(cmap, from)) and null?(lookup(thenCmap, from)))
-            cmap[from] = to;
-}
-
-// coalescing application pass
 
 private coalescedVars(cmap:VariableMap, vs:VariableList)
     = map(v ref=> coalesced(cmap, v), vs);
