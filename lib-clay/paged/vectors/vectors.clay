@@ -114,7 +114,12 @@ overload Vector?(static Vector[T]) = true;
 overload vectorData(a:Vector[T]) = &(a.data^);
 
 [T]
-overload vectorSize(a:Vector[T]) = ref a.size;
+overload vectorSize(a:Vector[T]) = a.size;
+
+[T]
+overload vectorSetSize(a:Vector[T], n:SizeT) {
+    a.size = n;
+}
 
 [T]
 overload vectorCapacity(a:Vector[T]) = a.capacity;

@@ -111,7 +111,12 @@ overload Vector?(static Vector[T]) = true;
 inline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
-inline overload vectorSize(a:Vector[T]) = ref a.size;
+inline overload vectorSize(a:Vector[T]) = a.size;
+
+[T]
+inline overload vectorSetSize(a:Vector[T], n:SizeT) {
+    a.size = n;
+}
 
 [T]
 inline overload vectorCapacity(a:Vector[T]) = a.capacity;
