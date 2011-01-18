@@ -1,0 +1,6 @@
+main() {
+    rvalue x = 1;
+    rvalue y = 2;
+
+    return if (true) x else y;
+}

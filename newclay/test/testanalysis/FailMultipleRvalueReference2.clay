@@ -1,0 +1,7 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = 5;
+    eatRvalue(x);
+    eatRvalue(x);
+}

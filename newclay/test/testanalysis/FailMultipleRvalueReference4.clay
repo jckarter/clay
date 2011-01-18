@@ -1,0 +1,7 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = false;
+    var y = true;
+    return if (x) x else y;
+}
