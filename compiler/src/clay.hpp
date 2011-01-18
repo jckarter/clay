@@ -1472,6 +1472,7 @@ struct Overload : public TopLevelItem {
 
 struct Procedure : public TopLevelItem {
     vector<OverloadPtr> overloads;
+    ObjectTablePtr evaluatorCache; // HACK: used only for preducates
     Procedure(IdentifierPtr name, Visibility visibility)
         : TopLevelItem(PROCEDURE, name, visibility) {}
 };

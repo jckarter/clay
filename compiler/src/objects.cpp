@@ -88,6 +88,7 @@ int objectHash(ObjectPtr a)
         int n = typeSize(b->type);
         for (int i = 0; i < n; ++i)
             h += b->buf[i];
+        h = h*11 + objectHash(b->type.ptr());
         return h;
     }
 
@@ -126,6 +127,7 @@ ObjectPtr &ObjectTable::lookup(const vector<ObjectPtr> &key)
             return bucket[i].value;
     }
     bucket.push_back(ObjectTableNode(key, NULL));
+    ++this->size;
     return bucket.back().value;
 }
 

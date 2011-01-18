@@ -1,0 +1,8 @@
+
+main() {
+    var x = 10;
+    var bar = p => { return x; };
+    println(CallDefined?(bar));
+    println(CallDefined?(bar, Int));
+    println(CallDefined?(bar, Int, Bool));
+}
