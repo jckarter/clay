@@ -89,6 +89,6 @@ overload vectorSetSize(a:BufferVector[T], size:SizeT) {
 overload vectorCapacity(a:BufferVector[T]) = a.end - a.begin;
 
 [T]
-overload vectorSetCapacity(a:BufferVector[T], capacity:SizeT) {
+overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
     assert(capacity <= a.end-a.begin, "BufferVector cannot be expanded");
 }
