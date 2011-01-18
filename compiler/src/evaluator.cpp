@@ -1491,6 +1491,15 @@ void evalAliasIndexing(GlobalAliasPtr x,
 // evalCallExpr
 //
 
+static bool isMemoizable(ObjectPtr callable) {
+    // UGLY HACK: memoize if procedure name ends with '?'
+    if (callable->objKind != PROCEDURE)
+        return false;
+    Procedure *x = (Procedure *)callable.ptr();
+    const string &s = x->name->str;
+    return s[s.size()-1] == '?';
+}
+
 void evalCallExpr(ExprPtr callable,
                   ExprListPtr args,
                   EnvPtr env,
@@ -1547,7 +1556,29 @@ void evalCallExpr(ExprPtr callable,
         else {
             assert(entry->analyzed);
             MultiEValuePtr mev = evalMultiAsRef(args, env);
-            evalCallCode(entry, mev, out);
+            if (isMemoizable(obj)) {
+                assert(obj->objKind == PROCEDURE);
+                Procedure *x = (Procedure *)obj.ptr();
+                vector<ObjectPtr> args2;
+                for (unsigned i = 0; i < mev->size(); ++i)
+                    args2.push_back(evalueToStatic(mev->values[i]));
+                if (!x->evaluatorCache)
+                    x->evaluatorCache = new ObjectTable();
+                ObjectPtr result = x->evaluatorCache->lookup(args2);
+                if (!result) {
+                    evalCallCode(entry, mev, out);
+                    MultiStaticPtr ms = new MultiStatic();
+                    for (unsigned i = 0; i < out->size(); ++i)
+                        ms->add(evalueToStatic(out->values[i]));
+                    x->evaluatorCache->lookup(args2) = ms.ptr();
+                }
+                else {
+                    evalStaticObject(result, out);
+                }
+            }
+            else {
+                evalCallCode(entry, mev, out);
+            }
         }
         break;
     }
