@@ -92,32 +92,3 @@ overload vectorCapacity(a:BufferVector[T]) = a.end - a.begin;
 overload vectorSetCapacity(a:BufferVector[T], capacity:SizeT) {
     assert(capacity <= a.end-a.begin, "BufferVector cannot be expanded");
 }
-
-
-
-//
-// stream protocol
-//
-
-[T, I | (ByteSizedInteger?(T) or (T == Char)) and Integer?(I)]
-overload write(stream:BufferVector[T], buf:Pointer[Byte], n:I) {
-    var src, dest = buf, Pointer[Byte](stream.current);
-    assert(dest + n <= Pointer[Byte](stream.end));
-    copyNonoverlappingMemory(dest, src, src + n);
-    stream.current += n;
-}
-
-[T | ByteSizedInteger?(T) or (T == Char)]
-overload flush(stream:BufferVector[T]) {
-}
-
-private ByteLike?(x) = ByteSizedInteger?(x) or (x == Char);
-private ByteBuffer?(x) = ContiguousSequence?(x) and ByteLike?(SequenceElementType(x));
-
-[S | ByteBuffer?(S)]
-printBuffer(buf:S, ...args) {
-    var bv = BufferVector(begin(buf), end(buf));
-    printTo(bv, ...args);
-    return bv;
-}
-

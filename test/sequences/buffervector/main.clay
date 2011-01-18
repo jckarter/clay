@@ -1,6 +1,4 @@
 
-import vectors.buffer.*;
-
 main() {
     var buf = Array[Char, 100]();
     {
@@ -17,8 +15,8 @@ main() {
         println(bv);
     }
     {
-        var bv = printBuffer(buf, "tata!", '\n');
-        println(size(bv));
-        print(bv);
+        var n = printBuffer(slicedFrom(buf, 0), "tata!", '\n');
+        println(n);
+        print(slicedUpto(buf, n));
     }
 }
