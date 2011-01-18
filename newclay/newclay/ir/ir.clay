@@ -141,11 +141,31 @@ record Nop();
 //
 
 procedure nodeOutputs;
+procedure nodeInputs;
 
 overload nodeOutputs(node) = VariableList();
 overload nodeOutputs(node:ValueList) = node.outputs;
-overload nodeOutputs(node:Call) = maybe(node.outputs, outputs => outputs, () => VariableList());
+overload nodeOutputs(node:Call) = maybe(node.outputs,
+    outputs => map(o => o.value, outputs),
+    () => VariableList()
+);
 overload nodeOutputs(node:Not) = VariableList(node.output);
 overload nodeOutputs(node:AddressOf) = VariableList(node.output);
-overload nodeOutputs(node:Phi) = node.outputs;
 overload nodeOutputs(node:Bind) = VariableList(node.output);
+// BindReturn and Initialize don't return their "output". The former's output is not really
+// available to other values, and the latter's output isn't actually a new value
+
+overload nodeOutputs(node:Node) = nodeOutputs(*node);
+
+
+overload nodeInputs(node) = VariableList();
+overload nodeInputs(node:Call) = node.inputs;
+overload nodeInputs(node:If) = VariableList(node.condition);
+overload nodeInputs(node:Not) = VariableList(node.input);
+overload nodeInputs(node:AddressOf) = VariableList(node.input);
+overload nodeInputs(node:Bind) = VariableList(node.input);
+overload nodeInputs(node:Initialize) = VariableList(node.input);
+overload nodeInputs(node:Throw) = VariableList(node.exception);
+
+overload nodeInputs(node:Node) = nodeInputs(*node);
+
