@@ -1,0 +1,24 @@
+
+import vectors.buffer.*;
+
+main() {
+    var buf = Array[Char, 100]();
+    {
+        var bv = BufferVector(buf);
+        for (x in "Hello World")
+            push(bv, x);
+        println(size(bv));
+        println(bv);
+    }
+    {
+        var bv = BufferVector(begin(buf), begin(buf) + 11);
+        push(bv, "Hello World");
+        println(size(bv));
+        println(bv);
+    }
+    {
+        var bv = printBuffer(buf, "tata!", '\n');
+        println(size(bv));
+        print(bv);
+    }
+}
