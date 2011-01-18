@@ -8,10 +8,49 @@ import newclay.evaluator.*;
 record SpecializationContext (
     body: Pointer[Vector[ir.Node]],
     complete?: Pointer[Bool],
+    availableRvalues: HashMap[RTVariable, Tuple[]],
 );
 
-subContext(s:SpecializationContext, subBody:Vector[ir.Node])
-    = SpecializationContext(&subBody, s.complete?);
+overload SpecializationContext(body, complete?)
+    = SpecializationContext(body, complete?, HashMap[RTVariable, Tuple[]]());
+
+private subContext(s:SpecializationContext, subBody:Vector[ir.Node])
+    = SpecializationContext(&subBody, s.complete?, s.availableRvalues);
+private loopSubContext(s:SpecializationContext, subBody:Vector[ir.Node])
+    = SpecializationContext(&subBody, s.complete?, HashMap[RTVariable, Tuple[]]());
+
+private addRvalue(s, rv) {
+    if (rv.kind != RT_VARIABLE_RVALUE)
+        return rv;
+
+    observe(#add, &s, referencePtr(rv).ptr);
+    assert(null?(lookup(s.availableRvalues, rv)), "rvalue introduced more than once");
+    s.availableRvalues[rv] = ();
+    return rv;
+}
+
+private useRvalue(s, rv) {
+    if (rv.kind != RT_VARIABLE_RVALUE)
+        return;
+
+    observe(#use, &s, referencePtr(rv).ptr);
+    if (null?(lookup(s.availableRvalues, rv)))
+        genericError("rvalue used more than once");
+
+    remove(s.availableRvalues, rv);
+}
+
+private useSubRvalues(s, subS) {
+    s.availableRvalues = subS.availableRvalues;
+}
+
+private useBranchRvalues(s, branchS1, branchS2) {
+    for (rv, x in items(s.availableRvalues)) {
+        if (null?(lookup(branchS1.availableRvalues, rv))
+            or null?(lookup(branchS2.availableRvalues, rv)))
+            remove(s.availableRvalues, rv);
+    }
+}
 
 
 //
@@ -206,21 +245,26 @@ private analyzeCall(s:SpecializationContext, ast, callable:Value, args:VariableL
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = addSpecializedValue(s, expr, evaluateExpr(expr, env));
 
-private analyzeShortCircuit(s, env, expr, LeftBody, RightBody)
+private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
     // XXX recursion
     = maybe(analyzeBoolSubnode(s, env, expr.expr1),
-        results1 ref=> {
-            var result1 = singleVariable(results1);
+        leftResults ref=> {
+            var leftResult = singleVariable(leftResults);
             var output = RTVariable(RT_VARIABLE_RVALUE, boolType(), true);
 
-            var ifNode = ir.If(ir.ASTNode(expr), result1,
+            var ifNode = ir.If(ir.ASTNode(expr), leftResult,
                 Vector[ir.Node](),
                 Vector[ir.Node]()
             );
 
-            ref leftS = subContext(s, fieldRef(ifNode, LeftBody));
-            ref rightS = subContext(s, fieldRef(ifNode, RightBody));
+            var leftS = subContext(s, fieldRef(ifNode, LeftBody));
+            addSpecializedNode(leftS, ir.ValueList(
+                ir.ASTNode(expr),
+                ValueList(leftValue),
+                VariableList(output)
+            ));
 
+            var rightS = subContext(s, fieldRef(ifNode, RightBody));
             maybe(analyzeBoolSubnode(rightS, env, expr.expr2),
                 results2 ref=> {
                     addSpecializedBind(rightS, ir.ASTNode(expr),
@@ -229,22 +273,25 @@ private analyzeShortCircuit(s, env, expr, LeftBody, RightBody)
                     );
                 },
             );
-            addSpecializedBind(leftS, ir.ASTNode(expr), result1, output);
+
+            useBranchRvalues(s, leftS, rightS);
+            addRvalue(s, output);
             addSpecializedNode(s, ifNode);
+
             return Maybe(VariableList(output));
         },
     );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.AndExpr)
-    = analyzeShortCircuit(s, env, expr, #elseBody, #thenBody);
+    = analyzeShortCircuit(s, env, expr, Value(BoolValue(false)), #elseBody, #thenBody);
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.OrExpr)
-    = analyzeShortCircuit(s, env, expr, #thenBody, #elseBody);
+    = analyzeShortCircuit(s, env, expr, Value(BoolValue(true)), #thenBody, #elseBody);
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.expr), input ref=> {
         var output = newValue(boolType());
-        addSpecializedNode(s, ir.Not(ir.ASTNode(expr), singleVariable(input), output));
+        addSpecializedNot(s, expr, singleVariable(input), output);
         return Maybe(VariableList(output));
     });
 
@@ -264,15 +311,18 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
             var thenResult = nothing(VariableList);
             var elseResult = nothing(VariableList);
 
+            var thenS = subContext(s, ifNode.thenBody);
+            var elseS = subContext(s, ifNode.elseBody);
+
             try {
-                thenResult = analyzeSubnode(subContext(s, ifNode.thenBody), env, expr.thenPart);
+                thenResult = analyzeSubnode(thenS, env, expr.thenPart);
             } catch (e:RecursiveAnalysisError) {
                 s.complete?^ = false;
                 thenRecursive? = true;
             }
 
             try {
-                elseResult = analyzeSubnode(subContext(s, ifNode.elseBody), env, expr.elsePart);
+                elseResult = analyzeSubnode(elseS, env, expr.elsePart);
             } catch (e:RecursiveAnalysisError) {
                 s.complete?^ = false;
                 elseRecursive? = true;
@@ -282,15 +332,16 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
             if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
-            var outputs = unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult);
+            var outputs = unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, elseS);
 
+            useBranchRvalues(s, thenS, elseS);
             addSpecializedNode(s, ifNode);
 
             return outputs;
         },
     );
 
-private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
+private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, elseS)
     = maybe(thenResult,
         thenr ref=> maybe(elseResult,
             elser ref=> {
@@ -307,8 +358,9 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult)
                 else
                     output = RTVariable(RT_VARIABLE_RVALUE, thenv.type, true);
 
-                addSpecializedBind(subContext(s, ifNode.thenBody), expr, thenv, output);
-                addSpecializedBind(subContext(s, ifNode.elseBody), expr, elsev, output);
+                addSpecializedBind(thenS, expr, thenv, output);
+                addSpecializedBind(elseS, expr, elsev, output);
+                addRvalue(s, output);
 
                 return Maybe(VariableList(output));
             },
@@ -326,7 +378,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
             if (operand.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot take the address of an rvalue");
             var output = newValue(pointerType(operand.type));
-            addSpecializedNode(s, ir.AddressOf(ir.ASTNode(expr), operand, output));
+            addSpecializedAddressOf(s, expr, operand, output);
             return Maybe(VariableList(output));
         }
         case ast.OP_PLUS:
@@ -505,11 +557,13 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
         var statementNode = allocateRef(ir.Statement);
         var statementS = subContext(blockS, statementNode.body);
         returns? = analyzeStatement(statementS, pc, subbc, lc, stmt);
+        useSubRvalues(blockS, statementS);
         addSpecializedNode(blockS, statementNode);
         if (returns?)
             break;
     }
 
+    useSubRvalues(s, blockS);
     addSpecializedNode(s, blockNode);
     return returns?;
 }
@@ -525,7 +579,6 @@ private withAssignmentValues(s, env, stmt, fn)
         () ref=> true,
     );
 
-
 private analyzeInitialize(s, env:Env, stmt) {
     try {
         return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
@@ -533,7 +586,7 @@ private analyzeInitialize(s, env:Env, stmt) {
                 genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
             for (toValue, fromValue in zipped(toValues, fromValues)) {
                 if (toValue.kind != RT_VARIABLE_REF)
-                    genericError("values on left side of <-- must be lvalues");
+                    genericError("values on left side of <-- must be non-const lvalues");
                 addSpecializedInitialize(s, stmt, fromValue, toValue);
             }
             return false;
@@ -663,7 +716,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     try {
         maybe(analyzeSubnode(s, bc.env, stmt.value),
             exResult ref=> {
-                addSpecializedNode(s, ir.Throw(stmt, singleVariable(exResult)));
+                addSpecializedThrow(s, stmt, singleVariable(exResult));
             },
         );
     } catch (e:RecursiveAnalysisError) {
@@ -685,10 +738,12 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             var elseRecursive? = nothing?(stmt.elseBody);
             var thenReturns? = false;
             var elseReturns? = false;
+            var thenS = subContext(s, ifNode.thenBody);
+            var elseS = subContext(s, ifNode.elseBody);
 
             try {
                 thenReturns? = analyzeStatement(
-                    subContext(s, ifNode.thenBody),
+                    thenS,
                     pc,
                     BlockContext(newEnv(bc.env)),
                     lc,
@@ -699,7 +754,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             maybe(stmt.elseBody, elseBody ref=> {
                 try {
                     elseReturns? = analyzeStatement(
-                        subContext(s, ifNode.elseBody),
+                        elseS,
                         pc,
                         BlockContext(newEnv(bc.env)),
                         lc,
@@ -711,6 +766,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
             if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
+            useBranchRvalues(s, thenS, elseS);
             addSpecializedNode(s, ifNode);
             return thenReturns? and elseReturns?;
         },
@@ -738,7 +794,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
         RTVariable(),
         Vector[ir.Node](),
     );
-    return maybe(analyzeBoolSubnode(subContext(s, whileNode.conditionBody), bc.env, stmt.condition),
+    return maybe(analyzeBoolSubnode(loopSubContext(s, whileNode.conditionBody), bc.env, stmt.condition),
         condResult ref=> {
             whileNode.condition = singleVariable(condResult);
 
@@ -746,7 +802,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
             var sublc = LoopContext(true, trueCondition?(stmt.condition));
 
             var bodyReturns? = analyzeStatement(
-                subContext(s, whileNode.body),
+                loopSubContext(s, whileNode.body),
                 pc, subbc, sublc, stmt.body
             );
 
@@ -974,7 +1030,7 @@ analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
         return results;
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
-        return Maybe(VariableList(newValue(boolType())));
+        return Maybe(VariableList(addRvalue(s, newValue(boolType()))));
     }
 });
 
@@ -1034,17 +1090,25 @@ valueToRTVariable(value:Value) = match(value,
 
 valueToSingleVariableList(value) = VariableList(valueToRTVariable(value));
 
+private _Name(node) = StaticName(Type(node));
+
 addSpecializedNode(s:SpecializationContext, node:ir.Node) {
+    observe(_Name(*node));
+    for (input in ir.nodeInputs(node))
+        useRvalue(s, input);
+    for (output in ir.nodeOutputs(node))
+        addRvalue(s, output);
     push(s.body^, node);
 }
 
 [T | VariantMember?(ir.Node, T)]
 overload addSpecializedNode(s:SpecializationContext, node:T) {
-    push(s.body^, ir.Node(node));
+    addSpecializedNode(s, ir.Node(node));
 }
 
-addSpecializedNodes(s:SpecializationContext, node:Vector[ir.Node]) {
-    push(s.body^, node);
+addSpecializedNodes(s:SpecializationContext, nodes:Vector[ir.Node]) {
+    for (node in nodes)
+        addSpecializedNode(s, node);
 }
 
 private literalCodeWhiteSpace?(c) = inValues?(c, ' ', '\t', '\r', '\n');
@@ -1112,6 +1176,35 @@ addSpecializedBind(
 ) {
     addSpecializedNode(s, ir.Bind(ir.ASTNode(ast), input, output));
     return Maybe(VariableList(output));
+}
+
+addSpecializedAddressOf(
+    s:SpecializationContext,
+    ast,
+    input:RTVariable,
+    output:RTVariable
+) {
+    addSpecializedNode(s, ir.AddressOf(ir.ASTNode(ast), input, output));
+    return Maybe(VariableList(output));
+}
+
+addSpecializedNot(
+    s:SpecializationContext,
+    ast,
+    input:RTVariable,
+    output:RTVariable
+) {
+    addSpecializedNode(s, ir.Not(ir.ASTNode(ast), input, output));
+    return Maybe(VariableList(output));
+}
+
+addSpecializedThrow(
+    s:SpecializationContext,
+    ast,
+    exception:RTVariable
+) {
+    addSpecializedNode(s, ir.Throw(ast, exception));
+    return nothing(VariableList);
 }
 
 addSpecializedInitialize(
@@ -1360,6 +1453,8 @@ private analyzeCallableBody2(s:Specialization, env, o:Overload) {
 
             var complete? = true;
             var context = SpecializationContext(&just(s.body), &complete?);
+            for (arg in s.internalArgs)
+                addRvalue(context, arg);
 
             var analyzedResults = match(o.ast.definition.body,
                 ast.ExprCodeBody, body ref=> analyzeNode(context, env, body.exprs),
