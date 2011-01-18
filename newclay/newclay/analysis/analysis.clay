@@ -23,7 +23,6 @@ private addRvalue(s, rv) {
     if (rv.kind != RT_VARIABLE_RVALUE)
         return rv;
 
-    observe(#add, &s, referencePtr(rv).ptr);
     assert(null?(lookup(s.availableRvalues, rv)), "rvalue introduced more than once");
     s.availableRvalues[rv] = ();
     return rv;
@@ -33,7 +32,6 @@ private useRvalue(s, rv) {
     if (rv.kind != RT_VARIABLE_RVALUE)
         return;
 
-    observe(#use, &s, referencePtr(rv).ptr);
     if (null?(lookup(s.availableRvalues, rv)))
         genericError("rvalue used more than once");
 
@@ -794,9 +792,11 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
         RTVariable(),
         Vector[ir.Node](),
     );
-    return maybe(analyzeBoolSubnode(loopSubContext(s, whileNode.conditionBody), bc.env, stmt.condition),
+    var loopS = loopSubContext(s, whileNode.conditionBody);
+    return maybe(analyzeBoolSubnode(loopS, bc.env, stmt.condition),
         condResult ref=> {
             whileNode.condition = singleVariable(condResult);
+            useRvalue(loopS, whileNode.condition);
 
             var subbc = BlockContext(newEnv(bc.env));
             var sublc = LoopContext(true, trueCondition?(stmt.condition));
@@ -1090,10 +1090,7 @@ valueToRTVariable(value:Value) = match(value,
 
 valueToSingleVariableList(value) = VariableList(valueToRTVariable(value));
 
-private _Name(node) = StaticName(Type(node));
-
 addSpecializedNode(s:SpecializationContext, node:ir.Node) {
-    observe(_Name(*node));
     for (input in ir.nodeInputs(node))
         useRvalue(s, input);
     for (output in ir.nodeOutputs(node))
