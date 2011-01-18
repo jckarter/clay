@@ -11,6 +11,9 @@ record SequenceHandle[A] (
 [A]
 overload LightweightSequence?(static SequenceHandle[A]) = true;
 
+[A]
+overload ContiguousSequence?(static SequenceHandle[A]) = true;
+
 [A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
 overload UnderlyingContainerConstructor(static SequenceHandle[A]) =
     UnderlyingContainerConstructor(A);
