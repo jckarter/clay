@@ -170,6 +170,8 @@ private procedure coalescedNode;
 
 overload coalescedNode(cmap:VariableMap, node:ir.LiteralCodeBody) = node;
 
+overload coalescedNode(cmap:VariableMap, node:ir.Adopt) = ir.Adopt(coalesced(cmap, node.value));
+
 overload coalescedNode(cmap:VariableMap, node:ir.ValueList)
     = ir.ValueList(
         node.ast,
@@ -215,6 +217,8 @@ overload coalescedNode(cmap:VariableMap, node:ir.Bind) {
     var cOutput = coalesced(cmap, node.output);
     if (isNot?(cInput, cOutput))
         return ir.Node(ir.Bind(node.ast, cInput, cOutput));
+    else if (node.input.kind == RT_VARIABLE_RVALUE)
+        return ir.Node(ir.Adopt(cInput));
     else
         return ir.Node(ir.Nop());
 }

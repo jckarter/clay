@@ -29,7 +29,8 @@ variant Node = LiteralCodeBody
              | Throw
              | Nop
              | Block
-             | Statement;
+             | Statement
+             | Adopt;
 
 variant ASTNode = ast.ExprListItem
                 | ast.ReturnExprListItem
@@ -131,6 +132,10 @@ record Return = referenceType(
 record Throw = referenceType(
     ast: ast.ThrowStatement,
     exception: RTVariable,
+);
+
+record Adopt = referenceType(
+    value: RTVariable,
 );
 
 record Nop();
