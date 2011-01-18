@@ -120,6 +120,14 @@ overload printNodeData(depth, node:ir.Initialize) {
     printVar(node.output);
 }
 
+overload printNodeData(depth, node:ir.Adopt) {
+    println();
+
+    printDepth(depth+1);
+    print("value ");
+    printVar(node.value);
+}
+
 overload printNodeData(depth, node:ir.Bind) {
     println(LeafTypeName(node.ast));
 

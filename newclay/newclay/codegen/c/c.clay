@@ -390,6 +390,10 @@ overload codegenNode(c, bc, node:ir.Phi) {
     assert(false, "ir.Phi must be eliminated by optimization");
 }
 
+overload codegenNode(c, bc, node:ir.Adopt) {
+    //assert(false, "ir.Adopt must be eliminated by lifetime analysis");
+}
+
 overload codegenNode(c, bc, node:ir.Bind) {
     if (node.output.value?) {
         // XXX should initializeFrom other value rather than bitwise assign
