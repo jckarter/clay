@@ -24,6 +24,7 @@ public import sequences.*;
 
 public import arrays.*;
 public import vectors.*;
+public import vectors.buffer.*;
 public import characters.*;
 public import strings.*;
 public import strings.constants.*;

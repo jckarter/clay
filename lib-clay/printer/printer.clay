@@ -439,6 +439,22 @@ printlnString(...x) {
 }
 
 
+
+//
+// printBuffer
+//
+
+private ByteLike?(x) = ByteSizedInteger?(x) or (x == Char);
+private ByteBuffer?(x) = ContiguousSequence?(x) and ByteLike?(SequenceElementType(x));
+
+[S | ByteBuffer?(S)]
+printBuffer(buf:S, ...args) {
+    var bv = BufferVector(begin(buf), end(buf));
+    printTo(bv, ...args);
+    return size(bv);
+}
+
+
 
 //
 // observe, observeTo, observeCall -- log intermediate values and forward them
