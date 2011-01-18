@@ -35,6 +35,6 @@ Sequence?(T) = true
 SequenceElementType(T) = Vector[Char]
 SizedSequence?(T) = false
 RandomAccessSequence?(T) = false
-LValueSequence?(T) = false
+LValueSequence?(T) = true
 ContiguousSequence?(T) = false
 

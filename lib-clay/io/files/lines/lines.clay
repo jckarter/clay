@@ -33,14 +33,19 @@ private record LineIterator (
 overload hasNext?(x:LineIterator) {
     if (not x.queued?) {
         x.queued? = true;
-        x.string = readLine(x.file^);
+        clear(x.string);
+        readLine(x.file^, x.string);
     }
     return size(x.string) > 0;
 }
 
 overload next(x:LineIterator) {
-    if (not x.queued?)
-        return readLine(x.file^);
-    x.queued? = false;
-    return move(x.string);
+    if (not x.queued?) {
+        clear(x.string);
+        readLine(x.file^, x.string);
+    }
+    else {
+        x.queued? = false;
+    }
+    return ref x.string;
 }
