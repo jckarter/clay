@@ -164,7 +164,7 @@ overload printTo(stream, x:S) {
 
 [S | ContiguousString?(S)]
 overload printTo(stream, x:S) {
-    writeBytes(stream, x);
+    write(stream, x);
 }
 
 
