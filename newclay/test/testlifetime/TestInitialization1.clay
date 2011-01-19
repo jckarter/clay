@@ -1,0 +1,10 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    var x1 = 1;
+    var x2 = 1;
+    var y1 = toNontrivialInt(1);
+    var y2 = toNontrivialInt(2);
+    x1 <-- x2;
+    y1 <-- y2;
+}

@@ -1,0 +1,45 @@
+testRvalue(rvalue x) = true;
+test(x) = true;
+
+main() {
+    if (false) return;
+
+    var x = toNontrivialInt(1);
+
+    if (false) return;
+
+    while (testRvalue(toNontrivialInt(2))) {
+        if (false) break;
+        if (false) return;
+
+        var y = toNontrivialInt(3);
+
+        if (false) break;
+        if (false) return;
+
+        {
+            if (false) break;
+            if (false) return;
+
+            var z = toNontrivialInt(4);
+
+            if (false) break;
+            if (false) return;
+        }
+
+        while (test(toNontrivialInt(5))) {
+            if (false) break;
+            if (false) return;
+
+            var w = toNontrivialInt(6);
+
+            if (false) break;
+            if (false) return;
+        }
+
+        if (false) break;
+        if (false) return;
+    }
+
+    if (false) return;
+}

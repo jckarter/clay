@@ -1,0 +1,5 @@
+refReturn() ref x:NontrivialInt __c__ """abort();""";
+
+main() {
+    ref x = refReturn();
+}
