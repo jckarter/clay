@@ -32,7 +32,8 @@ variant Node = LiteralCodeBody
              | Statement
              | Adopt;
 
-variant ASTNode = ast.ExprListItem
+variant ASTNode = Nothing
+                | ast.ExprListItem
                 | ast.ReturnExprListItem
                 | ast.Statement;
     // CodeBody or ExprListItem or ReturnExprListItem or Statement
@@ -139,6 +140,10 @@ record Adopt = referenceType(
 );
 
 record Nop();
+
+pushNode(body, n:Node) { push(body, n); }
+[T | VariantMember?(Node, T)]
+overload pushNode(body, n:T) { push(body, Node(n)); }
 
 
 //
