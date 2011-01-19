@@ -10,7 +10,7 @@ main() {
 }
 
 server(args) {
-    var listener = ListenSocket(Inet(INADDR_LOOPBACK, 27183));
+    var listener = ListenSocket(Inet(INADDR_LOOPBACK, 27184));
     
     // send to test runner so that it knows the server is ready
     write(stdout, "hello");
@@ -30,7 +30,7 @@ server(args) {
 client(args) {
     alias T = SizeT;
     var n = T(10);
-    var conn = StreamSocket(Inet(INADDR_LOOPBACK, 27183));
+    var conn = StreamSocket(Inet(INADDR_LOOPBACK, 27184));
     write(conn, Pointer[Byte](&n), TypeSize(T));
     var data = readN(conn, n);
     println("expected ", n, " bytes. received ", size(data), " bytes.");
