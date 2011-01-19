@@ -29,7 +29,7 @@ external (WINAPI) SetFilePointerEx(
 
 alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
-errorMessage(errorCode) {
+printErrorMessageTo(stream, errorCode) {
     var buf = Array[Byte, 1024]();
     var result = FormatMessageA(
         FORMAT_MESSAGE_FROM_SYSTEM,
@@ -38,10 +38,18 @@ errorMessage(errorCode) {
         CULong(0),
         LPSTR(&buf[0]),
         CULong(size(buf)),
-        null(va_list));
+        null(va_list),
+    );
     if (result == 0)
-        return String("Unknown error");
-    return String(&buf[0]);
+        printTo(stream, "unknown error");
+    else
+        printTo(stream, CStringRef(&buf[0]));
+}
+
+errorMessage(errorCode) {
+    var buf = String();
+    printErrorMessageTo(buf, errorCode);
+    return move(buf);
 }
 
 overload errorMessage() = errorMessage(GetLastError());

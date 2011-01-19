@@ -18,5 +18,14 @@ callbyname syscallNoThrow(callable, ...args) {
     return result;
 }
 
-errorMessage(err) = CStringRef(libc.strerror(err));
+printErrorMessageTo(stream, errorCode) {
+    printTo(stream, CStringRef(libc.strerror(errorCode)));
+}
+
+errorMessage(errorCode) {
+    var buf = String();
+    printErrorMessageTo(buf, errorCode);
+    return move(buf);
+}
+
 overload errorMessage() = errorMessage(errno());
