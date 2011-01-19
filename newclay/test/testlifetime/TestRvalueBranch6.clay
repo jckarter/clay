@@ -1,0 +1,16 @@
+eatRvalue(rvalue x) {}
+nop(x) {}
+
+main() {
+    rvalue x = toNontrivialInt(1);
+
+    if (false) return;
+
+    if (true) {
+    } else {
+        if (true)
+            eatRvalue(x);
+    }
+
+    if (false) return;
+}

@@ -1,0 +1,11 @@
+main() {
+    if (false) return;
+    rvalue x = toNontrivialInt(1);
+    if (false) return;
+    {
+        if (false) return;
+        var y = x;
+        if (false) return;
+    }
+    if (false) return;
+}

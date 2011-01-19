@@ -1,0 +1,4 @@
+main() {
+    var x = toNontrivialInt(1);
+    var y = toNontrivialInt(1);
+}

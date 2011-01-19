@@ -1,0 +1,4 @@
+main() {
+    var x = toNontrivialInt(1);
+    ref y = x;
+}

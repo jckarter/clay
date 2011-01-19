@@ -1,0 +1,221 @@
+import __primitives__.*;
+
+
+//
+// NewStaticFunction, StaticFunction?
+//
+
+symbol StaticFunctionTag = ();
+symbol NewStaticFunction = NewStaticFunction();
+static overload NewStaticFunction() = (StaticFunctionTag,);
+
+symbol StaticFunction? = NewStaticFunction();
+static overload StaticFunction?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), StaticFunctionTag);
+
+
+
+//
+// TypeTemplate?, Type?
+//
+
+symbol TypeTemplate? = NewStaticFunction();
+static overload TypeTemplate?('x) = false;
+
+symbol Type? = NewStaticFunction();
+static overload Type?('x) = false;
+
+
+
+//
+// ToLowLevelType
+//
+
+symbol ToLowLevelType = NewStaticFunction();
+
+symbol LLSigned = ();
+symbol LLUnsigned = ();
+
+symbol LLBoolType = ();
+symbol LLIntegerType['Signed, 'Bits] = ();
+symbol LLFloatType['Bits] = ();
+symbol LLPointerType['T] = ();
+symbol LLArrayType['T, 'n] = ();
+symbol LLTupleType[...'T] = ();
+symbol LLUnionType[...'T] = ();
+
+
+//
+// PODType?
+//
+
+static PODType?('T) = true;
+
+
+//
+// NewPrimitiveType, PrimitiveType?
+
+symbol PrimitiveTypeTag = ();
+symbol NewPrimitiveType = NewStaticFunction();
+static overload NewPrimitiveType() = (PrimitiveTypeTag,);
+
+symbol PrimitiveType? = NewStaticFunction();
+static overload PrimitiveType?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
+
+static overload Type?('x) | PrimitiveType?('x) = true;
+
+
+
+//
+// Bool, Int
+//
+
+symbol Bool = NewPrimitiveType();
+symbol Int = NewPrimitiveType();
+
+static overload ToLowLevelType(Bool) = LLBoolType;
+static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
+
+
+
+//
+// Static[T]
+//
+
+symbol Static['T] = ();
+static overload TypeTemplate?(Static) = true;
+static overload Type?(Static['T]) = true;
+static overload ToLowLevelType(Static['T]) = LLTupleType[];
+
+
+
+//
+// Pointer[T]
+//
+
+symbol Pointer['T] = ();
+static overload TypeTemplate?(Pointer) = true;
+static overload Type?(Pointer['T]) = true;
+static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
+
+
+
+//
+// NewProcedure, Procedure?
+//
+
+symbol ProcedureTag = ();
+symbol NewProcedure = NewStaticFunction();
+static overload NewProcedure() = (ProcedureTag,);
+
+symbol Procedure? = NewStaticFunction();
+static overload Procedure?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), ProcedureTag);
+
+
+
+//
+// TupleWithTag?
+//
+
+symbol TupleWithTag? = NewStaticFunction();
+static overload TupleWithTag?('x, 'tag) =
+    StaticTuple?('x)
+    and StaticLesser?(0, StaticTupleSize('x))
+    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
+
+
+
+//
+// operators
+//
+
+
+plus(a:Int) = a;
+
+minus(a:Int) returned:Int __c__ """
+    *returned_ = -*a_;
+""";
+
+dereference(a:Pointer['T]) ref returned:'T __c__ """
+    *returned_ = *a_;
+""";
+
+multiply(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ * *b_;
+""";
+
+divide(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ / *b_;
+""";
+
+remainder(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ % *b_;
+""";
+
+add(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ + *b_;
+""";
+
+subtract(a:Int, b:Int) returned:Int __c__ """
+    *returned_ = *a_ - *b_;
+""";
+
+lesser?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ < *b_;
+""";
+
+lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ <= *b_;
+""";
+
+greater?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ > *b_;
+""";
+
+greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ >= *b_;
+""";
+
+equals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ == *b_;
+""";
+
+notEquals?(a:Int, b:Int) returned:Bool __c__ """
+    *returned_ = *a_ != *b_;
+""";
+
+assign(ref a, b)                  { a <-- b; }
+addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
+subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
+multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
+divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
+remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+
+//
+// non-POD lifetime management
+//
+
+symbol initializeFromUnsafe = NewProcedure();
+symbol destroyUnsafe = NewProcedure();
+
+primitiveCopy(ref y, x) __c__ """*y_ = *x_;""";
+
+overload initializeFromUnsafe(y:'T, x:'T) | PODType?('T) { primitiveCopy(y, x); }
+overload destroyUnsafe(x:'T) {}
+
+symbol NontrivialInt = NewPrimitiveType();
+
+static overload ToLowLevelType(NontrivialInt) = LLIntegerType[LLSigned, 32];
+static overload PODType?(NontrivialInt) = false;
+
+toNontrivialInt(x:Int) y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
+
+overload initializeFromUnsafe(ref to:NontrivialInt, from:NontrivialInt) { primitiveCopy(to, from); }
+overload destroyUnsafe(ref i:NontrivialInt) { }
+

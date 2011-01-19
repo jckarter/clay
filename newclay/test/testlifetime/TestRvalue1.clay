@@ -1,0 +1,18 @@
+eatRvalue(rvalue x) {}
+nop(x) {}
+pass(x) = x;
+drop(x) = 1;
+
+main() {
+    if (false) return;
+    eatRvalue(toNontrivialInt(1));
+    if (false) return;
+    nop(toNontrivialInt(1));
+    if (false) return;
+    nop(drop(toNontrivialInt(1)));
+    if (false) return;
+    nop(pass(toNontrivialInt(1)));
+    if (false) return;
+    toNontrivialInt(1);
+    if (false) return;
+}
