@@ -78,7 +78,7 @@ overload Vector?(static BufferVector[T]) = true;
 overload vectorData(a:BufferVector[T]) = a.begin;
 
 [T]
-overload vectorSize(a:BufferVector[T]) = a.current - a.begin;
+overload vectorSize(a:BufferVector[T]) = SizeT(a.current - a.begin);
 
 [T]
 overload vectorSetSize(a:BufferVector[T], size:SizeT) {
@@ -86,7 +86,7 @@ overload vectorSetSize(a:BufferVector[T], size:SizeT) {
 }
 
 [T]
-overload vectorCapacity(a:BufferVector[T]) = a.end - a.begin;
+overload vectorCapacity(a:BufferVector[T]) = SizeT(a.end - a.begin);
 
 [T]
 overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
