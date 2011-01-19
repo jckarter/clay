@@ -9,3 +9,8 @@ time() {
     var usecs = Double(tv.tv_usec);
     return secs + usecs/(1000*1000);
 }
+
+sleep(seconds:Double) {
+    var useconds = UInt(seconds * 1000 * 1000);
+    unix.usleep(useconds);
+}
