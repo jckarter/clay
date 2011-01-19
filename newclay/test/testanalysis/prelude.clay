@@ -1,4 +1,5 @@
 import __primitives__.*;
+import __main__.(main);
 
 
 //
@@ -195,3 +196,18 @@ subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
 multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
 divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
 remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+
+//
+// destroyUnsafe, initializeFromUnsafe
+//
+
+primitiveCopy(ref y, x) __c__ """*y_ = *x_;""";
+
+initializeFromUnsafe(ref y, x) { primitiveCopy(y, x); }
+destroyUnsafe(ref x) {}
+
+//
+// callMain
+//
+
+callMain() Int { main(); return 0; }

@@ -219,3 +219,8 @@ fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
 overload initializeFromUnsafe(ref to:NontrivialInt, from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }
 
+//
+// callMain
+//
+
+callMain() Int { main(); return 0; }

@@ -11,6 +11,7 @@ import newclay.resolver.*;
 
 private loadPrimitivesModule(program:Program) {
     var module = Module(program, primitivesModuleName);
+    primitivesModule(program) = module;
     module.privateEnv = newEnv();
     module.publicEnv = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
@@ -164,6 +165,7 @@ programModule(program:Program, name:ModuleName) {
 
 private loadMainModule(program, mainFilename) {
     var module = Module(program, mainModuleName);
+    mainModule(program) = module;
     module.originalAST = parse(tokenize(readSource(mainFilename)));
     initializeModule(module);
     return module;
@@ -177,8 +179,8 @@ private resolveProgram(program:Program) {
 loadProgram(mainFilename:String, searchPath:Vector[String]) {
     var program = Program();
     program.moduleSearchPath = searchPath;
-    primitivesModule(program) = loadPrimitivesModule(program);
-    mainModule(program) = loadMainModule(program, mainFilename);
+    loadPrimitivesModule(program);
+    loadMainModule(program, mainFilename);
     resolveProgram(program);
     return program;
 }

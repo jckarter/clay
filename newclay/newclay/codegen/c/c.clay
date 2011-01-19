@@ -2,6 +2,7 @@ import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.analysis.*;
 import newclay.optimizer.*;
+import newclay.lifetime.*;
 import newclay.core.*;
 import newclay.common.*;
 import newclay.hooks.*;
@@ -782,6 +783,36 @@ private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
             return;
         }
     optimizeSpecialization(s);
+    lifetimeAnalyzeSpecialization(s);
     codegenFunction(c, s);
+}
+
+//
+// codegenStandaloneProgramTo
+//
+
+private printStandaloneStubTo(stream, c, mainS) {
+    printlnTo(stream);
+    printlnTo(stream, "int main(int argc, char **argv) {");
+    printlnTo(stream, "    int exitCode;");
+    printlnTo(stream, "    ", functionName(c, mainS), "(&exitCode);");
+    printlnTo(stream, "    return exitCode;");
+    printlnTo(stream, "}");
+}
+
+codegenStandaloneProgramTo(stream) {
+    var mainS = analyzeCallable(getHooks().callMain, VariableList());
+
+    var mainResultsOk? = maybe(mainS.results,
+        results => size(results) == 1 and results[0].type == intType(),
+        () => false
+    );
+
+    if (not mainResultsOk?)
+        genericError("callMain() must return an Int");
+
+    var c = codegenFromEntryPoints(Vector[Specialization](mainS));
+    printCodegenTo(stream, c);
+    printStandaloneStubTo(stream, c, mainS);
 }
 
