@@ -1,0 +1,57 @@
+
+import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
+import newclay.ast as ast;
+import newclay.core.*;
+import newclay.loader.*;
+import newclay.hooks.*;
+import newclay.analysis.*;
+import newclay.optimizer.*;
+import newclay.lifetime.*;
+import newclay.ir as ir;
+import testanalysis.*;
+import maybe.*;
+
+printInvokeTable(name, table) {
+    for (args, invoke in items(table)) {
+        println(name, args, ":");
+        maybe(invoke.specialization,
+            s => {
+                printSpecialization(1, s);
+                maybe(s.body, body ref=> {
+                    println("  optimized:");
+                    optimizeSpecialization(s);
+                    printSpecialization(2, s);
+                });
+            },
+            () => { println("  <no specialization!>"); },
+        );
+    }
+}
+
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var program = loadProgram(args[1]);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+
+            var s = analyzeMain();
+            analyzeCallableBody(s);
+
+            maybe(s.body, body ref=> {
+                optimizeSpecialization(s);
+                lifetimeAnalyzeSpecialization(s);
+                printSpecialization(1, s);
+            });
+        });
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
