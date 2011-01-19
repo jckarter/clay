@@ -19,10 +19,7 @@ main(args) {
         withProgram(program, () ref=> {
             initializeClayHooks();
 
-            var s = analyzeMain();
-            var codegen = codegenFromEntryPoints(Vector[Specialization](s));
-
-            printCodegenTo(stdout, codegen);
+            codegenStandaloneProgramTo(stdout);
         });
     }
     catch (e:ClayError) {

@@ -94,6 +94,8 @@ record ClayHooks (
 
     initializeFromUnsafe: Value,
     destroyUnsafe: Value,
+
+    callMain: Value,
 );
 
 

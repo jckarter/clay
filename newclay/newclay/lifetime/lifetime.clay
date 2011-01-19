@@ -176,7 +176,6 @@ private _Type(x) = StaticName(Type(x));
 
 private lifetimeAnalyzeSubbody(c, subdest, subbody) {
     for (subnode in subbody) {
-        observe(_Type(*subnode));
         lifetimeAnalyzeNode(c, subdest, *subnode);
     }
 }
@@ -247,7 +246,6 @@ private destroyValue(dest:Vector[ir.Node], value) {
 
 private addOutputs(c:LifetimeContext, node) {
     for (output in ir.nodeOutputs(node)) {
-        observe(referencePtr(output).ptr);
         addValue(c, output);
     }
 }
