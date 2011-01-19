@@ -87,12 +87,11 @@ overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 // read, write, flush
 //
 
-[I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n_:I) {
+overload read(f:File, buffer:Pointer[Byte], n_:SizeT) {
     ref fd = f.ptr^;
 
     var count = SizeT(0);
-    var pending = SizeT(n_);
+    var pending = n_;
     var dest = buffer;
     var src = fd.readBegin;
     var end = fd.readEnd;
@@ -123,7 +122,7 @@ overload read(f:File, buffer:Pointer[Byte], n_:I) {
         fd.readBegin = src;
         fd.readEnd = src;
 
-        var nRead = read(fd.file, fd.readBegin, BUFFER_SIZE);
+        var nRead = read(fd.file, fd.readBegin, SizeT(BUFFER_SIZE));
         if (nRead == 0)
             break;
         end += nRead;
@@ -133,8 +132,7 @@ overload read(f:File, buffer:Pointer[Byte], n_:I) {
     return count;
 }
 
-[I | Integer?(I)]
-overload write(f:File, buffer:Pointer[Byte], n:I) {
+overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
     ref fd = f.ptr^;
 
     var src = buffer;

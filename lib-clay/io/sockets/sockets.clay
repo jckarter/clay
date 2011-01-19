@@ -241,13 +241,11 @@ overload StreamSocket(addr: T) socket: StreamSocket {
 //
 // StreamSocket implementation of stream protocol
 //
-[I | Integer?(I)]
-overload read(s: StreamSocket, buffer: Pointer[Byte], n: I)
-    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), SizeT(n), 0));
+overload read(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), n, 0));
 
-[I | Integer?(I)]
-overload write(s: StreamSocket, buffer: Pointer[Byte], n: I) {
-    socketCall(platform.send, s.raw, RawPointer(buffer), SizeT(n), 0);
+overload write(s: StreamSocket, buffer: Pointer[Byte], n: SizeT) {
+    socketCall(platform.send, s.raw, RawPointer(buffer), n, 0);
 }
 
 overload flush(s: StreamSocket) { }
