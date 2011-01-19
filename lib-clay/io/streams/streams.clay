@@ -70,14 +70,21 @@ procedure readN;
 
 [V | ByteVector?(V)]
 overload readN(stream, n:SizeT, buf:V) {
-    var current = size(buf);
-    var expected = current + n;
+    var initial = size(buf);
+    var current = initial;
+    var expected = initial + n;
     while (current < expected) {
         var numRead = read(stream, expected - current, buf);
         if (numRead == 0)
             break;
         current += numRead;
     }
+    return current - initial;
+}
+
+overload readN(stream, buffer:Pointer[Byte], n:SizeT) {
+    var bv = BufferVector(buffer, buffer + n);
+    return readN(stream, n, bv);
 }
 
 overload readN(stream, n:SizeT) {
