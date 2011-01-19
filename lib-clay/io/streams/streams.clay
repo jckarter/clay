@@ -1,28 +1,36 @@
 
+import vectors.generic.*;
 
 //
 // read, write, flush - byte stream operations
 //
 
-// [I | Integer?(I)]
-// read(stream, buf:Pointer[Byte], n:I) SizeT
+// read(stream, buf:Pointer[Byte], n:SizeT) SizeT
 procedure read;
 
-// [I | Integer?(I)]
-// write(stream, buf:Pointer[Byte], n:I) Void
+// write(stream, buf:Pointer[Byte], n:SizeT) Void
 procedure write;
 
 // flush(stream) Void
 procedure flush;
 
 
+[T]
+ByteLike?(static T) = ByteSizedInteger?(T) or (T == Char);
+
+[T]
+ByteVector?(static T) = Vector?(T) and ByteLike?(SequenceElementType(T));
+
+[T]
+ByteBuffer?(static T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
+
 
 //
-// readByte, readChar, readLine
+// readByte, readChar
 //
 
 readByte(stream, b:Byte) Bool {
-    var result = read(stream, &b, 1);
+    var result = read(stream, &b, SizeT(1));
     return result == 1;
 }
 
@@ -32,91 +40,160 @@ readChar(stream, c:Char) Bool {
     return result == 1;
 }
 
-readUpto(stream, upto) String {
-    var v = String();
-    var c = Char();
-    while (readChar(stream, c)) {
-        push(v, c);
-        if (c == upto)
-            break;
-    }
-    return move(v);
+
+//
+// read - read into byte vector
+//
+
+[V | ByteVector?(V)]
+overload read(stream, n:SizeT, buf:V) {
+    var current = size(buf);
+    resize(buf, current + n);
+    var ptr = Pointer[Byte](begin(buf) + current);
+    var numRead = read(stream, ptr, n);
+    resize(buf, current + numRead);
+    return numRead;
 }
 
-readLine(stream) = readUpto(stream, '\n');
-
-readAll(stream) String {
+overload read(stream, n:SizeT) {
     var buf = String();
-    var total, space = SizeT(0), SizeT(4096);
-    resize(buf, space);
-    while (true) {
-        while (space - total < 4096) {
-            space *= 2;
-            resize(buf, space);
-        }
-        var ptr = Pointer[Byte](&buf[0] + total);
-        var numRead = read(stream, ptr, 4096);
-        if (numRead == 0)
-            break;
-        total += numRead;
-    }
-    resize(buf, total);
+    read(stream, n, buf);
     return move(buf);
 }
 
 
+//
+// readN - read n bytes unless EOF is hit
+//
+
+procedure readN;
+
+[V | ByteVector?(V)]
+overload readN(stream, n:SizeT, buf:V) {
+    var initial = size(buf);
+    var current = initial;
+    var expected = initial + n;
+    while (current < expected) {
+        var numRead = read(stream, expected - current, buf);
+        if (numRead == 0)
+            break;
+        current += numRead;
+    }
+    return current - initial;
+}
+
+overload readN(stream, buffer:Pointer[Byte], n:SizeT) {
+    var bv = BufferVector(buffer, buffer + n);
+    return readN(stream, n, bv);
+}
+
+overload readN(stream, n:SizeT) {
+    var buf = String();
+    readN(stream, n, buf);
+    return move(buf);
+}
+
+
+//
+// readAll
+//
+
+procedure readAll;
+
+[V | ByteVector?(V)]
+overload readAll(stream, chunkSize:SizeT, buf:V) {
+    while (true) {
+        var numRead = read(stream, chunkSize, buf);
+        if (numRead == 0)
+            break;
+    }
+}
+
+[V | ByteVector?(V)]
+overload readAll(stream, buf:V) {
+    readAll(stream, SizeT(4096), buf);
+}
+
+overload readAll(stream) String {
+    var buf = String();
+    readAll(stream, buf);
+    return move(buf);
+}
+
+
+//
+// readUpto, readLine
+//
+
+procedure readUpto;
+
+[T, V | ByteLike?(T) and ByteVector?(V)]
+overload readUpto(stream, upto:T, buf:V) {
+    alias ElementType = SequenceElementType(V);
+    var b = Byte();
+    var uptoByte = Byte(upto);
+    while (readByte(stream, b)) {
+        push(buf, ElementType(b));
+        if (b == uptoByte)
+            break;
+    }
+}
+
+[T | ByteLike?(T)]
+overload readUpto(stream, upto:T) String {
+    var v = String();
+    readUpto(stream, upto, v);
+    return move(v);
+}
+
+
+procedure readLine;
+
+[V | ByteVector?(V)]
+overload readLine(stream, buf:V) {
+    readUpto(stream, '\n', buf);
+}
+
+overload readLine(stream) = readUpto(stream, '\n');
+
 
 //
-// writeByte
+// write - write one byte
 //
 
 [I | Integer?(I)]
-writeByte(stream, x:I) {
+overload write(stream, x:I) {
     var b = Byte(x);
-    write(stream, &b, 1);
+    write(stream, &b, SizeT(1));
 }
 
-overload writeByte(stream, x:Char) {
-    writeByte(stream, Byte(x));
+overload write(stream, x:Char) {
+    write(stream, Byte(x));
 }
 
+
+//
+// write - write byte buffer
+//
+
+[V | ByteBuffer?(V)]
+overload write(stream, x:V) {
+    write(stream, Pointer[Byte](begin(x)), size(x));
+}
 
 
 //
-// write, flush - Vector[ByteSizedInteger]
+// write, flush - write to ByteVector
 //
 
-[T,I | ByteSizedInteger?(T) and Integer?(I)]
-overload write(v:Vector[T], buf:Pointer[Byte], n:I) {
-    reserve(v, size(v) + n);
-    var p = buf;
-    var end = buf + n;
-    while (p != end) {
-        push(v, T(p^));
-        p += 1;
-    }
+[V | ByteVector?(V)]
+overload write(stream:V, buf:Pointer[Byte], n:SizeT) {
+    var currentSize = size(stream);
+    resize(stream, currentSize + n);
+    var dest = Pointer[Byte](begin(stream)) + currentSize;
+    copyNonoverlappingMemory(dest, buf, buf+n);
 }
 
-[T | ByteSizedInteger?(T)]
-overload flush(v:Vector[T]) {
-}
-
-
-
-//
-// write, flush - Vector[Char]
-//
-
-[I | Integer?(I)]
-overload write(v:Vector[Char], buf:Pointer[Byte], n:I) {
-    reserve(v, size(v) + n);
-    var p = buf;
-    var end = buf + n;
-    while (p != end) {
-        push(v, Char(p^));
-        p += 1;
-    }
-}
-
-overload flush(v:Vector[Char]) {
+[V | ByteVector?(V)]
+overload flush(stream:V) {
 }

@@ -26,6 +26,14 @@ private alias platform = io.sockets.platform;
 record SocketError (code: platform.SocketErrorCode);
 instance Exception = SocketError;
 
+overload printTo(stream, x:SocketError) {
+    printTo(stream, "SocketError(", x.code, ", ", platform.errorMessage(x.code), ")");
+}
+
+overload printReprTo(stream, x:SocketError) {
+    printTo(stream, x);
+}
+
 socketCall(callable, forward ...args) {
     var ret = callable(...args);
     if (ret == Type(ret)(platform.SOCKET_ERROR))
@@ -241,13 +249,11 @@ overload StreamSocket(addr: T) socket: StreamSocket {
 //
 // StreamSocket implementation of stream protocol
 //
-[I | Integer?(I)]
-overload read(s: StreamSocket, buffer: Pointer[Byte], n: I)
-    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), SizeT(n), 0));
+overload read(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), n, 0));
 
-[I | Integer?(I)]
-overload write(s: StreamSocket, buffer: Pointer[Byte], n: I) {
-    socketCall(platform.send, s.raw, RawPointer(buffer), SizeT(n), 0);
+overload write(s: StreamSocket, buffer: Pointer[Byte], n: SizeT) {
+    socketCall(platform.send, s.raw, RawPointer(buffer), n, 0);
 }
 
 overload flush(s: StreamSocket) { }
