@@ -1,0 +1,38 @@
+import io.sockets.*;
+import commandline.dispatch.*;
+import time;
+
+main() {
+    startSockets();
+    var r = dispatchMain(server, client);
+    finishSockets();
+    return r;
+}
+
+server(args) {
+    var listener = ListenSocket(Inet(INADDR_LOOPBACK, 27183));
+    
+    // send to test runner so that it knows the server is ready
+    write(stdout, "hello");
+    flush(stdout);
+    
+    var conn, address = ...accept(listener);
+
+    alias T = SizeT;
+    var data = readN(conn, TypeSize(T));
+    var n = Pointer[T](begin(data))^;
+    for (i in range(n)) {
+        writeByte(conn, i);
+        time.sleep(0.01);
+    }
+}
+
+client(args) {
+    alias T = SizeT;
+    var n = T(10);
+    var conn = StreamSocket(Inet(INADDR_LOOPBACK, 27183));
+    write(conn, Pointer[Byte](&n), TypeSize(T));
+    var data = readN(conn, n);
+    println("expected ", n, " bytes. received ", size(data), " bytes.");
+    return 0;
+}

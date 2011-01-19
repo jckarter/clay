@@ -42,6 +42,79 @@ readChar(stream, c:Char) Bool {
 
 
 //
+// read - read into byte vector
+//
+
+[V | ByteVector?(V)]
+overload read(stream, n:SizeT, buf:V) {
+    var current = size(buf);
+    resize(buf, current + n);
+    var ptr = Pointer[Byte](begin(buf) + current);
+    var numRead = read(stream, ptr, n);
+    resize(buf, current + numRead);
+    return numRead;
+}
+
+overload read(stream, n:SizeT) {
+    var buf = String();
+    read(stream, n, buf);
+    return move(buf);
+}
+
+
+//
+// readN - read n bytes unless EOF is hit
+//
+
+procedure readN;
+
+[V | ByteVector?(V)]
+overload readN(stream, n:SizeT, buf:V) {
+    var current = size(buf);
+    var expected = current + n;
+    while (current < expected) {
+        var numRead = read(stream, expected - current, buf);
+        if (numRead == 0)
+            break;
+        current += numRead;
+    }
+}
+
+overload readN(stream, n:SizeT) {
+    var buf = String();
+    readN(stream, n, buf);
+    return move(buf);
+}
+
+
+//
+// readAll
+//
+
+procedure readAll;
+
+[V | ByteVector?(V)]
+overload readAll(stream, chunkSize:SizeT, buf:V) {
+    while (true) {
+        var numRead = read(stream, chunkSize, buf);
+        if (numRead == 0)
+            break;
+    }
+}
+
+[V | ByteVector?(V)]
+overload readAll(stream, buf:V) {
+    readAll(stream, SizeT(4096), buf);
+}
+
+overload readAll(stream) String {
+    var buf = String();
+    readAll(stream, buf);
+    return move(buf);
+}
+
+
+//
 // readUpto, readLine
 //
 
@@ -75,39 +148,6 @@ overload readLine(stream, buf:V) {
 }
 
 overload readLine(stream) = readUpto(stream, '\n');
-
-
-//
-// readAll
-//
-
-procedure readAll;
-
-[V | ByteVector?(V)]
-overload readAll(stream, chunkSize:SizeT, buf:V) {
-    while (true) {
-        var n = size(buf);
-        resize(buf, n+chunkSize);
-        var ptr = Pointer[Byte](begin(buf) + n);
-        var numRead = read(stream, ptr, chunkSize);
-        if (numRead < chunkSize)
-            resize(buf, n + numRead);
-        if (numRead == 0)
-            break;
-    }
-}
-
-[V | ByteVector?(V)]
-overload readAll(stream, buf:V) {
-    readAll(stream, SizeT(4096), buf);
-}
-
-overload readAll(stream) String {
-    var buf = String();
-    readAll(stream, buf);
-    return move(buf);
-}
-
 
 
 //
