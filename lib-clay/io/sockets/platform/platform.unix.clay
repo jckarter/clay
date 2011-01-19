@@ -18,6 +18,7 @@ alias RawSocket = Int;
 alias SOCKET_ERROR = RawSocket(-1);
 herrno() { return unix.herrno; }
 alias SocketErrorCode = Type(errno());
+alias errorMessage = unix.errorMessage;
 
 startSockets() {}
 finishSockets() {}

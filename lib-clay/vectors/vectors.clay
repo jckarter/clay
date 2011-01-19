@@ -111,14 +111,28 @@ overload Vector?(static Vector[T]) = true;
 inline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
-inline overload vectorSize(a:Vector[T]) = ref a.size;
+inline overload vectorSize(a:Vector[T]) = a.size;
+
+[T]
+inline overload vectorSetSize(a:Vector[T], n:SizeT) {
+    a.size = n;
+}
 
 [T]
 inline overload vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
-overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
+overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
     assert(capacity >= a.size);
+    if (capacity < a.capacity)
+        return;
+    var n = max(capacity, SizeT(16));
+    n = max(n, 2*a.capacity);
+    reallocVector(a, n);
+}
+
+[T]
+private reallocVector(a:Vector[T], capacity:SizeT) {
     var data = allocateRawMemory(T, capacity);
     moveNonoverlappingMemoryUnsafe(data, a.data, a.data + a.size);
     freeRawMemory(a.data);
@@ -127,7 +141,7 @@ overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
 }
 
 [T | BitwiseMovedType?(T)]
-overload vectorSetCapacity(a:Vector[T], capacity:SizeT) {
+overload reallocVector(a:Vector[T], capacity:SizeT) {
     a.data = reallocateRawMemory(a.data, capacity);
     a.capacity = capacity;
 }

@@ -17,6 +17,9 @@ record Sliced[A](
 [A | LightweightSequence?(A)]
 overload LightweightSequence?(static Sliced[A]) = true;
 
+[A | ContiguousSequence?(A)]
+overload ContiguousSequence?(static Sliced[A]) = true;
+
 [A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
 overload UnderlyingContainerConstructor(static Sliced[A]) =
     UnderlyingContainerConstructor(A);

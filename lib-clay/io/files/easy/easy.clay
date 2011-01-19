@@ -87,54 +87,34 @@ overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 // read, write, flush
 //
 
-[I | Integer?(I)]
-overload read(f:File, buffer:Pointer[Byte], n_:I) {
+overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
     ref fd = f.ptr^;
-
-    var count = SizeT(0);
-    var pending = SizeT(n_);
+    var requested = _requested;
+    var pending = requested;
     var dest = buffer;
-    var src = fd.readBegin;
-    var end = fd.readEnd;
+    ref src = fd.readBegin;
+    ref end = fd.readEnd;
 
     while (pending > 0) {
-        if (pending <= end - src) {
-            count += pending;
-            while (pending > 0) {
-                dest^ = src^;
-                inc(dest);
-                inc(src);
-                dec(pending);
-            }
-            fd.readBegin = src;
-            return count;
+        var n = min(pending, SizeT(end - src));
+        if (n > 0) {
+            copyNonoverlappingMemory(dest, src, src + n);
+            src += n;
+            dest += n;
+            pending -= n;
         }
-
-        count += (end - src);
-        pending -= (end - src);
-        while (src != end) {
-            dest^ = src^;
-            inc(dest);
-            inc(src);
+        else {
+            src = &fd.readBuffer[0];
+            var nRead = read(fd.file, src, SizeT(BUFFER_SIZE));
+            end = src + nRead;
+            if (nRead == 0)
+                break;
         }
-
-        src = &fd.readBuffer[0];
-        end = src;
-        fd.readBegin = src;
-        fd.readEnd = src;
-
-        var nRead = read(fd.file, fd.readBegin, BUFFER_SIZE);
-        if (nRead == 0)
-            break;
-        end += nRead;
-        fd.readEnd = end;
     }
-
-    return count;
+    return requested - pending;
 }
 
-[I | Integer?(I)]
-overload write(f:File, buffer:Pointer[Byte], n:I) {
+overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
     ref fd = f.ptr^;
 
     var src = buffer;

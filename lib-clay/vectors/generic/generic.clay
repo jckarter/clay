@@ -10,8 +10,9 @@ overload Vector?(x) = false;
 
 procedure vectorData;
 procedure vectorSize;
+procedure vectorSetSize;
 procedure vectorCapacity;
-procedure vectorSetCapacity;
+procedure vectorRequestCapacity;
 
 
 
@@ -125,7 +126,7 @@ overload pop(a:V) {
 [V, I | Vector?(V) and Integer?(I)]
 overload reserve(a:V, n:I) {
     if (vectorCapacity(a) < SizeT(n))
-        vectorSetCapacity(a, SizeT(n));
+        vectorRequestCapacity(a, SizeT(n));
 }
 
 [V, I | Vector?(V) and Integer?(I)]
@@ -148,12 +149,11 @@ private resizeInternal(a:V, n:SizeT, initializer) {
     else if (currentSize > n) {
         destroyMemory(begin(a)+n, end(a));
     }
-    vectorSize(a) = n;
+    vectorSetSize(a, n);
 }
 
 private inline ensureSpace(a, space:SizeT) {
-    if (size(a) + space > vectorCapacity(a))
-        vectorSetCapacity(a, 2*(size(a) + space));
+    reserve(a, size(a) + space);
 }
 
 
@@ -171,7 +171,7 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     ensureSpace(a, n);
     var first = begin(a) + pos;
     moveMemoryUnsafe(first+n, first, end(a));
-    vectorSize(a) += n;
+    vectorSetSize(a, vectorSize(a) + n);
     return first, first+n;
 }
 
@@ -282,9 +282,7 @@ inline overload clear(a:V) {
 private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     var n = end(a) - j;
     moveMemoryUnsafe(i, j, end(a));
-    vectorSize(a) -= (j - i);
-    if (vectorCapacity(a) > 3*(size(a)+1))
-        vectorSetCapacity(a, 2*(a.size + 1));
+    vectorSetSize(a, vectorSize(a) - (j-i));
 }
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]

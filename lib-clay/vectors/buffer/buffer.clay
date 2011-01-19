@@ -1,0 +1,94 @@
+
+import vectors.generic.*;
+
+//
+// BufferVector[T]
+//
+
+record BufferVector[T] (
+    begin: Pointer[T],
+    end: Pointer[T],
+    current: Pointer[T],
+);
+
+
+
+//
+// predicates
+//
+
+[T]
+overload ContiguousSequence?(static BufferVector[T]) = true;
+
+
+
+//
+// constructors
+//
+
+// disable all constructors
+[T] overload BufferVector[T](...args);
+[T] overload BufferVector(...args);
+
+[T | PODType?(T)]
+overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) returned:BufferVector[T] {
+    returned.begin = begin;
+    returned.end = end;
+    returned.current = current;
+}
+
+[T | PODType?(T)]
+overload BufferVector[T](begin:Pointer[T], end:Pointer[T]) =
+    BufferVector[T](begin, end, begin);
+
+[T | PODType?(T)]
+overload BufferVector(begin:Pointer[T], end:Pointer[T], current:Pointer[T]) =
+    BufferVector[T](begin, end, current);
+
+[T | PODType?(T)]
+overload BufferVector(begin:Pointer[T], end:Pointer[T]) =
+    BufferVector(begin, end, begin);
+
+[S | ContiguousSequence?(S) and PODType?(SequenceElementType(S))]
+overload BufferVector(seq:S) =
+    BufferVector(begin(seq), end(seq));
+
+
+//
+// default constructor and copy constructor
+//
+
+[T | PODType?(T)]
+overload BufferVector[T]() returned:BufferVector[T] {}
+
+[T | PODType?(T)]
+overload BufferVector[T](src:BufferVector[T]) =
+    BufferVector[T](src.begin, src.end, src.current);
+
+
+
+//
+// generic vector requirements
+//
+
+[T]
+overload Vector?(static BufferVector[T]) = true;
+
+[T]
+overload vectorData(a:BufferVector[T]) = a.begin;
+
+[T]
+overload vectorSize(a:BufferVector[T]) = SizeT(a.current - a.begin);
+
+[T]
+overload vectorSetSize(a:BufferVector[T], size:SizeT) {
+    a.current = a.begin + size;
+}
+
+[T]
+overload vectorCapacity(a:BufferVector[T]) = SizeT(a.end - a.begin);
+
+[T]
+overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
+    assert(capacity <= a.end-a.begin, "BufferVector cannot be expanded");
+}

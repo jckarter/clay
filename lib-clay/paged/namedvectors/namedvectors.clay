@@ -98,13 +98,28 @@ overload Vector?(static NamedVector[T]) = true;
 overload vectorData(a:NamedVector[T]) = &(a.data^);
 
 [T]
-overload vectorSize(a:NamedVector[T]) = ref a.header^.size;
+overload vectorSize(a:NamedVector[T]) = a.header^.size;
+
+[T]
+overload vectorSetSize(a:NamedVector[T], n:SizeT) {
+    a.header^.size = n;
+}
 
 [T]
 overload vectorCapacity(a:NamedVector[T]) = a.header^.capacity;
 
 [T]
-overload vectorSetCapacity(a:NamedVector[T], capacity:SizeT) {
+overload vectorRequestCapacity(a:NamedVector[T], capacity:SizeT) {
+    assert(capacity >= vectorSize(a));
+    if (capacity < vectorCapacity(a))
+        return;
+    var n = max(capacity, SizeT(16));
+    n = max(n, 2*vectorCapacity(a));
+    reallocVector(a, n);
+}
+
+[T]
+private reallocVector(a:NamedVector[T], capacity:SizeT) {
     destroy(a.mapping);
     resizeFile(a.file, requiredFileSize(T, capacity));
     a.mapping <-- FileMapping(a.file, MAP_READ_WRITE);

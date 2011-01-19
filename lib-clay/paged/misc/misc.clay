@@ -52,5 +52,5 @@ ceilLog2(n:T) {
 resizeFile(file, newSize) {
     assert(fileSize(file) < newSize, "resizeFile");
     seek(file, newSize-1);
-    writeByte(file, 0);
+    write(file, 0);
 }
