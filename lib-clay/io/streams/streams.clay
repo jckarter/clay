@@ -158,17 +158,17 @@ overload readLine(stream) = readUpto(stream, '\n');
 
 
 //
-// writeByte
+// write - write one byte
 //
 
 [I | Integer?(I)]
-writeByte(stream, x:I) {
+overload write(stream, x:I) {
     var b = Byte(x);
     write(stream, &b, SizeT(1));
 }
 
-overload writeByte(stream, x:Char) {
-    writeByte(stream, Byte(x));
+overload write(stream, x:Char) {
+    write(stream, Byte(x));
 }
 
 

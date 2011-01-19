@@ -22,7 +22,7 @@ server(args) {
     var data = readN(conn, TypeSize(T));
     var n = Pointer[T](begin(data))^;
     for (i in range(n)) {
-        writeByte(conn, i);
+        write(conn, i);
         time.sleep(0.01);
     }
 }
