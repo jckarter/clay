@@ -26,6 +26,14 @@ private alias platform = io.sockets.platform;
 record SocketError (code: platform.SocketErrorCode);
 instance Exception = SocketError;
 
+overload printTo(stream, x:SocketError) {
+    printTo(stream, "SocketError(", x.code, ", ", platform.errorMessage(x.code), ")");
+}
+
+overload printReprTo(stream, x:SocketError) {
+    printTo(stream, x);
+}
+
 socketCall(callable, forward ...args) {
     var ret = callable(...args);
     if (ret == Type(ret)(platform.SOCKET_ERROR))
