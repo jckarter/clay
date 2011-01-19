@@ -5,7 +5,7 @@ record TruncatedRead ();
 instance Exception = TruncatedRead;
 
 private fullRead(stream, dest, size) {
-    if (read(stream, dest, size) < size)
+    if (readN(stream, dest, size) < size)
         throw TruncatedRead();
 }
 
@@ -15,7 +15,7 @@ private readMarshalSize(stream) returned: MarshalSize {
 
 private maybeReadMarshalSize(stream) {
     var returned = MarshalSize();
-    var size = read(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+    var size = readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
     
     if (size == TypeSize(MarshalSize))
         return Maybe(returned);
