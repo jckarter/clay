@@ -159,7 +159,7 @@ overload printTo(stream, x:Char) {
 [S | String?(S)]
 overload printTo(stream, x:S) {
     for (c in x)
-        writeByte(stream, c);
+        write(stream, c);
 }
 
 [S | ContiguousString?(S)]

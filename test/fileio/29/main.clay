@@ -5,7 +5,7 @@ main() {
 
     var file = File("tempfile.txt", CREATE);
     seek(file, N-1);
-    writeByte(file, 'B');
+    write(file, 'B');
 
     var mapping = FileMapping(file, MAP_READ_WRITE);
     for (i in range(N))
