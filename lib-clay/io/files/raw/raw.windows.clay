@@ -125,8 +125,7 @@ overload fileHandle(f:RawFile) = f.handle;
 // read, write, flush
 //
 
-[I | Integer?(I)]
-overload read(f:RawFile, buffer:Pointer[Byte], n:I) SizeT {
+overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
         f.handle,
@@ -139,8 +138,7 @@ overload read(f:RawFile, buffer:Pointer[Byte], n:I) SizeT {
     return SizeT(nRead);
 }
 
-[I | Integer?(I)]
-overload write(f:RawFile, buffer:Pointer[Byte], n:I) {
+overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
     var nWritten = win32.DWORD();
     var result = win32.WriteFile(
         f.handle,

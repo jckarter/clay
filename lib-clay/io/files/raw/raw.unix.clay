@@ -90,15 +90,13 @@ overload fileHandle(f:RawFile) = f.handle;
 // read, write, flush
 //
 
-[I | Integer?(I)]
-overload read(f:RawFile, buffer:Pointer[Byte], n:I) SizeT {
-    var result = unix.syscall(unix.read, f.handle, buffer, SizeT(n));
+overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) SizeT {
+    var result = unix.syscall(unix.read, f.handle, buffer, n);
     return SizeT(result);
 }
 
-[I | Integer?(I)]
-overload write(f:RawFile, buffer:Pointer[Byte], n:I) {
-    unix.syscall(unix.write, f.handle, buffer, SizeT(n));
+overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
+    unix.syscall(unix.write, f.handle, buffer, n);
 }
 
 overload flush(f:RawFile) {
