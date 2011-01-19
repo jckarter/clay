@@ -2,9 +2,7 @@
 public import win32.generated.*;
 public import win32.constants.*;
 public import win32.errno.*;
-
-alias WINAPI = cdecl;
-alias WinApiCodePointer = CCodePointer;
+public import win32.platform.*;
 
 
 //
@@ -13,11 +11,11 @@ alias WinApiCodePointer = CCodePointer;
 // redefined because LARGE_INTEGER definition is wrong
 //
 
-external GetFileSizeEx(
+external (WINAPI) GetFileSizeEx(
     handle : HANDLE,
     lpFileSize : Pointer[Int64]) BOOL;
 
-external SetFilePointerEx(
+external (WINAPI) SetFilePointerEx(
     handle : HANDLE,
     offset : Int64,
     newPosition : Pointer[Int64],

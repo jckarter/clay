@@ -1,0 +1,3 @@
+
+alias WINAPI = stdcall;
+alias WinApiCodePointer = StdCallCodePointer;
