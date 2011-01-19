@@ -27,12 +27,12 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node) {
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Block) {
     withBlockFrame(c, dest, () ref=> {
-        push(dest, lifetimeAnalyzeSubbody(c, node.body));
+        lifetimeAnalyzeSubbody(c, dest, node.body);
     });
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Statement) {
     withStatementFrame(c, dest, () ref=> {
-        push(dest, lifetimeAnalyzeSubbody(c, node.body));
+        lifetimeAnalyzeSubbody(c, dest, node.body);
     });
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Call) {
@@ -54,8 +54,8 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If
     var origVariableFrames = c.variableFrames;
 
     // then branch
-    withBlockFrame(c, dest, () ref=> {
-        outNode.thenBody = lifetimeAnalyzeSubbody(c, node.thenBody);
+    withBlockFrame(c, outNode.thenBody, () ref=> {
+        lifetimeAnalyzeSubbody(c, outNode.thenBody, node.thenBody);
     });
 
     var thenVariableFrames = move(c.variableFrames);
@@ -69,8 +69,8 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If
         }
 
     // else branch
-    withBlockFrame(c, dest, () ref=> {
-        outNode.elseBody = lifetimeAnalyzeSubbody(c, node.elseBody);
+    withBlockFrame(c, outNode.elseBody, () ref=> {
+        lifetimeAnalyzeSubbody(c, outNode.elseBody, node.elseBody);
     });
 
     var elseVariableFrames = move(c.variableFrames);
@@ -99,9 +99,11 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.While) {
     var outNode = ir.While(node.ast, Vector[ir.Node](), node.condition, Vector[ir.Node]());
-    withLoopFrame(c, dest, () ref=> {
-        outNode.conditionBody = lifetimeAnalyzeSubbody(c, node.conditionBody);
-        outNode.body = lifetimeAnalyzeSubbody(c, node.body);
+    withLoopFrame(c, outNode.body, () ref=> {
+        withStatementFrame(c, outNode.conditionBody, () ref=> {
+            lifetimeAnalyzeSubbody(c, outNode.conditionBody, node.conditionBody);
+        });
+        lifetimeAnalyzeSubbody(c, outNode.body, node.body);
     });
     ir.pushNode(dest, outNode);
 }
@@ -172,13 +174,11 @@ private lifetimeAnalyzeInitialize(c, dest, node) {
 
 private _Type(x) = StaticName(Type(x));
 
-private lifetimeAnalyzeSubbody(c, subbody) {
-    var subdest = Vector[ir.Node]();
+private lifetimeAnalyzeSubbody(c, subdest, subbody) {
     for (subnode in subbody) {
         observe(_Type(*subnode));
         lifetimeAnalyzeNode(c, subdest, *subnode);
     }
-    return move(subdest);
 }
 
 private removeValue(c:LifetimeContext, input) {
@@ -317,7 +317,7 @@ lifetimeAnalyzeSpecialization(s:Specialization) {
         for (internalArg, arg in zipped(s.internalArgs, s.args))
             if (arg.kind == RT_VARIABLE_RVALUE)
                 addReference(c, internalArg);
-        outBody = lifetimeAnalyzeSubbody(c, just(s.body));
+        lifetimeAnalyzeSubbody(c, outBody, just(s.body));
     });
     s.body = Maybe(move(outBody));
 }
