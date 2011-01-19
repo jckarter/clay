@@ -91,6 +91,9 @@ record ClayHooks (
     multiplyAssign: Value,
     divideAssign: Value,
     remainderAssign: Value,
+
+    initializeFromUnsafe: Value,
+    destroyUnsafe: Value,
 );
 
 
