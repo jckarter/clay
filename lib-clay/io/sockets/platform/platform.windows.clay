@@ -18,6 +18,7 @@ public import win32.(
 alias RawSocket = win32.SOCKET;
 alias errno = win32.WSAGetLastError;
 alias herrno = win32.WSAGetLastError;
+alias errorMessage = win32.errorMessage;
 
 alias close = win32.closesocket;
 
