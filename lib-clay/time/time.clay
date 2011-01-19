@@ -2,3 +2,7 @@
 import time.platform as p;
 
 time() = p.time();
+
+sleep(seconds:Double) {
+    p.sleep(seconds);
+}

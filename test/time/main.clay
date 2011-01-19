@@ -1,0 +1,5 @@
+import time;
+
+main() {
+    time.sleep(0.1);
+}

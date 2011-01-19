@@ -1,0 +1,7 @@
+
+import win32;
+
+sleep(seconds:Double) {
+    var mseconds = CULong(seconds * 1000);
+    win32.Sleep(mseconds);
+}
