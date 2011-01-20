@@ -1,0 +1,15 @@
+public import os.errors.*;
+
+record GenericIOError(code:Int);
+
+[I | Integer?(I)]
+overload GenericIOError(code:I) returned:GenericIOError {
+    returned.code = Int(code);
+}
+
+variant IOError = GenericIOError;
+
+instance OSError = IOError;
+
+[T | VariantMember?(IOError, T)]
+overload Exception(forward x:T) = Exception(IOError(x));

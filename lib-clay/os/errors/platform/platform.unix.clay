@@ -1,0 +1,6 @@
+
+import unix;
+
+printErrorMessageTo(stream, code:Int) {
+    unix.printErrorMessageTo(stream, code);
+}
