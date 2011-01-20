@@ -45,11 +45,3 @@ printErrorMessageTo(stream, errorCode) {
     else
         printTo(stream, CStringRef(&buf[0]));
 }
-
-errorMessage(errorCode) {
-    var buf = String();
-    printErrorMessageTo(buf, errorCode);
-    return move(buf);
-}
-
-overload errorMessage() = errorMessage(GetLastError());
