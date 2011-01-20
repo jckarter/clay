@@ -4,28 +4,6 @@ public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
-callbyname syscall(callable, ...args) {
-    var result = callable(...args);
-    if (result == Type(result)(-1))
-        error(errorMessage());
-    return result;
-}
-
-callbyname syscallNoThrow(callable, ...args) {
-    var result = callable(...args);
-    if (result == Type(result)(-1))
-        errorNoThrow(errorMessage());
-    return result;
-}
-
 printErrorMessageTo(stream, errorCode) {
     printTo(stream, CStringRef(libc.strerror(errorCode)));
 }
-
-errorMessage(errorCode) {
-    var buf = String();
-    printErrorMessageTo(buf, errorCode);
-    return move(buf);
-}
-
-overload errorMessage() = errorMessage(errno());
