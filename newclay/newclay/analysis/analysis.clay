@@ -1311,8 +1311,11 @@ arityMatches?(formalArgs:ast.VariadicList[Arg], args:S) {
         return size(args) >= size(formalArgs.items);
 }
 
-private referenceSpecifier(x:ast.Argument) ast.ArgumentKind {
-    return maybe(x.kind, y => y, () => ast.ARG_CONST);
+private referenceSpecifier(formalArg:ast.Argument) ast.ArgumentKind {
+    return match(formalArg,
+        ast.BoundArgument, x => maybe(x.kind, y => y, () => ast.ARG_CONST),
+        ast.StaticArgument, x => ast.ARG_CONST,
+    );
 }
 
 private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTVariableKind) {
@@ -1330,24 +1333,41 @@ private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTVariableKind) {
 }
 
 private unifyArgumentType(formalArg:ast.Argument, arg:RTVariable, env) {
-    return maybe(formalArg.type,
-        type ref=> {
-            var typePattern = evaluatePattern(type, env);
-            return unify(typePattern, arg.type);
-        },
-        () => true,
+    return match(formalArg,
+        ast.BoundArgument, x ref=> maybe(x.type,
+            type ref=> {
+                var typePattern = evaluatePattern(type, env);
+                return unify(typePattern, arg.type);
+            },
+            () => true,
+        ),
+        ast.StaticArgument, x ref=> {
+            var staticPattern = evaluatePattern(x.pattern, env);
+            return unify(staticPattern, staticTypeValue(arg.type));
+        }
     );
 }
 
 private unifyVariadicArgumentType(formalArg, args, env) {
-    return maybe(formalArg.type,
-        type => {
-            var listCell = evaluateListPatternCell(type, env);
-            return unifyList(listCell, mapped(a => ref a.type, args));
+    return match(formalArg,
+        ast.BoundArgument, x ref=> maybe(x.type,
+            type => {
+                var listCell = evaluateListPatternCell(type, env);
+                return unifyList(listCell, mapped(a => ref a.type, args));
+            },
+            () => true,
+        ),
+        ast.StaticArgument, x ref=> {
+            genericError("static variadic arguments are not yet supported");
+            return false;
         },
-        () => true,
     );
 }
+
+private argumentName(formalArg) = match(formalArg,
+    ast.BoundArgument, x ref=> Maybe(x.name),
+    ast.StaticArgument, x ref=> nothing(ast.Identifier),
+);
 
 private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) {
     var formalKind = referenceSpecifier(formalArg);
@@ -1356,8 +1376,9 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) 
     if (not unifyArgumentType(formalArg, arg, s.env))
         return false;
     var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-    var v = RTVariable(loweredArgKind, arg.type, false, formalArg.name.str);
-    envAdd(s.env, formalArg.name, v);
+    var argName = argumentName(formalArg);
+    var v = RTVariable(loweredArgKind, arg.type, false, maybe(argName, name ref=> Maybe(name.str)));
+    maybe(argName, name ref=> { envAdd(s.env, name, v); });
     push(s.args, v);
     return true;
 }
@@ -1365,11 +1386,13 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) 
 private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
     var vars = VariableList();
+    var argName = argumentName(formalArg);
+    var argNameStr = maybe(argName, name ref=> Maybe(name.str));
     for (arg in args) {
         if (not referenceKindMatches?(formalKind, arg.kind))
             return false;
         var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-        var v = RTVariable(loweredArgKind, arg.type);
+        var v = RTVariable(loweredArgKind, arg.type, false, argNameStr);
         push(vars, v);
         push(s.args, v);
     }
@@ -1377,7 +1400,7 @@ private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
         return false;
 
     var listVar = RTListVariable(vars);
-    envAdd(s.env, formalArg.name, listVar);
+    maybe(argName, name ref=> { envAdd(s.env, name, listVar); });
 
     return true;
 }

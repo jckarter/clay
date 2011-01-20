@@ -13,11 +13,17 @@ overload ResolveASTVisitor(e:E) = ResolveASTVisitor(EnvParent(e));
 
 private newVisitor(parent:ResolveASTVisitor) = ResolveASTVisitor(newEnv(parent.env));
 
+private addArgument(env, arg:ast.StaticArgument) {
+}
+overload addArgument(env, arg:ast.BoundArgument) {
+    envAdd(env, arg.name, DummyValue);
+}
+
 private bindArgumentList(env:Env, argList) {
     for (arg in argList.items)
-        envAdd(env, arg.name, DummyValue);
+        addArgument(env, *arg);
     maybe(argList.variadicItem, arg ref=> {
-        envAdd(env, arg.name, DummyValue);
+        addArgument(env, *arg);
     });
 }
 

@@ -95,15 +95,22 @@ private lambdaArgName(arg) {
     return arg.name;
 }
 
+private addLambdaArg(env, formalArg:ast.BoundArgument, entry) {
+    envAdd(env, lambdaArgName(formalArg), entry);
+}
+overload addLambdaArg(env, formalArg:ast.StaticArgument, entry) {
+    genericError("static argument pattern not allowed on lambda evaluated in static context");
+}
+
 bindArgs(env, formalArgs, args) {
     verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
     for (formalArg, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
-        envAdd(env2, lambdaArgName(formalArg), arg);
+        addLambdaArg(env2, *formalArg, arg);
     maybe(formalArgs.variadicItem,
         formalArg ref=> {
-            envAdd(env2, lambdaArgName(formalArg), ValueList(slicedFrom(args, nFixed)));
+            addLambdaArg(env2, *formalArg, ValueList(slicedFrom(args, nFixed)));
         },
         () => {}
     );
@@ -809,17 +816,25 @@ walkListPattern(x:ast.ListPattern, visitor) {
 
 walkArgumentPatterns(x:ast.VariadicList[ast.Argument], visitor) {
     for (y in x.items)
-        walkArgumentPattern(y, visitor);
+        walkArgumentPattern(*y, visitor);
     maybe(x.variadicItem,
-        x ref=> { walkVariadicArgumentPattern(x, visitor); },
+        x ref=> { walkVariadicArgumentPattern(*x, visitor); },
         () => {},
     );
 }
-walkArgumentPattern(x:ast.Argument, visitor) {
+
+walkArgumentPattern(x:ast.BoundArgument, visitor) {
     maybe(x.type, p ref=> { walkPattern(p, visitor); }, () => {});
 }
-walkVariadicArgumentPattern(x:ast.Argument, visitor) {
+overload walkArgumentPattern(x:ast.StaticArgument, visitor) {
+    walkPattern(x.pattern, visitor);
+}
+
+walkVariadicArgumentPattern(x:ast.BoundArgument, visitor) {
     maybe(x.type, p ref=> { walkMultiPattern(p, visitor); }, () => {});
+}
+overload walkVariadicArgumentPattern(x:ast.StaticArgument, visitor) {
+    walkMultiPattern(x.pattern, visitor);
 }
 
 
