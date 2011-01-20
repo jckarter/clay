@@ -1,10 +1,12 @@
 
 import unix;
+import os.errors.*;
 
 time() {
     var tv = unix.Struct_timeval();
-    var r = unix.syscallNoThrow(unix.gettimeofday, &tv,
-                                unix.__timezone_ptr_t(0));
+    var r = unix.gettimeofday(&tv, unix.__timezone_ptr_t(0));
+    if (r == Type(r)(-1))
+        throw GenericOSError(unix.errno());
     var secs = Double(tv.tv_sec);
     var usecs = Double(tv.tv_usec);
     return secs + usecs/(1000*1000);
