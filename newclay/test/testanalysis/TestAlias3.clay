@@ -1,0 +1,14 @@
+foo(x) {}
+
+main() {
+    var x = 1;
+
+    alias y = x;
+    foo(y);
+    {
+        var x = true;
+        foo(y);
+    }
+
+    foo(y);
+}

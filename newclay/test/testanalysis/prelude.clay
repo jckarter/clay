@@ -102,7 +102,6 @@ static overload TypeTemplate?(Pointer) = true;
 static overload Type?(Pointer['T]) = true;
 static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
-
 
 //
 // NewProcedure, Procedure?

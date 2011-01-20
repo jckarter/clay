@@ -1,0 +1,12 @@
+foo(x, y) {}
+
+main() {
+    var x1 = 1;
+    var x2 = true;
+
+    alias y1 = x1, y2 = x2;
+    alias ...yy = x1, x2;
+
+    foo(y1, y2);
+    foo(...yy);
+}
