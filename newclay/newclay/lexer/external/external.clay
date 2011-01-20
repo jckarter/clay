@@ -194,9 +194,22 @@ private var decimalInt = seq(
 
 private var sign = choice('+', '-');
 
+private var intType = choice(
+    seq('u', '8'),
+    seq('u', '1', '6'),
+    seq('u', '3', '2'),
+    seq('u', '6', '4'),
+    seq('i', '8'),
+    seq('i', '1', '6'),
+    seq('i', '3', '2'),
+    seq('i', '6', '4'),
+    'u',
+    'i',
+);
+
 private var lexIntLiteral = modify(
     x => Token(INT_LITERAL),
-    seq(optional(sign), choice(hexInt, decimalInt)),
+    seq(optional(sign), choice(hexInt, decimalInt), optional(intType)),
 );
 
 
@@ -224,9 +237,18 @@ private var hexFloatTail = choice(
 private var decimalFloat = seq(decimalInt, floatTail);
 private var hexFloat = seq(hexInt, hexFloatTail);
 
+private var floatType = choice(
+    seq('f', '3', '2'),
+    seq('f', '6', '4'),
+    'f',
+);
+
 private var lexFloatLiteral = modify(
     x => Token(FLOAT_LITERAL),
-    seq(optional(sign), choice(hexFloat, decimalFloat)),
+    choice(
+        seq(optional(sign), choice(hexFloat, decimalFloat), optional(floatType)),
+        seq(optional(sign), choice(hexInt, decimalInt), floatType)
+    ),
 );
 
 

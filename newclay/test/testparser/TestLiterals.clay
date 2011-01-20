@@ -10,6 +10,18 @@ main() {
     -0x1234_aBcD;
     +0x1234_abcd;
 
+    // typed integers
+    1u;
+    1u8;
+    1u16;
+    1u32;
+    1u64;
+    1i;
+    1i8;
+    1i16;
+    1i32;
+    1i64;
+
     // floats
     0.0;
     -0.0;
@@ -27,6 +39,13 @@ main() {
     +0x1.7fffp123;
     0x1.7FFF_aBcD_p-1_234;
     -0x1P5;
+
+    // typed floats
+    0f;
+    1f;
+    0.0f;
+    0.0f32;
+    0.0f64;
 
     // char literals
     ' ';
