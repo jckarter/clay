@@ -26,7 +26,7 @@ overload transformASTInto(from:Node, to:Vector[TopLevelItem]) {
 
 
 //
-// transformed: construct a derived AST node that borrows the location info of an original node 
+// transformed: construct a derived AST node that borrows the location info of an original node
 //
 
 [FromNode, ToNode | ASTNode?(FromNode) and ASTNode?(ToNode)]
@@ -42,18 +42,18 @@ transformedNameRef(from:FromNode, moduleName:ModuleName, identifier:S)
         EnvRef(ModuleEnvRef(preludeModuleName, String(identifier))),
         Vector[Identifier](Identifier(identifier)),
     );
-        
+
 
 //
 // transform Procedure into Symbol, Overload
 //
 // <Visibility>? <SymbolName> <OverloadDefinition>
-//    
+//
 //   becomes
 //
 // <Visibility>? symbol <SymbolName> = prelude.NewProcedure();
 // overload <SymbolName> <OverloadDefinition>
-// 
+//
 
 overload transformASTInto(from:Procedure, to:Vector[TopLevelItem]) {
     var NewProcedureNameRef = transformedNameRef(from, preludeModuleName, String("NewProcedure"));
@@ -84,7 +84,7 @@ symbolNameToPattern(name:SymbolName) =
                 maybe(name.params.variadicItem, x => Maybe(symbolParamToPattern(x))),
             ),
         ));
-        
+
 symbolParamToPattern(name:Identifier) =
     Pattern(transformed(name, PatternNameRef, name));
 
@@ -93,12 +93,12 @@ symbolParamToPattern(name:Identifier) =
 // transform StaticFunction into Symbol, StaticOverload
 //
 // <Visibility>? static <SymbolName> <StaticOverloadDefinition>
-//    
+//
 //   becomes
 //
 // <Visibility>? symbol <SymbolName> = ();
 // static overload <SymbolName> <StaticOverloadDefinition>
-// 
+//
 
 overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
     push(to, TopLevelItem(transformed(from, Symbol,

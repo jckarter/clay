@@ -1011,6 +1011,7 @@ private var bindingKind = choice(
     modify(x => BINDING_REF, kw_ref),
     modify(x => BINDING_RVALUE, kw_rvalue),
     modify(x => BINDING_FORWARD, kw_forward),
+    modify(x => BINDING_ALIAS, kw_alias),
 );
 
 private var bindingList = choice(

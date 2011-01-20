@@ -28,7 +28,7 @@ wut:
     rvalue x:Int, y:Int, ...z = ...bar();
     const x:Int, y:Int, ...z = ...bar();
     forward x:Int, y:Int, ...z = ...bar();
-//    alias x:Int, y:Int, ...z = ...bar();
+    alias x:Int, y:Int, ...z = ...bar();
 
     x = 1;
     x <-- 1;
