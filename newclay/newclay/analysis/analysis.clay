@@ -196,7 +196,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StringLiteral)
     = addSpecializedValue(s, expr, Value(StringValue(expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
-    var envEntry = privateLookup(env, expr.name);
+    var envEntry = nameRefLookup(env, expr);
     return match(envEntry,
         RTVariable, x ref=> Maybe(VariableList(x)),
         Value, x ref=> addSpecializedValue(s, expr, x),
@@ -975,7 +975,7 @@ overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[VariableList]
     = analyzeMultiExprSubnode(s, env, *expr);
 
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
-    var envEntry = privateLookup(env, expr.name);
+    var envEntry = nameRefLookup(env, expr);
     return match(envEntry,
         RTListVariable, x ref=> Maybe(x.vars),
         ValueList, x ref=> addSpecializedValueList(s, expr, x),
