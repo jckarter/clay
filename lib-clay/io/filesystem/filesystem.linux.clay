@@ -1,4 +1,5 @@
 import unix.*;
+import io.errors.*;
 
 
 
@@ -16,7 +17,7 @@ readLink(x) {
 
     var size = readlink(cstring(x), Pointer[CChar](&buf[0]), size_t(path_max));
     if (size < 0)
-        error("failed to read link '", x, "': ", errorMessage());
+        throw GenericIOError(errno());
 
     resize(buf, size);
     return move(buf);
