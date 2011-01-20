@@ -422,7 +422,7 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
 
 
 //
-// publicLookup, privateLookup
+// publicLookup, privateLookup, nameRefLookup
 //
 
 private _ifEnvLookup(_ifParentLookup, fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
@@ -508,6 +508,12 @@ overload privateLookup(env, name:StringConstant)
     = forward privateLookup(env, String(name));
 
 privateLookup?(env, name) = ifPrivateLookup(env, name, entry => true, () => false);
+
+nameRefLookup(env, nameRef:ast.NameRef)
+    = match(nameRef.env,
+        ast.ModuleEnvRef, m ref=> privateLookup(getProgram().modules[m.module], m.name),
+        MatchDefault, x ref=> privateLookup(env, nameRef.name),
+    );
 
 
 //

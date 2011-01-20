@@ -209,7 +209,7 @@ overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
 }
 overload evaluateExpr(x:ast.NameRef, env) {
-    return envEntryToValue(privateLookup(env, x.name));
+    return envEntryToValue(nameRefLookup(env, x));
 }
 overload evaluateExpr(x:ast.PatternNameRef, env) {
     return derefPattern(env, x.name);
@@ -391,7 +391,7 @@ overload evaluateMultiExpr(x:ast.Expr, env) ValueList {
     return withLocation(x, () ref=> evaluateMultiExpr(*x, env));
 }
 overload evaluateMultiExpr(x:ast.NameRef, env) {
-    return envEntryToValueList(privateLookup(env, x.name));
+    return envEntryToValueList(nameRefLookup(env, x));
 }
 overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
     return derefListPattern(env, x.name);
