@@ -161,7 +161,9 @@ record UnpackExpr = ast(
 //
 
 variant Expr = BoolLiteral
+             | CharLiteral
              | IntLiteral
+             | FloatLiteral
              | StringLiteral
              | NameRef
              | PatternNameRef
@@ -184,7 +186,15 @@ record BoolLiteral = ast(
     value: Bool,
 );
 
+record CharLiteral = ast(
+    value: String,
+);
+
 record IntLiteral = ast(
+    value: String,
+);
+
+record FloatLiteral = ast(
     value: String,
 );
 
@@ -309,6 +319,7 @@ record IfExpr = ast(
 alias ListPattern = VariadicList[Pattern];
 
 variant Pattern = BoolLiteral
+                | CharLiteral
                 | IntLiteral
                 | StringLiteral
                 | NameRef
