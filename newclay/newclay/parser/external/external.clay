@@ -68,6 +68,8 @@ private bounds(parser:Parser) = modify(
     includeBounds(parser),
 );
 
+[P | Type(P()(ParserInput())) == Maybe[Argument]]
+overload bounds(p:P);
 
 
 //
@@ -472,16 +474,21 @@ private var orExpr = andOrOpChain(OrExpr, kw_or, andExpr);
 private var lambdaArgs = choice(
     modify(
         x => VariadicList[Argument](
-            Vector[Argument](Argument(nothing(ArgumentKind), move(x), nothing(Pattern))),
+            Vector[Argument](Argument(x)),
             nothing(Argument),
         ),
-        identifier,
+        lambdaSingleArg,
     ),
     modify(
         x => move(x.1),
         sequence(punc(#"("), arguments, punc(#")")),
     ),
 );
+
+private var lambdaSingleArg = bounds(modify(
+    x => BoundArgument(nothing(ArgumentKind), move(x), nothing(Pattern)),
+    identifier
+));
 
 private var lambdaCodeBody = choice(
     modify(LambdaCodeBody, groupedExprList),
@@ -785,13 +792,23 @@ private var argumentKind = choice(
     modify(x => ARG_FORWARD, kw_forward),
 );
 
-private var argument = bounds(modify(
-    x => Argument(move(x.0), move(x.1), move(x.2)),
+private var boundArgument = bounds(modify(
+    x => BoundArgument(move(x.0), move(x.1), move(x.2)),
     sequence(optional(argumentKind), identifier, optTypePattern),
 ));
 
+private var staticArgument = bounds(modify(
+    x => StaticArgument(move(x.1)),
+    sequence(punc(#"#"), pattern),
+));
+
+private var argument = choice(
+    modify(x => Argument(x), boundArgument),
+    modify(x => Argument(x), staticArgument),
+);
+
 private var multiArgument = bounds(modify(
-    x => Argument(move(x.0), move(x.2), move(x.3)),
+    x => BoundArgument(move(x.0), move(x.2), move(x.3)),
     sequence(
         optional(argumentKind), punc(#"..."),
         identifier, optMultiTypePattern
@@ -799,7 +816,7 @@ private var multiArgument = bounds(modify(
 ));
 
 private var arguments = variadicList(
-    argument, multiArgument
+    argument, modify(x => Argument(x), multiArgument),
 );
 
 private var optArguments = modify(

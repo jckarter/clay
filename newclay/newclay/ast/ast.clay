@@ -425,10 +425,17 @@ enum ArgumentKind {
     ARG_FORWARD,
 }
 
-record Argument = ast(
+variant Argument = BoundArgument
+                 | StaticArgument;
+
+record BoundArgument = ast(
     kind: Maybe[ArgumentKind],
     name: Identifier,
     type: Maybe[Pattern],
+);
+
+record StaticArgument = ast(
+    pattern: Pattern,
 );
 
 alias ArgumentList = VariadicList[Argument];
