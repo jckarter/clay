@@ -1,0 +1,43 @@
+main() {
+    // decimal integers
+    0;
+    1234;
+    -5678;
+    +1_234_;
+
+    // hex integers
+    0x1234abcd;
+    -0x1234_aBcD;
+    +0x1234_abcd;
+
+    // floats
+    0.0;
+    -0.0;
+    +0.0;
+    1234.5678;
+    1_234.567_8;
+    1_234e56;
+    -1_234E+56;
+    +1_234e-5_678;
+    1_234.5E56;
+
+    // hex floats
+    0x0.0;
+    -0x0.0;
+    +0x1.7fffp123;
+    0x1.7FFF_aBcD_p-1_234;
+    -0x1P5;
+
+    // char literals
+    ' ';
+    'a';
+    '\n';
+    '\'';
+    '\\';
+
+    // string literals
+    "abc";
+    "abc\"";
+    "abc\n";
+    "abc\\";
+}

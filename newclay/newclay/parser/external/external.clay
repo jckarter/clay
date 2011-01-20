@@ -237,9 +237,19 @@ private var boolLiteral = exprParser(
 
 private var identStr = modify(String, tokenData(IDENTIFIER));
 
+private var charLiteral = exprParser(
+    x => CharLiteral(String(x)),
+    tokenData(CHAR_LITERAL),
+);
+
 private var intLiteral = exprParser(
     x => IntLiteral(String(x)),
     tokenData(INT_LITERAL),
+);
+
+private var floatLiteral = exprParser(
+    x => FloatLiteral(String(x)),
+    tokenData(FLOAT_LITERAL),
 );
 
 private var stringLiteral = exprParser(
@@ -248,7 +258,7 @@ private var stringLiteral = exprParser(
 );
 
 private var literalExpr = choice(
-    boolLiteral, intLiteral, stringLiteral
+    boolLiteral, charLiteral, intLiteral, floatLiteral, stringLiteral
 );
 
 
@@ -278,7 +288,7 @@ private var tupleExpr = exprParser(
 );
 
 private var atomicExpr = choice(
-    nameRef, literalExpr, patternNameRef, bracketedExpr, tupleExpr,
+    literalExpr, nameRef, patternNameRef, bracketedExpr, tupleExpr,
 );
 
 
@@ -593,6 +603,11 @@ private var intLiteralPattern = patternParser(
     tokenData(INT_LITERAL),
 );
 
+private var charLiteralPattern = patternParser(
+    x => CharLiteral(String(x)),
+    tokenData(CHAR_LITERAL),
+);
+
 private var stringLiteralPattern = patternParser(
     x => StringLiteral(String(x)),
     tokenData(STRING_LITERAL),
@@ -618,7 +633,7 @@ private var targetPattern = choice(
 );
 
 private var pattern2 = choice(
-    boolLiteralPattern, intLiteralPattern, stringLiteralPattern,
+    boolLiteralPattern, charLiteralPattern, intLiteralPattern, stringLiteralPattern,
     targetPattern,
 );
 

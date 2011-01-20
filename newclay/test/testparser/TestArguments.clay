@@ -1,0 +1,16 @@
+
+foo() {}
+foo(x) {}
+foo(x, y) {}
+foo(x, y, ...z) {}
+foo(...x) {}
+
+foo(x:Int) {}
+foo(x:'T) {}
+foo(x:Foo['T]) {}
+
+foo(#Int) {}
+foo(#"foo") {}
+foo(#2) {}
+foo(#true) {}
+foo(#'T) {}

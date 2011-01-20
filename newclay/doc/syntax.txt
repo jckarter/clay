@@ -75,6 +75,7 @@ ReturnExprKind -> "const" | "ref" | "rvalue" | "forward"
 
 ListPattern -> variadic_list(Pattern, PatternNameRef)
 Pattern -> BoolLiteral
+         | CharLiteral
          | IntLiteral
          | StringLiteral
          | IndexingPattern
@@ -99,10 +100,13 @@ ExprListItem -> "..." "(" ExprList ")"
               | Expr
 
 LiteralExpr -> BoolLiteral
+             | CharLiteral
              | IntLiteral
+             | FloatLiteral
              | StringLiteral
 
-AtomicExpr -> NameRef
+AtomicExpr -> LiteralExpr
+            | NameRef
             | PatternNameRef
             | BracketedExpr
             | TupleExpr
