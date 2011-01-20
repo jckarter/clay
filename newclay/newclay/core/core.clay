@@ -266,6 +266,8 @@ variant EnvEntry = Value
                  | ValueList
                  | PatternCell
                  | ListPatternCell
+                 | Alias
+                 | ListAlias
                  | RTVariable
                  | RTListVariable
                  | RTLabel
@@ -591,6 +593,21 @@ overload printTo(stream, x:ValueList) {
     printTo(stream, x.data^);
 }
 
+
+
+//
+// Alias
+//
+
+record Alias = referenceType(
+    value: ast.Expr,
+    env: Env,
+);
+
+record ListAlias = referenceType(
+    value: ast.ExprList,
+    env: Env,
+);
 
 
 //

@@ -202,6 +202,9 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
         Value, x ref=> addSpecializedValue(s, expr, x),
         ValueList, x ref=>
             genericAnalysisError("multiple values cannot be used in single value context"),
+        Alias, x ref=> analyzeSubnode(s, x.env, x.value),
+        ListAlias, x ref=>
+            genericAnalysisError("multiple values cannot be used in single value context"),
         PatternCell, x ref=>
             genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
         ListPatternCell, x ref=>
@@ -663,7 +666,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
     // XXX handle recursion in binding values?
-    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, *stmt.bindings);
+    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, stmt.bindings);
     bc.env = subenv;
     return returns?;
 }
@@ -840,9 +843,86 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
 // analyzeBindings
 //
 
-private procedure analyzeBindings;
+private analyzeBindings(
+    s:SpecializationContext,
+    env:Env,
+    stmt:ast.BindingStatement,
+    kind:ast.BindingKind,
+    bindingList
+) {
+    if (kind == ast.BINDING_ALIAS)
+        return ...analyzeAliasBindings(s, env, *bindingList);
+    else
+        return ...analyzeStrictBindings(s, env, stmt, kind, *bindingList);
+}
 
-overload analyzeBindings(
+private procedure analyzeAliasBindings;
+
+overload analyzeAliasBindings(
+    s:SpecializationContext,
+    env_:Env,
+    bindingList:ast.SingleBindingList
+) {
+    var parentEnv = env_;
+    var env = env_;
+    for (binding in bindingList) {
+        if (just?(binding.name.type))
+            genericError("type declarations on alias bindings not yet supported");
+        env = newEnv(parentEnv);
+        envAdd(env, binding.name.name, Alias(binding.value, parentEnv));
+        parentEnv = env;
+    }
+    return env, false;
+}
+
+overload analyzeAliasBindings(
+    s:SpecializationContext,
+    parentEnv:Env,
+    bindingList:ast.MultipleBindingList
+) {
+    var env = newEnv(parentEnv);
+
+    maybe(bindingList.values,
+        values ref=> {
+            maybe(bindingList.names.variadicItem,
+                varBindingName ref=> {
+                    if (size(bindingList.names.items) != 0)
+                        genericError("multiple alias binding not yet supported");
+                    if (just?(varBindingName.type))
+                        genericError("type declarations on alias bindings not yet supported");
+
+                    envAdd(env, varBindingName.name, ListAlias(values, parentEnv));
+                },
+                () ref=> {
+                    if (size(bindingList.names.items) != 1)
+                        genericError("multiple alias binding not yet supported");
+                    var bindingName = bindingList.names.items[0];
+                    if (just?(bindingName.type))
+                        genericError("type declarations on alias bindings not yet supported");
+
+                    if (size(values) != 1)
+                        genericError("single alias variable bound to multiple value expression");
+                    var value = match(values[0],
+                        ast.Expr, x => x,
+                        ast.UnpackExpr, x ref=> {
+                            genericError("single alias variable bound to multiple value expression");
+                            return ast.Expr();
+                        },
+                    );
+
+                    envAdd(env, bindingName.name, Alias(value, parentEnv));
+                },
+            );
+        },
+        () ref=> { genericError("alias variable must have a value"); },
+    );
+
+    return env, false;
+}
+
+private procedure analyzeStrictBindings;
+
+overload analyzeStrictBindings(
     s:SpecializationContext,
     env_:Env,
     stmt:ast.BindingStatement,
@@ -923,7 +1003,7 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTVariableKin
     }
 }
 
-overload analyzeBindings(
+overload analyzeStrictBindings(
     s:SpecializationContext,
     env_:Env,
     stmt:ast.BindingStatement,
@@ -978,9 +1058,13 @@ overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
     var envEntry = nameRefLookup(env, expr);
     return match(envEntry,
         RTListVariable, x ref=> Maybe(x.vars),
-        ValueList, x ref=> addSpecializedValueList(s, expr, x),
         Value, x ref=>
             genericAnalysisError("single value cannot be used in multiple value context"),
+        ValueList, x ref=> addSpecializedValueList(s, expr, x),
+        Alias, x ref=>
+            analyzeSubnode(s, x.env, x.value),
+        ListAlias, x ref=>
+            analyzeExprListNode(s, x.env, x.value),
         PatternCell, x ref=>
             genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
         ListPatternCell, x ref=>

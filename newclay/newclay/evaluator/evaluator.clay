@@ -326,6 +326,13 @@ overload envEntryToValue(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return Value();
 }
+overload envEntryToValue(x:Alias) {
+    return evaluateExpr(x.value, x.env);
+}
+overload envEntryToValue(x:ListAlias) {
+    genericError("multi-value used in single value context");
+    return Value();
+}
 overload envEntryToValue(x:RTVariable) {
     return rtTypeToValue(x.type);
 }
@@ -427,6 +434,13 @@ overload envEntryToValueList(x:PatternCell) {
 overload envEntryToValueList(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return ValueList();
+}
+overload envEntryToValueList(x:Alias) {
+    genericError("single value used in multi-valued context");
+    return ValueList();
+}
+overload envEntryToValueList(x:ListAlias) {
+    return evaluateExprList(x.value, x.env);
 }
 overload envEntryToValueList(x:RTVariable) {
     genericError("single value used in multi-valued context");
