@@ -36,7 +36,10 @@ Procedure -> Visibility? SymbolName OverloadDefinition
 Predicate -> "|" Expr
 
 ArgumentList -> variadic_list2(Argument, MultiArgument)
-Argument -> ArgumentKind? Identifier (":" Pattern)?
+Argument -> BoundArgument
+          | StaticArgument;
+BoundArgument -> ArgumentKind? Identifier (":" Pattern)?
+StaticArgument -> "#" Pattern
 MultiArgument -> ArgumentKind? "..." Identifier (":" PatternNameRef)?
 ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 
