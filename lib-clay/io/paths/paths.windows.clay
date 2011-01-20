@@ -1,6 +1,6 @@
 
 import win32;
-import libc;
+import io.errors.*;
 
 
 
@@ -70,8 +70,11 @@ private slicedUNCPath(path) {
     return volume, ...slicedVolumeRelativePath(rest);
 }
 
+record InvalidUNCPath(path:String);
+instance IOError = InvalidUNCPath;
+
 private badUNCPath(path) {
-    error("malformed unc path: ", path);
+    throw InvalidUNCPath(String(path));
 }
 
 private slicedVolumeRelativePath(path) {
