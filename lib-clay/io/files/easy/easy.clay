@@ -57,7 +57,12 @@ overload FileData(rvalue file:RawFile) returned:FileData {
 
 overload destroy(fd:FileData) {
     if (fd.writeCount > 0) {
-        write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+        try {
+            write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+        }
+        catch (e) {
+            errorNoThrow(e);
+        }
         fd.writeCount = 0;
     }
     destroy(fd.file);
@@ -105,8 +110,9 @@ overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
         }
         else {
             src = &fd.readBuffer[0];
+            end = src; // initialize 'end' too as read may throw
             var nRead = read(fd.file, src, SizeT(BUFFER_SIZE));
-            end = src + nRead;
+            end += nRead;
             if (nRead == 0)
                 break;
         }
