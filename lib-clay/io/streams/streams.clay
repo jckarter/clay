@@ -1,4 +1,5 @@
 
+import io.errors.*;
 import vectors.generic.*;
 
 //
@@ -63,8 +64,11 @@ overload read(stream, n:SizeT) {
 
 
 //
-// readN - read n bytes unless EOF is hit
+// readN - read exactly n bytes
 //
+
+record PrematureEOF(expected:SizeT, received:SizeT);
+instance IOError = PrematureEOF;
 
 procedure readN;
 
@@ -76,15 +80,14 @@ overload readN(stream, n:SizeT, buf:V) {
     while (current < expected) {
         var numRead = read(stream, expected - current, buf);
         if (numRead == 0)
-            break;
+            throw PrematureEOF(expected-initial, current-initial);
         current += numRead;
     }
-    return current - initial;
 }
 
 overload readN(stream, buffer:Pointer[Byte], n:SizeT) {
     var bv = BufferVector(buffer, buffer + n);
-    return readN(stream, n, bv);
+    readN(stream, n, bv);
 }
 
 overload readN(stream, n:SizeT) {
