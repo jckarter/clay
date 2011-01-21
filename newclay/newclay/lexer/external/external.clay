@@ -230,7 +230,7 @@ private var hexExponent = seq(choice('p','P'), optional(sign), decimalInt);
 private var hexFractional = seq('.', hexDigits);
 
 private var hexFloatTail = choice(
-    seq(hexFractional, optional(hexExponent)),
+    seq(hexFractional, hexExponent),
     hexExponent,
 );
 
@@ -247,7 +247,7 @@ private var lexFloatLiteral = modify(
     x => Token(FLOAT_LITERAL),
     choice(
         seq(optional(sign), choice(hexFloat, decimalFloat), optional(floatType)),
-        seq(optional(sign), choice(hexInt, decimalInt), floatType)
+        seq(optional(sign), decimalInt, floatType)
     ),
 );
 

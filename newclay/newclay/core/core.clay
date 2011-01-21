@@ -231,6 +231,8 @@ enum PrimitiveKind {
     PRIM_StaticStringSize,
     PRIM_StaticStringSlice,
     PRIM_StaticStringConcat,
+    PRIM_StaticStringChars,
+    PRIM_StaticStringFromChars,
 
     PRIM_StaticTuple?,
     PRIM_StaticTuple,
@@ -615,7 +617,9 @@ record ListAlias = referenceType(
 //
 
 variant Value = BoolValue
+              | CharValue
               | IntValue
+              | FloatValue
               | StringValue
               | TupleValue
               | LambdaValue
@@ -629,13 +633,79 @@ variant Value = BoolValue
 overload Value() = Value(BoolValue());
 
 record BoolValue(value: Bool);
-record IntValue(value: Int);
+record CharValue(value: Char);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: EnvParent);
 
+variant IntValue = StaticIntValue
+                 |  Int8 |  Int16 |  Int32 |  Int64
+                 | UInt8 | UInt16 | UInt32 | UInt64;
+variant FloatValue = Float32 | Float64;
+
+overload IntValue() = IntValue(StaticIntValue(0i64));
+overload FloatValue() = FloatValue(0.0);
+
 [E | VariantMember?(EnvParent, E)]
 overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, EnvParent(env));
+
+
+//
+// StaticIntValue
+//
+
+// XXX use arbitrary-precision int here
+record StaticIntValue (value:Int64);
+
+[I | Integer?(I)]
+overload equals?(x:StaticIntValue, y:I) = x.value == y;
+[I | Integer?(I)]
+overload equals?(x:I, y:StaticIntValue) = x == y.value;
+[I | Integer?(I)]
+overload lesser?(x:StaticIntValue, y:I) = x.value < y;
+[I | Integer?(I)]
+overload lesser?(x:I, y:StaticIntValue) = x < y.value;
+
+overload Int64(x:StaticIntValue) = x.value;
+overload UInt64(x:StaticIntValue) = UInt64(x.value);
+
+StaticIntValueArgs?(I, J)
+    = VariantMember?(IntValue, I)
+    and VariantMember?(IntValue, J)
+    and inValues?(StaticIntValue, I, J);
+
+[I, J | StaticIntValueArgs?(I, J)]
+overload add(x:I, y:J) = StaticIntValue(Int64(x) + Int64(y));
+[I, J | StaticIntValueArgs?(I, J)]
+overload subtract(x:I, y:J) = StaticIntValue(Int64(x) - Int64(y));
+[I, J | StaticIntValueArgs?(I, J)]
+overload multiply(x:I, y:J) = StaticIntValue(Int64(x) * Int64(y));
+[I, J | StaticIntValueArgs?(I, J)]
+overload divide(x:I, y:J) = StaticIntValue(Int64(x) / Int64(y));
+[I, J | StaticIntValueArgs?(I, J)]
+overload remainder(x:I, y:J) = StaticIntValue(Int64(x) % Int64(y));
+
+overload plus(x:StaticIntValue) = x;
+overload minus(x:StaticIntValue) = StaticIntValue(-x.value);
+
+// IntValue operations
+
+private applyToIntValue(fn, x, y) = IntValue(fn(x, y));
+overload applyToIntValue(fn, x) = IntValue(fn(x));
+
+overload equals?(x:IntValue, y:IntValue) = equals?(*x, *y);
+overload lesser?(x:IntValue, y:IntValue) = lesser?(*x, *y);
+
+overload plus (x:IntValue) = applyToIntValue(plus,  *x);
+overload minus(x:IntValue) = applyToIntValue(minus, *x);
+
+overload add      (x:IntValue, y:IntValue) = applyToIntValue(add,       *x, *y);
+overload subtract (x:IntValue, y:IntValue) = applyToIntValue(subtract,  *x, *y);
+overload multiply (x:IntValue, y:IntValue) = applyToIntValue(multiply,  *x, *y);
+overload divide   (x:IntValue, y:IntValue) = applyToIntValue(divide,    *x, *y);
+overload remainder(x:IntValue, y:IntValue) = applyToIntValue(remainder, *x, *y);
+
+overload Int64(x:IntValue) = Int64(*x);
 
 
 //
@@ -751,8 +821,24 @@ overload printTo(stream, x:Value) {
 overload printTo(stream, x:BoolValue) {
     printTo(stream, x.value);
 }
-overload printTo(stream, x:IntValue) {
-    printTo(stream, x.value);
+overload printTo(stream, v:IntValue) {
+    match(v,
+        StaticIntValue, x ref=> { printTo(stream, x.value); },
+        UInt8,  x ref=> { printTo(stream, x, "u8" ); },
+        UInt16, x ref=> { printTo(stream, x, "u16"); },
+        UInt32, x ref=> { printTo(stream, x, "u32"); },
+        UInt64, x ref=> { printTo(stream, x, "u64"); },
+        Int8,   x ref=> { printTo(stream, x, "i8" ); },
+        Int16,  x ref=> { printTo(stream, x, "i16"); },
+        Int32,  x ref=> { printTo(stream, x, "i32"); },
+        Int64,  x ref=> { printTo(stream, x, "i64"); },
+    );
+}
+overload printTo(stream, v:FloatValue) {
+    match(v,
+        Float32, x ref=> { printTo(stream, x, "f32"); },
+        Float64, x ref=> { printTo(stream, x, "f64"); },
+    );
 }
 overload printTo(stream, x:StringValue) {
     printReprTo(stream, x.value);
