@@ -3678,6 +3678,20 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_arrayElements : {
+        ensureArity(args, 1);
+        ArrayTypePtr at;
+        EValuePtr earray = arrayValue(args, 0, at);
+        assert(out->size() == (unsigned)at->size);
+        for (unsigned i = 0; i < (unsigned)at->size; ++i) {
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(at->elementType));
+            char *ptr = earray->addr + i*typeSize(at->elementType);
+            *((void **)outi->addr) = (void *)ptr;
+        }
+        break;
+    }
+
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
 

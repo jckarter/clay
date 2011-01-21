@@ -716,6 +716,7 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
+    PRIMITIVE(arrayElements);
 
     PRIMITIVE(Vec);
 
