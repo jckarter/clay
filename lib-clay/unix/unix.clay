@@ -24,7 +24,7 @@ errnoName(code:Int) {
 // shadow system calls to handle EINTR
 //
 
-eintrSafeCall(f, ...args) {
+callIgnoringEINTR(f, ...args) {
     alias ResultType = Type(f(...args));
     var result = ResultType();
     while (true) {
@@ -35,16 +35,16 @@ eintrSafeCall(f, ...args) {
     return result;
 }
 
-open(...args) = eintrSafeCall(generated.open, ...args);
-read(...args) = eintrSafeCall(generated.read, ...args);
-write(...args) = eintrSafeCall(generated.write, ...args);
-close(...args) = eintrSafeCall(generated.close, ...args);
-connect(...args) = eintrSafeCall(generated.connect, ...args);
-accept(...args) = eintrSafeCall(generated.accept, ...args);
-send(...args) = eintrSafeCall(generated.send, ...args);
-sendto(...args) = eintrSafeCall(generated.sendto, ...args);
-sendmsg(...args) = eintrSafeCall(generated.sendmsg, ...args);
-recv(...args) = eintrSafeCall(generated.recv, ...args);
-recvfrom(...args) = eintrSafeCall(generated.recvfrom, ...args);
-recvmsg(...args) = eintrSafeCall(generated.recvmsg, ...args);
-select(...args) = eintrSafeCall(generated.select, ...args);
+open(...args) = callIgnoringEINTR(generated.open, ...args);
+read(...args) = callIgnoringEINTR(generated.read, ...args);
+write(...args) = callIgnoringEINTR(generated.write, ...args);
+close(...args) = callIgnoringEINTR(generated.close, ...args);
+connect(...args) = callIgnoringEINTR(generated.connect, ...args);
+accept(...args) = callIgnoringEINTR(generated.accept, ...args);
+send(...args) = callIgnoringEINTR(generated.send, ...args);
+sendto(...args) = callIgnoringEINTR(generated.sendto, ...args);
+sendmsg(...args) = callIgnoringEINTR(generated.sendmsg, ...args);
+recv(...args) = callIgnoringEINTR(generated.recv, ...args);
+recvfrom(...args) = callIgnoringEINTR(generated.recvfrom, ...args);
+recvmsg(...args) = callIgnoringEINTR(generated.recvmsg, ...args);
+select(...args) = callIgnoringEINTR(generated.select, ...args);
