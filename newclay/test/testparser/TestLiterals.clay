@@ -9,6 +9,10 @@ main() {
     0x1234abcd;
     -0x1234_aBcD;
     +0x1234_abcd;
+    0xf; // not float!
+    0xff; // not float!
+    0xf32; // not float!
+    0xf64; // not float!
 
     // typed integers
     1u;
@@ -34,8 +38,8 @@ main() {
     1_234.5E56;
 
     // hex floats
-    0x0.0;
-    -0x0.0;
+    0x0.0p-1;
+    -0x0.0p+1;
     +0x1.7fffp123;
     0x1.7FFF_aBcD_p-1_234;
     -0x1P5;
@@ -46,6 +50,9 @@ main() {
     0.0f;
     0.0f32;
     0.0f64;
+    0x1.fp1f;
+    0x1.fp1f32;
+    0x1.fp1f64;
 
     // char literals
     ' ';
@@ -53,10 +60,14 @@ main() {
     '\n';
     '\'';
     '\\';
+    '\xff';
+    '\123';
 
     // string literals
     "abc";
     "abc\"";
     "abc\n";
     "abc\\";
+    "abc\xff";
+    "abc\123";
 }

@@ -3,17 +3,19 @@ import maybe.*;
 import newclay.ast as ast;
 import newclay.core.*;
 import newclay.hooks.*;
+import numbers.floats.*;
+import printer.formatter.*;
 
 
 
 //
-// parseStringLiteral
+// parseStringLiteral, parseCharLiteral
 //
 
 parseStringLiteral(s) {
     var result = String();
-    assert(front(s) == '\"');
-    assert(back(s) == '\"');
+    assert(front(s) == '\"', "no quote opening string literal");
+    assert(back(s) == '\"', "no quote closing string literal");
     var i = 1;
     while (i+1 < size(s)) {
         var c = s[i];
@@ -27,6 +29,20 @@ parseStringLiteral(s) {
         }
     }
     return move(result);
+}
+
+parseCharLiteral(s) {
+    assert(front(s) == '\'', "no apostrophe opening char literal");
+    assert(back(s) == '\'', "no apostrophe closing char literal");
+    assert(size(s) >= 3, "char literal too small");
+    if (s[1] == '\\') {
+        var c, i = ...parseEscapeChar(s, 2);
+        assert(i == size(s) - 1, "junk characters after escape code character");
+        return c;
+    } else {
+        assert(size(s) == 3, "junk characters after simple character");
+        return s[1];
+    }
 }
 
 private parseEscapeChar(s, i) {
@@ -74,6 +90,189 @@ private parseOctalDigit(x) {
     return -1;
 }
 
+
+//
+// parseIntLiteral, parseFloatLiteral
+//
+
+private parseNumberLiteral(s) {
+}
+
+parseIntLiteral(s) {
+    var number = String();
+    var suffix = String();
+
+    for (i, c in enumerated(s)) {
+        if (c == 'i' or c == 'u') {
+            suffix = sliceFrom(s, i);
+            break;
+        }
+        if (c != '_')
+            push(number, c);
+    }
+    assert(size(number) > 0, "integer literal is empty");
+    assert(size(suffix) <= 3, "integer suffix is too large");
+
+    switch (suffix) {
+    case "":
+        return IntValue(StaticIntValue(Int64(number)));
+    case "u64":
+        return IntValue(UInt64(number));
+    case "i64":
+        return IntValue(Int64(number));
+    case "u":
+    case "u32":
+        return IntValue(UInt32(number));
+    case "i":
+    case "i32":
+        return IntValue(Int32(number));
+    case "u16":
+        return IntValue(UInt16(number));
+    case "i16":
+        return IntValue(Int16(number));
+    case "u8":
+        return IntValue(UInt8(number));
+    case "i8":
+        return IntValue(Int8(number));
+    default:
+        assert(false, "invalid integer literal suffix");
+        return IntValue();
+    }
+}
+
+parseHexFloatLiteral(number, suffix) {
+    var neg? = false;
+    var negExponent? = false;
+    var mantissa = 0_u64;
+    var mantissaBits = 0;
+    var usedMantissaBits = 0;
+    var exponentI = 0;
+    var pointExponent = -1;
+
+    for (i, c in enumerated(number)) {
+        if (c == '-') {
+            assert(i == 0, "junk before negative sign in hex float literal");
+            neg? = true;
+        } else if (c == '+') {
+            assert(i == 0, "junk before positive sign in hex float literal");
+            neg? = false;
+        } else if (c == '.') {
+            assert(point == -1, "multiple decimal points in hex float literal");
+            point = 0;
+        } else if (c == 'p' or c == 'P') {
+            assert(exponentI == 0, "multiple P markers in hex float literal");
+            exponentI = i;
+            break;
+        } else if (c == 'x') {
+            assert(mantissa == 0, "junk before hex designator in hex float literal");
+            continue;
+        } else {
+            if (point >= 0)
+                point += 4;
+            if (c == '0' and mantissa == 0)
+                continue;
+            mantissaBits += 4;
+            if (c != '0')
+                usedMantissaBits = mantissaBits;
+            if (mantissaBits < 64) {
+                mantissa = bitwiseOr(shiftLeft(mantissa, 4), parseHexDigit(c));
+            }
+        }
+    }
+
+    assert(number[exponentI] == 'p' or number[exponentI] == 'P', "no exponent in hex float literal");
+
+    var exponent = Int(sliceFrom(number, exponentI+1));
+    var value = 0.0;
+
+    if (mantissa == 0) {
+        value = floatFromParts(neg?, 0, 0u64);
+    } else {
+        var mantissaLog = log2(mantissa);
+        mantissa = shiftLeft(mantissa, 64 - mantissaLog);
+        var round = bitwiseAnd(mantissa, 0xFFF);
+        mantissa = shiftRight(mantissa, 12);
+
+        if (round > 0x800 or (round == 0x800 and (
+            mantissaLog > 56 or bitwiseAnd(mantissa, 0x1000) == 0x1000
+        )))
+            mantissa += 1;
+
+        var mantissaExponent = mantissaLog
+            + (if (mantissaBits > 64) mantissaBits - 64 else 0)
+            - point
+            + exponent
+            + exponentBias(Double);
+
+        if (mantissaExponent <= 0) {
+            mantissaExponent = 0;
+            mantissa = shiftRight(bitwiseOr(mantissa, 0x0010_0000_0000_0000_u64), 1 + mantissaExponent);
+        } else if (mantissaExponent >= 2047) {
+            mantissaExponent = 2047;
+            mantissa = 0_u64;
+        }
+
+        observe(number, neg?, mantissaExponent, hex(mantissa));
+
+        value = floatFromParts(neg?, mantissaExponent, mantissa);
+    }
+
+    switch (suffix) {
+    case "":
+    case "f64":
+        return FloatValue(value);
+    case "f":
+    case "f32":
+        return FloatValue(Float(value));
+    default:
+        assert(false, "invalid float suffix");
+        return FloatValue();
+    }
+}
+
+parseFloatLiteral(s) {
+    var number = String();
+    var suffix = String();
+    var s2 = slicedFrom(s, 0);
+
+    assert(size(s) > 0, "empty float literal");
+
+    var sz = size(s);
+    var hex? = false;
+
+    if (s[sz - 1] == 'f') {
+        suffix = sliceFrom(s, sz - 1);
+        s2 = slicedUpto(s, sz - 1);
+    } else if (sz > 3 and s[sz - 3] == 'f' and (
+           (s[sz - 2] == '3' and s[sz - 1] == '2')
+        or (s[sz - 2] == '6' and s[sz - 1] == '4')
+    )) {
+        suffix = sliceFrom(s, sz - 3);
+        s2 = slicedUpto(s, sz - 3);
+    }
+
+    for (c in s2) {
+        if (c != '_') {
+            if (c == 'x')
+                hex? = true;
+            push(number, s);
+        }
+    }
+
+    if (hex?)
+        parseHexFloatLiteral(number, suffix);
+    else switch (suffix) {
+    case "":
+    case "f64":
+        return FloatValue(Double(number));
+    case "f":
+    case "f32":
+        return FloatValue(Float(number));
+    default:
+        assert(false, "invalid float suffix");
+        return FloatValue();
+    }
+}
 
 
 //
@@ -210,10 +409,17 @@ overload evaluateExpr(x:ast.BoolLiteral, env) {
     return Value(BoolValue(x.value));
 }
 overload evaluateExpr(x:ast.IntLiteral, env) {
-    return Value(IntValue(Int(x.value)));
+    return Value(IntValue(parseIntLiteral(x.value)));
 }
 overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
+}
+overload evaluateExpr(x:ast.CharLiteral, env) {
+    return Value(CharValue(parseCharLiteral(x.value)));
+}
+overload evaluateExpr(x:ast.FloatLiteral, env) {
+    genericError("floating-point values not supported in static context");
+    return Value();
 }
 overload evaluateExpr(x:ast.NameRef, env) {
     return envEntryToValue(nameRefLookup(env, x));
@@ -541,6 +747,9 @@ overload evaluatePattern(x:ast.IntLiteral, env) {
 overload evaluatePattern(x:ast.StringLiteral, env) {
     return Pattern(evaluateExpr(x, env));
 }
+overload evaluatePattern(x:ast.CharLiteral, env) {
+    return Pattern(evaluateExpr(x, env));
+}
 overload evaluatePattern(x:ast.NameRef, env) {
     return Pattern(evaluateExpr(x, env));
 }
@@ -779,6 +988,7 @@ overload walkPattern(x:ast.Pattern, visitor) {
     });
 }
 overload walkPattern(x:ast.BoolLiteral, visitor) {}
+overload walkPattern(x:ast.CharLiteral, visitor) {}
 overload walkPattern(x:ast.IntLiteral, visitor) {}
 overload walkPattern(x:ast.StringLiteral, visitor) {}
 overload walkPattern(x:ast.NameRef, visitor) {}
@@ -1041,14 +1251,14 @@ private oneInt(args) {
     var a = oneValue(args);
     if (not variantIs?(a, IntValue))
         genericError("expecting one integer");
-    return variantAs(a, IntValue).value;
+    return variantAs(a, IntValue);
 }
 
 private twoInts(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, IntValue) or not variantIs?(b, IntValue))
         genericError("expecting two integers");
-    return variantAs(a, IntValue).value, variantAs(b, IntValue).value;
+    return variantAs(a, IntValue), variantAs(b, IntValue);
 }
 
 private oneString(args) {
@@ -1068,8 +1278,8 @@ private stringIntInt(args) {
     }
     return ...(
         variantAs(a, StringValue).value,
-        variantAs(b, IntValue).value,
-        variantAs(c, IntValue).value,
+        variantAs(b, IntValue),
+        variantAs(c, IntValue),
     );
 }
 
@@ -1094,7 +1304,7 @@ private tupleInt(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, TupleValue) or not variantIs?(b, IntValue))
         genericError("expecting a tuple and a int");
-    return variantAs(a, TupleValue).elements, variantAs(b, IntValue).value;
+    return variantAs(a, TupleValue).elements, variantAs(b, IntValue);
 }
 
 private oneSymbol(args) {
@@ -1125,8 +1335,9 @@ private evaluateStaticCompare(a, b, op) {
     return ValueList();
 }
 
-[T | inValues?(T, BoolValue, IntValue, StringValue)]
+[T | inValues?(T, BoolValue, StringValue)]
 overload evaluateStaticCompare(a:T, b:T, op) = ValueList(BoolValue(op(a.value, b.value)));
+overload evaluateStaticCompare(a:IntValue, b:IntValue, op) = ValueList(BoolValue(op(a, b)));
 
 overload evaluateStaticCompare(a:TupleValue, b:TupleValue, op) {
     for (av, bv in zipped(a.elements, b.elements)) {
@@ -1144,37 +1355,37 @@ evaluatePrimitive(kind, args) {
     }
     case PRIM_StaticPlus : {
         var a = oneInt(args);
-        return ValueList(IntValue(+a));
+        return ValueList(+a);
     }
     case PRIM_StaticMinus : {
         var a = oneInt(args);
-        return ValueList(IntValue(-a));
+        return ValueList(-a);
     }
     case PRIM_StaticAdd : {
         var a, b = ...twoInts(args);
-        return ValueList(IntValue(a + b));
+        return ValueList(a + b);
     }
     case PRIM_StaticSubtract : {
         var a, b = ...twoInts(args);
-        return ValueList(IntValue(a - b));
+        return ValueList(a - b);
     }
     case PRIM_StaticMultiply : {
         var a, b = ...twoInts(args);
-        return ValueList(IntValue(a * b));
+        return ValueList(a * b);
     }
     case PRIM_StaticDivide : {
         var a, b = ...twoInts(args);
-        return ValueList(IntValue(a / b));
+        return ValueList(a / b);
     }
     case PRIM_StaticRemainder : {
         var a, b = ...twoInts(args);
-        return ValueList(IntValue(a % b));
+        return ValueList(a % b);
     }
     case PRIM_StaticIntegers : {
-        var a = oneInt(args);
+        var a = Int64(oneInt(args));
         if (a < 0)
             genericError("expecting a non-negative integer");
-        return ValueList(mapped(i => Value(IntValue(i)), range(a)));
+        return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
     }
 
     case PRIM_StaticBool? : {
@@ -1212,10 +1423,12 @@ evaluatePrimitive(kind, args) {
     }
     case PRIM_StaticStringSize : {
         var s = oneString(args);
-        return ValueList(IntValue(Int(size(s))));
+        return ValueList(IntValue(StaticIntValue(Int64(size(s)))));
     }
     case PRIM_StaticStringSlice : {
-        var s, i, j = ...stringIntInt(args);
+        var s, i_, j_ = ...stringIntInt(args);
+        var i = Int64(i_);
+        var j = Int64(j_);
         if ((i < 0) or (i > size(s)))
             genericError("invalid starting index: ", i);
         if ((j < i) or (j > size(s)))
@@ -1242,7 +1455,8 @@ evaluatePrimitive(kind, args) {
         return ValueList(IntValue(Int(size(a))));
     }
     case PRIM_StaticTupleElement : {
-        var a, i = ...tupleInt(args);
+        var a, i_ = ...tupleInt(args);
+        var i = Int64(i_);
         if ((i < 0) or (i > size(a)))
             genericError("tuple index out of range");
         return ValueList(a[i]);
@@ -1269,7 +1483,7 @@ evaluatePrimitive(kind, args) {
     }
 
     default : {
-        assert(false);
+        assert(false, "invalid primitive");
         return ValueList();
     }
     }
