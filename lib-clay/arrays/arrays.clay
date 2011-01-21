@@ -47,31 +47,12 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 
 
 //
-// unpackArray, unpackArrayRef
-//
-
-[T,n]
-inline unpackArray(a:Array[T,n]) = ...unpackArrayRef(a);
-
-[T,n]
-inline unpackArrayRef(a:Array[T,n]) = ref ...unpackElements(a, static 0);
-
-[T,n,i]
-private inline unpackElements(a:Array[T,n], static i) =
-    ref a[i], ...unpackElements(a, static i+1);
-
-[T,n,i | i == n]
-inline overload unpackElements(a:Array[T,n], static i) = ;
-
-
-
-//
 // basic constructor
 //
 
 [T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
 callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
-    ...unpackArrayRef(returned) <-- ...args;
+    ...arrayElements(returned) <-- ...args;
 }
 
 
@@ -84,17 +65,18 @@ callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
            and (SequenceElementType(S) == T)]
 overload Array[T,n](s:S) returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
+    var ptr = first;
     try {
         var srcIter = iterator(s);
-        while (first != last) {
+        while (ptr != last) {
             assert(hasNext?(srcIter), "insufficient elements for array");
-            first^ <-- next(srcIter);
-            inc(first);
+            ptr^ <-- next(srcIter);
+            inc(ptr);
         }
         assert(not hasNext?(srcIter), "too many elements for array");
     }
     catch (e) {
-        resetMemoryUnsafe(first, last);
+        destroyMemory(first, ptr);
         throw e;
     }
 }
@@ -103,25 +85,36 @@ overload Array[T,n](s:S) returned:Array[T,n] {
            and (SequenceElementType(S) == T)]
 overload Array[T,n](rvalue s:S) returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
+    var ptr = first;
     try {
         var srcIter = iterator(s);
-        while (first != last) {
+        while (ptr != last) {
             assert(hasNext?(srcIter), "insufficient elements for array");
-            first^ <-- next(srcIter);
-            inc(first);
+            ptr^ <-- next(srcIter);
+            inc(ptr);
         }
         assert(not hasNext?(srcIter), "too many elements for array");
     }
     catch (e) {
-        resetMemoryUnsafe(first, last);
+        destroyMemory(first, ptr);
         throw e;
     }
 }
 
 [T,n]
 overload Array[T,n](elt: T) returned:Array[T,n] {
-    for (relt in returned)
-        relt <-- elt;
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        while (ptr != last) {
+            ptr^ <-- elt;
+            inc(ptr);
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
 }
 
 [n, S | Sequence?(S)]
@@ -144,15 +137,16 @@ overload Array(static n, forward s:S) = Array(static n, mapped(Tuple, s));
          and (n == StaticSize(S))]
 overload Array[T,n](s:S) returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
+    var ptr = first;
     try {
         var srcIter = iterator(s);
         while (hasNext?(srcIter)) {
-            first^ <-- next(srcIter);
-            inc(first);
+            ptr^ <-- next(srcIter);
+            inc(ptr);
         }
     }
     catch (e) {
-        resetMemoryUnsafe(first, last);
+        destroyMemory(first, ptr);
         throw e;
     }
 }
@@ -163,14 +157,15 @@ overload Array[T,n](s:S) returned:Array[T,n] {
          and (n == StaticSize(S))]
 overload Array[T,n](rvalue s:S) returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
+    var ptr = first;
     try {
         for (x in s) {
-            first^ <-- move(x);
-            inc(first);
+            ptr^ <-- move(x);
+            inc(ptr);
         }
     }
     catch (e) {
-        resetMemoryUnsafe(first, last);
+        destroyMemory(first, ptr);
         throw e;
     }
 }

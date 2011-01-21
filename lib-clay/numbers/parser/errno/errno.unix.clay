@@ -1,1 +1,1 @@
-public import unix.*;
+public import unix.(errno, ERANGE);

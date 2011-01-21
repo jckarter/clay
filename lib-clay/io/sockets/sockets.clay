@@ -1,3 +1,4 @@
+import io.errors.*;
 import io.sockets.platform;
 import byteorder.*;
 public import io.sockets.platform.(
@@ -23,21 +24,29 @@ private alias platform = io.sockets.platform;
 //
 // wrapper for socket API calls
 //
-record SocketError (code: platform.SocketErrorCode);
-instance Exception = SocketError;
 
-overload printTo(stream, x:SocketError) {
-    printTo(stream, "SocketError(", x.code, ", ", platform.errorMessage(x.code), ")");
+record GenericSocketError (code: Int);
+
+variant SocketError = GenericSocketError;
+
+instance IOError = SocketError;
+
+[T | VariantMember?(SocketError, T)]
+overload Exception(forward x:T) = Exception(SocketError(x));
+
+overload printTo(stream, x:GenericSocketError) {
+    printTo(stream, "error(", x.code, "): ");
+    printErrorMessageTo(stream, x.code);
 }
 
-overload printReprTo(stream, x:SocketError) {
-    printTo(stream, x);
+overload printReprTo(stream, x:GenericSocketError) {
+    printTo(stream, "GenericSocketError(", errorCodeName(x.code), ")");
 }
 
 socketCall(callable, forward ...args) {
     var ret = callable(...args);
     if (ret == Type(ret)(platform.SOCKET_ERROR))
-        throw SocketError(platform.errno());
+        throw GenericSocketError(platform.errno());
     return ret;
 }
 
@@ -88,7 +97,7 @@ overload Inet(host: T, port: I)
     = Inet(lookupInetHostname(host), UInt16(port));
 
 record InvalidInetAddress(sockaddr: Sockaddr_storage, szsockaddr: SocklenT);
-instance Exception = InvalidInetAddress;
+instance SocketError = InvalidInetAddress;
 
 overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     addr: Inet
@@ -119,7 +128,7 @@ overload lookupInetHostname(n: UInt32) s: In_addr {
 overload lookupInetHostname(n: In_addr) = n;
 
 record HostnameLookupError(hostname: String);
-instance Exception = HostnameLookupError;
+instance SocketError = HostnameLookupError;
 [S | String?(S) and S != String]
 overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 

@@ -1,4 +1,5 @@
 import unix;
+import io.errors.*;
 
 
 //
@@ -57,13 +58,16 @@ private modeFlags(mode) {
 overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var protection = modeProtection(mode);
     var flags = modeFlags(mode);
-    var address = unix.syscall(unix.mmap,
-                               RawPointer(0),
-                               SizeT(length),
-                               Int(protection),
-                               Int(flags),
-                               fileHandle(f),
-                               Int64(offset));
+    var address = unix.mmap(
+        RawPointer(0),
+        SizeT(length),
+        Int(protection),
+        Int(flags),
+        fileHandle(f),
+        Int64(offset),
+    );
+    if (address == Type(address)(-1))
+        throw GenericIOError(unix.errno());
     return FileMapping(new InnerFileMapping(address, SizeT(length)));
 }
 
@@ -71,7 +75,9 @@ overload FileMapping(f:File, mode:MappingMode) =
     FileMapping(f, mode, 0, fileSize(f));
 
 overload destroy(x:InnerFileMapping) {
-    unix.syscallNoThrow(unix.munmap, x.address, x.length);
+    var result = unix.munmap(x.address, x.length);
+    if (result == Type(result)(-1))
+        errorNoThrow(GenericIOError(unix.errno()));
 }
 
 
@@ -90,6 +96,7 @@ mappingLength(fm:FileMapping) = fm.inner^.length;
 //
 
 flushMapping(fm:FileMapping) {
-    unix.syscall(unix.msync, fm.inner^.address,
-                 fm.inner^.length, unix.MS_SYNC);
+    var result = unix.msync(fm.inner^.address, fm.inner^.length, unix.MS_SYNC);
+    if (result == Type(result)(-1))
+        throw GenericIOError(unix.errno());
 }

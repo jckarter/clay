@@ -1,26 +1,19 @@
 import remote.marshaling.*;
 import maybe.*;
 
-record TruncatedRead ();
-instance Exception = TruncatedRead;
-
-private fullRead(stream, dest, size) {
-    if (readN(stream, dest, size) < size)
-        throw TruncatedRead();
-}
-
 private readMarshalSize(stream) returned: MarshalSize {
-    fullRead(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+    readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
 }
 
 private maybeReadMarshalSize(stream) {
     var returned = MarshalSize();
-    var size = readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
-    
-    if (size == TypeSize(MarshalSize))
+    try {
+        readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
         return Maybe(returned);
-    else
+    }
+    catch (e:PrematureEOF) {
         return nothing(MarshalSize);
+    }
 }
 
 private writeMarshalSize(stream, n: MarshalSize) {
@@ -107,7 +100,7 @@ answerRemoteMessage(static Protocol, instream, code: MarshalSize) {
 
         var mArgs = Vector[Byte]();
         resize(mArgs, mArgsSize);
-        fullRead(instream, begin(mArgs), SizeT(mArgsSize));
+        readN(instream, begin(mArgs), SizeT(mArgsSize));
         
         remoteEntryPoints[Protocol][code](mArgs);
     } else {

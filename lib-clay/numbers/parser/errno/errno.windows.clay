@@ -1,1 +1,2 @@
-public import win32.*;
+public import win32.(errno);
+public import win32.errno.(ERANGE);

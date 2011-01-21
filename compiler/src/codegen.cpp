@@ -4649,6 +4649,20 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_arrayElements : {
+        ensureArity(args, 1);
+        ArrayTypePtr at;
+        llvm::Value *varray = arrayValue(args, 0, at);
+        assert(out->size() == (unsigned)at->size);
+        for (unsigned i = 0; i < (unsigned)at->size; ++i) {
+            CValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(at->elementType));
+            llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(varray, 0, i);
+            ctx->builder->CreateStore(ptr, outi->llValue);
+        }
+        break;
+    }
+
     case PRIM_Vec :
         error("Vec type constructor cannot be called");
 

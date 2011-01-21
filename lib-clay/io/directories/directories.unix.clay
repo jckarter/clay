@@ -1,5 +1,5 @@
 import unix.*;
-import libc;
+import io.errors.*;
 
 
 
@@ -30,12 +30,15 @@ overload BitwiseMovedType?(static DirentSequence) = true;
 overload DirentSequence(dir:T) returned: DirentSequence {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
-        error("failed to open directory: ", errorMessage());
+        throw GenericIOError(errno());
 }
 
 overload destroy(s: DirentSequence) {
-    if (not null?(s.dir))
-        closedir(s.dir);
+    if (not null?(s.dir)) {
+        var result = closedir(s.dir);
+        if (result == Type(result)(-1))
+            errorNoThrow(errorMessage(errno()));
+    }
 }
 overload resetUnsafe(s: DirentSequence) {
     s.dir = null(DIR);
@@ -61,7 +64,7 @@ overload hasNext?(x:DirentIterator) {
     var ptr = Pointer[Struct_dirent]();
     var returnCode = readdir_r(x.dir, &x.entry, &ptr);
     if (returnCode != 0)
-        error("failed to read directory: ", errorMessage());
+        throw GenericIOError(errno());
     return not null?(ptr);
 }
 

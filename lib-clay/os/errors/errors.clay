@@ -1,0 +1,38 @@
+import os.errors.platform as platform;
+
+record GenericOSError(code:Int);
+
+[I | Integer?(I)]
+overload GenericOSError(code:I) returned:GenericOSError {
+    returned.code = Int(code);
+}
+
+overload printTo(stream, x:GenericOSError) {
+    printTo(stream, "error(", x.code, "): ");
+    printErrorMessageTo(stream, x.code);
+}
+
+overload printReprTo(stream, x:GenericOSError) {
+    printTo(stream, "GenericOSError(", errorCodeName(x.code), ")");
+}
+
+variant OSError = GenericOSError;
+
+instance Exception = OSError;
+
+[T | VariantMember?(OSError, T)]
+overload Exception(forward x:T) = Exception(OSError(x));
+
+printErrorMessageTo(stream, code:Int) {
+    platform.printErrorMessageTo(stream, code);
+}
+
+errorMessage(code:Int) {
+    var buf = String();
+    printErrorMessageTo(buf, code);
+    return move(buf);
+}
+
+errorCodeName(code:Int) {
+    return platform.errorCodeName(code);
+}

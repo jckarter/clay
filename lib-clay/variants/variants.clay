@@ -63,7 +63,7 @@ overload V(src:V) returned:V {
             goto end;
         }
     }
-    error("invalid variant, tag = ", tag);
+    errorNoThrow("invalid variant, tag = ", tag);
     end :
 }
 
@@ -93,7 +93,7 @@ overload moveUnsafe(src:V) returned:V {
             goto end;
         }
     }
-    error("invalid variant, tag = ", tag);
+    errorNoThrow("invalid variant, tag = ", tag);
     end :
 }
 
@@ -138,7 +138,7 @@ overload assign(dest:V, lvalue src:V) {
             goto end;
         }
     }
-    error("invalid variant, tag = ", tag);
+    errorNoThrow("invalid variant, tag = ", tag);
     end :
 }
 
@@ -161,7 +161,7 @@ overload destroy(x:V) {
             return;
         }
     }
-    error("invalid variant, tag = ", tag);
+    errorNoThrow("invalid variant, tag = ", tag);
 }
 
 
@@ -182,7 +182,7 @@ overload equals?(a:V, b:V) {
         if (tag == unwrapStatic(i))
             return staticIndex(aData, i) == staticIndex(bData, i);
     }
-    error("invalid variant, tag = ", tag);
+    errorNoThrow("invalid variant, tag = ", tag);
     return false;
 }
 
@@ -251,7 +251,7 @@ inline unsafeVariantIndex(x:V, static i) =
 
 [V | Variant?(V)]
 inline invalidVariant(x:V) {
-    error("invalid variant, tag = ", variantTag(x));
+    errorNoThrow("invalid variant, tag = ", variantTag(x));
 }
 
 

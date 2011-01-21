@@ -1,4 +1,5 @@
 import win32;
+import io.errors.*;
 
 
 //
@@ -83,7 +84,7 @@ overload RawFile(path:S, mode:OpenMode) {
         win32.DWORD(win32.FILE_ATTRIBUTE_NORMAL),
         win32.HANDLE(0));
     if (handle == win32.INVALID_HANDLE_VALUE)
-        error(win32.errorMessage(), ": ", path);
+        throw GenericIOError(win32.GetLastError());
     var f = RawFile(handle, true);
     if (mode == APPEND)
         seek(f, 0, SEEK_END);
@@ -97,7 +98,7 @@ overload destroy(x:RawFile) {
     if (x.owned) {
         var result = win32.CloseHandle(x.handle);
         if (result == 0)
-            errorNoThrow(win32.errorMessage());
+            errorNoThrow(GenericIOError(win32.GetLastError()));
     }
 }
 
@@ -134,7 +135,7 @@ overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) SizeT {
         &nRead,
         win32.LPOVERLAPPED(0));
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     return SizeT(nRead);
 }
 
@@ -147,7 +148,7 @@ overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
         &nWritten,
         win32.LPOVERLAPPED(0));
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     assert(nWritten == n);
 }
 
@@ -168,7 +169,7 @@ overload fileSize(f:RawFile) {
     var size = Int64();
     var result = win32.GetFileSizeEx(f.handle, &size);
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     return size;
 }
 
@@ -191,7 +192,7 @@ overload seek(f:RawFile, offset, whence) {
         &newPos,
         seekMethod(whence));
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     return newPos;
 }
 

@@ -131,3 +131,49 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
 alias SOL_SOCKET = 1;
 
 alias SO_REUSEADDR = 2;
+
+
+//
+// signals
+//
+
+alias SIGHUP    = 1;
+alias SIGINT    = 2;
+alias SIGQUIT   = 3;
+alias SIGILL    = 4;
+alias SIGTRAP   = 5;
+alias SIGABRT   = 6;
+alias SIGIOT    = 6;
+alias SIGBUS    = 7;
+alias SIGFPE    = 8;
+alias SIGKILL   = 9;
+alias SIGUSR1   = 10;
+alias SIGSEGV   = 11;
+alias SIGUSR2   = 12;
+alias SIGPIPE   = 13;
+alias SIGALRM   = 14;
+alias SIGTERM   = 15;
+alias SIGSTKFLT = 16;
+alias SIGCLD    = SIGCHLD;
+alias SIGCHLD   = 17;
+alias SIGCONT   = 18;
+alias SIGSTOP   = 19;
+alias SIGTSTP   = 20;
+alias SIGTTIN   = 21;
+alias SIGTTOU   = 22;
+alias SIGURG    = 23;
+alias SIGXCPU   = 24;
+alias SIGXFSZ   = 25;
+alias SIGVTALRM = 26;
+alias SIGPROF   = 27;
+alias SIGWINCH  = 28;
+alias SIGPOLL   = SIGIO;
+alias SIGIO     = 29;
+alias SIGPWR    = 30;
+alias SIGSYS    = 31;
+
+
+alias SIG_ERR  = CCodePointer[(Int),()](-1);
+alias SIG_DFL  = CCodePointer[(Int),()](0);
+alias SIG_IGN  = CCodePointer[(Int),()](1);
+alias SIG_HOLD = CCodePointer[(Int),()](2);

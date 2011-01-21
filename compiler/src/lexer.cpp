@@ -565,7 +565,7 @@ static bool llvmBodyItem() {
 static bool llvmComment() {
     char c;
     if (!next(c) || (c != ';')) return false;
-    while (next(c) && (c != '\n'));
+    while (next(c) && (c != '\n')) {}
     return true;
 }
 

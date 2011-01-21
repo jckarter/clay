@@ -55,9 +55,12 @@ procedure dropValues;
 // countValues, nthValue, firstValue
 //
 
-procedure countValues;
-inline overload countValues() = 0;
-inline overload countValues(forward x, forward ...xs) = 1 + countValues(...xs);
+countValues(...args) {
+    var n = 0;
+    static for (x in ...args)
+        n += 1;
+    return n;
+}
 
 procedure countOccurrences;
 inline overload countOccurrences(value) = 0;
