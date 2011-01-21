@@ -821,6 +821,9 @@ overload printTo(stream, x:Value) {
 overload printTo(stream, x:BoolValue) {
     printTo(stream, x.value);
 }
+overload printTo(stream, c:CharValue) {
+    printReprTo(stream, c.value);
+}
 overload printTo(stream, v:IntValue) {
     match(v,
         StaticIntValue, x ref=> { printTo(stream, x.value); },
