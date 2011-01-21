@@ -1601,7 +1601,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 //
 
 MultiPValuePtr analyzeCallPointer(PValuePtr x,
-                                  MultiPValuePtr args)
+                                  MultiPValuePtr /*args*/)
 {
     switch (x->type->typeKind) {
 

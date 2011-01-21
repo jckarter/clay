@@ -11,7 +11,6 @@
 #include "llvm/LinkAllVMCore.h"
 #include "llvm/Target/TargetData.h"
 #include "llvm/Support/FormattedStream.h"
-#include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StandardPasses.h"
 #include "llvm/Support/Path.h"
@@ -187,7 +186,7 @@ static bool generateBinary(llvm::Module *module,
                            const string &outputFile,
                            const llvm::sys::Path &gccPath,
                            unsigned optLevel,
-                           bool exceptions,
+                           bool /*exceptions*/,
                            bool sharedLib,
                            bool genPIC,
                            const vector<string> &arguments)
@@ -657,7 +656,7 @@ int main(int argc, char **argv) {
     }
     // Add the relative path from the executable
     llvm::sys::Path clayExe =
-        llvm::sys::Path::GetMainExecutable(argv[0], (void *)&main);
+        llvm::sys::Path::GetMainExecutable(argv[0], (void *)&usage);
     llvm::sys::Path clayDir(llvm::sys::path::parent_path(clayExe.str()));
     llvm::sys::Path libDirDevelopment(clayDir);
     llvm::sys::Path libDirProduction1(clayDir);
@@ -699,11 +698,6 @@ int main(int argc, char **argv) {
     llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
     
     if (!run) {
-        if (outputFilePath.exists() && !outputFilePath.canWrite()) {
-            cerr << "error: unable to open " << outputFile << " for writing\n";
-            return -1;
-        }
-
         atomicOutputFilePath.eraseFromDisk();
         llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
     }
