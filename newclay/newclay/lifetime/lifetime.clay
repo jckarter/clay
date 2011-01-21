@@ -46,7 +46,7 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Ca
             removeValue(c, input);
         }
 
-    addOutputs(c, node);
+    addCallOutputs(c, node);
     ir.pushNode(dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If) {
@@ -176,6 +176,7 @@ private _Type(x) = StaticName(Type(x));
 
 private lifetimeAnalyzeSubbody(c, subdest, subbody) {
     for (subnode in subbody) {
+        observe(_Type(*subnode));
         lifetimeAnalyzeNode(c, subdest, *subnode);
     }
 }
@@ -193,7 +194,7 @@ private removeValue(c:LifetimeContext, input) {
 }
 
 private addValue(c:LifetimeContext, input) {
-    if (input.value?)
+    if (input.value? or input.kind == RT_VARIABLE_RVALUE)
         addReference(c, input);
 }
 
@@ -242,6 +243,13 @@ private destroyValue(dest:Vector[ir.Node], value) {
     );
 
     ir.pushNode(dest, destroyNode);
+}
+
+private addCallOutputs(c:LifetimeContext, node:ir.Call) {
+    for (output, result in zipped(ir.nodeOutputs(node), just(node.specialization.results))) {
+        if (result.kind == RT_VARIABLE_RVALUE)
+            addReference(c, output);
+    }
 }
 
 private addOutputs(c:LifetimeContext, node) {
@@ -309,6 +317,7 @@ private withLoopFrame(c:LifetimeContext, dest:Vector[ir.Node], fn) {
 //
 
 lifetimeAnalyzeSpecialization(s:Specialization) {
+    observe(s.callable);
     var c = LifetimeContext();
     var outBody = Vector[ir.Node]();
     withBlockFrame(c, outBody, () ref=> {

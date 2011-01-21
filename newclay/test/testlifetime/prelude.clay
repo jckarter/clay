@@ -1,4 +1,5 @@
 import __primitives__.*;
+import __main__.(main);
 
 
 //
@@ -70,15 +71,34 @@ static overload Type?('x) | PrimitiveType?('x) = true;
 
 
 //
-// Bool, Int
+// Bool, Char, *Int32*, Float*
 //
 
 symbol Bool = NewPrimitiveType();
-symbol Int = NewPrimitiveType();
+symbol Char  = NewPrimitiveType();
+symbol Int8  = NewPrimitiveType();
+symbol Int16 = NewPrimitiveType();
+symbol Int32 = NewPrimitiveType();
+symbol Int64 = NewPrimitiveType();
+symbol UInt8  = NewPrimitiveType();
+symbol UInt16 = NewPrimitiveType();
+symbol UInt32 = NewPrimitiveType();
+symbol UInt64 = NewPrimitiveType();
+symbol Float32 = NewPrimitiveType();
+symbol Float64 = NewPrimitiveType();
 
 static overload ToLowLevelType(Bool) = LLBoolType;
-static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
-
+static overload ToLowLevelType(Char) = LLIntegerType[LLUnsigned, 8];
+static overload ToLowLevelType(Int8 ) = LLIntegerType[LLSigned,  8];
+static overload ToLowLevelType(Int16) = LLIntegerType[LLSigned, 16];
+static overload ToLowLevelType(Int32) = LLIntegerType[LLSigned, 32];
+static overload ToLowLevelType(Int64) = LLIntegerType[LLSigned, 64];
+static overload ToLowLevelType(UInt8 ) = LLIntegerType[LLUnsigned,  8];
+static overload ToLowLevelType(UInt16) = LLIntegerType[LLUnsigned, 16];
+static overload ToLowLevelType(UInt32) = LLIntegerType[LLUnsigned, 32];
+static overload ToLowLevelType(UInt64) = LLIntegerType[LLUnsigned, 64];
+static overload ToLowLevelType(Float32) = LLFloatType[32];
+static overload ToLowLevelType(Float64) = LLFloatType[64];
 
 
 //
@@ -135,9 +155,9 @@ static overload TupleWithTag?('x, 'tag) =
 //
 
 
-plus(a:Int) = a;
+plus(a:Int32) = a;
 
-minus(a:Int) returned:Int __c__ """
+minus(a:Int32) returned:Int32 __c__ """
     *returned_ = -*a_;
 """;
 
@@ -145,56 +165,56 @@ dereference(a:Pointer['T]) ref returned:'T __c__ """
     *returned_ = *a_;
 """;
 
-multiply(a:Int, b:Int) returned:Int __c__ """
+multiply(a:Int32, b:Int32) returned:Int32 __c__ """
     *returned_ = *a_ * *b_;
 """;
 
-divide(a:Int, b:Int) returned:Int __c__ """
+divide(a:Int32, b:Int32) returned:Int32 __c__ """
     *returned_ = *a_ / *b_;
 """;
 
-remainder(a:Int, b:Int) returned:Int __c__ """
+remainder(a:Int32, b:Int32) returned:Int32 __c__ """
     *returned_ = *a_ % *b_;
 """;
 
-add(a:Int, b:Int) returned:Int __c__ """
+add(a:Int32, b:Int32) returned:Int32 __c__ """
     *returned_ = *a_ + *b_;
 """;
 
-subtract(a:Int, b:Int) returned:Int __c__ """
+subtract(a:Int32, b:Int32) returned:Int32 __c__ """
     *returned_ = *a_ - *b_;
 """;
 
-lesser?(a:Int, b:Int) returned:Bool __c__ """
+lesser?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ < *b_;
 """;
 
-lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
+lesserEquals?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ <= *b_;
 """;
 
-greater?(a:Int, b:Int) returned:Bool __c__ """
+greater?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ > *b_;
 """;
 
-greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
+greaterEquals?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ >= *b_;
 """;
 
-equals?(a:Int, b:Int) returned:Bool __c__ """
+equals?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ == *b_;
 """;
 
-notEquals?(a:Int, b:Int) returned:Bool __c__ """
+notEquals?(a:Int32, b:Int32) returned:Bool __c__ """
     *returned_ = *a_ != *b_;
 """;
 
 assign(ref a, b)                  { a <-- b; }
-addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
-subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
-multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
-divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
-remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+addAssign(ref a:Int32, b:Int32)       { a <-- add(a, b); }
+subtractAssign(ref a:Int32, b:Int32)  { a <-- subtract(a, b); }
+multiplyAssign(ref a:Int32, b:Int32)  { a <-- multiply(a, b); }
+divideAssign(ref a:Int32, b:Int32)    { a <-- divide(a, b); }
+remainderAssign(ref a:Int32, b:Int32) { a <-- remainder(a, b); }
 
 //
 // non-POD lifetime management
@@ -213,8 +233,8 @@ symbol NontrivialInt = NewPrimitiveType();
 static overload ToLowLevelType(NontrivialInt) = LLIntegerType[LLSigned, 32];
 static overload PODType?(NontrivialInt) = false;
 
-toNontrivialInt(x:Int) y:NontrivialInt { primitiveCopy(y, x); }
-fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
+toNontrivialInt(x:Int32) y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) y:Int32 { primitiveCopy(y, x); }
 
 overload initializeFromUnsafe(ref to:NontrivialInt, from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }
@@ -223,4 +243,4 @@ overload destroyUnsafe(ref i:NontrivialInt) { }
 // callMain
 //
 
-callMain() Int { main(); return 0; }
+callMain() Int32 { main(); return 0; }
