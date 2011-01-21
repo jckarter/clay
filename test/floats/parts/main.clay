@@ -1,0 +1,43 @@
+import numbers.floats.*;
+import printer.formatter.*;
+
+main() {
+    static for (f in 0.0, -1.0, 1.0, infinity(Double), negativeInfinity(Double))
+        println("0x", hex(floatBits(f)));
+
+    static for (f in 0.0f, -1.0f, 1.0f, infinity(Float), negativeInfinity(Float))
+        println("0x", hex(floatBits(f)));
+
+    // 0, -0
+    println(floatFromParts(false, 0, 0u32));
+    println(floatFromParts(true,  0, 0u32));
+    println(floatFromParts(false, 0, 0u64));
+    println(floatFromParts(true,  0, 0u64));
+
+    // 1, -1
+    println(floatFromParts(false,  127, 0u32));
+    println(floatFromParts(true,   127, 0u32));
+    println(floatFromParts(false, 1023, 0u64));
+    println(floatFromParts(true,  1023, 0u64));
+
+    // 1.5, -1.5
+    println(floatFromParts(false,  127, 0x40_0000u32));
+    println(floatFromParts(true,   127, 0x40_0000u32));
+    println(floatFromParts(false, 1023, 0x8_0000_0000_0000u64));
+    println(floatFromParts(true,  1023, 0x8_0000_0000_0000u64));
+
+    // 1.5 parts
+    var neg?, exp, mant = ...floatParts(1.5);
+    println(neg?, " ", exp, " 0x", hex(mant));
+    neg?, exp, mant = ...floatParts(-1.5);
+    println(neg?, " ", exp, " 0x", hex(mant));
+
+    var negf?, expf, mantf = ...floatParts(1.5f);
+    println(negf?, " ", expf, " 0x", hex(mantf));
+    negf?, expf, mantf = ...floatParts(-1.5f);
+    println(negf?, " ", expf, " 0x", hex(mantf));
+
+    // nan
+    println(ordered?(0.0, nan(Double)));
+    println(ordered?(0.0f, nan(Float)));
+}
