@@ -1,4 +1,4 @@
-eatRvalue(rvalue x:Int) {
+eatRvalue(rvalue x:Int32) {
     var x1 = x;
     x1 += 1;
     return x1;

@@ -1,6 +1,6 @@
 
 symbol foo = NewProcedure();
-overload foo(x:Int) = if (true) foo(0) else 2;
+overload foo(x:Int32) = if (true) foo(0) else 2;
 
 symbol main = NewProcedure();
 overload main() = foo(2);

@@ -1,0 +1,66 @@
+main() {
+    var a1 = 1.0;
+    var a2 = 0.0;
+    var a3 = 0.0f;
+    var a4 = 0.0f32;
+    var a5 = 0.0f64;
+
+    var b1 = 0x1.0p1;
+    var b2 = -0x1.0p1;
+    var b3 = +0x1.0p-1;
+    var b4 = -0x1.0p+1;
+    var b5 = 0x1.0p-1;
+
+    var c1 = 0x1.0fp0;
+    var c2 = 0x1.0fp1;
+    var c3 = 0x1.0fp+2;
+    var c4 = 0x1.0fp20;
+    var c5 = 0x1.0fp-1;
+    var c6 = 0x1.0f32p1;
+    var c7 = 0x1.0f32p1f32;
+
+    // check that full 53 bits are preserved
+    var d1 = 0x1.ABCD_ABCD_ABCD_Ap0;
+    var d2 = 0x01.ABCD_ABCD_ABCD_Ap0;
+    var d3 = 0x0.01ABCD_ABCD_ABCD_Ap0;
+    var d4 = 0x1_ABCD.ABCD_ABCD_Ap0;
+    var d5 = 0x0.0A_AAAA_AAAA_AAAA_8p0;
+    var d6 = 0x0.0A_AAAA_AAAA_AAAA_8p0;
+    var d7 = 0x0.05_5555_5555_5555_4p0;
+
+    // check rounding
+    var e1 = 0x1.ABCD_ABCD_ABCD_A7p0; // round down
+    var e2 = 0x1.ABCD_ABCD_ABCD_A8p0; // round to even (down in this case)
+    var e3 = 0x1.ABCD_ABCD_ABCD_A81p0; // round up
+    var e4 = 0x1.ABCD_ABCD_ABCD_A801p0; // round up
+    var e5 = 0x1.ABCD_ABCD_ABCD_A800_8p0; // round up
+    var e6 = 0x1.ABCD_ABCD_ABCD_A800_1p0; // round up
+    var e7 = 0x1.ABCD_ABCD_ABCD_A800_0000_0000_0001p0; // round up
+    var e8 = 0x1.ABCD_ABCD_ABCD_A9p0; // round up
+
+    var f1 = 0x1.ABCD_ABCD_ABCD_B7p0; // round down
+    var f2 = 0x1.ABCD_ABCD_ABCD_B8p0; // round to even (up in this case)
+    var f3 = 0x1.ABCD_ABCD_ABCD_B81p0; // round up
+    var f4 = 0x1.ABCD_ABCD_ABCD_B801p0; // round up
+    var f5 = 0x1.ABCD_ABCD_ABCD_B800_8p0; // round up
+    var f6 = 0x1.ABCD_ABCD_ABCD_B800_1p0; // round up
+    var f7 = 0x1.ABCD_ABCD_ABCD_B800_0000_0000_0001p0; // round up
+    var f8 = 0x1.ABCD_ABCD_ABCD_B9p0; // round up
+
+    var g1 = 0x1p1023; // largest exponent
+    var g2 = 0x1p1024; // infinity
+    var g3 = 0x1p1025; // infinity
+    var g4 = -0x1p1023; // largest exponent
+    var g5 = -0x1p1024; // -infinity
+    var g6 = -0x1p1025; // -infinity
+
+
+    var h1 = 0x1.2345_6789_ABCD_Ep-1022; // smallest normal
+    var h2 = 0x1.2345_6789_ABCD_Ep-1023; // largest denormal exponent
+    var h3 = 0x1.2345_6789_ABCD_Ep-1074; // smallest denormal
+    var h4 = 0x1.2345_6789_ABCD_Ep-1075; // zero
+    var h5 = -0x1.2345_6789_ABCD_Ep-1022; // smallest normal
+    var h6 = -0x1.2345_6789_ABCD_Ep-1023; // largest denormal exponent
+    var h7 = -0x1.2345_6789_ABCD_Ep-1074; // smallest denormal
+    var h8 = -0x1.2345_6789_ABCD_Ep-1075; // zero
+}

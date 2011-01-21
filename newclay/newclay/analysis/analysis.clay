@@ -189,11 +189,16 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BoolLiteral)
     = addSpecializedValue(s, expr, Value(BoolValue(expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IntLiteral)
-    // XXX Integer type matching
-    = addSpecializedValue(s, expr, Value(IntValue(Int(expr.value))));
+    = addSpecializedValue(s, expr, Value(parseIntLiteral(expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StringLiteral)
-    = addSpecializedValue(s, expr, Value(StringValue(expr.value)));
+    = addSpecializedValue(s, expr, Value(StringValue(parseStringLiteral(expr.value))));
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.CharLiteral)
+    = addSpecializedValue(s, expr, Value(CharValue(parseCharLiteral(expr.value))));
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
+    = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
     var envEntry = nameRefLookup(env, expr);
@@ -1158,9 +1163,26 @@ genericAnalysisError(forward ...err) {
 newValue(type, ...name) = RTVariable(RT_VARIABLE_RVALUE, type, true, ...name);
 newReference(kind, type, ...name) = RTVariable(kind, type, false, ...name);
 
+private procedure intValueType;
+overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism
+overload intValueType(v:UInt8)  = uint8Type();
+overload intValueType(v:UInt16) = uint16Type();
+overload intValueType(v:UInt32) = uint32Type();
+overload intValueType(v:UInt64) = uint64Type();
+overload intValueType(v:Int8)  = int8Type();
+overload intValueType(v:Int16) = int16Type();
+overload intValueType(v:Int32) = int32Type();
+overload intValueType(v:Int64) = int64Type();
+
+private procedure floatValueType;
+overload floatValueType(v:Float32) = float32Type();
+overload floatValueType(v:Float64) = float64Type();
+
 valueToRTVariable(value:Value) = match(value,
     BoolValue, x => newValue(boolType()),
-    IntValue, x => newValue(intType()),
+    CharValue, x => newValue(charType()),
+    IntValue, x => newValue(intValueType(*x)),
+    FloatValue, x => newValue(floatValueType(*x)),
     StringValue, x => {
         genericError("strings are not yet supported");
         return RTVariable();

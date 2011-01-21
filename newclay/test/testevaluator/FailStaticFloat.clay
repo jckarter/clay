@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+static Main() = 0.0;

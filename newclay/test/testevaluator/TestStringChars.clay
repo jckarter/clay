@@ -1,0 +1,6 @@
+import __primitives__.*;
+
+static Reverse() = ;
+static overload Reverse('x, ...'y) = ...Reverse(...'y), 'x;
+
+static Main() = StaticStringFromChars(...Reverse(...StaticStringChars("hello world")));

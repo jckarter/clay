@@ -3,7 +3,7 @@ symbol nonterminating = NewProcedure();
 overload nonterminating() { throw 0; }
 
 symbol foo = NewProcedure();
-overload foo(x:Int) = if (true) nonterminating() else 1;
+overload foo(x:Int32) = if (true) nonterminating() else 1;
 
 symbol main = NewProcedure();
 overload main() = foo(2);

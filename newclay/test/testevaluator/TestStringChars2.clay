@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+static Main() = StaticStringFromChars('h', '\x65', 'l', 'l', 'o', '\040', 'w', 'o', 'r', 'l', 'd', '\n');
