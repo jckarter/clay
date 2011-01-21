@@ -1,0 +1,14 @@
+rvalueReturn() rvalue x:NontrivialInt __c__ """abort();""";
+nop(x) {}
+
+main() {
+    if (false) return;
+
+    var x = rvalueReturn();
+
+    if (false) return;
+
+    nop(x);
+
+    if (false) return;
+}
