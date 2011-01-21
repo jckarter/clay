@@ -1,0 +1,16 @@
+import __primitives__.*;
+
+static Main() = (
+    (0, 1, -1, 1_234_567, 0x1234_ABCD, -0x1234_abcd, 0x7FFF_FFFF_FFFF_FFFF, -0x8000_0000_0000_0000),
+    (0u8, 100_u8, 0xFFu8),
+    (0u16, 100_u16, 0xFFFFu16),
+    (0u32, 0xFFFF_FFFF_u32),
+    (0u, 0xFFFF_FFFFu),
+    (0u64, 0xFFFF_FFFF_FFFF_FFFFu64),
+    (0i8, 100_i8, -100_i8, 0x7Fi8, -0x80i8),
+    (0i16, 100_i16, -100_i16, 0x7FFFi16, -0x8000i16),
+    (0i16, 100_i16, -100_i16, 0x7FFFi16, -0x8000i16),
+    (0i32, 0x7FFF_FFFFi32, -0x8000_0000i32),
+    (0i, 0x7FFF_FFFFi, -0x8000_0000i),
+    (0i64, 0x7FFF_FFFF_FFFF_FFFFi64, -0x8000_0000_0000_0000i64),
+);

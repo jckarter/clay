@@ -6,7 +6,7 @@ overload foo(x:'T) {
 
 symbol main = NewProcedure();
 overload main() {
-    var x:Int = 5;
+    var x:Int32 = 5;
     var y:Bool = foo(true);
     return x, y;
 }

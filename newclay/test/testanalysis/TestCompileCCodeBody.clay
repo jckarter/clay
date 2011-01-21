@@ -1,4 +1,4 @@
 symbol main = NewProcedure();
-overload main() r:Int __c__ """
+overload main() r:Int32 __c__ """
     *r = 1;
 """;

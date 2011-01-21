@@ -1,5 +1,5 @@
 symbol main = NewProcedure();
 overload main() {
-    var x:Int = true;
+    var x:Int32 = true;
 }
 

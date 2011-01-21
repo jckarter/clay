@@ -64,7 +64,17 @@ record ClayHooks (
     LLUnionType: Value,
 
     Bool: Value,
-    Int: Value,
+    Char: Value,
+    Int8: Value,
+    Int16: Value,
+    Int32: Value,
+    Int64: Value,
+    UInt8: Value,
+    UInt16: Value,
+    UInt32: Value,
+    UInt64: Value,
+    Float32: Value,
+    Float64: Value,
     Static: Value,
     Pointer: Value,
 

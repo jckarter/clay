@@ -72,7 +72,7 @@ private parseHexDigit(x) {
     if ((x >= 'a') and (x <= 'z'))
         return Int(x) - Int('a') + 10;
     if ((x >= 'A') and (x <= 'Z'))
-        return Int(x) - Int('z') + 10;
+        return Int(x) - Int('A') + 10;
     assert(false, "invalid hex digit: ", x);
     return -1;
 }
@@ -146,8 +146,9 @@ parseHexFloatLiteral(number, suffix) {
     var mantissa = 0_u64;
     var mantissaBits = 0;
     var usedMantissaBits = 0;
-    var exponentI = 0;
-    var pointExponent = -1;
+    var exponentI = SizeT(0);
+    var point = 0;
+    var point? = false;
 
     for (i, c in enumerated(number)) {
         if (c == '-') {
@@ -157,8 +158,8 @@ parseHexFloatLiteral(number, suffix) {
             assert(i == 0, "junk before positive sign in hex float literal");
             neg? = false;
         } else if (c == '.') {
-            assert(point == -1, "multiple decimal points in hex float literal");
-            point = 0;
+            assert(not point?, "multiple decimal points in hex float literal");
+            point? = true;
         } else if (c == 'p' or c == 'P') {
             assert(exponentI == 0, "multiple P markers in hex float literal");
             exponentI = i;
@@ -167,16 +168,15 @@ parseHexFloatLiteral(number, suffix) {
             assert(mantissa == 0, "junk before hex designator in hex float literal");
             continue;
         } else {
-            if (point >= 0)
+            if (point?)
                 point += 4;
             if (c == '0' and mantissa == 0)
                 continue;
             mantissaBits += 4;
             if (c != '0')
                 usedMantissaBits = mantissaBits;
-            if (mantissaBits < 64) {
+            if (mantissaBits <= 64)
                 mantissa = bitwiseOr(shiftLeft(mantissa, 4), parseHexDigit(c));
-            }
         }
     }
 
@@ -188,13 +188,15 @@ parseHexFloatLiteral(number, suffix) {
     if (mantissa == 0) {
         value = floatFromParts(neg?, 0, 0u64);
     } else {
+        observe(rightAlignedWith(16, '0', hex(mantissa)));
         var mantissaLog = log2(mantissa);
         mantissa = shiftLeft(mantissa, 64 - mantissaLog);
+        observe(mantissaLog, usedMantissaBits, mantissaBits, rightAlignedWith(16, '0', hex(mantissa)));
         var round = bitwiseAnd(mantissa, 0xFFF);
         mantissa = shiftRight(mantissa, 12);
 
         if (round > 0x800 or (round == 0x800 and (
-            mantissaLog > 56 or bitwiseAnd(mantissa, 0x1000) == 0x1000
+            usedMantissaBits > 64 or bitwiseAnd(mantissa, 0x1) == 0x1
         )))
             mantissa += 1;
 
@@ -205,14 +207,14 @@ parseHexFloatLiteral(number, suffix) {
             + exponentBias(Double);
 
         if (mantissaExponent <= 0) {
+            mantissa = shiftRight(bitwiseOr(mantissa, 0x0010_0000_0000_0000_u64), 1 - mantissaExponent);
             mantissaExponent = 0;
-            mantissa = shiftRight(bitwiseOr(mantissa, 0x0010_0000_0000_0000_u64), 1 + mantissaExponent);
         } else if (mantissaExponent >= 2047) {
             mantissaExponent = 2047;
             mantissa = 0_u64;
         }
 
-        observe(number, neg?, mantissaExponent, hex(mantissa));
+        observe(number, neg?, mantissaExponent, rightAlignedWith(13, '0', hex(mantissa)));
 
         value = floatFromParts(neg?, mantissaExponent, mantissa);
     }
@@ -255,23 +257,24 @@ parseFloatLiteral(s) {
         if (c != '_') {
             if (c == 'x')
                 hex? = true;
-            push(number, s);
+            push(number, c);
         }
     }
 
     if (hex?)
-        parseHexFloatLiteral(number, suffix);
-    else switch (suffix) {
-    case "":
-    case "f64":
-        return FloatValue(Double(number));
-    case "f":
-    case "f32":
-        return FloatValue(Float(number));
-    default:
-        assert(false, "invalid float suffix");
-        return FloatValue();
-    }
+        return parseHexFloatLiteral(number, suffix);
+    else
+        switch (suffix) {
+        case "":
+        case "f64":
+            return FloatValue(Double(number));
+        case "f":
+        case "f32":
+            return FloatValue(Float(number));
+        default:
+            assert(false, "invalid float suffix");
+            return FloatValue();
+        }
 }
 
 

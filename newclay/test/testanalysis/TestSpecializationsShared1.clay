@@ -1,4 +1,4 @@
-foo(x:Int) = x;
+foo(x:Int32) = x;
 overload foo(y:Bool) = y;
 
 main() = foo(1), foo(2), foo(true);

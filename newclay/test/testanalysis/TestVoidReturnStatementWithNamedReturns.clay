@@ -1,4 +1,4 @@
-main() r:Int {
+main() r:Int32 {
     r <-- 0;
     return;
 }
