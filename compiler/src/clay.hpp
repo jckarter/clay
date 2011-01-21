@@ -1941,6 +1941,7 @@ enum PrimOpCode {
 
     PRIM_Array,
     PRIM_arrayRef,
+    PRIM_arrayElements,
 
     PRIM_Vec,
 
