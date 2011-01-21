@@ -1293,6 +1293,16 @@ private nStrings(args) {
     return move(result);
 }
 
+private nChars(args) {
+    var result = Vector[Char]();
+    for (i, x in enumerated(args)) {
+        if (not variantIs?(x, CharValue))
+            genericError("expecting a char, but received: ", x);
+        push(result, variantAs(x, CharValue).value);
+    }
+    return move(result);
+}
+
 private oneTuple(args) {
     var a = oneValue(args);
     if (not variantIs?(a, TupleValue))
@@ -1331,11 +1341,11 @@ evaluatePrimitiveWithOneResult(kind, args) {
 private evaluateStaticCompareEquality(a:Value, b:Value, op) = ValueList(BoolValue(op(a, b)));
 
 private evaluateStaticCompare(a, b, op) {
-    genericError(op, " is only applicable to Bool,Bool; Int,Int; String,String; or Tuple,Tuple arguments");
+    genericError("static comparison is only applicable to Bool,Bool; Char,Char; Int,Int; String,String; or Tuple,Tuple arguments");
     return ValueList();
 }
 
-[T | inValues?(T, BoolValue, StringValue)]
+[T | inValues?(T, BoolValue, CharValue, StringValue)]
 overload evaluateStaticCompare(a:T, b:T, op) = ValueList(BoolValue(op(a.value, b.value)));
 overload evaluateStaticCompare(a:IntValue, b:IntValue, op) = ValueList(BoolValue(op(a, b)));
 
@@ -1441,6 +1451,14 @@ evaluatePrimitive(kind, args) {
         for (s in a)
             push(result, move(s));
         return ValueList(StringValue(move(result)));
+    }
+    case PRIM_StaticStringChars : {
+        var s = oneString(args);
+        return ValueList(mapped(c => Value(CharValue(c)), s));
+    }
+    case PRIM_StaticStringFromChars : {
+        var s = nChars(args);
+        return ValueList(StringValue(s));
     }
 
     case PRIM_StaticTuple? : {
