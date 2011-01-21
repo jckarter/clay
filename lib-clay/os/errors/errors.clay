@@ -23,3 +23,7 @@ errorMessage(code:Int) {
     printErrorMessageTo(buf, code);
     return move(buf);
 }
+
+errorCodeName(code:Int) {
+    return platform.errorCodeName(code);
+}
