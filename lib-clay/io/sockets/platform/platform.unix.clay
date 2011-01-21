@@ -17,7 +17,9 @@ public import unix.(
 alias RawSocket = Int;
 alias SOCKET_ERROR = RawSocket(-1);
 
-startSockets() {}
+startSockets() {
+    unix.signal(unix.SIGPIPE, unix.SIG_IGN);
+}
 finishSockets() {}
 
 alias Sockaddr = unix.Struct_sockaddr;
