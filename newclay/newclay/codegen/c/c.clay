@@ -8,11 +8,12 @@ import newclay.common.*;
 import newclay.hooks.*;
 import maybe.*;
 import printer.formatter.*;
+import numbers.floats.*;
 
 record CodegenFunction (
-    mangledName:String,
-    signature:Maybe[String],
-    definition:Maybe[String],
+    mangledName:String, // _clay__whatever
+    signature:Maybe[String], // static void _clay__whatever(...)
+    definition:Maybe[String], // { ... }
 );
 overload CodegenFunction(mangledName)
     = CodegenFunction(mangledName, nothing(String), nothing(String));
@@ -28,21 +29,27 @@ record CodegenType (
 overload CodegenType(mangledName, compoundKind)
     = CodegenType(mangledName, compoundKind, nothing(String), Vector[Value]());
 
-// TODO type codegen
+record CodegenConstant (
+    mangledName:String, // _clay_constant__n
+    definition:String, // const _clay__Type _clay_constant__n = ...;
+);
 
 record CodegenContext (
     types: HashMap[Value, CodegenType],
     typeOrder: Vector[Value],
     functions: HashMap[Specialization, CodegenFunction],
     functionOrder: Vector[Specialization],
+    constants: HashMap[Value, CodegenConstant],
+    constantOrder: Vector[Value],
+    constantNames: NameAllocator,
 );
-
-alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
 
 
 //
 // name mangling
 //
+
+alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
 
 mangleString(name) {
     var mangled = String();
@@ -140,6 +147,18 @@ private getFunction(c:CodegenContext, s:Specialization) {
 }
 
 private functionName(c, type) = getFunction(c, type).mangledName;
+
+private getConstant(c:CodegenContext, value:Value, definitionFn) {
+    var constantp = lookup(c.constants, value);
+    if (null?(constantp)) {
+        ref constant = c.constants[value];
+        constant.mangledName = mangleGlobal("constant " + allocateName(c.constantNames, printString(value)));
+        constant.definition = definitionFn(constant);
+        push(c.constantOrder, value);
+        return ref constant;
+    } else
+        return ref constantp^;
+}
 
 
 //
@@ -304,7 +323,7 @@ overload codegenNode(c, bc, node:ir.ValueList) {
     for (value, output in zipped(node.valueList, node.outputs)) {
         if (staticType?(output.type))
             continue;
-        printToIndented(bc, localDeref(bc, output), " = ", cValue(value), ";\n");
+        printToIndented(bc, localDeref(bc, output), " = ", cValue(c, value), ";\n");
     }
 }
 
@@ -432,30 +451,45 @@ overload codegenNode(c, bc, node:ir.Throw) {
 overload codegenNode(c, bc, node:ir.Nop) {
 }
 
-private cValue(value:Value) = match(value,
+private cValue(c, value:Value) = match(value,
     BoolValue,  bv ref=> if (bv.value) String("1") else String("0"),
-    IntValue,   iv ref=> cIntValue(iv),
-    FloatValue, fv ref=> cFloatValue(fv),
+    IntValue,   iv ref=> cIntValue(c, iv),
+    FloatValue, fv ref=> cFloatValue(c, fv),
     CharValue,  cv ref=> printString(Int(cv.value)),
     MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
 );
 
-private cIntValue(iv) = match(iv,
+private cIntValue(c, iv) = match(iv,
     // XXX polymorphic static ints
-    StaticIntValue, s => printString(s.value),
+    StaticIntValue, s ref=> printString(s.value),
     // XXX need to be dialect/type system aware for 64-bit
-    Int64, n => printString(n, "ll"),
-    UInt64, n => printString(n, "ull"),
-    UInt32, n => printString(n, "u"),
-    MatchDefault, n => printString(n),
+    Int64, n ref=> printString(n, "ll"),
+    UInt64, n ref=> printString(n, "ull"),
+    UInt32, n ref=> printString(n, "u"),
+    MatchDefault, n ref=> printString(n),
 );
 
-private cFloatValue(iv) = match(iv,
-    // XXX need to transfer exact value of float
-    // should use integer global constant and bitwise-cast to float
-    Float64, n => printString(n),
-    Float32, n => printString(n, "f"),
-);
+private cFloatConstant(c, fv) = getConstant(c, Value(fv), constant ref=> {
+    return match(fv,
+        Float32, n ref=> printString(
+            "static const ", typeName(c, uint32Type()), " ", constant.mangledName, " = 0x",
+            rightAlignedWith(8, '0', hex(floatBits(n))), "u;"
+        ),
+        // XXX dialect/type system aware
+        Float64, n ref=> printString(
+            "static const ", typeName(c, uint64Type()), " ", constant.mangledName, " = 0x",
+            rightAlignedWith(16, '0', hex(floatBits(n))), "ull;"
+        ),
+    );
+});
+
+private cFloatValue(c, fv) {
+    ref constant = cFloatConstant(c, fv);
+    return match(fv,
+        Float32, n ref=> printString("(*(", typeName(c, float32Type()), "*)&", constant.mangledName, ")"),
+        Float64, n ref=> printString("(*(", typeName(c, float64Type()), "*)&", constant.mangledName, ")"),
+    );
+}
 
 
 //
@@ -686,6 +720,7 @@ printCodegenTo(stream, c:CodegenContext) {
     printCodegenHeaderTo(stream, c);
     printTypeForwardDeclarationsTo(stream, c);
     printTypeDefinitionsTo(stream, c);
+    printConstantDefinitionsTo(stream, c);
     printFunctionForwardDeclarationsTo(stream, c);
     printFunctionDefinitionsTo(stream, c);
 }
@@ -727,6 +762,14 @@ private printTypeDefinitionTo(stream, printedMap:HashMap[Value,Bool], c:CodegenC
     ref type = getType(c, typeValue);
     printTypeDefinitionsTo2(stream, printedMap, c, type.dependencies);
     printlnTo(stream, "typedef ", just(type.definition), " ", type.mangledName, ";");
+}
+
+private printConstantDefinitionsTo(stream, c) {
+    for (value in c.constantOrder) {
+        ref constant = c.constants[value];
+        printlnTo(stream, constant.definition);
+    }
+    printlnTo(stream);
 }
 
 private printFunctionForwardDeclarationsTo(stream, c:CodegenContext) {
