@@ -433,9 +433,28 @@ overload codegenNode(c, bc, node:ir.Nop) {
 }
 
 private cValue(value:Value) = match(value,
-    BoolValue, bv ref=> if (bv.value) String("1") else String("0"),
-    IntValue,  iv ref=> printString(iv),
+    BoolValue,  bv ref=> if (bv.value) String("1") else String("0"),
+    IntValue,   iv ref=> cIntValue(iv),
+    FloatValue, fv ref=> cFloatValue(fv),
+    CharValue,  cv ref=> printString(Int(cv.value)),
     MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
+);
+
+private cIntValue(iv) = match(iv,
+    // XXX polymorphic static ints
+    StaticIntValue, s => printString(s.value),
+    // XXX need to be dialect/type system aware for 64-bit
+    Int64, n => printString(n, "ll"),
+    UInt64, n => printString(n, "ull"),
+    UInt32, n => printString(n, "u"),
+    MatchDefault, n => printString(n),
+);
+
+private cFloatValue(iv) = match(iv,
+    // XXX need to transfer exact value of float
+    // should use integer global constant and bitwise-cast to float
+    Float64, n => printString(n),
+    Float32, n => printString(n, "f"),
 );
 
 
@@ -500,10 +519,10 @@ private codegenIntegerType(c, type, llType, definition) {
         genericError("first symbol parameter of low-level integer type ", llType, " must be ", getHooks().LLSigned, " or ", getHooks().LLUnsigned);
 
     var bits = match(llType.params[1],
-        IntValue, v => v.value,
+        IntValue, v => Int64(v),
         MatchDefault, x => {
             genericError("second symbol parameter of low-level integer type ", llType, " must be integer value");
-            return 0;
+            return 0_i64;
         }
     );
 
@@ -517,10 +536,10 @@ private codegenFloatType(c, type, llType, definition) {
         genericError("low-level float type ", llType, " must have one symbol parameter");
 
     var bits = match(llType.params[0],
-        IntValue, v => v.value,
+        IntValue, v => Int64(v),
         MatchDefault, x => {
             genericError("symbol parameter of low-level float type ", llType, " must be integer value");
-            return 0;
+            return 0_i64;
         },
     );
 
@@ -548,10 +567,10 @@ private codegenArrayType(c, type, llType, definition) {
         genericError("low-level array type ", llType, " must have two symbol parameters");
 
     var arraySize = match(llType.params[1],
-        IntValue, v => v.value,
+        IntValue, v => Int64(v),
         MatchDefault, x => {
             genericError("second symbol parameter of low-level array type ", llType, " must be integer value");
-            return 0;
+            return 0_i64;
         },
     );
 
@@ -804,7 +823,7 @@ codegenStandaloneProgramTo(stream) {
     var mainS = analyzeCallable(getHooks().callMain, VariableList());
 
     var mainResultsOk? = maybe(mainS.results,
-        results => size(results) == 1 and results[0].type == intType(),
+        results => size(results) == 1 and results[0].type == int32Type(),
         () => false
     );
 
