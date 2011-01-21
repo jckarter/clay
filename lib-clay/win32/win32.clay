@@ -3,6 +3,7 @@ public import win32.generated.*;
 public import win32.constants.*;
 public import win32.errorcodes.*;
 public import win32.platform.*;
+import win32.errornames.(errorNames);
 
 
 //
@@ -44,4 +45,13 @@ printErrorMessageTo(stream, errorCode) {
         printTo(stream, "unknown error");
     else
         printTo(stream, CStringRef(&buf[0]));
+}
+
+errorCodeName(code:Int) {
+    ref names = errorNames();
+    var nameCodes = mapped(x => x.0, names);
+    var begin, end = ...binarySearch(nameCodes, code);
+    if (begin == end)
+        return "";
+    return mappedInnerCoordinate(begin)^.1;
 }
