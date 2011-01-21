@@ -5,6 +5,7 @@ import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.diagnostics.*;
+import numbers.floats.*;
 
 
 
@@ -716,6 +717,16 @@ overload divide   (x:IntValue, y:IntValue) = applyToIntValue(divide,    *x, *y);
 overload remainder(x:IntValue, y:IntValue) = applyToIntValue(remainder, *x, *y);
 
 overload Int64(x:IntValue) = Int64(*x);
+
+// Treat FloatValues as equivalent on bitwise equality, not float equality
+
+private floatValueEquals?(x, y) = false;
+[T] overload floatValueEquals?(x:T, y:T) = floatBits(x) == floatBits(y);
+
+private floatValueHash(x) = SizeT(floatBits(x));
+
+overload equals?(x:FloatValue, y:FloatValue) = floatValueEquals?(*x, *y);
+overload hash(x:FloatValue) = floatValueHash(*x);
 
 
 //
