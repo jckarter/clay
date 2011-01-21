@@ -3,6 +3,8 @@ import libc;
 public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
+
+import unix.generated as generated;
 import unix.errnonames.(errnoNames);
 
 printErrorMessageTo(stream, errorCode) {
@@ -16,3 +18,33 @@ errnoName(code:Int) {
         return "";
     return mappedInnerCoordinate(begin)^.1;
 }
+
+
+//
+// shadow system calls to handle EINTR
+//
+
+eintrSafeCall(f, ...args) {
+    alias ResultType = Type(f(...args));
+    var result = ResultType();
+    while (true) {
+        result = f(...args);
+        if (result != -1) break;
+        if (errno() != EINTR) break;
+    }
+    return result;
+}
+
+open(...args) = eintrSafeCall(generated.open, ...args);
+read(...args) = eintrSafeCall(generated.read, ...args);
+write(...args) = eintrSafeCall(generated.write, ...args);
+close(...args) = eintrSafeCall(generated.close, ...args);
+connect(...args) = eintrSafeCall(generated.connect, ...args);
+accept(...args) = eintrSafeCall(generated.accept, ...args);
+send(...args) = eintrSafeCall(generated.send, ...args);
+sendto(...args) = eintrSafeCall(generated.sendto, ...args);
+sendmsg(...args) = eintrSafeCall(generated.sendmsg, ...args);
+recv(...args) = eintrSafeCall(generated.recv, ...args);
+recvfrom(...args) = eintrSafeCall(generated.recvfrom, ...args);
+recvmsg(...args) = eintrSafeCall(generated.recvmsg, ...args);
+select(...args) = eintrSafeCall(generated.select, ...args);
