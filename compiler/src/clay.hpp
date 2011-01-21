@@ -187,7 +187,7 @@ enum ObjectKind {
     CVALUE,
     MULTI_CVALUE,
 
-    DONT_CARE,
+    DONT_CARE
 };
 
 
@@ -646,7 +646,7 @@ enum TokenKind {
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,
-    T_LLVM,
+    T_LLVM
 };
 
 struct Token : public Object {
@@ -731,7 +731,7 @@ enum ExprKind {
     DISPATCH_EXPR,
 
     FOREIGN_EXPR,
-    OBJECT_EXPR,
+    OBJECT_EXPR
 };
 
 struct Expr : public ANode {
@@ -839,7 +839,7 @@ enum UnaryOpKind {
     ADDRESS_OF,
     PLUS,
     MINUS,
-    NOT,
+    NOT
 };
 
 struct UnaryOp : public Expr {
@@ -862,7 +862,7 @@ enum BinaryOpKind {
     LESSER,
     LESSER_EQUALS,
     GREATER,
-    GREATER_EQUALS,
+    GREATER_EQUALS
 };
 
 struct BinaryOp : public Expr {
@@ -1026,7 +1026,7 @@ enum StatementKind {
     TRY,
     THROW,
     STATIC_FOR,
-    UNREACHABLE,
+    UNREACHABLE
 };
 
 struct Statement : public ANode {
@@ -1089,7 +1089,7 @@ enum UpdateOpKind {
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
     UPDATE_DIVIDE,
-    UPDATE_REMAINDER,
+    UPDATE_REMAINDER
 };
 
 struct UpdateAssignment : public Statement {
@@ -1109,7 +1109,7 @@ struct Goto : public Statement {
 enum ReturnKind {
     RETURN_VALUE,
     RETURN_REF,
-    RETURN_FORWARD,
+    RETURN_FORWARD
 };
 
 struct Return : public Statement {
@@ -1269,7 +1269,7 @@ enum ValueTempness {
     TEMPNESS_DONTCARE,
     TEMPNESS_LVALUE,
     TEMPNESS_RVALUE,
-    TEMPNESS_FORWARD,
+    TEMPNESS_FORWARD
 };
 
 struct FormalArg : public ANode {
@@ -1352,7 +1352,7 @@ struct Code : public ANode {
 
 enum Visibility {
     PUBLIC,
-    PRIVATE,
+    PRIVATE
 };
 
 
@@ -1637,7 +1637,7 @@ struct GlobalAlias : public TopLevelItem {
 enum ImportKind {
     IMPORT_MODULE,
     IMPORT_STAR,
-    IMPORT_MEMBERS,
+    IMPORT_MEMBERS
 };
 
 struct Import : public ANode {
@@ -1983,7 +1983,7 @@ enum PrimOpCode {
     PRIM_IdentifierConcat,
     PRIM_IdentifierSlice,
     PRIM_IdentifierModuleName,
-    PRIM_IdentifierStaticName,
+    PRIM_IdentifierStaticName
 };
 
 struct PrimOp : public Object {
@@ -2088,7 +2088,7 @@ enum TypeKind {
     RECORD_TYPE,
     VARIANT_TYPE,
     STATIC_TYPE,
-    ENUM_TYPE,
+    ENUM_TYPE
 };
 
 struct BoolType : public Type {
@@ -2302,7 +2302,7 @@ void typePrint(ostream &out, TypePtr t);
 
 enum PatternKind {
     PATTERN_CELL,
-    PATTERN_STRUCT,
+    PATTERN_STRUCT
 };
 
 struct Pattern : public Object {
@@ -2327,7 +2327,7 @@ struct PatternStruct : public Pattern {
 
 enum MultiPatternKind {
     MULTI_PATTERN_CELL,
-    MULTI_PATTERN_LIST,
+    MULTI_PATTERN_LIST
 };
 
 struct MultiPattern : public Object {
@@ -2450,7 +2450,7 @@ enum MatchCode {
     MATCH_CALLABLE_ERROR,
     MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
-    MATCH_PREDICATE_ERROR,
+    MATCH_PREDICATE_ERROR
 };
 
 struct MatchResult : public Object {
@@ -2740,7 +2740,7 @@ typedef Pointer<AnalysisContext> AnalysisContextPtr;
 enum StatementAnalysis {
     SA_FALLTHROUGH,
     SA_RECURSIVE,
-    SA_TERMINATED,
+    SA_TERMINATED
 };
 
 StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);

@@ -1762,9 +1762,9 @@ void evalCallValue(EValuePtr callable,
 // evalCallPointer
 //
 
-void evalCallPointer(EValuePtr x,
-                     MultiEValuePtr args,
-                     MultiEValuePtr out)
+void evalCallPointer(EValuePtr /*x*/,
+                     MultiEValuePtr /*args*/,
+                     MultiEValuePtr /*out*/)
 {
     error("invoking a code pointer not yet supported in evaluator");
 }
