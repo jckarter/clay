@@ -139,3 +139,51 @@ floatUnordered?(a:T, b:T) returned:Bool __llvm__ {
     store $Bool %result, $Bool * %returned
     ret i32 0
 }
+
+floatBits(f:Double) = forward bitwiseCast(f, UInt64);
+overload floatBits(f:Float) = forward bitwiseCast(f, UInt32);
+
+floatFromBits(b:UInt64) = forward bitwiseCast(b, Double);
+overload floatFromBits(b:UInt32) = forward bitwiseCast(b, Float);
+
+[I | Integer?(I)]
+floatFromParts(neg?:Bool, exp:I, mant:UInt64) = floatFromBits(bitwiseOr(
+    bitwiseAnd(mant, 0x000F_FFFF_FFFF_FFFF_u64),
+    shiftLeft(bitwiseAnd(UInt64(exp), 0x7FF_u64), 52),
+    if (neg?) 0x8000_0000_0000_0000_u64 else 0_u64
+));
+[I | Integer?(I)]
+overload floatFromParts(neg?:Bool, exp:I, mant:UInt32) = floatFromBits(bitwiseOr(
+    bitwiseAnd(mant, 0x007F_FFFFu),
+    shiftLeft(bitwiseAnd(UInt32(exp), 0xFFu), 23),
+    if (neg?) 0x8000_0000u else 0u
+));
+
+floatNegative?(f:Double) = bitwiseAnd(floatBits(f), 0x8000_0000_0000_0000_u64) != 0;
+overload floatNegative?(f:Float) = bitwiseAnd(floatBits(f), 0x8000_0000u) != 0;
+
+floatExponent(f:Double) = bitwiseAnd(shiftRight(floatBits(f), 52), 0x7FF_u64);
+overload floatExponent(f:Float) = bitwiseAnd(shiftRight(floatBits(f), 23), 0xFFu);
+
+floatMantissa(f:Double) = bitwiseAnd(floatBits(f), 0x000F_FFFF_FFFF_FFFF_u64);
+overload floatMantissa(f:Float) = bitwiseAnd(floatBits(f), 0x007F_FFFFu);
+
+floatParts(f) = floatNegative?(f), floatExponent(f), floatMantissa(f);
+
+infinity(static Double) = floatFromBits(0x7FF0_0000_0000_0000_u64);
+overload infinity(static Float) = floatFromBits(0x7F80_0000u);
+
+negativeInfinity(static Double) = floatFromBits(0xFFF0_0000_0000_0000_u64);
+overload negativeInfinity(static Float) = floatFromBits(0xFF80_0000u);
+
+nan(static Double) = floatFromBits(0xFFF8_0000_0000_0000_u64);
+overload nan(static Float) = floatFromBits(0xFFC0_0000u);
+
+snan(static Double) = floatFromBits(0xFFF0_0000_0000_0001_u64);
+overload snan(static Float) = floatFromBits(0xFF80_0001u);
+
+overload nan(static Double, sign?:Bool, payload:UInt64) = floatFromParts(sign?, 0x7FF, payload);
+overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, 0xFF, payload);
+
+exponentBias(static Double) = 1023;
+overload exponentBias(static Float) = 127;
