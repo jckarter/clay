@@ -1,4 +1,5 @@
 import win32;
+import io.errors.*;
 
 
 //
@@ -68,7 +69,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.DWORD(0),
         win32.LPCSTR(0));
     if (mappingObject == win32.HANDLE(0))
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     var offset64 = UInt64(offset);
     var offsetHigh = shiftRight(offset64, 32);
     var offsetLow = bitwiseAnd(offset64, shiftLeft(1u64,32)-1);
@@ -80,7 +81,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.DWORD(length));
     if (address == win32.LPVOID(0)) {
         win32.CloseHandle(mappingObject);
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     }
     var p = new InnerFileMapping(fileHandle(f), mappingObject,
                                  address, SizeT(length));
@@ -93,10 +94,10 @@ overload FileMapping(f:File, mode:MappingMode) =
 overload destroy(x:InnerFileMapping) {
     var result = win32.UnmapViewOfFile(x.address);
     if (result == 0)
-        errorNoThrow(win32.errorMessage());
+        errorNoThrow(GenericIOError(win32.GetLastError()));
     result = win32.CloseHandle(x.mappingObject);
     if (result == 0)
-        errorNoThrow(win32.errorMessage());
+        errorNoThrow(GenericIOError(win32.GetLastError()));
 }
 
 
@@ -117,8 +118,8 @@ mappingLength(fm:FileMapping) = fm.inner^.length;
 flushMapping(fm:FileMapping) {
     var result = win32.FlushViewOfFile(fm.inner^.address, fm.inner^.length);
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
     result = win32.FlushFileBuffers(fm.inner^.fileHandle);
     if (result == 0)
-        error(win32.errorMessage());
+        throw GenericIOError(win32.GetLastError());
 }

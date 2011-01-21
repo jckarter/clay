@@ -1762,9 +1762,9 @@ void evalCallValue(EValuePtr callable,
 // evalCallPointer
 //
 
-void evalCallPointer(EValuePtr x,
-                     MultiEValuePtr args,
-                     MultiEValuePtr out)
+void evalCallPointer(EValuePtr /*x*/,
+                     MultiEValuePtr /*args*/,
+                     MultiEValuePtr /*out*/)
 {
     error("invoking a code pointer not yet supported in evaluator");
 }
@@ -3675,6 +3675,20 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(at->elementType));
         *((void **)out0->addr) = (void *)ptr;
+        break;
+    }
+
+    case PRIM_arrayElements : {
+        ensureArity(args, 1);
+        ArrayTypePtr at;
+        EValuePtr earray = arrayValue(args, 0, at);
+        assert(out->size() == (unsigned)at->size);
+        for (unsigned i = 0; i < (unsigned)at->size; ++i) {
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(at->elementType));
+            char *ptr = earray->addr + i*typeSize(at->elementType);
+            *((void **)outi->addr) = (void *)ptr;
+        }
         break;
     }
 

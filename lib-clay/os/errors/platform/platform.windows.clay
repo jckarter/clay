@@ -1,0 +1,10 @@
+
+import win32;
+
+printErrorMessageTo(stream, code:Int) {
+    win32.printErrorMessageTo(stream, code);
+}
+
+errorCodeName(code:Int) {
+    return win32.errorCodeName(code);
+}

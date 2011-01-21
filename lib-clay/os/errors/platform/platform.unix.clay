@@ -1,0 +1,10 @@
+
+import unix;
+
+printErrorMessageTo(stream, code:Int) {
+    unix.printErrorMessageTo(stream, code);
+}
+
+errorCodeName(code:Int) {
+    return unix.errnoName(code);
+}

@@ -1,6 +1,7 @@
 
 import unix;
 import libc;
+import io.errors.*;
 
 
 
@@ -125,8 +126,9 @@ currentDirectory() {
         var result = unix.getcwd(Pointer[CChar](&buf[0]), size(buf));
         if (not null?(result))
             break;
-        if (unix.errno() != unix.ERANGE)
-            error("failed to get current directory: ", unix.errorMessage());
+        var err = unix.errno();
+        if (err != unix.ERANGE)
+            throw GenericIOError(err);
         resize(buf, 2*size(buf));
     }
  
@@ -152,6 +154,5 @@ overload pathToExecutable(arg0) {
         if (pathExists?(p))
             return move(p);
     }
-    error("executable not found: ", arg0);
     return String();
 }

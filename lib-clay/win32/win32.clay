@@ -1,10 +1,9 @@
 
 public import win32.generated.*;
 public import win32.constants.*;
-public import win32.errno.*;
-
-alias WINAPI = cdecl;
-alias WinApiCodePointer = CCodePointer;
+public import win32.errorcodes.*;
+public import win32.platform.*;
+import win32.errornames.(errorNames);
 
 
 //
@@ -13,11 +12,11 @@ alias WinApiCodePointer = CCodePointer;
 // redefined because LARGE_INTEGER definition is wrong
 //
 
-external GetFileSizeEx(
+external (WINAPI) GetFileSizeEx(
     handle : HANDLE,
     lpFileSize : Pointer[Int64]) BOOL;
 
-external SetFilePointerEx(
+external (WINAPI) SetFilePointerEx(
     handle : HANDLE,
     offset : Int64,
     newPosition : Pointer[Int64],
@@ -31,7 +30,7 @@ external SetFilePointerEx(
 
 alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
-errorMessage(errorCode) {
+printErrorMessageTo(stream, errorCode) {
     var buf = Array[Byte, 1024]();
     var result = FormatMessageA(
         FORMAT_MESSAGE_FROM_SYSTEM,
@@ -40,10 +39,19 @@ errorMessage(errorCode) {
         CULong(0),
         LPSTR(&buf[0]),
         CULong(size(buf)),
-        null(va_list));
+        null(va_list),
+    );
     if (result == 0)
-        return String("Unknown error");
-    return String(&buf[0]);
+        printTo(stream, "unknown error");
+    else
+        printTo(stream, CStringRef(&buf[0]));
 }
 
-overload errorMessage() = errorMessage(GetLastError());
+errorCodeName(code:Int) {
+    ref names = errorNames();
+    var nameCodes = mapped(x => x.0, names);
+    var begin, end = ...binarySearch(nameCodes, code);
+    if (begin == end)
+        return "";
+    return mappedInnerCoordinate(begin)^.1;
+}

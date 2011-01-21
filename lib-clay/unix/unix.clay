@@ -4,19 +4,47 @@ public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
 
-callbyname syscall(callable, ...args) {
-    var result = callable(...args);
-    if (result == Type(result)(-1))
-        error(errorMessage());
+import unix.generated as generated;
+import unix.errnonames.(errnoNames);
+
+printErrorMessageTo(stream, errorCode) {
+    printTo(stream, CStringRef(libc.strerror(errorCode)));
+}
+
+errnoName(code:Int) {
+    var nameCodes = mapped(x => x.0, errnoNames);
+    var begin, end = ...binarySearch(nameCodes, code);
+    if (begin == end)
+        return "";
+    return mappedInnerCoordinate(begin)^.1;
+}
+
+
+//
+// shadow system calls to handle EINTR
+//
+
+callIgnoringEINTR(f, ...args) {
+    alias ResultType = Type(f(...args));
+    var result = ResultType();
+    while (true) {
+        result = f(...args);
+        if (result != -1) break;
+        if (errno() != EINTR) break;
+    }
     return result;
 }
 
-callbyname syscallNoThrow(callable, ...args) {
-    var result = callable(...args);
-    if (result == Type(result)(-1))
-        errorNoThrow(errorMessage());
-    return result;
-}
-
-errorMessage(err) = CStringRef(libc.strerror(err));
-overload errorMessage() = errorMessage(errno());
+open(...args) = callIgnoringEINTR(generated.open, ...args);
+read(...args) = callIgnoringEINTR(generated.read, ...args);
+write(...args) = callIgnoringEINTR(generated.write, ...args);
+close(...args) = callIgnoringEINTR(generated.close, ...args);
+connect(...args) = callIgnoringEINTR(generated.connect, ...args);
+accept(...args) = callIgnoringEINTR(generated.accept, ...args);
+send(...args) = callIgnoringEINTR(generated.send, ...args);
+sendto(...args) = callIgnoringEINTR(generated.sendto, ...args);
+sendmsg(...args) = callIgnoringEINTR(generated.sendmsg, ...args);
+recv(...args) = callIgnoringEINTR(generated.recv, ...args);
+recvfrom(...args) = callIgnoringEINTR(generated.recvfrom, ...args);
+recvmsg(...args) = callIgnoringEINTR(generated.recvmsg, ...args);
+select(...args) = callIgnoringEINTR(generated.select, ...args);

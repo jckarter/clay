@@ -32,3 +32,21 @@ inline overload equals?(x:C, y:D) = equals?(x.code, y.code);
 [C, D | Character?(C) and Character?(D)]
 inline overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
 
+
+//
+// space?
+//
+
+space?(c) {
+    switch (c) {
+    case ' ' :
+    case '\r' :
+    case '\n' :
+    case '\t' :
+    case '\f' :
+    case '\v' :
+        return true;
+    default :
+        return false;
+    }
+}

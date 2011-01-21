@@ -1601,7 +1601,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
 //
 
 MultiPValuePtr analyzeCallPointer(PValuePtr x,
-                                  MultiPValuePtr args)
+                                  MultiPValuePtr /*args*/)
 {
     switch (x->type->typeKind) {
 
@@ -2273,6 +2273,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ensureArity(args, 2);
         ArrayTypePtr t = arrayTypeOfValue(args, 0);
         return new MultiPValue(new PValue(t->elementType, false));
+    }
+
+    case PRIM_arrayElements: {
+        ensureArity(args, 1);
+        ArrayTypePtr t = arrayTypeOfValue(args, 0);
+        MultiPValuePtr mpv = new MultiPValue();
+        for (unsigned i = 0; i < (unsigned)t->size; ++i)
+            mpv->add(new PValue(t->elementType, false));
+        return mpv;
     }
 
     case PRIM_Vec :

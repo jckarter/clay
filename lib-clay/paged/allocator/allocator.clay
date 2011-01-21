@@ -261,7 +261,7 @@ allocatePaged(static T, n_:I) {
 
     var b = popFreeList(n);
     if (nullBlock?(b)) {
-        error("out of paged memory: allocatePaged(", T, ", ", n_, ")");
+        errorNoThrow("out of paged memory: allocatePaged(", T, ", ", n_, ")");
         return nullPaged(T);
     }
     if (splitBlock?(b,n)) {

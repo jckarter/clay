@@ -68,6 +68,7 @@ callCCodePointer(ptr, ...args)
 
 Array[T,n]
 [T,n] arrayRef(a:Array[T,n], i:SizeT) ref : T
+[T,n] arrayElements(a:Array[T,n]) ...
 
 Vec[T,n]
 
