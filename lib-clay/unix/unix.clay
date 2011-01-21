@@ -3,7 +3,16 @@ import libc;
 public import unix.generated.*;
 public import unix.constants.*;
 public import unix.errno.*;
+import unix.errnonames.(errnoNames);
 
 printErrorMessageTo(stream, errorCode) {
     printTo(stream, CStringRef(libc.strerror(errorCode)));
+}
+
+errnoName(code:Int) {
+    var nameCodes = mapped(x => x.0, errnoNames);
+    var begin, end = ...binarySearch(nameCodes, code);
+    if (begin == end)
+        return "";
+    return mappedInnerCoordinate(begin)^.1;
 }
