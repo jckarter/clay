@@ -7,6 +7,15 @@ overload GenericIOError(code:I) returned:GenericIOError {
     returned.code = Int(code);
 }
 
+overload printTo(stream, x:GenericIOError) {
+    printTo(stream, "error(", x.code, "): ");
+    printErrorMessageTo(stream, x.code);
+}
+
+overload printReprTo(stream, x:GenericIOError) {
+    printTo(stream, "GenericIOError(", errorCodeName(x.code), ")");
+}
+
 variant IOError = GenericIOError;
 
 instance OSError = IOError;

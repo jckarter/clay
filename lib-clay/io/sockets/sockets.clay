@@ -35,7 +35,12 @@ instance IOError = SocketError;
 overload Exception(forward x:T) = Exception(SocketError(x));
 
 overload printTo(stream, x:GenericSocketError) {
-    printTo(stream, "socket error: ", errorMessage(x.code));
+    printTo(stream, "error(", x.code, "): ");
+    printErrorMessageTo(stream, x.code);
+}
+
+overload printReprTo(stream, x:GenericSocketError) {
+    printTo(stream, "GenericSocketError(", errorCodeName(x.code), ")");
 }
 
 socketCall(callable, forward ...args) {
