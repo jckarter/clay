@@ -47,31 +47,23 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 
 
 //
-// unpackArray, unpackArrayRef
-//
-
-[T,n]
-inline unpackArray(a:Array[T,n]) = ...unpackArrayRef(a);
-
-[T,n]
-inline unpackArrayRef(a:Array[T,n]) = ref ...unpackElements(a, static 0);
-
-[T,n,i]
-private inline unpackElements(a:Array[T,n], static i) =
-    ref a[i], ...unpackElements(a, static i+1);
-
-[T,n,i | i == n]
-inline overload unpackElements(a:Array[T,n], static i) = ;
-
-
-
-//
 // basic constructor
 //
 
 [T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
 callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
-    ...unpackArrayRef(returned) <-- ...args;
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        static for (x in ...args) {
+            ptr^ <-- x;
+            inc(ptr);
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
 }
 
 
