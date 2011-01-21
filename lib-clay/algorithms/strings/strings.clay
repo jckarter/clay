@@ -50,23 +50,3 @@ overload beginTrimmed(seq:S) = beginTrimmed(seq, space?);
 
 [S | String?(S)]
 overload endTrimmed(seq:S) = endTrimmed(seq, space?);
-
-
-
-//
-// space?
-//
-
-private space?(c) {
-    switch (c) {
-    case ' ' :
-    case '\r' :
-    case '\n' :
-    case '\t' :
-    case '\f' :
-    case '\v' :
-        return true;
-    default :
-        return false;
-    }
-}
