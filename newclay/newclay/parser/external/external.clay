@@ -956,14 +956,16 @@ private var literalCodeBodyKind = choice(
     modify(x => LITERAL_LLVM, kw_llvm),
 );
 
-private var literalCodeBody = modify(CodeBody, bounds(modify(
+private var literalCodeBodyProcedure = modify(CodeBody, literalCodeBody);
+
+private var literalCodeBody = bounds(modify(
     x => LiteralCodeBody(x.0, String(x.1)),
     sequence(literalCodeBodyKind, tokenData(LITERAL_CODE), punc(#";")),
-)));
+));
 
 private var blockCodeBody = modify(CodeBody, bounds(block));
 
-private var codeBody = choice(exprCodeBody, blockCodeBody, literalCodeBody);
+private var codeBody = choice(exprCodeBody, blockCodeBody, literalCodeBodyProcedure);
 
 private var overloadDefinition = modify(
     x => OverloadDefinition(move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
@@ -988,6 +990,13 @@ private var procedureDef = topLevelItemParser(
 private var staticFunctionDef = topLevelItemParser(
     x => StaticFunction(just(x.0, VIS_PUBLIC), x.2, x.3),
     sequence(visibility, kw_static, symbolName, staticOverloadDefinition),
+);
+
+// globalLiteralCodeBody
+
+private var globalLiteralCodeBody = topLevelItemParser(
+    x => GlobalLiteralCodeBody(move(x)),
+    literalCodeBody
 );
 
 // statements
@@ -1182,7 +1191,7 @@ private var exprStatement = statementParser(
 
 private var topLevelItem = choice(
     importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
-    procedureDef, staticFunctionDef
+    procedureDef, staticFunctionDef, globalLiteralCodeBody
 );
 
 

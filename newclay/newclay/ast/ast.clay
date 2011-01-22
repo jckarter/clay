@@ -345,6 +345,7 @@ variant TopLevelItem = Symbol
                      | Import
                      | Procedure
                      | StaticFunction
+                     | GlobalLiteralCodeBody
                      ;
 
 enum VisibilityKind {
@@ -403,6 +404,10 @@ record Procedure = ast(
     visibility: VisibilityKind,
     name: SymbolName,
     definition: OverloadDefinition,
+);
+
+record GlobalLiteralCodeBody = ast(
+    codeBody: LiteralCodeBody,
 );
 
 record Import = ast(

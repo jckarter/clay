@@ -1,3 +1,15 @@
+__c__ """
+    int printf(char const *format, ...);
+""";
+
+__llvm__ """
+    @declare i32 printf(i8* %format, ...)
+""";
+
+__asm__ """
+    .extern printf
+""";
+
 foo() __c__ """
     return 0;
 """;

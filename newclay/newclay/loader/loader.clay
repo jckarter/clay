@@ -116,6 +116,9 @@ private initializeAttributesAndOverloads(module) {
                 var y = Overload(x, module);
                 push(module.program.allOverloads, y);
             },
+            ast.GlobalLiteralCodeBody, x ref=> {
+                push(module.program.allLiteralCodeBodies, x);
+            },
             MatchDefault, x => { },
         );
     }

@@ -4,6 +4,15 @@
 // top level
 //
 
+TopLevelItem -> GlobalSymbol
+              | SymbolAttribute
+              | StaticOverload
+              | Overload
+              | Import
+              | Procedure
+              | StaticFunction
+              | GlobalLiteralCodeBody
+
 Visibility -> "public" | "private"
 
 NamePath -> Identifier ("." Identifier)*
@@ -32,6 +41,8 @@ Overload -> "overload" TargetPattern
 StaticFunction -> Visibility? "static" SymbolName StaticOverloadDefinition
 
 Procedure -> Visibility? SymbolName OverloadDefinition
+
+GlobalLiteralCodeBody -> LiteralCodeBodyKind LiteralCodeBody ";"
 
 Predicate -> "|" Expr
 
