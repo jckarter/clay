@@ -166,10 +166,13 @@ variant Expr = BoolLiteral
              | FloatLiteral
              | StringLiteral
              | NameRef
+             | SimpleNameRef
              | PatternNameRef
              | TupleExpr
              | Call
              | Indexing
+             | StaticIndexing
+             | FieldRef
              | AndExpr
              | OrExpr
              | NotExpr
@@ -222,7 +225,16 @@ record NameRef = ast(
 overload NameRef(name:Vector[Identifier]) = NameRef(EnvRef(), name);
 overload NameRef(name:Identifier) = NameRef(EnvRef(), Vector[Identifier](name));
 [S | String?(S)]
-overload NameRef(name:S) = NameRef(Identifier(String(S)));
+overload NameRef(name:S) = NameRef(Identifier(String(name)));
+
+record SimpleNameRef = ast(
+    env: EnvRef,
+    name: Identifier,
+);
+
+overload SimpleNameRef(name:Identifier) = SimpleNameRef(EnvRef(), name);
+[S | String?(S)]
+overload SimpleNameRef(name:S) = SimpleNameRef(EnvRef(), Identifier(String(name)));
 
 record PatternNameRef = ast(
     name: Identifier,
@@ -240,6 +252,16 @@ record Call = ast(
 record Indexing = ast(
     expr: Expr,
     args: ExprList,
+);
+
+record StaticIndexing = ast(
+    expr: Expr,
+    index: IntLiteral,
+);
+
+record FieldRef = ast(
+    expr: Expr,
+    field: Identifier,
 );
 
 record AndExpr = ast(

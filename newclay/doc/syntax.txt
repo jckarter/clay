@@ -117,12 +117,13 @@ LiteralExpr -> BoolLiteral
              | StringLiteral
 
 AtomicExpr -> LiteralExpr
-            | NameRef
+            | SimpleNameRef
             | PatternNameRef
             | BracketedExpr
             | TupleExpr
 
 NameRef -> NamePath
+SimpleNameRef -> Identifier
 PatternNameRef -> "'" Identifier
 BracketedExpr -> "(" Expr ")"
 TupleExpr -> "(" ExprList? ")"
@@ -138,10 +139,14 @@ StaticExpr -> "#" PrefixExpr
 
 SuffixExpr -> AtomicExpr Suffix*
 Suffix -> IndexingSuffix
+        | StaticIndexingSuffix
+        | FieldRefSuffix
         | CallSuffix
         | DereferenceSuffix
 
 IndexingSuffix -> "[" ExprList? "]"
+StaticIndexingSuffix -> "." IntLiteral
+FieldRefSuffix -> "." Identifier
 CallSuffix -> "(" ExprList? ")"
 DereferenceSuffix -> "^"
 
