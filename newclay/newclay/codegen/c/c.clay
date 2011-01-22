@@ -472,23 +472,20 @@ private cIntValue(c, iv) = match(iv,
 private cFloatConstant(c, fv) = getConstant(c, Value(fv), constant ref=> {
     return match(fv,
         Float32, n ref=> printString(
-            "static const ", typeName(c, uint32Type()), " ", constant.mangledName, " = 0x",
-            rightAlignedWith(8, '0', hex(floatBits(n))), "u;"
+            "static const union _clay_Float32Constant ", constant.mangledName, " = { 0x",
+            rightAlignedWith(8, '0', hex(floatBits(n))), "u };"
         ),
-        // XXX dialect/type system aware
+        // XXX dialect/type system awareness for 64-bit int
         Float64, n ref=> printString(
-            "static const ", typeName(c, uint64Type()), " ", constant.mangledName, " = 0x",
-            rightAlignedWith(16, '0', hex(floatBits(n))), "ull;"
+            "static const union _clay_Float64Constant ", constant.mangledName, " = { 0x",
+            rightAlignedWith(16, '0', hex(floatBits(n))), "ull };"
         ),
     );
 });
 
 private cFloatValue(c, fv) {
     ref constant = cFloatConstant(c, fv);
-    return match(fv,
-        Float32, n ref=> printString("(*(", typeName(c, float32Type()), "*)&", constant.mangledName, ")"),
-        Float64, n ref=> printString("(*(", typeName(c, float64Type()), "*)&", constant.mangledName, ")"),
-    );
+    return printString("(", constant.mangledName, ".asFloat)");
 }
 
 
@@ -535,7 +532,7 @@ private codegenBoolType(c, type, llType, definition) {
 
     if (not empty?(llType.params))
         genericError("low-level bool type ", llType, " must have no symbol parameters");
-    printTo(definition, cIntegerType(true, 8));
+    printTo(definition, cIntegerType(c, true, 8));
 }
 
 private codegenIntegerType(c, type, llType, definition) {
@@ -560,7 +557,7 @@ private codegenIntegerType(c, type, llType, definition) {
         }
     );
 
-    printTo(definition, cIntegerType(signed?, bits));
+    printTo(definition, cIntegerType(c, signed?, bits));
 }
 
 private codegenFloatType(c, type, llType, definition) {
@@ -677,7 +674,7 @@ private codegenUnionType(c, type, llType, definition) {
     printTo(definition, "}");
 }
 
-private cIntegerType(signed?:Bool, bits) {
+private cIntegerType(c, signed?:Bool, bits) {
     // XXX assumes LP32, LP64, or LLP64 type system
     switch (bits) {
     case 8:
@@ -720,6 +717,8 @@ printCodegenTo(stream, c:CodegenContext) {
     printCodegenHeaderTo(stream, c);
     printTypeForwardDeclarationsTo(stream, c);
     printTypeDefinitionsTo(stream, c);
+    printHelperTypeDefinitionsTo(stream, c);
+    printTopLevelLiteralCodeBodiesTo(stream, c);
     printConstantDefinitionsTo(stream, c);
     printFunctionForwardDeclarationsTo(stream, c);
     printFunctionDefinitionsTo(stream, c);
@@ -762,6 +761,28 @@ private printTypeDefinitionTo(stream, printedMap:HashMap[Value,Bool], c:CodegenC
     ref type = getType(c, typeValue);
     printTypeDefinitionsTo2(stream, printedMap, c, type.dependencies);
     printlnTo(stream, "typedef ", just(type.definition), " ", type.mangledName, ";");
+}
+
+private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
+    printlnTo(stream, "union _clay_Float32Constant {");
+    printlnTo(stream, "  ", cIntegerType(c, false, 32), " asBits;");
+    printlnTo(stream, "  ", cFloatType(32), " asFloat;");
+    printlnTo(stream, "};");
+    printlnTo(stream, "union _clay_Float64Constant {");
+    printlnTo(stream, "  ", cIntegerType(c, false, 64), " asBits;");
+    printlnTo(stream, "  ", cFloatType(64), " asFloat;");
+    printlnTo(stream, "};");
+    printlnTo(stream);
+}
+
+private printTopLevelLiteralCodeBodiesTo(stream, c:CodegenContext) {
+    for (codeBody in getProgram().allLiteralCodeBodies) {
+        if (codeBody.codeBody.kind == ast.LITERAL_LLVM)
+            genericError("__llvm__ procedures are not yet supported");
+        if (codeBody.codeBody.kind == ast.LITERAL_ASM)
+            genericError("__asm__ procedures are not yet supported");
+        printlnTo(stream, parseLiteralCodeBody(codeBody.codeBody.code));
+    }
 }
 
 private printConstantDefinitionsTo(stream, c) {
