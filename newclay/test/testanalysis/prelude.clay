@@ -102,6 +102,16 @@ static overload ToLowLevelType(Float64) = LLFloatType[64];
 
 
 //
+// StringConstant
+//
+
+symbol StringConstant = ();
+static overload Type?(StringConstant) = true;
+static overload ToLowLevelType(StringConstant)
+    = LLTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
+
+
+//
 // Static[T]
 //
 

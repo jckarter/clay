@@ -108,6 +108,13 @@ float64Type() = getHooks().Float64;
 
 
 //
+// stringConstantType
+//
+
+stringConstantType() = getHooks().StringConstant;
+
+
+//
 // staticType, staticType?, staticTypeValue
 //
 

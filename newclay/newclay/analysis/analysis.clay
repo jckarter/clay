@@ -1183,10 +1183,7 @@ valueToRTVariable(value:Value) = match(value,
     CharValue, x => newValue(charType()),
     IntValue, x => newValue(intValueType(*x)),
     FloatValue, x => newValue(floatValueType(*x)),
-    StringValue, x => {
-        genericError("strings are not yet supported");
-        return RTVariable();
-    },
+    StringValue, x => newValue(stringConstantType()),
     TupleValue, x => {
         genericError("tuples are not yet supported");
         return RTVariable();
