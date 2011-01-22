@@ -180,7 +180,7 @@ private resolveProgram(program:Program) {
 }
 
 loadProgram(mainFilename:String, searchPath:Vector[String]) {
-    var program = Program();
+    var program = allocateRef(Program);
     program.moduleSearchPath = searchPath;
     loadPrimitivesModule(program);
     loadMainModule(program, mainFilename);

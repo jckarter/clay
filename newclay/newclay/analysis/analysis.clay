@@ -1216,7 +1216,7 @@ addSpecializedNodes(s:SpecializationContext, nodes:Vector[ir.Node]) {
 
 private literalCodeWhiteSpace?(c) = inValues?(c, ' ', '\t', '\r', '\n');
 
-private parseLiteralCodeBody(code) {
+parseLiteralCodeBody(code) {
     assert(sliceUpto(code, 3) == "\"\"\"" and sliceFrom(code, size(code) - 3) == "\"\"\"");
     return trim(sliced(code, 3, size(code) - 3), literalCodeWhiteSpace?);
 }
