@@ -80,6 +80,9 @@ record ClayHooks (
 
     plus: Value,
     minus: Value,
+    index: Value,
+    staticIndex: Value,
+    fieldRef: Value,
     dereference: Value,
     multiply: Value,
     divide: Value,
@@ -92,6 +95,10 @@ record ClayHooks (
     greaterEquals?: Value,
     equals?: Value,
     notEquals?: Value,
+
+    tupleLiteral: Value,
+    arrayLiteral: Value,
+
     assign: Value,
     addAssign: Value,
     subtractAssign: Value,

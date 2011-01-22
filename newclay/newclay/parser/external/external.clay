@@ -272,6 +272,11 @@ private var nameRef = exprParser(
     namePath,
 );
 
+private var simpleNameRef = exprParser(
+    x => SimpleNameRef(move(x)),
+    identifier,
+);
+
 private var patternNameRef = exprParser(
     x => PatternNameRef(move(x.1)),
     sequence(punc(#"'"), identifier),
@@ -288,7 +293,7 @@ private var tupleExpr = exprParser(
 );
 
 private var atomicExpr = choice(
-    literalExpr, nameRef, patternNameRef, bracketedExpr, tupleExpr,
+    literalExpr, simpleNameRef, patternNameRef, bracketedExpr, tupleExpr,
 );
 
 
@@ -306,6 +311,8 @@ private setBase2(root, field, base) {
 
 private setBase(x, y) { assert(false, "baseless expression!"); }
 overload setBase(x:Indexing, y) { setBase2(x, #expr, y); }
+overload setBase(x:StaticIndexing, y) { setBase2(x, #expr, y); }
+overload setBase(x:FieldRef, y) { setBase2(x, #expr, y); }
 overload setBase(x:Call,     y) { setBase2(x, #expr, y); }
 overload setBase(x:AndExpr,  y) { setBase2(x, #expr1, y); }
 overload setBase(x:OrExpr,   y) { setBase2(x, #expr1, y); }
@@ -342,6 +349,16 @@ private var indexingSuffix = exprParser(
     sequence(punc(#"["), optExprList, punc(#"]")),
 );
 
+private var staticIndexingSuffix = exprParser(
+    x => StaticIndexing(Expr(), IntLiteral(String(x.1))),
+    sequence(punc(#"."), tokenData(INT_LITERAL)),
+);
+
+private var fieldRefSuffix = exprParser(
+    x => FieldRef(Expr(), move(x.1)),
+    sequence(punc(#"."), identifier),
+);
+
 private var callSuffix = exprParser(
     x => Call(Expr(), move(x.1)),
     sequence(punc(#"("), optExprList, punc(#")")),
@@ -353,7 +370,7 @@ private var dereferenceSuffix = exprParser(
 );
 
 private var suffix = choice(
-    indexingSuffix, callSuffix, dereferenceSuffix,
+    indexingSuffix, callSuffix, staticIndexingSuffix, fieldRefSuffix, dereferenceSuffix,
 );
 
 private var suffixExpr = modify(
