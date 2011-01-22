@@ -452,10 +452,11 @@ overload codegenNode(c, bc, node:ir.Nop) {
 }
 
 private cValue(c, value:Value) = match(value,
-    BoolValue,  bv ref=> if (bv.value) String("1") else String("0"),
-    IntValue,   iv ref=> cIntValue(c, iv),
-    FloatValue, fv ref=> cFloatValue(c, fv),
-    CharValue,  cv ref=> printString(Int(cv.value)),
+    BoolValue,   bv ref=> if (bv.value) String("1") else String("0"),
+    IntValue,    iv ref=> cIntValue(c, iv),
+    FloatValue,  fv ref=> cFloatValue(c, fv),
+    CharValue,   cv ref=> printString(Int(cv.value)),
+    StringValue, sv ref=> cStringValue(c, sv),
     MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
 );
 
@@ -469,8 +470,8 @@ private cIntValue(c, iv) = match(iv,
     MatchDefault, n ref=> printString(n),
 );
 
-private cFloatConstant(c, fv) = getConstant(c, Value(fv), constant ref=> {
-    return match(fv,
+private cFloatConstant(c, fv) = ref getConstant(c, Value(fv), constant ref=>
+    match(fv,
         Float32, n ref=> printString(
             "static const union _clay_Float32Constant ", constant.mangledName, " = { 0x",
             rightAlignedWith(8, '0', hex(floatBits(n))), "u };"
@@ -480,13 +481,60 @@ private cFloatConstant(c, fv) = getConstant(c, Value(fv), constant ref=> {
             "static const union _clay_Float64Constant ", constant.mangledName, " = { 0x",
             rightAlignedWith(16, '0', hex(floatBits(n))), "ull };"
         ),
-    );
-});
+    ),
+);
 
 private cFloatValue(c, fv) {
     ref constant = cFloatConstant(c, fv);
     return printString("(", constant.mangledName, ".asFloat)");
 }
+
+private cStringLiteral(s) {
+    var result = String("\"");
+    for (c in s) {
+        switch (c) {
+        case '\n':
+            push(result, "\\n"); break;
+        case '\r':
+            push(result, "\\r"); break;
+        case '\t':
+            push(result, "\\t"); break;
+        case '\a':
+            push(result, "\\a"); break;
+        case '\b':
+            push(result, "\\b"); break;
+        case '\f':
+            push(result, "\\f"); break;
+        case '\v':
+            push(result, "\\v"); break;
+        case '\\':
+            push(result, "\\\\"); break;
+        case '\"':
+            push(result, "\\\""); break;
+        default:
+            if (Int(c) < 0x20 or Int(c) > 0x7e)
+                printTo(result, "\\x", rightAlignedWith(2, '0', hex(Int(c))));
+            else
+                push(result, c);
+            break;
+        }
+    }
+    push(result, '\"');
+    return move(result);
+}
+
+private cStringConstant(c, sv) = ref getConstant(c, Value(sv),
+    constant ref=> {
+        var stringName = constant.mangledName + "_string";
+        return printString(
+            "static const char ", stringName, "[] = ", cStringLiteral(sv.value), ";\n",
+            "static const ", typeName(c, stringConstantType()), " ", constant.mangledName,
+            " = { (char*)", stringName, ", (char*)", stringName, " + ", size(sv.value), " };"
+        );
+    }
+);
+
+private cStringValue(c, sv) = cStringConstant(c, sv).mangledName;
 
 
 //
@@ -653,7 +701,7 @@ private codegenTupleType(c, type, llType, definition) {
         var name, memberType = ...aggregateMember(llType, member, i);
 
         push(type.dependencies, memberType);
-        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
+        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";\n");
     }
 
     printTo(definition, "}");

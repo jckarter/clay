@@ -73,6 +73,7 @@ record ClayHooks (
     Float64: Value,
     Static: Value,
     Pointer: Value,
+    StringConstant: Value,
 
     Procedure?: Value,
     PODType?: Value,

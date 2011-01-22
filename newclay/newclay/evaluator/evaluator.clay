@@ -188,10 +188,8 @@ parseHexFloatLiteral(number, suffix) {
     if (mantissa == 0) {
         value = floatFromParts(neg?, 0, 0u64);
     } else {
-        observe(rightAlignedWith(16, '0', hex(mantissa)));
         var mantissaLog = log2(mantissa);
         mantissa = shiftLeft(mantissa, 64 - mantissaLog);
-        observe(mantissaLog, usedMantissaBits, mantissaBits, rightAlignedWith(16, '0', hex(mantissa)));
         var round = bitwiseAnd(mantissa, 0xFFF);
         mantissa = shiftRight(mantissa, 12);
 
@@ -213,8 +211,6 @@ parseHexFloatLiteral(number, suffix) {
             mantissaExponent = 2047;
             mantissa = 0_u64;
         }
-
-        observe(number, neg?, mantissaExponent, rightAlignedWith(13, '0', hex(mantissa)));
 
         value = floatFromParts(neg?, mantissaExponent, mantissa);
     }
