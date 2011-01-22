@@ -30,13 +30,8 @@ record Program = referenceType(
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
+    allLiteralCodeBodies: Vector[ast.GlobalLiteralCodeBody],
     hooks: ClayHooks,
-);
-
-overload Program() = Program(
-    ModuleMap(), Vector[String](),
-    Vector[SymbolHead](), Vector[Attribute](), Vector[StaticOverload](), Vector[Overload](),
-    ClayHooks(),
 );
 
 var mainModuleName = ModuleName("__main__");

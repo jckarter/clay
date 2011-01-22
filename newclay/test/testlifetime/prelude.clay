@@ -237,6 +237,7 @@ toNontrivialInt(x:Int32) y:NontrivialInt { primitiveCopy(y, x); }
 fromNontrivialInt(x:NontrivialInt) y:Int32 { primitiveCopy(y, x); }
 
 overload initializeFromUnsafe(ref to:NontrivialInt, from:NontrivialInt) { primitiveCopy(to, from); }
+overload initializeFromUnsafe(ref to:NontrivialInt, rvalue from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }
 
 //
