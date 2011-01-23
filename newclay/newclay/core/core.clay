@@ -245,6 +245,7 @@ enum PrimitiveKind {
     PRIM_StaticStringSize,
     PRIM_StaticStringSlice,
     PRIM_StaticStringConcat,
+    PRIM_StaticStringChar,
     PRIM_StaticStringChars,
     PRIM_StaticStringFromChars,
 
