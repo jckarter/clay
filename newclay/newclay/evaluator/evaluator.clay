@@ -408,7 +408,7 @@ overload evaluateExpr(x:ast.BoolLiteral, env) {
     return Value(BoolValue(x.value));
 }
 overload evaluateExpr(x:ast.IntLiteral, env) {
-    return Value(IntValue(parseIntLiteral(x.value)));
+    return Value(parseIntLiteral(x.value));
 }
 overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
@@ -422,6 +422,9 @@ overload evaluateExpr(x:ast.FloatLiteral, env) {
 }
 overload evaluateExpr(x:ast.NameRef, env) {
     return envEntryToValue(nameRefLookup(env, x));
+}
+overload evaluateExpr(x:ast.SimpleNameRef, env) {
+    return envEntryToValue(privateLookup(env, x.name));
 }
 overload evaluateExpr(x:ast.PatternNameRef, env) {
     return derefPattern(env, x.name);
@@ -438,6 +441,16 @@ overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
     var args = evaluateExprList(x.args, env);
     return evaluateIndexing(indexable, args);
+}
+overload evaluateExpr(x:ast.StaticIndexing, env) {
+    var indexable = evaluateExpr(x.expr, env);
+    var index = Value(parseIntLiteral(x.index.value));
+    return evaluateIndexing(indexable, ValueList(index));
+}
+overload evaluateExpr(x:ast.FieldRef, env) {
+    var indexable = evaluateExpr(x.expr, env);
+    var field = Value(StringValue(x.field.str));
+    return evaluateFieldRef(indexable, field);
 }
 overload evaluateExpr(x:ast.NotExpr, env) {
     return Value(BoolValue(not evaluateBool(x.expr, env)));
@@ -715,7 +728,7 @@ overload evaluateLambdaCodeBody(x:ast.Block, env) {
 procedure evaluateIndexing;
 
 overload evaluateIndexing(x, args) {
-    genericError("invalid indexee: ", x);
+    genericError("invalid static indexee: ", x);
     return Value();
 }
 overload evaluateIndexing(x:Value, args) {
@@ -724,6 +737,34 @@ overload evaluateIndexing(x:Value, args) {
 overload evaluateIndexing(x:SymbolHead, args) {
     verifyBindingArity(x.ast.name.params, args);
     return Value(makeSymbol(x, args));
+}
+overload evaluateIndexing(x:StringValue, args) {
+    if (size(args) != 1)
+        genericError("string must be indexed with a single Int");
+    return evaluatePrimitiveWithOneResult(PRIM_StaticStringChar, ValueList(Value(x), args[0]));
+}
+overload evaluateIndexing(x:TupleValue, args) {
+    if (size(args) != 1)
+        genericError("tuple must be indexed with a single Int");
+    return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElement, ValueList(Value(x), args[0]));
+}
+
+
+//
+// evaluateFieldRef
+//
+
+procedure evaluateFieldRef;
+
+overload evaluateFieldRef(x, field) {
+    genericError("invalid field reference: ", x);
+    return Value();
+}
+overload evaluateFieldRef(x:Value, field) {
+    return evaluateFieldRef(*x, field);
+}
+overload evaluateFieldRef(x:ModuleValue, field) {
+    return evaluatePrimitiveWithOneResult(PRIM_StaticModuleMember, ValueList(Value(x), field));
 }
 
 
@@ -1267,6 +1308,19 @@ private oneString(args) {
     return variantAs(a, StringValue).value;
 }
 
+private stringInt(args) {
+    var a, b = ...twoValues(args);
+    if (not variantIs?(a, StringValue)
+        or not variantIs?(b, IntValue))
+    {
+        genericError("expecting a string and an Int");
+    }
+    return ...(
+        variantAs(a, StringValue).value,
+        variantAs(b, IntValue),
+    );
+}
+
 private stringIntInt(args) {
     var a, b, c = ...threeValues(args);
     if (not variantIs?(a, StringValue)
@@ -1450,6 +1504,14 @@ evaluatePrimitive(kind, args) {
         for (s in a)
             push(result, move(s));
         return ValueList(StringValue(move(result)));
+    }
+    case PRIM_StaticStringChar : {
+        var s, i_ = ...stringInt(args);
+        var i = Int64(i_);
+
+        if ((i < 0) or (i >= size(s)))
+            genericError("invalid index into string: ", i);
+        return ValueList(CharValue(s[i]));
     }
     case PRIM_StaticStringChars : {
         var s = oneString(args);
