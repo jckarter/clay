@@ -1,13 +1,12 @@
-symbol foo = NewProcedure();
-overload foo(x:'T) {
-    var y:'T = x;
-    return y;
-}
+foo() = 1, true, "three";
+bar() = 4.0;
 
-symbol main = NewProcedure();
-overload main() {
-    var x:Int32 = 5;
-    var y:Bool = foo(true);
-    return x, y;
+main() {
+    var x0 = bar();
+    var x1, y1, z1 = foo();
+    var ...w1 = foo();
+    var x2, y2, z2 = ...foo();
+    var x3, y3, z3, w3 = ...foo(), bar();
+    return x0, x1, y1, z1, ...w1, x2, y2, z2, x3, y3, z3, w3;
 }
 

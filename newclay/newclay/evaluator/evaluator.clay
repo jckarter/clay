@@ -599,6 +599,12 @@ evaluateExprList(exprList, env) {
     return move(results);
 }
 
+evaluateMultiExprList(exprList, env) {
+    if (size(exprList) == 1 and variantIs?(exprList[0], ast.Expr))
+        return evaluateMultiExpr(*exprList[0], env);
+    return evaluateExprList(exprList, env);
+}
+
 procedure evaluateExprListItem;
 
 overload evaluateExprListItem(x:ast.ExprListItem, env) {
