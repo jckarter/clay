@@ -1,9 +1,11 @@
 main() {
     var a1 = 1.0;
     var a2 = 0.0;
-    var a3 = 0.0f;
-    var a4 = 0.0f32;
-    var a5 = 0.0f64;
+    var a3 = -0.0;
+    var a4 = 0.0f;
+    var a5 = -0.0f;
+    var a6 = 0.0f32;
+    var a7 = 0.0f64;
 
     var b1 = 0x1.0p1;
     var b2 = -0x1.0p1;

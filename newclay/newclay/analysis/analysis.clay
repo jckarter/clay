@@ -68,7 +68,7 @@ analyzeMain() {
 //
 
 private analyzeLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.LiteralCodeBody) {
-    return addSpecializedLiteralCodeBody(s, body);
+    return addSpecializedLiteralCodeBody(s, env, body);
 }
 
 
@@ -1287,15 +1287,8 @@ addSpecializedNodes(s:SpecializationContext, nodes:Vector[ir.Node]) {
         addSpecializedNode(s, node);
 }
 
-private literalCodeWhiteSpace?(c) = inValues?(c, ' ', '\t', '\r', '\n');
-
-parseLiteralCodeBody(code) {
-    assert(sliceUpto(code, 3) == "\"\"\"" and sliceFrom(code, size(code) - 3) == "\"\"\"");
-    return trim(sliced(code, 3, size(code) - 3), literalCodeWhiteSpace?);
-}
-
-addSpecializedLiteralCodeBody(s:SpecializationContext, body:ast.LiteralCodeBody) {
-    addSpecializedNode(s, ir.LiteralCodeBody(body, parseLiteralCodeBody(body.code)));
+addSpecializedLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.LiteralCodeBody) {
+    addSpecializedNode(s, ir.LiteralCodeBody(body, body.kind, ir.parseLiteralCodeBody(env, body.code)));
     return Maybe(VariableList());
 }
 

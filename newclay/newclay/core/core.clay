@@ -23,6 +23,8 @@ overload ModuleName(...components: S)
 overload ModuleName(astName: Vector[ast.Identifier])
     = ModuleName(map(x => x.str, astName));
 
+record GlobalLiteralCode(kind:ast.LiteralCodeBodyKind, code:ir.LiteralCode);
+
 record Program = referenceType(
     modules: ModuleMap,
     moduleSearchPath: Vector[String],
@@ -30,7 +32,7 @@ record Program = referenceType(
     allAttributes: Vector[Attribute],
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
-    allLiteralCodeBodies: Vector[ast.GlobalLiteralCodeBody],
+    allLiteralCodeBodies: Vector[GlobalLiteralCode],
     hooks: ClayHooks,
 );
 

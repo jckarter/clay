@@ -4,6 +4,7 @@ import maybe.*;
 import newclay.common.*;
 import newclay.lexer.*;
 import newclay.ast as ast;
+import newclay.ir as ir;
 import newclay.ast.transforms.*;
 import newclay.parser.*;
 import newclay.core.*;
@@ -96,7 +97,7 @@ private initializeGlobals(module) {
                     symbolItem
                 );
             },
-            MatchDefault, x => { },
+            MatchDefault, x ref=> { },
         );
     }
 }
@@ -104,22 +105,24 @@ private initializeGlobals(module) {
 private initializeAttributesAndOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
-            ast.Attribute, x => {
+            ast.Attribute, x ref=> {
                 var y = Attribute(x, module);
                 push(module.program.allAttributes, y);
             },
-            ast.StaticOverload, x => {
+            ast.StaticOverload, x ref=> {
                 var y = StaticOverload(x, module);
                 push(module.program.allStaticOverloads, y);
             },
-            ast.Overload, x => {
+            ast.Overload, x ref=> {
                 var y = Overload(x, module);
                 push(module.program.allOverloads, y);
             },
             ast.GlobalLiteralCodeBody, x ref=> {
-                push(module.program.allLiteralCodeBodies, x);
+                push(module.program.allLiteralCodeBodies,
+                    GlobalLiteralCode(x.codeBody.kind, ir.parseLiteralCodeBody(module, x.codeBody.code))
+                );
             },
-            MatchDefault, x => { },
+            MatchDefault, x ref=> { },
         );
     }
 }

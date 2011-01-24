@@ -316,7 +316,9 @@ overload codegenNode(c, bc, node:ir.LiteralCodeBody) {
     if (node.ast.kind == ast.LITERAL_ASM)
         genericError("__asm__ procedures are not yet supported");
 
-    printToIndented(bc, node.code, '\n');
+    printToIndented(bc);
+    printLiteralCodeTo(bc, node.code);
+    printlnTo(bc.bodyCode);
 }
 
 overload codegenNode(c, bc, node:ir.ValueList) {
@@ -766,7 +768,7 @@ printCodegenTo(stream, c:CodegenContext) {
     printTypeForwardDeclarationsTo(stream, c);
     printTypeDefinitionsTo(stream, c);
     printHelperTypeDefinitionsTo(stream, c);
-    printTopLevelLiteralCodeBodiesTo(stream, c);
+    printGlobalLiteralCodeBodiesTo(stream, c);
     printConstantDefinitionsTo(stream, c);
     printFunctionForwardDeclarationsTo(stream, c);
     printFunctionDefinitionsTo(stream, c);
@@ -823,14 +825,16 @@ private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
     printlnTo(stream);
 }
 
-private printTopLevelLiteralCodeBodiesTo(stream, c:CodegenContext) {
+private printGlobalLiteralCodeBodiesTo(stream, c:CodegenContext) {
     for (codeBody in getProgram().allLiteralCodeBodies) {
-        if (codeBody.codeBody.kind == ast.LITERAL_LLVM)
-            genericError("__llvm__ procedures are not yet supported");
-        if (codeBody.codeBody.kind == ast.LITERAL_ASM)
-            genericError("__asm__ procedures are not yet supported");
-        printlnTo(stream, parseLiteralCodeBody(codeBody.codeBody.code));
+        if (codeBody.kind == ast.LITERAL_LLVM)
+            genericError("top-level __llvm__ is not yet supported");
+        if (codeBody.kind == ast.LITERAL_ASM)
+            genericError("top-level __asm__ is not yet supported");
+        printGlobalLiteralCodeTo(stream, codeBody.code);
+        printlnTo(stream);
     }
+    printlnTo(stream);
 }
 
 private printConstantDefinitionsTo(stream, c) {
@@ -858,6 +862,42 @@ private printFunctionDefinitionsTo(stream, c:CodegenContext) {
     }
     printlnTo(stream);
 }
+
+
+//
+// printGlobalLiteralCodeTo, printLiteralCodeTo
+//
+
+private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
+    for (token in code) {
+        match(token,
+            String,     s ref=> { printTo(stream, s); },
+            RTVariable, v ref=> { genericError("invalid global literal code substitution value: ", v); },
+            Value,      v ref=> { printLiteralCodeValueTo(stream, *v); }
+        );
+    }
+}
+
+private printLiteralCodeTo(bc, code:ir.LiteralCode) {
+    for (token in code) {
+        match(token,
+            String,     s ref=> { printTo(bc.bodyCode, s); },
+            RTVariable, v ref=> { printTo(bc.bodyCode, '(', localDeref(bc, v), ')'); },
+            Value,      v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); }
+        );
+    }
+}
+
+private procedure printLiteralCodeValueTo;
+
+overload printLiteralCodeValueTo(stream, x) {
+    genericError("invalid literal code substitution value: ", x);
+}
+overload printLiteralCodeValueTo(stream, i:IntValue)    { printTo(stream, Int64(i)); }
+overload printLiteralCodeValueTo(stream, s:StringValue) { printTo(stream, s.value); }
+overload printLiteralCodeValueTo(stream, c:CharValue)   { printTo(stream, Int(c.value)); }
+overload printLiteralCodeValueTo(stream, b:BoolValue)   { printTo(stream, if (b.value) 1 else 0); }
+
 
 
 //

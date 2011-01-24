@@ -1,10 +1,14 @@
 import newclay.ast as ast;
 import newclay.core.(
     RTVariable,
+    Value,
     Specialization,
     VariableList,
-    ValueList as CoreValueList
+    ValueList as CoreValueList,
+    genericError,
+    privateLookup
 );
+import newclay.evaluator.*;
 import maybe.*;
 
 record OutputVariable (
@@ -43,9 +47,16 @@ overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
 [S | VariantMember?(ast.Statement, S)]
 overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
+variant LiteralCodeToken = String
+                         | RTVariable
+                         | Value;
+
+alias LiteralCode = Vector[LiteralCodeToken];
+
 record LiteralCodeBody = referenceType(
     ast: ast.LiteralCodeBody,
-    code: String,
+    kind: ast.LiteralCodeBodyKind,
+    code: LiteralCode,
 );
 
 record ValueList = referenceType(
@@ -178,4 +189,107 @@ overload nodeInputs(node:Initialize) = VariableList(node.input);
 overload nodeInputs(node:Throw) = VariableList(node.exception);
 
 overload nodeInputs(node:Node) = nodeInputs(*node);
+
+
+//
+// parseLiteralCodeBody
+//
+
+private literalCodeWhiteSpace?(c) = inValues?(c, ' ', '\t', '\r', '\n');
+private literalCodeIdentifierChar?(c)
+    = inValues?(c, '_', '?')
+      or (c >= 'a' and c <= 'z')
+      or (c >= 'A' and c <= 'Z')
+      or (c >= '0' and c <= '9');
+
+private enum LiteralTokenMode { STRING, PATTERN_SUBSTITUTION, SUBSTITUTION }
+
+private literalCodeSubstitutionToken(env, token) {
+    var value = privateLookup(env, token);
+    return match(value,
+        RTVariable, v => LiteralCodeToken(v),
+        Value,      v => LiteralCodeToken(v),
+        MatchDefault, x => {
+            genericError("invalid literal code substitution: ", value);
+            return LiteralCodeToken(Value());
+        },
+    );
+}
+
+parseLiteralCodeBody(env, codeString:String) {
+    assert(
+        sliceUpto(codeString, 3) == "\"\"\""
+        and sliceFrom(codeString, size(codeString) - 3) == "\"\"\""
+    );
+
+    var code = LiteralCode();
+
+    var currentToken = String();
+    var currentTokenMode = STRING;
+
+    for (c in trimmed(sliced(codeString, 3, size(codeString) - 3), literalCodeWhiteSpace?)) {
+        switch (currentTokenMode) {
+        case STRING:
+            if (c == '$') {
+                if (not empty?(currentToken))
+                    push(code, LiteralCodeToken(move(currentToken)));
+                currentTokenMode = SUBSTITUTION;
+            } else
+                push(currentToken, c);
+            break;
+
+        case PATTERN_SUBSTITUTION:
+            if (not literalCodeIdentifierChar?(c)) {
+                if (empty?(currentToken))
+                    genericError("invalid pattern substitution in literal code body");
+                push(code, LiteralCodeToken(derefPattern(env, ast.Identifier(move(currentToken)))));
+                currentTokenMode = STRING;
+            }
+            push(currentToken, c);
+            break;
+
+        case SUBSTITUTION:
+            if (empty?(currentToken) and c == '\'') {
+                currentTokenMode = PATTERN_SUBSTITUTION;
+                break;
+            }
+
+            if (not literalCodeIdentifierChar?(c)) {
+                if (empty?(currentToken))
+                    genericError("invalid substitution in literal code body");
+                push(code, literalCodeSubstitutionToken(env, move(currentToken)));
+                currentTokenMode = STRING;
+            }
+            push(currentToken, c);
+            break;
+
+        default:
+            assert(false);
+            break;
+        }
+    }
+
+    switch (currentTokenMode) {
+    case STRING:
+        if (not empty?(currentToken))
+            push(code, LiteralCodeToken(move(currentToken)));
+        break;
+    case PATTERN_SUBSTITUTION:
+        if (empty?(currentToken))
+            genericError("invalid pattern substitution in literal code body");
+        push(code, LiteralCodeToken(derefPattern(env, ast.Identifier(move(currentToken)))));
+        break;
+    case SUBSTITUTION:
+        if (empty?(currentToken))
+            genericError("invalid substitution in literal code body");
+        push(code, literalCodeSubstitutionToken(env, move(currentToken)));
+        break;
+    default:
+        assert(false);
+        break;
+    }
+
+    observe(code);
+    return move(code);
+}
 

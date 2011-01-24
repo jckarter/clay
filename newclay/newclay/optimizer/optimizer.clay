@@ -20,8 +20,6 @@ record CoalesceContext (
 overload CoalesceContext(map:VariableMap) = CoalesceContext(&map, VariableSet());
 overload CoalesceContext(x:CoalesceContext);
 
-private _Type(x) = StaticName(Type(x));
-
 private addStatementRvalues(cc:CoalesceContext, node) {
     for (input in ir.nodeInputs(node)) {
         remove(cc.statementRvalues, input);
