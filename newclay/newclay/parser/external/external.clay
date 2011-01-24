@@ -292,8 +292,13 @@ private var tupleExpr = exprParser(
     sequence(punc(#"("), optExprList, punc(#")")),
 );
 
+private var arrayExpr = exprParser(
+    x => ArrayExpr(move(x.1)),
+    sequence(punc(#"["), optExprList, punc(#"]")),
+);
+
 private var atomicExpr = choice(
-    literalExpr, simpleNameRef, patternNameRef, bracketedExpr, tupleExpr,
+    literalExpr, simpleNameRef, patternNameRef, bracketedExpr, tupleExpr, arrayExpr,
 );
 
 

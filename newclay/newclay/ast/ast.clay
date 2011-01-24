@@ -169,6 +169,7 @@ variant Expr = BoolLiteral
              | SimpleNameRef
              | PatternNameRef
              | TupleExpr
+             | ArrayExpr
              | Call
              | Indexing
              | StaticIndexing
@@ -241,6 +242,10 @@ record PatternNameRef = ast(
 );
 
 record TupleExpr = ast(
+    args: ExprList,
+);
+
+record ArrayExpr = ast(
     args: ExprList,
 );
 
