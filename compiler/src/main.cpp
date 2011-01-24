@@ -583,7 +583,7 @@ int main(int argc, char **argv) {
         cerr << "error: clay file not specified\n";
         return -1;
     }
-    if (!clayScript.empty() + !clayFile.empty() > 1) {
+    if (!clayScript.empty() && !clayFile.empty()) {
         cerr << "error: -e cannot be specified with input file\n";
         return -1;
     }
