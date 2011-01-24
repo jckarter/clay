@@ -1141,7 +1141,7 @@ private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
     Alias, x ref=>
         analyzeSubnode(s, x.env, x.value),
     ListAlias, x ref=>
-        analyzeExprListNode(s, x.env, x.value),
+        analyzeMultiExprListNode(s, x.env, x.value, true),
     PatternCell, x ref=>
         genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
     ListPatternCell, x ref=>
