@@ -200,25 +200,32 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.CharLiteral)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
     = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.value)));
 
+private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
+    RTVariable, x ref=> Maybe(VariableList(x)),
+    Value, x ref=> addSpecializedValue(s, expr, x),
+    ValueList, x ref=>
+        genericAnalysisError("multiple values cannot be used in single value context"),
+    Alias, x ref=> analyzeSubnode(s, x.env, x.value),
+    ListAlias, x ref=>
+        genericAnalysisError("multiple values cannot be used in single value context"),
+    PatternCell, x ref=>
+        genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+    ListPatternCell, x ref=>
+        genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+    RTListVariable, x ref=>
+        genericAnalysisError("multiple values cannot be used in single value context"),
+    RTLabel, x ref=>
+        genericAnalysisError("label cannot be used as a value"),
+);
+
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
     var envEntry = nameRefLookup(env, expr);
-    return match(envEntry,
-        RTVariable, x ref=> Maybe(VariableList(x)),
-        Value, x ref=> addSpecializedValue(s, expr, x),
-        ValueList, x ref=>
-            genericAnalysisError("multiple values cannot be used in single value context"),
-        Alias, x ref=> analyzeSubnode(s, x.env, x.value),
-        ListAlias, x ref=>
-            genericAnalysisError("multiple values cannot be used in single value context"),
-        PatternCell, x ref=>
-            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
-        ListPatternCell, x ref=>
-            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
-        RTListVariable, x ref=>
-            genericAnalysisError("multiple values cannot be used in single value context"),
-        RTLabel, x ref=>
-            genericAnalysisError("label cannot be used as a value"),
-    );
+    return analyzeEnvEntry(s, expr, envEntry);
+}
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.SimpleNameRef) {
+    var envEntry = privateLookup(env, expr.name);
+    return analyzeEnvEntry(s, expr, envEntry);
 }
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
@@ -248,8 +255,66 @@ private analyzeCall(s:SpecializationContext, ast, callable:Value, args:VariableL
     return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
 }
 
+private unlessStaticValue(s, env, fullExpr, tryExpr, fn) {
+    var tryBody = Vector[ir.Node]();
+    var tryS = subContext(s, tryBody);
+    return maybe(analyzeSubnode(tryS, env, tryExpr),
+        results ref=> {
+            var result = singleVariable(results);
+            if (staticType?(result.type)) {
+                return addSpecializedValue(s, fullExpr, evaluateExpr(fullExpr, env));
+            }
+            addSpecializedNodes(s, move(tryBody));
+            return fn(result);
+        },
+        () ref=> {
+            addSpecializedNodes(s, move(tryBody));
+            return nothing(VariableList);
+        },
+    );
+}
+
+private withOneResult(mResults) {
+    maybe(mResults, results ref=> {
+        ensureArity(1, size(results));
+    });
+    return mResults;
+}
+
+private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
+    return unlessStaticValue(s, env, expr, expr.expr,
+        indexee ref=> maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
+            var operands = VariableList(indexee);
+            push(operands, indexArgs);
+            return analyzeCall(s, expr, getHooks().index, operands);
+        }),
+    );
+}
+        
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
-    = addSpecializedValue(s, expr, evaluateExpr(expr, env));
+    = withOneResult(analyzeIndexing(s, env, expr));
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) {
+    return unlessStaticValue(s, env, expr, expr.expr,
+        indexee ref=> {
+            var indexValue = Value(parseIntLiteral(expr.index.value));
+            var indexArg = singleAddSpecializedStaticValue(s, expr.index, indexValue);
+            var operands = VariableList(indexee, indexArg);
+            return analyzeCall(s, expr, getHooks().staticIndex, operands);
+        }
+    );
+}
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FieldRef) {
+    return unlessStaticValue(s, env, expr, expr.expr,
+        indexee ref=> {
+            var fieldValue = Value(StringValue(expr.field.str));
+            var fieldArg = singleAddSpecializedStaticValue(s, expr, fieldValue);
+            var operands = VariableList(indexee, fieldArg);
+            return analyzeCall(s, expr, getHooks().fieldRef, operands);
+        }
+    );
+}
 
 private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
     // XXX recursion
@@ -453,13 +518,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
     var value = evaluateExpr(expr.expr, env);
-    var outputs = VariableList(newValue(staticType(value)));
-    addSpecializedNode(s, ir.ValueList(
-        ir.ASTNode(expr),
-        ValueList(value),
-        outputs
-    ));
-    return Maybe(outputs);
+    return addSpecializedStaticValue(s, expr, value);
 }
 
 
@@ -1059,26 +1118,33 @@ private analyzeMultiExprNode(s, env, ast)
 overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[VariableList]
     = analyzeMultiExprSubnode(s, env, *expr);
 
+private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
+    RTListVariable, x ref=> Maybe(x.vars),
+    Value, x ref=>
+        genericAnalysisError("single value cannot be used in multiple value context"),
+    ValueList, x ref=> addSpecializedValueList(s, expr, x),
+    Alias, x ref=>
+        analyzeSubnode(s, x.env, x.value),
+    ListAlias, x ref=>
+        analyzeExprListNode(s, x.env, x.value),
+    PatternCell, x ref=>
+        genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+    ListPatternCell, x ref=>
+        genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
+    RTVariable, x ref=>
+        genericAnalysisError("single value cannot be used in multiple value context"),
+    RTLabel, x ref=>
+        genericAnalysisError("label cannot be used as a value"),
+);
+
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
     var envEntry = nameRefLookup(env, expr);
-    return match(envEntry,
-        RTListVariable, x ref=> Maybe(x.vars),
-        Value, x ref=>
-            genericAnalysisError("single value cannot be used in multiple value context"),
-        ValueList, x ref=> addSpecializedValueList(s, expr, x),
-        Alias, x ref=>
-            analyzeSubnode(s, x.env, x.value),
-        ListAlias, x ref=>
-            analyzeExprListNode(s, x.env, x.value),
-        PatternCell, x ref=>
-            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
-        ListPatternCell, x ref=>
-            genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
-        RTVariable, x ref=>
-            genericAnalysisError("single value cannot be used in multiple value context"),
-        RTLabel, x ref=>
-            genericAnalysisError("label cannot be used as a value"),
-    );
+    return analyzeMultiEnvEntry(s, expr, envEntry);
+}
+
+overload analyzeMultiExprNode(s, env, expr:ast.SimpleNameRef) {
+    var envEntry = privateLookup(env, expr.name);
+    return analyzeMultiEnvEntry(s, expr, envEntry);
 }
 
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
@@ -1098,6 +1164,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call) {
         return addSpecializedValueList(s, expr, result);
     }
 }
+
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
+    = analyzeIndexing(s, env, expr);
 
 
 //
@@ -1191,8 +1260,6 @@ valueToRTVariable(value:Value) = match(value,
     MatchDefault, x => newValue(staticType(Value(x))),
 );
 
-valueToSingleVariableList(value) = VariableList(valueToRTVariable(value));
-
 addSpecializedNode(s:SpecializationContext, node:ir.Node) {
     for (input in ir.nodeInputs(node))
         useRvalue(s, input);
@@ -1223,11 +1290,23 @@ addSpecializedLiteralCodeBody(s:SpecializationContext, body:ast.LiteralCodeBody)
     return Maybe(VariableList());
 }
 
-addSpecializedValue(s:SpecializationContext, ast, value:Value) {
-    var outputs = valueToSingleVariableList(value);
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), outputs));
-    return Maybe(outputs);
+singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) {
+    var output = valueToRTVariable(value);
+    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), VariableList(output)));
+    return output;
 }
+
+addSpecializedValue(s, ast, value)
+    = Maybe(VariableList(singleAddSpecializedValue(s, ast, value)));
+
+singleAddSpecializedStaticValue(s:SpecializationContext, ast, value:Value) {
+    var output = newValue(staticType(value));
+    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), VariableList(output)));
+    return output;
+}
+
+addSpecializedStaticValue(s, ast, value)
+    = Maybe(VariableList(singleAddSpecializedStaticValue(s, ast, value)));
 
 addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
     var outputs = Vector(mapped(valueToRTVariable, valueList));
@@ -1656,9 +1735,7 @@ private callableInvokeTable(callable:Value) {
 
 analyzeCallableWithOneResult(callable:Value, args:VariableList) {
     var spec = analyzeCallable(callable, args);
-    maybe(spec.results, results ref=> {
-        ensureArity(1, size(results));
-    });
+    withOneResult(spec.results);
     return spec;
 }
 

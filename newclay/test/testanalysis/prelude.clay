@@ -131,6 +131,29 @@ static overload TypeTemplate?(Pointer) = true;
 static overload Type?(Pointer['T]) = true;
 static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
+
+
+//
+// Array[T,n]
+//
+
+symbol Array['T, 'n] = ();
+static overload TypeTemplate?(Array) = true;
+static overload Type?(Array['T, 'n]) = true;
+static overload ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
+
+
+
+//
+// Tuple[...T]
+//
+
+symbol Tuple[...'T] = ();
+static overload TypeTemplate?(Tuple) = true;
+static overload Type?(Tuple[...'T]) = true;
+static overload ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
+
+
 
 //
 // NewProcedure, Procedure?
@@ -160,9 +183,32 @@ static overload TupleWithTag?('x, 'tag) =
 
 
 //
+// tupleLiteral, arrayLiteral
+//
+
+symbol tupleLiteral = NewProcedure();
+symbol arrayLiteral = NewProcedure();
+
+
+
+//
 // operators
 //
 
+
+index(a:Array['T, 'n], i:Int32) ref returned:'T __c__ """
+    *returned_ = &a->array[*i_];
+""";
+
+staticIndex(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
+    *returned_ = &a->field0;
+""";
+
+overload staticIndex(a:Tuple['T0, 'T1, ...'T], #1) ref returned:'T1 __c__ """
+    *returned_ = &a->field1;
+""";
+
+fieldRef(a, #'field) x:Int32 __c__ """abort();""";
 
 plus(a:Int32) = a;
 
