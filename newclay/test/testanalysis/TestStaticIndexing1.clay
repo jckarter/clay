@@ -1,0 +1,6 @@
+makeTuple(x:'T, y:'U) r:Tuple['T, 'U] __c__ """abort();""";
+
+main() {
+    var x = makeTuple(1, "two");
+    return x.1, x.0;
+}
