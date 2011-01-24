@@ -186,8 +186,8 @@ static overload TupleWithTag?('x, 'tag) =
 // tupleLiteral, arrayLiteral
 //
 
-symbol tupleLiteral = NewProcedure();
-symbol arrayLiteral = NewProcedure();
+tupleLiteral(...elements:'T) returned:Tuple[...'T] __c__ """abort();""";
+arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""";
 
 
 

@@ -231,8 +231,17 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.SimpleNameRef) {
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
     = addSpecializedValue(s, expr, derefPattern(env, expr.name));
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.TupleExpr)
-    = genericAnalysisError("tuples are not yet supported");
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.TupleExpr) {
+    return maybe(analyzeExprListNode(s, env, expr.args),
+        args ref=> analyzeCallWithOneResult(s, expr, getHooks().tupleLiteral, args)
+    );
+}
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
+    return maybe(analyzeExprListNode(s, env, expr.args),
+        args ref=> analyzeCallWithOneResult(s, expr, getHooks().arrayLiteral, args)
+    );
+}
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call) {
     var callable = evaluateExpr(expr.expr, env);
