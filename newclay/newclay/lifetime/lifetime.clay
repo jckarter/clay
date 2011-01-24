@@ -176,7 +176,6 @@ private _Type(x) = StaticName(Type(x));
 
 private lifetimeAnalyzeSubbody(c, subdest, subbody) {
     for (subnode in subbody) {
-        observe(_Type(*subnode));
         lifetimeAnalyzeNode(c, subdest, *subnode);
     }
 }
@@ -319,7 +318,6 @@ private withLoopFrame(c:LifetimeContext, dest:Vector[ir.Node], fn) {
 //
 
 lifetimeAnalyzeSpecialization(s:Specialization) {
-    observe(s.callable);
     var c = LifetimeContext();
     var outBody = Vector[ir.Node]();
     withBlockFrame(c, outBody, () ref=> {

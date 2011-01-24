@@ -17,14 +17,19 @@ record CoalesceContext (
     statementRvalues:VariableSet,
 );
 
-overload CoalesceContext(map) = CoalesceContext(&map, VariableSet());
+overload CoalesceContext(map:VariableMap) = CoalesceContext(&map, VariableSet());
+overload CoalesceContext(x:CoalesceContext);
+
+private _Type(x) = StaticName(Type(x));
 
 private addStatementRvalues(cc:CoalesceContext, node) {
-    for (input in ir.nodeInputs(node))
+    for (input in ir.nodeInputs(node)) {
         remove(cc.statementRvalues, input);
+    }
 
-    for (output in ir.nodeOutputs(node))
+    for (output in ir.nodeOutputs(node)) {
         cc.statementRvalues[output] = ();
+    }
 }
 
 coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
@@ -46,7 +51,7 @@ coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
             cc.map^[to] = cFrom;
         else {
             var newVar = RTVariable(to.kind, to.type, cFrom.value?,
-                maybe(to.name, x => to.name, () => cFrom.name)
+                maybe(to.name, x ref=> to.name, () ref=> cFrom.name)
             );
 
             cc.map^[cFrom] = newVar;
@@ -64,8 +69,9 @@ coalesceInitialize(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     var cFrom = coalesced(cc.map^, from);
 
     // only coalesce initializations from rvalues introduced by the same statement
-    if (null?(lookup(cc.statementRvalues, cFrom)))
+    if (null?(lookup(cc.statementRvalues, cFrom))) {
         return;
+    }
 
     // if initialized from an rvalue, we can steal the rvalue's identity
     if (cFrom.kind == RT_VARIABLE_RVALUE and cFrom.value?) {
@@ -98,28 +104,33 @@ overload coalesceNode(cc:CoalesceContext, node:ir.Initialize) {
     coalesceInitialize(cc, node.input, node.output);
 }
 overload coalesceNode(cc:CoalesceContext, node:ir.If) {
-    var thenCmap = cc.map^;
-    var elseCmap = cc.map^;
+    var thenmap = cc.map^;
+    var elsemap = cc.map^;
+    var thencc = CoalesceContext(thenmap);
+    var elsecc = CoalesceContext(elsemap);
 
     for (subnode in node.thenBody)
-        coalesceSubnode(CoalesceContext(thenCmap), *subnode);
+        coalesceSubnode(thencc, *subnode);
     for (subnode in node.elseBody)
-        coalesceSubnode(CoalesceContext(elseCmap), *subnode);
-    unifyBranchCoalescing(cc.map^, thenCmap, elseCmap);
+        coalesceSubnode(elsecc, *subnode);
+    unifyBranchCoalescing(cc.map^, thencc.map^, elsecc.map^);
 }
 overload coalesceNode(cc:CoalesceContext, node:ir.While) {
+    var subcc = CoalesceContext(cc.map^);
     for (subnode in node.conditionBody)
-        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+        coalesceSubnode(subcc, *subnode);
     for (subnode in node.body)
-        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+        coalesceSubnode(subcc, *subnode);
 }
 overload coalesceNode(cc:CoalesceContext, node:ir.Block) {
+    var subcc = CoalesceContext(cc.map^);
     for (subnode in node.body)
-        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+        coalesceSubnode(subcc, *subnode);
 }
 overload coalesceNode(cc:CoalesceContext, node:ir.Statement) {
+    var subcc = CoalesceContext(cc.map^);
     for (subnode in node.body)
-        coalesceSubnode(CoalesceContext(cc.map^), *subnode);
+        coalesceSubnode(subcc, *subnode);
 }
 overload coalesceNode(cc:CoalesceContext, node:ir.Phi) {
     for (branch in node.branches) {
@@ -356,7 +367,7 @@ overload namedReturnConvertNode(nmap:VariableMap, node:ir.Statement) ir.Node
 //
 
 private noReturnConvertSpecialization(s:Specialization) {
-    just(s.body) = map(node => noReturnConvertNode(*node), just(s.body));
+    just(s.body) = map(node ref=> noReturnConvertNode(*node), just(s.body));
 }
 
 private procedure noReturnConvertNode;
