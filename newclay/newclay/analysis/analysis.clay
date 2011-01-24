@@ -95,6 +95,12 @@ private analyzeExprListNode(s, env, exprList) {
     return Maybe(outputs);
 }
 
+private analyzeMultiExprListNode(s, env, exprList, multi?) {
+    if (multi? and size(exprList) == 1 and variantIs?(exprList[0], ast.Expr))
+        return analyzeMultiExprSubnode(s, env, *exprList[0]);
+    return analyzeExprListNode(s, env, exprList);
+}
+
 overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ReturnExprList)
     Maybe[VariableList]
     = analyzeExprListNode(s, env, exprList);
@@ -646,7 +652,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
 
 private withAssignmentValues(s, env, stmt, fn)
     = maybe(analyzeNode(s, env, stmt.to),
-        toValues ref=> maybe(analyzeNode(s, env, stmt.from),
+        toValues ref=> maybe(analyzeMultiExprListNode(s, env, stmt.from, size(toValues) != 1),
             fromValues ref=> fn(toValues, fromValues),
             () ref=> true,
         ),
@@ -1085,7 +1091,7 @@ overload analyzeStrictBindings(
 ) {
     var env = newEnv(env_);
     return ...maybe(bindingList.values,
-        valueExprList ref=> ...maybe(analyzeNode(s, env, valueExprList),
+        valueExprList ref=> ...maybe(analyzeMultiExprListNode(s, env, valueExprList, true),
             values ref=> {
                 if (not arityMatches?(bindingList.names, values))
                     genericError("incorrect number of values for variable binding");
