@@ -432,6 +432,10 @@ overload evaluateExpr(x:ast.PatternNameRef, env) {
 overload evaluateExpr(x:ast.TupleExpr, env) {
     return Value(TupleValue(evaluateExprList(x.args, env)));
 }
+overload evaluateExpr(x:ast.ArrayExpr, env) {
+    genericError("array literals not supported in static context");
+    return Value();
+}
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
     var args = evaluateExprList(x.args, env);
