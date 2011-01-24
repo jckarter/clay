@@ -172,8 +172,6 @@ private lifetimeAnalyzeInitialize(c, dest, node) {
     addValue(c, node.output);
 }
 
-private _Type(x) = StaticName(Type(x));
-
 private lifetimeAnalyzeSubbody(c, subdest, subbody) {
     for (subnode in subbody) {
         lifetimeAnalyzeNode(c, subdest, *subnode);

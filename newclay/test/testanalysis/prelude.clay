@@ -197,15 +197,15 @@ arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""
 
 
 index(a:Array['T, 'n], i:Int32) ref returned:'T __c__ """
-    *returned_ = &a->array[*i_];
+    $returned = &$a.array[$i];
 """;
 
 staticIndex(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
-    *returned_ = &a->field0;
+    $returned = &$a.field0;
 """;
 
 overload staticIndex(a:Tuple['T0, 'T1, ...'T], #1) ref returned:'T1 __c__ """
-    *returned_ = &a->field1;
+    $returned = &$a.field1;
 """;
 
 fieldRef(a, #'field) x:Int32 __c__ """abort();""";
@@ -213,55 +213,55 @@ fieldRef(a, #'field) x:Int32 __c__ """abort();""";
 plus(a:Int32) = a;
 
 minus(a:Int32) returned:Int32 __c__ """
-    *returned_ = -*a_;
+    $returned = -$a;
 """;
 
 dereference(a:Pointer['T]) ref returned:'T __c__ """
-    *returned_ = *a_;
+    $returned = $a;
 """;
 
 multiply(a:Int32, b:Int32) returned:Int32 __c__ """
-    *returned_ = *a_ * *b_;
+    $returned = $a * $b;
 """;
 
 divide(a:Int32, b:Int32) returned:Int32 __c__ """
-    *returned_ = *a_ / *b_;
+    $returned = $a / $b;
 """;
 
 remainder(a:Int32, b:Int32) returned:Int32 __c__ """
-    *returned_ = *a_ % *b_;
+    $returned = $a % $b;
 """;
 
 add(a:Int32, b:Int32) returned:Int32 __c__ """
-    *returned_ = *a_ + *b_;
+    $returned = $a + $b;
 """;
 
 subtract(a:Int32, b:Int32) returned:Int32 __c__ """
-    *returned_ = *a_ - *b_;
+    $returned = $a - $b;
 """;
 
 lesser?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ < *b_;
+    $returned = $a < $b;
 """;
 
 lesserEquals?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ <= *b_;
+    $returned = $a <= $b;
 """;
 
 greater?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ > *b_;
+    $returned = $a > $b;
 """;
 
 greaterEquals?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ >= *b_;
+    $returned = $a >= $b;
 """;
 
 equals?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ == *b_;
+    $returned = $a == $b;
 """;
 
 notEquals?(a:Int32, b:Int32) returned:Bool __c__ """
-    *returned_ = *a_ != *b_;
+    $returned = $a != $b;
 """;
 
 assign(ref a, b)                  { a <-- b; }
@@ -275,7 +275,7 @@ remainderAssign(ref a:Int32, b:Int32) { a <-- remainder(a, b); }
 // destroyUnsafe, initializeFromUnsafe
 //
 
-primitiveCopy(ref y, x) __c__ """*y_ = *x_;""";
+primitiveCopy(ref y, x) __c__ """$y = $x;""";
 
 initializeFromUnsafe(ref y, x) { primitiveCopy(y, x); }
 destroyUnsafe(ref x) {}
