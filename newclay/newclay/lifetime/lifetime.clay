@@ -246,10 +246,12 @@ private destroyValue(dest:Vector[ir.Node], value) {
 }
 
 private addCallOutputs(c:LifetimeContext, node:ir.Call) {
-    for (output, result in zipped(ir.nodeOutputs(node), just(node.specialization.results))) {
-        if (result.kind == RT_VARIABLE_RVALUE)
-            addReference(c, output);
-    }
+    maybe(node.specialization.results, results ref=> {
+        for (output, result in zipped(ir.nodeOutputs(node), results)) {
+            if (result.kind == RT_VARIABLE_RVALUE)
+                addReference(c, output);
+        }
+    });
 }
 
 private addOutputs(c:LifetimeContext, node) {
