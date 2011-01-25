@@ -80,6 +80,10 @@ record ClayHooks (
     Procedure?: Value,
     PODType?: Value,
 
+    Ref: Value,
+    Const: Value,
+    Rvalue: Value,
+
     plus: Value,
     minus: Value,
     index: Value,
@@ -275,6 +279,27 @@ primitiveName(kind:PrimitiveKind) {
 }
 overload primitiveName(p:Primitive) = primitiveName(p.kind);
 
+
+//
+// alias primitives
+//
+
+enum AliasPrimitiveKind {
+    APRIM_Returns?,
+    APRIM_RefType,
+    APRIM_Type,
+}
+
+record AliasPrimitive = referenceType(
+    kind: AliasPrimitiveKind,
+);
+
+overload primitiveName(kind:AliasPrimitiveKind) {
+    var s = printString(kind);
+    assert(beginsWith?(s, "APRIM_"));
+    return sliceFrom(s, size("APRIM_"));
+}
+overload primitiveName(p:AliasPrimitive) = primitiveName(p.kind);
 
 
 //
@@ -645,6 +670,7 @@ variant Value = BoolValue
               | SymbolHead
               | Symbol
               | Primitive
+              | AliasPrimitive
               ;
 
 overload Value() = Value(BoolValue());

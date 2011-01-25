@@ -1,6 +1,8 @@
 
 import maybe.*;
 import newclay.ast as ast;
+import newclay.ir as ir;
+import newclay.analysis.*;
 import newclay.core.*;
 import newclay.hooks.*;
 import numbers.floats.*;
@@ -350,7 +352,7 @@ makeSymbol(x:SymbolHead, params:ValueList) {
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
-        () ref=> evaluateExpr(x.head.ast.expr, x.env)
+        () ref=> evaluateExpr(x.head.ast.expr, newEnv(x.env))
     );
 }
 
@@ -388,11 +390,13 @@ evaluateBool(expr, env) {
 
 evaluateBoolCall(callable:Value, args:ValueList) {
     // FIXME: what about error location?
-    var result = evaluateCallWithOneResult(callable, args);
-    if (not variantIs?(result, BoolValue))
+    var results = evaluateStrictCall(callable, args);
+    ensureArity(1, size(results));
+    if (not variantIs?(results[0], BoolValue))
         genericError("expecting a Bool value");
-    return variantAs(result, BoolValue).value;
+    return variantAs(results[0], BoolValue).value;
 }
+
 
 
 //
@@ -401,7 +405,7 @@ evaluateBoolCall(callable:Value, args:ValueList) {
 
 procedure evaluateExpr;
 
-overload evaluateExpr(x:ast.Expr, env) Value {
+overload evaluateExpr(x:ast.Expr, env:Env) Value {
     return withLocation(x, () ref=> evaluateExpr(*x, env));
 }
 overload evaluateExpr(x:ast.BoolLiteral, env) {
@@ -438,8 +442,7 @@ overload evaluateExpr(x:ast.ArrayExpr, env) {
 }
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    var args = evaluateExprList(x.args, env);
-    return evaluateCallWithOneResult(callable, args);
+    return evaluateCallWithOneResult(callable, env, x.args);
 }
 overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
@@ -629,7 +632,7 @@ overload evaluateMultiExpr(x, env) {
     genericError("single valued expression used in multi-value context");
     return ValueList();
 }
-overload evaluateMultiExpr(x:ast.Expr, env) ValueList {
+overload evaluateMultiExpr(x:ast.Expr, env:Env) ValueList {
     return withLocation(x, () ref=> evaluateMultiExpr(*x, env));
 }
 overload evaluateMultiExpr(x:ast.NameRef, env) {
@@ -640,8 +643,7 @@ overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
 }
 overload evaluateMultiExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    var args = evaluateExprList(x.args, env);
-    return evaluateCall(callable, move(args));
+    return evaluateCall(callable, env, x.args);
 }
 
 
@@ -675,7 +677,7 @@ overload envEntryToValueList(x:Alias) {
     return ValueList();
 }
 overload envEntryToValueList(x:ListAlias) {
-    return evaluateExprList(x.value, x.env);
+    return evaluateMultiExprList(x.value, x.env);
 }
 overload envEntryToValueList(x:RTVariable) {
     genericError("single value used in multi-valued context");
@@ -695,32 +697,36 @@ overload envEntryToValueList(x:RTLabel) {
 // evaluateCallWithOneResult, evaluateCall
 //
 
-evaluateCallWithOneResult(x, args) {
-    var results = evaluateCall(x, move(args));
+evaluateCallWithOneResult(x, env, argsAst) {
+    var results = evaluateCall(x, env, argsAst);
     ensureArity(1, size(results));
     return move(results[0]);
 }
 
-procedure evaluateCall;
+evaluateCall(x, env, argsAst) = evaluateStrictCall(x, evaluateExprList(argsAst, env));
+overload evaluateCall(x:Value, env, argsAst) = evaluateCall(*x, env, argsAst);
+overload evaluateCall(x:AliasPrimitive, env, argsAst) = evaluateAliasPrimitive(x.kind, env, argsAst);
 
-overload evaluateCall(x, args) {
+private procedure evaluateStrictCall;
+
+overload evaluateStrictCall(x, args) {
     genericError("invalid callee: ", x);
     return ValueList();
 }
-overload evaluateCall(x:Value, args) {
-    return withStaticCall(x, args, () ref=> evaluateCall(*x, args));
+overload evaluateStrictCall(x:Value, args) {
+    return evaluateStrictCall(*x, args);
 }
-overload evaluateCall(x:LambdaValue, args) {
+overload evaluateStrictCall(x:LambdaValue, args) {
     var env2 = bindArgs(x.env, x.value.args, args);
     return evaluateLambdaCodeBody(*x.value.body, env2);
 }
-overload evaluateCall(x:Symbol, args) {
+overload evaluateStrictCall(x:Symbol, args) {
     return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);
 }
-overload evaluateCall(x:SymbolHead, args) {
+overload evaluateStrictCall(x:SymbolHead, args) {
     return memoizeStaticCall(x.evalTable, x.module.program, Value(x), args);
 }
-overload evaluateCall(x:Primitive, args) {
+overload evaluateStrictCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
 }
 
@@ -1247,6 +1253,18 @@ evaluateAttributes(target) {
     return move(values);
 }
 
+
+//
+// runtimeCallable?
+//
+
+runtimeCallable?(x:Value) {
+    return match(x,
+        SymbolHead, y => symbolHeadTypeTemplate?(y),
+        Symbol, y => (symbolType?(y) or symbolProcedure?(y)),
+        MatchDefault, y => false,
+    );
+}
 
 
 //
@@ -1569,6 +1587,56 @@ evaluatePrimitive(kind, args) {
     case PRIM_StaticModuleMember : {
         var module, member = ...moduleString(args);
         return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
+    }
+
+    default : {
+        assert(false, "invalid primitive");
+        return ValueList();
+    }
+    }
+}
+
+private argVariables(env, argsAst) {
+    var body = Vector[ir.Node]();
+    var complete? = false;
+    var s = SpecializationContext(&body, &complete?);
+    return analyzeExprListNode(s, env, argsAst);
+}
+
+private refType(v) {
+    var refSymbolHead = Value();
+    switch (v.kind) {
+    case RT_VARIABLE_REF:
+        refSymbolHead = getHooks().Ref;
+        break;
+    case RT_VARIABLE_CONST:
+        refSymbolHead = getHooks().Const;
+        break;
+    case RT_VARIABLE_RVALUE:
+        refSymbolHead = getHooks().Rvalue;
+        break;
+    }
+
+    return Value(makeSymbol(variantAs(refSymbolHead, SymbolHead), ValueList(v.type)));
+}
+
+evaluateAliasPrimitive(kind, env, argsAst) {
+    switch (kind) {
+    case APRIM_Returns? : {
+        return ValueList(BoolValue(just?(argVariables(env, argsAst))));
+    }
+    case APRIM_Type : {
+        return maybe(argVariables(env, argsAst),
+            vars ref=> ValueList(map(v => v.type, vars)),
+            ()   ref=> ValueList(),
+        );
+    }
+
+    case APRIM_RefType : {
+        return maybe(argVariables(env, argsAst),
+            vars ref=> ValueList(map(v => refType(v), vars)),
+            ()   ref=> ValueList(),
+        );
     }
 
     default : {
