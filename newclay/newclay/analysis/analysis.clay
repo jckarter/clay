@@ -84,7 +84,7 @@ analyzeNode(s:SpecializationContext, env:Env, body:ast.ExprCodeBody)
 // analyzeNode(ReturnExprList; ReturnExprListItem instances)
 //
 
-private analyzeExprListNode(s, env, exprList) {
+analyzeExprListNode(s, env, exprList) {
     var outputs = VariableList();
     for (item in exprList) {
         var itemOutputs = analyzeSubnode(s, env, item);
@@ -95,7 +95,7 @@ private analyzeExprListNode(s, env, exprList) {
     return Maybe(outputs);
 }
 
-private analyzeMultiExprListNode(s, env, exprList, multi?) {
+analyzeMultiExprListNode(s, env, exprList, multi?) {
     if (multi? and size(exprList) == 1 and variantIs?(exprList[0], ast.Expr))
         return analyzeMultiExprSubnode(s, env, *exprList[0]);
     return analyzeExprListNode(s, env, exprList);
@@ -256,8 +256,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call) {
         var maybeInputs = analyzeNode(s, env, expr.args);
         return maybe(maybeInputs, inputs ref=> analyzeCallWithOneResult(s, expr, callable, inputs));
     } else {
-        var args = evaluateExprList(expr.args, env);
-        var result = evaluateCallWithOneResult(callable, args);
+        var result = evaluateCallWithOneResult(callable, env, expr.args);
         return addSpecializedValue(s, expr, result);
     }
 }
@@ -1174,8 +1173,7 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call) {
             inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
         );
     } else {
-        var args = evaluateExprList(expr.args, env);
-        var result = evaluateCall(callable, args);
+        var result = evaluateCall(callable, env, expr.args);
         return addSpecializedValueList(s, expr, result);
     }
 }
@@ -1206,19 +1204,6 @@ analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
         return Maybe(VariableList(addRvalue(s, newValue(boolType()))));
     }
 });
-
-
-//
-// runtimeCallable?
-//
-
-runtimeCallable?(x:Value) {
-    return match(x,
-        SymbolHead, y => symbolHeadTypeTemplate?(y),
-        Symbol, y => (symbolType?(y) or symbolProcedure?(y)),
-        MatchDefault, y => false,
-    );
-}
 
 
 //

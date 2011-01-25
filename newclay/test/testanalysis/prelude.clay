@@ -285,3 +285,12 @@ destroyUnsafe(ref x) {}
 //
 
 callMain() Int32 { main(); return 0; }
+
+//
+// Ref, Rvalue, Const
+//
+
+symbol Ref['T] = ();
+symbol Rvalue['T] = ();
+symbol Const['T] = ();
+
