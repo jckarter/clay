@@ -68,6 +68,7 @@ var punctuations = [
 
 var keywords = [
     "import", "as",
+    "external",
     "symbol", "attribute",
     "overload", "static",
     "var", "const", "ref", "rvalue", "forward", "alias",
