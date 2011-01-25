@@ -249,17 +249,8 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
     );
 }
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call) {
-    var callable = evaluateExpr(expr.expr, env);
-
-    if (runtimeCallable?(callable)) {
-        var maybeInputs = analyzeNode(s, env, expr.args);
-        return maybe(maybeInputs, inputs ref=> analyzeCallWithOneResult(s, expr, callable, inputs));
-    } else {
-        var result = evaluateCallWithOneResult(callable, env, expr.args);
-        return addSpecializedValue(s, expr, result);
-    }
-}
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
+    = withOneResult(analyzeCallNode(s, env, expr));
 
 private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:VariableList) {
     return addSpecializedCall(s, ast, args, analyzeCallableWithOneResult(callable, args));
@@ -269,24 +260,21 @@ private analyzeCall(s:SpecializationContext, ast, callable:Value, args:VariableL
     return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
 }
 
-private unlessStaticValue(s, env, fullExpr, tryExpr, fn) {
-    var tryBody = Vector[ir.Node]();
-    var tryS = subContext(s, tryBody);
-    return maybe(analyzeSubnode(tryS, env, tryExpr),
+private ifStaticValue(s, env, tryExpr, thenFn, elseFn)
+    = maybe(analyzeSubnode(s, env, tryExpr),
         results ref=> {
             var result = singleVariable(results);
-            if (staticType?(result.type)) {
-                return addSpecializedValue(s, fullExpr, evaluateExpr(fullExpr, env));
-            }
-            addSpecializedNodes(s, move(tryBody));
-            return fn(result);
-        },
-        () ref=> {
-            addSpecializedNodes(s, move(tryBody));
-            return nothing(VariableList);
+            if (staticType?(result.type))
+                return thenFn(staticTypeValue(result.type));
+            return elseFn(result);
         },
     );
-}
+
+private unlessStaticValue(s, env, fullExpr, tryExpr, fn)
+    = ifStaticValue(s, env, tryExpr,
+        value ref=> addSpecializedValue(s, fullExpr, evaluateExpr(fullExpr, env)),
+        fn
+    );
 
 private withOneResult(mResults) {
     maybe(mResults, results ref=> {
@@ -1164,19 +1152,27 @@ overload analyzeMultiExprNode(s, env, expr:ast.SimpleNameRef) {
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.PatternNameRef)
     = addSpecializedValueList(s, expr, derefListPattern(env, expr.name));
 
-overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call) {
-    var callable = evaluateExpr(expr.expr, env);
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call)
+    = analyzeCallNode(s, env, expr);
 
-    if (runtimeCallable?(callable)) {
-        var maybeInputs = analyzeNode(s, env, expr.args);
-        return maybe(maybeInputs,
-            inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
-        );
-    } else {
-        var result = evaluateCall(callable, env, expr.args);
-        return addSpecializedValueList(s, expr, result);
-    }
-}
+private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
+    = ifStaticValue(s, env, expr.expr,
+        callable ref=> {
+            if (runtimeCallable?(callable)) {
+                return maybe(analyzeNode(s, env, expr.args),
+                    inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
+                );
+            } else {
+                var result = evaluateCall(callable, env, expr.args);
+                return addSpecializedValueList(s, expr, result);
+            }
+        },
+        callableResult ref=> maybe(analyzeNode(s, env, expr.args), inputs ref=> {
+            var operands = VariableList(callableResult);
+            push(operands, inputs);
+            return analyzeCall(s, expr, getHooks().call, operands);
+        }),
+    );
 
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = analyzeIndexing(s, env, expr);
