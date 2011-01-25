@@ -1,0 +1,7 @@
+import __primitives__.*;
+
+static foo() = Type(1 + 2);
+
+main() {
+    return foo();
+}
