@@ -1,0 +1,12 @@
+foo() = 1, true, "three";
+bar() = 4.0;
+
+main() {
+    var x = 0;
+    var y = false;
+    var z = "";
+    var w = 0.0;
+
+    w <-- bar();
+    x, y, z <-- foo();
+}
