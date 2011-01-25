@@ -288,6 +288,7 @@ enum AliasPrimitiveKind {
     APRIM_Returns?,
     APRIM_RefType,
     APRIM_Type,
+    APRIM_ExpressionString,
 }
 
 record AliasPrimitive = referenceType(

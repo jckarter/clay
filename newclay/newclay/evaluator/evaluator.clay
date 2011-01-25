@@ -1620,6 +1620,29 @@ private refType(v) {
     return Value(makeSymbol(variantAs(refSymbolHead, SymbolHead), ValueList(v.type)));
 }
 
+private expressionStringAst(env, argsAst:ast.ExprList) {
+    if (size(argsAst) == 1)
+        return match(argsAst[0],
+            ast.UnpackExpr, x ref=> expressionStringAst2(env, argsAst, x.expr),
+            ast.Expr, x ref=> expressionStringAst2(env, argsAst, x),
+        );
+    return argsAst;
+}
+
+private expressionStringAst2(env, argsAst:ast.ExprList, expr:ast.Expr)
+    = match(expr,
+        ast.NameRef, x ref=> expressionStringAst3(argsAst, nameRefLookup(env, x)),
+        ast.SimpleNameRef, x ref=> expressionStringAst3(argsAst, privateLookup(env, x.name)),
+        MatchDefault, x ref=> argsAst,
+    );
+
+private expressionStringAst3(argsAst, entry:EnvEntry)
+    = match(entry,
+        Alias, x ref=> ast.ExprList(ast.ExprListItem(x.value)),
+        ListAlias, x ref=> x.value,
+        MatchDefault, x ref=> argsAst,
+    );
+
 evaluateAliasPrimitive(kind, env, argsAst) {
     switch (kind) {
     case APRIM_Returns? : {
@@ -1637,6 +1660,16 @@ evaluateAliasPrimitive(kind, env, argsAst) {
             vars ref=> ValueList(map(v => refType(v), vars)),
             ()   ref=> ValueList(),
         );
+    }
+
+    case APRIM_ExpressionString : {
+        var exprAst = expressionStringAst(env, argsAst);
+        var sourceTokens = ast.getLocation(exprAst[0]).tokens;
+        var firstToken = ast.getLocation(exprAst[0]).tokenRange.begin;
+        var lastToken = ast.getLocation(exprAst[size(exprAst) - 1]).tokenRange.end;
+        var beginChar, endChar = sourceTokens.vector[firstToken].range.begin,
+                                 sourceTokens.vector[lastToken].range.end - 1;
+        return ValueList(StringValue(slice(sourceTokens.file.data, beginChar, endChar)));
     }
 
     default : {
