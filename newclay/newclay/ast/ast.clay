@@ -372,6 +372,7 @@ variant TopLevelItem = Symbol
                      | Import
                      | Procedure
                      | StaticFunction
+                     | ExternalProcedure
                      | GlobalLiteralCodeBody
                      ;
 
@@ -431,6 +432,20 @@ record Procedure = ast(
     visibility: VisibilityKind,
     name: SymbolName,
     definition: OverloadDefinition,
+);
+
+record ExternalProcedure = ast(
+    visibility: VisibilityKind,
+    attributes: Maybe[ExprList],
+    name: Identifier,
+    arguments: ExternalArgumentList,
+    returns: Maybe[Expr],
+    body: CodeBody,
+);
+
+record ExternalArgumentList = ast(
+    items: Vector[Argument],
+    variadic?: Bool,
 );
 
 record GlobalLiteralCodeBody = ast(
@@ -500,10 +515,14 @@ record ReturnSpec = ast(
     type: Expr,
 );
 
-variant CodeBody = ExprCodeBody
+variant CodeBody = UndefinedCodeBody
+                 | ExprCodeBody
                  | Block
                  | LiteralCodeBody
+                 | UndefinedCodeBody
                  ;
+
+record UndefinedCodeBody = ast();
 
 record ExprCodeBody = ast(
     exprs: ReturnExprList,

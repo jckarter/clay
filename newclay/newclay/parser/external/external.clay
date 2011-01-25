@@ -85,6 +85,7 @@ private keyword(s) {
 
 private var kw_import = keyword("import");
 private var kw_as = keyword("as");
+private var kw_external = keyword("external");
 private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
@@ -158,21 +159,26 @@ private optCommaListStrict(forward parser) =
 private commaAndItem(item) = modify(x => move(x.1), sequence(punc(#","), item));
 
 [Item, VariadicItem | Parsers?(Item, VariadicItem)]
-private variadicList(item:Item, variadicItem:VariadicItem) {
+private variadicListPair(item:Item, variadicItem:VariadicItem) {
     alias T = ParseResult(Item);
     return choice(
         modify(
-            x => VariadicList(move(x.0), move(x.1)),
+            x => (move(x.0), move(x.1)),
             sequence(
                 commaListStrict(item), optional(commaAndItem(variadicItem))
             ),
         ),
         modify(
-            x => VariadicList(Vector[T](), move(x)),
+            x => (Vector[T](), move(x)),
             optional(variadicItem),
         ),
     );
 }
+
+private variadicList(item, variadicItem) = modify(
+    x => VariadicList(move(x.0), move(x.1)),
+    variadicListPair(item, variadicItem)
+);
 
 
 
@@ -987,7 +993,11 @@ private var literalCodeBody = bounds(modify(
 
 private var blockCodeBody = modify(CodeBody, bounds(block));
 
-private var codeBody = choice(exprCodeBody, blockCodeBody, literalCodeBodyProcedure);
+private var undefinedCodeBody = modify(x => CodeBody(UndefinedCodeBody()), punc(#";"));
+
+private var codeBody = choice(
+    exprCodeBody, blockCodeBody, literalCodeBodyProcedure, undefinedCodeBody
+);
 
 private var overloadDefinition = modify(
     x => OverloadDefinition(move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
@@ -1012,6 +1022,29 @@ private var procedureDef = topLevelItemParser(
 private var staticFunctionDef = topLevelItemParser(
     x => StaticFunction(just(x.0, VIS_PUBLIC), x.2, x.3),
     sequence(visibility, kw_static, symbolName, staticOverloadDefinition),
+);
+
+// externalProcedureDef
+
+private var externalProcedureDef = topLevelItemParser(
+    x => ExternalProcedure(just(x.0, VIS_PUBLIC), x.2, x.3, x.4, x.5, x.6),
+    sequence(visibility, kw_external,
+        optExternalAttributes,
+        identifier,
+        externalArgumentList, 
+        optional(expr),
+        codeBody
+    ),
+);
+
+private var optExternalAttributes = modify(
+    x => maybe(x, expr => Maybe(expr.1)),
+    optional(sequence(punc(#"("), exprList, punc(#")"))),
+);
+
+private var externalArgumentList = modify(
+    x => ExternalArgumentList(x.1 .0, just?(x.1 .1)),
+    sequence(punc(#"("), variadicListPair(argument, punc(#"...")), punc(#")")),
 );
 
 // globalLiteralCodeBody
@@ -1213,7 +1246,7 @@ private var exprStatement = statementParser(
 
 private var topLevelItem = choice(
     importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
-    procedureDef, staticFunctionDef, globalLiteralCodeBody
+    procedureDef, staticFunctionDef, externalProcedureDef, globalLiteralCodeBody
 );
 
 

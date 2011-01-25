@@ -11,6 +11,7 @@ TopLevelItem -> GlobalSymbol
               | Import
               | Procedure
               | StaticFunction
+              | ExternalProcedure
               | GlobalLiteralCodeBody
 
 Visibility -> "public" | "private"
@@ -42,6 +43,13 @@ StaticFunction -> Visibility? "static" SymbolName StaticOverloadDefinition
 
 Procedure -> Visibility? SymbolName OverloadDefinition
 
+ExternalProcedure -> Visibility? "external" ExternalAttributes? Identifier
+                     ExternalArgumentList Expr? CodeBody
+
+ExternalAttributes -> "(" ExprList ")"
+
+ExternalArgumentList -> "(" variadic_list(Argument, ()) ")"
+
 GlobalLiteralCodeBody -> LiteralCodeBodyKind LiteralCodeBody ";"
 
 Predicate -> "|" Expr
@@ -69,6 +77,7 @@ ReturnKind -> "const" | "ref" | "rvalue"
 CodeBody -> "=" ReturnExprList ";"
           | Block
           | LiteralCodeBodyKind LiteralCodeBody ";"
+          | ";"
 
 LiteralCodeBodyKind = "__c__" | "__asm__" | "__llvm__"
 
