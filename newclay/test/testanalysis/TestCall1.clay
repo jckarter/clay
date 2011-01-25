@@ -1,0 +1,7 @@
+static staticCallable('x) = 'x;
+runtimeCallable(x) = x;
+overload call(x:Int32, y) = y;
+
+main() {
+    return staticCallable(2), runtimeCallable(3), 1(4);
+}

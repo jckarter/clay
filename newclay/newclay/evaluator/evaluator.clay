@@ -1266,6 +1266,14 @@ runtimeCallable?(x:Value) {
     );
 }
 
+staticCallable?(x:Value) {
+    return match(x,
+        SymbolHead, y => true,
+        Symbol, y => true,
+        MatchDefault, y => false,
+    );
+}
+
 
 //
 // memoizeStaticCall, evaluateStaticCall

@@ -86,6 +86,7 @@ record ClayHooks (
 
     plus: Value,
     minus: Value,
+    call: Value,
     index: Value,
     staticIndex: Value,
     fieldRef: Value,
