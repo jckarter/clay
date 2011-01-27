@@ -52,8 +52,14 @@ private useBranchRvalues(s, branchS1, branchS2) {
 
 
 //
-// externalAttributes
+// externalAttributes, externalRTValue
 //
+
+externalRTValue(x:RTExternal) {
+    var attrs = externalAttributes(x);
+    var type = externalCodePointerType(attrs.abi, attrs.variadic?, attrs.argumentTypes, attrs.returnType);
+    return RTValue(RT_VALUE_RVALUE, type, x, x.name);
+}
 
 externalAttributes(ex:RTExternal) = ref maybe(ex.attributes,
     a ref=> ref a,
@@ -67,12 +73,12 @@ private initializeExternalAttributes(ex:RTExternal) {
     var env = newEnv(ex.module);
 
     var attributeValues = maybe(ex.ast.attributes,
-        attributes ref=> evaluateExprList(ex.ast.attributes, env),
+        attributes ref=> evaluateExprList(attributes, env),
         () ref=> ValueList(),
     );
 
-    var argumentTypes = ValueList(mapped(externalArgumentType, ex.arguments.items));
-    var returnType = maybe(ex.returns, returnExpr ref=> withLocation(returnExpr, () ref=> {
+    var argumentTypes = ValueList(mapped(a ref=> externalArgumentType(a, env), ex.ast.arguments.items));
+    var returnType = maybe(ex.ast.returns, returnExpr ref=> withLocation(returnExpr, () ref=> {
         var returnType = evaluateExpr(returnExpr, env);
         if (not validExternalArgumentType?(returnType))
             genericError("external functions may only return values of POD types");
@@ -80,14 +86,25 @@ private initializeExternalAttributes(ex:RTExternal) {
     }));
 
     var symbolName = ex.name;
-    var abi = ABI_CDECL;
+    var abi = getHooks().CdeclABI;
+    var variadic? = ex.ast.arguments.variadic?;
 
-    withLocation(ex.ast.attributes, () ref=> {
-        applyExternalAttributes(attributeValues, symbolName, abi);
+    maybe(ex.ast.attributes, attributes ref=> {
+        withLocation(ex.ast, () ref=> {
+            applyExternalAttributes(attributeValues, symbolName, abi);
 
-        if (abi != ABI_CDECL and ex.ast.arguments.variadic?)
-            genericError("only cdecl abi for external functions supports variadic arguments");
+            if (not abiSupportsVariadics?(abi) and variadic?)
+                genericError("external function with ", abi, " does not support variadic arguments");
+        });
     });
+
+    ex.attributes = Maybe(RTExternalAttributes(
+        symbolName,
+        abi,
+        variadic?,
+        argumentTypes,
+        returnType
+    ));
 
     return ref just(ex.attributes);
 }
@@ -105,8 +122,13 @@ private applyExternalAttributes(attributeValues, outSymbolName, outAbi) {
                 outSymbolName = sv.value; 
             },
             MatchDefault, x ref=> {
-                // XXX handle abi symbols
-                genericError("invalid external function attribute: ", x);
+                if (abiValue?(value)) {
+                    if (gotAbi?)
+                        genericError("multiple ABIs specified for external function");
+                    gotAbi? = true;
+                    outAbi = value;
+                }
+                    
             },
         );
 }
@@ -292,8 +314,7 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("multiple values cannot be used in single value context"),
     RTLabel, x ref=>
         genericAnalysisError("label cannot be used as a value"),
-    RTExternal, x ref=>
-        genericAnalysisError("external functions not yet supported"),
+    RTExternal, x ref=> Maybe(RTValues(externalRTValue(x))),
 );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
@@ -1222,7 +1243,7 @@ private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
     RTLabel, x ref=>
         genericAnalysisError("label cannot be used as a value"),
     RTExternal, x ref=>
-        genericAnalysisError("external functions not yet supported"),
+        genericAnalysisError("single value cannot be used in multiple value context"),
 );
 
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {

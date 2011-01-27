@@ -2,6 +2,7 @@
 import newclay.ast as ast;
 import newclay.core.*;
 import newclay.evaluator.*;
+import maybe.*;
 
 
 //
@@ -170,3 +171,67 @@ pointerTargetType(x:Value) Value {
 podType?(x:Value) {
     return evaluateBoolCall(getHooks().PODType?, ValueList(x));
 }
+
+
+//
+// externalCodePointerType, externalCodePointerType?
+//
+
+externalCodePointerType(abi:Value, variadic?:Bool, inputs:ValueList, output:Maybe[Value]) {
+    return evaluateIndexing(getHooks().ExternalCodePointer, ValueList(
+        abi,
+        Value(BoolValue(variadic?)),
+        Value(TupleValue(inputs)),
+        just(output, Value(TupleValue()))
+    ));
+}
+
+externalCodePointerType?(x:Value) = match(x,
+    Symbol, y => Value(y.head) == getHooks().ExternalCodePointer and size(y.params) == 4,
+    MatchDefault, y => false,
+);
+
+externalCodePointerABI(x:Value) {
+    if (not externalCodePointerType?(x))
+        genericError("not an external code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return sym.params[0];
+}
+
+externalCodePointerVariadic?(x:Value) {
+    if (not externalCodePointerType?(x))
+        genericError("not an external code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return match(sym.params[1],
+        BoolValue, x => x.value,
+        MatchDefault, x => {
+            genericError("second symbol parameter of external code pointer type must be boolean");
+            return false;
+        },
+    );
+}
+
+externalCodePointerInputTypes(x:Value) {
+    if (not externalCodePointerType?(x))
+        genericError("not an external code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return match(sym.params[2],
+        TupleValue, x => x.elements,
+        MatchDefault, x => ValueList(x),
+    );
+}
+
+externalCodePointerOutputType(x:Value) {
+    if (not externalCodePointerType?(x))
+        genericError("not an external code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return if (variantIs?(sym.params[3], TupleValue)) nothing(Value) else Maybe(sym.params[3]);
+}
+
+
+//
+// abiValue?, abiSupportsVariadics?
+//
+
+abiValue?(x:Value) = evaluateBoolCall(getHooks().ABI?, ValueList(x));
+abiSupportsVariadics?(x:Value) = evaluateBoolCall(getHooks().ABISupportsVariadics?, ValueList(x));
