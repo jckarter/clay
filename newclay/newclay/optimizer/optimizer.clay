@@ -4,8 +4,8 @@ import newclay.core.*;
 import newclay.hooks.*;
 import maybe.*;
 
-alias VariableMap = HashMap[RTVariable, RTVariable];
-alias VariableSet = HashMap[RTVariable, Tuple[]];
+alias VariableMap = HashMap[RTValue, RTValue];
+alias VariableSet = HashMap[RTValue, Tuple[]];
 
 
 //
@@ -30,25 +30,25 @@ private addStatementRvalues(cc:CoalesceContext, node) {
     }
 }
 
-coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
+coalesceBinding(cc:CoalesceContext, from:RTValue, to:RTValue) {
     assert(to.type == from.type, "coalescing invariant: binding types must match");
 
     var cFrom = coalesced(cc.map^, from);
 
     // rvalues can merge with previous rvalues.
     // permanent values can merge with previous rvalues (even if rvalue is a ref!)
-    if (from.kind == RT_VARIABLE_RVALUE) {
-        assert(localVariable?(to) or not inValues?(to.kind, RT_VARIABLE_CONST, RT_VARIABLE_REF),
+    if (from.kind == RT_VALUE_RVALUE) {
+        assert(localVariable?(to) or not inValues?(to.kind, RT_VALUE_CONST, RT_VALUE_REF),
             "coalescing invariant: rvalue cannot be bound to const or ref reference"
         );
-        assert(cFrom.kind == RT_VARIABLE_RVALUE,
+        assert(cFrom.kind == RT_VALUE_RVALUE,
             "coalescing invariant: rvalue cannot be referenced after coalescing with non-rvalue (multiple reference to rvalue not allowed)"
         );
 
-        if (to.kind == RT_VARIABLE_RVALUE)
+        if (to.kind == RT_VALUE_RVALUE)
             cc.map^[to] = cFrom;
         else {
-            var newVar = RTVariable(to.kind, to.type, cFrom.referent,
+            var newVar = RTValue(to.kind, to.type, cFrom.referent,
                 maybe(to.name, x ref=> to.name, () ref=> cFrom.name)
             );
 
@@ -61,7 +61,7 @@ coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     }
 }
 
-coalesceInitialize(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
+coalesceInitialize(cc:CoalesceContext, from:RTValue, to:RTValue) {
     assert(to.type == from.type, "coalescing invariant: initialize types must match");
 
     var cFrom = coalesced(cc.map^, from);
@@ -72,7 +72,7 @@ coalesceInitialize(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     }
 
     // if initialized from an rvalue, we can steal the rvalue's identity
-    if (cFrom.kind == RT_VARIABLE_RVALUE and localVariable?(cFrom)) {
+    if (cFrom.kind == RT_VALUE_RVALUE and localVariable?(cFrom)) {
         cc.map^[cFrom] = to;
     }
 }
@@ -151,7 +151,7 @@ private unifyBranchCoalescing(cmap:VariableMap, thenCmap:VariableMap, elseCmap:V
 
 // coalescing application pass
 
-coalesced(cmap:VariableMap, rtVar:RTVariable) {
+coalesced(cmap:VariableMap, rtVar:RTValue) {
     var cVar = rtVar;
     var cVarp = lookup(cmap, cVar);
     while (not null?(cVarp)) {
@@ -226,7 +226,7 @@ overload coalescedNode(cmap:VariableMap, node:ir.Bind) {
     var cOutput = coalesced(cmap, node.output);
     if (isNot?(cInput, cOutput))
         return ir.Node(ir.Bind(node.ast, cInput, cOutput));
-    else if (node.input.kind == RT_VARIABLE_RVALUE)
+    else if (node.input.kind == RT_VALUE_RVALUE)
         return ir.Node(ir.Adopt(cInput));
     else
         return ir.Node(ir.Nop());
@@ -316,10 +316,10 @@ private namedReturnConvertSpecialization(s:Specialization, results) {
     );
 }
 
-private asNamedReturnVariable(result) = RTVariable(
-    RT_VARIABLE_REF,
+private asNamedReturnVariable(result) = RTValue(
+    RT_VALUE_REF,
     if (localVariable?(result)) result.type else pointerType(result.type),
-    AnyRef(),
+    ReferenceVariable(),
     "returned"
 );
 

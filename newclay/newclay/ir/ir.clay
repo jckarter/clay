@@ -1,6 +1,6 @@
 import newclay.ast as ast;
 import newclay.core.(
-    RTVariable,
+    RTValue,
     Value,
     Specialization,
     VariableList,
@@ -12,7 +12,7 @@ import newclay.evaluator.*;
 import maybe.*;
 
 record OutputVariable (
-    value:RTVariable,
+    value:RTValue,
     returnByRef?:Bool,
 );
 
@@ -48,7 +48,7 @@ overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
 overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
 variant LiteralCodeToken = String
-                         | RTVariable
+                         | RTValue
                          | Value;
 
 alias LiteralCode = Vector[LiteralCodeToken];
@@ -82,27 +82,27 @@ record Call = referenceType(
 
 record If = referenceType(
     ast: ASTNode,
-    condition: RTVariable,
+    condition: RTValue,
     thenBody: Vector[Node],
     elseBody: Vector[Node],
 );
 
 record Not = referenceType(
     ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
+    input: RTValue,
+    output: RTValue,
 );
 
 record AddressOf = referenceType(
     ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
+    input: RTValue,
+    output: RTValue,
 );
 
 record While = referenceType(
     ast: ast.WhileStatement,
     conditionBody: Vector[Node],
-    condition: RTVariable,
+    condition: RTValue,
     body: Vector[Node],
 );
 
@@ -113,20 +113,20 @@ record Phi = referenceType(
 
 record Bind = referenceType(
     ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
+    input: RTValue,
+    output: RTValue,
 );
 
 record BindReturn = referenceType(
     ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
+    input: RTValue,
+    output: RTValue,
 );
 
 record Initialize = referenceType(
     ast: ASTNode,
-    input: RTVariable,
-    output: RTVariable,
+    input: RTValue,
+    output: RTValue,
 );
 
 record Break = referenceType(
@@ -143,11 +143,11 @@ record Return = referenceType(
 
 record Throw = referenceType(
     ast: ast.ThrowStatement,
-    exception: RTVariable,
+    exception: RTValue,
 );
 
 record Adopt = referenceType(
-    value: RTVariable,
+    value: RTValue,
 );
 
 record Nop();
@@ -207,7 +207,7 @@ private enum LiteralTokenMode { STRING, PATTERN_SUBSTITUTION, SUBSTITUTION }
 private literalCodeSubstitutionToken(env, token) {
     var value = privateLookup(env, token);
     return match(value,
-        RTVariable, v => LiteralCodeToken(v),
+        RTValue, v => LiteralCodeToken(v),
         Value,      v => LiteralCodeToken(v),
         MatchDefault, x => {
             genericError("invalid literal code substitution: ", value);
