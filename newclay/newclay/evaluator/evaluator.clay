@@ -5,6 +5,7 @@ import newclay.ir as ir;
 import newclay.analysis.*;
 import newclay.core.*;
 import newclay.hooks.*;
+import newclay.diagnostics.(computeLocation);
 import numbers.floats.*;
 import printer.formatter.*;
 
@@ -442,7 +443,7 @@ overload evaluateExpr(x:ast.ArrayExpr, env) {
 }
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    return evaluateCallWithOneResult(callable, env, x.args);
+    return evaluateCallWithOneResult(callable, env, x);
 }
 overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
@@ -647,7 +648,7 @@ overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
 }
 overload evaluateMultiExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    return evaluateCall(callable, env, x.args);
+    return evaluateCall(callable, env, x);
 }
 
 
@@ -705,17 +706,17 @@ overload envEntryToValueList(x:RTLabel) {
 // evaluateCallWithOneResult, evaluateCall
 //
 
-evaluateCallWithOneResult(x, env, argsAst) {
-    var results = evaluateCall(x, env, argsAst);
+evaluateCallWithOneResult(x, env, callAst) {
+    var results = evaluateCall(x, env, callAst);
     ensureArity(1, size(results));
     return move(results[0]);
 }
 
-evaluateCall(x, env, argsAst) = evaluateStrictCall(x, evaluateExprList(argsAst, env));
-overload evaluateCall(x:Value, env, argsAst) = evaluateCall(*x, env, argsAst);
-overload evaluateCall(x:AliasPrimitive, env, argsAst) = evaluateAliasPrimitive(x.kind, env, argsAst);
+evaluateCall(x, env, callAst) = evaluateStrictCall(x, evaluateExprList(callAst.args, env));
+overload evaluateCall(x:Value, env, callAst) = evaluateCall(*x, env, callAst);
+overload evaluateCall(x:AliasPrimitive, env, callAst) = evaluateAliasPrimitive(x.kind, env, callAst);
 
-private procedure evaluateStrictCall;
+procedure evaluateStrictCall;
 
 overload evaluateStrictCall(x, args) {
     genericError("invalid callee: ", x);
@@ -736,6 +737,16 @@ overload evaluateStrictCall(x:SymbolHead, args) {
 }
 overload evaluateStrictCall(x:Primitive, args) {
     return evaluatePrimitive(x.kind, args);
+}
+overload evaluateStrictCall(x:AliasPrimitive, args) {
+    genericError(primitiveName(x), " not supported in this context");
+    return ValueList();
+}
+
+evaluateStrictCallWithOneResult(x, env) {
+    var results = evaluateStrictCall(x, env);
+    ensureArity(1, size(results));
+    return move(results[0]);
 }
 
 evaluateLambdaCodeBody(x:ast.ExprList, env) = evaluateExprList(x, env);
@@ -1659,27 +1670,27 @@ private expressionStringAst3(argsAst, entry:EnvEntry)
         MatchDefault, x ref=> argsAst,
     );
 
-evaluateAliasPrimitive(kind, env, argsAst) {
+evaluateAliasPrimitive(kind, env, callAst) {
     switch (kind) {
     case APRIM_Returns? : {
-        return ValueList(BoolValue(just?(argVariables(env, argsAst))));
+        return ValueList(BoolValue(just?(argVariables(env, callAst.args))));
     }
     case APRIM_Type : {
-        return maybe(argVariables(env, argsAst),
+        return maybe(argVariables(env, callAst.args),
             vars ref=> ValueList(map(v => v.type, vars)),
             ()   ref=> ValueList(),
         );
     }
 
     case APRIM_RefType : {
-        return maybe(argVariables(env, argsAst),
+        return maybe(argVariables(env, callAst.args),
             vars ref=> ValueList(map(v => refType(v), vars)),
             ()   ref=> ValueList(),
         );
     }
 
     case APRIM_ExpressionString : {
-        var exprAst = expressionStringAst(env, argsAst);
+        var exprAst = expressionStringAst(env, callAst.args);
         if (empty?(exprAst))
             return ValueList(StringValue(String("")));
         var sourceTokens = ast.getLocation(exprAst[0]).tokens;
@@ -1688,6 +1699,27 @@ evaluateAliasPrimitive(kind, env, argsAst) {
         var beginChar, endChar = sourceTokens.vector[firstToken].range.begin,
                                  sourceTokens.vector[lastToken].range.end - 1;
         return ValueList(StringValue(slice(sourceTokens.file.data, beginChar, endChar)));
+    }
+
+    case APRIM_ExpressionLocation : {
+        var exprAst = expressionStringAst(env, callAst.args);
+        var locAst = if (empty?(exprAst))
+                ast.ExprListItem(ast.Expr(callAst))
+            else
+                exprAst[0];
+
+        var location = ast.getLocation(locAst);
+        ref path = location.tokens.file.path;
+        var data = location.tokens.file.data;
+        var tokenOffset = location.tokenRange.begin;
+        var offset = location.tokens.vector[tokenOffset].range.begin;
+        var line, column, tabs = ...computeLocation(data, offset);
+
+        return ValueList(
+            Value(StringValue(path)),
+            Value(IntValue(StaticIntValue(Int64(line+1)))),
+            Value(IntValue(StaticIntValue(Int64(column + 7*tabs))))
+        );
     }
 
     default : {
