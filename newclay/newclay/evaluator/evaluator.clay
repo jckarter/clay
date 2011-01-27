@@ -1680,6 +1680,8 @@ evaluateAliasPrimitive(kind, env, argsAst) {
 
     case APRIM_ExpressionString : {
         var exprAst = expressionStringAst(env, argsAst);
+        if (empty?(exprAst))
+            return ValueList(StringValue(String("")));
         var sourceTokens = ast.getLocation(exprAst[0]).tokens;
         var firstToken = ast.getLocation(exprAst[0]).tokenRange.begin;
         var lastToken = ast.getLocation(exprAst[size(exprAst) - 1]).tokenRange.end;
