@@ -95,6 +95,7 @@ overload getLocation(x:Expr) = getLocation(*x);
 overload getLocation(x:Statement) = getLocation(*x);
 overload getLocation(x:ExprListItem) = getLocation(*x);
 overload getLocation(x:Pattern) = getLocation(*x);
+overload getLocation(x:CodeBody) = getLocation(*x);
 
 procedure setLocation;
 overload setLocation(x, forward location) {
@@ -443,8 +444,13 @@ record ExternalProcedure = ast(
     body: CodeBody,
 );
 
+record ExternalArgument = ast(
+    name: Identifier,
+    type: Expr,
+);
+
 record ExternalArgumentList = ast(
-    items: Vector[Argument],
+    items: Vector[ExternalArgument],
     variadic?: Bool,
 );
 
