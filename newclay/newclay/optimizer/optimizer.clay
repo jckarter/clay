@@ -38,7 +38,7 @@ coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     // rvalues can merge with previous rvalues.
     // permanent values can merge with previous rvalues (even if rvalue is a ref!)
     if (from.kind == RT_VARIABLE_RVALUE) {
-        assert(to.value? or not inValues?(to.kind, RT_VARIABLE_CONST, RT_VARIABLE_REF),
+        assert(localVariable?(to) or not inValues?(to.kind, RT_VARIABLE_CONST, RT_VARIABLE_REF),
             "coalescing invariant: rvalue cannot be bound to const or ref reference"
         );
         assert(cFrom.kind == RT_VARIABLE_RVALUE,
@@ -48,7 +48,7 @@ coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
         if (to.kind == RT_VARIABLE_RVALUE)
             cc.map^[to] = cFrom;
         else {
-            var newVar = RTVariable(to.kind, to.type, cFrom.value?,
+            var newVar = RTVariable(to.kind, to.type, cFrom.referent,
                 maybe(to.name, x ref=> to.name, () ref=> cFrom.name)
             );
 
@@ -56,7 +56,7 @@ coalesceBinding(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
             cc.map^[to] = newVar;
         }
     // references can merge with previous references or values of the same kind
-    } else if (not to.value? and to.kind == from.kind) {
+    } else if (referenceVariable?(to) and to.kind == from.kind) {
         cc.map^[to] = cFrom;
     }
 }
@@ -72,7 +72,7 @@ coalesceInitialize(cc:CoalesceContext, from:RTVariable, to:RTVariable) {
     }
 
     // if initialized from an rvalue, we can steal the rvalue's identity
-    if (cFrom.kind == RT_VARIABLE_RVALUE and cFrom.value?) {
+    if (cFrom.kind == RT_VARIABLE_RVALUE and localVariable?(cFrom)) {
         cc.map^[cFrom] = to;
     }
 }
@@ -318,8 +318,8 @@ private namedReturnConvertSpecialization(s:Specialization, results) {
 
 private asNamedReturnVariable(result) = RTVariable(
     RT_VARIABLE_REF,
-    if (result.value?) result.type else pointerType(result.type),
-    false,
+    if (localVariable?(result)) result.type else pointerType(result.type),
+    AnyRef(),
     "returned"
 );
 
@@ -328,7 +328,7 @@ overload namedReturnConvertNode(nmap:VariableMap, node) = ir.Node(node);
 
 overload namedReturnConvertNode(nmap:VariableMap, node:ir.BindReturn) {
     assert(not null?(lookup(nmap, node.output)), "named return conversion invariant: return expression value must have corresponding named return");
-    if (node.output.value?)
+    if (localVariable?(node.output))
         return ir.Node(ir.Initialize(node.ast, node.input, nmap[node.output]));
     else
         return ir.Node(ir.AddressOf(node.ast, node.input, nmap[node.output]));

@@ -52,6 +52,76 @@ private useBranchRvalues(s, branchS1, branchS2) {
 
 
 //
+// externalAttributes
+//
+
+externalAttributes(ex:RTExternal) = ref maybe(ex.attributes,
+    a ref=> ref a,
+    () ref=> ref initializeExternalAttributes(ex),
+);
+
+private validExternalArgumentType?(type)
+    = symbolType?(typeSymbol(type)) and podType?(type);
+
+private initializeExternalAttributes(ex:RTExternal) {
+    var env = newEnv(ex.module);
+
+    var attributeValues = maybe(ex.ast.attributes,
+        attributes ref=> evaluateExprList(ex.ast.attributes, env),
+        () ref=> ValueList(),
+    );
+
+    var argumentTypes = ValueList(mapped(externalArgumentType, ex.arguments.items));
+    var returnType = maybe(ex.returns, returnExpr ref=> withLocation(returnExpr, () ref=> {
+        var returnType = evaluateExpr(returnExpr, env);
+        if (not validExternalArgumentType?(returnType))
+            genericError("external functions may only return values of POD types");
+        return Maybe(returnType);
+    }));
+
+    var symbolName = ex.name;
+    var abi = ABI_CDECL;
+
+    withLocation(ex.ast.attributes, () ref=> {
+        applyExternalAttributes(attributeValues, symbolName, abi);
+
+        if (abi != ABI_CDECL and ex.ast.arguments.variadic?)
+            genericError("only cdecl abi for external functions supports variadic arguments");
+    });
+
+    return ref just(ex.attributes);
+}
+
+private applyExternalAttributes(attributeValues, outSymbolName, outAbi) {
+    var gotName? = false;
+    var gotAbi?  = false;
+
+    for (value in attributeValues)
+        match(value,
+            StringValue, sv ref=> {
+                if (gotName?)
+                    genericError("multiple external symbol names specified for external function");
+                gotName? = true;
+                outSymbolName = sv.value; 
+            },
+            MatchDefault, x ref=> {
+                // XXX handle abi symbols
+                genericError("invalid external function attribute: ", x);
+            },
+        );
+}
+
+private externalArgumentType(arg:ast.ExternalArgument, env)
+    = withLocation(arg, () ref=> {
+        var argType = evaluateExpr(arg.type, env);
+        if (not validExternalArgumentType?(argType))
+            genericError("external functions may only take values of POD types as arguments");
+        return argType;
+    });
+
+
+
+//
 // analyzeMain
 //
 
@@ -123,7 +193,7 @@ private analyzeReturn(
     returnKind ref=> {
         switch (returnKind) {
         case ast.RETURN_EXPR_CONST:
-            if (source.value?)
+            if (localVariable?(source))
                 genericError("cannot return temporary as const reference");
             if (source.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot return rvalue as const reference");
@@ -133,7 +203,7 @@ private analyzeReturn(
                 );
             break;
         case ast.RETURN_EXPR_REF:
-            if (source.value?)
+            if (localVariable?(source))
                 genericError("cannot return temporary as ref reference");
             if (source.kind == RT_VARIABLE_RVALUE)
                 genericError("cannot return rvalue as ref reference");
@@ -141,7 +211,7 @@ private analyzeReturn(
                 genericError("cannot return const as ref reference");
             break;
         case ast.RETURN_EXPR_RVALUE:
-            if (source.value?)
+            if (localVariable?(source))
                 genericError("cannot return temporary as rvalue reference");
             if (source.kind == RT_VARIABLE_CONST)
                 genericError("cannot return const as rvalue reference");
@@ -151,7 +221,7 @@ private analyzeReturn(
                 );
             break;
         case ast.RETURN_EXPR_FORWARD:
-            if (source.value?) {
+            if (localVariable?(source)) {
                 if (source.kind != RT_VARIABLE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
                 return singleAddSpecializedBindReturn(s, rItem, source,
@@ -222,6 +292,8 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("multiple values cannot be used in single value context"),
     RTLabel, x ref=>
         genericAnalysisError("label cannot be used as a value"),
+    RTExternal, x ref=>
+        genericAnalysisError("external functions not yet supported"),
 );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
@@ -323,7 +395,7 @@ private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
     = maybe(analyzeBoolSubnode(s, env, expr.expr1),
         leftResults ref=> {
             var leftResult = singleVariable(leftResults);
-            var output = RTVariable(RT_VARIABLE_RVALUE, boolType(), true);
+            var output = RTVariable(RT_VARIABLE_RVALUE, boolType(), LocalRef());
 
             var ifNode = ir.If(ir.ASTNode(expr), leftResult,
                 Vector[ir.Node](),
@@ -414,6 +486,15 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
         },
     );
 
+private unifyIfExprReferent(thenv, elsev) {
+    if (thenv.kind == RT_VARIABLE_RVALUE and elsev.kind == RT_VARIABLE_RVALUE
+        and localVariable?(thenv) and localVariable?(elsev))
+
+        return RTVariableReferent(LocalRef());
+    else
+        return RTVariableReferent(AnyRef());
+}
+
 private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, elseS)
     = maybe(thenResult,
         thenr ref=> maybe(elseResult,
@@ -426,10 +507,10 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, else
 
                 if (thenv.kind == elsev.kind)
                     output = RTVariable(thenv.kind, thenv.type,
-                        thenv.value? and elsev.value? and thenv.kind == RT_VARIABLE_RVALUE
+                        unifyIfExprReferent(thenv, elsev),
                     );
                 else
-                    output = RTVariable(RT_VARIABLE_RVALUE, thenv.type, true);
+                    output = RTVariable(RT_VARIABLE_RVALUE, thenv.type, LocalRef());
 
                 addSpecializedBind(thenS, expr, thenv, output);
                 addSpecializedBind(elseS, expr, elsev, output);
@@ -1015,8 +1096,11 @@ private maybeAnalyzeBinding(s, env, stmt, kind, binding)
 
 private analyzeBindingVar(s, stmt, kind, name, value) {
     var variableKind = bindingVariableKind(kind, value.kind);
-    var variableValue? = kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE;
-    var result = RTVariable(variableKind, value.type, variableValue?, name);
+    var variableReferent = if (kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE)
+            RTVariableReferent(LocalRef())
+        else
+            RTVariableReferent(AnyRef());
+    var result = RTVariable(variableKind, value.type, variableReferent, name);
     addSpecializedBind(s, stmt, value, result);
     return result;
 }
@@ -1137,6 +1221,8 @@ private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("single value cannot be used in multiple value context"),
     RTLabel, x ref=>
         genericAnalysisError("label cannot be used as a value"),
+    RTExternal, x ref=>
+        genericAnalysisError("external functions not yet supported"),
 );
 
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
@@ -1212,7 +1298,7 @@ singleVariable(s:VariableList) {
     return s[0];
 }
 
-cloneVariable(v:RTVariable, ...name) = RTVariable(v.kind, v.type, v.value?, ...name);
+cloneVariable(v:RTVariable, ...name) = RTVariable(v.kind, v.type, v.referent, ...name);
 cloneVariables(vs:VariableList, ...name) = map(v ref=> cloneVariable(v, ...name), vs);
 overload cloneVariables(mvs:Maybe[VariableList])
     = maybe(mvs, vs => Maybe(cloneVariables(vs)));
@@ -1225,8 +1311,8 @@ genericAnalysisError(forward ...err) {
     return nothing(VariableList);
 }
 
-newValue(type, ...name) = RTVariable(RT_VARIABLE_RVALUE, type, true, ...name);
-newReference(kind, type, ...name) = RTVariable(kind, type, false, ...name);
+newValue(type, ...name) = RTVariable(RT_VARIABLE_RVALUE, type, LocalRef(), ...name);
+newReference(kind, type, ...name) = RTVariable(kind, type, AnyRef(), ...name);
 
 private procedure intValueType;
 overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism
@@ -1311,7 +1397,7 @@ addSpecializedCall(
 ) {
     var mResults = cloneVariables(specialization.results);
     var outputs = maybe(mResults,
-        results ref=> Maybe(map(r ref=> ir.OutputVariable(r, not r.value?), results))
+        results ref=> Maybe(map(r ref=> ir.OutputVariable(r, not localVariable?(r)), results))
     );
     addSpecializedNode(s, ir.Call(ir.ASTNode(ast), inputs, outputs, specialization));
     return mResults;
@@ -1464,7 +1550,7 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTVariable) 
         return false;
     var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
     var argName = argumentName(formalArg);
-    var v = RTVariable(loweredArgKind, arg.type, false, maybe(argName, name ref=> Maybe(name.str)));
+    var v = RTVariable(loweredArgKind, arg.type, AnyRef(), maybe(argName, name ref=> Maybe(name.str)));
     maybe(argName, name ref=> { envAdd(s.env, name, v); });
     push(s.args, v);
     return true;
@@ -1479,7 +1565,7 @@ private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
         if (not referenceKindMatches?(formalKind, arg.kind))
             return false;
         var loweredArgKind = loweredArgumentKind(formalKind, arg.kind);
-        var v = RTVariable(loweredArgKind, arg.type, false, argNameStr);
+        var v = RTVariable(loweredArgKind, arg.type, AnyRef(), argNameStr);
         push(vars, v);
         push(s.args, v);
     }
@@ -1508,7 +1594,7 @@ private bindNamedSingleReturn(s:Specialization, name, returnSpec) {
     var type = evaluateExpr(returnSpec.type, s.env);
     if (just?(returnSpec.kind))
         type = pointerType(type);
-    var v = RTVariable(RT_VARIABLE_REF, type, false, name);
+    var v = RTVariable(RT_VARIABLE_REF, type, AnyRef(), name);
     push(s.internalNamedResults, v);
     envAdd(s.env, name, v);
 }
@@ -1593,15 +1679,15 @@ private returnSpecKind(returnSpec: ast.ReturnSpec) {
     return ...maybe(returnSpec.kind,
         k => {
             switch (k) {
-            case ast.RETURN_CONST: return RT_VARIABLE_CONST, false;
-            case ast.RETURN_REF: return RT_VARIABLE_REF, false;
-            case ast.RETURN_RVALUE: return RT_VARIABLE_RVALUE, false;
+            case ast.RETURN_CONST: return RT_VARIABLE_CONST, RTVariableReferent(AnyRef());
+            case ast.RETURN_REF: return RT_VARIABLE_REF, RTVariableReferent(AnyRef());
+            case ast.RETURN_RVALUE: return RT_VARIABLE_RVALUE, RTVariableReferent(AnyRef());
             default :
                 assert(false);
-                return RTVariableKind(), false;
+                return RTVariableKind(), RTVariableReferent(AnyRef());
             }
         },
-        () => ...(RT_VARIABLE_RVALUE, true),
+        () => ...(RT_VARIABLE_RVALUE, RTVariableReferent(LocalRef())),
     );
 }
 
@@ -1610,16 +1696,16 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
     var results = VariableList();
     for (returnSpec in returns) {
         if (returnSpec.arityKind == ast.RETURN_SINGLE) {
-            var kind, value? = ...returnSpecKind(returnSpec);
+            var kind, referent = ...returnSpecKind(returnSpec);
             var type = evaluateExpr(returnSpec.type, env);
-            push(results, RTVariable(kind, type, value?));
+            push(results, RTVariable(kind, type, referent));
         }
         else {
             assert(returnSpec.arityKind == ast.RETURN_MULTI);
-            var kind, value? = ...returnSpecKind(returnSpec);
+            var kind, referent = ...returnSpecKind(returnSpec);
             var types = evaluateMultiExpr(returnSpec.type, env);
             for (type in types)
-                push(results, RTVariable(kind, type, value?));
+                push(results, RTVariable(kind, type, referent));
         }
     }
     return Maybe(move(results));
@@ -1655,6 +1741,8 @@ private analyzeCallableBody2(s:Specialization, env, o:Overload) {
                     return analyzeLiteralCodeBody(context, env, body);
                 },
                 ast.Block, body ref=> analyzeBlockCodeBody(context, env, body),
+                ast.UndefinedCodeBody,
+                    body ref=> genericAnalysisError("undefined overload"),
             );
 
             if (not complete?)

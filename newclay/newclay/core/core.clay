@@ -314,6 +314,7 @@ variant EnvEntry = Value
                  | ListPatternCell
                  | Alias
                  | ListAlias
+                 | RTExternal
                  | RTVariable
                  | RTListVariable
                  | RTLabel
@@ -928,6 +929,9 @@ overload printTo(stream, x:ModuleValue) {
 overload printTo(stream, x:Primitive) {
     printTo(stream, primitiveName(x.kind));
 }
+overload printTo(stream, x:AliasPrimitive) {
+    printTo(stream, primitiveName(x.kind));
+}
 
 [T | VariantMember?(Value, T)]
 overload printReprTo(stream, x:T) {
@@ -1003,6 +1007,33 @@ overload printTo(stream, x:ListPattern) {
 
 
 //
+// RTExternal
+//
+
+enum RTExternalABIKind {
+    ABI_CDECL,
+    ABI_STDCALL,
+    ABI_FASTCALL,
+    ABI_THISCALL
+}
+
+record RTExternalAttributes = referenceType(
+    symbolName: String,
+    abi: RTExternalABIKind,
+    variadic?: Bool,
+    argumentTypes: ValueList,
+    returnType: Maybe[Value],
+);
+
+record RTExternal = referenceType(
+    ast: ast.ExternalProcedure,
+    module: Module,
+    name: String,
+    attributes: Maybe[RTExternalAttributes],
+);
+
+
+//
 // RTVariable, RTListVariable
 //
 
@@ -1012,10 +1043,18 @@ enum RTVariableKind {
     RT_VARIABLE_RVALUE,
 }
 
+record AnyRef();
+record LocalRef();
+
+variant RTVariableReferent = AnyRef
+                           | LocalRef;
+
+overload RTVariableReferent() = RTVariableReferent(AnyRef());
+
 record RTVariable = referenceType(
     kind: RTVariableKind,
     type: Value,
-    value?: Bool,
+    referent: RTVariableReferent,
     name: Maybe[String],
 );
 
@@ -1030,8 +1069,11 @@ equalArguments?(vs:VariableList, ws:VariableList) {
     return true;
 }
 
+localVariable?(v:RTVariable) = variantIs?(v.referent, LocalRef);
+referenceVariable?(v:RTVariable) = variantIs?(v.referent, AnyRef);
+
 equalResult?(v:RTVariable, w:RTVariable)
-    = v.kind == w.kind and v.type == w.type and v.value? == w.value?;
+    = v.kind == w.kind and v.type == w.type and localVariable?(v) == localVariable?(w);
 
 equalResults?(vs:VariableList, ws:VariableList) {
     if (size(vs) != size(ws))
@@ -1043,14 +1085,17 @@ equalResults?(vs:VariableList, ws:VariableList) {
 }
 
 overload RTVariable(kind:RTVariableKind, type:Value) =
-    RTVariable(kind, type, false, nothing(String));
-overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool) =
-    RTVariable(kind, type, value?, nothing(String));
+    RTVariable(kind, type, AnyRef(), nothing(String));
+overload RTVariable(kind:RTVariableKind, type:Value, referent) =
+    RTVariable(kind, type, RTVariableReferent(referent), nothing(String));
 [S | String?(S)]
-overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool, forward name:S) =
-    RTVariable(kind, type, value?, Maybe(String(name)));
-overload RTVariable(kind:RTVariableKind, type:Value, value?:Bool, name:ast.Identifier) =
-    RTVariable(kind, type, value?, name.str);
+overload RTVariable(kind:RTVariableKind, type:Value, referent, forward name:S) =
+    RTVariable(kind, type, RTVariableReferent(referent), Maybe(String(name)));
+overload RTVariable(kind:RTVariableKind, type:Value, referent, name:ast.Identifier) =
+    RTVariable(kind, type, RTVariableReferent(referent), name.str);
+[R | VariantMember?(RTVariableReferent, R)]
+overload RTVariable(kind:RTVariableKind, type:Value, referent:R, name:Maybe[String]) =
+    RTVariable(kind, type, RTVariableReferent(referent), name);
 
 record RTListVariable = referenceType(
     vars: Vector[RTVariable],

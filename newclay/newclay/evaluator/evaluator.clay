@@ -370,7 +370,7 @@ symbolAttributes(x:Symbol) {
 evaluateMain() {
     var mainRef = ast.Expr(ast.NameRef(ast.Identifier("Main")));
     var mainCall = ast.Expr(ast.Call(mainRef, ast.ExprList()));
-    return evaluateMultiExpr(mainCall, getProgramMainModule());
+    return evaluateMultiExpr(mainCall, newEnv(getProgramMainModule()));
 }
 
 
@@ -565,6 +565,10 @@ overload envEntryToValue(x:ListAlias) {
     genericError("multi-value used in single value context");
     return Value();
 }
+overload envEntryToValue(x:RTExternal) {
+    genericError("external functions not available in static context");
+    return Value();
+}
 overload envEntryToValue(x:RTVariable) {
     return rtTypeToValue(x.type);
 }
@@ -573,7 +577,7 @@ overload envEntryToValue(x:RTListVariable) {
     return Value();
 }
 overload envEntryToValue(x:RTLabel) {
-    genericError("cannot reference label at compile time");
+    genericError("labels not available in static context");
     return Value();
 }
 
@@ -628,7 +632,7 @@ overload evaluateExprListItem(x:ast.UnpackExpr, env) {
 
 procedure evaluateMultiExpr;
 
-overload evaluateMultiExpr(x, env) {
+overload evaluateMultiExpr(x, env:Env) {
     genericError("single valued expression used in multi-value context");
     return ValueList();
 }
@@ -679,6 +683,10 @@ overload envEntryToValueList(x:Alias) {
 overload envEntryToValueList(x:ListAlias) {
     return evaluateMultiExprList(x.value, x.env);
 }
+overload envEntryToValueList(x:RTExternal) {
+    genericError("external functions not available in static context");
+    return ValueList();
+}
 overload envEntryToValueList(x:RTVariable) {
     genericError("single value used in multi-valued context");
     return ValueList();
@@ -687,7 +695,7 @@ overload envEntryToValueList(x:RTListVariable) {
     return ValueList(mapped(v => rtTypeToValue(v.type), x.vars));
 }
 overload envEntryToValueList(x:RTLabel) {
-    genericError("cannot reference label at compile time");
+    genericError("labels not available in static context");
     return ValueList();
 }
 
