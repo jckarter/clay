@@ -7,16 +7,16 @@ import maybe.*;
 record Frame = referenceType(
     parent: Frame,
     loop?: Bool,
-    liveValues: Vector[RTVariable],
+    liveValues: Vector[RTValue],
 );
 
-subframe(parent) = Frame(parent, false, Vector[RTVariable]());
-overload subframe(parent, loop?) = Frame(parent, loop?, Vector[RTVariable]());
+subframe(parent) = Frame(parent, false, Vector[RTValue]());
+overload subframe(parent, loop?) = Frame(parent, loop?, Vector[RTValue]());
 
 record LifetimeContext (
     statementFrame: Frame,
     blockFrame: Frame,
-    variableFrames: HashMap[RTVariable, Frame],
+    variableFrames: HashMap[RTValue, Frame],
 );
 
 procedure lifetimeAnalyzeNode;
@@ -40,8 +40,8 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Ca
     // the called function takes responsibility for its rvalue-kinded arguments
     assert(size(node.inputs) == size(node.specialization.args), "lifetime analysis invariant: call argument count must match called specialization");
     for (input, arg in zipped(node.inputs, node.specialization.args))
-        if (arg.kind == RT_VARIABLE_RVALUE) {
-            assert(input.kind == RT_VARIABLE_RVALUE, "lifetime analysis invariant: call rvalue argument must be given an rvalue");
+        if (arg.kind == RT_VALUE_RVALUE) {
+            assert(input.kind == RT_VALUE_RVALUE, "lifetime analysis invariant: call rvalue argument must be given an rvalue");
 
             removeValue(c, input);
         }
@@ -78,7 +78,7 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If
 
     // if a value was consumed in one branch, destroy it in the other
     // also, the context is currently in the else-branch state, so remove any then-consumed values
-    var cleanUpVariables = Vector[RTVariable]();
+    var cleanUpVariables = Vector[RTValue]();
 
     for (variable, frame in items(c.variableFrames)) {
         var thenConsumed? = null?(lookup(thenVariableFrames, variable));
@@ -191,7 +191,7 @@ private removeValue(c:LifetimeContext, input) {
 }
 
 private addValue(c:LifetimeContext, input) {
-    if (input.value? or input.kind == RT_VARIABLE_RVALUE)
+    if (input.value? or input.kind == RT_VALUE_RVALUE)
         addReference(c, input);
 }
 
@@ -211,7 +211,7 @@ private attractInputs(c:LifetimeContext, node) {
     for (input in ir.nodeInputs(node)) {
         if (podType?(input.type))
             continue;
-        if (input.kind != RT_VARIABLE_RVALUE)
+        if (input.kind != RT_VALUE_RVALUE)
             continue;
         removeValue(c, input);
         c.variableFrames[input] = c.statementFrame;
@@ -224,7 +224,7 @@ private destroyValue(dest:Vector[ir.Node], value) {
         return;
 
     // destroy always gets its argument as a "ref"
-    var destroyInput = RTVariable(RT_VARIABLE_REF, value.type, value.value?);
+    var destroyInput = RTValue(RT_VALUE_REF, value.type, value.value?);
     var destroyS = analyzeCallable(
         getHooks().destroyUnsafe,
         VariableList(destroyInput),
@@ -245,7 +245,7 @@ private destroyValue(dest:Vector[ir.Node], value) {
 private addCallOutputs(c:LifetimeContext, node:ir.Call) {
     maybe(node.specialization.results, results ref=> {
         for (output, result in zipped(ir.nodeOutputs(node), results)) {
-            if (result.kind == RT_VARIABLE_RVALUE)
+            if (result.kind == RT_VALUE_RVALUE)
                 addReference(c, output);
         }
     });
@@ -320,7 +320,7 @@ lifetimeAnalyzeSpecialization(s:Specialization) {
     var outBody = Vector[ir.Node]();
     withBlockFrame(c, outBody, () ref=> {
         for (internalArg, arg in zipped(s.internalArgs, s.args))
-            if (arg.kind == RT_VARIABLE_RVALUE)
+            if (arg.kind == RT_VALUE_RVALUE)
                 addReference(c, internalArg);
         lifetimeAnalyzeSubbody(c, outBody, just(s.body));
     });

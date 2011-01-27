@@ -569,10 +569,10 @@ overload envEntryToValue(x:RTExternal) {
     genericError("external functions not available in static context");
     return Value();
 }
-overload envEntryToValue(x:RTVariable) {
+overload envEntryToValue(x:RTValue) {
     return rtTypeToValue(x.type);
 }
-overload envEntryToValue(x:RTListVariable) {
+overload envEntryToValue(x:RTValueList) {
     genericError("multi-value used in single value context");
     return Value();
 }
@@ -687,11 +687,11 @@ overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
     return ValueList();
 }
-overload envEntryToValueList(x:RTVariable) {
+overload envEntryToValueList(x:RTValue) {
     genericError("single value used in multi-valued context");
     return ValueList();
 }
-overload envEntryToValueList(x:RTListVariable) {
+overload envEntryToValueList(x:RTValueList) {
     return ValueList(mapped(v => rtTypeToValue(v.type), x.vars));
 }
 overload envEntryToValueList(x:RTLabel) {
@@ -1622,13 +1622,13 @@ private argVariables(env, argsAst) {
 private refType(v) {
     var refSymbolHead = Value();
     switch (v.kind) {
-    case RT_VARIABLE_REF:
+    case RT_VALUE_REF:
         refSymbolHead = getHooks().Ref;
         break;
-    case RT_VARIABLE_CONST:
+    case RT_VALUE_CONST:
         refSymbolHead = getHooks().Const;
         break;
-    case RT_VARIABLE_RVALUE:
+    case RT_VALUE_RVALUE:
         refSymbolHead = getHooks().Rvalue;
         break;
     }
