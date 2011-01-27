@@ -1044,8 +1044,14 @@ private var optExternalAttributes = modify(
 
 private var externalArgumentList = modify(
     x => ExternalArgumentList(x.1 .0, just?(x.1 .1)),
-    sequence(punc(#"("), variadicListPair(argument, punc(#"...")), punc(#")")),
+    sequence(punc(#"("), variadicListPair(externalArgument, punc(#"...")), punc(#")")),
 );
+
+private var externalArgument = bounds(modify(
+    x => ExternalArgument(move(x.0), move(x.2)),
+    sequence(identifier, punc(#":"), expr),
+));
+
 
 // globalLiteralCodeBody
 
