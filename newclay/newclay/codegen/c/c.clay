@@ -96,7 +96,7 @@ functionIdentifier(s:Specialization) {
     interleave(s.args,
         () ref=> { printTo(identifier, ","); },
         a  ref=> {
-            printVariableKindTo(identifier, a.kind);
+            printRTValueKindTo(identifier, a.kind);
             printIdentifierTo(identifier, a.type);
         },
     );
@@ -168,7 +168,7 @@ private getConstant(c:CodegenContext, value:Value, definitionFn) {
 record CodegenBodyContext (
     s:Specialization,
     bodyVars:HashMap[RTValue, String],
-    bodyVarOrder:VariableList,
+    bodyVarOrder:RTValues,
     bodyCode:String,
     indent:Int,
     localNames:NameAllocator,
@@ -177,7 +177,7 @@ record CodegenBodyContext (
 overload CodegenBodyContext(s) = CodegenBodyContext(
     s,
     HashMap[RTValue, String](),
-    VariableList(),
+    RTValues(),
     String(),
     1,
     NameAllocator(),
@@ -972,7 +972,7 @@ private printStandaloneStubTo(stream, c, mainS) {
 }
 
 codegenStandaloneProgramTo(stream) {
-    var mainS = analyzeCallable(getHooks().callMain, VariableList());
+    var mainS = analyzeCallable(getHooks().callMain, RTValues());
 
     var mainResultsOk? = maybe(mainS.results,
         results => size(results) == 1 and results[0].type == int32Type(),

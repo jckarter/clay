@@ -1060,7 +1060,7 @@ record RTValue = referenceType(
 
 equalArgument?(v:RTValue, w:RTValue) = v.kind == w.kind and v.type == w.type;
 
-equalArguments?(vs:VariableList, ws:VariableList) {
+equalArguments?(vs:RTValues, ws:RTValues) {
     if (size(vs) != size(ws))
         return false;
     for (v, w in zipped(vs, ws))
@@ -1075,7 +1075,7 @@ referenceVariable?(v:RTValue) = variantIs?(v.referent, ReferenceVariable);
 equalResult?(v:RTValue, w:RTValue)
     = v.kind == w.kind and v.type == w.type and localVariable?(v) == localVariable?(w);
 
-equalResults?(vs:VariableList, ws:VariableList) {
+equalResults?(vs:RTValues, ws:RTValues) {
     if (size(vs) != size(ws))
         return false;
     for (v, w in zipped(vs, ws))
@@ -1119,17 +1119,17 @@ record RTLabel = referenceType(
 // Specialization, InvokeTable
 //
 
-alias VariableList = Vector[RTValue];
+alias RTValues = Vector[RTValue];
 
 record Specialization = referenceType(
     matchedOverload: Overload,
     callable: Value,
-    args: VariableList,
-    results: Maybe[VariableList],
+    args: RTValues,
+    results: Maybe[RTValues],
     env: Env,
     body: Maybe[Vector[ir.Node]],
-    internalArgs: VariableList,
-    internalNamedResults: VariableList,
+    internalArgs: RTValues,
+    internalNamedResults: RTValues,
 );
 
 overload Specialization(o:Overload, callable:Value) {
@@ -1150,7 +1150,7 @@ alias InvokeTable = HashMap[ArgumentList, InvokeEntry];
 // ArgumentList equality adapter
 //
 
-record ArgumentList(args:VariableList);
+record ArgumentList(args:RTValues);
 
 overload equals?(a:ArgumentList, b:ArgumentList)
     = equalArguments?(a.args, b.args);
@@ -1158,7 +1158,7 @@ overload equals?(a:ArgumentList, b:ArgumentList)
 overload hash(a:ArgumentList)
     = hash(map(arg => (arg.kind, arg.type), a.args));
 
-printVariableKindTo(stream, kind) {
+printRTValueKindTo(stream, kind) {
     switch (kind) {
     case RT_VALUE_REF:
         printTo(stream, "ref ");
@@ -1180,7 +1180,7 @@ overload printTo(stream, a:ArgumentList) {
     interleave(a.args,
         () ref=> { printTo(stream, ", "); },
         v ref=> {
-            printVariableKindTo(stream, v.kind);
+            printRTValueKindTo(stream, v.kind);
             printTo(stream, v.type);
         }
     );
@@ -1255,12 +1255,12 @@ record StaticCallEntry (
 
 record CallAnalysisEntry (
     callable: Value,
-    args: VariableList,
+    args: RTValues,
 );
 
 record CallCompilationEntry (
     callable: Value,
-    args: VariableList,
+    args: RTValues,
 );
 
 overload printTo(stream, x:StaticCallEntry) {
@@ -1293,12 +1293,12 @@ withStaticCall(callable:Value, args:ValueList, f) {
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withCallAnalysis(callable:Value, args:VariableList, f) {
+withCallAnalysis(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withCallCompilation(callable:Value, args:VariableList, f) {
+withCallCompilation(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallCompilationEntry(callable, args));
     return forward ...withCompilationEntry(move(entry), f);
 }

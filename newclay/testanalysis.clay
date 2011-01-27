@@ -223,12 +223,12 @@ printVars(depth, prefix, vars) {
     }
 }
 
-printInputsOutputs(depth, inputs:VariableList, mOutputs:Maybe[VariableList]) {
+printInputsOutputs(depth, inputs:RTValues, mOutputs:Maybe[RTValues]) {
     printVars(depth, "in  ", inputs);
     printOutputs(depth, mOutputs);
 }
 
-printOutputs(depth, mOutputs:Maybe[VariableList]) {
+printOutputs(depth, mOutputs:Maybe[RTValues]) {
     maybe(mOutputs,
         outputs ref=> {
             printVars(depth, "out ", outputs);
