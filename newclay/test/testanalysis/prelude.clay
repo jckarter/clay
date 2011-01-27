@@ -42,6 +42,7 @@ symbol LLBoolType = ();
 symbol LLIntegerType['Signed, 'Bits] = ();
 symbol LLFloatType['Bits] = ();
 symbol LLPointerType['T] = ();
+symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs] = ();
 symbol LLArrayType['T, 'n] = ();
 symbol LLTupleType[...'T] = ();
 symbol LLUnionType[...'T] = ();
@@ -130,6 +131,18 @@ symbol Pointer['T] = ();
 static overload TypeTemplate?(Pointer) = true;
 static overload Type?(Pointer['T]) = true;
 static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
+
+
+
+//
+// ExternalCodePointer[ABI, Inputs, Outputs]
+//
+
+symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs] = ();
+static overload TypeTemplate?(ExternalCodePointer) = true;
+static overload Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
+static overload ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
+    = LLExternalCodePointerType['A, 'V, 'I, 'O];
 
 
 
@@ -301,3 +314,14 @@ symbol Ref['T] = ();
 symbol Rvalue['T] = ();
 symbol Const['T] = ();
 
+//
+// ABI symbols
+//
+
+symbol CdeclABI = ();
+
+static ABI?('x) = false;
+static overload ABI?(CdeclABI) = true;
+
+static ABISupportsVariadics?('x) = false;
+static overload ABISupportsVariadics?(CdeclABI) = true;

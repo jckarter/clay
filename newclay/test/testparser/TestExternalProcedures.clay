@@ -1,0 +1,10 @@
+external abort();
+external puts(str:CString) Int;
+external printf(format:CString, ...) Int;
+
+external (stdcall) WSAStartup(version:UShort, wsaData:win32.LPWSADATA) win32.INT;
+
+external ("_write$UNIX2003") write(fildes:Int, buf:RawPointer, nbytes:SizeT) SSizeT;
+
+external foo() = 1;
+external foo() { return 2; }

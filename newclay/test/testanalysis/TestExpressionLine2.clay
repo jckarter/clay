@@ -1,0 +1,6 @@
+import __primitives__.*;
+
+main() {
+    alias a = 1;
+    return ...ExpressionLocation(a);
+}

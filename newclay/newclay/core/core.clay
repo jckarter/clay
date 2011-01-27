@@ -57,6 +57,7 @@ record ClayHooks (
     LLIntegerType: Value,
     LLFloatType: Value,
     LLPointerType: Value,
+    LLCodePointerType: Value,
     LLArrayType: Value,
     LLTupleType: Value,
     LLUnionType: Value,
@@ -75,6 +76,7 @@ record ClayHooks (
     Float64: Value,
     Static: Value,
     Pointer: Value,
+    ExternalCodePointer: Value,
     StringConstant: Value,
 
     Procedure?: Value,
@@ -83,6 +85,10 @@ record ClayHooks (
     Ref: Value,
     Const: Value,
     Rvalue: Value,
+
+    CdeclABI: Value,
+    ABI?: Value,
+    ABISupportsVariadics?: Value,
 
     plus: Value,
     minus: Value,
@@ -139,6 +145,10 @@ overload Module(program:Program, name:ModuleName) =
 
 overload printTo(stream, mod:Module) {
     printTo(stream, "module ", moduleNameString(mod.name));
+}
+
+overload printReprTo(stream, mod:Module) {
+    printTo(stream, "#<module ", moduleNameString(mod.name), ">");
 }
 
 
@@ -908,6 +918,8 @@ overload printTo(stream, x:TupleValue) {
     var commaOut = CommaListPrinter(&stream);
     for (element in x.elements)
         newItem(commaOut, element);
+    if (size(x.elements) == 1)
+        printTo(stream, ",");
     printTo(stream, ")");
 }
 overload printTo(stream, x:LambdaValue) {
@@ -1011,16 +1023,9 @@ overload printTo(stream, x:ListPattern) {
 // RTExternal
 //
 
-enum RTExternalABIKind {
-    ABI_CDECL,
-    ABI_STDCALL,
-    ABI_FASTCALL,
-    ABI_THISCALL
-}
-
 record RTExternalAttributes = referenceType(
     symbolName: String,
-    abi: RTExternalABIKind,
+    abi: Value,
     variadic?: Bool,
     argumentTypes: ValueList,
     returnType: Maybe[Value],
@@ -1032,6 +1037,10 @@ record RTExternal = referenceType(
     name: String,
     attributes: Maybe[RTExternalAttributes],
 );
+
+overload printTo(stream, x:RTExternal) {
+    printTo(stream, "external ", x.name);
+}
 
 
 //
@@ -1048,7 +1057,8 @@ record ReferenceVariable();
 record LocalVariable();
 
 variant RTValueReferent = ReferenceVariable
-                           | LocalVariable;
+                        | LocalVariable
+                        | RTExternal;
 
 overload RTValueReferent() = RTValueReferent(ReferenceVariable());
 
