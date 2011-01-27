@@ -79,6 +79,19 @@ private addSymbolItem(module, env, symbolItem) {
     });
 }
 
+private addExternalItem(module, env, externalItem) {
+    // XXX support external definitions as entry points
+    withLocation(externalItem.body, () ref=> {
+        if (not variantIs?(externalItem.body, ast.UndefinedCodeBody))
+            genericError("external function definitions are not yet supported");
+    });
+    withLocation(externalItem, () ref=> {
+        envAdd(env, externalItem.name,
+            RTExternal(externalItem, module, externalItem.name.str, nothing(RTExternalAttributes))
+        );
+    });
+}
+
 private initializeGlobals(module) {
     module.publicEnv  = newEnv();
     module.privateEnv = newEnv();
@@ -101,6 +114,13 @@ private initializeGlobals(module) {
                     module,
                     if (symbolItem.visibility == ast.VIS_PUBLIC) module.publicEnv else module.privateEnv,
                     symbolItem
+                );
+            },
+            ast.ExternalProcedure, externalItem ref=> {
+                addExternalItem(
+                    module,
+                    if (externalItem.visibility == ast.VIS_PUBLIC) module.publicEnv else module.privateEnv,
+                    externalItem
                 );
             },
             MatchDefault, x ref=> { },
