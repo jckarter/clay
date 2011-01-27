@@ -290,6 +290,7 @@ enum AliasPrimitiveKind {
     APRIM_RefType,
     APRIM_Type,
     APRIM_ExpressionString,
+    APRIM_ExpressionLocation,
 }
 
 record AliasPrimitive = referenceType(
@@ -1424,7 +1425,7 @@ arityError(expected, received) {
 
 arityError2(minExpected, received) {
     genericError(
-        "expected atleast ", minExpected, " ", valuesStr(minExpected),
+        "expected at least ", minExpected, " ", valuesStr(minExpected),
         ", but received ", received
     );
 }

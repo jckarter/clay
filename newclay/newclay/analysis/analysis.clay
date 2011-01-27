@@ -1249,7 +1249,7 @@ private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
                     inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
                 );
             } else {
-                var result = evaluateCall(callable, env, expr.args);
+                var result = evaluateCall(callable, env, expr);
                 return addSpecializedValueList(s, expr, result);
             }
         },
