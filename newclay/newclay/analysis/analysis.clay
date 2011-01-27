@@ -129,7 +129,7 @@ analyzeMain() {
     var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
     if (not runtimeCallable?(mainValue))
         genericError("main is not a procedure");
-    return analyzeCallable(mainValue, VariableList());
+    return analyzeCallable(mainValue, RTValues());
 }
 
 
@@ -155,11 +155,11 @@ analyzeNode(s:SpecializationContext, env:Env, body:ast.ExprCodeBody)
 //
 
 analyzeExprListNode(s, env, exprList) {
-    var outputs = VariableList();
+    var outputs = RTValues();
     for (item in exprList) {
         var itemOutputs = analyzeSubnode(s, env, item);
         if (nothing?(itemOutputs))
-            return nothing(VariableList);
+            return nothing(RTValues);
         push(outputs, just(itemOutputs));
     }
     return Maybe(outputs);
@@ -172,11 +172,11 @@ analyzeMultiExprListNode(s, env, exprList, multi?) {
 }
 
 overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ReturnExprList)
-    Maybe[VariableList]
+    Maybe[RTValues]
     = analyzeExprListNode(s, env, exprList);
 
 overload analyzeNode(s:SpecializationContext, env:Env, rItem:ast.ReturnExprListItem)
-    Maybe[VariableList]
+    Maybe[RTValues]
 {
     var results = analyzeSubnode(s, env, rItem.item);
     return maybe(results,
@@ -244,13 +244,13 @@ private analyzeReturn(
 // analyzeNode(ExprList; ExprListItem instances)
 //
 
-overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ExprList) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ExprList) Maybe[RTValues]
     = analyzeExprListNode(s, env, exprList);
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ExprListItem) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ExprListItem) Maybe[RTValues]
     = analyzeNode(s, env, *expr);
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[VariableList]
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[RTValues]
     = analyzeNode(s, env, *expr);
 
 overload analyzeNode(s:SpecializationContext, env:Env, unpack:ast.UnpackExpr)
@@ -277,7 +277,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
     = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.value)));
 
 private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
-    RTValue, x ref=> Maybe(VariableList(x)),
+    RTValue, x ref=> Maybe(RTValues(x)),
     Value, x ref=> addSpecializedValue(s, expr, x),
     ValueList, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
@@ -324,18 +324,18 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = withOneResult(analyzeCallNode(s, env, expr));
 
-private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:VariableList) {
+private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTValues) {
     return addSpecializedCall(s, ast, args, analyzeCallableWithOneResult(callable, args));
 }
 
-private analyzeCall(s:SpecializationContext, ast, callable:Value, args:VariableList) {
+private analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues) {
     return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
 }
 
 private ifStaticValue(s, env, tryExpr, thenFn, elseFn)
     = maybe(analyzeSubnode(s, env, tryExpr),
         results ref=> {
-            var result = singleVariable(results);
+            var result = singleValue(results);
             if (staticType?(result.type))
                 return thenFn(staticTypeValue(result.type));
             return elseFn(result);
@@ -358,7 +358,7 @@ private withOneResult(mResults) {
 private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
     return unlessStaticValue(s, env, expr, expr.expr,
         indexee ref=> maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
-            var operands = VariableList(indexee);
+            var operands = RTValues(indexee);
             push(operands, indexArgs);
             return analyzeCall(s, expr, getHooks().index, operands);
         }),
@@ -373,7 +373,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) 
         indexee ref=> {
             var indexValue = Value(parseIntLiteral(expr.index.value));
             var indexArg = singleAddSpecializedStaticValue(s, expr.index, indexValue);
-            var operands = VariableList(indexee, indexArg);
+            var operands = RTValues(indexee, indexArg);
             return analyzeCall(s, expr, getHooks().staticIndex, operands);
         }
     );
@@ -384,7 +384,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FieldRef) {
         indexee ref=> {
             var fieldValue = Value(StringValue(expr.field.str));
             var fieldArg = singleAddSpecializedStaticValue(s, expr, fieldValue);
-            var operands = VariableList(indexee, fieldArg);
+            var operands = RTValues(indexee, fieldArg);
             return analyzeCall(s, expr, getHooks().fieldRef, operands);
         }
     );
@@ -394,7 +394,7 @@ private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
     // XXX recursion
     = maybe(analyzeBoolSubnode(s, env, expr.expr1),
         leftResults ref=> {
-            var leftResult = singleVariable(leftResults);
+            var leftResult = singleValue(leftResults);
             var output = RTValue(RT_VALUE_RVALUE, boolType(), LocalVariable());
 
             var ifNode = ir.If(ir.ASTNode(expr), leftResult,
@@ -406,14 +406,14 @@ private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
             addSpecializedNode(leftS, ir.ValueList(
                 ir.ASTNode(expr),
                 ValueList(leftValue),
-                VariableList(output)
+                RTValues(output)
             ));
 
             var rightS = subContext(s, fieldRef(ifNode, RightBody));
             maybe(analyzeBoolSubnode(rightS, env, expr.expr2),
                 results2 ref=> {
                     addSpecializedBind(rightS, ir.ASTNode(expr),
-                        singleVariable(results2),
+                        singleValue(results2),
                         output
                     );
                 },
@@ -423,7 +423,7 @@ private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
             addRvalue(s, output);
             addSpecializedNode(s, ifNode);
 
-            return Maybe(VariableList(output));
+            return Maybe(RTValues(output));
         },
     );
 
@@ -436,8 +436,8 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.OrExpr)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.expr), input ref=> {
         var output = newValue(boolType());
-        addSpecializedNot(s, expr, singleVariable(input), output);
-        return Maybe(VariableList(output));
+        addSpecializedNot(s, expr, singleValue(input), output);
+        return Maybe(RTValues(output));
     });
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
@@ -446,15 +446,15 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.condition),
         condResult ref=> {
-            var ifNode = ir.If(ir.ASTNode(expr), singleVariable(condResult),
+            var ifNode = ir.If(ir.ASTNode(expr), singleValue(condResult),
                 Vector[ir.Node](),
                 Vector[ir.Node]()
             );
 
             var thenRecursive? = false;
             var elseRecursive? = false;
-            var thenResult = nothing(VariableList);
-            var elseResult = nothing(VariableList);
+            var thenResult = nothing(RTValues);
+            var elseResult = nothing(RTValues);
 
             var thenS = subContext(s, ifNode.thenBody);
             var elseS = subContext(s, ifNode.elseBody);
@@ -499,8 +499,8 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, else
     = maybe(thenResult,
         thenr ref=> maybe(elseResult,
             elser ref=> {
-                var thenv = singleVariable(thenr);
-                var elsev = singleVariable(elser);
+                var thenv = singleValue(thenr);
+                var elsev = singleValue(elser);
                 if (thenv.type != elsev.type)
                     genericError("return types in if expression branches do not match");
                 var output = RTValue();
@@ -516,7 +516,7 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, else
                 addSpecializedBind(elseS, expr, elsev, output);
                 addRvalue(s, output);
 
-                return Maybe(VariableList(output));
+                return Maybe(RTValues(output));
             },
             () ref=> thenResult,
         ),
@@ -528,12 +528,12 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
         var operatorCallable = Value();
         switch (expr.operator) {
         case ast.OP_ADDRESS_OF: {
-            var operand = singleVariable(operands);
+            var operand = singleValue(operands);
             if (operand.kind == RT_VALUE_RVALUE)
                 genericError("cannot take the address of an rvalue");
             var output = newValue(pointerType(operand.type));
             addSpecializedAddressOf(s, expr, operand, output);
-            return Maybe(VariableList(output));
+            return Maybe(RTValues(output));
         }
         case ast.OP_PLUS:
             operatorCallable = getHooks().plus;
@@ -554,7 +554,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
     = maybe(analyzeSubnode(s, env, expr.expr1), operands1 ref=>
         maybe(analyzeSubnode(s, env, expr.expr2), operands2 ref=> {
-            var operands = VariableList(singleVariable(operands1), singleVariable(operands2));
+            var operands = RTValues(singleValue(operands1), singleValue(operands2));
             var operatorCallable = Value();
 
             switch (expr.operator) {
@@ -611,7 +611,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
 
 private record ProcResult (
     statement: ast.ReturnStatement,
-    results: VariableList,
+    results: RTValues,
 );
 
 private record ProcContext (
@@ -648,10 +648,10 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
                         recursiveAnalysisError();
                     });
                 });
-                return nothing(VariableList);
+                return nothing(RTValues);
             } else {
                 if (size(pc.results) > 1) {
-                    var branches = Vector[VariableList](pc.results[0].results);
+                    var branches = Vector[RTValues](pc.results[0].results);
                     var results = cloneVariables(pc.results[0].results, "returned");
                     for (resultSet in slicedFrom(pc.results, 1)) {
                         withLocation(resultSet.statement, () ref=> {
@@ -675,7 +675,7 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
                 for (resultSet in pc.results)
                     if (not empty?(resultSet.results))
                         genericError("not all branches return in block");
-            return Maybe(VariableList());
+            return Maybe(RTValues());
         }
     });
 
@@ -748,7 +748,7 @@ private analyzeInitialize(s, env:Env, stmt) {
 }
 
 private singleAssign(s, stmt, op, toValue, fromValue) {
-    return nothing?(analyzeCall(s, stmt, op, VariableList(toValue, fromValue)));
+    return nothing?(analyzeCall(s, stmt, op, RTValues(toValue, fromValue)));
 }
 
 private multiAssign(s, stmt, op, toValues, fromValues) {
@@ -791,7 +791,7 @@ private analyzeAssign(s, env, stmt) {
             case 0:
                 return false;
             case 1:
-                return singleAssign(s, stmt, operatorCallable, singleVariable(toValues), singleVariable(fromValues));
+                return singleAssign(s, stmt, operatorCallable, singleValue(toValues), singleValue(fromValues));
             default:
                 return multiAssign(s, stmt, operatorCallable, toValues, fromValues);
             }
@@ -864,7 +864,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     try {
         maybe(analyzeSubnode(s, bc.env, stmt.value),
             exResult ref=> {
-                addSpecializedThrow(s, stmt, singleVariable(exResult));
+                addSpecializedThrow(s, stmt, singleValue(exResult));
             },
         );
     } catch (e:RecursiveAnalysisError) {
@@ -877,7 +877,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
     // XXX recursion with statements
     = maybe(analyzeBoolSubnode(s, bc.env, stmt.condition),
         condResult ref=> {
-            var ifNode = ir.If(ir.ASTNode(stmt), singleVariable(condResult),
+            var ifNode = ir.If(ir.ASTNode(stmt), singleValue(condResult),
                 Vector[ir.Node](),
                 Vector[ir.Node](),
             );
@@ -945,7 +945,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
     var loopS = loopSubContext(s, whileNode.conditionBody);
     return maybe(analyzeBoolSubnode(loopS, bc.env, stmt.condition),
         condResult ref=> {
-            whileNode.condition = singleVariable(condResult);
+            whileNode.condition = singleValue(condResult);
             useRvalue(loopS, whileNode.condition);
 
             var subbc = BlockContext(newEnv(bc.env));
@@ -1088,7 +1088,7 @@ overload analyzeStrictBindings(
 private maybeAnalyzeBinding(s, env, stmt, kind, binding)
     = maybe(analyzeSubnode(s, env, binding.value),
         valueResult ref=> {
-            analyzeBinding(s, env, stmt, kind, binding.name, singleVariable(valueResult));
+            analyzeBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
             return false;
         },
         () ref=> true,
@@ -1195,13 +1195,13 @@ overload analyzeStrictBindings(
 // analyzeMultiExprSubnode
 //
 
-private analyzeMultiExprSubnode(s, env, ast) Maybe[VariableList]
+private analyzeMultiExprSubnode(s, env, ast) Maybe[RTValues]
     = withLocation(ast, () ref=> analyzeMultiExprNode(s, env, ast));
 
 private analyzeMultiExprNode(s, env, ast)
     = genericAnalysisError("single value cannot be used in multiple value context");
 
-overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[VariableList]
+overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues]
     = analyzeMultiExprSubnode(s, env, *expr);
 
 private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
@@ -1254,7 +1254,7 @@ private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
             }
         },
         callableResult ref=> maybe(analyzeNode(s, env, expr.args), inputs ref=> {
-            var operands = VariableList(callableResult);
+            var operands = RTValues(callableResult);
             push(operands, inputs);
             return analyzeCall(s, expr, getHooks().call, operands);
         }),
@@ -1268,9 +1268,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Indexin
 // analyzeBoolSubnode
 //
 
-validBoolResult?(results:Maybe[VariableList])
+validBoolResult?(results:Maybe[RTValues])
     = maybe(results,
-        r => singleVariable(r).type == boolType(),
+        r => singleValue(r).type == boolType(),
         () => true
     );
 
@@ -1283,7 +1283,7 @@ analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
         return results;
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
-        return Maybe(VariableList(addRvalue(s, newValue(boolType()))));
+        return Maybe(RTValues(addRvalue(s, newValue(boolType()))));
     }
 });
 
@@ -1292,23 +1292,23 @@ analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
 // analyzeNode helpers
 //
 
-singleVariable(s:VariableList) {
+singleValue(s:RTValues) {
     if (size(s) != 1)
         genericError("multiple values cannot be used in single value context");
     return s[0];
 }
 
 cloneVariable(v:RTValue, ...name) = RTValue(v.kind, v.type, v.referent, ...name);
-cloneVariables(vs:VariableList, ...name) = map(v ref=> cloneVariable(v, ...name), vs);
-overload cloneVariables(mvs:Maybe[VariableList])
+cloneVariables(vs:RTValues, ...name) = map(v ref=> cloneVariable(v, ...name), vs);
+overload cloneVariables(mvs:Maybe[RTValues])
     = maybe(mvs, vs => Maybe(cloneVariables(vs)));
 
-analyzeSubnode(s:SpecializationContext, env:Env, ast) Maybe[VariableList]
+analyzeSubnode(s:SpecializationContext, env:Env, ast) Maybe[RTValues]
     = withLocation(ast, () ref=> analyzeNode(s, env, ast));
 
 genericAnalysisError(forward ...err) {
     genericError(...err);
-    return nothing(VariableList);
+    return nothing(RTValues);
 }
 
 newValue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
@@ -1362,26 +1362,26 @@ addSpecializedNodes(s:SpecializationContext, nodes:Vector[ir.Node]) {
 
 addSpecializedLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.LiteralCodeBody) {
     addSpecializedNode(s, ir.LiteralCodeBody(body, body.kind, ir.parseLiteralCodeBody(env, body.code)));
-    return Maybe(VariableList());
+    return Maybe(RTValues());
 }
 
 singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) {
     var output = valueToRTValue(value);
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), VariableList(output)));
+    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), RTValues(output)));
     return output;
 }
 
 addSpecializedValue(s, ast, value)
-    = Maybe(VariableList(singleAddSpecializedValue(s, ast, value)));
+    = Maybe(RTValues(singleAddSpecializedValue(s, ast, value)));
 
 singleAddSpecializedStaticValue(s:SpecializationContext, ast, value:Value) {
     var output = newValue(staticType(value));
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), VariableList(output)));
+    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), RTValues(output)));
     return output;
 }
 
 addSpecializedStaticValue(s, ast, value)
-    = Maybe(VariableList(singleAddSpecializedStaticValue(s, ast, value)));
+    = Maybe(RTValues(singleAddSpecializedStaticValue(s, ast, value)));
 
 addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
     var outputs = Vector(mapped(valueToRTValue, valueList));
@@ -1392,7 +1392,7 @@ addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
 addSpecializedCall(
     s:SpecializationContext,
     ast,
-    inputs:VariableList,
+    inputs:RTValues,
     specialization:Specialization
 ) {
     var mResults = cloneVariables(specialization.results);
@@ -1405,8 +1405,8 @@ addSpecializedCall(
 
 addSpecializedPhi(
     s:SpecializationContext,
-    branches:Vector[VariableList],
-    outputs:VariableList
+    branches:Vector[RTValues],
+    outputs:RTValues
 ) {
     addSpecializedNode(s, ir.Phi(branches, outputs));
     return Maybe(outputs);
@@ -1429,7 +1429,7 @@ addSpecializedBind(
     output:RTValue
 ) {
     addSpecializedNode(s, ir.Bind(ir.ASTNode(ast), input, output));
-    return Maybe(VariableList(output));
+    return Maybe(RTValues(output));
 }
 
 addSpecializedAddressOf(
@@ -1439,7 +1439,7 @@ addSpecializedAddressOf(
     output:RTValue
 ) {
     addSpecializedNode(s, ir.AddressOf(ir.ASTNode(ast), input, output));
-    return Maybe(VariableList(output));
+    return Maybe(RTValues(output));
 }
 
 addSpecializedNot(
@@ -1449,7 +1449,7 @@ addSpecializedNot(
     output:RTValue
 ) {
     addSpecializedNode(s, ir.Not(ir.ASTNode(ast), input, output));
-    return Maybe(VariableList(output));
+    return Maybe(RTValues(output));
 }
 
 addSpecializedThrow(
@@ -1458,7 +1458,7 @@ addSpecializedThrow(
     exception:RTValue
 ) {
     addSpecializedNode(s, ir.Throw(ast, exception));
-    return nothing(VariableList);
+    return nothing(RTValues);
 }
 
 addSpecializedInitialize(
@@ -1468,7 +1468,7 @@ addSpecializedInitialize(
     output:RTValue
 ) {
     addSpecializedNode(s, ir.Initialize(ir.ASTNode(ast), input, output));
-    return Maybe(VariableList(output));
+    return Maybe(RTValues(output));
 }
 
 
@@ -1558,7 +1558,7 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
 
 private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
-    var vars = VariableList();
+    var vars = RTValues();
     var argName = argumentName(formalArg);
     var argNameStr = maybe(argName, name ref=> Maybe(name.str));
     for (arg in args) {
@@ -1639,7 +1639,7 @@ private bindNamedReturns(s:Specialization) {
     );
 }
 
-matchOverload(o:Overload, callable:Value, args:VariableList) Maybe[Specialization] {
+matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
     ref formalArgs = o.ast.definition.args;
     if (not arityMatches?(formalArgs, args))
         return nothing(Specialization);
@@ -1693,7 +1693,7 @@ private returnSpecKind(returnSpec: ast.ReturnSpec) {
 
 private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
     // XXX handle noreturn syntax here
-    var results = VariableList();
+    var results = RTValues();
     for (returnSpec in returns) {
         if (returnSpec.arityKind == ast.RETURN_SINGLE) {
             var kind, referent = ...returnSpecKind(returnSpec);
@@ -1752,7 +1752,7 @@ private analyzeCallableBody2(s:Specialization, env, o:Overload) {
                 // if returns are named, the body should return void
                 var expectedResults =
                     if (namedReturns?)
-                        Maybe(VariableList())
+                        Maybe(RTValues())
                     else
                         s.results;
                 // declared returns,  actually returns  => return types must match
@@ -1810,16 +1810,16 @@ private callableInvokeTable(callable:Value) {
 // analyzeCallable[WithOneResult]
 //
 
-analyzeCallableWithOneResult(callable:Value, args:VariableList) {
+analyzeCallableWithOneResult(callable:Value, args:RTValues) {
     var spec = analyzeCallable(callable, args);
     withOneResult(spec.results);
     return spec;
 }
 
-analyzeCallable(callable:Value, args:VariableList) Specialization
+analyzeCallable(callable:Value, args:RTValues) Specialization
     = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));
 
-analyzeCallable2(callable:Value, args:VariableList) Specialization {
+analyzeCallable2(callable:Value, args:RTValues) Specialization {
     ref invokeTable = callableInvokeTable(callable);
     var entryPtr = lookup(invokeTable, ArgumentList(args));
     if (not null?(entryPtr))

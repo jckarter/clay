@@ -151,7 +151,7 @@ private lifetimeAnalyzeInitialize(c, dest, node) {
     assert(node.input.type == node.output.type, "lifetime analysis invariant: initialization input and output types must match");
     attractInputs(c, node);
     if (not podType?(node.input.type)) {
-        var initializeInputs = VariableList(node.output, node.input);
+        var initializeInputs = RTValues(node.output, node.input);
         var initializeS = analyzeCallable(
             getHooks().initializeFromUnsafe,
             initializeInputs,
@@ -227,14 +227,14 @@ private destroyValue(dest:Vector[ir.Node], value) {
     var destroyInput = RTValue(RT_VALUE_REF, value.type, value.value?);
     var destroyS = analyzeCallable(
         getHooks().destroyUnsafe,
-        VariableList(destroyInput),
+        RTValues(destroyInput),
     );
 
     assert(maybe(destroyS.results, results => empty?(results), () => true), "destroyUnsafe must return no values");
 
     var destroyNode = ir.Call(
         ir.ASTNode(Nothing()),
-        VariableList(value),
+        RTValues(value),
         Maybe(Vector[ir.OutputVariable]()),
         destroyS
     );

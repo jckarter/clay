@@ -4,8 +4,8 @@ import newclay.core.*;
 import newclay.hooks.*;
 import maybe.*;
 
-alias VariableMap = HashMap[RTValue, RTValue];
-alias VariableSet = HashMap[RTValue, Tuple[]];
+alias RTValueMap = HashMap[RTValue, RTValue];
+alias RTValueSet = HashMap[RTValue, Tuple[]];
 
 
 //
@@ -13,11 +13,11 @@ alias VariableSet = HashMap[RTValue, Tuple[]];
 //
 
 record CoalesceContext (
-    map:Pointer[VariableMap],
-    statementRvalues:VariableSet,
+    map:Pointer[RTValueMap],
+    statementRvalues:RTValueSet,
 );
 
-overload CoalesceContext(map:VariableMap) = CoalesceContext(&map, VariableSet());
+overload CoalesceContext(map:RTValueMap) = CoalesceContext(&map, RTValueSet());
 overload CoalesceContext(x:CoalesceContext);
 
 private addStatementRvalues(cc:CoalesceContext, node) {
@@ -80,7 +80,7 @@ coalesceInitialize(cc:CoalesceContext, from:RTValue, to:RTValue) {
 // coalesce pass
 
 coalesceBody(body:Vector[ir.Node]) {
-    var coalescingMap = VariableMap();
+    var coalescingMap = RTValueMap();
     var cc = CoalesceContext(coalescingMap);
 
     for (node in body)
@@ -140,7 +140,7 @@ overload coalesceNode(cc:CoalesceContext, node:ir.Phi) {
     }
 }
 
-private unifyBranchCoalescing(cmap:VariableMap, thenCmap:VariableMap, elseCmap:VariableMap) {
+private unifyBranchCoalescing(cmap:RTValueMap, thenCmap:RTValueMap, elseCmap:RTValueMap) {
     for (from, to in items(thenCmap))
         if (null?(lookup(cmap, from)) and null?(lookup(elseCmap, from)))
             cmap[from] = to;
@@ -151,7 +151,7 @@ private unifyBranchCoalescing(cmap:VariableMap, thenCmap:VariableMap, elseCmap:V
 
 // coalescing application pass
 
-coalesced(cmap:VariableMap, rtVar:RTValue) {
+coalesced(cmap:RTValueMap, rtVar:RTValue) {
     var cVar = rtVar;
     var cVarp = lookup(cmap, cVar);
     while (not null?(cVarp)) {
@@ -161,34 +161,34 @@ coalesced(cmap:VariableMap, rtVar:RTValue) {
     return cVar;
 }
 
-private coalescedVars(cmap:VariableMap, vs:VariableList)
+private coalescedVars(cmap:RTValueMap, vs:RTValues)
     = map(v ref=> coalesced(cmap, v), vs);
-overload coalescedVars(cmap:VariableMap, vs:Vector[ir.OutputVariable])
+overload coalescedVars(cmap:RTValueMap, vs:Vector[ir.OutputVariable])
     = map(o ref=> ir.OutputVariable(coalesced(cmap, o.value), o.returnByRef?), vs);
 [T]
-overload coalescedVars(cmap:VariableMap, mvs:Maybe[T])
+overload coalescedVars(cmap:RTValueMap, mvs:Maybe[T])
     = maybe(mvs, vs ref=> Maybe(coalescedVars(cmap, vs)));
 
 
-private coalescedNodes(cmap:VariableMap, nodes:Vector[ir.Node])
+private coalescedNodes(cmap:RTValueMap, nodes:Vector[ir.Node])
     = map(n ref=> makeCoalescedNode(cmap, *n), nodes);
 
 private makeCoalescedNode(cmap, n) = ir.Node(coalescedNode(cmap, n));
 
 private procedure coalescedNode;
 
-overload coalescedNode(cmap:VariableMap, node:ir.LiteralCodeBody) = node;
+overload coalescedNode(cmap:RTValueMap, node:ir.LiteralCodeBody) = node;
 
-overload coalescedNode(cmap:VariableMap, node:ir.Adopt) = ir.Adopt(coalesced(cmap, node.value));
+overload coalescedNode(cmap:RTValueMap, node:ir.Adopt) = ir.Adopt(coalesced(cmap, node.value));
 
-overload coalescedNode(cmap:VariableMap, node:ir.ValueList)
+overload coalescedNode(cmap:RTValueMap, node:ir.ValueList)
     = ir.ValueList(
         node.ast,
         node.valueList,
         coalescedVars(cmap, node.outputs),
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.Call)
+overload coalescedNode(cmap:RTValueMap, node:ir.Call)
     = ir.Call(
         node.ast,
         coalescedVars(cmap, node.inputs),
@@ -196,13 +196,13 @@ overload coalescedNode(cmap:VariableMap, node:ir.Call)
         node.specialization,
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.Block) ir.Block
+overload coalescedNode(cmap:RTValueMap, node:ir.Block) ir.Block
     = ir.Block(coalescedNodes(cmap, node.body));
 
-overload coalescedNode(cmap:VariableMap, node:ir.Statement) ir.Statement
+overload coalescedNode(cmap:RTValueMap, node:ir.Statement) ir.Statement
     = ir.Statement(coalescedNodes(cmap, node.body));
 
-overload coalescedNode(cmap:VariableMap, node:ir.If) ir.If
+overload coalescedNode(cmap:RTValueMap, node:ir.If) ir.If
     = ir.If(
         node.ast,
         coalesced(cmap, node.condition),
@@ -210,7 +210,7 @@ overload coalescedNode(cmap:VariableMap, node:ir.If) ir.If
         coalescedNodes(cmap, node.elseBody),
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.While) ir.While
+overload coalescedNode(cmap:RTValueMap, node:ir.While) ir.While
     = ir.While(
         node.ast,
         coalescedNodes(cmap, node.conditionBody),
@@ -218,10 +218,10 @@ overload coalescedNode(cmap:VariableMap, node:ir.While) ir.While
         coalescedNodes(cmap, node.body),
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.Phi)
+overload coalescedNode(cmap:RTValueMap, node:ir.Phi)
     = ir.Nop();
 
-overload coalescedNode(cmap:VariableMap, node:ir.Bind) {
+overload coalescedNode(cmap:RTValueMap, node:ir.Bind) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
     if (isNot?(cInput, cOutput))
@@ -232,21 +232,21 @@ overload coalescedNode(cmap:VariableMap, node:ir.Bind) {
         return ir.Node(ir.Nop());
 }
 
-overload coalescedNode(cmap:VariableMap, node:ir.Not)
+overload coalescedNode(cmap:RTValueMap, node:ir.Not)
     = ir.Not(
         node.ast,
         coalesced(cmap, node.input),
         coalesced(cmap, node.output),
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.AddressOf)
+overload coalescedNode(cmap:RTValueMap, node:ir.AddressOf)
     = ir.AddressOf(
         node.ast,
         coalesced(cmap, node.input),
         coalesced(cmap, node.output),
     );
 
-overload coalescedNode(cmap:VariableMap, node:ir.BindReturn) {
+overload coalescedNode(cmap:RTValueMap, node:ir.BindReturn) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
 
@@ -254,7 +254,7 @@ overload coalescedNode(cmap:VariableMap, node:ir.BindReturn) {
     return ir.BindReturn(node.ast, cInput, cOutput);
 }
 
-overload coalescedNode(cmap:VariableMap, node:ir.Initialize) {
+overload coalescedNode(cmap:RTValueMap, node:ir.Initialize) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
 
@@ -264,12 +264,12 @@ overload coalescedNode(cmap:VariableMap, node:ir.Initialize) {
         return ir.Node(ir.Initialize(node.ast, cInput, cOutput));
 }
 
-overload coalescedNode(cmap:VariableMap, node:ir.Break) = node;
-overload coalescedNode(cmap:VariableMap, node:ir.Continue) = node;
-overload coalescedNode(cmap:VariableMap, node:ir.Return) = node;
-overload coalescedNode(cmap:VariableMap, node:ir.Nop) = node;
+overload coalescedNode(cmap:RTValueMap, node:ir.Break) = node;
+overload coalescedNode(cmap:RTValueMap, node:ir.Continue) = node;
+overload coalescedNode(cmap:RTValueMap, node:ir.Return) = node;
+overload coalescedNode(cmap:RTValueMap, node:ir.Nop) = node;
 
-overload coalescedNode(cmap:VariableMap, node:ir.Throw)
+overload coalescedNode(cmap:RTValueMap, node:ir.Throw)
     = ir.Throw(node.ast, coalesced(cmap, node.exception));
 
 coalesceSpecialization(s:Specialization) {
@@ -306,7 +306,7 @@ private needsNamedReturnConversion?(s, results)
 
 private namedReturnConvertSpecialization(s:Specialization, results) {
     s.internalNamedResults = map(asNamedReturnVariable, results);
-    var namedResultMap = VariableMap();
+    var namedResultMap = RTValueMap();
     for (from, to in zipped(results, s.internalNamedResults))
         namedResultMap[from] = to;
 
@@ -324,9 +324,9 @@ private asNamedReturnVariable(result) = RTValue(
 );
 
 private procedure namedReturnConvertNode;
-overload namedReturnConvertNode(nmap:VariableMap, node) = ir.Node(node);
+overload namedReturnConvertNode(nmap:RTValueMap, node) = ir.Node(node);
 
-overload namedReturnConvertNode(nmap:VariableMap, node:ir.BindReturn) {
+overload namedReturnConvertNode(nmap:RTValueMap, node:ir.BindReturn) {
     assert(not null?(lookup(nmap, node.output)), "named return conversion invariant: return expression value must have corresponding named return");
     if (localVariable?(node.output))
         return ir.Node(ir.Initialize(node.ast, node.input, nmap[node.output]));
@@ -334,7 +334,7 @@ overload namedReturnConvertNode(nmap:VariableMap, node:ir.BindReturn) {
         return ir.Node(ir.AddressOf(node.ast, node.input, nmap[node.output]));
 }
 
-overload namedReturnConvertNode(nmap:VariableMap, node:ir.If) ir.Node
+overload namedReturnConvertNode(nmap:RTValueMap, node:ir.If) ir.Node
     = ir.Node(ir.If(
         node.ast,
         node.condition,
@@ -342,18 +342,18 @@ overload namedReturnConvertNode(nmap:VariableMap, node:ir.If) ir.Node
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.elseBody),
     ));
 
-overload namedReturnConvertNode(nmap:VariableMap, node:ir.While) ir.Node
+overload namedReturnConvertNode(nmap:RTValueMap, node:ir.While) ir.Node
     = ir.Node(ir.While(
         node.ast,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.conditionBody),
         node.condition,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
-overload namedReturnConvertNode(nmap:VariableMap, node:ir.Block) ir.Node
+overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Block) ir.Node
     = ir.Node(ir.Block(
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
-overload namedReturnConvertNode(nmap:VariableMap, node:ir.Statement) ir.Node
+overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Statement) ir.Node
     = ir.Node(ir.Statement(
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));

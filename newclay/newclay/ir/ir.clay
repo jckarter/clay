@@ -3,7 +3,7 @@ import newclay.core.(
     RTValue,
     Value,
     Specialization,
-    VariableList,
+    RTValues,
     ValueList as CoreValueList,
     genericError,
     privateLookup
@@ -62,7 +62,7 @@ record LiteralCodeBody = referenceType(
 record ValueList = referenceType(
     ast: ASTNode,
     valueList: CoreValueList,
-    outputs: VariableList,
+    outputs: RTValues,
 );
 
 record Block = referenceType(
@@ -75,7 +75,7 @@ record Statement = referenceType(
 
 record Call = referenceType(
     ast: ASTNode,
-    inputs: VariableList,
+    inputs: RTValues,
     outputs: Maybe[Vector[OutputVariable]],
     specialization: Specialization, // XXX how to evaluate recursive reference?
 );
@@ -107,8 +107,8 @@ record While = referenceType(
 );
 
 record Phi = referenceType(
-    branches: Vector[VariableList],
-    outputs: VariableList,
+    branches: Vector[RTValues],
+    outputs: RTValues,
 );
 
 record Bind = referenceType(
@@ -164,29 +164,29 @@ overload pushNode(body, n:T) { push(body, Node(n)); }
 procedure nodeOutputs;
 procedure nodeInputs;
 
-overload nodeOutputs(node) = VariableList();
+overload nodeOutputs(node) = RTValues();
 overload nodeOutputs(node:ValueList) = node.outputs;
 overload nodeOutputs(node:Call) = maybe(node.outputs,
     outputs => map(o => o.value, outputs),
-    () => VariableList()
+    () => RTValues()
 );
-overload nodeOutputs(node:Not) = VariableList(node.output);
-overload nodeOutputs(node:AddressOf) = VariableList(node.output);
-overload nodeOutputs(node:Bind) = VariableList(node.output);
+overload nodeOutputs(node:Not) = RTValues(node.output);
+overload nodeOutputs(node:AddressOf) = RTValues(node.output);
+overload nodeOutputs(node:Bind) = RTValues(node.output);
 // BindReturn and Initialize don't return their "output". The former's output is not really
 // available to other values, and the latter's output isn't actually a new value
 
 overload nodeOutputs(node:Node) = nodeOutputs(*node);
 
 
-overload nodeInputs(node) = VariableList();
+overload nodeInputs(node) = RTValues();
 overload nodeInputs(node:Call) = node.inputs;
-overload nodeInputs(node:If) = VariableList(node.condition);
-overload nodeInputs(node:Not) = VariableList(node.input);
-overload nodeInputs(node:AddressOf) = VariableList(node.input);
-overload nodeInputs(node:Bind) = VariableList(node.input);
-overload nodeInputs(node:Initialize) = VariableList(node.input);
-overload nodeInputs(node:Throw) = VariableList(node.exception);
+overload nodeInputs(node:If) = RTValues(node.condition);
+overload nodeInputs(node:Not) = RTValues(node.input);
+overload nodeInputs(node:AddressOf) = RTValues(node.input);
+overload nodeInputs(node:Bind) = RTValues(node.input);
+overload nodeInputs(node:Initialize) = RTValues(node.input);
+overload nodeInputs(node:Throw) = RTValues(node.exception);
 
 overload nodeInputs(node:Node) = nodeInputs(*node);
 
