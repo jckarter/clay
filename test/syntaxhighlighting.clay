@@ -142,7 +142,12 @@ labelTest:
 }
 
 [X, Y, ...Z | PatternGuard?()]
-callbyname moreKeywordsTest(...x);
+callbyname callbynameTest(x:X, y:Y, ...z:Z);
+
+external externalTest1(x:Int, y:Char) Float;
+external (stdcall) externalTest2(x:Int, y:Char);
+external (cdecl, "_externalTest3") externalTest3(x:Int, y:Char, ...);
+external ("_externalTest4", fastcall) externalTest4(x:Int, y:Char); 
 
 [| EmptyPatternGuard?()]
 operatorsTest() {
