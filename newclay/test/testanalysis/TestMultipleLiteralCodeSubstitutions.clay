@@ -1,0 +1,11 @@
+__c__ """
+int printf(char const *format, ...);
+""";
+
+printf(#'format, ...args) __c__ """
+    printf("$'format", $...args);
+""";
+
+main() {
+    printf(#"hello world %d %d %d", 1, 2, 3);
+}

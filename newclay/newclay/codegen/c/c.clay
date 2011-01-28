@@ -986,9 +986,15 @@ private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
 private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
     for (token in code) {
         match(token,
-            String,  s ref=> { printTo(stream, s); },
-            RTValue, v ref=> { genericError("invalid global literal code substitution value: ", v); },
-            Value,   v ref=> { printLiteralCodeValueTo(stream, *v); }
+            String,      s ref=> { printTo(stream, s); },
+            RTValue,     v ref=> {
+                genericError("invalid global literal code substitution value: ", v);
+            },
+            RTValueList, m ref=> {
+                genericError("invalid global literal code substitution value: ", m);
+            },
+            Value,       v ref=> { printLiteralCodeValueTo(stream, *v); },
+            ValueList,   m ref=> { printLiteralCodeValueListTo(stream, m); },
         );
     }
 }
@@ -996,11 +1002,31 @@ private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
 private printLiteralCodeTo(c, bc, code:ir.LiteralCode) {
     for (token in code) {
         match(token,
-            String,  s ref=> { printTo(bc.bodyCode, s); },
-            RTValue, v ref=> { printTo(bc.bodyCode, '(', valueDeref(c, bc, v), ')'); },
-            Value,   v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); }
+            String,      s ref=> { printTo(bc.bodyCode, s); },
+            RTValue,     v ref=> { printLiteralCodeRTValueTo(c, bc, v); },
+            Value,       v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); },
+            RTValueList, m ref=> { printLiteralCodeRTValueListTo(c, bc, m); },
+            ValueList,   m ref=> { printLiteralCodeValueListTo(bc.bodyCode, m); },
         );
     }
+}
+
+private printLiteralCodeRTValueListTo(c, bc, values:RTValueList) {
+    interleave(values.vars,
+        () ref=> { printTo(bc.bodyCode, ", "); },
+        v  ref=> { printLiteralCodeRTValueTo(c, bc, v); },
+    );
+}
+
+private printLiteralCodeValueListTo(stream, values:ValueList) {
+    interleave(values,
+        () ref=> { printTo(stream, ", "); },
+        v  ref=> { printLiteralCodeValueTo(stream, v); },
+    );
+}
+
+private printLiteralCodeRTValueTo(c, bc, v) {
+    printTo(bc.bodyCode, '(', valueDeref(c, bc, v), ')');
 }
 
 private procedure printLiteralCodeValueTo;
@@ -1008,6 +1034,7 @@ private procedure printLiteralCodeValueTo;
 overload printLiteralCodeValueTo(stream, x) {
     genericError("invalid literal code substitution value: ", x);
 }
+overload printLiteralCodeValueTo(stream, v:Value)       { printLiteralCodeValueTo(stream, *v); }
 overload printLiteralCodeValueTo(stream, i:IntValue)    { printTo(stream, Int64(i)); }
 overload printLiteralCodeValueTo(stream, s:StringValue) { printTo(stream, s.value); }
 overload printLiteralCodeValueTo(stream, c:CharValue)   { printTo(stream, Int(c.value)); }
