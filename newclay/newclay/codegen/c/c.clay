@@ -34,7 +34,14 @@ record CodegenConstant (
     definition:String, // const _clay__Type _clay_constant_x = ...;
 );
 
+enum CDialect { GCC_DIALECT, MSVC_DIALECT }
+
+record CodegenConfig (
+    dialect: CDialect,
+);
+
 record CodegenContext (
+    config: CodegenConfig,
     types: HashMap[Value, CodegenType],
     typeOrder: Vector[Value],
     functions: HashMap[Specialization, CodegenFunction],
@@ -45,6 +52,16 @@ record CodegenContext (
     externals: HashMap[String, RTExternal],
     externalOrder: Vector[String],
 );
+
+overload CodegenContext(config:CodegenConfig) x:CodegenContext {
+    x <-- CodegenContext();
+    try {
+        x.config = config;
+    } catch (ex) {
+        destroy(x);
+        throw ex;
+    }
+}
 
 
 //
@@ -450,7 +467,6 @@ overload codegenNode(c, bc, node:ir.BindReturn) {
 }
 
 overload codegenNode(c, bc, node:ir.Initialize) {
-    // XXX should initializeFrom other value rather than bitwise assign
     printToIndented(bc, valueDeref(c, bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
 }
 
@@ -475,19 +491,30 @@ overload codegenNode(c, bc, node:ir.Nop) {
 
 private cValue(c, value:Value) = match(value,
     BoolValue,   bv ref=> if (bv.value) String("1") else String("0"),
-    IntValue,    iv ref=> cIntValue(c, iv),
+    IntValue,    iv ref=> cIntegerValue(c, iv),
     FloatValue,  fv ref=> cFloatValue(c, fv),
     CharValue,   cv ref=> printString(Int(cv.value)),
     StringValue, sv ref=> cStringValue(c, sv),
     MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
 );
 
-private cIntValue(c, iv) = match(iv,
+private cInt64Suffix(c) {
+    switch (c.config.dialect) {
+    case GCC_DIALECT:
+        return "ll";
+    case MSVC_DIALECT:
+        return "i64";
+    default:
+        assert(false);
+        return "";
+    }
+}
+
+private cIntegerValue(c, iv) = match(iv,
     // XXX polymorphic static ints
     StaticIntValue, s ref=> printString(s.value),
-    // XXX need to be dialect/type system aware for 64-bit
-    Int64, n ref=> printString(n, "ll"),
-    UInt64, n ref=> printString(n, "ull"),
+    Int64, n ref=> printString(n, cInt64Suffix(c)),
+    UInt64, n ref=> printString(n, "u", cInt64Suffix(c)),
     UInt32, n ref=> printString(n, "u"),
     MatchDefault, n ref=> printString(n),
 );
@@ -501,7 +528,7 @@ private cFloatConstant(c, fv) = ref getConstant(c, Value(fv), constant ref=>
         // XXX dialect/type system awareness for 64-bit int
         Float64, n ref=> printString(
             "static const union _clay_Float64Constant ", constant.mangledName, " = { 0x",
-            rightAlignedWith(16, '0', hex(floatBits(n))), "ull };"
+            rightAlignedWith(16, '0', hex(floatBits(n))), "u", cInt64Suffix(c), " };"
         ),
     ),
 );
@@ -788,8 +815,19 @@ private codegenCodePointerType(c, type, llType, definition) {
     printlnTo(definition, ";");
 }
 
+private cInt64Type(c) {
+    switch (c.config.dialect) {
+    case GCC_DIALECT:
+        return "long long int";
+    case MSVC_DIALECT:
+        return "__int64";
+    default:
+        assert(false);
+        return "";
+    }
+}
+
 private cIntegerType(c, signed?:Bool, bits) {
-    // XXX assumes LP32, LP64, or LLP64 type system
     switch (bits) {
     case 8:
         return withSigned(signed?, "char");
@@ -798,9 +836,7 @@ private cIntegerType(c, signed?:Bool, bits) {
     case 32:
         return withSigned(signed?, "int");
     case 64:
-        // XXX in msvc dialect long long is __int64
-        // XXX strict ansi dialect?
-        return withSigned(signed?, "long long int");
+        return withSigned(signed?, cInt64Type(c));
     default:
         genericError("integer type with ", bits, " bits not supported");
         return String();
@@ -1046,8 +1082,8 @@ overload printLiteralCodeValueTo(stream, b:BoolValue)   { printTo(stream, if (b.
 // codegenFromEntryPoints
 //
 
-codegenFromEntryPoints(entryPoints:Vector[Specialization]) {
-    var c = CodegenContext();
+codegenFromEntryPoints(config:CodegenConfig, entryPoints:Vector[Specialization]) {
+    var c = CodegenContext(config);
 
     codegenFunctionsToFixedPoint(c, entryPoints);
     codegenTypesToFixedPoint(c);
@@ -1113,7 +1149,7 @@ private printStandaloneStubTo(stream, c, mainS) {
     printlnTo(stream, "}");
 }
 
-codegenStandaloneProgramTo(stream) {
+codegenStandaloneProgramTo(config:CodegenConfig, stream) {
     var mainS = analyzeCallable(getHooks().callMain, RTValues());
 
     var mainResultsOk? = maybe(mainS.results,
@@ -1124,7 +1160,7 @@ codegenStandaloneProgramTo(stream) {
     if (not mainResultsOk?)
         genericError("callMain() must return an Int");
 
-    var c = codegenFromEntryPoints(Vector[Specialization](mainS));
+    var c = codegenFromEntryPoints(config, Vector[Specialization](mainS));
     printCodegenTo(stream, c);
     printStandaloneStubTo(stream, c, mainS);
 }

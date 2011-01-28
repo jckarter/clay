@@ -10,8 +10,8 @@ import newclay.codegen.c.*;
 import maybe.*;
 
 main(args) {
-    if (size(args) != 2) {
-        println("usage: ", args[0], " <file>");
+    if (size(args) < 2) {
+        println("usage: ", args[0], " <file> [msvc|gcc]");
         return -1;
     }
     try {
@@ -19,7 +19,22 @@ main(args) {
         withProgram(program, () ref=> {
             initializeClayHooks();
 
-            codegenStandaloneProgramTo(stdout);
+            var dialect = GCC_DIALECT;
+            if (size(args) >= 3) {
+                switch (args[2]) {
+                case "gcc":
+                    dialect = GCC_DIALECT;
+                    break;
+                case "msvc":
+                    dialect = MSVC_DIALECT;
+                    break;
+                default:
+                    error("unknown C dialect ", args[2]);
+                    break;
+                }
+            }
+
+            codegenStandaloneProgramTo(CodegenConfig(dialect), stdout);
         });
     }
     catch (e:ClayError) {
