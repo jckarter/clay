@@ -87,6 +87,7 @@ record ClayHooks (
     Rvalue: Value,
 
     CdeclABI: Value,
+    StdcallABI: Value,
     ABI?: Value,
     ABISupportsVariadics?: Value,
 

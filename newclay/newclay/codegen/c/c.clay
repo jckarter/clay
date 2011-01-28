@@ -275,7 +275,7 @@ codegenFunction(c:CodegenContext, s:Specialization) {
 private printLocalDefinitionTo(stream, c, bc, a) {
     printTo(stream, typeName(c, a.type), " ");
     assert(variable?(a));
-    if (localVariable?(a))
+    if (referenceVariable?(a))
         printTo(stream, '*');
     printTo(stream, localName(bc, a));
 }
@@ -809,8 +809,9 @@ private codegenCodePointerType(c, type, llType, definition) {
     maybe(outputType, o ref=>{ addTypePrimitiveDependency(c, type, o); });
 
     printTo(definition, "typedef ");
-    printFunctionTypeTo(definition, c, abi, variadic?, inputTypes, outputType,
-        "(*", type.mangledName, ")"
+    printFunctionTypeTo(definition, c, true,
+        abi, variadic?, inputTypes, outputType,
+        type.mangledName,
     );
     printlnTo(definition, ";");
 }
@@ -976,13 +977,44 @@ private printFunctionDefinitionsTo(stream, c:CodegenContext) {
 // printFunctionTypeTo, printExternalDeclarationTo
 //
 
-private printFunctionTypeTo(stream, c, abi, variadic?, inputTypes, outputType, forward ...name) {
-    // XXX add abi annotation
+private functionABI(c, abi) {
+    if (abi == getHooks().CdeclABI)
+        return String();
+    else if (abi == getHooks().StdcallABI)
+        return functionABI2(c, "stdcall");
+    else {
+        genericError("unsupported ABI value ", abi);
+        return String();
+    }
+}
+
+private functionABI2(c, name) {
+    switch (c.config.dialect) {
+    case GCC_DIALECT:
+        return "__attribute__((" + name + ")) ";
+    case MSVC_DIALECT:
+        return "__" + name + " ";
+    default:
+        assert(false);
+        return String();
+    }
+}
+
+private printFunctionTypeTo(stream, c, pointer?, abi, variadic?, inputTypes, outputType, name) {
     var returnTypeName = maybe(outputType,
         type ref=> typeName(c, type),
         ()   ref=> String("void"),
     );
-    printTo(stream, returnTypeName, ' ', ...name, '(');
+    printTo(stream, returnTypeName, ' ');
+    if (pointer?)
+        printTo(stream, '(');
+    printTo(stream, functionABI(c, abi));
+    if (pointer?)
+        printTo(stream, '*');
+    printTo(stream, name);
+    if (pointer?)
+        printTo(stream, ')');
+    printTo(stream, '(');
 
     if (empty?(inputTypes))
         printTo(stream, if (variadic?) "..." else "void");
@@ -1003,7 +1035,7 @@ private printFunctionTypeTo(stream, c, abi, variadic?, inputTypes, outputType, f
 private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
     ref attributes = externalAttributes(ex);
 
-    printFunctionTypeTo(stream, c,
+    printFunctionTypeTo(stream, c, false,
         attributes.abi,
         attributes.variadic?,
         attributes.argumentTypes,
