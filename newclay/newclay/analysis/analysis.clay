@@ -353,20 +353,14 @@ private analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues)
     return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
 }
 
-private ifStaticValue(s, env, tryExpr, thenFn, elseFn)
-    = maybe(analyzeSubnode(s, env, tryExpr),
+private ifStaticValue(s, env, expr, thenFn, elseFn)
+    = maybe(analyzeSubnode(s, env, expr),
         results ref=> {
             var result = singleValue(results);
             if (staticType?(result.type))
                 return thenFn(staticTypeValue(result.type));
             return elseFn(result);
         },
-    );
-
-private unlessStaticValue(s, env, fullExpr, tryExpr, fn)
-    = ifStaticValue(s, env, tryExpr,
-        value ref=> addSpecializedValue(s, fullExpr, evaluateExpr(fullExpr, env)),
-        fn
     );
 
 private withOneResult(mResults) {
@@ -377,7 +371,10 @@ private withOneResult(mResults) {
 }
 
 private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
-    return unlessStaticValue(s, env, expr, expr.expr,
+    return ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> addSpecializedValue(s, expr,
+            evaluateIndexing(staticIndexee, evaluateExprList(expr.args, env))
+        ),
         indexee ref=> maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
             var operands = RTValues(indexee);
             push(operands, indexArgs);
@@ -390,7 +387,10 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = withOneResult(analyzeIndexing(s, env, expr));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) {
-    return unlessStaticValue(s, env, expr, expr.expr,
+    return ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> addSpecializedValue(s, expr,
+            evaluateIndexing(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
+        ),
         indexee ref=> {
             var indexValue = Value(parseIntLiteral(expr.index.value));
             var indexArg = singleAddSpecializedStaticValue(s, expr.index, indexValue);
@@ -401,7 +401,10 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) 
 }
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FieldRef) {
-    return unlessStaticValue(s, env, expr, expr.expr,
+    return ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> addSpecializedValue(s, expr,
+            evaluateFieldRef(staticIndexee, Value(StringValue(expr.field.str)))
+        ),
         indexee ref=> {
             var fieldValue = Value(StringValue(expr.field.str));
             var fieldArg = singleAddSpecializedStaticValue(s, expr, fieldValue);
