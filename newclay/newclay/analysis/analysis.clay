@@ -58,7 +58,7 @@ private useBranchRvalues(s, branchS1, branchS2) {
 externalRTValue(x:RTExternal) {
     var attrs = externalAttributes(x);
     var type = externalCodePointerType(attrs.abi, attrs.variadic?, attrs.argumentTypes, attrs.returnType);
-    return RTValue(RT_VALUE_RVALUE, type, x, x.name);
+    return RTValue(RT_VALUE_CONST, type, x, x.name);
 }
 
 externalAttributes(ex:RTExternal) = ref maybe(ex.attributes,

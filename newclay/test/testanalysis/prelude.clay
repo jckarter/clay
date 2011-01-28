@@ -295,9 +295,9 @@ symbol call = NewProcedure();
 // destroyUnsafe, initializeFromUnsafe
 //
 
-primitiveCopy(ref y, x) __c__ """$y = $x;""";
+primitiveCopy(ref y, forward x) __c__ """$y = $x;""";
 
-initializeFromUnsafe(ref y, x) { primitiveCopy(y, x); }
+initializeFromUnsafe(ref y, forward x) { primitiveCopy(y, x); }
 destroyUnsafe(ref x) {}
 
 //
@@ -325,3 +325,17 @@ static overload ABI?(CdeclABI) = true;
 
 static ABISupportsVariadics?('x) = false;
 static overload ABISupportsVariadics?(CdeclABI) = true;
+
+//
+// sample non-POD type
+//
+
+symbol NontrivialInt = NewPrimitiveType();
+static overload ToLowLevelType(NontrivialInt) = LLIntegerType[LLSigned, 32];
+static overload PODType?(NontrivialInt) = false;
+
+toNontrivialInt(x:Int32) y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) y:Int32 { primitiveCopy(y, x); }
+
+overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
+overload destroyUnsafe(ref i:NontrivialInt) { }
