@@ -114,7 +114,7 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Bi
     assert(false, "lifetime analysis invariant: bind-return must be eliminated by optimizer");
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Bind) {
-    if (node.output.value?)
+    if (localVariable?(node.output))
         lifetimeAnalyzeInitialize(c, dest, node);
     else {
         attractInputs(c, node);
@@ -191,7 +191,7 @@ private removeValue(c:LifetimeContext, input) {
 }
 
 private addValue(c:LifetimeContext, input) {
-    if (input.value? or input.kind == RT_VALUE_RVALUE)
+    if (localVariable?(input) or input.kind == RT_VALUE_RVALUE)
         addReference(c, input);
 }
 
@@ -224,7 +224,7 @@ private destroyValue(dest:Vector[ir.Node], value) {
         return;
 
     // destroy always gets its argument as a "ref"
-    var destroyInput = RTValue(RT_VALUE_REF, value.type, value.value?);
+    var destroyInput = RTValue(RT_VALUE_REF, value.type, value.referent);
     var destroyS = analyzeCallable(
         getHooks().destroyUnsafe,
         RTValues(destroyInput),
