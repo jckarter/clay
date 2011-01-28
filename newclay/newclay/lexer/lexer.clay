@@ -20,6 +20,7 @@ enum TokenKind {
     CHAR_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
+    STATIC_INDEX,
     LITERAL_CODE,
     SPACE,
     COMMENT,

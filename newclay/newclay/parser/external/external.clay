@@ -360,9 +360,14 @@ private var indexingSuffix = exprParser(
     sequence(punc(#"["), optExprList, punc(#"]")),
 );
 
+private intLiteralFromStaticIndexToken(data) {
+    assert(size(data) > 1 and data[0] == '.', "static index token must begin with .");
+    return String(slicedFrom(data, 1));
+}
+
 private var staticIndexingSuffix = exprParser(
-    x => StaticIndexing(Expr(), IntLiteral(String(x.1))),
-    sequence(punc(#"."), tokenData(INT_LITERAL)),
+    x => StaticIndexing(Expr(), IntLiteral(intLiteralFromStaticIndexToken(x))),
+    tokenData(STATIC_INDEX),
 );
 
 private var fieldRefSuffix = exprParser(
