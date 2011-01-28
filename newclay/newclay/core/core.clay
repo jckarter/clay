@@ -277,6 +277,9 @@ enum PrimitiveKind {
     PRIM_StaticSymbolAttributes,
 
     PRIM_StaticModuleMember,
+
+    PRIM_StaticError,
+    PRIM_StaticAssert,
 }
 
 record Primitive = referenceType(
@@ -1378,10 +1381,30 @@ record GenericError = semanticError(
 
 instance SemanticError = GenericError;
 
+record StaticError = semanticError(
+    values:ValueList
+);
+
+instance SemanticError = StaticError;
+
 overload displayError(e:GenericError) {
     displaySemanticError(e.locationStack, e.compilationStack, e.msg);
 }
 
+overload displayError(e:StaticError) {
+    displaySemanticError(e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
+}
+
+private record PresentStaticErrorValues(values:ValueList);
+overload printTo(stream, x:PresentStaticErrorValues) {
+    for (value in x.values)
+        match(value,
+            StringValue, sv ref=> { printTo(stream, sv.value); },
+            IntValue, iv ref=> { printTo(stream, Int64(iv)); },
+            CharValue, cv ref=> { printTo(stream, cv.value); },
+            MatchDefault, x ref=> { printTo(stream, x); },
+        );
+}
 
 record RecursiveAnalysisError = semanticError(
 );

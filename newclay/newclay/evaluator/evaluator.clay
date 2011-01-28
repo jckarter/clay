@@ -1217,10 +1217,14 @@ verifyPatternVars(pvars:PatternVars, env:Env) {
 }
 
 testPredicate(predicate:Maybe[ast.Expr], env) {
-    return maybe(predicate,
-        pred => evaluateBool(pred, env),
-        () => true,
-    );
+    try {
+        return maybe(predicate,
+            pred => evaluateBool(pred, env),
+            () => true,
+        );
+    } catch (e:StaticError) {
+        return false;
+    }
 }
 
 
@@ -1312,13 +1316,15 @@ memoizeStaticCall(evalTable, program, callable, args) {
 }
 
 evaluateStaticCall(program, callable, args) {
-    for (x in reversed(program.allStaticOverloads)) {
-        var result = matchStaticOverload(x, callable, args);
-        if (just?(result))
-            return evaluateExprList(x.ast.definition.body, just(result));
-    }
-    genericError("no matching operation");
-    return ValueList();
+    return withStaticCall(callable, args, () ref=> {
+        for (x in reversed(program.allStaticOverloads)) {
+            var result = matchStaticOverload(x, callable, args);
+            if (just?(result))
+                return evaluateExprList(x.ast.definition.body, just(result));
+        }
+        genericError("no matching operation");
+        return ValueList();
+    });
 }
 
 
@@ -1616,6 +1622,22 @@ evaluatePrimitive(kind, args) {
         return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
     }
 
+    case PRIM_StaticError : {
+        throw StaticError(args);
+    }
+
+    case PRIM_StaticAssert : {
+        if (empty?(args))
+            genericError("StaticAssert requires at least one argument");
+        if (args[0] == Value(BoolValue(false))) {
+            if (size(args) == 1)
+                throw StaticError(ValueList(StringValue(String("assertion failure"))));
+            else
+                throw StaticError(ValueList(slicedFrom(args, 1)));
+        }
+        return ValueList(TupleValue());
+    }
+
     default : {
         assert(false, "invalid primitive");
         return ValueList();
@@ -1672,9 +1694,11 @@ private expressionStringAst3(argsAst, entry:EnvEntry)
 
 evaluateAliasPrimitive(kind, env, callAst) {
     switch (kind) {
+
     case APRIM_Returns? : {
         return ValueList(BoolValue(just?(argVariables(env, callAst.args))));
     }
+
     case APRIM_Type : {
         return maybe(argVariables(env, callAst.args),
             vars ref=> ValueList(map(v => v.type, vars)),
