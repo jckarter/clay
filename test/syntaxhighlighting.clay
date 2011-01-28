@@ -141,6 +141,10 @@ labelTest:
     alias s = z;
 }
 
+[X, Y, ...Z | PatternGuard?()]
+callbyname moreKeywordsTest(...x);
+
+[| EmptyPatternGuard?()]
 operatorsTest() {
     not x;
     +x;
@@ -149,6 +153,7 @@ operatorsTest() {
     &x;
     *x;
     x.0;
+    x.0.1.2;
     x.y;
     x[y];
     x[y, z, w];
@@ -314,6 +319,10 @@ valueTest() {
     -5.3e+1;
     -5.3e-1;
 
+    1.2e3f;
+    1.2e3f32;
+    1.2e3f64;
+
     "str ing";
     " str ing";
     "str ing ";
@@ -321,7 +330,7 @@ valueTest() {
     "string\\";
     "string\\\"";
     "string\\\\";
-    " \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+    " \x00 \x7F \123 \t \r \n \a \b \f \v \" \\ ";
     "//";
     "/*";
     "
@@ -357,7 +366,7 @@ string
     #"symbol\\";
     #"symbol\\\"";
     #"symbol\\\\";
-    #" \x00 \x7F \t \r \n \a \b \f \v \" \\ ";
+    #" \x00 \x7F \123 \t \r \n \a \b \f \v \" \\ ";
     #"//";
     #"/*";
 
