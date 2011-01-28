@@ -319,9 +319,11 @@ symbol Const['T] = ();
 //
 
 symbol CdeclABI = ();
+symbol StdcallABI = ();
 
 static ABI?('x) = false;
 static overload ABI?(CdeclABI) = true;
+static overload ABI?(StdcallABI) = true;
 
 static ABISupportsVariadics?('x) = false;
 static overload ABISupportsVariadics?(CdeclABI) = true;
