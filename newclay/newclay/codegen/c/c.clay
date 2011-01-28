@@ -80,6 +80,14 @@ printIdentifierTo(stream, value:Value) {
             }
         },
         Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
+        TupleValue, t ref=> {
+            printTo(stream, '(');
+            interleave(t.elements,
+                () ref=> { printTo(stream, ","); },
+                p  ref=> { printIdentifierTo(stream, p); },
+            );
+            printTo(stream, ')');
+        },
         MatchDefault, v ref=> { printTo(stream, v); },
     );
 }
