@@ -142,7 +142,7 @@ symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs] = ();
 static overload TypeTemplate?(ExternalCodePointer) = true;
 static overload Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
 static overload ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
-    = LLExternalCodePointerType['A, 'V, 'I, 'O];
+    = LLCodePointerType['A, 'V, 'I, 'O];
 
 
 
