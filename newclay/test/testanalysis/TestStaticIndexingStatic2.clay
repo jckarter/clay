@@ -1,0 +1,6 @@
+foo() = #(1, "two");
+
+main() {
+    var x = foo().0;
+    return x;
+}

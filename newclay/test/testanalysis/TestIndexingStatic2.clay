@@ -1,0 +1,5 @@
+foo() = Array;
+
+main() {
+    return foo()[Int32, 2];
+}
