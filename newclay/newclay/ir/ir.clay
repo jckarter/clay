@@ -1,6 +1,7 @@
 import newclay.ast as ast;
 import newclay.core.(
     RTValue,
+    RTValueList,
     Value,
     Specialization,
     RTValues,
@@ -49,7 +50,9 @@ overload ASTNode(x:S) = ASTNode(ast.Statement(x));
 
 variant LiteralCodeToken = String
                          | RTValue
-                         | Value;
+                         | Value
+                         | RTValueList
+                         | CoreValueList;
 
 alias LiteralCode = Vector[LiteralCodeToken];
 
@@ -202,13 +205,46 @@ private literalCodeIdentifierChar?(c)
       or (c >= 'A' and c <= 'Z')
       or (c >= '0' and c <= '9');
 
-private enum LiteralTokenMode { STRING, PATTERN_SUBSTITUTION, SUBSTITUTION }
+private enum LiteralTokenMode {
+    STRING,
+    PATTERN_SUBSTITUTION, SUBSTITUTION,
+    MULTI1, MULTI2,
+    MULTI_PATTERN_SUBSTITUTION, MULTI_SUBSTITUTION
+}
 
 private literalCodeSubstitutionToken(env, token) {
     var value = privateLookup(env, token);
     return match(value,
-        RTValue, v => LiteralCodeToken(v),
-        Value,      v => LiteralCodeToken(v),
+        RTValue,      v => LiteralCodeToken(v),
+        Value,        v => LiteralCodeToken(v),
+        RTValueList, m => {
+            genericError("multiple values substituted in single-value literal code substitution");
+            return LiteralCodeToken(Value());
+        },
+        CoreValueList, m => {
+            genericError("multiple values substituted in single-value literal code substitution");
+            return LiteralCodeToken(Value());
+        },
+        MatchDefault, x => {
+            genericError("invalid literal code substitution: ", value);
+            return LiteralCodeToken(Value());
+        },
+    );
+}
+
+private literalCodeMultiSubstitutionToken(env, token) {
+    var value = privateLookup(env, token);
+    return match(value,
+        RTValueList, m => LiteralCodeToken(m),
+        CoreValueList,   m => LiteralCodeToken(m),
+        RTValue, v => {
+            genericError("single value substituted in multiple-value literal code substitution");
+            return LiteralCodeToken(Value());
+        },
+        Value, v => {
+            genericError("single value substituted in multiple-value literal code substitution");
+            return LiteralCodeToken(Value());
+        },
         MatchDefault, x => {
             genericError("invalid literal code substitution: ", value);
             return LiteralCodeToken(Value());
@@ -254,6 +290,11 @@ parseLiteralCodeBody(env, codeString:String) {
                 break;
             }
 
+            if (empty?(currentToken) and c == '.') {
+                currentTokenMode = MULTI1;
+                break;
+            }
+
             if (not literalCodeIdentifierChar?(c)) {
                 if (empty?(currentToken))
                     genericError("invalid substitution in literal code body");
@@ -261,6 +302,47 @@ parseLiteralCodeBody(env, codeString:String) {
                 currentTokenMode = STRING;
             }
             push(currentToken, c);
+            break;
+
+        case MULTI_SUBSTITUTION:
+            if (empty?(currentToken) and c == '\'') {
+                currentTokenMode = MULTI_PATTERN_SUBSTITUTION;
+                break;
+            }
+
+            if (not literalCodeIdentifierChar?(c)) {
+                if (empty?(currentToken))
+                    genericError("invalid multiple-value substitution in literal code body");
+                push(code, literalCodeMultiSubstitutionToken(env, move(currentToken)));
+                currentTokenMode = STRING;
+            }
+            push(currentToken, c);
+            break;
+
+        case MULTI_PATTERN_SUBSTITUTION:
+            if (not literalCodeIdentifierChar?(c)) {
+                if (empty?(currentToken))
+                    genericError("invalid multiple-value pattern substitution in literal code body");
+                push(code, LiteralCodeToken(derefListPattern(env, ast.Identifier(move(currentToken)))));
+                currentTokenMode = STRING;
+            }
+            push(currentToken, c);
+            break;
+
+        case MULTI1:
+            if (c == '.') {
+                currentTokenMode = MULTI2;
+                break;
+            }
+            genericError("invalid substitution in literal code body");
+            break;
+
+        case MULTI2:
+            if (c == '.') {
+                currentTokenMode = MULTI_SUBSTITUTION;
+                break;
+            }
+            genericError("invalid substitution in literal code body");
             break;
 
         default:
@@ -283,6 +365,16 @@ parseLiteralCodeBody(env, codeString:String) {
         if (empty?(currentToken))
             genericError("invalid substitution in literal code body");
         push(code, literalCodeSubstitutionToken(env, move(currentToken)));
+        break;
+    case MULTI_PATTERN_SUBSTITUTION:
+        if (empty?(currentToken))
+            genericError("invalid multiple-value pattern substitution in literal code body");
+        push(code, LiteralCodeToken(derefListPattern(env, ast.Identifier(move(currentToken)))));
+        break;
+    case MULTI_SUBSTITUTION:
+        if (empty?(currentToken))
+            genericError("invalid multiple-value substitution in literal code body");
+        push(code, literalCodeMultiSubstitutionToken(env, move(currentToken)));
         break;
     default:
         assert(false);
