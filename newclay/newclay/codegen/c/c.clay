@@ -22,7 +22,7 @@ enum CompoundKind { PRIMITIVE_TYPE, UNION_TYPE, STRUCT_TYPE }
 
 record CodegenType (
     mangledName:String,
-    compoundKind:CompoundKind,
+    compoundKind:CompoundKind, // forward declared as union or struct?
     definition:Maybe[String],
     dependencies:Vector[Value],
 );
@@ -30,8 +30,8 @@ overload CodegenType(mangledName, compoundKind)
     = CodegenType(mangledName, compoundKind, nothing(String), Vector[Value]());
 
 record CodegenConstant (
-    mangledName:String, // _clay_constant__n
-    definition:String, // const _clay__Type _clay_constant__n = ...;
+    mangledName:String, // _clay__constant_x
+    definition:String, // const _clay__Type _clay_constant_x = ...;
 );
 
 record CodegenContext (
@@ -42,6 +42,8 @@ record CodegenContext (
     constants: HashMap[Value, CodegenConstant],
     constantOrder: Vector[Value],
     constantNames: NameAllocator,
+    externals: HashMap[String, RTExternal],
+    externalOrder: Vector[String],
 );
 
 
@@ -119,6 +121,17 @@ private getType(c:CodegenContext, typeValue:Value) {
         return ref namep^;
 }
 
+private addExternal(c:CodegenContext, e:RTExternal) {
+    var symbolName = externalAttributes(e).symbolName;
+
+    var externalp = lookup(c.externals, symbolName);
+    if (null?(externalp)) {
+        c.externals[symbolName] = e;
+        push(c.externalOrder, symbolName);
+    } else
+        assert(externalp^ == e, "multiple external declarations cannot use the same symbol name");
+}
+
 private typeName(c, type) = getType(c, type).mangledName;
 
 private typeKindedName(c, typeValue) {
@@ -183,39 +196,45 @@ overload CodegenBodyContext(s) = CodegenBodyContext(
     NameAllocator(),
 );
 
-private newLocalName(bc:CodegenBodyContext, variable) {
-    var name = maybe(variable.name, n => n, () => String("temp"));
-    bc.bodyVars[variable] = mangleString(allocateName(bc.localNames, name)) + "_";
-    push(bc.bodyVarOrder, variable);
-    return bc.bodyVars[variable];
+private newLocalName(bc:CodegenBodyContext, value) {
+    var name = maybe(value.name, n => n, () => String("temp"));
+    bc.bodyVars[value] = mangleString(allocateName(bc.localNames, name)) + "_";
+    push(bc.bodyVarOrder, value);
+    return bc.bodyVars[value];
 }
 
-private localName(bc:CodegenBodyContext, variable) {
-    var namep = lookup(bc.bodyVars, variable);
+private localName(bc:CodegenBodyContext, value) {
+    var namep = lookup(bc.bodyVars, value);
     if (null?(namep))
-        return newLocalName(bc, variable);
+        return newLocalName(bc, value);
     else
         return namep^;
 }
 
-private localDeref(bc:CodegenBodyContext, variable) {
-    var name = localName(bc, variable);
-    if (variable.value?)
-        return name;
-    else
-        return "*" + name;
+private externalName(c:CodegenContext, e:RTExternal) {
+    addExternal(c, e);
+    return externalAttributes(e).symbolName;
 }
 
-private localRef(bc:CodegenBodyContext, variable) {
-    var name = localName(bc, variable);
-    if (variable.value?)
-        return "&" + name;
-    else
-        return name;
+private valueDeref(c:CodegenContext, bc:CodegenBodyContext, value) {
+    return match(value.referent,
+        LocalVariable,     l ref=> localName(bc, value),
+        ReferenceVariable, r ref=> "*" + localName(bc, value),
+        RTExternal,        e ref=> externalName(c, e),
+    );
 }
 
-private localResultRef(bc:CodegenBodyContext, variable) {
-    var name = localName(bc, variable);
+private valueRef(c:CodegenContext, bc:CodegenBodyContext, value) {
+    return match(value.referent,
+        LocalVariable,     l ref=> "&" + localName(bc, value),
+        ReferenceVariable, r ref=> localName(bc, value),
+        RTExternal,        e ref=> externalName(c, e),
+    );
+}
+
+private valueReturnByRef(c:CodegenContext, bc:CodegenBodyContext, value) {
+    var name = localName(bc, value);
+    assert(variantIs?(value.referent, ReferenceVariable), "return-by-reference result must be reference variable");
     return "&" + name;
 }
 
@@ -230,14 +249,8 @@ codegenFunction(c:CodegenContext, s:Specialization) {
 
 private printLocalDefinitionTo(stream, c, bc, a) {
     printTo(stream, typeName(c, a.type), " ");
-    if (not a.value?)
-        printTo(stream, '*');
-    printTo(stream, localName(bc, a));
-}
-
-private printResultDefinitionTo(stream, c, bc, a) {
-    printTo(stream, typeName(c, a.type), " *");
-    if (not a.value?)
+    assert(variable?(a));
+    if (localVariable?(a))
         printTo(stream, '*');
     printTo(stream, localName(bc, a));
 }
@@ -277,10 +290,10 @@ private finalizeFunctionDefinition(c, bc, function) {
     function.definition = Maybe(String());
     ref definition = just(function.definition);
 
-    for (variable in bc.bodyVarOrder) {
-        if (not null?(lookup(bc.bodyVars, variable))) {
+    for (value in bc.bodyVarOrder) {
+        if (not null?(lookup(bc.bodyVars, value))) {
             printToIndented(definition, 1);
-            printLocalDefinitionTo(definition, c, bc, variable);
+            printLocalDefinitionTo(definition, c, bc, value);
             printTo(definition, ";\n");
         }
     }
@@ -317,7 +330,7 @@ overload codegenNode(c, bc, node:ir.LiteralCodeBody) {
         genericError("__asm__ procedures are not yet supported");
 
     printToIndented(bc);
-    printLiteralCodeTo(bc, node.code);
+    printLiteralCodeTo(c, bc, node.code);
     printlnTo(bc.bodyCode);
 }
 
@@ -325,16 +338,16 @@ overload codegenNode(c, bc, node:ir.ValueList) {
     for (value, output in zipped(node.valueList, node.outputs)) {
         if (staticType?(output.type))
             continue;
-        printToIndented(bc, localDeref(bc, output), " = ", cValue(c, value), ";\n");
+        printToIndented(bc, valueDeref(c, bc, output), " = ", cValue(c, value), ";\n");
     }
 }
 
 overload codegenNode(c, bc, node:ir.Not) {
-    printToIndented(bc, localDeref(bc, node.output), " = !(", localDeref(bc, node.input), ");\n");
+    printToIndented(bc, valueDeref(c, bc, node.output), " = !(", valueDeref(c, bc, node.input), ");\n");
 }
 
 overload codegenNode(c, bc, node:ir.AddressOf) {
-    printToIndented(bc, localDeref(bc, node.output), " = ", localRef(bc, node.input), ";\n");
+    printToIndented(bc, valueDeref(c, bc, node.output), " = ", valueRef(c, bc, node.input), ";\n");
 }
 
 overload codegenNode(c, bc, node:ir.Call) {
@@ -344,7 +357,7 @@ overload codegenNode(c, bc, node:ir.Call) {
     
     interleave(node.inputs,
         () ref=> { printTo(bc, ", "); },
-        i  ref=> { printTo(bc, localRef(bc, i)); },
+        i  ref=> { printTo(bc, valueRef(c, bc, i)); },
     );
 
     maybe(node.outputs, outputs ref=> {
@@ -353,10 +366,9 @@ overload codegenNode(c, bc, node:ir.Call) {
             () ref=> { printTo(bc, ", "); },
             o  ref=> {
                 if (o.returnByRef?) {
-                    assert(not o.value.value?, "value cannot be returned by reference");
-                    printTo(bc, localResultRef(bc, o.value));
+                    printTo(bc, valueReturnByRef(c, bc, o.value));
                 } else
-                    printTo(bc, localRef(bc, o.value));
+                    printTo(bc, valueRef(c, bc, o.value));
             },
         );
     });
@@ -365,7 +377,7 @@ overload codegenNode(c, bc, node:ir.Call) {
 }
 
 overload codegenNode(c, bc, node:ir.If) {
-    printToIndented(bc, "if (", localDeref(bc, node.condition), ") {\n"); 
+    printToIndented(bc, "if (", valueDeref(c, bc, node.condition), ") {\n"); 
     bc.indent += 1;
 
     for (subnode in node.thenBody)
@@ -399,7 +411,7 @@ overload codegenNode(c, bc, node:ir.While) {
     for (subnode in node.conditionBody)
         codegenNode(c, bc, *subnode);
 
-    printToIndented(bc, "if (!(", localDeref(bc, node.condition), ")) break;\n");
+    printToIndented(bc, "if (!(", valueDeref(c, bc, node.condition), ")) break;\n");
 
     for (subnode in node.body)
         codegenNode(c, bc, *subnode);
@@ -417,11 +429,11 @@ overload codegenNode(c, bc, node:ir.Adopt) {
 }
 
 overload codegenNode(c, bc, node:ir.Bind) {
-    if (node.output.value?) {
-        // XXX should initializeFrom other value rather than bitwise assign
-        printToIndented(bc, localName(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
+    assert(variable?(node.output));
+    if (localVariable?(node.output)) {
+        printToIndented(bc, localName(bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
     } else {
-        printToIndented(bc, localName(bc, node.output), " = ", localRef(bc, node.input), ";\n");
+        printToIndented(bc, localName(bc, node.output), " = ", valueRef(c, bc, node.input), ";\n");
     }
 }
 
@@ -431,7 +443,7 @@ overload codegenNode(c, bc, node:ir.BindReturn) {
 
 overload codegenNode(c, bc, node:ir.Initialize) {
     // XXX should initializeFrom other value rather than bitwise assign
-    printToIndented(bc, localDeref(bc, node.output), " = ", localDeref(bc, node.input), ";\n");
+    printToIndented(bc, valueDeref(c, bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
 }
 
 overload codegenNode(c, bc, node:ir.Break) {
@@ -564,6 +576,8 @@ codegenType(c:CodegenContext, typeValue:Value) {
         codegenTupleType(c, type, llType, definition);
     else if (ofLowLevelType?(llType, getHooks().LLUnionType))
         codegenUnionType(c, type, llType, definition);
+    else if (ofLowLevelType?(llType, getHooks().LLCodePointerType))
+        codegenCodePointerType(c, type, llType, definition);
     else
         genericError("invalid low-level type ", llType);
 }
@@ -577,12 +591,16 @@ typeCompoundKind(typeValue:Value) {
     return PRIMITIVE_TYPE;
 }
 
+private printTypedefTo(stream, type, forward ...contents) {
+    printlnTo(stream, "typedef ", ...contents, ' ', type.mangledName, ';');
+}
+
 private codegenBoolType(c, type, llType, definition) {
     assert(type.compoundKind == PRIMITIVE_TYPE, "bool type must have PRIMITIVE_TYPE compound kind");
 
     if (not empty?(llType.params))
         genericError("low-level bool type ", llType, " must have no symbol parameters");
-    printTo(definition, cIntegerType(c, true, 8));
+    printTypedefTo(definition, type, cIntegerType(c, true, 8));
 }
 
 private codegenIntegerType(c, type, llType, definition) {
@@ -607,7 +625,7 @@ private codegenIntegerType(c, type, llType, definition) {
         }
     );
 
-    printTo(definition, cIntegerType(c, signed?, bits));
+    printTypedefTo(definition, type, cIntegerType(c, signed?, bits));
 }
 
 private codegenFloatType(c, type, llType, definition) {
@@ -624,7 +642,12 @@ private codegenFloatType(c, type, llType, definition) {
         },
     );
 
-    printTo(definition, cFloatType(bits));
+    printTypedefTo(definition, type, cFloatType(bits));
+}
+
+private addTypePrimitiveDependency(c, type, dependencyType) {
+    if (getType(c, dependencyType).compoundKind == PRIMITIVE_TYPE)
+        push(type.dependencies, dependencyType);
 }
 
 private codegenPointerType(c, type, llType, definition) {
@@ -635,10 +658,9 @@ private codegenPointerType(c, type, llType, definition) {
 
     var targetType = llType.params[0];
 
-    if (getType(c, llType.params[0]).compoundKind == PRIMITIVE_TYPE)
-        push(type.dependencies, targetType);
+    addTypePrimitiveDependency(c, type, targetType);
 
-    printTo(definition, typeKindedName(c, targetType), " *");
+    printTypedefTo(definition, type, typeKindedName(c, targetType), " *");
 }
 
 private codegenArrayType(c, type, llType, definition) {
@@ -657,11 +679,11 @@ private codegenArrayType(c, type, llType, definition) {
 
     push(type.dependencies, llType.params[0]);
 
-    printlnTo(definition, "struct ", type.mangledName, " {");
+    printlnTo(definition, "typedef struct ", type.mangledName, " {");
     printToIndented(definition, 1, typeKindedName(c, llType.params[0]),
         " array[", arraySize, "];\n",
     );
-    printTo(definition, "}");
+    printlnTo(definition, "} ", type.mangledName, ";");
 }
 
 private aggregateMemberError(llType) {
@@ -697,7 +719,7 @@ private aggregateMember(llType:Symbol, member:Value, index) {
 private codegenTupleType(c, type, llType, definition) {
     assert(type.compoundKind == STRUCT_TYPE, "tuple type must have STRUCT_TYPE compound kind");
 
-    printlnTo(definition, "struct ", type.mangledName, " {");
+    printlnTo(definition, "typedef struct ", type.mangledName, " {");
 
     for (member, i in zipped(llType.params, range(size(llType.params)))) {
         var name, memberType = ...aggregateMember(llType, member, i);
@@ -706,13 +728,13 @@ private codegenTupleType(c, type, llType, definition) {
         printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";\n");
     }
 
-    printTo(definition, "}");
+    printlnTo(definition, "} ", type.mangledName, ";");
 }
 
 private codegenUnionType(c, type, llType, definition) {
     assert(type.compoundKind == UNION_TYPE, "union type must have UNION_TYPE compound kind");
 
-    printlnTo(definition, "union ", type.mangledName, " {");
+    printlnTo(definition, "typedef union ", type.mangledName, " {");
 
     for (member, i in zipped(llType.params, range(size(llType.params)))) {
         var name, memberType = ...aggregateMember(llType, member, i);
@@ -721,7 +743,41 @@ private codegenUnionType(c, type, llType, definition) {
         printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
     }
 
-    printTo(definition, "}");
+    printTo(definition, "} ", type.mangledName, ";");
+}
+
+private codegenCodePointerType(c, type, llType, definition) {
+    assert(type.compoundKind == PRIMITIVE_TYPE, "code pointer type must have PRIMITIVE_TYPE compound kind");
+
+    if (size(llType.params) != 4)
+        genericError("low-level code pointer type ", llType, " must have four symbol parameters");
+
+    var abi = llType.params[0];
+    var variadic? = match(llType.params[1],
+        BoolValue, v ref=> v.value,
+        MatchDefault, x ref=> {
+            genericError("second symbol parameter of low-level code pointer type ", llType, " must be a boolean value");
+            return false;
+        },
+    );
+    var inputTypes = match(llType.params[2],
+        TupleValue, v ref=> v.elements,
+        MatchDefault, x ref=> ValueList(llType.params[2]),
+    );
+    var outputType = match(llType.params[3],
+        TupleValue, v ref=> nothing(Value),
+        MatchDefault, x ref=> Maybe(llType.params[3]),
+    );
+
+    for (inputType in inputTypes)
+        addTypePrimitiveDependency(c, type, inputType);
+    maybe(outputType, o ref=>{ addTypePrimitiveDependency(c, type, o); });
+
+    printTo(definition, "typedef ");
+    printFunctionTypeTo(definition, c, abi, variadic?, inputTypes, outputType,
+        "(*", type.mangledName, ")"
+    );
+    printlnTo(definition, ";");
 }
 
 private cIntegerType(c, signed?:Bool, bits) {
@@ -770,6 +826,7 @@ printCodegenTo(stream, c:CodegenContext) {
     printHelperTypeDefinitionsTo(stream, c);
     printGlobalLiteralCodeBodiesTo(stream, c);
     printConstantDefinitionsTo(stream, c);
+    printExternalDeclarationsTo(stream, c);
     printFunctionForwardDeclarationsTo(stream, c);
     printFunctionDefinitionsTo(stream, c);
 }
@@ -810,7 +867,7 @@ private printTypeDefinitionsTo2(stream, printedMap:HashMap[Value,Bool], c:Codege
 private printTypeDefinitionTo(stream, printedMap:HashMap[Value,Bool], c:CodegenContext, typeValue:Value) {
     ref type = getType(c, typeValue);
     printTypeDefinitionsTo2(stream, printedMap, c, type.dependencies);
-    printlnTo(stream, "typedef ", just(type.definition), " ", type.mangledName, ";");
+    printlnTo(stream, just(type.definition));
 }
 
 private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
@@ -845,6 +902,12 @@ private printConstantDefinitionsTo(stream, c) {
     printlnTo(stream);
 }
 
+private printExternalDeclarationsTo(stream, c:CodegenContext) {
+    for (symbolName in c.externalOrder)
+        printExternalDeclarationTo(stream, c, c.externals[symbolName]);
+    printlnTo(stream);
+}
+
 private printFunctionForwardDeclarationsTo(stream, c:CodegenContext) {
     for (s in c.functionOrder) {
         ref function = getFunction(c,s);
@@ -863,6 +926,50 @@ private printFunctionDefinitionsTo(stream, c:CodegenContext) {
     printlnTo(stream);
 }
 
+
+
+//
+// printFunctionTypeTo, printExternalDeclarationTo
+//
+
+private printFunctionTypeTo(stream, c, abi, variadic?, inputTypes, outputType, forward ...name) {
+    // XXX add abi annotation
+    var returnTypeName = maybe(outputType,
+        type ref=> typeName(c, type),
+        ()   ref=> String("void"),
+    );
+    printTo(stream, returnTypeName, ' ', ...name, '(');
+
+    if (empty?(inputTypes))
+        printTo(stream, if (variadic?) "..." else "void");
+    else {
+        interleave(inputTypes,
+            () ref=> { printTo(stream, ", "); },
+            inputType ref=> {
+                printTo(stream, typeName(c, inputType));
+            },
+        );
+        if (variadic?)
+            printTo(stream, ", ...");
+    }
+        
+    printTo(stream, ")");
+}
+
+private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
+    ref attributes = externalAttributes(ex);
+
+    printFunctionTypeTo(stream, c,
+        attributes.abi,
+        attributes.variadic?,
+        attributes.argumentTypes,
+        attributes.returnType,
+        attributes.symbolName,
+    );
+
+    printlnTo(stream, ";");
+}
+
 
 //
 // printGlobalLiteralCodeTo, printLiteralCodeTo
@@ -871,19 +978,19 @@ private printFunctionDefinitionsTo(stream, c:CodegenContext) {
 private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
     for (token in code) {
         match(token,
-            String,     s ref=> { printTo(stream, s); },
+            String,  s ref=> { printTo(stream, s); },
             RTValue, v ref=> { genericError("invalid global literal code substitution value: ", v); },
-            Value,      v ref=> { printLiteralCodeValueTo(stream, *v); }
+            Value,   v ref=> { printLiteralCodeValueTo(stream, *v); }
         );
     }
 }
 
-private printLiteralCodeTo(bc, code:ir.LiteralCode) {
+private printLiteralCodeTo(c, bc, code:ir.LiteralCode) {
     for (token in code) {
         match(token,
-            String,     s ref=> { printTo(bc.bodyCode, s); },
-            RTValue, v ref=> { printTo(bc.bodyCode, '(', localDeref(bc, v), ')'); },
-            Value,      v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); }
+            String,  s ref=> { printTo(bc.bodyCode, s); },
+            RTValue, v ref=> { printTo(bc.bodyCode, '(', valueDeref(c, bc, v), ')'); },
+            Value,   v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); }
         );
     }
 }

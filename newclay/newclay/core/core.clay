@@ -1082,6 +1082,7 @@ equalArguments?(vs:RTValues, ws:RTValues) {
 
 localVariable?(v:RTValue) = variantIs?(v.referent, LocalVariable);
 referenceVariable?(v:RTValue) = variantIs?(v.referent, ReferenceVariable);
+variable?(v:RTValue) = localVariable?(v) or referenceVariable?(v);
 
 equalResult?(v:RTValue, w:RTValue)
     = v.kind == w.kind and v.type == w.type and localVariable?(v) == localVariable?(w);
