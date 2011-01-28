@@ -177,6 +177,17 @@ private var lexStringLiteral = modify(
 
 
 //
+// static index
+//
+
+private var lexStaticIndex = modify(
+    x => Token(STATIC_INDEX),
+    seq('.', unsignedIntLiteral)
+);
+
+
+
+//
 // int literal
 //
 
@@ -207,9 +218,11 @@ private var intType = choice(
     'i',
 );
 
+private var unsignedIntLiteral = seq(choice(hexInt, decimalInt), optional(intType));
+
 private var lexIntLiteral = modify(
     x => Token(INT_LITERAL),
-    seq(optional(sign), choice(hexInt, decimalInt), optional(intType)),
+    seq(optional(sign), unsignedIntLiteral)
 );
 
 
@@ -336,6 +349,7 @@ private var lexToken = bounds(choice(
     lexLineComment,
     lexBlockComment,
     lexCharLiteral,
+    lexStaticIndex,
     lexFloatLiteral,
     lexIntLiteral,
     lexPunctuation,
