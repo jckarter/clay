@@ -362,6 +362,8 @@ string
     #" dum";
     #"diddly squat";
 
+    #doodly?;
+
     #"\"symbol\"";
     #"symbol\\";
     #"symbol\\\"";
