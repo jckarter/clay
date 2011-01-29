@@ -1,0 +1,5 @@
+external (StdcallABI) x6(x:Int32, y:Float32, ...) Bool;
+
+main() {
+    return x6;
+}

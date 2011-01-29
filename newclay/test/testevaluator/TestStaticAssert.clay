@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+static Main() = StaticAssert(1 == 1);
