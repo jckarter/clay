@@ -57,12 +57,33 @@ main() {
     var g6 = -0x1p1025; // -infinity
 
 
-    var h1 = 0x1.2345_6789_ABCD_Ep-1022; // smallest normal
+    var h1 = 0x1.2345_6789_ABCD_Ep-1022; // smallest normal exponent
     var h2 = 0x1.2345_6789_ABCD_Ep-1023; // largest denormal exponent
-    var h3 = 0x1.2345_6789_ABCD_Ep-1074; // smallest denormal
-    var h4 = 0x1.2345_6789_ABCD_Ep-1075; // zero
-    var h5 = -0x1.2345_6789_ABCD_Ep-1022; // smallest normal
-    var h6 = -0x1.2345_6789_ABCD_Ep-1023; // largest denormal exponent
-    var h7 = -0x1.2345_6789_ABCD_Ep-1074; // smallest denormal
-    var h8 = -0x1.2345_6789_ABCD_Ep-1075; // zero
+    var h3 = 0x1p-1074; // smallest denormal exponent
+    var h4 = 0x1p-1075; // round to zero
+    var h5 = 0x1p-1076; // round to zero
+    var h6 = -0x1.2345_6789_ABCD_Ep-1022; // smallest normal exponent
+    var h7 = -0x1.2345_6789_ABCD_Ep-1023; // largest denormal exponent
+    var h8  = -0x1p-1074; // smallest denormal exponent
+    var h9  = -0x1p-1075; // round to zero
+    var h10 = -0x1p-1076; // round to zero
+
+    // round-to-nearest-or-even with denormal
+    var i1 = 0x1.0000_0000_0000_0FFFp-1023; // should round down
+    var i2 = 0x1.0000_0000_0000_1p-1023; // should round even (down)
+    var i3 = 0x1.0000_0000_0000_18p-1023; // should round up
+    var i4 = 0x1.0000_0000_0000_1000_0000_0001p-1023; // should round up
+
+    var j1 = 0x1.0000_0000_0000_2FFFp-1023; // should round down
+    var j2 = 0x1.0000_0000_0000_3p-1023; // should round even (up)
+    var j3 = 0x1.0000_0000_0000_38p-1023; // should round up
+    var j4 = 0x1.0000_0000_0000_3000_0000_0001p-1023; // should round up
+
+    var k1 = 0x1p-1075; // round even (down) to zero
+    var k2 = 0x1.8p-1075; // round up to 1p-1074
+    var k3 = 0x1.0000_0000_0000_0000_0000_0001p-1075; // round up to 1p-1074
+
+    var l1 = 0x1p-1076; // round to zero (1p-1074 is smallest possible denormal)
+    var l2 = 0x1.8p-1076; // round to zero
+    var l3 = 0x1p-2000; // round to zero
 }

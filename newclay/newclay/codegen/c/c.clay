@@ -450,7 +450,6 @@ overload codegenNode(c, bc, node:ir.Phi) {
 }
 
 overload codegenNode(c, bc, node:ir.Adopt) {
-    //assert(false, "ir.Adopt must be eliminated by lifetime analysis");
 }
 
 overload codegenNode(c, bc, node:ir.Bind) {
