@@ -1,11 +1,11 @@
 import __primitives__.*;
 
-symbol Factorial = ();
+symbol Factorial;
 static overload Factorial('n) = StaticMultiply('n, PrivateFactorial(StaticSubtract('n, 1)));
 static overload Factorial(1) = 1;
 static overload Factorial(0) = 1;
 
-private symbol PrivateFactorial = ();
+private symbol PrivateFactorial;
 static overload PrivateFactorial('n) = StaticMultiply('n, Factorial(StaticSubtract('n, 1)));
 static overload PrivateFactorial(1) = 1;
 static overload PrivateFactorial(0) = 1;

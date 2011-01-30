@@ -1,0 +1,5 @@
+import __primitives__.*;
+
+symbol Foo;
+
+static Main() = StaticSymbolBody(Foo);

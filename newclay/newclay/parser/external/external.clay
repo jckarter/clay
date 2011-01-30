@@ -792,11 +792,16 @@ private var symbolName = modify(
 );
 
 private var symbolDef = topLevelItemParser(
-    x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.4)),
+    x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3)),
     sequence(
         visibility, kw_symbol, symbolName,
-        punc(#"="), expr, punc(#";")
+        optional(symbolExpr), punc(#";")
     ),
+);
+
+private var symbolExpr = modify(
+    x => move(x.1),
+    sequence(punc(#"="), expr),
 );
 
 // attributeDef

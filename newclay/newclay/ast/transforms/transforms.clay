@@ -61,10 +61,10 @@ overload transformASTInto(from:Procedure, to:Vector[TopLevelItem]) {
     push(to, TopLevelItem(transformed(from, Symbol,
         from.visibility,
         from.name,
-        Expr(transformed(from, Call,
+        Maybe(Expr(transformed(from, Call,
             Expr(transformedNameRef(from, preludeModuleName, String("NewProcedure"))),
             ExprList()
-        ))
+        )))
     )));
 
     push(to, TopLevelItem(transformed(from, Overload,
@@ -104,7 +104,7 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
     push(to, TopLevelItem(transformed(from, Symbol,
         from.visibility,
         from.name,
-        Expr(transformed(from, TupleExpr, ExprList())),
+        nothing(Expr),
     )));
 
     push(to, TopLevelItem(transformed(from, StaticOverload,
