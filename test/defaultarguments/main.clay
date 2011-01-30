@@ -1,0 +1,12 @@
+import defaultarguments.*;
+
+foo(...args) {
+    var name, number = ...defaultArguments(("John Doe", 42), ...args);
+    println(name, ": ", number);
+}
+
+main() {
+    foo();
+    foo("Ford Prefect");
+    foo("John Romero", 666);
+}

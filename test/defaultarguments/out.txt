@@ -1,0 +1,3 @@
+John Doe: 42
+Ford Prefect: 42
+John Romero: 666
