@@ -192,29 +192,37 @@ parseHexFloatLiteral(number, suffix) {
         value = floatFromParts(neg?, 0, 0u64);
     } else {
         var mantissaLog = log2(mantissa);
-        mantissa = shiftLeft(mantissa, 64 - mantissaLog);
-        var round = bitwiseAnd(mantissa, 0xFFF);
-        mantissa = shiftRight(mantissa, 12);
-
-        if (round > 0x800 or (round == 0x800 and (
-            usedMantissaBits > 64 or bitwiseAnd(mantissa, 0x1) == 0x1
-        )))
-            mantissa += 1;
-
         var mantissaExponent = mantissaLog
             + (if (mantissaBits > 64) mantissaBits - 64 else 0)
             - point
             + exponent
             + exponentBias(Double);
 
-        if (mantissaExponent <= 0) {
-            mantissa = shiftRight(bitwiseOr(mantissa, 0x0010_0000_0000_0000_u64), 1 - mantissaExponent);
+        mantissa = shiftLeft(mantissa, 60 - mantissaLog);
+        var mantissaShift = 8 + max(0, 1-mantissaExponent);
+
+        if (mantissaShift > 61) {
             mantissaExponent = 0;
+            mantissa = 0_u64;
         } else if (mantissaExponent >= 2047) {
             mantissaExponent = 2047;
             mantissa = 0_u64;
+        } else {
+            var roundBit  = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift-1));
+            var roundMask = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift-1) - 1);
+            var evenBit   = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift));
+            observe(hex(roundBit), hex(roundMask), hex(evenBit));
+
+            mantissa = shiftRight(mantissa, mantissaShift);
+
+            if (roundBit != 0 and (roundMask != 0 or usedMantissaBits > 60 or evenBit != 0))
+                mantissa += 1_u64;
+
+            if (mantissaExponent < 0)
+                mantissaExponent = 0;
         }
 
+        observe(number, neg?, mantissaExponent, rightAlignedWith(13, '0', hex(mantissa)));
         value = floatFromParts(neg?, mantissaExponent, mantissa);
     }
 
