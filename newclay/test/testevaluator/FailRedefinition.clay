@@ -1,2 +1,2 @@
-symbol Main = ();
-symbol Main = ();
+symbol Main;
+symbol Main;

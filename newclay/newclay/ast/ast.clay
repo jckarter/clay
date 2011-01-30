@@ -390,7 +390,7 @@ record SymbolName = ast(
 record Symbol = ast(
     visibility: VisibilityKind,
     name: SymbolName,
-    expr: Expr,
+    expr: Maybe[Expr],
 );
 
 record Attribute = ast(

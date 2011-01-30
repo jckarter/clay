@@ -361,7 +361,10 @@ makeSymbol(x:SymbolHead, params:ValueList) {
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
-        () ref=> evaluateExpr(x.head.ast.expr, newEnv(x.env))
+        () ref=> maybe(x.head.ast.expr,
+            expr ref=> evaluateExpr(expr, newEnv(x.env)),
+            () ref=> Value(TupleValue()),
+        )
     );
 }
 

@@ -2,7 +2,7 @@ import __primitives__.*;
 import __primitives__.(StaticModuleMember as m);
 import publicimporter;
 
-symbol Main = ();
+symbol Main;
 static overload Main() = (
     m(publicimporter, "Factorial")(8),
     m(publicimporter, "Fac")(8),

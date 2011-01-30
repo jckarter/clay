@@ -1,7 +1,7 @@
 import __primitives__.*;
 import circular2.*;
 
-symbol Factorial1 = ();
+symbol Factorial1;
 static overload Factorial1('n) = StaticMultiply('n, Factorial2(StaticSubtract('n, 1)));
 static overload Factorial1(1) = 1;
 static overload Factorial1(0) = 1;
