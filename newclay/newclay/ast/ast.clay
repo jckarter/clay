@@ -375,6 +375,7 @@ variant TopLevelItem = Symbol
                      | StaticFunction
                      | ExternalProcedure
                      | GlobalLiteralCodeBody
+                     | GlobalBinding
                      ;
 
 enum VisibilityKind {
@@ -452,6 +453,11 @@ record ExternalArgument = ast(
 record ExternalArgumentList = ast(
     items: Vector[ExternalArgument],
     variadic?: Bool,
+);
+
+record GlobalBinding = ast(
+    kind: BindingKind,
+    bindings: BindingList,
 );
 
 record GlobalLiteralCodeBody = ast(

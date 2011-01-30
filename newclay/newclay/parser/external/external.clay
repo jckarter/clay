@@ -1062,6 +1062,12 @@ private var externalArgument = bounds(modify(
     sequence(identifier, punc(#":"), expr),
 ));
 
+// globalBinding
+
+private var globalBinding = topLevelItemParser(
+    x => GlobalBinding(x.0, x.1),
+    sequence(bindingKind, bindingList, punc(#";"))
+);
 
 // globalLiteralCodeBody
 
@@ -1262,7 +1268,8 @@ private var exprStatement = statementParser(
 
 private var topLevelItem = choice(
     importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
-    procedureDef, staticFunctionDef, externalProcedureDef, globalLiteralCodeBody
+    procedureDef, staticFunctionDef, externalProcedureDef, globalLiteralCodeBody,
+    globalBinding
 );
 
 
