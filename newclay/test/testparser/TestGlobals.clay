@@ -1,0 +1,28 @@
+var x;
+var x:Int;
+var x = 1;
+var x:Int = 1;
+
+var x, y;
+var x, y:Int;
+var x:Int, y;
+var x, y:'T;
+var x:'T, y;
+
+var x:Int = 1, y:Int = 2;
+
+var x, y = 1, 2;
+var x, y = ...bar();
+var x:Int, y = ...bar();
+var x, y:Int = ...bar();
+var x:Int, y:Int = ...bar();
+var x:Int, y:Int, ...z = ...bar();
+
+var ...x = ...bar();
+
+ref x:Int, y:Int, ...z = ...bar();
+rvalue x:Int, y:Int, ...z = ...bar();
+const x:Int, y:Int, ...z = ...bar();
+forward x:Int, y:Int, ...z = ...bar();
+alias x:Int, y:Int, ...z = ...bar();
+

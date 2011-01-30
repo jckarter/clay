@@ -12,6 +12,7 @@ TopLevelItem -> GlobalSymbol
               | Procedure
               | StaticFunction
               | ExternalProcedure
+              | GlobalBinding
               | GlobalLiteralCodeBody
 
 Visibility -> "public" | "private"
@@ -49,6 +50,8 @@ ExternalProcedure -> Visibility? "external" ExternalAttributes? Identifier
 ExternalAttributes -> "(" ExprList ")"
 
 ExternalArgumentList -> "(" variadic_list(Argument, ()) ")"
+
+GlobalBinding -> BindingStatement
 
 GlobalLiteralCodeBody -> LiteralCodeBodyKind LiteralCodeBody ";"
 
