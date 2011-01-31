@@ -92,6 +92,37 @@ private addExternalItem(module, env, externalItem) {
     });
 }
 
+private addGlobalItem(module, env, globalItem) {
+    withLocation(globalItem, () ref=> {
+        switch (globalItem.kind) {
+        case ast.BINDING_RVALUE:
+            genericError("global variables cannot be rvalues");
+            break;
+        case ast.BINDING_FORWARD:
+            genericError("global variables cannot be forward");
+            break;
+        case ast.BINDING_ALIAS:
+            addGlobalAlias(module, env, globalItem);
+            break;
+        default:
+            addGlobalVariable(module, env, globalItem);
+            break;
+        }
+    });
+}
+
+private addGlobalAlias(module, env, globalItem) {
+    envAddFlatAlias(env, env, globalItem.bindings);
+}
+
+private addGlobalVariable(module, env, globalItem) {
+    //XXX
+    genericError("non-alias global variables not yet supported");
+}
+
+callbyname ifPublic(item, publicValue, privateValue)
+    = if (item.visibility == ast.VIS_PUBLIC) publicValue else privateValue;
+
 private initializeGlobals(module) {
     module.publicEnv  = newEnv();
     module.privateEnv = newEnv();
@@ -105,22 +136,29 @@ private initializeGlobals(module) {
             ast.Import, importItem ref=> {
                 addImportItem(
                     module,
-                    if (importItem.visibility == ast.VIS_PUBLIC) publicRoot else privateRoot,
+                    ifPublic(importItem, publicRoot, privateRoot),
                     importItem
                 );
             },
             ast.Symbol, symbolItem ref=> {
                 addSymbolItem(
                     module,
-                    if (symbolItem.visibility == ast.VIS_PUBLIC) module.publicEnv else module.privateEnv,
+                    ifPublic(symbolItem, module.publicEnv, module.privateEnv),
                     symbolItem
                 );
             },
             ast.ExternalProcedure, externalItem ref=> {
                 addExternalItem(
                     module,
-                    if (externalItem.visibility == ast.VIS_PUBLIC) module.publicEnv else module.privateEnv,
+                    ifPublic(externalItem, module.publicEnv, module.privateEnv),
                     externalItem
+                );
+            },
+            ast.GlobalBinding, globalItem ref=> {
+                addGlobalItem(
+                    module,
+                    ifPublic(globalItem, module.publicEnv, module.privateEnv),
+                    globalItem
                 );
             },
             MatchDefault, x ref=> { },

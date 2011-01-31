@@ -1,0 +1,8 @@
+alias x = 1;
+alias y = 2;
+alias z = x + y;
+
+main() {
+    var x = 3;
+    return z; // z uses its original environment
+}
