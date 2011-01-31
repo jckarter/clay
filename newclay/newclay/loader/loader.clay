@@ -104,6 +104,14 @@ private addGlobalItem(module, env, globalItem) {
         case ast.BINDING_ALIAS:
             addGlobalAlias(module, env, globalItem);
             break;
+        case ast.BINDING_REF:
+            // XXX
+            genericError("global ref bindings not yet supported");
+            break;
+        case ast.BINDING_CONST:
+            // XXX
+            genericError("global const bindings not yet supported");
+            break;
         default:
             addGlobalVariable(module, env, globalItem);
             break;
@@ -116,8 +124,23 @@ private addGlobalAlias(module, env, globalItem) {
 }
 
 private addGlobalVariable(module, env, globalItem) {
-    //XXX
-    genericError("non-alias global variables not yet supported");
+    match(globalItem.bindings,
+        ast.SingleBindingList, bindings ref=> {
+            for (binding in bindings)
+                envAdd(env, binding.name.name,
+                    RTGlobal(binding, module, binding.name.name.str, RT_VALUE_REF)
+                );
+        },
+        ast.MultipleBindingList, bindings ref=> {
+            for (binding in bindings.names.items)
+                envAdd(env, binding.name,
+                    RTGlobal(bindings, module, binding.name.str, RT_VALUE_REF)
+                );
+            maybe(bindings.names.variadicItem, listGlobal ref=> {
+                envAdd(env, listGlobal.name, RTListGlobal(bindings, module, listGlobal.name.str));
+            });
+        },
+    );
 }
 
 callbyname ifPublic(item, publicValue, privateValue)

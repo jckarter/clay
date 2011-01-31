@@ -581,6 +581,14 @@ overload envEntryToValue(x:RTExternal) {
     genericError("external functions not available in static context");
     return Value();
 }
+overload envEntryToValue(x:RTGlobal) {
+    genericError("non-alias global variables not available in static context");
+    return Value();
+}
+overload envEntryToValue(x:RTListGlobal) {
+    genericError("non-alias global variables not available in static context");
+    return Value();
+}
 overload envEntryToValue(x:RTValue) {
     return rtTypeToValue(x.type);
 }
@@ -701,6 +709,14 @@ overload envEntryToValueList(x:ListAlias) {
 overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
     return ValueList();
+}
+overload envEntryToValue(x:RTGlobal) {
+    genericError("non-alias global variables not available in static context");
+    return Value();
+}
+overload envEntryToValue(x:RTListGlobal) {
+    genericError("non-alias global variables not available in static context");
+    return Value();
 }
 overload envEntryToValueList(x:RTValue) {
     genericError("single value used in multi-valued context");

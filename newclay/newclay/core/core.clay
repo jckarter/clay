@@ -33,21 +33,22 @@ record Program = referenceType(
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
     allLiteralCodeBodies: Vector[GlobalLiteralCode],
-//GLOBALS    allGlobals: ProgramGlobalMap,
+    globalMap: ProgramGlobalMap,
     hooks: ClayHooks,
 );
 
-/*GLOBALS
+variant GlobalAST = ast.SingleBinding | ast.MultipleBindingList;
+record GlobalBinding (ast:GlobalAST, module:Module);
+
 record ProgramGlobalMap (
-    globals: HashMap[ast.GlobalBinding, TriState[ProgramGlobal]],
-    globalOrder: Vector[ast.GlobalBinding],
+    globals: HashMap[GlobalBinding, ProgramGlobal],
+    globalOrder: Vector[GlobalBinding],
 );
 
 record ProgramGlobal (
     types: ValueList,
-    constructor: Vector[ir.Node],
+    constructorBody: Vector[ir.Node],
 );
-*/
 
 var mainModuleName = ModuleName("__main__");
 var primitivesModuleName = ModuleName("__primitives__");
@@ -343,10 +344,8 @@ variant EnvEntry = Value
                  | Alias
                  | ListAlias
                  | RTExternal
-                 /*GLOBALS
                  | RTGlobal
                  | RTListGlobal
-                 */
                  | RTValue
                  | RTValueList
                  | RTLabel
@@ -1122,30 +1121,41 @@ overload printTo(stream, x:RTExternal) {
 // RTGlobal, RTListGlobal
 //
 
-/*GLOBALS
 record RTGlobal = referenceType(
-    ast: ast.GlobalBinding,
-    module: Module,
+    binding: GlobalBinding,
     name: String,
     kind: RTValueKind,
     attributes: TriState[RTGlobalAttributes],
 );
+
+overload RTGlobal(ast, module:Module, name:String, kind:RTValueKind)
+    = RTGlobal(
+        GlobalBinding(GlobalAST(ast), module),
+        name,
+        kind,
+        TriState[RTGlobalAttributes]()
+    );
 
 record RTGlobalAttributes (
     type: Value,
 );
 
 record RTListGlobal = referenceType(
-    ast: ast.GlobalBinding,
-    module: Module,
+    binding: GlobalBinding,
     name: String,
     attributes: TriState[RTListGlobalAttributes],
 );
 
+overload RTListGlobal(ast, module:Module, name:String)
+    = RTListGlobal(
+        GlobalBinding(GlobalAST(ast), module),
+        name,
+        TriState[RTListGlobalAttributes]()
+    );
+
 record RTListGlobalAttributes (
     vars: Vector[RTGlobal],
 );
-*/
 
 
 //
@@ -1163,9 +1173,7 @@ record LocalVariable();
 
 variant RTValueReferent = ReferenceVariable
                         | LocalVariable
-                        /* GLOBAL
                         | RTGlobal
-                        */
                         | RTExternal;
 
 overload RTValueReferent() = RTValueReferent(ReferenceVariable());
@@ -1365,6 +1373,7 @@ withLocation(node, f) {
 
 variant CompilationEntry = StaticCallEntry
                          | CallAnalysisEntry
+                         | GlobalAnalysisEntry
                          | CallCompilationEntry
                          ;
 
@@ -1376,6 +1385,10 @@ record StaticCallEntry (
 record CallAnalysisEntry (
     callable: Value,
     args: RTValues,
+);
+
+record GlobalAnalysisEntry (
+    global: GlobalBinding,
 );
 
 record CallCompilationEntry (
@@ -1397,6 +1410,26 @@ overload printTo(stream, x:CallAnalysisEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
+overload printTo(stream, x:GlobalAnalysisEntry) {
+    match(x.global.ast,
+        ast.SingleBinding, binding ref=> {
+            printTo(stream, "analyze global: ", binding.name.name.str);
+        },
+        ast.MultipleBindingList, bindings ref=> {
+            printTo(stream, "analyze globals: ");
+            interleave(bindings.names.items,
+                () ref=> { printTo(stream, ", "); },
+                binding ref=> { printTo(stream, binding.name.str); },
+            );
+            maybe(bindings.names.variadicItem, item ref=> {
+                if (not empty?(bindings.names.items))
+                    printTo(stream, ", ");
+                printTo(stream, "...", item.name.str);
+            });
+        },
+    );
+}
+
 overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, "compile: ");
     printReprTo(stream, x.callable);
@@ -1415,6 +1448,11 @@ withStaticCall(callable:Value, args:ValueList, f) {
 
 withCallAnalysis(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
+    return forward ...withCompilationEntry(move(entry), f);
+}
+
+withGlobalAnalysis(global:GlobalBinding, f) {
+    var entry = CompilationEntry(GlobalAnalysisEntry(global));
     return forward ...withCompilationEntry(move(entry), f);
 }
 
