@@ -456,6 +456,7 @@ record ExternalArgumentList = ast(
 );
 
 record GlobalBinding = ast(
+    visibility: VisibilityKind,
     kind: BindingKind,
     bindings: BindingList,
 );

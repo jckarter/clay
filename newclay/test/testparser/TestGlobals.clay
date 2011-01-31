@@ -1,6 +1,6 @@
 var x;
-var x:Int;
-var x = 1;
+private var x:Int;
+public var x = 1;
 var x:Int = 1;
 
 var x, y;
