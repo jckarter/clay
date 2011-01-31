@@ -654,6 +654,9 @@ overload evaluateMultiExpr(x:ast.Expr, env:Env) ValueList {
 overload evaluateMultiExpr(x:ast.NameRef, env) {
     return envEntryToValueList(nameRefLookup(env, x));
 }
+overload evaluateMultiExpr(x:ast.SimpleNameRef, env) {
+    return envEntryToValueList(privateLookup(env, x.name));
+}
 overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
     return derefListPattern(env, x.name);
 }

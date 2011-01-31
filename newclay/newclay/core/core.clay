@@ -33,8 +33,21 @@ record Program = referenceType(
     allStaticOverloads: Vector[StaticOverload],
     allOverloads: Vector[Overload],
     allLiteralCodeBodies: Vector[GlobalLiteralCode],
+//GLOBALS    allGlobals: ProgramGlobalMap,
     hooks: ClayHooks,
 );
+
+/*GLOBALS
+record ProgramGlobalMap (
+    globals: HashMap[ast.GlobalBinding, TriState[ProgramGlobal]],
+    globalOrder: Vector[ast.GlobalBinding],
+);
+
+record ProgramGlobal (
+    types: ValueList,
+    constructor: Vector[ir.Node],
+);
+*/
 
 var mainModuleName = ModuleName("__main__");
 var primitivesModuleName = ModuleName("__primitives__");
@@ -330,6 +343,10 @@ variant EnvEntry = Value
                  | Alias
                  | ListAlias
                  | RTExternal
+                 /*GLOBALS
+                 | RTGlobal
+                 | RTListGlobal
+                 */
                  | RTValue
                  | RTValueList
                  | RTLabel
@@ -482,6 +499,60 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
         genericError("import of ", entry, " as ", asName, " conflicts with import of ", specImport^, " as ", asName);
 
     envRootReset(envRoot);
+}
+
+
+//
+// envAddFlatAlias -- add aliases to single level of environment
+//
+
+envAddFlatAlias(env:Env, aliasEnv:Env, bindingList:ast.BindingList) {
+    envAddFlatAlias(env, aliasEnv, *bindingList);
+}
+
+overload envAddFlatAlias(env:Env, aliasEnv:Env, bindingList:ast.MultipleBindingList) {
+    maybe(bindingList.values,
+        values ref=> {
+            maybe(bindingList.names.variadicItem,
+                varBindingName ref=> {
+                    if (size(bindingList.names.items) != 0)
+                        genericError("multiple alias binding not yet supported");
+                    if (just?(varBindingName.type))
+                        genericError("type declarations on alias bindings not yet supported");
+
+                    envAdd(env, varBindingName.name, ListAlias(values, aliasEnv));
+                },
+                () ref=> {
+                    if (size(bindingList.names.items) != 1)
+                        genericError("multiple alias binding not yet supported");
+                    var bindingName = bindingList.names.items[0];
+                    if (just?(bindingName.type))
+                        genericError("type declarations on alias bindings not yet supported");
+
+                    if (size(values) != 1)
+                        genericError("single alias variable bound to multiple value expression");
+                    var value = match(values[0],
+                        ast.Expr, x => x,
+                        ast.UnpackExpr, x ref=> {
+                            genericError("single alias variable bound to multiple value expression");
+                            return ast.Expr();
+                        },
+                    );
+
+                    envAdd(env, bindingName.name, Alias(value, aliasEnv));
+                },
+            );
+        },
+        () ref=> { genericError("alias variable must have a value"); },
+    );
+}
+
+overload envAddFlatAlias(env:Env, aliasEnv:Env, bindingList:ast.SingleBindingList) {
+    for (binding in bindingList) {
+        if (just?(binding.name.type))
+            genericError("type declarations on alias bindings not yet supported");
+        envAdd(env, binding.name.name, Alias(binding.value, aliasEnv));
+    }
 }
 
 
@@ -1048,6 +1119,36 @@ overload printTo(stream, x:RTExternal) {
 
 
 //
+// RTGlobal, RTListGlobal
+//
+
+/*GLOBALS
+record RTGlobal = referenceType(
+    ast: ast.GlobalBinding,
+    module: Module,
+    name: String,
+    kind: RTValueKind,
+    attributes: TriState[RTGlobalAttributes],
+);
+
+record RTGlobalAttributes (
+    type: Value,
+);
+
+record RTListGlobal = referenceType(
+    ast: ast.GlobalBinding,
+    module: Module,
+    name: String,
+    attributes: TriState[RTListGlobalAttributes],
+);
+
+record RTListGlobalAttributes (
+    vars: Vector[RTGlobal],
+);
+*/
+
+
+//
 // RTValue, RTValueList
 //
 
@@ -1062,6 +1163,9 @@ record LocalVariable();
 
 variant RTValueReferent = ReferenceVariable
                         | LocalVariable
+                        /* GLOBAL
+                        | RTGlobal
+                        */
                         | RTExternal;
 
 overload RTValueReferent() = RTValueReferent(ReferenceVariable());

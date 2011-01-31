@@ -1052,42 +1052,7 @@ overload analyzeAliasBindings(
     bindingList:ast.MultipleBindingList
 ) {
     var env = newEnv(parentEnv);
-
-    maybe(bindingList.values,
-        values ref=> {
-            maybe(bindingList.names.variadicItem,
-                varBindingName ref=> {
-                    if (size(bindingList.names.items) != 0)
-                        genericError("multiple alias binding not yet supported");
-                    if (just?(varBindingName.type))
-                        genericError("type declarations on alias bindings not yet supported");
-
-                    envAdd(env, varBindingName.name, ListAlias(values, parentEnv));
-                },
-                () ref=> {
-                    if (size(bindingList.names.items) != 1)
-                        genericError("multiple alias binding not yet supported");
-                    var bindingName = bindingList.names.items[0];
-                    if (just?(bindingName.type))
-                        genericError("type declarations on alias bindings not yet supported");
-
-                    if (size(values) != 1)
-                        genericError("single alias variable bound to multiple value expression");
-                    var value = match(values[0],
-                        ast.Expr, x => x,
-                        ast.UnpackExpr, x ref=> {
-                            genericError("single alias variable bound to multiple value expression");
-                            return ast.Expr();
-                        },
-                    );
-
-                    envAdd(env, bindingName.name, Alias(value, parentEnv));
-                },
-            );
-        },
-        () ref=> { genericError("alias variable must have a value"); },
-    );
-
+    envAddFlatAlias(env, parentEnv, bindingList);
     return env, false;
 }
 
@@ -1103,16 +1068,16 @@ overload analyzeStrictBindings(
     var env = env_;
     for (binding in bindingList) {
         env = newEnv(env);
-        if (maybeAnalyzeBinding(s, env, stmt, kind, binding))
+        if (maybeAnalyzeSingleBinding(s, env, stmt, kind, binding))
             return env, true;
     }
     return env, false;
 }
 
-private maybeAnalyzeBinding(s, env, stmt, kind, binding)
+private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
     = maybe(analyzeSubnode(s, env, binding.value),
         valueResult ref=> {
-            analyzeBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
+            analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
             return false;
         },
         () ref=> true,
@@ -1129,7 +1094,7 @@ private analyzeBindingVar(s, stmt, kind, name, value) {
     return result;
 }
 
-private analyzeBinding(
+private analyzeSingleBinding(
     s,
     env,
     stmt:ast.BindingStatement,
@@ -1191,7 +1156,7 @@ overload analyzeStrictBindings(
                 if (not arityMatches?(bindingList.names, values))
                     genericError("incorrect number of values for variable binding");
                 for (binding, value in zipped(bindingList.names.items, values))
-                    analyzeBinding(s, env, stmt, kind, binding, value);
+                    analyzeSingleBinding(s, env, stmt, kind, binding, value);
 
                 maybe(bindingList.names.variadicItem, varItem ref=> {
                     var variadicVars = map(

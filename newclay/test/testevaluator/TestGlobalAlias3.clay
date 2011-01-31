@@ -1,0 +1,5 @@
+alias x = 1;
+alias y = 2;
+alias z = x + y;
+
+static Main() = z;

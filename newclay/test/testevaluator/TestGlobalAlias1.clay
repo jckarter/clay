@@ -1,0 +1,3 @@
+alias twentyTwo = 22;
+
+static Main() = twentyTwo;
