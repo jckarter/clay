@@ -51,7 +51,7 @@ ExternalAttributes -> "(" ExprList ")"
 
 ExternalArgumentList -> "(" variadic_list(Argument, ()) ")"
 
-GlobalBinding -> BindingStatement
+GlobalBinding -> Visibility? BindingKind BindingList ";"
 
 GlobalLiteralCodeBody -> LiteralCodeBodyKind LiteralCodeBody ";"
 

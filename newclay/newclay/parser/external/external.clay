@@ -1065,8 +1065,8 @@ private var externalArgument = bounds(modify(
 // globalBinding
 
 private var globalBinding = topLevelItemParser(
-    x => GlobalBinding(x.0, x.1),
-    sequence(bindingKind, bindingList, punc(#";"))
+    x => GlobalBinding(just(x.0, VIS_PUBLIC), x.1, x.2),
+    sequence(visibility, bindingKind, bindingList, punc(#";"))
 );
 
 // globalLiteralCodeBody
