@@ -1,0 +1,3 @@
+external printf(...);
+
+static Main() = printf;
