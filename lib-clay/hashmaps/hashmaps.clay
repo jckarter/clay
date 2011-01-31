@@ -182,27 +182,41 @@ overload remove(a:HashMap[K,V], key:K) {
 //
 
 [K,V]
-overload items(a:HashMap[K,V]) {
-    var x = HashMapItems[K,V](iterator(a.buckets), nullShared(Node[K,V]));
+overload items(forward a:HashMap[K,V]) {
+    var x = HashMapItems(captureValue(a), K, V);
     while (null?(x.node) and hasNext?(x.bucketsIter))
         x.node = next(x.bucketsIter);
     return move(x);
 }
 
-private record HashMapItems[K,V] (
-    bucketsIter : Type(iterator(typeToLValue(Vector[NodePtr[K,V]]))),
-    node : NodePtr[K,V],
-);
+private record HashMapItems[CapturedMap,K,V] =
+    map: CapturedMap,
+    bucketsIter : SequenceIteratorType(Vector[NodePtr[K,V]]),
+    node : NodePtr[K,V];
 
-[K,V]
-overload iterator(x:HashMapItems[K,V]) = x;
+[CapturedMap,K,V]
+overload HashMapItems(forward captured:CapturedMap, static K, static V)
+    returned:HashMapItems[CapturedMap,K,V]
+{
+    returned.map <-- captured;
+    try {
+        returned.bucketsIter <-- iterator(capturedRef(returned.map).buckets);
+        returned.node = nullShared(Node[K,V]);
+    } catch (ex) {
+        destroy(returned.map);
+        throw ex;
+    }
+}
 
-[K,V]
-overload hasNext?(x:HashMapItems[K,V]) =
+[C,K,V]
+overload iterator(x:HashMapItems[C,K,V]) = x;
+
+[C,K,V]
+overload hasNext?(x:HashMapItems[C,K,V]) =
     not null?(x.node);
 
-[K,V]
-overload next(x:HashMapItems[K,V]) {
+[C,K,V]
+overload next(x:HashMapItems[C,K,V]) {
     assert(not null?(x.node));
     ref key, value = x.node^.key, x.node^.value;
     x.node = x.node^.next;

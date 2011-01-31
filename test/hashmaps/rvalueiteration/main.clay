@@ -1,0 +1,19 @@
+foo() {
+    var x = HashMap[String, Int]();
+    x[String("un")] = 1;
+    x[String("deux")] = 2;
+    x[String("troi")] = 3;
+    x[String("quatre")] = 4;
+    return move(x);
+}
+
+main() {
+    var checklist = [false, false, false, false, false];
+    for (k, v in items(foo())) {
+        assert(v > 0 and v <= 4);
+        checklist[v] = true;
+    }
+    for (i in range(1, 5)) {
+        println(i, if (checklist[i]) "" else " not", " present");
+    }
+}
