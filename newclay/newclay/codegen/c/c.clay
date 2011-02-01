@@ -179,7 +179,7 @@ private typeKindedName(c, typeValue) {
 
 private addFunction(
     c:CodegenContext,
-    s:Specialization,
+    s:Specialization
 ) {
     assert(null?(lookup(c.functions, s)), "function added to codegen multiple times!");
     c.functions[s] = CodegenFunction(mangleFunction(s));
@@ -1015,7 +1015,6 @@ private printExternalDeclarationsTo(stream, c:CodegenContext) {
 private printFunctionForwardDeclarationsTo(stream, c:CodegenContext) {
     for (s in c.functionOrder) {
         ref function = getFunction(c,s);
-        observe(function);
         printlnTo(stream, just(function.signature), ";");
     }
     printlnTo(stream);
@@ -1028,7 +1027,33 @@ private printFunctionDefinitionsTo(stream, c:CodegenContext) {
         printTo(stream, just(function.definition));
         printlnTo(stream, "}");
     }
+    if (c.config.dialect == MSVC_DIALECT)
+        printMSVCConstructorDefinitionTo(stream, c);
+
     printlnTo(stream);
+}
+
+private printMSVCConstructorDefinitionTo(stream, c) {
+    if (just?(c.constructorFunction) or just?(c.destructorFunction)) {
+        printlnTo(stream, "#pragma section(\".CRT$XCU\",read)");
+        maybe(c.destructorFunction, desS ref=> {
+            printlnTo(stream, "typedef int (*_onexit_t)(void);");
+            printlnTo(stream, "_onexit_t _onexit(_onexit_t);");
+            printlnTo(stream, "static int _clay_msvc_destructor(void) {");
+            printlnTo(stream, "  ", functionName(c, desS), "();");
+            printlnTo(stream, "  return 0;");
+            printlnTo(stream, "}");
+        });
+        printlnTo(stream, "static void _clay_msvc_constructor(void) {");
+        maybe(c.constructorFunction, consS ref=> {
+            printlnTo(stream, "  ", functionName(c, consS), "();");
+        });
+        maybe(c.destructorFunction, desS ref=> {
+            printlnTo(stream, "  _onexit(_clay_msvc_destructor);");
+        });
+        printlnTo(stream, "}");
+        printlnTo(stream, "__declspec(allocate(\".CRT$XCU\")) void (*_clay_msvc_constructor_ptr)(void) = _clay_msvc_constructor;");
+    }
 }
 
 
