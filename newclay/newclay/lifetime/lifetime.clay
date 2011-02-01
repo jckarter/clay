@@ -342,7 +342,7 @@ lifetimeAnalyzeGlobalDestructor() Maybe[Specialization] {
     specialization.body = Maybe(Vector[ir.Node]());
     ref body = just(specialization.body);
 
-    for (binding in reversed(globalMap.globalOrder)) {
+    for (binding in globalMap.globalOrder) {
         assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
         for (g in reversed(globalMap.globals[binding].globals))
             destroyValue(body, globalRTValue(g));

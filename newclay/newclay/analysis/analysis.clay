@@ -154,10 +154,10 @@ private analyzeGlobal(g:RTGlobal) {
     assert(null?(lookup(globalMap.globals, binding)), "unprotected recursive global reference");
     return withGlobalAnalysis(binding, () ref=>
         withLocation(*binding.ast, () ref=> {
+            push(globalMap.globalOrder, binding);
             // XXX multiple-value globals?
             var type = Value();
             type, globalMap.globals[binding] = ...analyzeGlobal2(g, *binding.ast, binding.module);
-            push(globalMap.globalOrder, binding);
             return RTGlobalAttributes(type);
         })
     );
@@ -1776,16 +1776,6 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
 }
 
 private analyzeCallableReturns(s:Specialization, env, o:Overload) {
-    if (not empty?(o.ast.definition.returns))
-        s.results = computeReturnSpec(o.ast.definition.returns, env);
-    else {
-        analyzeCallableBody2(s, env, o);
-    }
-}
-
-overload analyzeCallableReturns(s) { analyzeCallableReturns(s, s.env, s.matchedOverload); }
-
-private analyzeCallableBody2(s:Specialization, env, o:Overload) {
     s.body = Maybe(Vector[ir.Node]());
     try {
         return withLocation(o.ast.definition, () ref=> {
@@ -1818,7 +1808,7 @@ private analyzeCallableBody2(s:Specialization, env, o:Overload) {
                     if (namedReturns?)
                         Maybe(RTValues())
                     else
-                        s.results;
+                        computeReturnSpec(o.ast.definition.returns, env);
                 // declared returns,  actually returns  => return types must match
                 // declared returns,  actually noreturn => ok
                 // declared noreturn, actually returns  => error
@@ -1834,19 +1824,29 @@ private analyzeCallableBody2(s:Specialization, env, o:Overload) {
                     );
                 });
             }
-            s.results = analyzedResults;
+            s.results = if (namedReturns?)
+                computeReturnSpec(o.ast.definition.returns, env)
+            else
+                analyzedResults;
             return complete?;
         });
+    } catch (ex:RecursiveAnalysisError) {
+        s.body = nothing(Vector[ir.Node]);
+        if (not empty?(o.ast.definition.returns)) {
+            s.results = computeReturnSpec(o.ast.definition.returns, env);
+            return false;
+        } else
+            throw ex;
     } catch (ex) {
         s.body = nothing(Vector[ir.Node]);
         throw ex; 
     }
 }
 
-overload analyzeCallableBody2(s) = analyzeCallableBody2(s, s.env, s.matchedOverload);
+overload analyzeCallableReturns(s) = analyzeCallableReturns(s, s.env, s.matchedOverload);
 
 analyzeCallableBody(s)
-    = withCallAnalysis(s.callable, s.args, () ref=> analyzeCallableBody2(s));
+    = withCallAnalysis(s.callable, s.args, () ref=> analyzeCallableReturns(s));
 
 private entrySpecialization(entry:InvokeEntry) {
     return maybe(entry.specialization,
@@ -1930,7 +1930,7 @@ analyzeGlobalConstructor() Maybe[Specialization] {
     specialization.env = newEnv(getProgramMainModule());
     specialization.body = Maybe(Vector[ir.Node]());
     ref body = just(specialization.body);
-    for (binding in globalMap.globalOrder) {
+    for (binding in reversed(globalMap.globalOrder)) {
         assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
         push(body, globalMap.globals[binding].constructorBody);
     }
