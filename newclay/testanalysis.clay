@@ -16,12 +16,6 @@ LeafTypeName(x:T) = StaticName(T);
 [V | Variant?(V)]
 overload LeafTypeName(x:V) = LeafTypeName(*x);
 
-fakeSpecialization(env) {
-    var s = allocateRef(Specialization);
-    s.env = env;
-    return s;
-}
-
 printDepth(depth) {
     for (i in range(depth))
         print("  ");
@@ -280,6 +274,17 @@ printInvokeTable(name, table) {
     }
 }
 
+printGlobal(binding:GlobalBinding, global:ProgramGlobal) {
+    printDepth(1);
+    println(binding.ast, ":");
+    printDepth(2);
+    println("types ", global.types);
+    printDepth(2);
+    println("constructor analysis nodes:");
+    for (node in global.constructorBody)
+        printNode(3, node);
+}
+
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <file>");
@@ -303,6 +308,10 @@ main(args) {
                 }
             }
 
+            println("globals:");
+            for (binding in program.globalMap.globalOrder) {
+                printGlobal(binding, program.globalMap.globals[binding]);
+            }
         });
     }
     catch (e:ClayError) {

@@ -1,0 +1,7 @@
+foo(x:NontrivialInt, y:NontrivialInt) = toNontrivialInt(3);
+
+var x = toNontrivialInt(1);
+var y = toNontrivialInt(2);
+var z = foo(x, y);
+
+main() = z;

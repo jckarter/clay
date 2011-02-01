@@ -1,0 +1,4 @@
+var x = y;
+var y = x;
+
+main() = x;

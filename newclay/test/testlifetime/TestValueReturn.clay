@@ -1,0 +1,5 @@
+foo() = toNontrivialInt(1);
+
+main() {
+    var x = foo();
+}

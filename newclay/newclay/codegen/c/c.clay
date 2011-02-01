@@ -1174,9 +1174,9 @@ private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
 private printStandaloneStubTo(stream, c, mainS) {
     printlnTo(stream);
     printlnTo(stream, "int main(int argc, char **argv) {");
-    printlnTo(stream, "    int exitCode;");
-    printlnTo(stream, "    ", functionName(c, mainS), "(&exitCode);");
-    printlnTo(stream, "    return exitCode;");
+    printlnTo(stream, "  int exitCode;");
+    printlnTo(stream, "  ", functionName(c, mainS), "(&exitCode);");
+    printlnTo(stream, "  return exitCode;");
     printlnTo(stream, "}");
 }
 
