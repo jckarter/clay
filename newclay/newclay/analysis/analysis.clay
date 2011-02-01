@@ -582,6 +582,16 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
         },
     );
 
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PairExpr)
+    = maybe(analyzeSubnode(s, env, expr.expr),
+        rightResults ref=> {
+            var rightResult = singleValue(rightResults);
+            var leftResult = singleAddSpecializedStaticValue(s, expr, Value(StringValue(expr.name.str)));
+            var operands = RTValues(leftResult, rightResult);
+            return analyzeCallWithOneResult(s, expr, getHooks().tupleLiteral, operands);
+        },
+    );
+
 private unifyIfExprReferent(thenv, elsev) {
     if (thenv.kind == RT_VALUE_RVALUE and elsev.kind == RT_VALUE_RVALUE
         and localVariable?(thenv) and localVariable?(elsev))
