@@ -87,4 +87,9 @@ foo() {
     x *= y;
     x /= y;
     x %= y;
+
+    (foo: "bar");
+    (foo: if (a) b else c);
+
+    label: (pair: "value");
 }
