@@ -13,23 +13,6 @@ import newclay.ir as ir;
 import testanalysis.*;
 import maybe.*;
 
-printInvokeTable(name, table) {
-    for (args, invoke in items(table)) {
-        println(name, args, ":");
-        maybe(invoke.specialization,
-            s => {
-                printSpecialization(1, s);
-                maybe(s.body, body ref=> {
-                    println("  optimized:");
-                    optimizeSpecialization(s);
-                    printSpecialization(2, s);
-                });
-            },
-            () => { println("  <no specialization!>"); },
-        );
-    }
-}
-
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <file>");
@@ -44,10 +27,26 @@ main(args) {
             analyzeCallableBody(s);
 
             maybe(s.body, body ref=> {
+                println("main:");
                 optimizeSpecialization(s);
                 lifetimeAnalyzeSpecialization(s);
                 printSpecialization(1, s);
             });
+            
+            maybe(analyzeGlobalConstructor(), constructorS ref=> {
+                println("global constructor:");
+                optimizeSpecialization(constructorS);
+                lifetimeAnalyzeSpecialization(constructorS);
+                printSpecialization(1, constructorS);
+            });
+            
+            maybe(lifetimeAnalyzeGlobalDestructor(), destructorS ref=> {
+                println("global destructor:");
+                optimizeSpecialization(destructorS);
+                lifetimeAnalyzeSpecialization(destructorS);
+                printSpecialization(1, destructorS);
+            });
+            
         });
     }
     catch (e:ClayError) {

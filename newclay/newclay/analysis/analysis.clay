@@ -155,11 +155,10 @@ private analyzeGlobal(g:RTGlobal) {
     return withGlobalAnalysis(binding, () ref=>
         withLocation(*binding.ast, () ref=> {
             // XXX multiple-value globals?
-            globalMap.globals[binding] = analyzeGlobal2(g, *binding.ast, binding.module);
+            var type = Value();
+            type, globalMap.globals[binding] = ...analyzeGlobal2(g, *binding.ast, binding.module);
             push(globalMap.globalOrder, binding);
-            ref global = globalMap.globals[binding];
-            assert(size(global.types) == 1);
-            return RTGlobalAttributes(global.types[0]);
+            return RTGlobalAttributes(type);
         })
     );
 }
@@ -172,27 +171,27 @@ private analyzeGlobal2(g:RTGlobal, binding:ast.SingleBinding, module:Module) {
     var resultTypes = analyzeSubnode(constructorS, newEnv(module), binding.value);
     assert(complete?, "unresolvable recursion in global initializer");
 
-    return maybe(resultTypes,
+    return ...maybe(resultTypes,
         results ref=> {
             if (size(results) != 1)
                 genericError("single-value global binding gave ", size(results), " results");
 
             var type = results[0].type;
             addSpecializedInitialize(constructorS, binding.value, results[0], _globalRTValue(g, type));
-            global.types = ValueList(type);
+            global.globals = Vector[RTGlobal](g);
 
-            return move(global);
+            return type, move(global);
         },
         () ref=> {
             genericError("global initializer is nonreturning");
-            return ProgramGlobal();
+            return Value(), ProgramGlobal();
         },
     );
 }
 
 overload analyzeGlobal2(g:RTGlobal, binding:ast.MultipleBindingList, module:Module) {
     genericError("multiple-value global bindings not yet supported");
-    return ProgramGlobal();
+    return Value(), ProgramGlobal();
 }
 
 globalAttributes(g:RTGlobal) = safeInitialize(g.attributes, () ref=> analyzeGlobal(g));
@@ -205,8 +204,8 @@ overload globalAttributes(g:RTListGlobal) = safeInitialize(g.attributes, () ref=
 private _globalRTValue(g:RTGlobal, type:Value)
     = RTValue(g.kind, type, g, g.name);
 
-private globalRTValue(g:RTGlobal) = _globalRTValue(g, globalAttributes(g).type);
-private globalRTValues(g:RTListGlobal) {
+globalRTValue(g:RTGlobal) = _globalRTValue(g, globalAttributes(g).type);
+globalRTValues(g:RTListGlobal) {
     genericError("multiple-value global bindings not yet supported");
     return RTValues();
 }
@@ -1918,3 +1917,26 @@ analyzeCallable2(callable:Value, args:RTValues) Specialization {
     return specialization;
 }
 
+
+//
+// analyzeGlobalConstructor
+//
+
+analyzeGlobalConstructor() Maybe[Specialization] {
+    ref globalMap = getProgram().globalMap;
+    var specialization = Specialization(
+        Value(StringValue(String("global constructor")))
+    );
+    specialization.env = newEnv(getProgramMainModule());
+    specialization.body = Maybe(Vector[ir.Node]());
+    ref body = just(specialization.body);
+    for (binding in globalMap.globalOrder) {
+        assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
+        push(body, globalMap.globals[binding].constructorBody);
+    }
+
+    if (empty?(body))
+        return nothing(Specialization);
+    else
+        return Maybe(specialization);
+}

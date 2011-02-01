@@ -46,7 +46,7 @@ record ProgramGlobalMap (
 );
 
 record ProgramGlobal (
-    types: ValueList,
+    globals: Vector[RTGlobal],
     constructorBody: Vector[ir.Node],
 );
 
@@ -1196,6 +1196,7 @@ equalArguments?(vs:RTValues, ws:RTValues) {
     return true;
 }
 
+globalVariable?(v:RTValue) = variantIs?(v.referent, RTGlobal);
 localVariable?(v:RTValue) = variantIs?(v.referent, LocalVariable);
 referenceVariable?(v:RTValue) = variantIs?(v.referent, ReferenceVariable);
 variable?(v:RTValue) = localVariable?(v) or referenceVariable?(v);
@@ -1266,6 +1267,8 @@ overload Specialization(o:Overload, callable:Value) {
     s.callable = callable;
     return move(s);
 }
+
+overload Specialization(callable:Value) = Specialization(Overload(), callable);
 
 record InvokeEntry(
     specialization: Maybe[Specialization],
@@ -1410,24 +1413,26 @@ overload printTo(stream, x:CallAnalysisEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-overload printTo(stream, x:GlobalAnalysisEntry) {
-    match(x.global.ast,
-        ast.SingleBinding, binding ref=> {
-            printTo(stream, "analyze global: ", binding.name.name.str);
-        },
-        ast.MultipleBindingList, bindings ref=> {
-            printTo(stream, "analyze globals: ");
-            interleave(bindings.names.items,
-                () ref=> { printTo(stream, ", "); },
-                binding ref=> { printTo(stream, binding.name.str); },
-            );
-            maybe(bindings.names.variadicItem, item ref=> {
-                if (not empty?(bindings.names.items))
-                    printTo(stream, ", ");
-                printTo(stream, "...", item.name.str);
-            });
-        },
+overload printTo(stream, x:GlobalAST) {
+    printTo(stream, *x);
+}
+overload printTo(stream, x:ast.SingleBinding) {
+    printTo(stream, x.name.name.str);
+}
+overload printTo(stream, x:ast.MultipleBindingList) {
+    interleave(x.names.items,
+        () ref=> { printTo(stream, ", "); },
+        binding ref=> { printTo(stream, binding.name.str); },
     );
+    maybe(x.names.variadicItem, item ref=> {
+        if (not empty?(x.names.items))
+            printTo(stream, ", ");
+        printTo(stream, "...", item.name.str);
+    });
+}
+
+overload printTo(stream, x:GlobalAnalysisEntry) {
+    printTo(stream, "analyze global: ", x.global.ast);
 }
 
 overload printTo(stream, x:CallCompilationEntry) {

@@ -198,6 +198,8 @@ private addValue(c:LifetimeContext, input) {
 private addReference(c:LifetimeContext, input) {
     if (podType?(input.type))
         return;
+    if (globalVariable?(input))
+        return;
 
     if (not null?(lookup(c.variableFrames, input)))
         return;
@@ -325,5 +327,30 @@ lifetimeAnalyzeSpecialization(s:Specialization) {
         lifetimeAnalyzeSubbody(c, outBody, just(s.body));
     });
     s.body = Maybe(move(outBody));
+}
+
+//
+// lifetimeAnalyzeGlobalDestructor
+//
+
+lifetimeAnalyzeGlobalDestructor() Maybe[Specialization] {
+    ref globalMap = getProgram().globalMap;
+    var specialization = Specialization(
+        Value(StringValue(String("global destructor")))
+    );
+    specialization.env = newEnv(getProgramMainModule());
+    specialization.body = Maybe(Vector[ir.Node]());
+    ref body = just(specialization.body);
+
+    for (binding in reversed(globalMap.globalOrder)) {
+        assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
+        for (g in reversed(globalMap.globals[binding].globals))
+            destroyValue(body, globalRTValue(g));
+    }
+
+    if (empty?(body))
+        return nothing(Specialization);
+    else
+        return Maybe(specialization);
 }
 
