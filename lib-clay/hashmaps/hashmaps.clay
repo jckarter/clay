@@ -201,7 +201,7 @@ overload HashMapItems(forward captured:CapturedMap, static K, static V)
     returned.map <-- captured;
     try {
         returned.bucketsIter <-- iterator(capturedRef(returned.map).buckets);
-        returned.node = nullShared(Node[K,V]);
+        returned.node <-- nullShared(Node[K,V]);
     } catch (ex) {
         destroy(returned.map);
         throw ex;

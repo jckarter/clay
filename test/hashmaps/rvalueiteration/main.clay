@@ -9,7 +9,19 @@ foo() {
 
 main() {
     var checklist = [false, false, false, false, false];
+
     for (k, v in items(foo())) {
+        assert(v > 0 and v <= 4);
+        checklist[v] = true;
+    }
+    for (i in range(1, 5)) {
+        println(i, if (checklist[i]) "" else " not", " present");
+    }
+
+    checklist = [false, false, false, false, false];
+
+    var lv = foo();
+    for (k, v in items(lv)) {
         assert(v > 0 and v <= 4);
         checklist[v] = true;
     }
