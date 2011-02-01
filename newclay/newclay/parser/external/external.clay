@@ -562,11 +562,22 @@ private var ifExpr = exprParser(
 
 
 //
+// pair expr
+//
+
+private var pairExpr = exprParser(
+    x => PairExpr(move(x.0), move(x.2)),
+    sequence(identifier, punc(#":"), expr),
+);
+
+
+
+//
 // expr
 //
 
 private var expr2 = choice(
-    ifExpr, lambdaExpr, orExpr,
+    pairExpr, ifExpr, lambdaExpr, orExpr,
 );
 
 private expr(input) Maybe[Expr] { return expr2(input); }

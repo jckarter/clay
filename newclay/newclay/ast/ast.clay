@@ -183,6 +183,7 @@ variant Expr = BoolLiteral
              | UnaryOpExpr
              | BinaryOpExpr
              | StaticExpr
+             | PairExpr
              ;
 
 overload Expr() = Expr(BoolLiteral());
@@ -337,6 +338,11 @@ record IfExpr = ast(
     condition: Expr,
     thenPart: Expr,
     elsePart: Expr,
+);
+
+record PairExpr = ast(
+    name: Identifier,
+    expr: Expr,
 );
 
 

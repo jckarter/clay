@@ -185,7 +185,10 @@ LambdaArgs -> Identifier
 
 IfExpr -> "if" "(" Expr ")" Expr "else" Expr
 
-Expr -> IfExpr
+PairExpr -> identifier ":" Expr
+
+Expr -> PairExpr
+      | IfExpr
       | LambdaExpr
       | OrExpr
 
