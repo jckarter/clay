@@ -495,11 +495,14 @@ overload evaluateExpr(x:ast.IfExpr, env) {
     else
         return evaluateExpr(x.elsePart, env);
 }
-
+overload evaluateExpr(x:ast.PairExpr, env) {
+    var leftValue = Value(StringValue(x.name.str));
+    var rightValue = evaluateExpr(x.expr, env);
+    return Value(TupleValue(ValueList(leftValue, rightValue)));
+}
 overload evaluateExpr(x:ast.StaticExpr, env) {
     return evaluateExpr(x.expr, env);
 }
-
 overload evaluateExpr(x:ast.UnaryOpExpr, env) {
     var operands = ValueList(evaluateExpr(x.expr, env));
     switch (x.operator) {
