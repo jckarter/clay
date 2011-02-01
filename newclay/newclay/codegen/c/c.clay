@@ -46,11 +46,14 @@ record CodegenContext (
     typeOrder: Vector[Value],
     functions: HashMap[Specialization, CodegenFunction],
     functionOrder: Vector[Specialization],
+    constructorFunction: Maybe[Specialization],
+    destructorFunction: Maybe[Specialization],
     constants: HashMap[Value, CodegenConstant],
     constantOrder: Vector[Value],
     constantNames: NameAllocator,
     externals: HashMap[String, RTExternal],
     externalOrder: Vector[String],
+    globalNames: HashMap[RTGlobal, String],
 );
 
 overload CodegenContext(config:CodegenConfig) x:CodegenContext {
@@ -174,17 +177,37 @@ private typeKindedName(c, typeValue) {
     }
 }
 
+private addFunction(
+    c:CodegenContext,
+    s:Specialization,
+) {
+    assert(null?(lookup(c.functions, s)), "function added to codegen multiple times!");
+    c.functions[s] = CodegenFunction(mangleFunction(s));
+    push(c.functionOrder, s);
+    return ref c.functions[s];
+}
+
 private getFunction(c:CodegenContext, s:Specialization) {
     var namep = lookup(c.functions, s);
     if (null?(namep)) {
-        c.functions[s] = CodegenFunction(mangleFunction(s));
-        push(c.functionOrder, s);
-        return ref c.functions[s];
+        return ref addFunction(c, s);
     } else
         return ref namep^;
 }
 
 private functionName(c, type) = getFunction(c, type).mangledName;
+
+// XXX need to differentiate components of list globals
+private globalIdentifier(g) = printString("global ", g.binding.module.name, '.', g.name);
+
+private globalName(c:CodegenContext, g:RTGlobal) {
+    var namep = lookup(c.globalNames, g);
+    if (null?(namep)) {
+        c.globalNames[g] = mangleGlobal(globalIdentifier(g));
+        return c.globalNames[g];
+    } else
+        return namep^;
+}
 
 private getConstant(c:CodegenContext, value:Value, definitionFn) {
     var constantp = lookup(c.constants, value);
@@ -246,6 +269,7 @@ private valueDeref(c:CodegenContext, bc:CodegenBodyContext, value) {
         LocalVariable,     l ref=> localName(bc, value),
         ReferenceVariable, r ref=> "*" + localName(bc, value),
         RTExternal,        e ref=> externalName(c, e),
+        RTGlobal,          g ref=> globalName(c, g),
     );
 }
 
@@ -254,6 +278,7 @@ private valueRef(c:CodegenContext, bc:CodegenBodyContext, value) {
         LocalVariable,     l ref=> "&" + localName(bc, value),
         ReferenceVariable, r ref=> localName(bc, value),
         RTExternal,        e ref=> externalName(c, e),
+        RTGlobal,          g ref=> "&" + globalName(c, g),
     );
 }
 
@@ -280,11 +305,36 @@ private printLocalDefinitionTo(stream, c, bc, a) {
     printTo(stream, localName(bc, a));
 }
 
+private gccFunctionAttributes(c, s) {
+    if (c.constructorFunction == Maybe(s))
+        return String("__attribute__((constructor)) ");
+    if (c.destructorFunction == Maybe(s))
+        return String("__attribute__((destructor)) ");
+    return String("");
+}
+
+private msvcFunctionAttributes(c, s) = String("");
+
+private functionAttributes(c, s) {
+    switch (c.config.dialect) {
+    case GCC_DIALECT:
+        return gccFunctionAttributes(c, s);
+    case MSVC_DIALECT:
+        return msvcFunctionAttributes(c, s);
+    default:
+        assert(false);
+        return String();
+    }
+}
+
 private finalizeFunctionSignature(c, bc, function) {
     function.signature = Maybe(String());
     ref signature = just(function.signature);
 
-    printTo(signature, "static void ", functionName(c, bc.s), "(");
+    printTo(signature,
+        functionAttributes(c, bc.s),
+        "static void ", functionName(c, bc.s), "("
+    );
 
     interleave(bc.s.internalArgs,
         () ref=> { printTo(signature, ", "); },
@@ -868,6 +918,7 @@ printCodegenTo(stream, c:CodegenContext) {
     printTypeForwardDeclarationsTo(stream, c);
     printTypeDefinitionsTo(stream, c);
     printHelperTypeDefinitionsTo(stream, c);
+    printGlobalVariablesTo(stream, c);
     printGlobalLiteralCodeBodiesTo(stream, c);
     printConstantDefinitionsTo(stream, c);
     printExternalDeclarationsTo(stream, c);
@@ -926,6 +977,15 @@ private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
     printlnTo(stream);
 }
 
+private printGlobalVariablesTo(stream, c:CodegenContext) {
+    ref globalMap = getProgram().globalMap;
+    for (binding in reversed(globalMap.globalOrder)) {
+        for (g in globalMap.globals[binding].globals)
+            printlnTo(stream, typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
+    }
+    printlnTo(stream);
+}
+
 private printGlobalLiteralCodeBodiesTo(stream, c:CodegenContext) {
     for (codeBody in getProgram().allLiteralCodeBodies) {
         if (codeBody.kind == ast.LITERAL_LLVM)
@@ -955,6 +1015,7 @@ private printExternalDeclarationsTo(stream, c:CodegenContext) {
 private printFunctionForwardDeclarationsTo(stream, c:CodegenContext) {
     for (s in c.functionOrder) {
         ref function = getFunction(c,s);
+        observe(function);
         printlnTo(stream, just(function.signature), ";");
     }
     printlnTo(stream);
@@ -1118,9 +1179,15 @@ codegenFromEntryPoints(config:CodegenConfig, entryPoints:Vector[Specialization])
 
     codegenFunctionsToFixedPoint(c, entryPoints);
     codegenTypesToFixedPoint(c);
+    codegenGlobalConstructorDestructor(c);
 
     return move(c);
 }
+
+private functionsNeedingCodegen(c) = filter(
+    s ref=> nothing?(c.functions[s].definition),
+    c.functionOrder
+);
 
 private codegenFunctionsToFixedPoint(c, entryPoints) {
     var functionsToCodegen = entryPoints;
@@ -1129,11 +1196,7 @@ private codegenFunctionsToFixedPoint(c, entryPoints) {
             analyzeAndCodegenFunction(c, s);
 
         var oldFunctionsToCodegen = move(functionsToCodegen);
-        functionsToCodegen = filter(
-            s ref=> nothing?(c.functions[s].definition),
-            c.functionOrder
-        );
-
+        functionsToCodegen = functionsNeedingCodegen(c); 
         if (oldFunctionsToCodegen == functionsToCodegen)
             genericError("unable to propagate all functions");
     }
@@ -1167,6 +1230,20 @@ private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
     codegenFunction(c, s);
 }
 
+private codegenGlobalConstructorDestructor(c:CodegenContext) {
+    maybe(analyzeGlobalConstructor(), constructorS ref=> {
+        addFunction(c, constructorS);
+        c.constructorFunction = Maybe(constructorS);
+        analyzeAndCodegenFunction(c, constructorS);
+    });
+    maybe(lifetimeAnalyzeGlobalDestructor(), destructorS ref=> {
+        addFunction(c, destructorS);
+        c.destructorFunction = Maybe(destructorS);
+        analyzeAndCodegenFunction(c, destructorS);
+    });
+    codegenFunctionsToFixedPoint(c, functionsNeedingCodegen(c));
+}
+
 //
 // codegenStandaloneProgramTo
 //
@@ -1174,9 +1251,15 @@ private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
 private printStandaloneStubTo(stream, c, mainS) {
     printlnTo(stream);
     printlnTo(stream, "int main(int argc, char **argv) {");
-    printlnTo(stream, "  int exitCode;");
-    printlnTo(stream, "  ", functionName(c, mainS), "(&exitCode);");
-    printlnTo(stream, "  return exitCode;");
+    if (nothing?(mainS.results)) {
+        printlnTo(stream, "  ", functionName(c, mainS), "();");
+        printlnTo(stream, "  /* main does not return */");
+        printlnTo(stream, "  return 0;");
+    } else {
+        printlnTo(stream, "  int exitCode;");
+        printlnTo(stream, "  ", functionName(c, mainS), "(&exitCode);");
+        printlnTo(stream, "  return exitCode;");
+    }
     printlnTo(stream, "}");
 }
 
@@ -1185,11 +1268,11 @@ codegenStandaloneProgramTo(config:CodegenConfig, stream) {
 
     var mainResultsOk? = maybe(mainS.results,
         results => size(results) == 1 and results[0].type == int32Type(),
-        () => false
+        () => true
     );
 
     if (not mainResultsOk?)
-        genericError("callMain() must return an Int");
+        genericError("callMain() must return an Int32 but returns ", mainS.results);
 
     var c = codegenFromEntryPoints(config, Vector[Specialization](mainS));
     printCodegenTo(stream, c);

@@ -278,7 +278,7 @@ printGlobal(binding:GlobalBinding, global:ProgramGlobal) {
     printDepth(1);
     println(binding.ast, ":");
     printDepth(2);
-    println("types ", global.types);
+    println("global entries ", global.globals);
     printDepth(2);
     println("constructor analysis nodes:");
     for (node in global.constructorBody)
@@ -309,7 +309,7 @@ main(args) {
             }
 
             println("globals:");
-            for (binding in program.globalMap.globalOrder) {
+            for (binding in reversed(program.globalMap.globalOrder)) {
                 printGlobal(binding, program.globalMap.globals[binding]);
             }
         });
