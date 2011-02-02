@@ -981,7 +981,7 @@ private printGlobalVariablesTo(stream, c:CodegenContext) {
     ref globalMap = getProgram().globalMap;
     for (binding in reversed(globalMap.globalOrder)) {
         for (g in globalMap.globals[binding].globals)
-            printlnTo(stream, typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
+            printlnTo(stream, "static ", typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
     }
     printlnTo(stream);
 }

@@ -569,7 +569,6 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
                 elseRecursive? = true;
             }
 
-            // XXX if recursive, we need to re-analyze the recursive branch with the other branch result
             if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
