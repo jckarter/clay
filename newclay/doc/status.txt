@@ -1,7 +1,7 @@
 Unimplemented features:
-- multiple-value global bindings with initializers
+- multiple-value global bindings
     var x, y, ...z = ...foo();
-- global ref, const bindings
+- global ref and const bindings
 - parameterized global variables
     var typeSize['T] = TypeSize('T);
 - multiple-value assignment
