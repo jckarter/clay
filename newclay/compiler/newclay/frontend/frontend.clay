@@ -1,5 +1,6 @@
 import newclay.core.*;
 import newclay.codegen.c.*;
+import newclay.loader.*;
 import maybe.*;
 import io.paths.*;
 import libc.(exit);
@@ -71,8 +72,16 @@ parseFrontendOptions() {
 validateFrontendOptions(options) {
     if (nothing?(options.inputFile))
         optionError("no input file specified");
+
+    var inputFile = just(options.inputFile);
+
     if (nothing?(options.outputFile))
-        options.outputFile = Maybe(defaultOutputFileName(options, just(options.inputFile)));
+        options.outputFile = Maybe(defaultOutputFileName(options, inputFile));
+
+    var dirname = pathDirname(inputFile);
+    if (not empty?(dirname))
+        push(options.modulePaths, dirname);
+    push(options.modulePaths, String("."));
 }
 
 defaultOutputFileName(options, inputFile) {

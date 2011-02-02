@@ -2,12 +2,25 @@ import newclay.common.*;
 import newclay.lexer;
 import newclay.parser;
 import newclay.frontend.*;
+import newclay.codegen.c.*;
+import newclay.core.*;
+import newclay.hooks.*;
+import newclay.loader.*;
+import io.files.raw.*;
 import maybe.*;
 
 main() {
     try {
         var options = parseFrontendOptions();
-        println(options);
+        observe(#options, options);
+
+        var program = loadProgram(just(options.inputFile), options.modulePaths);
+        withProgram(program, () ref=> {
+            initializeClayHooks();
+
+            var outputFile = RawFile(just(options.outputFile), CREATE);
+            codegenStandaloneProgramTo(CodegenConfig(options.cDialect), outputFile);
+        });
     }
     catch (e:ClayError) {
         displayError(e);

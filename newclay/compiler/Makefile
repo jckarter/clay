@@ -1,6 +1,4 @@
-all:
-	@echo "Choose a test* target"
-	@exit 1
+all: clay
 
 .PRECIOUS: %.o %.s
 
@@ -17,6 +15,9 @@ parser.s: lexer.o newclay/ast/ast.clay newclay/parser/parser.clay newclay/parser
 	gcc -c -o $@ $<
 
 %: %.o lexer.o parser.o
+	gcc -o $@ $^
+
+clay: main.o lexer.o parser.o
 	gcc -o $@ $^
 
 clean:
