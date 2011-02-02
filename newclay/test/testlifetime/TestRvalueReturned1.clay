@@ -1,0 +1,4 @@
+main() {
+    rvalue x = toNontrivialInt(1);
+    return x;
+}

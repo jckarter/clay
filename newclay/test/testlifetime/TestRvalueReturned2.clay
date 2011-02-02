@@ -1,0 +1,6 @@
+rvalueReturn() rvalue x:NontrivialInt __c__ """abort();""";
+
+main() {
+    rvalue x = rvalueReturn();
+    return x;
+}
