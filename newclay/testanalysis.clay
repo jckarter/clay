@@ -11,6 +11,8 @@ import newclay.optimizer.*;
 import newclay.ir as ir;
 import maybe.*;
 
+var withIds = false;
+
 [T]
 LeafTypeName(x:T) = StaticName(T);
 [V | Variant?(V)]
@@ -178,7 +180,7 @@ overload printNodeData(depth, node:ir.Phi) {
         printVars(depth+2, "in  ", inputs);
     }
     printDepth(depth+1);
-    print("outputs:");
+    println("outputs:");
     printVars(depth+2, "out ", node.outputs);
 }
 
@@ -206,7 +208,9 @@ overload printNodeData(depth, node:ir.Throw) {
 }
 
 printVar(variable) {
-    println(asPtr(variable), " ", variable);
+    if (withIds)
+        print(asPtr(variable), " ");
+    println(variable);
 }
 
 printVars(depth, prefix, vars) {
@@ -233,7 +237,10 @@ printOutputs(depth, mOutputs:Maybe[RTValues]) {
 
 printSpecialization(depth, s) {
     printDepth(depth);
-    println("specialization ", asPtr(s));
+    print("specialization");
+    if (withIds)
+        print(" ", asPtr(s));
+    println();
     printDepth(depth);
     println("results:");
     printOutputs(depth+1, s.results);
@@ -286,12 +293,15 @@ printGlobal(binding:GlobalBinding, global:ProgramGlobal) {
 }
 
 main(args) {
-    if (size(args) != 2) {
-        println("usage: ", args[0], " <file>");
+    if (size(args) < 2) {
+        println("usage: ", args[0], " <file> [ids]");
         return -1;
     }
     try {
         var program = loadProgram(args[1]);
+        if (size(args) >= 3 and args[2] == "ids")
+            withIds = true;
+
         withProgram(program, () ref=> {
             initializeClayHooks();
 
