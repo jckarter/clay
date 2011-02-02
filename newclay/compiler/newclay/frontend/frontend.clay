@@ -1,0 +1,196 @@
+import newclay.core.*;
+import newclay.codegen.c.*;
+import maybe.*;
+
+
+//
+// parseFrontendOptions
+//
+
+record FrontendOptions (
+    modulePaths: Vector[String],
+    cDialect: CDialect,
+    // outputFileKind: OutputKind,
+    outputFile: Maybe[String],
+    inputFile: Maybe[String],
+);
+
+parseFrontendOptions() {
+    var options = FrontendOptions();
+
+    parseOptions(
+        ("-I", PrefixOption, o ref=> {
+            push(options.modulePaths, String(requireParameter(o, "no path given for -I")));
+        }),
+        ("-o", WordOption, o ref=> {
+            var outputFile = requireParameter(o, "no path given for -o");
+            maybe(options.outputFile,
+                oldOutputFile ref=> {
+                    error("multiple output paths given: ", oldOutputFile, ", ", outputFile);
+                },
+                () ref=> {
+                    options.outputFile = Maybe(String(outputFile));
+                },
+            );
+        }),
+        ("-c-dialect", WordOption, o ref=> {
+            var dialect = requireParameter(o, "no dialect given for -c-dialect");
+            switch (dialect) {
+            case "msvc":
+                options.cDialect = MSVC_DIALECT;
+                break;
+            case "gcc":
+                options.cDialect = GCC_DIALECT;
+                break;
+            default:
+                error("unknown -c-dialect value ", dialect);
+                break;
+            }
+        }),
+        inputFile ref=> {
+            maybe(options.inputFile,
+                oldInputFile ref=> {
+                    error("multiple input paths given: ", oldInputFile, ", ", inputFile);
+                },
+                () ref=> {
+                    options.inputFile = Maybe(String(inputFile));
+                },
+            );
+        },
+    );
+
+    return move(options);
+}
+
+
+//
+// options parser
+//
+
+record Options (
+    more?: Bool,
+    argc: SizeT,
+    argv: Pointer[Pointer[CChar]],
+    arg: Pointer[CChar],
+);
+
+overload Options(argc, argv) = Options(
+    argc != 0,
+    SizeT(argc),
+    argv,
+    if (argc == 0) null(CChar) else argv[0]
+);
+
+hasMoreParameters?(o:Options) = o.more?;
+currentParameter(o:Options) = CStringRef(o.arg);
+nextParameter(o:Options) {
+    var result = currentParameter(o);
+    o.argc -= 1;
+    o.argv += 1;
+    if (o.argc > 0) {
+        if (CStringRef(o.argv[0]) == "--") {
+            o.argc -= 1;
+            o.argv += 1;
+            o.more? = false;
+        } else
+            o.arg = o.argv[0];
+    } else
+        o.more? = false;
+    return result;
+}
+tailParameters(o:Options) = mapped(CStringRef, coordinateRange(o.argv, o.argv + o.argc));
+
+requireParameter(o:Options, ...msg) {
+    if (not hasMoreParameters?(o))
+        error(...msg);
+    return nextParameter(o);
+}
+
+[S | String?(S)]
+currentParameter?(o:Options, prefix:S) {
+    if (currentParameter(o) == prefix) {
+        nextParameter(o);
+        return true;
+    }
+    return false;
+}
+
+[S | String?(S)]
+prefixParameter?(o:Options, prefix:S) {
+    var param = currentParameter(o);
+    var prefixSize = size(prefix);
+    if (size(param) == prefixSize and param == prefix) {
+        nextParameter(o);
+        return true;
+    }
+    if (size(param) > prefixSize and prefix == slicedUpto(param, prefixSize)) {
+        o.arg += prefixSize;
+        return true;
+    }
+    return false;
+}
+
+parseArgcArgv(argc, argv, ...specs) {
+    var options = Options(argc, argv);
+
+    while (hasMoreParameters?(options)) {
+        tryOptions(options, ...specs);
+    }
+    tryTailParameters(options, ...specs);
+}
+
+parseOptions(...specs) {
+    var argc, argv = ...getArgcArgv();
+    assert(argc >= 1, "argc must be at least 1");
+    parseArgcArgv(argc - 1, argv + 1, ...specs);
+}
+
+procedure WordOption;
+procedure PrefixOption;
+
+OptionSpec?(X, O) = false;
+[S, O, F | String?(S) and CallDefined?(call, F, Options)]
+overload OptionSpec?(static Tuple[S, Static[O], F], static O) = true;
+
+private tryOptions(options) {
+    error("unknown option: ", currentParameter(options));
+}
+
+[F | CallDefined?(call, F, CStringRef)]
+overload tryOptions(options, defaultFn:F) {
+    var param = nextParameter(options);
+    if (size(param) > 0 and param[0] == '-')
+        error("unknown option: ", currentParameter(options));
+    defaultFn(param);
+}
+
+[O | OptionSpec?(O, PrefixOption)]
+overload tryOptions(options, spec:O, ...specs) {
+    ref name, _, fn = ...unpack(spec);
+    if (prefixParameter?(options, name))
+        fn(options);
+    else
+        tryOptions(options, ...specs);
+}
+[O | OptionSpec?(O, WordOption)]
+overload tryOptions(options, spec:O, ...specs) {
+    ref name, _, fn = ...unpack(spec);
+    if (currentParameter?(options, name))
+        fn(options);
+    else
+        tryOptions(options, ...specs);
+}
+
+private tryTailParameters(options) {
+    error("invalid parameter: ", currentParameter(options));
+}
+
+overload tryTailParameters(options, a, ...b) { tryTailParameters(options, ...b); }
+
+[F | CallDefined?(call, F, CStringRef)]
+overload tryTailParameters(options, defaultFn:F) {
+    for (param in tailParameters(options))
+        defaultFn(param);
+}
+
+

@@ -1,0 +1,16 @@
+import newclay.common.*;
+import newclay.lexer;
+import newclay.parser;
+import newclay.frontend.*;
+import maybe.*;
+
+main() {
+    try {
+        var options = parseFrontendOptions();
+        println(options);
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
