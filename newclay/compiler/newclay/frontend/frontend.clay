@@ -1,6 +1,8 @@
 import newclay.core.*;
 import newclay.codegen.c.*;
 import maybe.*;
+import io.paths.*;
+import libc.(exit);
 
 
 //
@@ -47,6 +49,9 @@ parseFrontendOptions() {
                 break;
             }
         }),
+        ("--help", WordOption, o ref=> { usage(); }),
+        ("-help",  WordOption, o ref=> { usage(); }),
+        ("/?",     WordOption, o ref=> { usage(); }),
         inputFile ref=> {
             maybe(options.inputFile,
                 oldInputFile ref=> {
@@ -59,7 +64,35 @@ parseFrontendOptions() {
         },
     );
 
+    validateFrontendOptions(options);
     return move(options);
+}
+
+validateFrontendOptions(options) {
+    if (nothing?(options.inputFile))
+        error("no input file specified");
+    if (nothing?(options.outputFile))
+        options.outputFile = Maybe(defaultOutputFileName(options, just(options.inputFile)));
+}
+
+defaultOutputFileName(options, inputFile) {
+    var dirname, basename = ...slicedPath(inputFile);
+    var e = reverseFind(basename, '.');
+    var name = if (e != begin(basename))
+        String(coordinateRange(begin(basename), e - 1))
+    else
+        String(basename);
+
+    return name + ".c";
+}
+
+usage() {
+    println("usage: clay <options> <clayfile>");
+    println("options:");
+    println("  -o <filename>        - specify output C file (default <clayfile>.c)");
+    println("  -I<path>             - add <path> to module search path");
+    println("  -c-dialect gcc|msvc  - generate GCC or MSVC C dialect (default GCC)");
+    exit(2);
 }
 
 
