@@ -28,7 +28,7 @@ parseFrontendOptions() {
             var outputFile = requireParameter(o, "no path given for -o");
             maybe(options.outputFile,
                 oldOutputFile ref=> {
-                    error("multiple output paths given: ", oldOutputFile, ", ", outputFile);
+                    optionError("multiple output paths given: ", oldOutputFile, ", ", outputFile);
                 },
                 () ref=> {
                     options.outputFile = Maybe(String(outputFile));
@@ -45,7 +45,7 @@ parseFrontendOptions() {
                 options.cDialect = GCC_DIALECT;
                 break;
             default:
-                error("unknown -c-dialect value ", dialect);
+                optionError("unknown -c-dialect value ", dialect);
                 break;
             }
         }),
@@ -55,7 +55,7 @@ parseFrontendOptions() {
         inputFile ref=> {
             maybe(options.inputFile,
                 oldInputFile ref=> {
-                    error("multiple input paths given: ", oldInputFile, ", ", inputFile);
+                    optionError("multiple input paths given: ", oldInputFile, ", ", inputFile);
                 },
                 () ref=> {
                     options.inputFile = Maybe(String(inputFile));
@@ -70,7 +70,7 @@ parseFrontendOptions() {
 
 validateFrontendOptions(options) {
     if (nothing?(options.inputFile))
-        error("no input file specified");
+        optionError("no input file specified");
     if (nothing?(options.outputFile))
         options.outputFile = Maybe(defaultOutputFileName(options, just(options.inputFile)));
 }
@@ -135,7 +135,7 @@ tailParameters(o:Options) = mapped(CStringRef, coordinateRange(o.argv, o.argv + 
 
 requireParameter(o:Options, ...msg) {
     if (not hasMoreParameters?(o))
-        error(...msg);
+        optionError(...msg);
     return nextParameter(o);
 }
 
@@ -186,14 +186,14 @@ OptionSpec?(X, O) = false;
 overload OptionSpec?(static Tuple[S, Static[O], F], static O) = true;
 
 private tryOptions(options) {
-    error("unknown option: ", currentParameter(options));
+    optionError("unknown option: ", currentParameter(options));
 }
 
 [F | CallDefined?(call, F, CStringRef)]
 overload tryOptions(options, defaultFn:F) {
     var param = nextParameter(options);
     if (size(param) > 0 and param[0] == '-')
-        error("unknown option: ", currentParameter(options));
+        optionError("unknown option: ", currentParameter(options));
     defaultFn(param);
 }
 
@@ -215,7 +215,7 @@ overload tryOptions(options, spec:O, ...specs) {
 }
 
 private tryTailParameters(options) {
-    error("invalid parameter: ", currentParameter(options));
+    optionError("invalid parameter: ", currentParameter(options));
 }
 
 overload tryTailParameters(options, a, ...b) { tryTailParameters(options, ...b); }

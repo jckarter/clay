@@ -1469,6 +1469,18 @@ withCallCompilation(callable:Value, args:RTValues, f) {
 
 
 //
+// option errors
+//
+
+record OptionError (message:String);
+instance ClayError = OptionError;
+
+optionError(forward ...msg) { throw OptionError(printString(...msg)); }
+
+overload displayError(e:OptionError) { println(e.message); }
+
+
+//
 // semantic errors
 //
 
