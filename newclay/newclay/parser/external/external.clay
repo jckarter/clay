@@ -710,6 +710,12 @@ private var typePattern = modify(
 );
 private var optTypePattern = optional(typePattern);
 
+private var typeExpr = modify(
+    x => move(x.1),
+    sequence(punc(#":"), expr),
+);
+private var optTypeExpr = optional(typeExpr);
+
 private var multiTypePattern = modify(
     x => move(x.1),
     sequence(punc(#":"), patternNameRefPattern),
@@ -1150,7 +1156,7 @@ private var bindingList = choice(
 
 private var bindingName = modify(
     x => BindingName(x.0, x.1),
-    sequence(identifier, optTypePattern),
+    sequence(identifier, optTypeExpr),
 );
 
 private var singleBindingList = commaList(singleBinding);
@@ -1162,7 +1168,7 @@ private var singleBinding = modify(
 private var variadicBindingNameList = variadicList(
     bindingName,
     modify(
-        x => BindingName(x.1, nothing(Pattern)),
+        x => BindingName(x.1, nothing(Expr)),
         sequence(punc(#"..."), identifier),
     ),
 );

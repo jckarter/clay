@@ -1,0 +1,3 @@
+var x:Int32;
+
+main() = x;

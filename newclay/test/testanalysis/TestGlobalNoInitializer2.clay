@@ -1,0 +1,3 @@
+var x:Int32, y:Int8;
+
+main() = x, y;

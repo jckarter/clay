@@ -623,7 +623,7 @@ variant BindingList = SingleBindingList
 
 record BindingName = ast(
     name: Identifier,
-    type: Maybe[Pattern],
+    type: Maybe[Expr],
 );
 
 record SingleBinding = ast(

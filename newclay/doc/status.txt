@@ -1,9 +1,7 @@
 Unimplemented features:
-- multiple-value global bindings 
+- multiple-value global bindings with initializers
     var x, y, ...z = ...foo();
 - global ref, const bindings
-- global bindings without initializer
-    var x:T;
 - parameterized global variables
     var typeSize['T] = TypeSize('T);
 - multiple-value assignment
@@ -44,7 +42,7 @@ Unimplemented features:
     external entry_point(foo:Int) { ... }
   NB: external declarations DO work:
     external puts(x:Pointer[CChar]);
-    main() { puts(cstring("Hello world"));
+    main() { puts(cstring("Hello world")); }
 
 Known bugs:
 - unused value returns are destroyed at end of scope instead of end of statement

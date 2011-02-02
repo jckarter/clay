@@ -257,7 +257,7 @@ ExprStatement -> Expr ";"
 
 BindingKind -> "var" | "const" | "ref" | "rvalue" | "forward" | "alias"
 
-BindingName -> Identifier (":" Pattern)?
+BindingName -> Identifier (":" Expr)?
 
 SingleBinding -> BindingName "=" Expr
 
