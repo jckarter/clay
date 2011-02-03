@@ -169,12 +169,11 @@ static overload ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
 
 
 //
-// NewProcedure, Procedure?
+// Procedure, Procedure?
 //
 
 symbol ProcedureTag = ();
-symbol NewProcedure = NewStaticFunction();
-static overload NewProcedure() = (ProcedureTag,);
+static Procedure() = (ProcedureTag,);
 
 symbol Procedure? = NewStaticFunction();
 static overload Procedure?('x) =
@@ -288,7 +287,7 @@ remainderAssign(ref a:Int32, b:Int32) { a <-- remainder(a, b); }
 // call
 //
 
-symbol call = NewProcedure();
+symbol call = Procedure();
 
 
 //

@@ -25,6 +25,11 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node) {
     addOutputs(c, node);
     ir.pushNode(dest, node);
 }
+overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.LiteralCodeBody) {
+    // consume all values
+    c.variableFrames = HashMap[RTValue, Frame]();
+    c.statementFrame.liveValues = Vector[RTValue]();
+}
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Block) {
     withBlockFrame(c, dest, () ref=> {
         lifetimeAnalyzeSubbody(c, dest, node.body);

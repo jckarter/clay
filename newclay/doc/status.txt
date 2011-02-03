@@ -56,11 +56,6 @@ Known bugs:
         bar();
         // <-- result of foo() is destroyed here
     }
-- destructors are emitted in __c__ functions that take rvalue arguments
-    // "from" will currently be destroyed even though it should be assumed
-    // that the __c__ block will take care of it (in this case by moving
-    // the contents of the rvalue to a live value)
-    overload move(rvalue from:Foo) to:Foo __c__ """to = from;""";
 - mutually recursive global alias bindings cause an infinite loop
     alias y = x;
     alias x = y;
@@ -89,7 +84,7 @@ Pending potential language changes:
     definite integer type:
         var x:Int64 = 1;
         var x:Int8 = 1;
-        
+
         foo(x:Int8) = x + 1;
         main() = foo(2);
     However, we need to specify how untyped integers behave in type-ambiguous cases, such as when
