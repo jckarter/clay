@@ -675,6 +675,9 @@ overload evaluateMultiExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
     return evaluateCall(callable, env, x);
 }
+overload evaluateMultiExpr(x:ast.StaticExpr, env) {
+    return evaluateMultiExpr(x.expr, env);
+}
 
 
 

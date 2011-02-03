@@ -1,8 +1,11 @@
+static oneTwoThree() = 1, 2, 3;
+
 main() {
     var x1 = 2;
     var y1 = main;
     var x2 = #2;
     var y2 = #main;
+    var ...z = ...#oneTwoThree();
 
-    return x1, y1, x2, y2;
+    return x1, y1, x2, y2, ...z;
 }

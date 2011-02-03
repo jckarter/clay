@@ -128,7 +128,6 @@ private applyExternalAttributes(attributeValues, outSymbolName, outAbi) {
                     gotAbi? = true;
                     outAbi = value;
                 }
-                    
             },
         );
 }
@@ -1368,6 +1367,11 @@ private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = analyzeIndexing(s, env, expr);
 
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
+    var values = evaluateMultiExpr(expr.expr, env);
+    return addSpecializedStaticValueList(s, expr, values);
+}
+
 
 //
 // analyzeBoolSubnode
@@ -1487,6 +1491,12 @@ singleAddSpecializedStaticValue(s:SpecializationContext, ast, value:Value) {
 
 addSpecializedStaticValue(s, ast, value)
     = Maybe(RTValues(singleAddSpecializedStaticValue(s, ast, value)));
+
+addSpecializedStaticValueList(s, ast, values:ValueList) {
+    var outputs = RTValues(mapped(v => newValue(staticType(v)), values));
+    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), values, outputs));
+    return Maybe(outputs);
+}
 
 addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
     var outputs = Vector(mapped(valueToRTValue, valueList));
