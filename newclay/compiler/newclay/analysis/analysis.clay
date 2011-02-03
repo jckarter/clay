@@ -58,7 +58,7 @@ private useBranchRvalues(s, branchS1, branchS2) {
 externalRTValue(x:RTExternal) {
     var attrs = externalAttributes(x);
     var type = externalCodePointerType(attrs.abi, attrs.variadic?, attrs.argumentTypes, attrs.returnType);
-    return RTValue(RT_VALUE_CONST, type, x, x.name);
+    return RTValue(RT_VALUE_RVALUE, type, x, x.name);
 }
 
 externalAttributes(ex:RTExternal) = ref maybe(ex.attributes,
@@ -415,7 +415,7 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("multiple values cannot be used in single value context"),
     RTLabel, x ref=>
         genericAnalysisError("label cannot be used as a value"),
-    RTExternal,   x ref=> Maybe(RTValues(externalRTValue(x))),
+    RTExternal,   x ref=> Maybe(RTValues(addRvalue(s, externalRTValue(x)))),
     RTGlobal,     x ref=> Maybe(RTValues(globalRTValue(x))),
     RTListGlobal, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
@@ -450,7 +450,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = withOneResult(analyzeCallNode(s, env, expr));
 
 private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTValues) {
-    return addSpecializedCall(s, ast, args, analyzeCallableWithOneResult(callable, args));
+    return withOneResult(analyzeCall(s, ast, callable, args));
 }
 
 private analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues) {
@@ -1912,14 +1912,8 @@ private callableInvokeTable(callable:Value) {
 
 
 //
-// analyzeCallable[WithOneResult]
+// analyzeCallable
 //
-
-analyzeCallableWithOneResult(callable:Value, args:RTValues) {
-    var spec = analyzeCallable(callable, args);
-    withOneResult(spec.results);
-    return spec;
-}
 
 analyzeCallable(callable:Value, args:RTValues) Specialization
     = withCallAnalysis(callable, args, () ref=> analyzeCallable2(callable, args));

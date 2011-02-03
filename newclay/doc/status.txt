@@ -68,7 +68,6 @@ Known bugs:
 - dotted module imports can run over aliased module imports
     import a as b;
     import b.c; // should be an error since "b" is already an alias
-- codegen is incorrect for external functions as arguments
 - global alias lookup occasionally fails across modules
 
 Pending potential language changes:
