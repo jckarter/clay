@@ -1,0 +1,14 @@
+import symbols.(SymbolWithTag?);
+
+
+//
+// NewProcedure, Procedure?
+//
+
+private symbol ProcedureTag;
+symbol Procedure;
+static overload Procedure() = (ProcedureTag,);
+
+static Procedure?('x) = SymbolWithTag?('x, ProcedureTag);
+
+

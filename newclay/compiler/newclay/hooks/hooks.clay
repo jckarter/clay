@@ -12,7 +12,7 @@ import maybe.*;
 initializeClayHooks() {
     var program = getProgram();
     var module = preludeModule(program);
-    var lookup = name => envEntryToValue(publicLookup(module, name));
+    var lookup = name => envEntryToValue(privateLookup(module, name));
     program.hooks = ClayHooks(...mapValues(
         field ref=> lookup(StaticName(field)),
         ...RecordFieldNames(ClayHooks)

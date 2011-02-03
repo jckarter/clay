@@ -1,0 +1,13 @@
+static allValues?('f) = true;
+static overload allValues?('f, 'x, ...'xs) = 'f('x) and allValues?('f, ...'xs);
+
+static equalValues?('x0) = true;
+static overload equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, 'xs);
+
+static countValues() = 0;
+static overload countValues('x, ...'xs) = 1 + countValues(...'xs);
+
+static takeValues('n) = ;
+static overload takeValues(0, ...'xs) = ;
+static overload takeValues('n, 'x, ...'xs)
+    | StaticInt?('n) and 'n > 0 = 'x, ...takeValues('n - 1, ...'xs);
