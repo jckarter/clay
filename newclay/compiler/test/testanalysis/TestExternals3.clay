@@ -1,0 +1,5 @@
+external x1(x:Int32);
+
+main() {
+    return x1, x1;
+}
