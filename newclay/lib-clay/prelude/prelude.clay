@@ -8,5 +8,5 @@ public import prelude.types.*;
 public import prelude;
 
 // non-public detail modules
-import prelude.types.lowlevel;
+import prelude.types.lowlevel.*;
 

@@ -1,0 +1,17 @@
+// dumb simple library for displaying values for debugging purposes
+import libc.(puts as c_puts, printf as c_printf);
+import ctypes.(cstring);
+
+puts(s:StringConstant) { c_puts(cstring(s)); }
+printf(fmt:StringConstant, value) { c_printf(cstring(fmt), value); }
+
+show(s:StringConstant) { puts(s); }
+overload show(b:Bool) { puts(if (b) "true" else "false"); }
+overload show(c:Char) { printf("%c\n", c); }
+overload show(i:'I) | SignedInteger?('I) { printf("%d\n", i); }
+overload show(i:'I) | UnsignedInteger?('I) { printf("%u\n", i); }
+overload show(f:'F) | Float?('F) { printf("%.18g\n", f); }
+// XXX target-sensitive
+overload show(i:Int64) { printf("%lld\n", i); }
+overload show(i:UInt64) { printf("%llu\n", i); }
+

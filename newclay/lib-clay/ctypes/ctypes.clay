@@ -1,0 +1,14 @@
+// XXX make this target-sensitive
+// XXX using these aliases gives bogus "name not found: Int32" error
+alias CChar  = Int8;
+alias CShort = Int16;
+alias CInt   = Int32;
+alias CLong  = Int64;
+alias CLongLong = Int64;
+alias CUChar  = UInt8;
+alias CUShort = UInt16;
+alias CUInt   = UInt32;
+alias CULong  = UInt64;
+alias CULongLong = UInt64;
+
+cstring(s:StringConstant) = s.begin;

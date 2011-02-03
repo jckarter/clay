@@ -23,9 +23,9 @@ index(forward a:Array['T, 'n], i:'I) | Integer?('I)
 
 // A bit of improper coupling with the C codegen implementation: tuple elements
 // are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
-private static TupleFieldName(#'n) = StaticStringConcat("field", 'n);
+private static TupleFieldName('n) = StaticStringConcat("field", 'n);
 
-private ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n < countValues(...'T);
+private static ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n < countValues(...'T);
 
 overload index(forward t:Tuple[...'T], #'n)
     | ValidStaticIndex?('n, ...'T)
@@ -35,12 +35,18 @@ overload index(forward u:Union[...'T], #'n)
     | ValidStaticIndex?('n, ...'T)
     = forward primitiveFieldRef(#nthValue('n, ...'T), u, #TupleFieldName('n));
 
+// XXX StringConstant should be a record rather than hardcoded like this
+overload index(forward s:StringConstant, #'field) | 'field == "begin" or 'field == "end"
+    = forward primitiveFieldRef(Pointer[Char], s, #'field);
+
+
 
 //
 // dereference
 //
 
 dereference(forward a:Pointer['T]) = forward primitiveDereference('T, a);
+
 
 
 //
@@ -50,6 +56,7 @@ dereference(forward a:Pointer['T]) = forward primitiveDereference('T, a);
 // XXX use CallDefined?
 staticIndex(forward a, #'n) = forward a[#'n];
 fieldRef(forward a, #'field) = forward a[#'field];
+
 
 
 //
