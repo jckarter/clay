@@ -93,6 +93,8 @@ record ClayHooks (
     ExternalCodePointer: Value,
     StringConstant: Value,
 
+    Procedure: Value,
+
     Procedure?: Value,
     PODType?: Value,
 
@@ -1479,6 +1481,22 @@ instance ClayError = OptionError;
 optionError(forward ...msg) { throw OptionError(printString(...msg)); }
 
 overload displayError(e:OptionError) { println(e.message); }
+
+
+//
+// hook initialization error
+//
+
+record HookInitializationError (error:UniqueValue[ClayError]);
+instance ClayError = HookInitializationError;
+
+hookInitializationError(ex) { throw HookInitializationError(UniqueValue(ex)); }
+
+overload displayError(e:HookInitializationError) {
+    println("The compiler failed to find all the hook symbols necessary to initialize Clay.");
+    print("  ");
+    displayError(e.error^);
+}
 
 
 //

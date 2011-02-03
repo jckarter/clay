@@ -1,6 +1,7 @@
 
 import newclay.ast as ast;
 import newclay.core.*;
+import newclay.common.(ClayError);
 import newclay.evaluator.*;
 import maybe.*;
 
@@ -13,10 +14,15 @@ initializeClayHooks() {
     var program = getProgram();
     var module = preludeModule(program);
     var lookup = name => envEntryToValue(privateLookup(module, name));
-    program.hooks = ClayHooks(...mapValues(
-        field ref=> lookup(StaticName(field)),
-        ...RecordFieldNames(ClayHooks)
-    ));
+    try {
+        program.hooks = ClayHooks(...mapValues(
+            field ref=> lookup(StaticName(field)),
+            ...RecordFieldNames(ClayHooks)
+        ));
+    } catch (ex:ClayError) {
+        hookInitializationError(ex);
+        assert(false);
+    }
 }
 
 
