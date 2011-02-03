@@ -277,7 +277,7 @@ private valueRef(c:CodegenContext, bc:CodegenBodyContext, value) {
     return match(value.referent,
         LocalVariable,     l ref=> "&" + localName(bc, value),
         ReferenceVariable, r ref=> localName(bc, value),
-        RTExternal,        e ref=> externalName(c, e),
+        RTExternal,        e ref=> "&" + localName(bc, value),
         RTGlobal,          g ref=> "&" + globalName(c, g),
     );
 }
@@ -299,10 +299,12 @@ codegenFunction(c:CodegenContext, s:Specialization) {
 
 private printLocalDefinitionTo(stream, c, bc, a) {
     printTo(stream, typeName(c, a.type), " ");
-    assert(variable?(a));
+    assert(variable?(a) or immediateValue?(a), "generating a local for something that isn't a local variable or immediate value");
     if (referenceVariable?(a))
         printTo(stream, '*');
     printTo(stream, localName(bc, a));
+    if (immediateValue?(a))
+        printTo(stream, " = ", valueDeref(c, bc, a));
 }
 
 private gccFunctionAttributes(c, s) {
@@ -339,6 +341,7 @@ private finalizeFunctionSignature(c, bc, function) {
     interleave(bc.s.internalArgs,
         () ref=> { printTo(signature, ", "); },
         a  ref=> {
+            assert(not immediateValue?(a), "argument cannot have an immediate value");
             printLocalDefinitionTo(signature, c, bc, a);
             remove(bc.bodyVars, a);
         },
@@ -347,10 +350,11 @@ private finalizeFunctionSignature(c, bc, function) {
     if (not empty?(bc.s.internalNamedResults)) {
         if (not empty?(bc.s.internalArgs))
             printTo(signature, ", ");
-        
+
         interleave(bc.s.internalNamedResults,
             () ref=> { printTo(signature, ", "); },
             r  ref=> {
+                assert(not immediateValue?(r), "return cannot have an immediate value");
                 printLocalDefinitionTo(signature, c, bc, r);
                 remove(bc.bodyVars, r);
             },
@@ -503,7 +507,7 @@ overload codegenNode(c, bc, node:ir.Adopt) {
 }
 
 overload codegenNode(c, bc, node:ir.Bind) {
-    assert(variable?(node.output));
+    assert(variable?(node.output), "binding something that isn't a local variable");
     if (localVariable?(node.output)) {
         printToIndented(bc, localName(bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
     } else {
@@ -872,7 +876,7 @@ private cInt64Type(c) {
     case MSVC_DIALECT:
         return "__int64";
     default:
-        assert(false);
+        assert(false, "invalid dialect");
         return "";
     }
 }
@@ -1080,7 +1084,7 @@ private functionABI2(c, name) {
     case MSVC_DIALECT:
         return "__" + name + " ";
     default:
-        assert(false);
+        assert(false, "invalid dialect");
         return String();
     }
 }
