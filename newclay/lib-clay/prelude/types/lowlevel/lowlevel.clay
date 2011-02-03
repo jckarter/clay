@@ -1,0 +1,13 @@
+symbol LLSigned;
+symbol LLUnsigned;
+
+symbol LLBoolType;
+symbol LLIntegerType['Signed, 'Bits];
+symbol LLFloatType['Bits];
+symbol LLPointerType['T];
+symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+symbol LLArrayType['T, 'n];
+symbol LLTupleType[...'T];
+symbol LLUnionType[...'T];
+
+symbol ToLowLevelType;

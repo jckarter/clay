@@ -1,0 +1,174 @@
+import __primitives__.*;
+import values.(equalValues?, countValues);
+import prelude.operators.primitive.*;
+
+
+//
+// tupleLiteral, arrayLiteral
+//
+
+tupleLiteral(...elements:'T) = Tuple[...'T](...elements);
+arrayLiteral(x0:'T0, ...xs:'T)
+    | equalValues?('T0, ...'T)
+    = Array['T0, countValues('T0, ...'T)](...elements);
+
+
+
+//
+// index
+//
+
+index(forward a:Array['T, 'n], i:'I) | Integer?('I)
+    = forward primitiveIndex('T, a, i);
+
+// A bit of improper coupling with the C codegen implementation: tuple elements
+// are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
+private static TupleFieldName(#'n) = StaticStringConcat("field", 'n);
+
+private ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n < countValues(...'T);
+
+overload index(forward t:Tuple[...'T], #'n)
+    | ValidStaticIndex?('n, ...'T)
+    = forward primitiveFieldRef(#nthValue('n, ...'T), t, #TupleFieldName('n));
+
+overload index(forward u:Union[...'T], #'n)
+    | ValidStaticIndex?('n, ...'T)
+    = forward primitiveFieldRef(#nthValue('n, ...'T), u, #TupleFieldName('n));
+
+
+//
+// dereference
+//
+
+dereference(forward a:Pointer['T]) = forward primitiveDereference('T, a);
+
+
+//
+// staticIndex, fieldRef
+//
+
+// XXX use CallDefined?
+staticIndex(forward a, #'n) = forward a[#'n];
+fieldRef(forward a, #'field) = forward a[#'field];
+
+
+//
+// arithmetic operators
+//
+
+plus(a:'N) | Number?('N) = a;
+minus(a:'N) | Number?('N) = primitiveMinus('N, a);
+
+// XXX have default implementations of math operators in terms of mathAssign operators
+// when we have exceptions
+
+multiply(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+    = primitiveMultiply(BiggerNumericType('A, 'B), a, b);
+divide(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+    = primitiveDivide(BiggerNumericType('A, 'B), a, b);
+remainder(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+    = primitiveRemainder(BiggerNumericType('A, 'B), a, b);
+
+overload multiply(forward a, forward b, forward c, forward ...d)
+    = forward a * multiply(b, c, ...d);
+
+add(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+    = primitiveAdd(BiggerNumericType('A, 'B), a, b);
+subtract(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+    = primitiveSubtract(BiggerNumericType('A, 'B), a, b);
+
+overload add(forward a, forward b, forward c, forward ...d)
+    = forward a + add(b, c, ...d);
+
+
+//
+// comparison operators
+//
+
+symbol lesser? = Procedure();
+lesserEquals?(a, b) = not b < a;
+greater?(a, b) = b < a;
+greaterEquals?(a, b) = not a < b;
+
+symbol equals? = Procedure();
+notEquals?(a, b) = not equals?(a, b);
+
+
+//
+// comparison operators on numbers
+//
+
+overload lesser?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+    = primitiveLesser?(a, b);
+overload lesserEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+    = primitiveLesserEquals?(a, b);
+overload greater?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+    = primitiveGreater?(a, b);
+overload greaterEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+    = primitiveGreaterEquals?(a, b);
+
+overload equals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+    = primitiveEquals?(a, b);
+overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+    = primitiveNotEquals?(a, b);
+
+
+//
+// assignment
+//
+
+assign(ref a:'T, b:'T) | BitwiseAssignedType?('T) { a <-- b; }
+overload assign(ref a:'T, rvalue b:'T) | BitwiseMoveAssignedType?('T) { a <-- move(b); }
+
+overload assign(ref a:'A, b:'B) | AssignablePrimitiveTypes?('A, 'B) { primitiveAssign(a, b); }
+
+
+//
+// arithmetic assignment
+//
+
+// XXX use CallDefined? here to determine whether <op> and assign are applicable
+addAssign      (ref a, b) { a = add(a, b); }
+subtractAssign (ref a, b) { a = subtract(a, b); }
+multiplyAssign (ref a, b) { a = multiply(a, b); }
+divideAssign   (ref a, b) { a = divide(a, b); }
+remainderAssign(ref a, b) { a = remainder(a, b); }
+
+inc(ref a:'T) { a += 'T(1); }
+dec(ref a:'T) { a -= 'T(1); }
+
+
+
+//
+// call
+//
+
+call(#'f, forward ...args) = forward 'f(...args);
+
+overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ...args:'Args) ...ExternalOutputTypes('O)
+    | 'I == (...'Args)
+    = ...primitiveExternalCall(f, ...args);
+
+overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args) ...ExternalOutputTypes('O)
+    | allValues?(RequireExternalPODType?, 'Args)
+      and 'I == (...takeValues(StaticTupleSize('I), ...'Args))
+    = ...primitiveExternalCall(f, ...args);
+
+
+
+//
+// destroyUnsafe, initializeFromUnsafe, moveUnsafe, resetUnsafe, copy, move
+//
+
+initializeFromUnsafe(ref a:'T, b:'T) { a <-- copy(b); }
+overload initializeFromUnsafe(ref a:'T, rvalue b:'T) { a <-- move(b); }
+
+destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
+resetUnsafe(ref x:'T) | NotResetType?('T) {}
+
+copy(a:'T) returned:'T | BitwiseCopiedType?('T) { primitiveAssign(returned, a); }
+
+moveUnsafe(forward a:'T) returned:'T | BitwiseMovedType?('T) { primitiveAssign(returned, a); }
+
+move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
+overload move(rvalue a:'T) = moveUnsafe(a);

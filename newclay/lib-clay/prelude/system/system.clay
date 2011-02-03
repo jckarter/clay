@@ -1,0 +1,7 @@
+import __main__.(main);
+
+callMain() {
+    main();
+    return 0;
+}
+
