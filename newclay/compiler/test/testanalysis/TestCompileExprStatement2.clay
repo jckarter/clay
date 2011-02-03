@@ -1,10 +1,10 @@
-symbol fanfare = NewProcedure();
+symbol fanfare = Procedure();
 overload fanfare() r:Int32 __c__ """
     printf("hello world");
     *r = 2;
 """;
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     fanfare();
     return 1;

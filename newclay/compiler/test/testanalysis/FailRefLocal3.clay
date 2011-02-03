@@ -1,5 +1,5 @@
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     var x = true;
     return const x;

@@ -3,24 +3,24 @@ symbol RefArg = ();
 symbol RvalueArg = ();
 symbol ConstArg = ();
 
-symbol foo = NewProcedure();
+symbol foo = Procedure();
 overload foo(x) = ConstArg;
 overload foo(ref x) = RefArg;
 overload foo(rvalue x) = RvalueArg;
 
-symbol valueReturn = NewProcedure();
+symbol valueReturn = Procedure();
 overload valueReturn() x:Int32 __c__ """abort();""";
 
-symbol refReturn = NewProcedure();
+symbol refReturn = Procedure();
 overload refReturn() ref x:Int32 __c__ """abort();""";
 
-symbol rvalueReturn = NewProcedure();
+symbol rvalueReturn = Procedure();
 overload rvalueReturn() rvalue x:Int32 __c__ """abort();""";
 
-symbol constReturn = NewProcedure();
+symbol constReturn = Procedure();
 overload constReturn() const x:Int32 __c__ """abort();""";
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() =
     foo(valueReturn()),
     foo(refReturn()),

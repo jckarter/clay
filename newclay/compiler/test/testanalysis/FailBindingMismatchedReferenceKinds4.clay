@@ -1,16 +1,16 @@
-symbol valueReturn = NewProcedure();
+symbol valueReturn = Procedure();
 overload valueReturn() x:Int32 __c__ """abort();""";
 
-symbol refReturn = NewProcedure();
+symbol refReturn = Procedure();
 overload refReturn() ref x:Int32 __c__ """abort();""";
 
-symbol rvalueReturn = NewProcedure();
+symbol rvalueReturn = Procedure();
 overload rvalueReturn() rvalue x:Int32 __c__ """abort();""";
 
-symbol constReturn = NewProcedure();
+symbol constReturn = Procedure();
 overload constReturn() const x:Int32 __c__ """abort();""";
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     rvalue y = refReturn();
 }

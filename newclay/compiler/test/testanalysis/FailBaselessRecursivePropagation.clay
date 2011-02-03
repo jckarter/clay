@@ -1,7 +1,7 @@
 
-symbol foo = NewProcedure();
+symbol foo = Procedure();
 overload foo(x:Int32) = if (true) foo(1) else foo(0);
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() = foo(2);
 
