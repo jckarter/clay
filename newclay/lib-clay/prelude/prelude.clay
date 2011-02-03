@@ -1,7 +1,6 @@
 public import __primitives__.*;
 public import prelude.operators.*;
 public import prelude.procedures.*;
-public import prelude.system.*;
 public import prelude.types.*;
 
 // prelude symbols are always available as "prelude.foo"
@@ -9,4 +8,5 @@ public import prelude;
 
 // non-public detail modules
 import prelude.types.lowlevel.*;
+import prelude.system.*;
 
