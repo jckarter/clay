@@ -7,8 +7,6 @@
 cscope.out
 tags
 *.o
-newclay/compiler/test*
-!newclay/compiler/test*.clay
 *.claycache
 *.s
 *.pyc
