@@ -1,10 +1,10 @@
-symbol refReturn = NewProcedure();
+symbol refReturn = Procedure();
 overload refReturn() ref r:Int32 __c__ """abort();""";
 
-symbol id = NewProcedure();
+symbol id = Procedure();
 overload id(ref x) = ref x;
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() Int32 {
     return id(refReturn());
 }

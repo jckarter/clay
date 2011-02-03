@@ -1,7 +1,7 @@
-symbol id = NewProcedure();
+symbol id = Procedure();
 overload id(ref x) = ref x;
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() r:Int32 {
     id(r) <-- 1;
 }

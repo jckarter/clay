@@ -1,4 +1,4 @@
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     return true;
 }

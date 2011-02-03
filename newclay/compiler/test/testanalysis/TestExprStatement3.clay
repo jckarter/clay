@@ -1,7 +1,7 @@
-symbol foo = NewProcedure();
+symbol foo = Procedure();
 overload foo() = 1, 2, 3;
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     foo();
 }

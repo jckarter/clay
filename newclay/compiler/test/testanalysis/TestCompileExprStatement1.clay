@@ -1,9 +1,9 @@
-symbol fanfare = NewProcedure();
+symbol fanfare = Procedure();
 overload fanfare() __c__ """
     printf("hello world");
 """;
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     fanfare();
     return 1;

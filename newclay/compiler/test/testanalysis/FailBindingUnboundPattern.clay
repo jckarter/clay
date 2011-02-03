@@ -1,10 +1,10 @@
-symbol foo = NewProcedure();
+symbol foo = Procedure();
 overload foo(x:'T) {
     var y:'U = x;
     return y;
 }
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     var x:Int32 = 5;
     var y:Bool = foo(true);

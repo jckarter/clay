@@ -1,4 +1,4 @@
-symbol foo = NewProcedure();
+symbol foo = Procedure();
 overload foo(x:Bool) {
     if (x)
         return 1;
@@ -6,7 +6,7 @@ overload foo(x:Bool) {
         return 0;
 }
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     return foo(true);
 }

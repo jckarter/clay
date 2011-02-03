@@ -1,6 +1,6 @@
 symbol bar = ();
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     goto bar;
 foo:

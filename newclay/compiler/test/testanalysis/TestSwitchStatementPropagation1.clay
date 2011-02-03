@@ -1,5 +1,5 @@
 
-symbol main = NewProcedure();
+symbol main = Procedure();
 overload main() {
     switch (0)
     case (0) {
