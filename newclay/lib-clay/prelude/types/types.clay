@@ -21,15 +21,15 @@ static BitwiseAssignedType?('T) = BitwiseCopiedType?('T) and NotDestroyedType?('
 static BitwiseMoveAssignedType?('T) = BitwiseMovedType?('T) and NotDestroyedType?('T);
 
 static InheritableTypePredicate?('X) = false;
-static InheritableTypePredicate?(PODType?) = true;
-static InheritableTypePredicate?(BitwiseCopiedType?) = true;
-static InheritableTypePredicate?(BitwiseMovedType?) = true;
-static InheritableTypePredicate?(NotDestroyedType?) = true;
-static InheritableTypePredicate?(NotResetType?) = true;
-static InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
-static InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
-static InheritableTypePredicate?(BitwiseAssignedType?) = true;
-static InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
+static overload InheritableTypePredicate?(PODType?) = true;
+static overload InheritableTypePredicate?(BitwiseCopiedType?) = true;
+static overload InheritableTypePredicate?(BitwiseMovedType?) = true;
+static overload InheritableTypePredicate?(NotDestroyedType?) = true;
+static overload InheritableTypePredicate?(NotResetType?) = true;
+static overload InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
+static overload InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
+static overload InheritableTypePredicate?(BitwiseAssignedType?) = true;
+static overload InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
 
 
 
@@ -118,8 +118,8 @@ static overload UnsignedInteger?(UInt32) = true;
 static overload UnsignedInteger?(UInt64) = true;
 
 static Float?('x) = false;
-static Float?(Float32) = true;
-static Float?(Float64) = true;
+static overload Float?(Float32) = true;
+static overload Float?(Float64) = true;
 
 static Number?('T) = Integer?('T) or Float?(T);
 
@@ -196,7 +196,7 @@ static overload ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
 static ExternalOutputTypes('T) | Type?('T) = 'T;
-static ExternalOutputTypes(()) = ;
+static overload ExternalOutputTypes('O) | 'O == () = ;
 
 
 
@@ -247,9 +247,6 @@ static overload Union?(Union[...'T]) | Type?(Union[...'T]) = true;
 //
 // Predicates for primitive types
 //
-    AssignablePrimitiveTypes?, ComparablePrimitiveTypes?,
-    EqualityComparablePrimitiveTypes?,
-    BiggerNumericType
 
 static ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = (SignedInteger?('A) and SignedInteger?('B))

@@ -1,0 +1,7 @@
+import ctypes.*;
+
+// XXX use ctypes
+external abort() /*noreturn*/;
+external exit(code:Int32) /*noreturn*/;
+external puts(s:Pointer[Char]) Int32;
+external printf(format:Pointer[Char], ...) Int32;

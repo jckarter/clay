@@ -84,8 +84,9 @@ primitiveNotEquals?(a, b) returned:Bool
 primitiveAssign(ref a, forward b)
     __c__ """$a = $b;""";
 
-primitiveCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returned:'O
+primitiveExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returned:'O
     | Type?('O)
     __c__ """$returned = $callable($...args);""";
-overload primitiveCall(callable:ExternalCodePointer['A,'V,'I,()], ...args)
+overload primitiveExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args)
+    | 'O == ()
     __c__ """$callable($...args);""";

@@ -3,7 +3,7 @@ public import __primitives__.(
     StaticSymbol? as Symbol?,
     StaticSymbolAttributes as SymbolAttributes,
 );
-import __primitives__.(StaticTuple?, Stati
+import __primitives__.(StaticTuple?, StaticTupleSize);
 
 private static TupleWithTag?('t, 'tag)
     = StaticTuple?('t) and StaticTupleSize('t) > 0 and 't.0 == 'tag;
