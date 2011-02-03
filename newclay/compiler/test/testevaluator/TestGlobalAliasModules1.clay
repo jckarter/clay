@@ -1,0 +1,3 @@
+import aliastest1.(AliasTest);
+
+static Main() = AliasTest;
