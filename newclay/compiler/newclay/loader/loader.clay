@@ -120,7 +120,7 @@ private addGlobalItem(module, env, globalItem) {
 }
 
 private addGlobalAlias(module, env, globalItem) {
-    envAddFlatAlias(env, env, globalItem.bindings);
+    envAddFlatAlias(env, newEnv(module), globalItem.bindings);
 }
 
 private addGlobalVariable(module, env, globalItem) {
