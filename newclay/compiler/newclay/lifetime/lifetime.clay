@@ -29,6 +29,7 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Li
     // consume all values
     c.variableFrames = HashMap[RTValue, Frame]();
     c.statementFrame.liveValues = Vector[RTValue]();
+    ir.pushNode(dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Block) {
     withBlockFrame(c, dest, () ref=> {
