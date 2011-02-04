@@ -48,14 +48,6 @@ Unimplemented features:
     main() { puts(cstring("Hello world")); }
 
 Known bugs:
-- unused value returns are destroyed at end of scope instead of end of statement
-    var foo() = String("foo");
-
-    main() {
-        foo();
-        bar();
-        // <-- result of foo() is destroyed here
-    }
 - mutually recursive global alias bindings cause an infinite loop
     alias y = x;
     alias x = y;

@@ -181,6 +181,11 @@ overload coalescedNode(cmap:RTValueMap, node:ir.LiteralCodeBody) = node;
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Adopt) = ir.Adopt(coalesced(cmap, node.value));
 
+overload coalescedNode(cmap:RTValueMap, node:ir.Consume) {
+    assert(coalesced(cmap, node.value) == node.value, "coalescing invariant: Consumed values should never be referenced, so they should never be coalesced");
+    return node;
+}
+
 overload coalescedNode(cmap:RTValueMap, node:ir.ValueList)
     = ir.ValueList(
         node.ast,
