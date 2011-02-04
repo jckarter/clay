@@ -58,23 +58,29 @@ private addImportItem(module, envRoot, importItem) {
     });
 }
 
+private addSymbolHead(module, astItem, astName) {
+    var name = astName.name;
+    if (not null?(lookup(module.publicEnv.entries, name.str))
+        or not null?(lookup(module.privateEnv.entries, name.str)))
+        genericError("symbol redefinition: ", name.str);
+
+    var head = SymbolHead(astItem, astName, module);
+
+    push(module.program.allSymbolHeads, head);
+
+    return head;
+}
+
 private addSymbolItem(module, env, symbolItem) {
     withLocation(symbolItem, () ref=> {
-        var name = symbolItem.name.name;
-        if (not null?(lookup(module.publicEnv.entries, name.str))
-            or not null?(lookup(module.privateEnv.entries, name.str)))
-            genericError("symbol redefinition: ", name.str);
-
-        var head = SymbolHead(symbolItem, module);
-
-        push(module.program.allSymbolHeads, head);
+        var head = addSymbolHead(module, SymbolHeadAST(symbolItem), symbolItem.name);
 
         if (symbolHeadHasParams?(head)) {
-            envAdd(env, name, Value(head));
+            envAdd(env, symbolItem.name.name, Value(head));
         } else {
-            var sym = Symbol(head, ValueList(), module);
-            head.symbols[ValueList()] = sym;
-            envAdd(env, name, Value(sym));
+            var sym = EnvEntry(Value(Symbol(head, ValueList(), newEnv(module))));
+            head.instances[ValueList()] = sym;
+            envAdd(env, symbolItem.name.name, sym);
         }
     });
 }
@@ -94,59 +100,41 @@ private addExternalItem(module, env, externalItem) {
 
 private addGlobalItem(module, env, globalItem) {
     withLocation(globalItem, () ref=> {
-        switch (globalItem.kind) {
-        case ast.BINDING_RVALUE:
-            genericError("global variables cannot be rvalues");
-            break;
-        case ast.BINDING_FORWARD:
-            genericError("global variables cannot be forward");
-            break;
-        case ast.BINDING_ALIAS:
-            addGlobalAlias(module, env, globalItem);
-            break;
-        case ast.BINDING_REF:
-            // XXX
-            genericError("global ref bindings not yet supported");
-            break;
-        case ast.BINDING_CONST:
-            // XXX
-            genericError("global const bindings not yet supported");
-            break;
-        default:
-            addGlobalVariable(module, env, globalItem);
-            break;
+        for (binding in globalItem.bindings) {
+            withLocation(binding, () ref=> {
+                if (globalItem.kind == ast.BINDING_ALIAS and not symbolNameHasParams?(binding.name))
+                    addGlobalAlias(module, env, binding);
+                else
+                    addGlobalVariable(module, env, globalItem.kind, binding);
+            });
         }
     });
 }
 
-private addGlobalAlias(module, env, globalItem) {
-    envAddFlatAlias(env, newEnv(module), globalItem.bindings);
+private addGlobalAlias(module, env, binding:ast.SingleGlobalBinding) {
+    if (just?(binding.type))
+        genericError("type declarations on alias bindings not yet supported");
+    if (nothing?(binding.value))
+        genericError("alias bindings must have a value");
+    envAdd(env, binding.name.name, Alias(just(binding.value), newEnv(module)));
 }
 
-private addGlobalVariable(module, env, globalItem) {
-    match(globalItem.bindings,
-        ast.SingleBindingList, bindings ref=> {
-            for (binding in bindings)
-                envAdd(env, binding.name.name,
-                    RTGlobal(binding, module, binding.name.name.str, RT_VALUE_REF)
-                );
-        },
-        ast.MultipleBindingList, bindings ref=> {
-            for (binding in bindings.names.items)
-                envAdd(env, binding.name,
-                    RTGlobal(bindings, module, binding.name.str, RT_VALUE_REF)
-                );
-            maybe(bindings.names.variadicItem, listGlobal ref=> {
-                envAdd(env, listGlobal.name, RTListGlobal(bindings, module, listGlobal.name.str));
-            });
-        },
-    );
+private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleGlobalBinding) {
+    var head = addSymbolHead(module, SymbolHeadAST(GlobalBinding(kind, binding)), binding.name);
+
+    if (symbolHeadHasParams?(head)) {
+        envAdd(env, binding.name.name, Value(head));
+    } else {
+        var g = RTGlobal(head, newEnv(module));
+        head.instances[ValueList()] = EnvEntry(g);
+        envAdd(env, binding.name.name, g);
+    }
 }
 
 callbyname ifPublic(item, publicValue, privateValue)
     = if (item.visibility == ast.VIS_PUBLIC) publicValue else privateValue;
 
-private initializeGlobals(module) {
+private initializeGlobalEntries(module) {
     module.publicEnv  = newEnv();
     module.privateEnv = newEnv();
     ref publicRoot  = envRoot(module.publicEnv);
@@ -216,7 +204,7 @@ private initializeAttributesAndOverloads(module) {
 
 private initializeModule(module) {
     module.ast = transformAST(module.originalAST);
-    initializeGlobals(module);
+    initializeGlobalEntries(module);
     initializeAttributesAndOverloads(module);
 }
 

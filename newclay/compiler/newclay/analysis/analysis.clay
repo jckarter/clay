@@ -148,98 +148,93 @@ private externalArgumentType(arg:ast.ExternalArgument, env)
 
 private analyzeGlobal(g:RTGlobal) {
     ref globalMap = getProgram().globalMap;
-    ref binding = g.binding;
 
-    assert(null?(lookup(globalMap.globals, binding)), "unprotected recursive global reference");
-    return withGlobalAnalysis(binding, () ref=>
-        withLocation(*binding.ast, () ref=> {
-            push(globalMap.globalOrder, binding);
-            // XXX multiple-value globals?
-            var type = Value();
-            type, globalMap.globals[binding] = ...analyzeGlobal2(g, *binding.ast, binding.module);
+    assert(null?(lookup(globalMap.constructors, g)), "unprotected recursive global reference");
+    var binding = variantAs(g.head.ast, GlobalBinding);
+    return withGlobalAnalysis(g, () ref=>
+        withLocation(binding.ast, () ref=> {
+            push(globalMap.globalOrder, g);
+            var type = analyzeGlobal2(g, binding);
             return RTGlobalAttributes(type);
         })
     );
 }
 
-private analyzeGlobal2(g:RTGlobal, binding:ast.SingleBinding, module:Module) {
-    var global = ProgramGlobal();
+private analyzeGlobal2(g:RTGlobal, binding:GlobalBinding) {
+    ref globalMap = getProgram().globalMap;
     var complete? = true;
-    var constructorS = SpecializationContext(&global.constructorBody, &complete?);
-    var env = newEnv(module);
+    var constructorS = SpecializationContext(&globalMap.constructors[g], &complete?);
 
-    var resultTypes = analyzeSubnode(constructorS, env, binding.value);
-    assert(complete?, "unresolvable recursion in global initializer");
+    return maybe(binding.ast.value,
+        valueExpr ref=> {
+            var resultTypes = analyzeSubnode(constructorS, g.env, valueExpr);
+            assert(complete?, "unresolvable recursion in global initializer");
 
-    return ...maybe(resultTypes,
-        results ref=> {
-            if (size(results) != 1)
-                genericError("single-value global binding gave ", size(results), " results");
+            return maybe(resultTypes,
+                results ref=> {
+                    if (size(results) != 1)
+                        genericError("single-value global binding gave ", size(results), " results");
 
-            var type = results[0].type;
+                    var type = results[0].type;
 
-            maybe(binding.name.type, declaredTypeExpr ref=> {
-                withLocation(declaredTypeExpr, () ref=> {
-                    var declaredType = evaluateExpr(declaredTypeExpr, env);
-                    if (declaredType != type)
-                        genericError(
-                            "global variable declared with type ", declaredType,
-                            " but bound to value of type ", type,
-                        );
-                });
-            });
+                    maybe(binding.ast.type, declaredTypeExpr ref=> {
+                        withLocation(declaredTypeExpr, () ref=> {
+                            var declaredType = evaluateExpr(declaredTypeExpr, g.env);
+                            if (declaredType != type)
+                                genericError(
+                                    "global variable declared with type ", declaredType,
+                                    " but bound to value of type ", type,
+                                );
+                        });
+                    });
 
-            addSpecializedInitialize(constructorS, binding.value, results[0], _globalRTValue(g, type));
-            global.globals = Vector[RTGlobal](g);
-
-            return type, move(global);
+                    addSpecializedInitialize(constructorS, valueExpr, results[0], _globalRTValue(g, type));
+                    return type;
+                },
+                () ref=> {
+                    genericError("global initializer is nonreturning");
+                    return Value();
+                },
+            );
         },
-        () ref=> {
-            genericError("global initializer is nonreturning");
-            return Value(), ProgramGlobal();
-        },
+        () ref=> maybe(binding.ast.type,
+            declaredTypeExpr ref=> evaluateExpr(declaredTypeExpr, g.env),
+            () ref=> {
+                genericError("global variable binding must have a declared type or an initializer expression");
+                return Value();
+            },
+        ),
     );
-}
-
-overload analyzeGlobal2(g:RTGlobal, bindings:ast.MultipleBindingList, module:Module) {
-    // XXX multiple globals
-    if (size(bindings.names.items) > 1)
-        genericError("multiple-value global bindings not yet supported");
-    if (just?(bindings.names.variadicItem))
-        genericError("variadic global bindings not yet supported");
-    if (just?(bindings.values))
-        genericError("multiple-value global bindings with initializer not yet supported");
-
-    var binding = bindings.names.items[0];
-    var env = newEnv(module);
-    var type = maybe(binding.type,
-        declaredTypeExpr ref=> evaluateExpr(declaredTypeExpr, env),
-        () ref=> {
-            genericError("global variable must have a declared type or initializer expression");
-            return Value();
-        }
-    );
-
-    var global = ProgramGlobal();
-    global.globals = Vector[RTGlobal](g);
-    return type, move(global);
 }
 
 globalAttributes(g:RTGlobal) = safeInitialize(g.attributes, () ref=> analyzeGlobal(g));
-
-overload globalAttributes(g:RTListGlobal) = safeInitialize(g.attributes, () ref=> {
-    genericError("multiple-value global bindings not yet supported");
-    return RTListGlobalAttributes();
-});
+globalBinding(g:RTGlobal) = variantAs(g.head.ast, GlobalBinding);
+globalKind(g:RTGlobal) {
+    switch (globalBinding(g).kind) {
+    case ast.BINDING_RVALUE:
+        genericError("global variables cannot be rvalues");
+        return RTValueKind();
+    case ast.BINDING_FORWARD:
+        genericError("global variables cannot be forward");
+        return RTValueKind();
+    case ast.BINDING_ALIAS:
+        assert(false, "global alias created as runtime global");
+        return RTValueKind();
+    case ast.BINDING_REF:
+        genericError("global ref bindings not yet supported");
+        return RTValueKind();
+    case ast.BINDING_CONST:
+        genericError("global const bindings not yet supported");
+        return RTValueKind();
+    default:
+        return RT_VALUE_REF;
+    }
+}
 
 private _globalRTValue(g:RTGlobal, type:Value)
-    = RTValue(g.kind, type, g, g.name);
+    = RTValue(globalKind(g), type, g);
 
 globalRTValue(g:RTGlobal) = _globalRTValue(g, globalAttributes(g).type);
-globalRTValues(g:RTListGlobal) {
-    genericError("multiple-value global bindings not yet supported");
-    return RTValues();
-}
 
 
 
@@ -416,8 +411,6 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("label cannot be used as a value"),
     RTExternal,   x ref=> Maybe(RTValues(addRvalue(s, externalRTValue(x)))),
     RTGlobal,     x ref=> Maybe(RTValues(globalRTValue(x))),
-    RTListGlobal, x ref=>
-        genericAnalysisError("multiple values cannot be used in single value context"),
 );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
@@ -475,8 +468,8 @@ private withOneResult(mResults) {
 
 private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
     return ifStaticValue(s, env, expr.expr,
-        staticIndexee ref=> addSpecializedValue(s, expr,
-            evaluateIndexing(staticIndexee, evaluateExprList(expr.args, env))
+        staticIndexee ref=> analyzeEnvEntry(s, expr,
+            evaluateIndexingEntry(staticIndexee, evaluateExprList(expr.args, env))
         ),
         indexee ref=> maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
             var operands = RTValues(indexee);
@@ -491,8 +484,8 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) {
     return ifStaticValue(s, env, expr.expr,
-        staticIndexee ref=> addSpecializedValue(s, expr,
-            evaluateIndexing(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
+        staticIndexee ref=> analyzeEnvEntry(s, expr,
+            evaluateIndexingEntry(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
         ),
         indexee ref=> {
             var indexValue = Value(parseIntLiteral(expr.index.value));
@@ -1333,7 +1326,6 @@ private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("single value cannot be used in multiple value context"),
     RTGlobal,     x ref=>
         genericAnalysisError("single value cannot be used in multiple value context"),
-    RTListGlobal, x ref=> Maybe(globalRTValues(x)),
 );
 
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
@@ -1982,9 +1974,9 @@ analyzeGlobalConstructor() Maybe[Specialization] {
     specialization.env = newEnv(getProgramMainModule());
     specialization.body = Maybe(Vector[ir.Node]());
     ref body = just(specialization.body);
-    for (binding in reversed(globalMap.globalOrder)) {
-        assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
-        push(body, globalMap.globals[binding].constructorBody);
+    for (g in reversed(globalMap.globalOrder)) {
+        assert(not null?(lookup(globalMap.constructors, g)), "missing constructor in global map!");
+        push(body, globalMap.constructors[g]);
     }
 
     if (empty?(body))
