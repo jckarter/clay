@@ -2,6 +2,7 @@
 import maybe.*;
 import newclay.lexer.*;
 import remote.marshaling.*;
+import newclay.diagnostics.(computeLocation);
 
 
 
@@ -113,6 +114,24 @@ overload setLocation(x:Pattern, forward location) {
 
 assignLocation(destNode, srcNode) {
     setLocation(destNode, getLocation(srcNode));
+}
+
+
+
+//
+// getFileLocation
+//
+
+getFileLocation(x) = ...getFileLocation2(getLocation(x));
+
+private getFileLocation2(location) {
+    ref path = location.tokens.file.path;
+    var data = location.tokens.file.data;
+    var tokenOffset = location.tokenRange.begin;
+    var offset = location.tokens.vector[tokenOffset].range.begin;
+    var line, column, tabs = ...computeLocation(data, offset);
+
+    return path, line+1, column + 7*tabs;
 }
 
 

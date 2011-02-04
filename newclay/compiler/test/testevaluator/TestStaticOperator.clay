@@ -1,0 +1,2 @@
+static twoThree() = 2, 3;
+static Main() = #1, ...#twoThree();
