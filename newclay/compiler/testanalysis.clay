@@ -124,6 +124,14 @@ overload printNodeData(depth, node:ir.Adopt) {
     printVar(node.value);
 }
 
+overload printNodeData(depth, node:ir.Consume) {
+    println();
+
+    printDepth(depth+1);
+    print("value ");
+    printVar(node.value);
+}
+
 overload printNodeData(depth, node:ir.Bind) {
     println(LeafTypeName(node.ast));
 
@@ -281,15 +289,13 @@ printInvokeTable(name, table) {
     }
 }
 
-printGlobal(binding:GlobalBinding, global:ProgramGlobal) {
+printGlobal(g:RTGlobal, constructorBody:Vector[ir.Node]) {
     printDepth(1);
-    println(binding.ast, ":");
-    printDepth(2);
-    println("global entries ", global.globals);
-    printDepth(2);
+    println("global ", g.head.astName);
+    printDepth(1);
     println("constructor analysis nodes:");
-    for (node in global.constructorBody)
-        printNode(3, node);
+    for (node in constructorBody)
+        printNode(2, node);
 }
 
 main(args) {
@@ -309,18 +315,21 @@ main(args) {
             analyzeCallableBody(s);
 
             for (symbolHead in program.allSymbolHeads) {
-                printInvokeTable(symbolHead.ast.name.name.str, symbolHead.invokeTable);
-                for (args, symbol in items(symbolHead.symbols)) {
-                    printInvokeTable(
-                        printString(symbolHead.ast.name.name.str, args),
-                        symbol.invokeTable
-                    );
+                printInvokeTable(symbolHead.astName.name.str, symbolHead.invokeTable);
+                for (args, inst in items(symbolHead.instances)) {
+                    if (variantIs?(inst, Value)) {
+                        var symbol = variantAs(variantAs(inst, Value), Symbol);
+                        printInvokeTable(
+                            printString(symbolHead.astName.name.str, args),
+                            symbol.invokeTable
+                        );
+                    }
                 }
             }
 
             println("globals:");
-            for (binding in reversed(program.globalMap.globalOrder)) {
-                printGlobal(binding, program.globalMap.globals[binding]);
+            for (g in reversed(program.globalMap.globalOrder)) {
+                printGlobal(g, program.globalMap.constructors[g]);
             }
         });
     }

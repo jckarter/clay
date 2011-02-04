@@ -326,7 +326,7 @@ bindArgs(env, formalArgs, args) {
     return env2;
 }
 
-bindPatternArgs(env, formalArgs, args) {
+bindPatternArgs(env:Env, formalArgs, args) {
     verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
@@ -348,20 +348,34 @@ bindPatternArgs(env, formalArgs, args) {
 // symbols
 //
 
-makeSymbol(x:SymbolHead, params:ValueList) {
-    var ptr = lookup(x.symbols, params);
+makeSymbolHeadInstance(x:SymbolHead, params:ValueList) {
+    var ptr = lookup(x.instances, params);
     if (not null?(ptr)) {
         return ptr^;
     }
-    ref y = x.symbols[params];
-    var env = bindPatternArgs(x.module, x.ast.name.params, params);
-    y = Symbol(x, params, env);
+    ref y = x.instances[params];
+    var env = bindPatternArgs(newEnv(x.module), x.astName.params, params);
+    y = makeSymbolHeadInstance2(x, *x.ast, params, env);
     return y;
+}
+
+private makeSymbolHeadInstance2(x:SymbolHead, ast:ast.Symbol, params:ValueList, env:Env)
+    = EnvEntry(Value(Symbol(x, params, env)));
+
+overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:ValueList, env:Env) {
+    if (binding.kind == ast.BINDING_ALIAS) {
+        return withLocation(binding.ast, () ref=> {
+            if (nothing?(binding.ast.value))
+                genericError("alias bindings must have a value");
+            return EnvEntry(Alias(just(binding.ast.value), env));
+        });
+    } else
+        return EnvEntry(RTGlobal(x, env));
 }
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
-        () ref=> maybe(x.head.ast.expr,
+        () ref=> maybe(variantAs(x.head.ast, ast.Symbol).expr,
             expr ref=> evaluateExpr(expr, newEnv(x.env)),
             () ref=> Value(TupleValue()),
         )
@@ -588,10 +602,6 @@ overload envEntryToValue(x:RTGlobal) {
     genericError("non-alias global variables not available in static context");
     return Value();
 }
-overload envEntryToValue(x:RTListGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
-}
 overload envEntryToValue(x:RTValue) {
     return rtTypeToValue(x.type);
 }
@@ -716,13 +726,9 @@ overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
     return ValueList();
 }
-overload envEntryToValue(x:RTGlobal) {
+overload envEntryToValueList(x:RTGlobal) {
     genericError("non-alias global variables not available in static context");
-    return Value();
-}
-overload envEntryToValue(x:RTListGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
+    return ValueList();
 }
 overload envEntryToValueList(x:RTValue) {
     genericError("single value used in multi-valued context");
@@ -806,8 +812,7 @@ overload evaluateIndexing(x:Value, args) {
     return evaluateIndexing(*x, args);
 }
 overload evaluateIndexing(x:SymbolHead, args) {
-    verifyBindingArity(x.ast.name.params, args);
-    return Value(makeSymbol(x, args));
+    return envEntryToValue(evaluateIndexingEntry(x, args));
 }
 overload evaluateIndexing(x:StringValue, args) {
     if (size(args) != 1)
@@ -818,6 +823,24 @@ overload evaluateIndexing(x:TupleValue, args) {
     if (size(args) != 1)
         genericError("tuple must be indexed with a single Int");
     return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElement, ValueList(Value(x), args[0]));
+}
+
+
+//
+// evaluateIndexingEntry
+//
+
+procedure evaluateIndexingEntry;
+
+overload evaluateIndexingEntry(x, args) {
+    return EnvEntry(evaluateIndexing(x, args));
+}
+overload evaluateIndexingEntry(x:Value, args) {
+    return evaluateIndexingEntry(*x, args);
+}
+overload evaluateIndexingEntry(x:SymbolHead, args) {
+    verifyBindingArity(x.astName.params, args);
+    return makeSymbolHeadInstance(x, args);
 }
 
 
@@ -1702,7 +1725,9 @@ private refType(v) {
         break;
     }
 
-    return Value(makeSymbol(variantAs(refSymbolHead, SymbolHead), ValueList(v.type)));
+    return envEntryToValue(makeSymbolHeadInstance(
+        variantAs(refSymbolHead, SymbolHead), ValueList(v.type)
+    ));
 }
 
 private expressionStringAst(env, argsAst:ast.ExprList) {

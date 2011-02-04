@@ -16,10 +16,12 @@ Unimplemented features:
 - runtime conversion of static tuple values
     static foo() = (1, "two");
     bar() = foo();
-- alias arguments/call-by-name functions
 - parameterized aliases; aliases in pattern expressions
     alias Foo['T] = Bar['T, "foo"];
     bas(x:Foo['T]) { ... }
+- tuples in pattern expressions
+    static foo(('A, 'B), 'C) = 'B;
+- alias arguments/call-by-name functions
 - inline functions
 - goto
 - static for

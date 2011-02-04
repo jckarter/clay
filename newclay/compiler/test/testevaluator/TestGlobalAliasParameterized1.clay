@@ -1,0 +1,10 @@
+symbol Foo['A, 'B];
+symbol Bar;
+
+alias Bas['B] = Foo[Bar, 'B];
+
+symbol Zim;
+symbol Zang;
+symbol Zung;
+
+static Main() = Bas, Bas[Zim], Bas[Zang], Bas[Zung];

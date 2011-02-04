@@ -88,9 +88,9 @@ mangleGlobal(name) = "_clay__" + mangleString(name);
 
 printIdentifierTo(stream, value:Value) {
     match(value,
-        SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.ast.name.name.str); },
+        SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.astName.name.str); },
         Symbol, s ref=> {
-            printTo(stream, s.head.module.name, '.', s.head.ast.name.name.str);
+            printTo(stream, s.head.module.name, '.', s.head.astName.name.str);
             if (not empty?(s.params)) {
                 printTo(stream, '[');
                 interleave(s.params,
@@ -1009,9 +1009,8 @@ private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
 
 private printGlobalVariablesTo(stream, c:CodegenContext) {
     ref globalMap = getProgram().globalMap;
-    for (binding in reversed(globalMap.globalOrder)) {
-        for (g in globalMap.globals[binding].globals)
-            printlnTo(stream, "static ", typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
+    for (g in reversed(globalMap.globalOrder)) {
+        printlnTo(stream, "static ", typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
     }
     printlnTo(stream);
 }
