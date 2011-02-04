@@ -1083,8 +1083,19 @@ private var externalArgument = bounds(modify(
 
 private var globalBinding = topLevelItemParser(
     x => GlobalBinding(just(x.0, VIS_PUBLIC), x.1, x.2),
-    sequence(visibility, bindingKind, bindingList, punc(#";"))
+    sequence(visibility, bindingKind, commaList(singleGlobalBinding), punc(#";"))
 );
+
+private var singleGlobalBinding = modify(
+    x => SingleGlobalBinding(x.0, x.1, x.2),
+    sequence(symbolName, optTypeExpr, optInitializerExpr),
+);
+
+private var initializerExpr = modify(
+    x => move(x.1),
+    sequence(punc(#"="), expr),
+);
+private var optInitializerExpr = optional(initializerExpr);
 
 // globalLiteralCodeBody
 

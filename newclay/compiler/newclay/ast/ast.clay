@@ -480,10 +480,16 @@ record ExternalArgumentList = ast(
     variadic?: Bool,
 );
 
+record SingleGlobalBinding = ast(
+    name: SymbolName,
+    type: Maybe[Expr],
+    value: Maybe[Expr],
+);
+
 record GlobalBinding = ast(
     visibility: VisibilityKind,
     kind: BindingKind,
-    bindings: BindingList,
+    bindings: Vector[SingleGlobalBinding],
 );
 
 record GlobalLiteralCodeBody = ast(
