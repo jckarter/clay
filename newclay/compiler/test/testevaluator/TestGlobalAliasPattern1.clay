@@ -1,0 +1,6 @@
+symbol Foo;
+alias Bar = Foo;
+
+static Barf(Bar) = "BARF!!";
+
+static Main() = Barf(Foo), Barf(Bar);
