@@ -145,6 +145,8 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         var z = x;
         var w = NSString("bar");
 
+        expectType(test, "NSString(\"foo\")", NSString, x);
+
         expectTrue(test, "equality", x == y);
         expectTrue(test, "inequality", x != w);
 

@@ -53,7 +53,7 @@ overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
 overload NSString(static ident) = NSString(NSSTR(ident));
 
 [S | CCompatibleString?(S)]
-overload NSString(s: S) = NSString.stringWithUTF8String(cstring(s));
+overload NSString(s: S) = NSString(NSString.stringWithUTF8String(cstring(s)));
 
 [O | ObjectRef?(O)]
 overload String(o: O) = String(CStringRef(o.description().UTF8String()));
