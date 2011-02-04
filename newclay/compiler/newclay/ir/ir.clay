@@ -35,7 +35,8 @@ variant Node = LiteralCodeBody
              | Nop
              | Block
              | Statement
-             | Adopt;
+             | Adopt
+             | Consume;
 
 variant ASTNode = Nothing
                 | ast.ExprListItem
@@ -158,6 +159,10 @@ record Adopt = referenceType(
     value: RTValue,
 );
 
+record Consume = referenceType(
+    value: RTValue,
+);
+
 record Nop();
 
 pushNode(body, n:Node) { push(body, n); }
@@ -195,6 +200,8 @@ overload nodeInputs(node:AddressOf) = RTValues(node.input);
 overload nodeInputs(node:Bind) = RTValues(node.input);
 overload nodeInputs(node:Initialize) = RTValues(node.input);
 overload nodeInputs(node:Throw) = RTValues(node.exception);
+overload nodeInputs(node:Adopt) = RTValues(node.value);
+overload nodeInputs(node:Consume) = RTValues(node.value);
 
 overload nodeInputs(node:Node) = nodeInputs(*node);
 

@@ -152,6 +152,9 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Ad
     removeValue(c, node.value);
     addReference(c, node.value);
 }
+overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Consume) {
+    attractInputs(c, node);
+}
 
 private lifetimeAnalyzeInitialize(c, dest, node) {
     assert(node.input.type == node.output.type, "lifetime analysis invariant: initialization input and output types must match");

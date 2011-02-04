@@ -1114,7 +1114,14 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
     try {
-        return nothing?(analyzeMultiExprSubnode(s, bc.env, stmt.expr));
+        return maybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr),
+            results ref=> {
+                for (result in results)
+                    addSpecializedNode(s, ir.Consume(result));
+                return false;
+            },
+            () ref=> true,
+        );
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return false;
