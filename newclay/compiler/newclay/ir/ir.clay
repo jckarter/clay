@@ -41,12 +41,17 @@ variant ASTNode = Nothing
                 | ast.ExprListItem
                 | ast.ReturnExprListItem
                 | ast.Statement;
-    // CodeBody or ExprListItem or ReturnExprListItem or Statement
 overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
 [E | VariantMember?(ast.Expr, E)]
 overload ASTNode(x:E) = ASTNode(ast.ExprListItem(ast.Expr(x)));
 [S | VariantMember?(ast.Statement, S)]
 overload ASTNode(x:S) = ASTNode(ast.Statement(x));
+
+// XXX hack to deal with destructors not having a definite AST node attached
+overload ast.getFileLocation(astNode:ASTNode) = ...match(astNode,
+    Nothing, x ref=> ...(String("(destructors)"), 1, 0),
+    MatchDefault, a ref=> ...ast.getFileLocation(a),
+);
 
 variant LiteralCodeToken = String
                          | RTValue
@@ -263,7 +268,7 @@ parseLiteralCodeBody(env, codeString:String) {
     var currentToken = String();
     var currentTokenMode = STRING;
 
-    for (c in trimmed(sliced(codeString, 3, size(codeString) - 3), literalCodeWhiteSpace?)) {
+    for (c in sliced(codeString, 3, size(codeString) - 3)) {
         switch (currentTokenMode) {
         case STRING:
             if (c == '$') {

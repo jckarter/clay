@@ -1768,17 +1768,12 @@ evaluateAliasPrimitive(kind, env, callAst) {
             else
                 exprAst[0];
 
-        var location = ast.getLocation(locAst);
-        ref path = location.tokens.file.path;
-        var data = location.tokens.file.data;
-        var tokenOffset = location.tokenRange.begin;
-        var offset = location.tokens.vector[tokenOffset].range.begin;
-        var line, column, tabs = ...computeLocation(data, offset);
+        var path, line, column = ...ast.getFileLocation(locAst);
 
         return ValueList(
             Value(StringValue(path)),
-            Value(IntValue(StaticIntValue(Int64(line+1)))),
-            Value(IntValue(StaticIntValue(Int64(column + 7*tabs))))
+            Value(IntValue(StaticIntValue(Int64(line)))),
+            Value(IntValue(StaticIntValue(Int64(column))))
         );
     }
 
