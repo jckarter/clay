@@ -365,9 +365,14 @@ private intLiteralFromStaticIndexToken(data) {
     return String(slicedFrom(data, 1));
 }
 
-private var staticIndexingSuffix = exprParser(
-    x => StaticIndexing(Expr(), IntLiteral(intLiteralFromStaticIndexToken(x))),
+private var staticIndexingLiteral = bounds(modify(
+    x => IntLiteral(intLiteralFromStaticIndexToken(x)),
     tokenData(STATIC_INDEX),
+));
+
+private var staticIndexingSuffix = exprParser(
+    x => StaticIndexing(Expr(), x),
+    staticIndexingLiteral,
 );
 
 private var fieldRefSuffix = exprParser(
