@@ -478,7 +478,7 @@ private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
         }),
     );
 }
-        
+
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = withOneResult(analyzeIndexing(s, env, expr));
 

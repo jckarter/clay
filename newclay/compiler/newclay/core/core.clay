@@ -1420,7 +1420,7 @@ overload printTo(stream, x:ast.MultipleBindingList) {
 }
 
 overload printTo(stream, x:GlobalAnalysisEntry) {
-    printTo(stream, "analyze global: ", x.global.head.astName);
+    printTo(stream, "analyze global: ", x.global);
 }
 
 overload printTo(stream, x:CallCompilationEntry) {
