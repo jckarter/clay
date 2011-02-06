@@ -125,6 +125,9 @@ assignLocation(destNode, srcNode) {
 getFileLocation(x) = ...getFileLocation2(getLocation(x));
 
 private getFileLocation2(location) {
+    if (null?(location.tokens))
+        return String("(unknown)"), 1, 0;
+
     ref path = location.tokens.file.path;
     var data = location.tokens.file.data;
     var tokenOffset = location.tokenRange.begin;
