@@ -1892,6 +1892,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
             gvArgs.push_back(llvm::GenericValue(out->values[i]->addr));
         }
     }
+    error("calling compiled code is not supported in the evaluator");
     llvmEngine->runFunction(entry->llvmFunc, gvArgs);
 }
 
