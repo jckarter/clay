@@ -370,7 +370,7 @@ overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:Val
             return EnvEntry(Alias(just(binding.ast.value), env));
         });
     } else
-        return EnvEntry(RTGlobal(x, env));
+        return EnvEntry(RTGlobal(x, params, env));
 }
 
 symbolBody(x:Symbol) {

@@ -125,7 +125,7 @@ private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleG
     if (symbolHeadHasParams?(head)) {
         envAdd(env, binding.name.name, Value(head));
     } else {
-        var g = RTGlobal(head, newEnv(module));
+        var g = RTGlobal(head, ValueList(), newEnv(module));
         head.instances[ValueList()] = EnvEntry(g);
         envAdd(env, binding.name.name, g);
     }

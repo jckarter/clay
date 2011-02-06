@@ -90,15 +90,7 @@ printIdentifierTo(stream, value:Value) {
     match(value,
         SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.astName.name.str); },
         Symbol, s ref=> {
-            printTo(stream, s.head.module.name, '.', s.head.astName.name.str);
-            if (not empty?(s.params)) {
-                printTo(stream, '[');
-                interleave(s.params,
-                    () ref=> { printTo(stream, ","); },
-                    p  ref=> { printIdentifierTo(stream, p); },
-                );
-                printTo(stream, ']');
-            }
+            printSymbolIdentifierTo(stream, s.head, s.params);
         },
         Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
         TupleValue, t ref=> {
@@ -113,16 +105,28 @@ printIdentifierTo(stream, value:Value) {
     );
 }
 
-symbolIdentifier(symbol:Value) {
+valueIdentifier(symbol:Value) {
     var ident = String();
     printIdentifierTo(ident, symbol);
     return move(ident);
 }
 
-mangleType(type:Value) = mangleGlobal(symbolIdentifier(type));
+printSymbolIdentifierTo(stream, head:SymbolHead, params:ValueList) {
+    printTo(stream, head.module.name, '.', head.astName.name.str);
+    if (not empty?(params)) {
+        printTo(stream, '[');
+        interleave(params,
+            () ref=> { printTo(stream, ","); },
+            p  ref=> { printIdentifierTo(stream, p); },
+        );
+        printTo(stream, ']');
+    }
+}
+
+mangleType(type:Value) = mangleGlobal(valueIdentifier(type));
 
 functionIdentifier(s:Specialization) {
-    var identifier = symbolIdentifier(s.callable);
+    var identifier = valueIdentifier(s.callable);
     printTo(identifier, '(');
     interleave(s.args,
         () ref=> { printTo(identifier, ","); },
@@ -199,7 +203,11 @@ private getFunction(c:CodegenContext, s:Specialization) {
 private functionName(c, type) = getFunction(c, type).mangledName;
 
 // XXX need to differentiate components of list globals
-private globalIdentifier(g) = printString("global ", g.binding.module.name, '.', g.name);
+private globalIdentifier(g) {
+    var identifier = String("global ");
+    printSymbolIdentifierTo(identifier, g.head, g.params);
+    return move(identifier);
+}
 
 private globalName(c:CodegenContext, g:RTGlobal) {
     var namep = lookup(c.globalNames, g);
@@ -380,6 +388,7 @@ private finalizeFunctionDefinition(c, bc, function) {
 
     printlnTo(definition);
     printTo(definition, bc.bodyCode);
+    printlnTo(definition, "#line 1 \"(clay generated)\"");
 }
 
 private finalizeSpecialization(c, bc) {
