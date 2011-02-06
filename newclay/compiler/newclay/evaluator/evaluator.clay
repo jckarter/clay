@@ -599,8 +599,7 @@ overload envEntryToValue(x:RTExternal) {
     return Value();
 }
 overload envEntryToValue(x:RTGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
+    return rtTypeToValue(globalAttributes(x).type);
 }
 overload envEntryToValue(x:RTValue) {
     return rtTypeToValue(x.type);
