@@ -956,6 +956,12 @@ addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName) 
 // print Value
 //
 
+private printSymbol(stream, head, params) {
+    printTo(stream, head.astName.name.str);
+    if (not empty?(params))
+        printTo(stream, params);
+}
+
 overload printTo(stream, x:Value) {
     printTo(stream, *x);
 }
@@ -1003,9 +1009,7 @@ overload printTo(stream, x:SymbolHead) {
     printTo(stream, x.astName.name.str);
 }
 overload printTo(stream, x:Symbol) {
-    printTo(stream, x.head.astName.name.str);
-    if (not empty?(x.params))
-        printTo(stream, x.params);
+    printSymbol(stream, x.head, x.params);
 }
 overload printTo(stream, x:ModuleValue) {
     maybe(x.module,
@@ -1029,6 +1033,9 @@ overload printReprTo(stream, x:Value) {
     printReprTo(stream, *x);
 }
 
+overload printReprTo(stream, x:RTGlobal) {
+    printSymbol(stream, x.head, x.params);
+}
 
 
 //
@@ -1123,13 +1130,15 @@ overload printTo(stream, x:RTExternal) {
 
 record RTGlobal = referenceType(
     head: SymbolHead,
+    params: ValueList,
     env: Env,
     attributes: TriState[RTGlobalAttributes],
 );
 
-overload RTGlobal(head:SymbolHead, env:Env)
+overload RTGlobal(head:SymbolHead, params:ValueList, env:Env)
     = RTGlobal(
         head,
+        params,
         env,
         TriState[RTGlobalAttributes]()
     );

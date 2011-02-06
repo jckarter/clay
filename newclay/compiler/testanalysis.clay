@@ -291,7 +291,7 @@ printInvokeTable(name, table) {
 
 printGlobal(g:RTGlobal, constructorBody:Vector[ir.Node]) {
     printDepth(1);
-    println("global ", g.head.astName);
+    println("global ", g);
     printDepth(1);
     println("constructor analysis nodes:");
     for (node in constructorBody)
