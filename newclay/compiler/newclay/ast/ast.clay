@@ -723,12 +723,12 @@ record WhileStatement = ast(
 record SwitchStatement = ast(
     value: Expr,
     caseBlocks: Vector[CaseBlock],
-    defaultBlock: Maybe[Block],
+    defaultBlock: Maybe[Statement],
 );
 
 record CaseBlock = ast(
     values: ExprList,
-    body: Block,
+    body: Statement,
 );
 
 record TryStatement = ast(

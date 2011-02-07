@@ -1274,13 +1274,13 @@ private var switchStatement = statementParser(
 
 private var caseBlock = bounds(modify(
     x => CaseBlock(x.2, x.4),
-    sequence(kw_case, punc(#"("), exprList, punc(#")"), block),
+    sequence(kw_case, punc(#"("), exprList, punc(#")"), statement),
 ));
 
-private var defaultBlock = bounds(modify(
+private var defaultBlock = modify(
     x => x.1,
-    sequence(kw_default, block),
-));
+    sequence(kw_default, statement),
+);
 
 private var tryStatement = statementParser(
     x => TryStatement(x.1, x.2),
