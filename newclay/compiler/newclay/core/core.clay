@@ -307,6 +307,8 @@ enum PrimitiveKind {
 
     PRIM_StaticName,
     PRIM_StaticQualifiedName,
+
+    PRIM_CallDefinedForSymbol?,
 }
 
 record Primitive = referenceType(

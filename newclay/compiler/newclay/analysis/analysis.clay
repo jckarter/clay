@@ -1958,15 +1958,20 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
 // analyzeCallable helpers
 //
 
-private findOverload(program, callable, args) {
+ifOverload(program, callable, args, thenFn, elseFn) {
     for (x in reversed(program.allOverloads)) {
         var result = matchOverload(x, callable, args);
-        if (not nothing?(result))
-            return just(move(result));
+        if (just?(result))
+            return forward ...thenFn(move(just(result)));
     }
-    genericError("no matching operation");
-    return Specialization();
+    return forward ...elseFn();
 }
+
+private findOverload(program, callable, args)
+    = ifOverload(program, callable, args, s => s, () ref=> {
+        genericError("no matching operation");
+        return Specialization();
+    });
 
 private returnSpecKind(returnSpec: ast.ReturnSpec) {
     return ...maybe(returnSpec.kind,
