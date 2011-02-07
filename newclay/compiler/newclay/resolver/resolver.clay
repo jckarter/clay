@@ -112,6 +112,15 @@ overload visitASTNode(r:ResolveASTVisitor, stmt:ast.IfStatement) {
     maybe(stmt.elseBody, elseBody ref=> { visitAST(newVisitor(r), elseBody); });
 }
 
+overload visitASTNode(r:ResolveASTVisitor, stmt:ast.SwitchStatement) {
+    visitAST(r, stmt.value);
+    for (caseBlock in stmt.caseBlocks) {
+        visitAST(r, caseBlock.values);
+        visitAST(newVisitor(r), caseBlock.body);
+    }
+    maybe(stmt.defaultBlock, defaultBlock ref=> { visitAST(newVisitor(r), defaultBlock); });
+}
+
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.WhileStatement) {
     visitAST(r, stmt.condition);
     visitAST(newVisitor(r), stmt.body);

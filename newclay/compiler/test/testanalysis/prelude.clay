@@ -284,6 +284,18 @@ divideAssign(ref a:Int32, b:Int32)    { a <-- divide(a, b); }
 remainderAssign(ref a:Int32, b:Int32) { a <-- remainder(a, b); }
 
 //
+// case?
+//
+
+case?(a, forward ...against) {
+    static for (b in ...against)
+        if (a == b)
+            return true;
+    return false;
+}
+
+
+//
 // call
 //
 

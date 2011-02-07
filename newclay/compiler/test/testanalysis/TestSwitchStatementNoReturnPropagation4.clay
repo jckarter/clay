@@ -1,9 +1,9 @@
 nonterminating() { throw 0; }
 
 main() {
-    switch (nonterminating())
+    switch (0)
     case (1) {
-        return 1;
+        nonterminating();
     }
     case (2) {
         return 2;

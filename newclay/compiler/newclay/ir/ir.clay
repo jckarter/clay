@@ -41,6 +41,7 @@ variant Node = LiteralCodeBody
 variant ASTNode = Nothing
                 | ast.ExprListItem
                 | ast.ReturnExprListItem
+                | ast.CaseBlock
                 | ast.Statement;
 overload ASTNode(x:ast.Expr) = ASTNode(ast.ExprListItem(x));
 [E | VariantMember?(ast.Expr, E)]
