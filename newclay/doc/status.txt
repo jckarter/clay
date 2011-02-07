@@ -2,8 +2,6 @@ Unimplemented features:
 - multiple-value global bindings
     var x, y, ...z = ...foo();
 - global ref and const bindings
-- parameterized global variables
-    var typeSize['T] = TypeSize('T);
 - multiple-value assignment
     x, y, ...z = ...foo();
   NB: multiple-value local variable binding and initialization DO work:
@@ -16,7 +14,7 @@ Unimplemented features:
 - runtime conversion of static tuple values
     static foo() = (1, "two");
     bar() = foo();
-- parameterized aliases; aliases in pattern expressions
+- aliases in pattern expressions
     alias Foo['T] = Bar['T, "foo"];
     bas(x:Foo['T]) { ... }
 - tuples in pattern expressions
@@ -24,7 +22,9 @@ Unimplemented features:
 - alias arguments/call-by-name functions
 - inline functions
 - goto
-- static for
+- break/continue in static for
+    "static for" isn't a real loop. break and continue within a static for would have to be
+    implemented as goto
 - for
 - switch
 - binding expressions
@@ -50,10 +50,10 @@ Unimplemented features:
     main() { puts(cstring("Hello world")); }
 
 Known bugs:
+- context in compiler error messages is often lacking or inaccurate
 - mutually recursive global alias bindings cause an infinite loop
     alias y = x;
     alias x = y;
-- context in compiler error messages is often lacking or inaccurate
 - dotted module imports can run over aliased module imports
     import a as b;
     import b.c; // should be an error since "b" is already an alias
