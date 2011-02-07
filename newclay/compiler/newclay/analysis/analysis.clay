@@ -1074,8 +1074,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
                 var subS = subContext(s, subNode.body);
 
                 var forEnv = newEnv(bc.env);
-                var forValue = newCapture(value, stmt.bodyBinding.str);
-                addSpecializedBind(subS, stmt, value, forValue);
+                var forValue = addCapture(subS, stmt, value, stmt.bodyBinding.str);
 
                 envAdd(forEnv, stmt.bodyBinding, forValue);
 
@@ -1173,10 +1172,10 @@ private analyzeCase(s, pc, bc, lc, testValue, stmt:ast.SwitchStatement, caseI:Si
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
     return stmtMaybe(analyzeSubnode(s, bc.env, stmt.value), testValues ref=> {
         assert(size(stmt.caseBlocks) > 0, "switch must have at least one case block");
-        var testValueTmp = singleValue(testValues);
-        var testValue = newCapture(testValueTmp);
-        addSpecializedBind(s, stmt, testValueTmp, testValue);
-        return analyzeCase(s, pc, bc, lc, testValue, stmt, SizeT(0));
+        return analyzeCase(s, pc, bc, lc,
+            addCapture(s, stmt, singleValue(testValues)),
+            stmt, SizeT(0)
+        );
     });
 }
 
@@ -1499,16 +1498,19 @@ genericAnalysisError(forward ...err) {
 newValue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
 newReference(kind, type, ...name) = RTValue(kind, type, ReferenceVariable(), ...name);
 
-newCapture(capturedValue, ...name)
-    = RTValue(
-        if (capturedValue.kind == RT_VALUE_RVALUE) RT_VALUE_REF else capturedValue.kind,
-        capturedValue.type,
-        if (capturedValue.kind == RT_VALUE_RVALUE)
+addCapture(s, stmt, value, ...name) {
+    var capturedValue = RTValue(
+        if (value.kind == RT_VALUE_RVALUE) RT_VALUE_REF else value.kind,
+        value.type,
+        if (value.kind == RT_VALUE_RVALUE)
             RTValueReferent(LocalVariable())
         else
             RTValueReferent(ReferenceVariable()),
         ...name
     );
+    addSpecializedBind(s, stmt, value, capturedValue);
+    return capturedValue;
+}
 
 private procedure intValueType;
 overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism
