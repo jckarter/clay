@@ -776,7 +776,7 @@ overload evaluateStrictCall(x:Symbol, args) {
 overload evaluateStrictCall(x:SymbolHead, args) {
     return memoizeStaticCall(x.evalTable, x.module.program, Value(x), args);
 }
-overload evaluateStrictCall(x:Primitive, args) {
+overload evaluateStrictCall(x:Primitive, args) ValueList {
     return evaluatePrimitive(x.kind, args);
 }
 overload evaluateStrictCall(x:AliasPrimitive, args) {
@@ -1724,12 +1724,55 @@ evaluatePrimitive(kind, args) {
         return ValueList(StringValue(qualifiedValueString(a)));
     }
 
+    case PRIM_CallDefinedForSymbol? : {
+        if (size(args) < 1)
+            genericError("CallDefinedForSymbol? requires at least one argument");
+        var callable = args[0];
+        var callArgs = map(callDefinedRTValue, slicedFrom(args, 1));
+
+        var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
+        return ValueList(BoolValue(callDefined?));
+    }
+
     default : {
         assert(false, "invalid primitive");
         return ValueList();
     }
     }
 }
+
+private callDefinedRTValue(type:Value) = match(type,
+    Symbol, typeSymbol ref=> {
+        if (symbolType?(typeSymbol))
+            return RTValue(RT_VALUE_CONST, type, LocalVariable());
+        else {
+            var refHead = Value(typeSymbol.head);
+            if (size(typeSymbol.params) != 1)
+                genericError("arguments to CallDefined? must be types");
+            var refTypeSymbol = typeSymbol.params[0];
+            var type? = match(refTypeSymbol,
+                Symbol, s ref=> symbolType?(s),
+                MatchDefault, x ref=> false,
+            );
+            if (not type?)
+                genericError("arguments to CallDefined? must be types");
+
+            if (refHead == getHooks().Ref)
+                return RTValue(RT_VALUE_REF, type, LocalVariable());
+            if (refHead == getHooks().Rvalue)
+                return RTValue(RT_VALUE_RVALUE, type, LocalVariable());
+            if (refHead == getHooks().Const)
+                return RTValue(RT_VALUE_CONST, type, LocalVariable());
+
+            genericError("arguments to CallDefined? must be types");
+            return RTValue();
+        }
+    },
+    MatchDefault, x ref=> {
+        genericError("arguments to CallDefined? must be types");
+        return RTValue();
+    },
+);
 
 printQualifiedTo(stream, value:Value) {
     match(value,
@@ -1796,6 +1839,8 @@ private refType(v) {
     ));
 }
 
+// extract a single Alias argument from an ast and use its associated ast
+// used so that ExpressionString, ExpressionLine, etc. work with alias arguments
 private expressionStringAst(env, argsAst:ast.ExprList) {
     if (size(argsAst) == 1)
         return match(argsAst[0],
