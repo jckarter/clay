@@ -1056,7 +1056,38 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
-    genericError("static for loops are not yet supported");
+    for (valueItem in stmt.values) {
+        var returns? = maybe(analyzeSubnode(s, bc.env, valueItem),
+            forValues ref=> {
+                for (value in forValues) {
+                    var subNode = allocateRef(ir.Block);
+                    var subS = subContext(s, subNode.body);
+
+                    var forEnv = newEnv(bc.env);
+                    var forValue = newCapture(value, stmt.bodyBinding.str);
+                    addSpecializedBind(subS, stmt, value, forValue);
+
+                    envAdd(forEnv, stmt.bodyBinding, forValue);
+
+                    var bodyReturns? = analyzeStatement(
+                        subS,
+                        pc,
+                        BlockContext(forEnv),
+                        lc,
+                        stmt.body
+                    );
+
+                    addSpecializedNode(s, subNode);
+                    if (bodyReturns?)
+                        return true;
+                }
+                return false;
+            },
+            () ref=> true,
+        );
+        if (returns?)
+            return true;
+    }
     return false;
 }
 
@@ -1421,6 +1452,17 @@ genericAnalysisError(forward ...err) {
 
 newValue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
 newReference(kind, type, ...name) = RTValue(kind, type, ReferenceVariable(), ...name);
+
+newCapture(capturedValue, ...name)
+    = RTValue(
+        if (capturedValue.kind == RT_VALUE_RVALUE) RT_VALUE_REF else capturedValue.kind,
+        capturedValue.type,
+        if (capturedValue.kind == RT_VALUE_RVALUE)
+            RTValueReferent(LocalVariable())
+        else
+            RTValueReferent(ReferenceVariable()),
+        ...name
+    );
 
 private procedure intValueType;
 overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism

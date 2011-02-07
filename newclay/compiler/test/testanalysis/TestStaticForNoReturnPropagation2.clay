@@ -1,0 +1,10 @@
+terminating1() = 1;
+terminating2() = 2;
+nonterminating() { throw 0; }
+
+foo() {}
+
+main() {
+    static for (x in terminating1(), ...nonterminating(), terminating2())
+        foo();
+}
