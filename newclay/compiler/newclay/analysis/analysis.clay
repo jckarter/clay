@@ -148,98 +148,93 @@ private externalArgumentType(arg:ast.ExternalArgument, env)
 
 private analyzeGlobal(g:RTGlobal) {
     ref globalMap = getProgram().globalMap;
-    ref binding = g.binding;
 
-    assert(null?(lookup(globalMap.globals, binding)), "unprotected recursive global reference");
-    return withGlobalAnalysis(binding, () ref=>
-        withLocation(*binding.ast, () ref=> {
-            push(globalMap.globalOrder, binding);
-            // XXX multiple-value globals?
-            var type = Value();
-            type, globalMap.globals[binding] = ...analyzeGlobal2(g, *binding.ast, binding.module);
+    assert(null?(lookup(globalMap.constructors, g)), "unprotected recursive global reference");
+    var binding = variantAs(g.head.ast, GlobalBinding);
+    return withGlobalAnalysis(g, () ref=>
+        withLocation(binding.ast, () ref=> {
+            push(globalMap.globalOrder, g);
+            var type = analyzeGlobal2(g, binding);
             return RTGlobalAttributes(type);
         })
     );
 }
 
-private analyzeGlobal2(g:RTGlobal, binding:ast.SingleBinding, module:Module) {
-    var global = ProgramGlobal();
+private analyzeGlobal2(g:RTGlobal, binding:GlobalBinding) {
+    ref globalMap = getProgram().globalMap;
     var complete? = true;
-    var constructorS = SpecializationContext(&global.constructorBody, &complete?);
-    var env = newEnv(module);
+    var constructorS = SpecializationContext(&globalMap.constructors[g], &complete?);
 
-    var resultTypes = analyzeSubnode(constructorS, env, binding.value);
-    assert(complete?, "unresolvable recursion in global initializer");
+    return maybe(binding.ast.value,
+        valueExpr ref=> {
+            var resultTypes = analyzeSubnode(constructorS, g.env, valueExpr);
+            assert(complete?, "unresolvable recursion in global initializer");
 
-    return ...maybe(resultTypes,
-        results ref=> {
-            if (size(results) != 1)
-                genericError("single-value global binding gave ", size(results), " results");
+            return maybe(resultTypes,
+                results ref=> {
+                    if (size(results) != 1)
+                        genericError("single-value global binding gave ", size(results), " results");
 
-            var type = results[0].type;
+                    var type = results[0].type;
 
-            maybe(binding.name.type, declaredTypeExpr ref=> {
-                withLocation(declaredTypeExpr, () ref=> {
-                    var declaredType = evaluateExpr(declaredTypeExpr, env);
-                    if (declaredType != type)
-                        genericError(
-                            "global variable declared with type ", declaredType,
-                            " but bound to value of type ", type,
-                        );
-                });
-            });
+                    maybe(binding.ast.type, declaredTypeExpr ref=> {
+                        withLocation(declaredTypeExpr, () ref=> {
+                            var declaredType = evaluateExpr(declaredTypeExpr, g.env);
+                            if (declaredType != type)
+                                genericError(
+                                    "global variable declared with type ", declaredType,
+                                    " but bound to value of type ", type,
+                                );
+                        });
+                    });
 
-            addSpecializedInitialize(constructorS, binding.value, results[0], _globalRTValue(g, type));
-            global.globals = Vector[RTGlobal](g);
-
-            return type, move(global);
+                    addSpecializedInitialize(constructorS, valueExpr, results[0], _globalRTValue(g, type));
+                    return type;
+                },
+                () ref=> {
+                    genericError("global initializer is nonreturning");
+                    return Value();
+                },
+            );
         },
-        () ref=> {
-            genericError("global initializer is nonreturning");
-            return Value(), ProgramGlobal();
-        },
+        () ref=> maybe(binding.ast.type,
+            declaredTypeExpr ref=> evaluateExpr(declaredTypeExpr, g.env),
+            () ref=> {
+                genericError("global variable binding must have a declared type or an initializer expression");
+                return Value();
+            },
+        ),
     );
-}
-
-overload analyzeGlobal2(g:RTGlobal, bindings:ast.MultipleBindingList, module:Module) {
-    // XXX multiple globals
-    if (size(bindings.names.items) > 1)
-        genericError("multiple-value global bindings not yet supported");
-    if (just?(bindings.names.variadicItem))
-        genericError("variadic global bindings not yet supported");
-    if (just?(bindings.values))
-        genericError("multiple-value global bindings with initializer not yet supported");
-
-    var binding = bindings.names.items[0];
-    var env = newEnv(module);
-    var type = maybe(binding.type,
-        declaredTypeExpr ref=> evaluateExpr(declaredTypeExpr, env),
-        () ref=> {
-            genericError("global variable must have a declared type or initializer expression");
-            return Value();
-        }
-    );
-
-    var global = ProgramGlobal();
-    global.globals = Vector[RTGlobal](g);
-    return type, move(global);
 }
 
 globalAttributes(g:RTGlobal) = safeInitialize(g.attributes, () ref=> analyzeGlobal(g));
-
-overload globalAttributes(g:RTListGlobal) = safeInitialize(g.attributes, () ref=> {
-    genericError("multiple-value global bindings not yet supported");
-    return RTListGlobalAttributes();
-});
+globalBinding(g:RTGlobal) = variantAs(g.head.ast, GlobalBinding);
+globalKind(g:RTGlobal) {
+    switch (globalBinding(g).kind) {
+    case ast.BINDING_RVALUE:
+        genericError("global variables cannot be rvalues");
+        return RTValueKind();
+    case ast.BINDING_FORWARD:
+        genericError("global variables cannot be forward");
+        return RTValueKind();
+    case ast.BINDING_ALIAS:
+        assert(false, "global alias created as runtime global");
+        return RTValueKind();
+    case ast.BINDING_REF:
+        genericError("global ref bindings not yet supported");
+        return RTValueKind();
+    case ast.BINDING_CONST:
+        genericError("global const bindings not yet supported");
+        return RTValueKind();
+    default:
+        return RT_VALUE_REF;
+    }
+}
 
 private _globalRTValue(g:RTGlobal, type:Value)
-    = RTValue(g.kind, type, g, g.name);
+    = RTValue(globalKind(g), type, g);
 
 globalRTValue(g:RTGlobal) = _globalRTValue(g, globalAttributes(g).type);
-globalRTValues(g:RTListGlobal) {
-    genericError("multiple-value global bindings not yet supported");
-    return RTValues();
-}
 
 
 
@@ -416,8 +411,6 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("label cannot be used as a value"),
     RTExternal,   x ref=> Maybe(RTValues(addRvalue(s, externalRTValue(x)))),
     RTGlobal,     x ref=> Maybe(RTValues(globalRTValue(x))),
-    RTListGlobal, x ref=>
-        genericAnalysisError("multiple values cannot be used in single value context"),
 );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NameRef) {
@@ -475,8 +468,8 @@ private withOneResult(mResults) {
 
 private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
     return ifStaticValue(s, env, expr.expr,
-        staticIndexee ref=> addSpecializedValue(s, expr,
-            evaluateIndexing(staticIndexee, evaluateExprList(expr.args, env))
+        staticIndexee ref=> analyzeEnvEntry(s, expr,
+            evaluateIndexingEntry(staticIndexee, evaluateExprList(expr.args, env))
         ),
         indexee ref=> maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
             var operands = RTValues(indexee);
@@ -485,14 +478,14 @@ private analyzeIndexing(s:SpecializationContext, env:Env, expr:ast.Indexing) {
         }),
     );
 }
-        
+
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
     = withOneResult(analyzeIndexing(s, env, expr));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) {
     return ifStaticValue(s, env, expr.expr,
-        staticIndexee ref=> addSpecializedValue(s, expr,
-            evaluateIndexing(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
+        staticIndexee ref=> analyzeEnvEntry(s, expr,
+            evaluateIndexingEntry(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
         ),
         indexee ref=> {
             var indexValue = Value(parseIntLiteral(expr.index.value));
@@ -815,6 +808,8 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
         }
     });
 
+[T] private stmtMaybe(value:Maybe[T], thenFn) = maybe(value, thenFn, () => true);
+
 private analyzeStatement(
     s:SpecializationContext,
     pc:ProcContext,
@@ -1009,88 +1004,115 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     return true;
 }
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
-    // XXX recursion with statements
-    = maybe(analyzeBoolSubnode(s, bc.env, stmt.condition),
-        condResult ref=> {
-            var ifNode = ir.If(ir.ASTNode(stmt), singleValue(condResult),
-                Vector[ir.Node](),
-                Vector[ir.Node](),
-            );
-
-            var thenRecursive? = false;
-            var elseRecursive? = nothing?(stmt.elseBody);
-            var thenReturns? = false;
-            var elseReturns? = false;
-            var thenS = subContext(s, ifNode.thenBody);
-            var elseS = subContext(s, ifNode.elseBody);
-
-            try {
-                thenReturns? = analyzeStatement(
-                    thenS,
-                    pc,
-                    BlockContext(newEnv(bc.env)),
-                    lc,
-                    stmt.thenBody
-                );
-            } catch (e:RecursiveAnalysisError) { thenRecursive? = true; }
-
-            maybe(stmt.elseBody, elseBody ref=> {
-                try {
-                    elseReturns? = analyzeStatement(
-                        elseS,
-                        pc,
-                        BlockContext(newEnv(bc.env)),
-                        lc,
-                        elseBody
-                    );
-                } catch (e:RecursiveAnalysisError) { elseRecursive? = true; }
-            });
-
-            if (thenRecursive? and elseRecursive?)
-                recursiveAnalysisError();
-
-            useBranchRvalues(s, thenS, elseS);
-            addSpecializedNode(s, ifNode);
-            return thenReturns? and elseReturns?;
-        },
-        () => true,
+private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
+    var ifNode = ir.If(ir.ASTNode(ast), cond,
+        Vector[ir.Node](),
+        Vector[ir.Node](),
     );
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement) {
-    genericError("for loops are not yet supported");
-    return false;
+    var thenRecursive? = false;
+    var elseRecursive? = not else?;
+    var thenReturns? = false;
+    var elseReturns? = false;
+    var thenS = subContext(s, ifNode.thenBody);
+    var elseS = subContext(s, ifNode.elseBody);
+
+    try {
+        thenReturns? = thenAnalysisFn(thenS);
+    } catch (e:RecursiveAnalysisError) {
+        thenRecursive? = true;
+    }
+
+    if (else?)
+        try {
+            elseReturns? = elseAnalysisFn(elseS);
+        } catch (e:RecursiveAnalysisError) {
+            elseRecursive? = true;
+        }
+
+    if (thenRecursive? and elseRecursive?)
+        recursiveAnalysisError();
+
+    useBranchRvalues(s, thenS, elseS);
+
+    addSpecializedNode(s, ifNode);
+    return thenReturns? and elseReturns?;
 }
+
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
+    = stmtMaybe(analyzeBoolSubnode(s, bc.env, stmt.condition), condResult ref=> {
+        return analyzeBranch(
+            s, stmt, singleValue(condResult), just?(stmt.elseBody),
+            thenS ref=> analyzeStatement(
+                thenS,
+                pc,
+                BlockContext(newEnv(bc.env)),
+                lc,
+                stmt.thenBody
+            ),
+            elseS ref=> analyzeStatement(
+                elseS,
+                pc,
+                BlockContext(newEnv(bc.env)),
+                lc,
+                just(stmt.elseBody)
+            ),
+        );
+    });
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
-    genericError("static for loops are not yet supported");
+    for (valueItem in stmt.values) {
+        var returns? = stmtMaybe(analyzeSubnode(s, bc.env, valueItem), forValues ref=> {
+            for (value in forValues) {
+                var subNode = allocateRef(ir.Block);
+                var subS = subContext(s, subNode.body);
+
+                var forEnv = newEnv(bc.env);
+                var forValue = addCapture(subS, stmt, value, stmt.bodyBinding.str);
+
+                envAdd(forEnv, stmt.bodyBinding, forValue);
+
+                var bodyReturns? = analyzeStatement(
+                    subS,
+                    pc,
+                    BlockContext(forEnv),
+                    lc,
+                    stmt.body
+                );
+
+                addSpecializedNode(s, subNode);
+                if (bodyReturns?)
+                    return true;
+            }
+            return false;
+        });
+        if (returns?)
+            return true;
+    }
     return false;
 }
 
-private trueCondition?(expr)
+private trueCondition?(condBody)
     // XXX check for true condition
     = false;
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
+private analyzeLoop(s, ast, bc, condAnalysisFn, bodyAnalysisFn) {
     var whileNode = ir.While(
-        stmt,
+        ir.ASTNode(ast),
         Vector[ir.Node](),
         RTValue(),
         Vector[ir.Node](),
     );
     var loopS = loopSubContext(s, whileNode.conditionBody);
-    return maybe(analyzeBoolSubnode(loopS, bc.env, stmt.condition),
+    return maybe(condAnalysisFn(loopS),
         condResult ref=> {
             whileNode.condition = singleValue(condResult);
             useRvalue(loopS, whileNode.condition);
 
             var subbc = BlockContext(newEnv(bc.env));
-            var sublc = LoopContext(true, trueCondition?(stmt.condition));
+            var sublc = LoopContext(true, trueCondition?(whileNode.conditionBody));
 
-            var bodyReturns? = analyzeStatement(
-                loopSubContext(s, whileNode.body),
-                pc, subbc, sublc, stmt.body
-            );
+            var bodyReturns? = bodyAnalysisFn(loopSubContext(s, whileNode.body), subbc, sublc);
 
             addSpecializedNode(s, whileNode);
             return sublc.infiniteLoop? and bodyReturns?;
@@ -1102,26 +1124,156 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
     );
 }
 
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
+    return analyzeLoop(s, stmt, bc,
+        condS ref=> analyzeBoolSubnode(condS, bc.env, stmt.condition),
+        (bodyS, subbc, sublc) ref=> analyzeStatement(bodyS, pc, subbc, sublc, stmt.body),
+    );
+}
+
+private analyzeForBindings(s, env, stmt:ast.ForStatement, bindingValues:RTValues) {
+    if (not arityMatches?(stmt.bodyBindings, bindingValues))
+        // XXX improve error messages
+        genericError("incorrect number of iterator values in for loop");
+    for (arg, value in zipped(stmt.bodyBindings.items, bindingValues))
+        addForBinding(s, env, stmt, arg, value);
+    maybe(stmt.bodyBindings.variadicItem, varArg ref=> {
+        addVariadicForBinding(s, env, stmt, varArg, sliceFrom(bindingValues, size(stmt.bodyBindings.items)));
+    });
+}
+
+capturedForValue(s, stmt, formalKind, value)
+    = if (value.kind == RT_VALUE_RVALUE and formalKind != ast.ARG_RVALUE)
+        addCapture(s, stmt, value)
+    else
+        value;
+
+private addForBinding(s, env, stmt, arg, value) {
+    withLocation(arg, () ref=> {
+        var formalKind = referenceSpecifier(arg);
+        var value2 = capturedForValue(s, stmt, formalKind, value);
+        if (not referenceKindMatches?(formalKind, value2.kind))
+            // XXX improve error messages
+            genericError("incorrect reference kind for iterator value in for loop");
+        if (not unifyArgumentType(arg, value2, env))
+            // XXX improve error messages
+            genericError("mismatched type for iterator value in for loop: ", value.type);
+        var loweredKind = loweredArgumentKind(formalKind, value2.kind);
+        var loweredValue = newReference(loweredKind, value2.type, argumentNameString(arg));
+        addSpecializedBind(s, stmt, value2, loweredValue);
+
+        maybe(argumentName(arg), name ref=> { envAdd(env, name, value2); });
+    });
+}
+
+private addVariadicForBinding(s, env, stmt, varArg, values) {
+    withLocation(varArg, () ref=> {
+        var formalKind = referenceSpecifier(varArg);
+        var values2 = map(v ref=> {
+            var v2 = capturedForValue(s, stmt, formalKind, v);
+            if (not referenceKindMatches?(formalKind, v2.kind))
+                // XXX improve error messages
+                genericError("incorrect reference kinds for variadic iterator value in for loop: ");
+            var loweredKind = loweredArgumentKind(formalKind, v2.kind);
+            var loweredValue = newReference(loweredKind, v2.type, argumentNameString(varArg));
+            addSpecializedBind(s, stmt, v2, loweredValue);
+            return v2;
+        }, values);
+        if (not unifyVariadicArgumentType(varArg, values2, env))
+            genericError("mismatched types for variadic iterator value in for loop: ",
+                ValueList(mapped(v => v.type, values2))
+            );
+
+        var listVar = RTValueList(values2);
+        maybe(argumentName(varArg), name ref=> { envAdd(env, name, listVar); });
+    });
+}
+
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
+    = stmtMaybe(analyzeSubnode(s, bc.env, stmt.sequenceValue), seqValues ref=> {
+        var seqValue = addCapture(s, stmt, singleValue(seqValues));
+
+        return stmtMaybe(
+            withLocation(stmt.sequenceValue, () ref=>
+                analyzeCallWithOneResult(s, stmt.sequenceValue, getHooks().iterator, RTValues(seqValue)),
+            ),
+            iterValues ref=> {
+                var iterValue = addCapture(s, stmt.sequenceValue, singleValue(iterValues));
+
+                return analyzeLoop(s, stmt, bc,
+                    condS ref=> withLocation(stmt.sequenceValue, () ref=> withBoolResult(
+                        analyzeCallWithOneResult(condS, stmt.sequenceValue, getHooks().hasNext?, RTValues(iterValue))
+                    )),
+                    (bodyS, subbc, sublc) ref=> {
+                        return stmtMaybe(
+                            withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().next, RTValues(iterValue))),
+                            bindingValues ref=> {
+                                analyzeForBindings(bodyS, subbc.env, stmt, bindingValues);
+                                return analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
+                            },
+                        );
+                    },
+                );
+            }
+        );
+    });
+
+private analyzeCase(s, pc, bc, lc, testValue, stmt:ast.SwitchStatement, caseI:SizeT) {
+    ref caseBlock = stmt.caseBlocks[caseI];
+    return stmtMaybe(analyzeExprListNode(s, bc.env, caseBlock.values), caseValues ref=> {
+        var caseArgs = RTValues(testValue);
+        push(caseArgs, caseValues);
+        var mCaseResult = withBoolResult(withLocation(caseBlock, () ref=>
+            analyzeCallWithOneResult(s, caseBlock, getHooks().case?, caseArgs)
+        ));
+
+        var nextCase? = caseI + 1 < size(stmt.caseBlocks);
+        var default? = just?(stmt.defaultBlock);
+
+        return stmtMaybe(mCaseResult, caseResults ref=> {
+            return analyzeBranch(
+                s, caseBlock.body, singleValue(caseResults), nextCase? or default?,
+                caseS ref=> analyzeStatement(
+                    caseS,
+                    pc,
+                    BlockContext(newEnv(bc.env)),
+                    lc,
+                    caseBlock.body
+                ),
+                nextCaseS ref=> if (nextCase?)
+                        analyzeCase(nextCaseS, pc, bc, lc, testValue, stmt, caseI + 1)
+                    else
+                        analyzeStatement(
+                            nextCaseS, pc, BlockContext(newEnv(bc.env)), lc,
+                            just(stmt.defaultBlock)
+                        ),
+            );
+        });
+    });
+}
+
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
-    genericError("switch statements are not yet supported");
-    return false;
+    return stmtMaybe(analyzeSubnode(s, bc.env, stmt.value), testValues ref=> {
+        assert(size(stmt.caseBlocks) > 0, "switch must have at least one case block");
+        return analyzeCase(s, pc, bc, lc,
+            addCapture(s, stmt, singleValue(testValues)),
+            stmt, SizeT(0)
+        );
+    });
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
-    genericError("try statements are not yet supported");
-    return false;
+    // XXX true exception support
+    return analyzeStatement(s, pc, bc, lc, stmt.body);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
     try {
-        return maybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr),
-            results ref=> {
-                for (result in results)
-                    addSpecializedNode(s, ir.Consume(result));
-                return false;
-            },
-            () ref=> true,
-        );
+        return stmtMaybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr), results ref=> {
+            for (result in results)
+                addSpecializedNode(s, ir.Consume(result));
+            return false;
+        });
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return false;
@@ -1194,13 +1346,10 @@ overload analyzeStrictBindings(
 }
 
 private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
-    = maybe(analyzeSubnode(s, env, binding.value),
-        valueResult ref=> {
-            analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
-            return false;
-        },
-        () ref=> true,
-    );
+    = stmtMaybe(analyzeSubnode(s, env, binding.value), valueResult ref=> {
+        analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
+        return false;
+    });
 
 private analyzeBindingVar(s, stmt, kind, name, value) {
     var variableKind = bindingVariableKind(kind, value.kind);
@@ -1273,6 +1422,7 @@ overload analyzeStrictBindings(
         valueExprList ref=> ...maybe(analyzeMultiExprListNode(s, env, valueExprList, true),
             values ref=> {
                 if (not arityMatches?(bindingList.names, values))
+                    // XXX better error message
                     genericError("incorrect number of values for variable binding");
                 for (binding, value in zipped(bindingList.names.items, values))
                     analyzeSingleBinding(s, env, stmt, kind, binding, value);
@@ -1333,7 +1483,6 @@ private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
         genericAnalysisError("single value cannot be used in multiple value context"),
     RTGlobal,     x ref=>
         genericAnalysisError("single value cannot be used in multiple value context"),
-    RTListGlobal, x ref=> Maybe(globalRTValues(x)),
 );
 
 overload analyzeMultiExprNode(s, env, expr:ast.NameRef) {
@@ -1390,13 +1539,16 @@ validBoolResult?(results:Maybe[RTValues])
         () => true
     );
 
+withBoolResult(x) {
+    if (not validBoolResult?(x))
+        // OK to assume results is not Nothing and has one element here
+        genericError(boolType(), " expected but ", just(x)[0].type, " received");
+    return x;
+}
+
 analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
     try {
-        var results = analyzeNode(s, env, ast);
-        if (not validBoolResult?(results))
-            // OK to assume results is not Nothing and has one element here
-            genericError(boolType(), " expected but ", just(results)[0].type, " received");
-        return results;
+        return withBoolResult(analyzeNode(s, env, ast));
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return Maybe(RTValues(addRvalue(s, newValue(boolType()))));
@@ -1429,6 +1581,20 @@ genericAnalysisError(forward ...err) {
 
 newValue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
 newReference(kind, type, ...name) = RTValue(kind, type, ReferenceVariable(), ...name);
+
+addCapture(s, stmt, value, ...name) {
+    var capturedValue = RTValue(
+        if (value.kind == RT_VALUE_RVALUE) RT_VALUE_REF else value.kind,
+        value.type,
+        if (value.kind == RT_VALUE_RVALUE)
+            RTValueReferent(LocalVariable())
+        else
+            RTValueReferent(ReferenceVariable()),
+        ...name
+    );
+    addSpecializedBind(s, stmt, value, capturedValue);
+    return capturedValue;
+}
 
 private procedure intValueType;
 overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism
@@ -1664,6 +1830,11 @@ private argumentName(formalArg) = match(formalArg,
     ast.StaticArgument, x ref=> nothing(ast.Identifier),
 );
 
+private argumentNameString(formalArg) = match(formalArg,
+    ast.BoundArgument, x ref=> Maybe(x.name.str),
+    ast.StaticArgument, x ref=> nothing(String),
+);
+
 private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
     var formalKind = referenceSpecifier(formalArg);
     if (not referenceKindMatches?(formalKind, arg.kind))
@@ -1787,15 +1958,20 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
 // analyzeCallable helpers
 //
 
-private findOverload(program, callable, args) {
+ifOverload(program, callable, args, thenFn, elseFn) {
     for (x in reversed(program.allOverloads)) {
         var result = matchOverload(x, callable, args);
-        if (not nothing?(result))
-            return just(move(result));
+        if (just?(result))
+            return forward ...thenFn(move(just(result)));
     }
-    genericError("no matching operation");
-    return Specialization();
+    return forward ...elseFn();
 }
+
+private findOverload(program, callable, args)
+    = ifOverload(program, callable, args, s => s, () ref=> {
+        genericError("no matching operation");
+        return Specialization();
+    });
 
 private returnSpecKind(returnSpec: ast.ReturnSpec) {
     return ...maybe(returnSpec.kind,
@@ -1982,9 +2158,9 @@ analyzeGlobalConstructor() Maybe[Specialization] {
     specialization.env = newEnv(getProgramMainModule());
     specialization.body = Maybe(Vector[ir.Node]());
     ref body = just(specialization.body);
-    for (binding in reversed(globalMap.globalOrder)) {
-        assert(not null?(lookup(globalMap.globals, binding)), "missing global in global map!");
-        push(body, globalMap.globals[binding].constructorBody);
+    for (g in reversed(globalMap.globalOrder)) {
+        assert(not null?(lookup(globalMap.constructors, g)), "missing constructor in global map!");
+        push(body, globalMap.constructors[g]);
     }
 
     if (empty?(body))

@@ -97,6 +97,7 @@ overload getLocation(x:Statement) = getLocation(*x);
 overload getLocation(x:ExprListItem) = getLocation(*x);
 overload getLocation(x:Pattern) = getLocation(*x);
 overload getLocation(x:CodeBody) = getLocation(*x);
+overload getLocation(x:Argument) = getLocation(*x);
 
 procedure setLocation;
 overload setLocation(x, forward location) {
@@ -125,6 +126,9 @@ assignLocation(destNode, srcNode) {
 getFileLocation(x) = ...getFileLocation2(getLocation(x));
 
 private getFileLocation2(location) {
+    if (null?(location.tokens))
+        return String("(unknown)"), 1, 0;
+
     ref path = location.tokens.file.path;
     var data = location.tokens.file.data;
     var tokenOffset = location.tokenRange.begin;
@@ -480,10 +484,16 @@ record ExternalArgumentList = ast(
     variadic?: Bool,
 );
 
+record SingleGlobalBinding = ast(
+    name: SymbolName,
+    type: Maybe[Expr],
+    value: Maybe[Expr],
+);
+
 record GlobalBinding = ast(
     visibility: VisibilityKind,
     kind: BindingKind,
-    bindings: BindingList,
+    bindings: Vector[SingleGlobalBinding],
 );
 
 record GlobalLiteralCodeBody = ast(
@@ -714,12 +724,12 @@ record WhileStatement = ast(
 record SwitchStatement = ast(
     value: Expr,
     caseBlocks: Vector[CaseBlock],
-    defaultBlock: Maybe[Block],
+    defaultBlock: Maybe[Statement],
 );
 
 record CaseBlock = ast(
     values: ExprList,
-    body: Block,
+    body: Statement,
 );
 
 record TryStatement = ast(

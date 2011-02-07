@@ -365,9 +365,14 @@ private intLiteralFromStaticIndexToken(data) {
     return String(slicedFrom(data, 1));
 }
 
-private var staticIndexingSuffix = exprParser(
-    x => StaticIndexing(Expr(), IntLiteral(intLiteralFromStaticIndexToken(x))),
+private var staticIndexingLiteral = bounds(modify(
+    x => IntLiteral(intLiteralFromStaticIndexToken(x)),
     tokenData(STATIC_INDEX),
+));
+
+private var staticIndexingSuffix = exprParser(
+    x => StaticIndexing(Expr(), x),
+    staticIndexingLiteral,
 );
 
 private var fieldRefSuffix = exprParser(
@@ -1083,8 +1088,19 @@ private var externalArgument = bounds(modify(
 
 private var globalBinding = topLevelItemParser(
     x => GlobalBinding(just(x.0, VIS_PUBLIC), x.1, x.2),
-    sequence(visibility, bindingKind, bindingList, punc(#";"))
+    sequence(visibility, bindingKind, commaList(singleGlobalBinding), punc(#";"))
 );
+
+private var singleGlobalBinding = modify(
+    x => SingleGlobalBinding(x.0, x.1, x.2),
+    sequence(symbolName, optTypeExpr, optInitializerExpr),
+);
+
+private var initializerExpr = modify(
+    x => move(x.1),
+    sequence(punc(#"="), expr),
+);
+private var optInitializerExpr = optional(initializerExpr);
 
 // globalLiteralCodeBody
 
@@ -1258,13 +1274,13 @@ private var switchStatement = statementParser(
 
 private var caseBlock = bounds(modify(
     x => CaseBlock(x.2, x.4),
-    sequence(kw_case, punc(#"("), exprList, punc(#")"), block),
+    sequence(kw_case, punc(#"("), exprList, punc(#")"), statement),
 ));
 
-private var defaultBlock = bounds(modify(
+private var defaultBlock = modify(
     x => x.1,
-    sequence(kw_default, block),
-));
+    sequence(kw_default, statement),
+);
 
 private var tryStatement = statementParser(
     x => TryStatement(x.1, x.2),

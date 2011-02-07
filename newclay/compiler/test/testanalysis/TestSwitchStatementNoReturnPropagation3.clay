@@ -1,11 +1,11 @@
 nonterminating() { throw 0; }
 
 main() {
-    switch (nonterminating())
+    switch (0)
     case (1) {
         return 1;
     }
-    case (2) {
+    case (nonterminating()) {
         return 2;
     }
     default {

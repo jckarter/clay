@@ -1,0 +1,15 @@
+// dummy test to verify the concurrency.intrinsics loads and works
+
+import concurrency.intrinsics.*;
+
+var x = 1;
+
+main() {
+    var x1 = x;
+    llvm_memory_barrier(static true, static false, static false, static false, static false);
+    var x2 = x;
+
+    println(llvm_atomic_swap32(&x, 2));
+    println(llvm_atomic_cmp_swap32(&x, 2, 4));
+    println(llvm_atomic_cmp_swap32(&x, 3, 4));
+}

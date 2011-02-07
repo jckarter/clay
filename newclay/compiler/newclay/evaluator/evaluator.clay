@@ -326,7 +326,7 @@ bindArgs(env, formalArgs, args) {
     return env2;
 }
 
-bindPatternArgs(env, formalArgs, args) {
+bindPatternArgs(env:Env, formalArgs, args) {
     verifyBindingArity(formalArgs, args);
     var env2 = newEnv(env);
     var nFixed = size(formalArgs.items);
@@ -348,20 +348,34 @@ bindPatternArgs(env, formalArgs, args) {
 // symbols
 //
 
-makeSymbol(x:SymbolHead, params:ValueList) {
-    var ptr = lookup(x.symbols, params);
+makeSymbolHeadInstance(x:SymbolHead, params:ValueList) {
+    var ptr = lookup(x.instances, params);
     if (not null?(ptr)) {
         return ptr^;
     }
-    ref y = x.symbols[params];
-    var env = bindPatternArgs(x.module, x.ast.name.params, params);
-    y = Symbol(x, params, env);
+    ref y = x.instances[params];
+    var env = bindPatternArgs(newEnv(x.module), x.astName.params, params);
+    y = makeSymbolHeadInstance2(x, *x.ast, params, env);
     return y;
+}
+
+private makeSymbolHeadInstance2(x:SymbolHead, ast:ast.Symbol, params:ValueList, env:Env)
+    = EnvEntry(Value(Symbol(x, params, env)));
+
+overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:ValueList, env:Env) {
+    if (binding.kind == ast.BINDING_ALIAS) {
+        return withLocation(binding.ast, () ref=> {
+            if (nothing?(binding.ast.value))
+                genericError("alias bindings must have a value");
+            return EnvEntry(Alias(just(binding.ast.value), env));
+        });
+    } else
+        return EnvEntry(RTGlobal(x, params, env));
 }
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
-        () ref=> maybe(x.head.ast.expr,
+        () ref=> maybe(variantAs(x.head.ast, ast.Symbol).expr,
             expr ref=> evaluateExpr(expr, newEnv(x.env)),
             () ref=> Value(TupleValue()),
         )
@@ -585,12 +599,7 @@ overload envEntryToValue(x:RTExternal) {
     return Value();
 }
 overload envEntryToValue(x:RTGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
-}
-overload envEntryToValue(x:RTListGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
+    return rtTypeToValue(globalAttributes(x).type);
 }
 overload envEntryToValue(x:RTValue) {
     return rtTypeToValue(x.type);
@@ -716,13 +725,9 @@ overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
     return ValueList();
 }
-overload envEntryToValue(x:RTGlobal) {
+overload envEntryToValueList(x:RTGlobal) {
     genericError("non-alias global variables not available in static context");
-    return Value();
-}
-overload envEntryToValue(x:RTListGlobal) {
-    genericError("non-alias global variables not available in static context");
-    return Value();
+    return ValueList();
 }
 overload envEntryToValueList(x:RTValue) {
     genericError("single value used in multi-valued context");
@@ -771,7 +776,7 @@ overload evaluateStrictCall(x:Symbol, args) {
 overload evaluateStrictCall(x:SymbolHead, args) {
     return memoizeStaticCall(x.evalTable, x.module.program, Value(x), args);
 }
-overload evaluateStrictCall(x:Primitive, args) {
+overload evaluateStrictCall(x:Primitive, args) ValueList {
     return evaluatePrimitive(x.kind, args);
 }
 overload evaluateStrictCall(x:AliasPrimitive, args) {
@@ -806,8 +811,7 @@ overload evaluateIndexing(x:Value, args) {
     return evaluateIndexing(*x, args);
 }
 overload evaluateIndexing(x:SymbolHead, args) {
-    verifyBindingArity(x.ast.name.params, args);
-    return Value(makeSymbol(x, args));
+    return envEntryToValue(evaluateIndexingEntry(x, args));
 }
 overload evaluateIndexing(x:StringValue, args) {
     if (size(args) != 1)
@@ -818,6 +822,24 @@ overload evaluateIndexing(x:TupleValue, args) {
     if (size(args) != 1)
         genericError("tuple must be indexed with a single Int");
     return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElement, ValueList(Value(x), args[0]));
+}
+
+
+//
+// evaluateIndexingEntry
+//
+
+procedure evaluateIndexingEntry;
+
+overload evaluateIndexingEntry(x, args) {
+    return EnvEntry(evaluateIndexing(x, args));
+}
+overload evaluateIndexingEntry(x:Value, args) {
+    return evaluateIndexingEntry(*x, args);
+}
+overload evaluateIndexingEntry(x:SymbolHead, args) {
+    verifyBindingArity(x.astName.params, args);
+    return makeSymbolHeadInstance(x, args);
 }
 
 
@@ -1653,6 +1675,23 @@ evaluatePrimitive(kind, args) {
         var a = oneSymbol(args);
         return ValueList(symbolAttributes(a));
     }
+    case PRIM_StaticModule : {
+        var a = oneValue(args);
+        return ValueList(match(a,
+            SymbolHead, a ref=> ModuleValue(a.module),
+            Symbol, a ref=> ModuleValue(a.head.module),
+            Primitive, p ref=> ModuleValue(primitivesModule(getProgram())),
+            AliasPrimitive, p ref=> ModuleValue(primitivesModule(getProgram())),
+            MatchDefault, x ref=> {
+                genericError("expecting a symbol");
+                return ModuleValue();
+            },
+        ));
+    }
+    case PRIM_StaticModule? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, ModuleValue)));
+    }
     case PRIM_StaticModuleMember : {
         var module, member = ...moduleString(args);
         return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
@@ -1674,12 +1713,105 @@ evaluatePrimitive(kind, args) {
         return ValueList(TupleValue());
     }
 
+    case PRIM_StaticName : {
+        var a = oneValue(args);
+        var s = String();
+        printReprTo(s, a);
+        return ValueList(StringValue(s));
+    }
+    case PRIM_StaticQualifiedName : {
+        var a = oneValue(args);
+        return ValueList(StringValue(qualifiedValueString(a)));
+    }
+
+    case PRIM_CallDefinedForSymbol? : {
+        if (size(args) < 1)
+            genericError("CallDefinedForSymbol? requires at least one argument");
+        var callable = args[0];
+        var callArgs = map(callDefinedRTValue, slicedFrom(args, 1));
+
+        var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
+        return ValueList(BoolValue(callDefined?));
+    }
+
     default : {
         assert(false, "invalid primitive");
         return ValueList();
     }
     }
 }
+
+private callDefinedRTValue(type:Value) = match(type,
+    Symbol, typeSymbol ref=> {
+        if (symbolType?(typeSymbol))
+            return RTValue(RT_VALUE_CONST, type, LocalVariable());
+        else {
+            var refHead = Value(typeSymbol.head);
+            if (size(typeSymbol.params) != 1)
+                genericError("arguments to CallDefined? must be types");
+            var refTypeSymbol = typeSymbol.params[0];
+            var type? = match(refTypeSymbol,
+                Symbol, s ref=> symbolType?(s),
+                MatchDefault, x ref=> false,
+            );
+            if (not type?)
+                genericError("arguments to CallDefined? must be types");
+
+            if (refHead == getHooks().Ref)
+                return RTValue(RT_VALUE_REF, type, LocalVariable());
+            if (refHead == getHooks().Rvalue)
+                return RTValue(RT_VALUE_RVALUE, type, LocalVariable());
+            if (refHead == getHooks().Const)
+                return RTValue(RT_VALUE_CONST, type, LocalVariable());
+
+            genericError("arguments to CallDefined? must be types");
+            return RTValue();
+        }
+    },
+    MatchDefault, x ref=> {
+        genericError("arguments to CallDefined? must be types");
+        return RTValue();
+    },
+);
+
+printQualifiedTo(stream, value:Value) {
+    match(value,
+        SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.astName.name.str); },
+        Symbol, s ref=> {
+            printQualifiedSymbolTo(stream, s.head, s.params);
+        },
+        Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
+        TupleValue, t ref=> {
+            printTo(stream, '(');
+            interleave(t.elements,
+                () ref=> { printTo(stream, ", "); },
+                p  ref=> { printQualifiedTo(stream, p); },
+            );
+            printTo(stream, ')');
+        },
+        MatchDefault, v ref=> { printTo(stream, v); },
+    );
+}
+
+printQualifiedSymbolTo(stream, head:SymbolHead, params:ValueList) {
+    printTo(stream, head.module.name, '.', head.astName.name.str);
+    if (not empty?(params)) {
+        printTo(stream, '[');
+        interleave(params,
+            () ref=> { printTo(stream, ", "); },
+            p  ref=> { printQualifiedTo(stream, p); },
+        );
+        printTo(stream, ']');
+    }
+}
+
+qualifiedValueString(symbol:Value) {
+    var ident = String();
+    printQualifiedTo(ident, symbol);
+    return move(ident);
+}
+
+
 
 private argVariables(env, argsAst) {
     var body = Vector[ir.Node]();
@@ -1698,13 +1830,20 @@ private refType(v) {
         refSymbolHead = getHooks().Const;
         break;
     case RT_VALUE_RVALUE:
+        if (localVariable?(v) or immediateValue?(v))
+            return v.type;
+
         refSymbolHead = getHooks().Rvalue;
         break;
     }
 
-    return Value(makeSymbol(variantAs(refSymbolHead, SymbolHead), ValueList(v.type)));
+    return envEntryToValue(makeSymbolHeadInstance(
+        variantAs(refSymbolHead, SymbolHead), ValueList(v.type)
+    ));
 }
 
+// extract a single Alias argument from an ast and use its associated ast
+// used so that ExpressionString, ExpressionLine, etc. work with alias arguments
 private expressionStringAst(env, argsAst:ast.ExprList) {
     if (size(argsAst) == 1)
         return match(argsAst[0],

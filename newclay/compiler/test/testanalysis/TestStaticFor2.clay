@@ -1,0 +1,13 @@
+refReturn() ref x:Int32 __c__ """abort();""";
+rvalueReturn() rvalue x:Int32 __c__ """abort();""";
+constReturn() const x:Int32 __c__ """abort();""";
+valueReturn() x:Int32 __c__ """abort();""";
+
+bar(const x:Int32) {}
+overload bar(rvalue x:Int32) {}
+overload bar(ref x:Int32) {}
+
+main() {
+    static for (x in refReturn(), rvalueReturn(), constReturn(), valueReturn())
+        bar(x);
+}
