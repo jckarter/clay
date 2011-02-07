@@ -298,10 +298,15 @@ enum PrimitiveKind {
     PRIM_StaticSymbolBody,
     PRIM_StaticSymbolAttributes,
 
+    PRIM_StaticModule?,
+    PRIM_StaticModule,
     PRIM_StaticModuleMember,
 
     PRIM_StaticError,
     PRIM_StaticAssert,
+
+    PRIM_StaticName,
+    PRIM_StaticQualifiedName,
 }
 
 record Primitive = referenceType(
@@ -1019,7 +1024,7 @@ overload printTo(stream, x:Symbol) {
 }
 overload printTo(stream, x:ModuleValue) {
     maybe(x.module,
-        module ref=> { printTo(stream, "module ", module.name); },
+        module ref=> { printTo(stream, module.name); },
         ()     ref=> { printTo(stream, "<incomplete module name>"); },
     );
 }
