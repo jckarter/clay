@@ -1830,6 +1830,9 @@ private refType(v) {
         refSymbolHead = getHooks().Const;
         break;
     case RT_VALUE_RVALUE:
+        if (localVariable?(v) or immediateValue?(v))
+            return v.type;
+
         refSymbolHead = getHooks().Rvalue;
         break;
     }
