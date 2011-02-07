@@ -15,7 +15,8 @@ Unimplemented features:
     static foo() = (1, "two");
     bar() = foo();
 - aliases in pattern expressions
-    alias Foo['T] = Bar['T, "foo"];
+    symbol Bar['T, 'n];
+    alias Foo['T] = Bar['T, 2];
     bas(x:Foo['T]) { ... }
 - tuples in pattern expressions
     static foo(('A, 'B), 'C) = 'B;
@@ -23,14 +24,11 @@ Unimplemented features:
 - inline functions
 - goto
 - break/continue in static for
-    "static for" isn't a real loop. break and continue within a static for would have to be
-    implemented as goto
-- for
 - binding expressions
     foo() = var x = 1, y = 2 in x + y;
 - exception handling
-    try { } catch () {} is a no-op: the "try" block is compiled as a simple block, and the catch
-    blocks are simply ignored.t
+    try {} catch () {} is a no-op: the "try" block is compiled as a simple block, and the catch
+    blocks are simply ignored.
     "throw x" immediately calls abort().
 - dispatch operator
 - clay code pointers

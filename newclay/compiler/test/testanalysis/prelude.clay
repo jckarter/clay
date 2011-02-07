@@ -294,6 +294,11 @@ case?(a, forward ...against) {
     return false;
 }
 
+// iterator, next, hasNext?
+
+symbol iterator = Procedure();
+symbol next = Procedure();
+symbol hasNext? = Procedure();
 
 //
 // call
