@@ -55,8 +55,8 @@ coalesceBinding(cc:CoalesceContext, from:RTValue, to:RTValue) {
             cc.map^[cFrom] = newVar;
             cc.map^[to] = newVar;
         }
-    // references can merge with previous references or values of the same kind
-    } else if (referenceVariable?(to) and to.kind == from.kind) {
+    // references can merge with previous references
+    } else if (referenceVariable?(to)) {
         cc.map^[to] = cFrom;
     }
 }

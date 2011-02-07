@@ -120,6 +120,10 @@ record ClayHooks (
 
     case?: Value,
 
+    iterator: Value,
+    hasNext?: Value,
+    next: Value,
+
     tupleLiteral: Value,
     arrayLiteral: Value,
 
