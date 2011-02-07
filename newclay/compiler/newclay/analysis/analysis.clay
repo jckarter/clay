@@ -1132,8 +1132,8 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
-    genericError("try statements are not yet supported");
-    return false;
+    // XXX true exception support
+    return analyzeStatement(s, pc, bc, lc, stmt.body);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
