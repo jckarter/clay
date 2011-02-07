@@ -1,0 +1,19 @@
+import __primitives__.*;
+import __primitives__;
+import factorial.*;
+import factorial;
+
+symbol Foo['X];
+symbol Bar;
+
+static Main()
+    = StaticName(StaticModule),
+      StaticName(Factorial),
+      StaticName(Foo),
+      StaticName(Foo[Bar]),
+      StaticName(Bar),
+      StaticName(1),
+      StaticName((1, 2, Foo[Bar], Bar)),
+      StaticName("foo"),
+      StaticName(__primitives__),
+      StaticName(factorial);
