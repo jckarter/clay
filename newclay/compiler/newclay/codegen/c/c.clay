@@ -1,6 +1,7 @@
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.analysis.*;
+import newclay.evaluator.(qualifiedValueString, printQualifiedTo, printQualifiedSymbolTo);
 import newclay.diagnostics.(computeLocation);
 import newclay.optimizer.*;
 import newclay.lifetime.*;
@@ -86,49 +87,16 @@ mangleString(name) {
 
 mangleGlobal(name) = "_clay__" + mangleString(name);
 
-printIdentifierTo(stream, value:Value) {
-    match(value,
-        SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.ast.name.name.str); },
-        Symbol, s ref=> {
-            printTo(stream, s.head.module.name, '.', s.head.ast.name.name.str);
-            if (not empty?(s.params)) {
-                printTo(stream, '[');
-                interleave(s.params,
-                    () ref=> { printTo(stream, ","); },
-                    p  ref=> { printIdentifierTo(stream, p); },
-                );
-                printTo(stream, ']');
-            }
-        },
-        Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
-        TupleValue, t ref=> {
-            printTo(stream, '(');
-            interleave(t.elements,
-                () ref=> { printTo(stream, ","); },
-                p  ref=> { printIdentifierTo(stream, p); },
-            );
-            printTo(stream, ')');
-        },
-        MatchDefault, v ref=> { printTo(stream, v); },
-    );
-}
-
-symbolIdentifier(symbol:Value) {
-    var ident = String();
-    printIdentifierTo(ident, symbol);
-    return move(ident);
-}
-
-mangleType(type:Value) = mangleGlobal(symbolIdentifier(type));
+mangleType(type:Value) = mangleGlobal(qualifiedValueString(type));
 
 functionIdentifier(s:Specialization) {
-    var identifier = symbolIdentifier(s.callable);
+    var identifier = qualifiedValueString(s.callable);
     printTo(identifier, '(');
     interleave(s.args,
         () ref=> { printTo(identifier, ","); },
         a  ref=> {
             printRTValueKindTo(identifier, a.kind);
-            printIdentifierTo(identifier, a.type);
+            printQualifiedTo(identifier, a.type);
         },
     );
     printTo(identifier, ')');
@@ -198,8 +166,12 @@ private getFunction(c:CodegenContext, s:Specialization) {
 
 private functionName(c, type) = getFunction(c, type).mangledName;
 
-// XXX need to differentiate components of list globals
-private globalIdentifier(g) = printString("global ", g.binding.module.name, '.', g.name);
+// XXX need to differentiate components of variadic globals
+private globalIdentifier(g) {
+    var identifier = String("global ");
+    printQualifiedSymbolTo(identifier, g.head, g.params);
+    return move(identifier);
+}
 
 private globalName(c:CodegenContext, g:RTGlobal) {
     var namep = lookup(c.globalNames, g);
@@ -380,6 +352,7 @@ private finalizeFunctionDefinition(c, bc, function) {
 
     printlnTo(definition);
     printTo(definition, bc.bodyCode);
+    printlnTo(definition, "#line 1 \"(clay generated)\"");
 }
 
 private finalizeSpecialization(c, bc) {
@@ -1009,9 +982,8 @@ private printHelperTypeDefinitionsTo(stream, c:CodegenContext) {
 
 private printGlobalVariablesTo(stream, c:CodegenContext) {
     ref globalMap = getProgram().globalMap;
-    for (binding in reversed(globalMap.globalOrder)) {
-        for (g in globalMap.globals[binding].globals)
-            printlnTo(stream, "static ", typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
+    for (g in reversed(globalMap.globalOrder)) {
+        printlnTo(stream, "static ", typeName(c, globalAttributes(g).type), " ", globalName(c, g), ";");
     }
     printlnTo(stream);
 }

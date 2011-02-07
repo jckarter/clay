@@ -1,3 +1,0 @@
-alias ...twentyTwos = 22, "twenty-two";
-
-static Main() = ...twentyTwos;

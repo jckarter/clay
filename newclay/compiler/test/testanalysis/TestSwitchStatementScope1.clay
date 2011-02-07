@@ -1,0 +1,19 @@
+foo() = 4, 5, 6;
+
+main() {
+    var x = 1;
+    var y = 1;
+
+    switch (y)
+    case (1) {
+        var x = 2;
+        return x;
+    } case (2, 3) {
+        return x;
+    } case (...foo()) {
+        var x = 3;
+        return x;
+    } default {
+        return x;
+    }
+}

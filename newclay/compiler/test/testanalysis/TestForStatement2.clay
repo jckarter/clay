@@ -1,0 +1,17 @@
+// don't do this at home
+alias IntIterator = Tuple[Int32, Int32];
+
+overload iterator(x:Int32) = (0, x);
+overload hasNext?(i:IntIterator) = i.0 < i.1;
+overload next(i:IntIterator) {
+    var value = i.0;
+    i.0 += 1;
+    return i.0;
+}
+
+foo(x:Int32) {}
+
+main() {
+    for (x:Int32 in 5)
+        foo(x);
+}

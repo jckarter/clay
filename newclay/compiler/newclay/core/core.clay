@@ -37,17 +37,9 @@ record Program = referenceType(
     hooks: ClayHooks,
 );
 
-variant GlobalAST = ast.SingleBinding | ast.MultipleBindingList;
-record GlobalBinding (ast:GlobalAST, module:Module);
-
 record ProgramGlobalMap (
-    globals: HashMap[GlobalBinding, ProgramGlobal],
-    globalOrder: Vector[GlobalBinding],
-);
-
-record ProgramGlobal (
-    globals: Vector[RTGlobal],
-    constructorBody: Vector[ir.Node],
+    constructors: HashMap[RTGlobal, Vector[ir.Node]],
+    globalOrder: Vector[RTGlobal],
 );
 
 var mainModuleName = ModuleName("__main__");
@@ -126,6 +118,12 @@ record ClayHooks (
     equals?: Value,
     notEquals?: Value,
 
+    case?: Value,
+
+    iterator: Value,
+    hasNext?: Value,
+    next: Value,
+
     tupleLiteral: Value,
     arrayLiteral: Value,
 
@@ -175,30 +173,40 @@ overload printReprTo(stream, mod:Module) {
 
 alias EvalTable = HashMap[ValueList, ValueList];
 
+record GlobalBinding (kind:ast.BindingKind, ast:ast.SingleGlobalBinding);
+
+variant SymbolHeadAST = ast.Symbol
+                      | GlobalBinding;
+
 record SymbolHead = referenceType(
-    ast: ast.Symbol,
+    ast: SymbolHeadAST,
+    astName: ast.SymbolName,
     module: Module,
-    symbols: HashMap[ValueList, Symbol],
+    instances: HashMap[ValueList, EnvEntry],
     typeTemplate?: TriState[Bool],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
 );
 
-overload SymbolHead(x:ast.Symbol, module:Module) =
+overload SymbolHead(a:SymbolHeadAST, name:ast.SymbolName, module:Module) =
     SymbolHead(
-        x, module, HashMap[ValueList, Symbol](),
+        a, name, module, HashMap[ValueList, EnvEntry](),
         TriState[Bool](), EvalTable(), InvokeTable(),
     );
 
 symbolHeadHasParams?(x:SymbolHead) {
-    ref p = x.ast.name.params;
+    return symbolNameHasParams?(x.astName);
+}
+
+symbolNameHasParams?(name:ast.SymbolName) {
+    ref p = name.params;
     return not (empty?(p.items) and nothing?(p.variadicItem));
 }
 
 record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
-    env: EnvParent,
+    env: Env,
     body: TriState[Value],
     attributes: TriState[Value],
     type?: TriState[Bool],
@@ -207,7 +215,7 @@ record Symbol = referenceType(
     invokeTable: InvokeTable,
 );
 
-overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
+overload Symbol(head:SymbolHead, params:ValueList, env:Env)
     = Symbol(
         head, params, env,
         TriState[Value](), TriState[Value](),
@@ -215,9 +223,6 @@ overload Symbol(head:SymbolHead, params:ValueList, env:EnvParent)
         EvalTable(),
         InvokeTable(),
     );
-[E | VariantMember?(EnvParent, E)]
-overload Symbol(head:SymbolHead, params:ValueList, env:E)
-    = Symbol(head, params, EnvParent(env));
 
 record PatternVars = referenceType(
     vars: Vector[ast.Identifier],
@@ -293,10 +298,17 @@ enum PrimitiveKind {
     PRIM_StaticSymbolBody,
     PRIM_StaticSymbolAttributes,
 
+    PRIM_StaticModule?,
+    PRIM_StaticModule,
     PRIM_StaticModuleMember,
 
     PRIM_StaticError,
     PRIM_StaticAssert,
+
+    PRIM_StaticName,
+    PRIM_StaticQualifiedName,
+
+    PRIM_CallDefinedForSymbol?,
 }
 
 record Primitive = referenceType(
@@ -347,12 +359,11 @@ variant EnvEntry = Value
                  | ListAlias
                  | RTExternal
                  | RTGlobal
-                 | RTListGlobal
                  | RTValue
                  | RTValueList
                  | RTLabel
                  ;
- 
+
 overload EnvEntry() = EnvEntry(Value());
 
 variant EnvParent = EnvRoot | Env | Module;
@@ -470,7 +481,7 @@ overload envRoot(env:Module) EnvRoot {
 }
 overload envRoot(env:EnvParent) EnvRoot = envRoot(*env);
 
-envAdd(env, name, forward entry) {
+envAdd(env, name:ast.Identifier, forward entry) {
     if (contains?(env.entries, name.str))
         genericError("name redefinition: ", name.str);
     env.entries[name.str] = EnvEntry(entry);
@@ -958,6 +969,12 @@ addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName) 
 // print Value
 //
 
+private printSymbol(stream, head, params) {
+    printTo(stream, head.astName.name.str);
+    if (not empty?(params))
+        printTo(stream, params);
+}
+
 overload printTo(stream, x:Value) {
     printTo(stream, *x);
 }
@@ -1002,16 +1019,14 @@ overload printTo(stream, x:LambdaValue) {
     printTo(stream, "<lambda>");
 }
 overload printTo(stream, x:SymbolHead) {
-    printTo(stream, x.ast.name.name.str);
+    printTo(stream, x.astName.name.str);
 }
 overload printTo(stream, x:Symbol) {
-    printTo(stream, x.head.ast.name.name.str);
-    if (not empty?(x.params))
-        printTo(stream, x.params);
+    printSymbol(stream, x.head, x.params);
 }
 overload printTo(stream, x:ModuleValue) {
     maybe(x.module,
-        module ref=> { printTo(stream, "module ", module.name); },
+        module ref=> { printTo(stream, module.name); },
         ()     ref=> { printTo(stream, "<incomplete module name>"); },
     );
 }
@@ -1031,6 +1046,9 @@ overload printReprTo(stream, x:Value) {
     printReprTo(stream, *x);
 }
 
+overload printReprTo(stream, x:RTGlobal) {
+    printSymbol(stream, x.head, x.params);
+}
 
 
 //
@@ -1041,7 +1059,7 @@ variant Pattern = Value
                 | PatternCell
                 | SymbolPattern
                 ;
-         
+
 record PatternCell = referenceType(
     value: Maybe[Value]
 );
@@ -1120,43 +1138,26 @@ overload printTo(stream, x:RTExternal) {
 
 
 //
-// RTGlobal, RTListGlobal
+// RTGlobal
 //
 
 record RTGlobal = referenceType(
-    binding: GlobalBinding,
-    name: String,
-    kind: RTValueKind,
+    head: SymbolHead,
+    params: ValueList,
+    env: Env,
     attributes: TriState[RTGlobalAttributes],
 );
 
-overload RTGlobal(ast, module:Module, name:String, kind:RTValueKind)
+overload RTGlobal(head:SymbolHead, params:ValueList, env:Env)
     = RTGlobal(
-        GlobalBinding(GlobalAST(ast), module),
-        name,
-        kind,
+        head,
+        params,
+        env,
         TriState[RTGlobalAttributes]()
     );
 
 record RTGlobalAttributes (
     type: Value,
-);
-
-record RTListGlobal = referenceType(
-    binding: GlobalBinding,
-    name: String,
-    attributes: TriState[RTListGlobalAttributes],
-);
-
-overload RTListGlobal(ast, module:Module, name:String)
-    = RTListGlobal(
-        GlobalBinding(GlobalAST(ast), module),
-        name,
-        TriState[RTListGlobalAttributes]()
-    );
-
-record RTListGlobalAttributes (
-    vars: Vector[RTGlobal],
 );
 
 
@@ -1394,7 +1395,7 @@ record CallAnalysisEntry (
 );
 
 record GlobalAnalysisEntry (
-    global: GlobalBinding,
+    global: RTGlobal,
 );
 
 record CallCompilationEntry (
@@ -1416,9 +1417,6 @@ overload printTo(stream, x:CallAnalysisEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-overload printTo(stream, x:GlobalAST) {
-    printTo(stream, *x);
-}
 overload printTo(stream, x:ast.SingleBinding) {
     printTo(stream, x.name.name.str);
 }
@@ -1435,7 +1433,7 @@ overload printTo(stream, x:ast.MultipleBindingList) {
 }
 
 overload printTo(stream, x:GlobalAnalysisEntry) {
-    printTo(stream, "analyze global: ", x.global.ast);
+    printTo(stream, "analyze global: ", x.global);
 }
 
 overload printTo(stream, x:CallCompilationEntry) {
@@ -1459,7 +1457,7 @@ withCallAnalysis(callable:Value, args:RTValues, f) {
     return forward ...withCompilationEntry(move(entry), f);
 }
 
-withGlobalAnalysis(global:GlobalBinding, f) {
+withGlobalAnalysis(global:RTGlobal, f) {
     var entry = CompilationEntry(GlobalAnalysisEntry(global));
     return forward ...withCompilationEntry(move(entry), f);
 }

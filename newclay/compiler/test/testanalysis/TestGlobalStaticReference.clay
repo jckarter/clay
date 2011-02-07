@@ -1,0 +1,5 @@
+var x = #2;
+
+static Foo() = x;
+
+main() = Foo();

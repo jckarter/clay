@@ -71,12 +71,16 @@ wut:
     }
 
     switch (x)
-    case (y, z) {
+    case (y, z)
         a;
-    }
     case (z, w) {
         b;
     }
+    default
+        c;
+
+    switch (x)
+    case (y) z;
     default {
         c;
     }

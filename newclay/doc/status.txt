@@ -2,8 +2,6 @@ Unimplemented features:
 - multiple-value global bindings
     var x, y, ...z = ...foo();
 - global ref and const bindings
-- parameterized global variables
-    var typeSize['T] = TypeSize('T);
 - multiple-value assignment
     x, y, ...z = ...foo();
   NB: multiple-value local variable binding and initialization DO work:
@@ -16,20 +14,22 @@ Unimplemented features:
 - runtime conversion of static tuple values
     static foo() = (1, "two");
     bar() = foo();
-- alias arguments/call-by-name functions
-- parameterized aliases; aliases in pattern expressions
-    alias Foo['T] = Bar['T, "foo"];
+- aliases in pattern expressions
+    symbol Bar['T, 'n];
+    alias Foo['T] = Bar['T, 2];
     bas(x:Foo['T]) { ... }
+- tuples in pattern expressions
+    static foo(('A, 'B), 'C) = 'B;
+- alias arguments/call-by-name functions
 - inline functions
 - goto
-- static for
-- for
-- switch
+- break/continue in static for
 - binding expressions
     foo() = var x = 1, y = 2 in x + y;
 - exception handling
-    try/catch are not yet supported.
-    "throw x" immediately aborts.
+    try {} catch () {} is a no-op: the "try" block is compiled as a simple block, and the catch
+    blocks are simply ignored.
+    "throw x" immediately calls abort().
 - dispatch operator
 - clay code pointers
     external (C abi) code pointers DO work:
@@ -48,10 +48,10 @@ Unimplemented features:
     main() { puts(cstring("Hello world")); }
 
 Known bugs:
+- context in compiler error messages is often lacking or inaccurate
 - mutually recursive global alias bindings cause an infinite loop
     alias y = x;
     alias x = y;
-- context in compiler error messages is often lacking or inaccurate
 - dotted module imports can run over aliased module imports
     import a as b;
     import b.c; // should be an error since "b" is already an alias
