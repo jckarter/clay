@@ -118,6 +118,8 @@ record ClayHooks (
     equals?: Value,
     notEquals?: Value,
 
+    case?: Value,
+
     tupleLiteral: Value,
     arrayLiteral: Value,
 

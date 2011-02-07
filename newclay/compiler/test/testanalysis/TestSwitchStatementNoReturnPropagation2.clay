@@ -1,8 +1,8 @@
 nonterminating() { throw 0; }
 
 main() {
-    switch (nonterminating())
-    case (1) {
+    switch (0)
+    case (nonterminating()) {
         return 1;
     }
     case (2) {

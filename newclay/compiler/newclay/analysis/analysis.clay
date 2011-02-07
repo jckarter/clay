@@ -808,6 +808,8 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
         }
     });
 
+[T] private stmtMaybe(value:Maybe[T], thenFn) = maybe(value, thenFn, () => true);
+
 private analyzeStatement(
     s:SpecializationContext,
     pc:ProcContext,
@@ -1002,53 +1004,62 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     return true;
 }
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
-    // XXX recursion with statements
-    = maybe(analyzeBoolSubnode(s, bc.env, stmt.condition),
-        condResult ref=> {
-            var ifNode = ir.If(ir.ASTNode(stmt), singleValue(condResult),
-                Vector[ir.Node](),
-                Vector[ir.Node](),
-            );
-
-            var thenRecursive? = false;
-            var elseRecursive? = nothing?(stmt.elseBody);
-            var thenReturns? = false;
-            var elseReturns? = false;
-            var thenS = subContext(s, ifNode.thenBody);
-            var elseS = subContext(s, ifNode.elseBody);
-
-            try {
-                thenReturns? = analyzeStatement(
-                    thenS,
-                    pc,
-                    BlockContext(newEnv(bc.env)),
-                    lc,
-                    stmt.thenBody
-                );
-            } catch (e:RecursiveAnalysisError) { thenRecursive? = true; }
-
-            maybe(stmt.elseBody, elseBody ref=> {
-                try {
-                    elseReturns? = analyzeStatement(
-                        elseS,
-                        pc,
-                        BlockContext(newEnv(bc.env)),
-                        lc,
-                        elseBody
-                    );
-                } catch (e:RecursiveAnalysisError) { elseRecursive? = true; }
-            });
-
-            if (thenRecursive? and elseRecursive?)
-                recursiveAnalysisError();
-
-            useBranchRvalues(s, thenS, elseS);
-            addSpecializedNode(s, ifNode);
-            return thenReturns? and elseReturns?;
-        },
-        () => true,
+private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
+    var ifNode = ir.If(ir.ASTNode(ast), cond,
+        Vector[ir.Node](),
+        Vector[ir.Node](),
     );
+
+    var thenRecursive? = false;
+    var elseRecursive? = not else?;
+    var thenReturns? = false;
+    var elseReturns? = false;
+    var thenS = subContext(s, ifNode.thenBody);
+    var elseS = subContext(s, ifNode.elseBody);
+
+    try {
+        thenReturns? = thenAnalysisFn(thenS);
+    } catch (e:RecursiveAnalysisError) {
+        thenRecursive? = true;
+    }
+
+    if (else?)
+        try {
+            elseReturns? = elseAnalysisFn(elseS);
+        } catch (e:RecursiveAnalysisError) {
+            elseRecursive? = true;
+        }
+
+    if (thenRecursive? and elseRecursive?)
+        recursiveAnalysisError();
+
+    useBranchRvalues(s, thenS, elseS);
+
+    return ifNode, thenReturns? and elseReturns?;
+}
+
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
+    = stmtMaybe(analyzeBoolSubnode(s, bc.env, stmt.condition), condResult ref=> {
+        var ifNode, returns? = ...analyzeBranch(
+            s, stmt, singleValue(condResult), just?(stmt.elseBody),
+            thenS ref=> analyzeStatement(
+                thenS,
+                pc,
+                BlockContext(newEnv(bc.env)),
+                lc,
+                stmt.thenBody
+            ),
+            elseS ref=> analyzeStatement(
+                elseS,
+                pc,
+                BlockContext(newEnv(bc.env)),
+                lc,
+                just(stmt.elseBody)
+            ),
+        );
+        addSpecializedNode(s, ifNode);
+        return returns?;
+    });
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement) {
     genericError("for loops are not yet supported");
@@ -1057,34 +1068,31 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement) {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
     for (valueItem in stmt.values) {
-        var returns? = maybe(analyzeSubnode(s, bc.env, valueItem),
-            forValues ref=> {
-                for (value in forValues) {
-                    var subNode = allocateRef(ir.Block);
-                    var subS = subContext(s, subNode.body);
+        var returns? = stmtMaybe(analyzeSubnode(s, bc.env, valueItem), forValues ref=> {
+            for (value in forValues) {
+                var subNode = allocateRef(ir.Block);
+                var subS = subContext(s, subNode.body);
 
-                    var forEnv = newEnv(bc.env);
-                    var forValue = newCapture(value, stmt.bodyBinding.str);
-                    addSpecializedBind(subS, stmt, value, forValue);
+                var forEnv = newEnv(bc.env);
+                var forValue = newCapture(value, stmt.bodyBinding.str);
+                addSpecializedBind(subS, stmt, value, forValue);
 
-                    envAdd(forEnv, stmt.bodyBinding, forValue);
+                envAdd(forEnv, stmt.bodyBinding, forValue);
 
-                    var bodyReturns? = analyzeStatement(
-                        subS,
-                        pc,
-                        BlockContext(forEnv),
-                        lc,
-                        stmt.body
-                    );
+                var bodyReturns? = analyzeStatement(
+                    subS,
+                    pc,
+                    BlockContext(forEnv),
+                    lc,
+                    stmt.body
+                );
 
-                    addSpecializedNode(s, subNode);
-                    if (bodyReturns?)
-                        return true;
-                }
-                return false;
-            },
-            () ref=> true,
-        );
+                addSpecializedNode(s, subNode);
+                if (bodyReturns?)
+                    return true;
+            }
+            return false;
+        });
         if (returns?)
             return true;
     }
@@ -1126,9 +1134,50 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
     );
 }
 
+private analyzeCase(s, pc, bc, lc, testValue, stmt:ast.SwitchStatement, caseI:SizeT) {
+    ref caseBlock = stmt.caseBlocks[caseI];
+    return stmtMaybe(analyzeExprListNode(s, bc.env, caseBlock.values), caseValues ref=> {
+        var caseArgs = RTValues(testValue);
+        push(caseArgs, caseValues);
+        var mCaseResult = withBoolResult(withLocation(caseBlock, () ref=>
+            analyzeCallWithOneResult(s, caseBlock, getHooks().case?, caseArgs)
+        ));
+
+        var nextCase? = caseI + 1 < size(stmt.caseBlocks);
+        var default? = just?(stmt.defaultBlock);
+
+        return stmtMaybe(mCaseResult, caseResults ref=> {
+            var ifNode, returns? = ...analyzeBranch(
+                s, caseBlock.body, singleValue(caseResults), nextCase? or default?,
+                caseS ref=> analyzeStatement(
+                    caseS,
+                    pc,
+                    BlockContext(newEnv(bc.env)),
+                    lc,
+                    caseBlock.body
+                ),
+                nextCaseS ref=> if (nextCase?)
+                        analyzeCase(nextCaseS, pc, bc, lc, testValue, stmt, caseI + 1)
+                    else
+                        analyzeStatement(
+                            nextCaseS, pc, BlockContext(newEnv(bc.env)), lc,
+                            just(stmt.defaultBlock)
+                        ),
+            );
+            addSpecializedNode(s, ifNode);
+            return returns?;
+        });
+    });
+}
+
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
-    genericError("switch statements are not yet supported");
-    return false;
+    return stmtMaybe(analyzeSubnode(s, bc.env, stmt.value), testValues ref=> {
+        assert(size(stmt.caseBlocks) > 0, "switch must have at least one case block");
+        var testValueTmp = singleValue(testValues);
+        var testValue = newCapture(testValueTmp);
+        addSpecializedBind(s, stmt, testValueTmp, testValue);
+        return analyzeCase(s, pc, bc, lc, testValue, stmt, SizeT(0));
+    });
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
@@ -1138,14 +1187,11 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
     try {
-        return maybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr),
-            results ref=> {
-                for (result in results)
-                    addSpecializedNode(s, ir.Consume(result));
-                return false;
-            },
-            () ref=> true,
-        );
+        return stmtMaybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr), results ref=> {
+            for (result in results)
+                addSpecializedNode(s, ir.Consume(result));
+            return false;
+        });
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return false;
@@ -1218,13 +1264,10 @@ overload analyzeStrictBindings(
 }
 
 private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
-    = maybe(analyzeSubnode(s, env, binding.value),
-        valueResult ref=> {
-            analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
-            return false;
-        },
-        () ref=> true,
-    );
+    = stmtMaybe(analyzeSubnode(s, env, binding.value), valueResult ref=> {
+        analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
+        return false;
+    });
 
 private analyzeBindingVar(s, stmt, kind, name, value) {
     var variableKind = bindingVariableKind(kind, value.kind);
@@ -1413,13 +1456,16 @@ validBoolResult?(results:Maybe[RTValues])
         () => true
     );
 
+withBoolResult(x) {
+    if (not validBoolResult?(x))
+        // OK to assume results is not Nothing and has one element here
+        genericError(boolType(), " expected but ", just(x)[0].type, " received");
+    return x;
+}
+
 analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
     try {
-        var results = analyzeNode(s, env, ast);
-        if (not validBoolResult?(results))
-            // OK to assume results is not Nothing and has one element here
-            genericError(boolType(), " expected but ", just(results)[0].type, " received");
-        return results;
+        return withBoolResult(analyzeNode(s, env, ast));
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return Maybe(RTValues(addRvalue(s, newValue(boolType()))));

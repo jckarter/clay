@@ -1,0 +1,13 @@
+nonterminating() { throw 0; }
+
+main() {
+    switch (0)
+    case (1) {
+        nonterminating();
+    }
+    case (2) {
+        nonterminating();
+    }
+
+    return 2;
+}
