@@ -1,0 +1,4 @@
+import newclay.platforms.*;
+import newclay.codegen.c.*;
+
+hostTargetInfo() = TargetInfo(X86_64_CPU, MACOSX_PLATFORM);

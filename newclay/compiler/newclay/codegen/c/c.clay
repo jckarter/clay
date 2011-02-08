@@ -38,6 +38,20 @@ record CodegenConstant (
 
 enum CDialect { GCC_DIALECT, MSVC_DIALECT }
 
+overload printTo(stream, d:CDialect) {
+    switch (d) {
+    case GCC_DIALECT:
+        printTo(stream, "gcc");
+        break;
+    case MSVC_DIALECT:
+        printTo(stream, "msvc");
+        break;
+    default:
+        assert(false, "invalid c dialect");
+        break;
+    }
+}
+
 record CodegenConfig (
     dialect: CDialect,
 );

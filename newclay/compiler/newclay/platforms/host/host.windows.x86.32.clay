@@ -1,0 +1,4 @@
+import newclay.platforms.*;
+import newclay.codegen.c.*;
+
+hostTargetInfo() = TargetInfo(X86_32_CPU, MINGW_PLATFORM);
