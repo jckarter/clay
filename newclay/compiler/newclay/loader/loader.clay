@@ -8,6 +8,7 @@ import newclay.ir as ir;
 import newclay.ast.transforms.*;
 import newclay.parser.*;
 import newclay.core.*;
+import newclay.platforms.*;
 import newclay.resolver.*;
 
 private loadPrimitivesModule(program:Program) {
@@ -259,6 +260,7 @@ private resolveProgram(program:Program) {
 
 loadProgram(mainFilename:String, searchPath:Vector[String]) {
     var program = allocateRef(Program);
+    program.targetInfo = hostTargetInfo();
     program.moduleSearchPath = searchPath;
     loadPrimitivesModule(program);
     loadMainModule(program, mainFilename);

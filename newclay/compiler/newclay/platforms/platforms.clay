@@ -1,0 +1,198 @@
+import newclay.codegen.c.*;
+public import newclay.platforms.host.(hostTargetInfo);
+
+record TargetInfo (
+    cpu: CPUKind,
+    cpuFamily: CPUFamilyKind,
+    cpuPointerBits: Int,
+    platform: PlatformKind,
+    platformFamily: PlatformFamilyKind,
+    cDialect: CDialect,
+);
+
+overload TargetInfo(cpu:CPUKind, platform:PlatformKind) = TargetInfo(
+    cpu,
+    cpuFamily(cpu),
+    cpuPointerBits(cpu),
+    platform,
+    platformFamily(platform),
+    platformCDialect(platform),
+);
+
+enum CPUKind {
+    UNKNOWN_32_CPU,
+    UNKNOWN_64_CPU,
+    X86_32_CPU,
+    X86_64_CPU,
+    PPC_32_CPU,
+    PPC_64_CPU,
+    ARMV6_CPU,
+    ARMV7_CPU,
+}
+enum CPUFamilyKind {
+    UNKNOWN_CPU_FAMILY,
+    X86_CPU_FAMILY,
+    PPC_CPU_FAMILY,
+    ARM_CPU_FAMILY,
+}
+enum PlatformKind {
+    UNKNOWN_PLATFORM,
+    LINUX_PLATFORM,
+    MACOSX_PLATFORM,
+    OTHER_UNIX_PLATFORM,
+    MINGW_PLATFORM,
+    MSVC_PLATFORM,
+}
+enum PlatformFamilyKind {
+    UNKNOWN_PLATFORM_FAMILY,
+    UNIX_PLATFORM_FAMILY,
+    WINDOWS_PLATFORM_FAMILY,
+}
+
+overload printTo(stream, x:CPUKind) {
+    switch (x) {
+    case UNKNOWN_32_CPU:
+        printTo(stream, "<unknown 32-bit cpu>");
+        break;
+    case UNKNOWN_64_CPU:
+        printTo(stream, "<unknown 64-bit cpu>");
+        break;
+    case X86_32_CPU:
+    case X86_64_CPU:
+        printTo(stream, "x86");
+        break;
+    case ARMV6_CPU:
+        printTo(stream, "armv6");
+        break;
+    case ARMV7_CPU:
+        printTo(stream, "armv7");
+        break;
+    case PPC_32_CPU:
+    case PPC_64_CPU:
+        printTo(stream, "ppc");
+        break;
+    default:
+        assert(false, "invalid cpu");
+        break;
+    }
+}
+
+overload printTo(stream, x:CPUFamilyKind) {
+    switch (x) {
+    case UNKNOWN_CPU_FAMILY:
+        printTo(stream, "<unknown cpu>");
+        break;
+    case X86_CPU_FAMILY:
+        printTo(stream, "x86");
+        break;
+    case ARM_CPU_FAMILY:
+        printTo(stream, "arm");
+        break;
+    case PPC_CPU_FAMILY:
+        printTo(stream, "ppc");
+        break;
+    default:
+        assert(false, "invalid cpu family");
+        break;
+    }
+}
+
+overload printTo(stream, x:PlatformKind) {
+    switch (x) {
+    case UNKNOWN_PLATFORM:
+        printTo(stream, "<unknown platform>");
+        break;
+    case LINUX_PLATFORM:
+        printTo(stream, "linux");
+        break;
+    case MACOSX_PLATFORM:
+        printTo(stream, "macosx");
+        break;
+    case OTHER_UNIX_PLATFORM:
+        printTo(stream, "unix");
+        break;
+    case MINGW_PLATFORM:
+        printTo(stream, "mingw");
+        break;
+    case MSVC_PLATFORM:
+        printTo(stream, "msvc");
+        break;
+    default:
+        assert(false, "invalid platform");
+        break;
+    }
+}
+
+overload printTo(stream, x:PlatformFamilyKind) {
+    switch (x) {
+    case UNKNOWN_PLATFORM_FAMILY:
+        printTo(stream, "<unknown platform>");
+        break;
+    case UNIX_PLATFORM_FAMILY:
+        printTo(stream, "unix");
+        break;
+    case WINDOWS_PLATFORM_FAMILY:
+        printTo(stream, "windows");
+        break;
+    default:
+        assert(false, "invalid platform");
+        break;
+    }
+}
+
+cpuFamily(x:CPUKind) {
+    switch (x) {
+    case X86_32_CPU:
+    case X86_64_CPU:
+        return X86_CPU_FAMILY;
+    case ARMV6_CPU:
+    case ARMV7_CPU:
+        return ARM_CPU_FAMILY;
+    case PPC_32_CPU:
+    case PPC_64_CPU:
+        return PPC_CPU_FAMILY;
+    default:
+        return UNKNOWN_CPU_FAMILY;
+    }
+}
+
+cpuPointerBits(x:CPUKind) {
+    switch (x) {
+    case X86_32_CPU:
+    case PPC_32_CPU:
+    case ARMV6_CPU:
+    case ARMV7_CPU:
+    case UNKNOWN_32_CPU:
+        return 32;
+    case X86_64_CPU:
+    case PPC_64_CPU:
+    case UNKNOWN_64_CPU:
+        return 64;
+    default:
+        assert(false, "invalid cpu");
+        return 0;
+    }
+}
+
+platformFamily(x:PlatformKind) {
+    switch (x) {
+    case LINUX_PLATFORM:
+    case MACOSX_PLATFORM:
+    case OTHER_UNIX_PLATFORM:
+        return UNIX_PLATFORM_FAMILY;
+    case MINGW_PLATFORM:
+    case MSVC_PLATFORM:
+        return WINDOWS_PLATFORM_FAMILY;
+    default:
+        return UNKNOWN_PLATFORM_FAMILY;
+    }
+}
+
+platformCDialect(x:PlatformKind) {
+    switch (x) {
+    case MSVC_PLATFORM:
+        return MSVC_DIALECT;
+    default:
+        return GCC_DIALECT;
+    }
+}

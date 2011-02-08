@@ -1,10 +1,11 @@
-
-import maybe.*;
 import newclay.common.*;
 import newclay.lexer.(SourceTokens);
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.diagnostics.*;
+import newclay.platforms.*;
+
+import maybe.*;
 import numbers.floats.*;
 
 
@@ -26,6 +27,7 @@ overload ModuleName(astName: Vector[ast.Identifier])
 record GlobalLiteralCode(kind:ast.LiteralCodeBodyKind, code:ir.LiteralCode);
 
 record Program = referenceType(
+    targetInfo: TargetInfo,
     modules: ModuleMap,
     moduleSearchPath: Vector[String],
     allSymbolHeads: Vector[SymbolHead],
@@ -309,6 +311,14 @@ enum PrimitiveKind {
     PRIM_StaticQualifiedName,
 
     PRIM_CallDefinedForSymbol?,
+
+    PRIM_PlatformCPUName,
+    PRIM_PlatformCPUFamilyName,
+    PRIM_PlatformCPUPointerBits,
+    PRIM_PlatformName,
+    PRIM_PlatformFamilyName,
+    PRIM_PlatformCodegen,
+    PRIM_PlatformCodegenDialect,
 }
 
 record Primitive = referenceType(

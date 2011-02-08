@@ -1,0 +1,9 @@
+import __primitives__.*;
+
+static Main() = PlatformCPUName(),
+                PlatformCPUFamilyName(),
+                PlatformCPUPointerBits(),
+                PlatformName(),
+                PlatformFamilyName(),
+                PlatformCodegen(),
+                PlatformCodegenDialect();

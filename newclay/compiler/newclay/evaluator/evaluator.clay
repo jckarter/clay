@@ -1734,6 +1734,26 @@ evaluatePrimitive(kind, args) {
         return ValueList(BoolValue(callDefined?));
     }
 
+    case PRIM_PlatformCPUName :
+        return ValueList(StringValue(printString(getProgram().targetInfo.cpu)));
+
+    case PRIM_PlatformCPUFamilyName :
+        return ValueList(StringValue(printString(getProgram().targetInfo.cpuFamily)));
+
+    case PRIM_PlatformCPUPointerBits :
+        return ValueList(IntValue(StaticIntValue(Int64(getProgram().targetInfo.cpuPointerBits))));
+
+    case PRIM_PlatformName :
+        return ValueList(StringValue(printString(getProgram().targetInfo.platform)));
+
+    case PRIM_PlatformFamilyName :
+        return ValueList(StringValue(printString(getProgram().targetInfo.platformFamily)));
+
+    case PRIM_PlatformCodegen :
+        return ValueList(StringValue(String("c")));
+    case PRIM_PlatformCodegenDialect :
+        return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
+
     default : {
         assert(false, "invalid primitive");
         return ValueList();
@@ -1810,7 +1830,6 @@ qualifiedValueString(symbol:Value) {
     printQualifiedTo(ident, symbol);
     return move(ident);
 }
-
 
 
 private argVariables(env, argsAst) {
