@@ -3,4 +3,7 @@ main() {
     println((1, true, 3.5));
     println([10, 20, 30]);
     println(Vector([true, false, true]));
+    
+    var s = printString(Vector([true, false, true]));
+    println(s);
 }
