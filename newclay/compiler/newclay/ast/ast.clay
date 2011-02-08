@@ -440,7 +440,12 @@ record StaticOverload = ast(
     definition: StaticOverloadDefinition,
 );
 
+record OverloadAttributes = ast(
+    inline?: Bool,
+);
+
 record OverloadDefinition = ast(
+    attributes: OverloadAttributes,
     args: ArgumentList,
     returns: Vector[ReturnSpec],
     returnedNames: Maybe[Vector[Identifier]],
@@ -529,6 +534,7 @@ enum ArgumentKind {
     ARG_REF,
     ARG_RVALUE,
     ARG_FORWARD,
+    ARG_ALIAS,
 }
 
 variant Argument = BoundArgument
@@ -607,14 +613,13 @@ record LiteralCodeBody = ast(
 //
 
 record Block = ast(
+    label: Maybe[LabelDef],
     statements: Vector[Statement],
 );
 
 variant Statement = Block
-                  | LabelDef
                   | BindingStatement
                   | AssignmentStatement
-                  | GotoStatement
                   | ReturnStatement
                   | BreakStatement
                   | ContinueStatement
@@ -683,16 +688,16 @@ record AssignmentStatement = ast(
     from: ExprList,
 );
 
-record GotoStatement = ast(
-    label: Identifier,
-);
-
 record ReturnStatement = ast(
     values: ReturnExprList,
 );
 
-record BreakStatement = ast();
-record ContinueStatement = ast();
+record BreakStatement = ast(
+    label: Maybe[Identifier],
+);
+record ContinueStatement = ast(
+    label: Maybe[Identifier],
+);
 
 record ThrowStatement = ast(
     value: Expr,
@@ -705,18 +710,21 @@ record IfStatement = ast(
 );
 
 record ForStatement = ast(
+    label: Maybe[LabelDef],
     bodyBindings: ArgumentList,
     sequenceValue: Expr,
     body: Statement,
 );
 
 record StaticForStatement = ast(
+    label: Maybe[LabelDef],
     bodyBinding: Identifier,
     values: ExprList,
     body: Statement,
 );
 
 record WhileStatement = ast(
+    label: Maybe[LabelDef],
     condition: Expr,
     body: Statement,
 );

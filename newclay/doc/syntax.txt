@@ -38,11 +38,13 @@ StaticOverload -> "static" "overload" TargetPattern StaticOverloadDefinition
 OverloadDefinition -> "(" ArgumentList? ")" ReturnList?
                       Predicate? CodeBody
 
-Overload -> "overload" TargetPattern 
+OverloadAttributes -> "inline"?
+
+Overload -> OverloadAttributes "overload" TargetPattern OverloadDefinition
 
 StaticFunction -> Visibility? "static" SymbolName StaticOverloadDefinition
 
-Procedure -> Visibility? SymbolName OverloadDefinition
+Procedure -> Visibility? OverloadAttributes SymbolName OverloadDefinition
 
 ExternalProcedure -> Visibility? "external" ExternalAttributes? Identifier
                      ExternalArgumentList Expr? CodeBody
@@ -63,7 +65,7 @@ Argument -> BoundArgument
 BoundArgument -> ArgumentKind? Identifier (":" Pattern)?
 StaticArgument -> "#" Pattern
 MultiArgument -> ArgumentKind? "..." Identifier (":" PatternNameRef)?
-ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
+ArgumentKind -> "const" | "ref" | "rvalue" | "forward" | "alias"
 
 ReturnList -> NamedReturnList | UnnamedReturnList
 
@@ -197,10 +199,9 @@ Expr -> PairExpr
 // statements
 //
 
-Block -> "{" Statement* "}"
+Block -> LabelDef? "{" Statement* "}"
 
 Statement -> Block
-           | LabelDef
            | BindingStatement
            | Assignment
            | GotoStatement
@@ -227,9 +228,9 @@ GotoStatement -> "goto" Identifier ";"
 
 ReturnStatement -> "return" ReturnExprList? ";"
 
-BreakStatement -> "break" ";"
+BreakStatement -> "break" Identifier? ";"
 
-ContinueStatement -> "continue" ";"
+ContinueStatement -> "continue" Identifier? ";"
 
 ThrowStatement -> "throw" Expr ";"
 
