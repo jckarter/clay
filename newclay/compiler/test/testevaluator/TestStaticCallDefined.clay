@@ -1,0 +1,11 @@
+import __primitives__.*;
+
+static foo(Bar) = true;
+
+symbol Bar;
+symbol Bas;
+
+static Main() = StaticCallDefined?(foo, Bar),
+                StaticCallDefined?(foo, Bas),
+                StaticCallDefined?(foo),
+                StaticCallDefined?(foo, Bar, Bas);

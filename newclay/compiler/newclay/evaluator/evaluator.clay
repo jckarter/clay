@@ -1318,6 +1318,14 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
     return Maybe(env);
 }
 
+ifStaticOverload(program:Program, callable:Value, args:ValueList, thenFn, elseFn) {
+    for (x in reversed(program.allStaticOverloads)) {
+        var env = matchStaticOverload(x, callable, args);
+        if (just?(env))
+            return forward ...thenFn(x, just(env));
+    }
+    return forward ...elseFn();
+}
 
 
 //
@@ -1373,18 +1381,14 @@ memoizeStaticCall(evalTable, program, callable, args) {
     }
 }
 
-evaluateStaticCall(program, callable, args) {
-    return withStaticCall(callable, args, () ref=> {
-        for (x in reversed(program.allStaticOverloads)) {
-            var result = matchStaticOverload(x, callable, args);
-            if (just?(result))
-                return evaluateExprList(x.ast.definition.body, just(result));
+evaluateStaticCall(program, callable, args)
+    = withStaticCall(callable, args, () ref=> ifStaticOverload(program, callable, args,
+        (oload, env) ref=> evaluateExprList(oload.ast.definition.body, env),
+        () ref=> {
+            genericError("no matching operation");
+            return ValueList();
         }
-        genericError("no matching operation");
-        return ValueList();
-    });
-}
-
+    ));
 
 
 //
@@ -1731,6 +1735,22 @@ evaluatePrimitive(kind, args) {
         var callArgs = map(callDefinedRTValue, slicedFrom(args, 1));
 
         var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
+        return ValueList(BoolValue(callDefined?));
+    }
+
+    case PRIM_StaticCallDefined? : {
+        if (size(args) < 1)
+            genericError("StaticCallDefined? requires at least one argument");
+        var callable = args[0];
+        var callArgs = ValueList(slicedFrom(args,1));
+
+        if (variantIs?(callable, Primitive))
+            genericError("StaticCallDefined? for primitives not yet supported");
+
+        var callDefined? = ifStaticOverload(getProgram(), callable, callArgs,
+            (o, e) => true,
+            () => false,
+        );
         return ValueList(BoolValue(callDefined?));
     }
 
