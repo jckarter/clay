@@ -311,6 +311,7 @@ enum PrimitiveKind {
     PRIM_StaticQualifiedName,
 
     PRIM_CallDefinedForSymbol?,
+    PRIM_StaticCallDefined?,
 
     PRIM_PlatformCPUName,
     PRIM_PlatformCPUFamilyName,
