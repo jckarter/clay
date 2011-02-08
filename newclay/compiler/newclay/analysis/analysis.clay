@@ -1819,8 +1819,9 @@ private unifyVariadicArgumentType(formalArg, args, env) {
             () => true,
         ),
         ast.StaticArgument, x ref=> {
-            genericError("static variadic arguments are not yet supported");
-            return false;
+            var staticPattern = evaluateListPatternCell(x.pattern, env);
+            var types = ValueList(mapped(x => staticTypeValue(x.type), args));
+            return unifyList(staticPattern, types);
         },
     );
 }

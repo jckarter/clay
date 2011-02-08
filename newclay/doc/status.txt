@@ -19,7 +19,7 @@ Unimplemented features:
     alias Foo['T] = Bar['T, 2];
     bas(x:Foo['T]) { ... }
 - tuples in pattern expressions
-    static foo(('A, 'B), 'C) = 'B;
+    static foo(('A, 'B, ...'C), 'D) = ...'C;
 - alias arguments/call-by-name functions
 - inline functions
 - goto
@@ -36,8 +36,6 @@ Unimplemented features:
       external foo(x:Int) Int;
       var p = foo;
 - return by rvalue reference
-- variadic static arguments to runtime functions
-    foo(x, y, ...#'z);
 - __asm__ and __llvm__ procedures
     foo() __asm__ """ret""";
   NB: __c__ procedures do work with C codegen
@@ -46,6 +44,7 @@ Unimplemented features:
   NB: external declarations DO work:
     external puts(x:Pointer[CChar]);
     main() { puts(cstring("Hello world")); }
+- StaticCallDefined? on compiler-implemented primitives
 
 Known bugs:
 - context in compiler error messages is often lacking or inaccurate
@@ -64,7 +63,10 @@ Pending potential language changes:
     We plan to experiment with and adopt an approach that disallows overload shadowing without
     specifying an explicit resolution order among overlapping overload definitions.
 - storage attributes for globals, references, and pointers
-    This will probably end up looking something like this:
+    Storage attributes are necessary for representing memory model, address space, linkage, and
+    other aspects of global or referenced data.
+
+    The syntax will probably end up looking something like this:
         var(Immutable) x = 1;                   // global
 
         foo(ref(Immutable) x:Int) {             // ref argument

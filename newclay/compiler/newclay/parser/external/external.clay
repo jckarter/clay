@@ -882,7 +882,7 @@ private var argument = choice(
     modify(x => Argument(x), staticArgument),
 );
 
-private var multiArgument = bounds(modify(
+private var multiBoundArgument = bounds(modify(
     x => BoundArgument(move(x.0), move(x.2), move(x.3)),
     sequence(
         optional(argumentKind), punc(#"..."),
@@ -890,8 +890,18 @@ private var multiArgument = bounds(modify(
     ),
 ));
 
+private var multiStaticArgument = modify(
+    x => move(x.1),
+    sequence(punc(#"..."), staticArgument),
+);
+
+private var multiArgument = choice(
+    modify(x => Argument(x), multiBoundArgument),
+    modify(x => Argument(x), multiStaticArgument),
+);
+
 private var arguments = variadicList(
-    argument, modify(x => Argument(x), multiArgument),
+    argument, multiArgument,
 );
 
 private var optArguments = modify(
