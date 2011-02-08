@@ -14,3 +14,5 @@ foo(#"foo") {}
 foo(#2) {}
 foo(#true) {}
 foo(#'T) {}
+
+foo(...#'T) {}
