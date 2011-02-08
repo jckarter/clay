@@ -453,25 +453,15 @@ static EValuePtr derefValue(EValuePtr evPtr)
 
 void evalValueInit(EValuePtr dest)
 {
-    if (isPrimitiveAggregateType(dest->type))
-        return;
-    evalCallValue(staticEValue(dest->type.ptr()),
-                  new MultiEValue(),
-                  new MultiEValue(dest));
 }
 
 void evalValueDestroy(EValuePtr dest)
 {
-    if (isPrimitiveAggregateType(dest->type))
-        return;
-    evalCallValue(staticEValue(prelude_destroy()),
-                  new MultiEValue(dest),
-                  new MultiEValue());
 }
 
 void evalValueCopy(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (dest->type == src->type) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -483,7 +473,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
 
 void evalValueMove(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (dest->type == src->type) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -495,7 +485,7 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
 
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (dest->type == src->type) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -509,7 +499,7 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
 
 void evalValueMoveAssign(EValuePtr dest, EValuePtr src)
 {
-    if (isPrimitiveAggregateType(dest->type) && (dest->type == src->type)) {
+    if (dest->type == src->type) {
         if (dest->type->typeKind != STATIC_TYPE)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
@@ -1892,6 +1882,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
             gvArgs.push_back(llvm::GenericValue(out->values[i]->addr));
         }
     }
+    error("calling compiled code is not supported in the evaluator");
     llvmEngine->runFunction(entry->llvmFunc, gvArgs);
 }
 
