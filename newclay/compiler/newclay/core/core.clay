@@ -4,6 +4,7 @@ import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.diagnostics.*;
 import newclay.platforms.*;
+import newclay.hooks.*;
 
 import maybe.*;
 import numbers.floats.*;
@@ -1240,6 +1241,20 @@ overload RTValue(kind:RTValueKind, type:Value, referent, name:ast.Identifier) =
 [R | VariantMember?(RTValueReferent, R)]
 overload RTValue(kind:RTValueKind, type:Value, referent:R, name:Maybe[String]) =
     RTValue(kind, type, RTValueReferent(referent), name);
+
+overload RTValue(kind:RTValueKind, type:Value, referent:RTValueReferent, name:Maybe[String])
+    returned:RTValue
+{
+    if (not symbolType?(typeSymbol(type))) {
+        genericError("invalid type: ", type);
+        return RTValue();
+    }
+    returned <-- allocateUninitializedRefUnsafe(RTValue);
+    returned.kind <-- kind;
+    returned.type <-- type;
+    returned.referent <-- referent;
+    returned.name <-- name;
+}
 
 record RTValueList = referenceType(
     vars: Vector[RTValue],
