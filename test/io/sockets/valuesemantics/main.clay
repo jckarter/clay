@@ -1,0 +1,8 @@
+import io.sockets.*;
+
+main() {
+    var x = ListenSocket(Inet(INADDR_LOOPBACK, 1234));
+
+    var y = move(x);
+    x = move(y);
+}

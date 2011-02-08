@@ -173,7 +173,7 @@ overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
 overload S(x: S);
 
 [S | Socket?(S)]
-overload assign(x: S, y: S);
+overload assign(x: S, lvalue y: S);
 
 [S | Socket?(S)]
 overload fileHandle(s: S) { return s.raw; }
