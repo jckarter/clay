@@ -21,8 +21,10 @@ overload foo() {
 
     var ...x = ...bar();
 
-wut:
-    goto wut;
+    wut: {
+        break wut;
+        continue wut;
+    }
 
     ref x:Int, y:Int, ...z = ...bar();
     rvalue x:Int, y:Int, ...z = ...bar();
@@ -64,6 +66,11 @@ wut:
         v;
 
     while (x) y;
+
+    outer: while (a)
+        middle: for (b in c)
+            inner: static for (d in e)
+                break outer;
 
     switch (x)
     case (y) {

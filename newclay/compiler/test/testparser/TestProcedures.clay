@@ -6,3 +6,7 @@ public bas(x) { println(x); }
 
 static Foo('x) = 'x;
 static Bar('x) | Foo('x) = ('x, 'x);
+
+inline foo(x) { println(x); }
+private inline foo(x) { println(x); }
+inline overload foo(x) { println(x); }

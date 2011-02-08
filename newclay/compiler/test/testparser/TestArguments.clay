@@ -9,6 +9,11 @@ foo(x:Int) {}
 foo(x:'T) {}
 foo(x:Foo['T]) {}
 
+foo(ref x:Int) {}
+foo(rvalue x:Int) {}
+foo(const x:Int) {}
+foo(alias x:Int) {}
+
 foo(#Int) {}
 foo(#"foo") {}
 foo(#2) {}

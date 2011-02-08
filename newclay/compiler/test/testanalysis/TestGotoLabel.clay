@@ -1,5 +1,0 @@
-symbol main = Procedure();
-overload main() {
-foo:
-    goto foo;
-}

@@ -86,6 +86,7 @@ private keyword(s) {
 private var kw_import = keyword("import");
 private var kw_as = keyword("as");
 private var kw_external = keyword("external");
+private var kw_inline = keyword("inline");
 private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
@@ -105,7 +106,6 @@ private var kw_or = keyword("or");
 private var kw_not = keyword("not");
 private var kw_public = keyword("public");
 private var kw_private = keyword("private");
-private var kw_goto = keyword("goto");
 private var kw_return = keyword("return");
 private var kw_break = keyword("break");
 private var kw_continue = keyword("continue");
@@ -865,6 +865,7 @@ private var argumentKind = choice(
     modify(x => ARG_REF, kw_ref),
     modify(x => ARG_RVALUE, kw_rvalue),
     modify(x => ARG_FORWARD, kw_forward),
+    modify(x => ARG_ALIAS, kw_alias),
 );
 
 private var boundArgument = bounds(modify(
@@ -1042,23 +1043,33 @@ private var codeBody = choice(
 );
 
 private var overloadDefinition = modify(
-    x => OverloadDefinition(move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
+    x => OverloadDefinition(OverloadAttributes(false), move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
     sequence(
         punc(#"("), optArguments, punc(#")"),
         optReturnList, optPredicate, codeBody,
     ),
 );
 
+private var overloadAttributes = bounds(modify(
+    x => OverloadAttributes(just?(x)),
+    optional(kw_inline),
+));
+
+private overloadDefinitionWithAttributes(attributes, definition) {
+    definition.attributes = attributes;
+    return definition;
+}
+
 private var overloadDef = topLevelItemParser(
-    x => Overload(move(x.1), move(x.2)),
-    sequence(kw_overload, targetPattern, overloadDefinition),
+    x => Overload(move(x.2), overloadDefinitionWithAttributes(x.0, x.3)),
+    sequence(overloadAttributes, kw_overload, targetPattern, overloadDefinition),
 );
 
 // procedureDef, staticFunctionDef
 
 private var procedureDef = topLevelItemParser(
-    x => Procedure(just(x.0, VIS_PUBLIC), x.1, x.2),
-    sequence(visibility, symbolName, overloadDefinition),
+    x => Procedure(just(x.0, VIS_PUBLIC), x.2, overloadDefinitionWithAttributes(x.1, x.3)),
+    sequence(visibility, overloadAttributes, symbolName, overloadDefinition),
 );
 
 private var staticFunctionDef = topLevelItemParser(
@@ -1121,19 +1132,22 @@ private var globalLiteralCodeBody = topLevelItemParser(
 
 // statements
 
-private var block2 = modify(
-    x => Block(x.1),
-    sequence(punc(#"{"), zeroOrMore(statement), punc(#"}")),
-);
+private var labelDef = bounds(modify(
+    x => LabelDef(x.0),
+    sequence(identifier, punc(#":"))
+));
+
+private var block2 = bounds(modify(
+    x => Block(x.0, x.2),
+    sequence(optional(labelDef), punc(#"{"), zeroOrMore(statement), punc(#"}")),
+));
 
 private block(input) Maybe[Block] = block2(input);
 
 private var statement2 = choice(
     blockStatement,
-    labelDef,
     bindingStatement,
     assignmentStatement,
-    gotoStatement,
     returnStatement,
     breakStatement,
     continueStatement,
@@ -1155,11 +1169,6 @@ private statementParser(forward modifier, forward parser) = modify(
 );
 
 private var blockStatement = statementParser(x => x, block);
-
-private var labelDef = statementParser(
-    x => LabelDef(x.0),
-    sequence(identifier, punc(#":"))
-);
 
 private var bindingStatement = statementParser(
     x => BindingStatement(x.0, x.1),
@@ -1224,24 +1233,19 @@ private var assignmentStatement = statementParser(
     sequence(exprList, assignmentOp, exprList, punc(#";")),
 );
 
-private var gotoStatement = statementParser(
-    x => GotoStatement(x.1),
-    sequence(kw_goto, identifier, punc(#";")),
-);
-
 private var returnStatement = statementParser(
     x => ReturnStatement(x.1),
     sequence(kw_return, optReturnExprList, punc(#";")),
 );
 
 private var breakStatement = statementParser(
-    x => BreakStatement(),
-    sequence(kw_break, punc(#";")),
+    x => BreakStatement(x.1),
+    sequence(kw_break, optional(identifier), punc(#";")),
 );
 
 private var continueStatement = statementParser(
-    x => ContinueStatement(),
-    sequence(kw_continue, punc(#";")),
+    x => ContinueStatement(x.1),
+    sequence(kw_continue, optional(identifier), punc(#";")),
 );
 
 private var throwStatement = statementParser(
@@ -1260,18 +1264,18 @@ private var ifStatement = statementParser(
 );
 
 private var forStatement = statementParser(
-    x => ForStatement(x.2, x.4, x.6),
-    sequence(kw_for, punc(#"("), arguments, kw_in, expr, punc(#")"), statement),
+    x => ForStatement(x.0, x.3, x.5, x.7),
+    sequence(optional(labelDef), kw_for, punc(#"("), arguments, kw_in, expr, punc(#")"), statement),
 );
 
 private var staticForStatement = statementParser(
-    x => StaticForStatement(x.3, x.5, x.7),
-    sequence(kw_static, kw_for, punc(#"("), identifier, kw_in, exprList, punc(#")"), statement),
+    x => StaticForStatement(x.0, x.4, x.6, x.8),
+    sequence(optional(labelDef), kw_static, kw_for, punc(#"("), identifier, kw_in, exprList, punc(#")"), statement),
 );
 
 private var whileStatement = statementParser(
-    x => WhileStatement(x.2, x.4),
-    sequence(kw_while, punc(#"("), expr, punc(#")"), statement),
+    x => WhileStatement(x.0, x.3, x.5),
+    sequence(optional(labelDef), kw_while, punc(#"("), expr, punc(#")"), statement),
 );
 
 private var switchStatement = statementParser(

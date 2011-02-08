@@ -97,11 +97,7 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
 
 overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
     var subenv = newEnv(r.env);
-    for (stmt in block.statements)
-        match(stmt,
-            ast.LabelDef, label ref=> { envAdd(subenv, label.name, DummyValue); },
-            MatchDefault, x ref=> {},
-        );
+    envAdd(subenv, label.name, DummyValue);
 
     visitAST(ResolveASTVisitor(subenv), block.statements);
 }
