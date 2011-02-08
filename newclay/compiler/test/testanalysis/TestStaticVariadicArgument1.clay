@@ -1,0 +1,7 @@
+foo(...#'x) = ...'x;
+
+symbol Four;
+
+main() {
+    return ...foo(#1, #true, #"three", Four);
+}
