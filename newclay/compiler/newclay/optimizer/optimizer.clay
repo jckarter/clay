@@ -202,7 +202,10 @@ overload coalescedNode(cmap:RTValueMap, node:ir.Call)
     );
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Block) ir.Block
-    = ir.Block(coalescedNodes(cmap, node.body));
+    = ir.Block(
+        node.label,
+        coalescedNodes(cmap, node.body)
+    );
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Statement) ir.Statement
     = ir.Statement(coalescedNodes(cmap, node.body));
@@ -217,6 +220,7 @@ overload coalescedNode(cmap:RTValueMap, node:ir.If) ir.If
 
 overload coalescedNode(cmap:RTValueMap, node:ir.While) ir.While
     = ir.While(
+        node.label,
         node.ast,
         coalescedNodes(cmap, node.conditionBody),
         coalesced(cmap, node.condition),
@@ -348,6 +352,7 @@ overload namedReturnConvertNode(nmap:RTValueMap, node:ir.If) ir.Node
 
 overload namedReturnConvertNode(nmap:RTValueMap, node:ir.While) ir.Node
     = ir.Node(ir.While(
+        node.label,
         node.ast,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.conditionBody),
         node.condition,
@@ -355,6 +360,7 @@ overload namedReturnConvertNode(nmap:RTValueMap, node:ir.While) ir.Node
     ));
 overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Block) ir.Node
     = ir.Node(ir.Block(
+        node.label,
         map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
     ));
 overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Statement) ir.Node
@@ -385,6 +391,7 @@ overload noReturnConvertNode(node:ir.If) ir.Node
     ));
 overload noReturnConvertNode(node:ir.While) ir.Node
     = ir.Node(ir.While(
+        node.label,
         node.ast,
         map(subnode ref=> noReturnConvertNode(*subnode), node.conditionBody),
         node.condition,
@@ -392,6 +399,7 @@ overload noReturnConvertNode(node:ir.While) ir.Node
     ));
 overload noReturnConvertNode(node:ir.Block) ir.Node
     = ir.Node(ir.Block(
+        node.label,
         map(subnode ref=> noReturnConvertNode(*subnode), node.body),
     ));
 overload noReturnConvertNode(node:ir.Statement) ir.Node

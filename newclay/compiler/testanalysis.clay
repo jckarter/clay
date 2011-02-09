@@ -79,9 +79,7 @@ overload printNodeData(depth, node:ir.If) {
 }
 
 overload printNodeData(depth, node:ir.While) {
-    if (withIds)
-        print(asPtr(node), " ");
-    println(LeafTypeName(node.ast));
+    println(LeafTypeName(node.ast), node.label);
     printDepth(depth+1);
     print("condition ");
     printVar(node.condition);
@@ -97,9 +95,7 @@ overload printNodeData(depth, node:ir.While) {
 }
 
 overload printNodeData(depth, node:ir.Block) {
-    if (withIds)
-        print(asPtr(node));
-    println();
+    println(node.label);
     for (bodyNode in node.body)
         printNode(depth+1, bodyNode);
 }
@@ -203,17 +199,11 @@ overload printNodeData(depth, node:ir.Nop) {
 }
 
 overload printNodeData(depth, node:ir.Break) {
-    print(LeafTypeName(node.ast), " ", LeafTypeName(node.target));
-    if (withIds)
-        print(" ", asPtr(*node.target));
-    println();
+    println(LeafTypeName(node.ast), " ", node.target);
 }
 
 overload printNodeData(depth, node:ir.Continue) {
-    print(LeafTypeName(node.ast), " ", LeafTypeName(node.target));
-    if (withIds)
-        print(" ", asPtr(*node.target));
-    println();
+    println(LeafTypeName(node.ast), " ", node.target);
 }
 
 overload printNodeData(depth, node:ir.Throw) {
