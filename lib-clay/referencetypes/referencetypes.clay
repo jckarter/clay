@@ -134,6 +134,7 @@ allocateRef(static T) returned:T {
 allocateUninitializedRefUnsafe(static T) returned:T {
     alias InnerType = Tuple[...ReferenceTypeFieldTypes(T)];
     referencePtr(returned) <-- SharedPointer[InnerType](allocateRawMemory(RefCounted[InnerType], 1));
+    referencePtr(returned).ptr^.refCount = 1;
 }
 
 
