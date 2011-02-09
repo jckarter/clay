@@ -97,7 +97,9 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
 
 overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
     var subenv = newEnv(r.env);
-    envAdd(subenv, label.name, DummyValue);
+    maybe(block.label, label ref=> {
+        envAdd(subenv, label.name, DummyValue);
+    });
 
     visitAST(ResolveASTVisitor(subenv), block.statements);
 }
@@ -119,13 +121,21 @@ overload visitASTNode(r:ResolveASTVisitor, stmt:ast.SwitchStatement) {
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.WhileStatement) {
     visitAST(r, stmt.condition);
-    visitAST(newVisitor(r), stmt.body);
+
+    var subenv = newEnv(r.env);
+    maybe(stmt.label, label ref=> {
+        envAdd(subenv, label.name, DummyValue);
+    });
+    visitAST(ResolveASTVisitor(subenv), stmt.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.ForStatement) {
     visitAST(r, stmt.sequenceValue);
 
     var subenv = newEnv(r.env);
+    maybe(stmt.label, label ref=> {
+        envAdd(subenv, label.name, DummyValue);
+    });
     bindArgumentList(subenv, stmt.bodyBindings);
 
     visitAST(ResolveASTVisitor(subenv), stmt.body);
@@ -135,6 +145,9 @@ overload visitASTNode(r:ResolveASTVisitor, stmt:ast.StaticForStatement) {
     visitAST(r, stmt.values);
 
     var subenv = newEnv(r.env);
+    maybe(stmt.label, label ref=> {
+        envAdd(subenv, label.name, DummyValue);
+    });
     envAdd(subenv, stmt.bodyBinding, DummyValue);
 
     visitAST(ResolveASTVisitor(subenv), stmt.body);

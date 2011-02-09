@@ -744,6 +744,7 @@ private record ProcResult (
 );
 
 private record ProcContext (
+    returnTarget: Maybe[ir.Block],
     results: Vector[ProcResult],
     recursiveReturn: Maybe[ast.ReturnStatement],
 );
@@ -753,11 +754,49 @@ private record BlockContext (
 );
 
 private record LoopContext (
-    loop?: Bool,
+    breakTarget: Maybe[ir.BreakTarget],
+    continueTarget: Maybe[ir.BreakTarget],
     infiniteLoop?: Bool,
 );
 
-overload LoopContext() = LoopContext(false, false);
+overload LoopContext() = LoopContext(nothing(ir.BreakTarget), nothing(ir.BreakTarget), false);
+overload LoopContext(b:ir.BreakTarget, c:ir.BreakTarget, i?:Bool)
+    = LoopContext(Maybe(b), Maybe(c), i?);
+overload LoopContext(loop:ir.While, infinite?:Bool) {
+    var target = ir.BreakTarget(loop);
+    return LoopContext(target, target, infinite?);
+}
+
+overload LoopContext(breakBlock:ir.Block, continueBlock:ir.Block) {
+    return LoopContext(ir.BreakTarget(breakBlock), ir.BreakTarget(continueBlock), false);
+}
+
+private record StatementReturn ();
+private record StatementNoReturn ();
+
+private variant StatementTarget = Nothing            // statement proceeds to next normally
+                                | ir.BreakTarget     // statement breaks/continues to target
+                                | StatementReturn
+                                | StatementNoReturn; // statement is nonterminating
+
+overload StatementTarget() = StatementTarget(Nothing());
+[F | VariantMember?(ir.BreakTarget, F)]
+overload StatementTarget(frame:F) = StatementTarget(ir.BreakTarget(frame));
+overload StatementTarget(static StatementReturn) = StatementTarget(StatementReturn());
+overload StatementTarget(static StatementNoReturn) = StatementTarget(StatementNoReturn());
+
+statementBreaks?(tgt:StatementTarget) = not variantIs?(tgt, Nothing);
+statementBreaksAt?(tgt:StatementTarget, frame) = match(tgt,
+    ir.BreakTarget, bt ref=> bt == ir.BreakTarget(frame),
+    MatchDefault, x ref=> false,
+);
+statementReturns?(tgt:StatementTarget) = variantIs?(tgt, StatementReturn);
+statementNoReturn?(tgt:StatementTarget) = variantIs?(tgt, StatementNoReturn);
+
+resultTarget(results:Maybe[RTValues]) = maybe(results,
+    r => StatementTarget(),
+    () => StatementTarget(StatementNoReturn),
+);
 
 private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
     = withLocation(block, () ref=> {
@@ -765,9 +804,12 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
         var bc = BlockContext(env);
         var lc = LoopContext();
 
-        var returns? = analyzeStatement(s, pc, bc, lc, block);
+        var target = analyzeStatement(s, pc, bc, lc, block);
 
-        if (returns?) {
+        if (statementBreaks?(target)) {
+            assert(statementReturns?(target) or statementNoReturn?(target),
+                "procedure body cannot escape procedure"
+            );
             // "returns" without results? => nonterminating result
             // "returns" without definite results, but recursive return? => recursion error
             // returns with results? => results
@@ -808,7 +850,10 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
         }
     });
 
-[T] private stmtMaybe(value:Maybe[T], thenFn) = maybe(value, thenFn, () => true);
+[T] private stmtMaybe(value:Maybe[T], thenFn) = maybe(value,
+    thenFn,
+    () => StatementTarget(StatementNoReturn)
+);
 
 private analyzeStatement(
     s:SpecializationContext,
@@ -816,46 +861,45 @@ private analyzeStatement(
     bc:BlockContext,
     lc:LoopContext,
     stmt:ast.Statement
-) Bool = withLocation(stmt, () ref=> analyzeStatement(s, pc, bc, lc, *stmt));
+) StatementTarget = withLocation(stmt, () ref=> analyzeStatement(s, pc, bc, lc, *stmt));
 
-overload analyzeStatement(s, pc, bc, lc, block:ast.Block) Bool {
+private envAddLabel(env:Env, mLabel:Maybe[ast.LabelDef], target) {
+    maybe(mLabel, label ref=> {
+        envAdd(env, label.name, RTLabel(label, ir.BreakTarget(target)));
+    });
+}
+
+overload analyzeStatement(s, pc, bc, lc, block:ast.Block) StatementTarget {
     var blockNode = allocateRef(ir.Block);
+    if (nothing?(pc.returnTarget))
+        pc.returnTarget = Maybe(blockNode);
     var blockS = subContext(s, blockNode.body);
     var subbc = BlockContext(newEnv(bc.env));
-    // introduce labels
-    for (stmt in block.statements)
-        match(stmt,
-            ast.LabelDef, label ref=> {
-                envAdd(subbc.env, label.name, RTLabel(label));
-            },
-            MatchDefault, x ref=> {},
-        );
-    // analyze substatements
-    var returns? = false;
+    envAddLabel(subbc.env, block.label, blockNode);
+    var target = StatementTarget();
     for (stmt in block.statements) {
         var statementNode = allocateRef(ir.Statement);
         var statementS = subContext(blockS, statementNode.body);
-        returns? = analyzeStatement(statementS, pc, subbc, lc, stmt);
+        target = analyzeStatement(statementS, pc, subbc, lc, stmt);
         useSubRvalues(blockS, statementS);
         addSpecializedNode(blockS, statementNode);
-        if (returns?)
+        if (statementBreaks?(target))
             break;
     }
 
     useSubRvalues(s, blockS);
     addSpecializedNode(s, blockNode);
-    return returns?;
+    if (statementBreaksAt?(target, blockNode))
+        return StatementTarget();
+    else
+        return target;
 }
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.LabelDef) = false;
-
 private withAssignmentValues(s, env, stmt, fn)
-    = maybe(analyzeNode(s, env, stmt.to),
-        toValues ref=> maybe(analyzeMultiExprListNode(s, env, stmt.from, size(toValues) != 1),
+    = stmtMaybe(analyzeNode(s, env, stmt.to),
+        toValues ref=> stmtMaybe(analyzeMultiExprListNode(s, env, stmt.from, size(toValues) != 1),
             fromValues ref=> fn(toValues, fromValues),
-            () ref=> true,
         ),
-        () ref=> true,
     );
 
 private analyzeInitialize(s, env:Env, stmt) {
@@ -868,23 +912,23 @@ private analyzeInitialize(s, env:Env, stmt) {
                     genericError("values on left side of <-- must be non-const lvalues");
                 addSpecializedInitialize(s, stmt, fromValue, toValue);
             }
-            return false;
+            return StatementTarget();
         });
     } catch (e:RecursiveAnalysisError) {
     // XXX recursive analysis will need to be an error if it influences delayed propagation of var
     // bindings
         s.complete?^ = false;
-        return false;
+        return StatementTarget();
     }
 }
 
 private singleAssign(s, stmt, op, toValue, fromValue) {
-    return nothing?(analyzeCall(s, stmt, op, RTValues(toValue, fromValue)));
+    return resultTarget(analyzeCall(s, stmt, op, RTValues(toValue, fromValue)));
 }
 
 private multiAssign(s, stmt, op, toValues, fromValues) {
     genericError("assignment of multiple values not yet supported");
-    return false;
+    return StatementTarget();
 }
 
 private analyzeAssign(s, env, stmt) {
@@ -920,7 +964,7 @@ private analyzeAssign(s, env, stmt) {
 
             switch (size(toValues)) {
             case 0:
-                return false;
+                return StatementTarget();
             case 1:
                 return singleAssign(s, stmt, operatorCallable, singleValue(toValues), singleValue(fromValues));
             default:
@@ -929,7 +973,7 @@ private analyzeAssign(s, env, stmt) {
         });
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
-        return false;
+        return StatementTarget();
     }
 }
 
@@ -943,22 +987,9 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
-    // XXX handle recursion in binding values?
-    var subenv, returns? = ...analyzeBindings(s, bc.env, stmt, stmt.kind, stmt.bindings);
+    var subenv, target = ...analyzeBindings(s, bc.env, stmt, stmt.kind, stmt.bindings);
     bc.env = subenv;
-    return returns?;
-}
-
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.GotoStatement) {
-    match(privateLookup(bc.env, stmt.label),
-        RTLabel, x ref=> {},
-        MatchDefault, x ref=> {
-            genericError("goto target is not a label");
-        },
-    );
-    // XXX analyze branches and loops introduced by goto
-    genericError("goto is not yet supported");
-    return false;
+    return target;
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
@@ -966,29 +997,47 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
         maybe(analyzeNode(s, bc.env, stmt.values),
             results ref=> {
                 push(pc.results, ProcResult(stmt, results));
-                addSpecializedNode(s, ir.Return(stmt));
+                addSpecializedNode(s, ir.Break(stmt, just(pc.returnTarget)));
             },
         );
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         pc.recursiveReturn = Maybe(stmt);
     }
-    return true;
+    return StatementTarget(StatementReturn);
 }
 
+private envEntryToLabel(stmtName, entry) = match(entry,
+    RTLabel, label ref=> label,
+    MatchDefault, x ref=> {
+        genericError(stmtName, " target must be a label");
+        return RTLabel();
+    }
+);
+
+private breakTarget(stmtName, bc:BlockContext, lc:LoopContext, labelName:Maybe[ast.Identifier])
+    = maybe(labelName,
+        label ref=> envEntryToLabel(stmtName, privateLookup(bc.env, label)).target,
+        () ref=> maybe(fieldRef(lc, IdentifierConcat(stmtName, #"Target")),
+            target ref=> target,
+            () ref=> {
+                genericError(StaticName(stmtName), " statement cannot be used outside of a loop without a label");
+                return ir.BreakTarget(ir.Block());
+            }
+        ),
+    );
+
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BreakStatement) {
-    if (not lc.loop?)
-        genericError("break statement cannot be used outside of a loop");
-    lc.infiniteLoop? = false;
-    addSpecializedNode(s, ir.Break(stmt));
-    return true;
+    var target = breakTarget(#"break", bc, lc, stmt.label);
+    //XXX clear infiniteLoop? at While analysis level: lc.infiniteLoop? = false;
+    addSpecializedNode(s, ir.Break(stmt, target));
+    return StatementTarget(target);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ContinueStatement) {
-    if (not lc.loop?)
-        genericError("continue statement cannot be used outside of a loop");
-    addSpecializedNode(s, ir.Continue(stmt));
-    return true;
+    var target = breakTarget(#"continue", bc, lc, stmt.label);
+    addSpecializedNode(s, ir.Continue(stmt, target));
+    return StatementTarget(target);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
@@ -1001,7 +1050,28 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
     }
-    return true;
+    return StatementTarget(StatementNoReturn);
+}
+
+private branchStatementTarget(thenTarget, elseTarget) {
+    if (not statementBreaks?(thenTarget) or not statementBreaks?(elseTarget))
+        return StatementTarget();
+    if (thenTarget == elseTarget)
+        return thenTarget;
+    if (statementNoReturn?(thenTarget))
+        return elseTarget;
+    if (statementNoReturn?(elseTarget))
+        return thenTarget;
+    return StatementTarget(innermostTarget(
+        variantAs(thenTarget, ir.BreakTarget),
+        variantAs(elseTarget, ir.BreakTarget),
+    ));
+}
+
+private innermostTarget(a: ir.BreakTarget, b:ir.BreakTarget) {
+    // XXX
+    genericError("divergent jumps in branching statement not yet supported");
+    return ir.BreakTarget(ir.Block());
 }
 
 private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
@@ -1012,20 +1082,20 @@ private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
 
     var thenRecursive? = false;
     var elseRecursive? = not else?;
-    var thenReturns? = false;
-    var elseReturns? = false;
+    var thenTarget = StatementTarget();
+    var elseTarget = StatementTarget();
     var thenS = subContext(s, ifNode.thenBody);
     var elseS = subContext(s, ifNode.elseBody);
 
     try {
-        thenReturns? = thenAnalysisFn(thenS);
+        thenTarget = thenAnalysisFn(thenS);
     } catch (e:RecursiveAnalysisError) {
         thenRecursive? = true;
     }
 
     if (else?)
         try {
-            elseReturns? = elseAnalysisFn(elseS);
+            elseTarget = elseAnalysisFn(elseS);
         } catch (e:RecursiveAnalysisError) {
             elseRecursive? = true;
         }
@@ -1036,7 +1106,7 @@ private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
     useBranchRvalues(s, thenS, elseS);
 
     addSpecializedNode(s, ifNode);
-    return thenReturns? and elseReturns?;
+    return branchStatementTarget(thenTarget, elseTarget);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
@@ -1061,35 +1131,42 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
     });
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
+    var blockNode = allocateRef(ir.Block);
+    var blockS = subContext(s, blockNode.body);
+    addSpecializedNode(s, blockNode);
+
     for (valueItem in stmt.values) {
-        var returns? = stmtMaybe(analyzeSubnode(s, bc.env, valueItem), forValues ref=> {
+        var target = stmtMaybe(analyzeSubnode(blockS, bc.env, valueItem), forValues ref=> {
             for (value in forValues) {
                 var subNode = allocateRef(ir.Block);
-                var subS = subContext(s, subNode.body);
+                var subS = subContext(blockS, subNode.body);
+                addSpecializedNode(blockS, subNode);
 
                 var forEnv = newEnv(bc.env);
                 var forValue = addCapture(subS, stmt, value, stmt.bodyBinding.str);
 
                 envAdd(forEnv, stmt.bodyBinding, forValue);
 
-                var bodyReturns? = analyzeStatement(
+                var bodyTarget = analyzeStatement(
                     subS,
                     pc,
                     BlockContext(forEnv),
-                    lc,
+                    LoopContext(blockNode, subNode),
                     stmt.body
                 );
 
-                addSpecializedNode(s, subNode);
-                if (bodyReturns?)
-                    return true;
+                if (statementBreaks?(bodyTarget) and not statementBreaksAt?(bodyTarget, subNode))
+                    return bodyTarget;
             }
-            return false;
+            return StatementTarget();
         });
-        if (returns?)
-            return true;
+        if (statementBreaks?(target)) {
+            if(statementBreaksAt?(target, blockNode))
+                return StatementTarget();
+            return target;
+        }
     }
-    return false;
+    return StatementTarget();
 }
 
 private trueCondition?(condBody)
@@ -1110,16 +1187,20 @@ private analyzeLoop(s, ast, bc, condAnalysisFn, bodyAnalysisFn) {
             useRvalue(loopS, whileNode.condition);
 
             var subbc = BlockContext(newEnv(bc.env));
-            var sublc = LoopContext(true, trueCondition?(whileNode.conditionBody));
+            var sublc = LoopContext(whileNode, trueCondition?(whileNode.conditionBody));
 
-            var bodyReturns? = bodyAnalysisFn(loopSubContext(s, whileNode.body), subbc, sublc);
+            envAddLabel(subbc.env, ast.label, whileNode);
+
+            var bodyTarget = bodyAnalysisFn(loopSubContext(s, whileNode.body), subbc, sublc);
 
             addSpecializedNode(s, whileNode);
-            return sublc.infiniteLoop? and bodyReturns?;
+            if (sublc.infiniteLoop?)
+                return StatementTarget(StatementNoReturn);
+            return StatementTarget();
         },
         () ref=> {
             addSpecializedNodes(s, whileNode.conditionBody);
-            return true;
+            return StatementTarget(StatementNoReturn);
         }
     );
 }
@@ -1204,15 +1285,13 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
                     condS ref=> withLocation(stmt.sequenceValue, () ref=> withBoolResult(
                         analyzeCallWithOneResult(condS, stmt.sequenceValue, getHooks().hasNext?, RTValues(iterValue))
                     )),
-                    (bodyS, subbc, sublc) ref=> {
-                        return stmtMaybe(
-                            withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().next, RTValues(iterValue))),
-                            bindingValues ref=> {
-                                analyzeForBindings(bodyS, subbc.env, stmt, bindingValues);
-                                return analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
-                            },
-                        );
-                    },
+                    (bodyS, subbc, sublc) ref=> stmtMaybe(
+                        withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().next, RTValues(iterValue))),
+                        bindingValues ref=> {
+                            analyzeForBindings(bodyS, subbc.env, stmt, bindingValues);
+                            return analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
+                        },
+                    ),
                 );
             }
         );
@@ -1267,16 +1346,16 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.TryStatement) {
     return analyzeStatement(s, pc, bc, lc, stmt.body);
 }
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) Bool {
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) StatementTarget {
     try {
         return stmtMaybe(analyzeMultiExprSubnode(s, bc.env, stmt.expr), results ref=> {
             for (result in results)
                 addSpecializedNode(s, ir.Consume(result));
-            return false;
+            return StatementTarget();
         });
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
-        return false;
+        return StatementTarget();
     }
 }
 
@@ -1314,7 +1393,7 @@ overload analyzeAliasBindings(
         envAdd(env, binding.name.name, Alias(binding.value, parentEnv));
         parentEnv = env;
     }
-    return env, false;
+    return env, StatementTarget();
 }
 
 overload analyzeAliasBindings(
@@ -1324,7 +1403,7 @@ overload analyzeAliasBindings(
 ) {
     var env = newEnv(parentEnv);
     envAddFlatAlias(env, parentEnv, bindingList);
-    return env, false;
+    return env, StatementTarget();
 }
 
 private procedure analyzeStrictBindings;
@@ -1339,16 +1418,17 @@ overload analyzeStrictBindings(
     var env = env_;
     for (binding in bindingList) {
         env = newEnv(env);
-        if (maybeAnalyzeSingleBinding(s, env, stmt, kind, binding))
-            return env, true;
+        var target = maybeAnalyzeSingleBinding(s, env, stmt, kind, binding);
+        if (statementBreaks?(target))
+            return env, target;
     }
-    return env, false;
+    return env, StatementTarget();
 }
 
 private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
     = stmtMaybe(analyzeSubnode(s, env, binding.value), valueResult ref=> {
         analyzeSingleBinding(s, env, stmt, kind, binding.name, singleValue(valueResult));
-        return false;
+        return StatementTarget();
     });
 
 private analyzeBindingVar(s, stmt, kind, name, value) {
@@ -1401,8 +1481,7 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTValueKind) 
     case ast.BINDING_FORWARD:
         return valueKind;
     case ast.BINDING_ALIAS:
-        // XXX
-        genericError("alias variables are not yet supported");
+        assert(false, "alias binding handled as strict variable");
         return RTValueKind();
     default:
         assert(false, "invalid binding kind");
@@ -1436,14 +1515,14 @@ overload analyzeStrictBindings(
                     envAdd(env, varItem.name, RTValueList(variadicVars, varItem.name));
                 });
 
-                return env, false;
+                return env, StatementTarget();
             },
-            () ref=> ...(env, true),
+            () ref=> ...(env, StatementTarget(StatementNoReturn)),
         ),
         () ref=> {
             // XXX
             genericError("variable binding without initialization is not yet supported");
-            return env, false;
+            return env, StatementTarget();
         },
     );
 }

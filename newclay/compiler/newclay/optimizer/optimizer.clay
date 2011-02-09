@@ -271,7 +271,6 @@ overload coalescedNode(cmap:RTValueMap, node:ir.Initialize) {
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Break) = node;
 overload coalescedNode(cmap:RTValueMap, node:ir.Continue) = node;
-overload coalescedNode(cmap:RTValueMap, node:ir.Return) = node;
 overload coalescedNode(cmap:RTValueMap, node:ir.Nop) = node;
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Throw)
