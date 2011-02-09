@@ -1,0 +1,63 @@
+testRvalue(rvalue x) = true;
+test(x) = true;
+
+main() {
+    if (false) return;
+
+    var x = toNontrivialInt(1);
+
+    if (false) return;
+
+    foo: {
+        if (false) break foo;
+        if (false) return;
+
+        var y = toNontrivialInt(3);
+
+        if (false) break foo;
+        if (false) return;
+
+        bar: {
+            if (false) break foo;
+            if (false) break bar;
+            if (false) return;
+
+            var z = toNontrivialInt(4);
+
+            if (false) break foo;
+            if (false) break bar;
+            if (false) return;
+        }
+
+        while (test(toNontrivialInt(5))) {
+            if (false) break foo;
+            if (false) break;
+            if (false) return;
+
+            var w = toNontrivialInt(6);
+
+            if (false) break foo;
+            if (false) break;
+            if (false) return;
+
+            bas: {
+                if (false) break foo;
+                if (false) break;
+                if (false) break bas;
+                if (false) return;
+
+                var v = toNontrivialInt(7);
+
+                if (false) break foo;
+                if (false) break;
+                if (false) break bas;
+                if (false) return;
+            }
+        }
+
+        if (false) break foo;
+        if (false) return;
+    }
+
+    if (false) return;
+}

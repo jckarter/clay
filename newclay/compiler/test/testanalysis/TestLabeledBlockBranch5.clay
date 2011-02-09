@@ -1,0 +1,24 @@
+a() {}
+b() {}
+c() {}
+d() {}
+e() {}
+nonterminating() { throw 0; }
+
+main() {
+    foo: {
+        bar: {
+            bas: {
+                a();
+                if (false)
+                    nonterminating();
+                else
+                    break bar;
+                b();
+            }
+            c();
+        }
+        d();
+    }
+    e();
+}
