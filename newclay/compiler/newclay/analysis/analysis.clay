@@ -872,9 +872,9 @@ private analyzeStatement(
     stmt:ast.Statement
 ) StatementTarget = withLocation(stmt, () ref=> analyzeStatement(s, pc, bc, lc, *stmt));
 
-private envAddLabel(env:Env, mLabel:Maybe[ast.LabelDef], target) {
+private envAddLabel(env:Env, mLabel:Maybe[ast.LabelDef], ...targets) {
     maybe(mLabel, label ref=> {
-        envAdd(env, label.name, RTLabel(label, target.label));
+        envAdd(env, label.name, RTLabel(label, ...mapValues(x => x.label, ...targets)));
     });
 }
 
@@ -1024,7 +1024,10 @@ private envEntryToLabel(stmtName, entry) = match(entry,
 
 private breakTarget(stmtName, bc:BlockContext, lc:LoopContext, labelName:Maybe[ast.Identifier])
     = maybe(labelName,
-        label ref=> envEntryToLabel(stmtName, privateLookup(bc.env, label)).target,
+        label ref=> fieldRef(
+            envEntryToLabel(stmtName, privateLookup(bc.env, label)),
+            IdentifierConcat(stmtName, #"Target"),
+        ),
         () ref=> maybe(fieldRef(lc, IdentifierConcat(stmtName, #"Target")),
             target ref=> target,
             () ref=> {
@@ -1146,6 +1149,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
                 var forEnv = newEnv(bc.env);
                 var forValue = addCapture(subS, stmt, value, stmt.bodyBinding.str);
 
+                envAddLabel(forEnv, stmt.label, blockNode, subNode);
                 envAdd(forEnv, stmt.bodyBinding, forValue);
 
                 var bodyTarget = analyzeStatement(
