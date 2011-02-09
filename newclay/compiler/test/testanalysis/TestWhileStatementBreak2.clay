@@ -1,0 +1,16 @@
+a() {}
+b() {}
+c() {}
+d() {}
+
+main() {
+    outer: {
+        while (false) {
+            a();
+            break outer;
+            b();
+        }
+        c();
+    }
+    d();
+}

@@ -1,0 +1,13 @@
+main() {
+    outer: static for (x in true, false)
+        static for (y in 1, 2, 3) {
+            if (x)
+                continue;
+            else if (y == 1)
+                break;
+            else if (y == 2)
+                continue outer;
+            else if (y == 3)
+                break outer;
+        }
+}

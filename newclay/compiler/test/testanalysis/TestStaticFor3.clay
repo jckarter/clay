@@ -1,0 +1,8 @@
+main() {
+    static for (x in 1, 2, 3) {
+        if (x == 1)
+            continue;
+        if (x == 2)
+            break;
+    }
+}

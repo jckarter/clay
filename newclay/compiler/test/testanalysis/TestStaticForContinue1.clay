@@ -1,0 +1,12 @@
+a() {}
+b() {}
+c() {}
+
+main() {
+    static for (x in 1, 2) {
+        a();
+        continue;
+        b();
+    }
+    c();
+}
