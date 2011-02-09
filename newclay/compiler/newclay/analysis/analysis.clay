@@ -1017,7 +1017,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
 private envEntryToLabel(stmtName, entry) = match(entry,
     RTLabel, label ref=> label,
     MatchDefault, x ref=> {
-        genericError(stmtName, " target must be a label");
+        genericError(StaticName(stmtName), " target must be a label");
         return RTLabel();
     }
 );
