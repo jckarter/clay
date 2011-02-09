@@ -1270,9 +1270,10 @@ overload RTValueList(vars:Vector[RTValue], name:ast.Identifier)
 
 record RTLabel = referenceType(
     ast: ast.LabelDef,
-    target: ir.BreakTargetId,
+    breakTarget: ir.BreakTargetId,
+    continueTarget: ir.BreakTargetId,
 );
-
+overload RTLabel(ast, target) = RTLabel(ast, target, target);
 
 
 //
