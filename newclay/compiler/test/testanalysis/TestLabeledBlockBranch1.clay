@@ -1,0 +1,21 @@
+a() {}
+b() {}
+c() {}
+d() {}
+
+main() {
+    foo: {
+        bar: {
+            bas: {
+                a();
+                if (false)
+                    break bar;
+                else
+                    break foo;
+            }
+            b();
+        }
+        c();
+    }
+    d();
+}
