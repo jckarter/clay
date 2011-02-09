@@ -79,7 +79,7 @@ overload printNodeData(depth, node:ir.If) {
 }
 
 overload printNodeData(depth, node:ir.While) {
-    println(LeafTypeName(node.ast), node.label);
+    println(LeafTypeName(node.ast), " ", node.label);
     printDepth(depth+1);
     print("condition ");
     printVar(node.condition);
