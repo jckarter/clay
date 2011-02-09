@@ -37,8 +37,7 @@ variant Node = LiteralCodeBody
              | Adopt
              | Consume;
 
-variant BreakTarget = Block
-                    | While;
+alias BreakTargetId = Int;
 
 variant ASTNode = Nothing
                 | ast.ExprListItem
@@ -78,8 +77,11 @@ record ValueList = referenceType(
 );
 
 record Block = referenceType(
+    label: BreakTargetId,
     body: Vector[Node],
 );
+
+overload Block(label:BreakTargetId) = Block(label, Vector[Node]());
 
 record Statement = referenceType(
     body: Vector[Node],
@@ -112,6 +114,7 @@ record AddressOf = referenceType(
 );
 
 record While = referenceType(
+    label: BreakTargetId,
     ast: ASTNode,
     conditionBody: Vector[Node],
     condition: RTValue,
@@ -143,22 +146,18 @@ record Initialize = referenceType(
 
 record Break = referenceType(
     ast: ASTNode,
-    target: BreakTarget,
+    target: BreakTargetId,
 );
 
 record Continue = referenceType(
     ast: ASTNode,
-    target: BreakTarget,
+    target: BreakTargetId,
 );
 
-[A, T | VariantMember?(ast.Statement, A) and VariantMember?(BreakTarget, T)]
-overload Break(ast:A, target:T) = Break(ASTNode(ast), BreakTarget(target));
 [A | VariantMember?(ast.Statement, A)]
-overload Break(ast:A, target:BreakTarget) = Break(ASTNode(ast), target);
-[A, T | VariantMember?(ast.Statement, A) and VariantMember?(BreakTarget, T)]
-overload Continue(ast:A, target:T) = Continue(ASTNode(ast), BreakTarget(target));
+overload Break(ast:A, target:BreakTargetId) = Break(ASTNode(ast), target);
 [A | VariantMember?(ast.Statement, A)]
-overload Continue(ast:A, target:BreakTarget) = Continue(ASTNode(ast), target);
+overload Continue(ast:A, target:BreakTargetId) = Continue(ASTNode(ast), target);
 
 record Throw = referenceType(
     ast: ast.ThrowStatement,

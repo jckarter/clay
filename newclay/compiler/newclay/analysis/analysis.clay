@@ -744,50 +744,59 @@ private record ProcResult (
 );
 
 private record ProcContext (
-    returnTarget: Maybe[ir.Block],
+    currentTargetId: ir.BreakTargetId,
     results: Vector[ProcResult],
     recursiveReturn: Maybe[ast.ReturnStatement],
 );
+
+overload ProcContext() = ProcContext(ir.BreakTargetId(0), Vector[ProcResult](), Maybe[ast.ReturnStatement]());
+
+private returnTargetId(pc) = ir.BreakTargetId(0);
+
+private nextTargetId(pc) {
+    var id = pc.currentTargetId;
+    inc(pc.currentTargetId);
+    return id;
+}
 
 private record BlockContext (
     env: Env,
 );
 
 private record LoopContext (
-    breakTarget: Maybe[ir.BreakTarget],
-    continueTarget: Maybe[ir.BreakTarget],
+    breakTarget: Maybe[ir.BreakTargetId],
+    continueTarget: Maybe[ir.BreakTargetId],
     infiniteLoop?: Bool,
 );
 
-overload LoopContext() = LoopContext(nothing(ir.BreakTarget), nothing(ir.BreakTarget), false);
-overload LoopContext(b:ir.BreakTarget, c:ir.BreakTarget, i?:Bool)
+overload LoopContext() = LoopContext(nothing(ir.BreakTargetId), nothing(ir.BreakTargetId), false);
+overload LoopContext(b:ir.BreakTargetId, c:ir.BreakTargetId, i?:Bool)
     = LoopContext(Maybe(b), Maybe(c), i?);
 overload LoopContext(loop:ir.While, infinite?:Bool) {
-    var target = ir.BreakTarget(loop);
+    var target = loop.label;
     return LoopContext(target, target, infinite?);
 }
-
 overload LoopContext(breakBlock:ir.Block, continueBlock:ir.Block) {
-    return LoopContext(ir.BreakTarget(breakBlock), ir.BreakTarget(continueBlock), false);
+    return LoopContext(breakBlock.label, continueBlock.label, false);
 }
 
 private record StatementReturn ();
 private record StatementNoReturn ();
 
 private variant StatementTarget = Nothing            // statement proceeds to next normally
-                                | ir.BreakTarget     // statement breaks/continues to target
+                                | ir.BreakTargetId   // statement breaks/continues to target
                                 | StatementReturn
                                 | StatementNoReturn; // statement is nonterminating
 
 overload StatementTarget() = StatementTarget(Nothing());
-[F | VariantMember?(ir.BreakTarget, F)]
-overload StatementTarget(frame:F) = StatementTarget(ir.BreakTarget(frame));
+[F | F == ir.Block or F == ir.While]
+overload StatementTarget(frame:F) = StatementTarget(frame.label);
 overload StatementTarget(static StatementReturn) = StatementTarget(StatementReturn());
 overload StatementTarget(static StatementNoReturn) = StatementTarget(StatementNoReturn());
 
 statementBreaks?(tgt:StatementTarget) = not variantIs?(tgt, Nothing);
 statementBreaksAt?(tgt:StatementTarget, frame) = match(tgt,
-    ir.BreakTarget, bt ref=> bt == ir.BreakTarget(frame),
+    ir.BreakTargetId, bt ref=> bt == frame.label,
     MatchDefault, x ref=> false,
 );
 statementReturns?(tgt:StatementTarget) = variantIs?(tgt, StatementReturn);
@@ -865,14 +874,12 @@ private analyzeStatement(
 
 private envAddLabel(env:Env, mLabel:Maybe[ast.LabelDef], target) {
     maybe(mLabel, label ref=> {
-        envAdd(env, label.name, RTLabel(label, ir.BreakTarget(target)));
+        envAdd(env, label.name, RTLabel(label, target.label));
     });
 }
 
 overload analyzeStatement(s, pc, bc, lc, block:ast.Block) StatementTarget {
-    var blockNode = allocateRef(ir.Block);
-    if (nothing?(pc.returnTarget))
-        pc.returnTarget = Maybe(blockNode);
+    var blockNode = ir.Block(nextTargetId(pc));
     var blockS = subContext(s, blockNode.body);
     var subbc = BlockContext(newEnv(bc.env));
     envAddLabel(subbc.env, block.label, blockNode);
@@ -997,7 +1004,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
         maybe(analyzeNode(s, bc.env, stmt.values),
             results ref=> {
                 push(pc.results, ProcResult(stmt, results));
-                addSpecializedNode(s, ir.Break(stmt, just(pc.returnTarget)));
+                addSpecializedNode(s, ir.Break(stmt, returnTargetId(pc)));
             },
         );
     } catch (e:RecursiveAnalysisError) {
@@ -1022,7 +1029,7 @@ private breakTarget(stmtName, bc:BlockContext, lc:LoopContext, labelName:Maybe[a
             target ref=> target,
             () ref=> {
                 genericError(StaticName(stmtName), " statement cannot be used outside of a loop without a label");
-                return ir.BreakTarget(ir.Block());
+                return ir.BreakTargetId();
             }
         ),
     );
@@ -1062,16 +1069,10 @@ private branchStatementTarget(thenTarget, elseTarget) {
         return elseTarget;
     if (statementNoReturn?(elseTarget))
         return thenTarget;
-    return StatementTarget(innermostTarget(
-        variantAs(thenTarget, ir.BreakTarget),
-        variantAs(elseTarget, ir.BreakTarget),
+    return StatementTarget(max(
+        variantAs(thenTarget, ir.BreakTargetId),
+        variantAs(elseTarget, ir.BreakTargetId),
     ));
-}
-
-private innermostTarget(a: ir.BreakTarget, b:ir.BreakTarget) {
-    // XXX
-    genericError("divergent jumps in branching statement not yet supported");
-    return ir.BreakTarget(ir.Block());
 }
 
 private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
@@ -1131,14 +1132,14 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
     });
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
-    var blockNode = allocateRef(ir.Block);
+    var blockNode = ir.Block(nextTargetId(pc));
     var blockS = subContext(s, blockNode.body);
     addSpecializedNode(s, blockNode);
 
     for (valueItem in stmt.values) {
         var target = stmtMaybe(analyzeSubnode(blockS, bc.env, valueItem), forValues ref=> {
             for (value in forValues) {
-                var subNode = allocateRef(ir.Block);
+                var subNode = ir.Block(nextTargetId(pc));
                 var subS = subContext(blockS, subNode.body);
                 addSpecializedNode(blockS, subNode);
 
@@ -1173,8 +1174,9 @@ private trueCondition?(condBody)
     // XXX check for true condition
     = false;
 
-private analyzeLoop(s, ast, bc, condAnalysisFn, bodyAnalysisFn) {
+private analyzeLoop(s, ast, pc, bc, condAnalysisFn, bodyAnalysisFn) {
     var whileNode = ir.While(
+        nextTargetId(pc),
         ir.ASTNode(ast),
         Vector[ir.Node](),
         RTValue(),
@@ -1206,7 +1208,7 @@ private analyzeLoop(s, ast, bc, condAnalysisFn, bodyAnalysisFn) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
-    return analyzeLoop(s, stmt, bc,
+    return analyzeLoop(s, stmt, pc, bc,
         condS ref=> analyzeBoolSubnode(condS, bc.env, stmt.condition),
         (bodyS, subbc, sublc) ref=> analyzeStatement(bodyS, pc, subbc, sublc, stmt.body),
     );
@@ -1281,7 +1283,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
             iterValues ref=> {
                 var iterValue = addCapture(s, stmt.sequenceValue, singleValue(iterValues));
 
-                return analyzeLoop(s, stmt, bc,
+                return analyzeLoop(s, stmt, pc, bc,
                     condS ref=> withLocation(stmt.sequenceValue, () ref=> withBoolResult(
                         analyzeCallWithOneResult(condS, stmt.sequenceValue, getHooks().hasNext?, RTValues(iterValue))
                     )),
