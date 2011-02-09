@@ -1798,11 +1798,11 @@ private callDefinedRTValue(type:Value) = match(type,
                 genericError("arguments to CallDefined? must be types");
 
             if (refHead == getHooks().Ref)
-                return RTValue(RT_VALUE_REF, type, LocalVariable());
+                return RTValue(RT_VALUE_REF, refTypeSymbol, LocalVariable());
             if (refHead == getHooks().Rvalue)
-                return RTValue(RT_VALUE_RVALUE, type, LocalVariable());
+                return RTValue(RT_VALUE_RVALUE, refTypeSymbol, LocalVariable());
             if (refHead == getHooks().Const)
-                return RTValue(RT_VALUE_CONST, type, LocalVariable());
+                return RTValue(RT_VALUE_CONST, refTypeSymbol, LocalVariable());
 
             genericError("arguments to CallDefined? must be types");
             return RTValue();
