@@ -7,9 +7,9 @@ overload bar(x:Float64) {}
 
 bas(x:'T) | 'T == Int32 or 'T == Float64 {}
 
-zim(rvalue x) {}
+zim(rvalue x:Int32) {}
 
-zang(ref x) {}
+zang(ref x:Int32) {}
 
 main()
     = CallDefinedForSymbol?(foo, Int32),
