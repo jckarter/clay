@@ -1,0 +1,6 @@
+// This is not allowed, because breaking would bypass returning any values
+main() foo: {
+    if (false)
+        return 1;
+    break foo;
+}

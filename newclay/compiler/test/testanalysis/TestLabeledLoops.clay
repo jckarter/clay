@@ -1,0 +1,17 @@
+foo(x, y) {}
+
+main() {
+    var x = 0, y = 0;
+    outer: while (x < 10) {
+        x += 1;
+        y = 0;
+        while (y < 10) {
+            y += 1;
+            if (y > x)
+                continue outer;
+            if (x + y == 18)
+                break outer;
+            foo(x, y);
+        }
+    }
+}
