@@ -6,12 +6,12 @@ import maybe.*;
 
 record Frame = referenceType(
     parent: Frame,
-    loop?: Bool,
+    label: Maybe[ir.BreakTargetId],
     liveValues: Vector[RTValue],
 );
 
-subframe(parent) = Frame(parent, false, Vector[RTValue]());
-overload subframe(parent, loop?) = Frame(parent, loop?, Vector[RTValue]());
+subframe(parent) = Frame(parent, nothing(ir.BreakTargetId), Vector[RTValue]());
+overload subframe(parent, label) = Frame(parent, Maybe(label), Vector[RTValue]());
 
 record LifetimeContext (
     statementFrame: Frame,
@@ -32,9 +32,11 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Li
     ir.pushNode(dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Block) {
-    withBlockFrame(c, dest, () ref=> {
-        lifetimeAnalyzeSubbody(c, dest, node.body);
+    var outNode = ir.Block(node.label);
+    withLabelFrame(c, node.label, outNode.body, () ref=> {
+        lifetimeAnalyzeSubbody(c, outNode.body, node.body);
     });
+    ir.pushNode(dest, outNode);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Statement) {
     withStatementFrame(c, dest, () ref=> {
@@ -104,8 +106,8 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.If
     ir.pushNode(dest, outNode);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.While) {
-    var outNode = ir.While(node.ast, Vector[ir.Node](), node.condition, Vector[ir.Node]());
-    withLoopFrame(c, outNode.body, () ref=> {
+    var outNode = ir.While(node.label, node.ast, Vector[ir.Node](), node.condition, Vector[ir.Node]());
+    withLabelFrame(c, node.label, outNode.body, () ref=> {
         withStatementFrame(c, outNode.conditionBody, () ref=> {
             lifetimeAnalyzeSubbody(c, outNode.conditionBody, node.conditionBody);
         });
@@ -132,15 +134,11 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.In
     lifetimeAnalyzeInitialize(c, dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Break) {
-    unwindUntil(c, dest, frame => frame.loop?);
+    unwindUntilLabel(c, dest, node.target);
     ir.pushNode(dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Continue) {
-    unwindUntil(c, dest, frame => frame.loop?);
-    ir.pushNode(dest, node);
-}
-overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Return) {
-    unwindAll(c, dest);
+    unwindUntilLabel(c, dest, node.target);
     ir.pushNode(dest, node);
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Throw) {
@@ -279,6 +277,8 @@ private closeFrame(c, dest, frame) {
         remove(c.variableFrames, value);
 }
 
+frameLabel?(frame, label) = maybe(frame.label, l ref=> l == label, () ref=> false);
+
 private unwindUntil(c:LifetimeContext, dest:Vector[ir.Node], untilFn) {
     var frame = c.statementFrame;
     while (not null?(frame)) {
@@ -286,6 +286,10 @@ private unwindUntil(c:LifetimeContext, dest:Vector[ir.Node], untilFn) {
         if (untilFn(frame)) break;
         frame = frame.parent;
     }
+}
+
+unwindUntilLabel(c:LifetimeContext, dest:Vector[ir.Node], label) {
+    unwindUntil(c, dest, frame ref=> frameLabel?(frame, label));
 }
 
 private unwindAll(c:LifetimeContext, dest:Vector[ir.Node]) {
@@ -316,8 +320,8 @@ private withStatementFrame(c:LifetimeContext, dest:Vector[ir.Node], fn) {
     _withStatementFrame(frame, c, dest, fn);
     closeFrame(c, dest, frame);
 }
-private withLoopFrame(c:LifetimeContext, dest:Vector[ir.Node], fn) {
-    var frame = subframe(c.statementFrame, true);
+private withLabelFrame(c:LifetimeContext, label:ir.BreakTargetId, dest:Vector[ir.Node], fn) {
+    var frame = subframe(c.statementFrame, label);
     _withBlockFrame(frame, c, dest, fn);
     closeFrame(c, dest, frame);
 }
