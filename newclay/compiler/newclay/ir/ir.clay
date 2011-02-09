@@ -30,13 +30,15 @@ variant Node = LiteralCodeBody
              | Phi
              | Break
              | Continue
-             | Return
              | Throw
              | Nop
              | Block
              | Statement
              | Adopt
              | Consume;
+
+variant BreakTarget = Block
+                    | While;
 
 variant ASTNode = Nothing
                 | ast.ExprListItem
@@ -140,16 +142,23 @@ record Initialize = referenceType(
 );
 
 record Break = referenceType(
-    ast: ast.BreakStatement,
+    ast: ASTNode,
+    target: BreakTarget,
 );
 
 record Continue = referenceType(
-    ast: ast.ContinueStatement,
+    ast: ASTNode,
+    target: BreakTarget,
 );
 
-record Return = referenceType(
-    ast: ast.ReturnStatement,
-);
+[A, T | VariantMember?(ast.Statement, A) and VariantMember?(BreakTarget, T)]
+overload Break(ast:A, target:T) = Break(ASTNode(ast), BreakTarget(target));
+[A | VariantMember?(ast.Statement, A)]
+overload Break(ast:A, target:BreakTarget) = Break(ASTNode(ast), target);
+[A, T | VariantMember?(ast.Statement, A) and VariantMember?(BreakTarget, T)]
+overload Continue(ast:A, target:T) = Continue(ASTNode(ast), BreakTarget(target));
+[A | VariantMember?(ast.Statement, A)]
+overload Continue(ast:A, target:BreakTarget) = Continue(ASTNode(ast), target);
 
 record Throw = referenceType(
     ast: ast.ThrowStatement,

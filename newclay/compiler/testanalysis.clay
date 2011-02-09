@@ -29,7 +29,7 @@ printNode(depth, node) {
     printNodeData(depth, *node);
 }
 
-asPtr(x) = referencePtr(x).ptr;
+asPtr(x) = RawPointer(referencePtr(x).ptr);
 
 procedure printNodeData;
 
@@ -43,9 +43,11 @@ overload printNodeData(depth, node:ir.ValueList) {
 }
 
 overload printNodeData(depth, node:ir.Call) {
-    println(LeafTypeName(node.ast),
-        " specialization ", asPtr(node.specialization),
-        " ", node.specialization.callable
+    print(LeafTypeName(node.ast), " ");
+    if (withIds)
+        print("specialization ", asPtr(node.specialization), " ");
+    println(
+        node.specialization.callable, ArgumentList(node.specialization.args)
     );
     printVars(depth+1, "in  ", node.inputs);
     maybe(node.outputs,
@@ -77,6 +79,8 @@ overload printNodeData(depth, node:ir.If) {
 }
 
 overload printNodeData(depth, node:ir.While) {
+    if (withIds)
+        print(asPtr(node), " ");
     println(LeafTypeName(node.ast));
     printDepth(depth+1);
     print("condition ");
@@ -93,6 +97,8 @@ overload printNodeData(depth, node:ir.While) {
 }
 
 overload printNodeData(depth, node:ir.Block) {
+    if (withIds)
+        print(asPtr(node));
     println();
     for (bodyNode in node.body)
         printNode(depth+1, bodyNode);
@@ -197,15 +203,17 @@ overload printNodeData(depth, node:ir.Nop) {
 }
 
 overload printNodeData(depth, node:ir.Break) {
-    println(LeafTypeName(node.ast));
+    print(LeafTypeName(node.ast), " ", LeafTypeName(node.target));
+    if (withIds)
+        print(" ", asPtr(*node.target));
+    println();
 }
 
 overload printNodeData(depth, node:ir.Continue) {
-    println(LeafTypeName(node.ast));
-}
-
-overload printNodeData(depth, node:ir.Return) {
-    println(LeafTypeName(node.ast));
+    print(LeafTypeName(node.ast), " ", LeafTypeName(node.target));
+    if (withIds)
+        print(" ", asPtr(*node.target));
+    println();
 }
 
 overload printNodeData(depth, node:ir.Throw) {
