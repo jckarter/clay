@@ -440,7 +440,7 @@ overload codegenNode(c, bc, node:ir.Call) {
     var name = functionName(c, node.specialization);
 
     printToIndented(bc, name, "(");
-    
+
     interleave(node.inputs,
         () ref=> { printTo(bc, ", "); },
         i  ref=> { printTo(bc, valueRef(c, bc, i)); },
@@ -488,6 +488,7 @@ overload codegenNode(c, bc, node:ir.Statement) {
 overload codegenNode(c, bc, node:ir.Block) {
     for (subnode in node.body)
         codegenSubnode(c, bc, subnode);
+    printToIndented(bc, "_clay_continue_", node.label, ":; _clay_break_", node.label, ":;\n");
 }
 
 overload codegenNode(c, bc, node:ir.While) {
@@ -501,9 +502,9 @@ overload codegenNode(c, bc, node:ir.While) {
 
     for (subnode in node.body)
         codegenSubnode(c, bc, subnode);
-    
+
     bc.indent -= 1;
-    printToIndented(bc, "}\n");
+    printToIndented(bc, "_clay_continue_", node.label, ":; } _clay_break_", node.label, ":;\n");
 }
 
 overload codegenNode(c, bc, node:ir.Phi) {
@@ -536,15 +537,11 @@ overload codegenNode(c, bc, node:ir.Initialize) {
 }
 
 overload codegenNode(c, bc, node:ir.Break) {
-    printToIndented(bc, "break;\n");
+    printToIndented(bc, "goto _clay_break_", node.target, ";\n");
 }
 
 overload codegenNode(c, bc, node:ir.Continue) {
-    printToIndented(bc, "continue;\n");
-}
-
-overload codegenNode(c, bc, node:ir.Return) {
-    printToIndented(bc, "return;\n");
+    printToIndented(bc, "goto _clay_continue_", node.target, ";\n");
 }
 
 overload codegenNode(c, bc, node:ir.Throw) {
