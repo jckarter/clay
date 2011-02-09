@@ -1701,6 +1701,11 @@ evaluatePrimitive(kind, args) {
         return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
     }
 
+    case PRIM_StaticModuleMember? : {
+        var module, member = ...moduleString(args);
+        return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
+    }
+
     case PRIM_StaticError : {
         throw StaticError(args);
     }
