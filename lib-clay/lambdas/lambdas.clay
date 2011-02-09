@@ -106,4 +106,4 @@ packMultiValuedFreeVarByRef(...x) =
 unpackMultiValuedFreeVar(x) = forward ...unpackRef(x);
 
 unpackMultiValuedFreeVarAndDereference(x) =
-    forward mapValues(dereference, ...unpack(x));
+    forward ...mapValues(dereference, ...unpack(x));
