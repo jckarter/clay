@@ -304,6 +304,7 @@ enum PrimitiveKind {
     PRIM_StaticModule?,
     PRIM_StaticModule,
     PRIM_StaticModuleMember,
+    PRIM_StaticModuleMember?,
 
     PRIM_StaticError,
     PRIM_StaticAssert,
@@ -688,6 +689,18 @@ moduleValueLookup(moduleValue:ModuleValue, member:String) {
         );
     } else {
         return ref submoduleValue^.envEntry;
+    }
+}
+
+moduleValueLookup?(moduleValue:ModuleValue, member:String) {
+    var submoduleValue = lookup(moduleValue.submodules, member);
+    if (null?(submoduleValue)) {
+        return maybe(moduleValue.module,
+            module ref=> publicLookup?(module, member),
+            ()     ref=> false,
+        );
+    } else {
+        return true;
     }
 }
 

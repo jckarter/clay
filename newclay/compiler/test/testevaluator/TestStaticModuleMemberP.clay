@@ -1,0 +1,11 @@
+import __primitives__.*;
+import factorial; // has Factorial
+import tools;
+import tools.factorial;
+
+static Main() = StaticModuleMember?(factorial, "Factorial"),
+                StaticModuleMember?(factorial, "NotFactorial"),
+                StaticModuleMember?(tools, "factorial"),
+                StaticModuleMember?(tools, "Factorial"),
+                StaticModuleMember?(tools, "buh"),
+                StaticModuleMember?(tools.factorial, "Factorial");
