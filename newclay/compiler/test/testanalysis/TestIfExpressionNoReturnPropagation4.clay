@@ -1,10 +1,10 @@
 
-symbol nonterminating = Procedure();
+symbol nonterminating;
 overload nonterminating() { throw 0; }
 
-symbol foo = Procedure();
+symbol foo;
 overload foo(x:Int32) = if (nonterminating()) 1 else 2;
 
-symbol main = Procedure();
+symbol main;
 overload main() = foo(2);
 

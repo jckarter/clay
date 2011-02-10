@@ -1,16 +1,16 @@
-symbol fanfare = Procedure();
+symbol fanfare;
 overload fanfare() __c__ """
     printf("hello world");
 """;
 
-symbol foo = Procedure();
+symbol foo;
 overload foo(x:Bool) {
     if (x)
         return;
     fanfare();
 }
 
-symbol main = Procedure();
+symbol main;
 overload main() {
     foo(true);
 }

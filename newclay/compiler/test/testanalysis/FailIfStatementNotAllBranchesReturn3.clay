@@ -1,7 +1,7 @@
-symbol nop = Procedure();
+symbol nop;
 overload nop() {}
 
-symbol main = Procedure();
+symbol main;
 overload main() {
     if (true)
         nop();

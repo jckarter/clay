@@ -3,28 +3,10 @@ import __main__.(main);
 
 
 //
-// NewStaticFunction, StaticFunction?
+// Type?
 //
 
-symbol StaticFunctionTag = ();
-symbol NewStaticFunction = NewStaticFunction();
-static overload NewStaticFunction() = (StaticFunctionTag,);
-
-symbol StaticFunction? = NewStaticFunction();
-static overload StaticFunction?('x) =
-    StaticSymbol?('x)
-    and TupleWithTag?(StaticSymbolBody('x), StaticFunctionTag);
-
-
-
-//
-// TypeTemplate?, Type?
-//
-
-symbol TypeTemplate? = NewStaticFunction();
-static overload TypeTemplate?('x) = false;
-
-symbol Type? = NewStaticFunction();
+symbol Type?;
 static overload Type?('x) = false;
 
 
@@ -35,17 +17,17 @@ static overload Type?('x) = false;
 
 symbol ToLowLevelType = NewStaticFunction();
 
-symbol LLSigned = ();
-symbol LLUnsigned = ();
+symbol LLSigned;
+symbol LLUnsigned;
 
-symbol LLBoolType = ();
-symbol LLIntegerType['Signed, 'Bits] = ();
-symbol LLFloatType['Bits] = ();
-symbol LLPointerType['T] = ();
-symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs] = ();
-symbol LLArrayType['T, 'n] = ();
-symbol LLTupleType[...'T] = ();
-symbol LLUnionType[...'T] = ();
+symbol LLBoolType;
+symbol LLIntegerType['Signed, 'Bits];
+symbol LLFloatType['Bits];
+symbol LLPointerType['T];
+symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+symbol LLArrayType['T, 'n];
+symbol LLTupleType[...'T];
+symbol LLUnionType[...'T];
 
 
 //
@@ -58,7 +40,7 @@ static PODType?('T) = true;
 //
 // NewPrimitiveType, PrimitiveType?
 
-symbol PrimitiveTypeTag = ();
+symbol PrimitiveTypeTag;
 symbol NewPrimitiveType = NewStaticFunction();
 static overload NewPrimitiveType() = (PrimitiveTypeTag,);
 
@@ -106,7 +88,7 @@ static overload ToLowLevelType(Float64) = LLFloatType[64];
 // StringConstant
 //
 
-symbol StringConstant = ();
+symbol StringConstant;
 static overload Type?(StringConstant) = true;
 static overload ToLowLevelType(StringConstant)
     = LLTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
@@ -116,8 +98,7 @@ static overload ToLowLevelType(StringConstant)
 // Static[T]
 //
 
-symbol Static['T] = ();
-static overload TypeTemplate?(Static) = true;
+symbol Static['T];
 static overload Type?(Static['T]) = true;
 static overload ToLowLevelType(Static['T]) = LLTupleType[];
 
@@ -127,8 +108,7 @@ static overload ToLowLevelType(Static['T]) = LLTupleType[];
 // Pointer[T]
 //
 
-symbol Pointer['T] = ();
-static overload TypeTemplate?(Pointer) = true;
+symbol Pointer['T];
 static overload Type?(Pointer['T]) = true;
 static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
@@ -138,8 +118,7 @@ static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
 // ExternalCodePointer[ABI, Inputs, Outputs]
 //
 
-symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs] = ();
-static overload TypeTemplate?(ExternalCodePointer) = true;
+symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
 static overload Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
 static overload ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
     = LLCodePointerType['A, 'V, 'I, 'O];
@@ -150,8 +129,7 @@ static overload ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
 // Array[T,n]
 //
 
-symbol Array['T, 'n] = ();
-static overload TypeTemplate?(Array) = true;
+symbol Array['T, 'n];
 static overload Type?(Array['T, 'n]) = true;
 static overload ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
 
@@ -161,24 +139,9 @@ static overload ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
 // Tuple[...T]
 //
 
-symbol Tuple[...'T] = ();
-static overload TypeTemplate?(Tuple) = true;
+symbol Tuple[...'T];
 static overload Type?(Tuple[...'T]) = true;
 static overload ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
-
-
-
-//
-// Procedure, Procedure?
-//
-
-symbol ProcedureTag = ();
-static Procedure() = (ProcedureTag,);
-
-symbol Procedure? = NewStaticFunction();
-static overload Procedure?('x) =
-    StaticSymbol?('x)
-    and TupleWithTag?(StaticSymbolBody('x), ProcedureTag);
 
 
 
@@ -296,15 +259,15 @@ case?(a, forward ...against) {
 
 // iterator, next, hasNext?
 
-symbol iterator = Procedure();
-symbol next = Procedure();
-symbol hasNext? = Procedure();
+symbol iterator;
+symbol next;
+symbol hasNext?;
 
 //
 // call
 //
 
-symbol call = Procedure();
+symbol call;
 
 
 //
@@ -326,16 +289,16 @@ callMain() Int32 { main(); return 0; }
 // Ref, Rvalue, Const
 //
 
-symbol Ref['T] = ();
-symbol Rvalue['T] = ();
-symbol Const['T] = ();
+symbol Ref['T];
+symbol Rvalue['T];
+symbol Const['T];
 
 //
 // ABI symbols
 //
 
-symbol CdeclABI = ();
-symbol StdcallABI = ();
+symbol CdeclABI;
+symbol StdcallABI;
 
 static ABI?('x) = false;
 static overload ABI?(CdeclABI) = true;

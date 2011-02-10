@@ -244,8 +244,6 @@ globalRTValue(g:RTGlobal) = _globalRTValue(g, globalAttributes(g).type);
 
 analyzeMain() {
     var mainValue = envEntryToValue(publicLookup(getProgramMainModule(), "main"));
-    if (not runtimeCallable?(mainValue))
-        genericError("main is not a procedure");
     return analyzeCallable(mainValue, RTValues());
 }
 
@@ -1589,14 +1587,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.Call)
 private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = ifStaticValue(s, env, expr.expr,
         callable ref=> {
-            if (runtimeCallable?(callable)) {
-                return maybe(analyzeNode(s, env, expr.args),
-                    inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
-                );
-            } else {
-                var result = evaluateCall(callable, env, expr);
-                return addSpecializedValueList(s, expr, result);
-            }
+            return maybe(analyzeNode(s, env, expr.args),
+                inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
+            );
         },
         callableResult ref=> maybe(analyzeNode(s, env, expr.args), inputs ref=> {
             var operands = RTValues(callableResult);
@@ -2055,7 +2048,7 @@ ifOverload(program, callable, args, thenFn, elseFn) {
 
 private findOverload(program, callable, args)
     = ifOverload(program, callable, args, s => s, () ref=> {
-        genericError("no matching operation");
+        genericError("no matching runtime overload");
         return Specialization();
     });
 
@@ -2182,6 +2175,14 @@ private callableInvokeTable(callable:Value) {
     return ref match(callable,
         Symbol, x => ref x.invokeTable,
         SymbolHead, x => ref x.invokeTable,
+        Primitive, x => {
+            genericError("static primitive called in runtime context without # operator", x);
+            return ref typeToLValue(InvokeTable);
+        },
+        AliasPrimitive, x => {
+            genericError("static primitive called in runtime context without # operator", x);
+            return ref typeToLValue(InvokeTable);
+        },
         MatchDefault, x => {
             genericError("invalid runtime callable: ", x);
             return ref typeToLValue(InvokeTable);

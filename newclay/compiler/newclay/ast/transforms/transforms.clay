@@ -51,20 +51,15 @@ transformedNameRef(from:FromNode, moduleName:ModuleName, identifier:S)
 //
 //   becomes
 //
-// <Visibility>? symbol <SymbolName> = prelude.Procedure();
+// <Visibility>? symbol <SymbolName>;
 // overload <SymbolName> <OverloadDefinition>
 //
 
 overload transformASTInto(from:Procedure, to:Vector[TopLevelItem]) {
-    var NewProcedureNameRef = transformedNameRef(from, preludeModuleName, String("Procedure"));
-
     push(to, TopLevelItem(transformed(from, Symbol,
         from.visibility,
         from.name,
-        Maybe(Expr(transformed(from, Call,
-            Expr(transformedNameRef(from, preludeModuleName, String("Procedure"))),
-            ExprList()
-        )))
+        nothing(Expr),
     )));
 
     push(to, TopLevelItem(transformed(from, Overload,
@@ -96,7 +91,7 @@ symbolParamToPattern(name:Identifier) =
 //
 //   becomes
 //
-// <Visibility>? symbol <SymbolName> = ();
+// <Visibility>? symbol <SymbolName>;
 // static overload <SymbolName> <StaticOverloadDefinition>
 //
 

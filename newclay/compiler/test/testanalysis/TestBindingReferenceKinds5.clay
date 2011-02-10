@@ -1,4 +1,4 @@
-symbol main = Procedure();
+symbol main;
 overload main() {
     var x = 5;
     ref y = x;

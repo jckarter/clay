@@ -3,24 +3,24 @@ symbol RefArg = ();
 symbol RvalueArg = ();
 symbol ConstArg = ();
 
-symbol foo = Procedure();
+symbol foo;
 overload foo(x) = ConstArg;
 overload foo(ref x) = RefArg;
 overload foo(rvalue x) = RvalueArg;
 
-symbol valueReturn = Procedure();
+symbol valueReturn;
 overload valueReturn() x:Int32 __c__ """abort();""";
 
-symbol refReturn = Procedure();
+symbol refReturn;
 overload refReturn() ref x:Int32 __c__ """abort();""";
 
-symbol rvalueReturn = Procedure();
+symbol rvalueReturn;
 overload rvalueReturn() rvalue x:Int32 __c__ """abort();""";
 
-symbol constReturn = Procedure();
+symbol constReturn;
 overload constReturn() const x:Int32 __c__ """abort();""";
 
-symbol main = Procedure();
+symbol main;
 overload main() {
     var x = valueReturn();
     ref y = refReturn();

@@ -1,9 +1,9 @@
 
-symbol refReturn = Procedure();
+symbol refReturn;
 overload refReturn() ref x:Int32 __c__ """
     assert(0 && "fake");
 """;
 
-symbol main = Procedure();
+symbol main;
 overload main() = ref refReturn();
 

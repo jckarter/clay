@@ -1,6 +1,6 @@
-symbol nonterminating = Procedure();
+symbol nonterminating;
 overload nonterminating() { throw 0; }
 
-symbol main = Procedure();
+symbol main;
 overload main() = 1, nonterminating();
 
