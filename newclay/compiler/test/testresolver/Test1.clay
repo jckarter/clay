@@ -4,10 +4,10 @@ symbol Foo = ();
 symbol Bar = (Foo);
 symbol Bas = ();
 
-static overload 'f('x) = Foo;
-static overload Bar('x) = Foo;
-static overload Bar(Foo) = a => ('x, a, Foo);
-// missing name error: static overload Bar(x) = a => ('x, a, Foo);
+overload #'f('x) = Foo;
+overload #Bar('x) = Foo;
+overload #Bar(Foo) = a => ('x, a, Foo);
+// missing name error: overload #Bar(x) = a => ('x, a, Foo);
 
 overload Bas(a:'x) = (a, Foo);
 overload Bas(a:'x) Foo = (a, Foo);

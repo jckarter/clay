@@ -7,10 +7,10 @@ import __primitives__.*;
 
 symbol StaticFunctionTag = ();
 symbol NewStaticFunction = NewStaticFunction();
-static overload NewStaticFunction() = (StaticFunctionTag,);
+overload #NewStaticFunction() = (StaticFunctionTag,);
 
 symbol StaticFunction? = NewStaticFunction();
-static overload StaticFunction?('x) =
+overload #StaticFunction?('x) =
     StaticSymbol?('x)
     and TupleWithTag?(StaticSymbolBody('x), StaticFunctionTag);
 
@@ -21,10 +21,10 @@ static overload StaticFunction?('x) =
 //
 
 symbol TypeTemplate? = NewStaticFunction();
-static overload TypeTemplate?('x) = false;
+overload #TypeTemplate?('x) = false;
 
 symbol Type? = NewStaticFunction();
-static overload Type?('x) = false;
+overload #Type?('x) = false;
 
 
 
@@ -52,14 +52,14 @@ symbol LLUnionType[...'T] = ();
 
 symbol PrimitiveTypeTag = ();
 symbol NewPrimitiveType = NewStaticFunction();
-static overload NewPrimitiveType() = (PrimitiveTypeTag,);
+overload #NewPrimitiveType() = (PrimitiveTypeTag,);
 
 symbol PrimitiveType? = NewStaticFunction();
-static overload PrimitiveType?('x) =
+overload #PrimitiveType?('x) =
     StaticSymbol?('x)
     and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
 
-static overload Type?('x) | PrimitiveType?('x) = true;
+overload #Type?('x) | PrimitiveType?('x) = true;
 
 
 
@@ -70,8 +70,8 @@ static overload Type?('x) | PrimitiveType?('x) = true;
 symbol Bool = NewPrimitiveType();
 symbol Int = NewPrimitiveType();
 
-static overload ToLowLevelType(Bool) = LLBoolType;
-static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
+overload #ToLowLevelType(Bool) = LLBoolType;
+overload #ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
 
 
 
@@ -80,9 +80,9 @@ static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
 //
 
 symbol Static['T] = ();
-static overload TypeTemplate?(Static) = true;
-static overload Type?(Static['T]) = true;
-static overload ToLowLevelType(Static['T]) = LLTupleType[];
+overload #TypeTemplate?(Static) = true;
+overload #Type?(Static['T]) = true;
+overload #ToLowLevelType(Static['T]) = LLTupleType[];
 
 
 
@@ -91,9 +91,9 @@ static overload ToLowLevelType(Static['T]) = LLTupleType[];
 //
 
 symbol Pointer['T] = ();
-static overload TypeTemplate?(Pointer) = true;
-static overload Type?(Pointer['T]) = true;
-static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
+overload #TypeTemplate?(Pointer) = true;
+overload #Type?(Pointer['T]) = true;
+overload #ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
 
 
@@ -103,10 +103,10 @@ static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
 symbol ProcedureTag = ();
 symbol NewProcedure = NewStaticFunction();
-static overload NewProcedure() = (ProcedureTag,);
+overload #NewProcedure() = (ProcedureTag,);
 
 symbol Procedure? = NewStaticFunction();
-static overload Procedure?('x) =
+overload #Procedure?('x) =
     StaticSymbol?('x)
     and TupleWithTag?(StaticSymbolBody('x), ProcedureTag);
 
@@ -117,7 +117,7 @@ static overload Procedure?('x) =
 //
 
 symbol TupleWithTag? = NewStaticFunction();
-static overload TupleWithTag?('x, 'tag) =
+overload #TupleWithTag?('x, 'tag) =
     StaticTuple?('x)
     and StaticLesser?(0, StaticTupleSize('x))
     and StaticEquals?(StaticTupleElement('x, 0), 'tag);

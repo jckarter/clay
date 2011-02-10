@@ -1,8 +1,8 @@
 import __primitives__.*;
 
-static int() = 12;
+#int() = 12;
 
-static Main() = (
+#Main() = (
     (+1, -2),
     (+int(), -int()),
     (5 * 2, 12 / 2, 8 % 3, 5 + 2, 5 - 2),

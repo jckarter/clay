@@ -6,8 +6,8 @@ import __primitives__.*;
 //
 
 symbol MapValues;
-static overload MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
-static overload MapValues('f) = ;
+overload #MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
+overload #MapValues('f) = ;
 
 
 
@@ -16,7 +16,7 @@ static overload MapValues('f) = ;
 //
 
 symbol MapTuple;
-static overload MapTuple('f, 'a) = (...MapValues('f, ...StaticTupleElements('a)));
+overload #MapTuple('f, 'a) = (...MapValues('f, ...StaticTupleElements('a)));
 
 
 
@@ -25,7 +25,7 @@ static overload MapTuple('f, 'a) = (...MapValues('f, ...StaticTupleElements('a))
 //
 
 symbol ReverseTuple;
-static overload ReverseTuple('a) =
+overload #ReverseTuple('a) =
     MapTuple(
         i => StaticTupleElement('a, StaticSubtract(StaticTupleSize('a), StaticAdd(i,1))),
         (...StaticIntegers(StaticTupleSize('a))),
@@ -38,4 +38,4 @@ static overload ReverseTuple('a) =
 //
 
 symbol Main;
-static overload Main() = ReverseTuple((1, 2, true, false, "foo"));
+overload #Main() = ReverseTuple((1, 2, true, false, "foo"));

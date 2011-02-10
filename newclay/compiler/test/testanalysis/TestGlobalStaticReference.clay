@@ -1,5 +1,5 @@
 var x = #2;
 
-static Foo() = x;
+#Foo() = x;
 
 main() = #Foo();

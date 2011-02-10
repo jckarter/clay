@@ -7,4 +7,4 @@ symbol Zim;
 symbol Zang;
 symbol Zung;
 
-static Main() = Bas, Bas[Zim], Bas[Zang], Bas[Zung];
+#Main() = Bas, Bas[Zim], Bas[Zang], Bas[Zung];

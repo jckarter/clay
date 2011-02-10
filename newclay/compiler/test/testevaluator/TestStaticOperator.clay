@@ -1,2 +1,2 @@
-static twoThree() = 2, 3;
-static Main() = #1, ...#twoThree();
+#twoThree() = 2, 3;
+#Main() = #1, ...#twoThree();

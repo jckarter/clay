@@ -6,7 +6,7 @@ import factorial;
 symbol Foo['X];
 symbol Bar;
 
-static Main()
+#Main()
     = StaticQualifiedName(StaticModule),
       StaticQualifiedName(Factorial),
       StaticQualifiedName(Foo),

@@ -11,7 +11,7 @@ zim(rvalue x:Int) {}
 
 zang(ref x:Int) {}
 
-static Main()
+#Main()
     = CallDefinedForSymbol?(foo, Int),
       CallDefinedForSymbol?(foo, Tuple[Int, Char, Bool]),
       CallDefinedForSymbol?(foo, Ref[Int]),

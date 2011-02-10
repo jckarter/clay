@@ -1,1 +1,326 @@
-../testanalysis/prelude.clay
+import __primitives__.*;
+import __main__.(main);
+
+
+//
+// Type?
+//
+
+symbol Type?;
+overload #Type?('x) = false;
+
+
+
+//
+// ToLowLevelType
+//
+
+symbol ToLowLevelType = NewStaticFunction();
+
+symbol LLSigned;
+symbol LLUnsigned;
+
+symbol LLBoolType;
+symbol LLIntegerType['Signed, 'Bits];
+symbol LLFloatType['Bits];
+symbol LLPointerType['T];
+symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+symbol LLArrayType['T, 'n];
+symbol LLTupleType[...'T];
+symbol LLUnionType[...'T];
+
+
+//
+// PODType?
+//
+
+#PODType?('T) = true;
+
+
+//
+// NewPrimitiveType, PrimitiveType?
+
+symbol PrimitiveTypeTag;
+symbol NewPrimitiveType = NewStaticFunction();
+overload #NewPrimitiveType() = (PrimitiveTypeTag,);
+
+symbol PrimitiveType? = NewStaticFunction();
+overload #PrimitiveType?('x) =
+    StaticSymbol?('x)
+    and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
+
+overload #Type?('x) | PrimitiveType?('x) = true;
+
+
+
+//
+// Bool, Char, *Int*, Float*
+//
+
+symbol Bool = NewPrimitiveType();
+symbol Char  = NewPrimitiveType();
+symbol Int8  = NewPrimitiveType();
+symbol Int16 = NewPrimitiveType();
+symbol Int32 = NewPrimitiveType();
+symbol Int64 = NewPrimitiveType();
+symbol Int = NewPrimitiveType();
+symbol UInt8  = NewPrimitiveType();
+symbol UInt16 = NewPrimitiveType();
+symbol UInt32 = NewPrimitiveType();
+symbol UInt64 = NewPrimitiveType();
+symbol UInt  = NewPrimitiveType();
+symbol Float32 = NewPrimitiveType();
+symbol Float64 = NewPrimitiveType();
+
+overload #ToLowLevelType(Bool) = LLBoolType;
+overload #ToLowLevelType(Char) = LLIntegerType[LLUnsigned, 8];
+overload #ToLowLevelType(Int8 ) = LLIntegerType[LLSigned,  8];
+overload #ToLowLevelType(Int16) = LLIntegerType[LLSigned, 16];
+overload #ToLowLevelType(Int32) = LLIntegerType[LLSigned, 32];
+overload #ToLowLevelType(Int64) = LLIntegerType[LLSigned, 64];
+overload #ToLowLevelType(Int) = LLIntegerType[LLSigned, PlatformCPUPointerBits()];
+overload #ToLowLevelType(UInt8 ) = LLIntegerType[LLUnsigned,  8];
+overload #ToLowLevelType(UInt16) = LLIntegerType[LLUnsigned, 16];
+overload #ToLowLevelType(UInt32) = LLIntegerType[LLUnsigned, 32];
+overload #ToLowLevelType(UInt64) = LLIntegerType[LLUnsigned, 64];
+overload #ToLowLevelType(UInt) = LLIntegerType[LLUnsigned, PlatformCPUPointerBits()];
+overload #ToLowLevelType(Float32) = LLFloatType[32];
+overload #ToLowLevelType(Float64) = LLFloatType[64];
+
+
+//
+// StringConstant
+//
+
+symbol StringConstant;
+overload #Type?(StringConstant) = true;
+overload #ToLowLevelType(StringConstant)
+    = LLTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
+
+
+//
+// Static[T]
+//
+
+symbol Static['T];
+overload #Type?(Static['T]) = true;
+overload #ToLowLevelType(Static['T]) = LLTupleType[];
+
+
+
+//
+// Pointer[T]
+//
+
+symbol Pointer['T];
+overload #Type?(Pointer['T]) = true;
+overload #ToLowLevelType(Pointer['T]) = LLPointerType['T];
+
+
+
+//
+// ExternalCodePointer[ABI, Inputs, Outputs]
+//
+
+symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
+overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
+overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
+    = LLCodePointerType['A, 'V, 'I, 'O];
+
+
+
+//
+// Array[T,n]
+//
+
+symbol Array['T, 'n];
+overload #Type?(Array['T, 'n]) = true;
+overload #ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
+
+
+
+//
+// Tuple[...T]
+//
+
+symbol Tuple[...'T];
+overload #Type?(Tuple[...'T]) = true;
+overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
+
+
+
+//
+// TupleWithTag?
+//
+
+symbol TupleWithTag? = NewStaticFunction();
+overload #TupleWithTag?('x, 'tag) =
+    StaticTuple?('x)
+    and StaticLesser?(0, StaticTupleSize('x))
+    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
+
+
+
+//
+// tupleLiteral, arrayLiteral
+//
+
+tupleLiteral(...elements:'T) returned:Tuple[...'T] __c__ """abort();""";
+arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""";
+
+
+
+//
+// operators
+//
+
+
+index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
+    $returned = &$a.array[$i];
+""";
+
+#Index(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
+    $returned = &$a.field0;
+""";
+
+overload staticIndex(a:Tuple['T0, 'T1, ...'T], #1) ref returned:'T1 __c__ """
+    $returned = &$a.field1;
+""";
+
+fieldRef(a, #'field) x:Int __c__ """abort();""";
+
+plus(a:Int) = a;
+
+minus(a:Int) returned:Int __c__ """
+    $returned = -$a;
+""";
+
+dereference(a:Pointer['T]) ref returned:'T __c__ """
+    $returned = $a;
+""";
+
+multiply(a:Int, b:Int) returned:Int __c__ """
+    $returned = $a * $b;
+""";
+
+divide(a:Int, b:Int) returned:Int __c__ """
+    $returned = $a / $b;
+""";
+
+remainder(a:Int, b:Int) returned:Int __c__ """
+    $returned = $a % $b;
+""";
+
+add(a:Int, b:Int) returned:Int __c__ """
+    $returned = $a + $b;
+""";
+
+subtract(a:Int, b:Int) returned:Int __c__ """
+    $returned = $a - $b;
+""";
+
+lesser?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a < $b;
+""";
+
+lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a <= $b;
+""";
+
+greater?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a > $b;
+""";
+
+greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a >= $b;
+""";
+
+equals?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a == $b;
+""";
+
+notEquals?(a:Int, b:Int) returned:Bool __c__ """
+    $returned = $a != $b;
+""";
+
+assign(ref a, b)                  { a <-- b; }
+addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
+subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
+multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
+divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
+remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+
+//
+// case?
+//
+
+case?(a, forward ...against) {
+    static for (b in ...against)
+        if (a == b)
+            return true;
+    return false;
+}
+
+// iterator, next, hasNext?
+
+symbol iterator;
+symbol next;
+symbol hasNext?;
+
+//
+// call
+//
+
+symbol call;
+
+
+//
+// destroyUnsafe, initializeFromUnsafe
+//
+
+primitiveCopy(ref y, forward x) __c__ """$y = $x;""";
+
+initializeFromUnsafe(ref y, forward x) { primitiveCopy(y, x); }
+destroyUnsafe(ref x) {}
+
+//
+// callMain
+//
+
+callMain() Int { main(); return 0; }
+
+//
+// Ref, Rvalue, Const
+//
+
+symbol Ref['T];
+symbol Rvalue['T];
+symbol Const['T];
+
+//
+// ABI symbols
+//
+
+symbol CdeclABI;
+symbol StdcallABI;
+
+#ABI?('x) = false;
+overload #ABI?(CdeclABI) = true;
+overload #ABI?(StdcallABI) = true;
+
+#ABISupportsVariadics?('x) = false;
+overload #ABISupportsVariadics?(CdeclABI) = true;
+
+//
+// sample non-POD type
+//
+
+symbol NontrivialInt = NewPrimitiveType();
+overload #ToLowLevelType(NontrivialInt) = LLIntegerType[LLSigned, 32];
+overload #PODType?(NontrivialInt) = false;
+
+toNontrivialInt(x:Int) y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
+
+overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
+overload destroyUnsafe(ref i:NontrivialInt) { }

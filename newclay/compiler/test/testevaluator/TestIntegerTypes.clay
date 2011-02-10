@@ -1,6 +1,6 @@
 import __primitives__.*;
 
-static Main() = (
+#Main() = (
     (0, 1, -1, 1_234_567, 0x1234_ABCD, -0x1234_abcd, 0x7FFF_FFFF_FFFF_FFFF, -0x8000_0000_0000_0000),
     (0u8, 100_u8, 0xFFu8),
     (0u16, 100_u16, 0xFFFFu16),

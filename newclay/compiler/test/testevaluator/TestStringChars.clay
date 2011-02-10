@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-static SomeStringChars('s) = 's[0], 's[3], 's[6];
+#SomeStringChars('s) = 's[0], 's[3], 's[6];
 
-static Main() = ...SomeStringChars("hello world");
+#Main() = ...SomeStringChars("hello world");

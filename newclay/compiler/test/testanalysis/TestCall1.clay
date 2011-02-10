@@ -1,4 +1,4 @@
-static staticCallable('x) = 'x;
+#staticCallable('x) = 'x;
 runtimeCallable(x) = x;
 overload call(x:Int, y) = y;
 

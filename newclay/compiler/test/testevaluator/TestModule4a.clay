@@ -2,4 +2,4 @@ import __primitives__.*;
 import factorial;
 
 symbol Main;
-static overload Main() = factorial.Factorial(8);
+overload #Main() = factorial.Factorial(8);

@@ -33,7 +33,7 @@ SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
 
 StaticOverloadDefinition -> "(" ListPattern? ")" Predicate? "=" ExprList ";"
 
-StaticOverload -> "static" "overload" TargetPattern StaticOverloadDefinition
+StaticOverload -> "overload" "#" TargetPattern StaticOverloadDefinition
 
 OverloadDefinition -> "(" ArgumentList? ")" ReturnList?
                       Predicate? CodeBody
@@ -42,7 +42,7 @@ OverloadAttributes -> "inline"?
 
 Overload -> OverloadAttributes "overload" TargetPattern OverloadDefinition
 
-StaticFunction -> Visibility? "static" SymbolName StaticOverloadDefinition
+StaticFunction -> Visibility? "#" SymbolName StaticOverloadDefinition
 
 Procedure -> Visibility? OverloadAttributes SymbolName OverloadDefinition
 

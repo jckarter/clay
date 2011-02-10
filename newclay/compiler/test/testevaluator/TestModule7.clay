@@ -3,4 +3,4 @@ import factorial.*; // has Factorial
 import privatetools.*; // also has Factorial, but private
 
 symbol Main;
-static overload Main() = Factorial(8);
+overload #Main() = Factorial(8);
