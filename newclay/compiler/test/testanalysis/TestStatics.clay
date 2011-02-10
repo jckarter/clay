@@ -1,4 +1,4 @@
-static oneTwoThree() = 1, 2, 3;
+#oneTwoThree() = 1, 2, 3;
 
 main() {
     var x1 = 2;

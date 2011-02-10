@@ -1,1 +1,1 @@
-static Main() = foo: 1;
+#Main() = foo: 1;

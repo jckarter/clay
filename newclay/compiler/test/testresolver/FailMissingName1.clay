@@ -1,4 +1,4 @@
 import __primitives__.*;
 
 symbol Bar = ();
-static overload Bar(x) = ();
+overload #Bar(x) = ();

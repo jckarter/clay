@@ -1,6 +1,6 @@
 import __primitives__.*;
 
-static Main() = PlatformCPUName(),
+#Main() = PlatformCPUName(),
                 PlatformCPUFamilyName(),
                 PlatformCPUPointerBits(),
                 PlatformName(),

@@ -1,6 +1,6 @@
 import __primitives__.*;
 
-static Main() = (
+#Main() = (
     // untyped always wins
     (1 + 2, 1 + 2i8, 1 + 2u8, 1 + 2i16, 1 + 2u16, 1 + 2i32, 1 + 2u32, 1 + 2i64, 1 + 2u64),
     (1 + 2, 1i8 + 2, 1u8 + 2, 1i16 + 2, 1u16 + 2, 1i32 + 2, 1u32 + 2, 1i64 + 2, 1u64 + 2),

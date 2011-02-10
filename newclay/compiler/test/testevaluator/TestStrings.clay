@@ -6,8 +6,8 @@ import __primitives__.*;
 //
 
 symbol MapValues;
-static overload MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
-static overload MapValues('f) = ;
+overload #MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
+overload #MapValues('f) = ;
 
 
 
@@ -16,10 +16,10 @@ static overload MapValues('f) = ;
 //
 
 symbol StringChar;
-static overload StringChar('s, 'i) = StaticStringSlice('s, 'i, StaticAdd('i, 1));
+overload #StringChar('s, 'i) = StaticStringSlice('s, 'i, StaticAdd('i, 1));
 
 symbol ReverseString;
-static overload ReverseString('s) =
+overload #ReverseString('s) =
     StaticStringConcat(...MapValues(
         i => StringChar('s, StaticSubtract(StaticStringSize('s), StaticAdd(i,1))),
         ...StaticIntegers(StaticStringSize('s)),
@@ -32,4 +32,4 @@ static overload ReverseString('s) =
 //
 
 symbol Main;
-static overload Main() = ReverseString("foobar");
+overload #Main() = ReverseString("foobar");

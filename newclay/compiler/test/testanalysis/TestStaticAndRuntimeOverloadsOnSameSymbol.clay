@@ -1,5 +1,5 @@
 symbol foo;
 overload foo(x) = x;
-static overload foo('x) = 'x;
+overload #foo('x) = 'x;
 
 main() = foo(2), #foo(2);

@@ -6,8 +6,8 @@ import __primitives__.*;
 //
 
 symbol MapValues;
-static overload MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
-static overload MapValues('f) = ;
+overload #MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
+overload #MapValues('f) = ;
 
 
 
@@ -24,7 +24,7 @@ symbol String;
 
 
 symbol TupleWithTag?;
-static overload TupleWithTag?('x, 'tag) =
+overload #TupleWithTag?('x, 'tag) =
     StaticTuple?('x)
     and StaticLesser?(0, StaticTupleSize('x))
     and StaticEquals?(StaticTupleElement('x, 0), 'tag);
@@ -38,32 +38,32 @@ static overload TupleWithTag?('x, 'tag) =
 symbol RecordTag;
 
 symbol RecordType;
-static overload RecordType(...'fields) =
+overload #RecordType(...'fields) =
     (RecordTag, FieldNames(...'fields), FieldTypes(...'fields));
 
 symbol FieldNames;
-static overload FieldNames(...'fields) =
+overload #FieldNames(...'fields) =
     (...MapValues(f => StaticTupleElement(f, 0), ...'fields));
 
 symbol FieldTypes;
-static overload FieldTypes(...'fields) =
+overload #FieldTypes(...'fields) =
     (...MapValues(f => StaticTupleElement(f, 1), ...'fields));
 
 symbol Record?;
-static overload Record?('t) =
+overload #Record?('t) =
     StaticSymbol?('t)
     and TupleWithTag?(StaticSymbolBody('t), RecordTag);
 
 symbol RecordFieldCount;
-static overload RecordFieldCount('t) | Record?('t) =
+overload #RecordFieldCount('t) | Record?('t) =
     StaticTupleSize(StaticTupleElement(StaticSymbolBody('t), 1));
 
 symbol RecordFieldNames;
-static overload RecordFieldNames('t) | Record?('t) =
+overload #RecordFieldNames('t) | Record?('t) =
     StaticTupleElement(StaticSymbolBody('t), 1);
 
 symbol RecordFieldTypes;
-static overload RecordFieldTypes('t) | Record?('t) =
+overload #RecordFieldTypes('t) | Record?('t) =
     StaticTupleElement(StaticSymbolBody('t), 2);
 
 
@@ -75,15 +75,15 @@ static overload RecordFieldTypes('t) | Record?('t) =
 symbol VariantTag;
 
 symbol VariantType;
-static overload VariantType(...'members) = (VariantTag, (...'members));
+overload #VariantType(...'members) = (VariantTag, (...'members));
 
 symbol Variant?;
-static overload Variant?('t) = 
+overload #Variant?('t) = 
     StaticSymbol?('t)
     and TupleWithTag?(StaticSymbolBody('t), VariantTag);
 
 symbol VariantMembers;
-static overload VariantMembers('t) | Variant?('t) = (
+overload #VariantMembers('t) | Variant?('t) = (
     ...StaticTupleElements(StaticTupleElement(StaticSymbolBody('t), 1)),
     ...StaticTupleElements(StaticSymbolAttributes('t)),
 );
@@ -108,7 +108,7 @@ symbol AssertionError = RecordType(
 attribute Exception = AssertionError;
 
 symbol Main;
-static overload Main() = (
+overload #Main() = (
     Variant?(String),
     Variant?(Exception),
     VariantMembers(Exception)

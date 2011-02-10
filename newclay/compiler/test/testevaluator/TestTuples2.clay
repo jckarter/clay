@@ -1,6 +1,6 @@
 import __primitives__.*;
 
-static ReversePair('a) = ('a.1, 'a.0);
+#ReversePair('a) = ('a.1, 'a.0);
 
 symbol Main;
-static overload Main() = ReversePair((1, "two"));
+overload #Main() = ReversePair((1, "two"));

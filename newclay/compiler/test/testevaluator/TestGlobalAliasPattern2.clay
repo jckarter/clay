@@ -4,6 +4,6 @@ symbol Bar2;
 
 alias Bas['B] = Foo[Bar, 'B];
 
-static Barf(Bas['B]) = "BARF!!";
+#Barf(Bas['B]) = "BARF!!";
 
-static Main() = Barf(Foo[Bar, Bar2]), Barf(Bas[Bar2]);
+#Main() = Barf(Foo[Bar, Bar2]), Barf(Bas[Bar2]);

@@ -6,7 +6,7 @@ import factorial;
 symbol Foo['X];
 symbol Bar;
 
-static Main()
+#Main()
     = StaticModule(StaticModule),
       StaticModule(Factorial),
       StaticModule(Foo),

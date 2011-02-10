@@ -5,14 +5,14 @@ symbol Many;
 symbol FullHouse;
 
 symbol MatchTuple;
-static overload MatchTuple(()) = Empty;
-static overload MatchTuple(('x,)) = One;
-static overload MatchTuple(('x, 'y)) = Two;
-static overload MatchTuple(('x, 'y, 'z, ...'w)) = Many;
-static overload MatchTuple(('x, 'y, 'z, ...'w)) = Many;
-static overload MatchTuple(('x, 'x, 'x, 'y, 'y)) = FullHouse;
+overload #MatchTuple(()) = Empty;
+overload #MatchTuple(('x,)) = One;
+overload #MatchTuple(('x, 'y)) = Two;
+overload #MatchTuple(('x, 'y, 'z, ...'w)) = Many;
+overload #MatchTuple(('x, 'y, 'z, ...'w)) = Many;
+overload #MatchTuple(('x, 'x, 'x, 'y, 'y)) = FullHouse;
 
-static Main() =
+#Main() =
     MatchTuple(()),
     MatchTuple((1,)),
     MatchTuple((1, true)),
