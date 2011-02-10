@@ -1,4 +1,4 @@
-nonterminatingForFloat(x:Int32) = x;
+nonterminatingForFloat(x:Int) = x;
 overload nonterminatingForFloat(x:Float64) { throw 0; }
 
 main() {

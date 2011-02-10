@@ -1675,7 +1675,8 @@ addCapture(s, stmt, value, ...name) {
 }
 
 private procedure intValueType;
-overload intValueType(v:StaticIntValue) = int32Type(); // XXX integer literal polymorphism
+overload intValueType(v:StaticIntValue) = intType();
+overload intValueType(v:StaticUIntValue) = uintType();
 overload intValueType(v:UInt8)  = uint8Type();
 overload intValueType(v:UInt16) = uint16Type();
 overload intValueType(v:UInt32) = uint32Type();

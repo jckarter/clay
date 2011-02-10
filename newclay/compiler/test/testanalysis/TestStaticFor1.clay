@@ -1,6 +1,6 @@
 foo() = 1, true, "three", 4.5;
 
-bar(x:Int32) {}
+bar(x:Int) {}
 overload bar(x:Bool) {}
 overload bar(x:StringConstant) {}
 overload bar(x:Float64) {}

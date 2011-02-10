@@ -1,9 +1,9 @@
 import __primitives__.*;
 
-valueReturn() x:Int32 __c__ """abort();""";
-refReturn() ref x:Int32 __c__ """abort();""";
-rvalueReturn() rvalue x:Int32 __c__ """abort();""";
-constReturn() const x:Int32 __c__ """abort();""";
+valueReturn() x:Int __c__ """abort();""";
+refReturn() ref x:Int __c__ """abort();""";
+rvalueReturn() rvalue x:Int __c__ """abort();""";
+constReturn() const x:Int __c__ """abort();""";
 
 main() {
     return ...#Type(valueReturn(), refReturn(), rvalueReturn(), constReturn()),

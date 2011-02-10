@@ -54,7 +54,7 @@ static overload Type?('x) | PrimitiveType?('x) = true;
 
 
 //
-// Bool, Char, *Int32*, Float*
+// Bool, Char, *Int*, Float*
 //
 
 symbol Bool = NewPrimitiveType();
@@ -63,10 +63,12 @@ symbol Int8  = NewPrimitiveType();
 symbol Int16 = NewPrimitiveType();
 symbol Int32 = NewPrimitiveType();
 symbol Int64 = NewPrimitiveType();
+symbol Int = NewPrimitiveType();
 symbol UInt8  = NewPrimitiveType();
 symbol UInt16 = NewPrimitiveType();
 symbol UInt32 = NewPrimitiveType();
 symbol UInt64 = NewPrimitiveType();
+symbol UInt  = NewPrimitiveType();
 symbol Float32 = NewPrimitiveType();
 symbol Float64 = NewPrimitiveType();
 
@@ -76,10 +78,12 @@ static overload ToLowLevelType(Int8 ) = LLIntegerType[LLSigned,  8];
 static overload ToLowLevelType(Int16) = LLIntegerType[LLSigned, 16];
 static overload ToLowLevelType(Int32) = LLIntegerType[LLSigned, 32];
 static overload ToLowLevelType(Int64) = LLIntegerType[LLSigned, 64];
+static overload ToLowLevelType(Int) = LLIntegerType[LLSigned, PlatformCPUPointerBits()];
 static overload ToLowLevelType(UInt8 ) = LLIntegerType[LLUnsigned,  8];
 static overload ToLowLevelType(UInt16) = LLIntegerType[LLUnsigned, 16];
 static overload ToLowLevelType(UInt32) = LLIntegerType[LLUnsigned, 32];
 static overload ToLowLevelType(UInt64) = LLIntegerType[LLUnsigned, 64];
+static overload ToLowLevelType(UInt) = LLIntegerType[LLUnsigned, PlatformCPUPointerBits()];
 static overload ToLowLevelType(Float32) = LLFloatType[32];
 static overload ToLowLevelType(Float64) = LLFloatType[64];
 
@@ -171,7 +175,7 @@ arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""
 //
 
 
-index(a:Array['T, 'n], i:Int32) ref returned:'T __c__ """
+index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
     $returned = &$a.array[$i];
 """;
 
@@ -183,11 +187,11 @@ overload staticIndex(a:Tuple['T0, 'T1, ...'T], #1) ref returned:'T1 __c__ """
     $returned = &$a.field1;
 """;
 
-fieldRef(a, #'field) x:Int32 __c__ """abort();""";
+fieldRef(a, #'field) x:Int __c__ """abort();""";
 
-plus(a:Int32) = a;
+plus(a:Int) = a;
 
-minus(a:Int32) returned:Int32 __c__ """
+minus(a:Int) returned:Int __c__ """
     $returned = -$a;
 """;
 
@@ -195,56 +199,56 @@ dereference(a:Pointer['T]) ref returned:'T __c__ """
     $returned = $a;
 """;
 
-multiply(a:Int32, b:Int32) returned:Int32 __c__ """
+multiply(a:Int, b:Int) returned:Int __c__ """
     $returned = $a * $b;
 """;
 
-divide(a:Int32, b:Int32) returned:Int32 __c__ """
+divide(a:Int, b:Int) returned:Int __c__ """
     $returned = $a / $b;
 """;
 
-remainder(a:Int32, b:Int32) returned:Int32 __c__ """
+remainder(a:Int, b:Int) returned:Int __c__ """
     $returned = $a % $b;
 """;
 
-add(a:Int32, b:Int32) returned:Int32 __c__ """
+add(a:Int, b:Int) returned:Int __c__ """
     $returned = $a + $b;
 """;
 
-subtract(a:Int32, b:Int32) returned:Int32 __c__ """
+subtract(a:Int, b:Int) returned:Int __c__ """
     $returned = $a - $b;
 """;
 
-lesser?(a:Int32, b:Int32) returned:Bool __c__ """
+lesser?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a < $b;
 """;
 
-lesserEquals?(a:Int32, b:Int32) returned:Bool __c__ """
+lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a <= $b;
 """;
 
-greater?(a:Int32, b:Int32) returned:Bool __c__ """
+greater?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a > $b;
 """;
 
-greaterEquals?(a:Int32, b:Int32) returned:Bool __c__ """
+greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a >= $b;
 """;
 
-equals?(a:Int32, b:Int32) returned:Bool __c__ """
+equals?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a == $b;
 """;
 
-notEquals?(a:Int32, b:Int32) returned:Bool __c__ """
+notEquals?(a:Int, b:Int) returned:Bool __c__ """
     $returned = $a != $b;
 """;
 
 assign(ref a, b)                  { a <-- b; }
-addAssign(ref a:Int32, b:Int32)       { a <-- add(a, b); }
-subtractAssign(ref a:Int32, b:Int32)  { a <-- subtract(a, b); }
-multiplyAssign(ref a:Int32, b:Int32)  { a <-- multiply(a, b); }
-divideAssign(ref a:Int32, b:Int32)    { a <-- divide(a, b); }
-remainderAssign(ref a:Int32, b:Int32) { a <-- remainder(a, b); }
+addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
+subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
+multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
+divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
+remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
 
 //
 // case?
@@ -283,7 +287,7 @@ destroyUnsafe(ref x) {}
 // callMain
 //
 
-callMain() Int32 { main(); return 0; }
+callMain() Int { main(); return 0; }
 
 //
 // Ref, Rvalue, Const
@@ -315,8 +319,8 @@ symbol NontrivialInt = NewPrimitiveType();
 static overload ToLowLevelType(NontrivialInt) = LLIntegerType[LLSigned, 32];
 static overload PODType?(NontrivialInt) = false;
 
-toNontrivialInt(x:Int32) y:NontrivialInt { primitiveCopy(y, x); }
-fromNontrivialInt(x:NontrivialInt) y:Int32 { primitiveCopy(y, x); }
+toNontrivialInt(x:Int) y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
 
 overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }

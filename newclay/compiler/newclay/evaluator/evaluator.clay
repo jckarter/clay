@@ -118,15 +118,16 @@ parseIntLiteral(s) {
 
     switch (suffix) {
     case "":
+    case "i":
         return IntValue(StaticIntValue(Int64(number)));
+    case "u":
+        return IntValue(StaticUIntValue(UInt64(number)));
     case "u64":
         return IntValue(UInt64(number));
     case "i64":
         return IntValue(Int64(number));
-    case "u":
     case "u32":
         return IntValue(UInt32(number));
-    case "i":
     case "i32":
         return IntValue(Int32(number));
     case "u16":

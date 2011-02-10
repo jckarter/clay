@@ -2,38 +2,38 @@ import __primitives__.(CallDefinedForSymbol?);
 
 foo(x) {}
 
-bar(x:Int32) {}
+bar(x:Int) {}
 overload bar(x:Float64) {}
 
-bas(x:'T) | 'T == Int32 or 'T == Float64 {}
+bas(x:'T) | 'T == Int or 'T == Float64 {}
 
-zim(rvalue x:Int32) {}
+zim(rvalue x:Int) {}
 
-zang(ref x:Int32) {}
+zang(ref x:Int) {}
 
 static Main()
-    = CallDefinedForSymbol?(foo, Int32),
-      CallDefinedForSymbol?(foo, Tuple[Int32, Char, Bool]),
-      CallDefinedForSymbol?(foo, Ref[Int32]),
-      CallDefinedForSymbol?(foo, Rvalue[Int32]),
-      CallDefinedForSymbol?(foo, Const[Int32]),
+    = CallDefinedForSymbol?(foo, Int),
+      CallDefinedForSymbol?(foo, Tuple[Int, Char, Bool]),
+      CallDefinedForSymbol?(foo, Ref[Int]),
+      CallDefinedForSymbol?(foo, Rvalue[Int]),
+      CallDefinedForSymbol?(foo, Const[Int]),
 
-      CallDefinedForSymbol?(bar, Int32),
+      CallDefinedForSymbol?(bar, Int),
       CallDefinedForSymbol?(bar, Float64),
       CallDefinedForSymbol?(bar, Char),
 
-      CallDefinedForSymbol?(bas, Int32),
+      CallDefinedForSymbol?(bas, Int),
       CallDefinedForSymbol?(bas, Float64),
       CallDefinedForSymbol?(bas, Char),
 
-      CallDefinedForSymbol?(zim, Int32),
-      CallDefinedForSymbol?(zim, Ref[Int32]),
-      CallDefinedForSymbol?(zim, Rvalue[Int32]),
-      CallDefinedForSymbol?(zim, Const[Int32]),
+      CallDefinedForSymbol?(zim, Int),
+      CallDefinedForSymbol?(zim, Ref[Int]),
+      CallDefinedForSymbol?(zim, Rvalue[Int]),
+      CallDefinedForSymbol?(zim, Const[Int]),
 
-      CallDefinedForSymbol?(zang, Int32),
-      CallDefinedForSymbol?(zang, Ref[Int32]),
-      CallDefinedForSymbol?(zang, Rvalue[Int32]),
-      CallDefinedForSymbol?(zang, Const[Int32]);
+      CallDefinedForSymbol?(zang, Int),
+      CallDefinedForSymbol?(zang, Ref[Int]),
+      CallDefinedForSymbol?(zang, Rvalue[Int]),
+      CallDefinedForSymbol?(zang, Const[Int]);
 
 main() = ...#Main();

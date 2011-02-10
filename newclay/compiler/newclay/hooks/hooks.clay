@@ -89,10 +89,12 @@ ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
 
 boolType() = getHooks().Bool;
 charType() = getHooks().Char;
+uintType () = getHooks().UInt;
 uint8Type () = getHooks().UInt8;
 uint16Type() = getHooks().UInt16;
 uint32Type() = getHooks().UInt32;
 uint64Type() = getHooks().UInt64;
+intType () = getHooks().Int;
 int8Type () = getHooks().Int8;
 int16Type() = getHooks().Int16;
 int32Type() = getHooks().Int32;

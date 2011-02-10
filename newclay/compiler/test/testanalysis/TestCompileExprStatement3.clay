@@ -1,5 +1,5 @@
 symbol fanfare;
-overload fanfare() r:Int32 __c__ """
+overload fanfare() r:Int __c__ """
     printf("hello world");
     *r = 2;
 """;
