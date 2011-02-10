@@ -104,10 +104,13 @@ Pattern -> BoolLiteral
          | IntLiteral
          | StringLiteral
          | IndexingPattern
+         | TuplePattern
          | Identifier
          | PatternNameRef
 
 IndexingPattern -> Identifier "[" ListPattern "]"
+
+TuplePattern -> "(" ListPattern ")"
 
 TargetPattern -> IndexingPattern
                | Identifier
