@@ -1,4 +1,4 @@
-external x1(x:Int32);
+external x1(x:Int);
 
 main() {
     return x1, x1;

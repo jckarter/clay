@@ -1,6 +1,6 @@
 var y = 2;
 
-foo() Int32 = y;
+foo() Int = y;
 
 var x = foo();
 

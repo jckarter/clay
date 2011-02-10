@@ -2,6 +2,6 @@ symbol id;
 overload id(ref x) = ref x;
 
 symbol main;
-overload main() r:Int32 {
+overload main() r:Int {
     r <-- id(r);
 }

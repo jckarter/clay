@@ -73,10 +73,12 @@ record ClayHooks (
 
     Bool: Value,
     Char: Value,
+    Int: Value,
     Int8: Value,
     Int16: Value,
     Int32: Value,
     Int64: Value,
+    UInt: Value,
     UInt8: Value,
     UInt16: Value,
     UInt32: Value,
@@ -800,7 +802,7 @@ record StringValue(value: String);
 record TupleValue(elements: ValueList);
 record LambdaValue(value: ast.LambdaExpr, env: EnvParent);
 
-variant IntValue = StaticIntValue
+variant IntValue = StaticIntValue | StaticUIntValue
                  |  Int8 |  Int16 |  Int32 |  Int64
                  | UInt8 | UInt16 | UInt32 | UInt64;
 variant FloatValue = Float32 | Float64;
@@ -818,37 +820,72 @@ overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, EnvPare
 
 // XXX use arbitrary-precision int here
 record StaticIntValue (value:Int64);
+record StaticUIntValue (value:UInt64);
 
-[I | Integer?(I)]
-overload equals?(x:StaticIntValue, y:I) = x.value == y;
-[I | Integer?(I)]
-overload equals?(x:I, y:StaticIntValue) = x == y.value;
-[I | Integer?(I)]
-overload lesser?(x:StaticIntValue, y:I) = x.value < y;
-[I | Integer?(I)]
-overload lesser?(x:I, y:StaticIntValue) = x < y.value;
+StaticInteger?(X) = false;
+overload StaticInteger?(static StaticIntValue) = true;
+overload StaticInteger?(static StaticUIntValue) = true;
 
-overload Int64(x:StaticIntValue) = x.value;
-overload UInt64(x:StaticIntValue) = UInt64(x.value);
+[SI, I | StaticInteger?(SI) and Integer?(I)]
+overload equals?(x:SI, y:I) = x.value == y;
+[SI, I | StaticInteger?(SI) and Integer?(I)]
+overload equals?(x:I, y:SI) = x == y.value;
+[SI, I | StaticInteger?(SI) and Integer?(I)]
+overload lesser?(x:SI, y:I) = x.value < y;
+[SI, I | StaticInteger?(SI) and Integer?(I)]
+overload lesser?(x:I, y:SI) = x < y.value;
 
-StaticIntValueArgs?(I, J)
+[SI, SJ | StaticInteger?(SI) and StaticInteger?(SJ)]
+overload equals?(x:SI, y:SJ) = x.value == y.value;
+[SI, SJ | StaticInteger?(SI) and StaticInteger?(SJ)]
+overload lesser?(x:SI, y:SJ) = x.value == y.value;
+
+overload Int64(x:StaticIntValue)  = x.value;
+overload Int64(x:StaticUIntValue) = Int64(x.value);
+
+// work around oldclay compiler bug.
+// for some reason it refuses to see a UInt64(StaticIntValue) overload
+toUInt64(x) = UInt64(x);
+overload toUInt64(x:StaticIntValue)  = UInt64(x.value);
+overload toUInt64(x:StaticUIntValue) = x.value;
+
+private StaticIntValueArgs?(I, J)
     = VariantMember?(IntValue, I)
     and VariantMember?(IntValue, J)
-    and inValues?(StaticIntValue, I, J);
+    and (StaticInteger?(I) or StaticInteger?(J));
+
+private StaticIntResultType(I, J) = StaticIntValue;
+[I]
+overload StaticIntResultType(static StaticUIntValue, static I) = StaticUIntValue;
+[I]
+overload StaticIntResultType(static I, static StaticUIntValue) = StaticUIntValue;
+
+private StaticIntValueType(I, J) = Int64;
+[I, J | inValues?(StaticUIntValue, I, J)]
+overload StaticIntValueType(static I, static J) = toUInt64;
 
 [I, J | StaticIntValueArgs?(I, J)]
-overload add(x:I, y:J) = StaticIntValue(Int64(x) + Int64(y));
-[I, J | StaticIntValueArgs?(I, J)]
-overload subtract(x:I, y:J) = StaticIntValue(Int64(x) - Int64(y));
-[I, J | StaticIntValueArgs?(I, J)]
-overload multiply(x:I, y:J) = StaticIntValue(Int64(x) * Int64(y));
-[I, J | StaticIntValueArgs?(I, J)]
-overload divide(x:I, y:J) = StaticIntValue(Int64(x) / Int64(y));
-[I, J | StaticIntValueArgs?(I, J)]
-overload remainder(x:I, y:J) = StaticIntValue(Int64(x) % Int64(y));
+private staticIntMath(fn, x:I, y:J) {
+    alias ValueT = StaticIntValueType(I, J);
+    alias ResultT = StaticIntResultType(I, J);
+    return ResultT(fn(ValueT(x), ValueT(y)));
+}
 
-overload plus(x:StaticIntValue) = x;
-overload minus(x:StaticIntValue) = StaticIntValue(-x.value);
+[I, J | StaticIntValueArgs?(I, J)]
+overload add(x:I, y:J)       = staticIntMath(add,       x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload subtract(x:I, y:J)  = staticIntMath(subtract,  x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload multiply(x:I, y:J)  = staticIntMath(multiply,  x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload divide(x:I, y:J)    = staticIntMath(divide,    x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload remainder(x:I, y:J) = staticIntMath(remainder, x, y);
+
+[SI | StaticInteger?(SI)]
+overload plus(x:SI) = x;
+[SI | StaticInteger?(SI)]
+overload minus(x:SI) = SI(-x.value);
 
 // IntValue operations
 
@@ -868,6 +905,7 @@ overload divide   (x:IntValue, y:IntValue) = applyToIntValue(divide,    *x, *y);
 overload remainder(x:IntValue, y:IntValue) = applyToIntValue(remainder, *x, *y);
 
 overload Int64(x:IntValue) = Int64(*x);
+overload UInt64(x:IntValue) = UInt64(*x);
 
 // Treat FloatValues as equivalent on bitwise equality, not float equality
 
@@ -1004,7 +1042,8 @@ overload printTo(stream, c:CharValue) {
 }
 overload printTo(stream, v:IntValue) {
     match(v,
-        StaticIntValue, x ref=> { printTo(stream, x.value); },
+        StaticIntValue,  x ref=> { printTo(stream, x.value); },
+        StaticUIntValue, x ref=> { printTo(stream, x.value, "u"); },
         UInt8,  x ref=> { printTo(stream, x, "u8" ); },
         UInt16, x ref=> { printTo(stream, x, "u16"); },
         UInt32, x ref=> { printTo(stream, x, "u32"); },

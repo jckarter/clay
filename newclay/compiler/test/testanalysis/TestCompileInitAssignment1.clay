@@ -1,4 +1,4 @@
 symbol main;
-overload main() r:Int32 {
+overload main() r:Int {
     r <-- 1;
 }

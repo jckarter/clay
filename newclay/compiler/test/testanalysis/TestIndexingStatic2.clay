@@ -1,5 +1,5 @@
 foo() = Array;
 
 main() {
-    return foo()[Int32, 2];
+    return foo()[Int, 2];
 }

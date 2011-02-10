@@ -3,7 +3,7 @@ symbol nonterminating;
 overload nonterminating() { throw 0; }
 
 symbol foo;
-overload foo(x:Int32) = if (true) nonterminating() else nonterminating();
+overload foo(x:Int) = if (true) nonterminating() else nonterminating();
 
 symbol main;
 overload main() = foo(2);

@@ -1,4 +1,4 @@
-refReturn() rvalue x:Int32 __c__ """abort();""";
+refReturn() rvalue x:Int __c__ """abort();""";
 
 main() {
     return &refReturn();

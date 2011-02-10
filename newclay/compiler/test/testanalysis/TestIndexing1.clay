@@ -1,4 +1,4 @@
-makeArray() r:Array[Int32, 12] __c__ """abort();""";
+makeArray() r:Array[Int, 12] __c__ """abort();""";
 
 main() {
     var x = makeArray();

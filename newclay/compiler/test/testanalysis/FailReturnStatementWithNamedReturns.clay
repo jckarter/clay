@@ -1,3 +1,3 @@
-main() r:Int32 {
+main() r:Int {
     return 1;
 }

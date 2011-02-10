@@ -1,3 +1,3 @@
 var x['T]:'T;
 
-main() = x[Int32], x[Float32];
+main() = x[Int], x[Float32];

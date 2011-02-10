@@ -1,5 +1,5 @@
 var x = foo();
-foo() Int32 = y;
+foo() Int = y;
 var y = x;
 
 main() = x;
