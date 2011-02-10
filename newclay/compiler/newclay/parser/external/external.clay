@@ -677,8 +677,13 @@ private var indexingPattern = patternParser(
     sequence(nameRef, punc(#"["), listPattern, punc(#"]")),
 );
 
+private var tuplePattern = patternParser(
+    x => TuplePattern(move(x.1)),
+    sequence(punc(#"("), listPattern, punc(#")")),
+);
+
 private var targetPattern = choice(
-    indexingPattern, nameRefPattern, patternNameRefPattern
+    indexingPattern, nameRefPattern, patternNameRefPattern, tuplePattern,
 );
 
 private var pattern2 = choice(

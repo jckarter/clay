@@ -382,11 +382,16 @@ variant Pattern = BoolLiteral
                 | NameRef
                 | PatternNameRef
                 | IndexingPattern
+                | TuplePattern
                 ;
 
 record IndexingPattern = ast(
     base: Expr,
     args: ListPattern,
+);
+
+record TuplePattern = ast(
+    elements: ListPattern,
 );
 
 
