@@ -1,0 +1,20 @@
+symbol Empty;
+symbol One;
+symbol Two;
+symbol Many;
+symbol FullHouse;
+
+symbol MatchTuple;
+static overload MatchTuple(()) = Empty;
+static overload MatchTuple(('x,)) = One;
+static overload MatchTuple(('x, 'y)) = Two;
+static overload MatchTuple(('x, 'y, 'z, ...'w)) = Many;
+static overload MatchTuple(('x, 'y, 'z, ...'w)) = Many;
+static overload MatchTuple(('x, 'x, 'x, 'y, 'y)) = FullHouse;
+
+static Main() =
+    MatchTuple(()),
+    MatchTuple((1,)),
+    MatchTuple((1, true)),
+    MatchTuple((1, true, '3')),
+    MatchTuple((1, 1, 1, 2, 2));

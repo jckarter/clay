@@ -1,0 +1,16 @@
+static foo('T) = ;
+static foo(bar) = ;
+static foo(1) = ;
+static foo(true) = ;
+static foo('3') = ;
+static foo("four") = ;
+static foo(bar[]) = ;
+static foo(bar["foo"]) = ;
+static foo(bar['T]) = ;
+static foo(bar[...'T]) = ;
+static foo(bar['T, 'U, ...'V]) = ;
+static foo(()) = ;
+static foo(('T,)) = ;
+static foo((1, true, '3', "four")) = ;
+static foo(('T, ...'U)) = ;
+static foo(bar[('T, ...'U), ('V, ...'W)]) = ;
