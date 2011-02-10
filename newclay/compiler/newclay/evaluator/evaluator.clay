@@ -894,6 +894,10 @@ overload evaluatePattern(x:ast.IndexingPattern, env) {
     var args = evaluateListPattern(x.args, env);
     return evaluateIndexingPattern(base, args);
 }
+overload evaluatePattern(x:ast.TuplePattern, env) {
+    var elements = evaluateListPattern(x.elements, env);
+    return Pattern(TuplePattern(elements));
+}
 
 
 
@@ -978,6 +982,13 @@ overload unify(p:SymbolPattern, x:Value) {
     if (p.head != y.head)
         return false;
     return unifyList(p.params, y.params);
+}
+
+overload unify(p:TuplePattern, x:Value) {
+    if (not variantIs?(x, TupleValue))
+        return false;
+    var y = variantAs(x, TupleValue);
+    return unifyList(p.elements, y.elements);
 }
 
 
@@ -1128,6 +1139,9 @@ overload walkPattern(x:ast.NameRef, visitor) {}
 overload walkPattern(x:ast.PatternNameRef, visitor) {}
 overload walkPattern(x:ast.IndexingPattern, visitor) {
     walkListPattern(x.args, visitor);
+}
+overload walkPattern(x:ast.TuplePattern, visitor) {
+    walkListPattern(x.elements, visitor);
 }
 
 procedure walkMultiPattern;
