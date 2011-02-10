@@ -1,4 +1,4 @@
-symbol main = Procedure();
+symbol main;
 overload main() r:Int32 __c__ """
     *r = 1;
 """;

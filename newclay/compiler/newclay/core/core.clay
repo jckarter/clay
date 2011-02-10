@@ -56,8 +56,8 @@ primitivesModule(program:Program) = ref program.modules[primitivesModuleName];
 preludeModule(program:Program) = ref program.modules[preludeModuleName];
 
 record ClayHooks (
-    TypeTemplate?: Value,
     Type?: Value,
+    PODType?: Value,
 
     ToLowLevelType: Value,
     LLSigned: Value,
@@ -87,11 +87,6 @@ record ClayHooks (
     Pointer: Value,
     ExternalCodePointer: Value,
     StringConstant: Value,
-
-    Procedure: Value,
-
-    Procedure?: Value,
-    PODType?: Value,
 
     Ref: Value,
     Const: Value,
@@ -186,7 +181,6 @@ record SymbolHead = referenceType(
     astName: ast.SymbolName,
     module: Module,
     instances: HashMap[ValueList, EnvEntry],
-    typeTemplate?: TriState[Bool],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
 );
@@ -194,7 +188,7 @@ record SymbolHead = referenceType(
 overload SymbolHead(a:SymbolHeadAST, name:ast.SymbolName, module:Module) =
     SymbolHead(
         a, name, module, HashMap[ValueList, EnvEntry](),
-        TriState[Bool](), EvalTable(), InvokeTable(),
+        EvalTable(), InvokeTable(),
     );
 
 symbolHeadHasParams?(x:SymbolHead) {
@@ -213,7 +207,6 @@ record Symbol = referenceType(
     body: TriState[Value],
     attributes: TriState[Value],
     type?: TriState[Bool],
-    procedure?: TriState[Bool],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
 );
@@ -222,7 +215,7 @@ overload Symbol(head:SymbolHead, params:ValueList, env:Env)
     = Symbol(
         head, params, env,
         TriState[Value](), TriState[Value](),
-        TriState[Bool](), TriState[Bool](),
+        TriState[Bool](),
         EvalTable(),
         InvokeTable(),
     );

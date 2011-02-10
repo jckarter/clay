@@ -28,27 +28,14 @@ initializeClayHooks() {
 
 
 //
-// symbolHeadTypeTemplate?, symbolType?, symbolProcedure?
+// symbolType?
 //
-
-symbolHeadTypeTemplate?(head:SymbolHead) {
-    return safeInitialize(head.typeTemplate?,
-        () ref=> evaluateBoolCall(getHooks().TypeTemplate?, ValueList(head)),
-    );
-}
 
 symbolType?(x:Symbol) {
     return safeInitialize(x.type?,
         () ref=> evaluateBoolCall(getHooks().Type?, ValueList(x)),
     );
 }
-
-symbolProcedure?(x:Symbol) {
-    return safeInitialize(x.procedure?,
-        () ref=> evaluateBoolCall(getHooks().Procedure?, ValueList(x)),
-    );
-}
-
 
 
 //

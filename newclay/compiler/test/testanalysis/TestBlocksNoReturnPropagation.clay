@@ -1,10 +1,10 @@
 
-symbol noReturn = Procedure();
+symbol noReturn;
 overload noReturn() {
     throw 0;
 }
 
-symbol main = Procedure();
+symbol main;
 overload main() {
     noReturn();
 }

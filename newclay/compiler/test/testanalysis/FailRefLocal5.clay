@@ -1,5 +1,5 @@
 
-symbol main = Procedure();
+symbol main;
 overload main() {
     rvalue x = true;
     return rvalue x;

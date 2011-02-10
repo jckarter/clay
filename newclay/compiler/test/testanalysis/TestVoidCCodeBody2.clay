@@ -1,7 +1,7 @@
 
-symbol foo = Procedure();
+symbol foo;
 overload foo() __c__ """abort();""";
 
-symbol main = Procedure();
+symbol main;
 overload main() { foo(); }
 

@@ -1358,27 +1358,6 @@ evaluateAttributes(target) {
 
 
 //
-// runtimeCallable?
-//
-
-runtimeCallable?(x:Value) {
-    return match(x,
-        SymbolHead, y => symbolHeadTypeTemplate?(y),
-        Symbol, y => (symbolType?(y) or symbolProcedure?(y)),
-        MatchDefault, y => false,
-    );
-}
-
-staticCallable?(x:Value) {
-    return match(x,
-        SymbolHead, y => true,
-        Symbol, y => true,
-        MatchDefault, y => false,
-    );
-}
-
-
-//
 // memoizeStaticCall, evaluateStaticCall
 //
 
@@ -1399,7 +1378,7 @@ evaluateStaticCall(program, callable, args)
     = withStaticCall(callable, args, () ref=> ifStaticOverload(program, callable, args,
         (oload, env) ref=> evaluateExprList(oload.ast.definition.body, env),
         () ref=> {
-            genericError("no matching operation");
+            genericError("no matching static overload");
             return ValueList();
         }
     ));

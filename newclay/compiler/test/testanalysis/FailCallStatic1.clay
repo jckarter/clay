@@ -1,0 +1,5 @@
+static staticCallable('x) = 'x;
+
+main() {
+    return staticCallable(2);
+}

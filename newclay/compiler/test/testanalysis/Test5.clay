@@ -1,4 +1,4 @@
 
-symbol main = Procedure();
+symbol main;
 overload main() = ;
 
