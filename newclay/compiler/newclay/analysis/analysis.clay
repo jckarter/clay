@@ -914,7 +914,13 @@ private analyzeInitialize(s, env:Env, stmt) {
                 genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
             for (toValue, fromValue in zipped(toValues, fromValues)) {
                 if (toValue.kind != RT_VALUE_REF)
-                    genericError("values on left side of <-- must be non-const lvalues");
+                    genericError("values on left side of <-- expression must be non-const lvalues");
+                if (toValue.type != fromValue.type)
+                    genericError(
+                        "type mismatch in <-- expression\n",
+                        "  left side:  ", map(x => x.type, toValues),   "\n",
+                        "  right side: ", map(x => x.type, fromValues),
+                    );
                 addSpecializedInitialize(s, stmt, fromValue, toValue);
             }
             return StatementTarget();
