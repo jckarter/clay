@@ -2,8 +2,11 @@
 foo() {}
 foo(x) {}
 foo(x, y) {}
+foo(x, y,) {}
 foo(x, y, ...z) {}
+foo(x, y, ...z,) {}
 foo(...x) {}
+foo(...x,) {}
 
 foo(x:Int) {}
 foo(x:'T) {}

@@ -155,8 +155,13 @@ private commaListStrict(forward parser) =
 private optCommaListStrict(forward parser) =
     optSeparatedListStrict(punc(#","), parser);
 
+private tailItem(item) = modify(x => x.0, sequence(item, optional(punc(#","))));
 
-private commaAndItem(item) = modify(x => move(x.1), sequence(punc(#","), item));
+private commaAndItem(item) = modify(x => move(x.1), sequence(punc(#","), optional(tailItem(item))));
+private optCommaAndItem(item) = modify(x => maybe(x, v => v),
+    optional(commaAndItem(item))
+);
+
 
 [Item, VariadicItem | Parsers?(Item, VariadicItem)]
 private variadicListPair(item:Item, variadicItem:VariadicItem) {
@@ -165,12 +170,12 @@ private variadicListPair(item:Item, variadicItem:VariadicItem) {
         modify(
             x => (move(x.0), move(x.1)),
             sequence(
-                commaListStrict(item), optional(commaAndItem(variadicItem))
+                commaListStrict(item), optCommaAndItem(variadicItem)
             ),
         ),
         modify(
             x => (Vector[T](), move(x)),
-            optional(variadicItem),
+            optional(tailItem(variadicItem)),
         ),
     );
 }
