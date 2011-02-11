@@ -386,6 +386,8 @@ variant Pattern = BoolLiteral
                 | TuplePattern
                 ;
 
+overload Pattern() = Pattern(BoolLiteral());
+
 record IndexingPattern = ast(
     base: Expr,
     args: ListPattern,

@@ -1,6 +1,7 @@
 
 import maybe.*;
 import newclay.ast as ast;
+import newclay.ast.transforms.*;
 import newclay.ir as ir;
 import newclay.analysis.*;
 import newclay.core.*;
@@ -895,8 +896,7 @@ overload evaluatePattern(x:ast.PatternNameRef, env) {
 }
 overload evaluatePattern(x:ast.IndexingPattern, env) {
     var base = evaluateExpr(x.base, env);
-    var args = evaluateListPattern(x.args, env);
-    return evaluateIndexingPattern(base, args);
+    return evaluateIndexingPattern(base, x.args, env);
 }
 overload evaluatePattern(x:ast.TuplePattern, env) {
     var elements = evaluateListPattern(x.elements, env);
@@ -911,17 +911,43 @@ overload evaluatePattern(x:ast.TuplePattern, env) {
 
 procedure evaluateIndexingPattern;
 
-overload evaluateIndexingPattern(x, args) {
+overload evaluateIndexingPattern(x, argsAst, env) {
     genericError("invalid pattern expression");
     return Pattern();
 }
-overload evaluateIndexingPattern(x:Value, args) {
-    return evaluateIndexingPattern(*x, args);
+overload evaluateIndexingPattern(x:Value, argsAst, env) {
+    return evaluateIndexingPattern(*x, argsAst, env);
 }
-overload evaluateIndexingPattern(x:SymbolHead, args) {
-    return Pattern(SymbolPattern(x, args));
+overload evaluateIndexingPattern(x:SymbolHead, argsAst, env) {
+    if (x.aliasHead?)
+        return evaluateAliasPattern(*x.ast, argsAst, x, env);
+    else {
+        var args = evaluateListPattern(argsAst, env);
+        return Pattern(SymbolPattern(x, args));
+    }
 }
 
+private evaluateAliasPattern(x:ast.Symbol, argsAst, symbolHead, env) {
+    assert(false, "alias symbol isn't really an alias!");
+    return Pattern();
+}
+overload evaluateAliasPattern(x:GlobalBinding, argsAst, symbolHead, env) {
+    // XXX kludge
+    assert(x.kind == ast.BINDING_ALIAS, "alias symbol head must actually be an alias!");
+
+    var paramMap = HashMap[String, ast.Pattern]();
+    ref paramNames = symbolHead.astName.params;
+    if (size(argsAst.items) != size(paramNames.items))
+        genericError("expected ", size(paramNames.items), " parameters to alias pattern but got ", size(argsAst.items));
+    for (param, arg in zipped(paramNames.items, argsAst.items))
+        paramMap[param.str] = arg;
+    if (just?(argsAst.variadicItem) or just?(paramNames.variadicItem))
+        genericError("variadic parameters to alias patterns not yet supported");
+
+    var aliasedPattern = transformExprToPattern(just(x.ast.value), paramMap);
+    observe(aliasedPattern);
+    return evaluatePattern(transformExprToPattern(just(x.ast.value), paramMap), env);
+}
 
 
 //
