@@ -2,12 +2,16 @@ main() {
     var x = 1;
     var y = 2;
 
+    var z = 3.0;
+
     x = 3;
     y = x;
 
     x += 1;
     x -= 2;
     x *= 3;
-    x /= 4;
-    x %= 5;
+    x div= 4;
+    x mod= 5;
+
+    z /= 2.0;
 }

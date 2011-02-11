@@ -104,6 +104,8 @@ private var kw_else = keyword("else");
 private var kw_and = keyword("and");
 private var kw_or = keyword("or");
 private var kw_not = keyword("not");
+private var kw_div = keyword("div");
+private var kw_mod = keyword("mod");
 private var kw_public = keyword("public");
 private var kw_private = keyword("private");
 private var kw_return = keyword("return");
@@ -117,7 +119,6 @@ private var kw_in = keyword("in");
 private var kw_while = keyword("while");
 private var kw_switch = keyword("switch");
 private var kw_case = keyword("case");
-private var kw_default = keyword("default");
 private var kw_c = keyword("__c__");
 private var kw_llvm = keyword("__llvm__");
 private var kw_asm = keyword("__asm__");
@@ -433,9 +434,9 @@ private staticExpr(input) Maybe[Expr] = staticExpr2(input);
 // mul/div/rem expr
 //
 
-private var binaryOpChoiceBranch[p, op] = modify(x => op(), punc(p));
+private binaryOpChoiceBranch(p, op) = modify(x => op(), p);
 
-private binaryOpChoice(p, op, ...ops) = binaryOpChoiceBranch[p, op], ...binaryOpChoice(...ops);
+private binaryOpChoice(p, op, ...ops) = binaryOpChoiceBranch(p, op), ...binaryOpChoice(...ops);
 overload binaryOpChoice() = ;
 
 private binaryOpChain(term, ...ops) = modify(
@@ -447,9 +448,10 @@ private binaryOpChain(term, ...ops) = modify(
 );
 
 private var mulDivExpr = binaryOpChain(prefixExpr,
-    #"*", () => OP_MULTIPLY,
-    #"/", () => OP_DIVIDE,
-    #"%", () => OP_REMAINDER,
+    punc(#"*"), () => OP_MULTIPLY,
+    punc(#"/"), () => OP_DIVIDE,
+    kw_div, () => OP_QUOTIENT,
+    kw_mod, () => OP_REMAINDER,
 );
 
 
@@ -458,8 +460,8 @@ private var mulDivExpr = binaryOpChain(prefixExpr,
 //
 
 private var addSubExpr = binaryOpChain(mulDivExpr,
-    #"+", () => OP_ADD,
-    #"-", () => OP_SUBTRACT,
+    punc(#"+"), () => OP_ADD,
+    punc(#"-"), () => OP_SUBTRACT,
 );
 
 
@@ -477,10 +479,10 @@ private binaryOp(term, ...ops) = modify(
 );
 
 private var compareExpr = binaryOp(addSubExpr,
-    #"<=", () => OP_LESSER_EQUALS?,
-    #"<",  () => OP_LESSER?,
-    #">",  () => OP_GREATER?,
-    #">=", () => OP_GREATER_EQUALS?,
+    punc(#"<="), () => OP_LESSER_EQUALS?,
+    punc(#"<"),  () => OP_LESSER?,
+    punc(#">"),  () => OP_GREATER?,
+    punc(#">="), () => OP_GREATER_EQUALS?,
 );
 
 
@@ -489,8 +491,8 @@ private var compareExpr = binaryOp(addSubExpr,
 //
 
 private var equalityExpr = binaryOp(compareExpr,
-    #"!=", () => OP_NOT_EQUALS?,
-    #"==", () => OP_EQUALS?,
+    punc(#"!="), () => OP_NOT_EQUALS?,
+    punc(#"=="), () => OP_EQUALS?,
 );
 
 
@@ -1233,7 +1235,8 @@ private var assignmentOp = choice(
     modify(x => ASSIGNMENT_INITIALIZE, punc(#"<--")),
     modify(x => ASSIGNMENT_MULTIPLY,   punc(#"*=")),
     modify(x => ASSIGNMENT_DIVIDE,     punc(#"/=")),
-    modify(x => ASSIGNMENT_REMAINDER,  punc(#"%=")),
+    modify(x => ASSIGNMENT_QUOTIENT,   sequence(kw_div, punc(#"="))),
+    modify(x => ASSIGNMENT_REMAINDER,  sequence(kw_mod, punc(#"="))),
     modify(x => ASSIGNMENT_ADD,        punc(#"+=")),
     modify(x => ASSIGNMENT_SUBTRACT,   punc(#"-=")),
 );
@@ -1292,7 +1295,7 @@ private var switchStatement = statementParser(
     x => SwitchStatement(x.2, x.4, x.5),
     sequence(kw_switch, punc(#"("), expr, punc(#")"),
         oneOrMore(caseBlock),
-        optional(defaultBlock),
+        optional(elseBlock),
     ),
 );
 
@@ -1300,11 +1303,6 @@ private var caseBlock = bounds(modify(
     x => CaseBlock(x.2, x.4),
     sequence(kw_case, punc(#"("), exprList, punc(#")"), statement),
 ));
-
-private var defaultBlock = modify(
-    x => x.1,
-    sequence(kw_default, statement),
-);
 
 private var tryStatement = statementParser(
     x => TryStatement(x.1, x.2),
