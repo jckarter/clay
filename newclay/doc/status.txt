@@ -11,15 +11,10 @@ Unimplemented features:
     var x;
     var y:T;
 - runtime use of lambda expressions
-- runtime conversion of static tuple values
-    static foo() = (1, "two");
-    bar() = foo();
-- aliases in pattern expressions
-    symbol Bar['T, 'n];
-    alias Foo['T] = Bar['T, 2];
-    bas(x:Foo['T]) { ... }
-- tuples in pattern expressions
-    static foo(('A, 'B, ...'C), 'D) = ...'C;
+- variadic aliases in pattern expressions
+    symbol Bar[...'T];
+    alias Foo[...'T] = Bar[0, ...'T];
+    bas(x:Foo[...'T]) { ... }
 - alias arguments/call-by-name functions
 - inline functions
     the "inline foo()" and "inline overload foo()" syntaxes are understood, but
