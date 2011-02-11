@@ -1,5 +1,5 @@
 import newclay.ast.*;
-import newclay.core.(preludeModuleName);
+import newclay.core.(genericError, withLocation);
 import maybe.*;
 
 
@@ -107,4 +107,96 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
         from.definition,
     )));
 }
+
+
+//
+// transform expression AST into pattern AST
+//
+
+// transformExprToPattern
+// XXX transformed nodes need to have the same location info as the originals
+transformExprToPattern(x, map) {
+    genericError("expression is not valid as a pattern");
+    return Pattern(NameRef());
+}
+overload transformExprToPattern(x:Expr, map) {
+    return withLocation(x, () ref=> transformExprToPattern(*x, map));
+}
+
+private LiteralExpr?(X) = false;
+overload LiteralExpr?(static BoolLiteral) = true;
+overload LiteralExpr?(static CharLiteral) = true;
+overload LiteralExpr?(static IntLiteral) = true;
+//overload LiteralExpr?(static FloatLiteral) = true;
+overload LiteralExpr?(static StringLiteral) = true;
+overload LiteralExpr?(static NameRef) = true;
+
+[L | LiteralExpr?(L)]
+overload transformExprToPattern(x:L, map) = Pattern(x);
+
+overload transformExprToPattern(x:SimpleNameRef, map)
+    = Pattern(transformed(x, NameRef, x.env, Vector[Identifier](x.name)));
+
+overload transformExprToPattern(x:TupleExpr, map)
+    = Pattern(transformed(x, TuplePattern, transformExprListToListPattern(x.args, map)));
+
+overload transformExprToPattern(x:Indexing, map)
+    = Pattern(transformed(x, IndexingPattern, x.expr, transformExprListToListPattern(x.args, map)));
+
+overload transformExprToPattern(x:FieldRef, map)
+    = Pattern(fieldRefToNameRef(x.expr, x.field));
+
+overload transformExprToPattern(x:PatternNameRef, map) {
+    assert(not null?(lookup(map, x.name.str)), x.name.str, " not bound");
+    return map[x.name.str];
+}
+
+// fieldRefToNameRef
+private fieldRefToNameRef(x, field) = transformed(*x, NameRef, fieldRefToName(x, field));
+
+private fieldRefToName(x, field) {
+    genericError("expression is not valid as a pattern");
+    return Vector[Identifier]();
+}
+overload fieldRefToName(x:Expr, field:Identifier) Vector[Identifier]
+    = withLocation(x, () ref=> fieldRefToName(*x, field));
+overload fieldRefToName(x:FieldRef, field:Identifier) Vector[Identifier] {
+    var name = fieldRefToName(x.expr, x.field);
+    push(name, field);
+    return move(name);
+}
+overload fieldRefToName(x:NameRef, field:Identifier) Vector[Identifier] {
+    var name = x.name;
+    push(name, field);
+    return move(name);
+}
+overload fieldRefToName(x:SimpleNameRef, field:Identifier) Vector[Identifier] {
+    var name = Vector[Identifier](x.name);
+    push(name, field);
+    return move(name);
+}
+
+// transformExprListToListPattern
+transformExprListToListPattern(x:ExprList, map) {
+    var sz = size(x);
+    var tail? = variantIs?(x[sz - 1], UnpackExpr);
+    var headItems = slicedUpto(x, if (tail?) sz - 1 else sz);
+    var listPattern = ListPattern();
+    for (item in headItems) {
+        withLocation(item, () ref=> {
+            match(item,
+                Expr, ex ref=> { push(listPattern.items, transformExprToPattern(ex, map)); },
+                UnpackExpr, ex ref=> {
+                    genericError("multiple-value expression used as pattern can only have a single trailing ... element");
+                },
+            );
+        });
+    }
+    if (tail?)
+        listPattern.variadicItem = Maybe(
+            transformExprToPattern(variantAs(x[sz - 1], UnpackExpr).expr, map)
+        );
+    return move(listPattern);
+}
+
 
