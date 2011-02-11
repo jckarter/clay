@@ -108,6 +108,7 @@ record ClayHooks (
     dereference: Value,
     multiply: Value,
     divide: Value,
+    quotient: Value,
     remainder: Value,
     add: Value,
     subtract: Value,
@@ -132,6 +133,7 @@ record ClayHooks (
     subtractAssign: Value,
     multiplyAssign: Value,
     divideAssign: Value,
+    quotientAssign: Value,
     remainderAssign: Value,
 
     initializeFromUnsafe: Value,
@@ -266,7 +268,7 @@ enum PrimitiveKind {
     PRIM_StaticAdd,
     PRIM_StaticSubtract,
     PRIM_StaticMultiply,
-    PRIM_StaticDivide,
+    PRIM_StaticQuotient,
     PRIM_StaticRemainder,
     PRIM_StaticIntegers,
 

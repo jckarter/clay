@@ -9,6 +9,6 @@ main() {
         return 1;
     case (...foo())
         return 2;
-    default
+    else
         return 3;
 }

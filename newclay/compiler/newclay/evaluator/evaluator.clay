@@ -538,7 +538,10 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
     case ast.OP_MULTIPLY:
         return evaluatePrimitiveWithOneResult(PRIM_StaticMultiply, operands);
     case ast.OP_DIVIDE:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticDivide, operands);
+        genericError("real division not allowed in static context (did you mean the \"div\" operator?)");
+        return Value();
+    case ast.OP_QUOTIENT:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticQuotient, operands);
     case ast.OP_REMAINDER:
         return evaluatePrimitiveWithOneResult(PRIM_StaticRemainder, operands);
     case ast.OP_ADD:
@@ -1553,7 +1556,7 @@ evaluatePrimitive(kind, args) {
         var a, b = ...twoInts(args);
         return ValueList(a * b);
     }
-    case PRIM_StaticDivide : {
+    case PRIM_StaticQuotient : {
         var a, b = ...twoInts(args);
         return ValueList(a / b);
     }

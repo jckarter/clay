@@ -5,8 +5,8 @@ import __primitives__.*;
 #Main() = (
     (+1, -2),
     (+int(), -int()),
-    (5 * 2, 12 / 2, 8 % 3, 5 + 2, 5 - 2),
-    5*2 + -10/2,
+    (5 * 2, 12 div 2, 8 mod 3, 5 + 2, 5 - 2),
+    5*2 + -10 div 2,
     (2 + 2 == 4, 2 + 2 != 4),
     (true == true, true != true, 2 != true, 2 == true),
     ("foo" == "foo", "foo" != "foo", "foo" == "foon"),

@@ -691,6 +691,9 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
             case ast.OP_DIVIDE:
                 operatorCallable = getHooks().divide;
                 break;
+            case ast.OP_QUOTIENT:
+                operatorCallable = getHooks().quotient;
+                break;
             case ast.OP_REMAINDER:
                 operatorCallable = getHooks().remainder;
                 break;
@@ -964,6 +967,9 @@ private analyzeAssign(s, env, stmt) {
                 break;
             case ast.ASSIGNMENT_DIVIDE:
                 operatorCallable = getHooks().divideAssign;
+                break;
+            case ast.ASSIGNMENT_QUOTIENT:
+                operatorCallable = getHooks().quotientAssign;
                 break;
             case ast.ASSIGNMENT_REMAINDER:
                 operatorCallable = getHooks().remainderAssign;
