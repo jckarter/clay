@@ -8,6 +8,6 @@ overload main() {
     case (1) {
         return 2;
     }
-    default {
+    else {
     }
 }
