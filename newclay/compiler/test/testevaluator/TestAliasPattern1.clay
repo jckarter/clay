@@ -1,0 +1,10 @@
+symbol Bar;
+symbol Bas;
+
+symbol Foo['A, 'B];
+
+alias FooBar['C] = Foo[Bar, 'C];
+
+#foo(FooBar['D]) = 'D;
+
+#Main() = foo(Foo[Bar, Bas]);

@@ -1,0 +1,9 @@
+symbol Foo['A, 'B];
+
+alias Bar['C, 'D] = Foo['C, (1, 'D, 3)];
+
+alias Bar0['E] = Bar[0, 'E];
+
+#foo(Bar0['F]) = 'F;
+
+#Main() = foo(Foo[0, (1, 2, 3)]);

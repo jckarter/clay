@@ -187,12 +187,17 @@ record SymbolHead = referenceType(
     instances: HashMap[ValueList, EnvEntry],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
+    aliasHead?: Bool,
 );
+
+private aliasAST?(a:ast.Symbol) = false;
+overload aliasAST?(a:GlobalBinding) = a.kind == ast.BINDING_ALIAS;
 
 overload SymbolHead(a:SymbolHeadAST, name:ast.SymbolName, module:Module) =
     SymbolHead(
         a, name, module, HashMap[ValueList, EnvEntry](),
         EvalTable(), InvokeTable(),
+        aliasAST?(*a)
     );
 
 symbolHeadHasParams?(x:SymbolHead) {

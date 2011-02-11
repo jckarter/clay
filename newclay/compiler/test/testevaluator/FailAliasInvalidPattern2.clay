@@ -1,0 +1,8 @@
+symbol Bar;
+symbol Bas;
+
+alias FooBar['C] = 'C + 2;
+
+#foo(FooBar['D]) = FooBar['D];
+
+#Main() = foo(FooBar[1]);
