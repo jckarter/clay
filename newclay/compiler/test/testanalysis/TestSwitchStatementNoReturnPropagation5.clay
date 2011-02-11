@@ -8,7 +8,7 @@ main() {
     case (2) {
         nonterminating();
     }
-    default {
+    else {
         nonterminating();
     }
 }

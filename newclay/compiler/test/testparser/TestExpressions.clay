@@ -27,7 +27,8 @@ foo() {
 
     a * b;
     a / b;
-    a % b;
+    a div b;
+    a mod b;
 
     -a * b[c];
     a[b] * -c;
@@ -36,7 +37,6 @@ foo() {
     a - b;
 
     a * b + c / d;
-    a * b - c % d;
 
     a < b;
     a <= b;
@@ -86,7 +86,8 @@ foo() {
     x -= y;
     x *= y;
     x /= y;
-    x %= y;
+    x div= y;
+    x mod= y;
 
     (foo: "bar");
     (foo: if (a) b else c);

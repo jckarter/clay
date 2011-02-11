@@ -83,12 +83,11 @@ overload foo() {
     case (z, w) {
         b;
     }
-    default
-        c;
+    else c;
 
     switch (x)
     case (y) z;
-    default {
+    else {
         c;
     }
 

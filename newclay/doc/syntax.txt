@@ -167,7 +167,7 @@ FieldRefSuffix -> "." Identifier
 CallSuffix -> "(" ExprList? ")"
 DereferenceSuffix -> "^"
 
-MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*
+MulDivExpr -> PrefixExpr (("*" | "/" | "div" | "mod") PrefixExpr)*
 
 AddSubExpr -> MulDivExpr (("+" | "-") MulDivExpr)*
 
@@ -184,7 +184,7 @@ OrExpr -> AndExpr ("or" AndExpr)*
 LambdaCodeBody -> ExprListItem
                 | Block
 
-LambdaExpr -> LambdaArgs ("=>" | "->") LambdaCodeBody
+LambdaExpr -> LambdaArgs ("=>" | "->")? LambdaCodeBody
 LambdaArgs -> Identifier
             | "(" ArgumentList ")"
 
@@ -225,7 +225,7 @@ LabelDef -> Identifier ":"
 BindingStatement -> BindingKind BindingList ";"
 
 Assignment -> ExprList AssignmentOp ExprList ";"
-AssignmentOp -> "<--" | "=" | "+=" | "-=" | "*=" | "/=" | "%="
+AssignmentOp -> "<--" | "=" | "+=" | "-=" | "*=" | "/=" | "div" "=" | "mod" "="
 
 GotoStatement -> "goto" Identifier ";"
 
@@ -248,7 +248,7 @@ WhileStatement -> "while" "(" Expr ")" Statement
 
 SwitchStatement -> "switch" "(" Expr ")"
                    ("case" "(" ExprList ")" Block)+
-                   ("default" Block)?
+                   ("else" Block)?
 
 TryStatement -> "try" Block ("catch" "(" BindingName ")" Block)+
 

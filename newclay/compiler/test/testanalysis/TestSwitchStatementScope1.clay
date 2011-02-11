@@ -13,7 +13,7 @@ main() {
     } case (...foo()) {
         var x = 3;
         return x;
-    } default {
+    } else {
         return x;
     }
 }
