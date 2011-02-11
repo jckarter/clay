@@ -184,7 +184,7 @@ OrExpr -> AndExpr ("or" AndExpr)*
 LambdaCodeBody -> ExprListItem
                 | Block
 
-LambdaExpr -> LambdaArgs ("=>" | "->")? LambdaCodeBody
+LambdaExpr -> LambdaArgs ("=>" | "->") LambdaCodeBody
 LambdaArgs -> Identifier
             | "(" ArgumentList ")"
 

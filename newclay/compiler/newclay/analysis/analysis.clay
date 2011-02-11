@@ -1702,19 +1702,6 @@ private procedure floatValueType;
 overload floatValueType(v:Float32) = float32Type();
 overload floatValueType(v:Float64) = float64Type();
 
-valueToRTValue(value:Value) = match(value,
-    BoolValue, x => newValue(boolType()),
-    CharValue, x => newValue(charType()),
-    IntValue, x => newValue(intValueType(*x)),
-    FloatValue, x => newValue(floatValueType(*x)),
-    StringValue, x => newValue(stringConstantType()),
-    TupleValue, x => {
-        genericError("tuples are not yet supported");
-        return RTValue();
-    },
-    MatchDefault, x => newValue(staticType(Value(x))),
-);
-
 addSpecializedNode(s:SpecializationContext, node:ir.Node) {
     for (input in ir.nodeInputs(node))
         useRvalue(s, input);
@@ -1738,11 +1725,30 @@ addSpecializedLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.Literal
     return Maybe(RTValues());
 }
 
-singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) {
-    var output = valueToRTValue(value);
+private addNewValue(s, ast, value, type) {
+    var output = newValue(type);
     addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), RTValues(output)));
     return output;
 }
+
+singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = match(value,
+    BoolValue, x ref=> addNewValue(s, ast, value, boolType()),
+    CharValue, x ref=> addNewValue(s, ast, value, charType()),
+    IntValue, x ref=> addNewValue(s, ast, value, intValueType(*x)),
+    FloatValue, x ref=> addNewValue(s, ast, value, floatValueType(*x)),
+    StringValue, x ref=> addNewValue(s, ast, value, stringConstantType()),
+    TupleValue, x ref=> {
+        var elements = map(e ref=> singleAddSpecializedValue(s, ast, e), x.elements);
+        return maybe(analyzeCallWithOneResult(s, ast, getHooks().tupleLiteral, elements),
+            v => v[0],
+            () => {
+                genericError("tuple conversion does not terminate");
+                return RTValue();
+            },
+        );
+    },
+    MatchDefault, x ref=> addNewValue(s, ast, value, staticType(Value(x))),
+);
 
 addSpecializedValue(s, ast, value)
     = Maybe(RTValues(singleAddSpecializedValue(s, ast, value)));
@@ -1763,8 +1769,7 @@ addSpecializedStaticValueList(s, ast, values:ValueList) {
 }
 
 addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
-    var outputs = Vector(mapped(valueToRTValue, valueList));
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), valueList, outputs));
+    var outputs = Vector(mapped(o ref=> singleAddSpecializedValue(s, ast, o), valueList));
     return Maybe(outputs);
 }
 
