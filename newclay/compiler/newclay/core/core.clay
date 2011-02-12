@@ -774,12 +774,19 @@ overload printTo(stream, x:ValueList) {
 record Alias = referenceType(
     value: ast.Expr,
     env: Env,
+    staticValue: TriState[Value],
 );
+
+overload Alias(value, env) = Alias(value, env, TriState[Value]());
 
 record ListAlias = referenceType(
     value: ast.ExprList,
     env: Env,
+    staticValues: TriState[ValueList],
 );
+
+overload ListAlias(value, env) = ListAlias(value, env, TriState[ValueList]());
+
 
 
 //
