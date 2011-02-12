@@ -775,17 +775,21 @@ record Alias = referenceType(
     value: ast.Expr,
     env: Env,
     staticValue: TriState[Value],
+    runtimeAnalyzing?: Bool,
 );
 
-overload Alias(value, env) = Alias(value, env, TriState[Value]());
+overload Alias(value, env)
+    = Alias(value, env, TriState[Value](), false);
 
 record ListAlias = referenceType(
     value: ast.ExprList,
     env: Env,
     staticValues: TriState[ValueList],
+    runtimeAnalyzing?: Bool,
 );
 
-overload ListAlias(value, env) = ListAlias(value, env, TriState[ValueList]());
+overload ListAlias(value, env)
+    = ListAlias(value, env, TriState[ValueList](), false);
 
 
 

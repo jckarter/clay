@@ -396,7 +396,9 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
     Value, x ref=> addSpecializedValue(s, expr, x),
     ValueList, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
-    Alias, x ref=> analyzeSubnode(s, x.env, x.value),
+    Alias, x ref=> withAliasRecursionProtection(x,
+        () ref=> analyzeSubnode(s, x.env, x.value),
+    ),
     ListAlias, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
     PatternCell, x ref=>
@@ -1557,15 +1559,26 @@ private analyzeMultiExprNode(s, env, ast)
 overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues]
     = analyzeMultiExprSubnode(s, env, *expr);
 
+private withAliasRecursionProtection(x, fn) {
+    if (x.runtimeAnalyzing?)
+        genericError("recursion during alias evaluation");
+    x.runtimeAnalyzing? = true;
+    var results = fn();
+    x.runtimeAnalyzing? = false;
+    return move(results);
+}
+
 private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
     RTValueList, x ref=> Maybe(x.vars),
     Value, x ref=>
         genericAnalysisError("single value cannot be used in multiple value context"),
     ValueList, x ref=> addSpecializedValueList(s, expr, x),
-    Alias, x ref=>
-        analyzeSubnode(s, x.env, x.value),
-    ListAlias, x ref=>
-        analyzeMultiExprListNode(s, x.env, x.value, true),
+    Alias, x ref=> withAliasRecursionProtection(x,
+        () ref=> analyzeSubnode(s, x.env, x.value),
+    ),
+    ListAlias, x ref=> withAliasRecursionProtection(x,
+        () ref=> analyzeMultiExprListNode(s, x.env, x.value, true),
+    ),
     PatternCell, x ref=>
         genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
     ListPatternCell, x ref=>
