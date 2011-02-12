@@ -539,7 +539,7 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
     case ast.OP_MULTIPLY:
         return evaluatePrimitiveWithOneResult(PRIM_StaticMultiply, operands);
     case ast.OP_DIVIDE:
-        genericError("real division not allowed in static context (did you mean the \"div\" operator?)");
+        genericError("real division not allowed in static context; use the \"div\" operator for integer division");
         return Value();
     case ast.OP_QUOTIENT:
         return evaluatePrimitiveWithOneResult(PRIM_StaticQuotient, operands);
@@ -593,7 +593,7 @@ overload envEntryToValue(x:ListPatternCell) {
     return Value();
 }
 overload envEntryToValue(x:Alias) {
-    return evaluateExpr(x.value, x.env);
+    return safeInitialize(x.staticValue, () ref=> evaluateExpr(x.value, x.env));
 }
 overload envEntryToValue(x:ListAlias) {
     genericError("multi-value used in single value context");
@@ -724,7 +724,7 @@ overload envEntryToValueList(x:Alias) {
     return ValueList();
 }
 overload envEntryToValueList(x:ListAlias) {
-    return evaluateMultiExprList(x.value, x.env);
+    return safeInitialize(x.staticValues, () ref=> evaluateMultiExprList(x.value, x.env));
 }
 overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
@@ -945,7 +945,6 @@ overload evaluateAliasPattern(x:GlobalBinding, argsAst, symbolHead, env) {
         genericError("variadic parameters to alias patterns not yet supported");
 
     var aliasedPattern = transformExprToPattern(just(x.ast.value), paramMap);
-    observe(aliasedPattern);
     return evaluatePattern(transformExprToPattern(just(x.ast.value), paramMap), env);
 }
 
