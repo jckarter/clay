@@ -12,9 +12,18 @@ Unimplemented features:
     var y:T;
 - runtime use of lambda expressions
 - variadic aliases in pattern expressions
+    Global aliases can be defined with variadic parameters, but they cannot
+    yet be used in pattern matching expressions.
+
     symbol Bar[...'T];
     alias Foo[...'T] = Bar[0, ...'T];
-    bas(x:Foo[...'T]) { ... }
+    bas(x:Foo[...'T]) { ... } // <-- not yet supported
+
+    However, non-variadic global aliases work:
+
+    alias IntArray['n] = Array[Int, 'n];
+    foo(x:IntArray[8]) { ... }
+
 - alias arguments/call-by-name functions
 - inline functions
     the "inline foo()" and "inline overload foo()" syntaxes are understood, but
@@ -22,8 +31,8 @@ Unimplemented features:
 - binding expressions
     foo() = var x = 1, y = 2 in x + y;
 - exception handling
-    try {} catch () {} is a no-op: the "try" block is compiled as a simple block, and the catch
-    blocks are simply ignored.
+    try {} catch () {} is a no-op: the "try" block is compiled as a simple
+    block, and the catch blocks are simply ignored.
     "throw x" immediately calls abort().
 - dispatch operator
 - clay code pointers
@@ -43,9 +52,6 @@ Unimplemented features:
 
 Known bugs:
 - context in compiler error messages is often lacking or inaccurate
-- mutually recursive global alias bindings cause an infinite loop
-    alias y = x;
-    alias x = y;
 - dotted module imports can run over aliased module imports
     import a as b;
     import b.c; // should be an error since "b" is already an alias
