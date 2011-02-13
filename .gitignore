@@ -13,10 +13,22 @@ tags
 *.out
 bin/
 build/
-/clay
+clay
 compiler/src/*.o
 compiler/src/*.dep
 .gdb_history
+*.dSYM
+*.pdb
+main
+
+/newclay/compiler/testanalysis
+/newclay/compiler/testcodegen_c
+/newclay/compiler/testevaluator
+/newclay/compiler/testlexer
+/newclay/compiler/testlifetime
+/newclay/compiler/testloader
+/newclay/compiler/testparser
+/newclay/compiler/testresolver
 
 clay.exe
 vs2008/*.ncb
