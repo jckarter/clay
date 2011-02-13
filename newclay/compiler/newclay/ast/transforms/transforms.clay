@@ -59,7 +59,7 @@ overload transformASTInto(from:Procedure, to:Vector[TopLevelItem]) {
     push(to, TopLevelItem(transformed(from, Symbol,
         from.visibility,
         from.name,
-        nothing(Expr),
+        nothing(ExprList),
     )));
 
     push(to, TopLevelItem(transformed(from, Overload,
@@ -99,7 +99,7 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
     push(to, TopLevelItem(transformed(from, Symbol,
         from.visibility,
         from.name,
-        nothing(Expr),
+        nothing(ExprList),
     )));
 
     push(to, TopLevelItem(transformed(from, StaticOverload,

@@ -213,8 +213,8 @@ record Symbol = referenceType(
     head: SymbolHead,
     params: ValueList,
     env: Env,
-    body: TriState[Value],
-    attributes: TriState[Value],
+    body: TriState[ValueList],
+    attributes: TriState[ValueList],
     type?: TriState[Bool],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
@@ -223,7 +223,7 @@ record Symbol = referenceType(
 overload Symbol(head:SymbolHead, params:ValueList, env:Env)
     = Symbol(
         head, params, env,
-        TriState[Value](), TriState[Value](),
+        TriState[ValueList](), TriState[ValueList](),
         TriState[Bool](),
         EvalTable(),
         InvokeTable(),

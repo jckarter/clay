@@ -15,6 +15,11 @@ overload #MapValues('f) = ;
 // clay types as symbols
 //
 
+private  #_SymbolBody() = ();
+overload #_SymbolBody('x, ...'y) = 'x;
+
+#SymbolBody('t) = _SymbolBody(...StaticSymbolBody('t));
+
 symbol Bool;
 symbol Int;
 symbol Array['T, 'n];
@@ -34,7 +39,7 @@ overload #FieldTypes(...'fields) = (...MapValues(f => StaticTupleElement(f, 1), 
 symbol Record?;
 overload #Record?('t) =
     StaticSymbol?('t)
-    and TupleWithTag?(StaticSymbolBody('t), RecordTag);
+    and TupleWithTag?(SymbolBody('t), RecordTag);
 
 symbol TupleWithTag?;
 overload #TupleWithTag?('x, 'tag) =
@@ -44,15 +49,15 @@ overload #TupleWithTag?('x, 'tag) =
 
 symbol RecordFieldCount;
 overload #RecordFieldCount('t) | Record?('t) =
-    StaticTupleSize(StaticTupleElement(StaticSymbolBody('t), 1));
+    StaticTupleSize(StaticTupleElement(SymbolBody('t), 1));
 
 symbol RecordFieldNames;
 overload #RecordFieldNames('t) | Record?('t) =
-    StaticTupleElement(StaticSymbolBody('t), 1);
+    StaticTupleElement(SymbolBody('t), 1);
 
 symbol RecordFieldTypes;
 overload #RecordFieldTypes('t) | Record?('t) =
-    StaticTupleElement(StaticSymbolBody('t), 2);
+    StaticTupleElement(SymbolBody('t), 2);
 
 
 symbol Point['T] = RecordType(

@@ -829,13 +829,13 @@ private var symbolDef = topLevelItemParser(
     x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3)),
     sequence(
         visibility, kw_symbol, symbolName,
-        optional(symbolExpr), punc(#";")
+        optional(symbolExprList), punc(#";")
     ),
 );
 
-private var symbolExpr = modify(
+private var symbolExprList = modify(
     x => move(x.1),
-    sequence(punc(#"="), expr),
+    sequence(punc(#"="), exprList),
 );
 
 // attributeDef
