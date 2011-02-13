@@ -1,0 +1,11 @@
+
+external x1(x:Int);
+
+f(x) {}
+
+main() {
+    var x = x1;
+    f(x);
+    f(x);
+    return x;
+}
