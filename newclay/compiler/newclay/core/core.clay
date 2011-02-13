@@ -1256,6 +1256,7 @@ record LocalVariable();
 
 variant RTValueReferent = ReferenceVariable
                         | LocalVariable
+                        | Value
                         | RTGlobal
                         | RTExternal;
 
@@ -1283,7 +1284,8 @@ globalVariable?(v:RTValue) = variantIs?(v.referent, RTGlobal);
 localVariable?(v:RTValue) = variantIs?(v.referent, LocalVariable);
 referenceVariable?(v:RTValue) = variantIs?(v.referent, ReferenceVariable);
 variable?(v:RTValue) = localVariable?(v) or referenceVariable?(v);
-immediateValue?(v:RTValue) = variantIs?(v.referent, RTExternal);
+immediateValue?(v:RTValue)
+    = variantIs?(v.referent, RTExternal) or variantIs?(v.referent, Value);
 
 equalResult?(v:RTValue, w:RTValue)
     = v.kind == w.kind and v.type == w.type and localVariable?(v) == localVariable?(w);

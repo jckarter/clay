@@ -37,11 +37,6 @@ overload printNodeData(depth, node:ir.LiteralCodeBody) {
     println();
 }
 
-overload printNodeData(depth, node:ir.ValueList) {
-    println(LeafTypeName(node.ast), " ", node.valueList);
-    printVars(depth+1, "out ", node.outputs);
-}
-
 overload printNodeData(depth, node:ir.Call) {
     print(LeafTypeName(node.ast), " ");
     if (withIds)

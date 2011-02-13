@@ -340,7 +340,7 @@ private analyzeReturn(
                 if (source.kind != RT_VALUE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
                 return singleAddSpecializedBindReturn(s, rItem, source,
-                    newValue(source.type, "returned")
+                    newRvalue(source.type, "returned")
                 );
             }
             break;
@@ -351,7 +351,7 @@ private analyzeReturn(
         return singleAddSpecializedBindReturn(s, rItem, source, cloneVariable(source, "returned"));
     },
     // value return
-    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newValue(source.type, "returned")),
+    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newRvalue(source.type, "returned")),
 );
 
 
@@ -511,7 +511,6 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FieldRef) {
 }
 
 private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
-    // XXX recursion
     = maybe(analyzeBoolSubnode(s, env, expr.expr1),
         leftResults ref=> {
             var leftResult = singleValue(leftResults);
@@ -523,11 +522,10 @@ private analyzeShortCircuit(s, env, expr, leftValue, LeftBody, RightBody)
             );
 
             var leftS = subContext(s, fieldRef(ifNode, LeftBody));
-            addSpecializedNode(leftS, ir.ValueList(
-                ir.ASTNode(expr),
-                ValueList(leftValue),
-                RTValues(output)
-            ));
+            addSpecializedBind(leftS, ir.ASTNode(expr),
+                addImmediate(leftS, boolType(), leftValue),
+                output
+            );
 
             var rightS = subContext(s, fieldRef(ifNode, RightBody));
             maybe(analyzeBoolSubnode(rightS, env, expr.expr2),
@@ -555,7 +553,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.OrExpr)
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.expr), input ref=> {
-        var output = newValue(boolType());
+        var output = newRvalue(boolType());
         addSpecializedNot(s, expr, singleValue(input), output);
         return Maybe(RTValues(output));
     });
@@ -660,7 +658,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
             var operand = singleValue(operands);
             if (operand.kind == RT_VALUE_RVALUE)
                 genericError("cannot take the address of an rvalue");
-            var output = newValue(pointerType(operand.type));
+            var output = newRvalue(pointerType(operand.type));
             addSpecializedAddressOf(s, expr, operand, output);
             return Maybe(RTValues(output));
         }
@@ -1654,7 +1652,7 @@ analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
         return withBoolResult(analyzeNode(s, env, ast));
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
-        return Maybe(RTValues(addRvalue(s, newValue(boolType()))));
+        return Maybe(RTValues(addRvalue(s, newRvalue(boolType()))));
     }
 });
 
@@ -1682,8 +1680,15 @@ genericAnalysisError(forward ...err) {
     return nothing(RTValues);
 }
 
-newValue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
+newRvalue(type, ...name) = RTValue(RT_VALUE_RVALUE, type, LocalVariable(), ...name);
+newImmediate(type, value, ...name) = RTValue(RT_VALUE_RVALUE, type, value, ...name);
 newReference(kind, type, ...name) = RTValue(kind, type, ReferenceVariable(), ...name);
+
+addImmediate(s, type, value, ...name) {
+    var rv = RTValue(RT_VALUE_RVALUE, type, value, ...name);
+    addRvalue(s, rv);
+    return rv;
+}
 
 addCapture(s, stmt, value, ...name) {
     var capturedValue = RTValue(
@@ -1738,18 +1743,12 @@ addSpecializedLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.Literal
     return Maybe(RTValues());
 }
 
-private addNewValue(s, ast, value, type) {
-    var output = newValue(type);
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), RTValues(output)));
-    return output;
-}
-
 singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = match(value,
-    BoolValue, x ref=> addNewValue(s, ast, value, boolType()),
-    CharValue, x ref=> addNewValue(s, ast, value, charType()),
-    IntValue, x ref=> addNewValue(s, ast, value, intValueType(*x)),
-    FloatValue, x ref=> addNewValue(s, ast, value, floatValueType(*x)),
-    StringValue, x ref=> addNewValue(s, ast, value, stringConstantType()),
+    BoolValue, x ref=> addImmediate(s, boolType(), value),
+    CharValue, x ref=> addImmediate(s, charType(), value),
+    IntValue, x ref=> addImmediate(s, intValueType(*x), value),
+    FloatValue, x ref=> addImmediate(s, floatValueType(*x), value),
+    StringValue, x ref=> addImmediate(s, stringConstantType(), value),
     TupleValue, x ref=> {
         var elements = map(e ref=> singleAddSpecializedValue(s, ast, e), x.elements);
         return maybe(analyzeCallWithOneResult(s, ast, getHooks().tupleLiteral, elements),
@@ -1760,24 +1759,21 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
             },
         );
     },
-    MatchDefault, x ref=> addNewValue(s, ast, value, staticType(Value(x))),
+    MatchDefault, x ref=> addImmediate(s, staticType(Value(x)), value),
 );
 
 addSpecializedValue(s, ast, value)
     = Maybe(RTValues(singleAddSpecializedValue(s, ast, value)));
 
 singleAddSpecializedStaticValue(s:SpecializationContext, ast, value:Value) {
-    var output = newValue(staticType(value));
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), ValueList(value), RTValues(output)));
-    return output;
+    return addImmediate(s, staticType(value), value);
 }
 
 addSpecializedStaticValue(s, ast, value)
     = Maybe(RTValues(singleAddSpecializedStaticValue(s, ast, value)));
 
 addSpecializedStaticValueList(s, ast, values:ValueList) {
-    var outputs = RTValues(mapped(v => newValue(staticType(v)), values));
-    addSpecializedNode(s, ir.ValueList(ir.ASTNode(ast), values, outputs));
+    var outputs = RTValues(mapped(v ref=> addImmediate(s, staticType(v), v), values));
     return Maybe(outputs);
 }
 

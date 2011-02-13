@@ -251,21 +251,43 @@ private externalName(c:CodegenContext, e:RTExternal) {
     return externalAttributes(e).symbolName;
 }
 
+private cValue(c, value:Value) = match(value,
+    BoolValue,   bv ref=> if (bv.value) String("1") else String("0"),
+    IntValue,    iv ref=> cIntegerValue(c, iv),
+    FloatValue,  fv ref=> cFloatValue(c, fv),
+    CharValue,   cv ref=> printString(Int(cv.value)),
+    StringValue, sv ref=> cStringValue(c, sv),
+    MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
+);
+
+private immediateValue(c, value:Value, bc, rtValue:RTValue) {
+    if (staticType?(rtValue.type))
+        return localName(bc, rtValue);
+    else
+        return cValue(c, value);
+}
+
+private cValueRef(c, value:Value, bc, rtValue:RTValue)
+    = "&" + (if (immediateCValue?(value))
+        localName(bc, rtValue)
+    else
+        cValue(c, value));
+
 private valueDeref(c:CodegenContext, bc:CodegenBodyContext, value) {
     return match(value.referent,
         LocalVariable,     l ref=> localName(bc, value),
         ReferenceVariable, r ref=> "*" + localName(bc, value),
         RTExternal,        e ref=> externalName(c, e),
         RTGlobal,          g ref=> globalName(c, g),
+        Value,             v ref=> immediateValue(c, v, bc, value),
     );
 }
 
 private valueRef(c:CodegenContext, bc:CodegenBodyContext, value) {
     return match(value.referent,
-        LocalVariable,     l ref=> "&" + localName(bc, value),
         ReferenceVariable, r ref=> localName(bc, value),
-        RTExternal,        e ref=> "&" + localName(bc, value),
         RTGlobal,          g ref=> "&" + globalName(c, g),
+        MatchDefault,      x ref=> "&" + localName(bc, value),
     );
 }
 
@@ -290,7 +312,7 @@ private printLocalDefinitionTo(stream, c, bc, a) {
     if (referenceVariable?(a))
         printTo(stream, '*');
     printTo(stream, localName(bc, a));
-    if (immediateValue?(a))
+    if (immediateValue?(a) and not staticType?(a.type))
         printTo(stream, " = ", valueDeref(c, bc, a));
 }
 
@@ -420,14 +442,6 @@ overload codegenNode(c, bc, node:ir.LiteralCodeBody) {
     printlnTo(bc.bodyCode);
 }
 
-overload codegenNode(c, bc, node:ir.ValueList) {
-    for (value, output in zipped(node.valueList, node.outputs)) {
-        if (staticType?(output.type))
-            continue;
-        printToIndented(bc, valueDeref(c, bc, output), " = ", cValue(c, value), ";\n");
-    }
-}
-
 overload codegenNode(c, bc, node:ir.Not) {
     printToIndented(bc, valueDeref(c, bc, node.output), " = !(", valueDeref(c, bc, node.input), ");\n");
 }
@@ -521,6 +535,11 @@ overload codegenNode(c, bc, node:ir.Consume) {
 
 overload codegenNode(c, bc, node:ir.Bind) {
     assert(variable?(node.output), "binding something that isn't a local variable");
+    assert(node.output.type == node.input.type, "types in bind must match");
+
+    if (staticType?(node.output.type))
+        return;
+
     if (localVariable?(node.output)) {
         printToIndented(bc, localName(bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
     } else {
@@ -533,6 +552,12 @@ overload codegenNode(c, bc, node:ir.BindReturn) {
 }
 
 overload codegenNode(c, bc, node:ir.Initialize) {
+    assert(not immediateValue?(node.output), "cannot initialize an immediate value");
+    assert(node.output.type == node.input.type, "types in initialize must match");
+
+    if (staticType?(node.output.type))
+        return;
+
     printToIndented(bc, valueDeref(c, bc, node.output), " = ", valueDeref(c, bc, node.input), ";\n");
 }
 
@@ -550,15 +575,6 @@ overload codegenNode(c, bc, node:ir.Throw) {
 
 overload codegenNode(c, bc, node:ir.Nop) {
 }
-
-private cValue(c, value:Value) = match(value,
-    BoolValue,   bv ref=> if (bv.value) String("1") else String("0"),
-    IntValue,    iv ref=> cIntegerValue(c, iv),
-    FloatValue,  fv ref=> cFloatValue(c, fv),
-    CharValue,   cv ref=> printString(Int(cv.value)),
-    StringValue, sv ref=> cStringValue(c, sv),
-    MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
-);
 
 private cInt64Suffix(c) {
     switch (c.config.dialect) {

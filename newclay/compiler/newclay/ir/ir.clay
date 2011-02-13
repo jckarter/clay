@@ -5,7 +5,7 @@ import newclay.core.(
     Value,
     Specialization,
     RTValues,
-    ValueList as CoreValueList,
+    ValueList,
     genericError,
     privateLookup
 );
@@ -18,7 +18,6 @@ record OutputVariable (
 );
 
 variant Node = LiteralCodeBody
-             | ValueList
              | Call
              | Not
              | AddressOf
@@ -60,7 +59,7 @@ variant LiteralCodeToken = String
                          | RTValue
                          | Value
                          | RTValueList
-                         | CoreValueList;
+                         | ValueList;
 
 alias LiteralCode = Vector[LiteralCodeToken];
 
@@ -68,12 +67,6 @@ record LiteralCodeBody = referenceType(
     ast: ast.LiteralCodeBody,
     kind: ast.LiteralCodeBodyKind,
     code: LiteralCode,
-);
-
-record ValueList = referenceType(
-    ast: ASTNode,
-    valueList: CoreValueList,
-    outputs: RTValues,
 );
 
 record Block = referenceType(
@@ -187,7 +180,6 @@ procedure nodeOutputs;
 procedure nodeInputs;
 
 overload nodeOutputs(node) = RTValues();
-overload nodeOutputs(node:ValueList) = node.outputs;
 overload nodeOutputs(node:Call) = maybe(node.outputs,
     outputs => map(o => o.value, outputs),
     () => RTValues()
@@ -242,7 +234,7 @@ private literalCodeSubstitutionToken(env, token) {
             genericError("multiple values substituted in single-value literal code substitution");
             return LiteralCodeToken(Value());
         },
-        CoreValueList, m => {
+        ValueList, m => {
             genericError("multiple values substituted in single-value literal code substitution");
             return LiteralCodeToken(Value());
         },
@@ -257,7 +249,7 @@ private literalCodeMultiSubstitutionToken(env, token) {
     var value = privateLookup(env, token);
     return match(value,
         RTValueList, m => LiteralCodeToken(m),
-        CoreValueList,   m => LiteralCodeToken(m),
+        ValueList,   m => LiteralCodeToken(m),
         RTValue, v => {
             genericError("single value substituted in multiple-value literal code substitution");
             return LiteralCodeToken(Value());
