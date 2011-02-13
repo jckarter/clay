@@ -179,7 +179,7 @@ index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
     $returned = &$a.array[$i];
 """;
 
-#Index(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
+staticIndex(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
     $returned = &$a.field0;
 """;
 
@@ -203,7 +203,11 @@ multiply(a:Int, b:Int) returned:Int __c__ """
     $returned = $a * $b;
 """;
 
-divide(a:Int, b:Int) returned:Int __c__ """
+divide(a:Float64, b:Float64) returned:Float64 __c__ """
+    $returned = $a / $b;
+""";
+
+quotient(a:Int, b:Int) returned:Int __c__ """
     $returned = $a / $b;
 """;
 
@@ -247,7 +251,8 @@ assign(ref a, b)                  { a <-- b; }
 addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
 subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
 multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
-divideAssign(ref a:Int, b:Int)    { a <-- divide(a, b); }
+divideAssign(ref a:Float64, b:Float64)    { a <-- divide(a, b); }
+quotientAssign(ref a:Int, b:Int)  { a <-- quotient(a, b); }
 remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
 
 //
