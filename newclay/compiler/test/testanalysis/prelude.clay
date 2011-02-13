@@ -47,7 +47,7 @@ overload #NewPrimitiveType() = (PrimitiveTypeTag,);
 symbol PrimitiveType? = NewStaticFunction();
 overload #PrimitiveType?('x) =
     StaticSymbol?('x)
-    and TupleWithTag?(StaticSymbolBody('x), PrimitiveTypeTag);
+    and SymbolWithTag?('x, PrimitiveTypeTag);
 
 overload #Type?('x) | PrimitiveType?('x) = true;
 
@@ -150,7 +150,7 @@ overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
 
 
 //
-// TupleWithTag?
+// TupleWithTag?, SymbolWithTag?
 //
 
 symbol TupleWithTag? = NewStaticFunction();
@@ -159,6 +159,11 @@ overload #TupleWithTag?('x, 'tag) =
     and StaticLesser?(0, StaticTupleSize('x))
     and StaticEquals?(StaticTupleElement('x, 0), 'tag);
 
+private #SymbolBodyWithTag?('tag, 'x, ...'xs)
+    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ...'xs);
+overload #SymbolBodyWithTag?('tag) = false;
+
+#SymbolWithTag?('t, 'tag) = SymbolBodyWithTag?('tag, ...StaticSymbolBody('t));
 
 
 //

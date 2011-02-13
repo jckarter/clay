@@ -29,6 +29,10 @@ overload #TupleWithTag?('x, 'tag) =
     and StaticLesser?(0, StaticTupleSize('x))
     and StaticEquals?(StaticTupleElement('x, 0), 'tag);
 
+private  #_SymbolBody() = ();
+overload #_SymbolBody('x, ...'y) = 'x;
+
+#SymbolBody('t) = _SymbolBody(...StaticSymbolBody('t));
 
 
 //
@@ -52,19 +56,19 @@ overload #FieldTypes(...'fields) =
 symbol Record?;
 overload #Record?('t) =
     StaticSymbol?('t)
-    and TupleWithTag?(StaticSymbolBody('t), RecordTag);
+    and TupleWithTag?(SymbolBody('t), RecordTag);
 
 symbol RecordFieldCount;
 overload #RecordFieldCount('t) | Record?('t) =
-    StaticTupleSize(StaticTupleElement(StaticSymbolBody('t), 1));
+    StaticTupleSize(StaticTupleElement(SymbolBody('t), 1));
 
 symbol RecordFieldNames;
 overload #RecordFieldNames('t) | Record?('t) =
-    StaticTupleElement(StaticSymbolBody('t), 1);
+    StaticTupleElement(SymbolBody('t), 1);
 
 symbol RecordFieldTypes;
 overload #RecordFieldTypes('t) | Record?('t) =
-    StaticTupleElement(StaticSymbolBody('t), 2);
+    StaticTupleElement(SymbolBody('t), 2);
 
 
 
@@ -80,12 +84,12 @@ overload #VariantType(...'members) = (VariantTag, (...'members));
 symbol Variant?;
 overload #Variant?('t) = 
     StaticSymbol?('t)
-    and TupleWithTag?(StaticSymbolBody('t), VariantTag);
+    and TupleWithTag?(SymbolBody('t), VariantTag);
 
 symbol VariantMembers;
 overload #VariantMembers('t) | Variant?('t) = (
-    ...StaticTupleElements(StaticTupleElement(StaticSymbolBody('t), 1)),
-    ...StaticTupleElements(StaticSymbolAttributes('t)),
+    ...StaticTupleElements(StaticTupleElement(SymbolBody('t), 1)),
+    ...StaticSymbolAttributes('t),
 );
 
 

@@ -378,15 +378,15 @@ overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:Val
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
         () ref=> maybe(variantAs(x.head.ast, ast.Symbol).expr,
-            expr ref=> evaluateExpr(expr, newEnv(x.env)),
-            () ref=> Value(TupleValue()),
+            expr ref=> evaluateExprList(expr, newEnv(x.env)),
+            () ref=> ValueList(),
         )
     );
 }
 
 symbolAttributes(x:Symbol) {
     return safeInitialize(x.attributes,
-        () ref=> Value(TupleValue(evaluateAttributes(Value(x))))
+        () ref=> evaluateAttributes(Value(x))
     );
 }
 
@@ -1695,11 +1695,11 @@ evaluatePrimitive(kind, args) {
     }
     case PRIM_StaticSymbolBody : {
         var a = oneSymbol(args);
-        return ValueList(symbolBody(a));
+        return symbolBody(a);
     }
     case PRIM_StaticSymbolAttributes : {
         var a = oneSymbol(args);
-        return ValueList(symbolAttributes(a));
+        return symbolAttributes(a);
     }
     case PRIM_StaticModule : {
         var a = oneValue(args);
