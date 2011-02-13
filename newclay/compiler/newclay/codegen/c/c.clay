@@ -1306,12 +1306,12 @@ codegenStandaloneProgramTo(config:CodegenConfig, stream) {
     var mainS = analyzeCallable(getHooks().callMain, RTValues());
 
     var mainResultsOk? = maybe(mainS.results,
-        results => size(results) == 1 and results[0].type == int32Type(),
+        results => size(results) == 1 and results[0].type == intType(),
         () => true
     );
 
     if (not mainResultsOk?)
-        genericError("callMain() must return an Int32 but returns ", mainS.results);
+        genericError("callMain() must return an Int but returns ", mainS.results);
 
     var c = codegenFromEntryPoints(config, Vector[Specialization](mainS));
     printCodegenTo(stream, c);
