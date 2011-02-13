@@ -1,0 +1,3 @@
+unwrap(#'x) = 'x;
+
+main() = unwrap(#(1, true, '3', "four"));

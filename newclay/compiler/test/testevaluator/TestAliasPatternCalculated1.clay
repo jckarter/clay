@@ -1,0 +1,9 @@
+symbol Bas;
+
+#Bar() = Bas;
+
+alias Foo = Bar();
+
+#foo(Foo) = Foo;
+
+#Main() = foo(Bas);
