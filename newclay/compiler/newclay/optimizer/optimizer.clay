@@ -38,7 +38,7 @@ coalesceBinding(cc:CoalesceContext, from:RTValue, to:RTValue) {
     // rvalues can merge with previous rvalues.
     // permanent values can merge with previous rvalues (even if rvalue is a ref!)
     if (from.kind == RT_VALUE_RVALUE) {
-        assert(localVariable?(to) or not inValues?(to.kind, RT_VALUE_CONST, RT_VALUE_REF),
+        assert(localVariable?(to) or immediateValue?(to) or not inValues?(to.kind, RT_VALUE_CONST, RT_VALUE_REF),
             "coalescing invariant: rvalue cannot be bound to const or ref reference"
         );
         assert(cFrom.kind == RT_VALUE_RVALUE,
@@ -47,7 +47,7 @@ coalesceBinding(cc:CoalesceContext, from:RTValue, to:RTValue) {
 
         if (to.kind == RT_VALUE_RVALUE)
             cc.map^[to] = cFrom;
-        else {
+        else if (variable?(cFrom)) {
             var newVar = RTValue(to.kind, to.type, cFrom.referent,
                 maybe(to.name, x ref=> to.name, () ref=> cFrom.name)
             );
@@ -185,13 +185,6 @@ overload coalescedNode(cmap:RTValueMap, node:ir.Consume) {
     assert(coalesced(cmap, node.value) == node.value, "coalescing invariant: Consumed values should never be referenced, so they should never be coalesced");
     return node;
 }
-
-overload coalescedNode(cmap:RTValueMap, node:ir.ValueList)
-    = ir.ValueList(
-        node.ast,
-        node.valueList,
-        coalescedVars(cmap, node.outputs),
-    );
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Call)
     = ir.Call(
