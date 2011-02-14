@@ -8,10 +8,12 @@ printf(fmt:StringConstant, value) { c_printf(cstring(fmt), value); }
 show(s:StringConstant) { puts(s); }
 overload show(b:Bool) { puts(if (b) "true" else "false"); }
 overload show(c:Char) { printf("%c\n", c); }
-overload show(i:'I) | SignedInteger?('I) { printf("%d\n", i); }
-overload show(i:'I) | UnsignedInteger?('I) { printf("%u\n", i); }
-overload show(f:'F) | Float?('F) { printf("%.18g\n", f); }
+overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) <= 4 { printf("%d\n", i); }
+overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) <= 4 { printf("%u\n", i); }
+overload show(f:'F) | FloatType?('F) { printf("%.18g\n", f); }
 // XXX target-sensitive
-overload show(i:Int64) { printf("%lld\n", i); }
-overload show(i:UInt64) { printf("%llu\n", i); }
+overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) == 8 { printf("%lld\n", i); }
+overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) == 8 { printf("%llu\n", i); }
+
+overload show(#'x) { puts(StaticName('x)); }
 

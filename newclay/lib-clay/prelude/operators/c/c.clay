@@ -3,90 +3,89 @@ import prelude.types.(Bool);
 
 // TODO
 // A lot of this is more tightly coupled with the C codegen implementation than it ought to be.
-// Also, all of these functions should be inlined once the compiler supports inlining.
 
 // Array types are codegenned as a struct to avoid array decay. The array is in
 // a field named "array"
-primitiveIndex(#'T, const array, index) const returned:'T
+inline cIndex(#'T, const array, index) const returned:'T
     __c__ """$returned = &$array.array[$index];""";
-overload primitiveIndex(#'T, rvalue array, index) rvalue returned:'T
+inline overload cIndex(#'T, rvalue array, index) rvalue returned:'T
     __c__ """$returned = &$array.array[$index];""";
-overload primitiveIndex(#'T, ref array, index) ref returned:'T
+inline overload cIndex(#'T, ref array, index) ref returned:'T
     __c__ """$returned = &$array.array[$index];""";
 
-primitiveFieldRef(#'T, const aggregate, #'field) const returned:'T
+inline cFieldRef(#'T, const aggregate, #'field) const returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
-overload primitiveFieldRef(#'T, rvalue aggregate, #'field) rvalue returned:'T
+inline overload cFieldRef(#'T, rvalue aggregate, #'field) rvalue returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
-overload primitiveFieldRef(#'T, ref aggregate, #'field) ref returned:'T
+inline overload cFieldRef(#'T, ref aggregate, #'field) ref returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
 
-primitiveDereference(#'T, const ptr) const returned:'T
+inline cDereference(#'T, const ptr) const returned:'T
     __c__ """$returned = $ptr;""";
-overload primitiveDereference(#'T, rvalue ptr) rvalue returned:'T
+inline overload cDereference(#'T, rvalue ptr) rvalue returned:'T
     __c__ """$returned = $ptr;""";
-overload primitiveDereference(#'T, ref ptr) ref returned:'T
+inline overload cDereference(#'T, ref ptr) ref returned:'T
     __c__ """$returned = $ptr;""";
 
 
-primitiveMinus(#'T, a) returned:'T
+inline cMinus(#'T, a) returned:'T
     __c__ """$returned = -$a;""";
 
-primitiveBitnot(#'T, a) returned:'T
+inline cBitnot(#'T, a) returned:'T
     __c__ """$returned = ~$a;""";
 
-primitiveMultiply(#'T, a, b) returned:'T
+inline cMultiply(#'T, a, b) returned:'T
     __c__ """$returned = $a * $b;""";
 
-primitiveDivide(#'T, a, b) returned:'T
+inline cDivide(#'T, a, b) returned:'T
     __c__ """$returned = $a / $b;""";
 
-primitiveRemainder(#'T, a, b) returned:'T
+inline cRemainder(#'T, a, b) returned:'T
     __c__ """$returned = $a % $b;""";
 
-primitiveAdd(#'T, a, b) returned:'T
+inline cAdd(#'T, a, b) returned:'T
     __c__ """$returned = $a + $b;""";
 
-primitiveSubtract(#'T, a, b) returned:'T
+inline cSubtract(#'T, a, b) returned:'T
     __c__ """$returned = $a - $b;""";
 
-primitiveBitand(#'T, a, b) returned:'T
+inline cBitand(#'T, a, b) returned:'T
     __c__ """$returned = $a & $b;""";
 
-primitiveBitor(#'T, a, b) returned:'T
+inline cBitor(#'T, a, b) returned:'T
     __c__ """$returned = $a | $b;""";
 
-primitiveBitxor(#'T, a, b) returned:'T
+inline cBitxor(#'T, a, b) returned:'T
     __c__ """$returned = $a ^ $b;""";
 
 
-primitiveLesser?(a, b) returned:Bool
+inline cLesser?(a, b) returned:Bool
     __c__ """$returned = $a < $b;""";
 
-primitiveLesserEquals?(a, b) returned:Bool
+inline cLesserEquals?(a, b) returned:Bool
     __c__ """$returned = $a <= $b;""";
 
-primitiveGreater?(a, b) returned:Bool
+inline cGreater?(a, b) returned:Bool
     __c__ """$returned = $a > $b;""";
 
-primitiveGreaterEquals?(a, b) returned:Bool
+inline cGreaterEquals?(a, b) returned:Bool
     __c__ """$returned = $a >= $b;""";
 
-primitiveEquals?(a, b) returned:Bool
+inline cEquals?(a, b) returned:Bool
     __c__ """$returned = $a == $b;""";
 
-primitiveNotEquals?(a, b) returned:Bool
+inline cNotEquals?(a, b) returned:Bool
     __c__ """$returned = $a != $b;""";
 
-primitiveAssign(ref a, forward b)
+inline cAssign(ref a, forward b)
     __c__ """$a = $b;""";
 
-primitiveExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returned:'O
+inline cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returned:'O
     | Type?('O)
     __c__ """$returned = $callable($...args);""";
-overload primitiveExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args)
+inline overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args)
     | 'O == ()
     __c__ """$callable($...args);""";

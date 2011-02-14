@@ -1,13 +1,38 @@
-static allValues?('f) = true;
-static overload allValues?('f, 'x, ...'xs) = 'f('x) and allValues?('f, ...'xs);
+import __primitives__.(StaticCountValues);
 
-static equalValues?('x0) = true;
-static overload equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, 'xs);
+symbol allValues?;
+overload #allValues?('f) = true;
+overload #allValues?('f, 'x, ...'xs) = 'f('x) and allValues?('f, ...'xs);
+inline overload allValues?(f) = true;
+inline overload allValues?(f, forward x, forward ...xs)
+    = f(x) and allValues?(f, ...xs);
 
-static countValues() = 0;
-static overload countValues('x, ...'xs) = 1 + countValues(...'xs);
+symbol equalValues?;
+overload #equalValues?('x0) = true;
+overload #equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, 'xs);
+inline overload equalValues?(x0) = true;
+inline overload equalValues?(x0, forward x1, forward ...xs)
+    = x0 == x1 and equalValues?(x0, xs);
 
-static takeValues('n) = ;
-static overload takeValues(0, ...'xs) = ;
-static overload takeValues('n, 'x, ...'xs)
-    | StaticInt?('n) and 'n > 0 = 'x, ...takeValues('n - 1, ...'xs);
+symbol countValues;
+overload #countValues(...'xs) = StaticCountValues(...'xs);
+inline overload countValues(...xs:'T) = unwrap(#StaticCountValues(...'T));
+
+symbol takeValues;
+overload #takeValues('n) | StaticInt?('n) = ;
+overload #takeValues(0, ...'xs) = ;
+overload #takeValues('n, 'x, ...'xs)
+    | StaticInt?('n) and 'n > 0
+    = 'x, ...takeValues('n - 1, ...'xs);
+inline overload takeValues(#'n) | StaticInt?('n) = ;
+inline overload takeValues(#0) = ;
+inline overload takeValues(#'n, forward x, forward ...xs)
+    | StaticInt?('n) and 'n > 0
+    = forward x, forward ...takeValues(#('n - 1), ...xs);
+
+symbol mapValues;
+overload #mapValues('f) = ;
+overload #mapValues('f, 'x, ...'xs) = 'fn('x), ...mapValues('fn, ...'xs);
+inline overload mapValues(fn) = ;
+inline overload mapValues(fn, forward x:'T, forward ...xs:'TT)
+    = forward fn(x), forward ...mapValues(fn, ...xs);
