@@ -1908,6 +1908,9 @@ private unifyArgumentType(formalArg:ast.Argument, arg:RTValue, env) {
             () => true,
         ),
         ast.StaticArgument, x ref=> {
+            if (not staticType?(arg.type))
+                return false;
+
             var staticPattern = evaluatePattern(x.pattern, env);
             return unify(staticPattern, staticTypeValue(arg.type));
         }
@@ -1924,8 +1927,12 @@ private unifyVariadicArgumentType(formalArg, args, env) {
             () => true,
         ),
         ast.StaticArgument, x ref=> {
+            for(arg in args)
+                if (not staticType?(arg.type))
+                    return false;
+
             var staticPattern = evaluateListPatternCell(x.pattern, env);
-            var types = ValueList(mapped(x => staticTypeValue(x.type), args));
+            var types = ValueList(mapped(arg => staticTypeValue(arg.type), args));
             return unifyList(staticPattern, types);
         },
     );
@@ -2230,33 +2237,36 @@ analyzeCallable2(callable:Value, args:RTValues) Specialization {
     var entryPtr = lookup(invokeTable, ArgumentList(args));
     if (not null?(entryPtr))
         return entrySpecialization(entryPtr^);
+    var lowered? = false;
+    var loweredArgs = Vector[RTValue]();
     invokeTable[ArgumentList(args)] = InvokeEntry(nothing(Specialization));
-    var specialization = findOverload(getProgram(), callable, args);
-    ref loweredArgs = specialization.args;
-    var lowered? = not equalArguments?(loweredArgs, args);
-    if (lowered?) {
-        var entryPtr = lookup(invokeTable, ArgumentList(loweredArgs));
-        if (not null?(entryPtr)) {
-            var s = entrySpecialization(entryPtr^);
-            invokeTable[ArgumentList(args)].specialization = Maybe(s);
-            return s;
-        }
-        invokeTable[ArgumentList(loweredArgs)] = InvokeEntry(nothing(Specialization));
-    }
     try {
+        var specialization = findOverload(getProgram(), callable, args);
+        loweredArgs = specialization.args;
+        if (not equalArguments?(loweredArgs, args)) {
+            var entryPtr = lookup(invokeTable, ArgumentList(loweredArgs));
+            if (not null?(entryPtr)) {
+                var s = entrySpecialization(entryPtr^);
+                invokeTable[ArgumentList(args)].specialization = Maybe(s);
+                return s;
+            }
+            invokeTable[ArgumentList(loweredArgs)] = InvokeEntry(nothing(Specialization));
+            lowered? = true;
+        }
         alias s = specialization;
         analyzeCallableReturns(s);
+        invokeTable[ArgumentList(args)].specialization = Maybe(specialization);
+        if (lowered?)
+            invokeTable[ArgumentList(loweredArgs)].specialization = Maybe(specialization);
+        return specialization;
     }
     catch (e) {
         remove(invokeTable, ArgumentList(args));
-        if (lowered?)
+        if (lowered?) {
             remove(invokeTable, ArgumentList(loweredArgs));
+        }
         throw e;
     }
-    invokeTable[ArgumentList(args)].specialization = Maybe(specialization);
-    if (lowered?)
-        invokeTable[ArgumentList(loweredArgs)].specialization = Maybe(specialization);
-    return specialization;
 }
 
 
