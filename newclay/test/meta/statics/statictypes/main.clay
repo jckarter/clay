@@ -1,0 +1,67 @@
+import meta.statics.*;
+import show.*;
+
+main() {
+    show("is a string a string?");
+    show(#StaticString?("string"));
+    show(#StaticString?(""));
+
+    show("is an unstring a string?");
+    show(#StaticString?(1));
+    show(#StaticString?(true));
+    show(#StaticString?('3'));
+    show(#StaticString?(()));
+    show(#StaticString?(prelude));
+
+    show("is an int an int?");
+    show(#StaticInt?(1));
+    show(#StaticInt?(1i8));
+    show(#StaticInt?(1i16));
+    show(#StaticInt?(1i32));
+    show(#StaticInt?(1i64));
+    show(#StaticInt?(1u));
+    show(#StaticInt?(1u8));
+    show(#StaticInt?(1u16));
+    show(#StaticInt?(1u32));
+    show(#StaticInt?(1u64));
+
+    show("is an unint an int?");
+    show(#StaticInt?("1"));
+    show(#StaticInt?(true));
+    show(#StaticInt?('3'));
+    show(#StaticInt?(()));
+    show(#StaticInt?(prelude));
+
+    show("is a bool a bool?");
+    show(#StaticBool?(true));
+    show(#StaticBool?(false));
+
+    show("is an unbool a bool?");
+    show(#StaticBool?(1));
+    show(#StaticBool?("2"));
+    show(#StaticBool?('3'));
+    show(#StaticBool?(()));
+    show(#StaticBool?(prelude));
+
+    show("is a tuple a tuple?");
+    show(#StaticTuple?(()));
+    show(#StaticTuple?((1,))); // (expr,) is a one-element tuple
+    show(#StaticTuple?((1, true, "three")));
+
+    show("is an untuple a tuple?");
+    show(#StaticTuple?((1))); // (expr) is a parenthesized expression
+    show(#StaticTuple?(true));
+    show(#StaticTuple?('3'));
+    show(#StaticTuple?("four"));
+    show(#StaticTuple?(prelude));
+
+    show("is a module a module?");
+    show(#StaticModule?(prelude));
+
+    show("is an unmodule a module?");
+    show(#StaticModule?(1));
+    show(#StaticModule?(true));
+    show(#StaticModule?('3'));
+    show(#StaticModule?("four"));
+    show(#StaticModule?(()));
+}

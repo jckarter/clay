@@ -1,0 +1,53 @@
+is a string a string?
+true
+true
+is an unstring a string?
+false
+false
+false
+false
+false
+is an int an int?
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+is an unint an int?
+false
+false
+false
+false
+false
+is a bool a bool?
+true
+true
+is an unbool a bool?
+false
+false
+false
+false
+false
+is a tuple a tuple?
+true
+true
+true
+is an untuple a tuple?
+false
+false
+false
+false
+false
+is a module a module?
+true
+is an unmodule a module?
+false
+false
+false
+false
+false
