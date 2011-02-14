@@ -1883,7 +1883,7 @@ qualifiedValueString(symbol:Value) {
 }
 
 
-private argVariables(env, argsAst) {
+private argRTValues(env, argsAst) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var s = SpecializationContext(&body, &complete?);
@@ -1940,19 +1940,19 @@ private expressionStringAst3(argsAst, entry:EnvEntry)
 evaluateAliasPrimitive(kind, env, callAst) {
     switch (kind) {
 
-    case APRIM_Returns? : {
-        return ValueList(BoolValue(just?(argVariables(env, callAst.args))));
+    case APRIM_ExpressionReturns? : {
+        return ValueList(BoolValue(just?(argRTValues(env, callAst.args))));
     }
 
-    case APRIM_Type : {
-        return maybe(argVariables(env, callAst.args),
+    case APRIM_ExpressionType : {
+        return maybe(argRTValues(env, callAst.args),
             vars ref=> ValueList(map(v => v.type, vars)),
             ()   ref=> ValueList(),
         );
     }
 
-    case APRIM_RefType : {
-        return maybe(argVariables(env, callAst.args),
+    case APRIM_ExpressionRefType : {
+        return maybe(argRTValues(env, callAst.args),
             vars ref=> ValueList(map(v => refType(v), vars)),
             ()   ref=> ValueList(),
         );
@@ -1984,6 +1984,26 @@ evaluateAliasPrimitive(kind, env, callAst) {
             Value(IntValue(StaticIntValue(Int64(line)))),
             Value(IntValue(StaticIntValue(Int64(column))))
         );
+    }
+
+    case APRIM_StaticExpressionDefined? : {
+        var defined? = true;
+        try {
+            evaluateExprList(callAst.args, env);
+        } catch (e:SemanticError) {
+            defined? = false;
+        }
+        return ValueList(BoolValue(defined?));
+    }
+
+    case APRIM_ExpressionDefined? : {
+        var defined? = true;
+        try {
+            argRTValues(env, callAst.args);
+        } catch (e:SemanticError) {
+            defined? = false;
+        }
+        return ValueList(BoolValue(defined?));
     }
 
     default : {

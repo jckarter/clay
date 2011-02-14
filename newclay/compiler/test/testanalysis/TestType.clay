@@ -1,6 +1,6 @@
 import __primitives__.*;
 
-#foo() = Type(1 + 2);
+#foo() = ExpressionType(1 + 2);
 
 main() {
     return #foo();

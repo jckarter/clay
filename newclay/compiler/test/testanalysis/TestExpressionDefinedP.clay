@@ -1,0 +1,18 @@
+import __primitives__.*;
+
+#Foo?('T) = 'T == Int8 or 'T == Int64;
+
+symbol foo;
+overload foo(x:'T) | Foo?('T) = x;
+overload foo(x:Char) = x;
+overload foo(#'a') = 'a';
+overload foo(#'X') | StaticError("I AM ERROR.") {}
+
+main() =
+    #ExpressionDefined?(foo(1_i8)),  // true
+    #ExpressionDefined?(foo(1_i64)), // true
+    #ExpressionDefined?(foo(1)),     // false
+    #ExpressionDefined?(foo('a')),   // true
+    #ExpressionDefined?(foo(#'a')),  // true
+    #ExpressionDefined?(foo(#'b')),  // false
+    #ExpressionDefined?(foo(#'X'));  // false

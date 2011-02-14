@@ -345,9 +345,11 @@ overload primitiveName(p:Primitive) = primitiveName(p.kind);
 //
 
 enum AliasPrimitiveKind {
-    APRIM_Returns?,
-    APRIM_RefType,
-    APRIM_Type,
+    APRIM_ExpressionReturns?,
+    APRIM_ExpressionRefType,
+    APRIM_ExpressionType,
+    APRIM_StaticExpressionDefined?,
+    APRIM_ExpressionDefined?,
     APRIM_ExpressionString,
     APRIM_ExpressionLocation,
 }

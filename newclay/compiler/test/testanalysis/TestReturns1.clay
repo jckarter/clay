@@ -4,5 +4,5 @@ terminating() { return; }
 nonterminating() { throw 0; }
 
 main() {
-    return #Returns?(...terminating()), #Returns?(...nonterminating());
+    return #ExpressionReturns?(...terminating()), #ExpressionReturns?(...nonterminating());
 }

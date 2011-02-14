@@ -1,0 +1,12 @@
+import __primitives__.*;
+
+symbol foo;
+overload #foo('x) | StaticInt?('x) = 'x;
+overload #foo('a') = 'a';
+overload #foo('X') = StaticError("I AM ERROR.");
+
+#Main() =
+    StaticExpressionDefined?(foo(1)),
+    StaticExpressionDefined?(foo("a")),
+    StaticExpressionDefined?(foo('a')),
+    StaticExpressionDefined?(foo('X'));
