@@ -1,3 +1,4 @@
+public import prelude.diagnostics.*;
 public import prelude.procedures.*;
 public import prelude.operators.*;
 public import prelude.types.*;

@@ -1,4 +1,4 @@
-import __primitives__.(StaticString?);
+import meta.statics.(StaticString?);
 import prelude.types.(Bool);
 
 // TODO

@@ -1,0 +1,30 @@
+public import __primitives__.(
+    StaticString?,
+    StaticStringSize,
+    StaticStringSlice,
+    StaticStringConcat,
+    StaticStringChar,
+    StaticStringChars,
+    StaticStringFromChars,
+
+    StaticTuple?,
+    StaticTuple,
+    StaticTupleSize,
+    StaticTupleElement,
+    StaticTupleElements,
+
+    StaticInt?,
+    StaticBool?,
+    StaticModule?,
+);
+
+import __primitives__;
+
+symbol StaticName = RuntimeStaticProcedure();
+overload #StaticName('x) = __primitives__.StaticName('x);
+
+symbol StaticQualifiedName = RuntimeStaticProcedure();
+overload #StaticQualifiedName('x) = __primitives__.StaticQualifiedName('x);
+
+symbol StaticModule = RuntimeStaticProcedure();
+overload #StaticModule('x) = __primitives__.StaticModule('x);

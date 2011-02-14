@@ -1,3 +1,5 @@
+import meta.statics.(StaticName);
+
 // dumb simple library for displaying values for debugging purposes
 import libc.(puts as c_puts, printf as c_printf);
 import ctypes.(cstring);
@@ -15,5 +17,5 @@ overload show(f:'F) | FloatType?('F) { printf("%.18g\n", f); }
 overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) == 8 { printf("%lld\n", i); }
 overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) == 8 { printf("%llu\n", i); }
 
-overload show(#'x) { puts(StaticName('x)); }
+overload show(#'x) { puts(StaticName(#'x)); }
 
