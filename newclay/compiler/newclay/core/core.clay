@@ -308,6 +308,7 @@ enum PrimitiveKind {
     PRIM_StaticModuleMember,
     PRIM_StaticModuleMember?,
 
+    PRIM_StaticObserve,
     PRIM_StaticError,
     PRIM_StaticAssert,
 
