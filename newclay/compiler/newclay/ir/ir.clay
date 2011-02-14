@@ -199,6 +199,7 @@ overload nodeInputs(node:If) = RTValues(node.condition);
 overload nodeInputs(node:Not) = RTValues(node.input);
 overload nodeInputs(node:AddressOf) = RTValues(node.input);
 overload nodeInputs(node:Bind) = RTValues(node.input);
+overload nodeInputs(node:BindReturn) = RTValues(node.input);
 overload nodeInputs(node:Initialize) = RTValues(node.input);
 overload nodeInputs(node:Throw) = RTValues(node.exception);
 overload nodeInputs(node:Adopt) = RTValues(node.value);
