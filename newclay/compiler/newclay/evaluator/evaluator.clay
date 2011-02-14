@@ -5,6 +5,7 @@ import newclay.ast.transforms.*;
 import newclay.ir as ir;
 import newclay.analysis.*;
 import newclay.core.*;
+//import newclay.common.(displayError);
 import newclay.hooks.*;
 import newclay.diagnostics.(computeLocation);
 import numbers.floats.*;
@@ -1887,12 +1888,29 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-
-private argRTValues(env, argsAst) {
+private argRTValues(env:Env, argsAst:ast.ExprList) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var s = SpecializationContext(&body, &complete?);
+    addEnvRvalues(s, env);
+
     return analyzeExprListNode(s, env, argsAst);
+}
+
+private addEnvRvalues(s, envParent) {}
+overload addEnvRvalues(s, env:Env) {
+    for (name, entry in items(env.entries))
+        match(entry,
+            RTValue, v ref=> {
+                addRvalue(s, v);
+            },
+            RTValueList, vl ref=> {
+                for (v in vl.vars)
+                    addRvalue(s, v);
+            },
+            MatchDefault, x ref=> {}
+        );
+    addEnvRvalues(s, *env.parent);
 }
 
 private refType(v) {
@@ -1996,6 +2014,7 @@ evaluateAliasPrimitive(kind, env, callAst) {
         try {
             evaluateExprList(callAst.args, env);
         } catch (e:SemanticError) {
+            //displayError(e);
             defined? = false;
         }
         return ValueList(BoolValue(defined?));
@@ -2006,6 +2025,7 @@ evaluateAliasPrimitive(kind, env, callAst) {
         try {
             argRTValues(env, callAst.args);
         } catch (e:SemanticError) {
+            //displayError(e);
             defined? = false;
         }
         return ValueList(BoolValue(defined?));
