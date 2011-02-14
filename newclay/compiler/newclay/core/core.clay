@@ -317,6 +317,8 @@ enum PrimitiveKind {
     PRIM_CallDefinedForSymbol?,
     PRIM_StaticCallDefined?,
 
+    PRIM_StaticCountValues,
+
     PRIM_PlatformCPUName,
     PRIM_PlatformCPUFamilyName,
     PRIM_PlatformCPUPointerBits,

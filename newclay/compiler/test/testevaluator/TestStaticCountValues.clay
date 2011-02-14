@@ -1,0 +1,11 @@
+import __primitives__.*;
+
+#foo() = 1, 2, 3;
+
+#Main() =
+    StaticCountValues(),
+    StaticCountValues(1),
+    StaticCountValues(1, 2),
+    StaticCountValues(1, 2, 3),
+    StaticCountValues(...foo()),
+    StaticCountValues(...foo(), 4);
