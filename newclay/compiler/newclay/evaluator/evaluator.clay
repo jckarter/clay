@@ -1781,6 +1781,10 @@ evaluatePrimitive(kind, args) {
         return ValueList(BoolValue(callDefined?));
     }
 
+    case PRIM_StaticCountValues : {
+        return ValueList(IntValue(StaticIntValue(Int64(size(args)))));
+    }
+
     case PRIM_PlatformCPUName :
         return ValueList(StringValue(printString(getProgram().targetInfo.cpu)));
 
