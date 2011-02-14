@@ -1,35 +1,54 @@
 import __primitives__.*;
-import symbols.(SymbolBody, SymbolWithTag?);
+import meta.symbols.*;
 import values.(allValues?);
 import prelude.types.lowlevel.*;
+import meta.platform.*;
+
+public import __primitives__.(
+    ExpressionReturns?       as Returns?,
+    ExpressionRefType        as RefType,
+    ExpressionType           as Type,
+    StaticExpressionDefined? as StaticDefined?,
+    ExpressionDefined?       as Defined?,
+);
+
+
+//
+// TypeSize, TypeAlign
+//
+
+symbol TypeSize  = RuntimeStaticProcedure();
+symbol TypeAlign = RuntimeStaticProcedure();
+
+overload #TypeSize ('T) | Type?('T) = LLTypeSize (ToLowLevelType('T));
+overload #TypeAlign('T) | Type?('T) = LLTypeAlign(ToLowLevelType('T));
 
 
 //
 // basic type predicates
 //
 
-static TypeTemplate?('x) = false;
-static Type?('x) = false;
-static PODType?('T) = false;
-static BitwiseCopiedType?('T) = PODType?('T);
-static BitwiseMovedType?('T) = PODType?('T);
-static NotDestroyedType?('T) = PODType?('T);
-static NotResetType?('T) = PODType?('T);
-static CopyDoesNotThrowType?('T) = PODType?('T);
-static AssignDoesNotThrowType?('T) = PODType?('T);
-static BitwiseAssignedType?('T) = BitwiseCopiedType?('T) and NotDestroyedType?('T);
-static BitwiseMoveAssignedType?('T) = BitwiseMovedType?('T) and NotDestroyedType?('T);
+#Type?('x) = false;
+#PODType?('T) = false;
+#BitwiseCopiedType?('T) = PODType?('T);
+#BitwiseMovedType?('T) = PODType?('T);
+#NotDestroyedType?('T) = PODType?('T);
+#NotResetType?('T) = PODType?('T);
+#CopyDoesNotThrowType?('T) = PODType?('T);
+#AssignDoesNotThrowType?('T) = PODType?('T);
+#BitwiseAssignedType?('T) = BitwiseCopiedType?('T) and NotDestroyedType?('T);
+#BitwiseMoveAssignedType?('T) = BitwiseMovedType?('T) and NotDestroyedType?('T);
 
-static InheritableTypePredicate?('X) = false;
-static overload InheritableTypePredicate?(PODType?) = true;
-static overload InheritableTypePredicate?(BitwiseCopiedType?) = true;
-static overload InheritableTypePredicate?(BitwiseMovedType?) = true;
-static overload InheritableTypePredicate?(NotDestroyedType?) = true;
-static overload InheritableTypePredicate?(NotResetType?) = true;
-static overload InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
-static overload InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
-static overload InheritableTypePredicate?(BitwiseAssignedType?) = true;
-static overload InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
+#InheritableTypePredicate?('X) = false;
+overload #InheritableTypePredicate?(PODType?) = true;
+overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
+overload #InheritableTypePredicate?(BitwiseMovedType?) = true;
+overload #InheritableTypePredicate?(NotDestroyedType?) = true;
+overload #InheritableTypePredicate?(NotResetType?) = true;
+overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
+overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
+overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
+overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
 
 
 
@@ -41,10 +60,10 @@ symbol Ref['T];
 symbol Rvalue['T];
 symbol Const['T];
 
-static ReferenceKindTemplate?('x) = false;
-static overload ReferenceKindTemplate?(Ref) = true;
-static overload ReferenceKindTemplate?(Rvalue) = true;
-static overload ReferenceKindTemplate?(Const) = true;
+#ReferenceKindTemplate?('x) = false;
+overload #ReferenceKindTemplate?(Ref) = true;
+overload #ReferenceKindTemplate?(Rvalue) = true;
+overload #ReferenceKindTemplate?(Const) = true;
 
 
 
@@ -55,12 +74,12 @@ static overload ReferenceKindTemplate?(Const) = true;
 symbol CdeclABI;
 symbol StdcallABI;
 
-static ABI?('x) = false;
-static overload ABI?(CdeclABI) = true;
-static overload ABI?(StdcallABI) = true;
+#ABI?('x) = false;
+overload #ABI?(CdeclABI) = true;
+overload #ABI?(StdcallABI) = true;
 
-static ABISupportsVariadics?('x) = false;
-static overload ABISupportsVariadics?(CdeclABI) = true;
+#ABISupportsVariadics?('x) = false;
+overload #ABISupportsVariadics?(CdeclABI) = true;
 
 
 
@@ -68,17 +87,19 @@ static overload ABISupportsVariadics?(CdeclABI) = true;
 // primitive types
 //
 
-private symbol PrimitiveTypeTag;
-private static PrimitiveType('LLType) = (PrimitiveTypeTag, 'LLType);
+private #PrimitiveType('LLType) = (PrimitiveType, 'LLType);
 
-static PrimitiveType?('T) = SymbolWithTag?('T, PrimitiveTypeTag);
+#PrimitiveType?('T) = SymbolWithTag?('T, PrimitiveType);
 
-static overload Type?('T) | PrimitiveType?('T) = true;
-static overload PODType?('T) | PrimitiveType?('T) = true;
+overload #Type?('T) | PrimitiveType?('T) = true;
+overload #PODType?('T) | PrimitiveType?('T) = true;
 
-static overload ToLowLevelType('T) | PrimitiveType?('T) = SymbolBody('T).1;
+overload #ToLowLevelType('T) | PrimitiveType?('T) = SymbolBody('T).1;
 
 symbol Bool = PrimitiveType(LLBoolType);
+
+symbol Int   = PrimitiveType(LLIntegerType[LLSigned,   PlatformCPUPointerSize()]);
+symbol UInt  = PrimitiveType(LLIntegerType[LLUnsigned, PlatformCPUPointerSize()]);
 
 symbol Int8  = PrimitiveType(LLIntegerType[LLSigned,  8]);
 symbol Int16 = PrimitiveType(LLIntegerType[LLSigned, 16]);
@@ -93,35 +114,41 @@ symbol UInt64 = PrimitiveType(LLIntegerType[LLUnsigned, 64]);
 symbol Float32 = PrimitiveType(LLFloatType[32]);
 symbol Float64 = PrimitiveType(LLFloatType[64]);
 
-symbol Char = PrimitiveType(LLIntegerType[LLUnsigned, 8]);
+symbol Char   = PrimitiveType(LLIntegerType[LLUnsigned,  8]);
+symbol Char16 = PrimitiveType(LLIntegerType[LLUnsigned, 16]);
+symbol Char32 = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
 
-static Integer?('x) = false;
-static overload Integer?(Int8  ) = true;
-static overload Integer?(Int16 ) = true;
-static overload Integer?(Int32 ) = true;
-static overload Integer?(Int64 ) = true;
-static overload Integer?(UInt8 ) = true;
-static overload Integer?(UInt16) = true;
-static overload Integer?(UInt32) = true;
-static overload Integer?(UInt64) = true;
+#IntegerType?('x) = false;
+overload #IntegerType?(Int   ) = true;
+overload #IntegerType?(Int8  ) = true;
+overload #IntegerType?(Int16 ) = true;
+overload #IntegerType?(Int32 ) = true;
+overload #IntegerType?(Int64 ) = true;
+overload #IntegerType?(UInt  ) = true;
+overload #IntegerType?(UInt8 ) = true;
+overload #IntegerType?(UInt16) = true;
+overload #IntegerType?(UInt32) = true;
+overload #IntegerType?(UInt64) = true;
 
-static SignedInteger?('x) = false;
-static overload SignedInteger?(Int8 ) = true;
-static overload SignedInteger?(Int16) = true;
-static overload SignedInteger?(Int32) = true;
-static overload SignedInteger?(Int64) = true;
+#SignedIntegerType?('x) = false;
+overload #SignedIntegerType?(Int  ) = true;
+overload #SignedIntegerType?(Int8 ) = true;
+overload #SignedIntegerType?(Int16) = true;
+overload #SignedIntegerType?(Int32) = true;
+overload #SignedIntegerType?(Int64) = true;
 
-static UnsignedInteger?('x) = false;
-static overload UnsignedInteger?(UInt8 ) = true;
-static overload UnsignedInteger?(UInt16) = true;
-static overload UnsignedInteger?(UInt32) = true;
-static overload UnsignedInteger?(UInt64) = true;
+#UnsignedIntegerType?('x) = false;
+overload #UnsignedIntegerType?(UInt  ) = true;
+overload #UnsignedIntegerType?(UInt8 ) = true;
+overload #UnsignedIntegerType?(UInt16) = true;
+overload #UnsignedIntegerType?(UInt32) = true;
+overload #UnsignedIntegerType?(UInt64) = true;
 
-static Float?('x) = false;
-static overload Float?(Float32) = true;
-static overload Float?(Float64) = true;
+#FloatType?('x) = false;
+overload #FloatType?(Float32) = true;
+overload #FloatType?(Float64) = true;
 
-static Number?('T) = Integer?('T) or Float?(T);
+#NumberType?('T) = IntegerType?('T) or FloatType?('T);
 
 
 
@@ -131,9 +158,9 @@ static Number?('T) = Integer?('T) or Float?(T);
 //
 
 symbol StringConstant;
-static overload Type?(StringConstant) = true;
-static overload PODType?(StringConstant) = true;
-static overload ToLowLevelType(StringConstant)
+overload #Type?(StringConstant) = true;
+overload #PODType?(StringConstant) = true;
+overload #ToLowLevelType(StringConstant)
     = LLTupleType[begin:Pointer[Char], end:Pointer[Char]];
 
 
@@ -143,13 +170,12 @@ static overload ToLowLevelType(StringConstant)
 //
 
 symbol Static['x];
-static overload TypeTemplate?(Static) = true;
-static overload Type?(Static['x]) = true;
-static overload PODType?(Static['x]) = true;
-static overload ToLowLevelType(Static['x]) = LLTupleType[];
+overload #Type?(Static['x]) = true;
+overload #PODType?(Static['x]) = true;
+overload #ToLowLevelType(Static['x]) = LLTupleType[];
 
-static Static?('X) = false;
-static overload Static?(Static['x]) = true;
+#StaticType?('X) = false;
+overload #StaticType?(Static['x]) = true;
 
 
 
@@ -158,13 +184,12 @@ static overload Static?(Static['x]) = true;
 //
 
 symbol Pointer['T];
-static overload TypeTemplate?(Pointer) = true;
-static overload Type?(Pointer['T]) | Type?('T) = true;
-static overload PODType?(Pointer['T]) | Type?('T) = true;
-static overload ToLowLevelType(Pointer['T]) = LLPointerType['T];
+overload #Type?(Pointer['T]) | Type?('T) = true;
+overload #PODType?(Pointer['T]) | Type?('T) = true;
+overload #ToLowLevelType(Pointer['T]) = LLPointerType['T];
 
-static Pointer?('X) = false;
-static overload Pointer?(Pointer['T]) | Type?('T) = true;
+#PointerType?('X) = false;
+overload #PointerType?(Pointer['T]) | Type?('T) = true;
 
 
 
@@ -172,32 +197,34 @@ static overload Pointer?(Pointer['T]) | Type?('T) = true;
 // ExternalCodePointer[ABI, Inputs, Outputs]
 //
 
-static RequireExternalPODType?('x) = PODType?('x)
+#RequireExternalPODType?('x) = PODType?('x)
     or StaticError("external code pointer argument is not a POD type: ", 'x);
 
-private static ValidExternalCodePointerOutput?('O)
+private #ValidExternalCodePointerOutput?('O)
     = (StaticTuple?('O) and StaticTupleSize('O) == 0) or RequireExternalPODType?('O);
 
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
-static overload TypeTemplate?(ExternalCodePointer) = true;
-static overload Type?(ExternalCodePointer['A, 'V, 'I, 'O])
+overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O])
     | ABI?('A)
       and StaticBool?('V)
       and allValues?(RequireExternalPODType?, ...StaticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
     = true;
-static overload PODType?(ExternalCodePointer['A,'V,'I,'O])
+overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
-static overload ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
+overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
     = LLCodePointerType['A, 'V, 'I, 'O];
 
-static ExternalCodePointer?('X) = false;
-static overload ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
+#ExternalCodePointer?('X) = false;
+overload #ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
-static ExternalOutputTypes('T) | Type?('T) = 'T;
-static overload ExternalOutputTypes('O) | 'O == () = ;
+#ExternalOutputTypes('T) | Type?('T) = 'T;
+overload #ExternalOutputTypes(()) = ;
 
+alias CCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, false, 'I, 'O];
+alias VariadicCCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, true, 'I, 'O];
+alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O];
 
 
 //
@@ -205,13 +232,12 @@ static overload ExternalOutputTypes('O) | 'O == () = ;
 //
 
 symbol Array['T, 'n];
-static overload TypeTemplate?(Array) = true;
-static overload Type?(Array['T, 'n]) | Type?('T) and StaticInt?('n) = true;
-static overload 'XType?(Array['T, 'n]) | InheritableTypePredicate?('XType?) = 'XType?('T);
-static overload ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
+overload #Type?(Array['T, 'n]) | Type?('T) and StaticInt?('n) = true;
+overload #'XType?(Array['T, 'n]) | InheritableTypePredicate?('XType?) = 'XType?('T);
+overload #ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
 
-static Array?('X) = false;
-static overload Array?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
+#ArrayType?('X) = false;
+overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 
 
 
@@ -220,13 +246,12 @@ static overload Array?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 //
 
 symbol Tuple[...'T];
-static overload TypeTemplate?(Tuple) = true;
-static overload Type?(Tuple[...'T]) | allValues?(Type?, ...'T) = true;
-static overload 'XType?(Tuple[...'T]) | allValues?('XType?, ...'T) = true;
-static overload ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
+overload #Type?(Tuple[...'T]) | allValues?(Type?, ...'T) = true;
+overload #'XType?(Tuple[...'T]) | allValues?('XType?, ...'T) = true;
+overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
 
-static Tuple?('X) = false;
-static overload Tuple?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
+#TupleType?('X) = false;
+overload #TupleType?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
 
 
 
@@ -235,12 +260,11 @@ static overload Tuple?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
 //
 
 symbol Union[...'T];
-static overload TypeTemplate?(Union) = true;
-static overload Type(Union[...'T]) | allValues?(Type?, ...'T) = true;
-static overload PODType?(Union[...'T]) | allValues?(Type?, ...'T) = true;
+overload #Type(Union[...'T]) | allValues?(Type?, ...'T) = true;
+overload #PODType?(Union[...'T]) | allValues?(Type?, ...'T) = true;
 
-static Union?('X) = false;
-static overload Union?(Union[...'T]) | Type?(Union[...'T]) = true;
+#UnionType?('X) = false;
+overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
 
 
 
@@ -248,54 +272,58 @@ static overload Union?(Union[...'T]) | Type?(Union[...'T]) = true;
 // Predicates for primitive types
 //
 
-static ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = (SignedInteger?('A) and SignedInteger?('B))
-      or (UnsignedInteger?('A) and UnsignedInteger?('B))
-      or (Float?('A) and Float?('B));
-static BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = Integer?('A) and Integer?('B);
-static ComparablePrimitiveTypes?('A, 'B)
+#ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+    = (SignedIntegerType?('A) and SignedIntegerType?('B))
+      or (UnsignedIntegerType?('A) and UnsignedIntegerType?('B));
+#ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
+      = (FloatType?('A) and FloatType?('B));
+#ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+    = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+      or ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B);
+#BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = IntegerType?('A) and IntegerType?('B);
+#ComparablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
       or ('A == Char and 'B == Char)
       or ('A == Bool and 'B == Bool);
-static EqualityComparablePrimitiveTypes?('A, 'B)
+#EqualityComparablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
       or ('A == Char and 'B == Char)
       or ('A == Bool and 'B == Bool);
 
-static AssignablePrimitiveTypes?('A, 'B)
+#AssignablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
 
-static BiggerNumericType('T, 'T) = 'T;
-static overload BiggerNumericType('A, 'B) = BiggerNumericType('B, 'A);
-static overload BiggerNumericType( Int8 ,  Int16) =  Int16;
-static overload BiggerNumericType( Int8 ,  Int32) =  Int32;
-static overload BiggerNumericType( Int8 ,  Int64) =  Int64;
-static overload BiggerNumericType( Int8 , UInt8 ) = UInt8 ;
-static overload BiggerNumericType( Int8 , UInt16) = UInt16;
-static overload BiggerNumericType( Int8 , UInt32) = UInt32;
-static overload BiggerNumericType( Int8 , UInt64) = UInt64;
-static overload BiggerNumericType( Int16,  Int32) =  Int32;
-static overload BiggerNumericType( Int16,  Int64) =  Int64;
-static overload BiggerNumericType( Int16, UInt8 ) =  Int16;
-static overload BiggerNumericType( Int16, UInt16) = UInt16;
-static overload BiggerNumericType( Int16, UInt32) = UInt32;
-static overload BiggerNumericType( Int16, UInt64) = UInt64;
-static overload BiggerNumericType( Int32,  Int64) =  Int64;
-static overload BiggerNumericType( Int32, UInt8 ) =  Int32;
-static overload BiggerNumericType( Int32, UInt16) =  Int32;
-static overload BiggerNumericType( Int32, UInt32) = UInt32;
-static overload BiggerNumericType( Int32, UInt64) = UInt64;
-static overload BiggerNumericType( Int64, UInt8 ) =  Int64;
-static overload BiggerNumericType( Int64, UInt16) =  Int64;
-static overload BiggerNumericType( Int64, UInt32) =  Int64;
-static overload BiggerNumericType( Int64, UInt64) = UInt64;
+#BiggerNumericType('T, 'T) = 'T;
+overload #BiggerNumericType('A, 'B) = BiggerNumericType('B, 'A);
+overload #BiggerNumericType( Int8 ,  Int16) =  Int16;
+overload #BiggerNumericType( Int8 ,  Int32) =  Int32;
+overload #BiggerNumericType( Int8 ,  Int64) =  Int64;
+overload #BiggerNumericType( Int8 , UInt8 ) = UInt8 ;
+overload #BiggerNumericType( Int8 , UInt16) = UInt16;
+overload #BiggerNumericType( Int8 , UInt32) = UInt32;
+overload #BiggerNumericType( Int8 , UInt64) = UInt64;
+overload #BiggerNumericType( Int16,  Int32) =  Int32;
+overload #BiggerNumericType( Int16,  Int64) =  Int64;
+overload #BiggerNumericType( Int16, UInt8 ) =  Int16;
+overload #BiggerNumericType( Int16, UInt16) = UInt16;
+overload #BiggerNumericType( Int16, UInt32) = UInt32;
+overload #BiggerNumericType( Int16, UInt64) = UInt64;
+overload #BiggerNumericType( Int32,  Int64) =  Int64;
+overload #BiggerNumericType( Int32, UInt8 ) =  Int32;
+overload #BiggerNumericType( Int32, UInt16) =  Int32;
+overload #BiggerNumericType( Int32, UInt32) = UInt32;
+overload #BiggerNumericType( Int32, UInt64) = UInt64;
+overload #BiggerNumericType( Int64, UInt8 ) =  Int64;
+overload #BiggerNumericType( Int64, UInt16) =  Int64;
+overload #BiggerNumericType( Int64, UInt32) =  Int64;
+overload #BiggerNumericType( Int64, UInt64) = UInt64;
 
-static overload BiggerNumericType(UInt8 , UInt16) = UInt16;
-static overload BiggerNumericType(UInt8 , UInt32) = UInt32;
-static overload BiggerNumericType(UInt8 , UInt64) = UInt64;
-static overload BiggerNumericType(UInt16, UInt32) = UInt32;
-static overload BiggerNumericType(UInt16, UInt64) = UInt64;
-static overload BiggerNumericType(UInt32, UInt64) = UInt64;
+overload #BiggerNumericType(UInt8 , UInt16) = UInt16;
+overload #BiggerNumericType(UInt8 , UInt32) = UInt32;
+overload #BiggerNumericType(UInt8 , UInt64) = UInt64;
+overload #BiggerNumericType(UInt16, UInt32) = UInt32;
+overload #BiggerNumericType(UInt16, UInt64) = UInt64;
+overload #BiggerNumericType(UInt32, UInt64) = UInt64;
 
-static overload BiggerNumericType(Float32, Float64) = Float64;
+overload #BiggerNumericType(Float32, Float64) = Float64;

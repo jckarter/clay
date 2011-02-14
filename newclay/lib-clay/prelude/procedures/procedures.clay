@@ -1,14 +1,41 @@
-import symbols.(SymbolWithTag?);
+import __primitives__.(CallDefinedForSymbol?);
+import meta.symbols.(SymbolWithTag?);
+
+public import __primitives__.(StaticCallDefined?);
+
+symbol CallDefined?;
+overload #CallDefined?('fn, ...'T) = CallDefinedForSymbol?('fn, ...'T);
+overload CallDefined?(/*alias*/ fn:'F, ...#'T) = unwrap(#CallDefinedForSymbol?(call, 'F, ...'T));
+overload CallDefined?(#'fn, ...#'T) = unwrap(#CallDefinedForSymbol?('fn, ...'T));
+
+#CallDefinedForType?('F, ...'T) = CallDefinedForSymbol?(call, 'F, ...'T);
 
 
 //
-// NewProcedure, Procedure?
+// procedure tags
 //
 
-private symbol ProcedureTag;
-symbol Procedure;
-static overload Procedure() = (ProcedureTag,);
+// VariadicBinaryOperatorProcedure -- define variadic version of procedure in
+// terms of the binary operation
+#VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure);
+#VariadicBinaryOperatorProcedure?('fn) = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
+inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ...w:'W)
+    | VariadicBinaryOperatorProcedure?('fn)
+      and CallDefined?('fn, 'X, 'Y)
+      and CallDefined?('fn, Type('fn(x, y)), 'Z, ...'W)
+    = forward 'fn('fn(x, y), z, ...w);
 
-static Procedure?('x) = SymbolWithTag?('x, ProcedureTag);
+overload #'fn('x, 'y, 'z, ...'w)
+    | VariadicBinaryOperatorProcedure?('fn)
+      and StaticCallDefined?('fn, 'x, 'y)
+    = 'fn('fn('x, 'y), 'z, ...'w);
 
+// RuntimeStaticProcedure -- make a static function callable as a runtime procedure
+
+#RuntimeStaticProcedure() = (RuntimeStaticProcedure);
+#RuntimeStaticProcedure?('fn) = SymbolWithTag?('fn, RuntimeStaticProcedure);
+inline overload 'fn(...#'xs)
+    | RuntimeStaticProcedure?('fn)
+      and StaticCallDefined?('fn, ...'xs)
+    = unwrap(#'fn(...'xs));
 

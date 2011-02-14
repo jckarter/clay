@@ -1,0 +1,16 @@
+public import __primitives__.(
+    StaticSymbolBody as SymbolBody,
+    StaticSymbol? as Symbol?,
+    StaticSymbolAttributes as SymbolAttributes,
+);
+import __primitives__.(StaticTuple?, StaticTupleSize);
+
+private #TupleWithTag?('t, 'tag)
+    = StaticTuple?('t) and StaticTupleSize('t) > 0 and 't.0 == 'tag;
+
+private symbol SymbolBodyWithTag?;
+overload #SymbolBodyWithTag?('tag, 'x, ...'xs)
+    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ...'xs);
+overload #SymbolBodyWithTag?('tag) = false;
+
+#SymbolWithTag?('x, 'tag) = Symbol?('x) and SymbolBodyWithTag?('tag, ...SymbolBody('x));

@@ -1,7 +1,7 @@
 import ctypes.*;
 
-// XXX use ctypes
 external abort() /*noreturn*/;
-external exit(code:Int32) /*noreturn*/;
+external exit(code:CInt) /*noreturn*/;
+// XXX Use CChar once pointer casting is implemented
 external puts(s:Pointer[Char]) Int32;
 external printf(format:Pointer[Char], ...) Int32;
