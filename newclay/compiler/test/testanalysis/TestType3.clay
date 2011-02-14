@@ -6,6 +6,6 @@ rvalueReturn() rvalue x:Int __c__ """abort();""";
 constReturn() const x:Int __c__ """abort();""";
 
 main() {
-    return ...#Type(valueReturn(), refReturn(), rvalueReturn(), constReturn()),
-           ...#RefType(valueReturn(), refReturn(), rvalueReturn(), constReturn());
+    return ...#ExpressionType(valueReturn(), refReturn(), rvalueReturn(), constReturn()),
+           ...#ExpressionRefType(valueReturn(), refReturn(), rvalueReturn(), constReturn());
 }
