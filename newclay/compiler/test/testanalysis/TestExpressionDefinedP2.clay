@@ -1,0 +1,5 @@
+import __primitives__.*;
+
+foo(a, b) ExpressionType(a + b) | ExpressionDefined?(a + b) = a + b;
+
+main() = foo(1, 2);
