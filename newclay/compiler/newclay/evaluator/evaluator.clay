@@ -1732,6 +1732,11 @@ evaluatePrimitive(kind, args) {
         throw StaticError(args);
     }
 
+    case PRIM_StaticObserve : {
+        observe(#StaticObserve, args);
+        return ValueList(args);
+    }
+
     case PRIM_StaticAssert : {
         if (empty?(args))
             genericError("StaticAssert requires at least one argument");
