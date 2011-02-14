@@ -17,7 +17,7 @@ overload CallDefined?(#'fn, ...#'T) = unwrap(#CallDefinedForSymbol?('fn, ...'T))
 
 // VariadicBinaryOperatorProcedure -- define variadic version of procedure in
 // terms of the binary operation
-#VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure);
+#VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure,);
 #VariadicBinaryOperatorProcedure?('fn) = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
 inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ...w:'W)
     | VariadicBinaryOperatorProcedure?('fn)
@@ -32,7 +32,7 @@ overload #'fn('x, 'y, 'z, ...'w)
 
 // RuntimeStaticProcedure -- make a static function callable as a runtime procedure
 
-#RuntimeStaticProcedure() = (RuntimeStaticProcedure);
+#RuntimeStaticProcedure() = (RuntimeStaticProcedure,);
 #RuntimeStaticProcedure?('fn) = SymbolWithTag?('fn, RuntimeStaticProcedure);
 inline overload 'fn(...#'xs)
     | RuntimeStaticProcedure?('fn)

@@ -1,8 +1,8 @@
-import __primitives__.*;
+import meta.platform.*;
+import meta.statics.*;
 import meta.symbols.*;
 import values.(allValues?);
 import prelude.types.lowlevel.*;
-import meta.platform.*;
 
 public import __primitives__.(
     ExpressionReturns?       as Returns?,

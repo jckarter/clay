@@ -1,4 +1,3 @@
-import __primitives__.*;
 import values.*;
 import prelude.operators.c.*;
 import prelude.procedures.*;
