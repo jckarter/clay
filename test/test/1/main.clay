@@ -53,7 +53,7 @@ main() = testMain(
                 expectException(test, "throws 6", 6, throwInt);
                 expectException(test, "throws 6", 6, throwNothing);
             }),
-            TestCase("should fail by throwing uncaught exception", test ref => {
+            TestCase("should fail by throwing uncaught exception", test ref=> {
                 expectTrue(test, "truth", false);
                 throwInt();
                 expectFalse(test, "unreachable falsehood", true);
@@ -68,6 +68,15 @@ main() = testMain(
                 required(expectTrue, test, "truth", false);
                 // should not be reached
                 expectTrue(test, "truth", true);
+            }),
+            TestCase("ifPasses", test => {
+                ifPasses(expectTrue, test, "truth 1", false, () ref=> {
+                    // should not be reached
+                    expectTrue(test, "truth 2", true);
+                });
+                ifPasses(expectTrue, test, "truth 3", true, () ref=> {
+                    expectTrue(test, "truth 4", true);
+                });
             }),
         ]
     )

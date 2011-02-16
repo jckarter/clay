@@ -71,7 +71,6 @@ runTestCase(_case: TestCase) TestStatus {
     try {
         _case._case(test);
     } catch(e:RequiredExpectationFailed) {
-        failed(test);
         println();
         printFailure("required expectation did not pass");
     } catch(e) {
@@ -273,6 +272,14 @@ required(expectFn, test: TestStatus, forward ...args) {
     expectFn(test, ...args);
     if (test.failed != preFailed)
         throw RequiredExpectationFailed();
+}
+
+[...T] ifPasses(expectFn, test: TestStatus, ...args:T) {
+    ref fn = dropValues(static countValues(...T) - 1, ...args);
+    var preFailed = test.failed;
+    expectFn(test, ...takeValues(static countValues(...T) - 1, ...args));
+    if (test.failed == preFailed)
+        fn();
 }
 
 testMain(...suites) {
