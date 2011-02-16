@@ -63,7 +63,12 @@ main() = testMain(
             }),
             PendingTestCase("should fail", test => {
                 expectTrue(test, "truth", false);
-            })
+            }),
+            TestCase("required", test => {
+                required(expectTrue, test, "truth", false);
+                // should not be reached
+                expectTrue(test, "truth", true);
+            }),
         ]
     )
 );

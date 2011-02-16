@@ -70,6 +70,10 @@ runTestCase(_case: TestCase) TestStatus {
     var test = TestStatus();
     try {
         _case._case(test);
+    } catch(e:RequiredExpectationFailed) {
+        failed(test);
+        println();
+        printFailure("required expectation did not pass");
     } catch(e) {
         failed(test);
         println();
@@ -259,6 +263,16 @@ expectException(test: TestStatus, name, expectedException, fn) {
 
 expectPrinted(test: TestStatus, name, expectedOutput, forward ...values) {
     expectEqual(test, name, expectedOutput, printString(...values));
+}
+
+record RequiredExpectationFailed();
+instance Exception = RequiredExpectationFailed;
+
+required(expectFn, test: TestStatus, forward ...args) {
+    var preFailed = test.failed;
+    expectFn(test, ...args);
+    if (test.failed != preFailed)
+        throw RequiredExpectationFailed();
 }
 
 testMain(...suites) {

@@ -93,6 +93,11 @@ Testing test test suite:
     -- FIXED (should clear pending flag)
   (pending) should fail:
     truth is expected to be true but isn't
--- test test suite: 11 expectations passed; 18 failed (1 pending)
-Overall: 11 expectations passed; 18 failed (1 pending)
+  required:
+    truth is expected to be true but isn't
+
+    required expectation did not pass
+    -- FAILED
+-- test test suite: 11 expectations passed; 20 failed (1 pending)
+Overall: 11 expectations passed; 20 failed (1 pending)
 TESTS FAILED
