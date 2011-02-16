@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = StaticChar?('a'), StaticChar?("a"), StaticChar?(1);
