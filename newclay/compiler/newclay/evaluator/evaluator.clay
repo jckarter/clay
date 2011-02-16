@@ -1626,6 +1626,10 @@ evaluatePrimitive(kind, args) {
         return evaluateStaticCompare(*a, *b, greaterEquals?);
     }
 
+    case PRIM_StaticChar? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, CharValue)));
+    }
     case PRIM_StaticString? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, StringValue)));

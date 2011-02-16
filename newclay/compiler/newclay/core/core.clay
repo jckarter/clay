@@ -285,6 +285,7 @@ enum PrimitiveKind {
     PRIM_StaticGreater?,
     PRIM_StaticGreaterEquals?,
 
+    PRIM_StaticChar?,
     PRIM_StaticString?,
     PRIM_StaticStringSize,
     PRIM_StaticStringSlice,
