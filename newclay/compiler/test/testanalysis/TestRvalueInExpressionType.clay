@@ -1,0 +1,8 @@
+import __primitives__.*;
+
+bar(rvalue x) = "bar";
+
+main() {
+    rvalue x = 3;
+    return #ExpressionRefType(bar(x)), x;
+}
