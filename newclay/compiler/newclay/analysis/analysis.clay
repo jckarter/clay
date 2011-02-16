@@ -19,7 +19,7 @@ private subContext(s:SpecializationContext, subBody:Vector[ir.Node])
 private loopSubContext(s:SpecializationContext, subBody:Vector[ir.Node])
     = SpecializationContext(&subBody, s.complete?, HashMap[RTValue, Tuple[]]());
 
-private addRvalue(s, rv) {
+addRvalue(s, rv:RTValue) {
     if (rv.kind != RT_VALUE_RVALUE)
         return rv;
 
@@ -28,7 +28,10 @@ private addRvalue(s, rv) {
     return rv;
 }
 
-private useRvalue(s, rv) {
+overload addRvalue(s, mrvs:Maybe[RTValues])
+    = maybe(mrvs, rvs ref=> Maybe(map(rv ref=> addRvalue(s, rv), rvs)));
+
+useRvalue(s, rv:RTValue) {
     if (rv.kind != RT_VALUE_RVALUE)
         return;
 
@@ -568,6 +571,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
                 Vector[ir.Node](),
                 Vector[ir.Node]()
             );
+            addSpecializedNode(s, ifNode);
 
             var thenRecursive? = false;
             var elseRecursive? = false;
@@ -594,22 +598,9 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
             if (thenRecursive? and elseRecursive?)
                 recursiveAnalysisError();
 
-            var outputs = unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, elseS);
-
             useBranchRvalues(s, thenS, elseS);
-            addSpecializedNode(s, ifNode);
-
+            var outputs = unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, elseS);
             return outputs;
-        },
-    );
-
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PairExpr)
-    = maybe(analyzeSubnode(s, env, expr.expr),
-        rightResults ref=> {
-            var rightResult = singleValue(rightResults);
-            var leftResult = singleAddSpecializedStaticValue(s, expr, Value(StringValue(expr.name.str)));
-            var operands = RTValues(leftResult, rightResult);
-            return analyzeCallWithOneResult(s, expr, getHooks().tupleLiteral, operands);
         },
     );
 
@@ -645,9 +636,19 @@ private unifyIfExprBranches(s, expr, ifNode, thenResult, elseResult, thenS, else
 
                 return Maybe(RTValues(output));
             },
-            () ref=> thenResult,
+            () ref=> addRvalue(s, thenResult),
         ),
-        () ref=> elseResult,
+        () ref=> addRvalue(s, elseResult),
+    );
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PairExpr)
+    = maybe(analyzeSubnode(s, env, expr.expr),
+        rightResults ref=> {
+            var rightResult = singleValue(rightResults);
+            var leftResult = singleAddSpecializedStaticValue(s, expr, Value(StringValue(expr.name.str)));
+            var operands = RTValues(leftResult, rightResult);
+            return analyzeCallWithOneResult(s, expr, getHooks().tupleLiteral, operands);
+        },
     );
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
