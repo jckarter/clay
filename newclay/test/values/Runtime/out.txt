@@ -1,0 +1,35 @@
+are odd values odd?
+true
+true
+true
+true
+are odd and even values odd?
+false
+false
+false
+are equal values equal?
+true
+true
+are unequal values equal?
+false
+false
+counting values
+0
+1
+2
+3
+taking 0 values from 3
+taking 2 values from 3
+1
+2
+taking 4 values from 3
+1
+2
+3
+taking 4 values from zero
+mapping odd and even values
+true
+false
+true
+false
+mapping lack of odd and even values
