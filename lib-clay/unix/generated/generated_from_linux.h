@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/signal.h>
+#include <sys/wait.h>
 #include <sys/epoll.h>
 #include <signal.h>
 #include <dirent.h>

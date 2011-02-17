@@ -2252,6 +2252,93 @@ external signal(
     argument0 : Int,
     argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
 
+alias P_ALL = 0;
+alias P_PID = 1;
+alias P_PGID = 2;
+
+alias idtype_t = Int;
+
+alias rlim_t = UInt64;
+
+record Struct_rusage (
+    ru_utime : Struct_timeval,
+    ru_stime : Struct_timeval,
+    ru_maxrss : CLong,
+    ru_ixrss : CLong,
+    ru_idrss : CLong,
+    ru_isrss : CLong,
+    ru_minflt : CLong,
+    ru_majflt : CLong,
+    ru_nswap : CLong,
+    ru_inblock : CLong,
+    ru_oublock : CLong,
+    ru_msgsnd : CLong,
+    ru_msgrcv : CLong,
+    ru_nsignals : CLong,
+    ru_nvcsw : CLong,
+    ru_nivcsw : CLong,
+);
+
+record Struct_rlimit (
+    rlim_cur : UInt64,
+    rlim_max : UInt64,
+);
+
+external getpriority(
+    argument0 : Int,
+    argument1 : UInt) Int;
+
+external getiopolicy_np(
+    argument0 : Int,
+    argument1 : Int) Int;
+
+external ("_getrlimit$UNIX2003") getrlimit(
+    argument0 : Int,
+    argument1 : Pointer[Struct_rlimit]) Int;
+
+external getrusage(
+    argument0 : Int,
+    argument1 : Pointer[Struct_rusage]) Int;
+
+external setpriority(
+    argument0 : Int,
+    argument1 : UInt,
+    argument2 : Int) Int;
+
+external setiopolicy_np(
+    argument0 : Int,
+    argument1 : Int,
+    argument2 : Int) Int;
+
+external ("_setrlimit$UNIX2003") setrlimit(
+    argument0 : Int,
+    argument1 : Pointer[Struct_rlimit]) Int;
+
+external ("_wait$UNIX2003") wait(
+    argument0 : Pointer[Int]) Int;
+
+external ("_waitpid$UNIX2003") waitpid(
+    argument0 : Int,
+    argument1 : Pointer[Int],
+    argument2 : Int) Int;
+
+external ("_waitid$UNIX2003") waitid(
+    argument0 : idtype_t,
+    argument1 : UInt,
+    argument2 : Pointer[siginfo_t],
+    argument3 : Int) Int;
+
+external wait3(
+    argument0 : Pointer[Int],
+    argument1 : Int,
+    argument2 : Pointer[Struct_rusage]) Int;
+
+external wait4(
+    argument0 : Int,
+    argument1 : Pointer[Int],
+    argument2 : Int,
+    argument3 : Pointer[Struct_rusage]) Int;
+
 alias uint8_t = CUChar;
 
 alias uint16_t = UShort;
