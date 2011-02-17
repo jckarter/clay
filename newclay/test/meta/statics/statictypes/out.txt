@@ -33,6 +33,14 @@ false
 false
 false
 false
+is a char a char?
+true
+is an unchar a char?
+false
+false
+false
+false
+false
 is a tuple a tuple?
 true
 true
