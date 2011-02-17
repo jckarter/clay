@@ -278,7 +278,7 @@ overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
 #ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
       = (FloatType?('A) and FloatType?('B));
 #ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+    = ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
       or ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B);
 #BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = IntegerType?('A) and IntegerType?('B);
@@ -294,8 +294,8 @@ overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
 #AssignablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
 
-#BiggerNumericType('T, 'T) = 'T;
-overload #BiggerNumericType('A, 'B) = BiggerNumericType('B, 'A);
+#BiggerNumericType('A, 'B) = BiggerNumericType('B, 'A);
+overload #BiggerNumericType('T, 'T) = 'T;
 overload #BiggerNumericType( Int8 ,  Int16) =  Int16;
 overload #BiggerNumericType( Int8 ,  Int32) =  Int32;
 overload #BiggerNumericType( Int8 ,  Int64) =  Int64;

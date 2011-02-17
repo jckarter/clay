@@ -1,6 +1,7 @@
 import values.*;
 import prelude.operators.c.*;
 import prelude.procedures.*;
+import meta.statics.(StaticTupleSize);
 
 
 //
@@ -120,20 +121,20 @@ inline overload subtract(a:'A, b:'B) | CallDefined?(subtractAssign, Ref['A], 'B)
 inline overload plus(a:'N) | Number?('N) = a;
 inline overload minus(a:'N) | Number?('N) = cMinus('N, a);
 
-inline overload multiply(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+inline overload multiply(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cMultiply(#BiggerNumericType('A, 'B), a, b);
-inline overload divide(a:'A, b:'B) | CompatibleArithmeticFloatTypes?('A, 'B)
+inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
     = cDivide(#BiggerNumericType('A, 'B), a, b);
-inline overload divide(a:'A, b:'B) | CompatibleArithmeticIntTypes?('A, 'B)
+inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = Float64(a) / Float64(b);
-inline overload quotient(a:'A, b:'B) | CompatibleArithmeticIntTypes?('A, 'B)
+inline overload quotient(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = cDivide(#BiggerNumericType('A, 'B), a, b);
-inline overload remainder(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+inline overload remainder(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = cRemainder(#BiggerNumericType('A, 'B), a, b);
 
-inline overload add(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+inline overload add(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cAdd(#BiggerNumericType('A, 'B), a, b);
-inline overload subtract(a:'A, b:'B) | CompatibleArithmeticTypes?('A, 'B)
+inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cSubtract(#BiggerNumericType('A, 'B), a, b);
 
 
@@ -219,7 +220,7 @@ overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ...args:'Args) ...Exte
 
 // variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args) ...ExternalOutputTypes('O)
-    | allValues?(RequireExternalPODType?, 'Args)
+    | allValues?(RequireExternalPODType?, ...'Args)
       and 'I == (...takeValues(StaticTupleSize('I), ...'Args))
     = ...cExternalCall(f, ...args);
 
