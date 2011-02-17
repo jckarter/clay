@@ -15,6 +15,7 @@ public import __primitives__.(
 
     StaticInt?,
     StaticBool?,
+    StaticChar?,
     StaticModule?,
 );
 
