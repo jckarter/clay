@@ -1311,9 +1311,9 @@ private printStandaloneStubTo(stream, c, mainS) {
         printlnTo(stream, "  /* main does not return */");
         printlnTo(stream, "  return 0;");
     } else {
-        printlnTo(stream, "  int exitCode;");
+        printlnTo(stream, "  ", typeName(c, intType()), " exitCode;");
         printlnTo(stream, "  ", functionName(c, mainS), "(&exitCode);");
-        printlnTo(stream, "  return exitCode;");
+        printlnTo(stream, "  return (int)exitCode;");
     }
     printlnTo(stream, "}");
 }
