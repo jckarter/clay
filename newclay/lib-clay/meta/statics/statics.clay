@@ -17,6 +17,7 @@ public import __primitives__.(
     StaticBool?,
     StaticChar?,
     StaticModule?,
+    StaticSymbol?,
 );
 
 import __primitives__;
@@ -26,6 +27,3 @@ overload #StaticName('x) = __primitives__.StaticName('x);
 
 symbol StaticQualifiedName = RuntimeStaticProcedure();
 overload #StaticQualifiedName('x) = __primitives__.StaticQualifiedName('x);
-
-symbol StaticModule = RuntimeStaticProcedure();
-overload #StaticModule('x) = __primitives__.StaticModule('x);
