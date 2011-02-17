@@ -6,7 +6,6 @@ import newclay.codegen.c.*;
 import newclay.core.*;
 import newclay.hooks.*;
 import newclay.loader.*;
-import io.files.raw.*;
 import maybe.*;
 
 main() {
@@ -18,8 +17,7 @@ main() {
         withProgram(program, () ref=> {
             initializeClayHooks();
 
-            var outputFile = RawFile(just(options.outputFile), CREATE);
-            codegenStandaloneProgramTo(CodegenConfig(options.cDialect), outputFile);
+            compileProgramWithOptions(options);
         });
     }
     catch (e:ClayError) {
