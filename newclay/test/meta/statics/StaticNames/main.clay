@@ -1,0 +1,50 @@
+import meta.statics.*;
+import show.*;
+
+import meta.statics;
+import show as show_module;
+
+import __primitives__;
+
+symbol foo['x];
+
+testFunction(fn) {
+    show(fn);
+    show("");
+    show("--integers");
+    show(fn(#1));
+    show(fn(#1i8));
+    show(fn(#1i16));
+    show(fn(#1i32));
+    show(fn(#1i64));
+    show(fn(#1u));
+    show(fn(#1u8));
+    show(fn(#1u16));
+    show(fn(#1u32));
+    show(fn(#1u64));
+    show("--booleans");
+    show(fn(#true));
+    show(fn(#false));
+    show("--chars");
+    show(fn(#'a'));
+    show(fn(#'\n'));
+    show("--modules");
+    show(fn(meta.statics));
+    show(fn(show_module));
+    show(fn(__primitives__));
+    show("--symbols");
+    show(fn(show));
+    show(fn(foo));
+    show(fn(foo[show]));
+    show("--primitives");
+    show(fn(__primitives__.StaticName));
+    show(fn(__primitives__.ExpressionString));
+    show("--tuples");
+    show(fn(#(1, show, meta.statics)));
+    show("");
+}
+
+main() {
+    testFunction(StaticName);
+    testFunction(StaticQualifiedName);
+}

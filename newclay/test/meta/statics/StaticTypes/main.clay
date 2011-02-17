@@ -1,6 +1,8 @@
 import meta.statics.*;
 import show.*;
 
+symbol foo;
+
 main() {
     show("is a string a string?");
     show(#StaticString?("string"));
@@ -12,6 +14,7 @@ main() {
     show(#StaticString?('3'));
     show(#StaticString?(()));
     show(#StaticString?(prelude));
+    show(#StaticString?(foo));
 
     show("is an int an int?");
     show(#StaticInt?(1));
@@ -31,6 +34,7 @@ main() {
     show(#StaticInt?('3'));
     show(#StaticInt?(()));
     show(#StaticInt?(prelude));
+    show(#StaticInt?(foo));
 
     show("is a bool a bool?");
     show(#StaticBool?(true));
@@ -42,6 +46,7 @@ main() {
     show(#StaticBool?('3'));
     show(#StaticBool?(()));
     show(#StaticBool?(prelude));
+    show(#StaticBool?(foo));
 
     show("is a char a char?");
     show(#StaticChar?('a'));
@@ -52,6 +57,7 @@ main() {
     show(#StaticChar?("3"));
     show(#StaticChar?(()));
     show(#StaticChar?(prelude));
+    show(#StaticChar?(foo));
 
     show("is a tuple a tuple?");
     show(#StaticTuple?(()));
@@ -64,6 +70,7 @@ main() {
     show(#StaticTuple?('3'));
     show(#StaticTuple?("four"));
     show(#StaticTuple?(prelude));
+    show(#StaticTuple?(foo));
 
     show("is a module a module?");
     show(#StaticModule?(prelude));
@@ -74,4 +81,16 @@ main() {
     show(#StaticModule?('3'));
     show(#StaticModule?("four"));
     show(#StaticModule?(()));
+    show(#StaticModule?(foo));
+
+    show("is a symbol a symbol?");
+    show(#StaticSymbol?(foo));
+
+    show("is an unsymbol a symbol?");
+    show(#StaticSymbol?(1));
+    show(#StaticSymbol?(true));
+    show(#StaticSymbol?('3'));
+    show(#StaticSymbol?("four"));
+    show(#StaticSymbol?(()));
+    show(#StaticSymbol?(prelude));
 }
