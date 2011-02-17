@@ -230,3 +230,20 @@ alias	SIG_DFL		= CCodePointer[(Int),()](0);
 alias	SIG_IGN		= CCodePointer[(Int),()](1);
 alias	SIG_HOLD	= CCodePointer[(Int),()](5);
 alias	SIG_ERR		= CCodePointer[(Int),()](-1);
+
+private alias _WSTOPPED = 0x7f;
+private _WSTATUS(x) = bitwiseAnd(Int(x), 0x7f);
+
+alias WCOREFLAG = 0x80;
+
+WEXITSTATUS(x) = bitwiseAnd(shiftRight(Int(x), 8), 0xff);
+WSTOPSIG(x) = shiftRight(Int(x), 8);
+WIFCONTINUED(x) = _WSTATUS(x) == _WSTOPPED and WSTOPSIG(x) == SIGCONT;
+WIFSTOPPED(x) = _WSTATUS(x) == _WSTOPPED and WSTOPSIG(x) != SIGCONT;
+WIFEXITED(x) = _WSTATUS(x) == 0;
+WIFSIGNALED(x) = _WSTATUS(x) != _WSTOPPED and _WSTATUS(x) != 0;
+WTERMSIG(x) = _WSTATUS(x);
+WCOREDUMP(x) = bitwiseAnd(Int(x), WCOREFLAG) != 0;
+W_EXITCODE(ret, sig) = bitwiseOr(shiftLeft(Int(ret), 8), Int(sig));
+W_STOPCODE(sig) = bitwiseOr(shiftLeft(Int(sig), 8), _WSTOPPED);
+
