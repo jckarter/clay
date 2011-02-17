@@ -1,0 +1,31 @@
+import meta.symbols.*;
+import show.*;
+
+symbol Foo;
+symbol Bar = Foo;
+symbol Bas = Foo, Bar;
+
+symbol Zim = Foo;
+attribute Zim = Bar;
+
+symbol Zang;
+attribute Zang = Foo;
+attribute Zang = Bar;
+attribute Zang = Foo;
+
+showSymbol(sym) {
+    show(sym);
+    show("--body");
+    show(...#SymbolBody(sym));
+    show("--attributes");
+    show(...#SymbolAttributes(sym));
+    show("");
+}
+
+main() {
+    showSymbol(Foo);
+    showSymbol(Bar);
+    showSymbol(Bas);
+    showSymbol(Zim);
+    showSymbol(Zang);
+}
