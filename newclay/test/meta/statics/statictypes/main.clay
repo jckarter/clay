@@ -43,6 +43,16 @@ main() {
     show(#StaticBool?(()));
     show(#StaticBool?(prelude));
 
+    show("is a char a char?");
+    show(#StaticChar?('a'));
+
+    show("is an unchar a char?");
+    show(#StaticChar?(1));
+    show(#StaticChar?(true));
+    show(#StaticChar?("3"));
+    show(#StaticChar?(()));
+    show(#StaticChar?(prelude));
+
     show("is a tuple a tuple?");
     show(#StaticTuple?(()));
     show(#StaticTuple?((1,))); // (expr,) is a one-element tuple
