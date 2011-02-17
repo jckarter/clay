@@ -1,4 +1,5 @@
 import __primitives__.(StaticCountValues);
+import meta.statics.(StaticInt?);
 
 symbol allValues?;
 overload #allValues?('f) = true;
@@ -9,10 +10,10 @@ inline overload allValues?(f, forward x, forward ...xs)
 
 symbol equalValues?;
 overload #equalValues?('x0) = true;
-overload #equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, 'xs);
+overload #equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, ...'xs);
 inline overload equalValues?(x0) = true;
 inline overload equalValues?(x0, forward x1, forward ...xs)
-    = x0 == x1 and equalValues?(x0, xs);
+    = x0 == x1 and equalValues?(x0, ...xs);
 
 symbol countValues;
 overload #countValues(...'xs) = StaticCountValues(...'xs);
@@ -25,14 +26,14 @@ overload #takeValues('n, 'x, ...'xs)
     | StaticInt?('n) and 'n > 0
     = 'x, ...takeValues('n - 1, ...'xs);
 inline overload takeValues(#'n) | StaticInt?('n) = ;
-inline overload takeValues(#0) = ;
+inline overload takeValues(#0, forward ...xs) = ;
 inline overload takeValues(#'n, forward x, forward ...xs)
     | StaticInt?('n) and 'n > 0
     = forward x, forward ...takeValues(#('n - 1), ...xs);
 
 symbol mapValues;
 overload #mapValues('f) = ;
-overload #mapValues('f, 'x, ...'xs) = 'fn('x), ...mapValues('fn, ...'xs);
+overload #mapValues('f, 'x, ...'xs) = 'f('x), ...mapValues('f, ...'xs);
 inline overload mapValues(fn) = ;
 inline overload mapValues(fn, forward x:'T, forward ...xs:'TT)
     = forward fn(x), forward ...mapValues(fn, ...xs);
