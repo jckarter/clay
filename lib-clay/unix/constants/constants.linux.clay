@@ -177,3 +177,21 @@ alias SIG_ERR  = CCodePointer[(Int),()](-1);
 alias SIG_DFL  = CCodePointer[(Int),()](0);
 alias SIG_IGN  = CCodePointer[(Int),()](1);
 alias SIG_HOLD = CCodePointer[(Int),()](2);
+
+//
+// status flags for wait() calls
+//
+
+alias WCOREFLAG = 0x80;
+
+WEXITSTATUS(x) = shiftRight(bitwiseAnd(Int(x), 0xff00), 8);
+WSTOPSIG(x) = WEXITSTATUS(x);
+WIFCONTINUED(x) = x == 0xffff;
+WIFSTOPPED(x) = bitwiseAnd(Int(x), 0xff) == 0x7f;
+WIFEXITED(x) = WTERMSIG(x) == 0;
+WIFSIGNALED(x) = shiftRight((bitwiseAnd(Int(x), 0x7f) + 1), 1) > 0;
+WTERMSIG(x) = bitwiseAnd(Int(x), 0x7f);
+WCOREDUMP(x) = bitwiseAnd(Int(x), WCOREFLAG) != 0;
+W_EXITCODE(ret, sig) = bitwiseOr(shiftLeft(Int(ret), 8), Int(sig));
+W_STOPCODE(sig) = bitwiseOr(shiftLeft(Int(sig), 8), _WSTOPPED);
+
