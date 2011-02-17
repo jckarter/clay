@@ -1,22 +1,51 @@
 import newclay.core.*;
 import newclay.codegen.c.*;
 import newclay.loader.*;
+import newclay.platforms.*;
 import maybe.*;
 import io.paths.*;
-import libc.(exit);
+import io.files.raw.*;
+import libc.(exit, atexit);
+// XXX windows
+import unix.(fork, execvp, waitpid, mkstemp, unlink, WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS);
+
+// XXX replace hostTargetInfo() hardcodes with configurable target
 
 
 //
 // parseFrontendOptions
 //
 
+enum FrontendOutputMode {
+    EXECUTABLE_MODE,
+    OBJECT_MODE,
+    ASSEMBLY_MODE,
+    C_SOURCE_MODE,
+}
+
 record FrontendOptions (
     modulePaths: Vector[String],
-    cDialect: CDialect,
-    // outputFileKind: OutputKind,
+    cDialect: Maybe[CDialect],
+    cFlags: Vector[String],
+    outputMode: Maybe[FrontendOutputMode],
     outputFile: Maybe[String],
     inputFile: Maybe[String],
 );
+
+initUniqueOption(maybeOption, value, errorFn) {
+    maybe(maybeOption,
+        oldOption ref=> { errorFn(oldOption); },
+        () ref=> {
+            maybeOption = Maybe(value);
+        },
+    );
+}
+
+initOutputMode(modeVar, mode) {
+    initUniqueOption(modeVar, mode, x ref=> {
+        optionError("only one of -c, -S, -E may be specified");
+    });
+}
 
 parseFrontendOptions() {
     var options = FrontendOptions();
@@ -27,41 +56,47 @@ parseFrontendOptions() {
         }),
         ("-o", WordOption, o ref=> {
             var outputFile = requireParameter(o, "no path given for -o");
-            maybe(options.outputFile,
-                oldOutputFile ref=> {
-                    optionError("multiple output paths given: ", oldOutputFile, ", ", outputFile);
-                },
-                () ref=> {
-                    options.outputFile = Maybe(String(outputFile));
-                },
-            );
+            initUniqueOption(options.outputFile, String(outputFile), oldOutputFile ref=> {
+                optionError("multiple output paths given: ", oldOutputFile, ", ", outputFile);
+            });
         }),
-        ("-c-dialect", WordOption, o ref=> {
-            var dialect = requireParameter(o, "no dialect given for -c-dialect");
+        ("-cc", WordOption, o ref=> {
+            var dialect = requireParameter(o, "no dialect given for -cc");
             switch (dialect) {
             case "msvc":
-                options.cDialect = MSVC_DIALECT;
+                initUniqueOption(options.cDialect, MSVC_DIALECT, x ref=> {
+                    optionError("multiple -cc dialects given");
+                });
                 break;
             case "gcc":
-                options.cDialect = GCC_DIALECT;
+                initUniqueOption(options.cDialect, GCC_DIALECT, x ref=> {
+                    optionError("multiple -cc dialects given");
+                });
                 break;
             default:
-                optionError("unknown -c-dialect value ", dialect);
+                optionError("unknown -cc dialect ", dialect);
                 break;
             }
+        }),
+        ("-cflags{", PrefixOption, o ref=> {
+            requireParametersUntilBrace(o, options.cFlags, "no closing brace for -cflags{}");
+        }),
+        ("-c", WordOption, o ref=> {
+            initOutputMode(options.outputMode, OBJECT_MODE);
+        }),
+        ("-S", WordOption, o ref=> {
+            initOutputMode(options.outputMode, ASSEMBLY_MODE);
+        }),
+        ("-E", WordOption, o ref=> {
+            initOutputMode(options.outputMode, C_SOURCE_MODE);
         }),
         ("--help", WordOption, o ref=> { usage(); }),
         ("-help",  WordOption, o ref=> { usage(); }),
         ("/?",     WordOption, o ref=> { usage(); }),
         inputFile ref=> {
-            maybe(options.inputFile,
-                oldInputFile ref=> {
-                    optionError("multiple input paths given: ", oldInputFile, ", ", inputFile);
-                },
-                () ref=> {
-                    options.inputFile = Maybe(String(inputFile));
-                },
-            );
+            initUniqueOption(options.inputFile, String(inputFile), oldInputFile ref=> {
+                optionError("multiple input paths given: ", oldInputFile, ", ", inputFile);
+            });
         },
     );
 
@@ -70,18 +105,53 @@ parseFrontendOptions() {
 }
 
 validateFrontendOptions(options) {
-    if (nothing?(options.inputFile))
-        optionError("no input file specified");
+    if (nothing?(options.inputFile)) {
+        println("no input file specified");
+        println();
+        usage();
+    }
 
     var inputFile = just(options.inputFile);
 
+    // XXX must occur before outputFile
+    if (nothing?(options.outputMode))
+        options.outputMode = Maybe(EXECUTABLE_MODE);
+
     if (nothing?(options.outputFile))
         options.outputFile = Maybe(defaultOutputFileName(options, inputFile));
+
+    if (nothing?(options.cDialect))
+        options.cDialect = Maybe(hostTargetInfo().cDialect);
 
     var dirname = pathDirname(inputFile);
     if (not empty?(dirname))
         push(options.modulePaths, dirname);
     push(options.modulePaths, String("."));
+}
+
+defaultOutputFileExtension(options) {
+    switch (just(options.outputMode)) {
+    case EXECUTABLE_MODE:
+        if (hostTargetInfo().platformFamily == WINDOWS_PLATFORM_FAMILY)
+            return ".exe";
+        else
+            return "";
+    case OBJECT_MODE:
+        if (hostTargetInfo().platform == MSVC_PLATFORM)
+            return ".obj";
+        else
+            return ".o";
+    case ASSEMBLY_MODE:
+        if (hostTargetInfo().platform == MSVC_PLATFORM)
+            return ".asm";
+        else
+            return ".s";
+    case C_SOURCE_MODE:
+        return ".c";
+    default:
+        assert(false, "invalid output mode");
+        return "";
+    }
 }
 
 defaultOutputFileName(options, inputFile) {
@@ -92,16 +162,126 @@ defaultOutputFileName(options, inputFile) {
     else
         String(basename);
 
-    return name + ".c";
+    return name + defaultOutputFileExtension(options);
 }
 
 usage() {
     println("usage: clay <options> <clayfile>");
     println("options:");
-    println("  -o <filename>        - specify output C file (default <clayfile>.c)");
+    println("  -o <filename>        - specify output file name");
     println("  -I<path>             - add <path> to module search path");
-    println("  -c-dialect gcc|msvc  - generate GCC or MSVC C dialect (default GCC)");
+    println("  -cc gcc|msvc         - generate code for GCC or MSVC C dialect");
+    println("  -cflags{ <flags> }   - pass compiler flags directly to C compiler");
+    println("  -E                   - emit C source");
+    println("  -S                   - emit assembly language");
+    println("  -c                   - emit object file");
     exit(2);
+}
+
+
+//
+// compiler invocation
+//
+
+private var _temporarySourceName = String();
+
+private _deleteTemporarySourceFile() {
+    unlink(cstring(_temporarySourceName));
+}
+
+private temporarySourceFile() {
+    _temporarySourceName = String("claysource.XXXXXX");
+    var fd = mkstemp(cstring(_temporarySourceName));
+    if (fd < 0)
+        genericError("unable to create temporary file");
+    atexit(makeCCodePointer(_deleteTemporarySourceFile));
+    return _temporarySourceName, RawFile(fd, true);
+}
+
+compileProgramWithOptions(options:FrontendOptions) {
+    var sourceOnly? = just(options.outputMode) == C_SOURCE_MODE;
+    var sourceFileName = uninitializedUnsafe(String);
+    var sourceFile = uninitializedUnsafe(RawFile);
+
+    if (sourceOnly?) {
+        sourceFileName <-- just(options.outputFile);
+        sourceFile <-- RawFile(sourceFileName, CREATE);
+    } else {
+        sourceFileName, sourceFile <-- ...temporarySourceFile();
+    }
+
+    codegenStandaloneProgramTo(CodegenConfig(just(options.cDialect)), sourceFile);
+
+    if (not sourceOnly?) {
+        switch (just(options.cDialect)) {
+        case GCC_DIALECT:
+            invokeGCC(options, sourceFileName);
+            return;
+        case MSVC_DIALECT:
+            invokeMSVC(options, sourceFileName);
+            return;
+        default:
+            assert(false, "invalid C dialect");
+            return;
+        }
+    }
+}
+
+private invokeGCC(options, sourceFileName) {
+    var argv = Vector[String]();
+    // XXX configurable gcc location
+    push(argv, String("gcc"));
+    switch (just(options.outputMode)) {
+    case EXECUTABLE_MODE:
+        break;
+    case OBJECT_MODE:
+        push(argv, String("-c"));
+        break;
+    case ASSEMBLY_MODE:
+        push(argv, String("-S"));
+        break;
+    default:
+        assert(false, "invalid output mode for compiler");
+        break;
+    }
+    push(argv, String("-o"));
+    push(argv, just(options.outputFile));
+    push(argv, String("-x"));
+    push(argv, String("c"));
+    push(argv, options.cFlags);
+
+    // gcc doesn't support -- to end option parsing
+    if (sourceFileName[0] == '-')
+        sourceFileName = "./" + sourceFileName;
+
+    push(argv, sourceFileName);
+    observe(argv);
+
+    var cargv = map(cstring, argv);
+    push(cargv, null(CChar));
+
+    var pid = fork();
+    if (pid == 0) {
+        execvp(cstring(argv[0]), begin(cargv));
+        // XXX include strerror
+        genericError("failed to execute gcc");
+    } else if (pid < 0)
+        // XXX include strerror
+        genericError("failed to fork to execute gcc");
+
+    var statLoc = 0;
+    var r = waitpid(pid, &statLoc, 0);
+    if (r < 0)
+        // XXX include strerror
+        genericError("failed to get status of gcc process");
+    if (WIFSIGNALED(statLoc))
+        genericError("gcc process exited abnormally with signal ", WTERMSIG(statLoc));
+    if (WIFEXITED(statLoc) and WEXITSTATUS(statLoc) != 0)
+        genericError("gcc process exited with code ", WEXITSTATUS(statLoc));
+}
+
+private invokeMSVC(options, sourceFileName) {
+    optionError("compilation with MSVC not yet supported. use -E to generate C source");
 }
 
 
@@ -146,6 +326,18 @@ requireParameter(o:Options, ...msg) {
     if (not hasMoreParameters?(o))
         optionError(...msg);
     return nextParameter(o);
+}
+
+requireParametersUntilBrace(o:Options, into:Vector[String], ...msg) {
+    while (true) {
+        var s = requireParameter(o, ...msg);
+        if (size(s) > 0 and s[size(s) - 1] == '}') {
+            if (size(s) > 1)
+                push(into, String(sliceUpto(s, size(s) - 1)));
+            break;
+        }
+        push(into, String(s));
+    }
 }
 
 [S | String?(S)]
