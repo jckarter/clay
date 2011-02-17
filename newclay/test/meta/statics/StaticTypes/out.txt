@@ -7,6 +7,7 @@ false
 false
 false
 false
+false
 is an int an int?
 true
 true
@@ -24,6 +25,7 @@ false
 false
 false
 false
+false
 is a bool a bool?
 true
 true
@@ -33,9 +35,11 @@ false
 false
 false
 false
+false
 is a char a char?
 true
 is an unchar a char?
+false
 false
 false
 false
@@ -51,9 +55,20 @@ false
 false
 false
 false
+false
 is a module a module?
 true
 is an unmodule a module?
+false
+false
+false
+false
+false
+false
+is a symbol a symbol?
+true
+is an unsymbol a symbol?
+false
 false
 false
 false
