@@ -1,0 +1,47 @@
+import values.*;
+import meta.statics.*;
+import show.*;
+
+odd?(x:Int) = x mod 2 == 1;
+
+main() {
+    show("are odd values odd?");
+    show(allValues?(odd?));
+    show(allValues?(odd?, 1));
+    show(allValues?(odd?, 1, 3));
+    show(allValues?(odd?, 1, 3, 5, 7, 9, 11));
+
+    show("are odd and even values odd?");
+    show(allValues?(odd?, 2));
+    show(allValues?(odd?, 1, 2));
+    show(allValues?(odd?, 1, 3, 5, 7, 9, 11, 12));
+
+    show("are equal values equal?");
+    show(equalValues?(1));
+    show(equalValues?(1, 1, 1, 1));
+
+    show("are unequal values equal?");
+    show(equalValues?(1, 2));
+    show(equalValues?(1, 1, 1, 2));
+
+    show("counting values");
+    show(countValues());
+    show(countValues(1));
+    show(countValues(1, 2));
+    show(countValues(1, 2, 3));
+
+    show("taking 0 values from 3");
+    show(...takeValues(#0, '1', '2', '3'));
+    show("taking 2 values from 3");
+    show(...takeValues(#2, '1', '2', '3'));
+    show("taking 4 values from 3");
+    show(...takeValues(#4, '1', '2', '3'));
+    show("taking 4 values from zero");
+    show(...takeValues(#4));
+
+    show("mapping odd and even values");
+    show(...mapValues(odd?, 1, 2, 3, 4));
+
+    show("mapping lack of odd and even values");
+    show(...mapValues(odd?));
+}
