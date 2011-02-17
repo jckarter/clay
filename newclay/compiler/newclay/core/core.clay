@@ -862,7 +862,7 @@ overload lesser?(x:I, y:SI) = x < y.value;
 [SI, SJ | StaticInteger?(SI) and StaticInteger?(SJ)]
 overload equals?(x:SI, y:SJ) = x.value == y.value;
 [SI, SJ | StaticInteger?(SI) and StaticInteger?(SJ)]
-overload lesser?(x:SI, y:SJ) = x.value == y.value;
+overload lesser?(x:SI, y:SJ) = x.value < y.value;
 
 overload Int64(x:StaticIntValue)  = x.value;
 overload Int64(x:StaticUIntValue) = Int64(x.value);
