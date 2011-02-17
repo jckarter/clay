@@ -1,0 +1,21 @@
+import meta.symbols.*;
+import show.*;
+
+symbol FooTag;
+symbol BarTag;
+
+symbol Zim = (FooTag,);
+symbol Zang = (BarTag,);
+symbol Zung = (BarTag,), (FooTag,);
+
+main() {
+    show(Zim);
+    show(#SymbolWithTag?(Zim, FooTag));
+    show(#SymbolWithTag?(Zim, BarTag));
+    show(Zang);
+    show(#SymbolWithTag?(Zang, FooTag));
+    show(#SymbolWithTag?(Zang, BarTag));
+    show(Zung);
+    show(#SymbolWithTag?(Zung, FooTag));
+    show(#SymbolWithTag?(Zung, BarTag));
+}
