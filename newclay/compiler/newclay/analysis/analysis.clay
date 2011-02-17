@@ -2211,11 +2211,11 @@ private callableInvokeTable(callable:Value) {
         Symbol, x => ref x.invokeTable,
         SymbolHead, x => ref x.invokeTable,
         Primitive, x => {
-            genericError("static primitive called in runtime context without # operator", x);
+            genericError("static primitive called in runtime context without # operator: ", x);
             return ref typeToLValue(InvokeTable);
         },
         AliasPrimitive, x => {
-            genericError("static primitive called in runtime context without # operator", x);
+            genericError("static primitive called in runtime context without # operator: ", x);
             return ref typeToLValue(InvokeTable);
         },
         MatchDefault, x => {
