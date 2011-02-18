@@ -1,0 +1,24 @@
+import show.*;
+
+showAlign(#'T) {
+    show('T);
+    show(#TypeAlign('T));
+}
+
+main() {
+    showAlign(Bool);
+    showAlign(Int8);
+    showAlign(Int16);
+    showAlign(Int32);
+    showAlign(Int64);
+    showAlign(Float32);
+    showAlign(Float64);
+    showAlign(Char);
+    showAlign(Char16);
+    showAlign(Char32);
+    showAlign(OpaquePointer);
+    showAlign(Tuple[Int8, Int32]);
+    showAlign(Union[Int8, Int32]);
+    showAlign(Array[Int32, 12]);
+    showAlign(Array[Union[Int8, Int32], 12]);
+}
