@@ -54,8 +54,8 @@ inline dereference(forward a:Pointer['T]) = forward cDereference('T, a);
 // staticIndex, fieldRef
 //
 
-inline staticIndex(forward a:'T, #'n)  | CallDefined?(index, 'T, Static['n]) = forward a[#'n];
-inline fieldRef(forward a:'T, #'field) | CallDefined?(index, 'T, Static['field]) = forward a[#'field];
+inline staticIndex(forward a, #'n)  | Defined?(a[#'n]) = forward a[#'n];
+inline fieldRef(forward a, #'field) | Defined?(a[#'field]) = forward a[#'field];
 
 
 
@@ -100,17 +100,17 @@ private inline opFromAssign(#'assignFn, a:'A, b:'B) c:'A
     }
 }
 
-inline overload multiply(a:'A, b:'B) | CallDefined?(multiplyAssign, Ref['A], 'B)
+inline overload multiply(a:'A, b:'B) | Defined?(...multiplyAssign(a, b))
     = opFromAssign(multiplyAssign, a, b);
-inline overload divide(a:'A, b:'B) | CallDefined?(divideAssign, Ref['A], 'B)
+inline overload divide(a:'A, b:'B) | Defined?(...divideAssign(a, b))
     = opFromAssign(divideAssign, a, b);
-inline overload quotient(a:'A, b:'B) | CallDefined?(quotientAssign, Ref['A], 'B)
+inline overload quotient(a:'A, b:'B) | Defined?(...quotientAssign(a, b))
     = opFromAssign(quotientAssign, a, b);
-inline overload remainder(a:'A, b:'B) | CallDefined?(remainderAssign, Ref['A], 'B)
+inline overload remainder(a:'A, b:'B) | Defined?(...remainderAssign(a, b))
     = opFromAssign(remainderAssign, a, b);
-inline overload add(a:'A, b:'B) | CallDefined?(addAssign, Ref['A], 'B)
+inline overload add(a:'A, b:'B) | Defined?(...addAssign(a, b))
     = opFromAssign(addAssign, a, b);
-inline overload subtract(a:'A, b:'B) | CallDefined?(subtractAssign, Ref['A], 'B)
+inline overload subtract(a:'A, b:'B) | Defined?(...subtractAssign(a, b))
     = opFromAssign(subtractAssign, a, b);
 
 
@@ -118,8 +118,8 @@ inline overload subtract(a:'A, b:'B) | CallDefined?(subtractAssign, Ref['A], 'B)
 // arithmetic operators over c types
 //
 
-inline overload plus(a:'N) | Number?('N) = a;
-inline overload minus(a:'N) | Number?('N) = cMinus('N, a);
+inline overload plus(a:'N) | NumberType?('N) = a;
+inline overload minus(a:'N) | NumberType?('N) = cMinus('N, a);
 
 inline overload multiply(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cMultiply(#BiggerNumericType('A, 'B), a, b);
@@ -144,18 +144,18 @@ inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, '
 //
 
 symbol lesser?;
-lesserEquals?(a, b) = not b < a;
-greater?(a, b) = b < a;
-greaterEquals?(a, b) = not a < b;
+lesserEquals?(a, b) | Defined?(b < a) = not b < a;
+greater?(a, b) | Defined?(b < a) = b < a;
+greaterEquals?(a, b) | Defined?(a < b) = not a < b;
 
 symbol equals?;
-notEquals?(a, b) = not equals?(a, b);
+notEquals?(a, b) | Defined?(a == b) = not a == b;
 
-ordered?(a:'A, b:'B)
-    | CallDefined?(lesserEquals?, 'A, 'B) and CallDefined?(lesserEquals?, 'A, 'B)
+// XXX use intrinsic ordered/unordered conditions
+ordered?(a, b)
+    | Defined?(a <= b) and Defined?(b <= a)
     = a <= b or b <= a;
 
-// XXX use unordered conditions
 nan?(a:'A) | FloatType?('A) = a != a;
 
 
@@ -193,15 +193,15 @@ overload assign(ref a:'A, b:'B) | AssignablePrimitiveTypes?('A, 'B) { cAssign(a,
 // arithmetic assignment
 //
 
-addAssign      (ref a:'A, b:'B) | CallDefined?(add,       'A, 'B) { a = add(a, b); }
-subtractAssign (ref a:'A, b:'B) | CallDefined?(subtract,  'A, 'B) { a = subtract(a, b); }
-multiplyAssign (ref a:'A, b:'B) | CallDefined?(multiply,  'A, 'B) { a = multiply(a, b); }
-divideAssign   (ref a:'A, b:'B) | CallDefined?(divide,    'A, 'B) { a = divide(a, b); }
-quotientAssign (ref a:'A, b:'B) | CallDefined?(quotient,  'A, 'B) { a = quotient(a, b); }
-remainderAssign(ref a:'A, b:'B) | CallDefined?(remainder, 'A, 'B) { a = remainder(a, b); }
+addAssign      (ref a, b) | Defined?(a  +  b) { a = a  +  b; }
+subtractAssign (ref a, b) | Defined?(a  -  b) { a = a  -  b; }
+multiplyAssign (ref a, b) | Defined?(a  *  b) { a = a  *  b; }
+divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
+quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
+remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
 
-inc(ref a:'T) | CallDefined?(addAssign,      'T, Int) { a += 1; }
-dec(ref a:'T) | CallDefined?(subtractAssign, 'T, Int) { a -= 1; }
+inc(ref a:'T) | Defined?(...addAssign     (a, 'T(1))) { a += 'T(1); }
+dec(ref a:'T) | Defined?(...subtractAssign(a, 'T(1))) { a -= 'T(1); }
 
 
 
@@ -271,9 +271,9 @@ overload unwrap(#'x) = 'x;
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-overload max(a:'A, b:'A) | CallDefined?(lesser?, 'A, 'A)
+overload max(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) b else a;
-overload min(a:'A, b:'A) | CallDefined?(lesser?, 'A, 'A)
+overload min(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) a else b;
 
 overload max(a:'A, b:'A) | FloatType?('A)
