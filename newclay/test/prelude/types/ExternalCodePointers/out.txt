@@ -1,0 +1,3 @@
+--no output type
+--with output type
+Int
