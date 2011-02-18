@@ -1,0 +1,127 @@
+import show.*;
+
+nan() = 0.0/0.0;
+
+main() {
+    // defined arithmetic operations
+    show(#Defined?(1 + 2)); ////true
+    show(#Defined?(1u + 2u)); ////true
+    show(#Defined?(1.0 + 2.0)); ////true
+    //XXX show(#Defined?(1/2)); XXXXtrue
+    show(#Defined?(1.0/2.0)); ////true
+    show(#Defined?(1 div 2)); ////true
+    show(#Defined?(1 mod 2)); ////true
+
+    // undefined arithmetic operations
+    show(#Defined?(1   + 2u )); ////false
+    show(#Defined?(1   + 2.0)); ////false
+    show(#Defined?(1u  + 2  )); ////false
+    show(#Defined?(1u  + 2.0)); ////false
+    show(#Defined?(1.0 + 2  )); ////false
+    show(#Defined?(1.0 + 2u )); ////false
+    show(#Defined?(1.0 div 2.0)); ////false
+    show(#Defined?(1.0 mod 2.0)); ////false
+
+    // results of arithmetic operations
+    show(+(1)); ////1
+    show(-(1)); ////-1
+    show(2 * -3); ////-6
+    show(2.5 * -3.0); ////-7.5
+    show(0x8000_0000_u32 div 0x1000_0000_u32); ////8
+    show(-0x8000_0000_i32 div 0x1000_0000_i32); ////-8
+    //XXX show(1/2); XXXX0.5
+    show(1.0/2.0); ////0.5
+    show(1 + 2); ////3
+    show(1 - 2); ////-1
+
+    show(add(2, 3, 4)); ////9
+    show(multiply(2, 3, 4)); ////24
+
+    // defined comparison operations
+    show(#Defined?(1   < 2  )); ////true
+    show(#Defined?(1u  < 2u )); ////true
+    show(#Defined?(1.0 < 2.0)); ////true
+    show(#Defined?(1   == 2  )); ////true
+    show(#Defined?(1u  == 2u )); ////true
+    show(#Defined?(1.0 == 2.0)); ////true
+
+    // undefined comparison operations
+    show(#Defined?(1   < 2u )); ////false
+    show(#Defined?(1   < 2.0)); ////false
+    show(#Defined?(1u  < 2  )); ////false
+    show(#Defined?(1u  < 2.0)); ////false
+    show(#Defined?(1.0 < 2  )); ////false
+    show(#Defined?(1.0 < 2u )); ////false
+
+    // results of comparison operations
+    show(1 <  2); ////true
+    show(1 <= 2); ////true
+    show(1 == 2); ////false
+    show(1 != 2); ////true
+    show(1 >= 2); ////false
+    show(1 >  2); ////false
+
+    show(2 <  2); ////false
+    show(2 <= 2); ////true
+    show(2 == 2); ////true
+    show(2 != 2); ////false
+    show(2 >= 2); ////true
+    show(2 >  2); ////false
+
+    show(3 <  2); ////false
+    show(3 <= 2); ////false
+    show(3 == 2); ////false
+    show(3 != 2); ////true
+    show(3 >= 2); ////true
+    show(3 >  2); ////true
+
+    show(1.0 <  2.0); ////true
+    show(1.0 <= 2.0); ////true
+    show(1.0 == 2.0); ////false
+    show(1.0 != 2.0); ////true
+    show(1.0 >= 2.0); ////false
+    show(1.0 >  2.0); ////false
+
+    show(2.0 <  2.0); ////false
+    show(2.0 <= 2.0); ////true
+    show(2.0 == 2.0); ////true
+    show(2.0 != 2.0); ////false
+    show(2.0 >= 2.0); ////true
+    show(2.0 >  2.0); ////false
+
+    show(3.0 <  2.0); ////false
+    show(3.0 <= 2.0); ////false
+    show(3.0 == 2.0); ////false
+    show(3.0 != 2.0); ////true
+    show(3.0 >= 2.0); ////true
+    show(3.0 >  2.0); ////true
+
+    show(1.0 <  nan()); ////false
+    show(1.0 <= nan()); ////false
+    show(1.0 == nan()); ////false
+    show(1.0 != nan()); ////true
+    show(1.0 >= nan()); ////false
+    show(1.0 >  nan()); ////false
+
+    show(nan() <  1.0); ////false
+    show(nan() <= 1.0); ////false
+    show(nan() == 1.0); ////false
+    show(nan() != 1.0); ////true
+    show(nan() >= 1.0); ////false
+    show(nan() >  1.0); ////false
+
+    show(nan() <  nan()); ////false
+    show(nan() <= nan()); ////false
+    show(nan() == nan()); ////false
+    show(nan() != nan()); ////true
+    show(nan() >= nan()); ////false
+    show(nan() >  nan()); ////false
+
+    show(0.0 == -0.0); ////true
+
+    show(max(3, 1, 4, 2)); ////4
+    show(min(3, 1, 4, 2)); ////1
+
+    show(max(3.0, 1.0, 4.0, nan(), 2.0)); ////4
+    show(min(3.0, 1.0, 4.0, nan(), 2.0)); ////1
+}
