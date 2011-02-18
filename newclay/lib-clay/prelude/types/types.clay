@@ -28,7 +28,7 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(ToLowLevelType('T));
 // basic type predicates
 //
 
-#Type?('x) = false;
+#Type?('x) = StaticCallDefined?(ToLowLevelType, 'x);
 #PODType?('T) = false;
 #BitwiseCopiedType?('T) = PODType?('T);
 #BitwiseMovedType?('T) = PODType?('T);
@@ -91,7 +91,6 @@ private #PrimitiveType('LLType) = (PrimitiveType, 'LLType);
 
 #PrimitiveType?('T) = SymbolWithTag?('T, PrimitiveType);
 
-overload #Type?('T) | PrimitiveType?('T) = true;
 overload #PODType?('T) | PrimitiveType?('T) = true;
 
 overload #ToLowLevelType('T) | PrimitiveType?('T) = SymbolBody('T).1;
@@ -150,6 +149,10 @@ overload #FloatType?(Float64) = true;
 
 #NumberType?('T) = IntegerType?('T) or FloatType?('T);
 
+#CharType?('x) = false;
+overload #CharType?(Char  ) = true;
+overload #CharType?(Char16) = true;
+overload #CharType?(Char32) = true;
 
 
 //
@@ -158,7 +161,6 @@ overload #FloatType?(Float64) = true;
 //
 
 symbol StringConstant;
-overload #Type?(StringConstant) = true;
 overload #PODType?(StringConstant) = true;
 overload #ToLowLevelType(StringConstant)
     = LLTupleType[begin:Pointer[Char], end:Pointer[Char]];
@@ -180,11 +182,15 @@ overload #StaticType?(Static['x]) = true;
 // Pointer[T]
 //
 
-symbol Pointer['T] = PrimitiveType(LLPointerType['T]);
+symbol Pointer['T];
 
 #PointerType?('X) = false;
 overload #PointerType?(Pointer['T]) | Type?('T) = true;
+overload #PODType?(Pointer['T]) | Type?('T) = true;
 
+overload #ToLowLevelType(Pointer['T])
+    | Type?('T)
+    = LLPointerType['T];
 
 
 //
@@ -193,7 +199,7 @@ overload #PointerType?(Pointer['T]) | Type?('T) = true;
 
 symbol OpaquePointer = PrimitiveType(LLPointerType[UInt8]);
 
-overload #PointerType?(OpaquePointer) | Type?('T) = true;
+overload #PointerType?(OpaquePointer) = true;
 
 
 
@@ -201,9 +207,18 @@ overload #PointerType?(OpaquePointer) | Type?('T) = true;
 // ContiguousCoordinate
 //
 
-symbol ContiguousCoordinate['T] = PrimitiveType(LLPointerType['T]);
+symbol ContiguousCoordinate['T];
 
 overload #PointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
+overload #PODType?(ContiguousCoordinate['T]) | Type?('T) = true;
+
+overload #ToLowLevelType(ContiguousCoordinate['T])
+    | Type?('T)
+    = LLPointerType['T];
+
+
+#ArithmeticPointerType?('x) = false;
+overload #ArithmeticPointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
 
 
 
@@ -215,18 +230,17 @@ overload #PointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
     or StaticError("external code pointer argument is not a POD type: ", 'x);
 
 private #ValidExternalCodePointerOutput?('O)
-    = (StaticTuple?('O) and StaticTupleSize('O) == 0) or RequireExternalPODType?('O);
+    = (StaticTuple?('O) and StaticTupleSize('O) == 0) or PODType?('O);//RequireExternalPODType?('O);
 
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
-overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O])
-    | ABI?('A)
-      and StaticBool?('V)
-      and allValues?(RequireExternalPODType?, ...StaticTupleElements('I))
-      and ValidExternalCodePointerOutput?('O)
-    = true;
 overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
+    | ABI?('A)
+      and StaticBool?('V)
+      and StaticTuple?('I)
+      and allValues?(RequireExternalPODType?, ...StaticTupleElements('I))
+      and ValidExternalCodePointerOutput?('O)
     = LLCodePointerType['A, 'V, 'I, 'O];
 
 #ExternalCodePointerType?('X) = false;
@@ -246,9 +260,10 @@ alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O
 //
 
 symbol Array['T, 'n];
-overload #Type?(Array['T, 'n]) | Type?('T) and StaticInt?('n) = true;
 overload #'XType?(Array['T, 'n]) | InheritableTypePredicate?('XType?) = 'XType?('T);
-overload #ToLowLevelType(Array['T, 'n]) = LLArrayType['T, 'n];
+overload #ToLowLevelType(Array['T, 'n])
+    | Type?('T) and StaticInt?('n) and 'n >= 0
+    = LLArrayType['T, 'n];
 
 #ArrayType?('X) = false;
 overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
@@ -260,11 +275,12 @@ overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 //
 
 symbol Tuple[...'T];
-overload #Type?(Tuple[...'T]) | allValues?(Type?, ...'T) = true;
 overload #'XType?(Tuple[...'T])
     | InheritableTypePredicate?('XType?) and allValues?('XType?, ...'T)
     = true;
-overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
+overload #ToLowLevelType(Tuple[...'T])
+    | allValues?(Type?, ...'T)
+    = LLTupleType[...'T];
 
 #TupleType?('X) = false;
 overload #TupleType?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
@@ -276,11 +292,12 @@ overload #TupleType?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
 //
 
 symbol Union[...'T];
-overload #Type?(Union[...'T]) | allValues?(Type?, ...'T) = true;
 overload #'XType?(Union[...'T])
     | InheritableTypePredicate?('XType?) and allValues?(Type?, ...'T)
     = true;
-overload #ToLowLevelType(Union[...'T]) = LLUnionType[...'T];
+overload #ToLowLevelType(Union[...'T])
+    | allValues?(Type?, ...'T)
+    = LLUnionType[...'T];
 
 #UnionType?('X) = false;
 overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
@@ -303,46 +320,27 @@ overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
     = IntegerType?('A) and IntegerType?('B);
 #ComparablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-      or ('A == Char and 'B == Char)
+      or ComparablePointerTypes?('A, 'B)
+      or (CharType?('A) and CharType?('B))
       or ('A == Bool and 'B == Bool);
 #EqualityComparablePrimitiveTypes?('A, 'B)
-    = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-      or ('A == Char and 'B == Char)
-      or ('A == Bool and 'B == Bool);
+    = ComparablePrimitiveTypes?('A, 'B)
+      or EqualityComparablePointerTypes?('A, 'B);
+
+#ComparablePointerTypes?('A, 'B) = false;
+overload #ComparablePointerTypes?('A, 'A) = ArithmeticPointerType?('A);
+
+#EqualityComparablePointerTypes?('A, 'B) = false;
+overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
-    = ArithmeticCompatiblePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
+    = ComparablePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
 
-#BiggerNumericType('A, 'B) = BiggerNumericType('B, 'A);
+symbol BiggerNumericType;
+overload #BiggerNumericType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
+overload #BiggerNumericType('A, 'B) | TypeSize('B) > TypeSize('A) = 'B;
+overload #BiggerNumericType('T, Int) = 'T;
+overload #BiggerNumericType(Int, 'T) = 'T;
+overload #BiggerNumericType('T, UInt) = 'T;
+overload #BiggerNumericType(UInt, 'T) = 'T;
 overload #BiggerNumericType('T, 'T) = 'T;
-overload #BiggerNumericType( Int8 ,  Int16) =  Int16;
-overload #BiggerNumericType( Int8 ,  Int32) =  Int32;
-overload #BiggerNumericType( Int8 ,  Int64) =  Int64;
-overload #BiggerNumericType( Int8 , UInt8 ) = UInt8 ;
-overload #BiggerNumericType( Int8 , UInt16) = UInt16;
-overload #BiggerNumericType( Int8 , UInt32) = UInt32;
-overload #BiggerNumericType( Int8 , UInt64) = UInt64;
-overload #BiggerNumericType( Int16,  Int32) =  Int32;
-overload #BiggerNumericType( Int16,  Int64) =  Int64;
-overload #BiggerNumericType( Int16, UInt8 ) =  Int16;
-overload #BiggerNumericType( Int16, UInt16) = UInt16;
-overload #BiggerNumericType( Int16, UInt32) = UInt32;
-overload #BiggerNumericType( Int16, UInt64) = UInt64;
-overload #BiggerNumericType( Int32,  Int64) =  Int64;
-overload #BiggerNumericType( Int32, UInt8 ) =  Int32;
-overload #BiggerNumericType( Int32, UInt16) =  Int32;
-overload #BiggerNumericType( Int32, UInt32) = UInt32;
-overload #BiggerNumericType( Int32, UInt64) = UInt64;
-overload #BiggerNumericType( Int64, UInt8 ) =  Int64;
-overload #BiggerNumericType( Int64, UInt16) =  Int64;
-overload #BiggerNumericType( Int64, UInt32) =  Int64;
-overload #BiggerNumericType( Int64, UInt64) = UInt64;
-
-overload #BiggerNumericType(UInt8 , UInt16) = UInt16;
-overload #BiggerNumericType(UInt8 , UInt32) = UInt32;
-overload #BiggerNumericType(UInt8 , UInt64) = UInt64;
-overload #BiggerNumericType(UInt16, UInt32) = UInt32;
-overload #BiggerNumericType(UInt16, UInt64) = UInt64;
-overload #BiggerNumericType(UInt32, UInt64) = UInt64;
-
-overload #BiggerNumericType(Float32, Float64) = Float64;
