@@ -1,0 +1,8 @@
+import show.*;
+
+main() {
+    show("--no output type"); ////--no output type
+    show(...#ExternalOutputTypes(()));
+    show("--with output type"); ////--with output type
+    show(...#ExternalOutputTypes(Int)); ////Int
+}
