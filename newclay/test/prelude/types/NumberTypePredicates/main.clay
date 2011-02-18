@@ -1,0 +1,292 @@
+import show.*;
+
+main() {
+    // Primitive types
+    show(##PrimitiveType?(Bool)); ////true
+    show(##PrimitiveType?(Int)); ////true
+    show(##PrimitiveType?(UInt)); ////true
+    show(##PrimitiveType?(Int8)); ////true
+    show(##PrimitiveType?(Int16)); ////true
+    show(##PrimitiveType?(Int32)); ////true
+    show(##PrimitiveType?(Int64)); ////true
+    show(##PrimitiveType?(UInt8)); ////true
+    show(##PrimitiveType?(UInt16)); ////true
+    show(##PrimitiveType?(UInt32)); ////true
+    show(##PrimitiveType?(UInt64)); ////true
+    show(##PrimitiveType?(Float32)); ////true
+    show(##PrimitiveType?(Float64)); ////true
+    show(##PrimitiveType?(Char)); ////true
+    show(##PrimitiveType?(Char16)); ////true
+    show(##PrimitiveType?(Char32)); ////true
+    show(##PrimitiveType?(Static[2])); ////true
+    show(##PrimitiveType?(OpaquePointer)); ////true
+    // Nonprimitive types
+    show(##PrimitiveType?(StringConstant)); ////false
+    show(##PrimitiveType?(Pointer[Int])); ////false
+    show(##PrimitiveType?(ContiguousCoordinate[Int])); ////false
+    show(##PrimitiveType?(ExternalCodePointer[CdeclABI, true, (), ()])); ////false
+    show(##PrimitiveType?(ExternalCodePointer[StdcallABI, false, (Int, Int), Int])); ////false
+    show(##PrimitiveType?(Array[Int, 12])); ////false
+    show(##PrimitiveType?(Tuple[Int, Int])); ////false
+    show(##PrimitiveType?(Union[Int, Int])); ////false
+
+    // Integer types
+    show(##IntegerType?(Int)); ////true
+    show(##IntegerType?(UInt)); ////true
+    show(##IntegerType?(Int8)); ////true
+    show(##IntegerType?(Int16)); ////true
+    show(##IntegerType?(Int32)); ////true
+    show(##IntegerType?(Int64)); ////true
+    show(##IntegerType?(UInt8)); ////true
+    show(##IntegerType?(UInt16)); ////true
+    show(##IntegerType?(UInt32)); ////true
+    show(##IntegerType?(UInt64)); ////true
+    // Noninteger types
+    show(##IntegerType?(Bool)); ////false
+    show(##IntegerType?(Float32)); ////false
+    show(##IntegerType?(Float64)); ////false
+    show(##IntegerType?(Char)); ////false
+    show(##IntegerType?(Char16)); ////false
+    show(##IntegerType?(Char32)); ////false
+    show(##IntegerType?(Static[2])); ////false
+    show(##IntegerType?(OpaquePointer)); ////false
+
+    // Signed integer types
+    show(#SignedIntegerType?(Int)); ////true
+    show(#SignedIntegerType?(Int8)); ////true
+    show(#SignedIntegerType?(Int16)); ////true
+    show(#SignedIntegerType?(Int32)); ////true
+    show(#SignedIntegerType?(Int64)); ////true
+    // Non-signed-integer types
+    show(#SignedIntegerType?(UInt)); ////false
+    show(#SignedIntegerType?(UInt8)); ////false
+    show(#SignedIntegerType?(UInt16)); ////false
+    show(#SignedIntegerType?(UInt32)); ////false
+    show(#SignedIntegerType?(UInt64)); ////false
+    show(#SignedIntegerType?(Bool)); ////false
+    show(#SignedIntegerType?(Float32)); ////false
+    show(#SignedIntegerType?(Float64)); ////false
+    show(#SignedIntegerType?(Char)); ////false
+    show(#SignedIntegerType?(Char16)); ////false
+    show(#SignedIntegerType?(Char32)); ////false
+    show(#SignedIntegerType?(Static[2])); ////false
+    show(#SignedIntegerType?(OpaquePointer)); ////false
+
+    // Unsigned integer types
+    show(#UnsignedIntegerType?(UInt)); ////true
+    show(#UnsignedIntegerType?(UInt8)); ////true
+    show(#UnsignedIntegerType?(UInt16)); ////true
+    show(#UnsignedIntegerType?(UInt32)); ////true
+    show(#UnsignedIntegerType?(UInt64)); ////true
+    // Non-unsigned-integer types
+    show(#UnsignedIntegerType?(Int)); ////false
+    show(#UnsignedIntegerType?(Int8)); ////false
+    show(#UnsignedIntegerType?(Int16)); ////false
+    show(#UnsignedIntegerType?(Int32)); ////false
+    show(#UnsignedIntegerType?(Int64)); ////false
+    show(#UnsignedIntegerType?(Bool)); ////false
+    show(#UnsignedIntegerType?(Float32)); ////false
+    show(#UnsignedIntegerType?(Float64)); ////false
+    show(#UnsignedIntegerType?(Char)); ////false
+    show(#UnsignedIntegerType?(Char16)); ////false
+    show(#UnsignedIntegerType?(Char32)); ////false
+    show(#UnsignedIntegerType?(Static[2])); ////false
+    show(#UnsignedIntegerType?(OpaquePointer)); ////false
+
+    // Float types
+    show(#FloatType?(Float32)); ////true
+    show(#FloatType?(Float64)); ////true
+    // Nonfloat types
+    show(#FloatType?(UInt)); ////false
+    show(#FloatType?(UInt8)); ////false
+    show(#FloatType?(UInt16)); ////false
+    show(#FloatType?(UInt32)); ////false
+    show(#FloatType?(UInt64)); ////false
+    show(#FloatType?(Int)); ////false
+    show(#FloatType?(Int8)); ////false
+    show(#FloatType?(Int16)); ////false
+    show(#FloatType?(Int32)); ////false
+    show(#FloatType?(Int64)); ////false
+    show(#FloatType?(Bool)); ////false
+    show(#FloatType?(Char)); ////false
+    show(#FloatType?(Char16)); ////false
+    show(#FloatType?(Char32)); ////false
+    show(#FloatType?(Static[2])); ////false
+    show(#FloatType?(OpaquePointer)); ////false
+
+    // Number types
+    show(#NumberType?(Float32)); ////true
+    show(#NumberType?(Float64)); ////true
+    show(#NumberType?(UInt)); ////true
+    show(#NumberType?(UInt8)); ////true
+    show(#NumberType?(UInt16)); ////true
+    show(#NumberType?(UInt32)); ////true
+    show(#NumberType?(UInt64)); ////true
+    show(#NumberType?(Int)); ////true
+    show(#NumberType?(Int8)); ////true
+    show(#NumberType?(Int16)); ////true
+    show(#NumberType?(Int32)); ////true
+    show(#NumberType?(Int64)); ////true
+    // Nonnumber types
+    show(#NumberType?(Bool)); ////false
+    show(#NumberType?(Char)); ////false
+    show(#NumberType?(Char16)); ////false
+    show(#NumberType?(Char32)); ////false
+    show(#NumberType?(Static[2])); ////false
+    show(#NumberType?(OpaquePointer)); ////false
+
+    // Char types
+    show(#CharType?(Char)); ////true
+    show(#CharType?(Char16)); ////true
+    show(#CharType?(Char32)); ////true
+    // Nonchar types
+    show(#CharType?(Float32)); ////false
+    show(#CharType?(Float64)); ////false
+    show(#CharType?(UInt)); ////false
+    show(#CharType?(UInt8)); ////false
+    show(#CharType?(UInt16)); ////false
+    show(#CharType?(UInt32)); ////false
+    show(#CharType?(UInt64)); ////false
+    show(#CharType?(Int)); ////false
+    show(#CharType?(Int8)); ////false
+    show(#CharType?(Int16)); ////false
+    show(#CharType?(Int32)); ////false
+    show(#CharType?(Int64)); ////false
+    show(#CharType?(Bool)); ////false
+    show(#CharType?(Static[2])); ////false
+    show(#CharType?(OpaquePointer)); ////false
+
+    // Arithmetic compatible int types
+    show(#ArithmeticCompatiblePrimitiveIntTypes?(Int,     Int    )); ////true
+    show(#ArithmeticCompatiblePrimitiveIntTypes?(UInt,    UInt   )); ////true
+    // Non-arithmetic-compatible-int types
+    show(#ArithmeticCompatiblePrimitiveIntTypes?(Int,     UInt   )); ////false
+    show(#ArithmeticCompatiblePrimitiveIntTypes?(UInt,    Int    )); ////false
+    show(#ArithmeticCompatiblePrimitiveIntTypes?(Float64, Float64)); ////false
+
+    // Arithmetic compatible float types
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float64, Float64)); ////true
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float64, Float32)); ////true
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float32, Float64)); ////true
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float32, Float32)); ////true
+    // Non-arithmetic-compatible-float types
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Int,     Float64)); ////false
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(UInt,    Float64)); ////false
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float64, Int    )); ////false
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Float64, UInt   )); ////false
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(Int,     Int    )); ////false
+    show(#ArithmeticCompatiblePrimitiveFloatTypes?(UInt,    UInt   )); ////false
+
+    // Bitwise-compatible types
+    show(#BitwiseCompatiblePrimitiveTypes?(Int,     Int    )); ////true
+    show(#BitwiseCompatiblePrimitiveTypes?(UInt,    Int    )); ////true
+    show(#BitwiseCompatiblePrimitiveTypes?(UInt,    UInt   )); ////true
+    // Non-bitwise-compatible types
+    show(#BitwiseCompatiblePrimitiveTypes?(Float64, Float64)); ////false
+    show(#BitwiseCompatiblePrimitiveTypes?(Int,     Float64)); ////false
+    show(#BitwiseCompatiblePrimitiveTypes?(UInt,    Float64)); ////false
+    show(#BitwiseCompatiblePrimitiveTypes?(Float64, Int    )); ////false
+    show(#BitwiseCompatiblePrimitiveTypes?(Float64, UInt   )); ////false
+
+    // Comparable types
+    show(#ComparablePrimitiveTypes?(Int,     Int    )); ////true
+    show(#ComparablePrimitiveTypes?(UInt,    UInt   )); ////true
+    show(#ComparablePrimitiveTypes?(Float64, Float64)); ////true
+    show(#ComparablePrimitiveTypes?(Bool,    Bool   )); ////true
+    show(#ComparablePrimitiveTypes?(Char,    Char   )); ////true
+    show(#ComparablePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[Int])); ////true
+    // Noncomparable types
+    show(#ComparablePrimitiveTypes?(Char,    Bool   )); ////false
+    show(#ComparablePrimitiveTypes?(Char,    Int    )); ////false
+    show(#ComparablePrimitiveTypes?(Char,    UInt   )); ////false
+    show(#ComparablePrimitiveTypes?(Char,    Float64)); ////false
+    show(#ComparablePrimitiveTypes?(Bool,    Char   )); ////false
+    show(#ComparablePrimitiveTypes?(Bool,    Int    )); ////false
+    show(#ComparablePrimitiveTypes?(Bool,    UInt   )); ////false
+    show(#ComparablePrimitiveTypes?(Bool,    Float64)); ////false
+    show(#ComparablePrimitiveTypes?(Int,     Char   )); ////false
+    show(#ComparablePrimitiveTypes?(Int,     Bool   )); ////false
+    show(#ComparablePrimitiveTypes?(Int,     UInt   )); ////false
+    show(#ComparablePrimitiveTypes?(Int,     Float64)); ////false
+    show(#ComparablePrimitiveTypes?(UInt,    Char   )); ////false
+    show(#ComparablePrimitiveTypes?(UInt,    Bool   )); ////false
+    show(#ComparablePrimitiveTypes?(UInt,    Int    )); ////false
+    show(#ComparablePrimitiveTypes?(UInt,    Float64)); ////false
+    show(#ComparablePrimitiveTypes?(Float64, Char   )); ////false
+    show(#ComparablePrimitiveTypes?(Float64, Bool   )); ////false
+    show(#ComparablePrimitiveTypes?(Float64, Int    )); ////false
+    show(#ComparablePrimitiveTypes?(Float64, UInt   )); ////false
+    show(#ComparablePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[UInt])); ////false
+    show(#ComparablePrimitiveTypes?(Pointer[Int], Pointer[Int])); ////false
+    show(#ComparablePrimitiveTypes?(OpaquePointer, OpaquePointer)); ////false
+
+    // Equality comparable types
+    show(#EqualityComparablePrimitiveTypes?(Int,     Int    )); ////true
+    show(#EqualityComparablePrimitiveTypes?(UInt,    UInt   )); ////true
+    show(#EqualityComparablePrimitiveTypes?(Float64, Float64)); ////true
+    show(#EqualityComparablePrimitiveTypes?(Bool,    Bool   )); ////true
+    show(#EqualityComparablePrimitiveTypes?(Char,    Char   )); ////true
+    show(#EqualityComparablePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[Int])); ////true
+    show(#EqualityComparablePrimitiveTypes?(Pointer[Int], Pointer[Int])); ////true
+    show(#EqualityComparablePrimitiveTypes?(OpaquePointer, OpaquePointer)); ////true
+    // Non-equality-comparable types
+    show(#EqualityComparablePrimitiveTypes?(Char,    Bool   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Char,    Int    )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Char,    UInt   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Char,    Float64)); ////false
+    show(#EqualityComparablePrimitiveTypes?(Bool,    Char   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Bool,    Int    )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Bool,    UInt   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Bool,    Float64)); ////false
+    show(#EqualityComparablePrimitiveTypes?(Int,     Char   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Int,     Bool   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Int,     UInt   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Int,     Float64)); ////false
+    show(#EqualityComparablePrimitiveTypes?(UInt,    Char   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(UInt,    Bool   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(UInt,    Int    )); ////false
+    show(#EqualityComparablePrimitiveTypes?(UInt,    Float64)); ////false
+    show(#EqualityComparablePrimitiveTypes?(Float64, Char   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Float64, Bool   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Float64, Int    )); ////false
+    show(#EqualityComparablePrimitiveTypes?(Float64, UInt   )); ////false
+    show(#EqualityComparablePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[UInt])); ////false
+    show(#EqualityComparablePrimitiveTypes?(Pointer[Int], Pointer[UInt])); ////false
+
+    // Assignable types
+    show(#AssignablePrimitiveTypes?(Int16 , Int8  )); ////true
+    show(#AssignablePrimitiveTypes?(Int16 , Int16 )); ////true
+    show(#AssignablePrimitiveTypes?(Int16 , Int   )); ////true
+    show(#AssignablePrimitiveTypes?(UInt16, UInt8 )); ////true
+    show(#AssignablePrimitiveTypes?(UInt16, UInt16)); ////true
+    show(#AssignablePrimitiveTypes?(UInt16, UInt  )); ////true
+    show(#AssignablePrimitiveTypes?(Float32, Float32)); ////true
+    show(#AssignablePrimitiveTypes?(Float64, Float32)); ////true
+    show(#AssignablePrimitiveTypes?(Float64, Float64)); ////true
+    // Nonassignable types
+    show(#AssignablePrimitiveTypes?(Int16,  Int32 )); ////false
+    show(#AssignablePrimitiveTypes?(Int16,  UInt16)); ////false
+    show(#AssignablePrimitiveTypes?(Int16,  UInt8 )); ////false
+    show(#AssignablePrimitiveTypes?(Float32, Float64)); ////false
+
+    // Bigger numeric type
+    show(#BiggerNumericType(Int8,  Int8 )); ////Int8
+    show(#BiggerNumericType(Int8,  Int32)); ////Int32
+    show(#BiggerNumericType(Int32, Int8 )); ////Int32
+    show(#BiggerNumericType(Int8,  Int  )); ////Int8
+    show(#BiggerNumericType(UInt8, UInt )); ////UInt8
+    show(#BiggerNumericType(Int,   Int8 )); ////Int8
+    show(#BiggerNumericType(UInt,  UInt8)); ////UInt8
+    show(#BiggerNumericType(Float32, Float64)); ////Float64
+    show(#BiggerNumericType(Float64, Float32)); ////Float64
+}
+
+/*
+    StaticType?
+    PointerType?
+    ArithmeticPointerType?
+    ExternalCodePointerType?
+    ArrayType?
+    TupleType?
+    UnionType?
+*/

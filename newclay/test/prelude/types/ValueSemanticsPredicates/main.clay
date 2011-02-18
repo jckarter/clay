@@ -1,0 +1,40 @@
+import prelude.types.lowlevel.(ToLowLevelType);
+import show.*;
+
+symbol NonPODType;
+overload #ToLowLevelType(NonPODType) = LLTupleType[];
+
+main() {
+    show(#PODType?(Bool)); ////true
+    show(#PODType?(Int)); ////true
+    show(#PODType?(UInt)); ////true
+    show(#PODType?(Int8)); ////true
+    show(#PODType?(Int16)); ////true
+    show(#PODType?(Int32)); ////true
+    show(#PODType?(Int64)); ////true
+    show(#PODType?(UInt8)); ////true
+    show(#PODType?(UInt16)); ////true
+    show(#PODType?(UInt32)); ////true
+    show(#PODType?(UInt64)); ////true
+    show(#PODType?(Float32)); ////true
+    show(#PODType?(Float64)); ////true
+    show(#PODType?(Char)); ////true
+    show(#PODType?(Char16)); ////true
+    show(#PODType?(Char32)); ////true
+    show(#PODType?(StringConstant)); ////true
+    show(#PODType?(Static[2])); ////true
+    show(#PODType?(Pointer[Int])); ////true
+    show(#PODType?(Pointer[NonPODType])); ////true
+    show(#PODType?(OpaquePointer)); ////true
+    show(#PODType?(ContiguousCoordinate[Int])); ////true
+    show(#PODType?(ContiguousCoordinate[NonPODType])); ////true
+    show(#PODType?(ExternalCodePointer[CdeclABI, false, (Int,), Int])); ////true
+    show(#PODType?(Array[Int, 1])); ////true
+    show(#PODType?(Tuple[Int, UInt])); ////true
+    show(#PODType?(Union[Int, UInt])); ////true
+    show(#PODType?(Union[Int, NonPODType])); ////true
+
+    show(#PODType?(NonPODType)); ////false
+    show(#PODType?(Array[NonPODType, 1])); ////false
+    show(#PODType?(Tuple[Int, NonPODType])); ////false
+}

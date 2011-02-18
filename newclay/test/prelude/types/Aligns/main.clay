@@ -1,24 +1,22 @@
 import show.*;
 
-showAlign(#'T) {
-    show('T);
-    show(#TypeAlign('T));
-}
-
 main() {
-    showAlign(Bool);
-    showAlign(Int8);
-    showAlign(Int16);
-    showAlign(Int32);
-    showAlign(Int64);
-    showAlign(Float32);
-    showAlign(Float64);
-    showAlign(Char);
-    showAlign(Char16);
-    showAlign(Char32);
-    showAlign(OpaquePointer);
-    showAlign(Tuple[Int8, Int32]);
-    showAlign(Union[Int8, Int32]);
-    showAlign(Array[Int32, 12]);
-    showAlign(Array[Union[Int8, Int32], 12]);
+    show(#TypeAlign(Bool)); ////1
+    show(#TypeAlign(Int8)); ////1
+    show(#TypeAlign(Int16)); ////2
+    show(#TypeAlign(Int32)); ////4
+    // XXX platform dependent
+    show(#TypeAlign(Int64)); ////8
+    show(#TypeAlign(Float32)); ////4
+    // XXX platform dependent
+    show(#TypeAlign(Float64)); ////8
+    show(#TypeAlign(Char)); ////1
+    show(#TypeAlign(Char16)); ////2
+    show(#TypeAlign(Char32)); ////4
+    // XXX platform dependent
+    show(#TypeAlign(OpaquePointer)); ////8
+    show(#TypeAlign(Tuple[Int8, Int32])); ////4
+    show(#TypeAlign(Union[Int8, Int32])); ////4
+    show(#TypeAlign(Array[Int32, 12])); ////4
+    show(#TypeAlign(Array[Union[Int8, Int32], 12])); ////4
 }
