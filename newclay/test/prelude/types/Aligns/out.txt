@@ -1,30 +1,15 @@
-Bool
 1
-Int8
 1
-Int16
 2
-Int32
 4
-Int64
 8
-Float32
 4
-Float64
 8
-Char
 1
-Char16
 2
-Char32
 4
-OpaquePointer
 8
-Tuple[Int8, Int32]
 4
-Union[Int8, Int32]
 4
-Array[Int32, 12]
 4
-Array[Union[Int8, Int32], 12]
 4

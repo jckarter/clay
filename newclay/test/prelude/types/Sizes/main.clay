@@ -1,31 +1,27 @@
 import show.*;
 
-showSize(#'T) {
-    show('T);
-    show(#TypeSize('T));
-}
-
 main() {
-    showSize(Bool);
-    showSize(Int8);
-    showSize(Int16);
-    showSize(Int32);
-    showSize(Int64);
-    showSize(Float32);
-    showSize(Float64);
-    showSize(Char);
-    showSize(Char16);
-    showSize(Char32);
-    showSize(OpaquePointer);
-    showSize(Tuple[Int8]);
-    showSize(Tuple[Int8, Int8, Int8]);
-    showSize(Tuple[Int8, Int16]);
-    showSize(Tuple[Int8, Int32]);
-    showSize(Tuple[Int32, Int8]);
-    showSize(Tuple[Int32, Int8, Int64]);
-    showSize(Union[Int8]);
-    showSize(Union[Int8, Int16]);
-    showSize(Union[Tuple[Int8, Int8, Int8], Int16]);
-    showSize(Array[Int32, 16]);
-    showSize(Array[Tuple[Int8, Int8, Int8], 16]);
+    show(#TypeSize(Bool)); ////1
+    show(#TypeSize(Int8)); ////1
+    show(#TypeSize(Int16)); ////2
+    show(#TypeSize(Int32)); ////4
+    show(#TypeSize(Int64)); ////8
+    show(#TypeSize(Float32)); ////4
+    show(#TypeSize(Float64)); ////8
+    show(#TypeSize(Char)); ////1
+    show(#TypeSize(Char16)); ////2
+    show(#TypeSize(Char32)); ////4
+    // XXX platform dependent
+    show(#TypeSize(OpaquePointer)); ////8
+    show(#TypeSize(Tuple[Int8])); ////1
+    show(#TypeSize(Tuple[Int8, Int8, Int8])); ////3
+    show(#TypeSize(Tuple[Int8, Int16])); ////4
+    show(#TypeSize(Tuple[Int8, Int32])); ////8
+    show(#TypeSize(Tuple[Int32, Int8])); ////8
+    show(#TypeSize(Tuple[Int32, Int8, Int64])); ////16
+    show(#TypeSize(Union[Int8])); ////1
+    show(#TypeSize(Union[Int8, Int16])); ////2
+    show(#TypeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4
+    show(#TypeSize(Array[Int32, 16])); ////64
+    show(#TypeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48
 }

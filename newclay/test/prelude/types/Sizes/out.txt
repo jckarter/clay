@@ -1,44 +1,22 @@
-Bool
 1
-Int8
 1
-Int16
 2
-Int32
 4
-Int64
 8
-Float32
 4
-Float64
 8
-Char
 1
-Char16
 2
-Char32
 4
-OpaquePointer
 8
-Tuple[Int8]
 1
-Tuple[Int8, Int8, Int8]
 3
-Tuple[Int8, Int16]
 4
-Tuple[Int8, Int32]
 8
-Tuple[Int32, Int8]
 8
-Tuple[Int32, Int8, Int64]
 16
-Union[Int8]
 1
-Union[Int8, Int16]
 2
-Union[Tuple[Int8, Int8, Int8], Int16]
 4
-Array[Int32, 16]
 64
-Array[Tuple[Int8, Int8, Int8], 16]
 48
