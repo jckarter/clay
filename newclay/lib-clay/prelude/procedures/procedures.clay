@@ -1,5 +1,5 @@
 import __primitives__.(CallDefinedForSymbol?);
-import meta.symbols.(SymbolWithTag?);
+import meta.symbols.(SymbolWithTag?, Symbol?, private SymbolBodyWithTag?);
 
 public import __primitives__.(StaticCallDefined?);
 
@@ -18,17 +18,34 @@ overload CallDefined?(#'fn, ...#'T) = unwrap(#CallDefinedForSymbol?('fn, ...'T))
 // VariadicBinaryOperatorProcedure -- define variadic version of procedure in
 // terms of the binary operation
 #VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure,);
-#VariadicBinaryOperatorProcedure?('fn) = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
+
 inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ...w:'W)
     | VariadicBinaryOperatorProcedure?('fn)
       and CallDefined?('fn, 'X, 'Y)
       and CallDefined?('fn, Type('fn(x, y)), 'Z, ...'W)
     = forward 'fn('fn(x, y), z, ...w);
 
+inline overload 'fn(forward x)
+    | VariadicBinaryOperatorProcedure?('fn)
+    = forward x;
+
 overload #'fn('x, 'y, 'z, ...'w)
     | VariadicBinaryOperatorProcedure?('fn)
       and StaticCallDefined?('fn, 'x, 'y)
     = 'fn('fn('x, 'y), 'z, ...'w);
+
+overload #'fn('x)
+    | VariadicBinaryOperatorProcedure?('fn)
+    = 'x;
+
+#VariadicBinaryOperatorProcedure?('fn)
+    = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
+// blacklist a few functions to prevent endless recursion when evaluating
+// the predicate
+overload #VariadicBinaryOperatorProcedure?(VariadicBinaryOperatorProcedure?) = false;
+overload #VariadicBinaryOperatorProcedure?(Symbol?) = false;
+overload #VariadicBinaryOperatorProcedure?(SymbolBodyWithTag?) = false;
+
 
 // RuntimeStaticProcedure -- make a static function callable as a runtime procedure
 
