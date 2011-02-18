@@ -169,10 +169,7 @@ overload #ToLowLevelType(StringConstant)
 // Static[T]
 //
 
-symbol Static['x];
-overload #Type?(Static['x]) = true;
-overload #PODType?(Static['x]) = true;
-overload #ToLowLevelType(Static['x]) = LLTupleType[];
+symbol Static['x] = PrimitiveType(LLTupleType[]);
 
 #StaticType?('X) = false;
 overload #StaticType?(Static['x]) = true;
@@ -183,13 +180,30 @@ overload #StaticType?(Static['x]) = true;
 // Pointer[T]
 //
 
-symbol Pointer['T];
-overload #Type?(Pointer['T]) | Type?('T) = true;
-overload #PODType?(Pointer['T]) | Type?('T) = true;
-overload #ToLowLevelType(Pointer['T]) = LLPointerType['T];
+symbol Pointer['T] = PrimitiveType(LLPointerType['T]);
 
 #PointerType?('X) = false;
 overload #PointerType?(Pointer['T]) | Type?('T) = true;
+
+
+
+//
+// OpaquePointer
+//
+
+symbol OpaquePointer = PrimitiveType(LLPointerType[UInt8]);
+
+overload #PointerType?(OpaquePointer) | Type?('T) = true;
+
+
+
+//
+// ContiguousCoordinate
+//
+
+symbol ContiguousCoordinate['T] = PrimitiveType(LLPointerType['T]);
+
+overload #PointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
 
 
 
@@ -215,8 +229,8 @@ overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
 overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
     = LLCodePointerType['A, 'V, 'I, 'O];
 
-#ExternalCodePointer?('X) = false;
-overload #ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
+#ExternalCodePointerType?('X) = false;
+overload #ExternalCodePointerType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
 #ExternalOutputTypes('T) | Type?('T) = 'T;
@@ -247,7 +261,9 @@ overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 
 symbol Tuple[...'T];
 overload #Type?(Tuple[...'T]) | allValues?(Type?, ...'T) = true;
-overload #'XType?(Tuple[...'T]) | allValues?('XType?, ...'T) = true;
+overload #'XType?(Tuple[...'T])
+    | InheritableTypePredicate?('XType?) and allValues?('XType?, ...'T)
+    = true;
 overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
 
 #TupleType?('X) = false;
@@ -260,8 +276,11 @@ overload #TupleType?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
 //
 
 symbol Union[...'T];
-overload #Type(Union[...'T]) | allValues?(Type?, ...'T) = true;
-overload #PODType?(Union[...'T]) | allValues?(Type?, ...'T) = true;
+overload #Type?(Union[...'T]) | allValues?(Type?, ...'T) = true;
+overload #'XType?(Union[...'T])
+    | InheritableTypePredicate?('XType?) and allValues?(Type?, ...'T)
+    = true;
+overload #ToLowLevelType(Union[...'T]) = LLUnionType[...'T];
 
 #UnionType?('X) = false;
 overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
