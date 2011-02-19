@@ -279,6 +279,11 @@ main() {
     show(#BiggerNumericType(UInt,  UInt8)); ////UInt8
     show(#BiggerNumericType(Float32, Float64)); ////Float64
     show(#BiggerNumericType(Float64, Float32)); ////Float64
+    show(#BiggerNumericType(Float64, Float32)); ////Float64
+    show(#BiggerNumericType(UInt, Int)); ////UInt
+    show(#BiggerNumericType(Int, UInt)); ////UInt
+    show(#BiggerNumericType(Int32, UInt32)); ////UInt32
+    show(#BiggerNumericType(UInt32, Int32)); ////UInt32
 }
 
 /*

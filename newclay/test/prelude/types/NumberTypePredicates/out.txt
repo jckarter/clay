@@ -236,3 +236,8 @@ Int8
 UInt8
 Float64
 Float64
+Float64
+UInt
+UInt
+UInt32
+UInt32

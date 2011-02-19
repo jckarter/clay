@@ -315,6 +315,25 @@ uninitializedUnsafe(#'T) x:'T {}
 //
 
 bitcast(#'A, forward b:'B)
-    | TypeSize('A) >= TypeSize('B)
+    | TypeSize('A) <= TypeSize('B)
     = forward cRefCast('A, b);
 
+
+//
+// bitand, bitor, bitxor, bitnot
+//
+
+symbol bitand = VariadicBinaryOperatorProcedure();
+overload bitand(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = cBitand(#BiggerNumericType('A, 'B), a, b);
+
+symbol bitor = VariadicBinaryOperatorProcedure();
+overload bitor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = cBitor(#BiggerNumericType('A, 'B), a, b);
+
+symbol bitxor = VariadicBinaryOperatorProcedure();
+overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = cBitxor(#BiggerNumericType('A, 'B), a, b);
+
+symbol bitnot;
+overload bitnot(a:'A) | IntegerType?('A) = cBitnot('A, a);
