@@ -7,7 +7,7 @@ main() {
     show(#Defined?(1 + 2)); ////true
     show(#Defined?(1u + 2u)); ////true
     show(#Defined?(1.0 + 2.0)); ////true
-    //XXX show(#Defined?(1/2)); XXXXtrue
+    show(#Defined?(1/2)); ////true
     show(#Defined?(1.0/2.0)); ////true
     show(#Defined?(1 div 2)); ////true
     show(#Defined?(1 mod 2)); ////true
@@ -29,7 +29,7 @@ main() {
     show(2.5 * -3.0); ////-7.5
     show(0x8000_0000_u32 div 0x1000_0000_u32); ////8
     show(-0x8000_0000_i32 div 0x1000_0000_i32); ////-8
-    //XXX show(1/2); XXXX0.5
+    show(1/2); ////0.5
     show(1.0/2.0); ////0.5
     show(1 + 2); ////3
     show(1 - 2); ////-1
