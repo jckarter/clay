@@ -1,0 +1,46 @@
+import show.*;
+
+main() {
+    // types match
+    show(#Type(Bool())); ////Bool
+    show(#Type(Int())); ////Int
+    show(#Type(UInt())); ////UInt
+    show(#Type(Int8())); ////Int8
+    show(#Type(Int16())); ////Int16
+    show(#Type(Int32())); ////Int32
+    show(#Type(Int64())); ////Int64
+    show(#Type(UInt8())); ////UInt8
+    show(#Type(UInt16())); ////UInt16
+    show(#Type(UInt32())); ////UInt32
+    show(#Type(UInt64())); ////UInt64
+    show(#Type(Char())); ////Char
+    show(#Type(Char16())); ////Char16
+    show(#Type(Char32())); ////Char32
+
+    // default values
+    show(Bool()); ////false
+    show(Int()); ////0
+    show(UInt()); ////0
+    show(Int8()); ////0
+    show(Int16()); ////0
+    show(Int32()); ////0
+    show(Int64()); ////0
+    show(UInt8()); ////0
+    show(UInt16()); ////0
+    show(UInt32()); ////0
+    show(UInt64()); ////0
+    show(Int(Char())); ////0
+    show(Int(Char16())); ////0
+    show(Int(Char32())); ////0
+
+    // conversions
+    show(Int('@')); ////64
+    show(Char(0x40)); ////'@'
+    show(Char(0xA0)); ////'\xa0'
+    show(Char16(0x20AC)); ////'\x20ac'
+    show(Char32(0x1D121)); ////'\x0001d121'
+    show(Int(123u)); ////123
+    show(UInt(123)); ////123
+    show(Int8(255u)); ////-1
+    show(UInt8(-1)); ////255
+}
