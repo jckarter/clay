@@ -38,7 +38,8 @@ inline overload index(forward u:Union[...'T], #'n)
     = forward cFieldRef(#nthValue('n, ...'T), u, #TupleFieldName('n));
 
 // XXX StringConstant should be a record rather than hardcoded like this
-inline overload index(forward s:StringConstant, #'field) | 'field == "begin" or 'field == "end"
+inline overload index(forward s:StringConstant, #'field)
+    | 'field == "begin" or 'field == "end"
     = forward cFieldRef(Pointer[Char], s, #'field);
 
 
@@ -47,7 +48,9 @@ inline overload index(forward s:StringConstant, #'field) | 'field == "begin" or 
 // dereference
 //
 
-inline dereference(forward a:Pointer['T]) = forward cDereference('T, a);
+inline dereference(forward a:'T)
+    | PointerType?('T) and StaticDefined?(PointerReferencedType('T))
+    = forward cDereference(PointerReferencedType('T), a);
 
 
 
@@ -298,3 +301,13 @@ case?(value:'T, ...cases:'U)
             return true;
     return false;
 }
+
+
+//
+// bitcast
+//
+
+bitcast(#'A, forward b:'B)
+    | TypeSize('A) >= TypeSize('B)
+    = forward cRefCast('A, b);
+
