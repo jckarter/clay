@@ -1,0 +1,45 @@
+import prelude.types.*;
+import prelude.operators.c.*;
+
+//XXX tuples and arrays
+
+
+//
+// default constructors
+//
+
+inline overload Bool() = false;
+
+inline overload Int() = 0;
+inline overload UInt() = 0u;
+
+inline overload Int8()  = 0_i8;
+inline overload Int16() = 0_i16;
+inline overload Int32() = 0_i32;
+inline overload Int64() = 0_i64;
+
+inline overload UInt8()  = 0_u8;
+inline overload UInt16() = 0_u16;
+inline overload UInt32() = 0_u32;
+inline overload UInt64() = 0_u64;
+
+inline overload Float32() = 0.0_f32;
+inline overload Float64() = 0.0_f64;
+
+inline overload Char()   = Char(0_u8);
+inline overload Char16() = Char16(0_u16);
+inline overload Char32() = Char32(0_u32);
+
+inline overload StringConstant() = "";
+
+inline overload Static['x]() returned:Static['x] {}
+
+
+//
+// conversions
+//
+
+inline overload 'A(b:'B)
+    | ConvertiblePrimitiveTypes?('A, 'B)
+    = cCast('A, b);
+
