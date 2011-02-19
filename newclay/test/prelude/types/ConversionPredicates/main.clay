@@ -1,0 +1,17 @@
+import show.*;
+
+main() {
+    // convertible
+    show(#ConvertiblePrimitiveTypes?(Int, UInt)); ////true
+    show(#ConvertiblePrimitiveTypes?(Int, Float32)); ////true
+    show(#ConvertiblePrimitiveTypes?(Int, Char)); ////true
+    show(#ConvertiblePrimitiveTypes?(Pointer[Int], Pointer[Char])); ////true
+    show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[Char])); ////true
+    show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], Pointer[UInt8])); ////true
+    show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], OpaquePointer)); ////true
+    show(#ConvertiblePrimitiveTypes?(Pointer[UInt8], CCodePointer[(Int8,), Int8])); ////true
+
+    // nonconvertible
+    show(#ConvertiblePrimitiveTypes?(Int, StringConstant)); ////false
+    show(#ConvertiblePrimitiveTypes?(Int, Pointer[UInt8])); ////false
+}
