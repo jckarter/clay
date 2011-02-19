@@ -591,6 +591,7 @@ private cInt64Suffix(c) {
 private cIntegerValue(c, iv) = match(iv,
     // XXX polymorphic static ints
     StaticIntValue, s ref=> printString(s.value),
+    StaticUIntValue, s ref=> printString(s.value, "u"),
     Int64, n ref=> printString(n, cInt64Suffix(c)),
     UInt64, n ref=> printString(n, "u", cInt64Suffix(c)),
     UInt32, n ref=> printString(n, "u"),
@@ -1021,7 +1022,7 @@ private printGlobalLiteralCodeBodiesTo(stream, c:CodegenContext) {
             genericError("top-level __llvm__ is not yet supported");
         if (codeBody.kind == ast.LITERAL_ASM)
             genericError("top-level __asm__ is not yet supported");
-        printGlobalLiteralCodeTo(stream, codeBody.code);
+        printGlobalLiteralCodeTo(c, stream, codeBody.code);
         printlnTo(stream);
     }
     printlnTo(stream);
@@ -1165,7 +1166,7 @@ private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
 // printGlobalLiteralCodeTo, printLiteralCodeTo
 //
 
-private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
+private printGlobalLiteralCodeTo(c, stream, code:ir.LiteralCode) {
     for (token in code) {
         match(token,
             String,      s ref=> { printTo(stream, s); },
@@ -1175,8 +1176,8 @@ private printGlobalLiteralCodeTo(stream, code:ir.LiteralCode) {
             RTValueList, m ref=> {
                 genericError("invalid global literal code substitution value: ", m);
             },
-            Value,       v ref=> { printLiteralCodeValueTo(stream, *v); },
-            ValueList,   m ref=> { printLiteralCodeValueListTo(stream, m); },
+            Value,       v ref=> { printLiteralCodeValueTo(c, stream, *v); },
+            ValueList,   m ref=> { printLiteralCodeValueListTo(c, stream, m); },
         );
     }
 }
@@ -1186,9 +1187,9 @@ private printLiteralCodeTo(c, bc, code:ir.LiteralCode) {
         match(token,
             String,      s ref=> { printTo(bc.bodyCode, s); },
             RTValue,     v ref=> { printLiteralCodeRTValueTo(c, bc, v); },
-            Value,       v ref=> { printLiteralCodeValueTo(bc.bodyCode, *v); },
+            Value,       v ref=> { printLiteralCodeValueTo(c, bc.bodyCode, *v); },
             RTValueList, m ref=> { printLiteralCodeRTValueListTo(c, bc, m); },
-            ValueList,   m ref=> { printLiteralCodeValueListTo(bc.bodyCode, m); },
+            ValueList,   m ref=> { printLiteralCodeValueListTo(c, bc.bodyCode, m); },
         );
     }
 }
@@ -1200,10 +1201,10 @@ private printLiteralCodeRTValueListTo(c, bc, values:RTValueList) {
     );
 }
 
-private printLiteralCodeValueListTo(stream, values:ValueList) {
+private printLiteralCodeValueListTo(c, stream, values:ValueList) {
     interleave(values,
         () ref=> { printTo(stream, ", "); },
-        v  ref=> { printLiteralCodeValueTo(stream, v); },
+        v  ref=> { printLiteralCodeValueTo(c, stream, v); },
     );
 }
 
@@ -1213,14 +1214,17 @@ private printLiteralCodeRTValueTo(c, bc, v) {
 
 private procedure printLiteralCodeValueTo;
 
-overload printLiteralCodeValueTo(stream, x) {
+overload printLiteralCodeValueTo(c, stream, x) {
     genericError("invalid literal code substitution value: ", x);
 }
-overload printLiteralCodeValueTo(stream, v:Value)       { printLiteralCodeValueTo(stream, *v); }
-overload printLiteralCodeValueTo(stream, i:IntValue)    { printTo(stream, Int64(i)); }
-overload printLiteralCodeValueTo(stream, s:StringValue) { printTo(stream, s.value); }
-overload printLiteralCodeValueTo(stream, c:CharValue)   { printTo(stream, Int(c.value)); }
-overload printLiteralCodeValueTo(stream, b:BoolValue)   { printTo(stream, if (b.value) 1 else 0); }
+overload printLiteralCodeValueTo(c, stream, v:Value)       { printLiteralCodeValueTo(c, stream, *v); }
+overload printLiteralCodeValueTo(c, stream, i:IntValue)    { printTo(stream, Int64(i)); }
+overload printLiteralCodeValueTo(c, stream, s:StringValue) { printTo(stream, s.value); }
+overload printLiteralCodeValueTo(c, stream, ch:CharValue)  { printTo(stream, Int(ch.value)); }
+overload printLiteralCodeValueTo(c, stream, b:BoolValue)   { printTo(stream, if (b.value) 1 else 0); }
+overload printLiteralCodeValueTo(c, stream, s:Symbol) {
+    printTo(stream, typeName(c, Value(s)));
+}
 
 
 
