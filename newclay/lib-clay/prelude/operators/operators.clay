@@ -304,6 +304,13 @@ case?(value:'T, ...cases:'U)
 
 
 //
+// uninitializedUnsafe
+//
+
+uninitializedUnsafe(#'T) x:'T {}
+
+
+//
 // bitcast
 //
 
