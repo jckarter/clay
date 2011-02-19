@@ -89,3 +89,13 @@ inline cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returne
 inline overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args)
     | 'O == ()
     __c__ """$callable($...args);""";
+
+inline cCast(#'T, a) returned:'T
+    __c__ """$returned = ($'T)$a;""";
+
+inline cRefCast(#'T, const a) const returned:'T
+    __c__ """$returned = ($'T*)&$a;""";
+inline overload cRefCast(#'T, ref a) ref returned:'T
+    __c__ """$returned = ($'T*)&$a;""";
+inline overload cRefCast(#'T, rvalue a) rvalue returned:'T
+    __c__ """$returned = ($'T*)&$a;""";
