@@ -1,0 +1,14 @@
+import meta.statics.*;
+import show.*;
+
+main() {
+    show(#StaticStringSize("foo")); ////3
+    show(#StaticStringSlice("disbarred", 3, 6)); ////"bar"
+    show(#StaticStringConcat("foo", "b", "ar")); ////"foobar"
+    show(#StaticStringChar("bar", 2)); ////'r'
+    ////'b'
+    ////'a'
+    ////'r'
+    show(...#StaticStringChars("bar"));
+    show(#StaticStringFromChars('f', 'o', 'o', 'b', 'a', 'r')); ////"foobar"
+}

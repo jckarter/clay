@@ -1,0 +1,8 @@
+3
+"bar"
+"foobar"
+'r'
+'b'
+'a'
+'r'
+"foobar"
