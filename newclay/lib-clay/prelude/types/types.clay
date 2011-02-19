@@ -364,8 +364,16 @@ private #ConvertibleScalarType?('A)
 symbol BiggerNumericType;
 overload #BiggerNumericType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
 overload #BiggerNumericType('A, 'B) | TypeSize('B) > TypeSize('A) = 'B;
+overload #BiggerNumericType('A, 'B)
+    | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('A)
+    = 'A;
+overload #BiggerNumericType('A, 'B)
+    | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('B)
+    = 'B;
 overload #BiggerNumericType('T, Int) = 'T;
 overload #BiggerNumericType(Int, 'T) = 'T;
 overload #BiggerNumericType('T, UInt) = 'T;
 overload #BiggerNumericType(UInt, 'T) = 'T;
 overload #BiggerNumericType('T, 'T) = 'T;
+overload #BiggerNumericType(Int, UInt) = UInt;
+overload #BiggerNumericType(UInt, Int) = UInt;

@@ -1,0 +1,35 @@
+import show.*;
+
+main() {
+    // defined bitwise operations
+    show(#Defined?(bitand(0xFF, 0x7F))); ////true
+    show(#Defined?(bitand(0xFF, 0x7Fu))); ////true
+    show(#Defined?(bitand(0xFFu, 0x7F))); ////true
+    show(#Defined?(bitand(0xFFu, 0x7Fu))); ////true
+
+    // nondefined bitwise operations
+    show(#Defined?(bitand(1.0, 0x7F))); ////false
+    show(#Defined?(bitand(0x7F, 1.0))); ////false
+    show(#Defined?(bitand(1.0, 1.0))); ////false
+
+    // bitwise results
+    show(bitand(0xffff_u16, 0xff_u8)); ////255
+    show(bitand(0x7fff_i16, -1_i8)); ////32767
+    show(bitand(0xffffu, -1)); ////65535
+    show(bitor(0x1, 0x2)); ////3
+    show(bitor(0x1, 0x2, 0xC)); ////15
+    show(bitxor(0x1, 0x11)); ////16
+    show(bitnot(0xffff_fffe_u32)); ////1
+
+    // defined bitcast operations
+    show(#Defined?(bitcast(UInt32, 1.0f))); ////true
+    show(#Defined?(bitcast(UInt32, 1.0_f64))); ////true
+    show(#Defined?(bitcast(UInt32, 1_u64))); ////true
+
+    // nondefined bitcast operations
+    show(#Defined?(bitcast(UInt64, 1.0f))); ////false
+    show(#Defined?(bitcast(UInt64, 1_u32))); ////false
+
+    // bitcast
+    show(bitcast(Float32, 0x3f80_0000_u32)); ////1
+}
