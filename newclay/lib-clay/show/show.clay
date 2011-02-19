@@ -1,4 +1,4 @@
-import meta.statics.(StaticName);
+import meta.statics.(StaticName, StaticStringConcat);
 
 // dumb simple library for displaying values for debugging purposes
 import libc.(puts as c_puts, printf as c_printf);
@@ -9,7 +9,15 @@ printf(fmt:StringConstant, value) { c_printf(cstring(fmt), value); }
 
 show(s:StringConstant) { puts(s); }
 overload show(b:Bool) { puts(if (b) "true" else "false"); }
-overload show(c:Char) { printf("%c\n", c); }
+overload show(c:'C) | CharType?('C) {
+    if (UInt32(c) < 0x7f_u32)
+        printf("'%c'\n", c);
+    else
+        printf(
+            unwrap(#StaticStringConcat("'\\x%0", StaticName(TypeSize('C)*2), "x'\n")),
+            UInt32(c)
+        );
+}
 overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) <= 4 { printf("%d\n", i); }
 overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) <= 4 { printf("%u\n", i); }
 overload show(f:'F) | FloatType?('F) { printf("%.18g\n", f); }
