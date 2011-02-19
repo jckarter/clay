@@ -39,6 +39,15 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(ToLowLevelType('T));
 #BitwiseAssignedType?('T) = BitwiseCopiedType?('T) and NotDestroyedType?('T);
 #BitwiseMoveAssignedType?('T) = BitwiseMovedType?('T) and NotDestroyedType?('T);
 
+#BitwiseZeroInitializedType?('T) = false;
+overload #BitwiseZeroInitializedType?(Bool) = true;
+overload #BitwiseZeroInitializedType?('T) | NumberType?('T) = true;
+overload #BitwiseZeroInitializedType?('T) | CharType?('T) = true;
+
+#DefaultInitializableType?('T) = Defined?('T());
+#CopyableType?('T) = Defined?(copy('T));
+#MovableType?('T) = Defined?(move('T));
+
 #InheritableTypePredicate?('X) = false;
 overload #InheritableTypePredicate?(PODType?) = true;
 overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
@@ -49,6 +58,7 @@ overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
+overload #InheritableTypePredicate?(BitwiseZeroInitializedType?) = true;
 
 
 
@@ -97,8 +107,8 @@ overload #ToLowLevelType('T) | PrimitiveType?('T) = SymbolBody('T).1;
 
 symbol Bool = PrimitiveType(LLBoolType);
 
-symbol Int   = PrimitiveType(LLIntegerType[LLSigned,   PlatformCPUPointerSize()]);
-symbol UInt  = PrimitiveType(LLIntegerType[LLUnsigned, PlatformCPUPointerSize()]);
+symbol Int   = PrimitiveType(LLIntegerType[LLSigned,   PlatformCPUPointerBits()]);
+symbol UInt  = PrimitiveType(LLIntegerType[LLUnsigned, PlatformCPUPointerBits()]);
 
 symbol Int8  = PrimitiveType(LLIntegerType[LLSigned,  8]);
 symbol Int16 = PrimitiveType(LLIntegerType[LLSigned, 16]);
@@ -188,6 +198,9 @@ symbol Pointer['T];
 overload #PointerType?(Pointer['T]) | Type?('T) = true;
 overload #PODType?(Pointer['T]) | Type?('T) = true;
 
+symbol PointerReferencedType;
+overload #PointerReferencedType(Pointer['T]) = 'T;
+
 overload #ToLowLevelType(Pointer['T])
     | Type?('T)
     = LLPointerType['T];
@@ -211,6 +224,8 @@ symbol ContiguousCoordinate['T];
 
 overload #PointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
 overload #PODType?(ContiguousCoordinate['T]) | Type?('T) = true;
+
+overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
 
 overload #ToLowLevelType(ContiguousCoordinate['T])
     | Type?('T)
@@ -245,6 +260,9 @@ overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
 
 #ExternalCodePointerType?('X) = false;
 overload #ExternalCodePointerType?(ExternalCodePointer['A,'V,'I,'O])
+    | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
+
+overload #PointerType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
 #ExternalOutputTypes('T) | Type?('T) = 'T;
@@ -335,6 +353,13 @@ overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
     = ComparablePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
+
+private #ConvertibleScalarType?('A)
+    = NumberType?('A) or CharType?('A);
+
+#ConvertiblePrimitiveTypes?('A, 'B)
+    = (ConvertibleScalarType?('A) and ConvertibleScalarType?('B))
+      or (PointerType?('A) and PointerType?('B));
 
 symbol BiggerNumericType;
 overload #BiggerNumericType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
