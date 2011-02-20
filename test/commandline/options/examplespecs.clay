@@ -1,0 +1,13 @@
+import commandline.options.spec.*;
+
+fbbSpec() = OptionSpecs([
+  OptionSpec('f', "foo"),
+  OptionSpec('b', "bar"),
+  OptionSpec('z', "baz"),
+  OptionSpec('i', "bif")
+]);
+
+valuableSpec() = OptionSpecs([
+  OptionSpec('f', "foo", HAS_VALUE),
+  OptionSpec('b', "bar", HAS_VALUE)
+]);

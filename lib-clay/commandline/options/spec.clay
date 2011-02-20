@@ -1,0 +1,56 @@
+
+record OptionSpec(
+  names         : Vector[String],
+  allowsRepeats : Bool,
+  required      : Bool,
+  hasValue      : Bool
+);
+
+overload printTo(out, it : OptionSpec){
+  var iter = iterator(it.names);
+
+  while(hasNext?(iter)){
+    printTo(out, next(iter));
+    if(hasNext?(iter)) printTo(out, "/");
+  }
+}
+
+enum Flags{ HAS_VALUE, REQUIRED, ALLOWS_REPEATS }
+
+[S | SpecPart?(S)]
+overload OptionSpec(part : S, ...parts) OptionSpec{
+  var result = OptionSpec(Vector[String](), false, false, false);
+ 
+  addSpecPart(result, part); 
+
+  static for(part in ...parts){
+    addSpecPart(result, part);
+  }
+
+  return move(result);
+}
+
+alias OptionSpecs = Vector[OptionSpec];
+
+[T]
+private SpecPart?(static T) = String?(T) or (T == Char) or (T == Flags);
+
+private procedure addSpecPart;
+
+[T | String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
+  push(spec.names, String(t)); 
+}
+
+overload addSpecPart(spec, f : Flags){
+  switch(f){
+    case HAS_VALUE: 
+      spec.hasValue = true;
+      break;
+    case REQUIRED:
+      spec.required = true;
+      break;
+    case ALLOWS_REPEATS:
+      spec.allowsRepeats = true;
+      break;
+  }
+}
