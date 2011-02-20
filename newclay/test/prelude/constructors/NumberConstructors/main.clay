@@ -39,6 +39,7 @@ main() {
     show(Char(0xA0)); ////'\xa0'
     show(Char16(0x20AC)); ////'\x20ac'
     show(Char32(0x1D121)); ////'\x0001d121'
+    show(Char16('@')); ////'@'
     show(Int(123u)); ////123
     show(UInt(123)); ////123
     show(Int8(255u)); ////-1
