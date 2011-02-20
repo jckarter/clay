@@ -1,11 +1,9 @@
 import prelude.types.*;
 import prelude.operators.c.*;
 
-//XXX tuples and arrays
-
 
 //
-// default constructors
+// default constructors for basic types
 //
 
 inline overload Bool() = false;
@@ -30,16 +28,27 @@ inline overload Char()   = Char(0_u8);
 inline overload Char16() = Char16(0_u16);
 inline overload Char32() = Char32(0_u32);
 
-inline overload StringConstant() = "";
-
 inline overload Static['x]() returned:Static['x] {}
 
 
 //
-// conversions
+// primitive conversions
 //
 
 inline overload 'A(b:'B)
     | ConvertiblePrimitiveTypes?('A, 'B)
     = cCast('A, b);
+
+inline overload ContiguousCoordinate(forward x:'T)
+    | DereferenceablePointerType?('T)
+    = ContiguousCoordinate['T](x);
+
+inline overload Pointer(forward x:'T)
+    | DereferenceablePointerType?('T)
+    = Pointer['T](x);
+
+
+//
+//XXX tuples and arrays
+//
 
