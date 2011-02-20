@@ -1,0 +1,19 @@
+record PushbackIterator[S, T](
+  pending : Vector[S],
+  base : T
+);
+
+[S, T] overload hasNext?(it : PushbackIterator[S, T]) =
+  (not empty?(it.pending)) or hasNext?(it.base);
+
+[S, T] overload next(it : PushbackIterator[S, T]){
+  if(not empty?(it.pending)) return forward pop(it.pending);
+  else return forward next(it.base);
+}
+
+[S, T] overload push(it : PushbackIterator[S, T], x : S){ push(it.pending, x); }
+
+[T] withPushback(it : T) PushbackIterator[IteratorTargetType(T), T] {
+  alias S = IteratorTargetType(T);
+  return PushbackIterator(Vector[S](), it);
+}
