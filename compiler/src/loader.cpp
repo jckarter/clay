@@ -31,7 +31,6 @@ static std::string getOS(llvm::Triple const &triple) {
     case llvm::Triple::Linux : return "linux";
     case llvm::Triple::Cygwin :
     case llvm::Triple::MinGW32 :
-    case llvm::Triple::MinGW64 :
     case llvm::Triple::Win32 : return "windows";
     case llvm::Triple::NetBSD : return "netbsd";
     case llvm::Triple::OpenBSD : return "openbsd";

@@ -615,14 +615,10 @@ int main(int argc, char **argv) {
     setExceptionsEnabled(exceptions);
 
     // On Windows, instead of "*-*-win32", use the target triple:
-    // "*-*-mingw32" on 32-bit
-    // "*-*-mingw64" on 64-bit
+    // "*-*-mingw32"
     llvm::Triple llvmTriple(targetTriple);
     if (llvmTriple.getOS() == llvm::Triple::Win32) {
-        if (llvmTriple.getArch() != llvm::Triple::x86_64)
-            llvmTriple.setOS(llvm::Triple::MinGW32);
-        else
-            llvmTriple.setOS(llvm::Triple::MinGW64);
+        llvmTriple.setOS(llvm::Triple::MinGW32);
     }
     targetTriple = llvmTriple.str();
 
