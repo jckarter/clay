@@ -227,6 +227,9 @@ overload #PODType?(ContiguousCoordinate['T]) | Type?('T) = true;
 
 overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
 
+#DereferenceablePointerType?('T)
+    = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
+
 overload #ToLowLevelType(ContiguousCoordinate['T])
     | Type?('T)
     = LLPointerType['T];
