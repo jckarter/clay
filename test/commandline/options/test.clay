@@ -1,0 +1,79 @@
+import test.*;
+import commandline.options.table.*;
+import commandline.options.parser.*;
+
+fbbSpec() = OptionSpecs([
+  OptionSpec('f', "foo"),
+  OptionSpec('b', "bar"),
+  OptionSpec('z', "baz"),
+  OptionSpec('i', "bif")
+]);
+
+valuableSpec() = OptionSpecs([
+  OptionSpec('f', "foo", HAS_VALUE),
+  OptionSpec('b', "bar", HAS_VALUE)
+]);
+
+[T] numberOf(it, static T){
+  var i = 0;
+  for(x in it) if(variantIs?(x, T)) inc(i);
+  return i;
+}
+
+numberOfOptions(it) = numberOf(it, OptionValue);
+numberOfArguments(it) = numberOf(it, Argument);
+validOptions?(it) = numberOf(it, Error) == 0;
+
+PR(...args) = ParseResult(...mapValues(ParseToken, ...args));
+
+main() = testMain(
+  TestSuite("Raw option parsing", [ TestCase("a single option amongst many", test => { var opts = ["foo", "bar", "baz"]; for(opt in opts){ var pr = parseOptions(fbbSpec(), ["--"+opt]); expectEqual(test, "the options parsed", pr, Vector[ParseToken](ParseToken(OptionValue(opt)))); } }), TestCase("repeated options", test => { var pr1 = parseOptions(fbbSpec(), ["-f", "-b", "-i"]);
+      var pr2 = parseOptions(fbbSpec(), ["-fbi"]);
+
+      expectTrue(test, "the first parse was successful", validOptions?(pr1));
+      expectEqual(test, "options separate and repeated", pr1, pr2);
+    }),
+    TestCase("with values omitted", test => {
+      var pr = parseOptions(valuableSpec(), ["--foo", "--bar"]);
+      expectFalse(test, "parsing without a value", validOptions?(pr));
+    }), 
+    TestCase("with values as separate tokens", test => {
+      var pr = parseOptions(valuableSpec(), ["--foo", "bar"]);
+      expectEqual(test, "the value of the option", ParseResult(ParseToken(OptionValue("foo", "bar"))), pr);
+    }),
+    TestCase("with values included in a short options", test => {
+      var pr = parseOptions(valuableSpec(), ["-fbar"]);
+      expectEqual(test, "options separate and flattened", PR(OptionValue("f", "bar")), pr);
+    }), 
+    TestCase("with values included in a long option", test => {
+      var pr = parseOptions(valuableSpec(), ["--foo=bar"]);
+      expectEqual(test, "options separate and flattened", PR(OptionValue("foo", "bar")), pr);
+    }),
+    TestCase("with a separator", test => {
+      var pr = parseOptions(valuableSpec(), ["--foo", "bar", "--", "--bar"]);
+
+      expectTrue(test, "the parse was successful", validOptions?(pr));
+      expectEqual(test, "number of options", 1, numberOfOptions(pr));
+      expectEqual(test, "number of arguments", 1, numberOfArguments(pr));
+    }),
+    TestCase("with negative numeric arguments", test => {
+      var pr = parseOptions(OptionSpecs(), ["-1"]);
+
+      expectEqual(test, "the parsed option", PR(Argument(String("-1"))), pr);
+    })
+  ]),
+  TestSuite("The option table API", [
+    TestCase("testing for presence", test => {
+      var ot = OptionTable(fbbSpec(), ["-fb", "-baz"]);
+expectTrue(test, "foo is a provided option", optionGiven?(ot, "foo"));
+      expectTrue(test, "bar is a provided option", optionGiven?(ot, "foo"));
+    }),
+    TestCase("getting values", test => {
+      var ot = OptionTable(valuableSpec(), ["-fkittens", "--bar=badgers", "--foo", "bunnies"]);
+
+      expectEqual(test, "the values for foo", getOptions(ot, "foo"), Vector[String]([String("kittens"), String("bunnies")]));
+      expectEqual(test, "the values for bar", getOptions(ot, "bar"), Vector[String](String("badgers")));
+    })
+  ])
+);
+
