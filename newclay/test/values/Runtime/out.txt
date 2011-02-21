@@ -39,3 +39,7 @@ Int
 Int
 Int
 Int
+nthValue
+1
+true
+'3'

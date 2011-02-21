@@ -47,4 +47,9 @@ main() {
 
     show("five intValues");
     show(...#intValues(#5));
+
+    show("nthValue");
+    show(#nthValue(0, 1, true, '3'));
+    show(#nthValue(1, 1, true, '3'));
+    show(#nthValue(2, 1, true, '3'));
 }
