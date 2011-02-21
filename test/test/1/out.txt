@@ -98,6 +98,9 @@ Testing test test suite:
 
     required expectation did not pass
     -- FAILED
--- test test suite: 11 expectations passed; 20 failed (1 pending)
-Overall: 11 expectations passed; 20 failed (1 pending)
+  ifPasses:
+    truth 1 is expected to be true but isn't
+    -- FAILED
+-- test test suite: 13 expectations passed; 20 failed (1 pending)
+Overall: 13 expectations passed; 20 failed (1 pending)
 TESTS FAILED
