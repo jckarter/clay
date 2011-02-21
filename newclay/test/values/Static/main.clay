@@ -44,4 +44,7 @@ main() {
 
     show("mapping lack of odd and even values");
     show(...#mapValues(odd?));
+
+    show("five intValues");
+    show(...#intValues(#5));
 }

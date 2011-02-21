@@ -33,3 +33,9 @@ false
 true
 false
 mapping lack of odd and even values
+five intValues
+0
+1
+2
+3
+4
