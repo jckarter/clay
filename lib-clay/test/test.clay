@@ -1,3 +1,5 @@
+import commandline.options.*;
+
 record TestStatus (
     passed: UInt,
     failed: UInt,
@@ -275,10 +277,19 @@ required(expectFn, test: TestStatus, forward ...args) {
         throw RequiredExpectationFailed();
 }
 
+var testOptionSpecs = OptionSpecs(
+  OptionSpec("s", "suite", HAS_VALUE, ALLOWS_REPEATS)
+);
+
 testMain(...suites) {
+    var options = CommandlineOptionTable(testOptionSpecs);
+
     var test = TestStatus();
     eachValue(
-        suite ref => { accumulateTestStatus(test, runTestSuite(suite)); },
+        suite ref => { 
+          if(runSuite?(options, suite))
+            accumulateTestStatus(test, runTestSuite(suite)); 
+        },
         ...suites
     );
 
@@ -290,4 +301,16 @@ testMain(...suites) {
     } else {
         return 0;
     }
+}
+
+private runSuite?(options, suite){
+  ref suites = getOptions(options, "suite");
+
+  if(empty?(suites)) return true;
+  return include?(suites, suite.name); 
+}
+
+private include?(seq, elt){
+  for(x in seq) if(x == elt) return true;
+  return false;
 }
