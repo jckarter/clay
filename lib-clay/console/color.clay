@@ -23,19 +23,3 @@ resetConsole(){  sgr(0); }
 textColor(c : Color){ sgr(30 + Int(c)); }
 backgroundColor(c : Color){ sgr(40 + Int(c)); }
 invertColors(){ sgr(7); }
-
-main(){
-  textColor(Red);  
-  println("Hello world");
-  backgroundColor(Green);
-  print("Save the whales!");
-  backgroundColor(Black);
-  println();
-  backgroundColor(Green);
-  invertColors();
-  print("Eat the tuna!");
-  resetConsole();
-  println();
-  println("Goodbye world");
-  textColor(White);
-}
