@@ -1,4 +1,5 @@
 import commandline.options.*;
+import console.color.*;
 
 record TestStatus (
     passed: UInt,
@@ -64,7 +65,9 @@ pendingMessage(pending?) {
     }
 }
 
-printFailure(...xs) { println(TEST_FAILURE_INDENT, ...xs); }
+printFailure(...xs) { 
+  printlnColored(Red, TEST_FAILURE_INDENT, ...xs); 
+}
 
 runTestCase(_case: TestCase) TestStatus {
     print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
@@ -97,7 +100,7 @@ runTestCase(_case: TestCase) TestStatus {
             printFailure("-- FIXED (should clear pending flag)");
             test.failed = 1;
         } else {
-            println(" passed");
+            printlnColored(Green, " passed");
         }
     }
 
@@ -280,7 +283,8 @@ required(expectFn, test: TestStatus, forward ...args) {
 
 var testOptionSpecs = OptionSpecs(
   OptionSpec("s", "suite", HAS_VALUE, ALLOWS_REPEATS),
-  OptionSpec("c", "case", HAS_VALUE, ALLOWS_REPEATS)
+  OptionSpec("c", "case", HAS_VALUE, ALLOWS_REPEATS),
+  OptionSpec("n", "nc", "no-color")
 );
 
 var testOptionsInitialized? = false;
@@ -315,8 +319,15 @@ testMain(...suites) {
     }
 }
 
+private printlnColored(c : Color, ...values){
+  if(colored?()) textColor(c);
+  println(...values);
+  if(colored?()) resetConsole();
+}
+
 private runSuite?(suite) = optionsInclude?("suite", suite.name);
 private runCase?(_case) = optionsInclude?("case", _case.name);
+private colored?() = not(optionGiven?(testOptions(), "no-color"));
 
 private optionsInclude?(name, elt){
   ref seq = getOptions(testOptions(), name);
