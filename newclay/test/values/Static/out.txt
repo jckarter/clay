@@ -39,3 +39,7 @@ five intValues
 2
 3
 4
+nthValue
+1
+true
+'3'
