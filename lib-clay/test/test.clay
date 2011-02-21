@@ -49,6 +49,7 @@ reportTest(test: TestStatus, ...prefix) {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
     for (_case in suite.testCases)
+      if(runCase?(_case))
         accumulateTestStatus(test, runTestCase(_case));
 
     reportTest(test, "-- ", suite.name, ": ");
@@ -278,16 +279,27 @@ required(expectFn, test: TestStatus, forward ...args) {
 }
 
 var testOptionSpecs = OptionSpecs(
-  OptionSpec("s", "suite", HAS_VALUE, ALLOWS_REPEATS)
+  OptionSpec("s", "suite", HAS_VALUE, ALLOWS_REPEATS),
+  OptionSpec("c", "case", HAS_VALUE, ALLOWS_REPEATS)
 );
 
-testMain(...suites) {
-    var options = CommandlineOptionTable(testOptionSpecs);
+var testOptionsInitialized? = false;
+var _testOptions = OptionTable();
 
+private testOptions(){
+  if(not testOptionsInitialized?){
+    _testOptions = CommandlineOptionTable(testOptionSpecs);
+    testOptionsInitialized? = true;
+  }
+
+  return ref _testOptions;
+}
+
+testMain(...suites) {
     var test = TestStatus();
     eachValue(
         suite ref => { 
-          if(runSuite?(options, suite))
+          if(runSuite?(suite))
             accumulateTestStatus(test, runTestSuite(suite)); 
         },
         ...suites
@@ -303,11 +315,12 @@ testMain(...suites) {
     }
 }
 
-private runSuite?(options, suite){
-  ref suites = getOptions(options, "suite");
+private runSuite?(suite) = optionsInclude?("suite", suite.name);
+private runCase?(_case) = optionsInclude?("case", _case.name);
 
-  if(empty?(suites)) return true;
-  return include?(suites, suite.name); 
+private optionsInclude?(name, elt){
+  ref seq = getOptions(testOptions(), name);
+  return empty?(seq) or include?(seq, elt);
 }
 
 private include?(seq, elt){
