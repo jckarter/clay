@@ -1,0 +1,29 @@
+Tuple[Int, Tuple[Bool, Float64], Char]
+true
+1
+true
+3
+'4'
+1
+true
+3
+'5'
+1
+false
+3
+'5'
+Tuple[Int, Tuple[Bool, Float64], Char]
+true
+Tuple[Int, Tuple[Bool, Float64], Char]
+true
+2
+true
+4
+'6'
+0
+false
+0
+'\x00'
+1
+true
+'3'
