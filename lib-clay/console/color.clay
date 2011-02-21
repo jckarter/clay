@@ -1,0 +1,25 @@
+import io.files.raw.*;
+import system.platform.*;
+
+enum Color { 
+  Black,
+  Red,
+  Green,
+  Yellow,
+  Blue,
+  Magenta,
+  Cyan,
+  White
+}
+
+private procedure sgr(code){
+  if(supported?())
+    print(Char(27), '[', code, 'm');
+}
+
+supported?() = Unix?() and terminal?(stdoutRawFile());
+
+resetConsole(){  sgr(0); }
+textColor(c : Color){ sgr(30 + Int(c)); }
+backgroundColor(c : Color){ sgr(40 + Int(c)); }
+invertColors(){ sgr(7); }
