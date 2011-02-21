@@ -1,0 +1,16 @@
+import lua.*;
+
+main() {
+    var x = lua_open();
+    luaL_openlibs(x);
+    luaL_dostring(x, "
+        print('Hello world from Lua!')
+    ");
+    lua_close(x);
+}
+
+//
+// build command:
+//
+// clay test.clay -L/opt/local/lib -llua
+//
