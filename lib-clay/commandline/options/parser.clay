@@ -1,0 +1,174 @@
+import commandline.options.spec.*;
+import commandline.options.util.*;
+import maybe.*;
+
+record OptionValue(
+  option : String,
+  value  : Maybe[String]
+);
+
+[T | String?(T) ]
+overload OptionValue(x : T) = move(
+  OptionValue(String(x), nothing(String))
+);
+
+[S, T | String?(S) and String?(T)]
+overload OptionValue(x : S, y : T) = move(
+  OptionValue(String(x), Maybe(String(y)))
+);
+
+record Argument(value : String);
+record Error(value : String);
+record Separator();
+
+variant ParseToken = OptionValue | Argument | Error | Separator;
+
+alias ParseResult = Vector[ParseToken];
+
+parseOptions(ops : OptionSpecs, args) ParseResult { 
+  var pr = ParseResult();
+
+  var scanner = withPushback(iterator(mapped(x => String(x), args)));
+
+  while(hasNext?(scanner)){
+    var token = next(scanner);
+
+    // -- acts as a separator. After -- all tokens are interpreted as arguments rather than options
+    if(token == "--"){
+      addSeparator(pr);
+
+      while(hasNext?(scanner)){
+        addArgument(pr, next(scanner));
+      }
+    } else if(argument?(token)){
+      addArgument(pr, token);
+    } else {
+      var optionName, value? = ...splitOption(token);
+
+      var spec? = lookup(ops, optionName);
+
+      if(nothing?(spec?)){
+        unrecognisedOption(pr, optionName);
+      } else {
+        var spec = variantAs(spec?, OptionSpec);
+
+        if(just?(value?)){
+          var value = variantAs(value?, String);
+
+          if(not spec.hasValue){
+            // Note: It is important that we test the original token, not the
+            // length of the key provided. -foo and --f=oo have different meanings
+            // but return the same results from splitOption
+            if(shortOption?(token)){
+              for(c in slicedFrom(token, 1)){
+                var spec? = lookup(ops, String(c));
+
+                if(variantIs?(spec?, Nothing)){
+                  unrecognisedOption(pr, c);
+                } else {
+                  addOption(pr, String(c));
+                }
+              }
+            } else { 
+              unexpectedValue(pr, optionName, value);
+            }
+          } else {
+            addOption(pr, optionName, value);
+          }
+        } else if(spec.hasValue) {
+          seekToken(pr, optionName, scanner);
+        } else {
+          addOption(pr, optionName);
+        }
+      } 
+    }
+  }
+
+  return move(pr);
+}
+
+private splitOption(token){
+  if(argument?(token)) error("Invalid argument: splitOption called on non-option");
+
+  if(shortOption?(token)){
+    if(size(token) == 2) return ...String(token[1]), nothing(String);
+    else {
+      return ...String(token[1]), Maybe(sliceFrom(token, 2));
+    }
+  }
+
+  for(i in range(3, size(token))){
+    if(token[i] == '='){
+      return slice(token, 2, i), Maybe(sliceFrom(token, i+1));
+    }
+  }
+
+  return ...sliceFrom(token, 2), nothing(String);
+}
+
+private seekToken(pr, key, scanner){
+  var nextToken = String("");
+  var nextToken? = hasNext?(scanner);
+
+  if(nextToken?) nextToken = next(scanner);
+
+  if(nextToken? and argument?(nextToken)){
+    addOption(pr, key, nextToken);
+  } else {
+    missingValue(pr, key);
+    push(scanner, nextToken);
+  }
+}
+
+private lookup(specs, name) Maybe[OptionSpec] {
+  for(os in specs){
+    for(name2 in os.names){
+      if(name2 == name) return Maybe(os);
+    }
+  }
+  return nothing(OptionSpec);
+}
+
+private addPT(pr, x){
+  push(pr, ParseToken(x));
+}
+
+private addArgument(pr, arg){
+  addPT(pr, Argument(String(arg)));
+}
+
+
+private procedure addOption;
+
+overload addOption(pr, spec){
+  addPT(pr, OptionValue(spec, nothing(String)));
+}
+
+overload addOption(pr, spec, op){
+  addPT(pr, OptionValue(spec, Maybe(op)));
+}
+
+addError(pr, message){
+  addPT(pr, Error(message));
+}
+
+addSeparator(pr){
+  addPT(pr, Separator());
+}
+
+private unrecognisedOption(pr, op){
+  addError(pr, "Unrecognised option " + String(op));
+}
+
+private unexpectedValue(pr, spec, value){
+  addError(pr, "The value " + value + " was provided for " + String(spec) + " but no value was expected");
+}
+
+private missingValue(pr, op){
+  addError(pr, "Option " + String(op) + " expects a value but none was provided");
+}
+
+// tokens of size <= 1 can't be options. Note that it's important that we allow "-" as an argument.
+private argument?(token) = size(token) <= 1  or token[0] != '-' or ('0' <= token[1] and token[1] <= '9');
+
+private shortOption?(token) = size(token) >= 2 and token[0] == '-' and token[1] != '-';
