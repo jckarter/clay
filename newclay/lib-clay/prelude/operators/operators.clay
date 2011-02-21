@@ -265,7 +265,7 @@ symbol next;
 //
 
 symbol unwrap;
-overload unwrap(#'x) = 'x;
+overload unwrap(...#'x) = ...'x;
 
 
 //
