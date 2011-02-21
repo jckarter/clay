@@ -1,42 +1,4 @@
 import maybe.*;
 
 public import commandline.options.spec.*;
-public import commandline.options.parser.*;
-
-validOptions?(pr) = empty?(pr.errors);
-
-optionGiven?(pr, name){
-  assertValidOptions(pr);
-  for(opt in pr.options) if(matches(opt.spec, name)) return true;
-  return false;
-}
-
-overload index(pr : ParseResult, name){
-  assertValidOptions(pr);
-  for(opt? in pr) {
-    if(variantIs?(opt?, OptionValue)){
-      var opt = variantAs(opt?, OptionValue);
-      if(matches(opt.spec, name)){
-        if(variantIs?(opt.value, String)){
-          return variantAs(opt.value, String);
-        } else error("No value for option ", name);
-      }
-    }
-  }
-  error("No value for option ", name);
-  return String(""); // unreachable
-}
-
-private assertValidOptions(pr){
-  if(not validOptions?(pr)) error("Invalid options");
-}
-
-private procedure matches;
-
-overload matches(opt, x){
-  var y = String(x);
-  for(n in opt.names) if(y == n) return true; 
-  return false;
-}
-
-
+public import commandline.options.table.*;
