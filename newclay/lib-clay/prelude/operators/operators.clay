@@ -269,6 +269,23 @@ overload unwrap(...#'x) = ...'x;
 
 
 //
+// refToRvalueUnsafe, rvalueToRefUnsafe
+//
+
+inline refToRvalueUnsafe(ref x:'T) rvalue r:'T
+    __c__ """$r = &$x;""";
+inline rvalueToRefUnsafe(rvalue x:'T) ref r:'T
+    __c__ """$r = &$x;""";
+
+
+//
+// unpack
+//
+
+symbol unpack;
+
+
+//
 // max, min
 //
 
