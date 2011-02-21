@@ -58,7 +58,7 @@ overload OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
   return move(result);
 }
 
-procedure CommandlineOptionTable(sepcs : OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
+procedure CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
 
 private procedure findEntry;
 
