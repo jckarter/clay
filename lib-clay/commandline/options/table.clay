@@ -1,5 +1,6 @@
 public import commandline.options.spec.*;
 import commandline.options.parser.*;
+import system.(commandLine);
 
 record NoSuchOption(name : String);
 
@@ -57,6 +58,7 @@ overload OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
   return move(result);
 }
 
+procedure CommandlineOptionTable(sepcs : OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
 
 private procedure findEntry;
 
