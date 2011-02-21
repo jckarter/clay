@@ -2,17 +2,17 @@ import values.*;
 import prelude.operators.c.*;
 import prelude.procedures.*;
 import prelude.constructors.*;
-import meta.statics.(StaticTupleSize);
+import meta.statics.*;
 
 
 //
 // tupleLiteral, arrayLiteral
 //
 
-tupleLiteral(...elements:'T) = Tuple[...'T](...elements);
-arrayLiteral(x0:'T0, ...xs:'T)
+inline tupleLiteral(forward ...elements:'T) = Tuple[...'T](...elements);
+inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
     | equalValues?('T0, ...'T)
-    = Array['T0, countValues('T0, ...'T)](...elements);
+    = Array['T0, countValues('T0, ...'T)](x0, ...xs);
 
 
 
@@ -20,7 +20,9 @@ arrayLiteral(x0:'T0, ...xs:'T)
 // index
 //
 
-index(forward a:Array['T, 'n], i:'I) | Integer?('I)
+symbol index;
+
+inline overload index(forward a:Array['T, 'n], i:'I) | Integer?('I)
     = forward cIndex('T, a, i);
 
 // A bit of improper coupling with the C codegen implementation: tuple elements
@@ -153,6 +155,8 @@ greater?(a, b) | Defined?(b < a) = b < a;
 greaterEquals?(a, b) | Defined?(a < b) = not a < b;
 
 symbol equals?;
+overload equals?(a:'A, b:'B) | 'A != 'B = false;
+
 notEquals?(a, b) | Defined?(a == b) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
