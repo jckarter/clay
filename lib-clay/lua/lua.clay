@@ -1,0 +1,22 @@
+public import lua.generated.*;
+public import lua.constants.*;
+
+lua_upvalueindex(i) = LUA_GLOBALSINDEX - i;
+
+alias lua_open = luaL_newstate;
+
+[S | CCompatibleString?(S)]
+luaL_dofile(l:Pointer[lua_State], f:S) {
+    var result = luaL_loadfile(l, cstring(f));
+    if (result != 0)
+        return result;
+    return lua_pcall(l, 0, LUA_MULTRET, 0);
+}
+
+[S | CCompatibleString?(S)]
+luaL_dostring(l:Pointer[lua_State], s:S) {
+    var result = luaL_loadstring(l, cstring(s));
+    if (result != 0)
+        return result;
+    return lua_pcall(l, 0, LUA_MULTRET, 0);
+}

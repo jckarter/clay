@@ -1,0 +1,77 @@
+
+/* option for multiple returns in `lua_pcall' and `lua_call' */
+alias LUA_MULTRET = -1;
+
+/*
+** pseudo-indices
+*/
+alias LUA_REGISTRYINDEX = -10000;
+alias LUA_ENVIRONINDEX  = -10001;
+alias LUA_GLOBALSINDEX  = -10002;
+
+
+/* thread status; 0 is OK */
+alias LUA_YIELD     = 1;
+alias LUA_ERRRUN    = 2;
+alias LUA_ERRSYNTAX = 3;
+alias LUA_ERRMEM    = 4;
+alias LUA_ERRERR    = 5;
+
+/*
+** basic types
+*/
+alias LUA_TNONE          = -1;
+alias LUA_TNIL           = 0;
+alias LUA_TBOOLEAN       = 1;
+alias LUA_TLIGHTUSERDATA = 2;
+alias LUA_TNUMBER        = 3;
+alias LUA_TSTRING        = 4;
+alias LUA_TTABLE         = 5;
+alias LUA_TFUNCTION      = 6;
+alias LUA_TUSERDATA      = 7;
+alias LUA_TTHREAD        = 8;
+
+/* minimum Lua stack available to a C function */
+alias LUA_MINSTACK = 20;
+
+/*
+** garbage-collection function and options
+*/
+alias LUA_GCSTO        = 0;
+alias LUA_GCRESTART    = 1;
+alias LUA_GCCOLLECT    = 2;
+alias LUA_GCCOUNT      = 3;
+alias LUA_GCCOUNTB     = 4;
+alias LUA_GCSTEP       = 5;
+alias LUA_GCSETPAUSE   = 6;
+alias LUA_GCSETSTEPMUL = 7;
+
+/*
+** Event codes
+*/
+alias LUA_HOOKCALL    = 0;
+alias LUA_HOOKRET     = 1;
+alias LUA_HOOKLINE    = 2;
+alias LUA_HOOKCOUNT   = 3;
+alias LUA_HOOKTAILRET = 4;
+
+/*
+** Event masks
+*/
+alias LUA_MASKCALL  = shiftLeft(1, LUA_HOOKCALL);
+alias LUA_MASKRET   = shiftLeft(1, LUA_HOOKRET);
+alias LUA_MASKLINE  = shiftLeft(1, LUA_HOOKLINE);
+alias LUA_MASKCOUNT = shiftLeft(1, LUA_HOOKCOUNT);
+
+
+/* Key to file-handle type */
+alias LUA_FILEHANDLE = "FILE*";
+
+alias LUA_COLIBNAME = "coroutine";
+alias LUA_TABLIBNAME = "table";
+alias LUA_IOLIBNAME = "io";
+alias LUA_OSLIBNAME = "os";
+alias LUA_STRLIBNAME = "string";
+alias LUA_MATHLIBNAME = "math";
+alias LUA_DBLIBNAME = "debug";
+alias LUA_LOADLIBNAME = "package";
