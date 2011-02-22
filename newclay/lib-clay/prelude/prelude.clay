@@ -1,3 +1,4 @@
+public import prelude.arrays.*;
 public import prelude.constructors.*;
 public import prelude.diagnostics.*;
 public import prelude.procedures.*;

@@ -155,6 +155,10 @@ inline overload subtract(a:ContiguousCoordinate['A], b:'B)
 inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
     = cSubtract(Int, a, b);
 
+inline overload index(a, n:'I)
+    | IntegerType?('I) and Defined?(...((a + n)^))
+    = forward ...((a + n)^);
+
 
 //
 // comparison operators
@@ -220,8 +224,8 @@ divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
 quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
 remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
 
-inc(ref a:'T) | Defined?(...addAssign     (a, 'T(1))) { a += 'T(1); }
-dec(ref a:'T) | Defined?(...subtractAssign(a, 'T(1))) { a -= 'T(1); }
+inc(ref a:'T) | Defined?(...addAssign     (a, 1)) { a += 1; }
+dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
 
 
 
@@ -267,12 +271,13 @@ overload move(rvalue a:'T) = moveUnsafe(a);
 
 
 //
-// iterator, hasNext?, next
+// iterator, hasNext?, next, size
 //
 
 symbol iterator;
 symbol hasNext?;
 symbol next;
+symbol size;
 
 
 //
