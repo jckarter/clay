@@ -1,0 +1,31 @@
+import show.*;
+
+main() {
+    show(#Defined?(Union[UInt32, Float32](1_u32))); ////true
+    show(#Defined?(Union[UInt32, Float32](2f))); ////true
+
+    show(#Defined?(Union[UInt32, Float32]('3'))); ////false
+
+    var x = Union[UInt32, Float32](0x3f80_0000_u32);
+
+    show(#Defined?(x.0)); ////true
+    show(#Defined?(x.1)); ////true
+    show(#Defined?(x[UInt32])); ////true
+    show(#Defined?(x[Float32])); ////true
+
+    show(#Defined?(x.2)); ////false
+    show(#Defined?(x[Char])); ////false
+
+    show(x.0); ////1065353216
+    show(x.1); ////1
+
+    show(x[UInt32]); ////1065353216
+    show(x[Float32]); ////1
+
+    var y = Union[UInt32, Float32](1.0f);
+    show(x == y); ////true
+
+    x.1 = 2.0f;
+    show(x.0); ////1073741824
+    show(x.1); ////2
+}
