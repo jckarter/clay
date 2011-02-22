@@ -33,8 +33,16 @@ main() {
     show(#Type(z)); ////Tuple[Int, Tuple[Bool, Float64], Char]
     show(x == z); ////true
 
+
     var w = (2, (true, 4.0), '6');
+
+    show(x == w); ////false
+    show(x < w); ////true
+
     x = w;
+
+    show(x == w); ////true
+    show(x < w); ////false
 
     show(x.0); ////2
     show(x.1.0); ////true
