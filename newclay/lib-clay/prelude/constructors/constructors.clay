@@ -41,14 +41,21 @@ inline overload 'A(b:'B)
 
 inline overload ContiguousCoordinate(forward x:'T)
     | DereferenceablePointerType?('T)
-    = ContiguousCoordinate['T](x);
+    = ContiguousCoordinate[PointerReferencedType('T)](x);
 
 inline overload Pointer(forward x:'T)
     | DereferenceablePointerType?('T)
-    = Pointer['T](x);
+    = Pointer[PointerReferencedType('T)](x);
 
 
 //
-//XXX tuples and arrays
+// unions
+//
+
+
+
+
+//
+//XXX arrays
 //
 
