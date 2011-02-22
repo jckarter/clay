@@ -22,22 +22,14 @@ inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
 
 symbol index;
 
-inline overload index(forward a:Array['T, 'n], i:'I) | Integer?('I)
-    = forward cIndex('T, a, i);
-
 // A bit of improper coupling with the C codegen implementation: tuple elements
 // are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
-private #TupleFieldName('n) = StaticStringConcat("field", StaticName('n));
-
-private #ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
-
-inline overload index(forward t:Tuple[...'T], #'n)
-    | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), t, #TupleFieldName('n));
+#LLTupleFieldName('n) = StaticStringConcat("field", StaticName('n));
+#ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
 
 inline overload index(forward u:Union[...'T], #'n)
     | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), u, #TupleFieldName('n));
+    = forward cFieldRef(#nthValue('n, ...'T), u, #LLTupleFieldName('n));
 
 // XXX StringConstant should be a record rather than hardcoded like this
 inline overload index(forward s:StringConstant, #'field)
@@ -51,8 +43,8 @@ inline overload index(forward s:StringConstant, #'field)
 //
 
 inline dereference(forward a:'T)
-    | PointerType?('T) and StaticDefined?(PointerReferencedType('T))
-    = forward cDereference(PointerReferencedType('T), a);
+    | PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T)
+    = forward cDereference(#PointerReferencedType('T), a);
 
 
 
@@ -143,6 +135,25 @@ inline overload add(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
 inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cSubtract(#BiggerNumericType('A, 'B), a, b);
 
+
+//
+// ContiguousCoordinate arithmetic
+//
+
+inline overload add(a:ContiguousCoordinate['A], b:'B)
+    | IntegerType?('B)
+    = cAdd(ContiguousCoordinate['A], a, b);
+
+inline overload add(a:'A, b:ContiguousCoordinate['B])
+    | IntegerType?('A)
+    = cAdd(ContiguousCoordinate['B], b, a);
+
+inline overload subtract(a:ContiguousCoordinate['A], b:'B)
+    | IntegerType?('B)
+    = cSubtract(ContiguousCoordinate['A], a, b);
+
+inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
+    = cSubtract(Int, a, b);
 
 
 //
@@ -155,8 +166,6 @@ greater?(a, b) | Defined?(b < a) = b < a;
 greaterEquals?(a, b) | Defined?(a < b) = not a < b;
 
 symbol equals?;
-overload equals?(a:'A, b:'B) | 'A != 'B = false;
-
 notEquals?(a, b) | Defined?(a == b) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
@@ -165,6 +174,9 @@ ordered?(a, b)
     = a <= b or b <= a;
 
 nan?(a:'A) | FloatType?('A) = a != a;
+
+overload lesser?(#'a, #'b) = unwrap(#('a < 'b));
+overload equals?(#'a, #'b) = unwrap(#('a == 'b));
 
 
 //
@@ -262,6 +274,13 @@ symbol iterator;
 symbol hasNext?;
 symbol next;
 
+
+//
+// begin, end
+//
+
+symbol begin;
+symbol end;
 
 
 //

@@ -1,0 +1,66 @@
+import show.*;
+
+main() {
+    var int = 1, char = 'a', bool = true;
+    var pint = &int,
+        pchar = &char;
+    var cint = ContiguousCoordinate(&int),
+        cchar = ContiguousCoordinate(&char);
+    var opaque = OpaquePointer(&int);
+
+    show(#Type(pint)); ////Pointer[Int]
+    show(#Type(pchar)); ////Pointer[Char]
+    show(#Type(cint)); ////ContiguousCoordinate[Int]
+    show(#Type(cchar)); ////ContiguousCoordinate[Char]
+    show(#Type(opaque)); ////OpaquePointer
+
+    // defined comparisons
+    show(#Defined?(pint == pint)); ////true
+    show(#Defined?(cint == cint)); ////true
+    show(#Defined?(opaque == opaque)); ////true
+    show(#Defined?(cint < cint)); ////true
+
+    // nondefined comparisons
+    show(#Defined?(pint == pchar)); ////false
+    show(#Defined?(cint == cchar)); ////false
+    show(#Defined?(pint < pint)); ////false
+    show(#Defined?(opaque < opaque)); ////false
+
+    // defined dereference
+    show(#Defined?(pint^)); ////true
+    show(#Defined?(cint^)); ////true
+
+    // nondefined dereference
+    show(#Defined?(opaque^)); ////false
+
+    // defined arithmetic
+    show(#Defined?(cint + 1)); ////true
+    show(#Defined?(cint - 1)); ////true
+    show(#Defined?(1 + cint)); ////true
+    show(#Defined?(cint - cint)); ////true
+
+    // nondefined arithmetic
+    show(#Defined?(1 - cint)); ////false
+    show(#Defined?(cint - cchar)); ////false
+
+    show(#Defined?(pint + 1)); ////false
+    show(#Defined?(pint - 1)); ////false
+    show(#Defined?(1 + pint)); ////false
+    show(#Defined?(1 - pint)); ////false
+
+    show(#Defined?(opaque + 1)); ////false
+    show(#Defined?(opaque - 1)); ////false
+    show(#Defined?(1 + opaque)); ////false
+    show(#Defined?(1 - opaque)); ////false
+
+    show(#Defined?(pint - pint)); ////false
+    show(#Defined?(cint - pint)); ////false
+    show(#Defined?(opaque - pint)); ////false
+
+    show(#Defined?(pint - cint)); ////false
+    show(#Defined?(opaque - cint)); ////false
+
+    show(#Defined?(pint - opaque)); ////false
+    show(#Defined?(cint - opaque)); ////false
+    show(#Defined?(opaque - opaque)); ////false
+}
