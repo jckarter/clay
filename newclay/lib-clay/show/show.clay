@@ -10,7 +10,7 @@ printf(fmt:StringConstant, value) { c_printf(cstring(fmt), value); }
 show(s:StringConstant) { puts(s); }
 overload show(b:Bool) { puts(if (b) "true" else "false"); }
 overload show(c:'C) | CharType?('C) {
-    if (UInt32(c) < 0x7f_u32)
+    if (UInt32(c) > 0x20_u32 and UInt32(c) < 0x7f_u32)
         printf("'%c'\n", c);
     else
         printf(

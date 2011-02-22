@@ -55,5 +55,5 @@ overload #VariadicBinaryOperatorProcedure?(SymbolBodyWithTag?) = false;
 inline overload 'fn(...#'xs)
     | RuntimeStaticProcedure?('fn)
       and StaticCallDefined?('fn, ...'xs)
-    = unwrap(#'fn(...'xs));
+    = ...unwrap(...#'fn(...'xs));
 

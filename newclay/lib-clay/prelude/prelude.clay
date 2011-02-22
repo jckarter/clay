@@ -2,6 +2,7 @@ public import prelude.constructors.*;
 public import prelude.diagnostics.*;
 public import prelude.procedures.*;
 public import prelude.operators.*;
+public import prelude.tuples.*;
 public import prelude.types.*;
 
 // prelude symbols are always available as "prelude.foo"
