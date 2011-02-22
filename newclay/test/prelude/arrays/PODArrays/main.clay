@@ -1,0 +1,54 @@
+import show.*;
+
+main() {
+    show(#Defined?([1])); ////true
+    show(#Defined?([1, 2, 3])); ////true
+    show(#Defined?([1, 2u])); ////false
+
+    var x = [2, 4, 6];
+
+    show(#Type(x)); ////Array[Int, 3]
+    show(#BitwiseZeroInitializedType?(Type(x))); ////true
+
+    show(size(x)); ////3
+    show(x[0]); ////2
+    show(x[1]); ////4
+    show(x[2]); ////6
+
+    x[1] = 5;
+
+    show(x[0]); ////2
+    show(x[1]); ////5
+    show(x[2]); ////6
+
+    var y = Array[Int, 3]();
+    show(#Type(y)); ////Array[Int, 3]
+    show(x == y); ////false
+    show(y < x); ////true
+
+    show(size(y)); ////3
+    show(y[0]); ////0
+    show(y[1]); ////0
+    show(y[2]); ////0
+
+    var z = Array[Int, 3](2, 5, 6);
+
+    show(size(z)); ////3
+    show(#Type(z)); ////Array[Int, 3]
+    show(x == z); ////true
+    show(x < z); ////false
+
+    show(begin(x) < end(x)); ////true
+    show(end(x) - begin(x)); ////3
+    show(end(x) - begin(x) == Int(size(x))); ////true
+    show(begin(x) + size(x) == end(x)); ////true
+    show(end(x) - size(x) == begin(x)); ////true
+
+    show(begin(x)[0]); ////2
+    show(begin(x)[1]); ////5
+    show(begin(x)[2]); ////6
+
+    show(end(x)[-3]); ////2
+    show(end(x)[-2]); ////5
+    show(end(x)[-1]); ////6
+}
