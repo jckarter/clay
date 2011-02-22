@@ -1815,11 +1815,31 @@ evaluatePrimitive(kind, args) {
     case PRIM_PlatformCodegenDialect :
         return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
 
+    case PRIM_LLMangle : {
+        var s = oneString(args);
+        return ValueList(StringValue(mangleString(s)));
+    }
+
     default : {
         assert(false, "invalid primitive");
         return ValueList();
     }
     }
+}
+
+private alnum?(c)
+    = (c >= '0' and c <= '9')
+      or (c >= 'A' and c <= 'Z')
+      or (c >= 'a' and c <= 'z');
+
+mangleString(name) {
+    var mangled = String();
+    for (c in name)
+        if (not alnum?(c))
+            printTo(mangled, '_', rightAlignedWith(2, '0', hex(UInt8(c))));
+        else
+            push(mangled, c);
+    return move(mangled);
 }
 
 private callDefinedRTValue(type:Value) = match(type,
