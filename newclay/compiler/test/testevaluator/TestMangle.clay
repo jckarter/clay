@@ -1,0 +1,7 @@
+import __primitives__.*;
+
+#Main() =
+    LLMangle("abc"),
+    LLMangle("abc_def"),
+    LLMangle("abc_def?"),
+    LLMangle("abc def");

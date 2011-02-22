@@ -328,6 +328,8 @@ enum PrimitiveKind {
     PRIM_PlatformFamilyName,
     PRIM_PlatformCodegen,
     PRIM_PlatformCodegenDialect,
+
+    PRIM_LLMangle,
 }
 
 record Primitive = referenceType(

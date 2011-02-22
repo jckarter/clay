@@ -1,7 +1,7 @@
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.analysis.*;
-import newclay.evaluator.(qualifiedValueString, printQualifiedTo, printQualifiedSymbolTo);
+import newclay.evaluator.(mangleString, qualifiedValueString, printQualifiedTo, printQualifiedSymbolTo);
 import newclay.diagnostics.(computeLocation);
 import newclay.optimizer.*;
 import newclay.lifetime.*;
@@ -88,16 +88,6 @@ overload CodegenContext(config:CodegenConfig) x:CodegenContext {
 //
 
 alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-
-mangleString(name) {
-    var mangled = String();
-    for (c in name)
-        if (not alnum?(c))
-            printTo(mangled, '_', rightAlignedWith(2, '0', hex(UInt8(c))));
-        else
-            push(mangled, c);
-    return move(mangled);
-}
 
 mangleGlobal(name) = "_clay__" + mangleString(name);
 
