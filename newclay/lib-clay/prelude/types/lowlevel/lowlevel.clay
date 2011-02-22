@@ -1,5 +1,8 @@
 import meta.platform.*;
+import meta.statics.*;
 import values.*;
+
+public import __primitives__.(LLMangle);
 
 symbol LLSigned;
 symbol LLUnsigned;
@@ -52,4 +55,8 @@ overload #LLTypeAlign(LLCodePointerType[...'x]) = PlatformCPUPointerSize();
 overload #LLTypeAlign(LLArrayType['T, 'n]) = TypeAlign('T);
 overload #LLTypeAlign(LLTupleType[...'T]) = max(...mapValues(TypeAlign, ...'T));
 overload #LLTypeAlign(LLUnionType[...'T]) = max(...mapValues(TypeAlign, ...'T));
+
+// A bit of improper coupling with the C codegen implementation: tuple elements
+// are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
+#LLTupleFieldName('n) = StaticStringConcat("field", StaticName('n));
 
