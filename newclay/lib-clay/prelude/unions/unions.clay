@@ -1,0 +1,46 @@
+import values.*;
+import libc.*;
+import meta.statics.*;
+
+
+//
+// indexing
+//
+
+inline overload index(forward t:Union[...'T], #'n)
+    | ValidStaticIndex?('n, ...'T)
+    = forward bitcast(#nthValue('n, ...'T), t);
+
+inline overload index(forward t:Union[...'T], #'U)
+    | inValues?('U, ...'T)
+    = forward bitcast('U, t);
+
+
+//
+// default initialization
+//
+
+overload #BitwiseZeroInitializedType?(Union[...'T]) | Type?(Union[...'T]) = true;
+
+inline overload Union[...'T]() returned:Union[...'T] {
+    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize(Union[...'T])));
+}
+
+
+//
+// initialization from member type
+//
+
+inline overload Union[...'T](forward x:'U) returned:Union[...'T]
+    | inValues?('U, ...'T)
+{
+    returned['U] <-- x;
+}
+
+
+//
+// equality
+//
+
+inline overload equals?(a:Union[...'T], b:Union[...'T])
+    = memcmp(OpaquePointer(&a), OpaquePointer(&b), UInt(TypeSize(Union[...'T]))) == 0;

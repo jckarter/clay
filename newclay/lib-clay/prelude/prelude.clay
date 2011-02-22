@@ -5,6 +5,7 @@ public import prelude.procedures.*;
 public import prelude.operators.*;
 public import prelude.tuples.*;
 public import prelude.types.*;
+public import prelude.unions.*;
 
 // prelude symbols are always available as "prelude.foo"
 public import prelude;

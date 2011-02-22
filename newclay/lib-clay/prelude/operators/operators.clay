@@ -25,10 +25,6 @@ symbol index;
 
 #ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
 
-inline overload index(forward u:Union[...'T], #'n)
-    | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), u, #LLTupleFieldName('n));
-
 // XXX StringConstant should be a record rather than hardcoded like this
 inline overload index(forward s:StringConstant, #'field)
     | 'field == "begin" or 'field == "end"
@@ -318,14 +314,14 @@ symbol unpack;
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-overload max(a:'A, b:'A) | Defined?(a < b)
+inline overload max(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) b else a;
-overload min(a:'A, b:'A) | Defined?(a < b)
+inline overload min(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) a else b;
 
-overload max(a:'A, b:'A) | FloatType?('A)
+inline overload max(a:'A, b:'A) | FloatType?('A)
     = if (a >= b or nan?(b)) a else b;
-overload min(a:'A, b:'A) | FloatType?('A)
+inline overload min(a:'A, b:'A) | FloatType?('A)
     = if (a <= b or nan?(b)) a else b;
 
 overload #max('a, 'b) = if ('a < 'b) 'b else 'a;
@@ -336,14 +332,9 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 // case?
 //
 
-case?(value:'T, ...cases:'U)
+inline case?(value:'T, forward ...cases:'U)
     | allValues?(u -> CallDefined?(equals?, 'T, u), ...'U)
-{
-    static for (c in ...cases)
-        if (value == c)
-            return true;
-    return false;
-}
+    = inValues?(value, ...cases);
 
 
 //
