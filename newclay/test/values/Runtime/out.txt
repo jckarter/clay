@@ -43,3 +43,7 @@ nthValue
 1
 true
 '3'
+inValues?
+true
+false
+false
