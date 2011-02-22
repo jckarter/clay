@@ -44,4 +44,13 @@ main() {
 
     show("mapping lack of odd and even values");
     show(...mapValues(odd?));
+
+    show("types of five intValues");
+    static for (n in ...intValues(#5))
+        show(#Type(n));
+
+    show("nthValue");
+    show(nthValue(#0, 1, true, '3'));
+    show(nthValue(#1, 1, true, '3'));
+    show(nthValue(#2, 1, true, '3'));
 }

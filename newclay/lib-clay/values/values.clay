@@ -1,4 +1,4 @@
-import __primitives__.(StaticCountValues);
+import __primitives__.(StaticCountValues, StaticIntegers);
 import meta.statics.(StaticInt?);
 
 symbol allValues?;
@@ -37,3 +37,17 @@ overload #mapValues('f, 'x, ...'xs) = 'f('x), ...mapValues('f, ...'xs);
 inline overload mapValues(fn) = ;
 inline overload mapValues(fn, forward x:'T, forward ...xs:'TT)
     = forward fn(x), forward ...mapValues(fn, ...xs);
+
+symbol intValues = RuntimeStaticProcedure();
+overload #intValues('n) = ...StaticIntegers('n);
+
+symbol nthValue;
+overload #nthValue(0, 'x, ...'xs) = 'x;
+overload #nthValue('n, 'x, ...'xs)
+    | StaticInt?('n) and 'n > 0
+    = nthValue('n - 1, ...'xs);
+
+inline overload nthValue(#0, forward x, forward ...xs) = forward x;
+inline overload nthValue(#'n, forward x, forward ...xs)
+    | StaticInt?('n) and 'n > 0
+    = forward nthValue(#('n - 1), ...xs);

@@ -1,0 +1,99 @@
+public import commandline.options.spec.*;
+import commandline.options.parser.*;
+import system.(commandLine);
+
+record NoSuchOption(name : String);
+
+instance Exception = NoSuchOption;
+
+record OptionTable(
+  options   : Vector[OptionTableEntry],
+  arguments : Vector[String],
+  errors    : Vector[String]
+);
+
+record OptionTableEntry(
+  spec : OptionSpec,
+  present : Bool,
+  values : Vector[String]
+);
+
+
+overload OptionTable(os : OptionSpecs){
+  var result = OptionTable(Vector[OptionTableEntry](), Vector[String](), Vector[String]());
+
+  reserve(result.options, size(os));
+
+  for(spec in os){
+    push(result.options, OptionTableEntry(spec));    
+  }
+
+  return result;
+}
+
+overload OptionTableEntry(spec : OptionSpec) = move(OptionTableEntry(spec, false, Vector[String]()));
+
+overload OptionTable(os : OptionSpecs, arguments) = move(OptionTable(os, parseOptions(os, arguments)));
+
+overload OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
+  var result = OptionTable(os);
+
+  for(token in parse) addToken(result, token);
+
+  for(entry in result.options){
+    if(not entry.spec.allowsRepeats and size(entry.values) > 1){
+      var err = String("Option ");
+      printTo(err, entry.spec);
+      printTo(err, " does not allow repeats");  
+      push(result.errors, err);
+    }
+
+    if(entry.spec.required and not entry.present){
+      var err = String("Missing required option ");
+      printTo(err, entry.spec);
+      push(result.errors, err);
+    }
+  }
+
+  return move(result);
+}
+
+procedure CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
+
+private procedure findEntry;
+
+overload findEntry(ot, name : Char, f){
+  return ...findEntry(ot, String(name), f);
+}
+
+[T | String?(T)]
+overload findEntry(ot, name : T, f){
+  for(o in ot.options){
+    for(n in o.spec.names){
+      if(name == n){
+        return ...f(o); 
+      }
+    }
+  }
+  throw NoSuchOption(String(name));
+}
+
+private procedure addToken;
+
+overload addToken(ot, e : ParseToken){ addToken(ot, *e); }
+overload addToken(ot, e : Separator){}
+overload addToken(ot, e : Error){ push(ot.errors, e.value); }
+overload addToken(ot, e : Argument){ push(ot.arguments, e.value); }
+overload addToken(ot, e : OptionValue){
+  findEntry(ot, e.option, o ref => {
+    o.present = true;
+
+    if(variantIs?(e.value, String)){
+      push(o.values, variantAs(e.value, String));
+    }
+  });
+}
+
+valid?(ot : OptionTable) = empty?(ot.errors);
+optionGiven?(ot : OptionTable, name) = findEntry(ot, name, o ref => o.present);
+getOptions(ot : OptionTable, name) = findEntry(ot, name, o ref => o.values);
