@@ -15,6 +15,17 @@ inline overload equalValues?(x0) = true;
 inline overload equalValues?(x0, forward x1, forward ...xs)
     = x0 == x1 and equalValues?(x0, ...xs);
 
+symbol inValues?;
+overload #inValues?('x) = false;
+overload #inValues?('x, 'x, ...'ys) = true;
+overload #inValues?('x, 'y, ...'ys) | 'x != 'y = inValues?('x, ...'ys);
+inline overload inValues?(x, forward ...ys) {
+    static for (/*forward*/ y in ...ys)
+        if (x == y)
+            return true;
+    return false;
+}
+
 symbol countValues;
 overload #countValues(...'xs) = StaticCountValues(...'xs);
 inline overload countValues(...xs:'T) = unwrap(#StaticCountValues(...'T));
