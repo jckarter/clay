@@ -3,6 +3,7 @@ import prelude.operators.c.*;
 import prelude.procedures.*;
 import prelude.constructors.*;
 import meta.statics.*;
+import prelude.types.lowlevel.*;
 
 
 //
@@ -22,9 +23,6 @@ inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
 
 symbol index;
 
-// A bit of improper coupling with the C codegen implementation: tuple elements
-// are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
-#LLTupleFieldName('n) = StaticStringConcat("field", StaticName('n));
 #ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
 
 inline overload index(forward u:Union[...'T], #'n)
