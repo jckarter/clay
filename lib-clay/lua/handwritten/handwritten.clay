@@ -63,9 +63,9 @@ lua_pop(l:Pointer[lua_State], n:Int) { lua_settop(l, -n-1); }
 
 lua_newtable(l:Pointer[lua_State]) { lua_createtable(l, 0, 0); }
 
-lua_register(l:Pointer[lua_State], n:Int, f:lua_CFunction) {
+lua_register(l:Pointer[lua_State], name:Pointer[CChar], f:lua_CFunction) {
     lua_pushcfunction(l, f);
-    lua_setglobal(l, n);
+    lua_setglobal(l, name);
 }
 
 lua_pushcfunction(l:Pointer[lua_State], f:lua_CFunction) {
@@ -89,7 +89,7 @@ lua_pushliteral(l:Pointer[lua_State], s:S) {
 }
 
 lua_setglobal(l:Pointer[lua_State], s:Pointer[CChar]) {
-    lus_setfield(l, LUA_GLOBALSINDEX, s);
+    lua_setfield(l, LUA_GLOBALSINDEX, s);
 }
 
 lua_getglobal(l:Pointer[lua_State], s:Pointer[CChar]) {
