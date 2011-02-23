@@ -161,7 +161,7 @@ inline overload resetUnsafe(ref x:Array['T, 'n])
 }
 
 inline overload moveUnsafe(forward x:Array['T, 'n]) returned:Array['T, 'n]
-    | not BitwiseMovedType?('T)
+    | not BitwiseMovedType?('T) and MovableType?('T)
 {
     var ri = iterator(returned), xi = forwardIteratorUnsafe(x);
     while (hasNext?(ri)) {
@@ -170,7 +170,7 @@ inline overload moveUnsafe(forward x:Array['T, 'n]) returned:Array['T, 'n]
 }
 
 inline overload copy(x:Array['T, 'n]) returned:Array['T, 'n]
-    | not BitwiseCopiedType?('T)
+    | not BitwiseCopiedType?('T) and CopyableType?('T)
 {
     var ri = iterator(returned), xi = iterator(x);
     while (hasNext?(ri)) {

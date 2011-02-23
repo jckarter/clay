@@ -100,11 +100,11 @@ inline overload resetUnsafe(ref x:Tuple[...'T])
 }
 
 inline overload moveUnsafe(forward x:Tuple[...'T])
-    | not BitwiseMovedType?(Tuple[...'T])
+    | not BitwiseMovedType?(Tuple[...'T]) and allValues?(MovableType?, ...'T)
     = Tuple[...'T](...mapValues(moveUnsafe, ...unpack(x)));
 
 inline overload copy(x:Tuple[...'T])
-    | not BitwiseCopiedType?(Tuple[...'T])
+    | not BitwiseCopiedType?(Tuple[...'T]) and allValues?(CopyableType?, ...'T)
     = Tuple[...'T](...mapValues(copy, ...unpack(x)));
 
 #CompatibleTupleTypes?('fn, (...'T), (...'U))
