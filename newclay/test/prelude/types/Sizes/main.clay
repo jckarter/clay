@@ -24,4 +24,6 @@ main() {
     show(#TypeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4
     show(#TypeSize(Array[Int32, 16])); ////64
     show(#TypeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48
+    // XXX platform dependent
+    show(#TypeSize(StringConstant)); ////16
 }

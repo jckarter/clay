@@ -1,0 +1,24 @@
+import meta.symbols.*;
+import show.*;
+
+symbol FooTag;
+symbol BarTag;
+
+symbol Foo = (FooTag, 1, 2, 3);
+symbol Bar = (BarTag, 'a', 'b', 'c');
+symbol Bas = (FooTag, 4), (BarTag, 'd');
+
+main() {
+    ////1
+    ////2
+    ////3
+    show(...#SymbolTagBody(Foo, FooTag));
+    ////'a'
+    ////'b'
+    ////'c'
+    show(...#SymbolTagBody(Bar, BarTag));
+    ////4
+    show(...#SymbolTagBody(Bas, FooTag));
+    ////'d'
+    show(...#SymbolTagBody(Bas, BarTag));
+}

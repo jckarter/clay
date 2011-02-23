@@ -19,3 +19,9 @@ symbol Symbol?;
 overload #Symbol?('x) = StaticSymbol?('x);
 overload Symbol?(x) = false;
 overload Symbol?(#'x) = unwrap(#StaticSymbol?('x));
+
+private symbol SymbolBodyTagBody;
+overload #SymbolBodyTagBody('tag, 'x, ...'xs) = SymbolBodyTagBody('tag, ...'xs);
+overload #SymbolBodyTagBody('tag, ('tag, ...'body), ...'xs) = ...'body;
+
+#SymbolTagBody('x, 'tag) = ...SymbolBodyTagBody('tag, ...SymbolBody('x));

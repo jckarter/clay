@@ -229,15 +229,17 @@ dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
 
 symbol call;
 
-overload call(#'f, forward ...args) = forward ...'f(...args);
+inline overload call(#'f, forward ...args) = forward ...'f(...args);
 
 // non-variadic external code pointer
-overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ...args:'Args) ...ExternalOutputTypes('O)
+inline overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ...args:'Args)
+    ...ExternalOutputTypes('O)
     | 'I == (...'Args)
     = ...cExternalCall(f, ...args);
 
 // variadic external code pointer
-overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args) ...ExternalOutputTypes('O)
+inline overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args)
+    ...ExternalOutputTypes('O)
     | allValues?(RequireExternalPODType?, ...'Args)
       and 'I == (...takeValues(StaticTupleSize('I), ...'Args))
     = ...cExternalCall(f, ...args);
@@ -249,19 +251,20 @@ overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args) ...Exter
 //
 
 symbol initializeFromUnsafe;
-overload initializeFromUnsafe(ref a:'T, b:'T) { a <-- copy(b); }
-overload initializeFromUnsafe(ref a:'T, rvalue b:'T) { a <-- move(b); }
+inline overload initializeFromUnsafe(ref a:'T, b:'T) { a <-- copy(b); }
+inline overload initializeFromUnsafe(ref a:'T, rvalue b:'T) { a <-- move(b); }
 
 destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
-resetUnsafe(ref x:'T) | NotResetType?('T) {}
+inline resetUnsafe(ref x:'T) | DefaultInitializableType?('T) { x <-- 'T(); }
+inline overload resetUnsafe(ref x:'T) | NotResetType?('T) {}
 
-copy(a:'T) returned:'T | BitwiseCopiedType?('T) { cAssign(returned, a); }
+inline copy(a:'T) returned:'T | BitwiseCopiedType?('T) { cAssign(returned, a); }
 
-moveUnsafe(forward a:'T) returned:'T | BitwiseMovedType?('T) { cAssign(returned, a); }
+inline moveUnsafe(forward a:'T) returned:'T | BitwiseMovedType?('T) { cAssign(returned, a); }
 
 symbol move;
-overload move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
-overload move(rvalue a:'T) = moveUnsafe(a);
+inline overload move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
+inline overload move(rvalue a:'T) = moveUnsafe(a);
 
 
 //
