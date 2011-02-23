@@ -87,8 +87,6 @@ overload CodegenContext(config:CodegenConfig) x:CodegenContext {
 // name mangling
 //
 
-alnum?(c) = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-
 mangleGlobal(name) = "_clay__" + mangleString(name);
 
 mangleType(type:Value) = mangleGlobal(qualifiedValueString(type));
