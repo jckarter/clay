@@ -19,4 +19,6 @@ main() {
     show(#TypeAlign(Union[Int8, Int32])); ////4
     show(#TypeAlign(Array[Int32, 12])); ////4
     show(#TypeAlign(Array[Union[Int8, Int32], 12])); ////4
+    // XXX platform dependent
+    show(#TypeAlign(StringConstant)); ////8
 }
