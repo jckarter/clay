@@ -1,0 +1,14 @@
+import show.*;
+
+main() {
+    show(#PointerType?(Pointer[Int])); ////true
+    show(#PointerType?(ContiguousCoordinate[Int])); ////true
+    show(#PointerType?(OpaquePointer)); ////true
+
+    show(#StaticCallDefined?(PointerReferencedType, Pointer[Int])); ////true
+    show(#StaticCallDefined?(PointerReferencedType, ContiguousCoordinate[Int])); ////true
+    show(#StaticCallDefined?(PointerReferencedType, OpaquePointer)); ////false
+
+    show(#PointerReferencedType(Pointer[Int])); ////Int
+    show(#PointerReferencedType(ContiguousCoordinate[Int])); ////Int
+}

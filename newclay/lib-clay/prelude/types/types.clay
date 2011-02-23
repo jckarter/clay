@@ -380,3 +380,15 @@ overload #BiggerNumericType(UInt, 'T) = 'T;
 overload #BiggerNumericType('T, 'T) = 'T;
 overload #BiggerNumericType(Int, UInt) = UInt;
 overload #BiggerNumericType(UInt, Int) = UInt;
+
+
+//
+// sequence-related predicates
+//
+
+#SequenceType?('S) = CallDefined?(iterator, 'S);
+#IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, 'I);
+// XXX proper definition of CoordinateType?
+#CoordinateType?('C) = CallDefined?(dereference, 'C) and CallDefined?(inc, Ref['C]);
+
+#SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
