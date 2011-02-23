@@ -16,6 +16,10 @@ Tuple[Int, Tuple[Bool, Float64], Char]
 true
 Tuple[Int, Tuple[Bool, Float64], Char]
 true
+false
+true
+true
+false
 2
 true
 4

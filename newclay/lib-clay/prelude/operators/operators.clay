@@ -3,6 +3,7 @@ import prelude.operators.c.*;
 import prelude.procedures.*;
 import prelude.constructors.*;
 import meta.statics.*;
+import prelude.types.lowlevel.*;
 
 
 //
@@ -22,22 +23,7 @@ inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
 
 symbol index;
 
-inline overload index(forward a:Array['T, 'n], i:'I) | Integer?('I)
-    = forward cIndex('T, a, i);
-
-// A bit of improper coupling with the C codegen implementation: tuple elements
-// are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
-private #TupleFieldName('n) = StaticStringConcat("field", StaticName('n));
-
-private #ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
-
-inline overload index(forward t:Tuple[...'T], #'n)
-    | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), t, #TupleFieldName('n));
-
-inline overload index(forward u:Union[...'T], #'n)
-    | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), u, #TupleFieldName('n));
+#ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
 
 // XXX StringConstant should be a record rather than hardcoded like this
 inline overload index(forward s:StringConstant, #'field)
@@ -51,8 +37,8 @@ inline overload index(forward s:StringConstant, #'field)
 //
 
 inline dereference(forward a:'T)
-    | PointerType?('T) and StaticDefined?(PointerReferencedType('T))
-    = forward cDereference(PointerReferencedType('T), a);
+    | PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T)
+    = forward cDereference(#PointerReferencedType('T), a);
 
 
 
@@ -143,6 +129,29 @@ inline overload add(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
 inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cSubtract(#BiggerNumericType('A, 'B), a, b);
 
+
+//
+// ContiguousCoordinate arithmetic
+//
+
+inline overload add(a:ContiguousCoordinate['A], b:'B)
+    | IntegerType?('B)
+    = cAdd(ContiguousCoordinate['A], a, b);
+
+inline overload add(a:'A, b:ContiguousCoordinate['B])
+    | IntegerType?('A)
+    = cAdd(ContiguousCoordinate['B], b, a);
+
+inline overload subtract(a:ContiguousCoordinate['A], b:'B)
+    | IntegerType?('B)
+    = cSubtract(ContiguousCoordinate['A], a, b);
+
+inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
+    = cSubtract(Int, a, b);
+
+inline overload index(a, n:'I)
+    | IntegerType?('I) and Defined?(...((a + n)^))
+    = forward ...((a + n)^);
 
 
 //
@@ -155,8 +164,6 @@ greater?(a, b) | Defined?(b < a) = b < a;
 greaterEquals?(a, b) | Defined?(a < b) = not a < b;
 
 symbol equals?;
-overload equals?(a:'A, b:'B) | 'A != 'B = false;
-
 notEquals?(a, b) | Defined?(a == b) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
@@ -165,6 +172,9 @@ ordered?(a, b)
     = a <= b or b <= a;
 
 nan?(a:'A) | FloatType?('A) = a != a;
+
+overload lesser?(#'a, #'b) = unwrap(#('a < 'b));
+overload equals?(#'a, #'b) = unwrap(#('a == 'b));
 
 
 //
@@ -208,8 +218,8 @@ divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
 quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
 remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
 
-inc(ref a:'T) | Defined?(...addAssign     (a, 'T(1))) { a += 'T(1); }
-dec(ref a:'T) | Defined?(...subtractAssign(a, 'T(1))) { a -= 'T(1); }
+inc(ref a:'T) | Defined?(...addAssign     (a, 1)) { a += 1; }
+dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
 
 
 
@@ -255,13 +265,21 @@ overload move(rvalue a:'T) = moveUnsafe(a);
 
 
 //
-// iterator, hasNext?, next
+// iterator, hasNext?, next, size
 //
 
 symbol iterator;
 symbol hasNext?;
 symbol next;
+symbol size;
 
+
+//
+// begin, end
+//
+
+symbol begin;
+symbol end;
 
 
 //
@@ -296,14 +314,14 @@ symbol unpack;
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-overload max(a:'A, b:'A) | Defined?(a < b)
+inline overload max(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) b else a;
-overload min(a:'A, b:'A) | Defined?(a < b)
+inline overload min(a:'A, b:'A) | Defined?(a < b)
     = if (a < b) a else b;
 
-overload max(a:'A, b:'A) | FloatType?('A)
+inline overload max(a:'A, b:'A) | FloatType?('A)
     = if (a >= b or nan?(b)) a else b;
-overload min(a:'A, b:'A) | FloatType?('A)
+inline overload min(a:'A, b:'A) | FloatType?('A)
     = if (a <= b or nan?(b)) a else b;
 
 overload #max('a, 'b) = if ('a < 'b) 'b else 'a;
@@ -314,14 +332,9 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 // case?
 //
 
-case?(value:'T, ...cases:'U)
+inline case?(value:'T, forward ...cases:'U)
     | allValues?(u -> CallDefined?(equals?, 'T, u), ...'U)
-{
-    static for (c in ...cases)
-        if (value == c)
-            return true;
-    return false;
-}
+    = inValues?(value, ...cases);
 
 
 //

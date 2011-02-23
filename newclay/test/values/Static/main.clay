@@ -52,4 +52,9 @@ main() {
     show(#nthValue(0, 1, true, '3'));
     show(#nthValue(1, 1, true, '3'));
     show(#nthValue(2, 1, true, '3'));
+
+    show("inValues?");
+    show(#inValues?("waldo", 42, 'x', "waldo", false));
+    show(#inValues?("waldo", 42, 'x', "wally", false));
+    show(#inValues?("waldo"));
 }
