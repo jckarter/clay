@@ -827,7 +827,7 @@ private codegenTupleType(c, type, llType, definition) {
         var name, memberType = ...aggregateMember(llType, member, i);
 
         push(type.dependencies, memberType);
-        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";\n");
+        printToIndented(definition, 1, typeKindedName(c, memberType), " ", mangleString(name), ";\n");
     }
 
     printlnTo(definition, "} ", type.mangledName, ";");
@@ -842,7 +842,7 @@ private codegenUnionType(c, type, llType, definition) {
         var name, memberType = ...aggregateMember(llType, member, i);
 
         push(type.dependencies, memberType);
-        printToIndented(definition, 1, typeKindedName(c, memberType), " ", name, ";");
+        printToIndented(definition, 1, typeKindedName(c, memberType), " ", mangleString(name), ";\n");
     }
 
     printTo(definition, "} ", type.mangledName, ";");
