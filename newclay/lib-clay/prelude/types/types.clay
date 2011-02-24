@@ -44,9 +44,12 @@ overload #BitwiseZeroInitializedType?(Bool) = true;
 overload #BitwiseZeroInitializedType?('T) | NumberType?('T) = true;
 overload #BitwiseZeroInitializedType?('T) | CharType?('T) = true;
 
-#DefaultInitializableType?('T) = Defined?('T());
-#CopyableType?('T) = Defined?(copy('T));
-#MovableType?('T) = Defined?(move('T));
+#DefaultInitializableType?('T) = CallDefined?('T);
+#CopyableType?('T) = CallDefined?(copy, 'T);
+#MovableType?('T) = CallDefined?(move, 'T);
+#AssignableType?('T) = CallDefined?(assign, Ref['T], 'T);
+#MoveAssignableType?('T) = CallDefined?(assign, Ref['T], Rvalue['T]);
+#AssignableTypes?('T, 'U) = CallDefined?(assign, Ref['T], 'U);
 
 #InheritableTypePredicate?('X) = false;
 overload #InheritableTypePredicate?(PODType?) = true;
