@@ -461,7 +461,6 @@ private resolveGeneralEnvRootEntries(entries, generalImports) {
     for (name, genImport in items(generalImports)) {
         ref module = genImport.module;
         withLocation(genImport.location, () ref=> {
-            observe(#genImport, genImport.location.mainToken);
             ref rootEntries = envRootEntries(envRoot(module.publicEnv));
             for (entryName, entry in items(rootEntries)) {
                 if (null?(lookup(entries, entryName))) {
@@ -476,7 +475,6 @@ private resolveSpecificEnvRootEntries(entries, specificImports) {
     for (entryName, specImport in items(specificImports)) {
         ref entry = specImport.entry;
         withLocation(specImport.location, () ref=> {
-            observe(#specImport, specImport.location.mainToken);
             entries[entryName] = EnvRootEntry(*entry);
         });
     }
