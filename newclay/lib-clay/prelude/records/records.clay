@@ -1,0 +1,211 @@
+import meta.statics.*;
+import meta.symbols.*;
+import libc.*;
+import values.*;
+import prelude.operators.c.*;
+import prelude.types.lowlevel.*;
+import prelude.tuples.(private unpackFields);
+
+
+//
+// RecordType definer
+//
+
+#RecordType(...'fields) | ValidRecordFields?(...'fields) = (RecordType, ...'fields);
+
+#RecordType?('T) = SymbolWithTag?('T, RecordType);
+
+#ValidRecordField?('x) = false;
+overload #ValidRecordField?(('name, 'T)) | StaticString?('name) and Type?('T) = true;
+
+#ValidRecordFields?(...'x) = allValues?(ValidRecordField?, ...'x);
+
+
+//
+// record type metadata
+//
+
+#RecordFields('T) | RecordType?('T) = ...SymbolTagBody('T, RecordType);
+
+#RecordFieldNames('T) | RecordType?('T)
+    = ...mapValues(x -> x.0, ...RecordFields('T));
+
+#RecordFieldTypes('T) | RecordType?('T)
+    = ...mapValues(x -> x.1, ...RecordFields('T));
+
+overload #ToLowLevelType('T) | RecordType?('T) = LLTupleType[...RecordFields('T)];
+
+#RecordField?('T, 'field) = inValues?('field, ...RecordFieldNames('T));
+
+#RecordFieldType('T, 'field) = RecordFieldType2('field, ...RecordFields('T));
+private symbol RecordFieldType2;
+overload #RecordFieldType2('field, 'x, ...'fields) = RecordFieldType2('field, ...'fields);
+overload #RecordFieldType2('field, ('field, 'T), ...'fields) = 'T;
+
+overload #'XType?('T) | InheritableTypePredicate?('XType?) and RecordType?('T)
+    = allValues?('XType?, ...RecordFieldTypes('T));
+
+// XXX hack to avoid recursive evaluation
+overload #InheritableTypePredicate?(InheritableTypePredicate?) = false;
+overload #VariadicBinaryOperatorProcedure?(InheritableTypePredicate?) = false;
+
+
+//
+// unpack
+// XXX unpacking an rvalue CustomType by reference can't be allowed
+// because the destructor needs to work
+//
+
+inline overload unpack(forward x:'T) | RecordType?('T)
+    = forward ...unpackFields(x, ...#RecordFieldNames('T));
+
+
+//
+// record indexing
+//
+
+inline overload index(forward x:'T, #'field)
+    | RecordType?('T) and RecordField?('T, 'field)
+    = forward cFieldRef(#RecordFieldType('T, 'field), x, #LLMangle('field));
+
+inline overload index(rvalue x:'T, #'field)
+    rvalue returned:RecordFieldType('T, 'field)
+    | RecordType?('T) and RecordField?('T, 'field)
+{
+    ref rx = rvalueToRefUnsafe(x);
+    returned = &cFieldRef(#RecordFieldType('T, 'field), rx, #LLMangle('field));
+
+    static for (f in ...#RecordFieldNames('T))
+        if (f != #'field)
+            destroyUnsafe(rx[f]);
+}
+
+
+//
+// record constructors
+//
+
+symbol initializeRecord;
+inline overload initializeRecord(#'T) returned:'T
+    | RecordType?('T) and allValues?(DefaultInitializableType?, ...RecordFieldTypes('T))
+{
+    ...unpack(returned) <-- ...mapValues(call, ...RecordFieldTypes('T));
+}
+
+inline overload initializeRecord(#'T) returned:'T
+    | RecordType?('T) and allValues?(BitwiseZeroInitializedType?, ...RecordFieldTypes('T))
+{
+    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize('T)));
+}
+
+inline overload initializeRecord(#'T, forward ...fields:'F) returned:'T
+    | RecordType?('T) and (...'F) == (...RecordFieldTypes('T))
+{
+    ...unpack(returned) <-- ...fields;
+}
+
+inline overload 'T(forward ...args)
+    | RecordType?('T) //and Defined?(initializeRecord('T, ...args))
+    = initializeRecord('T, ...args);
+
+
+//
+// record value semantics
+//
+
+symbol destroyRecordUnsafe;
+inline overload destroyRecordUnsafe(ref x:'T)
+    | RecordType?('T) and allValues?(NotDestroyedType?, ...RecordFieldTypes('T))
+{ }
+inline overload destroyRecordUnsafe(ref x:'T)
+    | RecordType?('T) and not allValues?(NotDestroyedType?, ...RecordFieldTypes('T))
+{
+    static for (/*ref*/ f in ...unpack(x))
+        destroyUnsafe(f);
+}
+
+inline overload destroyUnsafe(ref x:'T)
+    | RecordType?('T) and not NotDestroyedType?('T)
+{
+    destroyRecordUnsafe(x);
+}
+
+symbol resetRecordUnsafe;
+inline overload resetRecordUnsafe(ref x:'T)
+    | RecordType?('T) and allValues?(NotResetType?, ...RecordFieldTypes('T))
+{ }
+inline overload resetRecordUnsafe(ref x:'T)
+    | RecordType?('T) and not allValues?(NotResetType?, ...RecordFieldTypes('T))
+{
+    static for (/*ref*/ f in ...unpack(x))
+        resetUnsafe(f);
+}
+
+inline overload resetUnsafe(ref x:'T)
+    | RecordType?('T) and not NotResetType?('T)
+{
+    resetRecordUnsafe(x);
+}
+
+symbol moveRecordUnsafe;
+inline overload moveRecordUnsafe(forward x:'T)
+    | RecordType?('T) and allValues?(BitwiseMovedType?, ...RecordFieldTypes('T))
+    = bitwiseCopyUnsafe(x);
+inline overload moveRecordUnsafe(forward x:'T)
+    | RecordType?('T)
+      and not allValues?(BitwiseMovedType?, ...RecordFieldTypes('T))
+      and allValues?(MovableType?, ...RecordFieldTypes('T))
+    = initializeRecord('T, ...mapValues(moveUnsafe, ...unpack(x)));
+
+inline overload moveUnsafe(forward x:'T)
+    | not BitwiseMovedType?('T) and allValues?(MovableType?, ...RecordFieldTypes('T))
+    = moveRecordUnsafe(x);
+
+symbol copyRecord;
+inline overload copyRecord(x:'T)
+    | RecordType?('T) and allValues?(BitwiseCopiedType?, ...RecordFieldTypes('T))
+    = bitwiseCopyUnsafe(x);
+inline overload copyRecord(x:'T)
+    | RecordType?('T)
+      and not allValues?(BitwiseCopiedType?, ...RecordFieldTypes('T))
+      and allValues?(CopyableType?, ...RecordFieldTypes('T))
+    = initializeRecord('T, ...mapValues(copy, ...unpack(x)));
+
+inline overload copy(x:'T)
+    | not BitwiseCopiedType?('T) and allValues?(CopyableType?, ...RecordFieldTypes('T))
+    = copyRecord(x);
+
+symbol assignRecord;
+inline overload assignRecord(ref to:'T, /*lvalue*/ from:'T)
+    | not allValues?(BitwiseAssignedType?, ...RecordFieldTypes('T))
+      and allValues?(AssignableType?, ...RecordFieldTypes('T))
+{
+    static for (field in ...#RecordFieldNames('T))
+        to[field] = from[field];
+}
+inline overload assignRecord(ref to:'T, /*lvalue*/ from:'T)
+    | allValues?(BitwiseAssignedType?, ...RecordFieldTypes('T))
+{
+    to <-- from;
+}
+
+inline overload assign(ref to:'T, /*lvalue*/ from:'T)
+    | not BitwiseAssignedType?('T) and allValues?(AssignableType?, ...RecordFieldTypes('T))
+{
+    assignRecord(to, from);
+}
+
+
+//
+// comparison
+//
+
+inline equalRecords?(a:'T, b:'T) | RecordType?('T)
+{
+    static for (field in ...#RecordFieldNames('T))
+        if (a[field] != b[field])
+            return false;
+    return true;
+}
+
+inline overload equals?(a:'T, b:'T) | RecordType?('T) = equalRecords?(a, b);

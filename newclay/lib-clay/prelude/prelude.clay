@@ -3,6 +3,7 @@ public import prelude.constructors.*;
 public import prelude.diagnostics.*;
 public import prelude.operators.*;
 public import prelude.procedures.*;
+public import prelude.records.*;
 public import prelude.tuples.*;
 public import prelude.types.*;
 public import prelude.unions.*;
