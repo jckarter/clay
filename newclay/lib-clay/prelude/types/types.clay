@@ -58,7 +58,6 @@ overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
-overload #InheritableTypePredicate?(BitwiseZeroInitializedType?) = true;
 
 
 

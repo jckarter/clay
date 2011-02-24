@@ -57,6 +57,9 @@ inline overload unpackTuple(rvalue x:Tuple[...'T], #'n)
 // default initialization
 //
 
+overload #BitwiseZeroInitializedType?(Tuple[...'T])
+    = allValues?(BitwiseZeroInitializedType?, ...'T);
+
 inline overload Tuple[...'T]() returned:Tuple[...'T]
     | allValues?(DefaultInitializableType?, ...'T)
 {
