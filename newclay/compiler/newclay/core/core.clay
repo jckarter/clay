@@ -173,7 +173,7 @@ overload printReprTo(stream, mod:Module) {
 // top-level item entries
 //
 
-alias EvalTable = HashMap[ValueList, ValueList];
+alias EvalTable = HashMap[ValueList, TriState[ValueList]];
 
 record GlobalBinding (kind:ast.BindingKind, ast:ast.SingleGlobalBinding);
 
