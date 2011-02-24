@@ -43,6 +43,14 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.St
         lifetimeAnalyzeSubbody(c, dest, node.body);
     });
 }
+overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.AddressOf) {
+    // the only valid time an AddressOf node should accept an rvalue as its input
+    // should be an rvalue reference return, in which case the rvalue must not be
+    // destroyed in this scope
+    if (node.input.kind == RT_VALUE_RVALUE)
+        removeValue(c, node.input);
+    ir.pushNode(dest, node);
+}
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Call) {
     attractInputs(c, node);
     // the called function takes responsibility for its rvalue-kinded arguments
