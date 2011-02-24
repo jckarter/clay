@@ -258,9 +258,11 @@ destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
 inline resetUnsafe(ref x:'T) | DefaultInitializableType?('T) { x <-- 'T(); }
 inline overload resetUnsafe(ref x:'T) | NotResetType?('T) {}
 
-inline copy(a:'T) returned:'T | BitwiseCopiedType?('T) { cAssign(returned, a); }
+inline bitwiseCopyUnsafe(forward a:'T) returned:'T { cAssign(returned, a); }
 
-inline moveUnsafe(forward a:'T) returned:'T | BitwiseMovedType?('T) { cAssign(returned, a); }
+inline copy(a:'T) | BitwiseCopiedType?('T) = bitwiseCopyUnsafe(a);
+
+inline moveUnsafe(forward a:'T) | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
 
 symbol move;
 inline overload move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
