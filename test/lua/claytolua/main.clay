@@ -1,0 +1,19 @@
+import lua.*;
+
+main() {
+    var x = lua_open();
+    luaL_openlibs(x);
+    luaL_dostring(x, "
+        function add(x, y)
+            return x + y
+        end
+    ");
+    lua_getglobal(x, cstring("add"));
+    lua_pushnumber(x, 41.0);
+    lua_pushnumber(x, 22.0);
+    lua_call(x, 2, 1);
+    var sum = Int(lua_tonumber(x, -1));
+    lua_pop(x, 1);
+    println("the result is ", sum);
+    lua_close(x);
+}
