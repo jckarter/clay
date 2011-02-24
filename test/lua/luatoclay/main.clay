@@ -1,0 +1,44 @@
+import lua.*;
+
+sayHello(x:Pointer[lua_State]) {
+    println("Hello from Clay!");
+    return 0;
+}
+
+sumAndAverage(x:Pointer[lua_State]) {
+    var n = lua_gettop(x);
+    assert(n >= 0);
+    if (n == 0) {
+        lua_pushstring(x, cstring("atleast one argument expected in 'sumAndAverage'"));
+        lua_error(x);
+    }
+    var sum = 0.0;
+    for (i in range(1,n+1)) {
+        if (lua_isnumber(x, i) == 0) {
+            lua_pushstring(x, cstring("incorrect argument to 'sumAndAverage'"));
+            lua_error(x);
+        }
+        sum += lua_tonumber(x, i);
+    }
+    lua_pushnumber(x, sum);
+    lua_pushnumber(x, sum/n);
+    return 2;
+}
+
+main() {
+    var x = lua_open();
+    luaL_openlibs(x);
+    lua_register(x, cstring("sayHello"), makeCCodePointer(
+        sayHello, Pointer[lua_State]
+    ));
+    lua_register(x, cstring("sumAndAverage"), makeCCodePointer(
+        sumAndAverage, Pointer[lua_State]
+    ));
+    luaL_dostring(x, "
+        sayHello()
+        sum, average = sumAndAverage(1, 2, 3, 4, 5, 6)
+        print('sum = ' .. sum)
+        print('average = ' .. average)
+    ");
+    lua_close(x);
+}
