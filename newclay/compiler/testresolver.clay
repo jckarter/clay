@@ -14,7 +14,7 @@ depth(d) {
 }
 
 overload visitASTNode(v:TestResolverVisitor, node:ast.Symbol) {
-    println(depth(v.depth), "symbol ", node.name.str);
+    println(depth(v.depth), "symbol ", node.name.name.str);
     v.depth += 1;
     visitASTFields(v, node);
     v.depth -= 1;

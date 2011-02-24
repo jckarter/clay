@@ -95,6 +95,23 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
         );
 }
 
+overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.SimpleNameRef) {
+    if (variantIs?(nameRef.env, ast.UnresolvedEnvRef))
+        nameRef.env = match(privateLookup(r.env, nameRef.name),
+            Value, v => match(v,
+                SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.astName.name.str)),
+                Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.astName.name.str)),
+                Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
+                ModuleValue,  m => maybe(m.module,
+                    module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
+                    () => ast.EnvRef(ast.ModulePathRef(Vector[ast.Identifier](nameRef.name))),
+                ),
+                MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+            ),
+            MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+        );
+}
+
 overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
     var subenv = newEnv(r.env);
     maybe(block.label, label ref=> {
