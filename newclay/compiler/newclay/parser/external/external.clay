@@ -776,22 +776,28 @@ private var namePath = separatedListStrict(punc(#"."), identifier);
 
 private var importAlias = optional(modify(x => x.1, sequence(kw_as, identifier)));
 
-private var qualifiedImportSpec = modify(
-    x => ImportSpec(QualifiedImportSpec()),
+private importSpecParser(forward modifier, forward parser) = modify(
+    x => ImportSpec(move(x)),
+    bounds(modify(modifier, parser)),
+);
+
+
+private var qualifiedImportSpec = importSpecParser(
+    x => QualifiedImportSpec(),
     punc(#";")
 );
-private var generalImportSpec = modify(
-    x => ImportSpec(GeneralImportSpec()),
+private var generalImportSpec = importSpecParser(
+    x => GeneralImportSpec(),
     sequence(punc(#"."), punc(#"*"), punc(#";"))
 );
-private var aliasedImportSpec = modify(
-    x => ImportSpec(AliasedImportSpec(x.1)),
+private var aliasedImportSpec = importSpecParser(
+    x => AliasedImportSpec(x.1),
     sequence(kw_as, identifier, punc(#";"))
 );
-private var specificImportSpec = modify(
+private var specificImportSpec = bounds(modify(
     x => SpecificImportSpec(just(x.0, VIS_PUBLIC), x.1, x.2),
     sequence(visibility, identifier, importAlias)
-);
+));
 private var specificImportSpecList = modify(
     x => ImportSpec(x.2),
     sequence(punc(#"."), punc(#"("), optCommaList(specificImportSpec), punc(#")"), punc(#";")),
