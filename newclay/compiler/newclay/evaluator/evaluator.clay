@@ -118,30 +118,35 @@ parseIntLiteral(s) {
     assert(size(number) > 0, "integer literal is empty");
     assert(size(suffix) <= 3, "integer suffix is too large");
 
-    switch (suffix) {
-    case "":
-    case "i":
-        return IntValue(StaticIntValue(Int64(number)));
-    case "u":
-        return IntValue(StaticUIntValue(UInt64(number)));
-    case "u64":
-        return IntValue(UInt64(number));
-    case "i64":
-        return IntValue(Int64(number));
-    case "u32":
-        return IntValue(UInt32(number));
-    case "i32":
-        return IntValue(Int32(number));
-    case "u16":
-        return IntValue(UInt16(number));
-    case "i16":
-        return IntValue(Int16(number));
-    case "u8":
-        return IntValue(UInt8(number));
-    case "i8":
-        return IntValue(Int8(number));
-    default:
-        assert(false, "invalid integer literal suffix");
+    try {
+        switch (suffix) {
+        case "":
+        case "i":
+            return IntValue(StaticIntValue(Int64(number)));
+        case "u":
+            return IntValue(StaticUIntValue(UInt64(number)));
+        case "u64":
+            return IntValue(UInt64(number));
+        case "i64":
+            return IntValue(Int64(number));
+        case "u32":
+            return IntValue(UInt32(number));
+        case "i32":
+            return IntValue(Int32(number));
+        case "u16":
+            return IntValue(UInt16(number));
+        case "i16":
+            return IntValue(Int16(number));
+        case "u8":
+            return IntValue(UInt8(number));
+        case "i8":
+            return IntValue(Int8(number));
+        default:
+            assert(false, "invalid integer literal suffix");
+            return IntValue();
+        }
+    } catch (ex:Error) {
+        genericError("invalid integer literal: ", s);
         return IntValue();
     }
 }
