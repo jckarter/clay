@@ -98,6 +98,7 @@ overload getLocation(x:ExprListItem) = getLocation(*x);
 overload getLocation(x:Pattern) = getLocation(*x);
 overload getLocation(x:CodeBody) = getLocation(*x);
 overload getLocation(x:Argument) = getLocation(*x);
+overload getLocation(x:Location) = x;
 
 procedure setLocation;
 overload setLocation(x, forward location) {
