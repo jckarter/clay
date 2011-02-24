@@ -1450,7 +1450,7 @@ private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
 
 private analyzeBindingVar(s, stmt, kind, name, value) {
     var variableKind = bindingVariableKind(kind, value.kind);
-    var variableReferent = if (kind == ast.BINDING_VAR or kind == ast.BINDING_RVALUE)
+    var variableReferent = if (kind == ast.BINDING_VAR or (value.kind == RT_VALUE_RVALUE and not referenceVariable?(value)))
             RTValueReferent(LocalVariable())
         else
             RTValueReferent(ReferenceVariable());
