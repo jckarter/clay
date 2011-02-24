@@ -277,6 +277,9 @@ enum PrimitiveKind {
     PRIM_StaticRemainder,
     PRIM_StaticIntegers,
 
+    PRIM_StaticUInt,
+    PRIM_StaticInt,
+
     PRIM_StaticBool?,
     PRIM_StaticEquals?,
     PRIM_StaticNotEquals?,

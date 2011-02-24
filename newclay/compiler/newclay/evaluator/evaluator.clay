@@ -100,9 +100,6 @@ private parseOctalDigit(x) {
 // parseIntLiteral, parseFloatLiteral
 //
 
-private parseNumberLiteral(s) {
-}
-
 parseIntLiteral(s) {
     var number = String();
     var suffix = String();
@@ -1324,14 +1321,10 @@ verifyPatternVars(pvars:PatternVars, env:Env) {
 }
 
 testPredicate(predicate:Maybe[ast.Expr], env) {
-    try {
-        return maybe(predicate,
-            pred => evaluateBool(pred, env),
-            () => true,
-        );
-    } catch (e:StaticError) {
-        return false;
-    }
+    return maybe(predicate,
+        pred => evaluateBool(pred, env),
+        () => true,
+    );
 }
 
 
@@ -1593,6 +1586,16 @@ evaluatePrimitive(kind, args) {
         if (a < 0)
             genericError("expecting a non-negative integer");
         return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
+    }
+
+    case PRIM_StaticUInt : {
+        var a = toUInt64(*oneInt(args));
+        return ValueList(IntValue(StaticUIntValue(a)));
+    }
+
+    case PRIM_StaticInt : {
+        var a = Int64(*oneInt(args));
+        return ValueList(IntValue(StaticIntValue(a)));
     }
 
     case PRIM_StaticBool? : {
