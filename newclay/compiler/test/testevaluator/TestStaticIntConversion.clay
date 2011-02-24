@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = StaticInt(1), StaticInt(1u), StaticUInt(1), StaticUInt(1u);
