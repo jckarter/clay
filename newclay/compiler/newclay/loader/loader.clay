@@ -34,28 +34,42 @@ private loadPrimitivesModule(program:Program) {
 private addImportItem(module, envRoot, importItem) {
     withLocation(importItem, () ref=> {
         var moduleName = ModuleName(importItem.name);
-        var importedModule = programModule(module.program, moduleName);
-        match(importItem.spec,
-            ast.GeneralImportSpec,   genSpec ref=> {
-                envRootAddGeneral(envRoot, importedModule);
-            },
-            ast.SpecificImportSpecs, specSpecs ref=> {
-                for (spec in specSpecs) {
-                    var asName = just(spec.asName, spec.name).str;
+        assert(size(importItem.name) > 0, "import module can't have empty name");
+        withLocation(importItem.name[0], () ref=> {
+            var importedModule = programModule(module.program, moduleName);
+            match(importItem.spec,
+                ast.GeneralImportSpec,   genSpec ref=> {
+                    envRootAddGeneral(envRoot, importedModule, genSpec.location);
+                },
+                ast.SpecificImportSpecs, specSpecs ref=> {
+                    for (spec in specSpecs) {
+                        var asName = just(spec.asName, spec.name).str;
+                        envRootAddSpecific(
+                            envRoot,
+                            asName,
+                            EnvImport(spec.visibility, importedModule, spec.name.str),
+                            spec.location
+                        );
+                    }
+                },
+                ast.QualifiedImportSpec, qualSpec ref=> {
+                    addQualifiedModuleValue(
+                        envRoot,
+                        importedModule,
+                        moduleName,
+                        qualSpec.location
+                    );
+                },
+                ast.AliasedImportSpec, aliasSpec ref=> {
                     envRootAddSpecific(
                         envRoot,
-                        asName,
-                        EnvImport(spec.visibility, importedModule, spec.name.str)
+                        aliasSpec.asName.str,
+                        ModuleValue(importedModule),
+                        aliasSpec.location
                     );
-                }
-            },
-            ast.QualifiedImportSpec, qualSpec ref=> {
-                addQualifiedModuleValue(envRoot, importedModule, moduleName);
-            },
-            ast.AliasedImportSpec, aliasSpec ref=> {
-                envRootAddSpecific(envRoot, aliasSpec.asName.str, ModuleValue(importedModule));
-            },
-        );
+                },
+            );
+        });
     });
 }
 
@@ -141,40 +155,46 @@ private initializeGlobalEntries(module) {
     ref publicRoot  = envRoot(module.publicEnv);
     ref privateRoot = envRoot(module.privateEnv);
 
-    envRootAddGeneral(privateRoot, programModule(module.program, preludeModuleName));
-
-    for (item in module.ast.topLevelItems) {
-        match(item,
-            ast.Import, importItem ref=> {
-                addImportItem(
-                    module,
-                    ifPublic(importItem, publicRoot, privateRoot),
-                    importItem
-                );
-            },
-            ast.Symbol, symbolItem ref=> {
-                addSymbolItem(
-                    module,
-                    ifPublic(symbolItem, module.publicEnv, module.privateEnv),
-                    symbolItem
-                );
-            },
-            ast.ExternalProcedure, externalItem ref=> {
-                addExternalItem(
-                    module,
-                    ifPublic(externalItem, module.publicEnv, module.privateEnv),
-                    externalItem
-                );
-            },
-            ast.GlobalBinding, globalItem ref=> {
-                addGlobalItem(
-                    module,
-                    ifPublic(globalItem, module.publicEnv, module.privateEnv),
-                    globalItem
-                );
-            },
-            MatchDefault, x ref=> { },
+    if (not empty?(module.ast.topLevelItems)) {
+        envRootAddGeneral(
+            privateRoot,
+            programModule(module.program, preludeModuleName),
+            ast.getLocation(*module.ast.topLevelItems[0])
         );
+
+        for (item in module.ast.topLevelItems) {
+            match(item,
+                ast.Import, importItem ref=> {
+                    addImportItem(
+                        module,
+                        ifPublic(importItem, publicRoot, privateRoot),
+                        importItem
+                    );
+                },
+                ast.Symbol, symbolItem ref=> {
+                    addSymbolItem(
+                        module,
+                        ifPublic(symbolItem, module.publicEnv, module.privateEnv),
+                        symbolItem
+                    );
+                },
+                ast.ExternalProcedure, externalItem ref=> {
+                    addExternalItem(
+                        module,
+                        ifPublic(externalItem, module.publicEnv, module.privateEnv),
+                        externalItem
+                    );
+                },
+                ast.GlobalBinding, globalItem ref=> {
+                    addGlobalItem(
+                        module,
+                        ifPublic(globalItem, module.publicEnv, module.privateEnv),
+                        globalItem
+                    );
+                },
+                MatchDefault, x ref=> { },
+            );
+        }
     }
 }
 

@@ -424,9 +424,12 @@ overload EnvRootEntry(imp: EnvImport) {
 
 overload EnvRootEntry(mv: ModuleValue) = EnvRootEntry(EnvEntry(Value(mv)));
 
+record GeneralImportEntry(module:Module, location:ast.Location);
+record SpecificImportEntry(entry:SpecificImport, location:ast.Location);
+
 record EnvRoot = referenceType(
-    generalImports: HashMap[ModuleName, Module],
-    specificImports: HashMap[String, SpecificImport],
+    generalImports: HashMap[ModuleName, GeneralImportEntry],
+    specificImports: HashMap[String, SpecificImportEntry],
     entries: Maybe[HashMap[String, EnvRootEntry]],
 );
 
@@ -446,7 +449,8 @@ private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
 private resolveGeneralEnvRootEntries(entries, generalImports) {
     var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
 
-    for (name, module in items(generalImports)) {
+    for (name, genImport in items(generalImports)) {
+        ref module = genImport.module;
         for (entryName, entry in items(module.publicEnv.entries))
             push(generalEntries[entryName], (module, entry));
     }
@@ -454,19 +458,28 @@ private resolveGeneralEnvRootEntries(entries, generalImports) {
     for (entryName, entryList in items(generalEntries))
         resolveGeneralEnvRootEntry(entries, entryName, entryList);
 
-    for (name, module in items(generalImports)) {
-        ref rootEntries = envRootEntries(envRoot(module.publicEnv));
-        for (entryName, entry in items(rootEntries)) {
-            if (null?(lookup(entries, entryName))) {
-                entries[entryName] = entry;
+    for (name, genImport in items(generalImports)) {
+        ref module = genImport.module;
+        withLocation(genImport.location, () ref=> {
+            observe(#genImport, genImport.location.mainToken);
+            ref rootEntries = envRootEntries(envRoot(module.publicEnv));
+            for (entryName, entry in items(rootEntries)) {
+                if (null?(lookup(entries, entryName))) {
+                    entries[entryName] = entry;
+                }
             }
-        }
+        });
     }
 }
 
 private resolveSpecificEnvRootEntries(entries, specificImports) {
-    for (entryName, entry in items(specificImports))
-        entries[entryName] = EnvRootEntry(*entry);
+    for (entryName, specImport in items(specificImports)) {
+        ref entry = specImport.entry;
+        withLocation(specImport.location, () ref=> {
+            observe(#specImport, specImport.location.mainToken);
+            entries[entryName] = EnvRootEntry(*entry);
+        });
+    }
 }
 
 envRootEntries(envRoot: EnvRoot) = ref maybe(envRoot.entries,
@@ -518,23 +531,23 @@ private envRootReset(envRoot) {
         envRoot.entries = nothing(HashMap[String, EnvRootEntry]);
 }
 
-envRootAddGeneral(envRoot:EnvRoot, module:Module) {
+envRootAddGeneral(envRoot:EnvRoot, module:Module, location:ast.Location) {
     if (not null?(lookup(envRoot.generalImports, module.name)))
         genericError("redundant import of module ", module.name);
-    envRoot.generalImports[module.name] = module;
+    envRoot.generalImports[module.name] = GeneralImportEntry(module, location);
     envRootReset(envRoot);
 }
 
 [I | VariantMember?(SpecificImport, I)]
-envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:I) {
-    envRootAddSpecific(envRoot, asName, SpecificImport(entry));
+envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:I, location:ast.Location) {
+    envRootAddSpecific(envRoot, asName, SpecificImport(entry), location);
 }
-overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport) {
+overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport, location:ast.Location) {
     var specImport = lookup(envRoot.specificImports, asName);
     if (null?(specImport))
-        envRoot.specificImports[asName] = entry;
+        envRoot.specificImports[asName] = SpecificImportEntry(entry, location);
     else
-        genericError("import of ", entry, " as ", asName, " conflicts with import of ", specImport^, " as ", asName);
+        genericError("import of ", entry, " as ", asName, " conflicts with import of ", specImport^.entry, " as ", asName);
 
     envRootReset(envRoot);
 }
@@ -1006,26 +1019,26 @@ overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], nam
 overload addModuleValueSubmodule(moduleRef:ModuleValue, path:Vector[String], name:String)
     = ref addModuleValueSubmodule(moduleRef, path, name, nothing(Module));
 
-private addRootModuleValue(envRoot, moduleName) {
+private addRootModuleValue(envRoot, moduleName, location) {
     var moduleRefEntry = lookup(envRoot.specificImports, moduleName.path[0]);
     if (null?(moduleRefEntry)) {
-        envRootAddSpecific(envRoot, moduleName.path[0], ModuleValue());
+        envRootAddSpecific(envRoot, moduleName.path[0], ModuleValue(), location);
         moduleRefEntry = &envRoot.specificImports[moduleName.path[0]];
-    } else if (not nestedVariantIs?(moduleRefEntry^, ModuleValue)) {
+    } else if (not nestedVariantIs?(moduleRefEntry^.entry, ModuleValue)) {
         genericError(
             "qualified import of module ", moduleName,
             " conflicts with import of definition ", moduleRefEntry^,
             " as ", moduleName.path[0],
         );
     }
-    return ref nestedVariantAs(moduleRefEntry^, ModuleValue);
+    return ref nestedVariantAs(moduleRefEntry^.entry, ModuleValue);
 }
 
-addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName) {
+addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName, location:ast.Location) {
     assert(size(moduleName.path) > 0);
 
     if (size(moduleName.path) == 1) {
-        ref moduleValue = addRootModuleValue(envRoot, moduleName);
+        ref moduleValue = addRootModuleValue(envRoot, moduleName, location);
         if (just?(moduleValue.module))
             genericError(
                 "qualified import of module ", moduleName.path[0],
@@ -1035,7 +1048,7 @@ addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName) 
         moduleValue.module = Maybe(module);
         checkQualifiedImportConflicts(moduleValue, module);
     } else {
-        var moduleRef = &addRootModuleValue(envRoot, moduleName);
+        var moduleRef = &addRootModuleValue(envRoot, moduleName, location);
 
         var componentPath = Vector[String](moduleName.path[0]);
 

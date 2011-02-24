@@ -27,12 +27,12 @@ main(args) {
                 var name, env = ...unpack(nameEnv);
                 println("  ", name, ":");
                 var root = envRoot(env);
-                for (name, module in items(root.generalImports))
-                    println("    imports ", module.name, ".*");
-                for (asName, entry in items(root.specificImports)) {
-                    println("    imports ", entry, " as ", asName);
-                    if (nestedVariantIs?(entry, ModuleValue)) {
-                        var moduleValue = nestedVariantAs(entry, ModuleValue);
+                for (name, genImport in items(root.generalImports))
+                    println("    imports ", genImport.module.name, ".*");
+                for (asName, specImport in items(root.specificImports)) {
+                    println("    imports ", specImport.entry, " as ", asName);
+                    if (nestedVariantIs?(specImport.entry, ModuleValue)) {
+                        var moduleValue = nestedVariantAs(specImport.entry, ModuleValue);
                         dumpModuleValue(moduleValue, 3);
                     }
                 }

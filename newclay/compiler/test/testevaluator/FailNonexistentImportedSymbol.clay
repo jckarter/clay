@@ -1,0 +1,3 @@
+import factorial.(Factorial, Gamma);
+
+#Main() = Gamma(3);
