@@ -13,13 +13,12 @@ inline overload index(forward t:Tuple[...'T], #'n)
     | ValidStaticIndex?('n, ...'T)
     = forward cFieldRef(#nthValue('n, ...'T), t, #LLTupleFieldName('n));
 
-inline overload index(rvalue t:Tuple[...'T], #'n) returned:nthValue('n, ...'T)
+inline overload index(rvalue t:Tuple[...'T], #'n)
+    rvalue returned:nthValue('n, ...'T)
     | ValidStaticIndex?('n, ...'T) and not NotDestroyedType?(Tuple[...'T])
 {
     ref rt = rvalueToRefUnsafe(t);
-    returned <-- refToRvalueUnsafe(
-        cFieldRef(#nthValue('n, ...'T), rt, #LLTupleFieldName('n))
-    );
+    returned = &cFieldRef(#nthValue('n, ...'T), rt, #LLTupleFieldName('n));
 
     static for (m in ...#intValues('n))
         if (m != #'n)
@@ -31,24 +30,23 @@ inline overload index(rvalue t:Tuple[...'T], #'n) returned:nthValue('n, ...'T)
 // unpack
 //
 
-inline overload unpack(forward x:Tuple[...'T]) = forward ...unpackTuple(x, #0);
+inline overload unpack(forward x:Tuple[...'T])
+    = forward ...unpackFields(x, ...#intValues(countValues(...'T)));
 
-private symbol unpackTuple;
-inline overload unpackTuple(forward x:Tuple[...'T], #'n)
-    = forward x[#'n], forward ...unpackTuple(x, #('n + 1));
-inline overload unpackTuple(forward x:Tuple[...'T], #'n)
-    | 'n >= countValues(...'T)
+private symbol unpackFields;
+// permanent values
+inline overload unpackFields(forward x, #'field, ...#'fields)
+    = forward x[#'field], forward ...unpackFields(x, ...#'fields);
+inline overload unpackFields(forward x)
     = ;
-
-inline overload unpackTuple(rvalue x:Tuple[...'T], #'n) {
+// rvalues
+inline overload unpackFields(rvalue x, #'field, ...#'fields) {
     ref refx = rvalueToRefUnsafe(x);
-    return rvalue refToRvalueUnsafe(refx[#'n]),
-           rvalue ...unpackTuple(refToRvalueUnsafe(refx), #('n + 1));
+    return rvalue refToRvalueUnsafe(refx[#'field]),
+           rvalue ...unpackFields(refToRvalueUnsafe(refx), ...#'fields);
 }
-inline overload unpackTuple(rvalue x:Tuple[...'T], #'n)
-    | 'n >= countValues(...'T)
-{
-    // prevent destruction of x
+inline overload unpackFields(rvalue x) {
+    // prevent destruction of x; it should have been entirely picked apart
     rvalueToRefUnsafe(x);
 }
 
@@ -120,8 +118,9 @@ overload #CompatibleTupleTypes2?('fn, (), ()) = true;
 
 // XXX lvalues only
 // XXX not BitwiseAssignedType?
-inline overload assign(ref to:Tuple[...'T], from:Tuple[...'U])
-    | CompatibleTupleTypes?(assign, (...'T), (...'U))
+inline overload assign(ref to:Tuple[...'T], /*lvalue*/ from:Tuple[...'U])
+    | not ((...'T) == (...'U) and BitwiseAssignedType?(Tuple[...'T]))
+      and CompatibleTupleTypes?(assign, (...'T), (...'U))
 {
     static for (n in ...#intValues(countValues(...'T)))
         to[n] = from[n];
