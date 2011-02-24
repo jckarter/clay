@@ -1,0 +1,54 @@
+import show.*;
+
+symbol Point = RecordType(x:Float64, y:Float32);
+
+symbol FunnyNamedField = RecordType(foo_bar?:Bool);
+
+main() {
+    ////"x"
+    ////"y"
+    show(...#RecordFieldNames(Point));
+    ////Float64
+    ////Float32
+    show(...#RecordFieldTypes(Point));
+
+    show(#RecordFieldType(Point, "x")); ////Float64
+    show(#RecordFieldType(Point, "y")); ////Float32
+
+    var origin = Point();
+    var xaxis = Point(1.0, 0.0f);
+    var yaxis = Point(0.0, 1.0f);
+
+    show(origin.x); ////0
+    show(origin.y); ////0
+
+    show(xaxis.x); ////1
+    show(xaxis.y); ////0
+
+    show(yaxis.x); ////0
+    show(yaxis.y); ////1
+
+    var diagonal = xaxis;
+
+    show(diagonal.x); ////1
+    show(diagonal.y); ////0
+    show(diagonal == xaxis); ////true
+
+    diagonal.y = 1.0f;
+
+    show(diagonal.x); ////1
+    show(diagonal.y); ////1
+
+    diagonal = yaxis;
+
+    show(diagonal.x); ////0
+    show(diagonal.y); ////1
+
+    var pythagoras = Point(3.0, 4.0f);
+    ////3
+    ////4
+    show(...unpack(pythagoras));
+
+    var z = FunnyNamedField(true);
+    show(z.foo_bar?); ////true
+}
