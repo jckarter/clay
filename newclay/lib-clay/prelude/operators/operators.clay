@@ -181,18 +181,18 @@ overload equals?(#'a, #'b) = unwrap(#('a == 'b));
 // comparison operators on numbers
 //
 
-overload lesser?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+inline overload lesser?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
     = cLesser?(a, b);
-overload lesserEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+inline overload lesserEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
     = cLesserEquals?(a, b);
-overload greater?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+inline overload greater?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
     = cGreater?(a, b);
-overload greaterEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+inline overload greaterEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
     = cGreaterEquals?(a, b);
 
-overload equals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+inline overload equals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
     = cEquals?(a, b);
-overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+inline overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
     = cNotEquals?(a, b);
 
 
@@ -223,15 +223,15 @@ inline overload assign(ref a:'A, b:'B)
 // arithmetic assignment
 //
 
-addAssign      (ref a, b) | Defined?(a  +  b) { a = a  +  b; }
-subtractAssign (ref a, b) | Defined?(a  -  b) { a = a  -  b; }
-multiplyAssign (ref a, b) | Defined?(a  *  b) { a = a  *  b; }
-divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
-quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
-remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
+inline addAssign      (ref a, b) | Defined?(a  +  b) { a = a  +  b; }
+inline subtractAssign (ref a, b) | Defined?(a  -  b) { a = a  -  b; }
+inline multiplyAssign (ref a, b) | Defined?(a  *  b) { a = a  *  b; }
+inline divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
+inline quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
+inline remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
 
-inc(ref a:'T) | Defined?(...addAssign     (a, 1)) { a += 1; }
-dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
+inline inc(ref a:'T) | Defined?(...addAssign     (a, 1)) { a += 1; }
+inline dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
 
 
 
