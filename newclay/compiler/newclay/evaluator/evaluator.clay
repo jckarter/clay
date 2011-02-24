@@ -1392,16 +1392,9 @@ evaluateAttributes(target) {
 //
 
 memoizeStaticCall(evalTable, program, callable, args) {
-    var memoizedResultp = lookup(evalTable, args);
-    if (null?(memoizedResultp)) {
-        // observe(#evaluating, callable, args);
-        ref result = evalTable[args];
-        result = evaluateStaticCall(program, callable, args);
-        return result;
-    } else {
-        // observe(#memoized, callable, args);
-        return memoizedResultp^;
-    }
+    return safeInitialize(evalTable[args],
+        () ref=> evaluateStaticCall(program, callable, args)
+    );
 }
 
 evaluateStaticCall(program, callable, args)
