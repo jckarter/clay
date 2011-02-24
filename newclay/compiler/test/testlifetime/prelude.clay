@@ -15,7 +15,7 @@ overload #Type?('x) = false;
 // ToLowLevelType
 //
 
-symbol ToLowLevelType = NewStaticFunction();
+symbol ToLowLevelType;
 
 symbol LLSigned;
 symbol LLUnsigned;
@@ -41,10 +41,10 @@ symbol LLUnionType[...'T];
 // NewPrimitiveType, PrimitiveType?
 
 symbol PrimitiveTypeTag;
-symbol NewPrimitiveType = NewStaticFunction();
+symbol NewPrimitiveType;
 overload #NewPrimitiveType() = (PrimitiveTypeTag,);
 
-symbol PrimitiveType? = NewStaticFunction();
+symbol PrimitiveType?;
 overload #PrimitiveType?('x) =
     StaticSymbol?('x)
     and SymbolWithTag?('x, PrimitiveTypeTag);
@@ -153,7 +153,7 @@ overload #ToLowLevelType(Tuple[...'T]) = LLTupleType[...'T];
 // TupleWithTag?, SymbolWithTag?
 //
 
-symbol TupleWithTag? = NewStaticFunction();
+symbol TupleWithTag?;
 overload #TupleWithTag?('x, 'tag) =
     StaticTuple?('x)
     and StaticLesser?(0, StaticTupleSize('x))
