@@ -112,7 +112,7 @@ inline overload initializeRecord(#'T) returned:'T
 inline overload initializeRecord(#'T) returned:'T
     | CompositeType?('T) and allValues?(BitwiseZeroInitializedType?, ...RecordFieldTypes('T))
 {
-    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize('T)));
+    memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
 }
 
 inline overload initializeRecord(#'T, forward ...fields:'F) returned:'T

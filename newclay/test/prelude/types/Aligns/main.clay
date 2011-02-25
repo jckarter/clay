@@ -1,24 +1,24 @@
 import show.*;
 
 main() {
-    show(#TypeAlign(Bool)); ////1
-    show(#TypeAlign(Int8)); ////1
-    show(#TypeAlign(Int16)); ////2
-    show(#TypeAlign(Int32)); ////4
+    show(#TypeAlign(Bool)); ////1u
+    show(#TypeAlign(Int8)); ////1u
+    show(#TypeAlign(Int16)); ////2u
+    show(#TypeAlign(Int32)); ////4u
     // XXX platform dependent
-    show(#TypeAlign(Int64)); ////8
-    show(#TypeAlign(Float32)); ////4
+    show(#TypeAlign(Int64)); ////8u
+    show(#TypeAlign(Float32)); ////4u
     // XXX platform dependent
-    show(#TypeAlign(Float64)); ////8
-    show(#TypeAlign(Char)); ////1
-    show(#TypeAlign(Char16)); ////2
-    show(#TypeAlign(Char32)); ////4
+    show(#TypeAlign(Float64)); ////8u
+    show(#TypeAlign(Char)); ////1u
+    show(#TypeAlign(Char16)); ////2u
+    show(#TypeAlign(Char32)); ////4u
     // XXX platform dependent
-    show(#TypeAlign(OpaquePointer)); ////8
-    show(#TypeAlign(Tuple[Int8, Int32])); ////4
-    show(#TypeAlign(Union[Int8, Int32])); ////4
-    show(#TypeAlign(Array[Int32, 12])); ////4
-    show(#TypeAlign(Array[Union[Int8, Int32], 12])); ////4
+    show(#TypeAlign(OpaquePointer)); ////8u
+    show(#TypeAlign(Tuple[Int8, Int32])); ////4u
+    show(#TypeAlign(Union[Int8, Int32])); ////4u
+    show(#TypeAlign(Array[Int32, 12])); ////4u
+    show(#TypeAlign(Array[Union[Int8, Int32], 12])); ////4u
     // XXX platform dependent
-    show(#TypeAlign(StringConstant)); ////8
+    show(#TypeAlign(StringConstant)); ////8u
 }
