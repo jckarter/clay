@@ -2,7 +2,7 @@ import __primitives__.*;
 
 bar(rvalue x) {}
 
-foo(rvalue x) ExpressionType(x) | ExpressionDefined?(...bar(x)) {
+foo(rvalue x) ExpressionType(x) | ExpressionDefined?(..bar(x)) {
     return x;
 }
 

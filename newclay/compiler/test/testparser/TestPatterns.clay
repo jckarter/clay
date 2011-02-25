@@ -7,10 +7,10 @@
 #foo(bar[]) = ;
 #foo(bar["foo"]) = ;
 #foo(bar['T]) = ;
-#foo(bar[...'T]) = ;
-#foo(bar['T, 'U, ...'V]) = ;
+#foo(bar[..'T]) = ;
+#foo(bar['T, 'U, ..'V]) = ;
 #foo(()) = ;
 #foo(('T,)) = ;
 #foo((1, true, '3', "four")) = ;
-#foo(('T, ...'U)) = ;
-#foo(bar[('T, ...'U), ('V, ...'W)]) = ;
+#foo(('T, ..'U)) = ;
+#foo(bar[('T, ..'U), ('V, ..'W)]) = ;

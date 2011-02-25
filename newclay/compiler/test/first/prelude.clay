@@ -42,8 +42,8 @@ symbol LLIntegerType['Signed, 'Bits] = ();
 symbol LLFloatType['Bits] = ();
 symbol LLPointerType['T] = ();
 symbol LLArrayType['T, 'n] = ();
-symbol LLTupleType[...'T] = ();
-symbol LLUnionType[...'T] = ();
+symbol LLTupleType[..'T] = ();
+symbol LLUnionType[..'T] = ();
 
 
 

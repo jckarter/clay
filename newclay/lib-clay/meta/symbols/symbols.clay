@@ -9,11 +9,11 @@ private #TupleWithTag?('t, 'tag)
     = StaticTuple?('t) and StaticTupleSize('t) > 0 and 't.0 == 'tag;
 
 private symbol SymbolBodyWithTag?;
-overload #SymbolBodyWithTag?('tag, 'x, ...'xs)
-    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ...'xs);
+overload #SymbolBodyWithTag?('tag, 'x, ..'xs)
+    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ..'xs);
 overload #SymbolBodyWithTag?('tag) = false;
 
-#SymbolWithTag?('x, 'tag) = Symbol?('x) and SymbolBodyWithTag?('tag, ...SymbolBody('x));
+#SymbolWithTag?('x, 'tag) = Symbol?('x) and SymbolBodyWithTag?('tag, ..SymbolBody('x));
 
 symbol Symbol?;
 overload #Symbol?('x) = StaticSymbol?('x);
@@ -21,7 +21,7 @@ overload Symbol?(x) = false;
 overload Symbol?(#'x) = unwrap(#StaticSymbol?('x));
 
 private symbol SymbolBodyTagBody;
-overload #SymbolBodyTagBody('tag, 'x, ...'xs) = SymbolBodyTagBody('tag, ...'xs);
-overload #SymbolBodyTagBody('tag, ('tag, ...'body), ...'xs) = ...'body;
+overload #SymbolBodyTagBody('tag, 'x, ..'xs) = SymbolBodyTagBody('tag, ..'xs);
+overload #SymbolBodyTagBody('tag, ('tag, ..'body), ..'xs) = ..'body;
 
-#SymbolTagBody('x, 'tag) = ...SymbolBodyTagBody('tag, ...SymbolBody('x));
+#SymbolTagBody('x, 'tag) = ..SymbolBodyTagBody('tag, ..SymbolBody('x));

@@ -259,7 +259,7 @@ overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
     | ABI?('A)
       and StaticBool?('V)
       and StaticTuple?('I)
-      and allValues?(RequireExternalPODType?, ...StaticTupleElements('I))
+      and allValues?(RequireExternalPODType?, ..StaticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
     = LLCodePointerType['A, 'V, 'I, 'O];
 
@@ -294,36 +294,36 @@ overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 
 
 //
-// Tuple[...T]
+// Tuple[..T]
 //
 
-symbol Tuple[...'T];
-overload #'XType?(Tuple[...'T])
-    | InheritableTypePredicate?('XType?) and allValues?('XType?, ...'T)
+symbol Tuple[..'T];
+overload #'XType?(Tuple[..'T])
+    | InheritableTypePredicate?('XType?) and allValues?('XType?, ..'T)
     = true;
-overload #LLType(Tuple[...'T])
-    | allValues?(Type?, ...'T)
-    = LLTupleType[...'T];
+overload #LLType(Tuple[..'T])
+    | allValues?(Type?, ..'T)
+    = LLTupleType[..'T];
 
 #TupleType?('X) = false;
-overload #TupleType?(Tuple[...'T]) | Type?(Tuple[...'T]) = true;
+overload #TupleType?(Tuple[..'T]) | Type?(Tuple[..'T]) = true;
 
 
 
 //
-// Union[...T]
+// Union[..T]
 //
 
-symbol Union[...'T];
-overload #'XType?(Union[...'T])
-    | InheritableTypePredicate?('XType?) and allValues?(Type?, ...'T)
+symbol Union[..'T];
+overload #'XType?(Union[..'T])
+    | InheritableTypePredicate?('XType?) and allValues?(Type?, ..'T)
     = true;
-overload #LLType(Union[...'T])
-    | allValues?(Type?, ...'T)
-    = LLUnionType[...'T];
+overload #LLType(Union[..'T])
+    | allValues?(Type?, ..'T)
+    = LLUnionType[..'T];
 
 #UnionType?('X) = false;
-overload #UnionType?(Union[...'T]) | Type?(Union[...'T]) = true;
+overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
 
 
 

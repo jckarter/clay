@@ -7,7 +7,7 @@ symbol bas = ();
 
 overload Foo() {
     for (bar, barr in bar)
-        var ...barrr = bar, barr, bas;
+        var ..barrr = bar, barr, bas;
     bar;
     bas;
     barrr;

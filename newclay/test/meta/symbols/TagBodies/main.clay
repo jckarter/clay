@@ -12,13 +12,13 @@ main() {
     ////1
     ////2
     ////3
-    show(...#SymbolTagBody(Foo, FooTag));
+    show(..#SymbolTagBody(Foo, FooTag));
     ////'a'
     ////'b'
     ////'c'
-    show(...#SymbolTagBody(Bar, BarTag));
+    show(..#SymbolTagBody(Bar, BarTag));
     ////4
-    show(...#SymbolTagBody(Bas, FooTag));
+    show(..#SymbolTagBody(Bas, FooTag));
     ////'d'
-    show(...#SymbolTagBody(Bas, BarTag));
+    show(..#SymbolTagBody(Bas, BarTag));
 }

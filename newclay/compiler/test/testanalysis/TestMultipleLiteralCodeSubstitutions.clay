@@ -1,9 +1,9 @@
 __c__ """
-int printf(char const *format, ...);
+int printf(char const *format, ..);
 """;
 
-printf(#'format, ...args) __c__ """
-    printf("$'format", $...args);
+printf(#'format, ..args) __c__ """
+    printf("$'format", $..args);
 """;
 
 main() {

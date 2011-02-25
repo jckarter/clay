@@ -6,6 +6,6 @@ overload bar(x:StringConstant) {}
 overload bar(x:Float64) {}
 
 main() {
-    static for (x in ...foo())
+    static for (x in ..foo())
         bar(x);
 }

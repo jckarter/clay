@@ -1,5 +1,5 @@
 __c__ """
-    int printf(char const *format, ...);
+    int printf(char const *format, ..);
 """;
 
 fanfare() __c__ """printf("Hello world");""";

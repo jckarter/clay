@@ -31,22 +31,22 @@ main() {
     show(countValues(1, 2, 3));
 
     show("taking 0 values from 3");
-    show(...takeValues(#0, '1', '2', '3'));
+    show(..takeValues(#0, '1', '2', '3'));
     show("taking 2 values from 3");
-    show(...takeValues(#2, '1', '2', '3'));
+    show(..takeValues(#2, '1', '2', '3'));
     show("taking 4 values from 3");
-    show(...takeValues(#4, '1', '2', '3'));
+    show(..takeValues(#4, '1', '2', '3'));
     show("taking 4 values from zero");
-    show(...takeValues(#4));
+    show(..takeValues(#4));
 
     show("mapping odd and even values");
-    show(...mapValues(odd?, 1, 2, 3, 4));
+    show(..mapValues(odd?, 1, 2, 3, 4));
 
     show("mapping lack of odd and even values");
-    show(...mapValues(odd?));
+    show(..mapValues(odd?));
 
     show("types of five intValues");
-    static for (n in ...intValues(#5))
+    static for (n in ..intValues(#5))
         show(#Type(n));
 
     show("nthValue");

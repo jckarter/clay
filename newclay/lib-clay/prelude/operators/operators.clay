@@ -22,10 +22,10 @@ import __primitives__.(
 // tupleLiteral, arrayLiteral
 //
 
-inline tupleLiteral(forward ...elements:'T) = Tuple[...'T](...elements);
-inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
-    | equalValues?('T0, ...'T)
-    = Array['T0, countValues('T0, ...'T)](x0, ...xs);
+inline tupleLiteral(forward ..elements:'T) = Tuple[..'T](..elements);
+inline arrayLiteral(forward x0:'T0, forward ..xs:'T)
+    | equalValues?('T0, ..'T)
+    = Array['T0, countValues('T0, ..'T)](x0, ..xs);
 
 
 
@@ -35,7 +35,7 @@ inline arrayLiteral(forward x0:'T0, forward ...xs:'T)
 
 symbol index;
 
-#ValidStaticIndex?('n, ...'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(...'T);
+#ValidStaticIndex?('n, ..'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(..'T);
 
 // XXX StringConstant should be a record rather than hardcoded like this
 inline overload index(forward s:StringConstant, #'field)
@@ -104,17 +104,17 @@ private inline opFromAssign(#'assignFn, a:'A, b:'B) c:'A
     }
 }
 
-inline overload multiply(a:'A, b:'B) | Defined?(...multiplyAssign(a, b))
+inline overload multiply(a:'A, b:'B) | Defined?(..multiplyAssign(a, b))
     = opFromAssign(multiplyAssign, a, b);
-inline overload divide(a:'A, b:'B) | Defined?(...divideAssign(a, b))
+inline overload divide(a:'A, b:'B) | Defined?(..divideAssign(a, b))
     = opFromAssign(divideAssign, a, b);
-inline overload quotient(a:'A, b:'B) | Defined?(...quotientAssign(a, b))
+inline overload quotient(a:'A, b:'B) | Defined?(..quotientAssign(a, b))
     = opFromAssign(quotientAssign, a, b);
-inline overload remainder(a:'A, b:'B) | Defined?(...remainderAssign(a, b))
+inline overload remainder(a:'A, b:'B) | Defined?(..remainderAssign(a, b))
     = opFromAssign(remainderAssign, a, b);
-inline overload add(a:'A, b:'B) | Defined?(...addAssign(a, b))
+inline overload add(a:'A, b:'B) | Defined?(..addAssign(a, b))
     = opFromAssign(addAssign, a, b);
-inline overload subtract(a:'A, b:'B) | Defined?(...subtractAssign(a, b))
+inline overload subtract(a:'A, b:'B) | Defined?(..subtractAssign(a, b))
     = opFromAssign(subtractAssign, a, b);
 
 
@@ -162,8 +162,8 @@ inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
     = cSubtract(Int, a, b);
 
 inline overload index(a, n:'I)
-    | IntegerType?('I) and Defined?(...((a + n)^))
-    = forward ...((a + n)^);
+    | IntegerType?('I) and Defined?(..((a + n)^))
+    = forward ..((a + n)^);
 
 
 //
@@ -242,8 +242,8 @@ inline divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
 inline quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
 inline remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
 
-inline inc(ref a:'T) | Defined?(...addAssign     (a, 1)) { a += 1; }
-inline dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
+inline inc(ref a:'T) | Defined?(..addAssign     (a, 1)) { a += 1; }
+inline dec(ref a:'T) | Defined?(..subtractAssign(a, 1)) { a -= 1; }
 
 
 
@@ -253,20 +253,20 @@ inline dec(ref a:'T) | Defined?(...subtractAssign(a, 1)) { a -= 1; }
 
 symbol call;
 
-inline overload call(#'f, forward ...args) = forward ...'f(...args);
+inline overload call(#'f, forward ..args) = forward ..'f(..args);
 
 // non-variadic external code pointer
-inline overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ...args:'Args)
-    ...ExternalOutputTypes('O)
-    | 'I == (...'Args)
-    = ...cExternalCall(f, ...args);
+inline overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args)
+    ..ExternalOutputTypes('O)
+    | 'I == (..'Args)
+    = ..cExternalCall(f, ..args);
 
 // variadic external code pointer
-inline overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ...args:'Args)
-    ...ExternalOutputTypes('O)
-    | allValues?(RequireExternalPODType?, ...'Args)
-      and 'I == (...takeValues(StaticTupleSize('I), ...'Args))
-    = ...cExternalCall(f, ...args);
+inline overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args)
+    ..ExternalOutputTypes('O)
+    | allValues?(RequireExternalPODType?, ..'Args)
+      and 'I == (..takeValues(StaticTupleSize('I), ..'Args))
+    = ..cExternalCall(f, ..args);
 
 
 
@@ -316,7 +316,7 @@ symbol end;
 //
 
 symbol unwrap;
-overload unwrap(...#'x) = ...'x;
+overload unwrap(..#'x) = ..'x;
 
 
 //
@@ -361,9 +361,9 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 // case?
 //
 
-inline case?(value:'T, forward ...cases:'U)
-    | allValues?(u -> CallDefined?(equals?, 'T, u), ...'U)
-    = inValues?(value, ...cases);
+inline case?(value:'T, forward ..cases:'U)
+    | allValues?(u -> CallDefined?(equals?, 'T, u), ..'U)
+    = inValues?(value, ..cases);
 
 
 //

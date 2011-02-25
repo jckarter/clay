@@ -2,8 +2,8 @@ symbol Bar;
 
 symbol Foo['A, 'B, 'C, 'D];
 
-alias FooBar['C, ...'D] = Foo['C, Bar, ...'D];
+alias FooBar['C, ..'D] = Foo['C, Bar, ..'D];
 
-#foo(FooBar[1, 2, ...'E]) = ...'E;
+#foo(FooBar[1, 2, ..'E]) = ..'E;
 
 #Main() = foo(Foo[1, Bar, 2, 3]);

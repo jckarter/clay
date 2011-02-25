@@ -8,8 +8,8 @@ symbol MatchTuple;
 overload #MatchTuple(()) = Empty;
 overload #MatchTuple(('x,)) = One;
 overload #MatchTuple(('x, 'y)) = Two;
-overload #MatchTuple(('x, 'y, 'z, ...'w)) = Many;
-overload #MatchTuple(('x, 'y, 'z, ...'w)) = Many;
+overload #MatchTuple(('x, 'y, 'z, ..'w)) = Many;
+overload #MatchTuple(('x, 'y, 'z, ..'w)) = Many;
 overload #MatchTuple(('x, 'x, 'x, 'y, 'y)) = FullHouse;
 
 #Main() =

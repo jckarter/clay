@@ -7,10 +7,10 @@ symbol FunnyNamedField = RecordType(foo_bar?:Bool);
 main() {
     ////"x"
     ////"y"
-    show(...#RecordFieldNames(Point));
+    show(..#RecordFieldNames(Point));
     ////Float64
     ////Float32
-    show(...#RecordFieldTypes(Point));
+    show(..#RecordFieldTypes(Point));
 
     show(#RecordFieldType(Point, "x")); ////Float64
     show(#RecordFieldType(Point, "y")); ////Float32
@@ -47,7 +47,7 @@ main() {
     var pythagoras = Point(3.0, 4.0f);
     ////3
     ////4
-    show(...unpack(pythagoras));
+    show(..unpack(pythagoras));
 
     var z = FunnyNamedField(true);
     show(z.foo_bar?); ////true

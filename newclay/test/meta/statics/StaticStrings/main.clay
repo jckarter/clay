@@ -9,6 +9,6 @@ main() {
     ////'b'
     ////'a'
     ////'r'
-    show(...#StaticStringChars("bar"));
+    show(..#StaticStringChars("bar"));
     show(#StaticStringFromChars('f', 'o', 'o', 'b', 'a', 'r')); ////"foobar"
 }

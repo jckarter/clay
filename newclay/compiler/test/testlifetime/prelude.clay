@@ -26,8 +26,8 @@ symbol LLFloatType['Bits];
 symbol LLPointerType['T];
 symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
 symbol LLArrayType['T, 'n];
-symbol LLTupleType[...'T];
-symbol LLUnionType[...'T];
+symbol LLTupleType[..'T];
+symbol LLUnionType[..'T];
 
 
 //
@@ -140,12 +140,12 @@ overload #LLType(Array['T, 'n]) = LLArrayType['T, 'n];
 
 
 //
-// Tuple[...T]
+// Tuple[..T]
 //
 
-symbol Tuple[...'T];
-overload #Type?(Tuple[...'T]) = true;
-overload #LLType(Tuple[...'T]) = LLTupleType[...'T];
+symbol Tuple[..'T];
+overload #Type?(Tuple[..'T]) = true;
+overload #LLType(Tuple[..'T]) = LLTupleType[..'T];
 
 
 
@@ -159,18 +159,18 @@ overload #TupleWithTag?('x, 'tag) =
     and StaticLesser?(0, StaticTupleSize('x))
     and StaticEquals?(StaticTupleElement('x, 0), 'tag);
 
-private #SymbolBodyWithTag?('tag, 'x, ...'xs)
-    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ...'xs);
+private #SymbolBodyWithTag?('tag, 'x, ..'xs)
+    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ..'xs);
 overload #SymbolBodyWithTag?('tag) = false;
 
-#SymbolWithTag?('t, 'tag) = SymbolBodyWithTag?('tag, ...StaticSymbolBody('t));
+#SymbolWithTag?('t, 'tag) = SymbolBodyWithTag?('tag, ..StaticSymbolBody('t));
 
 
 //
 // tupleLiteral, arrayLiteral
 //
 
-tupleLiteral(...elements:'T) returned:Tuple[...'T] __c__ """abort();""";
+tupleLiteral(..elements:'T) returned:Tuple[..'T] __c__ """abort();""";
 arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""";
 
 
@@ -184,11 +184,11 @@ index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
     $returned = &$a.array[$i];
 """;
 
-staticIndex(a:Tuple['T0, ...'T], #0) ref returned:'T0 __c__ """
+staticIndex(a:Tuple['T0, ..'T], #0) ref returned:'T0 __c__ """
     $returned = &$a.field0;
 """;
 
-overload staticIndex(a:Tuple['T0, 'T1, ...'T], #1) ref returned:'T1 __c__ """
+overload staticIndex(a:Tuple['T0, 'T1, ..'T], #1) ref returned:'T1 __c__ """
     $returned = &$a.field1;
 """;
 
@@ -264,8 +264,8 @@ remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
 // case?
 //
 
-case?(a, forward ...against) {
-    static for (b in ...against)
+case?(a, forward ..against) {
+    static for (b in ..against)
         if (a == b)
             return true;
     return false;

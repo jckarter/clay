@@ -3,6 +3,6 @@ nonterminating() { throw 0; }
 foo() {}
 
 main() {
-    static for (x in ...nonterminating())
+    static for (x in ..nonterminating())
         foo();
 }

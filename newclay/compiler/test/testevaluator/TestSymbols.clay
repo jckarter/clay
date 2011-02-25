@@ -6,7 +6,7 @@ import __primitives__.*;
 //
 
 symbol MapValues;
-overload #MapValues('f, 'first, ...'rest) = 'f('first), ...MapValues('f, ...'rest);
+overload #MapValues('f, 'first, ..'rest) = 'f('first), ..MapValues('f, ..'rest);
 overload #MapValues('f) = ;
 
 
@@ -16,25 +16,25 @@ overload #MapValues('f) = ;
 //
 
 private  #_SymbolBody() = ();
-overload #_SymbolBody('x, ...'y) = 'x;
+overload #_SymbolBody('x, ..'y) = 'x;
 
-#SymbolBody('t) = _SymbolBody(...StaticSymbolBody('t));
+#SymbolBody('t) = _SymbolBody(..StaticSymbolBody('t));
 
 symbol Bool;
 symbol Int;
 symbol Array['T, 'n];
-symbol Tuple[...'T];
+symbol Tuple[..'T];
 
 symbol RecordTag;
 
 symbol RecordType;
-overload #RecordType(...'fields) = (RecordTag, FieldNames(...'fields), FieldTypes(...'fields));
+overload #RecordType(..'fields) = (RecordTag, FieldNames(..'fields), FieldTypes(..'fields));
 
 symbol FieldNames;
-overload #FieldNames(...'fields) = (...MapValues(f => StaticTupleElement(f, 0), ...'fields));
+overload #FieldNames(..'fields) = (..MapValues(f => StaticTupleElement(f, 0), ..'fields));
 
 symbol FieldTypes;
-overload #FieldTypes(...'fields) = (...MapValues(f => StaticTupleElement(f, 1), ...'fields));
+overload #FieldTypes(..'fields) = (..MapValues(f => StaticTupleElement(f, 1), ..'fields));
 
 symbol Record?;
 overload #Record?('t) =

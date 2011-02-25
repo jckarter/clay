@@ -31,22 +31,22 @@ main() {
     show(#countValues(1, 2, 3));
 
     show("taking 0 values from 3");
-    show(...#takeValues(0, '1', '2', '3'));
+    show(..#takeValues(0, '1', '2', '3'));
     show("taking 2 values from 3");
-    show(...#takeValues(2, '1', '2', '3'));
+    show(..#takeValues(2, '1', '2', '3'));
     show("taking 4 values from 3");
-    show(...#takeValues(4, '1', '2', '3'));
+    show(..#takeValues(4, '1', '2', '3'));
     show("taking 4 values from zero");
-    show(...#takeValues(4));
+    show(..#takeValues(4));
 
     show("mapping odd and even values");
-    show(...#mapValues(odd?, 1, 2, 3, 4));
+    show(..#mapValues(odd?, 1, 2, 3, 4));
 
     show("mapping lack of odd and even values");
-    show(...#mapValues(odd?));
+    show(..#mapValues(odd?));
 
     show("five intValues");
-    show(...#intValues(#5));
+    show(..#intValues(#5));
 
     show("nthValue");
     show(#nthValue(0, 1, true, '3'));

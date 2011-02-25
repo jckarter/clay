@@ -5,6 +5,6 @@ nonterminating() { throw 0; }
 foo() {}
 
 main() {
-    static for (x in terminating1(), ...nonterminating(), terminating2())
+    static for (x in terminating1(), ..nonterminating(), terminating2())
         foo();
 }
