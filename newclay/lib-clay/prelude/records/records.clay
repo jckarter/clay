@@ -33,7 +33,7 @@ overload #ValidRecordField?(('name, 'T)) | StaticString?('name) and Type?('T) = 
 #RecordFieldTypes('T) | RecordType?('T)
     = ...mapValues(x -> x.1, ...RecordFields('T));
 
-overload #ToLowLevelType('T) | RecordType?('T) = LLTupleType[...RecordFields('T)];
+overload #LLType('T) | RecordType?('T) = LLTupleType[...RecordFields('T)];
 
 #RecordField?('T, 'field) = inValues?('field, ...RecordFieldNames('T));
 

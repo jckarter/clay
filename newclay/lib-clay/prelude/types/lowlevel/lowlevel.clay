@@ -16,7 +16,7 @@ symbol LLArrayType['T, 'n];
 symbol LLTupleType[...'T];
 symbol LLUnionType[...'T];
 
-symbol ToLowLevelType;
+symbol LLType;
 
 symbol LLMemberType;
 overload #LLMemberType('T) | not StaticTuple?('T) = 'T;
