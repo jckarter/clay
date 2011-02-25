@@ -1295,8 +1295,10 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
             withLocation(stmt.sequenceValue, () ref=>
                 analyzeCallWithOneResult(s, stmt.sequenceValue, getHooks().iterator, RTValues(seqValue)),
             ),
-            iterValues ref=> {
-                var iterValue = addCapture(s, stmt.sequenceValue, singleValue(iterValues));
+            iterResults ref=> {
+                var iterResult = singleValue(iterResults);
+                var iterValue = RTValue(RT_VALUE_REF, iterResult.type, LocalVariable());
+                addSpecializedBind(s, stmt, iterResult, iterValue);
 
                 return analyzeLoop(s, stmt, pc, bc,
                     condS ref=> withLocation(stmt.sequenceValue, () ref=> withBoolResult(
@@ -1693,7 +1695,7 @@ addImmediate(s, type, value, ...name) {
 
 addCapture(s, stmt, value, ...name) {
     var capturedValue = RTValue(
-        if (value.kind == RT_VALUE_RVALUE) RT_VALUE_REF else value.kind,
+        if (value.kind == RT_VALUE_RVALUE) RT_VALUE_CONST else value.kind,
         value.type,
         if (value.kind == RT_VALUE_RVALUE)
             RTValueReferent(LocalVariable())
