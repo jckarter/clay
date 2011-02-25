@@ -270,20 +270,20 @@ main() {
     show(#AssignablePrimitiveTypes?(Float32, Float64)); ////false
 
     // Bigger numeric type
-    show(#BiggerNumericType(Int8,  Int8 )); ////Int8
-    show(#BiggerNumericType(Int8,  Int32)); ////Int32
-    show(#BiggerNumericType(Int32, Int8 )); ////Int32
-    show(#BiggerNumericType(Int8,  Int  )); ////Int8
-    show(#BiggerNumericType(UInt8, UInt )); ////UInt8
-    show(#BiggerNumericType(Int,   Int8 )); ////Int8
-    show(#BiggerNumericType(UInt,  UInt8)); ////UInt8
-    show(#BiggerNumericType(Float32, Float64)); ////Float64
-    show(#BiggerNumericType(Float64, Float32)); ////Float64
-    show(#BiggerNumericType(Float64, Float32)); ////Float64
-    show(#BiggerNumericType(UInt, Int)); ////UInt
-    show(#BiggerNumericType(Int, UInt)); ////UInt
-    show(#BiggerNumericType(Int32, UInt32)); ////UInt32
-    show(#BiggerNumericType(UInt32, Int32)); ////UInt32
+    show(#BiggerNumberType(Int8,  Int8 )); ////Int8
+    show(#BiggerNumberType(Int8,  Int32)); ////Int32
+    show(#BiggerNumberType(Int32, Int8 )); ////Int32
+    show(#BiggerNumberType(Int8,  Int  )); ////Int8
+    show(#BiggerNumberType(UInt8, UInt )); ////UInt8
+    show(#BiggerNumberType(Int,   Int8 )); ////Int8
+    show(#BiggerNumberType(UInt,  UInt8)); ////UInt8
+    show(#BiggerNumberType(Float32, Float64)); ////Float64
+    show(#BiggerNumberType(Float64, Float32)); ////Float64
+    show(#BiggerNumberType(Float64, Float32)); ////Float64
+    show(#BiggerNumberType(UInt, Int)); ////UInt
+    show(#BiggerNumberType(Int, UInt)); ////UInt
+    show(#BiggerNumberType(Int32, UInt32)); ////UInt32
+    show(#BiggerNumberType(UInt32, Int32)); ////UInt32
 }
 
 /*
