@@ -1,0 +1,199 @@
+import lua.*;
+
+alias FOO = "Foo";
+
+record Foo (
+    x: Int,
+    y: Int,
+);
+
+toFoo(x:Pointer[lua_State], index:Int) Pointer[Foo] {
+    var bar = Pointer[Foo](lua_touserdata(x, index));
+    if (null?(bar))
+        luaL_typerror(x, index, cstring(FOO));
+    return bar;
+}
+
+checkFoo(x:Pointer[lua_State], index:Int) Pointer[Foo] {
+    luaL_checktype(x, index, LUA_TUSERDATA);
+    var bar = Pointer[Foo](luaL_checkudata(x, index, cstring(FOO)));
+    if (null?(bar))
+        luaL_typerror(x, index, cstring(FOO));
+    return bar;
+}
+
+pushFoo(x:Pointer[lua_State]) Pointer[Foo] {
+    var bar = Pointer[Foo](lua_newuserdata(x, TypeSize(Foo)));
+    luaL_getmetatable(x, cstring(FOO));
+    lua_setmetatable(x, -2);
+    return bar;
+}
+
+Foo_new(l:Pointer[lua_State]) Int {
+    var x = luaL_optint(l, 1, 0);
+    var y = luaL_optint(l, 2, 0);
+    var bar = pushFoo(l);
+    bar^.x = x;
+    bar^.y = y;
+    return 1;
+}
+
+Foo_yourCfunction(x:Pointer[lua_State]) Int {
+    var bar = checkFoo(x, 1);
+    println("this is yourCfunction\t");
+    lua_pushnumber(x, Double(bar^.x));
+    lua_pushnumber(x, Double(bar^.y));
+    return 2;
+}
+
+Foo_setx(x:Pointer[lua_State]) Int {
+    var bar = checkFoo(x, 1);
+    bar^.x = luaL_checkint(x, 2);
+    lua_settop(x, 1);
+    return 1;
+}
+
+Foo_sety(x:Pointer[lua_State]) Int {
+    var bar = checkFoo(x, 1);
+    bar^.y = luaL_checkint(x, 2);
+    lua_settop(x, 1);
+    return 1;
+}
+
+Foo_add(x:Pointer[lua_State]) Int {
+    var bar1 = checkFoo(x, 1);
+    var bar2 = checkFoo(x, 2);
+    var sum = pushFoo(x);
+    sum^.x = bar1^.x + bar2^.x;
+    sum^.y = bar1^.y + bar2^.y;
+    return 1;
+}
+
+Foo_dot(x:Pointer[lua_State]) Int {
+    var bar1 = checkFoo(x, 1);
+    var bar2 = checkFoo(x, 2);
+    lua_pushnumber(x, Double(bar1^.x * bar2^.x + bar1^.y * bar2^.y));
+    return 1;
+}
+
+var Foo_methods = [
+    ...mapValues(
+        x => luaL_Reg(
+            cstring(x.0),
+            makeCCodePointer(x.1, Pointer[lua_State])
+        ),
+        ("new", Foo_new),
+        ("yourCfunction", Foo_yourCfunction),
+        ("setx", Foo_setx),
+        ("sety", Foo_sety),
+        ("add", Foo_add),
+        ("dot", Foo_dot),
+    ),
+    luaL_Reg(
+        null(CChar),
+        CCodePointer[Pointer[lua_State], Int](0),
+    ),
+];
+
+Foo_gc(x:Pointer[lua_State]) Int {
+    println("bye, bye, bar = ", toFoo(x, 1));
+    return 0;
+}
+
+Foo_tostring(x:Pointer[lua_State]) Int {
+    var buf = Array[Char, 40]();
+    var bv = BufferVector(buf);
+    printTo(bv, "Foo (", toFoo(x, 1), ")");
+    push(bv, Char(0));
+    lua_pushstring(x, Pointer[CChar](begin(buf)));
+    return 1;
+}
+
+var Foo_meta = [
+    ...mapValues(
+        x => luaL_Reg(
+            cstring(x.0),
+            makeCCodePointer(x.1, Pointer[lua_State])
+        ),
+        ("__gc", Foo_gc),
+        ("__tostring", Foo_tostring),
+        ("__add", Foo_add),
+    ),
+    luaL_Reg(
+        null(CChar),
+        CCodePointer[Pointer[lua_State], Int](0),
+    ),
+];
+
+Foo_register(x:Pointer[lua_State]) Int {
+    luaL_openlib(x, cstring(FOO), begin(Foo_methods), 0);
+    luaL_newmetatable(x, cstring(FOO));
+    luaL_openlib(x, null(CChar), begin(Foo_meta), 0);
+    lua_pushliteral(x, "__index");
+    lua_pushvalue(x, -3);
+    lua_rawset(x, -3);
+    lua_pushliteral(x, "__metatable");
+    lua_pushvalue(x, -3);
+    lua_rawset(x, -3);
+    lua_pop(x, 1);
+    return 1;
+}
+
+main() {
+    var x = lua_open();
+    luaL_openlibs(x);
+
+    Foo_register(x);
+    lua_pop(x, 1);
+    
+    luaL_dostring(x, "
+        for n, v in pairs(Foo) do print(n, v) end
+        
+        local a = Foo.new()
+        local b = Foo.new(99, 100)
+        
+        MyFunction = Foo.yourCfunction
+        
+        print(a, MyFunction(a))
+        print(b, MyFunction(b))
+        
+        function Foo:show(msg)
+            print(msg, self, self:yourCfunction());
+            return self
+        end
+        
+        function Foo:point(t)
+            assert(type(t) == 'table');
+            self:setx(t.x or t[1]):sety(t.y or t[2])
+            return self
+        end
+        
+        setmetatable(Foo, {
+            __call = function (self, x, y)
+                local bar = self.new(x, y)
+                print('created', bar)
+                return bar
+            end
+        })
+        local p = Foo(1, 2)
+        p:show('p is')
+        p:setx(3):show'p is':sety(4):show'p is'
+        p:point{33, 44}:show'p is'
+        p = nil
+        
+        collectgarbage()
+        
+        a:point{x=500, y=1000}
+        a:show'a is'
+        
+        r = Foo.add(a, b)
+        r:show'r is'
+        
+        a:show'a is'
+        b:show'b is'
+        s = a + b
+        s:show's is'
+    ");
+
+    lua_close(x);
+}
