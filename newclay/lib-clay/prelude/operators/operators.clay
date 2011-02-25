@@ -5,6 +5,18 @@ import prelude.constructors.*;
 import meta.statics.*;
 import prelude.types.lowlevel.*;
 
+import __primitives__.(
+    StaticPlus,
+    StaticMinus,
+    StaticMultiply,
+    StaticQuotient,
+    StaticRemainder,
+    StaticAdd,
+    StaticSubtract,
+    StaticLesser?,
+    StaticEquals?,
+);
+
 
 //
 // tupleLiteral, arrayLiteral

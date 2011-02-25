@@ -246,8 +246,8 @@ overload #ArithmeticPointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
 // ExternalCodePointer[ABI, Inputs, Outputs]
 //
 
-#RequireExternalPODType?('x) = PODType?('x)
-    or StaticError("external code pointer argument is not a POD type: ", 'x);
+#RequireExternalPODType?('x) = PODType?('x);
+    //or StaticError("external code pointer argument is not a POD type: ", 'x);
 
 private #ValidExternalCodePointerOutput?('O)
     = 'O == () or PODType?('O);//RequireExternalPODType?('O);
