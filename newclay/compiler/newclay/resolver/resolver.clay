@@ -60,7 +60,6 @@ overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
-    visitAST(r, oload.definition.predicate);
     visitAST(r, oload.target);
     visitAST(r, oload.definition.args);
 
@@ -74,6 +73,7 @@ overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
 
     var subr = ResolveASTVisitor(subenv);
 
+    visitAST(subr, oload.definition.predicate);
     visitAST(subr, oload.definition.returns);
     visitAST(subr, oload.definition.body);
 }
