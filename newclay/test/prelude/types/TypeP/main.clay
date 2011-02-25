@@ -1,10 +1,10 @@
 import show.*;
-import prelude.types.lowlevel.(LLType);
-
-symbol NonType;
+import prelude.types.lowlevel.(LLType, LLTupleType);
 
 symbol NonPODType;
-overload LLType(NonPODType) = LLTupleType[];
+overload #LLType(NonPODType) = LLTupleType[];
+
+symbol NonType;
 
 main() {
     show(#Type?(Bool)); ////true
@@ -46,6 +46,8 @@ main() {
     show(#Type?(ExternalCodePointer[CdeclABI, 2, (), ()])); ////false
     show(#Type?(ExternalCodePointer[CdeclABI, true, 2, ()])); ////false
     show(#Type?(ExternalCodePointer[CdeclABI, true, (), 2])); ////false
+    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, NonType), Int])); ////false
+    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonType])); ////false
     show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, NonPODType), Int])); ////false
     show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonPODType])); ////false
     show(#Type?(Array)); ////false

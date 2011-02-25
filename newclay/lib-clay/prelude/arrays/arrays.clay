@@ -26,7 +26,7 @@ inline overload end(x:Array['T, 'n]) = ContiguousCoordinate['T](&x) + 'n;
 inline overload index(forward a:Array['T, 'n], i:'I) | IntegerType?('I)
     = forward cIndex('T, a, i);
 inline overload index(rvalue a:Array['T, 'n], i:'I) returned:'T
-    | Integer?('I) and not NotDestroyedType?('T)
+    | IntegerType?('I) and not NotDestroyedType?('T)
 {
     ref ra = rvalueToRefUnsafe(a);
     returned <-- refToRvalueUnsafe(cIndex('T, ra, i));
