@@ -1,0 +1,8 @@
+import show.*;
+
+main() {
+    show(#Int(1));   ////1
+    show(#Int(1u));  ////1
+    show(#UInt(1));  ////1u
+    show(#UInt(1u)); ////1u
+}

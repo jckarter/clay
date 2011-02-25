@@ -1,6 +1,8 @@
 import prelude.types.*;
 import prelude.operators.c.*;
 
+import __primitives__.(StaticInt, StaticUInt);
+
 
 //
 // default constructors for basic types
@@ -29,6 +31,16 @@ inline overload Char16() = Char16(0_u16);
 inline overload Char32() = Char32(0_u32);
 
 inline overload Static['x]() returned:Static['x] {}
+
+
+//
+// static Int and UInt conversion
+//
+
+overload #Int() = 0;
+overload #Int('x) = StaticInt('x);
+overload #UInt() = 0u;
+overload #UInt('x) = StaticUInt('x);
 
 
 //
