@@ -3,10 +3,10 @@ foo() {}
 foo(x) {}
 foo(x, y) {}
 foo(x, y,) {}
-foo(x, y, ...z) {}
-foo(x, y, ...z,) {}
-foo(...x) {}
-foo(...x,) {}
+foo(x, y, ..z) {}
+foo(x, y, ..z,) {}
+foo(..x) {}
+foo(..x,) {}
 
 foo(x:Int) {}
 foo(x:'T) {}
@@ -23,4 +23,4 @@ foo(#2) {}
 foo(#true) {}
 foo(#'T) {}
 
-foo(...#'T) {}
+foo(..#'T) {}

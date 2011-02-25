@@ -8,7 +8,7 @@ overload hasNext?(i:IntIterator) = i.0 < i.1;
 overload next(i:IntIterator) {
     var value = i.0;
     i.0 += 1;
-    return ...intFloat(i.0);
+    return ..intFloat(i.0);
 }
 
 

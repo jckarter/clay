@@ -1,6 +1,6 @@
 import __primitives__.*;
 
 main() {
-    alias ...x = &1 + 2^, foo(bar, bas);
-    return #ExpressionString(...x);
+    alias ..x = &1 + 2^, foo(bar, bas);
+    return #ExpressionString(..x);
 }

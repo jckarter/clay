@@ -6,4 +6,4 @@ foo(rvalue x) {
     return #ExpressionRefType(bar(x)), x;
 }
 
-main() = ...foo(3);
+main() = ..foo(3);

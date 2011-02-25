@@ -7,5 +7,5 @@ import __primitives__.*;
     StaticCountValues(1),
     StaticCountValues(1, 2),
     StaticCountValues(1, 2, 3),
-    StaticCountValues(...foo()),
-    StaticCountValues(...foo(), 4);
+    StaticCountValues(..foo()),
+    StaticCountValues(..foo(), 4);

@@ -1,2 +1,2 @@
 #twoThree() = 2, 3;
-#Main() = #1, ...#twoThree();
+#Main() = #1, ..#twoThree();

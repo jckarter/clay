@@ -1,6 +1,6 @@
 external abort();
 external puts(str:CString) Int;
-external printf(format:CString, ...) Int;
+external printf(format:CString, ..) Int;
 
 external (stdcall) WSAStartup(version:UShort, wsaData:win32.LPWSADATA) win32.INT;
 

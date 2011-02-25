@@ -27,9 +27,9 @@ overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) == 8 { printf("%
 
 overload show(#'x) { puts(StaticName(#'x)); }
 
-overload show(x, y, ...z) {
+overload show(x, y, ..z) {
     show(x);
-    show(y, ...z);
+    show(y, ..z);
 }
 
 overload show() {}

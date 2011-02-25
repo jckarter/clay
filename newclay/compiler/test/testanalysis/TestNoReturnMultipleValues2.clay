@@ -2,5 +2,5 @@ symbol nonterminating;
 overload nonterminating() { throw 0; }
 
 symbol main;
-overload main() = 1, ...nonterminating();
+overload main() = 1, ..nonterminating();
 

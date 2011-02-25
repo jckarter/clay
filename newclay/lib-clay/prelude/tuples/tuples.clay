@@ -9,18 +9,18 @@ import prelude.types.lowlevel.*;
 // indexing
 //
 
-inline overload index(forward t:Tuple[...'T], #'n)
-    | ValidStaticIndex?('n, ...'T)
-    = forward cFieldRef(#nthValue('n, ...'T), t, #LLTupleFieldName('n));
+inline overload index(forward t:Tuple[..'T], #'n)
+    | ValidStaticIndex?('n, ..'T)
+    = forward cFieldRef(#nthValue('n, ..'T), t, #LLTupleFieldName('n));
 
-inline overload index(rvalue t:Tuple[...'T], #'n)
-    rvalue returned:nthValue('n, ...'T)
-    | ValidStaticIndex?('n, ...'T) and not NotDestroyedType?(Tuple[...'T])
+inline overload index(rvalue t:Tuple[..'T], #'n)
+    rvalue returned:nthValue('n, ..'T)
+    | ValidStaticIndex?('n, ..'T) and not NotDestroyedType?(Tuple[..'T])
 {
     ref rt = rvalueToRefUnsafe(t);
-    returned = &cFieldRef(#nthValue('n, ...'T), rt, #LLTupleFieldName('n));
+    returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
 
-    static for (m in ...#intValues('n))
+    static for (m in ..#intValues('n))
         if (m != #'n)
             destroyUnsafe(rt[m]);
 }
@@ -30,20 +30,20 @@ inline overload index(rvalue t:Tuple[...'T], #'n)
 // unpack
 //
 
-inline overload unpack(forward x:Tuple[...'T])
-    = forward ...unpackFields(x, ...#intValues(countValues(...'T)));
+inline overload unpack(forward x:Tuple[..'T])
+    = forward ..unpackFields(x, ..#intValues(countValues(..'T)));
 
 private symbol unpackFields;
 // permanent values
-inline overload unpackFields(forward x, #'field, ...#'fields)
-    = forward x[#'field], forward ...unpackFields(x, ...#'fields);
+inline overload unpackFields(forward x, #'field, ..#'fields)
+    = forward x[#'field], forward ..unpackFields(x, ..#'fields);
 inline overload unpackFields(forward x)
     = ;
 // rvalues
-inline overload unpackFields(rvalue x, #'field, ...#'fields) {
+inline overload unpackFields(rvalue x, #'field, ..#'fields) {
     ref refx = rvalueToRefUnsafe(x);
     return rvalue refToRvalueUnsafe(refx[#'field]),
-           rvalue ...unpackFields(refToRvalueUnsafe(refx), ...#'fields);
+           rvalue ..unpackFields(refToRvalueUnsafe(refx), ..#'fields);
 }
 inline overload unpackFields(rvalue x) {
     // prevent destruction of x; it should have been entirely picked apart
@@ -55,19 +55,19 @@ inline overload unpackFields(rvalue x) {
 // default initialization
 //
 
-overload #BitwiseZeroInitializedType?(Tuple[...'T])
-    = allValues?(BitwiseZeroInitializedType?, ...'T);
+overload #BitwiseZeroInitializedType?(Tuple[..'T])
+    = allValues?(BitwiseZeroInitializedType?, ..'T);
 
-inline overload Tuple[...'T]() returned:Tuple[...'T]
-    | allValues?(DefaultInitializableType?, ...'T)
+inline overload Tuple[..'T]() returned:Tuple[..'T]
+    | allValues?(DefaultInitializableType?, ..'T)
 {
-    ...unpack(returned) <-- ...mapValues(call, ...'T);
+    ..unpack(returned) <-- ..mapValues(call, ..'T);
 }
 
-inline overload Tuple[...'T]() returned:Tuple[...'T]
-    | allValues?(BitwiseZeroInitializedType?, ...'T)
+inline overload Tuple[..'T]() returned:Tuple[..'T]
+    | allValues?(BitwiseZeroInitializedType?, ..'T)
 {
-    memset(OpaquePointer(&returned), 0_i32, TypeSize(Tuple[...'T]));
+    memset(OpaquePointer(&returned), 0_i32, TypeSize(Tuple[..'T]));
 }
 
 
@@ -75,54 +75,54 @@ inline overload Tuple[...'T]() returned:Tuple[...'T]
 // memberwise initialization
 //
 
-inline overload Tuple[...'T](forward ...x:'T) returned:Tuple[...'T] {
-    ...unpack(returned) <-- ...x;
+inline overload Tuple[..'T](forward ..x:'T) returned:Tuple[..'T] {
+    ..unpack(returned) <-- ..x;
 }
 
-inline overload Tuple(forward ...x:'T) = Tuple[...'T](...x);
+inline overload Tuple(forward ..x:'T) = Tuple[..'T](..x);
 
 
 //
 // value semantics
 //
 
-inline overload destroyUnsafe(ref x:Tuple[...'T])
-    | not NotDestroyedType?(Tuple[...'T])
+inline overload destroyUnsafe(ref x:Tuple[..'T])
+    | not NotDestroyedType?(Tuple[..'T])
 {
-    static for (/*ref*/ f in ...unpack(x))
+    static for (/*ref*/ f in ..unpack(x))
         destroyUnsafe(f);
 }
 
-inline overload resetUnsafe(ref x:Tuple[...'T])
-    | not NotResetType?(Tuple[...'T])
+inline overload resetUnsafe(ref x:Tuple[..'T])
+    | not NotResetType?(Tuple[..'T])
 {
-    static for (/*ref*/ f in ...unpack(x))
+    static for (/*ref*/ f in ..unpack(x))
         resetUnsafe(f);
 }
 
-inline overload moveUnsafe(forward x:Tuple[...'T])
-    | not BitwiseMovedType?(Tuple[...'T]) and allValues?(MovableType?, ...'T)
-    = Tuple[...'T](...mapValues(moveUnsafe, ...unpack(x)));
+inline overload moveUnsafe(forward x:Tuple[..'T])
+    | not BitwiseMovedType?(Tuple[..'T]) and allValues?(MovableType?, ..'T)
+    = Tuple[..'T](..mapValues(moveUnsafe, ..unpack(x)));
 
-inline overload copy(x:Tuple[...'T])
-    | not BitwiseCopiedType?(Tuple[...'T]) and allValues?(CopyableType?, ...'T)
-    = Tuple[...'T](...mapValues(copy, ...unpack(x)));
+inline overload copy(x:Tuple[..'T])
+    | not BitwiseCopiedType?(Tuple[..'T]) and allValues?(CopyableType?, ..'T)
+    = Tuple[..'T](..mapValues(copy, ..unpack(x)));
 
-#CompatibleTupleTypes?('fn, (...'T), (...'U))
-    = countValues(...'T) == countValues(...'U)
-      and CompatibleTupleTypes2?('fn, (...'T), (...'U));
+#CompatibleTupleTypes?('fn, (..'T), (..'U))
+    = countValues(..'T) == countValues(..'U)
+      and CompatibleTupleTypes2?('fn, (..'T), (..'U));
 
-private #CompatibleTupleTypes2?('fn, ('T, ...'TT), ('U, ...'UU))
-    = CallDefined?('fn, 'T, 'U) and CompatibleTupleTypes2?('fn, (...'TT), (...'UU));
+private #CompatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
+    = CallDefined?('fn, 'T, 'U) and CompatibleTupleTypes2?('fn, (..'TT), (..'UU));
 overload #CompatibleTupleTypes2?('fn, (), ()) = true;
 
 // XXX lvalues only
 // XXX not BitwiseAssignedType?
-inline overload assign(ref to:Tuple[...'T], /*lvalue*/ from:Tuple[...'U])
-    | not ((...'T) == (...'U) and BitwiseAssignedType?(Tuple[...'T]))
-      and CompatibleTupleTypes?(assign, (...'T), (...'U))
+inline overload assign(ref to:Tuple[..'T], /*lvalue*/ from:Tuple[..'U])
+    | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))
+      and CompatibleTupleTypes?(assign, (..'T), (..'U))
 {
-    static for (n in ...#intValues(countValues(...'T)))
+    static for (n in ..#intValues(countValues(..'T)))
         to[n] = from[n];
 }
 
@@ -131,19 +131,19 @@ inline overload assign(ref to:Tuple[...'T], /*lvalue*/ from:Tuple[...'U])
 // comparison
 //
 
-inline overload equals?(x:Tuple[...'T], y:Tuple[...'U])
-    | CompatibleTupleTypes?(equals?, (...'T), (...'U))
+inline overload equals?(x:Tuple[..'T], y:Tuple[..'U])
+    | CompatibleTupleTypes?(equals?, (..'T), (..'U))
 {
-    static for (n in ...#intValues(countValues(...'T)))
+    static for (n in ..#intValues(countValues(..'T)))
         if (x[n] != y[n])
             return false;
     return true;
 }
 
-inline overload lesser?(x:Tuple[...'T], y:Tuple[...'U])
-    | CompatibleTupleTypes?(lesser?, (...'T), (...'U))
+inline overload lesser?(x:Tuple[..'T], y:Tuple[..'U])
+    | CompatibleTupleTypes?(lesser?, (..'T), (..'U))
 {
-    static for (n in ...#intValues(countValues(...'T))) {
+    static for (n in ..#intValues(countValues(..'T))) {
         if (x[n] < y[n])
             return true;
         if (y[n] < x[n])

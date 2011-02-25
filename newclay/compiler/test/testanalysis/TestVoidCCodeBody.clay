@@ -3,5 +3,5 @@ symbol foo;
 overload foo() __c__ """abort();""";
 
 symbol main;
-overload main() = ...foo();
+overload main() = ..foo();
 

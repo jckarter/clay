@@ -79,12 +79,12 @@ inline cNotEquals?(a, b) returned:Bool
 inline cAssign(ref a, forward b)
     __c__ """$a = $b;""";
 
-inline cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args) returned:'O
+inline cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) returned:'O
     | Type?('O)
-    __c__ """$returned = $callable($...args);""";
-inline overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ...args)
+    __c__ """$returned = $callable($..args);""";
+inline overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args)
     | 'O == ()
-    __c__ """$callable($...args);""";
+    __c__ """$callable($..args);""";
 
 inline cCast(#'T, a) returned:'T
     __c__ """$returned = ($'T)$a;""";

@@ -16,9 +16,9 @@ attribute Zang = Foo;
 showSymbol(sym) {
     show(sym);
     show("--body");
-    show(...#SymbolBody(sym));
+    show(..#SymbolBody(sym));
     show("--attributes");
-    show(...#SymbolAttributes(sym));
+    show(..#SymbolAttributes(sym));
     show("");
 }
 

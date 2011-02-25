@@ -1,8 +1,8 @@
 foo() = 1, true, "three";
 
 main() {
-    alias ...x = foo();
+    alias ..x = foo();
 
-    return ...x;
+    return ..x;
 }
 

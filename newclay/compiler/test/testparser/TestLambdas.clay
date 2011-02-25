@@ -11,7 +11,7 @@ overload foo() {
     (ref x:Int, forward y:Bool) -> y;
     (ref x:Int, forward y:Bool) -> y;
 
-    (ref x:Int, forward y:Bool) -> ...(x, y);
+    (ref x:Int, forward y:Bool) -> ..(x, y);
 
     (x, y) -> {
         return x, y;

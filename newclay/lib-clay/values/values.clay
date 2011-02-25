@@ -3,62 +3,62 @@ import meta.statics.(StaticInt?);
 
 symbol allValues?;
 overload #allValues?('f) = true;
-overload #allValues?('f, 'x, ...'xs) = 'f('x) and allValues?('f, ...'xs);
+overload #allValues?('f, 'x, ..'xs) = 'f('x) and allValues?('f, ..'xs);
 inline overload allValues?(f) = true;
-inline overload allValues?(f, forward x, forward ...xs)
-    = f(x) and allValues?(f, ...xs);
+inline overload allValues?(f, forward x, forward ..xs)
+    = f(x) and allValues?(f, ..xs);
 
 symbol equalValues?;
 overload #equalValues?('x0) = true;
-overload #equalValues?('x0, 'x1, ...'xs) = 'x0 == 'x1 and equalValues?('x0, ...'xs);
+overload #equalValues?('x0, 'x1, ..'xs) = 'x0 == 'x1 and equalValues?('x0, ..'xs);
 inline overload equalValues?(x0) = true;
-inline overload equalValues?(x0, forward x1, forward ...xs)
-    = x0 == x1 and equalValues?(x0, ...xs);
+inline overload equalValues?(x0, forward x1, forward ..xs)
+    = x0 == x1 and equalValues?(x0, ..xs);
 
 symbol inValues?;
 overload #inValues?('x) = false;
-overload #inValues?('x, 'x, ...'ys) = true;
-overload #inValues?('x, 'y, ...'ys) | 'x != 'y = inValues?('x, ...'ys);
-inline overload inValues?(x, forward ...ys) {
-    static for (/*forward*/ y in ...ys)
+overload #inValues?('x, 'x, ..'ys) = true;
+overload #inValues?('x, 'y, ..'ys) | 'x != 'y = inValues?('x, ..'ys);
+inline overload inValues?(x, forward ..ys) {
+    static for (/*forward*/ y in ..ys)
         if (x == y)
             return true;
     return false;
 }
 
 symbol countValues;
-overload #countValues(...'xs) = StaticCountValues(...'xs);
-inline overload countValues(...xs:'T) = unwrap(#StaticCountValues(...'T));
+overload #countValues(..'xs) = StaticCountValues(..'xs);
+inline overload countValues(..xs:'T) = unwrap(#StaticCountValues(..'T));
 
 symbol takeValues;
 overload #takeValues('n) | StaticInt?('n) = ;
-overload #takeValues(0, ...'xs) = ;
-overload #takeValues('n, 'x, ...'xs)
+overload #takeValues(0, ..'xs) = ;
+overload #takeValues('n, 'x, ..'xs)
     | StaticInt?('n) and 'n > 0
-    = 'x, ...takeValues('n - 1, ...'xs);
+    = 'x, ..takeValues('n - 1, ..'xs);
 inline overload takeValues(#'n) | StaticInt?('n) = ;
-inline overload takeValues(#0, forward ...xs) = ;
-inline overload takeValues(#'n, forward x, forward ...xs)
+inline overload takeValues(#0, forward ..xs) = ;
+inline overload takeValues(#'n, forward x, forward ..xs)
     | StaticInt?('n) and 'n > 0
-    = forward x, forward ...takeValues(#('n - 1), ...xs);
+    = forward x, forward ..takeValues(#('n - 1), ..xs);
 
 symbol mapValues;
 overload #mapValues('f) = ;
-overload #mapValues('f, 'x, ...'xs) = 'f('x), ...mapValues('f, ...'xs);
+overload #mapValues('f, 'x, ..'xs) = 'f('x), ..mapValues('f, ..'xs);
 inline overload mapValues(fn) = ;
-inline overload mapValues(fn, forward x:'T, forward ...xs:'TT)
-    = forward fn(x), forward ...mapValues(fn, ...xs);
+inline overload mapValues(fn, forward x:'T, forward ..xs:'TT)
+    = forward fn(x), forward ..mapValues(fn, ..xs);
 
 symbol intValues = RuntimeStaticProcedure();
-overload #intValues('n) = ...StaticIntegers('n);
+overload #intValues('n) = ..StaticIntegers('n);
 
 symbol nthValue;
-overload #nthValue(0, 'x, ...'xs) = 'x;
-overload #nthValue('n, 'x, ...'xs)
+overload #nthValue(0, 'x, ..'xs) = 'x;
+overload #nthValue('n, 'x, ..'xs)
     | StaticInt?('n) and 'n > 0
-    = nthValue('n - 1, ...'xs);
+    = nthValue('n - 1, ..'xs);
 
-inline overload nthValue(#0, forward x, forward ...xs) = forward x;
-inline overload nthValue(#'n, forward x, forward ...xs)
+inline overload nthValue(#0, forward x, forward ..xs) = forward x;
+inline overload nthValue(#'n, forward x, forward ..xs)
     | StaticInt?('n) and 'n > 0
-    = forward nthValue(#('n - 1), ...xs);
+    = forward nthValue(#('n - 1), ..xs);

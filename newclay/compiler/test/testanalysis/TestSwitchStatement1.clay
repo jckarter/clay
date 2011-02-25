@@ -7,7 +7,7 @@ main() {
         return 0;
     case (2, 3)
         return 1;
-    case (...foo())
+    case (..foo())
         return 2;
     else
         return 3;

@@ -1,4 +1,4 @@
 main() {
-    alias ...twentyTwos = 22, "twenty-two";
-    return ...twentyTwos;
+    alias ..twentyTwos = 22, "twenty-two";
+    return ..twentyTwos;
 }

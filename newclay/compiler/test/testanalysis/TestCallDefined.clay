@@ -36,4 +36,4 @@ zang(ref x:Int) {}
       CallDefinedForSymbol?(zang, Rvalue[Int]),
       CallDefinedForSymbol?(zang, Const[Int]);
 
-main() = ...#Main();
+main() = ..#Main();

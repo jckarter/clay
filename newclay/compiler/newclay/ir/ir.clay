@@ -222,7 +222,7 @@ private literalCodeIdentifierChar?(c)
 private enum LiteralTokenMode {
     STRING,
     PATTERN_SUBSTITUTION, SUBSTITUTION,
-    MULTI1, MULTI2,
+    MULTI1,
     MULTI_PATTERN_SUBSTITUTION, MULTI_SUBSTITUTION
 }
 
@@ -344,14 +344,6 @@ parseLiteralCodeBody(env, codeString:String) {
             break;
 
         case MULTI1:
-            if (c == '.') {
-                currentTokenMode = MULTI2;
-                break;
-            }
-            genericError("invalid substitution in literal code body");
-            break;
-
-        case MULTI2:
             if (c == '.') {
                 currentTokenMode = MULTI_SUBSTITUTION;
                 break;

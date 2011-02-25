@@ -2,7 +2,7 @@ external x1(x:Int);
 external x2(x:Int, y:Float32) Bool;
 external ("_x3") x3(x:Int, y:Float32) Bool;
 external ("_x4", CdeclABI) x4(x:Int, y:Float32) Bool;
-external x5(x:Int, y:Float32, ...) Bool;
+external x5(x:Int, y:Float32, ..) Bool;
 external (StdcallABI) x6(x:Int, y:Float32) Bool;
 
 main() {

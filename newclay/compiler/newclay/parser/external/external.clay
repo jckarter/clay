@@ -141,6 +141,7 @@ private var punctuationParserTable[Ident] = punctuationParser(Ident);
 [Ident]
 private punc(static Ident) = punctuationParserTable[Ident];
 
+private var ellipsis = choice(punc(#"..."), punc(#".."));
 
 
 //
@@ -218,7 +219,7 @@ private var variadicIdentifierList = variadicList(
     identifier,
     modify(
         x => move(x.1),
-        sequence(punc(#"..."), identifier),
+        sequence(ellipsis, identifier),
     ),
 );
 
@@ -602,7 +603,7 @@ private expr(input) Maybe[Expr] { return expr2(input); }
 
 private var unpackExpr = bounds(modify(
     x => UnpackExpr(move(x.1)),
-    sequence(punc(#"..."), expr),
+    sequence(ellipsis, expr),
 ));
 
 private var exprListItem = choice(
@@ -613,7 +614,7 @@ private var exprListItem = choice(
 private var groupedExprList = choice(
     modify(
         x => move(x.2),
-        sequence(punc(#"..."), punc(#"("), exprList, punc(#")")),
+        sequence(ellipsis, punc(#"("), exprList, punc(#")")),
     ),
     modify(
         x => Vector[ExprListItem](move(x)),
@@ -704,7 +705,7 @@ private var listPattern2 = variadicList(
     pattern,
     modify(
         x => move(x.1),
-        sequence(punc(#"..."), patternNameRefPattern),
+        sequence(ellipsis, patternNameRefPattern),
     ),
 );
 
@@ -759,7 +760,7 @@ private var variadicPatternVarList = variadicList(
     patternVar,
     modify(
         x => move(x.1),
-        sequence(punc(#"..."), patternVar),
+        sequence(ellipsis, patternVar),
     ),
 );
 
@@ -904,14 +905,14 @@ private var argument = choice(
 private var multiBoundArgument = bounds(modify(
     x => BoundArgument(move(x.0), move(x.2), move(x.3)),
     sequence(
-        optional(argumentKind), punc(#"..."),
+        optional(argumentKind), ellipsis,
         identifier, optMultiTypePattern
     ),
 ));
 
 private var multiStaticArgument = modify(
     x => move(x.1),
-    sequence(punc(#"..."), staticArgument),
+    sequence(ellipsis, staticArgument),
 );
 
 private var multiArgument = choice(
@@ -944,7 +945,7 @@ private var returnKind = choice(
 
 private var returnArityKind = modify(
     x => maybe(x, x => RETURN_MULTI, () => RETURN_SINGLE),
-    optional(punc(#"...")),
+    optional(ellipsis),
 );
 
 private var namedReturn2 = modify(
@@ -1006,7 +1007,7 @@ private var groupedReturnExprList1 = modify(
         move(x.3),
     ),
     sequence(
-        optional(returnExprKind), punc(#"..."),
+        optional(returnExprKind), ellipsis,
         punc(#"("), exprList, punc(#")"),
     ),
 );
@@ -1115,7 +1116,7 @@ private var optExternalAttributes = modify(
 
 private var externalArgumentList = modify(
     x => ExternalArgumentList(x.1 .0, just?(x.1 .1)),
-    sequence(punc(#"("), variadicListPair(externalArgument, punc(#"...")), punc(#")")),
+    sequence(punc(#"("), variadicListPair(externalArgument, ellipsis), punc(#")")),
 );
 
 private var externalArgument = bounds(modify(
@@ -1222,7 +1223,7 @@ private var variadicBindingNameList = variadicList(
     bindingName,
     modify(
         x => BindingName(x.1, nothing(Expr)),
-        sequence(punc(#"..."), identifier),
+        sequence(ellipsis, identifier),
     ),
 );
 

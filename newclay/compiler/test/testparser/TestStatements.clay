@@ -13,33 +13,33 @@ overload foo() {
     var x:Int = 1, y:Int = 2;
 
     var x, y = 1, 2;
-    var x, y = ...bar();
-    var x:Int, y = ...bar();
-    var x, y:Int = ...bar();
-    var x:Int, y:Int = ...bar();
-    var x:Int, y:Int, ...z = ...bar();
+    var x, y = ..bar();
+    var x:Int, y = ..bar();
+    var x, y:Int = ..bar();
+    var x:Int, y:Int = ..bar();
+    var x:Int, y:Int, ..z = ..bar();
 
-    var ...x = ...bar();
+    var ..x = ..bar();
 
     wut: {
         break wut;
         continue wut;
     }
 
-    ref x:Int, y:Int, ...z = ...bar();
-    rvalue x:Int, y:Int, ...z = ...bar();
-    const x:Int, y:Int, ...z = ...bar();
-    forward x:Int, y:Int, ...z = ...bar();
-    alias x:Int, y:Int, ...z = ...bar();
+    ref x:Int, y:Int, ..z = ..bar();
+    rvalue x:Int, y:Int, ..z = ..bar();
+    const x:Int, y:Int, ..z = ..bar();
+    forward x:Int, y:Int, ..z = ..bar();
+    alias x:Int, y:Int, ..z = ..bar();
 
     x = 1;
     x <-- 1;
     x, y <-- 1, 2;
-    x, y, ...z <-- 1, 2, 3;
+    x, y, ..z <-- 1, 2, 3;
 
     return x;
     return ref x, const y;
-    return ref x, const y, ...z;
+    return ref x, const y, ..z;
 
     break;
     continue;

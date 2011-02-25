@@ -4,7 +4,7 @@ external abort() /*noreturn*/;
 external exit(code:CInt) /*noreturn*/;
 // XXX Use CChar once pointer casting is implemented
 external puts(s:Pointer[Char]) Int32;
-external printf(format:Pointer[Char], ...) Int32;
+external printf(format:Pointer[Char], ..) Int32;
 
 external memcpy(to:OpaquePointer, from:OpaquePointer, len:UInt) OpaquePointer;
 external memmove(to:OpaquePointer, from:OpaquePointer, len:UInt) OpaquePointer;
