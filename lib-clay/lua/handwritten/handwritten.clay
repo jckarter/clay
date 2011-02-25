@@ -85,7 +85,7 @@ lua_isnoneornil(l:Pointer[lua_State], n:Int) = lua_type(l, n) <= 0;
 
 [S | ContiguousString?(S)]
 lua_pushliteral(l:Pointer[lua_State], s:S) {
-    lua_pushlstring(l, &s[0], size(s));
+    lua_pushlstring(l, Pointer[CChar](&s[0]), size(s));
 }
 
 lua_setglobal(l:Pointer[lua_State], s:Pointer[CChar]) {
@@ -200,8 +200,8 @@ luaL_dostring(l:Pointer[lua_State], s:S) {
     return lua_pcall(l, 0, LUA_MULTRET, 0);
 }
 
-luaL_getmetatable(l:Pointer[lua_State], n:Int) {
-    lua_getfield(l, LUA_REGISTRYINDEX, n);
+luaL_getmetatable(l:Pointer[lua_State], name:Pointer[CChar]) {
+    lua_getfield(l, LUA_REGISTRYINDEX, name);
 }
 
 luaL_opt(l:Pointer[lua_State], f, n:Int, d) {
