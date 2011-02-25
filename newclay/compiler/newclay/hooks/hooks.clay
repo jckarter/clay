@@ -69,7 +69,7 @@ lowLevelTypeSymbol(type:Value) Symbol {
 }
 
 lowLevelType(type:Value) Symbol
-    = lowLevelTypeSymbol(evaluateStrictCallWithOneResult(getHooks().ToLowLevelType, ValueList(type)));
+    = lowLevelTypeSymbol(evaluateStrictCallWithOneResult(getHooks().LLType, ValueList(type)));
 
 ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
     return match(llTypeValue,

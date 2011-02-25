@@ -1,8 +1,8 @@
-import prelude.types.lowlevel.(ToLowLevelType);
+import prelude.types.lowlevel.(LLType);
 import show.*;
 
 symbol NonPODType;
-overload #ToLowLevelType(NonPODType) = LLTupleType[];
+overload #LLType(NonPODType) = LLTupleType[];
 
 main() {
     show(#PODType?(Bool)); ////true

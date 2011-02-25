@@ -59,7 +59,7 @@ record ClayHooks (
     Type?: Value,
     PODType?: Value,
 
-    ToLowLevelType: Value,
+    LLType: Value,
     LLSigned: Value,
     LLUnsigned: Value,
     LLBoolType: Value,

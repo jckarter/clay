@@ -84,7 +84,7 @@ inline overload Array['T, 'n](forward ...xs:'TT) returned:Array['T, 'n]
 // XXX record type
 symbol CoordinateRange['C];
 overload #PODType?(CoordinateRange['C]) | CoordinateType?('C) = true;
-overload #ToLowLevelType(CoordinateRange['C])
+overload #LLType(CoordinateRange['C])
     | CoordinateType?('C)
     = LLTupleType[begin:'C, end:'C];
 inline overload index(forward i:CoordinateRange['C], #'field)
@@ -112,7 +112,7 @@ inline overload next(ref i:CoordinateRange['C]) {
 //
 private symbol RvalueCoordinateRangeUnsafe['C];
 overload #PODType?(RvalueCoordinateRangeUnsafe['C]) | CoordinateType?('C) = true;
-overload #ToLowLevelType(RvalueCoordinateRangeUnsafe['C])
+overload #LLType(RvalueCoordinateRangeUnsafe['C])
     | CoordinateType?('C)
     = LLTupleType[begin:'C, end:'C];
 inline overload index(forward i:RvalueCoordinateRangeUnsafe['C], #'field)

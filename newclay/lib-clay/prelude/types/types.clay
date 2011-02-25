@@ -20,15 +20,15 @@ public import __primitives__.(
 symbol TypeSize  = RuntimeStaticProcedure();
 symbol TypeAlign = RuntimeStaticProcedure();
 
-overload #TypeSize ('T) | Type?('T) = LLTypeSize (ToLowLevelType('T));
-overload #TypeAlign('T) | Type?('T) = LLTypeAlign(ToLowLevelType('T));
+overload #TypeSize ('T) | Type?('T) = LLTypeSize (LLType('T));
+overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 
 
 //
 // basic type predicates
 //
 
-#Type?('x) = StaticCallDefined?(ToLowLevelType, 'x);
+#Type?('x) = StaticCallDefined?(LLType, 'x);
 #PODType?('T) = false;
 #BitwiseCopiedType?('T) = PODType?('T);
 #BitwiseMovedType?('T) = PODType?('T);
@@ -99,13 +99,13 @@ overload #ABISupportsVariadics?(CdeclABI) = true;
 // primitive types
 //
 
-private #PrimitiveType('LLType) = (PrimitiveType, 'LLType);
+private #PrimitiveType('LLT) = (PrimitiveType, 'LLT);
 
 #PrimitiveType?('T) = SymbolWithTag?('T, PrimitiveType);
 
 overload #PODType?('T) | PrimitiveType?('T) = true;
 
-overload #ToLowLevelType('T) | PrimitiveType?('T) = SymbolBody('T).1;
+overload #LLType('T) | PrimitiveType?('T) = SymbolBody('T).1;
 
 symbol Bool = PrimitiveType(LLBoolType);
 
@@ -174,7 +174,7 @@ overload #CharType?(Char32) = true;
 
 symbol StringConstant;
 overload #PODType?(StringConstant) = true;
-overload #ToLowLevelType(StringConstant)
+overload #LLType(StringConstant)
     = LLTupleType[begin:Pointer[Char], end:Pointer[Char]];
 
 
@@ -203,7 +203,7 @@ overload #PODType?(Pointer['T]) | Type?('T) = true;
 symbol PointerReferencedType;
 overload #PointerReferencedType(Pointer['T]) = 'T;
 
-overload #ToLowLevelType(Pointer['T])
+overload #LLType(Pointer['T])
     | Type?('T)
     = LLPointerType['T];
 
@@ -232,7 +232,7 @@ overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
 #DereferenceablePointerType?('T)
     = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
 
-overload #ToLowLevelType(ContiguousCoordinate['T])
+overload #LLType(ContiguousCoordinate['T])
     | Type?('T)
     = LLPointerType['T];
 
@@ -255,7 +255,7 @@ private #ValidExternalCodePointerOutput?('O)
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
 overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
-overload #ToLowLevelType(ExternalCodePointer['A, 'V, 'I, 'O])
+overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
     | ABI?('A)
       and StaticBool?('V)
       and StaticTuple?('I)
@@ -284,7 +284,7 @@ alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O
 
 symbol Array['T, 'n];
 overload #'XType?(Array['T, 'n]) | InheritableTypePredicate?('XType?) = 'XType?('T);
-overload #ToLowLevelType(Array['T, 'n])
+overload #LLType(Array['T, 'n])
     | Type?('T) and StaticInt?('n) and 'n >= 0
     = LLArrayType['T, 'n];
 
@@ -301,7 +301,7 @@ symbol Tuple[...'T];
 overload #'XType?(Tuple[...'T])
     | InheritableTypePredicate?('XType?) and allValues?('XType?, ...'T)
     = true;
-overload #ToLowLevelType(Tuple[...'T])
+overload #LLType(Tuple[...'T])
     | allValues?(Type?, ...'T)
     = LLTupleType[...'T];
 
@@ -318,7 +318,7 @@ symbol Union[...'T];
 overload #'XType?(Union[...'T])
     | InheritableTypePredicate?('XType?) and allValues?(Type?, ...'T)
     = true;
-overload #ToLowLevelType(Union[...'T])
+overload #LLType(Union[...'T])
     | allValues?(Type?, ...'T)
     = LLUnionType[...'T];
 

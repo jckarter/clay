@@ -29,10 +29,10 @@ overload #Type?('x) = false;
 
 
 //
-// ToLowLevelType
+// LLType
 //
 
-symbol ToLowLevelType = NewStaticFunction();
+symbol LLType = NewStaticFunction();
 
 symbol LLSigned = ();
 symbol LLUnsigned = ();
@@ -70,8 +70,8 @@ overload #Type?('x) | PrimitiveType?('x) = true;
 symbol Bool = NewPrimitiveType();
 symbol Int = NewPrimitiveType();
 
-overload #ToLowLevelType(Bool) = LLBoolType;
-overload #ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
+overload #LLType(Bool) = LLBoolType;
+overload #LLType(Int) = LLIntegerType[LLSigned, 32];
 
 
 
@@ -82,7 +82,7 @@ overload #ToLowLevelType(Int) = LLIntegerType[LLSigned, 32];
 symbol Static['T] = ();
 overload #TypeTemplate?(Static) = true;
 overload #Type?(Static['T]) = true;
-overload #ToLowLevelType(Static['T]) = LLTupleType[];
+overload #LLType(Static['T]) = LLTupleType[];
 
 
 
@@ -93,7 +93,7 @@ overload #ToLowLevelType(Static['T]) = LLTupleType[];
 symbol Pointer['T] = ();
 overload #TypeTemplate?(Pointer) = true;
 overload #Type?(Pointer['T]) = true;
-overload #ToLowLevelType(Pointer['T]) = LLPointerType['T];
+overload #LLType(Pointer['T]) = LLPointerType['T];
 
 
 
