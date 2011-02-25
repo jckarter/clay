@@ -126,20 +126,20 @@ inline overload plus(a:'N) | NumberType?('N) = a;
 inline overload minus(a:'N) | NumberType?('N) = cMinus('N, a);
 
 inline overload multiply(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cMultiply(#BiggerNumericType('A, 'B), a, b);
+    = cMultiply(#BiggerNumberType('A, 'B), a, b);
 inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
-    = cDivide(#BiggerNumericType('A, 'B), a, b);
+    = cDivide(#BiggerNumberType('A, 'B), a, b);
 inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = Float64(a) / Float64(b);
 inline overload quotient(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
-    = cDivide(#BiggerNumericType('A, 'B), a, b);
+    = cDivide(#BiggerNumberType('A, 'B), a, b);
 inline overload remainder(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
-    = cRemainder(#BiggerNumericType('A, 'B), a, b);
+    = cRemainder(#BiggerNumberType('A, 'B), a, b);
 
 inline overload add(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cAdd(#BiggerNumericType('A, 'B), a, b);
+    = cAdd(#BiggerNumberType('A, 'B), a, b);
 inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cSubtract(#BiggerNumericType('A, 'B), a, b);
+    = cSubtract(#BiggerNumberType('A, 'B), a, b);
 
 
 //
@@ -388,15 +388,15 @@ bitcast(#'A, forward b:'B)
 
 symbol bitand = VariadicBinaryOperatorProcedure();
 overload bitand(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitand(#BiggerNumericType('A, 'B), a, b);
+    = cBitand(#BiggerNumberType('A, 'B), a, b);
 
 symbol bitor = VariadicBinaryOperatorProcedure();
 overload bitor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitor(#BiggerNumericType('A, 'B), a, b);
+    = cBitor(#BiggerNumberType('A, 'B), a, b);
 
 symbol bitxor = VariadicBinaryOperatorProcedure();
 overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitxor(#BiggerNumericType('A, 'B), a, b);
+    = cBitxor(#BiggerNumberType('A, 'B), a, b);
 
 symbol bitnot;
 overload bitnot(a:'A) | IntegerType?('A) = cBitnot('A, a);

@@ -357,7 +357,7 @@ overload #ComparablePointerTypes?('A, 'A) = ArithmeticPointerType?('A);
 overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
-    = ComparablePrimitiveTypes?('A, 'B) and 'A == BiggerNumericType('A, 'B);
+    = ComparablePrimitiveTypes?('A, 'B) and 'A == BiggerNumberType('A, 'B);
 
 private #ConvertibleScalarType?('A)
     = NumberType?('A) or CharType?('A);
@@ -366,22 +366,22 @@ private #ConvertibleScalarType?('A)
     = (ConvertibleScalarType?('A) and ConvertibleScalarType?('B))
       or (PointerType?('A) and PointerType?('B));
 
-symbol BiggerNumericType;
-overload #BiggerNumericType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
-overload #BiggerNumericType('A, 'B) | TypeSize('B) > TypeSize('A) = 'B;
-overload #BiggerNumericType('A, 'B)
+symbol BiggerNumberType;
+overload #BiggerNumberType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
+overload #BiggerNumberType('A, 'B) | TypeSize('B) > TypeSize('A) = 'B;
+overload #BiggerNumberType('A, 'B)
     | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('A)
     = 'A;
-overload #BiggerNumericType('A, 'B)
+overload #BiggerNumberType('A, 'B)
     | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('B)
     = 'B;
-overload #BiggerNumericType('T, Int) = 'T;
-overload #BiggerNumericType(Int, 'T) = 'T;
-overload #BiggerNumericType('T, UInt) = 'T;
-overload #BiggerNumericType(UInt, 'T) = 'T;
-overload #BiggerNumericType('T, 'T) = 'T;
-overload #BiggerNumericType(Int, UInt) = UInt;
-overload #BiggerNumericType(UInt, Int) = UInt;
+overload #BiggerNumberType('T, Int) = 'T;
+overload #BiggerNumberType(Int, 'T) = 'T;
+overload #BiggerNumberType('T, UInt) = 'T;
+overload #BiggerNumberType(UInt, 'T) = 'T;
+overload #BiggerNumberType('T, 'T) = 'T;
+overload #BiggerNumberType(Int, UInt) = UInt;
+overload #BiggerNumberType(UInt, Int) = UInt;
 
 
 //
