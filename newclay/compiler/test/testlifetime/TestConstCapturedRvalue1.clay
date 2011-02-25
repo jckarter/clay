@@ -1,0 +1,11 @@
+rvalueReturn() rvalue x:NontrivialInt __c__ """abort();""";
+
+foo(x) {}
+
+main() {
+    const x = rvalueReturn();
+
+    if (false) return;
+    foo(x);
+    if (false) return;
+}

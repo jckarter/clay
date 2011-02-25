@@ -1,0 +1,19 @@
+
+symbol valueReturn;
+overload valueReturn() x:Int __c__ """abort();""";
+
+symbol refReturn;
+overload refReturn() ref x:Int __c__ """abort();""";
+
+symbol rvalueReturn;
+overload rvalueReturn() rvalue x:Int __c__ """abort();""";
+
+symbol constReturn;
+overload constReturn() const x:Int __c__ """abort();""";
+
+symbol main;
+overload main() {
+    const z = rvalueReturn();
+
+    return z;
+}

@@ -1450,9 +1450,16 @@ private maybeAnalyzeSingleBinding(s, env, stmt, kind, binding)
         return StatementTarget();
     });
 
+private localVariableBinding?(bindingKind, value)
+    = bindingKind == ast.BINDING_VAR
+      or (bindingKind == ast.BINDING_CONST and value.kind == RT_VALUE_RVALUE)
+      or (inValues?(bindingKind, ast.BINDING_FORWARD, ast.BINDING_RVALUE)
+          and value.kind == RT_VALUE_RVALUE
+          and not referenceVariable?(value));
+
 private analyzeBindingVar(s, stmt, kind, name, value) {
     var variableKind = bindingVariableKind(kind, value.kind);
-    var variableReferent = if (kind == ast.BINDING_VAR or (value.kind == RT_VALUE_RVALUE and not referenceVariable?(value)))
+    var variableReferent = if (localVariableBinding?(kind, value))
             RTValueReferent(LocalVariable())
         else
             RTValueReferent(ReferenceVariable());
@@ -1494,8 +1501,6 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTValueKind) 
             genericError("rvalue reference must be bound to an rvalue");
         return RT_VALUE_RVALUE;
     case ast.BINDING_CONST:
-        if (valueKind == RT_VALUE_RVALUE)
-            genericError("const reference must be bound to an lvalue");
         return RT_VALUE_CONST;
     case ast.BINDING_FORWARD:
         return valueKind;

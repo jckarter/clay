@@ -1,0 +1,11 @@
+valueReturn() x:NontrivialInt __c__ """abort();""";
+
+foo(x) {}
+
+main() {
+    const x = valueReturn();
+
+    if (false) return;
+    foo(x);
+    if (false) return;
+}
