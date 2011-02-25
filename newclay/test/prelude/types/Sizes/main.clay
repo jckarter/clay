@@ -1,29 +1,29 @@
 import show.*;
 
 main() {
-    show(#TypeSize(Bool)); ////1
-    show(#TypeSize(Int8)); ////1
-    show(#TypeSize(Int16)); ////2
-    show(#TypeSize(Int32)); ////4
-    show(#TypeSize(Int64)); ////8
-    show(#TypeSize(Float32)); ////4
-    show(#TypeSize(Float64)); ////8
-    show(#TypeSize(Char)); ////1
-    show(#TypeSize(Char16)); ////2
-    show(#TypeSize(Char32)); ////4
+    show(#TypeSize(Bool)); ////1u
+    show(#TypeSize(Int8)); ////1u
+    show(#TypeSize(Int16)); ////2u
+    show(#TypeSize(Int32)); ////4u
+    show(#TypeSize(Int64)); ////8u
+    show(#TypeSize(Float32)); ////4u
+    show(#TypeSize(Float64)); ////8u
+    show(#TypeSize(Char)); ////1u
+    show(#TypeSize(Char16)); ////2u
+    show(#TypeSize(Char32)); ////4u
     // XXX platform dependent
-    show(#TypeSize(OpaquePointer)); ////8
-    show(#TypeSize(Tuple[Int8])); ////1
-    show(#TypeSize(Tuple[Int8, Int8, Int8])); ////3
-    show(#TypeSize(Tuple[Int8, Int16])); ////4
-    show(#TypeSize(Tuple[Int8, Int32])); ////8
-    show(#TypeSize(Tuple[Int32, Int8])); ////8
-    show(#TypeSize(Tuple[Int32, Int8, Int64])); ////16
-    show(#TypeSize(Union[Int8])); ////1
-    show(#TypeSize(Union[Int8, Int16])); ////2
-    show(#TypeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4
-    show(#TypeSize(Array[Int32, 16])); ////64
-    show(#TypeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48
+    show(#TypeSize(OpaquePointer)); ////8u
+    show(#TypeSize(Tuple[Int8])); ////1u
+    show(#TypeSize(Tuple[Int8, Int8, Int8])); ////3u
+    show(#TypeSize(Tuple[Int8, Int16])); ////4u
+    show(#TypeSize(Tuple[Int8, Int32])); ////8u
+    show(#TypeSize(Tuple[Int32, Int8])); ////8u
+    show(#TypeSize(Tuple[Int32, Int8, Int64])); ////16u
+    show(#TypeSize(Union[Int8])); ////1u
+    show(#TypeSize(Union[Int8, Int16])); ////2u
+    show(#TypeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4u
+    show(#TypeSize(Array[Int32, 16])); ////64u
+    show(#TypeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48u
     // XXX platform dependent
-    show(#TypeSize(StringConstant)); ////16
+    show(#TypeSize(StringConstant)); ////16u
 }

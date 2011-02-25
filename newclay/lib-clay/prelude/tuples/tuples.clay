@@ -67,7 +67,7 @@ inline overload Tuple[...'T]() returned:Tuple[...'T]
 inline overload Tuple[...'T]() returned:Tuple[...'T]
     | allValues?(BitwiseZeroInitializedType?, ...'T)
 {
-    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize(Tuple[...'T])));
+    memset(OpaquePointer(&returned), 0_i32, TypeSize(Tuple[...'T]));
 }
 
 

@@ -23,7 +23,7 @@ inline overload index(forward t:Union[...'T], #'U)
 overload #BitwiseZeroInitializedType?(Union[...'T]) | Type?(Union[...'T]) = true;
 
 inline overload Union[...'T]() returned:Union[...'T] {
-    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize(Union[...'T])));
+    memset(OpaquePointer(&returned), 0_i32, TypeSize(Union[...'T]));
 }
 
 
@@ -43,4 +43,4 @@ inline overload Union[...'T](forward x:'U) returned:Union[...'T]
 //
 
 inline overload equals?(a:Union[...'T], b:Union[...'T])
-    = memcmp(OpaquePointer(&a), OpaquePointer(&b), UInt(TypeSize(Union[...'T]))) == 0;
+    = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize(Union[...'T])) == 0;

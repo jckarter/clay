@@ -57,7 +57,7 @@ inline overload Array['T, 'n]() returned:Array['T, 'n]
 inline overload Array['T, 'n]() returned:Array['T, 'n]
     | BitwiseZeroInitializedType?('T)
 {
-    memset(OpaquePointer(&returned), 0_i32, UInt(TypeSize(Array['T, 'n])));
+    memset(OpaquePointer(&returned), 0_i32, TypeSize(Array['T, 'n]));
 }
 
 
