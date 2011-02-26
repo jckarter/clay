@@ -81,21 +81,7 @@ inline overload Array['T, 'n](forward ..xs:'TT) returned:Array['T, 'n]
 // iterator
 //
 
-// XXX record type
-symbol CoordinateRange['C];
-overload #PODType?(CoordinateRange['C]) | CoordinateType?('C) = true;
-overload #LLType(CoordinateRange['C])
-    | CoordinateType?('C)
-    = LLTupleType[begin:'C, end:'C];
-inline overload index(forward i:CoordinateRange['C], #'field)
-    | 'field == "begin" or 'field == "end"
-    = forward cFieldRef('C, i, #'field);
-inline overload CoordinateRange['C](begin:'C, end:'C)
-    returned:CoordinateRange['C]
-{
-    returned.begin <-- begin;
-    returned.end <-- end;
-}
+symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
 inline overload CoordinateRange(begin:'C, end:'C) = CoordinateRange['C](begin, end);
 
 inline overload iterator(forward i:CoordinateRange['C]) = forward i;
@@ -110,22 +96,9 @@ inline overload next(ref i:CoordinateRange['C]) {
 //
 // unsafe iterator for consuming rvalue sequences
 //
-private symbol RvalueCoordinateRangeUnsafe['C];
-overload #PODType?(RvalueCoordinateRangeUnsafe['C]) | CoordinateType?('C) = true;
-overload #LLType(RvalueCoordinateRangeUnsafe['C])
-    | CoordinateType?('C)
-    = LLTupleType[begin:'C, end:'C];
-inline overload index(forward i:RvalueCoordinateRangeUnsafe['C], #'field)
-    | 'field == "begin" or 'field == "end"
-    = forward cFieldRef('C, i, #'field);
-inline overload RvalueCoordinateRangeUnsafe(begin:'C, end:'C)
-    returned:RvalueCoordinateRangeUnsafe['C]
-{
-    returned.begin <-- begin;
-    returned.end <-- end;
-}
+private symbol RvalueCoordinateRangeUnsafe['C] = RecordType(begin:'C, end:'C);
 
-inline overload iterator(forward i:CoordinateRange['C]) = forward i;
+inline overload iterator(forward i:RvalueCoordinateRangeUnsafe['C]) = forward i;
 inline overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) = i.begin < i.end;
 inline overload next(ref i:RvalueCoordinateRangeUnsafe['C]) {
     var p = i.begin;

@@ -169,13 +169,12 @@ overload #CharType?(Char32) = true;
 
 //
 // StringConstant
-// XXX should be a Record once records are implemented
 //
 
-symbol StringConstant;
-overload #PODType?(StringConstant) = true;
-overload #LLType(StringConstant)
-    = LLTupleType[begin:Pointer[Char], end:Pointer[Char]];
+symbol StringConstant = RecordType(
+    begin:ContiguousCoordinate[Char],
+    end:ContiguousCoordinate[Char],
+);
 
 
 
