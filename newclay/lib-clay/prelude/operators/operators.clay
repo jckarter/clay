@@ -35,14 +35,6 @@ inline arrayLiteral(forward x0:'T0, forward ..xs:'T)
 
 symbol index;
 
-#ValidStaticIndex?('n, ..'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(..'T);
-
-// XXX StringConstant should be a record rather than hardcoded like this
-inline overload index(forward s:StringConstant, #'field)
-    | 'field == "begin" or 'field == "end"
-    = forward cFieldRef(Pointer[Char], s, #'field);
-
-
 
 //
 // dereference
