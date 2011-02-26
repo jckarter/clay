@@ -57,4 +57,13 @@ main() {
     show(#inValues?("waldo", 42, 'x', "waldo", false));
     show(#inValues?("waldo", 42, 'x', "wally", false));
     show(#inValues?("waldo"));
+
+    show("assocValue");
+    show(#assocValue("foo", foo:1, bar:2));
+    show(#assocValue("bar", foo:1, bar:2));
+
+    show("assocValue?");
+    show(#assocValue?("foo", foo:1, bar:2));
+    show(#assocValue?("bar", foo:1, bar:2));
+    show(#assocValue?("bas", foo:1, bar:2));
 }

@@ -58,4 +58,13 @@ main() {
     show(inValues?(17,  1, 2, 17, 3));
     show(inValues?(17,  1, 2, 3));
     show(inValues?(17));
+
+    show("assocValue");
+    show(assocValue(#"foo", foo:1, bar:2));
+    show(assocValue(#"bar", foo:1, bar:2));
+
+    show("assocValue?");
+    show(assocValue?(#"foo", foo:1, bar:2));
+    show(assocValue?(#"bar", foo:1, bar:2));
+    show(assocValue?(#"bas", foo:1, bar:2));
 }

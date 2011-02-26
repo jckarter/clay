@@ -62,3 +62,24 @@ inline overload nthValue(#0, forward x, forward ..xs) = forward x;
 inline overload nthValue(#'n, forward x, forward ..xs)
     | StaticInt?('n) and 'n > 0
     = forward nthValue(#('n - 1), ..xs);
+
+symbol assocValue;
+overload #assocValue('key, 'kv, ..'kvs) = assocValue('key, ..'kvs);
+overload #assocValue('key, ('key, 'value), ..'kvs) = 'value;
+
+inline overload assocValue(#'key, forward kv, forward ..kvs)
+    = forward assocValue(#'key, ..kvs);
+inline overload assocValue(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs)
+    = forward kv[#1];
+
+symbol assocValue?;
+overload #assocValue?('key, 'kv, ..'kvs) = assocValue?('key, ..'kvs);
+overload #assocValue?('key, ('key, 'value), ..'kvs) = true;
+overload #assocValue?('key) = false;
+
+inline overload assocValue?(#'key, forward kv, forward ..kvs)
+    = assocValue?(#'key, ..kvs);
+inline overload assocValue?(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs)
+    = true;
+inline overload assocValue?(#'key)
+    = false;
