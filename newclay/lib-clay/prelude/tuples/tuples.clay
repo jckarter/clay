@@ -20,9 +20,8 @@ inline overload index(rvalue t:Tuple[..'T], #'n)
     ref rt = rvalueToRefUnsafe(t);
     returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
 
-    static for (m in ..#intValues('n))
-        if (m != #'n)
-            destroyUnsafe(rt[m]);
+    static for (m in ..#exceptValue('n, ..intValues('n)))
+        destroyUnsafe(rt[m]);
 }
 
 

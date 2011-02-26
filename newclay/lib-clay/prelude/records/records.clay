@@ -92,9 +92,8 @@ inline overload index(rvalue x:'T, #'field)
     ref rx = rvalueToRefUnsafe(x);
     returned = &cFieldRef(#RecordFieldType('T, 'field), rx, #LLMangle('field));
 
-    static for (f in ..#RecordFieldNames('T))
-        if (f != #'field)
-            destroyUnsafe(rx[f]);
+    static for (f in ..#exceptValue('field, ..RecordFieldNames('T)))
+        destroyUnsafe(rx[f]);
 }
 
 

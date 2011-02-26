@@ -83,3 +83,8 @@ inline overload assocValue?(#'key, forward kv:Tuple[Static['key], 'V], forward .
     = true;
 inline overload assocValue?(#'key)
     = false;
+
+symbol exceptValue = RuntimeStaticProcedure();
+overload #exceptValue('v) = ;
+overload #exceptValue('v, 'w, ..'vs) = 'w, ..exceptValue('v, ..'vs);
+overload #exceptValue('v, 'v, ..'vs) = ..exceptValue('v, ..'vs);
