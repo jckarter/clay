@@ -1,7 +1,7 @@
 import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
-import values.(allValues?);
+import values.(allValues?, countValues);
 import prelude.types.lowlevel.*;
 
 public import __primitives__.(
@@ -323,6 +323,13 @@ overload #LLType(Union[..'T])
 
 #UnionType?('X) = false;
 overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
+
+
+//
+// ValidStaticIndex? for unions or tuples
+//
+
+#ValidStaticIndex?('n, ..'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(..'T);
 
 
 
