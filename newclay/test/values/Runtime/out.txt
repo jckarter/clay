@@ -47,3 +47,10 @@ inValues?
 true
 false
 false
+assocValue
+1
+2
+assocValue?
+true
+true
+false
