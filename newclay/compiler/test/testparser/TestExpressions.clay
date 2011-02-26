@@ -80,6 +80,10 @@ foo() {
     if (a) b or c else d or e;
     if (a) b -> c or d else e -> f or g;
 
+    throw a;
+
+    if (a) throw b else throw c;
+
     x = y;
     x <-- y;
     x += y;

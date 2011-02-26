@@ -64,18 +64,18 @@ Argument -> BoundArgument
           | StaticArgument;
 BoundArgument -> ArgumentKind? Identifier (":" Pattern)?
 StaticArgument -> "#" Pattern
-MultiArgument -> ArgumentKind? "..." Identifier (":" PatternNameRef)?
+MultiArgument -> ArgumentKind? ".." Identifier (":" PatternNameRef)?
 ArgumentKind -> "const" | "ref" | "rvalue" | "forward" | "alias"
 
 ReturnList -> NamedReturnList | UnnamedReturnList
 
 NamedReturnList -> (NamedReturnSpec | NamedVariadicReturnSpec)+
 NamedReturnSpec -> ReturnKind? Identifier ":" Expr
-NamedVariadicReturnSpec -> ReturnKind? "..." Identifier ":" Expr
+NamedVariadicReturnSpec -> ReturnKind? ".." Identifier ":" Expr
 
 UnnamedReturnList -> (UnnamedReturnSpec | UnnamedVariadicReturnSpec)+
 UnnamedReturnSpec -> ReturnKind? Expr
-UnnamedVariadicReturnSpec -> ReturnKind? "..." Expr
+UnnamedVariadicReturnSpec -> ReturnKind? ".." Expr
 
 ReturnKind -> "const" | "ref" | "rvalue"
 
@@ -123,8 +123,8 @@ TargetPattern -> IndexingPattern
 //
 
 ExprList -> comma_list(ExprListItem)
-ExprListItem -> "..." "(" ExprList ")"
-              | "..." Expr
+ExprListItem -> ".." "(" ExprList ")"
+              | ".." Expr
               | Expr
 
 LiteralExpr -> BoolLiteral
@@ -192,10 +192,13 @@ IfExpr -> "if" "(" Expr ")" Expr "else" Expr
 
 PairExpr -> identifier ":" Expr
 
+ThrowExpr -> "throw" Expr
+
 Expr -> PairExpr
       | IfExpr
       | LambdaExpr
       | OrExpr
+      | ThrowExpr
 
 
 //
@@ -211,7 +214,6 @@ Statement -> Block
            | ReturnStatement
            | BreakStatement
            | ContinueStatement
-           | ThrowStatement
            | IfStatement
            | ForStatement
            | StaticForStatement
@@ -234,8 +236,6 @@ ReturnStatement -> "return" ReturnExprList? ";"
 BreakStatement -> "break" Identifier? ";"
 
 ContinueStatement -> "continue" Identifier? ";"
-
-ThrowStatement -> "throw" Expr ";"
 
 IfStatement -> "if" "(" Expr ")" Statement
                ("else" Statement)?
@@ -273,7 +273,7 @@ BindingList -> comma_list(SingleBinding)
 // misc
 //
 
-variadic_list(Head, Tail) -> variadic_list2(Head, "..." Tail)
+variadic_list(Head, Tail) -> variadic_list2(Head, ".." Tail)
 
 variadic_list2(Head, Tail) -> Tail
                             | comma_list(Head) ("," Tail)?

@@ -514,6 +514,10 @@ overload evaluateExpr(x:ast.IfExpr, env) {
     else
         return evaluateExpr(x.elsePart, env);
 }
+overload evaluateExpr(x:ast.ThrowExpr, env) {
+    var errorValue = evaluateExpr(x.value, env);
+    return evaluatePrimitiveWithOneResult(PRIM_StaticError, ValueList(errorValue));
+}
 overload evaluateExpr(x:ast.PairExpr, env) {
     var leftValue = Value(StringValue(x.name.str));
     var rightValue = evaluateExpr(x.expr, env);
@@ -694,6 +698,10 @@ overload evaluateMultiExpr(x:ast.Call, env) {
 }
 overload evaluateMultiExpr(x:ast.StaticExpr, env) {
     return evaluateMultiExpr(x.expr, env);
+}
+overload evaluateMultiExpr(x:ast.ThrowExpr, env) {
+    var errorValue = evaluateExpr(x.value, env);
+    return evaluatePrimitive(PRIM_StaticError, ValueList(errorValue));
 }
 
 

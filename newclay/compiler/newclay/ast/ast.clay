@@ -204,6 +204,7 @@ variant Expr = BoolLiteral
              | NotExpr
              | LambdaExpr
              | IfExpr
+             | ThrowExpr
              | UnaryOpExpr
              | BinaryOpExpr
              | StaticExpr
@@ -363,6 +364,10 @@ record IfExpr = ast(
     condition: Expr,
     thenPart: Expr,
     elsePart: Expr,
+);
+
+record ThrowExpr = ast(
+    value: Expr,
 );
 
 record PairExpr = ast(
@@ -632,7 +637,6 @@ variant Statement = Block
                   | ReturnStatement
                   | BreakStatement
                   | ContinueStatement
-                  | ThrowStatement
                   | IfStatement
                   | ForStatement
                   | StaticForStatement
@@ -707,10 +711,6 @@ record BreakStatement = ast(
 );
 record ContinueStatement = ast(
     label: Maybe[Identifier],
-);
-
-record ThrowStatement = ast(
-    value: Expr,
 );
 
 record IfStatement = ast(
