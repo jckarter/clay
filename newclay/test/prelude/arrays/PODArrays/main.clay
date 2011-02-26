@@ -11,15 +11,20 @@ main() {
     show(#BitwiseZeroInitializedType?(Type(x))); ////true
 
     show(size(x)); ////3
-    show(x[0]); ////2
-    show(x[1]); ////4
-    show(x[2]); ////6
+
+    ////2
+    ////4
+    ////6
+    for (i in x)
+        show(i);
 
     x[1] = 5;
 
-    show(x[0]); ////2
-    show(x[1]); ////5
-    show(x[2]); ////6
+    ////2
+    ////5
+    ////6
+    for (i in x)
+        show(i);
 
     var y = Array[Int, 3]();
     show(#Type(y)); ////Array[Int, 3]
@@ -27,9 +32,12 @@ main() {
     show(y < x); ////true
 
     show(size(y)); ////3
-    show(y[0]); ////0
-    show(y[1]); ////0
-    show(y[2]); ////0
+
+    ////0
+    ////0
+    ////0
+    for (i in y)
+        show(i);
 
     var z = Array[Int, 3](2, 5, 6);
 
