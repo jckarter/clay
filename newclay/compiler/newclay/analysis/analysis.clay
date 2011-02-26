@@ -564,6 +564,20 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
     = genericAnalysisError("lambda expressions are not yet supported");
 
+private analyzeThrowExprNode(s, env, expr) {
+    try {
+        maybe(analyzeSubnode(s, env, expr.value), exResult ref=> {
+            addSpecializedThrow(s, expr, singleValue(exResult));
+        });
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+    }
+    return nothing(RTValues);
+}
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ThrowExpr)
+    = analyzeThrowExprNode(s, env, expr);
+
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
     = maybe(analyzeBoolSubnode(s, env, expr.condition),
         condResult ref=> {
@@ -1059,19 +1073,6 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ContinueStatement) {
     var target = breakTarget(#"continue", bc, lc, stmt.label);
     addSpecializedNode(s, ir.Continue(stmt, target));
     return StatementTarget(target);
-}
-
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.ThrowStatement) {
-    try {
-        maybe(analyzeSubnode(s, bc.env, stmt.value),
-            exResult ref=> {
-                addSpecializedThrow(s, stmt, singleValue(exResult));
-            },
-        );
-    } catch (e:RecursiveAnalysisError) {
-        s.complete?^ = false;
-    }
-    return StatementTarget(StatementNoReturn);
 }
 
 private branchStatementTarget(thenTarget, elseTarget) {
@@ -1636,6 +1637,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.StaticE
     var values = evaluateMultiExpr(expr.expr, env);
     return addSpecializedStaticValueList(s, expr, values);
 }
+
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.ThrowExpr)
+    = analyzeThrowExprNode(s, env, expr);
 
 
 //

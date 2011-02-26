@@ -583,6 +583,15 @@ private var pairExpr = exprParser(
     sequence(identifier, punc(#":"), expr),
 );
 
+
+//
+// throw expr
+//
+
+private var throwExpr = exprParser(
+    x => ThrowExpr(x.1),
+    sequence(kw_throw, expr),
+);
 
 
 //
@@ -590,7 +599,7 @@ private var pairExpr = exprParser(
 //
 
 private var expr2 = choice(
-    pairExpr, ifExpr, lambdaExpr, orExpr,
+    pairExpr, ifExpr, lambdaExpr, orExpr, throwExpr,
 );
 
 private expr(input) Maybe[Expr] { return expr2(input); }
@@ -1170,7 +1179,6 @@ private var statement2 = choice(
     returnStatement,
     breakStatement,
     continueStatement,
-    throwStatement,
     ifStatement,
     forStatement,
     staticForStatement,
@@ -1266,11 +1274,6 @@ private var breakStatement = statementParser(
 private var continueStatement = statementParser(
     x => ContinueStatement(x.1),
     sequence(kw_continue, optional(identifier), punc(#";")),
-);
-
-private var throwStatement = statementParser(
-    x => ThrowStatement(x.1),
-    sequence(kw_throw, expr, punc(#";")),
 );
 
 private var elseBlock = modify(

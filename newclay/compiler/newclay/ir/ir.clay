@@ -153,7 +153,7 @@ overload Break(ast:A, target:BreakTargetId) = Break(ASTNode(ast), target);
 overload Continue(ast:A, target:BreakTargetId) = Continue(ASTNode(ast), target);
 
 record Throw = referenceType(
-    ast: ast.ThrowStatement,
+    ast: ast.ThrowExpr,
     exception: RTValue,
 );
 
