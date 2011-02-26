@@ -2,11 +2,15 @@ import meta.platform.*;
 
 private symbol CLongType;
 overload #CLongType() = Int64;
-overload #CLongType() | PlatformFamilyName() == "windows" = Int32;
+overload #CLongType()
+    | PlatformFamilyName() == "windows" or PlatformCPUPointerBits == 32
+    = Int32;
 
 private symbol CULongType;
 overload #CULongType() = UInt64;
-overload #CULongType() | PlatformFamilyName() == "windows" = UInt64;
+overload #CULongType()
+    | PlatformFamilyName() == "windows" or PlatformCPUPointerBits == 32
+    = UInt32;
 
 alias CChar  = Int8;
 alias CShort = Int16;
@@ -19,4 +23,8 @@ alias CUInt   = UInt32;
 alias CULong  = CULongType();
 alias CULongLong = UInt64;
 
-cstring(s:StringConstant) = s.begin;
+alias CSizeT = UInt;
+alias CPtrdiffT = UInt;
+alias CIntPtrT = Int;
+
+cstring(s:StringConstant) = Pointer[CChar](s.begin);
