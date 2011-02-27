@@ -57,6 +57,12 @@ inline cBitor(#'T, a, b) returned:'T
 inline cBitxor(#'T, a, b) returned:'T
     __c__ """$returned = $a ^ $b;""";
 
+inline cBitshl(#'T, a, b) returned:'T
+    __c__ """$returned = $a << $b;""";
+
+inline cBitshr(#'T, a, b) returned:'T
+    __c__ """$returned = $a >> $b;""";
+
 
 inline cLesser?(a, b) returned:Bool
     __c__ """$returned = $a < $b;""";
