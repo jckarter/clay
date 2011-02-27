@@ -413,3 +413,13 @@ symbol bitror;
 overload bitror(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
     = bitor(bitshr(a, shift), bitshl(a, TypeSize('A)*8u - UInt(shift)));
 
+
+//
+// these should only be used as shims for Type() tests and never in real code
+//
+
+value(#'T)              x:'T __c__ """abort();""";
+refValue(#'T)    ref    x:'T __c__ """abort();""";
+rvalueValue(#'T) rvalue x:'T __c__ """abort();""";
+constValue(#'T)  const  x:'T __c__ """abort();""";
+
