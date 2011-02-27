@@ -16,8 +16,8 @@ overload hostToNetwork(n:I8) = n;
 overload networkToHost(n:I16) {
     ref bytes = bitwiseCast(n, Array[UInt8, 2]);
     return bitwiseOr(
-        shiftLeft(UInt16(bytes[0]), 24),
-        shiftLeft(UInt16(bytes[1]), 16),
+        shiftLeft(UInt16(bytes[0]), 8),
+                  UInt16(bytes[1]),
     );
 }
 [I16 | inValues?(I16, Int16, UInt16)]
