@@ -1,0 +1,39 @@
+import show.*;
+
+main() {
+    show(#SequenceType?(Array[Int, 4])); ////true
+    show(#SequenceType?(CoordinateRange[ContiguousCoordinate[Int]])); ////true
+    show(#SequenceType?(ContiguousCoordinate[Int])); ////false
+    show(#SequenceType?(Int)); ////false
+
+    show(#CoordinateSequenceType?(Array[Int, 4])); ////true
+    show(#CoordinateSequenceType?(CoordinateRange[ContiguousCoordinate[Int]])); ////true
+    show(#CoordinateSequenceType?(ContiguousCoordinate[Int])); ////false
+    show(#CoordinateSequenceType?(Int)); ////false
+
+    show(#IteratorType?(Array[Int, 4])); ////false
+    show(#IteratorType?(CoordinateRange[ContiguousCoordinate[Int]])); ////true
+    show(#IteratorType?(ContiguousCoordinate[Int])); ////false
+    show(#IteratorType?(Int)); ////false
+
+    show(#CoordinateType?(Array[Int, 4])); ////false
+    show(#CoordinateType?(CoordinateRange[ContiguousCoordinate[Int]])); ////false
+    show(#CoordinateType?(ContiguousCoordinate[Int])); ////true
+    show(#CoordinateType?(Int)); ////false
+
+    show(#IteratorTargetType(CoordinateRange[ContiguousCoordinate[Int8]])); ////Int8
+    show(#CoordinateTargetType(ContiguousCoordinate[Int16])); ////Int16
+    ////CoordinateRange[ContiguousCoordinate[Int]]
+    show(#SequenceIteratorType(Array[Int, 4]));
+    ////CoordinateRange[ContiguousCoordinate[Int]]
+    show(#SequenceIteratorType(CoordinateRange[ContiguousCoordinate[Int]]));
+    ////ContiguousCoordinate[Int]
+    show(#SequenceCoordinateType(Array[Int, 4]));
+    ////ContiguousCoordinate[Int]
+    show(#SequenceCoordinateType(CoordinateRange[ContiguousCoordinate[Int]]));
+    ////Int
+    show(#SequenceElementType(Array[Int, 4]));
+
+    show(#ContiguousSequenceType?(Array[Int, 4])); ////true
+
+}
