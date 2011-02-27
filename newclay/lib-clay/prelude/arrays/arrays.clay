@@ -92,6 +92,9 @@ inline overload next(ref i:CoordinateRange['C]) {
     return ref p^;
 }
 
+inline overload begin(i:CoordinateRange['C]) = i.begin;
+inline overload end(i:CoordinateRange['C]) = i.end;
+
 
 //
 // unsafe iterator for consuming rvalue sequences
