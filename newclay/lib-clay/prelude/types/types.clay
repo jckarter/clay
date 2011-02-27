@@ -391,12 +391,26 @@ overload #BiggerNumberType(UInt, Int) = UInt;
 
 
 //
-// sequence-related predicates
+// sequence-related predicates and properties
 //
 
 #SequenceType?('S) = CallDefined?(iterator, 'S);
-#IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, 'I);
+#IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, Ref['I]);
 // XXX proper definition of CoordinateType?
 #CoordinateType?('C) = CallDefined?(dereference, 'C) and CallDefined?(inc, Ref['C]);
 
-#SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
+#CoordinateSequenceType?('S) = CallDefined?(begin, 'S) and CallDefined?(end, 'S);
+
+#IteratorTargetType('I) | IteratorType?('I) = Type(next(refValue('I)));
+#CoordinateTargetType('C) | CoordinateType?('C) = Type(dereference(constValue('C)));
+#SequenceIteratorType('S) | SequenceType?('S) = Type(iterator(constValue('S)));
+#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type(begin(constValue('S)));
+#SequenceElementType('S) | SequenceType?('S)
+    = IteratorTargetType(SequenceIteratorType('S));
+
+#ContiguousCoordinateType?('X) = false;
+overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
+
+#ContiguousSequenceType?('S) =
+    SequenceType?('S)
+    and ContiguousCoordinateType?(SequenceCoordinateType('S));
