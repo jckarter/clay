@@ -392,3 +392,24 @@ overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
 
 symbol bitnot;
 overload bitnot(a:'A) | IntegerType?('A) = cBitnot('A, a);
+
+symbol bitandc;
+overload bitandc(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = bitand(a, bitnot(b));
+
+symbol bitshl;
+overload bitshl(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+    = cBitshl('A, a, shift);
+
+symbol bitshr;
+overload bitshr(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+    = cBitshr('A, a, shift);
+
+symbol bitrol;
+overload bitrol(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+    = bitor(bitshl(a, shift), bitshr(a, TypeSize('A)*8u - UInt(shift)));
+
+symbol bitror;
+overload bitror(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+    = bitor(bitshr(a, shift), bitshl(a, TypeSize('A)*8u - UInt(shift)));
+
