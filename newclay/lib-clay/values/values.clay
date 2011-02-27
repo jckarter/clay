@@ -28,7 +28,7 @@ inline overload inValues?(x, forward ..ys) {
 
 symbol countValues;
 overload #countValues(..'xs) = StaticCountValues(..'xs);
-inline overload countValues(..xs:'T) = unwrap(#StaticCountValues(..'T));
+inline overload countValues(..xs:'T) = unpack(#StaticCountValues(..'T));
 
 symbol takeValues;
 overload #takeValues('n) | StaticInt?('n) = ;
@@ -88,3 +88,4 @@ symbol exceptValue = RuntimeStaticProcedure();
 overload #exceptValue('v) = ;
 overload #exceptValue('v, 'w, ..'vs) = 'w, ..exceptValue('v, ..'vs);
 overload #exceptValue('v, 'v, ..'vs) = ..exceptValue('v, ..'vs);
+

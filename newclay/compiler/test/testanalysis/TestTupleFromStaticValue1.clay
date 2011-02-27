@@ -1,3 +1,3 @@
-unwrap(#'x) = 'x;
+unpack(#'x) = 'x;
 
-main() = unwrap(#(1, true, '3', "four"));
+main() = unpack(#(1, true, '3', "four"));

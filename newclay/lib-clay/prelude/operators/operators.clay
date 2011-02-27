@@ -177,8 +177,8 @@ ordered?(a, b)
 
 nan?(a:'A) | FloatType?('A) = a != a;
 
-overload lesser?(#'a, #'b) = unwrap(#('a < 'b));
-overload equals?(#'a, #'b) = unwrap(#('a == 'b));
+overload lesser?(#'a, #'b) = unpack(#('a < 'b));
+overload equals?(#'a, #'b) = unpack(#('a == 'b));
 
 
 //
@@ -304,11 +304,12 @@ symbol end;
 
 
 //
-// unwrap
+// unpack
 //
 
-symbol unwrap;
-overload unwrap(..#'x) = ..'x;
+symbol unpack;
+overload unpack(..#'x) = ..'x;
+overload #unpack((..'x)) = ..'x;
 
 
 //
@@ -319,13 +320,6 @@ inline refToRvalueUnsafe(ref x:'T) rvalue r:'T
     __c__ """$r = &$x;""";
 inline rvalueToRefUnsafe(rvalue x:'T) ref r:'T
     __c__ """$r = &$x;""";
-
-
-//
-// unpack
-//
-
-symbol unpack;
 
 
 //
