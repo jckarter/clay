@@ -1,0 +1,51 @@
+import byteorder.*;
+import show.*;
+
+main() {
+    var x8  = 0x01_u8,
+        x16 = 0x0102_u16,
+        x32 = 0x01020304_u32,
+        x64 = 0x0102030405060708_u64;
+
+    var n8  = hostToNetwork(x8),
+        n16 = hostToNetwork(x16),
+        n32 = hostToNetwork(x32),
+        n64 = hostToNetwork(x64);
+
+    ref nb16 = bitcast(Array[UInt8, 2], n16),
+        nb32 = bitcast(Array[UInt8, 4], n32),
+        nb64 = bitcast(Array[UInt8, 8], n64);
+
+    var h8  = networkToHost(n8),
+        h16 = networkToHost(n16),
+        h32 = networkToHost(n32),
+        h64 = networkToHost(n64);
+
+    ////1
+    show(n8);
+    ////1
+    ////2
+    for (b in nb16)
+        show(b);
+    ////1
+    ////2
+    ////3
+    ////4
+    for (b in nb32)
+        show(b);
+    ////1
+    ////2
+    ////3
+    ////4
+    ////5
+    ////6
+    ////7
+    ////8
+    for (b in nb64)
+        show(b);
+
+    show(x8  == h8 ); ////true
+    show(x16 == h16); ////true
+    show(x32 == h32); ////true
+    show(x64 == h64); ////true
+}
