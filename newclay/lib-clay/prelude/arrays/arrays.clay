@@ -82,7 +82,9 @@ inline overload Array['T, 'n](forward ..xs:'TT) returned:Array['T, 'n]
 //
 
 symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
-inline overload CoordinateRange(begin:'C, end:'C) = CoordinateRange['C](begin, end);
+inline overload CoordinateRange(begin:'C, end:'C)
+    | CoordinateType?('C)
+    = CoordinateRange['C](begin, end);
 
 inline overload iterator(forward i:CoordinateRange['C]) = forward i;
 inline overload hasNext?(i:CoordinateRange['C]) = i.begin < i.end;
@@ -197,3 +199,13 @@ inline overload lesser?(x:Array['T, 'n], y:Array['U, 'n])
     }
     return false;
 }
+
+
+//
+// StringConstant as sequence
+//
+
+overload iterator(s:StringConstant) = CoordinateRange(s.begin, s.end);
+overload begin(s:StringConstant) = s.begin;
+overload end(s:StringConstant) = s.end;
+overload size(s:StringConstant) = UInt(s.end - s.begin);
