@@ -44,10 +44,10 @@ inline overload takeValues(#'n, forward x, forward ..xs)
 
 symbol mapValues;
 overload #mapValues('f) = ;
-overload #mapValues('f, 'x, ..'xs) = 'f('x), ..mapValues('f, ..'xs);
+overload #mapValues('f, 'x, ..'xs) = ..'f('x), ..mapValues('f, ..'xs);
 inline overload mapValues(fn) = ;
 inline overload mapValues(fn, forward x:'T, forward ..xs:'TT)
-    = forward fn(x), forward ..mapValues(fn, ..xs);
+    = forward ..fn(x), forward ..mapValues(fn, ..xs);
 
 symbol intValues = RuntimeStaticProcedure();
 overload #intValues('n) = ..StaticIntegers('n);
@@ -88,4 +88,36 @@ symbol exceptValue = RuntimeStaticProcedure();
 overload #exceptValue('v) = ;
 overload #exceptValue('v, 'w, ..'vs) = 'w, ..exceptValue('v, ..'vs);
 overload #exceptValue('v, 'v, ..'vs) = ..exceptValue('v, ..'vs);
+
+private symbol CapturedValue['T] = NewType('T);
+private symbol CapturedRef['T] = NewType(Pointer['T]);
+private symbol CapturedConst['T] = NewType(Pointer['T]);
+
+private #CapturedType?('x) = false;
+overload #CapturedType?(CapturedValue['T]) = true;
+overload #CapturedType?(CapturedRef['T]) = true;
+overload #CapturedType?(CapturedConst['T]) = true;
+
+symbol captureValue;
+inline overload captureValue(const x:'T) = CapturedConst['T](&x);
+inline overload captureValue(ref x:'T) = CapturedRef['T](&x);
+inline overload captureValue(rvalue x:'T) = CapturedValue['T](x);
+
+symbol forwardValue;
+inline overload forwardValue(x:CapturedConst['T]) = const (*x)^;
+inline overload forwardValue(x:CapturedRef['T]) = ref (*x)^;
+inline overload forwardValue(ref x:CapturedValue['T]) = rvalue refToRvalueUnsafe(*x);
+
+symbol capturedRef;
+inline overload capturedRef(x:CapturedConst['T]) = const (*x)^;
+inline overload capturedRef(x:CapturedRef['T]) = ref (*x)^;
+inline overload capturedRef(x:CapturedValue['T]) = const *x;
+
+inline captureValues(forward ..x) = (..mapValues(captureValue, ..x));
+inline forwardValues(ref x:Tuple[..'T])
+    | allValues?(CapturedType?, ..'T)
+    = forward ..mapValues(forwardValue, ..*x);
+inline capturedRefs(x:Tuple[..'T])
+    | allValues?(CapturedType?, ..'T)
+    = forward ..mapValues(capturedRef, ..*x);
 
