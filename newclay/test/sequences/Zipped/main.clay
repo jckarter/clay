@@ -1,0 +1,47 @@
+import sequences.*;
+import show.*;
+
+main() {
+    var x = ["one", "two", "three", "four"];
+    var y = range(0.5, 4.5);
+    
+    var z = zipped(x, y, ['a', 'b', 'c', 'd', 'e'], range(5, 9));
+
+    ////----
+    ////one
+    ////0.5
+    ////'a'
+    ////5
+    ////----
+    ////two
+    ////1.5
+    ////'b'
+    ////6
+    ////----
+    ////three
+    ////2.5
+    ////'c'
+    ////7
+    ////----
+    ////four
+    ////3.5
+    ////'d'
+    ////8
+    for(ref a, /*XXX rvalue*/ b, c, d in z) {
+        show("----");
+        show(a);
+        show(b);
+        show(c);
+        show(d);
+        a = "lol";
+    }
+
+    ////====
+    ////lol
+    ////lol
+    ////lol
+    ////lol
+    show("====");
+    for (a in x)
+        show(a);
+}
