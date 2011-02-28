@@ -1,4 +1,4 @@
-import lua.*;
+import lua.capi.*;
 
 alias FOO = "Foo";
 

@@ -1,4 +1,4 @@
-import lua.*;
+import lua.capi.*;
 
 sayHello(x:Pointer[lua_State]) {
     println("Hello from Clay!");

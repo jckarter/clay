@@ -1,4 +1,4 @@
-import lua.*;
+import lua.capi.*;
 
 main() {
     var x = lua_open();
