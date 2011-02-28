@@ -3,6 +3,9 @@ main() {
     var xp = &x;
     var y = xp^;
 
+    var t = (1, 2.0);
+    var z, w = *t;
+
     var a1 = x * y;
     var a2 = x div y;
     var a3 = x mod y;

@@ -105,6 +105,7 @@ record ClayHooks (
     index: Value,
     staticIndex: Value,
     fieldRef: Value,
+    unpack: Value,
     dereference: Value,
     multiply: Value,
     divide: Value,

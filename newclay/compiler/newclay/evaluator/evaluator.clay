@@ -533,6 +533,8 @@ overload evaluateExpr(x:ast.UnaryOpExpr, env) {
         return evaluatePrimitiveWithOneResult(PRIM_StaticPlus, operands);
     case ast.OP_MINUS:
         return evaluatePrimitiveWithOneResult(PRIM_StaticMinus, operands);
+    case ast.OP_UNPACK:
+        return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElements, operands);
     default:
         genericError("operator not allowed in static context");
         return Value();
@@ -702,6 +704,20 @@ overload evaluateMultiExpr(x:ast.StaticExpr, env) {
 overload evaluateMultiExpr(x:ast.ThrowExpr, env) {
     var errorValue = evaluateExpr(x.value, env);
     return evaluatePrimitive(PRIM_StaticError, ValueList(errorValue));
+}
+overload evaluateMultiExpr(x:ast.UnaryOpExpr, env) {
+    var operands = ValueList(evaluateExpr(x.expr, env));
+    switch (x.operator) {
+    case ast.OP_PLUS:
+        return evaluatePrimitive(PRIM_StaticPlus, operands);
+    case ast.OP_MINUS:
+        return evaluatePrimitive(PRIM_StaticMinus, operands);
+    case ast.OP_UNPACK:
+        return evaluatePrimitive(PRIM_StaticTupleElements, operands);
+    default:
+        genericError("operator not allowed in static context");
+        return ValueList();
+    }
 }
 
 
