@@ -406,13 +406,19 @@ private var suffixExpr = modify(
     sequence(atomicExpr, zeroOrMore(suffix)),
 );
 
-
 
 //
 // prefix expr
 //
 
-private var prefixExpr = choice(plusExpr, minusExpr, addressOfExpr, staticExpr, suffixExpr);
+private var prefixExpr = choice(
+    plusExpr,
+    minusExpr,
+    addressOfExpr,
+    unpackOpExpr,
+    staticExpr,
+    suffixExpr,
+);
 
 private var prefixOp[p, op] = exprParser(
     x => UnaryOpExpr(op(), move(x.1)),
@@ -422,6 +428,7 @@ private var prefixOp[p, op] = exprParser(
 private var plusExpr      = prefixOp[#"+", () => OP_PLUS];
 private var minusExpr     = prefixOp[#"-", () => OP_MINUS];
 private var addressOfExpr = prefixOp[#"&", () => OP_ADDRESS_OF];
+private var unpackOpExpr    = prefixOp[#"*", () => OP_UNPACK];
 
 private var staticExpr2 = exprParser(
     x => StaticExpr(x.1),

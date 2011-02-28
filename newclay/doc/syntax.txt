@@ -146,11 +146,13 @@ BracketedExpr -> "(" Expr ")"
 TupleExpr -> "(" ExprList? ")"
 
 PrefixExpr -> SignExpr
+            | UnpackExpr
             | AddressOfExpr
             | SuffixExpr
             | StaticExpr
 
 SignExpr -> ("+" | "-") SuffixExpr
+UnpackExpr -> "*" SuffixExpr
 AddressOfExpr -> "&" SuffixExpr
 StaticExpr -> "#" PrefixExpr
 

@@ -665,7 +665,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.PairExpr)
         },
     );
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
+private analyzeUnaryOp(s, env, expr)
     = maybe(analyzeSubnode(s, env, expr.expr), operands ref=> {
         var operatorCallable = Value();
         switch (expr.operator) {
@@ -683,6 +683,9 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
         case ast.OP_MINUS:
             operatorCallable = getHooks().minus;
             break;
+        case ast.OP_UNPACK:
+            operatorCallable = getHooks().unpack;
+            break;
         case ast.OP_DEREFERENCE:
             operatorCallable = getHooks().dereference;
             break;
@@ -690,8 +693,11 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
             assert(false, "invalid unary operator");
             break;
         }
-        return analyzeCallWithOneResult(s, expr, operatorCallable, operands);
+        return analyzeCall(s, expr, operatorCallable, operands);
     });
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
+    = withOneResult(analyzeUnaryOp(s, env, expr));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BinaryOpExpr)
     = maybe(analyzeSubnode(s, env, expr.expr1), operands1 ref=>
@@ -1637,6 +1643,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.StaticE
     var values = evaluateMultiExpr(expr.expr, env);
     return addSpecializedStaticValueList(s, expr, values);
 }
+
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.UnaryOpExpr)
+    = analyzeUnaryOp(s, env, expr);
 
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.ThrowExpr)
     = analyzeThrowExprNode(s, env, expr);

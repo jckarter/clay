@@ -313,6 +313,7 @@ record NotExpr = ast(
 enum OperatorKind {
     OP_PLUS,
     OP_MINUS,
+    OP_UNPACK,
     OP_ADDRESS_OF,
     OP_DEREFERENCE,
     OP_MULTIPLY,
