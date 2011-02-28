@@ -1,0 +1,14 @@
+import show.*;
+
+symbol Nonint = NewType(Int);
+
+main() {
+    var o = Nonint();
+    var n = Nonint(1);
+    var m = Nonint(2);
+
+    show(*o); ////0
+    show(*n); ////1
+    show(*m); ////2
+    show(*Nonint(*n + *m)); ////3
+}
