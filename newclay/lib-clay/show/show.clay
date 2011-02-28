@@ -14,7 +14,7 @@ overload show(c:'C) | CharType?('C) {
         printf("'%c'\n", c);
     else
         printf(
-            unpack(#StaticStringConcat("'\\x%0", StaticName(Int(TypeSize('C))*2), "x'\n")),
+            *#StaticStringConcat("'\\x%0", StaticName(Int(TypeSize('C))*2), "x'\n"),
             UInt32(c)
         );
 }

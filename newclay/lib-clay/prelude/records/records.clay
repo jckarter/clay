@@ -67,8 +67,6 @@ overload #VariadicBinaryOperatorProcedure?(InheritableTypePredicate?) = false;
 
 //
 // unpack
-// XXX unpacking an rvalue CustomType by reference can't be allowed
-// because the destructor needs to work
 //
 
 inline unpackRecord(forward x:'T) | CompositeType?('T)
@@ -105,7 +103,7 @@ symbol initializeRecord;
 inline overload initializeRecord(#'T) returned:'T
     | CompositeType?('T) and allValues?(DefaultInitializableType?, ..RecordFieldTypes('T))
 {
-    ..unpack(returned) <-- ..mapValues(call, ..RecordFieldTypes('T));
+    ..*returned <-- ..mapValues(call, ..RecordFieldTypes('T));
 }
 
 inline overload initializeRecord(#'T) returned:'T
@@ -117,7 +115,7 @@ inline overload initializeRecord(#'T) returned:'T
 inline overload initializeRecord(#'T, forward ..fields:'F) returned:'T
     | CompositeType?('T) and (..'F) == (..RecordFieldTypes('T))
 {
-    ..unpack(returned) <-- ..fields;
+    ..*returned <-- ..fields;
 }
 
 inline overload 'T(forward ..args)
@@ -136,7 +134,7 @@ inline overload destroyRecordUnsafe(ref x:'T)
 inline overload destroyRecordUnsafe(ref x:'T)
     | CompositeType?('T) and not allValues?(NotDestroyedType?, ..RecordFieldTypes('T))
 {
-    static for (/*ref*/ f in ..unpack(x))
+    static for (/*ref*/ f in ..*x)
         destroyUnsafe(f);
 }
 
@@ -153,7 +151,7 @@ inline overload resetRecordUnsafe(ref x:'T)
 inline overload resetRecordUnsafe(ref x:'T)
     | CompositeType?('T) and not allValues?(NotResetType?, ..RecordFieldTypes('T))
 {
-    static for (/*ref*/ f in ..unpack(x))
+    static for (/*ref*/ f in ..*x)
         resetUnsafe(f);
 }
 
@@ -171,7 +169,7 @@ inline overload moveRecordUnsafe(forward x:'T)
     | CompositeType?('T)
       and not allValues?(BitwiseMovedType?, ..RecordFieldTypes('T))
       and allValues?(MovableType?, ..RecordFieldTypes('T))
-    = initializeRecord('T, ..mapValues(moveUnsafe, ..unpack(x)));
+    = initializeRecord('T, ..mapValues(moveUnsafe, ..*x));
 
 inline overload moveUnsafe(forward x:'T)
     | RecordType?('T)
@@ -187,7 +185,7 @@ inline overload copyRecord(x:'T)
     | CompositeType?('T)
       and not allValues?(BitwiseCopiedType?, ..RecordFieldTypes('T))
       and allValues?(CopyableType?, ..RecordFieldTypes('T))
-    = initializeRecord('T, ..mapValues(copy, ..unpack(x)));
+    = initializeRecord('T, ..mapValues(copy, ..*x));
 
 inline overload copy(x:'T)
     | RecordType?('T)

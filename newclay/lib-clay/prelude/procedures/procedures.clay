@@ -5,8 +5,8 @@ public import __primitives__.(StaticCallDefined?);
 
 symbol CallDefined?;
 overload #CallDefined?('fn, ..'T) = CallDefinedForSymbol?('fn, ..'T);
-overload CallDefined?(/*alias*/ fn:'F, ..#'T) = unpack(#CallDefinedForSymbol?(call, 'F, ..'T));
-overload CallDefined?(#'fn, ..#'T) = unpack(#CallDefinedForSymbol?('fn, ..'T));
+overload CallDefined?(/*alias*/ fn:'F, ..#'T) = *#CallDefinedForSymbol?(call, 'F, ..'T);
+overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
 
 #CallDefinedForType?('F, ..'T) = CallDefinedForSymbol?(call, 'F, ..'T);
 

@@ -28,7 +28,7 @@ inline overload inValues?(x, forward ..ys) {
 
 symbol countValues;
 overload #countValues(..'xs) = StaticCountValues(..'xs);
-inline overload countValues(..xs:'T) = unpack(#StaticCountValues(..'T));
+inline overload countValues(..xs:'T) = *#StaticCountValues(..'T);
 
 symbol takeValues;
 overload #takeValues('n) | StaticInt?('n) = ;

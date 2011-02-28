@@ -60,5 +60,5 @@ main() {
     ////1
     ////true
     ////'3'
-    show(..unpack(b));
+    show(..*b);
 }

@@ -60,7 +60,7 @@ overload #BitwiseZeroInitializedType?(Tuple[..'T])
 inline overload Tuple[..'T]() returned:Tuple[..'T]
     | allValues?(DefaultInitializableType?, ..'T)
 {
-    ..unpack(returned) <-- ..mapValues(call, ..'T);
+    ..*returned <-- ..mapValues(call, ..'T);
 }
 
 inline overload Tuple[..'T]() returned:Tuple[..'T]
@@ -75,7 +75,7 @@ inline overload Tuple[..'T]() returned:Tuple[..'T]
 //
 
 inline overload Tuple[..'T](forward ..x:'T) returned:Tuple[..'T] {
-    ..unpack(returned) <-- ..x;
+    ..*returned <-- ..x;
 }
 
 inline overload Tuple(forward ..x:'T) = Tuple[..'T](..x);
@@ -88,24 +88,24 @@ inline overload Tuple(forward ..x:'T) = Tuple[..'T](..x);
 inline overload destroyUnsafe(ref x:Tuple[..'T])
     | not NotDestroyedType?(Tuple[..'T])
 {
-    static for (/*ref*/ f in ..unpack(x))
+    static for (/*ref*/ f in ..*x)
         destroyUnsafe(f);
 }
 
 inline overload resetUnsafe(ref x:Tuple[..'T])
     | not NotResetType?(Tuple[..'T])
 {
-    static for (/*ref*/ f in ..unpack(x))
+    static for (/*ref*/ f in ..*x)
         resetUnsafe(f);
 }
 
 inline overload moveUnsafe(forward x:Tuple[..'T])
     | not BitwiseMovedType?(Tuple[..'T]) and allValues?(MovableType?, ..'T)
-    = Tuple[..'T](..mapValues(moveUnsafe, ..unpack(x)));
+    = Tuple[..'T](..mapValues(moveUnsafe, ..*x));
 
 inline overload copy(x:Tuple[..'T])
     | not BitwiseCopiedType?(Tuple[..'T]) and allValues?(CopyableType?, ..'T)
-    = Tuple[..'T](..mapValues(copy, ..unpack(x)));
+    = Tuple[..'T](..mapValues(copy, ..*x));
 
 #CompatibleTupleTypes?('fn, (..'T), (..'U))
     = countValues(..'T) == countValues(..'U)
