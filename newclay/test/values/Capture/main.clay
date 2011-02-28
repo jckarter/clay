@@ -1,0 +1,37 @@
+import values.*;
+import show.*;
+
+showKind(const x) { show("const"); show(x); }
+overload showKind(ref x) { show("ref"); show(x); }
+overload showKind(rvalue x) { show("rvalue"); show(x); }
+
+main() {
+    var x = 1;
+    const y = 2;
+    rvalue z = 3;
+
+    var captures = captureValues(x, y, z, 4);
+
+    ////Tuple[CapturedRef[Int], CapturedConst[Int], CapturedValue[Int], CapturedValue[Int]]
+    show(#Type(captures));
+
+    ////ref
+    ////1
+    ////const
+    ////2
+    ////const
+    ////3
+    ////const
+    ////4
+    mapValues(showKind, ..capturedRefs(captures));
+
+    ////ref
+    ////1
+    ////const
+    ////2
+    ////rvalue
+    ////3
+    ////rvalue
+    ////4
+    mapValues(showKind, ..forwardValues(captures));
+}

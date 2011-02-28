@@ -1,0 +1,17 @@
+Tuple[CapturedRef[Int], CapturedConst[Int], CapturedValue[Int], CapturedValue[Int]]
+ref
+1
+const
+2
+const
+3
+const
+4
+ref
+1
+const
+2
+rvalue
+3
+rvalue
+4
