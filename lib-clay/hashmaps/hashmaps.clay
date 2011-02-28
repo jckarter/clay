@@ -24,12 +24,16 @@ private record Node[K,V] (
 //
 
 [K,V]
-overload HashMap[K,V]() {
-    var buckets = Vector[NodePtr[K,V]]();
-    reserve(buckets, 32);
-    for (i in range(1024))
-        push(buckets, nullShared(Node[K,V]));
-    return HashMap[K,V](move(buckets), SizeT(0));
+overload HashMap[K,V]() returned:HashMap[K,V] {
+    returned.buckets <-- Vector[NodePtr[K,V]]();
+    returned.size = 0;
+
+    try {
+        resize(returned.buckets, 1024);
+    } catch (ex) {
+        destroy(returned.buckets);
+        throw ex;
+    }
 }
 
 
