@@ -1,5 +1,9 @@
 import values.*;
 
+
+//
+// range
+//
 private symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
 
 overload iterator(x:Range['T]) = x;
@@ -25,3 +29,20 @@ overload subtract(x:RangeCoordinate['T], y:RangeCoordinate['T])
 range(to:'N) = Range['N]('N(0), to, 'N(1));
 overload range(from:'N, to:'N) = Range['N](from, to, 'N(1));
 overload range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
+
+
+//
+// zipped
+//
+private symbol Zipped[..'S] = NewType(Tuple[..'S]);
+overload Zipped(/*alias*/ forward x:Tuple[..'S]) = Zipped[..'S](x);
+
+private symbol ZippedIterator[..'S] = NewType(Tuple[..'S]);
+overload ZippedIterator(/*alias*/ forward x:Tuple[..'S]) = ZippedIterator[..'S](x);
+
+zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
+    = Zipped(captureValues(..seqs));
+
+iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
+hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
+next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
