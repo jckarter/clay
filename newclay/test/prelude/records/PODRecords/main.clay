@@ -47,7 +47,7 @@ main() {
     var pythagoras = Point(3.0, 4.0f);
     ////3
     ////4
-    show(..unpack(pythagoras));
+    show(..*pythagoras);
 
     var z = FunnyNamedField(true);
     show(z.foo_bar?); ////true
