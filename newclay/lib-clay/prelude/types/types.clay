@@ -414,3 +414,65 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 #ContiguousSequenceType?('S) =
     SequenceType?('S)
     and ContiguousCoordinateType?(SequenceCoordinateType('S));
+
+
+//
+// NewType
+//
+
+#NewType('T) = (NewType, 'T);
+#NewType?('T) = SymbolWithTag?('T, NewType);
+
+#OriginalType('T) | NewType?('T) = SymbolTagBody('T, NewType);
+
+overload #LLType('T) | NewType?('T) = LLType(OriginalType('T));
+
+overload #'XType?('T)
+    | InheritableTypePredicate?('XType?) and NewType?('T)
+    = 'XType?(OriginalType('T));
+
+inline overload unpack(forward x:'T) | NewType?('T)
+    = forward bitcast(#OriginalType('T), x);
+
+inline overload 'T() returned:'T
+    | NewType?('T) and DefaultInitializableType?(OriginalType('T))
+{
+    *returned <-- (#OriginalType('T))();
+}
+inline overload 'T(/*alias*/ forward orig:'U) returned:'T
+    | NewType?('T)
+      and Defined?(...initializeFromUnsafe(refValue('U), orig))
+      and 'U == OriginalType('T)
+{
+    *returned <-- orig;
+}
+
+inline overload copy(x:'T) returned:'T
+    | NewType?('T) and CopyableType?(OriginalType('T))
+{
+    *returned <-- copy(*x);
+}
+
+inline overload moveUnsafe(forward x:'T) returned:'T
+    | NewType?('T) and MovableType?(OriginalType('T))
+{
+    *returned <-- moveUnsafe(*x);
+}
+
+inline overload destroyUnsafe(ref x:'T)
+    | NewType?('T) and not NotDestroyedType?(OriginalType('T))
+{
+    destroyUnsafe(*x);
+}
+
+inline overload resetUnsafe(ref x:'T)
+    | NewType?('T) and not NotResetType?(OriginalType('T))
+{
+    resetUnsafe(*x);
+}
+
+inline overload assign(ref to:'T, /*lvalue*/ forward from:'T)
+    | NewType?('T) and AssignableType?(OriginalType('T))
+{
+    *to = *from;
+}
