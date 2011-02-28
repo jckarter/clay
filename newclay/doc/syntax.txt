@@ -151,9 +151,9 @@ PrefixExpr -> SignExpr
             | SuffixExpr
             | StaticExpr
 
-SignExpr -> ("+" | "-") SuffixExpr
-UnpackExpr -> "*" SuffixExpr
-AddressOfExpr -> "&" SuffixExpr
+SignExpr -> ("+" | "-") PrefixExpr
+UnpackExpr -> "*" PrefixExpr
+AddressOfExpr -> "&" PrefixExpr
 StaticExpr -> "#" PrefixExpr
 
 SuffixExpr -> AtomicExpr Suffix*

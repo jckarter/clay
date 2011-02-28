@@ -411,7 +411,7 @@ private var suffixExpr = modify(
 // prefix expr
 //
 
-private var prefixExpr = choice(
+private var prefixExpr2 = choice(
     plusExpr,
     minusExpr,
     addressOfExpr,
@@ -420,9 +420,11 @@ private var prefixExpr = choice(
     suffixExpr,
 );
 
+private prefixExpr(input) Maybe[Expr] = prefixExpr2(input);
+
 private var prefixOp[p, op] = exprParser(
     x => UnaryOpExpr(op(), move(x.1)),
-    sequence(punc(p), suffixExpr),
+    sequence(punc(p), prefixExpr),
 );
 
 private var plusExpr      = prefixOp[#"+", () => OP_PLUS];
