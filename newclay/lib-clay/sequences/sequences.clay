@@ -1,0 +1,27 @@
+import values.*;
+
+private symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
+
+overload iterator(x:Range['T]) = x;
+overload hasNext?(x:Range['T]) = x.begin < x.end;
+overload next(ref x:Range['T]) { 
+    var returned = x.begin;
+    x.begin += x.step;
+    return returned;
+}
+
+private symbol RangeCoordinate['T] = RecordType(value:'T, step:'T);
+
+overload dereference(x:RangeCoordinate['T]) = x.value;
+overload addAssign(x:RangeCoordinate['T], n:'I) | IntegerType?('I) {
+    x.value += n*x.step;
+}
+overload subtractAssign(x:RangeCoordinate['T], n:'I) | IntegerType?('I) {
+    x.value -= n*x.step;
+}
+overload subtract(x:RangeCoordinate['T], y:RangeCoordinate['T])
+    = (x.value - y.value) div x.step;
+
+range(to:'N) = Range['N]('N(0), to, 'N(1));
+overload range(from:'N, to:'N) = Range['N](from, to, 'N(1));
+overload range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));

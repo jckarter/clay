@@ -1,0 +1,28 @@
+import sequences.*;
+import show.*;
+
+main() {
+    ////0
+    ////1
+    ////2
+    ////3
+    ////4
+    for (n in range(5))
+        show(n);
+
+    ////5
+    ////6
+    ////7
+    ////8
+    ////9
+    for (n in range(5, 10))
+        show(n);
+
+    ////10
+    ////12
+    ////14
+    ////16
+    ////18
+    for (n in range(10, 20, 2))
+        show(n);
+}
