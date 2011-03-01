@@ -7,6 +7,7 @@ import newclay.platforms.*;
 import newclay.hooks.*;
 
 import maybe.*;
+import deques.*;
 import numbers.floats.*;
 
 
@@ -492,18 +493,97 @@ envRootEntries(envRoot: EnvRoot) = ref maybe(envRoot.entries,
     },
 );
 
-record Env = referenceType(
+
+//
+// env pool
+//
+
+private record EnvImpl(
+    refCount: SizeT,
     parent: EnvParent,
     entries: Map[String, EnvEntry],
 );
 
-callbyname overload Env(parent:EnvParent) =
-    Env(parent, Map[String, EnvEntry]());
+overload RegularRecord?(static EnvImpl) = false;
+overload BitwiseMovedType?(static EnvImpl) = true;
+// EnvImpls will only be moved as part of loading them into the pool, so reset
+// and destroy need not do anything
+overload NotDestroyedType?(static EnvImpl) = true;
+overload NotResetType?(static EnvImpl) = true;
 
-callbyname newEnv(parent:EnvParent) = Env(parent);
+private record EnvPool(
+    envs: Deque[EnvImpl],
+    freeList: Deque[Pointer[EnvImpl]],
+);
+// we can just drop the pool on the floor since it'll get destroyed only on exit
+overload NotDestroyedType?(static EnvPool) = true;
+overload NotResetType?(static EnvPool) = true;
+
+private var envPool = EnvPool();
+
+private resetEnvImpl(ei:EnvImpl, parent:EnvParent) {
+    ei.refCount = 1;
+    ei.parent <-- parent;
+}
+private freeEnvImpl(ei:EnvImpl) {
+    assert(ei.refCount == 0);
+    destroy(ei.parent);
+    clear(ei.entries);
+}
+
+private callbyname allocEnv(parent:EnvParent) {
+    if (empty?(envPool.freeList)) {
+        push(envPool.envs, EnvImpl(SizeT(1), parent, Map[String,EnvEntry]()));
+        return Env(&back(envPool.envs));
+    } else {
+        var eip = popFront(envPool.freeList);
+        resetEnvImpl(eip^, parent);
+        return Env(eip);
+    }
+}
+private freeEnv(env:Env) {
+    freeEnvImpl(env.__impl__^);
+    push(envPool.freeList, env.__impl__);
+}
+
+private retainEnv(env:Env) { inc(env.__impl__^.refCount); }
+private releaseEnv(env:Env) {
+    dec(env.__impl__^.refCount);
+    if (env.__impl__^.refCount == 0)
+        freeEnv(env);
+}
+
+record Env(__impl__: Pointer[EnvImpl]);
+overload fieldRef(env:Env, static #parent)  = ref env.__impl__^.parent;
+overload fieldRef(env:Env, static #entries) = ref env.__impl__^.entries;
+
+overload RegularRecord?(static Env) = false;
+overload BitwiseMovedType?(static Env) = true;
+
+overload Env() = Env(null(EnvImpl));
+overload Env(env:Env) returned:Env {
+    returned.__impl__ <-- env.__impl__;
+    retainEnv(returned);
+}
+overload resetUnsafe(env:Env) { env.__impl__ = null(EnvImpl); }
+overload destroy(env:Env) {
+    if (not null?(env.__impl__))
+        releaseEnv(env);
+}
+overload assign(to:Env, lvalue from:Env) {
+    if (to.__impl__ != from.__impl__) {
+        releaseEnv(to);
+        to.__impl__ = from.__impl__;
+        retainEnv(to);
+    }
+}
+
+overload equals?(a:Env, b:Env) = a.__impl__ == b.__impl__;
+
+newEnv(parent:EnvParent) = allocEnv(parent);
 [E | VariantMember?(EnvParent, E)]
-callbyname overload newEnv(parent:E) = Env(EnvParent(parent));
-callbyname overload newEnv() = Env(EnvParent(allocateRef(EnvRoot)));
+overload newEnv(parent:E) = allocEnv(EnvParent(parent));
+overload newEnv() = allocEnv(EnvParent(allocateRef(EnvRoot)));
 
 
 //
