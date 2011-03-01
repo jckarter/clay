@@ -1,0 +1,3 @@
+setjmp called
+before longjmp
+longjmp called. result = 10
