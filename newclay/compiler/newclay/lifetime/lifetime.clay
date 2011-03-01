@@ -1,4 +1,5 @@
 import newclay.ir as ir;
+import newclay.common.*;
 import newclay.core.*;
 import newclay.hooks.*;
 import newclay.analysis.*;
@@ -16,7 +17,7 @@ overload subframe(parent, label) = Frame(parent, Maybe(label), Vector[RTValue]()
 record LifetimeContext (
     statementFrame: Frame,
     blockFrame: Frame,
-    variableFrames: HashMap[RTValue, Frame],
+    variableFrames: Map[RTValue, Frame],
 );
 
 procedure lifetimeAnalyzeNode;
@@ -27,7 +28,7 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node) {
 }
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.LiteralCodeBody) {
     // consume all values
-    c.variableFrames = HashMap[RTValue, Frame]();
+    c.variableFrames = Map[RTValue, Frame]();
     c.statementFrame.liveValues = Vector[RTValue]();
     ir.pushNode(dest, node);
 }

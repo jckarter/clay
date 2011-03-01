@@ -4,6 +4,7 @@ import newclay.ast as ast;
 import newclay.ast.transforms.*;
 import newclay.ir as ir;
 import newclay.analysis.*;
+import newclay.common.*;
 import newclay.core.*;
 //import newclay.common.(displayError);
 import newclay.hooks.*;
@@ -962,7 +963,7 @@ overload evaluateAliasPattern(x:GlobalBinding, argsAst, symbolHead, env) {
     // XXX kludge
     assert(x.kind == ast.BINDING_ALIAS, "alias symbol head must actually be an alias!");
 
-    var paramMap = HashMap[String, ast.Pattern]();
+    var paramMap = Map[String, ast.Pattern]();
     ref paramNames = symbolHead.astName.params;
     if (size(argsAst.items) != size(paramNames.items))
         genericError("expected ", size(paramNames.items), " parameters to alias pattern but got ", size(argsAst.items));
@@ -1257,7 +1258,7 @@ overload walkVariadicArgumentPattern(x:ast.StaticArgument, visitor) {
 //
 
 record PatternVarCollector(
-    names: HashMap[String, Bool],
+    names: Map[String, Bool],
     vars: Vector[ast.Identifier],
     variadicVars: Vector[ast.Identifier],
 );
@@ -1327,14 +1328,17 @@ topLevelItemPatternVars(x:T) {
 // initializeMatch, verifyPatternVars, testPredicate
 //
 
-[E | VariantMember?(EnvParent, E)]
-initializeMatch(baseEnv:E, pvars:PatternVars) {
-    var env = newEnv(baseEnv);
-    for (name in pvars.vars)
-        envAdd(env, name, PatternCell(nothing(Value)));
-    for (name in pvars.variadicVars)
-        envAdd(env, name, ListPatternCell(nothing(ValueList)));
-    return env;
+initializeMatch(module:Module, pvars:PatternVars) env:Env {
+    env <-- newEnv(module);
+    try {
+        for (name in pvars.vars)
+            envAdd(env, name, PatternCell(nothing(Value)));
+        for (name in pvars.variadicVars)
+            envAdd(env, name, ListPatternCell(nothing(ValueList)));
+    } catch (ex) {
+        destroy(env);
+        throw ex;
+    }
 }
 
 verifyPatternVars(pvars:PatternVars, env:Env) {
@@ -1381,7 +1385,7 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
     verifyPatternVars(pvars, env);
     if (not testPredicate(x.ast.definition.predicate, env))
         return nothing(Env);
-    return Maybe(env);
+    return Maybe(move(env));
 }
 
 ifStaticOverload(program:Program, callable:Value, args:ValueList, thenFn, elseFn) {

@@ -1,4 +1,5 @@
-
+alias Map[K,V] = HashMap[K,V];
+alias Set[K] = HashSet[K];
 
 
 //
@@ -135,7 +136,7 @@ triStateInitialize(x:TriState[T], initializer, onError) {
 //
 
 record NameAllocator (
-    nameCounts: HashMap[String, Int],
+    nameCounts: Map[String, Int],
 );
 
 private newName?(x:NameAllocator, name:String) {
