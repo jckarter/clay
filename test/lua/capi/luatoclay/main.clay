@@ -34,11 +34,11 @@ main() {
     lua_register(x, cstring("sumAndAverage"), makeCCodePointer(
         sumAndAverage, Pointer[lua_State]
     ));
-    luaL_dostring(x, "
+    luaL_dostring(x, cstring("
         sayHello()
         sum, average = sumAndAverage(1, 2, 3, 4, 5, 6)
         print('sum = ' .. sum)
         print('average = ' .. average)
-    ");
+    "));
     lua_close(x);
 }

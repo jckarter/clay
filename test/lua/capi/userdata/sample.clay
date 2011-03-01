@@ -146,7 +146,7 @@ main() {
     Foo_register(x);
     lua_pop(x, 1);
     
-    luaL_dostring(x, "
+    luaL_dostring(x, cstring("
         for n, v in pairs(Foo) do print(n, v) end
         
         local a = Foo.new()
@@ -193,7 +193,7 @@ main() {
         b:show'b is'
         s = a + b
         s:show's is'
-    ");
+    "));
 
     lua_close(x);
 }
