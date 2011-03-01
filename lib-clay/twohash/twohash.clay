@@ -104,6 +104,7 @@ overload EntryType(static T) = EntryType(Type(typeToLValue(T).data));
 //
 // (copied from records.clay)
 
+/*
 [T | Entry?(T)]
 overload RegularRecord?(static T) = false;
 
@@ -126,6 +127,7 @@ overload resetUnsafe(a:T) {
     static for (x in ...recordFields(a))
         resetUnsafe(x);
 }
+*/
 
 //
 // size

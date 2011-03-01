@@ -76,18 +76,46 @@ overload RegularRecord?(static Bucket[E]) = false;
 [E]
 overload TwoHash[E]() 
 {
-    var tableA = Table[Bucket[E]](0);
-    var tableB = Table[Bucket[E]](0);
-    return TwoHash[E]([move(tableA), move(tableB)], SizeT(0));
+    alias TABLE = Table[Bucket[E]](0);
+    return TwoHash[E]([TABLE, TABLE], SizeT(0));
+}
+
+[E]
+overload TwoHash[E](x:TwoHash[E]) = TwoHash[E](x.tables, x.size);
+
+[E]
+overload assign(to:TwoHash[E], lvalue from:TwoHash[E]) {
+    var tmp = from;
+    destroy(to);
+    to <-- move(tmp);
 }
 
 [B]
-overload Table[B](ln2_size: Int) 
+overload Table[B](ln2_size: Int) returned:Table[B]
 {
     var size = shiftLeft(1, ln2_size);
-    var ptr = allocateRawMemoryAligned(B, size, 16);
-    initializeMemory(ptr, ptr+size);
-    return Table[B](ptr, ln2_size);
+    returned.ln2_size <-- ln2_size;
+    returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
+    try {
+        initializeMemory(returned.ptr, returned.ptr+size);
+    } catch (ex) {
+        freeRawMemoryAligned(returned.ptr);
+        throw ex;
+    }
+}
+
+[B]
+overload Table[B](x: Table[B]) returned:Table[B]
+{
+    var size = shiftLeft(1, x.ln2_size);
+    returned.ln2_size <-- x.ln2_size;
+    returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
+    try {
+        copyNonoverlappingMemory(returned.ptr, x.ptr, x.ptr+size);
+    } catch (ex) {
+        freeRawMemoryAligned(returned.ptr);
+        throw ex;
+    }
 }
 
 [E]
@@ -96,20 +124,36 @@ overload initialize(b: Bucket[E])
     for (x in b.hashBytes) x = 255u8;
 }
 
+[E]
+overload Bucket[E](b: Bucket[E]) returned:Bucket[E]
+{
+    returned.hashBytes <-- b.hashBytes;
+    for (i in range(16))
+    {
+        if (b.hashBytes[i] != 255)
+            returned.entries[i] <-- b.entries[i];
+    }
+}
+
 //
 // move semantics
 //
-
-[B]
-overload BitwiseMovedType?(static Table[B]) = true;
 
 [E]
 overload BitwiseMovedType?(static TwoHash[E]) = true;
 
 [B]
+overload BitwiseMovedType?(static Table[B]) = true;
+
+[B]
 inline overload resetUnsafe(t: Table[B]) {
     t.ptr = null(B);
     t.ln2_size = 0; // actually -infinity
+}
+
+[E]
+inline overload resetUnsafe(t: TwoHash[E]) {
+    t <-- TwoHash[E]();
 }
 
 //
