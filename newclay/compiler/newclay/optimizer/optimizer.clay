@@ -1,11 +1,12 @@
 import newclay.ast as ast;
 import newclay.ir as ir;
+import newclay.common.*;
 import newclay.core.*;
 import newclay.hooks.*;
 import maybe.*;
 
-alias RTValueMap = HashMap[RTValue, RTValue];
-alias RTValueSet = HashMap[RTValue, Tuple[]];
+alias RTValueMap = Map[RTValue, RTValue];
+alias RTValueSet = Map[RTValue, Tuple[]];
 
 
 //

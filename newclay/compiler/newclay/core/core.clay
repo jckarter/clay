@@ -16,7 +16,7 @@ import numbers.floats.*;
 //
 
 alias ModuleName = ast.ModuleName;
-alias ModuleMap = HashMap[ModuleName, Module];
+alias ModuleMap = Map[ModuleName, Module];
 
 [...S | countValues(...S) >= 1 and allValues?(String?, ...S)]
 overload ModuleName(...components: S)
@@ -41,7 +41,7 @@ record Program = referenceType(
 );
 
 record ProgramGlobalMap (
-    constructors: HashMap[RTGlobal, Vector[ir.Node]],
+    constructors: Map[RTGlobal, Vector[ir.Node]],
     globalOrder: Vector[RTGlobal],
 );
 
@@ -174,7 +174,7 @@ overload printReprTo(stream, mod:Module) {
 // top-level item entries
 //
 
-alias EvalTable = HashMap[ValueList, TriState[ValueList]];
+alias EvalTable = Map[ValueList, TriState[ValueList]];
 
 record GlobalBinding (kind:ast.BindingKind, ast:ast.SingleGlobalBinding);
 
@@ -185,7 +185,7 @@ record SymbolHead = referenceType(
     ast: SymbolHeadAST,
     astName: ast.SymbolName,
     module: Module,
-    instances: HashMap[ValueList, EnvEntry],
+    instances: Map[ValueList, EnvEntry],
     evalTable: EvalTable,
     invokeTable: InvokeTable,
     aliasHead?: Bool,
@@ -196,7 +196,7 @@ overload aliasAST?(a:GlobalBinding) = a.kind == ast.BINDING_ALIAS;
 
 overload SymbolHead(a:SymbolHeadAST, name:ast.SymbolName, module:Module) =
     SymbolHead(
-        a, name, module, HashMap[ValueList, EnvEntry](),
+        a, name, module, Map[ValueList, EnvEntry](),
         EvalTable(), InvokeTable(),
         aliasAST?(*a)
     );
@@ -429,9 +429,9 @@ record GeneralImportEntry(module:Module, location:ast.Location);
 record SpecificImportEntry(entry:SpecificImport, location:ast.Location);
 
 record EnvRoot = referenceType(
-    generalImports: HashMap[ModuleName, GeneralImportEntry],
-    specificImports: HashMap[String, SpecificImportEntry],
-    entries: Maybe[HashMap[String, EnvRootEntry]],
+    generalImports: Map[ModuleName, GeneralImportEntry],
+    specificImports: Map[String, SpecificImportEntry],
+    entries: Maybe[Map[String, EnvRootEntry]],
 );
 
 private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
@@ -448,7 +448,7 @@ private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
 }
 
 private resolveGeneralEnvRootEntries(entries, generalImports) {
-    var generalEntries = HashMap[String, Vector[Tuple[Module, EnvEntry]]]();
+    var generalEntries = Map[String, Vector[Tuple[Module, EnvEntry]]]();
 
     for (name, genImport in items(generalImports)) {
         ref module = genImport.module;
@@ -484,7 +484,7 @@ private resolveSpecificEnvRootEntries(entries, specificImports) {
 envRootEntries(envRoot: EnvRoot) = ref maybe(envRoot.entries,
     entries ref=> ref entries,
     () ref=> {
-        envRoot.entries = Maybe(HashMap[String, EnvRootEntry]());
+        envRoot.entries = Maybe(Map[String, EnvRootEntry]());
         ref entries = just(envRoot.entries);
         resolveGeneralEnvRootEntries(entries, envRoot.generalImports);
         resolveSpecificEnvRootEntries(entries, envRoot.specificImports);
@@ -494,17 +494,16 @@ envRootEntries(envRoot: EnvRoot) = ref maybe(envRoot.entries,
 
 record Env = referenceType(
     parent: EnvParent,
-    entries: HashMap[String, EnvEntry],
+    entries: Map[String, EnvEntry],
 );
 
-overload Env(parent:EnvParent) =
-    Env(parent, HashMap[String, EnvEntry]());
+callbyname overload Env(parent:EnvParent) =
+    Env(parent, Map[String, EnvEntry]());
 
-newEnv(parent:EnvParent) = Env(parent);
+callbyname newEnv(parent:EnvParent) = Env(parent);
 [E | VariantMember?(EnvParent, E)]
-overload newEnv(parent:E) = Env(EnvParent(parent));
-overload newEnv() = Env(EnvParent(allocateRef(EnvRoot)));
-
+callbyname overload newEnv(parent:E) = Env(EnvParent(parent));
+callbyname overload newEnv() = Env(EnvParent(allocateRef(EnvRoot)));
 
 
 //
@@ -527,7 +526,7 @@ envAdd(env, name:ast.Identifier, forward entry) {
 
 private envRootReset(envRoot) {
     if (just?(envRoot.entries))
-        envRoot.entries = nothing(HashMap[String, EnvRootEntry]);
+        envRoot.entries = nothing(Map[String, EnvRootEntry]);
 }
 
 envRootAddGeneral(envRoot:EnvRoot, module:Module, location:ast.Location) {
@@ -968,7 +967,7 @@ overload ModuleValueEntry() = ModuleValueEntry(EnvEntry(Value(ModuleValue())));
 
 record ModuleValue (
     module: Maybe[Module],
-    submodules: HashMap[String, ModuleValueEntry],
+    submodules: Map[String, ModuleValueEntry],
 );
 moduleValueSubmodule(m:ModuleValue, name:String)
     = ref nestedVariantAs(m.submodules[name].envEntry, ModuleValue);
@@ -977,9 +976,9 @@ overload equals?(m1: ModuleValue, m2: ModuleValue)
     = m1.module == m2.module;
 
 overload ModuleValue(module:Module)
-    = ModuleValue(Maybe(module), HashMap[String,ModuleValueEntry]());
+    = ModuleValue(Maybe(module), Map[String,ModuleValueEntry]());
 overload ModuleValue(module:Maybe[Module])
-    = ModuleValue(module, HashMap[String,ModuleValueEntry]());
+    = ModuleValue(module, Map[String,ModuleValueEntry]());
 
 qualifiedImportConflictError(path, name) {
     var pathString = join('.', path);
@@ -1399,7 +1398,7 @@ record InvokeEntry(
     specialization: Maybe[Specialization],
 );
 
-alias InvokeTable = HashMap[ArgumentList, InvokeEntry];
+alias InvokeTable = Map[ArgumentList, InvokeEntry];
 
 
 //
