@@ -5,11 +5,8 @@ record HashMap[K,V] (
     size : SizeT,
 );
 
-
-[K,V]
-overload RegularRecord?(static HashMap[K,V]) = false;
-
-alias NodePtr[K,V] = SharedPointer[Node[K,V]];
+alias NodePtr[K,V] = UniqueValue[Node[K,V]];
+alias WeakNodePtr[K,V] = Pointer[Node[K,V]];
 
 private record Node[K,V] (
     key : K,
@@ -29,69 +26,11 @@ overload HashMap[K,V]() returned:HashMap[K,V] {
     returned.size = 0;
 
     try {
-        resize(returned.buckets, 1024);
+        resize(returned.buckets, 32);
     } catch (ex) {
         destroy(returned.buckets);
         throw ex;
     }
-}
-
-
-
-//
-// copy constructor
-//
-
-[K,V]
-overload HashMap[K,V](src:HashMap[K,V]) {
-    var buckets = Vector[NodePtr[K,V]]();
-    reserve(buckets, size(src.buckets));
-    for (b in src.buckets)
-        push(buckets, cloneList(b));
-    return HashMap[K,V](move(buckets), src.size);
-}
-
-[K,V]
-private cloneList(_b:NodePtr[K,V]) {
-    var b = _b;
-    var list = nullShared(Node[K,V]);
-    while (not null?(b)) {
-        list = new Node[K,V](b^.key, b^.value, list);
-        b = b^.next;
-    }
-    var result = nullShared(Node[K,V]);
-    while (not null?(list)) {
-        var temp = list^.next;
-        list^.next = result;
-        result = list;
-        list = temp;
-    }
-    return result;
-}
-
-
-
-//
-// moveUnsafe, resetUnsafe
-//
-
-[K,V]
-overload BitwiseMovedType?(static HashMap[K,V]) = true;
-
-[K,V]
-overload resetUnsafe(a:HashMap[K,V]) {
-    resetUnsafe(a.buckets);
-}
-
-
-
-//
-// destroy
-//
-
-[K,V]
-overload destroy(a:HashMap[K,V]) {
-    destroy(a.buckets);
 }
 
 
@@ -129,8 +68,8 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
         ptr^ = value;
         return;
     }
-    var node = new Node(key, value, a.buckets[i]);
-    a.buckets[i] = node;
+    ref bucket = a.buckets[i];
+    bucket = UniqueValue(Node(key, value, move(bucket)));
     a.size += 1;
 }
 
@@ -146,10 +85,10 @@ overload index(a:HashMap[K,V], key:K) {
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr))
         return ref ptr^;
-    var node = new Node(key, V(), a.buckets[i]);
-    a.buckets[i] = node;
+    ref bucket = a.buckets[i];
+    bucket = UniqueValue(Node(key, V(), move(bucket)));
     a.size += 1;
-    return ref node^.value;
+    return ref bucket^.value;
 }
 
 
@@ -161,13 +100,13 @@ overload index(a:HashMap[K,V], key:K) {
 [K,V]
 overload remove(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
-    var prevNode = nullShared(Node[K,V]);
-    var node = a.buckets[i];
+    var prevNode = null(Node[K,V]);
+    var node = &a.buckets[i]^;
     while (not null?(node)) {
         if (node^.key == key)
             break;
         prevNode = node;
-        node = node^.next;
+        node = &node^.next^;
     }
     if (null?(node))
         return false;
@@ -189,14 +128,14 @@ overload remove(a:HashMap[K,V], key:K) {
 overload items(forward a:HashMap[K,V]) {
     var x = HashMapItems(captureValue(a), K, V);
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = next(x.bucketsIter);
+        x.node = &next(x.bucketsIter)^;
     return move(x);
 }
 
 private record HashMapItems[CapturedMap,K,V] =
     map: CapturedMap,
     bucketsIter : SequenceIteratorType(Vector[NodePtr[K,V]]),
-    node : NodePtr[K,V];
+    node : WeakNodePtr[K,V];
 
 [CapturedMap,K,V]
 overload HashMapItems(forward captured:CapturedMap, static K, static V)
@@ -205,7 +144,7 @@ overload HashMapItems(forward captured:CapturedMap, static K, static V)
     returned.map <-- captured;
     try {
         returned.bucketsIter <-- iterator(capturedRef(returned.map).buckets);
-        returned.node <-- nullShared(Node[K,V]);
+        returned.node <-- null(Node[K,V]);
     } catch (ex) {
         destroy(returned.map);
         throw ex;
@@ -216,16 +155,15 @@ overload HashMapItems(forward captured:CapturedMap, static K, static V)
 overload iterator(x:HashMapItems[C,K,V]) = x;
 
 [C,K,V]
-overload hasNext?(x:HashMapItems[C,K,V]) =
-    not null?(x.node);
+overload hasNext?(x:HashMapItems[C,K,V]) = not null?(x.node);
 
 [C,K,V]
 overload next(x:HashMapItems[C,K,V]) {
     assert(not null?(x.node));
     ref key, value = x.node^.key, x.node^.value;
-    x.node = x.node^.next;
+    x.node = &x.node^.next^;
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = next(x.bucketsIter);
+        x.node = &next(x.bucketsIter)^;
     return ref key, value;
 }
 
@@ -254,11 +192,11 @@ private bucketId(a:HashMap[K,V], key:K) =
 
 [K,V]
 private findInBucket(_node:NodePtr[K,V], key:K) {
-    var node = _node;
+    var node = &_node^;
     while (not null?(node)) {
         if (node^.key == key)
             return &node^.value;
-        node = node^.next;
+        node = &node^.next^;
     }
     return null(V);
 }
