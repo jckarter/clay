@@ -3,9 +3,9 @@ import lua.capi.*;
 main() {
     var x = lua_open();
     luaL_openlibs(x);
-    luaL_dostring(x, "
+    luaL_dostring(x, cstring("
         print('Hello world from Lua!')
-    ");
+    "));
     lua_close(x);
 }
 
