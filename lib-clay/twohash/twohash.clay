@@ -332,6 +332,10 @@ overload next(i: SetVectorItems[K])
 [K]
 overload SetEntry[K](a: HashSet[K], key: K) = SetEntry[K](key);
 
+[K,V]
+inline overload hash(m:HashMap[K,V]) = hashSequence(mapped((a,b) => (a,b), items(m)));
+[K]
+inline overload hash(s:HashSet[K]) = hashSequence(mapped((a,b) => (a,b), items(s)));
 
 
 
