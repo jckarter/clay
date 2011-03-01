@@ -30,4 +30,11 @@ main() {
     println();
     for (k,v in items(hh))
         println(k, ", ", v);
+
+    clear(hh);
+
+    println();
+    println(size(hh));
+    for (k,v in items(hh))
+        println(k, ", ", v);
 }
