@@ -101,10 +101,10 @@ overload initialize(b: Bucket[E])
 //
 
 [B]
-inline overload moveUnsafe(src: Table[B]) returned: Table[B] {
-    returned.ptr = src.ptr;
-    returned.ln2_size = src.ln2_size;
-}
+overload BitwiseMovedType?(static Table[B]) = true;
+
+[E]
+overload BitwiseMovedType?(static TwoHash[E]) = true;
 
 [B]
 inline overload resetUnsafe(t: Table[B]) {
