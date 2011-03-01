@@ -35,14 +35,16 @@ inline overload hash(a:Array[T,n]) = hashSequence(a);
 // tuples
 //
 
-[...T]
-inline overload hash(x:Tuple[...T]) {
+inline hashValues(...values) {
     var h = SizeT(0);
-    static for (x in ...tupleElements(x))
+    static for (x in ...values)
         h = 7*h + 13*hash(x);
     return h;
 }
+inline overload hashValues(value) = hash(value);
 
+[...T]
+inline overload hash(x:Tuple[...T]) = hashValues(...tupleElements(x));
 
 
 //
@@ -50,12 +52,7 @@ inline overload hash(x:Tuple[...T]) {
 //
 
 [T | Record?(T)]
-inline overload hash(x:T) {
-    var h = SizeT(0);
-    static for (x in ...recordFields(x))
-        h = 7*h + 13*hash(x);
-    return h;
-}
+inline overload hash(x:T) = hashValues(...recordFields(x));
 
 
 
@@ -99,11 +96,11 @@ inline overload hash(a:Vector[T]) = hashSequence(a);
 // hashSequence
 //
 
-private hashSequence(a) {
+hashSequence(a) {
     var h = SizeT(0);
     var f = SizeT(11);
     for (x in a) {
-        h += f * hash(x);
+        h += f * hashValues(x);
         f = 2*f - 1;
     }
     return h;
