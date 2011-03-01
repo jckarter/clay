@@ -1248,7 +1248,7 @@ private analyzeForBindings(s, env, stmt:ast.ForStatement, bindingValues:RTValues
 }
 
 capturedForValue(s, stmt, formalKind, value)
-    = if (value.kind == RT_VALUE_RVALUE and formalKind != ast.ARG_RVALUE)
+    = if (value.kind == RT_VALUE_RVALUE and not inValues?(formalKind, ast.ARG_RVALUE, ast.ARG_FORWARD))
         addCapture(s, stmt, value)
     else
         value;
@@ -1267,7 +1267,7 @@ private addForBinding(s, env, stmt, arg, value) {
         var loweredValue = newReference(loweredKind, value2.type, argumentNameString(arg));
         addSpecializedBind(s, stmt, value2, loweredValue);
 
-        maybe(argumentName(arg), name ref=> { envAdd(env, name, value2); });
+        maybe(argumentName(arg), name ref=> { envAdd(env, name, loweredValue); });
     });
 }
 
@@ -1569,8 +1569,9 @@ private analyzeMultiExprSubnode(s, env, ast) Maybe[RTValues]
 private analyzeMultiExprNode(s, env, ast)
     = genericAnalysisError("single value cannot be used in multiple value context");
 
-overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues]
-    = analyzeMultiExprSubnode(s, env, *expr);
+overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues] {
+    return analyzeMultiExprSubnode(s, env, *expr);
+}
 
 private withAliasRecursionProtection(x, fn) {
     if (x.runtimeAnalyzing?)
