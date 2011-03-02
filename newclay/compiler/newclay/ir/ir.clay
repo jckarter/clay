@@ -387,7 +387,6 @@ parseLiteralCodeBody(env, codeString:String) {
         break;
     }
 
-    observe(code);
     return move(code);
 }
 
