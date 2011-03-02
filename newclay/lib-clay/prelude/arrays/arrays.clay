@@ -160,7 +160,6 @@ inline overload copy(x:Array['T, 'n]) returned:Array['T, 'n]
 }
 
 // XXX lvalues only
-// XXX not BitwiseAssignedType?
 inline overload assign(ref to:Array['T, 'n], /*lvalue*/ from:Array['U, 'n])
     | not ('T == 'U and BitwiseAssignedType?('T))
       and CallDefined?(assign, 'T, 'U)

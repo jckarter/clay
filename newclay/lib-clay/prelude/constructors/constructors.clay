@@ -58,16 +58,3 @@ inline overload ContiguousCoordinate(forward x:'T)
 inline overload Pointer(forward x:'T)
     | DereferenceablePointerType?('T)
     = Pointer[PointerReferencedType('T)](x);
-
-
-//
-// unions
-//
-
-
-
-
-//
-//XXX arrays
-//
-
