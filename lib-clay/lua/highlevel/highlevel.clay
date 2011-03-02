@@ -41,8 +41,14 @@ record Error(msg:String);
 
 instance Exception = Error;
 
-[S | String?(S) and (S != String)]
+overload Error(...args) = Error(printString(...args));
+
+[S | String?(S)]
 overload Error(msg:S) = Error(String(msg));
+
+overload Error(forward msg:String) out:Error {
+    out.msg <-- msg;
+}
 
 private popError(x:State) {
     var msg = String(CStringRef(lua_tostring(x.handle, -1)));
