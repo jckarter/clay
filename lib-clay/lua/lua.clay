@@ -1,1 +1,2 @@
 public import lua.capi as capi;
+public import lua.highlevel.*;

@@ -1,0 +1,18 @@
+import lua;
+
+main() {
+    var x = lua.State();
+    lua.openLibs(x);
+    lua.doString(x, "
+        function add(x, y)
+            return '' .. (x + y)
+        end
+    ");
+    lua.getGlobal(x, "add");
+    lua.pushNumber(x, 41);
+    lua.pushNumber(x, 22);
+    lua.call(x, 2, 1);
+    var sum = lua.toInteger(x, -1);
+    lua.pop(x, 1);
+    println("the result is ", sum);
+}
