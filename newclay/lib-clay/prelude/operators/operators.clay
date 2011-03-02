@@ -204,22 +204,28 @@ inline overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, '
 // assignment
 //
 
-symbol assign;
-inline overload assign(ref a:'T, b:'T) | BitwiseAssignedType?('T) { a <-- b; }
-inline overload assign(ref a:'T, rvalue b:'T) {
+inline moveAssign(ref a:'T, rvalue b:'T) {
     destroyUnsafe(a);
     a <-- move(b);
 }
-inline overload assign(ref a:'T, rvalue b:'T)
+inline overload moveAssign(ref a:'T, rvalue b:'T)
     | BitwiseMoveAssignedType?('T)
 {
     a <-- move(b);
 }
 
-inline overload assign(ref a:'A, b:'B)
-    | AssignablePrimitiveTypes?('A, 'B)
+inline copyAssign(ref a:'T, b:'T) | BitwiseAssignedType?('T) { a <-- b; }
+inline overload copyAssign(ref a:'A, b:'B) | AssignablePrimitiveTypes?('A, 'B)
 {
     cAssign(a, b);
+}
+
+symbol assign;
+inline overload assign(ref a:'T, b:'U) | Defined?(..copyAssign(a, b)) {
+    copyAssign(a, b);
+}
+inline overload assign(ref a:'T, rvalue b:'T) | Defined?(..moveAssign(a, b)) {
+    moveAssign(a, b);
 }
 
 

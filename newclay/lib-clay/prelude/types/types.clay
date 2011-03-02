@@ -449,13 +449,17 @@ inline overload 'T(/*alias*/ forward orig:'U) returned:'T
 }
 
 inline overload copy(x:'T) returned:'T
-    | NewType?('T) and CopyableType?(OriginalType('T))
+    | NewType?('T)
+      and CopyableType?(OriginalType('T))
+      and not BitwiseCopiedType?(OriginalType('T))
 {
     *returned <-- copy(*x);
 }
 
 inline overload moveUnsafe(forward x:'T) returned:'T
-    | NewType?('T) and MovableType?(OriginalType('T))
+    | NewType?('T)
+      and MovableType?(OriginalType('T))
+      and not BitwiseMovedType?(OriginalType('T))
 {
     *returned <-- moveUnsafe(*x);
 }
@@ -472,7 +476,7 @@ inline overload resetUnsafe(ref x:'T)
     resetUnsafe(*x);
 }
 
-inline overload assign(ref to:'T, /*lvalue*/ forward from:'T)
+inline overload copyAssign(ref to:'T, from:'T)
     | NewType?('T) and AssignableType?(OriginalType('T))
 {
     *to = *from;
