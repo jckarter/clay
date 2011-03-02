@@ -40,12 +40,6 @@ overload #'fn('x)
 
 #VariadicBinaryOperatorProcedure?('fn)
     = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
-// blacklist a few functions to prevent endless recursion when evaluating
-// the predicate
-// XXX this is a hack. 'fn overloads should automatically have lower precedence
-overload #VariadicBinaryOperatorProcedure?(VariadicBinaryOperatorProcedure?) = false;
-overload #VariadicBinaryOperatorProcedure?(Symbol?) = false;
-overload #VariadicBinaryOperatorProcedure?(SymbolBodyWithTag?) = false;
 
 
 // RuntimeStaticProcedure -- make a static function callable as a runtime procedure

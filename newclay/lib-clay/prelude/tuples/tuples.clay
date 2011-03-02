@@ -116,7 +116,6 @@ private #CompatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
 overload #CompatibleTupleTypes2?('fn, (), ()) = true;
 
 // XXX lvalues only
-// XXX not BitwiseAssignedType?
 inline overload assign(ref to:Tuple[..'T], /*lvalue*/ from:Tuple[..'U])
     | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))
       and CompatibleTupleTypes?(assign, (..'T), (..'U))
