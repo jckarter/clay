@@ -59,7 +59,10 @@ coalesceBinding(cc:CoalesceContext, from:RTValue, to:RTValue) {
     // references can merge with previous references
     } else if (referenceVariable?(to)) {
         cc.map^[to] = cFrom;
-    }
+    // stash non-coalesceable rvalues in the coalescing map so other branches don't
+    // try to coalesce them
+    } else if (to.kind == RT_VALUE_RVALUE)
+        cc.map^[to] = to;
 }
 
 coalesceInitialize(cc:CoalesceContext, from:RTValue, to:RTValue) {
@@ -156,6 +159,8 @@ coalesced(cmap:RTValueMap, rtVar:RTValue) {
     var cVar = rtVar;
     var cVarp = lookup(cmap, cVar);
     while (not null?(cVarp)) {
+        if (cVar == cVarp^)
+            return cVar;
         cVar = cVarp^;
         cVarp = lookup(cmap, cVar);
     }
