@@ -30,6 +30,12 @@ symbol countValues;
 overload #countValues(..'xs) = StaticCountValues(..'xs);
 inline overload countValues(..xs:'T) = *#StaticCountValues(..'T);
 
+symbol emptyValues?;
+overload #emptyValues?(..'xs) = false;
+overload #emptyValues?() = true;
+inline overload emptyValues?(..xs) = false;
+inline overload emptyValues?() = true;
+
 symbol takeValues;
 overload #takeValues('n) | StaticInt?('n) = ;
 overload #takeValues(0, ..'xs) = ;
