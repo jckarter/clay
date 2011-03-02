@@ -1,7 +1,7 @@
 import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
-import values.(allValues?, countValues);
+import values.(allValues?, countValues, emptyValues?);
 import prelude.types.lowlevel.*;
 
 public import __primitives__.(
@@ -29,15 +29,17 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 //
 
 #Type?('x) = StaticCallDefined?(LLType, 'x);
-#PODType?('T) = false;
-#BitwiseCopiedType?('T) = PODType?('T);
-#BitwiseMovedType?('T) = PODType?('T);
-#NotDestroyedType?('T) = PODType?('T);
-#NotResetType?('T) = PODType?('T);
-#CopyDoesNotThrowType?('T) = PODType?('T);
-#AssignDoesNotThrowType?('T) = PODType?('T);
-#BitwiseAssignedType?('T) = BitwiseCopiedType?('T) and NotDestroyedType?('T);
-#BitwiseMoveAssignedType?('T) = BitwiseMovedType?('T) and NotDestroyedType?('T);
+#PODType?('T) | not PredicateInheritingType?('T) = false;
+#BitwiseCopiedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#BitwiseMovedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#NotDestroyedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#NotResetType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#BitwiseAssignedType?('T) | not PredicateInheritingType?('T)
+    = BitwiseCopiedType?('T) and NotDestroyedType?('T);
+#BitwiseMoveAssignedType?('T) | not PredicateInheritingType?('T)
+    = BitwiseMovedType?('T) and NotDestroyedType?('T);
 
 #BitwiseZeroInitializedType?('T) = false;
 overload #BitwiseZeroInitializedType?(Bool) = true;
@@ -62,6 +64,12 @@ overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
 
+#InheritsPredicatesFromTypes('T) = ;
+#PredicateInheritingType?('T)
+    = Type?('T) and not emptyValues?(..InheritsPredicatesFromTypes('T));
+overload #'XType?('T)
+    | InheritableTypePredicate?('XType?) and PredicateInheritingType?('T)
+    = allValues?('XType?, ..InheritsPredicatesFromTypes('T));
 
 
 //
@@ -282,7 +290,7 @@ alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O
 //
 
 symbol Array['T, 'n];
-overload #'XType?(Array['T, 'n]) | InheritableTypePredicate?('XType?) = 'XType?('T);
+overload #InheritsPredicatesFromTypes(Array['T, 'n]) = 'T;
 overload #LLType(Array['T, 'n])
     | Type?('T) and StaticInt?('n) and 'n >= 0
     = LLArrayType['T, 'n];
@@ -297,9 +305,7 @@ overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 //
 
 symbol Tuple[..'T];
-overload #'XType?(Tuple[..'T])
-    | InheritableTypePredicate?('XType?) and allValues?('XType?, ..'T)
-    = true;
+overload #InheritsPredicatesFromTypes(Tuple[..'T]) = ..'T;
 overload #LLType(Tuple[..'T])
     | allValues?(Type?, ..'T)
     = LLTupleType[..'T];
@@ -314,9 +320,7 @@ overload #TupleType?(Tuple[..'T]) | Type?(Tuple[..'T]) = true;
 //
 
 symbol Union[..'T];
-overload #'XType?(Union[..'T])
-    | InheritableTypePredicate?('XType?) and allValues?(Type?, ..'T)
-    = true;
+overload #PODType?(Union[..'T]) = true;
 overload #LLType(Union[..'T])
     | allValues?(Type?, ..'T)
     = LLUnionType[..'T];
@@ -396,7 +400,6 @@ overload #BiggerNumberType(UInt, Int) = UInt;
 
 #SequenceType?('S) = CallDefined?(iterator, 'S);
 #IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, Ref['I]);
-// XXX proper definition of CoordinateType?
 #CoordinateType?('C) = CallDefined?(dereference, 'C) and CallDefined?(inc, Ref['C]);
 
 #CoordinateSequenceType?('S) = CallDefined?(begin, 'S) and CallDefined?(end, 'S);
@@ -427,9 +430,7 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 
 overload #LLType('T) | NewType?('T) = LLType(OriginalType('T));
 
-overload #'XType?('T)
-    | InheritableTypePredicate?('XType?) and NewType?('T)
-    = 'XType?(OriginalType('T));
+overload #InheritsPredicatesFromTypes('T) | NewType?('T) = OriginalType('T);
 
 inline overload unpack(forward x:'T) | NewType?('T)
     = forward bitcast(#OriginalType('T), x);

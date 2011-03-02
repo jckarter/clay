@@ -57,12 +57,7 @@ private symbol RecordFieldType2;
 overload #RecordFieldType2('field, 'x, ..'fields) = RecordFieldType2('field, ..'fields);
 overload #RecordFieldType2('field, ('field, 'T), ..'fields) = 'T;
 
-overload #'XType?('T) | InheritableTypePredicate?('XType?) and RecordType?('T)
-    = allValues?('XType?, ..RecordFieldTypes('T));
-
-// XXX hack to avoid recursive evaluation
-overload #InheritableTypePredicate?(InheritableTypePredicate?) = false;
-overload #VariadicBinaryOperatorProcedure?(InheritableTypePredicate?) = false;
+overload #InheritsPredicatesFromTypes('T) | RecordType?('T) = ..RecordFieldTypes('T);
 
 
 //
