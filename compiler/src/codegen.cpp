@@ -2133,8 +2133,11 @@ bool codegenShortcut(ObjectPtr callable,
             return false;
         if (pvArgs->size() > 1)
             return false;
-        if (pvArgs->size() == 0)
+        if (pvArgs->size() == 0) {
+            MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
+            assert(cvArgs->size() == 0);
             return true;
+        }
         PValuePtr pv = pvArgs->values[0];
         if ((pv->type == t) && (!isPrimitiveAggregateTooLarge(t))) {
             MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
