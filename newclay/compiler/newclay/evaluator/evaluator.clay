@@ -101,8 +101,8 @@ private parseOctalDigit(x) {
 // parseIntLiteral, parseFloatLiteral
 //
 
-parseIntLiteral(s) {
-    var number = String();
+parseIntLiteral(negative?, s) {
+    var number = String(if (negative?) "-" else "");
     var suffix = String();
 
     for (i, c in enumerated(s)) {
@@ -144,7 +144,7 @@ parseIntLiteral(s) {
             return IntValue();
         }
     } catch (ex:Error) {
-        genericError("invalid integer literal: ", s);
+        genericError("invalid integer literal: ", if (negative?) "-" else "", s);
         return IntValue();
     }
 }
@@ -245,8 +245,8 @@ parseHexFloatLiteral(number, suffix) {
     }
 }
 
-parseFloatLiteral(s) {
-    var number = String();
+parseFloatLiteral(negative?, s) {
+    var number = String(if (negative?) "-" else "");
     var suffix = String();
     var s2 = slicedFrom(s, 0);
 
@@ -444,7 +444,7 @@ overload evaluateExpr(x:ast.BoolLiteral, env) {
     return Value(BoolValue(x.value));
 }
 overload evaluateExpr(x:ast.IntLiteral, env) {
-    return Value(parseIntLiteral(x.value));
+    return Value(parseIntLiteral(x.negative?, x.value));
 }
 overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
@@ -483,7 +483,7 @@ overload evaluateExpr(x:ast.Indexing, env) {
 }
 overload evaluateExpr(x:ast.StaticIndexing, env) {
     var indexable = evaluateExpr(x.expr, env);
-    var index = Value(parseIntLiteral(x.index.value));
+    var index = Value(parseIntLiteral(false, x.index.value));
     return evaluateIndexing(indexable, ValueList(index));
 }
 overload evaluateExpr(x:ast.FieldRef, env) {

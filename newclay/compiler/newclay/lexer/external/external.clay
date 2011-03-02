@@ -182,7 +182,7 @@ private var lexStringLiteral = modify(
 
 private var lexStaticIndex = modify(
     x => Token(STATIC_INDEX),
-    seq('.', unsignedIntLiteral)
+    seq('.', intLiteral)
 );
 
 
@@ -218,11 +218,11 @@ private var intType = choice(
     'i',
 );
 
-private var unsignedIntLiteral = seq(choice(hexInt, decimalInt), optional(intType));
+private var intLiteral = seq(choice(hexInt, decimalInt), optional(intType));
 
 private var lexIntLiteral = modify(
     x => Token(INT_LITERAL),
-    seq(optional(sign), unsignedIntLiteral)
+    intLiteral
 );
 
 
@@ -259,8 +259,8 @@ private var floatType = choice(
 private var lexFloatLiteral = modify(
     x => Token(FLOAT_LITERAL),
     choice(
-        seq(optional(sign), choice(hexFloat, decimalFloat), optional(floatType)),
-        seq(optional(sign), decimalInt, floatType)
+        seq(choice(hexFloat, decimalFloat), optional(floatType)),
+        seq(decimalInt, floatType)
     ),
 );
 

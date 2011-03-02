@@ -255,14 +255,22 @@ private var charLiteral = exprParser(
     tokenData(CHAR_LITERAL),
 );
 
+private var optSign = modify(
+    x => just(x, false),
+    optional(choice(
+        modify(x => false, punc(#"+")),
+        modify(x => true, punc(#"-")),
+    ))
+);
+
 private var intLiteral = exprParser(
-    x => IntLiteral(String(x)),
-    tokenData(INT_LITERAL),
+    x => IntLiteral(x.0, String(x.1)),
+    sequence(optSign, tokenData(INT_LITERAL)),
 );
 
 private var floatLiteral = exprParser(
-    x => FloatLiteral(String(x)),
-    tokenData(FLOAT_LITERAL),
+    x => FloatLiteral(x.0, String(x.1)),
+    sequence(optSign, tokenData(FLOAT_LITERAL)),
 );
 
 private var stringLiteral = exprParser(
@@ -373,7 +381,7 @@ private intLiteralFromStaticIndexToken(data) {
 }
 
 private var staticIndexingLiteral = bounds(modify(
-    x => IntLiteral(intLiteralFromStaticIndexToken(x)),
+    x => IntLiteral(false, intLiteralFromStaticIndexToken(x)),
     tokenData(STATIC_INDEX),
 ));
 
@@ -412,12 +420,12 @@ private var suffixExpr = modify(
 //
 
 private var prefixExpr2 = choice(
+    suffixExpr,
     plusExpr,
     minusExpr,
     addressOfExpr,
     unpackOpExpr,
     staticExpr,
-    suffixExpr,
 );
 
 private prefixExpr(input) Maybe[Expr] = prefixExpr2(input);
@@ -674,8 +682,8 @@ private var boolLiteralPattern = patternParser(
 );
 
 private var intLiteralPattern = patternParser(
-    x => IntLiteral(String(x)),
-    tokenData(INT_LITERAL),
+    x => IntLiteral(x.0, String(x.1)),
+    sequence(optSign, tokenData(INT_LITERAL)),
 );
 
 private var charLiteralPattern = patternParser(
