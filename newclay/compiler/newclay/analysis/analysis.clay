@@ -2094,7 +2094,21 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
 //
 
 ifOverload(program, callable, args, thenFn, elseFn) {
-    for (x in reversed(program.allOverloads)) {
+    var maybeHead = valueSymbolHead(callable);
+    if (just?(maybeHead)) {
+        ref overloads = if (program.overloadsDistributed?)
+                just(maybeHead).overloads
+            else
+                program.symbolOverloads;
+
+        for (x in reversed(overloads)) {
+            var result = matchOverload(x, callable, args);
+            if (just?(result))
+                return forward ...thenFn(move(just(result)));
+        }
+    }
+
+    for (x in reversed(program.patternOverloads)) {
         var result = matchOverload(x, callable, args);
         if (just?(result))
             return forward ...thenFn(move(just(result)));

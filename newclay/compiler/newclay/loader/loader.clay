@@ -1,4 +1,3 @@
-
 import io.paths.*;
 import maybe.*;
 import newclay.common.*;
@@ -6,6 +5,7 @@ import newclay.lexer.*;
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.ast.transforms.*;
+import newclay.evaluator.*;
 import newclay.parser.*;
 import newclay.core.*;
 import newclay.platforms.*;
@@ -198,6 +198,10 @@ private initializeGlobalEntries(module) {
     }
 }
 
+private symbolTarget?(p:ast.Pattern)
+    = variantIs?(p, ast.IndexingPattern) or variantIs?(p, ast.NameRef);
+
+
 private initializeAttributesAndOverloads(module) {
     for (item in module.ast.topLevelItems) {
         match(item,
@@ -207,11 +211,17 @@ private initializeAttributesAndOverloads(module) {
             },
             ast.StaticOverload, x ref=> {
                 var y = StaticOverload(x, module);
-                push(module.program.allStaticOverloads, y);
+                if (symbolTarget?(x.target))
+                    push(module.program.symbolStaticOverloads, y);
+                else
+                    push(module.program.patternStaticOverloads, y);
             },
             ast.Overload, x ref=> {
                 var y = Overload(x, module);
-                push(module.program.allOverloads, y);
+                if (symbolTarget?(x.target))
+                    push(module.program.symbolOverloads, y);
+                else
+                    push(module.program.patternOverloads, y);
             },
             ast.GlobalLiteralCodeBody, x ref=> {
                 push(module.program.allLiteralCodeBodies,
@@ -221,6 +231,39 @@ private initializeAttributesAndOverloads(module) {
             MatchDefault, x ref=> { },
         );
     }
+}
+
+private overloadSymbolHead(item) {
+    var pvars = topLevelItemPatternVars(item);
+    var env = initializeMatch(item.module, pvars);
+    var patternResult = evaluatePattern(item.ast.target, env);
+    return match(patternResult,
+        Value, v ref=> valueSymbolHead(v),
+        SymbolPattern, i ref=> Maybe(i.head),
+        MatchDefault, x ref=> nothing(SymbolHead),
+    );
+}
+
+private distributeOverloads(program) {
+    for (so in program.symbolStaticOverloads)
+        maybe(overloadSymbolHead(so),
+            symbolHead ref=> {
+                push(symbolHead.staticOverloads, so);
+            },
+            () ref=> {
+                assert(false, "symbol static overload isn't: ", so);
+            },
+        );
+    for (o in program.symbolOverloads)
+        maybe(overloadSymbolHead(o),
+            symbolHead ref=> {
+                push(symbolHead.overloads, o);
+            },
+            () ref=> {
+                assert(false, "symbol overload isn't: ", o);
+            },
+        );
+    program.overloadsDistributed? = true;
 }
 
 private initializeModule(module) {
@@ -280,10 +323,13 @@ private resolveProgram(program:Program) {
 
 loadProgram(mainFilename:String, searchPath:Vector[String]) {
     var program = allocateRef(Program);
+    program.overloadsDistributed? = false;
+
     program.targetInfo = hostTargetInfo();
     program.moduleSearchPath = searchPath;
     loadPrimitivesModule(program);
     loadMainModule(program, mainFilename);
+    distributeOverloads(program);
     resolveProgram(program);
     return program;
 }

@@ -34,8 +34,11 @@ record Program = referenceType(
     moduleSearchPath: Vector[String],
     allSymbolHeads: Vector[SymbolHead],
     allAttributes: Vector[Attribute],
-    allStaticOverloads: Vector[StaticOverload],
-    allOverloads: Vector[Overload],
+    symbolStaticOverloads: Vector[StaticOverload],
+    symbolOverloads: Vector[Overload],
+    patternStaticOverloads: Vector[StaticOverload],
+    patternOverloads: Vector[Overload],
+    overloadsDistributed?: Bool,
     allLiteralCodeBodies: Vector[GlobalLiteralCode],
     globalMap: ProgramGlobalMap,
     hooks: ClayHooks,
@@ -190,6 +193,8 @@ record SymbolHead = referenceType(
     evalTable: EvalTable,
     invokeTable: InvokeTable,
     aliasHead?: Bool,
+    staticOverloads: Vector[StaticOverload],
+    overloads: Vector[Overload],
 );
 
 private aliasAST?(a:ast.Symbol) = false;
@@ -199,7 +204,9 @@ overload SymbolHead(a:SymbolHeadAST, name:ast.SymbolName, module:Module) =
     SymbolHead(
         a, name, module, Map[ValueList, EnvEntry](),
         EvalTable(), InvokeTable(),
-        aliasAST?(*a)
+        aliasAST?(*a),
+        Vector[StaticOverload](),
+        Vector[Overload](),
     );
 
 symbolHeadHasParams?(x:SymbolHead) {

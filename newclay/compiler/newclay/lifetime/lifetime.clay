@@ -199,7 +199,7 @@ private removeValue(c:LifetimeContext, input) {
         return;
 
     var inputFramep = lookup(c.variableFrames, input);
-    assert(not null?(inputFramep), "lifetime analysis invariant: consumed value must be live");
+    assert(not null?(inputFramep), "lifetime analysis invariant: consumed value must be live: ", input);
     var inputCoord = find(inputFramep^.liveValues, input);
     assert(inputCoord != end(inputFramep^.liveValues), "lifetime analysis invariant: variable must be in its expected frame");
     remove(inputFramep^.liveValues, inputCoord);
