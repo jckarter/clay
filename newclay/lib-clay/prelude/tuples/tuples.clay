@@ -115,8 +115,7 @@ private #CompatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
     = CallDefined?('fn, 'T, 'U) and CompatibleTupleTypes2?('fn, (..'TT), (..'UU));
 overload #CompatibleTupleTypes2?('fn, (), ()) = true;
 
-// XXX lvalues only
-inline overload assign(ref to:Tuple[..'T], /*lvalue*/ from:Tuple[..'U])
+inline overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U])
     | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))
       and CompatibleTupleTypes?(assign, (..'T), (..'U))
 {

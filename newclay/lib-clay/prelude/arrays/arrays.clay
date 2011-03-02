@@ -159,8 +159,7 @@ inline overload copy(x:Array['T, 'n]) returned:Array['T, 'n]
     }
 }
 
-// XXX lvalues only
-inline overload assign(ref to:Array['T, 'n], /*lvalue*/ from:Array['U, 'n])
+inline overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n])
     | not ('T == 'U and BitwiseAssignedType?('T))
       and CallDefined?(assign, 'T, 'U)
 {

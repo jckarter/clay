@@ -188,8 +188,8 @@ inline overload copy(x:'T)
       and allValues?(CopyableType?, ..RecordFieldTypes('T))
     = copyRecord(x);
 
-symbol assignRecord;
-inline overload assignRecord(ref to:'T, /*lvalue*/ from:'T)
+symbol copyAssignRecord;
+inline overload copyAssignRecord(ref to:'T, from:'T)
     | CompositeType?('T)
       and not allValues?(BitwiseAssignedType?, ..RecordFieldTypes('T))
       and allValues?(AssignableType?, ..RecordFieldTypes('T))
@@ -197,19 +197,19 @@ inline overload assignRecord(ref to:'T, /*lvalue*/ from:'T)
     static for (field in ..#RecordFieldNames('T))
         to[field] = from[field];
 }
-inline overload assignRecord(ref to:'T, /*lvalue*/ from:'T)
+inline overload copyAssignRecord(ref to:'T, from:'T)
     | CompositeType?('T)
       and allValues?(BitwiseAssignedType?, ..RecordFieldTypes('T))
 {
     to <-- from;
 }
 
-inline overload assign(ref to:'T, /*lvalue*/ from:'T)
+inline overload copyAssign(ref to:'T, from:'T)
     | RecordType?('T)
       and not BitwiseAssignedType?('T)
       and allValues?(AssignableType?, ..RecordFieldTypes('T))
 {
-    assignRecord(to, from);
+    copyAssignRecord(to, from);
 }
 
 
