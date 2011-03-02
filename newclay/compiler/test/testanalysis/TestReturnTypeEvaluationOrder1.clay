@@ -1,0 +1,6 @@
+import __primitives__.*;
+
+foo(x) = x;
+overload foo(x) y:StaticError("this should not be run") | false { }
+
+main() = foo(5);
