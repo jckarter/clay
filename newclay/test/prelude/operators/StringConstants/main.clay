@@ -1,0 +1,38 @@
+import show.*;
+
+main() {
+    var a = "a", a2 = "a", ab = "ab", b = "b";
+
+    show("a" == "a"); ////true
+    show(a == "a"); ////true
+    show(a == a); ////true
+    show(a == a2); ////true
+    show(a == b); ////false
+    show(a == ab); ////false
+    show(a == "b"); ////false
+
+    show(a <= a); ////true
+    show(a <  a); ////false
+    show(a >  a); ////false
+    show(a >= a); ////true
+
+    show(a <= ab); ////true
+    show(a <  ab); ////true
+    show(a >  ab); ////false
+    show(a >= ab); ////false
+
+    show(a <= b); ////true
+    show(a <  b); ////true
+    show(a >  b); ////false
+    show(a >= b); ////false
+
+    show(ab <= a); ////false
+    show(ab <  a); ////false
+    show(ab >  a); ////true
+    show(ab >= a); ////true
+
+    show(b <= a); ////false
+    show(b <  a); ////false
+    show(b >  a); ////true
+    show(b >= a); ////true
+}

@@ -1,0 +1,8 @@
+import show.*;
+
+main() {
+    show(false < true); ////true
+    show(true < false); ////false
+    show(false == false); ////true
+    show(false == true); ////false
+}
