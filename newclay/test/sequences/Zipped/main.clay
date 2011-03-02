@@ -27,7 +27,7 @@ main() {
     ////3.5
     ////'d'
     ////8
-    for(ref a, /*XXX rvalue*/ b, c, d in z) {
+    for(ref a, rvalue b, c, d in z) {
         show("----");
         show(a);
         show(b);
