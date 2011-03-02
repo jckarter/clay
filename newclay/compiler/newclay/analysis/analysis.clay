@@ -383,7 +383,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.BoolLiteral)
     = addSpecializedValue(s, expr, Value(BoolValue(expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IntLiteral)
-    = addSpecializedValue(s, expr, Value(parseIntLiteral(expr.value)));
+    = addSpecializedValue(s, expr, Value(parseIntLiteral(expr.negative?, expr.value)));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StringLiteral)
     = addSpecializedValue(s, expr, Value(StringValue(parseStringLiteral(expr.value))));
@@ -392,7 +392,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.CharLiteral)
     = addSpecializedValue(s, expr, Value(CharValue(parseCharLiteral(expr.value))));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
-    = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.value)));
+    = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.negative?, expr.value)));
 
 private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
     RTValue, x ref=> Maybe(RTValues(x)),
@@ -488,10 +488,10 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Indexing)
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticIndexing) {
     return ifStaticValue(s, env, expr.expr,
         staticIndexee ref=> analyzeEnvEntry(s, expr,
-            evaluateIndexingEntry(staticIndexee, ValueList(parseIntLiteral(expr.index.value)))
+            evaluateIndexingEntry(staticIndexee, ValueList(parseIntLiteral(false, expr.index.value)))
         ),
         indexee ref=> {
-            var indexValue = Value(parseIntLiteral(expr.index.value));
+            var indexValue = Value(parseIntLiteral(false, expr.index.value));
             var indexArg = singleAddSpecializedStaticValue(s, expr.index, indexValue);
             var operands = RTValues(indexee, indexArg);
             return analyzeCall(s, expr, getHooks().staticIndex, operands);

@@ -222,10 +222,12 @@ record CharLiteral = ast(
 );
 
 record IntLiteral = ast(
+    negative?: Bool,
     value: String,
 );
 
 record FloatLiteral = ast(
+    negative?: Bool,
     value: String,
 );
 
