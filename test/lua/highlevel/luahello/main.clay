@@ -1,0 +1,9 @@
+import lua;
+
+main() {
+    var x = lua.State();
+    lua.openLibs(x);
+    lua.doString(x, "
+        print('Hello world from Lua!')
+    ");
+}

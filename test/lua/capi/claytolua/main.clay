@@ -1,13 +1,13 @@
-import lua.*;
+import lua.capi.*;
 
 main() {
     var x = lua_open();
     luaL_openlibs(x);
-    luaL_dostring(x, "
+    luaL_dostring(x, cstring("
         function add(x, y)
             return x + y
         end
-    ");
+    "));
     lua_getglobal(x, cstring("add"));
     lua_pushnumber(x, 41.0);
     lua_pushnumber(x, 22.0);

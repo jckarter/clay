@@ -1,0 +1,19 @@
+import libc;
+
+foo(buf) {
+    println("before longjmp");
+    libc.longjmp(&buf[0], 10);
+    println("after longjmp");
+}
+
+main() {
+    var buf = libc.jmp_buf();
+    var result = libc.setjmp(&buf[0]);
+    if (result == 0) {
+        println("setjmp called");
+        foo(buf);
+    }
+    else {
+        println("longjmp called. result = ", result);
+    }
+}

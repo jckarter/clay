@@ -1,0 +1,14 @@
+
+bar1() {
+    println("bar1");
+    return 5, 6;
+}
+
+bar2() {
+    println("bar2");
+}
+
+main() {
+    var a = Tuple(...bar1());
+    var b = Tuple(...bar2());
+}

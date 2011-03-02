@@ -964,7 +964,7 @@ external strtol(
 
 external strtold(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType21;
+    argument1 : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType22;
 
 external strtoll(
     argument0 : Pointer[CChar],
@@ -1534,7 +1534,7 @@ external __fpclassify(
     argument0 : Double) Int;
 
 external __fpclassifyl(
-    argument0 : UnsupportedCBuiltinType21) Int;
+    argument0 : UnsupportedCBuiltinType22) Int;
 
 external acos(
     argument0 : Double) Double;
@@ -1911,203 +1911,203 @@ external fmaf(
     argument2 : Float) Float;
 
 external acosl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external asinl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external atanl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external atan2l(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external cosl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external sinl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external tanl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external acoshl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external asinhl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external atanhl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external coshl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external sinhl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external tanhl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external expl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external exp2l(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external expm1l(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external logl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external log10l(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external log2l(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external log1pl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external logbl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external modfl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : Pointer[UnsupportedCBuiltinType21]) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : Pointer[UnsupportedCBuiltinType22]) UnsupportedCBuiltinType22;
 
 external ldexpl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : Int) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : Int) UnsupportedCBuiltinType22;
 
 external frexpl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : Pointer[Int]) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : Pointer[Int]) UnsupportedCBuiltinType22;
 
 external ilogbl(
-    argument0 : UnsupportedCBuiltinType21) Int;
+    argument0 : UnsupportedCBuiltinType22) Int;
 
 external scalbnl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : Int) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : Int) UnsupportedCBuiltinType22;
 
 external scalblnl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : CLong) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : CLong) UnsupportedCBuiltinType22;
 
 external fabsl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external cbrtl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external hypotl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external powl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external sqrtl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external erfl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external erfcl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external lgammal(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external tgammal(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external ceill(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external floorl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external nearbyintl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external rintl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external lrintl(
-    argument0 : UnsupportedCBuiltinType21) CLong;
+    argument0 : UnsupportedCBuiltinType22) CLong;
 
 external roundl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external lroundl(
-    argument0 : UnsupportedCBuiltinType21) CLong;
+    argument0 : UnsupportedCBuiltinType22) CLong;
 
 external llrintl(
-    argument0 : UnsupportedCBuiltinType21) Int64;
+    argument0 : UnsupportedCBuiltinType22) Int64;
 
 external llroundl(
-    argument0 : UnsupportedCBuiltinType21) Int64;
+    argument0 : UnsupportedCBuiltinType22) Int64;
 
 external truncl(
-    argument0 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external fmodl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external remainderl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external remquol(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21,
-    argument2 : Pointer[Int]) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22,
+    argument2 : Pointer[Int]) UnsupportedCBuiltinType22;
 
 external copysignl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external nanl(
-    argument0 : Pointer[CChar]) UnsupportedCBuiltinType21;
+    argument0 : Pointer[CChar]) UnsupportedCBuiltinType22;
 
 external nextafterl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external nexttoward(
     argument0 : Double,
-    argument1 : UnsupportedCBuiltinType21) Double;
+    argument1 : UnsupportedCBuiltinType22) Double;
 
 external nexttowardf(
     argument0 : Float,
-    argument1 : UnsupportedCBuiltinType21) Float;
+    argument1 : UnsupportedCBuiltinType22) Float;
 
 external nexttowardl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external fdiml(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external fmaxl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external fminl(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external fmal(
-    argument0 : UnsupportedCBuiltinType21,
-    argument1 : UnsupportedCBuiltinType21,
-    argument2 : UnsupportedCBuiltinType21) UnsupportedCBuiltinType21;
+    argument0 : UnsupportedCBuiltinType22,
+    argument1 : UnsupportedCBuiltinType22,
+    argument2 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
 
 external j0(
     argument0 : Double) Double;
@@ -2134,3 +2134,31 @@ external scalb(
     argument1 : Double) Double;
 
 external signgam : Int;
+
+alias jmp_buf = Array[Int,28];
+
+alias sigjmp_buf = Array[Int,29];
+
+external setjmp(
+    env : Pointer[Int]) Int;
+
+external longjmp(
+    env : Pointer[Int],
+    val : Int);
+
+external _setjmp(
+    env : Pointer[Int]) Int;
+
+external _longjmp(
+    argument0 : Pointer[Int],
+    val : Int);
+
+external sigsetjmp(
+    env : Pointer[Int],
+    val : Int) Int;
+
+external siglongjmp(
+    env : Pointer[Int],
+    val : Int);
+
+external longjmperror();

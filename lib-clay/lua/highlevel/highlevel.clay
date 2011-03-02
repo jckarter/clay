@@ -1,0 +1,526 @@
+import lua.capi.*;
+import libc;
+
+
+//
+// State
+//
+
+record State (
+    handle: Pointer[lua_State],
+    owned: Bool,
+);
+
+overload RegularRecord?(static State) = false;
+
+overload State() = State(luaL_newstate(), true);
+
+overload State(handle:Pointer[lua_State]) = State(handle, false);
+
+overload resetUnsafe(x:State) {
+    x.handle = null(lua_State);
+    x.owned = false;
+}
+
+overload moveUnsafe(x:State) out:State {
+    out.handle = x.handle;
+    out.owned = x.owned;
+}
+
+overload destroy(x:State) {
+    if (x.owned and (not null?(x.handle)))
+        lua_close(x.handle);
+}
+
+
+//
+// Error
+//
+
+record Error(msg:String);
+
+instance Exception = Error;
+
+[S | String?(S) and (S != String)]
+overload Error(msg:S) = Error(String(msg));
+
+private popError(x:State) {
+    var msg = String(CStringRef(lua_tostring(x.handle, -1)));
+    lua_pop(x.handle, 1);
+    return Error(move(msg));
+}
+
+
+//
+// safeCall wrapper
+//
+
+private var panicJmpBuf = Pointer[libc.jmp_buf](0);
+private var panicMsg = String();
+
+private panicHandler(handle:Pointer[lua_State]) Int {
+    panicMsg = String(CStringRef(lua_tostring(handle, -1)));
+    libc.longjmp(&panicJmpBuf^[0], 1);
+    return 0;
+}
+
+private safeCall(x:State, func) {
+    // declare a jmp_buf, set global panicJmpBuf
+    var jmpBuf = libc.jmp_buf();
+    var savedJmpBuf = panicJmpBuf;
+    panicJmpBuf = &jmpBuf;
+
+    // set panic handler
+    var newPanic = makeCCodePointer(panicHandler, Pointer[lua_State]);
+    var oldPanic = lua_atpanic(x.handle, newPanic);
+
+    var jmpCode = libc.setjmp(&jmpBuf[0]);
+    if (jmpCode == 0) {
+        var makeTuple = (...args) => Tuple(...args);
+        var result = makeTuple(...func(x));
+        // restore panic jmp_buf and panic handler
+        panicJmpBuf = savedJmpBuf;
+        lua_atpanic(x.handle, oldPanic);
+        return ...unpackTuple(result);
+    }
+    else {
+        // handle error
+        panicJmpBuf = savedJmpBuf;
+        lua_atpanic(x.handle, oldPanic);
+        throw Error(move(panicMsg));
+    }
+}
+
+
+//
+// openLibs, call, doString, doFile
+//
+
+openLibs(x:State) {
+    luaL_openlibs(x.handle);
+}
+
+call(x:State, nargs:Int, nresults:Int) {
+    safeCall(x, x ref=> {
+        lua_call(x.handle, nargs, nresults);
+    });
+}
+
+[S | CCompatibleString?(S)]
+doString(x:State, s:S) {
+    var result = luaL_loadstring(x.handle, cstring(s));
+    if (result != 0)
+        throw popError(x);
+    call(x, 0, LUA_MULTRET);
+}
+
+[S | CCompatibleString?(S)]
+doFile(x:State, file:S) {
+    var result = luaL_loadfile(x.handle, cstring(file));
+    if (result != 0)
+        throw popError(x);
+    call(x, 0, LUA_MULTRET);
+}
+
+
+//
+// push values on to lua stack
+//
+
+checkStack(x:State, n:Int) {
+    var result = lua_checkstack(x.handle, n);
+    if (result == 0)
+        throw Error("insufficient stack space");
+}
+
+pushNil(x:State) {
+    lua_pushnil(x.handle);
+}
+
+pushBoolean(x:State, v:Bool) {
+    lua_pushboolean(x.handle, Int(v));
+}
+
+[T | Numeric?(T)]
+pushNumber(x:State, v:T) {
+    lua_pushnumber(x.handle, lua_Number(v));
+}
+
+[T | Integer?(T)]
+pushInteger(x:State, v:T) {
+    lua_pushinteger(x.handle, lua_Integer(v));
+}
+
+[S | ContiguousString?(S)]
+pushString(x:State, v:S) {
+    lua_pushlstring(x.handle, Pointer[CChar](begin(v)), size(v));
+}
+
+[F | CallDefined?(F, State) and (Type(F(typeToLValue(State))) == Int)]
+pushFunction(x:State, static F) {
+    var cWrapper = (handle) => F(State(handle));
+    var ptr = makeCCodePointer(cWrapper, Pointer[lua_State]);
+    lua_pushcfunction(x.handle, ptr);
+}
+
+[F | CallDefined?(F, State) and (Type(F(typeToLValue(State))) == Int)]
+pushClosure(x:State, static F, n:Int) {
+    var cWrapper = (handle) => F(State(handle));
+    var ptr = makeCCodePointer(cWrapper, Pointer[lua_State]);
+    lua_pushcclosure(x.handle, ptr, n);
+}
+
+createTable(x:State, narr:Int, nrec:Int) {
+    lua_createtable(x.handle, narr, nrec);
+}
+
+newTable(x:State) {
+    lua_newtable(x.handle);
+}
+
+
+//
+// query type
+//
+
+type(x:State, index:Int) = lua_type(x.handle, index);
+typeName(x:State, index:Int) = CStringRef(lua_typename(x.handle, index));
+
+isNil(x:State, index:Int) = Bool(lua_isnil(x.handle, index));
+alias nil? = isNil;
+
+isBoolean(x:State, index:Int) = Bool(lua_isboolean(x.handle, index));
+alias boolean? = isBoolean;
+
+isNumber(x:State, index:Int) = Bool(lua_isnumber(x.handle, index));
+alias number? = isNumber;
+
+isString(x:State, index:Int) = Bool(lua_isstring(x.handle, index));
+alias string? = isString;
+
+isTable(x:State, index:Int) = Bool(lua_istable(x.handle, index));
+alias table? = isTable;
+
+isFunction(x:State, index:Int) = Bool(lua_isfunction(x.handle, index));
+alias function? = isFunction;
+
+isThread(x:State, index:Int) = Bool(lua_isthread(x.handle, index));
+alias thread? = isThread;
+
+isUserData(x:State, index:Int) = Bool(lua_isuserdata(x.handle, index));
+alias userData? = isUserData;
+
+isLightUserData(x:State, index:Int) = Bool(lua_islightuserdata(x.handle, index));
+alias lightUserData? = isLightUserData;
+
+
+//
+// query value
+//
+
+toBoolean(x:State, index:Int) = Bool(lua_toboolean(x.handle, index));
+
+toNumber(x:State, index:Int) = lua_tonumber(x.handle, index);
+
+toInteger(x:State, index:Int) = lua_tointeger(x.handle, index);
+
+toString(x:State, index:Int) {
+    var size = SizeT();
+    var ptr = lua_tolstring(x.handle, index, &size);
+    if (null?(ptr))
+        throw Error("not a string");
+    var ptr2 = Pointer[Char](ptr);
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
+    return StringConstant(ptr2, ptr2 + size);
+}
+
+objLen(x:State, index:Int) = lua_objlen(x.handle, index);
+
+toUserData(x:State, index:Int) {
+    var ptr = lua_touserdata(x.handle, index);
+    if (null?(ptr))
+        throw Error("not a userdatum");
+    return ptr;
+}
+
+toCFunction(x:State, index:Int) {
+    var ptr = lua_tocfunction(x.handle, index);
+    if (null?(ptr))
+        throw Error("not a c-function");
+    return ptr;
+}
+
+
+//
+// other stack operations
+//
+
+getTop(x:State) = lua_gettop(x.handle);
+
+setTop(x:State, index:Int) { lua_settop(x.handle, index); }
+
+pushValue(x:State, index:Int) { lua_pushvalue(x.handle, index); }
+
+remove(x:State, index:Int) { lua_remove(x.handle, index); }
+
+insert(x:State, index:Int) { lua_insert(x.handle, index); }
+
+replace(x:State, index:Int) { lua_replace(x.handle, index); }
+
+pop(x:State, n:Int) { lua_pop(x.handle, n); }
+
+
+//
+// comparison operations
+//
+
+equal(x:State, i:Int, j:Int) = safeCall(x,
+    x ref=> Bool(lua_equal(x.handle, i, j))
+);
+
+rawEqual(x:State, i:Int, j:Int) = Bool(lua_rawequal(x.handle, i, j));
+
+lessThan(x:State, i:Int, j:Int) = safeCall(x,
+    x ref=> Bool(lua_lessthan(x.handle, i, j))
+);
+
+alias equal? = equal;
+alias rawEqual? = rawEqual;
+alias lessThan? = lessThan;
+
+
+//
+// getGlobal, setGlobal
+//
+
+[S | CCompatibleString?(S)]
+getGlobal(x:State, name:S) {
+    safeCall(x, x ref=> {
+        lua_getglobal(x.handle, cstring(name));
+    });
+}
+
+[S | CCompatibleString?(S)]
+setGlobal(x:State, name:S) {
+    safeCall(x, x ref=> {
+        lua_setglobal(x.handle, cstring(name));
+    });
+}
+
+
+//
+// table ops - getTable/setTable, rawGet/rawSet, rawGetI/rawSetI, getField/setField
+//
+
+getTable(x:State, index:Int) {
+    safeCall(x, x ref=> {
+        lua_gettable(x.handle, index);
+    });
+}
+
+setTable(x:State, index:Int) {
+    safeCall(x, x ref=> {
+        lua_settable(x.handle, index);
+    });
+}
+
+rawGet(x:State, index:Int) { lua_rawget(x.handle, index); }
+rawSet(x:State, index:Int) { lua_rawset(x.handle, index); }
+
+rawGetI(x:State, index:Int, n:Int) { lua_rawgeti(x.handle, index, n); }
+rawSetI(x:State, index:Int, n:Int) { lua_rawseti(x.handle, index, n); }
+
+[S | CCompatibleString?(S)]
+getField(x:State, index:Int, key:S) {
+    safeCall(x, x ref=> {
+        lua_getfield(x.handle, index, cstring(key));
+    });
+}
+
+[S | CCompatibleString?(S)]
+setField(x:State, index:Int, key:S) {
+    lua_setfield(x.handle, index, cstring(key));
+}
+
+
+//
+// getMetaTable, setMetaTable
+//
+
+getMetaTable(x:State, index:Int) {
+    var result = lua_getmetatable(x.handle, index);
+    if (result == 0)
+        throw Error("unable to get metatable");
+}
+
+setMetaTable(x:State, index:Int) {
+    var result = lua_setmetatable(x.handle, index);
+    if (result == 0)
+        throw Error("unable to set metatable");
+}
+
+
+//
+// genericError, typeError, argError
+//
+// uses safeCall to convert these errors to exceptions
+//
+
+[S | CCompatibleString?(S)]
+genericError(x:State, msg:S) {
+    pushString(x, msg);
+    safeCall(x, x ref=> {
+        lua_error(x.handle);
+    });
+}
+
+[S | CCompatibleString?(S)]
+typeError(x:State, index:Int, expected:S) {
+    safeCall(x, x ref=> {
+        lua_typerror(x.handle, index, cstring(expected));
+    });
+}
+
+[S | CCompatibleString?(S)]
+argError(x:State, index:Int, extraMsg:S) {
+    safeCall(x, x ref=> {
+        lua_argerror(x.handle, index, cstring(extraMsg));
+    });
+}
+
+overload argError(x:State, index:Int) {
+    safeCall(x, x ref=> {
+        lua_argerror(x.handle, index, null(CChar));
+    });
+}
+
+
+//
+// check type and get stack value
+//
+
+checkAny(x:State, index:Int) {
+    safeCall(x, x ref=> {
+        luaL_checkany(x.handle, index);
+    });
+}
+
+checkInt(x:State, index:Int) = safeCall(x,
+    x ref=> luaL_checkint(x.handle, index)
+);
+
+checkInteger(x:State, index:Int) = safeCall(x,
+    x ref=> luaL_checkinteger(x.handle, index)
+);
+
+checkLong(x:State, index:Int) = safeCall(x,
+    x ref=> luaL_checklong(x.handle, index)
+);
+
+checkNumber(x:State, index:Int) = safeCall(x,
+    x ref=> luaL_checknumber(x.handle, index)
+);
+
+checkString(x:State, index:Int) {
+    var size = SizeT();
+    var ptr = safeCall(x,
+        x ref=> luaL_checklstring(x.handle, index, &size)
+    );
+    var ptr2 = Pointer[Char](ptr);
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
+    return StringConstant(ptr2, ptr2 + size);
+}
+
+[S | CCompatibleString?(S)]
+checkUserData(x:State, index:Int, tname:S) {
+    return safeCall(x,
+        x ref=> luaL_checkudata(x.handle, index, cstring(tname))
+    );
+}
+
+
+//
+// LuaClayFunction?, toLuaCFunction
+//
+
+private LuaClayFunction?(x) = false;
+
+[F | CallDefined?(F, State) and (Type(F(typeToLValue(State))) == Int)]
+overload LuaClayFunction?(static F) = true;
+
+[F | LuaClayFunction?(F)]
+private toLuaCFunction(static F) {
+    var cWrapper = (handle) => {
+        try {
+            return F(State(handle));
+        }
+        catch (e:Error) {
+            // HACK: create inner scope to ensure
+            // the error message String is destroyed
+            // before the call to lua_error
+            {
+                var msg = move(e.msg);
+                lua_pushlstring(handle, Pointer[CChar](begin(msg)), size(msg));
+            }
+            lua_error(handle);
+            // UGLY: the following is a no-op, which is there to
+            // simply appease the compiler.
+            return F(State(handle));
+        }
+    };
+    return makeCCodePointer(cWrapper, Pointer[lua_State]);
+}
+
+
+//
+// register
+//
+
+[S, F | CCompatibleString?(S) and LuaClayFunction?(F)]
+register(x:State, name:S, static F) {
+    safeCall(x, x ref=> {
+        lua_register(x.handle, cstring(name), toLuaCFunction(F));
+    });
+}
+
+
+//
+// registerTable, registerModule
+//
+
+private NameFunctionPair?(x) = false;
+
+[S, F]
+overload NameFunctionPair?(static Tuple[S, Static[F]]) {
+    return CCompatibleString?(S) and LuaClayFunction?(F);
+}
+
+[...E | allValues?(NameFunctionPair?, ...E)]
+registerTable(x:State, ...entries:E) {
+    alias N = countValues(...E) + 1;
+    var moduleEntries = Array[luaL_Reg, N]();
+    var ptr = begin(moduleEntries);
+    static for (entry in ...entries) {
+        ptr^.name = cstring(entry.0);
+        ptr^.func = toLuaCFunction(entry.1);
+        ptr += 1;
+    }
+    ptr^.name = Type(ptr^.name)(0);
+    ptr^.func = Type(ptr^.func)(0);
+    luaL_register(x.handle, null(CChar), begin(moduleEntries));
+}
+
+[S, ...E | CCompatibleString?(S) and allValues?(NameFunctionPair?, ...E)]
+registerModule(x:State, name:S, ...entries:E) {
+    alias N = countValues(...E) + 1;
+    var moduleEntries = Array[luaL_Reg, N]();
+    var ptr = begin(moduleEntries);
+    static for (entry in ...entries) {
+        ptr^.name = cstring(entry.0);
+        ptr^.func = toLuaCFunction(entry.1);
+        ptr += 1;
+    }
+    ptr^.name = Type(ptr^.name)(0);
+    ptr^.func = Type(ptr^.func)(0);
+    luaL_register(x.handle, cstring(name), begin(moduleEntries));
+}

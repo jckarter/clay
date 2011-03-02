@@ -1,2 +1,2 @@
-public import lua.generated.*;
-public import lua.handwritten.*;
+public import lua.capi as capi;
+public import lua.highlevel.*;
