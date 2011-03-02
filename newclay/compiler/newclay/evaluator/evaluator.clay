@@ -1388,12 +1388,33 @@ matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env]
     return Maybe(move(env));
 }
 
+valueSymbolHead(v)
+    = match(v,
+        SymbolHead, s ref=> Maybe(s),
+        Symbol, s ref=> Maybe(s.head),
+        MatchDefault, x ref=> nothing(SymbolHead),
+    );
+
 ifStaticOverload(program:Program, callable:Value, args:ValueList, thenFn, elseFn) {
-    for (x in reversed(program.allStaticOverloads)) {
+    var maybeHead = valueSymbolHead(callable);
+    if (just?(maybeHead)) {
+        ref staticOverloads = if (program.overloadsDistributed?)
+                just(maybeHead).staticOverloads
+            else
+                program.symbolStaticOverloads;
+        for (x in reversed(staticOverloads)) {
+            var env = matchStaticOverload(x, callable, args);
+            if (just?(env))
+                return forward ...thenFn(x, just(env));
+        }
+    }
+
+    for (x in reversed(program.patternStaticOverloads)) {
         var env = matchStaticOverload(x, callable, args);
         if (just?(env))
             return forward ...thenFn(x, just(env));
     }
+
     return forward ...elseFn();
 }
 
@@ -1427,7 +1448,7 @@ evaluateStaticCall(program, callable, args)
     = withStaticCall(callable, args, () ref=> ifStaticOverload(program, callable, args,
         (oload, env) ref=> evaluateExprList(oload.ast.definition.body, env),
         () ref=> {
-            genericError("no matching static overload");
+            genericError("no matching static overload: ", callable, args);
             return ValueList();
         }
     ));
