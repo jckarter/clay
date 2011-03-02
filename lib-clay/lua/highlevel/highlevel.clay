@@ -157,6 +157,8 @@ pushInteger(x:State, v:T) {
     lua_pushinteger(x.handle, lua_Integer(v));
 }
 
+alias pushInt = pushInteger;
+
 [S | ContiguousString?(S)]
 pushString(x:State, v:S) {
     lua_pushlstring(x.handle, Pointer[CChar](begin(v)), size(v));
