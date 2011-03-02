@@ -178,6 +178,10 @@ newTable(x:State) {
     lua_newtable(x.handle);
 }
 
+newUserData(x:State, size:SizeT) {
+    return lua_newuserdata(x.handle, size);
+}
+
 
 //
 // query type
@@ -344,7 +348,7 @@ setField(x:State, index:Int, key:S) {
 
 
 //
-// getMetaTable, setMetaTable
+// getMetaTable, setMetaTable, newMetaTable, lookupMetaTable
 //
 
 getMetaTable(x:State, index:Int) {
@@ -357,6 +361,16 @@ setMetaTable(x:State, index:Int) {
     var result = lua_setmetatable(x.handle, index);
     if (result == 0)
         throw Error("unable to set metatable");
+}
+
+[S | CCompatibleString?(S)]
+newMetaTable(x:State, name:S) {
+    return Bool(luaL_newmetatable(x.handle, cstring(name)));
+}
+
+[S | CCompatibleString?(S)]
+lookupMetaTable(x:State, name:S) {
+    luaL_getmetatable(x.handle, cstring(name));
 }
 
 
