@@ -1,5 +1,5 @@
 
-import lua.generated.*;
+import lua.capi.generated.*;
 
 
 //
@@ -184,17 +184,15 @@ luaL_optlong(l:Pointer[lua_State], n:Int, d:CLong) =
 luaL_typename(l:Pointer[lua_State], i:Int) =
     lua_typename(l, lua_type(l, i));
 
-[S | CCompatibleString?(S)]
-luaL_dofile(l:Pointer[lua_State], f:S) {
-    var result = luaL_loadfile(l, cstring(f));
+luaL_dofile(l:Pointer[lua_State], fileName:Pointer[CChar]) {
+    var result = luaL_loadfile(l, fileName);
     if (result != 0)
         return result;
     return lua_pcall(l, 0, LUA_MULTRET, 0);
 }
 
-[S | CCompatibleString?(S)]
-luaL_dostring(l:Pointer[lua_State], s:S) {
-    var result = luaL_loadstring(l, cstring(s));
+luaL_dostring(l:Pointer[lua_State], s:Pointer[CChar]) {
+    var result = luaL_loadstring(l, s);
     if (result != 0)
         return result;
     return lua_pcall(l, 0, LUA_MULTRET, 0);
