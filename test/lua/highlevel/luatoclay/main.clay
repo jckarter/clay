@@ -9,7 +9,7 @@ sumAndAverage(x:lua.State) {
     var n = lua.getTop(x);
     assert(n >= 0);
     if (n == 0)
-        lua.genericError(x, "atleast one argument expected in 'sumAndAverage'");
+        throw lua.Error("atleast one argument expected in 'sumAndAverage'");
     var sum = 0.0;
     for (i in range(1,n+1))
         sum += lua.checkNumber(x, i);
