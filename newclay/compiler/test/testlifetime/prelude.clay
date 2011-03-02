@@ -179,7 +179,6 @@ arrayLiteral(element1:'T, element2:'T) returned:Array['T, 2] __c__ """abort();""
 // operators
 //
 
-
 index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
     $returned = &$a.array[$i];
 """;
@@ -191,6 +190,8 @@ staticIndex(a:Tuple['T0, ..'T], #0) ref returned:'T0 __c__ """
 overload staticIndex(a:Tuple['T0, 'T1, ..'T], #1) ref returned:'T1 __c__ """
     $returned = &$a.field1;
 """;
+
+unpack(a:Tuple['T0, 'T1]) = a.0, a.1;
 
 fieldRef(a, #'field) x:Int __c__ """abort();""";
 
