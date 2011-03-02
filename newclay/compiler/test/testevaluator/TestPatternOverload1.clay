@@ -1,0 +1,7 @@
+#foo('x) = "foo";
+#bar() = "bar";
+
+overload #'f(21) = "blackjack";
+overload #'f() = "nil";
+
+#Main() = foo(21), bar(21), foo(), bar();
