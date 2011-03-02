@@ -522,7 +522,7 @@ overload codegenNode(c, bc, node:ir.Consume) {
 }
 
 overload codegenNode(c, bc, node:ir.Bind) {
-    assert(variable?(node.output), "binding something that isn't a local variable");
+    assert(variable?(node.output), "binding something that isn't a local variable: ", node.output, " <- ", node.input);
     assert(node.output.type == node.input.type, "types in bind must match");
 
     if (staticType?(node.output.type))
