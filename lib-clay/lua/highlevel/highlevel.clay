@@ -440,6 +440,57 @@ checkUserData(x:State, index:Int, tname:S) {
 
 
 //
+// get stack values with default
+//
+
+[I | Integer?(I)]
+optInt(x:State, index:Int, _default:I) {
+    return safeCall(x,
+        x ref=> luaL_optint(x.handle, index, Int(_default))
+    );
+}
+
+[I | Integer?(I)]
+optInteger(x:State, index:Int, _default:I) {
+    return safeCall(x,
+        x ref=> luaL_optinteger(x.handle, index, lua_Integer(_default))
+    );
+}
+
+[I | Integer?(I)]
+optLong(x:State, index:Int, _default:I) {
+    return safeCall(x,
+        x ref=> luaL_optlong(x.handle, index, CLong(_default))
+    );
+}
+
+[T | Numeric?(T)]
+optNumber(x:State, index:Int, _default:T) {
+    return safeCall(x,
+        x ref=> luaL_optnumber(x.hanlde, index, lua_Number(_default))
+    );
+}
+
+// optString - the default string has to be a lvalue string.
+// only rvalue string allowed is StringConstant
+
+optString(x:State, index:Int, rvalue _default:StringConstant) {
+    return optString(x, index, _default);
+}
+
+[S | CCompatibleString?(S)]
+overload optString(x:State, index:Int, lvalue _default:S) {
+    var size = SizeT();
+    var ptr = safeCall(x,
+        x ref=> luaL_optlstring(x.handle, index, cstring(_default), &size)
+    );
+    var ptr2 = Pointer[Char](ptr);
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
+    return StringConstant(ptr2, ptr2 + size);
+}
+
+
+//
 // LuaClayFunction?, toLuaCFunction
 //
 
