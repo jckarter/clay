@@ -518,7 +518,7 @@ overload optString(x:State, index:Int, lvalue _default:S) {
 
 private LuaClayFunction?(x) = false;
 
-[F | CallDefined?(F, State) and (Type(F(typeToLValue(State))) == Int)]
+[F | CallDefined?(F, State) and (Tuple[...Type(...F(typeToLValue(State)))] == Tuple[Int])]
 overload LuaClayFunction?(static F) = true;
 
 [F | LuaClayFunction?(F)]
@@ -568,14 +568,18 @@ overload NameFunctionPair?(static Tuple[S, Static[F]]) {
     return CCompatibleString?(S) and LuaClayFunction?(F);
 }
 
-[...E | allValues?(NameFunctionPair?, ...E)]
+[E | NameFunctionPair?(E)]
+private unpackNameAndFunction(x:E) {
+    return cstring(x.0), toLuaCFunction(x.1);
+}
+
+[...E]
 registerTable(x:State, ...entries:E) {
     alias N = countValues(...E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
     static for (entry in ...entries) {
-        ptr^.name = cstring(entry.0);
-        ptr^.func = toLuaCFunction(entry.1);
+        ptr^.name, ptr^.func = ...unpackNameAndFunction(entry);
         ptr += 1;
     }
     ptr^.name = Type(ptr^.name)(0);
@@ -583,14 +587,13 @@ registerTable(x:State, ...entries:E) {
     luaL_register(x.handle, null(CChar), begin(moduleEntries));
 }
 
-[S, ...E | CCompatibleString?(S) and allValues?(NameFunctionPair?, ...E)]
+[S, ...E | CCompatibleString?(S)]
 registerModule(x:State, name:S, ...entries:E) {
     alias N = countValues(...E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
     static for (entry in ...entries) {
-        ptr^.name = cstring(entry.0);
-        ptr^.func = toLuaCFunction(entry.1);
+        ptr^.name, ptr^.func = ...unpackNameAndFunction(entry);
         ptr += 1;
     }
     ptr^.name = Type(ptr^.name)(0);
