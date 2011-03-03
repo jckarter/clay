@@ -18,6 +18,12 @@ toIntArray(x:lua.State, index:Int) {
     return ref Pointer[IntArray](data)^;
 }
 
+IntArray_destroy(x:lua.State) {
+    ref v = toIntArray(x, 1);
+    destroy(v);
+    return 0;
+}
+
 IntArray_set(x:lua.State) {
     ref v = toIntArray(x, 1);
     var index = lua.checkInt(x, 2);
@@ -49,6 +55,7 @@ main() {
     lua.registerModule(x,
         "IntArray",
         ("new", IntArray_new),
+        ("destroy", IntArray_destroy),
         ("set", IntArray_set),
         ("get", IntArray_get),
         ("size", IntArray_size),
@@ -62,6 +69,7 @@ main() {
                 IntArray.set(a, i, i*i)
             end
             print(IntArray.get(a, 11));
+            IntArray.destroy(a)
         ");
     }
     catch (e:lua.Error) {
