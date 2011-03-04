@@ -1,0 +1,78 @@
+import lua;
+
+alias IntArray = Vector[Int];
+
+IntArray_new(x:lua.State) {
+    var n = lua.checkInt(x, 1);
+    if (n < 0)
+        throw lua.Error("IntArray.new: invalid array size: ", n);
+    var data = lua.newUserData(x, TypeSize(IntArray));
+    ref v = Pointer[IntArray](data)^;
+    v <-- IntArray();
+    resize(v, n);
+    return 1;
+}
+
+toIntArray(x:lua.State, index:Int) {
+    var data = lua.toUserData(x, index);
+    return ref Pointer[IntArray](data)^;
+}
+
+IntArray_destroy(x:lua.State) {
+    ref v = toIntArray(x, 1);
+    destroy(v);
+    return 0;
+}
+
+IntArray_set(x:lua.State) {
+    ref v = toIntArray(x, 1);
+    var index = lua.checkInt(x, 2);
+    var value = lua.checkInt(x, 3);
+    if ((index <= 0) or (index > size(v)))
+        throw lua.Error("IntArray.set: index out of range: ", index);
+    v[index-1] = value;
+    return 0;
+}
+
+IntArray_get(x:lua.State) {
+    ref v = toIntArray(x, 1);
+    var index = lua.checkInt(x, 2);
+    if ((index <= 0) or (index > size(v)))
+        throw lua.Error("IntArray.get: index out of range: ", index);
+    lua.pushInt(x, v[index-1]);
+    return 1;
+}
+
+IntArray_size(x:lua.State) {
+    ref v = toIntArray(x, 1);
+    lua.pushInteger(x, size(v));
+    return 1;
+}
+
+main() {
+    var x = lua.State();
+    lua.openLibs(x);
+    lua.registerModule(x,
+        "IntArray",
+        ("new", IntArray_new),
+        ("destroy", IntArray_destroy),
+        ("set", IntArray_set),
+        ("get", IntArray_get),
+        ("size", IntArray_size),
+    );
+    try {
+        lua.doString(x, "
+            a = IntArray.new(1000)
+            print(type(a))
+            print(IntArray.size(a))
+            for i=1,1000 do
+                IntArray.set(a, i, i*i)
+            end
+            print(IntArray.get(a, 11));
+            IntArray.destroy(a)
+        ");
+    }
+    catch (e:lua.Error) {
+        println("error: ", e.msg);
+    }
+}
