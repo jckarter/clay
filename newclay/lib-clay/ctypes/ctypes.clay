@@ -1,4 +1,5 @@
 import meta.platform.*;
+import libc.(strlen);
 
 private symbol CLongType;
 overload #CLongType() = Int64;
@@ -27,4 +28,12 @@ alias CSizeT = UInt;
 alias CPtrdiffT = UInt;
 alias CIntPtrT = Int;
 
-cstring(s:StringConstant) = Pointer[CChar](s.begin);
+symbol CString = NewType(Pointer[CChar]);
+
+overload CString(s:StringConstant) = CString(Pointer[CChar](s.begin));
+
+overload begin(s:CString) = ContiguousCoordinate(*s);
+overload end(s:CString) = ContiguousCoordinate(*s) + size(s);
+overload size(s:CString) = strlen(*s);
+
+overload iterator(s:CString) = CoordinateRange(begin(s), end(s));
