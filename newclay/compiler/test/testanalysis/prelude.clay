@@ -298,7 +298,7 @@ destroyUnsafe(ref x) {}
 // callMain
 //
 
-callMain() Int { main(); return 0; }
+callMain(argc:Int, argv:Pointer[Pointer[Int8]]) Int { main(); return 0; }
 
 //
 // Ref, Rvalue, Const
