@@ -2,12 +2,13 @@ import meta.statics.(StaticName, StaticStringConcat);
 
 // dumb simple library for displaying values for debugging purposes
 import libc.(puts as c_puts, printf as c_printf);
-import ctypes.(cstring);
+import ctypes.(CString);
 
-puts(s:StringConstant) { c_puts(cstring(s)); }
-printf(fmt:StringConstant, value) { c_printf(cstring(fmt), value); }
+puts(s:StringConstant) { c_puts(CString(s)); }
+printf(fmt:StringConstant, value) { c_printf(CString(fmt), value); }
 
 show(s:StringConstant) { puts(s); }
+overload show(s:CString) { c_puts(s); }
 overload show(b:Bool) { puts(if (b) "true" else "false"); }
 overload show(c:'C) | CharType?('C) {
     if (UInt32(c) > 0x20_u32 and UInt32(c) < 0x7f_u32)
