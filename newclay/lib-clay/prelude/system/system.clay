@@ -1,7 +1,18 @@
 import __main__.(main);
+import ctypes.(CChar, CString);
 
-callMain() {
-    main();
-    return 0;
+private exitValue() = 0;
+overload exitValue(n) = Int(n);
+
+symbol callMain;
+overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
+    | Defined?(..main())
+{
+    return exitValue(..main());
 }
-
+overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
+    | CallDefined?(main, CoordinateRange[ContiguousCoordinate[CString]])
+{
+    var beginArgv = ContiguousCoordinate[CString](cargv);
+    return exitValue(..main(CoordinateRange(beginArgv, beginArgv + cargc)));
+}
