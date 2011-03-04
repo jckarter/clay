@@ -385,6 +385,22 @@ lookupMetaTable(x:State, name:S) {
 
 
 //
+// newRef, releaseRef
+//
+
+alias NOREF = LUA_NOREF;
+alias REFNIL = LUA_REFNIL;
+
+newRef(x:State, t:Int) {
+    return luaL_ref(x.handle, t);
+}
+
+releaseRef(x:State, t:Int, _ref:Int) {
+    luaL_unref(x.handle, t, _ref);
+}
+
+
+//
 // genericError, typeError, argError
 //
 // uses safeCall to convert these errors to exceptions
