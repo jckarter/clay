@@ -96,6 +96,7 @@ inline overload next(ref i:CoordinateRange['C]) {
 
 inline overload begin(i:CoordinateRange['C]) = i.begin;
 inline overload end(i:CoordinateRange['C]) = i.end;
+inline overload size(i:CoordinateRange['C]) = UInt(i.end - i.begin);
 
 
 //
