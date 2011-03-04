@@ -1,0 +1,7 @@
+import show.*;
+
+main(args) {
+    show(size(args));
+    for (arg in args)
+        show(arg);
+}
