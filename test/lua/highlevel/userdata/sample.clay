@@ -1,0 +1,159 @@
+import lua;
+
+record Foo (
+    x: Int,
+    y: Int,
+);
+
+checkFoo(s:lua.State, index:Int) {
+    var ptr = lua.checkUserData(s, index, "Foo");
+    assert(not null?(ptr));
+    return Pointer[Foo](ptr);
+}
+
+pushFoo(s:lua.State) {
+    var ptr = lua.newUserData(s, TypeSize(Foo));
+    lua.lookupMetaTable(s, "Foo");
+    lua.setMetaTable(s, -2);
+    return Pointer[Foo](ptr);
+}
+
+Foo_new(s:lua.State) {
+    var x = lua.optInt(s, 1, 0);
+    var y = lua.optInt(s, 2, 0);
+    var p = pushFoo(s);
+    p^.x = x;
+    p^.y = y;
+    return 1;
+}
+
+Foo_yourCfunction(s:lua.State) {
+    var p = checkFoo(s, 1);
+    println("this is yourCfunction\t");
+    lua.pushNumber(s, p^.x);
+    lua.pushNumber(s, p^.y);
+    return 2;
+}
+
+Foo_setx(s:lua.State) {
+    var p = checkFoo(s, 1);
+    p^.x = lua.checkInt(s, 2);
+    lua.setTop(s, 1);
+    return 1;
+}
+
+Foo_sety(s:lua.State) {
+    var p = checkFoo(s, 1);
+    p^.y = lua.checkInt(s, 2);
+    lua.setTop(s, 1);
+    return 1;
+}
+
+Foo_add(s:lua.State) Int {
+    var p1 = checkFoo(s, 1);
+    var p2 = checkFoo(s, 2);
+    var sum = pushFoo(s);
+    sum^.x = p1^.x + p2^.x;
+    sum^.y = p1^.y + p2^.y;
+    return 1;
+}
+
+Foo_dot(s:lua.State) {
+    var p1 = checkFoo(s, 1);
+    var p2 = checkFoo(s, 2);
+    lua.pushNumber(s, p1^.x * p2^.x + p1^.y * p2^.y);
+    return 1;
+}
+
+Foo_gc(s:lua.State) {
+    println("bye, bye, foo = ", checkFoo(s, 1));
+    return 0;
+}
+
+Foo_tostring(s:lua.State) {
+    var str = printString("Foo (", checkFoo(s, 1), ")");
+    lua.pushString(s, str);
+    return 1;
+}
+
+Foo_register(s:lua.State) {
+    lua.registerModule(s,
+        "Foo",
+        ("new", Foo_new),
+        ("yourCfunction", Foo_yourCfunction),
+        ("setx", Foo_setx),
+        ("sety", Foo_sety),
+        ("add", Foo_add),
+        ("dot", Foo_dot),
+    );
+    lua.newMetaTable(s, "Foo");
+    lua.registerTable(s,
+        ("__gc", Foo_gc),
+        ("__tostring", Foo_tostring),
+        ("__add", Foo_add),
+    );
+    lua.pushString(s, "__index");
+    lua.pushValue(s, -3);
+    lua.rawSet(s, -3);
+    lua.pushString(s, "__metatable");
+    lua.pushValue(s, -3);
+    lua.rawSet(s, -3);
+    lua.pop(s, 1);
+    return 1;
+}
+
+main() {
+    var s = lua.State();
+    lua.openLibs(s);
+    Foo_register(s);
+    lua.pop(s, 1);
+    
+    lua.doString(s, "
+        for n, v in pairs(Foo) do print(n, v) end
+    
+        local a = Foo.new()
+        local b = Foo.new(99, 100)
+    
+        MyFunction = Foo.yourCfunction
+    
+        print(a, MyFunction(a))
+        print(b, MyFunction(b))
+    
+        function Foo:show(msg)
+            print(msg, self, self:yourCfunction());
+            return self
+        end
+    
+        function Foo:point(t)
+            assert(type(t) == 'table');
+            self:setx(t.x or t[1]):sety(t.y or t[2])
+            return self
+        end
+    
+        setmetatable(Foo, {
+            __call = function (self, x, y)
+                local bar = self.new(x, y)
+                print('created', bar)
+                return bar
+            end
+        })
+        local p = Foo(1, 2)
+        p:show('p is')
+        p:setx(3):show'p is':sety(4):show'p is'
+        p:point{33, 44}:show'p is'
+        p = nil
+    
+        collectgarbage()
+    
+        a:point{x=500, y=1000}
+        a:show'a is'
+    
+        r = Foo.add(a, b)
+        r:show'r is'
+    
+        a:show'a is'
+        b:show'b is'
+        s = a + b
+        s:show's is'
+    ");
+}
