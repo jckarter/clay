@@ -1297,21 +1297,26 @@ private codegenGlobalConstructorDestructor(c:CodegenContext) {
 private printStandaloneStubTo(stream, c, mainS) {
     printlnTo(stream);
     printlnTo(stream, "#line 1 \"(clay generated)\"");
-    printlnTo(stream, "int main(int argc, char **argv) {");
+    printlnTo(stream, "int main(int _argc, char **_argv) {");
+    printlnTo(stream, "  ", typeName(c, intType()), " argc = (", typeName(c, intType()), ")_argc;");
+    printlnTo(stream, "  ", typeName(c, pointerType(pointerType(int8Type()))), " argv = (", typeName(c, pointerType(pointerType(int8Type()))), ")_argv;");
     if (nothing?(mainS.results)) {
-        printlnTo(stream, "  ", functionName(c, mainS), "();");
+        printlnTo(stream, "  ", functionName(c, mainS), "(&argc, &argv);");
         printlnTo(stream, "  /* main does not return */");
         printlnTo(stream, "  return 0;");
     } else {
         printlnTo(stream, "  ", typeName(c, intType()), " exitCode;");
-        printlnTo(stream, "  ", functionName(c, mainS), "(&exitCode);");
+        printlnTo(stream, "  ", functionName(c, mainS), "(&argc, &argv, &exitCode);");
         printlnTo(stream, "  return (int)exitCode;");
     }
     printlnTo(stream, "}");
 }
 
 codegenStandaloneProgramTo(config:CodegenConfig, stream) {
-    var mainS = analyzeCallable(getHooks().callMain, RTValues());
+    var mainS = analyzeCallable(getHooks().callMain, RTValues(
+        RTValue(RT_VALUE_REF, intType()),
+        RTValue(RT_VALUE_REF, pointerType(pointerType(int8Type())))
+    ));
 
     var mainResultsOk? = maybe(mainS.results,
         results => size(results) == 1 and results[0].type == intType(),
@@ -1319,7 +1324,7 @@ codegenStandaloneProgramTo(config:CodegenConfig, stream) {
     );
 
     if (not mainResultsOk?)
-        genericError("callMain() must return an Int but returns ", mainS.results);
+        genericError("callMain(Int, Pointer[Pointer[Int8]]) must return an Int but returns ", mainS.results);
 
     var c = codegenFromEntryPoints(config, Vector[Specialization](mainS));
     printCodegenTo(stream, c);
