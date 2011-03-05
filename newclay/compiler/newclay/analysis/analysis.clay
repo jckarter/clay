@@ -8,16 +8,25 @@ import newclay.evaluator.*;
 record SpecializationContext (
     body: Pointer[Vector[ir.Node]],
     complete?: Pointer[Bool],
+    returns: Pointer[SpecializationReturns],
     availableRvalues: HashMap[RTValue, Tuple[]],
 );
 
-overload SpecializationContext(body, complete?)
-    = SpecializationContext(body, complete?, HashMap[RTValue, Tuple[]]());
+overload SpecializationContext(body, complete?, returns)
+    = SpecializationContext(body, complete?, returns, HashMap[RTValue, Tuple[]]());
 
 private subContext(s:SpecializationContext, subBody:Vector[ir.Node])
-    = SpecializationContext(&subBody, s.complete?, s.availableRvalues);
+    = SpecializationContext(&subBody, s.complete?, s.returns, s.availableRvalues);
 private loopSubContext(s:SpecializationContext, subBody:Vector[ir.Node])
-    = SpecializationContext(&subBody, s.complete?, HashMap[RTValue, Tuple[]]());
+    = SpecializationContext(&subBody, s.complete?, s.returns, HashMap[RTValue, Tuple[]]());
+
+record SpecializationReturns (
+    results?: Bool,
+    results: RTValues,
+    namedResults: RTValues,
+);
+
+overload SpecializationReturns() = SpecializationReturns(false, RTValues(), RTValues());
 
 addRvalue(s, rv:RTValue) {
     if (rv.kind != RT_VALUE_RVALUE)
@@ -166,12 +175,14 @@ private analyzeGlobal(g:RTGlobal) {
 private analyzeGlobal2(g:RTGlobal, binding:GlobalBinding) {
     ref globalMap = getProgram().globalMap;
     var complete? = true;
-    var constructorS = SpecializationContext(&globalMap.constructors[g], &complete?);
+    var returns = SpecializationReturns();
+    var constructorS = SpecializationContext(&globalMap.constructors[g], &complete?, &returns);
 
     return maybe(binding.ast.value,
         valueExpr ref=> {
             var resultTypes = analyzeSubnode(constructorS, g.env, valueExpr);
             assert(complete?, "unresolvable recursion in global initializer");
+            assert(not returns.results?, "global initializer shouldn't return");
 
             return maybe(resultTypes,
                 results ref=> {
@@ -275,7 +286,9 @@ analyzeNode(s:SpecializationContext, env:Env, body:ast.ExprCodeBody)
 analyzeExprListNode(s, env, exprList) {
     var outputs = RTValues();
     for (item in exprList) {
-        var itemOutputs = analyzeSubnode(s, env, item);
+        var itemOutputs = withLocation(item,
+            () ref=> analyzeExprListItem(s, env, item, size(outputs))
+        );
         if (nothing?(itemOutputs))
             return nothing(RTValues);
         push(outputs, just(itemOutputs));
@@ -291,21 +304,112 @@ analyzeMultiExprListNode(s, env, exprList, multi?) {
 
 overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ReturnExprList)
     Maybe[RTValues]
-    = analyzeExprListNode(s, env, exprList);
+{
+    var results = analyzeExprListNode(s, env, exprList);
+    maybe(results, r ref=> {
+        if (s.returns^.results?) {
+            if (size(s.returns^.results) != size(r))
+                genericError("number of return values does not match previous return");
+        } else
+            s.returns^.results? = true;
+    });
+    return move(results);
+}
 
-overload analyzeNode(s:SpecializationContext, env:Env, rItem:ast.ReturnExprListItem)
+private procedure analyzeExprListItem;
+overload analyzeExprListItem(
+    s:SpecializationContext,
+    env:Env,
+    rItem:ast.ReturnExprListItem,
+    position:SizeT
+)
     Maybe[RTValues]
 {
-    var results = analyzeSubnode(s, env, rItem.item);
-    return maybe(results,
-        rs ref=> Maybe(map(r ref=> analyzeReturn(s, rItem, r), rs)), 
+    var results = withLocation(rItem.item,
+        () ref=> analyzeExprListItem(s, env, rItem.item, position)
     );
+    return maybe(results,
+        rs ref=> Maybe(map(
+            (i, r) ref=> analyzeReturn(s, rItem, r, position + i),
+            enumerated(rs)
+        )), 
+    );
+}
+
+private bindReferenceReturn(s, rItem, kind, source, position) {
+    if (s.returns^.results?) {
+        if (position >= size(s.returns^.results))
+            genericError("number of return values does not match previous return");
+        ref result = s.returns^.results[position];
+        ref namedResult = s.returns^.namedResults[position];
+        if (result.type != source.type)
+            genericError("return type ", source.type, " does not match previous return type ", result.type);
+        if (not referenceVariable?(result))
+            genericError("return by reference does not match previous return by value");
+        if (result.kind != kind)
+            genericError("return reference kind does not match previous return reference kind");
+        assert(
+            referenceVariable?(namedResult)
+            and namedResult.kind == RT_VALUE_REF
+            and pointerType?(namedResult.type)
+            and pointerTargetType(namedResult.type) == result.type,
+            "named return must match external return"
+        );
+        addSpecializedAddressOf(s, rItem, source, namedResult);
+        return result;
+    } else {
+        assert(
+            size(s.returns^.results) == position
+            and size(s.returns^.namedResults) == position,
+            "result list out of sync"
+        );
+        var result = RTValue(kind, source.type, ReferenceVariable(), "returned");
+        push(s.returns^.results, result);
+        var namedResult = newReference(RT_VALUE_REF, pointerType(source.type), "returned");
+        addSpecializedAddressOf(s, rItem, source, namedResult);
+        push(s.returns^.namedResults, namedResult);
+        return result;
+    }
+}
+
+private bindValueReturn(s, rItem, source, position) {
+    if (s.returns^.results?) {
+        if (position >= size(s.returns^.results))
+            genericError("number of return values does not match previous return");
+        ref result = s.returns^.results[position];
+        ref namedResult = s.returns^.namedResults[position];
+        if (result.type != source.type)
+            genericError("return type ", source.type, " does not match previous return type ", result.type);
+        if (not localVariable?(result))
+            genericError("return by value does not match previous return by reference");
+        assert(
+            referenceVariable?(namedResult)
+            and namedResult.kind == RT_VALUE_REF
+            and namedResult.type == result.type,
+            "named return must match external return"
+        );
+        addSpecializedInitialize(s, rItem, source, namedResult);
+        return result;
+    } else {
+        assert(
+            size(s.returns^.results) == position
+            and size(s.returns^.namedResults) == position,
+            "result list out of sync"
+        );
+        var result = RTValue(RT_VALUE_RVALUE, source.type, LocalVariable(), "returned");
+        push(s.returns^.results, result);
+        var namedResult = newReference(RT_VALUE_REF, source.type, "returned");
+        addSpecializedInitialize(s, rItem, source, namedResult);
+        push(s.returns^.namedResults, namedResult);
+        return result;
+    }
 }
 
 private analyzeReturn(
     s:SpecializationContext,
     rItem:ast.ReturnExprListItem,
-    source:RTValue
+    source:RTValue,
+    position:SizeT
 ) = maybe(rItem.kind,
     // reference return
     returnKind ref=> {
@@ -316,9 +420,7 @@ private analyzeReturn(
             if (source.kind == RT_VALUE_RVALUE)
                 genericError("cannot return rvalue as const reference");
             if (source.kind != RT_VALUE_CONST)
-                return singleAddSpecializedBindReturn(s, rItem, source,
-                    newReference(RT_VALUE_CONST, source.type, "returned")
-                );
+                return bindReferenceReturn(s, rItem, RT_VALUE_CONST, source, position);
             break;
         case ast.RETURN_EXPR_REF:
             if (localVariable?(source))
@@ -334,27 +436,23 @@ private analyzeReturn(
             if (source.kind == RT_VALUE_CONST)
                 genericError("cannot return const as rvalue reference");
             if (source.kind != RT_VALUE_RVALUE)
-                return singleAddSpecializedBindReturn(s, rItem, source,
-                    newReference(RT_VALUE_RVALUE, source.type, "returned")
-                );
+                return bindReferenceReturn(s, rItem, RT_VALUE_RVALUE, source, position);
             break;
         case ast.RETURN_EXPR_FORWARD:
             if (localVariable?(source)) {
                 if (source.kind != RT_VALUE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
-                return singleAddSpecializedBindReturn(s, rItem, source,
-                    newRvalue(source.type, "returned")
-                );
+                return bindValueReturn(s, rItem, source, position);
             }
             break;
         default:
             assert(false, "invalid reference kind");
             return RTValue();
         }
-        return singleAddSpecializedBindReturn(s, rItem, source, cloneVariable(source, "returned"));
+        return bindReferenceReturn(s, rItem, source.kind, source, position);
     },
     // value return
-    () ref=> singleAddSpecializedBindReturn(s, rItem, source, newRvalue(source.type, "returned")),
+    () ref=> bindValueReturn(s, rItem, source, position),
 );
 
 
@@ -365,8 +463,12 @@ private analyzeReturn(
 overload analyzeNode(s:SpecializationContext, env:Env, exprList:ast.ExprList) Maybe[RTValues]
     = analyzeExprListNode(s, env, exprList);
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ExprListItem) Maybe[RTValues]
-    = analyzeNode(s, env, *expr);
+overload analyzeExprListItem(
+    s:SpecializationContext,
+    env:Env,
+    expr:ast.ExprListItem,
+    pos:SizeT
+) Maybe[RTValues] = analyzeNode(s, env, *expr);
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[RTValues]
     = analyzeNode(s, env, *expr);
@@ -760,18 +862,12 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
 // analyzeBlockCodeBody, analyzeStatement
 //
 
-private record ProcResult (
-    statement: ast.ReturnStatement,
-    results: RTValues,
-);
-
 private record ProcContext (
     currentTargetId: ir.BreakTargetId,
-    results: Vector[ProcResult],
     recursiveReturn: Maybe[ast.ReturnStatement],
 );
 
-overload ProcContext() = ProcContext(ir.BreakTargetId(0), Vector[ProcResult](), Maybe[ast.ReturnStatement]());
+overload ProcContext() = ProcContext(ir.BreakTargetId(0), Maybe[ast.ReturnStatement]());
 
 private returnTargetId(pc) = ir.BreakTargetId(0);
 
@@ -844,39 +940,22 @@ private analyzeBlockCodeBody(s:SpecializationContext, env:Env, block:ast.Block)
             // "returns" without results? => nonterminating result
             // "returns" without definite results, but recursive return? => recursion error
             // returns with results? => results
-            if (empty?(pc.results)) {
+            if (s.returns^.results?) {
+                return Maybe(s.returns^.results);
+            } else {
                 maybe(pc.recursiveReturn, stmt ref=> {
                     withLocation(stmt, () ref=> {
                         recursiveAnalysisError();
                     });
                 });
                 return nothing(RTValues);
-            } else {
-                if (size(pc.results) > 1) {
-                    var branches = Vector[RTValues](pc.results[0].results);
-                    var results = cloneVariables(pc.results[0].results, "returned");
-                    for (resultSet in slicedFrom(pc.results, 1)) {
-                        withLocation(resultSet.statement, () ref=> {
-                            if (not equalResults?(results, resultSet.results))
-                                genericError("return statement types do not match");
-                            if (size(results) > 0)
-                                push(branches, resultSet.results);
-                        });
-                    }
-                    if (size(results) > 0)
-                        addSpecializedPhi(s, branches, results);
-                    return Maybe(results);
-                } else
-                    return Maybe(pc.results[0].results);
             }
         } else {
             // falls through with no results? => void results
             // falls through with nonvoid results? => error (not all branches return)
             // falls through with void results? => void results
-            if (not empty?(pc.results))
-                for (resultSet in pc.results)
-                    if (not empty?(resultSet.results))
-                        genericError("not all branches return in block");
+            if (s.returns^.results? and not empty?(s.returns^.results))
+                genericError("not all branches return in block");
             return Maybe(RTValues());
         }
     });
@@ -1034,7 +1113,6 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
     try {
         maybe(analyzeNode(s, bc.env, stmt.values),
             results ref=> {
-                push(pc.results, ProcResult(stmt, results));
                 addSpecializedNode(s, ir.Break(stmt, returnTargetId(pc)));
             },
         );
@@ -1158,7 +1236,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
     addSpecializedNode(s, blockNode);
 
     for (valueItem in stmt.values) {
-        var target = stmtMaybe(analyzeSubnode(blockS, bc.env, valueItem), forValues ref=> {
+        var target = stmtMaybe(analyzeExprListItem(blockS, bc.env, valueItem, SizeT(0)), forValues ref=> {
             for (value in forValues) {
                 var subNode = ir.Block(nextTargetId(pc));
                 var subS = subContext(blockS, subNode.body);
@@ -1627,7 +1705,10 @@ private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = ifStaticValue(s, env, expr.expr,
         callable ref=> {
             return maybe(analyzeNode(s, env, expr.args),
-                inputs ref=> addSpecializedCall(s, expr, inputs, analyzeCallable(callable, inputs)),
+                inputs ref=> addSpecializedCall(
+                    s, expr, inputs,
+                    analyzeCallable(callable, inputs)
+                ),
             );
         },
         callableResult ref=> maybe(analyzeNode(s, env, expr.args), inputs ref=> {
@@ -1804,12 +1885,9 @@ addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
     return Maybe(outputs);
 }
 
-addSpecializedCall(
-    s:SpecializationContext,
-    ast,
-    inputs:RTValues,
-    specialization:Specialization
-) {
+private addOutOfLineCall(s, ast, inputs, specialization) {
+    assert(not specialization.alias?, "alias functions must be inline");
+
     var mResults = cloneVariables(specialization.results);
     var outputs = maybe(mResults,
         results ref=> Maybe(map(r ref=> ir.OutputVariable(r, not localVariable?(r)), results))
@@ -1818,23 +1896,32 @@ addSpecializedCall(
     return mResults;
 }
 
-addSpecializedPhi(
-    s:SpecializationContext,
-    branches:Vector[RTValues],
-    outputs:RTValues
-) {
-    addSpecializedNode(s, ir.Phi(branches, outputs));
-    return Maybe(outputs);
+private addInlineCall(s, ast, inputs, specialization) {
+    if (specialization.alias?)
+        genericError("alias arguments not yet supported");
+    return nothing(RTValues);
+
+/*INLINE
+    for (input, arg in zipped(inputs, specialization.internalArgs))
+        addSpecializedBind(s, ast, input, arg);
+    for (result in specialization.internalNamedResults)
+        addSpecializedBind(s, ast, newRvalue(result.type, result.name), result);
+*/
+
 }
 
-singleAddSpecializedBindReturn(
+addSpecializedCall(
     s:SpecializationContext,
     ast,
-    input:RTValue,
-    output:RTValue
+    inputs:RTValues,
+    specialization:Specialization
 ) {
-    addSpecializedNode(s, ir.BindReturn(ir.ASTNode(ast), input, output));
-    return output;
+    /*INLINE
+    if (specialization.inline?)
+        return addInlineCall(s, ast, inputs, specialization);
+    else
+    */
+        return addOutOfLineCall(s, ast, inputs, specialization);
 }
 
 addSpecializedBind(
@@ -1972,6 +2059,12 @@ private argumentNameString(formalArg) = match(formalArg,
 
 private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
     var formalKind = referenceSpecifier(formalArg);
+
+    if (formalKind == ast.ARG_ALIAS) {
+        s.inline? = true;
+        s.alias? = true;
+    }
+
     if (not referenceKindMatches?(formalKind, arg.kind))
         return false;
     if (not unifyArgumentType(formalArg, arg, s.env))
@@ -1986,6 +2079,12 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
 
 private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
+
+    if (formalKind == ast.ARG_ALIAS) {
+        s.inline? = true;
+        s.alias? = true;
+    }
+
     var vars = RTValues();
     var argName = argumentName(formalArg);
     var argNameStr = maybe(argName, name ref=> Maybe(name.str));
@@ -2073,6 +2172,8 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
         return nothing(Specialization);
     var pvars = topLevelItemPatternVars(o);
     var s = Specialization(o, callable);
+    if (o.ast.definition.attributes.inline?)
+        s.inline? = true;
     s.env = initializeMatch(o.module, pvars);
     var callablePattern = evaluatePattern(o.ast.target, s.env);
     if (not unify(callablePattern, callable))
@@ -2158,6 +2259,13 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
     return Maybe(move(results));
 }
 
+private asNamedReturnVariable(result) = RTValue(
+    RT_VALUE_REF,
+    if (localVariable?(result)) result.type else pointerType(result.type),
+    ReferenceVariable(),
+    "returned"
+);
+
 private analyzeCallableReturns(s:Specialization, env, o:Overload) {
     s.body = Maybe(Vector[ir.Node]());
     try {
@@ -2166,9 +2274,25 @@ private analyzeCallableReturns(s:Specialization, env, o:Overload) {
             var namedReturns? = just?(o.ast.definition.returnedNames);
 
             var complete? = true;
-            var context = SpecializationContext(&just(s.body), &complete?);
+            var returns = SpecializationReturns();
+            var context = SpecializationContext(&just(s.body), &complete?, &returns);
             for (arg in s.internalArgs)
                 addRvalue(context, arg);
+
+            var declaredNoReturn? = false;
+            if (namedReturns?) {
+                // must return void if returns are already named
+                returns.results? = true;
+            } else if (declaredReturns?) {
+                maybe(computeReturnSpec(o.ast.definition.returns, env),
+                    computedResults ref=> {
+                        returns.results? = true;
+                        returns.results = computedResults;
+                        returns.namedResults = map(asNamedReturnVariable, computedResults);
+                    },
+                    () ref=> { declaredNoReturn? = true; }
+                );
+            }
 
             var analyzedResults = match(o.ast.definition.body,
                 ast.ExprCodeBody, body ref=> analyzeNode(context, env, body.exprs),
@@ -2186,31 +2310,22 @@ private analyzeCallableReturns(s:Specialization, env, o:Overload) {
                 s.body = nothing(Vector[ir.Node]);
 
             if (declaredReturns?) {
-                // if returns are named, the body should return void
-                var expectedResults =
-                    if (namedReturns?)
-                        Maybe(RTValues())
-                    else
-                        computeReturnSpec(o.ast.definition.returns, env);
                 // declared returns,  actually returns  => return types must match
                 // declared returns,  actually noreturn => ok
                 // declared noreturn, actually returns  => error
                 maybe(analyzedResults, ar ref=> {
-                    maybe(expectedResults,
-                        er ref=> {
-                            if (not equalResults?(ar, er))
-                                genericError("procedure declared with different return types from what the body returns");
-                        },
-                        () ref=> {
-                            genericError("procedure declared as noreturn but the body returns");
-                        },
-                    );
+                    if (declaredNoReturn?)
+                        genericError("procedure declared as noreturn but the body returns");
                 });
             }
-            s.results = if (namedReturns?)
-                computeReturnSpec(o.ast.definition.returns, env)
-            else
-                analyzedResults;
+
+            if (namedReturns?)
+                s.results = computeReturnSpec(o.ast.definition.returns, env);
+            else {
+                s.results = analyzedResults;
+                s.internalNamedResults = returns.namedResults;
+            }
+
             return complete?;
         });
     } catch (ex:RecursiveAnalysisError) {
@@ -2290,7 +2405,8 @@ analyzeCallable2(callable:Value, args:RTValues) Specialization {
             lowered? = true;
         }
         alias s = specialization;
-        analyzeCallableReturns(s);
+        if (not s.alias?)
+            analyzeCallableReturns(s);
         invokeTable[ArgumentList(args)].specialization = Maybe(specialization);
         if (lowered?)
             invokeTable[ArgumentList(loweredArgs)].specialization = Maybe(specialization);

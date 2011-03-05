@@ -124,12 +124,6 @@ overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Wh
     });
     ir.pushNode(dest, outNode);
 }
-overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Phi) {
-    assert(false, "lifetime analysis invariant: phi must be eliminated by optimizer");
-}
-overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.BindReturn) {
-    assert(false, "lifetime analysis invariant: bind-return must be eliminated by optimizer");
-}
 overload lifetimeAnalyzeNode(c:LifetimeContext, dest:Vector[ir.Node], node:ir.Bind) {
     if (localVariable?(node.output))
         lifetimeAnalyzeInitialize(c, dest, node);

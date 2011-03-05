@@ -25,8 +25,6 @@ variant Node = LiteralCodeBody
              | While
              | Initialize
              | Bind
-             | BindReturn
-             | Phi
              | Break
              | Continue
              | Throw
@@ -114,18 +112,7 @@ record While = referenceType(
     body: Vector[Node],
 );
 
-record Phi = referenceType(
-    branches: Vector[RTValues],
-    outputs: RTValues,
-);
-
 record Bind = referenceType(
-    ast: ASTNode,
-    input: RTValue,
-    output: RTValue,
-);
-
-record BindReturn = referenceType(
     ast: ASTNode,
     input: RTValue,
     output: RTValue,
@@ -187,8 +174,7 @@ overload nodeOutputs(node:Call) = maybe(node.outputs,
 overload nodeOutputs(node:Not) = RTValues(node.output);
 overload nodeOutputs(node:AddressOf) = RTValues(node.output);
 overload nodeOutputs(node:Bind) = RTValues(node.output);
-// BindReturn and Initialize don't return their "output". The former's output is not really
-// available to other values, and the latter's output isn't actually a new value
+// Initialize doesn't return its "output" because it isn't actually a new value
 
 overload nodeOutputs(node:Node) = nodeOutputs(*node);
 
@@ -199,7 +185,6 @@ overload nodeInputs(node:If) = RTValues(node.condition);
 overload nodeInputs(node:Not) = RTValues(node.input);
 overload nodeInputs(node:AddressOf) = RTValues(node.input);
 overload nodeInputs(node:Bind) = RTValues(node.input);
-overload nodeInputs(node:BindReturn) = RTValues(node.input);
 overload nodeInputs(node:Initialize) = RTValues(node.input);
 overload nodeInputs(node:Throw) = RTValues(node.exception);
 overload nodeInputs(node:Adopt) = RTValues(node.value);
