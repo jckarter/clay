@@ -165,30 +165,6 @@ overload printNodeData(depth, node:ir.Not) {
     printVar(node.output);
 }
 
-overload printNodeData(depth, node:ir.BindReturn) {
-    println(LeafTypeName(node.ast));
-
-    printDepth(depth+1);
-    print("in  ");
-    printVar(node.input);
-
-    printDepth(depth+1);
-    print("out ");
-    printVar(node.output);
-}
-
-overload printNodeData(depth, node:ir.Phi) {
-    println();
-    for (inputs in node.branches) {
-        printDepth(depth+1);
-        println("branch:");
-        printVars(depth+2, "in  ", inputs);
-    }
-    printDepth(depth+1);
-    println("outputs:");
-    printVars(depth+2, "out ", node.outputs);
-}
-
 overload printNodeData(depth, node:ir.Nop) {
     println();
 }

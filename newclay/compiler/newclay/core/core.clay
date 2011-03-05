@@ -1470,12 +1470,16 @@ record Specialization = referenceType(
     body: Maybe[Vector[ir.Node]],
     internalArgs: RTValues,
     internalNamedResults: RTValues,
+    inline?: Bool,
+    alias?: Bool,
 );
 
 overload Specialization(o:Overload, callable:Value) {
     var s = allocateRef(Specialization);
     s.matchedOverload = o;
     s.callable = callable;
+    s.inline? = false;
+    s.alias? = false;
     return move(s);
 }
 

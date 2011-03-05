@@ -134,15 +134,6 @@ overload coalesceNode(cc:CoalesceContext, node:ir.Statement) {
     for (subnode in node.body)
         coalesceSubnode(subcc, *subnode);
 }
-overload coalesceNode(cc:CoalesceContext, node:ir.Phi) {
-    for (branch in node.branches) {
-        assert(size(branch) == size(node.outputs), "coalescing invariant: ir.Phi branches must be of equal length");
-        for (branchOutput, phiOutput in zipped(branch, node.outputs)) {
-            assert(equalResult?(branchOutput, phiOutput), "coalescing invariant: ir.Phi branches must match in type and kind");
-            cc.map^[branchOutput] = phiOutput;
-        }
-    }
-}
 
 private unifyBranchCoalescing(cmap:RTValueMap, thenCmap:RTValueMap, elseCmap:RTValueMap) {
     for (from, to in items(thenCmap))
@@ -226,9 +217,6 @@ overload coalescedNode(cmap:RTValueMap, node:ir.While) ir.While
         coalescedNodes(cmap, node.body),
     );
 
-overload coalescedNode(cmap:RTValueMap, node:ir.Phi)
-    = ir.Nop();
-
 overload coalescedNode(cmap:RTValueMap, node:ir.Bind) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);
@@ -253,14 +241,6 @@ overload coalescedNode(cmap:RTValueMap, node:ir.AddressOf)
         coalesced(cmap, node.input),
         coalesced(cmap, node.output),
     );
-
-overload coalescedNode(cmap:RTValueMap, node:ir.BindReturn) {
-    var cInput = coalesced(cmap, node.input);
-    var cOutput = coalesced(cmap, node.output);
-
-    assert(isNot?(cInput, cOutput), "coalescing invariant: return value cannot be coalesced with input");
-    return ir.BindReturn(node.ast, cInput, cOutput);
-}
 
 overload coalescedNode(cmap:RTValueMap, node:ir.Initialize) {
     var cInput = coalesced(cmap, node.input);
@@ -295,124 +275,9 @@ coalesceSpecialization(s:Specialization) {
 
 
 //
-// named return conversion
-//
-
-returnConvertSpecialization(s:Specialization) {
-    maybe(s.results,
-        results ref=> {
-            if (needsNamedReturnConversion?(s, results))
-                namedReturnConvertSpecialization(s, results);
-        },
-        () ref=> { noReturnConvertSpecialization(s); }
-    );
-}
-
-private needsNamedReturnConversion?(s, results)
-    = empty?(s.internalNamedResults) and not empty?(results);
-
-private namedReturnConvertSpecialization(s:Specialization, results) {
-    s.internalNamedResults = map(asNamedReturnVariable, results);
-    var namedResultMap = RTValueMap();
-    for (from, to in zipped(results, s.internalNamedResults))
-        namedResultMap[from] = to;
-
-    just(s.body) = map(
-        node ref=> namedReturnConvertNode(namedResultMap, *node),
-        just(s.body)
-    );
-}
-
-private asNamedReturnVariable(result) = RTValue(
-    RT_VALUE_REF,
-    if (localVariable?(result)) result.type else pointerType(result.type),
-    ReferenceVariable(),
-    "returned"
-);
-
-private procedure namedReturnConvertNode;
-overload namedReturnConvertNode(nmap:RTValueMap, node) = ir.Node(node);
-
-overload namedReturnConvertNode(nmap:RTValueMap, node:ir.BindReturn) {
-    assert(not null?(lookup(nmap, node.output)), "named return conversion invariant: return expression value must have corresponding named return");
-    if (localVariable?(node.output))
-        return ir.Node(ir.Initialize(node.ast, node.input, nmap[node.output]));
-    else
-        return ir.Node(ir.AddressOf(node.ast, node.input, nmap[node.output]));
-}
-
-overload namedReturnConvertNode(nmap:RTValueMap, node:ir.If) ir.Node
-    = ir.Node(ir.If(
-        node.ast,
-        node.condition,
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.thenBody),
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.elseBody),
-    ));
-
-overload namedReturnConvertNode(nmap:RTValueMap, node:ir.While) ir.Node
-    = ir.Node(ir.While(
-        node.label,
-        node.ast,
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.conditionBody),
-        node.condition,
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
-    ));
-overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Block) ir.Node
-    = ir.Node(ir.Block(
-        node.label,
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
-    ));
-overload namedReturnConvertNode(nmap:RTValueMap, node:ir.Statement) ir.Node
-    = ir.Node(ir.Statement(
-        map(subnode ref=> namedReturnConvertNode(nmap, *subnode), node.body),
-    ));
-
-
-
-//
-// turn BindReturn operations on no-return functions into nops
-//
-
-private noReturnConvertSpecialization(s:Specialization) {
-    just(s.body) = map(node ref=> noReturnConvertNode(*node), just(s.body));
-}
-
-private procedure noReturnConvertNode;
-overload noReturnConvertNode(node) = ir.Node(node);
-overload noReturnConvertNode(node:ir.BindReturn)
-    = ir.Node(ir.Nop());
-overload noReturnConvertNode(node:ir.If) ir.Node
-    = ir.Node(ir.If(
-        node.ast,
-        node.condition,
-        map(subnode ref=> noReturnConvertNode(*subnode), node.thenBody),
-        map(subnode ref=> noReturnConvertNode(*subnode), node.elseBody),
-    ));
-overload noReturnConvertNode(node:ir.While) ir.Node
-    = ir.Node(ir.While(
-        node.label,
-        node.ast,
-        map(subnode ref=> noReturnConvertNode(*subnode), node.conditionBody),
-        node.condition,
-        map(subnode ref=> noReturnConvertNode(*subnode), node.body),
-    ));
-overload noReturnConvertNode(node:ir.Block) ir.Node
-    = ir.Node(ir.Block(
-        node.label,
-        map(subnode ref=> noReturnConvertNode(*subnode), node.body),
-    ));
-overload noReturnConvertNode(node:ir.Statement) ir.Node
-    = ir.Node(ir.Statement(
-        map(subnode ref=> noReturnConvertNode(*subnode), node.body),
-    ));
-
-
-//
 // optimizeSpecialization
 //
 
 optimizeSpecialization(s:Specialization) {
-    coalesceSpecialization(s);
-    returnConvertSpecialization(s);
     coalesceSpecialization(s);
 }

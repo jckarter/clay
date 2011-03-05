@@ -509,10 +509,6 @@ overload codegenNode(c, bc, node:ir.While) {
     printToIndented(bc, "_clay_continue_", node.label, ":; } _clay_break_", node.label, ":;\n");
 }
 
-overload codegenNode(c, bc, node:ir.Phi) {
-    assert(false, "ir.Phi must be eliminated by optimization");
-}
-
 overload codegenNode(c, bc, node:ir.Adopt) {
     assert(false, "ir.Adopt must be eliminated by lifetime analysis");
 }
@@ -533,10 +529,6 @@ overload codegenNode(c, bc, node:ir.Bind) {
     } else {
         printToIndented(bc, localName(bc, node.output), " = ", valueRef(c, bc, node.input), ";\n");
     }
-}
-
-overload codegenNode(c, bc, node:ir.BindReturn) {
-    assert(false, "ir.BindReturn must be eliminated by optimization");
 }
 
 overload codegenNode(c, bc, node:ir.Initialize) {

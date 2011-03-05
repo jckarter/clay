@@ -1965,7 +1965,8 @@ qualifiedValueString(symbol:Value) {
 private argRTValues(env:Env, argsAst:ast.ExprList) {
     var body = Vector[ir.Node]();
     var complete? = false;
-    var s = SpecializationContext(&body, &complete?);
+    var returns = SpecializationReturns();
+    var s = SpecializationContext(&body, &complete?, &returns);
     addEnvRvalues(s, env);
 
     return analyzeExprListNode(s, env, argsAst);
