@@ -31,48 +31,6 @@ private loadPrimitivesModule(program:Program) {
     return module;
 }
 
-private addImportItem(module, envRoot, importItem) {
-    withLocation(importItem, () ref=> {
-        var moduleName = ModuleName(importItem.name);
-        assert(size(importItem.name) > 0, "import module can't have empty name");
-        withLocation(importItem.name[0], () ref=> {
-            var importedModule = programModule(module.program, moduleName);
-            match(importItem.spec,
-                ast.GeneralImportSpec,   genSpec ref=> {
-                    envRootAddGeneral(envRoot, importedModule, genSpec.location);
-                },
-                ast.SpecificImportSpecs, specSpecs ref=> {
-                    for (spec in specSpecs) {
-                        var asName = just(spec.asName, spec.name).str;
-                        envRootAddSpecific(
-                            envRoot,
-                            asName,
-                            EnvImport(spec.visibility, importedModule, spec.name.str),
-                            spec.location
-                        );
-                    }
-                },
-                ast.QualifiedImportSpec, qualSpec ref=> {
-                    addQualifiedModuleValue(
-                        envRoot,
-                        importedModule,
-                        moduleName,
-                        qualSpec.location
-                    );
-                },
-                ast.AliasedImportSpec, aliasSpec ref=> {
-                    envRootAddSpecific(
-                        envRoot,
-                        aliasSpec.asName.str,
-                        ModuleValue(importedModule),
-                        aliasSpec.location
-                    );
-                },
-            );
-        });
-    });
-}
-
 private addSymbolHead(module, astItem, astName) {
     var name = astName.name;
     if (not null?(lookup(module.publicEnv.entries, name.str))
@@ -149,6 +107,48 @@ private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleG
 callbyname ifPublic(item, publicValue, privateValue)
     = if (item.visibility == ast.VIS_PUBLIC) publicValue else privateValue;
 
+envRootAddImport(envRoot:EnvRoot, program:Program, importItem) {
+    withLocation(importItem, () ref=> {
+        var moduleName = ModuleName(importItem.name);
+        assert(size(importItem.name) > 0, "import module can't have empty name");
+        withLocation(importItem.name[0], () ref=> {
+            var importedModule = programModule(program, moduleName);
+            match(importItem.spec,
+                ast.GeneralImportSpec,   genSpec ref=> {
+                    envRootAddGeneral(envRoot, importedModule, genSpec.location);
+                },
+                ast.SpecificImportSpecs, specSpecs ref=> {
+                    for (spec in specSpecs) {
+                        var asName = just(spec.asName, spec.name).str;
+                        envRootAddSpecific(
+                            envRoot,
+                            asName,
+                            EnvImport(spec.visibility, importedModule, spec.name.str),
+                            spec.location
+                        );
+                    }
+                },
+                ast.QualifiedImportSpec, qualSpec ref=> {
+                    addQualifiedModuleValue(
+                        envRoot,
+                        importedModule,
+                        moduleName,
+                        qualSpec.location
+                    );
+                },
+                ast.AliasedImportSpec, aliasSpec ref=> {
+                    envRootAddSpecific(
+                        envRoot,
+                        aliasSpec.asName.str,
+                        ModuleValue(importedModule),
+                        aliasSpec.location
+                    );
+                },
+            );
+        });
+    });
+}
+
 private initializeGlobalEntries(module) {
     module.publicEnv  = newEnv();
     module.privateEnv = newEnv();
@@ -165,9 +165,9 @@ private initializeGlobalEntries(module) {
         for (item in module.ast.topLevelItems) {
             match(item,
                 ast.Import, importItem ref=> {
-                    addImportItem(
-                        module,
+                    envRootAddImport(
                         ifPublic(importItem, publicRoot, privateRoot),
+                        module.program,
                         importItem
                     );
                 },

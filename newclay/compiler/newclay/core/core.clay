@@ -442,6 +442,12 @@ record EnvRoot = referenceType(
     entries: Maybe[Map[String, EnvRootEntry]],
 );
 
+cloneEnvRoot(root:EnvRoot) = EnvRoot(
+    root.generalImports,
+    root.specificImports,
+    nothing(Map[String, EnvRootEntry]),
+);
+
 private resolveGeneralEnvRootEntry(entries, entryName, entryList) {
     switch (size(entryList)) {
     case 0:
