@@ -252,4 +252,4 @@ lua_getref(l:Pointer[lua_State], ref_:Int) {
     lua_rawget(l, LUA_REGISTRYINDEX, ref_);
 }
 
-alias luaL_ref = luaL_Reg;
+alias luaL_reg = luaL_Reg;

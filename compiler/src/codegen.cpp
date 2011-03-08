@@ -2362,10 +2362,12 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     ctx->builder->CreateCondBr(cond, normal, landing);
 
     ctx->builder->SetInsertPoint(landing);
-    JumpTarget &jt = ctx->exceptionTargets.back();
-    cgDestroyStack(jt.stackMarker, ctx);
-    ctx->builder->CreateBr(jt.block);
-    ++jt.useCount;
+    JumpTarget *jt = &ctx->exceptionTargets.back();
+    cgDestroyStack(jt->stackMarker, ctx);
+    // jt might be invalidated at this point
+    jt = &ctx->exceptionTargets.back();
+    ctx->builder->CreateBr(jt->block);
+    ++jt->useCount;
 
     ctx->builder->SetInsertPoint(normal);
 }
@@ -3234,10 +3236,12 @@ bool codegenStatement(StatementPtr stmt,
         default :
             assert(false);
         }
-        JumpTarget &jt = ctx->returnTargets.back();
-        cgDestroyStack(jt.stackMarker, ctx);
-        ctx->builder->CreateBr(jt.block);
-        ++ jt.useCount;
+        JumpTarget *jt = &ctx->returnTargets.back();
+        cgDestroyStack(jt->stackMarker, ctx);
+        // jt might be invalidated at this point
+        jt = &ctx->returnTargets.back();
+        ctx->builder->CreateBr(jt->block);
+        ++ jt->useCount;
         return true;
     }
 
@@ -3366,20 +3370,24 @@ bool codegenStatement(StatementPtr stmt,
     case BREAK : {
         if (ctx->breaks.empty())
             error("invalid break statement");
-        JumpTarget &jt = ctx->breaks.back();
-        cgDestroyStack(jt.stackMarker, ctx);
-        ctx->builder->CreateBr(jt.block);
-        ++ jt.useCount;
+        JumpTarget *jt = &ctx->breaks.back();
+        cgDestroyStack(jt->stackMarker, ctx);
+        // jt might be invalidated at this point
+        jt = &ctx->breaks.back();
+        ctx->builder->CreateBr(jt->block);
+        ++ jt->useCount;
         return true;
     }
 
     case CONTINUE : {
         if (ctx->continues.empty())
             error("invalid continue statement");
-        JumpTarget &jt = ctx->continues.back();
-        cgDestroyStack(jt.stackMarker, ctx);
-        ctx->builder->CreateBr(jt.block);
-        ++ jt.useCount;
+        JumpTarget *jt = &ctx->continues.back();
+        cgDestroyStack(jt->stackMarker, ctx);
+        // jt might be invalidated at this point
+        jt = &ctx->continues.back();
+        ctx->builder->CreateBr(jt->block);
+        ++ jt->useCount;
         return true;
     }
 

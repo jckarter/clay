@@ -6,8 +6,10 @@ import libc;
 // State
 //
 
+alias StateHandle = Pointer[lua_State];
+
 record State (
-    handle: Pointer[lua_State],
+    handle: StateHandle,
     owned: Bool,
 );
 
@@ -15,10 +17,10 @@ overload RegularRecord?(static State) = false;
 
 overload State() = State(luaL_newstate(), true);
 
-overload State(handle:Pointer[lua_State]) = State(handle, false);
+overload State(handle:StateHandle) = State(handle, false);
 
 overload resetUnsafe(x:State) {
-    x.handle = null(lua_State);
+    x.handle = StateHandle(0);
     x.owned = false;
 }
 
@@ -379,6 +381,22 @@ newMetaTable(x:State, name:S) {
 [S | CCompatibleString?(S)]
 lookupMetaTable(x:State, name:S) {
     luaL_getmetatable(x.handle, cstring(name));
+}
+
+
+//
+// newRef, releaseRef
+//
+
+alias NOREF = LUA_NOREF;
+alias REFNIL = LUA_REFNIL;
+
+newRef(x:State, t:Int) {
+    return luaL_ref(x.handle, t);
+}
+
+releaseRef(x:State, t:Int, _ref:Int) {
+    luaL_unref(x.handle, t, _ref);
 }
 
 
