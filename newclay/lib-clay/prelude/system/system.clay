@@ -6,7 +6,7 @@ overload exitValue(n) = Int(n);
 
 symbol callMain;
 overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
-    | Defined?(..main())
+    | CallDefined?(main)
 {
     return exitValue(..main());
 }
