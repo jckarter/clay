@@ -1,6 +1,7 @@
 import newclay.core.*;
 import newclay.common.*;
 import newclay.lexer.*;
+import newclay.loader.*;
 import newclay.parser.*;
 import newclay.evaluator.*;
 import newclay.ast as ast;
@@ -14,8 +15,15 @@ record Interactor(
     env:Env,
 );
 
+private defaultInteractorEnv(program) {
+    ref mainModuleRoot = envRoot(mainModule(program).privateEnv);
+    var newRoot = cloneEnvRoot(mainModuleRoot);
+
+    return newEnv(newRoot);
+}
+
 overload Interactor(stdin, stdout, program)
-    = Interactor(stdin, stdout, program, newEnv(mainModule(program)));
+    = Interactor(stdin, stdout, program, defaultInteractorEnv(program));
 
 overload Interactor(program) = Interactor(stdin, stdout, program);
 
@@ -42,13 +50,18 @@ private iread(inter:Interactor) {
     if (not trimRead(inter.stdin, s))
         return nothing(ast.InteractorInput);
     readUpto(inter.stdin, ';', s);
-    return Maybe(parseInput(s));
+    if (empty?(s))
+        return nothing(ast.InteractorInput);
+    else
+        return Maybe(parseInput(s));
 }
 
 private ieval(inter:Interactor, input:ast.InteractorInput) {
     return match(input,
         ast.InteractorImport, ii ref=> {
-            printlnTo(inter.stdout, "(import not implemented yet)");
+            var module = programModule(inter.program, ModuleName(ii.name));
+            var root = envRoot(inter.env);
+            envRootAddImport(root, inter.program, ii);
             return ValueList();
         },
         ast.ExprList, exprList ref=> evaluateExprList(exprList, inter.env),
