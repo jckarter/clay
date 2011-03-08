@@ -272,6 +272,15 @@ BindingList -> comma_list(SingleBinding)
 
 
 //
+// interactor input
+
+InteractorInput -> InteractorImport
+                 | ExprList
+
+InteractorImport -> "import" NamePath ImportSpec? ";"
+
+
+//
 // misc
 //
 

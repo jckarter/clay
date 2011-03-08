@@ -769,6 +769,19 @@ record ExprStatement = ast(
 
 
 //
+// interactor input
+//
+
+variant InteractorInput = InteractorImport
+                        | ExprList;
+
+record InteractorImport = ast(
+    name: Vector[Identifier],
+    spec: ImportSpec,
+);
+
+
+//
 // SourceAST
 //
 
