@@ -1,5 +1,7 @@
+import newclay.common.*;
 import newclay.core.*;
 import newclay.codegen.c.*;
+import newclay.interactor.*;
 import newclay.loader.*;
 import newclay.platforms.*;
 import maybe.*;
@@ -21,6 +23,7 @@ enum FrontendOutputMode {
     OBJECT_MODE,
     ASSEMBLY_MODE,
     C_SOURCE_MODE,
+    INTERACTOR_MODE,
 }
 
 record FrontendOptions (
@@ -30,6 +33,7 @@ record FrontendOptions (
     outputMode: Maybe[FrontendOutputMode],
     outputFile: Maybe[String],
     inputFile: Maybe[String],
+    interactorOnError?: Maybe[Bool],
 );
 
 initUniqueOption(maybeOption, value, errorFn) {
@@ -90,6 +94,14 @@ parseFrontendOptions() {
         ("-E", WordOption, o ref=> {
             initOutputMode(options.outputMode, C_SOURCE_MODE);
         }),
+        ("-i", WordOption, o ref=> {
+            initOutputMode(options.outputMode, INTERACTOR_MODE);
+        }),
+        ("-ierror", WordOption, o ref=> {
+            initUniqueOption(options.interactorOnError?, true, x ref=> {
+                optionError("more than one -ierror option given");
+            });
+        }),
         ("--help", WordOption, o ref=> { usage(); }),
         ("-help",  WordOption, o ref=> { usage(); }),
         ("/?",     WordOption, o ref=> { usage(); }),
@@ -123,6 +135,9 @@ validateFrontendOptions(options) {
     if (nothing?(options.cDialect))
         options.cDialect = Maybe(hostTargetInfo().cDialect);
 
+    if (nothing?(options.interactorOnError?))
+        options.interactorOnError? = Maybe(false);
+
     var dirname = pathDirname(inputFile);
     if (not empty?(dirname))
         push(options.modulePaths, dirname);
@@ -146,6 +161,7 @@ defaultOutputFileExtension(options) {
             return ".asm";
         else
             return ".s";
+    case INTERACTOR_MODE:
     case C_SOURCE_MODE:
         return ".c";
     default:
@@ -175,6 +191,9 @@ usage() {
     println("  -E                   - emit C source");
     println("  -S                   - emit assembly language");
     println("  -c                   - emit object file");
+    println("  -i                   - enter interactor after loading instead of");
+    println("                         running compiler");
+    println("  -ierror              - enter interactor on error");
     exit(2);
 }
 
@@ -199,6 +218,12 @@ private temporarySourceFile() {
 }
 
 compileProgramWithOptions(options:FrontendOptions) {
+    if (just(options.outputMode) == INTERACTOR_MODE) {
+        var interactor = Interactor(getProgram());
+        interactLoop(interactor);
+        return;
+    }
+
     var sourceOnly? = just(options.outputMode) == C_SOURCE_MODE;
     var sourceFileName = uninitializedUnsafe(String);
     var sourceFile = uninitializedUnsafe(RawFile);
@@ -210,7 +235,20 @@ compileProgramWithOptions(options:FrontendOptions) {
         sourceFileName, sourceFile <-- ...temporarySourceFile();
     }
 
-    codegenStandaloneProgramTo(CodegenConfig(just(options.cDialect)), sourceFile);
+    try {
+        codegenStandaloneProgramTo(CodegenConfig(just(options.cDialect)), sourceFile);
+    } catch (e:ClayError) {
+        if (just(options.interactorOnError?)) {
+            displayError(e);
+            println();
+            flush(stdout);
+
+            var interactor = Interactor(getProgram());
+            interactLoop(interactor);
+            return;
+        } else
+            throw e;
+    }
 
     if (not sourceOnly?) {
         switch (just(options.cDialect)) {

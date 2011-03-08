@@ -1,6 +1,7 @@
 import newclay.common.*;
 import newclay.lexer;
 import newclay.parser;
+import newclay.ast;
 import newclay.frontend.*;
 import newclay.codegen.c.*;
 import newclay.core.*;

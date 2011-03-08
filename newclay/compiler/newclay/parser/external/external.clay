@@ -1357,28 +1357,28 @@ private var topLevelItem = choice(
 
 
 //
-// parseExpr, parse implementation
+// parseExprList, parse implementation
 //
 
-private var parseExpr2 = modify(
+private var parseExprList2 = modify(
     x => x.0,
-    sequence(expr, token(SENTINEL)),
+    sequence(exprList, token(SENTINEL)),
 );
 
-private impl_parseExpr(tokens:SourceTokens) {
+private impl_parseExprList(tokens:SourceTokens) {
     var input = ParserInput(tokens);
-    var result = parseExpr2(input);
+    var result = parseExprList2(input);
     if (nothing?(result))
         throw ParserError(tokens, input.maxCurrent);
     return require(move(result));
 }
 
-external parser_parseExpr(
+external parser_parseExprList(
     ex:ExternalException,
     inTokens:Pointer[SourceTokens],
-    out:Pointer[Expr]
+    out:Pointer[ExprList]
 ) {
-    wrapAsExternal(impl_parseExpr, static 1, ex, inTokens, out);
+    wrapAsExternal(impl_parseExprList, static 1, ex, inTokens, out);
 }
 
 private var parse2 = modify(
