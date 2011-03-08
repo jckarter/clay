@@ -37,7 +37,7 @@ readByte(stream, b:Byte) Bool {
 
 readChar(stream, c:Char) Bool {
     var ptr = Pointer[Byte](&c);
-    var result = read(stream, ptr, 1);
+    var result = read(stream, ptr, SizeT(1));
     return result == 1;
 }
 
