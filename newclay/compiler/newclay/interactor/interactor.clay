@@ -11,21 +11,20 @@ record Interactor(
     stdin:File,
     stdout:File,
     program:Program,
-    moduleName:ModuleName,
     env:Env,
 );
 
 overload Interactor(stdin, stdout, program)
-    = Interactor(stdin, stdout, program, mainModuleName, newEnv(mainModule(program)));
+    = Interactor(stdin, stdout, program, newEnv(mainModule(program)));
 
 overload Interactor(program) = Interactor(stdin, stdout, program);
 
 prompt(inter:Interactor) {
-    printTo(inter.stdout, "/* ", inter.moduleName, " */ # ");
+    printTo(inter.stdout, "# ");
     flush(inter.stdout);
 }
 
-parseExprString(s) = parseExprList(tokenize(SourceFile("(interactor input)", s)));
+parseInput(s) = parseInteractorInput(tokenize(SourceFile("(interactor input)", s)));
 
 private trimRead(stream, s) {
     push(s, '\n');
@@ -41,15 +40,19 @@ private iread(inter:Interactor) {
     prompt(inter);
     var s = String();
     if (not trimRead(inter.stdin, s))
-        return nothing(ast.ExprList);
+        return nothing(ast.InteractorInput);
     readUpto(inter.stdin, ';', s);
-    if (not empty?(s) and back(s) == ';')
-        pop(s);
-    return Maybe(parseExprString(s));
+    return Maybe(parseInput(s));
 }
 
-private ieval(inter:Interactor, expr:ast.ExprList) {
-    return evaluateExprList(expr, inter.env);
+private ieval(inter:Interactor, input:ast.InteractorInput) {
+    return match(input,
+        ast.InteractorImport, ii ref=> {
+            printlnTo(inter.stdout, "(import not implemented yet)");
+            return ValueList();
+        },
+        ast.ExprList, exprList ref=> evaluateExprList(exprList, inter.env),
+    );
 }
 
 private iprint(inter:Interactor, result:ValueList) {
@@ -67,7 +70,20 @@ interact(inter:Interactor) {
     );
 }
 
+interactWelcome(inter:Interactor) {
+    printlnTo(inter.stdout);
+    printlnTo(inter.stdout, "Available commands:");
+    printlnTo(inter.stdout, "  <expr>;                       evaluate <expr> as a static expression");
+    printlnTo(inter.stdout, "  import <module>.*;            import all definitions from <module>");
+    printlnTo(inter.stdout, "  import <module>.(<name> [as <name>], ...);");
+    printlnTo(inter.stdout, "                                import selected definitions from <module> (as <name>)");
+    printlnTo(inter.stdout, "  import <module> [as <name>];  add module name <module> to search path (as <name>)");
+    printlnTo(inter.stdout);
+    flush(inter.stdout);
+}
+
 interactLoop(inter:Interactor) {
+    interactWelcome(inter);
     var running? = true;
     while (running?) {
         try {

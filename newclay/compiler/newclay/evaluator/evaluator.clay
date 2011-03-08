@@ -1448,7 +1448,7 @@ evaluateStaticCall(program, callable, args)
     = withStaticCall(callable, args, () ref=> ifStaticOverload(program, callable, args,
         (oload, env) ref=> evaluateExprList(oload.ast.definition.body, env),
         () ref=> {
-            genericError("no matching static overload: ", callable, args);
+            genericError("no matching static overload");
             return ValueList();
         }
     ));

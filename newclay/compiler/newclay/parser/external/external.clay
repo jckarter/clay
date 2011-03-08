@@ -1354,31 +1354,44 @@ private var topLevelItem = choice(
     globalBinding
 );
 
+// interactorImport
+
+private var interactorExprList = modify(x => InteractorInput(x.0),
+    sequence(exprList, punc(#";")),
+);
+
+private var interactorImport = modify(
+    x => InteractorInput(InteractorImport(move(x.1), move(x.2))),
+    sequence(kw_import, namePath, importSpec),
+);
+
+private var interactorInput = choice(interactorExprList, interactorImport);
+
 
 
 //
-// parseExprList, parse implementation
+// parse implementation
 //
 
-private var parseExprList2 = modify(
+private var parseInteractorInput2 = modify(
     x => x.0,
-    sequence(exprList, token(SENTINEL)),
+    sequence(interactorInput, token(SENTINEL)),
 );
 
-private impl_parseExprList(tokens:SourceTokens) {
+private impl_parseInteractorInput(tokens:SourceTokens) {
     var input = ParserInput(tokens);
-    var result = parseExprList2(input);
+    var result = parseInteractorInput2(input);
     if (nothing?(result))
         throw ParserError(tokens, input.maxCurrent);
     return require(move(result));
 }
 
-external parser_parseExprList(
+external parser_parseInteractorInput(
     ex:ExternalException,
     inTokens:Pointer[SourceTokens],
-    out:Pointer[ExprList]
+    out:Pointer[InteractorInput]
 ) {
-    wrapAsExternal(impl_parseExprList, static 1, ex, inTokens, out);
+    wrapAsExternal(impl_parseInteractorInput, static 1, ex, inTokens, out);
 }
 
 private var parse2 = modify(
