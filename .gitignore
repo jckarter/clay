@@ -13,6 +13,8 @@ tags
 *.out
 bin/
 build/
+build-debug/
+build-release/
 clay
 compiler/src/*.o
 compiler/src/*.dep
