@@ -75,11 +75,11 @@ external parser_parse(
     out:Pointer[SourceAST]
 );
 
-external parser_parseExpr(
+external parser_parseExprList(
     ex:ExternalException,
     inTokens:Pointer[SourceTokens],
-    out:Pointer[Expr]
+    out:Pointer[ExprList]
 );
 
-parseExpr(tokens) = callExternal(parser_parseExpr, tokens);
+parseExprList(tokens) = callExternal(parser_parseExprList, tokens);
 parse(tokens) = callExternal(parser_parse, tokens);

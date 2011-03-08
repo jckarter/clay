@@ -178,9 +178,10 @@ record SourceFile = referenceType(
     data:String,
 );
 
-readSource(path) =
-    SourceFile(path, readAll(File(path)));
+[S1, S2 | String?(S1) and String?(S2) and (S1 != String or S2 != String)]
+overload SourceFile(path:S1, data:S2) = SourceFile(String(path), String(data));
 
+readSource(path) = SourceFile(path, readAll(File(path)));
 
 
 //
