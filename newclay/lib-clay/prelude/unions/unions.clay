@@ -1,6 +1,8 @@
 import values.*;
 import libc.*;
+import meta.symbols.*;
 import meta.statics.*;
+import prelude.types.lowlevel.*;
 
 
 //
@@ -44,3 +46,39 @@ inline overload Union[..'T](forward x:'U) returned:Union[..'T]
 
 inline overload equals?(a:Union[..'T], b:Union[..'T])
     = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize(Union[..'T])) == 0;
+
+
+//
+// named union type
+//
+
+#NamedUnionType(..'fields) | ValidFields?(..'fields) = (NamedUnionType, ..'fields);
+#NamedUnionType?('T) = SymbolWithTag?('T, NamedUnionType);
+
+overload #Fields('T) | NamedUnionType?('T) = ..SymbolTagBody('T, NamedUnionType);
+
+overload #LLType('T) | NamedUnionType?('T) = LLUnionType[..Fields('T)];
+overload #PODType?('T) | NamedUnionType?('T) = true;
+
+inline overload index(forward x:'T, #'field)
+    | NamedUnionType?('T) and Field?('T, 'field)
+    = forward bitcast(#FieldType('T, 'field), x);
+
+overload #BitwiseZeroInitializedType?('T) | NamedUnionType?('T) = true;
+
+inline overload 'T() returned:'T
+    | NamedUnionType?('T)
+{
+    memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
+}
+
+inline overload 'T(forward x:'U) returned:'T
+    | NamedUnionType?('T) and inValues?('U, ..FieldTypes('T))
+{
+    bitcast('U, returned) <-- x;
+}
+
+inline overload equals?(a:'T, b:'T)
+    | NamedUnionType?('T)
+    = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize('T)) == 0;
+

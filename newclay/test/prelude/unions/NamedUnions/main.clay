@@ -1,0 +1,28 @@
+import show.*;
+
+symbol Foonion = NamedUnionType(foo:UInt32, bar:Float32);
+
+main() {
+    show(#NamedUnionType?(Foonion)); ////true
+
+    show(#Defined?(Foonion(1_u32))); ////true
+    show(#Defined?(Foonion(2f))); ////true
+
+    show(#Defined?(Foonion('3'))); ////false
+
+    var x = Foonion(0x3f80_0000_u32);
+
+    show(#Defined?(x.foo)); ////true
+    show(#Defined?(x.bar)); ////true
+    show(#Defined?(x.bas)); ////false
+
+    show(x.foo); ////1065353216
+    show(x.bar); ////1
+
+    var y = Foonion(1.0f);
+    show(x == y); ////true
+
+    x.bar = 2.0f;
+    show(x.foo); ////1073741824
+    show(x.bar); ////2
+}
