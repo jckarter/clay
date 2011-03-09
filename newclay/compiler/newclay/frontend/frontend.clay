@@ -34,6 +34,8 @@ record FrontendOptions (
     outputFile: Maybe[String],
     inputFile: Maybe[String],
     interactorOnError?: Maybe[Bool],
+    traceLoading?: Maybe[Bool],
+    traceCompilation?: Maybe[Bool],
 );
 
 initUniqueOption(maybeOption, value, errorFn) {
@@ -102,6 +104,16 @@ parseFrontendOptions() {
                 optionError("more than one -ierror option given");
             });
         }),
+        ("-trace", WordOption, o ref=> {
+            initUniqueOption(options.traceCompilation?, true, x ref=> {
+                optionError("more than one -trace option given");
+            });
+        }),
+        ("-trace-load", WordOption, o ref=> {
+            initUniqueOption(options.traceLoading?, true, x ref=> {
+                optionError("more than one -trace option given");
+            });
+        }),
         ("--help", WordOption, o ref=> { usage(); }),
         ("-help",  WordOption, o ref=> { usage(); }),
         ("/?",     WordOption, o ref=> { usage(); }),
@@ -137,6 +149,12 @@ validateFrontendOptions(options) {
 
     if (nothing?(options.interactorOnError?))
         options.interactorOnError? = Maybe(false);
+
+    if (nothing?(options.traceCompilation?))
+        options.traceCompilation? = Maybe(false);
+
+    if (nothing?(options.traceLoading?))
+        options.traceLoading? = Maybe(false);
 
     var dirname = pathDirname(inputFile);
     if (not empty?(dirname))
@@ -191,9 +209,10 @@ usage() {
     println("  -E                   - emit C source");
     println("  -S                   - emit assembly language");
     println("  -c                   - emit object file");
-    println("  -i                   - enter interactor after loading instead of");
-    println("                         running compiler");
+    println("  -i                   - enter interactor instead of running compiler");
     println("  -ierror              - enter interactor on error");
+    println("  -trace               - trace compilation");
+    println("  -trace-load          - trace module loading");
     exit(2);
 }
 
