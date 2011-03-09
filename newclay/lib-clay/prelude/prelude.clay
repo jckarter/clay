@@ -12,6 +12,6 @@ public import prelude.unions.*;
 public import prelude;
 
 // non-public detail modules required for compiler hooks
-import prelude.types.lowlevel.*;
+import meta.lltypes.*;
 import prelude.system.*;
 

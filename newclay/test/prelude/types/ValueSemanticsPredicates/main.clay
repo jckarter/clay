@@ -1,4 +1,4 @@
-import prelude.types.lowlevel.(LLType, LLTupleType);
+import meta.lltypes.(LLType, LLTupleType);
 import show.*;
 
 symbol NonPODType;

@@ -3,7 +3,7 @@ import meta.symbols.*;
 import libc.*;
 import values.*;
 import prelude.operators.c.*;
-import prelude.types.lowlevel.*;
+import meta.lltypes.*;
 import prelude.tuples.(private unpackFields);
 
 

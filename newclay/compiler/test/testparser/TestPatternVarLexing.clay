@@ -1,5 +1,5 @@
 import prelude.operators.c.*;
-import prelude.types.lowlevel.*;
+import meta.lltypes.*;
 
 
 //

@@ -2,7 +2,7 @@ import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
 import values.(allValues?, countValues, emptyValues?);
-import prelude.types.lowlevel.*;
+import meta.lltypes.*;
 
 public import __primitives__.(
     ExpressionReturns?       as Returns?,
