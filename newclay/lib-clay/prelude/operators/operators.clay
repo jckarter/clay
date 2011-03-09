@@ -15,6 +15,12 @@ import __primitives__.(
     StaticSubtract,
     StaticLesser?,
     StaticEquals?,
+    StaticBitnot,
+    StaticBitor,
+    StaticBitand,
+    StaticBitxor,
+    StaticBitshl,
+    StaticBitshr,
 );
 
 
@@ -414,6 +420,20 @@ overload bitrol(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
 symbol bitror;
 overload bitror(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
     = bitor(bitshr(a, shift), bitshl(a, TypeSize('A)*8u - UInt(shift)));
+
+
+//
+// bitwise static operations
+//
+
+overload #bitnot('x) = StaticBitnot('x);
+overload #bitand('x, 'y) = StaticBitand('x, 'y);
+overload #bitor('x, 'y) = StaticBitor('x, 'y);
+overload #bitxor('x, 'y) = StaticBitxor('x, 'y);
+overload #bitshl('x, 'y) = StaticBitshl('x, 'y);
+overload #bitshr('x, 'y) = StaticBitshr('x, 'y);
+
+overload #bitandc('x, 'y) = StaticBitand('x, StaticBitnot('y));
 
 
 //
