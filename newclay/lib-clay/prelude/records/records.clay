@@ -80,7 +80,7 @@ inline overload index(forward x:'T, #'field)
 
 inline overload index(rvalue x:'T, #'field)
     rvalue returned:FieldType('T, 'field)
-    | CompositeType?('T) and Field?('T, 'field)
+    | RecordType?('T) and Field?('T, 'field)
 {
     ref rx = rvalueToRefUnsafe(x);
     returned = &cFieldRef(#FieldType('T, 'field), rx, #LLMangle('field));
