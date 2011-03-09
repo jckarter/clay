@@ -2,7 +2,7 @@ import values.*;
 import libc.*;
 import meta.symbols.*;
 import meta.statics.*;
-import prelude.types.lowlevel.*;
+import meta.lltypes.*;
 
 
 //

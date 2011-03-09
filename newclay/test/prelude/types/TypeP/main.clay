@@ -1,5 +1,5 @@
 import show.*;
-import prelude.types.lowlevel.(LLType, LLTupleType);
+import meta.lltypes.(LLType, LLTupleType);
 
 symbol NonPODType;
 overload #LLType(NonPODType) = LLTupleType[];
