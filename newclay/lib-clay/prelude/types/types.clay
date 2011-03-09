@@ -418,6 +418,8 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
     SequenceType?('S)
     and ContiguousCoordinateType?(SequenceCoordinateType('S));
 
+#SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
+
 
 //
 // NewType
