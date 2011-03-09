@@ -3,3 +3,12 @@ public import __primitives__.(
     StaticError,
     StaticAssert,
 );
+import libc.(abort);
+import show.(show);
+
+assert(/*alias*/ x:Bool, forward ..msg) {
+    if (not x) {
+        show("assertion failed! ", ..msg);
+        abort();
+    }
+}
