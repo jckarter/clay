@@ -1,4 +1,5 @@
 import prelude.operators.c.*;
+import prelude.sequences.*;
 import meta.lltypes.*;
 import values.*;
 import libc.*;
@@ -78,33 +79,10 @@ inline overload Array['T, 'n](forward ..xs:'TT) returned:Array['T, 'n]
 
 
 //
-// iterator
-//
-
-symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
-inline overload CoordinateRange(begin:'C, end:'C)
-    | CoordinateType?('C)
-    = CoordinateRange['C](begin, end);
-
-inline overload iterator(forward i:CoordinateRange['C]) = forward i;
-inline overload hasNext?(i:CoordinateRange['C]) = i.begin < i.end;
-inline overload next(ref i:CoordinateRange['C]) {
-    var p = i.begin;
-    inc(i.begin);
-    return ref p^;
-}
-
-inline overload begin(i:CoordinateRange['C]) = i.begin;
-inline overload end(i:CoordinateRange['C]) = i.end;
-inline overload size(i:CoordinateRange['C]) = UInt(i.end - i.begin);
-
-
-//
 // unsafe iterator for consuming rvalue sequences
 //
 private symbol RvalueCoordinateRangeUnsafe['C] = RecordType(begin:'C, end:'C);
 
-inline overload iterator(forward i:RvalueCoordinateRangeUnsafe['C]) = forward i;
 inline overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) = i.begin < i.end;
 inline overload next(ref i:RvalueCoordinateRangeUnsafe['C]) {
     var p = i.begin;
@@ -120,6 +98,11 @@ private rvalueIteratorUnsafe(rvalue x:Array['T, 'n]) {
 private symbol forwardIteratorUnsafe;
 inline overload forwardIteratorUnsafe(x:Array['T, 'n]) = iterator(x);
 inline overload forwardIteratorUnsafe(rvalue x:Array['T, 'n]) = rvalueIteratorUnsafe(x);
+
+
+//
+// iterator
+//
 
 overload iterator(x:Array['T, 'n]) = CoordinateRange(begin(x), end(x));
 
@@ -231,7 +214,5 @@ inline overload lesser?(x:Array['T, 'n], y:Array['U, 'n])
 // StringConstant as sequence
 //
 
-overload iterator(s:StringConstant) = CoordinateRange(s.begin, s.end);
 overload begin(s:StringConstant) = s.begin;
 overload end(s:StringConstant) = s.end;
-overload size(s:StringConstant) = UInt(s.end - s.begin);

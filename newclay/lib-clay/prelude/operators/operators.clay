@@ -300,24 +300,6 @@ inline overload move(rvalue a:'T) = moveUnsafe(a);
 
 
 //
-// iterator, hasNext?, next, size
-//
-
-symbol iterator;
-symbol hasNext?;
-symbol next;
-symbol size;
-
-
-//
-// begin, end
-//
-
-symbol begin;
-symbol end;
-
-
-//
 // unpack
 //
 
@@ -437,6 +419,7 @@ overload #bitandc('x, 'y) = StaticBitand('x, StaticBitnot('y));
 
 
 //
+// type-to-value conversions
 // these should only be used as shims for Type() tests and never in real code
 //
 

@@ -1,4 +1,3 @@
-import sequences.*;
 import show.*;
 
 main() {
