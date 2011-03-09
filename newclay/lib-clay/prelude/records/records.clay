@@ -42,10 +42,10 @@ overload #Fields('T)
     | RecordType?('T)
     = ..SymbolTagBody('T, RecordType);
 
-#FieldNames('T) | CompositeType?('T)
+#FieldNames('T) | StaticCallDefined?(Fields, 'T)
     = ..mapValues(x -> x.0, ..Fields('T));
 
-#FieldTypes('T) | CompositeType?('T)
+#FieldTypes('T) | StaticCallDefined?(Fields, 'T)
     = ..mapValues(x -> x.1, ..Fields('T));
 
 overload #LLType('T) | CompositeType?('T) = LLTupleType[..Fields('T)];
