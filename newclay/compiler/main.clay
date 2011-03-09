@@ -14,6 +14,9 @@ main() {
         var options = parseFrontendOptions();
         observe(#options, options);
 
+        traceCompilation(just(options.traceCompilation?));
+        traceLoading(just(options.traceLoading?));
+
         var program = loadProgram(just(options.inputFile), options.modulePaths);
         withProgram(program, () ref=> {
             initializeClayHooks();

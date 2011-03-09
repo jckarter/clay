@@ -41,8 +41,13 @@ record StackNode[T] = referenceType(
 );
 
 record Stack[T] (
+    trace?: Bool,
+    size: SizeT,
     root: StackNode[T],
 );
+
+[T] overload Stack[T]() = Stack[T](false, SizeT(0), StackNode[T]());
+[T] overload Stack[T](trace?:Bool) = Stack[T](trace?, SizeT(0), StackNode[T]());
 
 [T]
 stackEmpty?(s:Stack[T]) = null?(s.root);
@@ -53,10 +58,24 @@ stackTop(s:Stack[T]) = ref s.root.value;
 [T]
 stackPush(s:Stack[T], forward x:T) {
     s.root = StackNode[T](x, s.root);
+    if (s.trace?) {
+        for (i in range(s.size))
+            print(' ');
+        println("[ entering ", s.root.value);
+        flush(stdout);
+    }
+    inc(s.size);
 }
 
 [T]
 stackPop(s:Stack[T]) {
+    dec(s.size);
+    if (s.trace?) {
+        for (i in range(s.size))
+            print(' ');
+        println("] leaving  ", s.root.value);
+        flush(stdout);
+    }
     s.root = s.root.next;
 }
 

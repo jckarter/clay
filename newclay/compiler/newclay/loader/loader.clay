@@ -292,10 +292,16 @@ private findModuleSource(searchPath, name) {
     ));
 }
 
+private var _traceLoading? = false;
+traceLoading(traceLoading?:Bool) { _traceLoading? = traceLoading?; }
+
 private loadModule(program, name) {
     ref module = program.modules[name];
     module = Module(program, name);
-    module.originalAST = parse(tokenize(readSource(findModuleSource(program.moduleSearchPath, name))));
+    var sourcePath = findModuleSource(program.moduleSearchPath, name);
+    if (_traceLoading?)
+        println("* loading ", name, " from ", sourcePath);
+    module.originalAST = parse(tokenize(readSource(sourcePath)));
     initializeModule(module);
 }
 
@@ -311,6 +317,8 @@ programModule(program:Program, name:ModuleName) {
 private loadMainModule(program, mainFilename) {
     var module = Module(program, mainModuleName);
     mainModule(program) = module;
+    if (_traceLoading?)
+        println("* loading ", mainModuleName, " from ", mainFilename);
     module.originalAST = parse(tokenize(readSource(mainFilename)));
     initializeModule(module);
     return module;

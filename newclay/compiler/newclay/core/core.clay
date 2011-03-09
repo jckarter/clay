@@ -1659,7 +1659,9 @@ overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-private var _compilationStack = Stack[CompilationEntry]();
+private var _compilationStack = Stack[CompilationEntry](false);
+
+traceCompilation(trace?:Bool) { _compilationStack.trace? = trace?; }
 
 withCompilationEntry(forward entry:CompilationEntry, f) =
     forward ...withStackValue(_compilationStack, entry, f);
