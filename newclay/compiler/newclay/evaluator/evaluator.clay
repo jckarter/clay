@@ -1676,6 +1676,31 @@ evaluatePrimitive(kind, args) {
         return evaluateStaticCompare(*a, *b, greaterEquals?);
     }
 
+    case PRIM_StaticBitand : {
+        var a, b = ...twoInts(args);
+        return ValueList(bitwiseAnd(a, b));
+    }
+    case PRIM_StaticBitor : {
+        var a, b = ...twoInts(args);
+        return ValueList(bitwiseOr(a, b));
+    }
+    case PRIM_StaticBitxor : {
+        var a, b = ...twoInts(args);
+        return ValueList(bitwiseXor(a, b));
+    }
+    case PRIM_StaticBitnot : {
+        var a = oneInt(args);
+        return ValueList(bitwiseNot(a));
+    }
+    case PRIM_StaticBitshl : {
+        var a, b = ...twoInts(args);
+        return ValueList(shiftLeft(a, b));
+    }
+    case PRIM_StaticBitshr : {
+        var a, b = ...twoInts(args);
+        return ValueList(shiftRight(a, b));
+    }
+
     case PRIM_StaticChar? : {
         var a = oneValue(args);
         return ValueList(BoolValue(variantIs?(a, CharValue)));
