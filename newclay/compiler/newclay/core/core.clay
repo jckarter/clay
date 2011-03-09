@@ -297,6 +297,13 @@ enum PrimitiveKind {
     PRIM_StaticGreater?,
     PRIM_StaticGreaterEquals?,
 
+    PRIM_StaticBitand,
+    PRIM_StaticBitor,
+    PRIM_StaticBitxor,
+    PRIM_StaticBitnot,
+    PRIM_StaticBitshl,
+    PRIM_StaticBitshr,
+
     PRIM_StaticChar?,
     PRIM_StaticString?,
     PRIM_StaticStringSize,
@@ -1014,11 +1021,23 @@ overload multiply(x:I, y:J)  = staticIntMath(multiply,  x, y);
 overload divide(x:I, y:J)    = staticIntMath(divide,    x, y);
 [I, J | StaticIntValueArgs?(I, J)]
 overload remainder(x:I, y:J) = staticIntMath(remainder, x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload bitwiseAnd(x:I, y:J) = staticIntMath(bitwiseAnd, x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload bitwiseOr(x:I, y:J) = staticIntMath(bitwiseOr, x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload bitwiseXor(x:I, y:J) = staticIntMath(bitwiseXor, x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload shiftLeft(x:I, y:J) = staticIntMath(shiftLeft, x, y);
+[I, J | StaticIntValueArgs?(I, J)]
+overload shiftRight(x:I, y:J) = staticIntMath(shiftRight, x, y);
 
 [SI | StaticInteger?(SI)]
 overload plus(x:SI) = x;
 [SI | StaticInteger?(SI)]
 overload minus(x:SI) = SI(-x.value);
+[SI | StaticInteger?(SI)]
+overload bitwiseNot(x:SI) = SI(bitwiseNot(x.value));
 
 // IntValue operations
 
@@ -1030,12 +1049,18 @@ overload lesser?(x:IntValue, y:IntValue) = lesser?(*x, *y);
 
 overload plus (x:IntValue) = applyToIntValue(plus,  *x);
 overload minus(x:IntValue) = applyToIntValue(minus, *x);
+overload bitwiseNot(x:IntValue) = applyToIntValue(bitwiseNot, *x);
 
 overload add      (x:IntValue, y:IntValue) = applyToIntValue(add,       *x, *y);
 overload subtract (x:IntValue, y:IntValue) = applyToIntValue(subtract,  *x, *y);
 overload multiply (x:IntValue, y:IntValue) = applyToIntValue(multiply,  *x, *y);
 overload divide   (x:IntValue, y:IntValue) = applyToIntValue(divide,    *x, *y);
 overload remainder(x:IntValue, y:IntValue) = applyToIntValue(remainder, *x, *y);
+overload bitwiseAnd(x:IntValue, y:IntValue) = applyToIntValue(bitwiseAnd, *x, *y);
+overload bitwiseOr(x:IntValue, y:IntValue) = applyToIntValue(bitwiseOr, *x, *y);
+overload bitwiseXor(x:IntValue, y:IntValue) = applyToIntValue(bitwiseXor, *x, *y);
+overload shiftLeft(x:IntValue, y:IntValue) = applyToIntValue(shiftLeft, *x, *y);
+overload shiftRight(x:IntValue, y:IntValue) = applyToIntValue(shiftRight, *x, *y);
 
 overload Int64(x:IntValue) = Int64(*x);
 overload UInt64(x:IntValue) = UInt64(*x);
