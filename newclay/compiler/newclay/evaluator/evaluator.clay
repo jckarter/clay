@@ -800,8 +800,10 @@ overload evaluateStrictCall(x:Value, args) {
     return evaluateStrictCall(*x, args);
 }
 overload evaluateStrictCall(x:LambdaValue, args) {
-    var env2 = bindArgs(x.env, x.value.args, args);
-    return evaluateLambdaCodeBody(*x.value.body, env2);
+    return withStaticCall(Value(x), args, () ref=> {
+        var env2 = bindArgs(x.env, x.value.args, args);
+        return evaluateLambdaCodeBody(*x.value.body, env2);
+    });
 }
 overload evaluateStrictCall(x:Symbol, args) {
     return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);

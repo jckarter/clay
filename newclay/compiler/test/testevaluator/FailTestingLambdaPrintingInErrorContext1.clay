@@ -1,0 +1,10 @@
+import __primitives__.*;
+
+alias shortLambda = x -> x() + 1;
+alias longErrorLambda = () -> (
+    StaticError("hurr")
+);
+
+#foo('f, 'g) = 'f('g);
+
+#Main() = foo(shortLambda, longErrorLambda);
