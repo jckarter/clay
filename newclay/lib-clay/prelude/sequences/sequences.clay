@@ -1,0 +1,241 @@
+import values.*;
+
+
+//
+// iterator operations
+//
+
+symbol iterator;
+symbol hasNext?;
+symbol next;
+
+
+//
+// coordinate operations
+//
+
+symbol begin;
+symbol end;
+symbol size;
+
+
+//
+// default implementations
+//
+
+overload iterator(forward x:'I) | IteratorType?('I) = forward x;
+
+overload iterator(x:'S) | CoordinateSequenceType?('S)
+    = CoordinateRange(begin(x), end(x));
+
+overload size(x:'S) | CoordinateSequenceType?('S) and Defined?(end(x) - begin(x))
+    = UInt(end(x) - begin(x));
+
+
+//
+// CoordinateRange
+//
+
+symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
+inline overload CoordinateRange(begin:'C, end:'C)
+    | CoordinateType?('C)
+    = CoordinateRange['C](begin, end);
+
+inline overload hasNext?(i:CoordinateRange['C]) = i.begin < i.end;
+inline overload next(ref i:CoordinateRange['C]) {
+    var p = i.begin;
+    inc(i.begin);
+    return ref p^;
+}
+
+inline overload begin(i:CoordinateRange['C]) = i.begin;
+inline overload end(i:CoordinateRange['C]) = i.end;
+
+
+//
+// Range
+//
+
+private symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
+
+overload hasNext?(x:Range['T]) = x.begin < x.end;
+overload next(ref x:Range['T]) { 
+    var returned = x.begin;
+    x.begin += x.step;
+    return returned;
+}
+
+range(to:'N) = Range['N]('N(0), to, 'N(1));
+overload range(from:'N, to:'N) = Range['N](from, to, 'N(1));
+overload range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
+
+
+//
+// apply a function to each value in a coordinate range or paired coordinate ranges
+//
+
+eachInRange(begin:'C, end:'C, fn) | CoordinateType?('C) {
+    var i = begin;
+    while (i < end) {
+        fn(i^);
+        inc(i);
+    }
+}
+
+eachInRangeBackwards(begin:'C, end:'C, fn) | CoordinateType?('C) {
+    var i = end;
+    while (begin < i) {
+        dec(i);
+        fn(i^);
+    }
+}
+
+eachInRangeWithCleanup(begin:'C, end:'C, fn) | CoordinateType?('C) {
+    var i = begin;
+    try {
+        while (i < end) {
+            fn(i^);
+            inc(i);
+        }
+    } catch (ex) {
+        destroyRangeUnsafe(begin, i);
+        throw ex;
+    }
+}
+
+eachInRangeBackwardsWithCleanup(begin:'C, end:'C, fn) | CoordinateType?('C) {
+    var i = end;
+    try {
+        while (begin < i) {
+            dec(i);
+            fn(i^);
+        }
+    } catch (ex) {
+        inc(i);
+        destroyRangeUnsafe(i, end);
+        throw ex;
+    }
+}
+
+private #CompatibleCoordinateTypes?('C, 'D)
+    = CoordinateType?('C) and CoordinateType?('D)
+      and CoordinateTargetType('C) == CoordinateTargetType('D);
+
+// XXX lambdas
+private copyTo(ref x, y) { x <-- y; }
+private moveToUnsafe(ref x, ref y) { x <-- moveUnsafe(y); }
+
+eachInRanges(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
+    var i1 = begin1;
+    var i2 = begin2;
+    while (i2 < end2) {
+        fn(i1^, i2^);
+        inc(i1);
+        inc(i2);
+    }
+}
+
+eachInRangesBackwards(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
+    var end1 = begin1 + (end2 - begin2);
+    var i1 = end1;
+    var i2 = end2;
+    while (begin2 < i2) {
+        dec(i1);
+        dec(i2);
+        fn(i1^, i2^);
+    }
+}
+
+eachInRangesWithCleanup(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
+    var i1 = begin1;
+    var i2 = begin2;
+    try {
+        while (i2 < end2) {
+            fn(i1^, i2^);
+            inc(i1);
+            inc(i2);
+        }
+    } catch (ex) {
+        destroyRangeUnsafe(begin1, i1);
+    }
+}
+
+eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    var end1 = begin1 + (end2 - begin2);
+    var i1 = end1;
+    var i2 = end2;
+    try {
+        while (begin2 < i2) {
+            dec(i1);
+            dec(i2);
+            fn(i1^, i2^);
+        }
+    } catch (ex) {
+        inc(i1);
+        destroyRangeUnsafe(i1, end1);
+    }
+}
+
+
+//
+// apply value semantics operations over coordinate ranges
+//
+
+inline initializeRange(begin:'C, end:'C) | CoordinateType?('C) {
+    eachInRangeWithCleanup(begin, end, #CoordinateTargetType('C));
+}
+
+inline destroyRangeUnsafe(begin:'C, end:'C) | CoordinateType?('C) {
+    eachInRange(begin, end, destroyUnsafe);
+}
+
+inline copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    eachInRangesWithCleanup(destBegin, srcBegin, srcEnd, copyTo);
+}
+
+private inline moveRangeForwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    eachInRanges(destBegin, srcBegin, srcEnd, moveToUnsafe);
+}
+
+private inline moveRangeBackwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    eachInRangesBackwards(destBegin, srcBegin, srcEnd, moveToUnsafe);
+}
+
+inline moveRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D) and 'C != 'D
+{
+    moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
+}
+
+inline overload moveRangeUnsafe(destBegin:'C, srcBegin:'C, srcEnd:'C)
+    | CoordinateType?('C)
+{
+    if (destBegin <= srcBegin)
+        moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
+    else
+        moveRangeBackwardsUnsafe(destBegin, srcBegin, srcEnd);
+}
+
+inline moveNonoverlappingRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
+}
+
+inline resetRangeUnsafe(begin:'C, end:'C) | CoordinateType?('C) {
+    eachInRange(begin, end, resetUnsafe);
+}
+
+inline assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D)
+    | CompatibleCoordinateTypes?('C, 'D)
+{
+    eachInRanges(destBegin, srcBegin, srcEnd, assign);
+}
