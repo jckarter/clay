@@ -430,3 +430,9 @@ refValue(#'T)    ref    x:'T __c__ """abort();""";
 rvalueValue(#'T) rvalue x:'T __c__ """abort();""";
 constValue(#'T)  const  x:'T __c__ """abort();""";
 
+
+//
+// identity function
+//
+
+inline identity(forward ..x) = forward ..x; 
