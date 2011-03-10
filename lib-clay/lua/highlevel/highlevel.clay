@@ -445,6 +445,10 @@ checkAny(x:State, index:Int) {
     });
 }
 
+checkBoolean(x:State, index:Int) = safeCall(x,
+    x ref=> Bool(luaL_checkint(x.handle, index))
+);
+
 checkInt(x:State, index:Int) = safeCall(x,
     x ref=> luaL_checkint(x.handle, index)
 );
