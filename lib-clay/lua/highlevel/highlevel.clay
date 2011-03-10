@@ -417,20 +417,20 @@ genericError(x:State, msg:S) {
 [S | CCompatibleString?(S)]
 typeError(x:State, index:Int, expected:S) {
     safeCall(x, x ref=> {
-        lua_typerror(x.handle, index, cstring(expected));
+        luaL_typerror(x.handle, index, cstring(expected));
     });
 }
 
 [S | CCompatibleString?(S)]
 argError(x:State, index:Int, extraMsg:S) {
     safeCall(x, x ref=> {
-        lua_argerror(x.handle, index, cstring(extraMsg));
+        luaL_argerror(x.handle, index, cstring(extraMsg));
     });
 }
 
 overload argError(x:State, index:Int) {
     safeCall(x, x ref=> {
-        lua_argerror(x.handle, index, null(CChar));
+        luaL_argerror(x.handle, index, null(CChar));
     });
 }
 
