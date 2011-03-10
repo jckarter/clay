@@ -20,6 +20,18 @@ symbol size;
 
 
 //
+// back/front
+//
+
+front(x:'S) | CoordinateSequenceType?('S) = forward begin(x)^;
+back(x:'S) | CoordinateSequenceType?('S) {
+    var c = end(x);
+    dec(c);
+    return forward c^;
+}
+
+
+//
 // default implementations
 //
 
