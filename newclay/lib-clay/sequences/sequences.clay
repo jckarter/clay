@@ -16,3 +16,6 @@ zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
 iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
 hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
 next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
+
+enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
+    = zipped(range(UInt(0), UInt(-1)), ..seqs);
