@@ -1230,8 +1230,18 @@ overload printTo(stream, x:TupleValue) {
         printTo(stream, ",");
     printTo(stream, ")");
 }
+
+private shortExpressionString?(string)
+    = size(string) < 40 and find(string, '\n') == end(string);
+
 overload printTo(stream, x:LambdaValue) {
-    printTo(stream, "<lambda>");
+    var expression = ast.getSourceString(x.value);
+    if (shortExpressionString?(expression))
+        printTo(stream, '(', expression, ')');
+    else {
+        var path, line, column = ...ast.getFileLocation(x.value);
+        printTo(stream, "<lambda ", path, "(", line, ",", column, ")>");
+    }
 }
 overload printTo(stream, x:SymbolHead) {
     printTo(stream, x.astName.name.str);
