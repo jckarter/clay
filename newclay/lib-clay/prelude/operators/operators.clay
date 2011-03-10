@@ -285,18 +285,20 @@ inline overload initializeFromUnsafe(ref a:'T, b:'T) { a <-- copy(b); }
 inline overload initializeFromUnsafe(ref a:'T, rvalue b:'T) { a <-- move(b); }
 
 destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
-inline resetUnsafe(ref x:'T) | DefaultInitializableType?('T) { x <-- 'T(); }
+inline resetUnsafe(ref x:'T)
+    | DefaultInitializableType?('T) and InitializeDoesNotThrowType?('T)
+    { x <-- 'T(); }
 inline overload resetUnsafe(ref x:'T) | NotResetType?('T) {}
 
 inline bitwiseCopyUnsafe(forward a:'T) returned:'T { cAssign(returned, a); }
 
 inline copy(a:'T) | BitwiseCopiedType?('T) = bitwiseCopyUnsafe(a);
 
-inline moveUnsafe(forward a:'T) | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
+inline moveUnsafe(ref a:'T) | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
 
 symbol move;
 inline overload move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
-inline overload move(rvalue a:'T) = moveUnsafe(a);
+inline overload move(rvalue a:'T) = moveUnsafe(rvalueToRefUnsafe(a));
 
 
 //

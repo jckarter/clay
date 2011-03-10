@@ -34,6 +34,7 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 #BitwiseMovedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #NotDestroyedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #NotResetType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#InitializeDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #BitwiseAssignedType?('T) | not PredicateInheritingType?('T)
@@ -59,6 +60,7 @@ overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMovedType?) = true;
 overload #InheritableTypePredicate?(NotDestroyedType?) = true;
 overload #InheritableTypePredicate?(NotResetType?) = true;
+overload #InheritableTypePredicate?(InitializeDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
