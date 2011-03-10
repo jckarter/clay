@@ -940,7 +940,7 @@ record BoolValue(value: Bool);
 record CharValue(value: Char);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
-record LambdaValue(value: ast.LambdaExpr, env: EnvParent);
+record LambdaValue(value: ast.LambdaExpr, env: Env);
 
 variant IntValue = StaticIntValue | StaticUIntValue
                  |  Int8 |  Int16 |  Int32 |  Int64
@@ -950,8 +950,8 @@ variant FloatValue = Float32 | Float64;
 overload IntValue() = IntValue(StaticIntValue(0i64));
 overload FloatValue() = FloatValue(0.0);
 
-[E | VariantMember?(EnvParent, E)]
-overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, EnvParent(env));
+[E | VariantMember?(EnvParent, E) and E != Env]
+overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, newEnv(env));
 
 
 //
