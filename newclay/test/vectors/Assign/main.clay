@@ -1,0 +1,24 @@
+import show.*;
+import vectors.*;
+
+main() {
+    var a = Vector[Int](2, 3, 5);
+    var b = Vector[Int](7, 11, 13, 17);
+    var c = Vector[Int](19, 23);
+
+    a = b;
+    show("---");
+    for (x in a)
+        show(x);
+    a = c;
+    show("---");
+    for (x in a)
+        show(x);
+
+    var d = Vector[Int](29, 31, 37, 41, 43);
+
+    a = move(d);
+    show("---");
+    for (x in a)
+        show(x);
+}

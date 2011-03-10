@@ -1,0 +1,13 @@
+import vectors.*;
+import show.*;
+
+main() {
+    var v = Vector[Int]();
+    
+    push(v, 2);
+    push(v, 3, 5);
+    push(v, [7, 11]);
+
+    for (x in v)
+        show(x);
+}
