@@ -49,18 +49,20 @@ main() {
         for (x in CoordinateRange(c, c+SIZE))
             show(x);
 
+        assignRange(c, a, a+SIZE);
+
         c = reallocateRawValues(c, SIZE*2u);
 
         copyRange(c+SIZE, c, c+SIZE);
 
         ////0
+        ////1
+        ////2
+        ////3
         ////0
         ////1
         ////2
-        ////0
-        ////0
-        ////1
-        ////2
+        ////3
         for (x in CoordinateRange(c, c+SIZE*2u))
             show(x);
     } catch (ex) {
