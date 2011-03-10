@@ -2083,14 +2083,7 @@ evaluateAliasPrimitive(kind, env, callAst) {
 
     case APRIM_ExpressionString : {
         var exprAst = expressionStringAst(env, callAst.args);
-        if (empty?(exprAst))
-            return ValueList(StringValue(String("")));
-        var sourceTokens = ast.getLocation(exprAst[0]).tokens;
-        var firstToken = ast.getLocation(exprAst[0]).tokenRange.begin;
-        var lastToken = ast.getLocation(exprAst[size(exprAst) - 1]).tokenRange.end;
-        var beginChar, endChar = sourceTokens.vector[firstToken].range.begin,
-                                 sourceTokens.vector[lastToken].range.end - 1;
-        return ValueList(StringValue(slice(sourceTokens.file.data, beginChar, endChar)));
+        return ValueList(StringValue(ast.getSourceString(exprAst)));
     }
 
     case APRIM_ExpressionLocation : {
