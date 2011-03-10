@@ -1,0 +1,28 @@
+import libc.(malloc, free, realloc);
+
+safeMalloc(count) returned:OpaquePointer {
+    returned <-- malloc(count);
+    assert(bitcast(UInt, returned) != 0u, "malloc returned null pointer");
+}
+
+safeRealloc(ptr, count) returned:OpaquePointer {
+    returned <-- realloc(ptr, count);
+    assert(bitcast(UInt, returned) != 0u, "realloc returned null pointer");
+}
+
+// XXX alignment
+
+allocateRawValues(#'T, count:'I) | Type?('T) and IntegerType?('I)
+    = ContiguousCoordinate['T](safeMalloc(TypeSize('T) * UInt(count)));
+
+allocateRawValue(#'T) | Type?('T) and IntegerType?('I)
+    = Pointer['T](safeMalloc(TypeSize('T)));
+
+reallocateRawValues(values:ContiguousCoordinate['T], count:'I) | Type?('T)
+    = ContiguousCoordinate['T](
+        safeRealloc(OpaquePointer(values), TypeSize('T) * UInt(count))
+    );
+
+freeRawValues(values:ContiguousCoordinate['T]) { free(OpaquePointer(values)); }
+freeRawValue(value:Pointer['T]) { free(OpaquePointer(value)); }
+
