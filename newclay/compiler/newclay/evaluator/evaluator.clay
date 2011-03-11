@@ -1,4 +1,3 @@
-
 import maybe.*;
 import newclay.ast as ast;
 import newclay.ast.transforms.*;

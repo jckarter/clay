@@ -326,7 +326,7 @@ private loadMainModule(program, mainFilename) {
 
 private resolveProgram(program:Program) {
     for (name, module in items(program.modules))
-        resolveAST(EnvParent(module), module.ast);
+        resolveAST(newEnv(module), module.ast);
 }
 
 loadProgram(mainFilename:String, searchPath:Vector[String]) {

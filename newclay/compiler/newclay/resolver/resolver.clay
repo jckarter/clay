@@ -4,47 +4,66 @@ import maybe.*;
 
 procedure resolveAST;
 
-alias DummyValue = Value(BoolValue(false));
+private dummyValue(depth:Int) = Value(IntValue(depth));
 
-private record ResolveASTVisitor(env:EnvParent);
+private record LambdaCapture = referenceType(
+    parent:Maybe[LambdaCapture],
+    lambda:ast.LambdaExpr,
+    depth:Int,
+);
 
-[E | VariantMember?(EnvParent, E)]
-overload ResolveASTVisitor(e:E) = ResolveASTVisitor(EnvParent(e));
+private record ResolveASTVisitor(
+    env:Env,
+    depth:Int,
+    lambda:Maybe[LambdaCapture],
+);
 
-private newVisitor(parent:ResolveASTVisitor) = ResolveASTVisitor(newEnv(parent.env));
+overload ResolveASTVisitor(env, depth)
+    = ResolveASTVisitor(env, depth, nothing(LambdaCapture));
 
-private addArgument(env, arg:ast.StaticArgument) {
+private newVisitor(parent:ResolveASTVisitor)
+    = ResolveASTVisitor(
+        newEnv(parent.env), parent.depth+1, parent.lambda
+    );
+
+private newVisitorForLambda(parent:ResolveASTVisitor, lambda:ast.LambdaExpr)
+    = ResolveASTVisitor(
+        newEnv(parent.env),
+        parent.depth+1,
+        Maybe(LambdaCapture(parent.lambda, lambda, parent.depth+1)),
+    );
+
+private addArgument(r, arg:ast.StaticArgument) { }
+overload addArgument(r, arg:ast.BoundArgument) {
+    envAdd(r.env, arg.name, dummyValue(r.depth));
 }
-overload addArgument(env, arg:ast.BoundArgument) {
-    envAdd(env, arg.name, DummyValue);
-}
 
-private bindArgumentList(env:Env, argList) {
+private bindArgumentList(r, argList) {
     for (arg in argList.items)
-        addArgument(env, *arg);
+        addArgument(r, *arg);
     maybe(argList.variadicItem, arg ref=> {
-        addArgument(env, *arg);
+        addArgument(r, *arg);
     });
 }
 
-private addBindingName(r, subenv:Env, bindingName) {
+private addBindingName(r, bindingName) {
     visitAST(r, bindingName.type);
-    envAdd(subenv, bindingName.name, DummyValue);
+    envAdd(r.env, bindingName.name, dummyValue(r.depth));
 }
 
-private addBindingList(r, subenv:Env, bindingList:ast.SingleBindingList) {
+private addBindingList(r, bindingList:ast.SingleBindingList) {
     for (binding in bindingList) {
         visitAST(r, binding.value);
-        addBindingName(r, subenv, binding.name);
+        addBindingName(r, binding.name);
     }
 }
 
-overload addBindingList(r, subenv:Env, bindingList:ast.MultipleBindingList) {
+overload addBindingList(r, bindingList:ast.MultipleBindingList) {
     visitAST(r, bindingList.values);
     for (bindingName in bindingList.names.items)
-        addBindingName(r, subenv, bindingName);
+        addBindingName(r, bindingName);
     maybe(bindingList.names.variadicItem, bindingName ref=> {
-        addBindingName(r, subenv, bindingName);
+        addBindingName(r, bindingName);
     });
 }
 
@@ -52,10 +71,9 @@ overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
     visitAST(r, lambda.predicate);
     visitAST(r, lambda.args);
 
-    var subenv = newEnv(r.env);
-    bindArgumentList(subenv, lambda.args);
+    var subr = newVisitorForLambda(r, lambda);
+    bindArgumentList(subr, lambda.args);
 
-    var subr = ResolveASTVisitor(subenv);
     visitAST(subr, lambda.body);
 }
 
@@ -63,19 +81,27 @@ overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(r, oload.target);
     visitAST(r, oload.definition.args);
 
-    var subenv = newEnv(r.env);
-    bindArgumentList(subenv, oload.definition.args);
+    var subr = newVisitor(r);
+    bindArgumentList(subr, oload.definition.args);
 
     maybe(oload.definition.returnedNames, returnedNames ref=> {
         for (ret in returnedNames)
-            envAdd(subenv, ret, DummyValue);
+            envAdd(subr.env, ret, dummyValue(r.depth));
     });
-
-    var subr = ResolveASTVisitor(subenv);
 
     visitAST(subr, oload.definition.predicate);
     visitAST(subr, oload.definition.returns);
     visitAST(subr, oload.definition.body);
+}
+
+private captureLocal(r, name, depth) {
+    var mLambda = r.lambda;
+    while(just?(mLambda)) {
+        ref lambda = just(mLambda);
+        if (depth < lambda.depth)
+            lambda.lambda.capturedNames[name] = ();
+        mLambda = lambda.parent;
+    }
 }
 
 overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
@@ -85,11 +111,20 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
                 SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.astName.name.str)),
                 Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.astName.name.str)),
                 Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
+                AliasPrimitive, p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
                 ModuleValue,  m => maybe(m.module,
                     module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
                     () => ast.EnvRef(ast.ModulePathRef(nameRef.name)),
                 ),
-                MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+                IntValue,     i => {
+                    assert(size(nameRef.name) == 1, "local can only have one name component");
+                    captureLocal(r, nameRef.name[0].str, Int(Int64(i)));
+                    return ast.EnvRef(ast.LocalEnvRef());
+                },
+                MatchDefault, x => {
+                    assert(false, "invalid value during lookup: ", x);
+                    return ast.EnvRef(ast.LocalEnvRef());
+                },
             ),
             MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
         );
@@ -102,23 +137,31 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.SimpleNameRef) {
                 SymbolHead,   h => ast.EnvRef(ast.ModuleEnvRef(h.module.name, h.astName.name.str)),
                 Symbol,       s => ast.EnvRef(ast.ModuleEnvRef(s.head.module.name, s.head.astName.name.str)),
                 Primitive,    p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
+                AliasPrimitive, p => ast.EnvRef(ast.ModuleEnvRef(primitivesModuleName, primitiveName(p))),
                 ModuleValue,  m => maybe(m.module,
                     module => ast.EnvRef(ast.ModuleAliasRef(module.name)),
                     () => ast.EnvRef(ast.ModulePathRef(Vector[ast.Identifier](nameRef.name))),
                 ),
-                MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
+                IntValue,     i => {
+                    captureLocal(r, nameRef.name.str, Int(Int64(i)));
+                    return ast.EnvRef(ast.LocalEnvRef());
+                },
+                MatchDefault, x => {
+                    assert(false, "invalid value during lookup: ", x);
+                    return ast.EnvRef(ast.LocalEnvRef());
+                },
             ),
             MatchDefault, x => ast.EnvRef(ast.LocalEnvRef()),
         );
 }
 
 overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
-    var subenv = newEnv(r.env);
+    var subr = newVisitor(r);
     maybe(block.label, label ref=> {
-        envAdd(subenv, label.name, DummyValue);
+        envAdd(subr.env, label.name, dummyValue(subr.depth));
     });
 
-    visitAST(ResolveASTVisitor(subenv), block.statements);
+    visitAST(subr, block.statements);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.IfStatement) {
@@ -139,47 +182,47 @@ overload visitASTNode(r:ResolveASTVisitor, stmt:ast.SwitchStatement) {
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.WhileStatement) {
     visitAST(r, stmt.condition);
 
-    var subenv = newEnv(r.env);
+    var subr = newVisitor(r);
     maybe(stmt.label, label ref=> {
-        envAdd(subenv, label.name, DummyValue);
+        envAdd(subr.env, label.name, dummyValue(subr.depth));
     });
-    visitAST(ResolveASTVisitor(subenv), stmt.body);
+    visitAST(subr, stmt.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.ForStatement) {
     visitAST(r, stmt.sequenceValue);
 
-    var subenv = newEnv(r.env);
+    var subr = newVisitor(r);
     maybe(stmt.label, label ref=> {
-        envAdd(subenv, label.name, DummyValue);
+        envAdd(subr.env, label.name, dummyValue(subr.depth));
     });
-    bindArgumentList(subenv, stmt.bodyBindings);
+    bindArgumentList(subr, stmt.bodyBindings);
 
-    visitAST(ResolveASTVisitor(subenv), stmt.body);
+    visitAST(subr, stmt.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.StaticForStatement) {
     visitAST(r, stmt.values);
 
-    var subenv = newEnv(r.env);
+    var subr = newVisitor(r);
     maybe(stmt.label, label ref=> {
-        envAdd(subenv, label.name, DummyValue);
+        envAdd(subr.env, label.name, dummyValue(subr.depth));
     });
-    envAdd(subenv, stmt.bodyBinding, DummyValue);
+    envAdd(subr.env, stmt.bodyBinding, dummyValue(subr.depth));
 
-    visitAST(ResolveASTVisitor(subenv), stmt.body);
+    visitAST(subr, stmt.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, block:ast.CatchBlock) {
-    var subenv = newEnv(r.env);
-    addBindingName(r, subenv, block.binding);
-    visitAST(ResolveASTVisitor(subenv), block.body);
+    var subr = newVisitor(r);
+    addBindingName(subr, block.binding);
+    visitAST(subr, block.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.BindingStatement) {
-    addBindingList(r, variantAs(r.env, Env), *stmt.bindings);
+    addBindingList(r, *stmt.bindings);
 }
 
-overload resolveAST(e:EnvParent, a) {
-    visitAST(ResolveASTVisitor(e), a);
+overload resolveAST(e:Env, a) {
+    visitAST(ResolveASTVisitor(e, 0), a);
 }
