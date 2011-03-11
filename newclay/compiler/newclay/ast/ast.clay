@@ -389,7 +389,10 @@ record LambdaExpr = ast(
     predicate: Maybe[Expr],
     args: ArgumentList,
     body: LambdaCodeBody,
+    capturedNames: HashMap[String, Tuple[]],
 );
+overload LambdaExpr(captureKind, predicate, args, body)
+    = LambdaExpr(captureKind, predicate, args, body, HashMap[String,Tuple[]]());
 
 record IfExpr = ast(
     condition: Expr,
