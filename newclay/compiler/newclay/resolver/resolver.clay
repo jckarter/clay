@@ -94,12 +94,19 @@ overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(subr, oload.definition.body);
 }
 
+private addCapturedName(lambda, name) {
+    if (null?(lookup(lambda.capturedNames, name))) {
+        lambda.capturedNames[name] = ();
+        push(lambda.capturedOrder, name);
+    }
+}
+
 private captureLocal(r, name, depth) {
     var mLambda = r.lambda;
     while(just?(mLambda)) {
         ref lambda = just(mLambda);
         if (depth < lambda.depth)
-            lambda.lambda.capturedNames[name] = ();
+            addCapturedName(lambda.lambda, name);
         mLambda = lambda.parent;
     }
 }

@@ -390,9 +390,17 @@ record LambdaExpr = ast(
     args: ArgumentList,
     body: LambdaCodeBody,
     capturedNames: HashMap[String, Tuple[]],
+    capturedOrder: Vector[String],
 );
 overload LambdaExpr(captureKind, predicate, args, body)
-    = LambdaExpr(captureKind, predicate, args, body, HashMap[String,Tuple[]]());
+    = LambdaExpr(
+        captureKind,
+        predicate,
+        args,
+        body,
+        HashMap[String,Tuple[]](),
+        Vector[String](),
+    );
 
 record IfExpr = ast(
     condition: Expr,
