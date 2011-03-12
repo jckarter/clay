@@ -80,7 +80,7 @@ inline overload index(forward x:'T, #'field)
 
 inline overload index(rvalue x:'T, #'field)
     rvalue returned:FieldType('T, 'field)
-    | CompositeType?('T) and Field?('T, 'field)
+    | RecordType?('T) and Field?('T, 'field)
 {
     ref rx = rvalueToRefUnsafe(x);
     returned = &cFieldRef(#FieldType('T, 'field), rx, #LLMangle('field));
@@ -98,7 +98,7 @@ symbol initializeRecord;
 inline overload initializeRecord(#'T) returned:'T
     | CompositeType?('T) and allValues?(DefaultInitializableType?, ..FieldTypes('T))
 {
-    ..*returned <-- ..mapValues(call, ..FieldTypes('T));
+    ..unpackRecord(returned) <-- ..mapValues(call, ..FieldTypes('T));
 }
 
 inline overload initializeRecord(#'T) returned:'T
@@ -110,7 +110,7 @@ inline overload initializeRecord(#'T) returned:'T
 inline overload initializeRecord(#'T, forward ..fields:'F) returned:'T
     | CompositeType?('T) and (..'F) == (..FieldTypes('T))
 {
-    ..*returned <-- ..fields;
+    ..unpackRecord(returned) <-- ..fields;
 }
 
 inline overload 'T(forward ..args)
@@ -129,7 +129,7 @@ inline overload destroyRecordUnsafe(ref x:'T)
 inline overload destroyRecordUnsafe(ref x:'T)
     | CompositeType?('T) and not allValues?(NotDestroyedType?, ..FieldTypes('T))
 {
-    static for (/*ref*/ f in ..*x)
+    static for (/*ref*/ f in ..unpackRecord(x))
         destroyUnsafe(f);
 }
 
@@ -146,7 +146,7 @@ inline overload resetRecordUnsafe(ref x:'T)
 inline overload resetRecordUnsafe(ref x:'T)
     | CompositeType?('T) and not allValues?(NotResetType?, ..FieldTypes('T))
 {
-    static for (/*ref*/ f in ..*x)
+    static for (/*ref*/ f in ..unpackRecord(x))
         resetUnsafe(f);
 }
 
@@ -157,16 +157,16 @@ inline overload resetUnsafe(ref x:'T)
 }
 
 symbol moveRecordUnsafe;
-inline overload moveRecordUnsafe(forward x:'T)
+inline overload moveRecordUnsafe(ref x:'T)
     | CompositeType?('T) and allValues?(BitwiseMovedType?, ..FieldTypes('T))
     = bitwiseCopyUnsafe(x);
-inline overload moveRecordUnsafe(forward x:'T)
+inline overload moveRecordUnsafe(ref x:'T)
     | CompositeType?('T)
       and not allValues?(BitwiseMovedType?, ..FieldTypes('T))
       and allValues?(MovableType?, ..FieldTypes('T))
-    = initializeRecord('T, ..mapValues(moveUnsafe, ..*x));
+    = initializeRecord('T, ..mapValues(moveUnsafe, ..unpackRecord(x)));
 
-inline overload moveUnsafe(forward x:'T)
+inline overload moveUnsafe(ref x:'T)
     | RecordType?('T)
       and not BitwiseMovedType?('T)
       and allValues?(MovableType?, ..FieldTypes('T))
@@ -180,7 +180,7 @@ inline overload copyRecord(x:'T)
     | CompositeType?('T)
       and not allValues?(BitwiseCopiedType?, ..FieldTypes('T))
       and allValues?(CopyableType?, ..FieldTypes('T))
-    = initializeRecord('T, ..mapValues(copy, ..*x));
+    = initializeRecord('T, ..mapValues(copy, ..unpack(x)));
 
 inline overload copy(x:'T)
     | RecordType?('T)

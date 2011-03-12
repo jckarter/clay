@@ -1,0 +1,19 @@
+import vectors.*;
+import show.*;
+
+main() {
+    var v = Vector[Int](5, 31);
+
+    insert(v, 1, 7);
+    insert(v, begin(v)+2, 11);
+
+    var w = Vector[Int](17, 19);
+
+    insert(v, 0, range(2, 4));
+    insert(v, begin(v)+5, Vector[Int](13, 23, 29));
+    insert(v, 6, w);
+
+    show("---");
+    for (x in v)
+        show(x);
+}

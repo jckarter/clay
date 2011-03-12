@@ -1,0 +1,9 @@
+import vectors.*;
+import show.*;
+
+main() {
+    var v = Vector([2, 3, 5, 7, 11]);
+
+    for (x in v)
+        show(x);
+}
