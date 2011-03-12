@@ -21,7 +21,14 @@ overload visitASTNode(v:TestResolverVisitor, node:ast.Symbol) {
 }
 
 overload visitASTNode(v:TestResolverVisitor, node:ast.LambdaExpr) {
-    println(depth(v.depth), "lambda");
+    print(depth(v.depth), "lambda (capturing ");
+    var capturedNames = map((x, y) => x, items(node.capturedNames));
+    sort(capturedNames);
+    interleave(capturedNames,
+        () ref=> { print(", "); },
+        name ref=> { print(name); },
+    );
+    println(")");
     v.depth += 1;
     visitASTFields(v, node);
     v.depth -= 1;

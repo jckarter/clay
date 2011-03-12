@@ -26,6 +26,8 @@ overload show(f:'F) | FloatType?('F) { printf("%.18g\n", f); }
 overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) == 8 { printf("%lld\n", i); }
 overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) == 8 { printf("%llu\n", i); }
 
+overload show(p:'P) | PointerType?('P) { printf("%p\n", p); }
+
 overload show(#'x) { puts(StaticName(#'x)); }
 
 overload show(x, y, ..z) {

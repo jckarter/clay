@@ -1,0 +1,75 @@
+import memory.*;
+import sequences.*;
+import show.*;
+
+main() {
+    alias SIZE = 4u;
+
+    var a = allocateRawValues(UInt, SIZE);
+    var b = allocateRawValues(UInt, SIZE);
+    var c = allocateRawValues(UInt, SIZE);
+
+    try {
+        for (i, ref x in enumerated(CoordinateRange(a, a+SIZE)))
+            x = i;
+
+        copyRange(b, a, a + SIZE);
+
+        ////0
+        ////1
+        ////2
+        ////3
+        for (x in CoordinateRange(b, b+SIZE))
+            show(x);
+
+        moveNonoverlappingRangeUnsafe(c, b, b + SIZE);
+
+        ////0
+        ////1
+        ////2
+        ////3
+        for (x in CoordinateRange(c, c+SIZE))
+            show(x);
+
+        moveRangeUnsafe(b, b+1, b+SIZE);
+
+        ////1
+        ////2
+        ////3
+        ////3
+        for (x in CoordinateRange(b, b+SIZE))
+            show(x);
+
+        moveRangeUnsafe(c+1, c, c+SIZE-1);
+
+        ////0
+        ////0
+        ////1
+        ////2
+        for (x in CoordinateRange(c, c+SIZE))
+            show(x);
+
+        assignRange(c, a, a+SIZE);
+
+        c = reallocateRawValues(c, SIZE*2u);
+
+        copyRange(c+SIZE, c, c+SIZE);
+
+        ////0
+        ////1
+        ////2
+        ////3
+        ////0
+        ////1
+        ////2
+        ////3
+        for (x in CoordinateRange(c, c+SIZE*2u))
+            show(x);
+    } catch (ex) {
+        show(ex);
+    }
+
+    freeRawValues(c);
+    freeRawValues(b);
+    freeRawValues(a);
+}
