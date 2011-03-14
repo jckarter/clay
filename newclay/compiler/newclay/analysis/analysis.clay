@@ -664,7 +664,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
     });
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
-    = genericAnalysisError("lambda expressions are not yet supported");
+    = analyzeLambdaValue(s, LambdaValue(expr, env));
 
 private analyzeThrowExprNode(s, env, expr) {
     try {
@@ -1862,6 +1862,7 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
             },
         );
     },
+    LambdaValue, x ref=> analyzeStaticLambdaValue(s, x),
     MatchDefault, x ref=> addImmediate(s, staticType(Value(x)), value),
 );
 
@@ -2443,4 +2444,32 @@ analyzeGlobalConstructor() Maybe[Specialization] {
         return nothing(Specialization);
     else
         return Maybe(specialization);
+}
+
+
+//
+// analyzeLambdaValue
+//
+
+analyzeStaticLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
+    var result = analyzeLambdaValue(s, lambda);
+    assert(just?(result) and size(just(result)) == 1, "static lambda must analyze as a single terminating value");
+    return just(result)[0];
+}
+
+analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
+    if (statelessLambdaValue?(lambda))
+        return addSpecializedStaticValue(s, lambda.value, Value(lambda));
+
+    var captures = RTValues();
+
+    for (capturedName in lambda.value.capturedOrder) {
+        var capturedValues = analyzeEnvEntry(
+            s, lambda.value, privateLookup(lambda.env, capturedName)
+        );
+        if (nothing?(capturedValues))
+            return nothing(RTValues);
+        push(captures, just(capturedValues));
+    }
+    return analyzeCallWithOneResult(s, lambda.value, Value(lambda), captures);
 }
