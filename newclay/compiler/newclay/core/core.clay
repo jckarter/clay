@@ -616,10 +616,18 @@ overload newEnv() = allocEnv(EnvParent(allocateRef(EnvRoot)));
 envRoot(env:EnvRoot) EnvRoot = env;
 overload envRoot(env:Env) EnvRoot = envRoot(*env.parent);
 overload envRoot(env:Module) EnvRoot {
-    assert(false);
+    assert(false, "module does not have envRoot");
     return envRoot(env.privateEnv);
 }
 overload envRoot(env:EnvParent) EnvRoot = envRoot(*env);
+
+envModule(env:EnvRoot) {
+    assert(false, "env root does not have module");
+    return Module();
+}
+overload envModule(env:Env) Module = envModule(*env.parent);
+overload envModule(m:Module) = m;
+overload envModule(env:EnvParent) = envModule(*env);
 
 envAdd(env, name:ast.Identifier, forward entry) {
     if (contains?(env.entries, name.str))
@@ -947,6 +955,8 @@ record TupleValue(elements: ValueList);
 record LambdaValue(
     value: ast.LambdaExpr,
     env: Env,
+    invokeTable: InvokeTable,
+    lambdaOverload: Maybe[Overload],
 );
 
 statelessLambdaValue?(l:LambdaValue) = empty?(l.value.capturedOrder);
@@ -959,7 +969,8 @@ variant FloatValue = Float32 | Float64;
 overload IntValue() = IntValue(StaticIntValue(0i64));
 overload FloatValue() = FloatValue(0.0);
 
-// overload LambdaValue(value, env) = LambdaValue(value, env);
+overload LambdaValue(value, env)
+    = LambdaValue(value, env, InvokeTable(), nothing(Overload));
 
 [E | VariantMember?(EnvParent, E) and E != Env]
 overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, newEnv(env));

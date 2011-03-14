@@ -1,0 +1,4 @@
+main() {
+    var f = x -> x + 1;
+    return f(1);
+}

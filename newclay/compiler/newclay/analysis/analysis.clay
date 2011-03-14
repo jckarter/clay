@@ -1,5 +1,6 @@
 import maybe.*;
 import newclay.ast as ast;
+import newclay.ast.transforms.(transformLambdaToOverload);
 import newclay.ir as ir;
 import newclay.core.*;
 import newclay.hooks.*;
@@ -2195,25 +2196,50 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
 // analyzeCallable helpers
 //
 
-ifOverload(program, callable, args, thenFn, elseFn) {
-    var maybeHead = valueSymbolHead(callable);
-    if (just?(maybeHead)) {
-        ref overloads = if (program.overloadsDistributed?)
-                just(maybeHead).overloads
-            else
-                program.symbolOverloads;
+private procedure callableOverloads;
+overload callableOverloads(program, callable) = nothing(Vector[Overload]);
+overload callableOverloads(program, callable:SymbolHead)
+    = if (program.overloadsDistributed?)
+        Maybe(callable.overloads)
+    else
+        Maybe(program.symbolOverloads);
 
-        for (x in reversed(overloads)) {
+overload callableOverloads(program, callable:Symbol)
+    = if (program.overloadsDistributed?)
+        Maybe(callable.head.overloads)
+    else
+        Maybe(program.symbolOverloads);
+
+private lambdaOverload(l:LambdaValue) {
+    return maybe(l.lambdaOverload,
+        o ref=> o,
+        () ref=> {
+            var o = Overload(transformLambdaToOverload(l.value), envModule(l.env));
+            l.lambdaOverload = Maybe(o);
+            return o;
+        },
+    );
+}
+
+overload callableOverloads(program, callable:LambdaValue) {
+    return Maybe(Vector[Overload](observe(lambdaOverload(callable))));
+}
+
+ifOverload(program, callable, args, thenFn, elseFn) {
+    observe(callable);
+    var overloads = callableOverloads(program, *callable);
+    if (just?(overloads)) {
+        for (x in reversed(just(overloads))) {
             var result = matchOverload(x, callable, args);
             if (just?(result))
-                return forward ...thenFn(move(just(result)));
+                return forward ...thenFn(just(result));
         }
     }
 
     for (x in reversed(program.patternOverloads)) {
         var result = matchOverload(x, callable, args);
         if (just?(result))
-            return forward ...thenFn(move(just(result)));
+            return forward ...thenFn(just(result));
     }
     return forward ...elseFn();
 }
@@ -2361,6 +2387,7 @@ private callableInvokeTable(callable:Value) {
     return ref match(callable,
         Symbol, x => ref x.invokeTable,
         SymbolHead, x => ref x.invokeTable,
+        LambdaValue, x => ref x.invokeTable,
         Primitive, x => {
             genericError("static primitive called in runtime context without # operator: ", x);
             return ref typeToLValue(InvokeTable);

@@ -199,4 +199,45 @@ transformExprListToListPattern(x:ExprList, map) {
     return move(listPattern);
 }
 
+
+//
+// transform lambda AST into overload AST
+//
 
+private procedure transformLambdaCodeBody;
+overload transformLambdaCodeBody(body:Block) = CodeBody(body);
+overload transformLambdaCodeBody(body:ExprList) = CodeBody(ExprCodeBody(
+    map(item => ReturnExprListItem(nothing(ReturnExprKind), item), body),
+));
+
+private transformLambdaArgs(x:LambdaExpr) {
+    var args = ArgumentList();
+    for (capture in x.capturedOrder) {
+        push(args.items, Argument(BoundArgument(
+            Maybe(ARG_FORWARD),
+            Identifier(capture),
+            nothing(Pattern),
+        )));
+    }
+    push(args.items, x.args.items);
+    args.variadicItem = x.args.variadicItem;
+    return move(args);
+}
+
+transformLambdaToOverload(x:LambdaExpr) {
+    var target = Pattern(transformed(x, PatternNameRef, transformed(x, Identifier, "")));
+
+    var body = transformLambdaCodeBody(*x.body);
+
+    return transformed(x, Overload,
+        target,
+        transformed(x, OverloadDefinition,
+            OverloadAttributes(false),
+            transformLambdaArgs(x),
+            Vector[ReturnSpec](),
+            nothing(Vector[Identifier]),
+            x.predicate,
+            body
+        )
+    );
+}
