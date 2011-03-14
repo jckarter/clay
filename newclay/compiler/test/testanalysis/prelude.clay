@@ -335,3 +335,12 @@ fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
 
 overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }
+
+//
+// lambdas
+//
+
+captureLambda(#'L, capture) = (#'L, capture);
+lambdaCaptures(lambda) = lambda.1;
+
+overload call(lambda:Tuple[Static['L], 'T], forward ..args) = forward ..(#'L)(..args);

@@ -1,0 +1,44 @@
+import concurrency.intrinsics.*;
+
+procedure LoadLoad;
+procedure LoadStore;
+procedure StoreLoad;
+procedure StoreStore;
+
+procedure compareSwap;
+[I | Integer?(I) and TypeSize(I) == 1]
+inline overload compareSwap(to:I, cmp:I, from:I)
+    = llvm_atomic_cmp_swap8(Pointer[Int8](&to), Int8(cmp), Int8(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 2 and TypeSize(J) <= 2]
+inline overload compareSwap(to:I, cmp:J, from:J)
+    = llvm_atomic_cmp_swap16(Pointer[Int16](&to), Int16(cmp), Int16(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 4 and TypeSize(J) <= 4]
+inline overload compareSwap(to:I, cmp:J, from:J)
+    = llvm_atomic_cmp_swap32(Pointer[Int32](&to), Int32(cmp), Int32(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 8 and TypeSize(J) <= 8]
+inline overload compareSwap(to:I, cmp:J, from:J)
+    = llvm_atomic_cmp_swap64(Pointer[Int64](&to), Int64(cmp), Int64(from));
+
+inline compareSet(to, cmp, from) = compareSwap(to, cmp, from) == cmp;
+
+procedure atomicSwap;
+[I | Integer?(I) and TypeSize(I) == 1]
+inline overload atomicSwap(to:I, from:I)
+    = llvm_atomic_swap8(Pointer[Int8](&to), Int8(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 2 and TypeSize(J) <= 2]
+inline overload atomicSwap(to:I, from:J)
+    = llvm_atomic_swap16(Pointer[Int16](&to), Int16(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 4 and TypeSize(J) <= 4]
+inline overload atomicSwap(to:I, from:J)
+    = llvm_atomic_swap32(Pointer[Int32](&to), Int32(from));
+[I, J | Integer?(I) and Integer?(J) and TypeSize(I) == 8 and TypeSize(J) <= 8]
+inline overload atomicSwap(to:I, from:J)
+    = llvm_atomic_swap64(Pointer[Int64](&to), Int64(from));
+
+private barrierKinds(...Kinds)
+    = static inValues?(LoadLoad, ...Kinds),
+      static inValues?(LoadStore, ...Kinds),
+      static inValues?(StoreLoad, ...Kinds),
+      static inValues?(StoreStore, ...Kinds);
+
+inline barrier(...Kinds) = llvm_memory_barrier(...barrierKinds(...Kinds), static true);
