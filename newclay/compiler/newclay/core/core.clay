@@ -940,7 +940,13 @@ record BoolValue(value: Bool);
 record CharValue(value: Char);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
-record LambdaValue(value: ast.LambdaExpr, env: Env);
+
+record LambdaValue(
+    value: ast.LambdaExpr,
+    env: Env,
+);
+
+statelessLambdaValue?(l:LambdaValue) = empty?(l.value.capturedOrder);
 
 variant IntValue = StaticIntValue | StaticUIntValue
                  |  Int8 |  Int16 |  Int32 |  Int64
