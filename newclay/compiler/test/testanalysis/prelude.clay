@@ -343,4 +343,5 @@ overload destroyUnsafe(ref i:NontrivialInt) { }
 captureLambda(#'L, capture) = (#'L, capture);
 lambdaCaptures(lambda) = lambda.1;
 
-overload call(lambda:Tuple[Static['L], 'T], forward ..args) = forward ..(#'L)(..args);
+overload call(lambda:Tuple[Static['L], 'T], forward ..args)
+    = forward ..((#'L)(..lambdaCaptures(lambda), ..args));

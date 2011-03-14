@@ -1,0 +1,6 @@
+adder(y) = x -> y + x;
+
+main() {
+    var f = adder(1);
+    return f(2);
+}
