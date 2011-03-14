@@ -2458,10 +2458,11 @@ analyzeStaticLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
 }
 
 analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
+    var staticValue = singleAddSpecializedStaticValue(s, lambda.value, Value(lambda));
     if (statelessLambdaValue?(lambda))
-        return addSpecializedStaticValue(s, lambda.value, Value(lambda));
+        return Maybe(RTValues(staticValue));
 
-    var captures = RTValues();
+    var captures = RTValues(staticValue);
 
     for (capturedName in lambda.value.capturedOrder) {
         var capturedValues = analyzeEnvEntry(
@@ -2471,5 +2472,5 @@ analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
             return nothing(RTValues);
         push(captures, just(capturedValues));
     }
-    return analyzeCallWithOneResult(s, lambda.value, Value(lambda), captures);
+    return analyzeCallWithOneResult(s, lambda.value, getHooks().captureLambda, captures);
 }

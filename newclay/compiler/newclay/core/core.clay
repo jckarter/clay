@@ -144,6 +144,9 @@ record ClayHooks (
     initializeFromUnsafe: Value,
     destroyUnsafe: Value,
 
+    captureLambda: Value,
+    lambdaCaptures: Value,
+
     callMain: Value,
 );
 
@@ -955,6 +958,8 @@ variant FloatValue = Float32 | Float64;
 
 overload IntValue() = IntValue(StaticIntValue(0i64));
 overload FloatValue() = FloatValue(0.0);
+
+// overload LambdaValue(value, env) = LambdaValue(value, env);
 
 [E | VariantMember?(EnvParent, E) and E != Env]
 overload LambdaValue(value: ast.LambdaExpr, env: E) = LambdaValue(value, newEnv(env));
