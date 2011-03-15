@@ -957,7 +957,7 @@ record CharValue(value: Char);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
 
-record LambdaValue(
+record LambdaValue = referenceType(
     value: ast.LambdaExpr,
     env: Env,
     invokeTable: InvokeTable,
