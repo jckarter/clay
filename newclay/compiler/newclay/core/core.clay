@@ -331,6 +331,11 @@ enum PrimitiveKind {
     PRIM_StaticModuleMember,
     PRIM_StaticModuleMember?,
 
+    PRIM_Lambda?,
+    PRIM_LambdaCapturesByReference?,
+    PRIM_LambdaCapturesByValue?,
+    PRIM_LambdaStateless?,
+
     PRIM_StaticObserve,
     PRIM_StaticError,
     PRIM_StaticAssert,
