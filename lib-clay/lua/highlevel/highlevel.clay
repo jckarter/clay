@@ -242,7 +242,7 @@ toString(x:State, index:Int) {
     var size = SizeT();
     var ptr = lua_tolstring(x.handle, index, &size);
     if (null?(ptr))
-        throw Error("not a string");
+        typeError(x, index, "string");
     var ptr2 = Pointer[Char](ptr);
     // HACK: assumes that (ptr2 + size)^ is byte value 0.
     return StringConstant(ptr2, ptr2 + size);
@@ -253,14 +253,14 @@ objLen(x:State, index:Int) = lua_objlen(x.handle, index);
 toUserData(x:State, index:Int) {
     var ptr = lua_touserdata(x.handle, index);
     if (null?(ptr))
-        throw Error("not a userdatum");
+        typeError(x, index, "userdata");
     return ptr;
 }
 
 toCFunction(x:State, index:Int) {
     var ptr = lua_tocfunction(x.handle, index);
     if (null?(ptr))
-        throw Error("not a c-function");
+        typeError(x, index, "cfunction");
     return ptr;
 }
 
@@ -417,20 +417,20 @@ genericError(x:State, msg:S) {
 [S | CCompatibleString?(S)]
 typeError(x:State, index:Int, expected:S) {
     safeCall(x, x ref=> {
-        lua_typerror(x.handle, index, cstring(expected));
+        luaL_typerror(x.handle, index, cstring(expected));
     });
 }
 
 [S | CCompatibleString?(S)]
 argError(x:State, index:Int, extraMsg:S) {
     safeCall(x, x ref=> {
-        lua_argerror(x.handle, index, cstring(extraMsg));
+        luaL_argerror(x.handle, index, cstring(extraMsg));
     });
 }
 
 overload argError(x:State, index:Int) {
     safeCall(x, x ref=> {
-        lua_argerror(x.handle, index, null(CChar));
+        luaL_argerror(x.handle, index, null(CChar));
     });
 }
 
