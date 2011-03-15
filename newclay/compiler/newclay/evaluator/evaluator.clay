@@ -1993,6 +1993,14 @@ printQualifiedTo(stream, value:Value) {
             );
             printTo(stream, ')');
         },
+        LambdaValue, l ref=> {
+            var path, line, column = ...ast.getFileLocation(l.value);
+            printTo(stream, "<lambda ",
+                path, "(", line, ",", column, ") ",
+                l.env.__impl__,
+                ">"
+            );
+        },
         MatchDefault, v ref=> { printTo(stream, v); },
     );
 }
