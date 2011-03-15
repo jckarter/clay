@@ -1564,6 +1564,13 @@ private oneSymbol(args) {
     return variantAs(a, Symbol);
 }
 
+private oneLambda(args) {
+    var a = oneValue(args);
+    if (not variantIs?(a, LambdaValue))
+        genericError("expecting a lambda, but received: ", a);
+    return variantAs(a, LambdaValue);
+}
+
 private moduleString(args) {
     var moduleValue, stringValue = ...twoValues(args);
     if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue)) {
@@ -1807,6 +1814,26 @@ evaluatePrimitive(kind, args) {
     case PRIM_StaticModuleMember? : {
         var module, member = ...moduleString(args);
         return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
+    }
+
+    case PRIM_Lambda? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, LambdaValue)));
+    }
+
+    case PRIM_LambdaCapturesByReference? : {
+        var l = oneLambda(args);
+        return ValueList(BoolValue(l.value.captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
+    }
+
+    case PRIM_LambdaCapturesByValue? : {
+        var l = oneLambda(args);
+        return ValueList(BoolValue(l.value.captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
+    }
+
+    case PRIM_LambdaStateless? : {
+        var l = oneLambda(args);
+        return ValueList(BoolValue(empty?(l.value.capturedOrder)));
     }
 
     case PRIM_StaticError : {
