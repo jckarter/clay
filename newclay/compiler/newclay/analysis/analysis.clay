@@ -1863,7 +1863,6 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
             },
         );
     },
-    LambdaValue, x ref=> analyzeStaticLambdaValue(s, x),
     MatchDefault, x ref=> addImmediate(s, staticType(Value(x)), value),
 );
 
@@ -2222,11 +2221,10 @@ private lambdaOverload(l:LambdaValue) {
 }
 
 overload callableOverloads(program, callable:LambdaValue) {
-    return Maybe(Vector[Overload](observe(lambdaOverload(callable))));
+    return Maybe(Vector[Overload](lambdaOverload(callable)));
 }
 
 ifOverload(program, callable, args, thenFn, elseFn) {
-    observe(callable);
     var overloads = callableOverloads(program, *callable);
     if (just?(overloads)) {
         for (x in reversed(just(overloads))) {
@@ -2477,12 +2475,6 @@ analyzeGlobalConstructor() Maybe[Specialization] {
 //
 // analyzeLambdaValue
 //
-
-analyzeStaticLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
-    var result = analyzeLambdaValue(s, lambda);
-    assert(just?(result) and size(just(result)) == 1, "static lambda must analyze as a single terminating value");
-    return just(result)[0];
-}
 
 analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
     var staticValue = singleAddSpecializedStaticValue(s, lambda.value, Value(lambda));
