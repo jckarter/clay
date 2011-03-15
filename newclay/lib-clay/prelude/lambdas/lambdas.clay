@@ -1,0 +1,32 @@
+public import __primitives__.(
+    Lambda?,
+    LambdaCapturesByValue?,
+    LambdaCapturesByReference?,
+    LambdaStateless?,
+);
+import values.(captureValues, capturedRefs);
+
+private symbol Lambda['L, 'C] = NewType('C);
+
+overload Lambda(#'L, captures:'C) = Lambda['L, 'C](captures);
+
+symbol captureLambda;
+symbol lambdaCaptures;
+
+overload captureLambda(#'L, forward ..captures)
+    | Lambda?('L) and LambdaCapturesByReference?('L)
+    = Lambda(#'L, captureValues(..captures));
+overload lambdaCaptures(l:Lambda['L, 'C])
+    | Lambda?('L) and LambdaCapturesByReference?('L)
+    = forward ..capturedRefs(*l);
+
+overload captureLambda(#'L, forward ..captures)
+    | Lambda?('L) and LambdaCapturesByValue?('L)
+    = Lambda(#'L, (..captures));
+overload lambdaCaptures(forward l:Lambda['L, 'C])
+    | Lambda?('L) and LambdaCapturesByValue?('L)
+    = forward ..unpack(*l);
+
+overload call(forward l:Lambda['L, 'C], forward ..args)
+    | Lambda?('L)// and Defined?(..'L(..lambdaCaptures(l), ..args))
+    = forward ..'L(..lambdaCaptures(l), ..args);
