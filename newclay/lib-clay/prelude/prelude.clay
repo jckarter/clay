@@ -1,6 +1,7 @@
 public import prelude.arrays.*;
 public import prelude.constructors.*;
 public import prelude.diagnostics.*;
+public import prelude.lambdas.*;
 public import prelude.operators.*;
 public import prelude.procedures.*;
 public import prelude.records.*;
