@@ -13,6 +13,7 @@ TopLevelItem -> GlobalSymbol
               | StaticFunction
               | ExternalProcedure
               | GlobalBinding
+              | GlobalAlias
               | GlobalLiteralCodeBody
 
 Visibility -> "public" | "private"
@@ -55,6 +56,8 @@ ExternalArgumentList -> "(" variadic_list(Argument, ()) ")"
 
 GlobalBinding -> Visibility? BindingKind SymbolName (":" Expr)? ("=" Expr)? ";"
 
+GlobalAlias -> Visibility? "alias" SymbolName "=" Pattern ";"
+
 GlobalLiteralCodeBody -> LiteralCodeBodyKind LiteralCodeBody ";"
 
 Predicate -> "|" Expr
@@ -65,7 +68,7 @@ Argument -> BoundArgument
 BoundArgument -> ArgumentKind? Identifier (":" Pattern)?
 StaticArgument -> "#" Pattern
 MultiArgument -> ArgumentKind? ".." Identifier (":" PatternNameRef)?
-ArgumentKind -> "const" | "ref" | "rvalue" | "forward" | "alias"
+ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 
 ReturnList -> NamedReturnList | UnnamedReturnList
 
@@ -261,7 +264,7 @@ ExprStatement -> Expr ";"
 // variable binding
 //
 
-BindingKind -> "var" | "const" | "ref" | "rvalue" | "forward" | "alias"
+BindingKind -> "var" | "const" | "ref" | "rvalue" | "forward"
 
 BindingName -> Identifier (":" Expr)?
 

@@ -910,7 +910,6 @@ private var argumentKind = choice(
     modify(x => ARG_REF, kw_ref),
     modify(x => ARG_RVALUE, kw_rvalue),
     modify(x => ARG_FORWARD, kw_forward),
-    modify(x => ARG_ALIAS, kw_alias),
 );
 
 private var boundArgument = bounds(modify(
@@ -1168,6 +1167,13 @@ private var initializerExpr = modify(
 );
 private var optInitializerExpr = optional(initializerExpr);
 
+// globalAlias
+
+private var globalAlias = topLevelItemParser(
+    x => GlobalAlias(just(x.0, VIS_PUBLIC), x.2, x.4),
+    sequence(visibility, kw_alias, symbolName, punc(#"="), pattern, punc(#";")),
+);
+
 // globalLiteralCodeBody
 
 private var globalLiteralCodeBody = topLevelItemParser(
@@ -1225,7 +1231,6 @@ private var bindingKind = choice(
     modify(x => BINDING_REF, kw_ref),
     modify(x => BINDING_RVALUE, kw_rvalue),
     modify(x => BINDING_FORWARD, kw_forward),
-    modify(x => BINDING_ALIAS, kw_alias),
 );
 
 private var bindingList = choice(
@@ -1353,7 +1358,7 @@ private var exprStatement = statementParser(
 private var topLevelItem = choice(
     importDef, symbolDef, attributeDef, staticOverloadDef, overloadDef,
     procedureDef, staticFunctionDef, externalProcedureDef, globalLiteralCodeBody,
-    globalBinding
+    globalBinding, globalAlias
 );
 
 // interactorImport

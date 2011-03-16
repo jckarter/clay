@@ -461,6 +461,7 @@ variant TopLevelItem = Symbol
                      | ExternalProcedure
                      | GlobalLiteralCodeBody
                      | GlobalBinding
+                     | GlobalAlias
                      ;
 
 enum VisibilityKind {
@@ -557,6 +558,12 @@ record GlobalBinding = ast(
     bindings: Vector[SingleGlobalBinding],
 );
 
+record GlobalAlias = ast(
+    visibility: VisibilityKind,
+    name: SymbolName,
+    value: Pattern,
+);
+
 record GlobalLiteralCodeBody = ast(
     codeBody: LiteralCodeBody,
 );
@@ -590,7 +597,6 @@ enum ArgumentKind {
     ARG_REF,
     ARG_RVALUE,
     ARG_FORWARD,
-    ARG_ALIAS,
 }
 
 variant Argument = BoundArgument
@@ -698,7 +704,6 @@ enum BindingKind {
     BINDING_REF,
     BINDING_RVALUE,
     BINDING_FORWARD,
-    BINDING_ALIAS,
 }
 
 record BindingStatement = ast(

@@ -30,7 +30,6 @@ overload foo() {
     rvalue x:Int, y:Int, ..z = ..bar();
     const x:Int, y:Int, ..z = ..bar();
     forward x:Int, y:Int, ..z = ..bar();
-    alias x:Int, y:Int, ..z = ..bar();
 
     x = 1;
     x <-- 1;
@@ -68,7 +67,7 @@ overload foo() {
     while (x) y;
 
     @outer while (a)
-        middle: for (b in c)
+        @middle for (b in c)
             @inner static for (d in e)
                 break @outer;
 
