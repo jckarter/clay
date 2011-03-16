@@ -367,16 +367,8 @@ makeSymbolHeadInstance(x:SymbolHead, params:ValueList) {
 private makeSymbolHeadInstance2(x:SymbolHead, ast:ast.Symbol, params:ValueList, env:Env)
     = EnvEntry(Value(Symbol(x, params, env)));
 
-overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:ValueList, env:Env) {
-    if (binding.kind == ast.BINDING_ALIAS) {
-        return withLocation(binding.ast, () ref=> {
-            if (nothing?(binding.ast.value))
-                genericError("alias bindings must have a value");
-            return EnvEntry(Alias(just(binding.ast.value), env));
-        });
-    } else
-        return EnvEntry(RTGlobal(x, params, env));
-}
+overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:ValueList, env:Env)
+    = EnvEntry(RTGlobal(x, params, env));
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
@@ -421,7 +413,7 @@ evaluateBool(expr, env) {
 
 evaluateBoolCall(callable:Value, args:ValueList) {
     // FIXME: what about error location?
-    var results = evaluateStrictCall(callable, args);
+    var results = evaluateCall(callable, args);
     ensureArity(1, size(results));
     if (not variantIs?(results[0], BoolValue))
         genericError("expecting a Bool value");
@@ -473,7 +465,7 @@ overload evaluateExpr(x:ast.ArrayExpr, env) {
 }
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    return evaluateCallWithOneResult(callable, env, x);
+    return evaluateCallWithOneResult(callable, evaluateExprList(x.args, env));
 }
 overload evaluateExpr(x:ast.Indexing, env) {
     var indexable = evaluateExpr(x.expr, env);
@@ -601,13 +593,6 @@ overload envEntryToValue(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return Value();
 }
-overload envEntryToValue(x:Alias) {
-    return safeInitialize(x.staticValue, () ref=> evaluateExpr(x.value, x.env));
-}
-overload envEntryToValue(x:ListAlias) {
-    genericError("multi-value used in single value context");
-    return Value();
-}
 overload envEntryToValue(x:RTExternal) {
     genericError("external functions not available in static context");
     return Value();
@@ -696,7 +681,7 @@ overload evaluateMultiExpr(x:ast.PatternNameRef, env) {
 }
 overload evaluateMultiExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
-    return evaluateCall(callable, env, x);
+    return evaluateCall(callable, evaluateExprList(x.args, env));
 }
 overload evaluateMultiExpr(x:ast.StaticExpr, env) {
     return evaluateMultiExpr(x.expr, env);
@@ -746,19 +731,12 @@ overload envEntryToValueList(x:ListPatternCell) {
     genericError("pattern variable cannot be used in non-pattern expression");
     return ValueList();
 }
-overload envEntryToValueList(x:Alias) {
-    genericError("single value used in multi-valued context");
-    return ValueList();
-}
-overload envEntryToValueList(x:ListAlias) {
-    return safeInitialize(x.staticValues, () ref=> evaluateMultiExprList(x.value, x.env));
-}
 overload envEntryToValueList(x:RTExternal) {
     genericError("external functions not available in static context");
     return ValueList();
 }
 overload envEntryToValueList(x:RTGlobal) {
-    genericError("non-alias global variables not available in static context");
+    genericError("single value used in multi-valued context");
     return ValueList();
 }
 overload envEntryToValueList(x:RTValue) {
@@ -779,49 +757,35 @@ overload envEntryToValueList(x:RTLabel) {
 // evaluateCallWithOneResult, evaluateCall
 //
 
-evaluateCallWithOneResult(x, env, callAst) {
-    var results = evaluateCall(x, env, callAst);
+evaluateCallWithOneResult(x, args) {
+    var results = evaluateCall(x, args);
     ensureArity(1, size(results));
     return move(results[0]);
 }
 
-evaluateCall(x, env, callAst) = evaluateStrictCall(x, evaluateExprList(callAst.args, env));
-overload evaluateCall(x:Value, env, callAst) = evaluateCall(*x, env, callAst);
-overload evaluateCall(x:AliasPrimitive, env, callAst) = evaluateAliasPrimitive(x.kind, env, callAst);
+procedure evaluateCall;
 
-procedure evaluateStrictCall;
-
-overload evaluateStrictCall(x, args) {
+overload evaluateCall(x, args) {
     genericError("invalid callee: ", x);
     return ValueList();
 }
-overload evaluateStrictCall(x:Value, args) {
-    return evaluateStrictCall(*x, args);
+overload evaluateCall(x:Value, args) {
+    return evaluateCall(*x, args);
 }
-overload evaluateStrictCall(x:LambdaValue, args) {
+overload evaluateCall(x:LambdaValue, args) {
     return withStaticCall(Value(x), args, () ref=> {
         var env2 = bindArgs(x.env, x.value.args, args);
         return evaluateLambdaCodeBody(*x.value.body, env2);
     });
 }
-overload evaluateStrictCall(x:Symbol, args) {
+overload evaluateCall(x:Symbol, args) {
     return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);
 }
-overload evaluateStrictCall(x:SymbolHead, args) {
+overload evaluateCall(x:SymbolHead, args) {
     return memoizeStaticCall(x.evalTable, x.module.program, Value(x), args);
 }
-overload evaluateStrictCall(x:Primitive, args) ValueList {
+overload evaluateCall(x:Primitive, args) ValueList {
     return evaluatePrimitive(x.kind, args);
-}
-overload evaluateStrictCall(x:AliasPrimitive, args) {
-    genericError(primitiveName(x), " not supported in this context");
-    return ValueList();
-}
-
-evaluateStrictCallWithOneResult(x, env) {
-    var results = evaluateStrictCall(x, env);
-    ensureArity(1, size(results));
-    return move(results[0]);
 }
 
 evaluateLambdaCodeBody(x:ast.ExprList, env) = evaluateExprList(x, env);
@@ -948,33 +912,8 @@ overload evaluateIndexingPattern(x:Value, argsAst, env) {
     return evaluateIndexingPattern(*x, argsAst, env);
 }
 overload evaluateIndexingPattern(x:SymbolHead, argsAst, env) {
-    if (x.aliasHead?)
-        return evaluateAliasPattern(*x.ast, argsAst, x, env);
-    else {
-        var args = evaluateListPattern(argsAst, env);
-        return Pattern(SymbolPattern(x, args));
-    }
-}
-
-private evaluateAliasPattern(x:ast.Symbol, argsAst, symbolHead, env) {
-    assert(false, "alias symbol isn't really an alias!");
-    return Pattern();
-}
-overload evaluateAliasPattern(x:GlobalBinding, argsAst, symbolHead, env) {
-    // XXX kludge
-    assert(x.kind == ast.BINDING_ALIAS, "alias symbol head must actually be an alias!");
-
-    var paramMap = Map[String, ast.Pattern]();
-    ref paramNames = symbolHead.astName.params;
-    if (size(argsAst.items) != size(paramNames.items))
-        genericError("expected ", size(paramNames.items), " parameters to alias pattern but got ", size(argsAst.items));
-    for (param, arg in zipped(paramNames.items, argsAst.items))
-        paramMap[param.str] = arg;
-    if (just?(argsAst.variadicItem) or just?(paramNames.variadicItem))
-        genericError("variadic parameters to alias patterns not yet supported");
-
-    var aliasedPattern = transformExprToPattern(just(x.ast.value), paramMap);
-    return evaluatePattern(transformExprToPattern(just(x.ast.value), paramMap), env);
+    var args = evaluateListPattern(argsAst, env);
+    return Pattern(SymbolPattern(x, args));
 }
 
 
@@ -1795,7 +1734,6 @@ evaluatePrimitive(kind, args) {
             SymbolHead, a ref=> ModuleValue(a.module),
             Symbol, a ref=> ModuleValue(a.head.module),
             Primitive, p ref=> ModuleValue(primitivesModule(getProgram())),
-            AliasPrimitive, p ref=> ModuleValue(primitivesModule(getProgram())),
             MatchDefault, x ref=> {
                 genericError("expecting a symbol");
                 return ModuleValue();
@@ -1834,6 +1772,68 @@ evaluatePrimitive(kind, args) {
     case PRIM_LambdaStateless? : {
         var l = oneLambda(args);
         return ValueList(BoolValue(empty?(l.value.capturedOrder)));
+    }
+
+    case PRIM_LambdaString : {
+        var l = oneLambda(args);
+        return ValueList(StringValue(ast.getSourceString(l.value)));
+    }
+
+    case PRIM_LambdaLocation : {
+        var l = oneLambda(args);
+
+        var path, line, column = ...ast.getFileLocation(l.value);
+
+        return ValueList(
+            Value(StringValue(path)),
+            Value(IntValue(StaticIntValue(Int64(line)))),
+            Value(IntValue(StaticIntValue(Int64(column))))
+        );
+    }
+
+    case PRIM_Returns? : {
+        var callable = oneValue(args);
+        return ValueList(BoolValue(just?(callRTValues(callable))));
+    }
+
+    case PRIM_Type : {
+        var callable = oneValue(args);
+        return maybe(callRTValues(callable),
+            vars ref=> ValueList(map(v => v.type, vars)),
+            ()   ref=> ValueList(),
+        );
+    }
+
+    case PRIM_RefType : {
+        var callable = oneValue(args);
+        return maybe(callRTValues(callable),
+            vars ref=> ValueList(map(v => refType(v), vars)),
+            ()   ref=> ValueList(),
+        );
+    }
+
+    case PRIM_StaticDefined? : {
+        var callable = oneValue(args);
+        var defined? = true;
+        try {
+            evaluateCall(callable, ValueList());
+        } catch (e:SemanticError) {
+            //displayError(e);
+            defined? = false;
+        }
+        return ValueList(BoolValue(defined?));
+    }
+
+    case PRIM_Defined? : {
+        var callable = oneValue(args);
+        var defined? = true;
+        try {
+            callRTValues(callable);
+        } catch (e:SemanticError) {
+            //displayError(e);
+            defined? = false;
+        }
+        return ValueList(BoolValue(defined?));
     }
 
     case PRIM_StaticError : {
@@ -2023,14 +2023,13 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-private argRTValues(env:Env, argsAst:ast.ExprList) {
+private callRTValues(callable:Value) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var returns = SpecializationReturns();
     var s = SpecializationContext(&body, &complete?, &returns);
-    addEnvRvalues(s, env);
 
-    return analyzeExprListNode(s, env, argsAst);
+    return analyzeCall(s, Nothing(), callable, RTValues());
 }
 
 private addEnvRvalues(s, envParent) {}
@@ -2069,100 +2068,4 @@ private refType(v) {
     return envEntryToValue(makeSymbolHeadInstance(
         variantAs(refSymbolHead, SymbolHead), ValueList(v.type)
     ));
-}
-
-// extract a single Alias argument from an ast and use its associated ast
-// used so that ExpressionString, ExpressionLine, etc. work with alias arguments
-private expressionStringAst(env, argsAst:ast.ExprList) {
-    if (size(argsAst) == 1)
-        return match(argsAst[0],
-            ast.UnpackExpr, x ref=> expressionStringAst2(env, argsAst, x.expr),
-            ast.Expr, x ref=> expressionStringAst2(env, argsAst, x),
-        );
-    return argsAst;
-}
-
-private expressionStringAst2(env, argsAst:ast.ExprList, expr:ast.Expr)
-    = match(expr,
-        ast.NameRef, x ref=> expressionStringAst3(argsAst, nameRefLookup(env, x)),
-        ast.SimpleNameRef, x ref=> expressionStringAst3(argsAst, privateLookup(env, x.name)),
-        MatchDefault, x ref=> argsAst,
-    );
-
-private expressionStringAst3(argsAst, entry:EnvEntry)
-    = match(entry,
-        Alias, x ref=> ast.ExprList(ast.ExprListItem(x.value)),
-        ListAlias, x ref=> x.value,
-        MatchDefault, x ref=> argsAst,
-    );
-
-evaluateAliasPrimitive(kind, env, callAst) {
-    switch (kind) {
-
-    case APRIM_ExpressionReturns? : {
-        return ValueList(BoolValue(just?(argRTValues(env, callAst.args))));
-    }
-
-    case APRIM_ExpressionType : {
-        return maybe(argRTValues(env, callAst.args),
-            vars ref=> ValueList(map(v => v.type, vars)),
-            ()   ref=> ValueList(),
-        );
-    }
-
-    case APRIM_ExpressionRefType : {
-        return maybe(argRTValues(env, callAst.args),
-            vars ref=> ValueList(map(v => refType(v), vars)),
-            ()   ref=> ValueList(),
-        );
-    }
-
-    case APRIM_ExpressionString : {
-        var exprAst = expressionStringAst(env, callAst.args);
-        return ValueList(StringValue(ast.getSourceString(exprAst)));
-    }
-
-    case APRIM_ExpressionLocation : {
-        var exprAst = expressionStringAst(env, callAst.args);
-        var locAst = if (empty?(exprAst))
-                ast.ExprListItem(ast.Expr(callAst))
-            else
-                exprAst[0];
-
-        var path, line, column = ...ast.getFileLocation(locAst);
-
-        return ValueList(
-            Value(StringValue(path)),
-            Value(IntValue(StaticIntValue(Int64(line)))),
-            Value(IntValue(StaticIntValue(Int64(column))))
-        );
-    }
-
-    case APRIM_StaticExpressionDefined? : {
-        var defined? = true;
-        try {
-            evaluateExprList(callAst.args, env);
-        } catch (e:SemanticError) {
-            //displayError(e);
-            defined? = false;
-        }
-        return ValueList(BoolValue(defined?));
-    }
-
-    case APRIM_ExpressionDefined? : {
-        var defined? = true;
-        try {
-            argRTValues(env, callAst.args);
-        } catch (e:SemanticError) {
-            //displayError(e);
-            defined? = false;
-        }
-        return ValueList(BoolValue(defined?));
-    }
-
-    default : {
-        assert(false, "invalid primitive");
-        return ValueList();
-    }
-    }
 }

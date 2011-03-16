@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-main() {
-    return #ExpressionString(&1 + 2^ - foo(bar, bas));
-}

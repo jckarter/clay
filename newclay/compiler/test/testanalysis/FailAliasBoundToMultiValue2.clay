@@ -1,7 +1,0 @@
-foo(x, y) {}
-
-main() {
-    var ..x = 1, true;
-
-    alias y = ..x;
-}

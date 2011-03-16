@@ -4,5 +4,5 @@ bar(rvalue x) = "bar";
 
 main() {
     rvalue x = 3;
-    return #ExpressionRefType(bar(x)), x;
+    return #RefType(() -> bar(x)), x;
 }

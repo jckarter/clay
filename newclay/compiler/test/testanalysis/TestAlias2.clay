@@ -1,8 +1,0 @@
-foo(x) = x;
-
-main() {
-    alias x = foo(1);
-
-    x;
-    x;
-}

@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = ..LambdaLocation(x -> x + 1);

@@ -1,6 +1,0 @@
-symbol Foo;
-alias Bar = Foo;
-
-#Barf(Bar) = "BARF!!";
-
-#Main() = Barf(Foo), Barf(Bar);
