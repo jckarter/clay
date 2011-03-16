@@ -232,9 +232,6 @@ globalKind(g:RTGlobal) {
     case ast.BINDING_FORWARD:
         genericError("global variables cannot be forward");
         return RTValueKind();
-    case ast.BINDING_ALIAS:
-        assert(false, "global alias created as runtime global");
-        return RTValueKind();
     case ast.BINDING_REF:
         genericError("global ref bindings not yet supported");
         return RTValueKind();
@@ -502,11 +499,6 @@ private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
     Value, x ref=> addSpecializedValue(s, expr, x),
     ValueList, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
-    Alias, x ref=> withAliasRecursionProtection(x,
-        () ref=> analyzeSubnode(s, x.env, x.value),
-    ),
-    ListAlias, x ref=>
-        genericAnalysisError("multiple values cannot be used in single value context"),
     PatternCell, x ref=>
         genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
     ListPatternCell, x ref=>
@@ -547,11 +539,11 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = withOneResult(analyzeCallNode(s, env, expr));
 
-private analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTValues) {
+analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTValues) {
     return withOneResult(analyzeCall(s, ast, callable, args));
 }
 
-private analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues) {
+analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues) {
     return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
 }
 
@@ -1476,39 +1468,7 @@ private analyzeBindings(
     kind:ast.BindingKind,
     bindingList
 ) {
-    if (kind == ast.BINDING_ALIAS)
-        return ...analyzeAliasBindings(s, env, *bindingList);
-    else
-        return ...analyzeStrictBindings(s, env, stmt, kind, *bindingList);
-}
-
-private procedure analyzeAliasBindings;
-
-overload analyzeAliasBindings(
-    s:SpecializationContext,
-    env_:Env,
-    bindingList:ast.SingleBindingList
-) {
-    var parentEnv = env_;
-    var env = env_;
-    for (binding in bindingList) {
-        if (just?(binding.name.type))
-            genericError("type declarations on alias bindings not yet supported");
-        env = newEnv(parentEnv);
-        envAdd(env, binding.name.name, Alias(binding.value, parentEnv));
-        parentEnv = env;
-    }
-    return env, StatementTarget();
-}
-
-overload analyzeAliasBindings(
-    s:SpecializationContext,
-    parentEnv:Env,
-    bindingList:ast.MultipleBindingList
-) {
-    var env = newEnv(parentEnv);
-    envAddFlatAlias(env, parentEnv, bindingList);
-    return env, StatementTarget();
+    return ...analyzeStrictBindings(s, env, stmt, kind, *bindingList);
 }
 
 private procedure analyzeStrictBindings;
@@ -1590,9 +1550,6 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTValueKind) 
         return RT_VALUE_CONST;
     case ast.BINDING_FORWARD:
         return valueKind;
-    case ast.BINDING_ALIAS:
-        assert(false, "alias binding handled as strict variable");
-        return RTValueKind();
     default:
         assert(false, "invalid binding kind");
         return RTValueKind();
@@ -1652,26 +1609,11 @@ overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues] {
     return analyzeMultiExprSubnode(s, env, *expr);
 }
 
-private withAliasRecursionProtection(x, fn) {
-    if (x.runtimeAnalyzing?)
-        genericError("recursion during alias evaluation");
-    x.runtimeAnalyzing? = true;
-    var results = fn();
-    x.runtimeAnalyzing? = false;
-    return move(results);
-}
-
 private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
     RTValueList, x ref=> Maybe(x.vars),
     Value, x ref=>
         genericAnalysisError("single value cannot be used in multiple value context"),
     ValueList, x ref=> addSpecializedValueList(s, expr, x),
-    Alias, x ref=> withAliasRecursionProtection(x,
-        () ref=> analyzeSubnode(s, x.env, x.value),
-    ),
-    ListAlias, x ref=> withAliasRecursionProtection(x,
-        () ref=> analyzeMultiExprListNode(s, x.env, x.value, true),
-    ),
     PatternCell, x ref=>
         genericAnalysisError("pattern variable cannot be used in non-pattern expression"),
     ListPatternCell, x ref=>
@@ -1887,8 +1829,6 @@ addSpecializedValueList(s:SpecializationContext, ast, valueList:ValueList) {
 }
 
 private addOutOfLineCall(s, ast, inputs, specialization) {
-    assert(not specialization.alias?, "alias functions must be inline");
-
     var mResults = cloneVariables(specialization.results);
     var outputs = maybe(mResults,
         results ref=> Maybe(map(r ref=> ir.OutputVariable(r, not localVariable?(r)), results))
@@ -1897,19 +1837,16 @@ private addOutOfLineCall(s, ast, inputs, specialization) {
     return mResults;
 }
 
-private addInlineCall(s, ast, inputs, specialization) {
-    if (specialization.alias?)
-        genericError("alias arguments not yet supported");
-    return nothing(RTValues);
-
 /*INLINE
+private addInlineCall(s, ast, inputs, specialization) {
     for (input, arg in zipped(inputs, specialization.internalArgs))
         addSpecializedBind(s, ast, input, arg);
     for (result in specialization.internalNamedResults)
         addSpecializedBind(s, ast, newRvalue(result.type, result.name), result);
-*/
 
+    ...
 }
+*/
 
 addSpecializedCall(
     s:SpecializationContext,
@@ -2061,11 +1998,6 @@ private argumentNameString(formalArg) = match(formalArg,
 private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
     var formalKind = referenceSpecifier(formalArg);
 
-    if (formalKind == ast.ARG_ALIAS) {
-        s.inline? = true;
-        s.alias? = true;
-    }
-
     if (not referenceKindMatches?(formalKind, arg.kind))
         return false;
     if (not unifyArgumentType(formalArg, arg, s.env))
@@ -2080,11 +2012,6 @@ private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
 
 private unifyVariadicArgument(s:Specialization, formalArg:ast.Argument, args) {
     var formalKind = referenceSpecifier(formalArg);
-
-    if (formalKind == ast.ARG_ALIAS) {
-        s.inline? = true;
-        s.alias? = true;
-    }
 
     var vars = RTValues();
     var argName = argumentName(formalArg);
@@ -2387,11 +2314,7 @@ private callableInvokeTable(callable:Value) {
         SymbolHead, x => ref x.invokeTable,
         LambdaValue, x => ref x.invokeTable,
         Primitive, x => {
-            genericError("static primitive called in runtime context without # operator: ", x);
-            return ref typeToLValue(InvokeTable);
-        },
-        AliasPrimitive, x => {
-            genericError("static primitive called in runtime context without # operator: ", x);
+            genericError("static primitive called in runtime context: ", x);
             return ref typeToLValue(InvokeTable);
         },
         MatchDefault, x => {
@@ -2431,8 +2354,7 @@ analyzeCallable2(callable:Value, args:RTValues) Specialization {
             lowered? = true;
         }
         alias s = specialization;
-        if (not s.alias?)
-            analyzeCallableReturns(s);
+        analyzeCallableReturns(s);
         invokeTable[ArgumentList(args)].specialization = Maybe(specialization);
         if (lowered?)
             invokeTable[ArgumentList(loweredArgs)].specialization = Maybe(specialization);

@@ -1,0 +1,10 @@
+import __primitives__.*;
+
+alias foo = a -> ..(
+        LambdaCapturesByReference?(x -> 1),
+        LambdaCapturesByReference?(x -> a),
+        LambdaCapturesByReference?(x => 1),
+        LambdaCapturesByReference?(x => a),
+    );
+
+#Main() = ..foo(0);

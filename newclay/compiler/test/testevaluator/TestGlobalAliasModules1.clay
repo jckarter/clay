@@ -1,3 +1,0 @@
-import aliastest1.(AliasTest);
-
-#Main() = AliasTest;

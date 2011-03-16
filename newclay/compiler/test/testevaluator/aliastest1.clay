@@ -1,3 +1,0 @@
-import aliastest2.*;
-
-alias AliasTest = AliaseeTest;

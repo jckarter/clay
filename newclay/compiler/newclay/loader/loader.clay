@@ -22,12 +22,6 @@ private loadPrimitivesModule(program:Program) {
         var entry = Primitive(kind);
         envAdd(module.publicEnv, name, Value(entry));
     }
-    for (i in range(EnumMemberCount(AliasPrimitiveKind))) {
-        var kind = AliasPrimitiveKind(i);
-        var name = ast.Identifier(primitiveName(kind));
-        var entry = AliasPrimitive(kind);
-        envAdd(module.publicEnv, name, Value(entry));
-    }
     return module;
 }
 
@@ -75,21 +69,10 @@ private addGlobalItem(module, env, globalItem) {
     withLocation(globalItem, () ref=> {
         for (binding in globalItem.bindings) {
             withLocation(binding, () ref=> {
-                if (globalItem.kind == ast.BINDING_ALIAS and not symbolNameHasParams?(binding.name))
-                    addGlobalAlias(module, env, binding);
-                else
-                    addGlobalVariable(module, env, globalItem.kind, binding);
+                addGlobalVariable(module, env, globalItem.kind, binding);
             });
         }
     });
-}
-
-private addGlobalAlias(module, env, binding:ast.SingleGlobalBinding) {
-    if (just?(binding.type))
-        genericError("type declarations on alias bindings not yet supported");
-    if (nothing?(binding.value))
-        genericError("alias bindings must have a value");
-    envAdd(env, binding.name.name, Alias(just(binding.value), newEnv(module)));
 }
 
 private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleGlobalBinding) {

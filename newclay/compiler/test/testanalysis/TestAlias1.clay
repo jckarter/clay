@@ -1,7 +1,0 @@
-foo(x) {}
-
-main() {
-    alias x = 1;
-
-    foo(x);
-}

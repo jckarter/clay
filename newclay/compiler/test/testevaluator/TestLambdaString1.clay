@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = LambdaString(x -> x + 1);
