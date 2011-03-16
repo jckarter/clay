@@ -1,4 +1,4 @@
 main() {
     var foo = 1;
-    break foo;
+    break @foo;
 }

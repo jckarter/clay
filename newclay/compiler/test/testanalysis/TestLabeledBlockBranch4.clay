@@ -6,12 +6,12 @@ e() {}
 nonterminating() { throw 0; }
 
 main() {
-    foo: {
-        bar: {
-            bas: {
+    @foo {
+        @bar {
+            @bas {
                 a();
                 if (false)
-                    break bar;
+                    break @bar;
                 else
                     nonterminating();
                 b();

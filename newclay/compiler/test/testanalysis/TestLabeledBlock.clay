@@ -3,9 +3,9 @@ b() {}
 c() {}
 
 main() {
-    foo: {
+    @foo {
         a();
-        break foo;
+        break @foo;
         b();
     }
     c();

@@ -4,10 +4,10 @@ c() {}
 d() {}
 
 main() {
-    outer: {
+    @outer {
         while (false) {
             a();
-            break outer;
+            break @outer;
             b();
         }
         c();

@@ -141,7 +141,7 @@ private var punctuationParserTable[Ident] = punctuationParser(Ident);
 [Ident]
 private punc(static Ident) = punctuationParserTable[Ident];
 
-private var ellipsis = choice(punc(#"..."), punc(#".."));
+private var ellipsis = punc(#"..");
 
 
 //
@@ -1178,8 +1178,8 @@ private var globalLiteralCodeBody = topLevelItemParser(
 // statements
 
 private var labelDef = bounds(modify(
-    x => LabelDef(x.0),
-    sequence(identifier, punc(#":"))
+    x => LabelDef(x.1),
+    sequence(punc(#"@"), identifier),
 ));
 
 private var block2 = bounds(modify(
@@ -1283,14 +1283,16 @@ private var returnStatement = statementParser(
     sequence(kw_return, optReturnExprList, punc(#";")),
 );
 
+private var labelRef = modify(x => x.1, sequence(punc(#"@"), identifier));
+
 private var breakStatement = statementParser(
     x => BreakStatement(x.1),
-    sequence(kw_break, optional(identifier), punc(#";")),
+    sequence(kw_break, optional(labelRef), punc(#";")),
 );
 
 private var continueStatement = statementParser(
     x => ContinueStatement(x.1),
-    sequence(kw_continue, optional(identifier), punc(#";")),
+    sequence(kw_continue, optional(labelRef), punc(#";")),
 );
 
 private var elseBlock = modify(
