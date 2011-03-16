@@ -1,4 +1,4 @@
 main() {
-    foo: {}
-    break foo;
+    @foo {}
+    break @foo;
 }

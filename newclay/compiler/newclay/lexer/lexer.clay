@@ -49,7 +49,7 @@ record SourceTokens = referenceType(
 
 // 34 punctuations
 var punctuations = [
-    "...", "<--",
+    "<--",
     "=>", "->",
     "<=", ">=", "<", ">",
     "!=", "==",
@@ -67,6 +67,7 @@ var punctuations = [
     "/",
     "&", "^",
     "#",
+    "@",
 ];
 
 // 39 keywords

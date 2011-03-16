@@ -21,9 +21,9 @@ overload foo() {
 
     var ..x = ..bar();
 
-    wut: {
-        break wut;
-        continue wut;
+    @wut {
+        break @wut;
+        continue @wut;
     }
 
     ref x:Int, y:Int, ..z = ..bar();
@@ -67,10 +67,10 @@ overload foo() {
 
     while (x) y;
 
-    outer: while (a)
+    @outer while (a)
         middle: for (b in c)
-            inner: static for (d in e)
-                break outer;
+            @inner static for (d in e)
+                break @outer;
 
     switch (x)
     case (y) {

@@ -4,10 +4,10 @@ c() {}
 d() {}
 
 main() {
-    foo: {
-        bar: {
+    @foo {
+        @bar {
             a();
-            break foo;
+            break @foo;
             b();
         }
         c();

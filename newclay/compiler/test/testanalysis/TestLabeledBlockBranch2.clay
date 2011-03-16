@@ -4,14 +4,14 @@ c() {}
 d() {}
 
 main() {
-    foo: {
-        bar: {
-            bas: {
+    @foo {
+        @bar {
+            @bas {
                 a();
                 if (false)
-                    break foo;
+                    break @foo;
                 else
-                    break bar;
+                    break @bar;
             }
             b();
         }

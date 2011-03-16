@@ -5,12 +5,12 @@ d() {}
 e() {}
 
 main() {
-    foo: {
-        bar: {
-            bas: {
+    @foo {
+        @bar {
+            @bas {
                 a();
                 if (false)
-                    break foo;
+                    break @foo;
                 b();
             }
             c();
