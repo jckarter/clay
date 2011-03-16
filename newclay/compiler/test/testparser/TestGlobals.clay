@@ -8,7 +8,7 @@ var x:Int = 1, y:Int = 2;
 var x['T]:'T = 'T(1);
 var x['n]:Int = 1;
 
-alias Foo['x, 'y] = 'x + 'y;
+alias Foo['x, 'y] = 'x;
 
 ref x:Int = y;
 const x:Int = y;
