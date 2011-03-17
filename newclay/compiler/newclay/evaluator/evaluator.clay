@@ -367,6 +367,9 @@ makeSymbolHeadInstance(x:SymbolHead, params:ValueList) {
 private makeSymbolHeadInstance2(x:SymbolHead, ast:ast.Symbol, params:ValueList, env:Env)
     = EnvEntry(Value(Symbol(x, params, env)));
 
+overload makeSymbolHeadInstance2(x:SymbolHead, ast:ast.GlobalAlias, params:ValueList, env:Env)
+    = EnvEntry(Alias(ast, env));
+
 overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:ValueList, env:Env)
     = EnvEntry(RTGlobal(x, params, env));
 
@@ -570,48 +573,89 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
 
 
 //
+// evaluatePatternExpr
+//
+
+[T | VariantMember?(ast.Expr, T)]
+evaluatePatternExpr(x:T, env) Value = evaluateExpr(x, env);
+
+overload evaluatePatternExpr(x:ast.Pattern, env)
+    = withLocation(x, () ref=> evaluatePatternExpr(*x, env));
+
+overload evaluatePatternExpr(x:ast.IndexingPattern, env) {
+    var base = evaluateExpr(x.base, env);
+    var args = evaluateListPatternExpr(x.args, env);
+    return evaluateIndexing(base, args);
+}
+
+overload evaluatePatternExpr(x:ast.TuplePattern, env) {
+    var elements = evaluateListPatternExpr(x.elements, env);
+    return Value(TupleValue(elements));
+}
+
+evaluateListPatternExpr(x:ast.ListPattern, env) ValueList {
+    var values = ValueList();
+    for (item in x.items)
+        push(values, evaluatePatternExpr(item, env));
+
+    maybe(x.variadicItem, varItem ref=> {
+        withLocation(varItem, () ref=> {
+            push(values, evaluateMultiExpr(*varItem, env));
+        });
+    });
+    return values;
+}
+
+
+//
 // envEntryToValue
 //
 
 procedure envEntryToValue;
 
-overload envEntryToValue(x:EnvEntry) {
+overload envEntryToValue(x:EnvEntry) Value {
     return envEntryToValue(*x);
 }
-overload envEntryToValue(x:Value) {
+overload envEntryToValue(x:Value) Value {
     return x;
 }
-overload envEntryToValue(x:ValueList) {
+overload envEntryToValue(x:ValueList) Value {
     genericError("multi-value used in single value context");
     return Value();
 }
-overload envEntryToValue(x:PatternCell) {
+overload envEntryToValue(x:PatternCell) Value {
     genericError("pattern variable cannot be used in non-pattern expression");
     return Value();
 }
-overload envEntryToValue(x:ListPatternCell) {
+overload envEntryToValue(x:ListPatternCell) Value {
     genericError("pattern variable cannot be used in non-pattern expression");
     return Value();
 }
-overload envEntryToValue(x:RTExternal) {
+overload envEntryToValue(x:RTExternal) Value {
     genericError("external functions not available in static context");
     return Value();
 }
-overload envEntryToValue(x:RTGlobal) {
+overload envEntryToValue(x:RTGlobal) Value {
     return rtTypeToValue(globalAttributes(x).type);
 }
-overload envEntryToValue(x:RTValue) {
+overload envEntryToValue(x:RTValue) Value {
     return rtTypeToValue(x.type);
 }
-overload envEntryToValue(x:RTValueList) {
+overload envEntryToValue(x:Alias) Value {
+    return Value(aliasValue(x));
+}
+overload envEntryToValue(x:RTValueList) Value {
     genericError("multi-value used in single value context");
     return Value();
 }
-overload envEntryToValue(x:RTLabel) {
+overload envEntryToValue(x:RTLabel) Value {
     genericError("labels not available in static context");
     return Value();
 }
 
+aliasValue(x:Alias) = safeInitialize(x.value,
+    () ref=> evaluatePatternExpr(x.ast.value, x.env),
+);
 
 
 //
@@ -740,6 +784,10 @@ overload envEntryToValueList(x:RTGlobal) {
     return ValueList();
 }
 overload envEntryToValueList(x:RTValue) {
+    genericError("single value used in multi-valued context");
+    return ValueList();
+}
+overload envEntryToValueList(x:Alias) {
     genericError("single value used in multi-valued context");
     return ValueList();
 }
