@@ -1,0 +1,4 @@
+alias x = y;
+alias y = x;
+
+#Main() = x;

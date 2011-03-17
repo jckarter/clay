@@ -497,6 +497,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
 private analyzeEnvEntry(s, expr, envEntry) = match(envEntry,
     RTValue, x ref=> Maybe(RTValues(x)),
     Value, x ref=> addSpecializedValue(s, expr, x),
+    Alias, x ref=> addSpecializedValue(s, expr, aliasValue(x)),
     ValueList, x ref=>
         genericAnalysisError("multiple values cannot be used in single value context"),
     PatternCell, x ref=>
@@ -1612,6 +1613,8 @@ overload analyzeMultiExprNode(s, env, expr:ast.Expr) Maybe[RTValues] {
 private analyzeMultiEnvEntry(s, expr, envEntry) = match(envEntry,
     RTValueList, x ref=> Maybe(x.vars),
     Value, x ref=>
+        genericAnalysisError("single value cannot be used in multiple value context"),
+    Alias, x ref=>
         genericAnalysisError("single value cannot be used in multiple value context"),
     ValueList, x ref=> addSpecializedValueList(s, expr, x),
     PatternCell, x ref=>

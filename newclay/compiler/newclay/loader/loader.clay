@@ -75,6 +75,24 @@ private addGlobalItem(module, env, globalItem) {
     });
 }
 
+private addAliasItem(module, env, aliasItem) {
+    withLocation(aliasItem, () ref=> {
+        var head = addSymbolHead(
+            module,
+            SymbolHeadAST(aliasItem),
+            aliasItem.name
+        );
+
+        if (symbolHeadHasParams?(head)) {
+            envAdd(env, aliasItem.name.name, Value(head));
+        } else {
+            var a = Alias(aliasItem, newEnv(module));
+            head.instances[ValueList()] = EnvEntry(a);
+            envAdd(env, aliasItem.name.name, a);
+        }
+    });
+}
+
 private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleGlobalBinding) {
     var head = addSymbolHead(module, SymbolHeadAST(GlobalBinding(kind, binding)), binding.name);
 
@@ -173,6 +191,13 @@ private initializeGlobalEntries(module) {
                         module,
                         ifPublic(globalItem, module.publicEnv, module.privateEnv),
                         globalItem
+                    );
+                },
+                ast.GlobalAlias, aliasItem ref=> {
+                    addAliasItem(
+                        module,
+                        ifPublic(aliasItem, module.publicEnv, module.privateEnv),
+                        aliasItem
                     );
                 },
                 MatchDefault, x ref=> { },

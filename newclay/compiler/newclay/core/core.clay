@@ -186,6 +186,7 @@ alias EvalTable = Map[ValueList, TriState[ValueList]];
 record GlobalBinding (kind:ast.BindingKind, ast:ast.SingleGlobalBinding);
 
 variant SymbolHeadAST = ast.Symbol
+                      | ast.GlobalAlias
                       | GlobalBinding;
 
 record SymbolHead = referenceType(
@@ -267,6 +268,19 @@ record Overload = referenceType(
 
 overload Overload(x:ast.Overload, module:Module) =
     Overload(x, module, nothing(PatternVars));
+
+
+//
+// aliases
+//
+
+record Alias = referenceType(
+    ast: ast.GlobalAlias,
+    env: Env,
+    value: TriState[Value],
+);
+
+overload Alias(ast, env) = Alias(ast, env, TriState[Value]());
 
 
 //
@@ -382,6 +396,7 @@ variant EnvEntry = Value
                  | ValueList
                  | PatternCell
                  | ListPatternCell
+                 | Alias
                  | RTExternal
                  | RTGlobal
                  | RTValue
