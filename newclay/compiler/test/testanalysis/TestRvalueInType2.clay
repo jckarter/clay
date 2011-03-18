@@ -3,7 +3,7 @@ import __primitives__.*;
 bar(rvalue x) = "bar";
 
 foo(rvalue x) {
-    return #RefType(() -> bar(x)), x;
+    return #Type(() -> bar(x)), x;
 }
 
 main() = ..foo(3);

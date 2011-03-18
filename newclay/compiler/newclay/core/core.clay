@@ -348,7 +348,6 @@ enum PrimitiveKind {
     PRIM_LambdaLocation,
 
     PRIM_Returns?,
-    PRIM_RefType,
     PRIM_Type,
     PRIM_StaticDefined?,
     PRIM_Defined?,
