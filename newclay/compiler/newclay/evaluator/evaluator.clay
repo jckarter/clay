@@ -1610,6 +1610,15 @@ private oneLambda(args) {
     return variantAs(a, LambdaValue);
 }
 
+private nullary?(arglist) = empty?(arglist.items) and nothing?(arglist.variadicItem);
+
+private oneNullaryLambda(args) {
+    var l = oneLambda(args);
+    if (not nullary?(l.value.args))
+        genericError("expecting a lambda with no arguments, but received: ", l);
+    return l;
+}
+
 private moduleString(args) {
     var moduleValue, stringValue = ...twoValues(args);
     if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue)) {
@@ -1892,21 +1901,13 @@ evaluatePrimitive(kind, args) {
     }
 
     case PRIM_Returns? : {
-        var callable = oneValue(args);
-        return ValueList(BoolValue(just?(callRTValues(callable))));
+        var l = oneNullaryLambda(args);
+        return ValueList(BoolValue(just?(rtLambdaResults(l))));
     }
 
     case PRIM_Type : {
-        var callable = oneValue(args);
-        return maybe(callRTValues(callable),
-            vars ref=> ValueList(map(v => v.type, vars)),
-            ()   ref=> ValueList(),
-        );
-    }
-
-    case PRIM_RefType : {
-        var callable = oneValue(args);
-        return maybe(callRTValues(callable),
+        var l = oneNullaryLambda(args);
+        return maybe(rtLambdaResults(l),
             vars ref=> ValueList(map(v => refType(v), vars)),
             ()   ref=> ValueList(),
         );
@@ -1925,10 +1926,10 @@ evaluatePrimitive(kind, args) {
     }
 
     case PRIM_Defined? : {
-        var callable = oneValue(args);
+        var l = oneNullaryLambda(args);
         var defined? = true;
         try {
-            callRTValues(callable);
+            rtLambdaResults(l);
         } catch (e:SemanticError) {
             //displayError(e);
             defined? = false;
@@ -2123,13 +2124,14 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-private callRTValues(callable:Value) {
+private rtLambdaResults(l:LambdaValue) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var returns = SpecializationReturns();
     var s = SpecializationContext(&body, &complete?, &returns);
+    addEnvRvalues(s, l.env);
 
-    return analyzeCall(s, Nothing(), callable, RTValues());
+    return analyzeCodeBody(s, l.env, transformLambdaCodeBody(*l.value.body));
 }
 
 private addEnvRvalues(s, envParent) {}

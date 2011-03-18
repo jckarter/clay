@@ -2221,6 +2221,15 @@ private asNamedReturnVariable(result) = RTValue(
     "returned"
 );
 
+analyzeCodeBody(s:SpecializationContext, env:Env, body:ast.CodeBody)
+    = match(body,
+        ast.ExprCodeBody, body ref=> analyzeNode(s, env, body.exprs),
+        ast.LiteralCodeBody, body ref=> analyzeLiteralCodeBody(s, env, body),
+        ast.Block, body ref=> analyzeBlockCodeBody(s, env, body),
+        ast.UndefinedCodeBody,
+            body ref=> genericAnalysisError("undefined overload"),
+    );
+
 private analyzeCallableReturns(s:Specialization, env, o:Overload) {
     s.body = Maybe(Vector[ir.Node]());
     try {
@@ -2249,17 +2258,12 @@ private analyzeCallableReturns(s:Specialization, env, o:Overload) {
                 );
             }
 
-            var analyzedResults = match(o.ast.definition.body,
-                ast.ExprCodeBody, body ref=> analyzeNode(context, env, body.exprs),
-                ast.LiteralCodeBody, body ref=> {
-                    if (declaredReturns? and not namedReturns?)
-                        genericError("literal procedure must use named return values");
-                    return analyzeLiteralCodeBody(context, env, body);
-                },
-                ast.Block, body ref=> analyzeBlockCodeBody(context, env, body),
-                ast.UndefinedCodeBody,
-                    body ref=> genericAnalysisError("undefined overload"),
-            );
+            if (variantIs?(o.ast.definition.body, ast.LiteralCodeBody)
+                and declaredReturns?
+                and not namedReturns?)
+                genericError("literal procedure must use named return values");
+
+            var analyzedResults = analyzeCodeBody(context, env, o.ast.definition.body);
 
             if (not complete?)
                 s.body = nothing(Vector[ir.Node]);

@@ -4,5 +4,5 @@ bar(rvalue x) = "bar";
 
 main() {
     rvalue x = 3;
-    return #RefType(() -> bar(x)), x;
+    return #Type(() -> bar(x)), x;
 }

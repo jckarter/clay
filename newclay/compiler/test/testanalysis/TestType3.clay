@@ -8,7 +8,7 @@ constReturn() const x:Int __c__ """abort();""";
 main() {
     return
         ..#Type(() -> ..(valueReturn(), refReturn(), rvalueReturn(), constReturn())),
-        ..#RefType(() -> {
+        ..#Type(() -> {
             return forward ..(valueReturn(), refReturn(), rvalueReturn(), constReturn());
         });
 }

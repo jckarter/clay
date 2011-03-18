@@ -113,7 +113,7 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
 // transform lambda AST into overload AST
 //
 
-private procedure transformLambdaCodeBody;
+procedure transformLambdaCodeBody;
 overload transformLambdaCodeBody(body:Block) = CodeBody(body);
 overload transformLambdaCodeBody(body:ExprList) = CodeBody(ExprCodeBody(
     map(item => ReturnExprListItem(nothing(ReturnExprKind), item), body),
