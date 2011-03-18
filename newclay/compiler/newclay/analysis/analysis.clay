@@ -2105,7 +2105,7 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
     var s = Specialization(o, callable);
     if (o.ast.definition.attributes.inline?)
         s.inline? = true;
-    s.env = initializeMatch(o.module, pvars);
+    s.env = initializeMatch(o.env, pvars);
     var callablePattern = evaluatePattern(o.ast.target, s.env);
     if (not unify(callablePattern, callable))
         return nothing(Specialization);
@@ -2143,7 +2143,7 @@ private lambdaOverload(l:LambdaValue) {
     return maybe(l.lambdaOverload,
         o ref=> o,
         () ref=> {
-            var o = Overload(transformLambdaToOverload(l.value), envModule(l.env));
+            var o = Overload(transformLambdaToOverload(l.value), l.env);
             l.lambdaOverload = Maybe(o);
             return o;
         },
