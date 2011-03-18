@@ -218,14 +218,14 @@ private initializeAttributesAndOverloads(module) {
                 push(module.program.allAttributes, y);
             },
             ast.StaticOverload, x ref=> {
-                var y = StaticOverload(x, module);
+                var y = StaticOverload(x, newEnv(module));
                 if (symbolTarget?(x.target))
                     push(module.program.symbolStaticOverloads, y);
                 else
                     push(module.program.patternStaticOverloads, y);
             },
             ast.Overload, x ref=> {
-                var y = Overload(x, module);
+                var y = Overload(x, newEnv(module));
                 if (symbolTarget?(x.target))
                     push(module.program.symbolOverloads, y);
                 else
@@ -243,7 +243,7 @@ private initializeAttributesAndOverloads(module) {
 
 private overloadSymbolHead(item) {
     var pvars = topLevelItemPatternVars(item);
-    var env = initializeMatch(item.module, pvars);
+    var env = initializeMatch(item.env, pvars);
     var patternResult = evaluatePattern(item.ast.target, env);
     return match(patternResult,
         Value, v ref=> valueSymbolHead(v),

@@ -1364,8 +1364,7 @@ topLevelItemPatternVars(x:T) {
 // initializeMatch, verifyPatternVars, testPredicate
 //
 
-initializeMatch(module:Module, pvars:PatternVars) env:Env {
-    env <-- newEnv(module);
+private initializeMatch2(env, pvars) {
     try {
         for (name in pvars.vars)
             envAdd(env, name, PatternCell(nothing(Value)));
@@ -1375,6 +1374,11 @@ initializeMatch(module:Module, pvars:PatternVars) env:Env {
         destroy(env);
         throw ex;
     }
+}
+
+initializeMatch(envParent, pvars:PatternVars) env:Env {
+    env <-- newEnv(envParent);
+    initializeMatch2(env, pvars);
 }
 
 verifyPatternVars(pvars:PatternVars, env:Env) {
@@ -1411,7 +1415,7 @@ matchAttribute(x:Attribute, target:Value) Maybe[Env] {
 
 matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
     var pvars = topLevelItemPatternVars(x);
-    var env = initializeMatch(x.module, pvars);
+    var env = initializeMatch(x.env, pvars);
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
         return nothing(Env);

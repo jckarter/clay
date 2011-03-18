@@ -253,21 +253,21 @@ overload Attribute(x:ast.Attribute, module:Module) =
 
 record StaticOverload = referenceType(
     ast: ast.StaticOverload,
-    module: Module,
+    env: Env,
     patternVars: Maybe[PatternVars],
 );
 
-overload StaticOverload(x:ast.StaticOverload, module:Module) =
-    StaticOverload(x, module, nothing(PatternVars));
+overload StaticOverload(x:ast.StaticOverload, env:Env) =
+    StaticOverload(x, env, nothing(PatternVars));
 
 record Overload = referenceType(
     ast: ast.Overload,
-    module: Module,
+    env: Env,
     patternVars: Maybe[PatternVars],
 );
 
-overload Overload(x:ast.Overload, module:Module) =
-    Overload(x, module, nothing(PatternVars));
+overload Overload(x:ast.Overload, env:Env) =
+    Overload(x, env, nothing(PatternVars));
 
 
 //
