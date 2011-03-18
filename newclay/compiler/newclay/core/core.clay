@@ -1216,6 +1216,7 @@ overload printReprTo(stream, x:RTGlobal) {
 variant Pattern = Value
                 | PatternCell
                 | SymbolPattern
+                | AliasPattern
                 | TuplePattern
                 ;
 
@@ -1230,6 +1231,12 @@ record SymbolPattern = referenceType(
 
 record TuplePattern = referenceType(
     elements: ListPattern,
+);
+
+record AliasPattern = referenceType(
+    pattern: Pattern,
+    cellsPattern: ListPattern,
+    argsPattern: ListPattern,
 );
 
 overload Pattern() = Pattern(Value());
