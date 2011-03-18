@@ -446,7 +446,7 @@ inline overload 'T() returned:'T
 }
 inline overload 'T(/*alias*/ forward orig:'U) returned:'T
     | NewType?('T)
-      and Defined?(...initializeFromUnsafe(refValue('U), orig))
+      and Defined?(..initializeFromUnsafe(refValue('U), orig))
       and 'U == OriginalType('T)
 {
     *returned <-- orig;
