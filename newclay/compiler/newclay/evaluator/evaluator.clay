@@ -337,16 +337,28 @@ bindPatternArgs(env:Env, formalArgs, args) {
     var nFixed = size(formalArgs.items);
     for (name, arg in zipped(formalArgs.items, slicedUpto(args, nFixed)))
         envAdd(env2, name, PatternCell(Maybe(arg)));
-    maybe(formalArgs.variadicItem,
-        name ref=> {
-            ref rest = slicedFrom(args, nFixed);
-            envAdd(env2, name, ListPatternCell(Maybe(ValueList(rest))));
-        },
-        () => {}
-    );
+    maybe(formalArgs.variadicItem, name ref=> {
+        ref rest = slicedFrom(args, nFixed);
+        envAdd(env2, name, ListPatternCell(Maybe(ValueList(rest))));
+    });
     return env2;
 }
 
+bindPatternArgCells(env:Env, formalArgs) {
+    var env2 = newEnv(env);
+    var cellsPattern = ListPattern(Vector[Pattern](), ListPatternCell(Maybe(ValueList())));
+    for (name in formalArgs.items) {
+        var cell = PatternCell(nothing(Value));
+        envAdd(env2, name, cell);
+        push(cellsPattern.patterns, Pattern(cell));
+    }
+    maybe(formalArgs.variadicItem, name ref=> {
+        var cell = ListPatternCell(nothing(ValueList));
+        envAdd(env2, name, cell);
+        cellsPattern.variadicPattern = cell;
+    });
+    return env2, cellsPattern;
+}
 
 
 //
@@ -914,7 +926,7 @@ overload evaluateFieldRef(x:ModuleValue, field) {
 
 procedure evaluatePattern;
 
-overload evaluatePattern(x:ast.Pattern, env) {
+overload evaluatePattern(x:ast.Pattern, env) Pattern {
     return withLocation(x, () ref=> evaluatePattern(*x, env));
 }
 overload evaluatePattern(x:ast.BoolLiteral, env) {
@@ -961,7 +973,23 @@ overload evaluateIndexingPattern(x:Value, argsAst, env) {
 }
 overload evaluateIndexingPattern(x:SymbolHead, argsAst, env) {
     var args = evaluateListPattern(argsAst, env);
-    return Pattern(SymbolPattern(x, args));
+    return evaluateSymbolHeadPattern(*x.ast, x, args);
+}
+
+private procedure evaluateSymbolHeadPattern;
+overload evaluateSymbolHeadPattern(ast:ast.Symbol, x:SymbolHead, args:ListPattern)
+    = Pattern(SymbolPattern(x, args));
+overload evaluateSymbolHeadPattern(ast:ast.GlobalAlias, x:SymbolHead, args:ListPattern) {
+    var env, cells = ...bindPatternArgCells(newEnv(x.module), x.astName.params);
+    return Pattern(AliasPattern(
+        evaluatePattern(ast.value, env),
+        cells,
+        args,
+    ));
+}
+overload evaluateSymbolHeadPattern(ast:GlobalBinding, x:SymbolHead, args:ListPattern) {
+    genericError("global variable name cannot be used in pattern");
+    return Pattern();
 }
 
 
@@ -1034,6 +1062,26 @@ overload unify(p:TuplePattern, x:Value) {
         return false;
     var y = variantAs(x, TupleValue);
     return unifyList(p.elements, y.elements);
+}
+
+overload unify(p:AliasPattern, x:Value) {
+    if (unify(p.pattern, x)) {
+        observe(p.pattern);
+        observe(p.cellsPattern);
+        observe(p.argsPattern);
+        var cellValues = ValueList();
+        for (pat in p.cellsPattern.patterns)
+            maybe(variantAs(pat, PatternCell).value,
+                value ref=> { push(cellValues, value); },
+                () ref=> { genericError("unbound pattern variable in alias"); },
+            );
+        maybe(p.cellsPattern.variadicPattern.values,
+            values ref=> { push(cellValues, values); },
+            () ref=> { genericError("unbound variadic pattern variable in alias"); },
+        );
+        return unifyList(p.argsPattern, cellValues);
+    } else
+        return false;
 }
 
 
