@@ -303,6 +303,21 @@ private var patternNameRef = exprParser(
     sequence(punc(#"'"), identifier),
 );
 
+private var optStatementExprBody = modify(
+    x => StatementExpr(move(x.0), move(x.1)),
+    sequence(zeroOrMore(statement), expr),
+);
+
+private var statementExprBody = modify(
+    x => StatementExpr(move(x.0), move(x.1)),
+    sequence(oneOrMore(statement), expr),
+);
+
+private var statementExpr = exprParser(
+    x => move(x.1),
+    sequence(punc(#"("), statementExprBody, punc(#")")),
+);
+
 private var bracketedExpr = modify(
     x => move(x.1),
     sequence(punc(#"("), expr, punc(#")")),
@@ -319,7 +334,9 @@ private var arrayExpr = exprParser(
 );
 
 private var atomicExpr = choice(
-    literalExpr, simpleNameRef, patternNameRef, bracketedExpr, tupleExpr, arrayExpr,
+    literalExpr, simpleNameRef, patternNameRef,
+    bracketedExpr, statementExpr, tupleExpr,
+    arrayExpr,
 );
 
 
@@ -564,7 +581,7 @@ private var lambdaSingleArg = bounds(modify(
 ));
 
 private var lambdaCodeBody = choice(
-    modify(LambdaCodeBody, groupedExprList),
+    modify(x => LambdaCodeBody(ExprList(x)), exprListItem),
     modify(LambdaCodeBody, block),
 );
 
@@ -586,7 +603,7 @@ private var lambdaExpr = exprParser(
 
 private var ifExpr = exprParser(
     x => IfExpr(move(x.2), move(x.4), move(x.6)),
-    sequence(kw_if, punc(#"("), expr, punc(#")"), expr, kw_else, expr),
+    sequence(kw_if, punc(#"("), optStatementExprBody, punc(#")"), expr, kw_else, expr),
 );
 
 
@@ -634,29 +651,18 @@ private var unpackExpr = bounds(modify(
 
 private var exprListItem = choice(
     modify(x => ExprListItem(move(x)), unpackExpr),
+    modify(x => ExprListItem(move(x)), statementExprList),
     modify(x => ExprListItem(move(x)), expr),
 );
 
-private var groupedExprList = choice(
-    modify(
-        x => move(x.2),
-        sequence(ellipsis, punc(#"("), exprList, punc(#")")),
-    ),
-    modify(
-        x => Vector[ExprListItem](move(x)),
-        exprListItem,
-    ),
+private var statementExprList2 = modify(
+    x => StatementExprList(x.1, x.2),
+    sequence(punc(#"("), oneOrMore(statement), exprList, punc(#")")),
 );
 
-private var exprList2 = modify(
-    x => {
-        var result = Vector[ExprListItem]();
-        for (a in x)
-            push(result, move(a));
-        return move(result);
-    },
-    commaList(groupedExprList),
-);
+private statementExprList(input) Maybe[StatementExprList] = statementExprList2(input);
+
+private var exprList2 = commaList(exprListItem);
 
 private exprList(input) Maybe[ExprList] { return exprList2(input); }
 
@@ -1209,6 +1215,7 @@ private var statement2 = choice(
     switchStatement,
     tryStatement,
     exprStatement,
+    emptyStatement,
 );
 
 private statement(input) Maybe[Statement] = statement2(input);
@@ -1307,7 +1314,10 @@ private var elseBlock = modify(
 
 private var ifStatement = statementParser(
     x => IfStatement(x.2, x.4, x.5),
-    sequence(kw_if, punc(#"("), expr, punc(#")"), statement, optional(elseBlock)),
+    sequence(kw_if, punc(#"("), optStatementExprBody, punc(#")"),
+        statement,
+        optional(elseBlock)
+    ),
 );
 
 private var forStatement = statementParser(
@@ -1322,12 +1332,14 @@ private var staticForStatement = statementParser(
 
 private var whileStatement = statementParser(
     x => WhileStatement(x.0, x.3, x.5),
-    sequence(optional(labelDef), kw_while, punc(#"("), expr, punc(#")"), statement),
+    sequence(optional(labelDef), kw_while, punc(#"("), optStatementExprBody, punc(#")"),
+        statement
+    ),
 );
 
 private var switchStatement = statementParser(
     x => SwitchStatement(x.2, x.4, x.5),
-    sequence(kw_switch, punc(#"("), expr, punc(#")"),
+    sequence(kw_switch, punc(#"("), optStatementExprBody, punc(#")"),
         oneOrMore(caseBlock),
         optional(elseBlock),
     ),
@@ -1351,6 +1363,11 @@ private var catchBlock = bounds(modify(
 private var exprStatement = statementParser(
     x => ExprStatement(x.0),
     sequence(expr, punc(#";")),
+);
+
+private var emptyStatement = statementParser(
+    x => EmptyStatement(),
+    punc(#";"),
 );
 
 // topLevelItem
