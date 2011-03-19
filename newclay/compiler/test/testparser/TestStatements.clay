@@ -52,7 +52,7 @@ overload foo() {
 
     if (x) {
         y;
-    } else if (z) {
+    } else if (z; z) {
         w;
     } else {
         v;
@@ -65,6 +65,7 @@ overload foo() {
         v;
 
     while (x) y;
+    while (x; y) z;
 
     @outer while (a)
         @middle for (b in c)
@@ -76,7 +77,7 @@ overload foo() {
         a;
     }
 
-    switch (x)
+    switch (x; x)
     case (y, z)
         a;
     case (z, w) {
@@ -106,6 +107,7 @@ overload foo() {
         d;
     }
 
+    ; ;
     {}
     { var x; }
 }

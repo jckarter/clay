@@ -126,8 +126,8 @@ TargetPattern -> IndexingPattern
 //
 
 ExprList -> comma_list(ExprListItem)
-ExprListItem -> ".." "(" ExprList ")"
-              | ".." Expr
+ExprListItem -> ".." Expr
+              | StatementExprList
               | Expr
 
 LiteralExpr -> BoolLiteral
@@ -140,12 +140,15 @@ AtomicExpr -> LiteralExpr
             | SimpleNameRef
             | PatternNameRef
             | BracketedExpr
+            | StatementExpr
             | TupleExpr
 
 NameRef -> NamePath
 SimpleNameRef -> Identifier
 PatternNameRef -> "'" Identifier
 BracketedExpr -> "(" Expr ")"
+StatementExpr -> "(" Statement+ Expr ")"
+StatementExprList -> "(" Statement+ ExprList ")"
 TupleExpr -> "(" ExprList? ")"
 
 PrefixExpr -> SignExpr
@@ -193,7 +196,7 @@ LambdaExpr -> LambdaArgs ("=>" | "->") LambdaCodeBody
 LambdaArgs -> Identifier
             | "(" ArgumentList ")"
 
-IfExpr -> "if" "(" Expr ")" Expr "else" Expr
+IfExpr -> "if" "(" Statement* Expr ")" Expr "else" Expr
 
 PairExpr -> identifier ":" Expr
 
@@ -226,6 +229,7 @@ Statement -> Block
            | SwitchStatement
            | TryStatement
            | ExprStatement
+           | EmptyStatement
 
 LabelDef -> "@" Identifier
 
@@ -242,22 +246,24 @@ BreakStatement -> "break" ("@" Identifier)? ";"
 
 ContinueStatement -> "continue" ("@" Identifier)? ";"
 
-IfStatement -> "if" "(" Expr ")" Statement
+IfStatement -> "if" "(" Statement* Expr ")" Statement
                ("else" Statement)?
 
 ForStatement -> LabelDef? "for" "(" ArgumentList "in" Expr ")" Statement
 
 StaticForStatement -> LabelDef? "static" "for" "(" Identifier "in" ExprList ")" Statement
 
-WhileStatement -> LabelDef? "while" "(" Expr ")" Statement
+WhileStatement -> LabelDef? "while" "(" Statement* Expr ")" Statement
 
-SwitchStatement -> "switch" "(" Expr ")"
+SwitchStatement -> "switch" "(" Statement* Expr ")"
                    ("case" "(" ExprList ")" Statement)+
                    ("else" Statement)?
 
 TryStatement -> "try" Block ("catch" "(" BindingName ")" Block)+
 
 ExprStatement -> Expr ";"
+
+EmptyStatement -> ";"
 
 
 //

@@ -201,6 +201,7 @@ alias ExprList = Vector[ExprListItem];
 
 variant ExprListItem = UnpackExpr
                      | Expr
+                     | StatementExprList
                      ;
 
 record UnpackExpr = ast(
@@ -221,6 +222,7 @@ variant Expr = BoolLiteral
              | NameRef
              | SimpleNameRef
              | PatternNameRef
+             | StatementExpr
              | TupleExpr
              | ArrayExpr
              | Call
@@ -296,6 +298,16 @@ overload SimpleNameRef(name:S) = SimpleNameRef(EnvRef(), Identifier(String(name)
 
 record PatternNameRef = ast(
     name: Identifier,
+);
+
+record StatementExprList = ast(
+    statements: Vector[Statement],
+    expr: ExprList,
+);
+
+record StatementExpr = ast(
+    statements: Vector[Statement],
+    expr: Expr,
 );
 
 record TupleExpr = ast(
@@ -403,7 +415,7 @@ overload LambdaExpr(captureKind, predicate, args, body)
     );
 
 record IfExpr = ast(
-    condition: Expr,
+    condition: StatementExpr,
     thenPart: Expr,
     elsePart: Expr,
 );
@@ -692,6 +704,7 @@ variant Statement = Block
                   | SwitchStatement
                   | TryStatement
                   | ExprStatement
+                  | EmptyStatement
                   ;
 
 record LabelDef = ast(
@@ -761,7 +774,7 @@ record ContinueStatement = ast(
 );
 
 record IfStatement = ast(
-    condition: Expr,
+    condition: StatementExpr,
     thenBody: Statement,
     elseBody: Maybe[Statement],
 );
@@ -782,12 +795,12 @@ record StaticForStatement = ast(
 
 record WhileStatement = ast(
     label: Maybe[LabelDef],
-    condition: Expr,
+    condition: StatementExpr,
     body: Statement,
 );
 
 record SwitchStatement = ast(
-    value: Expr,
+    value: StatementExpr,
     caseBlocks: Vector[CaseBlock],
     defaultBlock: Maybe[Statement],
 );
@@ -810,6 +823,8 @@ record CatchBlock = ast(
 record ExprStatement = ast(
     expr: Expr,
 );
+
+record EmptyStatement = ast();
 
 
 //

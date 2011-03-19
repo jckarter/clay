@@ -84,6 +84,7 @@ foo() {
     throw a;
 
     if (a) throw b else throw c;
+    if (a; b) throw c else throw d;
 
     x = y;
     x <-- y;
@@ -97,5 +98,12 @@ foo() {
     (foo: "bar");
     (foo: if (a) b else c);
 
-    label: (pair: "value");
+    (a);
+    (a,);
+    (a, b, c);
+    (..a);
+    (a, b, (; c, d));
+    (a; b; c);
+
+    pair: "value";
 }
