@@ -1,4 +1,5 @@
 println() { }
+println() = ;
 
 foo(x) { println(x); }
 private bar(x) { println(x); }
