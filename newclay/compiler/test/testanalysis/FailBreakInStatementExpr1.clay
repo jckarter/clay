@@ -1,0 +1,5 @@
+main() {
+    while (true) {
+        var x = (break; 1);
+    }
+}

@@ -1,0 +1,10 @@
+foo() = 1, 2;
+main() {
+    switch (var x, y = foo(); y)
+    case (1)
+        return x;
+    case (2)
+        return x;
+    else
+        return x;
+}

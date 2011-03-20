@@ -583,6 +583,17 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
     }
 }
 
+private verifyStatementExprStatements(statements) {
+    for (statement in statements)
+        if (not variantIs?(statement, ast.EmptyStatement))
+            genericError("statement expressions in static context not yet supported");
+}
+
+overload evaluateExpr(x:ast.StatementExpr, env) {
+    verifyStatementExprStatements(x.statements);
+    return evaluateExpr(x.expr, env);
+}
+
 
 //
 // evaluatePatternExpr
@@ -711,6 +722,11 @@ overload evaluateExprListItem(x:ast.UnpackExpr, env) {
     return evaluateMultiExpr(x.expr, env);
 }
 
+overload evaluateExprListItem(x:ast.StatementExprList, env) {
+    verifyStatementExprStatements(x.statements);
+
+    return evaluateExprList(x.exprList, env);
+}
 
 
 //
@@ -759,6 +775,10 @@ overload evaluateMultiExpr(x:ast.UnaryOpExpr, env) {
         genericError("operator not allowed in static context");
         return ValueList();
     }
+}
+overload evaluateMultiExpr(x:ast.StatementExpr, env) {
+    verifyStatementExprStatements(x.statements);
+    return evaluateMultiExpr(x.expr, env);
 }
 
 
