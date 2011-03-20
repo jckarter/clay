@@ -136,6 +136,31 @@ overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.NameRef) {
         );
 }
 
+private visitStatementExpr(r, expr) {
+    for (statement in expr.statements)
+        visitAST(r, statement);
+    visitAST(r, expr.expr);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, expr:ast.StatementExpr) {
+    var r2 = newVisitor(r);
+    visitStatementExpr(r2, expr);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, expr:ast.IfExpr) {
+    var r2 = newVisitor(r);
+    visitStatementExpr(r2, expr.condition);
+    visitAST(r2, expr.thenPart);
+    visitAST(r2, expr.elsePart);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, expr:ast.StatementExprList) {
+    var r2 = newVisitor(r);
+    for (statement in expr.statements)
+        visitAST(r, statement);
+    visitAST(r, expr.exprList);
+}
+
 overload visitASTNode(r:ResolveASTVisitor, nameRef:ast.SimpleNameRef) {
     if (variantIs?(nameRef.env, ast.UnresolvedEnvRef))
         nameRef.env = match(privateLookup(r.env, nameRef.name),
@@ -170,28 +195,32 @@ overload visitASTNode(r:ResolveASTVisitor, block:ast.Block) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.IfStatement) {
-    visitAST(r, stmt.condition);
-    visitAST(newVisitor(r), stmt.thenBody);
-    maybe(stmt.elseBody, elseBody ref=> { visitAST(newVisitor(r), elseBody); });
+    var r2 = newVisitor(r);
+    visitStatementExpr(r2, stmt.condition);
+    visitAST(newVisitor(r2), stmt.thenBody);
+    maybe(stmt.elseBody, elseBody ref=> { visitAST(newVisitor(r2), elseBody); });
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.SwitchStatement) {
-    visitAST(r, stmt.value);
+    var r2 = newVisitor(r);
+    visitStatementExpr(r2, stmt.value);
+
     for (caseBlock in stmt.caseBlocks) {
         visitAST(r, caseBlock.values);
-        visitAST(newVisitor(r), caseBlock.body);
+        visitAST(newVisitor(r2), caseBlock.body);
     }
-    maybe(stmt.defaultBlock, defaultBlock ref=> { visitAST(newVisitor(r), defaultBlock); });
+    maybe(stmt.defaultBlock, defaultBlock ref=> { visitAST(newVisitor(r2), defaultBlock); });
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.WhileStatement) {
-    visitAST(r, stmt.condition);
+    var r2 = newVisitor(r);
+    visitStatementExpr(r2, stmt.condition);
 
-    var subr = newVisitor(r);
+    var r3 = newVisitor(r2);
     maybe(stmt.label, label ref=> {
-        envAdd(subr.env, label.name, dummyValue(subr.depth));
+        envAdd(r3.env, label.name, dummyValue(r3.depth));
     });
-    visitAST(subr, stmt.body);
+    visitAST(r3, stmt.body);
 }
 
 overload visitASTNode(r:ResolveASTVisitor, stmt:ast.ForStatement) {

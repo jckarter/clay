@@ -1,0 +1,7 @@
+main() {
+    if (var x = 1; x) {
+        x;
+    } else {
+        x;
+    }
+}

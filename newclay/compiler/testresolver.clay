@@ -122,6 +122,12 @@ overload visitAST(v:TestResolverVisitor, node:ast.NameRef) {
     println(" references ", node.env);
 }
 
+overload visitAST(v:TestResolverVisitor, node:ast.SimpleNameRef) {
+    print(depth(v.depth));
+    print(node.name.str);
+    println(" references ", node.env);
+}
+
 main(args) {
     if (size(args) != 2) {
         println("usage: ", args[0], " <file>");
