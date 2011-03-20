@@ -302,7 +302,7 @@ record PatternNameRef = ast(
 
 record StatementExprList = ast(
     statements: Vector[Statement],
-    expr: ExprList,
+    exprList: ExprList,
 );
 
 record StatementExpr = ast(

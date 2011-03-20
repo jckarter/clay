@@ -474,6 +474,11 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[RTVa
 overload analyzeNode(s:SpecializationContext, env:Env, unpack:ast.UnpackExpr)
     = analyzeMultiExprSubnode(s, env, unpack.expr);
 
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StatementExprList) {
+    return analyzeStatementExprListNode(s, newEnv(env), expr);
+}
+
+
 
 //
 // analyzeNode(Expr instances)
@@ -539,6 +544,33 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = withOneResult(analyzeCallNode(s, env, expr));
+
+private analyzeStatementExprNode2(s, bc:BlockContext, statements, expr, subnodeFn) {
+    var pc = ProcContext(nothing(ir.BreakTargetId));
+    var lc = LoopContext();
+
+    for (stmt in statements)
+        if (statementNoReturn?(analyzeStatement(s, pc, bc, lc, stmt)))
+            return nothing(RTValues);
+
+    return subnodeFn(s, bc.env, expr);
+}
+
+overload analyzeStatementExprNode2(s, env:Env, statements, expr, subnodeFn) {
+    var bc = BlockContext(env);
+    return analyzeStatementExprNode2(s, bc, statements, expr, subnodeFn);
+}
+
+private analyzeStatementExprNode(s, env, expr)
+    = analyzeStatementExprNode2(s, env, expr.statements, expr.expr, analyzeSubnode);
+private analyzeMultiStatementExprNode(s, env, expr)
+    = analyzeStatementExprNode2(s, env, expr.statements, expr.expr, analyzeMultiExprSubnode);
+private analyzeStatementExprListNode(s, env, expr)
+    = analyzeStatementExprNode2(s, env, expr.statements, expr.exprList, analyzeNode);
+
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StatementExpr) {
+    return analyzeStatementExprNode(s, newEnv(env), expr);
+}
 
 analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTValues) {
     return withOneResult(analyzeCall(s, ast, callable, args));
@@ -674,8 +706,9 @@ private analyzeThrowExprNode(s, env, expr) {
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ThrowExpr)
     = analyzeThrowExprNode(s, env, expr);
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
-    = maybe(analyzeBoolSubnode(s, env, expr.condition),
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr) {
+    var bc = BlockContext(newEnv(env));
+    return maybe(analyzeBoolStatementExprNode(s, bc, expr.condition),
         condResult ref=> {
             var ifNode = ir.If(ir.ASTNode(expr), singleValue(condResult),
                 Vector[ir.Node](),
@@ -692,14 +725,14 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
             var elseS = subContext(s, ifNode.elseBody);
 
             try {
-                thenResult = analyzeSubnode(thenS, env, expr.thenPart);
+                thenResult = analyzeSubnode(thenS, bc.env, expr.thenPart);
             } catch (e:RecursiveAnalysisError) {
                 s.complete?^ = false;
                 thenRecursive? = true;
             }
 
             try {
-                elseResult = analyzeSubnode(elseS, env, expr.elsePart);
+                elseResult = analyzeSubnode(elseS, bc.env, expr.elsePart);
             } catch (e:RecursiveAnalysisError) {
                 s.complete?^ = false;
                 elseRecursive? = true;
@@ -713,6 +746,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.IfExpr)
             return outputs;
         },
     );
+}
 
 private unifyIfExprReferent(thenv, elsev) {
     if (thenv.kind == RT_VALUE_RVALUE and elsev.kind == RT_VALUE_RVALUE
@@ -857,18 +891,29 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StaticExpr) {
 //
 
 private record ProcContext (
-    currentTargetId: ir.BreakTargetId,
+    currentTargetId: Maybe[ir.BreakTargetId],
     recursiveReturn: Maybe[ast.ReturnStatement],
 );
 
-overload ProcContext() = ProcContext(ir.BreakTargetId(0), Maybe[ast.ReturnStatement]());
+overload ProcContext()
+    = ProcContext(Maybe(ir.BreakTargetId(0)), Maybe[ast.ReturnStatement]());
+overload ProcContext(targetId)
+    = ProcContext(targetId, Maybe[ast.ReturnStatement]());
 
 private returnTargetId(pc) = ir.BreakTargetId(0);
 
 private nextTargetId(pc) {
-    var id = pc.currentTargetId;
-    inc(pc.currentTargetId);
-    return id;
+    return maybe(pc.currentTargetId,
+        currentTargetId ref=> {
+            var id = currentTargetId;
+            inc(currentTargetId);
+            return id;
+        },
+        () ref=> {
+            genericError("blocks not allowed in statement expression");
+            return ir.BreakTargetId();
+        },
+    );
 }
 
 private record BlockContext (
@@ -1104,6 +1149,9 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.BindingStatement) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ReturnStatement) {
+    if (nothing?(pc.currentTargetId))
+        genericError("return cannot be used in a statement expression");
+
     try {
         maybe(analyzeNode(s, bc.env, stmt.values),
             results ref=> {
@@ -1125,8 +1173,16 @@ private envEntryToLabel(stmtName, entry) = match(entry,
     }
 );
 
-private breakTarget(stmtName, bc:BlockContext, lc:LoopContext, labelName:Maybe[ast.Identifier])
-    = maybe(labelName,
+private breakTarget(
+    stmtName,
+    pc:ProcContext,
+    bc:BlockContext,
+    lc:LoopContext,
+    labelName:Maybe[ast.Identifier]
+) {
+    if (nothing?(pc.currentTargetId))
+        genericError(StaticName(stmtName), " statement cannot be used in a statement expression");
+    return maybe(labelName,
         label ref=> fieldRef(
             envEntryToLabel(stmtName, privateLookup(bc.env, label)),
             IdentifierConcat(stmtName, #"Target"),
@@ -1139,16 +1195,17 @@ private breakTarget(stmtName, bc:BlockContext, lc:LoopContext, labelName:Maybe[a
             }
         ),
     );
+}
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.BreakStatement) {
-    var target = breakTarget(#"break", bc, lc, stmt.label);
+    var target = breakTarget(#"break", pc, bc, lc, stmt.label);
     //XXX clear infiniteLoop? at While analysis level: lc.infiniteLoop? = false;
     addSpecializedNode(s, ir.Break(stmt, target));
     return StatementTarget(target);
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.ContinueStatement) {
-    var target = breakTarget(#"continue", bc, lc, stmt.label);
+    var target = breakTarget(#"continue", pc, bc, lc, stmt.label);
     addSpecializedNode(s, ir.Continue(stmt, target));
     return StatementTarget(target);
 }
@@ -1203,26 +1260,28 @@ private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
     return branchStatementTarget(thenTarget, elseTarget);
 }
 
-overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement)
-    = stmtMaybe(analyzeBoolSubnode(s, bc.env, stmt.condition), condResult ref=> {
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.IfStatement) {
+    var bc2 = BlockContext(newEnv(bc.env));
+    return stmtMaybe(analyzeBoolStatementExprNode(s, bc2, stmt.condition), condResult ref=> {
         return analyzeBranch(
             s, stmt, singleValue(condResult), just?(stmt.elseBody),
             thenS ref=> analyzeStatement(
                 thenS,
                 pc,
-                BlockContext(newEnv(bc.env)),
+                BlockContext(newEnv(bc2.env)),
                 lc,
                 stmt.thenBody
             ),
             elseS ref=> analyzeStatement(
                 elseS,
                 pc,
-                BlockContext(newEnv(bc.env)),
+                BlockContext(newEnv(bc2.env)),
                 lc,
                 just(stmt.elseBody)
             ),
         );
     });
+}
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
     var blockNode = ir.Block(nextTargetId(pc));
@@ -1302,8 +1361,9 @@ private analyzeLoop(s, ast, pc, bc, condAnalysisFn, bodyAnalysisFn) {
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.WhileStatement) {
-    return analyzeLoop(s, stmt, pc, bc,
-        condS ref=> analyzeBoolSubnode(condS, bc.env, stmt.condition),
+    var bc2 = BlockContext(newEnv(bc.env));
+    return analyzeLoop(s, stmt, pc, bc2,
+        condS ref=> analyzeBoolStatementExprNode(condS, bc2, stmt.condition),
         (bodyS, subbc, sublc) ref=> analyzeStatement(bodyS, pc, subbc, sublc, stmt.body),
     );
 }
@@ -1430,9 +1490,10 @@ private analyzeCase(s, pc, bc, lc, testValue, stmt:ast.SwitchStatement, caseI:Si
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.SwitchStatement) {
-    return stmtMaybe(analyzeSubnode(s, bc.env, stmt.value), testValues ref=> {
+    var bc2 = BlockContext(newEnv(bc.env));
+    return stmtMaybe(analyzeStatementExprNode(s, bc2, stmt.value), testValues ref=> {
         assert(size(stmt.caseBlocks) > 0, "switch must have at least one case block");
-        return analyzeCase(s, pc, bc, lc,
+        return analyzeCase(s, pc, bc2, lc,
             addCapture(s, stmt, singleValue(testValues)),
             stmt, SizeT(0)
         );
@@ -1455,6 +1516,10 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ExprStatement) StatementTarget
         s.complete?^ = false;
         return StatementTarget();
     }
+}
+
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.EmptyStatement) StatementTarget {
+    return StatementTarget();
 }
 
 
@@ -1678,6 +1743,9 @@ overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.UnaryOp
 overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.ThrowExpr)
     = analyzeThrowExprNode(s, env, expr);
 
+overload analyzeMultiExprNode(s:SpecializationContext, env:Env, expr:ast.StatementExpr)
+    = analyzeMultiStatementExprNode(s, newEnv(env), expr);
+
 
 //
 // analyzeBoolSubnode
@@ -1699,6 +1767,15 @@ withBoolResult(x) {
 analyzeBoolSubnode(s, env, ast) = withLocation(ast, () ref=> {
     try {
         return withBoolResult(analyzeNode(s, env, ast));
+    } catch (e:RecursiveAnalysisError) {
+        s.complete?^ = false;
+        return Maybe(RTValues(addRvalue(s, newRvalue(boolType()))));
+    }
+});
+
+analyzeBoolStatementExprNode(s, env, ast) = withLocation(ast, () ref=> {
+    try {
+        return withBoolResult(analyzeStatementExprNode(s, env, ast));
     } catch (e:RecursiveAnalysisError) {
         s.complete?^ = false;
         return Maybe(RTValues(addRvalue(s, newRvalue(boolType()))));
@@ -2296,7 +2373,7 @@ private analyzeCallableReturns(s:Specialization, env, o:Overload) {
             throw ex;
     } catch (ex) {
         s.body = nothing(Vector[ir.Node]);
-        throw ex; 
+        throw ex;
     }
 }
 

@@ -1,0 +1,4 @@
+foo() = 1;
+bar() = true;
+
+main() = (foo(); bar(); 3.0);
