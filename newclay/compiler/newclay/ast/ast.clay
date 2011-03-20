@@ -224,7 +224,6 @@ variant Expr = BoolLiteral
              | PatternNameRef
              | StatementExpr
              | TupleExpr
-             | ArrayExpr
              | Call
              | Indexing
              | StaticIndexing
@@ -314,10 +313,6 @@ record TupleExpr = ast(
     args: ExprList,
 );
 
-record ArrayExpr = ast(
-    args: ExprList,
-);
-
 record Call = ast(
     expr: Expr,
     args: ExprList,
@@ -392,22 +387,25 @@ enum LambdaCaptureKind {
     LAMBDA_CAPTURE_BY_REFERENCE,
 }
 
-variant LambdaCodeBody = ExprList
+variant LambdaCodeBody = StatementReturnExprList
                        | Block
                        ;
 
+record StatementReturnExprList = ast(
+    statements: Vector[Statement],
+    exprList: ReturnExprList,
+);
+
 record LambdaExpr = ast(
     captureKind: LambdaCaptureKind,
-    predicate: Maybe[Expr],
     args: ArgumentList,
     body: LambdaCodeBody,
     capturedNames: HashMap[String, Tuple[]],
     capturedOrder: Vector[String],
 );
-overload LambdaExpr(captureKind, predicate, args, body)
+overload LambdaExpr(captureKind, args, body)
     = LambdaExpr(
         captureKind,
-        predicate,
         args,
         body,
         HashMap[String,Tuple[]](),

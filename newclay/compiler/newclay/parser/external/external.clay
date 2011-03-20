@@ -328,15 +328,10 @@ private var tupleExpr = exprParser(
     sequence(punc(#"("), optExprList, punc(#")")),
 );
 
-private var arrayExpr = exprParser(
-    x => ArrayExpr(move(x.1)),
-    sequence(punc(#"["), optExprList, punc(#"]")),
-);
-
 private var atomicExpr = choice(
     literalExpr, simpleNameRef, patternNameRef,
     bracketedExpr, statementExpr, tupleExpr,
-    arrayExpr,
+    lambdaExpr,
 );
 
 
@@ -561,27 +556,13 @@ private var orExpr = andOrOpChain(OrExpr, kw_or, andExpr);
 // lambda
 //
 
-private var lambdaArgs = choice(
-    modify(
-        x => VariadicList[Argument](
-            Vector[Argument](Argument(x)),
-            nothing(Argument),
-        ),
-        lambdaSingleArg,
-    ),
-    modify(
-        x => move(x.1),
-        sequence(punc(#"("), arguments, punc(#")")),
-    ),
+private var statementReturnExprList = modify(
+    x => StatementReturnExprList(x.0, x.1),
+    sequence(zeroOrMore(statement), optReturnExprList),
 );
 
-private var lambdaSingleArg = bounds(modify(
-    x => BoundArgument(nothing(ArgumentKind), move(x), nothing(Pattern)),
-    identifier
-));
-
 private var lambdaCodeBody = choice(
-    modify(x => LambdaCodeBody(ExprList(x)), exprListItem),
+    modify(LambdaCodeBody, statementReturnExprList),
     modify(LambdaCodeBody, block),
 );
 
@@ -591,8 +572,15 @@ private var lambdaCaptureKind = choice(
 );
 
 private var lambdaExpr = exprParser(
-    x => LambdaExpr(move(x.1), nothing(Expr), move(x.0), move(x.2)),
-    sequence(lambdaArgs, lambdaCaptureKind, lambdaCodeBody),
+    x => maybe(x.1,
+        args ref=> LambdaExpr(move(args.1), move(args.0), move(x.2)),
+        ()   ref=> LambdaExpr(LAMBDA_CAPTURE_BY_REFERENCE, ArgumentList(), move(x.2)),
+    ),
+    sequence(
+        punc(#"["),
+        optional(sequence(optArguments, lambdaCaptureKind)), lambdaCodeBody,
+        punc(#"]"),
+    ),
 );
 
 
@@ -633,7 +621,7 @@ private var throwExpr = exprParser(
 //
 
 private var expr2 = choice(
-    pairExpr, ifExpr, lambdaExpr, orExpr, throwExpr,
+    pairExpr, ifExpr, orExpr, throwExpr,
 );
 
 private expr(input) Maybe[Expr] { return expr2(input); }

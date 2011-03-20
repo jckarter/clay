@@ -142,6 +142,7 @@ AtomicExpr -> LiteralExpr
             | BracketedExpr
             | StatementExpr
             | TupleExpr
+            | LambdaExpr
 
 NameRef -> NamePath
 SimpleNameRef -> Identifier
@@ -189,12 +190,12 @@ AndExpr -> NotExpr ("and" NotExpr)*
 
 OrExpr -> AndExpr ("or" AndExpr)*
 
-LambdaCodeBody -> ExprListItem
+LambdaCodeBody -> Statement* ReturnExprList
                 | Block
 
-LambdaExpr -> LambdaArgs ("=>" | "->") LambdaCodeBody
-LambdaArgs -> Identifier
-            | "(" ArgumentList ")"
+LambdaArguments -> ArgumentList? ("=>" | "->")
+
+LambdaExpr -> "[" LambdaArguments? LambdaCodeBody "]"
 
 IfExpr -> "if" "(" Statement* Expr ")" Expr "else" Expr
 

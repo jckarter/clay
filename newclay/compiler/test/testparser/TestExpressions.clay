@@ -68,18 +68,8 @@ foo() {
     a or b;
     not a and b or c and not d;
 
-    x -> y;
-    (x, y) -> z;
-
-    x -> ..(y, z);
-
-    x -> a or b;
-
-    x -> { a; };
-
     if (a) b else c;
     if (a) b or c else d or e;
-    if (a) b -> c or d else e -> f or g;
 
     throw a;
 
