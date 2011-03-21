@@ -1,10 +1,10 @@
 import __primitives__.*;
 
-alias foo = a -> ..(
-        LambdaStateless?(x -> 1),
-        LambdaStateless?(x -> a),
-        LambdaStateless?(x => 1),
-        LambdaStateless?(x => a),
-    );
+alias foo = [a ->
+        LambdaStateless?([x -> 1]),
+        LambdaStateless?([x -> a]),
+        LambdaStateless?([x => 1]),
+        LambdaStateless?([x => a]),
+    ];
 
 #Main() = ..foo(0);

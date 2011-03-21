@@ -9,10 +9,10 @@ overload foo(#'a') = 'a';
 overload foo(#'X') | StaticError("I AM ERROR.") {}
 
 main() =
-    #Defined?(() -> foo(1_i8)),  // true
-    #Defined?(() -> foo(1_i64)), // true
-    #Defined?(() -> foo(1)),     // false
-    #Defined?(() -> foo('a')),   // true
-    #Defined?(() -> foo(#'a')),  // true
-    #Defined?(() -> foo(#'b')),  // false
-    #Defined?(() -> foo(#'X'));  // false
+    #Defined?([foo(1_i8)]),  // true
+    #Defined?([foo(1_i64)]), // true
+    #Defined?([foo(1)]),     // false
+    #Defined?([foo('a')]),   // true
+    #Defined?([foo(#'a')]),  // true
+    #Defined?([foo(#'b')]),  // false
+    #Defined?([foo(#'X')]);  // false

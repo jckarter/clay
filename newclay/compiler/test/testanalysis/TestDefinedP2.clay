@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-foo(a, b) Type(() -> a + b) | Defined?(() -> a + b) = a + b;
+foo(a, b) Type([a + b]) | Defined?([a + b]) = a + b;
 
 main() = foo(1, 2);

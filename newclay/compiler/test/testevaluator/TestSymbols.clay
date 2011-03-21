@@ -31,10 +31,10 @@ symbol RecordType;
 overload #RecordType(..'fields) = (RecordTag, FieldNames(..'fields), FieldTypes(..'fields));
 
 symbol FieldNames;
-overload #FieldNames(..'fields) = (..MapValues(f => StaticTupleElement(f, 0), ..'fields));
+overload #FieldNames(..'fields) = (..MapValues([f => StaticTupleElement(f, 0)], ..'fields));
 
 symbol FieldTypes;
-overload #FieldTypes(..'fields) = (..MapValues(f => StaticTupleElement(f, 1), ..'fields));
+overload #FieldTypes(..'fields) = (..MapValues([f => StaticTupleElement(f, 1)], ..'fields));
 
 symbol Record?;
 overload #Record?('t) =
