@@ -115,9 +115,14 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
 
 procedure transformLambdaCodeBody;
 overload transformLambdaCodeBody(body:Block) = CodeBody(body);
-overload transformLambdaCodeBody(body:ExprList) = CodeBody(ExprCodeBody(
-    map(item => ReturnExprListItem(nothing(ReturnExprKind), item), body),
-));
+overload transformLambdaCodeBody(body:StatementReturnExprList) {
+    var block = Block(nothing(LabelDef), body.statements);
+    if (not empty?(body.exprList))
+        push(block.statements, Statement(
+            transformed(body.exprList[0], ReturnStatement, body.exprList)
+        ));
+    return CodeBody(block);
+}
 
 private transformLambdaArgs(x:LambdaExpr) {
     var args = ArgumentList();
@@ -145,7 +150,7 @@ transformLambdaToOverload(x:LambdaExpr) {
             transformLambdaArgs(x),
             Vector[ReturnSpec](),
             nothing(Vector[Identifier]),
-            x.predicate,
+            nothing(Expr),
             body
         )
     );

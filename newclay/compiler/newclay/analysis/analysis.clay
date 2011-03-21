@@ -536,12 +536,6 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.TupleExpr) {
     );
 }
 
-overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.ArrayExpr) {
-    return maybe(analyzeExprListNode(s, env, expr.args),
-        args ref=> analyzeCallWithOneResult(s, expr, getHooks().arrayLiteral, args)
-    );
-}
-
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = withOneResult(analyzeCallNode(s, env, expr));
 
@@ -690,7 +684,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.NotExpr)
     });
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.LambdaExpr)
-    = analyzeLambdaValue(s, LambdaValue(expr, env));
+    = analyzeLambda(s, env, expr);
 
 private analyzeThrowExprNode(s, env, expr) {
     try {
@@ -1869,6 +1863,7 @@ addSpecializedLiteralCodeBody(s:SpecializationContext, env:Env, body:ast.Literal
     return Maybe(RTValues());
 }
 
+// XXX needs to handle potentially nonterminating tuple and lambda conversions
 singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = match(value,
     BoolValue, x ref=> addImmediate(s, boolType(), value),
     CharValue, x ref=> addImmediate(s, charType(), value),
@@ -1881,6 +1876,15 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
             v => v[0],
             () => {
                 genericError("tuple conversion does not terminate");
+                return RTValue();
+            },
+        );
+    },
+    StaticLambdaValue, x ref=> {
+        return maybe(analyzeLambda(s, x.env, x.value),
+            v => v[0],
+            () => {
+                genericError("lambda conversion does not terminate");
                 return RTValue();
             },
         );
@@ -2216,7 +2220,7 @@ overload callableOverloads(program, callable:Symbol)
     else
         Maybe(program.symbolOverloads);
 
-private lambdaOverload(l:LambdaValue) {
+private lambdaOverload(l:RuntimeLambdaValue) {
     return maybe(l.lambdaOverload,
         o ref=> o,
         () ref=> {
@@ -2227,7 +2231,7 @@ private lambdaOverload(l:LambdaValue) {
     );
 }
 
-overload callableOverloads(program, callable:LambdaValue) {
+overload callableOverloads(program, callable:RuntimeLambdaValue) {
     return Maybe(Vector[Overload](lambdaOverload(callable)));
 }
 
@@ -2396,7 +2400,7 @@ private callableInvokeTable(callable:Value) {
     return ref match(callable,
         Symbol, x => ref x.invokeTable,
         SymbolHead, x => ref x.invokeTable,
-        LambdaValue, x => ref x.invokeTable,
+        RuntimeLambdaValue, x => ref x.invokeTable,
         Primitive, x => {
             genericError("static primitive called in runtime context: ", x);
             return ref typeToLValue(InvokeTable);
@@ -2479,12 +2483,13 @@ analyzeGlobalConstructor() Maybe[Specialization] {
 
 
 //
-// analyzeLambdaValue
+// analyzeLambda
 //
 
-analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
-    var staticValue = singleAddSpecializedStaticValue(s, lambda.value, Value(lambda));
-    if (statelessLambdaValue?(lambda))
+analyzeLambda(s:SpecializationContext, env:Env, expr:ast.LambdaExpr) {
+    var lambda = RuntimeLambdaValue(expr, env);
+    var staticValue = singleAddSpecializedStaticValue(s, expr, Value(lambda));
+    if (statelessRuntimeLambda?(lambda))
         return Maybe(RTValues(staticValue));
 
     var captures = RTValues(staticValue);
@@ -2497,5 +2502,5 @@ analyzeLambdaValue(s:SpecializationContext, lambda:LambdaValue) {
             return nothing(RTValues);
         push(captures, just(capturedValues));
     }
-    return analyzeCallWithOneResult(s, lambda.value, getHooks().captureLambda, captures);
+    return analyzeCallWithOneResult(s, expr, getHooks().captureLambda, captures);
 }

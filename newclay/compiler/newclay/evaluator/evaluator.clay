@@ -474,10 +474,6 @@ overload evaluateExpr(x:ast.PatternNameRef, env) {
 overload evaluateExpr(x:ast.TupleExpr, env) {
     return Value(TupleValue(evaluateExprList(x.args, env)));
 }
-overload evaluateExpr(x:ast.ArrayExpr, env) {
-    genericError("array literals not supported in static context");
-    return Value();
-}
 overload evaluateExpr(x:ast.Call, env) {
     var callable = evaluateExpr(x.expr, env);
     return evaluateCallWithOneResult(callable, evaluateExprList(x.args, env));
@@ -513,7 +509,7 @@ overload evaluateExpr(x:ast.OrExpr, env) {
         return evaluateExpr(x.expr2, env);
 }
 overload evaluateExpr(x:ast.LambdaExpr, env) {
-    return Value(LambdaValue(x, env));
+    return Value(StaticLambdaValue(x, env));
 }
 overload evaluateExpr(x:ast.IfExpr, env) {
     if (evaluateBool(x.condition, env))
@@ -852,11 +848,15 @@ overload evaluateCall(x, args) {
 overload evaluateCall(x:Value, args) {
     return evaluateCall(*x, args);
 }
-overload evaluateCall(x:LambdaValue, args) {
+overload evaluateCall(x:StaticLambdaValue, args) {
     return withStaticCall(Value(x), args, () ref=> {
         var env2 = bindArgs(x.env, x.value.args, args);
         return evaluateLambdaCodeBody(*x.value.body, env2);
     });
+}
+overload evaluateCall(x:RuntimeLambdaValue, args) {
+    genericError("runtime lambda symbol cannot be evaluated in static context");
+    return ValueList();
 }
 overload evaluateCall(x:Symbol, args) {
     return memoizeStaticCall(x.evalTable, x.head.module.program, Value(x), args);
@@ -868,7 +868,20 @@ overload evaluateCall(x:Primitive, args) ValueList {
     return evaluatePrimitive(x.kind, args);
 }
 
-evaluateLambdaCodeBody(x:ast.ExprList, env) = evaluateExprList(x, env);
+evaluateLambdaCodeBody(x:ast.StatementReturnExprList, env) {
+    verifyStatementExprStatements(x.statements);
+    var exprList = ast.ExprList();
+    for (item in x.exprList) {
+        withLocation(item, () ref=> {
+            if (just?(item.kind))
+                genericError("reference returns not allowed in static lambda evaluation");
+        });
+        push(exprList, item.item);
+    }
+
+    return evaluateExprList(exprList, env);
+}
+
 overload evaluateLambdaCodeBody(x:ast.Block, env) {
     genericError("lambda block statement not allowed in static context");
     return ValueList();
@@ -1086,9 +1099,6 @@ overload unify(p:TuplePattern, x:Value) {
 
 overload unify(p:AliasPattern, x:Value) {
     if (unify(p.pattern, x)) {
-        observe(p.pattern);
-        observe(p.cellsPattern);
-        observe(p.argsPattern);
         var cellValues = ValueList();
         for (pat in p.cellsPattern.patterns)
             maybe(variantAs(pat, PatternCell).value,
@@ -1623,17 +1633,31 @@ private oneSymbol(args) {
     return variantAs(a, Symbol);
 }
 
-private oneLambda(args) {
+private oneStaticLambda(args) {
     var a = oneValue(args);
-    if (not variantIs?(a, LambdaValue))
+    if (variantIs?(a, RuntimeLambdaValue))
+        genericError("runtime lambda symbol cannot be evaluated in a static context");
+    if (not variantIs?(a, StaticLambdaValue))
         genericError("expecting a lambda, but received: ", a);
-    return variantAs(a, LambdaValue);
+    return variantAs(a, StaticLambdaValue);
+}
+
+private withOneLambda(args, f) {
+    var a = oneValue(args);
+    return forward ...match(a,
+        StaticLambdaValue, f,
+        RuntimeLambdaValue, f,
+        MatchDefault, x => {
+            genericError("expecting a lambda, but received: ", a);
+            return forward ...f(typeToRValue(StaticLambdaValue));
+        },
+    );
 }
 
 private nullary?(arglist) = empty?(arglist.items) and nothing?(arglist.variadicItem);
 
 private oneNullaryLambda(args) {
-    var l = oneLambda(args);
+    var l = oneStaticLambda(args);
     if (not nullary?(l.value.args))
         genericError("expecting a lambda with no arguments, but received: ", l);
     return l;
@@ -1883,35 +1907,39 @@ evaluatePrimitive(kind, args) {
         return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
     }
 
-    case PRIM_Lambda? : {
+    case PRIM_StaticLambda? : {
         var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, LambdaValue)));
+        return ValueList(BoolValue(variantIs?(a, StaticLambdaValue)));
+    }
+
+    case PRIM_LambdaSymbol? : {
+        var a = oneValue(args);
+        return ValueList(BoolValue(variantIs?(a, RuntimeLambdaValue)));
     }
 
     case PRIM_LambdaCapturesByReference? : {
-        var l = oneLambda(args);
-        return ValueList(BoolValue(l.value.captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
+        var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
+        return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
     }
 
     case PRIM_LambdaCapturesByValue? : {
-        var l = oneLambda(args);
-        return ValueList(BoolValue(l.value.captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
+        var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
+        return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
     }
 
     case PRIM_LambdaStateless? : {
-        var l = oneLambda(args);
-        return ValueList(BoolValue(empty?(l.value.capturedOrder)));
+        var stateless? = withOneLambda(args, l ref=> empty?(l.value.capturedOrder));
+        return ValueList(BoolValue(stateless?));
     }
 
     case PRIM_LambdaString : {
-        var l = oneLambda(args);
-        return ValueList(StringValue(ast.getSourceString(l.value)));
+        var sourceString = withOneLambda(args, l ref=> ast.getSourceString(l.value));
+        return ValueList(StringValue(move(sourceString)));
     }
 
     case PRIM_LambdaLocation : {
-        var l = oneLambda(args);
-
-        var path, line, column = ...ast.getFileLocation(l.value);
+        var path, line, column
+            = ...withOneLambda(args, l ref=> ...ast.getFileLocation(l.value));
 
         return ValueList(
             Value(StringValue(path)),
@@ -2099,6 +2127,15 @@ private callDefinedRTValue(type:Value) = match(type,
     },
 );
 
+private printQualifiedLambdaTo(stream, l) {
+    var path, line, column = ...ast.getFileLocation(l.value);
+    printTo(stream, "<lambda ",
+        path, "(", line, ",", column, ") ",
+        l.env.__impl__,
+        ">"
+    );
+}
+
 printQualifiedTo(stream, value:Value) {
     match(value,
         SymbolHead, s ref=> { printTo(stream, s.module.name, '.', s.astName.name.str); },
@@ -2114,13 +2151,11 @@ printQualifiedTo(stream, value:Value) {
             );
             printTo(stream, ')');
         },
-        LambdaValue, l ref=> {
-            var path, line, column = ...ast.getFileLocation(l.value);
-            printTo(stream, "<lambda ",
-                path, "(", line, ",", column, ") ",
-                l.env.__impl__,
-                ">"
-            );
+        StaticLambdaValue, l ref=> {
+            printQualifiedLambdaTo(stream, l);
+        },
+        RuntimeLambdaValue, l ref=> {
+            printQualifiedLambdaTo(stream, l);
         },
         MatchDefault, v ref=> { printTo(stream, v); },
     );
@@ -2144,7 +2179,7 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-private rtLambdaResults(l:LambdaValue) {
+private rtLambdaResults(l:StaticLambdaValue) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var returns = SpecializationReturns();

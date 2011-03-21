@@ -27,7 +27,7 @@ overload #MapTuple('f, 'a) = (..MapValues('f, ..StaticTupleElements('a)));
 symbol ReverseTuple;
 overload #ReverseTuple('a) =
     MapTuple(
-        i => StaticTupleElement('a, StaticSubtract(StaticTupleSize('a), StaticAdd(i,1))),
+        [i => StaticTupleElement('a, StaticSubtract(StaticTupleSize('a), StaticAdd(i,1)))],
         (..StaticIntegers(StaticTupleSize('a))),
     );
 

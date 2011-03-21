@@ -21,7 +21,7 @@ overload #StringChar('s, 'i) = StaticStringSlice('s, 'i, StaticAdd('i, 1));
 symbol ReverseString;
 overload #ReverseString('s) =
     StaticStringConcat(..MapValues(
-        i => StringChar('s, StaticSubtract(StaticStringSize('s), StaticAdd(i,1))),
+        [i => StringChar('s, StaticSubtract(StaticStringSize('s), StaticAdd(i,1)))],
         ..StaticIntegers(StaticStringSize('s)),
     ));
 

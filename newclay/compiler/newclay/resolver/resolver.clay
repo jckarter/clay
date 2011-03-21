@@ -68,7 +68,6 @@ overload addBindingList(r, bindingList:ast.MultipleBindingList) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
-    visitAST(r, lambda.predicate);
     visitAST(r, lambda.args);
 
     var subr = newVisitorForLambda(r, lambda);
@@ -155,6 +154,13 @@ overload visitASTNode(r:ResolveASTVisitor, expr:ast.IfExpr) {
 }
 
 overload visitASTNode(r:ResolveASTVisitor, expr:ast.StatementExprList) {
+    var r2 = newVisitor(r);
+    for (statement in expr.statements)
+        visitAST(r, statement);
+    visitAST(r, expr.exprList);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, expr:ast.StatementReturnExprList) {
     var r2 = newVisitor(r);
     for (statement in expr.statements)
         visitAST(r, statement);

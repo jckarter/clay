@@ -1,4 +1,4 @@
-adder(y:'T) = x -> { return 'T, y + x; };
+adder(y:'T) = [x -> 'T, y + x];
 
 main() {
     var f = adder(1), g = adder(1.0);
