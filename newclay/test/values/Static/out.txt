@@ -27,6 +27,15 @@ taking 4 values from 3
 '2'
 '3'
 taking 4 values from zero
+dropping 0 values from 3
+'1'
+'2'
+'3'
+dropping 2 values from 3
+'3'
+dropping 3 values from 3
+dropping 4 values from 3
+dropping 4 values from zero
 mapping odd and even values
 true
 false

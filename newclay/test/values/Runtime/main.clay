@@ -39,6 +39,17 @@ main() {
     show("taking 4 values from zero");
     show(..takeValues(#4));
 
+    show("dropping 0 values from 3");
+    show(..dropValues(#0, '1', '2', '3'));
+    show("dropping 2 values from 3");
+    show(..dropValues(#2, '1', '2', '3'));
+    show("dropping 3 values from 3");
+    show(..dropValues(#3, '1', '2', '3'));
+    show("dropping 4 values from 3");
+    show(..dropValues(#4, '1', '2', '3'));
+    show("dropping 4 values from zero");
+    show(..dropValues(#4));
+
     show("mapping odd and even values");
     show(..mapValues(odd?, 1, 2, 3, 4));
 
