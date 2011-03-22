@@ -5,11 +5,10 @@ import values.(allValues?, countValues, emptyValues?);
 import meta.lltypes.*;
 
 public import __primitives__.(
-    ExpressionReturns?       as Returns?,
-    ExpressionRefType        as RefType,
-    ExpressionType           as Type,
-    StaticExpressionDefined? as StaticDefined?,
-    ExpressionDefined?       as Defined?,
+    Returns?,
+    Type,
+    StaticDefined?,
+    Defined?,
 );
 
 
@@ -406,10 +405,10 @@ overload #BiggerNumberType(UInt, Int) = UInt;
 
 #CoordinateSequenceType?('S) = CallDefined?(begin, 'S) and CallDefined?(end, 'S);
 
-#IteratorTargetType('I) | IteratorType?('I) = Type(next(refValue('I)));
-#CoordinateTargetType('C) | CoordinateType?('C) = Type(dereference(constValue('C)));
-#SequenceIteratorType('S) | SequenceType?('S) = Type(iterator(constValue('S)));
-#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type(begin(constValue('S)));
+#IteratorTargetType('I) | IteratorType?('I) = Type([next(refValue('I))]);
+#CoordinateTargetType('C) | CoordinateType?('C) = Type([dereference(constValue('C))]);
+#SequenceIteratorType('S) | SequenceType?('S) = Type([iterator(constValue('S))]);
+#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type([begin(constValue('S))]);
 #SequenceElementType('S) | SequenceType?('S)
     = IteratorTargetType(SequenceIteratorType('S));
 
@@ -446,7 +445,7 @@ inline overload 'T() returned:'T
 }
 inline overload 'T(/*alias*/ forward orig:'U) returned:'T
     | NewType?('T)
-      and Defined?(..initializeFromUnsafe(refValue('U), orig))
+      and Defined?([refValue('U) <-- orig;])
       and 'U == OriginalType('T)
 {
     *returned <-- orig;

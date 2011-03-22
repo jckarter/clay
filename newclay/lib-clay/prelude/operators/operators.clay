@@ -25,13 +25,10 @@ import __primitives__.(
 
 
 //
-// tupleLiteral, arrayLiteral
+// tupleLiteral
 //
 
 inline tupleLiteral(forward ..elements:'T) = Tuple[..'T](..elements);
-inline arrayLiteral(forward x0:'T0, forward ..xs:'T)
-    | equalValues?('T0, ..'T)
-    = Array['T0, countValues('T0, ..'T)](x0, ..xs);
 
 
 
@@ -56,8 +53,8 @@ inline dereference(forward a:'T)
 // staticIndex, fieldRef
 //
 
-inline staticIndex(forward a, #'n)  | Defined?(a[#'n]) = forward a[#'n];
-inline fieldRef(forward a, #'field) | Defined?(a[#'field]) = forward a[#'field];
+inline staticIndex(forward a, #'n)  | Defined?([a[#'n]]) = forward a[#'n];
+inline fieldRef(forward a, #'field) | Defined?([a[#'field]]) = forward a[#'field];
 
 
 
@@ -102,17 +99,17 @@ private inline opFromAssign(#'assignFn, a:'A, b:'B) c:'A
     }
 }
 
-inline overload multiply(a:'A, b:'B) | Defined?(..multiplyAssign(a, b))
+inline overload multiply(a:'A, b:'B) | Defined?([multiplyAssign(a, b);])
     = opFromAssign(multiplyAssign, a, b);
-inline overload divide(a:'A, b:'B) | Defined?(..divideAssign(a, b))
+inline overload divide(a:'A, b:'B) | Defined?([divideAssign(a, b);])
     = opFromAssign(divideAssign, a, b);
-inline overload quotient(a:'A, b:'B) | Defined?(..quotientAssign(a, b))
+inline overload quotient(a:'A, b:'B) | Defined?([quotientAssign(a, b);])
     = opFromAssign(quotientAssign, a, b);
-inline overload remainder(a:'A, b:'B) | Defined?(..remainderAssign(a, b))
+inline overload remainder(a:'A, b:'B) | Defined?([remainderAssign(a, b);])
     = opFromAssign(remainderAssign, a, b);
-inline overload add(a:'A, b:'B) | Defined?(..addAssign(a, b))
+inline overload add(a:'A, b:'B) | Defined?([addAssign(a, b);])
     = opFromAssign(addAssign, a, b);
-inline overload subtract(a:'A, b:'B) | Defined?(..subtractAssign(a, b))
+inline overload subtract(a:'A, b:'B) | Defined?([subtractAssign(a, b);])
     = opFromAssign(subtractAssign, a, b);
 
 
@@ -160,7 +157,7 @@ inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
     = cSubtract(Int, a, b);
 
 inline overload index(a, n:'I)
-    | IntegerType?('I) and Defined?(..((a + n)^))
+    | IntegerType?('I) and Defined?([(a + n)^;])
     = forward ..((a + n)^);
 
 
@@ -169,16 +166,16 @@ inline overload index(a, n:'I)
 //
 
 symbol lesser?;
-lesserEquals?(a, b) | Defined?(b < a) = not b < a;
-greater?(a, b) | Defined?(b < a) = b < a;
-greaterEquals?(a, b) | Defined?(a < b) = not a < b;
+lesserEquals?(a, b) | Defined?([b < a]) = not b < a;
+greater?(a, b) | Defined?([b < a]) = b < a;
+greaterEquals?(a, b) | Defined?([a < b]) = not a < b;
 
 symbol equals?;
-notEquals?(a, b) | Defined?(a == b) = not a == b;
+notEquals?(a, b) | Defined?([a == b]) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
 ordered?(a, b)
-    | Defined?(a <= b) and Defined?(b <= a)
+    | Defined?([a <= b]) and Defined?([b <= a])
     = a <= b or b <= a;
 
 nan?(a:'A) | FloatType?('A) = a != a;
@@ -229,10 +226,10 @@ inline overload copyAssign(ref a:'A, b:'B) | AssignablePrimitiveTypes?('A, 'B)
 }
 
 symbol assign;
-inline overload assign(ref a:'T, b:'U) | Defined?(..copyAssign(a, b)) {
+inline overload assign(ref a:'T, b:'U) | Defined?([copyAssign(a, b);]) {
     copyAssign(a, b);
 }
-inline overload assign(ref a:'T, rvalue b:'T) | Defined?(..moveAssign(a, b)) {
+inline overload assign(ref a:'T, rvalue b:'T) | Defined?([moveAssign(a, b);]) {
     moveAssign(a, b);
 }
 
@@ -241,15 +238,15 @@ inline overload assign(ref a:'T, rvalue b:'T) | Defined?(..moveAssign(a, b)) {
 // arithmetic assignment
 //
 
-inline addAssign      (ref a, b) | Defined?(a  +  b) { a = a  +  b; }
-inline subtractAssign (ref a, b) | Defined?(a  -  b) { a = a  -  b; }
-inline multiplyAssign (ref a, b) | Defined?(a  *  b) { a = a  *  b; }
-inline divideAssign   (ref a, b) | Defined?(a  /  b) { a = a  /  b; }
-inline quotientAssign (ref a, b) | Defined?(a div b) { a = a div b; }
-inline remainderAssign(ref a, b) | Defined?(a mod b) { a = a mod b; }
+inline addAssign      (ref a, b) | Defined?([a  +  b]) { a = a  +  b; }
+inline subtractAssign (ref a, b) | Defined?([a  -  b]) { a = a  -  b; }
+inline multiplyAssign (ref a, b) | Defined?([a  *  b]) { a = a  *  b; }
+inline divideAssign   (ref a, b) | Defined?([a  /  b]) { a = a  /  b; }
+inline quotientAssign (ref a, b) | Defined?([a div b]) { a = a div b; }
+inline remainderAssign(ref a, b) | Defined?([a mod b]) { a = a mod b; }
 
-inline inc(ref a:'T) | Defined?(..addAssign     (a, 1)) { a += 1; }
-inline dec(ref a:'T) | Defined?(..subtractAssign(a, 1)) { a -= 1; }
+inline inc(ref a:'T) | Defined?([addAssign     (a, 1);]) { a += 1; }
+inline dec(ref a:'T) | Defined?([subtractAssign(a, 1);]) { a -= 1; }
 
 
 
@@ -327,9 +324,9 @@ inline rvalueToRefUnsafe(rvalue x:'T) ref r:'T
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-inline overload max(a:'A, b:'A) | Defined?(a < b)
+inline overload max(a:'A, b:'A) | Defined?([a < b])
     = if (a < b) b else a;
-inline overload min(a:'A, b:'A) | Defined?(a < b)
+inline overload min(a:'A, b:'A) | Defined?([a < b])
     = if (a < b) a else b;
 
 inline overload max(a:'A, b:'A) | FloatType?('A)
@@ -346,7 +343,7 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 //
 
 inline case?(value:'T, forward ..cases:'U)
-    | allValues?(u -> CallDefined?(equals?, 'T, u), ..'U)
+    | allValues?([u -> CallDefined?(equals?, 'T, u)], ..'U)
     = inValues?(value, ..cases);
 
 

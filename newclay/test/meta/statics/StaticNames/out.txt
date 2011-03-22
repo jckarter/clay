@@ -28,7 +28,6 @@ foo
 foo[show]
 --primitives
 StaticName
-ExpressionString
 --tuples
 (1, show, meta.statics)
 
@@ -62,7 +61,6 @@ __main__.foo
 __main__.foo[show.show]
 --primitives
 __primitives__.StaticName
-ExpressionString
 --tuples
 (1, show.show, meta.statics)
 

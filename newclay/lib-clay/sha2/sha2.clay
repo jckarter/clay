@@ -4,7 +4,7 @@ import libc.*;
 
 symbol SHA256 = RecordType(digest: Array[UInt8, 32]);
 
-private var sha256RoundConstants = [
+private var sha256RoundConstants = Array[UInt32, 64](
    0x428a2f98_u32, 0x71374491_u32, 0xb5c0fbcf_u32, 0xe9b5dba5_u32,
    0x3956c25b_u32, 0x59f111f1_u32, 0x923f82a4_u32, 0xab1c5ed5_u32,
    0xd807aa98_u32, 0x12835b01_u32, 0x243185be_u32, 0x550c7dc3_u32,
@@ -21,7 +21,7 @@ private var sha256RoundConstants = [
    0x391c0cb3_u32, 0x4ed8aa4a_u32, 0x5b9cca4f_u32, 0x682e6ff3_u32,
    0x748f82ee_u32, 0x78a5636f_u32, 0x84c87814_u32, 0x8cc70208_u32,
    0x90befffa_u32, 0xa4506ceb_u32, 0xbef9a3f7_u32, 0xc67178f2_u32,
-];
+);
 
 alias ChunkBytes = Array[UInt8,  64];
 alias ChunkWords = Array[UInt32, 16];
@@ -91,7 +91,7 @@ sha256(message: 'S) returned: SHA256
     var messageTailBegin = ContiguousCoordinate[UInt8](messageHeadEnd);
     var messageTailEnd   = ContiguousCoordinate[UInt8](end(message));
 
-    var state = [
+    var state = Array[UInt32, 8](
         0x6a09e667_u32,
         0xbb67ae85_u32,
         0x3c6ef372_u32,
@@ -100,7 +100,7 @@ sha256(message: 'S) returned: SHA256
         0x9b05688c_u32,
         0x1f83d9ab_u32,
         0x5be0cd19_u32,
-    ];
+    );
     var tempState = Array[UInt32, 8]();
     var chunkSpace = Array[UInt32, 64]();
 

@@ -97,7 +97,7 @@ inline overload end(v:Vector['T]) = v.data + v.size;
 
 inline push(ref v:Vector['T], forward ..elements:'TT)
     | countValues(..'TT) != 1
-      and allValues?(U -> CallDefined?(push, Ref[Vector['T]], U), ..'TT)
+      and allValues?([U -> CallDefined?(push, Ref[Vector['T]], U)], ..'TT)
 {
     reserve(v, countValues(..'TT));
     static for (/*forward*/ e in ..elements)

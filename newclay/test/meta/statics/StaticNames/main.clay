@@ -38,7 +38,6 @@ testFunction(fn) {
     show(fn(foo[show]));
     show("--primitives");
     show(fn(__primitives__.StaticName));
-    show(fn(__primitives__.ExpressionString));
     show("--tuples");
     show(fn(#(1, show, meta.statics)));
     show("");

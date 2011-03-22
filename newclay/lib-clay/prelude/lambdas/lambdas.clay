@@ -1,5 +1,6 @@
 public import __primitives__.(
-    Lambda?,
+    StaticLambda?,
+    LambdaSymbol?,
     LambdaCapturesByValue?,
     LambdaCapturesByReference?,
     LambdaStateless?,
@@ -14,19 +15,19 @@ symbol captureLambda;
 symbol lambdaCaptures;
 
 overload captureLambda(#'L, forward ..captures)
-    | Lambda?('L) and LambdaCapturesByReference?('L)
+    | LambdaSymbol?('L) and LambdaCapturesByReference?('L)
     = Lambda(#'L, captureValues(..captures));
 overload lambdaCaptures(l:Lambda['L, 'C])
-    | Lambda?('L) and LambdaCapturesByReference?('L)
+    | LambdaSymbol?('L) and LambdaCapturesByReference?('L)
     = forward ..capturedRefs(*l);
 
 overload captureLambda(#'L, forward ..captures)
-    | Lambda?('L) and LambdaCapturesByValue?('L)
+    | LambdaSymbol?('L) and LambdaCapturesByValue?('L)
     = Lambda(#'L, (..captures));
 overload lambdaCaptures(forward l:Lambda['L, 'C])
-    | Lambda?('L) and LambdaCapturesByValue?('L)
+    | LambdaSymbol?('L) and LambdaCapturesByValue?('L)
     = forward ..unpack(*l);
 
 overload call(forward l:Lambda['L, 'C], forward ..args)
-    | Lambda?('L)// and Defined?(..'L(..lambdaCaptures(l), ..args))
+    | LambdaSymbol?('L) and Defined?(['L(..lambdaCaptures(l), ..args);])
     = forward ..'L(..lambdaCaptures(l), ..args);
