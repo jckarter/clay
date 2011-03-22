@@ -1,0 +1,45 @@
+import meta.lambdas.*;
+import show.*;
+import values.*;
+
+main() {
+    var y = 2;
+    var stateless1 = [x -> x + 1];
+    var stateless2 = [x => x + 1];
+    var captureByRef = [x -> x + y];
+    var captureByVal = [x => x + y];
+
+    show(LambdaString(stateless1)); ////[x -> x + 1]
+    show(LambdaString(stateless2)); ////[x => x + 1]
+    show(LambdaString(captureByRef)); ////[x -> x + y]
+    show(LambdaString(captureByVal)); ////[x => x + y]
+
+    ////7
+    ////21
+    show(..dropValues(#1, ..LambdaLocation(stateless1)));
+    ////8
+    ////21
+    show(..dropValues(#1, ..LambdaLocation(stateless2)));
+    ////9
+    ////23
+    show(..dropValues(#1, ..LambdaLocation(captureByRef)));
+    ////10
+    ////23
+    show(..dropValues(#1, ..LambdaLocation(captureByVal)));
+
+    show(LambdaCapturesByValue?(stateless1)); ////false
+    show(LambdaCapturesByValue?(stateless2)); ////true
+    show(LambdaCapturesByValue?(captureByRef)); ////false
+    show(LambdaCapturesByValue?(captureByVal)); ////true
+
+    show(LambdaCapturesByReference?(stateless1)); ////true
+    show(LambdaCapturesByReference?(stateless2)); ////false
+    show(LambdaCapturesByReference?(captureByRef)); ////true
+    show(LambdaCapturesByReference?(captureByVal)); ////false
+
+    show(LambdaStateless?(stateless1)); ////true
+    show(LambdaStateless?(stateless2)); ////true
+    show(LambdaStateless?(captureByRef)); ////false
+    show(LambdaStateless?(captureByVal)); ////false
+
+}

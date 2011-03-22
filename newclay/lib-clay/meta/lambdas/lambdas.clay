@@ -1,8 +1,29 @@
 public import __primitives__.(
-    LambdaString,
-    LambdaLocation,
+    StaticLambda?,
     LambdaSymbol?,
-    LambdaCapturesByValue?,
-    LambdaCapturesByReference?,
-    LambdaStateless?,
 );
+
+import __primitives__;
+import meta.symbols.*;
+import values.*;
+
+private #LambdaProperty('p) = (LambdaProperty, 'p);
+private #LambdaProperty?('f) = SymbolWithTag?('f, LambdaProperty);
+private #LambdaPropertyPrimitive('f) = SymbolTagBody('f, LambdaProperty);
+
+overload #'f('L) | LambdaProperty?('f) and (StaticLambda?('L) or LambdaSymbol?('L))
+    = ..LambdaPropertyPrimitive('f)('L);
+overload #'f(Lambda['L, 'C]) | LambdaProperty?('f) and LambdaSymbol?('L)
+    = ..LambdaPropertyPrimitive('f)('L);
+
+overload 'f(#'L) | LambdaProperty?('f) and StaticDefined?([..'f('L)])
+    = forward ..mapValues(unpack, ..#'f('L));
+overload 'f(x:Lambda['L, 'C]) | LambdaProperty?('f) and LambdaSymbol?('L)
+    = forward ..mapValues(unpack, ..#'f('L));
+
+symbol LambdaString = LambdaProperty(__primitives__.LambdaString);
+symbol LambdaLocation = LambdaProperty(__primitives__.LambdaLocation);
+symbol LambdaCapturesByValue? = LambdaProperty(__primitives__.LambdaCapturesByValue?);
+symbol LambdaCapturesByReference? = LambdaProperty(__primitives__.LambdaCapturesByReference?);
+symbol LambdaStateless? = LambdaProperty(__primitives__.LambdaStateless?);
+
