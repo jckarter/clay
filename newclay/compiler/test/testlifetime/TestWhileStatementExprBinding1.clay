@@ -1,0 +1,10 @@
+foo?(x) = true;
+bar(x) {}
+
+main() {
+    while (var x = toNontrivialInt(1); foo?(x)) {
+        if (false)
+            break;
+        bar(x);
+    }
+}
