@@ -43,10 +43,10 @@ overload #Fields('T)
     = ..SymbolTagBody('T, RecordType);
 
 #FieldNames('T) | StaticCallDefined?(Fields, 'T)
-    = ..mapValues(x -> x.0, ..Fields('T));
+    = ..mapValues([x -> x.0], ..Fields('T));
 
 #FieldTypes('T) | StaticCallDefined?(Fields, 'T)
-    = ..mapValues(x -> x.1, ..Fields('T));
+    = ..mapValues([x -> x.1], ..Fields('T));
 
 overload #LLType('T) | CompositeType?('T) = LLTupleType[..Fields('T)];
 
@@ -114,7 +114,7 @@ inline overload initializeRecord(#'T, forward ..fields:'F) returned:'T
 }
 
 inline overload 'T(forward ..args)
-    | RecordType?('T) and Defined?(initializeRecord('T, ..args))
+    | RecordType?('T) and Defined?([initializeRecord('T, ..args)])
     = initializeRecord('T, ..args);
 
 

@@ -3,7 +3,7 @@ import sequences.*;
 import show.*;
 
 main() {
-    alias SIZE = 4u;
+    const SIZE = 4u;
 
     var a = allocateRawValues(UInt, SIZE);
     var b = allocateRawValues(UInt, SIZE);

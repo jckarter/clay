@@ -40,7 +40,7 @@ overload iterator(forward x:'I) | IteratorType?('I) = forward x;
 overload iterator(x:'S) | CoordinateSequenceType?('S)
     = CoordinateRange(begin(x), end(x));
 
-overload size(x:'S) | CoordinateSequenceType?('S) and Defined?(end(x) - begin(x))
+overload size(x:'S) | CoordinateSequenceType?('S) and Defined?([end(x) - begin(x)])
     = UInt(end(x) - begin(x));
 
 

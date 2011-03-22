@@ -4,7 +4,7 @@ import vectors.*;
 main() {
     var v = Vector[Int](2, 3, 5);
 
-    var f = x -> pop(v) + x;
+    var f = [x -> pop(v) + x];
 
     show(f(1)); ////6
     show(f(1)); ////4

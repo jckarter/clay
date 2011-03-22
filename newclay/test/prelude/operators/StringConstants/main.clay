@@ -3,7 +3,7 @@ import show.*;
 main() {
     var a = "a", a2 = "a", ab = "ab", b = "b";
 
-    show(#Defined?(StringConstant())); ////false
+    show(#Defined?([StringConstant()])); ////false
 
     show("a" == "a"); ////true
     show(a == "a"); ////true

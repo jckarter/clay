@@ -3,8 +3,8 @@ import show.*;
 main() {
     var x = (1, (true, 3.0), '4');
 
-    show(#Type(x)); ////Tuple[Int, Tuple[Bool, Float64], Char]
-    show(#BitwiseZeroInitializedType?(Type(x))); ////true
+    show(#Type([x])); ////Tuple[Int, Tuple[Bool, Float64], Char]
+    show(#BitwiseZeroInitializedType?(Type([x]))); ////true
 
     show(x.0); ////1
     show(x.1.0); ////true
@@ -26,11 +26,11 @@ main() {
     show(x.2); ////'5'
 
     var y = Tuple[Int, Tuple[Bool, Float64], Char](1, (false, 3.0), '5');
-    show(#Type(y)); ////Tuple[Int, Tuple[Bool, Float64], Char]
+    show(#Type([y])); ////Tuple[Int, Tuple[Bool, Float64], Char]
     show(x == y); ////true
 
     var z = Tuple(1, (false, 3.0), '5');
-    show(#Type(z)); ////Tuple[Int, Tuple[Bool, Float64], Char]
+    show(#Type([z])); ////Tuple[Int, Tuple[Bool, Float64], Char]
     show(x == z); ////true
 
 
@@ -49,7 +49,7 @@ main() {
     show(x.1.1); ////4
     show(x.2); ////'6'
 
-    var a = (#Type(x))();
+    var a = (#Type([x]))();
 
     show(a.0); ////0
     show(a.1.0); ////false

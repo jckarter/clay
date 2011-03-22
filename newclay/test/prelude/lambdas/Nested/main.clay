@@ -1,7 +1,7 @@
 import show.*;
 import vectors.*;
 
-foo(x) = y -> z -> x + y + z;
+foo(x) = [y -> [z -> x + y + z]];
 
 main() {
     var f = foo(2);

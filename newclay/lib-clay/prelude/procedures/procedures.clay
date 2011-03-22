@@ -22,7 +22,7 @@ overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
 inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W)
     | VariadicBinaryOperatorProcedure?('fn)
       and CallDefined?('fn, 'X, 'Y)
-      and CallDefined?('fn, Type('fn(x, y)), 'Z, ..'W)
+      and CallDefined?('fn, Type(['fn(x, y)]), 'Z, ..'W)
     = forward 'fn('fn(x, y), z, ..w);
 
 inline overload 'fn(forward x)
