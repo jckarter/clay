@@ -219,7 +219,7 @@ inline overload remove(ref v:Vector['T], i:'I, j:'J)
 //
 
 private requestCapacity(ref v:Vector['T], capacity:UInt) {
-    assert(capacity >= v.size);
+    assert([capacity >= v.size]);
     if (capacity < v.capacity)
         return;
     var n = max(capacity, 16u);

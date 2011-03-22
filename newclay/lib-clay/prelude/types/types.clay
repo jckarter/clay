@@ -13,6 +13,12 @@ public import __primitives__.(
 
 
 //
+// DefinedWithType?
+
+#DefinedWithType?('f, ..'TT) = Defined?('f) and (..Type('f)) == (..'TT);
+
+
+//
 // TypeSize, TypeAlign
 //
 
