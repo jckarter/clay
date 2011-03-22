@@ -48,6 +48,18 @@ inline overload takeValues(#'n, forward x, forward ..xs)
     | StaticInt?('n) and 'n > 0
     = forward x, forward ..takeValues(#('n - 1), ..xs);
 
+symbol dropValues;
+overload #dropValues('n) | StaticInt?('n) = ;
+overload #dropValues(0, ..'xs) = ..'xs;
+overload #dropValues('n, 'x, ..'xs)
+    | StaticInt?('n) and 'n > 0
+    = ..dropValues('n - 1, ..'xs);
+inline overload dropValues(#'n) | StaticInt?('n) = ;
+inline overload dropValues(#0, forward ..xs) = forward ..xs;
+inline overload dropValues(#'n, forward x, forward ..xs)
+    | StaticInt?('n) and 'n > 0
+    = forward ..dropValues(#('n - 1), ..xs);
+
 symbol mapValues;
 overload #mapValues('f) = ;
 overload #mapValues('f, 'x, ..'xs) = ..'f('x), ..mapValues('f, ..'xs);
