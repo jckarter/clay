@@ -1,0 +1,4 @@
+terminating() {}
+nonterminating() { throw 0; }
+
+main() = 1, (terminating(); nonterminating(); terminating(); 2, 3);
