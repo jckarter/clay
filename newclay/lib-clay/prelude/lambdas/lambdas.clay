@@ -1,13 +1,7 @@
-public import __primitives__.(
-    StaticLambda?,
-    LambdaSymbol?,
-    LambdaCapturesByValue?,
-    LambdaCapturesByReference?,
-    LambdaStateless?,
-);
+import meta.lambdas.*;
 import values.(captureValues, capturedRefs);
 
-private symbol Lambda['L, 'C] = NewType('C);
+symbol Lambda['L, 'C] = NewType('C);
 
 overload Lambda(#'L, captures:'C) = Lambda['L, 'C](captures);
 
@@ -31,3 +25,7 @@ overload lambdaCaptures(forward l:Lambda['L, 'C])
 overload call(forward l:Lambda['L, 'C], forward ..args)
     | LambdaSymbol?('L) and Defined?(['L(..lambdaCaptures(l), ..args);])
     = forward ..'L(..lambdaCaptures(l), ..args);
+
+#LambdaType?('T) = false;
+overload #LambdaType?(Static['L]) | LambdaSymbol?('L) and LambdaStateless?('L) = true;
+overload #LambdaType?(Lambda['L, 'C]) | LambdaSymbol?('L) and Type?('C) = true;
