@@ -385,6 +385,7 @@ record Primitive = referenceType(
 
 enum RTPrimitiveKind {
     RTPRIM_makeCodePointer,
+    RTPRIM_callCodePointer,
 }
 
 record RTPrimitive = referenceType(

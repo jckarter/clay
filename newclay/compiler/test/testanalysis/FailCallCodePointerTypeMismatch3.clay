@@ -1,0 +1,9 @@
+import __primitives__.(makeCodePointer, callCodePointer);
+
+bar(x) { return x; }
+
+main() {
+    var barp = makeCodePointer(bar, Int);
+
+    return callCodePointer(barp, 1.0);
+}

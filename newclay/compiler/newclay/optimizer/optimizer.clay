@@ -191,6 +191,14 @@ overload coalescedNode(cmap:RTValueMap, node:ir.Call)
         node.specialization,
     );
 
+overload coalescedNode(cmap:RTValueMap, node:ir.DereferenceCall)
+    = ir.DereferenceCall(
+        node.ast,
+        coalesced(cmap, node.codePointer),
+        coalescedVars(cmap, node.inputs),
+        coalescedVars(cmap, node.outputs),
+    );
+
 overload coalescedNode(cmap:RTValueMap, node:ir.Block) ir.Block
     = ir.Block(
         node.label,
