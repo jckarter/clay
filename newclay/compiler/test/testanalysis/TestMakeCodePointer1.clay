@@ -1,0 +1,8 @@
+import __primitives__.*;
+
+foo(x:Int) { return 1; }
+overload foo(y:Float64) { return 2; }
+
+main() {
+    return makeCodePointer(foo, Int), makeCodePointer(foo, Float64);
+}

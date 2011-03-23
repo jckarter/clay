@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = makeCodePointer(false);
