@@ -570,9 +570,23 @@ analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTVa
     return withOneResult(analyzeCall(s, ast, callable, args));
 }
 
-analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues) {
-    return addSpecializedCall(s, ast, args, analyzeCallable(callable, args));
+analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
+    switch (primitive.kind) {
+    case RTPRIM_makeCodePointer:
+        genericError("makeCodePointer is not yet supported");
+        return nothing(RTValues);
+
+    default:
+        assert(false, "invalid runtime primitive");
+        return nothing(RTValues);
+    }
 }
+
+analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues)
+    = match(callable,
+        RTPrimitive, p ref=> analyzeRTPrimitive(s, ast, p, args),
+        MatchDefault, x ref=> addSpecializedCall(s, ast, args, analyzeCallable(callable, args)),
+    );
 
 private ifStaticValue(s, env, expr, thenFn, elseFn)
     = maybe(analyzeSubnode(s, env, expr),
@@ -1710,10 +1724,7 @@ private analyzeCallNode(s:SpecializationContext, env:Env, expr:ast.Call)
     = ifStaticValue(s, env, expr.expr,
         callable ref=> {
             return maybe(analyzeNode(s, env, expr.args),
-                inputs ref=> addSpecializedCall(
-                    s, expr, inputs,
-                    analyzeCallable(callable, inputs)
-                ),
+                inputs ref=> analyzeCall(s, expr, callable, inputs),
             );
         },
         callableResult ref=> maybe(analyzeNode(s, env, expr.args), inputs ref=> {
@@ -2410,6 +2421,10 @@ private callableInvokeTable(callable:Value) {
         RuntimeLambdaValue, x => ref x.invokeTable,
         Primitive, x => {
             genericError("static primitive called in runtime context: ", x);
+            return ref typeToLValue(InvokeTable);
+        },
+        RTPrimitive, x => {
+            assert(false, "runtime primitive should be handled before consulting invoke table");
             return ref typeToLValue(InvokeTable);
         },
         MatchDefault, x => {
