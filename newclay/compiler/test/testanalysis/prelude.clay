@@ -127,6 +127,15 @@ overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
 overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
     = LLCodePointerType['A, 'V, 'I, 'O];
 
+
+//
+// CodePointer
+//
+
+symbol CodePointer['Inputs, 'Outputs];
+overload #Type?(CodePointer['I, 'O]) = true;
+overload #LLType(CodePointer['I, 'O])
+    = LLCodePointerType[CdeclABI, false, 'I, 'O]; // XXX
 
 
 //

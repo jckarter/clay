@@ -91,6 +91,7 @@ record ClayHooks (
     Float64: Value,
     Static: Value,
     Pointer: Value,
+    CodePointer: Value,
     ExternalCodePointer: Value,
     StringConstant: Value,
 
