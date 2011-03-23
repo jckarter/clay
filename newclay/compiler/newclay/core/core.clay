@@ -382,12 +382,28 @@ record Primitive = referenceType(
     kind: PrimitiveKind,
 );
 
-primitiveName(kind:PrimitiveKind) {
+enum RTPrimitiveKind {
+    RTPRIM_makeCodePointer,
+}
+
+record RTPrimitive = referenceType(
+    kind: RTPrimitiveKind,
+);
+
+procedure primitiveName;
+overload primitiveName(kind:PrimitiveKind) {
     var s = printString(kind);
     assert(beginsWith?(s, "PRIM_"));
     return sliceFrom(s, size("PRIM_"));
 }
 overload primitiveName(p:Primitive) = primitiveName(p.kind);
+
+overload primitiveName(kind:RTPrimitiveKind) {
+    var s = printString(kind);
+    assert(beginsWith?(s, "RTPRIM_"));
+    return sliceFrom(s, size("RTPRIM_"));
+}
+overload primitiveName(p:RTPrimitive) = primitiveName(p.kind);
 
 
 //
@@ -860,6 +876,7 @@ variant Value = BoolValue
               | SymbolHead
               | Symbol
               | Primitive
+              | RTPrimitive
               ;
 
 overload Value() = Value(BoolValue());
@@ -1208,6 +1225,10 @@ overload printTo(stream, x:ModuleValue) {
     );
 }
 overload printTo(stream, x:Primitive) {
+    printTo(stream, primitiveName(x.kind));
+}
+
+overload printTo(stream, x:RTPrimitive) {
     printTo(stream, primitiveName(x.kind));
 }
 

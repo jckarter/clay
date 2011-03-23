@@ -22,6 +22,12 @@ private loadPrimitivesModule(program:Program) {
         var entry = Primitive(kind);
         envAdd(module.publicEnv, name, Value(entry));
     }
+    for (i in range(EnumMemberCount(RTPrimitiveKind))) {
+        var kind = RTPrimitiveKind(i);
+        var name = ast.Identifier(primitiveName(kind));
+        var entry = RTPrimitive(kind);
+        envAdd(module.publicEnv, name, Value(entry));
+    }
     return module;
 }
 
