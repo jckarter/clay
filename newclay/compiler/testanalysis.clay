@@ -31,6 +31,20 @@ printNode(depth, node) {
 
 asPtr(x) = RawPointer(referencePtr(x).ptr);
 
+printCallOutputs(depth, mOutputs) {
+    maybe(mOutputs,
+        outputs ref=> {
+            for (v in outputs) {
+                printDepth(depth);
+                print("out ");
+                print(if (v.returnByRef?) "ref   " else "value ");
+                printVar(v.value);
+            }
+        },
+        () ref=> { printDepth(depth); println("nonterminating"); }
+    );
+}
+
 procedure printNodeData;
 
 overload printNodeData(depth, node:ir.LiteralCodeBody) {
@@ -45,17 +59,16 @@ overload printNodeData(depth, node:ir.Call) {
         node.specialization.callable, ArgumentList(node.specialization.args)
     );
     printVars(depth+1, "in  ", node.inputs);
-    maybe(node.outputs,
-        outputs ref=> {
-            for (v in outputs) {
-                printDepth(depth+1);
-                print("out ");
-                print(if (v.returnByRef?) "ref   " else "value ");
-                printVar(v.value);
-            }
-        },
-        () ref=> { printDepth(depth); println("nonterminating"); }
-    );
+    printCallOutputs(depth+1, node.outputs);
+}
+
+overload printNodeData(depth, node:ir.DereferenceCall) {
+    println(LeafTypeName(node.ast));
+    printDepth(depth+1);
+    print("code pointer ");
+    printVar(node.codePointer);
+    printVars(depth+1, "in  ", node.inputs);
+    printCallOutputs(depth+1, node.outputs);
 }
 
 overload printNodeData(depth, node:ir.If) {

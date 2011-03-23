@@ -19,6 +19,7 @@ record OutputVariable (
 
 variant Node = LiteralCodeBody
              | Call
+             | DereferenceCall
              | Not
              | AddressOf
              | AddressOfCode
@@ -84,6 +85,13 @@ record Call = referenceType(
     inputs: RTValues,
     outputs: Maybe[Vector[OutputVariable]],
     specialization: Specialization,
+);
+
+record DereferenceCall = referenceType(
+    ast: ASTNode,
+    codePointer: RTValue,
+    inputs: RTValues,
+    outputs: Maybe[Vector[OutputVariable]],
 );
 
 record If = referenceType(
@@ -173,11 +181,14 @@ overload pushNode(body, n:T) { push(body, Node(n)); }
 procedure nodeOutputs;
 procedure nodeInputs;
 
-overload nodeOutputs(node) = RTValues();
-overload nodeOutputs(node:Call) = maybe(node.outputs,
+private callOutputs(mOutputs) = maybe(mOutputs,
     outputs => map(o => o.value, outputs),
     () => RTValues()
 );
+
+overload nodeOutputs(node) = RTValues();
+overload nodeOutputs(node:Call) = callOutputs(node.outputs);
+overload nodeOutputs(node:DereferenceCall) = callOutputs(node.outputs);
 overload nodeOutputs(node:Not) = RTValues(node.output);
 overload nodeOutputs(node:AddressOf) = RTValues(node.output);
 overload nodeOutputs(node:AddressOfCode) = RTValues(node.output);
@@ -189,6 +200,11 @@ overload nodeOutputs(node:Node) = nodeOutputs(*node);
 
 overload nodeInputs(node) = RTValues();
 overload nodeInputs(node:Call) = node.inputs;
+overload nodeInputs(node:DereferenceCall) {
+    var inputs = RTValues(node.codePointer);
+    push(inputs, node.inputs);
+    return move(inputs);
+}
 overload nodeInputs(node:If) = RTValues(node.condition);
 overload nodeInputs(node:Not) = RTValues(node.input);
 overload nodeInputs(node:AddressOf) = RTValues(node.input);

@@ -1,0 +1,11 @@
+import __primitives__.(makeCodePointer, callCodePointer);
+
+bar(ref x) { x += 1; return ref x; }
+
+main() {
+    var barp = makeCodePointer(bar, Ref[Int]);
+
+    const x = 1;
+
+    return callCodePointer(barp, x);
+}

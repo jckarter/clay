@@ -2200,10 +2200,15 @@ rtReturnToRefType(v) {
     ));
 }
 
-refTypeToRTArgument(type:Value) = match(type,
+private _refTypeToRTValue(
+    type:Value,
+    referent:RTValueReferent,
+    defaultKind:RTValueKind,
+    defaultReferent:RTValueReferent
+) = match(type,
     Symbol, typeSymbol ref=> {
         if (symbolType?(typeSymbol))
-            return RTValue(RT_VALUE_CONST, type, LocalVariable());
+            return RTValue(defaultKind, type, defaultReferent);
         else {
             var refHead = Value(typeSymbol.head);
             if (size(typeSymbol.params) != 1)
@@ -2217,11 +2222,11 @@ refTypeToRTArgument(type:Value) = match(type,
                 genericError("arguments must be valid types");
 
             if (refHead == getHooks().Ref)
-                return RTValue(RT_VALUE_REF, refTypeSymbol, LocalVariable());
+                return RTValue(RT_VALUE_REF, refTypeSymbol, referent);
             if (refHead == getHooks().Rvalue)
-                return RTValue(RT_VALUE_RVALUE, refTypeSymbol, LocalVariable());
+                return RTValue(RT_VALUE_RVALUE, refTypeSymbol, referent);
             if (refHead == getHooks().Const)
-                return RTValue(RT_VALUE_CONST, refTypeSymbol, LocalVariable());
+                return RTValue(RT_VALUE_CONST, refTypeSymbol, referent);
 
             genericError("arguments must be valid types");
             return RTValue();
@@ -2233,3 +2238,15 @@ refTypeToRTArgument(type:Value) = match(type,
     },
 );
 
+refTypeToRTArgument(type:Value) = _refTypeToRTValue(
+    type,
+    RTValueReferent(LocalVariable()),
+    RT_VALUE_CONST,
+    RTValueReferent(LocalVariable()),
+);
+refTypeToRTReturn(type:Value) = _refTypeToRTValue(
+    type,
+    RTValueReferent(ReferenceVariable()),
+    RT_VALUE_RVALUE,
+    RTValueReferent(LocalVariable()),
+);
