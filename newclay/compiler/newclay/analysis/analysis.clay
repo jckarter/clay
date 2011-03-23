@@ -572,13 +572,31 @@ analyzeCallWithOneResult(s:SpecializationContext, ast, callable:Value, args:RTVa
 
 analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
     switch (primitive.kind) {
-    case RTPRIM_makeCodePointer:
-        genericError("makeCodePointer is not yet supported");
-        return nothing(RTValues);
+    case RTPRIM_makeCodePointer: {
+        if (size(args) < 1)
+            genericError("makeCodePointer requires at least one argument");
+        var callable = staticTypeValue(args[0].type);
+        var inputTypes = ValueList(
+            mapped(x => staticTypeValue(x.type), slicedFrom(args, 1))
+        );
+        var callArgs = map(refTypeToRTArgument, inputTypes);
 
-    default:
+        var specialization = analyzeCallable(callable, callArgs);
+
+        var outputTypes = ValueList(
+            mapped(rtReturnToRefType, just(specialization.results, RTValues()))
+        );
+        var resultType = codePointerType(inputTypes, outputTypes);
+        var result = RTValue(RT_VALUE_RVALUE, resultType, LocalVariable());
+        addSpecializedNode(s, ir.AddressOfCode(ir.ASTNode(ast), specialization, result));
+        return Maybe(RTValues(result));
+    }
+
+    default: {
         assert(false, "invalid runtime primitive");
         return nothing(RTValues);
+    }
+
     }
 }
 

@@ -169,6 +169,43 @@ podType?(x:Value) {
 
 
 //
+// codePointerType, codePointerType?
+//
+
+codePointerType(inputs:ValueList, outputs:ValueList) {
+    return evaluateIndexing(getHooks().CodePointer, ValueList(
+        Value(TupleValue(inputs)),
+        Value(TupleValue(outputs)),
+    ));
+}
+
+codePointerType?(x:Value) = match(x,
+    Symbol, y => Value(y.head) == getHooks().CodePointer and size(y.params) == 2,
+    MatchDefault, y => false,
+);
+
+codePointerInputTypes(x:Value) {
+    if (not codePointerType?(x))
+        genericError("not a code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return match(sym.params[0],
+        TupleValue, x => x.elements,
+        MatchDefault, x => ValueList(x),
+    );
+}
+
+codePointerOutputTypes(x:Value) {
+    if (not codePointerType?(x))
+        genericError("not a code pointer type: ", x);
+    var sym = typeSymbol(x);
+    return match(sym.params[1],
+        TupleValue, x => x.elements,
+        MatchDefault, x => ValueList(x),
+    );
+}
+
+
+//
 // externalCodePointerType, externalCodePointerType?
 //
 

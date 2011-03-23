@@ -1961,7 +1961,7 @@ evaluatePrimitive(kind, args) {
     case PRIM_Type : {
         var l = oneNullaryLambda(args);
         return maybe(rtLambdaResults(l),
-            vars ref=> ValueList(map(v => refType(v), vars)),
+            vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
             ()   ref=> ValueList(),
         );
     }
@@ -2026,7 +2026,7 @@ evaluatePrimitive(kind, args) {
         if (size(args) < 1)
             genericError("CallDefinedForSymbol? requires at least one argument");
         var callable = args[0];
-        var callArgs = map(callDefinedRTValue, slicedFrom(args, 1));
+        var callArgs = map(refTypeToRTArgument, slicedFrom(args, 1));
 
         var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
         return ValueList(BoolValue(callDefined?));
@@ -2098,39 +2098,6 @@ mangleString(name) {
             push(mangled, c);
     return move(mangled);
 }
-
-private callDefinedRTValue(type:Value) = match(type,
-    Symbol, typeSymbol ref=> {
-        if (symbolType?(typeSymbol))
-            return RTValue(RT_VALUE_CONST, type, LocalVariable());
-        else {
-            var refHead = Value(typeSymbol.head);
-            if (size(typeSymbol.params) != 1)
-                genericError("arguments to CallDefined? must be types");
-            var refTypeSymbol = typeSymbol.params[0];
-            var type? = match(refTypeSymbol,
-                Symbol, s ref=> symbolType?(s),
-                MatchDefault, x ref=> false,
-            );
-            if (not type?)
-                genericError("arguments to CallDefined? must be types");
-
-            if (refHead == getHooks().Ref)
-                return RTValue(RT_VALUE_REF, refTypeSymbol, LocalVariable());
-            if (refHead == getHooks().Rvalue)
-                return RTValue(RT_VALUE_RVALUE, refTypeSymbol, LocalVariable());
-            if (refHead == getHooks().Const)
-                return RTValue(RT_VALUE_CONST, refTypeSymbol, LocalVariable());
-
-            genericError("arguments to CallDefined? must be types");
-            return RTValue();
-        }
-    },
-    MatchDefault, x ref=> {
-        genericError("arguments to CallDefined? must be types");
-        return RTValue();
-    },
-);
 
 private printQualifiedLambdaTo(stream, l) {
     var path, line, column = ...ast.getFileLocation(l.value);
@@ -2211,7 +2178,7 @@ overload addEnvRvalues(s, env:Env) {
     addEnvRvalues(s, *env.parent);
 }
 
-private refType(v) {
+rtReturnToRefType(v) {
     var refSymbolHead = Value();
     switch (v.kind) {
     case RT_VALUE_REF:
@@ -2232,3 +2199,37 @@ private refType(v) {
         variantAs(refSymbolHead, SymbolHead), ValueList(v.type)
     ));
 }
+
+refTypeToRTArgument(type:Value) = match(type,
+    Symbol, typeSymbol ref=> {
+        if (symbolType?(typeSymbol))
+            return RTValue(RT_VALUE_CONST, type, LocalVariable());
+        else {
+            var refHead = Value(typeSymbol.head);
+            if (size(typeSymbol.params) != 1)
+                genericError("arguments must be valid types");
+            var refTypeSymbol = typeSymbol.params[0];
+            var type? = match(refTypeSymbol,
+                Symbol, s ref=> symbolType?(s),
+                MatchDefault, x ref=> false,
+            );
+            if (not type?)
+                genericError("arguments must be valid types");
+
+            if (refHead == getHooks().Ref)
+                return RTValue(RT_VALUE_REF, refTypeSymbol, LocalVariable());
+            if (refHead == getHooks().Rvalue)
+                return RTValue(RT_VALUE_RVALUE, refTypeSymbol, LocalVariable());
+            if (refHead == getHooks().Const)
+                return RTValue(RT_VALUE_CONST, refTypeSymbol, LocalVariable());
+
+            genericError("arguments must be valid types");
+            return RTValue();
+        }
+    },
+    MatchDefault, x ref=> {
+        genericError("arguments must be valid types");
+        return RTValue();
+    },
+);
+

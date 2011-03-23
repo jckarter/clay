@@ -21,6 +21,7 @@ variant Node = LiteralCodeBody
              | Call
              | Not
              | AddressOf
+             | AddressOfCode
              | If
              | While
              | Initialize
@@ -82,7 +83,7 @@ record Call = referenceType(
     ast: ASTNode,
     inputs: RTValues,
     outputs: Maybe[Vector[OutputVariable]],
-    specialization: Specialization, // XXX how to evaluate recursive reference?
+    specialization: Specialization,
 );
 
 record If = referenceType(
@@ -101,6 +102,12 @@ record Not = referenceType(
 record AddressOf = referenceType(
     ast: ASTNode,
     input: RTValue,
+    output: RTValue,
+);
+
+record AddressOfCode = referenceType(
+    ast: ASTNode,
+    specialization: Specialization,
     output: RTValue,
 );
 
@@ -173,6 +180,7 @@ overload nodeOutputs(node:Call) = maybe(node.outputs,
 );
 overload nodeOutputs(node:Not) = RTValues(node.output);
 overload nodeOutputs(node:AddressOf) = RTValues(node.output);
+overload nodeOutputs(node:AddressOfCode) = RTValues(node.output);
 overload nodeOutputs(node:Bind) = RTValues(node.output);
 // Initialize doesn't return its "output" because it isn't actually a new value
 
