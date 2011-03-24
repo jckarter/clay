@@ -1,5 +1,6 @@
-import __primitives__.(CallDefinedForSymbol?);
+import __primitives__.(CallDefinedForSymbol?, makeCodePointer, callCodePointer);
 import meta.symbols.(SymbolWithTag?, Symbol?, private SymbolBodyWithTag?);
+import values.(mapValues);
 
 public import __primitives__.(StaticCallDefined?);
 
@@ -50,4 +51,17 @@ inline overload 'fn(..#'xs)
     | RuntimeStaticProcedure?('fn)
       and StaticCallDefined?('fn, ..'xs)
     = ..unpack(..#'fn(..'xs));
+
+
+//
+// code pointers
+//
+
+inline overload CodePointer[(..'I), (..'O)](#'f)
+    | DefinedWithType?([forward ..'f(..arg(..'I))], ..'O)
+    = makeCodePointer(#'f, ..'I);
+
+inline overload call(c:CodePointer[(..'I), (..'O)], forward ..args)
+    | Defined?([callCodePointer(c, ..args);])
+    = forward ..callCodePointer(c, ..args);
 

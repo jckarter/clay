@@ -1,7 +1,7 @@
 import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
-import values.(allValues?, countValues, emptyValues?);
+import values.(allValues?, countValues, emptyValues?, mapValues);
 import meta.lltypes.*;
 
 public import __primitives__.(
@@ -92,6 +92,15 @@ overload #ReferenceKindTemplate?(Ref) = true;
 overload #ReferenceKindTemplate?(Rvalue) = true;
 overload #ReferenceKindTemplate?(Const) = true;
 
+#ReferenceType?('T) = Type?('T);
+overload #ReferenceType?(Ref['T])    = Type?('T);
+overload #ReferenceType?(Rvalue['T]) = Type?('T);
+overload #ReferenceType?(Const['T])  = Type?('T);
+
+#ReferenceBaseType('T) | Type?('T) = 'T;
+overload #ReferenceBaseType(Ref['T])    | Type?('T) = 'T;
+overload #ReferenceBaseType(Rvalue['T]) | Type?('T) = 'T;
+overload #ReferenceBaseType(Const['T])  | Type?('T) = 'T;
 
 
 //
@@ -257,7 +266,32 @@ overload #ArithmeticPointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
 
 
 //
-// ExternalCodePointer[ABI, Inputs, Outputs]
+// CodePointer[Inputs, Outputs]
+//
+
+symbol CodePointer['Inputs, 'Outputs];
+overload #PODType?(CodePointer['I, 'O])
+    | Type?(CodePointer['I, 'O]) = true;
+
+// XXX inappropriate dependency on codegen representation
+// a clay function is a cdecl function that takes its inputs, then its outputs,
+// all by reference
+
+private #CodePointerLLInput('T) = Pointer[ReferenceBaseType('T)];
+
+overload #LLType(CodePointer[(..'I), (..'O)])
+    | allValues?(ReferenceType?, ..'I, ..'O)
+    = LLCodePointerType[CdeclABI, false,
+        (..mapValues(CodePointerLLInput, ..'I, ..'O)),
+        ()
+    ];
+
+overload #PointerType?(CodePointer['I,'O])
+    | Type?(CodePointer['I,'O]) = true;
+
+
+//
+// ExternalCodePointer[ABI, Variadic?, Inputs, Outputs]
 //
 
 #RequireExternalPODType?('x) = PODType?('x);
@@ -411,10 +445,10 @@ overload #BiggerNumberType(UInt, Int) = UInt;
 
 #CoordinateSequenceType?('S) = CallDefined?(begin, 'S) and CallDefined?(end, 'S);
 
-#IteratorTargetType('I) | IteratorType?('I) = Type([next(refValue('I))]);
-#CoordinateTargetType('C) | CoordinateType?('C) = Type([dereference(constValue('C))]);
-#SequenceIteratorType('S) | SequenceType?('S) = Type([iterator(constValue('S))]);
-#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type([begin(constValue('S))]);
+#IteratorTargetType('I) | IteratorType?('I) = Type([next(arg(Ref['I]))]);
+#CoordinateTargetType('C) | CoordinateType?('C) = Type([dereference(arg('C))]);
+#SequenceIteratorType('S) | SequenceType?('S) = Type([iterator(arg('S))]);
+#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type([begin(arg('S))]);
 #SequenceElementType('S) | SequenceType?('S)
     = IteratorTargetType(SequenceIteratorType('S));
 
@@ -451,7 +485,7 @@ inline overload 'T() returned:'T
 }
 inline overload 'T(/*alias*/ forward orig:'U) returned:'T
     | NewType?('T)
-      and Defined?([refValue('U) <-- orig;])
+      and Defined?([arg(Ref['U]) <-- orig;])
       and 'U == OriginalType('T)
 {
     *returned <-- orig;
