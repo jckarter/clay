@@ -1,0 +1,14 @@
+import show.*;
+
+foo(x) = x + x;
+
+main() {
+    var foo1 = CodePointer[(Int,), (Int,)](foo);
+    var foo2 = CodePointer[(Float64,), (Float64,)](foo);
+
+    ////2
+    ////4
+    ////2.5
+    ////4.5
+    show(foo1(1), foo1(2), foo2(1.25), foo2(2.25));
+}
