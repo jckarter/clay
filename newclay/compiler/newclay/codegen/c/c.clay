@@ -438,9 +438,11 @@ overload codegenNode(c, bc, node:ir.AddressOf) {
     printToIndented(bc, valueDeref(c, bc, node.output), " = ", valueRef(c, bc, node.input), ";\n");
 }
 
-overload codegenNode(c, bc, node:ir.Call) {
-    var name = functionName(c, node.specialization);
+overload codegenNode(c, bc, node:ir.AddressOfCode) {
+    printToIndented(bc, valueDeref(c, bc, node.output), " = &", functionName(c, node.specialization), ";\n");
+}
 
+private codegenCall(c, bc, name, node) {
     printToIndented(bc, name, "(");
 
     interleave(node.inputs,
@@ -462,6 +464,16 @@ overload codegenNode(c, bc, node:ir.Call) {
     });
 
     printTo(bc, ");\n");
+}
+
+overload codegenNode(c, bc, node:ir.DereferenceCall) {
+    var name = printString("(*(", valueDeref(c, bc, node.codePointer), "))");
+    codegenCall(c, bc, name, node);
+}
+
+overload codegenNode(c, bc, node:ir.Call) {
+    var name = functionName(c, node.specialization);
+    codegenCall(c, bc, name, node);
 }
 
 overload codegenNode(c, bc, node:ir.If) {

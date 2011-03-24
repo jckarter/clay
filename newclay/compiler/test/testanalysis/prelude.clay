@@ -133,9 +133,12 @@ overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
 //
 
 symbol CodePointer['Inputs, 'Outputs];
-overload #Type?(CodePointer['I, 'O]) = true;
-overload #LLType(CodePointer['I, 'O])
-    = LLCodePointerType[CdeclABI, false, 'I, 'O]; // XXX
+overload #Type?(CodePointer[('I), ('O)]) = true;
+overload #LLType(CodePointer[('I), ('O)])
+    = LLCodePointerType[CdeclABI, false,
+        (Pointer[ReferenceBaseType('I)], Pointer[ReferenceBaseType('O)]),
+        ()
+    ];
 
 
 //
@@ -319,6 +322,11 @@ callMain(argc:Int, argv:Pointer[Pointer[Int8]]) Int { main(); return 0; }
 symbol Ref['T];
 symbol Rvalue['T];
 symbol Const['T];
+
+#ReferenceBaseType('T) = 'T;
+overload #ReferenceBaseType(Ref['T]) = 'T;
+overload #ReferenceBaseType(Rvalue['T]) = 'T;
+overload #ReferenceBaseType(Const['T]) = 'T;
 
 //
 // ABI symbols

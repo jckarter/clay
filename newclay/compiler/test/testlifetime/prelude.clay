@@ -127,6 +127,18 @@ overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
 overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
     = LLCodePointerType['A, 'V, 'I, 'O];
 
+
+//
+// CodePointer
+//
+
+symbol CodePointer['Inputs, 'Outputs];
+overload #Type?(CodePointer[('I), ('O)]) = true;
+overload #LLType(CodePointer[('I), ('O)])
+    = LLCodePointerType[CdeclABI, false,
+        (Pointer[ReferenceBaseType('I)], Pointer[ReferenceBaseType('O)]),
+        ()
+    ];
 
 
 //
@@ -167,7 +179,7 @@ overload #SymbolBodyWithTag?('tag) = false;
 
 
 //
-// tupleLiteral, arrayLiteral
+// tupleLiteral
 //
 
 tupleLiteral(..elements:'T) returned:Tuple[..'T] __c__ """abort();""";
@@ -310,6 +322,11 @@ callMain(argc:Int, argv:Pointer[Pointer[Int8]]) Int { main(); return 0; }
 symbol Ref['T];
 symbol Rvalue['T];
 symbol Const['T];
+
+#ReferenceBaseType('T) = 'T;
+overload #ReferenceBaseType(Ref['T]) = 'T;
+overload #ReferenceBaseType(Rvalue['T]) = 'T;
+overload #ReferenceBaseType(Const['T]) = 'T;
 
 //
 // ABI symbols
