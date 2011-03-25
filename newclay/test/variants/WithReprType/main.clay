@@ -1,0 +1,33 @@
+import variants.*;
+import variants.representation.*;
+import show.*;
+
+symbol Nothing = RecordType();
+
+symbol MaybePointer['T] =
+    VariantType(Nothing, Pointer['T]),
+    WithReprType(NullablePointerRepr);
+
+foo(_:Nothing) {
+    show("nothing");
+}
+
+overload foo(p:Pointer[Int]) {
+    show(p^);
+    p^ += 1;
+}
+
+main() {
+    show(#(TypeSize(MaybePointer[Int]) == TypeSize(Pointer[Int]))); ////true
+
+    var i = 5;
+    var m = MaybePointer[Int](&i);
+    var n = MaybePointer[Int](Nothing());
+
+    dispatch(m, foo); ////5
+    dispatch(m, foo); ////6
+    dispatch(n, foo); ////nothing
+    dispatch(n, foo); ////nothing
+
+    show(i); ////7
+}
