@@ -1,50 +1,8 @@
 import values.*;
 import meta.lltypes.*;
 import meta.symbols.*;
-
-
-//
-// TaggedUnionRepr
-//
-
-private symbol TaggedUnionRepr[..'M] = RecordType(
-    tag:TagType(..'M),
-    value:Union[..'M],
-);
-
-private symbol TagType;
-overload #TagType(..'M) = UInt64;
-overload #TagType(..'M) | countValues(..'M) < 0x1_0000_0000 = UInt32;
-overload #TagType(..'M) | countValues(..'M) < 0x1_0000 = UInt16;
-overload #TagType(..'M) | countValues(..'M) < 0x100 = UInt8;
-
-private tagValue(#'M, ..#'MM) = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
-
-private initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) {
-    repr.tag <-- tagValue('M, ..'MM);
-    repr.value['M] <-- m;
-}
-
-private dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
-    forward rtag, value = *repr;
-    const tag = rtag;
-    static for (/*#'M*/ M in ..'MM)
-        if (tag == tagValue(M, ..'MM))
-            return forward ..fn(value[M]);
-    fatal("invalid variant tag ", tag);
-}
-
-private copyRepr(ref toRepr:TaggedUnionRepr[..'M], fromRepr:TaggedUnionRepr[..'M]) {
-    toRepr.tag <-- fromRepr.tag;
-
-    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- from;]);
-}
-
-private moveRepr(ref toRepr:TaggedUnionRepr[..'M], ref fromRepr:TaggedUnionRepr[..'M]) {
-    toRepr.tag <-- fromRepr.tag;
-
-    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- moveUnsafe(from);]);
-}
+import variants.representation.*;
+import libc.(memset);
 
 
 //
@@ -58,10 +16,23 @@ private moveRepr(ref toRepr:TaggedUnionRepr[..'M], ref fromRepr:TaggedUnionRepr[
 #VariantMemberType?('T, 'M) | VariantType?('T)
     = inValues?('M, ..VariantMemberTypes('T));
 
-private #ReprType('T) | VariantType?('T) = TaggedUnionRepr[..VariantMemberTypes('T)];
-private repr(forward v:'T) | VariantType?('T) = forward bitcast(#ReprType('T), v);
+#WithReprType('R) = (WithReprType, 'R);
+#WithReprType?('V) = VariantType?('V) and SymbolWithTag?('V, WithReprType);
 
-overload #LLType('T) | VariantType?('T) = LLType(ReprType('T));
+#VariantReprType('T) | VariantType?('T) and not WithReprType?('T)
+    = TaggedUnionRepr[..VariantMemberTypes('T)];
+overload #VariantReprType('T) | VariantType?('T) and WithReprType?('T)
+    and ReprAcceptsMemberTypes?(SymbolTagBody('T, WithReprType)[..VariantMemberTypes('T)])
+    = SymbolTagBody('T, WithReprType)[..VariantMemberTypes('T)];
+overload #VariantReprType('T) | VariantType?('T) and WithReprType?('T)
+    and not ReprAcceptsMemberTypes?(SymbolTagBody('T, WithReprType)[..VariantMemberTypes('T)])
+    = StaticError("variant ", 'T, " representation ", SymbolTagBody('T, WithReprType),
+        " does not accept member types ", (..VariantMemberTypes('T))
+    );
+
+private repr(forward v:'T) | VariantType?('T) = forward bitcast(#VariantReprType('T), v);
+
+overload #LLType('T) | VariantType?('T) = LLType(VariantReprType('T));
 
 overload #InheritsPredicatesFromTypes('T) | VariantType?('T)
     = true, ..VariantMemberTypes('T);
