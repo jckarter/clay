@@ -1,0 +1,16 @@
+import show.*;
+
+symbol Nothing = RecordType();
+
+main() {
+    show(..#FieldNames(Nothing));
+    show(..#FieldTypes(Nothing));
+
+    show(#PODType?(Nothing)); ////true
+    show(#TypeSize(Nothing)); ////0u
+    show(#TypeAlign(Nothing)); ////1u
+
+    var n = Nothing();
+
+    show(..*n);
+}

@@ -51,6 +51,7 @@ overload #LLUnionSize2('size, 'T, ..'TT)
 overload #LLUnionSize2('size) = 'size;
 
 private #LLAggAlign(..'T) = max(..mapValues(TypeAlign, ..'T));
+overload #LLAggAlign() = 1u;
 
 // XXX platform-specific
 #MaxIntegerAlign() = 8u;
@@ -67,6 +68,8 @@ overload #LLTypeAlign(LLTupleType[..'T])
     = max(..mapValues(TypeAlign, ..LLMemberTypes(..'T)));
 overload #LLTypeAlign(LLUnionType[..'T])
     = max(..mapValues(TypeAlign, ..LLMemberTypes(..'T)));
+overload #LLTypeAlign(LLTupleType[]) = 1u;
+overload #LLTypeAlign(LLUnionType[]) = 1u;
 
 // A bit of improper coupling with the C codegen implementation: tuple elements
 // are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct

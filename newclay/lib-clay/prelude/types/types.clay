@@ -1,7 +1,7 @@
 import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
-import values.(allValues?, countValues, emptyValues?, mapValues);
+import values.*;
 import meta.lltypes.*;
 
 public import __primitives__.(
@@ -71,12 +71,12 @@ overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
 
-#InheritsPredicatesFromTypes('T) = ;
+#InheritsPredicatesFromTypes('T) = false;
 #PredicateInheritingType?('T)
-    = Type?('T) and not emptyValues?(..InheritsPredicatesFromTypes('T));
+    = Type?('T) and takeValues(1, ..InheritsPredicatesFromTypes('T));
 overload #'XType?('T)
     | InheritableTypePredicate?('XType?) and PredicateInheritingType?('T)
-    = allValues?('XType?, ..InheritsPredicatesFromTypes('T));
+    = allValues?('XType?, ..dropValues(1, ..InheritsPredicatesFromTypes('T)));
 
 
 //
@@ -331,7 +331,7 @@ alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O
 //
 
 symbol Array['T, 'n];
-overload #InheritsPredicatesFromTypes(Array['T, 'n]) = 'T;
+overload #InheritsPredicatesFromTypes(Array['T, 'n]) = true, 'T;
 overload #LLType(Array['T, 'n])
     | Type?('T) and StaticInt?('n) and 'n >= 0
     = LLArrayType['T, 'n];
@@ -346,7 +346,7 @@ overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
 //
 
 symbol Tuple[..'T];
-overload #InheritsPredicatesFromTypes(Tuple[..'T]) = ..'T;
+overload #InheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
 overload #LLType(Tuple[..'T])
     | allValues?(Type?, ..'T)
     = LLTupleType[..'T];
@@ -473,7 +473,7 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 
 overload #LLType('T) | NewType?('T) = LLType(OriginalType('T));
 
-overload #InheritsPredicatesFromTypes('T) | NewType?('T) = OriginalType('T);
+overload #InheritsPredicatesFromTypes('T) | NewType?('T) = true, OriginalType('T);
 
 inline overload unpack(forward x:'T) | NewType?('T)
     = forward bitcast(#OriginalType('T), x);

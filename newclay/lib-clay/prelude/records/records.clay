@@ -57,7 +57,7 @@ private symbol FieldType2;
 overload #FieldType2('field, 'x, ..'fields) = FieldType2('field, ..'fields);
 overload #FieldType2('field, ('field, 'T), ..'fields) = 'T;
 
-overload #InheritsPredicatesFromTypes('T) | RecordType?('T) = ..FieldTypes('T);
+overload #InheritsPredicatesFromTypes('T) | RecordType?('T) = true, ..FieldTypes('T);
 
 
 //
