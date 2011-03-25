@@ -3,13 +3,13 @@ public import __primitives__.(
     StaticError,
     StaticAssert,
 );
-import libc.(abort, printf);
+import libc.(abort, puts, printf);
 import ctypes.(CUInt, CString);
 import meta.lambdas.(LambdaString, LambdaLocation);
 
 private assertLocation(file, line, column) = CString(file), CUInt(line), CUInt(column);
 
-assert(f, forward ..msg) | DefinedWithType?([f()], Bool) {
+assert(f, ..msg) | DefinedWithType?([f()], Bool) {
     if (not f()) {
         // XXX show message
         printf(CString("assertion %s failed at %s(%u,%u)\n"),
@@ -17,5 +17,13 @@ assert(f, forward ..msg) | DefinedWithType?([f()], Bool) {
             ..assertLocation(..LambdaLocation(f))
         );
         abort();
+        throw 0; // XXX until we can mark externals as noreturn
     }
 }
+
+fatal(msg, ..msgg) {
+    puts(CString(msg));
+    abort();
+    throw 0; // XXX until we can mark externals as noreturn
+}
+
