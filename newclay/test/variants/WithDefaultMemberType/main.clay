@@ -1,0 +1,27 @@
+import variants.*;
+import show.*;
+
+symbol Foo = VariantType(Int, Char), WithDefaultMemberType(Int);
+symbol Bar = VariantType(Char, Int), WithDefaultMemberType(Int);
+
+symbol Nint = NewType(Int);
+overload Nint() = Nint(22);
+overload show(x:Nint) { show("Nint", *x); }
+
+symbol Bas = VariantType(Nint, Char), WithDefaultMemberType(Nint);
+
+main() {
+    show(#BitwiseZeroInitializedType?(Foo)); ////true
+    show(#BitwiseZeroInitializedType?(Bar)); ////false
+    show(#BitwiseZeroInitializedType?(Bas)); ////false
+
+    var foo = Foo();
+    var bar = Bar();
+    var bas = Bas();
+
+    dispatch(foo, show); ////0
+    dispatch(bar, show); ////0
+    ////Nint
+    ////22
+    dispatch(bas, show);
+}
