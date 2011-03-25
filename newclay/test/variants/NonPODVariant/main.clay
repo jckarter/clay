@@ -1,0 +1,22 @@
+import show.*;
+import variants.*;
+import vectors.*;
+
+symbol Foo = VariantType(Bool, Vector[Int], Char);
+
+symbol showType;
+overload showType(x:Bool) { show("boolean", x); }
+overload showType(x:Vector[Int])  { show("integer vector", size(x)); }
+overload showType(x:Char) { show("character", x); }
+
+main() {
+    var a = Foo(true), b = Foo(Vector[Int](1, 2, 3)), c = Foo('@');
+    var d = b;
+    var e = move(c);
+
+    static for (x in a, b, d, e)
+        dispatch(x, showType);
+
+    var f = move(b);
+    dispatch(f, showType);
+}
