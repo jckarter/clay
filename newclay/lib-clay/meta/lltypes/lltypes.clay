@@ -16,6 +16,27 @@ symbol LLArrayType['T, 'n];
 symbol LLTupleType[..'T];
 symbol LLUnionType[..'T];
 
+#LLIntegerType?('L) = false;
+overload #LLIntegerType?(LLIntegerType['S, 'B]) = true;
+
+#LLFloatType?('L) = false;
+overload #LLFloatType?(LLFloatType['B]) = true;
+
+#LLPointerType?('L) = false;
+overload #LLPointerType?(LLPointerType['T]) = true;
+
+#LLCodePointerType?('L) = false;
+overload #LLCodePointerType?(LLCodePointerType['A,'V,'I,'O]) = true;
+
+#LLArrayType?('L) = false;
+overload #LLArrayType?(LLArrayType['T, 'n]) = true;
+
+#LLTupleType?('L) = false;
+overload #LLTupleType?(LLTupleType[..'T]) = true;
+
+#LLUnionType?('L) = false;
+overload #LLUnionType?(LLUnionType[..'T]) = true;
+
 symbol LLType;
 
 symbol LLMemberType;
