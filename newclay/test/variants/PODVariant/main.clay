@@ -1,0 +1,19 @@
+import show.*;
+import variants.*;
+
+symbol Foo = VariantType(Bool, Int, Char);
+
+symbol showType;
+overload showType(x:Bool) { show("boolean", x); }
+overload showType(x:Int)  { show("integer", x); }
+overload showType(x:Char) { show("character", x); }
+
+main() {
+    var a = Foo(true), b = Foo(22), c = Foo('@');
+    var d = b;
+    var e = move(c);
+
+    static for (x in a, b, d, e)
+        dispatch(x, showType);
+
+}

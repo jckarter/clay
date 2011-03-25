@@ -1,0 +1,91 @@
+import values.*;
+import meta.lltypes.*;
+import meta.symbols.*;
+
+
+//
+// TaggedUnionRepr
+//
+
+private symbol TaggedUnionRepr[..'M] = RecordType(
+    tag:TagType(..'M),
+    value:Union[..'M],
+);
+
+private symbol TagType;
+overload #TagType(..'M) = UInt64;
+overload #TagType(..'M) | countValues(..'M) < 0x1_0000_0000 = UInt32;
+overload #TagType(..'M) | countValues(..'M) < 0x1_0000 = UInt16;
+overload #TagType(..'M) | countValues(..'M) < 0x100 = UInt8;
+
+private tagValue(#'M, ..#'MM) = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
+
+private initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) {
+    repr.tag <-- tagValue('M, ..'MM);
+    repr.value['M] <-- m;
+}
+
+private dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
+    forward rtag, value = *repr;
+    const tag = rtag;
+    static for (/*#'M*/ M in ..'MM)
+        if (tag == tagValue(M, ..'MM))
+            return ..fn(value[M]);
+    assert([false], "invalid variant tag ", tag);
+}
+
+private copyRepr(ref toRepr:TaggedUnionRepr[..'M], fromRepr:TaggedUnionRepr[..'M]) {
+    toRepr.tag <-- fromRepr.tag;
+
+    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- from;]);
+}
+
+private moveRepr(ref toRepr:TaggedUnionRepr[..'M], ref fromRepr:TaggedUnionRepr[..'M]) {
+    toRepr.tag <-- fromRepr.tag;
+
+    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- moveUnsafe(from);]);
+}
+
+
+//
+// VariantType
+//
+
+#VariantType(..'members) = (VariantType, ..'members);
+#VariantType?('T) = SymbolWithTag?('T, VariantType);
+
+#VariantMemberTypes('T) | VariantType?('T) = ..SymbolTagBody('T, VariantType);
+#VariantMemberType?('T, 'M) | VariantType?('T)
+    = inValues?('M, ..VariantMemberTypes('T));
+
+private #ReprType('T) | VariantType?('T) = TaggedUnionRepr[..VariantMemberTypes('T)];
+private repr(forward v:'T) | VariantType?('T) = forward bitcast(#ReprType('T), v);
+
+overload #LLType('T) | VariantType?('T) = LLType(ReprType('T));
+
+overload #InheritsPredicatesFromTypes('T) | VariantType?('T) = ReprType('T);
+
+overload 'T(forward m:'M) returned:'T
+    | VariantType?('T) and VariantMemberType?('T, 'M)
+{
+    initializeRepr(repr(returned), m);
+}
+
+overload dispatch(forward v:'T, forward fn) | VariantType?('T)
+    = forward ..dispatchRepr(repr(v), fn);
+
+overload destroyUnsafe(ref v:'T) | VariantType?('T) and not NotDestroyedType?('T) {
+    dispatchRepr(repr(v), destroyUnsafe);
+}
+
+overload resetUnsafe(ref v:'T) | VariantType?('T) and not NotResetType?('T) {
+    dispatchRepr(repr(v), resetUnsafe);
+}
+
+overload copy(v:'T) returned:'T | VariantType?('T) and not BitwiseCopiedType?('T) {
+    copyRepr(repr(returned), repr(v));
+}
+
+overload moveUnsafe(ref v:'T) returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
+    moveRepr(repr(returned), repr(v));
+}

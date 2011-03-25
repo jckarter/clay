@@ -1,0 +1,8 @@
+boolean
+true
+integer
+22
+integer
+22
+character
+'@'

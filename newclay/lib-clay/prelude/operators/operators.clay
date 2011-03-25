@@ -443,4 +443,11 @@ overload ret(..#'T) | countValues(..'T) != 1 = forward ..mapValues(ret, ..'T);
 // identity function
 //
 
-inline identity(forward ..x) = forward ..x; 
+inline identity(forward ..x) = forward ..x;
+
+
+//
+// dispatch operator
+//
+
+inline dispatch(forward subject, forward fn) = forward ..fn(..unpack(subject));
