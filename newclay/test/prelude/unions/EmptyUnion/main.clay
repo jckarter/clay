@@ -1,0 +1,7 @@
+import show.*;
+
+main() {
+    show(#PODType?(Union[])); ////true
+    show(#TypeSize(Union[])); ////0u
+    show(#TypeAlign(Union[])); ////1u
+}

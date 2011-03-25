@@ -1,0 +1,11 @@
+import show.*;
+
+main() {
+    show(#PODType?(Tuple[])); ////true
+    show(#TypeSize(Tuple[])); ////0u
+    show(#TypeAlign(Tuple[])); ////1u
+
+    var t = Tuple[]();
+
+    show(..*t);
+}
