@@ -107,6 +107,13 @@ overload #exceptValue('v) = ;
 overload #exceptValue('v, 'w, ..'vs) = 'w, ..exceptValue('v, ..'vs);
 overload #exceptValue('v, 'v, ..'vs) = ..exceptValue('v, ..'vs);
 
+private symbol indexValue2;
+overload #indexValue2('n, 'v, 'w, ..'vs) = indexValue2('n + 1, 'v, ..'vs);
+overload #indexValue2('n, 'v, 'v, ..'vs) = 'n;
+
+symbol indexValue;
+overload #indexValue('v, ..'vs) = indexValue2(0, 'v, ..'vs);
+
 private symbol CapturedValue['T] = NewType('T);
 private symbol CapturedRef['T] = NewType(Pointer['T]);
 private symbol CapturedConst['T] = NewType(Pointer['T]);
@@ -138,4 +145,3 @@ inline forwardValues(ref x:Tuple[..'T])
 inline capturedRefs(x:Tuple[..'T])
     | allValues?(CapturedType?, ..'T)
     = forward ..mapValues(capturedRef, ..*x);
-

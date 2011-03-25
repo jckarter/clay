@@ -52,6 +52,10 @@ nthValue
 1
 true
 '3'
+indexValue
+0
+1
+2
 inValues?
 true
 false
