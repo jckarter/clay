@@ -64,6 +64,11 @@ main() {
     show(#nthValue(1, 1, true, '3'));
     show(#nthValue(2, 1, true, '3'));
 
+    show("indexValue");
+    show(#indexValue(1,    1, true, '3'));
+    show(#indexValue(true, 1, true, '3'));
+    show(#indexValue('3',  1, true, '3'));
+
     show("inValues?");
     show(#inValues?("waldo", 42, 'x', "waldo", false));
     show(#inValues?("waldo", 42, 'x', "wally", false));
