@@ -1,0 +1,16 @@
+import show.*;
+import vectors.*;
+
+main() {
+    var t = Tuple(Vector[Int](), Vector[Int](1, 11, 21, 1211, 111221));
+
+    show(size(t.0), size(t.1));
+
+    show("--");
+    for (x in t.0)
+        show(x);
+
+    show("--");
+    for (x in t.1)
+        show(x);
+}
