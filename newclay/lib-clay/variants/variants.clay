@@ -30,8 +30,8 @@ private dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
     const tag = rtag;
     static for (/*#'M*/ M in ..'MM)
         if (tag == tagValue(M, ..'MM))
-            return ..fn(value[M]);
-    assert([false], "invalid variant tag ", tag);
+            return forward ..fn(value[M]);
+    fatal("invalid variant tag ", tag);
 }
 
 private copyRepr(ref toRepr:TaggedUnionRepr[..'M], fromRepr:TaggedUnionRepr[..'M]) {
@@ -63,7 +63,7 @@ private repr(forward v:'T) | VariantType?('T) = forward bitcast(#ReprType('T), v
 
 overload #LLType('T) | VariantType?('T) = LLType(ReprType('T));
 
-overload #InheritsPredicatesFromTypes('T) | VariantType?('T) = ReprType('T);
+overload #InheritsPredicatesFromTypes('T) | VariantType?('T) = ..VariantMemberTypes('T);
 
 overload 'T(forward m:'M) returned:'T
     | VariantType?('T) and VariantMemberType?('T, 'M)
