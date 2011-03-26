@@ -447,7 +447,7 @@ inline identity(forward ..x) = forward ..x;
 
 
 //
-// dispatch operator
+// monad operations
 //
 
-inline dispatch(forward subject, forward fn) = forward ..fn(..unpack(subject));
+symbol bind = VariadicBinaryOperatorProcedure();

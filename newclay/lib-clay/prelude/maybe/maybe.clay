@@ -1,0 +1,54 @@
+import variants.*;
+import variants.representation.*;
+import values.*;
+
+symbol Nothing;
+
+private #MaybeRepr('T) = TaggedUnionRepr;
+overload #MaybeRepr('T)
+    | ReprAcceptsMemberTypes?(NullablePointerRepr[Static[Nothing], 'T])
+    = NullablePointerRepr;
+
+symbol Maybe['T] = VariantType(Static[Nothing], 'T),
+    WithDefaultMemberType(Static[Nothing]),
+    WithReprType(MaybeRepr('T));
+
+#MaybeType?('T) = false;
+overload #MaybeType?(Maybe['T]) = true;
+
+inline just(forward x:'T) = Maybe['T](x);
+inline nothing(#'T) = Maybe['T]();
+
+inline just?(m:Maybe['T]) = variantIs?('T, m);
+inline nothing?(m:Maybe['T]) = variantIs?(Static[Nothing], m);
+
+inline required(forward m:Maybe['T]) = forward m['T];
+
+inline requiredUnsafe(forward m:Maybe['T]) = forward variantAsUnsafe('T, m);
+
+private symbol maybe2;
+inline overload maybe2(forward x, forward justf, forward nothingf) = forward ..justf(x);
+inline overload maybe2(#Nothing, forward justf, forward nothingf) = forward ..nothingf();
+
+inline maybe(forward m:Maybe['T], forward justf, forward nothingf)
+    = forward ..dispatch(m, [forward x -> forward ..maybe2(x, justf, nothingf)]);
+
+private inline maybe3(forward m, forward f, ..#'ReturnTypes)
+    = ..maybe(m, f, [..mapValues(call, ..#'ReturnTypes)]);
+
+inline overload maybe(forward m:Maybe['T], forward f)
+    | allValues?(MaybeType?, ..Type([forward ..f(required(m))]))
+    = ..maybe3(m, f, ..#Type([..f(required(m))]));
+
+inline overload bind(forward m:Maybe['T], forward f)
+    | allValues?(MaybeType?, ..Type([..f(required(m))]))
+    = forward ..maybe(m, [forward x -> ..f(x)]);
+
+
+//
+// conveniences for handling maybe-pointers
+//
+
+alias MPointer['T] = Maybe[Pointer['T]];
+inline null(#'T) = nothing(Pointer['T]);
+

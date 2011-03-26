@@ -1,16 +1,16 @@
 import show.*;
 
-symbol Nothing = RecordType();
+symbol Empty = RecordType();
 
 main() {
-    show(..#FieldNames(Nothing));
-    show(..#FieldTypes(Nothing));
+    show(..#FieldNames(Empty));
+    show(..#FieldTypes(Empty));
 
-    show(#PODType?(Nothing)); ////true
-    show(#TypeSize(Nothing)); ////0u
-    show(#TypeAlign(Nothing)); ////1u
+    show(#PODType?(Empty)); ////true
+    show(#TypeSize(Empty)); ////0u
+    show(#TypeAlign(Empty)); ////1u
 
-    var n = Nothing();
+    var n = Empty();
 
     show(..*n);
 }

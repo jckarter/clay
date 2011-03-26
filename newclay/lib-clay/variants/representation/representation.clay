@@ -83,7 +83,9 @@ inline overload moveRepr(
 ) {
     toRepr.tag <-- fromRepr.tag;
 
-    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- moveUnsafe(from);]);
+    dispatchRepr(fromRepr,
+        [ref from -> toRepr.value[#Type([from])] <-- moveUnsafe(from);]
+    );
 }
 
 
