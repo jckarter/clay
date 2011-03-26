@@ -112,7 +112,8 @@ inline overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], p:'P) {
 inline overload dispatchRepr(repr:NullablePointerRepr['N, 'P], forward fn) {
     if (bitcast(Int, repr) == 0)
         return forward ..fn(bitcast('N, repr));
-    return forward ..fn(*repr);
+    else
+        return forward ..fn(*repr);
 }
 
 inline overload reprIs?(#'N, repr:NullablePointerRepr['N, 'P])
