@@ -9,6 +9,7 @@ import values.*;
 // required functions
 symbol initializeRepr; // (ref repr, forward member) -> void
 symbol dispatchRepr; // (forward repr, forward fn) -> forward ..'T
+symbol reprAs; // (#'M, forward repr) -> forward 'M
 
 symbol ReprAcceptsMemberTypes?; // #('R) -> Bool
 
@@ -19,6 +20,10 @@ inline copyRepr(ref toRepr:'R, fromRepr:'R) {
 
 inline moveRepr(ref toRepr:'R, ref fromRepr:'R) {
     dispatchRepr(fromRepr, [fromMember -> initializeRepr(toRepr, moveUnsafe(fromMember));]);
+}
+
+inline reprIs?(#'M, repr:'R) {
+    return dispatchRepr(repr, [member -> #Type([member]) == 'M]);
 }
 
 #ReprZeroInitializedWithMemberType?('R, 'M) = false;
@@ -58,6 +63,10 @@ overload dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
             return forward ..fn(value[M]);
     fatal("invalid variant tag ", tag);
 }
+
+inline overload reprAs(#'M, forward repr:TaggedUnionRepr[..'MM]) = forward repr.value['M];
+inline overload reprIs?(#'M, repr:TaggedUnionRepr[..'MM])
+    = repr.tag == tagValue('M, ..'MM);
 
 inline overload copyRepr(
     ref toRepr:TaggedUnionRepr[..'M],
@@ -103,6 +112,16 @@ inline overload dispatchRepr(repr:NullablePointerRepr['N, 'P], forward fn) {
         return forward ..fn(bitcast('N, repr));
     return forward ..fn(*repr);
 }
+
+inline overload reprIs?(#'N, repr:NullablePointerRepr['N, 'P])
+    = bitcast(Int, repr) == 0;
+inline overload reprIs?(#'P, repr:NullablePointerRepr['N, 'P])
+    = bitcast(Int, repr) != 0;
+
+inline overload reprAs(#'N, forward repr:NullablePointerRepr['N, 'P])
+    = forward bitcast('N, repr);
+inline overload reprAs(#'P, forward repr:NullablePointerRepr['N, 'P])
+    = forward *repr;
 
 inline overload copyRepr(
     ref toRepr:NullablePointerRepr['N, 'P],

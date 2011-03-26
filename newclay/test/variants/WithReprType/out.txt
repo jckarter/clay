@@ -4,3 +4,11 @@ true
 nothing
 nothing
 7
+--
+false
+true
+7
+--
+true
+false
+true
