@@ -30,4 +30,14 @@ main() {
     dispatch(n, foo); ////nothing
 
     show(i); ////7
+
+    show("--"); ////--
+    show(variantIs?(Nothing,      m)); ////false
+    show(variantIs?(Pointer[Int], m)); ////true
+    show(variantAs (Pointer[Int], m)^); ////7
+
+    show("--"); ////--
+    show(variantIs?(Nothing,      n)); ////true
+    show(variantIs?(Pointer[Int], n)); ////false
+    show(OpaquePointer(&variantAs(Nothing, n)) == OpaquePointer(&n)); ////true
 }

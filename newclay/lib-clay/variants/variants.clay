@@ -63,33 +63,51 @@ overload 'T() returned:'T
     initializeRepr(repr(returned), (#VariantDefaultMemberType('T))());
 }
 
-overload 'T() returned:'T
+inline overload 'T() returned:'T
     | VariantType?('T) and WithDefaultMemberType?('T) and BitwiseZeroInitializedType?('T)
 {
     memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
 }
 
-overload 'T(forward m:'M) returned:'T
+inline overload 'T(forward m:'M) returned:'T
     | VariantType?('T) and VariantMemberType?('T, 'M)
 {
     initializeRepr(repr(returned), m);
 }
 
-overload dispatch(forward v:'T, forward fn) | VariantType?('T)
+inline overload dispatch(forward v:'T, forward fn) | VariantType?('T)
     = forward ..dispatchRepr(repr(v), fn);
 
-overload destroyUnsafe(ref v:'T) | VariantType?('T) and not NotDestroyedType?('T) {
+inline overload destroyUnsafe(ref v:'T) | VariantType?('T) and not NotDestroyedType?('T) {
     dispatchRepr(repr(v), destroyUnsafe);
 }
 
-overload resetUnsafe(ref v:'T) | VariantType?('T) and not NotResetType?('T) {
+inline overload resetUnsafe(ref v:'T) | VariantType?('T) and not NotResetType?('T) {
     dispatchRepr(repr(v), resetUnsafe);
 }
 
-overload copy(v:'T) returned:'T | VariantType?('T) and not BitwiseCopiedType?('T) {
+inline overload copy(v:'T) returned:'T | VariantType?('T) and not BitwiseCopiedType?('T) {
     copyRepr(repr(returned), repr(v));
 }
 
-overload moveUnsafe(ref v:'T) returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
+inline overload moveUnsafe(ref v:'T) returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
     moveRepr(repr(returned), repr(v));
 }
+
+inline variantIs?(#'M, v:'T) | VariantType?('T) and VariantMemberType?('T, 'M)
+    = reprIs?(#'M, repr(v));
+inline variantAs(#'M, forward v:'T) | VariantType?('T) and VariantMemberType?('T, 'M) {
+    assert([variantIs?(#'M, v)]);
+    return forward reprAs(#'M, repr(v));
+}
+inline overload variantAs(#'M, rvalue v:'T)
+    | VariantType?('T) and VariantMemberType?('T, 'M)
+{
+    ref rv = rvalueToRefUnsafe(v);
+    assert([variantIs?(#'M, rv)]);
+    return forward reprAs(#'M, repr(refToRvalueUnsafe(rv)));
+}
+
+inline overload index(forward v:'T, #'M)
+    | VariantType?('T) and VariantMemberType?('T, 'M)
+    = forward variantAs(#'M, v);

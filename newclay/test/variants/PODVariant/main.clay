@@ -16,4 +16,27 @@ main() {
     static for (x in a, b, d, e)
         dispatch(x, showType);
 
+    show("--");
+    show(variantIs?(Bool, a));
+    show(variantIs?(Int,  a));
+    show(variantIs?(Char, a));
+    show(variantAs( Bool, a));
+
+    show("--");
+    show(variantIs?(Bool, b));
+    show(variantIs?(Int,  b));
+    show(variantIs?(Char, b));
+    show(variantAs( Int,  b));
+
+    show("--");
+    show(variantIs?(Bool, d));
+    show(variantIs?(Int,  d));
+    show(variantIs?(Char, d));
+    show(variantAs( Int,  d));
+
+    show("--");
+    show(variantIs?(Bool, e));
+    show(variantIs?(Int,  e));
+    show(variantIs?(Char, e));
+    show(variantAs( Char, e));
 }
