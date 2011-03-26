@@ -2,13 +2,13 @@ import variants.*;
 import variants.representation.*;
 import show.*;
 
-symbol Nothing = RecordType();
+symbol Null = RecordType();
 
 symbol MaybePointer['T] =
-    VariantType(Nothing, Pointer['T]),
+    VariantType(Null, Pointer['T]),
     WithReprType(NullablePointerRepr);
 
-foo(_:Nothing) {
+foo(_:Null) {
     show("nothing");
 }
 
@@ -22,7 +22,7 @@ main() {
 
     var i = 5;
     var m = MaybePointer[Int](&i);
-    var n = MaybePointer[Int](Nothing());
+    var n = MaybePointer[Int](Null());
 
     dispatch(m, foo); ////5
     dispatch(m, foo); ////6
@@ -32,12 +32,12 @@ main() {
     show(i); ////7
 
     show("--"); ////--
-    show(variantIs?(Nothing,      m)); ////false
+    show(variantIs?(Null,         m)); ////false
     show(variantIs?(Pointer[Int], m)); ////true
     show(variantAs (Pointer[Int], m)^); ////7
 
     show("--"); ////--
-    show(variantIs?(Nothing,      n)); ////true
+    show(variantIs?(Null,         n)); ////true
     show(variantIs?(Pointer[Int], n)); ////false
-    show(OpaquePointer(&variantAs(Nothing, n)) == OpaquePointer(&n)); ////true
+    show(OpaquePointer(&variantAs(Null, n)) == OpaquePointer(&n)); ////true
 }

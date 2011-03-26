@@ -1,0 +1,18 @@
+true
+false
+2
+just:
+2
+false
+true
+nothing
+a
+just a
+nothing b
+24
+6
+2
+1
+1
+false
+true

@@ -16,8 +16,8 @@ overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
 // procedure tags
 //
 
-// VariadicBinaryOperatorProcedure -- define variadic version of procedure in
-// terms of the binary operation
+// VariadicBinaryOperatorProcedure -- define variadic version of procedure
+// as left fold of the binary procedure
 #VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure,);
 
 inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W)
