@@ -1,0 +1,16 @@
+true
+0
+true
+--
+true
+false
+just:
+21
+--
+21
+1211
+111221
+--
+false
+true
+nothing
