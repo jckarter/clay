@@ -1,0 +1,12 @@
+import show.*;
+
+symbol Foo = RecordType(p:Pointer[Foo]);
+
+symbol Bar1 = RecordType(p:Pointer[Bar2]);
+symbol Bar2 = RecordType(p:Pointer[Bar1]);
+
+main() {
+    show(#Type?(Foo)); ////true
+    show(#Type?(Bar1)); ////true
+    show(#Type?(Bar2)); ////true
+}
