@@ -220,14 +220,14 @@ overload #StaticType?(Static['x]) = true;
 symbol Pointer['T];
 
 #PointerType?('X) = false;
-overload #PointerType?(Pointer['T]) | Type?('T) = true;
-overload #PODType?(Pointer['T]) | Type?('T) = true;
+overload #PointerType?(Pointer['T]) /*XXX recursive types | Type?('T)*/ = true;
+overload #PODType?(Pointer['T]) /*XXX recursive types | Type?('T)*/ = true;
 
 symbol PointerReferencedType;
 overload #PointerReferencedType(Pointer['T]) = 'T;
 
 overload #LLType(Pointer['T])
-    | Type?('T)
+    //XXX recursive types | Type?('T)
     = LLPointerType['T];
 
 
@@ -247,8 +247,8 @@ overload #PointerType?(OpaquePointer) = true;
 
 symbol ContiguousCoordinate['T];
 
-overload #PointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
-overload #PODType?(ContiguousCoordinate['T]) | Type?('T) = true;
+overload #PointerType?(ContiguousCoordinate['T]) /*XXX recursive types | Type?('T)*/ = true;
+overload #PODType?(ContiguousCoordinate['T]) /*XXX recursive types | Type?('T)*/ = true;
 
 overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
 
@@ -256,7 +256,7 @@ overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
     = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
 
 overload #LLType(ContiguousCoordinate['T])
-    | Type?('T)
+    //XXX recursive types | Type?('T)
     = LLPointerType['T];
 
 
@@ -280,7 +280,7 @@ overload #PODType?(CodePointer['I, 'O])
 private #CodePointerLLInput('T) = Pointer[ReferenceBaseType('T)];
 
 overload #LLType(CodePointer[(..'I), (..'O)])
-    | allValues?(ReferenceType?, ..'I, ..'O)
+    // XXX recursive types | allValues?(ReferenceType?, ..'I, ..'O)
     = LLCodePointerType[CdeclABI, false,
         (..mapValues(CodePointerLLInput, ..'I, ..'O)),
         ()
