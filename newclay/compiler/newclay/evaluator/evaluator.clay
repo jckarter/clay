@@ -387,10 +387,12 @@ overload makeSymbolHeadInstance2(x:SymbolHead, binding:GlobalBinding, params:Val
 
 symbolBody(x:Symbol) {
     return safeInitialize(x.body,
-        () ref=> maybe(variantAs(x.head.ast, ast.Symbol).expr,
-            expr ref=> evaluateExprList(expr, newEnv(x.env)),
-            () ref=> ValueList(),
-        )
+        () ref=> withStaticSymbolBody(x.head, x.params, () ref=>
+            maybe(variantAs(x.head.ast, ast.Symbol).expr,
+                expr ref=> evaluateExprList(expr, newEnv(x.env)),
+                () ref=> ValueList(),
+            )
+        ),
     );
 }
 
