@@ -1635,11 +1635,17 @@ withLocation(node, f) {
 // compilation stack
 //
 
-variant CompilationEntry = StaticCallEntry
+variant CompilationEntry = SymbolBodyEntry
+                         | StaticCallEntry
                          | CallAnalysisEntry
                          | GlobalAnalysisEntry
                          | CallCompilationEntry
                          ;
+
+record SymbolBodyEntry (
+    symbolHead: SymbolHead,
+    args: ValueList,
+);
 
 record StaticCallEntry (
     callable: Value,
@@ -1659,6 +1665,14 @@ record CallCompilationEntry (
     callable: Value,
     args: RTValues,
 );
+
+overload printTo(stream, x:SymbolBodyEntry) {
+    printTo(stream, "symbol: ");
+    printReprTo(stream, x.symbolHead);
+    printTo(stream, "[");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, "]");
+}
 
 overload printTo(stream, x:StaticCallEntry) {
     printTo(stream, "eval: ");
@@ -1705,6 +1719,11 @@ traceCompilation(trace?:Bool) { _compilationStack.trace? = trace?; }
 
 withCompilationEntry(forward entry:CompilationEntry, f) =
     forward ...withStackValue(_compilationStack, entry, f);
+
+withStaticSymbolBody(head:SymbolHead, args:ValueList, f) {
+    var entry = CompilationEntry(SymbolBodyEntry(head, args));
+    return forward ...withCompilationEntry(move(entry), f);
+}
 
 withStaticCall(callable:Value, args:ValueList, f) {
     var entry = CompilationEntry(StaticCallEntry(callable, args));

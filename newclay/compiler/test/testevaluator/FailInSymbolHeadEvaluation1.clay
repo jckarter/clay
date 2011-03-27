@@ -1,0 +1,5 @@
+import __primitives__.*;
+
+symbol Foo[..'x] = StaticError("I AM ERROR.", ..'x);
+
+#Main() = StaticSymbolBody(Foo[2]);
