@@ -161,12 +161,28 @@ record Module = referenceType(
     name: ModuleName,
     originalAST: ast.SourceAST,
     ast: ast.SourceAST,
-    publicEnv: Env,
-    privateEnv: Env,
+    publicEnvRoot: EnvRoot,
+    privateEnvRoot: EnvRoot,
+    publicEnv: Map[String, EnvEntry],
+    privateEnv: Map[String, EnvEntry],
+);
+
+cloneModule(m:Module, name) = Module(
+    m.program,
+    name,
+    ast.SourceAST(),
+    ast.SourceAST(),
+    cloneEnvRoot(m.publicEnvRoot),
+    cloneEnvRoot(m.privateEnvRoot),
+    m.publicEnv,
+    m.privateEnv,
 );
 
 overload Module(program:Program, name:ModuleName) =
-    Module(program, name, ast.SourceAST(), ast.SourceAST(), Env(), Env());
+    Module(program, name, ast.SourceAST(), ast.SourceAST(),
+        allocateRef(EnvRoot), allocateRef(EnvRoot),
+        Map[String, EnvEntry](), Map[String, EnvEntry](),
+    );
 
 overload printTo(stream, mod:Module) {
     printTo(stream, "module ", moduleNameString(mod.name));
@@ -426,7 +442,7 @@ variant EnvEntry = Value
 
 overload EnvEntry() = EnvEntry(Value());
 
-variant EnvParent = EnvRoot | Env | Module;
+variant EnvParent = Env | Module;
 
 record AmbiguousEntry (modules: Vector[Tuple[Module, EnvEntry]]);
 
@@ -491,7 +507,7 @@ private resolveGeneralEnvRootEntries(entries, generalImports) {
 
     for (name, genImport in items(generalImports)) {
         ref module = genImport.module;
-        for (entryName, entry in items(module.publicEnv.entries))
+        for (entryName, entry in items(module.publicEnv))
             push(generalEntries[entryName], (module, entry));
     }
 
@@ -501,7 +517,7 @@ private resolveGeneralEnvRootEntries(entries, generalImports) {
     for (name, genImport in items(generalImports)) {
         ref module = genImport.module;
         withLocation(genImport.location, () ref=> {
-            ref rootEntries = envRootEntries(envRoot(module.publicEnv));
+            ref rootEntries = envRootEntries(module.publicEnvRoot);
             for (entryName, entry in items(rootEntries)) {
                 if (null?(lookup(entries, entryName))) {
                     entries[entryName] = entry;
@@ -621,33 +637,27 @@ overload equals?(a:Env, b:Env) = a.__impl__ == b.__impl__;
 newEnv(parent:EnvParent) = allocEnv(parent);
 [E | VariantMember?(EnvParent, E)]
 overload newEnv(parent:E) = allocEnv(EnvParent(parent));
-overload newEnv() = allocEnv(EnvParent(allocateRef(EnvRoot)));
 
 
 //
-// envRoot, envAdd
+// envModule, envAdd, moduleAdd
 //
 
-envRoot(env:EnvRoot) EnvRoot = env;
-overload envRoot(env:Env) EnvRoot = envRoot(*env.parent);
-overload envRoot(env:Module) EnvRoot {
-    assert(false, "module does not have envRoot");
-    return envRoot(env.privateEnv);
-}
-overload envRoot(env:EnvParent) EnvRoot = envRoot(*env);
-
-envModule(env:EnvRoot) {
-    assert(false, "env root does not have module");
-    return Module();
-}
+procedure envModule;
 overload envModule(env:Env) Module = envModule(*env.parent);
 overload envModule(m:Module) = m;
 overload envModule(env:EnvParent) = envModule(*env);
 
-envAdd(env, name:ast.Identifier, forward entry) {
+envAdd(env:Env, name:ast.Identifier, forward entry) {
     if (contains?(env.entries, name.str))
-        genericError("name redefinition: ", name.str);
+        genericError("name redefined: ", name.str);
     env.entries[name.str] = EnvEntry(entry);
+}
+
+moduleAdd(module:Module, menv:Map[String, EnvEntry], name:ast.Identifier, forward entry) {
+    if (contains?(module.publicEnv, name.str) or contains?(module.privateEnv, name.str))
+        genericError("name redefined: ", name.str);
+    menv[name.str] = EnvEntry(entry);
 }
 
 private envRootReset(envRoot) {
@@ -681,48 +691,49 @@ overload envRootAddSpecific(envRoot:EnvRoot, asName:String, entry:SpecificImport
 // publicLookup, privateLookup, nameRefLookup
 //
 
-private _ifEnvLookup(_ifParentLookup, fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn) {
-    if (just?(fromEnv) and env == just(fromEnv))
-        return forward ...notFoundFn();
+private procedure _ifPublicLookup;
 
+private _ifEnvLookup(_ifParentLookup, fromMod:Maybe[Module], env:Env, name:String, foundFn, notFoundFn) {
     var ptr = lookup(env.entries, name);
-    if (null?(ptr)) {
-        var newFromEnv = maybe(fromEnv,
-            env ref=> fromEnv,
-            ()  ref=> if (variantIs?(env.parent, EnvRoot)) Maybe(env) else nothing(Env)
-        );
-        return forward ..._ifParentLookup(newFromEnv, env.parent, name, foundFn, notFoundFn);
-    }
+    if (null?(ptr))
+        return forward ..._ifParentLookup(fromMod, env.parent, name, foundFn, notFoundFn);
     return forward ...foundFn(ptr^);
 }
 
-private procedure _ifPublicLookup;
+overload _ifPublicLookup(fromMod:Maybe[Module], env:Env, name:String, foundFn, notFoundFn)
+    = forward ..._ifEnvLookup(_ifPublicLookup, fromMod, env, name, foundFn, notFoundFn);
 
-overload _ifPublicLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn)
-    = forward ..._ifEnvLookup(_ifPublicLookup, fromEnv, env, name, foundFn, notFoundFn);
-
-private envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:EnvEntry, foundFn, notFoundFn)
+private envRootEntryLookup(fromMod:Maybe[Module], name:String, entry:EnvEntry, foundFn, notFoundFn)
     = forward ...foundFn(entry);
-overload envRootEntryLookup(fromEnv:Maybe[Env], name:String, entry:AmbiguousEntry, foundFn, notFoundFn)
+overload envRootEntryLookup(fromMod:Maybe[Module], name:String, entry:AmbiguousEntry, foundFn, notFoundFn)
     = forward ...throwButPropagateLike(AmbiguousEntryError(name, entry), ...notFoundFn());
 
-overload _ifPublicLookup(fromEnv:Maybe[Env], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
+overload _ifPublicLookup(fromMod:Maybe[Module], envRoot:EnvRoot, name:String, foundFn, notFoundFn) {
     ref entries = envRootEntries(envRoot);
     var ptr = lookup(entries, name);
     if (null?(ptr))
         return forward ...notFoundFn();
     else
-        return forward ...envRootEntryLookup(fromEnv, name, *ptr^, foundFn, notFoundFn);
+        return forward ...envRootEntryLookup(fromMod, name, *ptr^, foundFn, notFoundFn);
 }
 
-overload _ifPublicLookup(fromEnv:Maybe[Env], module:Module, name:String, foundFn, notFoundFn)
-    = forward ..._ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn);
+overload _ifPublicLookup(fromMod:Maybe[Module], module:Module, name:String, foundFn, notFoundFn) {
+    if (maybe(fromMod, f ref=> f == module, () ref=> false))
+        return forward ...notFoundFn();
 
-overload _ifPublicLookup(fromEnv:Maybe[Env], envParent:EnvParent, name:String, foundFn, notFoundFn)
-    = forward ..._ifPublicLookup(fromEnv, *envParent, name, foundFn, notFoundFn);
+    var ptr = lookup(module.publicEnv, name);
+    if (not null?(ptr))
+        return forward ...foundFn(ptr^);
+
+    var newFromMod = maybe(fromMod, f ref=> fromMod, () ref=> Maybe(module));
+    return forward ..._ifPublicLookup(newFromMod, module.publicEnvRoot, name, foundFn, notFoundFn);
+}
+
+overload _ifPublicLookup(fromMod:Maybe[Module], envParent:EnvParent, name:String, foundFn, notFoundFn)
+    = forward ..._ifPublicLookup(fromMod, *envParent, name, foundFn, notFoundFn);
 
 ifPublicLookup(env, name:String, foundFn, notFoundFn)
-    = forward ..._ifPublicLookup(nothing(Env), env, name, foundFn, notFoundFn);
+    = forward ..._ifPublicLookup(nothing(Module), env, name, foundFn, notFoundFn);
 
 publicLookup(env, name) = ref ifPublicLookup(env, name,
     entry ref=> ref entry,
@@ -735,24 +746,41 @@ overload publicLookup(env, name:StringConstant)
 
 publicLookup?(env, name) = ifPublicLookup(env, name, entry => true, () => false);
 
+private _ifPrivateLookup(fromMod:Maybe[Module], env:Env, name:String, foundFn, notFoundFn)
+    = forward ..._ifEnvLookup(_ifPrivateLookup, fromMod, env, name, foundFn, notFoundFn);
 
-private _ifPrivateLookup(fromEnv:Maybe[Env], env:Env, name:String, foundFn, notFoundFn)
-    = forward ..._ifEnvLookup(_ifPrivateLookup, fromEnv, env, name, foundFn, notFoundFn);
+overload _ifPrivateLookup(fromMod, env:EnvRoot, name, foundFn, notFoundFn)
+    = forward ..._ifPublicLookup(fromMod, env, name, foundFn, notFoundFn);
 
-overload _ifPrivateLookup(fromEnv, env:EnvRoot, name, foundFn, notFoundFn)
-    = forward ..._ifPublicLookup(fromEnv, env, name, foundFn, notFoundFn);
+overload _ifPrivateLookup(fromMod:Maybe[Module], module:Module, name:String, foundFn, notFoundFn) {
+    if (maybe(fromMod, f ref=> f == module, () ref=> false))
+        return forward ...notFoundFn();
 
-overload _ifPrivateLookup(fromEnv, module:Module, name, foundFn, notFoundFn)
-    = forward ..._ifPublicLookup(fromEnv, module.privateEnv, name,
+    var ptr = lookup(module.privateEnv, name);
+    if (not null?(ptr))
+        return forward ...foundFn(ptr^);
+
+    ptr = lookup(module.publicEnv, name);
+    if (not null?(ptr))
+        return forward ...foundFn(ptr^);
+
+    var newFromMod = maybe(fromMod, f ref=> fromMod, () ref=> Maybe(module));
+
+    return forward ..._ifPublicLookup(newFromMod, module.privateEnvRoot, name,
         foundFn,
-        () => forward ..._ifPublicLookup(fromEnv, module.publicEnv, name, foundFn, notFoundFn),
+        () ref=> forward ..._ifPublicLookup(newFromMod, module.publicEnvRoot, name,
+            foundFn,
+            notFoundFn,
+        ),
     );
+}
 
-overload _ifPrivateLookup(fromEnv, env:EnvParent, name, foundFn, notFoundFn)
-    = forward ..._ifPrivateLookup(fromEnv, *env, name, foundFn, notFoundFn);
+
+overload _ifPrivateLookup(fromMod, env:EnvParent, name, foundFn, notFoundFn)
+    = forward ..._ifPrivateLookup(fromMod, *env, name, foundFn, notFoundFn);
 
 ifPrivateLookup(env, name:String, foundFn, notFoundFn)
-    = forward ..._ifPrivateLookup(nothing(Env), env, name, foundFn, notFoundFn);
+    = forward ..._ifPrivateLookup(nothing(Module), env, name, foundFn, notFoundFn);
 
 privateLookup(env, name) = ref ifPrivateLookup(env, name,
     entry ref=> ref entry,
