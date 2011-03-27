@@ -14,29 +14,20 @@ import newclay.resolver.*;
 private loadPrimitivesModule(program:Program) {
     var module = Module(program, primitivesModuleName);
     primitivesModule(program) = module;
-    module.privateEnv = newEnv();
-    module.publicEnv = newEnv();
     for (i in range(EnumMemberCount(PrimitiveKind))) {
         var kind = PrimitiveKind(i);
-        var name = ast.Identifier(primitiveName(kind));
-        var entry = Primitive(kind);
-        envAdd(module.publicEnv, name, Value(entry));
+        module.publicEnv[primitiveName(kind)] = EnvEntry(Value(Primitive(kind)));
     }
     for (i in range(EnumMemberCount(RTPrimitiveKind))) {
         var kind = RTPrimitiveKind(i);
         var name = ast.Identifier(primitiveName(kind));
-        var entry = RTPrimitive(kind);
-        envAdd(module.publicEnv, name, Value(entry));
+        module.publicEnv[primitiveName(kind)] = EnvEntry(Value(RTPrimitive(kind)));
     }
     return module;
 }
 
 private addSymbolHead(module, astItem, astName) {
     var name = astName.name;
-    if (not null?(lookup(module.publicEnv.entries, name.str))
-        or not null?(lookup(module.privateEnv.entries, name.str)))
-        genericError("symbol redefinition: ", name.str);
-
     var head = SymbolHead(astItem, astName, module);
 
     push(module.program.allSymbolHeads, head);
@@ -44,28 +35,28 @@ private addSymbolHead(module, astItem, astName) {
     return head;
 }
 
-private addSymbolItem(module, env, symbolItem) {
+private addSymbolItem(module, menv, symbolItem) {
     withLocation(symbolItem, () ref=> {
         var head = addSymbolHead(module, SymbolHeadAST(symbolItem), symbolItem.name);
 
         if (symbolHeadHasParams?(head)) {
-            envAdd(env, symbolItem.name.name, Value(head));
+            moduleAdd(module, menv, symbolItem.name.name, Value(head));
         } else {
             var sym = EnvEntry(Value(Symbol(head, ValueList(), newEnv(module))));
             head.instances[ValueList()] = sym;
-            envAdd(env, symbolItem.name.name, sym);
+            moduleAdd(module, menv, symbolItem.name.name, sym);
         }
     });
 }
 
-private addExternalItem(module, env, externalItem) {
+private addExternalItem(module, menv, externalItem) {
     // XXX support external definitions as entry points
     withLocation(externalItem.body, () ref=> {
         if (not variantIs?(externalItem.body, ast.UndefinedCodeBody))
             genericError("external function definitions are not yet supported");
     });
     withLocation(externalItem, () ref=> {
-        envAdd(env, externalItem.name,
+        moduleAdd(module, menv, externalItem.name,
             RTExternal(externalItem, module, externalItem.name.str, nothing(RTExternalAttributes))
         );
     });
@@ -81,7 +72,7 @@ private addGlobalItem(module, env, globalItem) {
     });
 }
 
-private addAliasItem(module, env, aliasItem) {
+private addAliasItem(module, menv, aliasItem) {
     withLocation(aliasItem, () ref=> {
         var head = addSymbolHead(
             module,
@@ -90,29 +81,29 @@ private addAliasItem(module, env, aliasItem) {
         );
 
         if (symbolHeadHasParams?(head)) {
-            envAdd(env, aliasItem.name.name, Value(head));
+            moduleAdd(module, menv, aliasItem.name.name, Value(head));
         } else {
             var a = Alias(aliasItem, newEnv(module));
             head.instances[ValueList()] = EnvEntry(a);
-            envAdd(env, aliasItem.name.name, a);
+            moduleAdd(module, menv, aliasItem.name.name, a);
         }
     });
 }
 
-private addGlobalVariable(module, env, kind:ast.BindingKind, binding:ast.SingleGlobalBinding) {
+private addGlobalVariable(module, menv, kind:ast.BindingKind, binding:ast.SingleGlobalBinding) {
     var head = addSymbolHead(module, SymbolHeadAST(GlobalBinding(kind, binding)), binding.name);
 
     if (symbolHeadHasParams?(head)) {
-        envAdd(env, binding.name.name, Value(head));
+        moduleAdd(module, menv, binding.name.name, Value(head));
     } else {
         var g = RTGlobal(head, ValueList(), newEnv(module));
         head.instances[ValueList()] = EnvEntry(g);
-        envAdd(env, binding.name.name, g);
+        moduleAdd(module, menv, binding.name.name, g);
     }
 }
 
 callbyname ifPublic(item, publicValue, privateValue)
-    = if (item.visibility == ast.VIS_PUBLIC) publicValue else privateValue;
+    = ref if (item.visibility == ast.VIS_PUBLIC) publicValue else privateValue;
 
 envRootAddImport(envRoot:EnvRoot, program:Program, importItem) {
     withLocation(importItem, () ref=> {
@@ -157,10 +148,8 @@ envRootAddImport(envRoot:EnvRoot, program:Program, importItem) {
 }
 
 private initializeGlobalEntries(module) {
-    module.publicEnv  = newEnv();
-    module.privateEnv = newEnv();
-    ref publicRoot  = envRoot(module.publicEnv);
-    ref privateRoot = envRoot(module.privateEnv);
+    ref publicRoot  = module.publicEnvRoot;
+    ref privateRoot = module.privateEnvRoot;
 
     if (not empty?(module.ast.topLevelItems)) {
         envRootAddGeneral(

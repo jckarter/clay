@@ -12,18 +12,15 @@ record Interactor(
     stdin:File,
     stdout:File,
     program:Program,
-    env:Env,
+    module:Module,
 );
 
-private defaultInteractorEnv(program) {
-    ref mainModuleRoot = envRoot(mainModule(program).privateEnv);
-    var newRoot = cloneEnvRoot(mainModuleRoot);
-
-    return newEnv(newRoot);
+private defaultInteractorModule(program) {
+    return cloneModule(mainModule(program), ModuleName("__interactor__"));
 }
 
 overload Interactor(stdin, stdout, program)
-    = Interactor(stdin, stdout, program, defaultInteractorEnv(program));
+    = Interactor(stdin, stdout, program, defaultInteractorModule(program));
 
 overload Interactor(program) = Interactor(stdin, stdout, program);
 
@@ -59,12 +56,10 @@ private iread(inter:Interactor) {
 private ieval(inter:Interactor, input:ast.InteractorInput) {
     return match(input,
         ast.InteractorImport, ii ref=> {
-            var module = programModule(inter.program, ModuleName(ii.name));
-            var root = envRoot(inter.env);
-            envRootAddImport(root, inter.program, ii);
+            envRootAddImport(inter.module.privateEnvRoot, inter.program, ii);
             return ValueList();
         },
-        ast.ExprList, exprList ref=> evaluateExprList(exprList, inter.env),
+        ast.ExprList, exprList ref=> evaluateExprList(exprList, newEnv(inter.module)),
     );
 }
 
