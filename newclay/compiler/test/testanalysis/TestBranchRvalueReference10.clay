@@ -1,0 +1,8 @@
+main() {
+    rvalue x = true;
+    if (true) {
+        //nothing
+    } else
+        return x;
+    return not x;
+}

@@ -1319,7 +1319,14 @@ private analyzeBranch(s, ast, cond, else?, thenAnalysisFn, elseAnalysisFn) {
     if (thenRecursive? and elseRecursive?)
         recursiveAnalysisError();
 
-    useBranchRvalues(s, thenS, elseS);
+    if (statementBreaks?(thenTarget) and statementBreaks?(elseTarget)) {
+        //nothing
+    } else if (statementBreaks?(thenTarget))
+        useSubRvalues(s, elseS);
+    else if (statementBreaks?(elseTarget))
+        useSubRvalues(s, thenS);
+    else
+        useBranchRvalues(s, thenS, elseS);
 
     addSpecializedNode(s, ifNode);
     return branchStatementTarget(thenTarget, elseTarget);
