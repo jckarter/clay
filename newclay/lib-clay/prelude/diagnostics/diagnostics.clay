@@ -21,8 +21,11 @@ assert(f, ..msg) | DefinedWithType?([f()], Bool) {
     }
 }
 
-fatal(msg, ..msgg) {
-    puts(CString(msg));
+assertUnreachable(f, ..msg) {
+    // XXX show message
+    printf(CString("unreachable code reached at %s(%u,%u)\n"),
+        ..assertLocation(..LambdaLocation(f))
+    );
     abort();
     throw 0; // XXX until we can mark externals as noreturn
 }
