@@ -6,5 +6,5 @@ import meta.lltypes.*;
 // size
 //
 
-inline overload size(x:Array['T, 'n]) = UInt('n);
+overload size(x:Array['T, 'n]) inline = UInt('n);
 

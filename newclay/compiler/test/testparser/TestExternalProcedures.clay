@@ -1,10 +1,13 @@
-external abort();
-external puts(str:CString) Int;
-external printf(format:CString, ..) Int;
+external puts(str:CString) : Int;
+external printf(format:CString, ..) : Int;
+external abort() noreturn;
+external srand() : ;
+external srand();
 
-external (stdcall) WSAStartup(version:UShort, wsaData:win32.LPWSADATA) win32.INT;
+external (stdcall) WSAStartup(version:UShort, wsaData:win32.LPWSADATA) : win32.INT;
 
-external ("_write$UNIX2003") write(fildes:Int, buf:RawPointer, nbytes:SizeT) SSizeT;
+external ("_write$UNIX2003") write(fildes:Int, buf:RawPointer, nbytes:SizeT) : SSizeT;
 
 external foo() = 1;
 external foo() { return 2; }
+external foo() noreturn { while(true) {} }

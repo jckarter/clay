@@ -36,23 +36,23 @@ StaticOverloadDefinition -> "(" ListPattern? ")" Predicate? "=" ExprList ";"
 
 StaticOverload -> "overload" "#" TargetPattern StaticOverloadDefinition
 
-OverloadDefinition -> "(" ArgumentList? ")" ReturnList?
+OverloadAttributes -> OverloadAttribute*
+OverloadAttribute -> "inline" | "noreturn" | "nothrow"
+
+OverloadDefinition -> "(" ArgumentList? ")" OverloadAttributes ReturnList?
                       Predicate? CodeBody
 
-OverloadAttributes -> "inline"?
-
-Overload -> OverloadAttributes "overload" TargetPattern OverloadDefinition
+Overload -> "overload" TargetPattern OverloadDefinition
 
 StaticFunction -> Visibility? "#" SymbolName StaticOverloadDefinition
 
-Procedure -> Visibility? OverloadAttributes SymbolName OverloadDefinition
+Procedure -> Visibility? SymbolName OverloadDefinition
 
 ExternalProcedure -> Visibility? "external" ExternalAttributes? Identifier
-                     ExternalArgumentList Expr? CodeBody
-
+                     ExternalArgumentList OverloadAttributes ExternalReturn? CodeBody
 ExternalAttributes -> "(" ExprList ")"
-
 ExternalArgumentList -> "(" variadic_list(Argument, ()) ")"
+ExternalReturn -> ":" Expr?
 
 GlobalBinding -> Visibility? BindingKind SymbolName (":" Expr)? ("=" Expr)? ";"
 
@@ -72,11 +72,11 @@ ArgumentKind -> "const" | "ref" | "rvalue" | "forward"
 
 ReturnList -> NamedReturnList | UnnamedReturnList
 
-NamedReturnList -> (NamedReturnSpec | NamedVariadicReturnSpec)+
+NamedReturnList -> "-->" (NamedReturnSpec | NamedVariadicReturnSpec)+
 NamedReturnSpec -> ReturnKind? Identifier ":" Expr
 NamedVariadicReturnSpec -> ReturnKind? ".." Identifier ":" Expr
 
-UnnamedReturnList -> (UnnamedReturnSpec | UnnamedVariadicReturnSpec)+
+UnnamedReturnList -> ":" (UnnamedReturnSpec | UnnamedVariadicReturnSpec)+
 UnnamedReturnSpec -> ReturnKind? Expr
 UnnamedVariadicReturnSpec -> ReturnKind? ".." Expr
 
