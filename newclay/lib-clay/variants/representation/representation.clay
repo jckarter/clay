@@ -61,7 +61,7 @@ overload dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
     static for (/*#'M*/ M in ..'MM)
         if (tag == tagValue(M, ..'MM))
             return forward ..fn(value[M]);
-    fatal("invalid variant tag ", tag);
+    assertUnreachable([], "invalid variant tag ", tag);
 }
 
 inline overload reprAs(#'M, forward repr:TaggedUnionRepr[..'MM]) = forward repr.value['M];
