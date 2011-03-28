@@ -87,6 +87,8 @@ private var kw_import = keyword("import");
 private var kw_as = keyword("as");
 private var kw_external = keyword("external");
 private var kw_inline = keyword("inline");
+private var kw_noreturn = keyword("noreturn");
+private var kw_nothrow = keyword("nothrow");
 private var kw_symbol = keyword("symbol");
 private var kw_attribute = keyword("attribute");
 private var kw_overload = keyword("overload");
@@ -980,8 +982,8 @@ private var namedReturn = modify(
 );
 
 private var namedReturnList = modify(
-    x => Tuple(Maybe(map(y => move(y.0), x)), map(y => move(y.1), x)),
-    commaList(namedReturn),
+    x => Tuple(Maybe(map(y => move(y.0), x.1)), map(y => move(y.1), x.1)),
+    sequence(punc(#"-->"), optCommaList(namedReturn)),
 );
 
 private var unnamedReturn = bounds(modify(
@@ -990,8 +992,8 @@ private var unnamedReturn = bounds(modify(
 ));
 
 private var unnamedReturnList = modify(
-    x => Tuple(nothing(Vector[Identifier]), move(x)),
-    commaList(unnamedReturn),
+    x => Tuple(nothing(Vector[Identifier]), move(x.1)),
+    sequence(punc(#":"), optCommaList(unnamedReturn)),
 );
 
 private var returnList = choice(namedReturnList, unnamedReturnList);
@@ -1081,33 +1083,39 @@ private var codeBody = choice(
 );
 
 private var overloadDefinition = modify(
-    x => OverloadDefinition(OverloadAttributes(false), move(x.1), move((x.3).1), move((x.3).0), move(x.4), move(x.5)),
+    x => OverloadDefinition(
+        move(x.1), // arguments
+        move(x.3), // attributes
+        move((x.4).1), move((x.4).0), // returns
+        move(x.5), // predicate
+        move(x.6) // body
+    ),
     sequence(
         punc(#"("), optArguments, punc(#")"),
+        zeroOrMore(overloadAttribute),
         optReturnList, optPredicate, codeBody,
     ),
 );
 
-private var overloadAttributes = bounds(modify(
-    x => OverloadAttributes(just?(x)),
-    optional(kw_inline),
+private var overloadAttribute = bounds(modify(
+    OverloadAttribute,
+    choice(
+        modify(x => OVERLOAD_INLINE,   kw_inline),
+        modify(x => OVERLOAD_NORETURN, kw_noreturn),
+        modify(x => OVERLOAD_NOTHROW,  kw_nothrow),
+    )
 ));
 
-private overloadDefinitionWithAttributes(attributes, definition) {
-    definition.attributes = attributes;
-    return definition;
-}
-
 private var overloadDef = topLevelItemParser(
-    x => Overload(move(x.2), overloadDefinitionWithAttributes(x.0, x.3)),
-    sequence(overloadAttributes, kw_overload, targetPattern, overloadDefinition),
+    x => Overload(move(x.1), move(x.2)),
+    sequence(kw_overload, targetPattern, overloadDefinition),
 );
 
 // procedureDef, staticFunctionDef
 
 private var procedureDef = topLevelItemParser(
-    x => Procedure(just(x.0, VIS_PUBLIC), x.2, overloadDefinitionWithAttributes(x.1, x.3)),
-    sequence(visibility, overloadAttributes, symbolName, overloadDefinition),
+    x => Procedure(just(x.0, VIS_PUBLIC), x.1, x.2),
+    sequence(visibility, symbolName, overloadDefinition),
 );
 
 private var staticFunctionDef = topLevelItemParser(
@@ -1117,13 +1125,21 @@ private var staticFunctionDef = topLevelItemParser(
 
 // externalProcedureDef
 
+private var externalReturn = bounds(modify(
+    x => ExternalReturn(x.1),
+    sequence(punc(#":"), optional(expr)),
+));
+
 private var externalProcedureDef = topLevelItemParser(
-    x => ExternalProcedure(just(x.0, VIS_PUBLIC), x.2, x.3, x.4, x.5, x.6),
-    sequence(visibility, kw_external,
+    x => ExternalProcedure(just(x.0, VIS_PUBLIC), x.2, x.5, x.3, x.4, x.6, x.7),
+    sequence(
+        visibility,
+        kw_external,
         optExternalAttributes,
         identifier,
-        externalArgumentList, 
-        optional(expr),
+        externalArgumentList,
+        zeroOrMore(overloadAttribute),
+        optional(externalReturn),
         codeBody
     ),
 );

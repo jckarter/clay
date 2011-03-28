@@ -507,13 +507,15 @@ record StaticOverload = ast(
     definition: StaticOverloadDefinition,
 );
 
-record OverloadAttributes = ast(
-    inline?: Bool,
+enum OverloadAttributeKind { OVERLOAD_INLINE, OVERLOAD_NORETURN, OVERLOAD_NOTHROW }
+
+record OverloadAttribute = ast(
+    kind: OverloadAttributeKind,
 );
 
 record OverloadDefinition = ast(
-    attributes: OverloadAttributes,
     args: ArgumentList,
+    attributes: Vector[OverloadAttribute],
     returns: Vector[ReturnSpec],
     returnedNames: Maybe[Vector[Identifier]],
     predicate: Maybe[Expr],
@@ -537,12 +539,17 @@ record Procedure = ast(
     definition: OverloadDefinition,
 );
 
+record ExternalReturn = ast(
+    returnType: Maybe[Expr],
+);
+
 record ExternalProcedure = ast(
     visibility: VisibilityKind,
-    attributes: Maybe[ExprList],
+    externalAttributes: Maybe[ExprList],
+    attributes:Vector[OverloadAttribute],
     name: Identifier,
     arguments: ExternalArgumentList,
-    returns: Maybe[Expr],
+    returns: Maybe[ExternalReturn],
     body: CodeBody,
 );
 

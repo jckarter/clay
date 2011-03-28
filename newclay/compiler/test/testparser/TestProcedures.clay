@@ -8,6 +8,19 @@ public bas(x) { println(x); }
 #Foo('x) = 'x;
 #Bar('x) | Foo('x) = ('x, 'x);
 
-inline foo(x) { println(x); }
-private inline foo(x) { println(x); }
-inline overload foo(x) { println(x); }
+foo(x) inline { println(x); }
+private foo(x) noreturn { throw x; }
+overload foo(x) nothrow { println(x); }
+
+foo(x) : { println(x); }
+foo(x) --> { println(x); }
+
+foo(x:Int) : Int = x;
+foo(x:Int) nothrow : Int = x;
+foo(x:Int) noreturn : Int = foo(x);
+foo(x) : Type([x]) = x;
+
+foo(x:Int) --> y:Int { y <-- x; }
+foo(x:Int) nothrow --> y:Int { y <-- x; }
+foo(x:Int) noreturn --> y:Int { y <-- foo(x); }
+foo(x) --> y:Type([x]) { y <-- foo(x); }
