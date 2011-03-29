@@ -1,4 +1,4 @@
-rvalueReturn() rvalue x:NontrivialInt __c__ """abort();""";
+rvalueReturn() --> rvalue x:NontrivialInt __c__ """abort();""";
 
 main() {
     rvalue x = rvalueReturn();

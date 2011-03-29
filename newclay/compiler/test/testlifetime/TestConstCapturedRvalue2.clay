@@ -1,4 +1,4 @@
-valueReturn() x:NontrivialInt __c__ """abort();""";
+valueReturn() --> x:NontrivialInt __c__ """abort();""";
 
 foo(x) {}
 

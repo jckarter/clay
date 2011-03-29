@@ -1,4 +1,4 @@
-refReturn() ref x:NontrivialInt __c__ """abort();""";
+refReturn() --> ref x:NontrivialInt __c__ """abort();""";
 
 main() {
     var x = refReturn();
