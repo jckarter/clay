@@ -18,6 +18,7 @@ foo(x) --> { println(x); }
 foo(x:Int) : Int = x;
 foo(x:Int) nothrow : Int = x;
 foo(x:Int) noreturn : Int = foo(x);
+foo(x:Int) inline nothrow noreturn : Int = foo(x);
 foo(x) : Type([x]) = x;
 
 foo(x:Int) --> y:Int { y <-- x; }
