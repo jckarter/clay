@@ -513,11 +513,14 @@ record OverloadAttribute = ast(
     kind: OverloadAttributeKind,
 );
 
+variant ReturnList = Nothing
+                   | Vector[NamedReturn]
+                   | Vector[ReturnSpec];
+
 record OverloadDefinition = ast(
     args: ArgumentList,
     attributes: Vector[OverloadAttribute],
-    returns: Vector[ReturnSpec],
-    returnedNames: Maybe[Vector[Identifier]],
+    returns: ReturnList,
     predicate: Maybe[Expr],
     body: CodeBody,
 );
@@ -648,6 +651,11 @@ record ReturnSpec = ast(
     type: Expr,
 );
 
+record NamedReturn = ast(
+    name: Identifier,
+    spec: ReturnSpec,
+);
+
 variant CodeBody = UndefinedCodeBody
                  | ExprCodeBody
                  | Block
@@ -710,6 +718,7 @@ variant Statement = Block
                   | TryStatement
                   | ExprStatement
                   | EmptyStatement
+                  | UnreachableStatement
                   ;
 
 record LabelDef = ast(
@@ -830,6 +839,8 @@ record ExprStatement = ast(
 );
 
 record EmptyStatement = ast();
+
+record UnreachableStatement = ast();
 
 
 //

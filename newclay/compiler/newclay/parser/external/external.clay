@@ -970,20 +970,20 @@ private var returnArityKind = modify(
     optional(ellipsis),
 );
 
-private var namedReturn2 = modify(
-    x => Tuple(move(x.2), ReturnSpec(x.0, x.1, move(x.4))),
+private var namedReturn2 = bounds(modify(
+    x => NamedReturn(move(x.2), ReturnSpec(x.0, x.1, move(x.4))),
     sequence(
         optional(returnKind), returnArityKind, identifier, punc(#":"), expr,
     ),
-);
+));
 
 private var namedReturn = modify(
-    x => { setLocation((x.1).1, move(x.0)); return move(x.1); },
-    includeBounds(namedReturn2),
+    x => { x.spec.location = x.location; return x; },
+    namedReturn2
 );
 
 private var namedReturnList = modify(
-    x => Tuple(Maybe(map(y => move(y.0), x.1)), map(y => move(y.1), x.1)),
+    x => x.1,
     sequence(punc(#"-->"), optCommaList(namedReturn)),
 );
 
@@ -993,18 +993,13 @@ private var unnamedReturn = bounds(modify(
 ));
 
 private var unnamedReturnList = modify(
-    x => Tuple(nothing(Vector[Identifier]), move(x.1)),
+    x => x.1,
     sequence(punc(#":"), optCommaList(unnamedReturn)),
 );
 
-private var returnList = choice(namedReturnList, unnamedReturnList);
-
-private var optReturnList = modify(
-    x => maybe(x,
-        move,
-        () => Tuple(nothing(Vector[Identifier]), Vector[ReturnSpec]()),
-    ),
-    optional(returnList),
+private var returnList = choice(
+    modify(x => ReturnList(x), namedReturnList),
+    modify(x => ReturnList(x), unnamedReturnList),
 );
 
 private var returnExprKind = choice(
@@ -1083,11 +1078,16 @@ private var codeBody = choice(
     exprCodeBody, blockCodeBody, literalCodeBodyProcedure, undefinedCodeBody
 );
 
+private var optReturnList = modify(
+    m => just(m, ReturnList(Nothing())),
+    optional(returnList),
+);
+
 private var overloadDefinition = modify(
     x => OverloadDefinition(
         move(x.1), // arguments
         move(x.3), // attributes
-        move((x.4).1), move((x.4).0), // returns
+        move(x.4), // returns
         move(x.5), // predicate
         move(x.6) // body
     ),
