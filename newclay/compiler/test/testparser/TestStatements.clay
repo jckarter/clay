@@ -108,6 +108,9 @@ overload foo() {
     }
 
     ; ;
+
     {}
     { var x; }
+
+    __unreachable__;
 }

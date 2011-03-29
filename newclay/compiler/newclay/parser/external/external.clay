@@ -124,6 +124,7 @@ private var kw_case = keyword("case");
 private var kw_c = keyword("__c__");
 private var kw_llvm = keyword("__llvm__");
 private var kw_asm = keyword("__asm__");
+private var kw_unreachable = keyword("__unreachable__");
 
 
 
@@ -1220,6 +1221,7 @@ private var statement2 = choice(
     tryStatement,
     exprStatement,
     emptyStatement,
+    unreachableStatement,
 );
 
 private statement(input) Maybe[Statement] = statement2(input);
@@ -1372,6 +1374,11 @@ private var exprStatement = statementParser(
 private var emptyStatement = statementParser(
     x => EmptyStatement(),
     punc(#";"),
+);
+
+private var unreachableStatement = statementParser(
+    x => UnreachableStatement(),
+    sequence(kw_unreachable, punc(#";")),
 );
 
 // topLevelItem

@@ -231,6 +231,7 @@ Statement -> Block
            | TryStatement
            | ExprStatement
            | EmptyStatement
+           | UnreachableStatement
 
 LabelDef -> "@" Identifier
 
@@ -265,6 +266,8 @@ TryStatement -> "try" Block ("catch" "(" BindingName ")" Block)+
 ExprStatement -> Expr ";"
 
 EmptyStatement -> ";"
+
+UnreachableStatement -> "__unreachable__" ";"
 
 
 //
