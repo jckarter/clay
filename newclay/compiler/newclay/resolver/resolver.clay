@@ -78,19 +78,27 @@ overload visitASTNode(r:ResolveASTVisitor, lambda:ast.LambdaExpr) {
 
 overload visitASTNode(r:ResolveASTVisitor, oload:ast.Overload) {
     visitAST(r, oload.target);
-    visitAST(r, oload.definition.args);
+    visitAST(r, oload.definition);
+}
+
+overload visitASTNode(r:ResolveASTVisitor, definition:ast.OverloadDefinition) {
+    visitAST(r, definition.args);
 
     var subr = newVisitor(r);
-    bindArgumentList(subr, oload.definition.args);
+    bindArgumentList(subr, definition.args);
 
-    maybe(oload.definition.returnedNames, returnedNames ref=> {
-        for (ret in returnedNames)
-            envAdd(subr.env, ret, dummyValue(r.depth));
-    });
+    visitAST(subr, definition.returns);
+    match(definition.returns,
+        Vector[ast.NamedReturn], namedReturns ref=> {
+            for (ret in namedReturns)
+                envAdd(subr.env, ret.name, dummyValue(r.depth));
+        },
+        MatchDefault, x ref=> {},
+    );
 
-    visitAST(subr, oload.definition.predicate);
-    visitAST(subr, oload.definition.returns);
-    visitAST(subr, oload.definition.body);
+    visitAST(subr, definition.predicate);
+    visitAST(subr, definition.returns);
+    visitAST(subr, definition.body);
 }
 
 private addCapturedName(lambda, name) {

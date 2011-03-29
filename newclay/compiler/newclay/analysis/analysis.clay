@@ -74,7 +74,7 @@ externalRTValue(x:RTExternal) {
     return RTValue(RT_VALUE_RVALUE, type, x, x.name);
 }
 
-externalAttributes(ex:RTExternal) = ref maybe(ex.attributes,
+externalAttributes(ex:RTExternal) = ref maybe(ex.externalAttributes,
     a ref=> ref a,
     () ref=> ref initializeExternalAttributes(ex),
 );
@@ -85,24 +85,29 @@ private validExternalArgumentType?(type)
 private initializeExternalAttributes(ex:RTExternal) {
     var env = newEnv(ex.module);
 
-    var attributeValues = maybe(ex.ast.attributes,
+    var attributeValues = maybe(ex.ast.externalAttributes,
         attributes ref=> evaluateExprList(attributes, env),
         () ref=> ValueList(),
     );
 
     var argumentTypes = ValueList(mapped(a ref=> externalArgumentType(a, env), ex.ast.arguments.items));
-    var returnType = maybe(ex.ast.returns, returnExpr ref=> withLocation(returnExpr, () ref=> {
-        var returnType = evaluateExpr(returnExpr, env);
-        if (not validExternalArgumentType?(returnType))
-            genericError("external functions may only return values of POD types");
-        return Maybe(returnType);
-    }));
+    // XXX handle noreturn externals
+    var returnType = maybe(ex.ast.returns, extReturn ref=>
+        maybe(extReturn.returnType, returnExpr ref=>
+            withLocation(returnExpr, () ref=> {
+                var returnType = evaluateExpr(returnExpr, env);
+                if (not validExternalArgumentType?(returnType))
+                    genericError("external functions may only return values of POD types");
+                return Maybe(returnType);
+            }),
+        ),
+    );
 
     var symbolName = ex.name;
     var abi = getHooks().CdeclABI;
     var variadic? = ex.ast.arguments.variadic?;
 
-    maybe(ex.ast.attributes, attributes ref=> {
+    maybe(ex.ast.externalAttributes, attributes ref=> {
         withLocation(ex.ast, () ref=> {
             applyExternalAttributes(attributeValues, symbolName, abi);
 
@@ -111,7 +116,7 @@ private initializeExternalAttributes(ex:RTExternal) {
         });
     });
 
-    ex.attributes = Maybe(RTExternalAttributes(
+    ex.externalAttributes = Maybe(RTExternalAttributes(
         symbolName,
         abi,
         variadic?,
@@ -119,7 +124,7 @@ private initializeExternalAttributes(ex:RTExternal) {
         returnType
     ));
 
-    return ref just(ex.attributes);
+    return ref just(ex.externalAttributes);
 }
 
 private applyExternalAttributes(attributeValues, outSymbolName, outAbi) {
@@ -1594,6 +1599,10 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.EmptyStatement) StatementTarge
     return StatementTarget();
 }
 
+overload analyzeStatement(s, pc, bc, lc, stmt:ast.UnreachableStatement) StatementTarget {
+    return StatementTarget(StatementNoReturn);
+}
+
 
 //
 // analyzeBindings
@@ -2246,15 +2255,19 @@ private bindNamedReturn(s:Specialization, name, returnSpec) {
 }
 
 private bindNamedReturns(s:Specialization) {
-    ref ast = s.matchedOverload.ast;
-    maybe(ast.definition.returnedNames,
-        names ref=> {
-            for (name, returnSpec in zipped(names, ast.definition.returns))
-                bindNamedReturn(s, name, returnSpec);
+    ref oast = s.matchedOverload.ast;
+    match(oast.definition.returns,
+        Vector[ast.NamedReturn], namedReturns ref=> {
+            for (namedReturn in namedReturns)
+                bindNamedReturn(s, namedReturn.name, namedReturn.spec);
         },
-        () => {},
+        MatchDefault, x ref=> {},
     );
 }
+
+inlineAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_INLINE);
+nothrowAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_NOTHROW);
+noreturnAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_NORETURN);
 
 matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
     ref formalArgs = o.ast.definition.args;
@@ -2262,7 +2275,7 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
         return nothing(Specialization);
     var pvars = topLevelItemPatternVars(o);
     var s = Specialization(o, callable);
-    if (o.ast.definition.attributes.inline?)
+    if (inlineAttribute?(o.ast.definition.attributes))
         s.inline? = true;
     s.env = initializeMatch(o.env, pvars);
     var callablePattern = evaluatePattern(o.ast.target, s.env);
@@ -2370,8 +2383,11 @@ private computeReturnSpec(returns:Vector[ast.ReturnSpec], env) {
                 push(results, RTValue(kind, type, referent));
         }
     }
-    return Maybe(move(results));
+    return move(results);
 }
+
+private computeNamedReturnSpec(returns:Vector[ast.NamedReturn], env)
+    = computeReturnSpec(map(x => x.spec, returns), env);
 
 private asNamedReturnVariable(result) = RTValue(
     RT_VALUE_REF,
@@ -2380,86 +2396,114 @@ private asNamedReturnVariable(result) = RTValue(
     "returned"
 );
 
-analyzeCodeBody(s:SpecializationContext, env:Env, body:ast.CodeBody)
-    = match(body,
+analyzeCodeBody(s, env, codeBody)
+    = match(codeBody,
         ast.ExprCodeBody, body ref=> analyzeNode(s, env, body.exprs),
         ast.LiteralCodeBody, body ref=> analyzeLiteralCodeBody(s, env, body),
         ast.Block, body ref=> analyzeBlockCodeBody(s, env, body),
-        ast.UndefinedCodeBody,
-            body ref=> genericAnalysisError("undefined overload"),
+        ast.UndefinedCodeBody, body ref=> genericAnalysisError("undefined overload"),
     );
+
+
+private bodyAnalyzedResults(s, env, definition) {
+    var declaredNoReturn? = noreturnAttribute?(definition.attributes);
+
+    var results = analyzeCodeBody(s, env, definition.body);
+    if(just?(results) and declaredNoReturn?)
+        genericError("procedure declared as noreturn but the body returns");
+
+    return move(results);
+}
+
+private saveAnalyzedResults(s, returns, analyzedResults) {
+    s.results = analyzedResults;
+    if (nothing?(analyzedResults)) {
+        // if function is nonterminating, promote any remaining return values
+        // to local variables so they will absorb and destroy return values
+        for (result in returns.namedResults)
+            result.referent = RTValueReferent(LocalVariable());
+        s.internalNamedResults = RTValues();
+    } else
+        s.internalNamedResults = returns.namedResults;
+}
+
+private procedure analyzeCallableDeclaredReturns;
+overload analyzeCallableDeclaredReturns(s, env, o, namedReturns:Nothing) {
+    var complete? = true;
+    var returns = SpecializationReturns();
+    var context = SpecializationContext(&just(s.body), &complete?, &returns);
+    for (arg in s.internalArgs)
+        addRvalue(context, arg);
+
+    var analyzedResults = bodyAnalyzedResults(context, env, o.ast.definition);
+
+    saveAnalyzedResults(s, returns, analyzedResults);
+
+    return complete?;
+}
+overload analyzeCallableDeclaredReturns(s, env, o, namedReturns:Vector[ast.NamedReturn]) {
+    try {
+        var complete? = true;
+        var returns = SpecializationReturns();
+        var context = SpecializationContext(&just(s.body), &complete?, &returns);
+        for (arg in s.internalArgs)
+            addRvalue(context, arg);
+
+        // must return void since returns are already named
+        returns.results? = true;
+
+        var analyzedResults = bodyAnalyzedResults(context, env, o.ast.definition);
+
+        s.results = maybe(analyzedResults,
+            x ref=> Maybe(computeNamedReturnSpec(namedReturns, env)),
+            () ref=> nothing(RTValues),
+        );
+
+        return complete?;
+    } catch (ex:RecursiveAnalysisError) {
+        s.body = nothing(Vector[ir.Node]);
+        s.results = Maybe(computeNamedReturnSpec(namedReturns, env));
+        return false;
+    }
+}
+overload analyzeCallableDeclaredReturns(s, env, o, declaredReturns:Vector[ast.ReturnSpec]) {
+    try {
+        if (variantIs?(o.ast.definition.body, ast.LiteralCodeBody))
+            genericError("literal procedure must use named return values");
+
+        var complete? = true;
+        var returns = SpecializationReturns();
+        var context = SpecializationContext(&just(s.body), &complete?, &returns);
+        for (arg in s.internalArgs)
+            addRvalue(context, arg);
+
+        returns.results? = true;
+        returns.results = computeReturnSpec(declaredReturns, env);
+        returns.namedResults = map(asNamedReturnVariable, returns.results);
+
+        var analyzedResults = bodyAnalyzedResults(context, env, o.ast.definition);
+
+        saveAnalyzedResults(s, returns, analyzedResults);
+
+        return complete?;
+    } catch (ex:RecursiveAnalysisError) {
+        s.body = nothing(Vector[ir.Node]);
+        s.results = Maybe(computeReturnSpec(declaredReturns, env));
+        return false;
+    }
+}
 
 private analyzeCallableReturns(s:Specialization, env, o:Overload) {
     s.body = Maybe(Vector[ir.Node]());
     try {
         return withLocation(o.ast.definition, () ref=> {
-            var declaredReturns? = not empty?(o.ast.definition.returns);
-            var namedReturns? = just?(o.ast.definition.returnedNames);
-
-            var complete? = true;
-            var returns = SpecializationReturns();
-            var context = SpecializationContext(&just(s.body), &complete?, &returns);
-            for (arg in s.internalArgs)
-                addRvalue(context, arg);
-
-            var declaredNoReturn? = false;
-            if (namedReturns?) {
-                // must return void if returns are already named
-                returns.results? = true;
-            } else if (declaredReturns?) {
-                maybe(computeReturnSpec(o.ast.definition.returns, env),
-                    computedResults ref=> {
-                        returns.results? = true;
-                        returns.results = computedResults;
-                        returns.namedResults = map(asNamedReturnVariable, computedResults);
-                    },
-                    () ref=> { declaredNoReturn? = true; }
-                );
-            }
-
-            if (variantIs?(o.ast.definition.body, ast.LiteralCodeBody)
-                and declaredReturns?
-                and not namedReturns?)
-                genericError("literal procedure must use named return values");
-
-            var analyzedResults = analyzeCodeBody(context, env, o.ast.definition.body);
-
+            var complete? = analyzeCallableDeclaredReturns(s, env, o,
+                *o.ast.definition.returns
+            );
             if (not complete?)
                 s.body = nothing(Vector[ir.Node]);
-
-            if (declaredReturns?) {
-                // declared returns,  actually returns  => return types must match
-                // declared returns,  actually noreturn => ok
-                // declared noreturn, actually returns  => error
-                maybe(analyzedResults, ar ref=> {
-                    if (declaredNoReturn?)
-                        genericError("procedure declared as noreturn but the body returns");
-                });
-            }
-
-            if (namedReturns?)
-                s.results = computeReturnSpec(o.ast.definition.returns, env);
-            else {
-                s.results = analyzedResults;
-                if (nothing?(analyzedResults)) {
-                    // if function is nonterminating, promote any remaining return values
-                    // to local variables so they will absorb and destroy return values
-                    for (result in returns.namedResults)
-                        result.referent = RTValueReferent(LocalVariable());
-                    s.internalNamedResults = RTValues();
-                } else
-                    s.internalNamedResults = returns.namedResults;
-            }
-
             return complete?;
         });
-    } catch (ex:RecursiveAnalysisError) {
-        s.body = nothing(Vector[ir.Node]);
-        if (not empty?(o.ast.definition.returns)) {
-            s.results = computeReturnSpec(o.ast.definition.returns, env);
-            return false;
-        } else
-            throw ex;
     } catch (ex) {
         s.body = nothing(Vector[ir.Node]);
         throw ex;

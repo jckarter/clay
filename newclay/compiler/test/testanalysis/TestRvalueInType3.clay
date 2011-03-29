@@ -2,7 +2,7 @@ import __primitives__.*;
 
 bar(rvalue x) {}
 
-foo(rvalue x) Type([x]) | Defined?([..bar(x)]) {
+foo(rvalue x) : Type([x]) | Defined?([..bar(x)]) {
     return x;
 }
 
