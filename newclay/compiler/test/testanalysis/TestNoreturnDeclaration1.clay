@@ -1,0 +1,4 @@
+foo() noreturn __c__ """abort();""";
+main() {
+    foo();
+}
