@@ -1,4 +1,4 @@
-foo() ref x:NontrivialInt __c__ """abort();""";
+foo() --> ref x:NontrivialInt __c__ """abort();""";
 
 main() {
     ref x = foo();
