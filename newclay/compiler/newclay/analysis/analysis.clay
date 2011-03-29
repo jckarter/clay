@@ -2409,6 +2409,9 @@ private bodyAnalyzedResults(s, env, definition) {
     var declaredNoReturn? = noreturnAttribute?(definition.attributes);
 
     var results = analyzeCodeBody(s, env, definition.body);
+    if (declaredNoReturn? and variantIs?(definition.body, ast.LiteralCodeBody))
+        return nothing(RTValues);
+
     if(just?(results) and declaredNoReturn?)
         genericError("procedure declared as noreturn but the body returns");
 
