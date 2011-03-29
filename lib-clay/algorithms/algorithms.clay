@@ -148,6 +148,8 @@ overload reverseFindIf(_first, _last, pred) {
     return cur;
 }
 
+any?(seq, pred) = findIf(seq, pred) != end(seq);
+all?(seq, pred) = findIf(seq, x ref=> not pred(x)) != end(seq);
 
 
 //
