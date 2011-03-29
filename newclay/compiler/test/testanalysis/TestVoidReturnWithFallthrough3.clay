@@ -1,0 +1,6 @@
+symbol main;
+overload main() --> {
+    if (true)
+        return;
+}
+

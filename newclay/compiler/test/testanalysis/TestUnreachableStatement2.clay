@@ -1,0 +1,6 @@
+foo() {}
+
+main() {
+    __unreachable__;
+    foo();
+}
