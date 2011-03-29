@@ -90,6 +90,7 @@ var keywords = [
     "switch", "case",
     "div", "mod",
     "__c__", "__llvm__", "__asm__",
+    "__unreachable__",
 ];
 
 punctuationIndex(s) Int {
