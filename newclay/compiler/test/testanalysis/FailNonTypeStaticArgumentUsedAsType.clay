@@ -1,4 +1,4 @@
-foo(#'T) x:'T __c__ """abort();""";
+foo(#'T) --> x:'T __c__ """abort();""";
 
 main() {
     return foo(#2);

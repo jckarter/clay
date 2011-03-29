@@ -182,7 +182,7 @@ overload #SymbolBodyWithTag?('tag) = false;
 // tupleLiteral
 //
 
-tupleLiteral(..elements:'T) returned:Tuple[..'T] __c__ """abort();""";
+tupleLiteral(..elements:'T) --> returned:Tuple[..'T] __c__ """abort();""";
 
 
 
@@ -190,81 +190,81 @@ tupleLiteral(..elements:'T) returned:Tuple[..'T] __c__ """abort();""";
 // operators
 //
 
-index(a:Array['T, 'n], i:Int) ref returned:'T __c__ """
+index(a:Array['T, 'n], i:Int) --> ref returned:'T __c__ """
     $returned = &$a.array[$i];
 """;
 
-staticIndex(a:Tuple['T0, ..'T], #0) ref returned:'T0 __c__ """
+staticIndex(a:Tuple['T0, ..'T], #0) --> ref returned:'T0 __c__ """
     $returned = &$a.field0;
 """;
 
-overload staticIndex(a:Tuple['T0, 'T1, ..'T], #1) ref returned:'T1 __c__ """
+overload staticIndex(a:Tuple['T0, 'T1, ..'T], #1) --> ref returned:'T1 __c__ """
     $returned = &$a.field1;
 """;
 
 unpack(a:Tuple['T0, 'T1]) = a.0, a.1;
 
-fieldRef(a, #'field) x:Int __c__ """abort();""";
+fieldRef(a, #'field) --> x:Int __c__ """abort();""";
 
 plus(a:Int) = a;
 
-minus(a:Int) returned:Int __c__ """
+minus(a:Int) --> returned:Int __c__ """
     $returned = -$a;
 """;
 
-dereference(a:Pointer['T]) ref returned:'T __c__ """
+dereference(a:Pointer['T]) --> ref returned:'T __c__ """
     $returned = $a;
 """;
 
-multiply(a:Int, b:Int) returned:Int __c__ """
+multiply(a:Int, b:Int) --> returned:Int __c__ """
     $returned = $a * $b;
 """;
 
-divide(a:Float64, b:Float64) returned:Float64 __c__ """
+divide(a:Float64, b:Float64) --> returned:Float64 __c__ """
     $returned = $a / $b;
 """;
 
-quotient(a:Int, b:Int) returned:Int __c__ """
+quotient(a:Int, b:Int) --> returned:Int __c__ """
     $returned = $a / $b;
 """;
 
-remainder(a:Int, b:Int) returned:Int __c__ """
+remainder(a:Int, b:Int) --> returned:Int __c__ """
     $returned = $a % $b;
 """;
 
-add(a:Int, b:Int) returned:Int __c__ """
+add(a:Int, b:Int) --> returned:Int __c__ """
     $returned = $a + $b;
 """;
 
-overload add(a:Float64, b:Float64) returned:Float64 __c__ """
+overload add(a:Float64, b:Float64) --> returned:Float64 __c__ """
     $returned = $a + $b;
 """;
 
-subtract(a:Int, b:Int) returned:Int __c__ """
+subtract(a:Int, b:Int) --> returned:Int __c__ """
     $returned = $a - $b;
 """;
 
-lesser?(a:Int, b:Int) returned:Bool __c__ """
+lesser?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a < $b;
 """;
 
-lesserEquals?(a:Int, b:Int) returned:Bool __c__ """
+lesserEquals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a <= $b;
 """;
 
-greater?(a:Int, b:Int) returned:Bool __c__ """
+greater?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a > $b;
 """;
 
-greaterEquals?(a:Int, b:Int) returned:Bool __c__ """
+greaterEquals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a >= $b;
 """;
 
-equals?(a:Int, b:Int) returned:Bool __c__ """
+equals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a == $b;
 """;
 
-notEquals?(a:Int, b:Int) returned:Bool __c__ """
+notEquals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a != $b;
 """;
 
@@ -313,7 +313,7 @@ destroyUnsafe(ref x) {}
 // callMain
 //
 
-callMain(argc:Int, argv:Pointer[Pointer[Int8]]) Int { main(); return 0; }
+callMain(argc:Int, argv:Pointer[Pointer[Int8]]) : Int { main(); return 0; }
 
 //
 // Ref, Rvalue, Const
@@ -350,8 +350,8 @@ symbol NontrivialInt = NewPrimitiveType();
 overload #LLType(NontrivialInt) = LLIntegerType[LLSigned, 32];
 overload #PODType?(NontrivialInt) = false;
 
-toNontrivialInt(x:Int) y:NontrivialInt { primitiveCopy(y, x); }
-fromNontrivialInt(x:NontrivialInt) y:Int { primitiveCopy(y, x); }
+toNontrivialInt(x:Int) --> y:NontrivialInt { primitiveCopy(y, x); }
+fromNontrivialInt(x:NontrivialInt) --> y:Int { primitiveCopy(y, x); }
 
 overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
 overload destroyUnsafe(ref i:NontrivialInt) { }

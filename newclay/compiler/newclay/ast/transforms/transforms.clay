@@ -146,10 +146,9 @@ transformLambdaToOverload(x:LambdaExpr) {
     return transformed(x, Overload,
         target,
         transformed(x, OverloadDefinition,
-            OverloadAttributes(false),
             transformLambdaArgs(x),
-            Vector[ReturnSpec](),
-            nothing(Vector[Identifier]),
+            Vector[OverloadAttribute](),
+            ReturnList(Nothing()),
             nothing(Expr),
             body
         )

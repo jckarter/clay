@@ -1366,7 +1366,7 @@ record RTExternal = referenceType(
     ast: ast.ExternalProcedure,
     module: Module,
     name: String,
-    attributes: Maybe[RTExternalAttributes],
+    externalAttributes: Maybe[RTExternalAttributes],
 );
 
 overload printTo(stream, x:RTExternal) {
