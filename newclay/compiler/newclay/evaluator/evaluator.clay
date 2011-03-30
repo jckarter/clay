@@ -1973,7 +1973,7 @@ evaluatePrimitive(kind, args) {
         var defined? = true;
         try {
             evaluateCall(callable, ValueList());
-        } catch (e:SemanticError) {
+        } catch (e:MatchError) {
             //displayError(e);
             defined? = false;
         }
@@ -1985,7 +1985,7 @@ evaluatePrimitive(kind, args) {
         var defined? = true;
         try {
             rtLambdaResults(l);
-        } catch (e:SemanticError) {
+        } catch (e:MatchError) {
             //displayError(e);
             defined? = false;
         }

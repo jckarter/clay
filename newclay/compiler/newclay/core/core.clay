@@ -1225,7 +1225,7 @@ private shortExpressionString?(string)
 overload printTo(stream, x:StaticLambdaValue) {
     var expression = ast.getSourceString(x.value);
     if (shortExpressionString?(expression))
-        printTo(stream, '(', expression, ')');
+        printTo(stream, expression);
     else {
         var path, line, column = ...ast.getFileLocation(x.value);
         printTo(stream, "<lambda ", path, "(", line, ",", column, ")>");
