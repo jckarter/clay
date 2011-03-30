@@ -585,7 +585,7 @@ analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
     switch (primitive.kind) {
     case RTPRIM_makeCodePointer: {
         if (size(args) < 1)
-            genericError("makeCodePointer requires at least one argument");
+            matchFailureError("makeCodePointer requires at least one argument");
         var callable = staticTypeValue(args[0].type);
         var inputTypes = ValueList(
             mapped(x => staticTypeValue(x.type), slicedFrom(args, 1))
@@ -605,21 +605,22 @@ analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
 
     case RTPRIM_callCodePointer: {
         if (size(args) < 1)
-            genericError("callCodePointer requires at least one argument");
+            matchFailureError("callCodePointer requires at least one argument");
         var cp = args[0];
         var inputs = sliceFrom(args, 1);
 
         if (not codePointerType?(cp.type))
-            genericError("first argument to callCodePointer must be a CodePointer");
+            matchFailureError("first argument to callCodePointer must be a CodePointer");
 
         var inputTypes = codePointerInputTypes(cp.type);
         if (size(inputTypes) != size(inputs))
-            genericError("expected ", size(inputTypes), " arguments for code pointer, but got ", size(inputs));
+            matchFailureError("expected ", size(inputTypes), " arguments for code pointer, but got ", size(inputs));
 
         for (inputType, input in zipped(inputTypes, inputs))
             if (not unifyCodePointerArgumentType(inputType, input))
-                genericError("argument types do not match code pointer's input types\n",
-                    "  expected types: ", inputTypes, "\n",
+                matchFailureError(
+                    "argument types do not match code pointer's input types\n",
+                    "  expected types: ", ArgumentList(map(refTypeToRTArgument, inputTypes)), "\n",
                     "  got types:      ", ArgumentList(inputs),
                 );
         var outputs = map(
@@ -1123,12 +1124,12 @@ private analyzeInitialize(s, env:Env, stmt) {
     try {
         return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
             if (size(toValues) != size(fromValues))
-                genericError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
+                matchFailureError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
             for (toValue, fromValue in zipped(toValues, fromValues)) {
                 if (toValue.kind != RT_VALUE_REF)
-                    genericError("values on left side of <-- expression must be non-const lvalues");
+                    matchFailureError("values on left side of <-- expression must be non-const lvalues");
                 if (toValue.type != fromValue.type)
-                    genericError(
+                    matchFailureError(
                         "type mismatch in <-- expression\n",
                         "  left side:  ", map(x => x.type, toValues),   "\n",
                         "  right side: ", map(x => x.type, fromValues),
@@ -1158,7 +1159,7 @@ private analyzeAssign(s, env, stmt) {
     try {
         return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
             if (size(toValues) != size(fromValues))
-                genericError("got ", size(toValues), " values on left side of assignment but ", size(fromValues), " values on right side");
+                matchFailureError("got ", size(toValues), " values on left side of assignment but ", size(fromValues), " values on right side");
 
             var operatorCallable = Value();
             switch (stmt.kind) {
@@ -1468,7 +1469,7 @@ private addForBinding(s, env, stmt, arg, value) {
         var value2 = capturedForValue(s, stmt, formalKind, value);
         if (not referenceKindMatches?(formalKind, value2.kind))
             // XXX improve error messages
-            genericError("incorrect reference kind for iterator value in for loop");
+            matchFailureError("incorrect reference kind for iterator value in for loop");
         if (not unifyArgumentType(arg, value2, env))
             // XXX improve error messages
             genericError("mismatched type for iterator value in for loop: ", value.type);
@@ -1959,6 +1960,7 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
         return maybe(analyzeCallWithOneResult(s, ast, getHooks().tupleLiteral, elements),
             v => v[0],
             () => {
+                // XXX
                 genericError("tuple conversion does not terminate");
                 return RTValue();
             },
@@ -1968,6 +1970,7 @@ singleAddSpecializedValue(s:SpecializationContext, ast, value:Value) RTValue = m
         return maybe(analyzeLambda(s, x.env, x.value),
             v => v[0],
             () => {
+                // XXX
                 genericError("lambda conversion does not terminate");
                 return RTValue();
             },
@@ -2346,7 +2349,7 @@ ifOverload(program, callable, args, thenFn, elseFn) {
 
 private findOverload(program, callable, args)
     = ifOverload(program, callable, args, s => s, () ref=> {
-        genericError("no matching runtime overload");
+        matchFailureError("no matching runtime overload");
         return Specialization();
     });
 
@@ -2534,7 +2537,7 @@ private callableInvokeTable(callable:Value) {
         SymbolHead, x => ref x.invokeTable,
         RuntimeLambdaValue, x => ref x.invokeTable,
         Primitive, x => {
-            genericError("static primitive called in runtime context: ", x);
+            matchFailureError("static primitive called in runtime context: ", x);
             return ref typeToLValue(InvokeTable);
         },
         RTPrimitive, x => {
