@@ -79,7 +79,7 @@ private sha256chunk(ref state, ref tempState, ref chunkSpace, chunk) {
         stateWord += tempStateWord;
 }
 
-sha256(message: 'S) returned: SHA256
+sha256(message: 'S) --> returned: SHA256
     | ContiguousSequenceType?('S) and TypeSize(SequenceElementType('S)) == 1
 {
     var messageSize = size(message);
@@ -139,11 +139,11 @@ sha256(message: 'S) returned: SHA256
         returnedWord = hostToNetwork(stateWord);
 }
 
-inline copyNonoverlappingMemory(to, from, size) {
+copyNonoverlappingMemory(to, from, size) inline {
     memcpy(OpaquePointer(to), OpaquePointer(from), UInt(size));
 }
 
-inline zeroMemory(from, to) {
+zeroMemory(from, to) inline {
     var size = ContiguousCoordinate[UInt8](to) - ContiguousCoordinate[UInt8](from);
     memset(OpaquePointer(from), 0_i32, UInt(size));
 }

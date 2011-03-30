@@ -6,98 +6,98 @@ import prelude.types.(Bool);
 
 // Array types are codegenned as a struct to avoid array decay. The array is in
 // a field named "array"
-inline cIndex(#'T, const array, index) const returned:'T
+cIndex(#'T, const array, index) inline --> const returned:'T
     __c__ """$returned = &$array.array[$index];""";
-inline overload cIndex(#'T, rvalue array, index) rvalue returned:'T
+overload cIndex(#'T, rvalue array, index) inline --> rvalue returned:'T
     __c__ """$returned = &$array.array[$index];""";
-inline overload cIndex(#'T, ref array, index) ref returned:'T
+overload cIndex(#'T, ref array, index) inline --> ref returned:'T
     __c__ """$returned = &$array.array[$index];""";
 
-inline cFieldRef(#'T, const aggregate, #'field) const returned:'T
+cFieldRef(#'T, const aggregate, #'field) inline --> const returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
-inline overload cFieldRef(#'T, rvalue aggregate, #'field) rvalue returned:'T
+overload cFieldRef(#'T, rvalue aggregate, #'field) inline --> rvalue returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
-inline overload cFieldRef(#'T, ref aggregate, #'field) ref returned:'T
+overload cFieldRef(#'T, ref aggregate, #'field) inline --> ref returned:'T
     | StaticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
 
-inline cDereference(#'T, ptr) ref returned:'T
+cDereference(#'T, ptr) inline --> ref returned:'T
     __c__ """$returned = $ptr;""";
 
 
-inline cMinus(#'T, a) returned:'T
+cMinus(#'T, a) inline --> returned:'T
     __c__ """$returned = -$a;""";
 
-inline cBitnot(#'T, a) returned:'T
+cBitnot(#'T, a) inline --> returned:'T
     __c__ """$returned = ~$a;""";
 
-inline cMultiply(#'T, a, b) returned:'T
+cMultiply(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a * $b;""";
 
-inline cDivide(#'T, a, b) returned:'T
+cDivide(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a / $b;""";
 
-inline cRemainder(#'T, a, b) returned:'T
+cRemainder(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a % $b;""";
 
-inline cAdd(#'T, a, b) returned:'T
+cAdd(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a + $b;""";
 
-inline cSubtract(#'T, a, b) returned:'T
+cSubtract(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a - $b;""";
 
-inline cBitand(#'T, a, b) returned:'T
+cBitand(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a & $b;""";
 
-inline cBitor(#'T, a, b) returned:'T
+cBitor(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a | $b;""";
 
-inline cBitxor(#'T, a, b) returned:'T
+cBitxor(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a ^ $b;""";
 
-inline cBitshl(#'T, a, b) returned:'T
+cBitshl(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a << $b;""";
 
-inline cBitshr(#'T, a, b) returned:'T
+cBitshr(#'T, a, b) inline --> returned:'T
     __c__ """$returned = $a >> $b;""";
 
 
-inline cLesser?(a, b) returned:Bool
+cLesser?(a, b) inline --> returned:Bool
     __c__ """$returned = $a < $b;""";
 
-inline cLesserEquals?(a, b) returned:Bool
+cLesserEquals?(a, b) inline --> returned:Bool
     __c__ """$returned = $a <= $b;""";
 
-inline cGreater?(a, b) returned:Bool
+cGreater?(a, b) inline --> returned:Bool
     __c__ """$returned = $a > $b;""";
 
-inline cGreaterEquals?(a, b) returned:Bool
+cGreaterEquals?(a, b) inline --> returned:Bool
     __c__ """$returned = $a >= $b;""";
 
-inline cEquals?(a, b) returned:Bool
+cEquals?(a, b) inline --> returned:Bool
     __c__ """$returned = $a == $b;""";
 
-inline cNotEquals?(a, b) returned:Bool
+cNotEquals?(a, b) inline --> returned:Bool
     __c__ """$returned = $a != $b;""";
 
-inline cAssign(ref a, forward b)
+cAssign(ref a, forward b) inline
     __c__ """$a = $b;""";
 
-inline cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) returned:'O
+cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline --> returned:'O
     | Type?('O)
     __c__ """$returned = $callable($..args);""";
-inline overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args)
+overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline
     | 'O == ()
     __c__ """$callable($..args);""";
 
-inline cCast(#'T, a) returned:'T
+cCast(#'T, a) inline --> returned:'T
     __c__ """$returned = ($'T)$a;""";
 
-inline cRefCast(#'T, const a) const returned:'T
+cRefCast(#'T, const a) inline --> const returned:'T
     __c__ """$returned = ($'T*)&$a;""";
-inline overload cRefCast(#'T, ref a) ref returned:'T
+overload cRefCast(#'T, ref a) inline --> ref returned:'T
     __c__ """$returned = ($'T*)&$a;""";
-inline overload cRefCast(#'T, rvalue a) rvalue returned:'T
+overload cRefCast(#'T, rvalue a) inline --> rvalue returned:'T
     __c__ """$returned = ($'T*)&$a;""";

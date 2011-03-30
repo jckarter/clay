@@ -16,31 +16,31 @@ symbol Maybe['T] = VariantType(Static[Nothing], 'T),
 #MaybeType?('T) = false;
 overload #MaybeType?(Maybe['T]) = true;
 
-inline just(forward x:'T) = Maybe['T](x);
-inline nothing(#'T) = Maybe['T]();
+just(forward x:'T) inline = Maybe['T](x);
+nothing(#'T) inline = Maybe['T]();
 
-inline just?(m:Maybe['T]) = variantIs?('T, m);
-inline nothing?(m:Maybe['T]) = variantIs?(Static[Nothing], m);
+just?(m:Maybe['T]) inline = variantIs?('T, m);
+nothing?(m:Maybe['T]) inline = variantIs?(Static[Nothing], m);
 
-inline required(forward m:Maybe['T]) = forward m['T];
+required(forward m:Maybe['T]) inline = forward m['T];
 
-inline requiredUnsafe(forward m:Maybe['T]) = forward variantAsUnsafe('T, m);
+requiredUnsafe(forward m:Maybe['T]) inline = forward variantAsUnsafe('T, m);
 
 private symbol maybe2;
-inline overload maybe2(forward x, forward justf, forward nothingf) = forward ..justf(x);
-inline overload maybe2(#Nothing, forward justf, forward nothingf) = forward ..nothingf();
+overload maybe2(forward x, forward justf, forward nothingf) inline = forward ..justf(x);
+overload maybe2(#Nothing, forward justf, forward nothingf) inline = forward ..nothingf();
 
-inline maybe(forward m:Maybe['T], forward justf, forward nothingf)
+maybe(forward m:Maybe['T], forward justf, forward nothingf) inline
     = forward ..dispatch(m, [forward x -> forward ..maybe2(x, justf, nothingf)]);
 
-private inline maybe3(forward m, forward f, ..#'ReturnTypes)
+private maybe3(forward m, forward f, ..#'ReturnTypes) inline
     = ..maybe(m, f, [..mapValues(call, ..#'ReturnTypes)]);
 
-inline overload maybe(forward m:Maybe['T], forward f)
+overload maybe(forward m:Maybe['T], forward f) inline
     | allValues?(MaybeType?, ..Type([forward ..f(required(m))]))
     = ..maybe3(m, f, ..#Type([..f(required(m))]));
 
-inline overload bind(forward m:Maybe['T], forward f)
+overload bind(forward m:Maybe['T], forward f) inline
     | allValues?(MaybeType?, ..Type([..f(required(m))]))
     = forward ..maybe(m, [forward x -> ..f(x)]);
 
@@ -50,5 +50,5 @@ inline overload bind(forward m:Maybe['T], forward f)
 //
 
 alias MPointer['T] = Maybe[Pointer['T]];
-inline null(#'T) = nothing(Pointer['T]);
+null(#'T) inline = nothing(Pointer['T]);
 

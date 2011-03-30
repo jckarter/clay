@@ -1,11 +1,11 @@
 import libc.(malloc, free, realloc);
 
-safeMalloc(count) returned:OpaquePointer {
+safeMalloc(count) --> returned:OpaquePointer {
     returned <-- malloc(count);
     assert([bitcast(UInt, returned) != 0u], "malloc returned null pointer");
 }
 
-safeRealloc(ptr, count) returned:OpaquePointer {
+safeRealloc(ptr, count) --> returned:OpaquePointer {
     returned <-- realloc(ptr, count);
     assert([bitcast(UInt, returned) != 0u], "realloc returned null pointer");
 }
