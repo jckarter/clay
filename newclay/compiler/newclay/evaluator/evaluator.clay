@@ -541,7 +541,7 @@ overload evaluateExpr(x:ast.UnaryOpExpr, env) {
     case ast.OP_UNPACK:
         return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElements, operands);
     default:
-        genericError("operator not allowed in static context");
+        matchFailureError("operator not allowed in static context");
         return Value();
     }
 }
@@ -553,7 +553,7 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
     case ast.OP_MULTIPLY:
         return evaluatePrimitiveWithOneResult(PRIM_StaticMultiply, operands);
     case ast.OP_DIVIDE:
-        genericError("real division not allowed in static context; use the \"div\" operator for integer division");
+        matchFailureError("real division not supported in static context; use the \"div\" operator for integer division");
         return Value();
     case ast.OP_QUOTIENT:
         return evaluatePrimitiveWithOneResult(PRIM_StaticQuotient, operands);
@@ -576,7 +576,7 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
     case ast.OP_NOT_EQUALS?:
         return evaluatePrimitiveWithOneResult(PRIM_StaticNotEquals?, operands);
     default:
-        genericError("operator not allowed in static context");
+        matchFailureError("operator not allowed in static context");
         return Value();
     }
 }
@@ -685,7 +685,7 @@ aliasValue(x:Alias) = safeInitialize(x.value,
 
 rtTypeToValue(type) {
     if (not staticType?(type))
-        genericError("run-time variable cannot be used at compile time");
+        genericError("runtime variable cannot be used at compile time");
     return staticTypeValue(type);
 }
 
@@ -770,7 +770,7 @@ overload evaluateMultiExpr(x:ast.UnaryOpExpr, env) {
     case ast.OP_UNPACK:
         return evaluatePrimitive(PRIM_StaticTupleElements, operands);
     default:
-        genericError("operator not allowed in static context");
+        matchFailureError("operator not allowed in static context");
         return ValueList();
     }
 }
@@ -857,7 +857,7 @@ overload evaluateCall(x:StaticLambdaValue, args) {
     });
 }
 overload evaluateCall(x:RuntimeLambdaValue, args) {
-    genericError("runtime lambda symbol cannot be evaluated in static context");
+    matchFailureError("runtime lambda symbol cannot be evaluated in static context");
     return ValueList();
 }
 overload evaluateCall(x:Symbol, args) {
@@ -870,7 +870,7 @@ overload evaluateCall(x:Primitive, args) ValueList {
     return evaluatePrimitive(x.kind, args);
 }
 overload evaluateCall(x:RTPrimitive, args) ValueList {
-    genericError(x, " cannot be evaluated in static context");
+    matchFailureError(x, " cannot be evaluated in static context");
     return ValueList();
 }
 
@@ -901,7 +901,7 @@ overload evaluateLambdaCodeBody(x:ast.Block, env) {
 procedure evaluateIndexing;
 
 overload evaluateIndexing(x, args) {
-    genericError("invalid static indexee: ", x);
+    matchFailureError("invalid static indexee: ", x);
     return Value();
 }
 overload evaluateIndexing(x:Value, args) {
@@ -912,12 +912,12 @@ overload evaluateIndexing(x:SymbolHead, args) {
 }
 overload evaluateIndexing(x:StringValue, args) {
     if (size(args) != 1)
-        genericError("string must be indexed with a single Int");
+        matchFailureError("string must be indexed with a single Int");
     return evaluatePrimitiveWithOneResult(PRIM_StaticStringChar, ValueList(Value(x), args[0]));
 }
 overload evaluateIndexing(x:TupleValue, args) {
     if (size(args) != 1)
-        genericError("tuple must be indexed with a single Int");
+        matchFailureError("tuple must be indexed with a single Int");
     return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElement, ValueList(Value(x), args[0]));
 }
 
@@ -947,7 +947,7 @@ overload evaluateIndexingEntry(x:SymbolHead, args) {
 procedure evaluateFieldRef;
 
 overload evaluateFieldRef(x, field) {
-    genericError("invalid field reference: ", x);
+    matchFailureError("invalid field reference: ", x);
     return Value();
 }
 overload evaluateFieldRef(x:Value, field) {
@@ -1524,7 +1524,7 @@ evaluateStaticCall(program, callable, args)
     = withStaticCall(callable, args, () ref=> ifStaticOverload(program, callable, args,
         (oload, env) ref=> evaluateExprList(oload.ast.definition.body, env),
         () ref=> {
-            genericError("no matching static overload for ", callable, TupleValue(args));
+            matchFailureError("no matching static overload for ", callable, TupleValue(args));
             return ValueList();
         }
     ));
@@ -1552,21 +1552,21 @@ private threeValues(args) {
 private oneInt(args) {
     var a = oneValue(args);
     if (not variantIs?(a, IntValue))
-        genericError("expecting one integer");
+        matchFailureError("expecting one integer");
     return variantAs(a, IntValue);
 }
 
 private twoInts(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, IntValue) or not variantIs?(b, IntValue))
-        genericError("expecting two integers");
+        matchFailureError("expecting two integers");
     return variantAs(a, IntValue), variantAs(b, IntValue);
 }
 
 private oneString(args) {
     var a = oneValue(args);
     if (not variantIs?(a, StringValue))
-        genericError("expecting one string");
+        matchFailureError("expecting one string");
     return variantAs(a, StringValue).value;
 }
 
@@ -1575,7 +1575,7 @@ private stringInt(args) {
     if (not variantIs?(a, StringValue)
         or not variantIs?(b, IntValue))
     {
-        genericError("expecting a string and an Int");
+        matchFailureError("expecting a string and an Int");
     }
     return ...(
         variantAs(a, StringValue).value,
@@ -1589,7 +1589,7 @@ private stringIntInt(args) {
         or not variantIs?(b, IntValue)
         or not variantIs?(c, IntValue))
     {
-        genericError("expecting a string, and two Ints");
+        matchFailureError("expecting a string and two Ints");
     }
     return ...(
         variantAs(a, StringValue).value,
@@ -1602,7 +1602,7 @@ private nStrings(args) {
     var result = Vector[String]();
     for (i, x in enumerated(args)) {
         if (not variantIs?(x, StringValue))
-            genericError("expecting a string, but received: ", x);
+            matchFailureError("expecting a string, but received: ", x);
         push(result, variantAs(x, StringValue).value);
     }
     return move(result);
@@ -1612,7 +1612,7 @@ private nChars(args) {
     var result = Vector[Char]();
     for (i, x in enumerated(args)) {
         if (not variantIs?(x, CharValue))
-            genericError("expecting a char, but received: ", x);
+            matchFailureError("expecting a char, but received: ", x);
         push(result, variantAs(x, CharValue).value);
     }
     return move(result);
@@ -1621,30 +1621,30 @@ private nChars(args) {
 private oneTuple(args) {
     var a = oneValue(args);
     if (not variantIs?(a, TupleValue))
-        genericError("expecting a tuple, but received: ", a);
+        matchFailureError("expecting a tuple, but received: ", a);
     return variantAs(a, TupleValue).elements;
 }
 
 private tupleInt(args) {
     var a, b = ...twoValues(args);
     if (not variantIs?(a, TupleValue) or not variantIs?(b, IntValue))
-        genericError("expecting a tuple and a int");
+        matchFailureError("expecting a tuple and a int");
     return variantAs(a, TupleValue).elements, variantAs(b, IntValue);
 }
 
 private oneSymbol(args) {
     var a = oneValue(args);
     if (not variantIs?(a, Symbol))
-        genericError("expecting a symbol, but received: ", a);
+        matchFailureError("expecting a symbol, but received: ", a);
     return variantAs(a, Symbol);
 }
 
 private oneStaticLambda(args) {
     var a = oneValue(args);
     if (variantIs?(a, RuntimeLambdaValue))
-        genericError("runtime lambda symbol cannot be evaluated in a static context");
+        matchFailureError("runtime lambda symbol cannot be evaluated in a static context");
     if (not variantIs?(a, StaticLambdaValue))
-        genericError("expecting a lambda, but received: ", a);
+        matchFailureError("expecting a lambda, but received: ", a);
     return variantAs(a, StaticLambdaValue);
 }
 
@@ -1654,7 +1654,7 @@ private withOneLambda(args, f) {
         StaticLambdaValue, f,
         RuntimeLambdaValue, f,
         MatchDefault, x => {
-            genericError("expecting a lambda, but received: ", a);
+            matchFailureError("expecting a lambda, but received: ", a);
             return forward ...f(typeToRValue(StaticLambdaValue));
         },
     );
@@ -1665,14 +1665,14 @@ private nullary?(arglist) = empty?(arglist.items) and nothing?(arglist.variadicI
 private oneNullaryLambda(args) {
     var l = oneStaticLambda(args);
     if (not nullary?(l.value.args))
-        genericError("expecting a lambda with no arguments, but received: ", l);
+        matchFailureError("expecting a lambda with no arguments, but received: ", l);
     return l;
 }
 
 private moduleString(args) {
     var moduleValue, stringValue = ...twoValues(args);
     if (not variantIs?(moduleValue, ModuleValue) or not variantIs?(stringValue, StringValue)) {
-        genericError("expecting a module and an identifier string");
+        matchFailureError("expecting a module and an identifier string");
     }
     return variantAs(moduleValue, ModuleValue), variantAs(stringValue, StringValue);
 }
@@ -1686,7 +1686,7 @@ evaluatePrimitiveWithOneResult(kind, args) {
 private evaluateStaticCompareEquality(a:Value, b:Value, op) = ValueList(BoolValue(op(a, b)));
 
 private evaluateStaticCompare(a, b, op) {
-    genericError("static comparison is only applicable to Bool,Bool; Char,Char; Int,Int; String,String; or Tuple,Tuple arguments");
+    matchFailureError("static comparison is only applicable to Bool,Bool; Char,Char; Int,Int; String,String; or Tuple,Tuple arguments");
     return ValueList();
 }
 
@@ -1739,7 +1739,7 @@ evaluatePrimitive(kind, args) {
     case PRIM_StaticIntegers : {
         var a = Int64(oneInt(args));
         if (a < 0)
-            genericError("expecting a non-negative integer");
+            matchFailureError("expecting a non-negative integer");
         return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
     }
 
@@ -1824,9 +1824,9 @@ evaluatePrimitive(kind, args) {
         var i = Int64(i_);
         var j = Int64(j_);
         if ((i < 0) or (i > size(s)))
-            genericError("invalid starting index: ", i);
+            matchFailureError("invalid starting index: ", i);
         if ((j < i) or (j > size(s)))
-            genericError("invalid ending index: ", j);
+            matchFailureError("invalid ending index: ", j);
         return ValueList(StringValue(slice(s, i, j)));
     }
     case PRIM_StaticStringConcat : {
@@ -1841,7 +1841,7 @@ evaluatePrimitive(kind, args) {
         var i = Int64(i_);
 
         if ((i < 0) or (i >= size(s)))
-            genericError("invalid index into string: ", i);
+            matchFailureError("invalid index into string: ", i);
         return ValueList(CharValue(s[i]));
     }
     case PRIM_StaticStringChars : {
@@ -1868,7 +1868,7 @@ evaluatePrimitive(kind, args) {
         var a, i_ = ...tupleInt(args);
         var i = Int64(i_);
         if ((i < 0) or (i > size(a)))
-            genericError("tuple index out of range");
+            matchFailureError("tuple index out of range");
         return ValueList(a[i]);
     }
     case PRIM_StaticTupleElements : {
@@ -1895,7 +1895,7 @@ evaluatePrimitive(kind, args) {
             Primitive, p ref=> ModuleValue(primitivesModule(getProgram())),
             RTPrimitive, p ref=> ModuleValue(primitivesModule(getProgram())),
             MatchDefault, x ref=> {
-                genericError("expecting a symbol");
+                matchFailureError("expecting a symbol");
                 return ModuleValue();
             },
         ));
@@ -1993,7 +1993,7 @@ evaluatePrimitive(kind, args) {
     }
 
     case PRIM_StaticError : {
-        throw StaticError(args);
+        throw MatchError(StaticError(args));
     }
 
     case PRIM_StaticObserve : {
@@ -2003,12 +2003,12 @@ evaluatePrimitive(kind, args) {
 
     case PRIM_StaticAssert : {
         if (empty?(args))
-            genericError("StaticAssert requires at least one argument");
+            matchFailureError("StaticAssert requires at least one argument");
         if (args[0] == Value(BoolValue(false))) {
             if (size(args) == 1)
-                throw StaticError(ValueList(StringValue(String("assertion failure"))));
+                throw StaticAssertionError(ValueList(StringValue(String("assertion failure"))));
             else
-                throw StaticError(ValueList(slicedFrom(args, 1)));
+                throw StaticAssertionError(ValueList(slicedFrom(args, 1)));
         }
         return ValueList(TupleValue());
     }
@@ -2026,7 +2026,7 @@ evaluatePrimitive(kind, args) {
 
     case PRIM_CallDefinedForSymbol? : {
         if (size(args) < 1)
-            genericError("CallDefinedForSymbol? requires at least one argument");
+            matchFailureError("CallDefinedForSymbol? requires at least one argument");
         var callable = args[0];
         var callArgs = map(refTypeToRTArgument, slicedFrom(args, 1));
 
@@ -2036,12 +2036,12 @@ evaluatePrimitive(kind, args) {
 
     case PRIM_StaticCallDefined? : {
         if (size(args) < 1)
-            genericError("StaticCallDefined? requires at least one argument");
+            matchFailureError("StaticCallDefined? requires at least one argument");
         var callable = args[0];
         var callArgs = ValueList(slicedFrom(args,1));
 
         if (variantIs?(callable, Primitive))
-            genericError("StaticCallDefined? for primitives not yet supported");
+            matchFailureError("StaticCallDefined? for primitives not yet supported");
 
         var callDefined? = ifStaticOverload(getProgram(), callable, callArgs,
             (o, e) => true,

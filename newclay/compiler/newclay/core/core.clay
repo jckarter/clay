@@ -1836,13 +1836,39 @@ record GenericError = semanticError(
 
 instance SemanticError = GenericError;
 
+record StaticAssertionError = semanticError(
+    values:ValueList
+);
+
+instance SemanticError = StaticAssertionError;
+
+variant MatchError = MatchFailureError
+                   | StaticError
+                   ;
+
+instance SemanticError = MatchError;
+
+record MatchFailureError = semanticError(
+    msg: String,
+);
+
 record StaticError = semanticError(
     values:ValueList
 );
 
-instance SemanticError = StaticError;
-
 overload displayError(e:GenericError) {
+    displaySemanticError(e.locationStack, e.compilationStack, e.msg);
+}
+
+overload displayError(e:StaticAssertionError) {
+    displaySemanticError(e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
+}
+
+overload displayError(e:MatchError) {
+    displayError(*e);
+}
+
+overload displayError(e:MatchFailureError) {
     displaySemanticError(e.locationStack, e.compilationStack, e.msg);
 }
 
@@ -1861,8 +1887,7 @@ overload printTo(stream, x:PresentStaticErrorValues) {
         );
 }
 
-record RecursiveAnalysisError = semanticError(
-);
+record RecursiveAnalysisError = semanticError();
 
 instance SemanticError = RecursiveAnalysisError;
 
@@ -1898,6 +1923,10 @@ genericError(...msg) {
     throw GenericError(printString(...msg));
 }
 
+matchFailureError(...msg) {
+    throw MatchError(MatchFailureError(printString(...msg)));
+}
+
 recursiveAnalysisError() {
     throw RecursiveAnalysisError();
 }
@@ -1928,11 +1957,6 @@ ensureArity2(minExpected, received) {
     if (minExpected > received)
         arityError2(minExpected, received);
 }
-
-typeError(expected, received) {
-    genericError("expected type ", expected, ", but received ", received);
-}
-
 
 
 //
