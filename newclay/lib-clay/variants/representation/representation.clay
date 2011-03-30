@@ -14,15 +14,15 @@ symbol reprAs; // (#'M, forward repr) -> forward 'M
 symbol ReprAcceptsMemberTypes?; // #('R) -> Bool
 
 // optional functions
-inline copyRepr(ref toRepr:'R, fromRepr:'R) {
+copyRepr(ref toRepr:'R, fromRepr:'R) inline {
     dispatchRepr(fromRepr, [fromMember -> initializeRepr(toRepr, fromMember);]);
 }
 
-inline moveRepr(ref toRepr:'R, ref fromRepr:'R) {
+moveRepr(ref toRepr:'R, ref fromRepr:'R) inline {
     dispatchRepr(fromRepr, [fromMember -> initializeRepr(toRepr, moveUnsafe(fromMember));]);
 }
 
-inline reprIs?(#'M, repr:'R) {
+reprIs?(#'M, repr:'R) inline {
     return dispatchRepr(repr, [member -> #Type([member]) == 'M]);
 }
 
@@ -48,9 +48,9 @@ overload #TagType(..'M) | countValues(..'M) < 0x1_0000_0000 = UInt32;
 overload #TagType(..'M) | countValues(..'M) < 0x1_0000 = UInt16;
 overload #TagType(..'M) | countValues(..'M) < 0x100 = UInt8;
 
-private inline tagValue(#'M, ..#'MM) = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
+private tagValue(#'M, ..#'MM) inline = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
 
-inline overload initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) {
+overload initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) inline {
     repr.tag <-- tagValue('M, ..'MM);
     repr.value['M] <-- m;
 }
@@ -64,23 +64,23 @@ overload dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
     assertUnreachable([], "invalid variant tag ", tag);
 }
 
-inline overload reprAs(#'M, forward repr:TaggedUnionRepr[..'MM]) = forward repr.value['M];
-inline overload reprIs?(#'M, repr:TaggedUnionRepr[..'MM])
+overload reprAs(#'M, forward repr:TaggedUnionRepr[..'MM]) inline = forward repr.value['M];
+overload reprIs?(#'M, repr:TaggedUnionRepr[..'MM]) inline
     = repr.tag == tagValue('M, ..'MM);
 
-inline overload copyRepr(
+overload copyRepr(
     ref toRepr:TaggedUnionRepr[..'M],
     fromRepr:TaggedUnionRepr[..'M]
-) {
+) inline {
     toRepr.tag <-- fromRepr.tag;
 
     dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- from;]);
 }
 
-inline overload moveRepr(
+overload moveRepr(
     ref toRepr:TaggedUnionRepr[..'M],
     ref fromRepr:TaggedUnionRepr[..'M]
-) {
+) inline {
     toRepr.tag <-- fromRepr.tag;
 
     dispatchRepr(fromRepr,
@@ -101,41 +101,41 @@ overload #ReprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
 
 overload #ReprZeroInitializedWithMemberType?(NullablePointerRepr['N, 'P], 'N) = true;
 
-inline overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], m:'N) {
+overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], m:'N) inline {
     bitcast(Int, repr) = 0;
 }
 
-inline overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], p:'P) {
+overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], p:'P) inline {
     *repr <-- p;
 }
 
-inline overload dispatchRepr(repr:NullablePointerRepr['N, 'P], forward fn) {
+overload dispatchRepr(repr:NullablePointerRepr['N, 'P], forward fn) inline {
     if (bitcast(Int, repr) == 0)
         return forward ..fn(bitcast('N, repr));
     else
         return forward ..fn(*repr);
 }
 
-inline overload reprIs?(#'N, repr:NullablePointerRepr['N, 'P])
+overload reprIs?(#'N, repr:NullablePointerRepr['N, 'P]) inline
     = bitcast(Int, repr) == 0;
-inline overload reprIs?(#'P, repr:NullablePointerRepr['N, 'P])
+overload reprIs?(#'P, repr:NullablePointerRepr['N, 'P]) inline
     = bitcast(Int, repr) != 0;
 
-inline overload reprAs(#'N, forward repr:NullablePointerRepr['N, 'P])
+overload reprAs(#'N, forward repr:NullablePointerRepr['N, 'P]) inline
     = forward bitcast('N, repr);
-inline overload reprAs(#'P, forward repr:NullablePointerRepr['N, 'P])
+overload reprAs(#'P, forward repr:NullablePointerRepr['N, 'P]) inline
     = forward *repr;
 
-inline overload copyRepr(
+overload copyRepr(
     ref toRepr:NullablePointerRepr['N, 'P],
     fromRepr:NullablePointerRepr['N, 'P],
-) {
+) inline {
     toRepr <-- fromRepr;
 }
 
-inline overload moveRepr(
+overload moveRepr(
     ref toRepr:NullablePointerRepr['N, 'P],
     ref fromRepr:NullablePointerRepr['N, 'P],
-) {
+) inline {
     toRepr <-- fromRepr;
 }

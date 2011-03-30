@@ -9,24 +9,24 @@ import libc.*;
 // size
 //
 
-inline overload size(x:Array['T, 'n]) = UInt('n);
+overload size(x:Array['T, 'n]) inline = UInt('n);
 
 
 //
 // begin, end
 //
 
-inline overload begin(x:Array['T, 'n]) = ContiguousCoordinate['T](&x);
-inline overload end(x:Array['T, 'n]) = ContiguousCoordinate['T](&x) + 'n;
+overload begin(x:Array['T, 'n]) inline = ContiguousCoordinate['T](&x);
+overload end(x:Array['T, 'n]) inline = ContiguousCoordinate['T](&x) + 'n;
 
 
 //
 // indexing
 //
 
-inline overload index(forward a:Array['T, 'n], i:'I) | IntegerType?('I)
+overload index(forward a:Array['T, 'n], i:'I) inline | IntegerType?('I)
     = forward cIndex('T, a, i);
-inline overload index(rvalue a:Array['T, 'n], i:'I) returned:'T
+overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
     | IntegerType?('I) and not NotDestroyedType?('T)
 {
     ref ra = rvalueToRefUnsafe(a);
@@ -48,14 +48,14 @@ inline overload index(rvalue a:Array['T, 'n], i:'I) returned:'T
 overload #BitwiseZeroInitializedType?(Array['T, 'n])
     = BitwiseZeroInitializedType?('T);
 
-inline overload Array['T, 'n]() returned:Array['T, 'n]
+overload Array['T, 'n]() inline --> returned:Array['T, 'n]
     | DefaultInitializableType?('T)
 {
     for (ref r in returned)
         r <-- 'T();
 }
 
-inline overload Array['T, 'n]() returned:Array['T, 'n]
+overload Array['T, 'n]() inline --> returned:Array['T, 'n]
     | BitwiseZeroInitializedType?('T)
 {
     memset(OpaquePointer(&returned), 0_i32, TypeSize(Array['T, 'n]));
@@ -66,7 +66,7 @@ inline overload Array['T, 'n]() returned:Array['T, 'n]
 // memberwise initialization
 //
 
-inline overload Array['T, 'n](forward ..xs:'TT) returned:Array['T, 'n]
+overload Array['T, 'n](forward ..xs:'TT) inline --> returned:Array['T, 'n]
     | countValues(..'TT) == 'n
       and allValues?([t -> t == 'T], ..'TT)
 {
@@ -83,8 +83,8 @@ inline overload Array['T, 'n](forward ..xs:'TT) returned:Array['T, 'n]
 //
 private symbol RvalueCoordinateRangeUnsafe['C] = RecordType(begin:'C, end:'C);
 
-inline overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) = i.begin < i.end;
-inline overload next(ref i:RvalueCoordinateRangeUnsafe['C]) {
+overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) inline = i.begin < i.end;
+overload next(ref i:RvalueCoordinateRangeUnsafe['C]) inline {
     var p = i.begin;
     inc(i.begin);
     return rvalue refToRvalueUnsafe(p^);
@@ -96,8 +96,8 @@ private rvalueIteratorUnsafe(rvalue x:Array['T, 'n]) {
 }
 
 private symbol forwardIteratorUnsafe;
-inline overload forwardIteratorUnsafe(x:Array['T, 'n]) = iterator(x);
-inline overload forwardIteratorUnsafe(rvalue x:Array['T, 'n]) = rvalueIteratorUnsafe(x);
+overload forwardIteratorUnsafe(x:Array['T, 'n]) inline = iterator(x);
+overload forwardIteratorUnsafe(rvalue x:Array['T, 'n]) inline = rvalueIteratorUnsafe(x);
 
 
 //
@@ -111,21 +111,21 @@ overload iterator(x:Array['T, 'n]) = CoordinateRange(begin(x), end(x));
 // value semantics
 //
 
-inline overload destroyUnsafe(ref x:Array['T, 'n])
+overload destroyUnsafe(ref x:Array['T, 'n]) inline
     | not NotDestroyedType?('T)
 {
     for (ref y in x)
         destroyUnsafe(y);
 }
 
-inline overload resetUnsafe(ref x:Array['T, 'n])
+overload resetUnsafe(ref x:Array['T, 'n]) inline
     | not NotResetType?('T)
 {
     for (ref y in x)
         resetUnsafe(y);
 }
 
-inline overload moveUnsafe(forward x:Array['T, 'n]) returned:Array['T, 'n]
+overload moveUnsafe(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
     | not BitwiseMovedType?('T) and MovableType?('T)
 {
     var ri = iterator(returned), xi = forwardIteratorUnsafe(x);
@@ -134,7 +134,7 @@ inline overload moveUnsafe(forward x:Array['T, 'n]) returned:Array['T, 'n]
     }
 }
 
-inline overload copy(x:Array['T, 'n]) returned:Array['T, 'n]
+overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
     | not BitwiseCopiedType?('T) and CopyableType?('T)
 {
     var ri = iterator(returned), xi = iterator(x);
@@ -143,7 +143,7 @@ inline overload copy(x:Array['T, 'n]) returned:Array['T, 'n]
     }
 }
 
-inline overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n])
+overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
     | not ('T == 'U and BitwiseAssignedType?('T))
       and CallDefined?(assign, 'T, 'U)
 {
@@ -158,7 +158,7 @@ inline overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n])
 // comparison
 //
 
-inline equalSequence?(x, y) {
+equalSequence?(x, y) inline {
     var xi = iterator(x), yi = iterator(y);
     var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
     while (xnext? and ynext?) {
@@ -170,7 +170,7 @@ inline equalSequence?(x, y) {
     return xnext? == ynext?;
 }
 
-inline lesserSequence?(x, y) {
+lesserSequence?(x, y) inline {
     var xi = iterator(x), yi = iterator(y);
     var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
     while (xnext? and ynext?) {
@@ -185,7 +185,7 @@ inline lesserSequence?(x, y) {
     return xnext? < ynext?;
 }
 
-inline overload equals?(x:Array['T, 'n], y:Array['U, 'n])
+overload equals?(x:Array['T, 'n], y:Array['U, 'n]) inline
     | CallDefined?(equals?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);
@@ -195,7 +195,7 @@ inline overload equals?(x:Array['T, 'n], y:Array['U, 'n])
     return true;
 }
 
-inline overload lesser?(x:Array['T, 'n], y:Array['U, 'n])
+overload lesser?(x:Array['T, 'n], y:Array['U, 'n]) inline
     | CallDefined?(lesser?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);

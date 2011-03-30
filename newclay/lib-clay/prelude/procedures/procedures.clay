@@ -20,13 +20,13 @@ overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
 // as left fold of the binary procedure
 #VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure,);
 
-inline overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W)
+overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W) inline
     | VariadicBinaryOperatorProcedure?('fn)
       and CallDefined?('fn, 'X, 'Y)
       and CallDefined?('fn, Type(['fn(x, y)]), 'Z, ..'W)
     = forward 'fn('fn(x, y), z, ..w);
 
-inline overload 'fn(forward x)
+overload 'fn(forward x) inline
     | VariadicBinaryOperatorProcedure?('fn)
     = forward x;
 
@@ -47,7 +47,7 @@ overload #'fn('x)
 
 #RuntimeStaticProcedure() = (RuntimeStaticProcedure,);
 #RuntimeStaticProcedure?('fn) = SymbolWithTag?('fn, RuntimeStaticProcedure);
-inline overload 'fn(..#'xs)
+overload 'fn(..#'xs) inline
     | RuntimeStaticProcedure?('fn)
       and StaticCallDefined?('fn, ..'xs)
     = ..unpack(..#'fn(..'xs));
@@ -57,11 +57,11 @@ inline overload 'fn(..#'xs)
 // code pointers
 //
 
-inline overload CodePointer[(..'I), (..'O)](#'f)
+overload CodePointer[(..'I), (..'O)](#'f) inline
     | DefinedWithType?([forward ..'f(..arg(..'I))], ..'O)
     = makeCodePointer(#'f, ..'I);
 
-inline overload call(c:CodePointer[(..'I), (..'O)], forward ..args)
+overload call(c:CodePointer[(..'I), (..'O)], forward ..args) inline
     | Defined?([callCodePointer(c, ..args);])
     = forward ..callCodePointer(c, ..args);
 

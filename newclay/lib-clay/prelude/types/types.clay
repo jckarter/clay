@@ -475,15 +475,15 @@ overload #LLType('T) | NewType?('T) = LLType(OriginalType('T));
 
 overload #InheritsPredicatesFromTypes('T) | NewType?('T) = true, OriginalType('T);
 
-inline overload unpack(forward x:'T) | NewType?('T)
+overload unpack(forward x:'T) inline | NewType?('T)
     = forward bitcast(#OriginalType('T), x);
 
-inline overload 'T() returned:'T
+overload 'T() inline --> returned:'T
     | NewType?('T) and DefaultInitializableType?(OriginalType('T))
 {
     *returned <-- (#OriginalType('T))();
 }
-inline overload 'T(/*alias*/ forward orig:'U) returned:'T
+overload 'T(/*alias*/ forward orig:'U) inline --> returned:'T
     | NewType?('T)
       and Defined?([arg(Ref['U]) <-- orig;])
       and 'U == OriginalType('T)
@@ -491,7 +491,7 @@ inline overload 'T(/*alias*/ forward orig:'U) returned:'T
     *returned <-- orig;
 }
 
-inline overload copy(x:'T) returned:'T
+overload copy(x:'T) inline --> returned:'T
     | NewType?('T)
       and CopyableType?(OriginalType('T))
       and not BitwiseCopiedType?(OriginalType('T))
@@ -499,7 +499,7 @@ inline overload copy(x:'T) returned:'T
     *returned <-- copy(*x);
 }
 
-inline overload moveUnsafe(forward x:'T) returned:'T
+overload moveUnsafe(forward x:'T) inline --> returned:'T
     | NewType?('T)
       and MovableType?(OriginalType('T))
       and not BitwiseMovedType?(OriginalType('T))
@@ -507,19 +507,19 @@ inline overload moveUnsafe(forward x:'T) returned:'T
     *returned <-- moveUnsafe(*x);
 }
 
-inline overload destroyUnsafe(ref x:'T)
+overload destroyUnsafe(ref x:'T) inline
     | NewType?('T) and not NotDestroyedType?(OriginalType('T))
 {
     destroyUnsafe(*x);
 }
 
-inline overload resetUnsafe(ref x:'T)
+overload resetUnsafe(ref x:'T) inline
     | NewType?('T) and not NotResetType?(OriginalType('T))
 {
     resetUnsafe(*x);
 }
 
-inline overload copyAssign(ref to:'T, from:'T)
+overload copyAssign(ref to:'T, from:'T) inline
     | NewType?('T) and AssignableType?(OriginalType('T))
 {
     *to = *from;

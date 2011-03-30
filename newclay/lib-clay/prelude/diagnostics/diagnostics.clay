@@ -9,7 +9,13 @@ import meta.lambdas.(LambdaString, LambdaLocation);
 
 private assertLocation(file, line, column) = CString(file), CUInt(line), CUInt(column);
 
-assert(f, ..msg) | DefinedWithType?([f()], Bool) {
+#AssertionsEnabled?() = true; // XXX use -DNDEBUG or something like that
+
+symbol assert;
+overload assert(f, ..msg) inline | not AssertionsEnabled?() {}
+overload assert(f, ..msg) inline
+    | DefinedWithType?([f()], Bool) and AssertionsEnabled?()
+{
     if (not f()) {
         // XXX show message
         printf(CString("assertion %s failed at %s(%u,%u)\n"),
@@ -17,16 +23,20 @@ assert(f, ..msg) | DefinedWithType?([f()], Bool) {
             ..assertLocation(..LambdaLocation(f))
         );
         abort();
-        throw 0; // XXX until we can mark externals as noreturn
+        __unreachable__; // XXX not needed when external noreturns are implemented
     }
 }
 
-assertUnreachable(f, ..msg) {
+symbol assertUnreachable;
+overload assertUnreachable(f, ..msg) noreturn inline | not AssertionsEnabled?() {
+    __unreachable__;
+}
+overload assertUnreachable(f, ..msg) inline | AssertionsEnabled?() {
     // XXX show message
     printf(CString("unreachable code reached at %s(%u,%u)\n"),
         ..assertLocation(..LambdaLocation(f))
     );
     abort();
-    throw 0; // XXX until we can mark externals as noreturn
+    __unreachable__; // XXX not needed when external noreturns are implemented
 }
 

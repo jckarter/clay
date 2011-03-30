@@ -49,19 +49,19 @@ overload size(x:'S) | CoordinateSequenceType?('S) and Defined?([end(x) - begin(x
 //
 
 symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
-inline overload CoordinateRange(begin:'C, end:'C)
+overload CoordinateRange(begin:'C, end:'C) inline
     | CoordinateType?('C)
     = CoordinateRange['C](begin, end);
 
-inline overload hasNext?(i:CoordinateRange['C]) = i.begin < i.end;
-inline overload next(ref i:CoordinateRange['C]) {
+overload hasNext?(i:CoordinateRange['C]) inline = i.begin < i.end;
+overload next(ref i:CoordinateRange['C]) inline {
     var p = i.begin;
     inc(i.begin);
     return ref p^;
 }
 
-inline overload begin(i:CoordinateRange['C]) = i.begin;
-inline overload end(i:CoordinateRange['C]) = i.end;
+overload begin(i:CoordinateRange['C]) inline = i.begin;
+overload end(i:CoordinateRange['C]) inline = i.end;
 
 
 //
@@ -195,39 +195,39 @@ eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
 // apply value semantics operations over coordinate ranges
 //
 
-inline initializeRange(begin:'C, end:'C) | CoordinateType?('C) {
+initializeRange(begin:'C, end:'C) inline | CoordinateType?('C) {
     eachInRangeWithCleanup(begin, end, #CoordinateTargetType('C));
 }
 
-inline destroyRangeUnsafe(begin:'C, end:'C) | CoordinateType?('C) {
+destroyRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
     eachInRange(begin, end, destroyUnsafe);
 }
 
-inline copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D)
+copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
     eachInRangesWithCleanup(destBegin, srcBegin, srcEnd, copyTo);
 }
 
-private inline moveRangeForwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+private moveRangeForwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
     eachInRanges(destBegin, srcBegin, srcEnd, moveToUnsafe);
 }
 
-private inline moveRangeBackwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+private moveRangeBackwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
     eachInRangesBackwards(destBegin, srcBegin, srcEnd, moveToUnsafe);
 }
 
-inline moveRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+moveRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D) and 'C != 'D
 {
     moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
-inline overload moveRangeUnsafe(destBegin:'C, srcBegin:'C, srcEnd:'C)
+overload moveRangeUnsafe(destBegin:'C, srcBegin:'C, srcEnd:'C) inline
     | CoordinateType?('C)
 {
     if (destBegin <= srcBegin)
@@ -236,17 +236,17 @@ inline overload moveRangeUnsafe(destBegin:'C, srcBegin:'C, srcEnd:'C)
         moveRangeBackwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
-inline moveNonoverlappingRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D)
+moveNonoverlappingRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
     moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
-inline resetRangeUnsafe(begin:'C, end:'C) | CoordinateType?('C) {
+resetRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
     eachInRange(begin, end, resetUnsafe);
 }
 
-inline assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D)
+assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
     eachInRanges(destBegin, srcBegin, srcEnd, assign);

@@ -22,7 +22,7 @@ overload Vector['T]() = initializeRecord(Vector['T],
 overload #InitializeDoesNotThrowType?(Vector['T]) = true;
 overload #BitwiseZeroInitializedType?(Vector['T]) = true;
 
-inline overload Vector['T](forward s:'S) returned:Vector['T]
+overload Vector['T](forward s:'S) inline --> returned:Vector['T]
     | SequenceType?('S) and SequenceElementType('S) == 'T
 {
     returned <-- Vector['T]();
@@ -35,11 +35,11 @@ inline overload Vector['T](forward s:'S) returned:Vector['T]
     }
 }
 
-inline overload Vector(forward s:'S)
+overload Vector(forward s:'S) inline
     | SequenceType?('S)
     = Vector[SequenceElementType('S)](s);
 
-inline overload Vector['T](forward ..elements:'TT) returned:Vector['T]
+overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
     | not emptyValues?(..'TT) and equalValues?('T, ..'TT)
 {
     returned <-- Vector['T]();
@@ -58,44 +58,44 @@ inline overload Vector['T](forward ..elements:'TT) returned:Vector['T]
 
 overload #BitwiseMovedType?(Vector['T]) = true;
 
-inline overload copyAssign(ref to:Vector['T], from:Vector['U])
+overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
     | AssignableTypes?('T, 'U)
 {
     resizeUnsafe(to, size(from));
     assignRange(begin(to), begin(from), end(from));
 }
 
-inline overload destroyUnsafe(ref a:Vector['T]) {
+overload destroyUnsafe(ref a:Vector['T]) inline {
     destroyRangeUnsafe(begin(a), end(a));
     freeRawValues(a.data);
 }
 
-inline overload copy(a:Vector['T]) = Vector['T](a);
+overload copy(a:Vector['T]) inline = Vector['T](a);
 
 
 //
 // sequence operations
 //
 
-inline overload size(v:Vector['T]) = v.size;
-inline overload index(/*not rvalue*/ forward v:Vector['T], i:'I)
+overload size(v:Vector['T]) inline = v.size;
+overload index(/*not rvalue*/ forward v:Vector['T], i:'I) inline
     | IntegerType?('I)
     = forward v.data[i];
 
-inline overload index(rvalue v:Vector['T], i:'I) {
+overload index(rvalue v:Vector['T], i:'I) inline {
     var w = v;
     return w.data[i];
 }
 
-inline overload begin(v:Vector['T]) = v.data;
-inline overload end(v:Vector['T]) = v.data + v.size;
+overload begin(v:Vector['T]) inline = v.data;
+overload end(v:Vector['T]) inline = v.data + v.size;
 
 
 //
 // vector mutation operations
 //
 
-inline push(ref v:Vector['T], forward ..elements:'TT)
+push(ref v:Vector['T], forward ..elements:'TT) inline
     | countValues(..'TT) != 1
       and allValues?([U -> CallDefined?(push, Ref[Vector['T]], U)], ..'TT)
 {
@@ -104,31 +104,31 @@ inline push(ref v:Vector['T], forward ..elements:'TT)
         push(v, e);
 }
 
-inline overload push(ref v:Vector['T], forward seq:'S)
+overload push(ref v:Vector['T], forward seq:'S) inline
     | SequenceType?('S) and SequenceElementType('S) == 'T
 {
     insert(v, size(v), seq);
 }
 
-inline overload push(ref v:Vector['T], forward elt:'T) {
+overload push(ref v:Vector['T], forward elt:'T) inline {
     insert(v, size(v), elt);
 }
 
-inline pop(ref v:Vector['T]) returned:'T {
+pop(ref v:Vector['T]) inline --> returned:'T {
     returned <-- moveUnsafe(back(v));
     removeLocations(v, end(v) - 1, end(v));
 }
 
-inline reserve(ref v:Vector['T], n:'I) | IntegerType?('I) {
+reserve(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     if (v.capacity < UInt(n))
         requestCapacity(v, UInt(n));
 }
 
-inline resize(ref v:Vector['T], n:'I) | IntegerType?('I) {
+resize(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     resizeInternal(v, UInt(n), initializeRange);
 }
 
-inline resizeUnsafe(ref v:Vector['T], n:'I) | IntegerType?('I) {
+resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     resizeInternal(v, UInt(n), resetRangeUnsafe);
 }
 
@@ -190,24 +190,24 @@ overload insert(ref v:Vector['T], i:ContiguousCoordinate['T], x:'T) {
 
 // remove
 
-inline clear(ref v:Vector['T]) {
+clear(ref v:Vector['T]) inline {
     remove(v, begin(v), end(v));
 }
 
-inline remove(ref v:Vector['T], i:ContiguousCoordinate['T], j:ContiguousCoordinate['T]) {
+remove(ref v:Vector['T], i:ContiguousCoordinate['T], j:ContiguousCoordinate['T]) inline {
     destroyRangeUnsafe(i, j);
     removeLocations(v, i, j);
 }
 
-inline overload remove(ref v:Vector['T], i:ContiguousCoordinate['T]) {
+overload remove(ref v:Vector['T], i:ContiguousCoordinate['T]) inline {
     remove(v, i, i+1);
 }
 
-inline overload remove(ref v:Vector['T], i:'I) | IntegerType?('I) {
+overload remove(ref v:Vector['T], i:'I) inline | IntegerType?('I) {
     remove(v, begin(v) + i);
 }
 
-inline overload remove(ref v:Vector['T], i:'I, j:'J)
+overload remove(ref v:Vector['T], i:'I, j:'J) inline
     | IntegerType?('I) and IntegerType?('J)
 {
     remove(v, begin(v) + i, begin(v) + j);
@@ -249,7 +249,7 @@ private resizeInternal(ref v:Vector['T], n:UInt, initializer) {
     v.size = n;
 }
 
-private inline ensureSpace(ref v, space) { reserve(v, v.size + space); }
+private ensureSpace(ref v, space) inline { reserve(v, v.size + space); }
 
 private insertLocations(ref v:Vector['T], pos:UInt, n:UInt) {
     ensureSpace(v, n);

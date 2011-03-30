@@ -28,7 +28,7 @@ import __primitives__.(
 // tupleLiteral
 //
 
-inline tupleLiteral(forward ..elements:'T) = Tuple[..'T](..elements);
+tupleLiteral(forward ..elements:'T) inline = Tuple[..'T](..elements);
 
 
 
@@ -43,7 +43,7 @@ symbol index;
 // dereference
 //
 
-inline dereference(forward a:'T)
+dereference(forward a:'T) inline
     | PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T)
     = forward cDereference(#PointerReferencedType('T), a);
 
@@ -53,8 +53,8 @@ inline dereference(forward a:'T)
 // staticIndex, fieldRef
 //
 
-inline staticIndex(forward a, #'n)  | Defined?([a[#'n]]) = forward a[#'n];
-inline fieldRef(forward a, #'field) | Defined?([a[#'field]]) = forward a[#'field];
+staticIndex(forward a, #'n) inline  | Defined?([a[#'n]]) = forward a[#'n];
+fieldRef(forward a, #'field) inline | Defined?([a[#'field]]) = forward a[#'field];
 
 
 
@@ -88,7 +88,7 @@ overload #subtract('x, 'y) = StaticSubtract('x);
 //
 // arithmetic operations defined in terms of *Assign operators
 
-private inline opFromAssign(#'assignFn, a:'A, b:'B) c:'A
+private opFromAssign(#'assignFn, a:'A, b:'B) inline --> c:'A
 {
     c <-- a;
     try {
@@ -99,17 +99,17 @@ private inline opFromAssign(#'assignFn, a:'A, b:'B) c:'A
     }
 }
 
-inline overload multiply(a:'A, b:'B) | Defined?([multiplyAssign(a, b);])
+overload multiply(a:'A, b:'B) inline | Defined?([multiplyAssign(a, b);])
     = opFromAssign(multiplyAssign, a, b);
-inline overload divide(a:'A, b:'B) | Defined?([divideAssign(a, b);])
+overload divide(a:'A, b:'B) inline | Defined?([divideAssign(a, b);])
     = opFromAssign(divideAssign, a, b);
-inline overload quotient(a:'A, b:'B) | Defined?([quotientAssign(a, b);])
+overload quotient(a:'A, b:'B) inline | Defined?([quotientAssign(a, b);])
     = opFromAssign(quotientAssign, a, b);
-inline overload remainder(a:'A, b:'B) | Defined?([remainderAssign(a, b);])
+overload remainder(a:'A, b:'B) inline | Defined?([remainderAssign(a, b);])
     = opFromAssign(remainderAssign, a, b);
-inline overload add(a:'A, b:'B) | Defined?([addAssign(a, b);])
+overload add(a:'A, b:'B) inline | Defined?([addAssign(a, b);])
     = opFromAssign(addAssign, a, b);
-inline overload subtract(a:'A, b:'B) | Defined?([subtractAssign(a, b);])
+overload subtract(a:'A, b:'B) inline | Defined?([subtractAssign(a, b);])
     = opFromAssign(subtractAssign, a, b);
 
 
@@ -117,23 +117,23 @@ inline overload subtract(a:'A, b:'B) | Defined?([subtractAssign(a, b);])
 // arithmetic operators over c types
 //
 
-inline overload plus(a:'N) | NumberType?('N) = a;
-inline overload minus(a:'N) | NumberType?('N) = cMinus('N, a);
+overload plus(a:'N) inline | NumberType?('N) = a;
+overload minus(a:'N) inline | NumberType?('N) = cMinus('N, a);
 
-inline overload multiply(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+overload multiply(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cMultiply(#BiggerNumberType('A, 'B), a, b);
-inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
+overload divide(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
     = cDivide(#BiggerNumberType('A, 'B), a, b);
-inline overload divide(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+overload divide(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = Float64(a) / Float64(b);
-inline overload quotient(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+overload quotient(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = cDivide(#BiggerNumberType('A, 'B), a, b);
-inline overload remainder(a:'A, b:'B) | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+overload remainder(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = cRemainder(#BiggerNumberType('A, 'B), a, b);
 
-inline overload add(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+overload add(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cAdd(#BiggerNumberType('A, 'B), a, b);
-inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+overload subtract(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cSubtract(#BiggerNumberType('A, 'B), a, b);
 
 
@@ -141,22 +141,22 @@ inline overload subtract(a:'A, b:'B) | ArithmeticCompatiblePrimitiveTypes?('A, '
 // ContiguousCoordinate arithmetic
 //
 
-inline overload add(a:ContiguousCoordinate['A], b:'B)
+overload add(a:ContiguousCoordinate['A], b:'B) inline
     | IntegerType?('B)
     = cAdd(ContiguousCoordinate['A], a, b);
 
-inline overload add(a:'A, b:ContiguousCoordinate['B])
+overload add(a:'A, b:ContiguousCoordinate['B]) inline
     | IntegerType?('A)
     = cAdd(ContiguousCoordinate['B], b, a);
 
-inline overload subtract(a:ContiguousCoordinate['A], b:'B)
+overload subtract(a:ContiguousCoordinate['A], b:'B) inline
     | IntegerType?('B)
     = cSubtract(ContiguousCoordinate['A], a, b);
 
-inline overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A])
+overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
     = cSubtract(Int, a, b);
 
-inline overload index(a, n:'I)
+overload index(a, n:'I) inline
     | IntegerType?('I) and Defined?([(a + n)^;])
     = forward ..((a + n)^);
 
@@ -190,18 +190,18 @@ overload lesser?(a:StringConstant, b:StringConstant) = lesserSequence?(a, b);
 // comparison operators on numbers
 //
 
-inline overload lesser?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+overload lesser?(a:'A, b:'B) inline | ComparablePrimitiveTypes?('A, 'B)
     = cLesser?(a, b);
-inline overload lesserEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+overload lesserEquals?(a:'A, b:'B) inline | ComparablePrimitiveTypes?('A, 'B)
     = cLesserEquals?(a, b);
-inline overload greater?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+overload greater?(a:'A, b:'B) inline | ComparablePrimitiveTypes?('A, 'B)
     = cGreater?(a, b);
-inline overload greaterEquals?(a:'A, b:'B) | ComparablePrimitiveTypes?('A, 'B)
+overload greaterEquals?(a:'A, b:'B) inline | ComparablePrimitiveTypes?('A, 'B)
     = cGreaterEquals?(a, b);
 
-inline overload equals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+overload equals?(a:'A, b:'B) inline | EqualityComparablePrimitiveTypes?('A, 'B)
     = cEquals?(a, b);
-inline overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, 'B)
+overload notEquals?(a:'A, b:'B) inline | EqualityComparablePrimitiveTypes?('A, 'B)
     = cNotEquals?(a, b);
 
 
@@ -209,27 +209,27 @@ inline overload notEquals?(a:'A, b:'B) | EqualityComparablePrimitiveTypes?('A, '
 // assignment
 //
 
-inline moveAssign(ref a:'T, rvalue b:'T) {
+moveAssign(ref a:'T, rvalue b:'T) inline {
     destroyUnsafe(a);
     a <-- move(b);
 }
-inline overload moveAssign(ref a:'T, rvalue b:'T)
+overload moveAssign(ref a:'T, rvalue b:'T) inline
     | BitwiseMoveAssignedType?('T)
 {
     a <-- move(b);
 }
 
-inline copyAssign(ref a:'T, b:'T) | BitwiseAssignedType?('T) { a <-- b; }
-inline overload copyAssign(ref a:'A, b:'B) | AssignablePrimitiveTypes?('A, 'B)
+copyAssign(ref a:'T, b:'T) inline | BitwiseAssignedType?('T) { a <-- b; }
+overload copyAssign(ref a:'A, b:'B) inline | AssignablePrimitiveTypes?('A, 'B)
 {
     cAssign(a, b);
 }
 
 symbol assign;
-inline overload assign(ref a:'T, b:'U) | Defined?([copyAssign(a, b);]) {
+overload assign(ref a:'T, b:'U) inline | Defined?([copyAssign(a, b);]) {
     copyAssign(a, b);
 }
-inline overload assign(ref a:'T, rvalue b:'T) | Defined?([moveAssign(a, b);]) {
+overload assign(ref a:'T, rvalue b:'T) inline | Defined?([moveAssign(a, b);]) {
     moveAssign(a, b);
 }
 
@@ -238,15 +238,15 @@ inline overload assign(ref a:'T, rvalue b:'T) | Defined?([moveAssign(a, b);]) {
 // arithmetic assignment
 //
 
-inline addAssign      (ref a, b) | Defined?([a  +  b]) { a = a  +  b; }
-inline subtractAssign (ref a, b) | Defined?([a  -  b]) { a = a  -  b; }
-inline multiplyAssign (ref a, b) | Defined?([a  *  b]) { a = a  *  b; }
-inline divideAssign   (ref a, b) | Defined?([a  /  b]) { a = a  /  b; }
-inline quotientAssign (ref a, b) | Defined?([a div b]) { a = a div b; }
-inline remainderAssign(ref a, b) | Defined?([a mod b]) { a = a mod b; }
+addAssign      (ref a, b) inline | Defined?([a  +  b]) { a = a  +  b; }
+subtractAssign (ref a, b) inline | Defined?([a  -  b]) { a = a  -  b; }
+multiplyAssign (ref a, b) inline | Defined?([a  *  b]) { a = a  *  b; }
+divideAssign   (ref a, b) inline | Defined?([a  /  b]) { a = a  /  b; }
+quotientAssign (ref a, b) inline | Defined?([a div b]) { a = a div b; }
+remainderAssign(ref a, b) inline | Defined?([a mod b]) { a = a mod b; }
 
-inline inc(ref a:'T) | Defined?([addAssign     (a, 1);]) { a += 1; }
-inline dec(ref a:'T) | Defined?([subtractAssign(a, 1);]) { a -= 1; }
+inc(ref a:'T) inline | Defined?([addAssign     (a, 1);]) { a += 1; }
+dec(ref a:'T) inline | Defined?([subtractAssign(a, 1);]) { a -= 1; }
 
 
 
@@ -256,17 +256,17 @@ inline dec(ref a:'T) | Defined?([subtractAssign(a, 1);]) { a -= 1; }
 
 symbol call;
 
-inline overload call(#'f, forward ..args) = forward ..'f(..args);
+overload call(#'f, forward ..args) inline = forward ..'f(..args);
 
 // non-variadic external code pointer
-inline overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args)
-    ..ExternalOutputTypes('O)
+overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args) inline
+    : ..ExternalOutputTypes('O)
     | 'I == (..'Args)
     = ..cExternalCall(f, ..args);
 
 // variadic external code pointer
-inline overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args)
-    ..ExternalOutputTypes('O)
+overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
+    : ..ExternalOutputTypes('O)
     | allValues?(RequireExternalPODType?, ..'Args)
       and 'I == (..takeValues(StaticTupleSize('I), ..'Args))
     = ..cExternalCall(f, ..args);
@@ -278,24 +278,25 @@ inline overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args)
 //
 
 symbol initializeFromUnsafe;
-inline overload initializeFromUnsafe(ref a:'T, b:'T) { a <-- copy(b); }
-inline overload initializeFromUnsafe(ref a:'T, rvalue b:'T) { a <-- move(b); }
+overload initializeFromUnsafe(ref a:'T, b:'T) inline { a <-- copy(b); }
+overload initializeFromUnsafe(ref a:'T, rvalue b:'T) inline { a <-- move(b); }
 
 destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
-inline resetUnsafe(ref x:'T)
+resetUnsafe(ref x:'T) inline
     | DefaultInitializableType?('T) and InitializeDoesNotThrowType?('T)
     { x <-- 'T(); }
-inline overload resetUnsafe(ref x:'T) | NotResetType?('T) {}
+overload resetUnsafe(ref x:'T) inline | NotResetType?('T) {}
 
-inline bitwiseCopyUnsafe(forward a:'T) returned:'T { cAssign(returned, a); }
+bitwiseCopyUnsafe(forward a:'T) inline --> returned:'T { cAssign(returned, a); }
 
-inline copy(a:'T) | BitwiseCopiedType?('T) = bitwiseCopyUnsafe(a);
+copy(a:'T) inline | BitwiseCopiedType?('T) = bitwiseCopyUnsafe(a);
 
-inline moveUnsafe(ref a:'T) | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
+moveUnsafe(ref a:'T) inline | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
 
 symbol move;
-inline overload move(ref a:'T) returned:'T { returned <-- moveUnsafe(a); resetUnsafe(a); }
-inline overload move(rvalue a:'T) = moveUnsafe(rvalueToRefUnsafe(a));
+overload move(ref a:'T) inline --> returned:'T
+    { returned <-- moveUnsafe(a); resetUnsafe(a); }
+overload move(rvalue a:'T) inline = moveUnsafe(rvalueToRefUnsafe(a));
 
 
 //
@@ -311,9 +312,9 @@ overload #unpack((..'x)) = ..'x;
 // refToRvalueUnsafe, rvalueToRefUnsafe
 //
 
-inline refToRvalueUnsafe(ref x:'T) rvalue r:'T
+refToRvalueUnsafe(ref x:'T) inline --> rvalue r:'T
     __c__ """$r = &$x;""";
-inline rvalueToRefUnsafe(rvalue x:'T) ref r:'T
+rvalueToRefUnsafe(rvalue x:'T) inline --> ref r:'T
     __c__ """$r = &$x;""";
 
 
@@ -324,14 +325,14 @@ inline rvalueToRefUnsafe(rvalue x:'T) ref r:'T
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-inline overload max(a:'A, b:'A) | Defined?([a < b])
+overload max(a:'A, b:'A) inline | Defined?([a < b])
     = if (a < b) b else a;
-inline overload min(a:'A, b:'A) | Defined?([a < b])
+overload min(a:'A, b:'A) inline | Defined?([a < b])
     = if (a < b) a else b;
 
-inline overload max(a:'A, b:'A) | FloatType?('A)
+overload max(a:'A, b:'A) inline | FloatType?('A)
     = if (a >= b or nan?(b)) a else b;
-inline overload min(a:'A, b:'A) | FloatType?('A)
+overload min(a:'A, b:'A) inline | FloatType?('A)
     = if (a <= b or nan?(b)) a else b;
 
 overload #max('a, 'b) = if ('a < 'b) 'b else 'a;
@@ -342,7 +343,7 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 // case?
 //
 
-inline case?(value:'T, forward ..cases:'U)
+case?(value:'T, forward ..cases:'U) inline
     | allValues?([u -> CallDefined?(equals?, 'T, u)], ..'U)
     = inValues?(value, ..cases);
 
@@ -351,7 +352,7 @@ inline case?(value:'T, forward ..cases:'U)
 // uninitializedUnsafe
 //
 
-uninitializedUnsafe(#'T) x:'T {}
+uninitializedUnsafe(#'T) inline --> x:'T {}
 
 
 //
@@ -423,18 +424,18 @@ overload #bitandc('x, 'y) = StaticBitand('x, StaticBitnot('y));
 //
 
 symbol arg;
-overload arg(#'T)         const  x:'T __c__ """abort();""";
-overload arg(#Const['T])  const  x:'T __c__ """abort();""";
-overload arg(#Ref['T])    ref    x:'T __c__ """abort();""";
-overload arg(#Rvalue['T]) rvalue x:'T __c__ """abort();""";
+overload arg(#'T)         --> const  x:'T __c__ """abort();""";
+overload arg(#Const['T])  --> const  x:'T __c__ """abort();""";
+overload arg(#Ref['T])    --> ref    x:'T __c__ """abort();""";
+overload arg(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
 
 overload arg(..#'T) | countValues(..'T) != 1 = forward ..mapValues(arg, ..'T);
 
 symbol ret;
-overload ret(#'T)                x:'T __c__ """abort();""";
-overload ret(#Const['T])  const  x:'T __c__ """abort();""";
-overload ret(#Ref['T])    ref    x:'T __c__ """abort();""";
-overload ret(#Rvalue['T]) rvalue x:'T __c__ """abort();""";
+overload ret(#'T)         -->        x:'T __c__ """abort();""";
+overload ret(#Const['T])  --> const  x:'T __c__ """abort();""";
+overload ret(#Ref['T])    --> ref    x:'T __c__ """abort();""";
+overload ret(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
 
 overload ret(..#'T) | countValues(..'T) != 1 = forward ..mapValues(ret, ..'T);
 
@@ -443,7 +444,7 @@ overload ret(..#'T) | countValues(..'T) != 1 = forward ..mapValues(ret, ..'T);
 // identity function
 //
 
-inline identity(forward ..x) = forward ..x;
+identity(forward ..x) inline = forward ..x;
 
 
 //

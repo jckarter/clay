@@ -1,18 +1,18 @@
 import ctypes.*;
 
-external abort() /*noreturn*/;
-external exit(code:CInt) /*noreturn*/;
-external puts(s:CString) CInt;
-external printf(format:CString, ..) CInt;
+external abort() noreturn;
+external exit(code:CInt) noreturn;
+external puts(s:CString) : CInt;
+external printf(format:CString, ..) : CInt;
 
-external memcpy(to:OpaquePointer, from:OpaquePointer, len:CSizeT) OpaquePointer;
-external memmove(to:OpaquePointer, from:OpaquePointer, len:CSizeT) OpaquePointer;
-external memset(to:OpaquePointer, c:CInt, len:CSizeT) OpaquePointer;
-external memcmp(a:OpaquePointer, b:OpaquePointer, len:CSizeT) CInt;
+external memcpy(to:OpaquePointer, from:OpaquePointer, len:CSizeT) : OpaquePointer;
+external memmove(to:OpaquePointer, from:OpaquePointer, len:CSizeT) : OpaquePointer;
+external memset(to:OpaquePointer, c:CInt, len:CSizeT) : OpaquePointer;
+external memcmp(a:OpaquePointer, b:OpaquePointer, len:CSizeT) : CInt;
 
-external strlen(s:CString) CSizeT;
+external strlen(s:CString) : CSizeT;
 
 // XXX Maybe[OpaquePointer]
-external malloc(size:CSizeT) OpaquePointer;
-external realloc(ptr:OpaquePointer, size:CSizeT) OpaquePointer;
+external malloc(size:CSizeT) : OpaquePointer;
+external realloc(ptr:OpaquePointer, size:CSizeT) : OpaquePointer;
 external free(ptr:OpaquePointer);

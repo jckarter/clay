@@ -9,11 +9,11 @@ import meta.lltypes.*;
 // indexing
 //
 
-inline overload index(forward t:Union[..'T], #'n)
+overload index(forward t:Union[..'T], #'n) inline
     | ValidStaticIndex?('n, ..'T)
     = forward bitcast(#nthValue('n, ..'T), t);
 
-inline overload index(forward t:Union[..'T], #'U)
+overload index(forward t:Union[..'T], #'U) inline
     | inValues?('U, ..'T)
     = forward bitcast('U, t);
 
@@ -24,7 +24,7 @@ inline overload index(forward t:Union[..'T], #'U)
 
 overload #BitwiseZeroInitializedType?(Union[..'T]) | Type?(Union[..'T]) = true;
 
-inline overload Union[..'T]() returned:Union[..'T] {
+overload Union[..'T]() inline --> returned:Union[..'T] {
     memset(OpaquePointer(&returned), 0_i32, TypeSize(Union[..'T]));
 }
 
@@ -33,7 +33,7 @@ inline overload Union[..'T]() returned:Union[..'T] {
 // initialization from member type
 //
 
-inline overload Union[..'T](forward x:'U) returned:Union[..'T]
+overload Union[..'T](forward x:'U) inline --> returned:Union[..'T]
     | inValues?('U, ..'T)
 {
     returned['U] <-- x;
@@ -44,7 +44,7 @@ inline overload Union[..'T](forward x:'U) returned:Union[..'T]
 // equality
 //
 
-inline overload equals?(a:Union[..'T], b:Union[..'T])
+overload equals?(a:Union[..'T], b:Union[..'T]) inline
     = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize(Union[..'T])) == 0;
 
 
@@ -60,25 +60,25 @@ overload #Fields('T) | NamedUnionType?('T) = ..SymbolTagBody('T, NamedUnionType)
 overload #LLType('T) | NamedUnionType?('T) = LLUnionType[..Fields('T)];
 overload #PODType?('T) | NamedUnionType?('T) = true;
 
-inline overload index(forward x:'T, #'field)
+overload index(forward x:'T, #'field) inline
     | NamedUnionType?('T) and Field?('T, 'field)
     = forward bitcast(#FieldType('T, 'field), x);
 
 overload #BitwiseZeroInitializedType?('T) | NamedUnionType?('T) = true;
 
-inline overload 'T() returned:'T
+overload 'T() inline --> returned:'T
     | NamedUnionType?('T)
 {
     memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
 }
 
-inline overload 'T(forward x:'U) returned:'T
+overload 'T(forward x:'U) inline --> returned:'T
     | NamedUnionType?('T) and inValues?('U, ..FieldTypes('T))
 {
     bitcast('U, returned) <-- x;
 }
 
-inline overload equals?(a:'T, b:'T)
+overload equals?(a:'T, b:'T) inline
     | NamedUnionType?('T)
     = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize('T)) == 0;
 

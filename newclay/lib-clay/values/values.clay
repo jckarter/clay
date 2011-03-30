@@ -4,22 +4,22 @@ import meta.statics.(StaticInt?);
 symbol allValues?;
 overload #allValues?('f) = true;
 overload #allValues?('f, 'x, ..'xs) = 'f('x) and allValues?('f, ..'xs);
-inline overload allValues?(f) = true;
-inline overload allValues?(f, forward x, forward ..xs)
+overload allValues?(f) inline = true;
+overload allValues?(f, forward x, forward ..xs) inline
     = f(x) and allValues?(f, ..xs);
 
 symbol equalValues?;
 overload #equalValues?('x0) = true;
 overload #equalValues?('x0, 'x1, ..'xs) = 'x0 == 'x1 and equalValues?('x0, ..'xs);
-inline overload equalValues?(x0) = true;
-inline overload equalValues?(x0, forward x1, forward ..xs)
+overload equalValues?(x0) inline = true;
+overload equalValues?(x0, forward x1, forward ..xs) inline
     = x0 == x1 and equalValues?(x0, ..xs);
 
 symbol inValues?;
 overload #inValues?('x) = false;
 overload #inValues?('x, 'x, ..'ys) = true;
 overload #inValues?('x, 'y, ..'ys) | 'x != 'y = inValues?('x, ..'ys);
-inline overload inValues?(x, forward ..ys) {
+overload inValues?(x, forward ..ys) inline {
     static for (/*forward*/ y in ..ys)
         if (x == y)
             return true;
@@ -28,13 +28,13 @@ inline overload inValues?(x, forward ..ys) {
 
 symbol countValues;
 overload #countValues(..'xs) = StaticCountValues(..'xs);
-inline overload countValues(..xs:'T) = *#StaticCountValues(..'T);
+overload countValues(..xs:'T) inline = *#StaticCountValues(..'T);
 
 symbol emptyValues?;
 overload #emptyValues?(..'xs) = false;
 overload #emptyValues?() = true;
-inline overload emptyValues?(..xs) = false;
-inline overload emptyValues?() = true;
+overload emptyValues?(..xs) inline = false;
+overload emptyValues?() inline = true;
 
 symbol takeValues;
 overload #takeValues('n) | StaticInt?('n) = ;
@@ -42,9 +42,9 @@ overload #takeValues(0, ..'xs) = ;
 overload #takeValues('n, 'x, ..'xs)
     | StaticInt?('n) and 'n > 0
     = 'x, ..takeValues('n - 1, ..'xs);
-inline overload takeValues(#'n) | StaticInt?('n) = ;
-inline overload takeValues(#0, forward ..xs) = ;
-inline overload takeValues(#'n, forward x, forward ..xs)
+overload takeValues(#'n) inline | StaticInt?('n) = ;
+overload takeValues(#0, forward ..xs) inline = ;
+overload takeValues(#'n, forward x, forward ..xs) inline
     | StaticInt?('n) and 'n > 0
     = forward x, forward ..takeValues(#('n - 1), ..xs);
 
@@ -54,17 +54,17 @@ overload #dropValues(0, ..'xs) = ..'xs;
 overload #dropValues('n, 'x, ..'xs)
     | StaticInt?('n) and 'n > 0
     = ..dropValues('n - 1, ..'xs);
-inline overload dropValues(#'n) | StaticInt?('n) = ;
-inline overload dropValues(#0, forward ..xs) = forward ..xs;
-inline overload dropValues(#'n, forward x, forward ..xs)
+overload dropValues(#'n) inline | StaticInt?('n) = ;
+overload dropValues(#0, forward ..xs) inline = forward ..xs;
+overload dropValues(#'n, forward x, forward ..xs) inline
     | StaticInt?('n) and 'n > 0
     = forward ..dropValues(#('n - 1), ..xs);
 
 symbol mapValues;
 overload #mapValues('f) = ;
 overload #mapValues('f, 'x, ..'xs) = ..'f('x), ..mapValues('f, ..'xs);
-inline overload mapValues(fn) = ;
-inline overload mapValues(fn, forward x:'T, forward ..xs:'TT)
+overload mapValues(fn) inline = ;
+overload mapValues(fn, forward x:'T, forward ..xs:'TT) inline
     = forward ..fn(x), forward ..mapValues(fn, ..xs);
 
 symbol intValues = RuntimeStaticProcedure();
@@ -76,8 +76,8 @@ overload #nthValue('n, 'x, ..'xs)
     | StaticInt?('n) and 'n > 0
     = nthValue('n - 1, ..'xs);
 
-inline overload nthValue(#0, forward x, forward ..xs) = forward x;
-inline overload nthValue(#'n, forward x, forward ..xs)
+overload nthValue(#0, forward x, forward ..xs) inline = forward x;
+overload nthValue(#'n, forward x, forward ..xs) inline
     | StaticInt?('n) and 'n > 0
     = forward nthValue(#('n - 1), ..xs);
 
@@ -85,9 +85,9 @@ symbol assocValue;
 overload #assocValue('key, 'kv, ..'kvs) = assocValue('key, ..'kvs);
 overload #assocValue('key, ('key, 'value), ..'kvs) = 'value;
 
-inline overload assocValue(#'key, forward kv, forward ..kvs)
+overload assocValue(#'key, forward kv, forward ..kvs) inline
     = forward assocValue(#'key, ..kvs);
-inline overload assocValue(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs)
+overload assocValue(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs) inline
     = forward kv[#1];
 
 symbol assocValue?;
@@ -95,11 +95,11 @@ overload #assocValue?('key, 'kv, ..'kvs) = assocValue?('key, ..'kvs);
 overload #assocValue?('key, ('key, 'value), ..'kvs) = true;
 overload #assocValue?('key) = false;
 
-inline overload assocValue?(#'key, forward kv, forward ..kvs)
+overload assocValue?(#'key, forward kv, forward ..kvs) inline
     = assocValue?(#'key, ..kvs);
-inline overload assocValue?(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs)
+overload assocValue?(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs) inline
     = true;
-inline overload assocValue?(#'key)
+overload assocValue?(#'key) inline
     = false;
 
 symbol exceptValue = RuntimeStaticProcedure();
@@ -124,24 +124,24 @@ overload #CapturedType?(CapturedRef['T]) = true;
 overload #CapturedType?(CapturedConst['T]) = true;
 
 symbol captureValue;
-inline overload captureValue(const x:'T) = CapturedConst['T](&x);
-inline overload captureValue(ref x:'T) = CapturedRef['T](&x);
-inline overload captureValue(rvalue x:'T) = CapturedValue['T](x);
+overload captureValue(const x:'T) inline = CapturedConst['T](&x);
+overload captureValue(ref x:'T) inline = CapturedRef['T](&x);
+overload captureValue(rvalue x:'T) inline = CapturedValue['T](x);
 
 symbol forwardValue;
-inline overload forwardValue(x:CapturedConst['T]) = const (*x)^;
-inline overload forwardValue(x:CapturedRef['T]) = ref (*x)^;
-inline overload forwardValue(ref x:CapturedValue['T]) = rvalue refToRvalueUnsafe(*x);
+overload forwardValue(x:CapturedConst['T]) inline = const (*x)^;
+overload forwardValue(x:CapturedRef['T]) inline = ref (*x)^;
+overload forwardValue(ref x:CapturedValue['T]) inline = rvalue refToRvalueUnsafe(*x);
 
 symbol capturedRef;
-inline overload capturedRef(x:CapturedConst['T]) = const (*x)^;
-inline overload capturedRef(x:CapturedRef['T]) = ref (*x)^;
-inline overload capturedRef(x:CapturedValue['T]) = const *x;
+overload capturedRef(x:CapturedConst['T]) inline = const (*x)^;
+overload capturedRef(x:CapturedRef['T]) inline = ref (*x)^;
+overload capturedRef(x:CapturedValue['T]) inline = const *x;
 
-inline captureValues(forward ..x) = (..mapValues(captureValue, ..x));
-inline forwardValues(ref x:Tuple[..'T])
+captureValues(forward ..x) inline = (..mapValues(captureValue, ..x));
+forwardValues(ref x:Tuple[..'T]) inline
     | allValues?(CapturedType?, ..'T)
     = forward ..mapValues(forwardValue, ..*x);
-inline capturedRefs(x:Tuple[..'T])
+capturedRefs(x:Tuple[..'T]) inline
     | allValues?(CapturedType?, ..'T)
     = forward ..mapValues(capturedRef, ..*x);

@@ -13,7 +13,7 @@ overload networkToHost(n:'I16) | inValues?('I16, Int16, UInt16) {
                UInt16(bytes[1]),
     );
 }
-overload hostToNetwork(n:'I16) returned:UInt16 | inValues?('I16, Int16, UInt16) {
+overload hostToNetwork(n:'I16) --> returned:UInt16 | inValues?('I16, Int16, UInt16) {
     ref bytes = bitcast(Array[UInt8, 2], returned);
     bytes[0] = UInt8(bitshr(n,  8));
     bytes[1] = UInt8(       n     );
@@ -28,7 +28,7 @@ overload networkToHost(n:'I32) | inValues?('I32, Int32, UInt32) {
                UInt32(bytes[3])
     );
 }
-overload hostToNetwork(n:'I32) returned:UInt32 | inValues?('I32, Int32, UInt32) {
+overload hostToNetwork(n:'I32) --> returned:UInt32 | inValues?('I32, Int32, UInt32) {
     ref bytes = bitcast(Array[UInt8, 4], returned);
     bytes[0] = UInt8(bitshr(n, 24));
     bytes[1] = UInt8(bitshr(n, 16));
@@ -49,7 +49,7 @@ overload networkToHost(n:'I64) | inValues?('I64, Int64, UInt64) {
                UInt64(bytes[7])
     );
 }
-overload hostToNetwork(n:'I64) returned:UInt64 | inValues?('I64, Int64, UInt64) {
+overload hostToNetwork(n:'I64) --> returned:UInt64 | inValues?('I64, Int64, UInt64) {
     ref bytes = bitcast(Array[UInt8, 8], returned);
     bytes[0] = UInt8(bitshr(n, 56));
     bytes[1] = UInt8(bitshr(n, 48));
