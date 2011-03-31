@@ -802,7 +802,7 @@ record ForStatement = ast(
 
 record StaticForStatement = ast(
     label: Maybe[LabelDef],
-    bodyBinding: Identifier,
+    bodyBinding: Argument,
     values: ExprList,
     body: Statement,
 );

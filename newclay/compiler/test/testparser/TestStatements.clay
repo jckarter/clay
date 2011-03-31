@@ -64,6 +64,9 @@ overload foo() {
     static for (x in y, z, w)
         v;
 
+    static for (ref x:Int in y, z, w)
+        v;
+
     while (x) y;
     while (x; y) z;
 
