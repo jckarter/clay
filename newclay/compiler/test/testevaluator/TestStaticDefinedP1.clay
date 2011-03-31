@@ -1,0 +1,5 @@
+import __primitives__.*;
+
+#Foo('n) | 'n mod 2 == 0 = "even";
+
+#Main() = StaticDefined?([Foo(0)]), StaticDefined?([Foo(1)]), StaticDefined?([Foo(true)]);

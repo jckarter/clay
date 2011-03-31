@@ -1,0 +1,7 @@
+symbol Foo['A];
+
+alias Bar['B, 'X] = Foo['B];
+
+#foo(Bar['B, 'X]) = 'X;
+
+#Main() = ..foo(Foo[1]);

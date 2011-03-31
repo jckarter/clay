@@ -1,0 +1,8 @@
+import __primitives__.*;
+
+#Foo?(..'T) = 'T == Int8 or 'T == Int64;
+
+symbol foo;
+overload foo(x:'T) | Foo?('T) = x;
+
+main() = #Defined?([foo(1)]);

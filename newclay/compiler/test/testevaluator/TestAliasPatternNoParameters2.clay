@@ -1,0 +1,9 @@
+#Foo() = 2;
+
+alias Bar = Foo();
+
+symbol test;
+overload #test('x) = false;
+overload #test(Bar) = true;
+
+#Main() = test(2);
