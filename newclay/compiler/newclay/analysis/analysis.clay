@@ -1374,10 +1374,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
                 addSpecializedNode(blockS, subNode);
 
                 var forEnv = newEnv(bc.env);
-                var forValue = addCapture(subS, stmt, value, stmt.bodyBinding.str);
-
-                envAddLabel(forEnv, stmt.label, blockNode, subNode);
-                envAdd(forEnv, stmt.bodyBinding, forValue);
+                addForBinding(subS, forEnv, stmt, stmt.bodyBinding, value);
 
                 var bodyTarget = analyzeStatement(
                     subS,

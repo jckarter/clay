@@ -258,7 +258,7 @@ overload visitASTNode(r:ResolveASTVisitor, stmt:ast.StaticForStatement) {
     maybe(stmt.label, label ref=> {
         envAdd(subr.env, label.name, dummyValue(subr.depth));
     });
-    envAdd(subr.env, stmt.bodyBinding, dummyValue(subr.depth));
+    addArgument(subr, *stmt.bodyBinding);
 
     visitAST(subr, stmt.body);
 }
