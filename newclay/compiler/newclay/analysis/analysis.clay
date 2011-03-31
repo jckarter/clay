@@ -1374,7 +1374,7 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.StaticForStatement) {
                 addSpecializedNode(blockS, subNode);
 
                 var forEnv = newEnv(bc.env);
-                addForBinding(subS, forEnv, stmt, stmt.bodyBinding, value);
+                addForBinding(subS, forEnv, stmt, *stmt.bodyBinding, value);
 
                 var bodyTarget = analyzeStatement(
                     subS,
@@ -1448,9 +1448,9 @@ private analyzeForBindings(s, env, stmt:ast.ForStatement, bindingValues:RTValues
         // XXX improve error messages
         genericError("incorrect number of iterator values in for loop");
     for (arg, value in zipped(stmt.bodyBindings.items, bindingValues))
-        addForBinding(s, env, stmt, arg, value);
+        addForBinding(s, env, stmt, *arg, value);
     maybe(stmt.bodyBindings.variadicItem, varArg ref=> {
-        addVariadicForBinding(s, env, stmt, varArg, sliceFrom(bindingValues, size(stmt.bodyBindings.items)));
+        addVariadicForBinding(s, env, stmt, *varArg, sliceFrom(bindingValues, size(stmt.bodyBindings.items)));
     });
 }
 
@@ -1460,7 +1460,22 @@ capturedForValue(s, stmt, formalKind, value)
     else
         value;
 
-private addForBinding(s, env, stmt, arg, value) {
+private bindForBinding(env, arg:ast.BoundArgument, value) {
+    envAdd(env, arg.name, value);
+}
+overload bindForBinding(env, arg:ast.StaticArgument, value:RTValue) {
+    initializePatternVars(env, observe(collectPatternVars(arg)));
+    unify(evaluatePattern(arg.pattern, env), staticTypeValue(value.type));
+}
+overload bindForBinding(env, arg:ast.StaticArgument, values:RTValueList) {
+    initializePatternVars(env, observe(collectPatternVars(arg)));
+    unifyList(
+        ListPattern(Vector[Pattern](), evaluateListPatternCell(arg.pattern, env)),
+        ValueList(mapped(x => staticTypeValue(x.type), values.vars))
+    );
+}
+
+private addForBinding(s, env, stmt, arg:ast.BoundArgument, value) {
     withLocation(arg, () ref=> {
         var formalKind = referenceSpecifier(arg);
         var value2 = capturedForValue(s, stmt, formalKind, value);
@@ -1474,11 +1489,19 @@ private addForBinding(s, env, stmt, arg, value) {
         var loweredValue = newReference(loweredKind, value2.type, argumentNameString(arg));
         addSpecializedBind(s, stmt, value2, loweredValue);
 
+        envAdd(env, arg.name, value);
+
         maybe(argumentName(arg), name ref=> { envAdd(env, name, loweredValue); });
     });
 }
+overload addForBinding(s, env, stmt, arg:ast.StaticArgument, value) {
+    withLocation(arg, () ref=> {
+        initializePatternVars(env, collectPatternVars(arg));
+        unify(evaluatePattern(arg.pattern, env), staticTypeValue(value.type));
+    });
+}
 
-private addVariadicForBinding(s, env, stmt, varArg, values) {
+private addVariadicForBinding(s, env, stmt, varArg:ast.BoundArgument, values) {
     withLocation(varArg, () ref=> {
         var formalKind = referenceSpecifier(varArg);
         var values2 = map(v ref=> {
@@ -1497,7 +1520,16 @@ private addVariadicForBinding(s, env, stmt, varArg, values) {
             );
 
         var listVar = RTValueList(values2);
-        maybe(argumentName(varArg), name ref=> { envAdd(env, name, listVar); });
+        envAdd(env, varArg.name, listVar);
+    });
+}
+overload addVariadicForBinding(s, env, stmt, varArg:ast.StaticArgument, values) {
+    withLocation(varArg, () ref=> {
+        initializePatternVars(env, collectMultiPatternVars(varArg));
+        unifyList(
+            ListPattern(Vector[Pattern](), evaluateListPatternCell(varArg.pattern, env)),
+            ValueList(mapped(x => staticTypeValue(x.type), values))
+        );
     });
 }
 
@@ -2095,12 +2127,9 @@ arityMatches?(formalArgs:ast.VariadicList[Arg], args:S) {
         return size(args) >= size(formalArgs.items);
 }
 
-private referenceSpecifier(formalArg:ast.Argument) ast.ArgumentKind {
-    return match(formalArg,
-        ast.BoundArgument, x => maybe(x.kind, y => y, () => ast.ARG_CONST),
-        ast.StaticArgument, x => ast.ARG_CONST,
-    );
-}
+private referenceSpecifier(formalArg:ast.Argument) = referenceSpecifier(*formalArg);
+overload referenceSpecifier(x:ast.BoundArgument) = just(x.kind, ast.ARG_CONST);
+overload referenceSpecifier(x:ast.StaticArgument) = ast.ARG_CONST;
 
 private referenceKindMatches?(formalKind:ast.ArgumentKind, kind:RTValueKind) {
     if (formalKind == ast.ARG_REF)
@@ -2116,55 +2145,51 @@ private loweredArgumentKind(formalKind:ast.ArgumentKind, kind:RTValueKind) {
     return kind;
 }
 
-private unifyArgumentType(formalArg:ast.Argument, arg:RTValue, env) {
-    return match(formalArg,
-        ast.BoundArgument, x ref=> maybe(x.type,
-            type ref=> {
-                var typePattern = evaluatePattern(type, env);
-                return unify(typePattern, arg.type);
-            },
-            () => true,
-        ),
-        ast.StaticArgument, x ref=> {
-            if (not staticType?(arg.type))
-                return false;
-
-            var staticPattern = evaluatePattern(x.pattern, env);
-            return unify(staticPattern, staticTypeValue(arg.type));
-        }
-    );
-}
-
-private unifyVariadicArgumentType(formalArg, args, env) {
-    return match(formalArg,
-        ast.BoundArgument, x ref=> maybe(x.type,
-            type => {
-                var listCell = evaluateListPatternCell(type, env);
-                return unifyList(listCell, mapped(a => ref a.type, args));
-            },
-            () => true,
-        ),
-        ast.StaticArgument, x ref=> {
-            for(arg in args)
-                if (not staticType?(arg.type))
-                    return false;
-
-            var staticPattern = evaluateListPatternCell(x.pattern, env);
-            var types = ValueList(mapped(arg => staticTypeValue(arg.type), args));
-            return unifyList(staticPattern, types);
+private unifyArgumentType(formalArg:ast.Argument, arg:RTValue, env)
+    = unifyArgumentType(*formalArg, arg, env);
+overload unifyArgumentType(x:ast.BoundArgument, arg, env)
+    = maybe(x.type,
+        type ref=> {
+            var typePattern = evaluatePattern(type, env);
+            return unify(typePattern, arg.type);
         },
+        () => true,
     );
+overload unifyArgumentType(x:ast.StaticArgument, arg, env) {
+    if (not staticType?(arg.type))
+        return false;
+
+    var staticPattern = evaluatePattern(x.pattern, env);
+    return unify(staticPattern, staticTypeValue(arg.type));
 }
 
-private argumentName(formalArg) = match(formalArg,
-    ast.BoundArgument, x ref=> Maybe(x.name),
-    ast.StaticArgument, x ref=> nothing(ast.Identifier),
-);
+private unifyVariadicArgumentType(formalArg, args, env)
+    = unifyVariadicArgumentType(*formalArg, args, env);
+overload unifyVariadicArgumentType(x:ast.BoundArgument, args, env)
+    = maybe(x.type,
+        type => {
+            var listCell = evaluateListPatternCell(type, env);
+            return unifyList(listCell, mapped(a => ref a.type, args));
+        },
+        () => true,
+    );
+overload unifyVariadicArgumentType(x:ast.StaticArgument, args, env) {
+    for(arg in args)
+        if (not staticType?(arg.type))
+            return false;
 
-private argumentNameString(formalArg) = match(formalArg,
-    ast.BoundArgument, x ref=> Maybe(x.name.str),
-    ast.StaticArgument, x ref=> nothing(String),
-);
+    var staticPattern = evaluateListPatternCell(x.pattern, env);
+    var types = ValueList(mapped(arg => staticTypeValue(arg.type), args));
+    return unifyList(staticPattern, types);
+}
+
+private argumentName(formalArg) = argumentName(*formalArg);
+overload argumentName(x:ast.BoundArgument) = Maybe(x.name);
+overload argumentName(x:ast.StaticArgument) = nothing(ast.Identifier);
+
+private argumentNameString(formalArg) = argumentName(*formalArg);
+overload argumentNameString(x:ast.BoundArgument) = Maybe(x.name.str);
+overload argumentNameString(x:ast.StaticArgument) = nothing(String);
 
 private unifyArgument(s:Specialization, formalArg:ast.Argument, arg:RTValue) {
     var formalKind = referenceSpecifier(formalArg);
