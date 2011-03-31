@@ -1368,6 +1368,15 @@ overload TopLevelItemWithPatternVars?(static StaticOverload) = true;
 overload TopLevelItemWithPatternVars?(static Overload) = true;
 
 private procedure applyCollector;
+overload applyCollector(x:ast.Argument, collector) {
+    applyCollector(*x, collector);
+}
+overload applyCollector(x:ast.BoundArgument, collector) {
+    walkArgumentPattern(x, collector);
+}
+overload applyCollector(x:ast.StaticArgument, collector) {
+    walkArgumentPattern(x, collector);
+}
 overload applyCollector(x:Attribute, collector) {
     walkPattern(x.ast.target, collector);
 }
@@ -1380,14 +1389,24 @@ overload applyCollector(x:Overload, collector) {
     walkArgumentPatterns(x.ast.definition.args, collector);
 }
 
+collectPatternVars(x) {
+    var c = PatternVarCollector();
+    applyCollector(x, c);
+    return PatternVars(move(c.vars), move(c.variadicVars));
+}
+
+collectMultiPatternVars(x) {
+    var c = PatternVarCollector();
+    walkVariadicArgumentPattern(x, c);
+    return PatternVars(move(c.vars), move(c.variadicVars));
+}
+
 [T | TopLevelItemWithPatternVars?(T)]
 topLevelItemPatternVars(x:T) {
     return maybe(x.patternVars,
         y ref=> y,
         () ref=> {
-            var c = PatternVarCollector();
-            applyCollector(x, c);
-            var pvars = PatternVars(move(c.vars), move(c.variadicVars));
+            var pvars = collectPatternVars(x);
             x.patternVars = Maybe(pvars);
             return pvars;
         },
@@ -1400,21 +1419,21 @@ topLevelItemPatternVars(x:T) {
 // initializeMatch, verifyPatternVars, testPredicate
 //
 
-private initializeMatch2(env, pvars) {
+initializePatternVars(env, pvars) {
+    for (name in pvars.vars)
+        envAdd(env, name, PatternCell(nothing(Value)));
+    for (name in pvars.variadicVars)
+        envAdd(env, name, ListPatternCell(nothing(ValueList)));
+}
+
+initializeMatch(envParent, pvars:PatternVars) env:Env {
     try {
-        for (name in pvars.vars)
-            envAdd(env, name, PatternCell(nothing(Value)));
-        for (name in pvars.variadicVars)
-            envAdd(env, name, ListPatternCell(nothing(ValueList)));
+        env <-- newEnv(envParent);
+        initializePatternVars(env, pvars);
     } catch (ex) {
         destroy(env);
         throw ex;
     }
-}
-
-initializeMatch(envParent, pvars:PatternVars) env:Env {
-    env <-- newEnv(envParent);
-    initializeMatch2(env, pvars);
 }
 
 verifyPatternVars(pvars:PatternVars, env:Env) {
