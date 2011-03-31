@@ -920,8 +920,8 @@ private var staticArgument = bounds(modify(
 ));
 
 private var argument = choice(
-    modify(x => Argument(x), boundArgument),
-    modify(x => Argument(x), staticArgument),
+    modify(Argument, boundArgument),
+    modify(Argument, staticArgument),
 );
 
 private var multiBoundArgument = bounds(modify(
@@ -1333,7 +1333,7 @@ private var forStatement = statementParser(
 
 private var staticForStatement = statementParser(
     x => StaticForStatement(x.0, x.4, x.6, x.8),
-    sequence(optional(labelDef), kw_static, kw_for, punc(#"("), identifier, kw_in, exprList, punc(#")"), statement),
+    sequence(optional(labelDef), kw_static, kw_for, punc(#"("), argument, kw_in, exprList, punc(#")"), statement),
 );
 
 private var whileStatement = statementParser(

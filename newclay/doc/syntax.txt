@@ -253,7 +253,7 @@ IfStatement -> "if" "(" Statement* Expr ")" Statement
 
 ForStatement -> LabelDef? "for" "(" ArgumentList "in" Expr ")" Statement
 
-StaticForStatement -> LabelDef? "static" "for" "(" Identifier "in" ExprList ")" Statement
+StaticForStatement -> LabelDef? "static" "for" "(" Argument "in" ExprList ")" Statement
 
 WhileStatement -> LabelDef? "while" "(" Statement* Expr ")" Statement
 
