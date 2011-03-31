@@ -1,0 +1,4 @@
+import namenotfound1;
+import namenotfound2.(NameNotFound as WrongName);
+
+#Main() = NameNotFound;
