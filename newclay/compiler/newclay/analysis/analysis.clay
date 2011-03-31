@@ -442,7 +442,7 @@ private analyzeReturn(
                 return bindReferenceReturn(s, rItem, RT_VALUE_RVALUE, source, position);
             break;
         case ast.RETURN_EXPR_FORWARD:
-            if (localVariable?(source)) {
+            if (localVariable?(source) or source.kind == RT_VALUE_RVALUE) {
                 if (source.kind != RT_VALUE_RVALUE)
                     genericError("cannot forward non-rvalue temporary value");
                 return bindValueReturn(s, rItem, source, position);
