@@ -51,16 +51,16 @@ overload #TagType(..'M) | countValues(..'M) < 0x100 = UInt8;
 private tagValue(#'M, ..#'MM) inline = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
 
 overload initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) inline {
-    repr.tag <-- tagValue('M, ..'MM);
-    repr.value['M] <-- m;
+    repr.tag <-- tagValue(#'M, ..#'MM);
+    repr.value[#'M] <-- m;
 }
 
 overload dispatchRepr(forward repr:TaggedUnionRepr[..'MM], forward fn) {
     forward rtag, value = *repr;
     const tag = rtag;
-    static for (/*#'M*/ M in ..'MM)
-        if (tag == tagValue(M, ..'MM))
-            return forward ..fn(value[M]);
+    static for (#'M in ..#'MM)
+        if (tag == tagValue(#'M, ..#'MM))
+            return forward ..fn(value[#'M]);
     assertUnreachable([], "invalid variant tag ", tag);
 }
 
