@@ -85,8 +85,8 @@ overload index(rvalue x:'T, #'field) inline
     ref rx = rvalueToRefUnsafe(x);
     returned = &cFieldRef(#FieldType('T, 'field), rx, #LLMangle('field));
 
-    static for (f in ..#exceptValue('field, ..FieldNames('T)))
-        destroyUnsafe(rx[f]);
+    static for (#'f in ..#exceptValue('field, ..FieldNames('T)))
+        destroyUnsafe(rx[#'f]);
 }
 
 
@@ -129,7 +129,7 @@ overload destroyRecordUnsafe(ref x:'T) inline
 overload destroyRecordUnsafe(ref x:'T) inline
     | CompositeType?('T) and not allValues?(NotDestroyedType?, ..FieldTypes('T))
 {
-    static for (/*ref*/ f in ..unpackRecord(x))
+    static for (ref f in ..unpackRecord(x))
         destroyUnsafe(f);
 }
 
@@ -146,7 +146,7 @@ overload resetRecordUnsafe(ref x:'T) inline
 overload resetRecordUnsafe(ref x:'T) inline
     | CompositeType?('T) and not allValues?(NotResetType?, ..FieldTypes('T))
 {
-    static for (/*ref*/ f in ..unpackRecord(x))
+    static for (ref f in ..unpackRecord(x))
         resetUnsafe(f);
 }
 
@@ -194,8 +194,8 @@ overload copyAssignRecord(ref to:'T, from:'T) inline
       and not allValues?(BitwiseAssignedType?, ..FieldTypes('T))
       and allValues?(AssignableType?, ..FieldTypes('T))
 {
-    static for (field in ..#FieldNames('T))
-        to[field] = from[field];
+    static for (#'field in ..#FieldNames('T))
+        to[#'field] = from[#'field];
 }
 overload copyAssignRecord(ref to:'T, from:'T) inline
     | CompositeType?('T)
@@ -219,8 +219,8 @@ overload copyAssign(ref to:'T, from:'T) inline
 
 equalRecords?(a:'T, b:'T) inline | CompositeType?('T)
 {
-    static for (field in ..#FieldNames('T))
-        if (a[field] != b[field])
+    static for (#'field in ..#FieldNames('T))
+        if (a[#'field] != b[#'field])
             return false;
     return true;
 }

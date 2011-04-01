@@ -100,7 +100,7 @@ push(ref v:Vector['T], forward ..elements:'TT) inline
       and allValues?([U -> CallDefined?(push, Ref[Vector['T]], U)], ..'TT)
 {
     reserve(v, countValues(..'TT));
-    static for (/*forward*/ e in ..elements)
+    static for (forward e in ..elements)
         push(v, e);
 }
 

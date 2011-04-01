@@ -71,7 +71,7 @@ overload Array['T, 'n](forward ..xs:'TT) inline --> returned:Array['T, 'n]
       and allValues?([t -> t == 'T], ..'TT)
 {
     var i = begin(returned);
-    static for (/*forward*/ x in ..xs) {
+    static for (forward x in ..xs) {
         i^ <-- x;
         inc(i);
     }

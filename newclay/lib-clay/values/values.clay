@@ -20,7 +20,7 @@ overload #inValues?('x) = false;
 overload #inValues?('x, 'x, ..'ys) = true;
 overload #inValues?('x, 'y, ..'ys) | 'x != 'y = inValues?('x, ..'ys);
 overload inValues?(x, forward ..ys) inline {
-    static for (/*forward*/ y in ..ys)
+    static for (forward y in ..ys)
         if (x == y)
             return true;
     return false;
