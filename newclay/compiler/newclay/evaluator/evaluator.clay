@@ -312,8 +312,16 @@ private lambdaArgName(arg) {
 private addLambdaArg(env, formalArg:ast.BoundArgument, entry) {
     envAdd(env, lambdaArgName(formalArg), entry);
 }
-overload addLambdaArg(env, formalArg:ast.StaticArgument, entry) {
-    genericError("static argument pattern not allowed on lambda evaluated in static context");
+overload addLambdaArg(env, formalArg:ast.StaticArgument, entry:Value) {
+    initializePatternVars(env, collectPatternVars(formalArg));
+    unify(evaluatePattern(formalArg.pattern, env), entry);
+}
+overload addLambdaArg(env, formalArg:ast.StaticArgument, entry:ValueList) {
+    initializePatternVars(env, collectMultiPatternVars(formalArg));
+    unifyList(
+        ListPattern(Vector[Pattern](), evaluateListPatternCell(formalArg.pattern, env)),
+        entry
+    );
 }
 
 bindArgs(env, formalArgs, args) {
