@@ -1464,11 +1464,11 @@ private bindForBinding(env, arg:ast.BoundArgument, value) {
     envAdd(env, arg.name, value);
 }
 overload bindForBinding(env, arg:ast.StaticArgument, value:RTValue) {
-    initializePatternVars(env, observe(collectPatternVars(arg)));
+    initializePatternVars(env, collectPatternVars(arg));
     unify(evaluatePattern(arg.pattern, env), staticTypeValue(value.type));
 }
 overload bindForBinding(env, arg:ast.StaticArgument, values:RTValueList) {
-    initializePatternVars(env, observe(collectPatternVars(arg)));
+    initializePatternVars(env, collectPatternVars(arg));
     unifyList(
         ListPattern(Vector[Pattern](), evaluateListPatternCell(arg.pattern, env)),
         ValueList(mapped(x => staticTypeValue(x.type), values.vars))
@@ -1489,9 +1489,7 @@ private addForBinding(s, env, stmt, arg:ast.BoundArgument, value) {
         var loweredValue = newReference(loweredKind, value2.type, argumentNameString(arg));
         addSpecializedBind(s, stmt, value2, loweredValue);
 
-        envAdd(env, arg.name, value);
-
-        maybe(argumentName(arg), name ref=> { envAdd(env, name, loweredValue); });
+        envAdd(env, arg.name, loweredValue);
     });
 }
 overload addForBinding(s, env, stmt, arg:ast.StaticArgument, value) {
