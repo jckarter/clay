@@ -68,7 +68,7 @@ overload end(i:CoordinateRange['C]) inline = i.end;
 // Range
 //
 
-private symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
+symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
 
 overload hasNext?(x:Range['T]) = x.begin < x.end;
 overload next(ref x:Range['T]) { 
@@ -77,9 +77,9 @@ overload next(ref x:Range['T]) {
     return returned;
 }
 
-range(to:'N) = Range['N]('N(0), to, 'N(1));
-overload range(from:'N, to:'N) = Range['N](from, to, 'N(1));
-overload range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
+overload Range(to:'N) = Range['N]('N(0), to, 'N(1));
+overload Range(from:'N, to:'N) = Range['N](from, to, 'N(1));
+overload Range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
 
 
 //

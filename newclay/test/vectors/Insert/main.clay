@@ -9,7 +9,7 @@ main() {
 
     var w = Vector[Int](17, 19);
 
-    insert(v, 0, range(2, 4));
+    insert(v, 0, Range(2, 4));
     insert(v, begin(v)+5, Vector[Int](13, 23, 29));
     insert(v, 6, w);
 

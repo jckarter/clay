@@ -27,9 +27,9 @@ alias ChunkBytes = Array[UInt8,  64];
 alias ChunkWords = Array[UInt32, 16];
 
 private sha256chunk(ref state, ref tempState, ref chunkSpace, chunk) {
-    for (ref toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
+    for (ref toChunkWord, fromChunkWord in Zipped(chunkSpace, chunk))
         toChunkWord = networkToHost(fromChunkWord);
-    for (i in range(16, 64)) {
+    for (i in Range(16, 64)) {
         var s0 = bitxor(
             bitror(chunkSpace[i - 15],  7),
             bitror(chunkSpace[i - 15], 18),
@@ -44,7 +44,7 @@ private sha256chunk(ref state, ref tempState, ref chunkSpace, chunk) {
     }
 
     tempState = state;
-    for (roundWord, chunkWord in zipped(sha256RoundConstants, chunkSpace)) {
+    for (roundWord, chunkWord in Zipped(sha256RoundConstants, chunkSpace)) {
         var s0 = bitxor(
             bitror(tempState[0],  2),
             bitror(tempState[0], 13),
@@ -75,7 +75,7 @@ private sha256chunk(ref state, ref tempState, ref chunkSpace, chunk) {
         tempState[1] = tempState[0];
         tempState[0] = t1 + t2;
     }
-    for (ref stateWord, tempStateWord in zipped(state, tempState))
+    for (ref stateWord, tempStateWord in Zipped(state, tempState))
         stateWord += tempStateWord;
 }
 
@@ -135,7 +135,7 @@ sha256(message: 'S) --> returned: SHA256
     sha256chunk(state, tempState, chunkSpace, tailChunk);
 
     ref returnedWords = bitcast(Array[UInt32, 8], returned.digest);
-    for (ref returnedWord, stateWord in zipped(returnedWords, state))
+    for (ref returnedWord, stateWord in Zipped(returnedWords, state))
         returnedWord = hostToNetwork(stateWord);
 }
 
