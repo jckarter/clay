@@ -2,6 +2,7 @@ import ctypes.*;
 
 external abort() noreturn;
 external exit(code:CInt) noreturn;
+
 external puts(s:CString) : CInt;
 external printf(format:CString, ..) : CInt;
 
@@ -12,7 +13,6 @@ external memcmp(a:OpaquePointer, b:OpaquePointer, len:CSizeT) : CInt;
 
 external strlen(s:CString) : CSizeT;
 
-// XXX Maybe[OpaquePointer]
 external malloc(size:CSizeT) : MOpaquePointer;
 external realloc(ptr:OpaquePointer, size:CSizeT) : MOpaquePointer;
 external free(ptr:OpaquePointer);
