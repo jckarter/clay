@@ -3,9 +3,9 @@ import show.*;
 
 main() {
     var x = Array[StringConstant, 4]("one", "two", "three", "four");
-    var y = range(0.5, 4.5);
+    var y = Range(0.5, 4.5);
 
-    var z = zipped(x, y, Array[Char,5]('a', 'b', 'c', 'd', 'e'), range(5, 9));
+    var z = Zipped(x, y, Array[Char,5]('a', 'b', 'c', 'd', 'e'), Range(5, 9));
 
     ////----
     ////one

@@ -4,13 +4,13 @@ import values.*;
 //
 // zipped
 //
-private symbol Zipped[..'S] = NewType(Tuple[..'S]);
+symbol Zipped[..'S] = NewType(Tuple[..'S]);
 overload Zipped(forward x:Tuple[..'S]) = Zipped[..'S](x);
 
 private symbol ZippedIterator[..'S] = NewType(Tuple[..'S]);
 overload ZippedIterator(forward x:Tuple[..'S]) = ZippedIterator[..'S](x);
 
-zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
+overload Zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
     = Zipped(captureValues(..seqs));
 
 overload iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
@@ -18,4 +18,4 @@ overload hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
 overload next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
 
 enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
-    = zipped(range(UInt(0), UInt(-1)), ..seqs);
+    = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
