@@ -35,12 +35,12 @@ enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
 
 symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
 overload Mapped(forward f:'F, forward s:'S)
-    | SequenceType?('S) and Defined?([var i = iterator(s); f(next(i))])
+    | SequenceType?('S) and Defined?([var i = iterator(s); ..f(..next(i))])
     = Mapped['F, #Type([captureValue(s)])](f, captureValue(s));
 
 private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
-overload MappedIterator(mapper:'F, forward iterator:'I)
-    = MappedIterator['F, 'I](&mapper, iterator);
+overload MappedIterator(mapper:'F, forward iter:'I)
+    = MappedIterator['F, 'I](&mapper, iter);
 
 overload iterator(s:Mapped['F, 'S])
     = MappedIterator(s.mapper, iterator(capturedRef(s.sequence)));
@@ -51,4 +51,48 @@ overload reverseIterator(s:Mapped['F, 'S])
 overload hasNext?(i:MappedIterator['F,'S]) = hasNext?(i.iterator);
 overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.iterator));
 
+
+//
+// filtered
+//
 
+symbol Filtered['F, 'S] = RecordType(filterer:'F, sequence:'S);
+overload Filtered(forward f:'F, forward s:'S)
+    | SequenceType?('S) and DefinedWithType?([var i = iterator(s); f(..next(i))], Bool)
+    = Filtered['F, #Type([captureValue(s)])](f, captureValue(s));
+
+private symbol FilteredIterator['F, 'I, 'V] = RecordType(
+    filtererp:Pointer['F],
+    iterator:'I,
+    queuedValues:Maybe['V],
+);
+overload FilteredIterator(filterer:'F, forward iter:'I) {
+    const V = #Type([var refiter = iter; captureValues(..next(refiter))]);
+    return FilteredIterator['F, 'I, V](&filterer, iter, nothing(V));
+}
+
+overload iterator(s:Filtered['F, 'S])
+    = FilteredIterator(s.filterer, iterator(capturedRef(s.sequence)));
+overload reverseIterator(s:Filtered['F, 'S])
+    | ReversibleSequenceType?(CapturedType('S))
+    = FilteredIterator(s.filterer, reverseIterator(capturedRef(s.sequence)));
+
+overload hasNext?(ref i:FilteredIterator['F, 'I, 'V]) {
+    while (nothing?(i.queuedValues)) {
+        if (not hasNext?(i.iterator))
+            return false;
+        var queuedValues = captureValues(..next(i.iterator));
+        if (not i.filtererp^(..capturedRefs(queuedValues)))
+            continue;
+        i.queuedValues = just(move(queuedValues));
+    }
+    return true;
+}
+overload next(ref i:FilteredIterator['F, 'I, 'V]) {
+    var values = move(maybe(i.queuedValues,
+        identity,
+        [hasNext?(i); forward required(i.queuedValues)]
+    ));
+    i.queuedValues = nothing('V);
+    return forward ..forwardValues(values);
+}

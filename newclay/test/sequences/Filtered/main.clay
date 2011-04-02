@@ -1,0 +1,10 @@
+import sequences.(Filtered);
+import show.(show);
+import values.(inValues?);
+
+singleDigitPrime?(x:Int) = inValues?(x, 2, 3, 5, 7);
+
+main() {
+    for (x in Filtered(singleDigitPrime?, Range(1, 11)))
+        show(x);
+}
