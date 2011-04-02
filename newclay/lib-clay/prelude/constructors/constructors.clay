@@ -32,6 +32,10 @@ overload Char32() inline = Char32(0_u32);
 
 overload Static['x]() inline --> returned:Static['x] {}
 
+overload ContiguousCoordinate['T]() inline --> returned:ContiguousCoordinate['T] {
+    bitcast(Int, returned) <-- 0;
+}
+
 
 //
 // static Int and UInt conversion

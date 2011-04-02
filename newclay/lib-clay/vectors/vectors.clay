@@ -15,8 +15,7 @@ symbol Vector['T] = CompositeType(
 overload Vector['T]() = initializeRecord(Vector['T],
     0u,
     0u,
-    // XXX MaybeCC (or allow null CCs)
-    bitcast(ContiguousCoordinate['T], 0u),
+    ContiguousCoordinate['T](),
 );
 
 overload #InitializeDoesNotThrowType?(Vector['T]) = true;
