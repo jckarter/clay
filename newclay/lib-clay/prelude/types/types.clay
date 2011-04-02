@@ -462,6 +462,10 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 
 #SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
 
+#ReversibleSequenceType?('S) = CallDefined?(reverseIterator, 'S);
+#ReversibleCoordinateType?('C) = CallDefined?(dereference, 'C)
+    and CallDefined?(dec, Ref['C]);
+
 
 //
 // NewType

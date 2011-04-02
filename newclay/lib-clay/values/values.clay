@@ -123,6 +123,13 @@ overload #CapturedType?(CapturedValue['T]) = true;
 overload #CapturedType?(CapturedRef['T]) = true;
 overload #CapturedType?(CapturedConst['T]) = true;
 
+symbol CapturedType;
+overload #CapturedType(CapturedValue['T]) = 'T;
+overload #CapturedType(CapturedRef['T])   = 'T;
+overload #CapturedType(CapturedConst['T]) = 'T;
+
+#CapturedTypes(..'T) = ..mapValues(CapturedType, ..'T);
+
 symbol captureValue;
 overload captureValue(const x:'T) inline = CapturedConst['T](&x);
 overload captureValue(ref x:'T) inline = CapturedRef['T](&x);

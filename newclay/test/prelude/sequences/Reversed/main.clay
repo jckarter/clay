@@ -1,0 +1,19 @@
+import sequences.(Zipped);
+import show.(show);
+import vectors.(Vector);
+
+main() {
+    for (x in Reversed(Vector[Int](1, 2, 3)))
+        show(x);
+
+    for (x, y in Reversed(Zipped(Vector[Char]('a', 'b', 'c'), Array[Int,3](1, 2, 3)))) {
+        show("--");
+        show(x);
+        show(y);
+    }
+
+    show("--");
+
+    for (x in Reversed(Range(1, 7, 2)))
+        show(x);
+}
