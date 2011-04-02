@@ -62,3 +62,10 @@ overload ContiguousCoordinate(forward x:'T) inline
 overload Pointer(forward x:'T) inline
     | DereferenceablePointerType?('T)
     = Pointer[PointerReferencedType('T)](x);
+
+
+//
+// disable StringConstant initializer
+//
+
+overload StringConstant();
