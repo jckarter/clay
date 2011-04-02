@@ -14,7 +14,6 @@ overload Zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
     = Zipped(captureValues(..seqs));
 
 overload iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
-overload iterator(rvalue s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..forwardValues(*s))));
 
 overload reverseIterator(s:Zipped[..'S])
     | allValues?(ReversibleSequenceType?, ..CapturedTypes(..'S))
@@ -28,4 +27,28 @@ overload next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
 
 enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
     = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
+
+
+//
+// mapped
+//
+
+symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
+overload Mapped(forward f:'F, forward s:'S)
+    | SequenceType?('S) and Defined?([var i = iterator(s); f(next(i))])
+    = Mapped['F, #Type([captureValue(s)])](f, captureValue(s));
+
+private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
+overload MappedIterator(mapper:'F, forward iterator:'I)
+    = MappedIterator['F, 'I](&mapper, iterator);
+
+overload iterator(s:Mapped['F, 'S])
+    = MappedIterator(s.mapper, iterator(capturedRef(s.sequence)));
+overload reverseIterator(s:Mapped['F, 'S])
+    | ReversibleSequenceType?(CapturedType('S))
+    = MappedIterator(s.mapper, reverseIterator(capturedRef(s.sequence)));
+
+overload hasNext?(i:MappedIterator['F,'S]) = hasNext?(i.iterator);
+overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.iterator));
+
 

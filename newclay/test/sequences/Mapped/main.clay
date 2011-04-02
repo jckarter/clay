@@ -1,0 +1,19 @@
+import sequences.(Mapped);
+import show.(show);
+
+named(x:Int) {
+    switch (x)
+    case (0)
+        return "zero";
+    case (1)
+        return "one";
+    case (2)
+        return "two";
+    else
+        return "too many";
+}
+
+main() {
+    for (x in Mapped(named, Range(0, 4)))
+        show(x);
+}
