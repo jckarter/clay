@@ -96,3 +96,30 @@ overload next(ref i:FilteredIterator['F, 'I, 'V]) {
     i.queuedValues = nothing('V);
     return forward ..forwardValues(values);
 }
+
+
+//
+// sliced
+//
+
+symbol Sliced['S, 'C] = RecordType(sequence:'S, range:CoordinateRange['C]);
+overload Sliced(forward s:'S, forward from:'C, forward to:'C)
+    | CoordinateSequenceType?('S) and 'C == SequenceCoordinateType('S)
+    = Sliced[Type([captureValue(s)]), 'C](captureValue(s), CoordinateRange(from, to));
+
+overload Sliced(forward s:'S, from:'I, to:'J)
+    --> returned:Sliced[Type([captureValue(s)]), Type([begin(s)])]
+    | CoordinateSequenceType?('S) and IntegerType?('I) and IntegerType?('J)
+{
+    returned.sequence <-- captureValue(s);
+    try {
+        var beg = begin(capturedRef(returned.sequence));
+        returned.range <-- CoordinateRange(beg + from, beg + to);
+    } catch (ex) {
+        destroyUnsafe(returned.sequence);
+        throw ex;
+    }
+}
+
+overload iterator(s:Sliced['S, 'C]) = s.range;
+overload reverseIterator(s:Sliced['S, 'C]) = reverseIterator(s.range);
