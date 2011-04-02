@@ -2424,7 +2424,10 @@ analyzeCodeBody(s, env, codeBody)
         ast.ExprCodeBody, body ref=> analyzeNode(s, env, body.exprs),
         ast.LiteralCodeBody, body ref=> analyzeLiteralCodeBody(s, env, body),
         ast.Block, body ref=> analyzeBlockCodeBody(s, env, body),
-        ast.UndefinedCodeBody, body ref=> genericAnalysisError("undefined overload"),
+        ast.UndefinedCodeBody, body ref=> {
+            matchFailureError("undefined overload");
+            return nothing(RTValues);
+        },
     );
 
 
