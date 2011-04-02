@@ -14,8 +14,18 @@ overload Zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
     = Zipped(captureValues(..seqs));
 
 overload iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
+overload iterator(rvalue s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..forwardValues(*s))));
+
+overload reverseIterator(s:Zipped[..'S])
+    | allValues?(ReversibleSequenceType?, ..CapturedTypes(..'S))
+    = ZippedIterator((..mapValues(reverseIterator, ..capturedRefs(*s))));
+overload reverseIterator(rvalue s:Zipped[..'S])
+    | allValues?(ReversibleSequenceType?, ..CapturedTypes(..'S))
+    = ZippedIterator((..mapValues(reverseIterator, ..forwardValues(*s))));
+
 overload hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
 overload next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
 
 enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
     = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
+

@@ -35,10 +35,10 @@ back(x:'S) | CoordinateSequenceType?('S) {
 // default implementations
 //
 
-overload iterator(forward x:'I) | IteratorType?('I) = forward x;
-
 overload iterator(x:'S) | CoordinateSequenceType?('S)
     = CoordinateRange(begin(x), end(x));
+
+overload iterator(forward x:'I) | IteratorType?('I) = forward x;
 
 overload size(x:'S) | CoordinateSequenceType?('S) and Defined?([end(x) - begin(x)])
     = UInt(end(x) - begin(x));
@@ -57,7 +57,7 @@ overload hasNext?(i:CoordinateRange['C]) inline = i.begin < i.end;
 overload next(ref i:CoordinateRange['C]) inline {
     var p = i.begin;
     inc(i.begin);
-    return ref p^;
+    return forward ..p^;
 }
 
 overload begin(i:CoordinateRange['C]) inline = i.begin;
@@ -71,7 +71,7 @@ overload end(i:CoordinateRange['C]) inline = i.end;
 symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
 
 overload hasNext?(x:Range['T]) = x.begin < x.end;
-overload next(ref x:Range['T]) { 
+overload next(ref x:Range['T]) {
     var returned = x.begin;
     x.begin += x.step;
     return returned;
@@ -251,3 +251,49 @@ assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
 {
     eachInRanges(destBegin, srcBegin, srcEnd, assign);
 }
+
+
+//
+// reversible sequences
+//
+
+symbol reverseIterator;
+
+symbol Reversed['S] = NewType('S);
+
+overload Reversed(forward x:'S) | ReversibleSequenceType?('S) = Reversed['S](x);
+
+overload iterator(x:Reversed['S])
+    | ReversibleSequenceType?('S)
+    = forward reverseIterator(*x);
+
+symbol ReversedRange['T] = RecordType(begin:'T, end:'T, step:'T);
+overload ReversedRange(begin:'T, end:'T, step:'T)
+    = ReversedRange['T](begin, end, step);
+
+overload hasNext?(x:ReversedRange['T]) = x.begin < x.end;
+overload next(ref x:ReversedRange['T]) {
+    x.end -= x.step;
+    return x.end;
+}
+
+overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);
+
+symbol ReversedCoordinateRange['C] = RecordType(begin:'C, end:'C);
+overload ReversedCoordinateRange(forward begin:'C, forward end:'C)
+    | ReversibleCoordinateType?('C)
+    = ReversedCoordinateRange['C](begin, end);
+
+overload hasNext?(i:ReversedCoordinateRange['C]) = i.begin < i.end;
+overload next(ref i:ReversedCoordinateRange['C]) {
+    dec(i.end);
+    return forward ..i.end^;
+}
+
+overload reverseIterator(x:'S)
+    | CoordinateSequenceType?('S) and ReversibleCoordinateType?(SequenceCoordinateType('S))
+    = ReversedCoordinateRange(begin(x), end(x));
+
+overload reverseIterator(forward x:CoordinateRange['C])
+    | ReversibleCoordinateType?('C)
+    = ReversedCoordinateRange['C](..*x);
