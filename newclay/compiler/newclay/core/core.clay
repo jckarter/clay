@@ -1813,12 +1813,12 @@ overload displayError(e:SemanticError) {
 displaySemanticError(locationStack, compilationStack, ...message) {
     if (stackEmpty?(locationStack)) {
         println(...message);
-        return;
+    } else {
+        var location = stackTop(locationStack);
+        var tokens = location.tokens;
+        var offset = tokens.vector[location.where].range.begin;
+        errorWithLocation(tokens.file, offset, ...message);
     }
-    var location = stackTop(locationStack);
-    var tokens = location.tokens;
-    var offset = tokens.vector[location.where].range.begin;
-    errorWithLocation(tokens.file, offset, ...message);
     if (not stackEmpty?(compilationStack)) {
         println("context stack: ");
         for (entry in compilationStack)
