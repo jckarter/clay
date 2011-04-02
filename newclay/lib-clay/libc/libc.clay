@@ -13,6 +13,6 @@ external memcmp(a:OpaquePointer, b:OpaquePointer, len:CSizeT) : CInt;
 external strlen(s:CString) : CSizeT;
 
 // XXX Maybe[OpaquePointer]
-external malloc(size:CSizeT) : OpaquePointer;
-external realloc(ptr:OpaquePointer, size:CSizeT) : OpaquePointer;
+external malloc(size:CSizeT) : MOpaquePointer;
+external realloc(ptr:OpaquePointer, size:CSizeT) : MOpaquePointer;
 external free(ptr:OpaquePointer);

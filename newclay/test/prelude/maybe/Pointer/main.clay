@@ -14,11 +14,14 @@ cons(forward v:'T, next:List['T]) {
 
 main() {
     show(TypeSize(MPointer[Int]) == TypeSize(Pointer[Int])); ////true
+    show(TypeSize(MOpaquePointer) == TypeSize(OpaquePointer)); ////true
 
     show(bitcast(Int, null(Int))); ////0
+    show(bitcast(Int, nullOpaque())); ////0
 
     var int = 0;
     show(bitcast(Int, just(&int)) == bitcast(Int, &int)); ////true
+    show(bitcast(Int, just(OpaquePointer(&int))) == bitcast(Int, &int)); ////true
 
     show("--"); ////--
 
