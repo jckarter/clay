@@ -52,3 +52,5 @@ overload bind(forward m:Maybe['T], forward f) inline
 alias MPointer['T] = Maybe[Pointer['T]];
 null(#'T) inline = nothing(Pointer['T]);
 
+alias MOpaquePointer = Maybe[OpaquePointer];
+nullOpaque() inline = nothing(OpaquePointer);
