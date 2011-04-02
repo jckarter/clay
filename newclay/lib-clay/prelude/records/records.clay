@@ -124,34 +124,34 @@ overload 'T(forward ..args) inline
 
 symbol destroyRecordUnsafe;
 overload destroyRecordUnsafe(ref x:'T) inline
-    | CompositeType?('T) and allValues?(NotDestroyedType?, ..FieldTypes('T))
+    | CompositeType?('T) and allValues?(DestroyDoesNothingType?, ..FieldTypes('T))
 { }
 overload destroyRecordUnsafe(ref x:'T) inline
-    | CompositeType?('T) and not allValues?(NotDestroyedType?, ..FieldTypes('T))
+    | CompositeType?('T) and not allValues?(DestroyDoesNothingType?, ..FieldTypes('T))
 {
     static for (ref f in ..unpackRecord(x))
         destroyUnsafe(f);
 }
 
 overload destroyUnsafe(ref x:'T) inline
-    | RecordType?('T) and not NotDestroyedType?('T)
+    | RecordType?('T) and not DestroyDoesNothingType?('T)
 {
     destroyRecordUnsafe(x);
 }
 
 symbol resetRecordUnsafe;
 overload resetRecordUnsafe(ref x:'T) inline
-    | CompositeType?('T) and allValues?(NotResetType?, ..FieldTypes('T))
+    | CompositeType?('T) and allValues?(ResetDoesNothingType?, ..FieldTypes('T))
 { }
 overload resetRecordUnsafe(ref x:'T) inline
-    | CompositeType?('T) and not allValues?(NotResetType?, ..FieldTypes('T))
+    | CompositeType?('T) and not allValues?(ResetDoesNothingType?, ..FieldTypes('T))
 {
     static for (ref f in ..unpackRecord(x))
         resetUnsafe(f);
 }
 
 overload resetUnsafe(ref x:'T) inline
-    | RecordType?('T) and not NotResetType?('T)
+    | RecordType?('T) and not ResetDoesNothingType?('T)
 {
     resetRecordUnsafe(x);
 }

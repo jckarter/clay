@@ -27,7 +27,7 @@ overload end(x:Array['T, 'n]) inline = ContiguousCoordinate['T](&x) + 'n;
 overload index(forward a:Array['T, 'n], i:'I) inline | IntegerType?('I)
     = forward cIndex('T, a, i);
 overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
-    | IntegerType?('I) and not NotDestroyedType?('T)
+    | IntegerType?('I) and not DestroyDoesNothingType?('T)
 {
     ref ra = rvalueToRefUnsafe(a);
     returned <-- refToRvalueUnsafe(cIndex('T, ra, i));
@@ -112,14 +112,14 @@ overload iterator(x:Array['T, 'n]) = CoordinateRange(begin(x), end(x));
 //
 
 overload destroyUnsafe(ref x:Array['T, 'n]) inline
-    | not NotDestroyedType?('T)
+    | not DestroyDoesNothingType?('T)
 {
     for (ref y in x)
         destroyUnsafe(y);
 }
 
 overload resetUnsafe(ref x:Array['T, 'n]) inline
-    | not NotResetType?('T)
+    | not ResetDoesNothingType?('T)
 {
     for (ref y in x)
         resetUnsafe(y);
