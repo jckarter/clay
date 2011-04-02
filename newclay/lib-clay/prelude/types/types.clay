@@ -51,6 +51,7 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 overload #BitwiseZeroInitializedType?(Bool) = true;
 overload #BitwiseZeroInitializedType?('T) | NumberType?('T) = true;
 overload #BitwiseZeroInitializedType?('T) | CharType?('T) = true;
+overload #BitwiseZeroInitializedType?(ContiguousCoordinate['T]) = true;
 
 #DefaultInitializableType?('T) = CallDefined?('T);
 #CopyableType?('T) = CallDefined?(copy, 'T);
