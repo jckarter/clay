@@ -1,0 +1,3 @@
+import __primitives__.*;
+
+#Main() = [..#'x -> StaticAdd(..#'x)](1, 2);
