@@ -78,11 +78,11 @@ overload 'T(forward m:'M) inline --> returned:'T
 dispatch(forward v:'T, forward fn) inline | VariantType?('T)
     = forward ..dispatchRepr(repr(v), fn);
 
-overload destroyUnsafe(ref v:'T) inline | VariantType?('T) and not NotDestroyedType?('T) {
+overload destroyUnsafe(ref v:'T) inline | VariantType?('T) and not DestroyDoesNothingType?('T) {
     dispatchRepr(repr(v), destroyUnsafe);
 }
 
-overload resetUnsafe(ref v:'T) inline | VariantType?('T) and not NotResetType?('T) {
+overload resetUnsafe(ref v:'T) inline | VariantType?('T) and not ResetDoesNothingType?('T) {
     dispatchRepr(repr(v), resetUnsafe);
 }
 

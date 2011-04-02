@@ -37,15 +37,15 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 #PODType?('T) | not PredicateInheritingType?('T) = false;
 #BitwiseCopiedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #BitwiseMovedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#NotDestroyedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#NotResetType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#DestroyDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#ResetDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #InitializeDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #BitwiseAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseCopiedType?('T) and NotDestroyedType?('T);
+    = BitwiseCopiedType?('T) and DestroyDoesNothingType?('T);
 #BitwiseMoveAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseMovedType?('T) and NotDestroyedType?('T);
+    = BitwiseMovedType?('T) and DestroyDoesNothingType?('T);
 
 #BitwiseZeroInitializedType?('T) = false;
 overload #BitwiseZeroInitializedType?(Bool) = true;
@@ -64,8 +64,8 @@ overload #BitwiseZeroInitializedType?(ContiguousCoordinate['T]) = true;
 overload #InheritableTypePredicate?(PODType?) = true;
 overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
 overload #InheritableTypePredicate?(BitwiseMovedType?) = true;
-overload #InheritableTypePredicate?(NotDestroyedType?) = true;
-overload #InheritableTypePredicate?(NotResetType?) = true;
+overload #InheritableTypePredicate?(DestroyDoesNothingType?) = true;
+overload #InheritableTypePredicate?(ResetDoesNothingType?) = true;
 overload #InheritableTypePredicate?(InitializeDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
 overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
@@ -509,13 +509,13 @@ overload moveUnsafe(forward x:'T) inline --> returned:'T
 }
 
 overload destroyUnsafe(ref x:'T) inline
-    | NewType?('T) and not NotDestroyedType?(OriginalType('T))
+    | NewType?('T) and not DestroyDoesNothingType?(OriginalType('T))
 {
     destroyUnsafe(*x);
 }
 
 overload resetUnsafe(ref x:'T) inline
-    | NewType?('T) and not NotResetType?(OriginalType('T))
+    | NewType?('T) and not ResetDoesNothingType?(OriginalType('T))
 {
     resetUnsafe(*x);
 }

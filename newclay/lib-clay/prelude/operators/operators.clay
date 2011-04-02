@@ -281,11 +281,11 @@ symbol initializeFromUnsafe;
 overload initializeFromUnsafe(ref a:'T, b:'T) inline { a <-- copy(b); }
 overload initializeFromUnsafe(ref a:'T, rvalue b:'T) inline { a <-- move(b); }
 
-destroyUnsafe(ref x:'T) | NotDestroyedType?('T) {}
+destroyUnsafe(ref x:'T) | DestroyDoesNothingType?('T) {}
 resetUnsafe(ref x:'T) inline
     | DefaultInitializableType?('T) and InitializeDoesNotThrowType?('T)
     { x <-- 'T(); }
-overload resetUnsafe(ref x:'T) inline | NotResetType?('T) {}
+overload resetUnsafe(ref x:'T) inline | ResetDoesNothingType?('T) {}
 
 bitwiseCopyUnsafe(forward a:'T) inline --> returned:'T { cAssign(returned, a); }
 

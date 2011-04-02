@@ -15,7 +15,7 @@ overload index(forward t:Tuple[..'T], #'n) inline
 
 overload index(rvalue t:Tuple[..'T], #'n) inline
     --> rvalue returned:nthValue('n, ..'T)
-    | ValidStaticIndex?('n, ..'T) and not NotDestroyedType?(Tuple[..'T])
+    | ValidStaticIndex?('n, ..'T) and not DestroyDoesNothingType?(Tuple[..'T])
 {
     ref rt = rvalueToRefUnsafe(t);
     returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
@@ -86,14 +86,14 @@ overload Tuple(forward ..x:'T) inline = Tuple[..'T](..x);
 //
 
 overload destroyUnsafe(ref x:Tuple[..'T]) inline
-    | not NotDestroyedType?(Tuple[..'T])
+    | not DestroyDoesNothingType?(Tuple[..'T])
 {
     static for (ref f in ..*x)
         destroyUnsafe(f);
 }
 
 overload resetUnsafe(ref x:Tuple[..'T]) inline
-    | not NotResetType?(Tuple[..'T])
+    | not ResetDoesNothingType?(Tuple[..'T])
 {
     static for (ref f in ..*x)
         resetUnsafe(f);
