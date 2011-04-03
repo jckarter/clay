@@ -44,6 +44,10 @@ overload bind(forward m:Maybe['T], forward f) inline
     | allValues?(MaybeType?, ..Type([..f(required(m))]))
     = forward ..maybe(m, [forward x -> ..f(x)]);
 
+overload resetUnsafe(m:Maybe['T]) | not ResetDoesNothingType?(Maybe['T]) {
+    m <-- nothing('T);
+}
+
 
 //
 // conveniences for handling maybe-pointers
