@@ -1,0 +1,66 @@
+import pointers.shared.(SharedPointer);
+import show.(show);
+
+symbol CanaryType = CompositeType(x:Int);
+
+overload CanaryType(x:Int) {
+    show("constructing");
+    show(x);
+    return initializeRecord(CanaryType, x);
+}
+
+overload destroyUnsafe(ref c:CanaryType) {
+    show("destroying");
+    show(c.x);
+}
+
+main() {
+    {
+        var a = SharedPointer([CanaryType(55)]);
+        var b = SharedPointer([CanaryType(44)]);
+    }
+    show("--");
+    {
+        var a = SharedPointer([CanaryType(1)]);
+        var b = SharedPointer([CanaryType(2)]);
+        var c = move(a);
+    }
+    show("--");
+    var p = SharedPointer([CanaryType(33)]);
+    var q = SharedPointer([CanaryType(22)]);
+
+    show("--");
+    show(p^.x);
+    show(q^.x);
+
+    var r = p;
+
+    show("--");
+    show(r^.x);
+
+    r = q;
+
+    show("--");
+    show(r^.x);
+
+    r = q;
+
+    show("--");
+    show(r^.x);
+
+    p = p;
+
+    show("--");
+    show(p^.x);
+
+    r = move(p);
+
+    show("--");
+    show(r^.x);
+
+    var q1 = q;
+    var q2 = q1;
+    var q3 = q2;
+
+    show("--");
+}
