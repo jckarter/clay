@@ -4,4 +4,7 @@ import ctypes.(CString);
 main() {
     printf(CString("hello world\n"));
     printf(CString("%s world #%d\n"), CString("goodbye"), 2);
+    printf(CString("promoted %d, %u, and %g\n"),
+        -3_i8, 5_u8, 2.75_f32
+    );
 }
