@@ -19,5 +19,11 @@ main() {
 
     show("--");
     show(p^.x);
+
+    var q = move(p);
+
+    show("--");
+    show(q^.x);
+
     show("--");
 }
