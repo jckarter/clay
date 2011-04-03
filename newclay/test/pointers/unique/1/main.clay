@@ -1,0 +1,23 @@
+import pointers.unique.(UniquePointer);
+import show.(show);
+
+symbol CanaryType = CompositeType(x:Int);
+
+overload CanaryType(x:Int) {
+    show("constructing");
+    show(x);
+    return initializeRecord(CanaryType, x);
+}
+
+overload destroyUnsafe(ref c:CanaryType) {
+    show("destroying");
+    show(c.x);
+}
+
+main() {
+    var p = UniquePointer([CanaryType(33)]);
+
+    show("--");
+    show(p^.x);
+    show("--");
+}
