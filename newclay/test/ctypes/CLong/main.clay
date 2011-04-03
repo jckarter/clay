@@ -1,0 +1,16 @@
+import ctypes.(CUInt, CLong, CULong);
+import show.(show);
+
+longsize() --> sz:UInt __c__ """$sz = sizeof(long);""";
+
+long?(x) = false;
+overload long?(x:CLong) = true;
+overload long?(x:CULong) = true;
+
+main() {
+    show(TypeSize(CLong) == longsize());
+    show(TypeSize(CULong) == longsize());
+
+    show(long?(CLong(1)));
+    show(long?(CULong(1)));
+}
