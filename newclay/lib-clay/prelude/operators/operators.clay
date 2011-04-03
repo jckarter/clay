@@ -248,6 +248,8 @@ remainderAssign(ref a, b) inline | Defined?([a mod b]) { a = a mod b; }
 inc(ref a:'T) inline | Defined?([addAssign     (a, 1);]) { a += 1; }
 dec(ref a:'T) inline | Defined?([subtractAssign(a, 1);]) { a -= 1; }
 
+overload inc(ref a:'T) inline | Defined?([addAssign     (a, 1u);]) { a += 1u; }
+overload dec(ref a:'T) inline | Defined?([subtractAssign(a, 1u);]) { a -= 1u; }
 
 
 //
