@@ -1,0 +1,55 @@
+import memory.(allocateRawValue, freeRawValue);
+
+symbol RefCounted['T] = RecordType(refCount:UInt, value:'T);
+
+symbol SharedPointer['T] = CompositeType(ptr:MPointer[RefCounted['T]]);
+
+alias MSharedPointer['T] = Maybe[SharedPointer['T]];
+
+overload SharedPointer['T](f) inline
+    | Type([f()]) == 'T
+{
+    var ptr = allocateRawValue(RefCounted['T]);
+    ptr^.refCount <-- 1u;
+    try {
+        ptr^.value <-- f();
+    } catch (ex) {
+        freeRawValue(ptr);
+        throw ex;
+    }
+    return initializeRecord(SharedPointer['T], just(ptr));
+}
+
+overload SharedPointer(f) inline
+    | Defined?([var x = f();])
+    = SharedPointer[Type([f()])](f);
+
+overload destroyUnsafe(ref p:SharedPointer['T]) inline {
+    maybe(p.ptr, [ptr -> {
+        dec(ptr^.refCount);
+        if (ptr^.refCount == 0u) {
+            destroyUnsafe(ptr^.value);
+            freeRawValue(ptr);
+        }
+    }]);
+}
+
+overload resetUnsafe(ref p:SharedPointer['T]) inline {
+    p.ptr <-- nothing(Pointer[RefCounted['T]]);
+}
+
+overload copy(p:SharedPointer['T]) inline {
+    inc(required(p.ptr)^.refCount);
+    return initializeRecord(SharedPointer['T], p.ptr);
+}
+
+overload copyAssign(ref to:SharedPointer['T], from:SharedPointer['T]) inline {
+    if (to.ptr == from.ptr)
+        return;
+    to = copy(from);
+}
+
+overload dereference(p:SharedPointer['T]) inline = forward required(p.ptr)^.value;
+
+overload equals?(p:SharedPointer['T], q:SharedPointer['T])
+    = p.ptr == q.ptr;

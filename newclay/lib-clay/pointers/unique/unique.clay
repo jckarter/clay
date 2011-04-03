@@ -29,7 +29,7 @@ overload resetUnsafe(ref p:UniquePointer['T]) inline {
     p.ptr <-- nothing(Pointer['T]);
 }
 
-overload dereference(p:UniquePointer['T]) inline = forward requiredUnsafe(p.ptr)^;
+overload dereference(p:UniquePointer['T]) inline = forward required(p.ptr)^;
 
 overload equals?(p:UniquePointer['T], q:UniquePointer['T])
     = p.ptr == q.ptr;
