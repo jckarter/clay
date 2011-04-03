@@ -55,8 +55,6 @@ overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
 // value semantics
 //
 
-overload #BitwiseMovedType?(Vector['T]) = true;
-
 overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
     | AssignableTypes?('T, 'U)
 {
