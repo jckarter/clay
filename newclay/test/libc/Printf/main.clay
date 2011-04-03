@@ -1,0 +1,7 @@
+import libc.(printf);
+import ctypes.(CString);
+
+main() {
+    printf(CString("hello world\n"));
+    printf(CString("%s world #%d\n"), CString("goodbye"), 2);
+}
