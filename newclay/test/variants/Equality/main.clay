@@ -1,0 +1,28 @@
+import show.(show);
+import variants.(VariantType);
+
+symbol Foo = VariantType(Int, Float64);
+
+main() {
+    var a = Foo(1);
+    var b = Foo(1);
+    var c = Foo(2);
+
+    var f = Foo(-0.0);
+    var g = Foo( 0.0);
+    var h = Foo( 1.0);
+    var i = Foo(0.0/0.0);
+    var j = Foo(0.0/0.0);
+
+    show(a == a); ////true
+    show(a == b); ////true
+    show(a == c); ////false
+    show(a == f); ////false
+    show(a == h); ////false
+    show(f == f); ////true
+    show(f == g); ////true
+    show(f == h); ////false
+    show(f == i); ////false
+    show(i == i); ////false
+    show(i == j); ////false
+}

@@ -114,3 +114,13 @@ variantAsUnsafe(#'M, forward v:'T) inline
 overload index(forward v:'T, #'M) inline
     | VariantType?('T) and VariantMemberType?('T, 'M)
     = forward variantAs(#'M, v);
+
+
+//
+// equality
+//
+
+overload equals?(v:'V, w:'V)
+    | VariantType?('V)
+      and allValues?([#'T -> CallDefined?(equals?, 'T, 'T)], ..VariantMemberTypes('V))
+    = dispatch(v, [vm:'M -> variantIs?('M, w) and vm == variantAsUnsafe('M, w)]);
