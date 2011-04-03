@@ -36,9 +36,9 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 #Type?('x) = StaticCallDefined?(LLType, 'x);
 #PODType?('T) | not PredicateInheritingType?('T) = false;
 #BitwiseCopiedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#BitwiseMovedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#BitwiseMovedType?('T) | not PredicateInheritingType?('T) = true;
 #DestroyDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#ResetDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
+#ResetDoesNothingType?('T) | not PredicateInheritingType?('T) = DestroyDoesNothingType?('T);
 #InitializeDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
 #AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
@@ -488,7 +488,7 @@ overload 'T() inline --> returned:'T
 {
     *returned <-- (#OriginalType('T))();
 }
-overload 'T(/*alias*/ forward orig:'U) inline --> returned:'T
+overload 'T(forward orig:'U) inline --> returned:'T
     | NewType?('T)
       and Defined?([arg(Ref['U]) <-- orig;])
       and 'U == OriginalType('T)
