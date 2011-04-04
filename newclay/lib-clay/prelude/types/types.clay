@@ -491,14 +491,14 @@ overload unpack(forward x:'T) inline | NewType?('T)
 initializeUnderlying(#'T) inline --> returned:'T
     | HasUnderlyingType?('T) and DefaultInitializableType?(UnderlyingType('T))
 {
-    *returned <-- (#UnderlyingType('T))();
+    underlying(returned) <-- (#UnderlyingType('T))();
 }
 overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
     | HasUnderlyingType?('T)
       and Defined?([arg(Ref['U]) <-- orig;])
       and 'U == UnderlyingType('T)
 {
-    *returned <-- orig;
+    underlying(returned) <-- orig;
 }
 
 overload 'T(forward ..args) inline
@@ -510,7 +510,7 @@ overload copy(x:'T) inline --> returned:'T
       and CopyableType?(UnderlyingType('T))
       and not BitwiseCopiedType?(UnderlyingType('T))
 {
-    *returned <-- copy(*x);
+    underlying(returned) <-- copy(underlying(x));
 }
 
 overload moveUnsafe(forward x:'T) inline --> returned:'T
@@ -518,27 +518,27 @@ overload moveUnsafe(forward x:'T) inline --> returned:'T
       and MovableType?(UnderlyingType('T))
       and not BitwiseMovedType?(UnderlyingType('T))
 {
-    *returned <-- moveUnsafe(*x);
+    underlying(returned) <-- moveUnsafe(underlying(x));
 }
 
 overload destroyUnsafe(ref x:'T) inline
     | HasUnderlyingType?('T) and not DestroyDoesNothingType?(UnderlyingType('T))
 {
-    destroyUnsafe(*x);
+    destroyUnsafe(underlying(x));
 }
 
 overload resetUnsafe(ref x:'T) inline
     | HasUnderlyingType?('T) and not ResetDoesNothingType?(UnderlyingType('T))
 {
-    resetUnsafe(*x);
+    resetUnsafe(underlying(x));
 }
 
 overload copyAssign(ref to:'T, from:'T) inline
     | HasUnderlyingType?('T) and AssignableType?(UnderlyingType('T))
 {
-    *to = *from;
+    underlying(to) = underlying(from);
 }
 
 overload equals?(a:'T, b:'T) inline
-    | HasUnderlyingType?('T) and Defined?([*a == *b])
-    = *a == *b;
+    | HasUnderlyingType?('T) and Defined?([underlying(a) == underlying(b)])
+    = underlying(a) == underlying(b);

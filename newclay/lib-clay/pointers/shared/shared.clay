@@ -6,13 +6,13 @@ symbol SharedPointer['T] = CompositeType(ptr:MPointer[RefCounted['T]]);
 
 alias MSharedPointer['T] = Maybe[SharedPointer['T]];
 
-overload SharedPointer['T](f) inline
-    | Type([f()]) == 'T
+overload SharedPointer['T](f, forward ..args) inline
+    | Type([f(..args)]) == 'T
 {
     var ptr = allocateRawValue(RefCounted['T]);
     ptr^.refCount <-- 1u;
     try {
-        ptr^.value <-- f();
+        ptr^.value <-- f(..args);
     } catch (ex) {
         freeRawValue(ptr);
         throw ex;
@@ -20,9 +20,9 @@ overload SharedPointer['T](f) inline
     return initializeRecord(SharedPointer['T], just(ptr));
 }
 
-overload SharedPointer(f) inline
-    | Defined?([var x = f();])
-    = SharedPointer[Type([f()])](f);
+overload SharedPointer(f, forward ..args) inline
+    | Defined?([var x = f(..args);])
+    = SharedPointer[#Type([f(..args)])](f, ..args);
 
 overload destroyUnsafe(ref p:SharedPointer['T]) inline {
     maybe(p.ptr, [ptr -> {
