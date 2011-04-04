@@ -1,0 +1,32 @@
+import referencetypes.(ReferenceType, WithPointerType);
+import pointers.unique.(UniquePointer);
+import show.(show);
+import vectors.(Vector, push);
+
+symbol Foo = ReferenceType(a:Int, b:Vector[Int]);
+symbol Bar = ReferenceType(a:Int, b:Vector[Int]), WithPointerType(UniquePointer);
+
+main() {
+    var foo = Foo();
+    var bar = Bar();
+
+    show(#Defined?([copy(foo)])); ////true
+    show(#Defined?([copy(bar)])); ////false
+
+    show(foo.a); ////0
+    show(size(foo.b)); ////0
+
+    show(bar.a); ////0
+    show(size(bar.b)); ////0
+
+    var foo2 = foo;
+
+    foo.a += 111;
+    push(foo.b, 222, 333, 555, 777);
+
+    show(foo.a); ////111
+    show(size(foo.b)); ////4
+
+    show(foo2.a); ////111
+    show(size(foo2.b)); ////4
+}

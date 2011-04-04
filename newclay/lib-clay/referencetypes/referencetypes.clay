@@ -1,0 +1,25 @@
+import pointers.shared.(SharedPointer);
+import meta.symbols.*;
+
+symbol ReferenceTypeValue['R] = RecordType(..Fields('R));
+
+#ReferenceType(..'fields) | ValidFields?(..'fields) = (ReferenceType, ..'fields);
+#ReferenceType?('T) = SymbolWithTag?('T, ReferenceType);
+
+overload #Fields('R) | ReferenceType?('R) = ..SymbolTagBody('R, ReferenceType);
+
+#WithPointerType('P) = (WithPointerType, 'P);
+#WithPointerType?('R) = ReferenceType?('R) and SymbolWithTag?('R, WithPointerType);
+
+overload #UnderlyingType('R) | ReferenceType?('R)
+    = SharedPointer[ReferenceTypeValue['R]];
+overload #UnderlyingType('R) | WithPointerType?('R)
+    = SymbolTagBody('R, WithPointerType)[ReferenceTypeValue['R]];
+
+overload index(forward r:'R, #'field) inline
+    | ReferenceType?('R) and Defined?([forward underlying(r)^[#'field]])
+    = forward underlying(r)^[#'field];
+
+overload 'R(forward ..args)
+    | ReferenceType?('R) and Defined?([ReferenceTypeValue['R](..args)])
+    = initializeUnderlying('R, (#UnderlyingType('R))(ReferenceTypeValue['R], ..args));
