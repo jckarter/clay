@@ -474,58 +474,71 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 #NewType('T) = (NewType, 'T);
 #NewType?('T) = SymbolWithTag?('T, NewType);
 
-#OriginalType('T) | NewType?('T) = SymbolTagBody('T, NewType);
+#UnderlyingType('T) | NewType?('T) = SymbolTagBody('T, NewType);
 
-overload #LLType('T) | NewType?('T) = LLType(OriginalType('T));
+#HasUnderlyingType?('T) = StaticCallDefined?(UnderlyingType, 'T);
 
-overload #InheritsPredicatesFromTypes('T) | NewType?('T) = true, OriginalType('T);
+overload #LLType('T) | HasUnderlyingType?('T) = LLType(UnderlyingType('T));
+
+overload #InheritsPredicatesFromTypes('T) | HasUnderlyingType?('T) = true, UnderlyingType('T);
+
+underlying(forward x:'T) inline | HasUnderlyingType?('T)
+    = forward bitcast(#UnderlyingType('T), x);
 
 overload unpack(forward x:'T) inline | NewType?('T)
-    = forward bitcast(#OriginalType('T), x);
+    = forward underlying(x);
 
-overload 'T() inline --> returned:'T
-    | NewType?('T) and DefaultInitializableType?(OriginalType('T))
+initializeUnderlying(#'T) inline --> returned:'T
+    | HasUnderlyingType?('T) and DefaultInitializableType?(UnderlyingType('T))
 {
-    *returned <-- (#OriginalType('T))();
+    *returned <-- (#UnderlyingType('T))();
 }
-overload 'T(forward orig:'U) inline --> returned:'T
-    | NewType?('T)
+overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
+    | HasUnderlyingType?('T)
       and Defined?([arg(Ref['U]) <-- orig;])
-      and 'U == OriginalType('T)
+      and 'U == UnderlyingType('T)
 {
     *returned <-- orig;
 }
 
+overload 'T(forward ..args) inline
+    | NewType?('T) and Defined?([initializeUnderlying('T, ..args)])
+    = initializeUnderlying('T, ..args);
+
 overload copy(x:'T) inline --> returned:'T
-    | NewType?('T)
-      and CopyableType?(OriginalType('T))
-      and not BitwiseCopiedType?(OriginalType('T))
+    | HasUnderlyingType?('T)
+      and CopyableType?(UnderlyingType('T))
+      and not BitwiseCopiedType?(UnderlyingType('T))
 {
     *returned <-- copy(*x);
 }
 
 overload moveUnsafe(forward x:'T) inline --> returned:'T
-    | NewType?('T)
-      and MovableType?(OriginalType('T))
-      and not BitwiseMovedType?(OriginalType('T))
+    | HasUnderlyingType?('T)
+      and MovableType?(UnderlyingType('T))
+      and not BitwiseMovedType?(UnderlyingType('T))
 {
     *returned <-- moveUnsafe(*x);
 }
 
 overload destroyUnsafe(ref x:'T) inline
-    | NewType?('T) and not DestroyDoesNothingType?(OriginalType('T))
+    | HasUnderlyingType?('T) and not DestroyDoesNothingType?(UnderlyingType('T))
 {
     destroyUnsafe(*x);
 }
 
 overload resetUnsafe(ref x:'T) inline
-    | NewType?('T) and not ResetDoesNothingType?(OriginalType('T))
+    | HasUnderlyingType?('T) and not ResetDoesNothingType?(UnderlyingType('T))
 {
     resetUnsafe(*x);
 }
 
 overload copyAssign(ref to:'T, from:'T) inline
-    | NewType?('T) and AssignableType?(OriginalType('T))
+    | HasUnderlyingType?('T) and AssignableType?(UnderlyingType('T))
 {
     *to = *from;
 }
+
+overload equals?(a:'T, b:'T) inline
+    | HasUnderlyingType?('T) and Defined?([*a == *b])
+    = *a == *b;
