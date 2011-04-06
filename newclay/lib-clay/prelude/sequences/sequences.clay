@@ -134,6 +134,7 @@ private #CompatibleCoordinateTypes?('C, 'D)
       and CoordinateTargetType('C) == CoordinateTargetType('D);
 
 // XXX lambdas
+private initializeTo(ref x:'X) { x <-- 'X(); }
 private copyTo(ref x, y) { x <-- y; }
 private moveToUnsafe(ref x, ref y) { x <-- moveUnsafe(y); }
 
@@ -196,7 +197,7 @@ eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
 //
 
 initializeRange(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRangeWithCleanup(begin, end, #CoordinateTargetType('C));
+    eachInRangeWithCleanup(begin, end, initializeTo);
 }
 
 destroyRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
