@@ -1,0 +1,41 @@
+import values.(allValues?);
+
+symbol hash;
+
+#HashableType?('T) = CallDefined?(equals?, 'T, 'T) and CallDefined?(hash, 'T);
+
+overload hash(x:'T) inline
+    | IntegerType?('T) or CharType?('T) or 'T == Bool
+    = UInt(x);
+overload hash(x:'P) inline | PointerType?('P) = bitcast(UInt, x);
+overload hash(x:Static['x]) = 0u;
+
+hashValues(forward ..values) {
+    var h = 0u;
+    static for (forward v in ..values)
+        h = 7u*h + 13u*hash(v);
+    return h;
+}
+overload hashValues(forward value) inline = hash(value);
+
+overload hash(x:Tuple[..'T]) inline
+    | allValues?(HashableType?, ..'T)
+    = hashValues(..*x);
+overload hash(x:'R) inline
+    | RecordType?('R) and allValues?(HashableType?, ..FieldTypes('R))
+    = hashValues(..*x);
+overload hash(x:'N) inline
+    | NewType?('N) and HashableType?(UnderlyingType('N))
+    = hash(*x);
+
+hashSequence(seq:'S) | SequenceType?('S) {
+    var h = 0u;
+    var f = 11u;
+    for (forward ..v in seq) {
+        h += f * hashValues(..v);
+        f = 2*f - 1;
+    }
+    return h;
+}
+
+overload hash(x:Array['T,'n]) | HashableType?('T) = hashSequence(x);
