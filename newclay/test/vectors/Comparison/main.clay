@@ -1,0 +1,34 @@
+import vectors.(Vector);
+import show.(show);
+
+alias String = Vector[Char];
+
+main() {
+    var s1 = String("mets");
+    var s2 = String("mets");
+    var s3 = String("met");
+    var p1 = String("mettons");
+    var p2 = String("mettez");
+    var p3 = String("mettent");
+
+    show(s1 == s1); ////true
+    show(s1 == s2); ////true
+    show(s1 == s3); ////false
+    show(s3 == p1); ////false
+    show(p3 == p1); ////false
+
+    show(s1 < s3); ////false
+    show(s1 > s3); ////true
+    show(s3 < s1); ////true
+    show(s3 > s1); ////false
+
+    show(p1 < p3); ////false
+    show(p1 > p3); ////true
+    show(p3 < p1); ////true
+    show(p3 > p1); ////false
+
+    show(p2 < p3); ////false
+    show(p2 > p3); ////true
+    show(p3 < p2); ////true
+    show(p3 > p2); ////false
+}

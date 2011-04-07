@@ -1,5 +1,6 @@
 import memory.*;
 import values.*;
+import hashing.(hash, hashSequence);
 
 symbol Vector['T] = CompositeType(
     size:UInt,
@@ -266,3 +267,15 @@ private removeLocations(
     v.size -= UInt(to - from);
 }
 
+
+//
+// equals?, lesser?, hashing
+//
+
+overload equals?(a:Vector['A], b:Vector['B]) inline | CallDefined?(equals?, 'A, 'B)
+    = equalSequence?(a, b);
+
+overload lesser?(a:Vector['A], b:Vector['B]) inline | CallDefined?(lesser?, 'A, 'B)
+    = lesserSequence?(a, b);
+
+overload hash(v:Vector['V]) = hashSequence(v);
