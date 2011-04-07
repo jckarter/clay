@@ -42,11 +42,14 @@ lookup(m:HashMap['K, 'V], key:'K)
 
 put(ref m:HashMap['K, 'V], key:'K, forward value:'V) {
     ref hash = *m;
-    var entp = entryp(hash, key);
-    if (just?(entp))
-        required(entp)^.value = value;
-    else
-        allocEntry(hash, key, MapEntry['K,'V](key, value));
+    var mEntp = entryp(hash, key);
+    if (just?(mEntp)) {
+        var entp = required(mEntp);
+        entp^.value = value;
+        return entp;
+    } else {
+        return allocEntry(hash, key, MapEntry['K,'V](key, value));
+    }
 }
 
 remove(ref m:HashMap['K, 'V], key:'K) {
@@ -58,6 +61,21 @@ clear(ref m:HashMap['K,'V]) {
 }
 
 items(m:HashMap['K,'V]) = HashIterator[MapEntry['K,'V]](*m);
+
+
+//
+// index operator
+//
+
+overload index(ref m:HashMap['K, 'V], key:'K) | DefaultInitializableType?('V) {
+    ref hash = *m;
+    var mEntp = entryp(hash, key);
+    if (just?(mEntp)) {
+        return ref valueFromEntry(required(mEntp)^);
+    } else {
+        return ref valueFromEntry(allocEntry(hash, key, MapEntry['K,'V](key, 'V()))^);
+    }
+}
 
 
 //
@@ -149,10 +167,13 @@ private symbol MapEntry['K,'V] = RecordType(key:'K, value:'V);
 private symbol keyMatch?;
 private symbol entryHash;
 private symbol itemFromEntry;
+private symbol valueFromEntry;
 
 overload keyMatch?(entry:MapEntry['K,'V], key:'K) = entry.key == key;
 overload entryHash(entry:MapEntry['K,'V]) = largeHash(entry.key);
-overload itemFromEntry(entry:MapEntry['K,'V]) = const entry.key, const entry.value;
+overload itemFromEntry(forward entry:MapEntry['K,'V])
+    = forward ..*entry;
+overload valueFromEntry(forward entry:MapEntry['K,'V]) = forward entry.value;
 
 
 //
@@ -308,9 +329,9 @@ private allocEntry(ref h:TwoHash['E], key, forward entry:'E) {
 
         var bi = if (entryCount[1] < entryCount[0]) 1 else 0;
 
-        allocInBucket(h.tables[bi].begin[hash[bi]], entry, hash[2]);
+        var entp = allocInBucket(h.tables[bi].begin[hash[bi]], entry, hash[2]);
         h.size += 1u;
-        return;
+        return entp;
     }
 }
 
@@ -364,9 +385,9 @@ overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
 
         var bi = if (entryCount[1] < entryCount[0]) 1 else 0;
 
-        allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalueUnsafe(rentry), hash[2]);
+        var entp = allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalueUnsafe(rentry), hash[2]);
         h.size += 1u;
-        return;
+        return entp;
     }
     assertUnreachable([]);
 }
@@ -377,7 +398,7 @@ private allocInBucket(ref b:Bucket['E], forward entry:'E, hashByte) {
             b.hashBytes[i] = UInt8(hashByte);
             var entryp = &b.entries[i];
             entryp^ <-- entry;
-            return;
+            return entryp;
         }
     }
     assertUnreachable([]);
@@ -391,7 +412,7 @@ overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
             b.hashBytes[i] = UInt8(hashByte);
             var entryp = &b.entries[i];
             entryp^ <-- refToRvalueUnsafe(rentry);
-            return;
+            return entryp;
         }
     }
     assertUnreachable([]);

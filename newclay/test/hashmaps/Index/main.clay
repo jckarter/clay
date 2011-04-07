@@ -1,0 +1,23 @@
+
+import hashmaps.*;
+import show.(show);
+
+main() {
+    var h = HashMap[Int, Char]();
+
+    h[5] = 'a';
+    h[3] = 'b';
+    h[7919] = 'z';
+
+    show(size(h)); ////3
+
+    for (k, v in items(h))
+        show("--", "key", k, "value", v);
+
+    show("--");
+    show(h[2]);
+    show(h[3]);
+    show(h[4]);
+    show(h[5]);
+    show(h[7919]);
+}
