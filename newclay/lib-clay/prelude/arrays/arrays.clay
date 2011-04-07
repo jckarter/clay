@@ -145,7 +145,7 @@ overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
 
 overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
     | not ('T == 'U and BitwiseAssignedType?('T))
-      and CallDefined?(assign, 'T, 'U)
+      and CallDefined?(assign, Ref['T], 'U)
 {
     var ti = iterator(to), fi = iterator(from);
     while (hasNext?(ti)) {
