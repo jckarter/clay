@@ -49,11 +49,6 @@ put(ref m:HashMap['K, 'V], key:'K, forward value:'V) {
         allocEntry(hash, key, MapEntry['K,'V](key, value));
 }
 
-private reassignEntry(entp)
-    = [ref h, key, forward value -> entp^.value = value;];
-private addEntry()
-    = [ref h, key, forward value -> allocEntry(h, key, MapEntry['K,'V](key, value));];
-
 items(m:HashMap['K,'V]) = HashIterator[MapEntry['K,'V]](*m);
 
 
@@ -305,7 +300,9 @@ private allocEntry(ref h:TwoHash['E], key, forward entry:'E) {
 
         var bi = if (entryCount[1] < entryCount[0]) 1 else 0;
 
-        return allocInBucket(h.tables[bi].begin[hash[bi]], entry, hash[2]);
+        allocInBucket(h.tables[bi].begin[hash[bi]], entry, hash[2]);
+        h.size += 1u;
+        return;
     }
 }
 
@@ -332,7 +329,9 @@ overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
 
         var bi = if (entryCount[1] < entryCount[0]) 1 else 0;
 
-        return allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalueUnsafe(rentry), hash[2]);
+        allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalueUnsafe(rentry), hash[2]);
+        h.size += 1u;
+        return;
     }
     assertUnreachable([]);
 }
@@ -343,7 +342,7 @@ private allocInBucket(ref b:Bucket['E], forward entry:'E, hashByte) {
             b.hashBytes[i] = UInt8(hashByte);
             var entryp = &b.entries[i];
             entryp^ <-- entry;
-            return entryp;
+            return;
         }
     }
     assertUnreachable([]);
@@ -357,7 +356,7 @@ overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
             b.hashBytes[i] = UInt8(hashByte);
             var entryp = &b.entries[i];
             entryp^ <-- refToRvalueUnsafe(rentry);
-            return entryp;
+            return;
         }
     }
     assertUnreachable([]);
