@@ -1,0 +1,27 @@
+import hashmaps.*;
+import vectors.(Vector);
+import show.(show);
+
+alias String = Vector[Char];
+
+main() {
+    var h = HashMap[String, String]();
+
+    put(h, String("a squid eating dough"), String("fast and bulbous"));
+    put(h, String("a tin teardrop"), String("bulbous also tapered"));
+
+    show(size(h)); ////2
+
+    maybe(lookup(h, String("a squid eating dough")),
+        [p -> show(size(p^));],
+        [show("no squid");]
+    );
+    maybe(lookup(h, String("a tin teardrop")),
+        [p -> show(size(p^));],
+        [show("no teardrop");]
+    );
+    maybe(lookup(h, String("rocket morton")),
+        [p -> show(size(p^));],
+        [show("no rocket");]
+    );
+}
