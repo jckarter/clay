@@ -33,7 +33,7 @@ hashSequence(seq:'S) | SequenceType?('S) {
     var f = 11u;
     for (forward ..v in seq) {
         h += f * hashValues(..v);
-        f = 2*f - 1;
+        f = 2u*f - 1u;
     }
     return h;
 }
