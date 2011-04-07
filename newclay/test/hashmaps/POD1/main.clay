@@ -19,7 +19,4 @@ main() {
     maybe(lookup(h, 4), [p -> show(p^);], [show("no 4");]);
     maybe(lookup(h, 5), [p -> show(p^);], [show("no 5");]);
     maybe(lookup(h, 7919), [p -> show(p^);], [show("no 7919");]);
-
-    // clear
-    // remove
 }
