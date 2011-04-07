@@ -49,6 +49,14 @@ put(ref m:HashMap['K, 'V], key:'K, forward value:'V) {
         allocEntry(hash, key, MapEntry['K,'V](key, value));
 }
 
+remove(ref m:HashMap['K, 'V], key:'K) {
+    freeEntry(*m, key);
+}
+
+clear(ref m:HashMap['K,'V]) {
+    clearEntries(*m);
+}
+
 items(m:HashMap['K,'V]) = HashIterator[MapEntry['K,'V]](*m);
 
 
@@ -306,6 +314,33 @@ private allocEntry(ref h:TwoHash['E], key, forward entry:'E) {
     }
 }
 
+private freeEntry(ref h:TwoHash['E], key) {
+    var hash = splitHash(h, key);
+    for (i in Range(2)) {
+        for (j in Range(BucketSize)) {
+            if (h.tables[i].begin[hash[i]].hashBytes[j] == hash[2]) {
+                ref bucket = h.tables[i].begin[hash[i]];
+                ref entry = bucket.entries[j];
+                if (keyMatch?(entry, key)) {
+                    freeFromBucket(bucket, j);
+                    h.size -= 1u;
+                    return;
+                }
+            }
+        }
+    }
+}
+
+private clearEntries(ref h:TwoHash['E]) {
+    for (i in Range(2)) {
+        ref table = h.tables[i];
+        ref begin = table.begin;
+        for (ref bucket in CoordinateRange(begin, begin + tableSize(table)))
+            clearBucket(bucket);
+    }
+    h.size = 0u;
+}
+
 // XXX rvalue analysis
 overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
     ref rentry = rvalueToRefUnsafe(entry);
@@ -362,6 +397,18 @@ overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
     assertUnreachable([]);
 }
 
+private freeFromBucket(ref b:Bucket['E], index) {
+    destroyUnsafe(b.entries[index]);
+    b.hashBytes[index] = 255u;
+}
+
+private clearBucket(ref b:Bucket['E]) {
+    for (i in Range(BucketSize))
+        if (b.hashBytes[i] != 255u)
+            destroyUnsafe(b.entries[i]);
+    resetUnsafe(b);
+}
+
 private grow(ref h:TwoHash['E]) {
     var i = 0;
     if (h.tables[0].ln2_size > h.tables[1].ln2_size)
@@ -402,5 +449,3 @@ private baseSplitHash(h:TwoHash['E], hash:UInt64) {
         lowHash
     );
 }
-
-//XXX clear and remove
