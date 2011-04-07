@@ -226,7 +226,9 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
     }
 
     var oldSize = tableSize(to), newSize = tableSize(from);
-    if (to.begin != ContiguousCoordinate['B]() and to.ln2_size >= from.ln2_size) {
+    if (to.begin == ContiguousCoordinate['B]()) {
+        to <-- from;
+    } else if (to.begin != ContiguousCoordinate['B]() and to.ln2_size >= from.ln2_size) {
         destroyRangeUnsafe(to.begin+newSize, to.begin+oldSize);
         to.ln2_size = from.ln2_size;
         assignRange(to.begin, from.begin, from.begin+newSize);
