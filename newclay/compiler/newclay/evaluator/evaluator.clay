@@ -543,13 +543,15 @@ overload evaluateExpr(x:ast.UnaryOpExpr, env) {
     var operands = ValueList(evaluateExpr(x.expr, env));
     switch (x.operator) {
     case ast.OP_PLUS:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticPlus, operands);
+        return evaluateCallWithOneResult(getHooks().plus, operands);
     case ast.OP_MINUS:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticMinus, operands);
+        return evaluateCallWithOneResult(getHooks().minus, operands);
     case ast.OP_UNPACK:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElements, operands);
+        return evaluateCallWithOneResult(getHooks().unpack, operands);
+    case ast.OP_DEREFERENCE:
+        return evaluateCallWithOneResult(getHooks().dereference, operands);
     default:
-        matchFailureError("operator not allowed in static context");
+        genericError("operator not allowed in static context");
         return Value();
     }
 }
@@ -559,32 +561,31 @@ overload evaluateExpr(x:ast.BinaryOpExpr, env) {
 
     switch (x.operator) {
     case ast.OP_MULTIPLY:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticMultiply, operands);
+        return evaluateCallWithOneResult(getHooks().multiply, operands);
     case ast.OP_DIVIDE:
-        matchFailureError("real division not supported in static context; use the \"div\" operator for integer division");
-        return Value();
+        return evaluateCallWithOneResult(getHooks().divide, operands);
     case ast.OP_QUOTIENT:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticQuotient, operands);
+        return evaluateCallWithOneResult(getHooks().quotient, operands);
     case ast.OP_REMAINDER:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticRemainder, operands);
+        return evaluateCallWithOneResult(getHooks().remainder, operands);
     case ast.OP_ADD:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticAdd, operands);
+        return evaluateCallWithOneResult(getHooks().add, operands);
     case ast.OP_SUBTRACT:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticSubtract, operands);
+        return evaluateCallWithOneResult(getHooks().subtract, operands);
     case ast.OP_LESSER?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticLesser?, operands);
+        return evaluateCallWithOneResult(getHooks().lesser?, operands);
     case ast.OP_LESSER_EQUALS?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticLesserEquals?, operands);
+        return evaluateCallWithOneResult(getHooks().lesserEquals?, operands);
     case ast.OP_GREATER?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticGreater?, operands);
+        return evaluateCallWithOneResult(getHooks().greater?, operands);
     case ast.OP_GREATER_EQUALS?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticGreaterEquals?, operands);
+        return evaluateCallWithOneResult(getHooks().greaterEquals?, operands);
     case ast.OP_EQUALS?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticEquals?, operands);
+        return evaluateCallWithOneResult(getHooks().equals?, operands);
     case ast.OP_NOT_EQUALS?:
-        return evaluatePrimitiveWithOneResult(PRIM_StaticNotEquals?, operands);
+        return evaluateCallWithOneResult(getHooks().notEquals?, operands);
     default:
-        matchFailureError("operator not allowed in static context");
+        assert(false, "invalid binary operator");
         return Value();
     }
 }
