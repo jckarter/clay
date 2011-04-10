@@ -1,3 +1,4 @@
+import meta.statics.(StaticString?, StaticStringSize);
 import values.*;
 
 
@@ -298,3 +299,11 @@ overload reverseIterator(x:'S)
 overload reverseIterator(forward x:CoordinateRange['C])
     | ReversibleCoordinateType?('C)
     = ReversedCoordinateRange['C](..*x);
+
+
+//
+// static aggregate sizes
+//
+
+overload #size('s) | StaticString?('s) = StaticStringSize('s);
+overload #size((..'t)) = countValues(..'t);
