@@ -39,6 +39,10 @@ back(x:'S) | CoordinateSequenceType?('S) {
 overload iterator(x:'S) | CoordinateSequenceType?('S)
     = CoordinateRange(begin(x), end(x));
 
+overload index(x:'S, n)
+    | CoordinateSequenceType?('S) and Defined?([begin(x) + n])
+    = forward (begin(x) + n)^;
+
 overload iterator(forward x:'I) | IteratorType?('I) = forward x;
 
 overload size(x:'S) | CoordinateSequenceType?('S) and Defined?([end(x) - begin(x)])
