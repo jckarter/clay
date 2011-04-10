@@ -37,6 +37,9 @@ tupleLiteral(forward ..elements:'T) inline = Tuple[..'T](..elements);
 //
 
 symbol index;
+overload index(forward a, #'n) inline
+    | StaticInt?('n) and Defined?([forward a['n]])
+    = forward a['n];
 
 
 //
