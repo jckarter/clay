@@ -372,6 +372,27 @@ overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
 
 
 //
+// UnmanagedUnsafe['T]
+//
+
+symbol UnmanagedUnsafe['T];
+overload #PODType?(UnmanagedUnsafe['T]) = true;
+overload #LLType(UnmanagedUnsafe['T])
+    | Type?('T)
+    = LLType('T);
+
+overload UnmanagedUnsafe['T](forward ..args) inline --> returned:UnmanagedUnsafe['T]
+    | Defined?(['T(..args)])
+{
+    *returned <-- 'T(..args);
+}
+overload UnmanagedUnsafe(forward x:'T) inline --> returned:UnmanagedUnsafe['T] {
+    *returned <-- x;
+}
+overload unpack(forward x:UnmanagedUnsafe['T]) = forward bitcast('T, x);
+
+
+//
 // ValidStaticIndex? for unions or tuples
 //
 
