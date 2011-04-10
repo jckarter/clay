@@ -222,7 +222,18 @@ overload moveAssign(ref a:'T, rvalue b:'T) inline
     a <-- move(b);
 }
 
-copyAssign(ref a:'T, b:'T) inline | BitwiseAssignedType?('T) { a <-- b; }
+copyAssign(ref a:'T, b:'T) inline
+    | Defined?([a <-- b;])
+{
+    var tmp = moveUnsafe(a);
+    try {
+        a <-- b;
+    } catch (ex) {
+        a <-- move(tmp);
+        throw ex;
+    }
+}
+overload copyAssign(ref a:'T, b:'T) inline | BitwiseAssignedType?('T) { a <-- b; }
 overload copyAssign(ref a:'A, b:'B) inline | AssignablePrimitiveTypes?('A, 'B)
 {
     cAssign(a, b);
