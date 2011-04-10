@@ -773,11 +773,13 @@ overload evaluateMultiExpr(x:ast.UnaryOpExpr, env) {
     var operands = ValueList(evaluateExpr(x.expr, env));
     switch (x.operator) {
     case ast.OP_PLUS:
-        return evaluatePrimitive(PRIM_StaticPlus, operands);
+        return evaluateCall(getHooks().plus, operands);
     case ast.OP_MINUS:
-        return evaluatePrimitive(PRIM_StaticMinus, operands);
+        return evaluateCall(getHooks().minus, operands);
     case ast.OP_UNPACK:
-        return evaluatePrimitive(PRIM_StaticTupleElements, operands);
+        return evaluateCall(getHooks().unpack, operands);
+    case ast.OP_DEREFERENCE:
+        return evaluateCall(getHooks().dereference, operands);
     default:
         matchFailureError("operator not allowed in static context");
         return ValueList();
