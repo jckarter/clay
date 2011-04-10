@@ -1533,6 +1533,13 @@ overload Specialization(o:Overload, callable:Value) {
 
 overload Specialization(callable:Value) = Specialization(Overload(), callable);
 
+overload printTo(stream, s:Specialization) {
+    maybe(s.results,
+        results ref=> { printTo(stream, "return ", ResultList(results)); },
+        () ref=> { printTo(stream, "noreturn"); },
+    );
+}
+
 record InvokeEntry(
     specialization: Maybe[Specialization],
 );
@@ -1580,6 +1587,26 @@ overload printTo(stream, a:ArgumentList) {
     );
     printTo(stream, ")");
 }
+
+record ResultList(results:RTValues);
+
+overload equals?(a:ResultList, b:ResultList)
+    = equalResults?(a.results, b.results);
+
+overload hash(a:ResultList)
+    = hash(map(arg => (arg.kind, arg.type, localVariable?(arg)), a.args));
+
+overload printTo(stream, a:ResultList) {
+    interleave(a.results,
+        () ref=> { printTo(stream, ", "); },
+        v ref=> {
+            if (not localVariable?(v))
+                printRTValueKindTo(stream, v.kind);
+            printTo(stream, v.type);
+        }
+    );
+}
+
 
 
 //
@@ -1679,7 +1706,7 @@ overload printTo(stream, x:SymbolBodyEntry) {
 }
 
 overload printTo(stream, x:StaticCallEntry) {
-    printTo(stream, "eval: ");
+    printTo(stream, "eval #");
     printReprTo(stream, x.callable);
     printTo(stream, "(");
     printReprElementsTo(stream, x.args);
@@ -1687,7 +1714,7 @@ overload printTo(stream, x:StaticCallEntry) {
 }
 
 overload printTo(stream, x:CallAnalysisEntry) {
-    printTo(stream, "analyze: ");
+    printTo(stream, "compile ");
     printReprTo(stream, x.callable);
     printTo(stream, ArgumentList(x.args));
 }
@@ -1717,36 +1744,64 @@ overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-private var _compilationStack = Stack[CompilationEntry](false);
+record CompilationTrace (trace?:Bool, depth:UInt);
+private var _traceCompilation = CompilationTrace(false, 0u);
 
-traceCompilation(trace?:Bool) { _compilationStack.trace? = trace?; }
+traceCompilation(trace?:Bool) { _traceCompilation.trace? = trace?; }
 
-withCompilationEntry(forward entry:CompilationEntry, f) =
-    forward ...withStackValue(_compilationStack, entry, f);
+traceEnter(entry) {
+    if (_traceCompilation.trace?) {
+        for (i in range(_traceCompilation.depth))
+            print(' ');
+
+        println("[ entering ", entry);
+
+        inc(_traceCompilation.depth);
+    }
+}
+
+traceExit(entry, results) {
+    if (_traceCompilation.trace?) {
+        dec(_traceCompilation.depth);
+
+        for (i in range(_traceCompilation.depth))
+            print(' ');
+        println("] leaving  ", entry, ", result: ", ...weaveValues(", ", ...results));
+    }
+}
+
+private var _compilationStack = Stack[CompilationEntry]();
+
+withCompilationEntry(entry:CompilationEntry, f) {
+    traceEnter(entry);
+    var values = captureValues(...withStackValue(_compilationStack, entry, f));
+    traceExit(entry, ...capturedRefs(values));
+    return forward ...forwardValues(values);
+}
 
 withStaticSymbolBody(head:SymbolHead, args:ValueList, f) {
     var entry = CompilationEntry(SymbolBodyEntry(head, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withStaticCall(callable:Value, args:ValueList, f) {
     var entry = CompilationEntry(StaticCallEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withCallAnalysis(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withGlobalAnalysis(global:RTGlobal, f) {
     var entry = CompilationEntry(GlobalAnalysisEntry(global));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withCallCompilation(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallCompilationEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 
