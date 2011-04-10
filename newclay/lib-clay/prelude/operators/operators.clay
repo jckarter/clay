@@ -13,8 +13,15 @@ import __primitives__.(
     StaticRemainder,
     StaticAdd,
     StaticSubtract,
+    StaticString?,
+    StaticStringChars,
+    StaticModuleMember,
     StaticLesser?,
+    StaticLesserEquals?,
+    StaticGreater?,
+    StaticGreaterEquals?,
     StaticEquals?,
+    StaticNotEquals?,
     StaticBitnot,
     StaticBitor,
     StaticBitand,
@@ -29,6 +36,7 @@ import __primitives__.(
 //
 
 tupleLiteral(forward ..elements:'T) inline = Tuple[..'T](..elements);
+overload #tupleLiteral(..'x) = (..'x);
 
 
 
@@ -59,6 +67,14 @@ dereference(forward a:'T) inline
 staticIndex(forward a, #'n) inline  | Defined?([a[#'n]]) = forward a[#'n];
 fieldRef(forward a, #'field) inline | Defined?([a[#'field]]) = forward a[#'field];
 
+
+//
+// static accessors
+
+overload #staticIndex('a, 'x) = 'a['x];
+overload #index('a, ..'x) = ..'a[..'x];
+overload #fieldRef('a, 'x) = StaticModuleMember('a, 'x);
+overload #call('a, ..'x) = ..'a(..'x);
 
 
 //
@@ -85,7 +101,7 @@ overload #multiply('x, 'y) = StaticMultiply('x, 'y);
 overload #quotient('x, 'y) = StaticQuotient('x, 'y);
 overload #remainder('x, 'y) = StaticRemainder('x, 'y);
 overload #add('x, 'y) = StaticAdd('x, 'y);
-overload #subtract('x, 'y) = StaticSubtract('x);
+overload #subtract('x, 'y) = StaticSubtract('x, 'y);
 
 
 //
@@ -209,6 +225,17 @@ overload notEquals?(a:'A, b:'B) inline | EqualityComparablePrimitiveTypes?('A, '
 
 
 //
+// comparison operators on statics
+
+overload #lesser?('a, 'b) = StaticLesser?('a, 'b);
+overload #lesserEquals?('a, 'b) = StaticLesserEquals?('a, 'b);
+overload #greater?('a, 'b) = StaticGreater?('a, 'b);
+overload #greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
+overload #equals?('a, 'b) = StaticEquals?('a, 'b);
+overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+
+
+//
 // assignment
 //
 
@@ -322,6 +349,7 @@ overload move(rvalue a:'T) inline = moveUnsafe(rvalueToRefUnsafe(a));
 symbol unpack;
 overload unpack(..#'x) = ..'x;
 overload #unpack((..'x)) = ..'x;
+overload #unpack('s) | StaticString?('s) = ..StaticStringChars('s);
 
 
 //
