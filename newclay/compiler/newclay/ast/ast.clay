@@ -178,6 +178,9 @@ record VariadicList[T] (
     variadicItem: Maybe[T],
 );
 
+[T] emptyVariadicList?(vl:VariadicList[T])
+    = empty?(vl.items) and nothing?(vl.variadicItem);
+
 
 
 //
