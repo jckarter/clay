@@ -14,6 +14,7 @@
 #include <sys/epoll.h>
 #include <signal.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 #include <netdb.h>
 #include <netinet/in.h>
