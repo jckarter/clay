@@ -1698,15 +1698,15 @@ record CallCompilationEntry (
 );
 
 record StaticMatchEntry (
+    oload: StaticOverload,
     callable: Value,
     args: ValueList,
-    oload: StaticOverload,
 );
 
 record RuntimeMatchEntry (
+    oload: Overload,
     callable: Value,
     args: RTValues,
-    oload: Overload,
 );
 
 overload printTo(stream, x:SymbolBodyEntry) {
@@ -1830,6 +1830,48 @@ withCallCompilation(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallCompilationEntry(callable, args));
     return forward ...withCompilationEntry(entry, f);
 }
+
+withStaticMatch(oload:StaticOverload, callable:Value, args:ValueList, f) {
+    var entry = CompilationEntry(StaticMatchEntry(oload, callable, args));
+    return forward ...withCompilationEntry(entry, f);
+}
+
+withRuntimeMatch(oload:Overload, callable:Value, args:RTValues, f) {
+    var entry = CompilationEntry(RuntimeMatchEntry(oload, callable, args));
+    return forward ...withCompilationEntry(entry, f);
+}
+
+
+
+//
+// match results
+//
+
+variant MatchResult[T] = MatchSuccess[T]
+                       | MatchFailedArgCount
+                       | MatchFailedPattern
+                       | MatchFailedPredicate;
+
+record MatchSuccess[T] (result:T);
+record MatchFailedArgCount ();
+record MatchFailedPattern ();
+record MatchFailedPredicate ();
+
+[T] overload printTo(stream, x:MatchSuccess[T]) {
+    printTo(stream, "matched");
+}
+overload printTo(stream, x:MatchFailedArgCount) {
+    printTo(stream, "wrong number of arguments");
+}
+overload printTo(stream, x:MatchFailedPattern) {
+    printTo(stream, "pattern matching failed");
+}
+overload printTo(stream, x:MatchFailedPredicate) {
+    printTo(stream, "predicate returned false");
+}
+
+[T] matchSuccess?(x:MatchResult[T]) = variantIs?(x, MatchSuccess[T]);
+[T] matchResult(x:MatchResult[T]) = ref variantAs(x, MatchSuccess[T]).result;
 
 
 

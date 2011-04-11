@@ -1479,19 +1479,19 @@ matchAttribute(x:Attribute, target:Value) Maybe[Env] {
     return Maybe(env);
 }
 
-matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) Maybe[Env] {
+matchStaticOverload(x:StaticOverload, callable:Value, args:ValueList) MatchResult[Env] {
     var pvars = topLevelItemPatternVars(x);
     var env = initializeMatch(x.env, pvars);
     var callablePattern = evaluatePattern(x.ast.target, env);
     if (not unify(callablePattern, callable))
-        return nothing(Env);
+        return MatchResult[Env](MatchFailedPattern());
     var argsPattern = evaluateListPattern(x.ast.definition.args, env);
     if (not unifyList(argsPattern, args))
-        return nothing(Env);
+        return MatchResult[Env](MatchFailedPattern());
     verifyPatternVars(pvars, env);
     if (not testPredicate(x.ast.definition.predicate, env))
-        return nothing(Env);
-    return Maybe(move(env));
+        return MatchResult[Env](MatchFailedPredicate());
+    return MatchResult[Env](MatchSuccess(env));
 }
 
 valueSymbolHead(v)
@@ -1509,22 +1509,20 @@ ifStaticOverload(program:Program, callable:Value, args:ValueList, thenFn, elseFn
             else
                 program.symbolStaticOverloads;
         for (x in reversed(staticOverloads)) {
-            var entry = StaticMatchEntry(callable, args, x);
-            traceEnter(entry);
-            var env = matchStaticOverload(x, callable, args);
-            traceExit(entry, maybe(env, x => "matched", () => "not matched"));
-            if (just?(env))
-                return forward ...thenFn(x, just(env));
+            var matchEnv = withStaticMatch(x, callable, args,
+                () => matchStaticOverload(x, callable, args)
+            );
+            if (matchSuccess?(matchEnv))
+                return forward ...thenFn(x, matchResult(matchEnv));
         }
     }
 
     for (x in reversed(program.patternStaticOverloads)) {
-        var entry = StaticMatchEntry(callable, args, x);
-        traceEnter(entry);
-        var env = matchStaticOverload(x, callable, args);
-        traceExit(entry, maybe(env, x => "matched", () => "not matched"));
-        if (just?(env))
-            return forward ...thenFn(x, just(env));
+        var matchEnv = withStaticMatch(x, callable, args,
+            () => matchStaticOverload(x, callable, args)
+        );
+        if (matchSuccess?(matchEnv))
+            return forward ...thenFn(x, matchResult(matchEnv));
     }
 
     return forward ...elseFn();
