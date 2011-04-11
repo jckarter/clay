@@ -1737,387 +1737,389 @@ overload evaluateStaticCompare(a:TupleValue, b:TupleValue, op) {
 }
 
 evaluatePrimitive(kind, args) {
-    switch (kind) {
-    case PRIM_StaticInt? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, IntValue)));
-    }
-    case PRIM_StaticPlus : {
-        var a = oneInt(args);
-        return ValueList(+a);
-    }
-    case PRIM_StaticMinus : {
-        var a = oneInt(args);
-        return ValueList(-a);
-    }
-    case PRIM_StaticAdd : {
-        var a, b = ...twoInts(args);
-        return ValueList(a + b);
-    }
-    case PRIM_StaticSubtract : {
-        var a, b = ...twoInts(args);
-        return ValueList(a - b);
-    }
-    case PRIM_StaticMultiply : {
-        var a, b = ...twoInts(args);
-        return ValueList(a * b);
-    }
-    case PRIM_StaticQuotient : {
-        var a, b = ...twoInts(args);
-        return ValueList(a / b);
-    }
-    case PRIM_StaticRemainder : {
-        var a, b = ...twoInts(args);
-        return ValueList(a % b);
-    }
-    case PRIM_StaticIntegers : {
-        var a = Int64(oneInt(args));
-        if (a < 0)
-            matchFailureError("expecting a non-negative integer");
-        return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
-    }
-
-    case PRIM_StaticUInt : {
-        var a = toUInt64(*oneInt(args));
-        return ValueList(IntValue(StaticUIntValue(a)));
-    }
-
-    case PRIM_StaticInt : {
-        var a = Int64(*oneInt(args));
-        return ValueList(IntValue(StaticIntValue(a)));
-    }
-
-    case PRIM_StaticBool? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, BoolValue)));
-    }
-    case PRIM_StaticEquals? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompareEquality(a, b, equals?);
-    }
-    case PRIM_StaticNotEquals? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompareEquality(a, b, notEquals?);
-    }
-    case PRIM_StaticLesser? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompare(*a, *b, lesser?);
-    }
-    case PRIM_StaticLesserEquals? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompare(*a, *b, lesserEquals?);
-    }
-    case PRIM_StaticGreater? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompare(*a, *b, greater?);
-    }
-    case PRIM_StaticGreaterEquals? : {
-        var a, b = ...twoValues(args);
-        return evaluateStaticCompare(*a, *b, greaterEquals?);
-    }
-
-    case PRIM_StaticBitand : {
-        var a, b = ...twoInts(args);
-        return ValueList(bitwiseAnd(a, b));
-    }
-    case PRIM_StaticBitor : {
-        var a, b = ...twoInts(args);
-        return ValueList(bitwiseOr(a, b));
-    }
-    case PRIM_StaticBitxor : {
-        var a, b = ...twoInts(args);
-        return ValueList(bitwiseXor(a, b));
-    }
-    case PRIM_StaticBitnot : {
-        var a = oneInt(args);
-        return ValueList(bitwiseNot(a));
-    }
-    case PRIM_StaticBitshl : {
-        var a, b = ...twoInts(args);
-        return ValueList(shiftLeft(a, b));
-    }
-    case PRIM_StaticBitshr : {
-        var a, b = ...twoInts(args);
-        return ValueList(shiftRight(a, b));
-    }
-
-    case PRIM_StaticChar? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, CharValue)));
-    }
-    case PRIM_StaticString? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, StringValue)));
-    }
-    case PRIM_StaticStringSize : {
-        var s = oneString(args);
-        return ValueList(IntValue(StaticIntValue(Int64(size(s)))));
-    }
-    case PRIM_StaticStringSlice : {
-        var s, i_, j_ = ...stringIntInt(args);
-        var i = Int64(i_);
-        var j = Int64(j_);
-        if ((i < 0) or (i > size(s)))
-            matchFailureError("invalid starting index: ", i);
-        if ((j < i) or (j > size(s)))
-            matchFailureError("invalid ending index: ", j);
-        return ValueList(StringValue(slice(s, i, j)));
-    }
-    case PRIM_StaticStringConcat : {
-        var a = nStrings(args);
-        var result = String();
-        for (s in a)
-            push(result, move(s));
-        return ValueList(StringValue(move(result)));
-    }
-    case PRIM_StaticStringChar : {
-        var s, i_ = ...stringInt(args);
-        var i = Int64(i_);
-
-        if ((i < 0) or (i >= size(s)))
-            matchFailureError("invalid index into string: ", i);
-        return ValueList(CharValue(s[i]));
-    }
-    case PRIM_StaticStringChars : {
-        var s = oneString(args);
-        return ValueList(mapped(c => Value(CharValue(c)), s));
-    }
-    case PRIM_StaticStringFromChars : {
-        var s = nChars(args);
-        return ValueList(StringValue(s));
-    }
-
-    case PRIM_StaticTuple? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, TupleValue)));
-    }
-    case PRIM_StaticTuple : {
-        return ValueList(TupleValue(args));
-    }
-    case PRIM_StaticTupleSize : {
-        var a = oneTuple(args);
-        return ValueList(IntValue(Int(size(a))));
-    }
-    case PRIM_StaticTupleElement : {
-        var a, i_ = ...tupleInt(args);
-        var i = Int64(i_);
-        if ((i < 0) or (i > size(a)))
-            matchFailureError("tuple index out of range");
-        return ValueList(a[i]);
-    }
-    case PRIM_StaticTupleElements : {
-        return oneTuple(args);
-    }
-
-    case PRIM_StaticSymbol? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, Symbol)));
-    }
-    case PRIM_StaticSymbolBody : {
-        var a = oneSymbol(args);
-        return symbolBody(a);
-    }
-    case PRIM_StaticSymbolAttributes : {
-        var a = oneSymbol(args);
-        return symbolAttributes(a);
-    }
-    case PRIM_StaticModule : {
-        var a = oneValue(args);
-        return ValueList(match(a,
-            SymbolHead, a ref=> ModuleValue(a.module),
-            Symbol, a ref=> ModuleValue(a.head.module),
-            Primitive, p ref=> ModuleValue(primitivesModule(getProgram())),
-            RTPrimitive, p ref=> ModuleValue(primitivesModule(getProgram())),
-            MatchDefault, x ref=> {
-                matchFailureError("expecting a symbol");
-                return ModuleValue();
-            },
-        ));
-    }
-    case PRIM_StaticModule? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, ModuleValue)));
-    }
-    case PRIM_StaticModuleMember : {
-        var module, member = ...moduleString(args);
-        return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
-    }
-
-    case PRIM_StaticModuleMember? : {
-        var module, member = ...moduleString(args);
-        return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
-    }
-
-    case PRIM_StaticLambda? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, StaticLambdaValue)));
-    }
-
-    case PRIM_LambdaSymbol? : {
-        var a = oneValue(args);
-        return ValueList(BoolValue(variantIs?(a, RuntimeLambdaValue)));
-    }
-
-    case PRIM_LambdaCapturesByReference? : {
-        var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
-        return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
-    }
-
-    case PRIM_LambdaCapturesByValue? : {
-        var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
-        return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
-    }
-
-    case PRIM_LambdaStateless? : {
-        var stateless? = withOneLambda(args, l ref=> empty?(l.value.capturedOrder));
-        return ValueList(BoolValue(stateless?));
-    }
-
-    case PRIM_LambdaString : {
-        var sourceString = withOneLambda(args, l ref=> ast.getSourceString(l.value));
-        return ValueList(StringValue(move(sourceString)));
-    }
-
-    case PRIM_LambdaLocation : {
-        var path, line, column
-            = ...withOneLambda(args, l ref=> ...ast.getFileLocation(l.value));
-
-        return ValueList(
-            Value(StringValue(path)),
-            Value(IntValue(StaticIntValue(Int64(line)))),
-            Value(IntValue(StaticIntValue(Int64(column))))
-        );
-    }
-
-    case PRIM_Returns? : {
-        var l = oneNullaryLambda(args);
-        return ValueList(BoolValue(just?(rtLambdaResults(l))));
-    }
-
-    case PRIM_Type : {
-        var l = oneNullaryLambda(args);
-        return maybe(rtLambdaResults(l),
-            vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
-            ()   ref=> ValueList(),
-        );
-    }
-
-    case PRIM_StaticDefined? : {
-        var callable = oneValue(args);
-        var defined? = true;
-        try {
-            evaluateCall(callable, ValueList());
-        } catch (e:MatchError) {
-            //displayError(e);
-            defined? = false;
+    return withStaticCall(Value(Primitive(kind)), args, () ref=> {
+        switch (kind) {
+        case PRIM_StaticInt? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, IntValue)));
         }
-        return ValueList(BoolValue(defined?));
-    }
-
-    case PRIM_Defined? : {
-        var l = oneNullaryLambda(args);
-        var defined? = true;
-        try {
-            rtLambdaResults(l);
-        } catch (e:MatchError) {
-            //displayError(e);
-            defined? = false;
+        case PRIM_StaticPlus : {
+            var a = oneInt(args);
+            return ValueList(+a);
         }
-        return ValueList(BoolValue(defined?));
-    }
-
-    case PRIM_StaticError : {
-        throw MatchError(StaticError(args));
-    }
-
-    case PRIM_StaticObserve : {
-        observe(#StaticObserve, args);
-        return ValueList(args);
-    }
-
-    case PRIM_StaticAssert : {
-        if (empty?(args))
-            matchFailureError("StaticAssert requires at least one argument");
-        if (args[0] == Value(BoolValue(false))) {
-            if (size(args) == 1)
-                throw StaticAssertionError(ValueList(StringValue(String("assertion failure"))));
-            else
-                throw StaticAssertionError(ValueList(slicedFrom(args, 1)));
+        case PRIM_StaticMinus : {
+            var a = oneInt(args);
+            return ValueList(-a);
         }
-        return ValueList(TupleValue());
-    }
+        case PRIM_StaticAdd : {
+            var a, b = ...twoInts(args);
+            return ValueList(a + b);
+        }
+        case PRIM_StaticSubtract : {
+            var a, b = ...twoInts(args);
+            return ValueList(a - b);
+        }
+        case PRIM_StaticMultiply : {
+            var a, b = ...twoInts(args);
+            return ValueList(a * b);
+        }
+        case PRIM_StaticQuotient : {
+            var a, b = ...twoInts(args);
+            return ValueList(a / b);
+        }
+        case PRIM_StaticRemainder : {
+            var a, b = ...twoInts(args);
+            return ValueList(a % b);
+        }
+        case PRIM_StaticIntegers : {
+            var a = Int64(oneInt(args));
+            if (a < 0)
+                matchFailureError("expecting a non-negative integer");
+            return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
+        }
 
-    case PRIM_StaticName : {
-        var a = oneValue(args);
-        var s = String();
-        printReprTo(s, a);
-        return ValueList(StringValue(s));
-    }
-    case PRIM_StaticQualifiedName : {
-        var a = oneValue(args);
-        return ValueList(StringValue(qualifiedValueString(a)));
-    }
+        case PRIM_StaticUInt : {
+            var a = toUInt64(*oneInt(args));
+            return ValueList(IntValue(StaticUIntValue(a)));
+        }
 
-    case PRIM_CallDefinedForSymbol? : {
-        if (size(args) < 1)
-            matchFailureError("CallDefinedForSymbol? requires at least one argument");
-        var callable = args[0];
-        var callArgs = map(refTypeToRTArgument, slicedFrom(args, 1));
+        case PRIM_StaticInt : {
+            var a = Int64(*oneInt(args));
+            return ValueList(IntValue(StaticIntValue(a)));
+        }
 
-        var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
-        return ValueList(BoolValue(callDefined?));
-    }
+        case PRIM_StaticBool? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, BoolValue)));
+        }
+        case PRIM_StaticEquals? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompareEquality(a, b, equals?);
+        }
+        case PRIM_StaticNotEquals? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompareEquality(a, b, notEquals?);
+        }
+        case PRIM_StaticLesser? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompare(*a, *b, lesser?);
+        }
+        case PRIM_StaticLesserEquals? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompare(*a, *b, lesserEquals?);
+        }
+        case PRIM_StaticGreater? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompare(*a, *b, greater?);
+        }
+        case PRIM_StaticGreaterEquals? : {
+            var a, b = ...twoValues(args);
+            return evaluateStaticCompare(*a, *b, greaterEquals?);
+        }
 
-    case PRIM_StaticCallDefined? : {
-        if (size(args) < 1)
-            matchFailureError("StaticCallDefined? requires at least one argument");
-        var callable = args[0];
-        var callArgs = ValueList(slicedFrom(args,1));
+        case PRIM_StaticBitand : {
+            var a, b = ...twoInts(args);
+            return ValueList(bitwiseAnd(a, b));
+        }
+        case PRIM_StaticBitor : {
+            var a, b = ...twoInts(args);
+            return ValueList(bitwiseOr(a, b));
+        }
+        case PRIM_StaticBitxor : {
+            var a, b = ...twoInts(args);
+            return ValueList(bitwiseXor(a, b));
+        }
+        case PRIM_StaticBitnot : {
+            var a = oneInt(args);
+            return ValueList(bitwiseNot(a));
+        }
+        case PRIM_StaticBitshl : {
+            var a, b = ...twoInts(args);
+            return ValueList(shiftLeft(a, b));
+        }
+        case PRIM_StaticBitshr : {
+            var a, b = ...twoInts(args);
+            return ValueList(shiftRight(a, b));
+        }
 
-        if (variantIs?(callable, Primitive))
-            matchFailureError("StaticCallDefined? for primitives not yet supported");
+        case PRIM_StaticChar? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, CharValue)));
+        }
+        case PRIM_StaticString? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, StringValue)));
+        }
+        case PRIM_StaticStringSize : {
+            var s = oneString(args);
+            return ValueList(IntValue(StaticIntValue(Int64(size(s)))));
+        }
+        case PRIM_StaticStringSlice : {
+            var s, i_, j_ = ...stringIntInt(args);
+            var i = Int64(i_);
+            var j = Int64(j_);
+            if ((i < 0) or (i > size(s)))
+                matchFailureError("invalid starting index: ", i);
+            if ((j < i) or (j > size(s)))
+                matchFailureError("invalid ending index: ", j);
+            return ValueList(StringValue(slice(s, i, j)));
+        }
+        case PRIM_StaticStringConcat : {
+            var a = nStrings(args);
+            var result = String();
+            for (s in a)
+                push(result, move(s));
+            return ValueList(StringValue(move(result)));
+        }
+        case PRIM_StaticStringChar : {
+            var s, i_ = ...stringInt(args);
+            var i = Int64(i_);
 
-        var callDefined? = ifStaticOverload(getProgram(), callable, callArgs,
-            (o, e) => true,
-            () => false,
-        );
-        return ValueList(BoolValue(callDefined?));
-    }
+            if ((i < 0) or (i >= size(s)))
+                matchFailureError("invalid index into string: ", i);
+            return ValueList(CharValue(s[i]));
+        }
+        case PRIM_StaticStringChars : {
+            var s = oneString(args);
+            return ValueList(mapped(c => Value(CharValue(c)), s));
+        }
+        case PRIM_StaticStringFromChars : {
+            var s = nChars(args);
+            return ValueList(StringValue(s));
+        }
 
-    case PRIM_StaticCountValues : {
-        return ValueList(IntValue(StaticIntValue(Int64(size(args)))));
-    }
+        case PRIM_StaticTuple? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, TupleValue)));
+        }
+        case PRIM_StaticTuple : {
+            return ValueList(TupleValue(args));
+        }
+        case PRIM_StaticTupleSize : {
+            var a = oneTuple(args);
+            return ValueList(IntValue(Int(size(a))));
+        }
+        case PRIM_StaticTupleElement : {
+            var a, i_ = ...tupleInt(args);
+            var i = Int64(i_);
+            if ((i < 0) or (i > size(a)))
+                matchFailureError("tuple index out of range");
+            return ValueList(a[i]);
+        }
+        case PRIM_StaticTupleElements : {
+            return oneTuple(args);
+        }
 
-    case PRIM_PlatformCPUName :
-        return ValueList(StringValue(printString(getProgram().targetInfo.cpu)));
+        case PRIM_StaticSymbol? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, Symbol)));
+        }
+        case PRIM_StaticSymbolBody : {
+            var a = oneSymbol(args);
+            return symbolBody(a);
+        }
+        case PRIM_StaticSymbolAttributes : {
+            var a = oneSymbol(args);
+            return symbolAttributes(a);
+        }
+        case PRIM_StaticModule : {
+            var a = oneValue(args);
+            return ValueList(match(a,
+                SymbolHead, a ref=> ModuleValue(a.module),
+                Symbol, a ref=> ModuleValue(a.head.module),
+                Primitive, p ref=> ModuleValue(primitivesModule(getProgram())),
+                RTPrimitive, p ref=> ModuleValue(primitivesModule(getProgram())),
+                MatchDefault, x ref=> {
+                    matchFailureError("expecting a symbol");
+                    return ModuleValue();
+                },
+            ));
+        }
+        case PRIM_StaticModule? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, ModuleValue)));
+        }
+        case PRIM_StaticModuleMember : {
+            var module, member = ...moduleString(args);
+            return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
+        }
 
-    case PRIM_PlatformCPUFamilyName :
-        return ValueList(StringValue(printString(getProgram().targetInfo.cpuFamily)));
+        case PRIM_StaticModuleMember? : {
+            var module, member = ...moduleString(args);
+            return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
+        }
 
-    case PRIM_PlatformCPUPointerBits :
-        return ValueList(IntValue(StaticIntValue(Int64(getProgram().targetInfo.cpuPointerBits))));
+        case PRIM_StaticLambda? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, StaticLambdaValue)));
+        }
 
-    case PRIM_PlatformName :
-        return ValueList(StringValue(printString(getProgram().targetInfo.platform)));
+        case PRIM_LambdaSymbol? : {
+            var a = oneValue(args);
+            return ValueList(BoolValue(variantIs?(a, RuntimeLambdaValue)));
+        }
 
-    case PRIM_PlatformFamilyName :
-        return ValueList(StringValue(printString(getProgram().targetInfo.platformFamily)));
+        case PRIM_LambdaCapturesByReference? : {
+            var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
+            return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
+        }
 
-    case PRIM_PlatformCodegen :
-        return ValueList(StringValue(String("c")));
-    case PRIM_PlatformCodegenDialect :
-        return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
+        case PRIM_LambdaCapturesByValue? : {
+            var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
+            return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
+        }
 
-    case PRIM_LLMangle : {
-        var s = oneString(args);
-        return ValueList(StringValue(mangleString(s)));
-    }
+        case PRIM_LambdaStateless? : {
+            var stateless? = withOneLambda(args, l ref=> empty?(l.value.capturedOrder));
+            return ValueList(BoolValue(stateless?));
+        }
 
-    default : {
-        assert(false, "invalid primitive");
-        return ValueList();
-    }
-    }
+        case PRIM_LambdaString : {
+            var sourceString = withOneLambda(args, l ref=> ast.getSourceString(l.value));
+            return ValueList(StringValue(move(sourceString)));
+        }
+
+        case PRIM_LambdaLocation : {
+            var path, line, column
+                = ...withOneLambda(args, l ref=> ...ast.getFileLocation(l.value));
+
+            return ValueList(
+                Value(StringValue(path)),
+                Value(IntValue(StaticIntValue(Int64(line)))),
+                Value(IntValue(StaticIntValue(Int64(column))))
+            );
+        }
+
+        case PRIM_Returns? : {
+            var l = oneNullaryLambda(args);
+            return ValueList(BoolValue(just?(rtLambdaResults(l))));
+        }
+
+        case PRIM_Type : {
+            var l = oneNullaryLambda(args);
+            return maybe(rtLambdaResults(l),
+                vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
+                ()   ref=> ValueList(),
+            );
+        }
+
+        case PRIM_StaticDefined? : {
+            var callable = oneValue(args);
+            var defined? = true;
+            try {
+                evaluateCall(callable, ValueList());
+            } catch (e:MatchError) {
+                //displayError(e);
+                defined? = false;
+            }
+            return ValueList(BoolValue(defined?));
+        }
+
+        case PRIM_Defined? : {
+            var l = oneNullaryLambda(args);
+            var defined? = true;
+            try {
+                rtLambdaResults(l);
+            } catch (e:MatchError) {
+                //displayError(e);
+                defined? = false;
+            }
+            return ValueList(BoolValue(defined?));
+        }
+
+        case PRIM_StaticError : {
+            throw MatchError(StaticError(args));
+        }
+
+        case PRIM_StaticObserve : {
+            observe(#StaticObserve, args);
+            return ValueList(args);
+        }
+
+        case PRIM_StaticAssert : {
+            if (empty?(args))
+                matchFailureError("StaticAssert requires at least one argument");
+            if (args[0] == Value(BoolValue(false))) {
+                if (size(args) == 1)
+                    throw StaticAssertionError(ValueList(StringValue(String("assertion failure"))));
+                else
+                    throw StaticAssertionError(ValueList(slicedFrom(args, 1)));
+            }
+            return ValueList(TupleValue());
+        }
+
+        case PRIM_StaticName : {
+            var a = oneValue(args);
+            var s = String();
+            printReprTo(s, a);
+            return ValueList(StringValue(s));
+        }
+        case PRIM_StaticQualifiedName : {
+            var a = oneValue(args);
+            return ValueList(StringValue(qualifiedValueString(a)));
+        }
+
+        case PRIM_CallDefinedForSymbol? : {
+            if (size(args) < 1)
+                matchFailureError("CallDefinedForSymbol? requires at least one argument");
+            var callable = args[0];
+            var callArgs = map(refTypeToRTArgument, slicedFrom(args, 1));
+
+            var callDefined? = ifOverload(getProgram(), callable, callArgs, s => true, () => false);
+            return ValueList(BoolValue(callDefined?));
+        }
+
+        case PRIM_StaticCallDefined? : {
+            if (size(args) < 1)
+                matchFailureError("StaticCallDefined? requires at least one argument");
+            var callable = args[0];
+            var callArgs = ValueList(slicedFrom(args,1));
+
+            if (variantIs?(callable, Primitive))
+                matchFailureError("StaticCallDefined? for primitives not yet supported");
+
+            var callDefined? = ifStaticOverload(getProgram(), callable, callArgs,
+                (o, e) => true,
+                () => false,
+            );
+            return ValueList(BoolValue(callDefined?));
+        }
+
+        case PRIM_StaticCountValues : {
+            return ValueList(IntValue(StaticIntValue(Int64(size(args)))));
+        }
+
+        case PRIM_PlatformCPUName :
+            return ValueList(StringValue(printString(getProgram().targetInfo.cpu)));
+
+        case PRIM_PlatformCPUFamilyName :
+            return ValueList(StringValue(printString(getProgram().targetInfo.cpuFamily)));
+
+        case PRIM_PlatformCPUPointerBits :
+            return ValueList(IntValue(StaticIntValue(Int64(getProgram().targetInfo.cpuPointerBits))));
+
+        case PRIM_PlatformName :
+            return ValueList(StringValue(printString(getProgram().targetInfo.platform)));
+
+        case PRIM_PlatformFamilyName :
+            return ValueList(StringValue(printString(getProgram().targetInfo.platformFamily)));
+
+        case PRIM_PlatformCodegen :
+            return ValueList(StringValue(String("c")));
+        case PRIM_PlatformCodegenDialect :
+            return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
+
+        case PRIM_LLMangle : {
+            var s = oneString(args);
+            return ValueList(StringValue(mangleString(s)));
+        }
+
+        default : {
+            assert(false, "invalid primitive");
+            return ValueList();
+        }
+        }
+    });
 }
 
 private alnum?(c)
