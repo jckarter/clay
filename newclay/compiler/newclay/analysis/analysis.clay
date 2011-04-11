@@ -2352,15 +2352,22 @@ overload callableOverloads(program, callable:RuntimeLambdaValue) {
 ifOverload(program, callable, args, thenFn, elseFn) {
     var overloads = callableOverloads(program, *callable);
     if (just?(overloads)) {
+        
         for (x in reversed(just(overloads))) {
+            var entry = RuntimeMatchEntry(callable, args, x);
+            traceEnter(entry);
             var result = matchOverload(x, callable, args);
+            traceExit(entry, maybe(result, x => "matched", () => "not matched"));
             if (just?(result))
                 return forward ...thenFn(just(result));
         }
     }
 
     for (x in reversed(program.patternOverloads)) {
+        var entry = RuntimeMatchEntry(callable, args, x);
+        traceEnter(entry);
         var result = matchOverload(x, callable, args);
+        traceExit(entry, maybe(result, x => "matched", () => "not matched"));
         if (just?(result))
             return forward ...thenFn(just(result));
     }
