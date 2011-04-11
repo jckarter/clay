@@ -145,24 +145,23 @@ private getFileLocation2(location) {
 //
 
 getSourceString(x) {
-    var location = getLocation(x);
-    var sourceTokens = location.tokens;
-    var firstTokenIndex = location.tokenRange.begin;
-    var lastTokenIndex = location.tokenRange.end;
-    return getSourceString2(sourceTokens, firstTokenIndex, lastTokenIndex);
+    return getSourceStringRange(x, x);
 }
 
 overload getSourceString(x:ExprList) {
     if (empty?(x))
         return String("");
-    var location0 = getLocation(front(x));
-    var sourceTokens = location0.tokens;
-    var firstTokenIndex = location0.tokenRange.begin;
-    var lastTokenIndex = getLocation(back(x)).tokenRange.end;
-    return getSourceString2(sourceTokens, firstTokenIndex, lastTokenIndex);
+    return getSourceStringRange(front(x), back(x));
 }
 
-private getSourceString2(sourceTokens, firstTokenIndex, lastTokenIndex) {
+getSourceStringRange(firstNode, lastNode) {
+    var firstLocation = getLocation(firstNode);
+    var lastLocation = getLocation(lastNode);
+    assert(firstLocation.tokens == lastLocation.tokens);
+    var sourceTokens = firstLocation.tokens;
+    var firstTokenIndex = firstLocation.tokenRange.begin;
+    var lastTokenIndex = lastLocation.tokenRange.begin;
+
     var beginChar, endChar = sourceTokens.vector[firstTokenIndex].range.begin,
                              sourceTokens.vector[lastTokenIndex].range.end - 1;
     return slice(sourceTokens.file.data, beginChar, endChar);

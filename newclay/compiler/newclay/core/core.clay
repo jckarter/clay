@@ -1669,6 +1669,8 @@ variant CompilationEntry = SymbolBodyEntry
                          | CallAnalysisEntry
                          | GlobalAnalysisEntry
                          | CallCompilationEntry
+                         | StaticMatchEntry
+                         | RuntimeMatchEntry
                          ;
 
 record SymbolBodyEntry (
@@ -1695,6 +1697,18 @@ record CallCompilationEntry (
     args: RTValues,
 );
 
+record StaticMatchEntry (
+    callable: Value,
+    args: ValueList,
+    oload: StaticOverload,
+);
+
+record RuntimeMatchEntry (
+    callable: Value,
+    args: RTValues,
+    oload: Overload,
+);
+
 overload printTo(stream, x:SymbolBodyEntry) {
     printTo(stream, "eval symbol ");
     printReprTo(stream, x.symbolHead);
@@ -1713,10 +1727,23 @@ overload printTo(stream, x:StaticCallEntry) {
     printTo(stream, ")");
 }
 
-overload printTo(stream, x:CallAnalysisEntry) {
-    printTo(stream, "compile ");
+overload printTo(stream, x:StaticMatchEntry) {
+    printTo(stream, "match #");
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ") to ");
+    var file, line, col = ...ast.getFileLocation(x.oload.ast);
+    printTo(stream, file, "(", line, ",", col, ")");
+}
+
+overload printTo(stream, x:RuntimeMatchEntry) {
+    printTo(stream, "match ");
     printReprTo(stream, x.callable);
     printTo(stream, ArgumentList(x.args));
+    printTo(stream, " to ");
+    var file, line, col = ...ast.getFileLocation(x.oload.ast);
+    printTo(stream, file, "(", line, ",", col, ")");
 }
 
 overload printTo(stream, x:ast.SingleBinding) {

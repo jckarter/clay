@@ -1509,14 +1509,20 @@ ifStaticOverload(program:Program, callable:Value, args:ValueList, thenFn, elseFn
             else
                 program.symbolStaticOverloads;
         for (x in reversed(staticOverloads)) {
+            var entry = StaticMatchEntry(callable, args, x);
+            traceEnter(entry);
             var env = matchStaticOverload(x, callable, args);
+            traceExit(entry, maybe(env, x => "matched", () => "not matched"));
             if (just?(env))
                 return forward ...thenFn(x, just(env));
         }
     }
 
     for (x in reversed(program.patternStaticOverloads)) {
+        var entry = StaticMatchEntry(callable, args, x);
+        traceEnter(entry);
         var env = matchStaticOverload(x, callable, args);
+        traceExit(entry, maybe(env, x => "matched", () => "not matched"));
         if (just?(env))
             return forward ...thenFn(x, just(env));
     }
