@@ -2292,10 +2292,10 @@ inlineAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_INLI
 nothrowAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_NOTHROW);
 noreturnAttribute?(attributes) = any?(attributes, a => a.kind == ast.OVERLOAD_NORETURN);
 
-matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
+matchOverload(o:Overload, callable:Value, args:RTValues) MatchResult[Specialization] {
     ref formalArgs = o.ast.definition.args;
     if (not arityMatches?(formalArgs, args))
-        return nothing(Specialization);
+        return MatchResult[Specialization](MatchFailedArgCount());
     var pvars = topLevelItemPatternVars(o);
     var s = Specialization(o, callable);
     if (inlineAttribute?(o.ast.definition.attributes))
@@ -2303,16 +2303,16 @@ matchOverload(o:Overload, callable:Value, args:RTValues) Maybe[Specialization] {
     s.env = initializeMatch(o.env, pvars);
     var callablePattern = evaluatePattern(o.ast.target, s.env);
     if (not unify(callablePattern, callable))
-        return nothing(Specialization);
+        return MatchResult[Specialization](MatchFailedPattern());
     if (not unifyArguments(s, formalArgs, args))
-        return nothing(Specialization);
+        return MatchResult[Specialization](MatchFailedPattern());
     assert(size(s.args) == size(args));
     s.internalArgs = s.args;
     verifyPatternVars(pvars, s.env);
     if (not testPredicate(o.ast.definition.predicate, s.env))
-        return nothing(Specialization);
+        return MatchResult[Specialization](MatchFailedPredicate());
     bindNamedReturns(s);
-    return Maybe(s);
+    return MatchResult[Specialization](MatchSuccess(s));
 }
 
 
@@ -2352,24 +2352,21 @@ overload callableOverloads(program, callable:RuntimeLambdaValue) {
 ifOverload(program, callable, args, thenFn, elseFn) {
     var overloads = callableOverloads(program, *callable);
     if (just?(overloads)) {
-        
         for (x in reversed(just(overloads))) {
-            var entry = RuntimeMatchEntry(callable, args, x);
-            traceEnter(entry);
-            var result = matchOverload(x, callable, args);
-            traceExit(entry, maybe(result, x => "matched", () => "not matched"));
-            if (just?(result))
-                return forward ...thenFn(just(result));
+            var result = withRuntimeMatch(x, callable, args,
+                () ref=> matchOverload(x, callable, args)
+            );
+            if (matchSuccess?(result))
+                return forward ...thenFn(matchResult(result));
         }
     }
 
     for (x in reversed(program.patternOverloads)) {
-        var entry = RuntimeMatchEntry(callable, args, x);
-        traceEnter(entry);
-        var result = matchOverload(x, callable, args);
-        traceExit(entry, maybe(result, x => "matched", () => "not matched"));
-        if (just?(result))
-            return forward ...thenFn(just(result));
+        var result = withRuntimeMatch(x, callable, args,
+            () ref=> matchOverload(x, callable, args)
+        );
+        if (matchSuccess?(result))
+            return forward ...thenFn(matchResult(result));
     }
     return forward ...elseFn();
 }
