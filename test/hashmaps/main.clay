@@ -1,6 +1,18 @@
 
 even?(x) = (x % 2 == 0);
 
+printSortedContents(h) {
+    var contents = Vector[String]();
+    for (k,v in items(h)) {
+        var str = String();
+        printTo(str, k, ", ", v);
+        push(contents, move(str));
+    }
+    sort(contents);
+    for (str in contents)
+        println(str);
+}
+
 main() {
     var h = HashMap[Int,Int]();
 
@@ -15,26 +27,22 @@ main() {
         }
     }
 
-    for (k,v in items(h))
-        println(k, ", ", v);
+    printSortedContents(h);
 
     var hh = HashMap[Int,Int]();
     hh = h;
 
     println();
-    for (k,v in items(hh))
-        println(k, ", ", v);
+    printSortedContents(hh);
 
     hh = hh;
 
     println();
-    for (k,v in items(hh))
-        println(k, ", ", v);
+    printSortedContents(hh);
 
     clear(hh);
 
     println();
     println(size(hh));
-    for (k,v in items(hh))
-        println(k, ", ", v);
+    printSortedContents(hh);
 }
