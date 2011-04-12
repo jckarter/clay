@@ -2337,3 +2337,108 @@ external siglongjmp(
     argument1 : Int);
 
 external longjmperror();
+
+record Struct_timespec (
+    tv_sec : CLong,
+    tv_nsec : CLong,
+);
+
+alias clock_t = CULong;
+
+alias time_t = CLong;
+
+record Struct_tm (
+    tm_sec : Int,
+    tm_min : Int,
+    tm_hour : Int,
+    tm_mday : Int,
+    tm_mon : Int,
+    tm_year : Int,
+    tm_wday : Int,
+    tm_yday : Int,
+    tm_isdst : Int,
+    tm_gmtoff : CLong,
+    tm_zone : Pointer[CChar],
+);
+
+external tzname : Array[Pointer[CChar],0];
+
+external getdate_err : Int;
+
+external timezone : CLong;
+
+external daylight : Int;
+
+external asctime(
+    argument0 : Pointer[Struct_tm]) Pointer[CChar];
+
+external ("_clock") clock() CULong;
+
+external ctime(
+    argument0 : Pointer[CLong]) Pointer[CChar];
+
+external difftime(
+    argument0 : CLong,
+    argument1 : CLong) Double;
+
+external getdate(
+    argument0 : Pointer[CChar]) Pointer[Struct_tm];
+
+external gmtime(
+    argument0 : Pointer[CLong]) Pointer[Struct_tm];
+
+external localtime(
+    argument0 : Pointer[CLong]) Pointer[Struct_tm];
+
+external ("_mktime") mktime(
+    argument0 : Pointer[Struct_tm]) CLong;
+
+external ("_strftime") strftime(
+    argument0 : Pointer[CChar],
+    argument1 : CULong,
+    argument2 : Pointer[CChar],
+    argument3 : Pointer[Struct_tm]) CULong;
+
+external ("_strptime") strptime(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
+    argument2 : Pointer[Struct_tm]) Pointer[CChar];
+
+external time(
+    argument0 : Pointer[CLong]) CLong;
+
+external tzset();
+
+external asctime_r(
+    argument0 : Pointer[Struct_tm],
+    argument1 : Pointer[CChar]) Pointer[CChar];
+
+external ctime_r(
+    argument0 : Pointer[CLong],
+    argument1 : Pointer[CChar]) Pointer[CChar];
+
+external gmtime_r(
+    argument0 : Pointer[CLong],
+    argument1 : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external localtime_r(
+    argument0 : Pointer[CLong],
+    argument1 : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external posix2time(
+    argument0 : CLong) CLong;
+
+external tzsetwall();
+
+external time2posix(
+    argument0 : CLong) CLong;
+
+external timelocal(
+    argument0 : Pointer[Struct_tm]) CLong;
+
+external timegm(
+    argument0 : Pointer[Struct_tm]) CLong;
+
+external ("_nanosleep") nanosleep(
+    argument0 : Pointer[Struct_timespec],
+    argument1 : Pointer[Struct_timespec]) Int;
