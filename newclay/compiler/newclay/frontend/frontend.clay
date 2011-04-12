@@ -36,6 +36,7 @@ record FrontendOptions (
     interactorOnError?: Maybe[Bool],
     traceLoading?: Maybe[Bool],
     traceCompilation?: Maybe[Bool],
+    traceTimes?: Maybe[Bool],
 );
 
 initUniqueOption(maybeOption, value, errorFn) {
@@ -49,7 +50,7 @@ initUniqueOption(maybeOption, value, errorFn) {
 
 initOutputMode(modeVar, mode) {
     initUniqueOption(modeVar, mode, x ref=> {
-        optionError("only one of -c, -S, -E may be specified");
+        optionError("only one of -c, -S, -E, or -i may be specified");
     });
 }
 
@@ -63,7 +64,7 @@ parseFrontendOptions() {
         ("-o", WordOption, o ref=> {
             var outputFile = requireParameter(o, "no path given for -o");
             initUniqueOption(options.outputFile, String(outputFile), oldOutputFile ref=> {
-                optionError("multiple output paths given: ", oldOutputFile, ", ", outputFile);
+                optionError("multiple output filenames given: ", oldOutputFile, ", ", outputFile);
             });
         }),
         ("-cc", WordOption, o ref=> {
@@ -109,9 +110,14 @@ parseFrontendOptions() {
                 optionError("more than one -trace option given");
             });
         }),
+        ("-trace-times", WordOption, o ref=> {
+            initUniqueOption(options.traceTimes?, true, x ref=> {
+                optionError("more than one -trace-times option given");
+            });
+        }),
         ("-trace-load", WordOption, o ref=> {
             initUniqueOption(options.traceLoading?, true, x ref=> {
-                optionError("more than one -trace option given");
+                optionError("more than one -trace-load option given");
             });
         }),
         ("--help", WordOption, o ref=> { usage(); }),
@@ -119,7 +125,7 @@ parseFrontendOptions() {
         ("/?",     WordOption, o ref=> { usage(); }),
         inputFile ref=> {
             initUniqueOption(options.inputFile, String(inputFile), oldInputFile ref=> {
-                optionError("multiple input paths given: ", oldInputFile, ", ", inputFile);
+                optionError("multiple input filenames given: ", oldInputFile, ", ", inputFile);
             });
         },
     );
@@ -152,6 +158,9 @@ validateFrontendOptions(options) {
 
     if (nothing?(options.traceCompilation?))
         options.traceCompilation? = Maybe(false);
+
+    if (nothing?(options.traceTimes?))
+        options.traceTimes? = Maybe(false);
 
     if (nothing?(options.traceLoading?))
         options.traceLoading? = Maybe(false);
@@ -212,6 +221,7 @@ usage() {
     println("  -i                   - enter interactor instead of running compiler");
     println("  -ierror              - enter interactor on error");
     println("  -trace               - trace compilation");
+    println("  -trace-times         - include timestamps in compilation trace");
     println("  -trace-load          - trace module loading");
     exit(2);
 }
