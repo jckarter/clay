@@ -160,7 +160,7 @@ getSourceStringRange(firstNode, lastNode) {
     assert(firstLocation.tokens == lastLocation.tokens);
     var sourceTokens = firstLocation.tokens;
     var firstTokenIndex = firstLocation.tokenRange.begin;
-    var lastTokenIndex = lastLocation.tokenRange.begin;
+    var lastTokenIndex = lastLocation.tokenRange.end;
 
     var beginChar, endChar = sourceTokens.vector[firstTokenIndex].range.begin,
                              sourceTokens.vector[lastTokenIndex].range.end - 1;
