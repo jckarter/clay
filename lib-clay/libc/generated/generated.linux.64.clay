@@ -2952,3 +2952,148 @@ alias sigjmp_buf = Array[Struct___jmp_buf_tag,1];
 external siglongjmp(
     __env : Pointer[Struct___jmp_buf_tag],
     __val : Int);
+
+record Struct_tm (
+    tm_sec : Int,
+    tm_min : Int,
+    tm_hour : Int,
+    tm_mday : Int,
+    tm_mon : Int,
+    tm_year : Int,
+    tm_wday : Int,
+    tm_yday : Int,
+    tm_isdst : Int,
+    tm_gmtoff : CLong,
+    tm_zone : Pointer[CChar],
+);
+
+record Struct_itimerspec (
+    it_interval : Struct_timespec,
+    it_value : Struct_timespec,
+);
+
+external clock() CLong;
+
+external time(
+    __timer : Pointer[CLong]) CLong;
+
+external difftime(
+    __time1 : CLong,
+    __time0 : CLong) Double;
+
+external mktime(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external strftime(
+    __s : Pointer[CChar],
+    __maxsize : CULong,
+    __format : Pointer[CChar],
+    __tp : Pointer[Struct_tm]) CULong;
+
+external strftime_l(
+    __s : Pointer[CChar],
+    __maxsize : CULong,
+    __format : Pointer[CChar],
+    __tp : Pointer[Struct_tm],
+    __loc : __locale_t) CULong;
+
+external gmtime(
+    __timer : Pointer[CLong]) Pointer[Struct_tm];
+
+external localtime(
+    __timer : Pointer[CLong]) Pointer[Struct_tm];
+
+external gmtime_r(
+    __timer : Pointer[CLong],
+    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external localtime_r(
+    __timer : Pointer[CLong],
+    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external asctime(
+    __tp : Pointer[Struct_tm]) Pointer[CChar];
+
+external ctime(
+    __timer : Pointer[CLong]) Pointer[CChar];
+
+external asctime_r(
+    __tp : Pointer[Struct_tm],
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external ctime_r(
+    __timer : Pointer[CLong],
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external __tzname : Array[Pointer[CChar],2];
+
+external __daylight : Int;
+
+external __timezone : CLong;
+
+external tzname : Array[Pointer[CChar],2];
+
+external tzset();
+
+external daylight : Int;
+
+external timezone : CLong;
+
+external stime(
+    __when : Pointer[CLong]) Int;
+
+external timegm(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external timelocal(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external dysize(
+    __year : Int) Int;
+
+external nanosleep(
+    __requested_time : Pointer[Struct_timespec],
+    __remaining : Pointer[Struct_timespec]) Int;
+
+external clock_getres(
+    __clock_id : Int,
+    __res : Pointer[Struct_timespec]) Int;
+
+external clock_gettime(
+    __clock_id : Int,
+    __tp : Pointer[Struct_timespec]) Int;
+
+external clock_settime(
+    __clock_id : Int,
+    __tp : Pointer[Struct_timespec]) Int;
+
+external clock_nanosleep(
+    __clock_id : Int,
+    __flags : Int,
+    __req : Pointer[Struct_timespec],
+    __rem : Pointer[Struct_timespec]) Int;
+
+external clock_getcpuclockid(
+    __pid : Int,
+    __clock_id : Pointer[Int]) Int;
+
+external timer_create(
+    __clock_id : Int,
+    __evp : OpaquePointer,
+    __timerid : Pointer[timer_t]) Int;
+
+external timer_delete(
+    __timerid : timer_t) Int;
+
+external timer_settime(
+    __timerid : timer_t,
+    __flags : Int,
+    __value : Pointer[Struct_itimerspec],
+    __ovalue : Pointer[Struct_itimerspec]) Int;
+
+external timer_gettime(
+    __timerid : timer_t,
+    __value : Pointer[Struct_itimerspec]) Int;
+
+external timer_getoverrun(
+    __timerid : timer_t) Int;
