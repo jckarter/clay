@@ -1,5 +1,21 @@
+import libc.(strftime, localtime, time_t, time);
+
 alias Map[K,V] = HashMap[K,V];
 alias Set[K] = HashSet[K];
+
+
+//
+// printTimestampTo
+//
+
+printTimestampTo(stream) {
+    var t = time_t();
+    time(&t);
+    var tp = localtime(&t);
+    var s = Array[CChar, 10]();
+    strftime(begin(s), SizeT(10), cstring("%H:%M:%S"), tp);
+    printTo(stream, CStringRef(begin(s)));
+}
 
 
 //

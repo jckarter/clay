@@ -1771,13 +1771,19 @@ overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-record CompilationTrace (trace?:Bool, depth:UInt);
-private var _traceCompilation = CompilationTrace(false, 0u);
+record CompilationTrace (trace?:Bool, traceTime?:Bool, depth:UInt);
+private var _traceCompilation = CompilationTrace(false, false, 0u);
 
 traceCompilation(trace?:Bool) { _traceCompilation.trace? = trace?; }
+traceTime(trace?:Bool) { _traceCompilation.traceTime? = trace?; }
 
 traceEnter(entry) {
     if (_traceCompilation.trace?) {
+        if (_traceCompilation.traceTime?) {
+            printTimestampTo(stdout);
+            print("  ");
+        }
+
         for (i in range(_traceCompilation.depth))
             print(' ');
 
@@ -1789,6 +1795,11 @@ traceEnter(entry) {
 
 traceExit(entry, results) {
     if (_traceCompilation.trace?) {
+        if (_traceCompilation.traceTime?) {
+            printTimestampTo(stdout);
+            print("  ");
+        }
+
         dec(_traceCompilation.depth);
 
         for (i in range(_traceCompilation.depth))
