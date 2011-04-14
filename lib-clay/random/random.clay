@@ -1,33 +1,66 @@
+import libc;
 
-import random.platform as p;
+// Implementation of XOR-shift RNGs by George Marsaglia  
+record XORShiftRNG(
+  w : UInt32,
+  x : UInt32,
+  y : UInt32,
+  z : UInt32
+);
 
-
-//
-// random, randomInt
-//
+overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
-random() {
-    var a, b = UInt(0), UInt(0);
-    while (a == b) {
-        a = p.random();
-        b = p.random();
-    }
-    if (a < b)
-        return Double(a) / b;
-    else
-        return Double(b) / a;
+procedure random;
+
+[I | Integer?(I) and TypeSize(I) <= 32] overload random(r, static I) = I(random(r, UInt32));
+
+overload random(r : XORShiftRNG, static UInt32){
+  var t = xsl(r.x, 15);
+  r.x = r.y;
+  r.y = r.z;
+  r.z = r.w;
+  r.w = xor(xsr(r.w, 21), xsr(t, 4));
+
+  return r.w;
 }
 
-[I | Integer?(I)]
-randomInt(max:I) = I(random() * max);
+overload random(r, static UInt64){
+  var x = UInt64(random(r, UInt32));
+  var y = UInt64(random(r, UInt32));
+
+  return bitwiseOr(shiftLeft(x, 32), y);
+}
+
+overload random(r, static Int64) = Int64(random(r, UInt64));
+
+overload random(r, static Float64){
+  var x = mask(random(r, UInt32), 26);
+  var y = mask(random(r, UInt32), 27);
+
+  return Double(shiftLeft(UInt64(x), 27) + y) / shiftLeft(Int64(1), 53);
+}
+
+overload random(r, static Float32) = mask(random(r, UInt32), 24) / Float32(shiftLeft(1, 24));
+
+[n, T] overload random(r, static Array[T, n]){
+  var result = Array[T, n]();
+
+  for(i in range(n)) result[i] <-- random(r, i);
+
+  return move(result);
+}
+
+procedure randomRange;
+
+// TODO: This is a bit of a rubbish default implementation
+// It works fine for integers (I think) but is almost certainly wrong for floats
+// Either way it could be a lot faster.
+[T] overload randomRange(rnd, from : T, to : T) = from + T(random(rnd, Double) * (to - from));
 
 
-
-//
-// seedRandom
-//
 
-[I | Integer?(I)]
-seedRandom(x:I) { p.seedRandom(UInt(x)); }
-
-overload seedRandom() { p.seedRandomWithTime(); }
+private xor(x, y) = bitwiseXor(x, y);
+private xsl(x, n) = xor(x, shiftLeft(x, n));
+private xsr(x, n) = xor(x, shiftRight(x, n));
+private mask(x, n) = bitwiseAnd(x, shiftLeft(1, n) - 1);
+private pr() = UInt32(libc.random());
