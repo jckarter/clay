@@ -281,6 +281,12 @@ external _IO_seekpos(
 external _IO_free_backup_area(
     argument0 : Pointer[_IO_FILE]);
 
+alias va_list = __gnuc_va_list;
+
+alias off_t = CLong;
+
+alias ssize_t = CLong;
+
 alias fpos_t = _G_fpos_t;
 
 external stdin : Pointer[Struct__IO_FILE];
@@ -625,6 +631,8 @@ external funlockfile(
 
 alias wchar_t = Int;
 
+alias __WAIT_STATUS = AUnionType;
+
 record UnnamedStruct5 (
     quot : Int,
     rem : Int,
@@ -736,19 +744,17 @@ alias nlink_t = CULong;
 
 alias uid_t = UInt;
 
-alias off_t = CLong;
-
 alias pid_t = Int;
 
 alias id_t = UInt;
-
-alias ssize_t = CLong;
 
 alias daddr_t = Int;
 
 alias caddr_t = __caddr_t;
 
 alias key_t = Int;
+
+alias clock_t = CLong;
 
 alias time_t = CLong;
 
@@ -836,6 +842,8 @@ external gnu_dev_minor(
 external gnu_dev_makedev(
     __major : UInt,
     __minor : UInt) UInt64;
+
+alias blksize_t = CLong;
 
 alias blkcnt_t = CLong;
 
@@ -1206,8 +1214,10 @@ external wcstombs(
 external rpmatch(
     __response : Pointer[CChar]) Int;
 
-external posix_openpt(
-    __oflag : Int) Int;
+external getsubopt(
+    __optionp : Pointer[Pointer[CChar]],
+    __tokens : Pointer[Pointer[CChar]],
+    __valuep : Pointer[Pointer[CChar]]) Int;
 
 external getloadavg(
     __loadavg : Pointer[Double],
@@ -2908,3 +2918,182 @@ record Struct_exception (
 
 external matherr(
     __exc : Pointer[Struct_exception]) Int;
+
+alias __jmp_buf = Array[CLong,8];
+
+record Struct___jmp_buf_tag (
+    __jmpbuf : __jmp_buf,
+    __mask_was_saved : Int,
+    __saved_mask : __sigset_t,
+);
+
+alias jmp_buf = Array[Struct___jmp_buf_tag,1];
+
+external setjmp(
+    __env : Pointer[Struct___jmp_buf_tag]) Int;
+
+external __sigsetjmp(
+    __env : Pointer[Struct___jmp_buf_tag],
+    __savemask : Int) Int;
+
+external _setjmp(
+    __env : Pointer[Struct___jmp_buf_tag]) Int;
+
+external longjmp(
+    __env : Pointer[Struct___jmp_buf_tag],
+    __val : Int);
+
+external _longjmp(
+    __env : Pointer[Struct___jmp_buf_tag],
+    __val : Int);
+
+alias sigjmp_buf = Array[Struct___jmp_buf_tag,1];
+
+external siglongjmp(
+    __env : Pointer[Struct___jmp_buf_tag],
+    __val : Int);
+
+record Struct_tm (
+    tm_sec : Int,
+    tm_min : Int,
+    tm_hour : Int,
+    tm_mday : Int,
+    tm_mon : Int,
+    tm_year : Int,
+    tm_wday : Int,
+    tm_yday : Int,
+    tm_isdst : Int,
+    tm_gmtoff : CLong,
+    tm_zone : Pointer[CChar],
+);
+
+record Struct_itimerspec (
+    it_interval : Struct_timespec,
+    it_value : Struct_timespec,
+);
+
+external clock() CLong;
+
+external time(
+    __timer : Pointer[CLong]) CLong;
+
+external difftime(
+    __time1 : CLong,
+    __time0 : CLong) Double;
+
+external mktime(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external strftime(
+    __s : Pointer[CChar],
+    __maxsize : CULong,
+    __format : Pointer[CChar],
+    __tp : Pointer[Struct_tm]) CULong;
+
+external strftime_l(
+    __s : Pointer[CChar],
+    __maxsize : CULong,
+    __format : Pointer[CChar],
+    __tp : Pointer[Struct_tm],
+    __loc : __locale_t) CULong;
+
+external gmtime(
+    __timer : Pointer[CLong]) Pointer[Struct_tm];
+
+external localtime(
+    __timer : Pointer[CLong]) Pointer[Struct_tm];
+
+external gmtime_r(
+    __timer : Pointer[CLong],
+    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external localtime_r(
+    __timer : Pointer[CLong],
+    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+
+external asctime(
+    __tp : Pointer[Struct_tm]) Pointer[CChar];
+
+external ctime(
+    __timer : Pointer[CLong]) Pointer[CChar];
+
+external asctime_r(
+    __tp : Pointer[Struct_tm],
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external ctime_r(
+    __timer : Pointer[CLong],
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external __tzname : Array[Pointer[CChar],2];
+
+external __daylight : Int;
+
+external __timezone : CLong;
+
+external tzname : Array[Pointer[CChar],2];
+
+external tzset();
+
+external daylight : Int;
+
+external timezone : CLong;
+
+external stime(
+    __when : Pointer[CLong]) Int;
+
+external timegm(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external timelocal(
+    __tp : Pointer[Struct_tm]) CLong;
+
+external dysize(
+    __year : Int) Int;
+
+external nanosleep(
+    __requested_time : Pointer[Struct_timespec],
+    __remaining : Pointer[Struct_timespec]) Int;
+
+external clock_getres(
+    __clock_id : Int,
+    __res : Pointer[Struct_timespec]) Int;
+
+external clock_gettime(
+    __clock_id : Int,
+    __tp : Pointer[Struct_timespec]) Int;
+
+external clock_settime(
+    __clock_id : Int,
+    __tp : Pointer[Struct_timespec]) Int;
+
+external clock_nanosleep(
+    __clock_id : Int,
+    __flags : Int,
+    __req : Pointer[Struct_timespec],
+    __rem : Pointer[Struct_timespec]) Int;
+
+external clock_getcpuclockid(
+    __pid : Int,
+    __clock_id : Pointer[Int]) Int;
+
+external timer_create(
+    __clock_id : Int,
+    __evp : OpaquePointer,
+    __timerid : Pointer[timer_t]) Int;
+
+external timer_delete(
+    __timerid : timer_t) Int;
+
+external timer_settime(
+    __timerid : timer_t,
+    __flags : Int,
+    __value : Pointer[Struct_itimerspec],
+    __ovalue : Pointer[Struct_itimerspec]) Int;
+
+external timer_gettime(
+    __timerid : timer_t,
+    __value : Pointer[Struct_itimerspec]) Int;
+
+external timer_getoverrun(
+    __timerid : timer_t) Int;

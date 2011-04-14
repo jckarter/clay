@@ -12,9 +12,9 @@ import maybe.*;
 main() {
     try {
         var options = parseFrontendOptions();
-        observe(#options, options);
 
         traceCompilation(just(options.traceCompilation?));
+        traceTime(just(options.traceTimes?));
         traceLoading(just(options.traceLoading?));
 
         var program = loadProgram(just(options.inputFile), options.modulePaths);
