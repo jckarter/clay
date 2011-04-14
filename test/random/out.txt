@@ -1,0 +1,6 @@
+Testing Random number generation:
+  consecutive runs from the same RNG: passed
+  Independent runs from a copy: passed
+  runs from two RNGs created consecutively: passed
+-- Random number generation: 3 expectations passed; 0 failed (0 pending)
+Overall: 3 expectations passed; 0 failed (0 pending)
