@@ -1,1 +1,93 @@
+import __primitives__.*;
+
 symbol Bar = "prelude";
+
+symbol Type?;
+symbol PODType?;
+
+symbol LLType;
+symbol LLSigned;
+symbol LLUnsigned;
+symbol LLBoolType;
+symbol LLIntegerType;
+symbol LLFloatType;
+symbol LLPointerType;
+symbol LLCodePointerType;
+symbol LLArrayType;
+symbol LLTupleType;
+symbol LLUnionType;
+
+symbol Bool;
+symbol Char;
+symbol Int;
+symbol Int8;
+symbol Int16;
+symbol Int32;
+symbol Int64;
+symbol UInt;
+symbol UInt8;
+symbol UInt16;
+symbol UInt32;
+symbol UInt64;
+symbol Float32;
+symbol Float64;
+symbol Static;
+symbol Pointer;
+symbol CodePointer;
+symbol ExternalCodePointer;
+symbol StringConstant;
+
+symbol Ref;
+symbol Const;
+symbol Rvalue;
+
+symbol CdeclABI;
+symbol StdcallABI;
+symbol ABI?;
+symbol ABISupportsVariadics?;
+
+#plus('x) = StaticPlus('x);
+#minus('x) = StaticMinus('x);
+#call('f, ..'x) = 'f(..'x);
+#index('a, ..'x) = 'a[..'x];
+#staticIndex('a, 'x) = 'a['x];
+#fieldRef('a, 'x) = StaticModuleMember('a, 'x);
+#unpack('a) = ..StaticTupleElements('a);
+symbol dereference;
+#multiply('a, 'b) = StaticMultiply('a, 'b);
+symbol divide;
+#quotient('a, 'b) = StaticQuotient('a, 'b);
+#remainder('a, 'b) = StaticRemainder('a, 'b);
+#add('a, 'b) = StaticAdd('a, 'b);
+#subtract('a, 'b) = StaticSubtract('a, 'b);
+#lesser?('a, 'b) = StaticLesser?('a, 'b);
+#lesserEquals?('a, 'b) = StaticLesserEquals?('a, 'b);
+#greater?('a, 'b) = StaticGreater?('a, 'b);
+#greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
+#equals?('a, 'b) = StaticEquals?('a, 'b);
+#notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+
+symbol case?;
+
+symbol iterator;
+symbol hasNext?;
+symbol next;
+
+#tupleLiteral(..'x) = (..'x);
+
+symbol assign;
+symbol addAssign;
+symbol subtractAssign;
+symbol multiplyAssign;
+symbol divideAssign;
+symbol quotientAssign;
+symbol remainderAssign;
+
+symbol initializeFromUnsafe;
+symbol destroyUnsafe;
+
+symbol captureLambda;
+symbol lambdaCaptures;
+
+symbol callMain;
+

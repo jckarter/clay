@@ -1,0 +1,8 @@
+import show.(show);
+import values.(mapValues);
+
+main() {
+    var fish = #"salmon";
+    show(#size(fish));
+    show(..#(*fish));
+}

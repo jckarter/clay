@@ -886,7 +886,7 @@ overload push(x:ValueList, forward ...a) { push(x.data^, ...a); }
 overload hash(x:ValueList) = hash(x.data^);
 overload equals?(a:ValueList, b:ValueList) = equals?(a.data^, b.data^);
 overload printTo(stream, x:ValueList) {
-    printTo(stream, x.data^);
+    printReprElementsTo(stream, x.data^);
 }
 
 
@@ -1175,8 +1175,8 @@ addQualifiedModuleValue(envRoot: EnvRoot, module:Module, moduleName:ModuleName, 
 
 private printSymbol(stream, head, params) {
     printTo(stream, head.astName.name.str);
-    if (not empty?(params))
-        printTo(stream, params);
+    if (not ast.emptyVariadicList?(head.astName.params))
+        printTo(stream, '[', params, ']');
 }
 
 overload printTo(stream, x:Value) {
@@ -1533,6 +1533,13 @@ overload Specialization(o:Overload, callable:Value) {
 
 overload Specialization(callable:Value) = Specialization(Overload(), callable);
 
+overload printTo(stream, s:Specialization) {
+    maybe(s.results,
+        results ref=> { printTo(stream, "return ", ResultList(results)); },
+        () ref=> { printTo(stream, "noreturn"); },
+    );
+}
+
 record InvokeEntry(
     specialization: Maybe[Specialization],
 );
@@ -1580,6 +1587,26 @@ overload printTo(stream, a:ArgumentList) {
     );
     printTo(stream, ")");
 }
+
+record ResultList(results:RTValues);
+
+overload equals?(a:ResultList, b:ResultList)
+    = equalResults?(a.results, b.results);
+
+overload hash(a:ResultList)
+    = hash(map(arg => (arg.kind, arg.type, localVariable?(arg)), a.args));
+
+overload printTo(stream, a:ResultList) {
+    interleave(a.results,
+        () ref=> { printTo(stream, ", "); },
+        v ref=> {
+            if (not localVariable?(v))
+                printRTValueKindTo(stream, v.kind);
+            printTo(stream, v.type);
+        }
+    );
+}
+
 
 
 //
@@ -1642,6 +1669,8 @@ variant CompilationEntry = SymbolBodyEntry
                          | CallAnalysisEntry
                          | GlobalAnalysisEntry
                          | CallCompilationEntry
+                         | StaticMatchEntry
+                         | RuntimeMatchEntry
                          ;
 
 record SymbolBodyEntry (
@@ -1668,26 +1697,53 @@ record CallCompilationEntry (
     args: RTValues,
 );
 
+record StaticMatchEntry (
+    oload: StaticOverload,
+    callable: Value,
+    args: ValueList,
+);
+
+record RuntimeMatchEntry (
+    oload: Overload,
+    callable: Value,
+    args: RTValues,
+);
+
 overload printTo(stream, x:SymbolBodyEntry) {
-    printTo(stream, "symbol: ");
+    printTo(stream, "eval symbol ");
     printReprTo(stream, x.symbolHead);
-    printTo(stream, "[");
-    printReprElementsTo(stream, x.args);
-    printTo(stream, "]");
+    if (not ast.emptyVariadicList?(x.symbolHead.astName.params)) {
+        printTo(stream, "[");
+        printReprElementsTo(stream, x.args);
+        printTo(stream, "]");
+    }
 }
 
 overload printTo(stream, x:StaticCallEntry) {
-    printTo(stream, "eval: ");
+    printTo(stream, "eval #");
     printReprTo(stream, x.callable);
     printTo(stream, "(");
     printReprElementsTo(stream, x.args);
     printTo(stream, ")");
 }
 
-overload printTo(stream, x:CallAnalysisEntry) {
-    printTo(stream, "analyze: ");
+overload printTo(stream, x:StaticMatchEntry) {
+    printTo(stream, "match #");
+    printReprTo(stream, x.callable);
+    printTo(stream, "(");
+    printReprElementsTo(stream, x.args);
+    printTo(stream, ") to ");
+    var file, line, col = ...ast.getFileLocation(x.oload.ast);
+    printTo(stream, file, "(", line, ",", col, ")");
+}
+
+overload printTo(stream, x:RuntimeMatchEntry) {
+    printTo(stream, "match ");
     printReprTo(stream, x.callable);
     printTo(stream, ArgumentList(x.args));
+    printTo(stream, " to ");
+    var file, line, col = ...ast.getFileLocation(x.oload.ast);
+    printTo(stream, file, "(", line, ",", col, ")");
 }
 
 overload printTo(stream, x:ast.SingleBinding) {
@@ -1715,37 +1771,118 @@ overload printTo(stream, x:CallCompilationEntry) {
     printTo(stream, ArgumentList(x.args));
 }
 
-private var _compilationStack = Stack[CompilationEntry](false);
+record CompilationTrace (trace?:Bool, traceTime?:Bool, depth:UInt);
+private var _traceCompilation = CompilationTrace(false, false, 0u);
 
-traceCompilation(trace?:Bool) { _compilationStack.trace? = trace?; }
+traceCompilation(trace?:Bool) { _traceCompilation.trace? = trace?; }
+traceTime(trace?:Bool) { _traceCompilation.traceTime? = trace?; }
 
-withCompilationEntry(forward entry:CompilationEntry, f) =
-    forward ...withStackValue(_compilationStack, entry, f);
+traceEnter(entry) {
+    if (_traceCompilation.trace?) {
+        if (_traceCompilation.traceTime?) {
+            printTimestampTo(stdout);
+            print("  ");
+        }
+
+        for (i in range(_traceCompilation.depth))
+            print(' ');
+
+        println("[ entering ", entry);
+
+        inc(_traceCompilation.depth);
+    }
+}
+
+traceExit(entry, results) {
+    if (_traceCompilation.trace?) {
+        if (_traceCompilation.traceTime?) {
+            printTimestampTo(stdout);
+            print("  ");
+        }
+
+        dec(_traceCompilation.depth);
+
+        for (i in range(_traceCompilation.depth))
+            print(' ');
+        println("] leaving  ", entry, ", result: ", ...weaveValues(", ", ...results));
+    }
+}
+
+private var _compilationStack = Stack[CompilationEntry]();
+
+withCompilationEntry(entry:CompilationEntry, f) {
+    traceEnter(entry);
+    var values = captureValues(...withStackValue(_compilationStack, entry, f));
+    traceExit(entry, ...capturedRefs(values));
+    return forward ...forwardValues(values);
+}
 
 withStaticSymbolBody(head:SymbolHead, args:ValueList, f) {
     var entry = CompilationEntry(SymbolBodyEntry(head, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withStaticCall(callable:Value, args:ValueList, f) {
     var entry = CompilationEntry(StaticCallEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withCallAnalysis(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallAnalysisEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withGlobalAnalysis(global:RTGlobal, f) {
     var entry = CompilationEntry(GlobalAnalysisEntry(global));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
 
 withCallCompilation(callable:Value, args:RTValues, f) {
     var entry = CompilationEntry(CallCompilationEntry(callable, args));
-    return forward ...withCompilationEntry(move(entry), f);
+    return forward ...withCompilationEntry(entry, f);
 }
+
+withStaticMatch(oload:StaticOverload, callable:Value, args:ValueList, f) {
+    var entry = CompilationEntry(StaticMatchEntry(oload, callable, args));
+    return forward ...withCompilationEntry(entry, f);
+}
+
+withRuntimeMatch(oload:Overload, callable:Value, args:RTValues, f) {
+    var entry = CompilationEntry(RuntimeMatchEntry(oload, callable, args));
+    return forward ...withCompilationEntry(entry, f);
+}
+
+
+
+//
+// match results
+//
+
+variant MatchResult[T] = MatchSuccess[T]
+                       | MatchFailedArgCount
+                       | MatchFailedPattern
+                       | MatchFailedPredicate;
+
+record MatchSuccess[T] (result:T);
+record MatchFailedArgCount ();
+record MatchFailedPattern ();
+record MatchFailedPredicate ();
+
+[T] overload printTo(stream, x:MatchSuccess[T]) {
+    printTo(stream, "matched");
+}
+overload printTo(stream, x:MatchFailedArgCount) {
+    printTo(stream, "wrong number of arguments");
+}
+overload printTo(stream, x:MatchFailedPattern) {
+    printTo(stream, "pattern matching failed");
+}
+overload printTo(stream, x:MatchFailedPredicate) {
+    printTo(stream, "predicate returned false");
+}
+
+[T] matchSuccess?(x:MatchResult[T]) = variantIs?(x, MatchSuccess[T]);
+[T] matchResult(x:MatchResult[T]) = ref variantAs(x, MatchSuccess[T]).result;
 
 
 

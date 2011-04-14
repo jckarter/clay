@@ -167,6 +167,18 @@ external write(
     __buf : RawPointer,
     __n : CULong) CLong;
 
+external pread(
+    __fd : Int,
+    __buf : RawPointer,
+    __nbytes : CULong,
+    __offset : CLong) CLong;
+
+external pwrite(
+    __fd : Int,
+    __buf : RawPointer,
+    __n : CULong,
+    __offset : CLong) CLong;
+
 external pipe(
     __pipedes : Pointer[Int]) Int;
 
@@ -568,6 +580,8 @@ alias _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS = 1144;
 alias _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS = 1145;
 alias _CS_POSIX_V7_LPBIG_OFFBIG_LIBS = 1146;
 alias _CS_POSIX_V7_LPBIG_OFFBIG_LINTFLAGS = 1147;
+alias _CS_V6_ENV = 1148;
+alias _CS_V7_ENV = 1149;
 
 external pathconf(
     __path : Pointer[CChar],
@@ -594,6 +608,9 @@ external getpgrp() Int;
 external __getpgid(
     __pid : Int) Int;
 
+external getpgid(
+    __pid : Int) Int;
+
 external setpgid(
     __pid : Int,
     __pgid : Int) Int;
@@ -601,6 +618,9 @@ external setpgid(
 external setpgrp() Int;
 
 external setsid() Int;
+
+external getsid(
+    __pid : Int) Int;
 
 external getuid() UInt;
 
@@ -808,7 +828,12 @@ external lockf(
 external fdatasync(
     __fildes : Int) Int;
 
+external ctermid(
+    __s : Pointer[CChar]) Pointer[CChar];
+
 external __errno_location() Pointer[Int];
+
+alias time_t = CLong;
 
 record Struct_timespec (
     tv_sec : CLong,
@@ -882,8 +907,6 @@ external sched_rr_get_interval(
     __t : Pointer[Struct_timespec]) Int;
 
 alias clock_t = CLong;
-
-alias time_t = CLong;
 
 alias clockid_t = Int;
 
@@ -1046,16 +1069,6 @@ external timer_gettime(
 external timer_getoverrun(
     __timerid : timer_t) Int;
 
-alias __sig_atomic_t = Int;
-
-record UnnamedStruct3 (
-    __val : Array[CULong,16],
-);
-
-alias __sigset_t = UnnamedStruct3;
-
-alias sigset_t = __sigset_t;
-
 alias pthread_t = CULong;
 
 alias pthread_attr_t = AUnionType;
@@ -1098,6 +1111,10 @@ alias PTHREAD_MUTEX_TIMED_NP = 0;
 alias PTHREAD_MUTEX_RECURSIVE_NP = 1;
 alias PTHREAD_MUTEX_ERRORCHECK_NP = 2;
 alias PTHREAD_MUTEX_ADAPTIVE_NP = 3;
+alias PTHREAD_MUTEX_NORMAL = 0;
+alias PTHREAD_MUTEX_RECURSIVE = 1;
+alias PTHREAD_MUTEX_ERRORCHECK = 2;
+alias PTHREAD_MUTEX_DEFAULT = 0;
 
 alias PTHREAD_MUTEX_STALLED = 0;
 alias PTHREAD_MUTEX_STALLED_NP = 0;
@@ -1264,7 +1281,7 @@ external pthread_cancel(
 
 external pthread_testcancel();
 
-record UnnamedStruct4 (
+record UnnamedStruct3 (
     __cancel_jmp_buf : Array[UnnamedRecord,1],
     __pad : Array[RawPointer,4],
 );
@@ -1274,7 +1291,7 @@ record UnnamedRecord (
     __mask_was_saved : Int,
 );
 
-alias __pthread_unwind_buf_t = UnnamedStruct4;
+alias __pthread_unwind_buf_t = UnnamedStruct3;
 
 record Struct___pthread_cleanup_frame (
     __cancel_routine : CCodePointer[(RawPointer),()],
@@ -1316,7 +1333,16 @@ external pthread_mutex_timedlock(
 external pthread_mutex_unlock(
     __mutex : Pointer[pthread_mutex_t]) Int;
 
-external pthread_mutex_consistent_np(
+external pthread_mutex_getprioceiling(
+    __mutex : Pointer[pthread_mutex_t],
+    __prioceiling : Pointer[Int]) Int;
+
+external pthread_mutex_setprioceiling(
+    __mutex : Pointer[pthread_mutex_t],
+    __prioceiling : Int,
+    __old_ceiling : Pointer[Int]) Int;
+
+external pthread_mutex_consistent(
     __mutex : Pointer[pthread_mutex_t]) Int;
 
 external pthread_mutexattr_init(
@@ -1332,6 +1358,30 @@ external pthread_mutexattr_getpshared(
 external pthread_mutexattr_setpshared(
     __attr : Pointer[pthread_mutexattr_t],
     __pshared : Int) Int;
+
+external pthread_mutexattr_gettype(
+    __attr : Pointer[pthread_mutexattr_t],
+    __kind : Pointer[Int]) Int;
+
+external pthread_mutexattr_settype(
+    __attr : Pointer[pthread_mutexattr_t],
+    __kind : Int) Int;
+
+external pthread_mutexattr_getprotocol(
+    __attr : Pointer[pthread_mutexattr_t],
+    __protocol : Pointer[Int]) Int;
+
+external pthread_mutexattr_setprotocol(
+    __attr : Pointer[pthread_mutexattr_t],
+    __protocol : Int) Int;
+
+external pthread_mutexattr_getprioceiling(
+    __attr : Pointer[pthread_mutexattr_t],
+    __prioceiling : Pointer[Int]) Int;
+
+external pthread_mutexattr_setprioceiling(
+    __attr : Pointer[pthread_mutexattr_t],
+    __prioceiling : Int) Int;
 
 external pthread_mutexattr_getrobust(
     __attr : Pointer[pthread_mutexattr_t],
@@ -1557,6 +1607,16 @@ alias u_int64_t = CULong;
 
 alias register_t = CLong;
 
+alias __sig_atomic_t = Int;
+
+record UnnamedStruct4 (
+    __val : Array[CULong,16],
+);
+
+alias __sigset_t = UnnamedStruct4;
+
+alias sigset_t = __sigset_t;
+
 record Struct_timeval (
     tv_sec : CLong,
     tv_usec : CLong,
@@ -1599,6 +1659,8 @@ external gnu_dev_makedev(
     __major : UInt,
     __minor : UInt) UInt64;
 
+alias blksize_t = CLong;
+
 alias blkcnt_t = CLong;
 
 alias fsblkcnt_t = CULong;
@@ -1613,6 +1675,24 @@ record Struct_flock (
     l_pid : Int,
 );
 
+record Struct_stat (
+    st_dev : CULong,
+    st_ino : CULong,
+    st_nlink : CULong,
+    st_mode : UInt,
+    st_uid : UInt,
+    st_gid : UInt,
+    __pad0 : Int,
+    st_rdev : CULong,
+    st_size : CLong,
+    st_blksize : CLong,
+    st_blocks : CLong,
+    st_atim : Struct_timespec,
+    st_mtim : Struct_timespec,
+    st_ctim : Struct_timespec,
+    __unused : Array[CLong,3],
+);
+
 external fcntl(
     __fd : Int,
     __cmd : Int,
@@ -1624,12 +1704,6 @@ external open(
     ...) Int;
 
 external openat(
-    __fd : Int,
-    __file : Pointer[CChar],
-    __oflag : Int,
-    ...) Int;
-
-external openat64(
     __fd : Int,
     __file : Pointer[CChar],
     __oflag : Int,
@@ -1700,24 +1774,6 @@ external lutimes(
 external futimes(
     __fd : Int,
     __tvp : Pointer[Struct_timeval]) Int;
-
-record Struct_stat (
-    st_dev : CULong,
-    st_ino : CULong,
-    st_nlink : CULong,
-    st_mode : UInt,
-    st_uid : UInt,
-    st_gid : UInt,
-    __pad0 : Int,
-    st_rdev : CULong,
-    st_size : CLong,
-    st_blksize : CLong,
-    st_blocks : CLong,
-    st_atim : Struct_timespec,
-    st_mtim : Struct_timespec,
-    st_ctim : Struct_timespec,
-    __unused : Array[CLong,3],
-);
 
 external stat(
     __file : Pointer[CChar],
@@ -1956,6 +2012,7 @@ alias MSG_RST = 4096;
 alias MSG_ERRQUEUE = 8192;
 alias MSG_NOSIGNAL = 16384;
 alias MSG_MORE = 32768;
+alias MSG_WAITFORONE = 65536;
 alias MSG_CMSG_CLOEXEC = 1073741824;
 
 record Struct_msghdr (
@@ -1985,6 +2042,13 @@ record Struct_linger (
     l_onoff : Int,
     l_linger : Int,
 );
+
+external recvmmsg(
+    __fd : Int,
+    __vmessages : OpaquePointer,
+    __vlen : UInt,
+    __flags : Int,
+    __tmo : Pointer[Struct_timespec]) Int;
 
 record Struct_osockaddr (
     sa_family : UShort,
@@ -2396,6 +2460,55 @@ record Struct_sigaltstack (
 
 alias stack_t = Struct_sigaltstack;
 
+alias greg_t = CLong;
+
+alias gregset_t = Array[CLong,23];
+
+record Struct__libc_fpxreg (
+    significand : Array[UShort,4],
+    exponent : UShort,
+    padding : Array[UShort,3],
+);
+
+record Struct__libc_xmmreg (
+    element : Array[UInt,4],
+);
+
+record Struct__libc_fpstate (
+    cwd : UShort,
+    swd : UShort,
+    ftw : UShort,
+    fop : UShort,
+    rip : CULong,
+    rdp : CULong,
+    mxcsr : UInt,
+    mxcr_mask : UInt,
+    _st : Array[Struct__libc_fpxreg,8],
+    _xmm : Array[Struct__libc_xmmreg,16],
+    padding : Array[UInt,24],
+);
+
+alias fpregset_t = Pointer[Struct__libc_fpstate];
+
+record UnnamedStruct6 (
+    gregs : gregset_t,
+    fpregs : fpregset_t,
+    __reserved1 : Array[CULong,8],
+);
+
+alias mcontext_t = UnnamedStruct6;
+
+record Struct_ucontext (
+    uc_flags : CULong,
+    uc_link : Pointer[Struct_ucontext],
+    uc_stack : stack_t,
+    uc_mcontext : mcontext_t,
+    uc_sigmask : __sigset_t,
+    __fpregs_mem : Struct__libc_fpstate,
+);
+
+alias ucontext_t = Struct_ucontext;
+
 external sigstack(
     __ss : Pointer[Struct_sigstack],
     __oss : Pointer[Struct_sigstack]) Int;
@@ -2416,6 +2529,118 @@ external pthread_kill(
 external __libc_current_sigrtmin() Int;
 
 external __libc_current_sigrtmax() Int;
+
+alias RLIMIT_CPU = 0;
+alias RLIMIT_FSIZE = 1;
+alias RLIMIT_DATA = 2;
+alias RLIMIT_STACK = 3;
+alias RLIMIT_CORE = 4;
+alias __RLIMIT_RSS = 5;
+alias RLIMIT_NOFILE = 7;
+alias __RLIMIT_OFILE = 7;
+alias RLIMIT_AS = 9;
+alias __RLIMIT_NPROC = 6;
+alias __RLIMIT_MEMLOCK = 8;
+alias __RLIMIT_LOCKS = 10;
+alias __RLIMIT_SIGPENDING = 11;
+alias __RLIMIT_MSGQUEUE = 12;
+alias __RLIMIT_NICE = 13;
+alias __RLIMIT_RTPRIO = 14;
+alias __RLIMIT_NLIMITS = 15;
+alias __RLIM_NLIMITS = 15;
+
+alias rlim_t = CULong;
+
+record Struct_rlimit (
+    rlim_cur : CULong,
+    rlim_max : CULong,
+);
+
+alias RUSAGE_SELF = 0;
+alias RUSAGE_CHILDREN = 4294967295;
+
+record Struct_rusage (
+    ru_utime : Struct_timeval,
+    ru_stime : Struct_timeval,
+    ru_maxrss : CLong,
+    ru_ixrss : CLong,
+    ru_idrss : CLong,
+    ru_isrss : CLong,
+    ru_minflt : CLong,
+    ru_majflt : CLong,
+    ru_nswap : CLong,
+    ru_inblock : CLong,
+    ru_oublock : CLong,
+    ru_msgsnd : CLong,
+    ru_msgrcv : CLong,
+    ru_nsignals : CLong,
+    ru_nvcsw : CLong,
+    ru_nivcsw : CLong,
+);
+
+alias PRIO_PROCESS = 0;
+alias PRIO_PGRP = 1;
+alias PRIO_USER = 2;
+
+alias __rlimit_resource_t = Int;
+
+alias __rusage_who_t = Int;
+
+alias __priority_which_t = Int;
+
+external getrlimit(
+    __resource : Int,
+    __rlimits : Pointer[Struct_rlimit]) Int;
+
+external setrlimit(
+    __resource : Int,
+    __rlimits : Pointer[Struct_rlimit]) Int;
+
+external getrusage(
+    __who : Int,
+    __usage : Pointer[Struct_rusage]) Int;
+
+external getpriority(
+    __which : Int,
+    __who : UInt) Int;
+
+external setpriority(
+    __which : Int,
+    __who : UInt,
+    __prio : Int) Int;
+
+alias __WAIT_STATUS = AUnionType;
+
+alias P_ALL = 0;
+alias P_PID = 1;
+alias P_PGID = 2;
+
+alias idtype_t = Int;
+
+external wait(
+    __stat_loc : __WAIT_STATUS) Int;
+
+external waitpid(
+    __pid : Int,
+    __stat_loc : Pointer[Int],
+    __options : Int) Int;
+
+external waitid(
+    __idtype : idtype_t,
+    __id : UInt,
+    __infop : Pointer[siginfo_t],
+    __options : Int) Int;
+
+external wait3(
+    __stat_loc : __WAIT_STATUS,
+    __options : Int,
+    __usage : Pointer[Struct_rusage]) Int;
+
+external wait4(
+    __pid : Int,
+    __stat_loc : __WAIT_STATUS,
+    __options : Int,
+    __usage : Pointer[Struct_rusage]) Int;
 
 alias uint8_t = CUChar;
 
@@ -2577,6 +2802,430 @@ external getdirentries(
     __buf : Pointer[CChar],
     __nbytes : CULong,
     __basep : Pointer[CLong]) CLong;
+
+alias wchar_t = Int;
+
+record UnnamedStruct7 (
+    quot : Int,
+    rem : Int,
+);
+
+alias div_t = UnnamedStruct7;
+
+record UnnamedStruct8 (
+    quot : CLong,
+    rem : CLong,
+);
+
+alias ldiv_t = UnnamedStruct8;
+
+record UnnamedStruct9 (
+    quot : Int64,
+    rem : Int64,
+);
+
+alias lldiv_t = UnnamedStruct9;
+
+external __ctype_get_mb_cur_max() CULong;
+
+external atof(
+    __nptr : Pointer[CChar]) Double;
+
+external atoi(
+    __nptr : Pointer[CChar]) Int;
+
+external atol(
+    __nptr : Pointer[CChar]) CLong;
+
+external atoll(
+    __nptr : Pointer[CChar]) Int64;
+
+external strtod(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]]) Double;
+
+external strtof(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]]) Float;
+
+external strtold(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType22;
+
+external strtol(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) CLong;
+
+external strtoul(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) CULong;
+
+external strtoq(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) Int64;
+
+external strtouq(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) UInt64;
+
+external strtoll(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) Int64;
+
+external strtoull(
+    __nptr : Pointer[CChar],
+    __endptr : Pointer[Pointer[CChar]],
+    __base : Int) UInt64;
+
+external l64a(
+    __n : CLong) Pointer[CChar];
+
+external a64l(
+    __s : Pointer[CChar]) CLong;
+
+external random() CLong;
+
+external srandom(
+    __seed : UInt);
+
+external initstate(
+    __seed : UInt,
+    __statebuf : Pointer[CChar],
+    __statelen : CULong) Pointer[CChar];
+
+external setstate(
+    __statebuf : Pointer[CChar]) Pointer[CChar];
+
+record Struct_random_data (
+    fptr : Pointer[Int],
+    rptr : Pointer[Int],
+    state : Pointer[Int],
+    rand_type : Int,
+    rand_deg : Int,
+    rand_sep : Int,
+    end_ptr : Pointer[Int],
+);
+
+external random_r(
+    __buf : Pointer[Struct_random_data],
+    __result : Pointer[Int]) Int;
+
+external srandom_r(
+    __seed : UInt,
+    __buf : Pointer[Struct_random_data]) Int;
+
+external initstate_r(
+    __seed : UInt,
+    __statebuf : Pointer[CChar],
+    __statelen : CULong,
+    __buf : Pointer[Struct_random_data]) Int;
+
+external setstate_r(
+    __statebuf : Pointer[CChar],
+    __buf : Pointer[Struct_random_data]) Int;
+
+external rand() Int;
+
+external srand(
+    __seed : UInt);
+
+external rand_r(
+    __seed : Pointer[UInt]) Int;
+
+external drand48() Double;
+
+external erand48(
+    __xsubi : Pointer[UShort]) Double;
+
+external lrand48() CLong;
+
+external nrand48(
+    __xsubi : Pointer[UShort]) CLong;
+
+external mrand48() CLong;
+
+external jrand48(
+    __xsubi : Pointer[UShort]) CLong;
+
+external srand48(
+    __seedval : CLong);
+
+external seed48(
+    __seed16v : Pointer[UShort]) Pointer[UShort];
+
+external lcong48(
+    __param : Pointer[UShort]);
+
+record Struct_drand48_data (
+    __x : Array[UShort,3],
+    __old_x : Array[UShort,3],
+    __c : UShort,
+    __init : UShort,
+    __a : UInt64,
+);
+
+external drand48_r(
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[Double]) Int;
+
+external erand48_r(
+    __xsubi : Pointer[UShort],
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[Double]) Int;
+
+external lrand48_r(
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[CLong]) Int;
+
+external nrand48_r(
+    __xsubi : Pointer[UShort],
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[CLong]) Int;
+
+external mrand48_r(
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[CLong]) Int;
+
+external jrand48_r(
+    __xsubi : Pointer[UShort],
+    __buffer : Pointer[Struct_drand48_data],
+    __result : Pointer[CLong]) Int;
+
+external srand48_r(
+    __seedval : CLong,
+    __buffer : Pointer[Struct_drand48_data]) Int;
+
+external seed48_r(
+    __seed16v : Pointer[UShort],
+    __buffer : Pointer[Struct_drand48_data]) Int;
+
+external lcong48_r(
+    __param : Pointer[UShort],
+    __buffer : Pointer[Struct_drand48_data]) Int;
+
+external malloc(
+    __size : CULong) RawPointer;
+
+external calloc(
+    __nmemb : CULong,
+    __size : CULong) RawPointer;
+
+external realloc(
+    __ptr : RawPointer,
+    __size : CULong) RawPointer;
+
+external free(
+    __ptr : RawPointer);
+
+external cfree(
+    __ptr : RawPointer);
+
+external alloca(
+    __size : CULong) RawPointer;
+
+external valloc(
+    __size : CULong) RawPointer;
+
+external posix_memalign(
+    __memptr : Pointer[RawPointer],
+    __alignment : CULong,
+    __size : CULong) Int;
+
+external abort();
+
+external atexit(
+    __func : CCodePointer[(),()]) Int;
+
+external on_exit(
+    __func : CCodePointer[(Int,RawPointer),()],
+    __arg : RawPointer) Int;
+
+external exit(
+    __status : Int);
+
+external _Exit(
+    __status : Int);
+
+external getenv(
+    __name : Pointer[CChar]) Pointer[CChar];
+
+external __secure_getenv(
+    __name : Pointer[CChar]) Pointer[CChar];
+
+external putenv(
+    __string : Pointer[CChar]) Int;
+
+external setenv(
+    __name : Pointer[CChar],
+    __value : Pointer[CChar],
+    __replace : Int) Int;
+
+external unsetenv(
+    __name : Pointer[CChar]) Int;
+
+external clearenv() Int;
+
+external mktemp(
+    __template : Pointer[CChar]) Pointer[CChar];
+
+external mkstemp(
+    __template : Pointer[CChar]) Int;
+
+external mkstemps(
+    __template : Pointer[CChar],
+    __suffixlen : Int) Int;
+
+external mkdtemp(
+    __template : Pointer[CChar]) Pointer[CChar];
+
+external system(
+    __command : Pointer[CChar]) Int;
+
+external realpath(
+    __name : Pointer[CChar],
+    __resolved : Pointer[CChar]) Pointer[CChar];
+
+alias __compar_fn_t = CCodePointer[(RawPointer,RawPointer),(Int)];
+
+external bsearch(
+    __key : RawPointer,
+    __base : RawPointer,
+    __nmemb : CULong,
+    __size : CULong,
+    __compar : __compar_fn_t) RawPointer;
+
+external qsort(
+    __base : RawPointer,
+    __nmemb : CULong,
+    __size : CULong,
+    __compar : __compar_fn_t);
+
+external abs(
+    __x : Int) Int;
+
+external labs(
+    __x : CLong) CLong;
+
+external llabs(
+    __x : Int64) Int64;
+
+external div(
+    __numer : Int,
+    __denom : Int) div_t;
+
+external ldiv(
+    __numer : CLong,
+    __denom : CLong) ldiv_t;
+
+external lldiv(
+    __numer : Int64,
+    __denom : Int64) lldiv_t;
+
+external ecvt(
+    __value : Double,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int]) Pointer[CChar];
+
+external fcvt(
+    __value : Double,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int]) Pointer[CChar];
+
+external gcvt(
+    __value : Double,
+    __ndigit : Int,
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external qecvt(
+    __value : UnsupportedCBuiltinType22,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int]) Pointer[CChar];
+
+external qfcvt(
+    __value : UnsupportedCBuiltinType22,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int]) Pointer[CChar];
+
+external qgcvt(
+    __value : UnsupportedCBuiltinType22,
+    __ndigit : Int,
+    __buf : Pointer[CChar]) Pointer[CChar];
+
+external ecvt_r(
+    __value : Double,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int],
+    __buf : Pointer[CChar],
+    __len : CULong) Int;
+
+external fcvt_r(
+    __value : Double,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int],
+    __buf : Pointer[CChar],
+    __len : CULong) Int;
+
+external qecvt_r(
+    __value : UnsupportedCBuiltinType22,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int],
+    __buf : Pointer[CChar],
+    __len : CULong) Int;
+
+external qfcvt_r(
+    __value : UnsupportedCBuiltinType22,
+    __ndigit : Int,
+    __decpt : Pointer[Int],
+    __sign : Pointer[Int],
+    __buf : Pointer[CChar],
+    __len : CULong) Int;
+
+external mblen(
+    __s : Pointer[CChar],
+    __n : CULong) Int;
+
+external mbtowc(
+    __pwc : Pointer[Int],
+    __s : Pointer[CChar],
+    __n : CULong) Int;
+
+external wctomb(
+    __s : Pointer[CChar],
+    __wchar : Int) Int;
+
+external mbstowcs(
+    __pwcs : Pointer[Int],
+    __s : Pointer[CChar],
+    __n : CULong) CULong;
+
+external wcstombs(
+    __s : Pointer[CChar],
+    __pwcs : Pointer[Int],
+    __n : CULong) CULong;
+
+external rpmatch(
+    __response : Pointer[CChar]) Int;
+
+external getsubopt(
+    __optionp : Pointer[Pointer[CChar]],
+    __tokens : Pointer[Pointer[CChar]],
+    __valuep : Pointer[Pointer[CChar]]) Int;
+
+external getloadavg(
+    __loadavg : Pointer[Double],
+    __nelem : Int) Int;
 
 alias IPPROTO_IP = 0;
 alias IPPROTO_HOPOPTS = 0;
@@ -3053,6 +3702,19 @@ external ruserok_af(
     __locuser : Pointer[CChar],
     __af : UShort) Int;
 
+external iruserok(
+    __raddr : UInt,
+    __suser : Int,
+    __remuser : Pointer[CChar],
+    __locuser : Pointer[CChar]) Int;
+
+external iruserok_af(
+    __raddr : RawPointer,
+    __suser : Int,
+    __remuser : Pointer[CChar],
+    __locuser : Pointer[CChar],
+    __af : UShort) Int;
+
 external rresvport(
     __alport : Pointer[Int]) Int;
 
@@ -3120,14 +3782,14 @@ external dlvsym(
 
 external dlerror() Pointer[CChar];
 
-record UnnamedStruct6 (
+record UnnamedStruct10 (
     dli_fname : Pointer[CChar],
     dli_fbase : RawPointer,
     dli_sname : Pointer[CChar],
     dli_saddr : RawPointer,
 );
 
-alias Dl_info = UnnamedStruct6;
+alias Dl_info = UnnamedStruct10;
 
 external dladdr(
     __address : RawPointer,
@@ -3159,17 +3821,17 @@ alias RTLD_DI_TLS_MODID = 9;
 alias RTLD_DI_TLS_DATA = 10;
 alias RTLD_DI_MAX = 10;
 
-record UnnamedStruct7 (
+record UnnamedStruct11 (
     dls_name : Pointer[CChar],
     dls_flags : UInt,
 );
 
-alias Dl_serpath = UnnamedStruct7;
+alias Dl_serpath = UnnamedStruct11;
 
-record UnnamedStruct8 (
+record UnnamedStruct12 (
     dls_size : CULong,
     dls_cnt : UInt,
     dls_serpath : Array[Dl_serpath,1],
 );
 
-alias Dl_serinfo = UnnamedStruct8;
+alias Dl_serinfo = UnnamedStruct12;

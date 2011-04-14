@@ -1,3 +1,4 @@
+import meta.statics.(StaticString?, StaticStringSize);
 import values.*;
 
 
@@ -37,6 +38,10 @@ back(x:'S) | CoordinateSequenceType?('S) {
 
 overload iterator(x:'S) | CoordinateSequenceType?('S)
     = CoordinateRange(begin(x), end(x));
+
+overload index(x:'S, n)
+    | CoordinateSequenceType?('S) and Defined?([begin(x) + n])
+    = forward (begin(x) + n)^;
 
 overload iterator(forward x:'I) | IteratorType?('I) = forward x;
 
@@ -298,3 +303,11 @@ overload reverseIterator(x:'S)
 overload reverseIterator(forward x:CoordinateRange['C])
     | ReversibleCoordinateType?('C)
     = ReversedCoordinateRange['C](..*x);
+
+
+//
+// static aggregate sizes
+//
+
+overload #size('s) | StaticString?('s) = StaticStringSize('s);
+overload #size((..'t)) = countValues(..'t);
