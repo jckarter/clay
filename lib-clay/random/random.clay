@@ -10,11 +10,11 @@ record XORShiftRNG(
 
 overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
-procedure random;
+procedure generate;
 
-[I | Integer?(I) and TypeSize(I) <= 32] overload random(r, static I) = I(random(r, UInt32));
+[I | Integer?(I) and TypeSize(I) <= 32] overload generate(r, static I) = I(generate(r, UInt32));
 
-overload random(r : XORShiftRNG, static UInt32){
+overload generate(r : XORShiftRNG, static UInt32){
   var t = xsl(r.x, 15);
   r.x = r.y;
   r.y = r.z;
@@ -24,43 +24,78 @@ overload random(r : XORShiftRNG, static UInt32){
   return r.w;
 }
 
-overload random(r, static UInt64){
-  var x = UInt64(random(r, UInt32));
-  var y = UInt64(random(r, UInt32));
+overload generate(r, static UInt64){
+  var x = UInt64(generate(r, UInt32));
+  var y = UInt64(generate(r, UInt32));
 
   return bitwiseOr(shiftLeft(x, 32), y);
 }
 
-overload random(r, static Int64) = Int64(random(r, UInt64));
+overload generate(r, static Int64) = Int64(generate(r, UInt64));
 
-overload random(r, static Float64){
-  var x = mask(random(r, UInt32), 26);
-  var y = mask(random(r, UInt32), 27);
-
-  return Double(shiftLeft(UInt64(x), 27) + y) / shiftLeft(Int64(1), 53);
-}
-
-overload random(r, static Float32) = mask(random(r, UInt32), 24) / Float32(shiftLeft(1, 24));
-
-[n, T] overload random(r, static Array[T, n]){
+[n, T] overload generate(r, static Array[T, n]){
   var result = Array[T, n]();
 
-  for(i in range(n)) result[i] <-- random(r, i);
+  for(i in range(n)) result[i] <-- generate(r, i);
 
   return move(result);
 }
 
-procedure randomRange;
+procedure uniform;
 
 // TODO: This is a bit of a rubbish default implementation
 // It works fine for integers (I think) but is almost certainly wrong for floats
 // Either way it could be a lot faster.
-[T] overload randomRange(rnd, from : T, to : T) = from + T(random(rnd, Double) * (to - from));
+[T | Integer?(T)] overload uniform(rnd, from : T, to : T){
+  if(safeFromOverflow?(from, to)){
+    var ub = to - from;
+    var mask = toMask(ub);
+
+    var result = bitwiseAnd(mask, generate(rnd, T));
+
+    while(result >= ub) result = bitwiseAnd(mask, generate(rnd, T));
+    
+    return result + from;
+  } else {
+    var result = generate(rnd, T);
+
+    while(result < from or result >= to) result = generate(rnd, T);
+    
+    return result;
+  }
+}
 
 
+smallDouble(r){
+  var x = mask(generate(r, UInt32), 26);
+  var y = mask(generate(r, UInt32), 27);
+
+  return Double(shiftLeft(UInt64(x), 27) + y) / shiftLeft(Int64(1), 53);
+}
+
+smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(shiftLeft(1, 24));
 
 private xor(x, y) = bitwiseXor(x, y);
 private xsl(x, n) = xor(x, shiftLeft(x, n));
 private xsr(x, n) = xor(x, shiftRight(x, n));
 private mask(x, n) = bitwiseAnd(x, shiftLeft(1, n) - 1);
 private pr() = UInt32(libc.random());
+
+private procedure safeFromOverflow?;
+
+[T | UnsignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = true;
+[T | SignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
+
+private procedure toMask;
+
+private inline pb(x, n){ x = bitwiseOr(x, shiftRight(x, n)); }
+overload toMask(x){
+  var t = x;
+  pb(t, 1); 
+  pb(t, 2); 
+  pb(t, 4); 
+  pb(t, 8); 
+  pb(t, 16); 
+  pb(t, 32); 
+  return t;
+}
