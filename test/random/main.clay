@@ -47,10 +47,10 @@ main() = testMain(
         expectTrue(test, printString(i, " appeared"), results[i]);
       }
     }),
-    TestCase("uniform floats should be in range", test => {
+    TestCase("uniform doubles should be in range", test => {
       var rng = XORShiftRNG();
 
-      for(i in range(5)){
+      for(i in range(100)){
         var x = uniform(rng, 1.0, 3.0);
         expectTrue(test, "x >= 1.0", x >= 1.0);
         expectTrue(test, "x < 3.0", x < 3.0);

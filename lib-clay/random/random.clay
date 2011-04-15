@@ -69,12 +69,8 @@ overload uniform(rnd, from : Float32, to : Float32) = from + (to - from) * small
 overload uniform(rnd, from : Float64, to : Float64) = from + (to - from) * smallDouble(rnd);
   
 
-private smallDouble(r){
-  var x = mask(generate(r, UInt32), 26);
-  var y = mask(generate(r, UInt32), 27);
-
-  return Double(shiftLeft(UInt64(x), 27) + y) / shiftLeft(Int64(1), 53);
-}
+private smallDouble(r) =
+  bitcast(Double, bitwiseOr(mask(generate(r, Int64), 52), bitcast(UInt64,1.0)))-1;
 
 private smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(shiftLeft(1, 24));
 
@@ -83,6 +79,7 @@ private xsl(x, n) = xor(x, shiftLeft(x, n));
 private xsr(x, n) = xor(x, shiftRight(x, n));
 private mask(x, n) = bitwiseAnd(x, shiftLeft(1, n) - 1);
 private pr() = UInt32(libc.random());
+private bitcast(T, x) = Pointer[T](&x)^;
 
 private procedure safeFromOverflow?;
 
