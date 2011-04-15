@@ -46,6 +46,15 @@ main() = testMain(
       for(i in range(5)){
         expectTrue(test, printString(i, " appeared"), results[i]);
       }
-    })
+    }),
+    TestCase("uniform floats should be in range", test => {
+      var rng = XORShiftRNG();
+
+      for(i in range(5)){
+        var x = uniform(rng, 1.0, 3.0);
+        expectTrue(test, "x >= 1.0", x >= 1.0);
+        expectTrue(test, "x < 3.0", x < 3.0);
+      }
+    }),
   ])
 );

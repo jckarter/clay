@@ -65,15 +65,18 @@ procedure uniform;
   }
 }
 
+overload uniform(rnd, from : Float32, to : Float32) = from + (to - from) * smallFloat(rnd);
+overload uniform(rnd, from : Float64, to : Float64) = from + (to - from) * smallDouble(rnd);
+  
 
-smallDouble(r){
+private smallDouble(r){
   var x = mask(generate(r, UInt32), 26);
   var y = mask(generate(r, UInt32), 27);
 
   return Double(shiftLeft(UInt64(x), 27) + y) / shiftLeft(Int64(1), 53);
 }
 
-smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(shiftLeft(1, 24));
+private smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(shiftLeft(1, 24));
 
 private xor(x, y) = bitwiseXor(x, y);
 private xsl(x, n) = xor(x, shiftLeft(x, n));

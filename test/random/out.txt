@@ -4,5 +4,6 @@ Testing Random number generation:
   runs from two RNGs created consecutively: passed
   uniform integers should be in range: passed
   uniform integers should cover the whole range: passed
--- Random number generation: 18 expectations passed; 0 failed (0 pending)
-Overall: 18 expectations passed; 0 failed (0 pending)
+  uniform floats should be in range: passed
+-- Random number generation: 28 expectations passed; 0 failed (0 pending)
+Overall: 28 expectations passed; 0 failed (0 pending)
