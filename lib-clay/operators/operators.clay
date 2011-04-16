@@ -8,6 +8,7 @@ procedure destroy;
 procedure moveUnsafe;
 procedure resetUnsafe;
 procedure assign;
+procedure updateAssign;
 
 procedure equals?;
 procedure lesser?;
@@ -23,12 +24,6 @@ procedure subtract;
 procedure multiply;
 procedure divide;
 procedure remainder;
-
-procedure addAssign;
-procedure subtractAssign;
-procedure multiplyAssign;
-procedure divideAssign;
-procedure remainderAssign;
 
 procedure inc;
 procedure dec;
@@ -225,6 +220,11 @@ inline overload assign(dest:T, rvalue src:T) {
     swap(dest, src);
 }
 
+[F]
+inline overload updateAssign(static F, dest, src) {
+    dest = F(dest, src);
+}
+
 inline notEquals?(a, b) = not equals?(a, b);
 
 inline ordered?(a, b) = (a <= b) or (b <= a);
@@ -234,12 +234,6 @@ inline overload lesserEquals?(a, b) = not lesser?(b, a);
 inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
-
-inline overload addAssign(a, b)       { a = a + b; }
-inline overload subtractAssign(a, b)  { a = a - b; }
-inline overload multiplyAssign(a, b)  { a = a * b; }
-inline overload divideAssign(a, b)    { a = a / b; }
-inline overload remainderAssign(a, b) { a = a % b; }
 
 inline overload bitwiseAnd(a, b, c, ...rest) =
     bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
