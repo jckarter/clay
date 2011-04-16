@@ -165,11 +165,11 @@ overload add(i: RAGroupCoordinate[C], n: I)
 overload subtract(i: RAGroupCoordinate[C], n: I)
     = RAGroupCoordinate(i.coord - n * i.groupSize, i.groupSize);
 [C, I | Integer?(I)]
-overload addAssign(i: RAGroupCoordinate[C], n: I) {
+overload updateAssign(static add, i: RAGroupCoordinate[C], n: I) {
     i.coord += n * i.groupSize;
 }
 [C, I | Integer?(I)]
-overload subtractAssign(i: RAGroupCoordinate[C], n: I) {
+overload updateAssign(static subtract, i: RAGroupCoordinate[C], n: I) {
     i.coord -= n * i.groupSize;
 }
 

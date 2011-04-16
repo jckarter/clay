@@ -3176,7 +3176,8 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
+        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        call->args->add(updateOperatorExpr(x->op));
         call->args->add(x->left);
         call->args->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
