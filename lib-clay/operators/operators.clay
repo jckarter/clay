@@ -221,7 +221,7 @@ inline overload assign(dest:T, rvalue src:T) {
 }
 
 [F]
-inline overload updateAssign(static F, dest, src) {
+inline overload updateAssign(static F, dest, forward src) {
     dest = F(dest, src);
 }
 
