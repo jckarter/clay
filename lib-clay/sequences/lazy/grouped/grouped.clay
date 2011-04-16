@@ -170,7 +170,7 @@ overload addAssign(i: RAGroupCoordinate[C], n: I) {
 }
 [C, I | Integer?(I)]
 overload subtractAssign(i: RAGroupCoordinate[C], n: I) {
-    i.coord += n * i.groupSize;
+    i.coord -= n * i.groupSize;
 }
 
 [C]
