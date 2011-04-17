@@ -4,6 +4,7 @@ import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
 import externals.*;
+import strings.encodings.utf8.(UTF8Decoder);
 
 
 
@@ -117,19 +118,20 @@ keywordIndex(s) Int {
 
 record LexerInput(
     file : SourceFile,
+    data : UTF8Decoder[CoordinateRange[Pointer[Char]]],
     current : SizeT,
     maxCurrent : SizeT,
 );
 
 overload LexerInput(file : SourceFile) =
-    LexerInput(file, SizeT(0), SizeT(0));
+    LexerInput(file, utf8Iterator(file.data), SizeT(0), SizeT(0));
 
 overload iterator(x:LexerInput) = x;
 
-overload hasNext?(x:LexerInput) = (x.current < size(x.file.data));
+overload hasNext?(x:LexerInput) = hasNext?(x.data);
 
 overload next(x:LexerInput) {
-    var c = x.file.data[x.current];
+    var c = next(x.data);
     x.current += 1;
     return c;
 }
@@ -148,6 +150,7 @@ overload assign(dest:LexerInput, lvalue src:LexerInput) {
     }
 }
 
+currentByte(x:LexerInput) = SizeT(x.data.iter.begin - begin(x.file.data));
 
 
 //

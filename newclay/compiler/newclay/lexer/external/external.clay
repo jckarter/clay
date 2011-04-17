@@ -4,6 +4,7 @@ import newclay.diagnostics.*;
 import maybe.*;
 import parsing.combinators.wrapper.*;
 import externals.*;
+import strings.encodings.utf8.(UTF8);
 
 
 //
@@ -39,8 +40,8 @@ private var oneOrMoreAs = combinators.oneOrMoreAs;
 // utility
 //
 
-private alias Dummy = Char;
-private alias dummy = 'T';
+private alias Dummy = UniChar;
+private alias dummy = UniChar('T');
 
 private seq(forward ...parsers) = sequenceAs(dummy, ...parsers);
 
@@ -60,10 +61,10 @@ overload onePlus(forward parser) = oneOrMoreAs(dummy, parser);
 private bounds(parser:Parser) {
     return input => {
         alias T = ParseResult(Parser);
-        var start = input.current;
+        var start = currentByte(input);
         return maybe(parser(input),
             x ref=> {
-                x.range = DataRange(start, input.current);
+                x.range = DataRange(start, currentByte(input));
                 return Maybe(x);
             },
             () => nothing(T),
@@ -100,9 +101,9 @@ private var identChar2 = condition(identChar2?);
 private var identStr = seq(identChar1, zeroPlus(identChar2));
 
 private lexIdentifierOrKeyword(input) Maybe[Token] {
-    var start = input.current;
+    var start = currentByte(input);
     if (not nothing?(identStr(input))) {
-        var data = sliced(input.file.data, start, input.current);
+        var data = String(sliced(input.file.data, start, currentByte(input)));
         var i = keywordIndex(data);
         if (i >= 0)
             return Maybe(Token(KEYWORD, i));
@@ -119,7 +120,7 @@ private lexIdentifierOrKeyword(input) Maybe[Token] {
 
 private lexPunctuation(input) {
     for (i, sym in enumerated(punctuations)) {
-        var parser = literalString(sym);
+        var parser = literalString(UTF8(sym));
         var result = parser(input);
         if (not nothing?(result))
             return Maybe(Token(PUNCTUATION, i));
@@ -143,15 +144,17 @@ private var decimalDigit = condition(decimalDigit?);
 // char literal, string literal
 //
 
-private var hexEscape = seq('x', hexDigit, hexDigit);
+private var hexEscape = seq(UniChar('x'), hexDigit, hexDigit);
 private var octalEscape = seq(octalDigit, octalDigit, octalDigit);
 
 private var escapeSeq = choice(
-    'n', 'r', 't', 'a', 'b', 'f', 'v', '\\', '\'', '\"',
-     hexEscape, octalEscape,
+    UniChar('n'), UniChar('r'), UniChar('t'), UniChar('a'),
+    UniChar('b'), UniChar('f'), UniChar('v'), UniChar('\\'),
+    UniChar('\''), UniChar('\"'),
+    hexEscape, octalEscape,
 );
 
-private var escapeChar2 = seq('\\', escapeSeq);
+private var escapeChar2 = seq(UniChar('\\'), escapeSeq);
 private escapeChar(input) = escapeChar2(input);
 
 private var charChar = choice(
@@ -166,12 +169,12 @@ private var strChar = choice(
 
 private var lexCharLiteral = modify(
     x => Token(CHAR_LITERAL),
-    seq('\'', charChar, '\''),
+    seq(UniChar('\''), charChar, UniChar('\'')),
 );
 
 private var lexStringLiteral = modify(
     x => Token(STRING_LITERAL),
-    seq('\"', zeroPlus(strChar), '\"'),
+    seq(UniChar('\"'), zeroPlus(strChar), UniChar('\"')),
 );
 
 
@@ -182,7 +185,7 @@ private var lexStringLiteral = modify(
 
 private var lexStaticIndex = modify(
     x => Token(STATIC_INDEX),
-    seq('.', intLiteral)
+    seq(UniChar('.'), intLiteral)
 );
 
 
@@ -192,30 +195,30 @@ private var lexStaticIndex = modify(
 //
 
 private var hexDigits = seq(
-    hexDigit, zeroPlus(choice('_', hexDigit))
+    hexDigit, zeroPlus(choice(UniChar('_'), hexDigit))
 );
 
 private var hexInt = seq(
-    "0x", hexDigits,
+    UTF8("0x"), hexDigits,
 );
 
 private var decimalInt = seq(
-    decimalDigit, zeroPlus(choice('_', decimalDigit))
+    decimalDigit, zeroPlus(choice(UniChar('_'), decimalDigit))
 );
 
-private var sign = choice('+', '-');
+private var sign = choice(UniChar('+'), UniChar('-'));
 
 private var intType = choice(
-    seq('u', '8'),
-    seq('u', '1', '6'),
-    seq('u', '3', '2'),
-    seq('u', '6', '4'),
-    seq('i', '8'),
-    seq('i', '1', '6'),
-    seq('i', '3', '2'),
-    seq('i', '6', '4'),
-    'u',
-    'i',
+    seq(UniChar('u'), UniChar('8')),
+    seq(UniChar('u'), UniChar('1'), UniChar('6')),
+    seq(UniChar('u'), UniChar('3'), UniChar('2')),
+    seq(UniChar('u'), UniChar('6'), UniChar('4')),
+    seq(UniChar('i'), UniChar('8')),
+    seq(UniChar('i'), UniChar('1'), UniChar('6')),
+    seq(UniChar('i'), UniChar('3'), UniChar('2')),
+    seq(UniChar('i'), UniChar('6'), UniChar('4')),
+    UniChar('u'),
+    UniChar('i'),
 );
 
 private var intLiteral = seq(choice(hexInt, decimalInt), optional(intType));
@@ -231,16 +234,16 @@ private var lexIntLiteral = modify(
 // float literal
 //
 
-private var exponent = seq(choice('e','E'), optional(sign), decimalInt);
-private var fractional = seq('.', decimalInt);
+private var exponent = seq(choice(UniChar('e'),UniChar('E')), optional(sign), decimalInt);
+private var fractional = seq(UniChar('.'), decimalInt);
 
 private var floatTail = choice(
     seq(fractional, optional(exponent)),
     exponent,
 );
 
-private var hexExponent = seq(choice('p','P'), optional(sign), decimalInt);
-private var hexFractional = seq('.', hexDigits);
+private var hexExponent = seq(choice(UniChar('p'),UniChar('P')), optional(sign), decimalInt);
+private var hexFractional = seq(UniChar('.'), hexDigits);
 
 private var hexFloatTail = choice(
     seq(hexFractional, hexExponent),
@@ -251,9 +254,9 @@ private var decimalFloat = seq(decimalInt, floatTail);
 private var hexFloat = seq(hexInt, hexFloatTail);
 
 private var floatType = choice(
-    seq('f', '3', '2'),
-    seq('f', '6', '4'),
-    'f',
+    seq(UniChar('f'), UniChar('3'), UniChar('2')),
+    seq(UniChar('f'), UniChar('6'), UniChar('4')),
+    UniChar('f'),
 );
 
 private var lexFloatLiteral = modify(
@@ -270,14 +273,14 @@ private var lexFloatLiteral = modify(
 // literal code
 //
 
-private var literalCodeDelimiter = literalString("\"\"\"");
+private var literalCodeDelimiter = literalString(UTF8("\"\"\""));
 
 private nonDelimiter(input) {
     var saved = input;
     return maybe(literalCodeDelimiter(input),
         x ref=> {
             input = move(saved);
-            return nothing(Char);
+            return nothing(UniChar);
         },
         () ref=> nextChar(input),
     );
@@ -317,7 +320,7 @@ private var notNewline = condition(c => (c != '\n'));
 
 private var lexLineComment = modify(
     x => Token(COMMENT),
-    seq("//", zeroPlus(notNewline), optional('\n')),
+    seq(UTF8("//"), zeroPlus(notNewline), optional(UniChar('\n'))),
 );
 
 private blockCommentTail(input) {
@@ -335,7 +338,7 @@ private blockCommentTail(input) {
 
 private var lexBlockComment = modify(
     x => Token(COMMENT),
-    seq("/*", blockCommentTail)
+    seq(UTF8("/*"), blockCommentTail)
 );
 
 
@@ -377,7 +380,7 @@ private var tokenize1 = modify(
 private tokenizeAll(file) {
     var input = LexerInput(file);
     var tokensData = require(tokenize1(input));
-    if (input.current != size(file.data))
+    if (currentByte(input) != size(file.data))
         throw LexerError(file, input.maxCurrent);
     return SourceTokens(file, move(tokensData));
 }

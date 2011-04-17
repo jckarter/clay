@@ -10,7 +10,11 @@ import newclay.common.*;
 
 computeLocation(data, offset) {
     var line, column, tabs = 0, 0, 0;
-    for (c in slicedUpto(data, offset)) {
+    var iter = utf8Iterator(data);
+    for (i in range(offset)) {
+        if (not hasNext?(iter))
+            assert(false, "invalid location in source file");
+        var c = next(iter);
         column += 1;
         if (c == '\n') {
             line += 1;
