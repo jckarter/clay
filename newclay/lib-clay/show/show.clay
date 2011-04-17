@@ -13,11 +13,10 @@ overload show(b:Bool) { puts(if (b) "true" else "false"); }
 overload show(c:'C) | CharType?('C) {
     if (UInt32(c) > 0x20_u32 and UInt32(c) < 0x7f_u32)
         printf("'%c'\n", c);
+    else if (UInt32(c) < 0x100_u32)
+        printf("'\\x%02X'\n", UInt32(c));
     else
-        printf(
-            *#StaticStringConcat("'\\x%0", StaticName(Int(TypeSize('C))*2), "x'\n"),
-            UInt32(c)
-        );
+        printf("'\\u%06X'\n", UInt32(c));
 }
 overload show(i:'I) | SignedIntegerType?('I)   and TypeSize('I) <= 4 { printf("%d\n", i); }
 overload show(i:'I) | UnsignedIntegerType?('I) and TypeSize('I) <= 4 { printf("%u\n", i); }
