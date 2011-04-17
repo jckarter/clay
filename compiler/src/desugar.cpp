@@ -119,11 +119,11 @@ ExprPtr desugarStaticExpr(StaticExprPtr x) {
 
 ExprPtr updateOperatorExpr(int op) {
     switch (op) {
-    case UPDATE_ADD : return prelude_expr_addAssign();
-    case UPDATE_SUBTRACT : return prelude_expr_subtractAssign();
-    case UPDATE_MULTIPLY : return prelude_expr_multiplyAssign();
-    case UPDATE_DIVIDE : return prelude_expr_divideAssign();
-    case UPDATE_REMAINDER : return prelude_expr_remainderAssign();
+    case UPDATE_ADD : return prelude_expr_add();
+    case UPDATE_SUBTRACT : return prelude_expr_subtract();
+    case UPDATE_MULTIPLY : return prelude_expr_multiply();
+    case UPDATE_DIVIDE : return prelude_expr_divide();
+    case UPDATE_REMAINDER : return prelude_expr_remainder();
     default :
         assert(false);
         return NULL;

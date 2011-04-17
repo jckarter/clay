@@ -180,6 +180,18 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
                           CodegenContextPtr ctx);
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
 
+void codegenExprAssign(ExprPtr left,
+                       CValuePtr cvRight,
+                       PValuePtr pvRight,
+                       EnvPtr env,
+                       CodegenContextPtr ctx);
+
+void codegenMultiExprAssign(ExprListPtr left,
+                            MultiCValuePtr mcvRight,
+                            MultiPValuePtr mpvRight,
+                            EnvPtr env,
+                            CodegenContextPtr ctx);
+
 void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
                    CodegenContextPtr ctx,
@@ -3114,34 +3126,55 @@ bool codegenStatement(StatementPtr stmt,
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        if (mpvLeft->size() == 1) {
-            MultiCValuePtr mcvRight = codegenMultiAsRef(x->right, env, ctx);
-            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
-            CValuePtr cvRight = mcvRight->values[0];
-            CValuePtr cvLeft = mcvLeft->values[0];
-            if (mpvRight->values[0]->isTemp)
-                codegenValueMoveAssign(cvLeft, cvRight, ctx);
-            else
-                codegenValueAssign(cvLeft, cvRight, ctx);
+
+        MultiPValuePtr mpvRight2;
+        MultiCValuePtr mcvRight;
+        if (mpvRight->size() == 1) {
+            mcvRight = codegenMultiAsRef(x->right, env, ctx);
+            mpvRight2 = mpvRight;
         }
         else {
-            MultiCValuePtr mcvRight = new MultiCValue();
+            mpvRight2 = new MultiPValue();
+            mcvRight = new MultiCValue();
             for (unsigned i = 0; i < mpvRight->size(); ++i) {
                 PValuePtr pv = mpvRight->values[i];
+                PValuePtr pv2 = new PValue(pv->type, true);
+                mpvRight2->add(pv2);
                 CValuePtr cv = codegenAllocValue(pv->type, ctx);
                 mcvRight->add(cv);
             }
             codegenMultiInto(x->right, env, ctx, mcvRight);
             for (unsigned i = 0; i < mcvRight->size(); ++i)
                 cgPushStack(mcvRight->values[i], ctx);
-            MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
-            assert(mcvLeft->size() == mcvRight->size());
-            for (unsigned i = 0; i < mcvLeft->size(); ++i) {
-                CValuePtr cvLeft = mcvLeft->values[i];
-                CValuePtr cvRight = mcvRight->values[i];
-                codegenValueMoveAssign(cvLeft, cvRight, ctx);
+        }
+        unsigned j = 0;
+        for (unsigned i = 0; i < x->left->size(); ++i) {
+            ExprPtr leftExpr = x->left->exprs[i];
+            if (leftExpr->exprKind == UNPACK) {
+                ExprListPtr leftExprList = new ExprList();
+                leftExprList->add(leftExpr);
+                MultiPValuePtr mpvLeftI = safeAnalyzeMulti(leftExprList, env);
+                MultiPValuePtr mpvRightI = new MultiPValue();
+                MultiCValuePtr mcvRightI = new MultiCValue();
+                for (unsigned k = 0; k < mpvLeftI->size(); ++k) {
+                    mpvRightI->add(mpvRight2->values[j + k]);
+                    mcvRightI->add(mcvRight->values[j + k]);
+                }
+                codegenMultiExprAssign(
+                    leftExprList, mcvRightI, mpvRightI, env, ctx
+                );
+                j += mpvLeftI->size();
+            }
+            else {
+                codegenExprAssign(
+                    leftExpr, mcvRight->values[j], mpvRight2->values[j],
+                    env, ctx
+                );
+                j += 1;
             }
         }
+        assert(j == mpvRight2->size());
+
         cgDestroyAndPopStack(marker, ctx);
         clearTemps(tempMarker, ctx);
         return false;
@@ -3176,7 +3209,48 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(updateOperatorExpr(x->op), new ExprList());
+        if (x->left->exprKind == INDEXING) {
+            Indexing *y = (Indexing *)x->left.ptr();
+            PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
+            if (pvIndexable->type->typeKind != STATIC_TYPE) {
+                CallPtr call = new Call(
+                    prelude_expr_indexUpdateAssign(), new ExprList()
+                );
+                call->args->add(updateOperatorExpr(x->op));
+                call->args->add(y->expr);
+                call->args->add(y->args);
+                call->args->add(x->right);
+                return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+            }
+        }
+        else if (x->left->exprKind == STATIC_INDEXING) {
+            StaticIndexing *y = (StaticIndexing *)x->left.ptr();
+            CallPtr call = new Call(
+                prelude_expr_staticIndexUpdateAssign(), new ExprList()
+            );
+            call->args->add(updateOperatorExpr(x->op));
+            call->args->add(y->expr);
+            ValueHolderPtr vh = sizeTToValueHolder(y->index);
+            call->args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+            call->args->add(x->right);
+            return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+        }
+        else if (x->left->exprKind == FIELD_REF) {
+            FieldRef *y = (FieldRef *)x->left.ptr();
+            PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
+            if (pvBase->type->typeKind != STATIC_TYPE) {
+                CallPtr call = new Call(
+                    prelude_expr_fieldRefUpdateAssign(), new ExprList()
+                );
+                call->args->add(updateOperatorExpr(x->op));
+                call->args->add(y->expr);
+                call->args->add(new ObjectExpr(y->name.ptr()));
+                call->args->add(x->right);
+                return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+            }
+        }
+        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        call->args->add(updateOperatorExpr(x->op));
         call->args->add(x->left);
         call->args->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
@@ -3609,6 +3683,101 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         return NULL;
     }
 
+    }
+}
+
+
+
+//
+// codegenExprAssign, codegenMultiExprAssign
+//
+
+void codegenExprAssign(ExprPtr left,
+                       CValuePtr cvRight,
+                       PValuePtr pvRight,
+                       EnvPtr env,
+                       CodegenContextPtr ctx)
+{
+    if (left->exprKind == INDEXING) {
+        Indexing *x = (Indexing *)left.ptr();
+        ExprPtr indexable = x->expr;
+        ExprListPtr args = x->args;
+        PValuePtr pvIndexable = safeAnalyzeOne(indexable, env);
+        if (pvIndexable->type->typeKind != STATIC_TYPE) {
+            MultiPValuePtr pvArgs = new MultiPValue(pvIndexable);
+            pvArgs->add(safeAnalyzeMulti(args, env));
+            pvArgs->add(pvRight);
+            CValuePtr cvIndexable = codegenOneAsRef(indexable, env, ctx);
+            MultiCValuePtr cvArgs = new MultiCValue(cvIndexable);
+            cvArgs->add(codegenMultiAsRef(args, env, ctx));
+            cvArgs->add(cvRight);
+            codegenCallValue(
+                staticCValue(prelude_indexAssign(), ctx),
+                cvArgs, pvArgs, ctx,
+                new MultiCValue()
+            );
+            return;
+        }
+    }
+    else if (left->exprKind == STATIC_INDEXING) {
+        StaticIndexing *x = (StaticIndexing *)left.ptr();
+        ValueHolderPtr vh = sizeTToValueHolder(x->index);
+        CValuePtr cvIndex = staticCValue(vh.ptr(), ctx);
+        MultiPValuePtr pvArgs = new MultiPValue(safeAnalyzeOne(x->expr, env));
+        pvArgs->add(new PValue(cvIndex->type, true));
+        pvArgs->add(pvRight);
+        MultiCValuePtr cvArgs = new MultiCValue(codegenOneAsRef(x->expr, env, ctx));
+        cvArgs->add(cvIndex);
+        cvArgs->add(cvRight);
+        codegenCallValue(
+            staticCValue(prelude_staticIndexAssign(), ctx),
+            cvArgs, pvArgs, ctx,
+            new MultiCValue()
+        );
+        return;
+    }
+    else if (left->exprKind == FIELD_REF) {
+        FieldRef *x = (FieldRef *)left.ptr();
+        ExprPtr base = x->expr;
+        PValuePtr pvBase = safeAnalyzeOne(base, env);
+        if (pvBase->type->typeKind != STATIC_TYPE) {
+            CValuePtr cvName = staticCValue(x->name.ptr(), ctx);
+            MultiPValuePtr pvArgs = new MultiPValue(pvBase);
+            pvArgs->add(new PValue(cvName->type, true));
+            pvArgs->add(pvRight);
+            MultiCValuePtr cvArgs = new MultiCValue(codegenOneAsRef(base, env, ctx));
+            cvArgs->add(cvName);
+            cvArgs->add(cvRight);
+            codegenCallValue(
+                staticCValue(prelude_fieldRefAssign(), ctx),
+                cvArgs, pvArgs, ctx,
+                new MultiCValue()
+            );
+            return;
+        }
+    }
+    CValuePtr cvLeft = codegenOneAsRef(left, env, ctx);
+    if (pvRight->isTemp)
+        codegenValueMoveAssign(cvLeft, cvRight, ctx);
+    else
+        codegenValueAssign(cvLeft, cvRight, ctx);
+}
+
+void codegenMultiExprAssign(ExprListPtr left,
+                            MultiCValuePtr mcvRight,
+                            MultiPValuePtr mpvRight,
+                            EnvPtr env,
+                            CodegenContextPtr ctx)
+{
+    MultiCValuePtr mcvLeft = codegenMultiAsRef(left, env, ctx);
+    assert(mcvLeft->size() == mcvRight->size());
+    for (unsigned i = 0; i < mcvLeft->size(); ++i) {
+        CValuePtr cvLeft = mcvLeft->values[i];
+        CValuePtr cvRight = mcvRight->values[i];
+        if (mpvRight->values[i]->isTemp)
+            codegenValueMoveAssign(cvLeft, cvRight, ctx);
+        else
+            codegenValueAssign(cvLeft, cvRight, ctx);
     }
 }
 

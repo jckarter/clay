@@ -8,6 +8,7 @@ procedure destroy;
 procedure moveUnsafe;
 procedure resetUnsafe;
 procedure assign;
+procedure updateAssign;
 
 procedure equals?;
 procedure lesser?;
@@ -24,12 +25,6 @@ procedure multiply;
 procedure divide;
 procedure remainder;
 
-procedure addAssign;
-procedure subtractAssign;
-procedure multiplyAssign;
-procedure divideAssign;
-procedure remainderAssign;
-
 procedure inc;
 procedure dec;
 
@@ -44,6 +39,13 @@ procedure dereference;
 procedure call;
 procedure fieldRef;
 procedure staticIndex;
+
+procedure fieldRefAssign;
+procedure fieldRefUpdateAssign;
+procedure staticIndexAssign;
+procedure staticIndexUpdateAssign;
+procedure indexAssign;
+procedure indexUpdateAssign;
 
 
 
@@ -225,6 +227,11 @@ inline overload assign(dest:T, rvalue src:T) {
     swap(dest, src);
 }
 
+[F]
+inline overload updateAssign(static F, dest, forward src) {
+    dest = F(dest, src);
+}
+
 inline notEquals?(a, b) = not equals?(a, b);
 
 inline ordered?(a, b) = (a <= b) or (b <= a);
@@ -235,12 +242,6 @@ inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
 
-inline overload addAssign(a, b)       { a = a + b; }
-inline overload subtractAssign(a, b)  { a = a - b; }
-inline overload multiplyAssign(a, b)  { a = a * b; }
-inline overload divideAssign(a, b)    { a = a / b; }
-inline overload remainderAssign(a, b) { a = a % b; }
-
 inline overload bitwiseAnd(a, b, c, ...rest) =
     bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
 
@@ -249,6 +250,50 @@ inline overload bitwiseOr(a, b, c, ...rest) =
 
 inline overload bitwiseXor(a, b, c, ...rest) =
     bitwiseXor(bitwiseXor(a,b), c, ...rest);
+
+[FIELD]
+inline overload fieldRefAssign(dest, static FIELD, forward src) {
+    assign(fieldRef(dest, static FIELD), src);
+}
+
+[F, FIELD]
+inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward src) {
+    updateAssign(static F, fieldRef(dest, static FIELD), src);
+}
+
+[i]
+inline overload staticIndexAssign(dest, static i, forward src) {
+    assign(staticIndex(dest, static i), src);
+}
+
+[F, i]
+inline overload staticIndexUpdateAssign(static F, dest, static i, forward src) {
+    updateAssign(static F, staticIndex(dest, static i), src);
+}
+
+[...T | countValues(...T) >= 2]
+inline overload indexAssign(dest, forward ...indicesAndSrc:T) {
+    assign(
+        index(dest, ...withoutNthValue(
+            static countValues(...T)-1,
+            ...indicesAndSrc
+        )),
+        lastValue(...indicesAndSrc),
+    );
+}
+
+[F, ...T | countValues(...T) >= 2]
+inline overload indexUpdateAssign(static F, dest, forward ...indicesAndSrc:T) {
+    updateAssign(
+        static F,
+        index(dest, ...withoutNthValue(
+            static countValues(...T)-1,
+            ...indicesAndSrc
+        )),
+        lastValue(...indicesAndSrc),
+    );
+}
+
 
 
 
