@@ -139,6 +139,9 @@ sha256(message: 'S) --> returned: SHA256
         returnedWord = hostToNetwork(stateWord);
 }
 
+overload sha256(message:'S) | StringType?('S) and Defined?([stringBytes(message)])
+    = sha256(stringBytes(message));
+
 copyNonoverlappingMemory(to, from, size) inline {
     memcpy(OpaquePointer(to), OpaquePointer(from), UInt(size));
 }

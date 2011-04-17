@@ -320,3 +320,5 @@ overload #size((..'t)) = countValues(..'t);
 
 overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
 overload size(s:StringConstant) = s.size;
+
+stringBytes(s:StringConstant) = CoordinateRange(s.begin, s.end);
