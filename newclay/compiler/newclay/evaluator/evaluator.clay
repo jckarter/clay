@@ -75,6 +75,7 @@ private parseEscapeChar(iter) {
     case UniChar('\''): return UniChar('\'');
     case UniChar('\"'): return UniChar('\"');
     case UniChar('x'): return parseHexChar(iter);
+    case UniChar('u'): return parseUniChar(iter);
     }
     return parseOctalChar(c, iter);
 }
@@ -90,6 +91,17 @@ private parseHexChar(iter) {
     b = next(iter);
 
     return UniChar(parseHexDigit(a)*16 + parseHexDigit(b));
+}
+
+private parseUniChar(iter) {
+    var chars = Array[UniChar,6]();
+    for (c in chars) {
+        if (not hasNext?(iter))
+            assert(false, "incomplete unicode escape sequence in literal");
+        c = next(iter);
+    }
+
+    return UniChar( reduce((a, b) => a*16 + parseHexDigit(b), 0, chars) );
 }
 
 private parseHexDigit(x) {

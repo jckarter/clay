@@ -61,6 +61,7 @@ main() {
     '\'';
     '\\';
     '\xff';
+    '\u10ffff';
     '\123';
 
     // string literals
@@ -69,5 +70,6 @@ main() {
     "abc\n";
     "abc\\";
     "abc\xff";
+    "abc\u10ffff";
     "abc\123";
 }
