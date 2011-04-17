@@ -3209,6 +3209,46 @@ bool codegenStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
+        if (x->left->exprKind == INDEXING) {
+            Indexing *y = (Indexing *)x->left.ptr();
+            PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
+            if (pvIndexable->type->typeKind != STATIC_TYPE) {
+                CallPtr call = new Call(
+                    prelude_expr_indexUpdateAssign(), new ExprList()
+                );
+                call->args->add(updateOperatorExpr(x->op));
+                call->args->add(y->expr);
+                call->args->add(y->args);
+                call->args->add(x->right);
+                return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+            }
+        }
+        else if (x->left->exprKind == STATIC_INDEXING) {
+            StaticIndexing *y = (StaticIndexing *)x->left.ptr();
+            CallPtr call = new Call(
+                prelude_expr_staticIndexUpdateAssign(), new ExprList()
+            );
+            call->args->add(updateOperatorExpr(x->op));
+            call->args->add(y->expr);
+            ValueHolderPtr vh = sizeTToValueHolder(y->index);
+            call->args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+            call->args->add(x->right);
+            return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+        }
+        else if (x->left->exprKind == FIELD_REF) {
+            FieldRef *y = (FieldRef *)x->left.ptr();
+            PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
+            if (pvBase->type->typeKind != STATIC_TYPE) {
+                CallPtr call = new Call(
+                    prelude_expr_fieldRefUpdateAssign(), new ExprList()
+                );
+                call->args->add(updateOperatorExpr(x->op));
+                call->args->add(y->expr);
+                call->args->add(new ObjectExpr(y->name.ptr()));
+                call->args->add(x->right);
+                return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
+            }
+        }
         CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
         call->args->add(updateOperatorExpr(x->op));
         call->args->add(x->left);
