@@ -1763,6 +1763,12 @@ overload printTo(stream, x:StaticCallEntry) {
     printTo(stream, ")");
 }
 
+overload printTo(stream, x:CallAnalysisEntry) {
+    printTo(stream, "compile ");
+    printReprTo(stream, x.callable);
+    printTo(stream, ArgumentList(x.args));
+}
+
 overload printTo(stream, x:StaticMatchEntry) {
     printTo(stream, "match #");
     printReprTo(stream, x.callable);
