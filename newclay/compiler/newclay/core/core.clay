@@ -11,6 +11,7 @@ import algorithms.(sort);
 import maybe.*;
 import deques.*;
 import numbers.floats.*;
+import printer.formatter.*;
 
 
 
@@ -914,7 +915,7 @@ variant Value = BoolValue
 overload Value() = Value(BoolValue());
 
 record BoolValue(value: Bool);
-record CharValue(value: Char);
+record CharValue(value: UInt32);
 record StringValue(value: String);
 record TupleValue(elements: ValueList);
 
@@ -1179,6 +1180,36 @@ private printSymbol(stream, head, params) {
         printTo(stream, '[', params, ']');
 }
 
+printCharReprTo(stream, value:UInt32) {
+    if (value == UInt32('\''))
+        printTo(stream, "\\'");
+    else if (value == UInt32('\"'))
+        printTo(stream, "\\\"");
+    else if (value >= UInt32(' ') and value <= UInt32('~'))
+        printTo(stream, Char(value));
+    else if (value == UInt32('\n'))
+        printTo(stream, "\\n");
+    else if (value == UInt32('\r'))
+        printTo(stream, "\\r");
+    else if (value == UInt32('\t'))
+        printTo(stream, "\\t");
+    else if (value == UInt32('\a'))
+        printTo(stream, "\\a");
+    else if (value == UInt32('\b'))
+        printTo(stream, "\\a");
+    else if (value == UInt32('\f'))
+        printTo(stream, "\\f");
+    else if (value == UInt32('\v'))
+        printTo(stream, "\\v");
+    else if (value == UInt32('\\'))
+        printTo(stream, "\\\\");
+    else if (value <= 0xffu)
+        printTo(stream, "\\x", rightAlignedWith(2, '0', hex(value)));
+    else
+        printTo(stream, "\\u", rightAlignedWith(6, '0', hex(value)));
+
+}
+
 overload printTo(stream, x:Value) {
     printTo(stream, *x);
 }
@@ -1186,7 +1217,9 @@ overload printTo(stream, x:BoolValue) {
     printTo(stream, x.value);
 }
 overload printTo(stream, c:CharValue) {
-    printReprTo(stream, c.value);
+    printTo(stream, '\'');
+    printCharReprTo(stream, c.value);
+    printTo(stream, '\'');
 }
 overload printTo(stream, v:IntValue) {
     match(v,
@@ -1209,7 +1242,10 @@ overload printTo(stream, v:FloatValue) {
     );
 }
 overload printTo(stream, x:StringValue) {
-    printReprTo(stream, x.value);
+    printTo(stream, '\"');
+    for (c in utf8Iterator(x.value))
+        printCharReprTo(stream, UInt32(c));
+    printTo(stream, '\"');
 }
 overload printTo(stream, x:TupleValue) {
     printTo(stream, "(");

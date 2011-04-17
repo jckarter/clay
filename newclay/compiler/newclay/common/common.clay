@@ -1,4 +1,5 @@
 import libc.(strftime, localtime, time_t, time);
+import strings.encodings.utf8.(UTF8Decoder);
 
 alias Map[K,V] = HashMap[K,V];
 alias Set[K] = HashSet[K];
@@ -238,3 +239,9 @@ record IdentityHashed[T] (value:T);
 [T] overload equals?(x:IdentityHashed[T], y:IdentityHashed[T]) = is?(x, y);
 [T] overload hash(x:IdentityHashed[T]) = hash(referencePtr(x));
 
+
+//
+// utf8Iterator
+//
+
+utf8Iterator(x) = UTF8Decoder(iterator(x));
