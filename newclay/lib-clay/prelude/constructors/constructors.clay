@@ -26,9 +26,7 @@ overload UInt64() inline = 0_u64;
 overload Float32() inline = 0.0_f32;
 overload Float64() inline = 0.0_f64;
 
-overload Char() inline   = Char(0_u8);
-overload Char16() inline = Char16(0_u16);
-overload Char32() inline = Char32(0_u32);
+overload Char() inline   = '\u000000'
 
 overload Static['x]() inline --> returned:Static['x] {}
 
