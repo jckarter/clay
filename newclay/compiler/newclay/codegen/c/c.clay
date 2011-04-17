@@ -1,7 +1,7 @@
 import newclay.ast as ast;
 import newclay.ir as ir;
 import newclay.analysis.*;
-import newclay.evaluator.(mangleString, qualifiedValueString, printQualifiedTo, printQualifiedSymbolTo);
+import newclay.evaluator.(mangleString, qualifiedValueString, printQualifiedTo, printQualifiedSymbolTo, stringSize);
 import newclay.diagnostics.(computeLocation);
 import newclay.optimizer.*;
 import newclay.lifetime.*;
@@ -243,7 +243,7 @@ private cValue(c, value:Value) = match(value,
     BoolValue,   bv ref=> if (bv.value) String("1") else String("0"),
     IntValue,    iv ref=> cIntegerValue(c, iv),
     FloatValue,  fv ref=> cFloatValue(c, fv),
-    CharValue,   cv ref=> printString(Int(cv.value)),
+    CharValue,   cv ref=> printString(cv.value, "u"),
     StringValue, sv ref=> cStringValue(c, sv),
     MatchDefault, x ref=> { genericError("codegen of this value not yet supported"); return String(); },
 );
@@ -633,7 +633,7 @@ private cStringLiteral(s) {
             push(result, "\\\""); break;
         default:
             if (Int(c) < 0x20 or Int(c) > 0x7e)
-                printTo(result, "\\x", rightAlignedWith(2, '0', hex(Int(c))));
+                printTo(result, "\\x", rightAlignedWith(2, '0', hex(UInt8(c))));
             else
                 push(result, c);
             break;
@@ -647,9 +647,15 @@ private cStringConstant(c, sv) = ref getConstant(c, Value(sv),
     constant ref=> {
         var stringName = constant.mangledName + "_string";
         return printString(
-            "static const char ", stringName, "[] = ", cStringLiteral(sv.value), ";\n",
+            "static const unsigned char ", stringName, "[] = ",
+                cStringLiteral(sv.value), ";\n",
             "static const ", typeName(c, stringConstantType()), " ", constant.mangledName,
-            " = { (char*)", stringName, ", (char*)", stringName, " + ", size(sv.value), " };"
+            " = { ",
+            "(", typeName(c, uintType()), ")",
+              cIntegerValue(c, IntValue(StaticUIntValue(UInt64(stringSize(sv.value))))), ", ",
+            "(unsigned char*)", stringName,
+            "(unsigned char*)", stringName, " + ", size(sv.value),
+            " };",
         );
     }
 );
