@@ -1,0 +1,6 @@
+import show.(show);
+
+main() {
+    for (c in "привет")
+        show(c);
+}
