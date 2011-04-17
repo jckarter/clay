@@ -40,6 +40,9 @@ procedure call;
 procedure fieldRef;
 procedure staticIndex;
 
+procedure fieldRefAssign;
+procedure staticIndexAssign;
+procedure indexAssign;
 
 
 //
@@ -243,6 +246,27 @@ inline overload bitwiseOr(a, b, c, ...rest) =
 
 inline overload bitwiseXor(a, b, c, ...rest) =
     bitwiseXor(bitwiseXor(a,b), c, ...rest);
+
+[FIELD]
+inline overload fieldRefAssign(dest, static FIELD, forward src) {
+    assign(fieldRef(dest, static FIELD), src);
+}
+
+[i]
+inline overload staticIndexAssign(dest, static i, forward src) {
+    assign(staticIndex(dest, static i), src);
+}
+
+[...T | countValues(...T) >= 2]
+inline overload indexAssign(dest, forward ...indicesAndSrc:T) {
+    assign(
+        index(dest, ...withoutNthValue(
+            static countValues(...T)-1,
+            ...indicesAndSrc
+        )),
+        lastValue(...indicesAndSrc),
+    );
+}
 
 
 
