@@ -1,0 +1,6 @@
+import show.(show);
+
+main() {
+    static for (c in 'п', 'р', 'и', 'в', 'е', 'т')
+        show(c);
+}
