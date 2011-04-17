@@ -145,13 +145,16 @@ private var decimalDigit = condition(decimalDigit?);
 //
 
 private var hexEscape = seq(UniChar('x'), hexDigit, hexDigit);
+private var unicodeEscape = seq(UniChar('u'),
+    hexDigit, hexDigit, hexDigit, hexDigit, hexDigit, hexDigit
+);
 private var octalEscape = seq(octalDigit, octalDigit, octalDigit);
 
 private var escapeSeq = choice(
     UniChar('n'), UniChar('r'), UniChar('t'), UniChar('a'),
     UniChar('b'), UniChar('f'), UniChar('v'), UniChar('\\'),
     UniChar('\''), UniChar('\"'),
-    hexEscape, octalEscape,
+    hexEscape, octalEscape, unicodeEscape
 );
 
 private var escapeChar2 = seq(UniChar('\\'), escapeSeq);
