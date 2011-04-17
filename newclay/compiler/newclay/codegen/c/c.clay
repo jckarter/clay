@@ -653,7 +653,7 @@ private cStringConstant(c, sv) = ref getConstant(c, Value(sv),
             " = { ",
             "(", typeName(c, uintType()), ")",
               cIntegerValue(c, IntValue(StaticUIntValue(UInt64(stringSize(sv.value))))), ", ",
-            "(unsigned char*)", stringName,
+            "(unsigned char*)", stringName, ", ",
             "(unsigned char*)", stringName, " + ", size(sv.value),
             " };",
         );
