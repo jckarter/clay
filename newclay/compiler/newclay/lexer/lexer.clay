@@ -142,9 +142,11 @@ overload assign(dest:LexerInput, lvalue src:LexerInput) {
         var srcMax = max(src.maxCurrent, src.current);
         dest.maxCurrent = max(destMax, srcMax);
         dest.current = src.current;
+        dest.data = src.data;
     }
     else {
         dest.file = src.file;
+        dest.data = src.data;
         dest.current = src.current;
         dest.maxCurrent = src.maxCurrent;
     }
