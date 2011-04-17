@@ -1,0 +1,3 @@
+alias REPLACEMENT_CHAR = '\u00FFFD';
+alias MAX_CODE_POINT = '\u10FFFF';
+
