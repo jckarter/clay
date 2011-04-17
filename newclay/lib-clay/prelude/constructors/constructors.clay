@@ -10,7 +10,7 @@ import __primitives__.(StaticInt, StaticUInt);
 
 overload Bool() inline = false;
 
-overload Int() inline = 0;
+overload Int() inline = 0i;
 overload UInt() inline = 0u;
 
 overload Int8() inline  = 0_i8;
