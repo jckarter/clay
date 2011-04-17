@@ -10,7 +10,7 @@ import newclay.hooks.*;
 import newclay.diagnostics.(computeLocation);
 import numbers.floats.*;
 import printer.formatter.*;
-
+import strings.encodings.utf8.(UTF8);
 
 
 //
@@ -18,57 +18,78 @@ import printer.formatter.*;
 //
 
 parseStringLiteral(s) {
-    var result = String();
-    assert(front(s) == '\"', "no quote opening string literal");
-    assert(back(s) == '\"', "no quote closing string literal");
-    var i = 1;
-    while (i+1 < size(s)) {
-        var c = s[i];
-        if (c == '\\') {
-            c, i = ...parseEscapeChar(s, i+1);
+    var result = UTF8(String());
+    var iter = utf8Iterator(s);
+    if (not hasNext?(iter) or next(iter) != UniChar('"'))
+        assert(false, "no quote opening string literal");
+
+    while (hasNext?(iter)) {
+        var c = next(iter);
+        if (c == UniChar('"')) {
+            if (hasNext?(iter))
+                assert(false, "unescaped quote in string literal");
+            return move(result.encoded);
+        } else if (c == UniChar('\\')) {
+            push(result, parseEscapeChar(iter));
+        } else {
             push(result, c);
-        }
-        else {
-            push(result, c);
-            i += 1;
         }
     }
-    return move(result);
+    assert(false, "no quote closing string literal");
+    return String();
 }
 
 parseCharLiteral(s) {
-    assert(front(s) == '\'', "no apostrophe opening char literal");
-    assert(back(s) == '\'', "no apostrophe closing char literal");
-    assert(size(s) >= 3, "char literal too small");
-    if (s[1] == '\\') {
-        var c, i = ...parseEscapeChar(s, 2);
-        assert(i == size(s) - 1, "junk characters after escape code character");
-        return c;
-    } else {
-        assert(size(s) == 3, "junk characters after simple character");
-        return s[1];
-    }
+    var iter = utf8Iterator(s);
+    if (not hasNext?(iter) or next(iter) != UniChar('\''))
+        assert(false, "no quote opening char literal");
+    if (not hasNext?(iter))
+        assert(false, "char literal too small");
+    var c = next(iter);
+    if (c == UniChar('\''))
+        assert(false, "unescaped quot in char literal");
+    if (c == UniChar('\\'))
+        c = parseEscapeChar(iter);
+
+    if (not hasNext?(iter) or next(iter) != UniChar('\''))
+        assert(false, "no quote opening char literal");
+    if (hasNext?(iter))
+        assert(false, "junk after value in char literal");
+
+    return c;
 }
 
-private parseEscapeChar(s, i) {
-    switch (s[i]) {
-    case 'n': return '\n', i+1;
-    case 'r': return '\r', i+1;
-    case 't': return '\t', i+1;
-    case 'a': return '\a', i+1;
-    case 'b': return '\b', i+1;
-    case 'f': return '\f', i+1;
-    case 'v': return '\v', i+1;
-    case '\\': return '\\', i+1;
-    case '\'': return '\'', i+1;
-    case '\"': return '\"', i+1;
-    case 'x' : return parseHexChar(s[i+1], s[i+2]), i+3;
+private parseEscapeChar(iter) {
+    if (not hasNext?(iter))
+        assert(false, "incomplete escape sequence in literal");
+    var c = next(iter);
+    switch (c) {
+    case UniChar('n'): return UniChar('\n');
+    case UniChar('r'): return UniChar('\r');
+    case UniChar('t'): return UniChar('\t');
+    case UniChar('a'): return UniChar('\a');
+    case UniChar('b'): return UniChar('\b');
+    case UniChar('f'): return UniChar('\f');
+    case UniChar('v'): return UniChar('\v');
+    case UniChar('\\'): return UniChar('\\');
+    case UniChar('\''): return UniChar('\'');
+    case UniChar('\"'): return UniChar('\"');
+    case UniChar('x'): return parseHexChar(iter);
     }
-    return parseOctalChar(s[i], s[i+1], s[i+2]), i+3;
+    return parseOctalChar(c, iter);
 }
 
-private parseHexChar(a, b) {
-    return Char(parseHexDigit(a)*16 + parseHexDigit(b));
+private parseHexChar(iter) {
+    var a, b = UniChar(), UniChar();
+
+    if (not hasNext?(iter))
+        assert(false, "incomplete hex escape sequence in literal");
+    a = next(iter);
+    if (not hasNext?(iter))
+        assert(false, "incomplete hex escape sequence in literal");
+    b = next(iter);
+
+    return UniChar(parseHexDigit(a)*16 + parseHexDigit(b));
 }
 
 private parseHexDigit(x) {
@@ -82,8 +103,17 @@ private parseHexDigit(x) {
     return -1;
 }
 
-private parseOctalChar(a, b, c) {
-    return Char(
+private parseOctalChar(a, iter) {
+    var b, c = UniChar(), UniChar();
+
+    if (not hasNext?(iter))
+        assert(false, "incomplete octal escape sequence in literal");
+    b = next(iter);
+    if (not hasNext?(iter))
+        assert(false, "incomplete octal escape sequence in literal");
+    c = next(iter);
+
+    return UniChar(
         parseOctalDigit(a)*8*8 + parseOctalDigit(b)*8 + parseOctalDigit(c)
     );
 }
@@ -216,7 +246,7 @@ parseHexFloatLiteral(number, suffix) {
             var roundBit  = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift-1));
             var roundMask = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift-1) - 1);
             var evenBit   = bitwiseAnd(mantissa, shiftLeft(1_u64, mantissaShift));
-            observe(hex(roundBit), hex(roundMask), hex(evenBit));
+            //observe(hex(roundBit), hex(roundMask), hex(evenBit));
 
             mantissa = shiftRight(mantissa, mantissaShift);
 
@@ -227,7 +257,7 @@ parseHexFloatLiteral(number, suffix) {
                 mantissaExponent = 0;
         }
 
-        observe(number, neg?, mantissaExponent, rightAlignedWith(13, '0', hex(mantissa)));
+        //observe(number, neg?, mantissaExponent, rightAlignedWith(13, '0', hex(mantissa)));
         value = floatFromParts(neg?, mantissaExponent, mantissa);
     }
 
@@ -466,7 +496,7 @@ overload evaluateExpr(x:ast.StringLiteral, env) {
     return Value(StringValue(parseStringLiteral(x.value)));
 }
 overload evaluateExpr(x:ast.CharLiteral, env) {
-    return Value(CharValue(parseCharLiteral(x.value)));
+    return Value(CharValue(UInt32(parseCharLiteral(x.value))));
 }
 overload evaluateExpr(x:ast.FloatLiteral, env) {
     genericError("floating-point values not supported in static context");
@@ -1643,13 +1673,13 @@ private nStrings(args) {
 }
 
 private nChars(args) {
-    var result = Vector[Char]();
+    var result = UTF8(String());
     for (i, x in enumerated(args)) {
         if (not variantIs?(x, CharValue))
             matchFailureError("expecting a char, but received: ", x);
         push(result, variantAs(x, CharValue).value);
     }
-    return move(result);
+    return move(result.encoded);
 }
 
 private oneTuple(args) {
@@ -1852,17 +1882,37 @@ evaluatePrimitive(kind, args) {
         }
         case PRIM_StaticStringSize : {
             var s = oneString(args);
-            return ValueList(IntValue(StaticIntValue(Int64(size(s)))));
+            var sz = 0_i64;
+            for (c in utf8Iterator(s))
+                inc(sz);
+            return ValueList(IntValue(StaticIntValue(sz)));
         }
         case PRIM_StaticStringSlice : {
-            var s, i_, j_ = ...stringIntInt(args);
-            var i = Int64(i_);
-            var j = Int64(j_);
-            if ((i < 0) or (i > size(s)))
-                matchFailureError("invalid starting index: ", i);
-            if ((j < i) or (j > size(s)))
-                matchFailureError("invalid ending index: ", j);
-            return ValueList(StringValue(slice(s, i, j)));
+            var s, from_, to_ = ...stringIntInt(args);
+            var from = Int64(from_);
+            var to = Int64(to_);
+
+            if (from < 0)
+                matchFailureError("invalid starting index: ", from);
+            if (to < from)
+                matchFailureError("invalid ending index: ", to);
+
+            var slicedS = UTF8(String());
+            var iter = utf8Iterator(s);
+
+            for (i in range(from))
+                if (hasNext?(iter))
+                    next(iter);
+                else
+                    matchFailureError("invalid starting index: ", from);
+
+            for (i in range(from, to))
+                if (hasNext?(iter))
+                    push(slicedS, next(iter));
+                else
+                    matchFailureError("invalid ending index: ", from);
+
+            return ValueList(StringValue(slicedS.encoded));
         }
         case PRIM_StaticStringConcat : {
             var a = nStrings(args);
@@ -1872,16 +1922,26 @@ evaluatePrimitive(kind, args) {
             return ValueList(StringValue(move(result)));
         }
         case PRIM_StaticStringChar : {
-            var s, i_ = ...stringInt(args);
-            var i = Int64(i_);
+            var s, n_ = ...stringInt(args);
+            var n = Int64(n_);
 
-            if ((i < 0) or (i >= size(s)))
-                matchFailureError("invalid index into string: ", i);
-            return ValueList(CharValue(s[i]));
+            if (n < 0)
+                matchFailureError("invalid index into string: ", n);
+
+            var iter = utf8Iterator(s);
+            for (i in range(n))
+                if (hasNext?(iter))
+                    next(iter);
+                else
+                    matchFailureError("invalid index into string: ", n);
+
+            if (not hasNext?(iter))
+                matchFailureError("invalid index into string: ", n);
+            return ValueList(CharValue(UInt32(next(iter))));
         }
         case PRIM_StaticStringChars : {
             var s = oneString(args);
-            return ValueList(mapped(c => Value(CharValue(c)), s));
+            return ValueList(mapped(c => Value(CharValue(UInt32(c))), utf8Iterator(s)));
         }
         case PRIM_StaticStringFromChars : {
             var s = nChars(args);

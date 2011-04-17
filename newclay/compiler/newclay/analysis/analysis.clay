@@ -499,7 +499,7 @@ overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.StringLiteral)
     = addSpecializedValue(s, expr, Value(StringValue(parseStringLiteral(expr.value))));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.CharLiteral)
-    = addSpecializedValue(s, expr, Value(CharValue(parseCharLiteral(expr.value))));
+    = addSpecializedValue(s, expr, Value(CharValue(UInt32(parseCharLiteral(expr.value)))));
 
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.FloatLiteral)
     = addSpecializedValue(s, expr, Value(parseFloatLiteral(expr.negative?, expr.value)));
