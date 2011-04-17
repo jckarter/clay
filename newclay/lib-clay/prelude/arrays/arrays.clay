@@ -209,10 +209,3 @@ overload lesser?(x:Array['T, 'n], y:Array['U, 'n]) inline
     return false;
 }
 
-
-//
-// StringConstant as sequence
-//
-
-overload begin(s:StringConstant) = s.begin;
-overload end(s:StringConstant) = s.end;

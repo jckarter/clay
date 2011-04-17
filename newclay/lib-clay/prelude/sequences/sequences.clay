@@ -1,4 +1,5 @@
 import meta.statics.(StaticString?, StaticStringSize);
+import strings.encodings.utf8.(UTF8Iterator);
 import values.*;
 
 
@@ -311,3 +312,11 @@ overload reverseIterator(forward x:CoordinateRange['C])
 
 overload #size('s) | StaticString?('s) = StaticStringSize('s);
 overload #size((..'t)) = countValues(..'t);
+
+
+//
+// StringConstant as sequence
+//
+
+overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
+overload size(s:StringConstant) = s.size;
