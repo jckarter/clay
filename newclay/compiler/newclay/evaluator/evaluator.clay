@@ -1778,6 +1778,13 @@ overload evaluateStaticCompare(a:TupleValue, b:TupleValue, op) {
     return ValueList(BoolValue(op(size(a.elements), size(b.elements))));
 }
 
+stringSize(s) {
+    var sz = 0_i64;
+    for (c in utf8Iterator(s))
+        inc(sz);
+    return sz;
+}
+
 evaluatePrimitive(kind, args) {
     return withStaticCall(Value(Primitive(kind)), args, () ref=> {
         switch (kind) {
@@ -1894,10 +1901,7 @@ evaluatePrimitive(kind, args) {
         }
         case PRIM_StaticStringSize : {
             var s = oneString(args);
-            var sz = 0_i64;
-            for (c in utf8Iterator(s))
-                inc(sz);
-            return ValueList(IntValue(StaticIntValue(sz)));
+            return ValueList(IntValue(StaticIntValue(stringSize(s))));
         }
         case PRIM_StaticStringSlice : {
             var s, from_, to_ = ...stringIntInt(args);
