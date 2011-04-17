@@ -150,9 +150,7 @@ symbol UInt64 = PrimitiveType(LLIntegerType[LLUnsigned, 64]);
 symbol Float32 = PrimitiveType(LLFloatType[32]);
 symbol Float64 = PrimitiveType(LLFloatType[64]);
 
-symbol Char   = PrimitiveType(LLIntegerType[LLUnsigned,  8]);
-symbol Char16 = PrimitiveType(LLIntegerType[LLUnsigned, 16]);
-symbol Char32 = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
+symbol Char = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
 
 #IntegerType?('x) = false;
 overload #IntegerType?(Int   ) = true;
@@ -187,9 +185,7 @@ overload #FloatType?(Float64) = true;
 #NumberType?('T) = IntegerType?('T) or FloatType?('T);
 
 #CharType?('x) = false;
-overload #CharType?(Char  ) = true;
-overload #CharType?(Char16) = true;
-overload #CharType?(Char32) = true;
+overload #CharType?(Char) = true;
 
 
 //
@@ -197,8 +193,9 @@ overload #CharType?(Char32) = true;
 //
 
 symbol StringConstant = RecordType(
-    begin:ContiguousCoordinate[Char],
-    end:ContiguousCoordinate[Char],
+    size:UInt,
+    begin:ContiguousCoordinate[UInt8],
+    end:ContiguousCoordinate[UInt8],
 );
 
 
@@ -486,6 +483,13 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 #ReversibleSequenceType?('S) = CallDefined?(reverseIterator, 'S);
 #ReversibleCoordinateType?('C) = CallDefined?(dereference, 'C)
     and CallDefined?(dec, Ref['C]);
+
+
+//
+// StringType?
+//
+
+#StringType?('S) = SequenceType?('S) and CharType?(SequenceElementType('S));
 
 
 //
