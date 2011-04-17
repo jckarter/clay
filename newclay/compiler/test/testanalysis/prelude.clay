@@ -73,7 +73,7 @@ symbol Float32 = NewPrimitiveType();
 symbol Float64 = NewPrimitiveType();
 
 overload #LLType(Bool) = LLBoolType;
-overload #LLType(Char) = LLIntegerType[LLUnsigned, 8];
+overload #LLType(Char) = LLIntegerType[LLUnsigned, 32];
 overload #LLType(Int8 ) = LLIntegerType[LLSigned,  8];
 overload #LLType(Int16) = LLIntegerType[LLSigned, 16];
 overload #LLType(Int32) = LLIntegerType[LLSigned, 32];
@@ -95,7 +95,7 @@ overload #LLType(Float64) = LLFloatType[64];
 symbol StringConstant;
 overload #Type?(StringConstant) = true;
 overload #LLType(StringConstant)
-    = LLTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
+    = LLTupleType[("size", UInt), ("begin", Pointer[UInt8]), ("end", Pointer[UInt8])];
 
 
 //
@@ -268,6 +268,8 @@ notEquals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a != $b;
 """;
 
+
+
 assign(ref a, b)                  { a <-- b; }
 addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
 subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
@@ -365,3 +367,29 @@ lambdaCaptures(lambda) = lambda.1;
 
 overload call(lambda:Tuple[Static['L], 'T], forward ..args)
     = forward ..'L(..lambdaCaptures(lambda), ..args);
+
+//
+// static operators
+//
+
+overload #plus('x) = StaticPlus('x);
+overload #minus('x) = StaticMinus('x);
+overload #call('f, ..'x) = 'f(..'x);
+overload #index('a, ..'x) = 'a[..'x];
+overload #staticIndex('a, 'x) = 'a['x];
+overload #fieldRef('a, 'x) = StaticModuleMember('a, 'x);
+overload #unpack('a) = ..StaticTupleElements('a);
+overload #multiply('a, 'b) = StaticMultiply('a, 'b);
+overload #quotient('a, 'b) = StaticQuotient('a, 'b);
+overload #remainder('a, 'b) = StaticRemainder('a, 'b);
+overload #add('a, 'b) = StaticAdd('a, 'b);
+overload #subtract('a, 'b) = StaticSubtract('a, 'b);
+overload #lesser?('a, 'b) = StaticLesser?('a, 'b);
+overload #lesserEquals?('a, 'b) = StaticLesserEquals?('a, 'b);
+overload #greater?('a, 'b) = StaticGreater?('a, 'b);
+overload #greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
+overload #equals?('a, 'b) = StaticEquals?('a, 'b);
+overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+
+overload #tupleLiteral(..'x) = (..'x);
+
