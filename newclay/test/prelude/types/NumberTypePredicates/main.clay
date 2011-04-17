@@ -16,8 +16,6 @@ main() {
     show(##PrimitiveType?(Float32)); ////true
     show(##PrimitiveType?(Float64)); ////true
     show(##PrimitiveType?(Char)); ////true
-    show(##PrimitiveType?(Char16)); ////true
-    show(##PrimitiveType?(Char32)); ////true
     show(##PrimitiveType?(Static[2])); ////true
     show(##PrimitiveType?(OpaquePointer)); ////true
     // Nonprimitive types
@@ -46,8 +44,6 @@ main() {
     show(##IntegerType?(Float32)); ////false
     show(##IntegerType?(Float64)); ////false
     show(##IntegerType?(Char)); ////false
-    show(##IntegerType?(Char16)); ////false
-    show(##IntegerType?(Char32)); ////false
     show(##IntegerType?(Static[2])); ////false
     show(##IntegerType?(OpaquePointer)); ////false
 
@@ -67,8 +63,6 @@ main() {
     show(#SignedIntegerType?(Float32)); ////false
     show(#SignedIntegerType?(Float64)); ////false
     show(#SignedIntegerType?(Char)); ////false
-    show(#SignedIntegerType?(Char16)); ////false
-    show(#SignedIntegerType?(Char32)); ////false
     show(#SignedIntegerType?(Static[2])); ////false
     show(#SignedIntegerType?(OpaquePointer)); ////false
 
@@ -88,8 +82,6 @@ main() {
     show(#UnsignedIntegerType?(Float32)); ////false
     show(#UnsignedIntegerType?(Float64)); ////false
     show(#UnsignedIntegerType?(Char)); ////false
-    show(#UnsignedIntegerType?(Char16)); ////false
-    show(#UnsignedIntegerType?(Char32)); ////false
     show(#UnsignedIntegerType?(Static[2])); ////false
     show(#UnsignedIntegerType?(OpaquePointer)); ////false
 
@@ -109,8 +101,6 @@ main() {
     show(#FloatType?(Int64)); ////false
     show(#FloatType?(Bool)); ////false
     show(#FloatType?(Char)); ////false
-    show(#FloatType?(Char16)); ////false
-    show(#FloatType?(Char32)); ////false
     show(#FloatType?(Static[2])); ////false
     show(#FloatType?(OpaquePointer)); ////false
 
@@ -130,15 +120,11 @@ main() {
     // Nonnumber types
     show(#NumberType?(Bool)); ////false
     show(#NumberType?(Char)); ////false
-    show(#NumberType?(Char16)); ////false
-    show(#NumberType?(Char32)); ////false
     show(#NumberType?(Static[2])); ////false
     show(#NumberType?(OpaquePointer)); ////false
 
     // Char types
     show(#CharType?(Char)); ////true
-    show(#CharType?(Char16)); ////true
-    show(#CharType?(Char32)); ////true
     // Nonchar types
     show(#CharType?(Float32)); ////false
     show(#CharType?(Float64)); ////false

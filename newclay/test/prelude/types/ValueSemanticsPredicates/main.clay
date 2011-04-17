@@ -19,8 +19,6 @@ main() {
     show(#PODType?(Float32)); ////true
     show(#PODType?(Float64)); ////true
     show(#PODType?(Char)); ////true
-    show(#PODType?(Char16)); ////true
-    show(#PODType?(Char32)); ////true
     show(#PODType?(StringConstant)); ////true
     show(#PODType?(Static[2])); ////true
     show(#PODType?(Pointer[Int])); ////true

@@ -10,9 +10,7 @@ main() {
     show(#TypeAlign(Float32)); ////4u
     // XXX platform dependent
     show(#TypeAlign(Float64)); ////8u
-    show(#TypeAlign(Char)); ////1u
-    show(#TypeAlign(Char16)); ////2u
-    show(#TypeAlign(Char32)); ////4u
+    show(#TypeAlign(Char)); ////4u
     // XXX platform dependent
     show(#TypeAlign(OpaquePointer)); ////8u
     show(#TypeAlign(Tuple[Int8, Int32])); ////4u

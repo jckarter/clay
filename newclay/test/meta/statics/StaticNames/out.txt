@@ -16,8 +16,7 @@ true
 false
 --chars
 'a'
-'
-'
+'\n'
 --modules
 meta.statics
 show
@@ -49,8 +48,7 @@ true
 false
 --chars
 'a'
-'
-'
+'\n'
 --modules
 meta.statics
 show

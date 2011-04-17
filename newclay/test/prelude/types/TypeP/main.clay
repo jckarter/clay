@@ -21,8 +21,6 @@ main() {
     show(#Type?(Float32)); ////true
     show(#Type?(Float64)); ////true
     show(#Type?(Char)); ////true
-    show(#Type?(Char16)); ////true
-    show(#Type?(Char32)); ////true
     show(#Type?(StringConstant)); ////true
     show(#Type?(Static[2])); ////true
     show(#Type?(Static[NonType])); ////true
