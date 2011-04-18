@@ -3120,10 +3120,6 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
-        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
-            if (mpvLeft->values[i]->isTemp)
-                argumentError(i, "cannot assign to a temporary");
-        }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
 
@@ -3207,8 +3203,6 @@ bool codegenStatement(StatementPtr stmt,
     case UPDATE_ASSIGNMENT : {
         UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
-        if (pvLeft->isTemp)
-            error(x->left, "cannot assign to a temporary");
         if (x->left->exprKind == INDEXING) {
             Indexing *y = (Indexing *)x->left.ptr();
             PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);

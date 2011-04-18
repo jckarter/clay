@@ -1,0 +1,25 @@
+
+record Foo[A](inner: A);
+
+[A]
+overload index(x:Foo[A], i) = x.inner[i] + 1;
+
+[A]
+overload indexAssign(x:Foo[A], i, v) { x.inner[i] = v-1; }
+
+main() {
+    var a = Foo([1, 2, 3]);
+    for (i in range(3))
+        println(a[i]);
+    println();
+    for (i in range(3))
+        a[i] = a[i] + 1;
+    for (i in range(3))
+        println(a[i]);
+    println();
+    for (i in range(3))
+        a[i] *= 10;
+    for (i in range(3))
+        println(a[i]);
+    println();
+}
