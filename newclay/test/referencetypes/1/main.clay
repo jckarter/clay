@@ -1,7 +1,8 @@
+import containers.(push);
 import referencetypes.(ReferenceType, WithPointerType);
 import pointers.unique.(UniquePointer);
 import show.(show);
-import vectors.(Vector, push);
+import vectors.(Vector);
 
 symbol Foo = ReferenceType(a:Int, b:Vector[Int]);
 symbol Bar = ReferenceType(a:Int, b:Vector[Int]), WithPointerType(UniquePointer);

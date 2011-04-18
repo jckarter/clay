@@ -1,12 +1,15 @@
 import memory.*;
 import values.*;
 import hashing.(hash, hashSequence);
+import containers.*;
 
 symbol Vector['T] = CompositeType(
     size:UInt,
     capacity:UInt,
     data:ContiguousCoordinate['T],
 );
+
+overload #ContainerType?(Vector['T]) = true;
 
 
 //
@@ -93,7 +96,7 @@ overload end(v:Vector['T]) inline = v.data + v.size;
 // vector mutation operations
 //
 
-push(ref v:Vector['T], forward ..elements:'TT) inline
+overload push(ref v:Vector['T], forward ..elements:'TT) inline
     | countValues(..'TT) != 1
       and allValues?([U -> CallDefined?(push, Ref[Vector['T]], U)], ..'TT)
 {
@@ -112,27 +115,27 @@ overload push(ref v:Vector['T], forward elt:'T) inline {
     insert(v, size(v), elt);
 }
 
-pop(ref v:Vector['T]) inline --> returned:'T {
+overload pop(ref v:Vector['T]) inline --> returned:'T {
     returned <-- moveUnsafe(back(v));
     removeLocations(v, end(v) - 1, end(v));
 }
 
-reserve(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload reserve(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     if (v.capacity < UInt(n))
         requestCapacity(v, UInt(n));
 }
 
-resize(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload resize(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     resizeInternal(v, UInt(n), initializeRange);
 }
 
-resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
     resizeInternal(v, UInt(n), resetRangeUnsafe);
 }
 
 // insert
 
-insert(ref v:Vector['T], i:'I, seq:'S)
+overload insert(ref v:Vector['T], i:'I, seq:'S)
     | IntegerType?('I) and SequenceType?('S) and SequenceElementType('S) == 'T
 {
     var pos = UInt(i);
@@ -188,11 +191,15 @@ overload insert(ref v:Vector['T], i:ContiguousCoordinate['T], x:'T) {
 
 // remove
 
-clear(ref v:Vector['T]) inline {
+overload clear(ref v:Vector['T]) inline {
     remove(v, begin(v), end(v));
 }
 
-remove(ref v:Vector['T], i:ContiguousCoordinate['T], j:ContiguousCoordinate['T]) inline {
+overload remove(
+    ref v:Vector['T],
+    i:ContiguousCoordinate['T],
+    j:ContiguousCoordinate['T]
+) inline {
     destroyRangeUnsafe(i, j);
     removeLocations(v, i, j);
 }

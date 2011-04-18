@@ -1,5 +1,6 @@
-import vectors.*;
-import show.*;
+import containers.(push);
+import vectors.(Vector);
+import show.(show);
 
 main() {
     var v = Vector[Int]();
