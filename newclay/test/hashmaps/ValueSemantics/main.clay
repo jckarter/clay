@@ -1,5 +1,6 @@
 import hashmaps.*;
-import vectors.(Vector, push);
+import containers.(push);
+import vectors.(Vector);
 import show.(show);
 
 alias String = Vector[Char];
