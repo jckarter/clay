@@ -1,26 +1,24 @@
 import hashmaps.*;
-import vectors.(Vector);
+import strings.(RandomAccessString as RString);
 import show.(show);
 
-alias String = Vector[Char];
-
 main() {
-    var h = HashMap[String, String]();
+    var h = HashMap[RString, RString]();
 
-    put(h, String("a squid eating dough"), String("fast and bulbous"));
-    put(h, String("a tin teardrop"), String("bulbous also tapered"));
+    put(h, RString("a squid eating dough"), RString("fast and bulbous"));
+    put(h, RString("a tin teardrop"), RString("bulbous also tapered"));
 
     show(size(h)); ////2
 
-    maybe(lookup(h, String("a squid eating dough")),
+    maybe(lookup(h, RString("a squid eating dough")),
         [p -> show(size(p^));],
         [show("no squid");]
     );
-    maybe(lookup(h, String("a tin teardrop")),
+    maybe(lookup(h, RString("a tin teardrop")),
         [p -> show(size(p^));],
         [show("no teardrop");]
     );
-    maybe(lookup(h, String("rocket morton")),
+    maybe(lookup(h, RString("rocket morton")),
         [p -> show(size(p^));],
         [show("no rocket");]
     );

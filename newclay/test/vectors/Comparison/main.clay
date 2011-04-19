@@ -1,15 +1,13 @@
-import vectors.(Vector);
+import strings.(RandomAccessString); // RandomAccessString is an alias for Vector[Char]
 import show.(show);
 
-alias String = Vector[Char];
-
 main() {
-    var s1 = String("mets");
-    var s2 = String("mets");
-    var s3 = String("met");
-    var p1 = String("mettons");
-    var p2 = String("mettez");
-    var p3 = String("mettent");
+    var s1 = RandomAccessString("mets");
+    var s2 = RandomAccessString("mets");
+    var s3 = RandomAccessString("met");
+    var p1 = RandomAccessString("mettons");
+    var p2 = RandomAccessString("mettez");
+    var p3 = RandomAccessString("mettent");
 
     show(s1 == s1); ////true
     show(s1 == s2); ////true

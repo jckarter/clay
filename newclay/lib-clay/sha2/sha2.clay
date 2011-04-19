@@ -1,4 +1,5 @@
 import byteorder.*;
+import strings.encodings.(stringBytes);
 import sequences.*;
 import libc.*;
 
