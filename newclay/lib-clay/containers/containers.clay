@@ -17,12 +17,10 @@ symbol clear;
 
 #PushableType?('T) =
     SequenceType?('T)
-    and CallDefined?(push, Ref['T], SequenceElementType('T))
-    and CallDefined?(pop, Ref['T]);
+    and CallDefined?(push, Ref['T], SequenceElementType('T));
 #FrontPushableType?('T) =
     SequenceType?('T)
-    and CallDefined?(pushFront, Ref['T], SequenceElementType('T))
-    and CallDefined?(popFront, Ref['T]);
+    and CallDefined?(pushFront, Ref['T], SequenceElementType('T));
 
 #ReservableType?('T) =
     SequenceType?('T)
