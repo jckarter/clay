@@ -1,0 +1,105 @@
+import containers.(push, reserve);
+import ctypes.(CString, CChar);
+import meta.statics.(StaticString?, StaticStringSize);
+import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
+import strings.encodings.utf8.(UTF8);
+import vectors.(Vector);
+import values.(allValues?);
+
+
+//
+// StringType?
+//
+
+#StringType?('S) = SequenceType?('S) and CharType?(SequenceElementType('S));
+
+
+//
+// RandomAccessString alias
+//
+
+alias RandomAccessString = Vector[Char];
+
+
+//
+// String -- pushable and iterable UTF-8 encoded string with cached size
+//
+
+symbol String = RecordType(size:UInt, contents:UTF8[Vector[UInt8]]);
+
+overload String(#'s) | StaticString?('s)
+    = String(*#StaticStringSize('s), UTF8(Vector(stringBytes('s))));
+
+overload String(forward x:'S) --> returned:String
+    | StringType?('S) and 'S != String
+{
+    returned <-- String();
+    try {
+        push(returned, x);
+    } catch (ex) {
+        destroyUnsafe(returned);
+        throw ex;
+    }
+}
+
+overload String(x:'S)
+    | EncodedStringType?('S, UTF8) and SizedSequenceType?('S) and 'S != String
+    = String(size(x), UTF8(Vector(stringBytes(x))));
+
+overload size(s:String) = s.size;
+overload iterator(s:String) = iterator(s.contents);
+
+overload #StringTypeEncoding(String) = UTF8;
+overload stringBytes(s:String) = stringBytes(s.contents);
+
+overload push(ref s:String, c:Char) {
+    push(s.contents, c);
+    s.size += 1u;
+}
+overload push(ref s:String, s2:'S)
+    | StringType?('S)
+{
+    for (c in s2)
+        push(s, c);
+}
+overload push(ref s:String, s2:'S)
+    | StringType?('S) and SizedSequenceType?('S)
+{
+    push(s.contents, s2);
+    s.size += size(s2);
+}
+
+
+//
+// cat -- concatenate multiple StringType? types into a single String
+//
+
+cat(forward s1:'S1, forward ..ss:'SS) --> returned:String
+    | StringType?('S1) and allValues?(StringType?, ..'SS)
+{
+    returned <-- String(s1);
+    try {
+        push(returned, ..ss);
+    } catch (ex) {
+        destroyUnsafe(returned);
+        throw ex;
+    }
+}
+
+
+//
+// some inappropriate touching to tack a null byte onto a String so it can be
+// passed as a CString
+//
+// XXX requires the String to be a ref. can we make it also work for rvalue and const?
+//
+
+overload CString(ref s:String) {
+    ref bytes = *s.contents;
+    var beginByte = begin(bytes);
+    var sz = size(bytes);
+    reserve(bytes, sz + 1u);
+    beginByte[sz] = 0_u8;
+    return CString(Pointer[CChar](beginByte));
+}
+
