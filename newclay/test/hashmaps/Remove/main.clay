@@ -1,8 +1,6 @@
 import hashmaps.(HashMap, put, remove, clear, items);
-import vectors.(Vector);
+import strings.(String);
 import show.(show);
-
-alias String = Vector[Char];
 
 private itemizedSize(h) {
     var x = 0u;

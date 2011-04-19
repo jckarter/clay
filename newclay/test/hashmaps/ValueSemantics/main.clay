@@ -1,9 +1,7 @@
 import hashmaps.*;
 import containers.(push);
-import vectors.(Vector);
 import show.(show);
-
-alias String = Vector[Char];
+import strings.(String);
 
 main() {
     var h1 = HashMap[String, String]();
