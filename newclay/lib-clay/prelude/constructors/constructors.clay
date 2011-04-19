@@ -67,3 +67,20 @@ overload Pointer(forward x:'T) inline
 //
 
 overload StringConstant();
+
+
+//
+// copy/move construction
+//
+overload 'T(x:'T) inline --> returned:'T
+    | Defined?([copy(x)])
+{
+    returned <-- copy(x);
+}
+
+overload 'T(rvalue x:'T) inline --> returned:'T
+    | Defined?([move(x)])
+{
+    returned <-- move(x);
+}
+
