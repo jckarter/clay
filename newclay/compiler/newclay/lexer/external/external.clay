@@ -62,9 +62,11 @@ private bounds(parser:Parser) {
     return input => {
         alias T = ParseResult(Parser);
         var start = currentByte(input);
+        var indexStart = input.current;
         return maybe(parser(input),
             x ref=> {
                 x.range = DataRange(start, currentByte(input));
+                x.indexRange = DataRange(indexStart, input.current);
                 return Maybe(x);
             },
             () => nothing(T),

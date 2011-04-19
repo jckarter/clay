@@ -1995,7 +1995,7 @@ displaySemanticError(locationStack, compilationStack, ...message) {
     } else {
         var location = stackTop(locationStack);
         var tokens = location.tokens;
-        var offset = tokens.vector[location.where].range.begin;
+        var offset = tokens.vector[location.where].indexRange.begin;
         errorWithLocation(tokens.file, offset, ...message);
     }
     if (not stackEmpty?(compilationStack)) {

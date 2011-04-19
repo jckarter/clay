@@ -29,11 +29,14 @@ enum TokenKind {
 
 alias DataRange = Range[SizeT];
 
-record Token(kind:TokenKind, subKind:UInt8, range:DataRange);
+record Token(kind:TokenKind, subKind:UInt8, range:DataRange, indexRange:DataRange);
 
 [I | Integer?(I)]
 overload Token(kind:TokenKind, subKind:I) =
-    Token(kind, UInt8(subKind), DataRange(SizeT(0), SizeT(0)));
+    Token(kind, UInt8(subKind),
+        DataRange(SizeT(0), SizeT(0)),
+        DataRange(SizeT(0), SizeT(0))
+    );
 
 overload Token(kind:TokenKind) = Token(kind, 0);
 
