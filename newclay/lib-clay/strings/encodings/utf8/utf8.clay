@@ -1,7 +1,9 @@
+import containers.(push, pop, pushFront, popFront, PushableType?, FrontPushableType?);
+import strings.encodings.(StringTypeEncoding, stringBytes, EncodedStringType?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
 
 symbol UTF8Iterator['I] = NewType('I);
-overload UTF8Iterator(forward x:'I)
+overload UTF8Iterator(forward x:'I) inline
     | IteratorType?('I) and IteratorTargetType('I) == UInt8
     = UTF8Iterator['I](x);
 
@@ -88,3 +90,39 @@ overload next(ref i:UTF8Iterator['I]) {
     }
     return REPLACEMENT_CHAR;
 }
+
+symbol UTF8['S] = NewType('S);
+overload UTF8(forward s:'S) inline
+    | SequenceType?('S) and SequenceElementType('S) == UInt8
+    = UTF8['S](s);
+
+overload iterator(s:UTF8['S]) inline = UTF8Iterator(iterator(*s));
+
+overload push(ref s:UTF8['S], c:Char) | PushableType?('S) {
+    var code = UInt(c);
+    if (code > UInt(MAX_CODE_POINT))
+        code = UInt(REPLACEMENT_CHAR);
+
+    if (code < 0x80u)
+        push(*s, UInt8(c));
+    else if (code < 0x800u)
+        push(*s, ..encodeTwo(code));
+    else if (code < 0x10000u)
+        push(*s, ..encodeThree(code));
+    else
+        push(*s, ..encodeFour(code));
+}
+overload push(ref s:UTF8['S], s2:'S2) | StringType?('S2) {
+    for (c in s2)
+        push(s, c);
+}
+overload push(ref s:UTF8['S], s2:'S2)
+    | EncodedStringType?('S2, UTF8)
+{
+    push(*s, stringBytes(s2));
+}
+
+overload stringBytes(forward s:UTF8['S]) = iterator(*s);
+overload #StringTypeEncoding(UTF8['S])
+    | SequenceType?('S) and SequenceElementType('S) == UInt8
+    = UTF8;
