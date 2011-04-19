@@ -1,0 +1,28 @@
+import containers.(push);
+import show.(show);
+import strings.(String, RandomAccessString);
+
+main() {
+    var s = String("привет");
+
+    show("--");
+    show(size(s));
+    for (c in s)
+        show(c);
+
+    show("--");
+    push(s, ' ');
+    show(size(s));
+
+    show("--");
+    push(s, "été");
+    show(size(s));
+    for (c in s)
+        show(c);
+
+    show("--");
+    push(s, RandomAccessString(" ☃"));
+    show(size(s));
+    for (c in s)
+        show(c);
+}
