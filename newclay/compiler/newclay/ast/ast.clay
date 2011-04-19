@@ -133,7 +133,7 @@ private getFileLocation2(location) {
     ref path = location.tokens.file.path;
     var data = location.tokens.file.data;
     var tokenOffset = location.tokenRange.begin;
-    var offset = location.tokens.vector[tokenOffset].range.begin;
+    var offset = location.tokens.vector[tokenOffset].indexRange.begin;
     var line, column, tabs = ...computeLocation(data, offset);
 
     return path, line+1, column + 7*tabs;

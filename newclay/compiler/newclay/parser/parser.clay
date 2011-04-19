@@ -60,7 +60,7 @@ record ParserError(
 instance ClayError = ParserError;
 
 overload displayError(e:ParserError) {
-    var offset = e.tokens.vector[e.where].range.begin;
+    var offset = e.tokens.vector[e.where].indexRange.begin;
     errorWithLocation(e.tokens.file, offset, "parse error");
 }
 
