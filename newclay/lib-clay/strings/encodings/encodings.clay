@@ -1,0 +1,10 @@
+symbol StringTypeEncoding; // #StringTypeEncoding('S) = symbol representing encoding of 'S;
+symbol stringBytes; // stringBytes(s:'S) = iterator over encoded bytes of s
+
+#EncodedStringType?('T)
+    = StringType?('T)
+      and StaticCallDefined?(StringTypeEncoding, 'T)
+      and CallDefined?(stringBytes, 'T);
+
+overload #EncodedStringType?('T, 'E)
+    = EncodedStringType?('T) and StringTypeEncoding('T) == 'E;

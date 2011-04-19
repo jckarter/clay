@@ -1,0 +1,17 @@
+import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
+import strings.encodings.utf8.(UTF8);
+import show.(show);
+
+main() {
+    show(#EncodedStringType?(StringConstant)); ////true
+    show(#EncodedStringType?(StringConstant, UTF8)); ////true
+    show(#StringTypeEncoding(StringConstant)); ////UTF8
+
+    ////116
+    ////104
+    ////195
+    ////169
+    for (b in stringBytes("thé")) {
+        show(b);
+    }
+}
