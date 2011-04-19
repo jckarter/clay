@@ -1,0 +1,9 @@
+Testing Permutations of integer ranges:
+  Permuting 1..1: passed
+  Permuting 1..2: passed
+  Permuting 1..3: passed
+  Permuting 1..4: passed
+  Permuting 1..5: passed
+  Permuting 1..6: passed
+-- Permutations of integer ranges: 6 expectations passed; 0 failed (0 pending)
+Overall: 6 expectations passed; 0 failed (0 pending)
