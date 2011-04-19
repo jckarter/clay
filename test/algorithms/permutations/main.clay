@@ -1,0 +1,25 @@
+import test.*;
+import algorithms.permutations.*;
+
+
+fact(n){
+  var result = 1;
+  for(i in range(1, n + 1)) result *= i;
+  return result;
+}
+
+baseTestCase(n) = 
+  TestCase(printString("Permuting 1..", n), test => {
+    var it = Vector[Int](range(1,n+1));
+
+    var counter = 0;
+    eachPermutation(it, () ref=> {
+      counter += 1;
+    });
+
+    expectEqual(test, "number of permutations", fact(n), counter);
+  });
+
+main() = testMain(
+  TestSuite("Permutations of integer ranges", map(baseTestCase, range(1, 7)))
+);
