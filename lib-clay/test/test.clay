@@ -22,10 +22,13 @@ overload TestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), false
 
 PendingTestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), true);
 
-record TestSuite[n] (
-    name: StringConstant,
-    testCases: Array[TestCase, n],
+record TestSuite (
+    name: String,
+    testCases: Vector[TestCase]
 );
+
+[S, T | S != String or T != Vector[TestCase]] 
+overload TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT + TEST_CASE_INDENT;
@@ -46,7 +49,7 @@ reportTest(test: TestStatus, ...prefix) {
     );
 }
 
-[n] runTestSuite(suite: TestSuite[n]) TestStatus {
+runTestSuite(suite: TestSuite) TestStatus {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
     for (_case in suite.testCases)
