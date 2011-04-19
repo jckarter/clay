@@ -1,0 +1,53 @@
+import values.(countValues, allValues?);
+
+#ContainerType?('T) = false;
+
+symbol push;
+symbol pop;
+symbol pushFront;
+symbol popFront;
+
+symbol reserve;
+symbol resize;
+symbol resizeUnsafe;
+
+symbol insert;
+symbol remove;
+symbol clear;
+
+#PushableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(push, Ref['T], SequenceElementType('T))
+    and CallDefined?(pop, Ref['T]);
+#FrontPushableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(pushFront, Ref['T], SequenceElementType('T))
+    and CallDefined?(popFront, Ref['T]);
+
+#ReservableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(reserve, Ref['T], UInt);
+#ResizableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(resize, Ref['T], UInt);
+#InsertableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(insert, Ref['T], UInt, SequenceElementType('T));
+#RemovableType?('T) =
+    SequenceType?('T)
+    and CallDefined?(remove, Ref['T], UInt);
+
+
+//
+// default extensions
+//
+
+overload push(ref c:'C, forward ..elements:'TT) inline
+    | PushableType?('C)
+      and countValues(..'TT) != 1
+      and allValues?([#'U -> CallDefined?(push, Ref['C], 'U)], ..'TT)
+{
+    static for (forward e in ..elements)
+        push(c, e);
+}
+
