@@ -17,9 +17,7 @@ main() {
 
     var string = "привет";
 
-    push(s, '\x00');
-    push(s, charvector);
-    push(s, string);
+    push(s, '\x00', charvector, string);
 
     for (c in s)
         show(c);
