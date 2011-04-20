@@ -1,0 +1,6 @@
+import show.(show);
+
+main() {
+    assert([1 == 2]);
+    show("assertions disabled");
+}
