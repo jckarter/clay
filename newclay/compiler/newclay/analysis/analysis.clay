@@ -2063,12 +2063,36 @@ addSpecializedCall(
         return addOutOfLineCall(s, ast, inputs, specialization);
 }
 
+private verifyInitializable(s, ast, input, output) {
+    if (not podType?(input.type)) {
+        analyzeCall(subContext(s, Vector[ir.Node]()), ast,
+            getHooks().initializeFromUnsafe,
+            RTValues(output, input)
+        );
+    }
+}
+
+private verifyDestroyable(s, ast, value) {
+    if (not podType?(value.type)) {
+        analyzeCall(subContext(s, Vector[ir.Node]()), ast,
+            getHooks().destroyUnsafe,
+            RTValues(value)
+        );
+    }
+}
+
 addSpecializedBind(
     s:SpecializationContext,
     ast,
     input:RTValue,
     output:RTValue
 ) {
+    if (not podType?(output.type)) {
+        var refOutput = RTValue(RT_VALUE_REF, output.type, output.referent);
+        verifyInitializable(s, ast, input, refOutput);
+        if (localVariable?(output))
+            verifyDestroyable(s, ast, refOutput);
+    }
     addSpecializedNode(s, ir.Bind(ir.ASTNode(ast), input, output));
     return Maybe(RTValues(output));
 }
@@ -2108,6 +2132,7 @@ addSpecializedInitialize(
     input:RTValue,
     output:RTValue
 ) {
+    verifyInitializable(s, ast, input, output);
     addSpecializedNode(s, ir.Initialize(ir.ASTNode(ast), input, output));
     return Maybe(RTValues(output));
 }
