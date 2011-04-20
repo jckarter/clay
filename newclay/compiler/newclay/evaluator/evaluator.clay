@@ -2185,6 +2185,18 @@ evaluatePrimitive(kind, args) {
         case PRIM_PlatformCodegenDialect :
             return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
 
+        case PRIM_CommandlineVariable : {
+            var name = oneString(args);
+            var valuep = lookup(getProgram().commandlineVariables, name);
+
+            if (null?(valuep))
+                return ValueList(BoolValue(false));
+            else return maybe(valuep^,
+                value ref=> ValueList(StringValue(value)),
+                () ref=> ValueList(BoolValue(true)),
+            );
+        }
+
         case PRIM_LLMangle : {
             var s = oneString(args);
             return ValueList(StringValue(mangleString(s)));

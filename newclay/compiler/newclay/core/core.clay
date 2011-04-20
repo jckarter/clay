@@ -33,6 +33,7 @@ record GlobalLiteralCode(kind:ast.LiteralCodeBodyKind, code:ir.LiteralCode);
 
 record Program = referenceType(
     targetInfo: TargetInfo,
+    commandlineVariables: HashMap[String, Maybe[String]],
     modules: ModuleMap,
     moduleSearchPath: Vector[String],
     allSymbolHeads: Vector[SymbolHead],
@@ -394,6 +395,8 @@ enum PrimitiveKind {
     PRIM_PlatformFamilyName,
     PRIM_PlatformCodegen,
     PRIM_PlatformCodegenDialect,
+
+    PRIM_CommandlineVariable,
 
     PRIM_LLMangle,
 }

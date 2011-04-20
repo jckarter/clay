@@ -20,6 +20,7 @@ main() {
         var program = loadProgram(just(options.inputFile), options.modulePaths);
         withProgram(program, () ref=> {
             initializeClayHooks();
+            program.commandlineVariables = options.commandlineVariables;
 
             compileProgramWithOptions(options);
         });
