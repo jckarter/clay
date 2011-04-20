@@ -37,6 +37,7 @@ record FrontendOptions (
     traceLoading?: Maybe[Bool],
     traceCompilation?: Maybe[Bool],
     traceTimes?: Maybe[Bool],
+    commandlineVariables: HashMap[String, Maybe[String]],
 );
 
 initUniqueOption(maybeOption, value, errorFn) {
@@ -60,6 +61,22 @@ parseFrontendOptions() {
     parseOptions(
         ("-I", PrefixOption, o ref=> {
             push(options.modulePaths, String(requireParameter(o, "no path given for -I")));
+        }),
+        ("-D", PrefixOption, o ref=> {
+            var param = String(requireParameter(o, "no variable name given for -D"));
+            var equalSign = find(param, '=');
+            var name = String();
+            var value = nothing(String);
+
+            if (equalSign != end(param)) {
+                name = String(CoordinateRange(begin(param), equalSign));
+                value = Maybe(String(CoordinateRange(equalSign + 1, end(param))));
+            } else
+                name = param;
+
+            if (not null?(lookup(options.commandlineVariables, name)))
+                optionError("multiple values given for -D", name);
+            options.commandlineVariables[name] = value;
         }),
         ("-o", WordOption, o ref=> {
             var outputFile = requireParameter(o, "no path given for -o");
@@ -131,6 +148,7 @@ parseFrontendOptions() {
     );
 
     validateFrontendOptions(options);
+    observe(options);
     return move(options);
 }
 
