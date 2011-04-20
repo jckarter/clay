@@ -2,6 +2,7 @@ public import __primitives__.(
     StaticObserve,
     StaticError,
     StaticAssert,
+    CommandlineVariable,
 );
 import libc.(abort, puts, printf);
 import ctypes.(CUInt, CString);
@@ -9,7 +10,7 @@ import meta.lambdas.(LambdaString, LambdaLocation);
 
 private assertLocation(file, line, column) = CString(file), CUInt(line), CUInt(column);
 
-#AssertionsEnabled?() = true; // XXX use -DNDEBUG or something like that
+#AssertionsEnabled?() = not CommandlineVariable("NDEBUG");
 
 symbol assert;
 overload assert(f, ..msg) inline | not AssertionsEnabled?() {}
