@@ -68,7 +68,10 @@ record Stack[T] (
 stackEmpty?(s:Stack[T]) = null?(s.root);
 
 [T]
-stackTop(s:Stack[T]) = ref s.root.value;
+stackTop(s:Stack[T]) {
+    assert(not stackEmpty?(s), "context stack is empty!");
+    return ref s.root.value;
+}
 
 [T]
 stackPush(s:Stack[T], forward x:T) {
