@@ -64,8 +64,8 @@ dereference(forward a:'T) inline
 // staticIndex, fieldRef
 //
 
-staticIndex(forward a, #'n) inline  | Defined?([a[#'n]]) = forward a[#'n];
-fieldRef(forward a, #'field) inline | Defined?([a[#'field]]) = forward a[#'field];
+staticIndex(forward a, #'n) inline  | Defined?([forward a[#'n]]) = forward a[#'n];
+fieldRef(forward a, #'field) inline | Defined?([forward a[#'field]]) = forward a[#'field];
 
 
 //
@@ -321,8 +321,12 @@ overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
 //
 
 symbol initializeFromUnsafe;
-overload initializeFromUnsafe(ref a:'T, b:'T) inline { a <-- copy(b); }
-overload initializeFromUnsafe(ref a:'T, rvalue b:'T) inline { a <-- move(b); }
+overload initializeFromUnsafe(ref a:'T, b:'T) inline
+    | CallDefined?(copy, 'T)
+    { a <-- copy(b); }
+overload initializeFromUnsafe(ref a:'T, rvalue b:'T) inline
+    | CallDefined?(move, Rvalue['T])
+    { a <-- move(b); }
 
 destroyUnsafe(ref x:'T) | DestroyDoesNothingType?('T) {}
 resetUnsafe(ref x:'T) inline
