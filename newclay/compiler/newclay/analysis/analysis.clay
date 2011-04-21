@@ -1827,11 +1827,11 @@ private bindingVariableKind(bindingKind:ast.BindingKind, valueKind:RTValueKind) 
         return RT_VALUE_REF;
     case ast.BINDING_REF:
         if (valueKind != RT_VALUE_REF)
-            genericError("ref reference must be bound to a non-const lvalue");
+            matchFailureError("ref must be bound to a non-const lvalue");
         return RT_VALUE_REF;
     case ast.BINDING_RVALUE:
         if (valueKind != RT_VALUE_RVALUE)
-            genericError("rvalue reference must be bound to an rvalue");
+            matchFailureError("rvalue reference must be bound to an rvalue");
         return RT_VALUE_RVALUE;
     case ast.BINDING_CONST:
         return RT_VALUE_CONST;
