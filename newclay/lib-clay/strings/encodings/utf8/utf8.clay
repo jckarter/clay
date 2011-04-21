@@ -1,6 +1,7 @@
 import containers.(push, pop, pushFront, popFront, PushableType?, FrontPushableType?);
 import strings.encodings.(StringTypeEncoding, stringBytes, EncodedStringType?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
+import strings.(StringType?);
 
 symbol UTF8Iterator['I] = NewType('I);
 overload UTF8Iterator(forward x:'I) inline
