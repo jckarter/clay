@@ -1,6 +1,7 @@
 import memory.*;
 import values.*;
 import hashing.(hash, hashSequence);
+import sequences.(equalSequence?, lesserSequence?);
 import containers.*;
 
 symbol Vector['T] = CompositeType(

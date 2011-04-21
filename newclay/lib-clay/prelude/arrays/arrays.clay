@@ -3,6 +3,7 @@ import prelude.sequences.*;
 import meta.lltypes.*;
 import values.*;
 import libc.*;
+import sequences.(equalSequence?, lesserSequence?);
 
 
 //
@@ -157,33 +158,6 @@ overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
 //
 // comparison
 //
-
-equalSequence?(x, y) inline {
-    var xi = iterator(x), yi = iterator(y);
-    var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
-    while (xnext? and ynext?) {
-        if (next(xi) != next(yi))
-            return false;
-        xnext? = hasNext?(xi);
-        ynext? = hasNext?(yi);
-    }
-    return xnext? == ynext?;
-}
-
-lesserSequence?(x, y) inline {
-    var xi = iterator(x), yi = iterator(y);
-    var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
-    while (xnext? and ynext?) {
-        const xe = next(xi), ye = next(yi);
-        if (xe < ye)
-            return true;
-        if (ye < xe)
-            return false;
-        xnext? = hasNext?(xi);
-        ynext? = hasNext?(yi);
-    }
-    return xnext? < ynext?;
-}
 
 overload equals?(x:Array['T, 'n], y:Array['U, 'n]) inline
     | CallDefined?(equals?, 'T, 'U)

@@ -1,4 +1,5 @@
 import meta.statics.(StaticString?, StaticStringSize);
+import sequences.(lesserSequence?);
 import strings.encodings.(StringTypeEncoding, stringBytes);
 import strings.encodings.utf8.(UTF8, UTF8Iterator);
 import values.*;
@@ -324,3 +325,8 @@ overload size(s:StringConstant) = s.size;
 
 overload #StringTypeEncoding(StringConstant) = UTF8;
 overload stringBytes(s:StringConstant) = CoordinateRange(s.begin, s.end);
+
+overload lesser?(a:StringConstant, b:StringConstant)
+    = lesserSequence?(stringBytes(a), stringBytes(b));
+// since StringConstants are constant-folded at compile time, record equality
+// suffices to test StringConstant equality

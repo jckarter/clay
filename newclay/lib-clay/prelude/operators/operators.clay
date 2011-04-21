@@ -174,8 +174,6 @@ nan?(a:'A) | FloatType?('A) = a != a;
 overload lesser?(#'a, #'b) = *#('a < 'b);
 overload equals?(#'a, #'b) = *#('a == 'b);
 
-overload lesser?(a:StringConstant, b:StringConstant) = lesserSequence?(a, b);
-
 
 //
 // comparison operators on numbers
