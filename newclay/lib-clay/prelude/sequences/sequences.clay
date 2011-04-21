@@ -141,10 +141,9 @@ private #CompatibleCoordinateTypes?('C, 'D)
     = CoordinateType?('C) and CoordinateType?('D)
       and CoordinateTargetType('C) == CoordinateTargetType('D);
 
-// XXX lambdas
-private initializeTo(ref x:'X) { x <-- 'X(); }
-private copyTo(ref x, y) { x <-- y; }
-private moveToUnsafe(ref x, ref y) { x <-- moveUnsafe(y); }
+private initializeTo(ref x:'X) inline { x <-- 'X(); }
+private copyTo(ref x, y) inline { x <-- y; }
+private moveToUnsafe(ref x, ref y) inline { x <-- moveUnsafe(y); }
 
 eachInRanges(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
     var i1 = begin1;
