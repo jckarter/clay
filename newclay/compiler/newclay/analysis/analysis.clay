@@ -1217,6 +1217,16 @@ overload assignCallOp(s, env, expr:ast.FieldRef) {
         }
     );
 }
+overload assignCallOp(s, env, expr:ast.UnaryOpExpr) {
+    switch (expr.operator) {
+    case ast.OP_UNPACK:
+        return Maybe(getHooks().unpack), analyzeSubnode(s, env, expr.expr);
+    case ast.OP_DEREFERENCE:
+        return Maybe(getHooks().dereference), analyzeSubnode(s, env, expr.expr);
+    default:
+        return nothing(Value), analyzeSubnode(s, env, expr);
+    }
+}
 //XXX overload assignCallOp(s, env, expr:ast.StatementExpr) {
 // analyze statements, recursively analyze final expression
 
