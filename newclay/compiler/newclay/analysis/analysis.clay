@@ -550,14 +550,15 @@ private analyzeStatementExprNode2(s, bc:BlockContext, statements, expr, subnodeF
 
     for (stmt in statements)
         if (statementNoReturn?(analyzeStatement(s, pc, bc, lc, stmt)))
-            return nothing(RTValues);
+            // return nothing;
+            return ...mapValues(call, ...Type(...subnodeFn(s, bc.env, expr)));
 
-    return subnodeFn(s, bc.env, expr);
+    return ...subnodeFn(s, bc.env, expr);
 }
 
 overload analyzeStatementExprNode2(s, env:Env, statements, expr, subnodeFn) {
     var bc = BlockContext(env);
-    return analyzeStatementExprNode2(s, bc, statements, expr, subnodeFn);
+    return ...analyzeStatementExprNode2(s, bc, statements, expr, subnodeFn);
 }
 
 private analyzeStatementExprNode(s, env, expr)
@@ -652,12 +653,12 @@ analyzeCall(s:SpecializationContext, ast, callable:Value, args:RTValues)
     );
 
 private ifStaticValue(s, env, expr, thenFn, elseFn)
-    = maybe(analyzeSubnode(s, env, expr),
+    = ...maybe(analyzeSubnode(s, env, expr),
         results ref=> {
             var result = singleValue(results);
             if (staticType?(result.type))
-                return thenFn(staticTypeValue(result.type));
-            return elseFn(result);
+                return ...thenFn(staticTypeValue(result.type));
+            return ...elseFn(result);
         },
     );
 
@@ -1113,7 +1114,7 @@ overload analyzeStatement(s, pc, bc, lc, block:ast.Block) StatementTarget {
         return target;
 }
 
-private withAssignmentValues(s, env, stmt, fn)
+private withInitializeValues(s, env, stmt, fn)
     = stmtMaybe(analyzeNode(s, env, stmt.to),
         toValues ref=> stmtMaybe(analyzeMultiExprListNode(s, env, stmt.from, size(toValues) != 1),
             fromValues ref=> fn(toValues, fromValues),
@@ -1122,7 +1123,7 @@ private withAssignmentValues(s, env, stmt, fn)
 
 private analyzeInitialize(s, env:Env, stmt) {
     try {
-        return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
+        return withInitializeValues(s, env, stmt, (toValues, fromValues) ref=> {
             if (size(toValues) != size(fromValues))
                 matchFailureError("got ", size(toValues), " values on left side of <-- but ", size(fromValues), " values on right side");
             for (toValue, fromValue in zipped(toValues, fromValues)) {
@@ -1146,62 +1147,173 @@ private analyzeInitialize(s, env:Env, stmt) {
     }
 }
 
-private singleAssign(s, stmt, op, toValue, fromValue) {
-    return resultTarget(analyzeCall(s, stmt, op, RTValues(toValue, fromValue)));
+private singleExpr(s, env, exprList:ast.ExprList) {
+    if (size(exprList) != 1)
+        return nothing(ast.Expr);
+    return match(exprList[0],
+        ast.UnpackExpr, x => nothing(ast.Expr),
+        ast.Expr, x => Maybe(x),
+        ast.StatementExprList, x =>
+            analyzeStatementExprNode2(s, env, x.statements, x.exprList, singleExpr),
+    );
 }
 
-private multiAssign(s, stmt, op, toValues, fromValues) {
-    genericError("assignment of multiple values not yet supported");
-    return StatementTarget();
+private singleExpr?(exprList:ast.ExprList) {
+    if (size(exprList) != 1)
+        return false;
+    return match(exprList[0],
+        ast.UnpackExpr, x => false,
+        ast.Expr, x => true,
+        ast.StatementExprList, x => singleExpr?(x.exprList),
+    );
 }
+
+private procedure assignCallOp;
+overload assignCallOp(s, env, expr)
+    = nothing(Value), analyzeSubnode(s, env, expr);
+overload assignCallOp(s, env, expr:ast.Indexing) {
+    return ...ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> {
+            return nothing(Value), analyzeEnvEntry(s, expr,
+                evaluateIndexingEntry(staticIndexee, evaluateExprList(expr.args, env))
+            );
+        },
+        indexee ref=> {
+            return ...maybe(analyzeExprListNode(s, env, expr.args), indexArgs ref=> {
+                var operands = RTValues(indexee);
+                push(operands, indexArgs);
+                return Maybe(getHooks().index), Maybe(operands);
+            });
+        },
+    );
+}
+overload assignCallOp(s, env, expr:ast.StaticIndexing) {
+    return ...ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> {
+            return nothing(Value), analyzeEnvEntry(s, expr,
+                evaluateIndexingEntry(staticIndexee, ValueList(parseIntLiteral(false, expr.index.value)))
+            );
+        },
+        indexee ref=> {
+            var indexValue = Value(parseIntLiteral(false, expr.index.value));
+            var indexArg = singleAddSpecializedStaticValue(s, expr.index, indexValue);
+            var operands = RTValues(indexee, indexArg);
+            return Maybe(getHooks().staticIndex), Maybe(operands);
+        }
+    );
+}
+overload assignCallOp(s, env, expr:ast.FieldRef) {
+    return ...ifStaticValue(s, env, expr.expr,
+        staticIndexee ref=> {
+            return nothing(Value), addSpecializedValue(s, expr,
+                evaluateFieldRef(staticIndexee, Value(StringValue(expr.field.str)))
+            );
+        },
+        indexee ref=> {
+            var fieldValue = Value(StringValue(expr.field.str));
+            var fieldArg = singleAddSpecializedStaticValue(s, expr, fieldValue);
+            var operands = RTValues(indexee, fieldArg);
+            return Maybe(getHooks().fieldRef), Maybe(operands);
+        }
+    );
+}
+//XXX overload assignCallOp(s, env, expr:ast.StatementExpr) {
+// analyze statements, recursively analyze final expression
 
 private analyzeAssign(s, env, stmt) {
-    try {
-        return withAssignmentValues(s, env, stmt, (toValues, fromValues) ref=> {
-            if (size(toValues) != size(fromValues))
-                matchFailureError("got ", size(toValues), " values on left side of assignment but ", size(fromValues), " values on right side");
+    if (not singleExpr?(stmt.to))
+        genericError("multiple assignment not yet supported");
 
-            var operatorCallable = Value();
+    return maybe(singleExpr(s, env, stmt.to),
+        toExpr ref=> {
+            var updateOp = nothing(Value);
+
             switch (stmt.kind) {
             case ast.ASSIGNMENT_ASSIGN:
-                operatorCallable = getHooks().assign;
+                updateOp = nothing(Value);
                 break;
             case ast.ASSIGNMENT_ADD:
-                operatorCallable = getHooks().addAssign;
+                updateOp = Maybe(getHooks().add);
                 break;
             case ast.ASSIGNMENT_SUBTRACT:
-                operatorCallable = getHooks().subtractAssign;
+                updateOp = Maybe(getHooks().subtract);
                 break;
             case ast.ASSIGNMENT_MULTIPLY:
-                operatorCallable = getHooks().multiplyAssign;
+                updateOp = Maybe(getHooks().multiply);
                 break;
             case ast.ASSIGNMENT_DIVIDE:
-                operatorCallable = getHooks().divideAssign;
+                updateOp = Maybe(getHooks().divide);
                 break;
             case ast.ASSIGNMENT_QUOTIENT:
-                operatorCallable = getHooks().quotientAssign;
+                updateOp = Maybe(getHooks().quotient);
                 break;
             case ast.ASSIGNMENT_REMAINDER:
-                operatorCallable = getHooks().remainderAssign;
+                updateOp = Maybe(getHooks().remainder);
                 break;
             default:
                 assert(false, "invalid assignment operator");
                 break;
             }
 
-            switch (size(toValues)) {
-            case 0:
-                return StatementTarget();
-            case 1:
-                return singleAssign(s, stmt, operatorCallable, singleValue(toValues), singleValue(fromValues));
-            default:
-                return multiAssign(s, stmt, operatorCallable, toValues, fromValues);
-            }
-        });
-    } catch (e:RecursiveAnalysisError) {
-        s.complete?^ = false;
-        return StatementTarget();
-    }
+            var callOp, callArgs = ...assignCallOp(s, env, *toExpr);
+            return maybe(callArgs,
+                toArgs ref=> maybe(analyzeExprListNode(s, env, stmt.from),
+                    fromValues ref=> {
+                        if (size(fromValues) != 1)
+                            genericError("got one value on left side of assignment, but ", size(fromValues), " values on right side");
+                        var fromValue = fromValues[0];
+                        var callable, args = ...maybe(updateOp,
+                            updatee ref=> ...maybe(callOp,
+                                callee ref=> {
+                                    //updateCallAssign(#updateOp, fromValue, #callOp, ..callArgs)
+                                    var args = RTValues();
+                                    push(args, singleAddSpecializedStaticValue(s, stmt, updatee));
+                                    push(args, fromValue);
+                                    push(args, singleAddSpecializedStaticValue(s, toExpr, callee));
+                                    push(args, toArgs);
+                                    return getHooks().updateCallAssign, args;
+                                },
+                                () ref=> {
+                                    //updateAssign(#updateOp, toValue, fromValue)
+                                    var args = RTValues();
+                                    push(args, singleAddSpecializedStaticValue(s, stmt, updatee));
+                                    assert(size(toArgs) == 1, "more than one single assignment value");
+                                    push(args, toArgs[0]);
+                                    push(args, fromValue);
+                                    return getHooks().updateAssign, args;
+                                },
+                            ),
+                            () ref=> ...maybe(callOp,
+                                callee ref=> {
+                                    //callAssign(fromValue, #callOp, ..callArgs)
+                                    var args = RTValues();
+                                    push(args, fromValue);
+                                    push(args, singleAddSpecializedStaticValue(s, toExpr, callee));
+                                    push(args, toArgs);
+                                    return getHooks().callAssign, args;
+                                },
+                                () ref=> {
+                                    //assign(toValue, fromValue)
+                                    var args = RTValues();
+                                    assert(size(toArgs) == 1, "more than one single assignment value");
+                                    push(args, toArgs[0]);
+                                    push(args, fromValue);
+                                    return getHooks().assign, args;
+                                },
+                            ),
+                        );
+                        return resultTarget(analyzeCall(s, stmt, callable, args));
+                    },
+                    () ref=> StatementTarget(StatementNoReturn),
+                ),
+                () ref=> StatementTarget(StatementNoReturn),
+            );
+        },
+        () ref=> {
+            genericError("multiple-value assignment not yet supported");
+            return StatementTarget();
+        },
+    );
 }
 
 overload analyzeStatement(s, pc, bc, lc, stmt:ast.AssignmentStatement) {

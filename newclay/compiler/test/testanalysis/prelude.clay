@@ -271,12 +271,12 @@ notEquals?(a:Int, b:Int) --> returned:Bool __c__ """
 
 
 assign(ref a, b)                  { a <-- b; }
-addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
-subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
-multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
-divideAssign(ref a:Float64, b:Float64)    { a <-- divide(a, b); }
-quotientAssign(ref a:Int, b:Int)  { a <-- quotient(a, b); }
-remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+updateAssign(#'op, ref a, b) { a <-- 'op(a, b); }
+callAssign(b, #'f, forward ..args) { 'f(..args) <-- b; }
+updateCallAssign(#'op, b, #'f, forward ..args) {
+    ref a = 'f(..args);
+    a <-- 'op(a, b);
+}
 
 //
 // case?
