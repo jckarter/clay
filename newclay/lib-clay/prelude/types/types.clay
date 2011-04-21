@@ -486,13 +486,6 @@ overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
 
 
 //
-// StringType?
-//
-
-#StringType?('S) = SequenceType?('S) and CharType?(SequenceElementType('S));
-
-
-//
 // NewType
 //
 
