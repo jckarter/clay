@@ -1828,13 +1828,40 @@ evaluatePrimitive(kind, args) {
         }
 
         case PRIM_StaticUInt : {
-            var a = toUInt64(*oneInt(args));
-            return ValueList(IntValue(StaticUIntValue(a)));
+            var a = oneValue(args);
+            return match(a,
+                IntValue, iv ref=> ValueList(IntValue(StaticUIntValue(toUInt64(*iv)))),
+                CharValue, cv ref=> ValueList(IntValue(StaticUIntValue(UInt64(cv.value)))),
+                MatchDefault, x ref=> {
+                    matchFailureError("expecting an integer or character, got: ", a);
+                    return ValueList();
+                },
+            );
         }
-
         case PRIM_StaticInt : {
-            var a = Int64(*oneInt(args));
-            return ValueList(IntValue(StaticIntValue(a)));
+            var a = oneValue(args);
+            return match(a,
+                IntValue, iv ref=> ValueList(IntValue(StaticIntValue(Int64(*iv)))),
+                CharValue, cv ref=> ValueList(IntValue(StaticIntValue(Int64(cv.value)))),
+                MatchDefault, x ref=> {
+                    matchFailureError("expecting an integer or character, got: ", a);
+                    return ValueList();
+                },
+            );
+        }
+        case PRIM_StaticChar : {
+            var a = oneValue(args);
+            return match(a,
+                IntValue, iv ref=> {
+                    var i = toUInt64(*iv);
+                    return ValueList(CharValue(UInt32(i)));
+                },
+                CharValue, cv ref=> ValueList(Value(cv)),
+                MatchDefault, x ref=> {
+                    matchFailureError("expecting an integer or character, got: ", a);
+                    return ValueList();
+                },
+            );
         }
 
         case PRIM_StaticBool? : {
