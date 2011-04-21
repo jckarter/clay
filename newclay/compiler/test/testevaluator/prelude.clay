@@ -76,12 +76,9 @@ symbol next;
 #tupleLiteral(..'x) = (..'x);
 
 symbol assign;
-symbol addAssign;
-symbol subtractAssign;
-symbol multiplyAssign;
-symbol divideAssign;
-symbol quotientAssign;
-symbol remainderAssign;
+symbol callAssign;
+symbol updateAssign;
+symbol updateCallAssign;
 
 symbol initializeFromUnsafe;
 symbol destroyUnsafe;

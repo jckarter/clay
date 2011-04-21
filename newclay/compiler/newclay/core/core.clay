@@ -138,12 +138,9 @@ record ClayHooks (
     tupleLiteral: Value,
 
     assign: Value,
-    addAssign: Value,
-    subtractAssign: Value,
-    multiplyAssign: Value,
-    divideAssign: Value,
-    quotientAssign: Value,
-    remainderAssign: Value,
+    updateAssign: Value,
+    callAssign: Value,
+    updateCallAssign: Value,
 
     initializeFromUnsafe: Value,
     destroyUnsafe: Value,
@@ -1622,7 +1619,7 @@ overload printTo(stream, a:ArgumentList) {
         v ref=> {
             printRTValueKindTo(stream, v.kind);
             printTo(stream, v.type);
-        }
+        },
     );
     printTo(stream, ")");
 }
