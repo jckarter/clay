@@ -1617,8 +1617,12 @@ overload printTo(stream, a:ArgumentList) {
     interleave(a.args,
         () ref=> { printTo(stream, ", "); },
         v ref=> {
-            printRTValueKindTo(stream, v.kind);
-            printTo(stream, v.type);
+            if (staticType?(v.type))
+                printTo(stream, "#", staticTypeValue(v.type));
+            else {
+                printRTValueKindTo(stream, v.kind);
+                printTo(stream, v.type);
+            }
         },
     );
     printTo(stream, ")");
@@ -1965,6 +1969,7 @@ private SemanticError?(static T) = false;
 
 private semanticError(...fields) = recordWithPredicate(
     SemanticError?,
+    programStack: Stack[Program],
     locationStack: Stack[LocationEntry],
     compilationStack: Stack[CompilationEntry],
     ...fields
@@ -1973,9 +1978,9 @@ private semanticError(...fields) = recordWithPredicate(
 [T, ...A | Record?(T)
            and SemanticError?(T)
            and (Tuple[...RecordFieldTypes(T)] ==
-                Tuple[Stack[LocationEntry], Stack[CompilationEntry], ...A])]
+                Tuple[Stack[Program], Stack[LocationEntry], Stack[CompilationEntry], ...A])]
 callbyname overload T(...args:A) =
-    T(_locationStack, _compilationStack, ...args);
+    T(_programStack, _locationStack, _compilationStack, ...args);
 
 variant SemanticError;
 
@@ -1989,7 +1994,7 @@ overload displayError(e:SemanticError) {
     displayError(*e);
 }
 
-displaySemanticError(locationStack, compilationStack, ...message) {
+private _displaySemanticError(locationStack, compilationStack, ...message) {
     if (stackEmpty?(locationStack)) {
         println(...message);
     } else {
@@ -2005,6 +2010,14 @@ displaySemanticError(locationStack, compilationStack, ...message) {
     }
 }
 
+displaySemanticError(programStack, locationStack, compilationStack, ...message) {
+    if (stackEmpty?(programStack))
+        _displaySemanticError(locationStack, compilationStack, ...message);
+    else
+        withProgram(stackTop(programStack), () ref=> {
+            _displaySemanticError(locationStack, compilationStack, ...message);
+        });
+}
 
 
 //
@@ -2045,7 +2058,7 @@ record StaticError = semanticError(
 );
 
 overload displayError(e:GenericError) {
-    displaySemanticError(e.locationStack, e.compilationStack, e.msg);
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, e.msg);
 }
 
 suggestNameCorrections(program:Program, name:String) {
@@ -2073,13 +2086,13 @@ suggestNameCorrections(program:Program, name:String) {
 }
 
 overload displayError(e:NameNotFoundError) {
-    displaySemanticError(e.locationStack, e.compilationStack,
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack,
         suggestNameCorrections(e.program, e.missingName)
     );
 }
 
 overload displayError(e:StaticAssertionError) {
-    displaySemanticError(e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
 }
 
 overload displayError(e:MatchError) {
@@ -2087,11 +2100,11 @@ overload displayError(e:MatchError) {
 }
 
 overload displayError(e:MatchFailureError) {
-    displaySemanticError(e.locationStack, e.compilationStack, e.msg);
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, e.msg);
 }
 
 overload displayError(e:StaticError) {
-    displaySemanticError(e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, PresentStaticErrorValues(e.values));
 }
 
 private record PresentStaticErrorValues(values:ValueList);
@@ -2111,7 +2124,7 @@ instance SemanticError = RecursiveAnalysisError;
 
 overload displayError(e:RecursiveAnalysisError) {
     var msg = "recursion without base case during type propagation";
-    displaySemanticError(e.locationStack, e.compilationStack, msg);
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, msg);
 }
 
 
@@ -2129,7 +2142,7 @@ overload displayError(e:AmbiguousEntryError) {
     for (m in e.entry.modules)
         printTo(msg, "\n  ", m.0.name);
     printTo(msg, "\nuse \"import module.(name);\" form to disambiguate");
-    displaySemanticError(e.locationStack, e.compilationStack, msg);
+    displaySemanticError(e.programStack, e.locationStack, e.compilationStack, msg);
 }
 
 
