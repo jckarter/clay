@@ -1,7 +1,7 @@
 import prelude.types.*;
 import prelude.operators.c.*;
 
-import __primitives__.(StaticInt, StaticUInt);
+import __primitives__.(StaticInt, StaticUInt, StaticChar);
 
 
 //
@@ -36,13 +36,15 @@ overload ContiguousCoordinate['T]() inline --> returned:ContiguousCoordinate['T]
 
 
 //
-// static Int and UInt conversion
+// static Int, UInt, and Char conversion
 //
 
 overload #Int() = 0;
 overload #Int('x) = StaticInt('x);
 overload #UInt() = 0u;
 overload #UInt('x) = StaticUInt('x);
+overload #Char() = '\u000000';
+overload #Char('x) = StaticChar('x);
 
 
 //
