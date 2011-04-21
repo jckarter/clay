@@ -103,6 +103,15 @@ overload #ReferenceBaseType(Ref['T])    | Type?('T) = 'T;
 overload #ReferenceBaseType(Rvalue['T]) | Type?('T) = 'T;
 overload #ReferenceBaseType(Const['T])  | Type?('T) = 'T;
 
+#Ref?('X) = false;
+overload #Ref?(Ref['T]) | Type?('T) = true;
+
+#Rvalue?('X) = false;
+overload #Rvalue?(Rvalue['T]) | Type?('T) = true;
+
+#Const?('X) = false;
+overload #Const?(Const['T]) | Type?('T) = true;
+
 
 //
 // external ABIs
