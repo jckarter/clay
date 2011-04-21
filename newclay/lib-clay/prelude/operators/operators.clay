@@ -105,34 +105,6 @@ overload #subtract('x, 'y) = StaticSubtract('x, 'y);
 
 
 //
-// arithmetic operations defined in terms of *Assign operators
-
-private opFromAssign(#'assignFn, a:'A, b:'B) inline --> c:'A
-{
-    c <-- a;
-    try {
-        'assignFn(c, b);
-    } catch (ex) {
-        destroyUnsafe(c);
-        throw ex;
-    }
-}
-
-overload multiply(a:'A, b:'B) inline | Defined?([multiplyAssign(a, b);])
-    = opFromAssign(multiplyAssign, a, b);
-overload divide(a:'A, b:'B) inline | Defined?([divideAssign(a, b);])
-    = opFromAssign(divideAssign, a, b);
-overload quotient(a:'A, b:'B) inline | Defined?([quotientAssign(a, b);])
-    = opFromAssign(quotientAssign, a, b);
-overload remainder(a:'A, b:'B) inline | Defined?([remainderAssign(a, b);])
-    = opFromAssign(remainderAssign, a, b);
-overload add(a:'A, b:'B) inline | Defined?([addAssign(a, b);])
-    = opFromAssign(addAssign, a, b);
-overload subtract(a:'A, b:'B) inline | Defined?([subtractAssign(a, b);])
-    = opFromAssign(subtractAssign, a, b);
-
-
-//
 // arithmetic operators over c types
 //
 
@@ -276,21 +248,32 @@ overload assign(ref a:'T, rvalue b:'T) inline | Defined?([moveAssign(a, b);]) {
 
 
 //
-// arithmetic assignment
+// update assignment
 //
 
-addAssign      (ref a, b) inline | Defined?([a  +  b]) { a = a  +  b; }
-subtractAssign (ref a, b) inline | Defined?([a  -  b]) { a = a  -  b; }
-multiplyAssign (ref a, b) inline | Defined?([a  *  b]) { a = a  *  b; }
-divideAssign   (ref a, b) inline | Defined?([a  /  b]) { a = a  /  b; }
-quotientAssign (ref a, b) inline | Defined?([a div b]) { a = a div b; }
-remainderAssign(ref a, b) inline | Defined?([a mod b]) { a = a mod b; }
+updateAssign(#'op, ref a, forward b) inline
+    | Defined?([a = 'op(a, b);])
+    { a = 'op(a, b); }
 
-inc(ref a:'T) inline | Defined?([addAssign     (a, 1);]) { a += 1; }
-dec(ref a:'T) inline | Defined?([subtractAssign(a, 1);]) { a -= 1; }
+inc(ref a:'T) inline | Defined?([a += 1;]) { a += 1; }
+dec(ref a:'T) inline | Defined?([a -= 1;]) { a -= 1; }
 
-overload inc(ref a:'T) inline | Defined?([addAssign     (a, 1u);]) { a += 1u; }
-overload dec(ref a:'T) inline | Defined?([subtractAssign(a, 1u);]) { a -= 1u; }
+overload inc(ref a:'T) inline | Defined?([a += 1u;]) { a += 1u; }
+overload dec(ref a:'T) inline | Defined?([a -= 1u;]) { a -= 1u; }
+
+
+//
+// accessor assignment
+//
+
+callAssign(forward b, #'f, forward ..args) inline
+    | Defined?([ref a = 'f(..args); a = b;])
+    { ref a = 'f(..args); a = b; }
+
+updateCallAssign(#'op, forward b, #'f, forward ..args) inline
+    | Defined?([ref a = 'f(..args); a = 'op(a, b);])
+    { ref a = 'f(..args); a = 'op(a, b); }
+
 
 
 //
