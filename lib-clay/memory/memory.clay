@@ -80,7 +80,7 @@ allocateRawMemory(static T, count:I) {
     return Pointer[T](ptr);
 }
 
-[T,I | Integer?(I)]
+[T,I | Integer?(I) and TypeAlignment(T) <= SystemMallocAlignment]
 reallocateRawMemory(ptr:Pointer[T], count:I) {
     var newptr = realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
     return Pointer[T](newptr);
