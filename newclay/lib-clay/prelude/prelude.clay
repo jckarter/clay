@@ -14,7 +14,8 @@ public import prelude.unions.*;
 // prelude symbols are always available as "prelude.foo"
 public import prelude;
 
-// non-public detail modules required for compiler hooks
+// XXX non-prelude detail modules required to be privately present in "prelude"
+// as compiler hooks
 import meta.lltypes.*;
-import prelude.system.*;
+import standalone.*;
 

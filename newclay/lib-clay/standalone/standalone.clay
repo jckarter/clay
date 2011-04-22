@@ -1,3 +1,11 @@
+// callMain() is the true entry point for standalone executables
+// this implementation calls the main() function with one of:
+// - no arguments
+// - a SequenceType? whose members are of a StringType?, containing the commandline
+//   arguments
+// - an Int and Pointer[Pointer[CChar]], containing the raw original values of
+//   argc and argv
+
 import __main__.(main);
 import ctypes.(CChar, CString);
 
@@ -15,4 +23,9 @@ overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
 {
     var beginArgv = ContiguousCoordinate[CString](cargv);
     return exitValue(..main(CoordinateRange(beginArgv, beginArgv + cargc)));
+}
+overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
+    | CallDefined?(main, Int, Pointer[Pointer[CChar]])
+{
+    return exitValue(..main(cargc, cargv));
 }
