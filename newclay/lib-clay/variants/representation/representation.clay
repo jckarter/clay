@@ -1,5 +1,6 @@
 import meta.lltypes.*;
 import values.*;
+import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitializedType?, PODType?);
 
 
 //
@@ -19,7 +20,7 @@ copyRepr(ref toRepr:'R, fromRepr:'R) inline {
 }
 
 moveRepr(ref toRepr:'R, ref fromRepr:'R) inline {
-    dispatchRepr(fromRepr, [fromMember -> initializeRepr(toRepr, moveUnsafe(fromMember));]);
+    dispatchRepr(fromRepr, [fromMember -> initializeRepr(toRepr, moveRvalue(fromMember));]);
 }
 
 reprIs?(#'M, repr:'R) inline {
@@ -84,7 +85,7 @@ overload moveRepr(
     toRepr.tag <-- fromRepr.tag;
 
     dispatchRepr(fromRepr,
-        [ref from -> toRepr.value[#Type([from])] <-- moveUnsafe(from);]
+        [ref from -> toRepr.value[#Type([from])] <-- moveRvalue(from);]
     );
 }
 

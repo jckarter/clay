@@ -1,5 +1,6 @@
 import variants.*;
 import show.*;
+import unsafe.valuesemantics.(BitwiseZeroInitializedType?);
 
 symbol Foo = VariantType(Int, Char), WithDefaultMemberType(Int);
 symbol Bar = VariantType(Char, Int), WithDefaultMemberType(Int);

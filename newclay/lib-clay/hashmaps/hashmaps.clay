@@ -26,6 +26,7 @@ import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
 import memory.(allocateRawValues, freeRawValues);
+import unsafe.valuesemantics.*;
 
 
 //
@@ -246,11 +247,11 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
         to.ln2_size = from.ln2_size;
     }
 }
-overload resetUnsafe(ref t:Table['B]) {
+overload reset(ref t:Table['B]) {
     t.begin = ContiguousCoordinate['B]();
     t.ln2_size = 0;
 }
-overload destroyUnsafe(ref t:Table['B]) {
+overload destroy(ref t:Table['B]) {
     if (t.begin != ContiguousCoordinate['B]()) {
         destroyRangeUnsafe(t.begin, t.begin+tableSize(t));
         freeRawValues(t.begin);
@@ -282,17 +283,17 @@ overload copyAssign(ref to:Bucket['E], from:Bucket['E]) {
         if (to.hashBytes[i] != 255u and from.hashBytes[i] != 255u)
             to.entries[i] = from.entries[i];
         else if (to.hashBytes[i] != 255u /*and from.hashBytes[i] == 255u*/)
-            destroyUnsafe(to.entries[i]);
+            destroy(to.entries[i]);
         else if (from.hashBytes[i] != 255u /*and to.hashBytes[i] == 255u*/)
             to.entries[i] <-- from.entries[i];
 
         to.hashBytes[i] = from.hashBytes[i];
     }
 }
-overload destroyUnsafe(ref b:Bucket['E]) {
+overload destroy(ref b:Bucket['E]) {
     for (i in Range(BucketSize))
         if (b.hashBytes[i] != 255u)
-            destroyUnsafe(b.entries[i]);
+            destroy(b.entries[i]);
 }
 
 // entry management
@@ -421,15 +422,15 @@ overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
 }
 
 private freeFromBucket(ref b:Bucket['E], index) {
-    destroyUnsafe(b.entries[index]);
+    destroy(b.entries[index]);
     b.hashBytes[index] = 255u;
 }
 
 private clearBucket(ref b:Bucket['E]) {
     for (i in Range(BucketSize))
         if (b.hashBytes[i] != 255u)
-            destroyUnsafe(b.entries[i]);
-    resetUnsafe(b);
+            destroy(b.entries[i]);
+    reset(b);
 }
 
 private grow(ref h:TwoHash['E]) {

@@ -3,6 +3,7 @@ import values.*;
 import hashing.(hash, hashSequence);
 import sequences.(equalSequence?, lesserSequence?);
 import containers.*;
+import unsafe.valuesemantics.*;
 
 symbol Vector['T] = CompositeType(
     size:UInt,
@@ -34,7 +35,7 @@ overload Vector['T](forward s:'S) inline --> returned:Vector['T]
     try {
         push(returned, s);
     } catch (ex) {
-        destroyUnsafe(returned);
+        destroy(returned);
         throw ex;
     }
 }
@@ -50,7 +51,7 @@ overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
     try {
         push(returned, ..elements);
     } catch (ex) {
-        destroyUnsafe(returned);
+        destroy(returned);
         throw ex;
     }
 }
@@ -67,7 +68,7 @@ overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
     assignRange(begin(to), begin(from), end(from));
 }
 
-overload destroyUnsafe(ref a:Vector['T]) inline {
+overload destroy(ref a:Vector['T]) inline {
     destroyRangeUnsafe(begin(a), end(a));
     freeRawValues(a.data);
 }
@@ -117,7 +118,7 @@ overload push(ref v:Vector['T], forward elt:'T) inline {
 }
 
 overload pop(ref v:Vector['T]) inline --> returned:'T {
-    returned <-- moveUnsafe(back(v));
+    returned <-- moveRvalue(back(v));
     removeLocations(v, end(v) - 1, end(v));
 }
 
@@ -170,7 +171,7 @@ overload insert(ref v:Vector['T], i:'I, x:'T) | IntegerType?('I) {
     try {
         first^ <-- x;
     } catch (ex) {
-        resetUnsafe(first^);
+        reset(first^);
         throw ex;
     }
 }

@@ -1,6 +1,7 @@
 import variants.*;
 import variants.representation.*;
 import values.*;
+import unsafe.valuesemantics.(reset, ResetDoesNothingType?);
 
 symbol Nothing;
 
@@ -44,7 +45,7 @@ overload bind(forward m:Maybe['T], forward f) inline
     | allValues?(MaybeType?, ..Type([..f(required(m))]))
     = forward ..maybe(m, [forward x -> ..f(x)]);
 
-overload resetUnsafe(m:Maybe['T]) | not ResetDoesNothingType?(Maybe['T]) {
+overload reset(m:Maybe['T]) | not ResetDoesNothingType?(Maybe['T]) {
     m <-- nothing('T);
 }
 

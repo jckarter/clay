@@ -1,4 +1,5 @@
 import show.(show);
+import unsafe.valuesemantics.(BitwiseMovedType?, DestroyDoesNothingType?);
 
 symbol Copyable = RecordType(x:Int);
 

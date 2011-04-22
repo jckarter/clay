@@ -5,6 +5,7 @@ import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
 import strings.encodings.utf8.(UTF8);
 import vectors.(Vector);
 import values.(allValues?);
+import unsafe.valuesemantics.(destroy);
 
 
 //
@@ -37,7 +38,7 @@ overload String(forward x:'S) --> returned:String
     try {
         push(returned, x);
     } catch (ex) {
-        destroyUnsafe(returned);
+        destroy(returned);
         throw ex;
     }
 }
@@ -81,7 +82,7 @@ cat(forward s1:'S1, forward ..ss:'SS) --> returned:String
     try {
         push(returned, ..ss);
     } catch (ex) {
-        destroyUnsafe(returned);
+        destroy(returned);
         throw ex;
     }
 }

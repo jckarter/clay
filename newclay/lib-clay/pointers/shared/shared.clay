@@ -1,4 +1,5 @@
 import memory.(allocateRawValue, freeRawValue);
+import unsafe.valuesemantics.*;
 
 symbol RefCounted['T] = RecordType(refCount:UInt, value:'T);
 
@@ -24,17 +25,17 @@ overload SharedPointer(f, forward ..args) inline
     | Defined?([var x = f(..args);])
     = SharedPointer[#Type([f(..args)])](f, ..args);
 
-overload destroyUnsafe(ref p:SharedPointer['T]) inline {
+overload destroy(ref p:SharedPointer['T]) inline {
     maybe(p.ptr, [ptr -> {
         dec(ptr^.refCount);
         if (ptr^.refCount == 0u) {
-            destroyUnsafe(ptr^.value);
+            destroy(ptr^.value);
             freeRawValue(ptr);
         }
     }]);
 }
 
-overload resetUnsafe(ref p:SharedPointer['T]) inline {
+overload reset(ref p:SharedPointer['T]) inline {
     p.ptr <-- nothing(Pointer[RefCounted['T]]);
 }
 

@@ -1,4 +1,5 @@
 import show.*;
+import unsafe.valuesemantics.(PODType?, BitwiseZeroInitializedType?);
 
 main() {
     var x = (1, (true, 3.0), '4');

@@ -15,7 +15,12 @@ public import prelude.unions.*;
 public import prelude;
 
 // XXX non-prelude detail modules required to be privately present in "prelude"
-// as compiler hooks
+// as hooks for the language to function
 import meta.lltypes.*;
 import standalone.*;
+import unsafe.valuesemantics.*;
+import unsafe.valuesemantics.(
+    private initializeFrom,
+    private assign
+);
 
