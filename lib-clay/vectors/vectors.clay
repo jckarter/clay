@@ -140,7 +140,7 @@ private reallocVector(a:Vector[T], capacity:SizeT) {
     a.capacity = capacity;
 }
 
-[T | BitwiseMovedType?(T)]
+[T | BitwiseMovedType?(T) and CallDefined?(reallocateRawMemory, Pointer[T], SizeT)]
 overload reallocVector(a:Vector[T], capacity:SizeT) {
     a.data = reallocateRawMemory(a.data, capacity);
     a.capacity = capacity;
