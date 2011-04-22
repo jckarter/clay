@@ -303,13 +303,13 @@ symbol call;
 
 
 //
-// destroyUnsafe, initializeFromUnsafe
+// destroy, initializeFrom
 //
 
 primitiveCopy(ref y, forward x) __c__ """$y = $x;""";
 
-initializeFromUnsafe(ref y, forward x) { primitiveCopy(y, x); }
-destroyUnsafe(ref x) {}
+initializeFrom(ref y, forward x) { primitiveCopy(y, x); }
+destroy(ref x) {}
 
 //
 // callMain
@@ -355,8 +355,8 @@ overload #PODType?(NontrivialInt) = false;
 toNontrivialInt(x:Int) --> y:NontrivialInt { primitiveCopy(y, x); }
 fromNontrivialInt(x:NontrivialInt) --> y:Int { primitiveCopy(y, x); }
 
-overload initializeFromUnsafe(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
-overload destroyUnsafe(ref i:NontrivialInt) { }
+overload initializeFrom(ref to:NontrivialInt, forward from:NontrivialInt) { primitiveCopy(to, from); }
+overload destroy(ref i:NontrivialInt) { }
 
 //
 // lambdas

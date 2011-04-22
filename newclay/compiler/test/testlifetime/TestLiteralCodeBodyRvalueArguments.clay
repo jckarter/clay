@@ -1,4 +1,4 @@
-// The __c__ block is assumed to consume x's resources, so no separate destroyUnsafe call is
+// The __c__ block is assumed to consume x's resources, so no separate destroy call is
 // emitted
 eatRvalue(rvalue x:NontrivialInt) __c__ """ """;
 
