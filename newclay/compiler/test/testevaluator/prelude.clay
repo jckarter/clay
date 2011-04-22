@@ -80,8 +80,8 @@ symbol callAssign;
 symbol updateAssign;
 symbol updateCallAssign;
 
-symbol initializeFromUnsafe;
-symbol destroyUnsafe;
+symbol initializeFrom;
+symbol destroy;
 
 symbol captureLambda;
 symbol lambdaCaptures;

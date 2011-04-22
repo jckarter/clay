@@ -2188,7 +2188,7 @@ addSpecializedCall(
 private verifyInitializable(s, ast, input, output) {
     if (not podType?(input.type)) {
         analyzeCall(subContext(s, Vector[ir.Node]()), ast,
-            getHooks().initializeFromUnsafe,
+            getHooks().initializeFrom,
             RTValues(output, input)
         );
     }
@@ -2197,7 +2197,7 @@ private verifyInitializable(s, ast, input, output) {
 private verifyDestroyable(s, ast, value) {
     if (not podType?(value.type)) {
         analyzeCall(subContext(s, Vector[ir.Node]()), ast,
-            getHooks().destroyUnsafe,
+            getHooks().destroy,
             RTValues(value)
         );
     }

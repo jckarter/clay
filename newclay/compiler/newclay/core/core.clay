@@ -142,8 +142,8 @@ record ClayHooks (
     callAssign: Value,
     updateCallAssign: Value,
 
-    initializeFromUnsafe: Value,
-    destroyUnsafe: Value,
+    initializeFrom: Value,
+    destroy: Value,
 
     captureLambda: Value,
     lambdaCaptures: Value,
