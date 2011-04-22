@@ -3,6 +3,7 @@ import meta.lltypes.*;
 import meta.symbols.*;
 import variants.representation.*;
 import libc.(memset);
+import unsafe.casts.(bitcast, refToRvalue, rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -104,9 +105,9 @@ variantAs(#'M, forward v:'T) inline | VariantType?('T) and VariantMemberType?('T
 overload variantAs(#'M, rvalue v:'T) inline
     | VariantType?('T) and VariantMemberType?('T, 'M)
 {
-    ref rv = rvalueToRefUnsafe(v);
+    ref rv = rvalueToRef(v);
     assert([variantIs?(#'M, rv)]);
-    return forward reprAs(#'M, repr(refToRvalueUnsafe(rv)));
+    return forward reprAs(#'M, repr(refToRvalue(rv)));
 }
 variantAsUnsafe(#'M, forward v:'T) inline
     | VariantType?('T) and VariantMemberType?('T, 'M)

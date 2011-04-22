@@ -2,6 +2,7 @@ import byteorder.*;
 import strings.encodings.(stringBytes);
 import strings.(StringType?);
 import sequences.*;
+import unsafe.casts.(bitcast);
 import libc.*;
 
 symbol SHA256 = RecordType(digest: Array[UInt8, 32]);

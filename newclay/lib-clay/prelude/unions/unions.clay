@@ -3,6 +3,7 @@ import libc.*;
 import meta.symbols.*;
 import meta.statics.*;
 import meta.lltypes.*;
+import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.*;
 
 

@@ -1,5 +1,6 @@
 import prelude.types.*;
 import prelude.operators.c.*;
+import unsafe.casts.(bitcast);
 
 import __primitives__.(StaticInt, StaticUInt, StaticChar);
 

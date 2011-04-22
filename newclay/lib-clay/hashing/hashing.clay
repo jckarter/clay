@@ -1,3 +1,4 @@
+import unsafe.casts.(bitcast);
 import values.(allValues?);
 
 symbol hash;
