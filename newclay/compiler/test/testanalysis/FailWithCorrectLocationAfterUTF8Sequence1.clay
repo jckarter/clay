@@ -1,0 +1,4 @@
+main() {
+    var x = "éééé";
+    return x + x;
+}
