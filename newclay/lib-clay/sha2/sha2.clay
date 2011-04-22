@@ -2,7 +2,7 @@ import byteorder.*;
 import strings.encodings.(stringBytes);
 import strings.(StringType?);
 import sequences.*;
-import unsafe.casts.(bitcast);
+import unsafe.casts.(bitcast, pointerCast);
 import libc.*;
 
 symbol SHA256 = RecordType(digest: Array[UInt8, 32]);
@@ -89,10 +89,10 @@ sha256(message: 'S) --> returned: SHA256
     var messageHeadSize = bitandc(messageSize, 63u);
     var messageTailSize = messageSize - messageHeadSize;
 
-    var messageHeadBegin = ContiguousCoordinate[ChunkWords](begin(message));
-    var messageHeadEnd   = ContiguousCoordinate[ChunkWords](begin(message) + messageHeadSize);
-    var messageTailBegin = ContiguousCoordinate[UInt8](messageHeadEnd);
-    var messageTailEnd   = ContiguousCoordinate[UInt8](end(message));
+    var messageHeadBegin = pointerCast(ContiguousCoordinate[ChunkWords], begin(message));
+    var messageHeadEnd   = pointerCast(ContiguousCoordinate[ChunkWords], begin(message) + messageHeadSize);
+    var messageTailBegin = pointerCast(ContiguousCoordinate[UInt8], messageHeadEnd);
+    var messageTailEnd   = pointerCast(ContiguousCoordinate[UInt8], end(message));
 
     var state = Array[UInt32, 8](
         0x6a09e667_u32,
@@ -134,7 +134,8 @@ sha256(message: 'S) --> returned: SHA256
         begin(tailChunkBytes) + messageTailSize,
         end(tailChunkBytes) - 8u,
     );
-    Pointer[UInt64](end(tailChunkBytes) - 8)^ = hostToNetwork(UInt64(messageSize) * 8_u64);
+    pointerCast(Pointer[UInt64], end(tailChunkBytes) - 8)^
+        = hostToNetwork(UInt64(messageSize) * 8_u64);
     sha256chunk(state, tempState, chunkSpace, tailChunk);
 
     ref returnedWords = bitcast(Array[UInt32, 8], returned.digest);

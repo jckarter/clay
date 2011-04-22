@@ -4,7 +4,7 @@ import meta.lltypes.*;
 import values.*;
 import libc.*;
 import sequences.(equalSequence?, lesserSequence?);
-import unsafe.casts.(refToRvalue, rvalueToRef);
+import unsafe.casts.(pointerCast, refToRvalue, rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -19,8 +19,8 @@ overload size(x:Array['T, 'n]) inline = UInt('n);
 // begin, end
 //
 
-overload begin(x:Array['T, 'n]) inline = ContiguousCoordinate['T](&x);
-overload end(x:Array['T, 'n]) inline = ContiguousCoordinate['T](&x) + 'n;
+overload begin(x:Array['T, 'n]) inline = pointerCast(ContiguousCoordinate['T], &x);
+overload end(x:Array['T, 'n]) inline = pointerCast(ContiguousCoordinate['T], &x) + 'n;
 
 
 //

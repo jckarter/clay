@@ -1,5 +1,6 @@
 import meta.platform.*;
 import libc.(strlen);
+import unsafe.casts.(pointerCast);
 
 private symbol CLongType;
 overload #CLongType() = Int64;
@@ -31,7 +32,7 @@ alias CIntPtrT = Int;
 
 symbol CString = NewType(Pointer[CChar]);
 
-overload CString(s:StringConstant) = CString(Pointer[CChar](s.begin));
+overload CString(s:StringConstant) = CString(pointerCast(Pointer[CChar], s.begin));
 
 overload begin(s:CString) = ContiguousCoordinate(*s);
 overload end(s:CString) = ContiguousCoordinate(*s) + size(s);
