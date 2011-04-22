@@ -1,5 +1,6 @@
 import values.*;
 import libc.*;
+import unsafe.compositetypes.(unpackFields);
 import meta.statics.*;
 import prelude.operators.c.*;
 import meta.lltypes.*;
@@ -32,23 +33,6 @@ overload index(rvalue t:Tuple[..'T], #'n) inline
 
 overload unpack(forward x:Tuple[..'T]) inline
     = forward ..unpackFields(x, ..#intValues(countValues(..'T)));
-
-private symbol unpackFields;
-// permanent values
-overload unpackFields(forward x, #'field, ..#'fields) inline
-    = forward x[#'field], forward ..unpackFields(x, ..#'fields);
-overload unpackFields(forward x) inline
-    = ;
-// rvalues
-overload unpackFields(rvalue x, #'field, ..#'fields) inline {
-    ref refx = rvalueToRefUnsafe(x);
-    return rvalue refToRvalueUnsafe(refx[#'field]),
-           rvalue ..unpackFields(refToRvalueUnsafe(refx), ..#'fields);
-}
-overload unpackFields(rvalue x) inline {
-    // prevent destruction of x; it should have been entirely picked apart
-    rvalueToRefUnsafe(x);
-}
 
 
 //

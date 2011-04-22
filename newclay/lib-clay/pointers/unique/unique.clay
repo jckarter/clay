@@ -1,5 +1,6 @@
 import memory.(allocateRawValue, freeRawValue);
 import pointers.unique.*;
+import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
 symbol UniquePointer['T] = CompositeType(ptr:MPointer['T]);

@@ -1,6 +1,7 @@
 import pointers.shared.(SharedPointer);
 import show.(show);
-import unsafe.valuesemantics.(destroy);
+import unsafe.compositetypes.*;
+import unsafe.valuesemantics.*;
 
 symbol CanaryType = CompositeType(x:Int);
 
