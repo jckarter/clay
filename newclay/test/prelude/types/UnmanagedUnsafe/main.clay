@@ -1,3 +1,4 @@
+import unsafe.compositetypes.*;
 import show.(show);
 import unsafe.valuesemantics.(destroy, Unmanaged);
 
@@ -5,7 +6,7 @@ symbol Foo = CompositeType(i:Int);
 
 overload Foo(i:Int) { show("initialized"); return initializeRecord(Foo, i); }
 overload copy(x:Foo) { show("copied"); return copyRecord(x); }
-overload destroy(x:Foo) { show("destroyed"); destroyRecordUnsafe(x); }
+overload destroy(x:Foo) { show("destroyed"); destroyRecord(x); }
 
 main() {
     var x = Unmanaged[Foo](3);

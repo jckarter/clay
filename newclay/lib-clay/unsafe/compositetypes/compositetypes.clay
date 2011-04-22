@@ -1,0 +1,124 @@
+import libc.(memset);
+import meta.symbols.(SymbolWithTag?);
+import unsafe.valuesemantics.*;
+import values.*;
+
+
+//
+// CompositeType definer
+//
+
+#CompositeType(..'fields) | ValidFields?(..'fields) = (CompositeType, ..'fields);
+
+#CompositeType?('T) = SymbolWithTag?('T, CompositeType) or SymbolWithTag?('T, RecordType);
+
+
+//
+// default record-style value semantics
+//
+
+symbol unpackFields;
+// permanent values
+overload unpackFields(forward x, #'field, ..#'fields) inline
+    = forward x[#'field], forward ..unpackFields(x, ..#'fields);
+overload unpackFields(forward x) inline
+    = ;
+// rvalues
+overload unpackFields(rvalue x, #'field, ..#'fields) inline {
+    ref refx = rvalueToRefUnsafe(x);
+    return rvalue refToRvalueUnsafe(refx[#'field]),
+           rvalue ..unpackFields(refToRvalueUnsafe(refx), ..#'fields);
+}
+overload unpackFields(rvalue x) inline {
+    // prevent destruction of x; it should have been entirely picked apart
+    rvalueToRefUnsafe(x);
+}
+
+unpackRecord(forward x:'T) inline | CompositeType?('T)
+    = forward ..unpackFields(x, ..#FieldNames('T));
+
+symbol initializeRecord;
+overload initializeRecord(#'T) inline --> returned:'T
+    | CompositeType?('T) and allValues?(DefaultInitializableType?, ..FieldTypes('T))
+{
+    ..unpackRecord(returned) <-- ..mapValues(call, ..FieldTypes('T));
+}
+
+overload initializeRecord(#'T) inline --> returned:'T
+    | CompositeType?('T) and allValues?(BitwiseZeroInitializedType?, ..FieldTypes('T))
+{
+    memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
+}
+
+overload initializeRecord(#'T, forward ..fields:'F) inline --> returned:'T
+    | CompositeType?('T) and (..'F) == (..FieldTypes('T))
+{
+    ..unpackRecord(returned) <-- ..fields;
+}
+
+symbol destroyRecord;
+overload destroyRecord(ref x:'T) inline
+    | CompositeType?('T) and allValues?(DestroyDoesNothingType?, ..FieldTypes('T))
+{ }
+overload destroyRecord(ref x:'T) inline
+    | CompositeType?('T) and not allValues?(DestroyDoesNothingType?, ..FieldTypes('T))
+{
+    static for (ref f in ..unpackRecord(x))
+        destroy(f);
+}
+
+symbol resetRecord;
+overload resetRecord(ref x:'T) inline
+    | CompositeType?('T) and allValues?(ResetDoesNothingType?, ..FieldTypes('T))
+{ }
+overload resetRecord(ref x:'T) inline
+    | CompositeType?('T) and not allValues?(ResetDoesNothingType?, ..FieldTypes('T))
+{
+    static for (ref f in ..unpackRecord(x))
+        reset(f);
+}
+
+symbol moveRvalueRecord;
+overload moveRvalueRecord(ref x:'T) inline
+    | CompositeType?('T) and allValues?(BitwiseMovedType?, ..FieldTypes('T))
+    = bitwiseCopy(x);
+overload moveRvalueRecord(ref x:'T) inline
+    | CompositeType?('T)
+      and not allValues?(BitwiseMovedType?, ..FieldTypes('T))
+      and allValues?(MovableType?, ..FieldTypes('T))
+    = initializeRecord('T, ..mapValues(moveRvalue, ..unpackRecord(x)));
+
+symbol copyRecord;
+overload copyRecord(x:'T) inline
+    | CompositeType?('T) and allValues?(BitwiseCopiedType?, ..FieldTypes('T))
+    = bitwiseCopy(x);
+overload copyRecord(x:'T) inline
+    | CompositeType?('T)
+      and not allValues?(BitwiseCopiedType?, ..FieldTypes('T))
+      and allValues?(CopyableType?, ..FieldTypes('T))
+    = initializeRecord('T, ..mapValues(copy, ..unpack(x)));
+
+symbol copyAssignRecord;
+overload copyAssignRecord(ref to:'T, from:'T) inline
+    | CompositeType?('T)
+      and not allValues?(BitwiseAssignedType?, ..FieldTypes('T))
+      and allValues?(AssignableType?, ..FieldTypes('T))
+{
+    static for (#'field in ..#FieldNames('T))
+        to[#'field] = from[#'field];
+}
+overload copyAssignRecord(ref to:'T, from:'T) inline
+    | CompositeType?('T)
+      and allValues?(BitwiseAssignedType?, ..FieldTypes('T))
+{
+    to <-- from;
+}
+
+equalRecords?(a:'T, b:'T) inline | CompositeType?('T)
+{
+    static for (#'field in ..#FieldNames('T))
+        if (a[#'field] != b[#'field])
+            return false;
+    return true;
+}
+

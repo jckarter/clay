@@ -26,6 +26,7 @@ import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
 import memory.(allocateRawValues, freeRawValues);
+import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
 

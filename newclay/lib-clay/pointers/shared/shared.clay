@@ -1,4 +1,5 @@
 import memory.(allocateRawValue, freeRawValue);
+import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
 symbol RefCounted['T] = RecordType(refCount:UInt, value:'T);
