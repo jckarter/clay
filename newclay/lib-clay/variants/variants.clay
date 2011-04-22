@@ -3,6 +3,7 @@ import meta.lltypes.*;
 import meta.symbols.*;
 import variants.representation.*;
 import libc.(memset);
+import unsafe.valuesemantics.*;
 
 
 //
@@ -78,19 +79,19 @@ overload 'T(forward m:'M) inline --> returned:'T
 dispatch(forward v:'T, forward fn) inline | VariantType?('T)
     = forward ..dispatchRepr(repr(v), fn);
 
-overload destroyUnsafe(ref v:'T) inline | VariantType?('T) and not DestroyDoesNothingType?('T) {
-    dispatchRepr(repr(v), destroyUnsafe);
+overload destroy(ref v:'T) inline | VariantType?('T) and not DestroyDoesNothingType?('T) {
+    dispatchRepr(repr(v), destroy);
 }
 
-overload resetUnsafe(ref v:'T) inline | VariantType?('T) and not ResetDoesNothingType?('T) {
-    dispatchRepr(repr(v), resetUnsafe);
+overload reset(ref v:'T) inline | VariantType?('T) and not ResetDoesNothingType?('T) {
+    dispatchRepr(repr(v), reset);
 }
 
 overload copy(v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseCopiedType?('T) {
     copyRepr(repr(returned), repr(v));
 }
 
-overload moveUnsafe(ref v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
+overload moveRvalue(ref v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
     moveRepr(repr(returned), repr(v));
 }
 

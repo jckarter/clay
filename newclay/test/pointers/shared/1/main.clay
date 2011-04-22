@@ -1,5 +1,6 @@
 import pointers.shared.(SharedPointer);
 import show.(show);
+import unsafe.valuesemantics.(destroy);
 
 symbol CanaryType = CompositeType(x:Int);
 
@@ -9,7 +10,7 @@ overload CanaryType(x:Int) {
     return initializeRecord(CanaryType, x);
 }
 
-overload destroyUnsafe(ref c:CanaryType) {
+overload destroy(ref c:CanaryType) {
     show("destroying");
     show(c.x);
 }

@@ -3,6 +3,7 @@ import libc.*;
 import meta.statics.*;
 import prelude.operators.c.*;
 import meta.lltypes.*;
+import unsafe.valuesemantics.*;
 
 
 //
@@ -21,7 +22,7 @@ overload index(rvalue t:Tuple[..'T], #'n) inline
     returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
 
     static for (#'m in ..#exceptValue('n, ..intValues('n)))
-        destroyUnsafe(rt[#'m]);
+        destroy(rt[#'m]);
 }
 
 
@@ -85,23 +86,23 @@ overload Tuple(forward ..x:'T) inline = Tuple[..'T](..x);
 // value semantics
 //
 
-overload destroyUnsafe(ref x:Tuple[..'T]) inline
+overload destroy(ref x:Tuple[..'T]) inline
     | not DestroyDoesNothingType?(Tuple[..'T])
 {
     static for (ref f in ..*x)
-        destroyUnsafe(f);
+        destroy(f);
 }
 
-overload resetUnsafe(ref x:Tuple[..'T]) inline
+overload reset(ref x:Tuple[..'T]) inline
     | not ResetDoesNothingType?(Tuple[..'T])
 {
     static for (ref f in ..*x)
-        resetUnsafe(f);
+        reset(f);
 }
 
-overload moveUnsafe(forward x:Tuple[..'T]) inline
+overload moveRvalue(forward x:Tuple[..'T]) inline
     | not BitwiseMovedType?(Tuple[..'T]) and allValues?(MovableType?, ..'T)
-    = Tuple[..'T](..mapValues(moveUnsafe, ..*x));
+    = Tuple[..'T](..mapValues(moveRvalue, ..*x));
 
 overload copy(x:Tuple[..'T]) inline
     | not BitwiseCopiedType?(Tuple[..'T]) and allValues?(CopyableType?, ..'T)
@@ -117,7 +118,7 @@ overload #CompatibleTupleTypes2?('fn, (), ()) = true;
 
 overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U]) inline
     | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))
-      and CompatibleTupleTypes?(assign, (..'T), (..'U))
+      and CompatibleTupleTypes?(copyAssign, (..'T), (..'U))
 {
     static for (#'n in ..#intValues(countValues(..'T)))
         to[#'n] = from[#'n];

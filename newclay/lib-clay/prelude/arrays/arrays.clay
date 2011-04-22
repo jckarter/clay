@@ -4,6 +4,7 @@ import meta.lltypes.*;
 import values.*;
 import libc.*;
 import sequences.(equalSequence?, lesserSequence?);
+import unsafe.valuesemantics.*;
 
 
 //
@@ -35,7 +36,7 @@ overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
     var n = 0u;
     for (ref elt in ra) {
         if (n != i)
-            destroyUnsafe(elt);
+            destroy(elt);
         inc(n);
     }
 }
@@ -112,26 +113,26 @@ overload iterator(x:Array['T, 'n]) = CoordinateRange(begin(x), end(x));
 // value semantics
 //
 
-overload destroyUnsafe(ref x:Array['T, 'n]) inline
+overload destroy(ref x:Array['T, 'n]) inline
     | not DestroyDoesNothingType?('T)
 {
     for (ref y in x)
-        destroyUnsafe(y);
+        destroy(y);
 }
 
-overload resetUnsafe(ref x:Array['T, 'n]) inline
+overload reset(ref x:Array['T, 'n]) inline
     | not ResetDoesNothingType?('T)
 {
     for (ref y in x)
-        resetUnsafe(y);
+        reset(y);
 }
 
-overload moveUnsafe(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
+overload moveRvalue(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
     | not BitwiseMovedType?('T) and MovableType?('T)
 {
     var ri = iterator(returned), xi = forwardIteratorUnsafe(x);
     while (hasNext?(ri)) {
-        next(ri) <-- moveUnsafe(next(xi));
+        next(ri) <-- moveRvalue(next(xi));
     }
 }
 
@@ -146,7 +147,7 @@ overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
 
 overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
     | not ('T == 'U and BitwiseAssignedType?('T))
-      and CallDefined?(assign, Ref['T], 'U)
+      and CallDefined?(copyAssign, Ref['T], 'U)
 {
     var ti = iterator(to), fi = iterator(from);
     while (hasNext?(ti)) {

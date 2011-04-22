@@ -1,4 +1,5 @@
 import values.*;
+import unsafe.valuesemantics.(destroy);
 
 
 //
@@ -149,7 +150,7 @@ overload Sliced(forward s:'S, from:'I, to:'J)
         var beg = begin(capturedRef(returned.sequence));
         returned.range <-- CoordinateRange(beg + from, beg + to);
     } catch (ex) {
-        destroyUnsafe(returned.sequence);
+        destroy(returned.sequence);
         throw ex;
     }
 }

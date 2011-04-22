@@ -3,6 +3,7 @@ import sequences.(lesserSequence?);
 import strings.encodings.(StringTypeEncoding, stringBytes);
 import strings.encodings.utf8.(UTF8, UTF8Iterator);
 import values.*;
+import unsafe.valuesemantics.*;
 
 
 //
@@ -143,7 +144,7 @@ private #CompatibleCoordinateTypes?('C, 'D)
 
 private initializeTo(ref x:'X) inline { x <-- 'X(); }
 private copyTo(ref x, y) inline { x <-- y; }
-private moveToUnsafe(ref x, ref y) inline { x <-- moveUnsafe(y); }
+private moveToUnsafe(ref x, ref y) inline { x <-- moveRvalue(y); }
 
 eachInRanges(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
     var i1 = begin1;
@@ -208,7 +209,7 @@ initializeRange(begin:'C, end:'C) inline | CoordinateType?('C) {
 }
 
 destroyRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRange(begin, end, destroyUnsafe);
+    eachInRange(begin, end, destroy);
 }
 
 copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
@@ -251,13 +252,13 @@ moveNonoverlappingRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
 }
 
 resetRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRange(begin, end, resetUnsafe);
+    eachInRange(begin, end, reset);
 }
 
 assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
     | CompatibleCoordinateTypes?('C, 'D)
 {
-    eachInRanges(destBegin, srcBegin, srcEnd, assign);
+    eachInRanges(destBegin, srcBegin, srcEnd, copyAssign);
 }
 
 

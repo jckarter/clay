@@ -5,6 +5,8 @@ import prelude.constructors.*;
 import meta.statics.*;
 import meta.lltypes.*;
 
+public import unsafe.valuesemantics.(copy, move);
+
 import __primitives__.(
     StaticPlus,
     StaticMinus,
@@ -206,46 +208,6 @@ overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
 
 
 //
-// assignment
-//
-
-moveAssign(ref a:'T, rvalue b:'T) inline {
-    destroyUnsafe(a);
-    a <-- move(b);
-}
-overload moveAssign(ref a:'T, rvalue b:'T) inline
-    | BitwiseMoveAssignedType?('T)
-{
-    a <-- move(b);
-}
-
-copyAssign(ref a:'T, b:'T) inline
-    | Defined?([a <-- b;])
-{
-    var tmp = moveUnsafe(a);
-    try {
-        a <-- b;
-    } catch (ex) {
-        a <-- move(tmp);
-        throw ex;
-    }
-}
-overload copyAssign(ref a:'T, b:'T) inline | BitwiseAssignedType?('T) { a <-- b; }
-overload copyAssign(ref a:'A, b:'B) inline | AssignablePrimitiveTypes?('A, 'B)
-{
-    cAssign(a, b);
-}
-
-symbol assign;
-overload assign(ref a:'T, b:'U) inline | Defined?([copyAssign(a, b);]) {
-    copyAssign(a, b);
-}
-overload assign(ref a:'T, rvalue b:'T) inline | Defined?([moveAssign(a, b);]) {
-    moveAssign(a, b);
-}
-
-
-//
 // update assignment
 //
 
@@ -298,36 +260,6 @@ overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
 
 
 //
-// destroyUnsafe, initializeFromUnsafe, moveUnsafe, resetUnsafe, copy, move
-//
-
-symbol initializeFromUnsafe;
-overload initializeFromUnsafe(ref a:'T, b:'T) inline
-    | CallDefined?(copy, 'T)
-    { a <-- copy(b); }
-overload initializeFromUnsafe(ref a:'T, rvalue b:'T) inline
-    | CallDefined?(move, Rvalue['T])
-    { a <-- move(b); }
-
-destroyUnsafe(ref x:'T) | DestroyDoesNothingType?('T) {}
-resetUnsafe(ref x:'T) inline
-    | DefaultInitializableType?('T) and InitializeDoesNotThrowType?('T)
-    { x <-- 'T(); }
-overload resetUnsafe(ref x:'T) inline | ResetDoesNothingType?('T) {}
-
-bitwiseCopyUnsafe(forward a:'T) inline --> returned:'T { cAssign(returned, a); }
-
-copy(a:'T) inline | BitwiseCopiedType?('T) = bitwiseCopyUnsafe(a);
-
-moveUnsafe(ref a:'T) inline | BitwiseMovedType?('T) = bitwiseCopyUnsafe(a);
-
-symbol move;
-overload move(ref a:'T) inline --> returned:'T
-    { returned <-- moveUnsafe(a); resetUnsafe(a); }
-overload move(rvalue a:'T) inline = moveUnsafe(rvalueToRefUnsafe(a));
-
-
-//
 // unpack
 //
 
@@ -375,13 +307,6 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 case?(value:'T, forward ..cases:'U) inline
     | allValues?([u -> CallDefined?(equals?, 'T, u)], ..'U)
     = inValues?(value, ..cases);
-
-
-//
-// uninitializedUnsafe
-//
-
-uninitializedUnsafe(#'T) inline --> x:'T {}
 
 
 //

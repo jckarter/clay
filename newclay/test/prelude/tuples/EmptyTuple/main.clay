@@ -1,4 +1,5 @@
 import show.*;
+import unsafe.valuesemantics.(PODType?);
 
 main() {
     show(#PODType?(Tuple[])); ////true

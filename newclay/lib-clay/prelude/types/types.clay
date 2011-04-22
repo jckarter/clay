@@ -3,6 +3,7 @@ import meta.statics.*;
 import meta.symbols.*;
 import values.*;
 import meta.lltypes.*;
+import unsafe.valuesemantics.*;
 
 public import __primitives__.(
     Returns?,
@@ -30,54 +31,12 @@ overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
 
 
 //
-// basic type predicates
+// basic type predicate
 //
 
 #Type?('x) = StaticCallDefined?(LLType, 'x);
-#PODType?('T) | not PredicateInheritingType?('T) = false;
-#BitwiseCopiedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#BitwiseMovedType?('T) | not PredicateInheritingType?('T) = true;
-#DestroyDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#ResetDoesNothingType?('T) | not PredicateInheritingType?('T) = DestroyDoesNothingType?('T);
-#InitializeDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#BitwiseAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseCopiedType?('T) and DestroyDoesNothingType?('T);
-#BitwiseMoveAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseMovedType?('T) and DestroyDoesNothingType?('T);
-
-#BitwiseZeroInitializedType?('T) = false;
-overload #BitwiseZeroInitializedType?(Bool) = true;
-overload #BitwiseZeroInitializedType?('T) | NumberType?('T) = true;
-overload #BitwiseZeroInitializedType?('T) | CharType?('T) = true;
-overload #BitwiseZeroInitializedType?(ContiguousCoordinate['T]) = true;
-
-#DefaultInitializableType?('T) = CallDefined?('T);
-#CopyableType?('T) = CallDefined?(copy, 'T);
-#MovableType?('T) = CallDefined?(move, 'T);
-#AssignableType?('T) = CallDefined?(assign, Ref['T], 'T);
-#MoveAssignableType?('T) = CallDefined?(assign, Ref['T], Rvalue['T]);
-#AssignableTypes?('T, 'U) = CallDefined?(assign, Ref['T], 'U);
-
-#InheritableTypePredicate?('X) = false;
-overload #InheritableTypePredicate?(PODType?) = true;
-overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
-overload #InheritableTypePredicate?(BitwiseMovedType?) = true;
-overload #InheritableTypePredicate?(DestroyDoesNothingType?) = true;
-overload #InheritableTypePredicate?(ResetDoesNothingType?) = true;
-overload #InheritableTypePredicate?(InitializeDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
-overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
-
-#InheritsPredicatesFromTypes('T) = false;
-#PredicateInheritingType?('T)
-    = Type?('T) and takeValues(1, ..InheritsPredicatesFromTypes('T));
-overload #'XType?('T)
-    | InheritableTypePredicate?('XType?) and PredicateInheritingType?('T)
-    = allValues?('XType?, ..dropValues(1, ..InheritsPredicatesFromTypes('T)));
+    /* and allValues?(Type?, ..RecursiveTypes('x));*/
+#RecursiveTypes('T) = ;
 
 
 //
@@ -227,15 +186,15 @@ overload #StaticType?(Static['x]) = true;
 symbol Pointer['T];
 
 #PointerType?('X) = false;
-overload #PointerType?(Pointer['T]) /*XXX recursive types | Type?('T)*/ = true;
-overload #PODType?(Pointer['T]) /*XXX recursive types | Type?('T)*/ = true;
+overload #PointerType?(Pointer['T]) = true;
+overload #PODType?(Pointer['T]) = true;
 
 symbol PointerReferencedType;
 overload #PointerReferencedType(Pointer['T]) = 'T;
 
 overload #LLType(Pointer['T])
-    //XXX recursive types | Type?('T)
     = LLPointerType['T];
+overload #RecursiveTypes(Pointer['T]) = 'T;
 
 
 //
@@ -254,8 +213,8 @@ overload #PointerType?(OpaquePointer) = true;
 
 symbol ContiguousCoordinate['T];
 
-overload #PointerType?(ContiguousCoordinate['T]) /*XXX recursive types | Type?('T)*/ = true;
-overload #PODType?(ContiguousCoordinate['T]) /*XXX recursive types | Type?('T)*/ = true;
+overload #PointerType?(ContiguousCoordinate['T]) = true;
+overload #PODType?(ContiguousCoordinate['T]) = true;
 
 overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
 
@@ -263,9 +222,8 @@ overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
     = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
 
 overload #LLType(ContiguousCoordinate['T])
-    //XXX recursive types | Type?('T)
     = LLPointerType['T];
-
+overload #RecursiveTypes(ContiguousCoordinate['T]) = 'T;
 
 #ArithmeticPointerType?('x) = false;
 overload #ArithmeticPointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
@@ -287,11 +245,12 @@ overload #PODType?(CodePointer['I, 'O])
 private #CodePointerLLInput('T) = Pointer[ReferenceBaseType('T)];
 
 overload #LLType(CodePointer[(..'I), (..'O)])
-    // XXX recursive types | allValues?(ReferenceType?, ..'I, ..'O)
     = LLCodePointerType[CdeclABI, false,
         (..mapValues(CodePointerLLInput, ..'I, ..'O)),
         ()
     ];
+overload #RecursiveTypes(CodePointer[(..'I), (..'O)])
+    = ..'I, ..'O;
 
 overload #PointerType?(CodePointer['I,'O])
     | Type?(CodePointer['I,'O]) = true;
@@ -317,6 +276,8 @@ overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
       and allValues?(RequireExternalPODType?, ..StaticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
     = LLCodePointerType['A, 'V, 'I, 'O];
+overload #RecursiveTypes(ExternalCodePointer['A, 'V, (..'I), 'O])
+    = ..'I, ..ExternalOutputTypes('O);
 
 #ExternalCodePointerType?('X) = false;
 overload #ExternalCodePointerType?(ExternalCodePointer['A,'V,'I,'O])
@@ -375,27 +336,6 @@ overload #LLType(Union[..'T])
 
 #UnionType?('X) = false;
 overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
-
-
-//
-// UnmanagedUnsafe['T]
-//
-
-symbol UnmanagedUnsafe['T];
-overload #PODType?(UnmanagedUnsafe['T]) = true;
-overload #LLType(UnmanagedUnsafe['T])
-    | Type?('T)
-    = LLType('T);
-
-overload UnmanagedUnsafe['T](forward ..args) inline --> returned:UnmanagedUnsafe['T]
-    | Defined?(['T(..args)])
-{
-    *returned <-- 'T(..args);
-}
-overload UnmanagedUnsafe(forward x:'T) inline --> returned:UnmanagedUnsafe['T] {
-    *returned <-- x;
-}
-overload unpack(forward x:UnmanagedUnsafe['T]) = forward bitcast('T, x);
 
 
 //
@@ -540,24 +480,24 @@ overload copy(x:'T) inline --> returned:'T
     underlying(returned) <-- copy(underlying(x));
 }
 
-overload moveUnsafe(forward x:'T) inline --> returned:'T
+overload moveRvalue(forward x:'T) inline --> returned:'T
     | HasUnderlyingType?('T)
       and MovableType?(UnderlyingType('T))
       and not BitwiseMovedType?(UnderlyingType('T))
 {
-    underlying(returned) <-- moveUnsafe(underlying(x));
+    underlying(returned) <-- moveRvalue(underlying(x));
 }
 
-overload destroyUnsafe(ref x:'T) inline
+overload destroy(ref x:'T) inline
     | HasUnderlyingType?('T) and not DestroyDoesNothingType?(UnderlyingType('T))
 {
-    destroyUnsafe(underlying(x));
+    destroy(underlying(x));
 }
 
-overload resetUnsafe(ref x:'T) inline
+overload reset(ref x:'T) inline
     | HasUnderlyingType?('T) and not ResetDoesNothingType?(UnderlyingType('T))
 {
-    resetUnsafe(underlying(x));
+    reset(underlying(x));
 }
 
 overload copyAssign(ref to:'T, from:'T) inline
