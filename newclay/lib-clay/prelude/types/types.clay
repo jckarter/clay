@@ -384,7 +384,11 @@ private #ConvertibleScalarType?('A)
 
 #ConvertiblePrimitiveTypes?('A, 'B)
     = (ConvertibleScalarType?('A) and ConvertibleScalarType?('B))
-      or (PointerType?('A) and PointerType?('B));
+      or (PointerType?('A) and 'A == 'B)
+      or (PointerType?('A) and 'B == OpaquePointer)
+      or ('A == OpaquePointer and PointerType?('B))
+      or (DereferenceablePointerType?('A) and DereferenceablePointerType?('B)
+          and PointerReferencedType('A) == PointerReferencedType('B));
 
 symbol BiggerNumberType;
 overload #BiggerNumberType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
