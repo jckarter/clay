@@ -1,5 +1,6 @@
 import libc.(memset);
 import meta.symbols.(SymbolWithTag?);
+import unsafe.casts.(rvalueToRef, refToRvalue);
 import unsafe.valuesemantics.*;
 import values.*;
 
@@ -25,13 +26,13 @@ overload unpackFields(forward x) inline
     = ;
 // rvalues
 overload unpackFields(rvalue x, #'field, ..#'fields) inline {
-    ref refx = rvalueToRefUnsafe(x);
-    return rvalue refToRvalueUnsafe(refx[#'field]),
-           rvalue ..unpackFields(refToRvalueUnsafe(refx), ..#'fields);
+    ref refx = rvalueToRef(x);
+    return rvalue refToRvalue(refx[#'field]),
+           rvalue ..unpackFields(refToRvalue(refx), ..#'fields);
 }
 overload unpackFields(rvalue x) inline {
     // prevent destruction of x; it should have been entirely picked apart
-    rvalueToRefUnsafe(x);
+    rvalueToRef(x);
 }
 
 unpackRecord(forward x:'T) inline | CompositeType?('T)

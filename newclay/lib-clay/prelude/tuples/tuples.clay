@@ -4,6 +4,7 @@ import unsafe.compositetypes.(unpackFields);
 import meta.statics.*;
 import prelude.operators.c.*;
 import meta.lltypes.*;
+import unsafe.casts.(rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -19,7 +20,7 @@ overload index(rvalue t:Tuple[..'T], #'n) inline
     --> rvalue returned:nthValue('n, ..'T)
     | ValidStaticIndex?('n, ..'T) and not DestroyDoesNothingType?(Tuple[..'T])
 {
-    ref rt = rvalueToRefUnsafe(t);
+    ref rt = rvalueToRef(t);
     returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
 
     static for (#'m in ..#exceptValue('n, ..intValues('n)))

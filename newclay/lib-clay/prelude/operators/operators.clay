@@ -270,16 +270,6 @@ overload #unpack('s) | StaticString?('s) = ..StaticStringChars('s);
 
 
 //
-// refToRvalueUnsafe, rvalueToRefUnsafe
-//
-
-refToRvalueUnsafe(ref x:'T) inline --> rvalue r:'T
-    __c__ """$r = &$x;""";
-rvalueToRefUnsafe(rvalue x:'T) inline --> ref r:'T
-    __c__ """$r = &$x;""";
-
-
-//
 // max, min
 //
 
@@ -307,15 +297,6 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 case?(value:'T, forward ..cases:'U) inline
     | allValues?([u -> CallDefined?(equals?, 'T, u)], ..'U)
     = inValues?(value, ..cases);
-
-
-//
-// bitcast
-//
-
-bitcast(#'A, forward b:'B)
-    | TypeSize('A) <= TypeSize('B)
-    = forward cRefCast('A, b);
 
 
 //

@@ -4,6 +4,7 @@ import meta.lltypes.*;
 import values.*;
 import libc.*;
 import sequences.(equalSequence?, lesserSequence?);
+import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -31,8 +32,8 @@ overload index(forward a:Array['T, 'n], i:'I) inline | IntegerType?('I)
 overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
     | IntegerType?('I) and not DestroyDoesNothingType?('T)
 {
-    ref ra = rvalueToRefUnsafe(a);
-    returned <-- refToRvalueUnsafe(cIndex('T, ra, i));
+    ref ra = rvalueToRef(a);
+    returned <-- refToRvalue(cIndex('T, ra, i));
     var n = 0u;
     for (ref elt in ra) {
         if (n != i)
@@ -89,11 +90,11 @@ overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) inline = i.begin < i.end;
 overload next(ref i:RvalueCoordinateRangeUnsafe['C]) inline {
     var p = i.begin;
     inc(i.begin);
-    return rvalue refToRvalueUnsafe(p^);
+    return rvalue refToRvalue(p^);
 }
 
 private rvalueIteratorUnsafe(rvalue x:Array['T, 'n]) {
-    ref rx = rvalueToRefUnsafe(x);
+    ref rx = rvalueToRef(x);
     return RvalueCoordinateRangeUnsafe(begin(rx), end(rx));
 }
 

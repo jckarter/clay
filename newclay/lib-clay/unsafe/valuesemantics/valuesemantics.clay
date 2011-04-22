@@ -1,5 +1,6 @@
 import prelude.operators.c.(cAssign);
 import meta.lltypes.(LLType);
+import unsafe.casts.(bitcast, rvalueToRef);
 import values.(allValues?, dropValues, takeValues);
 
 
@@ -104,7 +105,7 @@ overload copyAssign(ref a:'A, b:'B) inline | AssignablePrimitiveTypes?('A, 'B)
 symbol move;
 overload move(ref a:'T) inline --> returned:'T
     { returned <-- moveRvalue(a); reset(a); }
-overload move(rvalue a:'T) inline = moveRvalue(rvalueToRefUnsafe(a));
+overload move(rvalue a:'T) inline = moveRvalue(rvalueToRef(a));
 
 
 //

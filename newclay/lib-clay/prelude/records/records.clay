@@ -5,6 +5,7 @@ import libc.*;
 import values.*;
 import prelude.operators.c.*;
 import meta.lltypes.*;
+import unsafe.casts.(rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -71,7 +72,7 @@ overload index(rvalue x:'T, #'field) inline
     --> rvalue returned:FieldType('T, 'field)
     | RecordType?('T) and Field?('T, 'field)
 {
-    ref rx = rvalueToRefUnsafe(x);
+    ref rx = rvalueToRef(x);
     returned = &cFieldRef(#FieldType('T, 'field), rx, #LLMangle('field));
 
     static for (#'f in ..#exceptValue('field, ..FieldNames('T)))

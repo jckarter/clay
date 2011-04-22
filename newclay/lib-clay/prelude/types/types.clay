@@ -3,6 +3,7 @@ import meta.statics.*;
 import meta.symbols.*;
 import values.*;
 import meta.lltypes.*;
+import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.*;
 
 public import __primitives__.(

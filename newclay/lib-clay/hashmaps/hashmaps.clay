@@ -26,6 +26,7 @@ import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
 import memory.(allocateRawValues, freeRawValues);
+import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
@@ -368,7 +369,7 @@ private clearEntries(ref h:TwoHash['E]) {
 
 // XXX rvalue analysis
 overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
-    ref rentry = rvalueToRefUnsafe(entry);
+    ref rentry = rvalueToRef(entry);
 
     assert([nothing?(entryp(h, key))]);
 
@@ -389,7 +390,7 @@ overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
 
         var bi = if (entryCount[1] < entryCount[0]) 1 else 0;
 
-        var entp = allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalueUnsafe(rentry), hash[2]);
+        var entp = allocInBucket(h.tables[bi].begin[hash[bi]], refToRvalue(rentry), hash[2]);
         h.size += 1u;
         return entp;
     }
@@ -410,12 +411,12 @@ private allocInBucket(ref b:Bucket['E], forward entry:'E, hashByte) {
 
 // XXX rvalue analysis
 overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
-    ref rentry = rvalueToRefUnsafe(entry);
+    ref rentry = rvalueToRef(entry);
     for (i in Range(BucketSize)) {
         if (b.hashBytes[i] == 255u) {
             b.hashBytes[i] = UInt8(hashByte);
             var entryp = &b.entries[i];
-            entryp^ <-- refToRvalueUnsafe(rentry);
+            entryp^ <-- refToRvalue(rentry);
             return entryp;
         }
     }

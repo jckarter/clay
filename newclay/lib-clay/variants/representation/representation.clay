@@ -1,5 +1,6 @@
 import meta.lltypes.*;
 import values.*;
+import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitializedType?, PODType?);
 
 

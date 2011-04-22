@@ -1,4 +1,5 @@
 import __primitives__.(StaticCountValues, StaticIntegers);
+import unsafe.casts.(refToRvalue);
 import meta.statics.(StaticInt?);
 
 symbol allValues?;
@@ -138,7 +139,7 @@ overload captureValue(rvalue x:'T) inline = CapturedValue['T](x);
 symbol forwardValue;
 overload forwardValue(x:CapturedConst['T]) inline = const (*x)^;
 overload forwardValue(x:CapturedRef['T]) inline = ref (*x)^;
-overload forwardValue(ref x:CapturedValue['T]) inline = rvalue refToRvalueUnsafe(*x);
+overload forwardValue(ref x:CapturedValue['T]) inline = rvalue refToRvalue(*x);
 
 symbol capturedRef;
 overload capturedRef(x:CapturedConst['T]) inline = const (*x)^;

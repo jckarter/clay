@@ -1,5 +1,6 @@
 import byteorder.*;
 import show.*;
+import unsafe.casts.(bitcast);
 
 main() {
     var x8  = 0x01_u8,
