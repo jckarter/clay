@@ -1,15 +1,15 @@
-heapSelect(first_, middle_, last_) {
+heapSelect(first_, middle_, last_, compareLess?) {
     var first, middle, last = first_, middle_, last_;
-    makeHeap(first, middle);
+    makeHeap(first, middle, compareLess?);
     var i = middle;
     while (i < last) {
         if (i^ < first^)
-            popHeap(first, middle, i);
+            popHeap(first, middle, i, compareLess?);
         i += 1;
     }
 }
 
-makeHeap(first_, last_) {
+makeHeap(first_, last_, compareLess?) {
     var first, last = first_, last_;
     if (last - first < 2)
         return;
@@ -17,34 +17,34 @@ makeHeap(first_, last_) {
     var parent = (len - 2) / 2;
     while (true) {
         var value = move((first + parent)^);
-        adjustHeap(first, parent, len, move(value));
+        adjustHeap(first, parent, len, move(value), compareLess?);
         if (parent == 0)
             return;
         parent -= 1;
     }
 }
 
-sortHeap(first_, last_) {
+sortHeap(first_, last_, compareLess?) {
     var first, last = first_, last_;
     while (last - first > 1) {
         last -= 1;
-        popHeap(first, last, last);
+        popHeap(first, last, last, compareLess?);
     }
 }
 
-popHeap(first_, last_, result_) {
+popHeap(first_, last_, result_, compareLess?) {
     var first, last, result = first_, last_, result_;
     var value = move(result^);
     result^ = move(first^);
     alias DistanceType = Type(last - first);
-    adjustHeap(first, DistanceType(0), last-first, move(value));
+    adjustHeap(first, DistanceType(0), last-first, move(value), compareLess?);
 }
 
-pushHeap(first_, holeIndex_, topIndex_, rvalue value_) {
+pushHeap(first_, holeIndex_, topIndex_, rvalue value_, compareLess?) {
     var first, holeIndex, topIndex, value =
         first_, holeIndex_, topIndex_, move(value_);
     var parent = (holeIndex - 1) / 2;
-    while ((holeIndex > topIndex) and ((first + parent)^ < value)) {
+    while ((holeIndex > topIndex) and compareLess?((first + parent)^, value)) {
         (first + holeIndex)^ = move((first + parent)^);
         holeIndex = parent;
         parent = (holeIndex - 1) / 2;
@@ -52,13 +52,13 @@ pushHeap(first_, holeIndex_, topIndex_, rvalue value_) {
     (first + holeIndex)^ = move(value);
 }
 
-adjustHeap(first_, holeIndex_, len_, rvalue value_) {
+adjustHeap(first_, holeIndex_, len_, rvalue value_, compareLess?) {
     var first, holeIndex, len, value = first_, holeIndex_, len_, move(value_);
     var topIndex = holeIndex;
     var secondChild = holeIndex;
     while (secondChild < (len - 1)/2) {
         secondChild = 2 * (secondChild + 1);
-        if ((first + secondChild)^ < (first + secondChild - 1)^)
+        if(compareLess?((first + secondChild)^, (first + secondChild - 1)^))
             secondChild -= 1;
         (first + holeIndex)^ = move((first + secondChild)^);
         holeIndex = secondChild;
@@ -68,5 +68,5 @@ adjustHeap(first_, holeIndex_, len_, rvalue value_) {
         (first + holeIndex)^ = move((first + (secondChild - 1))^);
         holeIndex = secondChild - 1;
     }
-    pushHeap(first, holeIndex, topIndex, move(value));
+    pushHeap(first, holeIndex, topIndex, move(value), compareLess?);
 }

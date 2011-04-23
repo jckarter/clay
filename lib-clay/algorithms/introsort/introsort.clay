@@ -1,13 +1,13 @@
 import algorithms.heaps.*;
 
-introSort(a) {
-    introSort(begin(a), end(a));
+introSort(a, compareLess?) {
+    introSort(begin(a), end(a), compareLess?);
 }
 
-overload introSort(first, last) {
+overload introSort(first, last, compareLess?) {
     if (first != last) {
-        introSortLoop(first, last, log2(last-first)*2);
-        finalInsertionSort(first, last);
+        introSortLoop(first, last, log2(last-first)*2, compareLess?);
+        finalInsertionSort(first, last, compareLess?);
     }
 }
 
@@ -23,53 +23,54 @@ log2(x) {
 
 alias threshold = 32;
 
-introSortLoop(first_, last_, depthLimit_) {
+introSortLoop(first_, last_, depthLimit_, compareLess?) {
     var first, last, depthLimit = first_, last_, depthLimit_;
     while (last - first > threshold) {
         if (depthLimit == 0) {
-            partialSort(first, last, last);
+            partialSort(first, last, last, compareLess?
+);
             return;
         }
         depthLimit -= 1;
-        var cut = unguardedPartitionPivot(first, last);
-        introSortLoop(cut+1, last, depthLimit);
+        var cut = unguardedPartitionPivot(first, last, compareLess?);
+        introSortLoop(cut+1, last, depthLimit, compareLess?);
         last = cut;
     }
 }
 
-unguardedPartitionPivot(first_, last_) {
+unguardedPartitionPivot(first_, last_, compareLess?) {
     var first, last = first_, last_;
     var mid = first + (last - first)/2;
-    moveMedianFirst(first, mid, last-1);
-    var cut = unguardedPartition(first + 1, last, first^);
+    moveMedianFirst(first, mid, last-1, compareLess?);
+    var cut = unguardedPartition(first + 1, last, first^, compareLess?);
     cut -= 1;
     swap(first^, cut^);
     return cut;
 }
 
-moveMedianFirst(a_, b_, c_) {
+moveMedianFirst(a_, b_, c_, compareLess?) {
     var a, b, c = a_, b_, c_;
-    if (a^ < b^) {
-        if (b^ < c^)
+    if (compareLess?(a^,  b^)) {
+        if (compareLess?(b^, c^))
             swap(a^, b^);
-        else if (a^ < c^)
+        else if (compareLess?(a^, c^))
             swap(a^, c^);
     }
-    else if (a^ < c^)
+    else if (compareLess?(a^,  c^))
         return;
-    else if (b^ < c^)
+    else if (compareLess?(b^, c^))
         swap(a^, c^);
     else
         swap(a^, b^);
 }
 
-unguardedPartition(first_, last_, pivot) {
+unguardedPartition(first_, last_, pivot, compareLess?) {
     var first, last = first_, last_;
     while (true) {
-        while (first^ < pivot)
+        while (compareLess?(first^, pivot))
             first += 1;
         last -= 1;
-        while (pivot < last^)
+        while (compareLess?(pivot, last^))
             last -= 1;
         if (not (first < last))
             break;
@@ -79,54 +80,54 @@ unguardedPartition(first_, last_, pivot) {
     return first;
 }
 
-finalInsertionSort(first_, last_) {
+finalInsertionSort(first_, last_, compareLess?) {
     var first, last = first_, last_;
     if (last - first > threshold) {
-        insertionSort(first, first + threshold);
-        unguardedInsertionSort(first + threshold, last);
+        insertionSort(first, first + threshold, compareLess?);
+        unguardedInsertionSort(first + threshold, last, compareLess?);
     }
     else {
-        insertionSort(first, last);
+        insertionSort(first, last, compareLess?);
     }
 }
 
-insertionSort(a) {
-    insertionSort(begin(a), end(a));
+insertionSort(a, compareLess?) {
+    insertionSort(begin(a), end(a), compareLess?);
 }
 
-overload insertionSort(first_, last_) {
+overload insertionSort(first_, last_, compareLess?) {
     var first, last = first_, last_;
     if (first == last)
         return;
     var i = first + 1;
     while (i != last) {
-        if (i^ < first^) {
+        if (compareLess?(i^, first^)) {
             var value = move(i^);
             moveBackward(first, i, i+1);
             first^ = move(value);
         }
         else {
-            unguardedLinearInsert(i);
+            unguardedLinearInsert(i, compareLess?);
         }
         i += 1;
     }
 }
 
-unguardedInsertionSort(first_, last_) {
+unguardedInsertionSort(first_, last_, compareLess?) {
     var first, last = first_, last_;
     var i = first;
     while (i != last) {
-        unguardedLinearInsert(i);
+        unguardedLinearInsert(i, compareLess?);
         i += 1;
     }
 }
 
-unguardedLinearInsert(last_) {
+unguardedLinearInsert(last_, compareLess?) {
     var last = last_;
     var value = move(last^);
     var next = last;
     next -= 1;
-    while (value < next^) {
+    while (compareLess?(value, next^)) {
         last^ = move(next^);
         last = next;
         next -= 1;
@@ -148,13 +149,13 @@ heapSort(a) {
     heapSort(begin(a), end(a));
 }
 
-overload heapSort(first, last) {
-    partialSort(first, last, last);
+overload heapSort(first, last, compareLess?) {
+    partialSort(first, last, last, compareLess?);
 }
 
-partialSort(first_, middle_, last_) {
+partialSort(first_, middle_, last_, compareLess?) {
     var first, middle, last = first_, middle_, last_;
-    heapSelect(first, middle, last);
-    sortHeap(first, middle);
+    heapSelect(first, middle, last, compareLess?);
+    sortHeap(first, middle, compareLess?);
 }
 

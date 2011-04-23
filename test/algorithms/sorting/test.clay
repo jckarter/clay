@@ -1,0 +1,21 @@
+import test.*;
+import algorithms.*;
+
+main() = testMain(
+  TestSuite("sorting", [
+    TestCase("In ascending order", test => {
+      var baseSequence = [10, 9, 8, 1, 2, 7, 6, 2, 3, 4];
+      var sortedSequence = [1, 2, 2, 3, 4, 6, 7, 8, 9, 10];
+
+      sort(baseSequence);
+      expectEqual(test, "the sorted sequence", sortedSequence, baseSequence);
+    }),
+    TestCase("In descending order", test => {
+      var baseSequence = [10, 9, 8, 1, 2, 7, 6, 2, 3, 4];
+      var sortedSequence =  [10, 9, 8, 7, 6, 4, 3, 2, 2, 1];
+
+      sort(baseSequence, greater?);
+      expectEqual(test, "the sorted sequence", sortedSequence, baseSequence);
+    })
+  ])
+);

@@ -383,6 +383,10 @@ overload binarySearchUpperBound(begin_, end_, x) {
 //
 
 [A | RandomAccessSequence?(A)]
-sort(a:A) {
-    introsort.introSort(a);
+sort(a:A, compareLess?) {
+    introsort.introSort(a, compareLess?);
+}
+
+overload sort(a){
+  sort(a, lesser?);
 }

@@ -9,7 +9,7 @@ alias VectorQueue[T] = Queue[Vector[T]];
 [S] overload Queue(forward seq: S) returned: Queue[S] {
     returned.seq <-- seq;
     try {
-        makeHeap(begin(returned.seq), end(returned.seq));
+        makeHeap(begin(returned.seq), end(returned.seq), lesser?);
     } catch (ex) {
         destroy(returned.seq);
         throw ex;
@@ -20,7 +20,7 @@ alias VectorQueue[T] = Queue[Vector[T]];
 overload Queue[S](forward seq: S2) returned: Queue[S] {
     returned.seq <-- S(seq);
     try {
-        makeHeap(begin(returned.seq), end(returned.seq));
+        makeHeap(begin(returned.seq), end(returned.seq), lesser?);
     } catch (ex) {
         destroy(returned.seq);
         throw ex;
@@ -47,13 +47,13 @@ overload Queue[S](forward ...values: A) returned: Queue[S] {
 queuePush(q: Queue[S], forward v_: T) {
     var v = v_;
     push(q.seq, v);
-    pushHeap(begin(q.seq), size(q.seq) - 1, 0, move(v));
+    pushHeap(begin(q.seq), size(q.seq) - 1, 0, move(v), lesser?);
 }
 
 [S]
 queuePop(q: Queue[S]) {
     var backi = end(q.seq) - 1;
-    popHeap(begin(q.seq), backi, backi);
+    popHeap(begin(q.seq), backi, backi, lesser?);
     return pop(q.seq);
 }
 
