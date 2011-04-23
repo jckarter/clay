@@ -2,6 +2,8 @@ import test.*;
 import algorithms.*;
 import comparators.*;
 
+record Unordered[T](value : T);
+
 main() = testMain(
   TestSuite("sorting", [
     TestCase("In ascending order", test => {
@@ -34,7 +36,19 @@ main() = testMain(
           last = x;
         }
       }
-       
+    }),   
+    TestCase("for something not naturally orderable", test => {
+      var sequence = Vector[Unordered[Int]]();
+
+      for(i in range(10)){
+        push(sequence, Unordered(i));
+      }
+
+      sort(sequence, (x, y) => x.value > y.value);
+
+      for(i in range(10)){
+        expectEqual(test, printString("sequence[", i, "].0"), 9 - i, sequence[i].value);
+      }
     })
   ])
 );
