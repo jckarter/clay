@@ -3,7 +3,7 @@ heapSelect(first_, middle_, last_, compareLess?) {
     makeHeap(first, middle, compareLess?);
     var i = middle;
     while (i < last) {
-        if (i^ < first^)
+        if (compareLess?(i^, first^))
             popHeap(first, middle, i, compareLess?);
         i += 1;
     }
