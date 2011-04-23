@@ -1,5 +1,6 @@
 import test.*;
 import algorithms.*;
+import comparators.*;
 
 main() = testMain(
   TestSuite("sorting", [
@@ -14,8 +15,26 @@ main() = testMain(
       var baseSequence = [10, 9, 8, 1, 2, 7, 6, 2, 3, 4];
       var sortedSequence =  [10, 9, 8, 7, 6, 4, 3, 2, 2, 1];
 
-      sort(baseSequence, greater?);
+      sort(baseSequence, reversed());
       expectEqual(test, "the sorted sequence", sortedSequence, baseSequence);
+    }),
+    TestCase("Comparing size", test => {
+      var baseSequence = ["a", "b", "c", "blargh", "foo", "de", "x", "stuff"];
+      sort(baseSequence, comparing(size));
+     
+      var isFirst = true;
+      var last = "ignore me";
+
+      for(x in baseSequence){
+        if(isFirst){
+          last = x;
+          isFirst = false; 
+        } else {
+          expectTrue(test, printString("size(", last, ") <= size(", x, ")"), size(last) <= size(x));
+          last = x;
+        }
+      }
+       
     })
   ])
 );

@@ -1,0 +1,56 @@
+// A comparator is a type which encapsulates the notion of comparing things.
+// It may be used whenever you might want to naturally be able to redefine
+// operators such as equality or ordering for use in a specific operation
+
+Comparator?(T) = false;
+
+inline overload notEquals?(comparator, a, b) = not equals?(comparator, a, b);
+inline overload ordered?(comparator, a, b) = (a <= b) or (b <= a);
+inline overload lesserEquals?(comparator, a, b) = not lesser?(b, a);
+inline overload greater?(comparator, a, b) = lesser?(b, a);
+inline overload greaterEquals?(comparator, a, b) = not lesser?(a, b);
+
+// The natural comparison
+
+record Natural();
+overload Comparator?(static Natural) = true;
+
+natural() = Natural();
+
+inline overload equals?(c : Natural, x, y) = equals?(x, y);
+inline overload lesser?(c : Natural, x, y) = lesser?(x, y);
+inline overload lesserEquals?(c : Natural, x, y) = lesserEquals?(x, y);
+inline overload greater?(c : Natural, x, y) = greater?(x, y);
+inline overload greaterEquals?(c : Natural, x, y) = greaterEquals?(x, y);
+
+// Comparing on a specific function
+
+record Comparing[F](comparing : F);
+[F] overload Comparator?(static Comparing[F]) = true;
+
+comparing(f) = Comparing(f);
+
+
+[F] inline overload equals?(c : Comparing[F], x, y) = equals?(c.comparing(x), c.comparing(y));
+[F] inline overload lesser?(c : Comparing[F], x, y) = lesser?(c.comparing(x), c.comparing(y));
+[F] inline overload lesserEquals?(c : Comparing[F], x, y) = lesserEquals?(c.comparing(x), c.comparing(y));
+[F] inline overload greater?(c : Comparing[F], x, y) = greater?(c.comparing(x), c.comparing(y));
+[F] inline overload greaterEquals?(c : Comparing[F], x, y) = greaterEquals?(c.comparing(x), c.comparing(y));
+
+// Comparing in reversed of the normal order
+
+record Reversed[C](original : C);
+[C | Comparator?(C)] overload Comparator?(static Reversed[C]) = true;
+
+[C | Comparator?(C)] reversed(c : C) = Reversed(c);
+[C | Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;
+overload reversed() = reversed(natural());
+
+[F] inline overload equals?(c : Reversed[F], x, y) = equals?(c.original, x, y);
+[F] inline overload notEquals?(c : Reversed[F], x, y) = notEquals?(c.original, x, y);
+
+[F] inline overload lesser?(c : Reversed[F], x, y) = greater?(c.original, x, y);
+[F] inline overload lesserEquals?(c : Reversed[F], x, y) = greaterEquals?(c.original, x, y);
+
+[F] inline overload greater?(c : Reversed[F], x, y) = lesser?(c.original, x, y);
+[F] inline overload greaterEquals?(c : Reversed[F], x, y) = lesserEquals?(c.original, x, y);

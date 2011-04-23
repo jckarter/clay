@@ -1,6 +1,6 @@
 import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
-
+import comparators.(Comparator?);
 
 alias log2 = introsort.log2;
 
@@ -387,6 +387,10 @@ sort(a:A, compareLess?) {
     introsort.introSort(a, compareLess?);
 }
 
+[C | Comparator?(C)]
+overload sort(a, comparator : C) {
+    sort(a, (x, y) ref=> lesser?(comparator, x, y));
+}
 overload sort(a){
   sort(a, lesser?);
 }
