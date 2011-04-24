@@ -1,4 +1,5 @@
 import meta.c.*;
+import meta.statics.*;
 import prelude.sequences.*;
 import meta.lltypes.*;
 import values.*;
@@ -7,6 +8,17 @@ import sequences.(equalSequence?, lesserSequence?);
 import unsafe.casts.(pointerCast, refToRvalue, rvalueToRef);
 import unsafe.coordinates.(begin, end, ContiguousCoordinate);
 import unsafe.valuesemantics.*;
+
+
+//
+// Array[T,n]
+//
+
+symbol Array['T, 'n];
+overload #InheritsPredicatesFromTypes(Array['T, 'n]) = true, 'T;
+overload #LLType(Array['T, 'n])
+    | Type?('T) and StaticInt?('n) and 'n >= 0
+    = LLArrayType['T, 'n];
 
 
 //

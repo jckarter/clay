@@ -1,5 +1,4 @@
 import meta.statics.(StaticString?);
-import prelude.types.(Bool);
 
 // TODO
 // A lot of this is more tightly coupled with the C codegen implementation than it ought to be.
