@@ -1,5 +1,5 @@
 import show.*;
-import memory.*;
+import unsafe.memory.*;
 import unsafe.casts.(bitcast);
 
 symbol Node['T] = RecordType(value:'T, next:List['T]);

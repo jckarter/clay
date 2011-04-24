@@ -1,4 +1,4 @@
-import memory.(allocateRawValue, freeRawValue);
+import unsafe.memory.(allocateRawValue, freeRawValue);
 import pointers.unique.*;
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
