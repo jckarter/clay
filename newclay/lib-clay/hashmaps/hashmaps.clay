@@ -25,7 +25,7 @@
 import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
-import memory.(allocateRawValues, freeRawValues);
+import unsafe.memory.(allocateRawValues, freeRawValues);
 import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.compositetypes.*;
 import unsafe.coordinates.(

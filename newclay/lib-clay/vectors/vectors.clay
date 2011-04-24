@@ -1,4 +1,4 @@
-import memory.*;
+import unsafe.memory.*;
 import values.*;
 import hashing.(hash, hashSequence);
 import sequences.(equalSequence?, lesserSequence?);
