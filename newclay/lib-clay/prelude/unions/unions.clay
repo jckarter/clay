@@ -8,6 +8,17 @@ import unsafe.valuesemantics.*;
 
 
 //
+// Union[..T]
+//
+
+symbol Union[..'T];
+overload #PODType?(Union[..'T]) = true;
+overload #LLType(Union[..'T])
+    | allValues?(Type?, ..'T)
+    = LLUnionType[..'T];
+
+
+//
 // indexing
 //
 

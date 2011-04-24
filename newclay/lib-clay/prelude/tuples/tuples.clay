@@ -9,6 +9,17 @@ import unsafe.valuesemantics.*;
 
 
 //
+// Tuple[..T]
+//
+
+symbol Tuple[..'T];
+overload #InheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
+overload #LLType(Tuple[..'T])
+    | allValues?(Type?, ..'T)
+    = LLTupleType[..'T];
+
+
+//
 // indexing
 //
 
