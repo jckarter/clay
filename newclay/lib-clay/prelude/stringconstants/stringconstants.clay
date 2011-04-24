@@ -1,0 +1,35 @@
+import sequences.(lesserSequence?);
+import strings.encodings.(StringTypeEncoding, stringBytes);
+import strings.encodings.utf8.(UTF8, UTF8Iterator);
+import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
+
+symbol StringConstant = RecordType(
+    size:UInt,
+    begin:ContiguousCoordinate[UInt8],
+    end:ContiguousCoordinate[UInt8],
+);
+
+
+//
+// StringConstant as sequence
+//
+
+overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
+overload size(s:StringConstant) = s.size;
+
+overload #StringTypeEncoding(StringConstant) = UTF8;
+overload stringBytes(s:StringConstant) = CoordinateRange(s.begin, s.end);
+
+overload lesser?(a:StringConstant, b:StringConstant)
+    = lesserSequence?(stringBytes(a), stringBytes(b));
+
+// since StringConstants are uniqued at compile time, record equality
+// suffices to test StringConstant equality
+
+
+//
+// disable StringConstant default initializer
+//
+
+overload StringConstant();
+

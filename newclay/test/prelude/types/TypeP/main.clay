@@ -1,5 +1,6 @@
-import show.*;
 import meta.lltypes.(LLType, LLTupleType);
+import show.*;
+import unsafe.coordinates.(ContiguousCoordinate);
 
 symbol NonPODType;
 overload #LLType(NonPODType) = LLTupleType[];

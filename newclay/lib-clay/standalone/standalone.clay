@@ -9,6 +9,7 @@
 import __main__.(main);
 import ctypes.(CChar, CString);
 import unsafe.casts.(pointerCast);
+import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
 
 private exitValue() = 0;
 overload exitValue(n) = Int(n);

@@ -1,9 +1,10 @@
 import memory.*;
-import unsafe.compositetypes.*;
 import values.*;
 import hashing.(hash, hashSequence);
 import sequences.(equalSequence?, lesserSequence?);
 import containers.*;
+import unsafe.compositetypes.*;
+import unsafe.coordinates.*;
 import unsafe.valuesemantics.*;
 
 symbol Vector['T] = CompositeType(
@@ -70,7 +71,7 @@ overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
 }
 
 overload destroy(ref a:Vector['T]) inline {
-    destroyRangeUnsafe(begin(a), end(a));
+    destroyRange(begin(a), end(a));
     freeRawValues(a.data);
 }
 
@@ -133,7 +134,7 @@ overload resize(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
 }
 
 overload resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
-    resizeInternal(v, UInt(n), resetRangeUnsafe);
+    resizeInternal(v, UInt(n), resetRange);
 }
 
 // insert
@@ -160,7 +161,7 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
             inc(first);
         }
     } catch (ex) {
-        resetRangeUnsafe(first, last);
+        resetRange(first, last);
         throw ex;
     }
 }
@@ -203,7 +204,7 @@ overload remove(
     i:ContiguousCoordinate['T],
     j:ContiguousCoordinate['T]
 ) inline {
-    destroyRangeUnsafe(i, j);
+    destroyRange(i, j);
     removeLocations(v, i, j);
 }
 
@@ -237,7 +238,7 @@ private requestCapacity(ref v:Vector['T], capacity:UInt) {
 
 private reallocVector(ref v:Vector['T], capacity:UInt) {
     var data = allocateRawValues('T, capacity);
-    moveNonoverlappingRangeUnsafe(data, v.data, v.data + v.size);
+    moveRvalueNonoverlappingRange(data, v.data, v.data + v.size);
     freeRawValues(v.data);
     v.data = data;
     v.capacity = capacity;
@@ -252,7 +253,7 @@ private resizeInternal(ref v:Vector['T], n:UInt, initializer) {
         reserve(v, n);
         initializer(end(v), begin(v) + n);
     } else if (v.size > n) {
-        destroyRangeUnsafe(begin(v) + n, end(v));
+        destroyRange(begin(v) + n, end(v));
     }
     v.size = n;
 }
@@ -262,7 +263,7 @@ private ensureSpace(ref v, space) inline { reserve(v, v.size + space); }
 private insertLocations(ref v:Vector['T], pos:UInt, n:UInt) {
     ensureSpace(v, n);
     var first = begin(v) + pos;
-    moveRangeUnsafe(first + n, first, end(v));
+    moveRvalueRange(first + n, first, end(v));
     v.size += n;
     return first, first+n;
 }
@@ -273,7 +274,7 @@ private removeLocations(
     to:ContiguousCoordinate['T]
 ) {
     var n = end(v) - to;
-    moveRangeUnsafe(from, to, end(v));
+    moveRvalueRange(from, to, end(v));
     v.size -= UInt(to - from);
 }
 

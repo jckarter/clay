@@ -3,6 +3,10 @@ import strings.encodings.(stringBytes);
 import strings.(StringType?);
 import sequences.*;
 import unsafe.casts.(bitcast, pointerCast);
+import unsafe.coordinates.(
+    begin, end,
+    ContiguousCoordinate, ContiguousSequenceType?, CoordinateRange
+);
 import libc.*;
 
 symbol SHA256 = RecordType(digest: Array[UInt8, 32]);

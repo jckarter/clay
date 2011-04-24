@@ -1,4 +1,5 @@
 import libc.(malloc, free, realloc);
+import unsafe.coordinates.(ContiguousCoordinate);
 
 safeMalloc(count) = required(malloc(count));
 
