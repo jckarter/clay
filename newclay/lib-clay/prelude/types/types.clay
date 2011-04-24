@@ -4,6 +4,7 @@ import meta.symbols.*;
 import values.*;
 import meta.lltypes.*;
 import unsafe.casts.(bitcast);
+import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.*;
 
 public import __primitives__.(
@@ -158,18 +159,6 @@ overload #CharType?(Char) = true;
 
 
 //
-// StringConstant
-//
-
-symbol StringConstant = RecordType(
-    size:UInt,
-    begin:ContiguousCoordinate[UInt8],
-    end:ContiguousCoordinate[UInt8],
-);
-
-
-
-//
 // Static[T]
 //
 
@@ -188,10 +177,14 @@ symbol Pointer['T];
 
 #PointerType?('X) = false;
 overload #PointerType?(Pointer['T]) = true;
+overload #PointerType?(ContiguousCoordinate['T]) = true;
 overload #PODType?(Pointer['T]) = true;
 
 symbol PointerReferencedType;
 overload #PointerReferencedType(Pointer['T]) = 'T;
+
+#DereferenceablePointerType?('T)
+    = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
 
 overload #LLType(Pointer['T])
     = LLPointerType['T];
@@ -205,30 +198,6 @@ overload #RecursiveTypes(Pointer['T]) = 'T;
 symbol OpaquePointer = PrimitiveType(LLPointerType[UInt8]);
 
 overload #PointerType?(OpaquePointer) = true;
-
-
-
-//
-// ContiguousCoordinate
-//
-
-symbol ContiguousCoordinate['T];
-
-overload #PointerType?(ContiguousCoordinate['T]) = true;
-overload #PODType?(ContiguousCoordinate['T]) = true;
-
-overload #PointerReferencedType(ContiguousCoordinate['T]) = 'T;
-
-#DereferenceablePointerType?('T)
-    = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
-
-overload #LLType(ContiguousCoordinate['T])
-    = LLPointerType['T];
-overload #RecursiveTypes(ContiguousCoordinate['T]) = 'T;
-
-#ArithmeticPointerType?('x) = false;
-overload #ArithmeticPointerType?(ContiguousCoordinate['T]) | Type?('T) = true;
-
 
 
 //
@@ -370,10 +339,11 @@ overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
     = ComparablePrimitiveTypes?('A, 'B)
       or EqualityComparablePointerTypes?('A, 'B);
 
-#ComparablePointerTypes?('A, 'B) = false;
-overload #ComparablePointerTypes?('A, 'A) = ArithmeticPointerType?('A);
+private #ComparablePointerTypes?('A, 'B) = false;
+overload #ComparablePointerTypes?(ContiguousCoordinate['A], ContiguousCoordinate['A])
+    = true;
 
-#EqualityComparablePointerTypes?('A, 'B) = false;
+private #EqualityComparablePointerTypes?('A, 'B) = false;
 overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
@@ -414,29 +384,15 @@ overload #BiggerNumberType(UInt, Int) = UInt;
 
 #SequenceType?('S) = CallDefined?(iterator, 'S);
 #IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, Ref['I]);
-#CoordinateType?('C) = CallDefined?(dereference, 'C) and CallDefined?(inc, Ref['C]);
-
-#CoordinateSequenceType?('S) = CallDefined?(begin, 'S) and CallDefined?(end, 'S);
 
 #IteratorTargetType('I) | IteratorType?('I) = Type([next(arg(Ref['I]))]);
-#CoordinateTargetType('C) | CoordinateType?('C) = Type([dereference(arg('C))]);
 #SequenceIteratorType('S) | SequenceType?('S) = Type([iterator(arg('S))]);
-#SequenceCoordinateType('S) | CoordinateSequenceType?('S) = Type([begin(arg('S))]);
 #SequenceElementType('S) | SequenceType?('S)
     = IteratorTargetType(SequenceIteratorType('S));
-
-#ContiguousCoordinateType?('X) = false;
-overload #ContiguousCoordinateType?(ContiguousCoordinate['T]) = true;
-
-#ContiguousSequenceType?('S) =
-    CoordinateSequenceType?('S)
-    and ContiguousCoordinateType?(SequenceCoordinateType('S));
 
 #SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
 
 #ReversibleSequenceType?('S) = CallDefined?(reverseIterator, 'S);
-#ReversibleCoordinateType?('C) = CallDefined?(dereference, 'C)
-    and CallDefined?(dec, Ref['C]);
 
 
 //

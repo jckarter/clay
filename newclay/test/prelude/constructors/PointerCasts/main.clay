@@ -1,3 +1,4 @@
+import unsafe.coordinates.(ContiguousCoordinate);
 import show.*;
 
 main() {

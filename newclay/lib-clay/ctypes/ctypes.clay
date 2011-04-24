@@ -1,6 +1,7 @@
 import meta.platform.*;
 import libc.(strlen);
 import unsafe.casts.(pointerCast);
+import unsafe.coordinates.(begin, end, ContiguousCoordinate, CoordinateRange);
 
 private symbol CLongType;
 overload #CLongType() = Int64;

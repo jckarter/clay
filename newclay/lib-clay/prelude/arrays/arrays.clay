@@ -5,6 +5,7 @@ import values.*;
 import libc.*;
 import sequences.(equalSequence?, lesserSequence?);
 import unsafe.casts.(pointerCast, refToRvalue, rvalueToRef);
+import unsafe.coordinates.(begin, end, ContiguousCoordinate);
 import unsafe.valuesemantics.*;
 
 
@@ -16,7 +17,7 @@ overload size(x:Array['T, 'n]) inline = UInt('n);
 
 
 //
-// begin, end
+// begin and end coordinates
 //
 
 overload begin(x:Array['T, 'n]) inline = pointerCast(ContiguousCoordinate['T], &x);
@@ -82,8 +83,10 @@ overload Array['T, 'n](forward ..xs:'TT) inline --> returned:Array['T, 'n]
 
 
 //
-// unsafe iterator for consuming rvalue sequences
+// unsafe iterator for consuming rvalue array
+// this ONLY works for fully consuming an array
 //
+
 private symbol RvalueCoordinateRangeUnsafe['C] = RecordType(begin:'C, end:'C);
 
 overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) inline = i.begin < i.end;
@@ -101,13 +104,6 @@ private rvalueIteratorUnsafe(rvalue x:Array['T, 'n]) {
 private symbol forwardIteratorUnsafe;
 overload forwardIteratorUnsafe(x:Array['T, 'n]) inline = iterator(x);
 overload forwardIteratorUnsafe(rvalue x:Array['T, 'n]) inline = rvalueIteratorUnsafe(x);
-
-
-//
-// iterator
-//
-
-overload iterator(x:Array['T, 'n]) = CoordinateRange(begin(x), end(x));
 
 
 //

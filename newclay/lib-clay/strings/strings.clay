@@ -5,6 +5,7 @@ import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
 import strings.encodings.utf8.(UTF8);
 import vectors.(Vector);
 import values.(allValues?);
+import unsafe.coordinates.(begin, end);
 import unsafe.valuesemantics.(destroy);
 
 

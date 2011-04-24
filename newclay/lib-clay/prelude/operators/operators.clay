@@ -6,6 +6,7 @@ import meta.statics.*;
 import meta.lltypes.*;
 
 public import unsafe.valuesemantics.(copy, move);
+import unsafe.valuesemantics.(moveRvalue);
 
 import __primitives__.(
     StaticPlus,
@@ -48,8 +49,12 @@ overload #tupleLiteral(..'x) = (..'x);
 
 symbol index;
 overload index(forward a, #'n) inline
-    | StaticInt?('n) and Defined?([forward a['n]])
-    = forward a['n];
+    | StaticInt?('n) and Defined?([forward ..a['n]])
+    = forward ..a['n];
+
+overload index(a, n:'I) inline
+    | IntegerType?('I) and Defined?([forward ..((a + n)^)])
+    = forward ..((a + n)^);
 
 
 //
@@ -66,8 +71,12 @@ dereference(forward a:'T) inline
 // staticIndex, fieldRef
 //
 
-staticIndex(forward a, #'n) inline  | Defined?([forward a[#'n]]) = forward a[#'n];
-fieldRef(forward a, #'field) inline | Defined?([forward a[#'field]]) = forward a[#'field];
+staticIndex(forward a, #'n) inline
+    | Defined?([forward ..a[#'n]])
+    = forward ..a[#'n];
+fieldRef(forward a, #'field) inline
+    | Defined?([forward ..a[#'field]])
+    = forward ..a[#'field];
 
 
 //
@@ -131,30 +140,6 @@ overload subtract(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, '
 
 
 //
-// ContiguousCoordinate arithmetic
-//
-
-overload add(a:ContiguousCoordinate['A], b:'B) inline
-    | IntegerType?('B)
-    = cAdd(ContiguousCoordinate['A], a, b);
-
-overload add(a:'A, b:ContiguousCoordinate['B]) inline
-    | IntegerType?('A)
-    = cAdd(ContiguousCoordinate['B], b, a);
-
-overload subtract(a:ContiguousCoordinate['A], b:'B) inline
-    | IntegerType?('B)
-    = cSubtract(ContiguousCoordinate['A], a, b);
-
-overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
-    = cSubtract(Int, a, b);
-
-overload index(a, n:'I) inline
-    | IntegerType?('I) and Defined?([(a + n)^;])
-    = forward ..((a + n)^);
-
-
-//
 // comparison operators
 //
 
@@ -205,6 +190,17 @@ overload #greater?('a, 'b) = StaticGreater?('a, 'b);
 overload #greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
 overload #equals?('a, 'b) = StaticEquals?('a, 'b);
 overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+
+
+//
+// swap -- swap two values without copying, resetting, or destroying
+//
+
+swap(ref a, ref b) {
+    rvalue temp = moveRvalue(a);
+    a <-- moveRvalue(b);
+    b <-- temp;
+}
 
 
 //

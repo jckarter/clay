@@ -1,3 +1,8 @@
+import unsafe.coordinates.(
+    CoordinateRange, ContiguousCoordinate,
+    CoordinateSequenceType?, CoordinateType?, ContiguousSequenceType?,
+    CoordinateTargetType, SequenceCoordinateType
+);
 import show.*;
 
 main() {

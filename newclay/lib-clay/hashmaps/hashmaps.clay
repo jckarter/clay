@@ -28,6 +28,10 @@ import libc.(memset);
 import memory.(allocateRawValues, freeRawValues);
 import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.compositetypes.*;
+import unsafe.coordinates.(
+    ContiguousCoordinate, CoordinateRange,
+    assignRange, initializeRange, copyRange, destroyRange
+);
 import unsafe.valuesemantics.*;
 
 
@@ -232,7 +236,7 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
     if (to.begin == ContiguousCoordinate['B]()) {
         to <-- from;
     } else if (to.begin != ContiguousCoordinate['B]() and to.ln2_size >= from.ln2_size) {
-        destroyRangeUnsafe(to.begin+newSize, to.begin+oldSize);
+        destroyRange(to.begin+newSize, to.begin+oldSize);
         to.ln2_size = from.ln2_size;
         assignRange(to.begin, from.begin, from.begin+newSize);
     } else {
@@ -243,7 +247,7 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
             freeRawValues(newBegin);
             throw ex;
         }
-        destroyRangeUnsafe(to.begin, to.begin+oldSize);
+        destroyRange(to.begin, to.begin+oldSize);
         freeRawValues(to.begin);
         to.begin = newBegin;
         to.ln2_size = from.ln2_size;
@@ -255,7 +259,7 @@ overload reset(ref t:Table['B]) {
 }
 overload destroy(ref t:Table['B]) {
     if (t.begin != ContiguousCoordinate['B]()) {
-        destroyRangeUnsafe(t.begin, t.begin+tableSize(t));
+        destroyRange(t.begin, t.begin+tableSize(t));
         freeRawValues(t.begin);
     }
 }

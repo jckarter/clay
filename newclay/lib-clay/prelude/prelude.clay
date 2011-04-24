@@ -7,6 +7,7 @@ public import prelude.operators.*;
 public import prelude.procedures.*;
 public import prelude.records.*;
 public import prelude.sequences.*;
+public import prelude.stringconstants.*;
 public import prelude.tuples.*;
 public import prelude.types.*;
 public import prelude.unions.*;

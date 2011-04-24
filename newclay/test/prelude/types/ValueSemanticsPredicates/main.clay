@@ -1,5 +1,6 @@
 import meta.lltypes.(LLType, LLTupleType);
 import show.*;
+import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(PODType?);
 
 symbol NonPODType;

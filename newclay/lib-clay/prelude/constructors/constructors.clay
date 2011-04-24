@@ -31,10 +31,6 @@ overload Char() inline   = '\u000000';
 
 overload Static['x]() inline --> returned:Static['x] {}
 
-overload ContiguousCoordinate['T]() inline --> returned:ContiguousCoordinate['T] {
-    bitcast(Int, returned) <-- 0;
-}
-
 
 //
 // static Int, UInt, and Char conversion
@@ -56,20 +52,9 @@ overload 'A(b:'B) inline
     | ConvertiblePrimitiveTypes?('A, 'B)
     = cCast('A, b);
 
-overload ContiguousCoordinate(forward x:'T) inline
-    | DereferenceablePointerType?('T)
-    = ContiguousCoordinate[PointerReferencedType('T)](x);
-
 overload Pointer(forward x:'T) inline
     | DereferenceablePointerType?('T)
     = Pointer[PointerReferencedType('T)](x);
-
-
-//
-// disable StringConstant initializer
-//
-
-overload StringConstant();
 
 
 //

@@ -1,9 +1,5 @@
 import meta.statics.(StaticString?, StaticStringSize);
-import sequences.(lesserSequence?);
-import strings.encodings.(StringTypeEncoding, stringBytes);
-import strings.encodings.utf8.(UTF8, UTF8Iterator);
 import values.*;
-import unsafe.valuesemantics.*;
 
 
 //
@@ -16,61 +12,25 @@ symbol next;
 
 
 //
-// coordinate operations
+// sized sequence operations
 //
 
-symbol begin;
-symbol end;
 symbol size;
 
 
 //
-// back/front
+// back/front of sequence
 //
 
-front(x:'S) | CoordinateSequenceType?('S) = forward begin(x)^;
-back(x:'S) | CoordinateSequenceType?('S) {
-    var c = end(x);
-    dec(c);
-    return forward c^;
-}
+symbol front;
+symbol back;
 
 
 //
-// default implementations
+// an iterator is its own iterator
 //
-
-overload iterator(x:'S) | CoordinateSequenceType?('S)
-    = CoordinateRange(begin(x), end(x));
-
-overload index(x:'S, n)
-    | CoordinateSequenceType?('S) and Defined?([begin(x) + n])
-    = forward (begin(x) + n)^;
 
 overload iterator(forward x:'I) | IteratorType?('I) = forward x;
-
-overload size(x:'S) | CoordinateSequenceType?('S) and Defined?([end(x) - begin(x)])
-    = UInt(end(x) - begin(x));
-
-
-//
-// CoordinateRange
-//
-
-symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
-overload CoordinateRange(begin:'C, end:'C) inline
-    | CoordinateType?('C)
-    = CoordinateRange['C](begin, end);
-
-overload hasNext?(i:CoordinateRange['C]) inline = i.begin < i.end;
-overload next(ref i:CoordinateRange['C]) inline {
-    var p = i.begin;
-    inc(i.begin);
-    return forward ..p^;
-}
-
-overload begin(i:CoordinateRange['C]) inline = i.begin;
-overload end(i:CoordinateRange['C]) inline = i.end;
 
 
 //
@@ -89,177 +49,6 @@ overload next(ref x:Range['T]) {
 overload Range(to:'N) = Range['N]('N(0), to, 'N(1));
 overload Range(from:'N, to:'N) = Range['N](from, to, 'N(1));
 overload Range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
-
-
-//
-// apply a function to each value in a coordinate range or paired coordinate ranges
-//
-
-eachInRange(begin:'C, end:'C, fn) | CoordinateType?('C) {
-    var i = begin;
-    while (i < end) {
-        fn(i^);
-        inc(i);
-    }
-}
-
-eachInRangeBackwards(begin:'C, end:'C, fn) | CoordinateType?('C) {
-    var i = end;
-    while (begin < i) {
-        dec(i);
-        fn(i^);
-    }
-}
-
-eachInRangeWithCleanup(begin:'C, end:'C, fn) | CoordinateType?('C) {
-    var i = begin;
-    try {
-        while (i < end) {
-            fn(i^);
-            inc(i);
-        }
-    } catch (ex) {
-        destroyRangeUnsafe(begin, i);
-        throw ex;
-    }
-}
-
-eachInRangeBackwardsWithCleanup(begin:'C, end:'C, fn) | CoordinateType?('C) {
-    var i = end;
-    try {
-        while (begin < i) {
-            dec(i);
-            fn(i^);
-        }
-    } catch (ex) {
-        inc(i);
-        destroyRangeUnsafe(i, end);
-        throw ex;
-    }
-}
-
-private #CompatibleCoordinateTypes?('C, 'D)
-    = CoordinateType?('C) and CoordinateType?('D)
-      and CoordinateTargetType('C) == CoordinateTargetType('D);
-
-private initializeTo(ref x:'X) inline { x <-- 'X(); }
-private copyTo(ref x, y) inline { x <-- y; }
-private moveToUnsafe(ref x, ref y) inline { x <-- moveRvalue(y); }
-
-eachInRanges(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
-    var i1 = begin1;
-    var i2 = begin2;
-    while (i2 < end2) {
-        fn(i1^, i2^);
-        inc(i1);
-        inc(i2);
-    }
-}
-
-eachInRangesBackwards(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
-    var end1 = begin1 + (end2 - begin2);
-    var i1 = end1;
-    var i2 = end2;
-    while (begin2 < i2) {
-        dec(i1);
-        dec(i2);
-        fn(i1^, i2^);
-    }
-}
-
-eachInRangesWithCleanup(begin1:'C, begin2:'D, end2:'D, fn) | CompatibleCoordinateTypes?('C, 'D) {
-    var i1 = begin1;
-    var i2 = begin2;
-    try {
-        while (i2 < end2) {
-            fn(i1^, i2^);
-            inc(i1);
-            inc(i2);
-        }
-    } catch (ex) {
-        destroyRangeUnsafe(begin1, i1);
-    }
-}
-
-eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    var end1 = begin1 + (end2 - begin2);
-    var i1 = end1;
-    var i2 = end2;
-    try {
-        while (begin2 < i2) {
-            dec(i1);
-            dec(i2);
-            fn(i1^, i2^);
-        }
-    } catch (ex) {
-        inc(i1);
-        destroyRangeUnsafe(i1, end1);
-    }
-}
-
-
-//
-// apply value semantics operations over coordinate ranges
-//
-
-initializeRange(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRangeWithCleanup(begin, end, initializeTo);
-}
-
-destroyRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRange(begin, end, destroy);
-}
-
-copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    eachInRangesWithCleanup(destBegin, srcBegin, srcEnd, copyTo);
-}
-
-private moveRangeForwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    eachInRanges(destBegin, srcBegin, srcEnd, moveToUnsafe);
-}
-
-private moveRangeBackwardsUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    eachInRangesBackwards(destBegin, srcBegin, srcEnd, moveToUnsafe);
-}
-
-moveRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D) and 'C != 'D
-{
-    moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
-}
-
-overload moveRangeUnsafe(destBegin:'C, srcBegin:'C, srcEnd:'C) inline
-    | CoordinateType?('C)
-{
-    if (destBegin <= srcBegin)
-        moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
-    else
-        moveRangeBackwardsUnsafe(destBegin, srcBegin, srcEnd);
-}
-
-moveNonoverlappingRangeUnsafe(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    moveRangeForwardsUnsafe(destBegin, srcBegin, srcEnd);
-}
-
-resetRangeUnsafe(begin:'C, end:'C) inline | CoordinateType?('C) {
-    eachInRange(begin, end, reset);
-}
-
-assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
-    | CompatibleCoordinateTypes?('C, 'D)
-{
-    eachInRanges(destBegin, srcBegin, srcEnd, copyAssign);
-}
 
 
 //
@@ -288,25 +77,6 @@ overload next(ref x:ReversedRange['T]) {
 
 overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);
 
-symbol ReversedCoordinateRange['C] = RecordType(begin:'C, end:'C);
-overload ReversedCoordinateRange(forward begin:'C, forward end:'C)
-    | ReversibleCoordinateType?('C)
-    = ReversedCoordinateRange['C](begin, end);
-
-overload hasNext?(i:ReversedCoordinateRange['C]) = i.begin < i.end;
-overload next(ref i:ReversedCoordinateRange['C]) {
-    dec(i.end);
-    return forward ..i.end^;
-}
-
-overload reverseIterator(x:'S)
-    | CoordinateSequenceType?('S) and ReversibleCoordinateType?(SequenceCoordinateType('S))
-    = ReversedCoordinateRange(begin(x), end(x));
-
-overload reverseIterator(forward x:CoordinateRange['C])
-    | ReversibleCoordinateType?('C)
-    = ReversedCoordinateRange['C](..*x);
-
 
 //
 // static aggregate sizes
@@ -314,19 +84,3 @@ overload reverseIterator(forward x:CoordinateRange['C])
 
 overload #size('s) | StaticString?('s) = StaticStringSize('s);
 overload #size((..'t)) = countValues(..'t);
-
-
-//
-// StringConstant as sequence
-//
-
-overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
-overload size(s:StringConstant) = s.size;
-
-overload #StringTypeEncoding(StringConstant) = UTF8;
-overload stringBytes(s:StringConstant) = CoordinateRange(s.begin, s.end);
-
-overload lesser?(a:StringConstant, b:StringConstant)
-    = lesserSequence?(stringBytes(a), stringBytes(b));
-// since StringConstants are constant-folded at compile time, record equality
-// suffices to test StringConstant equality
