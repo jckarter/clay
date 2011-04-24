@@ -3,6 +3,7 @@
 .DS_Store
 *.xcodeproj/*.mode*v*
 *.xcodeproj/*.pbxuser
+*.mshark
 
 cscope.out
 tags
@@ -31,6 +32,7 @@ main
 /newclay/compiler/testloader
 /newclay/compiler/testparser
 /newclay/compiler/testresolver
+claysource.*
 
 clay.exe
 vs2008/*.ncb
