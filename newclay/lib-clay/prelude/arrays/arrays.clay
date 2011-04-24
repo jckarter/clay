@@ -1,4 +1,4 @@
-import prelude.operators.c.*;
+import meta.c.*;
 import prelude.sequences.*;
 import meta.lltypes.*;
 import values.*;

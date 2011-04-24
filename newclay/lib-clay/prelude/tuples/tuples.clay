@@ -2,7 +2,7 @@ import values.*;
 import libc.*;
 import unsafe.compositetypes.(unpackFields);
 import meta.statics.*;
-import prelude.operators.c.*;
+import meta.c.*;
 import meta.lltypes.*;
 import unsafe.casts.(rvalueToRef);
 import unsafe.valuesemantics.*;
