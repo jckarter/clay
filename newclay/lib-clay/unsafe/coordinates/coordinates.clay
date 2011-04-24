@@ -1,5 +1,5 @@
 import meta.lltypes.(LLType, LLPointerType);
-import prelude.operators.c.*;
+import meta.c.*;
 import unsafe.casts.(bitcast, pointerCast);
 import unsafe.valuesemantics.*;
 

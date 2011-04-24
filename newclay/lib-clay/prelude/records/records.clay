@@ -3,7 +3,7 @@ import meta.statics.*;
 import meta.symbols.*;
 import libc.*;
 import values.*;
-import prelude.operators.c.*;
+import meta.c.*;
 import meta.lltypes.*;
 import unsafe.casts.(rvalueToRef);
 import unsafe.valuesemantics.*;

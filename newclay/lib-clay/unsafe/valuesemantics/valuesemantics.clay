@@ -1,4 +1,4 @@
-import prelude.operators.c.(cAssign);
+import meta.c.(cAssign);
 import meta.lltypes.(LLType);
 import unsafe.casts.(bitcast, rvalueToRef);
 import values.(allValues?, dropValues, takeValues);
