@@ -1,0 +1,10 @@
+import show.(show);
+
+main() {
+    var x, y = 1, 2;
+
+    swap(x, y);
+
+    show(x);
+    show(y);
+}
