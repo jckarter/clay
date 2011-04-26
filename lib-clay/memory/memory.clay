@@ -27,6 +27,25 @@ freeObject(ptr:Pointer[T]) {
     freeRawMemory(ptr);
 }
 
+[T, I | Integer?(I)]
+allocateArray(static T, count:I) {
+    var begin = allocateRawMemory(T, SizeT(count));
+    var end = begin + SizeT(count);
+
+    try {
+        initializeMemory(begin, end);
+    } catch (e) {
+        freeRawMemory(begin);
+        throw e;
+    }
+    return CoordinateRange(begin, end);
+}
+
+[T]
+freeArray(array:CoordinateRange[T]) {
+    destroyMemory(begin(array), end(array));
+    freeRawMemory(begin(array));
+}
 
 
 //

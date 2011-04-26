@@ -1,0 +1,15 @@
+main() {
+    var xs = allocateArray(Int, 5);
+
+    for (x in xs)
+        println(x);
+
+    for (i, x in enumerated(xs))
+        x = Int(i);
+
+    println("--");
+    for (x in xs)
+        println(x);
+
+    freeArray(xs);
+}
