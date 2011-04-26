@@ -1,27 +1,27 @@
 public import __primitives__.(
-    StaticSymbolBody as SymbolBody,
-    StaticSymbolAttributes as SymbolAttributes,
-    StaticModule as SymbolModule,
+    staticSymbolBody as symbolBody,
+    staticSymbolAttributes as symbolAttributes,
+    staticModule as symbolModule,
 );
 import meta.statics.*;
 
-private #TupleWithTag?('t, 'tag)
-    = StaticTuple?('t) and StaticTupleSize('t) > 0 and 't.0 == 'tag;
+private #tupleWithTag?('t, 'tag)
+    = staticTuple?('t) and staticTupleSize('t) > 0 and 't.0 == 'tag;
 
-private symbol SymbolBodyWithTag?;
-overload #SymbolBodyWithTag?('tag, 'x, ..'xs)
-    = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ..'xs);
-overload #SymbolBodyWithTag?('tag) = false;
+private symbol symbolBodyWithTag?;
+overload #symbolBodyWithTag?('tag, 'x, ..'xs)
+    = tupleWithTag?('x, 'tag) or symbolBodyWithTag?('tag, ..'xs);
+overload #symbolBodyWithTag?('tag) = false;
 
-#SymbolWithTag?('x, 'tag) = Symbol?('x) and SymbolBodyWithTag?('tag, ..SymbolBody('x));
+#symbolWithTag?('x, 'tag) = symbol?('x) and symbolBodyWithTag?('tag, ..symbolBody('x));
 
-symbol Symbol?;
-overload #Symbol?('x) = StaticSymbol?('x);
-overload Symbol?(x) = false;
-overload Symbol?(#'x) = *#StaticSymbol?('x);
+symbol symbol?;
+overload #symbol?('x) = staticSymbol?('x);
+overload symbol?(x) = false;
+overload symbol?(#'x) = *#staticSymbol?('x);
 
-private symbol SymbolBodyTagBody;
-overload #SymbolBodyTagBody('tag, 'x, ..'xs) = SymbolBodyTagBody('tag, ..'xs);
-overload #SymbolBodyTagBody('tag, ('tag, ..'body), ..'xs) = ..'body;
+private symbol symbolBodyTagBody;
+overload #symbolBodyTagBody('tag, 'x, ..'xs) = symbolBodyTagBody('tag, ..'xs);
+overload #symbolBodyTagBody('tag, ('tag, ..'body), ..'xs) = ..'body;
 
-#SymbolTagBody('x, 'tag) = ..SymbolBodyTagBody('tag, ..SymbolBody('x));
+#symbolTagBody('x, 'tag) = ..symbolBodyTagBody('tag, ..symbolBody('x));

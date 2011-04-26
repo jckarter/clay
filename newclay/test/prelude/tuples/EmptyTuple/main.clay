@@ -3,8 +3,8 @@ import unsafe.valuesemantics.(PODType?);
 
 main() {
     show(#PODType?(Tuple[])); ////true
-    show(#TypeSize(Tuple[])); ////0u
-    show(#TypeAlign(Tuple[])); ////1u
+    show(#typeSize(Tuple[])); ////0u
+    show(#typeAlign(Tuple[])); ////1u
 
     var t = Tuple[]();
 

@@ -3,7 +3,7 @@ import values.(allValues?);
 
 symbol hash;
 
-#HashableType?('T) = CallDefined?(equals?, 'T, 'T) and CallDefined?(hash, 'T);
+#HashableType?('T) = callDefined?(equals?, 'T, 'T) and callDefined?(hash, 'T);
 
 overload hash(x:'T) inline
     | IntegerType?('T) or CharType?('T) or 'T == Bool
@@ -23,10 +23,10 @@ overload hash(x:Tuple[..'T]) inline
     | allValues?(HashableType?, ..'T)
     = hashValues(..*x);
 overload hash(x:'R) inline
-    | RecordType?('R) and allValues?(HashableType?, ..FieldTypes('R))
+    | RecordType?('R) and allValues?(HashableType?, ..fieldTypes('R))
     = hashValues(..*x);
 overload hash(x:'N) inline
-    | NewType?('N) and HashableType?(UnderlyingType('N))
+    | NewType?('N) and HashableType?(underlyingType('N))
     = hash(*x);
 
 hashSequence(seq:'S) | SequenceType?('S) {

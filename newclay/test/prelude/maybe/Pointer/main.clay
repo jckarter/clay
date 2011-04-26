@@ -14,9 +14,9 @@ cons(forward v:'T, next:List['T]) {
 }
 
 main() {
-    show(TypeSize(MPointer[Int]) == TypeSize(Pointer[Int])); ////true
-    show(TypeSize(MOpaquePointer) == TypeSize(OpaquePointer)); ////true
-    show(TypeSize(Maybe[MPointer[Int]]) != TypeSize(Pointer[Int])); ////true
+    show(typeSize(MPointer[Int]) == typeSize(Pointer[Int])); ////true
+    show(typeSize(MOpaquePointer) == typeSize(OpaquePointer)); ////true
+    show(typeSize(Maybe[MPointer[Int]]) != typeSize(Pointer[Int])); ////true
 
     show(bitcast(Int, null(Int))); ////0
     show(bitcast(Int, nullOpaque())); ////0

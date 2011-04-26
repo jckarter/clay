@@ -6,7 +6,7 @@ import meta.c.*;
 //
 
 bitcast(#'A, forward b:'B)
-    | TypeSize('A) <= TypeSize('B)
+    | typeSize('A) <= typeSize('B)
     = forward cRefCast('A, b);
 
 

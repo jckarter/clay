@@ -15,10 +15,10 @@ import unsafe.valuesemantics.*;
 //
 
 symbol Array['T, 'n];
-overload #InheritsPredicatesFromTypes(Array['T, 'n]) = true, 'T;
-overload #LLType(Array['T, 'n])
-    | Type?('T) and StaticInt?('n) and 'n >= 0
-    = LLArrayType['T, 'n];
+overload #inheritsPredicatesFromTypes(Array['T, 'n]) = true, 'T;
+overload #llType(Array['T, 'n])
+    | Type?('T) and staticInt?('n) and 'n >= 0
+    = llArrayType['T, 'n];
 
 
 //
@@ -74,7 +74,7 @@ overload Array['T, 'n]() inline --> returned:Array['T, 'n]
 overload Array['T, 'n]() inline --> returned:Array['T, 'n]
     | BitwiseZeroInitializedType?('T)
 {
-    memset(OpaquePointer(&returned), 0_i32, TypeSize(Array['T, 'n]));
+    memset(OpaquePointer(&returned), 0_i32, typeSize(Array['T, 'n]));
 }
 
 
@@ -156,7 +156,7 @@ overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
 
 overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
     | not ('T == 'U and BitwiseAssignedType?('T))
-      and CallDefined?(copyAssign, Ref['T], 'U)
+      and callDefined?(copyAssign, Ref['T], 'U)
 {
     var ti = iterator(to), fi = iterator(from);
     while (hasNext?(ti)) {
@@ -170,7 +170,7 @@ overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
 //
 
 overload equals?(x:Array['T, 'n], y:Array['U, 'n]) inline
-    | CallDefined?(equals?, 'T, 'U)
+    | callDefined?(equals?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);
     while (hasNext?(xi))
@@ -180,7 +180,7 @@ overload equals?(x:Array['T, 'n], y:Array['U, 'n]) inline
 }
 
 overload lesser?(x:Array['T, 'n], y:Array['U, 'n]) inline
-    | CallDefined?(lesser?, 'T, 'U)
+    | callDefined?(lesser?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);
     while (hasNext?(xi)) {

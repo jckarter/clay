@@ -3,6 +3,6 @@ import unsafe.valuesemantics.(PODType?);
 
 main() {
     show(#PODType?(Union[])); ////true
-    show(#TypeSize(Union[])); ////0u
-    show(#TypeAlign(Union[])); ////1u
+    show(#typeSize(Union[])); ////0u
+    show(#typeAlign(Union[])); ////1u
 }

@@ -11,8 +11,8 @@ main() {
     var foo = Foo();
     var bar = Bar();
 
-    show(#Defined?([copy(foo)])); ////true
-    show(#Defined?([copy(bar)])); ////false
+    show(#defined?([copy(foo)])); ////true
+    show(#defined?([copy(bar)])); ////false
 
     show(foo.a); ////0
     show(size(foo.b)); ////0

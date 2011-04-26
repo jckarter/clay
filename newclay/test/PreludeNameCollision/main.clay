@@ -1,12 +1,12 @@
-import meta.symbols.(SymbolModule);
-import meta.statics.(StaticQualifiedName);
+import meta.symbols.(symbolModule);
+import meta.statics.(staticQualifiedName);
 import show.(show);
 
 symbol Nothing = RecordType();
-#foo(Nothing) = SymbolModule(Nothing);
+#foo(Nothing) = symbolModule(Nothing);
 
 main() {
     show(#foo(Nothing));
     var x = Nothing();
-    show(#StaticQualifiedName(Type([x])));
+    show(#staticQualifiedName(type([x])));
 }

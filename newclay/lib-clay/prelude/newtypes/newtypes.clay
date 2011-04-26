@@ -4,73 +4,73 @@ import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.*;
 
 #NewType('T) = (NewType, 'T);
-#NewType?('T) = SymbolWithTag?('T, NewType);
+#NewType?('T) = symbolWithTag?('T, NewType);
 
-#UnderlyingType('T) | NewType?('T) = SymbolTagBody('T, NewType);
+#underlyingType('T) | NewType?('T) = symbolTagBody('T, NewType);
 
-#HasUnderlyingType?('T) = StaticCallDefined?(UnderlyingType, 'T);
+#HasUnderlyingType?('T) = staticCallDefined?(underlyingType, 'T);
 
-overload #LLType('T) | HasUnderlyingType?('T) = LLType(UnderlyingType('T));
+overload #llType('T) | HasUnderlyingType?('T) = llType(underlyingType('T));
 
-overload #InheritsPredicatesFromTypes('T) | HasUnderlyingType?('T) = true, UnderlyingType('T);
+overload #inheritsPredicatesFromTypes('T) | HasUnderlyingType?('T) = true, underlyingType('T);
 
 underlying(forward x:'T) inline | HasUnderlyingType?('T)
-    = forward bitcast(#UnderlyingType('T), x);
+    = forward bitcast(#underlyingType('T), x);
 
 overload unpack(forward x:'T) inline | NewType?('T)
     = forward underlying(x);
 
 initializeUnderlying(#'T) inline --> returned:'T
-    | HasUnderlyingType?('T) and DefaultInitializableType?(UnderlyingType('T))
+    | HasUnderlyingType?('T) and DefaultInitializableType?(underlyingType('T))
 {
-    underlying(returned) <-- (#UnderlyingType('T))();
+    underlying(returned) <-- (#underlyingType('T))();
 }
 overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
     | HasUnderlyingType?('T)
-      and Defined?([arg(Ref['U]) <-- orig;])
-      and 'U == UnderlyingType('T)
+      and defined?([arg(Ref['U]) <-- orig;])
+      and 'U == underlyingType('T)
 {
     underlying(returned) <-- orig;
 }
 
 overload 'T(forward ..args) inline
-    | NewType?('T) and Defined?([initializeUnderlying('T, ..args)])
+    | NewType?('T) and defined?([initializeUnderlying('T, ..args)])
     = initializeUnderlying('T, ..args);
 
 overload copy(x:'T) inline --> returned:'T
     | HasUnderlyingType?('T)
-      and CopyableType?(UnderlyingType('T))
-      and not BitwiseCopiedType?(UnderlyingType('T))
+      and CopyableType?(underlyingType('T))
+      and not BitwiseCopiedType?(underlyingType('T))
 {
     underlying(returned) <-- copy(underlying(x));
 }
 
 overload moveRvalue(forward x:'T) inline --> returned:'T
     | HasUnderlyingType?('T)
-      and MovableType?(UnderlyingType('T))
-      and not BitwiseMovedType?(UnderlyingType('T))
+      and MovableType?(underlyingType('T))
+      and not BitwiseMovedType?(underlyingType('T))
 {
     underlying(returned) <-- moveRvalue(underlying(x));
 }
 
 overload destroy(ref x:'T) inline
-    | HasUnderlyingType?('T) and not DestroyDoesNothingType?(UnderlyingType('T))
+    | HasUnderlyingType?('T) and not DestroyDoesNothingType?(underlyingType('T))
 {
     destroy(underlying(x));
 }
 
 overload reset(ref x:'T) inline
-    | HasUnderlyingType?('T) and not ResetDoesNothingType?(UnderlyingType('T))
+    | HasUnderlyingType?('T) and not ResetDoesNothingType?(underlyingType('T))
 {
     reset(underlying(x));
 }
 
 overload copyAssign(ref to:'T, from:'T) inline
-    | HasUnderlyingType?('T) and AssignableType?(UnderlyingType('T))
+    | HasUnderlyingType?('T) and AssignableType?(underlyingType('T))
 {
     underlying(to) = underlying(from);
 }
 
 overload equals?(a:'T, b:'T) inline
-    | HasUnderlyingType?('T) and Defined?([underlying(a) == underlying(b)])
+    | HasUnderlyingType?('T) and defined?([underlying(a) == underlying(b)])
     = underlying(a) == underlying(b);

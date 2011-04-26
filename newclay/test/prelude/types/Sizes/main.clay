@@ -1,27 +1,27 @@
 import show.*;
 
 main() {
-    show(#TypeSize(Bool)); ////1u
-    show(#TypeSize(Int8)); ////1u
-    show(#TypeSize(Int16)); ////2u
-    show(#TypeSize(Int32)); ////4u
-    show(#TypeSize(Int64)); ////8u
-    show(#TypeSize(Float32)); ////4u
-    show(#TypeSize(Float64)); ////8u
-    show(#TypeSize(Char)); ////4u
+    show(#typeSize(Bool)); ////1u
+    show(#typeSize(Int8)); ////1u
+    show(#typeSize(Int16)); ////2u
+    show(#typeSize(Int32)); ////4u
+    show(#typeSize(Int64)); ////8u
+    show(#typeSize(Float32)); ////4u
+    show(#typeSize(Float64)); ////8u
+    show(#typeSize(Char)); ////4u
     // XXX platform dependent
-    show(#TypeSize(OpaquePointer)); ////8u
-    show(#TypeSize(Tuple[Int8])); ////1u
-    show(#TypeSize(Tuple[Int8, Int8, Int8])); ////3u
-    show(#TypeSize(Tuple[Int8, Int16])); ////4u
-    show(#TypeSize(Tuple[Int8, Int32])); ////8u
-    show(#TypeSize(Tuple[Int32, Int8])); ////8u
-    show(#TypeSize(Tuple[Int32, Int8, Int64])); ////16u
-    show(#TypeSize(Union[Int8])); ////1u
-    show(#TypeSize(Union[Int8, Int16])); ////2u
-    show(#TypeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4u
-    show(#TypeSize(Array[Int32, 16])); ////64u
-    show(#TypeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48u
+    show(#typeSize(OpaquePointer)); ////8u
+    show(#typeSize(Tuple[Int8])); ////1u
+    show(#typeSize(Tuple[Int8, Int8, Int8])); ////3u
+    show(#typeSize(Tuple[Int8, Int16])); ////4u
+    show(#typeSize(Tuple[Int8, Int32])); ////8u
+    show(#typeSize(Tuple[Int32, Int8])); ////8u
+    show(#typeSize(Tuple[Int32, Int8, Int64])); ////16u
+    show(#typeSize(Union[Int8])); ////1u
+    show(#typeSize(Union[Int8, Int16])); ////2u
+    show(#typeSize(Union[Tuple[Int8, Int8, Int8], Int16])); ////4u
+    show(#typeSize(Array[Int32, 16])); ////64u
+    show(#typeSize(Array[Tuple[Int8, Int8, Int8], 16])); ////48u
     // XXX platform dependent
-    show(#TypeSize(StringConstant)); ////24u
+    show(#typeSize(StringConstant)); ////24u
 }

@@ -2,13 +2,13 @@ import meta.statics.*;
 import show.*;
 
 main() {
-    show(#StaticStringSize("foo")); ////3
-    show(#StaticStringSlice("disbarred", 3, 6)); ////"bar"
-    show(#StaticStringConcat("foo", "b", "ar")); ////"foobar"
-    show(#StaticStringChar("bar", 2)); ////'r'
+    show(#staticStringSize("foo")); ////3
+    show(#staticStringSlice("disbarred", 3, 6)); ////"bar"
+    show(#staticStringConcat("foo", "b", "ar")); ////"foobar"
+    show(#staticStringChar("bar", 2)); ////'r'
     ////'b'
     ////'a'
     ////'r'
-    show(..#StaticStringChars("bar"));
-    show(#StaticStringFromChars('f', 'o', 'o', 'b', 'a', 'r')); ////"foobar"
+    show(..#staticStringChars("bar"));
+    show(#staticStringFromChars('f', 'o', 'o', 'b', 'a', 'r')); ////"foobar"
 }

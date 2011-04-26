@@ -2,7 +2,7 @@ import values.*;
 import meta.statics.*;
 import show.*;
 
-#odd?('x)  | StaticInt?('x) = 'x mod 2 == 1;
+#odd?('x)  | staticInt?('x) = 'x mod 2 == 1;
 
 main() {
     show("are odd values odd?");

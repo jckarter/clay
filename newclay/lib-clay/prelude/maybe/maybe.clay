@@ -5,14 +5,14 @@ import unsafe.valuesemantics.(reset, ResetDoesNothingType?);
 
 symbol Nothing;
 
-private #MaybeRepr('T) = TaggedUnionRepr;
-overload #MaybeRepr('T)
-    | ReprAcceptsMemberTypes?(NullablePointerRepr[Static[Nothing], 'T])
+private #maybeRepr('T) = TaggedUnionRepr;
+overload #maybeRepr('T)
+    | reprAcceptsMemberTypes?(NullablePointerRepr[Static[Nothing], 'T])
     = NullablePointerRepr;
 
 symbol Maybe['T] = VariantType(Static[Nothing], 'T),
     WithDefaultMemberType(Static[Nothing]),
-    WithReprType(MaybeRepr('T));
+    WithReprType(maybeRepr('T));
 
 #MaybeType?('T) = false;
 overload #MaybeType?(Maybe['T]) = true;
@@ -38,11 +38,11 @@ private maybe3(forward m, forward f, ..#'ReturnTypes) inline
     = ..maybe(m, f, [..mapValues(call, ..#'ReturnTypes)]);
 
 overload maybe(forward m:Maybe['T], forward f) inline
-    | allValues?(MaybeType?, ..Type([forward ..f(required(m))]))
-    = ..maybe3(m, f, ..#Type([..f(required(m))]));
+    | allValues?(MaybeType?, ..type([forward ..f(required(m))]))
+    = ..maybe3(m, f, ..#type([..f(required(m))]));
 
 overload bind(forward m:Maybe['T], forward f) inline
-    | allValues?(MaybeType?, ..Type([..f(required(m))]))
+    | allValues?(MaybeType?, ..type([..f(required(m))]))
     = forward ..maybe(m, [forward x -> ..f(x)]);
 
 overload reset(m:Maybe['T]) | not ResetDoesNothingType?(Maybe['T]) {

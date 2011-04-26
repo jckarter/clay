@@ -1,11 +1,11 @@
-import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
+import strings.encodings.(stringBytes, stringTypeEncoding, EncodedStringType?);
 import strings.encodings.utf8.(UTF8);
 import show.(show);
 
 main() {
     show(#EncodedStringType?(StringConstant)); ////true
     show(#EncodedStringType?(StringConstant, UTF8)); ////true
-    show(#StringTypeEncoding(StringConstant)); ////UTF8
+    show(#stringTypeEncoding(StringConstant)); ////UTF8
 
     ////116
     ////104

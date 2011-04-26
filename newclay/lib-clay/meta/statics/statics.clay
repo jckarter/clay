@@ -1,29 +1,29 @@
 public import __primitives__.(
-    StaticString?,
-    StaticStringSize,
-    StaticStringSlice,
-    StaticStringConcat,
-    StaticStringChar,
-    StaticStringChars,
-    StaticStringFromChars,
+    staticString?,
+    staticStringSize,
+    staticStringSlice,
+    staticStringConcat,
+    staticStringChar,
+    staticStringChars,
+    staticStringFromChars,
 
-    StaticTuple?,
-    StaticTuple,
-    StaticTupleSize,
-    StaticTupleElement,
-    StaticTupleElements,
+    staticTuple?,
+    staticTuple,
+    staticTupleSize,
+    staticTupleElement,
+    staticTupleElements,
 
-    StaticInt?,
-    StaticBool?,
-    StaticChar?,
-    StaticModule?,
-    StaticSymbol?,
+    staticInt?,
+    staticBool?,
+    staticChar?,
+    staticModule?,
+    staticSymbol?,
 );
 
 import __primitives__;
 
-symbol StaticName = RuntimeStaticProcedure();
-overload #StaticName('x) = __primitives__.StaticName('x);
+symbol staticName = RuntimeStaticProcedure();
+overload #staticName('x) = __primitives__.staticName('x);
 
-symbol StaticQualifiedName = RuntimeStaticProcedure();
-overload #StaticQualifiedName('x) = __primitives__.StaticQualifiedName('x);
+symbol staticQualifiedName = RuntimeStaticProcedure();
+overload #staticQualifiedName('x) = __primitives__.staticQualifiedName('x);

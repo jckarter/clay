@@ -87,7 +87,7 @@ private sha256chunk(ref state, ref tempState, ref chunkSpace, chunk) {
 }
 
 sha256(message: 'S) --> returned: SHA256
-    | ContiguousSequenceType?('S) and TypeSize(SequenceElementType('S)) == 1
+    | ContiguousSequenceType?('S) and typeSize(sequenceElementType('S)) == 1
 {
     var messageSize = size(message);
     var messageHeadSize = bitandc(messageSize, 63u);
@@ -147,7 +147,7 @@ sha256(message: 'S) --> returned: SHA256
         returnedWord = hostToNetwork(stateWord);
 }
 
-overload sha256(message:'S) | StringType?('S) and Defined?([stringBytes(message)])
+overload sha256(message:'S) | StringType?('S) and defined?([stringBytes(message)])
     = sha256(stringBytes(message));
 
 copyNonoverlappingMemory(to, from, size) inline {

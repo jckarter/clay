@@ -2,7 +2,7 @@ import values.*;
 import unsafe.coordinates.(
     CoordinateRange,
     CoordinateSequenceType?,
-    SequenceCoordinateType,
+    sequenceCoordinateType,
     begin,
     end
 );
@@ -76,8 +76,8 @@ enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
 
 symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
 overload Mapped(forward f:'F, forward s:'S)
-    | SequenceType?('S) and Defined?([var i = iterator(s); ..f(..next(i))])
-    = Mapped['F, #Type([captureValue(s)])](f, captureValue(s));
+    | SequenceType?('S) and defined?([var i = iterator(s); ..f(..next(i))])
+    = Mapped['F, #type([captureValue(s)])](f, captureValue(s));
 
 private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
 overload MappedIterator(mapper:'F, forward iter:'I)
@@ -99,8 +99,8 @@ overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.itera
 
 symbol Filtered['F, 'S] = RecordType(filterer:'F, sequence:'S);
 overload Filtered(forward f:'F, forward s:'S)
-    | SequenceType?('S) and DefinedWithType?([var i = iterator(s); f(..next(i))], Bool)
-    = Filtered['F, #Type([captureValue(s)])](f, captureValue(s));
+    | SequenceType?('S) and definedWithType?([var i = iterator(s); f(..next(i))], Bool)
+    = Filtered['F, #type([captureValue(s)])](f, captureValue(s));
 
 private symbol FilteredIterator['F, 'I, 'V] = RecordType(
     filtererp:Pointer['F],
@@ -108,7 +108,7 @@ private symbol FilteredIterator['F, 'I, 'V] = RecordType(
     queuedValues:Maybe['V],
 );
 overload FilteredIterator(filterer:'F, forward iter:'I) {
-    const V = #Type([var refiter = iter; captureValues(..next(refiter))]);
+    const V = #type([var refiter = iter; captureValues(..next(refiter))]);
     return FilteredIterator['F, 'I, V](&filterer, iter, nothing(V));
 }
 
@@ -145,11 +145,11 @@ overload next(ref i:FilteredIterator['F, 'I, 'V]) {
 
 symbol Sliced['S, 'C] = RecordType(sequence:'S, range:CoordinateRange['C]);
 overload Sliced(forward s:'S, forward from:'C, forward to:'C)
-    | CoordinateSequenceType?('S) and 'C == SequenceCoordinateType('S)
-    = Sliced[Type([captureValue(s)]), 'C](captureValue(s), CoordinateRange(from, to));
+    | CoordinateSequenceType?('S) and 'C == sequenceCoordinateType('S)
+    = Sliced[type([captureValue(s)]), 'C](captureValue(s), CoordinateRange(from, to));
 
 overload Sliced(forward s:'S, from:'I, to:'J)
-    --> returned:Sliced[Type([captureValue(s)]), Type([begin(s)])]
+    --> returned:Sliced[type([captureValue(s)]), type([begin(s)])]
     | CoordinateSequenceType?('S) and IntegerType?('I) and IntegerType?('J)
 {
     returned.sequence <-- captureValue(s);
