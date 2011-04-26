@@ -1,4 +1,4 @@
-import unsafe.memory.(allocateRawValue, freeRawValue);
+import unsafe.memory.(allocateUninitializedValue, freeUninitializedValue);
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
@@ -11,12 +11,12 @@ alias MSharedPointer['T] = Maybe[SharedPointer['T]];
 overload SharedPointer['T](f, forward ..args) inline
     | type([f(..args)]) == 'T
 {
-    var ptr = allocateRawValue(RefCounted['T]);
+    var ptr = allocateUninitializedValue(RefCounted['T]);
     ptr^.refCount <-- 1u;
     try {
         ptr^.value <-- f(..args);
     } catch (ex) {
-        freeRawValue(ptr);
+        freeUninitializedValue(ptr);
         throw ex;
     }
     return initializeRecord(SharedPointer['T], just(ptr));
@@ -31,7 +31,7 @@ overload destroy(ref p:SharedPointer['T]) inline {
         dec(ptr^.refCount);
         if (ptr^.refCount == 0u) {
             destroy(ptr^.value);
-            freeRawValue(ptr);
+            freeUninitializedValue(ptr);
         }
     }]);
 }

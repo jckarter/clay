@@ -8,7 +8,7 @@ alias List['T] = MPointer[Node['T]];
 
 nil(#'T) = null(Node['T]);
 cons(forward v:'T, next:List['T]) {
-    var l = allocateRawValue(Node['T]);
+    var l = allocateUninitializedValue(Node['T]);
     l^ <-- Node['T](v, next);
     return just(l);
 }

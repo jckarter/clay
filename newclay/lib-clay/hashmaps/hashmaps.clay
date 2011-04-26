@@ -25,7 +25,7 @@
 import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
-import unsafe.memory.(allocateRawValues, freeRawValues);
+import unsafe.memory.(allocateUninitializedValues, freeUninitializedValues);
 import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.compositetypes.*;
 import unsafe.coordinates.(
@@ -207,22 +207,22 @@ overload tableSize(ln2_size:'I) | IntegerType?('I) = bitshl(1u, ln2_size);
 overload Table['B](ln2_size:Int) --> returned:Table['B] {
     var size = tableSize(ln2_size);
     returned.ln2_size <-- ln2_size;
-    returned.begin <-- allocateRawValues('B, size); //XXX aligned(16)
+    returned.begin <-- allocateUninitializedValues('B, size); //XXX aligned(16)
     try {
         initializeRange(returned.begin, returned.begin+size);
     } catch (ex) {
-        freeRawValues(returned.begin);
+        freeUninitializedValues(returned.begin);
         throw ex;
     }
 }
 overload copy(t:Table['B]) --> returned:Table['B] {
     var size = tableSize(t);
     returned.ln2_size <-- t.ln2_size;
-    returned.begin <-- allocateRawValues('B, size); //XXX aligned(16)
+    returned.begin <-- allocateUninitializedValues('B, size); //XXX aligned(16)
     try {
         copyRange(returned.begin, t.begin, t.begin+size);
     } catch (ex) {
-        freeRawValues(returned.begin);
+        freeUninitializedValues(returned.begin);
         throw ex;
     }
 }
@@ -240,15 +240,15 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
         to.ln2_size = from.ln2_size;
         assignRange(to.begin, from.begin, from.begin+newSize);
     } else {
-        var newBegin = allocateRawValues('B, newSize);
+        var newBegin = allocateUninitializedValues('B, newSize);
         try {
             copyRange(newBegin, from.begin, from.begin+newSize);
         } catch (ex) {
-            freeRawValues(newBegin);
+            freeUninitializedValues(newBegin);
             throw ex;
         }
         destroyRange(to.begin, to.begin+oldSize);
-        freeRawValues(to.begin);
+        freeUninitializedValues(to.begin);
         to.begin = newBegin;
         to.ln2_size = from.ln2_size;
     }
@@ -260,7 +260,7 @@ overload reset(ref t:Table['B]) {
 overload destroy(ref t:Table['B]) {
     if (t.begin != ContiguousCoordinate['B]()) {
         destroyRange(t.begin, t.begin+tableSize(t));
-        freeRawValues(t.begin);
+        freeUninitializedValues(t.begin);
     }
 }
 

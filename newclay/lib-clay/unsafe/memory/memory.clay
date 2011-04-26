@@ -1,23 +1,23 @@
 import libc.(malloc, free, realloc);
 import unsafe.coordinates.(ContiguousCoordinate);
 
-safeMalloc(count) = required(malloc(count));
+requiredMalloc(count) = required(malloc(count));
 
-safeRealloc(ptr, count) = required(realloc(ptr, count));
+requiredRealloc(ptr, count) = required(realloc(ptr, count));
 
 // XXX alignment
 
-allocateRawValues(#'T, count:'I) | Type?('T) and IntegerType?('I)
-    = ContiguousCoordinate['T](safeMalloc(typeSize('T) * UInt(count)));
+allocateUninitializedValues(#'T, count:'I) | Type?('T) and IntegerType?('I)
+    = ContiguousCoordinate['T](requiredMalloc(typeSize('T) * UInt(count)));
 
-allocateRawValue(#'T) | Type?('T)
-    = Pointer['T](safeMalloc(typeSize('T)));
+allocateUninitializedValue(#'T) | Type?('T)
+    = Pointer['T](requiredMalloc(typeSize('T)));
 
-reallocateRawValues(values:ContiguousCoordinate['T], count:'I) | Type?('T)
+reallocateUninitializedValues(values:ContiguousCoordinate['T], count:'I) | Type?('T)
     = ContiguousCoordinate['T](
-        safeRealloc(OpaquePointer(values), typeSize('T) * UInt(count))
+        requiredRealloc(OpaquePointer(values), typeSize('T) * UInt(count))
     );
 
-freeRawValues(values:ContiguousCoordinate['T]) { free(OpaquePointer(values)); }
-freeRawValue(value:Pointer['T]) { free(OpaquePointer(value)); }
+freeUninitializedValues(values:ContiguousCoordinate['T]) { free(OpaquePointer(values)); }
+freeUninitializedValue(value:Pointer['T]) { free(OpaquePointer(value)); }
 
