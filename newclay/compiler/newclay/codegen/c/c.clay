@@ -674,21 +674,21 @@ codegenType(c:CodegenContext, typeValue:Value) {
     
     var llType = lowLevelType(typeValue);
 
-    if (ofLowLevelType?(llType, getHooks().LLBoolType))
+    if (ofLowLevelType?(llType, getHooks().llBoolType))
         codegenBoolType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLIntegerType))
+    else if (ofLowLevelType?(llType, getHooks().llIntegerType))
         codegenIntegerType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLFloatType))
+    else if (ofLowLevelType?(llType, getHooks().llFloatType))
         codegenFloatType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLPointerType))
+    else if (ofLowLevelType?(llType, getHooks().llPointerType))
         codegenPointerType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLArrayType))
+    else if (ofLowLevelType?(llType, getHooks().llArrayType))
         codegenArrayType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLTupleType))
+    else if (ofLowLevelType?(llType, getHooks().llTupleType))
         codegenTupleType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLUnionType))
+    else if (ofLowLevelType?(llType, getHooks().llUnionType))
         codegenUnionType(c, type, llType, definition);
-    else if (ofLowLevelType?(llType, getHooks().LLCodePointerType))
+    else if (ofLowLevelType?(llType, getHooks().llCodePointerType))
         codegenCodePointerType(c, type, llType, definition);
     else
         genericError("invalid low-level type ", llType);
@@ -696,9 +696,9 @@ codegenType(c:CodegenContext, typeValue:Value) {
 
 typeCompoundKind(typeValue:Value) {
     var llType = lowLevelType(typeValue);
-    if (ofLowLevelType?(llType, getHooks().LLArrayType) or ofLowLevelType?(llType, getHooks().LLTupleType))
+    if (ofLowLevelType?(llType, getHooks().llArrayType) or ofLowLevelType?(llType, getHooks().llTupleType))
         return STRUCT_TYPE;
-    if (ofLowLevelType?(llType, getHooks().LLUnionType))
+    if (ofLowLevelType?(llType, getHooks().llUnionType))
         return UNION_TYPE;
     return PRIMITIVE_TYPE;
 }
@@ -722,12 +722,12 @@ private codegenIntegerType(c, type, llType, definition) {
         genericError("low-level integer type ", llType, " must have two symbol parameters");
 
     var signed? = false;
-    if (llType.params[0] == getHooks().LLSigned)
+    if (llType.params[0] == getHooks().llSigned)
         signed? = true;
-    else if (llType.params[0] == getHooks().LLUnsigned)
+    else if (llType.params[0] == getHooks().llUnsigned)
         signed? = false;
     else
-        genericError("first symbol parameter of low-level integer type ", llType, " must be ", getHooks().LLSigned, " or ", getHooks().LLUnsigned);
+        genericError("first symbol parameter of low-level integer type ", llType, " must be ", getHooks().llSigned, " or ", getHooks().llUnsigned);
 
     var bits = match(llType.params[1],
         IntValue, v => Int64(v),

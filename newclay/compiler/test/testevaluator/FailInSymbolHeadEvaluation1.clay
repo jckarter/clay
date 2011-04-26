@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-symbol Foo[..'x] = StaticError("I AM ERROR.", ..'x);
+symbol Foo[..'x] = staticError("I AM ERROR.", ..'x);
 
-#Main() = StaticSymbolBody(Foo[2]);
+#Main() = staticSymbolBody(Foo[2]);

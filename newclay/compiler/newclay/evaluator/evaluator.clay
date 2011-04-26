@@ -571,7 +571,7 @@ overload evaluateExpr(x:ast.IfExpr, env) {
 }
 overload evaluateExpr(x:ast.ThrowExpr, env) {
     var errorValue = evaluateExpr(x.value, env);
-    return evaluatePrimitiveWithOneResult(PRIM_StaticError, ValueList(errorValue));
+    return evaluatePrimitiveWithOneResult(PRIM_staticError, ValueList(errorValue));
 }
 overload evaluateExpr(x:ast.PairExpr, env) {
     var leftValue = Value(StringValue(x.name.str));
@@ -809,7 +809,7 @@ overload evaluateMultiExpr(x:ast.StaticExpr, env) {
 }
 overload evaluateMultiExpr(x:ast.ThrowExpr, env) {
     var errorValue = evaluateExpr(x.value, env);
-    return evaluatePrimitive(PRIM_StaticError, ValueList(errorValue));
+    return evaluatePrimitive(PRIM_staticError, ValueList(errorValue));
 }
 overload evaluateMultiExpr(x:ast.UnaryOpExpr, env) {
     var operands = ValueList(evaluateExpr(x.expr, env));
@@ -966,12 +966,12 @@ overload evaluateIndexing(x:SymbolHead, args) {
 overload evaluateIndexing(x:StringValue, args) {
     if (size(args) != 1)
         matchFailureError("string must be indexed with a single Int");
-    return evaluatePrimitiveWithOneResult(PRIM_StaticStringChar, ValueList(Value(x), args[0]));
+    return evaluatePrimitiveWithOneResult(PRIM_staticStringChar, ValueList(Value(x), args[0]));
 }
 overload evaluateIndexing(x:TupleValue, args) {
     if (size(args) != 1)
         matchFailureError("tuple must be indexed with a single Int");
-    return evaluatePrimitiveWithOneResult(PRIM_StaticTupleElement, ValueList(Value(x), args[0]));
+    return evaluatePrimitiveWithOneResult(PRIM_staticTupleElement, ValueList(Value(x), args[0]));
 }
 
 
@@ -1007,7 +1007,7 @@ overload evaluateFieldRef(x:Value, field) {
     return evaluateFieldRef(*x, field);
 }
 overload evaluateFieldRef(x:ModuleValue, field) {
-    return evaluatePrimitiveWithOneResult(PRIM_StaticModuleMember, ValueList(Value(x), field));
+    return evaluatePrimitiveWithOneResult(PRIM_staticModuleMember, ValueList(Value(x), field));
 }
 
 
@@ -1788,46 +1788,46 @@ stringSize(s) {
 evaluatePrimitive(kind, args) {
     return withStaticCall(Value(Primitive(kind)), args, () ref=> {
         switch (kind) {
-        case PRIM_StaticInt? : {
+        case PRIM_staticInt? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, IntValue)));
         }
-        case PRIM_StaticPlus : {
+        case PRIM_staticPlus : {
             var a = oneInt(args);
             return ValueList(+a);
         }
-        case PRIM_StaticMinus : {
+        case PRIM_staticMinus : {
             var a = oneInt(args);
             return ValueList(-a);
         }
-        case PRIM_StaticAdd : {
+        case PRIM_staticAdd : {
             var a, b = ...twoInts(args);
             return ValueList(a + b);
         }
-        case PRIM_StaticSubtract : {
+        case PRIM_staticSubtract : {
             var a, b = ...twoInts(args);
             return ValueList(a - b);
         }
-        case PRIM_StaticMultiply : {
+        case PRIM_staticMultiply : {
             var a, b = ...twoInts(args);
             return ValueList(a * b);
         }
-        case PRIM_StaticQuotient : {
+        case PRIM_staticQuotient : {
             var a, b = ...twoInts(args);
             return ValueList(a / b);
         }
-        case PRIM_StaticRemainder : {
+        case PRIM_staticRemainder : {
             var a, b = ...twoInts(args);
             return ValueList(a % b);
         }
-        case PRIM_StaticIntegers : {
+        case PRIM_staticIntegers : {
             var a = Int64(oneInt(args));
             if (a < 0)
                 matchFailureError("expecting a non-negative integer");
             return ValueList(mapped(i => Value(IntValue(StaticIntValue(i))), range(a)));
         }
 
-        case PRIM_StaticUInt : {
+        case PRIM_staticUInt : {
             var a = oneValue(args);
             return match(a,
                 IntValue, iv ref=> ValueList(IntValue(StaticUIntValue(toUInt64(*iv)))),
@@ -1838,7 +1838,7 @@ evaluatePrimitive(kind, args) {
                 },
             );
         }
-        case PRIM_StaticInt : {
+        case PRIM_staticInt : {
             var a = oneValue(args);
             return match(a,
                 IntValue, iv ref=> ValueList(IntValue(StaticIntValue(Int64(*iv)))),
@@ -1849,7 +1849,7 @@ evaluatePrimitive(kind, args) {
                 },
             );
         }
-        case PRIM_StaticChar : {
+        case PRIM_staticChar : {
             var a = oneValue(args);
             return match(a,
                 IntValue, iv ref=> {
@@ -1864,73 +1864,73 @@ evaluatePrimitive(kind, args) {
             );
         }
 
-        case PRIM_StaticBool? : {
+        case PRIM_staticBool? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, BoolValue)));
         }
-        case PRIM_StaticEquals? : {
+        case PRIM_staticEquals? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompareEquality(a, b, equals?);
         }
-        case PRIM_StaticNotEquals? : {
+        case PRIM_staticNotEquals? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompareEquality(a, b, notEquals?);
         }
-        case PRIM_StaticLesser? : {
+        case PRIM_staticLesser? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompare(*a, *b, lesser?);
         }
-        case PRIM_StaticLesserEquals? : {
+        case PRIM_staticLesserEquals? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompare(*a, *b, lesserEquals?);
         }
-        case PRIM_StaticGreater? : {
+        case PRIM_staticGreater? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompare(*a, *b, greater?);
         }
-        case PRIM_StaticGreaterEquals? : {
+        case PRIM_staticGreaterEquals? : {
             var a, b = ...twoValues(args);
             return evaluateStaticCompare(*a, *b, greaterEquals?);
         }
 
-        case PRIM_StaticBitand : {
+        case PRIM_staticBitand : {
             var a, b = ...twoInts(args);
             return ValueList(bitwiseAnd(a, b));
         }
-        case PRIM_StaticBitor : {
+        case PRIM_staticBitor : {
             var a, b = ...twoInts(args);
             return ValueList(bitwiseOr(a, b));
         }
-        case PRIM_StaticBitxor : {
+        case PRIM_staticBitxor : {
             var a, b = ...twoInts(args);
             return ValueList(bitwiseXor(a, b));
         }
-        case PRIM_StaticBitnot : {
+        case PRIM_staticBitnot : {
             var a = oneInt(args);
             return ValueList(bitwiseNot(a));
         }
-        case PRIM_StaticBitshl : {
+        case PRIM_staticBitshl : {
             var a, b = ...twoInts(args);
             return ValueList(shiftLeft(a, b));
         }
-        case PRIM_StaticBitshr : {
+        case PRIM_staticBitshr : {
             var a, b = ...twoInts(args);
             return ValueList(shiftRight(a, b));
         }
 
-        case PRIM_StaticChar? : {
+        case PRIM_staticChar? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, CharValue)));
         }
-        case PRIM_StaticString? : {
+        case PRIM_staticString? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, StringValue)));
         }
-        case PRIM_StaticStringSize : {
+        case PRIM_staticStringSize : {
             var s = oneString(args);
             return ValueList(IntValue(StaticIntValue(stringSize(s))));
         }
-        case PRIM_StaticStringSlice : {
+        case PRIM_staticStringSlice : {
             var s, from_, to_ = ...stringIntInt(args);
             var from = Int64(from_);
             var to = Int64(to_);
@@ -1957,14 +1957,14 @@ evaluatePrimitive(kind, args) {
 
             return ValueList(StringValue(slicedS.encoded));
         }
-        case PRIM_StaticStringConcat : {
+        case PRIM_staticStringConcat : {
             var a = nStrings(args);
             var result = String();
             for (s in a)
                 push(result, move(s));
             return ValueList(StringValue(move(result)));
         }
-        case PRIM_StaticStringChar : {
+        case PRIM_staticStringChar : {
             var s, n_ = ...stringInt(args);
             var n = Int64(n_);
 
@@ -1982,50 +1982,50 @@ evaluatePrimitive(kind, args) {
                 matchFailureError("invalid index into string: ", n);
             return ValueList(CharValue(UInt32(next(iter))));
         }
-        case PRIM_StaticStringChars : {
+        case PRIM_staticStringChars : {
             var s = oneString(args);
             return ValueList(mapped(c => Value(CharValue(UInt32(c))), utf8Iterator(s)));
         }
-        case PRIM_StaticStringFromChars : {
+        case PRIM_staticStringFromChars : {
             var s = nChars(args);
             return ValueList(StringValue(s));
         }
 
-        case PRIM_StaticTuple? : {
+        case PRIM_staticTuple? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, TupleValue)));
         }
-        case PRIM_StaticTuple : {
+        case PRIM_staticTuple : {
             return ValueList(TupleValue(args));
         }
-        case PRIM_StaticTupleSize : {
+        case PRIM_staticTupleSize : {
             var a = oneTuple(args);
             return ValueList(IntValue(Int(size(a))));
         }
-        case PRIM_StaticTupleElement : {
+        case PRIM_staticTupleElement : {
             var a, i_ = ...tupleInt(args);
             var i = Int64(i_);
             if ((i < 0) or (i > size(a)))
                 matchFailureError("tuple index out of range");
             return ValueList(a[i]);
         }
-        case PRIM_StaticTupleElements : {
+        case PRIM_staticTupleElements : {
             return oneTuple(args);
         }
 
-        case PRIM_StaticSymbol? : {
+        case PRIM_staticSymbol? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, Symbol)));
         }
-        case PRIM_StaticSymbolBody : {
+        case PRIM_staticSymbolBody : {
             var a = oneSymbol(args);
             return symbolBody(a);
         }
-        case PRIM_StaticSymbolAttributes : {
+        case PRIM_staticSymbolAttributes : {
             var a = oneSymbol(args);
             return symbolAttributes(a);
         }
-        case PRIM_StaticModule : {
+        case PRIM_staticModule : {
             var a = oneValue(args);
             return ValueList(match(a,
                 SymbolHead, a ref=> ModuleValue(a.module),
@@ -2038,51 +2038,51 @@ evaluatePrimitive(kind, args) {
                 },
             ));
         }
-        case PRIM_StaticModule? : {
+        case PRIM_staticModule? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, ModuleValue)));
         }
-        case PRIM_StaticModuleMember : {
+        case PRIM_staticModuleMember : {
             var module, member = ...moduleString(args);
             return ValueList(envEntryToValue(moduleValueLookup(module, member.value)));
         }
 
-        case PRIM_StaticModuleMember? : {
+        case PRIM_staticModuleMember? : {
             var module, member = ...moduleString(args);
             return ValueList(BoolValue(moduleValueLookup?(module, member.value)));
         }
 
-        case PRIM_StaticLambda? : {
+        case PRIM_staticLambda? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, StaticLambdaValue)));
         }
 
-        case PRIM_LambdaSymbol? : {
+        case PRIM_lambdaSymbol? : {
             var a = oneValue(args);
             return ValueList(BoolValue(variantIs?(a, RuntimeLambdaValue)));
         }
 
-        case PRIM_LambdaCapturesByReference? : {
+        case PRIM_lambdaCapturesByReference? : {
             var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
             return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_REFERENCE));
         }
 
-        case PRIM_LambdaCapturesByValue? : {
+        case PRIM_lambdaCapturesByValue? : {
             var captureKind = withOneLambda(args, l ref=> l.value.captureKind);
             return ValueList(BoolValue(captureKind == ast.LAMBDA_CAPTURE_BY_VALUE));
         }
 
-        case PRIM_LambdaStateless? : {
+        case PRIM_lambdaStateless? : {
             var stateless? = withOneLambda(args, l ref=> empty?(l.value.capturedOrder));
             return ValueList(BoolValue(stateless?));
         }
 
-        case PRIM_LambdaString : {
+        case PRIM_lambdaString : {
             var sourceString = withOneLambda(args, l ref=> ast.getSourceString(l.value));
             return ValueList(StringValue(move(sourceString)));
         }
 
-        case PRIM_LambdaLocation : {
+        case PRIM_lambdaLocation : {
             var path, line, column
                 = ...withOneLambda(args, l ref=> ...ast.getFileLocation(l.value));
 
@@ -2093,12 +2093,12 @@ evaluatePrimitive(kind, args) {
             );
         }
 
-        case PRIM_Returns? : {
+        case PRIM_returns? : {
             var l = oneNullaryLambda(args);
             return ValueList(BoolValue(just?(rtLambdaResults(l))));
         }
 
-        case PRIM_Type : {
+        case PRIM_type : {
             var l = oneNullaryLambda(args);
             return maybe(rtLambdaResults(l),
                 vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
@@ -2106,7 +2106,7 @@ evaluatePrimitive(kind, args) {
             );
         }
 
-        case PRIM_StaticDefined? : {
+        case PRIM_staticDefined? : {
             var callable = oneValue(args);
             var defined? = true;
             try {
@@ -2118,7 +2118,7 @@ evaluatePrimitive(kind, args) {
             return ValueList(BoolValue(defined?));
         }
 
-        case PRIM_Defined? : {
+        case PRIM_defined? : {
             var l = oneNullaryLambda(args);
             var defined? = true;
             try {
@@ -2130,16 +2130,16 @@ evaluatePrimitive(kind, args) {
             return ValueList(BoolValue(defined?));
         }
 
-        case PRIM_StaticError : {
+        case PRIM_staticError : {
             throw MatchError(StaticError(args));
         }
 
-        case PRIM_StaticObserve : {
+        case PRIM_staticObserve : {
             observe(#StaticObserve, args);
             return ValueList(args);
         }
 
-        case PRIM_StaticAssert : {
+        case PRIM_staticAssert : {
             if (empty?(args))
                 matchFailureError("StaticAssert requires at least one argument");
             if (args[0] == Value(BoolValue(false))) {
@@ -2151,18 +2151,18 @@ evaluatePrimitive(kind, args) {
             return ValueList(TupleValue());
         }
 
-        case PRIM_StaticName : {
+        case PRIM_staticName : {
             var a = oneValue(args);
             var s = String();
             printReprTo(s, a);
             return ValueList(StringValue(s));
         }
-        case PRIM_StaticQualifiedName : {
+        case PRIM_staticQualifiedName : {
             var a = oneValue(args);
             return ValueList(StringValue(qualifiedValueString(a)));
         }
 
-        case PRIM_CallDefinedForSymbol? : {
+        case PRIM_callDefinedForSymbol? : {
             if (size(args) < 1)
                 matchFailureError("CallDefinedForSymbol? requires at least one argument");
             var callable = args[0];
@@ -2172,7 +2172,7 @@ evaluatePrimitive(kind, args) {
             return ValueList(BoolValue(callDefined?));
         }
 
-        case PRIM_StaticCallDefined? : {
+        case PRIM_staticCallDefined? : {
             if (size(args) < 1)
                 matchFailureError("StaticCallDefined? requires at least one argument");
             var callable = args[0];
@@ -2188,31 +2188,31 @@ evaluatePrimitive(kind, args) {
             return ValueList(BoolValue(callDefined?));
         }
 
-        case PRIM_StaticCountValues : {
+        case PRIM_staticCountValues : {
             return ValueList(IntValue(StaticIntValue(Int64(size(args)))));
         }
 
-        case PRIM_PlatformCPUName :
+        case PRIM_platformCPUName :
             return ValueList(StringValue(printString(getProgram().targetInfo.cpu)));
 
-        case PRIM_PlatformCPUFamilyName :
+        case PRIM_platformCPUFamilyName :
             return ValueList(StringValue(printString(getProgram().targetInfo.cpuFamily)));
 
-        case PRIM_PlatformCPUPointerBits :
+        case PRIM_platformCPUPointerBits :
             return ValueList(IntValue(StaticIntValue(Int64(getProgram().targetInfo.cpuPointerBits))));
 
-        case PRIM_PlatformName :
+        case PRIM_platformName :
             return ValueList(StringValue(printString(getProgram().targetInfo.platform)));
 
-        case PRIM_PlatformFamilyName :
+        case PRIM_platformFamilyName :
             return ValueList(StringValue(printString(getProgram().targetInfo.platformFamily)));
 
-        case PRIM_PlatformCodegen :
+        case PRIM_platformCodegen :
             return ValueList(StringValue(String("c")));
-        case PRIM_PlatformCodegenDialect :
+        case PRIM_platformCodegenDialect :
             return ValueList(StringValue(printString(getProgram().targetInfo.cDialect)));
 
-        case PRIM_CommandlineVariable : {
+        case PRIM_commandlineVariable : {
             var name = oneString(args);
             var valuep = lookup(getProgram().commandlineVariables, name);
 
@@ -2224,7 +2224,7 @@ evaluatePrimitive(kind, args) {
             );
         }
 
-        case PRIM_LLMangle : {
+        case PRIM_llMangle : {
             var s = oneString(args);
             return ValueList(StringValue(mangleString(s)));
         }

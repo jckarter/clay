@@ -1,9 +1,9 @@
 import __primitives__.*;
 
-#Main() = PlatformCPUName(),
-                PlatformCPUFamilyName(),
-                PlatformCPUPointerBits(),
-                PlatformName(),
-                PlatformFamilyName(),
-                PlatformCodegen(),
-                PlatformCodegenDialect();
+#Main() = platformCPUName(),
+                platformCPUFamilyName(),
+                platformCPUPointerBits(),
+                platformName(),
+                platformFamilyName(),
+                platformCodegen(),
+                platformCodegenDialect();

@@ -5,7 +5,7 @@ import __primitives__.*;
 symbol Bar;
 symbol Bas;
 
-#Main() = StaticCallDefined?(foo, Bar),
-                StaticCallDefined?(foo, Bas),
-                StaticCallDefined?(foo),
-                StaticCallDefined?(foo, Bar, Bas);
+#Main() = staticCallDefined?(foo, Bar),
+                staticCallDefined?(foo, Bas),
+                staticCallDefined?(foo),
+                staticCallDefined?(foo, Bar, Bas);

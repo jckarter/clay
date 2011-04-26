@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-#Die() = StaticError(1, " is the loneliest number that you'll ever do");
+#Die() = staticError(1, " is the loneliest number that you'll ever do");
 
 #Main() = Die();

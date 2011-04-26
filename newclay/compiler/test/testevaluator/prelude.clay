@@ -2,20 +2,21 @@ import __primitives__.*;
 
 symbol Bar = "prelude";
 
-symbol Type?;
-symbol PODType?;
+#Type?('x) = false;
+overload #Type?(Static['x]) = true;
+#PODType?('x) = false;
 
-symbol LLType;
-symbol LLSigned;
-symbol LLUnsigned;
-symbol LLBoolType;
-symbol LLIntegerType;
-symbol LLFloatType;
-symbol LLPointerType;
-symbol LLCodePointerType;
-symbol LLArrayType;
-symbol LLTupleType;
-symbol LLUnionType;
+symbol llType;
+symbol llSigned;
+symbol llUnsigned;
+symbol llBoolType;
+symbol llIntegerType;
+symbol llFloatType;
+symbol llPointerType;
+symbol llCodePointerType;
+symbol llArrayType;
+symbol llTupleType;
+symbol llUnionType;
 
 symbol Bool;
 symbol Char;
@@ -31,7 +32,7 @@ symbol UInt32;
 symbol UInt64;
 symbol Float32;
 symbol Float64;
-symbol Static;
+symbol Static['x];
 symbol Pointer;
 symbol CodePointer;
 symbol ExternalCodePointer;
@@ -46,26 +47,26 @@ symbol StdcallABI;
 symbol ABI?;
 symbol ABISupportsVariadics?;
 
-#plus('x) = StaticPlus('x);
-#minus('x) = StaticMinus('x);
+#plus('x) = staticPlus('x);
+#minus('x) = staticMinus('x);
 #call('f, ..'x) = 'f(..'x);
 #index('a, ..'x) = 'a[..'x];
 #staticIndex('a, 'x) = 'a['x];
-#fieldRef('a, 'x) = StaticModuleMember('a, 'x);
-#unpack('a) = ..StaticTupleElements('a);
+#fieldRef('a, 'x) = staticModuleMember('a, 'x);
+#unpack('a) = ..staticTupleElements('a);
 symbol dereference;
-#multiply('a, 'b) = StaticMultiply('a, 'b);
+#multiply('a, 'b) = staticMultiply('a, 'b);
 symbol divide;
-#quotient('a, 'b) = StaticQuotient('a, 'b);
-#remainder('a, 'b) = StaticRemainder('a, 'b);
-#add('a, 'b) = StaticAdd('a, 'b);
-#subtract('a, 'b) = StaticSubtract('a, 'b);
-#lesser?('a, 'b) = StaticLesser?('a, 'b);
-#lesserEquals?('a, 'b) = StaticLesserEquals?('a, 'b);
-#greater?('a, 'b) = StaticGreater?('a, 'b);
-#greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
-#equals?('a, 'b) = StaticEquals?('a, 'b);
-#notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+#quotient('a, 'b) = staticQuotient('a, 'b);
+#remainder('a, 'b) = staticRemainder('a, 'b);
+#add('a, 'b) = staticAdd('a, 'b);
+#subtract('a, 'b) = staticSubtract('a, 'b);
+#lesser?('a, 'b) = staticLesser?('a, 'b);
+#lesserEquals?('a, 'b) = staticLesserEquals?('a, 'b);
+#greater?('a, 'b) = staticGreater?('a, 'b);
+#greaterEquals?('a, 'b) = staticGreaterEquals?('a, 'b);
+#equals?('a, 'b) = staticEquals?('a, 'b);
+#notEquals?('a, 'b) = staticNotEquals?('a, 'b);
 
 symbol case?;
 
@@ -80,8 +81,8 @@ symbol callAssign;
 symbol updateAssign;
 symbol updateCallAssign;
 
-symbol initializeFrom;
-symbol destroy;
+initializeFrom(..x) {}
+destroy(..x) {}
 
 symbol captureLambda;
 symbol lambdaCaptures;
