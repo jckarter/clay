@@ -17,23 +17,23 @@ symbol clear;
 
 #PushableType?('T) =
     SequenceType?('T)
-    and CallDefined?(push, Ref['T], SequenceElementType('T));
+    and callDefined?(push, Ref['T], sequenceElementType('T));
 #FrontPushableType?('T) =
     SequenceType?('T)
-    and CallDefined?(pushFront, Ref['T], SequenceElementType('T));
+    and callDefined?(pushFront, Ref['T], sequenceElementType('T));
 
 #ReservableType?('T) =
     SequenceType?('T)
-    and CallDefined?(reserve, Ref['T], UInt);
+    and callDefined?(reserve, Ref['T], UInt);
 #ResizableType?('T) =
     SequenceType?('T)
-    and CallDefined?(resize, Ref['T], UInt);
+    and callDefined?(resize, Ref['T], UInt);
 #InsertableType?('T) =
     SequenceType?('T)
-    and CallDefined?(insert, Ref['T], UInt, SequenceElementType('T));
+    and callDefined?(insert, Ref['T], UInt, sequenceElementType('T));
 #RemovableType?('T) =
     SequenceType?('T)
-    and CallDefined?(remove, Ref['T], UInt);
+    and callDefined?(remove, Ref['T], UInt);
 
 
 //
@@ -43,7 +43,7 @@ symbol clear;
 overload push(ref c:'C, forward ..elements:'TT) inline
     | PushableType?('C)
       and countValues(..'TT) != 1
-      and allValues?([#'U -> CallDefined?(push, Ref['C], 'U)], ..'TT)
+      and allValues?([#'U -> callDefined?(push, Ref['C], 'U)], ..'TT)
 {
     static for (forward e in ..elements)
         push(c, e);

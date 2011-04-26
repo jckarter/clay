@@ -1,7 +1,7 @@
 import containers.(push, reserve);
 import ctypes.(CString, CChar);
-import meta.statics.(StaticString?, StaticStringSize);
-import strings.encodings.(stringBytes, StringTypeEncoding, EncodedStringType?);
+import meta.statics.(staticString?, staticStringSize);
+import strings.encodings.(stringBytes, stringTypeEncoding, EncodedStringType?);
 import strings.encodings.utf8.(UTF8);
 import vectors.(Vector);
 import values.(allValues?);
@@ -13,7 +13,7 @@ import unsafe.valuesemantics.(destroy);
 // StringType?
 //
 
-#StringType?('S) = SequenceType?('S) and CharType?(SequenceElementType('S));
+#StringType?('S) = SequenceType?('S) and CharType?(sequenceElementType('S));
 
 
 //
@@ -29,8 +29,8 @@ alias RandomAccessString = Vector[Char];
 
 symbol String = RecordType(size:UInt, contents:UTF8[Vector[UInt8]]);
 
-overload String(#'s) | StaticString?('s)
-    = String(*#StaticStringSize('s), UTF8(Vector(stringBytes('s))));
+overload String(#'s) | staticString?('s)
+    = String(*#staticStringSize('s), UTF8(Vector(stringBytes('s))));
 
 overload String(forward x:'S) --> returned:String
     | StringType?('S) and 'S != String
@@ -51,7 +51,7 @@ overload String(x:'S)
 overload size(s:String) = s.size;
 overload iterator(s:String) = iterator(s.contents);
 
-overload #StringTypeEncoding(String) = UTF8;
+overload #stringTypeEncoding(String) = UTF8;
 overload stringBytes(s:String) = stringBytes(s.contents);
 
 overload push(ref s:String, c:Char) {

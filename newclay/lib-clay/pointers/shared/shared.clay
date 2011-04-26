@@ -9,7 +9,7 @@ symbol SharedPointer['T] = CompositeType(ptr:MPointer[RefCounted['T]]);
 alias MSharedPointer['T] = Maybe[SharedPointer['T]];
 
 overload SharedPointer['T](f, forward ..args) inline
-    | Type([f(..args)]) == 'T
+    | type([f(..args)]) == 'T
 {
     var ptr = allocateRawValue(RefCounted['T]);
     ptr^.refCount <-- 1u;
@@ -23,8 +23,8 @@ overload SharedPointer['T](f, forward ..args) inline
 }
 
 overload SharedPointer(f, forward ..args) inline
-    | Defined?([var x = f(..args);])
-    = SharedPointer[#Type([f(..args)])](f, ..args);
+    | defined?([var x = f(..args);])
+    = SharedPointer[#type([f(..args)])](f, ..args);
 
 overload destroy(ref p:SharedPointer['T]) inline {
     maybe(p.ptr, [ptr -> {

@@ -9,23 +9,23 @@ symbol captureLambda;
 symbol lambdaCaptures;
 
 overload captureLambda(#'L, forward ..captures)
-    | LambdaSymbol?('L) and LambdaCapturesByReference?('L)
+    | lambdaSymbol?('L) and lambdaCapturesByReference?('L)
     = Lambda(#'L, captureValues(..captures));
 overload lambdaCaptures(l:Lambda['L, 'C])
-    | LambdaSymbol?('L) and LambdaCapturesByReference?('L)
+    | lambdaSymbol?('L) and lambdaCapturesByReference?('L)
     = forward ..capturedRefs(*l);
 
 overload captureLambda(#'L, forward ..captures)
-    | LambdaSymbol?('L) and LambdaCapturesByValue?('L)
+    | lambdaSymbol?('L) and lambdaCapturesByValue?('L)
     = Lambda(#'L, (..captures));
 overload lambdaCaptures(forward l:Lambda['L, 'C])
-    | LambdaSymbol?('L) and LambdaCapturesByValue?('L)
+    | lambdaSymbol?('L) and lambdaCapturesByValue?('L)
     = forward ..unpack(*l);
 
 overload call(forward l:Lambda['L, 'C], forward ..args)
-    | LambdaSymbol?('L) and Defined?(['L(..lambdaCaptures(l), ..args);])
+    | lambdaSymbol?('L) and defined?(['L(..lambdaCaptures(l), ..args);])
     = forward ..'L(..lambdaCaptures(l), ..args);
 
 #LambdaType?('T) = false;
-overload #LambdaType?(Static['L]) | LambdaSymbol?('L) and LambdaStateless?('L) = true;
-overload #LambdaType?(Lambda['L, 'C]) | LambdaSymbol?('L) and Type?('C) = true;
+overload #LambdaType?(Static['L]) | lambdaSymbol?('L) and lambdaStateless?('L) = true;
+overload #LambdaType?(Lambda['L, 'C]) | lambdaSymbol?('L) and Type?('C) = true;

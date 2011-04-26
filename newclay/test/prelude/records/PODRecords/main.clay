@@ -7,13 +7,13 @@ symbol FunnyNamedField = RecordType(foo_bar?:Bool);
 main() {
     ////"x"
     ////"y"
-    show(..#FieldNames(Point));
+    show(..#fieldNames(Point));
     ////Float64
     ////Float32
-    show(..#FieldTypes(Point));
+    show(..#fieldTypes(Point));
 
-    show(#FieldType(Point, "x")); ////Float64
-    show(#FieldType(Point, "y")); ////Float32
+    show(#fieldType(Point, "x")); ////Float64
+    show(#fieldType(Point, "y")); ////Float32
 
     var origin = Point();
     var xaxis = Point(1.0, 0.0f);

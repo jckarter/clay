@@ -1,7 +1,7 @@
 import unsafe.coordinates.(
     CoordinateRange, ContiguousCoordinate,
     CoordinateSequenceType?, CoordinateType?, ContiguousSequenceType?,
-    CoordinateTargetType, SequenceCoordinateType
+    coordinateTargetType, sequenceCoordinateType
 );
 import show.*;
 
@@ -26,18 +26,18 @@ main() {
     show(#CoordinateType?(ContiguousCoordinate[Int])); ////true
     show(#CoordinateType?(Int)); ////false
 
-    show(#IteratorTargetType(CoordinateRange[ContiguousCoordinate[Int8]])); ////Int8
-    show(#CoordinateTargetType(ContiguousCoordinate[Int16])); ////Int16
+    show(#iteratorTargetType(CoordinateRange[ContiguousCoordinate[Int8]])); ////Int8
+    show(#coordinateTargetType(ContiguousCoordinate[Int16])); ////Int16
     ////CoordinateRange[ContiguousCoordinate[Int]]
-    show(#SequenceIteratorType(Array[Int, 4]));
+    show(#sequenceIteratorType(Array[Int, 4]));
     ////CoordinateRange[ContiguousCoordinate[Int]]
-    show(#SequenceIteratorType(CoordinateRange[ContiguousCoordinate[Int]]));
+    show(#sequenceIteratorType(CoordinateRange[ContiguousCoordinate[Int]]));
     ////ContiguousCoordinate[Int]
-    show(#SequenceCoordinateType(Array[Int, 4]));
+    show(#sequenceCoordinateType(Array[Int, 4]));
     ////ContiguousCoordinate[Int]
-    show(#SequenceCoordinateType(CoordinateRange[ContiguousCoordinate[Int]]));
+    show(#sequenceCoordinateType(CoordinateRange[ContiguousCoordinate[Int]]));
     ////Int
-    show(#SequenceElementType(Array[Int, 4]));
+    show(#sequenceElementType(Array[Int, 4]));
 
     show(#ContiguousSequenceType?(Array[Int, 4])); ////true
 

@@ -16,18 +16,18 @@ overload exitValue(n) = Int(n);
 
 symbol callMain;
 overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
-    | CallDefined?(main)
+    | callDefined?(main)
 {
     return exitValue(..main());
 }
 overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
-    | CallDefined?(main, CoordinateRange[ContiguousCoordinate[CString]])
+    | callDefined?(main, CoordinateRange[ContiguousCoordinate[CString]])
 {
     var beginArgv = pointerCast(ContiguousCoordinate[CString], cargv);
     return exitValue(..main(CoordinateRange(beginArgv, beginArgv + cargc)));
 }
 overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
-    | CallDefined?(main, Int, Pointer[Pointer[CChar]])
+    | callDefined?(main, Int, Pointer[Pointer[CChar]])
 {
     return exitValue(..main(cargc, cargv));
 }

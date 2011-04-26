@@ -1,11 +1,11 @@
 public import __primitives__.(
-    PlatformCPUName,
-    PlatformCPUFamilyName,
-    PlatformCPUPointerBits,
-    PlatformName,
-    PlatformFamilyName,
-    PlatformCodegen,
-    PlatformCodegenDialect,
+    platformCPUName,
+    platformCPUFamilyName,
+    platformCPUPointerBits,
+    platformName,
+    platformFamilyName,
+    platformCodegen,
+    platformCodegenDialect,
 );
 
-#PlatformCPUPointerSize() = PlatformCPUPointerBits() div 8;
+#platformCPUPointerSize() = platformCPUPointerBits() div 8;

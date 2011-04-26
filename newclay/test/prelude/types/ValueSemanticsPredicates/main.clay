@@ -1,10 +1,10 @@
-import meta.lltypes.(LLType, LLTupleType);
+import meta.lltypes.(llType, llTupleType);
 import show.*;
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(PODType?);
 
 symbol NonPODType;
-overload #LLType(NonPODType) = LLTupleType[];
+overload #llType(NonPODType) = llTupleType[];
 
 main() {
     show(#PODType?(Bool)); ////true

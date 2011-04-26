@@ -140,7 +140,7 @@ private lowBitMask(x) inline = bitand(x, -x);
 private lowBit(mask_:'I) {
     var b = 0;
     var mask = mask_;
-    for (x in Range(TypeSize('I))) {
+    for (x in Range(typeSize('I))) {
         switch (mask)
         case (1u)
             return b+0;

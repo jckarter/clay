@@ -13,44 +13,44 @@ import unsafe.valuesemantics.*;
 // RecordType definer
 //
 
-#RecordType(..'fields) | ValidFields?(..'fields) = (RecordType, ..'fields);
+#RecordType(..'fields) | validFields?(..'fields) = (RecordType, ..'fields);
 
-#RecordType?('T) = SymbolWithTag?('T, RecordType);
+#RecordType?('T) = symbolWithTag?('T, RecordType);
 
-#ValidField?('x) = false;
-overload #ValidField?(('name, 'T)) | StaticString?('name) and Type?('T) = true;
+#validField?('x) = false;
+overload #validField?(('name, 'T)) | staticString?('name) and Type?('T) = true;
 
-#ValidFields?(..'x) = allValues?(ValidField?, ..'x);
+#validFields?(..'x) = allValues?(validField?, ..'x);
 
 
 //
 // record type metadata
 //
 
-symbol Fields;
-overload #Fields('T)
+symbol fields;
+overload #fields('T)
     | CompositeType?('T) and not RecordType?('T)
-    = ..SymbolTagBody('T, CompositeType);
-overload #Fields('T)
+    = ..symbolTagBody('T, CompositeType);
+overload #fields('T)
     | RecordType?('T)
-    = ..SymbolTagBody('T, RecordType);
+    = ..symbolTagBody('T, RecordType);
 
-#FieldNames('T) | StaticCallDefined?(Fields, 'T)
-    = ..mapValues([x -> x.0], ..Fields('T));
+#fieldNames('T) | staticCallDefined?(fields, 'T)
+    = ..mapValues([x -> x.0], ..fields('T));
 
-#FieldTypes('T) | StaticCallDefined?(Fields, 'T)
-    = ..mapValues([x -> x.1], ..Fields('T));
+#fieldTypes('T) | staticCallDefined?(fields, 'T)
+    = ..mapValues([x -> x.1], ..fields('T));
 
-overload #LLType('T) | CompositeType?('T) = LLTupleType[..Fields('T)];
+overload #llType('T) | CompositeType?('T) = llTupleType[..fields('T)];
 
-#Field?('T, 'field) = inValues?('field, ..FieldNames('T));
+#field?('T, 'field) = inValues?('field, ..fieldNames('T));
 
-#FieldType('T, 'field) = FieldType2('field, ..Fields('T));
-private symbol FieldType2;
-overload #FieldType2('field, 'x, ..'fields) = FieldType2('field, ..'fields);
-overload #FieldType2('field, ('field, 'T), ..'fields) = 'T;
+#fieldType('T, 'field) = fieldType2('field, ..fields('T));
+private symbol fieldType2;
+overload #fieldType2('field, 'x, ..'fields) = fieldType2('field, ..'fields);
+overload #fieldType2('field, ('field, 'T), ..'fields) = 'T;
 
-overload #InheritsPredicatesFromTypes('T) | RecordType?('T) = true, ..FieldTypes('T);
+overload #inheritsPredicatesFromTypes('T) | RecordType?('T) = true, ..fieldTypes('T);
 
 
 //
@@ -65,17 +65,17 @@ overload unpack(forward x:'T) inline | RecordType?('T) = forward ..unpackRecord(
 //
 
 overload index(forward x:'T, #'field) inline
-    | CompositeType?('T) and Field?('T, 'field)
-    = forward cFieldRef(#FieldType('T, 'field), x, #LLMangle('field));
+    | CompositeType?('T) and field?('T, 'field)
+    = forward cFieldRef(#fieldType('T, 'field), x, #llMangle('field));
 
 overload index(rvalue x:'T, #'field) inline
-    --> rvalue returned:FieldType('T, 'field)
-    | RecordType?('T) and Field?('T, 'field)
+    --> rvalue returned:fieldType('T, 'field)
+    | RecordType?('T) and field?('T, 'field)
 {
     ref rx = rvalueToRef(x);
-    returned = &cFieldRef(#FieldType('T, 'field), rx, #LLMangle('field));
+    returned = &cFieldRef(#fieldType('T, 'field), rx, #llMangle('field));
 
-    static for (#'f in ..#exceptValue('field, ..FieldNames('T)))
+    static for (#'f in ..#exceptValue('field, ..fieldNames('T)))
         destroy(rx[#'f]);
 }
 
@@ -85,7 +85,7 @@ overload index(rvalue x:'T, #'field) inline
 //
 
 overload 'T(forward ..args) inline
-    | RecordType?('T) and Defined?([initializeRecord('T, ..args)])
+    | RecordType?('T) and defined?([initializeRecord('T, ..args)])
     = initializeRecord('T, ..args);
 
 
@@ -108,19 +108,19 @@ overload reset(ref x:'T) inline
 overload moveRvalue(ref x:'T) inline
     | RecordType?('T)
       and not BitwiseMovedType?('T)
-      and allValues?(MovableType?, ..FieldTypes('T))
+      and allValues?(MovableType?, ..fieldTypes('T))
     = moveRvalueRecord(x);
 
 overload copy(x:'T) inline
     | RecordType?('T)
       and not BitwiseCopiedType?('T)
-      and allValues?(CopyableType?, ..FieldTypes('T))
+      and allValues?(CopyableType?, ..fieldTypes('T))
     = copyRecord(x);
 
 overload copyAssign(ref to:'T, from:'T) inline
     | RecordType?('T)
       and not BitwiseAssignedType?('T)
-      and allValues?(AssignableType?, ..FieldTypes('T))
+      and allValues?(AssignableType?, ..fieldTypes('T))
 {
     copyAssignRecord(to, from);
 }

@@ -1,4 +1,4 @@
-StaticName
+staticName
 
 --integers
 1
@@ -26,11 +26,11 @@ show
 foo
 foo[show]
 --primitives
-StaticName
+staticName
 --tuples
 (1, show, meta.statics)
 
-StaticQualifiedName
+staticQualifiedName
 
 --integers
 1
@@ -58,7 +58,7 @@ show.show
 __main__.foo
 __main__.foo[show.show]
 --primitives
-__primitives__.StaticName
+__primitives__.staticName
 --tuples
 (1, show.show, meta.statics)
 

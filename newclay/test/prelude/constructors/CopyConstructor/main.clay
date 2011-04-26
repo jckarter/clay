@@ -11,11 +11,11 @@ overload #DestroyDoesNothingType?(Uncopyable) = true;
 main() {
     var copyable = initializeRecord(Copyable, 5);
 
-    show(#Defined?([Copyable(initializeRecord(Copyable, 5))])); ////true
-    show(#Defined?([Copyable(copyable)])); ////true
+    show(#defined?([Copyable(initializeRecord(Copyable, 5))])); ////true
+    show(#defined?([Copyable(copyable)])); ////true
 
     var uncopyable = initializeRecord(Uncopyable, 5);
 
-    show(#Defined?([Uncopyable(initializeRecord(Uncopyable, 5))])); ////true
-    show(#Defined?([Uncopyable(uncopyable)])); ////false
+    show(#defined?([Uncopyable(initializeRecord(Uncopyable, 5))])); ////true
+    show(#defined?([Uncopyable(uncopyable)])); ////false
 }

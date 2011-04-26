@@ -2,18 +2,18 @@ import show.*;
 
 main() {
     // types match
-    show(#Type([Bool()])); ////Bool
-    show(#Type([Int()])); ////Int
-    show(#Type([UInt()])); ////UInt
-    show(#Type([Int8()])); ////Int8
-    show(#Type([Int16()])); ////Int16
-    show(#Type([Int32()])); ////Int32
-    show(#Type([Int64()])); ////Int64
-    show(#Type([UInt8()])); ////UInt8
-    show(#Type([UInt16()])); ////UInt16
-    show(#Type([UInt32()])); ////UInt32
-    show(#Type([UInt64()])); ////UInt64
-    show(#Type([Char()])); ////Char
+    show(#type([Bool()])); ////Bool
+    show(#type([Int()])); ////Int
+    show(#type([UInt()])); ////UInt
+    show(#type([Int8()])); ////Int8
+    show(#type([Int16()])); ////Int16
+    show(#type([Int32()])); ////Int32
+    show(#type([Int64()])); ////Int64
+    show(#type([UInt8()])); ////UInt8
+    show(#type([UInt16()])); ////UInt16
+    show(#type([UInt32()])); ////UInt32
+    show(#type([UInt64()])); ////UInt64
+    show(#type([Char()])); ////Char
 
     // default values
     show(Bool()); ////false

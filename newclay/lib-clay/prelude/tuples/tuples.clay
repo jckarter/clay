@@ -13,10 +13,10 @@ import unsafe.valuesemantics.*;
 //
 
 symbol Tuple[..'T];
-overload #InheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
-overload #LLType(Tuple[..'T])
+overload #inheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
+overload #llType(Tuple[..'T])
     | allValues?(Type?, ..'T)
-    = LLTupleType[..'T];
+    = llTupleType[..'T];
 
 
 //
@@ -24,15 +24,15 @@ overload #LLType(Tuple[..'T])
 //
 
 overload index(forward t:Tuple[..'T], #'n) inline
-    | ValidStaticIndex?('n, ..'T)
-    = forward cFieldRef(#nthValue('n, ..'T), t, #LLTupleFieldName('n));
+    | validStaticIndex?('n, ..'T)
+    = forward cFieldRef(#nthValue('n, ..'T), t, #llTupleFieldName('n));
 
 overload index(rvalue t:Tuple[..'T], #'n) inline
     --> rvalue returned:nthValue('n, ..'T)
-    | ValidStaticIndex?('n, ..'T) and not DestroyDoesNothingType?(Tuple[..'T])
+    | validStaticIndex?('n, ..'T) and not DestroyDoesNothingType?(Tuple[..'T])
 {
     ref rt = rvalueToRef(t);
-    returned = &cFieldRef(#nthValue('n, ..'T), rt, #LLTupleFieldName('n));
+    returned = &cFieldRef(#nthValue('n, ..'T), rt, #llTupleFieldName('n));
 
     static for (#'m in ..#exceptValue('n, ..intValues('n)))
         destroy(rt[#'m]);
@@ -63,7 +63,7 @@ overload Tuple[..'T]() inline --> returned:Tuple[..'T]
 overload Tuple[..'T]() inline --> returned:Tuple[..'T]
     | allValues?(BitwiseZeroInitializedType?, ..'T)
 {
-    memset(OpaquePointer(&returned), 0_i32, TypeSize(Tuple[..'T]));
+    memset(OpaquePointer(&returned), 0_i32, typeSize(Tuple[..'T]));
 }
 
 
@@ -106,11 +106,11 @@ overload copy(x:Tuple[..'T]) inline
 
 #CompatibleTupleTypes?('fn, (..'T), (..'U))
     = countValues(..'T) == countValues(..'U)
-      and CompatibleTupleTypes2?('fn, (..'T), (..'U));
+      and compatibleTupleTypes2?('fn, (..'T), (..'U));
 
-private #CompatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
-    = CallDefined?('fn, 'T, 'U) and CompatibleTupleTypes2?('fn, (..'TT), (..'UU));
-overload #CompatibleTupleTypes2?('fn, (), ()) = true;
+private #compatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
+    = callDefined?('fn, 'T, 'U) and compatibleTupleTypes2?('fn, (..'TT), (..'UU));
+overload #compatibleTupleTypes2?('fn, (), ()) = true;
 
 overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U]) inline
     | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))

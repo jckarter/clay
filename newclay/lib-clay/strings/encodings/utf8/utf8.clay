@@ -1,11 +1,11 @@
 import containers.(push, pop, pushFront, popFront, PushableType?, FrontPushableType?);
-import strings.encodings.(StringTypeEncoding, stringBytes, EncodedStringType?);
+import strings.encodings.(stringTypeEncoding, stringBytes, EncodedStringType?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
 import strings.(StringType?);
 
 symbol UTF8Iterator['I] = NewType('I);
 overload UTF8Iterator(forward x:'I) inline
-    | IteratorType?('I) and IteratorTargetType('I) == UInt8
+    | IteratorType?('I) and iteratorTargetType('I) == UInt8
     = UTF8Iterator['I](x);
 
 private validSequenceByte?(d) = bitand(d, 0xC0u) == 0x80u;
@@ -94,7 +94,7 @@ overload next(ref i:UTF8Iterator['I]) {
 
 symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
-    | SequenceType?('S) and SequenceElementType('S) == UInt8
+    | SequenceType?('S) and sequenceElementType('S) == UInt8
     = UTF8['S](s);
 
 overload iterator(s:UTF8['S]) inline = UTF8Iterator(iterator(*s));
@@ -124,6 +124,6 @@ overload push(ref s:UTF8['S], s2:'S2)
 }
 
 overload stringBytes(forward s:UTF8['S]) = iterator(*s);
-overload #StringTypeEncoding(UTF8['S])
-    | SequenceType?('S) and SequenceElementType('S) == UInt8
+overload #stringTypeEncoding(UTF8['S])
+    | SequenceType?('S) and sequenceElementType('S) == UInt8
     = UTF8;

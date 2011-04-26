@@ -6,37 +6,37 @@ import meta.lltypes.*;
 import unsafe.coordinates.(ContiguousCoordinate);
 
 public import __primitives__.(
-    Returns?,
-    Type,
-    StaticDefined?,
-    Defined?,
+    returns?,
+    type,
+    staticDefined?,
+    defined?,
 );
 
 
 //
-// DefinedWithType?
+// definedWithType?
 
-#DefinedWithType?('f, ..'TT) = Defined?('f) and (..Type('f)) == (..'TT);
+#definedWithType?('f, ..'TT) = defined?('f) and (..type('f)) == (..'TT);
 
 
 //
-// TypeSize, TypeAlign
+// typeSize, typeAlign
 //
 
-symbol TypeSize  = RuntimeStaticProcedure();
-symbol TypeAlign = RuntimeStaticProcedure();
+symbol typeSize  = RuntimeStaticProcedure();
+symbol typeAlign = RuntimeStaticProcedure();
 
-overload #TypeSize ('T) | Type?('T) = LLTypeSize (LLType('T));
-overload #TypeAlign('T) | Type?('T) = LLTypeAlign(LLType('T));
+overload #typeSize ('T) | Type?('T) = llTypeSize (llType('T));
+overload #typeAlign('T) | Type?('T) = llTypeAlign(llType('T));
 
 
 //
 // basic type predicate
 //
 
-#Type?('x) = StaticCallDefined?(LLType, 'x);
-    /* and allValues?(Type?, ..RecursiveTypes('x));*/
-#RecursiveTypes('T) = ;
+#Type?('x) = staticCallDefined?(llType, 'x);
+    /* and allValues?(Type?, ..recursiveTypes('x));*/
+#recursiveTypes('T) = ;
 
 
 //
@@ -57,10 +57,10 @@ overload #ReferenceType?(Ref['T])    = Type?('T);
 overload #ReferenceType?(Rvalue['T]) = Type?('T);
 overload #ReferenceType?(Const['T])  = Type?('T);
 
-#ReferenceBaseType('T) | Type?('T) = 'T;
-overload #ReferenceBaseType(Ref['T])    | Type?('T) = 'T;
-overload #ReferenceBaseType(Rvalue['T]) | Type?('T) = 'T;
-overload #ReferenceBaseType(Const['T])  | Type?('T) = 'T;
+#referenceBaseType('T) | Type?('T) = 'T;
+overload #referenceBaseType(Ref['T])    | Type?('T) = 'T;
+overload #referenceBaseType(Rvalue['T]) | Type?('T) = 'T;
+overload #referenceBaseType(Const['T])  | Type?('T) = 'T;
 
 #Ref?('X) = false;
 overload #Ref?(Ref['T]) | Type?('T) = true;
@@ -156,7 +156,7 @@ overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
 // ValidStaticIndex? for unions or tuples
 //
 
-#ValidStaticIndex?('n, ..'T) = StaticInt?('n) and 'n >= 0 and 'n < countValues(..'T);
+#validStaticIndex?('n, ..'T) = staticInt?('n) and 'n >= 0 and 'n < countValues(..'T);
 
 
 
@@ -164,14 +164,14 @@ overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
 // sequence-related predicates and properties
 //
 
-#SequenceType?('S) = CallDefined?(iterator, 'S);
-#IteratorType?('I) = CallDefined?(hasNext?, 'I) and CallDefined?(next, Ref['I]);
+#SequenceType?('S) = callDefined?(iterator, 'S);
+#IteratorType?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
 
-#IteratorTargetType('I) | IteratorType?('I) = Type([next(arg(Ref['I]))]);
-#SequenceIteratorType('S) | SequenceType?('S) = Type([iterator(arg('S))]);
-#SequenceElementType('S) | SequenceType?('S)
-    = IteratorTargetType(SequenceIteratorType('S));
+#iteratorTargetType('I) | IteratorType?('I) = type([next(arg(Ref['I]))]);
+#sequenceIteratorType('S) | SequenceType?('S) = type([iterator(arg('S))]);
+#sequenceElementType('S) | SequenceType?('S)
+    = iteratorTargetType(sequenceIteratorType('S));
 
-#SizedSequenceType?('S) = SequenceType?('S) and CallDefined?(size, 'S);
+#SizedSequenceType?('S) = SequenceType?('S) and callDefined?(size, 'S);
 
-#ReversibleSequenceType?('S) = CallDefined?(reverseIterator, 'S);
+#ReversibleSequenceType?('S) = callDefined?(reverseIterator, 'S);

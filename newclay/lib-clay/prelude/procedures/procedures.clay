@@ -1,15 +1,17 @@
-import __primitives__.(CallDefinedForSymbol?, makeCodePointer, callCodePointer);
-import meta.symbols.(SymbolWithTag?, Symbol?, private SymbolBodyWithTag?);
+import __primitives__.(callDefinedForSymbol?, makeCodePointer, callCodePointer);
+import meta.symbols.(symbolWithTag?, symbol?, private symbolBodyWithTag?);
 import values.(mapValues);
 
-public import __primitives__.(StaticCallDefined?);
+public import __primitives__.(staticCallDefined?);
 
-symbol CallDefined?;
-overload #CallDefined?('fn, ..'T) = CallDefinedForSymbol?('fn, ..'T);
-overload CallDefined?(/*alias*/ fn:'F, ..#'T) = *#CallDefinedForSymbol?(call, 'F, ..'T);
-overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
+symbol callDefined?;
+overload #callDefined?('fn, ..'T) = callDefinedForSymbol?('fn, ..'T);
+overload callDefined?(fn:'F, ..#'T) = *#callDefinedForSymbol?(call, 'F, ..'T);
+overload callDefined?(#'fn, ..#'T) = *#callDefinedForSymbol?('fn, ..'T);
 
-#CallDefinedForType?('F, ..'T) = CallDefinedForSymbol?(call, 'F, ..'T);
+#callDefinedForType?('F, ..'T) = callDefinedForSymbol?(call, 'F, ..'T);
+overload #callDefinedForType?(Static['f], ..'T)
+    = callDefinedForSymbol?('f, ..'T);
 
 
 //
@@ -22,8 +24,8 @@ overload CallDefined?(#'fn, ..#'T) = *#CallDefinedForSymbol?('fn, ..'T);
 
 overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W) inline
     | VariadicBinaryOperatorProcedure?('fn)
-      and CallDefined?('fn, 'X, 'Y)
-      and CallDefined?('fn, Type(['fn(x, y)]), 'Z, ..'W)
+      and callDefined?('fn, 'X, 'Y)
+      and callDefined?('fn, type(['fn(x, y)]), 'Z, ..'W)
     = forward 'fn('fn(x, y), z, ..w);
 
 overload 'fn(forward x) inline
@@ -32,7 +34,7 @@ overload 'fn(forward x) inline
 
 overload #'fn('x, 'y, 'z, ..'w)
     | VariadicBinaryOperatorProcedure?('fn)
-      and StaticCallDefined?('fn, 'x, 'y)
+      and staticCallDefined?('fn, 'x, 'y)
     = 'fn('fn('x, 'y), 'z, ..'w);
 
 overload #'fn('x)
@@ -40,16 +42,16 @@ overload #'fn('x)
     = 'x;
 
 #VariadicBinaryOperatorProcedure?('fn)
-    = SymbolWithTag?('fn, VariadicBinaryOperatorProcedure);
+    = symbolWithTag?('fn, VariadicBinaryOperatorProcedure);
 
 
 // RuntimeStaticProcedure -- make a static function callable as a runtime procedure
 
 #RuntimeStaticProcedure() = (RuntimeStaticProcedure,);
-#RuntimeStaticProcedure?('fn) = SymbolWithTag?('fn, RuntimeStaticProcedure);
+#RuntimeStaticProcedure?('fn) = symbolWithTag?('fn, RuntimeStaticProcedure);
 overload 'fn(..#'xs) inline
     | RuntimeStaticProcedure?('fn)
-      and StaticCallDefined?('fn, ..'xs)
+      and staticCallDefined?('fn, ..'xs)
     = ..unpack(..#'fn(..'xs));
 
 
@@ -58,10 +60,10 @@ overload 'fn(..#'xs) inline
 //
 
 overload CodePointer[(..'I), (..'O)](#'f) inline
-    | DefinedWithType?([forward ..'f(..arg(..'I))], ..'O)
+    | definedWithType?([forward ..'f(..arg(..'I))], ..'O)
     = makeCodePointer(#'f, ..'I);
 
 overload call(c:CodePointer[(..'I), (..'O)], forward ..args) inline
-    | Defined?([callCodePointer(c, ..args);])
+    | defined?([callCodePointer(c, ..args);])
     = forward ..callCodePointer(c, ..args);
 

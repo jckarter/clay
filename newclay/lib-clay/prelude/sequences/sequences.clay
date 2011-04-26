@@ -1,4 +1,4 @@
-import meta.statics.(StaticString?, StaticStringSize);
+import meta.statics.(staticString?, staticStringSize);
 import values.*;
 
 
@@ -82,5 +82,5 @@ overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);
 // static aggregate sizes
 //
 
-overload #size('s) | StaticString?('s) = StaticStringSize('s);
+overload #size('s) | staticString?('s) = staticStringSize('s);
 overload #size((..'t)) = countValues(..'t);

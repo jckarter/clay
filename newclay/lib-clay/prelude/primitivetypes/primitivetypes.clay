@@ -8,7 +8,7 @@ import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.*;
 import values.*;
 
-import __primitives__.(StaticInt, StaticUInt, StaticChar);
+import __primitives__.(staticInt, staticUInt, staticChar);
 
 
 //
@@ -17,31 +17,31 @@ import __primitives__.(StaticInt, StaticUInt, StaticChar);
 
 private #PrimitiveType('LLT) = (PrimitiveType, 'LLT);
 
-#PrimitiveType?('T) = SymbolWithTag?('T, PrimitiveType);
+#PrimitiveType?('T) = symbolWithTag?('T, PrimitiveType);
 
 overload #PODType?('T) | PrimitiveType?('T) = true;
 
-overload #LLType('T) | PrimitiveType?('T) = SymbolBody('T).1;
+overload #llType('T) | PrimitiveType?('T) = symbolBody('T).1;
 
-symbol Bool = PrimitiveType(LLBoolType);
+symbol Bool = PrimitiveType(llBoolType);
 
-symbol Int   = PrimitiveType(LLIntegerType[LLSigned,   PlatformCPUPointerBits()]);
-symbol UInt  = PrimitiveType(LLIntegerType[LLUnsigned, PlatformCPUPointerBits()]);
+symbol Int   = PrimitiveType(llIntegerType[llSigned,   platformCPUPointerBits()]);
+symbol UInt  = PrimitiveType(llIntegerType[llUnsigned, platformCPUPointerBits()]);
 
-symbol Int8  = PrimitiveType(LLIntegerType[LLSigned,  8]);
-symbol Int16 = PrimitiveType(LLIntegerType[LLSigned, 16]);
-symbol Int32 = PrimitiveType(LLIntegerType[LLSigned, 32]);
-symbol Int64 = PrimitiveType(LLIntegerType[LLSigned, 64]);
+symbol Int8  = PrimitiveType(llIntegerType[llSigned,  8]);
+symbol Int16 = PrimitiveType(llIntegerType[llSigned, 16]);
+symbol Int32 = PrimitiveType(llIntegerType[llSigned, 32]);
+symbol Int64 = PrimitiveType(llIntegerType[llSigned, 64]);
 
-symbol UInt8  = PrimitiveType(LLIntegerType[LLUnsigned,  8]);
-symbol UInt16 = PrimitiveType(LLIntegerType[LLUnsigned, 16]);
-symbol UInt32 = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
-symbol UInt64 = PrimitiveType(LLIntegerType[LLUnsigned, 64]);
+symbol UInt8  = PrimitiveType(llIntegerType[llUnsigned,  8]);
+symbol UInt16 = PrimitiveType(llIntegerType[llUnsigned, 16]);
+symbol UInt32 = PrimitiveType(llIntegerType[llUnsigned, 32]);
+symbol UInt64 = PrimitiveType(llIntegerType[llUnsigned, 64]);
 
-symbol Float32 = PrimitiveType(LLFloatType[32]);
-symbol Float64 = PrimitiveType(LLFloatType[64]);
+symbol Float32 = PrimitiveType(llFloatType[32]);
+symbol Float64 = PrimitiveType(llFloatType[64]);
 
-symbol Char = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
+symbol Char = PrimitiveType(llIntegerType[llUnsigned, 32]);
 
 
 
@@ -49,7 +49,7 @@ symbol Char = PrimitiveType(LLIntegerType[LLUnsigned, 32]);
 // Static[T]
 //
 
-symbol Static['x] = PrimitiveType(LLTupleType[]);
+symbol Static['x] = PrimitiveType(llTupleType[]);
 
 
 //
@@ -60,22 +60,22 @@ symbol Pointer['T];
 
 overload #PODType?(Pointer['T]) = true;
 
-symbol PointerReferencedType;
-overload #PointerReferencedType(Pointer['T]) = 'T;
+symbol pointerReferencedType;
+overload #pointerReferencedType(Pointer['T]) = 'T;
 
 #DereferenceablePointerType?('T)
-    = PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T);
+    = PointerType?('T) and staticCallDefined?(pointerReferencedType, 'T);
 
-overload #LLType(Pointer['T])
-    = LLPointerType['T];
-overload #RecursiveTypes(Pointer['T]) = 'T;
+overload #llType(Pointer['T])
+    = llPointerType['T];
+overload #recursiveTypes(Pointer['T]) = 'T;
 
 
 //
 // OpaquePointer
 //
 
-symbol OpaquePointer = PrimitiveType(LLPointerType[UInt8]);
+symbol OpaquePointer = PrimitiveType(llPointerType[UInt8]);
 
 
 
@@ -91,14 +91,14 @@ overload #PODType?(CodePointer['I, 'O])
 // a clay function is a cdecl function that takes its inputs, then its outputs,
 // all by reference
 
-private #CodePointerLLInput('T) = Pointer[ReferenceBaseType('T)];
+private #codePointerLLInput('T) = Pointer[referenceBaseType('T)];
 
-overload #LLType(CodePointer[(..'I), (..'O)])
-    = LLCodePointerType[CdeclABI, false,
-        (..mapValues(CodePointerLLInput, ..'I, ..'O)),
+overload #llType(CodePointer[(..'I), (..'O)])
+    = llCodePointerType[CdeclABI, false,
+        (..mapValues(codePointerLLInput, ..'I, ..'O)),
         ()
     ];
-overload #RecursiveTypes(CodePointer[(..'I), (..'O)])
+overload #recursiveTypes(CodePointer[(..'I), (..'O)])
     = ..'I, ..'O;
 
 
@@ -107,7 +107,7 @@ overload #RecursiveTypes(CodePointer[(..'I), (..'O)])
 //
 
 #RequireExternalPODType?('x) = PODType?('x);
-    //or StaticError("external code pointer argument is not a POD type: ", 'x);
+    //or staticError("external code pointer argument is not a POD type: ", 'x);
 
 private #ValidExternalCodePointerOutput?('O)
     = 'O == () or PODType?('O);//RequireExternalPODType?('O);
@@ -115,22 +115,22 @@ private #ValidExternalCodePointerOutput?('O)
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
 overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
-overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
+overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
     | ABI?('A)
-      and StaticBool?('V)
-      and StaticTuple?('I)
-      and allValues?(RequireExternalPODType?, ..StaticTupleElements('I))
+      and staticBool?('V)
+      and staticTuple?('I)
+      and allValues?(RequireExternalPODType?, ..staticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
-    = LLCodePointerType['A, 'V, 'I, 'O];
-overload #RecursiveTypes(ExternalCodePointer['A, 'V, (..'I), 'O])
-    = ..'I, ..ExternalOutputTypes('O);
+    = llCodePointerType['A, 'V, 'I, 'O];
+overload #recursiveTypes(ExternalCodePointer['A, 'V, (..'I), 'O])
+    = ..'I, ..externalOutputTypes('O);
 
 #ExternalCodePointerType?('X) = false;
 overload #ExternalCodePointerType?(ExternalCodePointer['A,'V,'I,'O])
     | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
-#ExternalOutputTypes('T) | Type?('T) = 'T;
-overload #ExternalOutputTypes(()) = ;
+#externalOutputTypes('T) | Type?('T) = 'T;
+overload #externalOutputTypes(()) = ;
 
 alias CCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, false, 'I, 'O];
 alias VariadicCCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, true, 'I, 'O];
@@ -170,7 +170,7 @@ private #EqualityComparablePointerTypes?('A, 'B) = false;
 overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
-    = ComparablePrimitiveTypes?('A, 'B) and 'A == BiggerNumberType('A, 'B);
+    = ComparablePrimitiveTypes?('A, 'B) and 'A == biggerNumberType('A, 'B);
 
 private #ConvertibleScalarType?('A)
     = NumberType?('A) or CharType?('A);
@@ -181,24 +181,24 @@ private #ConvertibleScalarType?('A)
       or (PointerType?('A) and 'B == OpaquePointer)
       or ('A == OpaquePointer and PointerType?('B))
       or (DereferenceablePointerType?('A) and DereferenceablePointerType?('B)
-          and PointerReferencedType('A) == PointerReferencedType('B));
+          and pointerReferencedType('A) == pointerReferencedType('B));
 
-symbol BiggerNumberType;
-overload #BiggerNumberType('A, 'B) | TypeSize('A) > TypeSize('B) = 'A;
-overload #BiggerNumberType('A, 'B) | TypeSize('B) > TypeSize('A) = 'B;
-overload #BiggerNumberType('A, 'B)
-    | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('A)
+symbol biggerNumberType;
+overload #biggerNumberType('A, 'B) | typeSize('A) > typeSize('B) = 'A;
+overload #biggerNumberType('A, 'B) | typeSize('B) > typeSize('A) = 'B;
+overload #biggerNumberType('A, 'B)
+    | typeSize('A) == typeSize('B) and UnsignedIntegerType?('A)
     = 'A;
-overload #BiggerNumberType('A, 'B)
-    | TypeSize('A) == TypeSize('B) and UnsignedIntegerType?('B)
+overload #biggerNumberType('A, 'B)
+    | typeSize('A) == typeSize('B) and UnsignedIntegerType?('B)
     = 'B;
-overload #BiggerNumberType('T, Int) = 'T;
-overload #BiggerNumberType(Int, 'T) = 'T;
-overload #BiggerNumberType('T, UInt) = 'T;
-overload #BiggerNumberType(UInt, 'T) = 'T;
-overload #BiggerNumberType('T, 'T) = 'T;
-overload #BiggerNumberType(Int, UInt) = UInt;
-overload #BiggerNumberType(UInt, Int) = UInt;
+overload #biggerNumberType('T, Int) = 'T;
+overload #biggerNumberType(Int, 'T) = 'T;
+overload #biggerNumberType('T, UInt) = 'T;
+overload #biggerNumberType(UInt, 'T) = 'T;
+overload #biggerNumberType('T, 'T) = 'T;
+overload #biggerNumberType(Int, UInt) = UInt;
+overload #biggerNumberType(UInt, Int) = UInt;
 
 
 
@@ -234,11 +234,11 @@ overload Static['x]() inline --> returned:Static['x] {}
 //
 
 overload #Int() = 0;
-overload #Int('x) = StaticInt('x);
+overload #Int('x) = staticInt('x);
 overload #UInt() = 0u;
-overload #UInt('x) = StaticUInt('x);
+overload #UInt('x) = staticUInt('x);
 overload #Char() = '\u000000';
-overload #Char('x) = StaticChar('x);
+overload #Char('x) = staticChar('x);
 
 
 //
@@ -251,20 +251,20 @@ overload 'A(b:'B) inline
 
 overload Pointer(forward x:'T) inline
     | DereferenceablePointerType?('T)
-    = Pointer[PointerReferencedType('T)](x);
+    = Pointer[pointerReferencedType('T)](x);
 
 
 //
 // copy/move construction
 //
 overload 'T(x:'T) inline --> returned:'T
-    | Defined?([copy(x)])
+    | defined?([copy(x)])
 {
     returned <-- copy(x);
 }
 
 overload 'T(rvalue x:'T) inline --> returned:'T
-    | Defined?([move(x)])
+    | defined?([move(x)])
 {
     returned <-- move(x);
 }

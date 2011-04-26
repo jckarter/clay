@@ -1,5 +1,5 @@
 import sequences.(lesserSequence?);
-import strings.encodings.(StringTypeEncoding, stringBytes);
+import strings.encodings.(stringTypeEncoding, stringBytes);
 import strings.encodings.utf8.(UTF8, UTF8Iterator);
 import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
 
@@ -17,7 +17,7 @@ symbol StringConstant = RecordType(
 overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
 overload size(s:StringConstant) = s.size;
 
-overload #StringTypeEncoding(StringConstant) = UTF8;
+overload #stringTypeEncoding(StringConstant) = UTF8;
 overload stringBytes(s:StringConstant) = CoordinateRange(s.begin, s.end);
 
 overload lesser?(a:StringConstant, b:StringConstant)

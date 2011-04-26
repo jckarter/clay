@@ -30,7 +30,7 @@ overload #InitializeDoesNotThrowType?(Vector['T]) = true;
 overload #BitwiseZeroInitializedType?(Vector['T]) = true;
 
 overload Vector['T](forward s:'S) inline --> returned:Vector['T]
-    | SequenceType?('S) and SequenceElementType('S) == 'T
+    | SequenceType?('S) and sequenceElementType('S) == 'T
 {
     returned <-- Vector['T]();
     // XXX lambdas
@@ -44,7 +44,7 @@ overload Vector['T](forward s:'S) inline --> returned:Vector['T]
 
 overload Vector(forward s:'S) inline
     | SequenceType?('S)
-    = Vector[SequenceElementType('S)](s);
+    = Vector[sequenceElementType('S)](s);
 
 overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
     | not emptyValues?(..'TT) and equalValues?('T, ..'TT)
@@ -102,7 +102,7 @@ overload end(v:Vector['T]) inline = v.data + v.size;
 
 overload push(ref v:Vector['T], forward ..elements:'TT) inline
     | countValues(..'TT) != 1
-      and allValues?([U -> CallDefined?(push, Ref[Vector['T]], U)], ..'TT)
+      and allValues?([U -> callDefined?(push, Ref[Vector['T]], U)], ..'TT)
 {
     reserve(v, countValues(..'TT));
     static for (forward e in ..elements)
@@ -110,7 +110,7 @@ overload push(ref v:Vector['T], forward ..elements:'TT) inline
 }
 
 overload push(ref v:Vector['T], forward seq:'S) inline
-    | SequenceType?('S) and SequenceElementType('S) == 'T
+    | SequenceType?('S) and sequenceElementType('S) == 'T
 {
     insert(v, size(v), seq);
 }
@@ -140,7 +140,7 @@ overload resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
 // insert
 
 overload insert(ref v:Vector['T], i:'I, seq:'S)
-    | IntegerType?('I) and SequenceType?('S) and SequenceElementType('S) == 'T
+    | IntegerType?('I) and SequenceType?('S) and sequenceElementType('S) == 'T
 {
     var pos = UInt(i);
     var iter = iterator(seq);
@@ -151,7 +151,7 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
 }
 
 overload insert(ref v:Vector['T], i:'I, seq:'S)
-    | IntegerType?('I) and SizedSequenceType?('S) and SequenceElementType('S) == 'T
+    | IntegerType?('I) and SizedSequenceType?('S) and sequenceElementType('S) == 'T
 {
     var first, last = ..insertLocations(v, UInt(i), size(seq));
     try {
@@ -184,7 +184,7 @@ overload insert(ref v:Vector['T], i:'I, rvalue x:'T) | IntegerType?('I) {
 }
 
 overload insert(ref v:Vector['T], i:ContiguousCoordinate['T], forward seq:'S)
-    | SequenceType?('S) and SequenceElementType('S) == 'T
+    | SequenceType?('S) and sequenceElementType('S) == 'T
 {
     insert(v, i - begin(v), seq);
 }
@@ -283,10 +283,10 @@ private removeLocations(
 // equals?, lesser?, hashing
 //
 
-overload equals?(a:Vector['A], b:Vector['B]) inline | CallDefined?(equals?, 'A, 'B)
+overload equals?(a:Vector['A], b:Vector['B]) inline | callDefined?(equals?, 'A, 'B)
     = equalSequence?(a, b);
 
-overload lesser?(a:Vector['A], b:Vector['B]) inline | CallDefined?(lesser?, 'A, 'B)
+overload lesser?(a:Vector['A], b:Vector['B]) inline | callDefined?(lesser?, 'A, 'B)
     = lesserSequence?(a, b);
 
 overload hash(v:Vector['V]) = hashSequence(v);

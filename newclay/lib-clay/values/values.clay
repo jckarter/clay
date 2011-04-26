@@ -1,6 +1,6 @@
-import __primitives__.(StaticCountValues, StaticIntegers);
+import __primitives__.(staticCountValues, staticIntegers);
 import unsafe.casts.(refToRvalue);
-import meta.statics.(StaticInt?);
+import meta.statics.(staticInt?);
 
 symbol allValues?;
 overload #allValues?('f) = true;
@@ -28,8 +28,8 @@ overload inValues?(x, forward ..ys) inline {
 }
 
 symbol countValues;
-overload #countValues(..'xs) = StaticCountValues(..'xs);
-overload countValues(..xs:'T) inline = *#StaticCountValues(..'T);
+overload #countValues(..'xs) = staticCountValues(..'xs);
+overload countValues(..xs:'T) inline = *#staticCountValues(..'T);
 
 symbol emptyValues?;
 overload #emptyValues?(..'xs) = false;
@@ -38,27 +38,27 @@ overload emptyValues?(..xs) inline = false;
 overload emptyValues?() inline = true;
 
 symbol takeValues;
-overload #takeValues('n) | StaticInt?('n) = ;
+overload #takeValues('n) | staticInt?('n) = ;
 overload #takeValues(0, ..'xs) = ;
 overload #takeValues('n, 'x, ..'xs)
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = 'x, ..takeValues('n - 1, ..'xs);
-overload takeValues(#'n) inline | StaticInt?('n) = ;
+overload takeValues(#'n) inline | staticInt?('n) = ;
 overload takeValues(#0, forward ..xs) inline = ;
 overload takeValues(#'n, forward x, forward ..xs) inline
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = forward x, forward ..takeValues(#('n - 1), ..xs);
 
 symbol dropValues;
-overload #dropValues('n) | StaticInt?('n) = ;
+overload #dropValues('n) | staticInt?('n) = ;
 overload #dropValues(0, ..'xs) = ..'xs;
 overload #dropValues('n, 'x, ..'xs)
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = ..dropValues('n - 1, ..'xs);
-overload dropValues(#'n) inline | StaticInt?('n) = ;
+overload dropValues(#'n) inline | staticInt?('n) = ;
 overload dropValues(#0, forward ..xs) inline = forward ..xs;
 overload dropValues(#'n, forward x, forward ..xs) inline
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = forward ..dropValues(#('n - 1), ..xs);
 
 symbol mapValues;
@@ -69,17 +69,17 @@ overload mapValues(fn, forward x:'T, forward ..xs:'TT) inline
     = forward ..fn(x), forward ..mapValues(fn, ..xs);
 
 symbol intValues = RuntimeStaticProcedure();
-overload #intValues('n) = ..StaticIntegers('n);
+overload #intValues('n) = ..staticIntegers('n);
 
 symbol nthValue;
 overload #nthValue(0, 'x, ..'xs) = 'x;
 overload #nthValue('n, 'x, ..'xs)
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = nthValue('n - 1, ..'xs);
 
 overload nthValue(#0, forward x, forward ..xs) inline = forward x;
 overload nthValue(#'n, forward x, forward ..xs) inline
-    | StaticInt?('n) and 'n > 0
+    | staticInt?('n) and 'n > 0
     = forward nthValue(#('n - 1), ..xs);
 
 symbol assocValue;
