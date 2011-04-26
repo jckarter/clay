@@ -72,7 +72,7 @@ overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
 
 overload destroy(ref a:Vector['T]) inline {
     destroyRange(begin(a), end(a));
-    freeRawValues(a.data);
+    freeUninitializedValues(a.data);
 }
 
 overload copy(a:Vector['T]) inline = Vector['T](a);
@@ -237,14 +237,14 @@ private requestCapacity(ref v:Vector['T], capacity:UInt) {
 }
 
 private reallocVector(ref v:Vector['T], capacity:UInt) {
-    var data = allocateRawValues('T, capacity);
+    var data = allocateUninitializedValues('T, capacity);
     moveRvalueNonoverlappingRange(data, v.data, v.data + v.size);
-    freeRawValues(v.data);
+    freeUninitializedValues(v.data);
     v.data = data;
     v.capacity = capacity;
 }
 overload reallocVector(ref v:Vector['T], capacity:UInt) | BitwiseMovedType?('T) {
-    v.data = reallocateRawValues(v.data, capacity);
+    v.data = reallocateUninitializedValues(v.data, capacity);
     v.capacity = capacity;
 }
 
