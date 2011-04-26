@@ -2,4 +2,4 @@ import __primitives__.*;
 
 #Foo(..'n) = 'n;
 
-#Main() = StaticDefined?([Foo(0)]);
+#Main() = staticDefined?([Foo(0)]);

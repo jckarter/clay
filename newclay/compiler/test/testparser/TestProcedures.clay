@@ -19,9 +19,9 @@ foo(x:Int) : Int = x;
 foo(x:Int) nothrow : Int = x;
 foo(x:Int) noreturn : Int = foo(x);
 foo(x:Int) inline nothrow noreturn : Int = foo(x);
-foo(x) : Type([x]) = x;
+foo(x) : type([x]) = x;
 
 foo(x:Int) --> y:Int { y <-- x; }
 foo(x:Int) nothrow --> y:Int { y <-- x; }
 foo(x:Int) noreturn --> y:Int { y <-- foo(x); }
-foo(x) --> y:Type([x]) { y <-- foo(x); }
+foo(x) --> y:type([x]) { y <-- foo(x); }

@@ -1,5 +1,5 @@
 import __primitives__.*;
-import __primitives__.(StaticModuleMember as m);
+import __primitives__.(staticModuleMember as m);
 import publicimporter;
 
 symbol Main;

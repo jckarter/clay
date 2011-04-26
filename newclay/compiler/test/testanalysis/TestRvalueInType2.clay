@@ -3,7 +3,7 @@ import __primitives__.*;
 bar(rvalue x) = "bar";
 
 foo(rvalue x) {
-    return #Type([bar(x)]), x;
+    return #type([bar(x)]), x;
 }
 
 main() = ..foo(3);

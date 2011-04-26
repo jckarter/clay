@@ -4,4 +4,4 @@ import __primitives__.*;
     return x + 1;
 }];
 
-#Main() = ..LambdaLocation(foo());
+#Main() = ..lambdaLocation(foo());

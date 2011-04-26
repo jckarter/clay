@@ -16,13 +16,13 @@ overload #MapValues('f) = ;
 //
 
 symbol StringChar;
-overload #StringChar('s, 'i) = StaticStringSlice('s, 'i, StaticAdd('i, 1));
+overload #StringChar('s, 'i) = staticStringSlice('s, 'i, staticAdd('i, 1));
 
 symbol ReverseString;
 overload #ReverseString('s) =
-    StaticStringConcat(..MapValues(
-        [i => StringChar('s, StaticSubtract(StaticStringSize('s), StaticAdd(i,1)))],
-        ..StaticIntegers(StaticStringSize('s)),
+    staticStringConcat(..MapValues(
+        [i => StringChar('s, staticSubtract(staticStringSize('s), staticAdd(i,1)))],
+        ..staticIntegers(staticStringSize('s)),
     ));
 
 
