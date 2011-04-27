@@ -183,8 +183,8 @@ static void generateAssembly(llvm::Module *module,
 }
 
 static bool generateBinary(llvm::Module *module,
-                           const string &atomicOutputFile,
-                           const string &outputFile,
+                           const llvm::sys::Path &atomicOutputFilePath,
+                           const llvm::sys::Path &outputFilePath,
                            const llvm::sys::Path &gccPath,
                            unsigned optLevel,
                            bool /*exceptions*/,
@@ -235,21 +235,17 @@ static bool generateBinary(llvm::Module *module,
             || triple.getOS() == llvm::Triple::MinGW32
             || triple.getOS() == llvm::Triple::Cygwin) {
 
-            string defFile;
-            string::size_type dllSuffixPos = outputFile.rfind(".dll");
-            if (dllSuffixPos == outputFile.size() - 4) {
-                defFile = outputFile.substr(0, dllSuffixPos);
-                defFile += ".def";
-            } else
-                defFile = outputFile + ".def";
+            llvm::sys::Path defPath(outputFilePath);
+            defPath.eraseSuffix();
+            defPath.appendSuffix("def");
 
-            linkerFlags = "-Wl,-soname," + outputFile + ",--output-def," + defFile;
+            linkerFlags = "-Wl,--output-def," + defPath.str();
 
             gccArgs.push_back(linkerFlags.c_str());
         }
     }
     gccArgs.push_back("-o");
-    gccArgs.push_back(atomicOutputFile.c_str());
+    gccArgs.push_back(atomicOutputFilePath.c_str());
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
@@ -710,14 +706,11 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
-    string atomicOutputFile = outputFile + ".claytmp";
     llvm::sys::Path outputFilePath(outputFile);
-    llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
-    
-    if (!run) {
-        atomicOutputFilePath.eraseFromDisk();
-        llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
-    }
+    llvm::sys::Path atomicOutputFilePath = llvm::sys::Path::GetTemporaryDirectory();
+    llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
+    atomicOutputFilePath.appendComponent(outputFilePath.getLast());
+    llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
 
     HiResTimer loadTimer, compileTimer, llvmTimer;
 
@@ -744,7 +737,7 @@ int main(int argc, char **argv) {
         runModule(llvmModule);
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(atomicOutputFile.c_str(),
+        llvm::raw_fd_ostream out(atomicOutputFilePath.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -798,7 +791,7 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, atomicOutputFile, outputFile, gccPath,
+        result = generateBinary(llvmModule, atomicOutputFilePath, outputFilePath, gccPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
@@ -808,10 +801,14 @@ int main(int argc, char **argv) {
 
     if (!run) {
         string renameError;
-        if (atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError)) {
+        bool wasRenameError = atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError);
+
+        if (wasRenameError) {
             cerr << "error: could not commit result to " << outputFile << ": " << renameError;
             return -1;
         }
+        atomicOutputFilePath.eraseComponent();
+        atomicOutputFilePath.eraseFromDisk(true);
     }
 
     if (showTiming) {
