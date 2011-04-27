@@ -6,9 +6,9 @@ import show.*;
 main() {
     const SIZE = 4u;
 
-    var a = allocateUninitializedValues(UInt, SIZE);
-    var b = allocateUninitializedValues(UInt, SIZE);
-    var c = allocateUninitializedValues(UInt, SIZE);
+    var a = allocateUninitializedValues(SIZE, UInt);
+    var b = allocateUninitializedValues(SIZE, UInt);
+    var c = allocateUninitializedValues(SIZE, UInt);
 
     try {
         for (i, ref x in enumerated(CoordinateRange(a, a+SIZE)))
@@ -52,7 +52,7 @@ main() {
 
         assignRange(c, a, a+SIZE);
 
-        c = reallocateUninitializedValues(c, SIZE*2u);
+        c = reallocateUninitializedValues(SIZE*2u, c);
 
         copyRange(c+SIZE, c, c+SIZE);
 

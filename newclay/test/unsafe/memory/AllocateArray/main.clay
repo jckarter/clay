@@ -1,0 +1,24 @@
+import sequences.(enumerated);
+import show.(show);
+import unsafe.memory.(allocateArray, freeArray);
+import vectors.(Vector);
+
+main() {
+    var pods = allocateArray(3, Int);
+    for (i, ref x in enumerated(pods))
+        x = Int(i);
+    for (x in pods)
+        show(x);
+    freeArray(pods);
+
+
+    var vecs = allocateArray(3, Vector[Int], 1, 22, 333);
+    for (v in vecs) {
+        show("--");
+        show(size(v));
+        show(v[0]);
+        show(v[1]);
+        show(v[2]);
+    }
+    freeArray(vecs);
+}

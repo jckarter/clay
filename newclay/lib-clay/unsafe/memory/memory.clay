@@ -1,5 +1,6 @@
 import libc.(malloc, free, realloc);
-import unsafe.coordinates.(ContiguousCoordinate);
+import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange, destroyRange);
+import unsafe.valuesemantics.(destroy);
 
 requiredMalloc(count) = required(malloc(count));
 
@@ -7,13 +8,14 @@ requiredRealloc(ptr, count) = required(realloc(ptr, count));
 
 // XXX alignment
 
-allocateUninitializedValues(#'T, count:'I) | Type?('T) and IntegerType?('I)
+allocateUninitializedValues(count:'I, #'T) | Type?('T) and IntegerType?('I)
     = ContiguousCoordinate['T](requiredMalloc(typeSize('T) * UInt(count)));
 
 allocateUninitializedValue(#'T) | Type?('T)
     = Pointer['T](requiredMalloc(typeSize('T)));
 
-reallocateUninitializedValues(values:ContiguousCoordinate['T], count:'I) | Type?('T)
+reallocateUninitializedValues(count:'I, values:ContiguousCoordinate['T])
+    | Type?('T) and IntegerType?('I)
     = ContiguousCoordinate['T](
         requiredRealloc(OpaquePointer(values), typeSize('T) * UInt(count))
     );
@@ -21,3 +23,50 @@ reallocateUninitializedValues(values:ContiguousCoordinate['T], count:'I) | Type?
 freeUninitializedValues(values:ContiguousCoordinate['T]) { free(OpaquePointer(values)); }
 freeUninitializedValue(value:Pointer['T]) { free(OpaquePointer(value)); }
 
+
+//
+// manually-managed value allocation
+//
+
+allocateValue(f, forward ..args)
+    | defined?([var x = f(..args);])
+{
+    var ptr = allocateUninitializedValue(#type([f(..args)]));
+
+    try {
+        ptr^ <-- f(..args);
+    } catch (ex) {
+        freeUninitializedValue(ptr);
+        throw ex;
+    }
+    return ptr;
+}
+
+freeValue(ptr:Pointer['T]) {
+    destroy(ptr^);
+    freeUninitializedValue(ptr);
+}
+
+allocateArray(count:'I, f, ..args)
+    | defined?([var x = f(..args);])
+{
+    var begin = allocateUninitializedValues(count, #type([f(..args)]));
+    var end = begin + count;
+    var i = begin;
+
+    try {
+        while (i < end) {
+            i^ <-- f(..args);
+            inc(i);
+        }
+    } catch (ex) {
+        destroyRange(begin, i);
+        freeUninitializedValues(begin);
+    }
+    return CoordinateRange(begin, end);
+}
+
+freeArray(array:CoordinateRange[ContiguousCoordinate['T]]) {
+    destroyRange(array.begin, array.end);
+    freeUninitializedValues(array.begin);
+}
