@@ -237,14 +237,14 @@ private requestCapacity(ref v:Vector['T], capacity:UInt) {
 }
 
 private reallocVector(ref v:Vector['T], capacity:UInt) {
-    var data = allocateUninitializedValues('T, capacity);
+    var data = allocateUninitializedValues(capacity, 'T);
     moveRvalueNonoverlappingRange(data, v.data, v.data + v.size);
     freeUninitializedValues(v.data);
     v.data = data;
     v.capacity = capacity;
 }
 overload reallocVector(ref v:Vector['T], capacity:UInt) | BitwiseMovedType?('T) {
-    v.data = reallocateUninitializedValues(v.data, capacity);
+    v.data = reallocateUninitializedValues(capacity, v.data);
     v.capacity = capacity;
 }
 
