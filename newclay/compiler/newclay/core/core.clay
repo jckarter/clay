@@ -64,8 +64,8 @@ primitivesModule(program:Program) = ref program.modules[primitivesModuleName];
 preludeModule(program:Program) = ref program.modules[preludeModuleName];
 
 record ClayHooks (
-    Type?: Value,
-    PODType?: Value,
+    type?: Value,
+    POD?: Value,
 
     llType: Value,
     llSigned: Value,

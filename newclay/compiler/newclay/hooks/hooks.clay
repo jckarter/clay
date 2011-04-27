@@ -33,7 +33,7 @@ initializeClayHooks() {
 
 symbolType?(x:Symbol) {
     return safeInitialize(x.type?,
-        () ref=> evaluateBoolCall(getHooks().Type?, ValueList(x)),
+        () ref=> evaluateBoolCall(getHooks().type?, ValueList(x)),
     );
 }
 
@@ -164,7 +164,7 @@ pointerTargetType(x:Value) Value {
 //
 
 podType?(x:Value) {
-    return evaluateBoolCall(getHooks().PODType?, ValueList(x));
+    return evaluateBoolCall(getHooks().POD?, ValueList(x));
 }
 
 

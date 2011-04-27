@@ -2,9 +2,9 @@ import __primitives__.*;
 
 symbol Bar = "prelude";
 
-#Type?('x) = false;
-overload #Type?(Static['x]) = true;
-#PODType?('x) = false;
+#type?('x) = false;
+overload #type?(Static['x]) = true;
+#POD?('x) = false;
 
 symbol llType;
 symbol llSigned;

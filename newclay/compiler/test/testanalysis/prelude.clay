@@ -3,11 +3,11 @@ import __main__.(main);
 
 
 //
-// Type?
+// type?
 //
 
-symbol Type?;
-overload #Type?('x) = false;
+symbol type?;
+overload #type?('x) = false;
 
 
 
@@ -31,10 +31,10 @@ symbol llUnionType[..'T];
 
 
 //
-// PODType?
+// POD?
 //
 
-#PODType?('T) = true;
+#POD?('T) = true;
 
 
 //
@@ -49,7 +49,7 @@ overload #PrimitiveType?('x) =
     staticSymbol?('x)
     and SymbolWithTag?('x, PrimitiveTypeTag);
 
-overload #Type?('x) | PrimitiveType?('x) = true;
+overload #type?('x) | PrimitiveType?('x) = true;
 
 
 
@@ -93,7 +93,7 @@ overload #llType(Float64) = llFloatType[64];
 //
 
 symbol StringConstant;
-overload #Type?(StringConstant) = true;
+overload #type?(StringConstant) = true;
 overload #llType(StringConstant)
     = llTupleType[("size", UInt), ("begin", Pointer[UInt8]), ("end", Pointer[UInt8])];
 
@@ -103,7 +103,7 @@ overload #llType(StringConstant)
 //
 
 symbol Static['T];
-overload #Type?(Static['T]) = true;
+overload #type?(Static['T]) = true;
 overload #llType(Static['T]) = llTupleType[];
 
 
@@ -113,7 +113,7 @@ overload #llType(Static['T]) = llTupleType[];
 //
 
 symbol Pointer['T];
-overload #Type?(Pointer['T]) = true;
+overload #type?(Pointer['T]) = true;
 overload #llType(Pointer['T]) = llPointerType['T];
 
 
@@ -123,7 +123,7 @@ overload #llType(Pointer['T]) = llPointerType['T];
 //
 
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
-overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
+overload #type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
 overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
     = llCodePointerType['A, 'V, 'I, 'O];
 
@@ -133,7 +133,7 @@ overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
 //
 
 symbol CodePointer['Inputs, 'Outputs];
-overload #Type?(CodePointer[('I), ('O)]) = true;
+overload #type?(CodePointer[('I), ('O)]) = true;
 overload #llType(CodePointer[('I), ('O)])
     = llCodePointerType[CdeclABI, false,
         (Pointer[ReferenceBaseType('I)], Pointer[ReferenceBaseType('O)]),
@@ -146,7 +146,7 @@ overload #llType(CodePointer[('I), ('O)])
 //
 
 symbol Array['T, 'n];
-overload #Type?(Array['T, 'n]) = true;
+overload #type?(Array['T, 'n]) = true;
 overload #llType(Array['T, 'n]) = llArrayType['T, 'n];
 
 
@@ -156,7 +156,7 @@ overload #llType(Array['T, 'n]) = llArrayType['T, 'n];
 //
 
 symbol Tuple[..'T];
-overload #Type?(Tuple[..'T]) = true;
+overload #type?(Tuple[..'T]) = true;
 overload #llType(Tuple[..'T]) = llTupleType[..'T];
 
 
@@ -350,7 +350,7 @@ overload #ABISupportsVariadics?(CdeclABI) = true;
 
 symbol NontrivialInt = NewPrimitiveType();
 overload #llType(NontrivialInt) = llIntegerType[llSigned, 32];
-overload #PODType?(NontrivialInt) = false;
+overload #POD?(NontrivialInt) = false;
 
 toNontrivialInt(x:Int) --> y:NontrivialInt { primitiveCopy(y, x); }
 fromNontrivialInt(x:NontrivialInt) --> y:Int { primitiveCopy(y, x); }
