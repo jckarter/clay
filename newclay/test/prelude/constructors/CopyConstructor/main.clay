@@ -1,12 +1,12 @@
 import unsafe.compositetypes.*;
 import show.(show);
-import unsafe.valuesemantics.(BitwiseMovedType?, DestroyDoesNothingType?);
+import unsafe.valuesemantics.(BitwiseMoved?, DestroyDoesNothing?);
 
 symbol Copyable = RecordType(x:Int);
 
 symbol Uncopyable = CompositeType(x:Int);
-overload #BitwiseMovedType?(Uncopyable) = true;
-overload #DestroyDoesNothingType?(Uncopyable) = true;
+overload #BitwiseMoved?(Uncopyable) = true;
+overload #DestroyDoesNothing?(Uncopyable) = true;
 
 main() {
     var copyable = initializeRecord(Copyable, 5);

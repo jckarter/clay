@@ -51,7 +51,7 @@ overload index(forward a, #'n) inline
     = forward ..a['n];
 
 overload index(a, n:'I) inline
-    | IntegerType?('I) and defined?([forward ..((a + n)^)])
+    | Integer?('I) and defined?([forward ..((a + n)^)])
     = forward ..((a + n)^);
 
 
@@ -60,7 +60,7 @@ overload index(a, n:'I) inline
 //
 
 dereference(forward a:'T) inline
-    | PointerType?('T) and staticCallDefined?(pointerReferencedType, 'T)
+    | Pointer?('T) and staticCallDefined?(pointerReferencedType, 'T)
     = forward cDereference(#pointerReferencedType('T), a);
 
 
@@ -117,8 +117,8 @@ overload #subtract('x, 'y) = staticSubtract('x, 'y);
 // arithmetic operators over c types
 //
 
-overload plus(a:'N) inline | NumberType?('N) = a;
-overload minus(a:'N) inline | NumberType?('N) = cMinus('N, a);
+overload plus(a:'N) inline | Number?('N) = a;
+overload minus(a:'N) inline | Number?('N) = cMinus('N, a);
 
 overload multiply(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = cMultiply(#biggerNumberType('A, 'B), a, b);
@@ -154,7 +154,7 @@ ordered?(a, b)
     | defined?([a <= b]) and defined?([b <= a])
     = a <= b or b <= a;
 
-nan?(a:'A) | FloatType?('A) = a != a;
+nan?(a:'A) | Float?('A) = a != a;
 
 overload lesser?(#'a, #'b) = *#('a < 'b);
 overload equals?(#'a, #'b) = *#('a == 'b);
@@ -247,7 +247,7 @@ overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args) inline
 // variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
     : ..externalOutputTypes('O)
-    | allValues?(RequireExternalPODType?, ..'Args)
+    | allValues?(RequireExternalPOD?, ..'Args)
       and 'I == (..takeValues(staticTupleSize('I), ..'Args))
     = ..cExternalCall(f, ..args);
 
@@ -275,9 +275,9 @@ overload max(a:'A, b:'A) inline | defined?([a < b])
 overload min(a:'A, b:'A) inline | defined?([a < b])
     = if (a < b) a else b;
 
-overload max(a:'A, b:'A) inline | FloatType?('A)
+overload max(a:'A, b:'A) inline | Float?('A)
     = if (a >= b or nan?(b)) a else b;
-overload min(a:'A, b:'A) inline | FloatType?('A)
+overload min(a:'A, b:'A) inline | Float?('A)
     = if (a <= b or nan?(b)) a else b;
 
 overload #max('a, 'b) = if ('a < 'b) 'b else 'a;
@@ -310,26 +310,26 @@ overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = cBitxor(#biggerNumberType('A, 'B), a, b);
 
 symbol bitnot;
-overload bitnot(a:'A) | IntegerType?('A) = cBitnot('A, a);
+overload bitnot(a:'A) | Integer?('A) = cBitnot('A, a);
 
 symbol bitandc;
 overload bitandc(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = bitand(a, bitnot(b));
 
 symbol bitshl;
-overload bitshl(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitshl(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshl('A, a, shift);
 
 symbol bitshr;
-overload bitshr(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitshr(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshr('A, a, shift);
 
 symbol bitrol;
-overload bitrol(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitrol(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = bitor(bitshl(a, shift), bitshr(a, typeSize('A)*8u - UInt(shift)));
 
 symbol bitror;
-overload bitror(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitror(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = bitor(bitshr(a, shift), bitshl(a, typeSize('A)*8u - UInt(shift)));
 
 

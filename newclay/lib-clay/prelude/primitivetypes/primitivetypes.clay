@@ -19,7 +19,7 @@ private #PrimitiveType('LLT) = (PrimitiveType, 'LLT);
 
 #PrimitiveType?('T) = symbolWithTag?('T, PrimitiveType);
 
-overload #PODType?('T) | PrimitiveType?('T) = true;
+overload #POD?('T) | PrimitiveType?('T) = true;
 
 overload #llType('T) | PrimitiveType?('T) = symbolBody('T).1;
 
@@ -58,13 +58,13 @@ symbol Static['x] = PrimitiveType(llTupleType[]);
 
 symbol Pointer['T];
 
-overload #PODType?(Pointer['T]) = true;
+overload #POD?(Pointer['T]) = true;
 
 symbol pointerReferencedType;
 overload #pointerReferencedType(Pointer['T]) = 'T;
 
-#DereferenceablePointerType?('T)
-    = PointerType?('T) and staticCallDefined?(pointerReferencedType, 'T);
+#DereferenceablePointer?('T)
+    = Pointer?('T) and staticCallDefined?(pointerReferencedType, 'T);
 
 overload #llType(Pointer['T])
     = llPointerType['T];
@@ -84,8 +84,8 @@ symbol OpaquePointer = PrimitiveType(llPointerType[UInt8]);
 //
 
 symbol CodePointer['Inputs, 'Outputs];
-overload #PODType?(CodePointer['I, 'O])
-    | Type?(CodePointer['I, 'O]) = true;
+overload #POD?(CodePointer['I, 'O])
+    | type?(CodePointer['I, 'O]) = true;
 
 // XXX inappropriate dependency on codegen representation
 // a clay function is a cdecl function that takes its inputs, then its outputs,
@@ -106,30 +106,30 @@ overload #recursiveTypes(CodePointer[(..'I), (..'O)])
 // ExternalCodePointer[ABI, Variadic?, Inputs, Outputs]
 //
 
-#RequireExternalPODType?('x) = PODType?('x);
+#RequireExternalPOD?('x) = POD?('x);
     //or staticError("external code pointer argument is not a POD type: ", 'x);
 
 private #ValidExternalCodePointerOutput?('O)
-    = 'O == () or PODType?('O);//RequireExternalPODType?('O);
+    = 'O == () or POD?('O);//RequireExternalPOD?('O);
 
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
-overload #PODType?(ExternalCodePointer['A,'V,'I,'O])
-    | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
+overload #POD?(ExternalCodePointer['A,'V,'I,'O])
+    | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
     | ABI?('A)
       and staticBool?('V)
       and staticTuple?('I)
-      and allValues?(RequireExternalPODType?, ..staticTupleElements('I))
+      and allValues?(RequireExternalPOD?, ..staticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
     = llCodePointerType['A, 'V, 'I, 'O];
 overload #recursiveTypes(ExternalCodePointer['A, 'V, (..'I), 'O])
     = ..'I, ..externalOutputTypes('O);
 
-#ExternalCodePointerType?('X) = false;
-overload #ExternalCodePointerType?(ExternalCodePointer['A,'V,'I,'O])
-    | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
+#ExternalCodePointer?('X) = false;
+overload #ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
+    | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
-#externalOutputTypes('T) | Type?('T) = 'T;
+#externalOutputTypes('T) | type?('T) = 'T;
 overload #externalOutputTypes(()) = ;
 
 alias CCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, false, 'I, 'O];
@@ -144,19 +144,19 @@ alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O
 //
 
 #ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
-    = (SignedIntegerType?('A) and SignedIntegerType?('B))
-      or (UnsignedIntegerType?('A) and UnsignedIntegerType?('B));
+    = (SignedInteger?('A) and SignedInteger?('B))
+      or (UnsignedInteger?('A) and UnsignedInteger?('B));
 #ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
-      = (FloatType?('A) and FloatType?('B));
+      = (Float?('A) and Float?('B));
 #ArithmeticCompatiblePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
       or ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B);
 #BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = IntegerType?('A) and IntegerType?('B);
+    = Integer?('A) and Integer?('B);
 #ComparablePrimitiveTypes?('A, 'B)
     = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
       or ComparablePointerTypes?('A, 'B)
-      or (CharType?('A) and CharType?('B))
+      or (Char?('A) and Char?('B))
       or ('A == Bool and 'B == Bool);
 #EqualityComparablePrimitiveTypes?('A, 'B)
     = ComparablePrimitiveTypes?('A, 'B)
@@ -167,30 +167,30 @@ overload #ComparablePointerTypes?(ContiguousCoordinate['A], ContiguousCoordinate
     = true;
 
 private #EqualityComparablePointerTypes?('A, 'B) = false;
-overload #EqualityComparablePointerTypes?('A, 'A) = PointerType?('A);
+overload #EqualityComparablePointerTypes?('A, 'A) = Pointer?('A);
 
 #AssignablePrimitiveTypes?('A, 'B)
     = ComparablePrimitiveTypes?('A, 'B) and 'A == biggerNumberType('A, 'B);
 
-private #ConvertibleScalarType?('A)
-    = NumberType?('A) or CharType?('A);
+private #ConvertibleScalar?('A)
+    = Number?('A) or Char?('A);
 
 #ConvertiblePrimitiveTypes?('A, 'B)
-    = (ConvertibleScalarType?('A) and ConvertibleScalarType?('B))
-      or (PointerType?('A) and 'A == 'B)
-      or (PointerType?('A) and 'B == OpaquePointer)
-      or ('A == OpaquePointer and PointerType?('B))
-      or (DereferenceablePointerType?('A) and DereferenceablePointerType?('B)
+    = (ConvertibleScalar?('A) and ConvertibleScalar?('B))
+      or (Pointer?('A) and 'A == 'B)
+      or (Pointer?('A) and 'B == OpaquePointer)
+      or ('A == OpaquePointer and Pointer?('B))
+      or (DereferenceablePointer?('A) and DereferenceablePointer?('B)
           and pointerReferencedType('A) == pointerReferencedType('B));
 
 symbol biggerNumberType;
 overload #biggerNumberType('A, 'B) | typeSize('A) > typeSize('B) = 'A;
 overload #biggerNumberType('A, 'B) | typeSize('B) > typeSize('A) = 'B;
 overload #biggerNumberType('A, 'B)
-    | typeSize('A) == typeSize('B) and UnsignedIntegerType?('A)
+    | typeSize('A) == typeSize('B) and UnsignedInteger?('A)
     = 'A;
 overload #biggerNumberType('A, 'B)
-    | typeSize('A) == typeSize('B) and UnsignedIntegerType?('B)
+    | typeSize('A) == typeSize('B) and UnsignedInteger?('B)
     = 'B;
 overload #biggerNumberType('T, Int) = 'T;
 overload #biggerNumberType(Int, 'T) = 'T;
@@ -250,7 +250,7 @@ overload 'A(b:'B) inline
     = cCast('A, b);
 
 overload Pointer(forward x:'T) inline
-    | DereferenceablePointerType?('T)
+    | DereferenceablePointer?('T)
     = Pointer[pointerReferencedType('T)](x);
 
 

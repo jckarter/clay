@@ -1,10 +1,10 @@
-import strings.encodings.(stringBytes, stringTypeEncoding, EncodedStringType?);
+import strings.encodings.(stringBytes, stringTypeEncoding, EncodedString?);
 import strings.encodings.utf8.(UTF8);
 import show.(show);
 
 main() {
-    show(#EncodedStringType?(StringConstant)); ////true
-    show(#EncodedStringType?(StringConstant, UTF8)); ////true
+    show(#EncodedString?(StringConstant)); ////true
+    show(#EncodedString?(StringConstant, UTF8)); ////true
     show(#stringTypeEncoding(StringConstant)); ////UTF8
 
     ////116

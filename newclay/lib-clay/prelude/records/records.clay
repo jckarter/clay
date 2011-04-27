@@ -18,7 +18,7 @@ import unsafe.valuesemantics.*;
 #RecordType?('T) = symbolWithTag?('T, RecordType);
 
 #validField?('x) = false;
-overload #validField?(('name, 'T)) | staticString?('name) and Type?('T) = true;
+overload #validField?(('name, 'T)) | staticString?('name) and type?('T) = true;
 
 #validFields?(..'x) = allValues?(validField?, ..'x);
 
@@ -94,33 +94,33 @@ overload 'T(forward ..args) inline
 //
 
 overload destroy(ref x:'T) inline
-    | RecordType?('T) and not DestroyDoesNothingType?('T)
+    | RecordType?('T) and not DestroyDoesNothing?('T)
 {
     destroyRecord(x);
 }
 
 overload reset(ref x:'T) inline
-    | RecordType?('T) and not ResetDoesNothingType?('T)
+    | RecordType?('T) and not ResetDoesNothing?('T)
 {
     resetRecord(x);
 }
 
 overload moveRvalue(ref x:'T) inline
     | RecordType?('T)
-      and not BitwiseMovedType?('T)
-      and allValues?(MovableType?, ..fieldTypes('T))
+      and not BitwiseMoved?('T)
+      and allValues?(Movable?, ..fieldTypes('T))
     = moveRvalueRecord(x);
 
 overload copy(x:'T) inline
     | RecordType?('T)
-      and not BitwiseCopiedType?('T)
-      and allValues?(CopyableType?, ..fieldTypes('T))
+      and not BitwiseCopied?('T)
+      and allValues?(Copyable?, ..fieldTypes('T))
     = copyRecord(x);
 
 overload copyAssign(ref to:'T, from:'T) inline
     | RecordType?('T)
-      and not BitwiseAssignedType?('T)
-      and allValues?(AssignableType?, ..fieldTypes('T))
+      and not BitwiseAssigned?('T)
+      and allValues?(Assignable?, ..fieldTypes('T))
 {
     copyAssignRecord(to, from);
 }

@@ -15,7 +15,7 @@ import unsafe.valuesemantics.*;
 symbol Tuple[..'T];
 overload #inheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
 overload #llType(Tuple[..'T])
-    | allValues?(Type?, ..'T)
+    | allValues?(type?, ..'T)
     = llTupleType[..'T];
 
 
@@ -29,7 +29,7 @@ overload index(forward t:Tuple[..'T], #'n) inline
 
 overload index(rvalue t:Tuple[..'T], #'n) inline
     --> rvalue returned:nthValue('n, ..'T)
-    | validStaticIndex?('n, ..'T) and not DestroyDoesNothingType?(Tuple[..'T])
+    | validStaticIndex?('n, ..'T) and not DestroyDoesNothing?(Tuple[..'T])
 {
     ref rt = rvalueToRef(t);
     returned = &cFieldRef(#nthValue('n, ..'T), rt, #llTupleFieldName('n));
@@ -51,17 +51,17 @@ overload unpack(forward x:Tuple[..'T]) inline
 // default initialization
 //
 
-overload #BitwiseZeroInitializedType?(Tuple[..'T])
-    = allValues?(BitwiseZeroInitializedType?, ..'T);
+overload #BitwiseZeroInitialized?(Tuple[..'T])
+    = allValues?(BitwiseZeroInitialized?, ..'T);
 
 overload Tuple[..'T]() inline --> returned:Tuple[..'T]
-    | allValues?(DefaultInitializableType?, ..'T)
+    | allValues?(DefaultInitializable?, ..'T)
 {
     ..*returned <-- ..mapValues(call, ..'T);
 }
 
 overload Tuple[..'T]() inline --> returned:Tuple[..'T]
-    | allValues?(BitwiseZeroInitializedType?, ..'T)
+    | allValues?(BitwiseZeroInitialized?, ..'T)
 {
     memset(OpaquePointer(&returned), 0_i32, typeSize(Tuple[..'T]));
 }
@@ -83,25 +83,25 @@ overload Tuple(forward ..x:'T) inline = Tuple[..'T](..x);
 //
 
 overload destroy(ref x:Tuple[..'T]) inline
-    | not DestroyDoesNothingType?(Tuple[..'T])
+    | not DestroyDoesNothing?(Tuple[..'T])
 {
     static for (ref f in ..*x)
         destroy(f);
 }
 
 overload reset(ref x:Tuple[..'T]) inline
-    | not ResetDoesNothingType?(Tuple[..'T])
+    | not ResetDoesNothing?(Tuple[..'T])
 {
     static for (ref f in ..*x)
         reset(f);
 }
 
 overload moveRvalue(forward x:Tuple[..'T]) inline
-    | not BitwiseMovedType?(Tuple[..'T]) and allValues?(MovableType?, ..'T)
+    | not BitwiseMoved?(Tuple[..'T]) and allValues?(Movable?, ..'T)
     = Tuple[..'T](..mapValues(moveRvalue, ..*x));
 
 overload copy(x:Tuple[..'T]) inline
-    | not BitwiseCopiedType?(Tuple[..'T]) and allValues?(CopyableType?, ..'T)
+    | not BitwiseCopied?(Tuple[..'T]) and allValues?(Copyable?, ..'T)
     = Tuple[..'T](..mapValues(copy, ..*x));
 
 #CompatibleTupleTypes?('fn, (..'T), (..'U))
@@ -113,7 +113,7 @@ private #compatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
 overload #compatibleTupleTypes2?('fn, (), ()) = true;
 
 overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U]) inline
-    | not ((..'T) == (..'U) and BitwiseAssignedType?(Tuple[..'T]))
+    | not ((..'T) == (..'U) and BitwiseAssigned?(Tuple[..'T]))
       and CompatibleTupleTypes?(copyAssign, (..'T), (..'U))
 {
     static for (#'n in ..#intValues(countValues(..'T)))

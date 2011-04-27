@@ -12,9 +12,9 @@ import unsafe.valuesemantics.*;
 //
 
 symbol Union[..'T];
-overload #PODType?(Union[..'T]) = true;
+overload #POD?(Union[..'T]) = true;
 overload #llType(Union[..'T])
-    | allValues?(Type?, ..'T)
+    | allValues?(type?, ..'T)
     = llUnionType[..'T];
 
 
@@ -35,7 +35,7 @@ overload index(forward t:Union[..'T], #'U) inline
 // default initialization
 //
 
-overload #BitwiseZeroInitializedType?(Union[..'T]) | Type?(Union[..'T]) = true;
+overload #BitwiseZeroInitialized?(Union[..'T]) | type?(Union[..'T]) = true;
 
 overload Union[..'T]() inline --> returned:Union[..'T] {
     memset(OpaquePointer(&returned), 0_i32, typeSize(Union[..'T]));
@@ -71,13 +71,13 @@ overload equals?(a:Union[..'T], b:Union[..'T]) inline
 overload #fields('T) | NamedUnionType?('T) = ..symbolTagBody('T, NamedUnionType);
 
 overload #llType('T) | NamedUnionType?('T) = llUnionType[..fields('T)];
-overload #PODType?('T) | NamedUnionType?('T) = true;
+overload #POD?('T) | NamedUnionType?('T) = true;
 
 overload index(forward x:'T, #'field) inline
     | NamedUnionType?('T) and field?('T, 'field)
     = forward bitcast(#fieldType('T, 'field), x);
 
-overload #BitwiseZeroInitializedType?('T) | NamedUnionType?('T) = true;
+overload #BitwiseZeroInitialized?('T) | NamedUnionType?('T) = true;
 
 overload 'T() inline --> returned:'T
     | NamedUnionType?('T)

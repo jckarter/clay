@@ -26,16 +26,16 @@ public import __primitives__.(
 symbol typeSize  = RuntimeStaticProcedure();
 symbol typeAlign = RuntimeStaticProcedure();
 
-overload #typeSize ('T) | Type?('T) = llTypeSize (llType('T));
-overload #typeAlign('T) | Type?('T) = llTypeAlign(llType('T));
+overload #typeSize ('T) | type?('T) = llTypeSize (llType('T));
+overload #typeAlign('T) | type?('T) = llTypeAlign(llType('T));
 
 
 //
 // basic type predicate
 //
 
-#Type?('x) = staticCallDefined?(llType, 'x);
-    /* and allValues?(Type?, ..recursiveTypes('x));*/
+#type?('x) = staticCallDefined?(llType, 'x);
+    /* and allValues?(type?, ..recursiveTypes('x));*/
 #recursiveTypes('T) = ;
 
 
@@ -52,24 +52,24 @@ overload #ReferenceKindTemplate?(Ref) = true;
 overload #ReferenceKindTemplate?(Rvalue) = true;
 overload #ReferenceKindTemplate?(Const) = true;
 
-#ReferenceType?('T) = Type?('T);
-overload #ReferenceType?(Ref['T])    = Type?('T);
-overload #ReferenceType?(Rvalue['T]) = Type?('T);
-overload #ReferenceType?(Const['T])  = Type?('T);
+#ReferenceType?('T) = type?('T);
+overload #ReferenceType?(Ref['T])    = type?('T);
+overload #ReferenceType?(Rvalue['T]) = type?('T);
+overload #ReferenceType?(Const['T])  = type?('T);
 
-#referenceBaseType('T) | Type?('T) = 'T;
-overload #referenceBaseType(Ref['T])    | Type?('T) = 'T;
-overload #referenceBaseType(Rvalue['T]) | Type?('T) = 'T;
-overload #referenceBaseType(Const['T])  | Type?('T) = 'T;
+#referenceBaseType('T) | type?('T) = 'T;
+overload #referenceBaseType(Ref['T])    | type?('T) = 'T;
+overload #referenceBaseType(Rvalue['T]) | type?('T) = 'T;
+overload #referenceBaseType(Const['T])  | type?('T) = 'T;
 
 #Ref?('X) = false;
-overload #Ref?(Ref['T]) | Type?('T) = true;
+overload #Ref?(Ref['T]) | type?('T) = true;
 
 #Rvalue?('X) = false;
-overload #Rvalue?(Rvalue['T]) | Type?('T) = true;
+overload #Rvalue?(Rvalue['T]) | type?('T) = true;
 
 #Const?('X) = false;
-overload #Const?(Const['T]) | Type?('T) = true;
+overload #Const?(Const['T]) | type?('T) = true;
 
 
 //
@@ -92,64 +92,64 @@ overload #ABISupportsVariadics?(CdeclABI) = true;
 // primitive type predicates
 //
 
-#IntegerType?('x) = false;
-overload #IntegerType?(Int   ) = true;
-overload #IntegerType?(Int8  ) = true;
-overload #IntegerType?(Int16 ) = true;
-overload #IntegerType?(Int32 ) = true;
-overload #IntegerType?(Int64 ) = true;
-overload #IntegerType?(UInt  ) = true;
-overload #IntegerType?(UInt8 ) = true;
-overload #IntegerType?(UInt16) = true;
-overload #IntegerType?(UInt32) = true;
-overload #IntegerType?(UInt64) = true;
+#Integer?('x) = false;
+overload #Integer?(Int   ) = true;
+overload #Integer?(Int8  ) = true;
+overload #Integer?(Int16 ) = true;
+overload #Integer?(Int32 ) = true;
+overload #Integer?(Int64 ) = true;
+overload #Integer?(UInt  ) = true;
+overload #Integer?(UInt8 ) = true;
+overload #Integer?(UInt16) = true;
+overload #Integer?(UInt32) = true;
+overload #Integer?(UInt64) = true;
 
-#SignedIntegerType?('x) = false;
-overload #SignedIntegerType?(Int  ) = true;
-overload #SignedIntegerType?(Int8 ) = true;
-overload #SignedIntegerType?(Int16) = true;
-overload #SignedIntegerType?(Int32) = true;
-overload #SignedIntegerType?(Int64) = true;
+#SignedInteger?('x) = false;
+overload #SignedInteger?(Int  ) = true;
+overload #SignedInteger?(Int8 ) = true;
+overload #SignedInteger?(Int16) = true;
+overload #SignedInteger?(Int32) = true;
+overload #SignedInteger?(Int64) = true;
 
-#UnsignedIntegerType?('x) = false;
-overload #UnsignedIntegerType?(UInt  ) = true;
-overload #UnsignedIntegerType?(UInt8 ) = true;
-overload #UnsignedIntegerType?(UInt16) = true;
-overload #UnsignedIntegerType?(UInt32) = true;
-overload #UnsignedIntegerType?(UInt64) = true;
+#UnsignedInteger?('x) = false;
+overload #UnsignedInteger?(UInt  ) = true;
+overload #UnsignedInteger?(UInt8 ) = true;
+overload #UnsignedInteger?(UInt16) = true;
+overload #UnsignedInteger?(UInt32) = true;
+overload #UnsignedInteger?(UInt64) = true;
 
-#FloatType?('x) = false;
-overload #FloatType?(Float32) = true;
-overload #FloatType?(Float64) = true;
+#Float?('x) = false;
+overload #Float?(Float32) = true;
+overload #Float?(Float64) = true;
 
-#NumberType?('T) = IntegerType?('T) or FloatType?('T);
+#Number?('T) = Integer?('T) or Float?('T);
 
-#CharType?('x) = false;
-overload #CharType?(Char) = true;
+#Char?('x) = false;
+overload #Char?(Char) = true;
 
-#StaticType?('X) = false;
-overload #StaticType?(Static['x]) = true;
+#Static?('X) = false;
+overload #Static?(Static['x]) = true;
 
-#PointerType?('X) = false;
-overload #PointerType?(Pointer['T]) = true;
-overload #PointerType?(ContiguousCoordinate['T]) = true;
-overload #PointerType?(OpaquePointer) = true;
-overload #PointerType?(CodePointer['I,'O])
-    | Type?(CodePointer['I,'O]) = true;
-overload #PointerType?(ExternalCodePointer['A,'V,'I,'O])
-    | Type?(ExternalCodePointer['A,'V,'I,'O]) = true;
-
-
-#ArrayType?('X) = false;
-overload #ArrayType?(Array['T, 'n]) | Type?(Array['T, 'n]) = true;
+#Pointer?('X) = false;
+overload #Pointer?(Pointer['T]) = true;
+overload #Pointer?(ContiguousCoordinate['T]) = true;
+overload #Pointer?(OpaquePointer) = true;
+overload #Pointer?(CodePointer['I,'O])
+    | type?(CodePointer['I,'O]) = true;
+overload #Pointer?(ExternalCodePointer['A,'V,'I,'O])
+    | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
 
 
-#TupleType?('X) = false;
-overload #TupleType?(Tuple[..'T]) | Type?(Tuple[..'T]) = true;
+#Array?('X) = false;
+overload #Array?(Array['T, 'n]) | type?(Array['T, 'n]) = true;
 
 
-#UnionType?('X) = false;
-overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
+#Tuple?('X) = false;
+overload #Tuple?(Tuple[..'T]) | type?(Tuple[..'T]) = true;
+
+
+#Union?('X) = false;
+overload #Union?(Union[..'T]) | type?(Union[..'T]) = true;
 
 
 //
@@ -164,14 +164,14 @@ overload #UnionType?(Union[..'T]) | Type?(Union[..'T]) = true;
 // sequence-related predicates and properties
 //
 
-#SequenceType?('S) = callDefined?(iterator, 'S);
-#IteratorType?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
+#Sequence?('S) = callDefined?(iterator, 'S);
+#Iterator?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
 
-#iteratorTargetType('I) | IteratorType?('I) = type([next(arg(Ref['I]))]);
-#sequenceIteratorType('S) | SequenceType?('S) = type([iterator(arg('S))]);
-#sequenceElementType('S) | SequenceType?('S)
+#iteratorTargetType('I) | Iterator?('I) = type([next(arg(Ref['I]))]);
+#sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
+#sequenceElementType('S) | Sequence?('S)
     = iteratorTargetType(sequenceIteratorType('S));
 
-#SizedSequenceType?('S) = SequenceType?('S) and callDefined?(size, 'S);
+#SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
 
-#ReversibleSequenceType?('S) = callDefined?(reverseIterator, 'S);
+#ReversibleSequence?('S) = callDefined?(reverseIterator, 'S);

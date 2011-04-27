@@ -8,14 +8,14 @@ requiredRealloc(ptr, count) = required(realloc(ptr, count));
 
 // XXX alignment
 
-allocateUninitializedValues(count:'I, #'T) | Type?('T) and IntegerType?('I)
+allocateUninitializedValues(count:'I, #'T) | type?('T) and Integer?('I)
     = ContiguousCoordinate['T](requiredMalloc(typeSize('T) * UInt(count)));
 
-allocateUninitializedValue(#'T) | Type?('T)
+allocateUninitializedValue(#'T) | type?('T)
     = Pointer['T](requiredMalloc(typeSize('T)));
 
 reallocateUninitializedValues(count:'I, values:ContiguousCoordinate['T])
-    | Type?('T) and IntegerType?('I)
+    | type?('T) and Integer?('I)
     = ContiguousCoordinate['T](
         requiredRealloc(OpaquePointer(values), typeSize('T) * UInt(count))
     );

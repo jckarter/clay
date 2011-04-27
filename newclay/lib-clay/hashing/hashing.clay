@@ -3,12 +3,12 @@ import values.(allValues?);
 
 symbol hash;
 
-#HashableType?('T) = callDefined?(equals?, 'T, 'T) and callDefined?(hash, 'T);
+#Hashable?('T) = callDefined?(equals?, 'T, 'T) and callDefined?(hash, 'T);
 
 overload hash(x:'T) inline
-    | IntegerType?('T) or CharType?('T) or 'T == Bool
+    | Integer?('T) or Char?('T) or 'T == Bool
     = UInt(x);
-overload hash(x:'P) inline | PointerType?('P) = bitcast(UInt, x);
+overload hash(x:'P) inline | Pointer?('P) = bitcast(UInt, x);
 overload hash(x:Static['x]) = 0u;
 
 hashValues(forward ..values) {
@@ -20,16 +20,16 @@ hashValues(forward ..values) {
 overload hashValues(forward value) inline = hash(value);
 
 overload hash(x:Tuple[..'T]) inline
-    | allValues?(HashableType?, ..'T)
+    | allValues?(Hashable?, ..'T)
     = hashValues(..*x);
 overload hash(x:'R) inline
-    | RecordType?('R) and allValues?(HashableType?, ..fieldTypes('R))
+    | RecordType?('R) and allValues?(Hashable?, ..fieldTypes('R))
     = hashValues(..*x);
 overload hash(x:'N) inline
-    | NewType?('N) and HashableType?(underlyingType('N))
+    | NewType?('N) and Hashable?(underlyingType('N))
     = hash(*x);
 
-hashSequence(seq:'S) | SequenceType?('S) {
+hashSequence(seq:'S) | Sequence?('S) {
     var h = 0u;
     var f = 11u;
     for (forward ..v in seq) {
@@ -39,4 +39,4 @@ hashSequence(seq:'S) | SequenceType?('S) {
     return h;
 }
 
-overload hash(x:Array['T,'n]) | HashableType?('T) = hashSequence(x);
+overload hash(x:Array['T,'n]) | Hashable?('T) = hashSequence(x);

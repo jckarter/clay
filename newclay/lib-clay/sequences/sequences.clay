@@ -1,7 +1,7 @@
 import values.*;
 import unsafe.coordinates.(
     CoordinateRange,
-    CoordinateSequenceType?,
+    CoordinateSequence?,
     sequenceCoordinateType,
     begin,
     end
@@ -51,22 +51,22 @@ overload Zipped(forward x:Tuple[..'S]) = Zipped[..'S](x);
 private symbol ZippedIterator[..'S] = NewType(Tuple[..'S]);
 overload ZippedIterator(forward x:Tuple[..'S]) = ZippedIterator[..'S](x);
 
-overload Zipped(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
+overload Zipped(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
     = Zipped(captureValues(..seqs));
 
 overload iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
 
 overload reverseIterator(s:Zipped[..'S])
-    | allValues?(ReversibleSequenceType?, ..CapturedTypes(..'S))
+    | allValues?(ReversibleSequence?, ..CapturedTypes(..'S))
     = ZippedIterator((..mapValues(reverseIterator, ..capturedRefs(*s))));
 overload reverseIterator(rvalue s:Zipped[..'S])
-    | allValues?(ReversibleSequenceType?, ..CapturedTypes(..'S))
+    | allValues?(ReversibleSequence?, ..CapturedTypes(..'S))
     = ZippedIterator((..mapValues(reverseIterator, ..forwardValues(*s))));
 
 overload hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
 overload next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
 
-enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
+enumerated(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
     = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
 
 
@@ -76,7 +76,7 @@ enumerated(forward ..seqs:'S) | allValues?(SequenceType?, ..'S)
 
 symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
 overload Mapped(forward f:'F, forward s:'S)
-    | SequenceType?('S) and defined?([var i = iterator(s); ..f(..next(i))])
+    | Sequence?('S) and defined?([var i = iterator(s); ..f(..next(i))])
     = Mapped['F, #type([captureValue(s)])](f, captureValue(s));
 
 private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
@@ -86,7 +86,7 @@ overload MappedIterator(mapper:'F, forward iter:'I)
 overload iterator(s:Mapped['F, 'S])
     = MappedIterator(s.mapper, iterator(capturedRef(s.sequence)));
 overload reverseIterator(s:Mapped['F, 'S])
-    | ReversibleSequenceType?(CapturedType('S))
+    | ReversibleSequence?(CapturedType('S))
     = MappedIterator(s.mapper, reverseIterator(capturedRef(s.sequence)));
 
 overload hasNext?(i:MappedIterator['F,'S]) = hasNext?(i.iterator);
@@ -99,7 +99,7 @@ overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.itera
 
 symbol Filtered['F, 'S] = RecordType(filterer:'F, sequence:'S);
 overload Filtered(forward f:'F, forward s:'S)
-    | SequenceType?('S) and definedWithType?([var i = iterator(s); f(..next(i))], Bool)
+    | Sequence?('S) and definedWithType?([var i = iterator(s); f(..next(i))], Bool)
     = Filtered['F, #type([captureValue(s)])](f, captureValue(s));
 
 private symbol FilteredIterator['F, 'I, 'V] = RecordType(
@@ -115,7 +115,7 @@ overload FilteredIterator(filterer:'F, forward iter:'I) {
 overload iterator(s:Filtered['F, 'S])
     = FilteredIterator(s.filterer, iterator(capturedRef(s.sequence)));
 overload reverseIterator(s:Filtered['F, 'S])
-    | ReversibleSequenceType?(CapturedType('S))
+    | ReversibleSequence?(CapturedType('S))
     = FilteredIterator(s.filterer, reverseIterator(capturedRef(s.sequence)));
 
 overload hasNext?(ref i:FilteredIterator['F, 'I, 'V]) {
@@ -145,12 +145,12 @@ overload next(ref i:FilteredIterator['F, 'I, 'V]) {
 
 symbol Sliced['S, 'C] = RecordType(sequence:'S, range:CoordinateRange['C]);
 overload Sliced(forward s:'S, forward from:'C, forward to:'C)
-    | CoordinateSequenceType?('S) and 'C == sequenceCoordinateType('S)
+    | CoordinateSequence?('S) and 'C == sequenceCoordinateType('S)
     = Sliced[type([captureValue(s)]), 'C](captureValue(s), CoordinateRange(from, to));
 
 overload Sliced(forward s:'S, from:'I, to:'J)
     --> returned:Sliced[type([captureValue(s)]), type([begin(s)])]
-    | CoordinateSequenceType?('S) and IntegerType?('I) and IntegerType?('J)
+    | CoordinateSequence?('S) and Integer?('I) and Integer?('J)
 {
     returned.sequence <-- captureValue(s);
     try {

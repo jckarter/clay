@@ -1,4 +1,4 @@
-import unsafe.valuesemantics.(PODType?);
+import unsafe.valuesemantics.(POD?);
 import show.*;
 
 symbol Empty = RecordType();
@@ -7,7 +7,7 @@ main() {
     show(..#fieldNames(Empty));
     show(..#fieldTypes(Empty));
 
-    show(#PODType?(Empty)); ////true
+    show(#POD?(Empty)); ////true
     show(#typeSize(Empty)); ////0u
     show(#typeAlign(Empty)); ////1u
 

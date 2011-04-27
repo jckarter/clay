@@ -30,7 +30,7 @@ symbol back;
 // an iterator is its own iterator
 //
 
-overload iterator(forward x:'I) | IteratorType?('I) = forward x;
+overload iterator(forward x:'I) | Iterator?('I) = forward x;
 
 
 //
@@ -59,10 +59,10 @@ symbol reverseIterator;
 
 symbol Reversed['S] = NewType('S);
 
-overload Reversed(forward x:'S) | ReversibleSequenceType?('S) = Reversed['S](x);
+overload Reversed(forward x:'S) | ReversibleSequence?('S) = Reversed['S](x);
 
 overload iterator(x:Reversed['S])
-    | ReversibleSequenceType?('S)
+    | ReversibleSequence?('S)
     = forward reverseIterator(*x);
 
 symbol ReversedRange['T] = RecordType(begin:'T, end:'T, step:'T);

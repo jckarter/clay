@@ -13,7 +13,7 @@ symbol Vector['T] = CompositeType(
     data:ContiguousCoordinate['T],
 );
 
-overload #ContainerType?(Vector['T]) = true;
+overload #Container?(Vector['T]) = true;
 
 
 //
@@ -26,11 +26,11 @@ overload Vector['T]() = initializeRecord(Vector['T],
     ContiguousCoordinate['T](),
 );
 
-overload #InitializeDoesNotThrowType?(Vector['T]) = true;
-overload #BitwiseZeroInitializedType?(Vector['T]) = true;
+overload #InitializeDoesNotThrow?(Vector['T]) = true;
+overload #BitwiseZeroInitialized?(Vector['T]) = true;
 
 overload Vector['T](forward s:'S) inline --> returned:Vector['T]
-    | SequenceType?('S) and sequenceElementType('S) == 'T
+    | Sequence?('S) and sequenceElementType('S) == 'T
 {
     returned <-- Vector['T]();
     // XXX lambdas
@@ -43,7 +43,7 @@ overload Vector['T](forward s:'S) inline --> returned:Vector['T]
 }
 
 overload Vector(forward s:'S) inline
-    | SequenceType?('S)
+    | Sequence?('S)
     = Vector[sequenceElementType('S)](s);
 
 overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
@@ -84,7 +84,7 @@ overload copy(a:Vector['T]) inline = Vector['T](a);
 
 overload size(v:Vector['T]) inline = v.size;
 overload index(/*not rvalue*/ forward v:Vector['T], i:'I) inline
-    | IntegerType?('I)
+    | Integer?('I)
     = forward v.data[i];
 
 overload index(rvalue v:Vector['T], i:'I) inline {
@@ -110,7 +110,7 @@ overload push(ref v:Vector['T], forward ..elements:'TT) inline
 }
 
 overload push(ref v:Vector['T], forward seq:'S) inline
-    | SequenceType?('S) and sequenceElementType('S) == 'T
+    | Sequence?('S) and sequenceElementType('S) == 'T
 {
     insert(v, size(v), seq);
 }
@@ -124,23 +124,23 @@ overload pop(ref v:Vector['T]) inline --> returned:'T {
     removeLocations(v, end(v) - 1, end(v));
 }
 
-overload reserve(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload reserve(ref v:Vector['T], n:'I) inline | Integer?('I) {
     if (v.capacity < UInt(n))
         requestCapacity(v, UInt(n));
 }
 
-overload resize(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload resize(ref v:Vector['T], n:'I) inline | Integer?('I) {
     resizeInternal(v, UInt(n), initializeRange);
 }
 
-overload resizeUnsafe(ref v:Vector['T], n:'I) inline | IntegerType?('I) {
+overload resizeUnsafe(ref v:Vector['T], n:'I) inline | Integer?('I) {
     resizeInternal(v, UInt(n), resetRange);
 }
 
 // insert
 
 overload insert(ref v:Vector['T], i:'I, seq:'S)
-    | IntegerType?('I) and SequenceType?('S) and sequenceElementType('S) == 'T
+    | Integer?('I) and Sequence?('S) and sequenceElementType('S) == 'T
 {
     var pos = UInt(i);
     var iter = iterator(seq);
@@ -151,7 +151,7 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
 }
 
 overload insert(ref v:Vector['T], i:'I, seq:'S)
-    | IntegerType?('I) and SizedSequenceType?('S) and sequenceElementType('S) == 'T
+    | Integer?('I) and SizedSequence?('S) and sequenceElementType('S) == 'T
 {
     var first, last = ..insertLocations(v, UInt(i), size(seq));
     try {
@@ -168,7 +168,7 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
 
 // XXX insert(rvalue sequence) optimizations
 
-overload insert(ref v:Vector['T], i:'I, x:'T) | IntegerType?('I) {
+overload insert(ref v:Vector['T], i:'I, x:'T) | Integer?('I) {
     var first, last = ..insertLocations(v, UInt(i), 1u);
     try {
         first^ <-- x;
@@ -178,13 +178,13 @@ overload insert(ref v:Vector['T], i:'I, x:'T) | IntegerType?('I) {
     }
 }
 
-overload insert(ref v:Vector['T], i:'I, rvalue x:'T) | IntegerType?('I) {
+overload insert(ref v:Vector['T], i:'I, rvalue x:'T) | Integer?('I) {
     var first, last = ..insertLocations(v, UInt(i), 1u);
     first^ <-- x;
 }
 
 overload insert(ref v:Vector['T], i:ContiguousCoordinate['T], forward seq:'S)
-    | SequenceType?('S) and sequenceElementType('S) == 'T
+    | Sequence?('S) and sequenceElementType('S) == 'T
 {
     insert(v, i - begin(v), seq);
 }
@@ -212,12 +212,12 @@ overload remove(ref v:Vector['T], i:ContiguousCoordinate['T]) inline {
     remove(v, i, i+1);
 }
 
-overload remove(ref v:Vector['T], i:'I) inline | IntegerType?('I) {
+overload remove(ref v:Vector['T], i:'I) inline | Integer?('I) {
     remove(v, begin(v) + i);
 }
 
 overload remove(ref v:Vector['T], i:'I, j:'J) inline
-    | IntegerType?('I) and IntegerType?('J)
+    | Integer?('I) and Integer?('J)
 {
     remove(v, begin(v) + i, begin(v) + j);
 }
@@ -243,7 +243,7 @@ private reallocVector(ref v:Vector['T], capacity:UInt) {
     v.data = data;
     v.capacity = capacity;
 }
-overload reallocVector(ref v:Vector['T], capacity:UInt) | BitwiseMovedType?('T) {
+overload reallocVector(ref v:Vector['T], capacity:UInt) | BitwiseMoved?('T) {
     v.data = reallocateUninitializedValues(capacity, v.data);
     v.capacity = capacity;
 }
