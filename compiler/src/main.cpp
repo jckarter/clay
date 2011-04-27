@@ -183,6 +183,7 @@ static void generateAssembly(llvm::Module *module,
 }
 
 static bool generateBinary(llvm::Module *module,
+                           const string &atomicOutputFile,
                            const string &outputFile,
                            const llvm::sys::Path &gccPath,
                            unsigned optLevel,
@@ -225,10 +226,30 @@ static bool generateBinary(llvm::Module *module,
         assert(false);
     }
 
-    if (sharedLib)
+    string linkerFlags;
+    if (sharedLib) {
         gccArgs.push_back("-shared");
+        llvm::Triple triple(llvmModule->getTargetTriple());
+
+        if (triple.getOS() == llvm::Triple::Win32
+            || triple.getOS() == llvm::Triple::MinGW32
+            || triple.getOS() == llvm::Triple::Cygwin) {
+
+            string defFile;
+            string::size_type dllSuffixPos = outputFile.rfind(".dll");
+            if (dllSuffixPos == outputFile.size() - 4) {
+                defFile = outputFile.substr(0, dllSuffixPos);
+                defFile += ".def";
+            } else
+                defFile = outputFile + ".def";
+
+            linkerFlags = "-Wl,-soname," + outputFile + ",--output-def," + defFile;
+
+            gccArgs.push_back(linkerFlags.c_str());
+        }
+    }
     gccArgs.push_back("-o");
-    gccArgs.push_back(outputFile.c_str());
+    gccArgs.push_back(atomicOutputFile.c_str());
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
@@ -777,7 +798,7 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, atomicOutputFile, gccPath,
+        result = generateBinary(llvmModule, atomicOutputFile, outputFile, gccPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
