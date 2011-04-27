@@ -17,7 +17,7 @@ import unsafe.valuesemantics.*;
 symbol Array['T, 'n];
 overload #inheritsPredicatesFromTypes(Array['T, 'n]) = true, 'T;
 overload #llType(Array['T, 'n])
-    | Type?('T) and staticInt?('n) and 'n >= 0
+    | type?('T) and staticInt?('n) and 'n >= 0
     = llArrayType['T, 'n];
 
 
@@ -40,10 +40,10 @@ overload end(x:Array['T, 'n]) inline = pointerCast(ContiguousCoordinate['T], &x)
 // indexing
 //
 
-overload index(forward a:Array['T, 'n], i:'I) inline | IntegerType?('I)
+overload index(forward a:Array['T, 'n], i:'I) inline | Integer?('I)
     = forward cIndex('T, a, i);
 overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
-    | IntegerType?('I) and not DestroyDoesNothingType?('T)
+    | Integer?('I) and not DestroyDoesNothing?('T)
 {
     ref ra = rvalueToRef(a);
     returned <-- refToRvalue(cIndex('T, ra, i));
@@ -61,18 +61,18 @@ overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
 // default initialization
 //
 
-overload #BitwiseZeroInitializedType?(Array['T, 'n])
-    = BitwiseZeroInitializedType?('T);
+overload #BitwiseZeroInitialized?(Array['T, 'n])
+    = BitwiseZeroInitialized?('T);
 
 overload Array['T, 'n]() inline --> returned:Array['T, 'n]
-    | DefaultInitializableType?('T)
+    | DefaultInitializable?('T)
 {
     for (ref r in returned)
         r <-- 'T();
 }
 
 overload Array['T, 'n]() inline --> returned:Array['T, 'n]
-    | BitwiseZeroInitializedType?('T)
+    | BitwiseZeroInitialized?('T)
 {
     memset(OpaquePointer(&returned), 0_i32, typeSize(Array['T, 'n]));
 }
@@ -123,21 +123,21 @@ overload forwardIteratorUnsafe(rvalue x:Array['T, 'n]) inline = rvalueIteratorUn
 //
 
 overload destroy(ref x:Array['T, 'n]) inline
-    | not DestroyDoesNothingType?('T)
+    | not DestroyDoesNothing?('T)
 {
     for (ref y in x)
         destroy(y);
 }
 
 overload reset(ref x:Array['T, 'n]) inline
-    | not ResetDoesNothingType?('T)
+    | not ResetDoesNothing?('T)
 {
     for (ref y in x)
         reset(y);
 }
 
 overload moveRvalue(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
-    | not BitwiseMovedType?('T) and MovableType?('T)
+    | not BitwiseMoved?('T) and Movable?('T)
 {
     var ri = iterator(returned), xi = forwardIteratorUnsafe(x);
     while (hasNext?(ri)) {
@@ -146,7 +146,7 @@ overload moveRvalue(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
 }
 
 overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
-    | not BitwiseCopiedType?('T) and CopyableType?('T)
+    | not BitwiseCopied?('T) and Copyable?('T)
 {
     var ri = iterator(returned), xi = iterator(x);
     while (hasNext?(ri)) {
@@ -155,7 +155,7 @@ overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
 }
 
 overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
-    | not ('T == 'U and BitwiseAssignedType?('T))
+    | not ('T == 'U and BitwiseAssigned?('T))
       and callDefined?(copyAssign, Ref['T], 'U)
 {
     var ti = iterator(to), fi = iterator(from);

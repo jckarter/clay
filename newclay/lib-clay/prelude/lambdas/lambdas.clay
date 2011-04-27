@@ -26,6 +26,6 @@ overload call(forward l:Lambda['L, 'C], forward ..args)
     | lambdaSymbol?('L) and defined?(['L(..lambdaCaptures(l), ..args);])
     = forward ..'L(..lambdaCaptures(l), ..args);
 
-#LambdaType?('T) = false;
-overload #LambdaType?(Static['L]) | lambdaSymbol?('L) and lambdaStateless?('L) = true;
-overload #LambdaType?(Lambda['L, 'C]) | lambdaSymbol?('L) and Type?('C) = true;
+#Lambda?('T) = false;
+overload #Lambda?(Static['L]) | lambdaSymbol?('L) and lambdaStateless?('L) = true;
+overload #Lambda?(Lambda['L, 'C]) | lambdaSymbol?('L) and type?('C) = true;

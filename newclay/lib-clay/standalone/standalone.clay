@@ -1,7 +1,7 @@
 // callMain() is the true entry point for standalone executables
 // this implementation calls the main() function with one of:
 // - no arguments
-// - a SequenceType? whose members are of a StringType?, containing the commandline
+// - a Sequence? type whose members are of a String? type, containing the commandline
 //   arguments
 // - an Int and Pointer[Pointer[CChar]], containing the raw original values of
 //   argc and argv

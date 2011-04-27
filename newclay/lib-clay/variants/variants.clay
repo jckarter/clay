@@ -15,7 +15,7 @@ import unsafe.valuesemantics.*;
 #VariantType?('T) = symbolWithTag?('T, VariantType);
 
 #variantMemberTypes('T) | VariantType?('T) = ..symbolTagBody('T, VariantType);
-#VariantMemberType?('T, 'M) | VariantType?('T)
+#VariantMember?('T, 'M) | VariantType?('T)
     = inValues?('M, ..variantMemberTypes('T));
 
 #WithReprType('R) = (WithReprType, 'R);
@@ -37,18 +37,18 @@ overload #variantReprType('T) | VariantType?('T) and WithReprType?('T)
 
 #variantDefaultMemberType('T)
     | VariantType?('T) and WithDefaultMemberType?('T)
-      and VariantMemberType?('T, symbolTagBody('T, WithDefaultMemberType))
+      and VariantMember?('T, symbolTagBody('T, WithDefaultMemberType))
     = symbolTagBody('T, WithDefaultMemberType);
 
 overload #variantDefaultMemberType('T)
     | VariantType?('T) and WithDefaultMemberType?('T)
-      and not VariantMemberType?('T, symbolTagBody('T, WithDefaultMemberType))
+      and not VariantMember?('T, symbolTagBody('T, WithDefaultMemberType))
     = staticError("variant ", 'T, " default member type ",
         symbolTagBody('T, WithDefaultMemberType),
         " is not one of its member types ", (..variantMemberTypes('T))
     );
 
-overload #BitwiseZeroInitializedType?('V)
+overload #BitwiseZeroInitialized?('V)
     | VariantType?('V) and WithDefaultMemberType?('V)
     = reprZeroInitializedWithMemberType?(variantReprType('V), variantDefaultMemberType('V));
 
@@ -66,13 +66,13 @@ overload 'T() --> returned:'T
 }
 
 overload 'T() inline --> returned:'T
-    | VariantType?('T) and WithDefaultMemberType?('T) and BitwiseZeroInitializedType?('T)
+    | VariantType?('T) and WithDefaultMemberType?('T) and BitwiseZeroInitialized?('T)
 {
     memset(OpaquePointer(&returned), 0_i32, typeSize('T));
 }
 
 overload 'T(forward m:'M) inline --> returned:'T
-    | VariantType?('T) and VariantMemberType?('T, 'M)
+    | VariantType?('T) and VariantMember?('T, 'M)
 {
     initializeRepr(repr(returned), m);
 }
@@ -80,41 +80,41 @@ overload 'T(forward m:'M) inline --> returned:'T
 dispatch(forward v:'T, forward fn) inline | VariantType?('T)
     = forward ..dispatchRepr(repr(v), fn);
 
-overload destroy(ref v:'T) inline | VariantType?('T) and not DestroyDoesNothingType?('T) {
+overload destroy(ref v:'T) inline | VariantType?('T) and not DestroyDoesNothing?('T) {
     dispatchRepr(repr(v), destroy);
 }
 
-overload reset(ref v:'T) inline | VariantType?('T) and not ResetDoesNothingType?('T) {
+overload reset(ref v:'T) inline | VariantType?('T) and not ResetDoesNothing?('T) {
     dispatchRepr(repr(v), reset);
 }
 
-overload copy(v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseCopiedType?('T) {
+overload copy(v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseCopied?('T) {
     copyRepr(repr(returned), repr(v));
 }
 
-overload moveRvalue(ref v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseMovedType?('T) {
+overload moveRvalue(ref v:'T) inline --> returned:'T | VariantType?('T) and not BitwiseMoved?('T) {
     moveRepr(repr(returned), repr(v));
 }
 
-variantIs?(#'M, v:'T) inline | VariantType?('T) and VariantMemberType?('T, 'M)
+variantIs?(#'M, v:'T) inline | VariantType?('T) and VariantMember?('T, 'M)
     = reprIs?(#'M, repr(v));
-variantAs(#'M, forward v:'T) inline | VariantType?('T) and VariantMemberType?('T, 'M) {
+variantAs(#'M, forward v:'T) inline | VariantType?('T) and VariantMember?('T, 'M) {
     assert([variantIs?(#'M, v)]);
     return forward reprAs(#'M, repr(v));
 }
 overload variantAs(#'M, rvalue v:'T) inline
-    | VariantType?('T) and VariantMemberType?('T, 'M)
+    | VariantType?('T) and VariantMember?('T, 'M)
 {
     ref rv = rvalueToRef(v);
     assert([variantIs?(#'M, rv)]);
     return forward reprAs(#'M, repr(refToRvalue(rv)));
 }
 variantAsUnsafe(#'M, forward v:'T) inline
-    | VariantType?('T) and VariantMemberType?('T, 'M)
+    | VariantType?('T) and VariantMember?('T, 'M)
     = forward reprAs(#'M, repr(v));
 
 overload index(forward v:'T, #'M) inline
-    | VariantType?('T) and VariantMemberType?('T, 'M)
+    | VariantType?('T) and VariantMember?('T, 'M)
     = forward variantAs(#'M, v);
 
 

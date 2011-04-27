@@ -1,7 +1,7 @@
 import meta.lltypes.*;
 import values.*;
 import unsafe.casts.(bitcast);
-import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitializedType?, PODType?);
+import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitialized?, POD?);
 
 
 //
@@ -42,7 +42,7 @@ symbol TaggedUnionRepr[..'M] = RecordType(
 
 overload #reprAcceptsMemberTypes?(TaggedUnionRepr[..'M]) = true;
 overload #reprZeroInitializedWithMemberType?(TaggedUnionRepr['M, ..'MM], 'M)
-    = BitwiseZeroInitializedType?('M);
+    = BitwiseZeroInitialized?('M);
 
 private symbol tagType;
 overload #tagType(..'M) = UInt64;
@@ -98,8 +98,8 @@ overload moveRepr(
 symbol NullablePointerRepr['Null, 'P] = NewType('P);
 
 overload #reprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
-    = typeSize('N) == 0 and PODType?('N)
-      and PointerType?('P) and PODType?('P);
+    = typeSize('N) == 0 and POD?('N)
+      and Pointer?('P) and POD?('P);
 
 overload #reprZeroInitializedWithMemberType?(NullablePointerRepr['N, 'P], 'N) = true;
 

@@ -119,10 +119,10 @@ private symbol CapturedValue['T] = NewType('T);
 private symbol CapturedRef['T] = NewType(Pointer['T]);
 private symbol CapturedConst['T] = NewType(Pointer['T]);
 
-private #CapturedType?('x) = false;
-overload #CapturedType?(CapturedValue['T]) = true;
-overload #CapturedType?(CapturedRef['T]) = true;
-overload #CapturedType?(CapturedConst['T]) = true;
+private #Captured?('x) = false;
+overload #Captured?(CapturedValue['T]) = true;
+overload #Captured?(CapturedRef['T]) = true;
+overload #Captured?(CapturedConst['T]) = true;
 
 symbol CapturedType;
 overload #CapturedType(CapturedValue['T]) = 'T;
@@ -148,8 +148,8 @@ overload capturedRef(x:CapturedValue['T]) inline = const *x;
 
 captureValues(forward ..x) inline = (..mapValues(captureValue, ..x));
 forwardValues(ref x:Tuple[..'T]) inline
-    | allValues?(CapturedType?, ..'T)
+    | allValues?(Captured?, ..'T)
     = forward ..mapValues(forwardValue, ..*x);
 capturedRefs(x:Tuple[..'T]) inline
-    | allValues?(CapturedType?, ..'T)
+    | allValues?(Captured?, ..'T)
     = forward ..mapValues(capturedRef, ..*x);

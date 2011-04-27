@@ -10,7 +10,7 @@ main() {
     var x = Array[Int,3](2, 4, 6);
 
     show(#type([x])); ////Array[Int, 3]
-    show(#BitwiseZeroInitializedType?(type([x]))); ////true
+    show(#BitwiseZeroInitialized?(type([x]))); ////true
 
     show(size(x)); ////3
 

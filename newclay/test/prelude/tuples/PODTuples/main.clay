@@ -1,11 +1,11 @@
 import show.*;
-import unsafe.valuesemantics.(PODType?, BitwiseZeroInitializedType?);
+import unsafe.valuesemantics.(POD?, BitwiseZeroInitialized?);
 
 main() {
     var x = (1, (true, 3.0), '4');
 
     show(#type([x])); ////Tuple[Int, Tuple[Bool, Float64], Char]
-    show(#BitwiseZeroInitializedType?(type([x]))); ////true
+    show(#BitwiseZeroInitialized?(type([x]))); ////true
 
     show(x.0); ////1
     show(x.1.0); ////true

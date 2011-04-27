@@ -1,8 +1,8 @@
 import show.*;
-import unsafe.valuesemantics.(PODType?);
+import unsafe.valuesemantics.(POD?);
 
 main() {
-    show(#PODType?(Tuple[])); ////true
+    show(#POD?(Tuple[])); ////true
     show(#typeSize(Tuple[])); ////0u
     show(#typeAlign(Tuple[])); ////1u
 

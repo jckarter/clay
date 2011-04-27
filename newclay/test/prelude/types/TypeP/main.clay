@@ -8,53 +8,53 @@ overload #llType(NonPODType) = llTupleType[];
 symbol NonType;
 
 main() {
-    show(#Type?(Bool)); ////true
-    show(#Type?(Int)); ////true
-    show(#Type?(UInt)); ////true
-    show(#Type?(Int8)); ////true
-    show(#Type?(Int16)); ////true
-    show(#Type?(Int32)); ////true
-    show(#Type?(Int64)); ////true
-    show(#Type?(UInt8)); ////true
-    show(#Type?(UInt16)); ////true
-    show(#Type?(UInt32)); ////true
-    show(#Type?(UInt64)); ////true
-    show(#Type?(Float32)); ////true
-    show(#Type?(Float64)); ////true
-    show(#Type?(Char)); ////true
-    show(#Type?(StringConstant)); ////true
-    show(#Type?(Static[2])); ////true
-    show(#Type?(Static[NonType])); ////true
-    show(#Type?(Pointer[Int])); ////true
-    show(#Type?(OpaquePointer)); ////true
-    show(#Type?(ContiguousCoordinate[Int])); ////true
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (), ()])); ////true
-    show(#Type?(ExternalCodePointer[StdcallABI, false, (Int, Int), Int])); ////true
-    show(#Type?(Array[Int, 12])); ////true
-    show(#Type?(Tuple[Int, Int])); ////true
-    show(#Type?(Union[Int, Int])); ////true
+    show(#type?(Bool)); ////true
+    show(#type?(Int)); ////true
+    show(#type?(UInt)); ////true
+    show(#type?(Int8)); ////true
+    show(#type?(Int16)); ////true
+    show(#type?(Int32)); ////true
+    show(#type?(Int64)); ////true
+    show(#type?(UInt8)); ////true
+    show(#type?(UInt16)); ////true
+    show(#type?(UInt32)); ////true
+    show(#type?(UInt64)); ////true
+    show(#type?(Float32)); ////true
+    show(#type?(Float64)); ////true
+    show(#type?(Char)); ////true
+    show(#type?(StringConstant)); ////true
+    show(#type?(Static[2])); ////true
+    show(#type?(Static[NonType])); ////true
+    show(#type?(Pointer[Int])); ////true
+    show(#type?(OpaquePointer)); ////true
+    show(#type?(ContiguousCoordinate[Int])); ////true
+    show(#type?(ExternalCodePointer[CdeclABI, true, (), ()])); ////true
+    show(#type?(ExternalCodePointer[StdcallABI, false, (Int, Int), Int])); ////true
+    show(#type?(Array[Int, 12])); ////true
+    show(#type?(Tuple[Int, Int])); ////true
+    show(#type?(Union[Int, Int])); ////true
 
-    show(#Type?(Pointer)); ////false
-    show(#Type?(Pointer[2])); ////false
-    show(#Type?(Pointer[NonType])); ////false
-    show(#Type?(ContiguousCoordinate)); ////false
-    show(#Type?(ContiguousCoordinate[2])); ////false
-    show(#Type?(ContiguousCoordinate[NonType])); ////false
-    show(#Type?(ExternalCodePointer)); ////false
-    show(#Type?(ExternalCodePointer[2, true, (), ()])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, 2, (), ()])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, 2, ()])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (), 2])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, NonType), Int])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonType])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, NonPODType), Int])); ////false
-    show(#Type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonPODType])); ////false
-    show(#Type?(Array)); ////false
-    show(#Type?(Array[NonType, 12])); ////false
-    show(#Type?(Array[Int, false])); ////false
-    show(#Type?(Array[Int, -1])); ////false
-    show(#Type?(Tuple)); ////false
-    show(#Type?(Tuple[Int, Char, NonType])); ////false
-    show(#Type?(Union)); ////false
-    show(#Type?(Tuple[Int, Char, NonType])); ////false
+    show(#type?(Pointer)); ////false
+    show(#type?(Pointer[2])); ////false
+    show(#type?(Pointer[NonType])); ////false
+    show(#type?(ContiguousCoordinate)); ////false
+    show(#type?(ContiguousCoordinate[2])); ////false
+    show(#type?(ContiguousCoordinate[NonType])); ////false
+    show(#type?(ExternalCodePointer)); ////false
+    show(#type?(ExternalCodePointer[2, true, (), ()])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, 2, (), ()])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, 2, ()])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, (), 2])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, NonType), Int])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonType])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, NonPODType), Int])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonPODType])); ////false
+    show(#type?(Array)); ////false
+    show(#type?(Array[NonType, 12])); ////false
+    show(#type?(Array[Int, false])); ////false
+    show(#type?(Array[Int, -1])); ////false
+    show(#type?(Tuple)); ////false
+    show(#type?(Tuple[Int, Char, NonType])); ////false
+    show(#type?(Union)); ////false
+    show(#type?(Tuple[Int, Char, NonType])); ////false
 }

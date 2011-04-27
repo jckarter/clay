@@ -30,118 +30,118 @@ main() {
     show(##PrimitiveType?(Union[Int, Int])); ////false
 
     // Integer types
-    show(##IntegerType?(Int)); ////true
-    show(##IntegerType?(UInt)); ////true
-    show(##IntegerType?(Int8)); ////true
-    show(##IntegerType?(Int16)); ////true
-    show(##IntegerType?(Int32)); ////true
-    show(##IntegerType?(Int64)); ////true
-    show(##IntegerType?(UInt8)); ////true
-    show(##IntegerType?(UInt16)); ////true
-    show(##IntegerType?(UInt32)); ////true
-    show(##IntegerType?(UInt64)); ////true
+    show(##Integer?(Int)); ////true
+    show(##Integer?(UInt)); ////true
+    show(##Integer?(Int8)); ////true
+    show(##Integer?(Int16)); ////true
+    show(##Integer?(Int32)); ////true
+    show(##Integer?(Int64)); ////true
+    show(##Integer?(UInt8)); ////true
+    show(##Integer?(UInt16)); ////true
+    show(##Integer?(UInt32)); ////true
+    show(##Integer?(UInt64)); ////true
     // Noninteger types
-    show(##IntegerType?(Bool)); ////false
-    show(##IntegerType?(Float32)); ////false
-    show(##IntegerType?(Float64)); ////false
-    show(##IntegerType?(Char)); ////false
-    show(##IntegerType?(Static[2])); ////false
-    show(##IntegerType?(OpaquePointer)); ////false
+    show(##Integer?(Bool)); ////false
+    show(##Integer?(Float32)); ////false
+    show(##Integer?(Float64)); ////false
+    show(##Integer?(Char)); ////false
+    show(##Integer?(Static[2])); ////false
+    show(##Integer?(OpaquePointer)); ////false
 
     // Signed integer types
-    show(#SignedIntegerType?(Int)); ////true
-    show(#SignedIntegerType?(Int8)); ////true
-    show(#SignedIntegerType?(Int16)); ////true
-    show(#SignedIntegerType?(Int32)); ////true
-    show(#SignedIntegerType?(Int64)); ////true
+    show(#SignedInteger?(Int)); ////true
+    show(#SignedInteger?(Int8)); ////true
+    show(#SignedInteger?(Int16)); ////true
+    show(#SignedInteger?(Int32)); ////true
+    show(#SignedInteger?(Int64)); ////true
     // Non-signed-integer types
-    show(#SignedIntegerType?(UInt)); ////false
-    show(#SignedIntegerType?(UInt8)); ////false
-    show(#SignedIntegerType?(UInt16)); ////false
-    show(#SignedIntegerType?(UInt32)); ////false
-    show(#SignedIntegerType?(UInt64)); ////false
-    show(#SignedIntegerType?(Bool)); ////false
-    show(#SignedIntegerType?(Float32)); ////false
-    show(#SignedIntegerType?(Float64)); ////false
-    show(#SignedIntegerType?(Char)); ////false
-    show(#SignedIntegerType?(Static[2])); ////false
-    show(#SignedIntegerType?(OpaquePointer)); ////false
+    show(#SignedInteger?(UInt)); ////false
+    show(#SignedInteger?(UInt8)); ////false
+    show(#SignedInteger?(UInt16)); ////false
+    show(#SignedInteger?(UInt32)); ////false
+    show(#SignedInteger?(UInt64)); ////false
+    show(#SignedInteger?(Bool)); ////false
+    show(#SignedInteger?(Float32)); ////false
+    show(#SignedInteger?(Float64)); ////false
+    show(#SignedInteger?(Char)); ////false
+    show(#SignedInteger?(Static[2])); ////false
+    show(#SignedInteger?(OpaquePointer)); ////false
 
     // Unsigned integer types
-    show(#UnsignedIntegerType?(UInt)); ////true
-    show(#UnsignedIntegerType?(UInt8)); ////true
-    show(#UnsignedIntegerType?(UInt16)); ////true
-    show(#UnsignedIntegerType?(UInt32)); ////true
-    show(#UnsignedIntegerType?(UInt64)); ////true
+    show(#UnsignedInteger?(UInt)); ////true
+    show(#UnsignedInteger?(UInt8)); ////true
+    show(#UnsignedInteger?(UInt16)); ////true
+    show(#UnsignedInteger?(UInt32)); ////true
+    show(#UnsignedInteger?(UInt64)); ////true
     // Non-unsigned-integer types
-    show(#UnsignedIntegerType?(Int)); ////false
-    show(#UnsignedIntegerType?(Int8)); ////false
-    show(#UnsignedIntegerType?(Int16)); ////false
-    show(#UnsignedIntegerType?(Int32)); ////false
-    show(#UnsignedIntegerType?(Int64)); ////false
-    show(#UnsignedIntegerType?(Bool)); ////false
-    show(#UnsignedIntegerType?(Float32)); ////false
-    show(#UnsignedIntegerType?(Float64)); ////false
-    show(#UnsignedIntegerType?(Char)); ////false
-    show(#UnsignedIntegerType?(Static[2])); ////false
-    show(#UnsignedIntegerType?(OpaquePointer)); ////false
+    show(#UnsignedInteger?(Int)); ////false
+    show(#UnsignedInteger?(Int8)); ////false
+    show(#UnsignedInteger?(Int16)); ////false
+    show(#UnsignedInteger?(Int32)); ////false
+    show(#UnsignedInteger?(Int64)); ////false
+    show(#UnsignedInteger?(Bool)); ////false
+    show(#UnsignedInteger?(Float32)); ////false
+    show(#UnsignedInteger?(Float64)); ////false
+    show(#UnsignedInteger?(Char)); ////false
+    show(#UnsignedInteger?(Static[2])); ////false
+    show(#UnsignedInteger?(OpaquePointer)); ////false
 
     // Float types
-    show(#FloatType?(Float32)); ////true
-    show(#FloatType?(Float64)); ////true
+    show(#Float?(Float32)); ////true
+    show(#Float?(Float64)); ////true
     // Nonfloat types
-    show(#FloatType?(UInt)); ////false
-    show(#FloatType?(UInt8)); ////false
-    show(#FloatType?(UInt16)); ////false
-    show(#FloatType?(UInt32)); ////false
-    show(#FloatType?(UInt64)); ////false
-    show(#FloatType?(Int)); ////false
-    show(#FloatType?(Int8)); ////false
-    show(#FloatType?(Int16)); ////false
-    show(#FloatType?(Int32)); ////false
-    show(#FloatType?(Int64)); ////false
-    show(#FloatType?(Bool)); ////false
-    show(#FloatType?(Char)); ////false
-    show(#FloatType?(Static[2])); ////false
-    show(#FloatType?(OpaquePointer)); ////false
+    show(#Float?(UInt)); ////false
+    show(#Float?(UInt8)); ////false
+    show(#Float?(UInt16)); ////false
+    show(#Float?(UInt32)); ////false
+    show(#Float?(UInt64)); ////false
+    show(#Float?(Int)); ////false
+    show(#Float?(Int8)); ////false
+    show(#Float?(Int16)); ////false
+    show(#Float?(Int32)); ////false
+    show(#Float?(Int64)); ////false
+    show(#Float?(Bool)); ////false
+    show(#Float?(Char)); ////false
+    show(#Float?(Static[2])); ////false
+    show(#Float?(OpaquePointer)); ////false
 
     // Number types
-    show(#NumberType?(Float32)); ////true
-    show(#NumberType?(Float64)); ////true
-    show(#NumberType?(UInt)); ////true
-    show(#NumberType?(UInt8)); ////true
-    show(#NumberType?(UInt16)); ////true
-    show(#NumberType?(UInt32)); ////true
-    show(#NumberType?(UInt64)); ////true
-    show(#NumberType?(Int)); ////true
-    show(#NumberType?(Int8)); ////true
-    show(#NumberType?(Int16)); ////true
-    show(#NumberType?(Int32)); ////true
-    show(#NumberType?(Int64)); ////true
+    show(#Number?(Float32)); ////true
+    show(#Number?(Float64)); ////true
+    show(#Number?(UInt)); ////true
+    show(#Number?(UInt8)); ////true
+    show(#Number?(UInt16)); ////true
+    show(#Number?(UInt32)); ////true
+    show(#Number?(UInt64)); ////true
+    show(#Number?(Int)); ////true
+    show(#Number?(Int8)); ////true
+    show(#Number?(Int16)); ////true
+    show(#Number?(Int32)); ////true
+    show(#Number?(Int64)); ////true
     // Nonnumber types
-    show(#NumberType?(Bool)); ////false
-    show(#NumberType?(Char)); ////false
-    show(#NumberType?(Static[2])); ////false
-    show(#NumberType?(OpaquePointer)); ////false
+    show(#Number?(Bool)); ////false
+    show(#Number?(Char)); ////false
+    show(#Number?(Static[2])); ////false
+    show(#Number?(OpaquePointer)); ////false
 
     // Char types
-    show(#CharType?(Char)); ////true
+    show(#Char?(Char)); ////true
     // Nonchar types
-    show(#CharType?(Float32)); ////false
-    show(#CharType?(Float64)); ////false
-    show(#CharType?(UInt)); ////false
-    show(#CharType?(UInt8)); ////false
-    show(#CharType?(UInt16)); ////false
-    show(#CharType?(UInt32)); ////false
-    show(#CharType?(UInt64)); ////false
-    show(#CharType?(Int)); ////false
-    show(#CharType?(Int8)); ////false
-    show(#CharType?(Int16)); ////false
-    show(#CharType?(Int32)); ////false
-    show(#CharType?(Int64)); ////false
-    show(#CharType?(Bool)); ////false
-    show(#CharType?(Static[2])); ////false
-    show(#CharType?(OpaquePointer)); ////false
+    show(#Char?(Float32)); ////false
+    show(#Char?(Float64)); ////false
+    show(#Char?(UInt)); ////false
+    show(#Char?(UInt8)); ////false
+    show(#Char?(UInt16)); ////false
+    show(#Char?(UInt32)); ////false
+    show(#Char?(UInt64)); ////false
+    show(#Char?(Int)); ////false
+    show(#Char?(Int8)); ////false
+    show(#Char?(Int16)); ////false
+    show(#Char?(Int32)); ////false
+    show(#Char?(Int64)); ////false
+    show(#Char?(Bool)); ////false
+    show(#Char?(Static[2])); ////false
+    show(#Char?(OpaquePointer)); ////false
 
     // Arithmetic compatible int types
     show(#ArithmeticCompatiblePrimitiveIntTypes?(Int,     Int    )); ////true
@@ -274,11 +274,11 @@ main() {
 }
 
 /*
-    StaticType?
-    PointerType?
-    ArithmeticPointerType?
-    ExternalCodePointerType?
-    ArrayType?
-    TupleType?
-    UnionType?
+    Static?
+    Pointer?
+    ArithmeticPointer?
+    ExternalCodePointer?
+    Array?
+    Tuple?
+    Union?
 */

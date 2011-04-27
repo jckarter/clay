@@ -2,9 +2,9 @@ import unsafe.coordinates.(ContiguousCoordinate);
 import show.*;
 
 main() {
-    show(#PointerType?(Pointer[Int])); ////true
-    show(#PointerType?(ContiguousCoordinate[Int])); ////true
-    show(#PointerType?(OpaquePointer)); ////true
+    show(#Pointer?(Pointer[Int])); ////true
+    show(#Pointer?(ContiguousCoordinate[Int])); ////true
+    show(#Pointer?(OpaquePointer)); ////true
 
     show(#staticCallDefined?(pointerReferencedType, Pointer[Int])); ////true
     show(#staticCallDefined?(pointerReferencedType, ContiguousCoordinate[Int])); ////true

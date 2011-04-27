@@ -1,7 +1,7 @@
 import containers.(push, reserve);
 import ctypes.(CString, CChar);
 import meta.statics.(staticString?, staticStringSize);
-import strings.encodings.(stringBytes, stringTypeEncoding, EncodedStringType?);
+import strings.encodings.(stringBytes, stringTypeEncoding, EncodedString?);
 import strings.encodings.utf8.(UTF8);
 import vectors.(Vector);
 import values.(allValues?);
@@ -10,10 +10,10 @@ import unsafe.valuesemantics.(destroy);
 
 
 //
-// StringType?
+// String?
 //
 
-#StringType?('S) = SequenceType?('S) and CharType?(sequenceElementType('S));
+#String?('S) = Sequence?('S) and Char?(sequenceElementType('S));
 
 
 //
@@ -33,7 +33,7 @@ overload String(#'s) | staticString?('s)
     = String(*#staticStringSize('s), UTF8(Vector(stringBytes('s))));
 
 overload String(forward x:'S) --> returned:String
-    | StringType?('S) and 'S != String
+    | String?('S) and 'S != String
 {
     returned <-- String();
     try {
@@ -45,7 +45,7 @@ overload String(forward x:'S) --> returned:String
 }
 
 overload String(x:'S)
-    | EncodedStringType?('S, UTF8) and SizedSequenceType?('S) and 'S != String
+    | EncodedString?('S, UTF8) and SizedSequence?('S) and 'S != String
     = String(size(x), UTF8(Vector(stringBytes(x))));
 
 overload size(s:String) = s.size;
@@ -59,13 +59,13 @@ overload push(ref s:String, c:Char) {
     s.size += 1u;
 }
 overload push(ref s:String, s2:'S)
-    | StringType?('S)
+    | String?('S)
 {
     for (c in s2)
         push(s, c);
 }
 overload push(ref s:String, s2:'S)
-    | StringType?('S) and SizedSequenceType?('S)
+    | String?('S) and SizedSequence?('S)
 {
     push(s.contents, s2);
     s.size += size(s2);
@@ -73,11 +73,11 @@ overload push(ref s:String, s2:'S)
 
 
 //
-// cat -- concatenate multiple StringType? types into a single String
+// cat -- concatenate multiple String? types into a single String
 //
 
 cat(forward s1:'S1, forward ..ss:'SS) --> returned:String
-    | StringType?('S1) and allValues?(StringType?, ..'SS)
+    | String?('S1) and allValues?(String?, ..'SS)
 {
     returned <-- String(s1);
     try {

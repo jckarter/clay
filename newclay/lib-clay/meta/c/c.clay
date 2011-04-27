@@ -85,7 +85,7 @@ cAssign(ref a, forward b) inline
     __c__ """$a = $b;""";
 
 cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline --> returned:'O
-    | Type?('O)
+    | type?('O)
     __c__ """$returned = $callable($..args);""";
 overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline
     | 'O == ()

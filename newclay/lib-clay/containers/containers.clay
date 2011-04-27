@@ -1,6 +1,6 @@
 import values.(countValues, allValues?);
 
-#ContainerType?('T) = false;
+#Container?('T) = false;
 
 symbol push;
 symbol pop;
@@ -15,24 +15,24 @@ symbol insert;
 symbol remove;
 symbol clear;
 
-#PushableType?('T) =
-    SequenceType?('T)
+#Pushable?('T) =
+    Sequence?('T)
     and callDefined?(push, Ref['T], sequenceElementType('T));
-#FrontPushableType?('T) =
-    SequenceType?('T)
+#FrontPushable?('T) =
+    Sequence?('T)
     and callDefined?(pushFront, Ref['T], sequenceElementType('T));
 
-#ReservableType?('T) =
-    SequenceType?('T)
+#Reservable?('T) =
+    Sequence?('T)
     and callDefined?(reserve, Ref['T], UInt);
-#ResizableType?('T) =
-    SequenceType?('T)
+#Resizable?('T) =
+    Sequence?('T)
     and callDefined?(resize, Ref['T], UInt);
-#InsertableType?('T) =
-    SequenceType?('T)
+#Insertable?('T) =
+    Sequence?('T)
     and callDefined?(insert, Ref['T], UInt, sequenceElementType('T));
-#RemovableType?('T) =
-    SequenceType?('T)
+#Removable?('T) =
+    Sequence?('T)
     and callDefined?(remove, Ref['T], UInt);
 
 
@@ -41,7 +41,7 @@ symbol clear;
 //
 
 overload push(ref c:'C, forward ..elements:'TT) inline
-    | PushableType?('C)
+    | Pushable?('C)
       and countValues(..'TT) != 1
       and allValues?([#'U -> callDefined?(push, Ref['C], 'U)], ..'TT)
 {

@@ -15,7 +15,7 @@ bitcast(#'A, forward b:'B)
 //
 
 pointerCast(#'P1, forward p:'P2)
-    | PointerType?('P1) and PointerType?('P2)
+    | Pointer?('P1) and Pointer?('P2)
     = cCast('P1, p);
 
 
