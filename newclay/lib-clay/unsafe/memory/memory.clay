@@ -62,6 +62,7 @@ allocateArray(count:'I, f, ..args)
     } catch (ex) {
         destroyRange(begin, i);
         freeUninitializedValues(begin);
+        throw ex;
     }
     return CoordinateRange(begin, end);
 }
