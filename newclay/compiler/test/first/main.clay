@@ -1,5 +1,0 @@
-import factorial.*;
-
-symbol main = NewProcedure();
-overload main() = factorial(5);
-

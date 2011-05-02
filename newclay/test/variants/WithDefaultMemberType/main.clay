@@ -1,6 +1,6 @@
 import variants.*;
 import show.*;
-import unsafe.valuesemantics.(BitwiseZeroInitializedType?);
+import unsafe.valuesemantics.(BitwiseZeroInitialized?);
 
 symbol Foo = VariantType(Int, Char), WithDefaultMemberType(Int);
 symbol Bar = VariantType(Char, Int), WithDefaultMemberType(Int);
@@ -12,9 +12,9 @@ overload show(x:Nint) { show("Nint", *x); }
 symbol Bas = VariantType(Nint, Char), WithDefaultMemberType(Nint);
 
 main() {
-    show(#BitwiseZeroInitializedType?(Foo)); ////true
-    show(#BitwiseZeroInitializedType?(Bar)); ////false
-    show(#BitwiseZeroInitializedType?(Bas)); ////false
+    show(#BitwiseZeroInitialized?(Foo)); ////true
+    show(#BitwiseZeroInitialized?(Bar)); ////false
+    show(#BitwiseZeroInitialized?(Bas)); ////false
 
     var foo = Foo();
     var bar = Bar();

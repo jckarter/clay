@@ -1,7 +1,7 @@
 import meta.lltypes.*;
 import values.*;
 import unsafe.casts.(bitcast);
-import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitializedType?, PODType?);
+import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitialized?, POD?);
 
 
 //
@@ -13,7 +13,7 @@ symbol initializeRepr; // (ref repr, forward member) -> void
 symbol dispatchRepr; // (forward repr, forward fn) -> forward ..'T
 symbol reprAs; // (#'M, forward repr) -> forward 'M
 
-symbol ReprAcceptsMemberTypes?; // #('R) -> Bool
+symbol reprAcceptsMemberTypes?; // #('R) -> Bool
 
 // optional functions
 copyRepr(ref toRepr:'R, fromRepr:'R) inline {
@@ -25,10 +25,10 @@ moveRepr(ref toRepr:'R, ref fromRepr:'R) inline {
 }
 
 reprIs?(#'M, repr:'R) inline {
-    return dispatchRepr(repr, [member -> #Type([member]) == 'M]);
+    return dispatchRepr(repr, [member -> #type([member]) == 'M]);
 }
 
-#ReprZeroInitializedWithMemberType?('R, 'M) = false;
+#reprZeroInitializedWithMemberType?('R, 'M) = false;
 
 
 //
@@ -36,21 +36,21 @@ reprIs?(#'M, repr:'R) inline {
 //
 
 symbol TaggedUnionRepr[..'M] = RecordType(
-    tag:TagType(..'M),
+    tag:tagType(..'M),
     value:Union[..'M],
 );
 
-overload #ReprAcceptsMemberTypes?(TaggedUnionRepr[..'M]) = true;
-overload #ReprZeroInitializedWithMemberType?(TaggedUnionRepr['M, ..'MM], 'M)
-    = BitwiseZeroInitializedType?('M);
+overload #reprAcceptsMemberTypes?(TaggedUnionRepr[..'M]) = true;
+overload #reprZeroInitializedWithMemberType?(TaggedUnionRepr['M, ..'MM], 'M)
+    = BitwiseZeroInitialized?('M);
 
-private symbol TagType;
-overload #TagType(..'M) = UInt64;
-overload #TagType(..'M) | countValues(..'M) < 0x1_0000_0000 = UInt32;
-overload #TagType(..'M) | countValues(..'M) < 0x1_0000 = UInt16;
-overload #TagType(..'M) | countValues(..'M) < 0x100 = UInt8;
+private symbol tagType;
+overload #tagType(..'M) = UInt64;
+overload #tagType(..'M) | countValues(..'M) < 0x1_0000_0000 = UInt32;
+overload #tagType(..'M) | countValues(..'M) < 0x1_0000 = UInt16;
+overload #tagType(..'M) | countValues(..'M) < 0x100 = UInt8;
 
-private tagValue(#'M, ..#'MM) inline = (#TagType(..#'MM))(*#indexValue('M, ..'MM));
+private tagValue(#'M, ..#'MM) inline = (#tagType(..#'MM))(*#indexValue('M, ..'MM));
 
 overload initializeRepr(ref repr:TaggedUnionRepr[..'MM], forward m:'M) inline {
     repr.tag <-- tagValue(#'M, ..#'MM);
@@ -76,7 +76,7 @@ overload copyRepr(
 ) inline {
     toRepr.tag <-- fromRepr.tag;
 
-    dispatchRepr(fromRepr, [from -> toRepr.value[#Type([from])] <-- from;]);
+    dispatchRepr(fromRepr, [from -> toRepr.value[#type([from])] <-- from;]);
 }
 
 overload moveRepr(
@@ -86,7 +86,7 @@ overload moveRepr(
     toRepr.tag <-- fromRepr.tag;
 
     dispatchRepr(fromRepr,
-        [ref from -> toRepr.value[#Type([from])] <-- moveRvalue(from);]
+        [ref from -> toRepr.value[#type([from])] <-- moveRvalue(from);]
     );
 }
 
@@ -97,11 +97,11 @@ overload moveRepr(
 
 symbol NullablePointerRepr['Null, 'P] = NewType('P);
 
-overload #ReprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
-    = TypeSize('N) == 0 and PODType?('N)
-      and PointerType?('P) and PODType?('P);
+overload #reprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
+    = typeSize('N) == 0 and POD?('N)
+      and Pointer?('P) and POD?('P);
 
-overload #ReprZeroInitializedWithMemberType?(NullablePointerRepr['N, 'P], 'N) = true;
+overload #reprZeroInitializedWithMemberType?(NullablePointerRepr['N, 'P], 'N) = true;
 
 overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], m:'N) inline {
     bitcast(Int, repr) = 0;

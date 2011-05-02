@@ -7,13 +7,13 @@ symbol Foo['X];
 symbol Bar;
 
 #Main()
-    = StaticName(StaticModule),
-      StaticName(Factorial),
-      StaticName(Foo),
-      StaticName(Foo[Bar]),
-      StaticName(Bar),
-      StaticName(1),
-      StaticName((1, 2, Foo[Bar], Bar)),
-      StaticName("foo"),
-      StaticName(__primitives__),
-      StaticName(factorial);
+    = staticName(staticModule),
+      staticName(Factorial),
+      staticName(Foo),
+      staticName(Foo[Bar]),
+      staticName(Bar),
+      staticName(1),
+      staticName((1, 2, Foo[Bar], Bar)),
+      staticName("foo"),
+      staticName(__primitives__),
+      staticName(factorial);

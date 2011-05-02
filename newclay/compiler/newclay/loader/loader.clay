@@ -340,6 +340,9 @@ loadProgram(mainFilename:String, searchPath:Vector[String]) {
     program.moduleSearchPath = searchPath;
     loadPrimitivesModule(program);
     loadMainModule(program, mainFilename);
+    // ensure that "prelude" gets loaded, even if the main module somehow
+    // managed not to pull it in
+    programModule(program, preludeModuleName);
     distributeOverloads(program);
     resolveProgram(program);
     return program;

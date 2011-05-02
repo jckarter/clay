@@ -18,7 +18,7 @@ overload #MapValues('f) = ;
 private  #_SymbolBody() = ();
 overload #_SymbolBody('x, ..'y) = 'x;
 
-#SymbolBody('t) = _SymbolBody(..StaticSymbolBody('t));
+#SymbolBody('t) = _SymbolBody(..staticSymbolBody('t));
 
 symbol Bool;
 symbol Int;
@@ -31,33 +31,33 @@ symbol RecordType;
 overload #RecordType(..'fields) = (RecordTag, FieldNames(..'fields), FieldTypes(..'fields));
 
 symbol FieldNames;
-overload #FieldNames(..'fields) = (..MapValues([f => StaticTupleElement(f, 0)], ..'fields));
+overload #FieldNames(..'fields) = (..MapValues([f => staticTupleElement(f, 0)], ..'fields));
 
 symbol FieldTypes;
-overload #FieldTypes(..'fields) = (..MapValues([f => StaticTupleElement(f, 1)], ..'fields));
+overload #FieldTypes(..'fields) = (..MapValues([f => staticTupleElement(f, 1)], ..'fields));
 
 symbol Record?;
 overload #Record?('t) =
-    StaticSymbol?('t)
+    staticSymbol?('t)
     and TupleWithTag?(SymbolBody('t), RecordTag);
 
 symbol TupleWithTag?;
 overload #TupleWithTag?('x, 'tag) =
-    StaticTuple?('x)
-    and StaticLesser?(0, StaticTupleSize('x))
-    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
+    staticTuple?('x)
+    and staticLesser?(0, staticTupleSize('x))
+    and staticEquals?(staticTupleElement('x, 0), 'tag);
 
 symbol RecordFieldCount;
 overload #RecordFieldCount('t) | Record?('t) =
-    StaticTupleSize(StaticTupleElement(SymbolBody('t), 1));
+    staticTupleSize(staticTupleElement(SymbolBody('t), 1));
 
 symbol RecordFieldNames;
 overload #RecordFieldNames('t) | Record?('t) =
-    StaticTupleElement(SymbolBody('t), 1);
+    staticTupleElement(SymbolBody('t), 1);
 
 symbol RecordFieldTypes;
 overload #RecordFieldTypes('t) | Record?('t) =
-    StaticTupleElement(SymbolBody('t), 2);
+    staticTupleElement(SymbolBody('t), 2);
 
 
 symbol Point['T] = RecordType(

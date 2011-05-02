@@ -1,4 +1,4 @@
-import memory.(allocateRawValue, freeRawValue);
+import unsafe.memory.(allocateUninitializedValue, freeUninitializedValue);
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
@@ -9,29 +9,29 @@ symbol SharedPointer['T] = CompositeType(ptr:MPointer[RefCounted['T]]);
 alias MSharedPointer['T] = Maybe[SharedPointer['T]];
 
 overload SharedPointer['T](f, forward ..args) inline
-    | Type([f(..args)]) == 'T
+    | type([f(..args)]) == 'T
 {
-    var ptr = allocateRawValue(RefCounted['T]);
+    var ptr = allocateUninitializedValue(RefCounted['T]);
     ptr^.refCount <-- 1u;
     try {
         ptr^.value <-- f(..args);
     } catch (ex) {
-        freeRawValue(ptr);
+        freeUninitializedValue(ptr);
         throw ex;
     }
     return initializeRecord(SharedPointer['T], just(ptr));
 }
 
 overload SharedPointer(f, forward ..args) inline
-    | Defined?([var x = f(..args);])
-    = SharedPointer[#Type([f(..args)])](f, ..args);
+    | defined?([var x = f(..args);])
+    = SharedPointer[#type([f(..args)])](f, ..args);
 
 overload destroy(ref p:SharedPointer['T]) inline {
     maybe(p.ptr, [ptr -> {
         dec(ptr^.refCount);
         if (ptr^.refCount == 0u) {
             destroy(ptr^.value);
-            freeRawValue(ptr);
+            freeUninitializedValue(ptr);
         }
     }]);
 }

@@ -1,17 +1,18 @@
 import meta.platform.*;
 import libc.(strlen);
 import unsafe.casts.(pointerCast);
+import unsafe.coordinates.(begin, end, ContiguousCoordinate, CoordinateRange);
 
-private symbol CLongType;
-overload #CLongType() = Int64;
-overload #CLongType()
-    | PlatformFamilyName() == "windows" or PlatformCPUPointerBits == 32
+private symbol cLongType;
+overload #cLongType() = Int64;
+overload #cLongType()
+    | platformFamilyName() == "windows" or platformCPUPointerBits == 32
     = Int32;
 
-private symbol CULongType;
-overload #CULongType() = UInt64;
-overload #CULongType()
-    | PlatformFamilyName() == "windows" or PlatformCPUPointerBits == 32
+private symbol cULongType;
+overload #cULongType() = UInt64;
+overload #cULongType()
+    | platformFamilyName() == "windows" or platformCPUPointerBits == 32
     = UInt32;
 
 alias CChar  = Int8;
@@ -23,8 +24,8 @@ alias CUShort = UInt16;
 alias CUInt   = UInt32;
 alias CULongLong = UInt64;
 
-var CLong  = #CLongType();
-var CULong = #CULongType();
+var CLong  = #cLongType();
+var CULong = #cULongType();
 
 alias CSizeT = UInt;
 alias CPtrdiffT = UInt;

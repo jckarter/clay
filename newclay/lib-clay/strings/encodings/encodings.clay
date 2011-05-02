@@ -1,12 +1,12 @@
-import strings.(StringType?);
+import strings.(String?);
 
-symbol StringTypeEncoding; // #StringTypeEncoding('S) = symbol representing encoding of 'S;
+symbol stringTypeEncoding; // #stringTypeEncoding('S) = symbol representing encoding of 'S;
 symbol stringBytes; // stringBytes(s:'S) = iterator over encoded bytes of s
 
-#EncodedStringType?('T)
-    = StringType?('T)
-      and StaticCallDefined?(StringTypeEncoding, 'T)
-      and CallDefined?(stringBytes, 'T);
+#EncodedString?('T)
+    = String?('T)
+      and staticCallDefined?(stringTypeEncoding, 'T)
+      and callDefined?(stringBytes, 'T);
 
-overload #EncodedStringType?('T, 'E)
-    = EncodedStringType?('T) and StringTypeEncoding('T) == 'E;
+overload #EncodedString?('T, 'E)
+    = EncodedString?('T) and stringTypeEncoding('T) == 'E;

@@ -1,0 +1,32 @@
+import meta.c.*;
+
+
+//
+// bitcast
+//
+
+bitcast(#'A, forward b:'B)
+    | typeSize('A) <= typeSize('B)
+    = forward cRefCast('A, b);
+
+
+//
+// pointer casts
+//
+
+pointerCast(#'P1, forward p:'P2)
+    | Pointer?('P1) and Pointer?('P2)
+    = cCast('P1, p);
+
+
+//
+// inappropriate reference kind casts
+//
+
+refToRvalue(ref x:'T) inline --> rvalue r:'T
+    __c__ """$r = &$x;""";
+rvalueToRef(rvalue x:'T) inline --> ref r:'T
+    __c__ """$r = &$x;""";
+constToRef(const x:'T) inline --> ref r:'T
+    __c__ """$r = &$x;""";
+

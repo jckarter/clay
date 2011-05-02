@@ -1,0 +1,271 @@
+import meta.c.*;
+import meta.lltypes.*;
+import meta.platform.*;
+import meta.statics.*;
+import meta.symbols.*;
+import unsafe.casts.(bitcast);
+import unsafe.coordinates.(ContiguousCoordinate);
+import unsafe.valuesemantics.*;
+import values.*;
+
+import __primitives__.(staticInt, staticUInt, staticChar);
+
+
+//
+// primitive types
+//
+
+private #PrimitiveType('LLT) = (PrimitiveType, 'LLT);
+
+#PrimitiveType?('T) = symbolWithTag?('T, PrimitiveType);
+
+overload #POD?('T) | PrimitiveType?('T) = true;
+
+overload #llType('T) | PrimitiveType?('T) = symbolBody('T).1;
+
+symbol Bool = PrimitiveType(llBoolType);
+
+symbol Int   = PrimitiveType(llIntegerType[llSigned,   platformCPUPointerBits()]);
+symbol UInt  = PrimitiveType(llIntegerType[llUnsigned, platformCPUPointerBits()]);
+
+symbol Int8  = PrimitiveType(llIntegerType[llSigned,  8]);
+symbol Int16 = PrimitiveType(llIntegerType[llSigned, 16]);
+symbol Int32 = PrimitiveType(llIntegerType[llSigned, 32]);
+symbol Int64 = PrimitiveType(llIntegerType[llSigned, 64]);
+
+symbol UInt8  = PrimitiveType(llIntegerType[llUnsigned,  8]);
+symbol UInt16 = PrimitiveType(llIntegerType[llUnsigned, 16]);
+symbol UInt32 = PrimitiveType(llIntegerType[llUnsigned, 32]);
+symbol UInt64 = PrimitiveType(llIntegerType[llUnsigned, 64]);
+
+symbol Float32 = PrimitiveType(llFloatType[32]);
+symbol Float64 = PrimitiveType(llFloatType[64]);
+
+symbol Char = PrimitiveType(llIntegerType[llUnsigned, 32]);
+
+
+
+//
+// Static[T]
+//
+
+symbol Static['x] = PrimitiveType(llTupleType[]);
+
+
+//
+// Pointer[T]
+//
+
+symbol Pointer['T];
+
+overload #POD?(Pointer['T]) = true;
+
+symbol pointerReferencedType;
+overload #pointerReferencedType(Pointer['T]) = 'T;
+
+#DereferenceablePointer?('T)
+    = Pointer?('T) and staticCallDefined?(pointerReferencedType, 'T);
+
+overload #llType(Pointer['T])
+    = llPointerType['T];
+overload #recursiveTypes(Pointer['T]) = 'T;
+
+
+//
+// OpaquePointer
+//
+
+symbol OpaquePointer = PrimitiveType(llPointerType[UInt8]);
+
+
+
+//
+// CodePointer[Inputs, Outputs]
+//
+
+symbol CodePointer['Inputs, 'Outputs];
+overload #POD?(CodePointer['I, 'O])
+    | type?(CodePointer['I, 'O]) = true;
+
+// XXX inappropriate dependency on codegen representation
+// a clay function is a cdecl function that takes its inputs, then its outputs,
+// all by reference
+
+private #codePointerLLInput('T) = Pointer[referenceBaseType('T)];
+
+overload #llType(CodePointer[(..'I), (..'O)])
+    = llCodePointerType[CdeclABI, false,
+        (..mapValues(codePointerLLInput, ..'I, ..'O)),
+        ()
+    ];
+overload #recursiveTypes(CodePointer[(..'I), (..'O)])
+    = ..'I, ..'O;
+
+
+//
+// ExternalCodePointer[ABI, Variadic?, Inputs, Outputs]
+//
+
+#RequireExternalPOD?('x) = POD?('x);
+    //or staticError("external code pointer argument is not a POD type: ", 'x);
+
+private #ValidExternalCodePointerOutput?('O)
+    = 'O == () or POD?('O);//RequireExternalPOD?('O);
+
+symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
+overload #POD?(ExternalCodePointer['A,'V,'I,'O])
+    | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
+overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
+    | ABI?('A)
+      and staticBool?('V)
+      and staticTuple?('I)
+      and allValues?(RequireExternalPOD?, ..staticTupleElements('I))
+      and ValidExternalCodePointerOutput?('O)
+    = llCodePointerType['A, 'V, 'I, 'O];
+overload #recursiveTypes(ExternalCodePointer['A, 'V, (..'I), 'O])
+    = ..'I, ..externalOutputTypes('O);
+
+#ExternalCodePointer?('X) = false;
+overload #ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
+    | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
+
+#externalOutputTypes('T) | type?('T) = 'T;
+overload #externalOutputTypes(()) = ;
+
+alias CCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, false, 'I, 'O];
+alias VariadicCCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, true, 'I, 'O];
+alias StdcallCodePointer['I, 'O] = ExternalCodePointer[StdcallABI, false, 'I, 'O];
+
+
+
+
+//
+// Predicates for primitive type operations
+//
+
+#ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+    = (SignedInteger?('A) and SignedInteger?('B))
+      or (UnsignedInteger?('A) and UnsignedInteger?('B));
+#ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
+      = (Float?('A) and Float?('B));
+#ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+    = ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
+      or ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B);
+#BitwiseCompatiblePrimitiveTypes?('A, 'B)
+    = Integer?('A) and Integer?('B);
+#ComparablePrimitiveTypes?('A, 'B)
+    = ArithmeticCompatiblePrimitiveTypes?('A, 'B)
+      or ComparablePointerTypes?('A, 'B)
+      or (Char?('A) and Char?('B))
+      or ('A == Bool and 'B == Bool);
+#EqualityComparablePrimitiveTypes?('A, 'B)
+    = ComparablePrimitiveTypes?('A, 'B)
+      or EqualityComparablePointerTypes?('A, 'B);
+
+private #ComparablePointerTypes?('A, 'B) = false;
+overload #ComparablePointerTypes?(ContiguousCoordinate['A], ContiguousCoordinate['A])
+    = true;
+
+private #EqualityComparablePointerTypes?('A, 'B) = false;
+overload #EqualityComparablePointerTypes?('A, 'A) = Pointer?('A);
+
+#AssignablePrimitiveTypes?('A, 'B)
+    = ComparablePrimitiveTypes?('A, 'B) and 'A == biggerNumberType('A, 'B);
+
+private #ConvertibleScalar?('A)
+    = Number?('A) or Char?('A);
+
+#ConvertiblePrimitiveTypes?('A, 'B)
+    = (ConvertibleScalar?('A) and ConvertibleScalar?('B))
+      or (Pointer?('A) and 'A == 'B)
+      or (Pointer?('A) and 'B == OpaquePointer)
+      or ('A == OpaquePointer and Pointer?('B))
+      or (DereferenceablePointer?('A) and DereferenceablePointer?('B)
+          and pointerReferencedType('A) == pointerReferencedType('B));
+
+symbol biggerNumberType;
+overload #biggerNumberType('A, 'B) | typeSize('A) > typeSize('B) = 'A;
+overload #biggerNumberType('A, 'B) | typeSize('B) > typeSize('A) = 'B;
+overload #biggerNumberType('A, 'B)
+    | typeSize('A) == typeSize('B) and UnsignedInteger?('A)
+    = 'A;
+overload #biggerNumberType('A, 'B)
+    | typeSize('A) == typeSize('B) and UnsignedInteger?('B)
+    = 'B;
+overload #biggerNumberType('T, Int) = 'T;
+overload #biggerNumberType(Int, 'T) = 'T;
+overload #biggerNumberType('T, UInt) = 'T;
+overload #biggerNumberType(UInt, 'T) = 'T;
+overload #biggerNumberType('T, 'T) = 'T;
+overload #biggerNumberType(Int, UInt) = UInt;
+overload #biggerNumberType(UInt, Int) = UInt;
+
+
+
+//
+// default constructors for basic types
+//
+
+overload Bool() inline = false;
+
+overload Int() inline = 0i;
+overload UInt() inline = 0u;
+
+overload Int8() inline  = 0_i8;
+overload Int16() inline = 0_i16;
+overload Int32() inline = 0_i32;
+overload Int64() inline = 0_i64;
+
+overload UInt8() inline  = 0_u8;
+overload UInt16() inline = 0_u16;
+overload UInt32() inline = 0_u32;
+overload UInt64() inline = 0_u64;
+
+overload Float32() inline = 0.0_f32;
+overload Float64() inline = 0.0_f64;
+
+overload Char() inline   = '\u000000';
+
+overload Static['x]() inline --> returned:Static['x] {}
+
+
+//
+// static Int, UInt, and Char conversion
+//
+
+overload #Int() = 0;
+overload #Int('x) = staticInt('x);
+overload #UInt() = 0u;
+overload #UInt('x) = staticUInt('x);
+overload #Char() = '\u000000';
+overload #Char('x) = staticChar('x);
+
+
+//
+// primitive conversions
+//
+
+overload 'A(b:'B) inline
+    | ConvertiblePrimitiveTypes?('A, 'B)
+    = cCast('A, b);
+
+overload Pointer(forward x:'T) inline
+    | DereferenceablePointer?('T)
+    = Pointer[pointerReferencedType('T)](x);
+
+
+//
+// copy/move construction
+//
+overload 'T(x:'T) inline --> returned:'T
+    | defined?([copy(x)])
+{
+    returned <-- copy(x);
+}
+
+overload 'T(rvalue x:'T) inline --> returned:'T
+    | defined?([move(x)])
+{
+    returned <-- move(x);
+}
+

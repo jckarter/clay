@@ -25,9 +25,13 @@
 import ctypes.(CInt);
 import hashing.(hash);
 import libc.(memset);
-import memory.(allocateRawValues, freeRawValues);
+import unsafe.memory.(allocateUninitializedValues, freeUninitializedValues);
 import unsafe.casts.(refToRvalue, rvalueToRef);
 import unsafe.compositetypes.*;
+import unsafe.coordinates.(
+    ContiguousCoordinate, CoordinateRange,
+    assignRange, initializeRange, copyRange, destroyRange
+);
 import unsafe.valuesemantics.*;
 
 
@@ -70,7 +74,7 @@ items(m:HashMap['K,'V]) = HashIterator[MapEntry['K,'V]](*m);
 // index operator
 //
 
-overload index(ref m:HashMap['K, 'V], key:'K) | DefaultInitializableType?('V) {
+overload index(ref m:HashMap['K, 'V], key:'K) | DefaultInitializable?('V) {
     ref hash = *m;
     var mEntp = entryp(hash, key);
     if (just?(mEntp)) {
@@ -136,7 +140,7 @@ private lowBitMask(x) inline = bitand(x, -x);
 private lowBit(mask_:'I) {
     var b = 0;
     var mask = mask_;
-    for (x in Range(TypeSize('I))) {
+    for (x in Range(typeSize('I))) {
         switch (mask)
         case (1u)
             return b+0;
@@ -198,27 +202,27 @@ overload TwoHash['E]() {
 private symbol Table['B] = CompositeType(begin:ContiguousCoordinate['B], ln2_size:Int);
 
 private tableSize(t:Table['B]) = bitshl(1u, t.ln2_size);
-overload tableSize(ln2_size:'I) | IntegerType?('I) = bitshl(1u, ln2_size);
+overload tableSize(ln2_size:'I) | Integer?('I) = bitshl(1u, ln2_size);
 
 overload Table['B](ln2_size:Int) --> returned:Table['B] {
     var size = tableSize(ln2_size);
     returned.ln2_size <-- ln2_size;
-    returned.begin <-- allocateRawValues('B, size); //XXX aligned(16)
+    returned.begin <-- allocateUninitializedValues(size, 'B); //XXX aligned(16)
     try {
         initializeRange(returned.begin, returned.begin+size);
     } catch (ex) {
-        freeRawValues(returned.begin);
+        freeUninitializedValues(returned.begin);
         throw ex;
     }
 }
 overload copy(t:Table['B]) --> returned:Table['B] {
     var size = tableSize(t);
     returned.ln2_size <-- t.ln2_size;
-    returned.begin <-- allocateRawValues('B, size); //XXX aligned(16)
+    returned.begin <-- allocateUninitializedValues(size, 'B); //XXX aligned(16)
     try {
         copyRange(returned.begin, t.begin, t.begin+size);
     } catch (ex) {
-        freeRawValues(returned.begin);
+        freeUninitializedValues(returned.begin);
         throw ex;
     }
 }
@@ -232,19 +236,19 @@ overload copyAssign(ref to:Table['B], from:Table['B]) {
     if (to.begin == ContiguousCoordinate['B]()) {
         to <-- from;
     } else if (to.begin != ContiguousCoordinate['B]() and to.ln2_size >= from.ln2_size) {
-        destroyRangeUnsafe(to.begin+newSize, to.begin+oldSize);
+        destroyRange(to.begin+newSize, to.begin+oldSize);
         to.ln2_size = from.ln2_size;
         assignRange(to.begin, from.begin, from.begin+newSize);
     } else {
-        var newBegin = allocateRawValues('B, newSize);
+        var newBegin = allocateUninitializedValues(newSize, 'B);
         try {
             copyRange(newBegin, from.begin, from.begin+newSize);
         } catch (ex) {
-            freeRawValues(newBegin);
+            freeUninitializedValues(newBegin);
             throw ex;
         }
-        destroyRangeUnsafe(to.begin, to.begin+oldSize);
-        freeRawValues(to.begin);
+        destroyRange(to.begin, to.begin+oldSize);
+        freeUninitializedValues(to.begin);
         to.begin = newBegin;
         to.ln2_size = from.ln2_size;
     }
@@ -255,8 +259,8 @@ overload reset(ref t:Table['B]) {
 }
 overload destroy(ref t:Table['B]) {
     if (t.begin != ContiguousCoordinate['B]()) {
-        destroyRangeUnsafe(t.begin, t.begin+tableSize(t));
-        freeRawValues(t.begin);
+        destroyRange(t.begin, t.begin+tableSize(t));
+        freeUninitializedValues(t.begin);
     }
 }
 
@@ -269,7 +273,7 @@ private symbol Bucket['E] = CompositeType(
     entries:Array['E, BucketSize]
 );
 
-overload #InitializeDoesNotThrowType?(Bucket['E]) = true;
+overload #InitializeDoesNotThrow?(Bucket['E]) = true;
 
 overload Bucket['E]() --> returned:Bucket['E] {
     memset(OpaquePointer(&returned.hashBytes), CInt(255), UInt(BucketSize));

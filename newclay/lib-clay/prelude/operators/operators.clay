@@ -1,35 +1,34 @@
 import values.*;
-import prelude.operators.c.*;
-import prelude.procedures.*;
-import prelude.constructors.*;
+import meta.c.*;
 import meta.statics.*;
 import meta.lltypes.*;
 
 public import unsafe.valuesemantics.(copy, move);
+import unsafe.valuesemantics.(moveRvalue);
 
 import __primitives__.(
-    StaticPlus,
-    StaticMinus,
-    StaticMultiply,
-    StaticQuotient,
-    StaticRemainder,
-    StaticAdd,
-    StaticSubtract,
-    StaticString?,
-    StaticStringChars,
-    StaticModuleMember,
-    StaticLesser?,
-    StaticLesserEquals?,
-    StaticGreater?,
-    StaticGreaterEquals?,
-    StaticEquals?,
-    StaticNotEquals?,
-    StaticBitnot,
-    StaticBitor,
-    StaticBitand,
-    StaticBitxor,
-    StaticBitshl,
-    StaticBitshr,
+    staticPlus,
+    staticMinus,
+    staticMultiply,
+    staticQuotient,
+    staticRemainder,
+    staticAdd,
+    staticSubtract,
+    staticString?,
+    staticStringChars,
+    staticModuleMember,
+    staticLesser?,
+    staticLesserEquals?,
+    staticGreater?,
+    staticGreaterEquals?,
+    staticEquals?,
+    staticNotEquals?,
+    staticBitnot,
+    staticBitor,
+    staticBitand,
+    staticBitxor,
+    staticBitshl,
+    staticBitshr,
 );
 
 
@@ -48,8 +47,12 @@ overload #tupleLiteral(..'x) = (..'x);
 
 symbol index;
 overload index(forward a, #'n) inline
-    | StaticInt?('n) and Defined?([forward a['n]])
-    = forward a['n];
+    | staticInt?('n) and defined?([forward ..a['n]])
+    = forward ..a['n];
+
+overload index(a, n:'I) inline
+    | Integer?('I) and defined?([forward ..((a + n)^)])
+    = forward ..((a + n)^);
 
 
 //
@@ -57,8 +60,8 @@ overload index(forward a, #'n) inline
 //
 
 dereference(forward a:'T) inline
-    | PointerType?('T) and StaticCallDefined?(PointerReferencedType, 'T)
-    = forward cDereference(#PointerReferencedType('T), a);
+    | Pointer?('T) and staticCallDefined?(pointerReferencedType, 'T)
+    = forward cDereference(#pointerReferencedType('T), a);
 
 
 
@@ -66,8 +69,12 @@ dereference(forward a:'T) inline
 // staticIndex, fieldRef
 //
 
-staticIndex(forward a, #'n) inline  | Defined?([forward a[#'n]]) = forward a[#'n];
-fieldRef(forward a, #'field) inline | Defined?([forward a[#'field]]) = forward a[#'field];
+staticIndex(forward a, #'n) inline
+    | defined?([forward ..a[#'n]])
+    = forward ..a[#'n];
+fieldRef(forward a, #'field) inline
+    | defined?([forward ..a[#'field]])
+    = forward ..a[#'field];
 
 
 //
@@ -75,7 +82,7 @@ fieldRef(forward a, #'field) inline | Defined?([forward a[#'field]]) = forward a
 
 overload #staticIndex('a, 'x) = 'a['x];
 overload #index('a, ..'x) = ..'a[..'x];
-overload #fieldRef('a, 'x) = StaticModuleMember('a, 'x);
+overload #fieldRef('a, 'x) = staticModuleMember('a, 'x);
 overload #call('a, ..'x) = ..'a(..'x);
 
 
@@ -97,61 +104,37 @@ symbol subtract;
 // arithmetic over statics
 //
 
-overload #plus('x) = StaticPlus('x);
-overload #minus('x) = StaticMinus('x);
-overload #multiply('x, 'y) = StaticMultiply('x, 'y);
-overload #quotient('x, 'y) = StaticQuotient('x, 'y);
-overload #remainder('x, 'y) = StaticRemainder('x, 'y);
-overload #add('x, 'y) = StaticAdd('x, 'y);
-overload #subtract('x, 'y) = StaticSubtract('x, 'y);
+overload #plus('x) = staticPlus('x);
+overload #minus('x) = staticMinus('x);
+overload #multiply('x, 'y) = staticMultiply('x, 'y);
+overload #quotient('x, 'y) = staticQuotient('x, 'y);
+overload #remainder('x, 'y) = staticRemainder('x, 'y);
+overload #add('x, 'y) = staticAdd('x, 'y);
+overload #subtract('x, 'y) = staticSubtract('x, 'y);
 
 
 //
 // arithmetic operators over c types
 //
 
-overload plus(a:'N) inline | NumberType?('N) = a;
-overload minus(a:'N) inline | NumberType?('N) = cMinus('N, a);
+overload plus(a:'N) inline | Number?('N) = a;
+overload minus(a:'N) inline | Number?('N) = cMinus('N, a);
 
 overload multiply(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cMultiply(#BiggerNumberType('A, 'B), a, b);
+    = cMultiply(#biggerNumberType('A, 'B), a, b);
 overload divide(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveFloatTypes?('A, 'B)
-    = cDivide(#BiggerNumberType('A, 'B), a, b);
+    = cDivide(#biggerNumberType('A, 'B), a, b);
 overload divide(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
     = Float64(a) / Float64(b);
 overload quotient(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
-    = cDivide(#BiggerNumberType('A, 'B), a, b);
+    = cDivide(#biggerNumberType('A, 'B), a, b);
 overload remainder(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveIntTypes?('A, 'B)
-    = cRemainder(#BiggerNumberType('A, 'B), a, b);
+    = cRemainder(#biggerNumberType('A, 'B), a, b);
 
 overload add(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cAdd(#BiggerNumberType('A, 'B), a, b);
+    = cAdd(#biggerNumberType('A, 'B), a, b);
 overload subtract(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, 'B)
-    = cSubtract(#BiggerNumberType('A, 'B), a, b);
-
-
-//
-// ContiguousCoordinate arithmetic
-//
-
-overload add(a:ContiguousCoordinate['A], b:'B) inline
-    | IntegerType?('B)
-    = cAdd(ContiguousCoordinate['A], a, b);
-
-overload add(a:'A, b:ContiguousCoordinate['B]) inline
-    | IntegerType?('A)
-    = cAdd(ContiguousCoordinate['B], b, a);
-
-overload subtract(a:ContiguousCoordinate['A], b:'B) inline
-    | IntegerType?('B)
-    = cSubtract(ContiguousCoordinate['A], a, b);
-
-overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
-    = cSubtract(Int, a, b);
-
-overload index(a, n:'I) inline
-    | IntegerType?('I) and Defined?([(a + n)^;])
-    = forward ..((a + n)^);
+    = cSubtract(#biggerNumberType('A, 'B), a, b);
 
 
 //
@@ -159,19 +142,19 @@ overload index(a, n:'I) inline
 //
 
 symbol lesser?;
-lesserEquals?(a, b) | Defined?([b < a]) = not b < a;
-greater?(a, b) | Defined?([b < a]) = b < a;
-greaterEquals?(a, b) | Defined?([a < b]) = not a < b;
+lesserEquals?(a, b) | defined?([b < a]) = not b < a;
+greater?(a, b) | defined?([b < a]) = b < a;
+greaterEquals?(a, b) | defined?([a < b]) = not a < b;
 
 symbol equals?;
-notEquals?(a, b) | Defined?([a == b]) = not a == b;
+notEquals?(a, b) | defined?([a == b]) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
 ordered?(a, b)
-    | Defined?([a <= b]) and Defined?([b <= a])
+    | defined?([a <= b]) and defined?([b <= a])
     = a <= b or b <= a;
 
-nan?(a:'A) | FloatType?('A) = a != a;
+nan?(a:'A) | Float?('A) = a != a;
 
 overload lesser?(#'a, #'b) = *#('a < 'b);
 overload equals?(#'a, #'b) = *#('a == 'b);
@@ -199,12 +182,23 @@ overload notEquals?(a:'A, b:'B) inline | EqualityComparablePrimitiveTypes?('A, '
 //
 // comparison operators on statics
 
-overload #lesser?('a, 'b) = StaticLesser?('a, 'b);
-overload #lesserEquals?('a, 'b) = StaticLesserEquals?('a, 'b);
-overload #greater?('a, 'b) = StaticGreater?('a, 'b);
-overload #greaterEquals?('a, 'b) = StaticGreaterEquals?('a, 'b);
-overload #equals?('a, 'b) = StaticEquals?('a, 'b);
-overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
+overload #lesser?('a, 'b) = staticLesser?('a, 'b);
+overload #lesserEquals?('a, 'b) = staticLesserEquals?('a, 'b);
+overload #greater?('a, 'b) = staticGreater?('a, 'b);
+overload #greaterEquals?('a, 'b) = staticGreaterEquals?('a, 'b);
+overload #equals?('a, 'b) = staticEquals?('a, 'b);
+overload #notEquals?('a, 'b) = staticNotEquals?('a, 'b);
+
+
+//
+// swap -- swap two values without copying, resetting, or destroying
+//
+
+swap(ref a, ref b) {
+    rvalue temp = moveRvalue(a);
+    a <-- moveRvalue(b);
+    b <-- temp;
+}
 
 
 //
@@ -212,14 +206,14 @@ overload #notEquals?('a, 'b) = StaticNotEquals?('a, 'b);
 //
 
 updateAssign(#'op, ref a, forward b) inline
-    | Defined?([a = 'op(a, b);])
+    | defined?([a = 'op(a, b);])
     { a = 'op(a, b); }
 
-inc(ref a:'T) inline | Defined?([a += 1;]) { a += 1; }
-dec(ref a:'T) inline | Defined?([a -= 1;]) { a -= 1; }
+inc(ref a:'T) inline | defined?([a += 1;]) { a += 1; }
+dec(ref a:'T) inline | defined?([a -= 1;]) { a -= 1; }
 
-overload inc(ref a:'T) inline | Defined?([a += 1u;]) { a += 1u; }
-overload dec(ref a:'T) inline | Defined?([a -= 1u;]) { a -= 1u; }
+overload inc(ref a:'T) inline | defined?([a += 1u;]) { a += 1u; }
+overload dec(ref a:'T) inline | defined?([a -= 1u;]) { a -= 1u; }
 
 
 //
@@ -227,11 +221,11 @@ overload dec(ref a:'T) inline | Defined?([a -= 1u;]) { a -= 1u; }
 //
 
 callAssign(forward b, #'f, forward ..args) inline
-    | Defined?([ref a = 'f(..args); a = b;])
+    | defined?([ref a = 'f(..args); a = b;])
     { ref a = 'f(..args); a = b; }
 
 updateCallAssign(#'op, forward b, #'f, forward ..args) inline
-    | Defined?([ref a = 'f(..args); a = 'op(a, b);])
+    | defined?([ref a = 'f(..args); a = 'op(a, b);])
     { ref a = 'f(..args); a = 'op(a, b); }
 
 
@@ -246,15 +240,15 @@ overload call(#'f, forward ..args) inline = forward ..'f(..args);
 
 // non-variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args) inline
-    : ..ExternalOutputTypes('O)
+    : ..externalOutputTypes('O)
     | 'I == (..'Args)
     = ..cExternalCall(f, ..args);
 
 // variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
-    : ..ExternalOutputTypes('O)
-    | allValues?(RequireExternalPODType?, ..'Args)
-      and 'I == (..takeValues(StaticTupleSize('I), ..'Args))
+    : ..externalOutputTypes('O)
+    | allValues?(RequireExternalPOD?, ..'Args)
+      and 'I == (..takeValues(staticTupleSize('I), ..'Args))
     = ..cExternalCall(f, ..args);
 
 
@@ -266,7 +260,7 @@ overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
 symbol unpack;
 overload unpack(..#'x) = ..'x;
 overload #unpack((..'x)) = ..'x;
-overload #unpack('s) | StaticString?('s) = ..StaticStringChars('s);
+overload #unpack('s) | staticString?('s) = ..staticStringChars('s);
 
 
 //
@@ -276,14 +270,14 @@ overload #unpack('s) | StaticString?('s) = ..StaticStringChars('s);
 symbol max = VariadicBinaryOperatorProcedure();
 symbol min = VariadicBinaryOperatorProcedure();
 
-overload max(a:'A, b:'A) inline | Defined?([a < b])
+overload max(a:'A, b:'A) inline | defined?([a < b])
     = if (a < b) b else a;
-overload min(a:'A, b:'A) inline | Defined?([a < b])
+overload min(a:'A, b:'A) inline | defined?([a < b])
     = if (a < b) a else b;
 
-overload max(a:'A, b:'A) inline | FloatType?('A)
+overload max(a:'A, b:'A) inline | Float?('A)
     = if (a >= b or nan?(b)) a else b;
-overload min(a:'A, b:'A) inline | FloatType?('A)
+overload min(a:'A, b:'A) inline | Float?('A)
     = if (a <= b or nan?(b)) a else b;
 
 overload #max('a, 'b) = if ('a < 'b) 'b else 'a;
@@ -294,8 +288,8 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 // case?
 //
 
-case?(value:'T, forward ..cases:'U) inline
-    | allValues?([u -> CallDefined?(equals?, 'T, u)], ..'U)
+case?(value:'T, forward ..cases:'UU) inline
+    | allValues?([#'U -> callDefined?(equals?, 'T, 'U)], ..'UU)
     = inValues?(value, ..cases);
 
 
@@ -305,57 +299,57 @@ case?(value:'T, forward ..cases:'U) inline
 
 symbol bitand = VariadicBinaryOperatorProcedure();
 overload bitand(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitand(#BiggerNumberType('A, 'B), a, b);
+    = cBitand(#biggerNumberType('A, 'B), a, b);
 
 symbol bitor = VariadicBinaryOperatorProcedure();
 overload bitor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitor(#BiggerNumberType('A, 'B), a, b);
+    = cBitor(#biggerNumberType('A, 'B), a, b);
 
 symbol bitxor = VariadicBinaryOperatorProcedure();
 overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
-    = cBitxor(#BiggerNumberType('A, 'B), a, b);
+    = cBitxor(#biggerNumberType('A, 'B), a, b);
 
 symbol bitnot;
-overload bitnot(a:'A) | IntegerType?('A) = cBitnot('A, a);
+overload bitnot(a:'A) | Integer?('A) = cBitnot('A, a);
 
 symbol bitandc;
 overload bitandc(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = bitand(a, bitnot(b));
 
 symbol bitshl;
-overload bitshl(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitshl(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshl('A, a, shift);
 
 symbol bitshr;
-overload bitshr(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
+overload bitshr(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshr('A, a, shift);
 
 symbol bitrol;
-overload bitrol(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
-    = bitor(bitshl(a, shift), bitshr(a, TypeSize('A)*8u - UInt(shift)));
+overload bitrol(a:'A, shift:'N) | Integer?('A) and Integer?('N)
+    = bitor(bitshl(a, shift), bitshr(a, typeSize('A)*8u - UInt(shift)));
 
 symbol bitror;
-overload bitror(a:'A, shift:'N) | IntegerType?('A) and IntegerType?('N)
-    = bitor(bitshr(a, shift), bitshl(a, TypeSize('A)*8u - UInt(shift)));
+overload bitror(a:'A, shift:'N) | Integer?('A) and Integer?('N)
+    = bitor(bitshr(a, shift), bitshl(a, typeSize('A)*8u - UInt(shift)));
 
 
 //
 // bitwise static operations
 //
 
-overload #bitnot('x) = StaticBitnot('x);
-overload #bitand('x, 'y) = StaticBitand('x, 'y);
-overload #bitor('x, 'y) = StaticBitor('x, 'y);
-overload #bitxor('x, 'y) = StaticBitxor('x, 'y);
-overload #bitshl('x, 'y) = StaticBitshl('x, 'y);
-overload #bitshr('x, 'y) = StaticBitshr('x, 'y);
+overload #bitnot('x) = staticBitnot('x);
+overload #bitand('x, 'y) = staticBitand('x, 'y);
+overload #bitor('x, 'y) = staticBitor('x, 'y);
+overload #bitxor('x, 'y) = staticBitxor('x, 'y);
+overload #bitshl('x, 'y) = staticBitshl('x, 'y);
+overload #bitshr('x, 'y) = staticBitshr('x, 'y);
 
-overload #bitandc('x, 'y) = StaticBitand('x, StaticBitnot('y));
+overload #bitandc('x, 'y) = staticBitand('x, staticBitnot('y));
 
 
 //
 // type-to-argument and type-to-return value conversions
-// these should only be used as shims for Type() tests and never in real code
+// these should only be used as shims for type() tests and never in real code
 //
 
 symbol arg;

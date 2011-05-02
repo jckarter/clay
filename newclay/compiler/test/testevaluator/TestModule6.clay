@@ -4,6 +4,6 @@ import tools.factorial;
 
 symbol Main;
 overload #Main() = (
-    StaticModuleMember(tools, "Factorial")(8),
-    StaticModuleMember(StaticModuleMember(tools, "factorial"), "Factorial")(8),
+    staticModuleMember(tools, "Factorial")(8),
+    staticModuleMember(staticModuleMember(tools, "factorial"), "Factorial")(8),
 );

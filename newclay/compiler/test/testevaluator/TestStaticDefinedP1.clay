@@ -2,4 +2,4 @@ import __primitives__.*;
 
 #Foo('n) | 'n mod 2 == 0 = "even";
 
-#Main() = StaticDefined?([Foo(0)]), StaticDefined?([Foo(1)]), StaticDefined?([Foo(true)]);
+#Main() = staticDefined?([Foo(0)]), staticDefined?([Foo(1)]), staticDefined?([Foo(true)]);

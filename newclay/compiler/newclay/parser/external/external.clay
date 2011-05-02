@@ -306,15 +306,15 @@ private var patternNameRef = exprParser(
     sequence(punc(#"'"), identifier),
 );
 
-private var optStatementExprBody = modify(
+private var optStatementExprBody = bounds(modify(
     x => StatementExpr(move(x.0), move(x.1)),
     sequence(zeroOrMore(statement), expr),
-);
+));
 
-private var statementExprBody = modify(
+private var statementExprBody = bounds(modify(
     x => StatementExpr(move(x.0), move(x.1)),
     sequence(oneOrMore(statement), expr),
-);
+));
 
 private var statementExpr = exprParser(
     x => move(x.1),
@@ -850,10 +850,10 @@ private var optSymbolParams = modify(
     optional(symbolParams),
 );
 
-private var symbolName = modify(
+private var symbolName = bounds(modify(
     x => SymbolName(x.0, x.1),
     sequence(identifier, optSymbolParams),
-);
+));
 
 private var symbolDef = topLevelItemParser(
     x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3)),
@@ -1275,10 +1275,10 @@ private var multipleBindingExprList = modify(
     sequence(punc(#"="), exprList),
 );
 
-private var multipleBindingList = modify(
+private var multipleBindingList = bounds(modify(
     x => MultipleBindingList(x.0, x.1),
     sequence(variadicBindingNameList, optional(multipleBindingExprList)),
-);
+));
 
 private var assignmentOp = choice(
     modify(x => ASSIGNMENT_ASSIGN,     punc(#"=")),
