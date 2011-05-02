@@ -7,7 +7,7 @@ symbol Foo['X];
 symbol Bar;
 
 #Main()
-    = StaticModule(StaticModule),
-      StaticModule(Factorial),
-      StaticModule(Foo),
-      StaticModule(Foo[Bar]);
+    = staticModule(staticModule),
+      staticModule(Factorial),
+      staticModule(Foo),
+      staticModule(Foo[Bar]);

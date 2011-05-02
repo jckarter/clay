@@ -8,8 +8,8 @@ overload long?(x:CLong) = true;
 overload long?(x:CULong) = true;
 
 main() {
-    show(TypeSize(CLong) == longsize());
-    show(TypeSize(CULong) == longsize());
+    show(typeSize(CLong) == longsize());
+    show(typeSize(CULong) == longsize());
 
     show(long?(CLong(1)));
     show(long?(CULong(1)));

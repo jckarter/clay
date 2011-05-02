@@ -4,23 +4,23 @@ nan() = 0.0/0.0;
 
 main() {
     // defined arithmetic operations
-    show(#Defined?([1 + 2])); ////true
-    show(#Defined?([1u + 2u])); ////true
-    show(#Defined?([1.0 + 2.0])); ////true
-    show(#Defined?([1/2])); ////true
-    show(#Defined?([1.0/2.0])); ////true
-    show(#Defined?([1 div 2])); ////true
-    show(#Defined?([1 mod 2])); ////true
+    show(#defined?([1 + 2])); ////true
+    show(#defined?([1u + 2u])); ////true
+    show(#defined?([1.0 + 2.0])); ////true
+    show(#defined?([1/2])); ////true
+    show(#defined?([1.0/2.0])); ////true
+    show(#defined?([1 div 2])); ////true
+    show(#defined?([1 mod 2])); ////true
 
     // undefined arithmetic operations
-    show(#Defined?([1   + 2u ])); ////false
-    show(#Defined?([1   + 2.0])); ////false
-    show(#Defined?([1u  + 2  ])); ////false
-    show(#Defined?([1u  + 2.0])); ////false
-    show(#Defined?([1.0 + 2  ])); ////false
-    show(#Defined?([1.0 + 2u ])); ////false
-    show(#Defined?([1.0 div 2.0])); ////false
-    show(#Defined?([1.0 mod 2.0])); ////false
+    show(#defined?([1   + 2u ])); ////false
+    show(#defined?([1   + 2.0])); ////false
+    show(#defined?([1u  + 2  ])); ////false
+    show(#defined?([1u  + 2.0])); ////false
+    show(#defined?([1.0 + 2  ])); ////false
+    show(#defined?([1.0 + 2u ])); ////false
+    show(#defined?([1.0 div 2.0])); ////false
+    show(#defined?([1.0 mod 2.0])); ////false
 
     // results of arithmetic operations
     show(+(1)); ////1
@@ -38,20 +38,20 @@ main() {
     show(multiply(2, 3, 4)); ////24
 
     // defined comparison operations
-    show(#Defined?([1   <  2  ])); ////true
-    show(#Defined?([1u  <  2u ])); ////true
-    show(#Defined?([1.0 <  2.0])); ////true
-    show(#Defined?([1   == 2  ])); ////true
-    show(#Defined?([1u  == 2u ])); ////true
-    show(#Defined?([1.0 == 2.0])); ////true
+    show(#defined?([1   <  2  ])); ////true
+    show(#defined?([1u  <  2u ])); ////true
+    show(#defined?([1.0 <  2.0])); ////true
+    show(#defined?([1   == 2  ])); ////true
+    show(#defined?([1u  == 2u ])); ////true
+    show(#defined?([1.0 == 2.0])); ////true
 
     // undefined comparison operations
-    show(#Defined?([1   < 2u ])); ////false
-    show(#Defined?([1   < 2.0])); ////false
-    show(#Defined?([1u  < 2  ])); ////false
-    show(#Defined?([1u  < 2.0])); ////false
-    show(#Defined?([1.0 < 2  ])); ////false
-    show(#Defined?([1.0 < 2u ])); ////false
+    show(#defined?([1   < 2u ])); ////false
+    show(#defined?([1   < 2.0])); ////false
+    show(#defined?([1u  < 2  ])); ////false
+    show(#defined?([1u  < 2.0])); ////false
+    show(#defined?([1.0 < 2  ])); ////false
+    show(#defined?([1.0 < 2u ])); ////false
 
     // results of comparison operations
     show(1 <  2); ////true

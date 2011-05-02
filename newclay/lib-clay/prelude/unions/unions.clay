@@ -8,11 +8,22 @@ import unsafe.valuesemantics.*;
 
 
 //
+// Union[..T]
+//
+
+symbol Union[..'T];
+overload #POD?(Union[..'T]) = true;
+overload #llType(Union[..'T])
+    | allValues?(type?, ..'T)
+    = llUnionType[..'T];
+
+
+//
 // indexing
 //
 
 overload index(forward t:Union[..'T], #'n) inline
-    | ValidStaticIndex?('n, ..'T)
+    | validStaticIndex?('n, ..'T)
     = forward bitcast(#nthValue('n, ..'T), t);
 
 overload index(forward t:Union[..'T], #'U) inline
@@ -24,10 +35,10 @@ overload index(forward t:Union[..'T], #'U) inline
 // default initialization
 //
 
-overload #BitwiseZeroInitializedType?(Union[..'T]) | Type?(Union[..'T]) = true;
+overload #BitwiseZeroInitialized?(Union[..'T]) | type?(Union[..'T]) = true;
 
 overload Union[..'T]() inline --> returned:Union[..'T] {
-    memset(OpaquePointer(&returned), 0_i32, TypeSize(Union[..'T]));
+    memset(OpaquePointer(&returned), 0_i32, typeSize(Union[..'T]));
 }
 
 
@@ -47,40 +58,40 @@ overload Union[..'T](forward x:'U) inline --> returned:Union[..'T]
 //
 
 overload equals?(a:Union[..'T], b:Union[..'T]) inline
-    = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize(Union[..'T])) == 0;
+    = memcmp(OpaquePointer(&a), OpaquePointer(&b), typeSize(Union[..'T])) == 0;
 
 
 //
 // named union type
 //
 
-#NamedUnionType(..'fields) | ValidFields?(..'fields) = (NamedUnionType, ..'fields);
-#NamedUnionType?('T) = SymbolWithTag?('T, NamedUnionType);
+#NamedUnionType(..'fields) | validFields?(..'fields) = (NamedUnionType, ..'fields);
+#NamedUnionType?('T) = symbolWithTag?('T, NamedUnionType);
 
-overload #Fields('T) | NamedUnionType?('T) = ..SymbolTagBody('T, NamedUnionType);
+overload #fields('T) | NamedUnionType?('T) = ..symbolTagBody('T, NamedUnionType);
 
-overload #LLType('T) | NamedUnionType?('T) = LLUnionType[..Fields('T)];
-overload #PODType?('T) | NamedUnionType?('T) = true;
+overload #llType('T) | NamedUnionType?('T) = llUnionType[..fields('T)];
+overload #POD?('T) | NamedUnionType?('T) = true;
 
 overload index(forward x:'T, #'field) inline
-    | NamedUnionType?('T) and Field?('T, 'field)
-    = forward bitcast(#FieldType('T, 'field), x);
+    | NamedUnionType?('T) and field?('T, 'field)
+    = forward bitcast(#fieldType('T, 'field), x);
 
-overload #BitwiseZeroInitializedType?('T) | NamedUnionType?('T) = true;
+overload #BitwiseZeroInitialized?('T) | NamedUnionType?('T) = true;
 
 overload 'T() inline --> returned:'T
     | NamedUnionType?('T)
 {
-    memset(OpaquePointer(&returned), 0_i32, TypeSize('T));
+    memset(OpaquePointer(&returned), 0_i32, typeSize('T));
 }
 
 overload 'T(forward x:'U) inline --> returned:'T
-    | NamedUnionType?('T) and inValues?('U, ..FieldTypes('T))
+    | NamedUnionType?('T) and inValues?('U, ..fieldTypes('T))
 {
     bitcast('U, returned) <-- x;
 }
 
 overload equals?(a:'T, b:'T) inline
     | NamedUnionType?('T)
-    = memcmp(OpaquePointer(&a), OpaquePointer(&b), TypeSize('T)) == 0;
+    = memcmp(OpaquePointer(&a), OpaquePointer(&b), typeSize('T)) == 0;
 

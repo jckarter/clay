@@ -1,0 +1,76 @@
+import meta.lltypes.*;
+import meta.symbols.*;
+import unsafe.casts.(bitcast);
+import unsafe.valuesemantics.*;
+
+#NewType('T) = (NewType, 'T);
+#NewType?('T) = symbolWithTag?('T, NewType);
+
+#underlyingType('T) | NewType?('T) = symbolTagBody('T, NewType);
+
+#HasUnderlyingType?('T) = staticCallDefined?(underlyingType, 'T);
+
+overload #llType('T) | HasUnderlyingType?('T) = llType(underlyingType('T));
+
+overload #inheritsPredicatesFromTypes('T) | HasUnderlyingType?('T) = true, underlyingType('T);
+
+underlying(forward x:'T) inline | HasUnderlyingType?('T)
+    = forward bitcast(#underlyingType('T), x);
+
+overload unpack(forward x:'T) inline | NewType?('T)
+    = forward underlying(x);
+
+initializeUnderlying(#'T) inline --> returned:'T
+    | HasUnderlyingType?('T) and DefaultInitializable?(underlyingType('T))
+{
+    underlying(returned) <-- (#underlyingType('T))();
+}
+overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
+    | HasUnderlyingType?('T)
+      and defined?([arg(Ref['U]) <-- orig;])
+      and 'U == underlyingType('T)
+{
+    underlying(returned) <-- orig;
+}
+
+overload 'T(forward ..args) inline
+    | NewType?('T) and defined?([initializeUnderlying('T, ..args)])
+    = initializeUnderlying('T, ..args);
+
+overload copy(x:'T) inline --> returned:'T
+    | HasUnderlyingType?('T)
+      and Copyable?(underlyingType('T))
+      and not BitwiseCopied?(underlyingType('T))
+{
+    underlying(returned) <-- copy(underlying(x));
+}
+
+overload moveRvalue(forward x:'T) inline --> returned:'T
+    | HasUnderlyingType?('T)
+      and Movable?(underlyingType('T))
+      and not BitwiseMoved?(underlyingType('T))
+{
+    underlying(returned) <-- moveRvalue(underlying(x));
+}
+
+overload destroy(ref x:'T) inline
+    | HasUnderlyingType?('T) and not DestroyDoesNothing?(underlyingType('T))
+{
+    destroy(underlying(x));
+}
+
+overload reset(ref x:'T) inline
+    | HasUnderlyingType?('T) and not ResetDoesNothing?(underlyingType('T))
+{
+    reset(underlying(x));
+}
+
+overload copyAssign(ref to:'T, from:'T) inline
+    | HasUnderlyingType?('T) and Assignable?(underlyingType('T))
+{
+    underlying(to) = underlying(from);
+}
+
+overload equals?(a:'T, b:'T) inline
+    | HasUnderlyingType?('T) and defined?([underlying(a) == underlying(b)])
+    = underlying(a) == underlying(b);

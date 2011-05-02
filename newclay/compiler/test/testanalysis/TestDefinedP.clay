@@ -6,13 +6,13 @@ symbol foo;
 overload foo(x:'T) | Foo?('T) = x;
 overload foo(x:Char) = x;
 overload foo(#'a') = 'a';
-overload foo(#'X') | StaticError("I AM ERROR.") {}
+overload foo(#'X') | staticError("I AM ERROR.") {}
 
 main() =
-    #Defined?([foo(1_i8)]),  // true
-    #Defined?([foo(1_i64)]), // true
-    #Defined?([foo(1)]),     // false
-    #Defined?([foo('a')]),   // true
-    #Defined?([foo(#'a')]),  // true
-    #Defined?([foo(#'b')]),  // false
-    #Defined?([foo(#'X')]);  // false
+    #defined?([foo(1_i8)]),  // true
+    #defined?([foo(1_i64)]), // true
+    #defined?([foo(1)]),     // false
+    #defined?([foo('a')]),   // true
+    #defined?([foo(#'a')]),  // true
+    #defined?([foo(#'b')]),  // false
+    #defined?([foo(#'X')]);  // false

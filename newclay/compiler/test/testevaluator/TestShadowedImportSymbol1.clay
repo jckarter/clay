@@ -3,4 +3,4 @@ import foo.(Foo);
 
 symbol Foo = "main";
 
-#Main() = StaticSymbolBody(Foo);
+#Main() = staticSymbolBody(Foo);

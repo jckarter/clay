@@ -1,27 +1,27 @@
 public import __primitives__.(
-    StaticObserve,
-    StaticError,
-    StaticAssert,
-    CommandlineVariable,
+    staticObserve,
+    staticError,
+    staticAssert,
+    commandlineVariable,
 );
 import libc.(abort, puts, printf);
 import ctypes.(CUInt, CString);
-import meta.lambdas.(LambdaString, LambdaLocation);
+import meta.lambdas.(lambdaString, lambdaLocation);
 
 private assertLocation(file, line, column) = CString(file), CUInt(line), CUInt(column);
 
-#AssertionsEnabled?() = not CommandlineVariable("NDEBUG");
+#assertionsEnabled?() = not commandlineVariable("NDEBUG");
 
 symbol assert;
-overload assert(f, ..msg) inline | not AssertionsEnabled?() {}
+overload assert(f, ..msg) inline | not assertionsEnabled?() {}
 overload assert(f, ..msg) inline
-    | DefinedWithType?([f()], Bool) and AssertionsEnabled?()
+    | definedWithType?([f()], Bool) and assertionsEnabled?()
 {
     if (not f()) {
         // XXX show message
         printf(CString("assertion %s failed at %s(%u,%u)\n"),
-            CString(LambdaString(f)),
-            ..assertLocation(..LambdaLocation(f))
+            CString(lambdaString(f)),
+            ..assertLocation(..lambdaLocation(f))
         );
         abort();
         __unreachable__; // XXX not needed when external noreturns are implemented
@@ -29,13 +29,13 @@ overload assert(f, ..msg) inline
 }
 
 symbol assertUnreachable;
-overload assertUnreachable(f, ..msg) noreturn inline | not AssertionsEnabled?() {
+overload assertUnreachable(f, ..msg) noreturn inline | not assertionsEnabled?() {
     __unreachable__;
 }
-overload assertUnreachable(f, ..msg) inline | AssertionsEnabled?() {
+overload assertUnreachable(f, ..msg) noreturn inline | assertionsEnabled?() {
     // XXX show message
     printf(CString("unreachable code reached at %s(%u,%u)\n"),
-        ..assertLocation(..LambdaLocation(f))
+        ..assertLocation(..lambdaLocation(f))
     );
     abort();
     __unreachable__; // XXX not needed when external noreturns are implemented

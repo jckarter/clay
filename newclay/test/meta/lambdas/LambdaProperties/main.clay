@@ -9,37 +9,37 @@ main() {
     var captureByRef = [x -> x + y];
     var captureByVal = [x => x + y];
 
-    show(LambdaString(stateless1)); ////[x -> x + 1]
-    show(LambdaString(stateless2)); ////[x => x + 1]
-    show(LambdaString(captureByRef)); ////[x -> x + y]
-    show(LambdaString(captureByVal)); ////[x => x + y]
+    show(lambdaString(stateless1)); ////[x -> x + 1]
+    show(lambdaString(stateless2)); ////[x => x + 1]
+    show(lambdaString(captureByRef)); ////[x -> x + y]
+    show(lambdaString(captureByVal)); ////[x => x + y]
 
     ////7
     ////21
-    show(..dropValues(#1, ..LambdaLocation(stateless1)));
+    show(..dropValues(#1, ..lambdaLocation(stateless1)));
     ////8
     ////21
-    show(..dropValues(#1, ..LambdaLocation(stateless2)));
+    show(..dropValues(#1, ..lambdaLocation(stateless2)));
     ////9
     ////23
-    show(..dropValues(#1, ..LambdaLocation(captureByRef)));
+    show(..dropValues(#1, ..lambdaLocation(captureByRef)));
     ////10
     ////23
-    show(..dropValues(#1, ..LambdaLocation(captureByVal)));
+    show(..dropValues(#1, ..lambdaLocation(captureByVal)));
 
-    show(LambdaCapturesByValue?(stateless1)); ////false
-    show(LambdaCapturesByValue?(stateless2)); ////true
-    show(LambdaCapturesByValue?(captureByRef)); ////false
-    show(LambdaCapturesByValue?(captureByVal)); ////true
+    show(lambdaCapturesByValue?(stateless1)); ////false
+    show(lambdaCapturesByValue?(stateless2)); ////true
+    show(lambdaCapturesByValue?(captureByRef)); ////false
+    show(lambdaCapturesByValue?(captureByVal)); ////true
 
-    show(LambdaCapturesByReference?(stateless1)); ////true
-    show(LambdaCapturesByReference?(stateless2)); ////false
-    show(LambdaCapturesByReference?(captureByRef)); ////true
-    show(LambdaCapturesByReference?(captureByVal)); ////false
+    show(lambdaCapturesByReference?(stateless1)); ////true
+    show(lambdaCapturesByReference?(stateless2)); ////false
+    show(lambdaCapturesByReference?(captureByRef)); ////true
+    show(lambdaCapturesByReference?(captureByVal)); ////false
 
-    show(LambdaStateless?(stateless1)); ////true
-    show(LambdaStateless?(stateless2)); ////true
-    show(LambdaStateless?(captureByRef)); ////false
-    show(LambdaStateless?(captureByVal)); ////false
+    show(lambdaStateless?(stateless1)); ////true
+    show(lambdaStateless?(stateless2)); ////true
+    show(lambdaStateless?(captureByRef)); ////false
+    show(lambdaStateless?(captureByVal)); ////false
 
 }

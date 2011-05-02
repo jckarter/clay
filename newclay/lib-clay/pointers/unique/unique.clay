@@ -1,4 +1,4 @@
-import memory.(allocateRawValue, freeRawValue);
+import unsafe.memory.(allocateUninitializedValue, freeUninitializedValue);
 import pointers.unique.*;
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
@@ -8,24 +8,24 @@ symbol UniquePointer['T] = CompositeType(ptr:MPointer['T]);
 alias MUniquePointer['T] = Maybe[UniquePointer['T]];
 
 overload UniquePointer['T](f, forward ..args) inline
-    | Type([f(..args)]) == 'T
+    | type([f(..args)]) == 'T
 {
-    var ptr = allocateRawValue('T);
+    var ptr = allocateUninitializedValue('T);
     try {
         ptr^ <-- f(..args);
     } catch (ex) {
-        freeRawValue(ptr);
+        freeUninitializedValue(ptr);
         throw ex;
     }
     return initializeRecord(UniquePointer['T], just(ptr));
 }
 
 overload UniquePointer(f, forward ..args) inline
-    | Defined?([var x = f(..args);])
-    = UniquePointer[#Type([f(..args)])](f, ..args);
+    | defined?([var x = f(..args);])
+    = UniquePointer[#type([f(..args)])](f, ..args);
 
 overload destroy(ref p:UniquePointer['T]) inline {
-    maybe(p.ptr, [ptr -> destroy(ptr^); freeRawValue(ptr);]);
+    maybe(p.ptr, [ptr -> destroy(ptr^); freeUninitializedValue(ptr);]);
 }
 
 overload reset(ref p:UniquePointer['T]) inline {

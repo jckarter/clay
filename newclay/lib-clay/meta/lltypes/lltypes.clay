@@ -2,97 +2,97 @@ import meta.platform.*;
 import meta.statics.*;
 import values.*;
 
-public import __primitives__.(LLMangle);
+public import __primitives__.(llMangle);
 
-symbol LLSigned;
-symbol LLUnsigned;
+symbol llSigned;
+symbol llUnsigned;
 
-symbol LLBoolType;
-symbol LLIntegerType['Signed, 'Bits];
-symbol LLFloatType['Bits];
-symbol LLPointerType['T];
-symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
-symbol LLArrayType['T, 'n];
-symbol LLTupleType[..'T];
-symbol LLUnionType[..'T];
+symbol llBoolType;
+symbol llIntegerType['Signed, 'Bits];
+symbol llFloatType['Bits];
+symbol llPointerType['T];
+symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+symbol llArrayType['T, 'n];
+symbol llTupleType[..'T];
+symbol llUnionType[..'T];
 
-#LLIntegerType?('L) = false;
-overload #LLIntegerType?(LLIntegerType['S, 'B]) = true;
+#llIntegerType?('L) = false;
+overload #llIntegerType?(llIntegerType['S, 'B]) = true;
 
-#LLFloatType?('L) = false;
-overload #LLFloatType?(LLFloatType['B]) = true;
+#llFloatType?('L) = false;
+overload #llFloatType?(llFloatType['B]) = true;
 
-#LLPointerType?('L) = false;
-overload #LLPointerType?(LLPointerType['T]) = true;
+#llPointerType?('L) = false;
+overload #llPointerType?(llPointerType['T]) = true;
 
-#LLCodePointerType?('L) = false;
-overload #LLCodePointerType?(LLCodePointerType['A,'V,'I,'O]) = true;
+#llCodePointerType?('L) = false;
+overload #llCodePointerType?(llCodePointerType['A,'V,'I,'O]) = true;
 
-#LLArrayType?('L) = false;
-overload #LLArrayType?(LLArrayType['T, 'n]) = true;
+#llArrayType?('L) = false;
+overload #llArrayType?(llArrayType['T, 'n]) = true;
 
-#LLTupleType?('L) = false;
-overload #LLTupleType?(LLTupleType[..'T]) = true;
+#llTupleType?('L) = false;
+overload #llTupleType?(llTupleType[..'T]) = true;
 
-#LLUnionType?('L) = false;
-overload #LLUnionType?(LLUnionType[..'T]) = true;
+#llUnionType?('L) = false;
+overload #llUnionType?(llUnionType[..'T]) = true;
 
-symbol LLType;
+symbol llType;
 
-symbol LLMemberType;
-overload #LLMemberType('T) | not StaticTuple?('T) = 'T;
-overload #LLMemberType(('name, 'T)) = 'T;
+symbol llMemberType;
+overload #llMemberType('T) | not staticTuple?('T) = 'T;
+overload #llMemberType(('name, 'T)) = 'T;
 
-#LLMemberTypes(..'T) = ..mapValues(LLMemberType, ..'T);
+#llMemberTypes(..'T) = ..mapValues(llMemberType, ..'T);
 
-private #PointerSize() = UInt(PlatformCPUPointerSize());
+private #PointerSize() = UInt(platformCPUPointerSize());
 
-symbol LLTypeSize;
-overload #LLTypeSize(LLBoolType) = 1u;
-overload #LLTypeSize(LLIntegerType['S, 'Bits]) = 'Bits div 8u;
-overload #LLTypeSize(LLFloatType['Bits]) = 'Bits div 8u;
-overload #LLTypeSize(LLPointerType['T]) = PointerSize();
-overload #LLTypeSize(LLCodePointerType[..'x]) = PointerSize();
-overload #LLTypeSize(LLArrayType['T, 'n]) = TypeSize('T) * UInt('n);
-overload #LLTypeSize(LLTupleType[..'T]) = LLTupleSize(..LLMemberTypes(..'T));
-overload #LLTypeSize(LLUnionType[..'T]) = LLUnionSize(..LLMemberTypes(..'T));
+symbol llTypeSize;
+overload #llTypeSize(llBoolType) = 1u;
+overload #llTypeSize(llIntegerType['S, 'Bits]) = 'Bits div 8u;
+overload #llTypeSize(llFloatType['Bits]) = 'Bits div 8u;
+overload #llTypeSize(llPointerType['T]) = PointerSize();
+overload #llTypeSize(llCodePointerType[..'x]) = PointerSize();
+overload #llTypeSize(llArrayType['T, 'n]) = typeSize('T) * UInt('n);
+overload #llTypeSize(llTupleType[..'T]) = llTupleSize(..llMemberTypes(..'T));
+overload #llTypeSize(llUnionType[..'T]) = llUnionSize(..llMemberTypes(..'T));
 
 private #align('n, 'alignment) = ('n + 'alignment - 1u) div 'alignment * 'alignment;
 
-private #LLTupleSize(..'TT) = align(LLTupleSize2(0u, ..'TT), LLAggAlign(..'TT));
-private symbol LLTupleSize2;
-overload #LLTupleSize2('size, 'T, ..'TT)
-    = LLTupleSize2(align('size, TypeAlign('T)) + TypeSize('T), ..'TT);
-overload #LLTupleSize2('size) = 'size;
+private #llTupleSize(..'TT) = align(llTupleSize2(0u, ..'TT), llAggAlign(..'TT));
+private symbol llTupleSize2;
+overload #llTupleSize2('size, 'T, ..'TT)
+    = llTupleSize2(align('size, typeAlign('T)) + typeSize('T), ..'TT);
+overload #llTupleSize2('size) = 'size;
 
-private #LLUnionSize(..'TT) = align(LLUnionSize2(0u, ..'TT), LLAggAlign(..'TT));
-private symbol LLUnionSize2;
-overload #LLUnionSize2('size, 'T, ..'TT)
-    = LLUnionSize2(max(align('size, TypeAlign('T)), TypeSize('T)), ..'TT);
-overload #LLUnionSize2('size) = 'size;
+private #llUnionSize(..'TT) = align(llUnionSize2(0u, ..'TT), llAggAlign(..'TT));
+private symbol llUnionSize2;
+overload #llUnionSize2('size, 'T, ..'TT)
+    = llUnionSize2(max(align('size, typeAlign('T)), typeSize('T)), ..'TT);
+overload #llUnionSize2('size) = 'size;
 
-private #LLAggAlign(..'T) = max(..mapValues(TypeAlign, ..'T));
-overload #LLAggAlign() = 1u;
+private #llAggAlign(..'T) = max(..mapValues(typeAlign, ..'T));
+overload #llAggAlign() = 1u;
 
 // XXX platform-specific
-#MaxIntegerAlign() = 8u;
-#MaxFloatAlign() = 8u;
+#maxIntegerAlign() = 8u;
+#maxFloatAlign() = 8u;
 
-symbol LLTypeAlign;
-overload #LLTypeAlign(LLBoolType) = 1u;
-overload #LLTypeAlign(LLIntegerType['S, 'Bits]) = min('Bits div 8u, MaxIntegerAlign());
-overload #LLTypeAlign(LLFloatType['Bits]) = min('Bits div 8u, MaxFloatAlign());
-overload #LLTypeAlign(LLPointerType['T]) = PointerSize();
-overload #LLTypeAlign(LLCodePointerType[..'x]) = PointerSize();
-overload #LLTypeAlign(LLArrayType['T, 'n]) = TypeAlign('T);
-overload #LLTypeAlign(LLTupleType[..'T])
-    = max(..mapValues(TypeAlign, ..LLMemberTypes(..'T)));
-overload #LLTypeAlign(LLUnionType[..'T])
-    = max(..mapValues(TypeAlign, ..LLMemberTypes(..'T)));
-overload #LLTypeAlign(LLTupleType[]) = 1u;
-overload #LLTypeAlign(LLUnionType[]) = 1u;
+symbol llTypeAlign;
+overload #llTypeAlign(llBoolType) = 1u;
+overload #llTypeAlign(llIntegerType['S, 'Bits]) = min('Bits div 8u, maxIntegerAlign());
+overload #llTypeAlign(llFloatType['Bits]) = min('Bits div 8u, maxFloatAlign());
+overload #llTypeAlign(llPointerType['T]) = PointerSize();
+overload #llTypeAlign(llCodePointerType[..'x]) = PointerSize();
+overload #llTypeAlign(llArrayType['T, 'n]) = typeAlign('T);
+overload #llTypeAlign(llTupleType[..'T])
+    = max(..mapValues(typeAlign, ..llMemberTypes(..'T)));
+overload #llTypeAlign(llUnionType[..'T])
+    = max(..mapValues(typeAlign, ..llMemberTypes(..'T)));
+overload #llTypeAlign(llTupleType[]) = 1u;
+overload #llTypeAlign(llUnionType[]) = 1u;
 
 // A bit of improper coupling with the C codegen implementation: tuple elements
 // are generated as struct fields named "fieldn" for 0 <= n < tupleSize in a struct
-#LLTupleFieldName('n) = StaticStringConcat("field", StaticName('n));
+#llTupleFieldName('n) = staticStringConcat("field", staticName('n));
 

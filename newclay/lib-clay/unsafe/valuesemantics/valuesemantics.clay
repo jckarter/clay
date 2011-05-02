@@ -1,5 +1,5 @@
-import prelude.operators.c.(cAssign);
-import meta.lltypes.(LLType);
+import meta.c.(cAssign);
+import meta.lltypes.(llType);
 import unsafe.casts.(bitcast, rvalueToRef);
 import values.(allValues?, dropValues, takeValues);
 
@@ -8,79 +8,78 @@ import values.(allValues?, dropValues, takeValues);
 // value semantics predicates
 //
 
-#InheritableTypePredicate?('X) = false;
-overload #InheritableTypePredicate?(PODType?) = true;
-overload #InheritableTypePredicate?(BitwiseCopiedType?) = true;
-overload #InheritableTypePredicate?(BitwiseMovedType?) = true;
-overload #InheritableTypePredicate?(DestroyDoesNothingType?) = true;
-overload #InheritableTypePredicate?(ResetDoesNothingType?) = true;
-overload #InheritableTypePredicate?(InitializeDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(CopyDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(AssignDoesNotThrowType?) = true;
-overload #InheritableTypePredicate?(BitwiseAssignedType?) = true;
-overload #InheritableTypePredicate?(BitwiseMoveAssignedType?) = true;
+#inheritableTypePredicate?('X) = false;
+overload #inheritableTypePredicate?(POD?) = true;
+overload #inheritableTypePredicate?(BitwiseCopied?) = true;
+overload #inheritableTypePredicate?(BitwiseMoved?) = true;
+overload #inheritableTypePredicate?(DestroyDoesNothing?) = true;
+overload #inheritableTypePredicate?(ResetDoesNothing?) = true;
+overload #inheritableTypePredicate?(InitializeDoesNotThrow?) = true;
+overload #inheritableTypePredicate?(CopyDoesNotThrow?) = true;
+overload #inheritableTypePredicate?(AssignDoesNotThrow?) = true;
+overload #inheritableTypePredicate?(BitwiseAssigned?) = true;
+overload #inheritableTypePredicate?(BitwiseMoveAssigned?) = true;
 
-#InheritsPredicatesFromTypes('T) = false;
+#inheritsPredicatesFromTypes('T) = false;
 #PredicateInheritingType?('T)
-    = Type?('T) and takeValues(1, ..InheritsPredicatesFromTypes('T));
-overload #'XType?('T)
-    | InheritableTypePredicate?('XType?) and PredicateInheritingType?('T)
-    = allValues?('XType?, ..dropValues(1, ..InheritsPredicatesFromTypes('T)));
+    = type?('T) and takeValues(1, ..inheritsPredicatesFromTypes('T));
+overload #'X?('T)
+    | inheritableTypePredicate?('X?) and PredicateInheritingType?('T)
+    = allValues?('X?, ..dropValues(1, ..inheritsPredicatesFromTypes('T)));
 
-#PODType?('T) | not PredicateInheritingType?('T) = false;
-#BitwiseCopiedType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#BitwiseMovedType?('T) | not PredicateInheritingType?('T) = true;
-#DestroyDoesNothingType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#ResetDoesNothingType?('T) | not PredicateInheritingType?('T) = DestroyDoesNothingType?('T);
-#InitializeDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#CopyDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#AssignDoesNotThrowType?('T) | not PredicateInheritingType?('T) = PODType?('T);
-#BitwiseAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseCopiedType?('T) and DestroyDoesNothingType?('T);
-#BitwiseMoveAssignedType?('T) | not PredicateInheritingType?('T)
-    = BitwiseMovedType?('T) and DestroyDoesNothingType?('T);
+#POD?('T) | not PredicateInheritingType?('T) = false;
+#BitwiseCopied?('T) | not PredicateInheritingType?('T) = POD?('T);
+#BitwiseMoved?('T) | not PredicateInheritingType?('T) = true;
+#DestroyDoesNothing?('T) | not PredicateInheritingType?('T) = POD?('T);
+#ResetDoesNothing?('T) | not PredicateInheritingType?('T) = DestroyDoesNothing?('T);
+#InitializeDoesNotThrow?('T) | not PredicateInheritingType?('T) = POD?('T);
+#CopyDoesNotThrow?('T) | not PredicateInheritingType?('T) = POD?('T);
+#AssignDoesNotThrow?('T) | not PredicateInheritingType?('T) = POD?('T);
+#BitwiseAssigned?('T) | not PredicateInheritingType?('T)
+    = BitwiseCopied?('T) and DestroyDoesNothing?('T);
+#BitwiseMoveAssigned?('T) | not PredicateInheritingType?('T)
+    = BitwiseMoved?('T) and DestroyDoesNothing?('T);
 
-#BitwiseZeroInitializedType?('T) = false;
-overload #BitwiseZeroInitializedType?(Bool) = true;
-overload #BitwiseZeroInitializedType?('T) | NumberType?('T) = true;
-overload #BitwiseZeroInitializedType?('T) | CharType?('T) = true;
-overload #BitwiseZeroInitializedType?(ContiguousCoordinate['T]) = true;
+#BitwiseZeroInitialized?('T) = false;
+overload #BitwiseZeroInitialized?(Bool) = true;
+overload #BitwiseZeroInitialized?('T) | Number?('T) = true;
+overload #BitwiseZeroInitialized?('T) | Char?('T) = true;
 
-#DefaultInitializableType?('T) = CallDefined?('T);
-#CopyableType?('T) = CallDefined?(copy, 'T);
-#MovableType?('T) = CallDefined?(move, 'T);
-#AssignableType?('T) = CallDefined?(assign, Ref['T], 'T);
-#MoveAssignableType?('T) = CallDefined?(assign, Ref['T], Rvalue['T]);
-#AssignableTypes?('T, 'U) = CallDefined?(assign, Ref['T], 'U);
+#DefaultInitializable?('T) = callDefined?('T);
+#Copyable?('T) = callDefined?(copy, 'T);
+#Movable?('T) = callDefined?(move, 'T);
+#Assignable?('T) = callDefined?(assign, Ref['T], 'T);
+#MoveAssignable?('T) = callDefined?(assign, Ref['T], Rvalue['T]);
+#AssignableTypes?('T, 'U) = callDefined?(assign, Ref['T], 'U);
 
 
 //
 // value semantics protocol, and default implementations based on predicates
 //
 
-copy(a:'T) inline | BitwiseCopiedType?('T) = bitwiseCopy(a);
+copy(a:'T) inline | BitwiseCopied?('T) = bitwiseCopy(a);
 
-moveRvalue(ref a:'T) inline | BitwiseMovedType?('T) = bitwiseCopy(a);
+moveRvalue(ref a:'T) inline | BitwiseMoved?('T) = bitwiseCopy(a);
 
-destroy(ref x:'T) | DestroyDoesNothingType?('T) {}
+destroy(ref x:'T) | DestroyDoesNothing?('T) {}
 
 reset(ref x:'T) inline
-    | DefaultInitializableType?('T) and InitializeDoesNotThrowType?('T)
+    | DefaultInitializable?('T) and InitializeDoesNotThrow?('T)
     { x <-- 'T(); }
-overload reset(ref x:'T) inline | ResetDoesNothingType?('T) {}
+overload reset(ref x:'T) inline | ResetDoesNothing?('T) {}
 
 moveAssign(ref a:'T, rvalue b:'T) inline {
     destroy(a);
     a <-- move(b);
 }
 overload moveAssign(ref a:'T, rvalue b:'T) inline
-    | BitwiseMoveAssignedType?('T)
+    | BitwiseMoveAssigned?('T)
 {
     a <-- move(b);
 }
 
 copyAssign(ref a:'T, b:'T) inline
-    | Defined?([a <-- b;])
+    | defined?([a <-- b;])
 {
     var tmp = moveRvalue(a);
     try {
@@ -90,7 +89,7 @@ copyAssign(ref a:'T, b:'T) inline
         throw ex;
     }
 }
-overload copyAssign(ref a:'T, b:'T) inline | BitwiseAssignedType?('T) { a <-- b; }
+overload copyAssign(ref a:'T, b:'T) inline | BitwiseAssigned?('T) { a <-- b; }
 overload copyAssign(ref a:'A, b:'B) inline | AssignablePrimitiveTypes?('A, 'B)
 {
     cAssign(a, b);
@@ -125,13 +124,13 @@ bitwiseCopy(forward a:'T) inline --> returned:'T { cAssign(returned, a); }
 //
 
 symbol Unmanaged['T];
-overload #PODType?(Unmanaged['T]) = true;
-overload #LLType(Unmanaged['T])
-    | Type?('T)
-    = LLType('T);
+overload #POD?(Unmanaged['T]) = true;
+overload #llType(Unmanaged['T])
+    | type?('T)
+    = llType('T);
 
 overload Unmanaged['T](forward ..args) inline --> returned:Unmanaged['T]
-    | Defined?(['T(..args)])
+    | defined?(['T(..args)])
 {
     *returned <-- 'T(..args);
 }
@@ -151,17 +150,17 @@ overload unpack(forward x:Unmanaged['T]) = forward bitcast('T, x);
 
 private symbol initializeFrom;
 overload initializeFrom(ref a:'T, b:'T) inline
-    | CallDefined?(copy, 'T)
+    | callDefined?(copy, 'T)
     { a <-- copy(b); }
 overload initializeFrom(ref a:'T, rvalue b:'T) inline
-    | CallDefined?(move, Rvalue['T])
+    | callDefined?(move, Rvalue['T])
     { a <-- move(b); }
 
 private symbol assign;
-overload assign(ref a:'T, b:'U) inline | Defined?([copyAssign(a, b);]) {
+overload assign(ref a:'T, b:'U) inline | defined?([copyAssign(a, b);]) {
     copyAssign(a, b);
 }
-overload assign(ref a:'T, rvalue b:'T) inline | Defined?([moveAssign(a, b);]) {
+overload assign(ref a:'T, rvalue b:'T) inline | defined?([moveAssign(a, b);]) {
     moveAssign(a, b);
 }
 

@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-#Main() = ..LambdaLocation([x -> {
+#Main() = ..lambdaLocation([x -> {
     return x + 1;
 }]);

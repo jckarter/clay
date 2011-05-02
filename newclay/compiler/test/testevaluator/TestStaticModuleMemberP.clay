@@ -3,9 +3,9 @@ import factorial; // has Factorial
 import tools;
 import tools.factorial;
 
-#Main() = StaticModuleMember?(factorial, "Factorial"),
-                StaticModuleMember?(factorial, "NotFactorial"),
-                StaticModuleMember?(tools, "factorial"),
-                StaticModuleMember?(tools, "Factorial"),
-                StaticModuleMember?(tools, "buh"),
-                StaticModuleMember?(tools.factorial, "Factorial");
+#Main() = staticModuleMember?(factorial, "Factorial"),
+                staticModuleMember?(factorial, "NotFactorial"),
+                staticModuleMember?(tools, "factorial"),
+                staticModuleMember?(tools, "Factorial"),
+                staticModuleMember?(tools, "buh"),
+                staticModuleMember?(tools.factorial, "Factorial");

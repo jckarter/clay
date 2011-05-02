@@ -1,0 +1,309 @@
+import meta.lltypes.(llType, llPointerType);
+import meta.c.*;
+import unsafe.casts.(bitcast, pointerCast);
+import unsafe.valuesemantics.*;
+
+
+//
+// coordinate sequence protocol functions
+//
+
+symbol begin;
+symbol end;
+
+
+//
+// ContiguousCoordinate
+//
+
+symbol ContiguousCoordinate['T];
+
+overload #POD?(ContiguousCoordinate['T]) = true;
+overload #BitwiseZeroInitialized?(ContiguousCoordinate['T]) = true;
+
+overload #pointerReferencedType(ContiguousCoordinate['T]) = 'T;
+
+overload #llType(ContiguousCoordinate['T])
+    = llPointerType['T];
+overload #recursiveTypes(ContiguousCoordinate['T]) = 'T;
+
+overload ContiguousCoordinate['T]() inline --> returned:ContiguousCoordinate['T] {
+    bitcast(Int, returned) <-- 0;
+}
+
+overload ContiguousCoordinate(forward x:'T) inline
+    | DereferenceablePointer?('T)
+    = ContiguousCoordinate[pointerReferencedType('T)](x);
+
+
+//
+// ContiguousCoordinate arithmetic
+//
+
+overload add(a:ContiguousCoordinate['A], b:'B) inline
+    | Integer?('B)
+    = cAdd(ContiguousCoordinate['A], a, b);
+
+overload add(a:'A, b:ContiguousCoordinate['B]) inline
+    | Integer?('A)
+    = cAdd(ContiguousCoordinate['B], b, a);
+
+overload subtract(a:ContiguousCoordinate['A], b:'B) inline
+    | Integer?('B)
+    = cSubtract(ContiguousCoordinate['A], a, b);
+
+overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
+    = cSubtract(Int, a, b);
+
+
+//
+// coordinate type predicates
+//
+
+#Coordinate?('C) = callDefined?(dereference, 'C) and callDefined?(inc, Ref['C]);
+#coordinateTargetType('C) | Coordinate?('C) = type([dereference(arg('C))]);
+
+#CoordinateSequence?('S) = callDefined?(begin, 'S) and callDefined?(end, 'S);
+#sequenceCoordinateType('S) | CoordinateSequence?('S) = type([begin(arg('S))]);
+
+#ContiguousCoordinate?('X) = false;
+overload #ContiguousCoordinate?(ContiguousCoordinate['T]) = true;
+
+#ContiguousSequence?('S) =
+    CoordinateSequence?('S)
+    and ContiguousCoordinate?(sequenceCoordinateType('S));
+
+#ReversibleCoordinate?('C) = callDefined?(dereference, 'C)
+    and callDefined?(dec, Ref['C]);
+
+
+//
+// CoordinateRange
+//
+
+symbol CoordinateRange['C] = RecordType(begin:'C, end:'C);
+overload CoordinateRange(begin:'C, end:'C) inline
+    | Coordinate?('C)
+    = CoordinateRange['C](begin, end);
+
+overload hasNext?(i:CoordinateRange['C]) inline = i.begin < i.end;
+overload next(ref i:CoordinateRange['C]) inline {
+    var p = i.begin;
+    inc(i.begin);
+    return forward ..p^;
+}
+
+overload begin(i:CoordinateRange['C]) inline = i.begin;
+overload end(i:CoordinateRange['C]) inline = i.end;
+
+symbol ReversedCoordinateRange['C] = RecordType(begin:'C, end:'C);
+overload ReversedCoordinateRange(forward begin:'C, forward end:'C)
+    | ReversibleCoordinate?('C)
+    = ReversedCoordinateRange['C](begin, end);
+
+overload hasNext?(i:ReversedCoordinateRange['C]) = i.begin < i.end;
+overload next(ref i:ReversedCoordinateRange['C]) {
+    dec(i.end);
+    return forward ..i.end^;
+}
+
+overload reverseIterator(forward x:CoordinateRange['C])
+    | ReversibleCoordinate?('C)
+    = ReversedCoordinateRange['C](..*x);
+
+
+//
+// sequence operations for coordinate sequences
+//
+
+overload iterator(x:'S) | CoordinateSequence?('S)
+    = CoordinateRange(begin(x), end(x));
+
+overload reverseIterator(x:'S)
+    | CoordinateSequence?('S) and ReversibleCoordinate?(sequenceCoordinateType('S))
+    = ReversedCoordinateRange(begin(x), end(x));
+
+overload size(x:'S) | CoordinateSequence?('S) and defined?([end(x) - begin(x)])
+    = UInt(end(x) - begin(x));
+
+overload index(x:'S, n)
+    | CoordinateSequence?('S) and defined?([begin(x) + n])
+    = forward (begin(x) + n)^;
+
+overload front(x:'S) | CoordinateSequence?('S) = forward begin(x)^;
+overload back(x:'S) | CoordinateSequence?('S) {
+    var c = end(x);
+    dec(c);
+    return forward c^;
+}
+
+
+//
+// apply a function to each value in a coordinate range or paired coordinate ranges
+//
+
+#compatibleCoordinateTypes?('C, 'D)
+    = Coordinate?('C) and Coordinate?('D)
+      and coordinateTargetType('C) == coordinateTargetType('D);
+
+eachInRange(begin:'C, end:'C, fn) | Coordinate?('C) {
+    var i = begin;
+    while (i < end) {
+        fn(i^);
+        inc(i);
+    }
+}
+
+eachInRangeBackwards(begin:'C, end:'C, fn) | Coordinate?('C) {
+    var i = end;
+    while (begin < i) {
+        dec(i);
+        fn(i^);
+    }
+}
+
+eachInRangeWithCleanup(begin:'C, end:'C, fn) | Coordinate?('C) {
+    var i = begin;
+    try {
+        while (i < end) {
+            fn(i^);
+            inc(i);
+        }
+    } catch (ex) {
+        destroyRange(begin, i);
+        throw ex;
+    }
+}
+
+eachInRangeBackwardsWithCleanup(begin:'C, end:'C, fn) | Coordinate?('C) {
+    var i = end;
+    try {
+        while (begin < i) {
+            dec(i);
+            fn(i^);
+        }
+    } catch (ex) {
+        inc(i);
+        destroyRange(i, end);
+        throw ex;
+    }
+}
+
+eachInRanges(begin1:'C, begin2:'D, end2:'D, fn) | compatibleCoordinateTypes?('C, 'D) {
+    var i1 = begin1;
+    var i2 = begin2;
+    while (i2 < end2) {
+        fn(i1^, i2^);
+        inc(i1);
+        inc(i2);
+    }
+}
+
+eachInRangesBackwards(begin1:'C, begin2:'D, end2:'D, fn) | compatibleCoordinateTypes?('C, 'D) {
+    var end1 = begin1 + (end2 - begin2);
+    var i1 = end1;
+    var i2 = end2;
+    while (begin2 < i2) {
+        dec(i1);
+        dec(i2);
+        fn(i1^, i2^);
+    }
+}
+
+eachInRangesWithCleanup(begin1:'C, begin2:'D, end2:'D, fn) | compatibleCoordinateTypes?('C, 'D) {
+    var i1 = begin1;
+    var i2 = begin2;
+    try {
+        while (i2 < end2) {
+            fn(i1^, i2^);
+            inc(i1);
+            inc(i2);
+        }
+    } catch (ex) {
+        destroyRange(begin1, i1);
+    }
+}
+
+eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    var end1 = begin1 + (end2 - begin2);
+    var i1 = end1;
+    var i2 = end2;
+    try {
+        while (begin2 < i2) {
+            dec(i1);
+            dec(i2);
+            fn(i1^, i2^);
+        }
+    } catch (ex) {
+        inc(i1);
+        destroyRange(i1, end1);
+    }
+}
+
+
+//
+// apply value semantics operations over ranges of coordinates
+//
+
+private initializeTo(ref x:'X) inline { x <-- 'X(); }
+private copyTo(ref x, y) inline { x <-- y; }
+private moveRvalueTo(ref x, ref y) inline { x <-- moveRvalue(y); }
+
+initializeRange(begin:'C, end:'C) inline | Coordinate?('C) {
+    eachInRangeWithCleanup(begin, end, initializeTo);
+}
+
+destroyRange(begin:'C, end:'C) inline | Coordinate?('C) {
+    eachInRange(begin, end, destroy);
+}
+
+copyRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    eachInRangesWithCleanup(destBegin, srcBegin, srcEnd, copyTo);
+}
+
+private moveRvalueRangeForwards(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    eachInRanges(destBegin, srcBegin, srcEnd, moveRvalueTo);
+}
+
+private moveRvalueRangeBackwards(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    eachInRangesBackwards(destBegin, srcBegin, srcEnd, moveRvalueTo);
+}
+
+moveRvalueRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D) and 'C != 'D
+{
+    moveRvalueRangeForwards(destBegin, srcBegin, srcEnd);
+}
+
+overload moveRvalueRange(destBegin:'C, srcBegin:'C, srcEnd:'C) inline
+    | Coordinate?('C)
+{
+    if (destBegin <= srcBegin)
+        moveRvalueRangeForwards(destBegin, srcBegin, srcEnd);
+    else
+        moveRvalueRangeBackwards(destBegin, srcBegin, srcEnd);
+}
+
+moveRvalueNonoverlappingRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    moveRvalueRangeForwards(destBegin, srcBegin, srcEnd);
+}
+
+resetRange(begin:'C, end:'C) inline | Coordinate?('C) {
+    eachInRange(begin, end, reset);
+}
+
+assignRange(destBegin:'C, srcBegin:'D, srcEnd:'D) inline
+    | compatibleCoordinateTypes?('C, 'D)
+{
+    eachInRanges(destBegin, srcBegin, srcEnd, copyAssign);
+}

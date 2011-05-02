@@ -1,5 +1,4 @@
-import meta.statics.(StaticString?);
-import prelude.types.(Bool);
+import meta.statics.(staticString?);
 
 // TODO
 // A lot of this is more tightly coupled with the C codegen implementation than it ought to be.
@@ -14,13 +13,13 @@ overload cIndex(#'T, ref array, index) inline --> ref returned:'T
     __c__ """$returned = &$array.array[$index];""";
 
 cFieldRef(#'T, const aggregate, #'field) inline --> const returned:'T
-    | StaticString?('field)
+    | staticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
 overload cFieldRef(#'T, rvalue aggregate, #'field) inline --> rvalue returned:'T
-    | StaticString?('field)
+    | staticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
 overload cFieldRef(#'T, ref aggregate, #'field) inline --> ref returned:'T
-    | StaticString?('field)
+    | staticString?('field)
     __c__ """$returned = &$aggregate.$'field;""";
 
 cDereference(#'T, ptr) inline --> ref returned:'T
@@ -86,7 +85,7 @@ cAssign(ref a, forward b) inline
     __c__ """$a = $b;""";
 
 cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline --> returned:'O
-    | Type?('O)
+    | type?('O)
     __c__ """$returned = $callable($..args);""";
 overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline
     | 'O == ()

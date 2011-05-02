@@ -18,7 +18,7 @@ overload foo(p:Pointer[Int]) {
 }
 
 main() {
-    show(#(TypeSize(MaybePointer[Int]) == TypeSize(Pointer[Int]))); ////true
+    show(#(typeSize(MaybePointer[Int]) == typeSize(Pointer[Int]))); ////true
 
     var i = 5;
     var m = MaybePointer[Int](&i);

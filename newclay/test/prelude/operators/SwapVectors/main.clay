@@ -1,0 +1,11 @@
+import show.(show);
+import vectors.(Vector);
+
+main() {
+    var x, y = Vector[Int](1), Vector[Int](2);
+
+    swap(x, y);
+
+    show(x[0]);
+    show(y[0]);
+}

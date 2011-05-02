@@ -1,3 +1,4 @@
+import unsafe.coordinates.(ContiguousCoordinate);
 import show.*;
 
 main() {
@@ -8,59 +9,59 @@ main() {
         cchar = ContiguousCoordinate(&char);
     var opaque = OpaquePointer(&int);
 
-    show(#Type([pint])); ////Pointer[Int]
-    show(#Type([pchar])); ////Pointer[Char]
-    show(#Type([cint])); ////ContiguousCoordinate[Int]
-    show(#Type([cchar])); ////ContiguousCoordinate[Char]
-    show(#Type([opaque])); ////OpaquePointer
+    show(#type([pint])); ////Pointer[Int]
+    show(#type([pchar])); ////Pointer[Char]
+    show(#type([cint])); ////ContiguousCoordinate[Int]
+    show(#type([cchar])); ////ContiguousCoordinate[Char]
+    show(#type([opaque])); ////OpaquePointer
 
     // defined comparisons
-    show(#Defined?([pint == pint])); ////true
-    show(#Defined?([cint == cint])); ////true
-    show(#Defined?([opaque == opaque])); ////true
-    show(#Defined?([cint < cint])); ////true
+    show(#defined?([pint == pint])); ////true
+    show(#defined?([cint == cint])); ////true
+    show(#defined?([opaque == opaque])); ////true
+    show(#defined?([cint < cint])); ////true
 
     // nondefined comparisons
-    show(#Defined?([pint == pchar])); ////false
-    show(#Defined?([cint == cchar])); ////false
-    show(#Defined?([pint < pint])); ////false
-    show(#Defined?([opaque < opaque])); ////false
+    show(#defined?([pint == pchar])); ////false
+    show(#defined?([cint == cchar])); ////false
+    show(#defined?([pint < pint])); ////false
+    show(#defined?([opaque < opaque])); ////false
 
     // defined dereference
-    show(#Defined?([pint^])); ////true
-    show(#Defined?([cint^])); ////true
+    show(#defined?([pint^])); ////true
+    show(#defined?([cint^])); ////true
 
     // nondefined dereference
-    show(#Defined?([opaque^])); ////false
+    show(#defined?([opaque^])); ////false
 
     // defined arithmetic
-    show(#Defined?([cint + 1])); ////true
-    show(#Defined?([cint - 1])); ////true
-    show(#Defined?([1 + cint])); ////true
-    show(#Defined?([cint - cint])); ////true
+    show(#defined?([cint + 1])); ////true
+    show(#defined?([cint - 1])); ////true
+    show(#defined?([1 + cint])); ////true
+    show(#defined?([cint - cint])); ////true
 
     // nondefined arithmetic
-    show(#Defined?([1 - cint])); ////false
-    show(#Defined?([cint - cchar])); ////false
+    show(#defined?([1 - cint])); ////false
+    show(#defined?([cint - cchar])); ////false
 
-    show(#Defined?([pint + 1])); ////false
-    show(#Defined?([pint - 1])); ////false
-    show(#Defined?([1 + pint])); ////false
-    show(#Defined?([1 - pint])); ////false
+    show(#defined?([pint + 1])); ////false
+    show(#defined?([pint - 1])); ////false
+    show(#defined?([1 + pint])); ////false
+    show(#defined?([1 - pint])); ////false
 
-    show(#Defined?([opaque + 1])); ////false
-    show(#Defined?([opaque - 1])); ////false
-    show(#Defined?([1 + opaque])); ////false
-    show(#Defined?([1 - opaque])); ////false
+    show(#defined?([opaque + 1])); ////false
+    show(#defined?([opaque - 1])); ////false
+    show(#defined?([1 + opaque])); ////false
+    show(#defined?([1 - opaque])); ////false
 
-    show(#Defined?([pint - pint])); ////false
-    show(#Defined?([cint - pint])); ////false
-    show(#Defined?([opaque - pint])); ////false
+    show(#defined?([pint - pint])); ////false
+    show(#defined?([cint - pint])); ////false
+    show(#defined?([opaque - pint])); ////false
 
-    show(#Defined?([pint - cint])); ////false
-    show(#Defined?([opaque - cint])); ////false
+    show(#defined?([pint - cint])); ////false
+    show(#defined?([opaque - cint])); ////false
 
-    show(#Defined?([pint - opaque])); ////false
-    show(#Defined?([cint - opaque])); ////false
-    show(#Defined?([opaque - opaque])); ////false
+    show(#defined?([pint - opaque])); ////false
+    show(#defined?([cint - opaque])); ////false
+    show(#defined?([opaque - opaque])); ////false
 }

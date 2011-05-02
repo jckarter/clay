@@ -3,38 +3,38 @@ import __main__.(main);
 
 
 //
-// Type?
+// type?
 //
 
-symbol Type?;
-overload #Type?('x) = false;
+symbol type?;
+overload #type?('x) = false;
 
 
 
 //
-// LLType
+// llType
 //
 
-symbol LLType;
+symbol llType;
 
-symbol LLSigned;
-symbol LLUnsigned;
+symbol llSigned;
+symbol llUnsigned;
 
-symbol LLBoolType;
-symbol LLIntegerType['Signed, 'Bits];
-symbol LLFloatType['Bits];
-symbol LLPointerType['T];
-symbol LLCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
-symbol LLArrayType['T, 'n];
-symbol LLTupleType[..'T];
-symbol LLUnionType[..'T];
+symbol llBoolType;
+symbol llIntegerType['Signed, 'Bits];
+symbol llFloatType['Bits];
+symbol llPointerType['T];
+symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+symbol llArrayType['T, 'n];
+symbol llTupleType[..'T];
+symbol llUnionType[..'T];
 
 
 //
-// PODType?
+// POD?
 //
 
-#PODType?('T) = true;
+#POD?('T) = true;
 
 
 //
@@ -46,10 +46,10 @@ overload #NewPrimitiveType() = (PrimitiveTypeTag,);
 
 symbol PrimitiveType?;
 overload #PrimitiveType?('x) =
-    StaticSymbol?('x)
+    staticSymbol?('x)
     and SymbolWithTag?('x, PrimitiveTypeTag);
 
-overload #Type?('x) | PrimitiveType?('x) = true;
+overload #type?('x) | PrimitiveType?('x) = true;
 
 
 
@@ -72,20 +72,20 @@ symbol UInt  = NewPrimitiveType();
 symbol Float32 = NewPrimitiveType();
 symbol Float64 = NewPrimitiveType();
 
-overload #LLType(Bool) = LLBoolType;
-overload #LLType(Char) = LLIntegerType[LLUnsigned, 8];
-overload #LLType(Int8 ) = LLIntegerType[LLSigned,  8];
-overload #LLType(Int16) = LLIntegerType[LLSigned, 16];
-overload #LLType(Int32) = LLIntegerType[LLSigned, 32];
-overload #LLType(Int64) = LLIntegerType[LLSigned, 64];
-overload #LLType(Int) = LLIntegerType[LLSigned, PlatformCPUPointerBits()];
-overload #LLType(UInt8 ) = LLIntegerType[LLUnsigned,  8];
-overload #LLType(UInt16) = LLIntegerType[LLUnsigned, 16];
-overload #LLType(UInt32) = LLIntegerType[LLUnsigned, 32];
-overload #LLType(UInt64) = LLIntegerType[LLUnsigned, 64];
-overload #LLType(UInt) = LLIntegerType[LLUnsigned, PlatformCPUPointerBits()];
-overload #LLType(Float32) = LLFloatType[32];
-overload #LLType(Float64) = LLFloatType[64];
+overload #llType(Bool) = llBoolType;
+overload #llType(Char) = llIntegerType[llUnsigned, 8];
+overload #llType(Int8 ) = llIntegerType[llSigned,  8];
+overload #llType(Int16) = llIntegerType[llSigned, 16];
+overload #llType(Int32) = llIntegerType[llSigned, 32];
+overload #llType(Int64) = llIntegerType[llSigned, 64];
+overload #llType(Int) = llIntegerType[llSigned, platformCPUPointerBits()];
+overload #llType(UInt8 ) = llIntegerType[llUnsigned,  8];
+overload #llType(UInt16) = llIntegerType[llUnsigned, 16];
+overload #llType(UInt32) = llIntegerType[llUnsigned, 32];
+overload #llType(UInt64) = llIntegerType[llUnsigned, 64];
+overload #llType(UInt) = llIntegerType[llUnsigned, platformCPUPointerBits()];
+overload #llType(Float32) = llFloatType[32];
+overload #llType(Float64) = llFloatType[64];
 
 
 //
@@ -93,9 +93,9 @@ overload #LLType(Float64) = LLFloatType[64];
 //
 
 symbol StringConstant;
-overload #Type?(StringConstant) = true;
-overload #LLType(StringConstant)
-    = LLTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
+overload #type?(StringConstant) = true;
+overload #llType(StringConstant)
+    = llTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
 
 
 //
@@ -103,8 +103,8 @@ overload #LLType(StringConstant)
 //
 
 symbol Static['T];
-overload #Type?(Static['T]) = true;
-overload #LLType(Static['T]) = LLTupleType[];
+overload #type?(Static['T]) = true;
+overload #llType(Static['T]) = llTupleType[];
 
 
 
@@ -113,8 +113,8 @@ overload #LLType(Static['T]) = LLTupleType[];
 //
 
 symbol Pointer['T];
-overload #Type?(Pointer['T]) = true;
-overload #LLType(Pointer['T]) = LLPointerType['T];
+overload #type?(Pointer['T]) = true;
+overload #llType(Pointer['T]) = llPointerType['T];
 
 
 
@@ -123,9 +123,9 @@ overload #LLType(Pointer['T]) = LLPointerType['T];
 //
 
 symbol ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
-overload #Type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
-overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
-    = LLCodePointerType['A, 'V, 'I, 'O];
+overload #type?(ExternalCodePointer['A, 'V, 'I, 'O]) = true;
+overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
+    = llCodePointerType['A, 'V, 'I, 'O];
 
 
 //
@@ -133,9 +133,9 @@ overload #LLType(ExternalCodePointer['A, 'V, 'I, 'O])
 //
 
 symbol CodePointer['Inputs, 'Outputs];
-overload #Type?(CodePointer[('I), ('O)]) = true;
-overload #LLType(CodePointer[('I), ('O)])
-    = LLCodePointerType[CdeclABI, false,
+overload #type?(CodePointer[('I), ('O)]) = true;
+overload #llType(CodePointer[('I), ('O)])
+    = llCodePointerType[CdeclABI, false,
         (Pointer[ReferenceBaseType('I)], Pointer[ReferenceBaseType('O)]),
         ()
     ];
@@ -146,8 +146,8 @@ overload #LLType(CodePointer[('I), ('O)])
 //
 
 symbol Array['T, 'n];
-overload #Type?(Array['T, 'n]) = true;
-overload #LLType(Array['T, 'n]) = LLArrayType['T, 'n];
+overload #type?(Array['T, 'n]) = true;
+overload #llType(Array['T, 'n]) = llArrayType['T, 'n];
 
 
 
@@ -156,8 +156,8 @@ overload #LLType(Array['T, 'n]) = LLArrayType['T, 'n];
 //
 
 symbol Tuple[..'T];
-overload #Type?(Tuple[..'T]) = true;
-overload #LLType(Tuple[..'T]) = LLTupleType[..'T];
+overload #type?(Tuple[..'T]) = true;
+overload #llType(Tuple[..'T]) = llTupleType[..'T];
 
 
 
@@ -167,15 +167,15 @@ overload #LLType(Tuple[..'T]) = LLTupleType[..'T];
 
 symbol TupleWithTag?;
 overload #TupleWithTag?('x, 'tag) =
-    StaticTuple?('x)
-    and StaticLesser?(0, StaticTupleSize('x))
-    and StaticEquals?(StaticTupleElement('x, 0), 'tag);
+    staticTuple?('x)
+    and staticLesser?(0, staticTupleSize('x))
+    and staticEquals?(staticTupleElement('x, 0), 'tag);
 
 private #SymbolBodyWithTag?('tag, 'x, ..'xs)
     = TupleWithTag?('x, 'tag) or SymbolBodyWithTag?('tag, ..'xs);
 overload #SymbolBodyWithTag?('tag) = false;
 
-#SymbolWithTag?('t, 'tag) = SymbolBodyWithTag?('tag, ..StaticSymbolBody('t));
+#SymbolWithTag?('t, 'tag) = SymbolBodyWithTag?('tag, ..staticSymbolBody('t));
 
 
 //
@@ -347,8 +347,8 @@ overload #ABISupportsVariadics?(CdeclABI) = true;
 //
 
 symbol NontrivialInt = NewPrimitiveType();
-overload #LLType(NontrivialInt) = LLIntegerType[LLSigned, 32];
-overload #PODType?(NontrivialInt) = false;
+overload #llType(NontrivialInt) = llIntegerType[llSigned, 32];
+overload #POD?(NontrivialInt) = false;
 
 toNontrivialInt(x:Int) --> y:NontrivialInt { primitiveCopy(y, x); }
 fromNontrivialInt(x:NontrivialInt) --> y:Int { primitiveCopy(y, x); }

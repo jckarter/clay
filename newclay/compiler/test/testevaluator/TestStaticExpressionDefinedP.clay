@@ -1,9 +1,9 @@
 import __primitives__.*;
 
 symbol foo;
-overload #foo('x) | StaticInt?('x) = 'x;
+overload #foo('x) | staticInt?('x) = 'x;
 overload #foo('a') = 'a';
-overload #foo('X') = StaticError("I AM ERROR.");
+overload #foo('X') = staticError("I AM ERROR.");
 
 #Main() =
     StaticExpressionDefined?(foo(1)),

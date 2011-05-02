@@ -5,4 +5,4 @@ import __primitives__.*;
 symbol foo;
 overload foo(x:'T) | Foo?('T) = x;
 
-main() = #Defined?([foo(1)]);
+main() = #defined?([foo(1)]);

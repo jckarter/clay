@@ -6,4 +6,4 @@ symbol wut = "éééé";
     return x + 1;
 }];
 
-#Main() = ..LambdaLocation(foo());
+#Main() = ..lambdaLocation(foo());

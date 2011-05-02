@@ -157,7 +157,9 @@ overload getSourceString(x:ExprList) {
 getSourceStringRange(firstNode, lastNode) {
     var firstLocation = getLocation(firstNode);
     var lastLocation = getLocation(lastNode);
-    assert(firstLocation.tokens == lastLocation.tokens);
+    assert(not null?(firstLocation.tokens), Type(firstNode), " token has no bounds");
+    assert(not null?(lastLocation.tokens), Type(lastNode), " token has no bounds");
+    assert(firstLocation.tokens == lastLocation.tokens, "token spans different source files?!");
     var sourceTokens = firstLocation.tokens;
     var firstTokenIndex = firstLocation.tokenRange.begin;
     var lastTokenIndex = lastLocation.tokenRange.end;
@@ -662,7 +664,6 @@ variant CodeBody = UndefinedCodeBody
                  | ExprCodeBody
                  | Block
                  | LiteralCodeBody
-                 | UndefinedCodeBody
                  ;
 
 record UndefinedCodeBody = ast();

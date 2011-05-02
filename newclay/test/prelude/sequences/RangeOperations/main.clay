@@ -1,13 +1,14 @@
-import memory.*;
+import unsafe.memory.*;
+import unsafe.coordinates.*;
 import sequences.*;
 import show.*;
 
 main() {
     const SIZE = 4u;
 
-    var a = allocateRawValues(UInt, SIZE);
-    var b = allocateRawValues(UInt, SIZE);
-    var c = allocateRawValues(UInt, SIZE);
+    var a = allocateUninitializedValues(SIZE, UInt);
+    var b = allocateUninitializedValues(SIZE, UInt);
+    var c = allocateUninitializedValues(SIZE, UInt);
 
     try {
         for (i, ref x in enumerated(CoordinateRange(a, a+SIZE)))
@@ -22,7 +23,7 @@ main() {
         for (x in CoordinateRange(b, b+SIZE))
             show(x);
 
-        moveNonoverlappingRangeUnsafe(c, b, b + SIZE);
+        moveRvalueNonoverlappingRange(c, b, b + SIZE);
 
         ////0
         ////1
@@ -31,7 +32,7 @@ main() {
         for (x in CoordinateRange(c, c+SIZE))
             show(x);
 
-        moveRangeUnsafe(b, b+1, b+SIZE);
+        moveRvalueRange(b, b+1, b+SIZE);
 
         ////1
         ////2
@@ -40,7 +41,7 @@ main() {
         for (x in CoordinateRange(b, b+SIZE))
             show(x);
 
-        moveRangeUnsafe(c+1, c, c+SIZE-1);
+        moveRvalueRange(c+1, c, c+SIZE-1);
 
         ////0
         ////0
@@ -51,7 +52,7 @@ main() {
 
         assignRange(c, a, a+SIZE);
 
-        c = reallocateRawValues(c, SIZE*2u);
+        c = reallocateUninitializedValues(SIZE*2u, c);
 
         copyRange(c+SIZE, c, c+SIZE);
 
@@ -69,7 +70,7 @@ main() {
         show(ex);
     }
 
-    freeRawValues(c);
-    freeRawValues(b);
-    freeRawValues(a);
+    freeUninitializedValues(c);
+    freeUninitializedValues(b);
+    freeUninitializedValues(a);
 }

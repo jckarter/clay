@@ -1,5 +1,5 @@
 import show.*;
-import memory.*;
+import unsafe.memory.*;
 import unsafe.casts.(bitcast);
 
 symbol Node['T] = RecordType(value:'T, next:List['T]);
@@ -8,15 +8,15 @@ alias List['T] = MPointer[Node['T]];
 
 nil(#'T) = null(Node['T]);
 cons(forward v:'T, next:List['T]) {
-    var l = allocateRawValue(Node['T]);
+    var l = allocateUninitializedValue(Node['T]);
     l^ <-- Node['T](v, next);
     return just(l);
 }
 
 main() {
-    show(TypeSize(MPointer[Int]) == TypeSize(Pointer[Int])); ////true
-    show(TypeSize(MOpaquePointer) == TypeSize(OpaquePointer)); ////true
-    show(TypeSize(Maybe[MPointer[Int]]) != TypeSize(Pointer[Int])); ////true
+    show(typeSize(MPointer[Int]) == typeSize(Pointer[Int])); ////true
+    show(typeSize(MOpaquePointer) == typeSize(OpaquePointer)); ////true
+    show(typeSize(Maybe[MPointer[Int]]) != typeSize(Pointer[Int])); ////true
 
     show(bitcast(Int, null(Int))); ////0
     show(bitcast(Int, nullOpaque())); ////0

@@ -2,10 +2,10 @@ import __primitives__.*;
 
 symbol Factorial;
 overload #Factorial('n) =
-    if (StaticLesser?('n, 2))
+    if (staticLesser?('n, 2))
         1
     else
-        StaticMultiply('n, Factorial(StaticSubtract('n, 1)));
+        staticMultiply('n, Factorial(staticSubtract('n, 1)));
 
 symbol Main;
 overload #Main() = Factorial(8);

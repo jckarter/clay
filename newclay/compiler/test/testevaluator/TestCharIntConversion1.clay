@@ -1,6 +1,6 @@
 import __primitives__.*;
 
 #Main()
-    = StaticChar(65), StaticChar(65u), StaticChar('A'),
-      StaticInt(65),  StaticInt(65u),  StaticInt('A'),
-      StaticUInt(65), StaticUInt(65u), StaticUInt('A');
+    = staticChar(65), staticChar(65u), staticChar('A'),
+      staticInt(65),  staticInt(65u),  staticInt('A'),
+      staticUInt(65), staticUInt(65u), staticUInt('A');

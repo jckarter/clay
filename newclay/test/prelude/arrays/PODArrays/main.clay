@@ -1,15 +1,16 @@
+import unsafe.coordinates.(begin, end);
 import unsafe.valuesemantics.*;
 import show.*;
 
 main() {
-    show(#Defined?([Array[Int,1](1)])); ////true
-    show(#Defined?([Array[Int,3](1, 2, 3)])); ////true
-    show(#Defined?([Array[Int,2](1, 2u)])); ////false
+    show(#defined?([Array[Int,1](1)])); ////true
+    show(#defined?([Array[Int,3](1, 2, 3)])); ////true
+    show(#defined?([Array[Int,2](1, 2u)])); ////false
 
     var x = Array[Int,3](2, 4, 6);
 
-    show(#Type([x])); ////Array[Int, 3]
-    show(#BitwiseZeroInitializedType?(Type([x]))); ////true
+    show(#type([x])); ////Array[Int, 3]
+    show(#BitwiseZeroInitialized?(type([x]))); ////true
 
     show(size(x)); ////3
 
@@ -28,7 +29,7 @@ main() {
         show(i);
 
     var y = Array[Int, 3]();
-    show(#Type([y])); ////Array[Int, 3]
+    show(#type([y])); ////Array[Int, 3]
     show(x == y); ////false
     show(y < x); ////true
 
@@ -43,7 +44,7 @@ main() {
     var z = Array[Int, 3](2, 5, 6);
 
     show(size(z)); ////3
-    show(#Type([z])); ////Array[Int, 3]
+    show(#type([z])); ////Array[Int, 3]
     show(x == z); ////true
     show(x < z); ////false
 

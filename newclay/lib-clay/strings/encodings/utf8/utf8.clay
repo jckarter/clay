@@ -1,11 +1,11 @@
-import containers.(push, pop, pushFront, popFront, PushableType?, FrontPushableType?);
-import strings.encodings.(StringTypeEncoding, stringBytes, EncodedStringType?);
+import containers.(push, pop, pushFront, popFront, Pushable?, FrontPushable?);
+import strings.encodings.(stringTypeEncoding, stringBytes, EncodedString?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
-import strings.(StringType?);
+import strings.(String?);
 
 symbol UTF8Iterator['I] = NewType('I);
 overload UTF8Iterator(forward x:'I) inline
-    | IteratorType?('I) and IteratorTargetType('I) == UInt8
+    | Iterator?('I) and iteratorTargetType('I) == UInt8
     = UTF8Iterator['I](x);
 
 private validSequenceByte?(d) = bitand(d, 0xC0u) == 0x80u;
@@ -94,12 +94,12 @@ overload next(ref i:UTF8Iterator['I]) {
 
 symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
-    | SequenceType?('S) and SequenceElementType('S) == UInt8
+    | Sequence?('S) and sequenceElementType('S) == UInt8
     = UTF8['S](s);
 
 overload iterator(s:UTF8['S]) inline = UTF8Iterator(iterator(*s));
 
-overload push(ref s:UTF8['S], c:Char) | PushableType?('S) {
+overload push(ref s:UTF8['S], c:Char) | Pushable?('S) {
     var code = UInt(c);
     if (code > UInt(MAX_CODE_POINT))
         code = UInt(REPLACEMENT_CHAR);
@@ -113,17 +113,17 @@ overload push(ref s:UTF8['S], c:Char) | PushableType?('S) {
     else
         push(*s, ..encodeFour(code));
 }
-overload push(ref s:UTF8['S], s2:'S2) | StringType?('S2) {
+overload push(ref s:UTF8['S], s2:'S2) | String?('S2) {
     for (c in s2)
         push(s, c);
 }
 overload push(ref s:UTF8['S], s2:'S2)
-    | EncodedStringType?('S2, UTF8)
+    | EncodedString?('S2, UTF8)
 {
     push(*s, stringBytes(s2));
 }
 
 overload stringBytes(forward s:UTF8['S]) = iterator(*s);
-overload #StringTypeEncoding(UTF8['S])
-    | SequenceType?('S) and SequenceElementType('S) == UInt8
+overload #stringTypeEncoding(UTF8['S])
+    | Sequence?('S) and sequenceElementType('S) == UInt8
     = UTF8;
