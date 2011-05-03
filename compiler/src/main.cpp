@@ -183,7 +183,6 @@ static void generateAssembly(llvm::Module *module,
 }
 
 static bool generateBinary(llvm::Module *module,
-                           const llvm::sys::Path &atomicOutputFilePath,
                            const llvm::sys::Path &outputFilePath,
                            const llvm::sys::Path &gccPath,
                            unsigned optLevel,
@@ -245,7 +244,7 @@ static bool generateBinary(llvm::Module *module,
         }
     }
     gccArgs.push_back("-o");
-    gccArgs.push_back(atomicOutputFilePath.c_str());
+    gccArgs.push_back(outputFilePath.c_str());
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
@@ -707,10 +706,7 @@ int main(int argc, char **argv) {
             outputFile = DEFAULT_EXE;
     }
     llvm::sys::Path outputFilePath(outputFile);
-    llvm::sys::Path atomicOutputFilePath = llvm::sys::Path::GetTemporaryDirectory();
-    llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
-    atomicOutputFilePath.appendComponent(outputFilePath.getLast());
-    llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
+    llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     HiResTimer loadTimer, compileTimer, llvmTimer;
 
@@ -737,7 +733,7 @@ int main(int argc, char **argv) {
         runModule(llvmModule);
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(atomicOutputFilePath.c_str(),
+        llvm::raw_fd_ostream out(outputFilePath.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -791,25 +787,13 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, atomicOutputFilePath, outputFilePath, gccPath,
+        result = generateBinary(llvmModule, outputFilePath, gccPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
     }
     llvmTimer.stop();
-
-    if (!run) {
-        string renameError;
-        bool wasRenameError = atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError);
-
-        if (wasRenameError) {
-            cerr << "error: could not commit result to " << outputFile << ": " << renameError;
-            return -1;
-        }
-        atomicOutputFilePath.eraseComponent();
-        atomicOutputFilePath.eraseFromDisk(true);
-    }
 
     if (showTiming) {
         cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";
