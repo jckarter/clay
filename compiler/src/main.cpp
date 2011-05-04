@@ -183,7 +183,7 @@ static void generateAssembly(llvm::Module *module,
 }
 
 static bool generateBinary(llvm::Module *module,
-                           const string &outputFile,
+                           const llvm::sys::Path &outputFilePath,
                            const llvm::sys::Path &gccPath,
                            unsigned optLevel,
                            bool /*exceptions*/,
@@ -225,10 +225,26 @@ static bool generateBinary(llvm::Module *module,
         assert(false);
     }
 
-    if (sharedLib)
+    string linkerFlags;
+    if (sharedLib) {
         gccArgs.push_back("-shared");
+        llvm::Triple triple(llvmModule->getTargetTriple());
+
+        if (triple.getOS() == llvm::Triple::Win32
+            || triple.getOS() == llvm::Triple::MinGW32
+            || triple.getOS() == llvm::Triple::Cygwin) {
+
+            llvm::sys::Path defPath(outputFilePath);
+            defPath.eraseSuffix();
+            defPath.appendSuffix("def");
+
+            linkerFlags = "-Wl,--output-def," + defPath.str();
+
+            gccArgs.push_back(linkerFlags.c_str());
+        }
+    }
     gccArgs.push_back("-o");
-    gccArgs.push_back(outputFile.c_str());
+    gccArgs.push_back(outputFilePath.c_str());
     gccArgs.push_back("-x");
     gccArgs.push_back("assembler");
     gccArgs.push_back(tempAsm.c_str());
@@ -689,14 +705,8 @@ int main(int argc, char **argv) {
         else
             outputFile = DEFAULT_EXE;
     }
-    string atomicOutputFile = outputFile + ".claytmp";
     llvm::sys::Path outputFilePath(outputFile);
-    llvm::sys::Path atomicOutputFilePath(atomicOutputFile);
-    
-    if (!run) {
-        atomicOutputFilePath.eraseFromDisk();
-        llvm::sys::RemoveFileOnSignal(atomicOutputFilePath);
-    }
+    llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     HiResTimer loadTimer, compileTimer, llvmTimer;
 
@@ -723,7 +733,7 @@ int main(int argc, char **argv) {
         runModule(llvmModule);
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(atomicOutputFile.c_str(),
+        llvm::raw_fd_ostream out(outputFilePath.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -777,21 +787,13 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, atomicOutputFile, gccPath,
+        result = generateBinary(llvmModule, outputFilePath, gccPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
             return -1;
     }
     llvmTimer.stop();
-
-    if (!run) {
-        string renameError;
-        if (atomicOutputFilePath.renamePathOnDisk(outputFilePath, &renameError)) {
-            cerr << "error: could not commit result to " << outputFile << ": " << renameError;
-            return -1;
-        }
-    }
 
     if (showTiming) {
         cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";
