@@ -1,6 +1,6 @@
 import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
-import comparators.(Comparator?);
+import comparators.*;
 
 alias log2 = introsort.log2;
 
@@ -382,15 +382,15 @@ overload binarySearchUpperBound(begin_, end_, x) {
 // sort - use quicksort with median-of-3 partitioning
 //
 
-[A | RandomAccessSequence?(A)]
-sort(a:A, compareLess?) {
-    introsort.introSort(a, compareLess?);
+[C | Comparator?(C)]
+sort(a, comparator : C) {
+    introsort.introSort(a, (x, y) ref=> lesser?(comparator, x, y));
 }
 
-[C | Comparator?(C)]
-overload sort(a, comparator : C) {
-    sort(a, (x, y) ref=> lesser?(comparator, x, y));
-}
 overload sort(a){
-  sort(a, lesser?);
+  sort(a, natural());
+}
+
+sortBy(xs, f){
+  sort(xs, comparing(f));
 }
