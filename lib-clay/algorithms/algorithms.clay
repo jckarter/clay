@@ -383,14 +383,14 @@ overload binarySearchUpperBound(begin_, end_, x) {
 //
 
 [C | Comparator?(C)]
-sort(a, comparator : C) {
+sortBy(a, comparator : C) {
     introsort.introSort(a, (x, y) ref=> lesser?(comparator, x, y));
 }
 
-overload sort(a){
-  sort(a, natural());
+sort(a){
+  sortBy(a, natural());
 }
 
-sortBy(xs, f){
-  sort(xs, comparing(f));
+overload sort(xs, f){
+  sortBy(xs, comparing(f));
 }
