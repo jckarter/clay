@@ -1,5 +1,6 @@
 import test.*;
 import algorithms.*;
+import comparators.*;
 
 record Unordered[T](value : T);
 
@@ -16,9 +17,26 @@ main() = testMain(
       var baseSequence = [10, 9, 8, 1, 2, 7, 6, 2, 3, 4];
       var sortedSequence =  [10, 9, 8, 7, 6, 4, 3, 2, 2, 1];
 
-      sort(baseSequence, greater?);
+      sortBy(baseSequence, reversed());
       expectEqual(test, "the sorted sequence", sortedSequence, baseSequence);
     }),
+    TestCase("Comparing size", test => {
+      var baseSequence = ["a", "b", "c", "blargh", "foo", "de", "x", "stuff"];
+      sortBy(baseSequence, comparing(size));
+     
+      var isFirst = true;
+      var last = "ignore me";
+
+      for(x in baseSequence){
+        if(isFirst){
+          last = x;
+          isFirst = false; 
+        } else {
+          expectTrue(test, printString("size(", last, ") <= size(", x, ")"), size(last) <= size(x));
+          last = x;
+        }
+      }
+    }),   
     TestCase("for something not naturally orderable", test => {
       var sequence = Vector[Unordered[Int]]();
 
@@ -26,7 +44,7 @@ main() = testMain(
         push(sequence, Unordered(i));
       }
 
-      sort(sequence, (x, y) => x.value > y.value);
+      sortBy(sequence, reversed(comparing(x => x.value)));
 
       for(i in range(10)){
         expectEqual(test, printString("sequence[", i, "].0"), 9 - i, sequence[i].value);
