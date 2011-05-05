@@ -44,7 +44,7 @@ main() = testMain(
         push(sequence, Unordered(i));
       }
 
-      sort(sequence, (x, y) => x.value > y.value);
+      sortBy(sequence, x => x.value);
 
       for(i in range(10)){
         expectEqual(test, printString("sequence[", i, "].0"), 9 - i, sequence[i].value);
