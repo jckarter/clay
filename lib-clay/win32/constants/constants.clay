@@ -158,3 +158,10 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
 alias SOL_SOCKET = 0xffff;
 
 alias SO_REUSEADDR = 4;
+
+
+
+//
+// socket error
+//
+alias SOCKET_ERROR = -1;
