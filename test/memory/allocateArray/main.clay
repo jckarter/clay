@@ -2,18 +2,22 @@ main() {
     var xs = allocateArray(Foo, 5);
 
     for (x in xs)
-        println(x.x);
+        println(x);
     
     println("--");
 
-    for (i, x in enumerated(xs))
+    for (i, x in enumeratedAs(Int, xs))
         x = Foo(i);
 
     for (x in xs)
-        println(x.x);
+        println(x);
 
     freeArray(xs);
 }
 
-record Foo (x:UInt);
-overload Foo() = Foo(0u);
+record Foo (bar:Int);
+overload Foo() = Foo(0);
+
+overload printTo(stream, x:Foo) {
+	printTo(stream, x.bar);
+}
