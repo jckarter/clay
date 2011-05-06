@@ -1,1 +1,1 @@
-test.txt is 16 bytes.
+test.txt is 15 bytes.
