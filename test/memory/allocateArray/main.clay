@@ -1,11 +1,19 @@
 main() {
-    var xs = allocateArray(Int, 5);
-
-    for (i, x in enumerated(xs))
-        x = Int(i);
+    var xs = allocateArray(Foo, 5);
 
     for (x in xs)
-        println(x);
+        println(x.x);
+    
+    println("--");
+
+    for (i, x in enumerated(xs))
+        x = Foo(i);
+
+    for (x in xs)
+        println(x.x);
 
     freeArray(xs);
 }
+
+record Foo (x:UInt);
+overload Foo() = Foo(0u);
