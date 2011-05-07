@@ -77,6 +77,6 @@ main(args) {
         if (not nextPermutation(begin(a), end(a)))
             break;
     }
-	println("Pfannkuchen(",n,") = ", maxFlips);
+    println("Pfannkuchen(",n,") = ", maxFlips);
     return 0;
 }
