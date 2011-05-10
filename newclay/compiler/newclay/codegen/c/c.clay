@@ -1234,8 +1234,8 @@ codegenFromEntryPoints(config:CodegenConfig, entryPoints:Vector[Specialization])
     var c = CodegenContext(config);
 
     codegenFunctionsToFixedPoint(c, entryPoints);
-    codegenTypesToFixedPoint(c);
     codegenGlobalConstructorDestructor(c);
+    codegenTypesToFixedPoint(c);
 
     return move(c);
 }
