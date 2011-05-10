@@ -60,6 +60,12 @@ main() = testMain(
             expectEqual(test, "printedWidth(-999999999999999999_i64)",
                 19, printedWidth(-999999999999999999_i64)
             );
+            expectEqual(test, "printedWidth(111_u8)",
+                3, printedWidth(111_u8)
+            );
+            expectEqual(test, "printedWidth(-43_i8)",
+                3, printedWidth(-43_i8)
+            );
 
             expectEqual(test, "printedWidth(hex(0))", 1, printedWidth(hex(0)));
             expectEqual(test, "printedWidth(hex(1))", 1, printedWidth(hex(1)));

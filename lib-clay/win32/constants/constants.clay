@@ -9,7 +9,7 @@ alias INVALID_HANDLE_VALUE = HANDLE(-1);
 alias GENERIC_READ    = 0x80000000u;
 alias GENERIC_WRITE   = 0x40000000u;
 alias GENERIC_EXECUTE = 0x20000000u;
-alias GENERIC_ALL	   = 0x10000000u;
+alias GENERIC_ALL     = 0x10000000u;
 
 alias FILE_LIST_DIRECTORY       = 0x00000001u;
 alias FILE_READ_DATA            = 0x00000001u;
@@ -158,3 +158,10 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu32;
 alias SOL_SOCKET = 0xffff;
 
 alias SO_REUSEADDR = 4;
+
+
+
+//
+// socket error
+//
+alias SOCKET_ERROR = -1;
