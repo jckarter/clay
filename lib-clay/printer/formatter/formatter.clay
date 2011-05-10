@@ -103,42 +103,34 @@ procedure printedWidth;
 [S | String?(S)]
 overload printedWidth(s: S) = size(s);
 
-[base, length, place]
-private _unsignedWidthInBase(n, static base, static length, static place) {
-    if (n < place)
-        return length;
-    else return _unsignedWidthInBase(n, static base, static length+1, static place*base);
-}
-[base, length, place | place > UPTRINT_MAX/base]
-overload _unsignedWidthInBase(n, static base, static length, static place) {
-    if (n < place)
-        return length;
-    else
-        return length + 1;
-}
-
-
-[base]
-unsignedWidthInBase(n, static base)
-    = _unsignedWidthInBase(n, static base, static SizeT(1), static UInt64(base));
-
-[base]
-widthInBase(n, static base) {
-    if (n < 0)
-        return 1 + unsignedWidthInBase(-n, static base);
-    else
-        return unsignedWidthInBase(n, static base);
+[N, B | Integer?(N) and Integer?(B)]
+widthInBase(n:N, base:B) {
+    var nn = n;
+    var len = SizeT(1);
+    if (n < 0) {
+        len += 1;
+        while(nn <= -base) {
+            len += 1;
+            nn = Type(nn)(nn/base);
+        }
+    } else {
+        while(nn >= base) {
+            len += 1;
+            nn = Type(nn)(nn/base);
+        }
+    }
+    return ref len;
 }
 
 [I | Integer?(I)]
-overload printedWidth(n: I) = widthInBase(n, static 10);
+overload printedWidth(n: I) = widthInBase(n, 10);
 
 [T]
-overload printedWidth(f: HexFormatter[T]) = widthInBase(capturedRef(f.value), static 16);
+overload printedWidth(f: HexFormatter[T]) = widthInBase(capturedRef(f.value), 16);
 [T]
-overload printedWidth(f: HEXFormatter[T]) = widthInBase(capturedRef(f.value), static 16);
+overload printedWidth(f: HEXFormatter[T]) = widthInBase(capturedRef(f.value), 16);
 [T]
-overload printedWidth(f: OctFormatter[T]) = widthInBase(capturedRef(f.value), static  8);
+overload printedWidth(f: OctFormatter[T]) = widthInBase(capturedRef(f.value),  8);
 
 overload printedWidth(c: Char) = 1;
 overload printedWidth(b: Bool) = if (b) 4 else 5;

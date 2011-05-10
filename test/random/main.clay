@@ -3,7 +3,7 @@ import random.*;
 
 // WARNING: This test suite may fail generately. Care is taken to assure that the probability of it doing so 
 // is relatively low in the case that there is a genuine failure (<= 2^-64 is the general goal).
-// Failures in this test suite that do not reooccur on rerunning are troubling but not necessarily a major problem. 
+// Failures in this test suite that do not occur again on rerunning are troubling but not necessarily a major problem. 
 main() = testMain(
   TestSuite("Random number generation", [
     TestCase("consecutive runs from the same RNG", test => {
