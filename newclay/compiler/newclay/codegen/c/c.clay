@@ -413,7 +413,7 @@ overload codegenLineAnnotation(c, bc, node:N) {
     var path, line, column = ...ast.getFileLocation(node.ast);
 
     printTo(bc.bodyCode, "#line ", line, ' ');
-    printReprTo(bc.bodyCode, path);
+    printTo(bc.bodyCode, cStringLiteral(path));
     printlnTo(bc.bodyCode);
 }
 
@@ -833,7 +833,11 @@ private codegenTupleType(c, type, llType, definition) {
 
     printlnTo(definition, "typedef struct ", type.mangledName, " {");
 
-    for (member, i in zipped(llType.params, range(size(llType.params)))) {
+    if (empty?(llType.params) and c.config.dialect == MSVC_DIALECT)
+        // XXX this is broken! empty tuple/unions should have size zero
+        // empty types really should be optimized away
+        printToIndented(definition, 1, "char _pad_;\n");
+    else for (member, i in zipped(llType.params, range(size(llType.params)))) {
         var name, memberType = ...aggregateMember(llType, member, i);
 
         push(type.dependencies, memberType);
