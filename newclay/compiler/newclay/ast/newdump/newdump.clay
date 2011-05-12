@@ -576,14 +576,7 @@ private procedure dumpStatement;
 }
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.ExprListItem) {
-    match(node,
-        ast.ExprList, sublist ref=> {
-            printTo(v.stream, '(');
-            dumpList(v, sublist);
-            printTo(v.stream, ')');
-        },
-        MatchDefault, x ref=> { dumpNode(v, x); },
-    );
+    dumpNode(v, *node);
 }
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.UnpackExpr) {
@@ -991,13 +984,31 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
             printlnTo(v.stream);
             dumpIndent(v);
         },
-        ast.ExprCodeBody, exprBody ref=> {
-            printTo(v.stream, " (");
-            dumpList(v, exprBody.exprs);
-            printTo(v.stream, ")");
-        },
-        MatchDefault, x ref=> {
-            assert(false, "impossible lambda body");
+        ast.StatementReturnExprList, list ref=> {
+            printTo(v.stream, " ");
+            if (empty?(list.statements)) {
+                if (size(list.exprList) == 1) {
+                    dumpNode(v, list.exprList[0]);
+                } else {
+                    printTo(v.stream, "(");
+                    dumpList(v, list.exprList);
+                    printTo(v.stream, ")");
+                }
+            } else {
+                inc(v.depth);
+                for (stmt in list.statements) {
+                    printlnTo(v.stream);
+                    dumpIndent(v);
+                    dumpStatement(v, *stmt);
+                }
+                if (not empty?(list.exprList)) {
+                    printlnTo(v.stream);
+                    dumpIndent(v);
+                    printTo(v.stream, "return ");
+                    dumpList(v, list.exprList);
+                }
+                dec(v.depth);
+            }
         },
     );
 }
