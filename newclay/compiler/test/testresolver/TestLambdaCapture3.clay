@@ -1,8 +1,8 @@
 main() {
     var a = 1;
     var b = 2;
-    c -> {
+    [c ->
         var d = 3;
-        e -> a + b + c + d + e;
-    };
+        [e -> a + b + c + d + e]
+    ];
 }
