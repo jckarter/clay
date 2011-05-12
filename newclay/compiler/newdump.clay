@@ -1,0 +1,20 @@
+import newclay.common.*;
+import newclay.lexer.*;
+import newclay.parser.*;
+import newclay.ast.newdump.*;
+ 
+main(args) {
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <file>");
+        return -1;
+    }
+    try {
+        var file = readSource(args[1]);
+        var ast = parse(tokenize(file));
+        dumpASTTo(stdout, ast);
+    }
+    catch (e:ClayError) {
+        displayError(e);
+    }
+    return 0;
+}
