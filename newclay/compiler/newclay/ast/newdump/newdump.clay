@@ -1008,6 +1008,8 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
                     dumpList(v, list.exprList);
                 }
                 dec(v.depth);
+                printlnTo(v.stream);
+                dumpIndent(v);
             }
         },
     );
