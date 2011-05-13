@@ -173,12 +173,12 @@ private record DumpASTVisitor[S](stream:S, depth:Int);
         printTo(v.stream, "[");
         interleave(node.params.items,
             () ref=> { printTo(v.stream, ", "); },
-            param ref=> { printTo(v.stream, param.str); },
+            param ref=> { printTo(v.stream, "'", param.str); },
         );
         maybe(node.params.variadicItem, param ref=> {
             if (not empty?(node.params.items))
                 printTo(v.stream, ", ");
-            printTo(v.stream, "..", param.str);
+            printTo(v.stream, "..'", param.str);
         });
         printTo(v.stream, "]");
     }
@@ -588,8 +588,8 @@ private procedure dumpStatement;
     dumpNode(v, *node);
 }
 
-[S] overload dumpNode(v:DumpASTVisitor[S], node:ast.BoundArgument) {
-    maybe(node.kind, kind ref=> {
+[S] private dumpArgumentKind(v:DumpASTVisitor[S], mkind:Maybe[ast.ArgumentKind]) {
+    maybe(mkind, kind ref=> {
         switch (kind) {
         case ast.ARG_CONST:
             printTo(v.stream, "const ");
@@ -605,11 +605,19 @@ private procedure dumpStatement;
             break;
         }
     });
+}
+
+[S] private dumpArgumentName(v:DumpASTVisitor[S], node:ast.BoundArgument) {
     printTo(v.stream, node.name.str);
     maybe(node.type, type ref=> {
         printTo(v.stream, ":");
         dumpNode(v, type);
     });
+}
+
+[S] overload dumpNode(v:DumpASTVisitor[S], node:ast.BoundArgument) {
+    dumpArgumentKind(v, node.kind);
+    dumpArgumentName(v, node);
 }
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.StaticArgument) {
@@ -814,7 +822,7 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
 }
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.PatternNameRef) {
-    printTo(v.stream, node.name.str);
+    printTo(v.stream, "'", node.name.str);
 }
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.TupleExpr) {
@@ -1177,6 +1185,28 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
             printTo(v.stream, ", ");
         printTo(v.stream, "..");
         dumpNode(v, item);
+    });
+}
+
+[S] overload dumpVariadicList(v:DumpASTVisitor[S], list:ast.VariadicList[ast.Argument]) {
+    interleave(list.items,
+        () ref=> { printTo(v.stream, ", "); },
+        item ref=> { dumpNode(v, item); },
+    );
+    maybe(list.variadicItem, item ref=> {
+        if (not empty?(list.items))
+            printTo(v.stream, ", ");
+        match(item,
+            ast.StaticArgument, sa ref=> {
+                printTo(v.stream, "..");
+                dumpNode(v, sa);
+            },
+            ast.BoundArgument, ba ref=> {
+                dumpArgumentKind(v, ba.kind);
+                printTo(v.stream, "..");
+                dumpArgumentName(v, ba);
+            },
+        );
     });
 }
 
