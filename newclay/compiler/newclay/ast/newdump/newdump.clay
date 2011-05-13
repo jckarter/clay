@@ -865,7 +865,7 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.OrExpr) {
     dumpSubExpr(v, node, node.expr1);
-    printTo(v.stream, " and ");
+    printTo(v.stream, " or ");
     dumpSubExpr(v, node, node.expr2);
 }
 
