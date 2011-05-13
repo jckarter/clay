@@ -276,7 +276,9 @@ private procedure dumpStatement;
         dumpIndent(v);
     });
 
-    interleave(node.statements,
+    if (empty?(node.statements))
+        printTo(v.stream, "void");
+    else interleave(node.statements,
         () ref=> {
             printlnTo(v.stream);
             dumpIndent(v);
