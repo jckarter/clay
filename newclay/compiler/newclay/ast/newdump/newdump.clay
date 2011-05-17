@@ -421,7 +421,7 @@ private procedure dumpStatement;
 }
 
 [S] private dumpIfBody(v:DumpASTVisitor[S], node:ast.IfStatement) {
-    dumpNode(v, node.condition);
+    dumpStatementExpr(v, node.condition);
     printlnTo(v.stream);
     inc(v.depth);
     dumpIndent(v);
@@ -493,7 +493,7 @@ private procedure dumpStatement;
     });
 
     printTo(v.stream, "while ");
-    dumpNode(v, node.condition);
+    dumpStatementExpr(v, node.condition);
     printlnTo(v.stream);
     inc(v.depth);
     dumpIndent(v);
@@ -503,7 +503,7 @@ private procedure dumpStatement;
 
 [S] overload dumpStatement(v:DumpASTVisitor[S], node:ast.SwitchStatement) {
     printTo(v.stream, "switch ");
-    dumpNode(v, node.value);
+    dumpStatementExpr(v, node.value);
     for (block in node.caseBlocks) {
         printlnTo(v.stream);
         dumpIndent(v);
@@ -551,6 +551,7 @@ private procedure dumpStatement;
 }
 
 [S] overload dumpStatement(v:DumpASTVisitor[S], node:ast.EmptyStatement) {
+    printTo(v.stream, "void");
 }
 
 [S] overload dumpStatement(v:DumpASTVisitor[S], node:ast.UnreachableStatement) {
@@ -961,7 +962,7 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
 
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.IfExpr) {
     printTo(v.stream, "if ");
-    dumpNode(v, node.condition);
+    dumpStatementExpr(v, node.condition);
     printTo(v.stream, " then ");
     dumpNode(v, node.thenPart);
     printTo(v.stream, " else ");
@@ -1025,27 +1026,35 @@ private dumpSubExpr(v:DumpASTVisitor[S], parent:E, subexpr:ast.Expr) {
     );
 }
 
+[S] private dumpStatementExpr(v:DumpASTVisitor[S], node:ast.StatementExpr) {
+    for (stmt in node.statements) {
+        dumpStatement(v, *stmt);
+        printTo(v.stream, "; ");
+    }
+    dumpNode(v, node.expr);
+}
+
 [S] overload dumpNode(v:DumpASTVisitor[S], node:ast.StatementExpr) {
     if (empty?(node.statements))
         dumpNode(v, node.expr);
     else {
         printTo(v.stream, "(");
-        for (stmt in node.statements) {
-            dumpStatement(v, *stmt);
-            printTo(v.stream, "; ");
-        }
-        dumpNode(v, node.expr);
+        dumpStatementExpr(v, node);
         printTo(v.stream, ")");
     }
 }
 
-[S] overload dumpNode(v:DumpASTVisitor[S], node:ast.StatementExprList) {
-    printTo(v.stream, "(");
+[S] private dumpStatementExprList(v:DumpASTVisitor[S], node:ast.StatementExprList) {
     for (stmt in node.statements) {
         dumpStatement(v, *stmt);
         printTo(v.stream, "; ");
     }
     dumpList(v, node.exprList);
+}
+
+[S] overload dumpNode(v:DumpASTVisitor[S], node:ast.StatementExprList) {
+    printTo(v.stream, "(");
+    dumpStatementExprList(v, node);
     printTo(v.stream, ")");
 }
 
