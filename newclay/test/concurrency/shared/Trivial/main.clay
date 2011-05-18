@@ -1,0 +1,29 @@
+import concurrency.shared.*;
+import show.*;
+
+symbol Foo = RecordType(foo:Int, bar:Int);
+
+var int = Shared(100), ptr = Shared(&int), rec = Shared(Foo(200, 300));
+
+main() {
+    show(get(int)); ////100
+
+    set(int, 42);
+    show(get(int)); ////42
+
+    show(cas(int, 43, 17)); ////false
+    show(get(int)); ////42
+    show(cas(int, 42, 17)); ////true
+    show(get(int)); ////17
+
+    show(#type([ref get(ptr)^])); ////Ref[Shared[Int, FullOrder]]
+    show(get(get(ptr)^)); ////17
+
+    show(#type([ref rec.foo])); ////Ref[Shared[Int, FullOrder]]
+
+    ////Ref[Shared[Int, FullOrder]]
+    ////Ref[Shared[Int, FullOrder]]
+    show(..#type([ref ..*rec]));
+
+    show(get(rec.foo)); ////200
+}

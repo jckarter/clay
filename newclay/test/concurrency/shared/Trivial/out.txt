@@ -1,0 +1,12 @@
+100
+42
+false
+42
+true
+17
+Ref[Shared[Int, FullOrder]]
+17
+Ref[Shared[Int, FullOrder]]
+Ref[Shared[Int, FullOrder]]
+Ref[Shared[Int, FullOrder]]
+200
