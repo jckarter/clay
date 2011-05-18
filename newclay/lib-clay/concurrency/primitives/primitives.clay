@@ -1,0 +1,128 @@
+import values.(inValues?);
+import unsafe.valuesemantics.(POD?);
+
+// XXX this is all currently GCC- and X86 SSE2-specific
+
+symbol NoOrder;
+symbol AcquireReleaseOrder;
+symbol FullOrder;
+
+#order?('X) = inValues?('X,
+    NoOrder, AcquireReleaseOrder, FullOrder
+);
+
+optimizerBarrier() inline
+    __c__ """__asm__ __volatile__ ("":::"memory");""";
+
+symbol barrier;
+overload barrier(#NoOrder) inline { }
+overload barrier(#AcquireReleaseOrder) inline { optimizerBarrier(); }
+overload barrier(#FullOrder) inline
+    __c__ """__asm__ __volatile__ ("mfence":::"memory");""";
+
+#AtomicGettable?('T)
+    = POD?('T) and typeSize('T) <= typeSize(Int) and typeAlign('T) == typeSize('T);
+#AtomicSettable?('T)
+    = POD?('T) and typeSize('T) <= typeSize(Int) and typeAlign('T) == typeSize('T);
+#AtomicCasable?('T)
+    = POD?('T)
+        and (typeSize('T) == typeSize(Int) or typeSize('T) == typeSize(Int32))
+        and typeAlign('T) == typeSize('T);
+#AtomicCas2able?('DestT, 'SourceT)
+    = AtomicCasable?('SourceT)
+        and POD?('DestT)
+        and (typeSize('DestT) == typeSize(Int)*2 or typeSize('DestT) == typeSize(Int32)*2)
+        and typeSize('DestT) == typeSize('SourceT)*2
+        and typeAlign('DestT) == typeSize('DestT);
+
+symbol atomicGet;
+overload atomicGet(x:'T, #NoOrder) inline
+    | AtomicGettable?('T)
+    = x;
+overload atomicGet(x:'T, #AcquireReleaseOrder) inline --> returned:'T
+    | AtomicGettable?('T)
+{
+    returned <-- x;
+    optimizerBarrier();
+}
+overload atomicGet(x:'T, #FullOrder) inline --> returned:'T
+    | AtomicGettable?('T)
+{
+    barrier(FullOrder);
+    returned <-- x;
+    optimizerBarrier();
+}
+
+symbol atomicSet;
+overload atomicSet(ref to:'T, from:'T, #NoOrder) inline
+    | AtomicSettable?('T)
+{
+    to = from;
+}
+overload atomicSet(ref to:'T, from:'T, #AcquireReleaseOrder) inline
+    | AtomicSettable?('T)
+{
+    optimizerBarrier();
+    to = from;
+}
+overload atomicSet(ref to:'T, from:'T, #FullOrder) inline
+    | AtomicSettable?('T)
+{
+    optimizerBarrier();
+    to = from;
+    barrier(FullOrder);
+}
+
+symbol atomicCas;
+overload atomicCas(ref to:'T, old:'T, new:'T, #'Order) inline --> returned:Bool
+    | AtomicCasable?('T) and typeSize('T) == 4 and order?('Order)
+    __c__ """
+        char __result;
+        __asm__ __volatile__ (
+            "lock; cmpxchgl %3, %0; setz %1"
+            : "=m" ($to), "=q" (__result)
+            : "m" ($to), "r" ($new), "a" ($old)
+            : "memory"
+        );
+        $returned <-- __result;
+    """;
+overload atomicCas(ref to:'T, old:'T, new:'T, #'Order) inline --> returned:Bool
+    | AtomicCasable?('T) and typeSize('T) == 8 and order?('Order)
+    __c__ """
+        char __result;
+        __asm__ __volatile__ (
+            "lock; cmpxchgq %3, %0; setz %1"
+            : "=m" ($to), "=q" (__result)
+            : "m" ($to), "r" ($new), "a" ($old)
+            : "memory"
+        );
+        $returned = __result;
+    """;
+
+symbol atomicCas2;
+overload atomicCas2(ref to:'DestT, old1:'SourceT, old2:'SourceT, new1:'SourceT, new2:'SourceT, #'Order) inline
+    --> returned:Bool
+    | AtomicCas2able?('DestT, 'SourceT) and typeSize('SourceT) == 4 and order?('Order)
+    __c__ """
+        char __result;
+        __asm__ __volatile__ (
+            "lock; cmpxchg8b %0; setz %1"
+            : "=m" ($to), "=q" (__result)
+            : "m" ($to), "b" ($new1), "c" ($new2), "a" ($old1), "d" ($old2)
+            : "memory"
+        );
+        $returned = __result;
+    """;
+overload atomicCas2(ref to:'DestT, old1:'SourceT, old2:'SourceT, new1:'SourceT, new2:'SourceT, #'Order) inline
+    --> returned:Bool
+    | AtomicCas2able?('DestT, 'SourceT) and typeSize('SourceT) == 8 and order?('Order)
+    __c__ """
+        char __result;
+        __asm__ __volatile__ (
+            "lock; cmpxchg16b %0; setz %1"
+            : "=m" ($to), "=q" (__result)
+            : "m" ($to), "b" ($new1), "c" ($new2), "a" ($old1), "d" ($old2)
+            : "memory"
+        );
+        $returned = __result;
+    """;
