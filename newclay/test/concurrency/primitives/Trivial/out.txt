@@ -1,0 +1,14 @@
+42
+false
+42
+true
+17
+true
+12
+24
+false
+12
+24
+true
+17
+42
