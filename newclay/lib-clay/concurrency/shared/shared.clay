@@ -1,0 +1,101 @@
+// XXX import concurrency.locks.*;
+import concurrency.primitives as prim;
+import unsafe.compositetypes.(CompositeType, initializeRecord, destroyRecord);
+import unsafe.valuesemantics.(BitwiseMoved?, DestroyDoesNothing?, destroy);
+import unsafe.casts.(bitcast);
+import values.(mapValues);
+
+public import concurrency.primitives.(NoOrder, AcquireReleaseOrder, FullOrder, order?);
+
+#ValidShared?('T) = true;
+overload #ValidShared?(Pointer['T])
+    = staticError("a Shared[Pointer['T]] cannot reference a non-Shared 'T");
+overload #ValidShared?(Pointer[Shared['T, 'O]]) = true;
+overload #ValidShared?(Shared['T, 'O])
+    = staticError("Shared[] cannot be nested");
+
+symbol Shared['T, 'Order] = CompositeType(__value__:'T);
+
+//overload #BitwiseMoved?(Shared['T, 'Order]) = false;
+overload #DestroyDoesNothing?(Shared['T, 'Order]) = DestroyDoesNothing?('T);
+
+overload Shared(forward v:'T) --> returned:Shared['T, FullOrder]
+    | ValidShared?('T)
+{
+    unsharedCastUnsafe(returned) <-- v;
+}
+
+overload Shared(forward v:'T, #'O) --> returned:Shared['T, FullOrder]
+    | ValidShared?('T) and order?('O)
+{
+    unsharedCastUnsafe(returned) <-- v;
+}
+
+overload destroy(ref x:Shared['T, 'O]) { destroy(unsharedCastUnsafe(x)); }
+
+// cast shared-ness on and off of values
+
+unsharedCastUnsafe(forward x:Shared['T, 'O]) = forward bitcast('T, x);
+sharedCast(forward x:'T) = forward bitcast(Shared['T, FullOrder], x);
+overload sharedCast(forward x:'T, #'O) | order?('O)
+    = forward bitcast(Shared['T, 'O], x);
+
+// lock-free shared access. these operations are only defined on Shared types
+// that are atomically accessible without locking
+
+get(x:Shared['T, 'O])
+    | defined?([prim.atomicGet(unsharedCastUnsafe(x), #'O)])
+    = prim.atomicGet(unsharedCastUnsafe(x), #'O);
+
+set(ref x:Shared['T, 'O], from)
+    | defined?([prim.atomicSet(unsharedCastUnsafe(x), from, #'O);])
+{
+    prim.atomicSet(unsharedCastUnsafe(x), from, #'O);
+}
+
+cas(ref x:Shared['T, 'O], old, new)
+    | defined?([prim.atomicCas(unsharedCastUnsafe(x), old, new, #'O)])
+    = prim.atomicCas(unsharedCastUnsafe(x), old, new, #'O);
+
+cas2(ref x:Shared['T, 'O], old1, old2, new1, new2)
+    | defined?([prim.atomicCas2(unsharedCastUnsafe(x), old1, old2, new1, new2, #'O)])
+    = prim.atomicCas2(unsharedCastUnsafe(x), old1, old2, new1, new2, #'O);
+
+/* XXX implement locks
+// shared access synchronized via locks
+
+lockedGet(x:Shared['T, 'O], lock:'L) | Lock?('L)
+    = withLock(lock, [unsharedCastUnsafe(x)]);
+lockedSet(ref x:Shared['T, 'O], from, lock:'L) | Lock?('L) {
+    withLock(lock, [unsharedCastUnsafe(x) = from;]);
+}
+
+locked(forward x:Shared['T, 'O], lock:'L, forward f) | Lock?('L) {
+    = forward ..withLock(lock, [forward ..f(unsharedCastUnsafe(x))]);
+*/
+
+// field access for records, tuples, arrays
+
+#SharedIndexable?('X) = false;
+overload #SharedIndexable?('R) | RecordType?('R) = true;
+overload #SharedIndexable?(Tuple[..'T]) = true;
+overload #SharedIndexable?(Array['T, 'n]) = true;
+
+#SharedUnpackable?('X) = false;
+overload #SharedUnpackable?('R) | RecordType?('R) or NewType?('R) = true;
+overload #SharedUnpackable?(Tuple[..'T]) = true;
+
+overload index(forward x:Shared['T, 'O], forward ..idx:'I)
+    | SharedIndexable?('T)
+    = forward ..mapValues(
+        [forward e -> forward sharedCast(e, 'O)],
+        ..unsharedCastUnsafe(x)[..idx]
+    );
+
+overload unpack(forward x:Shared['T, 'O])
+    | SharedUnpackable?('T)
+    = forward ..mapValues(
+        [forward e -> forward sharedCast(e, 'O)],
+        ..*unsharedCastUnsafe(x)
+    );
+
