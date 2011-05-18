@@ -1,5 +1,5 @@
 #!/usr/bin/perl -p
-s/\b_clay__(\w+)\b/"`" . filt($1) . "`"/ge;
+s/\b_?_clay__(\w+)\b/"`" . filt($1) . "`"/ge;
 
 sub filt {
     my $x = shift;
