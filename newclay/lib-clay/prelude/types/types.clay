@@ -175,3 +175,15 @@ overload #Union?(Union[..'T]) | type?(Union[..'T]) = true;
 #SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
 
 #ReversibleSequence?('S) = callDefined?(reverseIterator, 'S);
+
+
+//
+// WithAlignment symbol attribute
+
+#WithAlignment('n) | staticInt?('n) = (WithAlignment, 'n);
+#WithAlignment?('T) = type?('T) and symbolWithTag?('T, WithAlignment);
+
+overload #typeAlign('T)
+    | type?('T) and WithAlignment?('T)
+    = max(UInt(symbolTagBody('T, WithAlignment)), llTypeAlign(llType('T)));
+
