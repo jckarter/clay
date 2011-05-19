@@ -9,6 +9,9 @@ import __main__.(main);
 symbol type?;
 overload #type?('x) = false;
 
+#typeAlign('x) = 1u;
+#llTypeAlign('x) = 1u;
+
 
 
 //

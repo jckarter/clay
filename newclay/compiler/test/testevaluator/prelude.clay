@@ -6,7 +6,10 @@ symbol Bar = "prelude";
 overload #type?(Static['x]) = true;
 #POD?('x) = false;
 
+symbol typeAlign;
+
 symbol llType;
+symbol llTypeAlign;
 symbol llSigned;
 symbol llUnsigned;
 symbol llBoolType;
