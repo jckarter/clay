@@ -44,7 +44,7 @@ private #atomicLLType?('T) = 'T == llBoolType
         and typeAlign('T) == typeSize('T);
 #AtomicCas2able?('DestT, 'SourceT)
     = AtomicCasable?('SourceT)
-        and atomicType?('T)
+        and atomicType?('DestT)
         and POD?('DestT)
         and (typeSize('DestT) == typeSize(Int)*2 or typeSize('DestT) == typeSize(Int32)*2)
         and typeSize('DestT) == typeSize('SourceT)*2
