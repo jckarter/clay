@@ -66,8 +66,10 @@ preludeModule(program:Program) = ref program.modules[preludeModuleName];
 record ClayHooks (
     type?: Value,
     POD?: Value,
+    typeAlign: Value,
 
     llType: Value,
+    llTypeAlign: Value,
     llSigned: Value,
     llUnsigned: Value,
     llBoolType: Value,

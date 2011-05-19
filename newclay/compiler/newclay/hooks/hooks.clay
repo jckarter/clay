@@ -68,8 +68,11 @@ lowLevelTypeSymbol(type:Value) Symbol {
     );
 }
 
+lowLevelTypeValue(type:Value) Value
+    = evaluateCallWithOneResult(getHooks().llType, ValueList(type));
+
 lowLevelType(type:Value) Symbol
-    = lowLevelTypeSymbol(evaluateCallWithOneResult(getHooks().llType, ValueList(type)));
+    = lowLevelTypeSymbol(lowLevelTypeValue(type));
 
 ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
     return match(llTypeValue,
@@ -79,6 +82,29 @@ ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
             genericError("invalid low-level type: ", x);
             return false;
         },
+    );
+}
+
+
+//
+// typeAlign, typeNaturalAlign
+//
+
+private alignIntValue(a:Value) {
+    if (not variantIs?(a, IntValue))
+        matchFailureError("alignment must be an integer value");
+    return toUInt64(*variantAs(a, IntValue));
+}
+
+typeAlign(type:Value) {
+    return alignIntValue(
+        evaluateCallWithOneResult(getHooks().typeAlign, ValueList(type))
+    );
+}
+typeNaturalAlign(type:Value) {
+    var llType = lowLevelTypeValue(type);
+    return alignIntValue(
+        evaluateCallWithOneResult(getHooks().llTypeAlign, ValueList(llType))
     );
 }
 
