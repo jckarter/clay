@@ -1,7 +1,8 @@
+import meta.lltypes.*;
 import values.(inValues?);
 import unsafe.valuesemantics.(POD?);
 
-// XXX this is all currently GCC- and X86 SSE2-specific
+// XXX this is all horribly GCC- and X86 SSE2-specific
 
 symbol NoOrder;
 symbol AcquireReleaseOrder;
@@ -20,12 +21,25 @@ overload barrier(#AcquireReleaseOrder) inline { optimizerBarrier(); }
 overload barrier(#FullOrder) inline
     __c__ """__asm__ __volatile__ ("mfence":::"memory");""";
 
+private #atomicLLType?('T) = 'T == llBoolType
+    or llIntegerType?('T)
+    or llFloatType?('T)
+    or llPointerType?('T)
+    or llCodePointerType?('T);
+
+#atomicType?('T) = atomicLLType?(llType('T));
+
 #AtomicGettable?('T)
-    = POD?('T) and typeSize('T) <= typeSize(Int) and typeAlign('T) == typeSize('T);
+    = atomicType?('T)
+        and POD?('T) and typeSize('T) <= typeSize(Int)
+        and typeAlign('T) == typeSize('T);
 #AtomicSettable?('T)
-    = POD?('T) and typeSize('T) <= typeSize(Int) and typeAlign('T) == typeSize('T);
+    = atomicType?('T)
+        and POD?('T) and typeSize('T) <= typeSize(Int)
+        and typeAlign('T) == typeSize('T);
 #AtomicCasable?('T)
-    = POD?('T)
+    = atomicType?('T)
+        and POD?('T)
         and (typeSize('T) == typeSize(Int) or typeSize('T) == typeSize(Int32))
         and typeAlign('T) == typeSize('T);
 #AtomicCas2able?('DestT, 'SourceT)
