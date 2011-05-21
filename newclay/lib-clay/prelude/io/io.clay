@@ -1,0 +1,42 @@
+
+//
+// iterator operations
+//
+
+symbol iterator;
+symbol hasNext?;
+symbol next;
+
+
+//
+// sized iterator/sequence operations
+//
+
+symbol size;
+
+
+//
+// back/front of (XXX soon to be iterator/)sequence
+//
+
+symbol front;
+symbol back;
+
+
+//
+// iterator-related predicates and properties
+//
+
+#Iterator?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
+
+#iteratorTargetType('I) | Iterator?('I) = type([next(arg(Ref['I]))]);
+
+#SizedIterator?('I) = Iterator?('I) and callDefined?(size, 'I);
+
+
+//
+// an iterator is its own iterator
+//
+
+overload iterator(forward x:'I) | Iterator?('I) = forward x;
+

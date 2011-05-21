@@ -161,23 +161,6 @@ overload #Union?(Union[..'T]) | type?(Union[..'T]) = true;
 
 
 //
-// sequence-related predicates and properties
-//
-
-#Sequence?('S) = callDefined?(iterator, 'S);
-#Iterator?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
-
-#iteratorTargetType('I) | Iterator?('I) = type([next(arg(Ref['I]))]);
-#sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
-#sequenceElementType('S) | Sequence?('S)
-    = iteratorTargetType(sequenceIteratorType('S));
-
-#SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
-
-#ReversibleSequence?('S) = callDefined?(reverseIterator, 'S);
-
-
-//
 // WithAlignment symbol attribute
 
 #WithAlignment('n) | staticInt?('n) = (WithAlignment, 'n);

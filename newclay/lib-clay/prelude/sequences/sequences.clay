@@ -3,37 +3,6 @@ import values.*;
 
 
 //
-// iterator operations
-//
-
-symbol iterator;
-symbol hasNext?;
-symbol next;
-
-
-//
-// sized sequence operations
-//
-
-symbol size;
-
-
-//
-// back/front of sequence
-//
-
-symbol front;
-symbol back;
-
-
-//
-// an iterator is its own iterator
-//
-
-overload iterator(forward x:'I) | Iterator?('I) = forward x;
-
-
-//
 // Range
 //
 
@@ -84,3 +53,19 @@ overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);
 
 overload #size('s) | staticString?('s) = staticStringSize('s);
 overload #size((..'t)) = countValues(..'t);
+
+
+//
+// sequence-related predicates and properties
+//
+
+#Sequence?('S) = callDefined?(iterator, 'S);
+
+#sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
+#sequenceElementType('S) | Sequence?('S)
+    = iteratorTargetType(sequenceIteratorType('S));
+
+#SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
+
+#ReversibleSequence?('S) = callDefined?(reverseIterator, 'S);
+

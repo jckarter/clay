@@ -1,5 +1,6 @@
 public import prelude.arrays.*;
 public import prelude.diagnostics.*;
+public import prelude.io.*;
 public import prelude.lambdas.*;
 public import prelude.maybe.*;
 public import prelude.newtypes.*;
