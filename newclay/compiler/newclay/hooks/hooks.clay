@@ -79,7 +79,17 @@ ofLowLevelType?(llType:Symbol, llTypeValue:Value) {
         Symbol, s ref=> llType == s,
         SymbolHead, sh ref=> llType.head == sh,
         MatchDefault, x ref=> {
-            genericError("invalid low-level type: ", x);
+            genericError("invalid low-level type: ", llTypeValue);
+            return false;
+        },
+    );
+}
+
+overload ofLowLevelType?(llType:Value, llTypeValue:Value) {
+    return match(llType,
+        Symbol, s ref=> ofLowLevelType?(s, llTypeValue),
+        MatchDefault, x ref=> {
+            genericError("invalid low-level type: ", llType);
             return false;
         },
     );
