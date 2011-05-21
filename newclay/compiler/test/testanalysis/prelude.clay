@@ -31,6 +31,7 @@ symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
 symbol llArrayType['T, 'n];
 symbol llTupleType[..'T];
 symbol llUnionType[..'T];
+symbol llLiteralCType[..'S];
 
 
 //

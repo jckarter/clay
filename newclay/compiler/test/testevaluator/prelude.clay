@@ -20,6 +20,7 @@ symbol llCodePointerType;
 symbol llArrayType;
 symbol llTupleType;
 symbol llUnionType;
+symbol llLiteralCType;
 
 symbol Bool;
 symbol Char;

@@ -15,6 +15,7 @@ symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
 symbol llArrayType['T, 'n];
 symbol llTupleType[..'T];
 symbol llUnionType[..'T];
+symbol llLiteralCType[..'Parts];
 
 #llIntegerType?('L) = false;
 overload #llIntegerType?(llIntegerType['S, 'B]) = true;
@@ -36,6 +37,9 @@ overload #llTupleType?(llTupleType[..'T]) = true;
 
 #llUnionType?('L) = false;
 overload #llUnionType?(llUnionType[..'T]) = true;
+
+#llLiteralCType?('L) = false;
+overload #llLiteralCType?(llLiteralCType[..'T]) = true;
 
 symbol llType;
 
