@@ -80,6 +80,7 @@ record ClayHooks (
     llArrayType: Value,
     llTupleType: Value,
     llUnionType: Value,
+    llLiteralCType: Value,
 
     Bool: Value,
     Char: Value,

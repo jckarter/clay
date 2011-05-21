@@ -693,7 +693,8 @@ codegenLLType(c:CodegenContext, llTypeValue:Value) {
         or ofLowLevelType?(llTypeValue, getHooks().llIntegerType)
         or ofLowLevelType?(llTypeValue, getHooks().llFloatType)
         or ofLowLevelType?(llTypeValue, getHooks().llPointerType)
-        or ofLowLevelType?(llTypeValue, getHooks().llCodePointerType))
+        or ofLowLevelType?(llTypeValue, getHooks().llCodePointerType)
+        or ofLowLevelType?(llTypeValue, getHooks().llLiteralCType))
         return;
     else if (ofLowLevelType?(llTypeValue, getHooks().llArrayType))
         codegenArrayType(c, llType, llTypeValue, definition);
@@ -730,6 +731,8 @@ private getLLTypeName(c, llTypeValue:Value) {
         return printString("struct ", mangleType(llTypeValue)), String("");
     else if (ofLowLevelType?(llTypeValue, getHooks().llUnionType))
         return printString("union ", mangleType(llTypeValue)), String("");
+    else if (ofLowLevelType?(llTypeValue, getHooks().llLiteralCType))
+        return ...getLiteralTypeName(c, llTypeValue);
     else {
         genericError("invalid low-level type ", llTypeValue);
         return String(""), String("");
@@ -822,6 +825,28 @@ private getCodePointerTypeName(c, llTypeValue) {
     printPostFunctionTypeTo(post, c, true,
         abi, variadic?, inputTypes, outputType,
     );
+    return move(pre), move(post);
+}
+
+private literalStringParamValue(llTypeValue, paramValue) = match(paramValue,
+    StringValue, s ref=> s.value,
+    MatchDefault, x ref=> {
+        genericError("low-level literal c type ", llTypeValue, " must have one or two string symbol parameters");
+        return String("");
+    },
+);
+
+private getLiteralTypeName(c, llTypeValue) {
+    ref params = llTypeParams(llTypeValue);
+    if (size(params) != 1 and size(params) != 2)
+        genericError("low-level literal c type ", llTypeValue, " must have one or two string symbol parameters");
+
+    var pre = literalStringParamValue(llTypeValue, params[0]);
+    var post = if (size(params) == 2)
+        literalStringParamValue(llTypeValue, params[1])
+    else
+        String("");
+
     return move(pre), move(post);
 }
 
@@ -991,7 +1016,7 @@ private codegenTypedef(c, typeValue:Value) {
     return printString(
         "typedef ",
         typedefAttributes(c, typeValue),
-        llType.preTypeName, ' ', mangleType(typeValue), llType.postTypeName, ';'
+        llType.preTypeName, ' ', mangleType(typeValue), ' ', llType.postTypeName, ';'
     );
 }
 
@@ -1032,7 +1057,8 @@ private printLLTypeForwardDeclarationsTo(stream, c:CodegenContext) {
 private printTypedefsTo(stream, c:CodegenContext) {
     for (typeValue in c.typedefOrder) {
         ref typedef = getTypedef(c, typeValue);
-        printlnTo(stream, typedef.definition);
+        if (not empty?(typedef.definition))
+            printlnTo(stream, typedef.definition);
     }
 }
 
@@ -1054,7 +1080,8 @@ private printLLTypeDefinitionTo(stream, c, llTypeValue, printedSet) {
     ref llType = getLLType(c, llTypeValue);
     for (dep in llType.dependencies)
         printLLTypeDefinitionTo(stream, c, dep, printedSet);
-    printlnTo(stream, just(llType.definition));
+    if (not empty?(just(llType.definition)))
+        printlnTo(stream, just(llType.definition));
     printedSet[llTypeValue] = true;
 }
 
