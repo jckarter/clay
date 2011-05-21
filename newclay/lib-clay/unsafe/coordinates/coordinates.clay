@@ -1,6 +1,6 @@
 import meta.lltypes.(llType, llPointerType);
 import meta.c.*;
-import unsafe.casts.(bitcast, pointerCast);
+import unsafe.casts.(pointerCast);
 import unsafe.valuesemantics.*;
 
 
@@ -27,9 +27,8 @@ overload #llType(ContiguousCoordinate['T])
     = llPointerType['T];
 overload #recursiveTypes(ContiguousCoordinate['T]) = 'T;
 
-overload ContiguousCoordinate['T]() inline --> returned:ContiguousCoordinate['T] {
-    bitcast(Int, returned) <-- 0;
-}
+overload ContiguousCoordinate['T]() inline
+    = pointerCast(ContiguousCoordinate['T], 0);
 
 overload ContiguousCoordinate(forward x:'T) inline
     | DereferenceablePointer?('T)

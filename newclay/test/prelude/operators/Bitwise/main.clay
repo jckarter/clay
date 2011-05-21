@@ -29,15 +29,6 @@ main() {
     show(bitrol(0x7f_u8, 1)); ////254
     show(bitror(0xfe_u8, 1)); ////127
 
-    // defined bitcast operations
-    show(#defined?([bitcast(UInt32, 1.0f)])); ////true
-    show(#defined?([bitcast(UInt32, 1.0_f64)])); ////true
-    show(#defined?([bitcast(UInt32, 1_u64)])); ////true
-
-    // nondefined bitcast operations
-    show(#defined?([bitcast(UInt64, 1.0f)])); ////false
-    show(#defined?([bitcast(UInt64, 1_u32)])); ////false
-
     // bitcast
     show(bitcast(Float32, 0x3f80_0000_u32)); ////1
 }

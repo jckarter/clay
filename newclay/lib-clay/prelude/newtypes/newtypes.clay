@@ -1,6 +1,6 @@
 import meta.lltypes.*;
 import meta.symbols.*;
-import unsafe.casts.(bitcast);
+import unsafe.casts.(llcast);
 import unsafe.valuesemantics.*;
 
 #NewType('T) = (NewType, 'T);
@@ -15,7 +15,7 @@ overload #llType('T) | HasUnderlyingType?('T) = llType(underlyingType('T));
 overload #inheritsPredicatesFromTypes('T) | HasUnderlyingType?('T) = true, underlyingType('T);
 
 underlying(forward x:'T) inline | HasUnderlyingType?('T)
-    = forward bitcast(#underlyingType('T), x);
+    = forward llcast(#underlyingType('T), x);
 
 overload unpack(forward x:'T) inline | NewType?('T)
     = forward underlying(x);

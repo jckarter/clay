@@ -1,6 +1,6 @@
 import meta.c.(cAssign);
 import meta.lltypes.(llType);
-import unsafe.casts.(bitcast, rvalueToRef);
+import unsafe.casts.(llcast, rvalueToRef);
 import values.(allValues?, dropValues, takeValues);
 
 
@@ -137,7 +137,7 @@ overload Unmanaged['T](forward ..args) inline --> returned:Unmanaged['T]
 overload Unmanaged(forward x:'T) inline --> returned:Unmanaged['T] {
     *returned <-- x;
 }
-overload unpack(forward x:Unmanaged['T]) = forward bitcast('T, x);
+overload unpack(forward x:Unmanaged['T]) = forward llcast('T, x);
 
 
 //

@@ -3,7 +3,6 @@ import meta.lltypes.*;
 import meta.platform.*;
 import meta.statics.*;
 import meta.symbols.*;
-import unsafe.casts.(bitcast);
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.*;
 import values.*;

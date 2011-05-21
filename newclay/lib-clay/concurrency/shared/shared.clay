@@ -1,8 +1,9 @@
 // XXX import concurrency.locks.*;
 import concurrency.primitives as prim;
+import meta.lltypes.(llType);
+import unsafe.casts.(llcast);
 import unsafe.compositetypes.(CompositeType, initializeRecord, destroyRecord);
 import unsafe.valuesemantics.(BitwiseMoved?, DestroyDoesNothing?, destroy);
-import unsafe.casts.(bitcast);
 import values.(mapValues);
 
 public import concurrency.primitives.(NoOrder, AcquireReleaseOrder, FullOrder, order?);
@@ -14,7 +15,8 @@ overload #ValidShared?(Pointer[Shared['T, 'O]]) = true;
 overload #ValidShared?(Shared['T, 'O])
     = staticError("Shared[] cannot be nested");
 
-symbol Shared['T, 'Order] = CompositeType(__value__:'T);
+symbol Shared['T, 'Order];
+overload #llType(Shared['T, 'Order]) = llType('T);
 
 //overload #BitwiseMoved?(Shared['T, 'Order]) = false;
 overload #DestroyDoesNothing?(Shared['T, 'Order]) = DestroyDoesNothing?('T);
@@ -35,10 +37,10 @@ overload destroy(ref x:Shared['T, 'O]) { destroy(unsharedCastUnsafe(x)); }
 
 // cast shared-ness on and off of values
 
-unsharedCastUnsafe(forward x:Shared['T, 'O]) = forward bitcast('T, x);
-sharedCast(forward x:'T) = forward bitcast(Shared['T, FullOrder], x);
+unsharedCastUnsafe(forward x:Shared['T, 'O]) = forward llcast('T, x);
+sharedCast(forward x:'T) = forward llcast(Shared['T, FullOrder], x);
 overload sharedCast(forward x:'T, #'O) | order?('O)
-    = forward bitcast(Shared['T, 'O], x);
+    = forward llcast(Shared['T, 'O], x);
 
 // lock-free shared access. these operations are only defined on Shared types
 // that are atomically accessible without locking

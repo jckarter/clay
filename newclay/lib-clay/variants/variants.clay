@@ -3,7 +3,7 @@ import meta.lltypes.*;
 import meta.symbols.*;
 import variants.representation.*;
 import libc.(memset);
-import unsafe.casts.(bitcast, refToRvalue, rvalueToRef);
+import unsafe.casts.(llcast, refToRvalue, rvalueToRef);
 import unsafe.valuesemantics.*;
 
 
@@ -52,7 +52,7 @@ overload #BitwiseZeroInitialized?('V)
     | VariantType?('V) and WithDefaultMemberType?('V)
     = reprZeroInitializedWithMemberType?(variantReprType('V), variantDefaultMemberType('V));
 
-private repr(forward v:'T) | VariantType?('T) = forward bitcast(#variantReprType('T), v);
+private repr(forward v:'T) | VariantType?('T) = forward llcast(#variantReprType('T), v);
 
 overload #llType('T) | VariantType?('T) = llType(variantReprType('T));
 
