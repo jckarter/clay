@@ -8,11 +8,12 @@ import values.*;
 
 symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
 
-overload hasNext?(x:Range['T]) = x.begin < x.end;
-overload next(ref x:Range['T]) {
-    var returned = x.begin;
+overload hasFront?(x:Range['T]) = x.begin < x.end;
+overload front(x:Range['T]) {
+    return x.begin;
+}
+overload incFront(ref x:Range['T]) {
     x.begin += x.step;
-    return returned;
 }
 
 overload Range(to:'N) = Range['N]('N(0), to, 'N(1));
@@ -38,10 +39,10 @@ symbol ReversedRange['T] = RecordType(begin:'T, end:'T, step:'T);
 overload ReversedRange(begin:'T, end:'T, step:'T)
     = ReversedRange['T](begin, end, step);
 
-overload hasNext?(x:ReversedRange['T]) = x.begin < x.end;
-overload next(ref x:ReversedRange['T]) {
+overload hasFront?(x:ReversedRange['T]) = x.begin < x.end;
+overload front(x:ReversedRange['T]) = x.end - x.step;
+overload incFront(ref x:ReversedRange['T]) {
     x.end -= x.step;
-    return x.end;
 }
 
 overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);

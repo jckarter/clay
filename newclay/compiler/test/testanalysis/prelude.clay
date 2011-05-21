@@ -293,11 +293,12 @@ case?(a, forward ..against) {
     return false;
 }
 
-// iterator, next, hasNext?
+// iterators
 
 symbol iterator;
-symbol next;
-symbol hasNext?;
+symbol hasFront?;
+symbol front;
+symbol incFront;
 
 //
 // call

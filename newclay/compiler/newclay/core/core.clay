@@ -135,8 +135,9 @@ record ClayHooks (
     case?: Value,
 
     iterator: Value,
-    hasNext?: Value,
-    next: Value,
+    hasFront?: Value,
+    front: Value,
+    incFront: Value,
 
     tupleLiteral: Value,
 

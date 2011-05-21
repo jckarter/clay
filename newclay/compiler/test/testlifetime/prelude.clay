@@ -9,6 +9,9 @@ import __main__.(main);
 symbol type?;
 overload #type?('x) = false;
 
+#typeAlign('x) = 1u;
+#llTypeAlign('x) = 1u;
+
 
 
 //
@@ -28,6 +31,7 @@ symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
 symbol llArrayType['T, 'n];
 symbol llTupleType[..'T];
 symbol llUnionType[..'T];
+symbol llLiteralCType[..'S];
 
 
 //
@@ -73,7 +77,7 @@ symbol Float32 = NewPrimitiveType();
 symbol Float64 = NewPrimitiveType();
 
 overload #llType(Bool) = llBoolType;
-overload #llType(Char) = llIntegerType[llUnsigned, 8];
+overload #llType(Char) = llIntegerType[llUnsigned, 32];
 overload #llType(Int8 ) = llIntegerType[llSigned,  8];
 overload #llType(Int16) = llIntegerType[llSigned, 16];
 overload #llType(Int32) = llIntegerType[llSigned, 32];
@@ -95,7 +99,7 @@ overload #llType(Float64) = llFloatType[64];
 symbol StringConstant;
 overload #type?(StringConstant) = true;
 overload #llType(StringConstant)
-    = llTupleType[("begin", Pointer[Char]), ("end", Pointer[Char])];
+    = llTupleType[("size", UInt), ("begin", Pointer[UInt8]), ("end", Pointer[UInt8])];
 
 
 //
@@ -268,13 +272,15 @@ notEquals?(a:Int, b:Int) --> returned:Bool __c__ """
     $returned = $a != $b;
 """;
 
+
+
 assign(ref a, b)                  { a <-- b; }
-addAssign(ref a:Int, b:Int)       { a <-- add(a, b); }
-subtractAssign(ref a:Int, b:Int)  { a <-- subtract(a, b); }
-multiplyAssign(ref a:Int, b:Int)  { a <-- multiply(a, b); }
-divideAssign(ref a:Float64, b:Float64)    { a <-- divide(a, b); }
-quotientAssign(ref a:Int, b:Int)  { a <-- quotient(a, b); }
-remainderAssign(ref a:Int, b:Int) { a <-- remainder(a, b); }
+updateAssign(#'op, ref a, b) { a <-- 'op(a, b); }
+callAssign(b, #'f, forward ..args) { 'f(..args) <-- b; }
+updateCallAssign(#'op, b, #'f, forward ..args) {
+    ref a = 'f(..args);
+    a <-- 'op(a, b);
+}
 
 //
 // case?
@@ -287,11 +293,12 @@ case?(a, forward ..against) {
     return false;
 }
 
-// iterator, next, hasNext?
+// iterators
 
 symbol iterator;
-symbol next;
-symbol hasNext?;
+symbol hasFront?;
+symbol front;
+symbol incFront;
 
 //
 // call
@@ -365,3 +372,29 @@ lambdaCaptures(lambda) = lambda.1;
 
 overload call(lambda:Tuple[Static['L], 'T], forward ..args)
     = forward ..'L(..lambdaCaptures(lambda), ..args);
+
+//
+// static operators
+//
+
+overload #plus('x) = staticPlus('x);
+overload #minus('x) = staticMinus('x);
+overload #call('f, ..'x) = 'f(..'x);
+overload #index('a, ..'x) = 'a[..'x];
+overload #staticIndex('a, 'x) = 'a['x];
+overload #fieldRef('a, 'x) = staticModuleMember('a, 'x);
+overload #unpack('a) = ..staticTupleElements('a);
+overload #multiply('a, 'b) = staticMultiply('a, 'b);
+overload #quotient('a, 'b) = staticQuotient('a, 'b);
+overload #remainder('a, 'b) = staticRemainder('a, 'b);
+overload #add('a, 'b) = staticAdd('a, 'b);
+overload #subtract('a, 'b) = staticSubtract('a, 'b);
+overload #lesser?('a, 'b) = staticLesser?('a, 'b);
+overload #lesserEquals?('a, 'b) = staticLesserEquals?('a, 'b);
+overload #greater?('a, 'b) = staticGreater?('a, 'b);
+overload #greaterEquals?('a, 'b) = staticGreaterEquals?('a, 'b);
+overload #equals?('a, 'b) = staticEquals?('a, 'b);
+overload #notEquals?('a, 'b) = staticNotEquals?('a, 'b);
+
+overload #tupleLiteral(..'x) = (..'x);
+
