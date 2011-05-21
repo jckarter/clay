@@ -39,5 +39,5 @@ main() {
     show("--"); ////--
     show(variantIs?(Null,         n)); ////true
     show(variantIs?(Pointer[Int], n)); ////false
-    show(OpaquePointer(&variantAs(Null, n)) == OpaquePointer(&n)); ////true
+//    show(OpaquePointer(&variantAs(Null, n)) == OpaquePointer(&n)); ////true
 }

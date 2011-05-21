@@ -1,7 +1,7 @@
 import meta.lltypes.*;
 import values.*;
-import unsafe.casts.(bitcast);
-import unsafe.valuesemantics.(moveRvalue, BitwiseZeroInitialized?, POD?);
+import unsafe.casts.(llcast, pointerCast);
+import unsafe.valuesemantics.(moveRvalue, uninitialized, BitwiseZeroInitialized?, POD?);
 
 
 //
@@ -95,6 +95,12 @@ overload moveRepr(
 // NullablePointerRepr
 //
 
+private nullRepr?(repr:NullablePointerRepr['N, 'P]) inline
+    = llcast('P, repr) == pointerCast('P, 0);
+
+private nullReprValue(repr:NullablePointerRepr['N, 'P]) inline
+    = uninitialized('N);
+
 symbol NullablePointerRepr['Null, 'P] = NewType('P);
 
 overload #reprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
@@ -104,7 +110,7 @@ overload #reprAcceptsMemberTypes?(NullablePointerRepr['N, 'P])
 overload #reprZeroInitializedWithMemberType?(NullablePointerRepr['N, 'P], 'N) = true;
 
 overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], m:'N) inline {
-    bitcast(Int, repr) = 0;
+    llcast('P, repr) = pointerCast('P, 0);
 }
 
 overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], p:'P) inline {
@@ -112,19 +118,19 @@ overload initializeRepr(ref repr:NullablePointerRepr['N, 'P], p:'P) inline {
 }
 
 overload dispatchRepr(repr:NullablePointerRepr['N, 'P], forward fn) inline {
-    if (bitcast(Int, repr) == 0)
-        return forward ..fn(bitcast('N, repr));
+    if (nullRepr?(repr))
+        return forward ..fn(nullReprValue(repr));
     else
         return forward ..fn(*repr);
 }
 
 overload reprIs?(#'N, repr:NullablePointerRepr['N, 'P]) inline
-    = bitcast(Int, repr) == 0;
+    = nullRepr?(repr);
 overload reprIs?(#'P, repr:NullablePointerRepr['N, 'P]) inline
-    = bitcast(Int, repr) != 0;
+    = not nullRepr?(repr);
 
 overload reprAs(#'N, forward repr:NullablePointerRepr['N, 'P]) inline
-    = forward bitcast('N, repr);
+    = forward nullReprValue(repr);
 overload reprAs(#'P, forward repr:NullablePointerRepr['N, 'P]) inline
     = forward *repr;
 

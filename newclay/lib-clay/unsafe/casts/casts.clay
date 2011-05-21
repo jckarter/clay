@@ -1,21 +1,34 @@
 import meta.c.*;
+import meta.lltypes.(llType);
 
 
 //
-// bitcast
+// llcast -- cast between types that share a llType representation
 //
 
-bitcast(#'A, forward b:'B)
-    | typeSize('A) <= typeSize('B)
+llcast(#'A, forward b:'B)
+    | llType('A) == llType('B)
     = forward cRefCast('A, b);
+
+
+//
+// bitcast -- bitwise-copy a value into a value of another type
+//
+
+bitcast(#'A, forward b:'B) {
+    var tmp = Union['A, 'B](b);
+    return tmp.0;
+}
 
 
 //
 // pointer casts
 //
 
+#PointerCastable?('P) = Pointer?('P) or 'P == Int or 'P == UInt;
+
 pointerCast(#'P1, forward p:'P2)
-    | Pointer?('P1) and Pointer?('P2)
+    | PointerCastable?('P1) and PointerCastable?('P2)
     = cCast('P1, p);
 
 

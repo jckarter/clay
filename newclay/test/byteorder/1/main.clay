@@ -13,7 +13,7 @@ main() {
         n32 = hostToNetwork(x32),
         n64 = hostToNetwork(x64);
 
-    ref nb16 = bitcast(Array[UInt8, 2], n16),
+    var nb16 = bitcast(Array[UInt8, 2], n16),
         nb32 = bitcast(Array[UInt8, 4], n32),
         nb64 = bitcast(Array[UInt8, 8], n64);
 

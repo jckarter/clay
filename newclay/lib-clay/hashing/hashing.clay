@@ -1,4 +1,4 @@
-import unsafe.casts.(bitcast);
+import unsafe.casts.(pointerCast);
 import values.(allValues?);
 
 symbol hash;
@@ -8,7 +8,7 @@ symbol hash;
 overload hash(x:'T) inline
     | Integer?('T) or Char?('T) or 'T == Bool
     = UInt(x);
-overload hash(x:'P) inline | Pointer?('P) = bitcast(UInt, x);
+overload hash(x:'P) inline | Pointer?('P) = pointerCast(UInt, x);
 overload hash(x:Static['x]) = 0u;
 
 hashValues(forward ..values) {

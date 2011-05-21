@@ -17,9 +17,4 @@ false
 5
 254
 127
-true
-true
-true
-false
-false
 1

@@ -1,9 +1,9 @@
 import values.*;
 import libc.*;
+import meta.c.*;
 import meta.symbols.*;
 import meta.statics.*;
 import meta.lltypes.*;
-import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.*;
 
 
@@ -24,11 +24,11 @@ overload #llType(Union[..'T])
 
 overload index(forward t:Union[..'T], #'n) inline
     | validStaticIndex?('n, ..'T)
-    = forward bitcast(#nthValue('n, ..'T), t);
+    = forward cFieldRef(#nthValue('n, ..'T), t, #llTupleFieldName(Int('n)));
 
 overload index(forward t:Union[..'T], #'U) inline
     | inValues?('U, ..'T)
-    = forward bitcast('U, t);
+    = forward cFieldRef('U, t, #llTupleFieldName(Int(indexValue('U, ..'T))));
 
 
 //
@@ -75,7 +75,7 @@ overload #POD?('T) | NamedUnionType?('T) = true;
 
 overload index(forward x:'T, #'field) inline
     | NamedUnionType?('T) and field?('T, 'field)
-    = forward bitcast(#fieldType('T, 'field), x);
+    = forward cFieldRef(#fieldType('T, 'field), x, #'field);
 
 overload #BitwiseZeroInitialized?('T) | NamedUnionType?('T) = true;
 
@@ -88,7 +88,8 @@ overload 'T() inline --> returned:'T
 overload 'T(forward x:'U) inline --> returned:'T
     | NamedUnionType?('T) and inValues?('U, ..fieldTypes('T))
 {
-    bitcast('U, returned) <-- x;
+    var fieldName = #nthValue(indexValue('U, ..fieldTypes('T)), ..fieldNames('T));
+    returned[fieldName] <-- x;
 }
 
 overload equals?(a:'T, b:'T) inline
