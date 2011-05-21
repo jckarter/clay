@@ -15,29 +15,27 @@ import unsafe.valuesemantics.(destroy);
 
 equalSequence?(x, y) inline {
     var xi = iterator(x), yi = iterator(y);
-    var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
-    while (xnext? and ynext?) {
-        if (next(xi) != next(yi))
+    while (hasFront?(xi) and hasFront?(yi)) {
+        if (front(xi) != front(yi))
             return false;
-        xnext? = hasNext?(xi);
-        ynext? = hasNext?(yi);
+        incFront(xi);
+        incFront(yi);
     }
-    return xnext? == ynext?;
+    return hasFront?(xi) == hasFront?(yi);
 }
 
 lesserSequence?(x, y) inline {
     var xi = iterator(x), yi = iterator(y);
-    var xnext? = hasNext?(xi), ynext? = hasNext?(yi);
-    while (xnext? and ynext?) {
-        const xe = next(xi), ye = next(yi);
+    while (hasFront?(xi) and hasFront?(yi)) {
+        const xe = front(xi), ye = front(yi);
         if (xe < ye)
             return true;
         if (ye < xe)
             return false;
-        xnext? = hasNext?(xi);
-        ynext? = hasNext?(yi);
+        incFront(xi);
+        incFront(yi);
     }
-    return xnext? < ynext?;
+    return hasFront?(xi) < hasFront?(yi);
 }
 
 
@@ -63,8 +61,9 @@ overload reverseIterator(rvalue s:Zipped[..'S])
     | allValues?(ReversibleSequence?, ..CapturedTypes(..'S))
     = ZippedIterator((..mapValues(reverseIterator, ..forwardValues(*s))));
 
-overload hasNext?(s:ZippedIterator[..'S]) = allValues?(hasNext?, ..**s);
-overload next(ref s:ZippedIterator[..'S]) = forward ..mapValues(next, ..**s);
+overload hasFront?(s:ZippedIterator[..'S]) = allValues?(hasFront?, ..**s);
+overload front(s:ZippedIterator[..'S]) = forward ..mapValues(front, ..**s);
+overload incFront(ref s:ZippedIterator[..'S]) { mapValues(incFront, ..**s); }
 
 enumerated(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
     = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
@@ -76,7 +75,7 @@ enumerated(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
 
 symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
 overload Mapped(forward f:'F, forward s:'S)
-    | Sequence?('S) and defined?([var i = iterator(s); ..f(..next(i))])
+    | Sequence?('S) and defined?([var i = iterator(s); ..f(..front(i))])
     = Mapped['F, #type([captureValue(s)])](f, captureValue(s));
 
 private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
@@ -89,8 +88,9 @@ overload reverseIterator(s:Mapped['F, 'S])
     | ReversibleSequence?(CapturedType('S))
     = MappedIterator(s.mapper, reverseIterator(capturedRef(s.sequence)));
 
-overload hasNext?(i:MappedIterator['F,'S]) = hasNext?(i.iterator);
-overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.iterator));
+overload hasFront?(i:MappedIterator['F,'S]) = hasFront?(i.iterator);
+overload front(i:MappedIterator['F,'S]) = forward ..i.mapperp^(..front(i.iterator));
+overload incFront(ref i:MappedIterator['F,'S]) { incFront(i.iterator); }
 
 
 //
@@ -99,17 +99,19 @@ overload next(ref i:MappedIterator['F,'S]) = forward ..i.mapperp^(..next(i.itera
 
 symbol Filtered['F, 'S] = RecordType(filterer:'F, sequence:'S);
 overload Filtered(forward f:'F, forward s:'S)
-    | Sequence?('S) and definedWithType?([var i = iterator(s); f(..next(i))], Bool)
+    | Sequence?('S) and definedWithType?([var i = iterator(s); f(..front(i))], Bool)
     = Filtered['F, #type([captureValue(s)])](f, captureValue(s));
 
-private symbol FilteredIterator['F, 'I, 'V] = RecordType(
+private symbol FilteredIterator['F, 'I] = RecordType(
     filtererp:Pointer['F],
     iterator:'I,
-    queuedValues:Maybe['V],
 );
-overload FilteredIterator(filterer:'F, forward iter:'I) {
-    const V = #type([var refiter = iter; captureValues(..next(refiter))]);
-    return FilteredIterator['F, 'I, V](&filterer, iter, nothing(V));
+overload FilteredIterator(filterer:'F, forward iter:'I)
+{
+    var nextiter = iter;
+    while (hasFront?(nextiter) and not filterer(front(nextiter)))
+        incFront(nextiter);
+    return FilteredIterator['F, 'I](&filterer, move(nextiter));
 }
 
 overload iterator(s:Filtered['F, 'S])
@@ -118,24 +120,12 @@ overload reverseIterator(s:Filtered['F, 'S])
     | ReversibleSequence?(CapturedType('S))
     = FilteredIterator(s.filterer, reverseIterator(capturedRef(s.sequence)));
 
-overload hasNext?(ref i:FilteredIterator['F, 'I, 'V]) {
-    while (nothing?(i.queuedValues)) {
-        if (not hasNext?(i.iterator))
-            return false;
-        var queuedValues = captureValues(..next(i.iterator));
-        if (not i.filtererp^(..capturedRefs(queuedValues)))
-            continue;
-        i.queuedValues = just(move(queuedValues));
-    }
-    return true;
-}
-overload next(ref i:FilteredIterator['F, 'I, 'V]) {
-    var values = move(maybe(i.queuedValues,
-        identity,
-        [hasNext?(i); forward required(i.queuedValues)]
-    ));
-    i.queuedValues = nothing('V);
-    return forward ..forwardValues(values);
+overload hasFront?(i:FilteredIterator['F, 'I]) = hasFront?(i.iterator);
+overload front(i:FilteredIterator['F, 'I]) = forward front(i.iterator);
+overload incFront(ref i:FilteredIterator['F, 'I]) {
+    incFront(i.iterator);
+    while (hasFront?(i.iterator) and not i.filtererp^(front(i.iterator)))
+        incFront(i.iterator);
 }
 
 

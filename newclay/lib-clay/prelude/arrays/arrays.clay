@@ -101,11 +101,12 @@ overload Array['T, 'n](forward ..xs:'TT) inline --> returned:Array['T, 'n]
 
 private symbol RvalueCoordinateRangeUnsafe['C] = RecordType(begin:'C, end:'C);
 
-overload hasNext?(i:RvalueCoordinateRangeUnsafe['C]) inline = i.begin < i.end;
-overload next(ref i:RvalueCoordinateRangeUnsafe['C]) inline {
-    var p = i.begin;
+overload hasFront?(i:RvalueCoordinateRangeUnsafe['C]) inline = i.begin < i.end;
+overload front(i:RvalueCoordinateRangeUnsafe['C]) inline {
+    return rvalue refToRvalue(i.begin^);
+}
+overload incFront(i:RvalueCoordinateRangeUnsafe['C]) inline {
     inc(i.begin);
-    return rvalue refToRvalue(p^);
 }
 
 private rvalueIteratorUnsafe(rvalue x:Array['T, 'n]) {
@@ -140,8 +141,9 @@ overload moveRvalue(forward x:Array['T, 'n]) inline --> returned:Array['T, 'n]
     | not BitwiseMoved?('T) and Movable?('T)
 {
     var ri = iterator(returned), xi = forwardIteratorUnsafe(x);
-    while (hasNext?(ri)) {
-        next(ri) <-- moveRvalue(next(xi));
+    while (hasFront?(ri)) {
+        front(ri) <-- moveRvalue(front(xi));
+        incFront(ri);
     }
 }
 
@@ -149,8 +151,9 @@ overload copy(x:Array['T, 'n]) inline --> returned:Array['T, 'n]
     | not BitwiseCopied?('T) and Copyable?('T)
 {
     var ri = iterator(returned), xi = iterator(x);
-    while (hasNext?(ri)) {
-        next(ri) <-- next(xi);
+    while (hasFront?(ri)) {
+        front(ri) <-- front(xi);
+        incFront(ri); incFront(xi);
     }
 }
 
@@ -159,8 +162,9 @@ overload copyAssign(ref to:Array['T, 'n], from:Array['U, 'n]) inline
       and callDefined?(copyAssign, Ref['T], 'U)
 {
     var ti = iterator(to), fi = iterator(from);
-    while (hasNext?(ti)) {
-        next(ti) = next(fi);
+    while (hasFront?(ti)) {
+        front(ti) = front(fi);
+        incFront(ti); incFront(fi);
     }
 }
 
@@ -173,9 +177,11 @@ overload equals?(x:Array['T, 'n], y:Array['U, 'n]) inline
     | callDefined?(equals?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);
-    while (hasNext?(xi))
-        if (next(xi) != next(yi))
+    while (hasFront?(xi)) {
+        if (front(xi) != front(yi))
             return false;
+        incFront(xi); incFront(yi);
+    }
     return true;
 }
 
@@ -183,12 +189,13 @@ overload lesser?(x:Array['T, 'n], y:Array['U, 'n]) inline
     | callDefined?(lesser?, 'T, 'U)
 {
     var xi = iterator(x), yi = iterator(y);
-    while (hasNext?(xi)) {
-        const xe = next(xi), ye = next(yi);
+    while (hasFront?(xi)) {
+        const xe = front(xi), ye = front(yi);
         if (xe < ye)
             return true;
         if (ye < xe)
             return false;
+        incFront(xi); incFront(yi);
     }
     return false;
 }

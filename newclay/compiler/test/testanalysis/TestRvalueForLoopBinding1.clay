@@ -2,12 +2,9 @@
 alias IntIterator = Tuple[Int, Int];
 
 overload iterator(x:Int) = (0, x);
-overload hasNext?(i:IntIterator) = i.0 < i.1;
-overload next(ref i:IntIterator) {
-    var value = i.0;
-    i.0 += 1;
-    return i.0;
-}
+overload hasFront?(i:IntIterator) = i.0 < i.1;
+overload front(i:IntIterator) = i.0;
+overload incFront(ref i:IntIterator) { i.0 += 1; }
 
 foo(x) {}
 bar() {}

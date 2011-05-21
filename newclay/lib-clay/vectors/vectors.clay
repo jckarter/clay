@@ -144,9 +144,10 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
 {
     var pos = UInt(i);
     var iter = iterator(seq);
-    while (hasNext?(iter)) {
-        insert(v, pos, next(iter));
-        pos += 1u;
+    while (hasFront?(iter)) {
+        insert(v, pos, front(iter));
+        inc(pos);
+        incFront(iter);
     }
 }
 
@@ -156,9 +157,10 @@ overload insert(ref v:Vector['T], i:'I, seq:'S)
     var first, last = ..insertLocations(v, UInt(i), size(seq));
     try {
         var iter = iterator(seq);
-        while (hasNext?(iter)) {
-            first^ <-- next(iter);
+        while (hasFront?(iter)) {
+            first^ <-- front(iter);
             inc(first);
+            incFront(iter);
         }
     } catch (ex) {
         resetRange(first, last);

@@ -1669,13 +1669,19 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
 
                 return analyzeLoop(s, stmt, pc, bc,
                     condS ref=> withLocation(stmt.sequenceValue, () ref=> withBoolResult(
-                        analyzeCallWithOneResult(condS, stmt.sequenceValue, getHooks().hasNext?, RTValues(iterValue))
+                        analyzeCallWithOneResult(condS, stmt.sequenceValue, getHooks().hasFront?, RTValues(iterValue))
                     )),
                     (bodyS, subbc, sublc) ref=> stmtMaybe(
-                        withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().next, RTValues(iterValue))),
+                        withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().front, RTValues(iterValue))),
                         bindingValues ref=> {
                             analyzeForBindings(bodyS, subbc.env, stmt, bindingValues);
-                            return analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
+                            var body = analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
+                            if (statementBreaks?(body))
+                                return body;
+                            return stmtMaybe(
+                                withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().incFront, RTValues(iterValue))),
+                                v ref=> StatementTarget(),
+                            );
                         },
                     ),
                 );

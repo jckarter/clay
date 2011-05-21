@@ -101,19 +101,24 @@ overload HashIterator['E](h:TwoHash['E]) --> returned:HashIterator['E] {
     refillMask(returned);
 }
 
-overload hasNext?(i:HashIterator['E]) = i.entryMask != 0u;
+overload hasFront?(i:HashIterator['E]) = i.entryMask != 0u;
 
-overload next(ref i:HashIterator['E]) {
+overload front(i:HashIterator['E]) {
+    assert([i.entryMask != 0u]);
+    var kmask = lowBitMask(i.entryMask);
+    var k = lowBit(kmask);
+    ref e = i.hashp^.tables[i.i].begin[i.j].entries[k];
+    return forward ..itemFromEntry(e);
+}
+
+overload incFront(ref i:HashIterator['E]) {
     assert([i.entryMask != 0u]);
     var kmask = lowBitMask(i.entryMask);
     i.entryMask = bitandc(i.entryMask, kmask);
-    var k = lowBit(kmask);
-    ref e = i.hashp^.tables[i.i].begin[i.j].entries[k];
     if (i.entryMask == 0u) {
         nextBucket(i);
         refillMask(i);
     }
-    return forward ..itemFromEntry(e);
 }
 
 private nextBucket(ref i:HashIterator['E]) {

@@ -4,8 +4,9 @@
 //
 
 symbol iterator;
-symbol hasNext?;
-symbol next;
+symbol hasFront?;
+symbol front;
+symbol incFront;
 
 
 //
@@ -19,7 +20,6 @@ symbol size;
 // back/front of (XXX soon to be iterator/)sequence
 //
 
-symbol front;
 symbol back;
 
 
@@ -27,9 +27,12 @@ symbol back;
 // iterator-related predicates and properties
 //
 
-#Iterator?('I) = callDefined?(hasNext?, 'I) and callDefined?(next, Ref['I]);
+//XXX front should not require a Ref['I]
+#Iterator?('I) = callDefined?(hasFront?, 'I)
+    and callDefined?(front, Ref['I])
+    and callDefined?(incFront, Ref['I]);
 
-#iteratorTargetType('I) | Iterator?('I) = type([next(arg(Ref['I]))]);
+#iteratorTargetType('I) | Iterator?('I) = type([front(arg(Ref['I]))]);
 
 #SizedIterator?('I) = Iterator?('I) and callDefined?(size, 'I);
 

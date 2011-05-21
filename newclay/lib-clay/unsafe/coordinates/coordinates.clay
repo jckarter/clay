@@ -85,12 +85,12 @@ overload CoordinateRange(begin:'C, end:'C) inline
     | Coordinate?('C)
     = CoordinateRange['C](begin, end);
 
-overload hasNext?(i:CoordinateRange['C]) inline = i.begin < i.end;
-overload next(ref i:CoordinateRange['C]) inline {
-    var p = i.begin;
+overload hasFront?(i:CoordinateRange['C]) inline = i.begin < i.end;
+overload front(i:CoordinateRange['C]) inline = forward ..i.begin^;
+overload incFront(ref i:CoordinateRange['C]) inline {
     inc(i.begin);
-    return forward ..p^;
 }
+
 
 overload begin(i:CoordinateRange['C]) inline = i.begin;
 overload end(i:CoordinateRange['C]) inline = i.end;
@@ -100,10 +100,11 @@ overload ReversedCoordinateRange(forward begin:'C, forward end:'C)
     | ReversibleCoordinate?('C)
     = ReversedCoordinateRange['C](begin, end);
 
-overload hasNext?(i:ReversedCoordinateRange['C]) = i.begin < i.end;
-overload next(ref i:ReversedCoordinateRange['C]) {
+overload hasFront?(i:ReversedCoordinateRange['C]) inline = i.begin < i.end;
+overload front(i:ReversedCoordinateRange['C]) inline
+    = forward ..(var preend = i.end; dec(preend); preend)^;
+overload incFront(ref i:ReversedCoordinateRange['C]) inline {
     dec(i.end);
-    return forward ..i.end^;
 }
 
 overload reverseIterator(forward x:CoordinateRange['C])
