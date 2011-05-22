@@ -3,10 +3,10 @@ import strings.encodings.(stringTypeEncoding, stringBytes, EncodedString?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
 import strings.(String?);
 
-symbol UTF8Iterator['I] = NewType('I);
-overload UTF8Iterator(forward x:'I) inline
-    | Iterator?('I) and iteratorTargetType('I) == UInt8
-    = UTF8Iterator['I](x);
+symbol UTF8Decoder['I] = NewType('I);
+overload UTF8Decoder(forward x:'I) inline
+    | Source?('I) and sourceTargetType('I) == UInt8
+    = UTF8Decoder['I](x);
 
 private validSequenceByte?(d) = bitand(d, 0xC0u) == 0x80u;
 private minUniChar(minCode, code) {
@@ -66,47 +66,40 @@ private encodeFour(code)
       bitor(0x80_u8, UInt8(bitshr(bitand(code,    0xFC0u),  6))),
       bitor(0x80_u8, UInt8(       bitand(code,     0x3Fu)     ));
 
-// XXX UTF8Iterator should be a source!
+private utf8maybe(forward x, forward then) inline = forward maybe(x, then, [REPLACEMENT_CHAR]);
 
-private next(ref i) {
-    forward x = front(i);
-    incFront(i);
-    return forward x;
-}
-
-overload hasFront?(i:UTF8Iterator['I]) = hasFront?(*i);
-overload front(ref i:UTF8Iterator['I]) {
-    var c = next(*i);
-    if (c < 0x80u)
-        return Char(c);
-    else if (c >= 0xC0u) @eof {
-        if (c < 0xE0u) {
-            if (not hasFront?(*i)) break @eof;
-            return decodeTwo(c, next(*i));
-        } else if (c < 0xF0u) {
-            if (not hasFront?(*i)) break @eof;
-            var d = next(*i);
-            if (not hasFront?(*i)) break @eof;
-            return decodeThree(c, d, next(*i));
-        } else if (c < 0xF8u) {
-            if (not hasFront?(*i)) break @eof;
-            var d = next(*i);
-            if (not hasFront?(*i)) break @eof;
-            var e = next(*i);
-            if (not hasFront?(*i)) break @eof;
-            return decodeFour(c, d, e, next(*i));
-        }
-    }
-    return REPLACEMENT_CHAR;
-}
-overload incFront(ref i:UTF8Iterator['I]) { }
+overload read(ref i:UTF8Decoder['I])
+    = maybe(read(*i), [c ->
+        just(if (c < 0x80u)
+            Char(c)
+        else if (c >= 0xC0u) (
+            if (c < 0xE0u)
+                utf8maybe(read(*i), [d -> decodeTwo(c, d)])
+            else if (c < 0xF0u)
+                utf8maybe(read(*i), [d ->
+                    utf8maybe(read(*i), [e -> decodeThree(c, d, e)])
+                ])
+            else if (c < 0xF8u)
+                utf8maybe(read(*i), [d ->
+                    utf8maybe(read(*i), [e ->
+                        utf8maybe(read(*i), [f -> decodeFour(c, d, e, f)])
+                    ])
+                ])
+            else REPLACEMENT_CHAR
+        ) else REPLACEMENT_CHAR)
+    ]);
 
 symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
     | Sequence?('S) and sequenceElementType('S) == UInt8
     = UTF8['S](s);
 
-overload iterator(s:UTF8['S]) inline = UTF8Iterator(iterator(*s));
+overload source(s:UTF8['S]) inline = UTF8Decoder(iterator(*s));
+overload source(s:UTF8['S]) inline | SourceSequence?('S) = UTF8Decoder(source(*s));
+
+// XXX replace "push" overloads with Pusher and UTF8Encoder sinks
+//overload sink(s:UTF8['S]) inline = UTF8Encoder(iterator(*s));
+//overload sink(s:UTF8['S]) inline | SinkSequence?('S) = UTF8Encoder(sink(*s));
 
 overload push(ref s:UTF8['S], c:Char) | Pushable?('S) {
     var code = UInt(c);

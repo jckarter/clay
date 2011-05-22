@@ -1,6 +1,6 @@
 import sequences.(lesserSequence?);
 import strings.encodings.(stringTypeEncoding, stringBytes);
-import strings.encodings.utf8.(UTF8, UTF8Iterator);
+import strings.encodings.utf8.(UTF8, UTF8Decoder);
 import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
 
 symbol StringConstant = RecordType(
@@ -14,7 +14,7 @@ symbol StringConstant = RecordType(
 // StringConstant as sequence
 //
 
-overload iterator(s:StringConstant) = UTF8Iterator(CoordinateRange(s.begin, s.end));
+overload source(s:StringConstant) = UTF8Decoder(CoordinateRange(s.begin, s.end));
 overload size(s:StringConstant) = s.size;
 
 overload #stringTypeEncoding(StringConstant) = UTF8;
