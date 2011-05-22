@@ -34,6 +34,8 @@ overload ContiguousCoordinate(forward x:'T) inline
     | DereferenceablePointer?('T)
     = ContiguousCoordinate[pointerReferencedType('T)](x);
 
+overload #Reliable?(ContiguousCoordinate['T]) = true;
+
 
 //
 // ContiguousCoordinate arithmetic
@@ -72,8 +74,13 @@ overload #ContiguousCoordinate?(ContiguousCoordinate['T]) = true;
     CoordinateSequence?('S)
     and ContiguousCoordinate?(sequenceCoordinateType('S));
 
-#ReversibleCoordinate?('C) = callDefined?(dereference, 'C)
+#BidirectionalCoordinate?('C) = callDefined?(dereference, 'C)
     and callDefined?(dec, Ref['C]);
+
+#RandomAccessCoordinate?('C) = BidirectionalCoordinate?('C)
+    and callDefined?(add, 'C, Int)
+    and callDefined?(subtract, 'C, Int)
+    and callDefined?(subtract, 'C, 'C);
 
 
 //
@@ -85,31 +92,29 @@ overload CoordinateRange(begin:'C, end:'C) inline
     | Coordinate?('C)
     = CoordinateRange['C](begin, end);
 
-overload hasFront?(i:CoordinateRange['C]) inline = i.begin < i.end;
-overload front(i:CoordinateRange['C]) inline = forward ..i.begin^;
-overload incFront(ref i:CoordinateRange['C]) inline {
-    inc(i.begin);
-}
-
-
 overload begin(i:CoordinateRange['C]) inline = i.begin;
 overload end(i:CoordinateRange['C]) inline = i.end;
 
-symbol ReversedCoordinateRange['C] = RecordType(begin:'C, end:'C);
-overload ReversedCoordinateRange(forward begin:'C, forward end:'C)
-    | ReversibleCoordinate?('C)
-    = ReversedCoordinateRange['C](begin, end);
+overload hasFront?(i:CoordinateRange['C]) inline = i.begin < i.end;
+overload front(i:CoordinateRange['C]) inline = forward ..i.begin^;
+overload incFront(ref i:CoordinateRange['C]) inline { inc(i.begin); }
 
-overload hasFront?(i:ReversedCoordinateRange['C]) inline = i.begin < i.end;
-overload front(i:ReversedCoordinateRange['C]) inline
+overload back(i:CoordinateRange['C]) inline
+    | BidirectionalCoordinate?('C)
     = forward ..(var preend = i.end; dec(preend); preend)^;
-overload incFront(ref i:ReversedCoordinateRange['C]) inline {
-    dec(i.end);
-}
+overload incBack(ref i:CoordinateRange['C]) inline
+    | BidirectionalCoordinate?('C)
+    { dec(i.end); }
 
-overload reverseIterator(forward x:CoordinateRange['C])
-    | ReversibleCoordinate?('C)
-    = ReversedCoordinateRange['C](..*x);
+overload seekFront(i:CoordinateRange['C], distance:'I) inline
+    | RandomAccessCoordinate?('C)
+    { i.begin += Int(distance); }
+overload seekBack(i:CoordinateRange['C], distance:'I) inline
+    | RandomAccessCoordinate?('C)
+    { i.end -= Int(distance); }
+
+overload #Savable?(CoordinateRange['C]) = true;
+overload #Reliable?(CoordinateRange['C]) = Reliable?('C);
 
 
 //
@@ -119,22 +124,18 @@ overload reverseIterator(forward x:CoordinateRange['C])
 overload iterator(x:'S) | CoordinateSequence?('S)
     = CoordinateRange(begin(x), end(x));
 
-overload reverseIterator(x:'S)
-    | CoordinateSequence?('S) and ReversibleCoordinate?(sequenceCoordinateType('S))
-    = ReversedCoordinateRange(begin(x), end(x));
-
 overload size(x:'S) | CoordinateSequence?('S) and defined?([end(x) - begin(x)])
     = UInt(end(x) - begin(x));
 
 overload index(x:'S, n)
     | CoordinateSequence?('S) and defined?([begin(x) + n])
-    = forward (begin(x) + n)^;
+    = forward ..dereference(begin(x) + n);
 
-overload front(x:'S) | CoordinateSequence?('S) = forward begin(x)^;
+overload front(x:'S) | CoordinateSequence?('S) = forward ..dereference(begin(x));
 overload back(x:'S) | CoordinateSequence?('S) {
     var c = end(x);
     dec(c);
-    return forward c^;
+    return forward ..c^;
 }
 
 
@@ -245,6 +246,7 @@ eachInRangesBackwardsWithCleanup(begin1:'C, begin2:'D, end2:'D, fn)
 
 //
 // apply value semantics operations over ranges of coordinates
+// XXX POD optimizations to use memcpy/memmove when possible
 //
 
 private initializeTo(ref x:'X) inline { x <-- 'X(); }

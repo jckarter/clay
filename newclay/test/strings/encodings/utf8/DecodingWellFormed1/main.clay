@@ -1,9 +1,9 @@
-import strings.encodings.utf8.(UTF8Iterator);
+import strings.encodings.utf8.(UTF8Decoder);
 import show.(show);
 import vectors.(Vector);
 
 main() {
-    for (c in UTF8Iterator(iterator(Vector[UInt8](
+    for (c in UTF8Decoder(iterator(Vector[UInt8](
         0x00_u8, // nul
         0x41_u8, // A
         0x7F_u8, // del

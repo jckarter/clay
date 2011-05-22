@@ -49,7 +49,7 @@ overload String(x:'S)
     = String(size(x), UTF8(Vector(stringBytes(x))));
 
 overload size(s:String) = s.size;
-overload iterator(s:String) = iterator(s.contents);
+overload source(s:String) = source(s.contents);
 
 overload #stringTypeEncoding(String) = UTF8;
 overload stringBytes(s:String) = stringBytes(s.contents);

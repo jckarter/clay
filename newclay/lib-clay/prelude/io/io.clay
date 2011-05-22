@@ -1,45 +1,251 @@
+import unsafe.coordinates.(ContiguousCoordinate);
+import unsafe.valuesemantics.(POD?);
+
+
+//
+// source operations
+//
+
+symbol source;
+symbol read;
+
+#Source?('S) = callDefined?(read, Ref['S]);
+#sourceTargetType('S) = type([required(read(arg(Ref['S])))]);
+
+
+//
+// sink operations
+//
+
+symbol sink;
+symbol hasFront?;
+symbol write;
+
+#Sink?('S, 'E) = callDefined?(hasFront?, 'S) and callDefined?(write, Ref['S], 'E);
+
+
+//
+// a reliable iterator/sink/source/coordinate will not throw an exception during
+// in-range data access
+//
+
+#Reliable?('I) = false;
+
 
 //
 // iterator operations
 //
 
 symbol iterator;
-symbol hasFront?;
 symbol front;
 symbol incFront;
-
-
-//
-// sized iterator/sequence operations
-//
-
-symbol size;
-
-
-//
-// back/front of (XXX soon to be iterator/)sequence
-//
-
-symbol back;
-
-
-//
-// iterator-related predicates and properties
-//
 
 //XXX front should not require a Ref['I]
 #Iterator?('I) = callDefined?(hasFront?, 'I)
     and callDefined?(front, Ref['I])
     and callDefined?(incFront, Ref['I]);
 
-#iteratorTargetType('I) | Iterator?('I) = type([front(arg(Ref['I]))]);
+#MutableIterator?('I) = Iterator?('I) and Ref?(type([forward front(arg(Ref['I]))]));
 
-#SizedIterator?('I) = Iterator?('I) and callDefined?(size, 'I);
+#iteratorTargetType('I) | Iterator?('I) = type([front(arg(Ref['I]))]);
 
 
 //
-// an iterator is its own iterator
+// iterator for source
+// XXX ideally a source should be directly iterable, and iterators should be
+// inherently savable
 //
 
-overload iterator(forward x:'I) | Iterator?('I) = forward x;
+symbol SourceIterator['S] = RecordType(source:'S, value:Maybe[sourceTargetType('S)]);
 
+overload SourceIterator(forward x:'S) --> returned:SourceIterator['S] | Source?('S) {
+    returned.source <-- x;
+    returned.value <-- read(returned.source);
+}
+
+overload hasFront?(i:SourceIterator['S]) inline = just?(i.value);
+overload front(i:SourceIterator['S]) inline = const required(i.value);
+overload incFront(ref i:SourceIterator['S]) inline {
+    i.value = read(i.source);
+}
+
+overload #Reliable?(SourceIterator['S]) = Reliable?('S);
+
+
+//
+// savable iterators
+// an iterator, source, or sink is savable if it can be copied, and the copy
+// can be iterated independently of the original iterator
+//
+
+#Savable?('X) = false;
+
+save(x:'X) | Savable?('X) = x;
+
+
+//
+// idempotent source/sink/iterator accessors
+//
+
+overload iterator(forward x:'I) inline | Iterator?('I) = forward x;
+overload source(forward x:'S) inline | Source?('S) = forward x;
+overload sink(forward x:'S) inline | Sink?('S) = forward x;
+
+
+//
+// iterator as source
+//
+
+overload read(ref i:'I) inline --> returned:Maybe[iteratorTargetType('I)]
+    | Iterator?('I)
+{
+    if (hasFront?(i)) {
+        returned <-- just(front(i));
+        incFront(i);
+    } else
+        returned <-- nothing(#iteratorTargetType('I));
+}
+
+
+//
+// mutable iterator as sink
+//
+
+overload write(ref i:'I, forward v:'E) inline
+    | MutableIterator?('I) and 'E == iteratorTargetType('I)
+{
+    assert([hasFront?(i)]);
+    front(i) = v;
+    incFront(i);
+}
+
+
+//
+// sized iterator operations
+//
+
+symbol size;
+
+#SizedIterator?('I) = Iterator?('I) and definedWithType?([size(arg('I))], UInt);
+
+overload hasFront?(i:'I) inline | defined?([size(i) > 0u]) = size(i) > 0u;
+
+
+//
+// reversible iterator
+//
+
+symbol back;
+symbol incBack;
+
+#ReversibleIterator?('I) = Iterator?('I)
+    and callDefined?(back, 'I)
+    and callDefined?(incBack, Ref['I]);
+
+hasBack?(x:'I) inline | ReversibleIterator?('I) = hasFront?(x);
+
+symbol ReversedIterator['I] = NewType('I);
+overload ReversedIterator(forward i:'I)
+    | ReversibleIterator?('I)
+    = ReversedIterator['I](i);
+
+overload hasFront?(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
+    = hasBack?(*x);
+overload front(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
+    = forward ..back(*x);
+overload incFront(ref x:ReversedIterator['I]) inline | ReversibleIterator?('I)
+    { incBack(*x); }
+
+overload back(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
+    = forward ..front(*x);
+overload incBack(ref x:ReversedIterator['I]) inline | ReversibleIterator?('I)
+    { incFront(*x); }
+
+overload seekFront(ref x:ReversedIterator['I], distance) inline
+    | ReversibleIterator?('I) and BackSeekableIterator?('I)
+    { seekBack(*x, distance); }
+overload seekBack(ref x:ReversedIterator['I], distance) inline
+    | ReversibleIterator?('I) and SeekableIterator?('I)
+    { seekFront(*x, distance); }
+
+overload index(ref x:ReversedIterator['I], distance) inline
+    | ReversibleIterator?('I) and IndexableIterator?('I)
+    = forward ..index(*x, size(*x) - 1 - distance);
+
+overload size(x:ReversedIterator['I]) inline
+    | SizedIterator?('I)
+    = size(*x);
+
+
+//
+// seekable iterator
+//
+
+symbol seekFront;
+symbol seekBack;
+
+#SeekableIterator?('I) = SizedIterator?('I)
+    and callDefined?(seekFront, Ref['I], Int);
+#BackSeekableIterator?('I) = SizedIterator?('I)
+    and callDefined?(seekBack, Ref['I], Int);
+
+
+//
+// indexable iterator
+//
+
+#IndexableIterator?('I) = SizedIterator?('I) and callDefined?(index, 'I, Int);
+
+
+//
+// bulk source operations
+// sources may implement readTo more efficiently
+//
+
+readTo(dest:ContiguousCoordinate['T], source:'S, count:UInt) : UInt
+    | Source?('S) and POD?('T) and sourceTargetType('S) == 'T
+{
+    var p = dest, i = count;
+    while (i > 0u and maybe(read(dest), [x -> p^ = x; true], [false])) {
+        dec(i);
+        inc(p);
+    }
+    return UInt(p - dest);
+}
+
+
+//
+// bulk sink operations
+// sinks may implement writeFrom more efficiently
+//
+
+writeFrom(src:ContiguousCoordinate['T], sink:'S, count:UInt) : UInt
+    | Sink?('S, 'T) and POD?('T)
+{
+    var p = src, i = count;
+    while (i > 0u and hasFront?(sink)) {
+        write(sink, p^);
+        dec(i);
+        inc(p);
+    }
+    return UInt(p - src);
+}
+
+
+//
+// common iterator concepts
+//
+
+#ForwardIterator?('I) = Iterator?('I) and Savable?('I);
+#BidirectionalIterator?('I) = ForwardIterator?('I) and ReversibleIterator?('I);
+#RandomAccessIterator?('I) = BidirectionalIterator?('I)
+    and SeekableIterator?('I)
+    and BackSeekableIterator?('I)
+    and IndexableIterator?('I);
+
+
+//
+// empty?
+//
+
+empty?(x) | defined?([hasFront?(x)]) = not hasFront?(x);

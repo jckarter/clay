@@ -8,24 +8,36 @@ import values.*;
 
 symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
 
-overload hasFront?(x:Range['T]) = x.begin < x.end;
-overload front(x:Range['T]) {
-    return x.begin;
-}
-overload incFront(ref x:Range['T]) {
-    x.begin += x.step;
-}
-
 overload Range(to:'N) = Range['N]('N(0), to, 'N(1));
 overload Range(from:'N, to:'N) = Range['N](from, to, 'N(1));
 overload Range(from:'N, to:'N, step) = Range['N](from, to, 'N(step));
+
+overload hasFront?(x:Range['T]) = x.begin < x.end;
+overload front(x:Range['T]) = x.begin;
+overload incFront(ref x:Range['T]) { x.begin += x.step; }
+
+overload back(x:Range['T]) = x.end - x.step;
+overload incBack(ref x:Range['T]) { x.end -= x.step; }
+
+overload seekFront(ref x:Range['T], distance:'I) inline
+    | Integer?('I)
+    { x.begin += x.step * distance; }
+overload seekBack(ref x:Range['T], distance:'I) inline
+    | Integer?('I)
+    { x.end -= x.step * distance; }
+overload index(x:Range['T], distance:'I) inline
+    | Integer?('I)
+    = x.begin + x.step * distance;
+overload size(x:Range['T]) inline
+    = UInt((x.end - x.begin) div x.step);
+
+overload #Savable?(Range['T]) = true;
+overload #Reliable?(Range['T]) = true;
 
 
 //
 // reversible sequences
 //
-
-symbol reverseIterator;
 
 symbol Reversed['S] = NewType('S);
 
@@ -33,19 +45,7 @@ overload Reversed(forward x:'S) | ReversibleSequence?('S) = Reversed['S](x);
 
 overload iterator(x:Reversed['S])
     | ReversibleSequence?('S)
-    = forward reverseIterator(*x);
-
-symbol ReversedRange['T] = RecordType(begin:'T, end:'T, step:'T);
-overload ReversedRange(begin:'T, end:'T, step:'T)
-    = ReversedRange['T](begin, end, step);
-
-overload hasFront?(x:ReversedRange['T]) = x.begin < x.end;
-overload front(x:ReversedRange['T]) = x.end - x.step;
-overload incFront(ref x:ReversedRange['T]) {
-    x.end -= x.step;
-}
-
-overload reverseIterator(forward x:Range['T]) = ReversedRange['T](..*x);
+    = ReversedIterator(iterator(*x));
 
 
 //
@@ -60,6 +60,8 @@ overload #size((..'t)) = countValues(..'t);
 // sequence-related predicates and properties
 //
 
+#SourceSequence?('S) = callDefined?(source, 'S);
+#SinkSequence?('S) = callDefined?(sink, 'S);
 #Sequence?('S) = callDefined?(iterator, 'S);
 
 #sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
@@ -68,5 +70,6 @@ overload #size((..'t)) = countValues(..'t);
 
 #SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
 
-#ReversibleSequence?('S) = callDefined?(reverseIterator, 'S);
+#ReversibleSequence?('S) = ReversibleIterator?(sequenceIteratorType('S));
 
+overload iterator(s:'S) | SourceSequence?('S) = SourceIterator(source(s));
