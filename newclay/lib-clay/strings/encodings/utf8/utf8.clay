@@ -1,7 +1,13 @@
-import containers.(push, pop, pushFront, popFront, Pushable?, FrontPushable?);
+import containers.(push, Pusher, Pushable?);
 import strings.encodings.(stringTypeEncoding, stringBytes, EncodedString?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
 import strings.(String?);
+import values.(mapValues);
+
+
+//
+// UTF8Decoder
+//
 
 symbol UTF8Decoder['I] = NewType('I);
 overload UTF8Decoder(forward x:'I) inline
@@ -53,19 +59,6 @@ private decodeFour(c, d, e, f) {
         return REPLACEMENT_CHAR;
 }
 
-private encodeTwo(code)
-    = bitor(0xC0_u8, UInt8(bitshr(bitand(code, 0x7C0u), 6))),
-      bitor(0x80_u8, UInt8(       bitand(code,  0x3Fu)    ));
-private encodeThree(code)
-    = bitor(0xE0_u8, UInt8(bitshr(bitand(code, 0xF000u), 12))),
-      bitor(0x80_u8, UInt8(bitshr(bitand(code,  0xFC0u),  6))),
-      bitor(0x80_u8, UInt8(       bitand(code,   0x3Fu)     ));
-private encodeFour(code)
-    = bitor(0xF0_u8, UInt8(bitshr(bitand(code, 0x1C0000u), 18))),
-      bitor(0x80_u8, UInt8(bitshr(bitand(code,  0x3F000u), 12))),
-      bitor(0x80_u8, UInt8(bitshr(bitand(code,    0xFC0u),  6))),
-      bitor(0x80_u8, UInt8(       bitand(code,     0x3Fu)     ));
-
 private utf8maybe(forward x, forward then) inline = forward maybe(x, then, [REPLACEMENT_CHAR]);
 
 overload read(ref i:UTF8Decoder['I])
@@ -89,6 +82,54 @@ overload read(ref i:UTF8Decoder['I])
         ) else REPLACEMENT_CHAR)
     ]);
 
+overload #Reliable?(UTF8Decoder['I]) = Reliable?('I);
+
+
+//
+// UTF8Encoder
+//
+
+symbol UTF8Encoder['I] = NewType('I);
+overload UTF8Encoder(forward x:'I) inline
+    | Sink?('I, UInt8)
+    = UTF8Encoder['I](x);
+
+private encodeTwo(code)
+    = bitor(0xC0_u8, UInt8(bitshr(bitand(code, 0x7C0u), 6))),
+      bitor(0x80_u8, UInt8(       bitand(code,  0x3Fu)    ));
+private encodeThree(code)
+    = bitor(0xE0_u8, UInt8(bitshr(bitand(code, 0xF000u), 12))),
+      bitor(0x80_u8, UInt8(bitshr(bitand(code,  0xFC0u),  6))),
+      bitor(0x80_u8, UInt8(       bitand(code,   0x3Fu)     ));
+private encodeFour(code)
+    = bitor(0xF0_u8, UInt8(bitshr(bitand(code, 0x1C0000u), 18))),
+      bitor(0x80_u8, UInt8(bitshr(bitand(code,  0x3F000u), 12))),
+      bitor(0x80_u8, UInt8(bitshr(bitand(code,    0xFC0u),  6))),
+      bitor(0x80_u8, UInt8(       bitand(code,     0x3Fu)     ));
+
+overload hasFront?(s:UTF8Encoder['I]) = hasFront?(*s);
+overload write(ref s:UTF8Encoder['I], c:Char) {
+    var code = UInt(c);
+    if (code > UInt(MAX_CODE_POINT))
+        code = UInt(REPLACEMENT_CHAR);
+
+    if (code < 0x80u)
+        write(*s, UInt8(c));
+    else if (code < 0x800u)
+        mapValues([b -> write(*s, b);], ..encodeTwo(code));
+    else if (code < 0x10000u)
+        mapValues([b -> write(*s, b);], ..encodeThree(code));
+    else
+        mapValues([b -> write(*s, b);], ..encodeFour(code));
+}
+
+overload #Reliable?(UTF8Encoder['I]) = Reliable?('I);
+
+
+//
+// UTF8 sequence
+//
+
 symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
     | Sequence?('S) and sequenceElementType('S) == UInt8
@@ -96,24 +137,11 @@ overload UTF8(forward s:'S) inline
 
 overload source(s:UTF8['S]) inline = UTF8Decoder(iterator(*s));
 overload source(s:UTF8['S]) inline | SourceSequence?('S) = UTF8Decoder(source(*s));
-
-// XXX replace "push" overloads with Pusher and UTF8Encoder sinks
-//overload sink(s:UTF8['S]) inline = UTF8Encoder(iterator(*s));
-//overload sink(s:UTF8['S]) inline | SinkSequence?('S) = UTF8Encoder(sink(*s));
+overload sink(s:UTF8['S]) inline | SinkSequence?('S) = UTF8Encoder(sink(*s));
 
 overload push(ref s:UTF8['S], c:Char) | Pushable?('S) {
-    var code = UInt(c);
-    if (code > UInt(MAX_CODE_POINT))
-        code = UInt(REPLACEMENT_CHAR);
-
-    if (code < 0x80u)
-        push(*s, UInt8(c));
-    else if (code < 0x800u)
-        push(*s, ..encodeTwo(code));
-    else if (code < 0x10000u)
-        push(*s, ..encodeThree(code));
-    else
-        push(*s, ..encodeFour(code));
+    var utf8Pusher = UTF8Encoder(Pusher(*s));
+    write(utf8Pusher, c);
 }
 overload push(ref s:UTF8['S], s2:'S2) | String?('S2) {
     for (c in s2)
