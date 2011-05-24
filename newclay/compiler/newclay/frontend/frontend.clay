@@ -273,28 +273,31 @@ compileProgramWithOptions(options:FrontendOptions) {
 
     var sourceOnly? = just(options.outputMode) == C_SOURCE_MODE;
     var sourceFileName = uninitializedUnsafe(String);
-    var sourceFile = uninitializedUnsafe(RawFile);
 
-    if (sourceOnly?) {
-        sourceFileName <-- just(options.outputFile);
-        sourceFile <-- RawFile(sourceFileName, CREATE);
-    } else {
-        sourceFileName, sourceFile <-- ...temporarySourceFile();
-    }
+    {
+        var sourceFile = uninitializedUnsafe(RawFile);
 
-    try {
-        codegenStandaloneProgramTo(CodegenConfig(just(options.cDialect)), sourceFile);
-    } catch (e:ClayError) {
-        if (just(options.interactorOnError?)) {
-            displayError(e);
-            println();
-            flush(stdout);
+        if (sourceOnly?) {
+            sourceFileName <-- just(options.outputFile);
+            sourceFile <-- RawFile(sourceFileName, CREATE);
+        } else {
+            sourceFileName, sourceFile <-- ...temporarySourceFile();
+        }
 
-            var interactor = Interactor(getProgram());
-            interactLoop(interactor);
-            return;
-        } else
-            throw e;
+        try {
+            codegenStandaloneProgramTo(CodegenConfig(just(options.cDialect)), sourceFile);
+        } catch (e:ClayError) {
+            if (just(options.interactorOnError?)) {
+                displayError(e);
+                println();
+                flush(stdout);
+
+                var interactor = Interactor(getProgram());
+                interactLoop(interactor);
+                return;
+            } else
+                throw e;
+        }
     }
 
     if (not sourceOnly?) {
