@@ -74,7 +74,7 @@ overload #recursiveTypes(Pointer['T]) = 'T;
 // OpaquePointer
 //
 
-symbol OpaquePointer = PrimitiveType(llPointerType[UInt8]);
+symbol OpaquePointer = PrimitiveType(llPointerType[]);
 
 
 
