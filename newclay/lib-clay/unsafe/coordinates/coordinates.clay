@@ -61,8 +61,9 @@ overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
 // coordinate type predicates
 //
 
-#Coordinate?('C) = callDefined?(dereference, 'C) and callDefined?(inc, Ref['C]);
-#coordinateTargetType('C) | Coordinate?('C) = type([dereference(arg('C))]);
+#Coordinate?('C, ..'T) = Coordinate?('C) and (..coordinateValueType('C)) == (..'T);
+overload #Coordinate?('C) = callDefined?(dereference, 'C) and callDefined?(inc, Ref['C]);
+#coordinateValueType('C) = ..type([..dereference(arg('C))]);
 
 #CoordinateSequence?('S) = callDefined?(begin, 'S) and callDefined?(end, 'S);
 #sequenceCoordinateType('S) | CoordinateSequence?('S) = type([begin(arg('S))]);
@@ -145,7 +146,7 @@ overload back(x:'S) | CoordinateSequence?('S) {
 
 #compatibleCoordinateTypes?('C, 'D)
     = Coordinate?('C) and Coordinate?('D)
-      and coordinateTargetType('C) == coordinateTargetType('D);
+      and coordinateValueType('C) == coordinateValueType('D);
 
 eachInRange(begin:'C, end:'C, fn) | Coordinate?('C) {
     var i = begin;

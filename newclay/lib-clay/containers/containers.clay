@@ -58,16 +58,18 @@ overload push(ref c:'C, forward ..elements:'TT) inline
 symbol Pusher['S] = NewType(Pointer['S]);
 overload Pusher(ref s:'S) | Pushable?('S) = Pusher['S](&s);
 overload hasFront?(p:Pusher['S]) = true;
-overload write(ref p:Pusher['S], forward elt:'T)
+overload write1(ref p:Pusher['S], forward elt:'T)
     | 'T == sequenceElementType('S)
     { push((*p)^, elt); }
+overload #sinkValueType(Pusher['S]) = sequenceElementType('S);
 
 symbol FrontPusher['S] = NewType(Pointer['S]);
 overload FrontPusher(ref s:'S) | FrontPushable?('S) = FrontPusher['S](&s);
 overload hasFront?(p:FrontPusher['S]) = true;
-overload write(ref p:FrontPusher['S], forward elt:'T)
+overload write1(ref p:FrontPusher['S], forward elt:'T)
     | 'T == sequenceElementType('S)
     { pushFront((*p)^, elt); }
+overload #sinkValueType(FrontPusher['S]) = sequenceElementType('S);
 
 
 //
@@ -82,9 +84,10 @@ overload Inserter(ref s:'S, coord:'C)
     | Insertable?('S) and CoordinateSequence?('S) and sequenceCoordinateType('S) == 'C
     = Inserter['S](&s, UInt(coord - begin(s)));
 overload hasFront?(i:Inserter['S]) = true;
-overload write(ref i:Inserter['S], forward elt:'T)
+overload write1(ref i:Inserter['S], forward elt:'T)
     | 'T == sequenceElementType('S)
 {
     insert(i.sequence^, i.index, elt);
     inc(i.index);
 }
+overload #sinkValueType(Inserter['S]) = sequenceElementType('S);

@@ -1,7 +1,7 @@
 import unsafe.coordinates.(
     CoordinateRange, ContiguousCoordinate,
     CoordinateSequence?, Coordinate?, ContiguousSequence?,
-    coordinateTargetType, sequenceCoordinateType
+    coordinateValueType, sequenceCoordinateType
 );
 import show.*;
 
@@ -26,8 +26,8 @@ main() {
     show(#Coordinate?(ContiguousCoordinate[Int])); ////true
     show(#Coordinate?(Int)); ////false
 
-    show(#iteratorTargetType(CoordinateRange[ContiguousCoordinate[Int8]])); ////Int8
-    show(#coordinateTargetType(ContiguousCoordinate[Int16])); ////Int16
+    show(#iteratorValueType(CoordinateRange[ContiguousCoordinate[Int8]])); ////Int8
+    show(#coordinateValueType(ContiguousCoordinate[Int16])); ////Int16
     ////CoordinateRange[ContiguousCoordinate[Int]]
     show(#sequenceIteratorType(Array[Int, 4]));
     ////CoordinateRange[ContiguousCoordinate[Int]]

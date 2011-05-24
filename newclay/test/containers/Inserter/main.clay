@@ -6,10 +6,10 @@ main() {
     var xs = Vector[Int](-1, -1);
 
     var i = Inserter(xs, 1);
-    write(i, 1);
-    write(i, 11);
-    write(i, 21);
-    write(i, 1211);
+    write1(i, 1);
+    write1(i, 11);
+    write1(i, 21);
+    write1(i, 1211);
 
     for (x in xs)
         show(x);

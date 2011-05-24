@@ -11,7 +11,7 @@ import values.(mapValues);
 
 symbol UTF8Decoder['I] = NewType('I);
 overload UTF8Decoder(forward x:'I) inline
-    | Source?('I) and sourceTargetType('I) == UInt8
+    | Source?('I, UInt8)
     = UTF8Decoder['I](x);
 
 private validSequenceByte?(d) = bitand(d, 0xC0u) == 0x80u;
@@ -61,22 +61,22 @@ private decodeFour(c, d, e, f) {
 
 private utf8maybe(forward x, forward then) inline = forward maybe(x, then, [REPLACEMENT_CHAR]);
 
-overload read(ref i:UTF8Decoder['I]) {
+overload read1(ref i:UTF8Decoder['I]) {
     ref source = *i;
-    return maybe(read(source), [c ->
+    return maybe(read1(source), [c ->
         just(if (c < 0x80u)
             Char(c)
         else if (c >= 0xC0u) (
             if (c < 0xE0u)
-                utf8maybe(read(source), [d -> decodeTwo(c, d)])
+                utf8maybe(read1(source), [d -> decodeTwo(c, d)])
             else if (c < 0xF0u)
-                utf8maybe(read(source), [d ->
-                    utf8maybe(read(source), [e -> decodeThree(c, d, e)])
+                utf8maybe(read1(source), [d ->
+                    utf8maybe(read1(source), [e -> decodeThree(c, d, e)])
                 ])
             else if (c < 0xF8u)
-                utf8maybe(read(source), [d ->
-                    utf8maybe(read(source), [e ->
-                        utf8maybe(read(source), [f -> decodeFour(c, d, e, f)])
+                utf8maybe(read1(source), [d ->
+                    utf8maybe(read1(source), [e ->
+                        utf8maybe(read1(source), [f -> decodeFour(c, d, e, f)])
                     ])
                 ])
             else REPLACEMENT_CHAR
@@ -110,22 +110,23 @@ private encodeFour(code)
       bitor(0x80_u8, UInt8(       bitand(code,     0x3Fu)     ));
 
 overload hasFront?(s:UTF8Encoder['I]) = hasFront?(*s);
-overload write(ref s:UTF8Encoder['I], c:Char) {
+overload write1(ref s:UTF8Encoder['I], c:Char) {
     ref sink = *s;
     var code = UInt(c);
     if (code > UInt(MAX_CODE_POINT))
         code = UInt(REPLACEMENT_CHAR);
 
     if (code < 0x80u)
-        write(sink, UInt8(c));
+        write1(sink, UInt8(c));
     else if (code < 0x800u)
-        mapValues([b -> write(sink, b);], ..encodeTwo(code));
+        mapValues([b -> write1(sink, b);], ..encodeTwo(code));
     else if (code < 0x10000u)
-        mapValues([b -> write(sink, b);], ..encodeThree(code));
+        mapValues([b -> write1(sink, b);], ..encodeThree(code));
     else
-        mapValues([b -> write(sink, b);], ..encodeFour(code));
+        mapValues([b -> write1(sink, b);], ..encodeFour(code));
 }
 
+overload #sinkValueType(UTF8Encoder['I]) = Char;
 overload #Reliable?(UTF8Encoder['I]) = Reliable?('I);
 
 
@@ -144,7 +145,7 @@ overload sink(s:UTF8['S]) inline | SinkSequence?('S) = UTF8Encoder(sink(*s));
 
 overload push(ref s:UTF8['S], c:Char) | Pushable?('S) {
     var utf8Pusher = UTF8Encoder(Pusher(*s));
-    write(utf8Pusher, c);
+    write1(utf8Pusher, c);
 }
 overload push(ref s:UTF8['S], s2:'S2) | String?('S2) {
     for (c in s2)

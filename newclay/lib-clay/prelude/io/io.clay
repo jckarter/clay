@@ -1,5 +1,6 @@
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(POD?);
+import values.(allValues?);
 
 
 //
@@ -7,10 +8,12 @@ import unsafe.valuesemantics.(POD?);
 //
 
 symbol source;
-symbol read;
+symbol read1;
 
-#Source?('S) = callDefined?(read, Ref['S]);
-#sourceTargetType('S) = type([required(read(arg(Ref['S])))]);
+#Source?('S, ..'E) = Source?('S) and (..sourceValueType('S)) == (..'E);
+overload #Source?('S) = callDefined?(read1, Ref['S]);
+#sourceValueType('S) = ..type([..required(read1(arg(Ref['S])))]);
+
 
 
 //
@@ -19,9 +22,14 @@ symbol read;
 
 symbol sink;
 symbol hasFront?;
-symbol write;
+symbol write1;
 
-#Sink?('S, 'E) = callDefined?(hasFront?, 'S) and callDefined?(write, Ref['S], 'E);
+symbol sinkValueType;
+
+#Sink?('S, ..'E) = Sink?('S) and (..sinkValueType('S)) == (..'E);
+overload #Sink?('S) = callDefined?(hasFront?, 'S)
+    and staticCallDefined?(sinkValueType, 'S)
+    and callDefined?(write1, Ref['S], ..sinkValueType('S));
 
 
 //
@@ -40,13 +48,15 @@ symbol iterator;
 symbol front;
 symbol incFront;
 
-#Iterator?('I) = callDefined?(hasFront?, 'I)
+#Iterator?('I, ..'T) = Iterator?('I) and (..iteratorValueType('I)) == (..'T);
+overload #Iterator?('I) = callDefined?(hasFront?, 'I)
     and callDefined?(front, 'I)
     and callDefined?(incFront, Ref['I]);
 
-#MutableIterator?('I) = Iterator?('I) and Ref?(type([forward front(arg('I))]));
+#MutableIterator?('I)
+    = Iterator?('I) and allValues?(Ref?, ..type([forward ..front(arg('I))]));
 
-#iteratorTargetType('I) | Iterator?('I) = type([front(arg('I))]);
+#iteratorValueType('I) | Iterator?('I) = ..type([..front(arg('I))]);
 
 
 //
@@ -55,17 +65,17 @@ symbol incFront;
 // inherently savable
 //
 
-symbol SourceIterator['S] = RecordType(source:'S, value:Maybe[sourceTargetType('S)]);
+symbol SourceIterator['S] = RecordType(source:'S, value:Maybe[sourceValueType('S)]);
 
 overload SourceIterator(forward x:'S) --> returned:SourceIterator['S] | Source?('S) {
     returned.source <-- x;
-    returned.value <-- read(returned.source);
+    returned.value <-- read1(returned.source);
 }
 
 overload hasFront?(i:SourceIterator['S]) inline = just?(i.value);
 overload front(i:SourceIterator['S]) inline = const required(i.value);
 overload incFront(ref i:SourceIterator['S]) inline {
-    i.value = read(i.source);
+    i.value = read1(i.source);
 }
 
 overload #Reliable?(SourceIterator['S]) = Reliable?('S);
@@ -95,14 +105,14 @@ overload sink(forward x:'S) inline | Sink?('S) = forward x;
 // iterator as source
 //
 
-overload read(ref i:'I) inline --> returned:Maybe[iteratorTargetType('I)]
+overload read1(ref i:'I) inline --> returned:Maybe[iteratorValueType('I)]
     | Iterator?('I)
 {
     if (hasFront?(i)) {
         returned <-- just(front(i));
         incFront(i);
     } else
-        returned <-- nothing(#iteratorTargetType('I));
+        returned <-- nothing(#iteratorValueType('I));
 }
 
 
@@ -110,11 +120,13 @@ overload read(ref i:'I) inline --> returned:Maybe[iteratorTargetType('I)]
 // mutable iterator as sink
 //
 
-overload write(ref i:'I, forward v:'E) inline
-    | MutableIterator?('I) and 'E == iteratorTargetType('I)
+overload #sinkValueType('I) | MutableIterator?('I) = ..iteratorValueType('I);
+
+overload write1(ref i:'I, forward ..v:'E) inline
+    | MutableIterator?('I) and (..'E) == (..iteratorValueType('I))
 {
     assert([hasFront?(i)]);
-    front(i) = v;
+    ..front(i) = ..v;
     incFront(i);
 }
 
@@ -197,38 +209,13 @@ symbol seekBack;
 
 
 //
-// bulk source operations
-// sources may implement readTo more efficiently
+// buffered iterator/sink/source
 //
 
-readTo(dest:ContiguousCoordinate['T], source:'S, count:UInt) : UInt
-    | Source?('S) and POD?('T) and sourceTargetType('S) == 'T
-{
-    var p = dest, i = count;
-    while (i > 0u and maybe(read(dest), [x -> p^ = x; true], [false])) {
-        dec(i);
-        inc(p);
-    }
-    return UInt(p - dest);
-}
+symbol flush;
 
-
-//
-// bulk sink operations
-// sinks may implement writeFrom more efficiently
-//
+#Buffered?('I) = callDefined?(flush, 'I);
 
-writeFrom(src:ContiguousCoordinate['T], sink:'S, count:UInt) : UInt
-    | Sink?('S, 'T) and POD?('T)
-{
-    var p = src, i = count;
-    while (i > 0u and hasFront?(sink)) {
-        write(sink, p^);
-        dec(i);
-        inc(p);
-    }
-    return UInt(p - src);
-}
 
 
 //
