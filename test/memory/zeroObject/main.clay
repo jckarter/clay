@@ -1,0 +1,7 @@
+record Foo(x:Int, y:Int);
+
+main() {
+    var foo = Foo(1111, 2222);
+    zeroObject(foo);
+    println(foo);
+}

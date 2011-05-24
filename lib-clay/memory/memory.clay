@@ -243,6 +243,7 @@ zeroMemory(begin:Pointer[T], end:Pointer[T]) {
     fillMemory(begin, end, T(0));
 }
 
+zeroObject(o) { zeroMemory(Pointer[UInt8](&o), Pointer[UInt8](&o + 1)); }
 
 
 //
