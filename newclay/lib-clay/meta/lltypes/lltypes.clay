@@ -10,7 +10,7 @@ symbol llUnsigned;
 symbol llBoolType;
 symbol llIntegerType['Signed, 'Bits];
 symbol llFloatType['Bits];
-symbol llPointerType['T];
+symbol llPointerType[..'T];
 symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
 symbol llArrayType['T, 'n];
 symbol llTupleType[..'T];
@@ -24,7 +24,7 @@ overload #llIntegerType?(llIntegerType['S, 'B]) = true;
 overload #llFloatType?(llFloatType['B]) = true;
 
 #llPointerType?('L) = false;
-overload #llPointerType?(llPointerType['T]) = true;
+overload #llPointerType?(llPointerType[..'T]) = true;
 
 #llCodePointerType?('L) = false;
 overload #llCodePointerType?(llCodePointerType['A,'V,'I,'O]) = true;
@@ -55,7 +55,7 @@ symbol llTypeSize;
 overload #llTypeSize(llBoolType) = 1u;
 overload #llTypeSize(llIntegerType['S, 'Bits]) = 'Bits div 8u;
 overload #llTypeSize(llFloatType['Bits]) = 'Bits div 8u;
-overload #llTypeSize(llPointerType['T]) = PointerSize();
+overload #llTypeSize(llPointerType[..'T]) = PointerSize();
 overload #llTypeSize(llCodePointerType[..'x]) = PointerSize();
 overload #llTypeSize(llArrayType['T, 'n]) = typeSize('T) * UInt('n);
 overload #llTypeSize(llTupleType[..'T]) = llTupleSize(..llMemberTypes(..'T));
@@ -86,7 +86,7 @@ symbol llTypeAlign;
 overload #llTypeAlign(llBoolType) = 1u;
 overload #llTypeAlign(llIntegerType['S, 'Bits]) = min('Bits div 8u, maxIntegerAlign());
 overload #llTypeAlign(llFloatType['Bits]) = min('Bits div 8u, maxFloatAlign());
-overload #llTypeAlign(llPointerType['T]) = PointerSize();
+overload #llTypeAlign(llPointerType[..'T]) = PointerSize();
 overload #llTypeAlign(llCodePointerType[..'x]) = PointerSize();
 overload #llTypeAlign(llArrayType['T, 'n]) = typeAlign('T);
 overload #llTypeAlign(llTupleType[..'T])
