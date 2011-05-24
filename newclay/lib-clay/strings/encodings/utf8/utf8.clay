@@ -61,26 +61,28 @@ private decodeFour(c, d, e, f) {
 
 private utf8maybe(forward x, forward then) inline = forward maybe(x, then, [REPLACEMENT_CHAR]);
 
-overload read(ref i:UTF8Decoder['I])
-    = maybe(read(*i), [c ->
+overload read(ref i:UTF8Decoder['I]) {
+    ref source = *i;
+    return maybe(read(source), [c ->
         just(if (c < 0x80u)
             Char(c)
         else if (c >= 0xC0u) (
             if (c < 0xE0u)
-                utf8maybe(read(*i), [d -> decodeTwo(c, d)])
+                utf8maybe(read(source), [d -> decodeTwo(c, d)])
             else if (c < 0xF0u)
-                utf8maybe(read(*i), [d ->
-                    utf8maybe(read(*i), [e -> decodeThree(c, d, e)])
+                utf8maybe(read(source), [d ->
+                    utf8maybe(read(source), [e -> decodeThree(c, d, e)])
                 ])
             else if (c < 0xF8u)
-                utf8maybe(read(*i), [d ->
-                    utf8maybe(read(*i), [e ->
-                        utf8maybe(read(*i), [f -> decodeFour(c, d, e, f)])
+                utf8maybe(read(source), [d ->
+                    utf8maybe(read(source), [e ->
+                        utf8maybe(read(source), [f -> decodeFour(c, d, e, f)])
                     ])
                 ])
             else REPLACEMENT_CHAR
         ) else REPLACEMENT_CHAR)
     ]);
+}
 
 overload #Reliable?(UTF8Decoder['I]) = Reliable?('I);
 
@@ -109,18 +111,19 @@ private encodeFour(code)
 
 overload hasFront?(s:UTF8Encoder['I]) = hasFront?(*s);
 overload write(ref s:UTF8Encoder['I], c:Char) {
+    ref sink = *s;
     var code = UInt(c);
     if (code > UInt(MAX_CODE_POINT))
         code = UInt(REPLACEMENT_CHAR);
 
     if (code < 0x80u)
-        write(*s, UInt8(c));
+        write(sink, UInt8(c));
     else if (code < 0x800u)
-        mapValues([b -> write(*s, b);], ..encodeTwo(code));
+        mapValues([b -> write(sink, b);], ..encodeTwo(code));
     else if (code < 0x10000u)
-        mapValues([b -> write(*s, b);], ..encodeThree(code));
+        mapValues([b -> write(sink, b);], ..encodeThree(code));
     else
-        mapValues([b -> write(*s, b);], ..encodeFour(code));
+        mapValues([b -> write(sink, b);], ..encodeFour(code));
 }
 
 overload #Reliable?(UTF8Encoder['I]) = Reliable?('I);
