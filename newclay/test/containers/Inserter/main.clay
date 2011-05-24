@@ -1,0 +1,16 @@
+import containers.(Inserter);
+import show.(show);
+import vectors.(Vector);
+
+main() {
+    var xs = Vector[Int](-1, -1);
+
+    var i = Inserter(xs, 1);
+    write(i, 1);
+    write(i, 11);
+    write(i, 21);
+    write(i, 1211);
+
+    for (x in xs)
+        show(x);
+}

@@ -1,0 +1,16 @@
+import containers.(Pusher);
+import show.(show);
+import vectors.(Vector);
+
+main() {
+    var xs = Vector[Int]();
+
+    var p = Pusher(xs);
+    write(p, 1);
+    write(p, 11);
+    write(p, 21);
+    write(p, 1211);
+
+    for (x in xs)
+        show(x);
+}
