@@ -1,0 +1,19 @@
+import containers.(Pusher);
+import show.(show);
+import strings.(String);
+import strings.encodings.lineendings.(WindowsLineEndingEncoder);
+
+main() {
+    var s = String();
+    var enc = WindowsLineEndingEncoder(Pusher(s));
+    write(enc, '1');
+    write(enc, '\r');
+    write(enc, '2');
+    write(enc, '\n');
+    write(enc, '3');
+    write(enc, '\r');
+    write(enc, '\n');
+
+    for (c in s)
+        show(c);
+}
