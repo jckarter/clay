@@ -787,12 +787,15 @@ private getFloatTypeName(c, llTypeValue) {
 
 private getPointerTypeName(c, llTypeValue) {
     ref params = llTypeParams(llTypeValue);
-    if (size(params) != 1)
-        genericError("low-level pointer type ", llTypeValue, " must have one symbol parameter");
+    if (size(params) > 1)
+        genericError("low-level pointer type ", llTypeValue, " must have zero or one symbol parameters");
 
-    var targetTypeName = typedefName(c, params[0]);
-
-    return printString(targetTypeName, " *"), String("");
+    if (size(params) == 0)
+        return String("void *"), String("");
+    else {
+        var targetTypeName = typedefName(c, params[0]);
+        return printString(targetTypeName, " *"), String("");
+    }
 }
 
 private getCodePointerTypeName(c, llTypeValue) {
