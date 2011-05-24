@@ -1,3 +1,4 @@
+import unsafe.coordinates.(CoordinateSequence?, sequenceCoordinateType, begin);
 import values.(countValues, allValues?);
 
 #Container?('T) = false;
@@ -49,3 +50,41 @@ overload push(ref c:'C, forward ..elements:'TT) inline
         push(c, e);
 }
 
+
+//
+// pusher sink
+//
+
+symbol Pusher['S] = NewType(Pointer['S]);
+overload Pusher(ref s:'S) | Pushable?('S) = Pusher['S](&s);
+overload hasFront?(p:Pusher['S]) = true;
+overload write(ref p:Pusher['S], forward elt:'T)
+    | 'T == sequenceElementType('S)
+    { push((*p)^, elt); }
+
+symbol FrontPusher['S] = NewType(Pointer['S]);
+overload FrontPusher(ref s:'S) | FrontPushable?('S) = FrontPusher['S](&s);
+overload hasFront?(p:FrontPusher['S]) = true;
+overload write(ref p:FrontPusher['S], forward elt:'T)
+    | 'T == sequenceElementType('S)
+    { pushFront((*p)^, elt); }
+
+
+//
+// inserter sink
+//
+
+symbol Inserter['S] = RecordType(sequence:Pointer['S], index:UInt);
+overload Inserter(ref s:'S, index:'I)
+    | Insertable?('S) and Integer?('I)
+    = Inserter['S](&s, UInt(index));
+overload Inserter(ref s:'S, coord:'C)
+    | Insertable?('S) and CoordinateSequence?('S) and sequenceCoordinateType('S) == 'C
+    = Inserter['S](&s, UInt(coord - begin(s)));
+overload hasFront?(i:Inserter['S]) = true;
+overload write(ref i:Inserter['S], forward elt:'T)
+    | 'T == sequenceElementType('S)
+{
+    insert(i.sequence^, i.index, elt);
+    inc(i.index);
+}
