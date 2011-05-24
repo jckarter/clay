@@ -1,0 +1,10 @@
+import ctypes.*;
+import libc.stdio.*;
+import strings.encodings.(stringBytes);
+import unsafe.coordinates.(begin);
+
+main() {
+    var s = "hello world\n";
+    var sbytes = stringBytes(s);
+    fwrite(OpaquePointer(begin(sbytes)), 1u, size(sbytes), stdout());
+}
