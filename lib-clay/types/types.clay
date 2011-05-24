@@ -130,3 +130,11 @@ alias ULONG_MAX = UINT64_MAX;
 alias SIZET_MAX = UPTRINT_MAX;
 alias SSIZET_MIN = PTRINT_MIN;
 alias SSIZET_MAX = PTRINT_MAX;
+
+
+//
+// valueSize()
+//
+
+[T] callbyname valueSize(x:T) = TypeSize(T);
+
