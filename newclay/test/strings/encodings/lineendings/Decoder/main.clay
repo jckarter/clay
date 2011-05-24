@@ -1,0 +1,8 @@
+import show.(show);
+import strings.encodings.lineendings.(WindowsLineEndingDecoder);
+
+main() {
+    var s = "1\r\n2\r3\n4\r\r\n\r\n5\r";
+    for (c in WindowsLineEndingDecoder(s))
+        show(c);
+}
