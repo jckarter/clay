@@ -40,14 +40,13 @@ symbol iterator;
 symbol front;
 symbol incFront;
 
-//XXX front should not require a Ref['I]
 #Iterator?('I) = callDefined?(hasFront?, 'I)
-    and callDefined?(front, Ref['I])
+    and callDefined?(front, 'I)
     and callDefined?(incFront, Ref['I]);
 
-#MutableIterator?('I) = Iterator?('I) and Ref?(type([forward front(arg(Ref['I]))]));
+#MutableIterator?('I) = Iterator?('I) and Ref?(type([forward front(arg('I))]));
 
-#iteratorTargetType('I) | Iterator?('I) = type([front(arg(Ref['I]))]);
+#iteratorTargetType('I) | Iterator?('I) = type([front(arg('I))]);
 
 
 //
