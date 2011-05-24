@@ -6,10 +6,10 @@ main() {
     var xs = Vector[Int]();
 
     var p = Pusher(xs);
-    write(p, 1);
-    write(p, 11);
-    write(p, 21);
-    write(p, 1211);
+    write1(p, 1);
+    write1(p, 11);
+    write1(p, 21);
+    write1(p, 1211);
 
     for (x in xs)
         show(x);
