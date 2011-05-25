@@ -65,7 +65,12 @@ overload #size((..'t)) = countValues(..'t);
 #Sequence?('S) = callDefined?(iterator, 'S);
 
 #sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
-#sequenceElementType('S) | Sequence?('S)
+#sequenceSourceType('S) | SourceSequence?('S) = type([source(arg('S))]);
+#sequenceSinkType('S) | SinkSequence?('S) = type([sink(arg('S))]);
+
+#sequenceElementType('S) | SinkSequence?('S)
+    = ..sinkValueType(sequenceSinkType('S));
+overload #sequenceElementType('S) | Sequence?('S)
     = ..iteratorValueType(sequenceIteratorType('S));
 
 #SizedSequence?('S) = Sequence?('S) and callDefined?(size, 'S);
