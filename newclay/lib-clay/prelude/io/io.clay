@@ -240,3 +240,4 @@ symbol flush;
 //
 
 empty?(x) | defined?([hasFront?(x)]) = not hasFront?(x);
+

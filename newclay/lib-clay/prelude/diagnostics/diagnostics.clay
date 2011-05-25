@@ -4,7 +4,8 @@ public import __primitives__.(
     staticAssert,
     commandlineVariable,
 );
-import libc.(abort, puts, printf);
+import libc.(abort);
+import libc.stdio.(puts, printf);
 import ctypes.(CUInt, CString);
 import meta.lambdas.(lambdaString, lambdaLocation);
 
