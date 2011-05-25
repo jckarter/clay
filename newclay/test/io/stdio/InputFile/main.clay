@@ -1,0 +1,7 @@
+import io.stdio.(InputFile);
+import show.(show);
+
+main() {
+    for (b in InputFile("foo.txt"))
+        show(b);
+}

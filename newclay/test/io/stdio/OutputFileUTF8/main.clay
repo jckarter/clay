@@ -1,0 +1,15 @@
+import io.stdio.(InputFile, OutputFile);
+import show.(show);
+import strings.encodings.utf8.(UTF8);
+
+main() {
+    {
+        var file = UTF8(OutputFile("temp"));
+        var s = sink(file);
+
+        write1(s, 'x');
+        write1(s, 'ф');
+    }
+    for (c in UTF8(InputFile("temp")))
+        show(c);
+}

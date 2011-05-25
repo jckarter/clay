@@ -1,0 +1,11 @@
+import io.stdio.(InputFile);
+import show.(show);
+import strings.encodings.utf8.(UTF8);
+
+main() {
+    for (c in UTF8(InputFile("foo.txt")))
+        show(c);
+    show("--");
+    for (c in UTF8(InputFile("фу.txt")))
+        show(c);
+}
