@@ -20,25 +20,26 @@ putc(c:CInt, stream:FILE) inline --> returned:CInt
 getc(stream:FILE) inline --> returned:CInt
     __c__ """$returned = getc($stream);""";
 
-fopen(name:CString, mode:CString) --> returned:FILE
+fopen(name:CString, mode:CString) inline --> returned:Maybe[FILE]
     __c__ """$returned = fopen($name, $mode);""";
-fclose(stream:FILE) --> returned:CInt
+fclose(stream:FILE) inline --> returned:CInt
     __c__ """$returned = fclose($stream);""";
-fread(ptr:OpaquePointer, size:CSizeT, nitems:CSizeT, stream:FILE) --> returned:CSizeT
+fread(ptr:OpaquePointer, size:CSizeT, nitems:CSizeT, stream:FILE) inline --> returned:CSizeT
     __c__ """$returned = fread($ptr, $size, $nitems, $stream);""";
-fwrite(ptr:OpaquePointer, size:CSizeT, nitems:CSizeT, stream:FILE) --> returned:CSizeT
+fwrite(ptr:OpaquePointer, size:CSizeT, nitems:CSizeT, stream:FILE) inline --> returned:CSizeT
     __c__ """$returned = fwrite($ptr, $size, $nitems, $stream);""";
-fseek(stream:FILE, offset:CLong, whence:CInt) --> returned:CInt
+fseek(stream:FILE, offset:CLong, whence:CInt) inline --> returned:CInt
     __c__ """$returned = fseek($stream, $offset, $whence);""";
-ftell(stream:FILE) --> returned:CLong
+ftell(stream:FILE) inline --> returned:CLong
     __c__ """$returned = ftell($stream);""";
-feof(stream:FILE) --> returned:CInt
+feof(stream:FILE) inline --> returned:CInt
     __c__ """$returned = feof($stream);""";
-ferror(stream:FILE) --> returned:CInt
+ferror(stream:FILE) inline --> returned:CInt
     __c__ """$returned = ferror($stream);""";
-fflush(stream:FILE) --> returned:CInt
+fflush(stream:FILE) inline --> returned:CInt
     __c__ """$returned = fflush($stream);""";
 
 const SEEK_SET = CInt(0);
 const SEEK_CUR = CInt(1);
 const SEEK_END = CInt(2);
+
