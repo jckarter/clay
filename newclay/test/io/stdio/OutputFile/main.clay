@@ -1,0 +1,14 @@
+import io.stdio.(InputFile, OutputFile);
+import show.(show);
+
+main() {
+    {
+        var file = OutputFile("temp");
+        var s = sink(file);
+
+        write1(s,   0_u8);
+        write1(s, 255_u8);
+    }
+    for (b in InputFile("temp"))
+        show(b);
+}
