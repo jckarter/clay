@@ -1,0 +1,67 @@
+public import newclay.common.*;
+public import newclay.core.*;
+public import newclay.codegen.c.*;
+public import newclay.interactor.*;
+public import newclay.loader.*;
+public import newclay.platforms.*;
+public import maybe.*;
+public import io.paths.*;
+public import io.files.raw.*;
+public import libc.(exit, atexit, _unlink);
+public import win32.(CreateProcessA, WaitForSingleObject, GetExitCodeProcess, CloseHandle, GetTempFileNameA, LPSECURITY_ATTRIBUTES, STARTUPINFO, PROCESS_INFORMATION);
+
+execArgv(argv) {
+    var cmdline = join(" ", argv);
+
+    var si = STARTUPINFO();
+    var pi = PROCESS_INFORMATION();
+
+    zeroObject(si);
+    si.cb = valueSize(si);
+    zeroObject(pi);
+
+    var ret = CreateProcessA(
+        Pointer[CChar](0),
+        Pointer[CChar](cstring(cmdline)),
+        LPSECURITY_ATTRIBUTES(0),
+        LPSECURITY_ATTRIBUTES(0),
+        0,
+        CULong(0),
+        RawPointer(0),
+        Pointer[CChar](0),
+        &si,
+        &pi);
+
+    if(ret == 0) {
+        genericError("failed to execute gcc");
+        return;
+    }
+
+    WaitForSingleObject(pi.hProcess, CULong(0xFFFFFFFFu32));
+
+    var code = CULong(0);
+    GetExitCodeProcess(pi.hProcess, &code);
+    if (code != 0)
+        genericError("gcc process exited abnormally with code ", code);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+}
+
+var _temporarySourceName = String();
+
+_deleteTemporarySourceFile() {
+    _unlink(cstring(_temporarySourceName));
+}
+
+temporarySourceFile() {
+    resize(_temporarySourceName, 200);
+    var ret = GetTempFileNameA(Pointer[CChar](cstring(".")),
+                           Pointer[CChar](cstring("clay")),
+                           UInt(0),
+                           Pointer[CChar](cstring(_temporarySourceName)));
+    if (ret == 0)
+        genericError("unable to create temporary file");
+    resize(_temporarySourceName, find(_temporarySourceName, '\0') - begin(_temporarySourceName));
+    atexit(makeCCodePointer(_deleteTemporarySourceFile));
+    return _temporarySourceName, RawFile(_temporarySourceName, CREATE);
+}

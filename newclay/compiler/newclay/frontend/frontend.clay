@@ -1,15 +1,4 @@
-import newclay.common.*;
-import newclay.core.*;
-import newclay.codegen.c.*;
-import newclay.interactor.*;
-import newclay.loader.*;
-import newclay.platforms.*;
-import maybe.*;
-import io.paths.*;
-import io.files.raw.*;
-import libc.(exit, atexit);
-// XXX windows
-import unix.(fork, execvp, waitpid, mkstemp, unlink, WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS);
+import newclay.frontend.platform.*;
 
 // XXX replace hostTargetInfo() hardcodes with configurable target
 
@@ -249,21 +238,6 @@ usage() {
 // compiler invocation
 //
 
-private var _temporarySourceName = String();
-
-private _deleteTemporarySourceFile() {
-    unlink(cstring(_temporarySourceName));
-}
-
-private temporarySourceFile() {
-    _temporarySourceName = String("claysource.XXXXXX");
-    var fd = mkstemp(cstring(_temporarySourceName));
-    if (fd < 0)
-        genericError("unable to create temporary file");
-    atexit(makeCCodePointer(_deleteTemporarySourceFile));
-    return _temporarySourceName, RawFile(fd, true);
-}
-
 compileProgramWithOptions(options:FrontendOptions) {
     if (just(options.outputMode) == INTERACTOR_MODE) {
         var interactor = Interactor(getProgram());
@@ -345,27 +319,7 @@ private invokeGCC(options, sourceFileName) {
     push(argv, sourceFileName);
     observe(argv);
 
-    var cargv = map(cstring, argv);
-    push(cargv, null(CChar));
-
-    var pid = fork();
-    if (pid == 0) {
-        execvp(cstring(argv[0]), begin(cargv));
-        // XXX include strerror
-        genericError("failed to execute gcc");
-    } else if (pid < 0)
-        // XXX include strerror
-        genericError("failed to fork to execute gcc");
-
-    var statLoc = 0;
-    var r = waitpid(pid, &statLoc, 0);
-    if (r < 0)
-        // XXX include strerror
-        genericError("failed to get status of gcc process");
-    if (WIFSIGNALED(statLoc))
-        genericError("gcc process exited abnormally with signal ", WTERMSIG(statLoc));
-    if (WIFEXITED(statLoc) and WEXITSTATUS(statLoc) != 0)
-        genericError("gcc process exited with code ", WEXITSTATUS(statLoc));
+    execArgv(argv);
 }
 
 private invokeMSVC(options, sourceFileName) {

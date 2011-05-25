@@ -1,0 +1,51 @@
+public import newclay.common.*;
+public import newclay.core.*;
+public import newclay.codegen.c.*;
+public import newclay.interactor.*;
+public import newclay.loader.*;
+public import newclay.platforms.*;
+public import maybe.*;
+public import io.paths.*;
+public import io.files.raw.*;
+public import libc.(exit, atexit);
+public import unix.(fork, execvp, waitpid, mkstemp, unlink, WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS);
+
+
+execArgv(argv) {
+    var cargv = map(cstring, argv);
+    push(cargv, null(CChar));
+
+    var pid = fork();
+    if (pid == 0) {
+        execvp(cstring(argv[0]), begin(cargv));
+        // XXX include strerror
+        genericError("failed to execute gcc");
+    } else if (pid < 0)
+        // XXX include strerror
+        genericError("failed to fork to execute gcc");
+
+    var statLoc = 0;
+    var r = waitpid(pid, &statLoc, 0);
+    if (r < 0)
+        // XXX include strerror
+        genericError("failed to get status of gcc process");
+    if (WIFSIGNALED(statLoc))
+        genericError("gcc process exited abnormally with signal ", WTERMSIG(statLoc));
+    if (WIFEXITED(statLoc) and WEXITSTATUS(statLoc) != 0)
+        genericError("gcc process exited with code ", WEXITSTATUS(statLoc));
+}
+
+var _temporarySourceName = String();
+
+_deleteTemporarySourceFile() {
+    unlink(cstring(_temporarySourceName));
+}
+
+temporarySourceFile() {
+    _temporarySourceName = String("claysource.XXXXXX");
+    var fd = mkstemp(cstring(_temporarySourceName));
+    if (fd < 0)
+        genericError("unable to create temporary file");
+    atexit(makeCCodePointer(_deleteTemporarySourceFile));
+    return _temporarySourceName, RawFile(fd, true);
+}
