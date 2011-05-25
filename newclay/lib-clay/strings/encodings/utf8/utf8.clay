@@ -136,10 +136,10 @@ overload #Reliable?(UTF8Encoder['I]) = Reliable?('I);
 
 symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
-    | Sequence?('S) and sequenceElementType('S) == UInt8
+    | (Sequence?('S) or SinkSequence?('S)) and sequenceElementType('S) == UInt8
     = UTF8['S](s);
 
-overload source(s:UTF8['S]) inline = UTF8Decoder(iterator(*s));
+overload source(s:UTF8['S]) inline | Sequence?('S) = UTF8Decoder(iterator(*s));
 overload source(s:UTF8['S]) inline | SourceSequence?('S) = UTF8Decoder(source(*s));
 overload sink(s:UTF8['S]) inline | SinkSequence?('S) = UTF8Encoder(sink(*s));
 
