@@ -1,0 +1,10 @@
+// XXX to avoid dealing with crazy errno macro magic, we just
+// #include <errno.h> and grab errno directly
+
+import ctypes.*;
+
+__c__ """#include <errno.h>""";
+
+errno() inline --> returned:CInt
+    __c__ """$returned = errno;""";
+
