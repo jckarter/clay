@@ -1,7 +1,7 @@
 import meta.statics.(staticName, staticStringConcat);
 
 // dumb simple library for displaying values for debugging purposes
-import libc.(puts as c_puts, printf as c_printf);
+import libc.stdio.(puts as c_puts, printf as c_printf);
 import ctypes.(CString);
 
 puts(s:StringConstant) { c_puts(CString(s)); }

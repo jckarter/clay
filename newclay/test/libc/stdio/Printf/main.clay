@@ -1,4 +1,4 @@
-import libc.(printf);
+import libc.stdio.(printf);
 import ctypes.(CString);
 
 main() {
