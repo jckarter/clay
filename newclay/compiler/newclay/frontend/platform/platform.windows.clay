@@ -10,7 +10,7 @@ public import io.files.raw.*;
 public import libc.(exit, atexit, _unlink);
 public import win32.(CreateProcessA, WaitForSingleObject, GetExitCodeProcess, CloseHandle, GetTempFileNameA, LPSECURITY_ATTRIBUTES, STARTUPINFO, PROCESS_INFORMATION);
 
-execGCC(argv) {
+execArgv(argv) {
     var cmdline = join(" ", argv);
 
     var si = STARTUPINFO();

@@ -11,7 +11,7 @@ public import libc.(exit, atexit);
 public import unix.(fork, execvp, waitpid, mkstemp, unlink, WIFSIGNALED, WIFEXITED, WTERMSIG, WEXITSTATUS);
 
 
-execGCC(argv) {
+execArgv(argv) {
     var cargv = map(cstring, argv);
     push(cargv, null(CChar));
 
