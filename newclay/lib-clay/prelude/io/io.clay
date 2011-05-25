@@ -1,5 +1,5 @@
 import unsafe.coordinates.(ContiguousCoordinate);
-import unsafe.valuesemantics.(POD?);
+import unsafe.valuesemantics.(POD?, destroy);
 import values.(allValues?);
 
 
@@ -69,7 +69,12 @@ symbol SourceIterator['S] = RecordType(source:'S, value:Maybe[sourceValueType('S
 
 overload SourceIterator(forward x:'S) --> returned:SourceIterator['S] | Source?('S) {
     returned.source <-- x;
-    returned.value <-- read1(returned.source);
+    try {
+        returned.value <-- read1(returned.source);
+    } catch (ex) {
+        destroy(returned.source);
+        throw ex;
+    }
 }
 
 overload hasFront?(i:SourceIterator['S]) inline = just?(i.value);
