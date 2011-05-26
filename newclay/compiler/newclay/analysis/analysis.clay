@@ -2193,7 +2193,7 @@ addSpecializedCall(
 }
 
 private verifyInitializable(s, ast, input, output) {
-    if (not podType?(input.type)) {
+    if (not podType?(input.type) and not localVariable?(input)) {
         analyzeCall(subContext(s, Vector[ir.Node]()), ast,
             getHooks().initializeFrom,
             RTValues(output, input)
