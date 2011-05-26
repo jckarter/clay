@@ -18,7 +18,7 @@ overload #ValidShared?(Shared['T, 'O])
 symbol Shared['T, 'Order];
 overload #llType(Shared['T, 'Order]) = llType('T);
 
-//overload #BitwiseMoved?(Shared['T, 'Order]) = false;
+overload #BitwiseMoved?(Shared['T, 'Order]) = false;
 overload #DestroyDoesNothing?(Shared['T, 'Order]) = DestroyDoesNothing?('T);
 
 overload Shared(forward v:'T) --> returned:Shared['T, FullOrder]
