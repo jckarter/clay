@@ -241,3 +241,31 @@ symbol flush;
 
 empty?(x) | defined?([hasFront?(x)]) = not hasFront?(x);
 
+
+//
+// bulk-readable source
+//
+
+symbol readN;
+
+#BulkReadableSource?('S) = Source?('S)
+    and POD?(sourceValueType('S))
+    and callDefined?(readN, Ref['S], ContiguousCoordinate[sourceValueType('S)], UInt);
+
+// size to use for read loops etc.
+idealReadSize(s:'S) | BulkReadableSource?('S) = 4096u;
+
+
+//
+// bulk-writable sink
+//
+
+symbol writeN;
+
+#BulkWritableSink?('S) = Sink?('S)
+    and POD?(sinkValueType('S))
+    and callDefined?(writeN, Ref['S], ContiguousCoordinate[sinkValueType('S)], UInt);
+
+// size to use for write loops etc.
+idealWriteSize(s:'S) | BulkWritableSink?('S) = 4096u;
+
