@@ -67,6 +67,16 @@ assocValue?
 true
 true
 false
+filterValues all
+"one"
+"two"
+"three"
+filterValues some
+"two"
+"four"
+"five"
+filterValues none
+filterValues empty input
 exceptValue
 1
 2
