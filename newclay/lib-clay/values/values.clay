@@ -27,6 +27,12 @@ overload inValues?(x, forward ..ys) inline {
     return false;
 }
 
+symbol filterValues;
+overload #filterValues('f) = ;
+overload #filterValues('f, 'x, ..'xs) = ..filterValues('f, ..'xs);
+overload #filterValues('f, 'x, ..'xs) | 'f('x)
+    = 'x, ..filterValues('f, ..'xs);
+
 symbol countValues;
 overload #countValues(..'xs) = staticCountValues(..'xs);
 overload countValues(..xs:'T) inline = *#staticCountValues(..'T);
