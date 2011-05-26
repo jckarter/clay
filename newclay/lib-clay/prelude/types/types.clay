@@ -4,6 +4,7 @@ import meta.symbols.*;
 import values.*;
 import meta.lltypes.*;
 import unsafe.coordinates.(ContiguousCoordinate);
+import unsafe.valuesemantics.(Copyable?, Movable?, Assignable?, MoveAssignable?);
 
 public import __primitives__.(
     returns?,
@@ -170,3 +171,10 @@ overload #typeAlign('T)
     | type?('T) and WithAlignment?('T)
     = max(UInt(symbolTagBody('T, WithAlignment)), llTypeAlign(llType('T)));
 
+
+//
+// regular type
+//
+
+#Regular?('T) = Copyable?('T) and Movable?('T)
+    and Assignable?('T) and MoveAssignable?('T);
