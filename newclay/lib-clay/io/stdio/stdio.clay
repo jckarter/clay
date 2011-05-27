@@ -4,6 +4,7 @@ import libc.errno as errno;
 import meta.symbols.(symbolWithTag?);
 import strings.(String?);
 import unsafe.compositetypes.(CompositeType, initializeRecord);
+import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(destroy);
 
 // XXX handle EINTR
@@ -90,6 +91,15 @@ overload read1(s:InputFileSource) {
         return just(UInt8(c));
 }
 
+overload readN(s:InputFileSource, data:ContiguousCoordinate[UInt8], count:UInt) {
+    var actualCount = UInt(stdio.fread(OpaquePointer(data), CSizeT(1), CSizeT(count), *s));
+    if (actualCount != count and stdio.ferror(*s) != 0)
+        throw FileError();
+    return actualCount;
+}
+
+overload idealReadSize(s:InputFileSource) inline = stdio.BUFSIZ();
+
 
 //
 // OutputFile as sink
@@ -106,4 +116,11 @@ overload write1(s:OutputFileSink, byte:UInt8) inline {
 }
 overload #sinkValueType(OutputFileSink) = UInt8;
 
+overload writeN(s:OutputFileSink, data:ContiguousCoordinate[UInt8], count:UInt) {
+    var actualCount = UInt(stdio.fwrite(OpaquePointer(data), CSizeT(1), CSizeT(count), *s));
+    if (actualCount != count)
+        throw FileError();
+    return count;
+}
 
+overload idealWriteSize(s:OutputFileSink) inline = stdio.BUFSIZ();
