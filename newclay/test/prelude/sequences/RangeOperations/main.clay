@@ -1,6 +1,6 @@
 import unsafe.memory.*;
 import unsafe.coordinates.*;
-import sequences.*;
+import io.transformers.(Enumerated);
 import show.*;
 
 main() {
@@ -11,7 +11,7 @@ main() {
     var c = allocateUninitializedValues(SIZE, UInt);
 
     try {
-        for (i, ref x in enumerated(CoordinateRange(a, a+SIZE)))
+        for (i, ref x in Enumerated(CoordinateRange(a, a+SIZE)))
             x = i;
 
         copyRange(b, a, a + SIZE);

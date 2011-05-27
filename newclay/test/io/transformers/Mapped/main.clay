@@ -1,4 +1,4 @@
-import sequences.(Mapped);
+import io.transformers.(Mapped);
 import show.(show);
 
 named(x:Int) {

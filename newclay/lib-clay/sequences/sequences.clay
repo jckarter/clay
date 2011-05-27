@@ -1,13 +1,3 @@
-import values.*;
-import unsafe.coordinates.(
-    CoordinateRange,
-    CoordinateSequence?,
-    sequenceCoordinateType,
-    begin,
-    end
-);
-import unsafe.valuesemantics.(destroy);
-
 
 //
 // sequence comparison
@@ -40,164 +30,10 @@ lesserSequence?(x, y) inline {
 
 
 //
-// zipped
+// captureSequence: return an iterator over an lvalue sequence, or move an rvalue sequence
 //
 
-symbol Zipped[..'S] = NewType(Tuple[..'S]);
-overload Zipped(forward x:Tuple[..'S]) = Zipped[..'S](x);
-
-private symbol ZippedIterator[..'S] = NewType(Tuple[..'S]);
-overload ZippedIterator(forward x:Tuple[..'S]) = ZippedIterator[..'S](x);
-
-overload Zipped(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
-    = Zipped(captureValues(..seqs));
-
-overload iterator(s:Zipped[..'S]) = ZippedIterator((..mapValues(iterator, ..capturedRefs(*s))));
-
-overload hasFront?(s:ZippedIterator[..'S])
-    | allValues?(Iterator?, ..'S)
-    = allValues?(hasFront?, ..**s);
-overload front(s:ZippedIterator[..'S])
-    | allValues?(Iterator?, ..'S)
-    = forward ..mapValues(front, ..**s);
-overload incFront(ref s:ZippedIterator[..'S])
-    | allValues?(Iterator?, ..'S)
-    { mapValues(incFront, ..**s); }
-
-overload back(s:ZippedIterator[..'S])
-    | allValues?(ReversibleIterator?, ..'S)
-    = forward ..mapValues(back, ..**s);
-overload incBack(ref s:ZippedIterator[..'S])
-    | allValues?(ReversibleIterator?, ..'S)
-    { mapValues(incBack, ..**s); }
-
-overload size(s:ZippedIterator[..'S])
-    | allValues?(SizedIterator?, ..'S)
-    = min(..mapValues(size, ..**s));
-
-overload index(s:ZippedIterator[..'S], index)
-    | allValues?(IndexableIterator?, ..'S)
-    = forward ..mapValues([iter -> iter[index]], ..**s);
-
-overload seekFront(ref s:ZippedIterator[..'S], distance)
-    | allValues?(SeekableIterator?, ..'S)
-    { mapValues([ref iter -> seekFront(iter, distance);], ..**s); }
-overload seekBack(ref s:ZippedIterator[..'S], distance)
-    | allValues?(BackSeekableIterator?, ..'S)
-    { mapValues([ref iter -> seekBack(iter, distance);], ..**s); }
-
-overload #Savable?(ZippedIterator[..'S]) = allValues?(Savable?, ..'S);
-overload #Reliable?(ZippedIterator[..'S]) = allValues?(Reliable?, ..'S);
-
-enumerated(forward ..seqs:'S) | allValues?(Sequence?, ..'S)
-    = Zipped(Range(UInt(0), UInt(-1)), ..seqs);
-
-
-//
-// mapped
-//
-
-symbol Mapped['F, 'S] = RecordType(mapper:'F, sequence:'S);
-overload Mapped(forward f:'F, forward s:'S)
-    | Sequence?('S) and defined?([var i = iterator(s); ..f(..front(i))])
-    = Mapped['F, #type([captureValue(s)])](f, captureValue(s));
-
-private symbol MappedIterator['F, 'I] = RecordType(mapperp:Pointer['F], iterator:'I);
-overload MappedIterator(mapper:'F, forward iter:'I)
-    = MappedIterator['F, 'I](&mapper, iter);
-
-overload iterator(s:Mapped['F, 'I])
-    = MappedIterator(s.mapper, iterator(capturedRef(s.sequence)));
-
-overload hasFront?(i:MappedIterator['F,'I]) = hasFront?(i.iterator);
-overload front(i:MappedIterator['F,'I]) = forward ..i.mapperp^(..front(i.iterator));
-overload incFront(ref i:MappedIterator['F,'I]) { incFront(i.iterator); }
-
-overload back(i:MappedIterator['F,'I])
-    | ReversibleIterator?('I)
-    = forward ..i.mapperp^(..back(i.iterator));
-overload incBack(ref i:MappedIterator['F,'I])
-    | ReversibleIterator?('I)
-    { incBack(i.iterator); }
-
-overload size(i:MappedIterator['F, 'I])
-    | SizedIterator?('I)
-    = size(i.iterator);
-
-overload index(i:MappedIterator['F, 'I], index)
-    | IndexableIterator?('I)
-    = forward ..i.mapperp^(i.iterator[index]);
-
-overload seekFront(ref i:MappedIterator['F, 'I], distance)
-    | SeekableIterator?('I)
-    { seekFront(i.iterator, distance); }
-overload seekBack(ref i:MappedIterator['F, 'I], distance)
-    | BackSeekableIterator?('I)
-    { seekFront(i.iterator, distance); }
-
-overload #Savable?(MappedIterator['F, 'I]) = Savable?('I);
-// XXX determine where calling 'F throws and set Reliable? appropriately
-overload #Reliable?(MappedIterator['F, 'I]) = true;
-
-
-//
-// filtered
-//
-
-symbol Filtered['F, 'S] = RecordType(filterer:'F, sequence:'S);
-overload Filtered(forward f:'F, forward s:'S)
-    | Sequence?('S) and definedWithType?([var i = iterator(s); f(..front(i))], Bool)
-    = Filtered['F, #type([captureValue(s)])](f, captureValue(s));
-
-private symbol FilteredIterator['F, 'I] = RecordType(
-    filtererp:Pointer['F],
-    iterator:'I,
-);
-overload FilteredIterator(filterer:'F, forward iter:'I)
-{
-    var nextiter = iter;
-    while (hasFront?(nextiter) and not filterer(front(nextiter)))
-        incFront(nextiter);
-    return FilteredIterator['F, 'I](&filterer, move(nextiter));
-}
-
-overload iterator(s:Filtered['F, 'S])
-    = FilteredIterator(s.filterer, iterator(capturedRef(s.sequence)));
-
-overload hasFront?(i:FilteredIterator['F, 'I]) = hasFront?(i.iterator);
-overload front(i:FilteredIterator['F, 'I]) = forward front(i.iterator);
-overload incFront(ref i:FilteredIterator['F, 'I]) {
-    incFront(i.iterator);
-    while (hasFront?(i.iterator) and not i.filtererp^(front(i.iterator)))
-        incFront(i.iterator);
-}
-
-overload #Savable?(FilteredIterator['F, 'I]) = Savable?('I);
-// XXX determine where calling 'F throws and set Reliable? appropriately
-overload #Reliable?(FilteredIterator['F, 'I]) = true;
-
-
-//
-// sliced
-//
-
-symbol Sliced['S, 'C] = RecordType(sequence:'S, range:CoordinateRange['C]);
-overload Sliced(forward s:'S, forward from:'C, forward to:'C)
-    | CoordinateSequence?('S) and 'C == sequenceCoordinateType('S)
-    = Sliced[type([captureValue(s)]), 'C](captureValue(s), CoordinateRange(from, to));
-
-overload Sliced(forward s:'S, from:'I, to:'J)
-    --> returned:Sliced[type([captureValue(s)]), type([begin(s)])]
-    | CoordinateSequence?('S) and Integer?('I) and Integer?('J)
-{
-    returned.sequence <-- captureValue(s);
-    try {
-        var beg = begin(capturedRef(returned.sequence));
-        returned.range <-- CoordinateRange(beg + from, beg + to);
-    } catch (ex) {
-        destroy(returned.sequence);
-        throw ex;
-    }
-}
-
-overload iterator(s:Sliced['S, 'C]) = s.range;
+captureSequence(forward s:'S) inline | Sequence?('S) = forward iterator(s);
+overload captureSequence(forward s:'S) inline | Iterator?('S) = forward s;
+overload captureSequence(rvalue s:'S) inline | Sequence?('S) and not Source?('S)
+    = rvalue s;
