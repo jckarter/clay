@@ -85,9 +85,11 @@ overload source(file:InputFile) = InputFileSource(file._handle);
 
 overload read1(s:InputFileSource) {
     var c = stdio.getc(*s);
-    if (c == -1)
+    if (c == -1) {
+        if (stdio.ferror(*s) != 0)
+            throw FileError();
         return nothing(UInt8);
-    else
+    } else
         return just(UInt8(c));
 }
 
