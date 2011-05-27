@@ -1,4 +1,4 @@
-import sequences.(Zipped);
+import io.transformers.(Reversed, Zipped);
 import show.(show);
 import vectors.(Vector);
 

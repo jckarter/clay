@@ -115,7 +115,12 @@ overload read1(ref i:'I) inline --> returned:Maybe[iteratorValueType('I)]
 {
     if (hasFront?(i)) {
         returned <-- just(front(i));
-        incFront(i);
+        try {
+            incFront(i);
+        } catch (ex) {
+            destroy(returned);
+            throw ex;
+        }
     } else
         returned <-- nothing(#iteratorValueType('I));
 }
@@ -159,38 +164,6 @@ symbol incBack;
     and callDefined?(incBack, Ref['I]);
 
 hasBack?(x:'I) inline | ReversibleIterator?('I) = hasFront?(x);
-
-symbol ReversedIterator['I] = NewType('I);
-overload ReversedIterator(forward i:'I)
-    | ReversibleIterator?('I)
-    = ReversedIterator['I](i);
-
-overload hasFront?(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
-    = hasBack?(*x);
-overload front(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
-    = forward ..back(*x);
-overload incFront(ref x:ReversedIterator['I]) inline | ReversibleIterator?('I)
-    { incBack(*x); }
-
-overload back(x:ReversedIterator['I]) inline | ReversibleIterator?('I)
-    = forward ..front(*x);
-overload incBack(ref x:ReversedIterator['I]) inline | ReversibleIterator?('I)
-    { incFront(*x); }
-
-overload seekFront(ref x:ReversedIterator['I], distance) inline
-    | ReversibleIterator?('I) and BackSeekableIterator?('I)
-    { seekBack(*x, distance); }
-overload seekBack(ref x:ReversedIterator['I], distance) inline
-    | ReversibleIterator?('I) and SeekableIterator?('I)
-    { seekFront(*x, distance); }
-
-overload index(ref x:ReversedIterator['I], distance) inline
-    | ReversibleIterator?('I) and IndexableIterator?('I)
-    = forward ..index(*x, size(*x) - 1 - distance);
-
-overload size(x:ReversedIterator['I]) inline
-    | SizedIterator?('I)
-    = size(*x);
 
 
 //

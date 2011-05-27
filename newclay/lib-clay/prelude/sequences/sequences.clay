@@ -36,19 +36,6 @@ overload #Reliable?(Range['T]) = true;
 
 
 //
-// reversible sequences
-//
-
-symbol Reversed['S] = NewType('S);
-
-overload Reversed(forward x:'S) | ReversibleSequence?('S) = Reversed['S](x);
-
-overload iterator(x:Reversed['S])
-    | ReversibleSequence?('S)
-    = ReversedIterator(iterator(*x));
-
-
-//
 // static aggregate sizes
 //
 
@@ -77,4 +64,10 @@ overload #sequenceElementType('S) | Sequence?('S)
 
 #ReversibleSequence?('S) = ReversibleIterator?(sequenceIteratorType('S));
 
-overload iterator(s:'S) | SourceSequence?('S) = SourceIterator(source(s));
+
+//
+// get the iterator from a source sequence
+//
+
+overload iterator(s:'S) inline | SourceSequence?('S) = SourceIterator(source(s));
+

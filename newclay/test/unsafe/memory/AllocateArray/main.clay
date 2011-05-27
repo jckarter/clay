@@ -1,11 +1,11 @@
-import sequences.(enumerated);
+import io.transformers.(Enumerated);
 import show.(show);
 import unsafe.memory.(allocateArray, freeArray);
 import vectors.(Vector);
 
 main() {
     var pods = allocateArray(3, Int);
-    for (i, ref x in enumerated(pods))
+    for (i, ref x in Enumerated(pods))
         x = Int(i);
     for (x in pods)
         show(x);
