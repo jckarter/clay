@@ -1,0 +1,48 @@
+import typeclasses.*;
+import show.(show);
+
+symbol myEquals? = ClassProcedure();
+symbol myLesser? = ClassProcedure();
+
+symbol MyComparable? = Class(
+    (myEquals?, [#'I -> ('I, 'I), (Bool,)]),
+    (myLesser?, [#'I -> ('I, 'I), (Bool,)]),
+);
+
+symbol Foo = RecordType(foo:Int);
+
+private fooEquals?(x, y) = x.foo == y.foo;
+private fooLesser?(x, y) = x.foo <  y.foo;
+
+attribute Foo = Instance(MyComparable?, Foo,
+    (myEquals?, fooEquals?),
+    (myLesser?, fooLesser?),
+);
+
+attribute Int = Instance(MyComparable?, Int,
+    (myEquals?, equals?),
+    (myLesser?, lesser?),
+);
+
+symbol Bar = RecordType(bar:Int);
+// overloads outside of WithInstance don't fulfill the class
+overload myEquals?(x:Bar, y:Bar) = x.bar == y.bar;
+overload myLesser?(x:Bar, y:Bar) = x.bar <  y.bar;
+
+main() {
+    show(#MyComparable?(Foo)); ////true
+    show(#MyComparable?(Bar)); ////false
+    show(#MyComparable?(Int)); ////true
+
+    show(myEquals?(Foo(1), Foo(1))); ////true
+    show(myEquals?(Foo(1), Foo(2))); ////false
+
+    show(myLesser?(Foo(1), Foo(1))); ////false
+    show(myLesser?(Foo(1), Foo(2))); ////true
+
+    show(myEquals?(1, 1)); ////true
+    show(myEquals?(1, 2)); ////false
+
+    show(myLesser?(1, 1)); ////false
+    show(myLesser?(1, 2)); ////true
+}
