@@ -1,0 +1,127 @@
+import meta.lambdas.*;
+import meta.statics.*;
+import meta.symbols.*;
+import values.*;
+
+
+//
+// Class
+//
+
+private #validClassPairs?(..'x) = false;
+overload #validClassPairs?() = true;
+overload #validClassPairs?(('sym, 'lambda), ..'more)
+    = symbol?('sym)
+      and (symbol?('lambda) or staticLambda?('lambda))
+      and validClassPairs?(..'more);
+
+#Class(..'x) = staticError("Class() must be given a set of symbol/lambda pairs\n");
+overload #Class(..'pairs) | validClassPairs?(..'pairs) = (Class, ..'pairs);
+
+#Class?('sym) = symbolWithTag?('sym, Class);
+
+overload #'C?('T) | Class?('C?) = inValues?('C?, ..instances('T));
+
+
+//
+// instances
+//
+
+private #validateImplementation('fn, 'implementationLambda, (..'Inputs), (..'Outputs))
+    = if (not defined?('implementationLambda))
+        staticStringConcat(
+            "  ", staticName('fn), " not defined for ", staticName((..'Inputs)), "\n"
+        )
+    else
+        validateOutputs('fn, (..'Inputs), (..type('implementationLambda)), (..'Outputs));
+overload #validateImplementation('fn, 'errorMsg)
+    | staticString?('errorMsg)
+    = 'errorMsg;
+
+private #validateOutputs('fn, (..'Inputs), (..'Actual), (..'Expected))
+    = if (not validOutputs?((..'Actual), (..'Expected)))
+        staticStringConcat(
+            "  ", staticName('fn), staticName((..'Inputs)),
+            " should return ", staticName((..'Expected)),
+            " but returns ", staticName((..'Actual)),
+            "\n"
+        )
+    else
+        true;
+
+private #validOutputs?((), ()) = true;
+overload #validOutputs?(('Expected, ..'Expecteds), ('Actual, ..'Actuals))
+    = validOutput?('Expected, 'Actual) and validOutputs?((..'Expecteds), (..'Actuals));
+
+private #validOutput?('X, 'Y) = false;
+overload #validOutput?('T, 'T) = true;
+overload #validOutput?('T, Ref['T])    = true;
+overload #validOutput?('T, Rvalue['T]) = true;
+overload #validOutput?('T, Const['T])  = true;
+overload #validOutput?(Rvalue['T], 'T) = true;
+
+private symbol assocValueOrErrorMessage;
+overload #assocValueOrErrorMessage('key)
+    = staticObserve(staticStringConcat("  no implementation for ", staticName('key), "\n"));
+overload #assocValueOrErrorMessage('key, 'kv, ..'kvs) = assocValue('key, ..'kvs);
+overload #assocValueOrErrorMessage('key, ('key, 'value), ..'kvs) = 'value;
+overload #assocValueOrErrorMessage('key, ('key, 'value), ..'kvs) = 'value;
+
+private #implTraits('fn, ..'x)
+    = staticStringConcat("  invalid class definition for ", staticName('fn), "\n");
+overload #implTraits('fn, 'implLambda, (..'Inputs), (..'Outputs))
+    = [forward ..'implLambda(..arg(..'Inputs))], (..'Inputs), (..'Outputs);
+overload #implTraits('fn, 'errorMsg, ..'etc) | staticString?('errorMsg)
+    = 'errorMsg;
+
+private #verifyInstance('C, 'I, ..'impl)
+    = verifyInstance2('C, 'I, ..mapValues(
+        [#('fn, 'signature) -> ('fn,
+            ..implTraits('fn, assocValueOrErrorMessage('fn, ..'impl), ..'signature('I))
+        )],
+        ..symbolTagBody('C, Class)
+    ));
+
+private #verifyInstance2('C, 'I, ..'implTraits)
+    = verifyInstance3('C, 'I,
+        ..mapValues([#(..'x) -> validateImplementation(..'x)], ..'implTraits)
+    );
+
+private #verifyInstance3('C, 'I, ..'trueOrError)
+    = if (allValues?([#'x -> 'x == true], ..'trueOrError))
+        true
+    else
+        staticError(staticName('I), " is not a valid instance of ", staticName('C), ":\n",
+            ..filterValues(staticString?, ..'trueOrError)
+        );
+
+#Instance('C, 'I, ..'impl)
+    = verifyInstance('C, 'I, ..'impl) and (Instance, 'C, ..'impl);
+
+#instances('T) = ..mapValues(getInstance, ..symbolAttributes('T));
+private #getInstance('x) = ;
+overload #getInstance((Instance, 'C, ..'impl)) = 'C;
+
+
+//
+// ClassProcedure
+//
+
+#ClassProcedure() = (ClassProcedure,);
+#ClassProcedure?('f) = symbolWithTag?('f, ClassProcedure);
+
+// XXX unique 'TT, fail if ambiguous implementations
+private #instanceImplementation('f, ..'TT)
+    = implementationFor('f,
+        ..mapValues(getImplementations, ..mapValues(symbolAttributes, ..'TT))
+    );
+private #getImplementations('x) = ;
+overload #getImplementations((Instance, 'C, ..'impl)) = ..'impl;
+
+private #implementationFor('f) = ;
+overload #implementationFor('f, 'x, ..'xs) = implementationFor('f, ..'xs);
+overload #implementationFor('f, ('f, 'l), ..'x) = 'l;
+
+overload 'f(forward ..x:'TT)
+    | ClassProcedure?('f) and countValues(..instanceImplementation('f, ..'TT)) == 1
+    = forward (var f = *#instanceImplementation('f, ..'TT); ..f(..x));
