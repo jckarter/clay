@@ -1,0 +1,22 @@
+import io.stdio.(InputFile);
+import show.(show);
+import unsafe.coordinates.(begin, CoordinateRange);
+
+main() {
+    var file = InputFile("foo.txt");
+    var buffer = Array[UInt8, 4]();
+    var count = 0u;
+
+    var s = source(file);
+
+    count = readN(s, begin(buffer), 4u);
+    show(count);
+    for (b in CoordinateRange(begin(buffer), begin(buffer) + count))
+        show(b);
+
+    show("--");
+    count = readN(s, begin(buffer), 4u);
+    show(count);
+    for (b in CoordinateRange(begin(buffer), begin(buffer) + count))
+        show(b);
+}

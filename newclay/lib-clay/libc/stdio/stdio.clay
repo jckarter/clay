@@ -15,6 +15,9 @@ stdout() inline --> returned:FILE
 stderr() inline --> returned:FILE
     __c__ """$returned = stderr;""";
 
+BUFSIZ() inline --> returned:UInt
+    __c__ """$returned = BUFSIZ;""";
+
 putc(c:CInt, stream:FILE) inline --> returned:CInt
     __c__ """$returned = putc($c, $stream);""";
 getc(stream:FILE) inline --> returned:CInt
@@ -49,4 +52,5 @@ overload printf(format:CString) inline --> returned:CInt
 const SEEK_SET = CInt(0);
 const SEEK_CUR = CInt(1);
 const SEEK_END = CInt(2);
+
 

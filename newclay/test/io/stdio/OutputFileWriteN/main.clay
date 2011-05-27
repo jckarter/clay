@@ -1,0 +1,29 @@
+import io.stdio.(InputFile, OutputFile);
+import show.(show);
+import unsafe.coordinates.(begin, CoordinateRange);
+
+main() {
+    {
+        var buffer1 = Array[UInt8, 4](0_u8, 1_u8, 2_u8, 3_u8);
+        var buffer2 = Array[UInt8, 4](4_u8, 5_u8, 6_u8, 7_u8);
+        var outfile = OutputFile("temp");
+        var s = sink(outfile);
+
+        show(writeN(s, begin(buffer1), 4u));
+        show(writeN(s, begin(buffer2), 4u));
+    }
+
+    show("--");
+
+    {
+        var buffer = Array[UInt8, 8]();
+        var infile = InputFile("temp");
+        var s = source(infile);
+
+        var count = readN(s, begin(buffer), 8u);
+        show(count);
+
+        for (b in CoordinateRange(begin(buffer), begin(buffer) + count))
+            show(b);
+    }
+}
