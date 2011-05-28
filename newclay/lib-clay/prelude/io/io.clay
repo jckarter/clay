@@ -1,6 +1,6 @@
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(POD?, destroy);
-import values.(allValues?);
+import values.(allValues?, countValues);
 
 
 //
@@ -11,7 +11,7 @@ symbol source;
 symbol read1;
 
 #Source?('S, ..'E) = Source?('S) and (..sourceValueType('S)) == (..'E);
-overload #Source?('S) = callDefined?(read1, Ref['S]);
+overload #Source?('S) = Regular?('S) and callDefined?(read1, Ref['S]);
 #sourceValueType('S) = ..type([..required(read1(arg(Ref['S])))]);
 
 
@@ -27,7 +27,8 @@ symbol write1;
 symbol sinkValueType;
 
 #Sink?('S, ..'E) = Sink?('S) and (..sinkValueType('S)) == (..'E);
-overload #Sink?('S) = callDefined?(hasFront?, 'S)
+overload #Sink?('S) = Regular?('S)
+    and callDefined?(hasFront?, 'S)
     and staticCallDefined?(sinkValueType, 'S)
     and callDefined?(write1, Ref['S], ..sinkValueType('S));
 
@@ -49,7 +50,8 @@ symbol front;
 symbol incFront;
 
 #Iterator?('I, ..'T) = Iterator?('I) and (..iteratorValueType('I)) == (..'T);
-overload #Iterator?('I) = callDefined?(hasFront?, 'I)
+overload #Iterator?('I) = Regular?('I)
+    and callDefined?(hasFront?, 'I)
     and callDefined?(front, 'I)
     and callDefined?(incFront, Ref['I]);
 
@@ -110,11 +112,11 @@ overload sink(forward x:'S) inline | Sink?('S) = forward x;
 // iterator as source
 //
 
-overload read1(ref i:'I) inline --> returned:Maybe[iteratorValueType('I)]
-    | Iterator?('I)
+overload read1(ref i:'I) inline --> returned:Maybe[..iteratorValueType('I)]
+    | Iterator?('I) and countValues(..iteratorValueType('I)) == 1 // XXX multi-value maybe
 {
     if (hasFront?(i)) {
-        returned <-- just(front(i));
+        returned <-- just(..front(i));
         try {
             incFront(i);
         } catch (ex) {
@@ -122,7 +124,7 @@ overload read1(ref i:'I) inline --> returned:Maybe[iteratorValueType('I)]
             throw ex;
         }
     } else
-        returned <-- nothing(#iteratorValueType('I));
+        returned <-- nothing(..#iteratorValueType('I));
 }
 
 
