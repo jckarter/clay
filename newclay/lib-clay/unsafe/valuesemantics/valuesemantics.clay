@@ -47,7 +47,7 @@ overload #BitwiseZeroInitialized?('T) | Char?('T) = true;
 
 #DefaultInitializable?('T) = callDefined?('T);
 #Copyable?('T) = callDefined?(copy, 'T);
-#Movable?('T) = callDefined?(move, 'T);
+#Movable?('T) = callDefined?(move, Ref['T]);
 #Assignable?('T) = callDefined?(assign, Ref['T], 'T);
 #MoveAssignable?('T) = callDefined?(assign, Ref['T], Rvalue['T]);
 #AssignableTypes?('T, 'U) = callDefined?(assign, Ref['T], 'U);
