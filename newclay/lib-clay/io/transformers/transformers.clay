@@ -15,8 +15,10 @@ import unsafe.valuesemantics.(destroy);
 //
 
 symbol Reversed['I] = NewType('I);
+private initializeReversed(forward seq:'S) = Reversed['S](seq);
+
 overload Reversed(forward seq:'S) inline | ReversibleSequence?('S)
-    = Reversed['S](seq);
+    = initializeReversed(captureSequence(seq));
 
 overload iterator(x:Reversed['S]) inline | Sequence?('S) and not Iterator?('S)
     = Reversed(iterator(*x));
@@ -170,8 +172,8 @@ symbol Filtered['F, 'I] = RecordType(
     underlying:'I,
 );
 
-private initializeFiltered(forward mapf:'F, forward underlying:'S) inline
-    = Filtered['F, 'S](mapf, underlying);
+private initializeFiltered(forward filterf:'F, forward underlying:'S) inline
+    = Filtered['F, 'S](filterf, underlying);
 
 overload Filtered(forward filterf:'F, forward seq:'S) inline
     | Sequence?('S) and not Iterator?('S)
@@ -185,9 +187,12 @@ overload Filtered(forward filterf:'F, forward iter:'I) inline
     return Filtered['F, 'I](filterf, move(iter2));
 }
 
-overload hasFront?(i:Filtered['F, 'I]) = hasFront?(i.underlying);
-overload front(i:Filtered['F, 'I]) = forward front(i.underlying);
-overload incFront(ref i:Filtered['F, 'I]) {
+overload iterator(s:Filtered['F, 'S]) inline | Sequence?('S) and not Iterator?('S)
+    = Filtered(s.filterf, iterator(s.underlying));
+
+overload hasFront?(i:Filtered['F, 'I]) | Iterator?('I) = hasFront?(i.underlying);
+overload front(i:Filtered['F, 'I]) | Iterator?('I) = forward front(i.underlying);
+overload incFront(ref i:Filtered['F, 'I]) | Iterator?('I) {
     incFront(i.underlying);
     while (hasFront?(i.underlying) and not i.filterf(front(i.underlying)))
         incFront(i.underlying);
@@ -199,24 +204,15 @@ overload #Reliable?(Filtered['F, 'I]) = Reliable?('I);
 
 
 //
-// sliced
-// XXX take/drop
+// slicedFrom
 //
 
-/*XXX
-overload Sliced(forward s:'S, from:'I, to:'J)
-    --> returned:Sliced[type([captureValue(s)]), type([begin(s)])]
-    | CoordinateSequence?('S) and Integer?('I) and Integer?('J)
-{
-    returned.sequence <-- captureValue(s);
-    try {
-        var beg = begin(capturedRef(returned.sequence));
-        returned.range <-- CoordinateRange(beg + from, beg + to);
-    } catch (ex) {
-        destroy(returned.sequence);
-        throw ex;
-    }
-}
+/*
+symbol SlicedFrom['S] = RecordType(seq:'S, from:UInt);
 
-overload iterator(s:Sliced['S, 'C]) = s.range;
+private initializeSlicedFrom(forward seq:'S, from:UInt) inline
+    | Sequence?('S) and not Source?('S)
+    = SlicedFrom['S](seq, from);
+
+private initializeSlicedFrom(forward
 */
