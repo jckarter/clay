@@ -62,7 +62,9 @@ overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
 //
 
 #Coordinate?('C, ..'T) = Coordinate?('C) and (..coordinateValueType('C)) == (..'T);
-overload #Coordinate?('C) = callDefined?(dereference, 'C) and callDefined?(inc, Ref['C]);
+overload #Coordinate?('C) = Regular?('C)
+    and callDefined?(dereference, 'C)
+    and callDefined?(inc, Ref['C]);
 #coordinateValueType('C) = ..type([..dereference(arg('C))]);
 
 #CoordinateSequence?('S) = callDefined?(begin, 'S) and callDefined?(end, 'S);
@@ -107,10 +109,10 @@ overload incBack(ref i:CoordinateRange['C]) inline
     | BidirectionalCoordinate?('C)
     { dec(i.end); }
 
-overload seekFront(i:CoordinateRange['C], distance:'I) inline
+overload seekFront(ref i:CoordinateRange['C], distance:'I) inline
     | RandomAccessCoordinate?('C)
     { i.begin += Int(distance); }
-overload seekBack(i:CoordinateRange['C], distance:'I) inline
+overload seekBack(ref i:CoordinateRange['C], distance:'I) inline
     | RandomAccessCoordinate?('C)
     { i.end -= Int(distance); }
 

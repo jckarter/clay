@@ -21,13 +21,13 @@ overload incBack(ref x:Range['T]) { x.end -= x.step; }
 
 overload seekFront(ref x:Range['T], distance:'I) inline
     | Integer?('I)
-    { x.begin += x.step * distance; }
+    { x.begin += x.step * 'T(distance); }
 overload seekBack(ref x:Range['T], distance:'I) inline
     | Integer?('I)
-    { x.end -= x.step * distance; }
+    { x.end -= x.step * 'T(distance); }
 overload index(x:Range['T], distance:'I) inline
     | Integer?('I)
-    = x.begin + x.step * distance;
+    = x.begin + x.step * 'T(distance);
 overload size(x:Range['T]) inline
     = UInt((x.end - x.begin) div x.step);
 
