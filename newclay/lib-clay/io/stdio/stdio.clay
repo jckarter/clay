@@ -54,7 +54,7 @@ private _seek(file:'F, distance, whence) inline {
         throw FileError();
 }
 
-overload seekFront(file:'F, distance:'I) | File?('F) and Integer?('I) {
+seekRelative(file:'F, distance:'I) | File?('F) and Integer?('I) {
     _seek(file, CLong(distance), stdio.SEEK_CUR);
 }
 
@@ -101,6 +101,7 @@ overload readN(s:InputFileSource, data:ContiguousCoordinate[UInt8], count:UInt) 
 }
 
 overload idealReadSize(s:InputFileSource) inline = stdio.BUFSIZ();
+
 
 
 //
