@@ -16,13 +16,13 @@ main() {
     show(cas(int, 42, 17)); ////true
     show(get(int)); ////17
 
-    show(#type([ref get(ptr)^])); ////Ref[Shared[Int, FullOrder]]
+    show(#type([ref get(ptr)^])); ////Ref[Shared[Int]]
     show(get(get(ptr)^)); ////17
 
-    show(#type([ref rec.foo])); ////Ref[Shared[Int, FullOrder]]
+    show(#type([ref rec.foo])); ////Ref[Shared[Int]]
 
-    ////Ref[Shared[Int, FullOrder]]
-    ////Ref[Shared[Int, FullOrder]]
+    ////Ref[Shared[Int]]
+    ////Ref[Shared[Int]]
     show(..#type([ref ..*rec]));
 
     show(get(rec.foo)); ////200
