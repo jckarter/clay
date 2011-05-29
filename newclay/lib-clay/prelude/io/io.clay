@@ -149,9 +149,19 @@ overload write1(ref i:'I, forward ..v:'E) inline
 
 symbol size;
 
-#SizedIterator?('I) = Iterator?('I) and definedWithType?([size(arg('I))], UInt);
+#Sized?('I) = definedWithType?([size(arg('I))], UInt);
+#SizedIterator?('I) = Iterator?('I) and Sized?('I);
+#SizedSource?('I) = Source?('I) and Sized?('I);
+#SizedSink?('I) = Sink?('I) and Sized?('I);
 
 overload hasFront?(i:'I) inline | defined?([size(i) > 0u]) = size(i) > 0u;
+
+#Infinite?('I) = false;
+#InfiniteIterator?('I) = Iterator?('I) and Infinite?('I);
+#InfiniteSource?('I) = Source?('I) and Infinite?('I);
+#InfiniteSink?('I) = Sink?('I) and Infinite?('I);
+
+overload size(x:'I) | Infinite?('I) = UInt(-1);
 
 
 //
@@ -175,9 +185,9 @@ hasBack?(x:'I) inline | ReversibleIterator?('I) = hasFront?(x);
 symbol seekFront;
 symbol seekBack;
 
-#SeekableSource?('I) = Source?('I)
+#SeekableSource?('I) = SizedSource?('I)
     and callDefined?(seekFront, Ref['I], UInt);
-#SeekableSink?('I) = Sink?('I)
+#SeekableSink?('I) = SizedSink?('I)
     and callDefined?(seekFront, Ref['I], UInt);
 #SeekableIterator?('I) = SizedIterator?('I)
     and callDefined?(seekFront, Ref['I], UInt);
