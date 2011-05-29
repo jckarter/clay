@@ -175,17 +175,21 @@ hasBack?(x:'I) inline | ReversibleIterator?('I) = hasFront?(x);
 symbol seekFront;
 symbol seekBack;
 
+#SeekableSource?('I) = Source?('I)
+    and callDefined?(seekFront, Ref['I], UInt);
+#SeekableSink?('I) = Sink?('I)
+    and callDefined?(seekFront, Ref['I], UInt);
 #SeekableIterator?('I) = SizedIterator?('I)
-    and callDefined?(seekFront, Ref['I], Int);
+    and callDefined?(seekFront, Ref['I], UInt);
 #BackSeekableIterator?('I) = SizedIterator?('I)
-    and callDefined?(seekBack, Ref['I], Int);
+    and callDefined?(seekBack, Ref['I], UInt);
 
 
 //
 // indexable iterator
 //
 
-#IndexableIterator?('I) = SizedIterator?('I) and callDefined?(index, 'I, Int);
+#IndexableIterator?('I) = SizedIterator?('I) and callDefined?(index, 'I, UInt);
 
 
 //

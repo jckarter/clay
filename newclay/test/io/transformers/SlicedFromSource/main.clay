@@ -1,0 +1,34 @@
+import io.transformers.(SlicedFrom);
+import show.(show);
+
+symbol FibonacciSource = RecordType(a:Int, b:Int, max:Int);
+overload FibonacciSource(max:Int) = FibonacciSource(0, 1, max);
+
+overload read1(ref s:FibonacciSource) {
+    var a, b = s.b, s.a + s.b;
+    s.a, s.b <-- a, b; // XXX multi assignment
+    if (s.a < s.max)
+        return just(s.a);
+    else
+        return nothing(Int);
+}
+
+main() {
+    for (n in FibonacciSource(10))
+        show(n);
+    show("--");
+    for (n in SlicedFrom(FibonacciSource(10), 0))
+        show(n);
+    show("--");
+    for (n in SlicedFrom(FibonacciSource(10), 1))
+        show(n);
+    show("--");
+    for (n in SlicedFrom(FibonacciSource(10), 5))
+        show(n);
+    show("--");
+    for (n in SlicedFrom(FibonacciSource(10), 6))
+        show(n);
+    show("--");
+    for (n in SlicedFrom(FibonacciSource(10), 7))
+        show(n);
+}
