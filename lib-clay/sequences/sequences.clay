@@ -95,10 +95,10 @@ overload add(forward x:T, forward a:A) = Vector[T](x) + a;
 interleave(seq:S, betweenFn, fn) {
     var i = iterator(seq);
     if (hasNext?(i)) {
-        fn(next(i));
+        fn(...next(i));
         while (hasNext?(i)) {
             betweenFn();
-            fn(next(i));
+            fn(...next(i));
         }
     }
 }
