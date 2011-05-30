@@ -1,0 +1,7 @@
+import __primitives__.*;
+
+foo() { }
+
+main() {
+    return makeExternalCodePointer(foo);
+}

@@ -23,6 +23,7 @@ variant Node = LiteralCodeBody
              | Not
              | AddressOf
              | AddressOfCode
+             | AddressOfExternalCode
              | If
              | While
              | Initialize
@@ -119,6 +120,12 @@ record AddressOfCode = referenceType(
     output: RTValue,
 );
 
+record AddressOfExternalCode = referenceType(
+    ast: ASTNode,
+    specialization: Specialization,
+    output: RTValue,
+);
+
 record While = referenceType(
     label: BreakTargetId,
     ast: ASTNode,
@@ -192,6 +199,7 @@ overload nodeOutputs(node:DereferenceCall) = callOutputs(node.outputs);
 overload nodeOutputs(node:Not) = RTValues(node.output);
 overload nodeOutputs(node:AddressOf) = RTValues(node.output);
 overload nodeOutputs(node:AddressOfCode) = RTValues(node.output);
+overload nodeOutputs(node:AddressOfExternalCode) = RTValues(node.output);
 overload nodeOutputs(node:Bind) = RTValues(node.output);
 // Initialize doesn't return its "output" because it isn't actually a new value
 

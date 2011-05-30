@@ -1,0 +1,14 @@
+import __primitives__.*;
+
+foo(x:Int) { return 1; }
+overload foo(y:Float64) { return 2; }
+overload foo() { }
+
+main() {
+    return makeExternalCodePointer(foo, CdeclABI, Int),
+        makeExternalCodePointer(foo, CdeclABI, Float64),
+        makeExternalCodePointer(foo, CdeclABI),
+        makeExternalCodePointer(foo, StdcallABI, Int),
+        makeExternalCodePointer(foo, StdcallABI, Float64),
+        makeExternalCodePointer(foo, StdcallABI);
+}

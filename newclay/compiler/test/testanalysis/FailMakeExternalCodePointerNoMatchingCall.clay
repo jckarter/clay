@@ -1,0 +1,7 @@
+import __primitives__.*;
+
+foo(x:Int) { }
+
+main() {
+    return makeExternalCodePointer(foo, CdeclABI, Float64);
+}

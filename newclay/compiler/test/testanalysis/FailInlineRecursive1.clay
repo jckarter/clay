@@ -1,0 +1,8 @@
+foo(x) inline { foo(x); return 1; }
+
+main() {
+    var x = 2;
+    var y = foo(x);
+
+    return x, y;
+}

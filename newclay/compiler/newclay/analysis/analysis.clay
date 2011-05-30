@@ -582,6 +582,12 @@ unifyCodePointerArgumentType(argType:Value, arg:RTValue) {
         and (expected.kind == RT_VALUE_CONST or expected.kind == arg.kind);
 }
 
+private typeToExternalRTArgument(arg) {
+    if (not validExternalArgumentType?(arg))
+        matchFailureError("external code pointers must have only by-value POD types as input types");
+    return refTypeToRTArgument(arg);
+}
+
 analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
     switch (primitive.kind) {
     case RTPRIM_makeCodePointer: {
@@ -601,6 +607,41 @@ analyzeRTPrimitive(s, ast, primitive:RTPrimitive, args:RTValues) {
         var resultType = codePointerType(inputTypes, outputTypes);
         var result = RTValue(RT_VALUE_RVALUE, resultType, LocalVariable());
         addSpecializedNode(s, ir.AddressOfCode(ir.ASTNode(ast), specialization, result));
+        return Maybe(RTValues(result));
+    }
+
+    case RTPRIM_makeExternalCodePointer: {
+        if (size(args) < 2)
+            matchFailureError("makeExternalCodePointer requires at least two arguments");
+        var callable = staticTypeValue(args[0].type);
+        var abi = staticTypeValue(args[1].type);
+
+        if (not abiValue?(abi))
+            matchFailureError("makeExternalCodePointer requires an ABI symbol as its second argument");
+
+        var inputTypes = ValueList(
+            mapped(x => staticTypeValue(x.type), slicedFrom(args, 2))
+        );
+
+        var callArgs = map(typeToExternalRTArgument, inputTypes);
+
+        var specialization = analyzeCallable(callable, callArgs);
+
+        var outputs = just(specialization.results, RTValues());
+        var nOutputs = size(outputs);
+        if (nOutputs > 1)
+            matchFailureError("makeExternalCodePointer target must return zero or one POD values");
+
+        var outputType = nothing(Value);
+        if (nOutputs == 1) {
+            if (not podType?(outputs[0].type))
+                matchFailureError("makeExternalCodePointer target must return a POD value");
+            outputType = Maybe(outputs[0].type);
+        }
+
+        var resultType = externalCodePointerType(abi, false, inputTypes, outputType);
+        var result = RTValue(RT_VALUE_RVALUE, resultType, LocalVariable());
+        addSpecializedNode(s, ir.AddressOfExternalCode(ir.ASTNode(ast), specialization, result));
         return Maybe(RTValues(result));
     }
 
