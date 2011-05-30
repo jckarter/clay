@@ -179,6 +179,19 @@ overload printNodeData(depth, node:ir.AddressOfCode) {
     printVar(node.output);
 }
 
+overload printNodeData(depth, node:ir.AddressOfExternalCode) {
+    print(LeafTypeName(node.ast), " ");
+    if (withIds)
+        print("specialization ", asPtr(node.specialization), " ");
+    println(
+        node.specialization.callable, ArgumentList(node.specialization.args)
+    );
+
+    printDepth(depth+1);
+    print("out ");
+    printVar(node.output);
+}
+
 overload printNodeData(depth, node:ir.Not) {
     println(LeafTypeName(node.ast));
 

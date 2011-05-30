@@ -257,6 +257,13 @@ overload coalescedNode(cmap:RTValueMap, node:ir.AddressOfCode)
         coalesced(cmap, node.output),
     );
 
+overload coalescedNode(cmap:RTValueMap, node:ir.AddressOfExternalCode)
+    = ir.AddressOfExternalCode(
+        node.ast,
+        node.specialization,
+        coalesced(cmap, node.output),
+    );
+
 overload coalescedNode(cmap:RTValueMap, node:ir.Initialize) {
     var cInput = coalesced(cmap, node.input);
     var cOutput = coalesced(cmap, node.output);

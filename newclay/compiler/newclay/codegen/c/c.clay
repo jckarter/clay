@@ -64,6 +64,16 @@ record CodegenConfig (
     dialect: CDialect,
 );
 
+record CodegenExternalEntryPointKey (
+    specialization:Specialization,
+    type:Value,
+);
+
+record CodegenExternalEntryPoint (
+    // extern?
+    name:String,
+);
+
 record CodegenContext (
     config: CodegenConfig,
     llTypes: HashMap[Value, CodegenLLType],
@@ -79,6 +89,8 @@ record CodegenContext (
     constantNames: NameAllocator,
     externals: HashMap[String, RTExternal],
     externalOrder: Vector[String],
+    externalEntryPoints: HashMap[CodegenExternalEntryPointKey, CodegenExternalEntryPoint],
+    externalEntryPointOrder: Vector[CodegenExternalEntryPointKey],
     globalNames: HashMap[RTGlobal, String],
 );
 
@@ -118,6 +130,13 @@ functionIdentifier(s:Specialization) {
 
 mangleFunction(s:Specialization) {
     return mangleGlobal(functionIdentifier(s));
+}
+
+mangleExternalEntryPoint(key:CodegenExternalEntryPointKey) {
+    return mangleGlobal(printString(
+        "external ", key.type, " ",
+        functionIdentifier(key.specialization)
+    ));
 }
 
 private getLLType(c:CodegenContext, llTypeValue:Value) {
@@ -185,6 +204,24 @@ private getFunction(c:CodegenContext, s:Specialization) {
 }
 
 private functionName(c, s) = getFunction(c, s).mangledName;
+
+private addExternalEntryPoint(c:CodegenContext, key:CodegenExternalEntryPointKey) {
+    getFunction(c, key.specialization);
+    c.externalEntryPoints[key] = CodegenExternalEntryPoint(mangleExternalEntryPoint(key));
+    push(c.externalEntryPointOrder, key);
+    return ref c.externalEntryPoints[key];
+}
+
+private getExternalEntryPoint(c:CodegenContext, s:Specialization, type:Value) {
+    var key = CodegenExternalEntryPointKey(s, type);
+    var extp = lookup(c.externalEntryPoints, key);
+    if (null?(extp))
+        return ref addExternalEntryPoint(c, key);
+    else
+        return ref extp^;
+}
+
+private externalEntryPointName(c, s, abi) = getExternalEntryPoint(c, s, abi).name;
 
 // XXX need to differentiate components of variadic globals
 private globalIdentifier(g) {
@@ -458,6 +495,13 @@ overload codegenNode(c, bc, node:ir.AddressOf) {
 
 overload codegenNode(c, bc, node:ir.AddressOfCode) {
     printToIndented(bc, valueDeref(c, bc, node.output), " = &", functionName(c, node.specialization), ";\n");
+}
+
+overload codegenNode(c, bc, node:ir.AddressOfExternalCode) {
+    printToIndented(bc, valueDeref(c, bc, node.output), " = &",
+        externalEntryPointName(c, node.specialization, node.output.type),
+        ";\n"
+    );
 }
 
 private codegenCall(c, bc, name, node) {
@@ -1039,6 +1083,7 @@ printCodegenTo(stream, c:CodegenContext) {
     printConstantDefinitionsTo(stream, c);
     printExternalDeclarationsTo(stream, c);
     printFunctionForwardDeclarationsTo(stream, c);
+    printExternalEntryPointsTo(stream, c);
     printFunctionDefinitionsTo(stream, c);
 }
 
@@ -1131,6 +1176,12 @@ private printConstantDefinitionsTo(stream, c) {
 private printExternalDeclarationsTo(stream, c:CodegenContext) {
     for (symbolName in c.externalOrder)
         printExternalDeclarationTo(stream, c, c.externals[symbolName]);
+    printlnTo(stream);
+}
+
+private printExternalEntryPointsTo(stream, c:CodegenContext) {
+    for (externalKey in c.externalEntryPointOrder)
+        printExternalEntryPointTo(stream, c, externalKey);
     printlnTo(stream);
 }
 
@@ -1241,6 +1292,27 @@ private printPostFunctionTypeTo(stream, c, pointer?, abi, variadic?, inputTypes,
     printTo(stream, ")");
 }
 
+private printPostFunctionTypeWithNamesTo(stream, c, pointer?, abi, variadic?, inputTypes, inputNames, outputType) {
+    if (pointer?)
+        printTo(stream, ')');
+    printTo(stream, '(');
+
+    if (empty?(inputTypes))
+        printTo(stream, if (variadic?) "" else "void");
+    else {
+        interleave(zipped(inputTypes, inputNames),
+            () ref=> { printTo(stream, ", "); },
+            (inputType, inputName) ref=> {
+                printTo(stream, typedefName(c, inputType), " ", inputName);
+            },
+        );
+        if (variadic?)
+            printTo(stream, ", ...");
+    }
+
+    printTo(stream, ")");
+}
+
 private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
     ref attributes = externalAttributes(ex);
 
@@ -1261,6 +1333,42 @@ private printExternalDeclarationTo(stream, c:CodegenContext, ex:RTExternal) {
     printlnTo(stream, ";");
 }
 
+private printExternalEntryPointTo(stream, c:CodegenContext, key:CodegenExternalEntryPointKey) {
+    var name = externalEntryPointName(c, key.specialization, key.type);
+    var abi = externalCodePointerABI(key.type);
+    var variadic? = false;
+    var inputs = externalCodePointerInputTypes(key.type);
+    var output = externalCodePointerOutputType(key.type);
+
+    var inputNames = map((i, x) => printString("arg", i), enumerated(inputs));
+
+    printPreFunctionTypeTo(stream, c, false, abi, variadic?, inputs, output);
+    printTo(stream, name);
+    printPostFunctionTypeWithNamesTo(stream, c, false, abi, variadic?, inputs, inputNames, output);
+
+    printlnTo(stream, " {");
+
+    maybe(output,
+        outType ref=> {
+            printlnTo(stream, "  ", typedefName(c, outType), " returned;");
+            printTo(stream, "  ", functionName(c, key.specialization), "(");
+            for (inputName in inputNames)
+                printTo(stream, "&", inputName, ", ");
+            printlnTo(stream, "&returned);");
+            printlnTo(stream, "  return returned;");
+        },
+        () ref=> {
+            printTo(stream, "  ", functionName(c, key.specialization), "(");
+            interleave(inputNames,
+                () ref=> { printTo(stream, ", "); },
+                inputName ref=> { printTo(stream, "&", inputName); },
+            );
+            printlnTo(stream, ");");
+        },
+    );
+
+    printlnTo(stream, "}");
+}
 
 //
 // printGlobalLiteralCodeTo, printLiteralCodeTo
