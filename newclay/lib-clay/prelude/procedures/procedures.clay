@@ -1,6 +1,12 @@
-import __primitives__.(callDefinedForSymbol?, makeCodePointer, callCodePointer);
+import __primitives__.(
+    callDefinedForSymbol?,
+    makeCodePointer,
+    makeExternalCodePointer,
+    callCodePointer,
+);
 import meta.symbols.(symbolWithTag?, symbol?, private symbolBodyWithTag?);
-import values.(mapValues);
+import unsafe.valuesemantics.(POD?);
+import values.(allValues?, mapValues);
 
 public import __primitives__.(staticCallDefined?);
 
@@ -66,4 +72,9 @@ overload CodePointer[(..'I), (..'O)](#'f) inline
 overload call(c:CodePointer[(..'I), (..'O)], forward ..args) inline
     | defined?([callCodePointer(c, ..args);])
     = forward ..callCodePointer(c, ..args);
+
+overload ExternalCodePointer['A, false, (..'I), 'O](#'f) inline
+    | allValues?(POD?, ..'I, ..externalOutputTypes('O))
+      and definedWithType?([..'f(..arg(..'I))], ..externalOutputTypes('O))
+    = makeExternalCodePointer(#'f, 'A, ..'I);
 
