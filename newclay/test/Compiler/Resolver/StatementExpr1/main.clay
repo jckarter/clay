@@ -1,0 +1,4 @@
+import show.(show);
+foo() = (var x = 1; x);
+
+main() { show("ok"); }

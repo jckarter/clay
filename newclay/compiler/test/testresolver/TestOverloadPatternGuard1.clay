@@ -1,3 +1,0 @@
-import __primitives__.*;
-
-foo(x) | defined?([x]) = x;

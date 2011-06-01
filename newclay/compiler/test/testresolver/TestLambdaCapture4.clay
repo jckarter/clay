@@ -1,6 +1,0 @@
-var a = 1;
-
-main() {
-    var b = 2;
-    [c -> a + b + c];
-}

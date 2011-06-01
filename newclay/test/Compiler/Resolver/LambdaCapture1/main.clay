@@ -1,0 +1,8 @@
+import show.(show);
+foo() {
+    var a = 1;
+    var b = 2;
+    [c -> a + b + c];
+}
+
+main() { show("ok"); }

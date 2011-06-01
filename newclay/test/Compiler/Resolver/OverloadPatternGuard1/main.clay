@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+foo(x) | defined?([x]) = x;
+
+main() { show("ok"); }
