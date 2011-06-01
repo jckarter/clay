@@ -64,7 +64,7 @@ overload Vector['T](forward ..elements:'TT) inline --> returned:Vector['T]
 //
 
 overload copyAssign(ref to:Vector['T], from:Vector['U]) inline
-    | AssignableTypes?('T, 'U)
+    | Assignable?('T, 'U)
 {
     resizeUnsafe(to, size(from));
     assignRange(begin(to), begin(from), end(from));
