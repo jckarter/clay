@@ -1,9 +1,15 @@
-// XXX import concurrency.locks.*;
+import concurrency.locks.*;
 import concurrency.primitives as prim;
 import meta.lltypes.(llType);
 import unsafe.casts.(llcast);
 import unsafe.compositetypes.(CompositeType, initializeRecord, destroyRecord);
-import unsafe.valuesemantics.(BitwiseMoved?, DestroyDoesNothing?, destroy);
+import unsafe.valuesemantics.(
+    BitwiseMoved?,
+    Copyable?,
+    Assignable?,
+    DestroyDoesNothing?,
+    destroy
+);
 import values.(mapValues);
 
 public import concurrency.primitives.(NoOrder, AcquireReleaseOrder, FullOrder, order?);
@@ -61,18 +67,24 @@ cas2(ref x:Shared['T], old1, old2, new1, new2, #'O) inline
 overload cas2(ref x:Shared['T], old1, old2, new1, new2) inline
     = cas2(x, old1, old2, new1, new2, FullOrder);
 
-/* XXX implement locks
 // shared access synchronized via locks
 
-lockedGet(x:Shared['T], lock:'L) | Lock?('L)
-    = withLock(lock, [unsharedCastUnsafe(x)]);
-lockedSet(ref x:Shared['T], from, lock:'L) | Lock?('L) {
-    withLock(lock, [unsharedCastUnsafe(x) = from;]);
+lockedGet(x:Shared['T], ref l:'L) inline | Lock?('L) and Copyable?('T) {
+    var _ = LockHolder(l);
+    return unsharedCastUnsafe(x);
 }
 
-locked(forward x:Shared['T], lock:'L, forward f) | Lock?('L) {
-    = forward ..withLock(lock, [forward ..f(unsharedCastUnsafe(x))]);
-*/
+lockedSet(ref x:Shared['T], from:'U, ref l:'L) | Lock?('L) and Assignable?('T, 'U) {
+    var _ = LockHolder(l);
+    unsharedCastUnsafe(x) = from;
+}
+
+locked(forward x:Shared['T], ref l:'L, forward f)
+    | Lock?('L) and defined?([forward ..f(unsharedCastUnsafe(x))])
+{
+    var _ = LockHolder(l);
+    return forward ..f(unsharedCastUnsafe(x));
+}
 
 // field access for records, tuples, arrays
 
