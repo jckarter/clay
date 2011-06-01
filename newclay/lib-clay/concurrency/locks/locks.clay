@@ -28,7 +28,7 @@ overload LockHolder(ref l:'L) inline | Lock?('L) {
     return initializeRecord(LockHolder['L], &l);
 }
 
-overload destroy(ref lh:LockHolder['L]) {
+overload destroy(ref lh:LockHolder['L]) inline {
     unlock(lh.lock^);
 }
 
