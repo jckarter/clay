@@ -1,0 +1,80 @@
+import show.(show);
+
+main() {
+    show(
+        // decimal integers
+        0,
+        1234,
+        -5678,
+        +1_234_,
+
+        // hex integers
+        0x1234abcd,
+        -0x1234_aBcD,
+        +0x1234_abcd,
+        0xf, // not float!
+        0xff, // not float!
+        0xf32, // not float!
+        0xf64, // not float!
+
+        // typed integers
+        1u,
+        1u8,
+        1u16,
+        1u32,
+        1u64,
+        1i,
+        1i8,
+        1i16,
+        1i32,
+        1i64,
+
+        // floats
+        0.0,
+        -0.0,
+        +0.0,
+        1234.5678,
+        1_234.567_8,
+        1_234e56,
+        -1_234E+56,
+        +1_234e-1_2_3,
+        1_234.5E56,
+
+        // hex floats
+        0x0.0p-1,
+        -0x0.0p+1,
+        +0x1.7fffp123,
+        0x1.7FFF_aBcD_p-1_234,
+        -0x1P5,
+
+        // typed floats
+        0f,
+        1f,
+        0.0f,
+        0.0f32,
+        0.0f64,
+        0x1.fp1f,
+        0x1.fp1f32,
+        0x1.fp1f64,
+
+        // char literals
+        ' ',
+        'a',
+        '\n',
+        '\'',
+        '\\',
+        '\xff',
+        '\u10ffff',
+        '\123',
+
+        // string literals
+        "abc",
+        "abc\"",
+        "abc\n",
+        "abc\\",
+        "abc\xff",
+        "abc\u10ffff",
+        "abc\123",
+    );
+}
+

@@ -1,0 +1,43 @@
+import show.(show);
+
+import foo;
+import foo.bar;
+import foo.bar.bas;
+
+public import foo as zim;
+import foo.bar as zang;
+import foo.bar.bas as zung;
+
+import foo.*;
+import foo.bar.bas.*;
+
+import foo.bar.();
+
+import foo.bar.(bar1);
+import foo.bar.(bar2, private privateBar2);
+import foo.bar.(bar3, private privateBar3,);
+
+import foo.bar.bas.(bas1 as myBas);
+
+main() {
+    foo.foo1();
+    foo.bar.bar1();
+    foo.bar.bas.bas1();
+
+    zim.foo2();
+    zang.bar2();
+    zung.bas2();
+
+    foo3();
+    bas3();
+
+    bar1();
+    bar2();
+    bar3();
+    privateBar2();
+    privateBar3();
+
+    myBas();
+
+    show("ok");
+}

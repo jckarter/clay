@@ -1,0 +1,11 @@
+import foo;
+import show.(show);
+import zim;
+
+attribute foo.bar = zim.zang;
+
+overload #foo.bar(zim.zang) = foo.bar;
+
+overload foo.bar(x:zim.ZangType) = foo.bar;
+
+main() { show("ok"); }

@@ -1,0 +1,23 @@
+import show.(show);
+
+symbol bar[..'x];
+
+symbol foo;
+overload #foo('T) = ;
+overload #foo(bar) = ;
+overload #foo(1) = ;
+overload #foo(true) = ;
+overload #foo('3') = ;
+overload #foo("four") = ;
+overload #foo(bar[]) = ;
+overload #foo(bar["foo"]) = ;
+overload #foo(bar['T]) = ;
+overload #foo(bar[..'T]) = ;
+overload #foo(bar['T, 'U, ..'V]) = ;
+overload #foo(()) = ;
+overload #foo(('T,)) = ;
+overload #foo((1, true, '3', "four")) = ;
+overload #foo(('T, ..'U)) = ;
+overload #foo(bar[('T, ..'U), ('V, ..'W)]) = ;
+
+main() { show("ok"); }

@@ -1,0 +1,38 @@
+import show.(show);
+
+frob(x) {}
+
+main() {
+    var x = 0, y = 1, z = 2;
+
+    frob([y]);
+    frob([ref y]);
+    frob([-> y]);
+    frob([=> y]);
+    frob([x, y, z]);
+    frob([x += 1; x]);
+    frob([x += 1; y += 2; x, y]);
+    frob([x += 1;]);
+
+    frob([x -> y]);
+    frob([x => y]);
+
+    frob([x:Int -> y]);
+    frob([ref x -> y]);
+    frob([ref x:Int -> y]);
+
+    frob([x, y -> y, x]);
+    frob([ref x, rvalue y -> y, x]);
+    frob([ref x:Int, forward y:Bool -> y]);
+    frob([ref x:Int, forward ..y:'T -> ..y]);
+
+    frob([{ return x, y; }]);
+    frob([-> { return x, y; }]);
+    frob([=> { return x, y; }]);
+    frob([x, y -> {
+        return x, y;
+    }]);
+
+    show("ok");
+}
+

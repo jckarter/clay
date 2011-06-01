@@ -1,0 +1,7 @@
+foo1() {}
+foo2() {}
+foo3() {}
+
+private privateFoo1() {}
+private privateFoo2() {}
+private privateFoo3() {}

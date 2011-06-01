@@ -1,0 +1,9 @@
+import show.(show);
+
+__c__ """double atan(double);""";
+
+biblicalPi() --> returned:Int __c__ """$returned = atan(1.0) * 4.0;""";
+
+main() {
+    show(biblicalPi());
+}

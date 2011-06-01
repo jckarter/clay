@@ -1,0 +1,7 @@
+bar1() {}
+bar2() {}
+bar3() {}
+
+private privateBar1() {}
+private privateBar2() {}
+private privateBar3() {}

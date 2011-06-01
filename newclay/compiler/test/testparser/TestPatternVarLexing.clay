@@ -1,10 +1,0 @@
-import prelude.operators.c.*;
-import meta.lltypes.*;
-
-
-//
-// size
-//
-
-overload size(x:Array['T, 'n]) inline = UInt('n);
-

@@ -1,0 +1,3 @@
+symbol zang;
+
+symbol ZangType = RecordType();

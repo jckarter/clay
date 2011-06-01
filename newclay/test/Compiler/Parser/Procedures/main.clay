@@ -1,0 +1,31 @@
+import show.(show);
+
+foo1() { }
+foo2() = ;
+
+foo3(x) { }
+private foo4(x) { }
+public foo5(x) { }
+
+#foo6('x) = 'x;
+#foo7('x) | foo6('x) = ('x, 'x);
+
+foo8(x) inline { }
+private foo9(x) noreturn { throw x; }
+overload foo9(x) nothrow { }
+
+foo10(x) : { }
+foo11(x) --> { }
+
+foo12(x:Int) : Int = x;
+foo13(x:Int) nothrow : Int = x;
+foo14(x:Int) noreturn : Int = foo14(x);
+foo15(x:Int) inline nothrow noreturn : Int { foo14(x); return 1; }
+foo16(x) : type([x]) = x;
+
+foo17(x:Int) --> y:Int { y <-- x; }
+foo18(x:Int) nothrow --> y:Int { y <-- x; }
+foo19(x:Int) noreturn --> y:Int { y <-- foo19(x); }
+foo20(x) --> y:type([x]) { y <-- x; }
+
+main() { show("ok"); }
