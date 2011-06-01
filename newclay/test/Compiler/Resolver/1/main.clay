@@ -1,0 +1,15 @@
+import show.(show);
+import __primitives__.*;
+
+symbol Foo = ();
+symbol Bar = (Foo);
+symbol Bas = ();
+
+overload #Bar('x) = Foo;
+overload #Bar(Foo) = [a => ('x, a, Foo)];
+
+overload Bas(a:'x) = (a, Foo);
+overload Bas(a:'x) : Foo = (a, Foo);
+overload Bas(a:Foo) --> b:Foo = (a, b, Foo);
+
+main() { show("ok"); }

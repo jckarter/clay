@@ -1,0 +1,10 @@
+import show.(show);
+foo() {
+    if (var x = 1; x) {
+        x;
+    } else {
+        x;
+    }
+}
+
+main() { show("ok"); }

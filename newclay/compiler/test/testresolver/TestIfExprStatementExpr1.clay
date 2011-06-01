@@ -1,3 +1,0 @@
-main() {
-    return if (var x = true; x) x else x;
-}

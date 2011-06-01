@@ -1,0 +1,23 @@
+import show.(show);
+import __primitives__.*;
+
+symbol Foo = ();
+symbol bar = ();
+symbol bas = ();
+
+overload Foo() {
+    try {
+        bar;
+        bas;
+    } catch (bar:Foo) {
+        bar;
+        bas;
+    } catch (bas) {
+        bar;
+        bas;
+    }
+    bar;
+    bas;
+}
+
+main() { show("ok"); }

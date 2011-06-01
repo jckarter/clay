@@ -1,0 +1,11 @@
+import show.(show);
+import __primitives__.*;
+
+symbol Foo = ();
+symbol bar = ();
+
+overload Foo() {
+    bar;
+}
+
+main() { show("ok"); }

@@ -1,0 +1,14 @@
+import show.(show);
+foo() {
+    if (var x = 1; x) {
+        x;
+    } else if (var y = 2; y) {
+        x;
+        y;
+    } else {
+        x;
+        y;
+    }
+}
+
+main() { show("ok"); }

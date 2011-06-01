@@ -1,0 +1,8 @@
+import show.(show);
+foo() {
+    if (var x = 1; x) {
+        x;
+    }
+}
+
+main() { show("ok"); }
