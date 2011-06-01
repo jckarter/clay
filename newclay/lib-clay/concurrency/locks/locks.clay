@@ -1,0 +1,77 @@
+import ctypes.*;
+import unix.pthreads.*;
+import unsafe.compositetypes.*;
+import unsafe.valuesemantics.*;
+
+
+//
+// lock protocol
+//
+
+symbol lock;
+symbol unlock;
+symbol tryLock;
+
+#Lock?('T) = callDefined?(lock, Ref['T])
+    and callDefined?(unlock, Ref['T])
+    and callDefined?(tryLock, Ref['T]);
+
+
+//
+// LockHolder RAII object; withLock combinator
+//
+
+symbol LockHolder['L] = CompositeType(lock:Pointer['L]);
+
+overload LockHolder(ref l:'L) inline | Lock?('L) {
+    lock(l);
+    return initializeRecord(LockHolder['L], &l);
+}
+
+overload destroy(ref lh:LockHolder['L]) {
+    unlock(lh.lock^);
+}
+
+withLock(ref l:'L, forward f, forward ..args) inline
+    | Lock?('L) and defined?([forward ..f(..args)])
+{
+    var _ = LockHolder(l);
+    return forward ..f(..args);
+}
+
+
+//
+// default implementation using pthread_mutex
+//
+
+symbol Lock = CompositeType(_mutex:PthreadMutexT);
+symbol LockError = RecordType(error:CInt);
+
+overload #BitwiseMoved?(Lock) = false;
+
+overload Lock() --> returned:Lock {
+    var code = pthread_mutex_init(&returned._mutex, null(PthreadMutexAttrT));
+    if (code != 0)
+        throw LockError(code);
+}
+
+overload destroy(ref l:Lock) {
+    pthread_mutex_destroy(&l._mutex);
+}
+
+overload lock(ref l:Lock) {
+    var code = pthread_mutex_lock(&l._mutex);
+    if (code != 0)
+        throw LockError(code);
+}
+
+overload unlock(ref l:Lock) {
+    pthread_mutex_unlock(&l._mutex);
+}
+
+overload tryLock(ref l:Lock) {
+    var code = pthread_mutex_trylock(&l._mutex);
+    return code != 0;
+}
+
+
