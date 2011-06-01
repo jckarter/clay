@@ -1,0 +1,33 @@
+import concurrency.locks.*;
+import ctypes.*;
+import unix.pthreads.*;
+import unsafe.compositetypes.*;
+import unsafe.valuesemantics.*;
+
+symbol CondVar = CompositeType(_condvar:PthreadCondT);
+
+symbol CondVarError = RecordType(error:CInt);
+
+overload #BitwiseMoved?(CondVar) = false;
+
+overload CondVar() --> returned:CondVar {
+    var code = pthread_cond_init(&returned._condvar, null(PthreadCondAttrT));
+    if (code != 0)
+        throw CondVarError(code);
+}
+
+overload destroy(ref c:CondVar) {
+    pthread_cond_destroy(&c._condvar);
+}
+
+wait(ref c:CondVar, ref l:Lock) {
+    pthread_cond_wait(&c._condvar, &l._mutex);
+}
+
+broadcast(ref c:CondVar) {
+    pthread_cond_broadcast(&c._condvar);
+}
+
+signal(ref c:CondVar) {
+    pthread_cond_signal(&c._condvar);
+}
