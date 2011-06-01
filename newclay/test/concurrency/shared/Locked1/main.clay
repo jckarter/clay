@@ -1,0 +1,30 @@
+import concurrency.locks.(Lock);
+import concurrency.threads.(Thread, spawn, join);
+import concurrency.shared.(Shared, locked, lockedGet);
+import show.(show);
+
+var counter = Shared(0);
+var counterLock = Lock();
+
+incCounter(ref x:Shared[Int]) {
+    locked(counter, counterLock, [ref c -> c += 1;]);
+}
+
+incStorm() {
+    for (x in Range(10000))
+        incCounter(counter);
+}
+
+main() {
+    var threads = Array[Thread, 4](
+        spawn(incStorm),
+        spawn(incStorm),
+        spawn(incStorm),
+        spawn(incStorm),
+    );
+
+    for (ref thread in threads)
+        join(thread);
+
+    show(lockedGet(counter, counterLock));
+}
