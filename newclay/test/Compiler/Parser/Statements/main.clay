@@ -117,3 +117,4 @@ overload foo() {
 
     __unreachable__;
 }
+

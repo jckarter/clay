@@ -1,4 +1,0 @@
-symbol Foo;
-symbol Foo = ();
-private symbol Foo = ();
-public symbol Foo = ();

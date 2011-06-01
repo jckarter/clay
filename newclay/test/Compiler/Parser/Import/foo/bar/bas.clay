@@ -1,0 +1,7 @@
+bas1() {}
+bas2() {}
+bas3() {}
+
+private privateBas1() {}
+private privateBas2() {}
+private privateBas3() {}

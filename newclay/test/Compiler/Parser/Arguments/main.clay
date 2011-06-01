@@ -1,0 +1,29 @@
+import show.(show);
+
+foo01() {}
+foo02(x) {}
+foo03(x, y) {}
+foo04(x, y,) {}
+foo05(x, y, ..z) {}
+foo06(x, y, ..z,) {}
+foo07(..x) {}
+foo08(..x,) {}
+
+foo09(x:Int) {}
+foo10(x:'T) {}
+foo11(x:Range['T]) {}
+
+foo12(ref x:Int) {}
+foo13(rvalue x:Int) {}
+foo14(const x:Int) {}
+
+foo15(#Int) {}
+foo16(#"foo") {}
+foo17(#2) {}
+foo18(#true) {}
+foo19(#'T) {}
+
+foo20(..#'T) {}
+
+main() { show("ok"); }
+
