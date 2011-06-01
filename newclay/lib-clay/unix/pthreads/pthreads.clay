@@ -2,7 +2,7 @@ import ctypes.*;
 
 // XXX these type mappings are totally bogus
 // just allocate 64 word-aligned bytes and hope for the best...
-private var PthreadStackThingy = Array[CLong, 64 div typeSize(CLong)];
+private alias PthreadStackThingy = Array[Int, 8];
 
 symbol PthreadT = NewType(OpaquePointer);
 symbol PthreadKeyT = NewType(UInt);

@@ -1,0 +1,32 @@
+import concurrency.threads.(Thread, spawn, join);
+import concurrency.shared.(Shared, get, cas);
+import show.(show);
+
+var counter = Shared(0);
+
+incCounter(ref x:Shared[Int]) {
+    while (true) {
+        var old = get(x);
+        if (cas(x, old, old+1))
+            break;
+    }
+}
+
+incStorm() {
+    for (x in Range(10000))
+        incCounter(counter);
+}
+
+main() {
+    var threads = Array[Thread, 4](
+        spawn(incStorm),
+        spawn(incStorm),
+        spawn(incStorm),
+        spawn(incStorm),
+    );
+
+    for (ref thread in threads)
+        join(thread);
+
+    show(get(counter));
+}
