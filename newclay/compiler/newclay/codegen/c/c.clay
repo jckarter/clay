@@ -1497,6 +1497,10 @@ private analyzeAndCodegenFunction(c:CodegenContext, s:Specialization) {
 }
 
 private codegenGlobalConstructorDestructor(c:CodegenContext) {
+    for (g in getProgram().globalMap.globalOrder) {
+        getTypedef(c, globalAttributes(g).type);
+    }
+
     maybe(analyzeGlobalConstructor(), constructorS ref=> {
         addFunction(c, constructorS);
         c.constructorFunction = Maybe(constructorS);
