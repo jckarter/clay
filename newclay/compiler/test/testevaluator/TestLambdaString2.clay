@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-#Main() = lambdaString([x -> {
-    return x + 1;
-}]);

@@ -1,2 +1,0 @@
-#adder('x) = [#'y -> 'x + 'y];
-#Main() = adder(1)(2);

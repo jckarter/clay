@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = [..x -> staticAdd(..x)](1, 2);
+
+main() { show(..#Main()); }

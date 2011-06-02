@@ -1,0 +1,8 @@
+import show.(show);
+import __primitives__.*;
+import factorial.(Factorial as Fac);
+
+symbol Main;
+overload #Main() = Fac(8);
+
+main() { show(..#Main()); }

@@ -1,3 +1,0 @@
-alias foo['x] = (1, 'x, 6);
-
-#Main() = foo[2], foo[3];

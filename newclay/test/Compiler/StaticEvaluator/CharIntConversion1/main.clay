@@ -1,0 +1,9 @@
+import show.(show);
+import __primitives__.*;
+
+#Main()
+    = staticChar(65), staticChar(65u), staticChar('A'),
+      staticInt(65),  staticInt(65u),  staticInt('A'),
+      staticUInt(65), staticUInt(65u), staticUInt('A');
+
+main() { show(..#Main()); }

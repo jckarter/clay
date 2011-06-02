@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = staticLambda?(1), staticLambda?([x -> 1]), staticLambda?([x => 1]);
+
+main() { show(..#Main()); }

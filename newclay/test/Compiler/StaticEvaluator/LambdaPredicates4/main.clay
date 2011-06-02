@@ -1,0 +1,13 @@
+import show.(show);
+import __primitives__.*;
+
+var foo = #[a ->
+        lambdaStateless?([x -> 1]),
+        lambdaStateless?([x -> a]),
+        lambdaStateless?([x => 1]),
+        lambdaStateless?([x => a]),
+    ];
+
+#Main() = ..foo(0);
+
+main() { show(..#Main()); }

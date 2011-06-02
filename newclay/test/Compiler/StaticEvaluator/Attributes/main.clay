@@ -1,0 +1,122 @@
+import show.(show);
+import __primitives__.*;
+
+
+//
+// MapValues
+//
+
+symbol MapValues;
+overload #MapValues('f, 'first, ..'rest) = 'f('first), ..MapValues('f, ..'rest);
+overload #MapValues('f) = ;
+
+
+
+//
+// clay types as symbols
+//
+
+symbol Bool;
+symbol Int;
+symbol Array['T, 'n];
+symbol Tuple[..'T];
+
+symbol String;
+
+
+symbol TupleWithTag?;
+overload #TupleWithTag?('x, 'tag) =
+    staticTuple?('x)
+    and staticLesser?(0, staticTupleSize('x))
+    and staticEquals?(staticTupleElement('x, 0), 'tag);
+
+private  #_SymbolBody() = ();
+overload #_SymbolBody('x, ..'y) = 'x;
+
+#SymbolBody('t) = _SymbolBody(..staticSymbolBody('t));
+
+
+//
+// record types
+//
+
+symbol RecordTag;
+
+symbol RecordType;
+overload #RecordType(..'fields) =
+    (RecordTag, FieldNames(..'fields), FieldTypes(..'fields));
+
+symbol FieldNames;
+overload #FieldNames(..'fields) =
+    (..MapValues([f => staticTupleElement(f, 0)], ..'fields));
+
+symbol FieldTypes;
+overload #FieldTypes(..'fields) =
+    (..MapValues([f => staticTupleElement(f, 1)], ..'fields));
+
+symbol Record?;
+overload #Record?('t) =
+    staticSymbol?('t)
+    and TupleWithTag?(SymbolBody('t), RecordTag);
+
+symbol RecordFieldCount;
+overload #RecordFieldCount('t) | Record?('t) =
+    staticTupleSize(staticTupleElement(SymbolBody('t), 1));
+
+symbol RecordFieldNames;
+overload #RecordFieldNames('t) | Record?('t) =
+    staticTupleElement(SymbolBody('t), 1);
+
+symbol RecordFieldTypes;
+overload #RecordFieldTypes('t) | Record?('t) =
+    staticTupleElement(SymbolBody('t), 2);
+
+
+
+//
+// variant types
+//
+
+symbol VariantTag;
+
+symbol VariantType;
+overload #VariantType(..'members) = (VariantTag, (..'members));
+
+symbol Variant?;
+overload #Variant?('t) = 
+    staticSymbol?('t)
+    and TupleWithTag?(SymbolBody('t), VariantTag);
+
+symbol VariantMembers;
+overload #VariantMembers('t) | Variant?('t) = (
+    ..staticTupleElements(staticTupleElement(SymbolBody('t), 1)),
+    ..staticSymbolAttributes('t),
+);
+
+
+
+//
+// testing
+//
+
+symbol GenericError = RecordType(
+    ("msg", String),
+);
+
+symbol Exception = VariantType(GenericError);
+
+symbol AssertionError = RecordType(
+    ("condition", String),
+    ("msg", String),
+);
+
+attribute Exception = AssertionError;
+
+symbol Main;
+overload #Main() = (
+    Variant?(String),
+    Variant?(Exception),
+    VariantMembers(Exception)
+);
+
+main() { show(..#Main()); }

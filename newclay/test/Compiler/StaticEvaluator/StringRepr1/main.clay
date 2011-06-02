@@ -1,0 +1,5 @@
+import show.(show);
+import __primitives__.*;
+#Main() = "why's \"poignant guide\" \x00\n\x1F ~\x7F ü ɐ";
+
+main() { show(..#Main()); }

@@ -1,6 +1,0 @@
-import __primitives__.*;
-
-// there is also a symbol Bar = "prelude"; definition in prelude
-symbol Bar = "main";
-
-#Main() = staticSymbolBody(Bar);

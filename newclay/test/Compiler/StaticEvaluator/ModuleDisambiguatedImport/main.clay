@@ -1,0 +1,10 @@
+import show.(show);
+import __primitives__.*;
+import factorial.*; // has Factorial
+import tools.*; // also has Factorial
+import tools.(Factorial); // disambiguate
+
+symbol Main;
+overload #Main() = Factorial(8);
+
+main() { show(..#Main()); }

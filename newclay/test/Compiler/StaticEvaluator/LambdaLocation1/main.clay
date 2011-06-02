@@ -1,0 +1,7 @@
+import show.(show);
+import values.(dropValues);
+import __primitives__.*;
+
+#Main() = ..dropValues(1, ..lambdaLocation([x -> x + 1]));
+
+main() { show(..#Main()); }

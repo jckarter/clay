@@ -1,5 +1,0 @@
-import __primitives__.*;
-import factorial as fac;
-
-symbol Main;
-overload #Main() = fac.Factorial(8);

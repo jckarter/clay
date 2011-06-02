@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = staticChar?('a'), staticChar?("a"), staticChar?(1);
+
+main() { show(..#Main()); }

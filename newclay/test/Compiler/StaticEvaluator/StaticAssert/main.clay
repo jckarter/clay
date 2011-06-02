@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = staticAssert(1 == 1);
+
+main() { show(..#Main()); }

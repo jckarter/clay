@@ -1,0 +1,7 @@
+import show.(show);
+import __primitives__.*;
+#multi() = 2, 3;
+
+#Main() = 1, ..(; multi()), 4;
+
+main() { show(..#Main()); }
