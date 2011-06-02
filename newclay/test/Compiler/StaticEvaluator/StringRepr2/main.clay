@@ -1,0 +1,5 @@
+import show.(show);
+import __primitives__.*;
+#Main() = "\u000000\u0000ff\u000100\u10ffff";
+
+main() { show(..#Main()); }

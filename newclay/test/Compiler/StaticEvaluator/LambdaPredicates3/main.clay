@@ -1,0 +1,13 @@
+import show.(show);
+import __primitives__.*;
+
+var foo = #[a ->
+        lambdaCapturesByValue?([x -> 1]),
+        lambdaCapturesByValue?([x -> a]),
+        lambdaCapturesByValue?([x => 1]),
+        lambdaCapturesByValue?([x => a]),
+    ];
+
+#Main() = ..foo(0);
+
+main() { show(..#Main()); }

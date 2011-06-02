@@ -1,8 +1,0 @@
-symbol Foo['x];
-symbol Bar;
-
-alias FooBar = Foo[Bar];
-
-#foo(FooBar) = 1;
-
-#Main() = foo(Foo[Bar]);

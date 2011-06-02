@@ -1,0 +1,10 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() =
+    llMangle("abc"),
+    llMangle("abc_def"),
+    llMangle("abc_def?"),
+    llMangle("abc def");
+
+main() { show(..#Main()); }

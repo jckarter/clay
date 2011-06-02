@@ -1,0 +1,8 @@
+import show.(show);
+import __primitives__.*;
+
+symbol Foo;
+
+#Main() = ..staticSymbolBody(Foo);
+
+main() { show(..#Main()); }

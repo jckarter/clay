@@ -1,5 +1,0 @@
-import __primitives__.*;
-import circular1.*;
-
-symbol Main;
-overload #Main() = Factorial1(8);

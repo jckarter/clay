@@ -1,0 +1,1 @@
+"why\'s \"poignant guide\" \x00\n\x1f ~\x7f \xfc \u000250"

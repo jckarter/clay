@@ -1,0 +1,9 @@
+import show.(show);
+import __primitives__.*;
+import factorial.*; // has Factorial
+import privatetools.*; // also has Factorial, but private
+
+symbol Main;
+overload #Main() = Factorial(8);
+
+main() { show(..#Main()); }

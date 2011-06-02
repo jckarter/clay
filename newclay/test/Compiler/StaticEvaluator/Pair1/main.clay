@@ -1,0 +1,5 @@
+import show.(show);
+import __primitives__.*;
+#Main() = foo: 1;
+
+main() { show(..#Main()); }

@@ -1,0 +1,12 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() =
+    staticBitand(0xFF, 0x7F),
+    staticBitor (0x70, 0x0F),
+    staticBitxor(0xFE, 0x81),
+    staticBitnot(0xFF80_u16),
+    staticBitshl(0x7F, 8),
+    staticBitshr(0x7F00, 8);
+
+main() { show(..#Main()); }

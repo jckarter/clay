@@ -1,5 +1,0 @@
-import splitfactorial1.*;
-import splitfactorial2.*;
-
-symbol Main;
-overload #Main() = Factorial(8);

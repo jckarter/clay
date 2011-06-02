@@ -1,0 +1,8 @@
+import show.(show);
+import __primitives__.*;
+import circular1.*;
+
+symbol Main;
+overload #Main() = Factorial1(8);
+
+main() { show(..#Main()); }

@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+#twoThree() = 2, 3;
+#Main() = #1, ..#twoThree();
+
+main() { show(..#Main()); }

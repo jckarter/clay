@@ -1,0 +1,5 @@
+import show.(show);
+import __primitives__.*;
+#Main() = '\x00', '\n', '\'', '"', ' ', '~', '\x7F', '\xFF', 'é', 'ʍ', 'க', '🀀';
+
+main() { show(..#Main()); }

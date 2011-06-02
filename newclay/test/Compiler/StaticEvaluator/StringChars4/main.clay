@@ -1,0 +1,6 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = (..staticStringChars("d'août à février \xA0\xFF"));
+
+main() { show(..#Main()); }

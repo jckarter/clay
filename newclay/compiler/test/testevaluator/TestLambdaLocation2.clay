@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-#Main() = ..lambdaLocation([x -> {
-    return x + 1;
-}]);

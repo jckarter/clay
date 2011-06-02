@@ -1,0 +1,14 @@
+import show.(show);
+import __primitives__.*;
+import factorial; // has Factorial
+import tools;
+import tools.factorial;
+
+#Main() = staticModuleMember?(factorial, "Factorial"),
+                staticModuleMember?(factorial, "NotFactorial"),
+                staticModuleMember?(tools, "factorial"),
+                staticModuleMember?(tools, "Factorial"),
+                staticModuleMember?(tools, "buh"),
+                staticModuleMember?(tools.factorial, "Factorial");
+
+main() { show(..#Main()); }

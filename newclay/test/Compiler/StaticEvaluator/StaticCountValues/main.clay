@@ -1,0 +1,14 @@
+import show.(show);
+import __primitives__.*;
+
+#foo() = 1, 2, 3;
+
+#Main() =
+    staticCountValues(),
+    staticCountValues(1),
+    staticCountValues(1, 2),
+    staticCountValues(1, 2, 3),
+    staticCountValues(..foo()),
+    staticCountValues(..foo(), 4);
+
+main() { show(..#Main()); }

@@ -1,0 +1,12 @@
+import show.(show);
+import __primitives__.*;
+
+#Main() = platformCPUName(),
+                platformCPUFamilyName(),
+                platformCPUPointerBits(),
+                platformName(),
+                platformFamilyName(),
+                platformCodegen(),
+                platformCodegenDialect();
+
+main() { show(..#Main()); }

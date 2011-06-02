@@ -1,35 +1,0 @@
-import __primitives__.*;
-
-
-//
-// MapValues
-//
-
-symbol MapValues;
-overload #MapValues('f, 'first, ..'rest) = 'f('first), ..MapValues('f, ..'rest);
-overload #MapValues('f) = ;
-
-
-
-//
-// StringChar, ReverseString
-//
-
-symbol StringChar;
-overload #StringChar('s, 'i) = staticStringSlice('s, 'i, staticAdd('i, 1));
-
-symbol ReverseString;
-overload #ReverseString('s) =
-    staticStringConcat(..MapValues(
-        [i => StringChar('s, staticSubtract(staticStringSize('s), staticAdd(i,1)))],
-        ..staticIntegers(staticStringSize('s)),
-    ));
-
-
-
-//
-// Main
-//
-
-symbol Main;
-overload #Main() = ReverseString("foobar");

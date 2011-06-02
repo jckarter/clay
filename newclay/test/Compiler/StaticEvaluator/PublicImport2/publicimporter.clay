@@ -1,0 +1,4 @@
+public import factorial.*;
+public import factorial.(Factorial as Fac);
+public import factorial;
+public import factorial as fac;
