@@ -1,0 +1,7 @@
+import show.(show);
+
+foo() noreturn { throw 0; }
+
+main() {
+    show(#returns?([ foo(); ]));
+}

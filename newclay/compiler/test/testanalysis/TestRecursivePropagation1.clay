@@ -1,7 +1,0 @@
-
-symbol foo;
-overload foo(x:Int) = if (true) 1 else foo(0);
-
-symbol main;
-overload main() = foo(2);
-

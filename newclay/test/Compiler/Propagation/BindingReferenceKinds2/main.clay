@@ -1,0 +1,17 @@
+import show.(show);
+
+valueReturn() --> x:Int __c__ """abort();""";
+refReturn() --> ref x:Int __c__ """abort();""";
+rvalueReturn() --> rvalue x:Int __c__ """abort();""";
+constReturn() --> const x:Int __c__ """abort();""";
+
+main() {
+    show(..#type([
+        forward x = valueReturn();
+        forward y = refReturn();
+        forward z = rvalueReturn();
+        forward w = constReturn();
+
+        return forward (; x, y, z, w);
+    ]));
+}

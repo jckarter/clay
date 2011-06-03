@@ -1,0 +1,12 @@
+import show.(show);
+import __primitives__.*;
+
+bar(rvalue x) = "bar";
+
+foo(rvalue x) {
+    return #type([bar(x)]), x;
+}
+
+main() {
+    show(..foo(3));
+}

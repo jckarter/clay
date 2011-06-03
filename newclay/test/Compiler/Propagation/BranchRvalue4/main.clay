@@ -1,0 +1,10 @@
+import show.(show);
+
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = 5;
+    var y = if (true) x else x;
+    show("ok");
+}
+

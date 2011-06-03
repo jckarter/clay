@@ -1,7 +1,0 @@
-symbol id;
-overload id(ref x) = ref x;
-
-symbol main;
-overload main() --> r:Int {
-    id(r) <-- 1;
-}

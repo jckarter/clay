@@ -1,6 +1,0 @@
-foo(#'x) {}
-
-main() {
-    static for (#'x in #1, #true, #"three")
-        foo(#'x);
-}

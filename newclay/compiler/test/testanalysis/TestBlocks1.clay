@@ -1,5 +1,0 @@
-symbol main;
-overload main() {
-    return 0;
-}
-

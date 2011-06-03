@@ -1,0 +1,10 @@
+import show.(show);
+
+main() {
+    while (true) {
+        if (true)
+            break;
+    }
+    show("ok");
+}
+

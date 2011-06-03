@@ -1,0 +1,14 @@
+import show.(show);
+
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = 5;
+    if (true)
+        eatRvalue(x);
+    else
+        eatRvalue(x);
+    
+    show("ok");
+}
+

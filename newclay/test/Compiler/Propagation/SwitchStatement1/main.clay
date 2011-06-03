@@ -1,0 +1,20 @@
+import show.(show);
+
+foo() = 4, 5, 6;
+
+bar(x:Int) {
+    switch (x)
+    case (1)
+        return "one";
+    case (2, 3)
+        return "two or three";
+    case (..foo())
+        return "four through six";
+    else
+        return "something else";
+}
+
+main() {
+    static for (x in 1, 2, 3, 4, 5, 6, 7)
+        show(bar(x));
+}

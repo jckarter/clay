@@ -1,0 +1,10 @@
+import show.(show);
+
+#staticCallable('x) = 'x;
+runtimeCallable(x) = x;
+overload call(x:Int, y) = y;
+
+main() {
+    show(#staticCallable(2), runtimeCallable(3), 1(4));
+}
+

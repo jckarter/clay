@@ -1,0 +1,14 @@
+import show.(show);
+
+eatRvalue(rvalue x) {}
+
+main() {
+    var i = 0;
+    while (i < 2) {
+        rvalue x = 2;
+        eatRvalue(x);
+        inc(i);
+    }
+
+    show("ok");
+}

@@ -1,0 +1,8 @@
+import show.(show);
+
+foo() {}
+bar() = true, 3.5;
+
+main() {
+    show(1, ..(foo(); bar()), (; 4, 5));
+}

@@ -1,7 +1,0 @@
-nonterminatingForFloat(x:Int) = x;
-overload nonterminatingForFloat(x:Float64) { throw 0; }
-
-main() {
-    static for (x in 1, 2, 3.0, 4)
-        nonterminatingForFloat(x);
-}

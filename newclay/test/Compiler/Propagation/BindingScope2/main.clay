@@ -1,0 +1,11 @@
+import show.(show);
+
+main() {
+    var x = true;
+    {
+        var w, x, y = x, 1, x;
+        show(..#type([ w, x, y ]));
+    }
+}
+
+

@@ -1,9 +1,0 @@
-symbol nonterminating;
-overload nonterminating() { throw 0; }
-
-symbol main;
-overload main() {
-    if (nonterminating())
-        return 1;
-    return 2;
-}

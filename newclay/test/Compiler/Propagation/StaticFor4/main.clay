@@ -1,0 +1,17 @@
+import show.(show);
+
+main() {
+    @outer static for (x in 0, 1)
+        static for (y in 0, 1, 2, 3, 4) {
+            show(x, y, "--");
+            if (y == 0)
+                continue;
+            else if (x == 0 and y == 1)
+                break;
+            else if (x == 0 and y == 2)
+                continue @outer;
+            else if (y == 3)
+                break @outer;
+            show("..");
+        }
+}

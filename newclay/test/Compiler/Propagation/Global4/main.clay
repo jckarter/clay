@@ -1,0 +1,12 @@
+import show.(show);
+
+var y = 2;
+
+foo() : Int = y;
+
+var x = foo();
+
+main() {
+    show(x);
+}
+

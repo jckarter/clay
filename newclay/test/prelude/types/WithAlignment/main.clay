@@ -1,0 +1,7 @@
+import show.(show);
+
+symbol Foo = NewType(Int), WithAlignment(16);
+
+main() {
+    show(#typeAlign(Foo));
+}

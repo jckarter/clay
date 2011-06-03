@@ -1,0 +1,14 @@
+import show.(show);
+
+foo() {
+    rvalue x = true;
+    if (true) {
+    } else
+        return x;
+    return not x;
+}
+
+main() {
+    foo();
+    show("ok");
+}

@@ -1,2 +1,0 @@
-nonterminating() { throw 0; }
-main() = if (true) nonterminating() else 2;

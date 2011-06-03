@@ -1,0 +1,10 @@
+import show.(show);
+
+foo() {
+    if (arg(Bool))
+        throw 0;
+}
+
+main() {
+    show(#returns?([foo();]));
+}

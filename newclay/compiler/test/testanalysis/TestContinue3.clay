@@ -1,8 +1,0 @@
-
-symbol main;
-overload main() {
-    while (true) {
-        if (false)
-            continue;
-    }
-}

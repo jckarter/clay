@@ -1,0 +1,7 @@
+import show.(show);
+
+foo(rvalue x) = rvalue x;
+
+main() {
+    show(#type([ rvalue foo(1) ]));
+}

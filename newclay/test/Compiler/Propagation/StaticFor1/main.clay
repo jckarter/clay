@@ -1,0 +1,13 @@
+import show.(show);
+
+foo() = 1, true, "three", 4.5;
+
+bar(x:Int) { show("eenie"); }
+overload bar(x:Bool) { show("meenie"); }
+overload bar(x:StringConstant) { show("mynie"); }
+overload bar(x:Float64) { show("moe"); }
+
+main() {
+    static for (x in ..foo())
+        bar(x);
+}

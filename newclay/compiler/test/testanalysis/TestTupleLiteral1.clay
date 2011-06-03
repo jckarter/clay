@@ -1,3 +1,0 @@
-main() {
-    return (1, "two", true);
-}

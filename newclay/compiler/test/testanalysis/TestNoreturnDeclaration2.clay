@@ -1,4 +1,0 @@
-foo() noreturn { throw 0; }
-main() {
-    foo();
-}

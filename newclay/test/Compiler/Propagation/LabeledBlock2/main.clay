@@ -1,0 +1,13 @@
+import show.(show);
+
+main() {
+    @foo {
+        @bar {
+            show("a");
+            break @foo;
+            show("b");
+        }
+        show("c");
+    }
+    show("d");
+}

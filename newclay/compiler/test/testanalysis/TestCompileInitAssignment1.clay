@@ -1,4 +1,0 @@
-symbol main;
-overload main() --> r:Int {
-    r <-- 1;
-}

@@ -1,0 +1,14 @@
+import show.(show);
+
+main() {
+    var x = 0;
+    while (x < 2) {
+        if (true) {
+            show("ok");
+            inc(x);
+            continue;
+            show("no");
+        }
+    }
+}
+

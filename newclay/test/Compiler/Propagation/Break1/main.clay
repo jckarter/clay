@@ -1,0 +1,8 @@
+import show.(show);
+
+main() {
+    while (true)
+        break;
+    show("ok");
+}
+

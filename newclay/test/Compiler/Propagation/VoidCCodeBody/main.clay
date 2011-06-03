@@ -1,0 +1,9 @@
+import show.(show);
+
+symbol foo;
+overload foo() __c__ """abort();""";
+
+main() {
+    show(..#type([..foo()]));
+}
+

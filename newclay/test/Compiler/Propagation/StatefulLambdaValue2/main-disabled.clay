@@ -1,0 +1,10 @@
+import show.(show);
+
+foo() {
+    var ..x = 1, 2;
+    return [y -> add(..x) + y];
+}
+
+main() {
+    show(#defined?([ foo() ]));
+}

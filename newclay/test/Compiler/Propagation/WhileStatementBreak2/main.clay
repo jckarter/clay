@@ -1,0 +1,13 @@
+import show.(show);
+
+main() {
+    @outer {
+        while (true) {
+            show("a");
+            break @outer;
+            show("b");
+        }
+        show("c");
+    }
+    show("d");
+}

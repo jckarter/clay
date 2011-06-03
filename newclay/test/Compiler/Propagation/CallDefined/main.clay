@@ -1,0 +1,43 @@
+import show.(show);
+import __primitives__.(callDefinedForSymbol?);
+
+foo(x) {}
+
+bar(x:Int) {}
+overload bar(x:Float64) {}
+
+bas(x:'T) | 'T == Int or 'T == Float64 {}
+
+zim(rvalue x:Int) {}
+
+zang(ref x:Int) {}
+
+#Main()
+    = callDefinedForSymbol?(foo, Int),
+      callDefinedForSymbol?(foo, Tuple[Int, Char, Bool]),
+      callDefinedForSymbol?(foo, Ref[Int]),
+      callDefinedForSymbol?(foo, Rvalue[Int]),
+      callDefinedForSymbol?(foo, Const[Int]),
+      "--",
+      callDefinedForSymbol?(bar, Int),
+      callDefinedForSymbol?(bar, Float64),
+      callDefinedForSymbol?(bar, Char),
+      "--",
+      callDefinedForSymbol?(bas, Int),
+      callDefinedForSymbol?(bas, Float64),
+      callDefinedForSymbol?(bas, Char),
+      "--",
+      callDefinedForSymbol?(zim, Int),
+      callDefinedForSymbol?(zim, Ref[Int]),
+      callDefinedForSymbol?(zim, Rvalue[Int]),
+      callDefinedForSymbol?(zim, Const[Int]),
+      "--",
+      callDefinedForSymbol?(zang, Int),
+      callDefinedForSymbol?(zang, Ref[Int]),
+      callDefinedForSymbol?(zang, Rvalue[Int]),
+      callDefinedForSymbol?(zang, Const[Int]);
+
+main() {
+    show(..#Main());
+}
+

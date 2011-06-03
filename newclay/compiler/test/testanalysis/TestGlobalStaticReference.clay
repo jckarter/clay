@@ -1,5 +1,0 @@
-var x = #2;
-
-#Foo() = x;
-
-main() = #Foo();

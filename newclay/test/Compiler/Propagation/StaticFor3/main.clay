@@ -1,0 +1,12 @@
+import show.(show);
+
+main() {
+    static for (x in 1, 2, 3) {
+        show(x);
+        if (x == 1)
+            continue;
+        show("...");
+        if (x == 2)
+            break;
+    }
+}

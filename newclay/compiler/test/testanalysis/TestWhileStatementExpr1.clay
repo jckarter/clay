@@ -1,9 +1,0 @@
-foo() = 2, true;
-
-bar(x) {}
-
-main() {
-    while (var x, y? = foo(); y?) {
-        bar(x);
-    }
-}

@@ -1,6 +1,0 @@
-foo(#'x) = [#'y -> 'x + 'y];
-
-main() {
-    var f = foo(#2);
-    return f(#1);
-}

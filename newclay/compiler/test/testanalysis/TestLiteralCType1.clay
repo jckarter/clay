@@ -1,9 +1,0 @@
-symbol M128;
-overload #type?(M128) = true;
-overload #llType(M128) = llLiteralCType["int", "__attribute__((aligned(16), vector_size(16)))"];
-
-overload M128() --> r:M128 __c__ """abort();""";
-
-main() {
-    return M128();
-}

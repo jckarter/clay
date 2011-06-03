@@ -1,0 +1,9 @@
+import show.(show);
+
+foo(..#'x) = ..'x;
+
+symbol Four;
+
+main() {
+    show(..#type([ ..foo(#1, #true, #"three", Four) ]));
+}

@@ -1,0 +1,14 @@
+import show.(show);
+
+nonterminating() { throw 0; }
+
+foo() {}
+
+bar() {
+    static for (x in ..nonterminating())
+        foo();
+}
+
+main() {
+    show(#returns?([ bar(); ]));
+}

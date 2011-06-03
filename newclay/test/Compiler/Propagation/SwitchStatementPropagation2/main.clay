@@ -1,0 +1,16 @@
+import show.(show);
+
+foo() {
+    switch (0)
+    case (0) {
+        return 1;
+    }
+    case (1) {
+        return 2;
+    }
+    return 3;
+}
+
+main() {
+    show(#type([ foo() ]));
+}

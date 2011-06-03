@@ -1,0 +1,11 @@
+import show.(show);
+
+foo(x:Int) = x+1, x < 5;
+
+main() {
+    var z = 0;
+    while (var x, y? = foo(z); y?) {
+        show(x);
+        z = x;
+    }
+}

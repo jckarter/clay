@@ -1,7 +1,0 @@
-symbol foo;
-overload foo() = 1, 2, 3;
-
-symbol main;
-overload main() {
-    foo();
-}

@@ -1,4 +1,0 @@
-terminating() {}
-nonterminating() { throw 0; }
-
-main() = (terminating(); nonterminating(); terminating(); 1);

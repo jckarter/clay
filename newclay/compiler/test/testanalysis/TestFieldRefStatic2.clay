@@ -1,8 +1,0 @@
-import prelude;
-
-foo() = prelude;
-
-main() {
-    var x = foo().add(1, 2);
-    return x;
-}

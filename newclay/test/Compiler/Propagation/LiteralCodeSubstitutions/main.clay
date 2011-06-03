@@ -1,0 +1,12 @@
+import ctypes.(CInt);
+import show.(show);
+
+printf(#'format, ..args) --> returned:Int __c__ """
+    $Int x = printf("$'format", $..args);
+    $returned = x;
+""";
+
+main() {
+    show(printf(#"hello world %d %d %d\\n", CInt(1), CInt(2), CInt(3)));
+}
+

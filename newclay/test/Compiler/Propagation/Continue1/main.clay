@@ -1,0 +1,12 @@
+import show.(show);
+
+main() {
+    var x = 0;
+    while (x < 2) {
+        show("ok");
+        inc(x);
+        continue;
+        show("no");
+    }
+}
+

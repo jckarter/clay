@@ -1,6 +1,0 @@
-symbol main;
-overload main() {
-    if (true)
-        return 1;
-    return 2;
-}

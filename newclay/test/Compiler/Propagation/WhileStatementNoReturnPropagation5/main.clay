@@ -1,0 +1,13 @@
+import show.(show);
+
+nonterminating() { throw 0; }
+
+foo() {
+    while (nonterminating())
+        return 1;
+    return 2;
+}
+
+main() {
+    show(#returns?([ foo(); ]));
+}
