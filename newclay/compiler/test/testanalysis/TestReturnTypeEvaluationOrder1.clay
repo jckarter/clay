@@ -1,6 +1,0 @@
-import __primitives__.*;
-
-foo(x) = x;
-overload foo(x) --> y:staticError("this should not be run") | false { }
-
-main() = foo(5);

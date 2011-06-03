@@ -1,0 +1,8 @@
+import show.(show);
+
+var x:Int;
+
+main() {
+    show(#type([forward x]));
+}
+

@@ -1,9 +1,0 @@
-foo() = 2, true;
-
-main() {
-    if (var x, y? = foo(); y?) {
-        return x;
-    } else {
-        return x;
-    }
-}

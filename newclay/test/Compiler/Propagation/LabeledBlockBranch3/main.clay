@@ -1,0 +1,24 @@
+import show.(show);
+
+foo(b?:Bool) {
+    @foo {
+        @bar {
+            @bas {
+                show("a");
+                if (b?)
+                    break @foo;
+                show("b");
+            }
+            show("c");
+        }
+        show("d");
+    }
+    show("e");
+}
+
+main() {
+    foo(true);
+    show("--");
+    foo(false);
+}
+

@@ -1,0 +1,23 @@
+import show.(show);
+import __primitives__.(makeCodePointer, callCodePointer);
+
+foo(x) = x + 1;
+bar(ref x) { x += 1; return ref x; }
+
+main() {
+    var foop = makeCodePointer(foo, Int);
+    var barp = makeCodePointer(bar, Ref[Int]);
+
+    var iref = 1;
+    const iconst = 10;
+    rvalue irvalue = 100;
+
+    var a = callCodePointer(foop, iref);
+    var b = callCodePointer(foop, iconst);
+    var c = callCodePointer(foop, irvalue);
+
+    ref d = callCodePointer(barp, iref);
+
+    show(a, b, c, d, iref);
+}
+

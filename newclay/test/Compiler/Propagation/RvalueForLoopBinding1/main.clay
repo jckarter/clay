@@ -1,0 +1,10 @@
+import show.(show);
+
+eatRvalue(rvalue x) {}
+
+main() {
+    for (rvalue x in Range(3)) {
+        eatRvalue(x);
+    }
+    show("ok");
+}

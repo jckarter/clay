@@ -1,0 +1,13 @@
+import show.(show);
+
+nonterminatingForFloat(x:Int) = x;
+overload nonterminatingForFloat(x:Float64) { throw 0; }
+
+bar() {
+    static for (x in 1, 2, 3.0, 4)
+        nonterminatingForFloat(x);
+}
+
+main() {
+    show(#returns?([ bar(); ]));
+}

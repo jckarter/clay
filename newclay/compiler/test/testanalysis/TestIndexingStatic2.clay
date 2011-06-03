@@ -1,5 +1,0 @@
-foo() = Array;
-
-main() {
-    return foo()[Int, 2];
-}

@@ -1,0 +1,23 @@
+import show.(show);
+
+foo(y:Int) {
+    var x = 1;
+
+    switch (y)
+    case (1) {
+        var x = 2;
+        return x;
+    } case (2, 3) {
+        return x;
+    } case (4) {
+        var x = 3;
+        return x;
+    } else {
+        return x;
+    }
+}
+
+main() {
+    static for (y in 1, 2, 3, 4, 5)
+        show(foo(y));
+}

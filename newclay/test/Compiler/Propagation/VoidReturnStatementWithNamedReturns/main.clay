@@ -1,0 +1,10 @@
+import show.(show);
+
+foo() --> r:Int {
+    r <-- 444;
+    return;
+}
+
+main() {
+    show(foo());
+}

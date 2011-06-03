@@ -1,0 +1,10 @@
+import show.(show);
+
+main() {
+    @foo {
+        show("a");
+        break @foo;
+        show("b");
+    }
+    show("c");
+}

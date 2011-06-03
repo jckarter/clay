@@ -1,0 +1,8 @@
+import show.(show);
+
+var x['T] = 'T + 1;
+
+main() {
+    show(x[1], x[2], x[3]);
+}
+

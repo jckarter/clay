@@ -1,0 +1,8 @@
+import show.(show);
+
+bar(rvalue x) = 1;
+
+main() {
+    rvalue x = 3;
+    show(bar(x));
+}

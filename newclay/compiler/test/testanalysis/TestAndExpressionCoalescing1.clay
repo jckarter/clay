@@ -1,5 +1,0 @@
-main() {
-    var x = true, y = false;
-
-    return x and y;
-}

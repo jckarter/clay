@@ -1,0 +1,5 @@
+import show.(show);
+
+main() {
+    show(..#type([1, 1i8, 1i16, 1i32, 1i64, 1u, 1u8, 1u16, 1u32, 1u64]));
+}

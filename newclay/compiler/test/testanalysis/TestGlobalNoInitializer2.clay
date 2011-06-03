@@ -1,3 +1,0 @@
-var x:Int, y:Int8;
-
-main() = x, y;

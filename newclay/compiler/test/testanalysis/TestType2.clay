@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-main() {
-    return ..#type([]);
-}

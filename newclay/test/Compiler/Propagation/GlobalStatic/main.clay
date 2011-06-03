@@ -1,0 +1,10 @@
+import show.(show);
+
+var x = #2;
+
+#Foo() = x;
+
+main() {
+    show(#type([#Foo()]));
+}
+

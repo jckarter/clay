@@ -1,0 +1,13 @@
+import show.(show);
+
+foo() = 1, true, "three";
+
+main() {
+    var x = 0;
+    var y = false;
+    var z = "";
+
+    x, y, z <-- foo();
+
+    show(x, y, z);
+}

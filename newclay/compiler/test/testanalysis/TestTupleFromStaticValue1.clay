@@ -1,3 +1,0 @@
-unpack(#'x) = 'x;
-
-main() = unpack(#(1, true, '3', "four"));

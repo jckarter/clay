@@ -1,5 +1,0 @@
-main() {
-    if (false)
-        return 1;
-    __unreachable__;
-}

@@ -1,0 +1,18 @@
+import show.(show);
+
+main() {
+    var x = 0, y = 0;
+    @outer while (x < 4) {
+        x += 1;
+        y = 0;
+        while (y < 4) {
+            y += 1;
+            if (y > x)
+                continue @outer;
+            if (x + y == 7)
+                break @outer;
+            show(x, y, "--");
+        }
+    }
+}
+

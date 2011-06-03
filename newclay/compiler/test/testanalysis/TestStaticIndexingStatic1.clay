@@ -1,4 +1,0 @@
-main() {
-    var x = (#(1, "two")).0;
-    return x;
-}

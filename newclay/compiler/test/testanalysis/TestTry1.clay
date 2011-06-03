@@ -1,6 +1,0 @@
-main() {
-    try {
-        var x = 1;
-    } catch (ex) {
-    }
-}

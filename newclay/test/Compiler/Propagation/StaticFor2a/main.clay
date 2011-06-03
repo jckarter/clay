@@ -1,0 +1,14 @@
+import show.(show);
+
+bar(const x:Int) { show("const"); }
+overload bar(rvalue x:Int) { show("rvalue"); }
+overload bar(ref x:Int) { show("ref"); }
+
+main() {
+    var refx = 1;
+    rvalue rvaluex = 1;
+    const constx = 1;
+
+    static for (forward x in refx, rvaluex, constx, 1)
+        bar(x);
+}

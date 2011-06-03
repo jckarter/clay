@@ -1,0 +1,27 @@
+import show.(show);
+
+foo1() {
+    if (arg(Bool))
+        return 1;
+    return 2;
+}
+
+foo2() {
+    if (arg(Bool))
+        return 1;
+    else {}
+
+    return 2;
+}
+
+foo3() {
+    if (arg(Bool)) {}
+    else return 1;
+
+    return 2;
+}
+
+main() {
+    show(..#type([forward foo1(), forward foo2(), forward foo3()]));
+}
+

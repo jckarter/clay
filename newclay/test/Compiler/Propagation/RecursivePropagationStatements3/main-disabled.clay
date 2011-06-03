@@ -1,0 +1,11 @@
+import show.(show);
+
+foo() {
+    foo();
+    return 1;
+}
+
+main() {
+    show(#returns?([ foo() ]));
+    show(..#type([ foo() ]));
+}

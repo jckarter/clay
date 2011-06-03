@@ -1,0 +1,8 @@
+import show.(show);
+
+foo() = if (arg(Bool)) 1 else foo();
+
+main() {
+    show(#type([foo()]));
+}
+

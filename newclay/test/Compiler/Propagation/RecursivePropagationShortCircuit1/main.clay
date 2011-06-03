@@ -1,0 +1,7 @@
+import show.(show);
+
+foo() = arg(Bool) or foo();
+
+main() {
+    show(#type([ foo() ]));
+}

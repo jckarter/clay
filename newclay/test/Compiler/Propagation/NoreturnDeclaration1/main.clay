@@ -1,0 +1,7 @@
+import show.(show);
+
+foo() noreturn __c__ """abort();""";
+
+main() {
+    show(#returns?([ foo(); ]));
+}

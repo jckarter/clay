@@ -1,3 +1,0 @@
-import __primitives__.(lambdaSymbol?);
-
-main() = (var l = [1]; #lambdaSymbol?(l));

@@ -1,6 +1,0 @@
-adder(y:'T) = [x -> 'T, y + x];
-
-main() {
-    var f = adder(1), g = adder(1.0);
-    return ..f(2), ..g(2.5);
-}

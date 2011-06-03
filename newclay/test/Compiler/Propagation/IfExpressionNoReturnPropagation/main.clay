@@ -1,0 +1,7 @@
+import show.(show);
+
+foo() = if (arg(Bool)) (throw 0) else 1;
+
+main() {
+    show(#returns?([foo();]));
+}

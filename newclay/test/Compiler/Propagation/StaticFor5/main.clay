@@ -1,0 +1,6 @@
+import show.(show);
+
+main() {
+    static for (#'x in #1, #true, #"three")
+        show(#'x);
+}

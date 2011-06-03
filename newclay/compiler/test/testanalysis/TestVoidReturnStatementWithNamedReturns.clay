@@ -1,4 +1,0 @@
-main() --> r:Int {
-    r <-- 0;
-    return;
-}

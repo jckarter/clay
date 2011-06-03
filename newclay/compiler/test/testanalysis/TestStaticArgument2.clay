@@ -1,3 +1,0 @@
-foo(x:Int, #'n) = 'n;
-
-main() = foo(1, #0), foo(1, #1);

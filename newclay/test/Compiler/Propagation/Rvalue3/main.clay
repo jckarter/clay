@@ -1,0 +1,5 @@
+import show.(show);
+
+main() {
+    show(if (true) 1 else (throw 0));
+}

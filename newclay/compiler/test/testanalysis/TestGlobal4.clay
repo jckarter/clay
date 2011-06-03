@@ -1,7 +1,0 @@
-var y = 2;
-
-foo() : Int = y;
-
-var x = foo();
-
-main() = x;

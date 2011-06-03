@@ -1,0 +1,11 @@
+import show.(show);
+
+foo() --> {
+    if (true)
+        return;
+}
+
+main() {
+    foo();
+    show("ok");
+}

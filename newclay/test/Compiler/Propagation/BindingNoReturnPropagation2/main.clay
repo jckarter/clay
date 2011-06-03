@@ -1,0 +1,5 @@
+import show.(show);
+
+main() {
+    show(#returns?([var x = 1, y = throw 0;]));
+}

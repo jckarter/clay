@@ -1,8 +1,0 @@
-import __primitives__.*;
-
-terminating() { return; }
-nonterminating() { throw 0; }
-
-main() {
-    return #returns?([..terminating()]), #returns?([..nonterminating()]);
-}

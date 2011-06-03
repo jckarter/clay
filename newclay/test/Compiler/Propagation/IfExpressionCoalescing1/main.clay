@@ -1,0 +1,10 @@
+import show.(show);
+
+main() {
+    var x = 1;
+
+    show(
+        if (true) x else 2,
+        if (false) x else 2,
+    );
+}

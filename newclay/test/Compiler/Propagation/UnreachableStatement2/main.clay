@@ -1,0 +1,12 @@
+import show.(show);
+
+foo() {}
+
+bar() {
+    __unreachable__;
+    foo();
+}
+
+main() {
+    show(#returns?([ bar(); ]));
+}

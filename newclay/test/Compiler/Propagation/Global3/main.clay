@@ -1,0 +1,9 @@
+import show.(show);
+
+var x = y;
+var y = 2;
+var z = x + y;
+
+main() {
+    show(z);
+}

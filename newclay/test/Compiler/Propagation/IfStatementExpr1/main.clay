@@ -1,0 +1,19 @@
+import show.(show);
+
+foo() = 2, true;
+bar() = 3, false;
+
+main() {
+    if (var x, y? = foo(); y?) {
+        show("true", x);
+    } else {
+        show("false", x);
+    }
+
+    if (var x, y? = bar(); y?) {
+        show("true", x);
+    } else {
+        show("false", x);
+    }
+}
+

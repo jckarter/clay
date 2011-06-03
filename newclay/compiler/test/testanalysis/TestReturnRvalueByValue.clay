@@ -1,3 +1,0 @@
-foo(rvalue x) = x;
-
-main() = foo(1);

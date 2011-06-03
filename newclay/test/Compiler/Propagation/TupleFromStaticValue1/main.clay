@@ -1,0 +1,8 @@
+import show.(show);
+
+unpack(#'x) = 'x;
+
+main() {
+    var t = unpack(#(1, true, '3', "four"));
+    show(t.0, t.1, t.2, t.3);
+}

@@ -1,0 +1,14 @@
+import show.(show);
+
+foo(y) = 111, y;
+
+main() {
+    static for (i in 1, 2, 3)
+        switch (var x, y = foo(i); y)
+        case (1)
+            show(x);
+        case (2)
+            show(x);
+        else
+            show(x);
+}

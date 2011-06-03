@@ -1,0 +1,17 @@
+import unsafe.compositetypes.*;
+import unsafe.valuesemantics.*;
+import show.(show);
+
+symbol Foo = CompositeType(value:Int);
+overload Foo(v:Int) = initializeRecord(Foo, v);
+overload destroy(x:Foo) {}
+overload #BitwiseMoved?(Foo) = false;
+overload moveRvalue(ref x:Foo) { show("moving"); return initializeRecord(Foo, x.value); }
+
+main() {
+    rvalue x = Foo(5);
+    var x1 = Foo(0);
+    show(x1.value);
+    x1 <-- x;
+    show(x1.value);
+}

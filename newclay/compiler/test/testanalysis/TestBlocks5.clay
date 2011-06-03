@@ -1,3 +1,0 @@
-symbol main;
-overload main() {}
-

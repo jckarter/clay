@@ -1,0 +1,11 @@
+import show.(show);
+
+foo() {
+    while (arg(Bool))
+        return 2;
+    throw 0;
+}
+
+main() {
+    show(#returns?([ foo(); ]));
+}

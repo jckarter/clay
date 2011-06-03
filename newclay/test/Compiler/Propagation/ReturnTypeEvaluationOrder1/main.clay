@@ -1,0 +1,12 @@
+import show.(show);
+import __primitives__.*;
+
+foo() { show("ok"); }
+overload foo() --> y:staticError("this should not be run")
+    | false
+{
+}
+
+main() {
+    foo();
+}

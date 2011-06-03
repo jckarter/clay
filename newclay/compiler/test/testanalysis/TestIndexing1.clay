@@ -1,7 +1,0 @@
-makeArray() --> r:Array[Int, 12] __c__ """abort();""";
-
-main() {
-    var x = makeArray();
-
-    return x[0];
-}

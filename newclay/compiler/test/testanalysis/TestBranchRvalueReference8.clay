@@ -1,4 +1,0 @@
-main() {
-    rvalue x = true, y = false;
-    return if (true) x else y;
-}
