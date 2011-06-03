@@ -1,0 +1,13 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+var global:ValueSemanticsLogger;
+
+foo() = ref global;
+
+main() {
+    show("--");
+    ref x = foo();
+    x <-- ValueSemanticsLogger(1);
+    show("--");
+}

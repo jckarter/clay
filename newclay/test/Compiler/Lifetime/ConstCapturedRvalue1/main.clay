@@ -1,0 +1,23 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+rvalueReturn(rvalue x) = rvalue x;
+
+bar(y) {}
+
+foo(a?, b?) {
+    rvalue x = ValueSemanticsLogger(1);
+    const y = rvalueReturn(x);
+
+    if (a?) return;
+    bar(y);
+    if (b?) return;
+}
+
+main() {
+    static for (a? in false, true)
+        static for (b? in false, true) {
+            foo(a?, b?);
+            show("--");
+        }
+}

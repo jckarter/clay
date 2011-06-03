@@ -1,0 +1,12 @@
+initialize
+1
+--
+initialize
+2
+destroy
+1
+move
+2
+--
+destroy
+2

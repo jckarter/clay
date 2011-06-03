@@ -1,0 +1,15 @@
+initialize
+1
+copy
+2
+initialize
+3
+--
+3
+--
+destroy
+3
+destroy
+2
+destroy
+1

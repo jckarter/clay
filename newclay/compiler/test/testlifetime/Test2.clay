@@ -1,8 +1,0 @@
-main() {
-    if (false) return;
-    {
-        var x = toNontrivialInt(1);
-        if (false) return;
-    }
-    if (false) return;
-}

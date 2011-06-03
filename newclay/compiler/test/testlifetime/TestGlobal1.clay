@@ -1,3 +1,0 @@
-var x = toNontrivialInt(1);
-
-main() = x;

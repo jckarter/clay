@@ -1,0 +1,25 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+foo?(x) = true;
+bar(x) {}
+
+wut(a?) {
+    show("--");
+    while (var x = ValueSemanticsLogger(1); foo?(x)) {
+        show("**");
+        if (a?)
+            break;
+        bar(x);
+        show("**");
+        break;
+    }
+    show("--");
+}
+
+main() {
+    show("!!");
+    wut(true);
+    show("!!");
+    wut(false);
+}

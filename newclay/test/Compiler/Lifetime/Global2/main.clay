@@ -1,0 +1,12 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+foo(x:ValueSemanticsLogger) = ValueSemanticsLogger(3);
+
+var x = ValueSemanticsLogger(1);
+var z = foo(x);
+
+main() {
+    show("--");
+    show(z.tag);
+    show("--");
+}

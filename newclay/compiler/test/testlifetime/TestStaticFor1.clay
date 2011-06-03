@@ -1,5 +1,0 @@
-foo() = toNontrivialInt(1), toNontrivialInt(2), toNontrivialInt(3);
-
-main() {
-    static for (x in ..foo()) {}
-}

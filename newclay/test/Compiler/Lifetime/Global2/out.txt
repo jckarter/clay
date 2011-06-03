@@ -1,0 +1,11 @@
+initialize
+1
+initialize
+3
+--
+3
+--
+destroy
+3
+destroy
+1

@@ -1,0 +1,9 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+foo() = ValueSemanticsLogger(1), ValueSemanticsLogger(2), ValueSemanticsLogger(3);
+
+main() {
+    show("--");
+    static for (x in ..foo()) {}
+    show("--");
+}

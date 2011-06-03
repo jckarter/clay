@@ -1,0 +1,11 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+refReturn() --> ref x:ValueSemanticsLogger __c__ 
+    """$x = 0;""";
+
+main() {
+    show("--");
+    ref x = refReturn();
+    show("--");
+}

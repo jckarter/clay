@@ -1,0 +1,16 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+foo(a?, b?) {
+    if (a?) return;
+    var x = ValueSemanticsLogger(1);
+    if (b?) return;
+}
+
+main() {
+    static for (a? in false, true)
+        static for (b? in false, true) {
+            foo(a?, b?);
+            show("--");
+        }
+}

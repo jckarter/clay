@@ -1,0 +1,14 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+foo() --> returned:ValueSemanticsLogger {
+    show("--");
+    returned <-- ValueSemanticsLogger(1);
+    show("--");
+}
+
+main() {
+    show("**");
+    foo();
+    show("**");
+}
