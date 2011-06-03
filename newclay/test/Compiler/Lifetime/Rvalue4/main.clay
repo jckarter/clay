@@ -1,0 +1,22 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+nop(x) {}
+
+foo(a?, b?) {
+    rvalue x = ValueSemanticsLogger(1);
+    if (a?) return;
+    show("**");
+    nop(x);
+    show("**");
+    if (b?) return;
+}
+
+main() {
+    static for (a? in true, false)
+        static for (b? in true, false) {
+            foo(a?, b?);
+            show("--");
+        }
+}
+

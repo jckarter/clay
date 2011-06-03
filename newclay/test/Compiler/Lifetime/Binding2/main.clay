@@ -1,0 +1,16 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+var global = ValueSemanticsLogger(1);
+
+refReturn() = ref global;
+
+main() {
+    show("**");
+    {
+        show("--");
+        var x = refReturn();
+        show("--");
+    }
+    show("**");
+}

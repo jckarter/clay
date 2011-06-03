@@ -1,0 +1,7 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+main() {
+    var x = ValueSemanticsLogger(1);
+    var y = ValueSemanticsLogger(2);
+}

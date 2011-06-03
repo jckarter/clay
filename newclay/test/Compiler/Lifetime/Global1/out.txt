@@ -1,0 +1,7 @@
+initialize
+1
+--
+1
+--
+destroy
+1

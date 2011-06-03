@@ -1,0 +1,11 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+main() {
+    var x1 = 1;
+    var x2 = 1;
+    var y1 = ValueSemanticsLogger(100);
+    var y2 = ValueSemanticsLogger(200);
+    x1 <-- x2;
+    y1 <-- y2;
+}

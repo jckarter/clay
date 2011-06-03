@@ -1,0 +1,31 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+eatRvalue(rvalue x) {}
+nop(x) {}
+pass(x) = x;
+drop(x) = 1;
+
+foo(a?, b?, c?, d?, e?, f?) {
+    show("--");
+    if (a?) return;
+    eatRvalue(ValueSemanticsLogger(1));
+    if (b?) return;
+    nop(ValueSemanticsLogger(2));
+    if (c?) return;
+    nop(drop(ValueSemanticsLogger(3)));
+    if (d?) return;
+    nop(pass(ValueSemanticsLogger(4)));
+    if (e?) return;
+    ValueSemanticsLogger(5);
+    if (f?) return;
+}
+
+main() {
+    foo(true,  false, false, false, false, false);
+    foo(false, true,  false, false, false, false);
+    foo(false, false, true,  false, false, false);
+    foo(false, false, false, true,  false, false);
+    foo(false, false, false, false, true,  false);
+    foo(false, false, false, false, false, true );
+}

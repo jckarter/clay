@@ -1,0 +1,10 @@
+initialize
+100
+initialize
+200
+copy
+201
+destroy
+200
+destroy
+201

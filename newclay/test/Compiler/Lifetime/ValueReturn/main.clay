@@ -1,0 +1,10 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+foo() = ValueSemanticsLogger(1);
+
+main() {
+    show("--");
+    var x = foo();
+    show("--");
+}

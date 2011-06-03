@@ -1,0 +1,24 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+eatRvalue(rvalue x:ValueSemanticsLogger) inline --> rvalue y:ValueSemanticsLogger
+    __c__ """$y = &$x;""";
+
+foo(a?, b?) {
+    rvalue x = ValueSemanticsLogger(1);
+    rvalue y = ValueSemanticsLogger(2);
+
+    if (a?) return;
+
+    rvalue z = eatRvalue(x);
+
+    if (b?) return;
+}
+
+main() {
+    static for (a? in true, false)
+        static for (b? in true, false) {
+            foo(a?, b?);
+            show("--");
+        }
+}

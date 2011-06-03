@@ -1,3 +1,0 @@
-main() --> returned:NontrivialInt {
-    returned <-- toNontrivialInt(1);
-}

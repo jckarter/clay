@@ -1,0 +1,74 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+testRvalue(rvalue x) = true;
+test(x) = true;
+
+foo(n) {
+    if (n == 0) return;
+
+    var x = ValueSemanticsLogger(1);
+
+    if (n == 1) return;
+
+    @foo {
+        if (n == 2) break @foo;
+        if (n == 3) return;
+
+        var y = ValueSemanticsLogger(3);
+
+        if (n == 4) break @foo;
+        if (n == 5) return;
+
+        @bar {
+            if (n == 6) break @foo;
+            if (n == 7) break @bar;
+            if (n == 8) return;
+
+            var z = ValueSemanticsLogger(4);
+
+            if (n ==  9) break @foo;
+            if (n == 10) break @bar;
+            if (n == 11) return;
+        }
+
+        while (test(ValueSemanticsLogger(5))) {
+            if (n == 12) break @foo;
+            if (n == 13) break;
+            if (n == 14) return;
+
+            var w = ValueSemanticsLogger(6);
+
+            if (n == 15) break @foo;
+            if (n == 16) break;
+            if (n == 17) return;
+
+            @bas {
+                if (n == 18) break @foo;
+                if (n == 19) break;
+                if (n == 20) break @bas;
+                if (n == 21) return;
+
+                var v = ValueSemanticsLogger(7);
+
+                if (n == 22) break @foo;
+                if (n == 23) break;
+                if (n == 24) break @bas;
+                if (n == 25) return;
+            }
+            break;
+        }
+
+        if (n == 26) break @foo;
+        if (n == 27) return;
+    }
+
+    if (n == 28) return;
+}
+
+main() {
+    for (n in Range(29)) {
+        foo(n);
+        show("--");
+    }
+}

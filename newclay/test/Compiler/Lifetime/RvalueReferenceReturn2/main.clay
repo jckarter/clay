@@ -1,0 +1,30 @@
+import show.(show);
+import unsafe.casts.(refToRvalue);
+import test.valuesemantics.(ValueSemanticsLogger);
+
+var global = ValueSemanticsLogger(1);
+
+rvalueReturn() = rvalue refToRvalue(global);
+nop(x) {}
+
+foo(a?, b?, c?) {
+    if (a?) return;
+
+    rvalue x = rvalueReturn();
+
+    if (b?) return;
+
+    nop(x);
+
+    if (c?) return;
+}
+
+main() {
+    show("--");
+    static for (a? in true, false)
+        static for (b? in true, false)
+            static for (c? in true, false) {
+                foo(a?, b?, c?);
+                show("--");
+            }
+}

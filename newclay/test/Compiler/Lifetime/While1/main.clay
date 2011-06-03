@@ -1,0 +1,58 @@
+import show.(show);
+import test.valuesemantics.(ValueSemanticsLogger);
+testRvalue(rvalue x) = true;
+test(x) = true;
+
+foo(n) {
+    if (n == 0) return;
+
+    var x = ValueSemanticsLogger(1);
+
+    if (n == 1) return;
+
+    while (testRvalue(ValueSemanticsLogger(2))) {
+        if (n == 2) break;
+        if (n == 3) return;
+
+        var y = ValueSemanticsLogger(3);
+
+        if (n == 4) break;
+        if (n == 5) return;
+
+        {
+            if (n == 6) break;
+            if (n == 7) return;
+
+            var z = ValueSemanticsLogger(4);
+
+            if (n == 8) break;
+            if (n == 9) return;
+        }
+
+        while (test(ValueSemanticsLogger(5))) {
+            if (n == 10) break;
+            if (n == 11) return;
+
+            var w = ValueSemanticsLogger(6);
+
+            if (n == 12) break;
+            if (n == 13) return;
+
+            break;
+        }
+
+        if (n == 14) break;
+        if (n == 15) return;
+
+        break;
+    }
+
+    if (n == 16) return;
+}
+
+main() {
+    for (n in Range(17)) {
+        foo(n);
+        show("--");
+    }
+}
