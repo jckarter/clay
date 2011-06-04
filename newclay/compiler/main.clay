@@ -27,6 +27,7 @@ main() {
     }
     catch (e:ClayError) {
         displayError(e);
+        return 1;
     }
     return 0;
 }
