@@ -1,3 +1,0 @@
-import dirmodule as foo;
-
-symbol Main = ();

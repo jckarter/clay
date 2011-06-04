@@ -1,4 +1,0 @@
-import dirmodule.subfilemodule.(SubFileModuleEntry);
-import dirmodule.subfilemodule2.(SubFileModuleEntry);
-
-symbol Main = ();
