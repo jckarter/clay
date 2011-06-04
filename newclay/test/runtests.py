@@ -260,7 +260,7 @@ def runTests() :
         print "(%d tests disabled)" % len(disabled)
     if len(failed) != 0:
         print "\nFAILED %d TESTS" % len(failed)
-        print "Failed tests:\n  ",
+        print "Failed tests:\n ",
         print "\n  ".join(failed)
 
 
