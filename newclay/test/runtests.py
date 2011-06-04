@@ -1,3 +1,4 @@
+import re
 import os
 import glob
 import pickle
@@ -109,26 +110,41 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("*.data")]
 
     def match(self, resultout, resulterr, returncode) :
-        outfile = fileForPlatform(".", "out", "txt")
-        errfile = fileForPlatform(".", "err", "txt")
-        if not os.path.isfile(outfile) :
-            return "out.txt missing"
-        refout = open(outfile).read()
-        referr = ""
-        if os.path.isfile(errfile):
-            referr = open(errfile).read()
-        resultout = resultout.replace('\r', '')
-        refout    = refout.replace('\r', '')
-        resulterr = resulterr.replace('\r', '')
-        referr    = referr.replace('\r', '')
-        if resultout == refout and resulterr == referr:
-            return "ok"
-        elif resultout != refout and resulterr != referr:
-            return "out.txt and err.txt mismatch"
-        elif resultout != refout:
-            return "out.txt mismatch"
-        elif resulterr != referr:
-            return "err.txt mismatch"
+        compilererrfile = fileForPlatform(".", "compilererr", "txt")
+        if os.path.isfile(compilererrfile):
+            if returncode != "compiler error":
+                return "compiler did not fail"
+            errpattern = open(compilererrfile).read()
+            errpattern = errpattern.replace('\r', '').strip()
+
+            if re.search(errpattern, resulterr):
+                return "ok"
+            else:
+                return "unexpected compiler error"
+
+        else:
+            if returncode == "compiler error":
+                return "compiler error"
+            outfile = fileForPlatform(".", "out", "txt")
+            errfile = fileForPlatform(".", "err", "txt")
+            if not os.path.isfile(outfile) :
+                return "out.txt missing"
+            refout = open(outfile).read()
+            referr = ""
+            if os.path.isfile(errfile):
+                referr = open(errfile).read()
+            resultout = resultout.replace('\r', '')
+            refout    = refout.replace('\r', '')
+            resulterr = resulterr.replace('\r', '')
+            referr    = referr.replace('\r', '')
+            if resultout == refout and resulterr == referr:
+                return "ok"
+            elif resultout != refout and resulterr != referr:
+                return "out.txt and err.txt mismatch"
+            elif resultout != refout:
+                return "out.txt mismatch"
+            elif resulterr != referr:
+                return "err.txt mismatch"
 
     def run(self):
         os.chdir(self.path)
@@ -136,10 +152,7 @@ class TestCase(object):
         self.post_build()
         resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        if returncode == "compiler error":
-            return "compiler error"
-        else:
-            return self.match(resultout, resulterr, returncode)
+        return self.match(resultout, resulterr, returncode)
 
     def name(self):
         return os.path.relpath(self.path, testRoot)
@@ -152,7 +165,7 @@ class TestCase(object):
         process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
         compilerout, compilererr = process.communicate()
         if process.returncode != 0 :
-            return "", "", "compiler error"
+            return "", compilerout, "compiler error"
         if self.runscript is None:
             commandline = [outfilename]
         else:
@@ -178,7 +191,12 @@ class TestCase(object):
 
 class TestModuleCase(TestCase):
     def match(self, resultout, resulterr, returncode) :
-        return "ok" if returncode == 0 else "fail"
+        if returncode == 0:
+            return "ok"
+        elif returncode == "compiler error":
+            return "compiler error"
+        else:
+            return "fail"
 
 class TestDisabledCase(TestCase):
     def runtest(self):
