@@ -112,7 +112,7 @@ class TestCase(object):
         outfile = fileForPlatform(".", "out", "txt")
         errfile = fileForPlatform(".", "err", "txt")
         if not os.path.isfile(outfile) :
-            return False
+            return "out.txt missing"
         refout = open(outfile).read()
         referr = ""
         if os.path.isfile(errfile):
@@ -121,7 +121,14 @@ class TestCase(object):
         refout    = refout.replace('\r', '')
         resulterr = resulterr.replace('\r', '')
         referr    = referr.replace('\r', '')
-        return resultout == refout and resulterr == referr
+        if resultout == refout and resulterr == referr:
+            return "ok"
+        elif resultout != refout and resulterr != referr:
+            return "out.txt and err.txt mismatch"
+        elif resultout != refout:
+            return "out.txt mismatch"
+        elif resulterr != referr:
+            return "err.txt mismatch"
 
     def run(self):
         os.chdir(self.path)
@@ -129,9 +136,10 @@ class TestCase(object):
         self.post_build()
         resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        if self.match(resultout, resulterr, returncode):
-            return "ok"
-        return "fail"
+        if returncode == "compiler error":
+            return "compiler error"
+        else:
+            return self.match(resultout, resulterr, returncode)
 
     def name(self):
         return os.path.relpath(self.path, testRoot)
@@ -141,9 +149,10 @@ class TestCase(object):
         outfilenameext = ".exe" if sys.platform == "win32" else ""
         outfilename = testbasename.replace('.clay', outfilenameext)
         outfilename = os.path.join(".", outfilename)
-        process = Popen(self.cmdline(compiler))
-        if process.wait() != 0 :
-            return "fail", "", None
+        process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
+        compilerout, compilererr = process.communicate()
+        if process.returncode != 0 :
+            return "", "", "compiler error"
         if self.runscript is None:
             commandline = [outfilename]
         else:
@@ -169,7 +178,13 @@ class TestCase(object):
 
 class TestModuleCase(TestCase):
     def match(self, resultout, resulterr, returncode) :
-        return returncode == 0
+        return "ok" if returncode == 0 else "fail"
+
+class TestDisabledCase(TestCase):
+    def runtest(self):
+        return "disabled", "", None
+    def match(self, resultout, resulterr, returncode) :
+        return "disabled"
 
 
 #
@@ -179,9 +194,15 @@ class TestModuleCase(TestCase):
 def findTestCase(folder, base = None):
     testPath = fileForPlatform(folder, "test", "clay")
     mainPath = fileForPlatform(folder, "main", "clay")
-    if os.path.isfile(testPath) :
+    testDisabledPath = fileForPlatform(folder, "test-disabled", "clay")
+    mainDisabledPath = fileForPlatform(folder, "main-disabled", "clay")
+    if os.path.isfile(testPath):
         TestModuleCase(folder, testPath, base)
-    else :
+    elif os.path.isfile(testDisabledPath):
+        TestDisabledCase(folder, testDisabledPath, base)
+    elif os.path.isfile(mainDisabledPath):
+        TestDisabledCase(folder, mainDisabledPath, base)
+    else:
         TestCase(folder, mainPath, base)
 
 def findTestCases():
@@ -196,13 +217,18 @@ def runTests() :
     pool = Pool(processes = cpu_count())
     results = pool.imap(runTest, testcases)
     failed = []
+    disabled = []
     for test in testcases:
         res = results.next()
         print "TEST %s: %s" % (test.name(), res)
-        if res == "fail":
+        if res == "disabled":
+            disabled.append(test.name())
+        elif res != "ok":
             failed.append(test.name())
     if len(failed) == 0:
         print "\nPASSED ALL %d TESTS" % len(testcases)
+        if len(disabled) != 0:
+            print "(%d tests disabled)" % len(disabled)
     else:
         print "\nFailed tests:" 
         print "\n".join(failed)
