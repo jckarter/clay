@@ -1,0 +1,13 @@
+eatRvalue(rvalue x) {}
+
+main() {
+    rvalue x = 3;
+
+    @outer while (true) {
+        rvalue y = 4;
+        @inner while (true) {
+            eatRvalue(x);
+            break;
+        }
+    }
+}

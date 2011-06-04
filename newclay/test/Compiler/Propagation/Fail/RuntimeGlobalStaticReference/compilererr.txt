@@ -1,0 +1,1 @@
+runtime variable cannot be used at compile time

@@ -1,0 +1,11 @@
+foo?(x) = false;
+
+assert(f) {
+        throw 0;
+}
+
+main() {
+    static for (x in 1, true, '3')
+        if (foo?(x))
+            return false;
+}

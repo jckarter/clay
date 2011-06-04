@@ -1,0 +1,1 @@
+blocks not allowed in statement expression
