@@ -2,6 +2,7 @@ import re
 import os
 import glob
 import pickle
+import signal
 import sys
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
@@ -227,30 +228,40 @@ def findTestCases():
     findTestCase(runTestRoot)
     return TestCase.allCases
 
+def initWorker():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
 def runTest(t):
     return t.run()
 
 def runTests() :
     testcases = findTestCases()
-    pool = Pool(processes = cpu_count())
+    pool = Pool(processes = cpu_count(), initializer=initWorker)
     results = pool.imap(runTest, testcases)
+    succeeded = []
     failed = []
     disabled = []
-    for test in testcases:
-        res = results.next()
-        print "TEST %s: %s" % (test.name(), res)
-        if res == "disabled":
-            disabled.append(test.name())
-        elif res != "ok":
-            failed.append(test.name())
-    if len(failed) == 0:
-        print "\nPASSED ALL %d TESTS" % len(testcases)
-        if len(disabled) != 0:
-            print "(%d tests disabled)" % len(disabled)
-    else:
-        print "\nFailed tests:" 
-        print "\n".join(failed)
-        print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases)) 
+    try:
+        for test in testcases:
+            res = results.next()
+            print "TEST %s: %s" % (test.name(), res)
+            if res == "disabled":
+                disabled.append(test.name())
+            elif res != "ok":
+                failed.append(test.name())
+            else:
+                succeeded.append(test.name())
+    except KeyboardInterrupt:
+        print "\nInterrupted!"
+        pool.terminate()
+
+    print "\nPASSED %d TESTS" % len(succeeded)
+    if len(disabled) != 0:
+        print "(%d tests disabled)" % len(disabled)
+    if len(failed) != 0:
+        print "\nFAILED %d TESTS" % len(failed)
+        print "Failed tests:\n  ",
+        print "\n  ".join(failed)
 
 
 def main() :
