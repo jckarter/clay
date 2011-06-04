@@ -1,4 +1,0 @@
-import conflict;
-import conflict.diamonds;
-
-symbol Main = ();

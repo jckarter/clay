@@ -1,5 +1,0 @@
-import circularspecific2.*;
-import circularspecific2.(Circular2);
-
-symbol Circular1 = ();
-
