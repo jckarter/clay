@@ -13,6 +13,7 @@ import time
 #
 
 testRoot = os.path.dirname(os.path.abspath(__file__))
+runTestRoot = testRoot
 
 
 
@@ -184,7 +185,7 @@ def findTestCase(folder, base = None):
         TestCase(folder, mainPath, base)
 
 def findTestCases():
-    findTestCase(testRoot)
+    findTestCase(runTestRoot)
     return TestCase.allCases
 
 def runTest(t):
@@ -210,8 +211,11 @@ def runTests() :
 
 def main() :
     global testRoot
+    global runTestRoot
     if len(sys.argv) > 1 :
-        testRoot = os.path.join(testRoot, *sys.argv[1:])
+        runTestRoot = os.path.join(testRoot, *sys.argv[1:])
+    else:
+        runTestRoot = testRoot
     startTime = time.time()
     runTests()
     endTime = time.time()
