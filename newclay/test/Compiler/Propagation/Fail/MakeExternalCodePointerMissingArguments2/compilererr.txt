@@ -1,0 +1,1 @@
+makeExternalCodePointer requires at least two arguments

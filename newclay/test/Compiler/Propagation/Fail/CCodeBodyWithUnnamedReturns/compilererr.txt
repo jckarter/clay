@@ -1,0 +1,1 @@
+literal procedure must use named return values

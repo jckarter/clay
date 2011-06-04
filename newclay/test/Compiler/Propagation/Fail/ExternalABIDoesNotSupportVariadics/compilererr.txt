@@ -1,0 +1,1 @@
+external function with StdcallABI does not support variadic arguments

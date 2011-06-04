@@ -1,0 +1,1 @@
+variable declared with type Int but bound to value of type Bool
