@@ -277,17 +277,18 @@ private initializeModule(module) {
 
 private moduleSourcePath(root, name) = joinPath(root, joinPath(name.path));
 
-private findModuleSource(searchPath, name) {
+private findModuleSource(searchPath, name, moduleSuffixes) {
     var path = String();
     var basename = name.path[size(name.path) - 1];
     for (root in searchPath) {
         path = moduleSourcePath(root, name);
-        for (tryName in [
-            path + ".clay",
-            joinPath(path, basename + ".clay"),
-        ])
-            if (pathExists?(tryName))
-                return move(tryName);
+        for (suffix in moduleSuffixes)
+            for (tryName in [
+                path + suffix,
+                joinPath(path, basename + suffix),
+            ])
+                if (pathExists?(tryName))
+                    return move(tryName);
     }
 
     throw GenericError(printString(
@@ -301,7 +302,11 @@ traceLoading(traceLoading?:Bool) { _traceLoading? = traceLoading?; }
 private loadModule(program, name) {
     ref module = program.modules[name];
     module = Module(program, name);
-    var sourcePath = findModuleSource(program.moduleSearchPath, name);
+    var sourcePath = findModuleSource(
+        program.moduleSearchPath,
+        name,
+        program.targetInfo.moduleSuffixes);
+
     if (_traceLoading?)
         println("* loading ", name, " from ", sourcePath);
     module.originalAST = parse(tokenize(readSource(sourcePath)));
