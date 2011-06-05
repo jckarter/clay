@@ -8,6 +8,7 @@ record TargetInfo (
     platform: PlatformKind,
     platformFamily: PlatformFamilyKind,
     cDialect: CDialect,
+    moduleSuffixes: Vector[String],
 );
 
 overload TargetInfo(cpu:CPUKind, platform:PlatformKind) = TargetInfo(
@@ -17,6 +18,7 @@ overload TargetInfo(cpu:CPUKind, platform:PlatformKind) = TargetInfo(
     platform,
     platformFamily(platform),
     platformCDialect(platform),
+    findModuleSuffixes(cpu, platform),
 );
 
 enum CPUKind {
@@ -195,4 +197,26 @@ platformCDialect(x:PlatformKind) {
     default:
         return GCC_DIALECT;
     }
+}
+
+findModuleSuffixes(cpu:CPUKind, platform:PlatformKind) {
+    var suffixes = Vector[String]();
+    var bitsString = printString(cpuPointerBits(cpu));
+    var platformString = printString(platform);
+    var cpuString = printString(cpu);
+
+    push(suffixes, String("." + platformString + "." + cpuString + "." + bitsString + ".clay"));
+    push(suffixes, String("." + platformString + "." + cpuString + ".clay"));
+    push(suffixes, String("." + platformString + "." + bitsString + ".clay"));
+    push(suffixes, String("." + cpuString + "." + bitsString + ".clay"));
+    push(suffixes, String("." + platformString + ".clay"));
+    push(suffixes, String("." + cpuString + ".clay"));
+    push(suffixes, String("." + bitsString + ".clay"));
+
+    var family = platformFamily(platform);
+    if (family != UNKNOWN_PLATFORM_FAMILY)
+        push(suffixes, String("." + printString(family) + ".clay"));
+    push(suffixes, String(".clay"));
+
+    return move(suffixes);
 }
