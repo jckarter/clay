@@ -91,10 +91,17 @@ overload #POD?(CodePointer['I, 'O])
 // all by reference
 
 private #codePointerLLInput('T) = Pointer[referenceBaseType('T)];
+private #codePointerLLOutput('T) = Pointer['T];
+overload #codePointerLLOutput(Ref['T]) = Pointer[Pointer['T]];
+overload #codePointerLLOutput(Rvalue['T]) = Pointer[Pointer['T]];
+overload #codePointerLLOutput(Const['T]) = Pointer[Pointer['T]];
 
 overload #llType(CodePointer[(..'I), (..'O)])
     = llCodePointerType[CdeclABI, false,
-        (..mapValues(codePointerLLInput, ..'I, ..'O)),
+        (
+            ..mapValues(codePointerLLInput, ..'I),
+            ..mapValues(codePointerLLOutput, ..'O)
+        ),
         ()
     ];
 overload #recursiveTypes(CodePointer[(..'I), (..'O)])
