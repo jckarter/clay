@@ -48,7 +48,7 @@ overload #size((..'t)) = countValues(..'t);
 //
 
 #SourceSequence?('S) = callDefined?(source, 'S);
-#SinkSequence?('S) = callDefined?(sink, 'S);
+#SinkSequence?('S) = callDefined?(sink, Ref['S]);
 #Sequence?('S) = callDefined?(iterator, 'S);
 
 #sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
