@@ -87,6 +87,10 @@ overload read1(ref i:UTF8Decoder['I]) {
     ]);
 }
 
+overload flush(ref s:UTF8Decoder['I]) | Buffered?('I) {
+    flush(*s);
+}
+
 overload #Reliable?(UTF8Decoder['I]) = Reliable?('I);
 
 
@@ -127,6 +131,10 @@ overload write1(ref s:UTF8Encoder['I], c:Char) {
         mapValues([b -> write1(sink, b);], ..encodeThree(code));
     else
         mapValues([b -> write1(sink, b);], ..encodeFour(code));
+}
+
+overload flush(ref s:UTF8Encoder['I]) | Buffered?('I) {
+    flush(*s);
 }
 
 overload #sinkValueType(UTF8Encoder['I]) = Char;
