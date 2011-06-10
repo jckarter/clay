@@ -33,10 +33,11 @@ alias CIntPtrT = Int;
 
 symbol CString = NewType(Pointer[CChar]);
 
+overload CString(c:ContiguousCoordinate[CChar])
+    = CString(pointerCast(Pointer[CChar], c));
 overload CString(s:StringConstant) = CString(pointerCast(Pointer[CChar], s.begin));
 
 overload begin(s:CString) = ContiguousCoordinate(*s);
 overload end(s:CString) = ContiguousCoordinate(*s) + size(s);
-overload size(s:CString) = strlen(*s);
+overload size(s:CString) = strlen(s);
 
-overload iterator(s:CString) = CoordinateRange(begin(s), end(s));

@@ -1,10 +1,11 @@
-import containers.(push, reserve);
+import containers.(push, reserve, Pusher);
 import ctypes.(CString, CChar);
 import meta.statics.(staticString?, staticStringSize);
 import strings.encodings.(stringBytes, stringTypeEncoding, EncodedString?);
 import strings.encodings.utf8.(UTF8);
 import vectors.(Vector);
 import values.(allValues?);
+import unsafe.casts.(pointerCast);
 import unsafe.coordinates.(begin, end);
 import unsafe.valuesemantics.(destroy);
 
@@ -52,6 +53,7 @@ overload String(x:'S)
 
 overload size(s:String) = s.size;
 overload source(s:String) = source(s.contents);
+overload sink(ref s:String) = Pusher(s);
 
 overload #stringTypeEncoding(String) = UTF8;
 overload stringBytes(s:String) = stringBytes(s.contents);
@@ -104,6 +106,6 @@ overload CString(ref s:String) {
     var sz = size(bytes);
     reserve(bytes, sz + 1u);
     beginByte[sz] = 0_u8;
-    return CString(Pointer[CChar](beginByte));
+    return CString(pointerCast(Pointer[CChar], beginByte));
 }
 
