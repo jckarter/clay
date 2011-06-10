@@ -1,4 +1,3 @@
-import containers.(Pusher);
 import ctypes.(CString);
 import printing.(printTo);
 import show.(show);
