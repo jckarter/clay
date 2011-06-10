@@ -1,0 +1,9 @@
+import show.(show);
+
+main() {
+    for (x in Range(5)) {
+        show(x);
+        if (x == 2) break;
+    }
+}
+
