@@ -6,9 +6,9 @@ initialize
 initialize
 3
 destroy
-3
+1
 destroy
 2
 destroy
-1
+3
 --
