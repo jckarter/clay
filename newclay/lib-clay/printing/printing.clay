@@ -1,0 +1,117 @@
+import ctypes.(CChar, CString, CInt, CUInt);
+import libc.stdio.(sprintf);
+import meta.statics.(staticString?, staticInt?);
+import strings.(String, String?);
+import strings.encodings.utf8.(UTF8);
+import unsafe.coordinates.(begin);
+
+
+//
+// printable protocol
+//
+
+symbol printObject;
+
+#PrintableSink?('S) = Sink?('S) and sinkValueType('S) == Char;
+#PrintableSinkSequence?('S) = SinkSequence?('S) and sequenceElementType('S) == Char;
+
+
+//
+// printing interface
+//
+
+printTo(ref seq:'S, forward ..objects) inline | PrintableSinkSequence?('S) {
+    var seqSink = sink(seq);
+    printTo(seqSink, ..objects);
+}
+
+overload printTo(ref sink:'S, forward ..objects) inline | PrintableSink?('S) {
+    static for (forward object in ..objects)
+        printObject(sink, object);
+}
+
+str['S](forward ..objects) inline {
+    var s = 'S();
+    printTo(s, ..objects);
+    return s;
+}
+
+overload str(forward ..objects) = str[String](..objects);
+
+
+//
+// printWithSprintf helper
+//
+
+// XXX specialize if the sink is a stdio file sink, or UTF-8 encoded, or bulk writable
+printWithSprintf(ref sink, #'fmt, #'sz, object)
+    | staticString?('fmt) and staticInt?('sz)
+{
+    var buffer = Array[CChar, 'sz]();
+    var cstring = CString(begin(buffer));
+    sprintf(cstring, CString('fmt), object);
+
+    for (c in UTF8(cstring)) {
+        if (not hasFront?(sink))
+            break;
+        write1(sink, c);
+    }
+}
+
+#bufferSizeForInt('T, 10)
+    = 2 // negative sign, null terminator
+    + (typeSize('T) * 240824 + 99999) div 100000; // log10(2^8) ~= 2.40824
+
+overload #bufferSizeForInt('T, 16)
+    = 2 // negative sign, null terminator
+    + typeSize('T) * 2; // log16(2^8) == 2
+
+
+//
+// printing of basic types
+//
+
+overload printObject(ref sink, s:'S) | String?('S) {
+    for (c in s) {
+        if (not hasFront?(sink))
+            break;
+        write1(sink, c);
+    }
+}
+
+overload printObject(ref sink, c:Char) {
+    if (hasFront?(sink))
+        write1(sink, c);
+}
+
+overload printObject(ref sink, b:Bool) {
+    printObject(sink, if (b) "true" else "false");
+}
+
+overload printObject(ref sink, i:'I)
+    | SignedInteger?('I) and typeSize('I) <= typeSize(CInt)
+{
+    printWithSprintf(sink, #"%d", #bufferSizeForInt('I, 10), i);
+}
+
+// XXX platform dependency
+overload printObject(ref sink, i:'I)
+    | SignedInteger?('I) and typeSize('I) == 8
+{
+    printWithSprintf(sink, #"%lld", #bufferSizeForInt('I, 10), i);
+}
+
+// XXX platform dependency
+overload printObject(ref sink, u:'U)
+    | UnsignedInteger?('U) and typeSize('U) == 8
+{
+    printWithSprintf(sink, #"%llu", #bufferSizeForInt('U, 10), u);
+}
+
+overload printObject(ref sink, f:Float32) {
+    printWithSprintf(sink, #"%.18g", f);
+}
+
+overload printObject(ref sink, f:Float64) {
+    printWithSprintf(sink, #"%.9g", f);
+}

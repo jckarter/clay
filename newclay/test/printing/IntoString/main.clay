@@ -1,0 +1,11 @@
+import containers.(Pusher);
+import ctypes.(CString);
+import printing.(printTo);
+import show.(show);
+import strings.(String);
+
+main() {
+    var s = String();
+    printTo(s, "it's ", true, " that ", 100, '¢', " make ", 'a', " $ or €");
+    show(CString(s));
+}
