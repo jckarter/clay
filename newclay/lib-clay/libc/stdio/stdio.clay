@@ -44,10 +44,17 @@ fflush(stream:FILE) inline --> returned:CInt
 
 puts(s:CString) inline --> returned:CInt
     __c__ """$returned = puts($s);""";
+
+// XXX gross
 printf(format:CString, ..args) inline --> returned:CInt
     __c__ """$returned = printf($format, $..args);""";
 overload printf(format:CString) inline --> returned:CInt
     __c__ """$returned = printf($format);""";
+sprintf(s:CString, format:CString, ..args) inline --> returned:CInt
+    __c__ """$returned = sprintf($s, $format, $..args);""";
+overload sprintf(s:CString, format:CString) inline --> returned:CInt
+    __c__ """$returned = sprintf($s, $format);""";
+
 
 const SEEK_SET = CInt(0);
 const SEEK_CUR = CInt(1);
