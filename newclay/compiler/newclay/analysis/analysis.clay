@@ -1716,9 +1716,26 @@ overload analyzeStatement(s, pc, bc, lc, stmt:ast.ForStatement)
                         withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().front, RTValues(iterValue))),
                         bindingValues ref=> {
                             analyzeForBindings(bodyS, subbc.env, stmt, bindingValues);
-                            var body = analyzeStatement(bodyS, pc, subbc, sublc, stmt.body);
-                            if (statementBreaks?(body))
-                                return body;
+
+                            var continueBlockNode = ir.Block(nextTargetId(pc));
+                            var continueBlockS = subContext(bodyS, continueBlockNode.body);
+                            var continuebc = BlockContext(newEnv(subbc.env));
+                            var continuelc = LoopContext(
+                                sublc.breakTarget,
+                                Maybe(continueBlockNode.label),
+                                false
+                            );
+
+                            var target = analyzeStatement(continueBlockS,
+                                pc, continuebc, continuelc, stmt.body
+                            );
+
+                            useSubRvalues(bodyS, continueBlockS);
+                            addSpecializedNode(bodyS, continueBlockNode);
+                            if (not statementBreaksAt?(target, continueBlockNode)
+                                and statementBreaks?(target))
+                                return target;
+
                             return stmtMaybe(
                                 withLocation(stmt, () ref=> analyzeCall(bodyS, stmt, getHooks().incFront, RTValues(iterValue))),
                                 v ref=> StatementTarget(),
