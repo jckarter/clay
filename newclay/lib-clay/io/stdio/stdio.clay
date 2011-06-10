@@ -3,6 +3,7 @@ import libc.stdio as stdio;
 import libc.errno as errno;
 import meta.symbols.(symbolWithTag?);
 import strings.(String?);
+import strings.encodings.utf8.(UTF8Encoder, UTF8Decoder);
 import unsafe.compositetypes.(CompositeType, initializeRecord);
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(destroy);
@@ -47,7 +48,6 @@ overload 'F(name:'S) inline | File?('F) and String?('S)
 //
 
 overload destroy(file:'F) inline | File?('F) { stdio.fclose(file._handle); }
-overload flush(file:'F) { stdio.fflush(file._handle); }
 
 private _seek(file:'F, distance, whence) inline {
     if (stdio.fseek(file._handle, distance, whence) == -1)
@@ -100,6 +100,8 @@ overload readN(s:InputFileSource, data:ContiguousCoordinate[UInt8], count:UInt) 
     return actualCount;
 }
 
+overload flush(s:InputFileSource) { stdio.fflush(*s); }
+
 overload idealReadSize(s:InputFileSource) inline = stdio.BUFSIZ();
 
 
@@ -126,4 +128,18 @@ overload writeN(s:OutputFileSink, data:ContiguousCoordinate[UInt8], count:UInt) 
     return count;
 }
 
+overload flush(s:OutputFileSink) { stdio.fflush(*s); }
+
 overload idealWriteSize(s:OutputFileSink) inline = stdio.BUFSIZ();
+
+
+
+//
+// stdin/stdout/stderr
+// XXX platform dependency. on windows these should also go through a line-ending
+// converter
+//
+
+var stdin = UTF8Decoder(InputFileSource(stdio.stdin()));
+var stdout = UTF8Encoder(OutputFileSink(stdio.stdout()));
+var stderr = UTF8Encoder(OutputFileSink(stdio.stderr()));
