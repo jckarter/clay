@@ -1,0 +1,10 @@
+import io.stdio.(stdout, stderr);
+import printing.(printTo);
+import show.(show);
+
+main() {
+    printTo(stdout, "it's ", true, " that ", 100, '¢', " make ", 'a', " $ or €\n");
+    flush(stdout);
+    printTo(stderr, "it's ", false, " that ", 100, '⁄', " make ", 'a', " £\n");
+    flush(stderr);
+}
