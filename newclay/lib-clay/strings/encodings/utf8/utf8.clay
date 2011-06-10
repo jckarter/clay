@@ -1,7 +1,10 @@
 import containers.(push, Pusher, Pushable?);
+import ctypes.(CString);
 import strings.encodings.(stringTypeEncoding, stringBytes, EncodedString?);
 import strings.unicode.(REPLACEMENT_CHAR, MAX_CODE_POINT);
 import strings.(String?);
+import unsafe.casts.(pointerCast);
+import unsafe.coordinates.(CoordinateRange, ContiguousCoordinate, begin, end);
 import values.(mapValues);
 
 
@@ -138,6 +141,12 @@ symbol UTF8['S] = NewType('S);
 overload UTF8(forward s:'S) inline
     | (Sequence?('S) or SinkSequence?('S)) and sequenceElementType('S) == UInt8
     = UTF8['S](s);
+
+overload UTF8(forward s:CString) inline
+    = UTF8(CoordinateRange(
+        pointerCast(ContiguousCoordinate[UInt8], begin(s)),
+        pointerCast(ContiguousCoordinate[UInt8], end(s)),
+    ));
 
 overload source(s:UTF8['S]) inline | Sequence?('S) = UTF8Decoder(iterator(*s));
 overload source(s:UTF8['S]) inline | SourceSequence?('S) = UTF8Decoder(source(*s));
