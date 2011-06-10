@@ -11,6 +11,13 @@ import unsafe.coordinates.(begin);
 //
 
 symbol printObject;
+symbol printObjectRepr;
+
+overload printObject(ref sink, forward o) inline
+    | defined?([printObjectRepr(sink, o);])
+{
+    printObjectRepr(sink, o);
+}
 
 #PrintableSink?('S) = Sink?('S) and sinkValueType('S) == Char;
 #PrintableSinkSequence?('S) = SinkSequence?('S) and sequenceElementType('S) == Char;
@@ -29,6 +36,19 @@ overload printTo(ref sink:'S, forward ..objects) inline | PrintableSink?('S) {
     static for (forward object in ..objects)
         printObject(sink, object);
 }
+
+printReprTo(ref seq:'S, forward ..objects) inline | PrintableSinkSequence?('S) {
+    var seqSink = sink(seq);
+    printTo(seqSink, ..objects);
+}
+overload printReprTo(ref sink:'S, forward o1, forward ..os) inline | PrintableSink?('S) {
+    printObjectRepr(sink, o1);
+    static for (forward o in ..os) {
+        printTo(sink, ", ");
+        printObjectRepr(sink, o);
+    }
+}
+overload printReprTo(ref sink:'S) inline | PrintableSink?('S) {}
 
 str['S](forward ..objects) inline {
     var s = 'S();
@@ -83,8 +103,26 @@ overload printObject(ref sink, c:Char) {
     if (hasFront?(sink))
         write1(sink, c);
 }
+overload printObjectRepr(ref sink, c:Char) {
+    var codePoint = CInt(c);
+    if (c == '\'') {
+        printObject(sink, "'\\''");
+    } else if (c == '\n') {
+        printObject(sink, "'\\n'");
+    } else if (c == '\t') {
+        printObject(sink, "'\\t'");
+    } else if (c == '\r') {
+        printObject(sink, "'\\r'");
+    } else if (codePoint >= 0x20 and codePoint < 0x7e) {
+        printWithSprintf(sink, #"'%c'", #4, codePoint);
+    } else if (codePoint < 0x80) {
+        printWithSprintf(sink, #"'\\x%02X'", #7, codePoint);
+    } else {
+        printWithSprintf(sink, #"'\\u%06X'", #11, codePoint);
+    }
+}
 
-overload printObject(ref sink, b:Bool) {
+overload printObjectRepr(ref sink, b:Bool) {
     printObject(sink, if (b) "true" else "false");
 }
 
@@ -92,6 +130,12 @@ overload printObject(ref sink, i:'I)
     | SignedInteger?('I) and typeSize('I) <= typeSize(CInt)
 {
     printWithSprintf(sink, #"%d", #bufferSizeForInt('I, 10), i);
+}
+
+overload printObject(ref sink, u:'U)
+    | UnsignedInteger?('U) and typeSize('U) <= typeSize(CUInt)
+{
+    printWithSprintf(sink, #"%u", #bufferSizeForInt('U, 10), u);
 }
 
 // XXX platform dependency
@@ -108,10 +152,84 @@ overload printObject(ref sink, u:'U)
     printWithSprintf(sink, #"%llu", #bufferSizeForInt('U, 10), u);
 }
 
+overload printObjectRepr(ref sink, i:Int8) {
+    printTo(sink, i, "i8");
+}
+overload printObjectRepr(ref sink, i:Int16) {
+    printTo(sink, i, "i16");
+}
+overload printObjectRepr(ref sink, i:Int32) {
+    printTo(sink, i, "i32");
+}
+overload printObjectRepr(ref sink, i:Int64) {
+    printTo(sink, i, "i64");
+}
+overload printObjectRepr(ref sink, i:Int) {
+    printTo(sink, i, "i");
+}
+overload printObjectRepr(ref sink, i:UInt8) {
+    printTo(sink, i, "u8");
+}
+overload printObjectRepr(ref sink, i:UInt16) {
+    printTo(sink, i, "u16");
+}
+overload printObjectRepr(ref sink, i:UInt32) {
+    printTo(sink, i, "u32");
+}
+overload printObjectRepr(ref sink, i:UInt64) {
+    printTo(sink, i, "u64");
+}
+overload printObjectRepr(ref sink, i:UInt) {
+    printTo(sink, i, "u");
+}
+
 overload printObject(ref sink, f:Float32) {
-    printWithSprintf(sink, #"%.18g", f);
+    // 25 = 18 significant digits + sign + "e" + 3 exponent digits + exponent sign + null
+    printWithSprintf(sink, #"%.18g", #25, f);
 }
 
 overload printObject(ref sink, f:Float64) {
-    printWithSprintf(sink, #"%.9g", f);
+    // 16 = 9 significant digits + sign + "e" + 3 exponent digits + exponent sign + null
+    printWithSprintf(sink, #"%.9g", #16, f);
+}
+
+overload printObjectRepr(ref sink, i:Int8) {
+    printTo(sink, i, "i8");
+}
+overload printObjectRepr(ref sink, i:Int16) {
+    printTo(sink, i, "i16");
+}
+overload printObjectRepr(ref sink, i:Int32) {
+    printTo(sink, i, "i32");
+}
+overload printObjectRepr(ref sink, i:Int64) {
+    printTo(sink, i, "i64");
+}
+overload printObjectRepr(ref sink, i:Int) {
+    printTo(sink, i, "i");
+}
+overload printObjectRepr(ref sink, i:UInt8) {
+    printTo(sink, i, "u8");
+}
+overload printObjectRepr(ref sink, i:UInt16) {
+    printTo(sink, i, "u16");
+}
+overload printObjectRepr(ref sink, i:UInt32) {
+    printTo(sink, i, "u32");
+}
+overload printObjectRepr(ref sink, i:UInt64) {
+    printTo(sink, i, "u64");
+}
+overload printObjectRepr(ref sink, i:UInt) {
+    printTo(sink, i, "u");
+}
+
+// XXX platform dependency. windows sprintf doesn't support %a
+overload printObjectRepr(ref sink, f:Float32) {
+    // 19 = 6 mantissa digits + "-0x1." + "p" + 4 exponent digits + exponent sign + "f" + null
+    printWithSprintf(sink, #"%.6af", #19, f);
+}
+overload printObjectRepr(ref sink, f:Float64) {
+    // 25 = 13 mantissa digits + "-0x1." + "p" + 4 exponent digits + exponent sign + null
+    printWithSprintf(sink, #"%.13a", #25, f);
 }
