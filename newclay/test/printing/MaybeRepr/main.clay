@@ -1,0 +1,15 @@
+import io.stdio.(stdout);
+import printing.(printTo, printReprTo);
+import variants.(VariantType);
+
+main() {
+    printReprTo(stdout, just(1));
+    printTo(stdout, '\n');
+    printReprTo(stdout, nothing(Int));
+    printTo(stdout, '\n');
+    printReprTo(stdout, null(Int));
+    printTo(stdout, '\n');
+    printReprTo(stdout, nullOpaque());
+    printTo(stdout, '\n');
+}
+

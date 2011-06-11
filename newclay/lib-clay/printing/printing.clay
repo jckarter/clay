@@ -4,6 +4,7 @@ import meta.statics.(staticString?, staticStringConcat, staticInt?, staticName);
 import strings.(String, String?);
 import strings.encodings.utf8.(UTF8);
 import unsafe.coordinates.(begin);
+import variants.(VariantType?, dispatch);
 
 
 //
@@ -92,6 +93,72 @@ overload #bufferSizeForInt('T, 16)
 
 
 //
+// printing of standard aggregates
+//
+
+overload printObjectRepr(ref sink, s:Tuple[..'T]) {
+    printObject(sink, '(');
+    printReprTo(sink, ..*s);
+    printObject(sink, ')');
+}
+
+overload printObjectRepr(ref sink, s:Tuple['T]) {
+    printObject(sink, '(');
+    printReprTo(sink, ..*s);
+    printObject(sink, ",)");
+}
+
+overload printObjectRepr(ref sink, r:'R) | RecordType?('R) {
+    printTo(sink, 'R, '(');
+    printReprTo(sink, ..*r);
+    printTo(sink, ')');
+}
+
+overload printObjectRepr(ref sink, n:'N) | NewType?('N) {
+    printTo(sink, 'N, '(');
+    printReprTo(sink, *n);
+    printTo(sink, ')');
+}
+
+overload printObjectRepr(ref sink, v:'V) | VariantType?('V) {
+    printTo(sink, 'V, '(');
+    dispatch(v, [x -> printReprTo(sink, x);]);
+    printTo(sink, ')');
+}
+
+overload printObjectRepr(ref sink, m:Maybe['T]) {
+    maybe(m,
+        [x ->
+            printTo(sink, "just(");
+            printReprTo(sink, x);
+            printTo(sink, ')');
+        ],
+        [printTo(sink, "nothing(", 'T, ')');]
+    );
+}
+
+overload printObjectRepr(ref sink, m:Maybe[Pointer['T]]) {
+    maybe(m,
+        [x ->
+            printTo(sink, "M");
+            printReprTo(sink, x);
+        ],
+        [printTo(sink, "null(", 'T, ')');]
+    );
+}
+
+overload printObjectRepr(ref sink, m:Maybe[OpaquePointer]) {
+    maybe(m,
+        [x ->
+            printTo(sink, "M");
+            printReprTo(sink, x);
+        ],
+        [printTo(sink, "nullOpaque()");]
+    );
+}
+
+
+//
 // printing of basic types
 //
 
@@ -103,16 +170,20 @@ overload printObject(ref sink, s:'S) | String?('S) {
     }
 }
 
-overload printObjectRepr(ref sink, s:StringConstant) {
+printStringRepr(ref sink, s:'S) | String?('S) {
     printObject(sink, '"');
     for (c in s) {
+        printCharRepr(sink, c);
     }
+    printObject(sink, '"');
 }
 
 printCharRepr(ref sink, c:Char) {
     var codePoint = CInt(c);
     if (c == '\'') {
         printObject(sink, "\\'");
+    } else if (c == '\"') {
+        printObject(sink, "\\\"");
     } else if (c == '\n') {
         printObject(sink, "\\n");
     } else if (c == '\t') {
@@ -126,6 +197,18 @@ printCharRepr(ref sink, c:Char) {
     } else {
         printWithSprintf(sink, #"\\u%06X", #9, codePoint);
     }
+}
+
+overload printObjectRepr(ref sink, s:'S) inline
+    | String?('S) and callDefined?('S, StringConstant)
+{
+    printTo(sink, 'S, '(');
+    printStringRepr(sink, s);
+    printTo(sink, ')');
+}
+
+overload printObjectRepr(ref sink, s:StringConstant) inline {
+    printStringRepr(sink, s);
 }
 
 overload printObject(ref sink, c:Char) {
@@ -248,6 +331,13 @@ overload printObjectRepr(ref sink, f:Float32) {
 overload printObjectRepr(ref sink, f:Float64) {
     // 25 = 13 mantissa digits + "-0x1." + "p" + 4 exponent digits + exponent sign + null
     printWithSprintf(sink, #"%.13a", #25, f);
+}
+
+overload printObjectRepr(ref sink, p:'P) | Pointer?('P) {
+    // 25 = 13 mantissa digits + "-0x1." + "p" + 4 exponent digits + exponent sign + null
+    printTo(sink, 'P, "(...");
+    printWithSprintf(sink, #"%p", #128, p);
+    printTo(sink, ")");
 }
 
 overload printObject(ref sink, #'x) inline {

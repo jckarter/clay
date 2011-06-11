@@ -1,0 +1,4 @@
+just(1i)
+nothing(Int)
+null(Int)
+nullOpaque()
