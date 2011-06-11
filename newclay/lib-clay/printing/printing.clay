@@ -1,3 +1,4 @@
+import containers.(Container?);
 import ctypes.(CChar, CString, CInt, CUInt);
 import libc.stdio.(sprintf);
 import meta.statics.(staticString?, staticStringConcat, staticInt?, staticName);
@@ -155,6 +156,25 @@ overload printObjectRepr(ref sink, m:Maybe[OpaquePointer]) {
         ],
         [printTo(sink, "nullOpaque()");]
     );
+}
+
+
+//
+// printing of container sequences
+//
+
+overload printObjectRepr(ref sink, s:'S) | Container?('S) and Sequence?('S) {
+    printTo(sink, 'S, '(');
+    var i = iterator(s);
+    if (hasFront?(i)) {
+        printReprTo(sink, front(i));
+        incFront(i);
+        for (elt in i) {
+            printTo(sink, ", ");
+            printReprTo(sink, elt);
+        }
+    }
+    printTo(sink, ')');
 }
 
 
