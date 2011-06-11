@@ -1,13 +1,12 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(println);
 
 main() {
-    printTo(stdout, #"whimper", '\n');
-    printTo(stdout, #'!', '\n');
-    printTo(stdout, #100, '\n');
-    printTo(stdout, #true, '\n');
-    printTo(stdout, Array, '\n');
-    printTo(stdout, Array[Int, 4], '\n');
-    printTo(stdout, prelude, '\n');
+    println(#"whimper");
+    println(#'!');
+    println(#100);
+    println(#true);
+    println(Array);
+    println(Array[Int, 4]);
+    println(prelude);
 }
 

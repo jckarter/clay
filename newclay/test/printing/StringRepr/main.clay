@@ -1,16 +1,10 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(printlnRepr);
 import strings.(String, RandomAccessString);
 
 main() {
-    printReprTo(stdout, "hello world");
-    printTo(stdout, "\n");
-    printReprTo(stdout, "\x00\x1F \n\r\t\'\"\x7F\x80\xFF\u10FFFF");
-    printTo(stdout, "\n");
-    printReprTo(stdout, "du février à l'août");
-    printTo(stdout, "\n");
-    printReprTo(stdout, String("hello world"));
-    printTo(stdout, "\n");
-    printReprTo(stdout, RandomAccessString("hello world"));
-    printTo(stdout, "\n");
+    printlnRepr("hello world");
+    printlnRepr("\x00\x1F \n\r\t\'\"\x7F\x80\xFF\u10FFFF");
+    printlnRepr("du février à l'août");
+    printlnRepr(String("hello world"));
+    printlnRepr(RandomAccessString("hello world"));
 }

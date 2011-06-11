@@ -1,18 +1,13 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(printlnRepr);
 
 symbol Empty = RecordType();
 symbol Foo = RecordType(foo:Int, bar:Bool);
 symbol Bar['T] = RecordType(foo:Int, bar:Bool, bas:'T);
 
 main() {
-    printReprTo(stdout, Empty());
-    printTo(stdout, '\n');
-    printReprTo(stdout, Foo(1, true));
-    printTo(stdout, '\n');
-    printReprTo(stdout, Bar[Char](1, true, '3'));
-    printTo(stdout, '\n');
-    printReprTo(stdout, Bar[StringConstant](1, true, "three"));
-    printTo(stdout, '\n');
+    printlnRepr(Empty());
+    printlnRepr(Foo(1, true));
+    printlnRepr(Bar[Char](1, true, '3'));
+    printlnRepr(Bar[StringConstant](1, true, "three"));
 }
 

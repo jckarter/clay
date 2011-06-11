@@ -1,50 +1,33 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(println, printlnRepr);
 
 main() {
-    printTo(stdout, "booleans:\n");
-    printReprTo(stdout, true, false);
-    printTo(stdout, "\n");
+    println("booleans:");
+    printlnRepr(true, false);
 
-    printTo(stdout, "ascii characters:\n");
-    printReprTo(stdout, '\x00', '\x1F', ' ', '\n', '\r', '\t', '\'', 'A', 'z', '\x7F');
-    printTo(stdout, "\n");
+    println("ascii characters:");
+    printlnRepr('\x00', '\x1F', ' ', '\n', '\r', '\t', '\'', 'A', 'z', '\x7F');
 
-    printTo(stdout, "unicode code points:\n");
-    printReprTo(stdout, '\x80', '\xFF', '\u000100', '\u10FFFF');
-    printTo(stdout, "\n");
+    println("unicode code points:");
+    printlnRepr('\x80', '\xFF', '\u000100', '\u10FFFF');
 
-    printTo(stdout, "integers:\n");
-    printReprTo(stdout, -0x8000_0000, 0, 1, 0x7FFF_FFFF);
-    printTo(stdout, "\n");
-    printReprTo(stdout, -128i8, 127i8, -32768i16, 32767i16);
-    printTo(stdout, "\n");
-    printReprTo(stdout, -0x8000_0000i32, 0x7FFF_FFFFi32);
-    printTo(stdout, "\n");
-    printReprTo(stdout, -0x8000_0000_0000_0000i64, 0x7FFF_FFFF_FFFF_FFFFi64);
-    printTo(stdout, "\n");
-    printReprTo(stdout, 255u8, 65535u16, 0xFFFF_FFFFu32, 0xFFFF_FFFF_FFFF_FFFFu64);
-    printTo(stdout, "\n");
+    println("integers:");
+    printlnRepr(-0x8000_0000, 0, 1, 0x7FFF_FFFF);
+    printlnRepr(-128i8, 127i8, -32768i16, 32767i16);
+    printlnRepr(-0x8000_0000i32, 0x7FFF_FFFFi32);
+    printlnRepr(-0x8000_0000_0000_0000i64, 0x7FFF_FFFF_FFFF_FFFFi64);
+    printlnRepr(255u8, 65535u16, 0xFFFF_FFFFu32, 0xFFFF_FFFF_FFFF_FFFFu64);
 
-    printTo(stdout, "float32s:\n");
-    printReprTo(stdout, -3.0f, -1.0f, -0.0f, 0.0f, 1.0f, 3.0f);
-    printTo(stdout, "\n");
-    printReprTo(stdout, -0x0.000002p-126f, -0x1.FFFFFEp127f);
-    printTo(stdout, "\n");
-    printReprTo(stdout,  0x0.000002p-126f,  0x1.FFFFFEp127f);
-    printTo(stdout, "\n");
+    println("float32s:");
+    printlnRepr(-3.0f, -1.0f, -0.0f, 0.0f, 1.0f, 3.0f);
+    printlnRepr(-0x0.000002p-126f, -0x1.FFFFFEp127f);
+    printlnRepr( 0x0.000002p-126f,  0x1.FFFFFEp127f);
 
-    printTo(stdout, "float64s:\n");
-    printReprTo(stdout, -3.0, -1.0, -0.0, 0.0, 1.0, 3.0);
-    printTo(stdout, "\n");
-    printReprTo(stdout, -0x0.0000_0000_0000_1p-1022, -0x1.FFFF_FFFF_FFFF_Fp1023);
-    printTo(stdout, "\n");
-    printReprTo(stdout,  0x0.0000_0000_0000_1p-1022,  0x1.FFFF_FFFF_FFFF_Fp1023);
-    printTo(stdout, "\n");
+    println("float64s:");
+    printlnRepr(-3.0, -1.0, -0.0, 0.0, 1.0, 3.0);
+    printlnRepr(-0x0.0000_0000_0000_1p-1022, -0x1.FFFF_FFFF_FFFF_Fp1023);
+    printlnRepr( 0x0.0000_0000_0000_1p-1022,  0x1.FFFF_FFFF_FFFF_Fp1023);
 
-    printTo(stdout, "statics:\n");
-    printReprTo(stdout, #true, #100, #'x', #'\n', #"zombies\n");
-    printTo(stdout, "\n");
-    printReprTo(stdout, #Array, #Array[Int, 2], #prelude);
-    printTo(stdout, "\n");
+    println("statics:");
+    printlnRepr(#true, #100, #'x', #'\n', #"zombies\n");
+    printlnRepr(#Array, #Array[Int, 2], #prelude);
 }

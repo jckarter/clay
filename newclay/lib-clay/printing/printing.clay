@@ -1,5 +1,6 @@
 import containers.(Container?);
 import ctypes.(CChar, CString, CInt, CUInt);
+import io.stdio.(stdout);
 import libc.stdio.(sprintf);
 import meta.statics.(staticString?, staticStringConcat, staticInt?, staticName);
 import strings.(String, String?);
@@ -43,6 +44,10 @@ overload printTo(ref sink:'S, forward ..objects) inline | PrintableSink?('S) {
         printObject(sink, object);
 }
 
+printlnTo(ref sink, forward ..objects) inline {
+    printTo(sink, ..objects, '\n');
+}
+
 printReprTo(ref seq:'S, forward ..objects) inline | PrintableSinkSequence?('S) {
     var seqSink = sink(seq);
     printTo(seqSink, ..objects);
@@ -55,6 +60,24 @@ overload printReprTo(ref sink:'S, forward o1, forward ..os) inline | PrintableSi
     }
 }
 overload printReprTo(ref sink:'S) inline | PrintableSink?('S) {}
+
+printlnReprTo(ref sink, forward ..objects) inline {
+    printReprTo(sink, ..objects);
+    printObject(sink, '\n');
+}
+
+print(forward ..objects) inline {
+    printTo(stdout, ..objects);
+}
+println(forward ..objects) inline {
+    printlnTo(stdout, ..objects);
+}
+printRepr(forward ..objects) inline {
+    printReprTo(stdout, ..objects);
+}
+printlnRepr(forward ..objects) inline {
+    printlnReprTo(stdout, ..objects);
+}
 
 str['S](forward ..objects) inline {
     var s = 'S();
