@@ -1,6 +1,6 @@
 import ctypes.(CChar, CString, CInt, CUInt);
 import libc.stdio.(sprintf);
-import meta.statics.(staticString?, staticInt?);
+import meta.statics.(staticString?, staticStringConcat, staticInt?, staticName);
 import strings.(String, String?);
 import strings.encodings.utf8.(UTF8);
 import unsafe.coordinates.(begin);
@@ -17,6 +17,10 @@ overload printObject(ref sink, forward o) inline
     | defined?([printObjectRepr(sink, o);])
 {
     printObjectRepr(sink, o);
+}
+overload printObjectRepr(ref sink, o:'T) inline
+{
+    printTo(sink, 'T, "(...)");
 }
 
 #PrintableSink?('S) = Sink?('S) and sinkValueType('S) == Char;
@@ -99,27 +103,39 @@ overload printObject(ref sink, s:'S) | String?('S) {
     }
 }
 
+overload printObjectRepr(ref sink, s:StringConstant) {
+    printObject(sink, '"');
+    for (c in s) {
+    }
+}
+
+printCharRepr(ref sink, c:Char) {
+    var codePoint = CInt(c);
+    if (c == '\'') {
+        printObject(sink, "\\'");
+    } else if (c == '\n') {
+        printObject(sink, "\\n");
+    } else if (c == '\t') {
+        printObject(sink, "\\t");
+    } else if (c == '\r') {
+        printObject(sink, "\\r");
+    } else if (codePoint >= 0x20 and codePoint < 0x7e) {
+        printWithSprintf(sink, #"%c", #2, codePoint);
+    } else if (codePoint < 0x80) {
+        printWithSprintf(sink, #"\\x%02X", #5, codePoint);
+    } else {
+        printWithSprintf(sink, #"\\u%06X", #9, codePoint);
+    }
+}
+
 overload printObject(ref sink, c:Char) {
     if (hasFront?(sink))
         write1(sink, c);
 }
 overload printObjectRepr(ref sink, c:Char) {
-    var codePoint = CInt(c);
-    if (c == '\'') {
-        printObject(sink, "'\\''");
-    } else if (c == '\n') {
-        printObject(sink, "'\\n'");
-    } else if (c == '\t') {
-        printObject(sink, "'\\t'");
-    } else if (c == '\r') {
-        printObject(sink, "'\\r'");
-    } else if (codePoint >= 0x20 and codePoint < 0x7e) {
-        printWithSprintf(sink, #"'%c'", #4, codePoint);
-    } else if (codePoint < 0x80) {
-        printWithSprintf(sink, #"'\\x%02X'", #7, codePoint);
-    } else {
-        printWithSprintf(sink, #"'\\u%06X'", #11, codePoint);
-    }
+    printObject(sink, '\'');
+    printCharRepr(sink, c);
+    printObject(sink, '\'');
 }
 
 overload printObjectRepr(ref sink, b:Bool) {
@@ -232,4 +248,14 @@ overload printObjectRepr(ref sink, f:Float32) {
 overload printObjectRepr(ref sink, f:Float64) {
     // 25 = 13 mantissa digits + "-0x1." + "p" + 4 exponent digits + exponent sign + null
     printWithSprintf(sink, #"%.13a", #25, f);
+}
+
+overload printObject(ref sink, #'x) inline {
+    printObject(sink, *#staticName('x));
+}
+overload printObject(ref sink, #'x) inline | staticString?('x) {
+    printObject(sink, 'x);
+}
+overload printObjectRepr(ref sink, #'x) inline {
+    printTo(sink, *#(staticStringConcat("#", staticName('x))));
 }

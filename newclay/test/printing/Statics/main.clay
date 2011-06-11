@@ -1,0 +1,13 @@
+import io.stdio.(stdout);
+import printing.(printTo, printReprTo);
+
+main() {
+    printTo(stdout, #"whimper", '\n');
+    printTo(stdout, #'!', '\n');
+    printTo(stdout, #100, '\n');
+    printTo(stdout, #true, '\n');
+    printTo(stdout, Array, '\n');
+    printTo(stdout, Array[Int, 4], '\n');
+    printTo(stdout, prelude, '\n');
+}
+
