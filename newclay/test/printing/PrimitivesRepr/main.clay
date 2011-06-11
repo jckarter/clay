@@ -41,4 +41,10 @@ main() {
     printTo(stdout, "\n");
     printReprTo(stdout,  0x0.0000_0000_0000_1p-1022,  0x1.FFFF_FFFF_FFFF_Fp1023);
     printTo(stdout, "\n");
+
+    printTo(stdout, "statics:\n");
+    printReprTo(stdout, #true, #100, #'x', #'\n', #"zombies\n");
+    printTo(stdout, "\n");
+    printReprTo(stdout, #Array, #Array[Int, 2], #prelude);
+    printTo(stdout, "\n");
 }

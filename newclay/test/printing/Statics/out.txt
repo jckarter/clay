@@ -1,0 +1,7 @@
+whimper
+'!'
+100
+true
+Array
+Array[Int, 4]
+prelude
