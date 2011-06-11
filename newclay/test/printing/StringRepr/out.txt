@@ -1,0 +1,5 @@
+"hello world"
+"\x00\x1F \n\r\t\'\"\x7F\u000080\u0000FF\u10FFFF"
+"du f\u0000E9vrier \u0000E0 l\'ao\u0000FBt"
+String("hello world")
+Vector[Char]("hello world")

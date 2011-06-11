@@ -1,0 +1,3 @@
+Foo(1i)
+Foo('2')
+Foo("three")

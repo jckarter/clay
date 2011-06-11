@@ -1,0 +1,11 @@
+import io.stdio.(stdout);
+import printing.(printTo, printReprTo);
+
+main() {
+    printReprTo(stdout, ());
+    printTo(stdout, '\n');
+    printReprTo(stdout, (1,));
+    printTo(stdout, '\n');
+    printReprTo(stdout, (1, true, "three", '4'));
+    printTo(stdout, '\n');
+}
