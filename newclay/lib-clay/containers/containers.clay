@@ -2,6 +2,7 @@ import unsafe.coordinates.(CoordinateSequence?, sequenceCoordinateType, begin);
 import values.(countValues, allValues?);
 
 #Container?('T) = false;
+overload #Container?(Array['T, 'n]) | type?(Array['T, 'n]) = true;
 
 symbol push;
 symbol pop;
