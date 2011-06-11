@@ -1,5 +1,4 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(println, printlnRepr);
 import unsafe.compositetypes.(CompositeType, initializeRecord);
 import unsafe.valuesemantics.(destroy);
 
@@ -8,7 +7,6 @@ overload Unprintable() = initializeRecord(Unprintable);
 overload destroy(ref x:Unprintable) {}
 
 main() {
-    printTo(stdout, Unprintable(), '\n');
-    printReprTo(stdout, Unprintable());
-    printTo(stdout, '\n');
+    println(Unprintable());
+    printlnRepr(Unprintable());
 }

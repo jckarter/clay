@@ -1,15 +1,11 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(printlnRepr);
 import variants.(VariantType);
 
 symbol Foo = VariantType(Int, Char, StringConstant);
 
 main() {
-    printReprTo(stdout, Foo(1));
-    printTo(stdout, '\n');
-    printReprTo(stdout, Foo('2'));
-    printTo(stdout, '\n');
-    printReprTo(stdout, Foo("three"));
-    printTo(stdout, '\n');
+    printlnRepr(Foo(1));
+    printlnRepr(Foo('2'));
+    printlnRepr(Foo("three"));
 }
 

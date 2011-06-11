@@ -1,10 +1,8 @@
-import io.stdio.(stdout);
-import printing.(printTo, printReprTo);
+import printing.(printlnRepr);
 
 symbol Foo = NewType(Int);
 
 main() {
-    printReprTo(stdout, Foo(1));
-    printTo(stdout, '\n');
+    printlnRepr(Foo(1));
 }
 
