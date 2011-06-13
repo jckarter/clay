@@ -28,9 +28,9 @@ SpecificImportSpec -> Visibility? Identifier ("as" Identifier)?
 
 SymbolName -> Identifier SymbolParams?
 
-GlobalSymbol -> Visibility? "symbol" SymbolName "=" Expr ";"
+GlobalSymbol -> Visibility? "define" SymbolName "as" Expr ";"
 SymbolParams -> "[" variadic_list(PatternNameRef, PatternNameRef) "]"
-SymbolAttribute -> "attribute" TargetPattern Predicate? "=" Expr ";"
+SymbolAttribute -> "extend" TargetPattern Predicate? "with" Expr ";"
 
 StaticOverloadDefinition -> "(" ListPattern? ")" Predicate? "=" ExprList ";"
 
@@ -113,7 +113,7 @@ Pattern -> BoolLiteral
 
 IndexingPattern -> Identifier "[" ListPattern "]"
 
-TuplePattern -> "(" ListPattern ")"
+TuplePattern -> "[" ListPattern "]"
 
 TargetPattern -> IndexingPattern
                | Identifier
@@ -127,6 +127,7 @@ TargetPattern -> IndexingPattern
 
 ExprList -> comma_list(ExprListItem)
 ExprListItem -> ".." Expr
+              | "(" ExprList ")"
               | StatementExprList
               | Expr
 
@@ -139,10 +140,10 @@ LiteralExpr -> BoolLiteral
 AtomicExpr -> LiteralExpr
             | SimpleNameRef
             | PatternNameRef
+            | LambdaExpr
             | BracketedExpr
             | StatementExpr
             | TupleExpr
-            | LambdaExpr
 
 NameRef -> NamePath
 SimpleNameRef -> Identifier
@@ -150,7 +151,7 @@ PatternNameRef -> "'" Identifier
 BracketedExpr -> "(" Expr ")"
 StatementExpr -> "(" Statement+ Expr ")"
 StatementExprList -> "(" Statement+ ExprList ")"
-TupleExpr -> "(" ExprList? ")"
+TupleExpr -> "[" ExprList? "]"
 
 PrefixExpr -> SignExpr
             | UnpackExpr
@@ -190,12 +191,12 @@ AndExpr -> NotExpr ("and" NotExpr)*
 
 OrExpr -> AndExpr ("or" AndExpr)*
 
-LambdaCodeBody -> Statement* ReturnExprList
-                | Block
+LambdaCodeBody -> ("=>" | "->") ReturnExprListItem
+                | ("=>" | "->")? Block
 
-LambdaArguments -> ArgumentList? ("=>" | "->")
+LambdaArguments -> "(" ArgumentList? ")" 
 
-LambdaExpr -> "[" LambdaArguments? LambdaCodeBody "]"
+LambdaExpr -> LambdaArguments? LambdaCodeBody
 
 IfExpr -> "if" "(" Statement* Expr ")" Expr "else" Expr
 

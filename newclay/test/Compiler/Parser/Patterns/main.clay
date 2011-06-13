@@ -1,8 +1,8 @@
 import show.(show);
 
-symbol bar[..'x];
+define bar[..'x];
 
-symbol foo;
+define foo;
 overload #foo('T) = ;
 overload #foo(bar) = ;
 overload #foo(1) = ;
@@ -14,10 +14,10 @@ overload #foo(bar["foo"]) = ;
 overload #foo(bar['T]) = ;
 overload #foo(bar[..'T]) = ;
 overload #foo(bar['T, 'U, ..'V]) = ;
-overload #foo(()) = ;
-overload #foo(('T,)) = ;
-overload #foo((1, true, '3', "four")) = ;
-overload #foo(('T, ..'U)) = ;
-overload #foo(bar[('T, ..'U), ('V, ..'W)]) = ;
+overload #foo([]) = ;
+overload #foo(['T,]) = ;
+overload #foo([1, true, '3', "four"]) = ;
+overload #foo(['T, ..'U]) = ;
+overload #foo(bar[['T, ..'U], ['V, ..'W]]) = ;
 
 main() { show("ok"); }

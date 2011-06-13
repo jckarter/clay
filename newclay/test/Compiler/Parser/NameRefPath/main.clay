@@ -2,7 +2,7 @@ import foo;
 import show.(show);
 import zim;
 
-attribute foo.bar = zim.zang;
+extend foo.bar with zim.zang;
 
 overload #foo.bar(zim.zang) = foo.bar;
 

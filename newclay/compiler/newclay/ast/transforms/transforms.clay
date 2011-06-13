@@ -113,17 +113,6 @@ overload transformASTInto(from:StaticFunction, to:Vector[TopLevelItem]) {
 // transform lambda AST into overload AST
 //
 
-procedure transformLambdaCodeBody;
-overload transformLambdaCodeBody(body:Block) = CodeBody(body);
-overload transformLambdaCodeBody(body:StatementReturnExprList) {
-    var block = Block(nothing(LabelDef), body.statements);
-    if (not empty?(body.exprList))
-        push(block.statements, Statement(
-            transformed(body.exprList[0], ReturnStatement, body.exprList)
-        ));
-    return CodeBody(block);
-}
-
 private transformLambdaArgs(x:LambdaExpr) {
     var args = ArgumentList();
     for (capture in x.capturedOrder) {
@@ -141,8 +130,6 @@ private transformLambdaArgs(x:LambdaExpr) {
 transformLambdaToOverload(x:LambdaExpr) {
     var target = Pattern(transformed(x, PatternNameRef, transformed(x, Identifier, "")));
 
-    var body = transformLambdaCodeBody(*x.body);
-
     return transformed(x, Overload,
         target,
         transformed(x, OverloadDefinition,
@@ -150,7 +137,7 @@ transformLambdaToOverload(x:LambdaExpr) {
             Vector[OverloadAttribute](),
             ReturnList(Nothing()),
             nothing(Expr),
-            body
+            x.body
         )
     );
 }

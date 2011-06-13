@@ -203,7 +203,12 @@ overload Identifier(x:S) = Identifier(String(x));
 
 alias ExprList = Vector[ExprListItem];
 
+record SubExprList = ast(
+    exprs: ExprList,
+);
+
 variant ExprListItem = UnpackExpr
+                     | SubExprList
                      | Expr
                      | StatementExprList
                      ;
@@ -391,10 +396,6 @@ enum LambdaCaptureKind {
     LAMBDA_CAPTURE_BY_REFERENCE,
 }
 
-variant LambdaCodeBody = StatementReturnExprList
-                       | Block
-                       ;
-
 record StatementReturnExprList = ast(
     statements: Vector[Statement],
     exprList: ReturnExprList,
@@ -403,7 +404,7 @@ record StatementReturnExprList = ast(
 record LambdaExpr = ast(
     captureKind: LambdaCaptureKind,
     args: ArgumentList,
-    body: LambdaCodeBody,
+    body: CodeBody,
     capturedNames: HashMap[String, Tuple[]],
     capturedOrder: Vector[String],
 );
