@@ -624,6 +624,7 @@ overload codegenNode(c, bc, node:ir.Continue) {
 }
 
 overload codegenNode(c, bc, node:ir.Throw) {
+    printToIndented(bc, "void abort();\n");
     printToIndented(bc, "abort();\n");
 }
 
