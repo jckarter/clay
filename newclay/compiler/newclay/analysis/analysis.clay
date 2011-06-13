@@ -476,6 +476,9 @@ overload analyzeExprListItem(
 overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.Expr) Maybe[RTValues]
     = analyzeNode(s, env, *expr);
 
+overload analyzeNode(s:SpecializationContext, env:Env, expr:ast.SubExprList) Maybe[RTValues]
+    = analyzeNode(s, env, expr.exprList);
+
 overload analyzeNode(s:SpecializationContext, env:Env, unpack:ast.UnpackExpr)
     = analyzeMultiExprSubnode(s, env, unpack.expr);
 
@@ -1196,6 +1199,7 @@ private singleExpr(s, env, exprList:ast.ExprList) {
         ast.Expr, x => Maybe(x),
         ast.StatementExprList, x =>
             analyzeStatementExprNode2(s, env, x.statements, x.exprList, singleExpr),
+        ast.SubExprList, x => singleExpr(s, env, x.exprList),
     );
 }
 
@@ -1206,6 +1210,7 @@ private singleExpr?(exprList:ast.ExprList) {
         ast.UnpackExpr, x => false,
         ast.Expr, x => true,
         ast.StatementExprList, x => singleExpr?(x.exprList),
+        ast.SubExprList, x => singleExpr?(x.exprList),
     );
 }
 

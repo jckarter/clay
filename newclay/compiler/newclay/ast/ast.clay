@@ -204,7 +204,7 @@ overload Identifier(x:S) = Identifier(String(x));
 alias ExprList = Vector[ExprListItem];
 
 record SubExprList = ast(
-    exprs: ExprList,
+    exprList: ExprList,
 );
 
 variant ExprListItem = UnpackExpr
