@@ -17,28 +17,28 @@ main() {
 
     show("--");
     maybe(lookup(h2, String("a squid eating dough")),
-        [p -> show(size(p^));],
-        [show("no squid");]
+        (p) -> { show(size(p^));   },
+            -> { show("no squid"); },
     );
     show("--");
     maybe(lookup(h2, String("a tin teardrop")),
-        [p ->
+        (p) -> {
             show(size(p^));
             push(p^, ", tight also");
             show(size(p^));
-        ],
-        [show("no teardrop");]
+        },
+        -> { show("no teardrop"); }
     );
     show("--");
     maybe(lookup(h2, String("rocket morton")),
-        [p -> show(size(p^));],
-        [show("no rocket");]
+        (p) -> { show(size(p^));    },
+            -> { show("no rocket"); },
     );
     show("--");
 
     maybe(lookup(h1, String("a tin teardrop")),
-        [p -> show(size(p^));],
-        [show("no squid");]
+        (p) -> { show(size(p^));   },
+            -> { show("no squid"); },
     );
 
     show("--");

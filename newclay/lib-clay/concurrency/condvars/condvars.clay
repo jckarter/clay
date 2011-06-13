@@ -4,9 +4,9 @@ import unix.pthreads.*;
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
-symbol CondVar = CompositeType(_condvar:PthreadCondT);
+define CondVar as CompositeType(_condvar:PthreadCondT);
 
-symbol CondVarError = RecordType(error:CInt);
+define CondVarError as RecordType(error:CInt);
 
 overload #BitwiseMoved?(CondVar) = false;
 

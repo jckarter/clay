@@ -11,14 +11,14 @@ import unsafe.valuesemantics.*;
 // VariantType
 //
 
-#VariantType(..'members) = (VariantType, ..'members);
+#VariantType(..'members) = [VariantType, ..'members];
 #VariantType?('T) = symbolWithTag?('T, VariantType);
 
 #variantMemberTypes('T) | VariantType?('T) = ..symbolTagBody('T, VariantType);
 #VariantMember?('T, 'M) | VariantType?('T)
     = inValues?('M, ..variantMemberTypes('T));
 
-#WithReprType('R) = (WithReprType, 'R);
+#WithReprType('R) = [WithReprType, 'R];
 #WithReprType?('V) = VariantType?('V) and symbolWithTag?('V, WithReprType);
 
 #variantReprType('T) | VariantType?('T) and not WithReprType?('T)
@@ -29,10 +29,10 @@ overload #variantReprType('T) | VariantType?('T) and WithReprType?('T)
 overload #variantReprType('T) | VariantType?('T) and WithReprType?('T)
     and not reprAcceptsMemberTypes?(symbolTagBody('T, WithReprType)[..variantMemberTypes('T)])
     = staticError("variant ", 'T, " representation ", symbolTagBody('T, WithReprType),
-        " does not accept member types ", (..variantMemberTypes('T))
+        " does not accept member types ", [..variantMemberTypes('T)]
     );
 
-#WithDefaultMemberType('T) = (WithDefaultMemberType, 'T);
+#WithDefaultMemberType('T) = [WithDefaultMemberType, 'T];
 #WithDefaultMemberType?('V) = VariantType?('V) and symbolWithTag?('V, WithDefaultMemberType);
 
 #variantDefaultMemberType('T)
@@ -45,7 +45,7 @@ overload #variantDefaultMemberType('T)
       and not VariantMember?('T, symbolTagBody('T, WithDefaultMemberType))
     = staticError("variant ", 'T, " default member type ",
         symbolTagBody('T, WithDefaultMemberType),
-        " is not one of its member types ", (..variantMemberTypes('T))
+        " is not one of its member types ", [..variantMemberTypes('T)]
     );
 
 overload #BitwiseZeroInitialized?('V)
@@ -99,14 +99,14 @@ overload moveRvalue(ref v:'T) inline --> returned:'T | VariantType?('T) and not 
 variantIs?(#'M, v:'T) inline | VariantType?('T) and VariantMember?('T, 'M)
     = reprIs?(#'M, repr(v));
 variantAs(#'M, forward v:'T) inline | VariantType?('T) and VariantMember?('T, 'M) {
-    assert([variantIs?(#'M, v)]);
+    assert(-> variantIs?(#'M, v));
     return forward reprAs(#'M, repr(v));
 }
 overload variantAs(#'M, rvalue v:'T) inline
     | VariantType?('T) and VariantMember?('T, 'M)
 {
     ref rv = rvalueToRef(v);
-    assert([variantIs?(#'M, rv)]);
+    assert(-> variantIs?(#'M, rv));
     return forward reprAs(#'M, repr(refToRvalue(rv)));
 }
 variantAsUnsafe(#'M, forward v:'T) inline
@@ -124,5 +124,5 @@ overload index(forward v:'T, #'M) inline
 
 overload equals?(v:'V, w:'V)
     | VariantType?('V)
-      and allValues?([#'T -> callDefined?(equals?, 'T, 'T)], ..variantMemberTypes('V))
-    = dispatch(v, [vm:'M -> variantIs?('M, w) and vm == variantAsUnsafe('M, w)]);
+      and allValues?((#'T) -> callDefined?(equals?, 'T, 'T), ..variantMemberTypes('V))
+    = dispatch(v, (vm:'M) -> variantIs?('M, w) and vm == variantAsUnsafe('M, w));

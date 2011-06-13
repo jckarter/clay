@@ -1,4 +1,4 @@
 import __primitives__.*;
 
-symbol Bar = ();
+define Bar as ();
 overload Bar(x) = y;

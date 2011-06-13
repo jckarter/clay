@@ -3,5 +3,5 @@ import show.(show);
 var x['T]:'T;
 
 main() {
-    show(..#type([x[Int], x[Float32]]));
+    show(..#type(-> (x[Int], x[Float32])));
 }

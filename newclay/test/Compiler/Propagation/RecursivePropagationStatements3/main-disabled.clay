@@ -6,6 +6,6 @@ foo() {
 }
 
 main() {
-    show(#returns?([ foo() ]));
-    show(..#type([ foo() ]));
+    show(#returns?(->  foo() ));
+    show(..#type(->  foo() ));
 }

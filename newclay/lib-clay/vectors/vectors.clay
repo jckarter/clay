@@ -7,7 +7,7 @@ import unsafe.compositetypes.*;
 import unsafe.coordinates.*;
 import unsafe.valuesemantics.*;
 
-symbol Vector['T] = CompositeType(
+define Vector['T] as CompositeType(
     size:UInt,
     capacity:UInt,
     data:ContiguousCoordinate['T],
@@ -102,7 +102,7 @@ overload end(v:Vector['T]) inline = v.data + v.size;
 
 overload push(ref v:Vector['T], forward ..elements:'TT) inline
     | countValues(..'TT) != 1
-      and allValues?([U -> callDefined?(push, Ref[Vector['T]], U)], ..'TT)
+      and allValues?((U) -> callDefined?(push, Ref[Vector['T]], U), ..'TT)
 {
     reserve(v, countValues(..'TT));
     static for (forward e in ..elements)
@@ -230,7 +230,7 @@ overload remove(ref v:Vector['T], i:'I, j:'J) inline
 //
 
 private requestCapacity(ref v:Vector['T], capacity:UInt) {
-    assert([capacity >= v.size]);
+    assert(-> capacity >= v.size);
     if (capacity < v.capacity)
         return;
     var n = max(capacity, 16u);

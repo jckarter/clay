@@ -39,13 +39,13 @@ import unsafe.valuesemantics.*;
 // hash map type
 //
 
-symbol HashMap['K,'V] = NewType(TwoHash[MapEntry['K,'V]]);
+define HashMap['K,'V] as NewType(TwoHash[MapEntry['K,'V]]);
 
 overload HashMap['K,'V]() = HashMap['K,'V](TwoHash[MapEntry['K,'V]]());
 overload size(m:HashMap['K, 'V]) = (*m).size;
 
 lookup(m:HashMap['K, 'V], key:'K)
-    = maybe(entryp(*m, key), [entp -> just(&entp^.value)]);
+    = maybe(entryp(*m, key), (entp) -> just(&entp^.value));
 
 put(ref m:HashMap['K, 'V], key:'K, forward value:'V) {
     ref hash = *m;
@@ -89,7 +89,7 @@ overload index(ref m:HashMap['K, 'V], key:'K) | DefaultInitializable?('V) {
 // iterator
 //
 
-symbol HashIterator['E] = RecordType(
+define HashIterator['E] as RecordType(
     hashp:Pointer[TwoHash['E]],
     i:Int,
     j:UInt,
@@ -104,7 +104,7 @@ overload HashIterator['E](h:TwoHash['E]) --> returned:HashIterator['E] {
 overload hasFront?(i:HashIterator['E]) = i.entryMask != 0u;
 
 overload front(i:HashIterator['E]) {
-    assert([i.entryMask != 0u]);
+    assert(-> i.entryMask != 0u);
     var kmask = lowBitMask(i.entryMask);
     var k = lowBit(kmask);
     ref e = i.hashp^.tables[i.i].begin[i.j].entries[k];
@@ -112,7 +112,7 @@ overload front(i:HashIterator['E]) {
 }
 
 overload incFront(ref i:HashIterator['E]) {
-    assert([i.entryMask != 0u]);
+    assert(-> i.entryMask != 0u);
     var kmask = lowBitMask(i.entryMask);
     i.entryMask = bitandc(i.entryMask, kmask);
     if (i.entryMask == 0u) {
@@ -166,7 +166,7 @@ private lowBit(mask_:'I) {
         b += 8;
         mask = bitshr(mask, 8);
     }
-    assertUnreachable([], "not a power of two");
+    assertUnreachable(->{}, "not a power of two");
 }
 
 
@@ -174,12 +174,12 @@ private lowBit(mask_:'I) {
 // hash entry structures
 //
 
-private symbol MapEntry['K,'V] = RecordType(key:'K, value:'V);
+private define MapEntry['K,'V] as RecordType(key:'K, value:'V);
 
-private symbol keyMatch?;
-private symbol entryHash;
-private symbol itemFromEntry;
-private symbol valueFromEntry;
+private define keyMatch?;
+private define entryHash;
+private define itemFromEntry;
+private define valueFromEntry;
 
 overload keyMatch?(entry:MapEntry['K,'V], key:'K) = entry.key == key;
 overload entryHash(entry:MapEntry['K,'V]) = largeHash(entry.key);
@@ -192,7 +192,7 @@ overload valueFromEntry(forward entry:MapEntry['K,'V]) = forward entry.value;
 // twohash implementation
 //
 
-private symbol TwoHash['E] = RecordType(tables:Array[Table[Bucket['E]], 2], size:UInt);
+private define TwoHash['E] as RecordType(tables:Array[Table[Bucket['E]], 2], size:UInt);
 
 overload TwoHash['E]() {
     var TableType = #Table[Bucket['E]];
@@ -204,7 +204,7 @@ overload TwoHash['E]() {
 
 // tables
 
-private symbol Table['B] = CompositeType(begin:ContiguousCoordinate['B], ln2_size:Int);
+private define Table['B] as CompositeType(begin:ContiguousCoordinate['B], ln2_size:Int);
 
 private tableSize(t:Table['B]) = bitshl(1u, t.ln2_size);
 overload tableSize(ln2_size:'I) | Integer?('I) = bitshl(1u, ln2_size);
@@ -233,7 +233,7 @@ overload copy(t:Table['B]) --> returned:Table['B] {
 }
 overload copyAssign(ref to:Table['B], from:Table['B]) {
     if (to.begin == from.begin) {
-        assert([to.ln2_size == from.ln2_size]);
+        assert(-> to.ln2_size == from.ln2_size);
         return;
     }
 
@@ -273,7 +273,7 @@ overload destroy(ref t:Table['B]) {
 
 private alias BucketSize = 16;
 
-private symbol Bucket['E] = CompositeType(
+private define Bucket['E] as CompositeType(
     hashBytes:Array[UInt8,BucketSize],
     entries:Array['E, BucketSize]
 );
@@ -324,7 +324,7 @@ private entryp(h:TwoHash['E], key) {
 }
 
 private allocEntry(ref h:TwoHash['E], key, forward entry:'E) {
-    assert([nothing?(entryp(h, key))]);
+    assert(-> nothing?(entryp(h, key)));
 
     while (true) {
         var hash = splitHash(h, key);
@@ -380,7 +380,7 @@ private clearEntries(ref h:TwoHash['E]) {
 overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
     ref rentry = rvalueToRef(entry);
 
-    assert([nothing?(entryp(h, key))]);
+    assert(-> nothing?(entryp(h, key)));
 
     while (true) {
         var hash = splitHash(h, key);
@@ -403,7 +403,7 @@ overload allocEntry(ref h:TwoHash['E], key, rvalue entry:'E) {
         h.size += 1u;
         return entp;
     }
-    assertUnreachable([]);
+    assertUnreachable(->{});
 }
 
 private allocInBucket(ref b:Bucket['E], forward entry:'E, hashByte) {
@@ -415,7 +415,7 @@ private allocInBucket(ref b:Bucket['E], forward entry:'E, hashByte) {
             return entryp;
         }
     }
-    assertUnreachable([]);
+    assertUnreachable(->{});
 }
 
 // XXX rvalue analysis
@@ -429,7 +429,7 @@ overload allocInBucket(ref b:Bucket['E], rvalue entry:'E, hashByte) {
             return entryp;
         }
     }
-    assertUnreachable([]);
+    assertUnreachable(->{});
 }
 
 private freeFromBucket(ref b:Bucket['E], index) {
@@ -464,7 +464,7 @@ private grow(ref h:TwoHash['E]) {
 
 // hashing
 
-private symbol splitHash;
+private define splitHash;
 overload splitHash(h:TwoHash['E], key:'K) = baseSplitHash(h, largeHash(key));
 overload splitHash(h:TwoHash['E], entry:'E) = baseSplitHash(h, entryHash(entry));
 

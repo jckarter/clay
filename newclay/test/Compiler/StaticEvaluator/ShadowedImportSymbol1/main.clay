@@ -2,7 +2,7 @@ import show.(show);
 import __primitives__.*;
 import foo.(Foo);
 
-symbol Foo = "main";
+define Foo as "main";
 
 #Main() = staticSymbolBody(Foo);
 

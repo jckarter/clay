@@ -12,48 +12,48 @@ main() {
     var opaque = OpaquePointer(&int);
 
     // defined pointer casts
-    show(#defined?([ContiguousCoordinate[Int](pint)])); ////true
-    show(#defined?([ContiguousCoordinate[Int](pchar)])); ////false
-    show(#defined?([ContiguousCoordinate[Int](pbool)])); ////false
-    show(#defined?([ContiguousCoordinate[Int](cint)])); ////true
-    show(#defined?([ContiguousCoordinate[Int](cchar)])); ////false
-    show(#defined?([ContiguousCoordinate[Int](cbool)])); ////false
-    show(#defined?([ContiguousCoordinate[Int](opaque)])); ////true
-    show(#defined?([ContiguousCoordinate(pint)])); ////true
-    show(#defined?([ContiguousCoordinate(pchar)])); ////true
-    show(#defined?([ContiguousCoordinate(pbool)])); ////true
-    show(#defined?([ContiguousCoordinate(cint)])); ////true
-    show(#defined?([ContiguousCoordinate(cchar)])); ////true
-    show(#defined?([ContiguousCoordinate(cbool)])); ////true
-    show(#defined?([ContiguousCoordinate(opaque)])); ////false
-    show(#defined?([Pointer[Int](pint)])); ////true
-    show(#defined?([Pointer[Int](pchar)])); ////false
-    show(#defined?([Pointer[Int](pbool)])); ////false
-    show(#defined?([Pointer[Int](cint)])); ////true
-    show(#defined?([Pointer[Int](cchar)])); ////false
-    show(#defined?([Pointer[Int](cbool)])); ////false
-    show(#defined?([Pointer[Int](opaque)])); ////true
-    show(#defined?([Pointer(pint)])); ////true
-    show(#defined?([Pointer(pchar)])); ////true
-    show(#defined?([Pointer(pbool)])); ////true
-    show(#defined?([Pointer(cint)])); ////true
-    show(#defined?([Pointer(cchar)])); ////true
-    show(#defined?([Pointer(cbool)])); ////true
-    show(#defined?([Pointer(opaque)])); ////false
-    show(#defined?([OpaquePointer(pint)])); ////true
-    show(#defined?([OpaquePointer(pchar)])); ////true
-    show(#defined?([OpaquePointer(pbool)])); ////true
-    show(#defined?([OpaquePointer(cint)])); ////true
-    show(#defined?([OpaquePointer(cchar)])); ////true
-    show(#defined?([OpaquePointer(cbool)])); ////true
-    show(#defined?([OpaquePointer(opaque)])); ////true
+    show(#defined?(-> ContiguousCoordinate[Int](pint))); ////true
+    show(#defined?(-> ContiguousCoordinate[Int](pchar))); ////false
+    show(#defined?(-> ContiguousCoordinate[Int](pbool))); ////false
+    show(#defined?(-> ContiguousCoordinate[Int](cint))); ////true
+    show(#defined?(-> ContiguousCoordinate[Int](cchar))); ////false
+    show(#defined?(-> ContiguousCoordinate[Int](cbool))); ////false
+    show(#defined?(-> ContiguousCoordinate[Int](opaque))); ////true
+    show(#defined?(-> ContiguousCoordinate(pint))); ////true
+    show(#defined?(-> ContiguousCoordinate(pchar))); ////true
+    show(#defined?(-> ContiguousCoordinate(pbool))); ////true
+    show(#defined?(-> ContiguousCoordinate(cint))); ////true
+    show(#defined?(-> ContiguousCoordinate(cchar))); ////true
+    show(#defined?(-> ContiguousCoordinate(cbool))); ////true
+    show(#defined?(-> ContiguousCoordinate(opaque))); ////false
+    show(#defined?(-> Pointer[Int](pint))); ////true
+    show(#defined?(-> Pointer[Int](pchar))); ////false
+    show(#defined?(-> Pointer[Int](pbool))); ////false
+    show(#defined?(-> Pointer[Int](cint))); ////true
+    show(#defined?(-> Pointer[Int](cchar))); ////false
+    show(#defined?(-> Pointer[Int](cbool))); ////false
+    show(#defined?(-> Pointer[Int](opaque))); ////true
+    show(#defined?(-> Pointer(pint))); ////true
+    show(#defined?(-> Pointer(pchar))); ////true
+    show(#defined?(-> Pointer(pbool))); ////true
+    show(#defined?(-> Pointer(cint))); ////true
+    show(#defined?(-> Pointer(cchar))); ////true
+    show(#defined?(-> Pointer(cbool))); ////true
+    show(#defined?(-> Pointer(opaque))); ////false
+    show(#defined?(-> OpaquePointer(pint))); ////true
+    show(#defined?(-> OpaquePointer(pchar))); ////true
+    show(#defined?(-> OpaquePointer(pbool))); ////true
+    show(#defined?(-> OpaquePointer(cint))); ////true
+    show(#defined?(-> OpaquePointer(cchar))); ////true
+    show(#defined?(-> OpaquePointer(cbool))); ////true
+    show(#defined?(-> OpaquePointer(opaque))); ////true
 
     // nondefined pointer casts
-    show(#defined?([ContiguousCoordinate(opaque)])); ////false
-    show(#defined?([Pointer(opaque)])); ////false
-    show(#defined?([Int(pint)])); ////false
-    show(#defined?([ContiguousCoordinate[Int](int)])); ////false
-    show(#defined?([Pointer[Int](int)])); ////false
-    show(#defined?([ContiguousCoordinate(int)])); ////false
-    show(#defined?([Pointer(int)])); ////false
+    show(#defined?(-> ContiguousCoordinate(opaque))); ////false
+    show(#defined?(-> Pointer(opaque))); ////false
+    show(#defined?(-> Int(pint))); ////false
+    show(#defined?(-> ContiguousCoordinate[Int](int))); ////false
+    show(#defined?(-> Pointer[Int](int))); ////false
+    show(#defined?(-> ContiguousCoordinate(int))); ////false
+    show(#defined?(-> Pointer(int))); ////false
 }

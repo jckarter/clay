@@ -1,7 +1,7 @@
 import printing.(printlnRepr);
 import variants.(VariantType);
 
-symbol Foo = VariantType(Int, Char, StringConstant);
+define Foo as VariantType(Int, Char, StringConstant);
 
 main() {
     printlnRepr(Foo(1));

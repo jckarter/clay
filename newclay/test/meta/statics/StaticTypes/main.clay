@@ -1,7 +1,7 @@
 import meta.statics.*;
 import show.*;
 
-symbol foo;
+define foo;
 
 main() {
     show("is a string a string?");
@@ -12,7 +12,7 @@ main() {
     show(#staticString?(1));
     show(#staticString?(true));
     show(#staticString?('3'));
-    show(#staticString?(()));
+    show(#staticString?([]));
     show(#staticString?(prelude));
     show(#staticString?(foo));
 
@@ -32,7 +32,7 @@ main() {
     show(#staticInt?("1"));
     show(#staticInt?(true));
     show(#staticInt?('3'));
-    show(#staticInt?(()));
+    show(#staticInt?([]));
     show(#staticInt?(prelude));
     show(#staticInt?(foo));
 
@@ -44,7 +44,7 @@ main() {
     show(#staticBool?(1));
     show(#staticBool?("2"));
     show(#staticBool?('3'));
-    show(#staticBool?(()));
+    show(#staticBool?([]));
     show(#staticBool?(prelude));
     show(#staticBool?(foo));
 
@@ -55,17 +55,17 @@ main() {
     show(#staticChar?(1));
     show(#staticChar?(true));
     show(#staticChar?("3"));
-    show(#staticChar?(()));
+    show(#staticChar?([]));
     show(#staticChar?(prelude));
     show(#staticChar?(foo));
 
     show("is a tuple a tuple?");
-    show(#staticTuple?(()));
-    show(#staticTuple?((1,))); // (expr,) is a one-element tuple
-    show(#staticTuple?((1, true, "three")));
+    show(#staticTuple?([]));
+    show(#staticTuple?([1]));
+    show(#staticTuple?([1, true, "three"]));
 
     show("is an untuple a tuple?");
-    show(#staticTuple?((1))); // (expr) is a parenthesized expression
+    show(#staticTuple?(1));
     show(#staticTuple?(true));
     show(#staticTuple?('3'));
     show(#staticTuple?("four"));
@@ -80,7 +80,7 @@ main() {
     show(#staticModule?(true));
     show(#staticModule?('3'));
     show(#staticModule?("four"));
-    show(#staticModule?(()));
+    show(#staticModule?([]));
     show(#staticModule?(foo));
 
     show("is a symbol a symbol?");
@@ -91,6 +91,6 @@ main() {
     show(#staticSymbol?(true));
     show(#staticSymbol?('3'));
     show(#staticSymbol?("four"));
-    show(#staticSymbol?(()));
+    show(#staticSymbol?([]));
     show(#staticSymbol?(prelude));
 }

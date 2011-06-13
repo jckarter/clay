@@ -4,5 +4,5 @@ noReturn() { throw 0; }
 foo() { return noReturn(); }
 
 main() {
-    show(#returns?([ foo(); ]));
+    show(#returns?(-> { foo(); }));
 }

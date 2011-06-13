@@ -6,7 +6,7 @@ import __primitives__.*;
 // MapValues
 //
 
-symbol MapValues;
+define MapValues;
 overload #MapValues('f, 'first, ..'rest) = 'f('first), ..MapValues('f, ..'rest);
 overload #MapValues('f) = ;
 
@@ -21,56 +21,53 @@ overload #_SymbolBody('x, ..'y) = 'x;
 
 #SymbolBody('t) = _SymbolBody(..staticSymbolBody('t));
 
-symbol Bool;
-symbol Int;
-symbol Array['T, 'n];
-symbol Tuple[..'T];
+define Bool;
+define Int;
+define Array['T, 'n];
+define Tuple[..'T];
 
-symbol RecordTag;
+define RecordTag;
 
-symbol RecordType;
-overload #RecordType(..'fields) = (RecordTag, FieldNames(..'fields), FieldTypes(..'fields));
+define RecordType;
+overload #RecordType(..'fields) = [RecordTag, FieldNames(..'fields), FieldTypes(..'fields)];
 
-symbol FieldNames;
-overload #FieldNames(..'fields) = (..MapValues([f => staticTupleElement(f, 0)], ..'fields));
+define FieldNames;
+overload #FieldNames(..'fields) = [..MapValues((f) -> staticTupleElement(f, 0), ..'fields)];
 
-symbol FieldTypes;
-overload #FieldTypes(..'fields) = (..MapValues([f => staticTupleElement(f, 1)], ..'fields));
+define FieldTypes;
+overload #FieldTypes(..'fields) = [..MapValues((f) -> staticTupleElement(f, 1), ..'fields)];
 
-symbol Record?;
+define Record?;
 overload #Record?('t) =
     staticSymbol?('t)
     and TupleWithTag?(SymbolBody('t), RecordTag);
 
-symbol TupleWithTag?;
+define TupleWithTag?;
 overload #TupleWithTag?('x, 'tag) =
     staticTuple?('x)
     and staticLesser?(0, staticTupleSize('x))
     and staticEquals?(staticTupleElement('x, 0), 'tag);
 
-symbol RecordFieldCount;
+define RecordFieldCount;
 overload #RecordFieldCount('t) | Record?('t) =
     staticTupleSize(staticTupleElement(SymbolBody('t), 1));
 
-symbol RecordFieldNames;
+define RecordFieldNames;
 overload #RecordFieldNames('t) | Record?('t) =
     staticTupleElement(SymbolBody('t), 1);
 
-symbol RecordFieldTypes;
+define RecordFieldTypes;
 overload #RecordFieldTypes('t) | Record?('t) =
     staticTupleElement(SymbolBody('t), 2);
 
 
-symbol Point['T] = RecordType(
-    ("x", 'T),
-    ("y", 'T),
-);
+define Point['T] as RecordType(x:'T, y:'T);
 
-symbol RecordInfo;
+define RecordInfo;
 overload #RecordInfo('t) | Record?('t) =
-    ('t, RecordFieldNames('t), RecordFieldTypes('t));
+    ['t, RecordFieldNames('t), RecordFieldTypes('t)];
 
-symbol Main;
+define Main;
 overload #Main() = RecordInfo(Point[Int]);
 
 main() { show(..#Main()); }

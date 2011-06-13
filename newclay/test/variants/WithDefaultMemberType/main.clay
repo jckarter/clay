@@ -2,14 +2,14 @@ import variants.*;
 import show.*;
 import unsafe.valuesemantics.(BitwiseZeroInitialized?);
 
-symbol Foo = VariantType(Int, Char), WithDefaultMemberType(Int);
-symbol Bar = VariantType(Char, Int), WithDefaultMemberType(Int);
+define Foo as VariantType(Int, Char), WithDefaultMemberType(Int);
+define Bar as VariantType(Char, Int), WithDefaultMemberType(Int);
 
-symbol Nint = NewType(Int);
+define Nint as NewType(Int);
 overload Nint() = Nint(22);
 overload show(x:Nint) { show("Nint", *x); }
 
-symbol Bas = VariantType(Nint, Char), WithDefaultMemberType(Nint);
+define Bas as VariantType(Nint, Char), WithDefaultMemberType(Nint);
 
 main() {
     show(#BitwiseZeroInitialized?(Foo)); ////true

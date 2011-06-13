@@ -3,7 +3,7 @@ import __primitives__.*;
 
 #Foo?('T) = 'T == Int8 or 'T == Int64;
 
-symbol foo;
+define foo;
 overload foo(x:'T) | Foo?('T) = x;
 overload foo(x:Char) = x;
 overload foo(#'a') = 'a';
@@ -11,13 +11,13 @@ overload foo(#'X') | staticError("I AM ERROR.") {}
 
 main() {
     show(
-        #defined?([foo(1_i8)]),  // true
-        #defined?([foo(1_i64)]), // true
-        #defined?([foo(1)]),     // false
-        #defined?([foo('a')]),   // true
-        #defined?([foo(#'a')]),  // true
-        #defined?([foo(#'b')]),  // false
-        #defined?([foo(#'X')]),  // false
+        #defined?(-> foo(1_i8)),  // true
+        #defined?(-> foo(1_i64)), // true
+        #defined?(-> foo(1)),     // false
+        #defined?(-> foo('a')),   // true
+        #defined?(-> foo(#'a')),  // true
+        #defined?(-> foo(#'b')),  // false
+        #defined?(-> foo(#'X')),  // false
     );
 }
 

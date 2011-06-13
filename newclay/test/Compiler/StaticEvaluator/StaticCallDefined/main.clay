@@ -3,8 +3,8 @@ import __primitives__.*;
 
 #foo(Bar) = true;
 
-symbol Bar;
-symbol Bas;
+define Bar;
+define Bas;
 
 #Main() = staticCallDefined?(foo, Bar),
                 staticCallDefined?(foo, Bas),

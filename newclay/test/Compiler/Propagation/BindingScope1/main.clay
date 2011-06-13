@@ -4,7 +4,7 @@ main() {
     var x = true;
     {
         var w = x, x = 1, y = x;
-        show(..#type([ w, x, y ]));
+        show(..#type(->  (w, x, y)));
     }
 }
 

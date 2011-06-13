@@ -88,7 +88,7 @@ cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline --> retu
     | type?('O)
     __c__ """$returned = $callable($..args);""";
 overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline
-    | 'O == ()
+    | 'O == []
     __c__ """$callable($..args);""";
 
 cCast(#'T, a) inline --> returned:'T

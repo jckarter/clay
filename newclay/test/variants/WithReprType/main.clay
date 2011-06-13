@@ -2,9 +2,9 @@ import variants.*;
 import variants.representation.*;
 import show.*;
 
-symbol Null = RecordType();
+define Null as RecordType();
 
-symbol MaybePointer['T] =
+define MaybePointer['T] as
     VariantType(Null, Pointer['T]),
     WithReprType(NullablePointerRepr);
 

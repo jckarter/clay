@@ -2,6 +2,6 @@ import __primitives__.*;
 
 main() {
     var y = 1;
-    var l = [ref x -> ref x, y];
+    var l = (ref x) -> { return ref x, y; };
     return makeCodePointer(l, Ref[Int]), makeCodePointer(l, Ref[Float64]);
 }

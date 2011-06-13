@@ -13,10 +13,10 @@ private assertLocation(file, line, column) = CString(file), CUInt(line), CUInt(c
 
 #assertionsEnabled?() = not commandlineVariable("NDEBUG");
 
-symbol assert;
+define assert;
 overload assert(f, ..msg) inline | not assertionsEnabled?() {}
 overload assert(f, ..msg) inline
-    | definedWithType?([f()], Bool) and assertionsEnabled?()
+    | definedWithType?(-> f(), Bool) and assertionsEnabled?()
 {
     if (not f()) {
         // XXX show message
@@ -29,7 +29,7 @@ overload assert(f, ..msg) inline
     }
 }
 
-symbol assertUnreachable;
+define assertUnreachable;
 overload assertUnreachable(f, ..msg) noreturn inline | not assertionsEnabled?() {
     __unreachable__;
 }

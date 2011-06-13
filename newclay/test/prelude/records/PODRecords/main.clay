@@ -1,8 +1,8 @@
 import show.*;
 
-symbol Point = RecordType(x:Float64, y:Float32);
+define Point as RecordType(x:Float64, y:Float32);
 
-symbol FunnyNamedField = RecordType(foo_bar?:Bool);
+define FunnyNamedField as RecordType(foo_bar?:Bool);
 
 main() {
     ////"x"

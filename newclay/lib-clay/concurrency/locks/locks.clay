@@ -8,9 +8,9 @@ import unsafe.valuesemantics.*;
 // lock protocol
 //
 
-symbol lock;
-symbol unlock;
-symbol tryLock;
+define lock;
+define unlock;
+define tryLock;
 
 #Lock?('T) = callDefined?(lock, Ref['T])
     and callDefined?(unlock, Ref['T])
@@ -21,7 +21,7 @@ symbol tryLock;
 // LockHolder RAII object; withLock combinator
 //
 
-symbol LockHolder['L] = CompositeType(lock:Pointer['L]);
+define LockHolder['L] as CompositeType(lock:Pointer['L]);
 
 overload LockHolder(ref l:'L) inline | Lock?('L) {
     lock(l);
@@ -33,7 +33,7 @@ overload destroy(ref lh:LockHolder['L]) inline {
 }
 
 withLock(ref l:'L, forward f, forward ..args) inline
-    | Lock?('L) and defined?([forward ..f(..args)])
+    | Lock?('L) and defined?(-> forward ..f(..args))
 {
     var _ = LockHolder(l);
     return forward ..f(..args);
@@ -44,8 +44,8 @@ withLock(ref l:'L, forward f, forward ..args) inline
 // default implementation using pthread_mutex
 //
 
-symbol Lock = CompositeType(_mutex:PthreadMutexT);
-symbol LockError = RecordType(error:CInt);
+define Lock as CompositeType(_mutex:PthreadMutexT);
+define LockError as RecordType(error:CInt);
 
 overload #BitwiseMoved?(Lock) = false;
 

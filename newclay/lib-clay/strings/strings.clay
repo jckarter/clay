@@ -28,7 +28,7 @@ alias RandomAccessString = Vector[Char];
 // String -- pushable and iterable UTF-8 encoded string with cached size
 //
 
-symbol String = RecordType(size:UInt, contents:UTF8[Vector[UInt8]]);
+define String as RecordType(size:UInt, contents:UTF8[Vector[UInt8]]);
 
 overload String(#'s) | staticString?('s)
     = String(*#staticStringSize('s), UTF8(Vector(stringBytes('s))));

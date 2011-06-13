@@ -6,5 +6,5 @@ nonterminating() { throw 0; }
 foo() = 1, (terminating(); nonterminating(); terminating(); 2, 3);
 
 main() {
-    show(#returns?([ foo() ]));
+    show(#returns?(->  foo() ));
 }

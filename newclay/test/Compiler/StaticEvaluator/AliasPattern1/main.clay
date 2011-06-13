@@ -1,9 +1,9 @@
 import show.(show);
 import __primitives__.*;
-symbol Bar;
-symbol Bas;
+define Bar;
+define Bas;
 
-symbol Foo['A, 'B];
+define Foo['A, 'B];
 
 alias FooBar['C] = Foo[Bar, 'C];
 

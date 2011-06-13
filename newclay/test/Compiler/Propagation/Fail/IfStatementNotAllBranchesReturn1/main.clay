@@ -1,4 +1,4 @@
-symbol main;
+define main;
 overload main() {
     if (true)
         return 1;

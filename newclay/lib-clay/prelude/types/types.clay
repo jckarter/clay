@@ -17,15 +17,15 @@ public import __primitives__.(
 //
 // definedWithType?
 
-#definedWithType?('f, ..'TT) = defined?('f) and (..type('f)) == (..'TT);
+#definedWithType?('f, ..'TT) = defined?('f) and [..type('f)] == [..'TT];
 
 
 //
 // typeSize, typeAlign
 //
 
-symbol typeSize  = RuntimeStaticProcedure();
-symbol typeAlign = RuntimeStaticProcedure();
+define typeSize  as RuntimeStaticProcedure();
+define typeAlign as RuntimeStaticProcedure();
 
 overload #typeSize ('T) | type?('T) = llTypeSize (llType('T));
 overload #typeAlign('T) | type?('T) = llTypeAlign(llType('T));
@@ -44,9 +44,9 @@ overload #typeAlign('T) | type?('T) = llTypeAlign(llType('T));
 // reference kinds
 //
 
-symbol Ref['T];
-symbol Rvalue['T];
-symbol Const['T];
+define Ref['T];
+define Rvalue['T];
+define Const['T];
 
 #ReferenceKindTemplate?('x) = false;
 overload #ReferenceKindTemplate?(Ref) = true;
@@ -77,8 +77,8 @@ overload #Const?(Const['T]) | type?('T) = true;
 // external ABIs
 //
 
-symbol CdeclABI;
-symbol StdcallABI;
+define CdeclABI;
+define StdcallABI;
 
 #ABI?('x) = false;
 overload #ABI?(CdeclABI) = true;
@@ -164,7 +164,7 @@ overload #Union?(Union[..'T]) | type?(Union[..'T]) = true;
 //
 // WithAlignment symbol attribute
 
-#WithAlignment('n) | staticInt?('n) = (WithAlignment, 'n);
+#WithAlignment('n) | staticInt?('n) = [WithAlignment, 'n];
 #WithAlignment?('T) = type?('T) and symbolWithTag?('T, WithAlignment);
 
 overload #typeAlign('T)

@@ -2,7 +2,7 @@ import show.(show);
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
-symbol ValueSemanticsLogger = CompositeType(tag:Int);
+define ValueSemanticsLogger as CompositeType(tag:Int);
 
 overload #BitwiseMoved?(ValueSemanticsLogger) = false;
 overload destroy(ref x:ValueSemanticsLogger)    { show("destroy", x.tag); }

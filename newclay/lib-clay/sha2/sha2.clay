@@ -9,7 +9,7 @@ import unsafe.coordinates.(
 );
 import libc.*;
 
-symbol SHA256 = RecordType(digest: Array[UInt8, 32]);
+define SHA256 as RecordType(digest: Array[UInt8, 32]);
 
 private var sha256RoundConstants = Array[UInt32, 64](
    0x428a2f98_u32, 0x71374491_u32, 0xb5c0fbcf_u32, 0xe9b5dba5_u32,
@@ -147,7 +147,7 @@ sha256(message: 'S) --> returned: SHA256
         returnedWord = hostToNetwork(stateWord);
 }
 
-overload sha256(message:'S) | String?('S) and defined?([stringBytes(message)])
+overload sha256(message:'S) | String?('S) and defined?(-> stringBytes(message))
     = sha256(stringBytes(message));
 
 copyNonoverlappingMemory(to, from, size) inline {

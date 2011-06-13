@@ -2,10 +2,10 @@ import meta.lltypes.(llType, llTupleType);
 import show.*;
 import unsafe.coordinates.(ContiguousCoordinate);
 
-symbol NonPODType;
+define NonPODType;
 overload #llType(NonPODType) = llTupleType[];
 
-symbol NonType;
+define NonType;
 
 main() {
     show(#type?(Bool)); ////true
@@ -28,8 +28,8 @@ main() {
     show(#type?(Pointer[Int])); ////true
     show(#type?(OpaquePointer)); ////true
     show(#type?(ContiguousCoordinate[Int])); ////true
-    show(#type?(ExternalCodePointer[CdeclABI, true, (), ()])); ////true
-    show(#type?(ExternalCodePointer[StdcallABI, false, (Int, Int), Int])); ////true
+    show(#type?(ExternalCodePointer[CdeclABI, true, [], []])); ////true
+    show(#type?(ExternalCodePointer[StdcallABI, false, [Int, Int], Int])); ////true
     show(#type?(Array[Int, 12])); ////true
     show(#type?(Tuple[Int, Int])); ////true
     show(#type?(Union[Int, Int])); ////true
@@ -41,14 +41,14 @@ main() {
     show(#type?(ContiguousCoordinate[2])); ////false
     show(#type?(ContiguousCoordinate[NonType])); ////false
     show(#type?(ExternalCodePointer)); ////false
-    show(#type?(ExternalCodePointer[2, true, (), ()])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, 2, (), ()])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, 2, ()])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, (), 2])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, NonType), Int])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonType])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, NonPODType), Int])); ////false
-    show(#type?(ExternalCodePointer[CdeclABI, true, (Int, Int), NonPODType])); ////false
+    show(#type?(ExternalCodePointer[2, true, [], []])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, 2, [], []])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, 2, []])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, [], 2])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, [Int, NonType], Int])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, [Int, Int], NonType])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, [Int, NonPODType], Int])); ////false
+    show(#type?(ExternalCodePointer[CdeclABI, true, [Int, Int], NonPODType])); ////false
     show(#type?(Array)); ////false
     show(#type?(Array[NonType, 12])); ////false
     show(#type?(Array[Int, false])); ////false

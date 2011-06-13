@@ -2,7 +2,7 @@ import __primitives__.*;
 
 #Foo?(..'T) = 'T == Int8 or 'T == Int64;
 
-symbol foo;
+define foo;
 overload foo(x:'T) | Foo?('T) = x;
 
-main() = #defined?([foo(1)]);
+main() = #defined?(-> foo(1));

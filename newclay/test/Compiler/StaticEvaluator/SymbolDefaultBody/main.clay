@@ -1,7 +1,7 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Foo;
+define Foo;
 
 #Main() = ..staticSymbolBody(Foo);
 

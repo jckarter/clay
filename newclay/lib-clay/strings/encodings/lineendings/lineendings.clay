@@ -1,4 +1,4 @@
-symbol WindowsLineEndingDecoder['I] = NewType('I);
+define WindowsLineEndingDecoder['I] as NewType('I);
 
 overload WindowsLineEndingDecoder(forward s:'S) inline
     | Sequence?('S) and sequenceElementType('S) == Char
@@ -23,7 +23,7 @@ overload read1(ref s:WindowsLineEndingDecoder['I]) {
         return nothing(Char);
 }
 
-symbol WindowsLineEndingEncoder['I] = NewType('I);
+define WindowsLineEndingEncoder['I] as NewType('I);
 
 overload WindowsLineEndingEncoder(forward s:'S) inline
     | Sink?('S, Char)

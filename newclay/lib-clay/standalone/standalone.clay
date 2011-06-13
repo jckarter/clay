@@ -14,7 +14,7 @@ import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
 private exitValue() = 0;
 overload exitValue(n) = Int(n);
 
-symbol callMain;
+define callMain;
 overload callMain(cargc:Int, cargv:Pointer[Pointer[CChar]])
     | callDefined?(main)
 {

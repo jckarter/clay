@@ -2,20 +2,20 @@ import unsafe.compositetypes.*;
 import show.(show);
 import unsafe.valuesemantics.(BitwiseMoved?, DestroyDoesNothing?);
 
-symbol Copyable = RecordType(x:Int);
+define Copyable as RecordType(x:Int);
 
-symbol Uncopyable = CompositeType(x:Int);
+define Uncopyable as CompositeType(x:Int);
 overload #BitwiseMoved?(Uncopyable) = true;
 overload #DestroyDoesNothing?(Uncopyable) = true;
 
 main() {
     var copyable = initializeRecord(Copyable, 5);
 
-    show(#defined?([Copyable(initializeRecord(Copyable, 5))])); ////true
-    show(#defined?([Copyable(copyable)])); ////true
+    show(#defined?(-> Copyable(initializeRecord(Copyable, 5)))); ////true
+    show(#defined?(-> Copyable(copyable))); ////true
 
     var uncopyable = initializeRecord(Uncopyable, 5);
 
-    show(#defined?([Uncopyable(initializeRecord(Uncopyable, 5))])); ////true
-    show(#defined?([Uncopyable(uncopyable)])); ////false
+    show(#defined?(-> Uncopyable(initializeRecord(Uncopyable, 5)))); ////true
+    show(#defined?(-> Uncopyable(uncopyable))); ////false
 }

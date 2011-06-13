@@ -1,1 +1,1 @@
-(Point[Int], ("x", "y"), (Int, Int))
+[Point[Int], ["x", "y"], [Int, Int]]

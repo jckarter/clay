@@ -9,6 +9,6 @@ main() {
         if (false) x else y,
     );
 
-    show(#type([forward if (true) x else y]));
+    show(#type(-> forward if (true) x else y));
 }
 

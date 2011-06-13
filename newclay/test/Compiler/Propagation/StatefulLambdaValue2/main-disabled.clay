@@ -6,5 +6,5 @@ foo() {
 }
 
 main() {
-    show(#defined?([ foo() ]));
+    show(#defined?(->  foo() ));
 }

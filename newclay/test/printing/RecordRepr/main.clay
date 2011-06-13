@@ -1,8 +1,8 @@
 import printing.(printlnRepr);
 
-symbol Empty = RecordType();
-symbol Foo = RecordType(foo:Int, bar:Bool);
-symbol Bar['T] = RecordType(foo:Int, bar:Bool, bas:'T);
+define Empty as RecordType();
+define Foo as RecordType(foo:Int, bar:Bool);
+define Bar['T] as RecordType(foo:Int, bar:Bool, bas:'T);
 
 main() {
     printlnRepr(Empty());

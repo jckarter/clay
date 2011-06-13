@@ -13,11 +13,11 @@ import variants.(VariantType?, dispatch);
 // printable protocol
 //
 
-symbol printObject;
-symbol printObjectRepr;
+define printObject;
+define printObjectRepr;
 
 overload printObject(ref sink, forward o) inline
-    | defined?([printObjectRepr(sink, o);])
+    | defined?(-> { printObjectRepr(sink, o); })
 {
     printObjectRepr(sink, o);
 }
@@ -121,15 +121,9 @@ overload #bufferSizeForInt('T, 16)
 //
 
 overload printObjectRepr(ref sink, s:Tuple[..'T]) {
-    printObject(sink, '(');
+    printObject(sink, '[');
     printReprTo(sink, ..*s);
-    printObject(sink, ')');
-}
-
-overload printObjectRepr(ref sink, s:Tuple['T]) {
-    printObject(sink, '(');
-    printReprTo(sink, ..*s);
-    printObject(sink, ",)");
+    printObject(sink, ']');
 }
 
 overload printObjectRepr(ref sink, r:'R) | RecordType?('R) {
@@ -146,38 +140,38 @@ overload printObjectRepr(ref sink, n:'N) | NewType?('N) {
 
 overload printObjectRepr(ref sink, v:'V) | VariantType?('V) {
     printTo(sink, 'V, '(');
-    dispatch(v, [x -> printReprTo(sink, x);]);
+    dispatch(v, (x) -> { printReprTo(sink, x); });
     printTo(sink, ')');
 }
 
 overload printObjectRepr(ref sink, m:Maybe['T]) {
     maybe(m,
-        [x ->
+        (x) -> {
             printTo(sink, "just(");
             printReprTo(sink, x);
             printTo(sink, ')');
-        ],
-        [printTo(sink, "nothing(", 'T, ')');]
+        },
+        -> { printTo(sink, "nothing(", 'T, ')'); }
     );
 }
 
 overload printObjectRepr(ref sink, m:Maybe[Pointer['T]]) {
     maybe(m,
-        [x ->
+        (x) -> {
             printTo(sink, "M");
             printReprTo(sink, x);
-        ],
-        [printTo(sink, "null(", 'T, ')');]
+        },
+        -> { printTo(sink, "null(", 'T, ')'); }
     );
 }
 
 overload printObjectRepr(ref sink, m:Maybe[OpaquePointer]) {
     maybe(m,
-        [x ->
+        (x) -> {
             printTo(sink, "M");
             printReprTo(sink, x);
-        ],
-        [printTo(sink, "nullOpaque()");]
+        },
+        -> { printTo(sink, "nullOpaque()"); }
     );
 }
 

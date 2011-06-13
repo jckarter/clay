@@ -1,7 +1,7 @@
 
-symbol foo;
+define foo;
 overload foo(x:Int) = if (true) foo(1) else foo(0);
 
-symbol main;
+define main;
 overload main() = foo(2);
 

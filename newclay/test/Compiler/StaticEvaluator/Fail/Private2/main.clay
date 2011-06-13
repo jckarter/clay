@@ -1,4 +1,4 @@
 import tools.(PrivateFactorial);
 
-symbol Main;
+define Main;
 overload #Main() = PrivateFactorial(8);

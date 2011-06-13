@@ -1,12 +1,12 @@
 import meta.symbols.*;
 import show.*;
 
-symbol FooTag;
-symbol BarTag;
+define FooTag;
+define BarTag;
 
-symbol Foo = (FooTag, 1, 2, 3);
-symbol Bar = (BarTag, 'a', 'b', 'c');
-symbol Bas = (FooTag, 4), (BarTag, 'd');
+define Foo as [FooTag, 1, 2, 3];
+define Bar as [BarTag, 'a', 'b', 'c'];
+define Bas as [FooTag, 4], [BarTag, 'd'];
 
 main() {
     ////1

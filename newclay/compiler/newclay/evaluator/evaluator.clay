@@ -2272,12 +2272,12 @@ printQualifiedTo(stream, value:Value) {
         Primitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
         RTPrimitive, p ref=> { printTo(stream, primitivesModuleName, '.', primitiveName(p.kind)); },
         TupleValue, t ref=> {
-            printTo(stream, '(');
+            printTo(stream, '[');
             interleave(t.elements,
                 () ref=> { printTo(stream, ", "); },
                 p  ref=> { printQualifiedTo(stream, p); },
             );
-            printTo(stream, ')');
+            printTo(stream, ']');
         },
         StaticLambdaValue, l ref=> {
             printQualifiedLambdaTo(stream, l);
@@ -2291,7 +2291,7 @@ printQualifiedTo(stream, value:Value) {
 
 printQualifiedSymbolTo(stream, head:SymbolHead, params:ValueList) {
     printTo(stream, head.module.name, '.', head.astName.name.str);
-    if (not empty?(params)) {
+    if (not ast.emptyVariadicList?(head.astName.params)) {
         printTo(stream, '[');
         interleave(params,
             () ref=> { printTo(stream, ", "); },

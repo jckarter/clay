@@ -4,7 +4,7 @@
 "Foo[Bar]"
 "Bar"
 "1"
-"(1, 2, Foo[Bar], Bar)"
+"[1, 2, Foo[Bar], Bar]"
 "\"foo\""
 "__primitives__"
 "factorial"

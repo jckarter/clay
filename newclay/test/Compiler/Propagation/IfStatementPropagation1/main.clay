@@ -22,6 +22,6 @@ foo3() {
 }
 
 main() {
-    show(..#type([forward foo1(), forward foo2(), forward foo3()]));
+    show(..#type(-> forward (foo1(), foo2(), foo3())));
 }
 

@@ -1,6 +1,6 @@
 import show.(show);
 import __primitives__.*;
 
-#Main() = (..staticStringChars("hello world\n"));
+#Main() = [..staticStringChars("hello world\n")];
 
 main() { show(..#Main()); }

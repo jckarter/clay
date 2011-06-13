@@ -6,7 +6,7 @@ import values.*;
 // Range
 //
 
-symbol Range['T] = RecordType(begin:'T, end:'T, step:'T);
+define Range['T] as RecordType(begin:'T, end:'T, step:'T);
 
 overload Range(to:'N) = Range['N]('N(0), to, 'N(1));
 overload Range(from:'N, to:'N) = Range['N](from, to, 'N(1));
@@ -40,7 +40,7 @@ overload #Reliable?(Range['T]) = true;
 //
 
 overload #size('s) | staticString?('s) = staticStringSize('s);
-overload #size((..'t)) = countValues(..'t);
+overload #size([..'t]) = countValues(..'t);
 
 
 //
@@ -51,9 +51,9 @@ overload #size((..'t)) = countValues(..'t);
 #SinkSequence?('S) = callDefined?(sink, Ref['S]);
 #Sequence?('S) = callDefined?(iterator, 'S);
 
-#sequenceIteratorType('S) | Sequence?('S) = type([iterator(arg('S))]);
-#sequenceSourceType('S) | SourceSequence?('S) = type([source(arg('S))]);
-#sequenceSinkType('S) | SinkSequence?('S) = type([sink(arg('S))]);
+#sequenceIteratorType('S) | Sequence?('S) = type(-> iterator(arg('S)));
+#sequenceSourceType('S) | SourceSequence?('S) = type(-> source(arg('S)));
+#sequenceSinkType('S) | SinkSequence?('S) = type(-> sink(arg('S)));
 
 #sequenceElementType('S) | SinkSequence?('S)
     = ..sinkValueType(sequenceSinkType('S));

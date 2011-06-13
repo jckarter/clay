@@ -3,7 +3,7 @@ var a = 1;
 
 foo() {
     var b = 2;
-    [c -> a + b + c];
+    (c) -> a + b + c;
 }
 
 main() { show("ok"); }

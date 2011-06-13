@@ -8,5 +8,5 @@ bar() {
 }
 
 main() {
-    show(#returns?([ bar(); ]));
+    show(#returns?(-> { bar(); }));
 }

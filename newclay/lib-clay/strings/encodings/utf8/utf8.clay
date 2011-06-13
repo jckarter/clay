@@ -12,7 +12,7 @@ import values.(mapValues);
 // UTF8Decoder
 //
 
-symbol UTF8Decoder['I] = NewType('I);
+define UTF8Decoder['I] as NewType('I);
 overload UTF8Decoder(forward x:'I) inline
     | Source?('I, UInt8)
     = UTF8Decoder['I](x);
@@ -62,29 +62,29 @@ private decodeFour(c, d, e, f) {
         return REPLACEMENT_CHAR;
 }
 
-private utf8maybe(forward x, forward then) inline = forward maybe(x, then, [REPLACEMENT_CHAR]);
+private utf8maybe(forward x, forward then) inline = forward maybe(x, then, -> REPLACEMENT_CHAR);
 
 overload read1(ref i:UTF8Decoder['I]) {
     ref source = *i;
-    return maybe(read1(source), [c ->
+    return maybe(read1(source), (c) ->
         just(if (c < 0x80u)
             Char(c)
         else if (c >= 0xC0u) (
             if (c < 0xE0u)
-                utf8maybe(read1(source), [d -> decodeTwo(c, d)])
+                utf8maybe(read1(source), (d) -> decodeTwo(c, d))
             else if (c < 0xF0u)
-                utf8maybe(read1(source), [d ->
-                    utf8maybe(read1(source), [e -> decodeThree(c, d, e)])
-                ])
+                utf8maybe(read1(source), (d) ->
+                    utf8maybe(read1(source), (e) -> decodeThree(c, d, e))
+                )
             else if (c < 0xF8u)
-                utf8maybe(read1(source), [d ->
-                    utf8maybe(read1(source), [e ->
-                        utf8maybe(read1(source), [f -> decodeFour(c, d, e, f)])
-                    ])
-                ])
+                utf8maybe(read1(source), (d) ->
+                    utf8maybe(read1(source), (e) ->
+                        utf8maybe(read1(source), (f) -> decodeFour(c, d, e, f))
+                    )
+                )
             else REPLACEMENT_CHAR
         ) else REPLACEMENT_CHAR)
-    ]);
+    );
 }
 
 overload flush(ref s:UTF8Decoder['I]) | Buffered?('I) {
@@ -98,7 +98,7 @@ overload #Reliable?(UTF8Decoder['I]) = Reliable?('I);
 // UTF8Encoder
 //
 
-symbol UTF8Encoder['I] = NewType('I);
+define UTF8Encoder['I] as NewType('I);
 overload UTF8Encoder(forward x:'I) inline
     | Sink?('I, UInt8)
     = UTF8Encoder['I](x);
@@ -126,11 +126,11 @@ overload write1(ref s:UTF8Encoder['I], c:Char) {
     if (code < 0x80u)
         write1(sink, UInt8(c));
     else if (code < 0x800u)
-        mapValues([b -> write1(sink, b);], ..encodeTwo(code));
+        mapValues((b) -> { write1(sink, b); }, ..encodeTwo(code));
     else if (code < 0x10000u)
-        mapValues([b -> write1(sink, b);], ..encodeThree(code));
+        mapValues((b) -> { write1(sink, b); }, ..encodeThree(code));
     else
-        mapValues([b -> write1(sink, b);], ..encodeFour(code));
+        mapValues((b) -> { write1(sink, b); }, ..encodeFour(code));
 }
 
 overload flush(ref s:UTF8Encoder['I]) | Buffered?('I) {
@@ -145,7 +145,7 @@ overload #Reliable?(UTF8Encoder['I]) = Reliable?('I);
 // UTF8 sequence
 //
 
-symbol UTF8['S] = NewType('S);
+define UTF8['S] as NewType('S);
 overload UTF8(forward s:'S) inline
     | (Sequence?('S) or SinkSequence?('S)) and sequenceElementType('S) == UInt8
     = UTF8['S](s);

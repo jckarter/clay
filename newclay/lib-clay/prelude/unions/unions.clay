@@ -11,7 +11,7 @@ import unsafe.valuesemantics.*;
 // Union[..T]
 //
 
-symbol Union[..'T];
+define Union[..'T];
 overload #POD?(Union[..'T]) = true;
 overload #llType(Union[..'T])
     | allValues?(type?, ..'T)
@@ -65,7 +65,7 @@ overload equals?(a:Union[..'T], b:Union[..'T]) inline
 // named union type
 //
 
-#NamedUnionType(..'fields) | validFields?(..'fields) = (NamedUnionType, ..'fields);
+#NamedUnionType(..'fields) | validFields?(..'fields) = [NamedUnionType, ..'fields];
 #NamedUnionType?('T) = symbolWithTag?('T, NamedUnionType);
 
 overload #fields('T) | NamedUnionType?('T) = ..symbolTagBody('T, NamedUnionType);

@@ -22,8 +22,8 @@ public import __primitives__.(
 
 import __primitives__;
 
-symbol staticName = RuntimeStaticProcedure();
+define staticName as RuntimeStaticProcedure();
 overload #staticName('x) = __primitives__.staticName('x);
 
-symbol staticQualifiedName = RuntimeStaticProcedure();
+define staticQualifiedName as RuntimeStaticProcedure();
 overload #staticQualifiedName('x) = __primitives__.staticQualifiedName('x);

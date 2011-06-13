@@ -1,7 +1,7 @@
 import unsafe.casts.(pointerCast);
 import values.(allValues?);
 
-symbol hash;
+define hash;
 
 #Hashable?('T) = callDefined?(equals?, 'T, 'T) and callDefined?(hash, 'T);
 

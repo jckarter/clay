@@ -49,12 +49,12 @@ bar() {}
 
 main() {
     show(
-        #returns?([foo1()]),
-        #returns?([foo2()]),
-        #returns?([foo3()]),
-        #returns?([foo4()]),
-        #returns?([foo5()]),
-        #returns?([foo6()]),
-        #returns?([foo7()]),
+        #returns?(-> foo1()),
+        #returns?(-> foo2()),
+        #returns?(-> foo3()),
+        #returns?(-> foo4()),
+        #returns?(-> foo5()),
+        #returns?(-> foo6()),
+        #returns?(-> foo7()),
     );
 }

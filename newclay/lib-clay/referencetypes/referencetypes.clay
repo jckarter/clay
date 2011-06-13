@@ -1,14 +1,14 @@
 import pointers.shared.(SharedPointer);
 import meta.symbols.*;
 
-symbol ReferenceTypeValue['R] = RecordType(..fields('R));
+define ReferenceTypeValue['R] as RecordType(..fields('R));
 
-#ReferenceType(..'fields) | validFields?(..'fields) = (ReferenceType, ..'fields);
+#ReferenceType(..'fields) | validFields?(..'fields) = [ReferenceType, ..'fields];
 #ReferenceType?('T) = symbolWithTag?('T, ReferenceType);
 
 overload #fields('R) | ReferenceType?('R) = ..symbolTagBody('R, ReferenceType);
 
-#WithPointerType('P) = (WithPointerType, 'P);
+#WithPointerType('P) = [WithPointerType, 'P];
 #WithPointerType?('R) = ReferenceType?('R) and symbolWithTag?('R, WithPointerType);
 
 overload #underlyingType('R) | ReferenceType?('R)
@@ -17,9 +17,9 @@ overload #underlyingType('R) | WithPointerType?('R)
     = symbolTagBody('R, WithPointerType)[ReferenceTypeValue['R]];
 
 overload index(forward r:'R, #'field) inline
-    | ReferenceType?('R) and defined?([forward underlying(r)^[#'field]])
+    | ReferenceType?('R) and defined?(-> forward underlying(r)^[#'field])
     = forward underlying(r)^[#'field];
 
 overload 'R(forward ..args)
-    | ReferenceType?('R) and defined?([ReferenceTypeValue['R](..args)])
+    | ReferenceType?('R) and defined?(-> ReferenceTypeValue['R](..args))
     = initializeUnderlying('R, (#underlyingType('R))(ReferenceTypeValue['R], ..args));

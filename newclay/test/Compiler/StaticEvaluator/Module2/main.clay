@@ -2,7 +2,7 @@ import show.(show);
 import __primitives__.*;
 import factorial.(Factorial);
 
-symbol Main;
+define Main;
 overload #Main() = Factorial(8);
 
 main() { show(..#Main()); }

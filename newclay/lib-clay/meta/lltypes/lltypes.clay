@@ -4,18 +4,18 @@ import values.*;
 
 public import __primitives__.(llMangle);
 
-symbol llSigned;
-symbol llUnsigned;
+define llSigned;
+define llUnsigned;
 
-symbol llBoolType;
-symbol llIntegerType['Signed, 'Bits];
-symbol llFloatType['Bits];
-symbol llPointerType[..'T];
-symbol llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
-symbol llArrayType['T, 'n];
-symbol llTupleType[..'T];
-symbol llUnionType[..'T];
-symbol llLiteralCType[..'Parts];
+define llBoolType;
+define llIntegerType['Signed, 'Bits];
+define llFloatType['Bits];
+define llPointerType[..'T];
+define llCodePointerType['ABI, 'Variadic?, 'Inputs, 'Outputs];
+define llArrayType['T, 'n];
+define llTupleType[..'T];
+define llUnionType[..'T];
+define llLiteralCType[..'Parts];
 
 #llIntegerType?('L) = false;
 overload #llIntegerType?(llIntegerType['S, 'B]) = true;
@@ -41,17 +41,17 @@ overload #llUnionType?(llUnionType[..'T]) = true;
 #llLiteralCType?('L) = false;
 overload #llLiteralCType?(llLiteralCType[..'T]) = true;
 
-symbol llType;
+define llType;
 
-symbol llMemberType;
+define llMemberType;
 overload #llMemberType('T) | not staticTuple?('T) = 'T;
-overload #llMemberType(('name, 'T)) = 'T;
+overload #llMemberType(['name, 'T]) = 'T;
 
 #llMemberTypes(..'T) = ..mapValues(llMemberType, ..'T);
 
 private #PointerSize() = UInt(platformCPUPointerSize());
 
-symbol llTypeSize;
+define llTypeSize;
 overload #llTypeSize(llBoolType) = 1u;
 overload #llTypeSize(llIntegerType['S, 'Bits]) = 'Bits div 8u;
 overload #llTypeSize(llFloatType['Bits]) = 'Bits div 8u;
@@ -64,13 +64,13 @@ overload #llTypeSize(llUnionType[..'T]) = llUnionSize(..llMemberTypes(..'T));
 private #align('n, 'alignment) = ('n + 'alignment - 1u) div 'alignment * 'alignment;
 
 private #llTupleSize(..'TT) = align(llTupleSize2(0u, ..'TT), llAggAlign(..'TT));
-private symbol llTupleSize2;
+private define llTupleSize2;
 overload #llTupleSize2('size, 'T, ..'TT)
     = llTupleSize2(align('size, typeAlign('T)) + typeSize('T), ..'TT);
 overload #llTupleSize2('size) = 'size;
 
 private #llUnionSize(..'TT) = align(llUnionSize2(0u, ..'TT), llAggAlign(..'TT));
-private symbol llUnionSize2;
+private define llUnionSize2;
 overload #llUnionSize2('size, 'T, ..'TT)
     = llUnionSize2(max(align('size, typeAlign('T)), typeSize('T)), ..'TT);
 overload #llUnionSize2('size) = 'size;
@@ -82,7 +82,7 @@ overload #llAggAlign() = 1u;
 #maxIntegerAlign() = 8u;
 #maxFloatAlign() = 8u;
 
-symbol llTypeAlign;
+define llTypeAlign;
 overload #llTypeAlign(llBoolType) = 1u;
 overload #llTypeAlign(llIntegerType['S, 'Bits]) = min('Bits div 8u, maxIntegerAlign());
 overload #llTypeAlign(llFloatType['Bits]) = min('Bits div 8u, maxFloatAlign());

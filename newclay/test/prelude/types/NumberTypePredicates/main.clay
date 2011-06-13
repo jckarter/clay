@@ -23,8 +23,8 @@ main() {
     show(##PrimitiveType?(StringConstant)); ////false
     show(##PrimitiveType?(Pointer[Int])); ////false
     show(##PrimitiveType?(ContiguousCoordinate[Int])); ////false
-    show(##PrimitiveType?(ExternalCodePointer[CdeclABI, true, (), ()])); ////false
-    show(##PrimitiveType?(ExternalCodePointer[StdcallABI, false, (Int, Int), Int])); ////false
+    show(##PrimitiveType?(ExternalCodePointer[CdeclABI, true, [], []])); ////false
+    show(##PrimitiveType?(ExternalCodePointer[StdcallABI, false, [Int, Int], Int])); ////false
     show(##PrimitiveType?(Array[Int, 12])); ////false
     show(##PrimitiveType?(Tuple[Int, Int])); ////false
     show(##PrimitiveType?(Union[Int, Int])); ////false

@@ -1,9 +1,9 @@
 import show.(show);
 
-symbol foo;
+define foo;
 overload foo() __c__ """abort();""";
 
 main() {
-    show(..#type([..foo()]));
+    show(..#type(-> ..foo()));
 }
 

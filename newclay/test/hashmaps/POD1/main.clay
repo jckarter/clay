@@ -14,9 +14,9 @@ main() {
         show("--", "key", k, "value", v);
 
     show("--");
-    maybe(lookup(h, 2), [p -> show(p^);], [show("no 2");]);
-    maybe(lookup(h, 3), [p -> show(p^);], [show("no 3");]);
-    maybe(lookup(h, 4), [p -> show(p^);], [show("no 4");]);
-    maybe(lookup(h, 5), [p -> show(p^);], [show("no 5");]);
-    maybe(lookup(h, 7919), [p -> show(p^);], [show("no 7919");]);
+    maybe(lookup(h, 2), (p) -> { show(p^); }, -> { show("no 2"); });
+    maybe(lookup(h, 3), (p) -> { show(p^); }, -> { show("no 3"); });
+    maybe(lookup(h, 4), (p) -> { show(p^); }, -> { show("no 4"); });
+    maybe(lookup(h, 5), (p) -> { show(p^); }, -> { show("no 5"); });
+    maybe(lookup(h, 7919), (p) -> { show(p^); }, -> { show("no 7919"); });
 }

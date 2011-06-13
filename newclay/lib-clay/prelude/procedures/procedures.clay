@@ -10,7 +10,7 @@ import values.(allValues?, mapValues);
 
 public import __primitives__.(staticCallDefined?);
 
-symbol callDefined?;
+define callDefined?;
 overload #callDefined?('fn, ..'T) = callDefinedForSymbol?('fn, ..'T);
 overload callDefined?(fn:'F, ..#'T) = *#callDefinedForSymbol?(call, 'F, ..'T);
 overload callDefined?(#'fn, ..#'T) = *#callDefinedForSymbol?('fn, ..'T);
@@ -26,12 +26,12 @@ overload #callDefinedForType?(Static['f], ..'T)
 
 // VariadicBinaryOperatorProcedure -- define variadic version of procedure
 // as left fold of the binary procedure
-#VariadicBinaryOperatorProcedure() = (VariadicBinaryOperatorProcedure,);
+#VariadicBinaryOperatorProcedure() = [VariadicBinaryOperatorProcedure];
 
 overload 'fn(forward x:'X, forward y:'Y, forward z:'Z, forward ..w:'W) inline
     | VariadicBinaryOperatorProcedure?('fn)
       and callDefined?('fn, 'X, 'Y)
-      and callDefined?('fn, type(['fn(x, y)]), 'Z, ..'W)
+      and callDefined?('fn, type(-> 'fn(x, y)), 'Z, ..'W)
     = forward 'fn('fn(x, y), z, ..w);
 
 overload 'fn(forward x) inline
@@ -53,7 +53,7 @@ overload #'fn('x)
 
 // RuntimeStaticProcedure -- make a static function callable as a runtime procedure
 
-#RuntimeStaticProcedure() = (RuntimeStaticProcedure,);
+#RuntimeStaticProcedure() = [RuntimeStaticProcedure];
 #RuntimeStaticProcedure?('fn) = symbolWithTag?('fn, RuntimeStaticProcedure);
 overload 'fn(..#'xs) inline
     | RuntimeStaticProcedure?('fn)
@@ -65,16 +65,16 @@ overload 'fn(..#'xs) inline
 // code pointers
 //
 
-overload CodePointer[(..'I), (..'O)](#'f) inline
-    | definedWithType?([forward ..'f(..arg(..'I))], ..'O)
+overload CodePointer[[..'I], [..'O]](#'f) inline
+    | definedWithType?(-> forward ..'f(..arg(..'I)), ..'O)
     = makeCodePointer(#'f, ..'I);
 
-overload call(c:CodePointer[(..'I), (..'O)], forward ..args) inline
-    | defined?([callCodePointer(c, ..args);])
+overload call(c:CodePointer[[..'I], [..'O]], forward ..args) inline
+    | defined?(-> forward callCodePointer(c, ..args))
     = forward ..callCodePointer(c, ..args);
 
-overload ExternalCodePointer['A, false, (..'I), 'O](#'f) inline
+overload ExternalCodePointer['A, false, [..'I], 'O](#'f) inline
     | allValues?(POD?, ..'I, ..externalOutputTypes('O))
-      and definedWithType?([..'f(..arg(..'I))], ..externalOutputTypes('O))
+      and definedWithType?(-> ..'f(..arg(..'I)), ..externalOutputTypes('O))
     = makeExternalCodePointer(#'f, 'A, ..'I);
 

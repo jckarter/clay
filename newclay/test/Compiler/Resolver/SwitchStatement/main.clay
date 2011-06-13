@@ -1,11 +1,11 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Foo = ();
-symbol bar = ();
-symbol bas = ();
-symbol zim = ();
-symbol zang = ();
+define Foo as ();
+define bar as ();
+define bas as ();
+define zim as ();
+define zang as ();
 
 overload Foo() {
     if (true)

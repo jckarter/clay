@@ -1,6 +1,6 @@
 import show.(show);
 
-foo(#'x) = [#'y -> 'x + 'y];
+foo(#'x) = (#'y) -> 'x + 'y;
 
 main() {
     var f = foo(#2);

@@ -4,7 +4,7 @@ import __primitives__.*;
 bar(rvalue x) = "bar";
 
 foo(rvalue x) {
-    return #type([bar(x)]), x;
+    return #type(-> bar(x)), x;
 }
 
 main() {

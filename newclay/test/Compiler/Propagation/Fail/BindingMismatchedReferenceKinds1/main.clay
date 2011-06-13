@@ -1,16 +1,16 @@
-symbol valueReturn;
+define valueReturn;
 overload valueReturn() --> x:Int __c__ """abort();""";
 
-symbol refReturn;
+define refReturn;
 overload refReturn() --> ref x:Int __c__ """abort();""";
 
-symbol rvalueReturn;
+define rvalueReturn;
 overload rvalueReturn() --> rvalue x:Int __c__ """abort();""";
 
-symbol constReturn;
+define constReturn;
 overload constReturn() --> const x:Int __c__ """abort();""";
 
-symbol main;
+define main;
 overload main() {
     ref y = valueReturn();
 }

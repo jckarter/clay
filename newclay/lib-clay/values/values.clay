@@ -2,21 +2,21 @@ import __primitives__.(staticCountValues, staticIntegers);
 import unsafe.casts.(refToRvalue);
 import meta.statics.(staticInt?);
 
-symbol allValues?;
+define allValues?;
 overload #allValues?('f) = true;
 overload #allValues?('f, 'x, ..'xs) = 'f('x) and allValues?('f, ..'xs);
 overload allValues?(f) inline = true;
 overload allValues?(f, forward x, forward ..xs) inline
     = f(x) and allValues?(f, ..xs);
 
-symbol equalValues?;
+define equalValues?;
 overload #equalValues?('x0) = true;
 overload #equalValues?('x0, 'x1, ..'xs) = 'x0 == 'x1 and equalValues?('x0, ..'xs);
 overload equalValues?(x0) inline = true;
 overload equalValues?(x0, forward x1, forward ..xs) inline
     = x0 == x1 and equalValues?(x0, ..xs);
 
-symbol inValues?;
+define inValues?;
 overload #inValues?('x) = false;
 overload #inValues?('x, 'x, ..'ys) = true;
 overload #inValues?('x, 'y, ..'ys) | 'x != 'y = inValues?('x, ..'ys);
@@ -27,23 +27,23 @@ overload inValues?(x, forward ..ys) inline {
     return false;
 }
 
-symbol filterValues;
+define filterValues;
 overload #filterValues('f) = ;
 overload #filterValues('f, 'x, ..'xs) = ..filterValues('f, ..'xs);
 overload #filterValues('f, 'x, ..'xs) | 'f('x)
     = 'x, ..filterValues('f, ..'xs);
 
-symbol countValues;
+define countValues;
 overload #countValues(..'xs) = staticCountValues(..'xs);
 overload countValues(..xs:'T) inline = *#staticCountValues(..'T);
 
-symbol emptyValues?;
+define emptyValues?;
 overload #emptyValues?(..'xs) = false;
 overload #emptyValues?() = true;
 overload emptyValues?(..xs) inline = false;
 overload emptyValues?() inline = true;
 
-symbol takeValues;
+define takeValues;
 overload #takeValues('n) | staticInt?('n) = ;
 overload #takeValues(0, ..'xs) = ;
 overload #takeValues('n, 'x, ..'xs)
@@ -55,7 +55,7 @@ overload takeValues(#'n, forward x, forward ..xs) inline
     | staticInt?('n) and 'n > 0
     = forward x, forward ..takeValues(#('n - 1), ..xs);
 
-symbol dropValues;
+define dropValues;
 overload #dropValues('n) | staticInt?('n) = ;
 overload #dropValues(0, ..'xs) = ..'xs;
 overload #dropValues('n, 'x, ..'xs)
@@ -67,17 +67,17 @@ overload dropValues(#'n, forward x, forward ..xs) inline
     | staticInt?('n) and 'n > 0
     = forward ..dropValues(#('n - 1), ..xs);
 
-symbol mapValues;
+define mapValues;
 overload #mapValues('f) = ;
 overload #mapValues('f, 'x, ..'xs) = ..'f('x), ..mapValues('f, ..'xs);
 overload mapValues(fn) inline = ;
 overload mapValues(fn, forward x:'T, forward ..xs:'TT) inline
     = forward ..fn(x), forward ..mapValues(fn, ..xs);
 
-symbol intValues = RuntimeStaticProcedure();
+define intValues as RuntimeStaticProcedure();
 overload #intValues('n) = ..staticIntegers('n);
 
-symbol nthValue;
+define nthValue;
 overload #nthValue(0, 'x, ..'xs) = 'x;
 overload #nthValue('n, 'x, ..'xs)
     | staticInt?('n) and 'n > 0
@@ -88,18 +88,18 @@ overload nthValue(#'n, forward x, forward ..xs) inline
     | staticInt?('n) and 'n > 0
     = forward nthValue(#('n - 1), ..xs);
 
-symbol assocValue;
+define assocValue;
 overload #assocValue('key, 'kv, ..'kvs) = assocValue('key, ..'kvs);
-overload #assocValue('key, ('key, 'value), ..'kvs) = 'value;
+overload #assocValue('key, ['key, 'value], ..'kvs) = 'value;
 
 overload assocValue(#'key, forward kv, forward ..kvs) inline
     = forward assocValue(#'key, ..kvs);
 overload assocValue(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs) inline
     = forward kv[#1];
 
-symbol assocValue?;
+define assocValue?;
 overload #assocValue?('key, 'kv, ..'kvs) = assocValue?('key, ..'kvs);
-overload #assocValue?('key, ('key, 'value), ..'kvs) = true;
+overload #assocValue?('key, ['key, 'value], ..'kvs) = true;
 overload #assocValue?('key) = false;
 
 overload assocValue?(#'key, forward kv, forward ..kvs) inline
@@ -109,50 +109,50 @@ overload assocValue?(#'key, forward kv:Tuple[Static['key], 'V], forward ..kvs) i
 overload assocValue?(#'key) inline
     = false;
 
-symbol exceptValue = RuntimeStaticProcedure();
+define exceptValue as RuntimeStaticProcedure();
 overload #exceptValue('v) = ;
 overload #exceptValue('v, 'w, ..'vs) = 'w, ..exceptValue('v, ..'vs);
 overload #exceptValue('v, 'v, ..'vs) = ..exceptValue('v, ..'vs);
 
-private symbol indexValue2;
+private define indexValue2;
 overload #indexValue2('n, 'v, 'w, ..'vs) = indexValue2('n + 1, 'v, ..'vs);
 overload #indexValue2('n, 'v, 'v, ..'vs) = 'n;
 
-symbol indexValue;
+define indexValue;
 overload #indexValue('v, ..'vs) = indexValue2(0, 'v, ..'vs);
 
-private symbol CapturedValue['T] = NewType('T);
-private symbol CapturedRef['T] = NewType(Pointer['T]);
-private symbol CapturedConst['T] = NewType(Pointer['T]);
+private define CapturedValue['T] as NewType('T);
+private define CapturedRef['T] as NewType(Pointer['T]);
+private define CapturedConst['T] as NewType(Pointer['T]);
 
 private #Captured?('x) = false;
 overload #Captured?(CapturedValue['T]) = true;
 overload #Captured?(CapturedRef['T]) = true;
 overload #Captured?(CapturedConst['T]) = true;
 
-symbol CapturedType;
+define CapturedType;
 overload #CapturedType(CapturedValue['T]) = 'T;
 overload #CapturedType(CapturedRef['T])   = 'T;
 overload #CapturedType(CapturedConst['T]) = 'T;
 
 #CapturedTypes(..'T) = ..mapValues(CapturedType, ..'T);
 
-symbol captureValue;
+define captureValue;
 overload captureValue(const x:'T) inline = CapturedConst['T](&x);
 overload captureValue(ref x:'T) inline = CapturedRef['T](&x);
 overload captureValue(rvalue x:'T) inline = CapturedValue['T](x);
 
-symbol forwardValue;
+define forwardValue;
 overload forwardValue(x:CapturedConst['T]) inline = const (*x)^;
 overload forwardValue(x:CapturedRef['T]) inline = ref (*x)^;
 overload forwardValue(ref x:CapturedValue['T]) inline = rvalue refToRvalue(*x);
 
-symbol capturedRef;
+define capturedRef;
 overload capturedRef(x:CapturedConst['T]) inline = const (*x)^;
 overload capturedRef(x:CapturedRef['T]) inline = ref (*x)^;
 overload capturedRef(x:CapturedValue['T]) inline = const *x;
 
-captureValues(forward ..x) inline = (..mapValues(captureValue, ..x));
+captureValues(forward ..x) inline = [..mapValues(captureValue, ..x)];
 forwardValues(ref x:Tuple[..'T]) inline
     | allValues?(Captured?, ..'T)
     = forward ..mapValues(forwardValue, ..*x);

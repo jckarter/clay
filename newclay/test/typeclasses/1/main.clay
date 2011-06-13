@@ -1,30 +1,30 @@
 import typeclasses.*;
 import show.(show);
 
-symbol myEquals? = ClassProcedure();
-symbol myLesser? = ClassProcedure();
+define myEquals? as ClassProcedure();
+define myLesser? as ClassProcedure();
 
-symbol MyComparable? = Class(
-    (myEquals?, [#'I -> ('I, 'I), (Bool,)]),
-    (myLesser?, [#'I -> ('I, 'I), (Bool,)]),
+define MyComparable? as Class(
+    [myEquals?, (#'I) -> (['I, 'I], [Bool])],
+    [myLesser?, (#'I) -> (['I, 'I], [Bool])],
 );
 
-symbol Foo = RecordType(foo:Int);
+define Foo as RecordType(foo:Int);
 
 private fooEquals?(x, y) = x.foo == y.foo;
 private fooLesser?(x, y) = x.foo <  y.foo;
 
-attribute Foo = Instance(MyComparable?, Foo,
-    (myEquals?, fooEquals?),
-    (myLesser?, fooLesser?),
+extend Foo with Instance(MyComparable?, Foo,
+    [myEquals?, fooEquals?],
+    [myLesser?, fooLesser?],
 );
 
-attribute Int = Instance(MyComparable?, Int,
-    (myEquals?, equals?),
-    (myLesser?, lesser?),
+extend Int with Instance(MyComparable?, Int,
+    [myEquals?, equals?],
+    [myLesser?, lesser?],
 );
 
-symbol Bar = RecordType(bar:Int);
+define Bar as RecordType(bar:Int);
 // overloads outside of an Instance don't fulfill the class
 overload myEquals?(x:Bar, y:Bar) = x.bar == y.bar;
 overload myLesser?(x:Bar, y:Bar) = x.bar <  y.bar;

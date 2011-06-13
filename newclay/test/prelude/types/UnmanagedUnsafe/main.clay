@@ -2,7 +2,7 @@ import unsafe.compositetypes.*;
 import show.(show);
 import unsafe.valuesemantics.(destroy, Unmanaged);
 
-symbol Foo = CompositeType(i:Int);
+define Foo as CompositeType(i:Int);
 
 overload Foo(i:Int) { show("initialized"); return initializeRecord(Foo, i); }
 overload copy(x:Foo) { show("copied"); return copyRecord(x); }

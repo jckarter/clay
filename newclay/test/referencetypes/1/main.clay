@@ -4,15 +4,15 @@ import pointers.unique.(UniquePointer);
 import show.(show);
 import vectors.(Vector);
 
-symbol Foo = ReferenceType(a:Int, b:Vector[Int]);
-symbol Bar = ReferenceType(a:Int, b:Vector[Int]), WithPointerType(UniquePointer);
+define Foo as ReferenceType(a:Int, b:Vector[Int]);
+define Bar as ReferenceType(a:Int, b:Vector[Int]), WithPointerType(UniquePointer);
 
 main() {
     var foo = Foo();
     var bar = Bar();
 
-    show(#defined?([copy(foo)])); ////true
-    show(#defined?([copy(bar)])); ////false
+    show(#defined?(-> copy(foo))); ////true
+    show(#defined?(-> copy(bar))); ////false
 
     show(foo.a); ////0
     show(size(foo.b)); ////0

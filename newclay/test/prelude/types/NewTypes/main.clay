@@ -1,6 +1,6 @@
 import show.*;
 
-symbol Nonint = NewType(Int);
+define Nonint as NewType(Int);
 
 main() {
     var o = Nonint();

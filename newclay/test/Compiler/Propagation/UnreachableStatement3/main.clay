@@ -7,5 +7,5 @@ foo() {
 }
 
 main() {
-    show(#returns?([ foo(); ]));
+    show(#returns?(-> { foo(); }));
 }

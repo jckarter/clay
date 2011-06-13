@@ -1,7 +1,7 @@
 import show.(show);
 import __primitives__.*;
 
-#foo() = type([1 + 2]);
+#foo() = type(-> 1 + 2);
 
 main() {
     show(#foo());

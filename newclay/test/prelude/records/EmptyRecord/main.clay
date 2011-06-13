@@ -1,7 +1,7 @@
 import unsafe.valuesemantics.(POD?);
 import show.*;
 
-symbol Empty = RecordType();
+define Empty as RecordType();
 
 main() {
     show(..#fieldNames(Empty));

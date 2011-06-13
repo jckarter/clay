@@ -3,7 +3,7 @@ import strings.encodings.(stringTypeEncoding, stringBytes);
 import strings.encodings.utf8.(UTF8, UTF8Decoder);
 import unsafe.coordinates.(ContiguousCoordinate, CoordinateRange);
 
-symbol StringConstant = RecordType(
+define StringConstant as RecordType(
     size:UInt,
     begin:ContiguousCoordinate[UInt8],
     end:ContiguousCoordinate[UInt8],

@@ -4,15 +4,15 @@ import values.*;
 
 main() {
     var y = 2;
-    var stateless1 = [x -> x + 1];
-    var stateless2 = [x => x + 1];
-    var captureByRef = [x -> x + y];
-    var captureByVal = [x => x + y];
+    var stateless1 = (x) -> x + 1;
+    var stateless2 = (x) => x + 1;
+    var captureByRef = (x) -> x + y;
+    var captureByVal = (x) => x + y;
 
-    show(lambdaString(stateless1)); ////[x -> x + 1]
-    show(lambdaString(stateless2)); ////[x => x + 1]
-    show(lambdaString(captureByRef)); ////[x -> x + y]
-    show(lambdaString(captureByVal)); ////[x => x + y]
+    show(lambdaString(stateless1)); ////(x) -> x + 1
+    show(lambdaString(stateless2)); ////(x) => x + 1
+    show(lambdaString(captureByRef)); ////(x) -> x + y
+    show(lambdaString(captureByVal)); ////(x) => x + y
 
     ////7
     ////21

@@ -1,6 +1,6 @@
 import show.(show);
 
-adder(y) = [x -> y + x];
+adder(y) = (x) -> y + x;
 
 main() {
     var f = adder(1);

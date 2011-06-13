@@ -1,7 +1,7 @@
 import concurrency.shared.*;
 import show.*;
 
-symbol Foo = RecordType(foo:Int, bar:Int);
+define Foo as RecordType(foo:Int, bar:Int);
 
 var int = Shared(100), ptr = Shared(&int), rec = Shared(Foo(200, 300));
 
@@ -16,14 +16,14 @@ main() {
     show(cas(int, 42, 17)); ////true
     show(get(int)); ////17
 
-    show(#type([ref get(ptr)^])); ////Ref[Shared[Int]]
+    show(#type(-> ref get(ptr)^)); ////Ref[Shared[Int]]
     show(get(get(ptr)^)); ////17
 
-    show(#type([ref rec.foo])); ////Ref[Shared[Int]]
+    show(#type(-> ref rec.foo)); ////Ref[Shared[Int]]
 
     ////Ref[Shared[Int]]
     ////Ref[Shared[Int]]
-    show(..#type([ref ..*rec]));
+    show(..#type(-> ref ..*rec));
 
     show(get(rec.foo)); ////200
 }

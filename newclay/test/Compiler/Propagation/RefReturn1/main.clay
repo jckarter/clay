@@ -3,5 +3,5 @@ import show.(show);
 refReturn() --> ref x:Int __c__ """abort();""";
 
 main() {
-    show(#type([forward refReturn()]));
+    show(#type(-> forward refReturn()));
 }

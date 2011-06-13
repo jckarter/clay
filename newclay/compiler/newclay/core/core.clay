@@ -1202,7 +1202,7 @@ printCharReprTo(stream, value:UInt32) {
     else if (value == UInt32('\a'))
         printTo(stream, "\\a");
     else if (value == UInt32('\b'))
-        printTo(stream, "\\a");
+        printTo(stream, "\\b");
     else if (value == UInt32('\f'))
         printTo(stream, "\\f");
     else if (value == UInt32('\v'))
@@ -1254,13 +1254,11 @@ overload printTo(stream, x:StringValue) {
     printTo(stream, '\"');
 }
 overload printTo(stream, x:TupleValue) {
-    printTo(stream, "(");
+    printTo(stream, "[");
     var commaOut = CommaListPrinter(&stream);
     for (element in x.elements)
         newItem(commaOut, element);
-    if (size(x.elements) == 1)
-        printTo(stream, ",");
-    printTo(stream, ")");
+    printTo(stream, "]");
 }
 
 private shortExpressionString?(string)
