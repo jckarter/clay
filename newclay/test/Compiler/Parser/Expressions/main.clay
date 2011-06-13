@@ -2,7 +2,7 @@ import values.(allValues?);
 import show.(show);
 import show as showModule;
 
-symbol Tracer = RecordType();
+define Tracer as RecordType();
 overload index(x:Tracer, ..etc) = showTrace(#index);
 overload call(x:Tracer, ..etc) = showTrace(#call);
 overload dereference(x:Tracer) = showTrace(#dereference);
@@ -26,13 +26,13 @@ overload greaterEquals?(x:Tracer, y:Tracer) = showTrace(#greaterEquals?);
 overload equals?(x:Tracer, y:Tracer) = showTrace(#equals?);
 overload notEquals?(x:Tracer, y:Tracer) = showTrace(#notEquals?);
 
-overload tupleLiteral(..x:'TT) | allValues?([x -> x == Tracer], ..'TT)
+overload tupleLiteral(..x:'TT) | allValues?((x) -> x == Tracer, ..'TT)
     = showTrace(#tupleLiteral);
 
 showTrace(..x) { show(..x); return Tracer(); }
 trace(..x) { show("--"); }
 
-symbol Foo = RecordType(x:Int);
+define Foo as RecordType(x:Int);
 
 testOverloadableOperators() {
     var v = Tracer();
@@ -107,10 +107,10 @@ testOverloadableOperators() {
     show("--");
 
     trace((x));
-    trace((x,));
-    trace((x, y, z));
-    trace((..zz));
-    trace((x, y, (; z, w)));
+    trace([x]);
+    trace([x, y, z]);
+    trace([..zz]);
+    trace([x, y, (z, w)]);
     trace((x(); y(); z));
 }
 
@@ -147,8 +147,8 @@ testThrowOperatorParsing() {
 
 testAddressOperator() {
     var f = Foo();
-    show(#type([ &f ]));
-    show(#type([ &f.x ]));
+    show(#type(-> &f));
+    show(#type(-> &f.x));
 }
 
 #two() = 2;

@@ -85,12 +85,13 @@ private keyword(s) {
 
 private var kw_import = keyword("import");
 private var kw_as = keyword("as");
+private var kw_with = keyword("with");
 private var kw_external = keyword("external");
 private var kw_inline = keyword("inline");
 private var kw_noreturn = keyword("noreturn");
 private var kw_nothrow = keyword("nothrow");
-private var kw_symbol = keyword("symbol");
-private var kw_attribute = keyword("attribute");
+private var kw_define = keyword("define");
+private var kw_extend = keyword("extend");
 private var kw_overload = keyword("overload");
 private var kw_static = keyword("static");
 private var kw_var = keyword("var");
@@ -328,13 +329,12 @@ private var bracketedExpr = modify(
 
 private var tupleExpr = exprParser(
     x => TupleExpr(move(x.1)),
-    sequence(punc(#"("), optExprList, punc(#")")),
+    sequence(punc(#"["), optExprList, punc(#"]")),
 );
 
 private var atomicExpr = choice(
     literalExpr, simpleNameRef, patternNameRef,
-    bracketedExpr, statementExpr, tupleExpr,
-    lambdaExpr,
+    lambdaExpr, bracketedExpr, statementExpr, tupleExpr,
 );
 
 
@@ -559,14 +559,13 @@ private var orExpr = andOrOpChain(OrExpr, kw_or, andExpr);
 // lambda
 //
 
-private var statementReturnExprList = modify(
-    x => StatementReturnExprList(x.0, x.1),
-    sequence(zeroOrMore(statement), optReturnExprList),
-);
-
 private var lambdaCodeBody = choice(
-    modify(LambdaCodeBody, statementReturnExprList),
-    modify(LambdaCodeBody, block),
+    modify(x => (x.0, CodeBody(ExprCodeBody(ReturnExprList(x.1)))),
+        sequence(lambdaCaptureKind, returnExprListItem)
+    ),
+    modify(x => (x.0, CodeBody(x.1)),
+        sequence(lambdaCaptureKind, block)
+    ),
 );
 
 private var lambdaCaptureKind = choice(
@@ -574,16 +573,19 @@ private var lambdaCaptureKind = choice(
     modify(x => LAMBDA_CAPTURE_BY_REFERENCE, punc(#"->")),
 );
 
+private var optLambdaArguments = modify(
+    m => maybe(m, x => x.1, () => ArgumentList()),
+    optional(sequence(punc(#"("), optArguments, punc(#")"))),
+);
+
+private var optLambdaCaptureKind = modify(
+    x => just(x, LAMBDA_CAPTURE_BY_REFERENCE),
+    optional(lambdaCaptureKind),
+);
+
 private var lambdaExpr = exprParser(
-    x => maybe(x.1,
-        args ref=> LambdaExpr(move(args.1), move(args.0), move(x.2)),
-        ()   ref=> LambdaExpr(LAMBDA_CAPTURE_BY_REFERENCE, ArgumentList(), move(x.2)),
-    ),
-    sequence(
-        punc(#"["),
-        optional(sequence(optArguments, lambdaCaptureKind)), lambdaCodeBody,
-        punc(#"]"),
-    ),
+    x => LambdaExpr(x.1 .0, x.0, x.1 .1),
+    sequence(optLambdaArguments, lambdaCodeBody),
 );
 
 
@@ -644,11 +646,12 @@ private var exprListItem = choice(
     modify(x => ExprListItem(move(x)), unpackExpr),
     modify(x => ExprListItem(move(x)), statementExprList),
     modify(x => ExprListItem(move(x)), expr),
+    modify(x => ExprListItem(SubExprList(move(x.1))), sequence(punc(#"("), optExprList, punc(#")"))),
 );
 
 private var statementExprList2 = modify(
     x => StatementExprList(x.1, x.2),
-    sequence(punc(#"("), oneOrMore(statement), exprList, punc(#")")),
+    sequence(punc(#"("), oneOrMore(statement), optExprList, punc(#")")),
 );
 
 private statementExprList(input) Maybe[StatementExprList] = statementExprList2(input);
@@ -710,7 +713,7 @@ private var indexingPattern = patternParser(
 
 private var tuplePattern = patternParser(
     x => TuplePattern(move(x.1)),
-    sequence(punc(#"("), listPattern, punc(#")")),
+    sequence(punc(#"["), listPattern, punc(#"]")),
 );
 
 private var targetPattern = choice(
@@ -858,14 +861,14 @@ private var symbolName = bounds(modify(
 private var symbolDef = topLevelItemParser(
     x => Symbol(just(x.0, VIS_PUBLIC), move(x.2), move(x.3)),
     sequence(
-        visibility, kw_symbol, symbolName,
+        visibility, kw_define, symbolName,
         optional(symbolExprList), punc(#";")
     ),
 );
 
 private var symbolExprList = modify(
     x => move(x.1),
-    sequence(punc(#"="), exprList),
+    sequence(kw_as, exprList),
 );
 
 // attributeDef
@@ -878,8 +881,8 @@ private var optPredicate = optional(modify(
 private var attributeDef = topLevelItemParser(
     x => Attribute(move(x.1), move(x.2), move(x.4)),
     sequence(
-        kw_attribute, targetPattern, optPredicate,
-        punc(#"="), expr, punc(#";"),
+        kw_extend, targetPattern, optPredicate,
+        kw_with, expr, punc(#";"),
     ),
 );
 

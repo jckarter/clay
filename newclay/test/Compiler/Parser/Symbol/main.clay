@@ -1,8 +1,8 @@
 import show.(show);
 
-symbol Foo1;
-symbol Foo2 = ();
-private symbol Foo3 = ();
-public symbol Foo4 = ();
+define Foo1;
+define Foo2 as ();
+private define Foo3 as ();
+public define Foo4 as ();
 
 main() { show("ok"); }
