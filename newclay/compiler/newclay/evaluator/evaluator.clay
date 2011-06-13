@@ -764,6 +764,9 @@ procedure evaluateExprListItem;
 overload evaluateExprListItem(x:ast.ExprListItem, env) {
     return evaluateExprListItem(*x, env);
 }
+overload evaluateExprListItem(x:ast.SubExprList, env) {
+    return evaluateExprList(x.exprList, env);
+}
 overload evaluateExprListItem(x:ast.Expr, env) {
     return ValueList(evaluateExpr(x, env));
 }
@@ -927,10 +930,14 @@ overload evaluateCall(x:RTPrimitive, args) ValueList {
     return ValueList();
 }
 
-evaluateLambdaCodeBody(x:ast.StatementReturnExprList, env) {
-    verifyStatementExprStatements(x.statements);
+overload evaluateLambdaCodeBody(x, env) {
+    genericError("lambda block statement not allowed in static context");
+    return ValueList();
+}
+
+evaluateLambdaCodeBody(x:ast.ExprCodeBody, env) {
     var exprList = ast.ExprList();
-    for (item in x.exprList) {
+    for (item in x.exprs) {
         withLocation(item, () ref=> {
             if (just?(item.kind))
                 genericError("reference returns not allowed in static lambda evaluation");
@@ -939,11 +946,6 @@ evaluateLambdaCodeBody(x:ast.StatementReturnExprList, env) {
     }
 
     return evaluateExprList(exprList, env);
-}
-
-overload evaluateLambdaCodeBody(x:ast.Block, env) {
-    genericError("lambda block statement not allowed in static context");
-    return ValueList();
 }
 
 
@@ -2312,7 +2314,7 @@ private rtLambdaResults(l:StaticLambdaValue) {
     var s = SpecializationContext(&body, &complete?, &returns);
     addEnvRvalues(s, l.env);
 
-    return analyzeCodeBody(s, l.env, transformLambdaCodeBody(*l.value.body));
+    return analyzeCodeBody(s, l.env, l.value.body);
 }
 
 private addEnvRvalues(s, envParent) {}
