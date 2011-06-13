@@ -1,0 +1,17 @@
+import printing.(printlnRepr);
+import vectors.(Vector);
+
+main() {
+    printlnRepr(Array[Int, 1](1));
+    printlnRepr(Array[Int, 4](1, 2, 3, 4));
+    printlnRepr(Array[Char, 1]('1'));
+    printlnRepr(Array[Char, 4]('1', '2', '3', '4'));
+
+    printlnRepr(Vector[Int]());
+    printlnRepr(Vector[Int](1));
+    printlnRepr(Vector[Int](1, 2));
+    printlnRepr(Vector[Int](1, 2, 3, 4));
+    printlnRepr(Vector[Char]());
+    printlnRepr(Vector[Char]('1'));
+    printlnRepr(Vector[Char]('1', '2', '3', '4'));
+}

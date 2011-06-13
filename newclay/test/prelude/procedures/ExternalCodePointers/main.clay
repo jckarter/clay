@@ -2,7 +2,7 @@ import ctypes.*;
 import unsafe.coordinates.(begin);
 import show.(show);
 
-alias QsortComparator = CCodePointer[(OpaquePointer, OpaquePointer), CInt];
+alias QsortComparator = CCodePointer[[OpaquePointer, OpaquePointer], CInt];
 
 external qsort(base:OpaquePointer, nel:CSizeT, width:CSizeT, compar:QsortComparator);
 
@@ -11,7 +11,7 @@ main() {
 
     qsort(
         OpaquePointer(begin(numbers)), 5u, CSizeT(typeSize(Int)),
-        QsortComparator([pa, pb -> CInt(Pointer[Int](pb)^ - Pointer[Int](pa)^)])
+        QsortComparator((pa, pb) -> CInt(Pointer[Int](pb)^ - Pointer[Int](pa)^))
     );
 
     for (n in numbers)

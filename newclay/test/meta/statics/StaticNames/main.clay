@@ -6,7 +6,7 @@ import show as show_module;
 
 import __primitives__;
 
-symbol foo['x];
+define foo['x];
 
 testFunction(fn) {
     show(fn);
@@ -39,7 +39,7 @@ testFunction(fn) {
     show("--primitives");
     show(fn(__primitives__.staticName));
     show("--tuples");
-    show(fn(#(1, show, meta.statics)));
+    show(fn(#[1, show, meta.statics]));
     show("");
 }
 

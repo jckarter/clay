@@ -2,7 +2,7 @@ import printing.(println, printlnRepr);
 import unsafe.compositetypes.(CompositeType, initializeRecord);
 import unsafe.valuesemantics.(destroy);
 
-symbol Unprintable = CompositeType();
+define Unprintable as CompositeType();
 overload Unprintable() = initializeRecord(Unprintable);
 overload destroy(ref x:Unprintable) {}
 

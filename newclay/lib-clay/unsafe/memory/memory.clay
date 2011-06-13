@@ -29,9 +29,9 @@ freeUninitializedValue(value:Pointer['T]) { free(OpaquePointer(value)); }
 //
 
 allocateValue(f, forward ..args)
-    | defined?([var x = f(..args);])
+    | defined?(-> f(..args))
 {
-    var ptr = allocateUninitializedValue(#type([f(..args)]));
+    var ptr = allocateUninitializedValue(#type(-> f(..args)));
 
     try {
         ptr^ <-- f(..args);
@@ -48,9 +48,9 @@ freeValue(ptr:Pointer['T]) {
 }
 
 allocateArray(count:'I, f, ..args)
-    | defined?([var x = f(..args);])
+    | defined?(-> f(..args))
 {
-    var begin = allocateUninitializedValues(count, #type([f(..args)]));
+    var begin = allocateUninitializedValues(count, #type(-> f(..args)));
     var end = begin + count;
     var i = begin;
 

@@ -1,9 +1,9 @@
 import show.*;
 import variants.*;
 
-symbol Foo = VariantType(Bool, Int, Char);
+define Foo as VariantType(Bool, Int, Char);
 
-symbol showType;
+define showType;
 overload showType(x:Bool) { show("boolean", x); }
 overload showType(x:Int)  { show("integer", x); }
 overload showType(x:Char) { show("character", x); }

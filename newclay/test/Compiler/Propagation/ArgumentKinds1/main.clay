@@ -1,10 +1,10 @@
 import show.(show);
 
-symbol RefArg;
-symbol RvalueArg;
-symbol ConstArg;
+define RefArg;
+define RvalueArg;
+define ConstArg;
 
-symbol foo;
+define foo;
 overload foo(x) = ConstArg;
 overload foo(ref x) = RefArg;
 overload foo(rvalue x) = RvalueArg;

@@ -13,7 +13,7 @@ main() {
     var captures = captureValues(x, y, z, 4);
 
     ////Tuple[CapturedRef[Int], CapturedConst[Int], CapturedValue[Int], CapturedValue[Int]]
-    show(#type([captures]));
+    show(#type(-> captures));
 
     ////ref
     ////1

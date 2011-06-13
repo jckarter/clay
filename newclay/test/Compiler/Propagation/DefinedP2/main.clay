@@ -1,7 +1,7 @@
 import show.(show);
 import __primitives__.*;
 
-foo(a, b) : type([a + b]) | defined?([a + b]) = a + b;
+foo(a, b) : type(-> a + b) | defined?(-> a + b) = a + b;
 
 main() {
     show(foo(1, 2));

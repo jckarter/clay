@@ -4,8 +4,9 @@ import __primitives__;
 import factorial.*;
 import factorial;
 
-symbol Foo['X];
-symbol Bar;
+define Foo['X];
+define Bar;
+define Bas[..'X];
 
 #Main()
     = staticQualifiedName(staticModule),
@@ -13,8 +14,10 @@ symbol Bar;
       staticQualifiedName(Foo),
       staticQualifiedName(Foo[Bar]),
       staticQualifiedName(Bar),
+      staticQualifiedName(Bas),
+      staticQualifiedName(Bas[]),
       staticQualifiedName(1),
-      staticQualifiedName((1, 2, Foo[Bar], Bar)),
+      staticQualifiedName([1, 2, Foo[Bar], Bar]),
       staticQualifiedName("foo"),
       staticQualifiedName(__primitives__),
       staticQualifiedName(factorial);

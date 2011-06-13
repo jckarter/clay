@@ -2,7 +2,7 @@ import show.*;
 import unsafe.memory.*;
 import unsafe.casts.(bitcast);
 
-symbol Node['T] = RecordType(value:'T, next:List['T]);
+define Node['T] as RecordType(value:'T, next:List['T]);
 
 alias List['T] = MPointer[Node['T]];
 
@@ -16,7 +16,7 @@ cons(forward v:'T, next:List['T]) {
 main() {
     show(typeSize(MPointer[Int]) == typeSize(Pointer[Int])); ////true
     show(typeSize(MOpaquePointer) == typeSize(OpaquePointer)); ////true
-    show(typeSize(Maybe[CCodePointer[(), ()]]) == typeSize(CCodePointer[(), ()])); ////true
+    show(typeSize(Maybe[CCodePointer[[], []]]) == typeSize(CCodePointer[[], []])); ////true
     show(typeSize(Maybe[MPointer[Int]]) != typeSize(Pointer[Int])); ////true
 
     show(bitcast(Int, null(Int))); ////0
@@ -35,21 +35,21 @@ main() {
     show(nothing?(l)); ////false
     ////just:
     ////21
-    maybe(l, [x -> show("just:"); show(x^.value);], [show("nothing");]);
+    maybe(l, (x) -> { show("just:"); show(x^.value); }, -> { show("nothing"); });
 
     show("--"); ////--
 
     var l5 = bind(l,
-        [x -> show(x^.value); x^.next], ////21
-        [x -> show(x^.value); x^.next], ////1211
-        [x -> show(x^.value); x^.next], ////111221
-        [x -> show(x^.value); x^.next],
-        [x -> show(x^.value); x^.next],
+        (x) -> (show(x^.value); x^.next), ////21
+        (x) -> (show(x^.value); x^.next), ////1211
+        (x) -> (show(x^.value); x^.next), ////111221
+        (x) -> (show(x^.value); x^.next),
+        (x) -> (show(x^.value); x^.next),
     );
 
     show("--"); ////--
 
     show(just?(l5)); ////false
     show(nothing?(l5)); ////true
-    maybe(l5, [x -> show("just:"); show(x^.value);], [show("nothing");]); ////nothing
+    maybe(l5, (x) -> { show("just:"); show(x^.value); }, -> { show("nothing"); }); ////nothing
 }

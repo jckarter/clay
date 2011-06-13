@@ -2,5 +2,5 @@ import __primitives__.*;
 import factorial.*; // has Factorial
 import tools.*; // also has Factorial
 
-symbol Main;
+define Main;
 overload #Main() = Factorial(8);

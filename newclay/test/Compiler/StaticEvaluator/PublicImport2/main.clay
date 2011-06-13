@@ -3,12 +3,12 @@ import __primitives__.*;
 import __primitives__.(staticModuleMember as m);
 import publicimporter;
 
-symbol Main;
-overload #Main() = (
+define Main;
+overload #Main() = [
     m(publicimporter, "Factorial")(8),
     m(publicimporter, "Fac")(8),
     m(m(publicimporter, "factorial"), "Factorial")(8),
     m(m(publicimporter, "fac"), "Factorial")(8),
-);
+];
 
 main() { show(..#Main()); }

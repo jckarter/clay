@@ -3,13 +3,13 @@ import libc.(strlen);
 import unsafe.casts.(pointerCast);
 import unsafe.coordinates.(begin, end, ContiguousCoordinate, CoordinateRange);
 
-private symbol cLongType;
+private define cLongType;
 overload #cLongType() = Int64;
 overload #cLongType()
     | platformFamilyName() == "windows" or platformCPUPointerBits == 32
     = Int32;
 
-private symbol cULongType;
+private define cULongType;
 overload #cULongType() = UInt64;
 overload #cULongType()
     | platformFamilyName() == "windows" or platformCPUPointerBits == 32
@@ -31,7 +31,7 @@ alias CSizeT = UInt;
 alias CPtrdiffT = UInt;
 alias CIntPtrT = Int;
 
-symbol CString = NewType(Pointer[CChar]);
+define CString as NewType(Pointer[CChar]);
 
 overload CString(c:ContiguousCoordinate[CChar])
     = CString(pointerCast(Pointer[CChar], c));

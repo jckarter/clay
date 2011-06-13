@@ -1,9 +1,9 @@
 import show.*;
 
-symbol Foo = RecordType(p:Pointer[Foo]);
+define Foo as RecordType(p:Pointer[Foo]);
 
-symbol Bar1 = RecordType(p:Pointer[Bar2]);
-symbol Bar2 = RecordType(p:Pointer[Bar1]);
+define Bar1 as RecordType(p:Pointer[Bar2]);
+define Bar2 as RecordType(p:Pointer[Bar1]);
 
 main() {
     show(#type?(Foo)); ////true

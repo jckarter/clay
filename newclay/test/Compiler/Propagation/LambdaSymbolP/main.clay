@@ -2,6 +2,6 @@ import show.(show);
 import __primitives__.(lambdaSymbol?);
 
 main() {
-    var l = [1];
+    var l = -> 1;
     show(#lambdaSymbol?(l));
 }

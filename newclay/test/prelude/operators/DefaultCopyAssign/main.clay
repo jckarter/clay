@@ -4,12 +4,12 @@ import unsafe.valuesemantics.(destroy);
 
 var fooCount = 0u;
 
-symbol Foo = CompositeType();
+define Foo as CompositeType();
 
 overload Foo() { inc(fooCount); return initializeRecord(Foo); }
 
 overload copy(x:Foo) { inc(fooCount); return copyRecord(x); }
-overload destroy(x:Foo) { assert([fooCount > 0u]); dec(fooCount); }
+overload destroy(x:Foo) { assert(-> fooCount > 0u); dec(fooCount); }
 
 main() {
     {

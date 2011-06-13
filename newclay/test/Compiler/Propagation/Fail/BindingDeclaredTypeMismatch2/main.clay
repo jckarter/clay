@@ -1,4 +1,4 @@
-symbol main;
+define main;
 overload main() {
     var x:Int = true;
 }

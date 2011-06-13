@@ -12,5 +12,5 @@ foo() {
 }
 
 main() {
-    show(#type([ foo() ]));
+    show(#type(->  foo() ));
 }

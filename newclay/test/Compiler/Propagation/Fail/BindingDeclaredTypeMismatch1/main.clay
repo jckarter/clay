@@ -1,10 +1,10 @@
-symbol foo;
+define foo;
 overload foo(x:'T) {
     var y:'T = 2;
     return y;
 }
 
-symbol main;
+define main;
 overload main() {
     var x:Int = 5;
     var y:Bool = foo(true);

@@ -1,1 +1,1 @@
-("foo", false, true, 2, 1)
+["foo", false, true, 2, 1]

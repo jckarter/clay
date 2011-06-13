@@ -1,2 +1,2 @@
-symbol Foo;
+define Foo;
 overload Foo() | Blerg?() = ;

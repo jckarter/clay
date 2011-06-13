@@ -2,5 +2,5 @@ import show.(show);
 import __primitives__.*;
 
 main() {
-    show("--", ..#type([]), "--");
+    show("--", ..#type(-> ()), "--");
 }

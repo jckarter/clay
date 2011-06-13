@@ -1,10 +1,10 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Foo = ();
-symbol bar = ();
-symbol barrr = ();
-symbol bas = ();
+define Foo as ();
+define bar as ();
+define barrr as ();
+define bas as ();
 
 overload Foo() {
     for (bar, barr in bar)

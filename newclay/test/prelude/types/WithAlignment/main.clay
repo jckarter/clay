@@ -1,6 +1,6 @@
 import show.(show);
 
-symbol Foo = NewType(Int), WithAlignment(16);
+define Foo as NewType(Int), WithAlignment(16);
 
 main() {
     show(#typeAlign(Foo));

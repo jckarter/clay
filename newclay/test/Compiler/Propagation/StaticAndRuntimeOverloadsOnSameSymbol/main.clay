@@ -1,6 +1,6 @@
 import show.(show);
 
-symbol foo;
+define foo;
 overload foo(x) = x - 1;
 overload #foo('x) = 'x + 1;
 

@@ -3,15 +3,15 @@ import unsafe.casts.(bitcast);
 
 main() {
     // defined bitwise operations
-    show(#defined?([bitand(0xFF, 0x7F)])); ////true
-    show(#defined?([bitand(0xFF, 0x7Fu)])); ////true
-    show(#defined?([bitand(0xFFu, 0x7F)])); ////true
-    show(#defined?([bitand(0xFFu, 0x7Fu)])); ////true
+    show(#defined?(-> bitand(0xFF, 0x7F))); ////true
+    show(#defined?(-> bitand(0xFF, 0x7Fu))); ////true
+    show(#defined?(-> bitand(0xFFu, 0x7F))); ////true
+    show(#defined?(-> bitand(0xFFu, 0x7Fu))); ////true
 
     // nondefined bitwise operations
-    show(#defined?([bitand(1.0, 0x7F)])); ////false
-    show(#defined?([bitand(0x7F, 1.0)])); ////false
-    show(#defined?([bitand(1.0, 1.0)])); ////false
+    show(#defined?(-> bitand(1.0, 0x7F))); ////false
+    show(#defined?(-> bitand(0x7F, 1.0))); ////false
+    show(#defined?(-> bitand(1.0, 1.0))); ////false
 
     // bitwise results
     show(bitand(0xffff_u16, 0xff_u8)); ////255

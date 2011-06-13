@@ -7,12 +7,12 @@ import values.(allValues?, countValues);
 // source operations
 //
 
-symbol source;
-symbol read1;
+define source;
+define read1;
 
-#Source?('S, ..'E) = Source?('S) and (..sourceValueType('S)) == (..'E);
+#Source?('S, ..'E) = Source?('S) and [..sourceValueType('S)] == [..'E];
 overload #Source?('S) = Regular?('S) and callDefined?(read1, Ref['S]);
-#sourceValueType('S) = ..type([..required(read1(arg(Ref['S])))]);
+#sourceValueType('S) = ..type(-> ..required(read1(arg(Ref['S]))));
 
 
 
@@ -20,13 +20,13 @@ overload #Source?('S) = Regular?('S) and callDefined?(read1, Ref['S]);
 // sink operations
 //
 
-symbol sink;
-symbol hasFront?;
-symbol write1;
+define sink;
+define hasFront?;
+define write1;
 
-symbol sinkValueType;
+define sinkValueType;
 
-#Sink?('S, ..'E) = Sink?('S) and (..sinkValueType('S)) == (..'E);
+#Sink?('S, ..'E) = Sink?('S) and [..sinkValueType('S)] == [..'E];
 overload #Sink?('S) = Regular?('S)
     and callDefined?(hasFront?, 'S)
     and staticCallDefined?(sinkValueType, 'S)
@@ -45,20 +45,20 @@ overload #Sink?('S) = Regular?('S)
 // iterator operations
 //
 
-symbol iterator;
-symbol front;
-symbol incFront;
+define iterator;
+define front;
+define incFront;
 
-#Iterator?('I, ..'T) = Iterator?('I) and (..iteratorValueType('I)) == (..'T);
+#Iterator?('I, ..'T) = Iterator?('I) and [..iteratorValueType('I)] == [..'T];
 overload #Iterator?('I) = Regular?('I)
     and callDefined?(hasFront?, 'I)
     and callDefined?(front, 'I)
     and callDefined?(incFront, Ref['I]);
 
 #MutableIterator?('I)
-    = Iterator?('I) and allValues?(Ref?, ..type([forward ..front(arg('I))]));
+    = Iterator?('I) and allValues?(Ref?, ..type(-> forward ..front(arg('I))));
 
-#iteratorValueType('I) | Iterator?('I) = ..type([..front(arg('I))]);
+#iteratorValueType('I) | Iterator?('I) = ..type(-> ..front(arg('I)));
 
 
 //
@@ -67,7 +67,7 @@ overload #Iterator?('I) = Regular?('I)
 // inherently savable
 //
 
-symbol SourceIterator['S] = RecordType(source:'S, value:Maybe[sourceValueType('S)]);
+define SourceIterator['S] as RecordType(source:'S, value:Maybe[sourceValueType('S)]);
 
 overload SourceIterator(forward x:'S) --> returned:SourceIterator['S] | Source?('S) {
     returned.source <-- x;
@@ -135,9 +135,9 @@ overload read1(ref i:'I) inline --> returned:Maybe[..iteratorValueType('I)]
 overload #sinkValueType('I) | MutableIterator?('I) = ..iteratorValueType('I);
 
 overload write1(ref i:'I, forward ..v:'E) inline
-    | MutableIterator?('I) and (..'E) == (..iteratorValueType('I))
+    | MutableIterator?('I) and [..'E] == [..iteratorValueType('I)]
 {
-    assert([hasFront?(i)]);
+    assert(-> hasFront?(i));
     ..front(i) = ..v;
     incFront(i);
 }
@@ -147,14 +147,14 @@ overload write1(ref i:'I, forward ..v:'E) inline
 // sized iterator operations
 //
 
-symbol size;
+define size;
 
-#Sized?('I) = definedWithType?([size(arg('I))], UInt);
+#Sized?('I) = definedWithType?(-> size(arg('I)), UInt);
 #SizedIterator?('I) = Iterator?('I) and Sized?('I);
 #SizedSource?('I) = Source?('I) and Sized?('I);
 #SizedSink?('I) = Sink?('I) and Sized?('I);
 
-overload hasFront?(i:'I) inline | defined?([size(i) > 0u]) = size(i) > 0u;
+overload hasFront?(i:'I) inline | defined?(-> size(i) > 0u) = size(i) > 0u;
 
 #Infinite?('I) = false;
 #InfiniteIterator?('I) = Iterator?('I) and Infinite?('I);
@@ -168,8 +168,8 @@ overload size(x:'I) | Infinite?('I) = UInt(-1);
 // reversible iterator
 //
 
-symbol back;
-symbol incBack;
+define back;
+define incBack;
 
 #ReversibleIterator?('I) = Iterator?('I)
     and callDefined?(back, 'I)
@@ -182,8 +182,8 @@ hasBack?(x:'I) inline | ReversibleIterator?('I) = hasFront?(x);
 // seekable iterator
 //
 
-symbol seekFront;
-symbol seekBack;
+define seekFront;
+define seekBack;
 
 #SeekableSource?('I) = SizedSource?('I)
     and callDefined?(seekFront, Ref['I], UInt);
@@ -206,7 +206,7 @@ symbol seekBack;
 // buffered iterator/sink/source
 //
 
-symbol flush;
+define flush;
 
 #Buffered?('I) = callDefined?(flush, 'I);
 
@@ -228,14 +228,14 @@ symbol flush;
 // empty?
 //
 
-empty?(x) | defined?([hasFront?(x)]) = not hasFront?(x);
+empty?(x) | defined?(-> hasFront?(x)) = not hasFront?(x);
 
 
 //
 // bulk-readable source
 //
 
-symbol readN;
+define readN;
 
 #BulkReadableSource?('S) = Source?('S)
     and POD?(sourceValueType('S))
@@ -249,7 +249,7 @@ idealReadSize(s:'S) | BulkReadableSource?('S) = 4096u;
 // bulk-writable sink
 //
 
-symbol writeN;
+define writeN;
 
 #BulkWritableSink?('S) = Sink?('S)
     and POD?(sinkValueType('S))

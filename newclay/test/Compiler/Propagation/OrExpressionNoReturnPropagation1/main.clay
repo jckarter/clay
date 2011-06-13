@@ -3,6 +3,6 @@ import show.(show);
 foo() = arg(Bool) or (throw 0);
 
 main() {
-    show(#returns?([ foo(); ]));
+    show(#returns?(-> { foo(); }));
 }
 

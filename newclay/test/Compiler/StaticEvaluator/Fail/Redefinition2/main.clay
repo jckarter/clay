@@ -1,2 +1,2 @@
-private symbol Main;
-public symbol Main;
+private define Main;
+public define Main;

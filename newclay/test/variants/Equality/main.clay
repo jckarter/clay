@@ -1,7 +1,7 @@
 import show.(show);
 import variants.(VariantType);
 
-symbol Foo = VariantType(Int, Float64);
+define Foo as VariantType(Int, Float64);
 
 main() {
     var a = Foo(1);

@@ -2,8 +2,8 @@ import unsafe.casts.(bitcast);
 import unsafe.valuesemantics.(uninitialized);
 import values.*;
 
-symbol networkToHost;
-symbol hostToNetwork;
+define networkToHost;
+define hostToNetwork;
 
 overload networkToHost(n:'I8) | inValues?('I8, Int8, UInt8) = n;
 overload hostToNetwork(n:'I8) | inValues?('I8, Int8, UInt8) = n;

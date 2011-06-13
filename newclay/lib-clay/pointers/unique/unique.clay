@@ -3,12 +3,12 @@ import pointers.unique.*;
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
-symbol UniquePointer['T] = CompositeType(ptr:MPointer['T]);
+define UniquePointer['T] as CompositeType(ptr:MPointer['T]);
 
 alias MUniquePointer['T] = Maybe[UniquePointer['T]];
 
 overload UniquePointer['T](f, forward ..args) inline
-    | type([f(..args)]) == 'T
+    | type(-> f(..args)) == 'T
 {
     var ptr = allocateUninitializedValue('T);
     try {
@@ -21,11 +21,11 @@ overload UniquePointer['T](f, forward ..args) inline
 }
 
 overload UniquePointer(f, forward ..args) inline
-    | defined?([var x = f(..args);])
-    = UniquePointer[#type([f(..args)])](f, ..args);
+    | defined?(-> f(..args))
+    = UniquePointer[#type(-> f(..args))](f, ..args);
 
 overload destroy(ref p:UniquePointer['T]) inline {
-    maybe(p.ptr, [ptr -> destroy(ptr^); freeUninitializedValue(ptr);]);
+    maybe(p.ptr, (ptr) -> { destroy(ptr^); freeUninitializedValue(ptr); });
 }
 
 overload reset(ref p:UniquePointer['T]) inline {

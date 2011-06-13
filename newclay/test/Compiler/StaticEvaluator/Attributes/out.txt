@@ -1,1 +1,1 @@
-(false, true, (GenericError, AssertionError))
+[false, true, [GenericError, AssertionError]]

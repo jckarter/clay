@@ -28,7 +28,7 @@ foo[show]
 --primitives
 staticName
 --tuples
-(1, show, meta.statics)
+[1, show, meta.statics]
 
 staticQualifiedName
 
@@ -60,5 +60,5 @@ __main__.foo[show.show]
 --primitives
 __primitives__.staticName
 --tuples
-(1, show.show, meta.statics)
+[1, show.show, meta.statics]
 

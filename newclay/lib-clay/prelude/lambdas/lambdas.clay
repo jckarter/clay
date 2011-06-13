@@ -1,12 +1,12 @@
 import meta.lambdas.*;
 import values.(captureValues, capturedRefs);
 
-symbol Lambda['L, 'C] = NewType('C);
+define Lambda['L, 'C] as NewType('C);
 
 overload Lambda(#'L, captures:'C) = Lambda['L, 'C](captures);
 
-symbol captureLambda;
-symbol lambdaCaptures;
+define captureLambda;
+define lambdaCaptures;
 
 overload captureLambda(#'L, forward ..captures)
     | lambdaSymbol?('L) and lambdaCapturesByReference?('L)
@@ -17,13 +17,13 @@ overload lambdaCaptures(l:Lambda['L, 'C])
 
 overload captureLambda(#'L, forward ..captures)
     | lambdaSymbol?('L) and lambdaCapturesByValue?('L)
-    = Lambda(#'L, (..captures));
+    = Lambda(#'L, [..captures]);
 overload lambdaCaptures(forward l:Lambda['L, 'C])
     | lambdaSymbol?('L) and lambdaCapturesByValue?('L)
     = forward ..unpack(*l);
 
 overload call(forward l:Lambda['L, 'C], forward ..args)
-    | lambdaSymbol?('L) and defined?(['L(..lambdaCaptures(l), ..args);])
+    | lambdaSymbol?('L) and defined?(-> { 'L(..lambdaCaptures(l), ..args); })
     = forward ..'L(..lambdaCaptures(l), ..args);
 
 #Lambda?('T) = false;

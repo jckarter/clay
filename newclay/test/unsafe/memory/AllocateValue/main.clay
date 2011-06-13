@@ -3,7 +3,7 @@ import unsafe.memory.(allocateValue, freeValue);
 import vectors.(Vector);
 
 main() {
-    var podp = allocateValue([5]);
+    var podp = allocateValue(-> 5);
     show(podp^);
     freeValue(podp);
 

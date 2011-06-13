@@ -4,9 +4,9 @@ import unsafe.valuesemantics.(POD?);
 
 // XXX this is all horribly GCC- and X86 SSE2-specific
 
-symbol NoOrder;
-symbol AcquireReleaseOrder;
-symbol FullOrder;
+define NoOrder;
+define AcquireReleaseOrder;
+define FullOrder;
 
 #order?('X) = inValues?('X,
     NoOrder, AcquireReleaseOrder, FullOrder
@@ -15,7 +15,7 @@ symbol FullOrder;
 optimizerBarrier() inline
     __c__ """__asm__ __volatile__ ("":::"memory");""";
 
-symbol barrier;
+define barrier;
 overload barrier(#NoOrder) inline { }
 overload barrier(#AcquireReleaseOrder) inline { optimizerBarrier(); }
 overload barrier(#FullOrder) inline
@@ -50,7 +50,7 @@ private #atomicLLType?('T) = 'T == llBoolType
         and typeSize('DestT) == typeSize('SourceT)*2
         and typeAlign('DestT) == typeSize('DestT);
 
-symbol atomicGet;
+define atomicGet;
 overload atomicGet(x:'T, #NoOrder) inline
     | AtomicGettable?('T)
     = x;
@@ -68,7 +68,7 @@ overload atomicGet(x:'T, #FullOrder) inline --> returned:'T
     optimizerBarrier();
 }
 
-symbol atomicSet;
+define atomicSet;
 overload atomicSet(ref to:'T, from:'T, #NoOrder) inline
     | AtomicSettable?('T)
 {
@@ -88,7 +88,7 @@ overload atomicSet(ref to:'T, from:'T, #FullOrder) inline
     barrier(FullOrder);
 }
 
-symbol atomicCas;
+define atomicCas;
 overload atomicCas(ref to:'T, old:'T, new:'T, #'Order) inline --> returned:Bool
     | AtomicCasable?('T) and typeSize('T) == 4 and order?('Order)
     __c__ """
@@ -114,7 +114,7 @@ overload atomicCas(ref to:'T, old:'T, new:'T, #'Order) inline --> returned:Bool
         $returned = __result;
     """;
 
-symbol atomicCas2;
+define atomicCas2;
 overload atomicCas2(ref to:'DestT, old1:'SourceT, old2:'SourceT, new1:'SourceT, new2:'SourceT, #'Order) inline
     --> returned:Bool
     | AtomicCas2able?('DestT, 'SourceT) and typeSize('SourceT) == 4 and order?('Order)

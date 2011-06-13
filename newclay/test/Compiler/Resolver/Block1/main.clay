@@ -1,8 +1,8 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Foo = ();
-symbol bar = ();
+define Foo as ();
+define bar as ();
 
 overload Foo() {
     bar;

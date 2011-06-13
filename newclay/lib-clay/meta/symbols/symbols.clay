@@ -8,20 +8,20 @@ import meta.statics.*;
 private #tupleWithTag?('t, 'tag)
     = staticTuple?('t) and staticTupleSize('t) > 0 and 't.0 == 'tag;
 
-private symbol symbolBodyWithTag?;
+private define symbolBodyWithTag?;
 overload #symbolBodyWithTag?('tag, 'x, ..'xs)
     = tupleWithTag?('x, 'tag) or symbolBodyWithTag?('tag, ..'xs);
 overload #symbolBodyWithTag?('tag) = false;
 
 #symbolWithTag?('x, 'tag) = symbol?('x) and symbolBodyWithTag?('tag, ..symbolBody('x));
 
-symbol symbol?;
+define symbol?;
 overload #symbol?('x) = staticSymbol?('x);
 overload symbol?(x) = false;
 overload symbol?(#'x) = *#staticSymbol?('x);
 
-private symbol symbolBodyTagBody;
+private define symbolBodyTagBody;
 overload #symbolBodyTagBody('tag, 'x, ..'xs) = symbolBodyTagBody('tag, ..'xs);
-overload #symbolBodyTagBody('tag, ('tag, ..'body), ..'xs) = ..'body;
+overload #symbolBodyTagBody('tag, ['tag, ..'body], ..'xs) = ..'body;
 
 #symbolTagBody('x, 'tag) = ..symbolBodyTagBody('tag, ..symbolBody('x));

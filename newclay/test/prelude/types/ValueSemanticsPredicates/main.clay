@@ -3,7 +3,7 @@ import show.*;
 import unsafe.coordinates.(ContiguousCoordinate);
 import unsafe.valuesemantics.(POD?);
 
-symbol NonPODType;
+define NonPODType;
 overload #llType(NonPODType) = llTupleType[];
 
 main() {
@@ -28,7 +28,7 @@ main() {
     show(#POD?(OpaquePointer)); ////true
     show(#POD?(ContiguousCoordinate[Int])); ////true
     show(#POD?(ContiguousCoordinate[NonPODType])); ////true
-    show(#POD?(ExternalCodePointer[CdeclABI, false, (Int,), Int])); ////true
+    show(#POD?(ExternalCodePointer[CdeclABI, false, [Int], Int])); ////true
     show(#POD?(Array[Int, 1])); ////true
     show(#POD?(Tuple[Int, UInt])); ////true
     show(#POD?(Union[Int, UInt])); ////true

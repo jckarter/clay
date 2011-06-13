@@ -2,7 +2,7 @@ import show.(show);
 import __primitives__.*;
 import factorial as fac;
 
-symbol Main;
+define Main;
 overload #Main() = staticModuleMember(fac, "Factorial")(8);
 
 main() { show(..#Main()); }

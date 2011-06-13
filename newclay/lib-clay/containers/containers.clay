@@ -4,18 +4,18 @@ import values.(countValues, allValues?);
 #Container?('T) = false;
 overload #Container?(Array['T, 'n]) | type?(Array['T, 'n]) = true;
 
-symbol push;
-symbol pop;
-symbol pushFront;
-symbol popFront;
+define push;
+define pop;
+define pushFront;
+define popFront;
 
-symbol reserve;
-symbol resize;
-symbol resizeUnsafe;
+define reserve;
+define resize;
+define resizeUnsafe;
 
-symbol insert;
-symbol remove;
-symbol clear;
+define insert;
+define remove;
+define clear;
 
 #Pushable?('T) =
     Sequence?('T)
@@ -45,7 +45,7 @@ symbol clear;
 overload push(ref c:'C, forward ..elements:'TT) inline
     | Pushable?('C)
       and countValues(..'TT) != 1
-      and allValues?([#'U -> callDefined?(push, Ref['C], 'U)], ..'TT)
+      and allValues?((#'U) -> callDefined?(push, Ref['C], 'U), ..'TT)
 {
     static for (forward e in ..elements)
         push(c, e);
@@ -56,7 +56,7 @@ overload push(ref c:'C, forward ..elements:'TT) inline
 // pusher sink
 //
 
-symbol Pusher['S] = NewType(Pointer['S]);
+define Pusher['S] as NewType(Pointer['S]);
 overload Pusher(ref s:'S) | Pushable?('S) = Pusher['S](&s);
 overload hasFront?(p:Pusher['S]) = true;
 overload write1(ref p:Pusher['S], forward elt:'T)
@@ -64,7 +64,7 @@ overload write1(ref p:Pusher['S], forward elt:'T)
     { push((*p)^, elt); }
 overload #sinkValueType(Pusher['S]) = sequenceElementType('S);
 
-symbol FrontPusher['S] = NewType(Pointer['S]);
+define FrontPusher['S] as NewType(Pointer['S]);
 overload FrontPusher(ref s:'S) | FrontPushable?('S) = FrontPusher['S](&s);
 overload hasFront?(p:FrontPusher['S]) = true;
 overload write1(ref p:FrontPusher['S], forward elt:'T)
@@ -77,7 +77,7 @@ overload #sinkValueType(FrontPusher['S]) = sequenceElementType('S);
 // inserter sink
 //
 
-symbol Inserter['S] = RecordType(sequence:Pointer['S], index:UInt);
+define Inserter['S] as RecordType(sequence:Pointer['S], index:UInt);
 overload Inserter(ref s:'S, index:'I)
     | Insertable?('S) and Integer?('I)
     = Inserter['S](&s, UInt(index));

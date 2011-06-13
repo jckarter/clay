@@ -5,6 +5,6 @@ var x = #2;
 #Foo() = x;
 
 main() {
-    show(#type([#Foo()]));
+    show(#type(-> #Foo()));
 }
 

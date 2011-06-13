@@ -2,10 +2,10 @@ import show.(show);
 foo() {
     var a = 1;
     var b = 2;
-    [c ->
+    (c) -> {
         var d = 3;
-        a + b + c + d
-    ];
+        return a + b + c + d;
+    };
 }
 
 main() { show("ok"); }

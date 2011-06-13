@@ -3,7 +3,7 @@ import meta.symbols.*;
 import unsafe.casts.(llcast);
 import unsafe.valuesemantics.*;
 
-#NewType('T) = (NewType, 'T);
+#NewType('T) = [NewType, 'T];
 #NewType?('T) = symbolWithTag?('T, NewType);
 
 #underlyingType('T) | NewType?('T) = symbolTagBody('T, NewType);
@@ -27,14 +27,14 @@ initializeUnderlying(#'T) inline --> returned:'T
 }
 overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
     | HasUnderlyingType?('T)
-      and defined?([arg(Ref['U]) <-- orig;])
+      and defined?(-> { arg(Ref['U]) <-- orig; })
       and 'U == underlyingType('T)
 {
     underlying(returned) <-- orig;
 }
 
 overload 'T(forward ..args) inline
-    | NewType?('T) and defined?([initializeUnderlying('T, ..args)])
+    | NewType?('T) and defined?(-> initializeUnderlying('T, ..args))
     = initializeUnderlying('T, ..args);
 
 overload copy(x:'T) inline --> returned:'T
@@ -72,5 +72,5 @@ overload copyAssign(ref to:'T, from:'T) inline
 }
 
 overload equals?(a:'T, b:'T) inline
-    | HasUnderlyingType?('T) and defined?([underlying(a) == underlying(b)])
+    | HasUnderlyingType?('T) and defined?(-> underlying(a) == underlying(b))
     = underlying(a) == underlying(b);

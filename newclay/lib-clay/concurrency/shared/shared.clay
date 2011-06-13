@@ -21,7 +21,7 @@ overload #ValidShared?(Pointer[Shared['T]]) = true;
 overload #ValidShared?(Shared['T])
     = staticError("Shared[] cannot be nested");
 
-symbol Shared['T];
+define Shared['T];
 overload #llType(Shared['T]) = llType('T);
 
 overload #BitwiseMoved?(Shared['T]) = false;
@@ -44,25 +44,25 @@ sharedCast(forward x:'T) = forward llcast(Shared['T], x);
 // that are atomically accessible without locking
 
 get(x:Shared['T], #'O) inline
-    | defined?([prim.atomicGet(unsharedCastUnsafe(x), #'O)])
+    | defined?(-> prim.atomicGet(unsharedCastUnsafe(x), #'O))
     = prim.atomicGet(unsharedCastUnsafe(x), #'O);
 overload get(x:Shared['T]) = get(x, FullOrder);
 
 set(ref x:Shared['T], from, #'O) inline
-    | defined?([prim.atomicSet(unsharedCastUnsafe(x), from, #'O);])
+    | defined?(-> { prim.atomicSet(unsharedCastUnsafe(x), from, #'O); })
 {
     prim.atomicSet(unsharedCastUnsafe(x), from, #'O);
 }
 overload set(ref x:Shared['T], from) { set(x, from, FullOrder); }
 
 cas(ref x:Shared['T], old, new, #'O) inline
-    | defined?([prim.atomicCas(unsharedCastUnsafe(x), old, new, #'O)])
+    | defined?(-> prim.atomicCas(unsharedCastUnsafe(x), old, new, #'O))
     = prim.atomicCas(unsharedCastUnsafe(x), old, new, #'O);
 overload cas(ref x:Shared['T], old, new) inline
     = cas(x, old, new, FullOrder);
 
 cas2(ref x:Shared['T], old1, old2, new1, new2, #'O) inline
-    | defined?([prim.atomicCas2(unsharedCastUnsafe(x), old1, old2, new1, new2, #'O)])
+    | defined?(-> prim.atomicCas2(unsharedCastUnsafe(x), old1, old2, new1, new2, #'O))
     = prim.atomicCas2(unsharedCastUnsafe(x), old1, old2, new1, new2, #'O);
 overload cas2(ref x:Shared['T], old1, old2, new1, new2) inline
     = cas2(x, old1, old2, new1, new2, FullOrder);
@@ -80,7 +80,7 @@ lockedSet(ref x:Shared['T], from:'U, ref l:'L) | Lock?('L) and Assignable?('T, '
 }
 
 locked(forward x:Shared['T], ref l:'L, forward f)
-    | Lock?('L) and defined?([forward ..f(unsharedCastUnsafe(x))])
+    | Lock?('L) and defined?(-> forward ..f(unsharedCastUnsafe(x)))
 {
     var _ = LockHolder(l);
     return forward ..f(unsharedCastUnsafe(x));
@@ -100,14 +100,14 @@ overload #SharedUnpackable?(Tuple[..'T]) = true;
 overload index(forward x:Shared['T], forward ..idx:'I)
     | SharedIndexable?('T)
     = forward ..mapValues(
-        [forward e -> forward sharedCast(e)],
+        (forward e) -> forward sharedCast(e),
         ..unsharedCastUnsafe(x)[..idx]
     );
 
 overload unpack(forward x:Shared['T])
     | SharedUnpackable?('T)
     = forward ..mapValues(
-        [forward e -> forward sharedCast(e)],
+        (forward e) -> forward sharedCast(e),
         ..*unsharedCastUnsafe(x)
     );
 

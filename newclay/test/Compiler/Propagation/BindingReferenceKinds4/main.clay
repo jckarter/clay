@@ -6,12 +6,12 @@ rvalueReturn() --> rvalue x:Int __c__ """abort();""";
 constReturn() --> const x:Int __c__ """abort();""";
 
 main() {
-    show(..#type([
+    show(..#type(-> {
         var x = valueReturn();
         ref y = refReturn();
         rvalue z = rvalueReturn();
         const w = constReturn();
 
-        return x, forward (; y, z, w);
-    ]));
+        return x, forward (y, z, w);
+    }));
 }

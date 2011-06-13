@@ -3,7 +3,7 @@ import __primitives__.*;
 import splitfactorial1.*;
 import splitfactorial2.*;
 
-symbol Main;
+define Main;
 overload #Main() = Factorial(8);
 
 main() { show(..#Main()); }

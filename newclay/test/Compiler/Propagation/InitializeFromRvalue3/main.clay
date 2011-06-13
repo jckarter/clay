@@ -2,7 +2,7 @@ import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 import show.(show);
 
-symbol Foo = CompositeType(value:Int);
+define Foo as CompositeType(value:Int);
 overload Foo(v:Int) = initializeRecord(Foo, v);
 overload destroy(x:Foo) {}
 overload #BitwiseMoved?(Foo) = false;

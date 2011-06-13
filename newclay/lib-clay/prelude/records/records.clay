@@ -13,12 +13,12 @@ import unsafe.valuesemantics.*;
 // RecordType definer
 //
 
-#RecordType(..'fields) | validFields?(..'fields) = (RecordType, ..'fields);
+#RecordType(..'fields) | validFields?(..'fields) = [RecordType, ..'fields];
 
 #RecordType?('T) = symbolWithTag?('T, RecordType);
 
 #validField?('x) = false;
-overload #validField?(('name, 'T)) | staticString?('name) and type?('T) = true;
+overload #validField?(['name, 'T]) | staticString?('name) and type?('T) = true;
 
 #validFields?(..'x) = allValues?(validField?, ..'x);
 
@@ -27,7 +27,7 @@ overload #validField?(('name, 'T)) | staticString?('name) and type?('T) = true;
 // record type metadata
 //
 
-symbol fields;
+define fields;
 overload #fields('T)
     | CompositeType?('T) and not RecordType?('T)
     = ..symbolTagBody('T, CompositeType);
@@ -36,19 +36,19 @@ overload #fields('T)
     = ..symbolTagBody('T, RecordType);
 
 #fieldNames('T) | staticCallDefined?(fields, 'T)
-    = ..mapValues([x -> x.0], ..fields('T));
+    = ..mapValues((x) -> x.0, ..fields('T));
 
 #fieldTypes('T) | staticCallDefined?(fields, 'T)
-    = ..mapValues([x -> x.1], ..fields('T));
+    = ..mapValues((x) -> x.1, ..fields('T));
 
 overload #llType('T) | CompositeType?('T) = llTupleType[..fields('T)];
 
 #field?('T, 'field) = inValues?('field, ..fieldNames('T));
 
 #fieldType('T, 'field) = fieldType2('field, ..fields('T));
-private symbol fieldType2;
+private define fieldType2;
 overload #fieldType2('field, 'x, ..'fields) = fieldType2('field, ..'fields);
-overload #fieldType2('field, ('field, 'T), ..'fields) = 'T;
+overload #fieldType2('field, ['field, 'T], ..'fields) = 'T;
 
 overload #inheritsPredicatesFromTypes('T) | RecordType?('T) = true, ..fieldTypes('T);
 
@@ -85,7 +85,7 @@ overload index(rvalue x:'T, #'field) inline
 //
 
 overload 'T(forward ..args) inline
-    | RecordType?('T) and defined?([initializeRecord('T, ..args)])
+    | RecordType?('T) and defined?(-> initializeRecord('T, ..args))
     = initializeRecord('T, ..args);
 
 

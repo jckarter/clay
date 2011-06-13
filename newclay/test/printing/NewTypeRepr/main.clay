@@ -1,6 +1,6 @@
 import printing.(printlnRepr);
 
-symbol Foo = NewType(Int);
+define Foo as NewType(Int);
 
 main() {
     printlnRepr(Foo(1));

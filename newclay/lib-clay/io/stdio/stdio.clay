@@ -16,7 +16,7 @@ import unsafe.valuesemantics.(destroy);
 // FileError exception
 //
 
-symbol FileError = RecordType(error:CInt);
+define FileError as RecordType(error:CInt);
 
 overload FileError() = FileError(errno.errno());
 
@@ -25,21 +25,21 @@ overload FileError() = FileError(errno.errno());
 // File types
 //
 
-private #FileType() = CompositeType(_handle:stdio.FILE), (FileType,);
+private #FileType() = CompositeType(_handle:stdio.FILE), [FileType];
 
-symbol InputFile = ..FileType();
-symbol OutputFile = ..FileType();
+define InputFile as ..FileType();
+define OutputFile as ..FileType();
 
 #File?('T) = symbolWithTag?('T, FileType);
 
-private symbol fileMode;
+private define fileMode;
 overload fileMode(#InputFile) inline = CString("rb");
 overload fileMode(#OutputFile) inline = CString("wb");
 
 overload 'F(name:'S) inline | File?('F) and String?('S)
     = maybe(stdio.fopen(CString(name), fileMode(#'F)),
-        [handle -> initializeRecord('F, handle)],
-        [throw FileError()]
+        (handle) -> initializeRecord('F, handle),
+        -> throw FileError()
     );
 
 
@@ -79,7 +79,7 @@ handle(file:'F) = file._handle;
 // InputFile as source
 //
 
-symbol InputFileSource = NewType(stdio.FILE);
+define InputFileSource as NewType(stdio.FILE);
 
 overload source(file:InputFile) = InputFileSource(file._handle);
 
@@ -110,7 +110,7 @@ overload idealReadSize(s:InputFileSource) inline = stdio.BUFSIZ();
 // OutputFile as sink
 //
 
-symbol OutputFileSink = NewType(stdio.FILE);
+define OutputFileSink as NewType(stdio.FILE);
 
 overload sink(file:OutputFile) = OutputFileSink(file._handle);
 

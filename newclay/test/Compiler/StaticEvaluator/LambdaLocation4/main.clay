@@ -2,11 +2,11 @@ import show.(show);
 import values.(dropValues);
 import __primitives__.*;
 
-symbol wut = "éééé";
+define wut as "éééé";
 
-#foo() = [x -> {
+#foo() = (x) -> {
     return x + 1;
-}];
+};
 
 #Main() = ..dropValues(1, ..lambdaLocation(foo()));
 

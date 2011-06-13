@@ -12,7 +12,7 @@ import unsafe.valuesemantics.*;
 // Tuple[..T]
 //
 
-symbol Tuple[..'T];
+define Tuple[..'T];
 overload #inheritsPredicatesFromTypes(Tuple[..'T]) = true, ..'T;
 overload #llType(Tuple[..'T])
     | allValues?(type?, ..'T)
@@ -104,17 +104,17 @@ overload copy(x:Tuple[..'T]) inline
     | not BitwiseCopied?(Tuple[..'T]) and allValues?(Copyable?, ..'T)
     = Tuple[..'T](..mapValues(copy, ..*x));
 
-#CompatibleTupleTypes?('fn, (..'T), (..'U))
+#CompatibleTupleTypes?('fn, [..'T], [..'U])
     = countValues(..'T) == countValues(..'U)
-      and compatibleTupleTypes2?('fn, (..'T), (..'U));
+      and compatibleTupleTypes2?('fn, [..'T], [..'U]);
 
-private #compatibleTupleTypes2?('fn, ('T, ..'TT), ('U, ..'UU))
-    = callDefined?('fn, 'T, 'U) and compatibleTupleTypes2?('fn, (..'TT), (..'UU));
-overload #compatibleTupleTypes2?('fn, (), ()) = true;
+private #compatibleTupleTypes2?('fn, ['T, ..'TT], ['U, ..'UU])
+    = callDefined?('fn, 'T, 'U) and compatibleTupleTypes2?('fn, [..'TT], [..'UU]);
+overload #compatibleTupleTypes2?('fn, [], []) = true;
 
 overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U]) inline
-    | not ((..'T) == (..'U) and BitwiseAssigned?(Tuple[..'T]))
-      and CompatibleTupleTypes?(copyAssign, (..'T), (..'U))
+    | not ([..'T] == [..'U] and BitwiseAssigned?(Tuple[..'T]))
+      and CompatibleTupleTypes?(copyAssign, [..'T], [..'U])
 {
     static for (#'n in ..#intValues(countValues(..'T)))
         to[#'n] = from[#'n];
@@ -126,7 +126,7 @@ overload copyAssign(ref to:Tuple[..'T], from:Tuple[..'U]) inline
 //
 
 overload equals?(x:Tuple[..'T], y:Tuple[..'U]) inline
-    | CompatibleTupleTypes?(equals?, (..'T), (..'U))
+    | CompatibleTupleTypes?(equals?, [..'T], [..'U])
 {
     static for (#'n in ..#intValues(countValues(..'T)))
         if (x[#'n] != y[#'n])
@@ -135,7 +135,7 @@ overload equals?(x:Tuple[..'T], y:Tuple[..'U]) inline
 }
 
 overload lesser?(x:Tuple[..'T], y:Tuple[..'U]) inline
-    | CompatibleTupleTypes?(lesser?, (..'T), (..'U))
+    | CompatibleTupleTypes?(lesser?, [..'T], [..'U])
 {
     static for (#'n in ..#intValues(countValues(..'T))) {
         if (x[#'n] < y[#'n])

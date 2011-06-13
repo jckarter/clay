@@ -7,7 +7,7 @@ var counter = Shared(0);
 var counterLock = Lock();
 
 incCounter(ref x:Shared[Int]) {
-    locked(counter, counterLock, [ref c -> c += 1;]);
+    locked(counter, counterLock, (ref c) -> { c += 1; });
 }
 
 incStorm() {

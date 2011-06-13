@@ -1,10 +1,10 @@
 import show.(show);
 
-symbol nonterminating;
+define nonterminating;
 overload nonterminating() { throw 0; }
 
 foo() = 1, ..nonterminating();
 
 main() {
-    show(#returns?([ foo(); ]));
+    show(#returns?(-> { foo(); }));
 }

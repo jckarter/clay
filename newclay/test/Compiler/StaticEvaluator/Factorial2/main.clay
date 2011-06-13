@@ -1,14 +1,14 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Factorial;
+define Factorial;
 overload #Factorial('n) =
     if (staticLesser?('n, 2))
         1
     else
         staticMultiply('n, Factorial(staticSubtract('n, 1)));
 
-symbol Main;
+define Main;
 overload #Main() = Factorial(8);
 
 main() { show(..#Main()); }

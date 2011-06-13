@@ -1,7 +1,7 @@
 import printing.(printlnRepr);
 
 main() {
-    printlnRepr(());
-    printlnRepr((1,));
-    printlnRepr((1, true, "three", '4'));
+    printlnRepr([]);
+    printlnRepr([1]);
+    printlnRepr([1, true, "three", '4']);
 }

@@ -10,5 +10,5 @@ main() {
     var x2, y2, z2 = ..foo();
     var x3, y3, ..z3 = ..foo(), bar();
 
-    show(..#type([ x0, x1, y1, z1, ..w1, x2, y2, z2, x3, y3, ..z3 ]));
+    show(..#type(->  (x0, x1, y1, z1, ..w1, x2, y2, z2, x3, y3, ..z3) ));
 }

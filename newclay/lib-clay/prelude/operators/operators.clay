@@ -37,7 +37,7 @@ import __primitives__.(
 //
 
 tupleLiteral(forward ..elements:'T) inline = Tuple[..'T](..elements);
-overload #tupleLiteral(..'x) = (..'x);
+overload #tupleLiteral(..'x) = [..'x];
 
 
 
@@ -45,13 +45,13 @@ overload #tupleLiteral(..'x) = (..'x);
 // index
 //
 
-symbol index;
+define index;
 overload index(forward a, #'n) inline
-    | staticInt?('n) and defined?([forward ..a['n]])
+    | staticInt?('n) and defined?(-> forward ..a['n])
     = forward ..a['n];
 
 overload index(a, n:'I) inline
-    | Integer?('I) and defined?([forward ..((a + n)^)])
+    | Integer?('I) and defined?(-> forward ..((a + n)^))
     = forward ..((a + n)^);
 
 
@@ -70,10 +70,10 @@ dereference(forward a:'T) inline
 //
 
 staticIndex(forward a, #'n) inline
-    | defined?([forward ..a[#'n]])
+    | defined?(-> forward ..a[#'n])
     = forward ..a[#'n];
 fieldRef(forward a, #'field) inline
-    | defined?([forward ..a[#'field]])
+    | defined?(-> forward ..a[#'field])
     = forward ..a[#'field];
 
 
@@ -90,14 +90,14 @@ overload #call('a, ..'x) = ..'a(..'x);
 // arithmetic operators
 //
 
-symbol plus;
-symbol minus;
-symbol multiply = VariadicBinaryOperatorProcedure();
-symbol divide;
-symbol quotient;
-symbol remainder;
-symbol add = VariadicBinaryOperatorProcedure();
-symbol subtract;
+define plus;
+define minus;
+define multiply as VariadicBinaryOperatorProcedure();
+define divide;
+define quotient;
+define remainder;
+define add as VariadicBinaryOperatorProcedure();
+define subtract;
 
 
 //
@@ -141,17 +141,17 @@ overload subtract(a:'A, b:'B) inline | ArithmeticCompatiblePrimitiveTypes?('A, '
 // comparison operators
 //
 
-symbol lesser?;
-lesserEquals?(a, b) | defined?([b < a]) = not b < a;
-greater?(a, b) | defined?([b < a]) = b < a;
-greaterEquals?(a, b) | defined?([a < b]) = not a < b;
+define lesser?;
+lesserEquals?(a, b) | defined?(-> b < a) = not b < a;
+greater?(a, b) | defined?(-> b < a) = b < a;
+greaterEquals?(a, b) | defined?(-> a < b) = not a < b;
 
-symbol equals?;
-notEquals?(a, b) | defined?([a == b]) = not a == b;
+define equals?;
+notEquals?(a, b) | defined?(-> a == b) = not a == b;
 
 // XXX use intrinsic ordered/unordered conditions
 ordered?(a, b)
-    | defined?([a <= b]) and defined?([b <= a])
+    | defined?(-> a <= b) and defined?(-> b <= a)
     = a <= b or b <= a;
 
 nan?(a:'A) | Float?('A) = a != a;
@@ -206,14 +206,14 @@ swap(ref a, ref b) {
 //
 
 updateAssign(#'op, ref a, forward b) inline
-    | defined?([a = 'op(a, b);])
+    | defined?(-> { a = 'op(a, b); })
     { a = 'op(a, b); }
 
-inc(ref a:'T) inline | defined?([a += 1;]) { a += 1; }
-dec(ref a:'T) inline | defined?([a -= 1;]) { a -= 1; }
+inc(ref a:'T) inline | defined?(-> { a += 1; }) { a += 1; }
+dec(ref a:'T) inline | defined?(-> { a -= 1; }) { a -= 1; }
 
-overload inc(ref a:'T) inline | defined?([a += 1u;]) { a += 1u; }
-overload dec(ref a:'T) inline | defined?([a -= 1u;]) { a -= 1u; }
+overload inc(ref a:'T) inline | defined?(-> { a += 1u; }) { a += 1u; }
+overload dec(ref a:'T) inline | defined?(-> { a -= 1u; }) { a -= 1u; }
 
 
 //
@@ -221,11 +221,11 @@ overload dec(ref a:'T) inline | defined?([a -= 1u;]) { a -= 1u; }
 //
 
 callAssign(forward b, #'f, forward ..args) inline
-    | defined?([ref a = 'f(..args); a = b;])
+    | defined?(-> { ref a = 'f(..args); a = b;})
     { ref a = 'f(..args); a = b; }
 
 updateCallAssign(#'op, forward b, #'f, forward ..args) inline
-    | defined?([ref a = 'f(..args); a = 'op(a, b);])
+    | defined?(-> { ref a = 'f(..args); a = 'op(a, b); })
     { ref a = 'f(..args); a = 'op(a, b); }
 
 
@@ -234,21 +234,21 @@ updateCallAssign(#'op, forward b, #'f, forward ..args) inline
 // call
 //
 
-symbol call;
+define call;
 
 overload call(#'f, forward ..args) inline = forward ..'f(..args);
 
 // non-variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args) inline
     : ..externalOutputTypes('O)
-    | 'I == (..'Args)
+    | 'I == [..'Args]
     = ..cExternalCall(f, ..args);
 
 // variadic external code pointer
 overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
     : ..externalOutputTypes('O)
     | allValues?(RequireExternalPOD?, ..'Args)
-      and 'I == (..takeValues(staticTupleSize('I), ..'Args))
+      and 'I == [..takeValues(staticTupleSize('I), ..'Args)]
     = ..cExternalCall(f, ..args);
 
 
@@ -257,9 +257,9 @@ overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
 // unpack
 //
 
-symbol unpack;
+define unpack;
 overload unpack(..#'x) = ..'x;
-overload #unpack((..'x)) = ..'x;
+overload #unpack([..'x]) = ..'x;
 overload #unpack('s) | staticString?('s) = ..staticStringChars('s);
 
 
@@ -267,12 +267,12 @@ overload #unpack('s) | staticString?('s) = ..staticStringChars('s);
 // max, min
 //
 
-symbol max = VariadicBinaryOperatorProcedure();
-symbol min = VariadicBinaryOperatorProcedure();
+define max as VariadicBinaryOperatorProcedure();
+define min as VariadicBinaryOperatorProcedure();
 
-overload max(a:'A, b:'A) inline | defined?([a < b])
+overload max(a:'A, b:'A) inline | defined?(-> a < b)
     = if (a < b) b else a;
-overload min(a:'A, b:'A) inline | defined?([a < b])
+overload min(a:'A, b:'A) inline | defined?(-> a < b)
     = if (a < b) a else b;
 
 overload max(a:'A, b:'A) inline | Float?('A)
@@ -289,7 +289,7 @@ overload #min('a, 'b) = if ('a < 'b) 'a else 'b;
 //
 
 case?(value:'T, forward ..cases:'UU) inline
-    | allValues?([#'U -> callDefined?(equals?, 'T, 'U)], ..'UU)
+    | allValues?((#'U) -> callDefined?(equals?, 'T, 'U), ..'UU)
     = inValues?(value, ..cases);
 
 
@@ -297,38 +297,38 @@ case?(value:'T, forward ..cases:'UU) inline
 // bitand, bitor, bitxor, bitnot
 //
 
-symbol bitand = VariadicBinaryOperatorProcedure();
+define bitand as VariadicBinaryOperatorProcedure();
 overload bitand(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = cBitand(#biggerNumberType('A, 'B), a, b);
 
-symbol bitor = VariadicBinaryOperatorProcedure();
+define bitor as VariadicBinaryOperatorProcedure();
 overload bitor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = cBitor(#biggerNumberType('A, 'B), a, b);
 
-symbol bitxor = VariadicBinaryOperatorProcedure();
+define bitxor as VariadicBinaryOperatorProcedure();
 overload bitxor(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = cBitxor(#biggerNumberType('A, 'B), a, b);
 
-symbol bitnot;
+define bitnot;
 overload bitnot(a:'A) | Integer?('A) = cBitnot('A, a);
 
-symbol bitandc;
+define bitandc;
 overload bitandc(a:'A, b:'B) | BitwiseCompatiblePrimitiveTypes?('A, 'B)
     = bitand(a, bitnot(b));
 
-symbol bitshl;
+define bitshl;
 overload bitshl(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshl('A, a, shift);
 
-symbol bitshr;
+define bitshr;
 overload bitshr(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = cBitshr('A, a, shift);
 
-symbol bitrol;
+define bitrol;
 overload bitrol(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = bitor(bitshl(a, shift), bitshr(a, typeSize('A)*8u - UInt(shift)));
 
-symbol bitror;
+define bitror;
 overload bitror(a:'A, shift:'N) | Integer?('A) and Integer?('N)
     = bitor(bitshr(a, shift), bitshl(a, typeSize('A)*8u - UInt(shift)));
 
@@ -352,7 +352,7 @@ overload #bitandc('x, 'y) = staticBitand('x, staticBitnot('y));
 // these should only be used as shims for type() tests and never in real code
 //
 
-symbol arg;
+define arg;
 overload arg(#'T)         --> const  x:'T __c__ """abort();""";
 overload arg(#Const['T])  --> const  x:'T __c__ """abort();""";
 overload arg(#Ref['T])    --> ref    x:'T __c__ """abort();""";
@@ -360,7 +360,7 @@ overload arg(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
 
 overload arg(..#'T) | countValues(..'T) != 1 = forward ..mapValues(arg, ..'T);
 
-symbol ret;
+define ret;
 overload ret(#'T)         -->        x:'T __c__ """abort();""";
 overload ret(#Const['T])  --> const  x:'T __c__ """abort();""";
 overload ret(#Ref['T])    --> ref    x:'T __c__ """abort();""";
@@ -380,4 +380,4 @@ identity(forward ..x) inline = forward ..x;
 // monad operations
 //
 
-symbol bind = VariadicBinaryOperatorProcedure();
+define bind as VariadicBinaryOperatorProcedure();

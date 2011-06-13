@@ -1,5 +1,5 @@
 import __primitives__.*;
 
-symbol Foo[..'x] = staticError("I AM ERROR.", ..'x);
+define Foo[..'x] as staticError("I AM ERROR.", ..'x);
 
 #Main() = staticSymbolBody(Foo[2]);

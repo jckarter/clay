@@ -1,1 +1,1 @@
-"[x -> {\n    return x + 1;\n}]"
+"(x) -> {\n    return x + 1;\n}"

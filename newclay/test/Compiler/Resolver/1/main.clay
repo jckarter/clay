@@ -1,12 +1,12 @@
 import show.(show);
 import __primitives__.*;
 
-symbol Foo = ();
-symbol Bar = (Foo);
-symbol Bas = ();
+define Foo as ();
+define Bar as (Foo);
+define Bas as ();
 
 overload #Bar('x) = Foo;
-overload #Bar(Foo) = [a => ('x, a, Foo)];
+overload #Bar(Foo) = (a) -> ('x, a, Foo);
 
 overload Bas(a:'x) = (a, Foo);
 overload Bas(a:'x) : Foo = (a, Foo);

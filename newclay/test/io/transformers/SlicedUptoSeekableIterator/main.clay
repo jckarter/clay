@@ -1,7 +1,7 @@
 import io.transformers.(SlicedUpto);
 import show.(show);
 
-symbol PowersOfTwo = RecordType(n:Int, count:UInt);
+define PowersOfTwo as RecordType(n:Int, count:UInt);
 overload PowersOfTwo(count:UInt) = PowersOfTwo(1, count);
 
 overload hasFront?(i:PowersOfTwo) = i.count > 0u;

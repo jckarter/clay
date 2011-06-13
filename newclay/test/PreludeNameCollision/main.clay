@@ -2,11 +2,11 @@ import meta.symbols.(symbolModule);
 import meta.statics.(staticQualifiedName);
 import show.(show);
 
-symbol Nothing = RecordType();
+define Nothing as RecordType();
 #foo(Nothing) = symbolModule(Nothing);
 
 main() {
     show(#foo(Nothing));
     var x = Nothing();
-    show(#staticQualifiedName(type([x])));
+    show(#staticQualifiedName(type(-> x)));
 }

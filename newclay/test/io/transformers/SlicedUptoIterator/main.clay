@@ -2,7 +2,7 @@
 import io.transformers.(SlicedUpto);
 import show.(show);
 
-symbol FibonacciIterator = RecordType(a:Int, b:Int, max:Int);
+define FibonacciIterator as RecordType(a:Int, b:Int, max:Int);
 overload FibonacciIterator(max:Int) = FibonacciIterator(0, 1, max);
 
 overload hasFront?(s:FibonacciIterator) = s.b < s.max;

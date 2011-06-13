@@ -4,7 +4,7 @@ import factorial.*; // has Factorial
 import tools.*; // also has Factorial
 import tools.(Factorial); // disambiguate
 
-symbol Main;
+define Main;
 overload #Main() = Factorial(8);
 
 main() { show(..#Main()); }

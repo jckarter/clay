@@ -3,6 +3,6 @@ import show.(show);
 main() {
     var x = true, y = false;
 
-    show(#type([forward x and y]));
+    show(#type(-> forward x and y));
 }
 

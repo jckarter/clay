@@ -3,8 +3,8 @@ import show.*;
 foo(x) = x + x;
 
 main() {
-    var foo1 = CodePointer[(Int,), (Int,)](foo);
-    var foo2 = CodePointer[(Float64,), (Float64,)](foo);
+    var foo1 = CodePointer[[Int], [Int]](foo);
+    var foo2 = CodePointer[[Float64], [Float64]](foo);
 
     ////2
     ////4

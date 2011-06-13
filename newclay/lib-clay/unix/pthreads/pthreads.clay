@@ -4,20 +4,20 @@ import ctypes.*;
 // just allocate 64 word-aligned bytes and hope for the best...
 private alias PthreadStackThingy = Array[Int, 8];
 
-symbol PthreadT = NewType(OpaquePointer);
-symbol PthreadKeyT = NewType(UInt);
+define PthreadT as NewType(OpaquePointer);
+define PthreadKeyT as NewType(UInt);
 
-symbol PthreadAttrT = NewType(PthreadStackThingy);
-symbol PthreadMutexT = NewType(PthreadStackThingy);
-symbol PthreadMutexAttrT = NewType(PthreadStackThingy);
-symbol PthreadCondT = NewType(PthreadStackThingy);
-symbol PthreadCondAttrT = NewType(PthreadStackThingy);
-symbol PthreadOnceT = NewType(PthreadStackThingy);
+define PthreadAttrT as NewType(PthreadStackThingy);
+define PthreadMutexT as NewType(PthreadStackThingy);
+define PthreadMutexAttrT as NewType(PthreadStackThingy);
+define PthreadCondT as NewType(PthreadStackThingy);
+define PthreadCondAttrT as NewType(PthreadStackThingy);
+define PthreadOnceT as NewType(PthreadStackThingy);
 
 external pthread_create(
     thread:Pointer[PthreadT],
     attrs:MPointer[PthreadAttrT],
-    startRoutine:CCodePointer[(MOpaquePointer,), MOpaquePointer],
+    startRoutine:CCodePointer[[MOpaquePointer], MOpaquePointer],
     arg:MOpaquePointer,
 ) : CInt;
 external pthread_detach(
@@ -39,14 +39,14 @@ external pthread_cancel(
 ) : CInt;
 external pthread_once(
     control:PthreadOnceT,
-    initRoutine:CCodePointer[(), ()],
+    initRoutine:CCodePointer[[], []],
 ) : CInt;
 external pthread_self(
 ) : PthreadT;
 external pthread_atfork(
-    prepare:Maybe[CCodePointer[(), ()]],
-    parent:Maybe[CCodePointer[(), ()]],
-    child:Maybe[CCodePointer[(), ()]],
+    prepare:Maybe[CCodePointer[[], []]],
+    parent:Maybe[CCodePointer[[], []]],
+    child:Maybe[CCodePointer[[], []]],
 ) : CInt;
 
 // XXX attr functions
@@ -93,7 +93,7 @@ external pthread_cond_wait(
 
 external pthread_key_create(
     key:Pointer[PthreadKeyT],
-    destructor:Maybe[CCodePointer[(OpaquePointer,), ()]],
+    destructor:Maybe[CCodePointer[[OpaquePointer], []]],
 ) : CInt;
 external pthread_key_delete(
     key:PthreadKeyT,

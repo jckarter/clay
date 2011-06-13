@@ -10,7 +10,7 @@ main() {
     show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], ContiguousCoordinate[Char])); ////false
     show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], Pointer[Int])); ////true
     show(#ConvertiblePrimitiveTypes?(ContiguousCoordinate[Int], OpaquePointer)); ////true
-    show(#ConvertiblePrimitiveTypes?(CCodePointer[(Int8,), Int8], CCodePointer[(Int8,), Int8])); ////true
+    show(#ConvertiblePrimitiveTypes?(CCodePointer[[Int8], Int8], CCodePointer[[Int8], Int8])); ////true
 
     // nonconvertible
     show(#ConvertiblePrimitiveTypes?(Int, StringConstant)); ////false

@@ -4,25 +4,25 @@ import ctypes.*;
 import unix.pthreads.*;
 import unsafe.valuesemantics.(uninitialized);
 
-symbol Thread = RecordType(_handle:PthreadT);
+define Thread as RecordType(_handle:PthreadT);
 
-symbol ThreadError = RecordType(error:CInt);
+define ThreadError as RecordType(error:CInt);
 
 // XXX more flexible thread entry point
 // should support stateful lambdas or other stateful types
 // should verify that such stateful types do not capture non-Shared or
 // non-immutable references/pointers
 
-private threadRunner(#'f) | (..type([..'f()])) != (MOpaquePointer,)
-    = [x -> 'f(); nullOpaque()];
-overload threadRunner(#'f) | (..type([..'f()])) == (MOpaquePointer,)
-    = [x -> 'f()];
+private threadRunner(#'f) | [..type(-> ..'f())] != [MOpaquePointer]
+    = (x) -> ('f(); nullOpaque());
+overload threadRunner(#'f) | [..type(-> ..'f())] == [MOpaquePointer]
+    = (x) -> 'f();
 
 spawn(#'f) inline | callDefined?('f)
 {
     var handle = uninitialized(PthreadT);
     var code = pthread_create(&handle, null(PthreadAttrT),
-        CCodePointer[(MOpaquePointer,), (MOpaquePointer)](threadRunner(#'f)),
+        CCodePointer[[MOpaquePointer], MOpaquePointer](threadRunner(#'f)),
         nullOpaque()
     );
     if (code != 0)

@@ -1,17 +1,17 @@
 import meta.symbols.*;
 import show.*;
 
-symbol Foo;
-symbol Bar = Foo;
-symbol Bas = Foo, Bar;
+define Foo;
+define Bar as Foo;
+define Bas as Foo, Bar;
 
-symbol Zim = Foo;
-attribute Zim = Bar;
+define Zim as Foo;
+extend Zim with Bar;
 
-symbol Zang;
-attribute Zang = Foo;
-attribute Zang = Bar;
-attribute Zang = Foo;
+define Zang;
+extend Zang with Foo;
+extend Zang with Bar;
+extend Zang with Foo;
 
 showSymbol(sym) {
     show(sym);

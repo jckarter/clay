@@ -3,7 +3,7 @@ import show.(show);
 import unsafe.compositetypes.*;
 import unsafe.valuesemantics.*;
 
-symbol CanaryType = CompositeType(x:Int);
+define CanaryType as CompositeType(x:Int);
 
 overload CanaryType(x:Int) {
     show("constructing");
@@ -17,7 +17,7 @@ overload destroy(ref c:CanaryType) {
 }
 
 main() {
-    var p = UniquePointer([CanaryType(33)]);
+    var p = UniquePointer(-> CanaryType(33));
 
     show("--");
     show(p^.x);
