@@ -2,6 +2,7 @@ import re
 import os
 import glob
 import pickle
+import platform
 import signal
 import sys
 from subprocess import Popen, PIPE
@@ -31,14 +32,26 @@ def getClayPlatform():
     if sys.platform.startswith("linux"):
         return "linux"
 
+def getClayBits():
+    if platform.architecture()[0] == "64bit":
+        return "64"
+    if platform.architecture()[0] == "32bit":
+        return "32"
+
 clayPlatform = getClayPlatform()
+clayBits = getClayBits()
 
 def fileForPlatform(folder, name, ext):
+    platformName = os.path.join(folder, "%s.%s.%s.%s" % (name, clayPlatform, clayBits, ext))
+    if os.path.isfile(platformName):
+        return platformName
     platformName = os.path.join(folder, "%s.%s.%s" % (name, clayPlatform, ext))
     if os.path.isfile(platformName):
         return platformName
-    else:
-        return os.path.join(folder, "%s.%s" % (name, ext))
+    platformName = os.path.join(folder, "%s.%s.%s" % (name, clayBits, ext))
+    if os.path.isfile(platformName):
+        return platformName
+    return os.path.join(folder, "%s.%s" % (name, ext))
 
 
 #
