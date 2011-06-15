@@ -73,8 +73,8 @@ overload call(c:CodePointer[[..'I], [..'O]], forward ..args) inline
     | defined?(-> forward callCodePointer(c, ..args))
     = forward ..callCodePointer(c, ..args);
 
-overload ExternalCodePointer['A, false, [..'I], 'O](#'f) inline
-    | allValues?(POD?, ..'I, ..externalOutputTypes('O))
-      and definedWithType?(-> ..'f(..arg(..'I)), ..externalOutputTypes('O))
+overload ExternalCodePointer['A, false, [..'I], [..'O]](#'f) inline
+    | allValues?(POD?, ..'I, ..'O)
+      and definedWithType?(-> ..'f(..arg(..'I)), ..'O)
     = makeExternalCodePointer(#'f, 'A, ..'I);
 

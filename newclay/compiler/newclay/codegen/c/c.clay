@@ -858,11 +858,24 @@ private getCodePointerTypeName(c, llTypeValue) {
     );
     var inputTypes = match(params[2],
         TupleValue, v ref=> v.elements,
-        MatchDefault, x ref=> ValueList(params[2]),
+        MatchDefault, x ref=> {
+            genericError("third symbol parameter of low-level code pointer type ", llTypeValue, " must be a tuple value");
+            return ValueList();
+        },
     );
     var outputType = match(params[3],
-        TupleValue, v ref=> nothing(Value),
-        MatchDefault, x ref=> Maybe(params[3]),
+        TupleValue, v ref=> {
+            if (size(v.elements) > 1)
+                genericError("fourth symbol parameter of low-level code pointer type ", llTypeValue, " must be a zero- or one-element tuple value");
+            if (size(v.elements) == 1)
+                return Maybe(v.elements[0]);
+            else
+                return nothing(Value);
+        },
+        MatchDefault, x ref=> {
+            genericError("fourth symbol parameter of low-level code pointer type ", llTypeValue, " must be a zero- or one-element tuple value");
+            return nothing(Value);
+        },
     );
 
     var pre, post = String(), String();

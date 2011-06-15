@@ -17,7 +17,7 @@ define PthreadOnceT as NewType(PthreadStackThingy);
 external pthread_create(
     thread:Pointer[PthreadT],
     attrs:MPointer[PthreadAttrT],
-    startRoutine:CCodePointer[[MOpaquePointer], MOpaquePointer],
+    startRoutine:CCodePointer[[MOpaquePointer], [MOpaquePointer]],
     arg:MOpaquePointer,
 ) : CInt;
 external pthread_detach(

@@ -84,11 +84,10 @@ cNotEquals?(a, b) inline --> returned:Bool
 cAssign(ref a, forward b) inline
     __c__ """$a = $b;""";
 
-cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline --> returned:'O
+cExternalCall(callable:ExternalCodePointer['A,'V,'I,['O]], ..args) inline --> returned:'O
     | type?('O)
     __c__ """$returned = $callable($..args);""";
-overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,'O], ..args) inline
-    | 'O == []
+overload cExternalCall(callable:ExternalCodePointer['A,'V,'I,[]], ..args) inline
     __c__ """$callable($..args);""";
 
 cCast(#'T, a) inline --> returned:'T

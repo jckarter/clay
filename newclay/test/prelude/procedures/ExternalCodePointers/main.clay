@@ -2,7 +2,7 @@ import ctypes.*;
 import unsafe.coordinates.(begin);
 import show.(show);
 
-alias QsortComparator = CCodePointer[[OpaquePointer, OpaquePointer], CInt];
+alias QsortComparator = CCodePointer[[OpaquePointer, OpaquePointer], [CInt]];
 
 external qsort(base:OpaquePointer, nel:CSizeT, width:CSizeT, compar:QsortComparator);
 

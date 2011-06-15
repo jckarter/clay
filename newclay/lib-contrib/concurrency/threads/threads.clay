@@ -22,7 +22,7 @@ spawn(#'f) inline | callDefined?('f)
 {
     var handle = uninitialized(PthreadT);
     var code = pthread_create(&handle, null(PthreadAttrT),
-        CCodePointer[[MOpaquePointer], MOpaquePointer](threadRunner(#'f)),
+        CCodePointer[[MOpaquePointer], [MOpaquePointer]](threadRunner(#'f)),
         nullOpaque()
     );
     if (code != 0)
