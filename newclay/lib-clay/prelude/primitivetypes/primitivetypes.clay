@@ -115,8 +115,10 @@ overload #recursiveTypes(CodePointer[[..'I], [..'O]])
 #RequireExternalPOD?('x) = POD?('x);
     //or staticError("external code pointer argument is not a POD type: ", 'x);
 
-private #ValidExternalCodePointerOutput?('O)
-    = 'O == [] or POD?('O);//RequireExternalPOD?('O);
+private #ValidExternalCodePointerOutput?('O) = false;
+overload #ValidExternalCodePointerOutput?([]) = true;
+overload #ValidExternalCodePointerOutput?(['O])
+    = POD?('O);//RequireExternalPOD?('O);
 
 define ExternalCodePointer['ABI, 'Variadic?, 'Inputs, 'Outputs];
 overload #POD?(ExternalCodePointer['A,'V,'I,'O])
@@ -128,15 +130,12 @@ overload #llType(ExternalCodePointer['A, 'V, 'I, 'O])
       and allValues?(RequireExternalPOD?, ..staticTupleElements('I))
       and ValidExternalCodePointerOutput?('O)
     = llCodePointerType['A, 'V, 'I, 'O];
-overload #recursiveTypes(ExternalCodePointer['A, 'V, [..'I], 'O])
-    = ..'I, ..externalOutputTypes('O);
+overload #recursiveTypes(ExternalCodePointer['A, 'V, [..'I], [..'O]])
+    = ..'I, ..'O;
 
 #ExternalCodePointer?('X) = false;
 overload #ExternalCodePointer?(ExternalCodePointer['A,'V,'I,'O])
     | type?(ExternalCodePointer['A,'V,'I,'O]) = true;
-
-#externalOutputTypes('T) | type?('T) = 'T;
-overload #externalOutputTypes([]) = ;
 
 alias CCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, false, 'I, 'O];
 alias VariadicCCodePointer['I, 'O] = ExternalCodePointer[CdeclABI, true, 'I, 'O];

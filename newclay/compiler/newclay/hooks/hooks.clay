@@ -225,8 +225,11 @@ codePointerInputTypes(x:Value) {
         genericError("not a code pointer type: ", x);
     var sym = typeSymbol(x);
     return match(sym.params[0],
-        TupleValue, x => x.elements,
-        MatchDefault, x => ValueList(x),
+        TupleValue, t => t.elements,
+        MatchDefault, _ => {
+            genericError("input types of code pointer type must be a tuple: ", x);
+            return ValueList();
+        },
     );
 }
 
@@ -234,9 +237,12 @@ codePointerOutputTypes(x:Value) {
     if (not codePointerType?(x))
         genericError("not a code pointer type: ", x);
     var sym = typeSymbol(x);
-    return match(sym.params[1],
-        TupleValue, x => x.elements,
-        MatchDefault, x => ValueList(x),
+    return match(sym.params[0],
+        TupleValue, t => t.elements,
+        MatchDefault, _ => {
+            genericError("output types of code pointer type must be a tuple: ", x);
+            return ValueList();
+        },
     );
 }
 
@@ -250,7 +256,7 @@ externalCodePointerType(abi:Value, variadic?:Bool, inputs:ValueList, output:Mayb
         abi,
         Value(BoolValue(variadic?)),
         Value(TupleValue(inputs)),
-        just(output, Value(TupleValue()))
+        maybe(output, o ref=> Value(TupleValue(ValueList(o))), () => Value(TupleValue()))
     ));
 }
 
@@ -284,8 +290,11 @@ externalCodePointerInputTypes(x:Value) {
         genericError("not an external code pointer type: ", x);
     var sym = typeSymbol(x);
     return match(sym.params[2],
-        TupleValue, x => x.elements,
-        MatchDefault, x => ValueList(x),
+        TupleValue, t => t.elements,
+        MatchDefault, _ => {
+            genericError("external code pointer type's input types must be in a tuple: ", x);
+            return ValueList();
+        }
     );
 }
 
@@ -293,7 +302,22 @@ externalCodePointerOutputType(x:Value) {
     if (not externalCodePointerType?(x))
         genericError("not an external code pointer type: ", x);
     var sym = typeSymbol(x);
-    return if (variantIs?(sym.params[3], TupleValue)) nothing(Value) else Maybe(sym.params[3]);
+    return match(sym.params[3],
+        TupleValue, t => {
+            if (size(t.elements) > 1)
+                genericError("external code pointer type may only have zero or one output types: ", x);
+
+            if (size(t.elements) == 1) {
+                return Maybe(t.elements[0]);
+            } else {
+                return nothing(Value);
+            }
+        },
+        MatchDefault, x => {
+            genericError("external code pointer type's output types must be in a tuple: ", x);
+            return nothing(Value);
+        },
+    );
 }
 
 

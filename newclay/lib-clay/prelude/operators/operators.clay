@@ -239,16 +239,16 @@ define call;
 overload call(#'f, forward ..args) inline = forward ..'f(..args);
 
 // non-variadic external code pointer
-overload call(f:ExternalCodePointer['ABI, false, 'I, 'O], ..args:'Args) inline
-    : ..externalOutputTypes('O)
-    | 'I == [..'Args]
+overload call(f:ExternalCodePointer['ABI, false, [..'I], [..'O]], ..args:'Args) inline
+    : ..'O
+    | [..'I] == [..'Args]
     = ..cExternalCall(f, ..args);
 
 // variadic external code pointer
-overload call(f:ExternalCodePointer['ABI, true, 'I, 'O], ..args:'Args) inline
-    : ..externalOutputTypes('O)
+overload call(f:ExternalCodePointer['ABI, true, [..'I], [..'O]], ..args:'Args) inline
+    : ..'O
     | allValues?(RequireExternalPOD?, ..'Args)
-      and 'I == [..takeValues(staticTupleSize('I), ..'Args)]
+      and 'I == [..takeValues(countValues(..'I), ..'Args)]
     = ..cExternalCall(f, ..args);
 
 
