@@ -1,0 +1,42 @@
+// XXX pthreads-specific
+import libc.(abort);
+import show.*;
+import unix.pthreads.*;
+import unsafe.valuesemantics.(CompositeType, DestroyDoesNothing?);
+import unsafe.memory.(allocateValue, freeValue);
+
+private destructorPointer(#'T)
+    = just(CCodePointer[[OpaquePointer], []](
+        (p) -> { freeValue(Pointer['T](p)); }
+    ));
+
+define ThreadLocal['T, 'C] as CompositeType(key:PthreadKeyT, constructor:'C);
+
+overload ThreadLocal(forward constructor:'C) {
+    var key = PthreadKeyT();
+    if (pthread_key_create(&key, destructorPointer('T)) != 0) {
+        show("failed to initialize ThreadLocal variables");
+        abort();
+    }
+    return ThreadLocal[type(-> constructor()), 'C](key, constructor);
+}
+
+overload #DestroyDoesNothing?(ThreadLocal['T, 'C]) = true;
+overload #BitwiseMoved?(ThreadLocal['T, 'C]) = false;
+
+overload unpack(tvar:ThreadLocal['T, 'C])
+    = maybe(pthread_getspecific(tvar.key),
+        (p) -> ref p^,
+        -> ref allocateThreadLocal(tvar),
+    );
+
+private allocateThreadLocal(tvar:ThreadLocal['T, 'C]) {
+    var p = allocateValue(tvar.constructor);
+
+    if (pthread_setspecific(tvar.key, just(OpaquePointer(p))) != 0) {
+        show("failed to allocate ThreadLocal variable");
+        abort();
+    }
+
+    return ref p^;
+}

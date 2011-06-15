@@ -111,7 +111,8 @@ class TestCase(object):
 
     def cmdline(self, clay) :
         libClay = os.path.join(testRoot, "..", "lib-clay")
-        return [clay, "-I" + self.path, "-I" + libClay] + self.buildflags + [self.testfile]
+        libContrib = os.path.join(testRoot, "..", "lib-contrib")
+        return [clay, "-I" + self.path, "-I" + libClay, "-I" + libContrib] + self.buildflags + [self.testfile]
 
     def pre_build(self) :
         pass
