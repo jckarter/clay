@@ -1740,11 +1740,12 @@ private withOneLambda(args, f) {
 
 private nullary?(arglist) = empty?(arglist.items) and nothing?(arglist.variadicItem);
 
-private oneNullaryLambda(args) {
+private oneMonomorphicLambda(args) {
     var l = oneStaticLambda(args);
-    if (not nullary?(l.value.args))
-        matchFailureError("expecting a lambda with no arguments, but received: ", l);
-    return l;
+    var inputs = monomorphicInputTypes(l);
+    if (nothing?(inputs))
+        matchFailureError("lambda must be monomorphic, but received: ", l);
+    return l, just(inputs);
 }
 
 private moduleString(args) {
@@ -1786,6 +1787,99 @@ stringSize(s) {
         inc(sz);
     return sz;
 }
+
+private maybeEvaluatePatternExpr(x, env) {
+    try {
+        return Maybe(evaluatePatternExpr(x, env));
+    } catch (ex:GenericError) {
+        // XXX this is kind of bogus just to catch unbound pattern var errors
+        return nothing(Value);
+    }
+}
+
+private maybeEvaluateMultiPatternExpr(x, env) {
+    try {
+        return Maybe(evaluateMultiExpr(*x, env));
+    } catch (ex:GenericError) {
+        // XXX this is kind of bogus just to catch unbound pattern var errors
+        return nothing(ValueList);
+    }
+}
+
+private withHead(head:Value, expr:Value) = evaluateIndexing(head, ValueList(expr));
+overload withHead(head:Value, exprs:ValueList)
+    = ValueList(mapped(x ref=> evaluateIndexing(head, ValueList(x)), exprs));
+
+[T]
+private withArgKind(maybeExpr:Maybe[T], maybeKind) = maybe(maybeExpr,
+    expr ref=> maybe(maybeKind,
+        kind ref=> {
+            var mhead = nothing(Value);
+            switch (kind) {
+            case ast.ARG_REF:
+                mhead = Maybe(getHooks().Ref);
+                break;
+            case ast.ARG_RVALUE:
+                mhead = Maybe(getHooks().Rvalue);
+                break;
+            case ast.ARG_FORWARD:
+                // not monomorphic
+                return nothing(T);
+            }
+
+            return maybe(mhead,
+                head ref=> Maybe(withHead(head, expr)),
+                () ref=> maybeExpr
+            );
+        },
+        () ref=> maybeExpr
+    ),
+);
+
+private monomorphicArgumentTypes(args:ast.ArgumentList, env:Env) {
+    var argTypes = ValueList();
+
+    for (arg in args.items) {
+        var argType = match(arg,
+            ast.BoundArgument, b ref=> maybe(b.type,
+                type ref=> withArgKind(maybeEvaluatePatternExpr(type, env), b.kind),
+            ),
+            ast.StaticArgument, s ref=> maybe(maybeEvaluatePatternExpr(s.pattern, env),
+                value ref=> Maybe(staticType(value)),
+            ),
+        );
+        if (nothing?(argType))
+            return nothing(ValueList);
+        else
+            push(argTypes, just(argType));
+    }
+
+    if (just?(args.variadicItem)) {
+        var varArgTypes = match(just(args.variadicItem),
+            ast.BoundArgument, b ref=> maybe(b.type,
+                type ref=> withArgKind(maybeEvaluateMultiPatternExpr(type, env), b.kind),
+            ),
+            ast.StaticArgument, s ref=> maybe(maybeEvaluateMultiPatternExpr(s.pattern, env),
+                values ref=> Maybe(ValueList(mapped(staticType, values))),
+            ),
+        );
+        if (nothing?(varArgTypes))
+            return nothing(ValueList);
+        else
+            push(argTypes, just(varArgTypes));
+    }
+
+    return Maybe(argTypes);
+}
+
+overload monomorphicInputTypes(_) Maybe[ValueList]
+    = nothing(ValueList);
+private monomorphicInputTypes(a:Value) Maybe[ValueList]
+    = monomorphicInputTypes(*a);
+overload monomorphicInputTypes(l:StaticLambdaValue) Maybe[ValueList]
+    = monomorphicArgumentTypes(l.value.args, l.env);
+overload monomorphicInputTypes(l:RuntimeLambdaValue) Maybe[ValueList]
+    = monomorphicArgumentTypes(l.value.args, l.env);
 
 evaluatePrimitive(kind, args) {
     return withStaticCall(Value(Primitive(kind)), args, () ref=> {
@@ -2095,14 +2189,32 @@ evaluatePrimitive(kind, args) {
             );
         }
 
+        case PRIM_monomorphic? : {
+            var a = oneValue(args);
+
+            return ValueList(BoolValue(just?(monomorphicInputTypes(a))));
+        }
+
+        case PRIM_monomorphicInputTypes : {
+            var a = oneValue(args);
+
+            return maybe(monomorphicInputTypes(a),
+                types ref=> types,
+                () ref=> {
+                    genericError("value is not a monomorphic function: ", a);
+                    return ValueList();
+                },
+            );
+        }
+
         case PRIM_returns? : {
-            var l = oneNullaryLambda(args);
-            return ValueList(BoolValue(just?(rtLambdaResults(l))));
+            var l, inputTypes = ...oneMonomorphicLambda(args);
+            return ValueList(BoolValue(just?(rtLambdaResults(l, inputTypes))));
         }
 
         case PRIM_type : {
-            var l = oneNullaryLambda(args);
-            return maybe(rtLambdaResults(l),
+            var l, inputTypes = ...oneMonomorphicLambda(args);
+            return maybe(rtLambdaResults(l, inputTypes),
                 vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
                 ()   ref=> ValueList(),
             );
@@ -2121,10 +2233,10 @@ evaluatePrimitive(kind, args) {
         }
 
         case PRIM_defined? : {
-            var l = oneNullaryLambda(args);
+            var l, inputTypes = ...oneMonomorphicLambda(args);
             var defined? = true;
             try {
-                rtLambdaResults(l);
+                rtLambdaResults(l, inputTypes);
             } catch (e:MatchError) {
                 //displayError(e);
                 defined? = false;
@@ -2143,7 +2255,7 @@ evaluatePrimitive(kind, args) {
 
         case PRIM_staticAssert : {
             if (empty?(args))
-                matchFailureError("StaticAssert requires at least one argument");
+                matchFailureError("staticAssert requires at least one argument");
             if (args[0] == Value(BoolValue(false))) {
                 if (size(args) == 1)
                     throw StaticAssertionError(ValueList(StringValue(String("assertion failure"))));
@@ -2166,7 +2278,7 @@ evaluatePrimitive(kind, args) {
 
         case PRIM_callDefinedForSymbol? : {
             if (size(args) < 1)
-                matchFailureError("CallDefinedForSymbol? requires at least one argument");
+                matchFailureError("callDefinedForSymbol? requires at least one argument");
             var callable = args[0];
             var callArgs = map(refTypeToRTArgument, slicedFrom(args, 1));
 
@@ -2176,12 +2288,12 @@ evaluatePrimitive(kind, args) {
 
         case PRIM_staticCallDefined? : {
             if (size(args) < 1)
-                matchFailureError("StaticCallDefined? requires at least one argument");
+                matchFailureError("staticCallDefined? requires at least one argument");
             var callable = args[0];
             var callArgs = ValueList(slicedFrom(args,1));
 
             if (variantIs?(callable, Primitive))
-                matchFailureError("StaticCallDefined? for primitives not yet supported");
+                matchFailureError("staticCallDefined? for primitives not yet supported");
 
             var callDefined? = ifStaticOverload(getProgram(), callable, callArgs,
                 (o, e) => true,
@@ -2307,7 +2419,7 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-private rtLambdaResults(l:StaticLambdaValue) {
+private rtLambdaResults(l:StaticLambdaValue, inputTypes:ValueList) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var returns = SpecializationReturns();

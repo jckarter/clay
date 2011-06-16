@@ -1,0 +1,53 @@
+import __primitives__.(monomorphic?, monomorphicInputTypes);
+import show.(show);
+
+main() {
+    show(#monomorphic?((x) -> x)); ////false
+    show(#monomorphic?((x:Int) -> x)); ////true
+    show(#monomorphic?((ref x:Int) -> x)); ////true
+    show(#monomorphic?((rvalue x:Int) -> x)); ////true
+    show(#monomorphic?((forward x:Int) -> x)); ////false
+    ////Int
+    ////Char
+    show(..#monomorphicInputTypes((x:Int, y:Char) -> x));
+
+    show("--"); ////--
+    ////Ref[Int]
+    ////Rvalue[Char]
+    show(..#monomorphicInputTypes((ref x:Int, rvalue y:Char) -> x));
+
+    testWithPatternVariables(Int, Char, Float64);
+}
+
+testWithPatternVariables(#'T, ..#'TT) {
+    show("--"); ////--
+    show(#monomorphic?((x:'T) -> x)); ////true
+    show(..#monomorphicInputTypes((x:'T) -> x)); ////Int
+    show(..#monomorphicInputTypes((ref x:'T) -> x)); ////Ref[Int]
+
+    show("--"); ////--
+    show(#monomorphic?((#'T) -> 0)); ////true
+    show(..#monomorphicInputTypes((#'T) -> 0)); ////Static[Int]
+
+    show("--"); ////--
+    show(#monomorphic?((..x:'TT) -> x)); ////true
+    show(#monomorphic?((ref ..x:'TT) -> x)); ////true
+    show(#monomorphic?((rvalue ..x:'TT) -> x)); ////true
+    show(#monomorphic?((forward ..x:'TT) -> x)); ////false
+    ////Char
+    ////Float64
+    ////Ref[Char]
+    ////Ref[Float64]
+    ////Rvalue[Char]
+    ////Rvalue[Float64]
+    show(..#monomorphicInputTypes((..x:'TT) -> x));
+    show(..#monomorphicInputTypes((ref ..x:'TT) -> x));
+    show(..#monomorphicInputTypes((rvalue ..x:'TT) -> x));
+
+    show("--"); ////--
+    show(#monomorphic?((..#'TT) -> 0)); ////true
+    ////Static[Char]
+    ////Static[Float64]
+    show(..#monomorphicInputTypes((..#'TT) -> 0));
+}
+

@@ -401,6 +401,9 @@ enum PrimitiveKind {
     PRIM_commandlineVariable,
 
     PRIM_llMangle,
+
+    PRIM_monomorphic?,
+    PRIM_monomorphicInputTypes,
 }
 
 record Primitive = referenceType(
