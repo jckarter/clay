@@ -40,11 +40,14 @@ overload end(x:Array['T, 'n]) inline = pointerCast(ContiguousCoordinate['T], &x)
 // indexing
 //
 
-overload index(forward a:Array['T, 'n], i:'I) inline | Integer?('I)
-    = forward cIndex('T, a, i);
+overload index(forward a:Array['T, 'n], i:'I) inline | Integer?('I) {
+    assert(-> i >= 'I(0) and UInt(i) < UInt('n), Array['T, 'n], " index out of bounds");
+    return forward cIndex('T, a, i);
+}
 overload index(rvalue a:Array['T, 'n], i:'I) inline --> returned:'T
     | Integer?('I) and not DestroyDoesNothing?('T)
 {
+    assert(-> i >= 'I(0) and UInt(i) < UInt('n), Array['T, 'n], " index out of bounds");
     ref ra = rvalueToRef(a);
     returned <-- refToRvalue(cIndex('T, ra, i));
     var n = 0u;
