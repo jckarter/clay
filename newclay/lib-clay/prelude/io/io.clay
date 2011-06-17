@@ -12,7 +12,7 @@ define read1;
 
 #Source?('S, ..'E) = Source?('S) and [..sourceValueType('S)] == [..'E];
 overload #Source?('S) = Regular?('S) and callDefined?(read1, Ref['S]);
-#sourceValueType('S) = ..type(-> ..required(read1(arg(Ref['S]))));
+#sourceValueType('S) = ..type((ref s:'S) -> ..required(read1(s)));
 
 
 
@@ -56,9 +56,9 @@ overload #Iterator?('I) = Regular?('I)
     and callDefined?(incFront, Ref['I]);
 
 #MutableIterator?('I)
-    = Iterator?('I) and allValues?(Ref?, ..type(-> forward ..front(arg('I))));
+    = Iterator?('I) and allValues?(Ref?, ..type((i:'I) -> forward ..front(i)));
 
-#iteratorValueType('I) | Iterator?('I) = ..type(-> ..front(arg('I)));
+#iteratorValueType('I) | Iterator?('I) = ..type((i:'I) -> ..front(i));
 
 
 //
@@ -149,7 +149,7 @@ overload write1(ref i:'I, forward ..v:'E) inline
 
 define size;
 
-#Sized?('I) = definedWithType?(-> size(arg('I)), UInt);
+#Sized?('I) = definedWithType?((i:'I) -> size(i), UInt);
 #SizedIterator?('I) = Iterator?('I) and Sized?('I);
 #SizedSource?('I) = Source?('I) and Sized?('I);
 #SizedSink?('I) = Sink?('I) and Sized?('I);

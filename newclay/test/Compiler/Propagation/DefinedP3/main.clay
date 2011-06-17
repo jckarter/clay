@@ -1,0 +1,21 @@
+import show.(show);
+import __primitives__.*;
+
+#Foo?('T) = 'T == Int8 or 'T == Int64;
+
+define foo;
+overload foo(x:'T) | Foo?('T) = x;
+overload foo(ref x:Int) = x;
+overload foo(rvalue x:Char) = x;
+
+main() {
+    show(
+        #defined?((x:Int8)        -> foo(x)), // true
+        #defined?((x:Int64)       -> foo(x)), // true
+        #defined?((x:Int)         -> foo(x)), // false
+        #defined?((ref x:Int)     -> foo(x)), // true
+        #defined?((x:Char)        -> foo(x)), // false
+        #defined?((rvalue x:Char) -> foo(x)), // true
+    );
+}
+

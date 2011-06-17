@@ -6,7 +6,7 @@ import __primitives__.(
 );
 import meta.symbols.(symbolWithTag?, symbol?, private symbolBodyWithTag?);
 import unsafe.valuesemantics.(POD?);
-import values.(allValues?, mapValues);
+import values.(allValues?, mapValues, countValues);
 
 public import __primitives__.(staticCallDefined?);
 
@@ -75,6 +75,22 @@ overload call(c:CodePointer[[..'I], [..'O]], forward ..args) inline
 
 overload ExternalCodePointer['A, false, [..'I], [..'O]](#'f) inline
     | allValues?(POD?, ..'I, ..'O)
-      and definedWithType?(-> ..'f(..arg(..'I)), ..'O)
+      and definedWithType?((..args:'I) -> ..'f(..args), ..'O)
     = makeExternalCodePointer(#'f, 'A, ..'I);
+
+
+//
+// XXX
+// type-to-argument conversions for CodePointer() constructor
+// ideally you'd be able to say type((x:Ref[Int]) -> foo(x)) and have x be a
+// ref Int, but that's not the case yet.
+//
+
+private define arg;
+overload arg(#'T)         --> const  x:'T __c__ """abort();""";
+overload arg(#Const['T])  --> const  x:'T __c__ """abort();""";
+overload arg(#Ref['T])    --> ref    x:'T __c__ """abort();""";
+overload arg(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
+
+overload arg(..#'T) | countValues(..'T) != 1 = forward ..mapValues(arg, ..'T);
 
