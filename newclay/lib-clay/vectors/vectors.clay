@@ -85,10 +85,14 @@ overload copy(a:Vector['T]) inline = Vector['T](a);
 overload size(v:Vector['T]) inline = v.size;
 overload index(/*not rvalue*/ forward v:Vector['T], i:'I) inline
     | Integer?('I)
-    = forward v.data[i];
+{
+    assert(-> i >= 'I(0) and UInt(i) < v.size, Vector['T], " index out of bounds");
+    return forward v.data[i];
+}
 
 overload index(rvalue v:Vector['T], i:'I) inline {
     var w = v;
+    assert(-> i >= 'I(0) and UInt(i) < w.size, Vector['T], " index out of bounds");
     return w.data[i];
 }
 

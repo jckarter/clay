@@ -99,12 +99,18 @@ overload begin(i:CoordinateRange['C]) inline = i.begin;
 overload end(i:CoordinateRange['C]) inline = i.end;
 
 overload hasFront?(i:CoordinateRange['C]) inline = i.begin < i.end;
-overload front(i:CoordinateRange['C]) inline = forward ..i.begin^;
+overload front(i:CoordinateRange['C]) inline {
+    assert(-> i.begin < i.end, "accessing front() of invalid ", CoordinateRange['C]);
+    return forward ..i.begin^;
+}
 overload incFront(ref i:CoordinateRange['C]) inline { inc(i.begin); }
 
 overload back(i:CoordinateRange['C]) inline
     | BidirectionalCoordinate?('C)
-    = forward ..(var preend = i.end; dec(preend); preend)^;
+{
+    assert(-> i.begin < i.end, "accessing back() of invalid ", CoordinateRange['C]);
+    return forward ..(var preend = i.end; dec(preend); preend)^;
+}
 overload incBack(ref i:CoordinateRange['C]) inline
     | BidirectionalCoordinate?('C)
     { dec(i.end); }
@@ -130,12 +136,19 @@ overload iterator(x:'S) | CoordinateSequence?('S)
 overload size(x:'S) | CoordinateSequence?('S) and defined?(-> end(x) - begin(x))
     = UInt(end(x) - begin(x));
 
-overload index(x:'S, n)
-    | CoordinateSequence?('S) and defined?(-> begin(x) + n)
-    = forward ..dereference(begin(x) + n);
+overload index(x:'S, n:'I)
+    | CoordinateSequence?('S) and Integer?('n) and defined?(-> begin(x) + n)
+{
+    assert(-> n >= 'I(0) and UInt(n) < size(x), 'S, " index out of range");
+    return forward ..dereference(begin(x) + n);
+}
 
-overload front(x:'S) | CoordinateSequence?('S) = forward ..dereference(begin(x));
+overload front(x:'S) | CoordinateSequence?('S) {
+    assert(-> size(x) > 0u, "accessing front() of empty ", 'S);
+    return forward ..dereference(begin(x));
+}
 overload back(x:'S) | CoordinateSequence?('S) {
+    assert(-> size(x) > 0u, "accessing back() of empty ", 'S);
     var c = end(x);
     dec(c);
     return forward ..c^;
