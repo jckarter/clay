@@ -2209,12 +2209,12 @@ evaluatePrimitive(kind, args) {
 
         case PRIM_returns? : {
             var l, inputTypes = ...oneMonomorphicLambda(args);
-            return ValueList(BoolValue(just?(rtLambdaResults(l, inputTypes))));
+            return ValueList(BoolValue(just?(rtLambdaResults(l))));
         }
 
         case PRIM_type : {
             var l, inputTypes = ...oneMonomorphicLambda(args);
-            return maybe(rtLambdaResults(l, inputTypes),
+            return maybe(rtLambdaResults(l),
                 vars ref=> ValueList(map(v => rtReturnToRefType(v), vars)),
                 ()   ref=> ValueList(),
             );
@@ -2236,7 +2236,7 @@ evaluatePrimitive(kind, args) {
             var l, inputTypes = ...oneMonomorphicLambda(args);
             var defined? = true;
             try {
-                rtLambdaResults(l, inputTypes);
+                rtLambdaResults(l);
             } catch (e:MatchError) {
                 //displayError(e);
                 defined? = false;
@@ -2419,14 +2419,64 @@ qualifiedValueString(symbol:Value) {
     return move(ident);
 }
 
-private rtLambdaResults(l:StaticLambdaValue, inputTypes:ValueList) {
+private argKind(kind:Maybe[ast.ArgumentKind]) {
+    return maybe(kind,
+        k ref=> {
+            switch (k) {
+            case ast.ARG_REF:
+                return RT_VALUE_REF;
+            case ast.ARG_RVALUE:
+                return RT_VALUE_RVALUE;
+            case ast.ARG_CONST:
+                return RT_VALUE_CONST;
+            default:
+                assert(false, "invalid monomorphic argument kind");
+                return RT_VALUE_CONST;
+            }
+        },
+        () ref=> RT_VALUE_CONST,
+    );
+}
+
+private argRTValue(arg:ast.BoundArgument, env)
+    = RTValue(argKind(arg.kind), evaluatePatternExpr(just(arg.type), env), ReferenceVariable(), arg.name);
+
+private argRTValueList(arg:ast.BoundArgument, env) {
+    var types = evaluateMultiExpr(*arg.type, env);
+    var kind = argKind(arg.kind);
+    return RTValueList(map(t ref=> RTValue(kind, t, ReferenceVariable()), types), arg.name);
+}
+
+private bindMonomorphicArgs(l:StaticLambdaValue) {
+    var env = newEnv(l.env);
+    for (arg in l.value.args.items) {
+        match(arg,
+            ast.BoundArgument, b ref=> {
+                envAdd(env, b.name, argRTValue(b, env));
+            },
+            ast.StaticArgument, s ref=> {},
+        );
+    }
+    maybe(l.value.args.variadicItem, arg ref=> {
+        match(arg,
+            ast.BoundArgument, b ref=> {
+                envAdd(env, b.name, argRTValueList(b, env));
+            },
+            ast.StaticArgument, s ref=> {},
+        );
+    });
+    return env;
+}
+
+private rtLambdaResults(l:StaticLambdaValue) {
     var body = Vector[ir.Node]();
     var complete? = false;
     var returns = SpecializationReturns();
+    var env = bindMonomorphicArgs(l);
     var s = SpecializationContext(&body, &complete?, &returns);
-    addEnvRvalues(s, l.env);
+    addEnvRvalues(s, env);
 
-    return analyzeCodeBody(s, l.env, l.value.body);
+    return analyzeCodeBody(s, env, l.value.body);
 }
 
 private addEnvRvalues(s, envParent) {}
