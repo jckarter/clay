@@ -3,6 +3,8 @@ import __primitives__.(
     makeCodePointer,
     makeExternalCodePointer,
     callCodePointer,
+    monomorphic?,
+    monomorphicInputTypes,
 );
 import meta.symbols.(symbolWithTag?, symbol?, private symbolBodyWithTag?);
 import unsafe.valuesemantics.(POD?);
@@ -69,6 +71,10 @@ overload CodePointer[[..'I], [..'O]](#'f) inline
     | definedWithType?(-> forward ..'f(..arg(..'I)), ..'O)
     = makeCodePointer(#'f, ..'I);
 
+overload CodePointer(#'f) inline
+    | monomorphic?('f)
+    = makeCodePointer(#'f, ..#monomorphicInputTypes('f));
+
 overload call(c:CodePointer[[..'I], [..'O]], forward ..args) inline
     | defined?(-> forward callCodePointer(c, ..args))
     = forward ..callCodePointer(c, ..args);
@@ -77,6 +83,16 @@ overload ExternalCodePointer['A, false, [..'I], [..'O]](#'f) inline
     | allValues?(POD?, ..'I, ..'O)
       and definedWithType?((..args:'I) -> ..'f(..args), ..'O)
     = makeExternalCodePointer(#'f, 'A, ..'I);
+
+overload CCodePointer(#'f) inline
+    | monomorphic?('f)
+      and allValues?(POD?, ..monomorphicInputTypes('f))
+    = makeExternalCodePointer(#'f, CdeclABI, ..#monomorphicInputTypes('f));
+
+overload StdcallCodePointer(#'f) inline
+    | monomorphic?('f)
+      and allValues?(POD?, ..monomorphicInputTypes('f))
+    = makeExternalCodePointer(#'f, StdcallABI, ..#monomorphicInputTypes('f));
 
 
 //

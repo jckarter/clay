@@ -14,7 +14,6 @@ define read1;
 overload #Source?('S) = Regular?('S) and callDefined?(read1, Ref['S]);
 #sourceValueType('S) = ..type((ref s:'S) -> ..required(read1(s)));
 
-
 
 //
 // sink operations
