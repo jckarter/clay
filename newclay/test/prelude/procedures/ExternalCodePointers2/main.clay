@@ -1,0 +1,20 @@
+import ctypes.*;
+import unsafe.coordinates.(begin);
+import show.(show);
+
+alias QsortComparator = CCodePointer[[OpaquePointer, OpaquePointer], [CInt]];
+external qsort(base:OpaquePointer, nel:CSizeT, width:CSizeT, compar:QsortComparator);
+
+main() {
+    var numbers = Array[Int, 5](3, 0, 2, 4, 1);
+
+    qsort(
+        OpaquePointer(begin(numbers)), 5u, CSizeT(typeSize(Int)),
+        CCodePointer((pa:OpaquePointer, pb:OpaquePointer) ->
+            CInt(Pointer[Int](pb)^ - Pointer[Int](pa)^)
+        )
+    );
+
+    for (n in numbers)
+        show(n);
+}
