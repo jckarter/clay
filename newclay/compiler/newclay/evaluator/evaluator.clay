@@ -2442,7 +2442,7 @@ private argRTValue(arg:ast.BoundArgument, env)
     = RTValue(argKind(arg.kind), evaluatePatternExpr(just(arg.type), env), ReferenceVariable(), arg.name);
 
 private argRTValueList(arg:ast.BoundArgument, env) {
-    var types = evaluateMultiExpr(*arg.type, env);
+    var types = evaluateMultiExpr(*just(arg.type), env);
     var kind = argKind(arg.kind);
     return RTValueList(map(t ref=> RTValue(kind, t, ReferenceVariable()), types), arg.name);
 }
