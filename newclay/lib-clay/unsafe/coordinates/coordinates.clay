@@ -65,10 +65,10 @@ overload subtract(a:ContiguousCoordinate['A], b:ContiguousCoordinate['A]) inline
 overload #Coordinate?('C) = Regular?('C)
     and callDefined?(dereference, 'C)
     and callDefined?(inc, Ref['C]);
-#coordinateValueType('C) = ..type(-> ..dereference(arg('C)));
+#coordinateValueType('C) = ..type((c:'C) -> ..dereference(c));
 
 #CoordinateSequence?('S) = callDefined?(begin, 'S) and callDefined?(end, 'S);
-#sequenceCoordinateType('S) | CoordinateSequence?('S) = type(-> begin(arg('S)));
+#sequenceCoordinateType('S) | CoordinateSequence?('S) = type((s:'S) -> begin(s));
 
 #ContiguousCoordinate?('X) = false;
 overload #ContiguousCoordinate?(ContiguousCoordinate['T]) = true;

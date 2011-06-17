@@ -27,7 +27,7 @@ initializeUnderlying(#'T) inline --> returned:'T
 }
 overload initializeUnderlying(#'T, forward orig:'U) inline --> returned:'T
     | HasUnderlyingType?('T)
-      and defined?(-> { arg(Ref['U]) <-- orig; })
+      and defined?((ref u:'U) -> { u <-- orig; })
       and 'U == underlyingType('T)
 {
     underlying(returned) <-- orig;

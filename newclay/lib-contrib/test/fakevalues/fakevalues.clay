@@ -1,0 +1,24 @@
+import values.(countValues, mapValues);
+
+
+//
+// type-to-argument and type-to-return value conversions
+// these should only be used as shims for type propagation tests and never in real code
+//
+
+define arg;
+overload arg(#'T)         --> const  x:'T __c__ """abort();""";
+overload arg(#Const['T])  --> const  x:'T __c__ """abort();""";
+overload arg(#Ref['T])    --> ref    x:'T __c__ """abort();""";
+overload arg(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
+
+overload arg(..#'T) | countValues(..'T) != 1 = forward ..mapValues(arg, ..'T);
+
+define ret;
+overload ret(#'T)         -->        x:'T __c__ """abort();""";
+overload ret(#Const['T])  --> const  x:'T __c__ """abort();""";
+overload ret(#Ref['T])    --> ref    x:'T __c__ """abort();""";
+overload ret(#Rvalue['T]) --> rvalue x:'T __c__ """abort();""";
+
+overload ret(..#'T) | countValues(..'T) != 1 = forward ..mapValues(ret, ..'T);
+

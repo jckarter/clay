@@ -1,3 +1,4 @@
+import test.fakevalues.(arg);
 import show.(show);
 
 foo() = (throw 0) and arg(Bool);

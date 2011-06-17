@@ -1,6 +1,7 @@
 import meta.lambdas.*;
 import meta.statics.*;
 import meta.symbols.*;
+import test.fakevalues.(arg); // XXX
 import values.*;
 
 
