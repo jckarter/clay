@@ -1,0 +1,130 @@
+import containers.(Container?, push, resize);
+import io.transformers.(SlicedUpto);
+import unsafe.coordinates.(Coordinate?, RandomAccessCoordinate?, CoordinateRange);
+import vectors.(Vector);
+
+
+//
+// splitting interface
+//
+
+define getSplit;
+define resetSplit;
+
+detachSplit(ref i) {
+    var split = getSplit(i);
+    resetSplit(i);
+    return split;
+}
+
+
+//
+// SplittingCoordinateRange
+//
+
+define SplittingCoordinateRange['C] as RecordType(
+    fromBegin:'C,
+    begin:'C,
+    end:'C,
+);
+
+overload #Savable?(SplittingCoordinateRange['C]) = true;
+overload #Reliable?(SplittingCoordinateRange['C]) = Reliable?('C);
+
+overload hasFront?(r:SplittingCoordinateRange['C]) | Coordinate?('C) = r.begin < r.end;
+overload front(r:SplittingCoordinateRange['C]) | Coordinate?('C) {
+    assert(-> r.begin < r.end, "invalid ", SplittingCoordinateRange['C]);
+    return forward ..(r.begin^);
+}
+overload incFront(ref r:SplittingCoordinateRange['C])
+    | Coordinate?('C)
+    { inc(r.begin); }
+
+overload seekFront(ref r:SplittingCoordinateRange['C], distance:UInt)
+    | RandomAccessCoordinate?('C)
+    { r.begin += distance; }
+
+overload getSplit(r:SplittingCoordinateRange['C]) {
+    assert(-> r.fromBegin <= r.begin, "invalid ", SplittingCoordinateRange['C]);
+    return CoordinateRange(r.fromBegin, r.begin);
+}
+
+overload resetSplit(ref r:SplittingCoordinateRange['C]) {
+    r.fromBegin = r.begin;
+}
+
+
+//
+// SplittingIterator (for savable iterators)
+//
+
+define SplittingIterator['I] as RecordType(
+    originalIterator:'I,
+    iterator:'I,
+    distance:UInt,
+);
+
+overload #Savable?(SplittingIterator['I]) = true;
+overload #Reliable?(SplittingIterator['I]) = Reliable?('I);
+
+overload hasFront?(i:SplittingIterator['I]) | Iterator?('I)
+    = hasFront?(i.iterator);
+overload front(i:SplittingIterator['I]) | Iterator?('I)
+    = forward ..front(i.iterator);
+overload incFront(ref i:SplittingIterator['I]) | Iterator?('I) {
+    incFront(i.iterator);
+    inc(i.distance);
+}
+
+overload seekFront(ref i:SplittingIterator['I], distance:UInt) | SeekableIterator?('I) {
+    seekFront(i.iterator, distance);
+    i.distance += distance;
+}
+
+overload getSplit(i:SplittingIterator['I]) = SlicedUpto(i.originalIterator, i.distance);
+overload resetSplit(ref i:SplittingIterator['I]) {
+    i.originalIterator = save(i.iterator);
+    i.distance = 0u;
+}
+
+
+//
+// SplittingSource (for non-savable iterators)
+//
+
+define SplittingSource['S, 'Container] as RecordType(
+    front:'Container,
+    source:'S,
+);
+
+overload read1(ref s:SplittingSource['S, 'C]) {
+    return maybe(read1(s.source),
+        (..elt) -> {
+            push(s.front, ..elt);
+            return just(..elt);
+        }
+    );
+}
+
+overload getSplit(s:SplittingSource['S, 'C]) = s.front;
+
+overload resetSplit(ref s:SplittingSource['S, 'C]) {
+    resize(s.front, 0u);
+}
+
+
+//
+// Splitting adapter
+//
+
+Splitting(forward s:'S) inline | Source?('S)
+    = SplittingSource['S, Vector[sourceValueType('S)]](Vector[sourceValueType('S)](), s);
+overload Splitting(forward i:'I) inline | Iterator?('I) and Savable?('I) {
+    var savedi = save(i);
+    return SplittingIterator['I](savedi, savedi);
+}
+overload Splitting(forward r:CoordinateRange['C]) inline | Coordinate?('C) {
+    var begin, end = ..*r;
+    return SplittingCoordinateRange['C](begin, begin, end);
+}
+

@@ -1,0 +1,26 @@
+import io.splitting.(Splitting, detachSplit);
+import printing.(printlnRepr, println);
+import vectors.(Vector);
+
+powerof2?(x:Int) = bitand(x, x - 1) == 0;
+
+getpowerof2(ref splitter) {
+    while (maybe(read1(splitter),
+        (x) -> not powerof2?(x),
+        -> false,
+    ));
+
+    return detachSplit(splitter);
+}
+
+main() {
+    var range = Range(1, 17), iter = Splitting(range);
+
+    while (true) {
+        var line = getpowerof2(iter);
+        if (empty?(line))
+            break;
+        printlnRepr(Vector(line));
+    }
+    println("fin");
+}

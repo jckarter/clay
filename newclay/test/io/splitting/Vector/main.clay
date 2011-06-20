@@ -1,0 +1,29 @@
+import io.splitting.(Splitting, detachSplit);
+import printing.(printlnRepr, println);
+import strings.(String);
+import strings.encodings.utf8.(UTF8);
+import vectors.(Vector);
+
+getline(ref splitter) {
+    while (maybe(read1(splitter),
+        (c) -> c != '\n',
+        -> false,
+    ));
+
+    return detachSplit(splitter);
+}
+
+main() {
+    var input = Vector[Char]("fee\nfie\nfoe\nfum\n"),
+        iter = Splitting(iterator(input));
+
+    printlnRepr(#type(-> iter));
+
+    while (true) {
+        var line = getline(iter);
+        if (empty?(line))
+            break;
+        printlnRepr(String(line));
+    }
+    println("fin");
+}

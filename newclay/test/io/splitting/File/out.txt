@@ -1,0 +1,5 @@
+String("fee\n")
+String("fie\n")
+String("foe\n")
+String("fum\n")
+fin
