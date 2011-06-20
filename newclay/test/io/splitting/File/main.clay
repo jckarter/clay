@@ -1,0 +1,26 @@
+import io.stdio.(InputFile);
+import io.splitting.(Splitting, detachSplit);
+import printing.(printlnRepr, println);
+import strings.(String);
+import strings.encodings.utf8.(UTF8);
+
+getline(ref splitter) {
+    while (maybe(read1(splitter),
+        (c) -> c != '\n',
+        -> false,
+    ));
+
+    return detachSplit(splitter);
+}
+
+main() {
+    var file = UTF8(InputFile("foo.txt")), src = Splitting(source(file));
+
+    while (true) {
+        var line = getline(src);
+        if (empty?(line))
+            break;
+        printlnRepr(String(line));
+    }
+    println("fin");
+}

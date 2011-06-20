@@ -52,15 +52,14 @@ overload size(x:Reversed['I]) inline
     | SizedIterator?('I)
     = size(*x);
 
-overload #Savable?(Reversed['I]) = 'I;
-overload #Reliable?(Reversed['I]) = 'I;
+overload #Savable?(Reversed['I]) = Savable?('I);
+overload #Reliable?(Reversed['I]) = Reliable?('I);
 
 
 //
 // zipped
 //
 
-// XXX capture sequences
 define Zipped[..'I] as NewType(Tuple[..'I]);
 
 private initializeZipped(forward ..seqs:'SS) inline = Zipped[..'SS]([..seqs]);
