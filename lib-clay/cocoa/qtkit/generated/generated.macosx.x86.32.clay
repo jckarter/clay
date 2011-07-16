@@ -6,6 +6,7 @@ import cocoa.objc.*;
 import libc.*;
 import cocoa.foundation.*;
 import cocoa.appkit.*;
+import cocoa.applicationservices.*;
 import cocoa.quartzcore.*;
 
 private alias OpaquePointer = RawPointer;
