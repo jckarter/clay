@@ -11,7 +11,7 @@ endif
 " Include ! and ? in keyword characters
 setlocal iskeyword=33,48-57,63,65-90,95,97-122
 
-syn keyword clayKeyword public private import record variant instance procedure overload external alias callbyname inline enum var if else goto return while switch break continue for try catch throw symbol define as
+syn keyword clayKeyword public private import record variant instance procedure overload external alias callbyname inline enum var if else goto return while switch break continue for try catch throw define as
 
 syn keyword clayLabelKeyword case default
 syn keyword clayOperatorKeyword and or not new static forward ref as in lvalue rvalue const
