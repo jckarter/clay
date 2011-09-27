@@ -50,7 +50,7 @@ command! -nargs=1 LibClayAlternate :call SelectLibClayAlternate(<args>)
 
 function! ClayModuleFileNames(path)
     let names = [a:path . ".clay"]
-    let oses = ["unix", "windows", "linux", "macosx"]
+    let oses = ["unix", "windows", "linux", "freebsd", "macosx"]
     let cpus = ["x86", "ppc", "arm"]
     let bits = ["32", "64"]
     for bit in bits
