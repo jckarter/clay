@@ -1,0 +1,121 @@
+import unix.*;
+
+errno() = __error()^;
+
+alias EPERM           = 1;          /* Operation not permitted */
+alias ENOENT          = 2;          /* No such file or directory */
+alias ESRCH           = 3;          /* No such process */
+alias EINTR           = 4;          /* Interrupted system call */
+alias EIO             = 5;          /* Input/output error */
+alias ENXIO           = 6;          /* Device not configured */
+alias E2BIG           = 7;          /* Argument list too long */
+alias ENOEXEC         = 8;          /* Exec format error */
+alias EBADF           = 9;          /* Bad file descriptor */
+alias ECHILD          = 10;         /* No child processes */
+alias EDEADLK         = 11;         /* Resource deadlock avoided */
+alias ENOMEM          = 12;         /* Cannot allocate memory */
+alias EACCES          = 13;         /* Permission denied */
+alias EFAULT          = 14;         /* Bad address */
+alias ENOTBLK         = 15;         /* Block device required */
+alias EBUSY           = 16;         /* Device busy */
+alias EEXIST          = 17;         /* File exists */
+alias EXDEV           = 18;         /* Cross-device link */
+alias ENODEV          = 19;         /* Operation not supported by device */
+alias ENOTDIR         = 20;         /* Not a directory */
+alias EISDIR          = 21;         /* Is a directory */
+alias EINVAL          = 22;         /* Invalid argument */
+alias ENFILE          = 23;         /* Too many open files in system */
+alias EMFILE          = 24;         /* Too many open files */
+alias ENOTTY          = 25;         /* Inappropriate ioctl for device */
+alias ETXTBSY         = 26;         /* Text file busy */
+alias EFBIG           = 27;         /* File too large */
+alias ENOSPC          = 28;         /* No space left on device */
+alias ESPIPE          = 29;         /* Illegal seek */
+alias EROFS           = 30;         /* Read-only filesystem */
+alias EMLINK          = 31;         /* Too many links */
+alias EPIPE           = 32;         /* Broken pipe */
+
+/* math software */
+alias EDOM            = 33;         /* Numerical argument out of domain */
+alias ERANGE          = 34;         /* Result too large */
+
+/* non-blocking and interrupt i/o */
+alias EAGAIN          = 35;         /* Resource temporarily unavailable */
+alias EWOULDBLOCK     = EAGAIN;     /* Operation would block */
+alias EINPROGRESS     = 36;         /* Operation now in progress */
+alias EALREADY        = 37;         /* Operation already in progress */
+
+/* ipc/network software -- argument errors */
+alias ENOTSOCK        = 38;         /* Socket operation on non-socket */
+alias EDESTADDRREQ    = 39;         /* Destination address required */
+alias EMSGSIZE        = 40;         /* Message too long */
+alias EPROTOTYPE      = 41;         /* Protocol wrong type for socket */
+alias ENOPROTOOPT     = 42;         /* Protocol not available */
+alias EPROTONOSUPPORT = 43;         /* Protocol not supported */
+alias ESOCKTNOSUPPORT = 44;         /* Socket type not supported */
+alias EOPNOTSUPP      = 45;         /* Operation not supported */
+alias ENOTSUP         = EOPNOTSUPP; /* Operation not supported */
+alias EPFNOSUPPORT    = 46;         /* Protocol family not supported */
+alias EAFNOSUPPORT    = 47;         /* Address family not supported by protocol family */
+alias EADDRINUSE      = 48;         /* Address already in use */
+alias EADDRNOTAVAIL   = 49;         /* Can't assign requested address */
+
+/* ipc/network software -- operational errors */
+alias ENETDOWN        = 50;         /* Network is down */
+alias ENETUNREACH     = 51;         /* Network is unreachable */
+alias ENETRESET       = 52;         /* Network dropped connection on reset */
+alias ECONNABORTED    = 53;         /* Software caused connection abort */
+alias ECONNRESET      = 54;         /* Connection reset by peer */
+alias ENOBUFS         = 55;         /* No buffer space available */
+alias EISCONN         = 56;         /* Socket is already connected */
+alias ENOTCONN        = 57;         /* Socket is not connected */
+alias ESHUTDOWN       = 58;         /* Can't send after socket shutdown */
+alias ETOOMANYREFS    = 59;         /* Too many references: can't splice */
+alias ETIMEDOUT       = 60;         /* Operation timed out */
+alias ECONNREFUSED    = 61;         /* Connection refused */
+
+alias ELOOP           = 62;         /* Too many levels of symbolic links */
+alias ENAMETOOLONG    = 63;         /* File name too long */
+
+/* should be rearranged */
+alias EHOSTDOWN       = 64;         /* Host is down */
+alias EHOSTUNREACH    = 65;         /* No route to host */
+alias ENOTEMPTY       = 66;         /* Directory not empty */
+
+/* quotas & mush */
+alias EPROCLIM        = 67;         /* Too many processes */
+alias EUSERS          = 68;         /* Too many users */
+alias EDQUOT          = 69;         /* Disc quota exceeded */
+
+/* Network File System */
+alias ESTALE          = 70;         /* Stale NFS file handle */
+alias EREMOTE         = 71;         /* Too many levels of remote in path */
+alias EBADRPC         = 72;         /* RPC struct is bad */
+alias ERPCMISMATCH    = 73;         /* RPC version wrong */
+alias EPROGUNAVAIL    = 74;         /* RPC prog. not avail */
+alias EPROGMISMATCH   = 75;         /* Program version wrong */
+alias EPROCUNAVAIL    = 76;         /* Bad procedure for program */
+
+alias ENOLCK          = 77;         /* No locks available */
+alias ENOSYS          = 78;         /* Function not implemented */
+
+alias EFTYPE          = 79;         /* Inappropriate file type or format */
+alias EAUTH           = 80;         /* Authentication error */
+alias ENEEDAUTH       = 81;         /* Need authenticator */
+alias EIDRM           = 82;         /* Identifier removed */
+alias ENOMSG          = 83;         /* No message of desired type */
+alias EOVERFLOW       = 84;         /* Value too large to be stored in data type */
+alias ECANCELED       = 85;         /* Operation canceled */
+alias EILSEQ          = 86;         /* Illegal byte sequence */
+alias ENOATTR         = 87;         /* Attribute not found */
+
+alias EDOOFUS         = 88;         /* Programming error */
+
+alias EBADMSG         = 89;         /* Bad message */
+alias EMULTIHOP       = 90;         /* Multihop attempted */
+alias ENOLINK         = 91;         /* Link has been severed */
+alias EPROTO          = 92;         /* Protocol error */
+
+alias ENOTCAPABLE     = 93;         /* Capabilities insufficient */
+
+alias ELAST           = 93;         /* Must be equal largest errno */
