@@ -42,6 +42,14 @@ unsigned long long HiResTimer::elapsedNanos() { return 0; }
 
 #else // Unices
 
+#if defined(CLOCK_PROCESS_CPUTIME_ID) && defined(__linux__)
+#    define CLOCK CLOCK_PROCESS_CPUTIME_ID
+#elif defined(CLOCK_PROF) && defined(__FreeBSD__)
+#    define CLOCK CLOCK_PROF
+#else
+#    define CLOCK CLOCK_REALTIME
+#endif
+
 #include <time.h>
 
 HiResTimer::HiResTimer()
@@ -53,7 +61,7 @@ void HiResTimer::start()
 {
     if (++running == 1) {
         struct timespec t;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+        clock_gettime(CLOCK, &t);
         startTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec;
     }
 }
@@ -62,7 +70,7 @@ void HiResTimer::stop()
 {
     if (--running == 0) {
         struct timespec t;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+        clock_gettime(CLOCK, &t);
         elapsedTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec - startTicks;
     }
 }
