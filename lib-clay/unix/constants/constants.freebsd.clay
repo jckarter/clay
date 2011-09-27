@@ -216,7 +216,7 @@ alias SIG_HOLD  = CCodePointer[(Int),()](3);
 //
 
 private alias _WSTOPPED = 0177;
-private _WSTATUS = bitwiseAnd(Int(x), 0177);
+private _WSTATUS(x) = bitwiseAnd(Int(x), 0177);
 
 alias WCOREFLAG = 0200;
 
