@@ -29,6 +29,8 @@ def getClayPlatform():
         return "windows"
     if sys.platform == "darwin":
         return "macosx"
+    if sys.platform.startswith("freebsd"):
+        return "freebsd"
     if sys.platform.startswith("linux"):
         return "linux"
 
