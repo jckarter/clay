@@ -40,6 +40,7 @@ enum CPUFamilyKind {
 enum PlatformKind {
     UNKNOWN_PLATFORM,
     LINUX_PLATFORM,
+    FREEBSD_PLATFORM,
     MACOSX_PLATFORM,
     OTHER_UNIX_PLATFORM,
     MINGW_PLATFORM,
@@ -106,6 +107,9 @@ overload printTo(stream, x:PlatformKind) {
         break;
     case LINUX_PLATFORM:
         printTo(stream, "linux");
+        break;
+    case FREEBSD_PLATFORM:
+        printTo(stream, "freebsd");
         break;
     case MACOSX_PLATFORM:
         printTo(stream, "macosx");
@@ -180,6 +184,7 @@ platformFamily(x:PlatformKind) {
     switch (x) {
     case LINUX_PLATFORM:
     case MACOSX_PLATFORM:
+    case FREEBSD_PLATFORM:
     case OTHER_UNIX_PLATFORM:
         return UNIX_PLATFORM_FAMILY;
     case MINGW_PLATFORM:
