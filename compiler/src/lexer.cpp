@@ -150,7 +150,7 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "...", "=>",
+    "<--", "...", "=>", "->",
     "==", "!=", "<=", ">=",
     "<", ">",
     "+=", "-=", "*=", "/=", "%=",

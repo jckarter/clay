@@ -12,7 +12,7 @@ main() {
     runStatement(db, "create temp table hoozits (foo text, bar integer primary key)"); 
 
     println("inserting table");
-    withTransaction(db, () ref=> {
+    withTransaction(db, () -> {
         runStatement(db, "insert into hoozits values ('lolcats', 9001)"); 
         println("inserted id ", lastInsertedRowId(db));
         runStatement(db, "insert into hoozits values ('goatse', -1)"); 
@@ -48,7 +48,7 @@ main() {
 
     var insertStmt = SqliteStatement(db, "insert into wotsits values (?, ?)", 0, "zim");
     println("inserting table");
-    withTransaction(db, () ref=> {
+    withTransaction(db, () -> {
         runStatement(insertStmt);
         runStatement(insertStmt, 1, Nothing());
         runStatement(insertStmt, 2, "zang");
@@ -63,7 +63,7 @@ main() {
 
     println("trying transaction");
     try {
-        withTransaction(db, () ref=> {
+        withTransaction(db, () -> {
             runStatement(insertStmt, 3, "zung");
             throw ExemplaryError();
         });
@@ -81,7 +81,7 @@ main() {
     }
 
     println("trying transaction again");
-    withTransaction(db, () ref=> {
+    withTransaction(db, () -> {
         runStatement(insertStmt, 3, "zung");
     });
 

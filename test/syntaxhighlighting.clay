@@ -185,11 +185,11 @@ operatorsTest() {
     x => { y; };
     (x, y) => { z; };
 
-    x ref=> y;
-    (x, y) ref=> z;
+    x -> y;
+    (x, y) -> z;
     
-    x ref=> { y; };
-    (x, y) ref=> { z; };
+    x -> { y; };
+    (x, y) -> { z; };
 
     if (x) y else z;
 

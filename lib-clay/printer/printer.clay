@@ -281,8 +281,8 @@ printReprValuesTo(stream, ...values) {
 
 printReprElementsTo(stream, seq) {
     interleave(seq,
-        () ref=> { printTo(stream, ", "); },
-        x  ref=> { printReprTo(stream, x); },
+        () -> { printTo(stream, ", "); },
+        x  -> { printReprTo(stream, x); },
     );
 }
 

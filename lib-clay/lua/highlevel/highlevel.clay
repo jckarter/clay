@@ -109,7 +109,7 @@ openLibs(x:State) {
 }
 
 call(x:State, nargs:Int, nresults:Int) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_call(x.handle, nargs, nresults);
     });
 }
@@ -289,13 +289,13 @@ pop(x:State, n:Int) { lua_pop(x.handle, n); }
 //
 
 equal(x:State, i:Int, j:Int) = safeCall(x,
-    x ref=> Bool(lua_equal(x.handle, i, j))
+    x -> Bool(lua_equal(x.handle, i, j))
 );
 
 rawEqual(x:State, i:Int, j:Int) = Bool(lua_rawequal(x.handle, i, j));
 
 lessThan(x:State, i:Int, j:Int) = safeCall(x,
-    x ref=> Bool(lua_lessthan(x.handle, i, j))
+    x -> Bool(lua_lessthan(x.handle, i, j))
 );
 
 alias equal? = equal;
@@ -309,14 +309,14 @@ alias lessThan? = lessThan;
 
 [S | CCompatibleString?(S)]
 getGlobal(x:State, name:S) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_getglobal(x.handle, cstring(name));
     });
 }
 
 [S | CCompatibleString?(S)]
 setGlobal(x:State, name:S) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_setglobal(x.handle, cstring(name));
     });
 }
@@ -327,13 +327,13 @@ setGlobal(x:State, name:S) {
 //
 
 getTable(x:State, index:Int) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_gettable(x.handle, index);
     });
 }
 
 setTable(x:State, index:Int) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_settable(x.handle, index);
     });
 }
@@ -346,7 +346,7 @@ rawSetI(x:State, index:Int, n:Int) { lua_rawseti(x.handle, index, n); }
 
 [S | CCompatibleString?(S)]
 getField(x:State, index:Int, key:S) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_getfield(x.handle, index, cstring(key));
     });
 }
@@ -409,27 +409,27 @@ releaseRef(x:State, t:Int, _ref:Int) {
 [S | CCompatibleString?(S)]
 genericError(x:State, msg:S) {
     pushString(x, msg);
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_error(x.handle);
     });
 }
 
 [S | CCompatibleString?(S)]
 typeError(x:State, index:Int, expected:S) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         luaL_typerror(x.handle, index, cstring(expected));
     });
 }
 
 [S | CCompatibleString?(S)]
 argError(x:State, index:Int, extraMsg:S) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         luaL_argerror(x.handle, index, cstring(extraMsg));
     });
 }
 
 overload argError(x:State, index:Int) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         luaL_argerror(x.handle, index, null(CChar));
     });
 }
@@ -440,35 +440,35 @@ overload argError(x:State, index:Int) {
 //
 
 checkAny(x:State, index:Int) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         luaL_checkany(x.handle, index);
     });
 }
 
 checkBoolean(x:State, index:Int) = safeCall(x,
-    x ref=> Bool(luaL_checkint(x.handle, index))
+    x -> Bool(luaL_checkint(x.handle, index))
 );
 
 checkInt(x:State, index:Int) = safeCall(x,
-    x ref=> luaL_checkint(x.handle, index)
+    x -> luaL_checkint(x.handle, index)
 );
 
 checkInteger(x:State, index:Int) = safeCall(x,
-    x ref=> luaL_checkinteger(x.handle, index)
+    x -> luaL_checkinteger(x.handle, index)
 );
 
 checkLong(x:State, index:Int) = safeCall(x,
-    x ref=> luaL_checklong(x.handle, index)
+    x -> luaL_checklong(x.handle, index)
 );
 
 checkNumber(x:State, index:Int) = safeCall(x,
-    x ref=> luaL_checknumber(x.handle, index)
+    x -> luaL_checknumber(x.handle, index)
 );
 
 checkString(x:State, index:Int) {
     var size = SizeT();
     var ptr = safeCall(x,
-        x ref=> luaL_checklstring(x.handle, index, &size)
+        x -> luaL_checklstring(x.handle, index, &size)
     );
     var ptr2 = Pointer[Char](ptr);
     // HACK: assumes that (ptr2 + size)^ is byte value 0.
@@ -478,7 +478,7 @@ checkString(x:State, index:Int) {
 [S | CCompatibleString?(S)]
 checkUserData(x:State, index:Int, tname:S) {
     return safeCall(x,
-        x ref=> luaL_checkudata(x.handle, index, cstring(tname))
+        x -> luaL_checkudata(x.handle, index, cstring(tname))
     );
 }
 
@@ -490,28 +490,28 @@ checkUserData(x:State, index:Int, tname:S) {
 [I | Integer?(I)]
 optInt(x:State, index:Int, _default:I) {
     return safeCall(x,
-        x ref=> luaL_optint(x.handle, index, Int(_default))
+        x -> luaL_optint(x.handle, index, Int(_default))
     );
 }
 
 [I | Integer?(I)]
 optInteger(x:State, index:Int, _default:I) {
     return safeCall(x,
-        x ref=> luaL_optinteger(x.handle, index, lua_Integer(_default))
+        x -> luaL_optinteger(x.handle, index, lua_Integer(_default))
     );
 }
 
 [I | Integer?(I)]
 optLong(x:State, index:Int, _default:I) {
     return safeCall(x,
-        x ref=> luaL_optlong(x.handle, index, CLong(_default))
+        x -> luaL_optlong(x.handle, index, CLong(_default))
     );
 }
 
 [T | Numeric?(T)]
 optNumber(x:State, index:Int, _default:T) {
     return safeCall(x,
-        x ref=> luaL_optnumber(x.hanlde, index, lua_Number(_default))
+        x -> luaL_optnumber(x.hanlde, index, lua_Number(_default))
     );
 }
 
@@ -526,7 +526,7 @@ optString(x:State, index:Int, rvalue _default:StringConstant) {
 overload optString(x:State, index:Int, lvalue _default:S) {
     var size = SizeT();
     var ptr = safeCall(x,
-        x ref=> luaL_optlstring(x.handle, index, cstring(_default), &size)
+        x -> luaL_optlstring(x.handle, index, cstring(_default), &size)
     );
     var ptr2 = Pointer[Char](ptr);
     // HACK: assumes that (ptr2 + size)^ is byte value 0.
@@ -573,7 +573,7 @@ private toLuaCFunction(static F) {
 
 [S, F | CCompatibleString?(S) and LuaClayFunction?(F)]
 register(x:State, name:S, static F) {
-    safeCall(x, x ref=> {
+    safeCall(x, x -> {
         lua_register(x.handle, cstring(name), toLuaCFunction(F));
     });
 }

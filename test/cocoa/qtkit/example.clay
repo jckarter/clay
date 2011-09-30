@@ -7,7 +7,7 @@ main(args) {
         error("usage: ", args[0], " filename");
     }
 
-    withAutoreleasePool(() ref=> {
+    withAutoreleasePool(() -> {
         var err = nil(NSError);
         var movie = QTMovie(QTMovie.movieWithFile_error(args[1], &err));
         if (nil?(movie)) {

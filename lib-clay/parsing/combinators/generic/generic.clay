@@ -163,13 +163,13 @@ condition(static TokenInput, predicate:Predicate) =
     input => {
         var saved = input;
         return maybe(nextToken(TokenInput, input),
-            x ref=> {
+            x -> {
                 if (predicate(x))
                     return Maybe(move(x));
                 input = move(saved);
                 return nothing(TokenType(TokenInput));
             },
-            () ref=> nothing(TokenType(TokenInput)),
+            () -> nothing(TokenType(TokenInput)),
         );
     };
 
@@ -195,7 +195,7 @@ literalString(static TokenInput, forward a:A) {
         var saved = input;
         for (item in a) {
             var parsed? = maybe(nextToken(TokenInput, input),
-                (x) ref=> (x == item),
+                (x) -> (x == item),
                 () => false,
             );
             if (not parsed?) {
@@ -252,7 +252,7 @@ choice(static TokenInput, forward first:First, forward ...rest:Rest) {
 sequence(static TokenInput, forward first:First, forward ...rest:Rest) {
     var parsers = Tuple(...convertParsers(TokenInput, first, ...rest));
     return input => {
-        alias f = (parser ref=> require(parser(input)));
+        alias f = (parser -> require(parser(input)));
         alias result = Tuple(...mapValues(f, ...unpackRef(parsers)));
         var saved = input;
         try {
@@ -299,8 +299,8 @@ modify(static TokenInput, modifier:Modifier, forward _parser:Parser) {
     return input => {
         alias T = Type(modifier(require(parser(input))));
         return maybe(parser(input),
-            (x ref=> Maybe(modifier(move(x)))),
-            () ref=> nothing(T),
+            (x -> Maybe(modifier(move(x)))),
+            () -> nothing(T),
         );
     };
 }
@@ -320,7 +320,7 @@ repeated(static TokenInput, min:Int, max:Int, forward _parser:Parser) {
         var v = Vector[T]();
         while (size(v) < max) {
             var parsed? = maybe(parser(input),
-                x ref=> { push(v, move(x)); return true; },
+                x -> { push(v, move(x)); return true; },
                 () => false,
             );
             if (not parsed?)
@@ -393,7 +393,7 @@ separatedList(static TokenInput, forward _separator:Separator, forward _element:
         var v = Vector[T]();
         while (true) {
             var parsed? = maybe(element(input),
-                x ref=> { push(v, move(x)); return true; },
+                x -> { push(v, move(x)); return true; },
                 () => false,
             );
             if (not parsed?)
@@ -428,7 +428,7 @@ separatedListStrict(static TokenInput, forward _separator:Separator, forward _el
         var saved = input;
         while (true) {
             var parsed? = maybe(element(input),
-                x ref=> { push(v, move(x)); return true; },
+                x -> { push(v, move(x)); return true; },
                 () => false,
             );
             if (not parsed?)

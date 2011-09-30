@@ -149,7 +149,7 @@ overload reverseFindIf(_first, _last, pred) {
 }
 
 any?(seq, pred) = findIf(seq, pred) != end(seq);
-all?(seq, pred) = findIf(seq, x ref=> not pred(x)) != end(seq);
+all?(seq, pred) = findIf(seq, x -> not pred(x)) != end(seq);
 
 
 //
@@ -384,7 +384,7 @@ overload binarySearchUpperBound(begin_, end_, x) {
 
 [C | Comparator?(C)]
 sortBy(a, comparator : C) {
-    introsort.introSort(a, (x, y) ref=> lesser?(comparator, x, y));
+    introsort.introSort(a, (x, y) -> lesser?(comparator, x, y));
 }
 
 sort(a){

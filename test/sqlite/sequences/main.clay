@@ -9,7 +9,7 @@ main() {
     runStatement(db, "create temp table popes (id integer primary key, name text not null)");
 
     var insertStmt = SqliteStatement(db, "insert into popes values (null, ?)");
-    withTransaction(db, () ref=> {
+    withTransaction(db, () -> {
         runStatement(insertStmt, "benedictus");
         runStatement(insertStmt, "boniface");
         runStatement(insertStmt, "pius");

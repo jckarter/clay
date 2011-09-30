@@ -42,10 +42,10 @@ private initModuleSuffixes() {
         platform.os, platform.osGroup, platform.cpu, platform.bits;
     var suffixes = Vector[String]();
     eachValue(
-        parts ref=> {
+        parts -> {
             var suffix = String();
             eachValue(
-                part ref=> {
+                part -> {
                     printTo(suffix, '.');
                     printTo(suffix, part);
                 },
@@ -76,7 +76,7 @@ private baseFileName(dottedName)
 
 private locateModule(dottedName) {
     var base = baseFileName(dottedName);
-    var relpaths = map(s ref=> base+s, moduleSuffixes);
+    var relpaths = map(s -> base+s, moduleSuffixes);
     for (dir in searchPath) {
         for (relpath in relpaths) {
             var path = joinPath(dir, relpath);
@@ -240,8 +240,8 @@ private primitiveName(kind) {
 loadModule(dottedName) {
     var name = moduleString(dottedName);
     return maybe(lookupModule(name),
-        module ref=> module,
-        () ref=> {
+        module -> module,
+        () -> {
             if (name == "__primitives__") {
                 println("loading module: ", name);
                 var module = Module(name);

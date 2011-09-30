@@ -124,7 +124,7 @@ private bounds(parser:Parser) {
         alias T = ParseResult(Parser);
         var start = input.current;
         return maybe(parser(input),
-            x ref=> {
+            x -> {
                 x.tokens = TokenRange(start, input.current);
                 x.mainToken = start;
                 return Maybe(move(x));
@@ -220,8 +220,8 @@ private tokenData(tokenKind) {
     return input => {
         ref data = input.tokens.file.data;
         return maybe(parser(input),
-            x ref=> Maybe(sliced(data, x.range.begin, x.range.end)),
-            () ref=> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
+            x -> Maybe(sliced(data, x.range.begin, x.range.end)),
+            () -> nothing(Type(sliced(data, SizeT(0), SizeT(0)))),
         );
     };
 }

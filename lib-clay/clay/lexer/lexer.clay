@@ -180,7 +180,7 @@ private bounds(parser:Parser) {
         alias T = ParseResult(Parser);
         var start = input.current;
         return maybe(parser(input),
-            x ref=> {
+            x -> {
                 x.range = DataRange(start, input.current);
                 return Maybe(x);
             },

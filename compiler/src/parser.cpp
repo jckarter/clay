@@ -904,8 +904,14 @@ static bool lambda(ExprPtr &x) {
     IdentifierPtr formalVarArg;
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;
     bool captureByRef;
-    if (!optCaptureByRef(captureByRef)) return false;
-    if (!symbol("=>")) return false;
+    int p = save();
+    if (symbol("->"))
+        captureByRef = true;
+    else {
+        restore(p);
+        if (!optCaptureByRef(captureByRef)) return false;
+        if (!symbol("=>")) return false;
+    }
     StatementPtr body;
     if (!lambdaBody(body)) return false;
     x = new Lambda(captureByRef, formalArgs, formalVarArg, body);

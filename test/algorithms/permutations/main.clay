@@ -13,7 +13,7 @@ baseTestCase(n) =
     var it = Vector[Int](range(1,n+1));
 
     var counter = 0;
-    eachPermutation(it, () ref=> {
+    eachPermutation(it, () -> {
       counter += 1;
     });
 

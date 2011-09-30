@@ -116,7 +116,7 @@ private RecordMemberwiseMarshalable?(R)
 [R | Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload marshaledSize(context, r: R)
     = ...foldValues(add,
-        ...mapValues(f ref=> marshaledSize(context, f), ...recordFields(r))
+        ...mapValues(f -> marshaledSize(context, f), ...recordFields(r))
     );
 
 marshalMemberwise(context, buffer:Pointer[Byte], forward ...fields) {
@@ -169,7 +169,7 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshaledSize(context, t: T)
     = ...foldValues(add,
-        ...mapValues(f ref=> marshaledSize(context, f), ...unpack(t))
+        ...mapValues(f -> marshaledSize(context, f), ...unpack(t))
     );
 
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
@@ -265,7 +265,7 @@ private UnmarshalAsVectorSequence?(S)
 
 private sequenceMarshaledSize(context, seq)
     = MarshalSize(TypeSize(MarshalSize))
-    + reduce(add, MarshalSize(0), mapped(f ref=> marshaledSize(context, f), seq));
+    + reduce(add, MarshalSize(0), mapped(f -> marshaledSize(context, f), seq));
 
 [S | MarshalableSequence?(S)]
 overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
@@ -516,7 +516,7 @@ overload UnmarshaledType(static SharedPointer[T]) = SharedPointer[UnmarshaledTyp
 overload marshal() = Vector[Byte]();
 
 overload marshal(context: MarshalContext, forward ...values) returned: Vector[Byte] {
-    var sz = foldValues(add, ...mapValues(v ref=> marshaledSize(context, v), ...values));
+    var sz = foldValues(add, ...mapValues(v -> marshaledSize(context, v), ...values));
     returned <-- Vector[Byte]();
     resize(returned, sz);
 
