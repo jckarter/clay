@@ -1,9 +1,0 @@
-Zim
-true
-false
-Zang
-false
-true
-Zung
-true
-true

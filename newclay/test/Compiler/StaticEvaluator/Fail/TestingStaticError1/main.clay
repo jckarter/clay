@@ -1,3 +1,0 @@
-import __primitives__.*;
-
-#Main() = staticError("to sleep, perchance to dream");

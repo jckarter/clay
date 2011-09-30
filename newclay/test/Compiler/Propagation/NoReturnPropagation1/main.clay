@@ -1,8 +1,0 @@
-import show.(show);
-
-noReturn() { throw 0; }
-foo() { return noReturn(); }
-
-main() {
-    show(#returns?(-> { foo(); }));
-}

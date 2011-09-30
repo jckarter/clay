@@ -1,3 +1,0 @@
-import show.(show);
-
-main() { show("Hello World!"); }

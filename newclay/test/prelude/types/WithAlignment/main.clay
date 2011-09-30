@@ -1,7 +1,0 @@
-import show.(show);
-
-define Foo as NewType(Int), WithAlignment(16);
-
-main() {
-    show(#typeAlign(Foo));
-}

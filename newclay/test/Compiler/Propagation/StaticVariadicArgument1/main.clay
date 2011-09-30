@@ -1,9 +1,0 @@
-import show.(show);
-
-foo(..#'x) = ..'x;
-
-define Four;
-
-main() {
-    show(..#type(->  ..foo(#1, #true, #"three", Four) ));
-}

@@ -1,44 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-
-//
-// MapValues
-//
-
-define MapValues;
-overload #MapValues('f, 'first, ..'rest) = 'f('first), ..MapValues('f, ..'rest);
-overload #MapValues('f) = ;
-
-
-
-//
-// MapTuple
-//
-
-define MapTuple;
-overload #MapTuple('f, 'a) = [..MapValues('f, ..staticTupleElements('a))];
-
-
-
-//
-// ReverseTuple
-//
-
-define ReverseTuple;
-overload #ReverseTuple('a) =
-    MapTuple(
-        (i) -> staticTupleElement('a, staticSubtract(staticTupleSize('a), staticAdd(i,1))),
-        [..staticIntegers(staticTupleSize('a))],
-    );
-
-
-
-//
-// Main
-//
-
-define Main;
-overload #Main() = ReverseTuple([1, 2, true, false, "foo"]);
-
-main() { show(..#Main()); }

@@ -1,7 +1,0 @@
-import show.(show);
-import __primitives__.*;
-alias foo = 1;
-
-#Main() = foo;
-
-main() { show(..#Main()); }

@@ -1,3 +1,0 @@
-main() noreturn : Int {
-    return 1;
-}

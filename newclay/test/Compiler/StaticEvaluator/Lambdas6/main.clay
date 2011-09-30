@@ -1,6 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-#Main() = ((#['x, 'y]) -> 'x + 'y)([1, 2]);
-
-main() { show(..#Main()); }

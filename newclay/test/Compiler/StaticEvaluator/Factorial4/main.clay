@@ -1,9 +1,0 @@
-import show.(show);
-import __primitives__.*;
-import splitfactorial1.*;
-import splitfactorial2.*;
-
-define Main;
-overload #Main() = Factorial(8);
-
-main() { show(..#Main()); }

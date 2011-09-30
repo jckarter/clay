@@ -1,8 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-#Main() = lambdaString((x) -> {
-    return x + 1;
-});
-
-main() { show(..#Main()); }

@@ -1,4 +1,0 @@
-import splitfactorial1.*;
-
-overload #Factorial(1) = 1;
-overload #Factorial(0) = 1;

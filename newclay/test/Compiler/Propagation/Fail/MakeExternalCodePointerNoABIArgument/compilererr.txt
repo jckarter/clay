@@ -1,1 +1,0 @@
-makeExternalCodePointer requires an ABI symbol as its second argument

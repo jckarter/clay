@@ -1,5 +1,0 @@
-main() {
-    while (true) {
-        var x = (continue; 1);
-    }
-}

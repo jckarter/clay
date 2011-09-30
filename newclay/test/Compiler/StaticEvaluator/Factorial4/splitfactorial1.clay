@@ -1,4 +1,0 @@
-import __primitives__.*;
-
-define Factorial;
-overload #Factorial('n) = staticMultiply('n, Factorial(staticSubtract('n, 1)));

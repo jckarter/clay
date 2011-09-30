@@ -1,4 +1,0 @@
-import __primitives__.*;
-
-define Bar as ();
-overload #Bar(x) = ();

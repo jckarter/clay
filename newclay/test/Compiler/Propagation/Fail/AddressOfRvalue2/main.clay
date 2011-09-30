@@ -1,5 +1,0 @@
-refReturn() --> rvalue x:Int __c__ """abort();""";
-
-main() {
-    return &refReturn();
-}

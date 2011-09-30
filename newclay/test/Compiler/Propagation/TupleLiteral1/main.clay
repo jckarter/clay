@@ -1,6 +1,0 @@
-import show.(show);
-
-main() {
-    var t = [1, "two", true];
-    show(t.0, t.1, t.2);
-}

@@ -1,4 +1,0 @@
-import tools.*;
-
-define Main;
-overload #Main() = PrivateFactorial(8);

@@ -1,1 +1,0 @@
-rvalue reference must be bound to an rvalue

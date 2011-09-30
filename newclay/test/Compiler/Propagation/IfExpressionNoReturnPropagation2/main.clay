@@ -1,9 +1,0 @@
-import test.fakevalues.(arg);
-import show.(show);
-
-foo() = if (arg(Bool)) 1 else (throw 0);
-
-main() {
-    show(#returns?(-> foo()));
-}
-

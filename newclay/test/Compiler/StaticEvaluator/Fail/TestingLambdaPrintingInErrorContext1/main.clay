@@ -1,7 +1,0 @@
-import __primitives__.*;
-
-#foo('f, 'g) = 'f('g);
-
-#Main() = foo([x -> x() + 1], [
-    staticError("hurr")
-]);

@@ -1,8 +1,0 @@
-import show.(show);
-
-define Foo1;
-define Foo2 as ();
-private define Foo3 as ();
-public define Foo4 as ();
-
-main() { show("ok"); }

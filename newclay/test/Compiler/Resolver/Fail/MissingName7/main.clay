@@ -1,2 +1,0 @@
-define Foo;
-overload Foo() | Blerg?() = ;

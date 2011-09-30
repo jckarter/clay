@@ -1,9 +1,0 @@
-import show.(show);
-
-define foo;
-overload foo(x) = x - 1;
-overload #foo('x) = 'x + 1;
-
-main() {
-    show(foo(2), #foo(2));
-}

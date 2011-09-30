@@ -1,9 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-terminating() { return; }
-nonterminating() { throw 0; }
-
-main() {
-    show(#returns?(-> ..terminating()), #returns?(-> ..nonterminating()));
-}

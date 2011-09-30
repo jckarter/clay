@@ -1,9 +1,0 @@
-import show.(show);
-
-define foo;
-overload foo() __c__ """abort();""";
-
-main() {
-    show(..#type(-> ..foo()));
-}
-

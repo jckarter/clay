@@ -1,6 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-#Main() = [..staticStringChars("aéʍக🀀")];
-
-main() { show(..#Main()); }

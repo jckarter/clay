@@ -1,1 +1,0 @@
-return cannot be used in a statement expression

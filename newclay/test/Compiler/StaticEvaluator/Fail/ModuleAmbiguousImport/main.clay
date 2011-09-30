@@ -1,6 +1,0 @@
-import __primitives__.*;
-import factorial.*; // has Factorial
-import tools.*; // also has Factorial
-
-define Main;
-overload #Main() = Factorial(8);

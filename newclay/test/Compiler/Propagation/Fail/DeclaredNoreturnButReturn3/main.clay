@@ -1,3 +1,0 @@
-main() noreturn --> x:Int {
-    x <-- 1;
-}

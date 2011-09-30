@@ -1,7 +1,0 @@
-import show.(show);
-
-foo(x:Int, #'n) = 'n;
-
-main() {
-    show(foo(1, #0), foo(1, #1));
-}

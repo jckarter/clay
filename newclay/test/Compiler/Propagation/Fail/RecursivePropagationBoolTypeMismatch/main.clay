@@ -1,5 +1,0 @@
-foo(x) = if (foo(x)) 1 else 2;
-
-main() {
-    return foo(1);
-}

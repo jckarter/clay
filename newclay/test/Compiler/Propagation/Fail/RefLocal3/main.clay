@@ -1,7 +1,0 @@
-
-define main;
-overload main() {
-    var x = true;
-    return const x;
-}
-

@@ -1,7 +1,0 @@
-import show.(show);
-
-foo() = 1, throw 2, 3;
-
-main() {
-    show(#returns?(-> { foo(); }));
-}

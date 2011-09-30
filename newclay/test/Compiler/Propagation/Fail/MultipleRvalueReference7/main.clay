@@ -1,4 +1,0 @@
-main() {
-    rvalue x = 3;
-    return x, x;
-}

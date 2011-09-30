@@ -1,8 +1,0 @@
-import __primitives__.*;
-
-#Foo?(..'T) = 'T == Int8 or 'T == Int64;
-
-define foo;
-overload foo(x:'T) | Foo?('T) = x;
-
-main() = #defined?(-> foo(1));

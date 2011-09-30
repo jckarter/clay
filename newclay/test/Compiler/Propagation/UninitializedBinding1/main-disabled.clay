@@ -1,7 +1,0 @@
-import show.(show);
-
-main() {
-    var x:Int;
-    x <-- 4444;
-    show(x);
-}

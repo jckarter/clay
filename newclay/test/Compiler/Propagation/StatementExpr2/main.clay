@@ -1,5 +1,0 @@
-import show.(show);
-
-main() {
-    show((var x = 1; x + 1));
-}

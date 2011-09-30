@@ -1,4 +1,0 @@
-Int
-Bool
-StringConstant
-Static[Four]

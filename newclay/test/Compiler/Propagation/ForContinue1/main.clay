@@ -1,9 +1,0 @@
-import show.(show);
-
-main() {
-    for (x in Range(5)) {
-        show(x);
-        continue;
-        show("...");
-    }
-}

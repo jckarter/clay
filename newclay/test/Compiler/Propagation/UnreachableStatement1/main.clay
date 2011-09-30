@@ -1,9 +1,0 @@
-import show.(show);
-
-foo() {
-    __unreachable__;
-}
-
-main() {
-    show(#returns?(-> { foo(); }));
-}

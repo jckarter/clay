@@ -1,9 +1,0 @@
-import show.(show);
-
-main() {
-    rvalue x = 1;
-    rvalue y = 2;
-
-    show(#type(-> forward if (true) x else y));
-}
-

@@ -1,8 +1,0 @@
-define main;
-overload main() {
-    if (true)
-        return true;
-    else
-        return 0;
-}
-

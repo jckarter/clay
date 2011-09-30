@@ -1,8 +1,0 @@
-import printing.(printlnRepr);
-
-define Foo as NewType(Int);
-
-main() {
-    printlnRepr(Foo(1));
-}
-

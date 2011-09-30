@@ -1,3 +1,0 @@
-main() : Float64 {
-    return 1;
-}

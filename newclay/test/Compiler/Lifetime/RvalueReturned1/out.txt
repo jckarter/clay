@@ -1,8 +1,0 @@
---
-initialize
-1
-move
-1
-destroy
-1
---

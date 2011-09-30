@@ -1,7 +1,0 @@
-import show.(show);
-
-foo() = if (throw 0) 1 else 2;
-
-main() {
-    show(#returns?(-> foo()));
-}

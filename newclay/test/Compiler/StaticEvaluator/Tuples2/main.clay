@@ -1,9 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-#ReversePair('a) = ['a.1, 'a.0];
-
-define Main;
-overload #Main() = ReversePair([1, "two"]);
-
-main() { show(..#Main()); }

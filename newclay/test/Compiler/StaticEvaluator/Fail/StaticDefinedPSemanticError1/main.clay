@@ -1,5 +1,0 @@
-import __primitives__.*;
-
-#Foo(..'n) = 'n;
-
-#Main() = staticDefined?([Foo(0)]);

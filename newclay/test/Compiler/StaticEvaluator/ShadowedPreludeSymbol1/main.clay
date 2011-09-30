@@ -1,9 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-// there is also a define Bar as "prelude"; definition in prelude
-define Bar as "main";
-
-#Main() = staticSymbolBody(Bar);
-
-main() { show(..#Main()); }

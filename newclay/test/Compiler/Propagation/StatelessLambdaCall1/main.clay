@@ -1,6 +1,0 @@
-import show.(show);
-
-main() {
-    var f = (x) -> x + 1;
-    show(f(1));
-}

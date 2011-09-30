@@ -1,8 +1,0 @@
-import show.(show);
-
-main() {
-    rvalue x = true, y = false;
-    var z = x and y;
-    show("ok");
-}
-

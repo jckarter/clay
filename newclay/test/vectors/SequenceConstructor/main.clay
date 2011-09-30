@@ -1,9 +1,0 @@
-import vectors.*;
-import show.*;
-
-main() {
-    var v = Vector(Array[Int,5](2, 3, 5, 7, 11));
-
-    for (x in v)
-        show(x);
-}

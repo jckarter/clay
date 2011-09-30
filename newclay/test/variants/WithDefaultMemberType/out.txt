@@ -1,7 +1,0 @@
-true
-false
-false
-0
-0
-Nint
-22

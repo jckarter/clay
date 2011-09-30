@@ -1,5 +1,0 @@
-import show.(show);
-
-main() {
-    show(if (false) (throw 0) else 2);
-}

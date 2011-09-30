@@ -1,8 +1,0 @@
-import show.*;
-import unsafe.valuesemantics.(POD?);
-
-main() {
-    show(#POD?(Union[])); ////true
-    show(#typeSize(Union[])); ////0u
-    show(#typeAlign(Union[])); ////1u
-}

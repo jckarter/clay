@@ -1,3 +1,0 @@
-hello world
-goodbye world #2
-promoted -3, 5, and 2.75

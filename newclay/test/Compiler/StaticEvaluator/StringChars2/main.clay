@@ -1,6 +1,0 @@
-import show.(show);
-import __primitives__.*;
-
-#Main() = staticStringFromChars('h', '\x65', 'l', 'l', 'o', '\040', 'w', 'o', 'r', 'l', 'd', '\n');
-
-main() { show(..#Main()); }

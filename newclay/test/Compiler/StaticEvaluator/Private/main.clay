@@ -1,8 +1,0 @@
-import show.(show);
-import __primitives__.*;
-import tools.(private PrivateFactorial);
-
-define Main;
-overload #Main() = PrivateFactorial(8);
-
-main() { show(..#Main()); }

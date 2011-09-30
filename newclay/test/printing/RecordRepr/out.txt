@@ -1,4 +1,0 @@
-Empty()
-Foo(1i, true)
-Bar[Char](1i, true, '3')
-Bar[StringConstant](1i, true, "three")

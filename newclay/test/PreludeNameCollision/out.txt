@@ -1,2 +1,0 @@
-__main__
-"__main__.Nothing"
