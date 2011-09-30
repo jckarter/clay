@@ -4,7 +4,7 @@ Clay
 
 Clay is a programming language designed for Generic Programming.
 
-Visit http://tachyon.in/clay for more information.
+Visit http://claylabs.com/clay for more information.
 
 
 Pre-requisites
