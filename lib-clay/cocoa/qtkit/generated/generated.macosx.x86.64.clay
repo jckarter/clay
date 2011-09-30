@@ -6,6 +6,7 @@ import cocoa.objc.*;
 import libc.*;
 import cocoa.foundation.*;
 import cocoa.appkit.*;
+import cocoa.applicationservices.*;
 import cocoa.quartzcore.*;
 
 private alias OpaquePointer = RawPointer;
@@ -8280,13 +8281,13 @@ external QTDataReferenceTypeURL : NSString;
 
 alias kQTTimeIsIndefinite = 1;
 
-record UnnamedStruct126 (
+record UnnamedStruct124 (
     timeValue : Int64,
     timeScale : CLong,
     flags : CLong,
 );
 
-alias QTTime = UnnamedStruct126;
+alias QTTime = UnnamedStruct124;
 
 external QTZeroTime : QTTime;
 
@@ -8338,12 +8339,12 @@ external QTTimeIsIndefinite(
 external QTStringFromSMPTETime(
     time : SMPTETime) NSString;
 
-record UnnamedStruct127 (
+record UnnamedStruct125 (
     time : QTTime,
     duration : QTTime,
 );
 
-alias QTTimeRange = UnnamedStruct127;
+alias QTTimeRange = UnnamedStruct125;
 
 external QTMakeTimeRange(
     time : QTTime,

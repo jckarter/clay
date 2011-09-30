@@ -22,6 +22,8 @@ public import referencetypes.*;
 public import coordinates.*;
 public import sequences.*;
 
+public import printer.*;
+
 public import arrays.*;
 public import vectors.*;
 public import vectors.buffer.*;
@@ -38,8 +40,6 @@ public import hashmaps.*;
 
 public import io.streams.*;
 public import io.files.*;
-
-public import printer.*;
 
 public import errors.*;
 public import exceptions.*;

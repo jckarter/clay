@@ -4,6 +4,7 @@ CLAY_BINDGEN_FLAGS = -x objective-c \
     -import libc \
     -import cocoa.foundation \
     -import cocoa.appkit \
+    -import cocoa.applicationservices \
     -import cocoa.quartzcore \
     -match /QTKit
 
