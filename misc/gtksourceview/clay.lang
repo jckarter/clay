@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+Copyright (c) 2011, Scott Olson
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the <organization> nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<language id="clay" _name="Clay" version="2.0" _section="Sources">
+    <metadata>
+        <property name="mimetypes">text/x-clay</property>
+        <property name="globs">*.clay</property>
+        <property name="line-comment-start">//</property>
+        <property name="block-comment-start">/*</property>
+        <property name="block-comment-end">*/</property>
+    </metadata>
+
+    <styles>
+        <style id="comment"           _name="Comment"             map-to="def:comment"/>
+        <style id="error"             _name="Error"               map-to="def:error"/>
+        <style id="string"            _name="String"              map-to="def:string"/>
+        <style id="import"            _name="Import"              map-to="def:preprocessor"/>
+        <style id="imported-file"     _name="Imported File"       map-to="def:string"/>
+        <style id="char"              _name="Character"           map-to="def:character"/>
+        <style id="keyword"           _name="Keyword"             map-to="def:keyword"/>
+        <style id="type"              _name="Data Type"           map-to="def:type"/>
+        <style id="storage-class"     _name="Storage Class"       map-to="def:type"/>
+        <style id="escaped-character" _name="Escaped Character"   map-to="def:special-char"/>
+        <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
+        <style id="decimal"           _name="Decimal number"      map-to="def:decimal"/>
+        <style id="octal"             _name="Octal number"        map-to="def:base-n-integer"/>
+        <style id="hexadecimal"       _name="Hexadecimal number"  map-to="def:base-n-integer"/>
+        <style id="boolean"           _name="Boolean value"       map-to="def:boolean"/>
+        <style id="static-identifier" _name="Static identifier"   map-to="def:constant"/>
+        <style id="static-index"      _name="Static index"        map-to="def:decimal"/>
+        <style id="ref-lambda"        _name="ref=>"/>
+    </styles>
+    
+    <definitions>
+        <define-regex id="escaped-character" extended="true">
+            \\(                   # leading backslash
+            [\\\"\'nrbtfav\?] |   # escaped character
+            [0-7]{1,3} |          # one, two, or three octal digits
+            x[0-9A-Fa-f]+         # 'x' followed by hex digits
+            )
+        </define-regex>
+        
+        <context id="clay" class="no-spell-check">
+            <include>
+                <!-- Comments -->
+                <context id="comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
+                    <start>//</start>
+
+                    <include>
+                      <context ref="def:in-comment"/>
+                    </include>
+                </context>
+
+                <context id="comment-multiline" style-ref="comment" class="comment" class-disabled="no-spell-check">
+                    <start>/\*</start>
+                    <end>\*/</end>
+                    <include>
+                        <context ref="def:in-comment"/>
+                    </include>
+                </context>
+
+                <context id="close-comment-outside-comment" style-ref="error">
+                    <match>\*/(?!\*)</match>
+                </context>
+                
+                <!-- Imports -->
+                <context id="import" style-ref="import">
+                    <!-- These regexps are the epitome of evil, and I apologise. -->
+                    <match extended="true">
+                            (?:public\s+|private\s+)?import\s*
+                            ((?:[^\s;](?![*(]))+)
+                    </match>
+                    <include>
+                        <context id="imported-file" sub-pattern="1" style-ref="imported-file"/>
+                    </include>
+                </context>
+                
+                <!-- Literals -->
+                <context id="string" style-ref="string" end-at-line-end="false" class="string" class-disabled="no-spell-check" end-parent="true">
+                    <start>"</start>
+                    <end>"</end>
+                    <include>
+                        <context id="escaped-character" style-ref="escaped-character">
+                            <match>\%{escaped-character}</match>
+                        </context>
+                        <context ref="def:line-continue"/>
+                    </include>
+                </context>
+
+                <context id="char" style-ref="char">
+                    <match>'(\%{escaped-character}|.)'</match>
+                </context>
+
+                <context id="float" style-ref="floating-point">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        (((\.[0-9_]+ | [0-9_]+\.[0-9_]*) ([Ee][+-]?[0-9_]*)? |
+                          ([0-9_]+[Ee][+-]?[0-9_]*))
+                         ([fF]\d*)?
+                        |
+                         [0-9_]+[fF]\d*)
+                        (?![\w\.])
+                    </match>
+                </context>
+
+                <context id="hexadecimal" style-ref="hexadecimal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        0[xX][a-fA-F0-9_]+([uU]\d*|[iI]\d+)?
+                        (?![\w\.])
+                    </match>
+                </context>
+
+                <context id="octal" style-ref="octal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        0[0-7_]+([uU]\d*|[iI]\d+)?
+                        (?![\w\.])
+                    </match>
+                </context>
+
+                <context id="decimal" style-ref="decimal">
+                    <match extended="true">
+                        (?&lt;![\w\.])
+                        [0-9_]+([uU]\d*|[iI]\d+)?
+                        (?![\w\.])
+                    </match>
+                </context>
+                
+                <context id="static-identifier" style-ref="static-identifier">
+                    <start>#</start>
+                    <end extended="true">\?|(?&lt;!\#)\b</end>
+                    <include>
+                        <context ref="string" style-ref="string"/>
+                    </include>
+                </context>
+
+                <context id="static-index" style-ref="static-index">
+                    <match extended="true">
+                        (?&lt;=\.)
+                        [0-9_]+
+                    </match>
+                </context>
+
+                <context id="ref-lambda" style-ref="ref-lambda">
+                    <match>ref=&gt;</match>
+                </context>
+                
+                <!-- Keywords -->
+                <context id="keywords" style-ref="keyword" class="keyword">
+                    <keyword>as</keyword>
+                    <keyword>record</keyword>
+                    <keyword>variant</keyword>
+                    <keyword>instance</keyword>
+                    <keyword>procedure</keyword>
+                    <keyword>private</keyword>
+                    <keyword>public</keyword>
+                    <keyword>overload</keyword>
+                    <keyword>external</keyword>
+                    <keyword>inline</keyword>
+                    <keyword>callbyname</keyword>
+                    <keyword>enum</keyword>
+                    <keyword>and</keyword>
+                    <keyword>or</keyword>
+                    <keyword>not</keyword>
+                    <keyword>if</keyword>
+                    <keyword>else</keyword>
+                    <keyword>goto</keyword>
+                    <keyword>return</keyword>
+                    <keyword>while</keyword>
+                    <keyword>switch</keyword>
+                    <keyword>case</keyword>
+                    <keyword>default</keyword>
+                    <keyword>break</keyword>
+                    <keyword>continue</keyword>
+                    <keyword>for</keyword>
+                    <keyword>in</keyword>
+                    <keyword>try</keyword>
+                    <keyword>catch</keyword>
+                    <keyword>throw</keyword>
+                    <keyword>__llvm__</keyword>
+                </context>
+
+                <context id="static-for" style-ref="keyword" class="keyword">
+                    <match extended="true">static(?=\s+for)</match>
+                </context>
+
+                <context id="types" style-ref="type" class="type">
+                    <keyword>Bool</keyword>
+                    <keyword>Int8</keyword>
+                    <keyword>Int16</keyword>
+                    <keyword>Int32</keyword>
+                    <keyword>Int64</keyword>
+                    <keyword>UInt8</keyword>
+                    <keyword>UInt16</keyword>
+                    <keyword>UInt32</keyword>
+                    <keyword>UInt64</keyword>
+                    <keyword>Float32</keyword>
+                    <keyword>Float64</keyword>
+                    <keyword>Pointer</keyword>
+                    <keyword>CodePointer</keyword>
+                    <keyword>RefCodePointer</keyword>
+                    <keyword>CCodePointer</keyword>
+                    <keyword>StdCallCodePointer</keyword>
+                    <keyword>FastCallCodePointer</keyword>
+                    <keyword>Array</keyword>
+                    <keyword>Tuple</keyword>
+                    <keyword>Void</keyword>
+                    <keyword>Byte</keyword>
+                    <keyword>UByte</keyword>
+                    <keyword>Char</keyword>
+                    <keyword>Short</keyword>
+                    <keyword>UShort</keyword>
+                    <keyword>Int</keyword>
+                    <keyword>UInt</keyword>
+                    <keyword>Long</keyword>
+                    <keyword>ULong</keyword>
+                    <keyword>Float</keyword>
+                    <keyword>Double</keyword>
+                    <keyword>RawPointer</keyword>
+                    <keyword>SizeT</keyword>
+                    <keyword>PtrInt</keyword>
+                    <keyword>UPtrInt</keyword>
+                    <keyword>StringConstant</keyword>
+                    <keyword>Vec</keyword>
+                    <keyword>Union</keyword>
+                    <keyword>Static</keyword>
+                </context>
+
+                <context id="storage-class" style-ref="storage-class" class="storage-class">
+                    <keyword>var</keyword>
+                    <keyword>ref</keyword>
+                    <keyword>new</keyword>
+                    <keyword>forward</keyword>
+                    <keyword>alias</keyword>
+                    <keyword>static</keyword>
+                    <keyword>lvalue</keyword>
+                    <keyword>rvalue</keyword>
+                    <keyword>const</keyword>
+                </context>
+
+                <!-- Booleans -->
+                <context id="boolean" style-ref="boolean" class="boolean">
+                    <keyword>true</keyword>
+                    <keyword>false</keyword>
+                </context>
+            </include>
+        </context>
+    </definitions>
+</language>
+

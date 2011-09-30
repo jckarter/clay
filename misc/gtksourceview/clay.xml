@@ -1,0 +1,6 @@
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="text/x-clay">
+    <comment>Clay Source</comment>
+    <glob pattern="*.clay"/>
+  </mime-type>
+</mime-info>
