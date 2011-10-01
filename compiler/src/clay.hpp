@@ -213,6 +213,9 @@ struct CharLiteral;
 struct StringLiteral;
 struct IdentifierLiteral;
 struct NameRef;
+struct FILEExpr;
+struct LINEExpr;
+struct COLUMNExpr;
 struct Tuple;
 struct Array;
 struct Indexing;
@@ -354,6 +357,9 @@ typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
 typedef Pointer<NameRef> NameRefPtr;
+typedef Pointer<FILEExpr> FILEExprPtr;
+typedef Pointer<LINEExpr> LINEExprPtr;
+typedef Pointer<COLUMNExpr> COLUMNExprPtr;
 typedef Pointer<Tuple> TuplePtr;
 typedef Pointer<Array> ArrayPtr;
 typedef Pointer<Indexing> IndexingPtr;
@@ -618,6 +624,11 @@ void argumentIndexRangeError(unsigned int index,
                              size_t value,
                              size_t maxValue);
 
+void computeLineCol(LocationPtr location,
+                    int &line,
+                    int &column,
+                    int &tabColumn);
+
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
 
@@ -711,6 +722,10 @@ enum ExprKind {
     STRING_LITERAL,
     IDENTIFIER_LITERAL,
 
+    FILE_EXPR,
+    LINE_EXPR,
+    COLUMN_EXPR,
+
     NAME_REF,
     TUPLE,
     ARRAY,
@@ -790,6 +805,21 @@ struct NameRef : public Expr {
     IdentifierPtr name;
     NameRef(IdentifierPtr name)
         : Expr(NAME_REF), name(name) {}
+};
+
+struct FILEExpr : public Expr {
+    FILEExpr()
+        : Expr(FILE_EXPR) {}
+};
+
+struct LINEExpr : public Expr {
+    LINEExpr()
+        : Expr(LINE_EXPR) {}
+};
+
+struct COLUMNExpr : public Expr {
+    COLUMNExpr()
+        : Expr(COLUMN_EXPR) {}
 };
 
 struct Tuple : public Expr {
@@ -1827,6 +1857,7 @@ void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
 
 struct Env : public Object {
     ObjectPtr parent;
+    ExprPtr callByNameExprHead;
     map<string, ObjectPtr> entries;
     Env()
         : Object(ENV) {}
@@ -1860,6 +1891,9 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       bool &isGlobal);
 
 ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
+
+ExprPtr lookupCallByNameExprHead(EnvPtr env);
+LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 
 
 
@@ -1983,7 +2017,9 @@ enum PrimOpCode {
     PRIM_IdentifierConcat,
     PRIM_IdentifierSlice,
     PRIM_IdentifierModuleName,
-    PRIM_IdentifierStaticName
+    PRIM_IdentifierStaticName,
+
+    PRIM_CallbynameLocation,
 };
 
 struct PrimOp : public Object {
@@ -2654,6 +2690,7 @@ InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
                                    const vector<TypePtr> &argsKey,
                                    const vector<ValueTempness> &argsTempness);
 MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+                                     ExprPtr callable,
                                      ExprListPtr args,
                                      EnvPtr env);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
@@ -2720,6 +2757,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<ValueTempness> &argsTempness);
 
 MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+                                 ExprPtr callable,
                                  ExprListPtr args,
                                  EnvPtr env);
 

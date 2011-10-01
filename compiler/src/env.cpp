@@ -362,3 +362,43 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr)
     }
     return new ForeignExpr(env, expr);
 }
+
+
+//
+// lookupCallByNameExprHead
+//
+
+ExprPtr lookupCallByNameExprHead(EnvPtr env)
+{
+    if (env->callByNameExprHead.ptr())
+        return env->callByNameExprHead;
+
+    if (env->parent.ptr()) {
+        switch (env->parent->objKind) {
+        case ENV : {
+            Env *p = (Env *)env->parent.ptr();
+            return lookupCallByNameExprHead(p);
+        }
+        default : {
+            return ExprPtr();
+        }
+        }
+    }
+}
+
+
+//
+// safeLookupCallByNameLocation
+//
+
+LocationPtr safeLookupCallByNameLocation(EnvPtr env)
+{
+    ExprPtr head = lookupCallByNameExprHead(env);
+    if (head.ptr() == 0) {
+        error("__FILE__, __LINE__, and __COLUMN__ are only allowed in a callbyname function");
+        return NULL;
+    }
+    return head->location;
+}
+
+

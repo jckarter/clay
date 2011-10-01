@@ -1,0 +1,10 @@
+
+callbyname sayMyLocation() {
+    println("(", __LINE__, ",", __COLUMN__, ")");
+}
+
+main() {
+    sayMyLocation();
+     sayMyLocation();
+      sayMyLocation();
+}

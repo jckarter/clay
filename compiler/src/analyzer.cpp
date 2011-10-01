@@ -351,11 +351,12 @@ InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
 }
 
 MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+                                     ExprPtr callable,
                                      ExprListPtr args,
                                      EnvPtr env)
 {
     ClearAnalysisError clear;
-    MultiPValuePtr result = analyzeCallByName(entry, args, env);
+    MultiPValuePtr result = analyzeCallByName(entry, callable, args, env);
     if (!entry)
         analysisError();
     return result;
@@ -596,6 +597,20 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             return analyzeMulti(z, env);
         }
         return analyzeStaticObject(y);
+    }
+
+    case FILE_EXPR : {
+        LocationPtr location = safeLookupCallByNameLocation(env);
+        string filename = location->source->fileName;
+        return analyzeStaticObject(new Identifier(filename));
+    }
+
+    case LINE_EXPR : {
+        return new MultiPValue(new PValue(cSizeTType, true));
+    }
+
+    case COLUMN_EXPR : {
+        return new MultiPValue(new PValue(cSizeTType, true));
     }
 
     case TUPLE : {
@@ -1450,7 +1465,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
-            return analyzeCallByName(entry, args, env);
+            return analyzeCallByName(entry, callable, args, env);
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
@@ -1667,6 +1682,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 //
 
 MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+                                 ExprPtr callable,
                                  ExprListPtr args,
                                  EnvPtr env)
 {
@@ -1689,6 +1705,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
         assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
+    bodyEnv->callByNameExprHead = callable;
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);

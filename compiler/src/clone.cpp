@@ -68,6 +68,21 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case FILE_EXPR : {
+        out = new FILEExpr();
+        break;
+    }
+
+    case LINE_EXPR : {
+        out = new LINEExpr();
+        break;
+    }
+
+    case COLUMN_EXPR : {
+        out = new COLUMNExpr();
+        break;
+    }
+
     case NAME_REF : {
         NameRef *y = (NameRef *)x.ptr();
         out = new NameRef(y->name);

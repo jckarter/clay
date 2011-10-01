@@ -325,12 +325,39 @@ static bool nameRef(ExprPtr &x) {
     return true;
 }
 
+static bool fileExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("__FILE__")) return false;
+    x = new FILEExpr();
+    x->location = location;
+    return true;
+}
+
+static bool lineExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("__LINE__")) return false;
+    x = new LINEExpr();
+    x->location = location;
+    return true;
+}
+
+static bool columnExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("__COLUMN__")) return false;
+    x = new COLUMNExpr();
+    x->location = location;
+    return true;
+}
+
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
     if (arrayExpr(x)) return true;
     if (restore(p), tupleExpr(x)) return true;
     if (restore(p), nameRef(x)) return true;
     if (restore(p), literal(x)) return true;
+    if (restore(p), fileExpr(x)) return true;
+    if (restore(p), lineExpr(x)) return true;
+    if (restore(p), columnExpr(x)) return true;
     return false;
 }
 

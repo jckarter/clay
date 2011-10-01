@@ -55,6 +55,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out);
 void evalCallByName(InvokeEntryPtr entry,
+                    ExprPtr callable,
                     ExprListPtr args,
                     EnvPtr env,
                     MultiEValuePtr out);
@@ -942,6 +943,28 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case IDENTIFIER_LITERAL :
         break;
 
+    case FILE_EXPR :
+        break;
+
+    case LINE_EXPR : {
+        LocationPtr location = safeLookupCallByNameLocation(env);
+        int line, column, tabColumn;
+        computeLineCol(location, line, column, tabColumn);
+
+        ValueHolderPtr vh = sizeTToValueHolder(line+1);
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+    case COLUMN_EXPR : {
+        LocationPtr location = safeLookupCallByNameLocation(env);
+        int line, column, tabColumn;
+        computeLineCol(location, line, column, tabColumn);
+
+        ValueHolderPtr vh = sizeTToValueHolder(column);
+        evalStaticObject(vh.ptr(), out);
+        break;
+    }
+
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = safeLookupEnv(env, x->name);
@@ -1541,7 +1564,7 @@ void evalCallExpr(ExprPtr callable,
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
-            evalCallByName(entry, args, env, out);
+            evalCallByName(entry, callable, args, env, out);
         }
         else {
             assert(entry->analyzed);
@@ -1893,6 +1916,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
 //
 
 void evalCallByName(InvokeEntryPtr entry,
+                    ExprPtr callable,
                     ExprListPtr args,
                     EnvPtr env,
                     MultiEValuePtr out)
@@ -1904,6 +1928,7 @@ void evalCallByName(InvokeEntryPtr entry,
         assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
+    bodyEnv->callByNameExprHead = callable;
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);
@@ -1919,7 +1944,7 @@ void evalCallByName(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, callable, args, env);
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;

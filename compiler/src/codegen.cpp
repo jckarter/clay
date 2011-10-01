@@ -162,6 +162,7 @@ void codegenCallInline(InvokeEntryPtr entry,
                        CodegenContextPtr ctx,
                        MultiCValuePtr out);
 void codegenCallByName(InvokeEntryPtr entry,
+                       ExprPtr callable,
                        ExprListPtr args,
                        EnvPtr env,
                        CodegenContextPtr ctx,
@@ -944,6 +945,29 @@ void codegenExpr(ExprPtr expr,
 
     case IDENTIFIER_LITERAL :
         break;
+
+    case FILE_EXPR :
+        break;
+
+    case LINE_EXPR : {
+        LocationPtr location = safeLookupCallByNameLocation(env);
+        int line, column, tabColumn;
+        computeLineCol(location, line, column, tabColumn);
+
+        ValueHolderPtr vh = sizeTToValueHolder(line+1);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+    case COLUMN_EXPR : {
+        LocationPtr location = safeLookupCallByNameLocation(env);
+        int line, column, tabColumn;
+        computeLineCol(location, line, column, tabColumn);
+
+        ValueHolderPtr vh = sizeTToValueHolder(column);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
 
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
@@ -1904,7 +1928,7 @@ void codegenCallExpr(ExprPtr callable,
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
-            codegenCallByName(entry, args, env, ctx, out);
+            codegenCallByName(entry, callable, args, env, ctx, out);
         }
         else {
             assert(entry->analyzed);
@@ -2971,6 +2995,7 @@ void codegenCallInline(InvokeEntryPtr entry,
 //
 
 void codegenCallByName(InvokeEntryPtr entry,
+                       ExprPtr callable,
                        ExprListPtr args,
                        EnvPtr env,
                        CodegenContextPtr ctx,
@@ -2983,6 +3008,7 @@ void codegenCallByName(InvokeEntryPtr entry,
         assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
+    bodyEnv->callByNameExprHead = callable;
 
     for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);
@@ -2998,7 +3024,7 @@ void codegenCallByName(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, args, env);
+    MultiPValuePtr mpv = safeAnalyzeCallByName(entry, callable, args, env);
     assert(mpv->size() == out->size());
 
     vector<CReturn> returns;

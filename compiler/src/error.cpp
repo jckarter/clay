@@ -93,10 +93,10 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-static void computeLineCol(LocationPtr location,
-                           int &line,
-                           int &column,
-                           int &tabColumn) {
+void computeLineCol(LocationPtr location,
+                    int &line,
+                    int &column,
+                    int &tabColumn) {
     char *p = location->source->data;
     char *end = p + location->offset;
     line = column = tabColumn = 0;
