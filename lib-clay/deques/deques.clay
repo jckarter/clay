@@ -57,7 +57,7 @@ record DequeCoordinate[T] (
             if (offset > 0)
                 PtrInt(offset/DequeBufferSize(T))
             else
-                PtrInt(-((-offset - 1)/DequeBufferSize(T)) - 1);
+                -PtrInt((-offset - 1)/DequeBufferSize(T)) - 1;
 
         setNode(i, i.node + nodeOffset);
         i.current = i.first + (offset - nodeOffset * DequeBufferSize(T));
@@ -70,12 +70,12 @@ record DequeCoordinate[T] (
 }
 
 [T, I | Integer?(I)] overload updateAssign(static subtract, i: DequeCoordinate[T], n: I) {
-    i += -n;
+    i += -PtrInt(n);
 }
 
 [T, I | Integer?(I)] overload subtract(i: DequeCoordinate[T], n: I) j: DequeCoordinate[T] {
     j <-- i;
-    j += -n;
+    j += -PtrInt(n);
 }
 
 [T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) PtrInt

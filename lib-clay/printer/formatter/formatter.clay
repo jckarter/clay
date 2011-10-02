@@ -50,6 +50,11 @@ private _formatBase(stream, value, fmt) {
     }
 }
 
+[U | UnsignedInteger?(U)]
+overload _formatBase(stream, value:U, fmt) {
+    printWithSprintf(stream, fmt, value);
+}
+
 private formatBase(stream, value, fmt, fmt64) {
     _formatBase(stream, value, fmt);
 }

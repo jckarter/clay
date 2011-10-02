@@ -249,7 +249,7 @@ inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 [A | Numeric?(A)]
 inline overload plus(a:A) = a;
 
-[A | Numeric?(A)]
+[A | Numeric?(A) and not UnsignedInteger?(A)]
 inline overload minus(a:A) = numericNegate(a);
 
 
