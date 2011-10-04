@@ -1,0 +1,114 @@
+// Dual numbers
+
+import libc;
+
+record Dual[T](d0:T,d1:T);
+
+[T | Numeric?(T)]
+inline dual(d0:T,d1:T) = Dual[T](d0,d1);
+
+[T | Numeric?(T)]
+inline overload add(z:Dual[T], y:T) = Dual[T](z.d0+y,z.d1);
+
+[T | Numeric?(T)]
+inline overload add(y:T,z:Dual[T]) = add(z,y);
+
+[T | Numeric?(T)]
+inline overload subtract(z:Dual[T], y:T) = Dual[T](z.d0-y,z.d1);
+
+[T | Numeric?(T)]
+inline overload subtract(y:T,z:Dual[T]) = Dual[T](y-z.d0,-z.d1);
+
+[T | Numeric?(T)]
+inline overload multiply(z:Dual[T], y:T) = Dual[T](z.d0*y,z.d1*y);
+
+[T | Numeric?(T)]
+inline overload multiply(y:T,z:Dual[T]) = multiply(z,y);
+
+[T | Numeric?(T)]
+inline overload divide(z:Dual[T], y:T) = Dual[T](z.d0/y,z.d1/y);
+
+[T | Numeric?(T)]
+inline overload divide(y:T,z:Dual[T]) = divide(Complex[T](y),z);
+
+[T | Numeric?(T)]
+inline overload add(z:Dual[T], y:Dual[T]) = Dual[T](z.d0 + y.d0,z.d1+y.d1);
+
+[T | Numeric?(T)]
+inline overload subtract(z:Dual[T], y:Dual[T]) = Dual[T](z.d0 - y.d0,z.d1-y.d1);
+
+[T | Numeric?(T)]
+inline overload multiply(z:Dual[T], y:Dual[T]) = Dual[T](z.d0*y.d0,z.d1*y.d0 + z.d0*y.d1);
+
+[T | Numeric?(T)]
+inline overload divide(z:Dual[T], y:Dual[T]) = Dual[T](z.d0/y.d0,(z.d1*y.d0 - z.d0*y.d1)/(y.d0*y.d0));
+
+[T | Numeric?(T)]
+inline conj(z:Dual[T]) = dual(z.d0,-z.d1);
+
+[T | Numeric?(T)]
+inline overload equals?(z:Dual[T], y:T) {
+    return if(z.im != 0.0) false else
+        if(z.re==y) true else false;
+}
+
+[T | Numeric?(T)]
+inline overload equals?(y:T, z:Dual[T]) = equals?(z,y);
+
+[T | Numeric?(T)]
+inline overload equals?(z:Dual[T], y:Dual[T]) {
+    return if(z.d0==y.d0 and z.d1==y.d1) true else false;
+}
+
+[T | Numeric?(T)]
+inline overload notEquals?(z:Dual[T], y:T) = not equals?(z, y);
+
+[T | Numeric?(T)]
+inline overload notEquals?(y:T,z:Dual[T]) = not equals?(z, y);
+
+[T | Numeric?(T)]
+inline overload notEquals?(z:Dual[T], y:Dual[T]) = not equals?(z,y);
+
+[T | Numeric?(T)]
+inline overload minus(z:Dual[T]) = Dual[T](-z.d0,-z.d1);
+
+[T | Numeric?(T)]
+inline overload plus(z:Dual[T]) = z;
+
+[T | Numeric?(T)]
+inline sin(z:Dual[T]) = Dual[T](libc.sin(z.d0),z.d1*libc.cos(z.d0));
+
+[T | Numeric?(T)]
+inline cos(z:Dual[T]) = Dual[T](libc.cos(z.d0),-z.d1*libc.sin(z.d0));
+
+[T | Numeric?(T)]
+inline exp(z:Dual[T]) = Dual[T](libc.exp(z.d0),z.d1*libc.exp(z.d0));
+
+[T | Numeric?(T)]
+inline log(z:Dual[T]) = Dual[T](libc.log(z.d0),z.d1/z.d0);
+
+[T | Numeric?(T)]
+inline pow(z:Dual[T]) = Dual[T](libc.pow(z.d0,k),k*libc.pow(z.d0,k-1.0)*z.d1);
+
+[T | Numeric?(T)]
+inline abs(z:Dual[T]) = Dual[T](libc.fabs(z.d0),z.d1*libc.copysign(1.0,z.d0));
+
+
+main(){
+
+    var z = dual(2.0,3.0);
+    var y = dual(4.0,1.0);
+    println(Type(z));
+    var u = z*y;
+    var v = u;
+
+    println(y);
+    println(u);
+    println(v);
+    println(abs(u));
+    println(exp(u));
+    println(sin(u));
+    println(cos(u));
+    println(log(u));
+    println(pow(u,2.0));
+}

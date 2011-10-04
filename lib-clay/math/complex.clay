@@ -1,0 +1,188 @@
+// Complex numbers
+
+import libc;
+import math;
+
+record Complex[T](re:T,im:T);
+
+[T | Numeric?(T)]
+inline complex(re:T,im:T) = Complex[T](re,im);
+
+[T | Numeric?(T)]
+inline overload complex(n:T) = Complex[T](n,T(0));
+
+[T | Numeric?(T)]
+inline real(z:Complex[T]) = z.re;
+
+[T | Numeric?(T)]
+inline imag(z:Complex[T]) = z.im;
+
+[T | Numeric?(T)]
+inline conj(z:Complex[T]) = Complex[T](z.re,-z.im);
+
+[T | Numeric?(T)]
+inline abs(z:Complex[T]) = libc.sqrt(z.re*z.re+z.im*z.im);
+
+[T | Numeric?(T)]
+inline arg(z:Complex[T]) = libc.atan2(z.im,z.re);
+
+[T | Numeric?(T)]
+inline fromPolar(m:T,ph:T) = Complex[T](m*libc.sin(ph),m*libc.cos(ph));
+
+[T | Numeric?(T)]
+inline overload equals?(z:Complex[T], y:T) {
+    return if(z.im != T(0)) false else
+        if(z.re==y) true else false;
+}
+
+[T | Numeric?(T)]
+inline overload equals?(y:T, z:Complex[T]) = equals?(z,y);
+
+[T | Numeric?(T)]
+inline overload equals?(z:Complex[T], y:Complex[T]) {
+    return if(z.re==y.re and z.im==y.im) true else false;
+}
+
+[T | Numeric?(T)]
+inline overload notEquals?(z:Complex[T], y:T) = not equals?(z, y);
+
+[T | Numeric?(T)]
+inline overload notEquals?(y:T,z:Complex[T]) = not equals?(z, y);
+
+[T | Numeric?(T)]
+inline overload notEquals?(z:Complex[T], y:Complex[T]) = not equals?(z,y);
+
+[T | Numeric?(T)]
+inline overload minus(z:Complex[T]) = Complex[T](-z.re,-z.im);
+
+[T | Numeric?(T)]
+inline overload plus(z:Complex[T]) = z;
+
+[T | Numeric?(T)]
+inline overload add(z:Complex[T], y:Complex[T]) = Complex[T](z.re + y.re, z.im+y.im);
+
+[T | Numeric?(T)]
+inline overload subtract(z:Complex[T], y:Complex[T]) = Complex[T](z.re - y.re,z.im-y.im);
+
+[T | Numeric?(T)]
+inline overload multiply(z:Complex[T], y:Complex[T]) = Complex[T](z.re*y.re-z.im*y.im,z.im*y.re+z.re*y.im);
+
+[T | Numeric?(T)]
+inline overload divide(z:Complex[T], y:Complex[T]) r:Complex[T] {
+    r = z*y;
+    var b = y.re*y.re+y.im*y.im;
+    r.re = r.re/b;
+    r.im = r.im/b;
+}
+
+[T | Numeric?(T)]
+inline overload add(z:Complex[T], y:T) = Complex[T](z.re + y,z.im);
+
+[T | Numeric?(T)]
+inline overload add(y:T,z:Complex[T]) = add(z,y);
+
+[T | Numeric?(T)]
+inline overload subtract(z:Complex[T], y:T) = Complex[T](z.re - y, z.im);
+
+[T | Numeric?(T)]
+inline overload subtract(y:T,z:Complex[T]) = Complex[T](y-z.re, -z.im);
+
+[T | Numeric?(T)]
+inline overload multiply(z:Complex[T], y:T) = Complex[T](z.re*y, z.im*y);
+
+[T | Numeric?(T)]
+inline overload multiply(y:T,z:Complex[T]) = multiply(z,y);
+
+[T | Numeric?(T)]
+inline overload divide(z:Complex[T], y:T) = Complex[T](z.re/y, z.im/y);
+
+[T | Numeric?(T)]
+inline overload divide(y:T,z:Complex[T]) = divide(Complex[T](y),z);
+
+/** Trig functions. */
+[T | Numeric?(T)]
+inline sin(z:Complex[T]) = Complex[T](math.sin(z.re) * libc.cosh(z.im), libc.cos(z.re) * libc.sinh(z.im));
+
+[T | Numeric?(T)]
+inline cos(z:Complex[T]) = Complex[T](libc.cos(z.re) * libc.cosh(z.im), libc.sin(z.re) * libc.sinh(z.im));
+
+[T | Numeric?(T)]
+inline pow(z:Complex[T],n:T) {
+    if(n==T(1)) return z;
+    if(n==T(0)) return complex(T(1));
+    var m, ph = libc.pow(abs(z),n), arg(z)*n;
+    return complex(m*libc.cos(ph), m*libc.sin(ph));
+}
+
+[T | Numeric?(T)]
+inline exp(z:Complex[T]) {
+    var zero, one = T(0),T(1);
+    var err, k, sum, sump = one, one, complex(one), complex(one);
+    while(err > 1e-12 and k < 171) {
+        sump = sum;
+        sum = sum + pow(z,k)/libc.tgamma(k+one);
+        err = abs(sum - sump);
+        k += one;
+    }
+    return sum;
+}
+
+[T | Numeric?(T)]
+inline log(z:Complex[T]) = Complex[T](libc.log(abs(z)), arg(z));
+
+[T | Numeric?(T)]
+inline overload pow(z:Complex[T],y:Complex[T]) = exp(y*log(z));
+
+/** Square root. */
+[T | Numeric?(T)]
+inline sqrt(z:Complex[T]) r:Complex[T]{
+    var zero,one,half = T(0),T(1),T(0.5);
+    if (z == zero)
+        r.re, r.im = zero, zero;
+    else {
+        var x = libc.fabs(z.re);
+        var y = libc.fabs(z.im);
+        var w,q = zero,zero;
+        if (x >= y) {
+            q = y / x;
+            w = libc.sqrt(x) * libc.sqrt(half * (one + libc.sqrt(one + q * q)));
+        } else {
+            q = x / y;
+            w = libc.sqrt(y) * libc.sqrt(half * (q + libc.sqrt(one + q * q)));
+        }
+        if (z.re >= zero)
+            r.re,r.im = w, z.im / (w + w);
+        else {
+            if (z.im < zero)
+                w = -w;
+            r.re,r.im = z.im / (w + w), w;
+        }
+    }
+}
+
+main(){
+
+    var z = complex(2.0,3.0);
+    var y = complex(4.0,1.0);
+    var w = complex(4.0);
+    var x = z;
+    println(z);
+    println(y);
+    println(w);
+    println(x);
+
+    println(abs(z));
+    println(arg(w));
+    println(conj(z));
+    println(sin(z));
+    //println(cos(z));
+    //println(sqrt(z));
+    //println(exp(z));
+    println(exp(w));
+    println(libc.exp(4.0));
+    println(log(w)," == ",libc.log(4.0));
+    println(pow(z,2.0));
+    println(pow(z,w));
+    println(pow(z,y));
+
+}

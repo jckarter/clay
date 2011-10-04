@@ -1,0 +1,430 @@
+import simd;
+
+__llvm__ {
+    @VI32MAX = unnamed_addr constant <4 x i32> <i32 4294967295,i32 4294967295,i32 4294967295 ,i32 4294967295>
+    @VI64MAX = unnamed_addr constant <4 x i64> <i64 18446744073709551615,i64 18446744073709551615,i64 18446744073709551615 ,i64 18446744073709551615>
+}
+
+procedure vecOrderedAndEquals?;
+procedure vecOrderedAndGreater?;
+procedure vecOrderedAndGreaterEquals?;
+procedure vecOrderedAndLesser?;
+procedure vecOrderedAndLesserEquals?;
+procedure vecOrderedAndNotEquals?;
+procedure vecOrdered?;
+
+procedure vecUnorderedOrEquals?;
+procedure vecUnorderedOrGreater?;
+procedure vecUnorderedOrGreaterEquals?;
+procedure vecUnorderedOrLesser?;
+procedure vecUnorderedOrLesserEquals?;
+procedure vecUnorderedOrNotEquals?;
+procedure vecUnordered?;
+
+
+
+
+[T,n | T==Float32]
+overload vecOrderedAndEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp oeq ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Double]
+overload vecOrderedAndEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp oeq ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+
+[T,n | T==Float64]
+overload vecOrderedAndGreater?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ogt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> *  @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Float32]
+overload vecOrderedAndGreater?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ogt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+
+
+
+[T,n | T==Float32]
+overload vecOrderedAndGreaterEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp oge ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Double]
+overload vecOrderedAndGreaterEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp oge ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecOrderedAndLesser?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp olt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n| T==Float32]
+overload vecOrderedAndLesserEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ole ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecOrderedAndNotEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp one ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T | T==Float32]
+overload vecOrdered?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ord ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+
+[T,n | T==Float32]
+overload vecUnorderedOrEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ueq ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecUnorderedOrGreater?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ugt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n| T==Float32]
+overload vecUnorderedOrGreaterEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp uge ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecUnorderedOrLesser?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ult ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecUnorderedOrLesserEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ule ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecUnorderedOrNotEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp une ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+[T,n | T==Float32]
+overload vecUnordered?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp uno ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i32>
+    %im = load <${n} x i32> * @VI32MAX
+    %mulres = mul <${n} x i32> %intres, %im
+    %result = bitcast <${n} x i32> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i32 0
+}
+
+
+[T,n | T==Double]
+overload vecOrderedAndLesser?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp olt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n| T==Double]
+overload vecOrderedAndLesserEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ole ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecOrderedAndNotEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp one ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T | T==Double]
+overload vecOrdered?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ord ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+
+[T,n | T==Double]
+overload vecUnorderedOrEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ueq ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecUnorderedOrGreater?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ugt ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n| T==Double]
+overload vecUnorderedOrGreaterEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp uge ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecUnorderedOrLesser?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ult ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecUnorderedOrLesserEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp ule ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecUnorderedOrNotEquals?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp une ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+
+[T,n | T==Double]
+overload vecUnordered?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
+    %aval = load ${Vec[T,n]} * %a
+    %bval = load ${Vec[T,n]} * %b
+    %flag = fcmp uno ${Vec[T,n]} %aval, %bval
+    %intres = zext <${n} x i1> %flag to <${n} x i64>
+    %im = load <${n} x i64> * @VI64MAX
+    %mulres = mul <${n} x i64> %intres, %im
+    %result = bitcast <${n} x i64> %mulres to ${Vec[T,n]}
+    store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
+    ret i64 0
+}
+//
+// equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
+//
+
+[A,n | Numeric?(A)]
+inline overload equals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndEquals?(a, b);
+
+[A,n | Numeric?(A)]
+inline overload notEquals?(a:Vec[A,n], b:Vec[A,n]) = vecUnorderedOrNotEquals?(a, b);
+
+
+[A,n | Numeric?(A)]
+inline overload lesser?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndLesser?(a, b);
+
+[A,n | Numeric?(A)]
+inline overload lesserEquals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndLesserEquals?(a, b);
+
+
+[A,n | A==Float32]
+inline overload greater?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreater?(a, b);
+
+[A,n | A==Float64]
+inline overload greater?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreater?(a, b);
+
+[A,n | Numeric?(A)]
+inline overload greaterEquals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreaterEquals?(a, b);
+
+
+main(){
+    var a = Vec[Float32,4](0.0f,0.0f,0.0f,2.0f);
+    var b = Vec[Float32,4](0.0f,0.0f,1.0f,2.0f);
+    var c = b > a;
+    println(Vec[Int,4](c));
+}
