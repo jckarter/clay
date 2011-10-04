@@ -35,10 +35,46 @@ unsigned long long HiResTimer::elapsedNanos()
 
 #elif defined(_WIN32) || defined(_WIN64)
 
-HiResTimer::HiResTimer() {}
-void HiResTimer::start() {}
-void HiResTimer::stop() {}
-unsigned long long HiResTimer::elapsedNanos() { return 0; }
+#include <windows.h>
+#include <assert.h>
+
+HiResTimer::HiResTimer()
+    : elapsedTicks(0), running(0), startTicks(0)
+{
+}
+
+static unsigned long long _get_counter()
+{
+    LARGE_INTEGER counter;
+    assert(QueryPerformanceCounter(&counter) != 0);
+    
+    return (unsigned long long)counter.QuadPart;
+}
+
+void HiResTimer::start()
+{
+    if (++running == 1)
+        startTicks = _get_counter();
+}
+
+void HiResTimer::stop()
+{
+    if (--running == 0) {
+        unsigned long long end = _get_counter();
+        elapsedTicks += (end - startTicks);
+    }
+}
+
+unsigned long long HiResTimer::elapsedNanos()
+{
+    LARGE_INTEGER frequency;
+    assert(QueryPerformanceFrequency(&frequency) != 0);
+
+    double performanceCounterRate = 1000000000.0 / (double)frequency.QuadPart;
+
+    return (unsigned long long)((double)elapsedTicks * performanceCounterRate);
+}
+
 
 #else // Unices
 
