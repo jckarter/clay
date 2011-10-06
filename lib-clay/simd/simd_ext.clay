@@ -21,6 +21,8 @@ procedure vecUnorderedOrLesserEquals?;
 procedure vecUnorderedOrNotEquals?;
 procedure vecUnordered?;
 
+procedure vecftoi;                  //WORKING
+procedure vecitof;                  //WORKING
 
 
 
@@ -394,6 +396,59 @@ overload vecUnordered?(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__ {
     store ${Vec[T,n]} %result, ${Vec[T,n]} * %returned
     ret i64 0
 }
+
+//Resize casts
+procedure truncate;
+
+[T,n,U | Numeric?(T) and Numeric?(U)]
+overload truncate(a:Vec[T,n],static U) r:Vec[U,n] __llvm__ {
+    %1 = load <${n} x $T> * %a
+    %2 = fptrunc <${n} x $T> %1 to <${n} x $U>
+    store <${n} x $U> %2, <${n} x $U> * %r
+    ret i32 0
+}
+
+[T,n,U | Integer?(T) and Integer?(U)]
+overload truncate(a:Vec[T,n],static U) r:Vec[U,n] __llvm__ {
+    %1 = load <${n} x $T> * %a
+    %2 = trunc <${n} x $T> %1 to <${n} x $U>
+    store <${n} x $U> %2, <${n} x $U> * %r
+    ret i32 0
+}
+
+
+[T,n | Float?(T)]
+inline overload vecftoi(x:Vec[T,n]) r:Vec[Int,n] __llvm__ {
+    %1 = load <${n} x $T>* %x
+    %2 = fptosi <${n} x $T> %1 to <${n} x i32>
+    store <${n} x i32> %2, <${n} x i32>* %r
+    ret i32 0
+}
+
+[T,n | T==Float64]
+inline overload vecftoi(x:Vec[T,n]) r:Vec[Int64,n] __llvm__ {
+    %1 = load <${n} x $T>* %x
+    %2 = fptosi <${n} x $T> %1 to <${n} x i64>
+    store <${n} x i64> %2, <${n} x i64>* %r
+    ret i64 0
+}
+
+[T,n | T==Int]
+inline overload vecitof(x:Vec[T,n]) r:Vec[Float32,n] __llvm__ {
+    %1 = load <${n} x $T>* %x
+    %2 = sitofp <${n} x $T> %1 to <${n} x float>
+    store <${n} x float> %2, <${n} x float>* %r
+    ret i32 0
+}
+
+[T,n | T==Int64]
+inline overload vecitof(x:Vec[T,n]) r:Vec[Float64,n] __llvm__ {
+    %1 = load <${n} x $T>* %x
+    %2 = sitofp <${n} x $T> %1 to <${n} x double>
+    store <${n} x double> %2, <${n} x double>* %r
+    ret i64 0
+}
+
 //
 // equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
 //
@@ -427,4 +482,6 @@ main(){
     var b = Vec[Float32,4](0.0f,0.0f,1.0f,2.0f);
     var c = b > a;
     println(Vec[Int,4](c));
+    var d = Vec[Double,4](16.4);
+    println(truncate(Vec[Long,4](d), Short));
 }
