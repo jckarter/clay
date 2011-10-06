@@ -34,7 +34,7 @@ procedure ceil;     // NUM + 4VEC   //WORKING
 procedure tan;
 procedure acos;     // NUM + 4VEC
 procedure asin;     // NUM + 4VEC
-procedure sign;     // NUM + 4VEC   //WORKING
+procedure sign;     // NUM + 4VEC
 procedure abs;      // NUM + 4VEC   //WORKING
 procedure atan;     // NUM + 4VEC   //WORKING
 procedure atan2;    // NUM + 4VEC   //WORKING
@@ -47,6 +47,9 @@ procedure sinh;
 procedure atanh;
 procedure acosh;
 procedure asinh;
+procedure copysign;
+procedure signbit;
+procedure sgn;
 
 
 alias C_00004[T,n] = Vec[T,n](T(1.0E-4));
@@ -59,14 +62,10 @@ alias CL_SIGN[n] = Vec[Long,n](Long(0x8000000000000000u64));
 alias CL_SIGNMASK[n] = Vec[Long,n](0x8000FFFFFFFFFFFFu);
 alias CI_RSIGN[n] = Vec[Int,n](0x7FFFFFFFi32);
 alias CL_RSIGN[n] = Vec[Long,n](0x7FFFFFFFFFFFFFFFi64);
-alias C_LI[n] = Vec[Float,n](Float(0x800000));
-alias C_LL[n] = Vec[Float64,n](Float64(0x10000000000000));
 alias CI_EXP[I,n] = Vec[I,n](I(0x7F800000u32));
 alias CI_EXP_1[I,n] = Vec[I,n](I(0x3F000000u32));
 alias CL_EXP[I,n] = Vec[I,n](I(0x7ff0000000000000u64));
 alias CL_EXP_1[I,n] = Vec[I,n](I(0x3fe0000000000000u64));
-alias CI_126[I,n] = Vec[I,n](I(126));
-alias CL_1022[I,n] = Vec[I,n](I(1022));
 alias C_LOG2EF[T,n] = Vec[T,n](T(1.44269504088896341));
 alias C_LOG2EA[T,n] = Vec[T,n](T(0.44269504088896340736));
 alias CF4_2414213562373095[T,n] = Vec[T,n](T(2.414213562373095));
@@ -104,7 +103,6 @@ alias tf2[T,n] = Vec[T,n](T( 2.44301354525E-2));
 alias tf3[T,n] = Vec[T,n](T( 5.34112807005E-2));
 alias tf4[T,n] = Vec[T,n](T( 1.33387994085E-1));
 alias tf5[T,n] = Vec[T,n](T( 3.33331568548E-1));
-
 alias C_SQRTHF[T,n] = Vec[T,n](T( 0.707106781186547524f));
 alias C_LOG0[T,n] = Vec[T,n](T( 7.0376836292E-2f));
 alias C_LOG1[T,n] = Vec[T,n](T( - 1.1514610310E-1f));
@@ -135,28 +133,63 @@ inline recip( a:Vec[T,n]) {
     return (T(1) - a * x0 )*x0+x0;
 }
 
-[T,n| Float?(T)]
+
+[T,n| Float?(T) or T==Int]
 inline overload abs( x:Vec[T,n]) = bitwiseAnd(x, CI_RSIGN[n]);
 
-[T,n | T==Float64]
+[T,n | T==Float64 or T==Int64]
 inline overload abs( x:Vec[T,n]) = bitwiseAnd(x, CL_RSIGN[n]);
 
 [T | Numeric?(T)]
 inline overload abs( x:T) = abs(Vec[T,4](x))[0];
 
+
+/*
 [T,n | Float?(T)]
 inline overload sign( x: Vec[T,n]) = Vec[T,n](bitwiseAnd(CI_SIGN[n], x));
 
 [T,n | T==Double]
 inline overload sign( x: Vec[T,n]) = Vec[T,n](bitwiseAnd(CL_SIGN[n], x));
 
-[T,n | Integer?(T)]
-inline overload sign( x: Vec[T,n]) = T(1) - shiftRight( bitwiseAnd(CI_SIGN[n], x), 30 );
 
-[T,n | T==Long]
-inline overload sign( x: Vec[T,n]) = T(1) - shiftRight( bitwiseAnd(CL_SIGN[n], x), 30 );
+[T | Numeric?(T)]
+inline overload sign(x:T) = sign(Vec[T,4](x))[0];
+*/
 
-[T | Numeric?(T)] inline overload sign( x:T) = sign(Vec[T,4])[0];
+[T,n | Numeric?(T)]
+inline overload sign(x:Vec[T,n]) = copysign(x,Vec[T,n](T(0)));
+
+[T | Numeric?(T)]
+inline overload sign(x:T) = sign(Vec[T,4](x))[0];
+
+[T | Numeric?(T)]
+inline overload sgn(x:T) = if(x>=T(0)) T(1) else T(-1);
+
+[T | Numeric?(T)]
+inline overload signbit(x:T) {
+    alias SIGNPOS_BYTE = TypeSize(T)-1;
+    return bitwiseAnd(Pointer[UInt8](&x)[SIGNPOS_BYTE] , 0x80) != 0;
+}
+
+[T,n | T==Float32 or T==Int32]
+inline overload copysign(from:Vec[T,n],  to:Vec[T,n]) {
+    var pto = bitwiseAnd(Vec[Int32,n](to) ,0x7FFFFFFFu32);
+    pto = bitwiseOr(pto,bitwiseAnd(Vec[Int32,n](from), 0x80000000u32));
+    return Vec[T,n](pto);
+}
+
+[T,n | T==Float64 or T==Int64]
+inline overload copysign(from:Vec[T,n],  to:Vec[T,n]) {
+    var pto = bitwiseAnd(Vec[Int64,n](to) ,0x7FFFFFFFFFFFFFFFu64);
+    pto = bitwiseOr(pto,bitwiseAnd(Vec[Int64,n](from), 0x8000000000000000u64));
+    return Vec[T,n](pto);
+}
+
+
+[T | Numeric?(T)]
+inline overload copysign(from:T, to:T) = copysign(Vec[T,4](from),Vec[T,4](to))[0];
+
+
 
 
 [T,n | Numeric?(T)]
@@ -178,13 +211,11 @@ inline overload atan(x:Vec[T,n]){
         - CF4_138776856032E_1[T,n]) * z
         + CF4_199777106478E_1[T,n]) * z
         - CF4_333329491539E_1[T,n]) * z * nx + nx;
-
     return bitwiseXor(y, sn);
 }
 
 [T | Numeric?(T)]
 inline overload atan(x:T) = atan(Vec[T,4](x))[0];
-
 
 [T,n]
 inline overload atan2(y:Vec[T,n] , x:Vec[T,n] ){
@@ -200,11 +231,8 @@ inline overload atan2(y:Vec[T,n] , x:Vec[T,n] ){
       return w + z + x_zero_PIO2 * (T(1) - y_zero - y_negativ_2 ) + y_zero * x_neg_PI;
 }
 
-
 [T | Numeric?(T)]
 inline overload atan2(x:T,y:T) = atan2(Vec[T,4](x),Vec[T,4](y))[0];
-
-
 
 [T,n | T==Float]
 inline overload sqrt(a:Vec[T,n]) r:Vec[T,n] __llvm__ {
@@ -287,7 +315,7 @@ inline overload frexp(x:Vec[T,n]){
 inline overload frexp(x:Vec[T,n]){
       var ex = CI_EXP[Int,n]; //int             // exponent mask
       ex = bitwiseAnd( ex, x);                    // extract exponent
-      var pw2 = shiftRight(ex,23)-CI_126[Int,n];//int // compute exponent
+      var pw2 = shiftRight(ex,23)-126i32;//int // compute exponent
       var nx = bitwiseAnd(x, bitwiseNot(CI_EXP[Int,n]));           // clear exponent in x
       nx = bitwiseOr(nx, CI_EXP_1[Int,n]);               // insert exponent +1 in x
       return (nx,pw2);
@@ -298,7 +326,6 @@ inline overload frexp(x:T) {
     var res = frexp(Vec[T,4](x));
     return (res.0[0],res.1[0]);
 }
-
 
 [T,n,I | T==Float64 and I==Int64]
 inline overload ldexp(x:Vec[T,n], y:Vec[I,n]) {
@@ -321,8 +348,6 @@ inline overload ldexp(x:Vec[T,n], y:Vec[I,n]) {
 [T,I | Numeric?(T)]
 inline overload ldexp(x:T, n:I) = ldexp(Vec[T,4](x),Vec[I,4](n));
 
-
-
 [T,n | Numeric?(T)]
 inline overload exp(x:Vec[T,n] ){
     var a = floor( C_LOG2EF[T,n] * x + T(0.5));
@@ -342,25 +367,6 @@ inline overload exp(x:Vec[T,n] ){
 [T | Numeric?(T)]
 inline overload exp(a:T) = exp(Vec[T,4](a))[0];
 
-/*
-[T | Float?(T)]
-inline overload exp(a:T) r:T __llvm__ {
-    %1 = load $T* %a
-    %2 = call $T @llvm.exp.f32($T %1);
-    store $T %2, $T* %r
-    ret i32 0
-}
-
-
-[T | T==Float64 ]
-inline overload exp(a:T) r:T __llvm__ {
-    %1 = load $T* %a
-    %2 = call $T @llvm.exp.f64($T %1)
-    store $T %2, $T* %r
-    ret i32 0
-}
-
-*/
 
 /*
 [T] frexp2( value:T) {
@@ -433,23 +439,6 @@ inline overload log(x:Vec[T,n] ) {
 [T | Numeric?(T)]
 inline overload log(a:T) = log(Vec[T,4](a))[0];
 
-/*
-[T | Float?(T)]
-inline overload log(a:T) r:T __llvm__ {
-    %1 = load $T* %a
-    %2 = call $T @llvm.log.f32($T %1);
-    store $T %2, $T* %r
-    ret i32 0
-}
-
-[T | T==Float64 ]
-inline overload log(a:T) r:T __llvm__ {
-    %1 = load $T* %a
-    %2 = call $T @llvm.log.f64($T %1)
-    store $T %2, $T* %r
-    ret i32 0
-}
-*/
 
 [T | T==Float64 ]
 inline overload pow(a:T,b:T) r:T __llvm__ {
@@ -565,70 +554,56 @@ inline overload acos(x:T) = atan2(sqrt(T(1)-x*x), x);
 inline overload asin(x:T) = atan2(x, sqrt(T(1)-x*x));
 
 
-/*
-[T,n]
+
+[T,n | Numeric?(T)]
 inline sincos(x:Vec[T,n]) {
 
-    alias fpi = C_FOPI[T,n];
-    alias dp1 = DP1[T,n];
-    alias dp2 = DP2[T,n];
-    alias dp3 = DP3[T,n];
-    alias v05 = C_05[T,n];
-    alias v1  = C_1[T,n];
-
-    alias   i0 =  C_0[T,n];
-    alias   i1 =  C_1[T,n];
-    alias   i2 =  C_2[T,n];
-    alias   i3 =  C_3[T,n];
-    alias   i4 =  C_4[T,n];
-    alias   i7 =  C_7[T,n];
-    alias   is =  CI_SIGN[n];
-
-    var sign_s = bitwiseAnd(x, is);
-    var nx = bitwiseNot(bitwiseAnd(x, is));
-    var x1 = fpi * x;
-    var j = vecftoi(x1); // integer part of x/(PI/4)
-    j = j + bitwiseAnd(j,i1);
+    var sign_s = sign(x); //int
+    var nx = bitwiseNot(sign_s);
+    var x1 = C_FOPI[T,n] * x;
+    var j = vecftoi(x1);        // integer part of x/(PI/4)
+    j += bitwiseAnd(j, T(1));
     var y = vecitof(j);
 
-    j = bitwiseAnd(j, i7);
+    j = bitwiseAnd(j, T(7));
 
-    var sign_c = bitwiseAnd(-shiftRight(bitwiseAnd(j,i4),2) , is);
+    var sign_c = sign(-shiftRight(bitwiseAnd(j,T(4)),2));
 
     sign_s = bitwiseXor(sign_s , sign_c); // revert sign if j=4,6
-    j = bitwiseAnd(j, i3);   // j= 0,2
+    println("sign_s=",sign_s);
 
-    var j_larger_1 = -shiftRight(bitwiseAnd(j,i2),1);
-    sign_c = bitwiseXor(sign_c, bitwiseAnd(j_larger_1 , is));
+    j = bitwiseAnd(j, T(3));   // j= 0,2
 
-    nx = x-y*dp1;
-    nx = nx-y* dp2;
-    nx = nx-y* dp3;
+    var j_larger_1 = -shiftRight(bitwiseAnd(j,T(2)),1);
+    sign_c = bitwiseXor(sign_c, sign(j_larger_1 ));
+    println("sign_c=",sign_c);
+
+    nx -= y*DP1[T,n];
+    nx -= y*DP2[T,n];
+    nx -= y*DP3[T,n];
 
     var z = nx * nx;
-    var j_equals_1_or_2 = - shiftRight(bitwiseAnd(j,i2), 1 );
-    var y0  = (( cf0[T,n] * z + cf1[T,n] ) * z + cf2[T,n]) * z * z - v05 * z + v1;
+    var j_equals_1_or_2 = - shiftRight(bitwiseAnd(j,T(2)), 1 );
+    println("j_equals_1_or_2=",j_equals_1_or_2);
+
+    var y0  = (( cf0[T,n] * z + cf1[T,n] ) * z + cf2[T,n]) * z * z - T(0.5) * z + T(1);
     var y1  = (( sf0[T,n] * z + sf1[T,n] ) * z + sf2[T,n]) * z * nx + nx;
+    println("y0=",y0);
+    println("y1=",y1);
 
-    var s = bitwiseXor(vec_sel(y1,y0, Vec[T,n](j_equals_1_or_2)), sign_s);
-    var c = bitwiseXor(vec_sel(y0,y1, Vec[T,n](j_equals_1_or_2)), sign_c);
-    return (s,c);
+    //var s = bitwiseXor(vec_sel(y1,y0, (j_equals_1_or_2)), sign_s);
+    //var c = bitwiseXor(vec_sel(y0,y1, (j_equals_1_or_2)), sign_c);
+    return (1,2);//(s,c);
 }
+
 
 [T,n]
-inline overload sin(x:Vec[T,n]){
-      var s = sincos(x).0;
-      return s;
-}
+inline overload sin(x:Vec[T,n]) = sincos(x).0;
 
 [T,n]
-inline overload cos(x:Vec[T,n]){
-      var c = sincos(x).1;
-      return c;
-}
+inline overload cos(x:Vec[T,n]) = sincos(x).1;
 
-*/
-
+/*
 [T | Float?(T)]
 inline overload sin(a:T) r:T __llvm__ {
     %1 = load $T* %a
@@ -662,10 +637,12 @@ inline overload cos(a:T) r:T __llvm__ {
     ret i32 0
 }
 
+*/
+
 [T,n ]
 inline overload tan(x:Vec[T,n]){
 
-    var sn = bitwiseAnd(x, CI_SIGN[n]);
+    var sn = sign(x);
     var nx = bitwiseXor(x, sn);
     var j = vecftoi(C_FOPI[T,n] * x);
     var y = vecitof(j + bitwiseAnd(j , T(1)));
@@ -781,6 +758,21 @@ main(){
     var b = Vec[Float64,4](2.0);
     var c = Vec[Int64,4](2i64);
     println("sign=",sign(a));
+    println("sign=",sign(0.23f));
+    println("sign=",sign(1.45));
+    println("sign=",sign(-5.87f));
+    println("sign=",sign(-234.76));
+    println("sign=",sign(Vec[Int,4](-5i32)));
+    println("sign=",sign(-23499997i64));
+
+    println("signbit=",signbit(-2));
+    println("copysign=",copysign(-2.0, 0.0));
+    println("sgn=",sgn(-2));
+
+    println(-1.0*0);
+
+
+
     println("atan=",atan(a));
     println("round=",round(a));
     println("floor=",floor(a));
@@ -796,9 +788,9 @@ main(){
 
     println("asin=",asin(a));
     println("acos=",acos(a));
-    //println("tan=",tan(a));
-    //println("sin=",sin(a));
-    //println("cos=",cos(a));
+    println("tan=",tan(a));
+    println("sin=",sin(a));
+    println("cos=",cos(a));
     println("cosh=",cosh(a));
     println("atan2=",atan2(a,b));
     //println("sqrt=",sqrt(a));
