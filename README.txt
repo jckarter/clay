@@ -15,23 +15,9 @@ clay-bindgen tool which generates Clay interfaces by parsing C header
 files. The Clay build system needs CMake. Make sure you have CMake
 version 2.6 or later.
 
-WARNING: LLVM builds in debug mode by default. This makes the
-Clay compiler crawl. Configure LLVM with "--enable-optimized" for good
-performance.
-
-Here are the commands for building LLVM and Clang. These steps result
-in the LLVM repo installed as $HOME/code/llvm, and the binaries are
-installed under /usr/local/.
-
-    mkdir -p $HOME/code
-    cd $HOME/code
-    svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
-    cd llvm/tools
-    svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
-    cd ..
-    ./configure --enable-targets=host-only --enable-optimized
-    make
-    make install
+NOTE: LLVM builds in debug mode by default. This makes the
+Clay compiler crawl. If you're building LLVM from source, configure it
+with "./configure --enable-optimized" for good performance.
 
 
 Build Clay
