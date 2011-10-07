@@ -10,11 +10,10 @@ Visit http://claylabs.com/clay for more information.
 Pre-requisites
 --------------
 
-Clay requires LLVM and Clang to build. Clang is used by the
+Clay requires LLVM 2.9 and Clang to build. Clang is used by the
 clay-bindgen tool which generates Clay interfaces by parsing C header
-files. I recommend tracking LLVM SVN as that's what we do. The Clay
-build system needs CMake. Make sure you have CMake version 2.6 or
-later.
+files. The Clay build system needs CMake. Make sure you have CMake
+version 2.6 or later.
 
 WARNING: LLVM builds in debug mode by default. This makes the
 Clay compiler crawl. Configure LLVM with "--enable-optimized" for good
