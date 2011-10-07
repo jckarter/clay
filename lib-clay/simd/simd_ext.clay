@@ -1,4 +1,5 @@
 import simd;
+import numbers.floats.*;
 
 __llvm__ {
     @VI32MAX = unnamed_addr constant <4 x i32> <i32 4294967295,i32 4294967295,i32 4294967295 ,i32 4294967295>
@@ -453,28 +454,66 @@ inline overload vecitof(x:Vec[T,n]) r:Vec[Float64,n] __llvm__ {
 // equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
 //
 
-[A,n | Numeric?(A)]
+[A,n | Float?(A)]
 inline overload equals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndEquals?(a, b);
 
-[A,n | Numeric?(A)]
+[A,n | Float?(A)]
 inline overload notEquals?(a:Vec[A,n], b:Vec[A,n]) = vecUnorderedOrNotEquals?(a, b);
 
 
-[A,n | Numeric?(A)]
+[A,n | Float?(A)]
 inline overload lesser?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndLesser?(a, b);
 
-[A,n | Numeric?(A)]
+[A,n | Float?(A)]
+inline overload lesser?(a:A, b:Vec[A,n]) = vecOrderedAndLesser?(Vec[A,n](a), b);
+
+[A,n | Float?(A)]
+inline overload lesser?(a:Vec[A,n], b:A) = vecOrderedAndLesser?(a, Vec[A,n](b));
+
+
+[A,n | Float?(A)]
 inline overload lesserEquals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndLesserEquals?(a, b);
 
 
-[A,n | A==Float32]
+
+[A,n | Float?(A)]
 inline overload greater?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreater?(a, b);
 
-[A,n | A==Float64]
-inline overload greater?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreater?(a, b);
+[A,n | Float?(A)]
+inline overload greater?(a:A, b:Vec[A,n]) = vecOrderedAndGreater?(Vec[A,n](a), b);
 
-[A,n | Numeric?(A)]
+[A,n | Float?(A)]
+inline overload greater?(a:Vec[A,n], b:A) = vecOrderedAndGreater?(a, Vec[A,n](b));
+
+
+[A,n | Float?(A)]
 inline overload greaterEquals?(a:Vec[A,n], b:Vec[A,n]) = vecOrderedAndGreaterEquals?(a, b);
+
+[n]
+inline overload floatFromBits(x:Vec[Long,n]) = forward bitwiseCast(x, Double);
+
+[n]
+inline overload floatFromBits(x:Vec[Int,n]) = forward bitwiseCast(x, Float);
+
+[n]
+inline overload floatBits(x:Vec[Double,n]) = forward bitwiseCast(x, UInt64);
+
+[n]
+inline overload floatBits(x:Vec[Float,n]) = forward bitwiseCast(x, UInt32);
+
+
+[n]
+overload floatExponent(x:Vec[Double,n]) = bitwiseAnd(shiftRight(floatBits(x), 52), 0x7FF_u64);
+
+[n]
+overload floatExponent(x:Vec[Float,n]) = bitwiseAnd(shiftRight(floatBits(x), 23), 0xFFu);
+
+[n]
+overload floatMantissa(x:Vec[Double,n]) = bitwiseAnd(floatBits(x), 0x000F_FFFF_FFFF_FFFF_u64);
+
+[n]
+overload floatMantissa(x:Vec[Float,n]) = bitwiseAnd(floatBits(x), 0x007F_FFFFu);
+
 
 
 main(){

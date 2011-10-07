@@ -1,0 +1,970 @@
+import simd;
+import simd_ext.*;
+import numbers.floats.*;
+
+__llvm__ {
+    declare <4 x float> @llvm.sqrt.v4f32(<4 x float>)
+    declare <4 x double> @llvm.sqrt.v4f64(<4 x double>)
+    declare float @llvm.sin.f32(float)
+    declare double @llvm.sin.f64(double)
+    declare float @llvm.cos.f32(float)
+    declare double @llvm.cos.f64(double)
+    declare float @llvm.sqrt.f32(float)
+    declare double @llvm.sqrt.f64(double)
+    declare float @llvm.exp.f32(float)
+    declare double @llvm.exp.f64(double)
+    declare float @llvm.log.f32(float)
+    declare double @llvm.log.f64(double)
+    declare float @llvm.pow.f32(float,float)
+    declare double @llvm.pow.f64(double,double)
+    declare float @llvm.powi.f32(float,i32)
+    declare double @llvm.powi.f64(double,i32)
+}
+
+procedure sin;
+procedure cos;
+procedure sqrt;     // NUM + 4VEC   //WORKING
+procedure log;      // NUM + 4VEC   //WORKING
+procedure exp;      // NUM + VEC    //WORKING
+procedure frexp;    // NUM + VEC    //WORKING
+procedure ldexp;    // NUM + VEC    //WORKING
+procedure pow;
+procedure round;    // NUM + 4VEC   //WORKING
+procedure floor;    // NUM + 4VEC   //WORKING
+procedure ceil;     // NUM + 4VEC   //WORKING
+procedure tan;
+procedure acos;     // NUM + 4VEC
+procedure asin;     // NUM + 4VEC
+procedure sign;     // NUM + 4VEC
+procedure abs;      // NUM + 4VEC   //WORKING
+procedure atan;     // NUM + 4VEC   //WORKING
+procedure atan2;    // NUM + 4VEC   //WORKING
+procedure dim;
+procedure max;
+procedure min;
+procedure tanh;
+procedure cosh;     // NUM + 4VEC   //WORKING
+procedure sinh;
+procedure atanh;
+procedure acosh;
+procedure asinh;
+procedure copysign;
+procedure sgn;
+
+
+
+alias C_00004 = 1.0E-4;
+alias C_SMALL = 1.0E-35;
+alias C_PIF = 3.14159265358979323846;
+alias C_PIO2F = 1.570796326794896619;
+alias C_PIO4F = 0.7853981633974483096;
+alias CI_SIGN = 0x8000_0000_u32;
+alias CL_SIGN = 0x8000_0000_0000_0000_u64;
+alias CL_SIGNMASK = 0x8000_FFFF_FFFF_FFFF_u;
+alias CI_RSIGN = 0x7FFF_FFFF_i32;
+alias CL_RSIGN = 0x7FFF_FFFF_FFFF_FFFF_i64;
+alias CI_EXP = 0x7F80_0000_u32;
+alias CI_EXP_1 = 0x3F00_0000_u32;
+alias CL_EXP = 0x7ff0000000000000u64;
+alias CL_EXP_1 = 0x3fe0000000000000u64;
+alias C_LOG2EF = 1.44269504088896341;
+alias C_LOG2EA = 0.44269504088896340736;
+alias CF4_2414213562373095 = 2.414213562373095;
+alias CF4_04142135623730950 = 0.4142135623730950;
+alias CF4_805374449538e_2 = 8.05374449538e-2;
+alias CF4_138776856032E_1 = 1.38776856032E-1;
+alias CF4_199777106478E_1 = 1.99777106478E-1;
+alias CF4_333329491539E_1 = 3.33329491539E-1;
+alias C_EXPC1 = 0.693359375;
+alias C_EXPC2 = -2.12194440e-4;
+alias C_EXP0 = 1.9875691500E-4;
+alias C_EXP1 = 1.3981999507E-3;
+alias C_EXP2 = 8.3334519073E-3;
+alias C_EXP3 = 4.1665795894E-2;
+alias C_EXP4 = 1.6666665459E-1;
+alias C_EXP5 = 5.0000001201E-1;
+alias C_42163199048E_2 = 4.2163199048E-2;
+alias C_24181311049E_2 = 2.4181311049E-2;
+alias C_45470025998E_2 = 4.5470025998E-2;
+alias C_74953002686E_2 = 7.4953002686E-2;
+alias C_16666752422E_1 = 1.6666752422E-1;
+alias C_FOPI = 1.27323954473516;
+alias DP1 = 0.78515625;
+alias DP2 = 2.4187564849853515625e-4;
+alias DP3 = 3.77489497744594108e-8;
+alias sf0 = -1.9515295891E-4;
+alias sf1 = 8.3321608736E-3;
+alias sf2= -1.6666654611E-1;
+alias cf0= 2.443315711809948E-005;
+alias cf1= -1.388731625493765E-003;
+alias cf2=  4.166664568298827E-002;
+alias tf0= 9.38540185543E-3;
+alias tf1= 3.11992232697E-3;
+alias tf2= 2.44301354525E-2;
+alias tf3= 5.34112807005E-2;
+alias tf4=1.33387994085E-1;
+alias tf5= 3.33331568548E-1;
+alias C_SQRTHF= 0.707106781186547524;
+alias C_LOG0= 7.0376836292E-2;
+alias C_LOG1= - 1.1514610310E-1;
+alias C_LOG2=1.1676998740E-1;
+alias C_LOG3= - 1.2420140846E-1;
+alias C_LOG4=1.4249322787E-1;
+alias C_LOG5= - 1.6668057665E-1;
+alias C_LOG6= 2.0000714765E-1;
+alias C_LOG7= - 2.4999993993E-1;
+alias C_LOG8= 3.3333331174E-1;
+alias C_LOG9= -2.12194440e-4;
+alias C_LOGA= 0.693359375;
+
+alias SIGNMASK_64 = 0x8000FFFFFFFFFFFFu64;
+alias EXPBIAS_64 = 0x3FE0000000000000u64;
+alias EXPBIAS_16 = 0x3FE0u16;
+alias EXPMASK_16 = 0x7FF0u16;
+alias ROUND_64 = 0x0010000000000000u64;
+alias ROUND_32 = 0x00800000u32;
+
+
+
+[T,n | Numeric?(T)]
+inline vec_sel(a:Vec[T,n], b:Vec[T,n], sel:Vec[T,n] ) =
+    bitwiseOr(bitwiseAnd(b, sel),bitwiseNot(bitwiseAnd(sel,a)));
+
+[n] inline overload abs( x:Vec[Double,n]) = bitwiseAnd(floatBits(x), CL_RSIGN);
+[n] inline overload abs( x:Vec[Long,n]) = bitwiseAnd(x, CL_RSIGN);
+inline overload abs(x:Double) = bitwiseAnd(floatBits(x), CL_RSIGN);
+inline overload abs(x:Long) = bitwiseAnd(x, CL_RSIGN);
+
+[n] inline overload sign(x:Vec[Double,n]) = bitwiseAnd(floatBits(x),CL_SIGN);
+[n] inline overload sign(x:Vec[Long,n]) = bitwiseAnd(x, CL_SIGN);
+inline overload sign(x:Double) = bitwiseAnd(floatBits(x), CL_SIGN);
+inline overload sign(x:Long) = bitwiseAnd(x, CL_SIGN);
+
+[T | Numeric?(T)]
+inline overload sgn(x:T) = if(x>=T(0)) T(1) else T(-1);
+
+[T,n | Equals?(T,Double) or Equals?(Long)]
+inline overload copysign(from:Vec[T,n],  to:Vec[T,n]) {
+    var pto = bitwiseAnd(Vec[Int64,n](to) ,CL_RSIGN);
+    return Vec[T,n](bitwiseOr(pto,bitwiseAnd(Vec[Int64,n](from), CL_SIGN)));
+}
+
+[T | equals?(T,Double) or equals?(T,Long)]
+inline overload copysign(from:T, to:T) {
+    return T(bitwiseOr(bitwiseAnd(floatBits(to) ,CL_RSIGN),
+            bitwiseAnd(floatBits(from), CL_SIGN)));
+}
+
+[n] inline overload atan(x:Vec[Double,n]){
+    /* make argument positive and save the sign */
+    var sn = sign( x );
+    var nx = bitwiseXor(x, sn);
+    /* range reduction */
+    var a1 = nx > CF4_2414213562373095;
+    var a2 = nx > CF4_04142135623730950;
+    var a3 = bitwiseNot(a2);
+    a2 = bitwiseXor(a2,a1);
+    var z1 = -1.0 / (nx+C_SMALL);
+    var z2 = (nx-1.0)/(nx+1.0);
+    nx = bitwiseOr(bitwiseOr(bitwiseAnd(nx, a3), bitwiseAnd(z1, a1)), bitwiseAnd(z2, a2));
+    var y = bitwiseOr(bitwiseAnd(C_PIO2F, a1), bitwiseAnd(C_PIO4F, a2));
+    var z = nx * nx;
+    y = y + ((( CF4_805374449538e_2 * z
+        - CF4_138776856032E_1) * z
+        + CF4_199777106478E_1) * z
+        - CF4_333329491539E_1) * z * nx + nx;
+    return bitwiseXor(y, sn);
+}
+
+inline overload atan(x:Double) = atan(Vec[Double,4](x))[0];
+
+[n] inline overload atan2(y:Vec[Double,n] , x:Vec[Double,n] ){
+      alias v0 = Vec[Double,n](0.0);
+      var x_neg_PI = bitwiseAnd(C_PIF, v0 > x );
+      var y_negativ_2 = bitwiseAnd(2.0, v0 > y );
+      var i_x_zero = v0 == x;
+      var i_y_zero = v0 == y;
+      var x_zero_PIO2 = bitwiseAnd(C_PIO2F, i_x_zero);
+      var y_zero = bitwiseAnd(1.0, i_y_zero);
+      var w = x_neg_PI * (1.0 - y_negativ_2 );
+      var z = bitwiseAnd(atan(y/(x+x_zero_PIO2)), bitwiseNot(bitwiseOr(i_x_zero,i_y_zero)));
+      return w + z + x_zero_PIO2 * (1.0 - y_zero - y_negativ_2 ) + y_zero * x_neg_PI;
+}
+
+inline overload atan2(x:Double,y:Double) = atan2(Vec[Double,4](x),Vec[Double,4](y))[0];
+
+[T,n | T==Float]
+inline overload sqrt(a:Vec[T,n]) r:Vec[T,n] __llvm__ {
+    %1 = load ${Vec[T,n]}* %a
+    %2 = call ${Vec[T,n]} @llvm.sqrt.v4f32(${Vec[T,n]} %1);
+    store ${Vec[T,n]} %2, ${Vec[T,n]}* %r
+    ret i32 0
+}
+
+[T,n | T==Float64]
+inline overload sqrt(a:Vec[T,n]) r:Vec[T,n] __llvm__ {
+    %1 = load ${Vec[T,n]}* %a
+    %2 = call ${Vec[T,n]} @llvm.sqrt.v4f64(${Vec[T,n]} %1);
+    store ${Vec[T,n]} %2, ${Vec[T,n]}* %r
+    ret i32 0
+}
+
+[T | Float?(T) ]
+inline overload sqrt(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.sqrt.f32($T %1);
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+[T | T==Float64 ]
+inline overload sqrt(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.sqrt.f64($T %1)
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+
+[n] inline overload round(x:Vec[Double,n]){
+    var sn = sign(x); // save sign
+    var temp = bitwiseXor(x, sn) + ROUND_64;
+    return bitwiseXor(temp - ROUND_64, sn);
+}
+
+inline overload round(x:Double) = round(Vec[Double,4](x))[0];
+
+[n] inline overload floor(x:Vec[Double,n] ) {
+    var y = round(x);
+    return y + bitwiseAnd(-1.0, y > x );
+}
+
+inline overload floor(x:Double) = floor(Vec[Double,4](x))[0];
+
+[n] inline overload ceil(x:Vec[Double,n]){
+    var y = round( x );
+    return y + bitwiseAnd(1.0, x > y );
+}
+
+inline overload ceil(x:Double) = ceil(Vec[Double,4](x))[0];
+
+
+[n] inline overload frexp(x:Vec[Double,n]){
+    var val = floatBits(x);
+    var ex = bitwiseAnd(shiftRight(val,48),EXPMASK_16);      // extract exponent
+    ex = shiftRight(ex-EXPBIAS_16,4);//int // compute exponent
+    var mt = bitwiseOr(bitwiseAnd(val, SIGNMASK_64),EXPBIAS_64);  // insert exponent +1 in x
+    return (floatFromBits(mt),ex);
+}
+
+inline overload frexp(x:Double) = (floatMantissa(x),floatExponent(x));
+
+[T,n,I | T==Double and I==Long]
+inline overload ldexp(x:Vec[T,n], y:Vec[I,n]) {
+    var val = floatBits(x);
+    var ex = bitwiseAnd(val,CL_EXP);      // extract exponent
+    var sx = shiftLeft(y,52)+ex;//int // compute exponent
+    var nx = bitwiseAnd(val, bitwiseNot(CL_EXP));           // clear exponent in x
+    return floatFromBits(bitwiseOr(nx,sx));
+}
+
+inline overload ldexp(x:Double, n:Long) = ldexp(Vec[Double,4](x),Vec[Double,4](n));
+
+[n]
+inline overload exp(x:Vec[Double,n] ){
+    var a = floor(C_LOG2EF * x + 0.5);
+    var nx = x - a * C_EXPC1;
+    nx -= a * C_EXPC2;
+    var z = ((((( C_EXP0 * nx
+        + C_EXP1) * nx
+        + C_EXP2) * nx
+        + C_EXP3) * nx
+        + C_EXP4) * nx
+        + C_EXP5) * nx * nx
+        + nx + 1.0;
+    return ldexp(z, vecftoi(a));
+}
+
+inline overload exp(a:Double) = exp(Vec[Double,4](a))[0];
+
+
+/*
+[T] frexp2( value:T) {
+    var vu = Pointer[UShort](&value);
+    var vl = Pointer[Long](&value);
+
+    var EXPMASK = 0x7FF0u16;
+    var SIGNMASK = 0x8000u16;
+    var EXPBIAS = 0x3FE0u16;
+    var EXPPOS = 3;
+    var RECIP_EPSILON = 0;
+    var INT_MAX = 0x7FFFFFFF;
+    var INT_MIN = 0xFFFFFFF8;
+
+    var ex = bitwiseAnd(vu[EXPPOS], EXPMASK) ;
+    println(ex);
+    var exp = 0;
+
+    if (ex != 0) { // If exponent is non-zero
+        if (ex == EXPMASK) { // infinity or NaN
+            if (vl^ == 0x7FF0000000000000u64) { // positive infinity
+                exp = INT_MAX;
+            } else if (vl^ == 0xFFF0000000000000u64) { // negative infinity
+                exp = INT_MIN;
+            } else { // NaN
+                vl^ = bitwiseOr(vl^,0x0008000000000000u64); // convert NaNS to NaNQ
+                exp = INT_MIN;
+            }
+        } else {
+            exp = UShort(shiftRight(ex - EXPBIAS, 4));
+            vu[EXPPOS] = bitwiseOr(bitwiseAnd(SIGNMASK, vu[EXPPOS]),0x3FE0u16);
+        }
+    } else if (bitwiseNot(bitwiseAnd(vl^ , 0x7FFFFFFFFFFFFFFFu64)) == 0) {
+        // value is +-0.0
+        exp = 0;
+    } else {
+        // subnormal
+        value *= RECIP_EPSILON;
+        ex = bitwiseAnd(vu[EXPPOS] , EXPMASK);
+        exp = shiftRight(ex - EXPBIAS, 4) - 54;
+        vu[EXPPOS] = bitwiseOr(bitwiseAnd(SIGNMASK, vu[EXPPOS]),0x3FE0u16);
+    }
+
+    return (value,exp);
+}
+*/
+
+[n]
+inline overload log(x:Vec[Double,n] ) {
+    var nx,e = floatMantissa(x), floatExponent(x);
+    var x_smaller_SQRTHF = Vec[Long,n](C_SQRTHF > nx); //int
+    nx += bitwiseAnd(nx, x_smaller_SQRTHF) + -1.0;
+    var z = nx * nx;//float
+    var y = (((((((( C_LOG0 * nx
+              + C_LOG1) * nx
+              + C_LOG2) * nx
+              + C_LOG3) * nx
+              + C_LOG4) * nx
+              + C_LOG5) * nx
+              + C_LOG6) * nx
+              + C_LOG7) * nx
+              + C_LOG8) * nx * z;//float
+    var fe = vecitof(e+x_smaller_SQRTHF);//float
+    y += fe*C_LOG9;
+    y -= 0.5 * z;  /* y - 0.5 x^2 */
+    return nx + y + C_LOGA * fe;
+}
+
+inline overload log(a:Double) = log(Vec[Double,4](a))[0];
+
+
+[T | T==Float64 ]
+inline overload pow(a:T,b:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = load $T* %b
+    %3 = call $T @llvm.pow.f64($T %1, $T %2);
+    store $T %3, $T* %r
+    ret i32 0
+}
+
+[T | Numeric?(T)]
+inline overload pow(a:T,b:T) = pow(Float64(a),Float64(b));
+
+
+inline overload pow(x:Vec[T,n], p:Vec[I,n] ){
+      var sign_x = sign( x ); //int
+      nx = bitwiseXor(x, sign_x);
+
+      var sign_n = sign( p ); //int
+      nn = p * sign_n;
+
+      var n_odd = CI4_1; //int
+      n_odd = bitwiseAnd( n_odd, nn );
+      var n_oddf = vecitof( n_odd ); //float
+      var nf = n_oddf; //float
+
+      var y = n_oddf * nx + CF4_1 - n_oddf;//float
+
+      var w = nx;//float
+      nn = shiftRight(nn,1);
+
+      while( _vec_or( nn ) ){
+            w = w*w;
+            n_odd = CI4_1;
+            n_odd = bitwiseAnd( n_odd, nn );
+            n_oddf = vecitof( n_odd );
+            y = y * n_oddf * w + CF4_1 - n_oddf;
+            nn = shiftRight(nn,1);
+      }
+
+
+      w = y;
+      w = bitwiseXor(w, sign_x);
+      y = nf * w + (CF4_1-nf) * y;
+
+      w = CF4_1/y;
+      nx = vecitof(nx, shiftRight(sign_n + CI4_1,1));  // 1 if positiv, else 0
+      return nx * y + (CF4_1-nx) * w;
+}
+
+[T | Numeric?(T)]
+inline overload pow( x:Vec[T,n], y:Vec[T,n] ){
+      return vec_sel( exp(log(x)*y), vec_sel(T(0), T(1), y==T(0)), x==T(0));
+}
+
+/*
+[T,n | Numeric?(T)]
+inline overload asin( x:Vec[T,n]){
+    var sn = sign(x);
+    var nx = bitwiseXor(x, sn);
+    var x_smaller_1e_4 = C_00004[T,n] > x;
+    var x_larger_05 = x > C_05[T,n];
+    var x_else = bitwiseNot(bitwiseOr(x_smaller_1e_4, x_larger_05));
+    var a = bitwiseAnd(nx, x_smaller_1e_4);
+    var b = bitwiseAnd(T(0.5)*(T(1)-nx), x_larger_05);
+    var z = bitwiseOr(bitwiseOr(bitwiseAnd(nx * nx, x_else), a), b);
+
+    nx = bitwiseOr(bitwiseAnd(nx, x_else), bitwiseAnd(sqrt(z), x_larger_05 ));
+
+    var z1 = (((( C_42163199048E_2[T,n] * z
+                  + C_24181311049E_2[T,n]) * z
+                  + C_45470025998E_2[T,n]) * z
+                  + C_74953002686E_2[T,n]) * z
+                  + C_16666752422E_1[T,n]) * z * nx + nx;
+
+    z = vec_sel(z1,z,Vec[T,n](x_smaller_1e_4));
+    z = vec_sel(z,C_PIO2F[T,n]-(z+z),Vec[T,n](x_larger_05));
+    return bitwiseXor(z,sn);
+}
+
+[T | Numeric?(T)]
+inline overload asin(x:T) = asin(Vec[T,4](x))[0];
+
+
+/*
+[T,n | Numeric?(T)]
+inline overload acos(x:Vec[T,n]){
+      var sn = sign(x);
+      var a = bitwiseXor(x, sn);
+      sn = -shiftRight(sn,31); // 0xffff.. if negativ
+      var a_larger_05 = a > C_05[T,n];
+      var nx = vec_sel( x, sqrt(C_05[T,n]-a*C_05[T,n]), Vec[T,n](a_larger_05));
+      nx = asin(nx);
+      var x2 = nx+nx;
+      var z = vec_sel(x2, C_PIF[T,n]-x2, Vec[T,n](sn));
+      return vec_sel(C_PIO2F[T,n] - nx, z, Vec[T,n](a_larger_05));
+}
+
+[T | Numeric?(T)]
+inline overload acos(x:T) = acos(Vec[T,4](x))[0];
+*/
+
+
+[n] inline overload acos(x:Vec[Double,n]) = atan2(sqrt(1.0-x*x), x);
+[n] inline overload asin(x:Vec[Double,n]) = atan2(x, sqrt(1.0-x*x));
+inline overload acos(x:Double) = atan2(sqrt(1.0-x*x), x);
+inline overload asin(x:Double) = atan2(x, sqrt(1.0-x*x));
+
+[T,n | Numeric?(T)]
+inline sincos(x:Vec[T,n]) {
+    var sign_s = sign(x); //int
+    println("sign_s=",sign_s);
+    var nx = bitwiseNot(sign_s);
+    println("nx=",nx);
+    var x1 = C_FOPI * x;
+    println("x1=",x1);
+    var j = vecftoi(x1);        // integer part of x/(PI/4)
+    j += bitwiseAnd(j, 1.0);
+    var y = vecitof(j);
+
+    j = bitwiseAnd(j, 7.0);
+
+    var sign_c = sign(-shiftRight(bitwiseAnd(j,4.0),2));
+    println("sign_c=",sign_c);
+
+    sign_s = bitwiseXor(sign_s , sign_c); // revert sign if j=4,6
+    println("sign_s=",sign_s);
+
+    j = bitwiseAnd(j, 3.0);   // j= 0,2
+
+    var j_larger_1 = -shiftRight(bitwiseAnd(j,2.0),1);
+    sign_c = bitwiseXor(sign_c, sign(j_larger_1 ));
+    println("sign_c=",sign_c);
+
+    nx -= y*DP1;
+    nx -= y*DP2;
+    nx -= y*DP3;
+
+    var z = nx * nx;
+    var j_equals_1_or_2 = - shiftRight(bitwiseAnd(j,2.0), 1 );
+    println("j_equals_1_or_2=",j_equals_1_or_2);
+
+    var y0  = (( cf0 * z + cf1 ) * z + cf2) * z * z - 0.5 * z + 1.0;
+    var y1  = (( sf0 * z + sf1 ) * z + sf2) * z * nx + nx;
+    println("y0=",y0);
+    println("y1=",y1);
+
+    //var s = bitwiseXor(vec_sel(y1,y0, (j_equals_1_or_2)), sign_s);
+    //var c = bitwiseXor(vec_sel(y0,y1, (j_equals_1_or_2)), sign_c);
+    return (1,2);//(s,c);
+}
+
+
+[n] inline overload sin(x:Vec[Double,n]) = sincos(x).0;
+[n] inline overload cos(x:Vec[Double,n]) = sincos(x).1;
+
+/*
+[T | Float?(T)]
+inline overload sin(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.sin.f32($T %1);
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+[T | T==Float64 ]
+inline overload sin(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.sin.f64($T %1)
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+
+[T | Float?(T)]
+inline overload cos(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.cos.f32($T %1);
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+[T | T==Float64 ]
+inline overload cos(a:T) r:T __llvm__ {
+    %1 = load $T* %a
+    %2 = call $T @llvm.cos.f64($T %1)
+    store $T %2, $T* %r
+    ret i32 0
+}
+
+*/
+
+[n] inline overload tan(x:Vec[Double,n]){
+
+    var sn = sign(x);
+    var nx = bitwiseXor(x, sn);
+    var j = vecftoi(C_FOPI * x);
+    var y = vecitof(j + bitwiseAnd(j, 1.0));
+
+    var z = x-y*DP1;
+    z = z-y*DP2;
+    z = z-y*DP3;
+
+    var zz = z * z;
+
+    var x_larger_1e_4 = x > C_00004;
+    y =   (((((( tf0 * zz) + tf1) * zz + tf2) * zz + tf3) * zz
+                          + tf4) * zz + tf5) * zz * z + z;
+
+    y = bitwiseOr(bitwiseAnd(y, x_larger_1e_4), bitwiseNot(bitwiseAnd(x_larger_1e_4, z)));
+
+    var j_and_2 = -shiftRight(bitwiseAnd(j, 2.0),1);
+    z = -1.0/(y+C_SMALL);
+    z = vec_sel(y,z,Vec[Double,n](j_and_2));
+    return bitwiseXor(z, sn);
+}
+
+[n] inline overload cosh(x:Vec[Double,n]) {
+    var y = exp(x);
+    return (y + 1.0/y) * 0.5;
+}
+
+inline overload cosh(x:Double) {
+    var y = exp(x);
+    return (y + 1.0/y) * 0.5;
+}
+
+/*
+[T | Numeric?(T)]
+inline overload sinh(x:T) {
+    // sinh(x) = (exp(x)-exp(-x))/2;
+    // Very large arguments could cause an overflow, but
+    // the maximum value of x for which exp(x) + exp(-x)) != exp(x)
+    // is x = 0.5 * (real.mant_dig) * LN2. // = 22.1807 for real80.
+    if (abs(x) > real.mant_dig * LN2) {
+        return sign(T(0.5) * exp(abs(x)), x);
+    }
+    var y = expm1(x);
+    return T(0.5) * y / (y+T(1)) * (y+T(2));
+}
+
+[T | Numeric?(T)]
+inline overload tanh(x:T) {
+    // tanh(x) = (exp(x) - exp(-x))/(exp(x)+exp(-x))
+    if (abs(x) > real.mant_dig * LN2) {
+        return sign(1, x);
+    }
+    var y = expm1(T(2)*x);
+    return y / (y + T(2));
+}
+
+
+// Returns cosh(x) + I * sinh(x)
+[T | Numeric?(T)]
+inline overload coshisinh( x:T) {
+    // See comments for cosh, sinh.
+    if (abs(x) > real.mant_dig * LN2) {
+        var y = exp(abs(x));
+        return y * 0.5 + 0.5i * sign(y, x);
+    } else {
+        var y = expm1(x);
+        return (y + 1.0 + 1.0/(y + 1.0)) * 0.5 + 0.5i * y / (y+1) * (y+2);
+    }
+}
+
+
+[T | Numeric?(T)]
+inline overload acosh(x:T) (
+    if (x > 1/epsilon)
+        return LN2 + log(x);
+    else
+        return log(x + sqrt(x*x - 1));
+}
+
+
+[T | Numeric?(T)]
+inline overload asinh(x:T) {
+    return if((abs(x) > 1 / real.epsilon))
+       // beyond this point, x*x + 1 == x*x
+        sign(LN2 + log(abs(x)), x)
+       // sqrt(x*x + 1) == 1 + x * x / ( 1 + sqrt(x*x + 1) )
+       else sign(log1p(abs(x) + x*x / (1 + sqrt(x*x + 1)) ), x);
+}
+
+[T | Numeric?(T)]
+inline overload atanh(x:T) {
+    // log( (1+x)/(1-x) ) == log ( 1 + (2*x)/(1-x) )
+    return 0.5 * log1p( 2 * x / (1 - x) );
+}
+*/
+
+[T | Numeric?(T)]
+inline overload dim(x:T, y:T) {return if(x > y) x - y else +0.0;}
+
+[T | Numeric?(T)]
+inline overload max(x:T, y:T) {return if(x > y) x else y;}
+
+[T | Numeric?(T)]
+inline overload min(x:T, y:T) {return if(x < y) x else y;}
+
+
+
+[T]
+poly(x:T, A:Array[T]){
+    var i = size(A) - 1;
+    var r = A[i];
+    while (i >= 0){
+        r *= x;
+        r += A[i];
+        dec(i);
+    }
+    return r;
+}
+
+// Polynomial approximations for gamma and loggamma.
+/*
+var GammaNumeratorCoeffs = [ 1.0,
+    0x1.acf42d903366539ep-1, 0x1.73a991c8475f1aeap-2, 0x1.c7e918751d6b2a92p-4,
+    0x1.86d162cca32cfe86p-6, 0x1.0c378e2e6eaf7cd8p-8, 0x1.dc5c66b7d05feb54p-12,
+    0x1.616457b47e448694p-15
+];
+
+var GammaDenominatorCoeffs = [ 1.0,
+  0x1.a8f9faae5d8fc8bp-2, -0x1.cb7895a6756eebdep-3, -0x1.7b9bab006d30652ap-5,
+  0x1.c671af78f312082ep-6, -0x1.a11ebbfaf96252dcp-11, -0x1.447b4d2230a77ddap-10,
+  0x1.ec1d45bb85e06696p-13,-0x1.d4ce24d05bd0a8e6p-17
+];
+
+var GammaSmallCoeffs = [ 1.0,
+    0x1.2788cfc6fb618f52p-1, -0x1.4fcf4026afa2f7ecp-1, -0x1.5815e8fa24d7e306p-5,
+    0x1.5512320aea2ad71ap-3, -0x1.59af0fb9d82e216p-5, -0x1.3b4b61d3bfdf244ap-7,
+    0x1.d9358e9d9d69fd34p-8, -0x1.38fc4bcbada775d6p-10
+];
+
+var GammaSmallNegCoeffs = [ -1.0,
+    0x1.2788cfc6fb618f54p-1, 0x1.4fcf4026afa2bc4cp-1, -0x1.5815e8fa2468fec8p-5,
+    -0x1.5512320baedaf4b6p-3, -0x1.59af0fa283baf07ep-5, 0x1.3b4a70de31e05942p-7,
+    0x1.d9398be3bad13136p-8, 0x1.291b73ee05bcbba2p-10
+];
+
+var logGammaStirlingCoeffs = [
+    0x1.5555555555553f98p-4, -0x1.6c16c16c07509b1p-9, 0x1.a01a012461cbf1e4p-11,
+    -0x1.3813089d3f9d164p-11, 0x1.b911a92555a277b8p-11, -0x1.ed0a7b4206087b22p-10,
+    0x1.402523859811b308p-8
+];
+
+var logGammaNumerator = [
+    -0x1.0edd25913aaa40a2p+23, -0x1.31c6ce2e58842d1ep+24, -0x1.f015814039477c3p+23,
+    -0x1.74ffe40c4b184b34p+22, -0x1.0d9c6d08f9eab55p+20, -0x1.54c6b71935f1fc88p+16,
+    -0x1.0e761b42932b2aaep+11
+];
+
+var logGammaDenominator = [
+    -0x1.4055572d75d08c56p+24, -0x1.deeb6013998e4d76p+24, -0x1.106f7cded5dcc79ep+24,
+    -0x1.25e17184848c66d2p+22, -0x1.301303b99a614a0ap+19, -0x1.09e76ab41ae965p+15,
+    -0x1.00f95ced9e5f54eep+9, 1.0
+];
+
+
+[T]
+gammaStirling(x:T){
+
+    var SmallStirlingCoeffs = [
+        0x1.55555555555543aap-4, 0x1.c71c71c720dd8792p-9, -0x1.5f7268f0b5907438p-9,
+        -0x1.e13cd410e0477de6p-13, 0x1.9b0f31643442616ep-11, 0x1.2527623a3472ae08p-14,
+        -0x1.37f6bc8ef8b374dep-11,-0x1.8c968886052b872ap-16, 0x1.76baa9c6d3eeddbcp-11
+    ];
+
+    var LargeStirlingCoeffs = [ 1.0L,
+        8.33333333333333333333E-2L, 3.47222222222222222222E-3L,
+        -2.68132716049382716049E-3L, -2.29472093621399176955E-4L,
+        7.84039221720066627474E-4L, 6.97281375836585777429E-5L
+    ];
+
+    var w = 1.0/x;
+    var y = exp(x);
+    if ( x > 1024.0 ) {
+        // For large x, use rational coefficients from the analytical expansion.
+        w = poly(w, LargeStirlingCoeffs);
+        // Avoid overflow in pow()
+        var v = pow( x, 0.5 * x - 0.25 );
+        y = v * (v / y);
+    }else {
+        w = 1.0 + w * poly( w, SmallStirlingCoeffs);
+        y = pow( x, x - 0.5 ) / y;
+    }
+    return SQRT2PI * y * w;
+}
+
+
+
+/// The maximum value of x for which gamma(x) < real.infinity.
+//enum real MAXGAMMA = 1755.5483429L;
+
+
+[T]
+gamma(x:T){
+    //if (isNaN(x)) return x;
+    //if (x == -x.infinity) return real.nan;
+    //if ( fabs(x) > MAXGAMMA ) return real.infinity;
+    if (x==0) return 1.0 / x; // +- infinity depending on sign of x, create an exception.
+
+    var q = abs(x);
+
+    if ( q > 13.0 ) {
+        // Large arguments are handled by Stirling's
+        // formula. Large negative arguments are made positive using
+        // the reflection formula.
+
+        if ( x < 0.0 ) {
+            if (x < -1/real.epsilon)
+            {
+                // Large negatives lose all precision
+                return real.nan;
+            }
+            var sgngam = 1; // sign of gamma.
+            var intpart = Long(q);
+            if (q == intpart)
+                  return real.nan; // poles for all integers <0.
+            var p = intpart;
+            if ( bitwiseAnd(intpart , 1) == 0 )
+                sgngam = -1;
+            var z = q - p;
+            if ( z > 0.5 ) {
+                p += 1.0;
+                z = q - p;
+            }
+            z = q * sin( PI * z );
+            z = abs(z) * gammaStirling(q);
+            if ( z <= PI/real.max ) return sgngam * real.infinity;
+            return sgngam * PI/z;
+        } else {
+            return gammaStirling(x);
+        }
+    }
+
+    // Arguments |x| <= 13 are reduced by recurrence and the function
+    // approximated by a rational function of degree 7/8 in the
+    // interval (2,3).
+
+    var z = 1.0;
+    while ( x >= 3.0 ) {
+        x -= 1.0;
+        z *= x;
+    }
+
+    while ( x < -0.03125 ) {
+        z /= x;
+        x += 1.0;
+    }
+
+    if ( x <= 0.03125 ) {
+        if ( x == 0.0 )
+            return real.nan;
+        else {
+            if ( x < 0.0 ) {
+                x = -x;
+                return z / (x * poly( x, GammaSmallNegCoeffs ));
+            } else {
+                return z / (x * poly( x, GammaSmallCoeffs ));
+            }
+        }
+    }
+
+    while ( x < 2.0 ) {
+        z /= x;
+        x += 1.0;
+    }
+    if ( x == 2.0 ) return z;
+
+    x -= 2.0;
+    return z * poly( x, GammaNumeratorCoeffs ) / poly( x, GammaDenominatorCoeffs );
+}
+
+[T]
+logGamma(x:T){
+
+    //if (isNaN(x)) return x;
+    //if (abs(x) == x.infinity) return x.infinity;
+
+    if( x < -34.0i64 ){
+        var q = -x;
+        var w = logGamma(q);
+        var p = floor(q);
+        if ( p == q ) return real.infinity;
+        var intpart = Int(p);
+        var sgngam = 1;
+        if ( bitwiseAnd(intpart , 1) == 0 )
+            sgngam = -1;
+        var z = q - p;
+        if ( z > 0.5 ) {
+            p += 1.0;
+            z = p - q;
+        }
+        z = q * sin( PI * z );
+        if ( z == 0.0 )
+            return sgngam * infinity;
+        z = log( PI/z ) - w;
+        return z;
+    }
+
+    if( x < 13.0L ){
+        var z = 1.0;
+        var nx = floor( x + 0.5 );
+        var f = x - nx;
+        while ( x >= 3.0 ) {
+            nx -= 1.0;
+            x = nx + f;
+            z *= x;
+        }
+        while ( x < 2.0 ) {
+            if( abs(x) <= 0.03125 ){
+                if ( x == 0.0 )
+                    return real.infinity;
+                if ( x < 0.0 ){
+                    x = -x;
+                    return log(abs(z / (x * poly( x, GammaSmallNegCoeffs))));
+                } else
+                    return log(abs(z / (x * poly( x, GammaSmallCoeffs))));
+            }
+            z /= nx + f;
+            nx += 1.0;
+            x = nx + f;
+        }
+        z = abs(z);
+        if ( x == 2.0 )
+            return log(z);
+        x = (nx - 2.0) + f;
+        var p = x * rationalPoly( x, logGammaNumerator, logGammaDenominator);
+        return log(z) + p;
+    }
+
+    alias LOGSQRT2PI = 0.91893853320467274178; // log( sqrt( 2*pi ) )
+
+    var q = ( x - 0.5 ) * log(x) - x + LOGSQRT2PI;
+    if (x > 1.0e+10) return q;
+    var p = 1.0 / (x*x);
+    q += poly( p, logGammaStirlingCoeffs ) / x;
+    return q ;
+}
+
+*/
+
+main(){
+
+    var x = 1.0;
+    var a = Vec[Float64,4](x,-x,x,-x);
+    var b = Vec[Float64,4](2.0);
+    var c = Vec[Int64,4](2_i64);
+    println("sign=",sign(a));
+    println("sign=",sign(1.45));
+    println("sign=",sign(-234.76));
+    println("sign=",sign(-23499997_i64));
+    println("copysign=",copysign(-2.0, 0.0));
+    println("sgn=",sgn(-2));
+    println("round=",round(a));
+    println("floor=",floor(a));
+    println("ceil=",ceil(a));
+    println("abs=",abs(a));
+    println("ldexp=",ldexp(a,c));
+    var me = frexp(a);
+    println("frexp=",me.0," ",me.1);
+    var val = frexp(x);
+    println(val.0," ",val.1);
+    println("sqrt=",sqrt(a));
+    println("exp=",exp(a));
+    //println("log=",log(a));
+    //println("sin=",sin(a));
+    //println("cos=",cos(a));
+    println("tan=",tan(a));
+    println("asin=",asin(a));
+    println("acos=",acos(a));
+    println("atan=",atan(a));
+    println("atan2=",atan2(a,b));
+    //println("cosh=",cosh(a));
+    //println("sinh=",sinh(a));
+    //println("tanh=",tanh(a));
+    //println(pow(a,2.0));
+    //println(pow(a,2));
+
+    println("round=",round(x));
+    println("floor=",floor(x));
+    println("ceil=",ceil(x));
+    println("abs=",abs(x));
+    //println("ldexp=",ldexp(x,2_i64));
+    var me = frexp(x);
+    println("frexp=",me.0," ",me.1);
+    var val = frexp(x);
+    println(val.0," ",val.1);
+    println("sqrt=",sqrt(x));
+    //println("exp=",exp(x));
+    //println("log=",log(x));
+    //println("sin=",sin(x));
+    //println("cos=",cos(x));
+    //println("tan=",tan(x));
+    println("asin=",asin(x));
+    println("acos=",acos(x));
+    println("atan=",atan(x));
+    println("atan2=",atan2(x,x));
+    //println("cosh=",cosh(x));
+    //println("sinh=",sinh(x));
+    //println("tanh=",tanh(x));
+    //println(pow(x,2.0));
+    //println(pow(x,2));
+
+
+    //println(gamma(x));
+    //println(gammaln(x));
+    //println(exp(gammaln(x)));
+
+}
