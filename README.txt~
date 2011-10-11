@@ -1,22 +1,3 @@
-##########
-
-TODO:
-
-Add 80-bit floating point support in float lib
-    * Real/Float80 type functions
-
-Add complex number library using libc
-    * Utilise new Real type
-
-Add math wrapper for libc functions
-    * Overloaded math functions
-
-
-
-##########
-
-
-
 
 Clay
 ----
