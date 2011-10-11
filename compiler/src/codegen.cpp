@@ -1637,8 +1637,6 @@ void codegenCompileTimeValue(EValuePtr ev,
     case INTEGER_TYPE :
     case FLOAT_TYPE : {
         llvm::Value *llv = codegenSimpleConstant(ev);
-        //std::cout << llv.dump() <<"\n";
-        llv->dump();
         ctx->builder->CreateStore(llv, out0->llValue);
         break;
     }
@@ -1761,12 +1759,10 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             val = llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
             break;
         case 80 :
-            //TODO use APfloat to get a 80bit value?
+            //use APfloat to get an 80bit value
             bits[0] = *(uint64_t*)ev->addr;
             bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
             val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
-            //val = llvm::ConstantFP::get(llvmType(t), *((long double *)ev->addr));
-            val->dump();
             break;
         default :
             assert(false);
