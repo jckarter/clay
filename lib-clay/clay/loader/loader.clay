@@ -210,6 +210,7 @@ private initializePrimitivesModule(module) {
     simpleType("UInt64", uint64Type);
     simpleType("Float32", float32Type);
     simpleType("Float64", float64Type);
+    simpleType("Float80", float80Type);
 
     installPrimitives(module, PrimitiveTypeConstructor, PrimitiveTypeConstructorKind);
     installPrimitives(module, StaticPrimitive, StaticPrimitiveKind);

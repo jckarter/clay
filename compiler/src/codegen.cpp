@@ -5,6 +5,10 @@
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
 
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <iostream>
+
 llvm::Module *llvmModule;
 llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
@@ -1633,6 +1637,8 @@ void codegenCompileTimeValue(EValuePtr ev,
     case INTEGER_TYPE :
     case FLOAT_TYPE : {
         llvm::Value *llv = codegenSimpleConstant(ev);
+        //std::cout << llv.dump() <<"\n";
+        llv->dump();
         ctx->builder->CreateStore(llv, out0->llValue);
         break;
     }
@@ -1698,6 +1704,8 @@ _uintConstant(EValuePtr ev)
 llvm::Value *codegenSimpleConstant(EValuePtr ev)
 {
     llvm::Value *val = NULL;
+    uint64_t bits[] = {0, 0};
+
     switch (ev->type->typeKind) {
     case BOOL_TYPE : {
         int bv = (*(bool *)ev->addr) ? 1 : 0;
@@ -1751,6 +1759,14 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             break;
         case 64 :
             val = llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
+            break;
+        case 80 :
+            //TODO use APfloat to get a 80bit value?
+            bits[0] = *(uint64_t*)ev->addr;
+            bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
+            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
+            //val = llvm::ConstantFP::get(llvmType(t), *((long double *)ev->addr));
+            val->dump();
             break;
         default :
             assert(false);
@@ -2056,7 +2072,7 @@ void codegenDispatch(ObjectPtr obj,
         pvArgs2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
         pvArgs2->add(pvSuffix);
         codegenDispatch(obj, args2, pvArgs2, dispatchIndices2, ctx, out);
-        
+
         ctx->builder->CreateBr(finalBlock);
 
         ctx->builder->SetInsertPoint(elseBlocks[i]);
@@ -2570,7 +2586,7 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 // codegenLLVMBody
 //
 
-void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) 
+void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 {
     string llFunc;
     llvm::raw_string_ostream out(llFunc);
@@ -2581,7 +2597,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     functionName << "clay_" << callableName << id;
     id++;
 
-    out << string("define internal i32 @\"") 
+    out << string("define internal i32 @\"")
         << functionName.str() << string("\"(");
 
     vector<const llvm::Type *> llArgTypes;
@@ -2619,10 +2635,10 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     out << body;
 
     llvm::SMDiagnostic err;
-    llvm::MemoryBuffer *buf = 
+    llvm::MemoryBuffer *buf =
         llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(out.str()));
 
-    if(!llvm::ParseAssembly(buf, llvmModule, err, 
+    if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
         err.Print("\n", out);
         std::cerr << out.str() << std::endl;
@@ -3161,6 +3177,7 @@ bool codegenStatement(StatementPtr stmt,
             for (unsigned i = 0; i < mpvRight->size(); ++i) {
                 PValuePtr pv = mpvRight->values[i];
                 PValuePtr pv2 = new PValue(pv->type, true);
+
                 mpvRight2->add(pv2);
                 CValuePtr cv = codegenAllocValue(pv->type, ctx);
                 mcvRight->add(cv);
@@ -3864,6 +3881,7 @@ static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
+
 }
 
 static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
@@ -3957,6 +3975,9 @@ static llvm::Value *numericValue(MultiCValuePtr args,
             argumentTypeError(index, "numeric type", cv->type);
         }
         type = cv->type;
+
+
+
     }
     return ctx->builder->CreateLoad(cv->llValue);
 }

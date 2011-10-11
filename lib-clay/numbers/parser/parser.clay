@@ -185,3 +185,22 @@ overload parseFloat64(s:S) {
         error("Float64 out of range: ", s);
     return Float64(value);
 }
+
+//
+// parseFloat80
+//
+
+[S | String?(S)]
+parseFloat80(s:S) = parseFloat80(String(s));
+
+[S | CCompatibleString?(S)]
+overload parseFloat80(s:S) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtold(p, &end);
+    if (end^ != 0)
+        error("invalid Float80: ", s);
+    if (errno() == ERANGE)
+        error("Float80 out of range: ", s);
+    return Float80(value);
+}

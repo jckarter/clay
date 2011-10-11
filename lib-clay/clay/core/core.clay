@@ -33,7 +33,7 @@ procedure lookupModule;
 [S | String?(S)]
 overload lookupModule(name:S) = lookupModule(String(name));
 
-overload lookupModule(name:String) Maybe[Module] { 
+overload lookupModule(name:String) Maybe[Module] {
     var ptr = lookup(modulesMap, name);
     if (null?(ptr))
         return nothing(Module);
@@ -296,10 +296,11 @@ var int64Type = Type(IntegerTag(true, 64));
 var uint8Type = Type(IntegerTag(false, 8));
 var uint16Type = Type(IntegerTag(false, 16));
 var uint32Type = Type(IntegerTag(false, 32));
-var uint64Type = Type(IntegerTag(false, 64)); 
+var uint64Type = Type(IntegerTag(false, 64));
 
 var float32Type = Type(FloatTag(32));
 var float64Type = Type(FloatTag(64));
+var float80Type = Type(FloatTag(80));
 
 
 

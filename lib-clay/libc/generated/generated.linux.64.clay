@@ -678,7 +678,7 @@ external strtof(
 
 external strtold(
     __nptr : Pointer[CChar],
-    __endptr : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType22;
+    __endptr : Pointer[Pointer[CChar]]) Float80;
 
 external strtol(
     __nptr : Pointer[CChar],
@@ -1140,19 +1140,19 @@ external gcvt(
     __buf : Pointer[CChar]) Pointer[CChar];
 
 external qecvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : Float80,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int]) Pointer[CChar];
 
 external qfcvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : Float80,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int]) Pointer[CChar];
 
 external qgcvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : Float80,
     __ndigit : Int,
     __buf : Pointer[CChar]) Pointer[CChar];
 
@@ -1173,7 +1173,7 @@ external fcvt_r(
     __len : CULong) Int;
 
 external qecvt_r(
-    __value : UnsupportedCBuiltinType22,
+    __value : Float80,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
@@ -1181,7 +1181,7 @@ external qecvt_r(
     __len : CULong) Int;
 
 external qfcvt_r(
-    __value : UnsupportedCBuiltinType22,
+    __value : Float80,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
@@ -1790,11 +1790,11 @@ external __nextafter(
 
 external nexttoward(
     __x : Double,
-    __y : UnsupportedCBuiltinType22) Double;
+    __y : Float80) Double;
 
 external __nexttoward(
     __x : Double,
-    __y : UnsupportedCBuiltinType22) Double;
+    __y : Float80) Double;
 
 external remainder(
     __x : Double,
@@ -2272,11 +2272,11 @@ external __nextafterf(
 
 external nexttowardf(
     __x : Float,
-    __y : UnsupportedCBuiltinType22) Float;
+    __y : Float80) Float;
 
 external __nexttowardf(
     __x : Float,
-    __y : UnsupportedCBuiltinType22) Float;
+    __y : Float80) Float;
 
 external remainderf(
     __x : Float,
@@ -2409,486 +2409,486 @@ external __scalbf(
     __n : Float) Float;
 
 external acosl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __acosl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external asinl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __asinl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external atanl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __atanl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external atan2l(
-    __y : UnsupportedCBuiltinType22,
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __y : Float80,
+    __x : Float80) Float80;
 
 external __atan2l(
-    __y : UnsupportedCBuiltinType22,
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __y : Float80,
+    __x : Float80) Float80;
 
 external cosl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __cosl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external sinl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __sinl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external tanl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __tanl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external coshl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __coshl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external sinhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __sinhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external tanhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __tanhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external acoshl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __acoshl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external asinhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __asinhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external atanhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __atanhl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external expl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __expl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external frexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Pointer[Int]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __exponent : Pointer[Int]) Float80;
 
 external __frexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Pointer[Int]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __exponent : Pointer[Int]) Float80;
 
 external ldexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Int) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __exponent : Int) Float80;
 
 external __ldexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Int) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __exponent : Int) Float80;
 
 external logl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __logl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external log10l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __log10l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external modfl(
-    __x : UnsupportedCBuiltinType22,
-    __iptr : Pointer[UnsupportedCBuiltinType22]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __iptr : Pointer[Float80]) Float80;
 
 external __modfl(
-    __x : UnsupportedCBuiltinType22,
-    __iptr : Pointer[UnsupportedCBuiltinType22]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __iptr : Pointer[Float80]) Float80;
 
 external expm1l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __expm1l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external log1pl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __log1pl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external logbl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __logbl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external exp2l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __exp2l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external log2l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __log2l(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external powl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __powl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external sqrtl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __sqrtl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external hypotl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __hypotl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external cbrtl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __cbrtl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external ceill(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __ceill(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external fabsl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __fabsl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external floorl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __floorl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external fmodl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __fmodl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __isinfl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external __finitel(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external isinfl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external finitel(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external dreml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __dreml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external significandl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __significandl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external copysignl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __copysignl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external nanl(
-    __tagb : Pointer[CChar]) UnsupportedCBuiltinType22;
+    __tagb : Pointer[CChar]) Float80;
 
 external __nanl(
-    __tagb : Pointer[CChar]) UnsupportedCBuiltinType22;
+    __tagb : Pointer[CChar]) Float80;
 
 external __isnanl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external isnanl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external j0l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __j0l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external j1l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __j1l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external jnl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument1 : Float80) Float80;
 
 external __jnl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument1 : Float80) Float80;
 
 external y0l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __y0l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external y1l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __y1l(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external ynl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument1 : Float80) Float80;
 
 external __ynl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument1 : Float80) Float80;
 
 external erfl(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __erfl(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external erfcl(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __erfcl(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external lgammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __lgammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external tgammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __tgammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external gammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external __gammal(
-    argument0 : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    argument0 : Float80) Float80;
 
 external lgammal_r(
-    argument0 : UnsupportedCBuiltinType22,
-    __signgamp : Pointer[Int]) UnsupportedCBuiltinType22;
+    argument0 : Float80,
+    __signgamp : Pointer[Int]) Float80;
 
 external __lgammal_r(
-    argument0 : UnsupportedCBuiltinType22,
-    __signgamp : Pointer[Int]) UnsupportedCBuiltinType22;
+    argument0 : Float80,
+    __signgamp : Pointer[Int]) Float80;
 
 external rintl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __rintl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external nextafterl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __nextafterl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external nexttowardl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __nexttowardl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external remainderl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __remainderl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external scalbnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : Int) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : Int) Float80;
 
 external __scalbnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : Int) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : Int) Float80;
 
 external ilogbl(
-    __x : UnsupportedCBuiltinType22) Int;
+    __x : Float80) Int;
 
 external __ilogbl(
-    __x : UnsupportedCBuiltinType22) Int;
+    __x : Float80) Int;
 
 external scalblnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : CLong) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : CLong) Float80;
 
 external __scalblnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : CLong) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : CLong) Float80;
 
 external nearbyintl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __nearbyintl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external roundl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __roundl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external truncl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external __truncl(
-    __x : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80) Float80;
 
 external remquol(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __quo : Pointer[Int]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80,
+    __quo : Pointer[Int]) Float80;
 
 external __remquol(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __quo : Pointer[Int]) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80,
+    __quo : Pointer[Int]) Float80;
 
 external lrintl(
-    __x : UnsupportedCBuiltinType22) CLong;
+    __x : Float80) CLong;
 
 external __lrintl(
-    __x : UnsupportedCBuiltinType22) CLong;
+    __x : Float80) CLong;
 
 external llrintl(
-    __x : UnsupportedCBuiltinType22) Int64;
+    __x : Float80) Int64;
 
 external __llrintl(
-    __x : UnsupportedCBuiltinType22) Int64;
+    __x : Float80) Int64;
 
 external lroundl(
-    __x : UnsupportedCBuiltinType22) CLong;
+    __x : Float80) CLong;
 
 external __lroundl(
-    __x : UnsupportedCBuiltinType22) CLong;
+    __x : Float80) CLong;
 
 external llroundl(
-    __x : UnsupportedCBuiltinType22) Int64;
+    __x : Float80) Int64;
 
 external __llroundl(
-    __x : UnsupportedCBuiltinType22) Int64;
+    __x : Float80) Int64;
 
 external fdiml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __fdiml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external fmaxl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __fmaxl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external fminl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __fminl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80) Float80;
 
 external __fpclassifyl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external __signbitl(
-    __value : UnsupportedCBuiltinType22) Int;
+    __value : Float80) Int;
 
 external fmal(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __z : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80,
+    __z : Float80) Float80;
 
 external __fmal(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __z : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __y : Float80,
+    __z : Float80) Float80;
 
 external scalbl(
-    __x : UnsupportedCBuiltinType22,
-    __n : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : Float80) Float80;
 
 external __scalbl(
-    __x : UnsupportedCBuiltinType22,
-    __n : UnsupportedCBuiltinType22) UnsupportedCBuiltinType22;
+    __x : Float80,
+    __n : Float80) Float80;
 
 external signgam : Int;
 

@@ -975,6 +975,9 @@ void printValue(ostream &out, EValuePtr ev)
         case 64 :
             out << *((double *)ev->addr);
             break;
+        case 80 :
+            out << *((long double *)ev->addr);
+            break;
         default :
             assert(false);
         }

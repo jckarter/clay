@@ -95,6 +95,15 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
+    else if (x->suffix == "f80") {
+        long double y = strtold(ptr, &end);
+        if (*end != 0)
+            error("invalid float80 literal");
+        if (errno == ERANGE)
+            error("float80 literal out of range");
+        vh = new ValueHolder(float80Type);
+        *((long double *)vh->buf) = y;
+    }
     else {
         error("invalid literal suffix: " + x->suffix);
     }
@@ -123,6 +132,15 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
             error("float64 literal out of range");
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
+    }
+    else if ((x->suffix == "f80") || x->suffix.empty()) {
+        long double y = strtold(ptr, &end);
+        if (*end != 0)
+            error("invalid float80 literal");
+        if (errno == ERANGE)
+            error("float80 literal out of range");
+        vh = new ValueHolder(float80Type);
+        *((long double *)vh->buf) = y;
     }
     else {
         error("invalid float literal suffix: " + x->suffix);

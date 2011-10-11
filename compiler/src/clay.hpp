@@ -597,7 +597,7 @@ void ensureArity(const vector<T> &args, int size)
 template <class T>
 void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
 {
-    if (!hasVarArgs) 
+    if (!hasVarArgs)
         ensureArity(args, size);
     else if ((int)args.size() < size)
         arityError2(size, args.size());
@@ -2270,6 +2270,7 @@ extern TypePtr uint32Type;
 extern TypePtr uint64Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
+extern TypePtr float80Type;
 
 // aliases
 extern TypePtr cIntType;

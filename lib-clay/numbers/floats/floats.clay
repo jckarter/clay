@@ -140,6 +140,8 @@ floatUnordered?(a:T, b:T) returned:Bool __llvm__ {
     ret i32 0
 }
 
+
+//floatBits(f:Real) = forward bitwiseCast(f, UInt64);
 floatBits(f:Double) = forward bitwiseCast(f, UInt64);
 overload floatBits(f:Float) = forward bitwiseCast(f, UInt32);
 
@@ -185,5 +187,6 @@ overload snan(static Float) = floatFromBits(0xFF80_0001u);
 overload nan(static Double, sign?:Bool, payload:UInt64) = floatFromParts(sign?, 0x7FF, payload);
 overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, 0xFF, payload);
 
-exponentBias(static Double) = 1023;
+exponentBias(static Real) = 16383;
+overload exponentBias(static Double) = 1023;
 overload exponentBias(static Float) = 127;

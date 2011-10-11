@@ -21,6 +21,7 @@ alias ULong = UInt64;
 
 alias Float = Float32;
 alias Double = Float64;
+alias Real = Float80;
 
 alias RawPointer = Pointer[Byte];
 

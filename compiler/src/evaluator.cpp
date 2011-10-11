@@ -193,6 +193,7 @@ static void setSizeTEValue(EValuePtr v, size_t x) {
     switch (typeSize(cSizeTType)) {
     case 4 : *(size32_t *)v->addr = size32_t(x); break;
     case 8 : *(size64_t *)v->addr = size64_t(x); break;
+    case 16 : *(size64_t *)v->addr = size64_t(x); break;
     default : assert(false);
     }
 }
@@ -211,6 +212,7 @@ static void setPtrEValue(EValuePtr v, void* x) {
     switch (typeSize(cPtrDiffTType)) {
     case 4 : *(size32_t *)v->addr = size32_t(size_t(x)); break;
     case 8 : *(size64_t *)v->addr = size64_t(x); break;
+    case 16 : *(size64_t *)v->addr = size64_t(x); break;
     default : assert(false);
     }
 }
@@ -316,6 +318,7 @@ ValueHolderPtr sizeTToValueHolder(size_t x)
     switch (typeSize(cSizeTType)) {
     case 4 : *(size32_t *)v->buf = size32_t(x); break;
     case 8 : *(size64_t *)v->buf = size64_t(x); break;
+    case 16 : *(size64_t *)v->buf = size64_t(x); break;
     default : assert(false);
     }
     return v;
@@ -327,6 +330,7 @@ ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
     switch (typeSize(cPtrDiffTType)) {
     case 4 : *(ptrdiff32_t *)v->buf = ptrdiff32_t(x); break;
     case 8 : *(ptrdiff64_t *)v->buf = ptrdiff64_t(x); break;
+    case 16 : *(ptrdiff64_t *)v->buf = ptrdiff64_t(x); break;
     default : assert(false);
     }
     return v;
@@ -2734,6 +2738,7 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         switch (t->bits) {
         case 32 : T<float>().eval(a, b, out); break;
         case 64 : T<double>().eval(a, b, out); break;
+        case 80 : T<long double>().eval(a, b, out); break;
         default : assert(false);
         }
         break;
@@ -2840,6 +2845,7 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
         switch (t->bits) {
         case 32 : T<float>().eval(a, out); break;
         case 64 : T<double>().eval(a, out); break;
+        case 80 : T<long double>().eval(a, out); break;
         default : assert(false);
         }
         break;
@@ -3013,8 +3019,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
             case 8 : op_numericConvert3<D,unsigned char>(dest, src); break;
             case 16 : op_numericConvert3<D,unsigned short>(dest, src); break;
             case 32 : op_numericConvert3<D,unsigned int>(dest, src); break;
-            case 64 :
-                op_numericConvert3<D,unsigned long long>(dest, src); break;
+            case 64 : op_numericConvert3<D,unsigned long long>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3025,6 +3030,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         switch (t->bits) {
         case 32 : op_numericConvert3<D,float>(dest, src); break;
         case 64 : op_numericConvert3<D,double>(dest, src); break;
+        case 80 : op_numericConvert3<D,long double>(dest, src); break;
         default : assert(false);
         }
         break;
@@ -3064,6 +3070,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         switch (t->bits) {
         case 32 : op_numericConvert2<float>(dest, src); break;
         case 64 : op_numericConvert2<double>(dest, src); break;
+        case 80 : op_numericConvert2<long double>(dest, src); break;
         default : assert(false);
         }
         break;

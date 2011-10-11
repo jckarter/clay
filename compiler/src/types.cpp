@@ -12,6 +12,7 @@ TypePtr uint32Type;
 TypePtr uint64Type;
 TypePtr float32Type;
 TypePtr float64Type;
+TypePtr float80Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -40,6 +41,7 @@ void initTypes() {
     uint64Type = new IntegerType(64, false);
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
+    float80Type = new FloatType(80);
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -103,6 +105,7 @@ TypePtr floatType(int bits) {
     switch (bits) {
     case 32 : return float32Type;
     case 64 : return float64Type;
+    case 80 : return float80Type;
     default :
         assert(false);
         return NULL;
@@ -834,6 +837,8 @@ const llvm::Type *llvmFloatType(int bits) {
         return llvm::Type::getFloatTy(llvm::getGlobalContext());
     case 64 :
         return llvm::Type::getDoubleTy(llvm::getGlobalContext());
+    case 80 :
+        return llvm::Type::getX86_FP80Ty(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;
