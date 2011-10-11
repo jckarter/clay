@@ -1,0 +1,407 @@
+// Complex numbers
+module complex;
+
+import math.*;
+
+record Complex[T](re:T,im:T);
+
+alias Complex32 = Complex[Float];
+alias Complex64 = Complex[Double];
+alias Complex80 = Complex[Real];
+
+
+//Double functions
+external cacos(
+    __z : Complex64) Complex64;
+
+external casin(
+    __z : Complex64) Complex64;
+
+external catan(
+    __z : Complex64) Complex64;
+
+external ccos(
+    __z : Complex64) Complex64;
+
+external csin(
+    __z : Complex64) Complex64;
+
+external ctan(
+    __z : Complex64) Complex64;
+
+external cacosh(
+    __z : Complex64) Complex64;
+
+external casinh(
+    __z : Complex64) Complex64;
+
+external catanh(
+    __z : Complex64) Complex64;
+
+external ccosh(
+    __z : Complex64) Complex64;
+
+external csinh(
+    __z : Complex64) Complex64;
+
+external ctanh(
+    __z : Complex64) Complex64;
+
+external cexp(
+    __z : Complex64) Complex64;
+
+external clog(
+    __z : Complex64) Complex64;
+
+external cpow(
+    __x : Complex64,
+    __y : Complex64) Complex64;
+
+external csqrt(
+    __z : Complex64) Complex64;
+
+external cabs(
+    __z : Complex64) Double;
+
+external carg(
+    __z : Complex64) Double;
+
+external cproj(
+    __z : Complex64) Complex64;
+
+
+//Float functions
+external cacosf(
+    __z : Complex32) Complex32;
+
+external casinf(
+    __z : Complex32) Complex32;
+
+external catanf(
+    __z : Complex32) Complex32;
+
+external ccosf(
+    __z : Complex32) Complex32;
+
+external csinf(
+    __z : Complex32) Complex32;
+
+external ctanf(
+    __z : Complex32) Complex32;
+
+external cacoshf(
+    __z : Complex32) Complex32;
+
+external casinhf(
+    __z : Complex32) Complex32;
+
+external catanhf(
+    __z : Complex32) Complex32;
+
+external ccoshf(
+    __z : Complex32) Complex32;
+
+external csinhf(
+    __z : Complex32) Complex32;
+
+external ctanhf(
+    __z : Complex32) Complex32;
+
+external cexpf(
+    __z : Complex32) Complex32;
+
+external clogf(
+    __z : Complex32) Complex32;
+
+external cpowf(
+    __x : Complex32,
+    __y : Complex32) Complex32;
+
+external csqrtf(
+    __z : Complex32) Complex32;
+
+external cabsf(
+    __z : Complex32) Float;
+
+external cargf(
+    __z : Complex32) Float;
+
+external cprojf(
+    __z : Complex32) Complex32;
+
+
+//Real functions
+external cacosl(
+    __z : Complex80) Complex80;
+
+external casinl(
+    __z : Complex80) Complex80;
+
+external catanl(
+    __z : Complex80) Complex80;
+
+external ccosl(
+    __z : Complex80) Complex80;
+
+external csinl(
+    __z : Complex80) Complex80;
+
+external ctanl(
+    __z : Complex80) Complex80;
+
+external cacoshl(
+    __z : Complex80) Complex80;
+
+external casinhl(
+    __z : Complex80) Complex80;
+
+external catanhl(
+    __z : Complex80) Complex80;
+
+external ccoshl(
+    __z : Complex80) Complex80;
+
+external csinhl(
+    __z : Complex80) Complex80;
+
+external ctanhl(
+    __z : Complex80) Complex80;
+
+external cexpl(
+    __z : Complex80) Complex80;
+
+external clogl(
+    __z : Complex80) Complex80;
+
+external cpowl(
+    __x : Complex80,
+    __y : Complex80) Complex80;
+
+external csqrtl(
+    __z : Complex80) Complex80;
+
+external cabsl(
+    __z : Complex80) Real;
+
+external cargl(
+    __z : Complex80) Real;
+
+external cprojl(
+    __z : Complex80) Complex80;
+
+
+
+[T] Complex?(static T) = false;
+overload Complex?(static Complex32) = true;
+overload Complex?(static Complex64) = true;
+overload Complex?(static Complex80) = true;
+[A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
+
+
+[T | Float?(T)]
+inline complex(re:T,im:T) = Complex[T](re,im);
+
+[T | Float?(T)]
+inline overload complex(n:T) = Complex[T](n,T(0));
+
+[T | Float?(T)]
+inline overload complex(z:Complex[T]) = complex(T(z.re),T(z.im));
+
+//Need to reimplement as casting
+[T,U | Float?(T,U) and TypeSize(T)<TypeSize(U) ]
+inline complexTo(z:Complex[T],static U) = complex(U(z.re),U(z.im));
+
+
+[T | Complex?(T)]
+inline real(z:T) = z.re;
+
+[T | Complex?(T)]
+inline imag(z:T) = z.im;
+
+[T | Complex?(T)]
+inline conj(z:T) = complex(z.re,-z.im);
+
+inline overload abs(z:Complex64) = cabs(z);
+inline overload abs(z:Complex32) = cabsf(z);
+inline overload abs(z:Complex80) = cabsl(z);
+
+inline arg(z:Complex64) = carg(z);
+inline overload arg(z:Complex32) = cargf(z);
+inline overload arg(z:Complex80) = cargl(z);
+
+inline overload sin(z:Complex64) = csin(z);
+inline overload sin(z:Complex32) = csinf(z);
+inline overload sin(z:Complex80) = csinl(z);
+
+inline overload cos(z:Complex64) = ccos(z);
+inline overload cos(z:Complex32) = ccosf(z);
+inline overload cos(z:Complex80) = ccosl(z);
+
+inline overload tan(z:Complex64) = ctan(z);
+inline overload tan(z:Complex32) = ctanf(z);
+inline overload tan(z:Complex80) = ctanl(z);
+
+inline overload asin(z:Complex64) = casin(z);
+inline overload asin(z:Complex32) = casinf(z);
+inline overload asin(z:Complex80) = casinl(z);
+
+inline overload acos(z:Complex64) = cacos(z);
+inline overload acos(z:Complex32) = cacosf(z);
+inline overload acos(z:Complex80) = cacosl(z);
+
+inline overload atan(z:Complex64) = catan(z);
+inline overload atan(z:Complex32) = catanf(z);
+inline overload atan(z:Complex80) = catanl(z);
+
+inline overload sinh(z:Complex64) = csinh(z);
+inline overload sinh(z:Complex32) = csinhf(z);
+inline overload sinh(z:Complex80) = csinhl(z);
+
+inline overload cosh(z:Complex64) = ccosh(z);
+inline overload cosh(z:Complex32) = ccoshf(z);
+inline overload cosh(z:Complex80) = ccoshl(z);
+
+inline overload tanh(z:Complex64) = ctanh(z);
+inline overload tanh(z:Complex32) = ctanhf(z);
+inline overload tanh(z:Complex80) = ctanhl(z);
+
+inline overload asinh(z:Complex64) = casinh(z);
+inline overload asinh(z:Complex32) = casinhf(z);
+inline overload asinh(z:Complex80) = casinhl(z);
+
+inline overload acosh(z:Complex64) = cacosh(z);
+inline overload acosh(z:Complex32) = cacoshf(z);
+inline overload acosh(z:Complex80) = cacoshl(z);
+
+inline overload atanh(z:Complex64) = catanh(z);
+inline overload atanh(z:Complex32) = catanhf(z);
+inline overload atanh(z:Complex80) = catanhl(z);
+
+inline overload exp(z:Complex64) = cexp(z);
+inline overload exp(z:Complex32) = cexpf(z);
+inline overload exp(z:Complex80) = cexpl(z);
+
+inline overload log(z:Complex64) = clog(z);
+inline overload log(z:Complex32) = clogf(z);
+inline overload log(z:Complex80) = clogl(z);
+
+inline overload pow(z:Complex64,y:Complex64) = cpow(z,y);
+inline overload pow(z:Complex32,y:Complex32) = cpowf(z,y);
+inline overload pow(z:Complex80,y:Complex80) = cpowl(z,y);
+inline overload pow(z:Complex64,y:Complex32) = cpow(z,complexTo(y,Double));
+inline overload pow(z:Complex80,y:Complex32) = cpowl(z,complexTo(y,Real));
+inline overload pow(z:Complex80,y:Complex64) = cpowl(z,complexTo(y,Real));
+inline overload pow(z:Complex64,y:Complex80) = cpowl(complexTo(z,Real),y);
+inline overload pow(z:Complex32,y:Complex64) = cpowl(complexTo(z,Double),y);
+inline overload pow(z:Complex32,y:Complex80) = cpowl(complexTo(z,Real),y);
+
+
+
+inline overload sqrt(z:Complex64) = csqrt(z);
+inline overload sqrt(z:Complex32) = csqrtf(z);
+inline overload sqrt(z:Complex80) = csqrtl(z);
+
+inline proj(z:Complex64) = cproj(z);
+inline overload proj(z:Complex32) = cprojf(z);
+inline overload proj(z:Complex80) = cprojl(z);
+
+[T | Float?(T)]
+inline fromPolar(m:T,ph:T) = complex(m*sin(ph),m*cos(ph));
+
+[T | Float?(T)]
+inline overload equals?(z:Complex[T], y:T) {
+    return if(z.im != T(0)) false else
+        if(z.re==y) true else false;
+}
+
+[T | Float?(T)]
+inline overload equals?(y:T, z:Complex[T]) = equals?(z,y);
+
+[T | Complex?(T)]
+inline overload equals?(z:T, y:T) {
+    return if(z.re==y.re and z.im==y.im) true else false;
+}
+
+[T | Float?(T)]
+inline overload notEquals?(z:Complex[T], y:T) = not equals?(z, y);
+
+[T | Float?(T)]
+inline overload notEquals?(y:T,z:Complex[T]) = not equals?(z, y);
+
+[T | Complex?(T)]
+inline overload notEquals?(z:T, y:T) = not equals?(z,y);
+
+[T | Complex?(T)]
+inline overload minus(z:T) = complex(-z.re,-z.im);
+
+[T | Complex?(T)]
+inline overload plus(z:T) = z;
+
+[T | Complex?(T)]
+inline overload add(z:T, y:T) = complex(z.re + y.re, z.im+y.im);
+
+[T | Complex?(T)]
+inline overload subtract(z:T, y:T) = complex(z.re - y.re,z.im-y.im);
+
+[T | Complex?(T)]
+inline overload multiply(z:T, y:T) = complex(z.re*y.re-z.im*y.im,z.im*y.re+z.re*y.im);
+
+[T | Complex?(T)]
+inline overload divide(z:T, y:T) r:T {
+    r = z*y;
+    var b = y.re*y.re+y.im*y.im;
+    r.re = r.re/b;
+    r.im = r.im/b;
+}
+
+[T | Float?(T)]
+inline overload add(z:Complex[T], y:T) = complex(z.re + y,z.im);
+
+[T | Float?(T)]
+inline overload add(y:T,z:Complex[T]) = add(z,y);
+
+[T | Float?(T)]
+inline overload subtract(z:Complex[T], y:T) = complex(z.re - y, z.im);
+
+[T | Float?(T)]
+inline overload subtract(y:T,z:Complex[T]) = complex(y-z.re, -z.im);
+
+[T | Float?(T)]
+inline overload multiply(z:Complex[T], y:T) = complex(z.re*y, z.im*y);
+
+[T | Float?(T)]
+inline overload multiply(y:T,z:Complex[T]) = multiply(z,y);
+
+[T | Float?(T)]
+inline overload divide(z:Complex[T], y:T) = complex(z.re/y, z.im/y);
+
+[T | Float?(T)]
+inline overload divide(y:T,z:Complex[T]) = divide(complex(y),z);
+
+
+
+main(){
+
+    var z = complex(2.0_f80,3.0_f80);
+    var y = complex(4.0_f80,1.0_f80);
+    var w = complex(4.0_f64);
+    var x = z;
+    println(z);
+    println(y);
+    println(w);
+    println(x);
+
+    println(abs(z));
+    println(arg(w));
+    println(conj(z));
+    println(sin(z));
+    println(cos(z));
+    println(sqrt(z));
+    println(exp(z));
+    println(exp(w));
+    println(exp(4.0));
+    println(log(w)," == ",log(4.0));
+    println(pow(z,w));
+    println(pow(z,y));
+
+}
