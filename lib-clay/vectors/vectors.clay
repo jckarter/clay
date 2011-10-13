@@ -133,7 +133,7 @@ inline overload vectorSetOrientation(a:Vector[T], row:Bool) {
 
 [T]
 inline overload transpose(a:Vector[T]) {
-    a.row = !a.row;
+    a.row = not a.row;
 }
 
 
