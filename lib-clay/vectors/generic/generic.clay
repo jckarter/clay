@@ -8,11 +8,14 @@
 procedure Vector?;
 overload Vector?(x) = false;
 
+procedure vectorOrientation;
+procedure vectorSetOrientation;
 procedure vectorData;
 procedure vectorSize;
 procedure vectorSetSize;
 procedure vectorCapacity;
 procedure vectorRequestCapacity;
+procedure transpose;
 
 
 
@@ -70,7 +73,7 @@ inline overload reverseIterator(a:V) =
 
 [V | Vector?(V)]
 overload equals?(a:V, b:V) {
-    if (size(a) != size(b))
+    if (size(a) != size(b) or vectorOrientation(a) != vectorOrientation(b))
         return false;
     for (x, y in zipped(a, b)) {
         if (x != y)
@@ -81,6 +84,7 @@ overload equals?(a:V, b:V) {
 
 [V | Vector?(V)]
 overload lesser?(a:V, b:V) {
+    assert(vectorOrientation(a) == vectorOrientation(b));
     for (x, y in zipped(a, b)) {
         if (x != y)
             return x < y;
@@ -300,3 +304,5 @@ overload remove(a:V, i:I) {
 overload remove(a:V, i:I, j:J) {
     remove(a, begin(a)+i, begin(a)+j);
 }
+
+

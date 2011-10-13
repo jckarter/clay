@@ -7,6 +7,7 @@ import vectors.generic.*;
 //
 
 record Vector[T] (
+    row:Bool,
     size:SizeT,
     capacity:SizeT,
     data:Pointer[T],
@@ -28,13 +29,14 @@ overload ContiguousSequence?(static Vector[T]) = true;
 overload SequenceContainer?(static Vector[T]) = true;
 
 
+
 
 //
 // constructors
 //
 
 [T]
-overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
+overload Vector[T]() = Vector[T](true, SizeT(0), SizeT(0), null(T));
 
 [T,A | Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
@@ -108,6 +110,12 @@ overload destroy(a:Vector[T]) {
 overload Vector?(static Vector[T]) = true;
 
 [T]
+inline overload vectorOrientation(a:Vector[T]) = a.row;
+
+[T]
+inline row?(v:Vector[T]) = v.row;
+
+[T]
 inline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
@@ -117,6 +125,17 @@ inline overload vectorSize(a:Vector[T]) = a.size;
 inline overload vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
 }
+
+[T]
+inline overload vectorSetOrientation(a:Vector[T], row:Bool) {
+    a.row = row;
+}
+
+[T]
+inline overload transpose(a:Vector[T]) {
+    a.row = !a.row;
+}
+
 
 [T]
 inline overload vectorCapacity(a:Vector[T]) = a.capacity;
