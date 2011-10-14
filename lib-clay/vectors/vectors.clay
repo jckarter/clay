@@ -8,7 +8,6 @@ import vectors.generic.*;
 //
 
 record Vector[T] (
-    row:Bool,
     size:SizeT,
     capacity:SizeT,
     data:Pointer[T]
@@ -113,12 +112,6 @@ overload destroy(a:Vector[T]) {
 overload Vector?(static Vector[T]) = true;
 
 [T]
-inline overload vectorOrientation(a:Vector[T]) = a.row;
-
-[T]
-inline row?(v:Vector[T]) = v.row;
-
-[T]
 inline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
@@ -128,12 +121,6 @@ inline overload vectorSize(a:Vector[T]) = a.size;
 inline overload vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
 }
-
-[T]
-inline overload vectorSetOrientation(a:Vector[T], row:Bool) {
-    a.row = row;
-}
-
 
 [T]
 inline overload vectorCapacity(a:Vector[T]) = a.capacity;
