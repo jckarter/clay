@@ -15,7 +15,7 @@ procedure vectorSize;
 procedure vectorSetSize;
 procedure vectorCapacity;
 procedure vectorRequestCapacity;
-procedure transpose;
+
 
 
 

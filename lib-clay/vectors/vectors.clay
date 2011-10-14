@@ -1,6 +1,7 @@
 
 import vectors.generic.*;
 
+
 
 //
 // Vector[T]
@@ -10,7 +11,7 @@ record Vector[T] (
     row:Bool,
     size:SizeT,
     capacity:SizeT,
-    data:Pointer[T],
+    data:Pointer[T]
 );
 
 
@@ -106,6 +107,8 @@ overload destroy(a:Vector[T]) {
 // generic vector requirements
 //
 
+
+
 [T]
 overload Vector?(static Vector[T]) = true;
 
@@ -129,11 +132,6 @@ inline overload vectorSetSize(a:Vector[T], n:SizeT) {
 [T]
 inline overload vectorSetOrientation(a:Vector[T], row:Bool) {
     a.row = row;
-}
-
-[T]
-inline overload transpose(a:Vector[T]) {
-    a.row = not a.row;
 }
 
 
