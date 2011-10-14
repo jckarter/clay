@@ -36,7 +36,7 @@ overload SequenceContainer?(static Vector[T]) = true;
 //
 
 [T]
-overload Vector[T]() = Vector[T](true, SizeT(0), SizeT(0), null(T));
+overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
 [T,A | Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
