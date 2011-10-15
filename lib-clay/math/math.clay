@@ -482,6 +482,13 @@ overload max(x:Real,y:Double) = libc.fmaxl(x,Real(y));
 overload max(x:Float,y:Real) = libc.fmaxl(Real(x),y);
 overload max(x:Real,y:Float) = libc.fmaxl(x,Real(y));
 
+[I,T | Integer?(I) and Float?(T)]
+overload max(a:I,b:T) = max(T(a),b);
+[I,T | Integer?(I) and Float?(T)]
+overload max(a:T,b:I) = max(a,T(b));
+[I,J | Integer?(I,J)]
+overload max(a:I,b:J) = if(SizeT(b)<SizeT(a)) a else b;
+
 overload min(x:Double,y:Double) = libc.fmin(x,y);
 overload min(x:Float,y:Float) = libc.fminf(x,y);
 overload min(x:Real,y:Real) = libc.fminl(x,y);
@@ -491,6 +498,15 @@ overload min(x:Double,y:Real) = libc.fminl(Real(x),y);
 overload min(x:Real,y:Double) = libc.fminl(x,Real(y));
 overload min(x:Float,y:Real) = libc.fminl(Real(x),y);
 overload min(x:Real,y:Float) = libc.fminl(x,Real(y));
+
+
+[I,T | Integer?(I) and Float?(T)]
+overload min(a:I,b:T) = min(T(a),b);
+[I,T | Integer?(I) and Float?(T)]
+overload min(a:T,b:I) = min(a,T(b));
+[I,J | Integer?(I,J)]
+overload min(a:I,b:J) = if(SizeT(a)<SizeT(b)) a else b;
+
 
 overload fpclassify(value:Double) = libc.fpclassify(value);
 overload fpclassify(value:Float) = libc.fpclassifyf(value);
