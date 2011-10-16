@@ -1,6 +1,6 @@
 // Complex numbers
 
-import math.*;
+public import math.*;
 
 record Complex[T](re:T,im:T);
 
@@ -378,7 +378,7 @@ inline overload divide(z:Complex[T], y:T) = complex(z.re/y, z.im/y);
 inline overload divide(y:T,z:Complex[T]) = divide(complex(y),z);
 
 
-
+/*
 main(){
 
     var z = complex(2.0_f80,3.0_f80);
@@ -404,3 +404,4 @@ main(){
     println(pow(z,y));
 
 }
+*/
