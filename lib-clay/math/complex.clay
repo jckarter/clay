@@ -1,5 +1,4 @@
 // Complex numbers
-module complex;
 
 import math.*;
 
