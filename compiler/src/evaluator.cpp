@@ -1206,7 +1206,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x.ptr();
         if (!y->llvmFunc)
-            codegenExternalProcedure(y);
+            codegenExternalProcedure(y, false);
         void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];

@@ -1581,6 +1581,7 @@ struct ExternalProcedure : public TopLevelItem {
     string attrAsmLabel;
 
     bool analyzed;
+    bool bodyCodegenned;
     TypePtr returnType2;
     TypePtr ptrType;
 
@@ -1600,7 +1601,7 @@ struct ExternalProcedure : public TopLevelItem {
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
-          analyzed(false), llvmFunc(NULL) {}
+          analyzed(false), bodyCodegenned(false), llvmFunc(NULL) {}
 };
 
 struct ExternalArg : public ANode {
@@ -2965,7 +2966,7 @@ typedef Pointer<CodegenContext> CodegenContextPtr;
 
 void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
-void codegenExternalProcedure(ExternalProcedurePtr x);
+void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 
 InvokeEntryPtr codegenCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,

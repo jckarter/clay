@@ -90,7 +90,7 @@ void codegenStaticObject(ObjectPtr x,
 
 void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
-void codegenExternalProcedure(ExternalProcedurePtr x);
+void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 
 void codegenValueHolder(ValueHolderPtr x,
                         CodegenContextPtr ctx,
@@ -1240,7 +1240,7 @@ void codegenStaticObject(ObjectPtr x,
     case EXTERNAL_PROCEDURE : {
         ExternalProcedure *y = (ExternalProcedure *)x.ptr();
         if (!y->llvmFunc)
-            codegenExternalProcedure(y);
+            codegenExternalProcedure(y, false);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == y->ptrType);
@@ -1465,9 +1465,9 @@ void codegenExternalVariable(ExternalVariablePtr x)
 // codegenExternalProcedure
 //
 
-void codegenExternalProcedure(ExternalProcedurePtr x)
+void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 {
-    if (x->llvmFunc != NULL)
+    if (x->llvmFunc != NULL && (!codegenBody || x->bodyCodegenned))
         return;
     if (!x->analyzed)
         analyzeExternalProcedure(x);
@@ -1504,28 +1504,35 @@ void codegenExternalProcedure(ExternalProcedurePtr x)
         llvmFuncName = x->name->str;
     }
 
-    llvm::Function *func = llvmModule->getFunction(llvmFuncName);
-    if (!func) {
-        func = llvm::Function::Create(llFuncType,
-                                      linkage,
-                                      llvmFuncName,
-                                      llvmModule);
-    }
-    x->llvmFunc = func;
-    switch (x->callingConv) {
-    case CC_DEFAULT :
-        break;
-    case CC_STDCALL :
-        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
-        break;
-    case CC_FASTCALL :
-        x->llvmFunc->setCallingConv(llvm::CallingConv::X86_FastCall);
-        break;
-    default :
-        assert(false);
+    if (x->llvmFunc == NULL) {
+        llvm::Function *func = llvmModule->getFunction(llvmFuncName);
+        if (!func) {
+            func = llvm::Function::Create(llFuncType,
+                                          linkage,
+                                          llvmFuncName,
+                                          llvmModule);
+        }
+        x->llvmFunc = func;
+        switch (x->callingConv) {
+        case CC_DEFAULT :
+            break;
+        case CC_STDCALL :
+            x->llvmFunc->setCallingConv(llvm::CallingConv::X86_StdCall);
+            break;
+        case CC_FASTCALL :
+            x->llvmFunc->setCallingConv(llvm::CallingConv::X86_FastCall);
+            break;
+        default :
+            assert(false);
+        }
     }
 
-    if (!x->body) return;
+    if (!codegenBody)
+        return;
+
+    x->bodyCodegenned = true;
+    if (!x->body)
+        return;
 
     CodegenContextPtr ctx = new CodegenContext(x->llvmFunc);
 
@@ -1883,7 +1890,7 @@ void codegenCallExpr(ExprPtr callable,
         if (y->objKind == EXTERNAL_PROCEDURE) {
             ExternalProcedure *z = (ExternalProcedure *)y.ptr();
             if (!z->llvmFunc)
-                codegenExternalProcedure(z);
+                codegenExternalProcedure(z, false);
             MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
             codegenCallCCode(t, z->llvmFunc, mcv, ctx, out);
             return;
@@ -5482,7 +5489,7 @@ void codegenSharedLib(ModulePtr module)
         if (x->objKind == EXTERNAL_PROCEDURE) {
             ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
             if (y->body.ptr())
-                codegenExternalProcedure(y);
+                codegenExternalProcedure(y, true);
         }
     }
     finalizeCtorsDtors();
@@ -5532,7 +5539,7 @@ void codegenExe(ModulePtr module)
 
     entryProc->env = module->env;
 
-    codegenExternalProcedure(entryProc);
+    codegenExternalProcedure(entryProc, true);
     finalizeCtorsDtors();
 }
 
