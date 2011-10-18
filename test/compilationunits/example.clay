@@ -1,0 +1,6 @@
+import foo.(foo, bar);
+
+main() {
+    println(foo(3,2,1));
+    println(bar(3,1));
+}
