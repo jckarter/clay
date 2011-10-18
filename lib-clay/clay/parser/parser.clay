@@ -552,9 +552,10 @@ private var lambdaArgs = choice(
     ),
 );
 
-private var optCaptureByRef = choice(
-    modify(x => true, kw_ref),
-    input => Maybe(false),
+private var lambdaArrow = choice(
+    modify(x => true, sequence(kw_ref, punc(#"=>"))),
+    modify(x => true, punc(#"->")),
+    modify(x => false, punc(#"=>")),
 );
 
 private var lambdaBody = choice(
@@ -567,7 +568,7 @@ private var lambdaBody = choice(
 
 private var lambdaExpr = exprParser(
     x => LambdaExpr(x.1, move(x.0), move(x.3)),
-    sequence(lambdaArgs, optCaptureByRef, punc(#"=>"), lambdaBody),
+    sequence(lambdaArgs, lambdaArrow, lambdaBody),
 );
 
 
