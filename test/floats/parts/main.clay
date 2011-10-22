@@ -27,14 +27,14 @@ main() {
     println(floatFromParts(true,  1023, 0x8_0000_0000_0000u64));
 
     // 1.5 parts
-    var neg?, exp, mant = ...floatParts(1.5);
+    var neg?, exp, mant = ..floatParts(1.5);
     println(neg?, " ", exp, " 0x", hex(mant));
-    neg?, exp, mant = ...floatParts(-1.5);
+    neg?, exp, mant = ..floatParts(-1.5);
     println(neg?, " ", exp, " 0x", hex(mant));
 
-    var negf?, expf, mantf = ...floatParts(1.5f);
+    var negf?, expf, mantf = ..floatParts(1.5f);
     println(negf?, " ", expf, " 0x", hex(mantf));
-    negf?, expf, mantf = ...floatParts(-1.5f);
+    negf?, expf, mantf = ..floatParts(-1.5f);
     println(negf?, " ", expf, " 0x", hex(mantf));
 
     // nan

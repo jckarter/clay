@@ -50,7 +50,7 @@ parseOpts(args) {
 
 main(args) {
     var loadPrelude?, moduleToLoad, programToLoad, error? =
-        ...parseOpts(args);
+        ..parseOpts(args);
 
     if (error?
         or (not loadPrelude?

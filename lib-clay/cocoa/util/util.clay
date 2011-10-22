@@ -218,38 +218,38 @@ overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
 //
 // array and dictionary constructors
 //
-[T, ...E | Class?(T) and allValues?(ObjectParameterType?, ...E)]
-makeArrayOfClass(static T, forward ...elements: E)
-    = T.arrayWithObjects(...mapValues(objectHandle, ...elements), nilHandle);
+[T, ..E | Class?(T) and allValues?(ObjectParameterType?, ..E)]
+makeArrayOfClass(static T, forward ..elements: E)
+    = T.arrayWithObjects(..mapValues(objectHandle, ..elements), nilHandle);
 
-[...E | allValues?(ObjectParameterType?, ...E)]
-makeNSArray(forward ...elements: E)
-    = makeArrayOfClass(NSArray, ...elements);
-[...E | allValues?(ObjectParameterType?, ...E)]
-makeNSMutableArray(forward ...elements: E)
-    = makeArrayOfClass(NSMutableArray, ...elements);
+[..E | allValues?(ObjectParameterType?, ..E)]
+makeNSArray(forward ..elements: E)
+    = makeArrayOfClass(NSArray, ..elements);
+[..E | allValues?(ObjectParameterType?, ..E)]
+makeNSMutableArray(forward ..elements: E)
+    = makeArrayOfClass(NSMutableArray, ..elements);
 
 private swapValuePairs() = ;
-overload swapValuePairs(forward x, forward y, forward ...xys)
-    = forward y, x, ...swapValuePairs(...xys);
+overload swapValuePairs(forward x, forward y, forward ..xys)
+    = forward y, x, ..swapValuePairs(..xys);
 
-private ValidDictionaryKVs?(...E)
-    = countValues(...E) % 2 == 0
-      and allValues?(ObjectParameterType?, ...E);
+private ValidDictionaryKVs?(..E)
+    = countValues(..E) % 2 == 0
+      and allValues?(ObjectParameterType?, ..E);
 
-[T, ...E | Class?(T) and ValidDictionaryKVs?(...E)]
-private makeDictionaryOfClass(static T, forward ...kvs: E)
+[T, ..E | Class?(T) and ValidDictionaryKVs?(..E)]
+private makeDictionaryOfClass(static T, forward ..kvs: E)
     = T.dictionaryWithObjectsAndKeys(
-        ...mapValues(objectHandle, ...swapValuePairs(...kvs)),
+        ..mapValues(objectHandle, ..swapValuePairs(..kvs)),
         nilHandle
     );
 
-[...E | ValidDictionaryKVs?(...E)]
-makeNSDictionary(forward ...kvs: E)
-    = makeDictionaryOfClass(NSDictionary, ...kvs);
-[...E | ValidDictionaryKVs?(...E)]
-makeNSMutableDictionary(forward ...kvs: E)
-    = makeDictionaryOfClass(NSMutableDictionary, ...kvs);
+[..E | ValidDictionaryKVs?(..E)]
+makeNSDictionary(forward ..kvs: E)
+    = makeDictionaryOfClass(NSDictionary, ..kvs);
+[..E | ValidDictionaryKVs?(..E)]
+makeNSMutableDictionary(forward ..kvs: E)
+    = makeDictionaryOfClass(NSMutableDictionary, ..kvs);
 
 
 
@@ -279,7 +279,7 @@ overload destroy(x: Drained) { x.pool.drain(); }
 
 withAutoreleasePool(fn) {
     var pool = Drained(NSAutoreleasePool(NSAutoreleasePool.alloc().init()));
-    return forward ...fn();
+    return forward ..fn();
 }
 
 
@@ -288,51 +288,51 @@ withAutoreleasePool(fn) {
 // standard implementations of lifecycle methods (init*, copyWithZone:, dealloc) 
 //
 
-[O, superSelector, F, ...A |
+[O, superSelector, F, ..A |
     Class?(O)
     and Selector?(superSelector)
     and CallDefined?(call, F,
-        O, ...dropValues(static SelectorArgumentCount(superSelector), ...A)
+        O, ..dropValues(static SelectorArgumentCount(superSelector), ..A)
     )
 ]
 initObjectWith(
-    self_: O, static superSelector, initFn_: F, forward ...args:A
+    self_: O, static superSelector, initFn_: F, forward ..args:A
 ) {
     var self = self_;
     ref initFn = initFn_;
     var superArgCount = static SelectorArgumentCount(superSelector);
 
-    // self = super(self).init...(...);
+    // self = super(self).init..(..);
     self = callMethod(super(self), superSelector,
-        ...takeValues(superArgCount, ...args)
+        ..takeValues(superArgCount, ..args)
     );
 
     if (not nil?(self))
         self = initFn(self,
-            ...dropValues(superArgCount, ...args)
+            ..dropValues(superArgCount, ..args)
         );
     return self;
 }
 
 initObject(self) = initObjectWith(self, #"init", self => self);
 
-overload initObject(self, superSelector, forward ...args)
-    = initObjectWith(self, superSelector, initObjectMembers, ...args);
+overload initObject(self, superSelector, forward ..args)
+    = initObjectWith(self, superSelector, initObjectMembers, ..args);
 
 [O | Class?(O)]
 private objectMembers(self: O)
-    = ref ...mapValues(ivar => ref fieldRef(self^, ivar.0), ...ClassInstanceVars(O));
+    = ref ..mapValues(ivar => ref fieldRef(self^, ivar.0), ..ClassInstanceVars(O));
 
 [O | Class?(O)]
 initObjectMembers(self: O) {
-    static for (member in ...objectMembers(self))
+    static for (member in ..objectMembers(self))
         member <-- Type(member)();
     return self;
 }
 
-[O, ...A | Class?(O) and (Tuple[...ClassIvarTypes(O)] == Tuple[...A])]
-overload initObjectMembers(self: O, forward ...args: A) {
-    ...objectMembers(self) <-- ...args;
+[O, ..A | Class?(O) and (Tuple[..ClassIvarTypes(O)] == Tuple[..A])]
+overload initObjectMembers(self: O, forward ..args: A) {
+    ..objectMembers(self) <-- ..args;
     return self;
 }
 
@@ -340,13 +340,13 @@ overload initObjectMembers(self: O, forward ...args: A) {
 copyRootObject(self: O, zone: Pointer[NSZone]) returned: O {
     var copy = O(self.class().allocWithZone(zone));
     copy = super(copy).init();
-    return initObjectMembers(copy, ...objectMembers(self));
+    return initObjectMembers(copy, ..objectMembers(self));
 }
 
 [O | Class?(O)]
 copyInheritingObject(self: O, zone: Pointer[NSZone]) returned: O {
     var copy = O(super(self).copyWithZone(zone));
-    return initObjectMembers(copy, ...objectMembers(self));
+    return initObjectMembers(copy, ..objectMembers(self));
 }
 
 [O | Class?(O)]
@@ -354,7 +354,7 @@ copyImmutableObject(self: O, zone: Pointer[NSZone]) = self.retain();
 
 [O | Class?(O)]
 deallocObject(self: O) {
-    static for (member in ...objectMembers(self))
+    static for (member in ..objectMembers(self))
         destroy(member);
     super(self).dealloc();
 }
@@ -371,13 +371,13 @@ AutoreleasedClassMethod(static selector)
 
 [selector, instanceSelector | Selector?(selector) and Selector?(instanceSelector)]
 overload AutoreleasedClassMethod(static selector, static instanceSelector)
-    = (selector, (class, ...args) =>
-        callMethod(class.alloc(), instanceSelector, ...args).autorelease()
+    = (selector, (class, ..args) =>
+        callMethod(class.alloc(), instanceSelector, ..args).autorelease()
     );
 
 [selector, superSelector | Selector?(selector) and Selector?(superSelector)]
-InitInstanceMethod(static selector, static superSelector, ...Types)
-    = (selector, (self, ...args) => initObject(self, superSelector, ...args), ...Types);
+InitInstanceMethod(static selector, static superSelector, ..Types)
+    = (selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types);
 
 overload InitInstanceMethod(selector) = InitInstanceMethod(selector, #"init");
 overload InitInstanceMethod() = InitInstanceMethod(#"init", #"init");
@@ -459,7 +459,7 @@ PropertyInstanceMethods(static ivarName, static readerSelector, static writerSel
     and Selector?(defaultWriterSelector(readerSelector))
 ]
 overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
-    = ...PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
+    = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
 
 [ivarName |
     Identifier?(ivarName)
@@ -467,7 +467,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
     and Selector?(defaultWriterSelector(ivarName))
 ]
 overload PropertyInstanceMethods(static ivarName, T)
-    = ...PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
+    = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
 
 [ivarName, readerSelector, writerSelector |
     Identifier?(ivarName)
@@ -484,7 +484,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, static 
     and Selector?(defaultWriterSelector(readerSelector))
 ]
 overload PropertyInstanceMethods(static ivarName, static readerSelector)
-    = ...PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
+    = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
 
 [ivarName |
     Identifier?(ivarName)
@@ -492,7 +492,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector)
     and Selector?(defaultWriterSelector(ivarName))
 ]
 overload PropertyInstanceMethods(static ivarName)
-    = ...PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName));
+    = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName));
 
 
 
@@ -516,11 +516,11 @@ overload printTo(stream, o: O) {
 
 private toIBOutlet(ivar) = (ivar.0, IBOutlet(ivar.1));
 private toIBAction(method) = (method.0, IBAction(method.1),
-    ...dropValues(static 2, ...unpack(method))
+    ..dropValues(static 2, ..unpack(method))
 );
 
-IBOutlets(...ivars) = ...mapValues(toIBOutlet, ...ivars);
-IBActions(...methods) = ...mapValues(toIBAction, ...methods);
+IBOutlets(..ivars) = ..mapValues(toIBOutlet, ..ivars);
+IBActions(..methods) = ..mapValues(toIBAction, ..methods);
 
 
 
@@ -528,31 +528,31 @@ IBActions(...methods) = ...mapValues(toIBAction, ...methods);
 // regularClass
 //
 
-private regularClassInstanceMethods(...fields)
+private regularClassInstanceMethods(..fields)
     = InitInstanceMethod(),
-      ...regularClassInitMethod(...fields),
+      ..regularClassInitMethod(..fields),
       CopyInstanceMethod(CopyRoot),
       DeallocInstanceMethod(),
-      ...regularClassPropertyMethods(...fields);
+      ..regularClassPropertyMethods(..fields);
 
 private regularClassInitMethod() = ;
-overload regularClassInitMethod(...fields)
-    = InitInstanceMethod(regularClassInitMethodName(...fields), #"init",
-        Id, ...mapValues(x => x.1, ...fields)
+overload regularClassInitMethod(..fields)
+    = InitInstanceMethod(regularClassInitMethodName(..fields), #"init",
+        Id, ..mapValues(x => x.1, ..fields)
     );
 
-private regularClassInitMethodName(field1, ...fields)
+private regularClassInitMethodName(field1, ..fields)
     = IdentifierConcat(#"initWith", IdentifierCapitalize(field1.0), #":",
-        ...mapValues(x => ...(x.0, #":"), ...fields)
+        ..mapValues(x => ..(x.0, #":"), ..fields)
     );
 
-private regularClassPropertyMethods(...fields)
-    = ...mapValues(field => ...PropertyInstanceMethods(field.0, field.1), ...fields);
+private regularClassPropertyMethods(..fields)
+    = ..mapValues(field => ..PropertyInstanceMethods(field.0, field.1), ..fields);
 
-regularClass(...fields) = newClass(NSObject,
-    InstanceVars(...fields),
+regularClass(..fields) = newClass(NSObject,
+    InstanceVars(..fields),
     ClassMethods(),
-    InstanceMethods(...regularClassInstanceMethods(...fields))
+    InstanceMethods(..regularClassInstanceMethods(..fields))
 );
 
 

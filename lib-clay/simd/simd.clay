@@ -15,11 +15,11 @@ inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 // type inferring constructor
 //
 
-[...A | (countValues(...A) > 0) and equalValues?(...A)]
-inline overload Vec(...args:A) {
-    alias n = static countValues(...A);
-    alias T = firstValue(...A);
-    return Vec[T, n](...args);
+[..A | (countValues(..A) > 0) and equalValues?(..A)]
+inline overload Vec(..args:A) {
+    alias n = static countValues(..A);
+    alias T = firstValue(..A);
+    return Vec[T, n](..args);
 }
 
 
@@ -28,11 +28,11 @@ inline overload Vec(...args:A) {
 // basic constructor
 //
 
-[T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
-inline overload Vec[T,n](...args:A) {
+[T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
+inline overload Vec[T,n](..args:A) {
     var a = Vec[T,n]();
     var i = 0;
-    static for (x in ...args) {
+    static for (x in ..args) {
         a[i] = x;
         i += 1;
     }
@@ -87,13 +87,13 @@ inline overload assign(dest:Vec[T,n], src:Vec[T,n]) {
 //
 
 [T,n]
-inline unpackVec(a:Vec[T,n]) = ...unpackElements(a, static 0);
+inline unpackVec(a:Vec[T,n]) = ..unpackElements(a, static 0);
 
 private procedure unpackElements;
 
 [T,n,i]
 inline overload unpackElements(a:Vec[T,n], static i) =
-    a[i], ...unpackElements(a, static i+1);
+    a[i], ..unpackElements(a, static i+1);
 
 [T,n,i | i == n]
 inline overload unpackElements(a:Vec[T,n], static i) = ;
@@ -238,7 +238,7 @@ inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](componentMask(T)), 
 
 [T,n]
 inline overload printTo(stream, a:Vec[T,n])
-    { printTo(stream, Type(a), "(", ...weaveValues(", ", ...unpackVec(a)), ")"); }
+    { printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")"); }
 
 
 

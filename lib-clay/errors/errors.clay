@@ -6,15 +6,15 @@ import libc.(abort);
 // error (exceptions disabled)
 //
 
-errorNoThrow(...e) {
-    printlnTo(stderr, "error: ", ...e);
+errorNoThrow(..e) {
+    printlnTo(stderr, "error: ", ..e);
     flush(stderr);
     abort();
 }
 
 [ | not ExceptionsEnabled?]
-error(...e) {
-    errorNoThrow(...e);
+error(..e) {
+    errorNoThrow(..e);
 }
 
 
@@ -28,9 +28,9 @@ record Error (msg : String);
 instance Exception = Error;
 
 [ | ExceptionsEnabled?]
-overload error(...e) {
+overload error(..e) {
     var buf = String();
-    printTo(buf, ...e);
+    printTo(buf, ..e);
     throw Error(move(buf));
 }
 
@@ -40,9 +40,9 @@ overload error(...e) {
 // assert
 //
 
-alias assert(cond:Bool, ...message) {
+alias assert(cond:Bool, ..message) {
     if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed: ", ...message);
+        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed: ", ..message);
 }
 
 alias overload assert(cond:Bool) {

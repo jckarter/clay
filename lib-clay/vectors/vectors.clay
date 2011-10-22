@@ -58,17 +58,17 @@ overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 // varargs constructor
 //
 
-[T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
-alias overload Vector[T](...elements:A) {
+[T, ..A | (countValues(..A) > 0) and equalValues?(T, ..A)]
+alias overload Vector[T](..elements:A) {
     var v = Vector[T]();
-    pushAll(v, ...elements);
+    pushAll(v, ..elements);
     return move(v);
 }
 
-[...A]
-private pushAll(v, forward ...elements:A) {
-    reserve(v, countValues(...A));
-    static for (x in ...elements) {
+[..A]
+private pushAll(v, forward ..elements:A) {
+    reserve(v, countValues(..A));
+    static for (x in ..elements) {
         push(v, x);
     }
 }

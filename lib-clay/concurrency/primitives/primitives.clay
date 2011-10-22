@@ -35,10 +35,10 @@ inline overload atomicSwap(to:I, from:J)
 inline overload atomicSwap(to:I, from:J)
     = llvm_atomic_swap64(Pointer[Int64](&to), Int64(from));
 
-private barrierKinds(...Kinds)
-    = static inValues?(LoadLoad, ...Kinds),
-      static inValues?(LoadStore, ...Kinds),
-      static inValues?(StoreLoad, ...Kinds),
-      static inValues?(StoreStore, ...Kinds);
+private barrierKinds(..Kinds)
+    = static inValues?(LoadLoad, ..Kinds),
+      static inValues?(LoadStore, ..Kinds),
+      static inValues?(StoreLoad, ..Kinds),
+      static inValues?(StoreStore, ..Kinds);
 
-inline barrier(...Kinds) = llvm_memory_barrier(...barrierKinds(...Kinds), static true);
+inline barrier(..Kinds) = llvm_memory_barrier(..barrierKinds(..Kinds), static true);

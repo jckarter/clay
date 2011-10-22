@@ -205,6 +205,7 @@ private var punctuationParserTable[Ident] = punctuationParser(Ident);
 [Ident]
 private punc(static Ident) = punctuationParserTable[Ident];
 
+private ellipsis() = choice(punc(#"..."), punc(#".."));
 
 
 //
@@ -496,7 +497,7 @@ private var ifExpr = exprParser(
 
 private var unpackExpr = exprParser(
     x => Unpack(x.1),
-    sequence(punc(#"..."), expr),
+    sequence(ellipsis(), expr),
 );
 
 private var newExpr = exprParser(
@@ -543,7 +544,7 @@ private var lambdaArgs = choice(
             punc(#"("),
             variadicList(
                 identifier,
-                modify(x => x.1, sequence(punc(#"..."), identifier)),
+                modify(x => x.1, sequence(ellipsis(), identifier)),
             ),
             punc(#")")
         ),
@@ -790,7 +791,7 @@ private statement(input) Maybe[Statement] = statement2(input);
 
 private var patternVar = bounds(modify(
     x => PatternVar(not nothing?(x.0), x.1),
-    sequence(optional(punc(#"...")), identifier),
+    sequence(optional(ellipsis()), identifier),
 ));
 
 private var optPredicate = optional(modify(
@@ -828,7 +829,7 @@ private var argument = choice(
 
 private var variadicArgument = modify(Argument, bounds(modify(
     x => NormalArgument(x.0, x.2, x.3),
-    sequence(argumentKind, punc(#"..."), identifier, optional(patternTypeSpec)),
+    sequence(argumentKind, ellipsis(), identifier, optional(patternTypeSpec)),
 )));
 
 private var arguments = variadicList(argument, variadicArgument);
@@ -840,7 +841,7 @@ private var namedReturn = modify(
 
 private var returnSpec = bounds(modify(
     x => ReturnSpec(not nothing?(x.0), x.1, x.2),
-    sequence(optional(punc(#"...")), optional(namedReturn), orExpr),
+    sequence(optional(ellipsis()), optional(namedReturn), orExpr),
 ));
 
 private var returnSpecs = optCommaList(returnSpec);
@@ -911,7 +912,7 @@ private var staticParams = modify(
         punc(#"["),
         variadicList(
             identifier,
-            modify(x => x.1, sequence(punc(#"..."), identifier)),
+            modify(x => x.1, sequence(ellipsis(), identifier)),
         ),
         punc(#"]"),
     ),
@@ -1033,7 +1034,7 @@ private var externalArg = bounds(modify(
 
 private var variadicExternalArg = bounds(modify(
     x => ExternalArg(Identifier(), Expr()),
-    punc(#"..."),
+    ellipsis(),
 ));
 
 private var externalArgs = modify(

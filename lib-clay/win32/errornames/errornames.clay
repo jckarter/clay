@@ -4,7 +4,7 @@ errorNames() {
     if (empty?(errorNamesVector)) {
         var b, e = begin(errorNamesData), end(errorNamesData);
         while (true) {
-            var code, name = ...findCodeAndName(b, e);
+            var code, name = ..findCodeAndName(b, e);
             if (empty?(code))
                 break;
             assert(not empty?(name));
@@ -35,7 +35,7 @@ generateAliases() {
     var entries = Vector[Tuple[S, S]]();
     var b, e = begin(errorNamesData), end(errorNamesData);
     while (true) {
-        var code, name = ...findCodeAndName(b, e);
+        var code, name = ..findCodeAndName(b, e);
         if (empty?(code))
             break;
         assert(not empty?(name));

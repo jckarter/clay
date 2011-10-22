@@ -1,17 +1,17 @@
 
 main() {
     { 
-        println("Creating...");
+        println("Creating..");
         var f = File("tempfile.txt", CREATE);
         printlnTo(f, "Hello World");
     }
     {
-        println("Appending...");
+        println("Appending..");
         var g = File("tempfile.txt", APPEND);
         printlnTo(g, "Hello World!");
     }
     {
-        println("Reading...");
+        println("Reading..");
         var f = File("tempfile.txt", READ);
         var i = 1;
         while (true) {

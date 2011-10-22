@@ -39,9 +39,9 @@ accumulateTestStatus(test: TestStatus, newTest: TestStatus) {
     test.pending += newTest.pending;
 }
 
-reportTest(test: TestStatus, ...prefix) {
+reportTest(test: TestStatus, ..prefix) {
     println(
-        ...prefix,
+        ..prefix,
         test.passed, " expectations passed; ",
         test.failed, " failed (",
         test.pending, " pending",
@@ -68,8 +68,8 @@ pendingMessage(pending?) {
     }
 }
 
-printFailure(...xs) { 
-  printlnColored(Red, TEST_FAILURE_INDENT, ...xs); 
+printFailure(..xs) { 
+  printlnColored(Red, TEST_FAILURE_INDENT, ..xs); 
 }
 
 runTestCase(_case: TestCase) TestStatus {
@@ -170,46 +170,46 @@ overload expectedResults?(expected, result) = false;
 [T | Tuple?(T)]
 overload expectedResults?(expected: T, result: T) = expected == result;
 
-expectEqualValues(test: TestStatus, name, expectedTuple, ...results) {
-    var resultsTuple = Tuple(...results);
+expectEqualValues(test: TestStatus, name, expectedTuple, ..results) {
+    var resultsTuple = Tuple(..results);
     expect(
         test,
         expectedResults?(expectedTuple, resultsTuple),
         () => {
             printFailure(name, " are expected to equal:");
-            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(expectedTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(expectedTuple)));
             printFailure("but are:");
-            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(resultsTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(resultsTuple)));
         }
     );
 }
 
-expectCallDefined(test: TestStatus, Proc, ...Types) {
-    var typesTuple = Tuple(...Types);
+expectCallDefined(test: TestStatus, Proc, ..Types) {
+    var typesTuple = Tuple(..Types);
     expect(
         test,
-        CallDefined?(Proc, ...Types),
+        CallDefined?(Proc, ..Types),
         () => {
             printFailure(Proc, " isn't callable with the expected argument types:");
-            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(typesTuple)));
         }
     );
 }
 
-expectCallUndefined(test: TestStatus, Proc, ...Types) {
-    var typesTuple = Tuple(...Types);
+expectCallUndefined(test: TestStatus, Proc, ..Types) {
+    var typesTuple = Tuple(..Types);
     expect(
         test,
-        not CallDefined?(Proc, ...Types),
+        not CallDefined?(Proc, ..Types),
         () => {
             printFailure(Proc, " shouldn't be callable with the expected argument types:");
-            printFailure(TEST_CASE_INDENT, ...weaveValues(", ", ...unpack(typesTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(typesTuple)));
         }
     );
 }
 
-expectIterator(test: TestStatus, name, iter, ...expected) {
-    var expectedV = Vector[Type(next(iter))](...expected);
+expectIterator(test: TestStatus, name, iter, ..expected) {
+    var expectedV = Vector[Type(next(iter))](..expected);
     var resultV = Vector[Type(next(iter))]();
     while (hasNext?(iter))
         push(resultV, next(iter));
@@ -227,8 +227,8 @@ expectIterator(test: TestStatus, name, iter, ...expected) {
     );
 }
 
-expectSequence(test: TestStatus, name, seq, ...expected) {
-    expectIterator(test, name, iterator(seq), ...expected);
+expectSequence(test: TestStatus, name, seq, ..expected) {
+    expectIterator(test, name, iterator(seq), ..expected);
 }
 
 expectExceptionType(test: TestStatus, name, T, fn) {
@@ -269,16 +269,16 @@ expectException(test: TestStatus, name, expectedException, fn) {
     });
 }
 
-expectPrinted(test: TestStatus, name, expectedOutput, forward ...values) {
-    expectEqual(test, name, expectedOutput, printString(...values));
+expectPrinted(test: TestStatus, name, expectedOutput, forward ..values) {
+    expectEqual(test, name, expectedOutput, printString(..values));
 }
 
 record RequiredExpectationFailed();
 instance Exception = RequiredExpectationFailed;
 
-required(expectFn, test: TestStatus, forward ...args) {
+required(expectFn, test: TestStatus, forward ..args) {
     var preFailed = test.failed;
-    expectFn(test, ...args);
+    expectFn(test, ..args);
     if (test.failed != preFailed)
         throw RequiredExpectationFailed();
 }
@@ -301,22 +301,22 @@ private testOptions() {
   return ref _testOptions;
 }
 
-[...T] ifPasses(expectFn, test: TestStatus, ...args:T) {
-    ref fn = dropValues(static countValues(...T) - 1, ...args);
+[..T] ifPasses(expectFn, test: TestStatus, ..args:T) {
+    ref fn = dropValues(static countValues(..T) - 1, ..args);
     var preFailed = test.failed;
-    expectFn(test, ...takeValues(static countValues(...T) - 1, ...args));
+    expectFn(test, ..takeValues(static countValues(..T) - 1, ..args));
     if (test.failed == preFailed)
         fn();
 }
 
-testMain(...suites) {
+testMain(..suites) {
     var test = TestStatus();
     eachValue(
         suite ref => { 
           if(runSuite?(suite))
             accumulateTestStatus(test, runTestSuite(suite)); 
         },
-        ...suites
+        ..suites
     );
 
     reportTest(test, "Overall: ");
@@ -329,9 +329,9 @@ testMain(...suites) {
     }
 }
 
-private printlnColored(c : Color, ...values){
+private printlnColored(c : Color, ..values){
   if(colored?()) textColor(c);
-  println(...values);
+  println(..values);
   if(colored?()) resetConsole();
 }
 

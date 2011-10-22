@@ -43,8 +43,8 @@ overload printReprTo(stream, x:GenericSocketError) {
     printTo(stream, "GenericSocketError(", errorCodeName(x.code), ")");
 }
 
-socketCall(callable, forward ...args) {
-    var ret = callable(...args);
+socketCall(callable, forward ..args) {
+    var ret = callable(..args);
     if (ret == Type(ret)(platform.SOCKET_ERROR))
         throw GenericSocketError(platform.errno());
     return ret;
@@ -193,7 +193,7 @@ overload ListenSocket(addr: T, backlog: I)
         Int(sockaddrStreamProtocol(addr))
     );
     try {
-        var sockaddr, psockaddr, szsockaddr = ...makeSockaddrParams(addr);
+        var sockaddr, psockaddr, szsockaddr = ..makeSockaddrParams(addr);
         var sockoptValue = 1;
         socketCall(platform.setsockopt, socket.raw,
             SOL_SOCKET, SO_REUSEADDR, RawPointer(&sockoptValue), SocklenT(TypeSize(Int))
@@ -234,7 +234,7 @@ accept(listener: ListenSocket[T])
 //
 [T]
 overload StreamSocket(listener: ListenSocket[T])
-    = takeValues(static 1, ...accept(listener));
+    = takeValues(static 1, ..accept(listener));
 
 [T | StreamSocketAddress?(T)]
 overload StreamSocket(addr: T) socket: StreamSocket {
@@ -245,7 +245,7 @@ overload StreamSocket(addr: T) socket: StreamSocket {
     );
     
     try {
-        var sockaddr, psockaddr, szsockaddr = ...makeSockaddrParams(addr);
+        var sockaddr, psockaddr, szsockaddr = ..makeSockaddrParams(addr);
         socketCall(platform.connect, socket.raw, psockaddr, szsockaddr);
     } catch (ex) {
         platform.close(socket.raw);

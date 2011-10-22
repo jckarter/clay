@@ -35,8 +35,8 @@ alias Opaque = Byte;
 // Type
 //
 
-[...T]
-alias Type(...x:T) = ...T;
+[..T]
+alias Type(..x:T) = ..T;
 
 
 
@@ -47,8 +47,8 @@ alias Type(...x:T) = ...T;
 inline typeToLValue(a) = ref null(a)^;
 [T] inline typeToRValue(static T) returned:T {}
 
-inline typesToLValues(...a) = forward ...mapValues(typeToLValue, ...a);
-inline typesToRValues(...a) = ...mapValues(typeToRValue, ...a);
+inline typesToLValues(..a) = forward ..mapValues(typeToLValue, ..a);
+inline typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
 
 
 
@@ -66,16 +66,16 @@ record ByRef[T] ();
 // ReturnType
 //
 
-alias ReturnType(...x) = ...Type(...returnValues(...x));
+alias ReturnType(..x) = ..Type(..returnValues(..x));
 
 
 private procedure returnValues;
 
-[T] inline overload returnValues(ref first:T, forward ...rest) =
-    typeToLValue(ByRef[T]), ...returnValues(...rest);
+[T] inline overload returnValues(ref first:T, forward ..rest) =
+    typeToLValue(ByRef[T]), ..returnValues(..rest);
 
-[T] inline overload returnValues(rvalue first:T, forward ...rest) =
-    typeToLValue(T), ...returnValues(...rest);
+[T] inline overload returnValues(rvalue first:T, forward ..rest) =
+    typeToLValue(T), ..returnValues(..rest);
 
 inline overload returnValues() = ;
 
@@ -89,7 +89,7 @@ procedure returnTypeToValue;
 [T] inline overload returnTypeToValue(static T) = typeToRValue(T);
 [T] inline overload returnTypeToValue(static ByRef[T]) = ref typeToLValue(T);
 
-inline returnTypesToValues(...a) = forward ...mapValues(returnTypeToValue, ...a);
+inline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..a);
 
 
 

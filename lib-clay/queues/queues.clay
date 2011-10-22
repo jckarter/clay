@@ -27,11 +27,11 @@ overload Queue[S](forward seq: S2) returned: Queue[S] {
     }
 }
 
-[S, ...A | countValues(...A) > 0 and equalValues?(SequenceElementType(S), ...A)]
-overload Queue[S](forward ...values: A) returned: Queue[S] {
+[S, ..A | countValues(..A) > 0 and equalValues?(SequenceElementType(S), ..A)]
+overload Queue[S](forward ..values: A) returned: Queue[S] {
     returned <-- Queue[S]();
     try {
-        static for (v in ...values)
+        static for (v in ..values)
             queuePush(returned, v);
     } catch (ex) {
         destroy(returned);

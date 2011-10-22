@@ -6,7 +6,7 @@ import sequences.util.*;
 // filtered
 //
 
-inline filtered(predicate, forward ...seqs) = Filtered(predicate, zipped(...seqs));
+inline filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
 
 inline overload filtered(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));
@@ -32,7 +32,7 @@ overload UnderlyingContainerConstructor(static Filtered[F,A]) =
 
 [F, A]
 inline overload iterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(...next(iterator(null(A)^))));
+    alias T = Type(captureValues(..next(iterator(null(A)^))));
     return FilteredIterator(a.predicate,
                             iterator(a.seq),
                             false,
@@ -41,7 +41,7 @@ inline overload iterator(a:Filtered[F, A]) {
 
 [F, A | CallDefined?(reverseIterator, A)]
 inline overload reverseIterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(...next(reverseIterator(null(A)^))));
+    alias T = Type(captureValues(..next(reverseIterator(null(A)^))));
     return FilteredIterator(a.predicate,
                             reverseIterator(a.seq),
                             false,
@@ -66,8 +66,8 @@ inline overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
     while (not iter.hasQueued?) {
         if (not hasNext?(iter.iter))
             return false;
-        iter.queued = captureValues(...next(iter.iter));
-        iter.hasQueued? = iter.predicate(...capturedRefs(iter.queued));
+        iter.queued = captureValues(..next(iter.iter));
+        iter.hasQueued? = iter.predicate(..capturedRefs(iter.queued));
     }
     return true;
 }
@@ -79,5 +79,5 @@ inline overload next(iter:FilteredIterator[F, ITER, VALS]) {
         assert(result);
     }
     iter.hasQueued? = false;
-    return forward ...forwardValues(iter.queued);
+    return forward ..forwardValues(iter.queued);
 }

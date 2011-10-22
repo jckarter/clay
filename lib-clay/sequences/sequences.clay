@@ -8,15 +8,15 @@ public import sequences.lazy.*;
 // strict wrappers around lazy sequences
 //
 
-alias zip(...args) = force(zipped(...args));
-alias map(...args) = force(mapped(...args));
-alias filter(...args) = force(filtered(...args));
-alias enumerate(...args) = force(enumerated(...args));
-alias reverse(...args) = force(reversed(...args));
-alias slice(...args) = force(sliced(...args));
-alias sliceFrom(...args) = force(slicedFrom(...args));
-alias sliceUpto(...args) = force(slicedUpto(...args));
-alias group(...args) = force(grouped(...args));
+alias zip(..args) = force(zipped(..args));
+alias map(..args) = force(mapped(..args));
+alias filter(..args) = force(filtered(..args));
+alias enumerate(..args) = force(enumerated(..args));
+alias reverse(..args) = force(reversed(..args));
+alias slice(..args) = force(sliced(..args));
+alias sliceFrom(..args) = force(slicedFrom(..args));
+alias sliceUpto(..args) = force(slicedUpto(..args));
+alias group(..args) = force(grouped(..args));
 
 
 
@@ -95,10 +95,10 @@ overload add(forward x:T, forward a:A) = Vector[T](x) + a;
 interleave(seq:S, betweenFn, fn) {
     var i = iterator(seq);
     if (hasNext?(i)) {
-        fn(...next(i));
+        fn(..next(i));
         while (hasNext?(i)) {
             betweenFn();
-            fn(...next(i));
+            fn(..next(i));
         }
     }
 }

@@ -258,12 +258,12 @@ external execv(
 external execle(
     __path : Pointer[CChar],
     __arg : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execl(
     __path : Pointer[CChar],
     __arg : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execvp(
     __file : Pointer[CChar],
@@ -272,7 +272,7 @@ external execvp(
 external execlp(
     __file : Pointer[CChar],
     __arg : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external nice(
     __inc : Int) Int;
@@ -818,7 +818,7 @@ external sbrk(
 
 external syscall(
     __sysno : CLong,
-    ...) CLong;
+    ..) CLong;
 
 external lockf(
     __fd : Int,
@@ -849,7 +849,7 @@ external clone(
     __child_stack : RawPointer,
     __flags : Int,
     __arg : RawPointer,
-    ...) Int;
+    ..) Int;
 
 external unshare(
     __flags : Int) Int;
@@ -1696,18 +1696,18 @@ record Struct_stat (
 external fcntl(
     __fd : Int,
     __cmd : Int,
-    ...) Int;
+    ..) Int;
 
 external open(
     __file : Pointer[CChar],
     __oflag : Int,
-    ...) Int;
+    ..) Int;
 
 external openat(
     __fd : Int,
     __file : Pointer[CChar],
     __oflag : Int,
-    ...) Int;
+    ..) Int;
 
 external creat(
     __file : Pointer[CChar],

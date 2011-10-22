@@ -259,7 +259,7 @@ external ("_fopen") fopen(
 external fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fputc(
     argument0 : Int,
@@ -283,7 +283,7 @@ external ("_freopen") freopen(
 external fscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fseek(
     argument0 : Pointer[FILE],
@@ -320,7 +320,7 @@ external perror(
 
 external printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external putc(
     argument0 : Int,
@@ -344,7 +344,7 @@ external rewind(
 
 external scanf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external setbuf(
     argument0 : Pointer[FILE],
@@ -359,12 +359,12 @@ external setvbuf(
 external sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sscanf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external tmpfile() Pointer[FILE];
 
@@ -392,7 +392,7 @@ external vsprintf(
 external asprintf(
     argument0 : Pointer[Pointer[CChar]],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vasprintf(
     argument0 : Pointer[Pointer[CChar]],
@@ -478,7 +478,7 @@ external snprintf(
     argument0 : Pointer[CChar],
     argument1 : CULong,
     argument2 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external ("_tempnam") tempnam(
     argument0 : Pointer[CChar],
@@ -533,7 +533,7 @@ external __sprintf_chk(
     argument1 : Int,
     argument2 : CULong,
     argument3 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __snprintf_chk(
     argument0 : Pointer[CChar],
@@ -541,7 +541,7 @@ external __snprintf_chk(
     argument2 : Int,
     argument3 : CULong,
     argument4 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __vsprintf_chk(
     argument0 : Pointer[CChar],

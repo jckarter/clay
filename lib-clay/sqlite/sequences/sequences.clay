@@ -59,10 +59,10 @@ overload SqliteStatementSequence(static T, static n, rvalue statement: SqliteSta
 }
 
 [T, n, S | String?(S)]
-overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ...statementArgs) {
+overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ..statementArgs) {
     var size = statementValue(SizeT, db,
         printString("select count(1) from (", sql, ")"),
-        ...statementArgs
+        ..statementArgs
     );
 
     return SqliteStatementSequence(T, static n,
@@ -71,7 +71,7 @@ overload SqliteStatementSequence(static T, static n, db: SqliteDB, sql: S, ...st
                 sql,
                 " limit :limit offset :offset",
             ),
-            ...statementArgs
+            ..statementArgs
         ),
         size
     );

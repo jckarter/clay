@@ -14,7 +14,7 @@ main(args) {
             error("Error opening movie ", args[1], ": ", err);
         }
         
-        println("Playing ", args[1], "...");
+        println("Playing ", args[1], "..");
         movie.play();
 
         var duration = movie.duration();

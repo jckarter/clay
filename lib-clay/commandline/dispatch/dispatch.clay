@@ -8,7 +8,7 @@ private dispatchCommand() {
         return Maybe(args[1]), Vector[String](slicedFrom(args, 2));
 }
 
-printlnUsage(forward ...x) { printlnTo(stderr, ...x); }
+printlnUsage(forward ..x) { printlnTo(stderr, ..x); }
 
 private pad(actualSize, desiredSize) {
     var r = String();
@@ -19,13 +19,13 @@ private pad(actualSize, desiredSize) {
     return move(r);
 }
 
-private usage(...commandTuples) {
-    var longestName = foldValues(max, ...mapValues(c => size(commandName(c)), ...commandTuples));
+private usage(..commandTuples) {
+    var longestName = foldValues(max, ..mapValues(c => size(commandName(c)), ..commandTuples));
 
     printlnUsage("Available commands:");
-    static for (commandTuple in ...commandTuples) {
+    static for (commandTuple in ..commandTuples) {
         var name = commandName(commandTuple);
-        printlnUsage("  ", name, pad(size(name), longestName), "    ", ...commandDescription(commandTuple));
+        printlnUsage("  ", name, pad(size(name), longestName), "    ", ..commandDescription(commandTuple));
     }
 
     return 2;
@@ -35,51 +35,51 @@ private usage(...commandTuples) {
 [fn | CallDefined?(fn, Vector[String])]
 private commandName(static fn) = StaticName(fn);
 
-[fn, ...Description | CallDefined?(fn, Vector[String])]
-overload commandName(commandTuple: Tuple[Static[fn], ...Description])
+[fn, ..Description | CallDefined?(fn, Vector[String])]
+overload commandName(commandTuple: Tuple[Static[fn], ..Description])
     = StaticName(commandTuple.0);
 
 [
-    Name, Callable, ...Description
+    Name, Callable, ..Description
     | String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandName(commandTuple: Tuple[Name, Callable, ...Description])
+overload commandName(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.0;
 
 [fn | CallDefined?(fn, Vector[String])]
 private commandFunction(static fn) = fn;
 
-[fn, ...Description | CallDefined?(fn, Vector[String])]
-overload commandFunction(commandTuple: Tuple[Static[fn], ...Description])
+[fn, ..Description | CallDefined?(fn, Vector[String])]
+overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
     = commandTuple.0;
 
 [
-    Name, Callable, ...Description
+    Name, Callable, ..Description
     | String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandFunction(commandTuple: Tuple[Name, Callable, ...Description])
+overload commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.1;
 
 [fn | CallDefined?(fn, Vector[String])]
 private commandDescription(static fn)
     = ;
 
-[fn, ...Description | CallDefined?(fn, Vector[String])]
-overload commandDescription(commandTuple: Tuple[Static[fn], ...Description])
-    = ...dropValues(static 1, ...unpack(commandTuple));
+[fn, ..Description | CallDefined?(fn, Vector[String])]
+overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
+    = ..dropValues(static 1, ..unpack(commandTuple));
 
 [
-    Name, Callable, ...Description
+    Name, Callable, ..Description
     | String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandDescription(commandTuple: Tuple[Name, Callable, ...Description])
-    = ...dropValues(static 2, ...unpack(commandTuple));
+overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
+    = ..dropValues(static 2, ..unpack(commandTuple));
 
 private commandTypeReturnCount(T)
-    = countValues(...Type(...commandFunction(typeToRValue(T))(Vector[String]())));
+    = countValues(..Type(..commandFunction(typeToRValue(T))(Vector[String]())));
 
 [CommandTuple | commandTypeReturnCount(CommandTuple) == 1]
 private invokeCommand(commandTuple: CommandTuple, args)
@@ -91,16 +91,16 @@ overload invokeCommand(commandTuple: CommandTuple, args) {
     return 0;
 }
 
-dispatchMain(...commandTuples) {
-    var maybeCmd, args = ...dispatchCommand();
+dispatchMain(..commandTuples) {
+    var maybeCmd, args = ..dispatchCommand();
 
     return maybe(maybeCmd, cmd => {
-        static for (commandTuple in ...commandTuples) {
+        static for (commandTuple in ..commandTuples) {
             if (cmd == commandName(commandTuple))
                 return invokeCommand(commandTuple, args);
         }
         printlnUsage("Command \"", cmd, "\" not supported");
-        return usage(...commandTuples);
-    }, () => usage(...commandTuples));
+        return usage(..commandTuples);
+    }, () => usage(..commandTuples));
 }
 

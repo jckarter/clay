@@ -46,7 +46,7 @@ record SourceTokens = referenceType(
 //
 
 private var punctuations = [
-    "<--", "...", "=>", "->",
+    "<--", "...", "..", "=>", "->",
     "==", "!=", "<=", ">=",
     "<", ">",
     "+=", "-=", "*=", "/=", "%=",
@@ -161,12 +161,12 @@ private var oneOrMoreAs = combinators.oneOrMoreAs;
 private alias Dummy = Char;
 private alias dummy = 'T';
 
-private seq(forward ...parsers) = sequenceAs(dummy, ...parsers);
+private seq(forward ..parsers) = sequenceAs(dummy, ..parsers);
 
-private zeroPlus(forward ...parsers) = zeroPlus(seq(...parsers));
+private zeroPlus(forward ..parsers) = zeroPlus(seq(..parsers));
 overload zeroPlus(forward parser) = zeroOrMoreAs(dummy, parser);
 
-private onePlus(forward ...parsers) = onePlus(seq(...parsers));
+private onePlus(forward ..parsers) = onePlus(seq(..parsers));
 overload onePlus(forward parser) = oneOrMoreAs(dummy, parser);
 
 

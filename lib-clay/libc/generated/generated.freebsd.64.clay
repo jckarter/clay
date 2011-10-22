@@ -270,7 +270,7 @@ external fopen(
 external fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fputc(
     argument0 : Int,
@@ -294,7 +294,7 @@ external freopen(
 external fscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fseek(
     argument0 : Pointer[FILE],
@@ -327,7 +327,7 @@ external perror(
 
 external printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external putc(
     argument0 : Int,
@@ -351,7 +351,7 @@ external rewind(
 
 external scanf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external setbuf(
     argument0 : Pointer[FILE],
@@ -366,12 +366,12 @@ external setvbuf(
 external sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sscanf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external tmpfile() Pointer[FILE];
 
@@ -400,7 +400,7 @@ external snprintf(
     argument0 : Pointer[CChar],
     argument1 : CULong,
     argument2 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vfscanf(
     argument0 : Pointer[FILE],
@@ -511,7 +511,7 @@ external vdprintf(
 external asprintf(
     argument0 : Pointer[Pointer[CChar]],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external ctermid_r(
     argument0 : Pointer[CChar]) Pointer[CChar];

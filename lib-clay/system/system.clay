@@ -29,7 +29,7 @@ procedure callMain;
 [Main]
 overload callMain(static Main) {
     try {
-        return getExitCode(...Main());
+        return getExitCode(..Main());
     }
     catch (e) {
         printlnTo(stderr, "unhandled exception: ", e);
@@ -40,7 +40,7 @@ overload callMain(static Main) {
 [Main | CallDefined?(Main, Type(commandLine()))]
 overload callMain(static Main) {
     try {
-        return getExitCode(...Main(commandLine()));
+        return getExitCode(..Main(commandLine()));
     }
     catch (e) {
         printlnTo(stderr, "unhandled exception: ", e);

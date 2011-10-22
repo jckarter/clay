@@ -4,9 +4,9 @@ import io.paths.*;
 
 expectSplitPath(test, path, expected) {
     expectEqual(test,
-        "[...splitPath(\"" + path + "\")]",
+        "[..splitPath(\"" + path + "\")]",
         expected,
-        [...splitPath(path)],
+        [..splitPath(path)],
     );
 }
 

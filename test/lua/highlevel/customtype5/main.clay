@@ -84,7 +84,7 @@ Point_xyArray(s:lua.State) {
 
 registerPoint(s:lua.State) {
     lua.newMetaTable(s, "PointFields");
-    static for (i in ...staticIntegers(static RecordFieldCount(Point))) {
+    static for (i in ..staticIntegers(static RecordFieldCount(Point))) {
         lua.pushNumber(s, unwrapStatic(i));
         lua.setField(s, -2, StaticName(RecordFieldName(Point, i)));
     }

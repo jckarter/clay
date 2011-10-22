@@ -21,7 +21,7 @@ overload fieldRef(x:Combinators[TokenInput], static Name) {
 // partialApply
 //
 
-private partialApply(f, ...args) = CallableAndArgs(f, Tuple(...args));
+private partialApply(f, ..args) = CallableAndArgs(f, Tuple(..args));
 
 private record CallableAndArgs[F, Args] (
     callable:F,
@@ -29,5 +29,5 @@ private record CallableAndArgs[F, Args] (
 );
 
 [F, Args]
-overload call(x:CallableAndArgs[F, Args], forward ...args) =
-    forward ...x.callable(...unpack(x.args), ...args);
+overload call(x:CallableAndArgs[F, Args], forward ..args) =
+    forward ..x.callable(..unpack(x.args), ..args);

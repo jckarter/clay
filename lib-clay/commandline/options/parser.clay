@@ -43,7 +43,7 @@ parseOptions(ops : OptionSpecs, args) ParseResult {
     } else if(argument?(token)){
       addArgument(pr, token);
     } else {
-      var optionName, value? = ...splitOption(token);
+      var optionName, value? = ..splitOption(token);
 
       var spec? = lookup(ops, optionName);
 
@@ -91,9 +91,9 @@ private splitOption(token){
   if(argument?(token)) error("Invalid argument: splitOption called on non-option");
 
   if(shortOption?(token)){
-    if(size(token) == 2) return ...String(token[1]), nothing(String);
+    if(size(token) == 2) return ..String(token[1]), nothing(String);
     else {
-      return ...String(token[1]), Maybe(sliceFrom(token, 2));
+      return ..String(token[1]), Maybe(sliceFrom(token, 2));
     }
   }
 
@@ -103,7 +103,7 @@ private splitOption(token){
     }
   }
 
-  return ...sliceFrom(token, 2), nothing(String);
+  return ..sliceFrom(token, 2), nothing(String);
 }
 
 private seekToken(pr, key, scanner){

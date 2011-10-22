@@ -12,7 +12,7 @@ server(args) {
     var listener = ListenSocket(Inet(INADDR_LOOPBACK, 27183));
 
     while (true) {
-        var conn, address = ...accept(listener);
+        var conn, address = ..accept(listener);
 
         var cmd = readLine(conn);
         if (cmd == "quit\n") {

@@ -1,7 +1,7 @@
 import opengl.platform.*;
 
-findGLFunction(Args, Return, ...names) {
-    static for (name in ...names) {
+findGLFunction(Args, Return, ..names) {
+    static for (name in ..names) {
         var ptr = lookupGLFunction(name);
         if (not null?(ptr))
             return GLCodePointer[Args, Return](ptr);

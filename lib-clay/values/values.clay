@@ -6,47 +6,47 @@
 // takeValues, dropValues
 //
 
-inline eachValue(fn, ...xs) {
-    static for (x in ...xs) {
+inline eachValue(fn, ..xs) {
+    static for (x in ..xs) {
         fn(x);
     }
 }
 
 procedure mapValues;
-inline overload mapValues(fn, forward x, forward ...xs)
-    = forward ...fn(x), ...mapValues(fn, ...xs);
+inline overload mapValues(fn, forward x, forward ..xs)
+    = forward ..fn(x), ..mapValues(fn, ..xs);
 inline overload mapValues(fn) = ;
 
 private procedure _mapIndexedValues;
-[n] inline overload _mapIndexedValues(fn, static n, forward x, forward ...xs)
-    = forward ...fn(x, n), ..._mapIndexedValues(fn, static n+1, ...xs);
+[n] inline overload _mapIndexedValues(fn, static n, forward x, forward ..xs)
+    = forward ..fn(x, n), .._mapIndexedValues(fn, static n+1, ..xs);
 [n] inline overload _mapIndexedValues(fn, static n) = ;
 
-mapIndexedValues(fn, forward ...values) = forward ..._mapIndexedValues(fn, static 0, ...values);
+mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, static 0, ..values);
 
 procedure foldValues;
-inline overload foldValues(fn, forward x, forward ...xs)
-    = fn(x, foldValues(fn, ...xs));
+inline overload foldValues(fn, forward x, forward ..xs)
+    = fn(x, foldValues(fn, ..xs));
 inline overload foldValues(fn, forward x) = forward x;
 
 procedure weaveValues;
-inline overload weaveValues(between, forward x, forward ...xs)
-    = forward x, between, ...weaveValues(between, ...xs);
+inline overload weaveValues(between, forward x, forward ..xs)
+    = forward x, between, ..weaveValues(between, ..xs);
 inline overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
 inline overload weaveValues(between, forward x) = forward x;
 inline overload weaveValues(between) = ;
 
 procedure takeValues;
-[i] inline overload takeValues(static i, forward x, forward ...xs)
-    = forward x, ...takeValues(static i-1, ...xs);
-[i | i == 0] inline overload takeValues(static i, forward ...xs) = ;
+[i] inline overload takeValues(static i, forward x, forward ..xs)
+    = forward x, ..takeValues(static i-1, ..xs);
+[i | i == 0] inline overload takeValues(static i, forward ..xs) = ;
 [i] inline overload takeValues(static i) = ;
 
 procedure dropValues;
-[i] inline overload dropValues(static i, forward x, forward ...xs)
-    = forward ...dropValues(static i-1, ...xs);
-[i | i == 0] inline overload dropValues(static i, forward ...xs) = forward ...xs;
+[i] inline overload dropValues(static i, forward x, forward ..xs)
+    = forward ..dropValues(static i-1, ..xs);
+[i | i == 0] inline overload dropValues(static i, forward ..xs) = forward ..xs;
 [i] inline overload dropValues(static i) = ;
 
 
@@ -55,9 +55,9 @@ procedure dropValues;
 // countValues, nthValue, firstValue
 //
 
-countValues(...args) {
+countValues(..args) {
     var n = 0;
-    static for (x in ...args)
+    static for (x in ..args)
         n += 1;
     return n;
 }
@@ -65,22 +65,22 @@ countValues(...args) {
 procedure countOccurrences;
 inline overload countOccurrences(value) = 0;
 [value1, value2]
-inline overload countOccurrences(static value1, static value2, forward ...xs)
-    = countOccurrences(value1, ...xs);
+inline overload countOccurrences(static value1, static value2, forward ..xs)
+    = countOccurrences(value1, ..xs);
 [value]
-inline overload countOccurrences(static value, static value, forward ...xs)
-    = 1 + countOccurrences(value, ...xs);
+inline overload countOccurrences(static value, static value, forward ..xs)
+    = 1 + countOccurrences(value, ..xs);
 
 procedure nthValue;
-[i] inline overload nthValue(static i, forward a, forward ...b)
-    = nthValue(static i-1, ...b);
-[i | i == 0] inline overload nthValue(static i, forward a, ...b) = a;
+[i] inline overload nthValue(static i, forward a, forward ..b)
+    = nthValue(static i-1, ..b);
+[i | i == 0] inline overload nthValue(static i, forward a, ..b) = a;
 
-inline firstValue(forward a, ...rest) = forward a;
+inline firstValue(forward a, ..rest) = forward a;
 
-inline restValues(a, forward ...rest) = forward ...rest;
+inline restValues(a, forward ..rest) = forward ..rest;
 
-inline lastValue(a, forward ...rest) = forward lastValue(...rest);
+inline lastValue(a, forward ..rest) = forward lastValue(..rest);
 overload lastValue(forward a) = forward a;
 
 
@@ -90,28 +90,28 @@ overload lastValue(forward a) = forward a;
 //
 
 [n]
-inline replicateValue(a, static n) = a, ...replicateValue(a, static n-1);
+inline replicateValue(a, static n) = a, ..replicateValue(a, static n-1);
 inline overload replicateValue(a, static 0) = ;
 
-inline allValues?(pred, ...rest) {
-    static for (x in ...rest) {
+inline allValues?(pred, ..rest) {
+    static for (x in ..rest) {
         if (not pred(x))
             return false;
     }
     return true;
 }
 
-inline anyValues?(pred, ...rest) {
-    static for (x in ...rest) {
+inline anyValues?(pred, ..rest) {
+    static for (x in ..rest) {
         if (pred(x))
             return true;
     }
     return false;
 }
 
-inline equalValues?(a, ...rest) = allValues?(x => a == x, ...rest);
+inline equalValues?(a, ..rest) = allValues?(x => a == x, ..rest);
 
-inValues?(a, ...rest) = anyValues?(x => a == x, ...rest);
+inValues?(a, ..rest) = anyValues?(x => a == x, ..rest);
 
 
 
@@ -139,15 +139,15 @@ inline overload capturedRef(x) = ref x;
 
 // captureValues, forwardValues, capturedRefs
 
-inline captureValues(forward ...args) = Tuple(...mapValues(captureValue, ...args));
+inline captureValues(forward ..args) = Tuple(..mapValues(captureValue, ..args));
 
-[...T]
-inline forwardValues(x:Tuple[...T]) =
-    forward ...mapValues(forwardValue, ...unpackTupleRef(x));
+[..T]
+inline forwardValues(x:Tuple[..T]) =
+    forward ..mapValues(forwardValue, ..unpackTupleRef(x));
 
-[...T]
-inline capturedRefs(x:Tuple[...T]) =
-    forward ...mapValues(capturedRef, ...unpackTupleRef(x));
+[..T]
+inline capturedRefs(x:Tuple[..T]) =
+    forward ..mapValues(capturedRef, ..unpackTupleRef(x));
 
 
 
@@ -155,34 +155,34 @@ inline capturedRefs(x:Tuple[...T]) =
 // expand values from sequence or iterator 
 //
 [S, n | Sequence?(S)]
-sequenceValues(seq: S, static n) = forward ...iteratorValues(iterator(seq), static n);
+sequenceValues(seq: S, static n) = forward ..iteratorValues(iterator(seq), static n);
 
 [I | Iterator?(I)]
 iteratorValues(iter: I, static 0) = ;
 [I, n | Iterator?(I) and n > 0]
 overload iteratorValues(iter: I, static n)
-    = forward next(iter), ...iteratorValues(iter, static n-1);
+    = forward next(iter), ..iteratorValues(iter, static n-1);
 
 
 
 //
 // iterate over two sets of values in tandem
 //
-[n | n > 0] withoutNthValue(static n, forward value, forward ...values)
-    = forward value, ...withoutNthValue(static n-1, ...values);
-overload withoutNthValue(static 0, forward value, forward ...values)
-    = forward ...values;
+[n | n > 0] withoutNthValue(static n, forward value, forward ..values)
+    = forward value, ..withoutNthValue(static n-1, ..values);
+overload withoutNthValue(static 0, forward value, forward ..values)
+    = forward ..values;
 
-[n | n > 0] eachValue2(fn, static n, forward x, forward ...xs) {
-    fn(x, nthValue(static n-1, ...xs));
-    return ...eachValue2(fn, static n-1, ...withoutNthValue(static n-1, ...xs));
+[n | n > 0] eachValue2(fn, static n, forward x, forward ..xs) {
+    fn(x, nthValue(static n-1, ..xs));
+    return ..eachValue2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
 }
-overload eachValue2(fn, static 0, forward ...xs) { }
+overload eachValue2(fn, static 0, forward ..xs) { }
 
-[n | n > 0] mapValues2(fn, static n, forward x, forward ...xs)
-    = forward fn(x, nthValue(static n-1, ...xs)),
-      ...mapValues2(fn, static n-1, ...withoutNthValue(static n-1, ...xs));
-overload mapValues2(fn, static 0, forward ...xs) = ;
+[n | n > 0] mapValues2(fn, static n, forward x, forward ..xs)
+    = forward fn(x, nthValue(static n-1, ..xs)),
+      ..mapValues2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
+overload mapValues2(fn, static 0, forward ..xs) = ;
 
 
 
@@ -191,25 +191,25 @@ overload mapValues2(fn, static 0, forward ...xs) = ;
 //
 
 [key]
-assocValue(static key, kv, forward ...kvs) = forward ...assocValue(static key, ...kvs);
+assocValue(static key, kv, forward ..kvs) = forward ..assocValue(static key, ..kvs);
 
-[key, ...T]
-overload assocValue(static key, forward kv: Tuple[Static[key], ...T], ...kvs)
-    = forward ...restValues(...unpack(kv));
+[key, ..T]
+overload assocValue(static key, forward kv: Tuple[Static[key], ..T], ..kvs)
+    = forward ..restValues(..unpack(kv));
 
 [key]
 assocValue?(static key) = false;
 [key]
-overload assocValue?(static key, kv, ...kvs) = assocValue?(key, ...kvs);
-[key, ...T]
-overload assocValue?(static key, kv: Tuple[Static[key], ...T], ...kvs) = true;
+overload assocValue?(static key, kv, ..kvs) = assocValue?(key, ..kvs);
+[key, ..T]
+overload assocValue?(static key, kv: Tuple[Static[key], ..T], ..kvs) = true;
 
 [key]
 assocCountValues(static key) = -1;
 [key]
-overload assocCountValues(static key, kv, ...kvs) = assocCountValues(key, ...kvs);
-[key, ...T]
-overload assocCountValues(static key, kv: Tuple[Static[key], ...T], ...kvs) = countValues(...T);
+overload assocCountValues(static key, kv, ..kvs) = assocCountValues(key, ..kvs);
+[key, ..T]
+overload assocCountValues(static key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
 
 
 
@@ -218,10 +218,10 @@ overload assocCountValues(static key, kv: Tuple[Static[key], ...T], ...kvs) = co
 //
 
 [n, value, other]
-private _valueIndex(static n, static value, static other, ...etc)
-    = _valueIndex(static n+1, static value, ...etc);
+private _valueIndex(static n, static value, static other, ..etc)
+    = _valueIndex(static n+1, static value, ..etc);
 [n, value]
-overload _valueIndex(static n, static value, static value, ...etc) = n;
+overload _valueIndex(static n, static value, static value, ..etc) = n;
 [value]
-valueIndex(static value, ...etc) = _valueIndex(static 0, static value, ...etc);
+valueIndex(static value, ..etc) = _valueIndex(static 0, static value, ..etc);
 

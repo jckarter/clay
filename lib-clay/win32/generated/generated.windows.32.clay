@@ -14681,12 +14681,12 @@ external (stdcall) WinHelpW(
 external wsprintfA(
     argument0 : LPSTR,
     argument1 : LPCSTR,
-    ...) Int;
+    ..) Int;
 
 external wsprintfW(
     argument0 : LPWSTR,
     argument1 : LPCWSTR,
-    ...) Int;
+    ..) Int;
 
 external (stdcall) wvsprintfA(
     argument0 : LPSTR,
@@ -25900,12 +25900,12 @@ external (stdcall) NdrFreeBuffer(
 external NdrClientCall(
     argument0 : PMIDL_STUB_DESC,
     argument1 : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external NdrClientCall2(
     argument0 : PMIDL_STUB_DESC,
     argument1 : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 alias STUB_UNMARSHAL = 0;
 alias STUB_CALL_SERVER = 1;

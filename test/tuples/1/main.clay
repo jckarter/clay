@@ -13,5 +13,5 @@ main() {
 }
 
 unpackAndShow(x) {
-    println("values: ", ...weaveValues(", ", ...unpack(x)));
+    println("values: ", ..weaveValues(", ", ..unpack(x)));
 }

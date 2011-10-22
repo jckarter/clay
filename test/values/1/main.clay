@@ -2,33 +2,33 @@ even?(x) = x % 2 == 0;
 main() {
     eachValue(println, 1, 2.0, "three");
 
-    println(...weaveValues(
+    println(..weaveValues(
         ", ",
-        ...mapValues(x => x+x, 1, 2.0, "three")
+        ..mapValues(x => x+x, 1, 2.0, "three")
     ));
 
-    println(...weaveValues(
+    println(..weaveValues(
         ", ",
-        ...mapValues(x => x+x)
+        ..mapValues(x => x+x)
     ));
 
     println(foldValues(add, 1, 2, 3));
 
-    println(...takeValues(static 3));
-    println(...takeValues(static 3, "one", "two"));
-    println(...takeValues(static 3, "one", "two", "three"));
-    println(...takeValues(static 3, "one", "two", "three", "four"));
+    println(..takeValues(static 3));
+    println(..takeValues(static 3, "one", "two"));
+    println(..takeValues(static 3, "one", "two", "three"));
+    println(..takeValues(static 3, "one", "two", "three", "four"));
 
-    println(...dropValues(static 3));
-    println(...dropValues(static 3, "one", "two"));
-    println(...dropValues(static 3, "one", "two", "three"));
-    println(...dropValues(static 3, "one", "two", "three", "four"));
+    println(..dropValues(static 3));
+    println(..dropValues(static 3, "one", "two"));
+    println(..dropValues(static 3, "one", "two", "three"));
+    println(..dropValues(static 3, "one", "two", "three", "four"));
 
     println(countValues());
     println(countValues("one"));
     println(countValues("one", "two", "three", "four"));
 
-    println(...weaveValues(", ", ...staticIntegers(static 8)));
+    println(..weaveValues(", ", ..staticIntegers(static 8)));
 
     println("1, 1, 1 ", if (equalValues?(1, 1, 1)) "" else "not ", "equal");
     println("1, 1, 2 ", if (equalValues?(1, 1, 2)) "" else "not ", "equal");
@@ -44,8 +44,8 @@ main() {
     println("2 ", if (inValues?(2, 1, 2)) "" else "not ", "in 1, 2");
     println("3 ", if (inValues?(3, 1, 2)) "" else "not ", "in 1, 2");
 
-    println("array: ", ...weaveValues(", ",
-        ...sequenceValues([3, 7, 15, 1, 292, 1, 1, 1], static 8)
+    println("array: ", ..weaveValues(", ",
+        ..sequenceValues([3, 7, 15, 1, 292, 1, 1, 1], static 8)
     ));
 
     eachValue2(
@@ -54,9 +54,9 @@ main() {
         7, 8, 9,
     );
 
-    println(...weaveValues(
+    println(..weaveValues(
         ", ",
-        ...mapValues2((x, y) => x+y, static 3,
+        ..mapValues2((x, y) => x+y, static 3,
             1, 2, 3,
             7, 8, 9,
         )
@@ -66,6 +66,6 @@ main() {
     println(assocValue?(#bar, (#foo, 1, 2, 3), (#bar, 4)));
     println(assocValue?(#bas, (#foo, 1, 2, 3), (#bar, 4)));
 
-    println(...weaveValues(", ", ...assocValue(#foo, (#foo, 1, 2, 3), (#bar, 4))));
+    println(..weaveValues(", ", ..assocValue(#foo, (#foo, 1, 2, 3), (#bar, 4))));
     println(assocValue(#bar, (#foo, 1, 2, 3), (#bar, 4)));
 }

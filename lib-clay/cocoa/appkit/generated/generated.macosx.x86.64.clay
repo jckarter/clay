@@ -14734,7 +14734,7 @@ external NSRunAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) CLong;
+    ..) CLong;
 
 external NSRunInformationalAlertPanel(
     title : NSString,
@@ -14742,7 +14742,7 @@ external NSRunInformationalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) CLong;
+    ..) CLong;
 
 external NSRunCriticalAlertPanel(
     title : NSString,
@@ -14750,7 +14750,7 @@ external NSRunCriticalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) CLong;
+    ..) CLong;
 
 external NSRunAlertPanelRelativeToWindow(
     title : NSString,
@@ -14759,7 +14759,7 @@ external NSRunAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ...) CLong;
+    ..) CLong;
 
 external NSRunInformationalAlertPanelRelativeToWindow(
     title : NSString,
@@ -14768,7 +14768,7 @@ external NSRunInformationalAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ...) CLong;
+    ..) CLong;
 
 external NSRunCriticalAlertPanelRelativeToWindow(
     title : NSString,
@@ -14777,7 +14777,7 @@ external NSRunCriticalAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ...) CLong;
+    ..) CLong;
 
 external NSBeginAlertSheet(
     title : NSString,
@@ -14790,7 +14790,7 @@ external NSBeginAlertSheet(
     didDismissSelector : SelectorHandle,
     contextInfo : RawPointer,
     msgFormat : NSString,
-    ...);
+    ..);
 
 external NSBeginInformationalAlertSheet(
     title : NSString,
@@ -14803,7 +14803,7 @@ external NSBeginInformationalAlertSheet(
     didDismissSelector : SelectorHandle,
     contextInfo : RawPointer,
     msgFormat : NSString,
-    ...);
+    ..);
 
 external NSBeginCriticalAlertSheet(
     title : NSString,
@@ -14816,7 +14816,7 @@ external NSBeginCriticalAlertSheet(
     didDismissSelector : SelectorHandle,
     contextInfo : RawPointer,
     msgFormat : NSString,
-    ...);
+    ..);
 
 external NSGetAlertPanel(
     title : NSString,
@@ -14824,7 +14824,7 @@ external NSGetAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) Id;
+    ..) Id;
 
 external NSGetInformationalAlertPanel(
     title : NSString,
@@ -14832,7 +14832,7 @@ external NSGetInformationalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) Id;
+    ..) Id;
 
 external NSGetCriticalAlertPanel(
     title : NSString,
@@ -14840,7 +14840,7 @@ external NSGetCriticalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ...) Id;
+    ..) Id;
 
 external NSReleaseAlertPanel(
     panel : Id);

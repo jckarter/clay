@@ -166,7 +166,7 @@ showCipher(cipher) {
     var s = String();
     resize(s, 16);
     sprintf(cstring(s), cstring("%02X%02X%02X%02X%02X%02X%02X%02X"),
-        ...sequenceValues(cipher, static 8)
+        ..sequenceValues(cipher, static 8)
     );
     return s;
 }
@@ -176,7 +176,7 @@ main() = dispatchMain(
     (decrypt,     "key cipher => plaintext"),
     (crack,       "plaintext cipher => key (single process, assumes alphanumeric key)"),
     (crackNode,   "port => listen for crack jobs from crackServer"),
-    (crackRun,    "plaintext cipher host:port... => distribute crack jobs to crackNodes"),
+    (crackRun,    "plaintext cipher host:port.. => distribute crack jobs to crackNodes"),
 );
 
 encrypt(args) {
@@ -240,7 +240,7 @@ private incKey(str, n) {
         push(str, '0');
     else if (str[n] == 'z') {
         str[n] = '0';
-        return ...incKey(str, n+1);
+        return ..incKey(str, n+1);
     } else
         str[n] = incKeyChar(str[n]);
 }
@@ -287,7 +287,7 @@ crackNode(args) {
     var port = Int(args[0]);
 
     var listener = ListenSocket(Inet(INADDR_ANY, port), 0);
-    var conn, remoteAddress = ...accept(listener);
+    var conn, remoteAddress = ..accept(listener);
 
     answerRemoteMessage(conn);
 }
@@ -307,7 +307,7 @@ connectNode(name) {
 
 crackRun(args) {
     if (size(args) < 3) {
-        println("Usage: ", commandLine()[0], " crackRun plaintext cipher host:port...");
+        println("Usage: ", commandLine()[0], " crackRun plaintext cipher host:port..");
     }
 
     var plaintext = readPlaintext(args[0]);

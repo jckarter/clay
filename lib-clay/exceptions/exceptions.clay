@@ -45,18 +45,18 @@ private signalException() __llvm__{
 // throwButPropagate
 //
 
-throwButPropagate(ex, ...T) {
+throwButPropagate(ex, ..T) {
     if (true)
         throw ex;
     else
-        return forward ...mapValues(typeToLValue, ...T);
+        return forward ..mapValues(typeToLValue, ..T);
 }
 
-alias throwButPropagateLike(ex, ...expr) {
+alias throwButPropagateLike(ex, ..expr) {
     if (true)
         throw ex;
     else
-        return forward ...expr;
+        return forward ..expr;
 }
 
 

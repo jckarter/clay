@@ -10,7 +10,7 @@ instance Exception = AnException;
 main() {
     var x = String("lemons");
     println(observe(2) + 1);
-    println(add(...observe(#loneliestNumbers, 2, 1)));
+    println(add(..observe(#loneliestNumbers, 2, 1)));
     println(tellRvalue(observe(x)) + 4);
     println(tellRvalue(observe(String("lemons"))) + 4);
 
@@ -18,6 +18,6 @@ main() {
     println(tellRvalueString(observeCall(add, a[0], a[1])));
     println(tellRvalueString(observeCall(index, a, 1)));
     try {
-        println(...observeCall(throwValue, AnException()));
+        println(..observeCall(throwValue, AnException()));
     } catch (ex) { }
 }

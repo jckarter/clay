@@ -117,16 +117,16 @@ private encodeFour(code)
     if (code < 0x80u) {
         push(u.encoded, Char(c));
     } else if (code < 0x800u) {
-        var x, y = ...encodeTwo(code);
+        var x, y = ..encodeTwo(code);
         push(u.encoded, Char(x));
         push(u.encoded, Char(y));
     } else if (code < 0x10000u) {
-        var x, y, z = ...encodeThree(code);
+        var x, y, z = ..encodeThree(code);
         push(u.encoded, Char(x));
         push(u.encoded, Char(y));
         push(u.encoded, Char(z));
     } else {
-        var x, y, z, w = ...encodeFour(code);
+        var x, y, z, w = ..encodeFour(code);
         push(u.encoded, Char(x));
         push(u.encoded, Char(y));
         push(u.encoded, Char(z));

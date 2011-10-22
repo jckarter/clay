@@ -111,20 +111,20 @@ overload RegularRecord?(static T) = false;
 [T | Entry?(T)]
 overload destroy(a:T)
 {
-    static for (x in ...recordFields(a))
+    static for (x in ..recordFields(a))
     destroy(x);
 }
 
 [T | Entry?(T)]
 overload moveUnsafe(src:T) returned:T {
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n))
+    static for (i in ..staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [T | Entry?(T)]
 overload resetUnsafe(a:T) {
-    static for (x in ...recordFields(a))
+    static for (x in ..recordFields(a))
         resetUnsafe(x);
 }
 */

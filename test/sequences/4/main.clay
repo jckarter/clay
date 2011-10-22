@@ -19,7 +19,7 @@ testFind(a, x) {
 }
 
 testBinarySearch(a, x) {
-    var lower, upper = ...binarySearch(a, x);
+    var lower, upper = ..binarySearch(a, x);
     if (lower == upper)
         print("not ");
     println("found ", x, ", range = [",

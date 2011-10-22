@@ -454,17 +454,17 @@ external dup2(
 external execl(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execle(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execlp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execv(
     argument0 : Pointer[CChar],
@@ -968,7 +968,7 @@ external setmode(
 
 external setproctitle(
     _fmt : Pointer[CChar],
-    ...);
+    ..);
 
 external setresgid(
     argument0 : UInt,
@@ -1001,11 +1001,11 @@ external swapoff(
 
 external syscall(
     argument0 : Int,
-    ...) Int;
+    ..) Int;
 
 external __syscall(
     argument0 : Int64,
-    ...) Int64;
+    ..) Int64;
 
 external ttyslot() Int;
 
@@ -1572,7 +1572,7 @@ record Struct_oflock (
 external open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external creat(
     argument0 : Pointer[CChar],
@@ -1581,13 +1581,13 @@ external creat(
 external fcntl(
     argument0 : Int,
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external openat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,
-    ...) Int;
+    ..) Int;
 
 external flock(
     argument0 : Int,

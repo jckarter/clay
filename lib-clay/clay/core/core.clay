@@ -277,8 +277,8 @@ overload Type(tag:TypeTag, forward value:StaticValue) {
 }
 
 [T | VariantMember?(TypeTag, T)]
-overload Type(tag:T, forward ...args) =
-    Type(TypeTag(tag), ...args);
+overload Type(tag:T, forward ..args) =
+    Type(TypeTag(tag), ..args);
 
 
 
@@ -407,9 +407,9 @@ private currentModule() {
 withCurrentModule(module:Module, f) {
     push(currentModuleStack, module);
     try {
-        var x = captureValues(...f());
+        var x = captureValues(..f());
         pop(currentModuleStack);
-        return forward ...forwardValues(x);
+        return forward ..forwardValues(x);
     }
     catch (e) {
         pop(currentModuleStack);
@@ -426,18 +426,18 @@ withCurrentModule(module:Module, f) {
 [T]
 private SemanticError?(static T) = false;
 
-private semanticError(...fields) = recordWithPredicate(
+private semanticError(..fields) = recordWithPredicate(
     SemanticError?,
     where: Maybe[Module],
-    ...fields,
+    ..fields,
 );
 
-[T, ...A | Record?(T)
+[T, ..A | Record?(T)
            and SemanticError?(T)
-           and (Tuple[...RecordFieldTypes(T)] ==
-                Tuple[Maybe[Module], ...A])]
-alias overload T(...args:A) =
-    T(currentModule(), ...args);
+           and (Tuple[..RecordFieldTypes(T)] ==
+                Tuple[Maybe[Module], ..A])]
+alias overload T(..args:A) =
+    T(currentModule(), ..args);
 
 variant SemanticError;
 
@@ -451,7 +451,7 @@ overload displayError(e:SemanticError) {
     displayError(*e);
 }
 
-private displaySemanticError(err, node, ...message) {
+private displaySemanticError(err, node, ..message) {
     if (nothing?(err.where) or empty?(node.tokens)) {
         println(err);
         return;
@@ -460,7 +460,7 @@ private displaySemanticError(err, node, ...message) {
     var stokens = m.ast.tokens;
     var offset = stokens.vector[node.mainToken].range.begin;
 
-    errorWithLocation(stokens.file, offset, ...message);
+    errorWithLocation(stokens.file, offset, ..message);
 }
 
 

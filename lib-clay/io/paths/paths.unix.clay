@@ -28,10 +28,10 @@ slicedPath(path) {
     return directoryTailTrimmed(parent), child;
 }
 
-pathDirname(path) = String(nthValue(static 0, ...slicedPath(path)));
-pathBasename(path) = String(nthValue(static 1, ...slicedPath(path)));
+pathDirname(path) = String(nthValue(static 0, ..slicedPath(path)));
+pathBasename(path) = String(nthValue(static 1, ..slicedPath(path)));
 
-splitPath(path) = ...mapValues(force, ...slicedPath(path));
+splitPath(path) = ..mapValues(force, ..slicedPath(path));
 
 private directoryTailTrimmed(path) {
     if (empty?(path))
@@ -42,10 +42,10 @@ private directoryTailTrimmed(path) {
 
 pathComponents(path) {
     var parts = Vector[String]();
-    var parent, child = ...slicedPath(path);
+    var parent, child = ..slicedPath(path);
     while (not empty?(child)) {
         push(parts, String(child));
-        parent, child = ...slicedPath(parent);
+        parent, child = ..slicedPath(parent);
     }
     if (not empty?(parent))
         push(parts, String(parent));
@@ -61,10 +61,10 @@ pathComponents(path) {
 
 procedure joinPath;
 
-[...S | allValues?(String?, ...S)]
-overload joinPath(...parts:S) {
+[..S | allValues?(String?, ..S)]
+overload joinPath(..parts:S) {
     var result = String();
-    static for (part in ...parts)
+    static for (part in ..parts)
         appendPath(result, part);
     trimDirectoryTail(result);
     return move(result);

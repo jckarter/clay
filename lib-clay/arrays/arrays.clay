@@ -50,9 +50,9 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 // basic constructor
 //
 
-[T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
-alias overload Array[T,n](...args:A) returned:Array[T,n] {
-    ...arrayElements(returned) <-- ...args;
+[T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
+alias overload Array[T,n](..args:A) returned:Array[T,n] {
+    ..arrayElements(returned) <-- ..args;
 }
 
 
@@ -236,11 +236,11 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
 // arrayLiteral - type inferring constructor
 //
 
-[...A | (countValues(...A) > 0) and equalValues?(...A)]
-alias arrayLiteral(...args:A) {
-    alias n = static countValues(...A);
-    alias T = firstValue(...A);
-    return Array[T, n](...args);
+[..A | (countValues(..A) > 0) and equalValues?(..A)]
+alias arrayLiteral(..args:A) {
+    alias n = static countValues(..A);
+    alias T = firstValue(..A);
+    return Array[T, n](..args);
 }
 
 

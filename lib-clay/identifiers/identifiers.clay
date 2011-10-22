@@ -1,7 +1,7 @@
 IdentifierChars(identifier)
-    = ...mapValues(
+    = ..mapValues(
         n => IdentifierSlice(identifier, n, static unwrapStatic(n)+1),
-        ...staticIntegers(static IdentifierSize(identifier))
+        ..staticIntegers(static IdentifierSize(identifier))
     );
 
 IdentifierStartsWith?(identifier, startsWith) = false;

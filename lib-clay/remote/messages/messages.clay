@@ -37,40 +37,40 @@ alias RemoteEntryPoint = CodePointer[(Vector[Byte]), ()];
 private var remoteEntryPoints[Protocol] = Vector[RemoteEntryPoint]();
 
 [Protocol]
-private createRemoteEntryPoint(static Protocol, ...Args)
+private createRemoteEntryPoint(static Protocol, ..Args)
     = makeCodePointer(
-        mArgs => { Protocol(...unmarshal(mArgs, ...Args)); },
+        mArgs => { Protocol(..unmarshal(mArgs, ..Args)); },
         Vector[Byte]
     );
 
 [Protocol]
-private createRemoteCode(static Protocol, ...Args) {
+private createRemoteCode(static Protocol, ..Args) {
     var code = MarshalSize(size(remoteEntryPoints[Protocol]));
 
-    push(remoteEntryPoints[Protocol], createRemoteEntryPoint(Protocol, ...Args));
+    push(remoteEntryPoints[Protocol], createRemoteEntryPoint(Protocol, ..Args));
     return code;
 }
 
-private var remoteCode[Protocol, ...Args] = createRemoteCode(Protocol, ...Args);
+private var remoteCode[Protocol, ..Args] = createRemoteCode(Protocol, ..Args);
 
 
 
 //
 // client interface
 //
-[Protocol, ...Args | CallDefined?(Protocol, ...Args)]
-remoteMessage(static Protocol, outstream, forward ...args: Args) {
-    var mArgs = marshal(...args);
+[Protocol, ..Args | CallDefined?(Protocol, ..Args)]
+remoteMessage(static Protocol, outstream, forward ..args: Args) {
+    var mArgs = marshal(..args);
     var mArgsSize = MarshalSize(size(mArgs));
-    writeMarshalSize(outstream, remoteCode[Protocol, ...Args]);
+    writeMarshalSize(outstream, remoteCode[Protocol, ..Args]);
     writeMarshalSize(outstream, mArgsSize);
     write(outstream, begin(mArgs), SizeT(mArgsSize));
     flush(outstream);
 }
 
-[...Args | CallDefined?(DefaultProtocol, ...Args)]
-overload remoteMessage(outstream, forward ...args: Args) {
-    remoteMessage(DefaultProtocol, outstream, ...args);
+[..Args | CallDefined?(DefaultProtocol, ..Args)]
+overload remoteMessage(outstream, forward ..args: Args) {
+    remoteMessage(DefaultProtocol, outstream, ..args);
 }
 
 

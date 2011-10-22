@@ -22,16 +22,16 @@ record ObjcSuper (
     class: Class,
 );
 
-external objc_msgSend(self: Id, _cmd: SEL, ...) Id;
-external objc_msgSend_stret(r: RawPointer, self: Id, _cmd: SEL, ...);
+external objc_msgSend(self: Id, _cmd: SEL, ..) Id;
+external objc_msgSend_stret(r: RawPointer, self: Id, _cmd: SEL, ..);
 
-external objc_msgSendSuper(super: Pointer[ObjcSuper], _cmd: SEL, ...) Id;
-external objc_msgSendSuper_stret(r: RawPointer, super: Pointer[ObjcSuper], _cmd: SEL, ...);
+external objc_msgSendSuper(super: Pointer[ObjcSuper], _cmd: SEL, ..) Id;
+external objc_msgSendSuper_stret(r: RawPointer, super: Pointer[ObjcSuper], _cmd: SEL, ..);
 
 // x86-32/64 only
-external objc_msgSend_fpret(self: Id, _cmd: SEL, ...) Double;
+external objc_msgSend_fpret(self: Id, _cmd: SEL, ..) Double;
 // x86-64 only
-// external objc_msgSend_fp2ret(self: Id, _cmd: SEL, ...) Complex[Float80];
+// external objc_msgSend_fp2ret(self: Id, _cmd: SEL, ..) Complex[Float80];
 
 external objc_getClassList(buffer: RawPointer, bufferLen: Int) Int;
 external objc_getClass(class: Pointer[CChar]) Class;

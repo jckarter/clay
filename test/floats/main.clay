@@ -47,7 +47,7 @@ testFuncs(title, funcs, values) {
     println("## ", title);
     println("#########################");
     println();
-    static for (f in ...unpack(funcs)) {
+    static for (f in ..unpack(funcs)) {
         for (a in values)
             for (b in values)
                 test(f, a, b);

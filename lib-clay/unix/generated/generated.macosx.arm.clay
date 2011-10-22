@@ -256,17 +256,17 @@ external ("_encrypt") encrypt(
 external execl(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execle(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execlp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external execv(
     argument0 : Pointer[CChar],
@@ -753,7 +753,7 @@ external swapon(
 
 external syscall(
     argument0 : Int,
-    ...) Int;
+    ..) Int;
 
 external ttyslot() Int;
 
@@ -1372,7 +1372,7 @@ alias filesec_property_t = Int;
 external ("_open") open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external ("_creat") creat(
     argument0 : Pointer[CChar],
@@ -1381,7 +1381,7 @@ external ("_creat") creat(
 external ("_fcntl") fcntl(
     argument0 : Int,
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external openx_np(
     argument0 : Pointer[CChar],
@@ -1760,7 +1760,7 @@ external ("_munmap") munmap(
 external shm_open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external shm_unlink(
     argument0 : Pointer[CChar]) Int;

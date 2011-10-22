@@ -16,7 +16,7 @@ server(args) {
     write(stdout, "hello");
     flush(stdout);
     
-    var conn, address = ...accept(listener);
+    var conn, address = ..accept(listener);
 
     alias T = SizeT;
     var data = readN(conn, TypeSize(T));

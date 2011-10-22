@@ -164,7 +164,7 @@ private inline ensureSpace(a, space:SizeT) {
 
 [I, J | Integer?(I) and Integer?(J)]
 private insertLocationsUnsafe(a, pos:I, n:J) {
-    return ...insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
+    return ..insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
 
 overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
@@ -189,7 +189,7 @@ overload insert(a:V, i:I, seq:S) {
 [V,I,S | Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
-    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
         var iter = iterator(seq);
         while (hasNext?(iter)) {
@@ -207,7 +207,7 @@ overload insert(a:V, i:I, seq:S) {
          and SizedSequence?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
-    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
         var src = &seq[0];
         copyNonoverlappingMemory(first, src, src+size(seq));
@@ -222,7 +222,7 @@ overload insert(a:V, i:I, seq:S) {
          and SequenceContainer?(S) and SizedSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
-    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     for (x in seq) {
         first^ <-- move(x);
         inc(first);
@@ -233,7 +233,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
          and SequenceContainer?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
-    var first, last = ...insertLocationsUnsafe(a, i, size(seq));
+    var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     var src = &seq[0];
     moveNonoverlappingMemory(first, src, src+size(seq));
 }
@@ -247,7 +247,7 @@ overload insert(a:V, i:I, ref x:T) {
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:I, rvalue x:T) {
-    var first, last = ...insertLocationsUnsafe(a, i, 1);
+    var first, last = ..insertLocationsUnsafe(a, i, 1);
     first^ <-- move(x);
 }
 

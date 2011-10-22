@@ -27,8 +27,8 @@ overload ContiguousSequence?(static BufferVector[T]) = true;
 //
 
 // disable all constructors
-[T] overload BufferVector[T](...args);
-[T] overload BufferVector(...args);
+[T] overload BufferVector[T](..args);
+[T] overload BufferVector(..args);
 
 [T | PODType?(T)]
 overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) returned:BufferVector[T] {

@@ -142,13 +142,13 @@ overload Deque[T](forward from: A) to: Deque[T] {
     }
 }
 
-[T, ...A | countValues(...A) > 0 and equalValues?(T, ...A)]
-overload Deque[T](forward ...from: A) to: Deque[T] {
-    initializeDequeMap(to, SizeT(countValues(...A)));
+[T, ..A | countValues(..A) > 0 and equalValues?(T, ..A)]
+overload Deque[T](forward ..from: A) to: Deque[T] {
+    initializeDequeMap(to, SizeT(countValues(..A)));
 
     var i = to.begin;
     try {
-        static for (x in ...from) {
+        static for (x in ..from) {
             i^ <-- x;
             inc(i);
         }

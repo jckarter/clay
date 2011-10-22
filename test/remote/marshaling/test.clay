@@ -176,12 +176,12 @@ main() = testMain(
             expectMarshalingInvariants(test, "() => char", () => char);
             expectMarshalingInvariants(test, "() => vectorInt", () => vectorInt);
             expectMarshalingInvariants(test, "() => vectorString", () => vectorString);
-            expectMarshalingInvariants(test, "() => ...(int, char)", () => ...(int, char));
-            expectMarshalingInvariants(test, "() => ...(int, vectorInt)",
-                () => ...(int, vectorInt)
+            expectMarshalingInvariants(test, "() => ..(int, char)", () => ..(int, char));
+            expectMarshalingInvariants(test, "() => ..(int, vectorInt)",
+                () => ..(int, vectorInt)
             );
-            expectMarshalingInvariants(test, "() => ...(int, vectorString, char)",
-                () => ...(int, vectorString, char)
+            expectMarshalingInvariants(test, "() => ..(int, vectorString, char)",
+                () => ..(int, vectorString, char)
             );
             expectNullMarshaling(test, "() => {}", () => {});
         }),

@@ -18,19 +18,19 @@ main() {
 // NamedUnion
 //
 
-record NamedUnion[...fields] (
-    data : Union[...mapValues(x => x.1, ...fields)]
+record NamedUnion[..fields] (
+    data : Union[..mapValues(x => x.1, ..fields)]
 );
 
-[...fields]
-overload fieldRef(x:NamedUnion[...fields], name) {
-    alias i = fieldIndex(name, ...fields);
+[..fields]
+overload fieldRef(x:NamedUnion[..fields], name) {
+    alias i = fieldIndex(name, ..fields);
     return ref staticIndex(x.0, static i);
 }
 
-private fieldIndex(name, ...fields) {
+private fieldIndex(name, ..fields) {
     var i = 0;
-    static for (field in ...fields) {
+    static for (field in ..fields) {
         if (name == field.0)
             goto end;
         i += 1;

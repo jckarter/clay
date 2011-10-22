@@ -87,29 +87,29 @@ BindableType?(T) = CallDefined?(bindStatement, SqliteStatement, Int, T);
 overload bindStatement(st: SqliteStatement, n: N, value: Maybe[T])
     { bindStatement(st, n, *value); }
 
-[...TT | allValues?(BindableType?, ...TT)]
-bindStatementValues(st: SqliteStatement, ...bindings: TT) {
+[..TT | allValues?(BindableType?, ..TT)]
+bindStatementValues(st: SqliteStatement, ..bindings: TT) {
     var i = 1;
-    static for (binding in ...bindings) {
+    static for (binding in ..bindings) {
         bindStatement(st, i, binding);
         inc(i);
     }
 }
 
-[...TT | allValues?(BindableType?, ...TT)]
-bindStatementTuple(st: SqliteStatement, t: Tuple[...TT]) {
-    bindStatementValues(st, ...unpack(t));
+[..TT | allValues?(BindableType?, ..TT)]
+bindStatementTuple(st: SqliteStatement, t: Tuple[..TT]) {
+    bindStatementValues(st, ..unpack(t));
 }
 
-[R | Record?(R) and allValues?(BindableType?, ...RecordFieldTypes(R))]
+[R | Record?(R) and allValues?(BindableType?, ..RecordFieldTypes(R))]
 bindStatementRecord(st: SqliteStatement, r: R) {
-    bindStatementValues(st, ...recordFields(r));
+    bindStatementValues(st, ..recordFields(r));
 }
 
-[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
-overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
+[S, ..TT | CCompatibleString?(S) and countValues(..TT) > 0 and allValues?(BindableType?, ..TT)]
+overload SqliteStatement(db: SqliteDB, sql: S, ..bindings: TT) {
     var st = SqliteStatement(db, sql);
-    bindStatementValues(st, ...bindings);
+    bindStatementValues(st, ..bindings);
     return move(st);
 }
 
@@ -117,9 +117,9 @@ overload SqliteStatement(db: SqliteDB, sql: S, ...bindings: TT) {
 overload bindStatement(st: SqliteStatement, name: NS, value)
     { bindStatement(st, sqlite3_bind_parameter_index(st.handle, cstring(name)), value); }
 
-[...TT | allValues?(BindableType?, ...TT)]
-runStatement(st: SqliteStatement, ...bindings: TT) {
-    bindStatementValues(st, ...bindings);
+[..TT | allValues?(BindableType?, ..TT)]
+runStatement(st: SqliteStatement, ..bindings: TT) {
+    bindStatementValues(st, ..bindings);
 
     var code = sqlite3_step(st.handle);
     var baseCode = bitwiseAnd(code, 0xFF);
@@ -136,10 +136,10 @@ overload runStatement(db: SqliteDB, sql: S) {
         throw SqliteError(code, String(CStringRef(msg)));
 }
 
-[S, ...TT | CCompatibleString?(S) and countValues(...TT) > 0 and allValues?(BindableType?, ...TT)]
-overload runStatement(db: SqliteDB, sql: S, ...bindings: TT) {
+[S, ..TT | CCompatibleString?(S) and countValues(..TT) > 0 and allValues?(BindableType?, ..TT)]
+overload runStatement(db: SqliteDB, sql: S, ..bindings: TT) {
     var st = SqliteStatement(db, sql);
-    runStatement(st, ...bindings);
+    runStatement(st, ..bindings);
 }
 
 record NoStatementRow ();
@@ -157,9 +157,9 @@ statementSingleRow(st: SqliteStatement)
 
 [T] statementValue(static T, st: SqliteStatement) = statementSingleRow(st)[0, T];
 
-[T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
-overload statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
-    var st = SqliteStatement(db, sql, ...bindings);
+[T, S, ..TT | CCompatibleString?(S) and allValues?(BindableType?, ..TT)]
+overload statementValue(static T, db: SqliteDB, sql: S, forward ..bindings: TT) {
+    var st = SqliteStatement(db, sql, ..bindings);
     return statementValue(T, st);
 }
 
@@ -168,15 +168,15 @@ overload statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT)
     () => nothing(T),
 );
 
-[T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
-overload maybeStatementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
-    var st = SqliteStatement(db, sql, ...bindings);
+[T, S, ..TT | CCompatibleString?(S) and allValues?(BindableType?, ..TT)]
+overload maybeStatementValue(static T, db: SqliteDB, sql: S, forward ..bindings: TT) {
+    var st = SqliteStatement(db, sql, ..bindings);
     return maybeStatementValue(T, st);
 }
 
-[T, S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
-overload statementValue(static T, db: SqliteDB, sql: S, forward ...bindings: TT) {
-    var st = SqliteStatement(db, sql, ...bindings);
+[T, S, ..TT | CCompatibleString?(S) and allValues?(BindableType?, ..TT)]
+overload statementValue(static T, db: SqliteDB, sql: S, forward ..bindings: TT) {
+    var st = SqliteStatement(db, sql, ..bindings);
     return statementValue(T, st);
 }
 
@@ -185,9 +185,9 @@ statementValue?(st: SqliteStatement) {
     return hasNext?(si);
 }
 
-[S, ...TT | CCompatibleString?(S) and allValues?(BindableType?, ...TT)]
-overload statementValue?(db: SqliteDB, sql: S, forward ...bindings: TT) {
-    var st = SqliteStatement(db, sql, ...bindings);
+[S, ..TT | CCompatibleString?(S) and allValues?(BindableType?, ..TT)]
+overload statementValue?(db: SqliteDB, sql: S, forward ..bindings: TT) {
+    var st = SqliteStatement(db, sql, ..bindings);
     return statementValue?(st);
 }
 
@@ -260,14 +260,14 @@ nullColumn?(st: SqliteStatementIterator, n: N)
 overload index(st: SqliteStatementIterator, n: N, static Maybe[T])
     = if (nullColumn?(st, n)) nothing(T) else Maybe(st[n, T]);
 
-rowValues(st: SqliteStatementIterator, ...Types)
-    = ...mapIndexedValues((Type, n) => st[n, Type], ...Types);
+rowValues(st: SqliteStatementIterator, ..Types)
+    = ..mapIndexedValues((Type, n) => st[n, Type], ..Types);
 
-rowTuple(st: SqliteStatementIterator, ...Types)
-    = Tuple(...rowValues(st, ...Types));
+rowTuple(st: SqliteStatementIterator, ..Types)
+    = Tuple(..rowValues(st, ..Types));
 
 rowRecord(st: SqliteStatementIterator, T)
-    = T(...rowValues(st, ...RecordFieldTypes(T)));
+    = T(..rowValues(st, ..RecordFieldTypes(T)));
 
 
 
@@ -278,16 +278,16 @@ rowRecord(st: SqliteStatementIterator, T)
 withTransaction(db: SqliteDB, fn) {
     runStatement(db, "begin");
 
-    var returnValues = Type(captureValues(...fn()))();
+    var returnValues = Type(captureValues(..fn()))();
     try {
-        returnValues = captureValues(...fn());
+        returnValues = captureValues(..fn());
     } catch (ex) {
         runStatement(db, "rollback");
         throw ex;
     }
 
     runStatement(db, "commit");
-    return ...forwardValues(returnValues);
+    return ..forwardValues(returnValues);
 }
 
 // TODO: sqlite values

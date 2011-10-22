@@ -116,12 +116,12 @@ external sqlite3_os_end() Int;
 
 external sqlite3_config(
     argument0 : Int,
-    ...) Int;
+    ..) Int;
 
 external sqlite3_db_config(
     argument0 : Pointer[sqlite3],
     op : Int,
-    ...) Int;
+    ..) Int;
 
 alias sqlite3_mem_methods = Struct_sqlite3_mem_methods;
 
@@ -180,7 +180,7 @@ external sqlite3_free_table(
 
 external sqlite3_mprintf(
     argument0 : Pointer[CChar],
-    ...) Pointer[CChar];
+    ..) Pointer[CChar];
 
 external sqlite3_vmprintf(
     argument0 : Pointer[CChar],
@@ -190,7 +190,7 @@ external sqlite3_snprintf(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
-    ...) Pointer[CChar];
+    ..) Pointer[CChar];
 
 external sqlite3_vsnprintf(
     argument0 : Int,
@@ -914,7 +914,7 @@ external sqlite3_file_control(
 
 external sqlite3_test_control(
     op : Int,
-    ...) Int;
+    ..) Int;
 
 external sqlite3_status(
     op : Int,
@@ -986,7 +986,7 @@ external sqlite3_strnicmp(
 external sqlite3_log(
     iErrCode : Int,
     zFormat : Pointer[CChar],
-    ...);
+    ..);
 
 external sqlite3_wal_hook(
     argument0 : Pointer[sqlite3],

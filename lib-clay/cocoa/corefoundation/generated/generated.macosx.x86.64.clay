@@ -1096,7 +1096,7 @@ external CFStringCreateWithFormat(
     alloc : CFAllocatorRef,
     formatOptions : CFDictionaryRef,
     format : CFStringRef,
-    ...) CFStringRef;
+    ..) CFStringRef;
 
 external CFStringCreateWithFormatAndArguments(
     alloc : CFAllocatorRef,
@@ -1329,7 +1329,7 @@ external CFStringAppendFormat(
     theString : CFMutableStringRef,
     formatOptions : CFDictionaryRef,
     format : CFStringRef,
-    ...);
+    ..);
 
 external CFStringAppendFormatAndArguments(
     theString : CFMutableStringRef,
@@ -2431,13 +2431,13 @@ external CFCalendarComposeAbsoluteTime(
     calendar : CFCalendarRef,
     at : Pointer[Double],
     componentDesc : Pointer[CChar],
-    ...) CUChar;
+    ..) CUChar;
 
 external CFCalendarDecomposeAbsoluteTime(
     calendar : CFCalendarRef,
     at : Double,
     componentDesc : Pointer[CChar],
-    ...) CUChar;
+    ..) CUChar;
 
 alias kCFCalendarComponentsWrap = 1;
 
@@ -2446,7 +2446,7 @@ external CFCalendarAddComponents(
     at : Pointer[Double],
     options : CULong,
     componentDesc : Pointer[CChar],
-    ...) CUChar;
+    ..) CUChar;
 
 external CFCalendarGetComponentDifference(
     calendar : CFCalendarRef,
@@ -2454,7 +2454,7 @@ external CFCalendarGetComponentDifference(
     resultAT : Double,
     options : CULong,
     componentDesc : Pointer[CChar],
-    ...) CUChar;
+    ..) CUChar;
 
 alias CFDateFormatterRef = OpaquePointer;
 

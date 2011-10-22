@@ -61,7 +61,7 @@ procedure indexUpdateAssign;
 //
 
 Coordinate?(T) = CallDefined?(dereference, T);
-CoordinateTargetType(T) = ...Type(...dereference(typeToLValue(T)));
+CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
 
 RandomAccessCoordinate?(T) =
     Coordinate?(T) and
@@ -83,7 +83,7 @@ ContiguousCoordinate?(T) = false;
 //
 
 Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
-IteratorTargetType(T) = ...Type(...next(typeToLValue(T)));
+IteratorTargetType(T) = ..Type(..next(typeToLValue(T)));
 
 
 
@@ -141,7 +141,7 @@ procedure StaticSize;
 //
 
 Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = ...Type(...next(iterator(typeToLValue(T))));
+SequenceElementType(T) = ..Type(..next(iterator(typeToLValue(T))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
 StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
@@ -163,9 +163,9 @@ SequenceContainer?(T) = false;
 
 // true if sequence is not single-valued (0 valued sequences are included).
 MultiValuedSequence?(T) =
-    Sequence?(T) and multiValued?(...Type(...next(iterator(typeToLValue(T)))));
+    Sequence?(T) and multiValued?(..Type(..next(iterator(typeToLValue(T)))));
 
-private multiValued?(...x) = true;
+private multiValued?(..x) = true;
 overload multiValued?(x) = false;
 
 
@@ -242,14 +242,14 @@ inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
 
-inline overload bitwiseAnd(a, b, c, ...rest) =
-    bitwiseAnd(bitwiseAnd(a,b), c, ...rest);
+inline overload bitwiseAnd(a, b, c, ..rest) =
+    bitwiseAnd(bitwiseAnd(a,b), c, ..rest);
 
-inline overload bitwiseOr(a, b, c, ...rest) =
-    bitwiseOr(bitwiseOr(a,b), c, ...rest);
+inline overload bitwiseOr(a, b, c, ..rest) =
+    bitwiseOr(bitwiseOr(a,b), c, ..rest);
 
-inline overload bitwiseXor(a, b, c, ...rest) =
-    bitwiseXor(bitwiseXor(a,b), c, ...rest);
+inline overload bitwiseXor(a, b, c, ..rest) =
+    bitwiseXor(bitwiseXor(a,b), c, ..rest);
 
 [FIELD]
 inline overload fieldRefAssign(dest, static FIELD, forward src) {
@@ -281,51 +281,51 @@ inline overload staticIndexUpdateAssign(static F, dest:T, static i, forward src)
     staticIndexAssign(dest, static i, F(staticIndex(dest, static i), src));
 }
 
-[...T | countValues(...T) >= 2]
-inline overload indexAssign(dest, forward ...indicesAndSrc:T) {
+[..T | countValues(..T) >= 2]
+inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     assign(
-        index(dest, ...withoutNthValue(
-            static countValues(...T)-1,
-            ...indicesAndSrc
+        index(dest, ..withoutNthValue(
+            static countValues(..T)-1,
+            ..indicesAndSrc
         )),
-        lastValue(...indicesAndSrc),
+        lastValue(..indicesAndSrc),
     );
 }
 
-[F, ...A | countValues(...A) >= 2]
-inline overload indexUpdateAssign(static F, dest, forward ...indicesAndSrc:A) {
+[F, ..A | countValues(..A) >= 2]
+inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         static F,
-        index(dest, ...withoutNthValue(
-            static countValues(...A)-1,
-            ...indicesAndSrc
+        index(dest, ..withoutNthValue(
+            static countValues(..A)-1,
+            ..indicesAndSrc
         )),
-        lastValue(...indicesAndSrc),
+        lastValue(..indicesAndSrc),
     );
 }
 
-[F, T, ...A |
-    (countValues(...A) >= 2) and
+[F, T, ..A |
+    (countValues(..A) >= 2) and
     RValue?(
         index(
             typeToLValue(T),
-            ...mapValues(
+            ..mapValues(
                 typeToLValue,
-                ...withoutNthValue(static countValues(...A)-1, ...A)
+                ..withoutNthValue(static countValues(..A)-1, ..A)
             )
         )
     )
 ]
-inline overload indexUpdateAssign(static F, dest:T, forward ...indicesAndSrc:A) {
+inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ...withoutNthValue(static countValues(...A)-1, ...indicesAndSrc),
+        ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc),
         F(
             index(
                 dest,
-                ...withoutNthValue(static countValues(...A)-1, ...indicesAndSrc)
+                ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc)
             ),
-            lastValue(...indicesAndSrc)
+            lastValue(..indicesAndSrc)
         )
     );
 }
@@ -469,7 +469,7 @@ overload PrimitiveType?(static Float64) = true;
 [T] overload PrimitiveType?(static Static[T]) = true;
 [T,n] overload PrimitiveType?(static Vec[T,n]) = true;
 [E | Enum?(E)] overload PrimitiveType?(static E) = true;
-[...T] overload PrimitiveType?(static Union[...T]) = true;
+[..T] overload PrimitiveType?(static Union[..T]) = true;
 [] overload PrimitiveType?(static Union[]) = true;
 overload PrimitiveType?(static Tuple[]) = true;
 
@@ -482,17 +482,17 @@ overload PrimitiveType?(static Tuple[]) = true;
 PrimitiveCompoundType?(X) = false;
 
 [T,n] overload PrimitiveCompoundType?(static Array[T,n]) = true;
-[...T] overload PrimitiveCompoundType?(static Tuple[...T]) = true;
+[..T] overload PrimitiveCompoundType?(static Tuple[..T]) = true;
 [R | RegularRecord?(R)] overload PrimitiveCompoundType?(static R) = true;
 [V | Variant?(V)] overload PrimitiveCompoundType?(static V) = true;
 
 procedure PrimitiveCompoundMemberTypes;
 [T,n] overload PrimitiveCompoundMemberTypes(static Array[T,n]) = T;
-[...T] overload PrimitiveCompoundMemberTypes(static Tuple[...T]) = ...T;
+[..T] overload PrimitiveCompoundMemberTypes(static Tuple[..T]) = ..T;
 [R | RegularRecord?(R)]
-overload PrimitiveCompoundMemberTypes(static R) = ...RecordFieldTypes(R);
+overload PrimitiveCompoundMemberTypes(static R) = ..RecordFieldTypes(R);
 [V | Variant?(V)]
-overload PrimitiveCompoundMemberTypes(static V) = ...VariantMembers(V);
+overload PrimitiveCompoundMemberTypes(static V) = ..VariantMembers(V);
 
 
 //
@@ -505,7 +505,7 @@ PODType?(X) = false;
 overload PODType?(static T) = true;
 
 [T | PrimitiveCompoundType?(T)]
-overload PODType?(static T) = allValues?(PODType?, ...PrimitiveCompoundMemberTypes(T));
+overload PODType?(static T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
 
 
 
@@ -524,28 +524,28 @@ BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
 
 [T | PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(static T)
-    = allValues?(BitwiseCopiedType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(BitwiseCopiedType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload BitwiseMovedType?(static T)
-    = allValues?(BitwiseMovedType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload NotDestroyedType?(static T)
-    = allValues?(NotDestroyedType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload NotResetType?(static T)
-    = allValues?(NotResetType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload CopyDoesNotThrowType?(static T)
-    = allValues?(CopyDoesNotThrowType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload AssignDoesNotThrowType?(static T)
-    = allValues?(AssignDoesNotThrowType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(AssignDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload BitwiseAssignedType?(static T)
-    = allValues?(BitwiseAssignedType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(BitwiseAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 [T | PrimitiveCompoundType?(T)]
 overload BitwiseMoveAssignedType?(static T)
-    = allValues?(BitwiseMoveAssignedType?, ...PrimitiveCompoundMemberTypes(T));
+    = allValues?(BitwiseMoveAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 
 
 

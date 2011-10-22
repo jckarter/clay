@@ -185,7 +185,7 @@ external fopen64(
 external fprintf(
     _File : Pointer[FILE],
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fputc(
     _Ch : Int,
@@ -212,13 +212,13 @@ external freopen(
 external fscanf(
     _File : Pointer[FILE],
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _fscanf_l(
     _File : Pointer[FILE],
     _Format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external fsetpos(
     _File : Pointer[FILE],
@@ -279,7 +279,7 @@ external _popen(
 
 external printf(
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external putc(
     _Ch : Int,
@@ -315,12 +315,12 @@ external _rmtmp() Int;
 
 external scanf(
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _scanf_l(
     format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external setbuf(
     _File : Pointer[FILE],
@@ -347,31 +347,31 @@ external setvbuf(
 
 external _scprintf(
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sscanf(
     _Src : Pointer[CChar],
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _sscanf_l(
     buffer : Pointer[CChar],
     format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _snscanf(
     _Src : Pointer[CChar],
     _MaxCount : UInt64,
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _snscanf_l(
     input : Pointer[CChar],
     length : UInt64,
     format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external tmpfile() Pointer[FILE];
 
@@ -401,11 +401,11 @@ external __mingw_snprintf(
     s : Pointer[CChar],
     n : UInt64,
     format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_vprintf(
     argument0 : Pointer[CChar],
@@ -414,7 +414,7 @@ external __mingw_vprintf(
 external __mingw_fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_vfprintf(
     argument0 : Pointer[FILE],
@@ -424,7 +424,7 @@ external __mingw_vfprintf(
 external __mingw_sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_vsprintf(
     argument0 : Pointer[CChar],
@@ -435,14 +435,14 @@ external _snprintf(
     _Dest : Pointer[CChar],
     _Count : UInt64,
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _snprintf_l(
     buffer : Pointer[CChar],
     count : UInt64,
     format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vsnprintf(
     _Dest : Pointer[CChar],
@@ -460,13 +460,13 @@ external _vsnprintf_l(
 external sprintf(
     _Dest : Pointer[CChar],
     _Format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _sprintf_l(
     buffer : Pointer[CChar],
     format : Pointer[CChar],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external vsprintf(
     _Dest : Pointer[CChar],
@@ -483,7 +483,7 @@ external snprintf(
     s : Pointer[CChar],
     n : UInt64,
     format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vscanf(
     Format : Pointer[CChar],
@@ -559,15 +559,15 @@ external _putws(
 external fwprintf(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external wprintf(
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _scwprintf(
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external vfwprintf(
     _File : Pointer[FILE],
@@ -581,14 +581,14 @@ external vwprintf(
 external swprintf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _swprintf_l(
     buffer : Pointer[UShort],
     count : UInt64,
     format : Pointer[UShort],
     locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external vswprintf(
     argument0 : Pointer[UShort],
@@ -599,7 +599,7 @@ external _swprintf_c(
     _DstBuf : Pointer[UShort],
     _SizeInWords : UInt64,
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vswprintf_c(
     _DstBuf : Pointer[UShort],
@@ -611,7 +611,7 @@ external _snwprintf(
     _Dest : Pointer[UShort],
     _Count : UInt64,
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vsnwprintf(
     _Dest : Pointer[UShort],
@@ -623,7 +623,7 @@ external snwprintf(
     s : Pointer[UShort],
     n : UInt64,
     format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external vsnwprintf(
     argument0 : Pointer[UShort],
@@ -648,11 +648,11 @@ external vswscanf(
 external _fwprintf_p(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _wprintf_p(
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vfwprintf_p(
     _File : Pointer[FILE],
@@ -667,7 +667,7 @@ external _swprintf_p(
     _DstBuf : Pointer[UShort],
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vswprintf_p(
     _DstBuf : Pointer[UShort],
@@ -677,7 +677,7 @@ external _vswprintf_p(
 
 external _scwprintf_p(
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vscwprintf_p(
     _Format : Pointer[UShort],
@@ -686,12 +686,12 @@ external _vscwprintf_p(
 external _wprintf_l(
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _wprintf_p_l(
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vwprintf_l(
     _Format : Pointer[UShort],
@@ -707,13 +707,13 @@ external _fwprintf_l(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _fwprintf_p_l(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vfwprintf_l(
     _File : Pointer[FILE],
@@ -732,14 +732,14 @@ external _swprintf_c_l(
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _swprintf_p_l(
     _DstBuf : Pointer[UShort],
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vswprintf_c_l(
     _DstBuf : Pointer[UShort],
@@ -758,12 +758,12 @@ external _vswprintf_p_l(
 external _scwprintf_l(
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _scwprintf_p_l(
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vscwprintf_p_l(
     _Format : Pointer[UShort],
@@ -775,7 +775,7 @@ external _snwprintf_l(
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vsnwprintf_l(
     _DstBuf : Pointer[UShort],
@@ -787,7 +787,7 @@ external _vsnwprintf_l(
 external _swprintf(
     _Dest : Pointer[UShort],
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _vswprintf(
     _Dest : Pointer[UShort],
@@ -798,7 +798,7 @@ external __swprintf_l(
     _Dest : Pointer[UShort],
     _Format : Pointer[UShort],
     _Plocinfo : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _vswprintf_l(
     buffer : Pointer[UShort],
@@ -829,46 +829,46 @@ external _vscwprintf_l(
 external fwscanf(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _fwscanf_l(
     _File : Pointer[FILE],
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external swscanf(
     _Src : Pointer[UShort],
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _swscanf_l(
     _Src : Pointer[UShort],
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _snwscanf(
     _Src : Pointer[UShort],
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _snwscanf_l(
     _Src : Pointer[UShort],
     _MaxCount : UInt64,
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external wscanf(
     _Format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _wscanf_l(
     _Format : Pointer[UShort],
     _Locale : _locale_t,
-    ...) Int;
+    ..) Int;
 
 external _wfdopen(
     _FileHandle : Int,
@@ -3316,13 +3316,13 @@ external _sopen_s(
 external _open(
     _Filename : Pointer[CChar],
     _OpenFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external _sopen(
     _Filename : Pointer[CChar],
     _OpenFlag : Int,
     _ShareFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external _waccess(
     _Filename : Pointer[UShort],
@@ -3388,13 +3388,13 @@ external _wsopen_s(
 external _wopen(
     _Filename : Pointer[UShort],
     _OpenFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external _wsopen(
     _Filename : Pointer[UShort],
     _OpenFlag : Int,
     _ShareFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external __lock_fhandle(
     _Filehandle : Int) Int;
@@ -3453,7 +3453,7 @@ external lseek(
 external open(
     _Filename : Pointer[CChar],
     _OpenFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external read(
     _FileHandle : Int,
@@ -3468,7 +3468,7 @@ external sopen(
     _Filename : Pointer[CChar],
     _OpenFlag : Int,
     _ShareFlag : Int,
-    ...) Int;
+    ..) Int;
 
 external tell(
     _FileHandle : Int) CLong;

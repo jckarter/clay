@@ -16,28 +16,28 @@ alias TokenRange = Range[SizeT];
 // AST nodes
 //
 
-private ast(...fields) = referenceTypeWithPredicate(
+private ast(..fields) = referenceTypeWithPredicate(
     ASTNode?,
     tokens: TokenRange,
     mainToken: SizeT,
-    ...fields,
+    ..fields,
 );
 
 procedure ASTNode?;
 overload ASTNode?(x) = false;
 
-[T, ...A | ASTNode?(T)
-           and (Tuple[...ReferenceTypeFieldTypes(T)] ==
-                Tuple[TokenRange, SizeT, ...A])]
-alias overload T(...args:A) {
+[T, ..A | ASTNode?(T)
+           and (Tuple[..ReferenceTypeFieldTypes(T)] ==
+                Tuple[TokenRange, SizeT, ..A])]
+alias overload T(..args:A) {
     alias tokens = TokenRange(SizeT(0), SizeT(0));
-    return T(tokens, SizeT(0), ...args);
+    return T(tokens, SizeT(0), ..args);
 }
 
 [T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...dropValues(static 2, ...referenceTypeFields(x)));
+    printReprValuesTo(stream, ..dropValues(static 2, ..referenceTypeFields(x)));
 }
 
 
@@ -70,9 +70,9 @@ private OtherString?(x) = String?(x) and (x != String);
 [S | OtherString?(S)]
 overload Identifier(forward x:S) = Identifier(String(x));
 
-[...A | allValues?(OtherString?, ...A)]
-overload DottedName(forward ...a:A) =
-    DottedName(Vector[Identifier](...mapValues(Identifier, ...a)));
+[..A | allValues?(OtherString?, ..A)]
+overload DottedName(forward ..a:A) =
+    DottedName(Vector[Identifier](..mapValues(Identifier, ..a)));
 
 [A | Sequence?(A) and String?(SequenceElementType(A))]
 overload DottedName(a:A) =
@@ -449,12 +449,12 @@ enum Visibility {
     PRIVATE,
 }
 
-private top(...fields) = ast(...fields);
+private top(..fields) = ast(..fields);
 
-private named(...fields) = top(
+private named(..fields) = top(
     visibility: Maybe[Visibility],
     name: Identifier,
-    ...fields,
+    ..fields,
 );
 
 record Record = named(

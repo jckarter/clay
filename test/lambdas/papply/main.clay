@@ -5,13 +5,13 @@ main() {
         println( plus100(x) );
 }
 
-partialApply(f, ...args) = CallableAndArgs(f, Tuple(...args));
+partialApply(f, ..args) = CallableAndArgs(f, Tuple(..args));
 
-record CallableAndArgs[F, ...A] (
+record CallableAndArgs[F, ..A] (
     f:F,
-    args : Tuple[...A],
+    args : Tuple[..A],
 );
 
-[F, ...A]
-overload call(x:CallableAndArgs[F, ...A], ...remainingArgs) =
-    x.f(...unpack(x.args), ...remainingArgs);
+[F, ..A]
+overload call(x:CallableAndArgs[F, ..A], ..remainingArgs) =
+    x.f(..unpack(x.args), ..remainingArgs);

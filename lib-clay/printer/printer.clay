@@ -12,8 +12,8 @@ procedure printTo;
 overload printTo(stream) {
 }
 
-overload printTo(stream, a, b, ...rest) {
-    static for (x in a, b, ...rest)
+overload printTo(stream, a, b, ..rest) {
+    static for (x in a, b, ..rest)
         printTo(stream, x);
 }
 
@@ -115,8 +115,8 @@ overload printTo(stream, x:E) {
 // printTo - tuples, records, arrays, vectors
 //
 
-[...T]
-overload printTo(stream, x:Tuple[...T]) {
+[..T]
+overload printTo(stream, x:Tuple[..T]) {
     printReprTo(stream, x);
 }
 
@@ -243,9 +243,9 @@ overload printReprTo(stream, x:E) {
 // printReprTo - tuples
 //
 
-[...T]
-overload printReprTo(stream, x:Tuple[...T]) {
-    printReprValuesTo(stream, ...tupleElements(x));
+[..T]
+overload printReprTo(stream, x:Tuple[..T]) {
+    printReprValuesTo(stream, ..tupleElements(x));
 }
 
 
@@ -257,7 +257,7 @@ overload printReprTo(stream, x:Tuple[...T]) {
 [T | Record?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ...recordFields(x));
+    printReprValuesTo(stream, ..recordFields(x));
 }
 
 
@@ -266,10 +266,10 @@ overload printReprTo(stream, x:T) {
 // printReprValuesTo, printReprElementsTo
 //
 
-printReprValuesTo(stream, ...values) {
+printReprValuesTo(stream, ..values) {
     printTo(stream, '(');
     var first = true;
-    static for (y in ...values) {
+    static for (y in ..values) {
         if (first)
             first = false;
         else
@@ -367,7 +367,7 @@ overload printReprTo(stream, x:T) {
         return;
     }
     printTo(stream, T);
-    printReprValuesTo(stream, ...referenceTypeFields(x));
+    printReprValuesTo(stream, ..referenceTypeFields(x));
 }
 
 
@@ -408,16 +408,16 @@ overload printReprTo(stream, v:UniqueValue[T]) {
 // print, println, printlnTo
 //
 
-print(...x) {
-    printTo(stdout, ...x);
+print(..x) {
+    printTo(stdout, ..x);
 }
 
-println(...x) {
-    printTo(stdout, ...x, '\n');
+println(..x) {
+    printTo(stdout, ..x, '\n');
 }
 
-printlnTo(stream, ...x) {
-    printTo(stream, ...x, '\n');
+printlnTo(stream, ..x) {
+    printTo(stream, ..x, '\n');
 }
 
 
@@ -426,15 +426,15 @@ printlnTo(stream, ...x) {
 // printString, printlnString
 //
 
-printString(...x) {
+printString(..x) {
     var s = String();
-    printTo(s, ...x);
+    printTo(s, ..x);
     return move(s);
 }
 
-printlnString(...x) {
+printlnString(..x) {
     var s = String();
-    printlnTo(s, ...x);
+    printlnTo(s, ..x);
     return move(s);
 }
 
@@ -445,9 +445,9 @@ printlnString(...x) {
 //
 
 [S | ByteBuffer?(S)]
-printBuffer(buf:S, ...args) {
+printBuffer(buf:S, ..args) {
     var bv = BufferVector(begin(buf), end(buf));
-    printTo(bv, ...args);
+    printTo(bv, ..args);
     return size(bv);
 }
 
@@ -457,37 +457,37 @@ printBuffer(buf:S, ...args) {
 // observe, observeTo, observeCall -- log intermediate values and forward them
 //
 
-observeTo(stream, forward ...x) {
-    var captured = captureValues(...x);
-    printlnTo(stream, "[observed: ", ...weaveValues(", ", ...capturedRefs(captured)), "]");
+observeTo(stream, forward ..x) {
+    var captured = captureValues(..x);
+    printlnTo(stream, "[observed: ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);
-    return forward ...forwardValues(captured);
+    return forward ..forwardValues(captured);
 }
 [tag | Identifier?(tag)]
-overload observeTo(stream, static tag, forward ...x) {
-    var captured = captureValues(...x);
-    printlnTo(stream, "[observed ", tag, ": ", ...weaveValues(", ", ...capturedRefs(captured)), "]");
+overload observeTo(stream, static tag, forward ..x) {
+    var captured = captureValues(..x);
+    printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);
-    return forward ...forwardValues(captured);
+    return forward ..forwardValues(captured);
 }
-observe(forward ...x) = forward ...observeTo(stderr, ...x);
+observe(forward ..x) = forward ..observeTo(stderr, ..x);
 
-observeCallTo(stream, forward fn, forward ...args) {
+observeCallTo(stream, forward fn, forward ..args) {
     var capturedFn = captureValue(fn);
-    var capturedArgs = captureValues(...args);
-    printlnTo(stream, "[observed call ", capturedRef(capturedFn), "(", ...weaveValues(", ", ...capturedRefs(capturedArgs)), ")...");
+    var capturedArgs = captureValues(..args);
+    printlnTo(stream, "[observed call ", capturedRef(capturedFn), "(", ..weaveValues(", ", ..capturedRefs(capturedArgs)), ")..");
     flush(stream);
     try {
-        var capturedReturn = captureValues(...forwardValue(capturedFn)(...forwardValues(capturedArgs)));
-        printlnTo(stream, "  ...returned ", ...capturedRefs(capturedReturn), "]");
+        var capturedReturn = captureValues(..forwardValue(capturedFn)(..forwardValues(capturedArgs)));
+        printlnTo(stream, "  ..returned ", ..capturedRefs(capturedReturn), "]");
         flush(stream);
-        return forward ...forwardValues(capturedReturn);
+        return forward ..forwardValues(capturedReturn);
     } catch (ex) {
-        printlnTo(stream, "  ...threw ", ex, "]");
+        printlnTo(stream, "  ..threw ", ex, "]");
         flush(stream);
         throw ex;
     }
 }
 
-observeCall(forward fn, forward ...args)
-    = forward ...observeCallTo(stderr, fn, ...args);
+observeCall(forward fn, forward ..args)
+    = forward ..observeCallTo(stderr, fn, ..args);

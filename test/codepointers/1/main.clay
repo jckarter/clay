@@ -1,7 +1,7 @@
 
 
-showCPType(callable, ...argTypes) {
-    var cp = makeCodePointer(callable, ...argTypes);
+showCPType(callable, ..argTypes) {
+    var cp = makeCodePointer(callable, ..argTypes);
     println(Type(cp));
 }
 

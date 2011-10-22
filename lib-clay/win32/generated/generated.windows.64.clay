@@ -16460,12 +16460,12 @@ external wvsprintfW(
 external wsprintfA(
     argument0 : LPSTR,
     argument1 : LPCSTR,
-    ...) Int;
+    ..) Int;
 
 external wsprintfW(
     argument0 : LPWSTR,
     argument1 : LPCWSTR,
-    ...) Int;
+    ..) Int;
 
 record Struct_tagCBT_CREATEWNDA (
     lpcs : Pointer[Struct_tagCREATESTRUCTA],
@@ -34504,22 +34504,22 @@ external NdrGetDcomProtocolVersion(
 external NdrClientCall2(
     pStubDescriptor : PMIDL_STUB_DESC,
     pFormat : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external NdrClientCall(
     pStubDescriptor : PMIDL_STUB_DESC,
     pFormat : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external NdrAsyncClientCall(
     pStubDescriptor : PMIDL_STUB_DESC,
     pFormat : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external NdrDcomAsyncClientCall(
     pStubDescriptor : PMIDL_STUB_DESC,
     pFormat : PFORMAT_STRING,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 alias STUB_UNMARSHAL = 0;
 alias STUB_CALL_SERVER = 1;
@@ -34802,19 +34802,19 @@ external NdrClientCall3(
     pProxyInfo : Pointer[MIDL_STUBLESS_PROXY_INFO],
     nProcNum : CULong,
     pReturnValue : RawPointer,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external Ndr64AsyncClientCall(
     pProxyInfo : Pointer[MIDL_STUBLESS_PROXY_INFO],
     nProcNum : CULong,
     pReturnValue : RawPointer,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external Ndr64DcomAsyncClientCall(
     pProxyInfo : Pointer[MIDL_STUBLESS_PROXY_INFO],
     nProcNum : CULong,
     pReturnValue : RawPointer,
-    ...) CLIENT_CALL_RETURN;
+    ..) CLIENT_CALL_RETURN;
 
 external Ndr64AsyncServerCall(
     pRpcMsg : PRPC_MESSAGE);

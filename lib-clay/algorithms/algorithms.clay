@@ -339,7 +339,7 @@ join(sep:S, a:A) {
 
 [A | Sequence?(A)]
 binarySearch(a:A, x) {
-    return ...binarySearch(begin(a), end(a), x);
+    return ..binarySearch(begin(a), end(a), x);
 }
 
 [A | Sequence?(A)]

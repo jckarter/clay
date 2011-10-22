@@ -2,8 +2,8 @@
 record Foo[F] ( fn : F );
 var z = Foo(x => { println(x); });
 
-foo(...args) {
-    var f = msg => { println(msg, ": ", ...args); };
+foo(..args) {
+    var f = msg => { println(msg, ": ", ..args); };
     f("first");
     f("second");
 }
@@ -12,6 +12,6 @@ main() {
     z.fn(10);
     foo(10, ", ", 20);
 
-    var g = x => ...(x, x+1, x+2);
-    println(...weaveValues(", ", ...g(99)));
+    var g = x => ..(x, x+1, x+2);
+    println(..weaveValues(", ", ..g(99)));
 }

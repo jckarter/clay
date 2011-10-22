@@ -51,6 +51,15 @@ static bool keyword(const char *s) {
     return t->str == s;
 }
 
+static bool ellipsis() {
+    int p = save();
+    if (symbol("..."))
+        return true;
+    else {
+        restore(p);
+        return symbol("..");
+    }
+}
 
 
 //
@@ -850,7 +859,7 @@ static bool block(StatementPtr &x);
 
 static bool lambdaArgs4(vector<IdentifierPtr> &formalArgs,
                         IdentifierPtr &formalVarArg) {
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     if (!identifier(formalVarArg)) return false;
     formalArgs.clear();
     return true;
@@ -860,7 +869,7 @@ static bool lambdaArgs3(vector<IdentifierPtr> &formalArgs,
                         IdentifierPtr &formalVarArg) {
     if (!identifierListNoTail(formalArgs)) return false;
     int p = save();
-    if (!symbol(",") || !symbol("...") || !identifier(formalVarArg)) {
+    if (!symbol(",") || !ellipsis() || !identifier(formalVarArg)) {
         restore(p);
         formalVarArg = NULL;
     }
@@ -954,7 +963,7 @@ static bool lambda(ExprPtr &x) {
 
 static bool unpack(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     ExprPtr y;
     if (!expression(y)) return false;
     x = new Unpack(y);
@@ -1552,7 +1561,7 @@ static bool statement(StatementPtr &x) {
 //
 
 static bool staticVarParam(IdentifierPtr &varParam) {
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     if (!identifier(varParam)) return false;
     return true;
 }
@@ -1727,7 +1736,7 @@ static bool varArg(FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     IdentifierPtr name;
     if (!identifier(name)) return false;
     ExprPtr type;
@@ -1803,7 +1812,7 @@ static bool optPredicate(ExprPtr &x) {
 static bool patternVar(PatternVar &x) {
     int p = save();
     x.isMulti = true;
-    if (!symbol("...")) {
+    if (!ellipsis()) {
         restore(p);
         x.isMulti = false;
     }
@@ -2139,7 +2148,7 @@ static bool optReturnSpecList(vector<ReturnSpecPtr> &x) {
 
 static bool varReturnSpec(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     IdentifierPtr y;
     if (!optNamedReturn(y)) return false;
     ExprPtr z;
@@ -2430,7 +2439,7 @@ static bool externalArgs(vector<ExternalArgPtr> &x) {
 }
 
 static bool externalVarArgs(bool &hasVarArgs) {
-    if (!symbol("...")) return false;
+    if (!ellipsis()) return false;
     hasVarArgs = true;
     return true;
 }

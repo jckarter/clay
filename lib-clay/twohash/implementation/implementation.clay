@@ -309,7 +309,7 @@ overload next(x: TwoHashEntries[E, F])
         nextBucket(x);
         refillMask(x);
     }
-    return ...F(e);
+    return ..F(e);
 }
 
 [E, F]

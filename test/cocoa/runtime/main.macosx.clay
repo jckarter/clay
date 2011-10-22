@@ -7,11 +7,11 @@ NSString(string) {
     return objc_msgSend(Id(class), sel_stringWithUTF8String_, cstring(string));
 }
 
-NSStringWithFormat(format, ...args) {
+NSStringWithFormat(format, ..args) {
     var class = objc_getClass(cstring("NSString"));
     var sel_stringWithFormat_ = sel_registerName(cstring("stringWithFormat:"));
 
-    return objc_msgSend(Id(class), sel_stringWithFormat_, format, ...args);
+    return objc_msgSend(Id(class), sel_stringWithFormat_, format, ..args);
 }
 
 UTF8String(nsstring) {

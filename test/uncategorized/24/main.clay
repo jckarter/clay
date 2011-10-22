@@ -1,9 +1,9 @@
 
 procedure printAll;
 
-overload printAll(a:Int, ...rest) {
+overload printAll(a:Int, ..rest) {
     println(a);
-    printAll(...rest);
+    printAll(..rest);
 }
 
 overload printAll() {

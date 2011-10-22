@@ -6,32 +6,32 @@ procedure InterfaceMembers;
 private ImplicitInterfaceMembers() = (destroy, (), ());
 
 private VtblSlotFunction(memFun) = memFun.0;
-private VtblSlotInputTypes(memFun) = ...unpack(memFun.1);
-private VtblSlotOutputTypes(memFun) = ...unpack(memFun.2);
+private VtblSlotInputTypes(memFun) = ..unpack(memFun.1);
+private VtblSlotOutputTypes(memFun) = ..unpack(memFun.2);
 
 InterfaceMember?(I, fn) = false;
 
 [I, fn | InterfaceType?(I)]
 overload InterfaceMember?(static I, static fn)
-    = inValues?(fn, ...mapValues(VtblSlotFunction, ...InterfaceMembers(I)));
+    = inValues?(fn, ..mapValues(VtblSlotFunction, ..InterfaceMembers(I)));
 
 private VtblSlotType(memFun) = CodePointer[
-    (Opaque, ...VtblSlotInputTypes(memFun)),
-    (...VtblSlotOutputTypes(memFun))
+    (Opaque, ..VtblSlotInputTypes(memFun)),
+    (..VtblSlotOutputTypes(memFun))
 ];
 
-private record InterfaceVtbl[...memberFunctions]
-    = (#methods, Tuple[...mapValues(VtblSlotType, ...memberFunctions)]);
+private record InterfaceVtbl[..memberFunctions]
+    = (#methods, Tuple[..mapValues(VtblSlotType, ..memberFunctions)]);
 
-interfaceType(...memberFunctions) = recordWithProperties(
+interfaceType(..memberFunctions) = recordWithProperties(
     (
         (InterfaceType?, static true),
         (InterfaceMembers, 
-            ...ImplicitInterfaceMembers(),
-            ...memberFunctions
+            ..ImplicitInterfaceMembers(),
+            ..memberFunctions
         ),
     ),
-    (#vtbl, Pointer[InterfaceVtbl[...ImplicitInterfaceMembers(), ...memberFunctions]]),
+    (#vtbl, Pointer[InterfaceVtbl[..ImplicitInterfaceMembers(), ..memberFunctions]]),
     (#this, Opaque),
 );
 
@@ -42,13 +42,13 @@ overload RegularRecord?(static I) = false;
 overload destroy(i: I) { invoke(destroy, &i); }
 
 private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
-    makeCodePointer(VtblSlotFunction(memFun), T, ...VtblSlotInputTypes(memFun))
+    makeCodePointer(VtblSlotFunction(memFun), T, ..VtblSlotInputTypes(memFun))
 );
 
 [I, T | InterfaceType?(I)]
-private makeInterfaceVtbl(static I, static T) = InterfaceVtbl[...InterfaceMembers(I)](
+private makeInterfaceVtbl(static I, static T) = InterfaceVtbl[..InterfaceMembers(I)](
     Tuple(
-        ...mapValues(slot => vtblSlotMember(T, slot), ...InterfaceMembers(I))
+        ..mapValues(slot => vtblSlotMember(T, slot), ..InterfaceMembers(I))
     )
 );
 
@@ -71,13 +71,13 @@ alias allocateBox(static I, this: T) Pointer[I] {
     return ptr;
 }
 
-[...memberFunctions, fn]
-private vtblSlot(vtbl: InterfaceVtbl[...memberFunctions], static fn)
+[..memberFunctions, fn]
+private vtblSlot(vtbl: InterfaceVtbl[..memberFunctions], static fn)
     = staticIndex(
         vtbl.methods,
-        static valueIndex(fn, ...mapValues(VtblSlotFunction, ...memberFunctions))
+        static valueIndex(fn, ..mapValues(VtblSlotFunction, ..memberFunctions))
     );
 
 [I, fn | InterfaceMember?(I, fn)]
-invoke(static fn, i: Pointer[I], forward ...args)
-    = ...vtblSlot(i^.vtbl^, fn)(i^.this, ...args);
+invoke(static fn, i: Pointer[I], forward ..args)
+    = ..vtblSlot(i^.vtbl^, fn)(i^.this, ..args);

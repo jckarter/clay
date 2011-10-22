@@ -5998,7 +5998,7 @@ external NSGetSizeAndAlignment(
 
 external NSLog(
     format : NSString,
-    ...);
+    ..);
 
 external NSLogv(
     format : NSString,

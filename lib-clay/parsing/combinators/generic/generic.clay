@@ -27,8 +27,8 @@ Parser?(static TokenInput, x) =
 procedure Parsers?;
 
 [TokenInput]
-overload Parsers?(static TokenInput, first, ...rest) =
-    Parser?(TokenInput, first) and Parsers?(TokenInput, ...rest);
+overload Parsers?(static TokenInput, first, ..rest) =
+    Parser?(TokenInput, first) and Parsers?(TokenInput, ..rest);
 
 [TokenInput]
 overload Parsers?(static TokenInput) = true;
@@ -48,10 +48,10 @@ overload SimpleParser?(static TokenInput, static Parser) = false;
 overload SimpleParser?(static TokenInput, static Parser) {
     alias parser = typeToLValue(Parser);
     alias input = typeToLValue(TokenInput);
-    return MaybeType?(...ReturnType(...parser(input)));
+    return MaybeType?(..ReturnType(..parser(input)));
 }
 
-private MaybeType?(...args) = false;
+private MaybeType?(..args) = false;
 [T] overload MaybeType?(static Maybe[T]) = true;
 
 
@@ -71,8 +71,8 @@ overload ConvertibleParser?(static TokenInput, static Token) = true;
 [TokenInput, A | Sequence?(A) and (TokenType(TokenInput) == SequenceElementType(A))]
 overload ConvertibleParser?(static TokenInput, static A) = true;
 
-[TokenInput, ...T | Parsers?(TokenInput, ...T)]
-overload ConvertibleParser?(static TokenInput, static Tuple[...T]) = true;
+[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+overload ConvertibleParser?(static TokenInput, static Tuple[..T]) = true;
 
 
 
@@ -90,9 +90,9 @@ overload convertParser(static TokenInput, token:Token) =
 overload convertParser(static TokenInput, forward a:A) =
     literalString(TokenInput, a);
 
-[TokenInput, ...T | Parsers?(TokenInput, ...T)]
-overload convertParser(static TokenInput, parsers:Tuple[...T]) =
-    sequence(TokenInput, ...convertParsers(TokenInput, ...unpackRef(parsers)));
+[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+overload convertParser(static TokenInput, parsers:Tuple[..T]) =
+    sequence(TokenInput, ..convertParsers(TokenInput, ..unpackRef(parsers)));
 
 [TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
 overload convertParser(static TokenInput, ref parser:Parser) =
@@ -112,9 +112,9 @@ private record Converter[TokenInput]();
 [TokenInput] overload call(x:Converter[TokenInput], forward p) =
     forward convertParser(TokenInput, p);
 
-[TokenInput, ...T | Parsers?(TokenInput, ...T)]
-convertParsers(static TokenInput, forward ...parsers:T) =
-    forward ...mapValues(Converter[TokenInput](), ...parsers);
+[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+convertParsers(static TokenInput, forward ..parsers:T) =
+    forward ..mapValues(Converter[TokenInput](), ..parsers);
 
 
 
@@ -155,7 +155,7 @@ TokenPredicate?(static TokenInput, static Predicate) {
     alias predicate = typeToLValue(Predicate);
     alias Token = TokenType(TokenInput);
     alias token = typeToLValue(Token);
-    return Tuple[Bool] == Tuple[...Type(...predicate(token))];
+    return Tuple[Bool] == Tuple[..Type(..predicate(token))];
 }
 
 [TokenInput, Predicate | TokenPredicate?(TokenInput, Predicate)]
@@ -225,15 +225,15 @@ optional(static TokenInput, forward _parser:Parser) {
 // choice
 //
 
-UniformParsers?(TokenInput, ...Parsers) =
-    Parsers?(TokenInput, ...Parsers) and
-    equalValues?(...mapValues(P => ParseResult(TokenInput, P), ...Parsers));
+UniformParsers?(TokenInput, ..Parsers) =
+    Parsers?(TokenInput, ..Parsers) and
+    equalValues?(..mapValues(P => ParseResult(TokenInput, P), ..Parsers));
 
-[TokenInput, First, ...Rest | UniformParsers?(TokenInput, First, ...Rest)]
-choice(static TokenInput, forward first:First, forward ...rest:Rest) {
-    var parsers = Tuple(...convertParsers(TokenInput, first, ...rest));
+[TokenInput, First, ..Rest | UniformParsers?(TokenInput, First, ..Rest)]
+choice(static TokenInput, forward first:First, forward ..rest:Rest) {
+    var parsers = Tuple(..convertParsers(TokenInput, first, ..rest));
     return input => {
-        static for (parser in ...unpackRef(parsers)) {
+        static for (parser in ..unpackRef(parsers)) {
             var result = parser(input);
             if (not nothing?(result))
                 return move(result);
@@ -248,12 +248,12 @@ choice(static TokenInput, forward first:First, forward ...rest:Rest) {
 // sequence, sequenceAs
 //
 
-[TokenInput, First, ...Rest | Parsers?(TokenInput, First, ...Rest)]
-sequence(static TokenInput, forward first:First, forward ...rest:Rest) {
-    var parsers = Tuple(...convertParsers(TokenInput, first, ...rest));
+[TokenInput, First, ..Rest | Parsers?(TokenInput, First, ..Rest)]
+sequence(static TokenInput, forward first:First, forward ..rest:Rest) {
+    var parsers = Tuple(..convertParsers(TokenInput, first, ..rest));
     return input => {
         alias f = (parser -> require(parser(input)));
-        alias result = Tuple(...mapValues(f, ...unpackRef(parsers)));
+        alias result = Tuple(..mapValues(f, ..unpackRef(parsers)));
         var saved = input;
         try {
             return Maybe(result);
@@ -265,12 +265,12 @@ sequence(static TokenInput, forward first:First, forward ...rest:Rest) {
     };
 }
 
-[TokenInput, Result, ...Parsers | Parsers?(TokenInput, ...Parsers)]
-sequenceAs(static TokenInput, result:Result, forward ..._parsers:Parsers) {
-    var parsers = Tuple(...convertParsers(TokenInput, ..._parsers));
+[TokenInput, Result, ..Parsers | Parsers?(TokenInput, ..Parsers)]
+sequenceAs(static TokenInput, result:Result, forward .._parsers:Parsers) {
+    var parsers = Tuple(..convertParsers(TokenInput, .._parsers));
     return input => {
         var saved = input;
-        static for (parser in ...unpackRef(parsers)) {
+        static for (parser in ..unpackRef(parsers)) {
             var result = parser(input);
             if (nothing?(result)) {
                 input = saved;

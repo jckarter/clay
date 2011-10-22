@@ -6,15 +6,15 @@ import sequences.util.*;
 // zipped
 //
 
-inline zipped(forward first, forward ...rest) =
-    Zipped(packSequences(first, ...rest));
+inline zipped(forward first, forward ..rest) =
+    Zipped(packSequences(first, ..rest));
 
 private record Zipped[A] (
     seqs : A
 );
 
-[...S | allValues?(LightweightSequence?, ...S)]
-overload LightweightSequence?(static Zipped[Tuple[...S]]) = true;
+[..S | allValues?(LightweightSequence?, ..S)]
+overload LightweightSequence?(static Zipped[Tuple[..S]]) = true;
 
 
 
@@ -34,7 +34,7 @@ inline overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters)
 
 [ITERS]
 inline overload next(iter:ZippedIterator[ITERS]) =
-    forward ...mapValues(next, ...unpackTupleRef(iter.iters));
+    forward ..mapValues(next, ..unpackTupleRef(iter.iters));
 
 
 
@@ -44,7 +44,7 @@ inline overload next(iter:ZippedIterator[ITERS]) =
 
 private AllReversible?(A) {
     var reversible? = (T => CallDefined?(reverseIterator, T));
-    return multiValueAll?(reversible?, ...Type(...unpackSequences(null(A)^)));
+    return multiValueAll?(reversible?, ..Type(..unpackSequences(null(A)^)));
 }
 
 [A | AllReversible?(A)]
@@ -59,31 +59,31 @@ inline overload reverseIterator(a:Zipped[A]) =
 
 private AllSized?(A) {
     var sizeDefined? = (T => CallDefined?(size, T));
-    return multiValueAll?(sizeDefined?, ...Type(...unpackSequences(null(A)^)));
+    return multiValueAll?(sizeDefined?, ..Type(..unpackSequences(null(A)^)));
 }
 
 [A | AllSized?(A)]
 inline overload size(a:Zipped[A]) {
     var f = (x => SizeT(size(x)));
-    return min([...mapValues(f, ...unpackSequences(a.seqs))]);
+    return min([..mapValues(f, ..unpackSequences(a.seqs))]);
 }
 
 private AllStaticSized?(A) {
     var staticSizeDefined? = (T => CallDefined?(StaticSize, Static[T]));
-    return allValues?(staticSizeDefined?, ...Type(...unpackSequences(null(A)^)));
+    return allValues?(staticSizeDefined?, ..Type(..unpackSequences(null(A)^)));
 }
 
 [A | AllStaticSized?(A)]
 overload StaticSize(static Zipped[A]) =
-    min([...mapValues(StaticSize, ...Type(...unpackSequences(null(A)^)))]);
+    min([..mapValues(StaticSize, ..Type(..unpackSequences(null(A)^)))]);
 
 private AllIndexable?(A, I) {
     var indexDefined? = (T => CallDefined?(index, T, I));
-    return multiValueAll?(indexDefined?, ...Type(unpackSequences(null(A)^)));
+    return multiValueAll?(indexDefined?, ..Type(unpackSequences(null(A)^)));
 }
 
 [A, I | AllIndexable?(A, I)]
 inline overload index(a:Zipped[A], i:I) {
-    var f = (x ref => { return forward ...index(x, i); });
-    return forward ...mapValues(f, ...unpackSequences(a.seqs));
+    var f = (x ref => { return forward ..index(x, i); });
+    return forward ..mapValues(f, ..unpackSequences(a.seqs));
 }

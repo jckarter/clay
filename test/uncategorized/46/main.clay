@@ -1,7 +1,7 @@
 
 fields(I) = (#x, I), (#y, I);
 
-record Point[I] = ...fields(I);
+record Point[I] = ..fields(I);
 
 [I] overload Point(x:I, y:I) = Point[I](x, y);
 

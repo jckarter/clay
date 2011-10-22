@@ -61,15 +61,15 @@ overload Vector(a:A) {
 // varargs constructor
 //
 
-[T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
-alias overload Vector[T](...args:A) {
+[T, ..A | (countValues(..A) > 0) and equalValues?(T, ..A)]
+alias overload Vector[T](..args:A) {
     var v = Vector[T]();
-    reserve(v, countValues(...A));
-    pushAll(v, ...args);
+    reserve(v, countValues(..A));
+    pushAll(v, ..args);
     return move(v);
 }
 
-private pushAll(a, forward x, forward ...rest) { push(a, x); pushAll(a, ...rest); }
+private pushAll(a, forward x, forward ..rest) { push(a, x); pushAll(a, ..rest); }
 overload pushAll(a) {}
 
 

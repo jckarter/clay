@@ -25,7 +25,7 @@ overload FlexiConstructor?(x) = false;
 // flexi
 //
 
-flexi(...fields) = recordWithPredicate(FlexiConstructor?, ...fields);
+flexi(..fields) = recordWithPredicate(FlexiConstructor?, ..fields);
 
 
 
@@ -33,10 +33,10 @@ flexi(...fields) = recordWithPredicate(FlexiConstructor?, ...fields);
 // argument converting constructor
 //
 
-[T, ...A | FlexiConstructor?(T) and (countValues(...A) == RecordFieldCount(T))]
-overload T(forward ...args:A) returned:T {
-    alias TargetTypes = Tuple(...RecordFieldTypes(T));
-    ...recordFields(returned) <-- ...convertToTypes(TargetTypes, static 0, ...args);
+[T, ..A | FlexiConstructor?(T) and (countValues(..A) == RecordFieldCount(T))]
+overload T(forward ..args:A) returned:T {
+    alias TargetTypes = Tuple(..RecordFieldTypes(T));
+    ..recordFields(returned) <-- ..convertToTypes(TargetTypes, static 0, ..args);
 }
 
 
@@ -48,9 +48,9 @@ overload T(forward ...args:A) returned:T {
 procedure convertToTypes;
 
 [i]
-overload convertToTypes(types, static i, forward first, forward ...rest) {
+overload convertToTypes(types, static i, forward first, forward ..rest) {
     alias T = staticIndex(types, static i);
-    return forward convertToType(T, first), ...convertToTypes(types, static i+1, ...rest);
+    return forward convertToType(T, first), ..convertToTypes(types, static i+1, ..rest);
 }
 
 [T, i | (i == TupleElementCount(T))]

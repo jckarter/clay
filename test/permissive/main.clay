@@ -30,15 +30,15 @@ overload permissiveAssign(dest:T, src:T) {
 
 PermissiveRecordConstructor?(x) = false;
 
-[T, ...A | Record?(T)
+[T, ..A | Record?(T)
            and PermissiveRecordConstructor?(T)
-           and (countValues(...A) == countValues(...RecordFieldTypes(T)))]
-T(...args:A) returned:T {
+           and (countValues(..A) == countValues(..RecordFieldTypes(T)))]
+T(..args:A) returned:T {
     returned <-- T();
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         ref field = staticIndex(returned, i);
-        ref value = nthValue(i, ...args);
+        ref value = nthValue(i, ..args);
         permissiveAssign(field, value);
     }
 }

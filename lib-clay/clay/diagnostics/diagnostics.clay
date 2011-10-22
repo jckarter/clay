@@ -44,11 +44,11 @@ private splitLines(data) {
     return move(lines);
 }
 
-errorWithLocation(file:SourceFile, offset, ...message) {
+errorWithLocation(file:SourceFile, offset, ..message) {
     ref fileName = file.path;
     ref data = file.data;
 
-    var line, column, tabs = ...computeLocation(data, offset);
+    var line, column, tabs = ..computeLocation(data, offset);
     column += 7*tabs;
     var lines = splitLines(data);
     println();
@@ -66,6 +66,6 @@ errorWithLocation(file:SourceFile, offset, ...message) {
     println("#######################################");
     println();
     println(fileName, "(", line+1, ",", column, ")");
-    println("error: ", ...message);
+    println("error: ", ..message);
     println();
 }

@@ -18,7 +18,7 @@ alias overload Lambda[In, Out](x:T) {
 }
 
 private CallableWithSignature?(T, In, Out) {
-    var CodePtr = Type(makeCodePointer(call, T, ...unpack(In)));
+    var CodePtr = Type(makeCodePointer(call, T, ..unpack(In)));
     return Out == CodePointerReturnTypes(CodePtr);
 }
 
@@ -42,8 +42,8 @@ overload Lambda[In,Out](x : Lambda[In,Out]) returned:Lambda[In,Out] {
 // makeLambda
 
 [T]
-makeLambda(forward x:T, ...In) {
-    var CodePtr = Type(makeCodePointer(call, T, ...In));
+makeLambda(forward x:T, ..In) {
+    var CodePtr = Type(makeCodePointer(call, T, ..In));
     var Out = CodePointerReturnTypes(CodePtr);
     return Lambda[In,Out](x);
 }
@@ -51,9 +51,9 @@ makeLambda(forward x:T, ...In) {
 
 // call operator
 
-[...I, ...O]
-overload call(x:Lambda[(...I), (...O)], forward ...args:I) ...O {
-    return forward ...x.body^.code(x.body^.obj^, ...args);
+[..I, ..O]
+overload call(x:Lambda[(..I), (..O)], forward ..args:I) ..O {
+    return forward ..x.body^.code(x.body^.obj^, ..args);
 }
 
 
@@ -64,15 +64,15 @@ overload call(x:Lambda[(...I), (...O)], forward ...args:I) ...O {
 
 private record LambdaBody[In, Out] (
     obj : Pointer[Opaque],
-    code : CodePointer[(Opaque, ...unpack(In)), Out],
+    code : CodePointer[(Opaque, ..unpack(In)), Out],
     destructor : CodePointer[Opaque,()],
 );
 
-[...I, ...O, T]
-alias overload LambdaBody[(...I),(...O)](x:T) returned:LambdaBody[(...I),(...O)] {
-    var codePtr = makeCodePointer(call, T, ...I);
+[..I, ..O, T]
+alias overload LambdaBody[(..I),(..O)](x:T) returned:LambdaBody[(..I),(..O)] {
+    var codePtr = makeCodePointer(call, T, ..I);
     var destructor = makeCodePointer(destroy, T);
-    returned.code = CodePointer[(Opaque, ...I), (...O)](codePtr);
+    returned.code = CodePointer[(Opaque, ..I), (..O)](codePtr);
     returned.destructor = CodePointer[Opaque,()](destructor);
 
     var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
@@ -98,12 +98,12 @@ overload destroy(x:LambdaBody[In, Out]) {
 // helper procs for closure conversion
 //
 
-packMultiValuedFreeVar(...x) = Tuple(...x);
+packMultiValuedFreeVar(..x) = Tuple(..x);
 
-packMultiValuedFreeVarByRef(...x) =
-    Tuple(...mapValues(addressOf, ...x));
+packMultiValuedFreeVarByRef(..x) =
+    Tuple(..mapValues(addressOf, ..x));
 
-unpackMultiValuedFreeVar(x) = forward ...unpackRef(x);
+unpackMultiValuedFreeVar(x) = forward ..unpackRef(x);
 
 unpackMultiValuedFreeVarAndDereference(x) =
-    forward ...mapValues(dereference, ...unpack(x));
+    forward ..mapValues(dereference, ..unpack(x));

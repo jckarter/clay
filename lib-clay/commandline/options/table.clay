@@ -63,7 +63,7 @@ procedure CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, s
 private procedure findEntry;
 
 overload findEntry(ot, name : Char, f){
-  return ...findEntry(ot, String(name), f);
+  return ..findEntry(ot, String(name), f);
 }
 
 [T | String?(T)]
@@ -71,7 +71,7 @@ overload findEntry(ot, name : T, f){
   for(o in ot.options){
     for(n in o.spec.names){
       if(name == n){
-        return ...f(o); 
+        return ..f(o); 
       }
     }
   }

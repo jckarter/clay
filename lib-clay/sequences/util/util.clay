@@ -21,10 +21,10 @@ inline overload wrapSequence(ref x:A) = x;
 // packSequences, unpackSequences
 //
 
-inline packSequences(forward ...args) = (...mapValues(wrapSequence, ...args));
+inline packSequences(forward ..args) = (..mapValues(wrapSequence, ..args));
 
-[...T]
-inline unpackSequences(x:Tuple[...T]) = ref ...unpackTupleRef(x);
+[..T]
+inline unpackSequences(x:Tuple[..T]) = ref ..unpackTupleRef(x);
 
 
 
@@ -33,12 +33,12 @@ inline unpackSequences(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 //
 
 alias CapturedElementsType(packedSeq) =
-    Type(captureValues(...dummyElements(...unpackTupleRef(packedSeq))));
+    Type(captureValues(..dummyElements(..unpackTupleRef(packedSeq))));
 
 
 private inline dummyElement(seq) = forward next(iterator(seq));
 
-inline dummyElements(...seqs) = forward ...mapValues(dummyElement, ...seqs);
+inline dummyElements(..seqs) = forward ..mapValues(dummyElement, ..seqs);
 
 
 
@@ -47,10 +47,10 @@ inline dummyElements(...seqs) = forward ...mapValues(dummyElement, ...seqs);
 //
 
 inline multiIterators(packedSeq) =
-    (...mapValues(iterator, ...unpackTupleRef(packedSeq)));
+    (..mapValues(iterator, ..unpackTupleRef(packedSeq)));
 
 inline multiReverseIterators(packedSeq) =
-    (...mapValues(reverseIterator, ...unpackTupleRef(packedSeq)));
+    (..mapValues(reverseIterator, ..unpackTupleRef(packedSeq)));
 
 
 
@@ -60,8 +60,8 @@ inline multiReverseIterators(packedSeq) =
 
 procedure multiValueAll?;
 
-inline overload multiValueAll?(predicate, forward first, forward ...rest) =
-    predicate(first) and multiValueAll?(predicate, ...rest);
+inline overload multiValueAll?(predicate, forward first, forward ..rest) =
+    predicate(first) and multiValueAll?(predicate, ..rest);
 
 inline overload multiValueAll?(predicate) = true;
 
@@ -72,7 +72,7 @@ inline overload multiValueAll?(predicate) = true;
 //
 
 inline multiHasNext?(multiIter) =
-    multiValueAll?(hasNext?, ...unpackTupleRef(multiIter));
+    multiValueAll?(hasNext?, ..unpackTupleRef(multiIter));
 
 
 
@@ -81,4 +81,4 @@ inline multiHasNext?(multiIter) =
 //
 
 inline multiNext(multiIter) =
-    captureValues(...mapValues(next, ...unpackTupleRef(multiIter)));
+    captureValues(..mapValues(next, ..unpackTupleRef(multiIter)));

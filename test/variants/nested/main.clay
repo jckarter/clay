@@ -16,7 +16,7 @@ variant Literal = IntLiteral | FloatLiteral;
 record IntLiteral ();
 record FloatLiteral ();
 
-nestingPath(Type) = Tuple(...VariantNestingPaths(Expr, Type));
+nestingPath(Type) = Tuple(..VariantNestingPaths(Expr, Type));
 
 main() {
     println(nestingPath(IntLiteral));

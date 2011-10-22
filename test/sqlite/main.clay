@@ -56,7 +56,7 @@ main() {
 
     println("selecting table");
     for (row in SqliteStatement(db, "select id, name from wotsits order by id")) {
-        println("  -- values: ", ...weaveValues(", ", ...rowValues(row, Int, Maybe[String])));
+        println("  -- values: ", ..weaveValues(", ", ..rowValues(row, Int, Maybe[String])));
         println("     tuple:  ", rowTuple(row, Int, Maybe[String]));
         println("     record: ", rowRecord(row, Wotsit));
     }
@@ -76,7 +76,7 @@ main() {
         if (nullColumn?(row, 1))
             println("  null name in wotsit ", row[0, Int]);
         else {
-            println("  values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
+            println("  values: ", ..weaveValues(", ", ..rowValues(row, Int, String)));
         }
     }
 
@@ -90,7 +90,7 @@ main() {
         if (nullColumn?(row, 1))
             println("  null name in wotsit ", row[0, Int]);
         else {
-            println("  values: ", ...weaveValues(", ", ...rowValues(row, Int, String)));
+            println("  values: ", ..weaveValues(", ", ..rowValues(row, Int, String)));
         }
     }
 

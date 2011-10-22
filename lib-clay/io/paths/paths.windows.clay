@@ -51,13 +51,13 @@ private uncPath?(path) = beginsWith?(path, "//") or beginsWith?(path, "\\\\");
 
 slicedWindowsPath(path) {
     if (uncPath?(path))
-        return ...slicedUNCPath(path);
+        return ..slicedUNCPath(path);
     if (hasDrive?(path)) {
         var volume = slicedUpto(path, 2);
         var rest = slicedFrom(path, 2);
-        return volume, ...slicedVolumeRelativePath(rest);
+        return volume, ..slicedVolumeRelativePath(rest);
     }
-    return slicedUpto(path,0), ...slicedVolumeRelativePath(path);
+    return slicedUpto(path,0), ..slicedVolumeRelativePath(path);
 }
 
 private slicedUNCPath(path) {
@@ -67,7 +67,7 @@ private slicedUNCPath(path) {
         badUNCPath(path);
     var shareEnd = findPathSeparator(slicedFrom(path, machineEnd+1));
     var volume, rest = slicedUpto(path, shareEnd), slicedFrom(path, shareEnd);
-    return volume, ...slicedVolumeRelativePath(rest);
+    return volume, ..slicedVolumeRelativePath(rest);
 }
 
 record InvalidUNCPath(path:String);
@@ -97,25 +97,25 @@ private directoryTailTrimmed(path) {
 // splitWindowsPath, slicedPath, splitPath, pathComponents
 //
 
-splitWindowsPath(path) = ...mapValues(force, ...slicedWindowsPath(path));
+splitWindowsPath(path) = ..mapValues(force, ..slicedWindowsPath(path));
 
 slicedPath(path) {
-    var volume, directory, name = ...slicedWindowsPath(path);
+    var volume, directory, name = ..slicedWindowsPath(path);
     return sliced(path, begin(volume), end(directory)), name;
 }
 
-pathDirname(path) = String(nthValue(static 0, ...slicedPath(path)));
-pathBasename(path) = String(nthValue(static 1, ...slicedPath(path)));
+pathDirname(path) = String(nthValue(static 0, ..slicedPath(path)));
+pathBasename(path) = String(nthValue(static 1, ..slicedPath(path)));
 
-splitPath(path) = ...mapValues(force, ...slicedPath(path));
+splitPath(path) = ..mapValues(force, ..slicedPath(path));
 
 pathComponents(path) {
     var parts = Vector[String]();
-    var volume, directory, name = ...slicedWindowsPath(path);
+    var volume, directory, name = ..slicedWindowsPath(path);
     var parent, child = directory, name;
     while (not empty?(child)) {
         push(parts, String(child));
-        parent, child = ...slicedPath(parent);
+        parent, child = ..slicedPath(parent);
     }
     if (not empty?(parent))
         push(parts, String(parent));
@@ -133,10 +133,10 @@ pathComponents(path) {
 
 procedure joinPath;
 
-[...S | allValues?(String?, ...S)]
-overload joinPath(...parts:S) {
+[..S | allValues?(String?, ..S)]
+overload joinPath(..parts:S) {
     var volume, directory, name = String(), String(), String();
-    static for (part in ...parts)
+    static for (part in ..parts)
         appendPath(volume, directory, name, part);
     ref result = volume;
     appendComponent(result, directory);
@@ -156,13 +156,13 @@ overload joinPath(parts:A) {
 }
 
 private appendPath(volume:String, directory:String, name:String, part) {
-    var volume2, directory2, name2 = ...slicedWindowsPath(part);
+    var volume2, directory2, name2 = ..slicedWindowsPath(part);
     if (not empty?(volume2)) {
-        volume, directory, name = ...mapValues(String, volume2, directory2, name2);
+        volume, directory, name = ..mapValues(String, volume2, directory2, name2);
         return;
     }
     if (absoluteDirectory?(directory2)) {
-        directory, name = ...mapValues(String, directory2, name2);
+        directory, name = ..mapValues(String, directory2, name2);
         return;
     }
     appendComponent(directory, name);

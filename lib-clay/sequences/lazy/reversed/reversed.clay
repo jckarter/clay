@@ -39,4 +39,4 @@ overload StaticSize(static Reversed[A]) = StaticSize(A);
 
 [A, I | CallDefined?(index, A, I) and CallDefined?(size, A)]
 inline overload index(a:Reversed[A], i:I) =
-    forward ...index(a.seq, size(a.seq) - i - 1);
+    forward ..index(a.seq, size(a.seq) - i - 1);

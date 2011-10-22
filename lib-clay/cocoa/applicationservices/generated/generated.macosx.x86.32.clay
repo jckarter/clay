@@ -5095,12 +5095,12 @@ external CGPostMouseEvent(
     updateMouseCursorPosition : Int,
     buttonCount : UInt,
     mouseButtonDown : Int,
-    ...) Int;
+    ..) Int;
 
 external CGPostScrollWheelEvent(
     wheelCount : UInt,
     wheel1 : Int,
-    ...) Int;
+    ..) Int;
 
 external CGPostKeyboardEvent(
     keyChar : UShort,
@@ -5315,7 +5315,7 @@ external CGEventCreateScrollWheelEvent(
     units : UInt,
     wheelCount : UInt,
     wheel1 : Int,
-    ...) CGEventRef;
+    ..) CGEventRef;
 
 external CGEventCreateCopy(
     event : CGEventRef) CGEventRef;

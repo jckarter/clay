@@ -8,10 +8,10 @@
 // corresponding field (name, Vector[type]) in Vectorized[R]
 //
 
-record Vectorized[R] = ...mapValues(vectorizeField, ...RecordFields(R));
+record Vectorized[R] = ..mapValues(vectorizeField, ..RecordFields(R));
 
 vectorizeField(field) {
-    var name, type = ...unpack(field);
+    var name, type = ..unpack(field);
     return (name, Vector[type]);
 }
 

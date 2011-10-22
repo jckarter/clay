@@ -66,13 +66,13 @@ record PropertyTest = newClass(NSObject,
     ClassMethods(),
     InstanceMethods(
         // reader/writer names related but different from variable name, default selector type
-        ...PropertyInstanceMethods(#fooVar, #"foo"),
+        ..PropertyInstanceMethods(#fooVar, #"foo"),
         // reader/writer names related but different from variable name, specified selector type
-        ...PropertyInstanceMethods(#fooVar, #"foo64", Int64),
+        ..PropertyInstanceMethods(#fooVar, #"foo64", Int64),
         // default reader/writer names, specified selector type
-        ...PropertyInstanceMethods(#bar, Id),
+        ..PropertyInstanceMethods(#bar, Id),
         // reader/writer names both different, default selector type
-        ...PropertyInstanceMethods(#bas, #"isBas", #"setBas:"),
+        ..PropertyInstanceMethods(#bas, #"isBas", #"setBas:"),
     )
 );
 
@@ -280,13 +280,13 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
             SelectorReturnType(RegularTest, #"foo")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #foo)", (),
-            ...SelectorArgumentTypes(RegularTest, #"foo")
+            ..SelectorArgumentTypes(RegularTest, #"foo")
         );
         expectEqual(test, "SelectorReturnType(RegularTest, #setFoo:)", Void,
             SelectorReturnType(RegularTest, #"setFoo:")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #setFoo:)", Tuple(String),
-            ...SelectorArgumentTypes(RegularTest, #"setFoo:")
+            ..SelectorArgumentTypes(RegularTest, #"setFoo:")
         );
 
         expectEqual(test, "SelectorReturnType(RegularTest, #initWithFoo:bar:)", RegularTest,
@@ -294,7 +294,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #initWithFoo:bar:)",
             (String, Char),
-            ...SelectorArgumentTypes(RegularTest, #"initWithFoo:bar:")
+            ..SelectorArgumentTypes(RegularTest, #"initWithFoo:bar:")
         );
 
         expectEqual(test, "SelectorReturnType(RegularCanary, #initWithFoo:bar:)", RegularCanary,
@@ -302,7 +302,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", [
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularCanary, #initWithFoo:bar:)",
             (Canary, Canary),
-            ...SelectorArgumentTypes(RegularCanary, #"initWithFoo:bar:")
+            ..SelectorArgumentTypes(RegularCanary, #"initWithFoo:bar:")
         );
     }),
     TestCase("regularClass usage", test => {

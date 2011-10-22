@@ -9,8 +9,8 @@ import printer.platform.*;
 
 Formatter?(X) = false;
 
-formatter(F, forward x, forward ...params)
-    = F[Type(captureValue(x))](captureValue(x), ...params);
+formatter(F, forward x, forward ..params)
+    = F[Type(captureValue(x))](captureValue(x), ..params);
 
 [F | Formatter?(F)]
 overload printTo(stream, forward formatter: F) {
@@ -165,36 +165,36 @@ private AlignedFormatter?(T) = false;
 [T | AlignedFormatter?(T)] overload Formatter?(static T) = true;
 
 [I | Integer?(I)]
-private alignedFormatter(F, width: I, pad: Char, forward ...values) {
+private alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // If printedWidth isn't available for all objects, print them to a string
     // and use the width of that
-    var s = printString(...values);
+    var s = printString(..values);
     var filledWidth = size(s);
     return formatter(F, Tuple(move(s)), SizeT(width), filledWidth, pad);
 }
 
-private filledWidth(...values)
-    = foldValues(add, SizeT(0), ...mapValues(printedWidth, ...values));
+private filledWidth(..values)
+    = foldValues(add, SizeT(0), ..mapValues(printedWidth, ..values));
 
-[I, ...TT | Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ...TT)]
-overload alignedFormatter(F, width: I, pad: Char, forward ...values: TT) {
-    var cvalues = captureValues(...values);
-    return F(cvalues, SizeT(width), filledWidth(...capturedRefs(cvalues)), pad);
+[I, ..TT | Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ..TT)]
+overload alignedFormatter(F, width: I, pad: Char, forward ..values: TT) {
+    var cvalues = captureValues(..values);
+    return F(cvalues, SizeT(width), filledWidth(..capturedRefs(cvalues)), pad);
 }
 
-leftAlignedWith(width, pad, forward ...values)
-    = alignedFormatter(LeftAlignedFormatter, width, pad, ...values);
-rightAlignedWith(width, pad, forward ...values)
-    = alignedFormatter(RightAlignedFormatter, width, pad, ...values);
+leftAlignedWith(width, pad, forward ..values)
+    = alignedFormatter(LeftAlignedFormatter, width, pad, ..values);
+rightAlignedWith(width, pad, forward ..values)
+    = alignedFormatter(RightAlignedFormatter, width, pad, ..values);
 
-leftAligned(width, forward ...values)
-    = alignedFormatter(LeftAlignedFormatter, width, ' ', ...values);
-rightAligned(width, forward ...values)
-    = alignedFormatter(RightAlignedFormatter, width, ' ', ...values);
+leftAligned(width, forward ..values)
+    = alignedFormatter(LeftAlignedFormatter, width, ' ', ..values);
+rightAligned(width, forward ..values)
+    = alignedFormatter(RightAlignedFormatter, width, ' ', ..values);
 
 [T]
 overload printTo(stream, f: LeftAlignedFormatter[T]) {
-    printTo(stream, ...forwardValues(f.value));
+    printTo(stream, ..forwardValues(f.value));
     var i = f.filledWidth;
     while (i < f.width) {
         printTo(stream, f.pad);
@@ -208,5 +208,5 @@ overload printTo(stream, f: RightAlignedFormatter[T]) {
         printTo(stream, f.pad);
         i += 1;
     }
-    printTo(stream, ...forwardValues(f.value));
+    printTo(stream, ..forwardValues(f.value));
 }

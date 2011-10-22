@@ -5,9 +5,9 @@
 // VariantRepr
 //
 
-record VariantRepr[...T] (
+record VariantRepr[..T] (
     tag : Int,
-    data : Union[...T],
+    data : Union[..T],
 );
 
 
@@ -22,7 +22,7 @@ VariantMember?(static V, static M) =
 
 VariantMembers(V) {
     var unionType = Type(variantRepr(typeToLValue(V)).data);
-    return ...UnionMembers(unionType);
+    return ..UnionMembers(unionType);
 }
 
 
@@ -55,7 +55,7 @@ overload V(src:V) returned:V {
     ref destData = destRepr.data;
     ref srcData = srcRepr.data;
     alias n = Int(VariantMemberCount(V));
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (tag == unwrapStatic(i)) {
             ref dest = staticIndex(destData, i);
             ref src = staticIndex(srcData, i);
@@ -85,7 +85,7 @@ overload moveUnsafe(src:V) returned:V {
     ref destData = destRepr.data;
     ref srcData = srcRepr.data;
     alias n = Int(VariantMemberCount(V));
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (tag == unwrapStatic(i)) {
             ref dest = staticIndex(destData, i);
             ref src = staticIndex(srcData, i);
@@ -130,7 +130,7 @@ overload assign(dest:V, ref src:V) {
     ref destData = destRepr.data;
     ref srcData = srcRepr.data;
     alias n = Int(VariantMemberCount(V));
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (tag == unwrapStatic(i)) {
             ref dest2 = staticIndex(destData, i);
             ref src2 = staticIndex(srcData, i);
@@ -154,7 +154,7 @@ overload destroy(x:V) {
     var tag = repr.tag;
     ref data = repr.data;
     alias n = Int(VariantMemberCount(V));
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (tag == unwrapStatic(i)) {
             ref dest = staticIndex(data, i);
             destroy(dest);
@@ -178,7 +178,7 @@ overload equals?(a:V, b:V) {
         return false;
     ref aData, bData = aRepr.data, bRepr.data;
     alias n = Int(VariantMemberCount(V));
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (tag == unwrapStatic(i))
             return staticIndex(aData, i) == staticIndex(bData, i);
     }
@@ -262,10 +262,10 @@ inline invalidVariant(x:V) {
 procedure MatchDefault; // dummy symbol used to implement default case
 
 private procedure matchValue;
-[T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ...cases)
-    = forward ...matchValue(x, ...cases);
-[T] inline overload matchValue(forward x:T, static T, fn, ...cases) = forward ...fn(x);
-inline overload matchValue(forward x, static MatchDefault, fn, ...cases) = forward ...fn(x);
+[T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ..cases)
+    = forward ..matchValue(x, ..cases);
+[T] inline overload matchValue(forward x:T, static T, fn, ..cases) = forward ..fn(x);
+inline overload matchValue(forward x, static MatchDefault, fn, ..cases) = forward ..fn(x);
 
-inline match(forward v, ...cases) = forward ...matchValue(*v, ...cases);
+inline match(forward v, ..cases) = forward ..matchValue(*v, ..cases);
 

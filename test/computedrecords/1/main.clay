@@ -4,7 +4,7 @@ computeFields(T) {
     return x:T, y:T;
 }
 
-record Point[T] = ...computeFields(T);
+record Point[T] = ..computeFields(T);
 
 // the above definition is equivalent to:
 // record Point[T] (

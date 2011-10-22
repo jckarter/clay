@@ -1,2 +1,2 @@
-[...T] defaultArguments(defaults, forward ...args:T)
-    = forward ...args, ...dropValues(static countValues(...T), ...unpack(defaults));
+[..T] defaultArguments(defaults, forward ..args:T)
+    = forward ..args, ..dropValues(static countValues(..T), ..unpack(defaults));

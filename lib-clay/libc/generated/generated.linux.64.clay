@@ -372,16 +372,16 @@ external setlinebuf(
 external fprintf(
     __stream : Pointer[FILE],
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external printf(
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sprintf(
     __s : Pointer[CChar],
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vfprintf(
     __s : Pointer[FILE],
@@ -401,7 +401,7 @@ external snprintf(
     __s : Pointer[CChar],
     __maxlen : CULong,
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vsnprintf(
     __s : Pointer[CChar],
@@ -417,21 +417,21 @@ external vdprintf(
 external dprintf(
     __fd : Int,
     __fmt : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fscanf(
     __stream : Pointer[FILE],
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external scanf(
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sscanf(
     __s : Pointer[CChar],
     __format : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vfscanf(
     __s : Pointer[FILE],

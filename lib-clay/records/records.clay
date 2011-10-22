@@ -24,7 +24,7 @@ inline overload staticIndex(x:T, static i) =
 RecordFieldType(static T, static i) = Type(staticIndex(null(T)^, static i));
 
 [T | Record?(T)]
-RecordFieldTypes(static T) = ...Type(...recordFields(null(T)^));
+RecordFieldTypes(static T) = ..Type(..recordFields(null(T)^));
 
 
 
@@ -35,12 +35,12 @@ RecordFieldTypes(static T) = ...Type(...recordFields(null(T)^));
 RecordFields(R) {
     alias n = RecordFieldCount(R);
     var f = i => (RecordFieldName(R,i), RecordFieldType(R,i));
-    return ...mapValues(f, ...staticIntegers(static n));
+    return ..mapValues(f, ..staticIntegers(static n));
 }
 
-RecordFieldNames(R) = ...mapValues(
+RecordFieldNames(R) = ..mapValues(
     i => RecordFieldName(R, i),
-    ...staticIntegers(static RecordFieldCount(R))
+    ..staticIntegers(static RecordFieldCount(R))
 );
 
 
@@ -63,9 +63,9 @@ overload RegularRecord?(static T) = true;
 // basic constructor
 //
 
-[T, ...A | Record?(T) and (Tuple[...RecordFieldTypes(T)] == Tuple[...A])]
-alias overload T(...args:A) returned:T {
-    ...recordFields(returned) <-- ...args;
+[T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
+alias overload T(..args:A) returned:T {
+    ..recordFields(returned) <-- ..args;
 }
 
 
@@ -76,16 +76,16 @@ alias overload T(...args:A) returned:T {
 
 [T | RegularRecord?(T)]
 overload T() returned:T {
-    initializeMulti(...recordFields(returned));
+    initializeMulti(..recordFields(returned));
 }
 
-[...A]
-private initializeMulti(...args:A) {
-    ...args <-- ...initializeTypes(...A);
+[..A]
+private initializeMulti(..args:A) {
+    ..args <-- ..initializeTypes(..A);
 }
 
 private procedure initializeTypes;
-inline overload initializeTypes(A, ...B) = A(), ...initializeTypes(...B);
+inline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
 inline overload initializeTypes() = ;
 
 
@@ -96,7 +96,7 @@ inline overload initializeTypes() = ;
 
 [T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
 overload T(src:T) returned:T {
-    ...recordFields(returned) <-- ...recordFields(src);
+    ..recordFields(returned) <-- ..recordFields(src);
 }
 
 
@@ -108,13 +108,13 @@ overload T(src:T) returned:T {
 [T | RegularRecord?(T) and not BitwiseMovedType?(T)]
 overload moveUnsafe(src:T) returned:T {
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n))
+    static for (i in ..staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [T | RegularRecord?(T) and not NotResetType?(T)]
 overload resetUnsafe(a:T) {
-    static for (x in ...recordFields(a))
+    static for (x in ..recordFields(a))
         resetUnsafe(x);
 }
 
@@ -126,7 +126,7 @@ overload resetUnsafe(a:T) {
 
 [T | RegularRecord?(T) and not NotDestroyedType?(T)]
 overload destroy(a:T) {
-    static for (x in ...recordFields(a))
+    static for (x in ..recordFields(a))
         destroy(x);
 }
 
@@ -139,7 +139,7 @@ overload destroy(a:T) {
 [T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
 overload assign(dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n))
+    static for (i in ..staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
@@ -152,7 +152,7 @@ overload assign(dest:T, ref src:T) {
 [T | RegularRecord?(T)]
 overload equals?(a:T, b:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
             return false;
     }
@@ -168,7 +168,7 @@ overload equals?(a:T, b:T) {
 [T | RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ...staticIntegers(static n)) {
+    static for (i in ..staticIntegers(static n)) {
         ref av = staticIndex(a, i);
         ref bv = staticIndex(b, i);
         if (lesser?(av, bv))
@@ -190,8 +190,8 @@ overload lesser?(a:T, b:T) {
 
 record RecordWithProperties[Properties, Fields]();
 
-recordWithProperties(properties, ...fields) {
-    var fieldsTuple = Tuple(...fields);
+recordWithProperties(properties, ..fields) {
+    var fieldsTuple = Tuple(..fields);
 
     // ensure they're all static
     static properties;
@@ -200,8 +200,8 @@ recordWithProperties(properties, ...fields) {
     return RecordWithProperties[Type(properties), Type(fieldsTuple)]();
 }
 
-recordWithProperty(property, ...fields) =
-    recordWithProperties(Tuple(property), ...fields);
+recordWithProperty(property, ..fields) =
+    recordWithProperties(Tuple(property), ..fields);
 
-recordWithPredicate(predicate, ...fields) =
-    recordWithProperty((predicate, static true), ...fields);
+recordWithPredicate(predicate, ..fields) =
+    recordWithProperty((predicate, static true), ..fields);

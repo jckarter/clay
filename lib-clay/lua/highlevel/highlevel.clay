@@ -43,7 +43,7 @@ record Error(msg:String);
 
 instance Exception = Error;
 
-overload Error(...args) = Error(printString(...args));
+overload Error(..args) = Error(printString(..args));
 
 [S | String?(S)]
 overload Error(msg:S) = Error(String(msg));
@@ -84,12 +84,12 @@ private safeCall(x:State, func) {
 
     var jmpCode = libc.setjmp(&jmpBuf[0]);
     if (jmpCode == 0) {
-        var makeTuple = (...args) => Tuple(...args);
-        var result = makeTuple(...func(x));
+        var makeTuple = (..args) => Tuple(..args);
+        var result = makeTuple(..func(x));
         // restore panic jmp_buf and panic handler
         panicJmpBuf = savedJmpBuf;
         lua_atpanic(x.handle, oldPanic);
-        return ...unpackTuple(result);
+        return ..unpackTuple(result);
     }
     else {
         // handle error
@@ -540,7 +540,7 @@ overload optString(x:State, index:Int, ref _default:S) {
 
 private LuaClayFunction?(x) = false;
 
-[F | CallDefined?(F, State) and (Tuple[...Type(...F(typeToLValue(State)))] == Tuple[Int])]
+[F | CallDefined?(F, State) and (Tuple[..Type(..F(typeToLValue(State)))] == Tuple[Int])]
 overload LuaClayFunction?(static F) = true;
 
 [F | LuaClayFunction?(F)]
@@ -595,13 +595,13 @@ private unpackNameAndFunction(x:E) {
     return cstring(x.0), toLuaCFunction(x.1);
 }
 
-[...E]
-registerTable(x:State, ...entries:E) {
-    alias N = countValues(...E) + 1;
+[..E]
+registerTable(x:State, ..entries:E) {
+    alias N = countValues(..E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
-    static for (entry in ...entries) {
-        ptr^.name, ptr^.func = ...unpackNameAndFunction(entry);
+    static for (entry in ..entries) {
+        ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }
     ptr^.name = Type(ptr^.name)(0);
@@ -609,13 +609,13 @@ registerTable(x:State, ...entries:E) {
     luaL_register(x.handle, null(CChar), begin(moduleEntries));
 }
 
-[S, ...E | CCompatibleString?(S)]
-registerModule(x:State, name:S, ...entries:E) {
-    alias N = countValues(...E) + 1;
+[S, ..E | CCompatibleString?(S)]
+registerModule(x:State, name:S, ..entries:E) {
+    alias N = countValues(..E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
-    static for (entry in ...entries) {
-        ptr^.name, ptr^.func = ...unpackNameAndFunction(entry);
+    static for (entry in ..entries) {
+        ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }
     ptr^.name = Type(ptr^.name)(0);

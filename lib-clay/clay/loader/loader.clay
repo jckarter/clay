@@ -21,7 +21,7 @@ addSearchPath(p) {
 }
 
 initSearchPath() {
-    var clayDir, clayExe = ...splitPath(pathToExecutable());
+    var clayDir, clayExe = ..splitPath(pathToExecutable());
     var libClayDir1 = joinPath(clayDir, "lib-clay");
     var libClayDir2 = joinPath(clayDir, "..", "lib-clay");
     addSearchPath(libClayDir1);
@@ -49,7 +49,7 @@ private initModuleSuffixes() {
                     printTo(suffix, '.');
                     printTo(suffix, part);
                 },
-                ...unpackTuple(parts),
+                ..unpackTuple(parts),
                 "clay",
             );
             push(suffixes, move(suffix));

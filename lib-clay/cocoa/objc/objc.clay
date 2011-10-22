@@ -75,13 +75,13 @@ overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^(Union)";
 [T | RegularRecord?(T)] overload encodeIdentifier(static T)
     = IdentifierConcat(
         #"{", IdentifierStaticName(T), #"=",
-        encodeIdentifier(...RecordFieldTypes(T)),
+        encodeIdentifier(..RecordFieldTypes(T)),
         #"}"
     );
-[...Members] overload encodeIdentifier(static Tuple[...Members])
-    = IdentifierConcat(#"{Tuple=", encodeIdentifier(...RecordFieldTypes(T)), #"}");
-[...Members] overload encodeIdentifier(static Union[...Members])
-    = IdentifierConcat(#"(Union=", encodeIdentifier(...Members), #")");
+[..Members] overload encodeIdentifier(static Tuple[..Members])
+    = IdentifierConcat(#"{Tuple=", encodeIdentifier(..RecordFieldTypes(T)), #"}");
+[..Members] overload encodeIdentifier(static Union[..Members])
+    = IdentifierConcat(#"(Union=", encodeIdentifier(..Members), #")");
 
 overload encodeIdentifier(static Pointer[CChar]) = #"*";
 overload encodeIdentifier(static ObjectHandle) = #"@";
@@ -102,11 +102,11 @@ overload encodeIdentifier(static Bool) = #"c";
 overload encodeIdentifier(static Void) = #"v";
 overload encodeIdentifier(static ()) = #"v";
 
-[...T | countValues(...T) > 1]
-overload encodeIdentifier(...types: T)
-    = IdentifierConcat(...mapValues(encodeIdentifier, ...types));
+[..T | countValues(..T) > 1]
+overload encodeIdentifier(..types: T)
+    = IdentifierConcat(..mapValues(encodeIdentifier, ..types));
 
-encode(...types) = StaticName(encodeIdentifier(...types));
+encode(..types) = StaticName(encodeIdentifier(..types));
 
 
 //
@@ -305,9 +305,9 @@ record InstanceVars[T] (value: T);
 record ClassMethods[T] (value: T);
 record InstanceMethods[T] (value: T);
 
-overload InstanceVars(...values) = InstanceVars[Type(Tuple(...values))](Tuple(...values));
-overload ClassMethods(...values) = ClassMethods[Type(Tuple(...values))](Tuple(...values));
-overload InstanceMethods(...values) = InstanceMethods[Type(Tuple(...values))](Tuple(...values));
+overload InstanceVars(..values) = InstanceVars[Type(Tuple(..values))](Tuple(..values));
+overload ClassMethods(..values) = ClassMethods[Type(Tuple(..values))](Tuple(..values));
+overload InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tuple(..values));
 
 
 
@@ -323,9 +323,9 @@ procedure ClassInstanceMethods;
 MangledModuleChar(c) = c;
 overload MangledModuleChar(static #".") = #__;
 
-MangledModuleName(T) = IdentifierConcat(...mapValues(
+MangledModuleName(T) = IdentifierConcat(..mapValues(
     MangledModuleChar,
-    ...IdentifierChars(IdentifierModuleName(T))
+    ..IdentifierChars(IdentifierModuleName(T))
 ));
 
 [T | ClayClass?(T)]
@@ -345,16 +345,16 @@ overload ClassName(static T) = StaticName(ClassStaticName(T));
 
 [T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
 ClassIvarType(static T, static name) = ClassIvarType(SuperclassType(T), name);
-[T, name | Class?(T) and Identifier?(name) and assocValue?(name, ...ClassInstanceVars(T))]
-overload ClassIvarType(static T, static name) = firstValue(...assocValue(name, ...ClassInstanceVars(T)));
+[T, name | Class?(T) and Identifier?(name) and assocValue?(name, ..ClassInstanceVars(T))]
+overload ClassIvarType(static T, static name) = firstValue(..assocValue(name, ..ClassInstanceVars(T)));
 
-ClassIvarNames(T) = ...mapValues(ivar => ivar.0, ...ClassInstanceVars(T));
-ClassIvarTypes(T) = ...mapValues(ivar => ivar.1, ...ClassInstanceVars(T));
+ClassIvarNames(T) = ..mapValues(ivar => ivar.0, ..ClassInstanceVars(T));
+ClassIvarTypes(T) = ..mapValues(ivar => ivar.1, ..ClassInstanceVars(T));
 
 ClassInstanceVar?(T, ivar) = false;
 [T, ivar | Class?(T) and Identifier?(ivar)]
 overload ClassInstanceVar?(static T, static ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
-[T, ivar | Class?(T) and Identifier?(ivar) and assocValue?(ivar, ...ClassInstanceVars(T))]
+[T, ivar | Class?(T) and Identifier?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
 overload ClassInstanceVar?(static T, static ivar) = true;
 
 
@@ -431,9 +431,9 @@ newClass(static Super,
     (
         (SuperclassType, Super),
         (ClayClass?, static true),
-        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
-        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
-        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+        Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ..unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -448,9 +448,9 @@ overload newClass(static name, static Super,
         (SuperclassType, Super),
         (ClayClass?, static true),
         (ClassStaticName, name),
-        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
-        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
-        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+        Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ..unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -465,9 +465,9 @@ newExternalClass(static Super,
         (SuperclassType, Super),
         (ClayClass?, static true),
         (ExternalClayClass?, static true),
-        Tuple(ClassInstanceVars, ...unpack(instancevars.value)),
-        Tuple(ClassClassMethods, ...unpack(classmethods.value)),
-        Tuple(ClassInstanceMethods, ...unpack(instancemethods.value)),
+        Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
+        Tuple(ClassClassMethods, ..unpack(classmethods.value)),
+        Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ), 
     (#__handle__, ObjectHandle)
 );
@@ -481,22 +481,22 @@ instance Exception = NewClassCouldNotAddIvar;
 record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
 instance Exception = NewClassCouldNotAddMethod;
 
-private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ...args) {
+private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
     objc_msgSend(
         ObjectHandle(objc_getClass(cstring("NSException"))),
         objcSelector[#"raise:format:"],
-        reason, format, ...mapValues(varArgUnbox1, ...args) 
+        reason, format, ..mapValues(varArgUnbox1, ..args) 
     );
 }
 
 [T, sel]
 private classMethodImp(static T, static sel, fn) 
     = makeCCodePointer(
-        (self, _cmd, ...args) => {
+        (self, _cmd, ..args) => {
             try {
-                return forward ...mapValues(
+                return forward ..mapValues(
                     r => msgSendUnbox1(SelectorReturnType(Static[T], sel), r),
-                    ...fn(objectParameter(T), ...msgSendBox(Static[T], sel, ...args))
+                    ..fn(objectParameter(T), ..msgSendBox(Static[T], sel, ..args))
                 );
             } catch (ex) {
                 raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
@@ -504,17 +504,17 @@ private classMethodImp(static T, static sel, fn)
                 throw ex;
             }
         },
-        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(Static[T], sel)
+        ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(Static[T], sel)
     );
 
 [T, sel]
 private instanceMethodImp(static T, static sel, fn)
     = makeCCodePointer(
-        (self, _cmd, ...args) => {
+        (self, _cmd, ..args) => {
             try {
-                return forward ...mapValues(
+                return forward ..mapValues(
                     r => msgSendUnbox1(SelectorReturnType(T, sel), r),
-                    ...fn(T(self), ...msgSendBox(T, sel, ...args))
+                    ..fn(T(self), ..msgSendBox(T, sel, ..args))
                 );
             } catch (ex) {
                 raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
@@ -522,7 +522,7 @@ private instanceMethodImp(static T, static sel, fn)
                 throw ex;
             }
         },
-        ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(T, sel)
+        ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(T, sel)
     );
 
 private record ObjcNewClassInstanceVar(
@@ -545,8 +545,8 @@ private objcNewClassInstanceVar(ivarPair) {
 }
 
 private var objcNewClassInstanceVarsTable[T]
-    = Array[ObjcNewClassInstanceVar, countValues(...ClassInstanceVars(T))](
-        ...mapValues(objcNewClassInstanceVar, ...ClassInstanceVars(T))
+    = Array[ObjcNewClassInstanceVar, countValues(..ClassInstanceVars(T))](
+        ..mapValues(objcNewClassInstanceVar, ..ClassInstanceVars(T))
     );
 
 private record ObjcNewClassMethod (
@@ -566,8 +566,8 @@ private objcNewClassClassMethod(T, classMethod) {
 }
 
 private var objcNewClassClassMethodsTable[T]
-    = Array[ObjcNewClassMethod, countValues(...ClassClassMethods(T))](
-        ...mapValues(m => objcNewClassClassMethod(T, m), ...ClassClassMethods(T))
+    = Array[ObjcNewClassMethod, countValues(..ClassClassMethods(T))](
+        ..mapValues(m => objcNewClassClassMethod(T, m), ..ClassClassMethods(T))
     );
 
 private objcNewClassInstanceMethod(T, instanceMethod) {
@@ -581,8 +581,8 @@ private objcNewClassInstanceMethod(T, instanceMethod) {
 }
 
 private var objcNewClassInstanceMethodsTable[T]
-    = Array[ObjcNewClassMethod, countValues(...ClassInstanceMethods(T))](
-        ...mapValues(m => objcNewClassInstanceMethod(T, m), ...ClassInstanceMethods(T))
+    = Array[ObjcNewClassMethod, countValues(..ClassInstanceMethods(T))](
+        ..mapValues(m => objcNewClassInstanceMethod(T, m), ..ClassInstanceMethods(T))
     );
 
 private _objcNewClassAddMethods(
@@ -660,7 +660,7 @@ inline overload objcClassMake(static T) ClassHandle {
         end  (objcNewClassInstanceMethodsTable[T]),
     );
 
-    static for (ivarPair in ...ClassInstanceVars(T)) {
+    static for (ivarPair in ..ClassInstanceVars(T)) {
         var ivar = ivarPair.0;
         objcIvar[T, ivar] = class_getInstanceVariable(handle, cstring(StaticName(ivar)));
         objcIvarOffset[T, ivar] = ivar_getOffset(objcIvar[T, ivar]);
@@ -710,12 +710,12 @@ Selector?(sel) = FixedSelector?(sel) or VarargSelector?(sel);
 selectorHandle(sel) = objcSelector[sel];
 
 [sel | Selector?(sel)]
-SelectorArgumentCount(static sel) = countValues(...GenericSelector(sel)) - 1;
+SelectorArgumentCount(static sel) = countValues(..GenericSelector(sel)) - 1;
 
 [sel | FixedSelector?(sel)]
-GenericSelector(static sel) = ...selector(sel);
+GenericSelector(static sel) = ..selector(sel);
 [sel | VarargSelector?(sel)]
-overload GenericSelector(static sel) = ...varargSelector(sel);
+overload GenericSelector(static sel) = ..varargSelector(sel);
 
 
 
@@ -724,15 +724,15 @@ overload GenericSelector(static sel) = ...varargSelector(sel);
 //
 
 [T, sel | ExternalClass?(T) and FixedSelector?(sel)]
-TypedSelector(static T, static sel) = ...externalInstanceMethod(T, sel);
+TypedSelector(static T, static sel) = ..externalInstanceMethod(T, sel);
 [T, sel | ExternalClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(static Static[T], static sel) = ...externalClassMethod(T, sel);
+overload TypedSelector(static Static[T], static sel) = ..externalClassMethod(T, sel);
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector(static T, static sel)
-    = ...restValues(...assocValue(sel, ...ClassInstanceMethods(T)));
+    = ..restValues(..assocValue(sel, ..ClassInstanceMethods(T)));
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector(static Static[T], static sel)
-    = ...restValues(...assocValue(sel, ...ClassClassMethods(T)));
+    = ..restValues(..assocValue(sel, ..ClassClassMethods(T)));
 
 [T, sel | ExternalClass?(T) and FixedSelector?(sel)]
 TypedSelector?(static T, static sel)
@@ -742,16 +742,16 @@ overload TypedSelector?(static Static[T], static sel)
     = CallDefined?(externalClassMethod, Static[Static[T]], Static[sel]);
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector?(static T, static sel)
-    = assocCountValues(sel, ...ClassInstanceMethods(T)) > 1;
+    = assocCountValues(sel, ..ClassInstanceMethods(T)) > 1;
 [T, sel | ClayClass?(T) and FixedSelector?(sel)]
 overload TypedSelector?(static Static[T], static sel)
-    = assocCountValues(sel, ...ClassClassMethods(T)) > 1;
+    = assocCountValues(sel, ..ClassClassMethods(T)) > 1;
 
 
 [T, sel | ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector(static T, static sel) = ...externalVarargInstanceMethod(T, sel);
+overload TypedSelector(static T, static sel) = ..externalVarargInstanceMethod(T, sel);
 [T, sel | ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector(static Static[T], static sel) = ...externalVarargClassMethod(T, sel);
+overload TypedSelector(static Static[T], static sel) = ..externalVarargClassMethod(T, sel);
 
 [T, sel | ExternalClass?(T) and VarargSelector?(sel)]
 overload TypedSelector?(static T, static sel)
@@ -767,34 +767,34 @@ overload TypedSelector?(static Static[T], static sel)
 //
 
 [sel | Selector?(sel)]
-private Selector(static Id, static sel) = ...GenericSelector(sel);
+private Selector(static Id, static sel) = ..GenericSelector(sel);
 
 [T, sel | Class?(T) and Selector?(sel)]
-overload Selector(static T, static sel) = ...GenericSelector(sel);
+overload Selector(static T, static sel) = ..GenericSelector(sel);
 [T, sel | Class?(T) and Selector?(sel)]
-overload Selector(static Static[T], static sel) = ...GenericSelector(sel);
+overload Selector(static Static[T], static sel) = ..GenericSelector(sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
-overload Selector(static T, static sel) = ...Selector(SuperclassType(T), sel);
+overload Selector(static T, static sel) = ..Selector(SuperclassType(T), sel);
 [T, sel |
     Class?(T)
     and TypedSelector?(T, sel)
 ]
-overload Selector(static T, static sel) = ...TypedSelector(T, sel);
+overload Selector(static T, static sel) = ..TypedSelector(T, sel);
 
 [T, sel | Class?(T) and SuperclassType(T) != Void]
-overload Selector(static Static[T], static sel) = ...Selector(Static[SuperclassType(T)], sel);
+overload Selector(static Static[T], static sel) = ..Selector(Static[SuperclassType(T)], sel);
 [T, sel |
     Class?(T)
     and TypedSelector?(Static[T], sel)
 ]
-overload Selector(static Static[T], static sel) = ...TypedSelector(Static[T], sel);
+overload Selector(static Static[T], static sel) = ..TypedSelector(Static[T], sel);
 
 [T, sel]
-SelectorReturnType(static T, static sel) = firstValue(...Selector(T, sel));
+SelectorReturnType(static T, static sel) = firstValue(..Selector(T, sel));
 
 [T, sel]
-SelectorArgumentTypes(static T, static sel) = ...restValues(...Selector(T, sel));
+SelectorArgumentTypes(static T, static sel) = ..restValues(..Selector(T, sel));
 
 
 
@@ -889,17 +889,17 @@ private varArgUnbox1(forward x) = forward x;
 overload varArgUnbox1(forward x: Param) = objectHandle(x);
 
 [T, S | FixedSelector?(S)]
-/*XXX private*/ msgSendUnbox(static T, static S, forward ...args)
-    = forward ...mapValues2(msgSendUnbox1, static SelectorArgumentCount(S),
-        ...SelectorArgumentTypes(T, S),
-        ...args
+/*XXX private*/ msgSendUnbox(static T, static S, forward ..args)
+    = forward ..mapValues2(msgSendUnbox1, static SelectorArgumentCount(S),
+        ..SelectorArgumentTypes(T, S),
+        ..args
     );
 [T, S | VarargSelector?(S)]
-overload msgSendUnbox(static T, static S, forward ...args) {
+overload msgSendUnbox(static T, static S, forward ..args) {
     var argCount = static SelectorArgumentCount(S);
     return forward
-        ...mapValues2(msgSendUnbox1, argCount, ...SelectorArgumentTypes(T, S), ...args),
-        ...mapValues(varArgUnbox1, ...dropValues(argCount, ...args));
+        ..mapValues2(msgSendUnbox1, argCount, ..SelectorArgumentTypes(T, S), ..args),
+        ..mapValues(varArgUnbox1, ..dropValues(argCount, ..args));
 }
 
 
@@ -915,19 +915,19 @@ overload msgSendBox1(static T, forward x: ObjectHandle)
     = T(x);
 
 [T, S | FixedSelector?(S)]
-/*XXX private*/ msgSendBox(static T, static S, forward ...args)
-    = forward ...mapValues2(msgSendBox1, static SelectorArgumentCount(S),
-        ...SelectorArgumentTypes(T, S),
-        ...args
+/*XXX private*/ msgSendBox(static T, static S, forward ..args)
+    = forward ..mapValues2(msgSendBox1, static SelectorArgumentCount(S),
+        ..SelectorArgumentTypes(T, S),
+        ..args
     );
 // XXX support overloading vararg selectors
 
 SelectorReturnParamType(T, S) = MsgSendParamType(SelectorReturnType(T, S));
-SelectorArgumentParamTypes(T, S) = ...mapValues(MsgSendParamType, ...SelectorArgumentTypes(T, S));
+SelectorArgumentParamTypes(T, S) = ..mapValues(MsgSendParamType, ..SelectorArgumentTypes(T, S));
 
 SelectorTypeEncoding(T, S)
     = encode(SelectorReturnParamType(T, S), ObjectHandle, SelectorHandle,
-        ...SelectorArgumentParamTypes(T, S)
+        ..SelectorArgumentParamTypes(T, S)
     );
 
 
@@ -953,20 +953,20 @@ private class_getMethodImplementation_for(static T, static S) = class_getMethodI
 [T, S | Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
 overload class_getMethodImplementation_for(static T, static S) = class_getMethodImplementation_stret;
 
-SelectorCallableWith?(C, S, ...T) = false;
+SelectorCallableWith?(C, S, ..T) = false;
 
-[C, S, ...TT | FixedSelector?(S) and countValues(...TT) == SelectorArgumentCount(S)]
-overload SelectorCallableWith?(static C, static S, ...T: TT)
-    = _SelectorCallableWith?(C, S, ...T);
+[C, S, ..TT | FixedSelector?(S) and countValues(..TT) == SelectorArgumentCount(S)]
+overload SelectorCallableWith?(static C, static S, ..T: TT)
+    = _SelectorCallableWith?(C, S, ..T);
 
-[C, S, ...TT | VarargSelector?(S) and countValues(...TT) >= SelectorArgumentCount(S)]
-overload SelectorCallableWith?(static C, static S, ...T: TT)
-    = _SelectorCallableWith?(C, S, ...takeValues(static countValues(...varargSelector(S)) - 1, ...T));
+[C, S, ..TT | VarargSelector?(S) and countValues(..TT) >= SelectorArgumentCount(S)]
+overload SelectorCallableWith?(static C, static S, ..T: TT)
+    = _SelectorCallableWith?(C, S, ..takeValues(static countValues(..varargSelector(S)) - 1, ..T));
 
-private _SelectorCallableWith?(C, S, ...T) {
-    alias Params = Tuple(...SelectorArgumentTypes(C, S));
-    alias Values = Tuple(...T);
-    static for (n in ...staticIntegers(static countValues(...T))) {
+private _SelectorCallableWith?(C, S, ..T) {
+    alias Params = Tuple(..SelectorArgumentTypes(C, S));
+    alias Values = Tuple(..T);
+    static for (n in ..staticIntegers(static countValues(..T))) {
         if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Values, n))) 
             return false;
     }
@@ -975,13 +975,13 @@ private _SelectorCallableWith?(C, S, ...T) {
 
 [C, S | FixedSelector?(S)]
 SelectorImpType(static C, static S) = CCodePointer[
-        (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(C, S)),
+        (ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
         SelectorReturnParamType(C, S)
     ];
 
 [C, S | VarargSelector?(S)]
 overload SelectorImpType(static C, static S) = VarArgsCCodePointer[
-        (ObjectHandle, SelectorHandle, ...SelectorArgumentParamTypes(C, S)),
+        (ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
         SelectorReturnParamType(C, S)
     ];
 
@@ -991,23 +991,23 @@ private msgSender(C, S)
 [C, S | FixedSelector?(S)]
 private msgSenderSuper(static C, static S)
     = CCodePointer[
-        (Pointer[ObjcSuper], SelectorHandle, ...SelectorArgumentParamTypes(C, S)),
+        (Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
 [C, S | VarargSelector?(S)]
 overload msgSenderSuper(static C, static S)
     = VarArgsCCodePointer[
-        (Pointer[ObjcSuper], SelectorHandle, ...SelectorArgumentParamTypes(C, S)),
+        (Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
-[SelfT, S, ...T]
-msgSend(static SelfT, imp, self, static S, forward ...args: T) {
+[SelfT, S, ..T]
+msgSend(static SelfT, imp, self, static S, forward ..args: T) {
     var cmdHandle = selectorHandle(S);
 
-    return forward ...mapValues(ret => msgSendBox1(SelectorReturnType(SelfT, S), ret),
-        ...imp(self, cmdHandle, ...msgSendUnbox(SelfT, S, ...args))
+    return forward ..mapValues(ret => msgSendBox1(SelectorReturnType(SelfT, S), ret),
+        ..imp(self, cmdHandle, ..msgSendUnbox(SelfT, S, ..args))
     );
 }
 
@@ -1030,16 +1030,16 @@ private _extraColon(static argCount, static underscoreCount, static lastCharacte
 overload _extraColon(static argCount, static underscoreCount, static lastCharacter)
     = #":";
 
-[argCount] private _identifierSelector(static argCount, ...chars) {
-    var lastCharacter = lastValue(...chars);
+[argCount] private _identifierSelector(static argCount, ..chars) {
+    var lastCharacter = lastValue(..chars);
     return IdentifierConcat(
-        ...mapValues(_identifierSelectorChar, ...chars),
-        ..._extraColon(static argCount, static countOccurrences(#_, ...chars), lastCharacter)
+        ..mapValues(_identifierSelectorChar, ..chars),
+        .._extraColon(static argCount, static countOccurrences(#_, ..chars), lastCharacter)
     );
 }
 
 private var memoIdentifierSelector[identifier, argCount]
-    = _identifierSelector(static argCount, ...IdentifierChars(identifier));
+    = _identifierSelector(static argCount, ..IdentifierChars(identifier));
 
 [argCount] identifierSelector(identifier, static argCount)
     = memoIdentifierSelector[identifier, argCount];
@@ -1053,7 +1053,7 @@ private _ValidMethodIdentifier?(static identifier, static minArity)
 ValidMethodIdentifier?(static identifier) = true;
     //= _ValidMethodIdentifier?(
     //    static identifier,
-    //    static countOccurrences(#_, ...IdentifierChars(identifier))
+    //    static countOccurrences(#_, ..IdentifierChars(identifier))
     //);
 
 
@@ -1073,32 +1073,32 @@ overload fieldRef(forward self: T, static cmd)
 [T, cmd | Class?(T) and ValidMethodIdentifier?(cmd)]
 overload fieldRef(static T, static cmd) = MethodRef(Static[T], T, cmd);
 
-[T, selector, ...Args | ObjectParameterType?(T) and Selector?(selector)]
-callMethod(forward self: T, static selector, forward ...args: Args)
-    = forward ...msgSend(
+[T, selector, ..Args | ObjectParameterType?(T) and Selector?(selector)]
+callMethod(forward self: T, static selector, forward ..args: Args)
+    = forward ..msgSend(
         T,
         msgSender(T, selector),
         objectHandle(self),
         selector,
-        ...args
+        ..args
     );
 
-[T, Captured, identifier, ...Args |
-    Selector?(identifierSelector(identifier, static countValues(...Args)))
+[T, Captured, identifier, ..Args |
+    Selector?(identifierSelector(identifier, static countValues(..Args)))
     and SelectorCallableWith?(
         T,
-        identifierSelector(identifier, static countValues(...Args)),
-        ...Args
+        identifierSelector(identifier, static countValues(..Args)),
+        ..Args
     )
 ]
-overload call(method: MethodRef[T, Captured, identifier], forward ...args: Args) {
-    var selector = identifierSelector(identifier, static countValues(...Args));
-    return forward ...msgSend(
+overload call(method: MethodRef[T, Captured, identifier], forward ..args: Args) {
+    var selector = identifierSelector(identifier, static countValues(..Args));
+    return forward ..msgSend(
         T,
         msgSender(T, selector),
         objectHandle(forwardValue(method.self)),
         selector, 
-        ...args
+        ..args
     );
 }
 
@@ -1121,13 +1121,13 @@ overload MethodDelegate(self: T, static selector) {
 }
 
 [T, selector]
-overload call(delegate: MethodDelegate[T, selector], forward ...args)
-    = forward ...msgSend(
+overload call(delegate: MethodDelegate[T, selector], forward ..args)
+    = forward ..msgSend(
         T,
         SelectorImpType(T, selector)(delegate.imp),
         delegate.self,
         selector,
-        ...args
+        ..args
     );
 
 
@@ -1174,33 +1174,33 @@ overload SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
 overload fieldRef(sup: SuperRef[T, Captured], static cmd)
     = SuperMethodRef(sup, cmd);
 
-[T, Captured, selector, ...Args | Class?(T) and Selector?(selector)]
-overload callMethod(sup: SuperRef[T, Captured], static selector, forward ...args: Args) {
+[T, Captured, selector, ..Args | Class?(T) and Selector?(selector)]
+overload callMethod(sup: SuperRef[T, Captured], static selector, forward ..args: Args) {
     var super = ObjcSuper(
         objectHandle(forwardValue(sup.__self__)),
         classHandle(SuperclassType(T))
     );
-    return forward ...msgSend(
+    return forward ..msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
         &super,
         selector,
-        ...args
+        ..args
     );
 }
 
-[T, Captured, identifier, ...Args]
-overload call(method: SuperMethodRef[T, Captured, identifier], forward ...args: Args) {
-    var selector = identifierSelector(identifier, static countValues(...Args));
+[T, Captured, identifier, ..Args]
+overload call(method: SuperMethodRef[T, Captured, identifier], forward ..args: Args) {
+    var selector = identifierSelector(identifier, static countValues(..Args));
     var super = ObjcSuper(
         objectHandle(forwardValue(method.__self__)),
         classHandle(SuperclassType(T))
     );
-    return forward ...msgSend(
+    return forward ..msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
         &super,
         selector,
-        ...args
+        ..args
     );
 }

@@ -24,7 +24,7 @@ numberOfOptions(it) = numberOf(it, OptionValue);
 numberOfArguments(it) = numberOf(it, Argument);
 validOptions?(it) = numberOf(it, Error) == 0;
 
-PR(...args) = ParseResult(...mapValues(ParseToken, ...args));
+PR(..args) = ParseResult(..mapValues(ParseToken, ..args));
 
 main() = testMain(
   TestSuite("Raw option parsing", [ TestCase("a single option amongst many", test => { var opts = ["foo", "bar", "baz"]; for(opt in opts){ var pr = parseOptions(fbbSpec(), ["--"+opt]); expectEqual(test, "the options parsed", pr, Vector[ParseToken](ParseToken(OptionValue(opt)))); } }), TestCase("repeated options", test => { var pr1 = parseOptions(fbbSpec(), ["-f", "-b", "-i"]);

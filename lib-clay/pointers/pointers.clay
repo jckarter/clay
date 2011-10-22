@@ -224,22 +224,22 @@ inline overload null?(p:CP) = null?(RawPointer(p));
 // CCodePointer - call
 //
 
-[...In, ...Out]
-inline overload call(ptr:CCodePointer[(...In), (...Out)], ...args:In) =
-    ...callCCodePointer(ptr, ...args);
+[..In, ..Out]
+inline overload call(ptr:CCodePointer[(..In), (..Out)], ..args:In) =
+    ..callCCodePointer(ptr, ..args);
 
-[...In, ...Out, ...A | (countValues(...A) >= countValues(...In))
-                       and (Tuple[...takeValues(static countValues(...In), ...A)] == Tuple[...In])]
-inline overload call(ptr:VarArgsCCodePointer[(...In), (...Out)], ...args:A) =
-    ...callCCodePointer(ptr, ...args);
+[..In, ..Out, ..A | (countValues(..A) >= countValues(..In))
+                       and (Tuple[..takeValues(static countValues(..In), ..A)] == Tuple[..In])]
+inline overload call(ptr:VarArgsCCodePointer[(..In), (..Out)], ..args:A) =
+    ..callCCodePointer(ptr, ..args);
 
-[...In, ...Out]
-inline overload call(ptr:FastCallCodePointer[(...In), (...Out)], ...args:In) =
-    ...callCCodePointer(ptr, ...args);
+[..In, ..Out]
+inline overload call(ptr:FastCallCodePointer[(..In), (..Out)], ..args:In) =
+    ..callCCodePointer(ptr, ..args);
 
-[...In, ...Out]
-inline overload call(ptr:StdCallCodePointer[(...In), (...Out)], ...args:In) =
-    ...callCCodePointer(ptr, ...args);
+[..In, ..Out]
+inline overload call(ptr:StdCallCodePointer[(..In), (..Out)], ..args:In) =
+    ..callCCodePointer(ptr, ..args);
 
 
 
@@ -247,10 +247,10 @@ inline overload call(ptr:StdCallCodePointer[(...In), (...Out)], ...args:In) =
 // construct code pointers from static callables
 //
 
-[...In, ...Out, fn | CallDefined?(fn, ...In)]
-inline overload CodePointer[(...In), (...Out)](static fn) CodePointer[(...In), (...Out)]
-    = makeCodePointer(fn, ...In);
+[..In, ..Out, fn | CallDefined?(fn, ..In)]
+inline overload CodePointer[(..In), (..Out)](static fn) CodePointer[(..In), (..Out)]
+    = makeCodePointer(fn, ..In);
 
-[...In, ...Out, fn | CallDefined?(fn, ...In)]
-inline overload CCodePointer[(...In), (...Out)](static fn) CCodePointer[(...In), (...Out)]
-    = makeCCodePointer(fn, ...In);
+[..In, ..Out, fn | CallDefined?(fn, ..In)]
+inline overload CCodePointer[(..In), (..Out)](static fn) CCodePointer[(..In), (..Out)]
+    = makeCCodePointer(fn, ..In);

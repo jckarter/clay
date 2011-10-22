@@ -149,10 +149,10 @@ record Bar (
 
 alias Foonion = Union[Int, Foo, Bar];
 
-expectEncoding(test, expected, ...Types) {
+expectEncoding(test, expected, ..Types) {
     expectEqual(test,
-        printString("encoding of (", ...Types, ")"),
-        expected, encode(...Types)
+        printString("encoding of (", ..Types, ")"),
+        expected, encode(..Types)
     );
 }
 
@@ -215,17 +215,17 @@ expectMsgSendParamType(test, Type, ParamType) {
     );
 }
 
-expectSelectorCallableWith(test, Class, selector, ...T) {
+expectSelectorCallableWith(test, Class, selector, ..T) {
     expectTrue(test,
-        printString(Class, ".", selector, " callable with (", ...weaveValues(", ", ...T), ")"),
-        SelectorCallableWith?(Class, selector, ...T)
+        printString(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+        SelectorCallableWith?(Class, selector, ..T)
     );
 }
 
-expectSelectorNotCallableWith(test, Class, selector, ...T) {
+expectSelectorNotCallableWith(test, Class, selector, ..T) {
     expectFalse(test,
-        printString(Class, ".", selector, " callable with (", ...weaveValues(", ", ...T), ")"),
-        SelectorCallableWith?(Class, selector, ...T)
+        printString(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+        SelectorCallableWith?(Class, selector, ..T)
     );
 }
 
@@ -550,30 +550,30 @@ main() = testMain(TestSuite("Objective-C binding internals", [
     }),
     TestCase("msgSendUnbox types", test => {
         expectEqualValues(test, "alloc", (),
-            ...Type(...msgSendUnbox(Id, #"alloc"))
+            ..Type(..msgSendUnbox(Id, #"alloc"))
         );
         expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
-            ...Type(...msgSendUnbox(Id, #"stringWithUTF8String:", null(CChar)))
+            ..Type(..msgSendUnbox(Id, #"stringWithUTF8String:", null(CChar)))
         );
         expectEqualValues(test, "stringWithFormat:", Tuple(ObjectHandle),
-            ...Type(...msgSendUnbox(Id, #"stringWithFormat:", nil(Id)))
+            ..Type(..msgSendUnbox(Id, #"stringWithFormat:", nil(Id)))
         );
         expectEqualValues(test, "stringWithFormat: varargs", Tuple(ObjectHandle, Pointer[CChar], Int, Foo, ObjectHandle),
-            ...Type(...msgSendUnbox(Id, #"stringWithFormat:", nil(NSString), null(CChar), 0, Foo(), nil(NSObject)))
+            ..Type(..msgSendUnbox(Id, #"stringWithFormat:", nil(NSString), null(CChar), 0, Foo(), nil(NSObject)))
         );
         expectEqualValues(test, "setEnabled:", Tuple(BOOL),
-            ...Type(...msgSendUnbox(Id, #"setEnabled:", false))
+            ..Type(..msgSendUnbox(Id, #"setEnabled:", false))
         );
     }),
     TestCase("msgSendBox types", test => {
         expectEqualValues(test, "alloc", (),
-            ...Type(...msgSendBox(Id, #"alloc"))
+            ..Type(..msgSendBox(Id, #"alloc"))
         );
         expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
-            ...Type(...msgSendBox(Id, #"stringWithUTF8String:", null(CChar)))
+            ..Type(..msgSendBox(Id, #"stringWithUTF8String:", null(CChar)))
         );
         expectEqualValues(test, "setEnabled:", Tuple(Bool),
-            ...Type(...msgSendBox(Id, #"setEnabled:", NO))
+            ..Type(..msgSendBox(Id, #"setEnabled:", NO))
         );
     }),
     TestCase("object parameter types", test => {

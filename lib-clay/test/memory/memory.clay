@@ -3,9 +3,9 @@ import test.(expect, printFailure);
 alias UNINITIALIZED_CANARY = SizeT(-1);
 alias NOISY_CANARIES = false;
 
-noisyPrintln(forward ...values) {
+noisyPrintln(forward ..values) {
     if (NOISY_CANARIES)
-        println(...values);
+        println(..values);
 }
 
 enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, INVALID }

@@ -50,7 +50,7 @@ compute(y){
             bits = 0i8;
         }
     }
-   if (shift != 0) { //if shift is not 0 ... i.e the size is not an exact multiple of 8
+   if (shift != 0) { //if shift is not 0 .. i.e the size is not an exact multiple of 8
        for( d in range(shift))
            bits *= 2i8; 
        print( Char( bits));

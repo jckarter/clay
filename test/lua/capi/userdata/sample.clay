@@ -77,7 +77,7 @@ Foo_dot(x:Pointer[lua_State]) Int {
 }
 
 var Foo_methods = [
-    ...mapValues(
+    ..mapValues(
         x => luaL_Reg(
             cstring(x.0),
             makeCCodePointer(x.1, Pointer[lua_State])
@@ -110,7 +110,7 @@ Foo_tostring(x:Pointer[lua_State]) Int {
 }
 
 var Foo_meta = [
-    ...mapValues(
+    ..mapValues(
         x => luaL_Reg(
             cstring(x.0),
             makeCCodePointer(x.1, Pointer[lua_State])

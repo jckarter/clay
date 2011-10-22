@@ -9,6 +9,6 @@ bar2() {
 }
 
 main() {
-    var a = Tuple(...bar1());
-    var b = Tuple(...bar2());
+    var a = Tuple(..bar1());
+    var b = Tuple(..bar2());
 }

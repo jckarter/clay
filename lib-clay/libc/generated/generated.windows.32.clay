@@ -89,22 +89,22 @@ external setbuf(
 external __mingw_fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __mingw_vfprintf(
     argument0 : Pointer[FILE],
@@ -129,16 +129,16 @@ external __mingw_vsnprintf(
 external fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vfprintf(
     argument0 : Pointer[FILE],
@@ -157,16 +157,16 @@ external vsprintf(
 external __msvcrt_fprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __msvcrt_printf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __msvcrt_sprintf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external __msvcrt_vfprintf(
     argument0 : Pointer[FILE],
@@ -186,7 +186,7 @@ external _snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external _vsnprintf(
     argument0 : Pointer[CChar],
@@ -202,7 +202,7 @@ external snprintf(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external vsnprintf(
     argument0 : Pointer[CChar],
@@ -227,16 +227,16 @@ external vsscanf(
 external fscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external scanf(
     argument0 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external sscanf(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ...) Int;
+    ..) Int;
 
 external fgetc(
     argument0 : Pointer[FILE]) Int;
@@ -418,17 +418,17 @@ external fseeko64(
 external fwprintf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external wprintf(
     argument0 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external _snwprintf(
     argument0 : Pointer[UShort],
     argument1 : UInt,
     argument2 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external vfwprintf(
     argument0 : Pointer[FILE],
@@ -452,16 +452,16 @@ external _vscwprintf(
 external fwscanf(
     argument0 : Pointer[FILE],
     argument1 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external wscanf(
     argument0 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external swscanf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external fgetwc(
     argument0 : Pointer[FILE]) UShort;
@@ -477,7 +477,7 @@ external ungetwc(
 external swprintf(
     argument0 : Pointer[UShort],
     argument1 : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external vswprintf(
     argument0 : Pointer[UShort],
@@ -554,7 +554,7 @@ external snwprintf(
     s : Pointer[UShort],
     n : UInt,
     format : Pointer[UShort],
-    ...) Int;
+    ..) Int;
 
 external vsnwprintf(
     s : Pointer[UShort],
@@ -2304,7 +2304,7 @@ external _lseek(
 external _open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external _open_osfhandle(
     argument0 : Int,
@@ -2328,7 +2328,7 @@ external _sopen(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Int,
-    ...) Int;
+    ..) Int;
 
 external _tell(
     argument0 : Int) CLong;
@@ -2367,13 +2367,13 @@ external _wunlink(
 external _wopen(
     argument0 : Pointer[UShort],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external _wsopen(
     argument0 : Pointer[UShort],
     argument1 : Int,
     argument2 : Int,
-    ...) Int;
+    ..) Int;
 
 external _wmktemp(
     argument0 : Pointer[UShort]) Pointer[UShort];
@@ -2425,7 +2425,7 @@ external lseek(
 external open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ...) Int;
+    ..) Int;
 
 external read(
     argument0 : Int,
@@ -2440,7 +2440,7 @@ external sopen(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Int,
-    ...) Int;
+    ..) Int;
 
 external tell(
     argument0 : Int) CLong;

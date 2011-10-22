@@ -18302,7 +18302,7 @@ external AEBuildDesc(
     dst : Pointer[AEDesc],
     error : Pointer[AEBuildError],
     src : Pointer[CChar],
-    ...) CLong;
+    ..) CLong;
 
 external vAEBuildDesc(
     dst : Pointer[AEDesc],
@@ -18314,7 +18314,7 @@ external AEBuildParameters(
     event : Pointer[AppleEvent],
     error : Pointer[AEBuildError],
     format : Pointer[CChar],
-    ...) CLong;
+    ..) CLong;
 
 external vAEBuildParameters(
     event : Pointer[AppleEvent],
@@ -18333,7 +18333,7 @@ external AEBuildAppleEvent(
     result : Pointer[AppleEvent],
     error : Pointer[AEBuildError],
     paramsFmt : Pointer[CChar],
-    ...) CLong;
+    ..) CLong;
 
 external vAEBuildAppleEvent(
     theClass : CULong,
@@ -23315,7 +23315,7 @@ external MDItemCopyAttributes(
 
 external MDItemCopyAttributeList(
     item : MDItemRef,
-    ...) CFDictionaryRef;
+    ..) CFDictionaryRef;
 
 external MDItemCopyAttributeNames(
     item : MDItemRef) CFArrayRef;
@@ -23610,7 +23610,7 @@ external kMDItemURL : CFStringRef;
 
 external __MDItemCopyAttributesEllipsis1(
     item : MDItemRef,
-    ...) CFDictionaryRef;
+    ..) CFDictionaryRef;
 
 alias MDQueryRef = OpaquePointer;
 
