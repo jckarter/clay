@@ -15,8 +15,32 @@ Planned changes:
         static foo => #foo
         static #foo => #"foo"
         #foo => #"foo"
-* Two-dot ellipsis '..' is interchangeable with three-dot ellipsis '...'.
-* The 'procedure' keyword has been changed to 'symbol'.
+* Return type syntax has been changed.
+    // 0.0
+    foo(x:Int, y:Int) Int = x + y; // anonymous returns
+    foo(x:Int, y:Int) z:Int        // named returns
+    {
+        z <-- x + y;
+    }
+
+    // 0.1
+    foo(x:Int, y:Int) : Int = x + y; // anonymous returns
+    foo(x:Int, y:Int) --> z:Int      // named returns
+    {
+        z <-- x + y;
+    }
+* A top-level 'module' declaration may be included in source files, immediately
+  after any 'import' definitions.
+    import foo.*;
+    import bar.*;
+
+    module bas;
+
+  It is currently ignored, but will be used in the future to provide module-specific
+  build flags and module-level parameters.
+
+* Two-dot ellipsis '..' can now be used interchangeably with three-dot ellipsis '...'.
+* The 'procedure' keyword has been changed to 'define'.
 * The 'new' keyword has been removed. 'sharedpointers.allocateShared'
   and 'uniquepointers.allocateUnique' have been both renamed to 'new' in their
   respective modules:
@@ -47,10 +71,10 @@ Planned changes:
 * The mapping of types to LLVM representation is exposed. A type is a symbol for which
   llvmRepresentation(#T) is overloaded. llvmRepresentation(#T) should return an
   identifier containing the LLVM IR description of the type. For example:
-    symbol Int;
+    define Int;
     overload llvmRepresentation(#Int) = #"i32";
 
-    symbol Vec[T,n];
+    define Vec[T,n];
     [T,n | Type?(T)] overload llvmRepresentation(#Vec[T,n])
         = cat(
             #"<",
