@@ -59,7 +59,7 @@ private var keywords = [
     "public", "private", "import", "as",
     "record", "variant", "instance",
     "procedure", "overload", "external", "alias",
-    "static", "callbyname", "lvalue", "rvalue",
+    "static", "rvalue",
     "inline", "enum", "var", "ref", "forward",
     "and", "or", "not", "new",
     "if", "else", "goto", "return", "while",
@@ -109,7 +109,7 @@ overload next(x:LexerInput) {
     return c;
 }
 
-overload assign(dest:LexerInput, lvalue src:LexerInput) {
+overload assign(dest:LexerInput, ref src:LexerInput) {
     if (dest.file == src.file) {
         var destMax = max(dest.maxCurrent, dest.current);
         var srcMax = max(src.maxCurrent, src.current);

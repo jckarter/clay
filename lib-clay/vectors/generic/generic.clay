@@ -239,7 +239,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
 }
 
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, lvalue x:T) {
+overload insert(a:V, i:I, ref x:T) {
     // NOTE: when 'x' is an lvalue, it _may_ be pointing inside 'a'.
     // so make a copy and insert it as an rvalue.
     insert(a, i, copy(x));

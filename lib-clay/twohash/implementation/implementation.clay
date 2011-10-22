@@ -84,7 +84,7 @@ overload TwoHash[E]()
 overload TwoHash[E](x:TwoHash[E]) = TwoHash[E](x.tables, x.size);
 
 [E]
-overload assign(to:TwoHash[E], lvalue from:TwoHash[E]) {
+overload assign(to:TwoHash[E], ref from:TwoHash[E]) {
     var tmp = from;
     destroy(to);
     to <-- move(tmp);

@@ -95,7 +95,7 @@ overload convertParser(static TokenInput, parsers:Tuple[...T]) =
     sequence(TokenInput, ...convertParsers(TokenInput, ...unpackRef(parsers)));
 
 [TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
-overload convertParser(static TokenInput, lvalue parser:Parser) =
+overload convertParser(static TokenInput, ref parser:Parser) =
     parser;
 
 [TokenInput, Parser | SimpleParser?(TokenInput, Parser)]

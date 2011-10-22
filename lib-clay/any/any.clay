@@ -76,14 +76,14 @@ overload destroy(x:Any) {
     }
 }
 
-overload assign(dest:Any, lvalue src:Any) {
+overload assign(dest:Any, ref src:Any) {
     if (&dest == &src)
         return;
     dest = Any(src);
 }
 
 [T]
-callbyname box(x:T) {
+alias box(x:T) {
     var ptr = allocateRawMemoryAligned(Byte, TypeSize(T), TypeAlignment(T));
     try {
         Pointer[T](ptr)^ <-- x;

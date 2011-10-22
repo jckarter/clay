@@ -56,7 +56,7 @@ inline unpack(x) = ...unpackRef(x);
 //
 
 [...T]
-callbyname overload Tuple(...args:T) = Tuple[...T](...args);
+alias overload Tuple(...args:T) = Tuple[...T](...args);
 
 
 
@@ -65,7 +65,7 @@ callbyname overload Tuple(...args:T) = Tuple[...T](...args);
 //
 
 [...T]
-callbyname overload Tuple[...T](...args:T) returned:Tuple[...T] {
+alias overload Tuple[...T](...args:T) returned:Tuple[...T] {
     ...unpackTupleRef(returned) <-- ...args;
 }
 
@@ -138,7 +138,7 @@ inline overload destroy(a:Tuple[...T]) {
 //
 
 [...T | not allValues?(BitwiseAssignedType?, ...T)]
-inline overload assign(dest:Tuple[...T], lvalue src:Tuple[...T]) {
+inline overload assign(dest:Tuple[...T], ref src:Tuple[...T]) {
     alias n = TupleElementCount(Tuple[...T]);
     static for (i in ...staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
@@ -189,7 +189,7 @@ inline overload lesser?(a:Tuple[...T], b:Tuple[...T]) {
 procedure tupleLiteral;
 
 // by default create a tuple
-callbyname overload tupleLiteral(...args) = Tuple(...args);
+alias overload tupleLiteral(...args) = Tuple(...args);
 
 // in the case of single argument, return the argument itself.
 overload tupleLiteral(forward x) = forward x;

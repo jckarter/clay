@@ -52,7 +52,7 @@ throwButPropagate(ex, ...T) {
         return forward ...mapValues(typeToLValue, ...T);
 }
 
-callbyname throwButPropagateLike(ex, ...expr) {
+alias throwButPropagateLike(ex, ...expr) {
     if (true)
         throw ex;
     else

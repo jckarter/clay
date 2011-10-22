@@ -32,7 +32,7 @@ overload next(x:ParserInput) {
     return ref token;
 }
 
-overload assign(dest:ParserInput, lvalue src:ParserInput) {
+overload assign(dest:ParserInput, ref src:ParserInput) {
     if (dest.tokens == src.tokens) {
         var destMax = max(dest.maxCurrent, dest.current);
         var srcMax = max(src.maxCurrent, src.current);
@@ -159,8 +159,6 @@ private var kw_overload = keyword("overload");
 private var kw_external = keyword("external");
 private var kw_alias = keyword("alias");
 private var kw_static = keyword("static");
-private var kw_callbyname = keyword("callbyname");
-private var kw_lvalue = keyword("lvalue");
 private var kw_rvalue = keyword("rvalue");
 private var kw_inline = keyword("inline");
 private var kw_enum = keyword("enum");
@@ -962,7 +960,7 @@ private var instanceDef = topLevelItemParser(
 
 private var optCallByName = modify(
     x => not nothing?(x),
-    optional(kw_callbyname),
+    optional(kw_alias),
 );
 
 private var optInline = modify(

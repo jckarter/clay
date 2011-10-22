@@ -1,7 +1,7 @@
-tellRvalue(lvalue x) = 0;
+tellRvalue(ref x) = 0;
 overload tellRvalue(rvalue x) = 1;
 
-tellRvalueString(lvalue x) = "lvalue";
+tellRvalueString(ref x) = "ref";
 overload tellRvalueString(rvalue x) = "rvalue";
 
 record AnException ();

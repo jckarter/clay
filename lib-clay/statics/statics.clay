@@ -49,7 +49,7 @@ inline overload lesser?(a:Static[A], b:Static[A]) = false;
 // wrapStatic, unwrapStatic
 //
 
-callbyname wrapStatic(x) {
+alias wrapStatic(x) {
     return Static[x]();
 }
 

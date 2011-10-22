@@ -10,5 +10,5 @@ record Finally[F] (destructor: F);
 [F] overload Finally[F]();
 [F] overload destroy(f: Finally[F]) { f.destructor(); }
 
-callbyname destroyedBy(value, destructor) = DestroyedBy(value, destructor);
-callbyname finally(destructor) = Finally(destructor);
+alias destroyedBy(value, destructor) = DestroyedBy(value, destructor);
+alias finally(destructor) = Finally(destructor);

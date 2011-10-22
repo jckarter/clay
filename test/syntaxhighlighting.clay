@@ -104,7 +104,7 @@ record TypesTest (
 variant VariantTest = TypesTest | Int;
 instance InstanceTest = VariantTest;
 
-keywordsTest(x, lvalue y, rvalue z, forward w, static v) {
+keywordsTest(x, ref y, rvalue z, forward w, static v) {
     if (x) {} else {}
 
     switch (x) {
@@ -142,7 +142,7 @@ labelTest:
 }
 
 [X, Y, ...Z | PatternGuard?()]
-callbyname callbynameTest(x:X, y:Y, ...z:Z);
+alias aliasTest(x:X, y:Y, ...z:Z);
 
 external externalTest1(x:Int, y:Char) Float;
 external (stdcall) externalTest2(x:Int, y:Char);

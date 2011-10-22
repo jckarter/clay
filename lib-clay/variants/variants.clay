@@ -32,7 +32,7 @@ VariantMembers(V) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-callbyname overload V(x:T) returned:V {
+alias overload V(x:T) returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
@@ -111,7 +111,7 @@ inline overload resetUnsafe(x:V) {
 //
 
 [V | Variant?(V) and not BitwiseAssignedType?(V)]
-overload assign(dest:V, lvalue src:V) {
+overload assign(dest:V, ref src:V) {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
     var tag = destRepr.tag;
@@ -208,7 +208,7 @@ inline variantIs?(x:V, static T) {
 procedure variantAs;
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-inline overload variantAs(lvalue x:V, static T) {
+inline overload variantAs(ref x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");

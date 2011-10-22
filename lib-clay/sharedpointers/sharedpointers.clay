@@ -24,7 +24,7 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 //
 
 [T]
-callbyname allocateShared(x:T) {
+alias allocateShared(x:T) {
     var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
     ptr^.refCount = 1;
     try {
@@ -64,7 +64,7 @@ inline overload resetUnsafe(p : SharedPointer[T]) {
 }
 
 [T]
-inline overload assign(dest:SharedPointer[T], lvalue src:SharedPointer[T]) {
+inline overload assign(dest:SharedPointer[T], ref src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     dest = SharedPointer[T](src);

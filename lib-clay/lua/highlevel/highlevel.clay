@@ -515,7 +515,7 @@ optNumber(x:State, index:Int, _default:T) {
     );
 }
 
-// optString - the default string has to be a lvalue string.
+// optString - the default string has to be a ref string.
 // only rvalue string allowed is StringConstant
 
 optString(x:State, index:Int, rvalue _default:StringConstant) {
@@ -523,7 +523,7 @@ optString(x:State, index:Int, rvalue _default:StringConstant) {
 }
 
 [S | CCompatibleString?(S)]
-overload optString(x:State, index:Int, lvalue _default:S) {
+overload optString(x:State, index:Int, ref _default:S) {
     var size = SizeT();
     var ptr = safeCall(x,
         x -> luaL_optlstring(x.handle, index, cstring(_default), &size)

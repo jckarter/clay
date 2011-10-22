@@ -67,7 +67,7 @@ inline nestedVariantIs?(x:V, static T) {
 //
 
 [V, T | Variant?(V)]
-inline nestedVariantAs(lvalue x:V, static T) {
+inline nestedVariantAs(ref x:V, static T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return ref ptr^;

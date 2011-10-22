@@ -68,7 +68,7 @@ instance Exception = ValueMissing;
 procedure require;
 
 [T]
-inline overload require(lvalue m:Maybe[T], fn) {
+inline overload require(ref m:Maybe[T], fn) {
     alias Ts = ReturnType(...fn(typeToLValue(T)));
     return forward ...maybe(m, fn, () => forward ...missing(...Ts));
 }

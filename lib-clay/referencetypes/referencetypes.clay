@@ -115,7 +115,7 @@ overload T() returned:T {
 //
 
 [T, ...A | ReferenceType?(T) and (Tuple[...A] == Tuple[...ReferenceTypeFieldTypes(T)])]
-callbyname overload T(...args:A) returned:T {
+alias overload T(...args:A) returned:T {
     referencePtr(returned) <-- new Tuple(...args);
 }
 
@@ -174,7 +174,7 @@ overload destroy(x:T) {
 }
 
 [T | ReferenceType?(T)]
-overload assign(dest:T, lvalue src:T) {
+overload assign(dest:T, ref src:T) {
     assign(referencePtr(dest), referencePtr(src));
 }
 

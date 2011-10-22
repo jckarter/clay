@@ -135,7 +135,7 @@ expectFalse(test: TestStatus, name, value) {
     });
 }
 
-callbyname expectType(test: TestStatus, name, ExpectedType, result) {
+alias expectType(test: TestStatus, name, ExpectedType, result) {
     expectType2(test, name, ExpectedType, Type(result));
 }
 

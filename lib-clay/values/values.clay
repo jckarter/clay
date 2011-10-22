@@ -127,7 +127,7 @@ private record CapturedLValue[T] (
 
 procedure captureValue;
 inline overload captureValue(rvalue x) = move(x);
-inline overload captureValue(lvalue x) = CapturedLValue(&x);
+inline overload captureValue(ref x) = CapturedLValue(&x);
 
 procedure forwardValue;
 inline overload forwardValue(x) = move(x);

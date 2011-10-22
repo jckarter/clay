@@ -103,7 +103,7 @@ overload destroy(x:Displayable) {
     }
 }
 
-overload assign(dest:Displayable, lvalue src:Displayable) {
+overload assign(dest:Displayable, ref src:Displayable) {
     dest = copy(src);
 }
 

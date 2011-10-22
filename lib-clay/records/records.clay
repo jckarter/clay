@@ -64,7 +64,7 @@ overload RegularRecord?(static T) = true;
 //
 
 [T, ...A | Record?(T) and (Tuple[...RecordFieldTypes(T)] == Tuple[...A])]
-callbyname overload T(...args:A) returned:T {
+alias overload T(...args:A) returned:T {
     ...recordFields(returned) <-- ...args;
 }
 
@@ -137,7 +137,7 @@ overload destroy(a:T) {
 //
 
 [T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
-overload assign(dest:T, lvalue src:T) {
+overload assign(dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
     static for (i in ...staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));

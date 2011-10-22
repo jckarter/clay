@@ -217,7 +217,7 @@ overload O1(obj: Retained[O2]) = O1(obj.__handle__);
 
 // copying managed to managed
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](lvalue obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
+overload Retained[O1](ref obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload Retained[O1](rvalue obj: Retained[O2]) r: Retained[O1] {
     r.__handle__ <-- obj.__handle__;
@@ -247,7 +247,7 @@ overload assign(left: O1, right: Retained[O2]) {
 
 // assigning managed to managed
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: Retained[O1], lvalue right: Retained[O2]) {
+overload assign(left: Retained[O1], ref right: Retained[O2]) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);

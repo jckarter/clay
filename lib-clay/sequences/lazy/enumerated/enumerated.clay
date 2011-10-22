@@ -2,14 +2,14 @@
 procedure enumerated;
 procedure enumeratedAs;
 
-overload enumerated(lvalue a) = zipped(range(size(a)), a);
+overload enumerated(ref a) = zipped(range(size(a)), a);
 
 overload enumerated(rvalue a) {
     var n = size(a);
     return zipped(range(n), move(a));
 }
 
-overload enumeratedAs(T, lvalue a) = zipped(range(T(size(a))), a);
+overload enumeratedAs(T, ref a) = zipped(range(T(size(a))), a);
 
 overload enumeratedAs(T, rvalue a) {
     var n = T(size(a));

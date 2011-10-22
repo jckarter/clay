@@ -9,7 +9,7 @@ import memory.platform.(SystemMallocAlignment);
 //
 
 [T]
-callbyname allocateObject(x:T) {
+alias allocateObject(x:T) {
     var ptr = allocateRawMemory(T, 1);
     try {
         ptr^ <-- x;

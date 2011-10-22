@@ -1,14 +1,14 @@
 0.0 -> 0.1
 ----------
 Changes made:
-<none yet>
+* Keywords that do similar things have been combined:
+    'callbyname' is now 'alias'
+    'lvalue' is now 'ref'
 
 Planned changes:
 * A "clayfix" program is provided to update code written for Clay 0.0 to
   compile in 0.1.
 * Keywords that do similar things have been combined:
-    'callbyname' is now 'alias'
-    'lvalue' is now 'ref'
     The 'static' keyword is now the '#' operator. Identifiers now lower to
     StringConstants, and must always be quoted:
         static 9 => #9

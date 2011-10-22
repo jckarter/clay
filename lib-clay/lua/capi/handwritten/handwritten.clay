@@ -158,7 +158,7 @@ alias LUA_ERRFILE = LUA_ERRERR + 1;
 ** some useful macros
 */
 
-callbyname luaL_argcheck(l:Pointer[lua_State], cond, numarg:Int, extramsg:Pointer[CChar]) {
+alias luaL_argcheck(l:Pointer[lua_State], cond, numarg:Int, extramsg:Pointer[CChar]) {
     if (not cond)
         luaL_argerror(l, numarg, extramsg);
 }

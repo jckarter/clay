@@ -10,10 +10,10 @@ import sequences.handle.*;
 procedure wrapSequence;
 
 inline overload wrapSequence(rvalue x) = move(x);
-inline overload wrapSequence(lvalue x) = sequenceHandle(x);
+inline overload wrapSequence(ref x) = sequenceHandle(x);
 
 [A | LightweightSequence?(A)]
-inline overload wrapSequence(lvalue x:A) = x;
+inline overload wrapSequence(ref x:A) = x;
 
 
 
@@ -32,7 +32,7 @@ inline unpackSequences(x:Tuple[...T]) = ref ...unpackTupleRef(x);
 // CapturedElementsType
 //
 
-callbyname CapturedElementsType(packedSeq) =
+alias CapturedElementsType(packedSeq) =
     Type(captureValues(...dummyElements(...unpackTupleRef(packedSeq))));
 
 

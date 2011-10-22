@@ -57,7 +57,7 @@ private var interfaceVtbl[I, T] = makeInterfaceVtbl(I, T);
 BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 
 [I, T | InterfaceType?(I)]
-callbyname allocateBox(static I, this: T) Pointer[I] {
+alias allocateBox(static I, this: T) Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
     ptr^.vtbl = &interfaceVtbl[I, T];
 

@@ -51,7 +51,7 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 //
 
 [T,n,...A | (countValues(...A) == n) and equalValues?(T, ...A)]
-callbyname overload Array[T,n](...args:A) returned:Array[T,n] {
+alias overload Array[T,n](...args:A) returned:Array[T,n] {
     ...arrayElements(returned) <-- ...args;
 }
 
@@ -171,14 +171,14 @@ overload Array[T,n](rvalue s:S) returned:Array[T,n] {
 }
 
 [S | StaticSizedSequence?(S)]
-callbyname overload Array(s:S) {
+alias overload Array(s:S) {
     alias T = SequenceElementType(S);
     alias n = static Int(StaticSize(S));
     return Array[T,n](s);
 }
 
 [S | StaticSizedSequence?(S) and MultiValuedSequence?(S)]
-callbyname overload Array(s:S) = Array(mapped(Tuple, s));
+alias overload Array(s:S) = Array(mapped(Tuple, s));
 
 
 
@@ -237,7 +237,7 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
 //
 
 [...A | (countValues(...A) > 0) and equalValues?(...A)]
-callbyname arrayLiteral(...args:A) {
+alias arrayLiteral(...args:A) {
     alias n = static countValues(...A);
     alias T = firstValue(...A);
     return Array[T, n](...args);

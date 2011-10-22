@@ -29,7 +29,7 @@ overload ASTNode?(x) = false;
 [T, ...A | ASTNode?(T)
            and (Tuple[...ReferenceTypeFieldTypes(T)] ==
                 Tuple[TokenRange, SizeT, ...A])]
-callbyname overload T(...args:A) {
+alias overload T(...args:A) {
     alias tokens = TokenRange(SizeT(0), SizeT(0));
     return T(tokens, SizeT(0), ...args);
 }

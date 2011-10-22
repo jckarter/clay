@@ -36,7 +36,7 @@ alias Opaque = Byte;
 //
 
 [...T]
-callbyname Type(...x:T) = ...T;
+alias Type(...x:T) = ...T;
 
 
 
@@ -66,12 +66,12 @@ record ByRef[T] ();
 // ReturnType
 //
 
-callbyname ReturnType(...x) = ...Type(...returnValues(...x));
+alias ReturnType(...x) = ...Type(...returnValues(...x));
 
 
 private procedure returnValues;
 
-[T] inline overload returnValues(lvalue first:T, forward ...rest) =
+[T] inline overload returnValues(ref first:T, forward ...rest) =
     typeToLValue(ByRef[T]), ...returnValues(...rest);
 
 [T] inline overload returnValues(rvalue first:T, forward ...rest) =
@@ -136,5 +136,5 @@ alias SSIZET_MAX = PTRINT_MAX;
 // valueSize()
 //
 
-[T] callbyname valueSize(x:T) = TypeSize(T);
+[T] alias valueSize(x:T) = TypeSize(T);
 

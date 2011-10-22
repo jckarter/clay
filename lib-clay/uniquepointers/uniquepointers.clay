@@ -13,7 +13,7 @@ overload RegularRecord?(static UniquePointer[T]) = false;
 // allocateUnique
 //
 [T]
-callbyname allocateUnique(x:T) {
+alias allocateUnique(x:T) {
     var ptr = allocateRawMemory(T, SizeT(1));
     try {
         ptr^ <-- x;
@@ -44,9 +44,9 @@ inline overload resetUnsafe(p: UniquePointer[T]) {
     p.ptr = null(T);
 }
 
-// no assign from lvalue
+// no assign from ref
 [T]
-inline overload assign(dest: UniquePointer[T], lvalue src: UniquePointer[T]);
+inline overload assign(dest: UniquePointer[T], ref src: UniquePointer[T]);
 
 [T]
 inline overload destroy(p: UniquePointer[T]) {
@@ -87,7 +87,7 @@ inline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
 record UniqueValue[T] (ptr: UniquePointer[T]);
 
 [T]
-callbyname overload UniqueValue(x:T) = UniqueValue[T](allocateUnique(x));
+alias overload UniqueValue(x:T) = UniqueValue[T](allocateUnique(x));
 
 [T]
 inline overload UniqueValue[T](x:UniqueValue[T]) =
@@ -97,7 +97,7 @@ inline overload UniqueValue[T](x:UniqueValue[T]) =
         UniqueValue(x^);
 
 [T]
-overload assign(to:UniqueValue[T], lvalue from:UniqueValue[T]) {
+overload assign(to:UniqueValue[T], ref from:UniqueValue[T]) {
     if (null?(from)) {
         destroy(to.ptr);
         resetUnsafe(to.ptr);

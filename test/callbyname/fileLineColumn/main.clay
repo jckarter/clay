@@ -1,5 +1,5 @@
 
-callbyname sayMyLocation() {
+alias sayMyLocation() {
     println("(", __LINE__, ",", __COLUMN__, ")");
 }
 

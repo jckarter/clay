@@ -40,12 +40,12 @@ overload error(...e) {
 // assert
 //
 
-callbyname assert(cond:Bool, ...message) {
+alias assert(cond:Bool, ...message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed: ", ...message);
 }
 
-callbyname overload assert(cond:Bool) {
+alias overload assert(cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed");
 }

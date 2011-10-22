@@ -39,7 +39,7 @@ inline overload sliced(forward a:A, first:C, last:C) {
 }
 
 [A, C | C == SequenceCoordinateType(A)]
-inline overload sliced(lvalue a:Sliced[A], first:C, last:C) {
+inline overload sliced(ref a:Sliced[A], first:C, last:C) {
     alias T = Type(wrapSequence(a.seq));
     return Sliced[T](wrapSequence(a.seq), first, last);
 }

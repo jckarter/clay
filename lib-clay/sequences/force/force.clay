@@ -38,4 +38,4 @@ overload ForcedContainerConstructor(static T) = Vector;
 //
 
 [A | Sequence?(A)]
-callbyname force(a:A) = ForcedContainerConstructor(A)(a);
+alias force(a:A) = ForcedContainerConstructor(A)(a);

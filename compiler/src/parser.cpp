@@ -1632,7 +1632,7 @@ static bool optArgTempness(ValueTempness &tempness) {
         return true;
     }
     restore(p);
-    if (keyword("lvalue")) {
+    if (keyword("ref")) {
         tempness = TEMPNESS_LVALUE;
         return true;
     }
@@ -2186,7 +2186,7 @@ static bool optInline(bool &isInline) {
 
 static bool optCallByName(bool &callByName) {
     int p = save();
-    if (!keyword("callbyname")) {
+    if (!keyword("alias")) {
         restore(p);
         callByName = false;
         return true;

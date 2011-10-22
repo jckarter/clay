@@ -62,7 +62,7 @@ overload Vector(a:A) {
 //
 
 [T, ...A | (countValues(...A) > 0) and equalValues?(T, ...A)]
-callbyname overload Vector[T](...args:A) {
+alias overload Vector[T](...args:A) {
     var v = Vector[T]();
     reserve(v, countValues(...A));
     pushAll(v, ...args);
@@ -88,7 +88,7 @@ overload resetUnsafe(a:Vector[T]) {
 
 
 [T]
-overload assign(dest:Vector[T], lvalue src:Vector[T]) {
+overload assign(dest:Vector[T], ref src:Vector[T]) {
     resize(dest, size(src));
     for (x, y in zipped(dest, src))
         assign(x, y);

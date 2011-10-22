@@ -345,7 +345,7 @@ variant StaticValue = BoolValue
 
 record LocalVariable = referenceType(
     type: Type,
-    lvalue?: Bool,
+    ref?: Bool,
 );
 
 record LocalAlias = referenceType(
@@ -436,7 +436,7 @@ private semanticError(...fields) = recordWithPredicate(
            and SemanticError?(T)
            and (Tuple[...RecordFieldTypes(T)] ==
                 Tuple[Maybe[Module], ...A])]
-callbyname overload T(...args:A) =
+alias overload T(...args:A) =
     T(currentModule(), ...args);
 
 variant SemanticError;

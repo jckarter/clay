@@ -1,7 +1,7 @@
 
 procedure RValue?;
-callbyname overload RValue?(rvalue x) = 1;
-callbyname overload RValue?(lvalue x) = 0;
+alias overload RValue?(rvalue x) = 1;
+alias overload RValue?(ref x) = 0;
 
 foo1() {
     println("returning a rvalue");
@@ -11,7 +11,7 @@ foo1() {
 var x = 5;
 
 foo2() {
-    println("returning a lvalue");
+    println("returning a ref");
     return ref x;
 }
 
