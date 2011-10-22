@@ -1,6 +1,9 @@
+import re
 import os
 import glob
 import pickle
+import platform
+import signal
 import sys
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
@@ -13,6 +16,7 @@ import time
 #
 
 testRoot = os.path.dirname(os.path.abspath(__file__))
+runTestRoot = testRoot
 
 
 
@@ -30,14 +34,26 @@ def getClayPlatform():
     if sys.platform.startswith("linux"):
         return "linux"
 
+def getClayBits():
+    if platform.architecture()[0] == "64bit":
+        return "64"
+    if platform.architecture()[0] == "32bit":
+        return "32"
+
 clayPlatform = getClayPlatform()
+clayBits = getClayBits()
 
 def fileForPlatform(folder, name, ext):
+    platformName = os.path.join(folder, "%s.%s.%s.%s" % (name, clayPlatform, clayBits, ext))
+    if os.path.isfile(platformName):
+        return platformName
     platformName = os.path.join(folder, "%s.%s.%s" % (name, clayPlatform, ext))
     if os.path.isfile(platformName):
         return platformName
-    else:
-        return os.path.join(folder, "%s.%s" % (name, ext))
+    platformName = os.path.join(folder, "%s.%s.%s" % (name, clayBits, ext))
+    if os.path.isfile(platformName):
+        return platformName
+    return os.path.join(folder, "%s.%s" % (name, ext))
 
 
 #
@@ -113,19 +129,41 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("*.data")]
 
     def match(self, resultout, resulterr, returncode) :
-        outfile = fileForPlatform(".", "out", "txt")
-        errfile = fileForPlatform(".", "err", "txt")
-        if not os.path.isfile(outfile) :
-            return False
-        refout = open(outfile).read()
-        referr = ""
-        if os.path.isfile(errfile):
-            referr = open(errfile).read()
-        resultout = resultout.replace('\r', '')
-        refout    = refout.replace('\r', '')
-        resulterr = resulterr.replace('\r', '')
-        referr    = referr.replace('\r', '')
-        return resultout == refout and resulterr == referr
+        compilererrfile = fileForPlatform(".", "compilererr", "txt")
+        if os.path.isfile(compilererrfile):
+            if returncode != "compiler error":
+                return "compiler did not fail"
+            errpattern = open(compilererrfile).read()
+            errpattern = errpattern.replace('\r', '').strip()
+
+            if re.search(errpattern, resulterr):
+                return "ok"
+            else:
+                return "unexpected compiler error"
+
+        else:
+            if returncode == "compiler error":
+                return "compiler error"
+            outfile = fileForPlatform(".", "out", "txt")
+            errfile = fileForPlatform(".", "err", "txt")
+            if not os.path.isfile(outfile) :
+                return "out.txt missing"
+            refout = open(outfile).read()
+            referr = ""
+            if os.path.isfile(errfile):
+                referr = open(errfile).read()
+            resultout = resultout.replace('\r', '')
+            refout    = refout.replace('\r', '')
+            resulterr = resulterr.replace('\r', '')
+            referr    = referr.replace('\r', '')
+            if resultout == refout and resulterr == referr:
+                return "ok"
+            elif resultout != refout and resulterr != referr:
+                return "out.txt and err.txt mismatch"
+            elif resultout != refout:
+                return "out.txt mismatch"
+            elif resulterr != referr:
+                return "err.txt mismatch"
 
     def run(self):
         os.chdir(self.path)
@@ -133,9 +171,7 @@ class TestCase(object):
         self.post_build()
         resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        if self.match(resultout, resulterr, returncode):
-            return "ok"
-        return "fail"
+        return self.match(resultout, resulterr, returncode)
 
     def name(self):
         return os.path.relpath(self.path, testRoot)
@@ -143,9 +179,10 @@ class TestCase(object):
     def runtest(self):
         outfilename = "a.exe" if sys.platform == "win32" else "a.out"
         outfilename = os.path.join(".", outfilename)
-        process = Popen(self.cmdline(compiler))
-        if process.wait() != 0 :
-            return "fail", "", None
+        process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
+        compilerout, compilererr = process.communicate()
+        if process.returncode != 0 :
+            return "", compilerout, "compiler error"
         if self.runscript is None:
             commandline = [outfilename]
         else:
@@ -171,8 +208,19 @@ class TestCase(object):
 
 class TestModuleCase(TestCase):
     def match(self, resultout, resulterr, returncode) :
-        return returncode == 0
-        
+        if returncode == 0:
+            return "ok"
+        elif returncode == "compiler error":
+            return "compiler error"
+        else:
+            return "fail"
+
+class TestDisabledCase(TestCase):
+    def runtest(self):
+        return "disabled", "", None
+    def match(self, resultout, resulterr, returncode) :
+        return "disabled"
+
 
 #
 # runtests
@@ -181,40 +229,64 @@ class TestModuleCase(TestCase):
 def findTestCase(folder, base = None):
     testPath = fileForPlatform(folder, "test", "clay")
     mainPath = fileForPlatform(folder, "main", "clay")
-    if os.path.isfile(testPath) :
+    testDisabledPath = fileForPlatform(folder, "test-disabled", "clay")
+    mainDisabledPath = fileForPlatform(folder, "main-disabled", "clay")
+    if os.path.isfile(testPath):
         TestModuleCase(folder, testPath, base)
-    else :
+    elif os.path.isfile(testDisabledPath):
+        TestDisabledCase(folder, testDisabledPath, base)
+    elif os.path.isfile(mainDisabledPath):
+        TestDisabledCase(folder, mainDisabledPath, base)
+    else:
         TestCase(folder, mainPath, base)
 
 def findTestCases():
-    findTestCase(testRoot)
+    findTestCase(runTestRoot)
     return TestCase.allCases
+
+def initWorker():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 def runTest(t):
     return t.run()
 
 def runTests() :
     testcases = findTestCases()
-    pool = Pool(processes = cpu_count())
+    pool = Pool(processes = cpu_count(), initializer=initWorker)
     results = pool.imap(runTest, testcases)
+    succeeded = []
     failed = []
-    for test in testcases:
-        res = results.next()
-        print "TEST %s: %s" % (test.name(), res)
-        if res == "fail":
-            failed.append(test.name())
-    if len(failed) == 0:
-        print "\nPASSED ALL %d TESTS" % len(testcases)
-    else:
-        print "\nFailed tests:" 
-        print "\n".join(failed)
-        print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases)) 
+    disabled = []
+    try:
+        for test in testcases:
+            res = results.next()
+            print "TEST %s: %s" % (test.name(), res)
+            if res == "disabled":
+                disabled.append(test.name())
+            elif res != "ok":
+                failed.append(test.name())
+            else:
+                succeeded.append(test.name())
+    except KeyboardInterrupt:
+        print "\nInterrupted!"
+        pool.terminate()
+
+    print "\nPASSED %d TESTS" % len(succeeded)
+    if len(disabled) != 0:
+        print "(%d tests disabled)" % len(disabled)
+    if len(failed) != 0:
+        print "\nFAILED %d TESTS" % len(failed)
+        print "Failed tests:\n ",
+        print "\n  ".join(failed)
 
 
 def main() :
     global testRoot
+    global runTestRoot
     if len(sys.argv) > 1 :
-        testRoot = os.path.join(testRoot, *sys.argv[1:])
+        runTestRoot = os.path.join(testRoot, *sys.argv[1:])
+    else:
+        runTestRoot = testRoot
     startTime = time.time()
     runTests()
     endTime = time.time()
