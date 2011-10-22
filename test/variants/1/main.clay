@@ -9,7 +9,7 @@ record Circle (
 
 variant Shape = Square | Circle;
 
-procedure show;
+define show;
 overload show(x:Square) { println("Square(", x.side, ")"); }
 overload show(x:Circle) { println("Circle(", x.radius, ")"); }
 

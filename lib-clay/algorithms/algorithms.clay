@@ -80,7 +80,7 @@ count(pred, a:A) {
 // select
 //
 
-private procedure select;
+private define select;
 
 [A | Sequence?(A)]
 overload select(a:A, f) {
@@ -161,7 +161,7 @@ all?(seq, pred) = findIf(seq, x -> not pred(x)) != end(seq);
 // find
 //
 
-procedure find;
+define find;
 
 [A, T | Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
 overload find(a:A, x:T) {
@@ -209,7 +209,7 @@ overload find(begin_:C, end_:C, b:B) {
 // reverseFind
 //
 
-procedure reverseFind;
+define reverseFind;
 
 [A, T | Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
 overload reverseFind(a:A, x:T) {
@@ -294,7 +294,7 @@ split(a:A, sep) {
     return move(result);
 }
 
-private procedure advancePast;
+private define advancePast;
 
 [C, S | Coordinate?(C) and Sequence?(S)
         and (CoordinateTargetType(C) == SequenceElementType(S))]

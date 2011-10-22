@@ -1,5 +1,5 @@
 
-procedure wrap;
+define wrap;
 overload wrap(rvalue first, forward ..rest) = first, ..wrap(..rest);
 overload wrap(ref first, forward ..rest) = &first, ..wrap(..rest);
 overload wrap() = ;

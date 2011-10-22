@@ -1,11 +1,11 @@
 import concurrency.intrinsics.*;
 
-procedure LoadLoad;
-procedure LoadStore;
-procedure StoreLoad;
-procedure StoreStore;
+define LoadLoad;
+define LoadStore;
+define StoreLoad;
+define StoreStore;
 
-procedure compareSwap;
+define compareSwap;
 [I | Integer?(I) and TypeSize(I) == 1]
 inline overload compareSwap(to:I, cmp:I, from:I)
     = llvm_atomic_cmp_swap8(Pointer[Int8](&to), Int8(cmp), Int8(from));
@@ -21,7 +21,7 @@ inline overload compareSwap(to:I, cmp:J, from:J)
 
 inline compareSet(to, cmp, from) = compareSwap(to, cmp, from) == cmp;
 
-procedure atomicSwap;
+define atomicSwap;
 [I | Integer?(I) and TypeSize(I) == 1]
 inline overload atomicSwap(to:I, from:I)
     = llvm_atomic_swap8(Pointer[Int8](&to), Int8(from));

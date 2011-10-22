@@ -1,5 +1,5 @@
 
-procedure RValue?;
+define RValue?;
 alias overload RValue?(rvalue x) = 1;
 alias overload RValue?(ref x) = 0;
 

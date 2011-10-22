@@ -12,24 +12,24 @@ inline eachValue(fn, ..xs) {
     }
 }
 
-procedure mapValues;
+define mapValues;
 inline overload mapValues(fn, forward x, forward ..xs)
     = forward ..fn(x), ..mapValues(fn, ..xs);
 inline overload mapValues(fn) = ;
 
-private procedure _mapIndexedValues;
+private define _mapIndexedValues;
 [n] inline overload _mapIndexedValues(fn, static n, forward x, forward ..xs)
     = forward ..fn(x, n), .._mapIndexedValues(fn, static n+1, ..xs);
 [n] inline overload _mapIndexedValues(fn, static n) = ;
 
 mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, static 0, ..values);
 
-procedure foldValues;
+define foldValues;
 inline overload foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));
 inline overload foldValues(fn, forward x) = forward x;
 
-procedure weaveValues;
+define weaveValues;
 inline overload weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);
 inline overload weaveValues(between, forward x, forward y)
@@ -37,13 +37,13 @@ inline overload weaveValues(between, forward x, forward y)
 inline overload weaveValues(between, forward x) = forward x;
 inline overload weaveValues(between) = ;
 
-procedure takeValues;
+define takeValues;
 [i] inline overload takeValues(static i, forward x, forward ..xs)
     = forward x, ..takeValues(static i-1, ..xs);
 [i | i == 0] inline overload takeValues(static i, forward ..xs) = ;
 [i] inline overload takeValues(static i) = ;
 
-procedure dropValues;
+define dropValues;
 [i] inline overload dropValues(static i, forward x, forward ..xs)
     = forward ..dropValues(static i-1, ..xs);
 [i | i == 0] inline overload dropValues(static i, forward ..xs) = forward ..xs;
@@ -62,7 +62,7 @@ countValues(..args) {
     return n;
 }
 
-procedure countOccurrences;
+define countOccurrences;
 inline overload countOccurrences(value) = 0;
 [value1, value2]
 inline overload countOccurrences(static value1, static value2, forward ..xs)
@@ -71,7 +71,7 @@ inline overload countOccurrences(static value1, static value2, forward ..xs)
 inline overload countOccurrences(static value, static value, forward ..xs)
     = 1 + countOccurrences(value, ..xs);
 
-procedure nthValue;
+define nthValue;
 [i] inline overload nthValue(static i, forward a, forward ..b)
     = nthValue(static i-1, ..b);
 [i | i == 0] inline overload nthValue(static i, forward a, ..b) = a;
@@ -125,15 +125,15 @@ private record CapturedLValue[T] (
     ptr : Pointer[T]
 );
 
-procedure captureValue;
+define captureValue;
 inline overload captureValue(rvalue x) = move(x);
 inline overload captureValue(ref x) = CapturedLValue(&x);
 
-procedure forwardValue;
+define forwardValue;
 inline overload forwardValue(x) = move(x);
 [T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
-procedure capturedRef;
+define capturedRef;
 inline overload capturedRef(x) = ref x;
 [T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 

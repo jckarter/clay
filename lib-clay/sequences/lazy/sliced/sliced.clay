@@ -30,7 +30,7 @@ overload UnderlyingContainerConstructor(static Sliced[A]) =
 // sliced, slicedFrom, slicedUpto
 //
 
-procedure sliced;
+define sliced;
 
 [A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload sliced(forward a:A, first:C, last:C) {
@@ -56,7 +56,7 @@ inline overload sliced(forward a:A, first:I, last:J) {
     return sliced(a, b+first, b+last);
 }
 
-procedure slicedFrom;
+define slicedFrom;
 
 [A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload slicedFrom(forward a:A, first:C) =
@@ -66,7 +66,7 @@ inline overload slicedFrom(forward a:A, first:C) =
 inline overload slicedFrom(forward a:A, first:I) =
     slicedFrom(a, begin(a)+first);
 
-procedure slicedUpto;
+define slicedUpto;
 
 [A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload slicedUpto(forward a:A, last:C) =

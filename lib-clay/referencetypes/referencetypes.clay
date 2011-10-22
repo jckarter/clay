@@ -5,12 +5,12 @@
 //
 
 
-procedure ReferenceType?;
+define ReferenceType?;
 overload ReferenceType?(x) = false;
 
-procedure ReferenceTypeFieldCount;
-procedure ReferenceTypeFieldNames;
-procedure ReferenceTypeFieldTypes;
+define ReferenceTypeFieldCount;
+define ReferenceTypeFieldNames;
+define ReferenceTypeFieldTypes;
 
 
 

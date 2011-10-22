@@ -57,13 +57,13 @@ socketCall(callable, forward ..args) {
 //
 
 // makeSockaddr(addr) --> Sockaddr
-procedure makeSockaddr;
+define makeSockaddr;
 // sockaddrDomain(addr) --> PF_*
-procedure sockaddrDomain;
+define sockaddrDomain;
 // sockaddrStreamProtocol(addr) --> *PROTO_*
-procedure sockaddrStreamProtocol;
+define sockaddrStreamProtocol;
 // sockaddrDgramProtocol(addr) --> *PROTO_*
-procedure sockaddrDgramProtocol;
+define sockaddrDgramProtocol;
 
 SocketAddress?(T)
     = CallDefined?(makeSockaddr, T)
@@ -88,7 +88,7 @@ makeSockaddrParams(addr: T)
 }
 
 // lookupInetHostname(host) --> In_addr
-procedure lookupInetHostname;
+define lookupInetHostname;
 InetHostname?(T) = CallDefined?(lookupInetHostname, T);
 record Inet (host: In_addr, port: UInt16);
 

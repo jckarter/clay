@@ -138,7 +138,7 @@ private addArgument(pr, arg){
 }
 
 
-private procedure addOption;
+private define addOption;
 
 overload addOption(pr, spec){
   addPT(pr, OptionValue(spec, nothing(String)));

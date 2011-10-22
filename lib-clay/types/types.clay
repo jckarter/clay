@@ -69,7 +69,7 @@ record ByRef[T] ();
 alias ReturnType(..x) = ..Type(..returnValues(..x));
 
 
-private procedure returnValues;
+private define returnValues;
 
 [T] inline overload returnValues(ref first:T, forward ..rest) =
     typeToLValue(ByRef[T]), ..returnValues(..rest);
@@ -85,7 +85,7 @@ inline overload returnValues() = ;
 // returnTypeToValue, returnTypesToValues
 //
 
-procedure returnTypeToValue;
+define returnTypeToValue;
 [T] inline overload returnTypeToValue(static T) = typeToRValue(T);
 [T] inline overload returnTypeToValue(static ByRef[T]) = ref typeToLValue(T);
 

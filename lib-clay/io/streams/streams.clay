@@ -7,13 +7,13 @@ import vectors.generic.*;
 //
 
 // read(stream, buf:Pointer[Byte], n:SizeT) SizeT
-procedure read;
+define read;
 
 // write(stream, buf:Pointer[Byte], n:SizeT) Void
-procedure write;
+define write;
 
 // flush(stream) Void
-procedure flush;
+define flush;
 
 
 [T]
@@ -70,7 +70,7 @@ overload read(stream, n:SizeT) {
 record PrematureEOF(expected:SizeT, received:SizeT);
 instance IOError = PrematureEOF;
 
-procedure readN;
+define readN;
 
 [V | ByteVector?(V)]
 overload readN(stream, n:SizeT, buf:V) {
@@ -101,7 +101,7 @@ overload readN(stream, n:SizeT) {
 // readAll
 //
 
-procedure readAll;
+define readAll;
 
 [V | ByteVector?(V)]
 overload readAll(stream, chunkSize:SizeT, buf:V) {
@@ -128,7 +128,7 @@ overload readAll(stream) String {
 // readUpto, readLine
 //
 
-procedure readUpto;
+define readUpto;
 
 [T, V | ByteLike?(T) and ByteVector?(V)]
 overload readUpto(stream, upto:T, buf:V) {
@@ -150,7 +150,7 @@ overload readUpto(stream, upto:T) String {
 }
 
 
-procedure readLine;
+define readLine;
 
 [V | ByteVector?(V)]
 overload readLine(stream, buf:V) {

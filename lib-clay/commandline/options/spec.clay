@@ -35,7 +35,7 @@ alias OptionSpecs = Vector[OptionSpec];
 [T]
 private SpecPart?(static T) = String?(T) or (T == Char) or (T == Flags);
 
-private procedure addSpecPart;
+private define addSpecPart;
 
 [T | String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
   push(spec.names, String(t)); 

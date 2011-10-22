@@ -1,4 +1,4 @@
-procedure myadd;
+define myadd;
 
 [T | Integer?(T)]
 overload myadd(x:T, y:T) returned:T __llvm__{

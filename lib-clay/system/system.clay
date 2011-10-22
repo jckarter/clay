@@ -24,7 +24,7 @@ setArgcArgv(argc_, argv_) {
 
 getArgcArgv() = argc, argv;
 
-procedure callMain;
+define callMain;
 
 [Main]
 overload callMain(static Main) {
@@ -48,6 +48,6 @@ overload callMain(static Main) {
     }
 }
 
-private procedure getExitCode;
+private define getExitCode;
 overload getExitCode() = 0;
 overload getExitCode(x) = Int(x);

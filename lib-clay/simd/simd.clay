@@ -89,7 +89,7 @@ inline overload assign(dest:Vec[T,n], src:Vec[T,n]) {
 [T,n]
 inline unpackVec(a:Vec[T,n]) = ..unpackElements(a, static 0);
 
-private procedure unpackElements;
+private define unpackElements;
 
 [T,n,i]
 inline overload unpackElements(a:Vec[T,n], static i) =

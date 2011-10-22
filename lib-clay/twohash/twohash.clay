@@ -226,7 +226,7 @@ overload remove(a: Hash, key: K)
 // items
 //
 
-procedure itemFromEntry;
+define itemFromEntry;
 
 [Hash | Hashtable?(Hash)]
 overload items(a: Hash) = TwoHashEntries[EntryType(Hash), itemFromEntry](a.data);

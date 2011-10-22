@@ -28,7 +28,7 @@ private var modulesMap = HashMap[String,Module]();
 // lookupModule, installModule
 //
 
-procedure lookupModule;
+define lookupModule;
 
 [S | String?(S)]
 overload lookupModule(name:S) = lookupModule(String(name));

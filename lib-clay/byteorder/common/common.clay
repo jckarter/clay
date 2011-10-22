@@ -4,8 +4,8 @@ import byteorder.platform.*;
 alias BigEndian? = ByteOrder == BigEndian;
 alias LittleEndian? = ByteOrder == LittleEndian;
 
-procedure networkToHost;
-procedure hostToNetwork;
+define networkToHost;
+define hostToNetwork;
 
 [I8 | inValues?(I8, Int8, UInt8)]
 overload networkToHost(n:I8) = n;

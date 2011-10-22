@@ -7,7 +7,7 @@
 private SubVariants(V) =
     ..filterStatics(Variant?, ..VariantMembers(V));
 
-private procedure filterStatics;
+private define filterStatics;
 [F, T] inline overload filterStatics(static F, static T, ..rest) =
     ..filterStatics(F, ..rest);
 [F, T | F(T)] inline overload filterStatics(static F, static T, ..rest) =

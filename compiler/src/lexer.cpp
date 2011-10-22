@@ -120,7 +120,7 @@ static void initKeywords() {
     const char *s[] =
         {"public", "private", "import", "as",
          "record", "variant", "instance",
-         "procedure", "overload", "external", "alias",
+         "define", "overload", "external", "alias",
          "static", "rvalue",
          "inline", "enum", "var", "ref", "forward",
          "and", "or", "not", "new",

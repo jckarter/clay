@@ -87,7 +87,7 @@ inline overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
 // range, reverseRange
 //
 
-procedure range;
+define range;
 
 inline overload range(begin, end) = Range(begin, end);
 
@@ -103,7 +103,7 @@ inline overload range(begin:I, end:I) = Range(begin, end);
 inline overload range(end:I) = Range(I(0), end);
 
 
-procedure reverseRange;
+define reverseRange;
 
 inline overload reverseRange(end, begin) = ReverseRange(end, begin);
 

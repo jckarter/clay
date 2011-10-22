@@ -54,7 +54,7 @@ private BiggerInteger?(static A, static B) =
 private BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
 
 
-private procedure BiggerNumeric?;
+private define BiggerNumeric?;
 
 [A,B | Float?(A) and Integer?(B)]
 overload BiggerNumeric?(static A, static B) = true;
@@ -74,7 +74,7 @@ overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 // toBiggerNumericType
 //
 
-procedure toBiggerNumericType;
+define toBiggerNumericType;
 
 [A | Numeric?(A)]
 inline overload toBiggerNumericType(static A, static A, v) = v;

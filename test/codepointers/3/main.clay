@@ -20,7 +20,7 @@ doCall(f:VarArgsCCodePointer[(..ArgTypes), (..ReturnTypes)], ..args:VarArgTypes)
 // countValues
 //
 
-procedure countValues() = 0;
+define countValues() = 0;
 overload countValues(first, ..rest) = 1 + countValues(..rest);
 
 
@@ -29,7 +29,7 @@ overload countValues(first, ..rest) = 1 + countValues(..rest);
 // takeNValues
 //
 
-procedure takeNValues;
+define takeNValues;
 
 [i]
 overload takeNValues(static i, first, ..rest) =

@@ -7,7 +7,7 @@ import printer.platform.(formatForInt64, formatForUInt64);
 // printTo
 //
 
-procedure printTo;
+define printTo;
 
 overload printTo(stream) {
 }
@@ -206,7 +206,7 @@ overload printTo(stream, x:HashMap[K,V]) {
 // printReprTo
 //
 
-procedure printReprTo;
+define printReprTo;
 
 
 

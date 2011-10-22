@@ -1,7 +1,7 @@
 import libc.(malloc, free);
 
 InterfaceType?(X) = false;
-procedure InterfaceMembers;
+define InterfaceMembers;
 
 private ImplicitInterfaceMembers() = (destroy, (), ());
 

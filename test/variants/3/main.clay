@@ -5,7 +5,7 @@ record Dog ();
 
 variant Animal = Human | Dog;
 
-procedure what;
+define what;
 overload what(x:Human) = "Human";
 overload what(x:Dog) = "Dog";
 

@@ -1,6 +1,6 @@
 
-procedure enumerated;
-procedure enumeratedAs;
+define enumerated;
+define enumeratedAs;
 
 overload enumerated(ref a) = zipped(range(size(a)), a);
 

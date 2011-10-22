@@ -2179,7 +2179,7 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 
 
 //
-// procedure, overload
+// define, overload
 //
 
 static bool optInline(bool &isInline) {
@@ -2252,7 +2252,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     bool callByName;
     if (!optCallByName(callByName)) return false;
     int p = save();
-    if (!keyword("procedure"))
+    if (!keyword("define"))
         restore(p);
     IdentifierPtr z;
     if (!identifier(z)) return false;
@@ -2278,7 +2278,7 @@ static bool procedure(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    if (!keyword("procedure")) return false;
+    if (!keyword("define")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(";")) return false;

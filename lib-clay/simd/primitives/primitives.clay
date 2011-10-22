@@ -18,7 +18,7 @@ vecElementRef(a:Vec[T,n], i:Int) returned:ByRef[T] __llvm__{
 // add
 //
 
-procedure add;
+define add;
 
 [T,n | Integer?(T)]
 overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -44,7 +44,7 @@ overload add(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // subtract
 //
 
-procedure subtract;
+define subtract;
 
 [T,n | Integer?(T)]
 overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -70,7 +70,7 @@ overload subtract(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // multiply
 //
 
-procedure multiply;
+define multiply;
 
 [T,n | Integer?(T)]
 overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -96,7 +96,7 @@ overload multiply(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // divide
 //
 
-procedure divide;
+define divide;
 
 [T,n | SignedInteger?(T)]
 overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -131,7 +131,7 @@ overload divide(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // remainder
 //
 
-procedure remainder;
+define remainder;
 
 [T,n | SignedInteger?(T)]
 overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -166,7 +166,7 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // shiftLeft
 //
 
-procedure shiftLeft;
+define shiftLeft;
 
 [T,n | Integer?(T)]
 overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
@@ -183,7 +183,7 @@ overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{
 // shiftRight
 //
 
-procedure shiftRight;
+define shiftRight;
 
 [T,n | SignedInteger?(T)]
 overload shiftRight(a:Vec[T,n], b:Vec[T,n]) returned:Vec[T,n] __llvm__{

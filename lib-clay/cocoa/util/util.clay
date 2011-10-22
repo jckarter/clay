@@ -383,9 +383,9 @@ overload InitInstanceMethod(selector) = InitInstanceMethod(selector, #"init");
 overload InitInstanceMethod() = InitInstanceMethod(#"init", #"init");
 
 // symbols for CopyInstanceMethod
-procedure CopyRoot;
-procedure CopyInheriting;
-procedure CopyImmutable;
+define CopyRoot;
+define CopyInheriting;
+define CopyImmutable;
 
 [selector | Selector?(selector)]
 CopyInstanceMethod(static selector, static CopyRoot)

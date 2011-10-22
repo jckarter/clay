@@ -7,7 +7,7 @@ import sequences.handle.*;
 // wrapSequence
 //
 
-procedure wrapSequence;
+define wrapSequence;
 
 inline overload wrapSequence(rvalue x) = move(x);
 inline overload wrapSequence(ref x) = sequenceHandle(x);
@@ -58,7 +58,7 @@ inline multiReverseIterators(packedSeq) =
 // multiValueAll?
 //
 
-procedure multiValueAll?;
+define multiValueAll?;
 
 inline overload multiValueAll?(predicate, forward first, forward ..rest) =
     predicate(first) and multiValueAll?(predicate, ..rest);

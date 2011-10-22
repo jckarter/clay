@@ -58,9 +58,9 @@ overload OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
   return move(result);
 }
 
-procedure CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
+define CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, sliceFrom(commandLine(), 1)));
 
-private procedure findEntry;
+private define findEntry;
 
 overload findEntry(ot, name : Char, f){
   return ..findEntry(ot, String(name), f);
@@ -78,7 +78,7 @@ overload findEntry(ot, name : T, f){
   throw NoSuchOption(String(name));
 }
 
-private procedure addToken;
+private define addToken;
 
 overload addToken(ot, e : ParseToken){ addToken(ot, *e); }
 overload addToken(ot, e : Separator){}

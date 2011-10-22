@@ -165,7 +165,7 @@ expectNotEqual(test: TestStatus, name, expected, result) {
     );
 }
 
-procedure expectedResults?;
+define expectedResults?;
 overload expectedResults?(expected, result) = false;
 [T | Tuple?(T)]
 overload expectedResults?(expected: T, result: T) = expected == result;

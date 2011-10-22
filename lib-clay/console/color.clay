@@ -12,7 +12,7 @@ enum Color {
   White
 }
 
-private procedure sgr(code){
+private define sgr(code){
   if(supported?())
     print(Char(27), '[', code, 'm');
 }

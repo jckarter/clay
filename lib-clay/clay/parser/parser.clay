@@ -154,7 +154,7 @@ private var kw_as = keyword("as");
 private var kw_record = keyword("record");
 private var kw_variant = keyword("variant");
 private var kw_instance = keyword("instance");
-private var kw_procedure = keyword("procedure");
+private var kw_define = keyword("define");
 private var kw_overload = keyword("overload");
 private var kw_external = keyword("external");
 private var kw_alias = keyword("alias");
@@ -975,14 +975,14 @@ private var procedureWithBody = topLevelItemParser(
     )),
     sequence(
         patternVarsWithPredicate, optional(visibility), optCallByName,
-        optInline, optional(kw_procedure), identifier,
+        optInline, optional(kw_define), identifier,
         punc(#"("), arguments, punc(#")"), returnSpecs, codeBody,
     ),
 );
 
 private var procedureWithoutBody = topLevelItemParser(
     x => Procedure(x.0, x.2, nothing(Code)),
-    sequence(optional(visibility), kw_procedure, identifier, punc(#";")),
+    sequence(optional(visibility), kw_define, identifier, punc(#";")),
 );
 
 private var overloadDef = topLevelItemParser(

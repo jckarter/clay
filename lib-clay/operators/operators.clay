@@ -4,48 +4,48 @@
 // core operations
 //
 
-procedure destroy;
-procedure moveUnsafe;
-procedure resetUnsafe;
-procedure assign;
-procedure updateAssign;
+define destroy;
+define moveUnsafe;
+define resetUnsafe;
+define assign;
+define updateAssign;
 
-procedure equals?;
-procedure lesser?;
-procedure lesserEquals?;
-procedure greater?;
-procedure greaterEquals?;
+define equals?;
+define lesser?;
+define lesserEquals?;
+define greater?;
+define greaterEquals?;
 
-procedure plus;
-procedure minus;
+define plus;
+define minus;
 
-procedure add;
-procedure subtract;
-procedure multiply;
-procedure divide;
-procedure remainder;
+define add;
+define subtract;
+define multiply;
+define divide;
+define remainder;
 
-procedure inc;
-procedure dec;
+define inc;
+define dec;
 
-procedure shiftLeft;
-procedure shiftRight;
-procedure bitwiseAnd;
-procedure bitwiseOr;
-procedure bitwiseXor;
-procedure bitwiseNot;
+define shiftLeft;
+define shiftRight;
+define bitwiseAnd;
+define bitwiseOr;
+define bitwiseXor;
+define bitwiseNot;
 
-procedure dereference;
-procedure call;
-procedure fieldRef;
-procedure staticIndex;
+define dereference;
+define call;
+define fieldRef;
+define staticIndex;
 
-procedure fieldRefAssign;
-procedure fieldRefUpdateAssign;
-procedure staticIndexAssign;
-procedure staticIndexUpdateAssign;
-procedure indexAssign;
-procedure indexUpdateAssign;
+define fieldRefAssign;
+define fieldRefUpdateAssign;
+define staticIndexAssign;
+define staticIndexUpdateAssign;
+define indexAssign;
+define indexUpdateAssign;
 
 
 
@@ -91,10 +91,10 @@ IteratorTargetType(T) = ..Type(..next(typeToLValue(T)));
 // iteration protocol
 //
 
-procedure iterator; // create iterator
+define iterator; // create iterator
 
-procedure hasNext?; // iterator operation
-procedure next;     // iterator operation
+define hasNext?; // iterator operation
+define next;     // iterator operation
 
 
 
@@ -102,7 +102,7 @@ procedure next;     // iterator operation
 // reverse iteration
 //
 
-procedure reverseIterator;
+define reverseIterator;
 
 
 
@@ -110,29 +110,29 @@ procedure reverseIterator;
 // sequence protocol
 //
 
-procedure size;
-procedure index;
+define size;
+define index;
 
-procedure begin; 
-procedure end;
+define begin; 
+define end;
 
-procedure front;
-procedure back;
+define front;
+define back;
 
-procedure push;
-procedure pop;
-procedure clear;
-procedure insert;
-procedure remove;
-procedure reserve;
-procedure resize;
-procedure resizeUnsafe;
+define push;
+define pop;
+define clear;
+define insert;
+define remove;
+define reserve;
+define resize;
+define resizeUnsafe;
 
-procedure pushFront;
-procedure popFront;
+define pushFront;
+define popFront;
 
 // defined for statically sized sequences like Array[T,n]
-procedure StaticSize;
+define StaticSize;
 
 
 
@@ -174,7 +174,7 @@ overload multiValued?(x) = false;
 // hashing
 //
 
-procedure hash;
+define hash;
 
 
 
@@ -185,9 +185,9 @@ procedure hash;
 // 'index' and 'size' are available for mappings
 // 'remove' is available
 
-procedure lookup; // get pointer to element, null if not available
-procedure put;
-procedure items; // iterate over all items
+define lookup; // get pointer to element, null if not available
+define put;
+define items; // iterate over all items
 
 inline contains?(map, key) = not null?(lookup(map, key));
 
@@ -197,7 +197,7 @@ inline contains?(map, key) = not null?(lookup(map, key));
 // LValue?, RValue?
 //
 
-procedure LValue?;
+define LValue?;
 alias overload LValue?(ref a) = true;
 alias overload LValue?(rvalue a) = false;
 
@@ -399,7 +399,7 @@ inline empty?(a:T) = (size(a) == 0);
 // ifExpression
 //
 
-procedure ifExpression;
+define ifExpression;
 
 [T]
 alias overload ifExpression(condition, consequent:T, alternate:T) T {
@@ -486,7 +486,7 @@ PrimitiveCompoundType?(X) = false;
 [R | RegularRecord?(R)] overload PrimitiveCompoundType?(static R) = true;
 [V | Variant?(V)] overload PrimitiveCompoundType?(static V) = true;
 
-procedure PrimitiveCompoundMemberTypes;
+define PrimitiveCompoundMemberTypes;
 [T,n] overload PrimitiveCompoundMemberTypes(static Array[T,n]) = T;
 [..T] overload PrimitiveCompoundMemberTypes(static Tuple[..T]) = ..T;
 [R | RegularRecord?(R)]

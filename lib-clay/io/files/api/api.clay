@@ -6,9 +6,9 @@ enum OpenMode {
     APPEND
 }
 
-procedure fileHandle;
+define fileHandle;
 
-procedure fileSize;
+define fileSize;
 
 enum SeekOrigin {
     SEEK_SET,
@@ -16,10 +16,10 @@ enum SeekOrigin {
     SEEK_END
 }
 
-procedure seek;    // seek(file, offset, whence)
+define seek;    // seek(file, offset, whence)
                    // seek(file, offset)
 
 overload seek(file, offset) = seek(file, offset, SEEK_SET);
 
 
-procedure terminal?;
+define terminal?;

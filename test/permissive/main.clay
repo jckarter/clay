@@ -5,7 +5,7 @@
 // permissiveAssign
 //
 
-procedure permissiveAssign;
+define permissiveAssign;
 
 [DEST, SRC]
 overload permissiveAssign(dest:DEST, src:SRC) {

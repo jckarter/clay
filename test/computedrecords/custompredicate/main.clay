@@ -16,7 +16,7 @@ main() {
 // FlexiConstructor? predicate
 //
 
-procedure FlexiConstructor?;
+define FlexiConstructor?;
 overload FlexiConstructor?(x) = false;
 
 
@@ -45,7 +45,7 @@ overload T(forward ..args:A) returned:T {
 // convertToTypes
 //
 
-procedure convertToTypes;
+define convertToTypes;
 
 [i]
 overload convertToTypes(types, static i, forward first, forward ..rest) {
@@ -62,7 +62,7 @@ overload convertToTypes(types:T, static i) = ;
 // convertToType
 //
 
-procedure convertToType;
+define convertToType;
 
 [Dest, Src]
 overload convertToType(static Dest, forward src:Src) = forward Dest(src);

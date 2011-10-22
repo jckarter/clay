@@ -29,9 +29,9 @@
 // basic definitions
 //
 
-procedure EntryType;
-procedure keyMatch?;
-procedure entryHash;
+define EntryType;
+define keyMatch?;
+define entryHash;
 
 record TwoHash[E]
 (
@@ -385,7 +385,7 @@ overload baseSplitHash(th: TwoHash[E], hash: UInt64)
     return sh;
 }
 
-procedure splitHash;
+define splitHash;
 
 [E, K]
 overload splitHash(th: TwoHash[E], key: K) = baseSplitHash(th, largeHash(key));

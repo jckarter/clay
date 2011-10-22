@@ -4,6 +4,8 @@ Changes made:
 * Keywords that do similar things have been combined:
     'callbyname' is now 'alias'
     'lvalue' is now 'ref'
+* Two-dot ellipsis '..' can now be used interchangeably with three-dot ellipsis '...'.
+* The 'procedure' keyword has been changed to 'define'.
 
 Planned changes:
 * A "clayfix" program is provided to update code written for Clay 0.0 to
@@ -39,8 +41,6 @@ Planned changes:
   It is currently ignored, but will be used in the future to provide module-specific
   build flags and module-level parameters.
 
-* Two-dot ellipsis '..' can now be used interchangeably with three-dot ellipsis '...'.
-* The 'procedure' keyword has been changed to 'define'.
 * The 'new' keyword has been removed. 'sharedpointers.allocateShared'
   and 'uniquepointers.allocateUnique' have been both renamed to 'new' in their
   respective modules:

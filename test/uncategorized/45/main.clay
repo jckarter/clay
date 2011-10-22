@@ -1,9 +1,9 @@
 
-procedure PointerTypes;
+define PointerTypes;
 overload PointerTypes(a, ..b) = Pointer[a], ..PointerTypes(..b);
 overload PointerTypes() = ;
 
-procedure pointerValues;
+define pointerValues;
 overload pointerValues(a, ..b) = &a, ..pointerValues(..b);
 overload pointerValues() = ;
 

@@ -15,9 +15,9 @@ public import cocoa.objc.runtime.(
 // class, selector, and ivar data
 //
 
-private procedure objcClassMake;
-private procedure objcInitIvar;
-private procedure objcInitIvarOffset;
+private define objcClassMake;
+private define objcInitIvar;
+private define objcInitIvarOffset;
 private var objcClass[Class] = objcClassMake(Class);
 
 private var objcSelector[name] = sel_registerName(cstring(StaticName(name)));
@@ -51,9 +51,9 @@ NSSTR(static value) = ObjectHandle(&objcConstantString[value]);
 // encode
 //
 
-procedure Void; // stand-in symbol for "no return value"
+define Void; // stand-in symbol for "no return value"
 
-procedure encodeIdentifier;
+define encodeIdentifier;
 
 overload encodeIdentifier() = #"";
 
@@ -113,8 +113,8 @@ encode(..types) = StaticName(encodeIdentifier(..types));
 // object parameters
 //
 
-procedure objectHandle;
-procedure ObjectParameterType;
+define objectHandle;
+define ObjectParameterType;
 
 ObjectHandleType(T) = Type(objectHandle(typeToRValue(T)));
 
@@ -285,8 +285,8 @@ overload ObjectParameterType(static ObjectHandle) = Id;
 // class hierarchy
 //
 
-procedure SuperclassType;
-procedure Subclass?;
+define SuperclassType;
+define Subclass?;
 
 [Super, Sub]
 overload Subclass?(static Super, static Sub)
@@ -317,8 +317,8 @@ overload InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tupl
 
 [T | Class?(T)]
 ClassInstanceVars(static T) = ();
-procedure ClassClassMethods;
-procedure ClassInstanceMethods;
+define ClassClassMethods;
+define ClassInstanceMethods;
 
 MangledModuleChar(c) = c;
 overload MangledModuleChar(static #".") = #__;
@@ -338,7 +338,7 @@ overload ClassName(static T) {
 [T | ExternalClass?(T) or ExternalClayClass?(T)]
 ClassName(static T) = StaticName(T);
 
-procedure ClassStaticName;
+define ClassStaticName;
 
 [T | CallDefined?(ClassStaticName, Static[T])]
 overload ClassName(static T) = StaticName(ClassStaticName(T));
@@ -367,7 +367,7 @@ Class?(T) = CallDefined?(SuperclassType, Static[T]);
 [T | Class?(T)] overload ObjectType?(static T) = true;
 ExternalClass?(T) = false;
 
-procedure classObjcName;
+define classObjcName;
 
 ValidSuperclass?(T) = Class?(T) or T == Void;
 
@@ -696,12 +696,12 @@ overload objcInitIvarOffset(static T, ivarName) = PtrInt();
 // XXX should be derived from class selector definitions
 //
 
-procedure selector;
-procedure varargSelector;
-procedure externalInstanceMethod;
-procedure externalClassMethod;
-procedure externalVarargInstanceMethod;
-procedure externalVarargClassMethod;
+define selector;
+define varargSelector;
+define externalInstanceMethod;
+define externalClassMethod;
+define externalVarargInstanceMethod;
+define externalVarargClassMethod;
 
 FixedSelector?(sel) = CallDefined?(selector, Static[sel]);
 VarargSelector?(sel) = CallDefined?(varargSelector, Static[sel]);

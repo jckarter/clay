@@ -8,7 +8,7 @@ main() {
 }
 
 
-procedure info;
+define info;
 
 [In,Out]
 overload info(x:VarArgsCCodePointer[In,Out]) {

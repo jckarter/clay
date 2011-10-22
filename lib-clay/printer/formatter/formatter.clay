@@ -39,7 +39,7 @@ HEX(forward x: I) = formatter(HEXFormatter, x);
 oct(forward x: I) = formatter(OctFormatter, x);
 
 // formatTo(stream, formatter, value)
-procedure formatTo;
+define formatTo;
 
 private _formatBase(stream, value, fmt) {
     if (value < 0) {
@@ -103,7 +103,7 @@ hexString(forward s:S) = formatter(HexStringFormatter, s);
 //
 
 // printedWidth(object) SizeT
-procedure printedWidth;
+define printedWidth;
 
 [S | String?(S)]
 overload printedWidth(s: S) = size(s);

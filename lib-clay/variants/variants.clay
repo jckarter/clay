@@ -205,7 +205,7 @@ inline variantIs?(x:V, static T) {
 // variantAs
 //
 
-procedure variantAs;
+define variantAs;
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
 inline overload variantAs(ref x:V, static T) {
@@ -259,9 +259,9 @@ inline invalidVariant(x:V) {
 // variant matching
 //
 
-procedure MatchDefault; // dummy symbol used to implement default case
+define MatchDefault; // dummy symbol used to implement default case
 
-private procedure matchValue;
+private define matchValue;
 [T, U | T != U] inline overload matchValue(forward x:T, static U, fn, ..cases)
     = forward ..matchValue(x, ..cases);
 [T] inline overload matchValue(forward x:T, static T, fn, ..cases) = forward ..fn(x);

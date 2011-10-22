@@ -85,7 +85,7 @@ private inline initializeMulti(..args:A) {
     ..args <-- ..initializeTypes(..A);
 }
 
-private procedure initializeTypes;
+private define initializeTypes;
 inline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
 inline overload initializeTypes() = ;
 
@@ -186,7 +186,7 @@ inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
 // tupleLiteral
 //
 
-procedure tupleLiteral;
+define tupleLiteral;
 
 // by default create a tuple
 alias overload tupleLiteral(..args) = Tuple(..args);

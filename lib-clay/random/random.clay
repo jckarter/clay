@@ -10,7 +10,7 @@ record XORShiftRNG(
 
 overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
-procedure generate;
+define generate;
 
 [I | Integer?(I) and TypeSize(I) <= 32] overload generate(r, static I) = I(generate(r, UInt32));
 
@@ -41,7 +41,7 @@ overload generate(r, static Int64) = Int64(generate(r, UInt64));
   return move(result);
 }
 
-procedure uniform;
+define uniform;
 
 // TODO: This is a bit of a rubbish default implementation
 // It works fine for integers (I think) but is almost certainly wrong for floats
@@ -81,12 +81,12 @@ private mask(x, n) = bitwiseAnd(x, shiftLeft(1, n) - 1);
 private pr() = UInt32(libc.random());
 private bitcast(T, x) = Pointer[T](&x)^;
 
-private procedure safeFromOverflow?;
+private define safeFromOverflow?;
 
 [T | UnsignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = true;
 [T | SignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
 
-private procedure toMask;
+private define toMask;
 
 private inline pb(x, n){ x = bitwiseOr(x, shiftRight(x, n)); }
 overload toMask(x){

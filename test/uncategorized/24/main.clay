@@ -1,5 +1,5 @@
 
-procedure printAll;
+define printAll;
 
 overload printAll(a:Int, ..rest) {
     println(a);

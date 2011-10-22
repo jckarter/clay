@@ -10,7 +10,7 @@ alias Opaque = Int;
 // display
 //
 
-procedure display;
+define display;
 
 overload display(x) {
     print(x);

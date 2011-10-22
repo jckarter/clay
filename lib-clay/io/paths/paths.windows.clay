@@ -131,7 +131,7 @@ pathComponents(path) {
 // joinPath
 //
 
-procedure joinPath;
+define joinPath;
 
 [..S | allValues?(String?, ..S)]
 overload joinPath(..parts:S) {

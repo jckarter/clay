@@ -5,14 +5,14 @@
 // generic vector requirements
 //
 
-procedure Vector?;
+define Vector?;
 overload Vector?(x) = false;
 
-procedure vectorData;
-procedure vectorSize;
-procedure vectorSetSize;
-procedure vectorCapacity;
-procedure vectorRequestCapacity;
+define vectorData;
+define vectorSize;
+define vectorSetSize;
+define vectorCapacity;
+define vectorRequestCapacity;
 
 
 

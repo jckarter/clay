@@ -4,7 +4,7 @@
 // UnderlyingContainerConstructor
 //
 
-procedure UnderlyingContainerConstructor;
+define UnderlyingContainerConstructor;
 
 [T,n]
 overload UnderlyingContainerConstructor(static Array[T,n]) = Array;
@@ -18,7 +18,7 @@ overload UnderlyingContainerConstructor(static Vector[T]) = Vector;
 // ForcedContainerConstructor
 //
 
-procedure ForcedContainerConstructor;
+define ForcedContainerConstructor;
 
 overload ForcedContainerConstructor(T) = Vector;
 

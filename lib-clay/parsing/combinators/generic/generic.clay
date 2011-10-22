@@ -24,7 +24,7 @@ Parser?(static TokenInput, x) =
     SimpleParser?(TokenInput, x) or ConvertibleParser?(TokenInput, x);
 
 
-procedure Parsers?;
+define Parsers?;
 
 [TokenInput]
 overload Parsers?(static TokenInput, first, ..rest) =
@@ -39,7 +39,7 @@ overload Parsers?(static TokenInput) = true;
 // SimpleParser?
 //
 
-procedure SimpleParser?;
+define SimpleParser?;
 
 [TokenInput, Parser]
 overload SimpleParser?(static TokenInput, static Parser) = false;
@@ -60,7 +60,7 @@ private MaybeType?(..args) = false;
 // ConvertibleParser?
 //
 
-procedure ConvertibleParser?;
+define ConvertibleParser?;
 
 [TokenInput]
 overload ConvertibleParser?(static TokenInput, x) = false;
@@ -80,7 +80,7 @@ overload ConvertibleParser?(static TokenInput, static Tuple[..T]) = true;
 // convertParser
 //
 
-procedure convertParser;
+define convertParser;
 
 [TokenInput, Token | TokenType(TokenInput) == Token]
 overload convertParser(static TokenInput, token:Token) =

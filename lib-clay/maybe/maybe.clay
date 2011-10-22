@@ -42,7 +42,7 @@ inline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 // maybe function
 //
 
-private procedure maybeValue;
+private define maybeValue;
 inline overload maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
 inline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..elseFn();
 
@@ -65,7 +65,7 @@ inline maybe(forward m:Maybe[T], thenFn, ..elseFn)
 record ValueMissing ();
 instance Exception = ValueMissing;
 
-procedure require;
+define require;
 
 [T]
 inline overload require(ref m:Maybe[T], fn) {

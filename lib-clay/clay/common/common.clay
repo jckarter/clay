@@ -31,7 +31,7 @@ overload Exception(forward x:T) = Exception(ClayError(x));
 // displayError
 //
 
-procedure displayError;
+define displayError;
 
 overload displayError(e:ClayError) {
     displayError(*e);

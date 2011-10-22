@@ -13,7 +13,7 @@ overload ContiguousCoordinate?(static Pointer[T]) = true;
 // null?
 //
 
-procedure null?;
+define null?;
 
 
 

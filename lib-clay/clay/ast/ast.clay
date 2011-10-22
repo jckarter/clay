@@ -23,7 +23,7 @@ private ast(..fields) = referenceTypeWithPredicate(
     ..fields,
 );
 
-procedure ASTNode?;
+define ASTNode?;
 overload ASTNode?(x) = false;
 
 [T, ..A | ASTNode?(T)

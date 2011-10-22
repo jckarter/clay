@@ -84,7 +84,7 @@ private initializeMulti(..args:A) {
     ..args <-- ..initializeTypes(..A);
 }
 
-private procedure initializeTypes;
+private define initializeTypes;
 inline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
 inline overload initializeTypes() = ;
 

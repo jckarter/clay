@@ -32,10 +32,10 @@ record UnmarshalContext (
 
 // [T] marshaledSize(context: MarshalContext, x: T) MarshalSize
 // -- should not throw
-procedure marshaledSize;
+define marshaledSize;
 // [T] marshalTo(context: MarshalContext, buffer: Pointer[Byte], x: T) Pointer[Byte]
 // -- should not throw
-procedure marshalTo;
+define marshalTo;
 // [T] unmarshalFrom(
 //    context: UnmarshalContext,
 //    begin: Pointer[Byte],
@@ -45,7 +45,7 @@ procedure marshalTo;
 //     UnmarshaledType(T), Pointer[Byte]
 // -- may throw
 // -- must throw UnmarshalUnexpectedEOF if unmarshal code would have to read past end
-procedure unmarshalFrom;
+define unmarshalFrom;
 // [T] UnmarshaledType(static T) T2
 // -- type that value of type T should be unmarshaled into
 UnmarshaledType(T) = T;
