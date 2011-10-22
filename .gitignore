@@ -16,7 +16,7 @@ bin/
 build/
 build-debug/
 build-release/
-clay
+/clay
 compiler/src/*.o
 compiler/src/*.dep
 .gdb_history
