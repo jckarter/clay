@@ -101,13 +101,146 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
     return vh;
 }
 
+static bool ishex(char *ptr) {
+    return
+        ((ptr[0] == '+' || ptr[0] == '-')
+            && ptr[1] == '0'
+            && (ptr[2] == 'x' || ptr[2] == 'X'))
+        || (ptr[0] == '0' && (ptr[1] == 'x' || ptr[1] == 'X'));
+}
+
+static int bitcount(unsigned long long bits)
+{
+    int k = 0;
+    while (bits != 0) {
+        k += 1;
+        bits = bits >> 1;
+    }
+    return k - 1;
+}
+
+static int hexdigit(char c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    assert(false);
+    return 0;
+}
+
+static double floatFromParts(bool negp, int exponent, unsigned long long mantissa)
+{
+    union { double f; unsigned long long bits; } x;
+    x.bits = ((unsigned long long)negp << 63)
+        | ((unsigned long long)(exponent & 0x7FF) << 52)
+        | (mantissa & 0xFFFFFFFFFFFFFULL);
+    return x.f;
+}
+
+static double hextod(char *number, char **end) {
+    bool negp = false;
+    bool negExponentp = false;
+    unsigned long long mantissa = 0;
+    int mantissaBits = 0;
+    int usedMantissaBits = 0;
+    size_t exponentI = 0;
+    int point = 0;
+    int pointp = false;
+
+    for (size_t i = 0; number[i] != '\0'; ++i) {
+        char c = number[i];
+
+        if (c == '-') {
+            assert(i == 0); // "junk before negative sign in hex float literal"
+            negp = true;
+        } else if (c == '+') {
+            assert(i == 0); // "junk before positive sign in hex float literal"
+            negp = false;
+        } else if (c == '.') {
+            assert(!pointp); // "multiple decimal points in hex float literal"
+            pointp = true;
+        } else if (c == 'p' || c == 'P') {
+            assert(exponentI == 0); // "multiple P markers in hex float literal"
+            exponentI = i;
+            break;
+        } else if (c == 'x') {
+            assert(mantissa == 0); // "junk before hex designator in hex float literal"
+            continue;
+        } else {
+            if (pointp)
+                point += 4;
+            if (c == '0' && mantissa == 0)
+                continue;
+            mantissaBits += 4;
+            if (c != '0')
+                usedMantissaBits = mantissaBits;
+            if (mantissaBits <= 64)
+                mantissa = (mantissa << 4) | hexdigit(c);
+        }
+    }
+
+    assert(number[exponentI] == 'p' || number[exponentI] == 'P'); // "no exponent in hex float literal"
+
+    long exponent = strtol(number + exponentI + 1, end, 10);
+    assert(**end == '\0'); // "junk after exponent in hex float literal"
+    double value = 0.0;
+
+    if (mantissa == 0) {
+        value = floatFromParts(negp, 0, 0);
+    } else {
+        int mantissaLog = bitcount(mantissa);
+        int mantissaExponent = mantissaLog
+            + (mantissaBits > 64 ? mantissaBits - 64 : 0)
+            - point
+            + exponent
+            + 1023;
+
+        mantissa = mantissa << (60 - mantissaLog);
+        int mantissaShift = 8 + std::max(0, 1-mantissaExponent);
+
+        if (mantissaShift > 61) {
+            mantissaExponent = 0;
+            mantissa = 0;
+        } else if (mantissaExponent >= 2047) {
+            mantissaExponent = 2047;
+            mantissa = 0;
+        } else {
+            unsigned long long roundBit  = mantissa & (1 << mantissaShift-1);
+            unsigned long long roundMask = mantissa & ((1 << mantissaShift-1) - 1);
+            unsigned long long evenBit   = mantissa & (1 << mantissaShift);
+
+            mantissa = mantissa >> mantissaShift;
+
+            if (roundBit != 0 && (roundMask != 0 || usedMantissaBits > 60 || evenBit != 0))
+                mantissa += 1;
+
+            if (mantissaExponent < 0)
+                mantissaExponent = 0;
+        }
+
+        value = floatFromParts(negp, mantissaExponent, mantissa);
+    }
+
+    return value;
+}
+
+static double clay_strtod(char *ptr, char **end) {
+    if (ishex(ptr))
+        return hextod(ptr, end);
+    else
+        return strtod(ptr, end);
+}
+
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
 {
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     ValueHolderPtr vh;
     if ((x->suffix == "f") || (x->suffix == "f32")) {
-        float y = (float)strtod(ptr, &end);
+        float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
         if (errno == ERANGE)
@@ -116,7 +249,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((float *)vh->buf) = y;
     }
     else if ((x->suffix == "f64") || x->suffix.empty()) {
-        double y = strtod(ptr, &end);
+        double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float64 literal");
         if (errno == ERANGE)
