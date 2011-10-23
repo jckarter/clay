@@ -238,24 +238,24 @@ record RecordTag(info:Record);
 record VariantTag(info:Variant);
 record EnumTag(info:Enum);
 
-variant TypeTag = BoolTag
-                | IntegerTag
-                | FloatTag
-                | PointerTag
-                | CodePointerTag
-                | RefTag
-                | CCodePointerTag
-                | VarArgsCCodePointerTag
-                | StdCallCodePointerTag
-                | FastCallCodePointerTag
-                | ArrayTag
-                | TupleTag
-                | UnionTag
-                | StaticTag
-                | RecordTag
-                | VariantTag
-                | EnumTag
-                ;
+variant TypeTag ( BoolTag
+                , IntegerTag
+                , FloatTag
+                , PointerTag
+                , CodePointerTag
+                , RefTag
+                , CCodePointerTag
+                , VarArgsCCodePointerTag
+                , StdCallCodePointerTag
+                , FastCallCodePointerTag
+                , ArrayTag
+                , TupleTag
+                , UnionTag
+                , StaticTag
+                , RecordTag
+                , VariantTag
+                , EnumTag
+                );
 
 
 
@@ -323,19 +323,19 @@ record IntValue(value: Int);
 record TupleValue(elements: Vector[StaticValue]);
 record IdentifierValue(value: String);
 
-variant StaticValue = BoolValue
-                    | IntValue
-                    | TupleValue
-                    | IdentifierValue
-                    | Procedure
-                    | Record
-                    | Variant
-                    | PrimitiveTypeConstructor
-                    | StaticPrimitive
-                    | Primitive
-                    | Type
-                    | ModuleHolder
-                    ;
+variant StaticValue ( BoolValue
+                    , IntValue
+                    , TupleValue
+                    , IdentifierValue
+                    , Procedure
+                    , Record
+                    , Variant
+                    , PrimitiveTypeConstructor
+                    , StaticPrimitive
+                    , Primitive
+                    , Type
+                    , ModuleHolder
+                    );
 
 
 
@@ -359,27 +359,27 @@ record LocalAlias = referenceType(
 // SymbolTable
 //
 
-variant SymbolTableEntry = Record
-                         | Variant
-                         | Procedure
-                         | Enum
-                         | EnumMember
-                         | GlobalVariable
-                         | GlobalAlias
-                         | ExternalProcedure
-                         | ExternalVariable
-                         | PrimitiveTypeConstructor
-                         | StaticPrimitive
-                         | Primitive
-                         | Type
-                         | ModuleHolder
-                         | BoolValue
-                         | IntValue
-                         | TupleValue
-                         | IdentifierValue
-                         | LocalVariable
-                         | LocalAlias
-                         ;
+variant SymbolTableEntry ( Record
+                         , Variant
+                         , Procedure
+                         , Enum
+                         , EnumMember
+                         , GlobalVariable
+                         , GlobalAlias
+                         , ExternalProcedure
+                         , ExternalVariable
+                         , PrimitiveTypeConstructor
+                         , StaticPrimitive
+                         , Primitive
+                         , Type
+                         , ModuleHolder
+                         , BoolValue
+                         , IntValue
+                         , TupleValue
+                         , IdentifierValue
+                         , LocalVariable
+                         , LocalAlias
+                         );
 
 overload SymbolTableEntry() = SymbolTableEntry(Record());
 
@@ -441,7 +441,7 @@ alias overload T(..args:A) =
 
 variant SemanticError;
 
-instance ClayError = SemanticError;
+instance ClayError (SemanticError);
 
 [T | VariantMember?(SemanticError, T)]
 overload Exception(forward e:T) =
@@ -472,7 +472,7 @@ private displaySemanticError(err, node, ..message) {
 record ModuleNotFoundError = semanticError(
     name: ast.DottedName,
 );
-instance SemanticError = ModuleNotFoundError;
+instance SemanticError (ModuleNotFoundError);
 
 overload displayError(e:ModuleNotFoundError) {
     displaySemanticError(
@@ -485,7 +485,7 @@ overload displayError(e:ModuleNotFoundError) {
 record GlobalRedefinitionError = semanticError(
     name: ast.Identifier,
 );
-instance SemanticError = GlobalRedefinitionError;
+instance SemanticError (GlobalRedefinitionError);
 
 overload displayError(e:GlobalRedefinitionError) {
     displaySemanticError(

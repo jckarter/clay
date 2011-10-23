@@ -8,7 +8,7 @@ public import maybe.*;
 // SqliteError exception
 //
 record SqliteError (code: Int, message: String);
-instance Exception = SqliteError;
+instance Exception (SqliteError);
 
 overload SqliteError(code: Int, dbHandle: Pointer[sqlite3])
     = SqliteError(code, String(CStringRef(sqlite3_errmsg(dbHandle))));
@@ -143,7 +143,7 @@ overload runStatement(db: SqliteDB, sql: S, ..bindings: TT) {
 }
 
 record NoStatementRow ();
-instance Exception = NoStatementRow;
+instance Exception (NoStatementRow);
 
 maybeStatementSingleRow(st: SqliteStatement) {
     var si = iterator(st);

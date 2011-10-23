@@ -701,8 +701,10 @@ static void initializeVariantType(VariantTypePtr t) {
         if (x->predicate.ptr())
             if (!evaluateBool(x->predicate, staticEnv))
                 continue;
-        TypePtr memberType = evaluateType(x->member, staticEnv);
-        t->memberTypes.push_back(memberType);
+        for (unsigned i = 0; i < x->members->size(); ++i) {
+            TypePtr memberType = evaluateType(x->members->exprs[i], staticEnv);
+            t->memberTypes.push_back(memberType);
+        }
     }
 
     RecordPtr reprRecord = getVariantReprRecord();

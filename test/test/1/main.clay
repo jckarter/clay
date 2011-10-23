@@ -1,7 +1,7 @@
 import test.*;
 
-instance Exception = Int;
-instance Exception = Double;
+instance Exception (Int);
+instance Exception (Double);
 
 throwInt() { throw 7; }
 throwDouble() { throw 7.0; }

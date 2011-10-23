@@ -1478,14 +1478,14 @@ struct Instance : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     ExprPtr target;
-    ExprPtr member;
+    ExprListPtr members;
 
     Instance(const vector<PatternVar> &patternVars,
              ExprPtr predicate,
              ExprPtr target,
-             ExprPtr member)
+             ExprListPtr members)
         : TopLevelItem(INSTANCE), patternVars(patternVars),
-          predicate(predicate), target(target), member(member)
+          predicate(predicate), target(target), members(members)
         {}
 };
 

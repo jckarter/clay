@@ -79,7 +79,7 @@ overload remoteMessage(outstream, forward ..args: Args) {
 // server interface
 //
 record InvalidRemoteMessage(code: MarshalSize);
-instance Exception = InvalidRemoteMessage;
+instance Exception (InvalidRemoteMessage);
 
 private consume(stream, bytes_) {
     var bytes = SizeT(bytes_);

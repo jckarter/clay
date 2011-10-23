@@ -144,7 +144,7 @@ readPlaintext(str) --> plaintext: Array[UInt8, 8] {
 showPlaintext(plaintext) = String(mapped(Char, plaintext));
 
 record BadHexDigit();
-instance Exception = BadHexDigit;
+instance Exception (BadHexDigit);
 badHexDigit(c) UInt8 { throw BadHexDigit(); }
 hexDigit(c) = if (c >= '0' and c <= '9') UInt8(c) - UInt8('0')
          else if (c >= 'A' and c <= 'F') UInt8(c) - UInt8('A') + 10u8
@@ -153,7 +153,7 @@ hexDigit(c) = if (c >= '0' and c <= '9') UInt8(c) - UInt8('0')
 hexByte(str) = shiftLeft(hexDigit(str[0]), 4) + hexDigit(str[1]);
 
 record BadCipher();
-instance Exception = BadCipher;
+instance Exception (BadCipher);
 
 readCipher(str) --> cipher: Array[UInt8, 8] {
     if (size(str) != 16) throw BadCipher();
@@ -220,7 +220,7 @@ overload next(ks: AlnumKeySpace) {
 }
 
 record InvalidAlnumKey();
-instance Exception = InvalidAlnumKey;
+instance Exception (InvalidAlnumKey);
 
 private incKeyChar(char) {
     if (char >= '0' and char < '9'
@@ -293,7 +293,7 @@ crackNode(args) {
 }
 
 record InvalidNodeAddress (address: String);
-instance Exception = InvalidNodeAddress;
+instance Exception (InvalidNodeAddress);
 
 connectNode(name) {
     var hostport = split(name, ':');

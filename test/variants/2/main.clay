@@ -7,7 +7,7 @@ record Circle (
     radius : Double
 );
 
-variant Shape = Square | Circle;
+variant Shape (Square, Circle);
 
 define show;
 overload show(x:Square) { println("Square(", x.side, ")"); }

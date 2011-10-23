@@ -84,33 +84,33 @@ overload DottedName(a:A) =
 // Expr
 //
 
-variant Expr = BoolLiteral
-             | IntLiteral
-             | FloatLiteral
-             | CharLiteral
-             | StringLiteral
-             | IdentifierLiteral
+variant Expr ( BoolLiteral
+             , IntLiteral
+             , FloatLiteral
+             , CharLiteral
+             , StringLiteral
+             , IdentifierLiteral
          
-             | NameRef
-             | TupleExpr
-             | ArrayExpr
-             | Indexing
-             | Call
-             | FieldRef
-             | StaticIndexing
-             | UnaryOp
-             | BinaryOp
-             | And
-             | Or
+             , NameRef
+             , TupleExpr
+             , ArrayExpr
+             , Indexing
+             , Call
+             , FieldRef
+             , StaticIndexing
+             , UnaryOp
+             , BinaryOp
+             , And
+             , Or
          
-             | IfExpr
-             | LambdaExpr
-             | Unpack
-             | New
-             | StaticExpr
-             | PairExpr
-             | DispatchExpr
-             ;
+             , IfExpr
+             , LambdaExpr
+             , Unpack
+             , New
+             , StaticExpr
+             , PairExpr
+             , DispatchExpr
+             );
 
 overload Expr() = Expr(BoolLiteral());
 
@@ -241,26 +241,26 @@ record DispatchExpr = ast(
 // Statement
 //
 
-variant Statement = Block
-                  | Label
-                  | Binding
-                  | Assignment
-                  | InitAssignment
-                  | UpdateAssignment
-                  | Goto
-                  | Return
-                  | If
-                  | Switch
-                  | CaseBody
-                  | ExprStatement
-                  | While
-                  | Break
-                  | Continue
-                  | For
-                  | Try
-                  | Throw
-                  | StaticFor
-                  ;
+variant Statement ( Block
+                  , Label
+                  , Binding
+                  , Assignment
+                  , InitAssignment
+                  , UpdateAssignment
+                  , Goto
+                  , Return
+                  , If
+                  , Switch
+                  , CaseBody
+                  , ExprStatement
+                  , While
+                  , Break
+                  , Continue
+                  , For
+                  , Try
+                  , Throw
+                  , StaticFor
+                  );
 
 overload Statement() = Statement(Block());
 
@@ -407,9 +407,9 @@ record StaticArgument = ast(
     expr: Expr,
 );
 
-variant Argument = NormalArgument
-                 | StaticArgument
-                 ;
+variant Argument ( NormalArgument
+                 , StaticArgument
+                 );
 
 record ReturnSpec = ast(
     multi?: Bool,
@@ -423,10 +423,10 @@ record LLVMBody = ast(
 
 record NoBody = ast();
 
-variant CodeBody = Statement
-                 | LLVMBody
-                 | NoBody
-                 ;
+variant CodeBody ( Statement
+                 , LLVMBody
+                 , NoBody
+                 );
 
 record Code = top(
     callByName?: Bool,
@@ -462,9 +462,9 @@ record Record = named(
     body: RecordBody,
 );
 
-variant RecordBody = ComputedRecordBody
-                   | DeclaredRecordBody
-                   ;
+variant RecordBody ( ComputedRecordBody
+                   , DeclaredRecordBody
+                   );
 
 record ComputedRecordBody = ast(
     fields: Vector[Expr],
@@ -532,17 +532,17 @@ record ExternalVariable = named(
     type: Expr,
 );
 
-variant TopLevelItem = Record
-                     | Variant
-                     | Instance
-                     | Procedure
-                     | Overload
-                     | Enum
-                     | GlobalVariable
-                     | GlobalAlias
-                     | ExternalProcedure
-                     | ExternalVariable
-                     ;
+variant TopLevelItem ( Record
+                     , Variant
+                     , Instance
+                     , Procedure
+                     , Overload
+                     , Enum
+                     , GlobalVariable
+                     , GlobalAlias
+                     , ExternalProcedure
+                     , ExternalVariable
+                     );
 
 
 
@@ -572,10 +572,10 @@ record ImportedMember = ast(
     aliasName: Maybe[Identifier],
 );
 
-variant Import = ImportModule
-               | ImportStar
-               | ImportMembers
-               ;
+variant Import ( ImportModule
+               , ImportStar
+               , ImportMembers
+               );
 
 
 

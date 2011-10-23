@@ -21,7 +21,7 @@ record Argument(value : String);
 record Error(value : String);
 record Separator();
 
-variant ParseToken = OptionValue | Argument | Error | Separator;
+variant ParseToken (OptionValue, Argument, Error, Separator);
 
 alias ParseResult = Vector[ParseToken];
 

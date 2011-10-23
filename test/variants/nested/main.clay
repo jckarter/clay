@@ -1,18 +1,18 @@
 
-variant Expr = BinaryOp | UnaryOp | Variable | Literal;
+variant Expr (BinaryOp, UnaryOp, Variable, Literal);
 
-variant BinaryOp = Add | Subtract | Multiply;
+variant BinaryOp (Add, Subtract, Multiply);
 record Add ();
 record Subtract ();
 record Multiply ();
 
-variant UnaryOp = Plus | Minus;
+variant UnaryOp (Plus, Minus);
 record Plus ();
 record Minus ();
 
 record Variable ();
 
-variant Literal = IntLiteral | FloatLiteral;
+variant Literal (IntLiteral, FloatLiteral);
 record IntLiteral ();
 record FloatLiteral ();
 

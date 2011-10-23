@@ -4,7 +4,7 @@ import system.(commandLine);
 
 record NoSuchOption(name : String);
 
-instance Exception = NoSuchOption;
+instance Exception (NoSuchOption);
 
 record OptionTable(
   options   : Vector[OptionTableEntry],

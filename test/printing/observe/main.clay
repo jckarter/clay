@@ -5,7 +5,7 @@ tellRvalueString(ref x) = "ref";
 overload tellRvalueString(rvalue x) = "rvalue";
 
 record AnException ();
-instance Exception = AnException;
+instance Exception (AnException);
 
 main() {
     var x = String("lemons");

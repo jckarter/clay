@@ -16,9 +16,9 @@ overload printReprTo(stream, x:GenericIOError) {
     printTo(stream, "GenericIOError(", errorCodeName(x.code), ")");
 }
 
-variant IOError = GenericIOError;
+variant IOError (GenericIOError);
 
-instance OSError = IOError;
+instance OSError (IOError);
 
 [T | VariantMember?(IOError, T)]
 overload Exception(forward x:T) = Exception(IOError(x));

@@ -20,7 +20,7 @@ readSource(path) =
 
 variant ClayError;
 
-instance Exception = ClayError;
+instance Exception (ClayError);
 
 [T | VariantMember?(ClayError, T)]
 overload Exception(forward x:T) = Exception(ClayError(x));

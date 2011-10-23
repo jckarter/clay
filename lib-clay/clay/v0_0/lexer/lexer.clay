@@ -444,7 +444,7 @@ record LexerError(
     where: SizeT
 );
 
-instance ClayError = LexerError;
+instance ClayError (LexerError);
 
 overload displayError(e:LexerError) {
     errorWithLocation(e.file, e.where, "invalid token");

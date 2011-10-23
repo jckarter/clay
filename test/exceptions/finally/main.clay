@@ -1,4 +1,4 @@
-instance Exception = Int;
+instance Exception (Int);
 
 foo(throw?) {
     println("--> foo");

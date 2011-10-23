@@ -275,7 +275,7 @@ expectPrinted(test: TestStatus, name, expectedOutput, forward ..values) {
 }
 
 record RequiredExpectationFailed();
-instance Exception = RequiredExpectationFailed;
+instance Exception (RequiredExpectationFailed);
 
 required(expectFn, test: TestStatus, forward ..args) {
     var preFailed = test.failed;

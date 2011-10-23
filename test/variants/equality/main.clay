@@ -7,7 +7,7 @@ record Circle (
     radius : Double
 );
 
-variant Shape = Square | Circle;
+variant Shape (Square, Circle);
 
 main() {
     var v = Vector[Shape]();

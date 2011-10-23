@@ -3,7 +3,7 @@
 // Maybe[T]
 //
 
-variant Maybe[T] = Nothing | T;
+variant Maybe[T] (Nothing, T);
 
 record Nothing ();
 
@@ -63,7 +63,7 @@ inline maybe(forward m:Maybe[T], thenFn, ..elseFn)
 //
 
 record ValueMissing ();
-instance Exception = ValueMissing;
+instance Exception (ValueMissing);
 
 define require;
 

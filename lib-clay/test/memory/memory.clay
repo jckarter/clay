@@ -26,10 +26,9 @@ overload allocateRawMemory(static Canary, n) --> r: Pointer[Canary] {
 }
 
 record CanaryCopyException ();
-instance Exception = CanaryCopyException;
-
 record UninitializedCanaryCopyException ();
-instance Exception = UninitializedCanaryCopyException;
+
+instance Exception (CanaryCopyException, UninitializedCanaryCopyException);
 
 private _Canary(r: Canary, throwOnCopy?: Bool) {
     r.id <-- size(canaryTracker);

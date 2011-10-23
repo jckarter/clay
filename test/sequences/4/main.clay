@@ -28,7 +28,7 @@ testBinarySearch(a, x) {
 
 record Cons[T] (car:T, cdr:SharedPointer[List[T]]);
 record Nil();
-variant List[T] = Cons[T] | Nil;
+variant List[T] (Cons[T], Nil);
 
 [T]
 cons(l: SharedPointer[List[T]], forward value: T) = new(List[T](Cons[T](value, l)));

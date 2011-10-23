@@ -1,4 +1,4 @@
-variant Tree = Branch | Leaf;
+variant Tree (Branch, Leaf);
 
 record Branch(left:SharedPointer[Tree], right:SharedPointer[Tree]);
 record Leaf(value:Int);

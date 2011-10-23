@@ -1,5 +1,5 @@
 
-instance Exception = Int;
+instance Exception (Int);
 
 captured_catch_type(T, v) = () => {
     try {
@@ -12,7 +12,7 @@ captured_catch_type(T, v) = () => {
 };
 
 record OtherException ( what: StringConstant );
-instance Exception = OtherException;
+instance Exception (OtherException);
 overload printTo(stream, x:OtherException) {
     printTo(stream, "<OtherException ", x.what, ">");
 }

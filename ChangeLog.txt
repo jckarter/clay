@@ -123,13 +123,13 @@ cut and pasted above.
   into symbol forms.
 
     // Normal struct
-      struct Foo[T](x:T, y:Int, z:Char);
+      struct Foo[T] (x:T, y:Int, z:Char);
     // Desugared
       define Foo[T];
       [T] overload structFields(#Foo[T]) = x:T, y:Int, z:Char;
-      // llvmRepresentation is derived from structFields
       // parameter-inferring constructor
       [T] overload Foo(x:T, y:Int, z:Char) = Foo[T](x:T, y:Int, z:Char);
+      // llvmRepresentation is derived from structFields
 
     // Calculated struct
       struct Foo[T] = fooStruct(T);
@@ -162,7 +162,7 @@ cut and pasted above.
   or to provide access to the original type representation by field reference.
   Examples:
     newtype PositionToken = Int; // delegate to Int
-    newtype PositionToken(value:Int); // use "token.value" to access Int
+    newtype PositionToken (value:Int); // use "token.value" to access Int
 * All structs now have "RegularRecord" value semantics, and the "RegularRecord?"
   predicate is gone. Structs should not provide custom value semantics. A new
   syntax '<bikeshed>' is provided for types with custom value semantics.
@@ -270,4 +270,4 @@ cut and pasted above.
     $end$hello world$end$
 
 * Pair syntax 'a: b' now desugars into two values '#"a", b' instead of a two-element
-  tuple as it did before.
+  tuple.

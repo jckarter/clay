@@ -21,9 +21,9 @@ alias errno = win32.WSAGetLastError;
 alias close = win32.closesocket;
 
 record WSAStartupError(code: Int);
-instance Exception = WSAStartupError;
+instance Exception (WSAStartupError);
 record WSAStartupVersionError();
-instance Exception = WSAStartupVersionError;
+instance Exception (WSAStartupVersionError);
 
 startSockets() {
     var wsaData = win32.WSADATA();

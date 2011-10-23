@@ -11,7 +11,7 @@ private markAlive(x:Canary) { x.value = WATERMARK; }
 private unmarkAlive(x:Canary) { x.value = 0; }
 
 record CanaryError();
-instance Exception = CanaryError;
+instance Exception (CanaryError);
 
 private var canaryCount = 0;
 private beginLife(x:Canary) { markAlive(x); canaryCount += 1; }

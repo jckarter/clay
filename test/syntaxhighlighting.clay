@@ -101,8 +101,8 @@ record TypesTest (
     ll: Static[0],
 );
 
-variant VariantTest = TypesTest | Int;
-instance InstanceTest = VariantTest;
+variant VariantTest (TypesTest, Int);
+instance InstanceTest (VariantTest);
 
 keywordsTest(x, ref y, rvalue z, forward w, static v) {
     if (x) {} else {}

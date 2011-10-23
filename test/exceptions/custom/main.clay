@@ -1,6 +1,6 @@
 
 
-instance Exception = Int;
+instance Exception (Int);
 
 //
 // define custom exception type Error1
@@ -11,7 +11,7 @@ record Error1 (
 );
 
 // include Error1 as a member of the Exception variant
-instance Exception = Error1;
+instance Exception (Error1);
 
 
 //
@@ -23,7 +23,7 @@ record Error2 (
 );
 
 // include Error2 as a member of the Exception variant
-instance Exception = Error2;
+instance Exception (Error2);
 
 
 //

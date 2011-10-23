@@ -68,7 +68,7 @@ overload read(stream, n:SizeT) {
 //
 
 record PrematureEOF(expected:SizeT, received:SizeT);
-instance IOError = PrematureEOF;
+instance IOError (PrematureEOF);
 
 define readN;
 

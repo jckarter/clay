@@ -1,4 +1,4 @@
-variant Foo = Int | Double | StringConstant;
+variant Foo (Int, Double, StringConstant);
 
 foo(x) {
     match(x,

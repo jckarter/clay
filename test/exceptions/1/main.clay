@@ -1,6 +1,6 @@
 
 
-instance Exception = Int;
+instance Exception (Int);
 
 record Test (
     x: Int32

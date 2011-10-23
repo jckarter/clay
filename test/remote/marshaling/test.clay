@@ -70,7 +70,7 @@ record GraphNodeRecord (
 record ReferenceRecord = referenceType(x: Int);
 overload equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
 
-variant TestVariant = Int | Vector[Int] | Char | Double;
+variant TestVariant (Int, Vector[Int], Char, Double);
 
 main() = testMain(
     TestSuite("marshaling", [

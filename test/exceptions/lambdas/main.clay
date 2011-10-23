@@ -1,5 +1,5 @@
 
-instance Exception = Int;
+instance Exception (Int);
 
 main() {
     var x = 451;

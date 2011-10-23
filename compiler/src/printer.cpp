@@ -555,7 +555,7 @@ static void print(ostream &out, const Object *x) {
     case INSTANCE : {
         const Instance *y = (const Instance *)x;
         out << "Instance(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->target << ", " << y->member << ")";
+        out << ", " << y->target << ", " << y->members << ")";
         break;
     }
 

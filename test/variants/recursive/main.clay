@@ -1,5 +1,5 @@
 record Foo ( x: SharedPointer[Bar], y: SharedPointer[Bar] );
-variant Bar = Int | Foo;
+variant Bar (Int, Foo);
 
 main() {
     var z = Foo(new(Bar(0)), new(Bar(0)));

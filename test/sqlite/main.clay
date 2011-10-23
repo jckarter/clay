@@ -3,7 +3,7 @@ import sqlite.*;
 record Wotsit (id: Int, name: Maybe[String]);
 
 record ExemplaryError ();
-instance Exception = ExemplaryError;
+instance Exception (ExemplaryError);
 
 main() {
     var db = SqliteDB("temp.sqlite");

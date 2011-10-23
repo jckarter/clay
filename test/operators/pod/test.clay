@@ -6,8 +6,8 @@ overload RegularRecord?(static IrregularRecord) = false;
 record PODRecord (x: Int, y: Char);
 record NonPODRecord (x: Int, y: IrregularRecord);
 
-variant PODVariant = Int | Char;
-variant NonPODVariant = Int | NonPODRecord;
+variant PODVariant (Int, Char);
+variant NonPODVariant (Int, NonPODRecord);
 
 enum Enum ( A, B, C );
 

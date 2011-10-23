@@ -1,10 +1,10 @@
 record FooException ();
-instance Exception = FooException;
+instance Exception (FooException);
 
 foo(x: Int) : Int { throw FooException(); }
 overload foo(x: Float) : Int { return 5; }
 
-variant Foo = Int | Float;
+variant Foo (Int, Float);
 
 fooFoo(x: Foo) = foo(*x);
 

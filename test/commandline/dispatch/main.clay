@@ -17,7 +17,7 @@ multiply(args) {
 }
 
 record DivideByZero();
-instance Exception = DivideByZero;
+instance Exception (DivideByZero);
 
 divide(args) {
     if (empty?(args)) {

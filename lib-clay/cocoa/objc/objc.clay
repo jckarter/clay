@@ -391,7 +391,7 @@ overload externalClass(static name, static Super) = recordWithProperties(
 );
 
 record ExternalClassNotFound (name: StringConstant);
-instance Exception = ExternalClassNotFound;
+instance Exception (ExternalClassNotFound);
 
 _objcExternalClassMake(name: StringConstant) {
     var handle = objc_getClass(cstring(name));
@@ -473,13 +473,10 @@ newExternalClass(static Super,
 );
 
 record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
-instance Exception = NewClassCouldNotBeCreated;
-
 record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
-instance Exception = NewClassCouldNotAddIvar;
-
 record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
-instance Exception = NewClassCouldNotAddMethod;
+
+instance Exception (NewClassCouldNotBeCreated, NewClassCouldNotAddIvar, NewClassCouldNotAddMethod);
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
     objc_msgSend(

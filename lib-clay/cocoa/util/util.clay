@@ -76,7 +76,7 @@ makeNSValue(value: T)
 overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
 
 record NSValueTypeMismatch (object: Id);
-instance Exception = NSValueTypeMismatch;
+instance Exception (NSValueTypeMismatch);
 
 [T, O | ObjectRef?(O)]
 fromNSValue(static T, o: O) {

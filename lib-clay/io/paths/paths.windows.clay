@@ -71,7 +71,7 @@ private slicedUNCPath(path) {
 }
 
 record InvalidUNCPath(path:String);
-instance IOError = InvalidUNCPath;
+instance IOError (InvalidUNCPath);
 
 private badUNCPath(path) {
     throw InvalidUNCPath(String(path));

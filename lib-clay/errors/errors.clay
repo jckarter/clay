@@ -25,7 +25,7 @@ error(..e) {
 
 record Error (msg : String);
 
-instance Exception = Error;
+instance Exception (Error);
 
 [ | ExceptionsEnabled?]
 overload error(..e) {

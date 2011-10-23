@@ -27,9 +27,9 @@ private alias platform = io.sockets.platform;
 
 record GenericSocketError (code: Int);
 
-variant SocketError = GenericSocketError;
+variant SocketError (GenericSocketError);
 
-instance IOError = SocketError;
+instance IOError (SocketError);
 
 [T | VariantMember?(SocketError, T)]
 overload Exception(forward x:T) = Exception(SocketError(x));
@@ -97,7 +97,7 @@ overload Inet(host: T, port: I)
     = Inet(lookupInetHostname(host), UInt16(port));
 
 record InvalidInetAddress(sockaddr: Sockaddr_storage, szsockaddr: SocklenT);
-instance SocketError = InvalidInetAddress;
+instance SocketError (InvalidInetAddress);
 
 overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     --> addr: Inet
@@ -128,7 +128,7 @@ overload lookupInetHostname(n: UInt32) --> s: In_addr {
 overload lookupInetHostname(n: In_addr) = n;
 
 record HostnameLookupError(hostname: String);
-instance SocketError = HostnameLookupError;
+instance SocketError (HostnameLookupError);
 [S | String?(S) and S != String]
 overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 

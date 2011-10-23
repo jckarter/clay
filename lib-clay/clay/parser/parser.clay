@@ -1144,7 +1144,7 @@ record ParserError(
     where: SizeT,
 );
 
-instance ClayError = ParserError;
+instance ClayError (ParserError);
 
 overload displayError(e:ParserError) {
     var offset = e.tokens.vector[e.where].range.begin;

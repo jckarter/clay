@@ -3,7 +3,7 @@ record Human ();
 
 record Dog ();
 
-variant Animal = Human | Dog;
+variant Animal (Human, Dog);
 
 define what;
 overload what(x:Human) = "Human";
@@ -20,7 +20,7 @@ printPair(a, b) {
 
 record Cat ();
 
-instance Animal = Cat;
+instance Animal (Cat);
 
 overload what(x:Cat) = "Cat";
 

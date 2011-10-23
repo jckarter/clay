@@ -51,7 +51,7 @@ define unmarshalFrom;
 UnmarshaledType(T) = T;
 
 record UnmarshalUnexpectedEOF ();
-instance Exception = UnmarshalUnexpectedEOF;
+instance Exception (UnmarshalUnexpectedEOF);
 
 Marshalable?(T)
     =     CallDefined?(marshaledSize, MarshalContext, T)
@@ -208,7 +208,7 @@ overload marshalTo(context, buffer_: Pointer[Byte], v: V) --> buffer: Pointer[By
 }
 
 record UnmarshalInvalidVariantTag (tag: Int);
-instance Exception = UnmarshalInvalidVariantTag;
+instance Exception (UnmarshalInvalidVariantTag);
 
 [..T, n]
 private unmarshalVariantMember(
@@ -451,13 +451,14 @@ overload marshalTo(context: MarshalContext, buffer_: Pointer[Byte], p: SharedPoi
 }
 
 record UnmarshalIncompleteObjectGraph ();
-instance Exception = UnmarshalIncompleteObjectGraph;
-
 record UnmarshalInconsistentObjectGraph ();
-instance Exception = UnmarshalInconsistentObjectGraph;
-
 record UnmarshalInvalidObjectGraphData ();
-instance Exception = UnmarshalInvalidObjectGraphData;
+
+instance Exception (
+    UnmarshalIncompleteObjectGraph,
+    UnmarshalInconsistentObjectGraph,
+    UnmarshalInvalidObjectGraphData,
+);
 
 [T]
 overload unmarshalFrom(context: UnmarshalContext,

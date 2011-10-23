@@ -2033,31 +2033,19 @@ static bool record(TopLevelItemPtr &x) {
 // variant, instance
 //
 
-static bool defaultInstances(ExprListPtr &x) {
-    ExprListPtr a;
-    ExprPtr y;
-    if (!expression(y)) return false;
-    a = new ExprList(y);
-    while (true) {
-        int p = save();
-        if (!symbol("|") || !expression(y)) {
-            restore(p);
-            break;
-        }
-        a->add(y);
-    }
-    x = a;
-    return true;
+static bool instances(ExprListPtr &x) {
+    return symbol("(") && optExpressionList(x) && symbol(")");
 }
 
-static bool optDefaultInstances(ExprListPtr &x) {
+static bool optInstances(ExprListPtr &x) {
     int p = save();
-    if (!symbol("=")) {
+    if (symbol("(")) {
+        return optExpressionList(x) && symbol(")");
+    } else {
         restore(p);
         x = new ExprList();
         return true;
     }
-    return defaultInstances(x);
 }
 
 static bool variant(TopLevelItemPtr &x) {
@@ -2071,7 +2059,7 @@ static bool variant(TopLevelItemPtr &x) {
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
     ExprListPtr defaultInstances;
-    if (!optDefaultInstances(defaultInstances)) return false;
+    if (!optInstances(defaultInstances)) return false;
     if (!symbol(";")) return false;
     x = new Variant(name, vis, params, varParam, defaultInstances);
     x->location = location;
@@ -2086,11 +2074,10 @@ static bool instance(TopLevelItemPtr &x) {
     if (!keyword("instance")) return false;
     ExprPtr target;
     if (!pattern(target)) return false;
-    if (!symbol("=")) return false;
-    ExprPtr member;
-    if (!expression(member)) return false;
+    ExprListPtr members;
+    if (!instances(members)) return false;
     if (!symbol(";")) return false;
-    x = new Instance(patternVars, predicate, target, member);
+    x = new Instance(patternVars, predicate, target, members);
     x->location = location;
     return true;
 }

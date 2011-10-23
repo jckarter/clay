@@ -41,7 +41,7 @@ overload destroy(x:State) {
 
 record Error(msg:String);
 
-instance Exception = Error;
+instance Exception (Error);
 
 overload Error(..args) = Error(printString(..args));
 
