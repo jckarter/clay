@@ -106,7 +106,6 @@ variant Expr = BoolLiteral
              | IfExpr
              | LambdaExpr
              | Unpack
-             | New
              | StaticExpr
              | PairExpr
              | DispatchExpr
@@ -215,10 +214,6 @@ record LambdaExpr = ast(
 );
 
 record Unpack = ast(
-    expr: Expr,
-);
-
-record New = ast(
     expr: Expr,
 );
 
@@ -434,7 +429,7 @@ record Code = top(
     patternVars: Vector[PatternVar],
     predicate: Maybe[Expr],
     args: VariadicList[Argument],
-    returns: Vector[ReturnSpec],
+    returns: Maybe[Vector[ReturnSpec]],
     body: CodeBody,
 );
 

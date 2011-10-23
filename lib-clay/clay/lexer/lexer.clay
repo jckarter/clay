@@ -61,7 +61,7 @@ private var keywords = [
     "define", "overload", "external", "alias",
     "static", "rvalue",
     "inline", "enum", "var", "ref", "forward",
-    "and", "or", "not", "new",
+    "and", "or", "not",
     "if", "else", "goto", "return", "while",
     "switch", "case", "default", "break", "continue", "for", "in",
     "true", "false", "try", "catch", "throw",
@@ -328,9 +328,20 @@ private var floatTail = choice(
     exponent,
 );
 
+private var hexExponent = seq(choice(UniChar('p'),UniChar('P')), optional(sign), decimalInt);
+private var hexFractional = seq(UniChar('.'), hexDigits);
+
+private var hexFloatTail = choice(
+    seq(hexFractional, hexExponent),
+    hexExponent,
+);
+
 private var lexFloatLiteral = modify(
     x => Token(FLOAT_LITERAL),
-    seq(optional(sign), decimalInt, floatTail),
+    choice(
+        seq(optional(sign), hexInt, hexFloatTail),
+        seq(optional(sign), decimalInt, floatTail),
+    ),
 );
 
 
