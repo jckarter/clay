@@ -28,7 +28,7 @@ inline callExternal(
     external_fn:CCodePointer[(ExternalException, ..IO), ()],
     ..args:T
 )
-    ..out:mapValues(unpointer, ..dropValues(static countValues(..T), ..IO))
+    --> ..out:mapValues(unpointer, ..dropValues(static countValues(..T), ..IO))
 {
     var ex = uninitializedUnsafe(Maybe[Exception]);
     external_fn(..mapValues(addressOf, ex, ..args, ..out));

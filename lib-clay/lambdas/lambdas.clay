@@ -29,12 +29,12 @@ private CodePointerReturnTypes(static CodePointer[In,Out]) = Out;
 // redefine constructors shadowed by the primary constructor
 
 [In,Out]
-alias overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) returned:Lambda[In,Out] {
+alias overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) --> returned:Lambda[In,Out] {
     returned.body <-- body;
 }
 
 [In,Out]
-overload Lambda[In,Out](x : Lambda[In,Out]) returned:Lambda[In,Out] {
+overload Lambda[In,Out](x : Lambda[In,Out]) --> returned:Lambda[In,Out] {
     returned.body <-- x.body;
 }
 
@@ -52,7 +52,7 @@ makeLambda(forward x:T, ..In) {
 // call operator
 
 [..I, ..O]
-overload call(x:Lambda[(..I), (..O)], forward ..args:I) ..O {
+overload call(x:Lambda[(..I), (..O)], forward ..args:I) : ..O {
     return forward ..x.body^.code(x.body^.obj^, ..args);
 }
 
@@ -69,7 +69,7 @@ private record LambdaBody[In, Out] (
 );
 
 [..I, ..O, T]
-alias overload LambdaBody[(..I),(..O)](x:T) returned:LambdaBody[(..I),(..O)] {
+alias overload LambdaBody[(..I),(..O)](x:T) --> returned:LambdaBody[(..I),(..O)] {
     var codePtr = makeCodePointer(call, T, ..I);
     var destructor = makeCodePointer(destroy, T);
     returned.code = CodePointer[(Opaque, ..I), (..O)](codePtr);

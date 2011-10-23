@@ -14,14 +14,14 @@ inline llvm_memory_barrier(
     ret i32 0
 }
 
-external ("llvm.atomic.cmp.swap.i8.p0i8") llvm_atomic_cmp_swap8(ptr:Pointer[Int8], cmp:Int8, val:Int8) Int8;
-external ("llvm.atomic.cmp.swap.i16.p0i16") llvm_atomic_cmp_swap16(ptr:Pointer[Int16], cmp:Int16, val:Int16) Int16;
-external ("llvm.atomic.cmp.swap.i32.p0i32") llvm_atomic_cmp_swap32(ptr:Pointer[Int32], cmp:Int32, val:Int32) Int32;
-external ("llvm.atomic.cmp.swap.i64.p0i64") llvm_atomic_cmp_swap64(ptr:Pointer[Int64], cmp:Int64, val:Int64) Int64;
+external ("llvm.atomic.cmp.swap.i8.p0i8") llvm_atomic_cmp_swap8(ptr:Pointer[Int8], cmp:Int8, val:Int8) : Int8;
+external ("llvm.atomic.cmp.swap.i16.p0i16") llvm_atomic_cmp_swap16(ptr:Pointer[Int16], cmp:Int16, val:Int16) : Int16;
+external ("llvm.atomic.cmp.swap.i32.p0i32") llvm_atomic_cmp_swap32(ptr:Pointer[Int32], cmp:Int32, val:Int32) : Int32;
+external ("llvm.atomic.cmp.swap.i64.p0i64") llvm_atomic_cmp_swap64(ptr:Pointer[Int64], cmp:Int64, val:Int64) : Int64;
 
-external ("llvm.atomic.swap.i8.p0i8") llvm_atomic_swap8(ptr:Pointer[Int8], val:Int8) Int8;
-external ("llvm.atomic.swap.i16.p0i16") llvm_atomic_swap16(ptr:Pointer[Int16], val:Int16) Int16;
-external ("llvm.atomic.swap.i32.p0i32") llvm_atomic_swap32(ptr:Pointer[Int32], val:Int32) Int32;
-external ("llvm.atomic.swap.i64.p0i64") llvm_atomic_swap64(ptr:Pointer[Int64], val:Int64) Int64;
+external ("llvm.atomic.swap.i8.p0i8") llvm_atomic_swap8(ptr:Pointer[Int8], val:Int8) : Int8;
+external ("llvm.atomic.swap.i16.p0i16") llvm_atomic_swap16(ptr:Pointer[Int16], val:Int16) : Int16;
+external ("llvm.atomic.swap.i32.p0i32") llvm_atomic_swap32(ptr:Pointer[Int32], val:Int32) : Int32;
+external ("llvm.atomic.swap.i64.p0i64") llvm_atomic_swap64(ptr:Pointer[Int64], val:Int64) : Int64;
 
 

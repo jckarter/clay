@@ -1,6 +1,6 @@
 
 [T | Float?(T)]
-floatOrderedAndEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp oeq $T %aval, %bval
@@ -10,7 +10,7 @@ floatOrderedAndEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrderedAndGreater?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ogt $T %aval, %bval
@@ -20,7 +20,7 @@ floatOrderedAndGreater?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrderedAndGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp oge $T %aval, %bval
@@ -30,7 +30,7 @@ floatOrderedAndGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrderedAndLesser?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp olt $T %aval, %bval
@@ -40,7 +40,7 @@ floatOrderedAndLesser?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrderedAndLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ole $T %aval, %bval
@@ -50,7 +50,7 @@ floatOrderedAndLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrderedAndNotEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatOrderedAndNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp one $T %aval, %bval
@@ -60,7 +60,7 @@ floatOrderedAndNotEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatOrdered?(a:T, b:T) returned:Bool __llvm__ {
+floatOrdered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ord $T %aval, %bval
@@ -71,7 +71,7 @@ floatOrdered?(a:T, b:T) returned:Bool __llvm__ {
 
 
 [T | Float?(T)]
-floatUnorderedOrEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ueq $T %aval, %bval
@@ -81,7 +81,7 @@ floatUnorderedOrEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnorderedOrGreater?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ugt $T %aval, %bval
@@ -91,7 +91,7 @@ floatUnorderedOrGreater?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnorderedOrGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp uge $T %aval, %bval
@@ -101,7 +101,7 @@ floatUnorderedOrGreaterEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnorderedOrLesser?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ult $T %aval, %bval
@@ -111,7 +111,7 @@ floatUnorderedOrLesser?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnorderedOrLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ule $T %aval, %bval
@@ -121,7 +121,7 @@ floatUnorderedOrLesserEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnorderedOrNotEquals?(a:T, b:T) returned:Bool __llvm__ {
+floatUnorderedOrNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp une $T %aval, %bval
@@ -131,7 +131,7 @@ floatUnorderedOrNotEquals?(a:T, b:T) returned:Bool __llvm__ {
 }
 
 [T | Float?(T)]
-floatUnordered?(a:T, b:T) returned:Bool __llvm__ {
+floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp uno $T %aval, %bval

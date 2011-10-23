@@ -104,7 +104,7 @@ referenceTypeFields(x:T) = ref ..tupleElements(referencePtr(x)^);
 //
 
 [T | ReferenceType?(T)]
-overload T() returned:T {
+overload T() --> returned:T {
     initialize(referencePtr(returned));
 }
 
@@ -115,7 +115,7 @@ overload T() returned:T {
 //
 
 [T, ..A | ReferenceType?(T) and (Tuple[..A] == Tuple[..ReferenceTypeFieldTypes(T)])]
-alias overload T(..args:A) returned:T {
+alias overload T(..args:A) --> returned:T {
     referencePtr(returned) <-- new Tuple(..args);
 }
 
@@ -126,12 +126,12 @@ alias overload T(..args:A) returned:T {
 //
 
 [T | ReferenceType?(T)]
-allocateRef(static T) returned:T {
+allocateRef(static T) --> returned:T {
     referencePtr(returned) <-- new Tuple[..ReferenceTypeFieldTypes(T)]();
 }
 
 [T | ReferenceType?(T)]
-allocateUninitializedRefUnsafe(static T) returned:T {
+allocateUninitializedRefUnsafe(static T) --> returned:T {
     alias InnerType = Tuple[..ReferenceTypeFieldTypes(T)];
     referencePtr(returned) <-- SharedPointer[InnerType](allocateRawMemory(RefCounted[InnerType], 1));
     referencePtr(returned).ptr^.refCount = 1;
@@ -144,7 +144,7 @@ allocateUninitializedRefUnsafe(static T) returned:T {
 //
 
 [T | ReferenceType?(T)]
-overload T(src:T) returned:T {
+overload T(src:T) --> returned:T {
     referencePtr(returned) <-- referencePtr(src);
 }
 

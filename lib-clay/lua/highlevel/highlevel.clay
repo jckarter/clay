@@ -24,7 +24,7 @@ overload resetUnsafe(x:State) {
     x.owned = false;
 }
 
-overload moveUnsafe(x:State) out:State {
+overload moveUnsafe(x:State) --> out:State {
     out.handle = x.handle;
     out.owned = x.owned;
 }
@@ -48,7 +48,7 @@ overload Error(..args) = Error(printString(..args));
 [S | String?(S)]
 overload Error(msg:S) = Error(String(msg));
 
-overload Error(forward msg:String) out:Error {
+overload Error(forward msg:String) --> out:Error {
     out.msg <-- msg;
 }
 
@@ -66,7 +66,7 @@ private popError(x:State) {
 private var panicJmpBuf = Pointer[libc.jmp_buf](0);
 private var panicMsg = String();
 
-private panicHandler(handle:Pointer[lua_State]) Int {
+private panicHandler(handle:Pointer[lua_State]) : Int {
     panicMsg = String(CStringRef(lua_tostring(handle, -1)));
     libc.longjmp(&panicJmpBuf^[0], 1);
     return 0;

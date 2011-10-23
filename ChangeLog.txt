@@ -1,22 +1,10 @@
-0.0 -> 0.1
+0.0 -> 0.1 (work in progress)
 ----------
-Changes made:
 * Keywords that do similar things have been combined:
     'callbyname' is now 'alias'
     'lvalue' is now 'ref'
 * Two-dot ellipsis '..' can now be used interchangeably with three-dot ellipsis '...'.
 * The 'procedure' keyword has been changed to 'define'.
-
-Planned changes:
-* A "clayfix" program is provided to update code written for Clay 0.0 to
-  compile in 0.1.
-* Keywords that do similar things have been combined:
-    The 'static' keyword in expressions and argument lists is now the '#' operator.
-    Identifiers now lower to StringConstants, and must always be quoted:
-        static 9 => #9
-        static foo => #foo
-        static #foo => #"foo"
-        #foo => #"foo"
 * Return type syntax has been changed.
     // 0.0
     foo(x:Int, y:Int) Int = x + y; // anonymous returns
@@ -31,6 +19,32 @@ Planned changes:
     {
         z <-- x + y;
     }
+
+    foo() : { // you can now declare no return values
+        println("Hello world");
+    }
+
+Planned changes
+---------------
+* A "clayfix" program is provided to update code written for Clay 0.0 to
+  compile in 0.1.
+
+These changes may not all get completed at the next point release, but they are
+planned to be made eventually. They're written in past tense so they can be easily
+cut and pasted above.
+
+* Hex float syntax (-0x1.234ABCp2) is now supported.
+* Keywords that do similar things have been combined:
+    The 'static' keyword in expressions and argument lists is now the '#' operator.
+    Identifiers now lower to StringConstants, and must always be quoted:
+        static 9 => #9
+        static foo => #foo
+        static #foo => #"foo"
+        #foo => #"foo"
+* A new keyword 'super' is provided to call the next matching overload.
+        [T|Integer?(T)] show(x:T) { println(x); }
+
+        overload show(x:UInt8) { print("my little "); super(x); }
 * A top-level 'module' declaration may be included in source files, immediately
   after any 'import' definitions.
     import foo.*;
@@ -41,9 +55,9 @@ Planned changes:
   It is currently ignored, but will be used in the future to provide module-specific
   build flags and module-level parameters.
 
-* The 'new' keyword has been removed. 'sharedpointers.allocateShared'
-  and 'uniquepointers.allocateUnique' have been both renamed to 'new' in their
-  respective modules:
+* The 'new' keyword has been removed. 'sharedpointers.allocateShared' and
+  'uniquepointers.allocateUnique' have been both renamed to 'new' in their respective
+  modules:
     // 0.0
     foo = new Foo(1); // always called allocateShared
 
@@ -83,8 +97,41 @@ Planned changes:
         );
   "struct", "variant", and "enum" syntax is still provided, but they now desugar
   into symbol forms.
+
+    // Normal struct
+      struct Foo[T](x:T, y:Int, z:Char);
+    // Desugared
+      define Foo[T];
+      [T] overload structFields(#Foo[T]) = x:T, y:Int, z:Char;
+      // llvmRepresentation is derived from structFields
+      // parameter-inferring constructor
+      [T] overload Foo(x:T, y:Int, z:Char) = Foo[T](x:T, y:Int, z:Char);
+
+    // Calculated struct
+      struct Foo[T] = fooStruct(T);
+    // Desugared
+      define Foo[T];
+      [T] overload structFields(#Foo[T]) = fooStruct(T);
+
+    // Variant
+      variant Foo(Bar, Bas);
+      instance Foo(Zim, Zang);
+    // Desugared
+      define Foo;
+      overload variantMembers(Foo) = Bar, Bas;
+      overload variantMembers(Foo) = ..super(Foo), Zim, Zang;
+
+    // Enum
+      enum Foo(BAR, BAS);
+    // Desugared
+      newtype Foo(ordinal:UInt8); // smallest fitting UInt for number of members
+      alias BAR = Foo(0);
+      alias BAS = Foo(1);
+      overload enumMembers(Foo) = BAR, BAS;
+
 * 'union' syntax is provided for defining named union types. Example:
     union FloatBits32(bits:Int32, float:Float32);
+  The anonymous union type Union[..T] is still present.
 * 'newtype' syntax is provided for strong typedefs. A newtype shares the exact
   low-level representation and ABI of the original type, but its type is distinct.
   The type can be defined to delegate its overloads to the original type by default,
@@ -92,10 +139,12 @@ Planned changes:
   Examples:
     newtype PositionToken = Int; // delegate to Int
     newtype PositionToken(value:Int); // use "token.value" to access Int
-* All structs are now "RegularRecord" (which is gone now), and structs should not
-  provide custom value semantics. A new syntax '<bikeshed>' is provided for types
-  with custom value semantics.
+* All structs now have "RegularRecord" value semantics, and the "RegularRecord?"
+  predicate is gone. Structs should not provide custom value semantics. A new
+  syntax '<bikeshed>' is provided for types with custom value semantics.
+
     <bikeshed> Vector[T](buffer:Pointer[T], size:SizeT, capacity:SizeT);
+
   In addition to custom value semantics, <bikeshed> types also have unspecified
   memory layouts and are not necessarily ABI-compatible with equivalent C structs.
 
@@ -156,8 +205,8 @@ Planned changes:
     external (C, cat(#"sqrt", LibcMathLetter(T))) sqrt(n:T):T;
 
   External definitions may also be parameterized, but must be given a set of types
-  for which to be instantiated using new [... in ...] syntax. For example, the
-  following will declare C-linkage functions "quadrootf", "quadroot", "quadrootl"
+  for which to be instantiated. For example, the
+  following will define C-linkage functions "quadrootf", "quadroot", "quadrootl"
   in terms of the above sqrt declaration:
 
     [T in Float, Double, LongDouble]
@@ -171,10 +220,55 @@ Planned changes:
   The external symbol name is unmangled. Example:
     [align,volatile? | Int?(align) and Bool?(volatile?)]
     external (llvmIntrinsic, "llvm.memcpy.p0i8.p0i8.i32") llvm_memcpy32(
-        Pointer[UInt8] dst,
-        Pointer[UInt8] src,
-        Int32 len,
+        dst:Pointer[UInt8],
+        src:Pointer[UInt8],
+        len:Int32,
         #align,
         #volatile?
     );
 
+* Throw is now an expression:
+    var p = malloc(123) or throw OutOfMemory;
+    var quotient = if (x == 0) throw DivisionByZero else y/x;
+
+* Scope guard statements are now provided. 'always foo();' performs 'foo();' on scope
+  exit for any reason. 'onerror foo();' performs 'foo();' if the scope is exited by a
+  thrown exception, without catching the exception.
+    // 0.0
+    try {
+      foo();
+    } catch(ex) {
+      bar();
+      throw ex;
+    }
+    bar();
+
+    // 0.1
+    always bar();
+    foo();
+
+    // 0.0
+    try {
+      foo();
+    } catch(ex) {
+      bar();
+      throw ex();
+    }
+
+    // 0.1
+    onerror bar();
+    foo();
+
+* Integer division now uses the div operator. '/' now only does floating-point division:
+    var x = 3 div 2; // 1
+    var x = 3/2; // type error
+
+* Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push' functions
+  should be used instead.
+
+* String literals can be delimited with Python-style triple quotes, or Postgres-style
+  $$ and $token$ delimiters:
+    "hello world"
+    """hello world"""
+    $$hello world$$
+    $end$hello world$end$

@@ -5107,7 +5107,7 @@ external UIAccessibilityPostNotification(
     notification : UInt,
     argument : Id);
 
-external UIAccessibilityIsVoiceOverRunning() Bool;
+external UIAccessibilityIsVoiceOverRunning() : Bool;
 
 external UIAccessibilityVoiceOverStatusChanged : NSString;
 
@@ -5327,7 +5327,7 @@ external UIApplicationMain(
     argc : Int,
     argv : Pointer[Pointer[CChar]],
     principalClassName : NSString,
-    delegateClassName : NSString) Int;
+    delegateClassName : NSString) : Int;
 
 external UITrackingRunLoopMode : NSString;
 
@@ -5387,34 +5387,34 @@ alias UIEdgeInsets = Struct_UIEdgeInsets;
 external UIEdgeInsetsZero : UIEdgeInsets;
 
 external NSStringFromCGPoint(
-    point : CGPoint) NSString;
+    point : CGPoint) : NSString;
 
 external NSStringFromCGSize(
-    size : CGSize) NSString;
+    size : CGSize) : NSString;
 
 external NSStringFromCGRect(
-    rect : CGRect) NSString;
+    rect : CGRect) : NSString;
 
 external NSStringFromCGAffineTransform(
-    transform : CGAffineTransform) NSString;
+    transform : CGAffineTransform) : NSString;
 
 external NSStringFromUIEdgeInsets(
-    insets : UIEdgeInsets) NSString;
+    insets : UIEdgeInsets) : NSString;
 
 external CGPointFromString(
-    string : NSString) CGPoint;
+    string : NSString) : CGPoint;
 
 external CGSizeFromString(
-    string : NSString) CGSize;
+    string : NSString) : CGSize;
 
 external CGRectFromString(
-    string : NSString) CGRect;
+    string : NSString) : CGRect;
 
 external CGAffineTransformFromString(
-    string : NSString) CGAffineTransform;
+    string : NSString) : CGAffineTransform;
 
 external UIEdgeInsetsFromString(
-    string : NSString) UIEdgeInsets;
+    string : NSString) : UIEdgeInsets;
 
 alias UIBarButtonItemStylePlain = 0;
 alias UIBarButtonItemStyleBordered = 1;
@@ -5506,7 +5506,7 @@ alias UIGestureRecognizerStateRecognized = 3;
 
 alias UIGestureRecognizerState = Int;
 
-external UIGraphicsGetCurrentContext() CGContextRef;
+external UIGraphicsGetCurrentContext() : CGContextRef;
 
 external UIGraphicsPushContext(
     context : CGContextRef);
@@ -5538,14 +5538,14 @@ external UIGraphicsBeginImageContextWithOptions(
     opaque : Bool,
     scale : Float);
 
-external UIGraphicsGetImageFromCurrentImageContext() UIImage;
+external UIGraphicsGetImageFromCurrentImageContext() : UIImage;
 
 external UIGraphicsEndImageContext();
 
 external UIGraphicsBeginPDFContextToFile(
     path : NSString,
     bounds : CGRect,
-    documentInfo : NSDictionary) Bool;
+    documentInfo : NSDictionary) : Bool;
 
 external UIGraphicsBeginPDFContextToData(
     data : NSMutableData,
@@ -5560,7 +5560,7 @@ external UIGraphicsBeginPDFPageWithInfo(
     bounds : CGRect,
     pageInfo : NSDictionary);
 
-external UIGraphicsGetPDFContextBounds() CGRect;
+external UIGraphicsGetPDFContextBounds() : CGRect;
 
 external UIGraphicsSetPDFContextURLForRect(
     url : NSURL,
@@ -5586,11 +5586,11 @@ alias UIImageOrientationRightMirrored = 7;
 alias UIImageOrientation = Int;
 
 external UIImagePNGRepresentation(
-    image : UIImage) NSData;
+    image : UIImage) : NSData;
 
 external UIImageJPEGRepresentation(
     image : UIImage,
-    compressionQuality : Float) NSData;
+    compressionQuality : Float) : NSData;
 
 external UINavigationControllerHideShowBarDuration : Float;
 
@@ -5644,7 +5644,7 @@ external UIImageWriteToSavedPhotosAlbum(
     contextInfo : RawPointer);
 
 external UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(
-    videoPath : NSString) Bool;
+    videoPath : NSString) : Bool;
 
 external UISaveVideoAtPathToSavedPhotosAlbum(
     videoPath : NSString,

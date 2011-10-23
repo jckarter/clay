@@ -25,20 +25,20 @@ alias lua_Integer = CLong;
 
 external lua_newstate(
     f : lua_Alloc,
-    ud : RawPointer) Pointer[lua_State];
+    ud : RawPointer) : Pointer[lua_State];
 
 external lua_close(
     L : Pointer[lua_State]);
 
 external lua_newthread(
-    L : Pointer[lua_State]) Pointer[lua_State];
+    L : Pointer[lua_State]) : Pointer[lua_State];
 
 external lua_atpanic(
     L : Pointer[lua_State],
-    panicf : lua_CFunction) lua_CFunction;
+    panicf : lua_CFunction) : lua_CFunction;
 
 external lua_gettop(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external lua_settop(
     L : Pointer[lua_State],
@@ -62,7 +62,7 @@ external lua_replace(
 
 external lua_checkstack(
     L : Pointer[lua_State],
-    sz : Int) Int;
+    sz : Int) : Int;
 
 external lua_xmove(
     from : Pointer[lua_State],
@@ -71,79 +71,79 @@ external lua_xmove(
 
 external lua_isnumber(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_isstring(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_iscfunction(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_isuserdata(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_type(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_typename(
     L : Pointer[lua_State],
-    tp : Int) Pointer[CChar];
+    tp : Int) : Pointer[CChar];
 
 external lua_equal(
     L : Pointer[lua_State],
     idx1 : Int,
-    idx2 : Int) Int;
+    idx2 : Int) : Int;
 
 external lua_rawequal(
     L : Pointer[lua_State],
     idx1 : Int,
-    idx2 : Int) Int;
+    idx2 : Int) : Int;
 
 external lua_lessthan(
     L : Pointer[lua_State],
     idx1 : Int,
-    idx2 : Int) Int;
+    idx2 : Int) : Int;
 
 external lua_tonumber(
     L : Pointer[lua_State],
-    idx : Int) Double;
+    idx : Int) : Double;
 
 external lua_tointeger(
     L : Pointer[lua_State],
-    idx : Int) CLong;
+    idx : Int) : CLong;
 
 external lua_toboolean(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_tolstring(
     L : Pointer[lua_State],
     idx : Int,
-    len : Pointer[CULong]) Pointer[CChar];
+    len : Pointer[CULong]) : Pointer[CChar];
 
 external lua_objlen(
     L : Pointer[lua_State],
-    idx : Int) CULong;
+    idx : Int) : CULong;
 
 external lua_tocfunction(
     L : Pointer[lua_State],
-    idx : Int) lua_CFunction;
+    idx : Int) : lua_CFunction;
 
 external lua_touserdata(
     L : Pointer[lua_State],
-    idx : Int) RawPointer;
+    idx : Int) : RawPointer;
 
 external lua_tothread(
     L : Pointer[lua_State],
-    idx : Int) Pointer[lua_State];
+    idx : Int) : Pointer[lua_State];
 
 external lua_topointer(
     L : Pointer[lua_State],
-    idx : Int) RawPointer;
+    idx : Int) : RawPointer;
 
 external lua_pushnil(
     L : Pointer[lua_State]);
@@ -168,11 +168,11 @@ external lua_pushstring(
 external lua_pushvfstring(
     L : Pointer[lua_State],
     fmt : Pointer[CChar],
-    argp : Pointer[__va_list_tag]) Pointer[CChar];
+    argp : Pointer[__va_list_tag]) : Pointer[CChar];
 
 external lua_pushfstring(
     L : Pointer[lua_State],
-    fmt : Pointer[CChar]) Pointer[CChar];
+    fmt : Pointer[CChar]) : Pointer[CChar];
 
 external lua_pushcclosure(
     L : Pointer[lua_State],
@@ -188,7 +188,7 @@ external lua_pushlightuserdata(
     p : RawPointer);
 
 external lua_pushthread(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external lua_gettable(
     L : Pointer[lua_State],
@@ -215,11 +215,11 @@ external lua_createtable(
 
 external lua_newuserdata(
     L : Pointer[lua_State],
-    sz : CULong) RawPointer;
+    sz : CULong) : RawPointer;
 
 external lua_getmetatable(
     L : Pointer[lua_State],
-    objindex : Int) Int;
+    objindex : Int) : Int;
 
 external lua_getfenv(
     L : Pointer[lua_State],
@@ -245,11 +245,11 @@ external lua_rawseti(
 
 external lua_setmetatable(
     L : Pointer[lua_State],
-    objindex : Int) Int;
+    objindex : Int) : Int;
 
 external lua_setfenv(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_call(
     L : Pointer[lua_State],
@@ -260,46 +260,46 @@ external lua_pcall(
     L : Pointer[lua_State],
     nargs : Int,
     nresults : Int,
-    errfunc : Int) Int;
+    errfunc : Int) : Int;
 
 external lua_cpcall(
     L : Pointer[lua_State],
     func : lua_CFunction,
-    ud : RawPointer) Int;
+    ud : RawPointer) : Int;
 
 external lua_load(
     L : Pointer[lua_State],
     reader : lua_Reader,
     dt : RawPointer,
-    chunkname : Pointer[CChar]) Int;
+    chunkname : Pointer[CChar]) : Int;
 
 external lua_dump(
     L : Pointer[lua_State],
     writer : lua_Writer,
-    data : RawPointer) Int;
+    data : RawPointer) : Int;
 
 external lua_yield(
     L : Pointer[lua_State],
-    nresults : Int) Int;
+    nresults : Int) : Int;
 
 external lua_resume(
     L : Pointer[lua_State],
-    narg : Int) Int;
+    narg : Int) : Int;
 
 external lua_status(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external lua_gc(
     L : Pointer[lua_State],
     what : Int,
-    data : Int) Int;
+    data : Int) : Int;
 
 external lua_error(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external lua_next(
     L : Pointer[lua_State],
-    idx : Int) Int;
+    idx : Int) : Int;
 
 external lua_concat(
     L : Pointer[lua_State],
@@ -307,7 +307,7 @@ external lua_concat(
 
 external lua_getallocf(
     L : Pointer[lua_State],
-    ud : Pointer[RawPointer]) lua_Alloc;
+    ud : Pointer[RawPointer]) : lua_Alloc;
 
 external lua_setallocf(
     L : Pointer[lua_State],
@@ -325,47 +325,47 @@ alias lua_Hook = CCodePointer[(OpaquePointer,Pointer[Struct_lua_Debug]),()];
 external lua_getstack(
     L : Pointer[lua_State],
     level : Int,
-    ar : Pointer[lua_Debug]) Int;
+    ar : Pointer[lua_Debug]) : Int;
 
 external lua_getinfo(
     L : Pointer[lua_State],
     what : Pointer[CChar],
-    ar : Pointer[lua_Debug]) Int;
+    ar : Pointer[lua_Debug]) : Int;
 
 external lua_getlocal(
     L : Pointer[lua_State],
     ar : Pointer[lua_Debug],
-    n : Int) Pointer[CChar];
+    n : Int) : Pointer[CChar];
 
 external lua_setlocal(
     L : Pointer[lua_State],
     ar : Pointer[lua_Debug],
-    n : Int) Pointer[CChar];
+    n : Int) : Pointer[CChar];
 
 external lua_getupvalue(
     L : Pointer[lua_State],
     funcindex : Int,
-    n : Int) Pointer[CChar];
+    n : Int) : Pointer[CChar];
 
 external lua_setupvalue(
     L : Pointer[lua_State],
     funcindex : Int,
-    n : Int) Pointer[CChar];
+    n : Int) : Pointer[CChar];
 
 external lua_sethook(
     L : Pointer[lua_State],
     func : lua_Hook,
     mask : Int,
-    count : Int) Int;
+    count : Int) : Int;
 
 external lua_gethook(
-    L : Pointer[lua_State]) lua_Hook;
+    L : Pointer[lua_State]) : lua_Hook;
 
 external lua_gethookmask(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external lua_gethookcount(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 record Struct_lua_Debug (
     event : Int,
@@ -402,51 +402,51 @@ external luaL_register(
 external luaL_getmetafield(
     L : Pointer[lua_State],
     obj : Int,
-    e : Pointer[CChar]) Int;
+    e : Pointer[CChar]) : Int;
 
 external luaL_callmeta(
     L : Pointer[lua_State],
     obj : Int,
-    e : Pointer[CChar]) Int;
+    e : Pointer[CChar]) : Int;
 
 external luaL_typerror(
     L : Pointer[lua_State],
     narg : Int,
-    tname : Pointer[CChar]) Int;
+    tname : Pointer[CChar]) : Int;
 
 external luaL_argerror(
     L : Pointer[lua_State],
     numarg : Int,
-    extramsg : Pointer[CChar]) Int;
+    extramsg : Pointer[CChar]) : Int;
 
 external luaL_checklstring(
     L : Pointer[lua_State],
     numArg : Int,
-    l : Pointer[CULong]) Pointer[CChar];
+    l : Pointer[CULong]) : Pointer[CChar];
 
 external luaL_optlstring(
     L : Pointer[lua_State],
     numArg : Int,
     def : Pointer[CChar],
-    l : Pointer[CULong]) Pointer[CChar];
+    l : Pointer[CULong]) : Pointer[CChar];
 
 external luaL_checknumber(
     L : Pointer[lua_State],
-    numArg : Int) Double;
+    numArg : Int) : Double;
 
 external luaL_optnumber(
     L : Pointer[lua_State],
     nArg : Int,
-    def : Double) Double;
+    def : Double) : Double;
 
 external luaL_checkinteger(
     L : Pointer[lua_State],
-    numArg : Int) CLong;
+    numArg : Int) : CLong;
 
 external luaL_optinteger(
     L : Pointer[lua_State],
     nArg : Int,
-    def : CLong) CLong;
+    def : CLong) : CLong;
 
 external luaL_checkstack(
     L : Pointer[lua_State],
@@ -464,12 +464,12 @@ external luaL_checkany(
 
 external luaL_newmetatable(
     L : Pointer[lua_State],
-    tname : Pointer[CChar]) Int;
+    tname : Pointer[CChar]) : Int;
 
 external luaL_checkudata(
     L : Pointer[lua_State],
     ud : Int,
-    tname : Pointer[CChar]) RawPointer;
+    tname : Pointer[CChar]) : RawPointer;
 
 external luaL_where(
     L : Pointer[lua_State],
@@ -477,17 +477,17 @@ external luaL_where(
 
 external luaL_error(
     L : Pointer[lua_State],
-    fmt : Pointer[CChar]) Int;
+    fmt : Pointer[CChar]) : Int;
 
 external luaL_checkoption(
     L : Pointer[lua_State],
     narg : Int,
     def : Pointer[CChar],
-    lst : Pointer[Pointer[CChar]]) Int;
+    lst : Pointer[Pointer[CChar]]) : Int;
 
 external luaL_ref(
     L : Pointer[lua_State],
-    t : Int) Int;
+    t : Int) : Int;
 
 external luaL_unref(
     L : Pointer[lua_State],
@@ -496,31 +496,31 @@ external luaL_unref(
 
 external luaL_loadfile(
     L : Pointer[lua_State],
-    filename : Pointer[CChar]) Int;
+    filename : Pointer[CChar]) : Int;
 
 external luaL_loadbuffer(
     L : Pointer[lua_State],
     buff : Pointer[CChar],
     sz : CULong,
-    name : Pointer[CChar]) Int;
+    name : Pointer[CChar]) : Int;
 
 external luaL_loadstring(
     L : Pointer[lua_State],
-    s : Pointer[CChar]) Int;
+    s : Pointer[CChar]) : Int;
 
-external luaL_newstate() Pointer[lua_State];
+external luaL_newstate() : Pointer[lua_State];
 
 external luaL_gsub(
     L : Pointer[lua_State],
     s : Pointer[CChar],
     p : Pointer[CChar],
-    r : Pointer[CChar]) Pointer[CChar];
+    r : Pointer[CChar]) : Pointer[CChar];
 
 external luaL_findtable(
     L : Pointer[lua_State],
     idx : Int,
     fname : Pointer[CChar],
-    szhint : Int) Pointer[CChar];
+    szhint : Int) : Pointer[CChar];
 
 record Struct_luaL_Buffer (
     p : Pointer[CChar],
@@ -536,7 +536,7 @@ external luaL_buffinit(
     B : Pointer[luaL_Buffer]);
 
 external luaL_prepbuffer(
-    B : Pointer[luaL_Buffer]) Pointer[CChar];
+    B : Pointer[luaL_Buffer]) : Pointer[CChar];
 
 external luaL_addlstring(
     B : Pointer[luaL_Buffer],
@@ -554,28 +554,28 @@ external luaL_pushresult(
     B : Pointer[luaL_Buffer]);
 
 external luaopen_base(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_table(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_io(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_os(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_string(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_math(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_debug(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaopen_package(
-    L : Pointer[lua_State]) Int;
+    L : Pointer[lua_State]) : Int;
 
 external luaL_openlibs(
     L : Pointer[lua_State]);

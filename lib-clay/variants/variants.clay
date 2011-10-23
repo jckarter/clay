@@ -32,7 +32,7 @@ VariantMembers(V) {
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-alias overload V(x:T) returned:V {
+alias overload V(x:T) --> returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
@@ -47,7 +47,7 @@ alias overload V(x:T) returned:V {
 //
 
 [V | Variant?(V) and not BitwiseCopiedType?(V)]
-overload V(src:V) returned:V {
+overload V(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
@@ -77,7 +77,7 @@ inline overload V(rvalue src:V) = move(src);
 //
 
 [V | Variant?(V) and not BitwiseMovedType?(V)]
-overload moveUnsafe(src:V) returned:V {
+overload moveUnsafe(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;

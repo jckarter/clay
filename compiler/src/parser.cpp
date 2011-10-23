@@ -2089,7 +2089,7 @@ static bool instance(TopLevelItemPtr &x) {
 // returnSpec
 //
 
-static bool namedReturn(IdentifierPtr &x) {
+static bool namedReturnName(IdentifierPtr &x) {
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(":")) return false;
@@ -2097,38 +2097,27 @@ static bool namedReturn(IdentifierPtr &x) {
     return true;
 }
 
-static bool optNamedReturn(IdentifierPtr &x) {
-    int p = save();
-    if (!namedReturn(x)) {
-        restore(p);
-        x = NULL;
-    }
-    return true;
-}
-
 static bool returnTypeExpression(ExprPtr &x) {
     return orExpr(x);
 }
 
-static bool returnSpec(ReturnSpecPtr &x) {
+static bool returnType(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
-    IdentifierPtr y;
-    if (!optNamedReturn(y)) return false;
     ExprPtr z;
     if (!returnTypeExpression(z)) return false;
-    x = new ReturnSpec(z, y);
+    x = new ReturnSpec(z, NULL);
     x->location = location;
     return true;
 }
 
-static bool returnSpecList(vector<ReturnSpecPtr> &x) {
+static bool returnTypeList(vector<ReturnSpecPtr> &x) {
     ReturnSpecPtr y;
-    if (!returnSpec(y)) return false;
+    if (!returnType(y)) return false;
     x.clear();
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !returnSpec(y)) {
+        if (!symbol(",") || !returnType(y)) {
             restore(p);
             break;
         }
@@ -2137,20 +2126,19 @@ static bool returnSpecList(vector<ReturnSpecPtr> &x) {
     return true;
 }
 
-static bool optReturnSpecList(vector<ReturnSpecPtr> &x) {
+static bool optReturnTypeList(vector<ReturnSpecPtr> &x) {
     int p = save();
-    if (!returnSpecList(x)) {
+    if (!returnTypeList(x)) {
         restore(p);
         x.clear();
     }
     return true;
 }
 
-static bool varReturnSpec(ReturnSpecPtr &x) {
+static bool namedReturn(ReturnSpecPtr &x) {
     LocationPtr location = currentLocation();
-    if (!ellipsis()) return false;
     IdentifierPtr y;
-    if (!optNamedReturn(y)) return false;
+    if (!namedReturnName(y)) return false;
     ExprPtr z;
     if (!returnTypeExpression(z)) return false;
     x = new ReturnSpec(z, y);
@@ -2158,9 +2146,65 @@ static bool varReturnSpec(ReturnSpecPtr &x) {
     return true;
 }
 
-static bool optVarReturnSpec(ReturnSpecPtr &x) {
+static bool namedReturnList(vector<ReturnSpecPtr> &x) {
+    ReturnSpecPtr y;
+    if (!namedReturn(y)) return false;
+    x.clear();
+    x.push_back(y);
+    while (true) {
+        int p = save();
+        if (!symbol(",") || !namedReturn(y)) {
+            restore(p);
+            break;
+        }
+        x.push_back(y);
+    }
+    return true;
+}
+
+static bool optNamedReturnList(vector<ReturnSpecPtr> &x) {
     int p = save();
-    if (!varReturnSpec(x)) {
+    if (!namedReturnList(x)) {
+        restore(p);
+        x.clear();
+    }
+    return true;
+}
+
+static bool varReturnType(ReturnSpecPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!ellipsis()) return false;
+    ExprPtr z;
+    if (!returnTypeExpression(z)) return false;
+    x = new ReturnSpec(z, NULL);
+    x->location = location;
+    return true;
+}
+
+static bool optVarReturnType(ReturnSpecPtr &x) {
+    int p = save();
+    if (!varReturnType(x)) {
+        restore(p);
+        x = NULL;
+    }
+    return true;
+}
+
+static bool varNamedReturn(ReturnSpecPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!ellipsis()) return false;
+    IdentifierPtr y;
+    if (!namedReturnName(y)) return false;
+    ExprPtr z;
+    if (!returnTypeExpression(z)) return false;
+    x = new ReturnSpec(z, y);
+    x->location = location;
+    return true;
+}
+
+static bool optVarNamedReturn(ReturnSpecPtr &x) {
+    int p = save();
+    if (!varNamedReturn(x)) {
         restore(p);
         x = NULL;
     }
@@ -2171,9 +2215,22 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
                            ReturnSpecPtr &varReturnSpec) {
     returnSpecs.clear();
     varReturnSpec = NULL;
-    if (!optReturnSpecList(returnSpecs)) return false;
-    if (!optVarReturnSpec(varReturnSpec)) return false;
-    return true;
+    int p = save();
+    if (symbol(":")) {
+        if (!optReturnTypeList(returnSpecs)) return false;
+        if (!optVarReturnType(varReturnSpec)) return false;
+        return true;
+    } else {
+        restore(p);
+        if (symbol("-->")) {
+            if (!optNamedReturnList(returnSpecs)) return false;
+            if (!optVarNamedReturn(varReturnSpec)) return false;
+            return true;
+        } else {
+            restore(p);
+            return false;
+        }
+    }
 }
 
 
@@ -2224,7 +2281,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    if (!optReturnSpecList(y->returnSpecs)) return false;
+    y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!llvmCode(y->llvmBody)) return false;
     y->location = location;
 
@@ -2257,7 +2314,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     IdentifierPtr z;
     if (!identifier(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    if (!allReturnSpecs(y->returnSpecs, y->varReturnSpec)) return false;
+    y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!body(y->body)) return false;
     y->location = location;
 
@@ -2299,7 +2356,7 @@ static bool overload(TopLevelItemPtr &x) {
     ExprPtr z;
     if (!pattern(z)) return false;
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    if (!allReturnSpecs(y->returnSpecs, y->varReturnSpec)) return false;
+    y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     int p = save();
     if (!optBody(y->body)) {
         restore(p);
@@ -2497,6 +2554,15 @@ static bool externalBody(StatementPtr &x) {
     return false;
 }
 
+static bool optExternalReturn(ExprPtr &x) {
+    int p = save();
+    if (!symbol(":")) {
+        restore(p);
+        return true;
+    }
+    return optExpression(x);
+}
+
 static bool external(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
     Visibility vis;
@@ -2508,7 +2574,7 @@ static bool external(TopLevelItemPtr &x) {
     if (!symbol("(")) return false;
     if (!externalArgsBody(y->args, y->hasVarArgs)) return false;
     if (!symbol(")")) return false;
-    if (!optExpression(y->returnType)) return false;
+    if (!optExternalReturn(y->returnType)) return false;
     if (!externalBody(y->body)) return false;
     x = y.ptr();
     x->location = location;

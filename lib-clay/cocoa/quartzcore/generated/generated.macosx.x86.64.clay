@@ -3965,7 +3965,7 @@ external kCISamplerFilterNearest : NSString;
 
 external kCISamplerFilterLinear : NSString;
 
-external CACurrentMediaTime() Double;
+external CACurrentMediaTime() : Double;
 
 record Struct_CATransform3D (
     m11 : Double,
@@ -3991,62 +3991,62 @@ alias CATransform3D = Struct_CATransform3D;
 external CATransform3DIdentity : CATransform3D;
 
 external CATransform3DIsIdentity(
-    t : CATransform3D) Bool;
+    t : CATransform3D) : Bool;
 
 external CATransform3DEqualToTransform(
     a : CATransform3D,
-    b : CATransform3D) Bool;
+    b : CATransform3D) : Bool;
 
 external CATransform3DMakeTranslation(
     tx : Double,
     ty : Double,
-    tz : Double) CATransform3D;
+    tz : Double) : CATransform3D;
 
 external CATransform3DMakeScale(
     sx : Double,
     sy : Double,
-    sz : Double) CATransform3D;
+    sz : Double) : CATransform3D;
 
 external CATransform3DMakeRotation(
     angle : Double,
     x : Double,
     y : Double,
-    z : Double) CATransform3D;
+    z : Double) : CATransform3D;
 
 external CATransform3DTranslate(
     t : CATransform3D,
     tx : Double,
     ty : Double,
-    tz : Double) CATransform3D;
+    tz : Double) : CATransform3D;
 
 external CATransform3DScale(
     t : CATransform3D,
     sx : Double,
     sy : Double,
-    sz : Double) CATransform3D;
+    sz : Double) : CATransform3D;
 
 external CATransform3DRotate(
     t : CATransform3D,
     angle : Double,
     x : Double,
     y : Double,
-    z : Double) CATransform3D;
+    z : Double) : CATransform3D;
 
 external CATransform3DConcat(
     a : CATransform3D,
-    b : CATransform3D) CATransform3D;
+    b : CATransform3D) : CATransform3D;
 
 external CATransform3DInvert(
-    t : CATransform3D) CATransform3D;
+    t : CATransform3D) : CATransform3D;
 
 external CATransform3DMakeAffineTransform(
-    m : CGAffineTransform) CATransform3D;
+    m : CGAffineTransform) : CATransform3D;
 
 external CATransform3DIsAffine(
-    t : CATransform3D) Bool;
+    t : CATransform3D) : Bool;
 
 external CATransform3DGetAffineTransform(
-    t : CATransform3D) CGAffineTransform;
+    t : CATransform3D) : CGAffineTransform;
 
 external kCAFillModeForwards : NSString;
 

@@ -22,7 +22,7 @@ record SqliteDB (handle: Pointer[sqlite3]);
 overload RegularRecord?(static SqliteDB) = false;
 
 [S | CCompatibleString?(S)]
-overload SqliteDB(filename: S) returned: SqliteDB {
+overload SqliteDB(filename: S) --> returned: SqliteDB {
     var code = sqlite3_open(cstring(filename), &returned.handle);
     if (code != SQLITE_OK) {
         var errmsg = String(CStringRef(sqlite3_errmsg(returned.handle)));
@@ -44,7 +44,7 @@ record SqliteStatement (handle: Pointer[sqlite3_stmt]);
 overload RegularRecord?(static SqliteStatement) = false;
 
 [S | CCompatibleString?(S)]
-overload SqliteStatement(db: SqliteDB, sql: S) returned: SqliteStatement {
+overload SqliteStatement(db: SqliteDB, sql: S) --> returned: SqliteStatement {
     var code = sqlite3_prepare_v2(db.handle, cstring(sql), Int(size(sql)) + 1,
         &returned.handle, null(Pointer[CChar])
     );

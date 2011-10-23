@@ -767,7 +767,7 @@ record GLFunctions (
     WindowPos3sv: GLCodePointer[(Pointer[GLshort]), ()],
 );
 
-overload GLFunctions() gl: GLFunctions { }
+overload GLFunctions() --> gl: GLFunctions { }
 overload destroy(gl: GLFunctions) { }
 
 private var globalGL = GLFunctions();

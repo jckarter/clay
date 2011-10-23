@@ -41,7 +41,7 @@ overload File(path:S) = File(new FileData(RawFile(path)));
 overload File(rvalue f:RawFile) =
     File(new FileData(move(f)));
 
-overload FileData(rvalue file:RawFile) returned:FileData {
+overload FileData(rvalue file:RawFile) --> returned:FileData {
     var lineBuffered? = terminal?(file);
     var buf = Array[Byte,BUFFER_SIZE]();
     return FileData(move(file),

@@ -14,7 +14,7 @@ eachPermutation(xs, f){
 // Permute xs in place to the lexicographically next permutation
 // If this is the last one (i.e. the sequence is weakly decreasing)
 // return Nothing. Else return Just(first index altered).
-nextPermutation(xs) Maybe[SizeT]{
+nextPermutation(xs) : Maybe[SizeT]{
   if(size(xs) <= 1) return nothing(SizeT);
 
   var k = size(xs) - 2;

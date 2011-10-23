@@ -64,7 +64,7 @@ overload RegularRecord?(static T) = true;
 //
 
 [T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload T(..args:A) returned:T {
+alias overload T(..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
 
@@ -75,7 +75,7 @@ alias overload T(..args:A) returned:T {
 //
 
 [T | RegularRecord?(T)]
-overload T() returned:T {
+overload T() --> returned:T {
     initializeMulti(..recordFields(returned));
 }
 
@@ -95,7 +95,7 @@ inline overload initializeTypes() = ;
 //
 
 [T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
-overload T(src:T) returned:T {
+overload T(src:T) --> returned:T {
     ..recordFields(returned) <-- ..recordFields(src);
 }
 
@@ -106,7 +106,7 @@ overload T(src:T) returned:T {
 //
 
 [T | RegularRecord?(T) and not BitwiseMovedType?(T)]
-overload moveUnsafe(src:T) returned:T {
+overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     static for (i in ..staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));

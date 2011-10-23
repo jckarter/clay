@@ -31,7 +31,7 @@ overload ContiguousSequence?(static BufferVector[T]) = true;
 [T] overload BufferVector(..args);
 
 [T | PODType?(T)]
-overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) returned:BufferVector[T] {
+overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) --> returned:BufferVector[T] {
     returned.begin = begin;
     returned.end = end;
     returned.current = current;
@@ -59,7 +59,7 @@ overload BufferVector(seq:S) =
 //
 
 [T | PODType?(T)]
-overload BufferVector[T]() returned:BufferVector[T] {}
+overload BufferVector[T]() --> returned:BufferVector[T] {}
 
 [T | PODType?(T)]
 overload BufferVector[T](src:BufferVector[T]) =

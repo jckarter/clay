@@ -34,7 +34,7 @@ flexi(..fields) = recordWithPredicate(FlexiConstructor?, ..fields);
 //
 
 [T, ..A | FlexiConstructor?(T) and (countValues(..A) == RecordFieldCount(T))]
-overload T(forward ..args:A) returned:T {
+overload T(forward ..args:A) --> returned:T {
     alias TargetTypes = Tuple(..RecordFieldTypes(T));
     ..recordFields(returned) <-- ..convertToTypes(TargetTypes, static 0, ..args);
 }

@@ -14,13 +14,13 @@ import win32.errornames.(errorNames);
 
 external (WINAPI) GetFileSizeEx(
     handle : HANDLE,
-    lpFileSize : Pointer[Int64]) BOOL;
+    lpFileSize : Pointer[Int64]) : BOOL;
 
 external (WINAPI) SetFilePointerEx(
     handle : HANDLE,
     offset : Int64,
     newPosition : Pointer[Int64],
-    moveMethod : DWORD) BOOL;
+    moveMethod : DWORD) : BOOL;
 
 
 

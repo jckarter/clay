@@ -12912,24 +12912,24 @@ external NSBestDepth(
     bps : CLong,
     bpp : CLong,
     planar : Bool,
-    exactMatch : Pointer[Bool]) Int;
+    exactMatch : Pointer[Bool]) : Int;
 
 external NSPlanarFromDepth(
-    depth : Int) Bool;
+    depth : Int) : Bool;
 
 external NSColorSpaceFromDepth(
-    depth : Int) NSString;
+    depth : Int) : NSString;
 
 external NSBitsPerSampleFromDepth(
-    depth : Int) CLong;
+    depth : Int) : CLong;
 
 external NSBitsPerPixelFromDepth(
-    depth : Int) CLong;
+    depth : Int) : CLong;
 
 external NSNumberOfColorComponents(
-    colorSpaceName : NSString) CLong;
+    colorSpaceName : NSString) : CLong;
 
-external NSAvailableWindowDepths() Pointer[Int];
+external NSAvailableWindowDepths() : Pointer[Int];
 
 external NSWhite : Double;
 
@@ -13007,7 +13007,7 @@ external NSDrawTiledRects(
     clipRect : NSRect,
     sides : Pointer[CULong],
     grays : Pointer[Double],
-    count : CLong) NSRect;
+    count : CLong) : NSRect;
 
 external NSDrawGrayBezel(
     aRect : NSRect,
@@ -13029,7 +13029,7 @@ external NSEraseRect(
     aRect : NSRect);
 
 external NSReadPixel(
-    passedPoint : NSPoint) NSColor;
+    passedPoint : NSPoint) : NSColor;
 
 external NSDrawBitmap(
     rect : NSRect,
@@ -13058,14 +13058,14 @@ external NSGetWindowServerMemory(
     context : CLong,
     virtualMemory : Pointer[CLong],
     windowBackingMemory : Pointer[CLong],
-    windowDumpString : Pointer[NSString]) CLong;
+    windowDumpString : Pointer[NSString]) : CLong;
 
 external NSDrawColorTiledRects(
     boundsRect : NSRect,
     clipRect : NSRect,
     sides : Pointer[CULong],
     colors : Pointer[NSColor],
-    count : CLong) NSRect;
+    count : CLong) : NSRect;
 
 external NSDrawDarkBezel(
     aRect : NSRect,
@@ -13207,13 +13207,13 @@ external NSAccessibilityException : NSString;
 
 external NSAccessibilityRoleDescription(
     role : NSString,
-    subrole : NSString) NSString;
+    subrole : NSString) : NSString;
 
 external NSAccessibilityRoleDescriptionForUIElement(
-    element : Id) NSString;
+    element : Id) : NSString;
 
 external NSAccessibilityActionDescription(
-    action : NSString) NSString;
+    action : NSString) : NSString;
 
 external NSAccessibilityRaiseBadArgumentException(
     element : Id,
@@ -13221,16 +13221,16 @@ external NSAccessibilityRaiseBadArgumentException(
     value : Id);
 
 external NSAccessibilityUnignoredAncestor(
-    element : Id) Id;
+    element : Id) : Id;
 
 external NSAccessibilityUnignoredDescendant(
-    element : Id) Id;
+    element : Id) : Id;
 
 external NSAccessibilityUnignoredChildren(
-    originalChildren : NSArray) NSArray;
+    originalChildren : NSArray) : NSArray;
 
 external NSAccessibilityUnignoredChildrenForOnlyChild(
-    originalChild : Id) NSArray;
+    originalChild : Id) : NSArray;
 
 external NSAccessibilityPostNotification(
     element : Id,
@@ -14172,22 +14172,22 @@ alias NSUserInterfaceLayoutDirection = CLong;
 
 external NSApplicationMain(
     argc : Int,
-    argv : Pointer[Pointer[CChar]]) Int;
+    argv : Pointer[Pointer[CChar]]) : Int;
 
-external NSApplicationLoad() Bool;
+external NSApplicationLoad() : Bool;
 
 external NSShowsServicesMenuItem(
-    itemName : NSString) Bool;
+    itemName : NSString) : Bool;
 
 external NSSetShowsServicesMenuItem(
     itemName : NSString,
-    enabled : Bool) CLong;
+    enabled : Bool) : CLong;
 
 external NSUpdateDynamicServices();
 
 external NSPerformService(
     itemName : NSString,
-    pboard : NSPasteboard) Bool;
+    pboard : NSPasteboard) : Bool;
 
 external NSRegisterServicesProvider(
     provider : Id,
@@ -14523,7 +14523,7 @@ external NSConvertGlyphsToPackedGlyphs(
     glBuf : Pointer[UInt],
     count : CLong,
     packing : CULong,
-    packedGlyphs : Pointer[CChar]) CLong;
+    packedGlyphs : Pointer[CChar]) : CLong;
 
 external NSAntialiasThresholdChangedNotification : NSString;
 
@@ -14734,7 +14734,7 @@ external NSRunAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) CLong;
+    ..) : CLong;
 
 external NSRunInformationalAlertPanel(
     title : NSString,
@@ -14742,7 +14742,7 @@ external NSRunInformationalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) CLong;
+    ..) : CLong;
 
 external NSRunCriticalAlertPanel(
     title : NSString,
@@ -14750,7 +14750,7 @@ external NSRunCriticalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) CLong;
+    ..) : CLong;
 
 external NSRunAlertPanelRelativeToWindow(
     title : NSString,
@@ -14759,7 +14759,7 @@ external NSRunAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ..) CLong;
+    ..) : CLong;
 
 external NSRunInformationalAlertPanelRelativeToWindow(
     title : NSString,
@@ -14768,7 +14768,7 @@ external NSRunInformationalAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ..) CLong;
+    ..) : CLong;
 
 external NSRunCriticalAlertPanelRelativeToWindow(
     title : NSString,
@@ -14777,7 +14777,7 @@ external NSRunCriticalAlertPanelRelativeToWindow(
     alternateButton : NSString,
     otherButton : NSString,
     docWindow : NSWindow,
-    ..) CLong;
+    ..) : CLong;
 
 external NSBeginAlertSheet(
     title : NSString,
@@ -14824,7 +14824,7 @@ external NSGetAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) Id;
+    ..) : Id;
 
 external NSGetInformationalAlertPanel(
     title : NSString,
@@ -14832,7 +14832,7 @@ external NSGetInformationalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) Id;
+    ..) : Id;
 
 external NSGetCriticalAlertPanel(
     title : NSString,
@@ -14840,7 +14840,7 @@ external NSGetCriticalAlertPanel(
     defaultButton : NSString,
     alternateButton : NSString,
     otherButton : NSString,
-    ..) Id;
+    ..) : Id;
 
 external NSReleaseAlertPanel(
     panel : Id);
@@ -15034,16 +15034,16 @@ external NSFilesPromisePboardType : NSString;
 external NSFileContentsPboardType : NSString;
 
 external NSCreateFilenamePboardType(
-    fileType : NSString) NSString;
+    fileType : NSString) : NSString;
 
 external NSCreateFileContentsPboardType(
-    fileType : NSString) NSString;
+    fileType : NSString) : NSString;
 
 external NSGetFileType(
-    pboardType : NSString) NSString;
+    pboardType : NSString) : NSString;
 
 external NSGetFileTypes(
-    pboardTypes : NSArray) NSArray;
+    pboardTypes : NSArray) : NSArray;
 
 external NSPICTPboardType : NSString;
 
@@ -16371,7 +16371,7 @@ alias NSInterfaceStyle = CULong;
 
 external NSInterfaceStyleForKey(
     key : NSString,
-    responder : NSResponder) CULong;
+    responder : NSResponder) : CULong;
 
 external NSInterfaceStyleDefault : NSString;
 
@@ -16583,7 +16583,7 @@ external NSNoSelectionMarker : Id;
 external NSNotApplicableMarker : Id;
 
 external NSIsControllerMarker(
-    object : Id) Bool;
+    object : Id) : Bool;
 
 external NSObservedObjectKey : NSString;
 

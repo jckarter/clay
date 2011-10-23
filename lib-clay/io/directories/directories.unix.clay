@@ -27,7 +27,7 @@ overload RegularRecord?(static DirentSequence) = false;
 overload BitwiseMovedType?(static DirentSequence) = true;
 
 [T | CCompatibleString?(T)]
-overload DirentSequence(dir:T) returned: DirentSequence {
+overload DirentSequence(dir:T) --> returned: DirentSequence {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
         throw GenericIOError(errno());

@@ -390,23 +390,23 @@ external pselect(
     argument2 : Pointer[fd_set],
     argument3 : Pointer[fd_set],
     argument4 : Pointer[Struct_timespec],
-    argument5 : Pointer[sigset_t]) Int;
+    argument5 : Pointer[sigset_t]) : Int;
 
 external select(
     argument0 : Int,
     argument1 : Pointer[fd_set],
     argument2 : Pointer[fd_set],
     argument3 : Pointer[fd_set],
-    argument4 : Pointer[Struct_timeval]) Int;
+    argument4 : Pointer[Struct_timeval]) : Int;
 
 external ftruncate(
     argument0 : Int,
-    argument1 : Int64) Int;
+    argument1 : Int64) : Int;
 
 external lseek(
     argument0 : Int,
     argument1 : Int64,
-    argument2 : Int) Int64;
+    argument2 : Int) : Int64;
 
 external mmap(
     argument0 : RawPointer,
@@ -414,175 +414,175 @@ external mmap(
     argument2 : Int,
     argument3 : Int,
     argument4 : Int,
-    argument5 : Int64) RawPointer;
+    argument5 : Int64) : RawPointer;
 
 external truncate(
     argument0 : Pointer[CChar],
-    argument1 : Int64) Int;
+    argument1 : Int64) : Int;
 
 external _exit(
     argument0 : Int);
 
 external access(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external alarm(
-    argument0 : UInt) UInt;
+    argument0 : UInt) : UInt;
 
 external chdir(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external chown(
     argument0 : Pointer[CChar],
     argument1 : UInt,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external close(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external closefrom(
     argument0 : Int);
 
 external dup(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external dup2(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external execl(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external execle(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external execlp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external execv(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) Int;
+    argument1 : Pointer[Pointer[CChar]]) : Int;
 
 external execve(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[Pointer[CChar]]) Int;
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external execvp(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) Int;
+    argument1 : Pointer[Pointer[CChar]]) : Int;
 
-external fork() Int;
+external fork() : Int;
 
 external fpathconf(
     argument0 : Int,
-    argument1 : Int) CLong;
+    argument1 : Int) : CLong;
 
 external getcwd(
     argument0 : Pointer[CChar],
-    argument1 : UInt) Pointer[CChar];
+    argument1 : UInt) : Pointer[CChar];
 
-external getegid() UInt;
+external getegid() : UInt;
 
-external geteuid() UInt;
+external geteuid() : UInt;
 
-external getgid() UInt;
+external getgid() : UInt;
 
 external getgroups(
     argument0 : Int,
-    argument1 : Pointer[UInt]) Int;
+    argument1 : Pointer[UInt]) : Int;
 
-external getlogin() Pointer[CChar];
+external getlogin() : Pointer[CChar];
 
-external getpgrp() Int;
+external getpgrp() : Int;
 
-external getpid() Int;
+external getpid() : Int;
 
-external getppid() Int;
+external getppid() : Int;
 
-external getuid() UInt;
+external getuid() : UInt;
 
 external isatty(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external link(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) Int;
+    argument1 : Pointer[CChar]) : Int;
 
 external pathconf(
     argument0 : Pointer[CChar],
-    argument1 : Int) CLong;
+    argument1 : Int) : CLong;
 
-external pause() Int;
+external pause() : Int;
 
 external pipe(
-    argument0 : Pointer[Int]) Int;
+    argument0 : Pointer[Int]) : Int;
 
 external read(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external rmdir(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external setgid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external setpgid(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
-external setsid() Int;
+external setsid() : Int;
 
 external setuid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external sleep(
-    argument0 : UInt) UInt;
+    argument0 : UInt) : UInt;
 
 external sysconf(
-    argument0 : Int) CLong;
+    argument0 : Int) : CLong;
 
 external tcgetpgrp(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external tcsetpgrp(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external ttyname(
-    argument0 : Int) Pointer[CChar];
+    argument0 : Int) : Pointer[CChar];
 
 external ttyname_r(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external unlink(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external write(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external confstr(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : UInt) UInt;
+    argument2 : UInt) : UInt;
 
 external getopt(
     argument0 : Int,
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[CChar]) Int;
+    argument2 : Pointer[CChar]) : Int;
 
 external optarg : Pointer[CChar];
 
@@ -593,132 +593,132 @@ external opterr : Int;
 external optopt : Int;
 
 external fsync(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external getlogin_r(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external fchown(
     argument0 : Int,
     argument1 : UInt,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external readlink(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external gethostname(
     argument0 : Pointer[CChar],
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external setegid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external seteuid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external getsid(
-    _pid : Int) Int;
+    _pid : Int) : Int;
 
 external fchdir(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external getpgid(
-    _pid : Int) Int;
+    _pid : Int) : Int;
 
 external lchown(
     argument0 : Pointer[CChar],
     argument1 : UInt,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external pread(
     argument0 : Int,
     argument1 : RawPointer,
     argument2 : UInt,
-    argument3 : Int64) Int;
+    argument3 : Int64) : Int;
 
 external pwrite(
     argument0 : Int,
     argument1 : RawPointer,
     argument2 : UInt,
-    argument3 : Int64) Int;
+    argument3 : Int64) : Int;
 
 external faccessat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external fchownat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : UInt,
     argument3 : UInt,
-    argument4 : Int) Int;
+    argument4 : Int) : Int;
 
 external fexecve(
     argument0 : Int,
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[Pointer[CChar]]) Int;
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external linkat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,
     argument3 : Pointer[CChar],
-    argument4 : Int) Int;
+    argument4 : Int) : Int;
 
 external readlinkat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
-    argument3 : UInt) Int;
+    argument3 : UInt) : Int;
 
 external symlinkat(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : Pointer[CChar]) Int;
+    argument2 : Pointer[CChar]) : Int;
 
 external unlinkat(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external symlink(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) Int;
+    argument1 : Pointer[CChar]) : Int;
 
 external crypt(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) Pointer[CChar];
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external encrypt(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
-external gethostid() CLong;
+external gethostid() : CLong;
 
 external lockf(
     argument0 : Int,
     argument1 : Int,
-    argument2 : Int64) Int;
+    argument2 : Int64) : Int;
 
 external nice(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external setpgrp(
     _pid : Int,
-    _pgrp : Int) Int;
+    _pgrp : Int) : Int;
 
 external setregid(
     argument0 : UInt,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external setreuid(
     argument0 : UInt,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external swab(
     argument0 : RawPointer,
@@ -728,160 +728,160 @@ external swab(
 external sync();
 
 external brk(
-    argument0 : RawPointer) Int;
+    argument0 : RawPointer) : Int;
 
 external chroot(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
-external getdtablesize() Int;
+external getdtablesize() : Int;
 
-external getpagesize() Int;
+external getpagesize() : Int;
 
 external getpass(
-    argument0 : Pointer[CChar]) Pointer[CChar];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external sbrk(
-    argument0 : Int) RawPointer;
+    argument0 : Int) : RawPointer;
 
 external getwd(
-    argument0 : Pointer[CChar]) Pointer[CChar];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external ualarm(
     argument0 : UInt,
-    argument1 : UInt) UInt;
+    argument1 : UInt) : UInt;
 
 external usleep(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
-external vfork() Int;
+external vfork() : Int;
 
 external acct(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
-external async_daemon() Int;
+external async_daemon() : Int;
 
 external check_utility_compat(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
-external crypt_get_format() Pointer[CChar];
+external crypt_get_format() : Pointer[CChar];
 
 external crypt_set_format(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external des_cipher(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : CLong,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external des_setkey(
-    key : Pointer[CChar]) Int;
+    key : Pointer[CChar]) : Int;
 
 external eaccess(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external endusershell();
 
 external exect(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[Pointer[CChar]]) Int;
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external execvP(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[Pointer[CChar]]) Int;
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external feature_present(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external fflagstostr(
-    argument0 : CULong) Pointer[CChar];
+    argument0 : CULong) : Pointer[CChar];
 
 external getdomainname(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external getgrouplist(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[UInt],
-    argument3 : Pointer[Int]) Int;
+    argument3 : Pointer[Int]) : Int;
 
 external getmode(
     argument0 : RawPointer,
-    argument1 : UShort) UShort;
+    argument1 : UShort) : UShort;
 
-external getosreldate() Int;
+external getosreldate() : Int;
 
 external getpeereid(
     argument0 : Int,
     argument1 : Pointer[UInt],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external getresgid(
     argument0 : Pointer[UInt],
     argument1 : Pointer[UInt],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external getresuid(
     argument0 : Pointer[UInt],
     argument1 : Pointer[UInt],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
-external getusershell() Pointer[CChar];
+external getusershell() : Pointer[CChar];
 
 external initgroups(
     argument0 : Pointer[CChar],
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external iruserok(
     argument0 : CULong,
     argument1 : Int,
     argument2 : Pointer[CChar],
-    argument3 : Pointer[CChar]) Int;
+    argument3 : Pointer[CChar]) : Int;
 
 external iruserok_sa(
     argument0 : RawPointer,
     argument1 : Int,
     argument2 : Int,
     argument3 : Pointer[CChar],
-    argument4 : Pointer[CChar]) Int;
+    argument4 : Pointer[CChar]) : Int;
 
-external issetugid() Int;
+external issetugid() : Int;
 
 external lpathconf(
     argument0 : Pointer[CChar],
-    argument1 : Int) CLong;
+    argument1 : Int) : CLong;
 
 external mkdtemp(
-    argument0 : Pointer[CChar]) Pointer[CChar];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external mknod(
     argument0 : Pointer[CChar],
     argument1 : UShort,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external mkstemp(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external mkstemps(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external mktemp(
-    argument0 : Pointer[CChar]) Pointer[CChar];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external nfssvc(
     argument0 : Int,
-    argument1 : RawPointer) Int;
+    argument1 : RawPointer) : Int;
 
 external profil(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external rcmd(
     argument0 : Pointer[Pointer[CChar]],
@@ -889,7 +889,7 @@ external rcmd(
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
     argument4 : Pointer[CChar],
-    argument5 : Pointer[Int]) Int;
+    argument5 : Pointer[Int]) : Int;
 
 external rcmd_af(
     argument0 : Pointer[Pointer[CChar]],
@@ -898,7 +898,7 @@ external rcmd_af(
     argument3 : Pointer[CChar],
     argument4 : Pointer[CChar],
     argument5 : Pointer[Int],
-    argument6 : Int) Int;
+    argument6 : Int) : Int;
 
 external rcmdsh(
     argument0 : Pointer[Pointer[CChar]],
@@ -906,65 +906,65 @@ external rcmdsh(
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar],
     argument4 : Pointer[CChar],
-    argument5 : Pointer[CChar]) Int;
+    argument5 : Pointer[CChar]) : Int;
 
 external re_comp(
-    argument0 : Pointer[CChar]) Pointer[CChar];
+    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external re_exec(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external reboot(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external revoke(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external rfork(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external rfork_thread(
     argument0 : Int,
     argument1 : RawPointer,
     argument2 : CCodePointer[(RawPointer),(Int)],
-    argument3 : RawPointer) Int;
+    argument3 : RawPointer) : Int;
 
 external rresvport(
-    argument0 : Pointer[Int]) Int;
+    argument0 : Pointer[Int]) : Int;
 
 external rresvport_af(
     argument0 : Pointer[Int],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external ruserok(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Pointer[CChar],
-    argument3 : Pointer[CChar]) Int;
+    argument3 : Pointer[CChar]) : Int;
 
 external setdomainname(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external setgroups(
     argument0 : Int,
-    argument1 : Pointer[UInt]) Int;
+    argument1 : Pointer[UInt]) : Int;
 
 external sethostid(
     argument0 : CLong);
 
 external sethostname(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external setkey(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external setlogin(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external setmode(
-    argument0 : Pointer[CChar]) RawPointer;
+    argument0 : Pointer[CChar]) : RawPointer;
 
 external setproctitle(
     _fmt : Pointer[CChar],
@@ -973,86 +973,86 @@ external setproctitle(
 external setresgid(
     argument0 : UInt,
     argument1 : UInt,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external setresuid(
     argument0 : UInt,
     argument1 : UInt,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external setrgid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external setruid(
-    argument0 : UInt) Int;
+    argument0 : UInt) : Int;
 
 external setusershell();
 
 external strtofflags(
     argument0 : Pointer[Pointer[CChar]],
     argument1 : Pointer[CULong],
-    argument2 : Pointer[CULong]) Int;
+    argument2 : Pointer[CULong]) : Int;
 
 external swapon(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external swapoff(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external syscall(
     argument0 : Int,
-    ..) Int;
+    ..) : Int;
 
 external __syscall(
     argument0 : Int64,
-    ..) Int64;
+    ..) : Int64;
 
-external ttyslot() Int;
+external ttyslot() : Int;
 
 external undelete(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external unwhiteout(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 external valloc(
-    argument0 : UInt) RawPointer;
+    argument0 : UInt) : RawPointer;
 
 external optreset : Int;
 
-external __error() Pointer[Int];
+external __error() : Pointer[Int];
 
 record Struct_sched_param (
     sched_priority : Int,
 );
 
 external sched_get_priority_max(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sched_get_priority_min(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sched_getparam(
     argument0 : Int,
-    argument1 : Pointer[Struct_sched_param]) Int;
+    argument1 : Pointer[Struct_sched_param]) : Int;
 
 external sched_getscheduler(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sched_rr_get_interval(
     argument0 : Int,
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external sched_setparam(
     argument0 : Int,
-    argument1 : Pointer[Struct_sched_param]) Int;
+    argument1 : Pointer[Struct_sched_param]) : Int;
 
 external sched_setscheduler(
     argument0 : Int,
     argument1 : Int,
-    argument2 : Pointer[Struct_sched_param]) Int;
+    argument2 : Pointer[Struct_sched_param]) : Int;
 
-external sched_yield() Int;
+external sched_yield() : Int;
 
 record Struct_tm (
     tm_sec : Int,
@@ -1071,106 +1071,106 @@ record Struct_tm (
 external tzname : Array[Pointer[CChar],0];
 
 external asctime(
-    argument0 : Pointer[Struct_tm]) Pointer[CChar];
+    argument0 : Pointer[Struct_tm]) : Pointer[CChar];
 
-external clock() CULong;
+external clock() : CULong;
 
 external ctime(
-    argument0 : Pointer[Int]) Pointer[CChar];
+    argument0 : Pointer[Int]) : Pointer[CChar];
 
 external difftime(
     argument0 : Int,
-    argument1 : Int) Double;
+    argument1 : Int) : Double;
 
 external gmtime(
-    argument0 : Pointer[Int]) Pointer[Struct_tm];
+    argument0 : Pointer[Int]) : Pointer[Struct_tm];
 
 external localtime(
-    argument0 : Pointer[Int]) Pointer[Struct_tm];
+    argument0 : Pointer[Int]) : Pointer[Struct_tm];
 
 external mktime(
-    argument0 : Pointer[Struct_tm]) Int;
+    argument0 : Pointer[Struct_tm]) : Int;
 
 external strftime(
     argument0 : Pointer[CChar],
     argument1 : UInt,
     argument2 : Pointer[CChar],
-    argument3 : Pointer[Struct_tm]) UInt;
+    argument3 : Pointer[Struct_tm]) : UInt;
 
 external time(
-    argument0 : Pointer[Int]) Int;
+    argument0 : Pointer[Int]) : Int;
 
 external timer_create(
     argument0 : Int,
     argument1 : Pointer[Struct_sigevent],
-    argument2 : Pointer[timer_t]) Int;
+    argument2 : Pointer[timer_t]) : Int;
 
 external timer_delete(
-    argument0 : timer_t) Int;
+    argument0 : timer_t) : Int;
 
 external timer_gettime(
     argument0 : timer_t,
-    argument1 : Pointer[Struct_itimerspec]) Int;
+    argument1 : Pointer[Struct_itimerspec]) : Int;
 
 external timer_getoverrun(
-    argument0 : timer_t) Int;
+    argument0 : timer_t) : Int;
 
 external timer_settime(
     argument0 : timer_t,
     argument1 : Int,
     argument2 : Pointer[Struct_itimerspec],
-    argument3 : Pointer[Struct_itimerspec]) Int;
+    argument3 : Pointer[Struct_itimerspec]) : Int;
 
 external tzset();
 
 external clock_getres(
     argument0 : Int,
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external clock_gettime(
     argument0 : Int,
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external clock_settime(
     argument0 : Int,
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external nanosleep(
     argument0 : Pointer[Struct_timespec],
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external asctime_r(
     argument0 : Pointer[Struct_tm],
-    argument1 : Pointer[CChar]) Pointer[CChar];
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external ctime_r(
     argument0 : Pointer[Int],
-    argument1 : Pointer[CChar]) Pointer[CChar];
+    argument1 : Pointer[CChar]) : Pointer[CChar];
 
 external gmtime_r(
     argument0 : Pointer[Int],
-    argument1 : Pointer[Struct_tm]) Pointer[Struct_tm];
+    argument1 : Pointer[Struct_tm]) : Pointer[Struct_tm];
 
 external localtime_r(
     argument0 : Pointer[Int],
-    argument1 : Pointer[Struct_tm]) Pointer[Struct_tm];
+    argument1 : Pointer[Struct_tm]) : Pointer[Struct_tm];
 
 external strptime(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
-    argument2 : Pointer[Struct_tm]) Pointer[CChar];
+    argument2 : Pointer[Struct_tm]) : Pointer[CChar];
 
 external timezone(
     argument0 : Int,
-    argument1 : Int) Pointer[CChar];
+    argument1 : Int) : Pointer[CChar];
 
 external tzsetwall();
 
 external timelocal(
-    argument0 : Pointer[Struct_tm]) Int;
+    argument0 : Pointer[Struct_tm]) : Int;
 
 external timegm(
-    argument0 : Pointer[Struct_tm]) Int;
+    argument0 : Pointer[Struct_tm]) : Int;
 
 alias PTHREAD_MUTEX_ERRORCHECK = 1;
 alias PTHREAD_MUTEX_RECURSIVE = 2;
@@ -1185,364 +1185,364 @@ record Struct__pthread_cleanup_info (
 external pthread_atfork(
     argument0 : CCodePointer[(),()],
     argument1 : CCodePointer[(),()],
-    argument2 : CCodePointer[(),()]) Int;
+    argument2 : CCodePointer[(),()]) : Int;
 
 external pthread_attr_destroy(
-    argument0 : Pointer[pthread_attr_t]) Int;
+    argument0 : Pointer[pthread_attr_t]) : Int;
 
 external pthread_attr_getstack(
     argument0 : Pointer[pthread_attr_t],
     argument1 : Pointer[RawPointer],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external pthread_attr_getstacksize(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[UInt]) Int;
+    argument1 : Pointer[UInt]) : Int;
 
 external pthread_attr_getguardsize(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[UInt]) Int;
+    argument1 : Pointer[UInt]) : Int;
 
 external pthread_attr_getstackaddr(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[RawPointer]) Int;
+    argument1 : Pointer[RawPointer]) : Int;
 
 external pthread_attr_getdetachstate(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_attr_init(
-    argument0 : Pointer[pthread_attr_t]) Int;
+    argument0 : Pointer[pthread_attr_t]) : Int;
 
 external pthread_attr_setstacksize(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external pthread_attr_setguardsize(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external pthread_attr_setstack(
     argument0 : Pointer[pthread_attr_t],
     argument1 : RawPointer,
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external pthread_attr_setstackaddr(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : RawPointer) Int;
+    argument1 : RawPointer) : Int;
 
 external pthread_attr_setdetachstate(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_barrier_destroy(
-    argument0 : Pointer[pthread_barrier_t]) Int;
+    argument0 : Pointer[pthread_barrier_t]) : Int;
 
 external pthread_barrier_init(
     argument0 : Pointer[pthread_barrier_t],
     argument1 : Pointer[pthread_barrierattr_t],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external pthread_barrier_wait(
-    argument0 : Pointer[pthread_barrier_t]) Int;
+    argument0 : Pointer[pthread_barrier_t]) : Int;
 
 external pthread_barrierattr_destroy(
-    argument0 : Pointer[pthread_barrierattr_t]) Int;
+    argument0 : Pointer[pthread_barrierattr_t]) : Int;
 
 external pthread_barrierattr_getpshared(
     argument0 : Pointer[pthread_barrierattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_barrierattr_init(
-    argument0 : Pointer[pthread_barrierattr_t]) Int;
+    argument0 : Pointer[pthread_barrierattr_t]) : Int;
 
 external pthread_barrierattr_setpshared(
     argument0 : Pointer[pthread_barrierattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_condattr_destroy(
-    argument0 : Pointer[pthread_condattr_t]) Int;
+    argument0 : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_condattr_getclock(
     argument0 : Pointer[pthread_condattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_condattr_getpshared(
     argument0 : Pointer[pthread_condattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_condattr_init(
-    argument0 : Pointer[pthread_condattr_t]) Int;
+    argument0 : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_condattr_setclock(
     argument0 : Pointer[pthread_condattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_condattr_setpshared(
     argument0 : Pointer[pthread_condattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_cond_broadcast(
-    argument0 : Pointer[pthread_cond_t]) Int;
+    argument0 : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_destroy(
-    argument0 : Pointer[pthread_cond_t]) Int;
+    argument0 : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_init(
     argument0 : Pointer[pthread_cond_t],
-    argument1 : Pointer[pthread_condattr_t]) Int;
+    argument1 : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_cond_signal(
-    argument0 : Pointer[pthread_cond_t]) Int;
+    argument0 : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_timedwait(
     argument0 : Pointer[pthread_cond_t],
     argument1 : Pointer[pthread_mutex_t],
-    argument2 : Pointer[Struct_timespec]) Int;
+    argument2 : Pointer[Struct_timespec]) : Int;
 
 external pthread_cond_wait(
     argument0 : Pointer[pthread_cond_t],
-    argument1 : Pointer[pthread_mutex_t]) Int;
+    argument1 : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_create(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
     argument2 : CCodePointer[(RawPointer),(RawPointer)],
-    argument3 : RawPointer) Int;
+    argument3 : RawPointer) : Int;
 
 external pthread_detach(
-    argument0 : pthread_t) Int;
+    argument0 : pthread_t) : Int;
 
 external pthread_equal(
     argument0 : pthread_t,
-    argument1 : pthread_t) Int;
+    argument1 : pthread_t) : Int;
 
 external pthread_exit(
     argument0 : RawPointer);
 
 external pthread_getspecific(
-    argument0 : Int) RawPointer;
+    argument0 : Int) : RawPointer;
 
 external pthread_getcpuclockid(
     argument0 : pthread_t,
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_join(
     argument0 : pthread_t,
-    argument1 : Pointer[RawPointer]) Int;
+    argument1 : Pointer[RawPointer]) : Int;
 
 external pthread_key_create(
     argument0 : Pointer[Int],
-    argument1 : CCodePointer[(RawPointer),()]) Int;
+    argument1 : CCodePointer[(RawPointer),()]) : Int;
 
 external pthread_key_delete(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external pthread_mutexattr_init(
-    argument0 : Pointer[pthread_mutexattr_t]) Int;
+    argument0 : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutexattr_destroy(
-    argument0 : Pointer[pthread_mutexattr_t]) Int;
+    argument0 : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutexattr_getpshared(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_mutexattr_gettype(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_mutexattr_settype(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_mutexattr_setpshared(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_mutex_destroy(
-    argument0 : Pointer[pthread_mutex_t]) Int;
+    argument0 : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_init(
     argument0 : Pointer[pthread_mutex_t],
-    argument1 : Pointer[pthread_mutexattr_t]) Int;
+    argument1 : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutex_lock(
-    argument0 : Pointer[pthread_mutex_t]) Int;
+    argument0 : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_trylock(
-    argument0 : Pointer[pthread_mutex_t]) Int;
+    argument0 : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_timedlock(
     argument0 : Pointer[pthread_mutex_t],
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external pthread_mutex_unlock(
-    argument0 : Pointer[pthread_mutex_t]) Int;
+    argument0 : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_once(
     argument0 : Pointer[pthread_once_t],
-    argument1 : CCodePointer[(),()]) Int;
+    argument1 : CCodePointer[(),()]) : Int;
 
 external pthread_rwlock_destroy(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_init(
     argument0 : Pointer[pthread_rwlock_t],
-    argument1 : Pointer[pthread_rwlockattr_t]) Int;
+    argument1 : Pointer[pthread_rwlockattr_t]) : Int;
 
 external pthread_rwlock_rdlock(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_timedrdlock(
     argument0 : Pointer[pthread_rwlock_t],
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external pthread_rwlock_timedwrlock(
     argument0 : Pointer[pthread_rwlock_t],
-    argument1 : Pointer[Struct_timespec]) Int;
+    argument1 : Pointer[Struct_timespec]) : Int;
 
 external pthread_rwlock_tryrdlock(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_trywrlock(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_unlock(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_wrlock(
-    argument0 : Pointer[pthread_rwlock_t]) Int;
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlockattr_init(
-    argument0 : Pointer[pthread_rwlockattr_t]) Int;
+    argument0 : Pointer[pthread_rwlockattr_t]) : Int;
 
 external pthread_rwlockattr_getpshared(
     argument0 : Pointer[pthread_rwlockattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_rwlockattr_setpshared(
     argument0 : Pointer[pthread_rwlockattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_rwlockattr_destroy(
-    argument0 : Pointer[pthread_rwlockattr_t]) Int;
+    argument0 : Pointer[pthread_rwlockattr_t]) : Int;
 
-external pthread_self() pthread_t;
+external pthread_self() : pthread_t;
 
 external pthread_setspecific(
     argument0 : Int,
-    argument1 : RawPointer) Int;
+    argument1 : RawPointer) : Int;
 
 external pthread_spin_init(
     argument0 : Pointer[pthread_spinlock_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_spin_destroy(
-    argument0 : Pointer[pthread_spinlock_t]) Int;
+    argument0 : Pointer[pthread_spinlock_t]) : Int;
 
 external pthread_spin_lock(
-    argument0 : Pointer[pthread_spinlock_t]) Int;
+    argument0 : Pointer[pthread_spinlock_t]) : Int;
 
 external pthread_spin_trylock(
-    argument0 : Pointer[pthread_spinlock_t]) Int;
+    argument0 : Pointer[pthread_spinlock_t]) : Int;
 
 external pthread_spin_unlock(
-    argument0 : Pointer[pthread_spinlock_t]) Int;
+    argument0 : Pointer[pthread_spinlock_t]) : Int;
 
 external pthread_cancel(
-    argument0 : pthread_t) Int;
+    argument0 : pthread_t) : Int;
 
 external pthread_setcancelstate(
     argument0 : Int,
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_setcanceltype(
     argument0 : Int,
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_testcancel();
 
 external pthread_getprio(
-    argument0 : pthread_t) Int;
+    argument0 : pthread_t) : Int;
 
 external pthread_setprio(
     argument0 : pthread_t,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_yield();
 
 external pthread_mutexattr_getprioceiling(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setprioceiling(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_mutex_getprioceiling(
     argument0 : Pointer[pthread_mutex_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_mutex_setprioceiling(
     argument0 : Pointer[pthread_mutex_t],
     argument1 : Int,
-    argument2 : Pointer[Int]) Int;
+    argument2 : Pointer[Int]) : Int;
 
 external pthread_mutexattr_getprotocol(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setprotocol(
     argument0 : Pointer[pthread_mutexattr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_attr_getinheritsched(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_attr_getschedparam(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Struct_sched_param]) Int;
+    argument1 : Pointer[Struct_sched_param]) : Int;
 
 external pthread_attr_getschedpolicy(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_attr_getscope(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external pthread_attr_setinheritsched(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_attr_setschedparam(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Pointer[Struct_sched_param]) Int;
+    argument1 : Pointer[Struct_sched_param]) : Int;
 
 external pthread_attr_setschedpolicy(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_attr_setscope(
     argument0 : Pointer[pthread_attr_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_getschedparam(
     pthread : pthread_t,
     argument1 : Pointer[Int],
-    argument2 : Pointer[Struct_sched_param]) Int;
+    argument2 : Pointer[Struct_sched_param]) : Int;
 
 external pthread_setschedparam(
     argument0 : pthread_t,
     argument1 : Int,
-    argument2 : Pointer[Struct_sched_param]) Int;
+    argument2 : Pointer[Struct_sched_param]) : Int;
 
-external pthread_getconcurrency() Int;
+external pthread_getconcurrency() : Int;
 
 external pthread_setconcurrency(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external __pthread_cleanup_push_imp(
     argument0 : CCodePointer[(RawPointer),()],
@@ -1572,26 +1572,26 @@ record Struct_oflock (
 external open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    ..) Int;
+    ..) : Int;
 
 external creat(
     argument0 : Pointer[CChar],
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external fcntl(
     argument0 : Int,
     argument1 : Int,
-    ..) Int;
+    ..) : Int;
 
 external openat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,
-    ..) Int;
+    ..) : Int;
 
 external flock(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 record Struct_timezone (
     tz_minuteswest : Int,
@@ -1619,40 +1619,40 @@ record Struct_clockinfo (
 external setitimer(
     argument0 : Int,
     argument1 : Pointer[Struct_itimerval],
-    argument2 : Pointer[Struct_itimerval]) Int;
+    argument2 : Pointer[Struct_itimerval]) : Int;
 
 external utimes(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct_timeval]) Int;
+    argument1 : Pointer[Struct_timeval]) : Int;
 
 external adjtime(
     argument0 : Pointer[Struct_timeval],
-    argument1 : Pointer[Struct_timeval]) Int;
+    argument1 : Pointer[Struct_timeval]) : Int;
 
 external futimes(
     argument0 : Int,
-    argument1 : Pointer[Struct_timeval]) Int;
+    argument1 : Pointer[Struct_timeval]) : Int;
 
 external futimesat(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : Pointer[Struct_timeval]) Int;
+    argument2 : Pointer[Struct_timeval]) : Int;
 
 external lutimes(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct_timeval]) Int;
+    argument1 : Pointer[Struct_timeval]) : Int;
 
 external settimeofday(
     argument0 : Pointer[Struct_timeval],
-    argument1 : Pointer[Struct_timezone]) Int;
+    argument1 : Pointer[Struct_timezone]) : Int;
 
 external getitimer(
     argument0 : Int,
-    argument1 : Pointer[Struct_itimerval]) Int;
+    argument1 : Pointer[Struct_itimerval]) : Int;
 
 external gettimeofday(
     argument0 : Pointer[Struct_timeval],
-    argument1 : Pointer[Struct_timezone]) Int;
+    argument1 : Pointer[Struct_timezone]) : Int;
 
 record Struct_ostat (
     st_dev : UShort,
@@ -1717,137 +1717,137 @@ record Struct_nstat (
 
 external chflags(
     argument0 : Pointer[CChar],
-    argument1 : CULong) Int;
+    argument1 : CULong) : Int;
 
 external chmod(
     argument0 : Pointer[CChar],
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external fchflags(
     argument0 : Int,
-    argument1 : CULong) Int;
+    argument1 : CULong) : Int;
 
 external fchmod(
     argument0 : Int,
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external fchmodat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : UShort,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external fstat(
     argument0 : Int,
-    argument1 : Pointer[Struct_stat]) Int;
+    argument1 : Pointer[Struct_stat]) : Int;
 
 external lchflags(
     argument0 : Pointer[CChar],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external lchmod(
     argument0 : Pointer[CChar],
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external lstat(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct_stat]) Int;
+    argument1 : Pointer[Struct_stat]) : Int;
 
 external mkdir(
     argument0 : Pointer[CChar],
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external mkfifo(
     argument0 : Pointer[CChar],
-    argument1 : UShort) Int;
+    argument1 : UShort) : Int;
 
 external stat(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[Struct_stat]) Int;
+    argument1 : Pointer[Struct_stat]) : Int;
 
 external umask(
-    argument0 : UShort) UShort;
+    argument0 : UShort) : UShort;
 
 external fstatat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Pointer[Struct_stat],
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external mkdirat(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : UShort) Int;
+    argument2 : UShort) : Int;
 
 external mkfifoat(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : UShort) Int;
+    argument2 : UShort) : Int;
 
 external mknodat(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : UShort,
-    argument3 : UInt) Int;
+    argument3 : UInt) : Int;
 
 external getpagesizes(
     argument0 : Pointer[UInt],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external madvise(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external mincore(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Pointer[CChar]) Int;
+    argument2 : Pointer[CChar]) : Int;
 
 external minherit(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external mlock(
     argument0 : RawPointer,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external mprotect(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external msync(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external munlock(
     argument0 : RawPointer,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external munmap(
     argument0 : RawPointer,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external posix_madvise(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external mlockall(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
-external munlockall() Int;
+external munlockall() : Int;
 
 external shm_open(
     argument0 : Pointer[CChar],
     argument1 : Int,
-    argument2 : UShort) Int;
+    argument2 : UShort) : Int;
 
 external shm_unlink(
-    argument0 : Pointer[CChar]) Int;
+    argument0 : Pointer[CChar]) : Int;
 
 record Struct_iovec (
     iov_base : RawPointer,
@@ -1945,44 +1945,44 @@ record Struct_sf_hdtr (
 external accept(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external bind(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external connect(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external getpeername(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external getsockname(
     argument0 : Int,
     argument1 : Pointer[Struct_sockaddr],
-    argument2 : Pointer[UInt]) Int;
+    argument2 : Pointer[UInt]) : Int;
 
 external getsockopt(
     argument0 : Int,
     argument1 : Int,
     argument2 : Int,
     argument3 : RawPointer,
-    argument4 : Pointer[UInt]) Int;
+    argument4 : Pointer[UInt]) : Int;
 
 external listen(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external recv(
     argument0 : Int,
     argument1 : RawPointer,
     argument2 : UInt,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external recvfrom(
     argument0 : Int,
@@ -1990,18 +1990,18 @@ external recvfrom(
     argument2 : UInt,
     argument3 : Int,
     argument4 : Pointer[Struct_sockaddr],
-    argument5 : Pointer[UInt]) Int;
+    argument5 : Pointer[UInt]) : Int;
 
 external recvmsg(
     argument0 : Int,
     argument1 : Pointer[Struct_msghdr],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external send(
     argument0 : Int,
     argument1 : RawPointer,
     argument2 : UInt,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external sendto(
     argument0 : Int,
@@ -2009,12 +2009,12 @@ external sendto(
     argument2 : UInt,
     argument3 : Int,
     argument4 : Pointer[Struct_sockaddr],
-    argument5 : UInt) Int;
+    argument5 : UInt) : Int;
 
 external sendmsg(
     argument0 : Int,
     argument1 : Pointer[Struct_msghdr],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external sendfile(
     argument0 : Int,
@@ -2023,35 +2023,35 @@ external sendfile(
     argument3 : UInt,
     argument4 : Pointer[Struct_sf_hdtr],
     argument5 : Pointer[Int64],
-    argument6 : Int) Int;
+    argument6 : Int) : Int;
 
 external setfib(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external setsockopt(
     argument0 : Int,
     argument1 : Int,
     argument2 : Int,
     argument3 : RawPointer,
-    argument4 : UInt) Int;
+    argument4 : UInt) : Int;
 
 external shutdown(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external sockatmark(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external socket(
     argument0 : Int,
     argument1 : Int,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external socketpair(
     argument0 : Int,
     argument1 : Int,
     argument2 : Int,
-    argument3 : Pointer[Int]) Int;
+    argument3 : Pointer[Int]) : Int;
 
 alias sig_atomic_t = Int;
 
@@ -2140,23 +2140,23 @@ external signal(
     argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
 
 external wait(
-    argument0 : Pointer[Int]) Int;
+    argument0 : Pointer[Int]) : Int;
 
 external waitpid(
     argument0 : Int,
     argument1 : Pointer[Int],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external wait3(
     argument0 : Pointer[Int],
     argument1 : Int,
-    argument2 : OpaquePointer) Int;
+    argument2 : OpaquePointer) : Int;
 
 external wait4(
     argument0 : Int,
     argument1 : Pointer[Int],
     argument2 : Int,
-    argument3 : OpaquePointer) Int;
+    argument3 : OpaquePointer) : Int;
 
 record Struct_kevent (
     ident : UInt,
@@ -2184,7 +2184,7 @@ record Struct_knlist (
     kl_lockarg : RawPointer,
 );
 
-external kqueue() Int;
+external kqueue() : Int;
 
 external kevent(
     kq : Int,
@@ -2192,7 +2192,7 @@ external kevent(
     nchanges : Int,
     eventlist : Pointer[Struct_kevent],
     nevents : Int,
-    timeout : Pointer[Struct_timespec]) Int;
+    timeout : Pointer[Struct_timespec]) : Int;
 
 external sys_signame : Array[Pointer[CChar],32];
 
@@ -2203,125 +2203,125 @@ external sys_nsig : Int;
 alias __pthread_t = OpaquePointer;
 
 external raise(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external kill(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_kill(
     argument0 : __pthread_t,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external pthread_sigmask(
     argument0 : Int,
     argument1 : Pointer[__sigset_t],
-    argument2 : Pointer[__sigset_t]) Int;
+    argument2 : Pointer[__sigset_t]) : Int;
 
 external sigaction(
     argument0 : Int,
     argument1 : Pointer[Struct_sigaction],
-    argument2 : Pointer[Struct_sigaction]) Int;
+    argument2 : Pointer[Struct_sigaction]) : Int;
 
 external sigaddset(
     argument0 : Pointer[sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external sigdelset(
     argument0 : Pointer[sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external sigemptyset(
-    argument0 : Pointer[sigset_t]) Int;
+    argument0 : Pointer[sigset_t]) : Int;
 
 external sigfillset(
-    argument0 : Pointer[sigset_t]) Int;
+    argument0 : Pointer[sigset_t]) : Int;
 
 external sigismember(
     argument0 : Pointer[sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external sigpending(
-    argument0 : Pointer[sigset_t]) Int;
+    argument0 : Pointer[sigset_t]) : Int;
 
 external sigprocmask(
     argument0 : Int,
     argument1 : Pointer[sigset_t],
-    argument2 : Pointer[sigset_t]) Int;
+    argument2 : Pointer[sigset_t]) : Int;
 
 external sigsuspend(
-    argument0 : Pointer[sigset_t]) Int;
+    argument0 : Pointer[sigset_t]) : Int;
 
 external sigwait(
     argument0 : Pointer[sigset_t],
-    argument1 : Pointer[Int]) Int;
+    argument1 : Pointer[Int]) : Int;
 
 external sigqueue(
     argument0 : Int,
     argument1 : Int,
-    argument2 : AUnionType) Int;
+    argument2 : AUnionType) : Int;
 
 external sigtimedwait(
     argument0 : Pointer[sigset_t],
     argument1 : Pointer[siginfo_t],
-    argument2 : Pointer[Struct_timespec]) Int;
+    argument2 : Pointer[Struct_timespec]) : Int;
 
 external sigwaitinfo(
     argument0 : Pointer[sigset_t],
-    argument1 : Pointer[siginfo_t]) Int;
+    argument1 : Pointer[siginfo_t]) : Int;
 
 external killpg(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external sigaltstack(
     argument0 : Pointer[stack_t],
-    argument1 : Pointer[stack_t]) Int;
+    argument1 : Pointer[stack_t]) : Int;
 
 external sighold(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigignore(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigpause(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigrelse(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigset(
     argument0 : Int,
     argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
 
 external xsi_sigpause(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external siginterrupt(
     argument0 : Int,
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external psignal(
     argument0 : UInt,
     argument1 : Pointer[CChar]);
 
 external sigblock(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigreturn(
-    argument0 : OpaquePointer) Int;
+    argument0 : OpaquePointer) : Int;
 
 external sigsetmask(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external sigstack(
     argument0 : Pointer[Struct_sigstack],
-    argument1 : Pointer[Struct_sigstack]) Int;
+    argument1 : Pointer[Struct_sigstack]) : Int;
 
 external sigvec(
     argument0 : Int,
     argument1 : Pointer[Struct_sigvec],
-    argument2 : Pointer[Struct_sigvec]) Int;
+    argument2 : Pointer[Struct_sigvec]) : Int;
 
 record Struct_dirent (
     d_fileno : UInt,
@@ -2348,36 +2348,36 @@ alias DIR = Struct__dirdesc;
 
 external alphasort(
     argument0 : Pointer[Pointer[Struct_dirent]],
-    argument1 : Pointer[Pointer[Struct_dirent]]) Int;
+    argument1 : Pointer[Pointer[Struct_dirent]]) : Int;
 
 external __opendir2(
     argument0 : Pointer[CChar],
-    argument1 : Int) Pointer[DIR];
+    argument1 : Int) : Pointer[DIR];
 
 external getdents(
     argument0 : Int,
     argument1 : Pointer[CChar],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external getdirentries(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,
-    argument3 : Pointer[CLong]) Int;
+    argument3 : Pointer[CLong]) : Int;
 
 external opendir(
-    argument0 : Pointer[CChar]) Pointer[DIR];
+    argument0 : Pointer[CChar]) : Pointer[DIR];
 
 external fdopendir(
-    argument0 : Int) Pointer[DIR];
+    argument0 : Int) : Pointer[DIR];
 
 external readdir(
-    argument0 : Pointer[DIR]) Pointer[Struct_dirent];
+    argument0 : Pointer[DIR]) : Pointer[Struct_dirent];
 
 external readdir_r(
     argument0 : Pointer[DIR],
     argument1 : Pointer[Struct_dirent],
-    argument2 : Pointer[Pointer[Struct_dirent]]) Int;
+    argument2 : Pointer[Pointer[Struct_dirent]]) : Int;
 
 external rewinddir(
     argument0 : Pointer[DIR]);
@@ -2386,17 +2386,17 @@ external scandir(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[Pointer[Struct_dirent]]],
     argument2 : CCodePointer[(Pointer[Struct_dirent]),(Int)],
-    argument3 : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) Int;
+    argument3 : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) : Int;
 
 external seekdir(
     argument0 : Pointer[DIR],
     argument1 : CLong);
 
 external telldir(
-    argument0 : Pointer[DIR]) CLong;
+    argument0 : Pointer[DIR]) : CLong;
 
 external closedir(
-    argument0 : Pointer[DIR]) Int;
+    argument0 : Pointer[DIR]) : Int;
 
 record Struct_dl_info (
     dli_fname : Pointer[CChar],
@@ -2429,30 +2429,30 @@ record Struct_dl_serinfo (
 alias Dl_serinfo = Struct_dl_serinfo;
 
 external dlclose(
-    argument0 : RawPointer) Int;
+    argument0 : RawPointer) : Int;
 
-external dlerror() Pointer[CChar];
+external dlerror() : Pointer[CChar];
 
 external dlopen(
     argument0 : Pointer[CChar],
-    argument1 : Int) RawPointer;
+    argument1 : Int) : RawPointer;
 
 external dlsym(
     argument0 : RawPointer,
-    argument1 : Pointer[CChar]) RawPointer;
+    argument1 : Pointer[CChar]) : RawPointer;
 
 external dladdr(
     argument0 : RawPointer,
-    argument1 : Pointer[Dl_info]) Int;
+    argument1 : Pointer[Dl_info]) : Int;
 
 external dlfunc(
     argument0 : RawPointer,
-    argument1 : Pointer[CChar]) dlfunc_t;
+    argument1 : Pointer[CChar]) : dlfunc_t;
 
 external dlinfo(
     argument0 : RawPointer,
     argument1 : Int,
-    argument2 : RawPointer) Int;
+    argument2 : RawPointer) : Int;
 
 external dllockinit(
     _context : RawPointer,
@@ -2466,7 +2466,7 @@ external dllockinit(
 external dlvsym(
     argument0 : RawPointer,
     argument1 : Pointer[CChar],
-    argument2 : Pointer[CChar]) RawPointer;
+    argument2 : Pointer[CChar]) : RawPointer;
 
 record Struct_hostent (
     h_name : Pointer[CChar],
@@ -2518,39 +2518,39 @@ external endservent();
 external gethostbyaddr(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Pointer[Struct_hostent];
+    argument2 : Int) : Pointer[Struct_hostent];
 
 external gethostbyname(
-    argument0 : Pointer[CChar]) Pointer[Struct_hostent];
+    argument0 : Pointer[CChar]) : Pointer[Struct_hostent];
 
-external gethostent() Pointer[Struct_hostent];
+external gethostent() : Pointer[Struct_hostent];
 
 external getnetbyaddr(
     argument0 : UInt,
-    argument1 : Int) Pointer[Struct_netent];
+    argument1 : Int) : Pointer[Struct_netent];
 
 external getnetbyname(
-    argument0 : Pointer[CChar]) Pointer[Struct_netent];
+    argument0 : Pointer[CChar]) : Pointer[Struct_netent];
 
-external getnetent() Pointer[Struct_netent];
+external getnetent() : Pointer[Struct_netent];
 
 external getprotobyname(
-    argument0 : Pointer[CChar]) Pointer[Struct_protoent];
+    argument0 : Pointer[CChar]) : Pointer[Struct_protoent];
 
 external getprotobynumber(
-    argument0 : Int) Pointer[Struct_protoent];
+    argument0 : Int) : Pointer[Struct_protoent];
 
-external getprotoent() Pointer[Struct_protoent];
+external getprotoent() : Pointer[Struct_protoent];
 
 external getservbyname(
     argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) Pointer[Struct_servent];
+    argument1 : Pointer[CChar]) : Pointer[Struct_servent];
 
 external getservbyport(
     argument0 : Int,
-    argument1 : Pointer[CChar]) Pointer[Struct_servent];
+    argument1 : Pointer[CChar]) : Pointer[Struct_servent];
 
-external getservent() Pointer[Struct_servent];
+external getservent() : Pointer[Struct_servent];
 
 external sethostent(
     argument0 : Int);
@@ -2565,7 +2565,7 @@ external getaddrinfo(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[Struct_addrinfo],
-    argument3 : Pointer[Pointer[Struct_addrinfo]]) Int;
+    argument3 : Pointer[Pointer[Struct_addrinfo]]) : Int;
 
 external getnameinfo(
     argument0 : Pointer[Struct_sockaddr],
@@ -2574,13 +2574,13 @@ external getnameinfo(
     argument3 : UInt,
     argument4 : Pointer[CChar],
     argument5 : UInt,
-    argument6 : Int) Int;
+    argument6 : Int) : Int;
 
 external freeaddrinfo(
     argument0 : Pointer[Struct_addrinfo]);
 
 external gai_strerror(
-    argument0 : Int) Pointer[CChar];
+    argument0 : Int) : Pointer[CChar];
 
 external setservent(
     argument0 : Int);
@@ -2598,7 +2598,7 @@ external gethostbyaddr_r(
     argument4 : Pointer[CChar],
     argument5 : UInt,
     argument6 : Pointer[Pointer[Struct_hostent]],
-    argument7 : Pointer[Int]) Int;
+    argument7 : Pointer[Int]) : Int;
 
 external gethostbyname_r(
     argument0 : Pointer[CChar],
@@ -2606,11 +2606,11 @@ external gethostbyname_r(
     argument2 : Pointer[CChar],
     argument3 : UInt,
     argument4 : Pointer[Pointer[Struct_hostent]],
-    argument5 : Pointer[Int]) Int;
+    argument5 : Pointer[Int]) : Int;
 
 external gethostbyname2(
     argument0 : Pointer[CChar],
-    argument1 : Int) Pointer[Struct_hostent];
+    argument1 : Int) : Pointer[Struct_hostent];
 
 external gethostbyname2_r(
     argument0 : Pointer[CChar],
@@ -2619,26 +2619,26 @@ external gethostbyname2_r(
     argument3 : Pointer[CChar],
     argument4 : UInt,
     argument5 : Pointer[Pointer[Struct_hostent]],
-    argument6 : Pointer[Int]) Int;
+    argument6 : Pointer[Int]) : Int;
 
 external gethostent_r(
     argument0 : Pointer[Struct_hostent],
     argument1 : Pointer[CChar],
     argument2 : UInt,
     argument3 : Pointer[Pointer[Struct_hostent]],
-    argument4 : Pointer[Int]) Int;
+    argument4 : Pointer[Int]) : Int;
 
 external getipnodebyaddr(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : Int,
-    argument3 : Pointer[Int]) Pointer[Struct_hostent];
+    argument3 : Pointer[Int]) : Pointer[Struct_hostent];
 
 external getipnodebyname(
     argument0 : Pointer[CChar],
     argument1 : Int,
     argument2 : Int,
-    argument3 : Pointer[Int]) Pointer[Struct_hostent];
+    argument3 : Pointer[Int]) : Pointer[Struct_hostent];
 
 external getnetbyaddr_r(
     argument0 : UInt,
@@ -2647,7 +2647,7 @@ external getnetbyaddr_r(
     argument3 : Pointer[CChar],
     argument4 : UInt,
     argument5 : Pointer[Pointer[Struct_netent]],
-    argument6 : Pointer[Int]) Int;
+    argument6 : Pointer[Int]) : Int;
 
 external getnetbyname_r(
     argument0 : Pointer[CChar],
@@ -2655,39 +2655,39 @@ external getnetbyname_r(
     argument2 : Pointer[CChar],
     argument3 : UInt,
     argument4 : Pointer[Pointer[Struct_netent]],
-    argument5 : Pointer[Int]) Int;
+    argument5 : Pointer[Int]) : Int;
 
 external getnetent_r(
     argument0 : Pointer[Struct_netent],
     argument1 : Pointer[CChar],
     argument2 : UInt,
     argument3 : Pointer[Pointer[Struct_netent]],
-    argument4 : Pointer[Int]) Int;
+    argument4 : Pointer[Int]) : Int;
 
 external getnetgrent(
     argument0 : Pointer[Pointer[CChar]],
     argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[Pointer[CChar]]) Int;
+    argument2 : Pointer[Pointer[CChar]]) : Int;
 
 external getprotobyname_r(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Struct_protoent],
     argument2 : Pointer[CChar],
     argument3 : UInt,
-    argument4 : Pointer[Pointer[Struct_protoent]]) Int;
+    argument4 : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external getprotobynumber_r(
     argument0 : Int,
     argument1 : Pointer[Struct_protoent],
     argument2 : Pointer[CChar],
     argument3 : UInt,
-    argument4 : Pointer[Pointer[Struct_protoent]]) Int;
+    argument4 : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external getprotoent_r(
     argument0 : Pointer[Struct_protoent],
     argument1 : Pointer[CChar],
     argument2 : UInt,
-    argument3 : Pointer[Pointer[Struct_protoent]]) Int;
+    argument3 : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external getservbyname_r(
     argument0 : Pointer[CChar],
@@ -2695,7 +2695,7 @@ external getservbyname_r(
     argument2 : Pointer[Struct_servent],
     argument3 : Pointer[CChar],
     argument4 : UInt,
-    argument5 : Pointer[Pointer[Struct_servent]]) Int;
+    argument5 : Pointer[Pointer[Struct_servent]]) : Int;
 
 external getservbyport_r(
     argument0 : Int,
@@ -2703,30 +2703,30 @@ external getservbyport_r(
     argument2 : Pointer[Struct_servent],
     argument3 : Pointer[CChar],
     argument4 : UInt,
-    argument5 : Pointer[Pointer[Struct_servent]]) Int;
+    argument5 : Pointer[Pointer[Struct_servent]]) : Int;
 
 external getservent_r(
     argument0 : Pointer[Struct_servent],
     argument1 : Pointer[CChar],
     argument2 : UInt,
-    argument3 : Pointer[Pointer[Struct_servent]]) Int;
+    argument3 : Pointer[Pointer[Struct_servent]]) : Int;
 
 external herror(
     argument0 : Pointer[CChar]);
 
 external hstrerror(
-    argument0 : Int) Pointer[CChar];
+    argument0 : Int) : Pointer[CChar];
 
 external innetgr(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar],
     argument2 : Pointer[CChar],
-    argument3 : Pointer[CChar]) Int;
+    argument3 : Pointer[CChar]) : Int;
 
 external setnetgrent(
     argument0 : Pointer[CChar]);
 
-external __h_errno() Pointer[Int];
+external __h_errno() : Pointer[Int];
 
 record Struct_in_addr (
     s_addr : UInt,
@@ -2741,16 +2741,16 @@ record Struct_sockaddr_in (
 );
 
 external htonl(
-    argument0 : UInt) UInt;
+    argument0 : UInt) : UInt;
 
 external htons(
-    argument0 : UShort) UShort;
+    argument0 : UShort) : UShort;
 
 external ntohl(
-    argument0 : UInt) UInt;
+    argument0 : UInt) : UInt;
 
 external ntohs(
-    argument0 : UShort) UShort;
+    argument0 : UShort) : UShort;
 
 record Struct_ip_mreq (
     imr_multiaddr : Struct_in_addr,
@@ -2794,7 +2794,7 @@ external setipv4sourcefilter(
     argument2 : Struct_in_addr,
     argument3 : UInt,
     argument4 : UInt,
-    argument5 : Pointer[Struct_in_addr]) Int;
+    argument5 : Pointer[Struct_in_addr]) : Int;
 
 external getipv4sourcefilter(
     argument0 : Int,
@@ -2802,7 +2802,7 @@ external getipv4sourcefilter(
     argument2 : Struct_in_addr,
     argument3 : Pointer[UInt],
     argument4 : Pointer[UInt],
-    argument5 : Pointer[Struct_in_addr]) Int;
+    argument5 : Pointer[Struct_in_addr]) : Int;
 
 external setsourcefilter(
     argument0 : Int,
@@ -2811,7 +2811,7 @@ external setsourcefilter(
     argument3 : UInt,
     argument4 : UInt,
     argument5 : UInt,
-    argument6 : Pointer[Struct_sockaddr_storage]) Int;
+    argument6 : Pointer[Struct_sockaddr_storage]) : Int;
 
 external getsourcefilter(
     argument0 : Int,
@@ -2820,7 +2820,7 @@ external getsourcefilter(
     argument3 : UInt,
     argument4 : Pointer[UInt],
     argument5 : Pointer[UInt],
-    argument6 : Pointer[Struct_sockaddr_storage]) Int;
+    argument6 : Pointer[Struct_sockaddr_storage]) : Int;
 
 record Struct_in6_addr (
     __u6_addr : AUnionType,
@@ -2869,65 +2869,65 @@ record Struct_ip6_mtuinfo (
 );
 
 external inet6_option_space(
-    argument0 : Int) Int;
+    argument0 : Int) : Int;
 
 external inet6_option_init(
     argument0 : RawPointer,
     argument1 : Pointer[Pointer[Struct_cmsghdr]],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external inet6_option_append(
     argument0 : Pointer[Struct_cmsghdr],
     argument1 : Pointer[CUChar],
     argument2 : Int,
-    argument3 : Int) Int;
+    argument3 : Int) : Int;
 
 external inet6_option_alloc(
     argument0 : Pointer[Struct_cmsghdr],
     argument1 : Int,
     argument2 : Int,
-    argument3 : Int) Pointer[CUChar];
+    argument3 : Int) : Pointer[CUChar];
 
 external inet6_option_next(
     argument0 : Pointer[Struct_cmsghdr],
-    argument1 : Pointer[Pointer[CUChar]]) Int;
+    argument1 : Pointer[Pointer[CUChar]]) : Int;
 
 external inet6_option_find(
     argument0 : Pointer[Struct_cmsghdr],
     argument1 : Pointer[Pointer[CUChar]],
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external inet6_rthdr_space(
     argument0 : Int,
-    argument1 : Int) UInt;
+    argument1 : Int) : UInt;
 
 external inet6_rthdr_init(
     argument0 : RawPointer,
-    argument1 : Int) Pointer[Struct_cmsghdr];
+    argument1 : Int) : Pointer[Struct_cmsghdr];
 
 external inet6_rthdr_add(
     argument0 : Pointer[Struct_cmsghdr],
     argument1 : Pointer[Struct_in6_addr],
-    argument2 : UInt) Int;
+    argument2 : UInt) : Int;
 
 external inet6_rthdr_lasthop(
     argument0 : Pointer[Struct_cmsghdr],
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external inet6_rthdr_segments(
-    argument0 : Pointer[Struct_cmsghdr]) Int;
+    argument0 : Pointer[Struct_cmsghdr]) : Int;
 
 external inet6_rthdr_getaddr(
     argument0 : Pointer[Struct_cmsghdr],
-    argument1 : Int) Pointer[Struct_in6_addr];
+    argument1 : Int) : Pointer[Struct_in6_addr];
 
 external inet6_rthdr_getflags(
     argument0 : Pointer[Struct_cmsghdr],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external inet6_opt_init(
     argument0 : RawPointer,
-    argument1 : UInt) Int;
+    argument1 : UInt) : Int;
 
 external inet6_opt_append(
     argument0 : RawPointer,
@@ -2936,18 +2936,18 @@ external inet6_opt_append(
     argument3 : CUChar,
     argument4 : UInt,
     argument5 : CUChar,
-    argument6 : Pointer[RawPointer]) Int;
+    argument6 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_finish(
     argument0 : RawPointer,
     argument1 : UInt,
-    argument2 : Int) Int;
+    argument2 : Int) : Int;
 
 external inet6_opt_set_val(
     argument0 : RawPointer,
     argument1 : Int,
     argument2 : RawPointer,
-    argument3 : UInt) Int;
+    argument3 : UInt) : Int;
 
 external inet6_opt_next(
     argument0 : RawPointer,
@@ -2955,7 +2955,7 @@ external inet6_opt_next(
     argument2 : Int,
     argument3 : Pointer[CUChar],
     argument4 : Pointer[UInt],
-    argument5 : Pointer[RawPointer]) Int;
+    argument5 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_find(
     argument0 : RawPointer,
@@ -2963,35 +2963,35 @@ external inet6_opt_find(
     argument2 : Int,
     argument3 : CUChar,
     argument4 : Pointer[UInt],
-    argument5 : Pointer[RawPointer]) Int;
+    argument5 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_get_val(
     argument0 : RawPointer,
     argument1 : Int,
     argument2 : RawPointer,
-    argument3 : UInt) Int;
+    argument3 : UInt) : Int;
 
 external inet6_rth_space(
     argument0 : Int,
-    argument1 : Int) UInt;
+    argument1 : Int) : UInt;
 
 external inet6_rth_init(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : Int,
-    argument3 : Int) RawPointer;
+    argument3 : Int) : RawPointer;
 
 external inet6_rth_add(
     argument0 : RawPointer,
-    argument1 : Pointer[Struct_in6_addr]) Int;
+    argument1 : Pointer[Struct_in6_addr]) : Int;
 
 external inet6_rth_reverse(
     argument0 : RawPointer,
-    argument1 : RawPointer) Int;
+    argument1 : RawPointer) : Int;
 
 external inet6_rth_segments(
-    argument0 : RawPointer) Int;
+    argument0 : RawPointer) : Int;
 
 external inet6_rth_getaddr(
     argument0 : RawPointer,
-    argument1 : Int) Pointer[Struct_in6_addr];
+    argument1 : Int) : Pointer[Struct_in6_addr];

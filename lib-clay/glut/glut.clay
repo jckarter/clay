@@ -259,14 +259,14 @@ external (GLAPI) glutInitWindowSize(
 external (GLAPI) glutMainLoop();
 
 external (GLAPI) glutCreateWindow(
-    title : Pointer[CChar]) Int;
+    title : Pointer[CChar]) : Int;
 
 external (GLAPI) glutCreateSubWindow(
     win : Int,
     x : Int,
     y : Int,
     width : Int,
-    height : Int) Int;
+    height : Int) : Int;
 
 external (GLAPI) glutDestroyWindow(
     win : Int);
@@ -278,7 +278,7 @@ external (GLAPI) glutPostWindowRedisplay(
 
 external (GLAPI) glutSwapBuffers();
 
-external (GLAPI) glutGetWindow() Int;
+external (GLAPI) glutGetWindow() : Int;
 
 external (GLAPI) glutSetWindow(
     win : Int);
@@ -343,12 +343,12 @@ external (GLAPI) glutShowOverlay();
 external (GLAPI) glutHideOverlay();
 
 external (GLAPI) glutCreateMenu(
-    argument0 : CCodePointer[(Int),()]) Int;
+    argument0 : CCodePointer[(Int),()]) : Int;
 
 external (GLAPI) glutDestroyMenu(
     menu : Int);
 
-external (GLAPI) glutGetMenu() Int;
+external (GLAPI) glutGetMenu() : Int;
 
 external (GLAPI) glutSetMenu(
     menu : Int);
@@ -466,27 +466,27 @@ external (GLAPI) glutSetColor(
 
 external (GLAPI) glutGetColor(
     ndx : Int,
-    component : Int) Int;
+    component : Int) : Int;
 
 external (GLAPI) glutCopyColormap(
     win : Int);
 
 external (GLAPI) glutGet(
-    type : Int) Int;
+    type : Int) : Int;
 
 external (GLAPI) glutDeviceGet(
-    type : Int) Int;
+    type : Int) : Int;
 
 external (GLAPI) glutExtensionSupported(
-    name : Pointer[CChar]) Int;
+    name : Pointer[CChar]) : Int;
 
-external (GLAPI) glutGetModifiers() Int;
+external (GLAPI) glutGetModifiers() : Int;
 
 external (GLAPI) glutLayerGet(
-    type : Int) Int;
+    type : Int) : Int;
 
 external (GLAPI) glutGetProcAddress(
-    procName : Pointer[CChar]) RawPointer;
+    procName : Pointer[CChar]) : RawPointer;
 
 external (GLAPI) glutBitmapCharacter(
     font : RawPointer,
@@ -494,7 +494,7 @@ external (GLAPI) glutBitmapCharacter(
 
 external (GLAPI) glutBitmapWidth(
     font : RawPointer,
-    character : Int) Int;
+    character : Int) : Int;
 
 external (GLAPI) glutStrokeCharacter(
     font : RawPointer,
@@ -502,15 +502,15 @@ external (GLAPI) glutStrokeCharacter(
 
 external (GLAPI) glutStrokeWidth(
     font : RawPointer,
-    character : Int) Int;
+    character : Int) : Int;
 
 external (GLAPI) glutBitmapLength(
     font : RawPointer,
-    string : Pointer[CUChar]) Int;
+    string : Pointer[CUChar]) : Int;
 
 external (GLAPI) glutStrokeLength(
     font : RawPointer,
-    string : Pointer[CUChar]) Int;
+    string : Pointer[CUChar]) : Int;
 
 external (GLAPI) glutWireSphere(
     radius : Int,
@@ -575,7 +575,7 @@ external (GLAPI) glutWireIcosahedron();
 external (GLAPI) glutSolidIcosahedron();
 
 external (GLAPI) glutVideoResizeGet(
-    param : Int) Int;
+    param : Int) : Int;
 
 external (GLAPI) glutSetupVideoResizing();
 
@@ -606,9 +606,9 @@ external (GLAPI) glutForceJoystickFunc();
 external (GLAPI) glutGameModeString(
     string : Pointer[CChar]);
 
-external (GLAPI) glutEnterGameMode() Int;
+external (GLAPI) glutEnterGameMode() : Int;
 
 external (GLAPI) glutLeaveGameMode();
 
 external (GLAPI) glutGameModeGet(
-    mode : Int) Int;
+    mode : Int) : Int;

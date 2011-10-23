@@ -85,7 +85,7 @@ private sha256chunk(state, tempState, chunkSpace, chunk) {
 }
 
 [S | ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
-sha256(message: S) returned: SHA256 {
+sha256(message: S) --> returned: SHA256 {
     var messageSize = size(message);
     var messageHeadSize = bitwiseAndc(messageSize, SizeT(63));
     var messageTailSize = messageSize - messageHeadSize;

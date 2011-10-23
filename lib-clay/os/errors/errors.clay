@@ -3,7 +3,7 @@ import os.errors.platform as platform;
 record GenericOSError(code:Int);
 
 [I | Integer?(I)]
-overload GenericOSError(code:I) returned:GenericOSError {
+overload GenericOSError(code:I) --> returned:GenericOSError {
     returned.code = Int(code);
 }
 

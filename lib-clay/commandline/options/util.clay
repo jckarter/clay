@@ -13,7 +13,7 @@ record PushbackIterator[S, T](
 
 [S, T] overload push(it : PushbackIterator[S, T], x : S){ push(it.pending, x); }
 
-[T] withPushback(it : T) PushbackIterator[IteratorTargetType(T), T] {
+[T] withPushback(it : T) : PushbackIterator[IteratorTargetType(T), T] {
   alias S = IteratorTargetType(T);
   return PushbackIterator(Vector[S](), it);
 }

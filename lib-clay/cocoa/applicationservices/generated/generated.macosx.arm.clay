@@ -49,73 +49,73 @@ external CGRectNull : CGRect;
 external CGRectInfinite : CGRect;
 
 external CGRectGetMinX(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetMidX(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetMaxX(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetMinY(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetMidY(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetMaxY(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetWidth(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGRectGetHeight(
-    rect : CGRect) Float;
+    rect : CGRect) : Float;
 
 external CGPointEqualToPoint(
     point1 : CGPoint,
-    point2 : CGPoint) Bool;
+    point2 : CGPoint) : Bool;
 
 external CGSizeEqualToSize(
     size1 : CGSize,
-    size2 : CGSize) Bool;
+    size2 : CGSize) : Bool;
 
 external CGRectEqualToRect(
     rect1 : CGRect,
-    rect2 : CGRect) Bool;
+    rect2 : CGRect) : Bool;
 
 external CGRectStandardize(
-    rect : CGRect) CGRect;
+    rect : CGRect) : CGRect;
 
 external CGRectIsEmpty(
-    rect : CGRect) Bool;
+    rect : CGRect) : Bool;
 
 external CGRectIsNull(
-    rect : CGRect) Bool;
+    rect : CGRect) : Bool;
 
 external CGRectIsInfinite(
-    rect : CGRect) Bool;
+    rect : CGRect) : Bool;
 
 external CGRectInset(
     rect : CGRect,
     dx : Float,
-    dy : Float) CGRect;
+    dy : Float) : CGRect;
 
 external CGRectIntegral(
-    rect : CGRect) CGRect;
+    rect : CGRect) : CGRect;
 
 external CGRectUnion(
     r1 : CGRect,
-    r2 : CGRect) CGRect;
+    r2 : CGRect) : CGRect;
 
 external CGRectIntersection(
     r1 : CGRect,
-    r2 : CGRect) CGRect;
+    r2 : CGRect) : CGRect;
 
 external CGRectOffset(
     rect : CGRect,
     dx : Float,
-    dy : Float) CGRect;
+    dy : Float) : CGRect;
 
 external CGRectDivide(
     rect : CGRect,
@@ -126,36 +126,36 @@ external CGRectDivide(
 
 external CGRectContainsPoint(
     rect : CGRect,
-    point : CGPoint) Bool;
+    point : CGPoint) : Bool;
 
 external CGRectContainsRect(
     rect1 : CGRect,
-    rect2 : CGRect) Bool;
+    rect2 : CGRect) : Bool;
 
 external CGRectIntersectsRect(
     rect1 : CGRect,
-    rect2 : CGRect) Bool;
+    rect2 : CGRect) : Bool;
 
 external CGPointCreateDictionaryRepresentation(
-    point : CGPoint) CFDictionaryRef;
+    point : CGPoint) : CFDictionaryRef;
 
 external CGPointMakeWithDictionaryRepresentation(
     dict : CFDictionaryRef,
-    point : Pointer[CGPoint]) Bool;
+    point : Pointer[CGPoint]) : Bool;
 
 external CGSizeCreateDictionaryRepresentation(
-    size : CGSize) CFDictionaryRef;
+    size : CGSize) : CFDictionaryRef;
 
 external CGSizeMakeWithDictionaryRepresentation(
     dict : CFDictionaryRef,
-    size : Pointer[CGSize]) Bool;
+    size : Pointer[CGSize]) : Bool;
 
 external CGRectCreateDictionaryRepresentation(
-    argument0 : CGRect) CFDictionaryRef;
+    argument0 : CGRect) : CFDictionaryRef;
 
 external CGRectMakeWithDictionaryRepresentation(
     dict : CFDictionaryRef,
-    rect : Pointer[CGRect]) Bool;
+    rect : Pointer[CGRect]) : Bool;
 
 record Struct_CGAffineTransform (
     a : Float,
@@ -174,58 +174,58 @@ external CGAffineTransformMake(
     c : Float,
     d : Float,
     tx : Float,
-    ty : Float) CGAffineTransform;
+    ty : Float) : CGAffineTransform;
 
 external CGAffineTransformMakeTranslation(
     tx : Float,
-    ty : Float) CGAffineTransform;
+    ty : Float) : CGAffineTransform;
 
 external CGAffineTransformMakeScale(
     sx : Float,
-    sy : Float) CGAffineTransform;
+    sy : Float) : CGAffineTransform;
 
 external CGAffineTransformMakeRotation(
-    angle : Float) CGAffineTransform;
+    angle : Float) : CGAffineTransform;
 
 external CGAffineTransformIsIdentity(
-    t : CGAffineTransform) Bool;
+    t : CGAffineTransform) : Bool;
 
 external CGAffineTransformTranslate(
     t : CGAffineTransform,
     tx : Float,
-    ty : Float) CGAffineTransform;
+    ty : Float) : CGAffineTransform;
 
 external CGAffineTransformScale(
     t : CGAffineTransform,
     sx : Float,
-    sy : Float) CGAffineTransform;
+    sy : Float) : CGAffineTransform;
 
 external CGAffineTransformRotate(
     t : CGAffineTransform,
-    angle : Float) CGAffineTransform;
+    angle : Float) : CGAffineTransform;
 
 external CGAffineTransformInvert(
-    t : CGAffineTransform) CGAffineTransform;
+    t : CGAffineTransform) : CGAffineTransform;
 
 external CGAffineTransformConcat(
     t1 : CGAffineTransform,
-    t2 : CGAffineTransform) CGAffineTransform;
+    t2 : CGAffineTransform) : CGAffineTransform;
 
 external CGAffineTransformEqualToTransform(
     t1 : CGAffineTransform,
-    t2 : CGAffineTransform) Bool;
+    t2 : CGAffineTransform) : Bool;
 
 external CGPointApplyAffineTransform(
     point : CGPoint,
-    t : CGAffineTransform) CGPoint;
+    t : CGAffineTransform) : CGPoint;
 
 external CGSizeApplyAffineTransform(
     size : CGSize,
-    t : CGAffineTransform) CGSize;
+    t : CGAffineTransform) : CGSize;
 
 external CGRectApplyAffineTransform(
     rect : CGRect,
-    t : CGAffineTransform) CGRect;
+    t : CGAffineTransform) : CGRect;
 
 alias CGContextRef = OpaquePointer;
 
@@ -269,16 +269,16 @@ record Struct_CGDataProviderDirectCallbacks (
 
 alias CGDataProviderDirectCallbacks = Struct_CGDataProviderDirectCallbacks;
 
-external CGDataProviderGetTypeID() CULong;
+external CGDataProviderGetTypeID() : CULong;
 
 external CGDataProviderCreateSequential(
     info : RawPointer,
-    callbacks : Pointer[CGDataProviderSequentialCallbacks]) CGDataProviderRef;
+    callbacks : Pointer[CGDataProviderSequentialCallbacks]) : CGDataProviderRef;
 
 external CGDataProviderCreateDirect(
     info : RawPointer,
     size : Int64,
-    callbacks : Pointer[CGDataProviderDirectCallbacks]) CGDataProviderRef;
+    callbacks : Pointer[CGDataProviderDirectCallbacks]) : CGDataProviderRef;
 
 alias CGDataProviderReleaseDataCallback = CCodePointer[(RawPointer,RawPointer,UInt),()];
 
@@ -286,25 +286,25 @@ external CGDataProviderCreateWithData(
     info : RawPointer,
     data : RawPointer,
     size : UInt,
-    releaseData : CGDataProviderReleaseDataCallback) CGDataProviderRef;
+    releaseData : CGDataProviderReleaseDataCallback) : CGDataProviderRef;
 
 external CGDataProviderCreateWithCFData(
-    data : CFDataRef) CGDataProviderRef;
+    data : CFDataRef) : CGDataProviderRef;
 
 external CGDataProviderCreateWithURL(
-    url : CFURLRef) CGDataProviderRef;
+    url : CFURLRef) : CGDataProviderRef;
 
 external CGDataProviderCreateWithFilename(
-    filename : Pointer[CChar]) CGDataProviderRef;
+    filename : Pointer[CChar]) : CGDataProviderRef;
 
 external CGDataProviderRetain(
-    provider : CGDataProviderRef) CGDataProviderRef;
+    provider : CGDataProviderRef) : CGDataProviderRef;
 
 external CGDataProviderRelease(
     provider : CGDataProviderRef);
 
 external CGDataProviderCopyData(
-    provider : CGDataProviderRef) CFDataRef;
+    provider : CGDataProviderRef) : CFDataRef;
 
 alias CGDataProviderSkipBytesCallback = CCodePointer[(RawPointer,UInt),()];
 
@@ -330,12 +330,12 @@ alias CGDataProviderDirectAccessCallbacks = Struct_CGDataProviderDirectAccessCal
 
 external CGDataProviderCreate(
     info : RawPointer,
-    callbacks : Pointer[CGDataProviderCallbacks]) CGDataProviderRef;
+    callbacks : Pointer[CGDataProviderCallbacks]) : CGDataProviderRef;
 
 external CGDataProviderCreateDirectAccess(
     info : RawPointer,
     size : UInt,
-    callbacks : Pointer[CGDataProviderDirectAccessCallbacks]) CGDataProviderRef;
+    callbacks : Pointer[CGDataProviderDirectAccessCallbacks]) : CGDataProviderRef;
 
 alias kCGRenderingIntentDefault = 0;
 alias kCGRenderingIntentAbsoluteColorimetric = 1;
@@ -370,80 +370,80 @@ external kCGColorSpaceSRGB : CFStringRef;
 
 external kCGColorSpaceGenericGrayGamma2_2 : CFStringRef;
 
-external CGColorSpaceCreateDeviceGray() CGColorSpaceRef;
+external CGColorSpaceCreateDeviceGray() : CGColorSpaceRef;
 
-external CGColorSpaceCreateDeviceRGB() CGColorSpaceRef;
+external CGColorSpaceCreateDeviceRGB() : CGColorSpaceRef;
 
-external CGColorSpaceCreateDeviceCMYK() CGColorSpaceRef;
+external CGColorSpaceCreateDeviceCMYK() : CGColorSpaceRef;
 
 external CGColorSpaceCreateCalibratedGray(
     whitePoint : Pointer[Float],
     blackPoint : Pointer[Float],
-    gamma : Float) CGColorSpaceRef;
+    gamma : Float) : CGColorSpaceRef;
 
 external CGColorSpaceCreateCalibratedRGB(
     whitePoint : Pointer[Float],
     blackPoint : Pointer[Float],
     gamma : Pointer[Float],
-    matrix : Pointer[Float]) CGColorSpaceRef;
+    matrix : Pointer[Float]) : CGColorSpaceRef;
 
 external CGColorSpaceCreateLab(
     whitePoint : Pointer[Float],
     blackPoint : Pointer[Float],
-    range : Pointer[Float]) CGColorSpaceRef;
+    range : Pointer[Float]) : CGColorSpaceRef;
 
 external CGColorSpaceCreateWithICCProfile(
-    data : CFDataRef) CGColorSpaceRef;
+    data : CFDataRef) : CGColorSpaceRef;
 
 external CGColorSpaceCreateICCBased(
     nComponents : UInt,
     range : Pointer[Float],
     profile : CGDataProviderRef,
-    alternate : CGColorSpaceRef) CGColorSpaceRef;
+    alternate : CGColorSpaceRef) : CGColorSpaceRef;
 
 external CGColorSpaceCreateIndexed(
     baseSpace : CGColorSpaceRef,
     lastIndex : UInt,
-    colorTable : Pointer[CUChar]) CGColorSpaceRef;
+    colorTable : Pointer[CUChar]) : CGColorSpaceRef;
 
 external CGColorSpaceCreatePattern(
-    baseSpace : CGColorSpaceRef) CGColorSpaceRef;
+    baseSpace : CGColorSpaceRef) : CGColorSpaceRef;
 
 external CGColorSpaceCreateWithPlatformColorSpace(
-    ref_ : RawPointer) CGColorSpaceRef;
+    ref_ : RawPointer) : CGColorSpaceRef;
 
 external CGColorSpaceCreateWithName(
-    name : CFStringRef) CGColorSpaceRef;
+    name : CFStringRef) : CGColorSpaceRef;
 
 external CGColorSpaceRetain(
-    space : CGColorSpaceRef) CGColorSpaceRef;
+    space : CGColorSpaceRef) : CGColorSpaceRef;
 
 external CGColorSpaceRelease(
     space : CGColorSpaceRef);
 
 external CGColorSpaceCopyName(
-    space : CGColorSpaceRef) CFStringRef;
+    space : CGColorSpaceRef) : CFStringRef;
 
-external CGColorSpaceGetTypeID() CULong;
+external CGColorSpaceGetTypeID() : CULong;
 
 external CGColorSpaceGetNumberOfComponents(
-    space : CGColorSpaceRef) UInt;
+    space : CGColorSpaceRef) : UInt;
 
 external CGColorSpaceGetModel(
-    space : CGColorSpaceRef) CGColorSpaceModel;
+    space : CGColorSpaceRef) : CGColorSpaceModel;
 
 external CGColorSpaceGetBaseColorSpace(
-    space : CGColorSpaceRef) CGColorSpaceRef;
+    space : CGColorSpaceRef) : CGColorSpaceRef;
 
 external CGColorSpaceGetColorTableCount(
-    space : CGColorSpaceRef) UInt;
+    space : CGColorSpaceRef) : UInt;
 
 external CGColorSpaceGetColorTable(
     space : CGColorSpaceRef,
     table : Pointer[CUChar]);
 
 external CGColorSpaceCopyICCProfile(
-    space : CGColorSpaceRef) CFDataRef;
+    space : CGColorSpaceRef) : CFDataRef;
 
 alias CGPatternRef = OpaquePointer;
 
@@ -465,7 +465,7 @@ record Struct_CGPatternCallbacks (
 
 alias CGPatternCallbacks = Struct_CGPatternCallbacks;
 
-external CGPatternGetTypeID() CULong;
+external CGPatternGetTypeID() : CULong;
 
 external CGPatternCreate(
     info : RawPointer,
@@ -475,76 +475,76 @@ external CGPatternCreate(
     yStep : Float,
     tiling : CGPatternTiling,
     isColored : Bool,
-    callbacks : Pointer[CGPatternCallbacks]) CGPatternRef;
+    callbacks : Pointer[CGPatternCallbacks]) : CGPatternRef;
 
 external CGPatternRetain(
-    pattern : CGPatternRef) CGPatternRef;
+    pattern : CGPatternRef) : CGPatternRef;
 
 external CGPatternRelease(
     pattern : CGPatternRef);
 
 external CGColorCreate(
     space : CGColorSpaceRef,
-    components : Pointer[Float]) CGColorRef;
+    components : Pointer[Float]) : CGColorRef;
 
 external CGColorCreateGenericGray(
     gray : Float,
-    alpha : Float) CGColorRef;
+    alpha : Float) : CGColorRef;
 
 external CGColorCreateGenericRGB(
     red : Float,
     green : Float,
     blue : Float,
-    alpha : Float) CGColorRef;
+    alpha : Float) : CGColorRef;
 
 external CGColorCreateGenericCMYK(
     cyan : Float,
     magenta : Float,
     yellow : Float,
     black : Float,
-    alpha : Float) CGColorRef;
+    alpha : Float) : CGColorRef;
 
 external CGColorGetConstantColor(
-    colorName : CFStringRef) CGColorRef;
+    colorName : CFStringRef) : CGColorRef;
 
 external CGColorCreateWithPattern(
     space : CGColorSpaceRef,
     pattern : CGPatternRef,
-    components : Pointer[Float]) CGColorRef;
+    components : Pointer[Float]) : CGColorRef;
 
 external CGColorCreateCopy(
-    color : CGColorRef) CGColorRef;
+    color : CGColorRef) : CGColorRef;
 
 external CGColorCreateCopyWithAlpha(
     color : CGColorRef,
-    alpha : Float) CGColorRef;
+    alpha : Float) : CGColorRef;
 
 external CGColorRetain(
-    color : CGColorRef) CGColorRef;
+    color : CGColorRef) : CGColorRef;
 
 external CGColorRelease(
     color : CGColorRef);
 
 external CGColorEqualToColor(
     color1 : CGColorRef,
-    color2 : CGColorRef) Bool;
+    color2 : CGColorRef) : Bool;
 
 external CGColorGetNumberOfComponents(
-    color : CGColorRef) UInt;
+    color : CGColorRef) : UInt;
 
 external CGColorGetComponents(
-    color : CGColorRef) Pointer[Float];
+    color : CGColorRef) : Pointer[Float];
 
 external CGColorGetAlpha(
-    color : CGColorRef) Float;
+    color : CGColorRef) : Float;
 
 external CGColorGetColorSpace(
-    color : CGColorRef) CGColorSpaceRef;
+    color : CGColorRef) : CGColorSpaceRef;
 
 external CGColorGetPattern(
-    color : CGColorRef) CGPatternRef;
+    color : CGColorRef) : CGPatternRef;
 
-external CGColorGetTypeID() CULong;
+external CGColorGetTypeID() : CULong;
 
 external kCGColorWhite : CFStringRef;
 
@@ -568,92 +568,92 @@ alias kCGFontIndexMax = 65534;
 alias kCGFontIndexInvalid = 65535;
 alias kCGGlyphMax = 65534;
 
-external CGFontGetTypeID() CULong;
+external CGFontGetTypeID() : CULong;
 
 external CGFontCreateWithPlatformFont(
-    platformFontReference : RawPointer) CGFontRef;
+    platformFontReference : RawPointer) : CGFontRef;
 
 external CGFontCreateWithDataProvider(
-    provider : CGDataProviderRef) CGFontRef;
+    provider : CGDataProviderRef) : CGFontRef;
 
 external CGFontCreateWithFontName(
-    name : CFStringRef) CGFontRef;
+    name : CFStringRef) : CGFontRef;
 
 external CGFontCreateCopyWithVariations(
     font : CGFontRef,
-    variations : CFDictionaryRef) CGFontRef;
+    variations : CFDictionaryRef) : CGFontRef;
 
 external CGFontRetain(
-    font : CGFontRef) CGFontRef;
+    font : CGFontRef) : CGFontRef;
 
 external CGFontRelease(
     font : CGFontRef);
 
 external CGFontGetNumberOfGlyphs(
-    font : CGFontRef) UInt;
+    font : CGFontRef) : UInt;
 
 external CGFontGetUnitsPerEm(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontCopyPostScriptName(
-    font : CGFontRef) CFStringRef;
+    font : CGFontRef) : CFStringRef;
 
 external CGFontCopyFullName(
-    font : CGFontRef) CFStringRef;
+    font : CGFontRef) : CFStringRef;
 
 external CGFontGetAscent(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontGetDescent(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontGetLeading(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontGetCapHeight(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontGetXHeight(
-    font : CGFontRef) Int;
+    font : CGFontRef) : Int;
 
 external CGFontGetFontBBox(
-    font : CGFontRef) CGRect;
+    font : CGFontRef) : CGRect;
 
 external CGFontGetItalicAngle(
-    font : CGFontRef) Float;
+    font : CGFontRef) : Float;
 
 external CGFontGetStemV(
-    font : CGFontRef) Float;
+    font : CGFontRef) : Float;
 
 external CGFontCopyVariationAxes(
-    font : CGFontRef) CFArrayRef;
+    font : CGFontRef) : CFArrayRef;
 
 external CGFontCopyVariations(
-    font : CGFontRef) CFDictionaryRef;
+    font : CGFontRef) : CFDictionaryRef;
 
 external CGFontGetGlyphAdvances(
     font : CGFontRef,
     glyphs : Pointer[UShort],
     count : UInt,
-    advances : Pointer[Int]) Bool;
+    advances : Pointer[Int]) : Bool;
 
 external CGFontGetGlyphBBoxes(
     font : CGFontRef,
     glyphs : Pointer[UShort],
     count : UInt,
-    bboxes : Pointer[CGRect]) Bool;
+    bboxes : Pointer[CGRect]) : Bool;
 
 external CGFontGetGlyphWithGlyphName(
     font : CGFontRef,
-    name : CFStringRef) UShort;
+    name : CFStringRef) : UShort;
 
 external CGFontCopyGlyphNameForGlyph(
     font : CGFontRef,
-    glyph : UShort) CFStringRef;
+    glyph : UShort) : CFStringRef;
 
 external CGFontCanCreatePostScriptSubset(
     font : CGFontRef,
-    format : CGFontPostScriptFormat) Bool;
+    format : CGFontPostScriptFormat) : Bool;
 
 external CGFontCreatePostScriptSubset(
     font : CGFontRef,
@@ -661,18 +661,18 @@ external CGFontCreatePostScriptSubset(
     format : CGFontPostScriptFormat,
     glyphs : Pointer[UShort],
     count : UInt,
-    encoding : Pointer[UShort]) CFDataRef;
+    encoding : Pointer[UShort]) : CFDataRef;
 
 external CGFontCreatePostScriptEncoding(
     font : CGFontRef,
-    encoding : Pointer[UShort]) CFDataRef;
+    encoding : Pointer[UShort]) : CFDataRef;
 
 external CGFontCopyTableTags(
-    font : CGFontRef) CFArrayRef;
+    font : CGFontRef) : CFArrayRef;
 
 external CGFontCopyTableForTag(
     font : CGFontRef,
-    tag : UInt) CFDataRef;
+    tag : UInt) : CFDataRef;
 
 external kCGFontVariationAxisName : CFStringRef;
 
@@ -692,21 +692,21 @@ alias kCGGradientDrawsAfterEndLocation = 2;
 
 alias CGGradientDrawingOptions = UInt;
 
-external CGGradientGetTypeID() CULong;
+external CGGradientGetTypeID() : CULong;
 
 external CGGradientCreateWithColorComponents(
     space : CGColorSpaceRef,
     components : Pointer[Float],
     locations : Pointer[Float],
-    count : UInt) CGGradientRef;
+    count : UInt) : CGGradientRef;
 
 external CGGradientCreateWithColors(
     space : CGColorSpaceRef,
     colors : CFArrayRef,
-    locations : Pointer[Float]) CGGradientRef;
+    locations : Pointer[Float]) : CGGradientRef;
 
 external CGGradientRetain(
-    gradient : CGGradientRef) CGGradientRef;
+    gradient : CGGradientRef) : CGGradientRef;
 
 external CGGradientRelease(
     gradient : CGGradientRef);
@@ -735,7 +735,7 @@ alias kCGBitmapByteOrder32Big = 16384;
 
 alias CGBitmapInfo = UInt;
 
-external CGImageGetTypeID() CULong;
+external CGImageGetTypeID() : CULong;
 
 external CGImageCreate(
     width : UInt,
@@ -748,7 +748,7 @@ external CGImageCreate(
     provider : CGDataProviderRef,
     decode : Pointer[Float],
     shouldInterpolate : Bool,
-    intent : CGColorRenderingIntent) CGImageRef;
+    intent : CGColorRenderingIntent) : CGImageRef;
 
 external CGImageMaskCreate(
     width : UInt,
@@ -758,107 +758,107 @@ external CGImageMaskCreate(
     bytesPerRow : UInt,
     provider : CGDataProviderRef,
     decode : Pointer[Float],
-    shouldInterpolate : Bool) CGImageRef;
+    shouldInterpolate : Bool) : CGImageRef;
 
 external CGImageCreateCopy(
-    image : CGImageRef) CGImageRef;
+    image : CGImageRef) : CGImageRef;
 
 external CGImageCreateWithJPEGDataProvider(
     source : CGDataProviderRef,
     decode : Pointer[Float],
     shouldInterpolate : Bool,
-    intent : CGColorRenderingIntent) CGImageRef;
+    intent : CGColorRenderingIntent) : CGImageRef;
 
 external CGImageCreateWithPNGDataProvider(
     source : CGDataProviderRef,
     decode : Pointer[Float],
     shouldInterpolate : Bool,
-    intent : CGColorRenderingIntent) CGImageRef;
+    intent : CGColorRenderingIntent) : CGImageRef;
 
 external CGImageCreateWithImageInRect(
     image : CGImageRef,
-    rect : CGRect) CGImageRef;
+    rect : CGRect) : CGImageRef;
 
 external CGImageCreateWithMask(
     image : CGImageRef,
-    mask : CGImageRef) CGImageRef;
+    mask : CGImageRef) : CGImageRef;
 
 external CGImageCreateWithMaskingColors(
     image : CGImageRef,
-    components : Pointer[Float]) CGImageRef;
+    components : Pointer[Float]) : CGImageRef;
 
 external CGImageCreateCopyWithColorSpace(
     image : CGImageRef,
-    space : CGColorSpaceRef) CGImageRef;
+    space : CGColorSpaceRef) : CGImageRef;
 
 external CGImageRetain(
-    image : CGImageRef) CGImageRef;
+    image : CGImageRef) : CGImageRef;
 
 external CGImageRelease(
     image : CGImageRef);
 
 external CGImageIsMask(
-    image : CGImageRef) Bool;
+    image : CGImageRef) : Bool;
 
 external CGImageGetWidth(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 external CGImageGetHeight(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 external CGImageGetBitsPerComponent(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 external CGImageGetBitsPerPixel(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 external CGImageGetBytesPerRow(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 external CGImageGetColorSpace(
-    image : CGImageRef) CGColorSpaceRef;
+    image : CGImageRef) : CGColorSpaceRef;
 
 external CGImageGetAlphaInfo(
-    image : CGImageRef) CGImageAlphaInfo;
+    image : CGImageRef) : CGImageAlphaInfo;
 
 external CGImageGetDataProvider(
-    image : CGImageRef) CGDataProviderRef;
+    image : CGImageRef) : CGDataProviderRef;
 
 external CGImageGetDecode(
-    image : CGImageRef) Pointer[Float];
+    image : CGImageRef) : Pointer[Float];
 
 external CGImageGetShouldInterpolate(
-    image : CGImageRef) Bool;
+    image : CGImageRef) : Bool;
 
 external CGImageGetRenderingIntent(
-    image : CGImageRef) CGColorRenderingIntent;
+    image : CGImageRef) : CGColorRenderingIntent;
 
 external CGImageGetBitmapInfo(
-    image : CGImageRef) UInt;
+    image : CGImageRef) : UInt;
 
 alias CGMutablePathRef = OpaquePointer;
 
 alias CGPathRef = OpaquePointer;
 
-external CGPathGetTypeID() CULong;
+external CGPathGetTypeID() : CULong;
 
-external CGPathCreateMutable() CGMutablePathRef;
+external CGPathCreateMutable() : CGMutablePathRef;
 
 external CGPathCreateCopy(
-    path : CGPathRef) CGPathRef;
+    path : CGPathRef) : CGPathRef;
 
 external CGPathCreateMutableCopy(
-    path : CGPathRef) CGMutablePathRef;
+    path : CGPathRef) : CGMutablePathRef;
 
 external CGPathRetain(
-    path : CGPathRef) CGPathRef;
+    path : CGPathRef) : CGPathRef;
 
 external CGPathRelease(
     path : CGPathRef);
 
 external CGPathEqualToPath(
     path1 : CGPathRef,
-    path2 : CGPathRef) Bool;
+    path2 : CGPathRef) : Bool;
 
 external CGPathMoveToPoint(
     path : CGMutablePathRef,
@@ -940,26 +940,26 @@ external CGPathAddPath(
     path2 : CGPathRef);
 
 external CGPathIsEmpty(
-    path : CGPathRef) Bool;
+    path : CGPathRef) : Bool;
 
 external CGPathIsRect(
     path : CGPathRef,
-    rect : Pointer[CGRect]) Bool;
+    rect : Pointer[CGRect]) : Bool;
 
 external CGPathGetCurrentPoint(
-    path : CGPathRef) CGPoint;
+    path : CGPathRef) : CGPoint;
 
 external CGPathGetBoundingBox(
-    path : CGPathRef) CGRect;
+    path : CGPathRef) : CGRect;
 
 external CGPathGetPathBoundingBox(
-    path : CGPathRef) CGRect;
+    path : CGPathRef) : CGRect;
 
 external CGPathContainsPoint(
     path : CGPathRef,
     m : Pointer[CGAffineTransform],
     point : CGPoint,
-    eoFill : Bool) Bool;
+    eoFill : Bool) : Bool;
 
 alias kCGPathElementMoveToPoint = 0;
 alias kCGPathElementAddLineToPoint = 1;
@@ -1012,12 +1012,12 @@ alias kCGPDFObjectTypeStream = 9;
 alias CGPDFObjectType = Int;
 
 external CGPDFObjectGetType(
-    object : CGPDFObjectRef) CGPDFObjectType;
+    object : CGPDFObjectRef) : CGPDFObjectType;
 
 external CGPDFObjectGetValue(
     object : CGPDFObjectRef,
     type : CGPDFObjectType,
-    value : RawPointer) Bool;
+    value : RawPointer) : Bool;
 
 alias CGPDFStreamRef = OpaquePointer;
 
@@ -1028,125 +1028,125 @@ alias CGPDFDataFormatJPEG2000 = 2;
 alias CGPDFDataFormat = Int;
 
 external CGPDFStreamGetDictionary(
-    stream : CGPDFStreamRef) CGPDFDictionaryRef;
+    stream : CGPDFStreamRef) : CGPDFDictionaryRef;
 
 external CGPDFStreamCopyData(
     stream : CGPDFStreamRef,
-    format : Pointer[CGPDFDataFormat]) CFDataRef;
+    format : Pointer[CGPDFDataFormat]) : CFDataRef;
 
 alias CGPDFStringRef = OpaquePointer;
 
 external CGPDFStringGetLength(
-    string : CGPDFStringRef) UInt;
+    string : CGPDFStringRef) : UInt;
 
 external CGPDFStringGetBytePtr(
-    string : CGPDFStringRef) Pointer[CUChar];
+    string : CGPDFStringRef) : Pointer[CUChar];
 
 external CGPDFStringCopyTextString(
-    string : CGPDFStringRef) CFStringRef;
+    string : CGPDFStringRef) : CFStringRef;
 
 external CGPDFStringCopyDate(
-    string : CGPDFStringRef) CFDateRef;
+    string : CGPDFStringRef) : CFDateRef;
 
 external CGPDFArrayGetCount(
-    array : CGPDFArrayRef) UInt;
+    array : CGPDFArrayRef) : UInt;
 
 external CGPDFArrayGetObject(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CGPDFObjectRef]) Bool;
+    value : Pointer[CGPDFObjectRef]) : Bool;
 
 external CGPDFArrayGetNull(
     array : CGPDFArrayRef,
-    index : UInt) Bool;
+    index : UInt) : Bool;
 
 external CGPDFArrayGetBoolean(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CUChar]) Bool;
+    value : Pointer[CUChar]) : Bool;
 
 external CGPDFArrayGetInteger(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CLong]) Bool;
+    value : Pointer[CLong]) : Bool;
 
 external CGPDFArrayGetNumber(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[Float]) Bool;
+    value : Pointer[Float]) : Bool;
 
 external CGPDFArrayGetName(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[Pointer[CChar]]) Bool;
+    value : Pointer[Pointer[CChar]]) : Bool;
 
 external CGPDFArrayGetString(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CGPDFStringRef]) Bool;
+    value : Pointer[CGPDFStringRef]) : Bool;
 
 external CGPDFArrayGetArray(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CGPDFArrayRef]) Bool;
+    value : Pointer[CGPDFArrayRef]) : Bool;
 
 external CGPDFArrayGetDictionary(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CGPDFDictionaryRef]) Bool;
+    value : Pointer[CGPDFDictionaryRef]) : Bool;
 
 external CGPDFArrayGetStream(
     array : CGPDFArrayRef,
     index : UInt,
-    value : Pointer[CGPDFStreamRef]) Bool;
+    value : Pointer[CGPDFStreamRef]) : Bool;
 
 external CGPDFDictionaryGetCount(
-    dict : CGPDFDictionaryRef) UInt;
+    dict : CGPDFDictionaryRef) : UInt;
 
 external CGPDFDictionaryGetObject(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CGPDFObjectRef]) Bool;
+    value : Pointer[CGPDFObjectRef]) : Bool;
 
 external CGPDFDictionaryGetBoolean(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CUChar]) Bool;
+    value : Pointer[CUChar]) : Bool;
 
 external CGPDFDictionaryGetInteger(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CLong]) Bool;
+    value : Pointer[CLong]) : Bool;
 
 external CGPDFDictionaryGetNumber(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[Float]) Bool;
+    value : Pointer[Float]) : Bool;
 
 external CGPDFDictionaryGetName(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[Pointer[CChar]]) Bool;
+    value : Pointer[Pointer[CChar]]) : Bool;
 
 external CGPDFDictionaryGetString(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CGPDFStringRef]) Bool;
+    value : Pointer[CGPDFStringRef]) : Bool;
 
 external CGPDFDictionaryGetArray(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CGPDFArrayRef]) Bool;
+    value : Pointer[CGPDFArrayRef]) : Bool;
 
 external CGPDFDictionaryGetDictionary(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CGPDFDictionaryRef]) Bool;
+    value : Pointer[CGPDFDictionaryRef]) : Bool;
 
 external CGPDFDictionaryGetStream(
     dict : CGPDFDictionaryRef,
     key : Pointer[CChar],
-    value : Pointer[CGPDFStreamRef]) Bool;
+    value : Pointer[CGPDFStreamRef]) : Bool;
 
 alias CGPDFDictionaryApplierFunction = CCodePointer[(Pointer[CChar],OpaquePointer,RawPointer),()];
 
@@ -1164,44 +1164,44 @@ alias kCGPDFArtBox = 4;
 alias CGPDFBox = Int;
 
 external CGPDFPageRetain(
-    page : CGPDFPageRef) CGPDFPageRef;
+    page : CGPDFPageRef) : CGPDFPageRef;
 
 external CGPDFPageRelease(
     page : CGPDFPageRef);
 
 external CGPDFPageGetDocument(
-    page : CGPDFPageRef) CGPDFDocumentRef;
+    page : CGPDFPageRef) : CGPDFDocumentRef;
 
 external CGPDFPageGetPageNumber(
-    page : CGPDFPageRef) UInt;
+    page : CGPDFPageRef) : UInt;
 
 external CGPDFPageGetBoxRect(
     page : CGPDFPageRef,
-    box : CGPDFBox) CGRect;
+    box : CGPDFBox) : CGRect;
 
 external CGPDFPageGetRotationAngle(
-    page : CGPDFPageRef) Int;
+    page : CGPDFPageRef) : Int;
 
 external CGPDFPageGetDrawingTransform(
     page : CGPDFPageRef,
     box : CGPDFBox,
     rect : CGRect,
     rotate : Int,
-    preserveAspectRatio : Bool) CGAffineTransform;
+    preserveAspectRatio : Bool) : CGAffineTransform;
 
 external CGPDFPageGetDictionary(
-    page : CGPDFPageRef) CGPDFDictionaryRef;
+    page : CGPDFPageRef) : CGPDFDictionaryRef;
 
-external CGPDFPageGetTypeID() CULong;
+external CGPDFPageGetTypeID() : CULong;
 
 external CGPDFDocumentCreateWithProvider(
-    provider : CGDataProviderRef) CGPDFDocumentRef;
+    provider : CGDataProviderRef) : CGPDFDocumentRef;
 
 external CGPDFDocumentCreateWithURL(
-    url : CFURLRef) CGPDFDocumentRef;
+    url : CFURLRef) : CGPDFDocumentRef;
 
 external CGPDFDocumentRetain(
-    document : CGPDFDocumentRef) CGPDFDocumentRef;
+    document : CGPDFDocumentRef) : CGPDFDocumentRef;
 
 external CGPDFDocumentRelease(
     document : CGPDFDocumentRef);
@@ -1212,62 +1212,62 @@ external CGPDFDocumentGetVersion(
     minorVersion : Pointer[Int]);
 
 external CGPDFDocumentIsEncrypted(
-    document : CGPDFDocumentRef) Bool;
+    document : CGPDFDocumentRef) : Bool;
 
 external CGPDFDocumentUnlockWithPassword(
     document : CGPDFDocumentRef,
-    password : Pointer[CChar]) Bool;
+    password : Pointer[CChar]) : Bool;
 
 external CGPDFDocumentIsUnlocked(
-    document : CGPDFDocumentRef) Bool;
+    document : CGPDFDocumentRef) : Bool;
 
 external CGPDFDocumentAllowsPrinting(
-    document : CGPDFDocumentRef) Bool;
+    document : CGPDFDocumentRef) : Bool;
 
 external CGPDFDocumentAllowsCopying(
-    document : CGPDFDocumentRef) Bool;
+    document : CGPDFDocumentRef) : Bool;
 
 external CGPDFDocumentGetNumberOfPages(
-    document : CGPDFDocumentRef) UInt;
+    document : CGPDFDocumentRef) : UInt;
 
 external CGPDFDocumentGetPage(
     document : CGPDFDocumentRef,
-    pageNumber : UInt) CGPDFPageRef;
+    pageNumber : UInt) : CGPDFPageRef;
 
 external CGPDFDocumentGetCatalog(
-    document : CGPDFDocumentRef) CGPDFDictionaryRef;
+    document : CGPDFDocumentRef) : CGPDFDictionaryRef;
 
 external CGPDFDocumentGetInfo(
-    document : CGPDFDocumentRef) CGPDFDictionaryRef;
+    document : CGPDFDocumentRef) : CGPDFDictionaryRef;
 
 external CGPDFDocumentGetID(
-    document : CGPDFDocumentRef) CGPDFArrayRef;
+    document : CGPDFDocumentRef) : CGPDFArrayRef;
 
-external CGPDFDocumentGetTypeID() CULong;
+external CGPDFDocumentGetTypeID() : CULong;
 
 external CGPDFDocumentGetMediaBox(
     document : CGPDFDocumentRef,
-    page : Int) CGRect;
+    page : Int) : CGRect;
 
 external CGPDFDocumentGetCropBox(
     document : CGPDFDocumentRef,
-    page : Int) CGRect;
+    page : Int) : CGRect;
 
 external CGPDFDocumentGetBleedBox(
     document : CGPDFDocumentRef,
-    page : Int) CGRect;
+    page : Int) : CGRect;
 
 external CGPDFDocumentGetTrimBox(
     document : CGPDFDocumentRef,
-    page : Int) CGRect;
+    page : Int) : CGRect;
 
 external CGPDFDocumentGetArtBox(
     document : CGPDFDocumentRef,
-    page : Int) CGRect;
+    page : Int) : CGRect;
 
 external CGPDFDocumentGetRotationAngle(
     document : CGPDFDocumentRef,
-    page : Int) Int;
+    page : Int) : Int;
 
 alias CGFunctionRef = OpaquePointer;
 
@@ -1283,7 +1283,7 @@ record Struct_CGFunctionCallbacks (
 
 alias CGFunctionCallbacks = Struct_CGFunctionCallbacks;
 
-external CGFunctionGetTypeID() CULong;
+external CGFunctionGetTypeID() : CULong;
 
 external CGFunctionCreate(
     info : RawPointer,
@@ -1291,17 +1291,17 @@ external CGFunctionCreate(
     domain : Pointer[Float],
     rangeDimension : UInt,
     range : Pointer[Float],
-    callbacks : Pointer[CGFunctionCallbacks]) CGFunctionRef;
+    callbacks : Pointer[CGFunctionCallbacks]) : CGFunctionRef;
 
 external CGFunctionRetain(
-    function : CGFunctionRef) CGFunctionRef;
+    function : CGFunctionRef) : CGFunctionRef;
 
 external CGFunctionRelease(
     function : CGFunctionRef);
 
 alias CGShadingRef = OpaquePointer;
 
-external CGShadingGetTypeID() CULong;
+external CGShadingGetTypeID() : CULong;
 
 external CGShadingCreateAxial(
     space : CGColorSpaceRef,
@@ -1309,7 +1309,7 @@ external CGShadingCreateAxial(
     end : CGPoint,
     function : CGFunctionRef,
     extendStart : Bool,
-    extendEnd : Bool) CGShadingRef;
+    extendEnd : Bool) : CGShadingRef;
 
 external CGShadingCreateRadial(
     space : CGColorSpaceRef,
@@ -1319,10 +1319,10 @@ external CGShadingCreateRadial(
     endRadius : Float,
     function : CGFunctionRef,
     extendStart : Bool,
-    extendEnd : Bool) CGShadingRef;
+    extendEnd : Bool) : CGShadingRef;
 
 external CGShadingRetain(
-    shading : CGShadingRef) CGShadingRef;
+    shading : CGShadingRef) : CGShadingRef;
 
 external CGShadingRelease(
     shading : CGShadingRef);
@@ -1402,7 +1402,7 @@ alias kCGBlendModePlusLighter = 27;
 
 alias CGBlendMode = Int;
 
-external CGContextGetTypeID() CULong;
+external CGContextGetTypeID() : CULong;
 
 external CGContextSaveGState(
     c : CGContextRef);
@@ -1429,7 +1429,7 @@ external CGContextConcatCTM(
     transform : CGAffineTransform);
 
 external CGContextGetCTM(
-    c : CGContextRef) CGAffineTransform;
+    c : CGContextRef) : CGAffineTransform;
 
 external CGContextSetLineWidth(
     c : CGContextRef,
@@ -1540,21 +1540,21 @@ external CGContextReplacePathWithStrokedPath(
     c : CGContextRef);
 
 external CGContextIsPathEmpty(
-    context : CGContextRef) Bool;
+    context : CGContextRef) : Bool;
 
 external CGContextGetPathCurrentPoint(
-    context : CGContextRef) CGPoint;
+    context : CGContextRef) : CGPoint;
 
 external CGContextGetPathBoundingBox(
-    context : CGContextRef) CGRect;
+    context : CGContextRef) : CGRect;
 
 external CGContextCopyPath(
-    context : CGContextRef) CGPathRef;
+    context : CGContextRef) : CGPathRef;
 
 external CGContextPathContainsPoint(
     context : CGContextRef,
     point : CGPoint,
-    mode : CGPathDrawingMode) Bool;
+    mode : CGPathDrawingMode) : Bool;
 
 external CGContextDrawPath(
     c : CGContextRef,
@@ -1616,7 +1616,7 @@ external CGContextClipToMask(
     mask : CGImageRef);
 
 external CGContextGetClipBoundingBox(
-    c : CGContextRef) CGRect;
+    c : CGContextRef) : CGRect;
 
 external CGContextClipToRect(
     c : CGContextRef,
@@ -1720,7 +1720,7 @@ external CGContextDrawTiledImage(
     image : CGImageRef);
 
 external CGContextGetInterpolationQuality(
-    context : CGContextRef) CGInterpolationQuality;
+    context : CGContextRef) : CGInterpolationQuality;
 
 external CGContextSetInterpolationQuality(
     context : CGContextRef,
@@ -1767,14 +1767,14 @@ external CGContextSetTextPosition(
     y : Float);
 
 external CGContextGetTextPosition(
-    context : CGContextRef) CGPoint;
+    context : CGContextRef) : CGPoint;
 
 external CGContextSetTextMatrix(
     c : CGContextRef,
     t : CGAffineTransform);
 
 external CGContextGetTextMatrix(
-    c : CGContextRef) CGAffineTransform;
+    c : CGContextRef) : CGAffineTransform;
 
 external CGContextSetTextDrawingMode(
     c : CGContextRef,
@@ -1848,7 +1848,7 @@ external CGContextEndPage(
     c : CGContextRef);
 
 external CGContextRetain(
-    c : CGContextRef) CGContextRef;
+    c : CGContextRef) : CGContextRef;
 
 external CGContextRelease(
     c : CGContextRef);
@@ -1904,31 +1904,31 @@ external CGContextEndTransparencyLayer(
     context : CGContextRef);
 
 external CGContextGetUserSpaceToDeviceSpaceTransform(
-    context : CGContextRef) CGAffineTransform;
+    context : CGContextRef) : CGAffineTransform;
 
 external CGContextConvertPointToDeviceSpace(
     context : CGContextRef,
-    point : CGPoint) CGPoint;
+    point : CGPoint) : CGPoint;
 
 external CGContextConvertPointToUserSpace(
     context : CGContextRef,
-    point : CGPoint) CGPoint;
+    point : CGPoint) : CGPoint;
 
 external CGContextConvertSizeToDeviceSpace(
     context : CGContextRef,
-    size : CGSize) CGSize;
+    size : CGSize) : CGSize;
 
 external CGContextConvertSizeToUserSpace(
     context : CGContextRef,
-    size : CGSize) CGSize;
+    size : CGSize) : CGSize;
 
 external CGContextConvertRectToDeviceSpace(
     context : CGContextRef,
-    rect : CGRect) CGRect;
+    rect : CGRect) : CGRect;
 
 external CGContextConvertRectToUserSpace(
     context : CGContextRef,
-    rect : CGRect) CGRect;
+    rect : CGRect) : CGRect;
 
 alias CGBitmapContextReleaseDataCallback = CCodePointer[(RawPointer,RawPointer),()];
 
@@ -1941,7 +1941,7 @@ external CGBitmapContextCreateWithData(
     space : CGColorSpaceRef,
     bitmapInfo : UInt,
     releaseCallback : CGBitmapContextReleaseDataCallback,
-    releaseInfo : RawPointer) CGContextRef;
+    releaseInfo : RawPointer) : CGContextRef;
 
 external CGBitmapContextCreate(
     data : RawPointer,
@@ -1950,37 +1950,37 @@ external CGBitmapContextCreate(
     bitsPerComponent : UInt,
     bytesPerRow : UInt,
     space : CGColorSpaceRef,
-    bitmapInfo : UInt) CGContextRef;
+    bitmapInfo : UInt) : CGContextRef;
 
 external CGBitmapContextGetData(
-    context : CGContextRef) RawPointer;
+    context : CGContextRef) : RawPointer;
 
 external CGBitmapContextGetWidth(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextGetHeight(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextGetBitsPerComponent(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextGetBitsPerPixel(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextGetBytesPerRow(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextGetColorSpace(
-    context : CGContextRef) CGColorSpaceRef;
+    context : CGContextRef) : CGColorSpaceRef;
 
 external CGBitmapContextGetAlphaInfo(
-    context : CGContextRef) CGImageAlphaInfo;
+    context : CGContextRef) : CGImageAlphaInfo;
 
 external CGBitmapContextGetBitmapInfo(
-    context : CGContextRef) UInt;
+    context : CGContextRef) : UInt;
 
 external CGBitmapContextCreateImage(
-    context : CGContextRef) CGImageRef;
+    context : CGContextRef) : CGImageRef;
 
 alias CGDataConsumerRef = OpaquePointer;
 
@@ -1995,20 +1995,20 @@ record Struct_CGDataConsumerCallbacks (
 
 alias CGDataConsumerCallbacks = Struct_CGDataConsumerCallbacks;
 
-external CGDataConsumerGetTypeID() CULong;
+external CGDataConsumerGetTypeID() : CULong;
 
 external CGDataConsumerCreate(
     info : RawPointer,
-    callbacks : Pointer[CGDataConsumerCallbacks]) CGDataConsumerRef;
+    callbacks : Pointer[CGDataConsumerCallbacks]) : CGDataConsumerRef;
 
 external CGDataConsumerCreateWithURL(
-    url : CFURLRef) CGDataConsumerRef;
+    url : CFURLRef) : CGDataConsumerRef;
 
 external CGDataConsumerCreateWithCFData(
-    data : CFMutableDataRef) CGDataConsumerRef;
+    data : CFMutableDataRef) : CGDataConsumerRef;
 
 external CGDataConsumerRetain(
-    consumer : CGDataConsumerRef) CGDataConsumerRef;
+    consumer : CGDataConsumerRef) : CGDataConsumerRef;
 
 external CGDataConsumerRelease(
     consumer : CGDataConsumerRef);
@@ -2045,19 +2045,19 @@ alias CGLayerRef = OpaquePointer;
 external CGLayerCreateWithContext(
     context : CGContextRef,
     size : CGSize,
-    auxiliaryInfo : CFDictionaryRef) CGLayerRef;
+    auxiliaryInfo : CFDictionaryRef) : CGLayerRef;
 
 external CGLayerRetain(
-    layer : CGLayerRef) CGLayerRef;
+    layer : CGLayerRef) : CGLayerRef;
 
 external CGLayerRelease(
     layer : CGLayerRef);
 
 external CGLayerGetSize(
-    layer : CGLayerRef) CGSize;
+    layer : CGLayerRef) : CGSize;
 
 external CGLayerGetContext(
-    layer : CGLayerRef) CGContextRef;
+    layer : CGLayerRef) : CGContextRef;
 
 external CGContextDrawLayerInRect(
     context : CGContextRef,
@@ -2069,41 +2069,41 @@ external CGContextDrawLayerAtPoint(
     point : CGPoint,
     layer : CGLayerRef);
 
-external CGLayerGetTypeID() CULong;
+external CGLayerGetTypeID() : CULong;
 
 alias CGPDFContentStreamRef = OpaquePointer;
 
 external CGPDFContentStreamCreateWithPage(
-    page : CGPDFPageRef) CGPDFContentStreamRef;
+    page : CGPDFPageRef) : CGPDFContentStreamRef;
 
 external CGPDFContentStreamCreateWithStream(
     stream : CGPDFStreamRef,
     streamResources : CGPDFDictionaryRef,
-    parent : CGPDFContentStreamRef) CGPDFContentStreamRef;
+    parent : CGPDFContentStreamRef) : CGPDFContentStreamRef;
 
 external CGPDFContentStreamRetain(
-    cs : CGPDFContentStreamRef) CGPDFContentStreamRef;
+    cs : CGPDFContentStreamRef) : CGPDFContentStreamRef;
 
 external CGPDFContentStreamRelease(
     cs : CGPDFContentStreamRef);
 
 external CGPDFContentStreamGetStreams(
-    cs : CGPDFContentStreamRef) CFArrayRef;
+    cs : CGPDFContentStreamRef) : CFArrayRef;
 
 external CGPDFContentStreamGetResource(
     cs : CGPDFContentStreamRef,
     category : Pointer[CChar],
-    name : Pointer[CChar]) CGPDFObjectRef;
+    name : Pointer[CChar]) : CGPDFObjectRef;
 
 external CGPDFContextCreate(
     consumer : CGDataConsumerRef,
     mediaBox : Pointer[CGRect],
-    auxiliaryInfo : CFDictionaryRef) CGContextRef;
+    auxiliaryInfo : CFDictionaryRef) : CGContextRef;
 
 external CGPDFContextCreateWithURL(
     url : CFURLRef,
     mediaBox : Pointer[CGRect],
-    auxiliaryInfo : CFDictionaryRef) CGContextRef;
+    auxiliaryInfo : CFDictionaryRef) : CGContextRef;
 
 external CGPDFContextClose(
     context : CGContextRef);
@@ -2187,62 +2187,62 @@ alias CGPDFScannerRef = OpaquePointer;
 external CGPDFScannerCreate(
     cs : CGPDFContentStreamRef,
     table : CGPDFOperatorTableRef,
-    info : RawPointer) CGPDFScannerRef;
+    info : RawPointer) : CGPDFScannerRef;
 
 external CGPDFScannerRetain(
-    scanner : CGPDFScannerRef) CGPDFScannerRef;
+    scanner : CGPDFScannerRef) : CGPDFScannerRef;
 
 external CGPDFScannerRelease(
     scanner : CGPDFScannerRef);
 
 external CGPDFScannerScan(
-    scanner : CGPDFScannerRef) Bool;
+    scanner : CGPDFScannerRef) : Bool;
 
 external CGPDFScannerGetContentStream(
-    scanner : CGPDFScannerRef) CGPDFContentStreamRef;
+    scanner : CGPDFScannerRef) : CGPDFContentStreamRef;
 
 external CGPDFScannerPopObject(
     scanner : CGPDFScannerRef,
-    value : Pointer[CGPDFObjectRef]) Bool;
+    value : Pointer[CGPDFObjectRef]) : Bool;
 
 external CGPDFScannerPopBoolean(
     scanner : CGPDFScannerRef,
-    value : Pointer[CUChar]) Bool;
+    value : Pointer[CUChar]) : Bool;
 
 external CGPDFScannerPopInteger(
     scanner : CGPDFScannerRef,
-    value : Pointer[CLong]) Bool;
+    value : Pointer[CLong]) : Bool;
 
 external CGPDFScannerPopNumber(
     scanner : CGPDFScannerRef,
-    value : Pointer[Float]) Bool;
+    value : Pointer[Float]) : Bool;
 
 external CGPDFScannerPopName(
     scanner : CGPDFScannerRef,
-    value : Pointer[Pointer[CChar]]) Bool;
+    value : Pointer[Pointer[CChar]]) : Bool;
 
 external CGPDFScannerPopString(
     scanner : CGPDFScannerRef,
-    value : Pointer[CGPDFStringRef]) Bool;
+    value : Pointer[CGPDFStringRef]) : Bool;
 
 external CGPDFScannerPopArray(
     scanner : CGPDFScannerRef,
-    value : Pointer[CGPDFArrayRef]) Bool;
+    value : Pointer[CGPDFArrayRef]) : Bool;
 
 external CGPDFScannerPopDictionary(
     scanner : CGPDFScannerRef,
-    value : Pointer[CGPDFDictionaryRef]) Bool;
+    value : Pointer[CGPDFDictionaryRef]) : Bool;
 
 external CGPDFScannerPopStream(
     scanner : CGPDFScannerRef,
-    value : Pointer[CGPDFStreamRef]) Bool;
+    value : Pointer[CGPDFStreamRef]) : Bool;
 
 alias CGPDFOperatorCallback = CCodePointer[(OpaquePointer,RawPointer),()];
 
-external CGPDFOperatorTableCreate() CGPDFOperatorTableRef;
+external CGPDFOperatorTableCreate() : CGPDFOperatorTableRef;
 
 external CGPDFOperatorTableRetain(
-    table : CGPDFOperatorTableRef) CGPDFOperatorTableRef;
+    table : CGPDFOperatorTableRef) : CGPDFOperatorTableRef;
 
 external CGPDFOperatorTableRelease(
     table : CGPDFOperatorTableRef);
@@ -2290,7 +2290,7 @@ alias CTFontStylisticClass = UInt;
 
 alias CTFontDescriptorRef = OpaquePointer;
 
-external CTFontDescriptorGetTypeID() CULong;
+external CTFontDescriptorGetTypeID() : CULong;
 
 external kCTFontURLAttribute : CFStringRef;
 
@@ -2362,48 +2362,48 @@ external kCTFontEnabledAttribute : CFStringRef;
 
 external CTFontDescriptorCreateWithNameAndSize(
     name : CFStringRef,
-    size : Float) CTFontDescriptorRef;
+    size : Float) : CTFontDescriptorRef;
 
 external CTFontDescriptorCreateWithAttributes(
-    attributes : CFDictionaryRef) CTFontDescriptorRef;
+    attributes : CFDictionaryRef) : CTFontDescriptorRef;
 
 external CTFontDescriptorCreateCopyWithAttributes(
     original : CTFontDescriptorRef,
-    attributes : CFDictionaryRef) CTFontDescriptorRef;
+    attributes : CFDictionaryRef) : CTFontDescriptorRef;
 
 external CTFontDescriptorCreateCopyWithVariation(
     original : CTFontDescriptorRef,
     variationIdentifier : CFNumberRef,
-    variationValue : Float) CTFontDescriptorRef;
+    variationValue : Float) : CTFontDescriptorRef;
 
 external CTFontDescriptorCreateCopyWithFeature(
     original : CTFontDescriptorRef,
     featureTypeIdentifier : CFNumberRef,
-    featureSelectorIdentifier : CFNumberRef) CTFontDescriptorRef;
+    featureSelectorIdentifier : CFNumberRef) : CTFontDescriptorRef;
 
 external CTFontDescriptorCreateMatchingFontDescriptors(
     descriptor : CTFontDescriptorRef,
-    mandatoryAttributes : CFSetRef) CFArrayRef;
+    mandatoryAttributes : CFSetRef) : CFArrayRef;
 
 external CTFontDescriptorCreateMatchingFontDescriptor(
     descriptor : CTFontDescriptorRef,
-    mandatoryAttributes : CFSetRef) CTFontDescriptorRef;
+    mandatoryAttributes : CFSetRef) : CTFontDescriptorRef;
 
 external CTFontDescriptorCopyAttributes(
-    descriptor : CTFontDescriptorRef) CFDictionaryRef;
+    descriptor : CTFontDescriptorRef) : CFDictionaryRef;
 
 external CTFontDescriptorCopyAttribute(
     descriptor : CTFontDescriptorRef,
-    attribute : CFStringRef) CFTypeRef;
+    attribute : CFStringRef) : CFTypeRef;
 
 external CTFontDescriptorCopyLocalizedAttribute(
     descriptor : CTFontDescriptorRef,
     attribute : CFStringRef,
-    language : Pointer[CFStringRef]) CFTypeRef;
+    language : Pointer[CFStringRef]) : CFTypeRef;
 
 alias CTFontRef = OpaquePointer;
 
-external CTFontGetTypeID() CULong;
+external CTFontGetTypeID() : CULong;
 
 external kCTFontCopyrightNameKey : CFStringRef;
 
@@ -2444,12 +2444,12 @@ external kCTFontPostScriptCIDNameKey : CFStringRef;
 external CTFontCreateWithName(
     name : CFStringRef,
     size : Float,
-    matrix : Pointer[CGAffineTransform]) CTFontRef;
+    matrix : Pointer[CGAffineTransform]) : CTFontRef;
 
 external CTFontCreateWithFontDescriptor(
     descriptor : CTFontDescriptorRef,
     size : Float,
-    matrix : Pointer[CGAffineTransform]) CTFontRef;
+    matrix : Pointer[CGAffineTransform]) : CTFontRef;
 
 alias kCTFontOptionsDefault = 0;
 alias kCTFontOptionsPreventAutoActivation = 1;
@@ -2461,13 +2461,13 @@ external CTFontCreateWithNameAndOptions(
     name : CFStringRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
-    options : CULong) CTFontRef;
+    options : CULong) : CTFontRef;
 
 external CTFontCreateWithFontDescriptorAndOptions(
     descriptor : CTFontDescriptorRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
-    options : CULong) CTFontRef;
+    options : CULong) : CTFontRef;
 
 alias kCTFontNoFontType = 4294967295;
 alias kCTFontUserFontType = 0;
@@ -2503,137 +2503,137 @@ alias CTFontUIFontType = UInt;
 external CTFontCreateUIFontForLanguage(
     uiType : UInt,
     size : Float,
-    language : CFStringRef) CTFontRef;
+    language : CFStringRef) : CTFontRef;
 
 external CTFontCreateCopyWithAttributes(
     font : CTFontRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
-    attributes : CTFontDescriptorRef) CTFontRef;
+    attributes : CTFontDescriptorRef) : CTFontRef;
 
 external CTFontCreateCopyWithSymbolicTraits(
     font : CTFontRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
     symTraitValue : UInt,
-    symTraitMask : UInt) CTFontRef;
+    symTraitMask : UInt) : CTFontRef;
 
 external CTFontCreateCopyWithFamily(
     font : CTFontRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
-    family : CFStringRef) CTFontRef;
+    family : CFStringRef) : CTFontRef;
 
 external CTFontCreateForString(
     currentFont : CTFontRef,
     string : CFStringRef,
-    range : CFRange) CTFontRef;
+    range : CFRange) : CTFontRef;
 
 external CTFontCopyFontDescriptor(
-    font : CTFontRef) CTFontDescriptorRef;
+    font : CTFontRef) : CTFontDescriptorRef;
 
 external CTFontCopyAttribute(
     font : CTFontRef,
-    attribute : CFStringRef) CFTypeRef;
+    attribute : CFStringRef) : CFTypeRef;
 
 external CTFontGetSize(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetMatrix(
-    font : CTFontRef) CGAffineTransform;
+    font : CTFontRef) : CGAffineTransform;
 
 external CTFontGetSymbolicTraits(
-    font : CTFontRef) UInt;
+    font : CTFontRef) : UInt;
 
 external CTFontCopyTraits(
-    font : CTFontRef) CFDictionaryRef;
+    font : CTFontRef) : CFDictionaryRef;
 
 external CTFontCopyPostScriptName(
-    font : CTFontRef) CFStringRef;
+    font : CTFontRef) : CFStringRef;
 
 external CTFontCopyFamilyName(
-    font : CTFontRef) CFStringRef;
+    font : CTFontRef) : CFStringRef;
 
 external CTFontCopyFullName(
-    font : CTFontRef) CFStringRef;
+    font : CTFontRef) : CFStringRef;
 
 external CTFontCopyDisplayName(
-    font : CTFontRef) CFStringRef;
+    font : CTFontRef) : CFStringRef;
 
 external CTFontCopyName(
     font : CTFontRef,
-    nameKey : CFStringRef) CFStringRef;
+    nameKey : CFStringRef) : CFStringRef;
 
 external CTFontCopyLocalizedName(
     font : CTFontRef,
     nameKey : CFStringRef,
-    language : Pointer[CFStringRef]) CFStringRef;
+    language : Pointer[CFStringRef]) : CFStringRef;
 
 external CTFontCopyCharacterSet(
-    font : CTFontRef) CFCharacterSetRef;
+    font : CTFontRef) : CFCharacterSetRef;
 
 external CTFontGetStringEncoding(
-    font : CTFontRef) CULong;
+    font : CTFontRef) : CULong;
 
 external CTFontCopySupportedLanguages(
-    font : CTFontRef) CFArrayRef;
+    font : CTFontRef) : CFArrayRef;
 
 external CTFontGetGlyphsForCharacters(
     font : CTFontRef,
     characters : Pointer[UShort],
     glyphs : Pointer[UShort],
-    count : CLong) Bool;
+    count : CLong) : Bool;
 
 external CTFontGetAscent(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetDescent(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetLeading(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetUnitsPerEm(
-    font : CTFontRef) UInt;
+    font : CTFontRef) : UInt;
 
 external CTFontGetGlyphCount(
-    font : CTFontRef) CLong;
+    font : CTFontRef) : CLong;
 
 external CTFontGetBoundingBox(
-    font : CTFontRef) CGRect;
+    font : CTFontRef) : CGRect;
 
 external CTFontGetUnderlinePosition(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetUnderlineThickness(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetSlantAngle(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetCapHeight(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetXHeight(
-    font : CTFontRef) Float;
+    font : CTFontRef) : Float;
 
 external CTFontGetGlyphWithName(
     font : CTFontRef,
-    glyphName : CFStringRef) UShort;
+    glyphName : CFStringRef) : UShort;
 
 external CTFontGetBoundingRectsForGlyphs(
     font : CTFontRef,
     orientation : UInt,
     glyphs : Pointer[UShort],
     boundingRects : Pointer[CGRect],
-    count : CLong) CGRect;
+    count : CLong) : CGRect;
 
 external CTFontGetAdvancesForGlyphs(
     font : CTFontRef,
     orientation : UInt,
     glyphs : Pointer[UShort],
     advances : Pointer[CGSize],
-    count : CLong) Double;
+    count : CLong) : Double;
 
 external CTFontGetVerticalTranslationsForGlyphs(
     font : CTFontRef,
@@ -2644,7 +2644,7 @@ external CTFontGetVerticalTranslationsForGlyphs(
 external CTFontCreatePathForGlyph(
     font : CTFontRef,
     glyph : UShort,
-    transform : Pointer[CGAffineTransform]) CGPathRef;
+    transform : Pointer[CGAffineTransform]) : CGPathRef;
 
 external kCTFontVariationAxisIdentifierKey : CFStringRef;
 
@@ -2657,10 +2657,10 @@ external kCTFontVariationAxisDefaultValueKey : CFStringRef;
 external kCTFontVariationAxisNameKey : CFStringRef;
 
 external CTFontCopyVariationAxes(
-    font : CTFontRef) CFArrayRef;
+    font : CTFontRef) : CFArrayRef;
 
 external CTFontCopyVariation(
-    font : CTFontRef) CFDictionaryRef;
+    font : CTFontRef) : CFDictionaryRef;
 
 external kCTFontFeatureTypeIdentifierKey : CFStringRef;
 
@@ -2679,20 +2679,20 @@ external kCTFontFeatureSelectorDefaultKey : CFStringRef;
 external kCTFontFeatureSelectorSettingKey : CFStringRef;
 
 external CTFontCopyFeatures(
-    font : CTFontRef) CFArrayRef;
+    font : CTFontRef) : CFArrayRef;
 
 external CTFontCopyFeatureSettings(
-    font : CTFontRef) CFArrayRef;
+    font : CTFontRef) : CFArrayRef;
 
 external CTFontCopyGraphicsFont(
     font : CTFontRef,
-    attributes : Pointer[CTFontDescriptorRef]) CGFontRef;
+    attributes : Pointer[CTFontDescriptorRef]) : CGFontRef;
 
 external CTFontCreateWithGraphicsFont(
     graphicsFont : CGFontRef,
     size : Float,
     matrix : Pointer[CGAffineTransform],
-    attributes : CTFontDescriptorRef) CTFontRef;
+    attributes : CTFontDescriptorRef) : CTFontRef;
 
 alias kCTFontTableBASE = 1111577413;
 alias kCTFontTableCFF = 1128678944;
@@ -2757,42 +2757,42 @@ alias CTFontTableOptions = UInt;
 
 external CTFontCopyAvailableTables(
     font : CTFontRef,
-    options : UInt) CFArrayRef;
+    options : UInt) : CFArrayRef;
 
 external CTFontCopyTable(
     font : CTFontRef,
     table : UInt,
-    options : UInt) CFDataRef;
+    options : UInt) : CFDataRef;
 
 alias CTFontCollectionRef = OpaquePointer;
 
 alias CTMutableFontCollectionRef = OpaquePointer;
 
-external CTFontCollectionGetTypeID() CULong;
+external CTFontCollectionGetTypeID() : CULong;
 
 alias CTFontCollectionSortDescriptorsCallback = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer),(CLong)];
 
 external kCTFontCollectionRemoveDuplicatesOption : CFStringRef;
 
 external CTFontCollectionCreateFromAvailableFonts(
-    options : CFDictionaryRef) CTFontCollectionRef;
+    options : CFDictionaryRef) : CTFontCollectionRef;
 
 external CTFontCollectionCreateWithFontDescriptors(
     queryDescriptors : CFArrayRef,
-    options : CFDictionaryRef) CTFontCollectionRef;
+    options : CFDictionaryRef) : CTFontCollectionRef;
 
 external CTFontCollectionCreateCopyWithFontDescriptors(
     original : CTFontCollectionRef,
     queryDescriptors : CFArrayRef,
-    options : CFDictionaryRef) CTFontCollectionRef;
+    options : CFDictionaryRef) : CTFontCollectionRef;
 
 external CTFontCollectionCreateMatchingFontDescriptors(
-    collection : CTFontCollectionRef) CFArrayRef;
+    collection : CTFontCollectionRef) : CFArrayRef;
 
 external CTFontCollectionCreateMatchingFontDescriptorsSortedWithCallback(
     collection : CTFontCollectionRef,
     sortCallback : CTFontCollectionSortDescriptorsCallback,
-    refCon : RawPointer) CFArrayRef;
+    refCon : RawPointer) : CFArrayRef;
 
 external kCTFontManagerErrorDomain : CFStringRef;
 
@@ -2810,19 +2810,19 @@ alias kCTFontManagerErrorSystemRequired = 202;
 
 alias CTFontManagerError = CLong;
 
-external CTFontManagerCopyAvailablePostScriptNames() CFArrayRef;
+external CTFontManagerCopyAvailablePostScriptNames() : CFArrayRef;
 
-external CTFontManagerCopyAvailableFontFamilyNames() CFArrayRef;
+external CTFontManagerCopyAvailableFontFamilyNames() : CFArrayRef;
 
-external CTFontManagerCopyAvailableFontURLs() CFArrayRef;
+external CTFontManagerCopyAvailableFontURLs() : CFArrayRef;
 
 external CTFontManagerCompareFontFamilyNames(
     family1 : RawPointer,
     family2 : RawPointer,
-    context : RawPointer) CLong;
+    context : RawPointer) : CLong;
 
 external CTFontManagerCreateFontDescriptorsFromURL(
-    fileURL : CFURLRef) CFArrayRef;
+    fileURL : CFURLRef) : CFArrayRef;
 
 alias kCTFontManagerScopeNone = 0;
 alias kCTFontManagerScopeProcess = 1;
@@ -2834,44 +2834,44 @@ alias CTFontManagerScope = UInt;
 external CTFontManagerRegisterFontsForURL(
     fontURL : CFURLRef,
     scope : UInt,
-    error : Pointer[CFErrorRef]) Bool;
+    error : Pointer[CFErrorRef]) : Bool;
 
 external CTFontManagerUnregisterFontsForURL(
     fontURL : CFURLRef,
     scope : UInt,
-    error : Pointer[CFErrorRef]) Bool;
+    error : Pointer[CFErrorRef]) : Bool;
 
 external CTFontManagerRegisterGraphicsFont(
     font : CGFontRef,
-    error : Pointer[CFErrorRef]) Bool;
+    error : Pointer[CFErrorRef]) : Bool;
 
 external CTFontManagerUnregisterGraphicsFont(
     font : CGFontRef,
-    error : Pointer[CFErrorRef]) Bool;
+    error : Pointer[CFErrorRef]) : Bool;
 
 external CTFontManagerRegisterFontsForURLs(
     fontURLs : CFArrayRef,
     scope : UInt,
-    errors : Pointer[CFArrayRef]) Bool;
+    errors : Pointer[CFArrayRef]) : Bool;
 
 external CTFontManagerUnregisterFontsForURLs(
     fontURLs : CFArrayRef,
     scope : UInt,
-    errors : Pointer[CFArrayRef]) Bool;
+    errors : Pointer[CFArrayRef]) : Bool;
 
 external CTFontManagerEnableFontDescriptors(
     descriptors : CFArrayRef,
     enable : Bool);
 
 external CTFontManagerGetScopeForURL(
-    fontURL : CFURLRef) UInt;
+    fontURL : CFURLRef) : UInt;
 
 external CTFontManagerIsSupportedFont(
-    fontURL : CFURLRef) Bool;
+    fontURL : CFURLRef) : Bool;
 
 external CTFontManagerCreateFontRequestRunLoopSource(
     sourceOrder : CLong,
-    createMatchesCallback : UnknownType) CFRunLoopSourceRef;
+    createMatchesCallback : UnknownType) : CFRunLoopSourceRef;
 
 external kCTFontManagerBundleIdentifier : CFStringRef;
 
@@ -2887,13 +2887,13 @@ external CTFontManagerSetAutoActivationSetting(
     setting : UInt);
 
 external CTFontManagerGetAutoActivationSetting(
-    bundleIdentifier : CFStringRef) UInt;
+    bundleIdentifier : CFStringRef) : UInt;
 
 external kCTFontManagerRegisteredFontsChangedNotification : CFStringRef;
 
 alias CTFrameRef = OpaquePointer;
 
-external CTFrameGetTypeID() CULong;
+external CTFrameGetTypeID() : CULong;
 
 alias kCTFrameProgressionTopToBottom = 0;
 alias kCTFrameProgressionRightToLeft = 1;
@@ -2903,19 +2903,19 @@ alias CTFrameProgression = UInt;
 external kCTFrameProgressionAttributeName : CFStringRef;
 
 external CTFrameGetStringRange(
-    frame : CTFrameRef) CFRange;
+    frame : CTFrameRef) : CFRange;
 
 external CTFrameGetVisibleStringRange(
-    frame : CTFrameRef) CFRange;
+    frame : CTFrameRef) : CFRange;
 
 external CTFrameGetPath(
-    frame : CTFrameRef) CGPathRef;
+    frame : CTFrameRef) : CGPathRef;
 
 external CTFrameGetFrameAttributes(
-    frame : CTFrameRef) CFDictionaryRef;
+    frame : CTFrameRef) : CFDictionaryRef;
 
 external CTFrameGetLines(
-    frame : CTFrameRef) CFArrayRef;
+    frame : CTFrameRef) : CFArrayRef;
 
 external CTFrameGetLineOrigins(
     frame : CTFrameRef,
@@ -2934,35 +2934,35 @@ alias kCTLineTruncationMiddle = 2;
 
 alias CTLineTruncationType = UInt;
 
-external CTLineGetTypeID() CULong;
+external CTLineGetTypeID() : CULong;
 
 external CTLineCreateWithAttributedString(
-    string : CFAttributedStringRef) CTLineRef;
+    string : CFAttributedStringRef) : CTLineRef;
 
 external CTLineCreateTruncatedLine(
     line : CTLineRef,
     width : Double,
     truncationType : UInt,
-    truncationToken : CTLineRef) CTLineRef;
+    truncationToken : CTLineRef) : CTLineRef;
 
 external CTLineCreateJustifiedLine(
     line : CTLineRef,
     justificationFactor : Float,
-    justificationWidth : Double) CTLineRef;
+    justificationWidth : Double) : CTLineRef;
 
 external CTLineGetGlyphCount(
-    line : CTLineRef) CLong;
+    line : CTLineRef) : CLong;
 
 external CTLineGetGlyphRuns(
-    line : CTLineRef) CFArrayRef;
+    line : CTLineRef) : CFArrayRef;
 
 external CTLineGetStringRange(
-    line : CTLineRef) CFRange;
+    line : CTLineRef) : CFRange;
 
 external CTLineGetPenOffsetForFlush(
     line : CTLineRef,
     flushFactor : Float,
-    flushWidth : Double) Double;
+    flushWidth : Double) : Double;
 
 external CTLineDraw(
     line : CTLineRef,
@@ -2970,98 +2970,98 @@ external CTLineDraw(
 
 external CTLineGetImageBounds(
     line : CTLineRef,
-    context : CGContextRef) CGRect;
+    context : CGContextRef) : CGRect;
 
 external CTLineGetTypographicBounds(
     line : CTLineRef,
     ascent : Pointer[Float],
     descent : Pointer[Float],
-    leading : Pointer[Float]) Double;
+    leading : Pointer[Float]) : Double;
 
 external CTLineGetTrailingWhitespaceWidth(
-    line : CTLineRef) Double;
+    line : CTLineRef) : Double;
 
 external CTLineGetStringIndexForPosition(
     line : CTLineRef,
-    position : CGPoint) CLong;
+    position : CGPoint) : CLong;
 
 external CTLineGetOffsetForStringIndex(
     line : CTLineRef,
     charIndex : CLong,
-    secondaryOffset : Pointer[Float]) Float;
+    secondaryOffset : Pointer[Float]) : Float;
 
 alias CTTypesetterRef = OpaquePointer;
 
-external CTTypesetterGetTypeID() CULong;
+external CTTypesetterGetTypeID() : CULong;
 
 external kCTTypesetterOptionDisableBidiProcessing : CFStringRef;
 
 external kCTTypesetterOptionForcedEmbeddingLevel : CFStringRef;
 
 external CTTypesetterCreateWithAttributedString(
-    string : CFAttributedStringRef) CTTypesetterRef;
+    string : CFAttributedStringRef) : CTTypesetterRef;
 
 external CTTypesetterCreateWithAttributedStringAndOptions(
     string : CFAttributedStringRef,
-    options : CFDictionaryRef) CTTypesetterRef;
+    options : CFDictionaryRef) : CTTypesetterRef;
 
 external CTTypesetterCreateLineWithOffset(
     typesetter : CTTypesetterRef,
     stringRange : CFRange,
-    offset : Double) CTLineRef;
+    offset : Double) : CTLineRef;
 
 external CTTypesetterCreateLine(
     typesetter : CTTypesetterRef,
-    stringRange : CFRange) CTLineRef;
+    stringRange : CFRange) : CTLineRef;
 
 external CTTypesetterSuggestLineBreakWithOffset(
     typesetter : CTTypesetterRef,
     startIndex : CLong,
     width : Double,
-    offset : Double) CLong;
+    offset : Double) : CLong;
 
 external CTTypesetterSuggestLineBreak(
     typesetter : CTTypesetterRef,
     startIndex : CLong,
-    width : Double) CLong;
+    width : Double) : CLong;
 
 external CTTypesetterSuggestClusterBreakWithOffset(
     typesetter : CTTypesetterRef,
     startIndex : CLong,
     width : Double,
-    offset : Double) CLong;
+    offset : Double) : CLong;
 
 external CTTypesetterSuggestClusterBreak(
     typesetter : CTTypesetterRef,
     startIndex : CLong,
-    width : Double) CLong;
+    width : Double) : CLong;
 
 alias CTFramesetterRef = OpaquePointer;
 
-external CTFramesetterGetTypeID() CULong;
+external CTFramesetterGetTypeID() : CULong;
 
 external CTFramesetterCreateWithAttributedString(
-    string : CFAttributedStringRef) CTFramesetterRef;
+    string : CFAttributedStringRef) : CTFramesetterRef;
 
 external CTFramesetterCreateFrame(
     framesetter : CTFramesetterRef,
     stringRange : CFRange,
     path : CGPathRef,
-    frameAttributes : CFDictionaryRef) CTFrameRef;
+    frameAttributes : CFDictionaryRef) : CTFrameRef;
 
 external CTFramesetterGetTypesetter(
-    framesetter : CTFramesetterRef) CTTypesetterRef;
+    framesetter : CTFramesetterRef) : CTTypesetterRef;
 
 external CTFramesetterSuggestFrameSizeWithConstraints(
     framesetter : CTFramesetterRef,
     stringRange : CFRange,
     frameAttributes : CFDictionaryRef,
     constraints : CGSize,
-    fitRange : Pointer[CFRange]) CGSize;
+    fitRange : Pointer[CFRange]) : CGSize;
 
 alias CTGlyphInfoRef = OpaquePointer;
 
-external CTGlyphInfoGetTypeID() CULong;
+external CTGlyphInfoGetTypeID() : CULong;
 
 alias kCTIdentityMappingCharacterCollection = 0;
 alias kCTAdobeCNS1CharacterCollection = 1;
@@ -3075,30 +3075,30 @@ alias CTCharacterCollection = UShort;
 external CTGlyphInfoCreateWithGlyphName(
     glyphName : CFStringRef,
     font : CTFontRef,
-    baseString : CFStringRef) CTGlyphInfoRef;
+    baseString : CFStringRef) : CTGlyphInfoRef;
 
 external CTGlyphInfoCreateWithGlyph(
     glyph : UShort,
     font : CTFontRef,
-    baseString : CFStringRef) CTGlyphInfoRef;
+    baseString : CFStringRef) : CTGlyphInfoRef;
 
 external CTGlyphInfoCreateWithCharacterIdentifier(
     cid : UShort,
     collection : UShort,
-    baseString : CFStringRef) CTGlyphInfoRef;
+    baseString : CFStringRef) : CTGlyphInfoRef;
 
 external CTGlyphInfoGetGlyphName(
-    glyphInfo : CTGlyphInfoRef) CFStringRef;
+    glyphInfo : CTGlyphInfoRef) : CFStringRef;
 
 external CTGlyphInfoGetCharacterIdentifier(
-    glyphInfo : CTGlyphInfoRef) UShort;
+    glyphInfo : CTGlyphInfoRef) : UShort;
 
 external CTGlyphInfoGetCharacterCollection(
-    glyphInfo : CTGlyphInfoRef) UShort;
+    glyphInfo : CTGlyphInfoRef) : UShort;
 
 alias CTParagraphStyleRef = OpaquePointer;
 
-external CTParagraphStyleGetTypeID() CULong;
+external CTParagraphStyleGetTypeID() : CULong;
 
 alias kCTLeftTextAlignment = 0;
 alias kCTRightTextAlignment = 1;
@@ -3151,16 +3151,16 @@ alias CTParagraphStyleSetting = Struct_CTParagraphStyleSetting;
 
 external CTParagraphStyleCreate(
     settings : Pointer[CTParagraphStyleSetting],
-    settingCount : CLong) CTParagraphStyleRef;
+    settingCount : CLong) : CTParagraphStyleRef;
 
 external CTParagraphStyleCreateCopy(
-    paragraphStyle : CTParagraphStyleRef) CTParagraphStyleRef;
+    paragraphStyle : CTParagraphStyleRef) : CTParagraphStyleRef;
 
 external CTParagraphStyleGetValueForSpecifier(
     paragraphStyle : CTParagraphStyleRef,
     spec : UInt,
     valueBufferSize : UInt,
-    valueBuffer : RawPointer) Bool;
+    valueBuffer : RawPointer) : Bool;
 
 alias CTRunRef = OpaquePointer;
 
@@ -3171,19 +3171,19 @@ alias kCTRunStatusHasNonIdentityMatrix = 4;
 
 alias CTRunStatus = UInt;
 
-external CTRunGetTypeID() CULong;
+external CTRunGetTypeID() : CULong;
 
 external CTRunGetGlyphCount(
-    run : CTRunRef) CLong;
+    run : CTRunRef) : CLong;
 
 external CTRunGetAttributes(
-    run : CTRunRef) CFDictionaryRef;
+    run : CTRunRef) : CFDictionaryRef;
 
 external CTRunGetStatus(
-    run : CTRunRef) UInt;
+    run : CTRunRef) : UInt;
 
 external CTRunGetGlyphsPtr(
-    run : CTRunRef) Pointer[UShort];
+    run : CTRunRef) : Pointer[UShort];
 
 external CTRunGetGlyphs(
     run : CTRunRef,
@@ -3191,7 +3191,7 @@ external CTRunGetGlyphs(
     buffer : Pointer[UShort]);
 
 external CTRunGetPositionsPtr(
-    run : CTRunRef) Pointer[CGPoint];
+    run : CTRunRef) : Pointer[CGPoint];
 
 external CTRunGetPositions(
     run : CTRunRef,
@@ -3199,7 +3199,7 @@ external CTRunGetPositions(
     buffer : Pointer[CGPoint]);
 
 external CTRunGetAdvancesPtr(
-    run : CTRunRef) Pointer[CGSize];
+    run : CTRunRef) : Pointer[CGSize];
 
 external CTRunGetAdvances(
     run : CTRunRef,
@@ -3207,7 +3207,7 @@ external CTRunGetAdvances(
     buffer : Pointer[CGSize]);
 
 external CTRunGetStringIndicesPtr(
-    run : CTRunRef) Pointer[CLong];
+    run : CTRunRef) : Pointer[CLong];
 
 external CTRunGetStringIndices(
     run : CTRunRef,
@@ -3215,22 +3215,22 @@ external CTRunGetStringIndices(
     buffer : Pointer[CLong]);
 
 external CTRunGetStringRange(
-    run : CTRunRef) CFRange;
+    run : CTRunRef) : CFRange;
 
 external CTRunGetTypographicBounds(
     run : CTRunRef,
     range : CFRange,
     ascent : Pointer[Float],
     descent : Pointer[Float],
-    leading : Pointer[Float]) Double;
+    leading : Pointer[Float]) : Double;
 
 external CTRunGetImageBounds(
     run : CTRunRef,
     context : CGContextRef,
-    range : CFRange) CGRect;
+    range : CFRange) : CGRect;
 
 external CTRunGetTextMatrix(
-    run : CTRunRef) CGAffineTransform;
+    run : CTRunRef) : CGAffineTransform;
 
 external CTRunDraw(
     run : CTRunRef,
@@ -3284,27 +3284,27 @@ alias CTUnderlineStyleModifiers = Int;
 
 alias CTTextTabRef = OpaquePointer;
 
-external CTTextTabGetTypeID() CULong;
+external CTTextTabGetTypeID() : CULong;
 
 external kCTTabColumnTerminatorsAttributeName : CFStringRef;
 
 external CTTextTabCreate(
     alignment : CUChar,
     location : Double,
-    options : CFDictionaryRef) CTTextTabRef;
+    options : CFDictionaryRef) : CTTextTabRef;
 
 external CTTextTabGetAlignment(
-    tab : CTTextTabRef) CUChar;
+    tab : CTTextTabRef) : CUChar;
 
 external CTTextTabGetLocation(
-    tab : CTTextTabRef) Double;
+    tab : CTTextTabRef) : Double;
 
 external CTTextTabGetOptions(
-    tab : CTTextTabRef) CFDictionaryRef;
+    tab : CTTextTabRef) : CFDictionaryRef;
 
 alias CTRunDelegateRef = OpaquePointer;
 
-external CTRunDelegateGetTypeID() CULong;
+external CTRunDelegateGetTypeID() : CULong;
 
 alias CTRunDelegateDeallocateCallback = CCodePointer[(RawPointer),()];
 
@@ -3329,9 +3329,9 @@ alias kCTRunDelegateCurrentVersion = 1;
 
 external CTRunDelegateCreate(
     callbacks : Pointer[CTRunDelegateCallbacks],
-    refCon : RawPointer) CTRunDelegateRef;
+    refCon : RawPointer) : CTRunDelegateRef;
 
 external CTRunDelegateGetRefCon(
-    runDelegate : CTRunDelegateRef) RawPointer;
+    runDelegate : CTRunDelegateRef) : RawPointer;
 
-external CTGetCoreTextVersion() UInt;
+external CTGetCoreTextVersion() : UInt;

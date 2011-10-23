@@ -128,19 +128,19 @@ inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 // value semantics for POD
 //
 
-[P] inline copyPOD(x: P) returned: P { _memcpy(&returned, &x, static TypeSize(P)); }
-inline overload copyPOD(x: Bool) returned: Bool { primitiveCopy(returned, x); }
+[P] inline copyPOD(x: P) --> returned: P { _memcpy(&returned, &x, static TypeSize(P)); }
+inline overload copyPOD(x: Bool) --> returned: Bool { primitiveCopy(returned, x); }
 [N | Numeric?(N)]
-inline overload copyPOD(x: N) returned: N { primitiveCopy(returned, x); }
+inline overload copyPOD(x: N) --> returned: N { primitiveCopy(returned, x); }
 [E | Enum?(E)]
-inline overload copyPOD(x: E) returned: E { primitiveCopy(returned, x); }
+inline overload copyPOD(x: E) --> returned: E { primitiveCopy(returned, x); }
 [T]
-inline overload copyPOD(x: Pointer[T]) returned: Pointer[T] { primitiveCopy(returned, x); }
+inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { primitiveCopy(returned, x); }
 [In, Out]
-inline overload copyPOD(x: CodePointer[In, Out]) returned: CodePointer[In, Out]
+inline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
     { primitiveCopy(returned, x); }
 [CP | CCodePointer?(CP)]
-inline overload copyPOD(x: CP) returned: CP
+inline overload copyPOD(x: CP) --> returned: CP
     { primitiveCopy(returned, x); }
 
 [P | NotDestroyedType?(P)]
@@ -150,7 +150,7 @@ inline overload moveUnsafe(x: P) = copyPOD(x);
 [P | NotResetType?(P)]
 inline overload resetUnsafe(x: P) { }
 [P | BitwiseCopiedType?(P)]
-inline overload P(x: P) returned: P = copyPOD(x);
+inline overload P(x: P) --> returned: P = copyPOD(x);
 [P | BitwiseAssignedType?(P)]
 inline overload assign(x: P, y: P) { x <-- copyPOD(y); }
 

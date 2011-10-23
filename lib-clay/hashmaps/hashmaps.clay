@@ -21,7 +21,7 @@ private record Node[K,V] (
 //
 
 [K,V]
-overload HashMap[K,V]() returned:HashMap[K,V] {
+overload HashMap[K,V]() --> returned:HashMap[K,V] {
     returned.buckets <-- Vector[NodePtr[K,V]]();
     returned.size = 0;
 
@@ -152,7 +152,7 @@ private record HashMapItems[CapturedMap,K,V] =
 
 [CapturedMap,K,V]
 overload HashMapItems(forward captured:CapturedMap, static K, static V)
-    returned:HashMapItems[CapturedMap,K,V]
+    --> returned:HashMapItems[CapturedMap,K,V]
 {
     returned.map <-- captured;
     try {

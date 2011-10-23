@@ -53,7 +53,7 @@ define indexUpdateAssign;
 // uninitialized stack allocation
 //
 
-[T] uninitializedUnsafe(static T) x:T {}
+[T] uninitializedUnsafe(static T) --> x:T {}
 
 
 //
@@ -217,7 +217,7 @@ inline initialize(a) {
 inline copy(a:T) = T(a);
 
 [T]
-inline move(src:T) returned:T {
+inline move(src:T) --> returned:T {
     returned <-- moveUnsafe(src);
     resetUnsafe(src);
 }
@@ -402,7 +402,7 @@ inline empty?(a:T) = (size(a) == 0);
 define ifExpression;
 
 [T]
-alias overload ifExpression(condition, consequent:T, alternate:T) T {
+alias overload ifExpression(condition, consequent:T, alternate:T) : T {
     if (condition)
         return consequent;
     else
@@ -410,7 +410,7 @@ alias overload ifExpression(condition, consequent:T, alternate:T) T {
 }
 
 [T]
-alias overload ifExpression(condition, ref consequent:T, ref alternate:T) ByRef[T] {
+alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRef[T] {
     if (condition)
         return ref consequent;
     else

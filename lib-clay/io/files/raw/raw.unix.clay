@@ -94,7 +94,7 @@ overload fileHandle(f:RawFile) = f.handle;
 // read, write, flush
 //
 
-overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) SizeT {
+overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var result = unix.read(f.handle, buffer, n);
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno());

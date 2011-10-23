@@ -116,20 +116,20 @@ record UnnamedStruct4 (
 alias XML_Memory_Handling_Suite = UnnamedStruct4;
 
 external XML_ParserCreate(
-    encoding : Pointer[CChar]) XML_Parser;
+    encoding : Pointer[CChar]) : XML_Parser;
 
 external XML_ParserCreateNS(
     encoding : Pointer[CChar],
-    namespaceSeparator : CChar) XML_Parser;
+    namespaceSeparator : CChar) : XML_Parser;
 
 external XML_ParserCreate_MM(
     encoding : Pointer[CChar],
     memsuite : Pointer[XML_Memory_Handling_Suite],
-    namespaceSeparator : Pointer[CChar]) XML_Parser;
+    namespaceSeparator : Pointer[CChar]) : XML_Parser;
 
 external XML_ParserReset(
     parser : XML_Parser,
-    encoding : Pointer[CChar]) CUChar;
+    encoding : Pointer[CChar]) : CUChar;
 
 alias XML_StartElementHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[Pointer[CChar]]),()];
 
@@ -296,49 +296,49 @@ external XML_SetUserData(
 
 external XML_SetEncoding(
     parser : XML_Parser,
-    encoding : Pointer[CChar]) Int;
+    encoding : Pointer[CChar]) : Int;
 
 external XML_UseParserAsHandlerArg(
     parser : XML_Parser);
 
 external XML_UseForeignDTD(
     parser : XML_Parser,
-    useDTD : CUChar) Int;
+    useDTD : CUChar) : Int;
 
 external XML_SetBase(
     parser : XML_Parser,
-    base : Pointer[CChar]) Int;
+    base : Pointer[CChar]) : Int;
 
 external XML_GetBase(
-    parser : XML_Parser) Pointer[CChar];
+    parser : XML_Parser) : Pointer[CChar];
 
 external XML_GetSpecifiedAttributeCount(
-    parser : XML_Parser) Int;
+    parser : XML_Parser) : Int;
 
 external XML_GetIdAttributeIndex(
-    parser : XML_Parser) Int;
+    parser : XML_Parser) : Int;
 
 external XML_Parse(
     parser : XML_Parser,
     s : Pointer[CChar],
     len : Int,
-    isFinal : Int) Int;
+    isFinal : Int) : Int;
 
 external XML_GetBuffer(
     parser : XML_Parser,
-    len : Int) RawPointer;
+    len : Int) : RawPointer;
 
 external XML_ParseBuffer(
     parser : XML_Parser,
     len : Int,
-    isFinal : Int) Int;
+    isFinal : Int) : Int;
 
 external XML_StopParser(
     parser : XML_Parser,
-    resumable : CUChar) Int;
+    resumable : CUChar) : Int;
 
 external XML_ResumeParser(
-    parser : XML_Parser) Int;
+    parser : XML_Parser) : Int;
 
 alias XML_INITIALIZED = 0;
 alias XML_PARSING = 1;
@@ -359,7 +359,7 @@ external XML_GetParsingStatus(
 external XML_ExternalEntityParserCreate(
     parser : XML_Parser,
     context : Pointer[CChar],
-    encoding : Pointer[CChar]) XML_Parser;
+    encoding : Pointer[CChar]) : XML_Parser;
 
 alias XML_PARAM_ENTITY_PARSING_NEVER = 0;
 alias XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1;
@@ -367,27 +367,27 @@ alias XML_PARAM_ENTITY_PARSING_ALWAYS = 2;
 
 external XML_SetParamEntityParsing(
     parser : XML_Parser,
-    parsing : Int) Int;
+    parsing : Int) : Int;
 
 external XML_GetErrorCode(
-    parser : XML_Parser) Int;
+    parser : XML_Parser) : Int;
 
 external XML_GetCurrentLineNumber(
-    parser : XML_Parser) CULong;
+    parser : XML_Parser) : CULong;
 
 external XML_GetCurrentColumnNumber(
-    parser : XML_Parser) CULong;
+    parser : XML_Parser) : CULong;
 
 external XML_GetCurrentByteIndex(
-    parser : XML_Parser) CLong;
+    parser : XML_Parser) : CLong;
 
 external XML_GetCurrentByteCount(
-    parser : XML_Parser) Int;
+    parser : XML_Parser) : Int;
 
 external XML_GetInputContext(
     parser : XML_Parser,
     offset : Pointer[Int],
-    size : Pointer[Int]) Pointer[CChar];
+    size : Pointer[Int]) : Pointer[CChar];
 
 external XML_FreeContentModel(
     parser : XML_Parser,
@@ -395,12 +395,12 @@ external XML_FreeContentModel(
 
 external XML_MemMalloc(
     parser : XML_Parser,
-    size : CULong) RawPointer;
+    size : CULong) : RawPointer;
 
 external XML_MemRealloc(
     parser : XML_Parser,
     ptr : RawPointer,
-    size : CULong) RawPointer;
+    size : CULong) : RawPointer;
 
 external XML_MemFree(
     parser : XML_Parser,
@@ -410,9 +410,9 @@ external XML_ParserFree(
     parser : XML_Parser);
 
 external XML_ErrorString(
-    code : Int) Pointer[CChar];
+    code : Int) : Pointer[CChar];
 
-external XML_ExpatVersion() Pointer[CChar];
+external XML_ExpatVersion() : Pointer[CChar];
 
 record UnnamedStruct7 (
     major : Int,
@@ -422,7 +422,7 @@ record UnnamedStruct7 (
 
 alias XML_Expat_Version = UnnamedStruct7;
 
-external XML_ExpatVersionInfo() XML_Expat_Version;
+external XML_ExpatVersionInfo() : XML_Expat_Version;
 
 alias XML_FEATURE_END = 0;
 alias XML_FEATURE_UNICODE = 1;
@@ -443,4 +443,4 @@ record UnnamedStruct8 (
 
 alias XML_Feature = UnnamedStruct8;
 
-external XML_GetFeatureList() Pointer[XML_Feature];
+external XML_GetFeatureList() : Pointer[XML_Feature];

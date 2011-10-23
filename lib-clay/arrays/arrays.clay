@@ -51,7 +51,7 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 //
 
 [T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
-alias overload Array[T,n](..args:A) returned:Array[T,n] {
+alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
     ..arrayElements(returned) <-- ..args;
 }
 
@@ -63,7 +63,7 @@ alias overload Array[T,n](..args:A) returned:Array[T,n] {
 
 [T, n, S | Sequence?(S)
            and (SequenceElementType(S) == T)]
-overload Array[T,n](s:S) returned:Array[T,n] {
+overload Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -83,7 +83,7 @@ overload Array[T,n](s:S) returned:Array[T,n] {
 
 [T, n, S | SequenceContainer?(S)
            and (SequenceElementType(S) == T)]
-overload Array[T,n](rvalue s:S) returned:Array[T,n] {
+overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -102,7 +102,7 @@ overload Array[T,n](rvalue s:S) returned:Array[T,n] {
 }
 
 [T,n]
-overload Array[T,n](elt: T) returned:Array[T,n] {
+overload Array[T,n](elt: T) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -135,7 +135,7 @@ overload Array(static n, forward s:S) = Array(static n, mapped(Tuple, s));
 [T,n,S | StaticSizedSequence?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
-overload Array[T,n](s:S) returned:Array[T,n] {
+overload Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -155,7 +155,7 @@ overload Array[T,n](s:S) returned:Array[T,n] {
          and SequenceContainer?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
-overload Array[T,n](rvalue s:S) returned:Array[T,n] {
+overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -188,17 +188,17 @@ alias overload Array(s:S) = Array(mapped(Tuple, s));
 //
 
 [T,n]
-overload Array[T,n]() returned:Array[T,n] {
+overload Array[T,n]() --> returned:Array[T,n] {
     initializeMemory(begin(returned), end(returned));
 }
 
 [T,n | not BitwiseCopiedType?(T)]
-overload Array[T,n](src:Array[T,n]) returned:Array[T,n] {
+overload Array[T,n](src:Array[T,n]) --> returned:Array[T,n] {
     copyNonoverlappingMemory(begin(returned), begin(src), end(src));
 }
 
 [T,n | not BitwiseMovedType?(T)]
-overload moveUnsafe(src:Array[T,n]) returned:Array[T,n] {
+overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
     moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
 }
 

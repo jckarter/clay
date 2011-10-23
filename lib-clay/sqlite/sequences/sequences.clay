@@ -21,7 +21,7 @@ record SqliteStatementSequence[T,bufferSize] (
     destroy(seq.buffers);
 }
 [T,n] overload moveUnsafe(seq: SqliteStatementSequence[T, n])
-    returned: SqliteStatementSequence[T, n]
+    --> returned: SqliteStatementSequence[T, n]
 {
     returned.statement <-- move(seq.statement);
     returned.olderBuffer <-- move(seq.olderBuffer);
@@ -36,7 +36,7 @@ record SqliteStatementSequence[T,bufferSize] (
 
 [T,n, J | Integer?(J)]
 overload SqliteStatementSequence(static T, static n, rvalue statement: SqliteStatement, sz: J)
-    returned: SqliteStatementSequence[T, n]
+    --> returned: SqliteStatementSequence[T, n]
 {
     returned.statement <-- move(statement);
     returned.olderBuffer = 0;

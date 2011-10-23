@@ -22,7 +22,7 @@ Union?(x) = false;
 //
 
 [..T]
-inline overload Union[..T]() returned:Union[..T] {
+inline overload Union[..T]() --> returned:Union[..T] {
 }
 
 

@@ -148,13 +148,13 @@ external AudioFileCreateWithURL(
     inFileType : CULong,
     inFormat : Pointer[AudioStreamBasicDescription],
     inFlags : CULong,
-    outAudioFile : Pointer[AudioFileID]) CLong;
+    outAudioFile : Pointer[AudioFileID]) : CLong;
 
 external AudioFileOpenURL(
     inFileRef : CFURLRef,
     inPermissions : CChar,
     inFileTypeHint : CULong,
-    outAudioFile : Pointer[AudioFileID]) CLong;
+    outAudioFile : Pointer[AudioFileID]) : CLong;
 
 alias AudioFile_ReadProc = CCodePointer[(RawPointer,Int64,CULong,RawPointer,Pointer[CULong]),(CLong)];
 
@@ -173,7 +173,7 @@ external AudioFileInitializeWithCallbacks(
     inFileType : CULong,
     inFormat : Pointer[AudioStreamBasicDescription],
     inFlags : CULong,
-    outAudioFile : Pointer[AudioFileID]) CLong;
+    outAudioFile : Pointer[AudioFileID]) : CLong;
 
 external AudioFileOpenWithCallbacks(
     inClientData : RawPointer,
@@ -182,27 +182,27 @@ external AudioFileOpenWithCallbacks(
     inGetSizeFunc : AudioFile_GetSizeProc,
     inSetSizeFunc : AudioFile_SetSizeProc,
     inFileTypeHint : CULong,
-    outAudioFile : Pointer[AudioFileID]) CLong;
+    outAudioFile : Pointer[AudioFileID]) : CLong;
 
 external AudioFileClose(
-    inAudioFile : AudioFileID) CLong;
+    inAudioFile : AudioFileID) : CLong;
 
 external AudioFileOptimize(
-    inAudioFile : AudioFileID) CLong;
+    inAudioFile : AudioFileID) : CLong;
 
 external AudioFileReadBytes(
     inAudioFile : AudioFileID,
     inUseCache : CUChar,
     inStartingByte : Int64,
     ioNumBytes : Pointer[CULong],
-    outBuffer : RawPointer) CLong;
+    outBuffer : RawPointer) : CLong;
 
 external AudioFileWriteBytes(
     inAudioFile : AudioFileID,
     inUseCache : CUChar,
     inStartingByte : Int64,
     ioNumBytes : Pointer[CULong],
-    inBuffer : RawPointer) CLong;
+    inBuffer : RawPointer) : CLong;
 
 external AudioFileReadPacketData(
     inAudioFile : AudioFileID,
@@ -211,7 +211,7 @@ external AudioFileReadPacketData(
     outPacketDescriptions : Pointer[AudioStreamPacketDescription],
     inStartingPacket : Int64,
     ioNumPackets : Pointer[CULong],
-    outBuffer : RawPointer) CLong;
+    outBuffer : RawPointer) : CLong;
 
 external AudioFileReadPackets(
     inAudioFile : AudioFileID,
@@ -220,7 +220,7 @@ external AudioFileReadPackets(
     outPacketDescriptions : Pointer[AudioStreamPacketDescription],
     inStartingPacket : Int64,
     ioNumPackets : Pointer[CULong],
-    outBuffer : RawPointer) CLong;
+    outBuffer : RawPointer) : CLong;
 
 external AudioFileWritePackets(
     inAudioFile : AudioFileID,
@@ -229,37 +229,37 @@ external AudioFileWritePackets(
     inPacketDescriptions : Pointer[AudioStreamPacketDescription],
     inStartingPacket : Int64,
     ioNumPackets : Pointer[CULong],
-    inBuffer : RawPointer) CLong;
+    inBuffer : RawPointer) : CLong;
 
 external AudioFileCountUserData(
     inAudioFile : AudioFileID,
     inUserDataID : CULong,
-    outNumberItems : Pointer[CULong]) CLong;
+    outNumberItems : Pointer[CULong]) : CLong;
 
 external AudioFileGetUserDataSize(
     inAudioFile : AudioFileID,
     inUserDataID : CULong,
     inIndex : CULong,
-    outUserDataSize : Pointer[CULong]) CLong;
+    outUserDataSize : Pointer[CULong]) : CLong;
 
 external AudioFileGetUserData(
     inAudioFile : AudioFileID,
     inUserDataID : CULong,
     inIndex : CULong,
     ioUserDataSize : Pointer[CULong],
-    outUserData : RawPointer) CLong;
+    outUserData : RawPointer) : CLong;
 
 external AudioFileSetUserData(
     inAudioFile : AudioFileID,
     inUserDataID : CULong,
     inIndex : CULong,
     inUserDataSize : CULong,
-    inUserData : RawPointer) CLong;
+    inUserData : RawPointer) : CLong;
 
 external AudioFileRemoveUserData(
     inAudioFile : AudioFileID,
     inUserDataID : CULong,
-    inIndex : CULong) CLong;
+    inIndex : CULong) : CLong;
 
 alias kAudioFilePropertyFileFormat = 1717988724;
 alias kAudioFilePropertyDataFormat = 1684434292;
@@ -292,19 +292,19 @@ external AudioFileGetPropertyInfo(
     inAudioFile : AudioFileID,
     inPropertyID : CULong,
     outDataSize : Pointer[CULong],
-    isWritable : Pointer[CULong]) CLong;
+    isWritable : Pointer[CULong]) : CLong;
 
 external AudioFileGetProperty(
     inAudioFile : AudioFileID,
     inPropertyID : CULong,
     ioDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 external AudioFileSetProperty(
     inAudioFile : AudioFileID,
     inPropertyID : CULong,
     inDataSize : CULong,
-    inPropertyData : RawPointer) CLong;
+    inPropertyData : RawPointer) : CLong;
 
 alias kAudioFileGlobalInfo_ReadableTypes = 1634103910;
 alias kAudioFileGlobalInfo_WritableTypes = 1634105190;
@@ -335,14 +335,14 @@ external AudioFileGetGlobalInfoSize(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
-    outDataSize : Pointer[CULong]) CLong;
+    outDataSize : Pointer[CULong]) : CLong;
 
 external AudioFileGetGlobalInfo(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
     ioDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 alias AudioFileStreamPropertyID = CULong;
 
@@ -394,40 +394,40 @@ external AudioFileStreamOpen(
     inPropertyListenerProc : AudioFileStream_PropertyListenerProc,
     inPacketsProc : AudioFileStream_PacketsProc,
     inFileTypeHint : CULong,
-    outAudioFileStream : Pointer[AudioFileStreamID]) CLong;
+    outAudioFileStream : Pointer[AudioFileStreamID]) : CLong;
 
 external AudioFileStreamParseBytes(
     inAudioFileStream : AudioFileStreamID,
     inDataByteSize : CULong,
     inData : RawPointer,
-    inFlags : CULong) CLong;
+    inFlags : CULong) : CLong;
 
 external AudioFileStreamSeek(
     inAudioFileStream : AudioFileStreamID,
     inPacketOffset : Int64,
     outDataByteOffset : Pointer[Int64],
-    ioFlags : Pointer[CULong]) CLong;
+    ioFlags : Pointer[CULong]) : CLong;
 
 external AudioFileStreamGetPropertyInfo(
     inAudioFileStream : AudioFileStreamID,
     inPropertyID : CULong,
     outPropertyDataSize : Pointer[CULong],
-    outWritable : Pointer[CUChar]) CLong;
+    outWritable : Pointer[CUChar]) : CLong;
 
 external AudioFileStreamGetProperty(
     inAudioFileStream : AudioFileStreamID,
     inPropertyID : CULong,
     ioPropertyDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 external AudioFileStreamSetProperty(
     inAudioFileStream : AudioFileStreamID,
     inPropertyID : CULong,
     inPropertyDataSize : CULong,
-    inPropertyData : RawPointer) CLong;
+    inPropertyData : RawPointer) : CLong;
 
 external AudioFileStreamClose(
-    inAudioFileStream : AudioFileStreamID) CLong;
+    inAudioFileStream : AudioFileStreamID) : CLong;
 
 alias AudioFormatPropertyID = CULong;
 
@@ -518,14 +518,14 @@ external AudioFormatGetPropertyInfo(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
-    outPropertyDataSize : Pointer[CULong]) CLong;
+    outPropertyDataSize : Pointer[CULong]) : CLong;
 
 external AudioFormatGetProperty(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
     ioPropertyDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 alias kAudioFormatUnspecifiedError = 2003329396;
 alias kAudioFormatUnsupportedPropertyError = 1886547824;
@@ -630,7 +630,7 @@ external AudioQueueNewOutput(
     inCallbackRunLoop : CFRunLoopRef,
     inCallbackRunLoopMode : CFStringRef,
     inFlags : CULong,
-    outAQ : Pointer[AudioQueueRef]) CLong;
+    outAQ : Pointer[AudioQueueRef]) : CLong;
 
 external AudioQueueNewInput(
     inFormat : Pointer[AudioStreamBasicDescription],
@@ -639,32 +639,32 @@ external AudioQueueNewInput(
     inCallbackRunLoop : CFRunLoopRef,
     inCallbackRunLoopMode : CFStringRef,
     inFlags : CULong,
-    outAQ : Pointer[AudioQueueRef]) CLong;
+    outAQ : Pointer[AudioQueueRef]) : CLong;
 
 external AudioQueueDispose(
     inAQ : AudioQueueRef,
-    inImmediate : CUChar) CLong;
+    inImmediate : CUChar) : CLong;
 
 external AudioQueueAllocateBuffer(
     inAQ : AudioQueueRef,
     inBufferByteSize : CULong,
-    outBuffer : Pointer[AudioQueueBufferRef]) CLong;
+    outBuffer : Pointer[AudioQueueBufferRef]) : CLong;
 
 external AudioQueueAllocateBufferWithPacketDescriptions(
     inAQ : AudioQueueRef,
     inBufferByteSize : CULong,
     inNumberPacketDescriptions : CULong,
-    outBuffer : Pointer[AudioQueueBufferRef]) CLong;
+    outBuffer : Pointer[AudioQueueBufferRef]) : CLong;
 
 external AudioQueueFreeBuffer(
     inAQ : AudioQueueRef,
-    inBuffer : AudioQueueBufferRef) CLong;
+    inBuffer : AudioQueueBufferRef) : CLong;
 
 external AudioQueueEnqueueBuffer(
     inAQ : AudioQueueRef,
     inBuffer : AudioQueueBufferRef,
     inNumPacketDescs : CULong,
-    inPacketDescs : Pointer[AudioStreamPacketDescription]) CLong;
+    inPacketDescs : Pointer[AudioStreamPacketDescription]) : CLong;
 
 external AudioQueueEnqueueBufferWithParameters(
     inAQ : AudioQueueRef,
@@ -676,107 +676,107 @@ external AudioQueueEnqueueBufferWithParameters(
     inNumParamValues : CULong,
     inParamValues : Pointer[AudioQueueParameterEvent],
     inStartTime : Pointer[AudioTimeStamp],
-    outActualStartTime : Pointer[AudioTimeStamp]) CLong;
+    outActualStartTime : Pointer[AudioTimeStamp]) : CLong;
 
 external AudioQueueStart(
     inAQ : AudioQueueRef,
-    inStartTime : Pointer[AudioTimeStamp]) CLong;
+    inStartTime : Pointer[AudioTimeStamp]) : CLong;
 
 external AudioQueuePrime(
     inAQ : AudioQueueRef,
     inNumberOfFramesToPrepare : CULong,
-    outNumberOfFramesPrepared : Pointer[CULong]) CLong;
+    outNumberOfFramesPrepared : Pointer[CULong]) : CLong;
 
 external AudioQueueStop(
     inAQ : AudioQueueRef,
-    inImmediate : CUChar) CLong;
+    inImmediate : CUChar) : CLong;
 
 external AudioQueuePause(
-    inAQ : AudioQueueRef) CLong;
+    inAQ : AudioQueueRef) : CLong;
 
 external AudioQueueFlush(
-    inAQ : AudioQueueRef) CLong;
+    inAQ : AudioQueueRef) : CLong;
 
 external AudioQueueReset(
-    inAQ : AudioQueueRef) CLong;
+    inAQ : AudioQueueRef) : CLong;
 
 external AudioQueueGetParameter(
     inAQ : AudioQueueRef,
     inParamID : CULong,
-    outValue : Pointer[Float]) CLong;
+    outValue : Pointer[Float]) : CLong;
 
 external AudioQueueSetParameter(
     inAQ : AudioQueueRef,
     inParamID : CULong,
-    inValue : Float) CLong;
+    inValue : Float) : CLong;
 
 external AudioQueueGetProperty(
     inAQ : AudioQueueRef,
     inID : CULong,
     outData : RawPointer,
-    ioDataSize : Pointer[CULong]) CLong;
+    ioDataSize : Pointer[CULong]) : CLong;
 
 external AudioQueueSetProperty(
     inAQ : AudioQueueRef,
     inID : CULong,
     inData : RawPointer,
-    inDataSize : CULong) CLong;
+    inDataSize : CULong) : CLong;
 
 external AudioQueueGetPropertySize(
     inAQ : AudioQueueRef,
     inID : CULong,
-    outDataSize : Pointer[CULong]) CLong;
+    outDataSize : Pointer[CULong]) : CLong;
 
 external AudioQueueAddPropertyListener(
     inAQ : AudioQueueRef,
     inID : CULong,
     inProc : AudioQueuePropertyListenerProc,
-    inUserData : RawPointer) CLong;
+    inUserData : RawPointer) : CLong;
 
 external AudioQueueRemovePropertyListener(
     inAQ : AudioQueueRef,
     inID : CULong,
     inProc : AudioQueuePropertyListenerProc,
-    inUserData : RawPointer) CLong;
+    inUserData : RawPointer) : CLong;
 
 external AudioQueueCreateTimeline(
     inAQ : AudioQueueRef,
-    outTimeline : Pointer[AudioQueueTimelineRef]) CLong;
+    outTimeline : Pointer[AudioQueueTimelineRef]) : CLong;
 
 external AudioQueueDisposeTimeline(
     inAQ : AudioQueueRef,
-    inTimeline : AudioQueueTimelineRef) CLong;
+    inTimeline : AudioQueueTimelineRef) : CLong;
 
 external AudioQueueGetCurrentTime(
     inAQ : AudioQueueRef,
     inTimeline : AudioQueueTimelineRef,
     outTimeStamp : Pointer[AudioTimeStamp],
-    outTimelineDiscontinuity : Pointer[CUChar]) CLong;
+    outTimelineDiscontinuity : Pointer[CUChar]) : CLong;
 
 external AudioQueueDeviceGetCurrentTime(
     inAQ : AudioQueueRef,
-    outTimeStamp : Pointer[AudioTimeStamp]) CLong;
+    outTimeStamp : Pointer[AudioTimeStamp]) : CLong;
 
 external AudioQueueDeviceTranslateTime(
     inAQ : AudioQueueRef,
     inTime : Pointer[AudioTimeStamp],
-    outTime : Pointer[AudioTimeStamp]) CLong;
+    outTime : Pointer[AudioTimeStamp]) : CLong;
 
 external AudioQueueDeviceGetNearestStartTime(
     inAQ : AudioQueueRef,
     ioRequestedStartTime : Pointer[AudioTimeStamp],
-    inFlags : CULong) CLong;
+    inFlags : CULong) : CLong;
 
 external AudioQueueSetOfflineRenderFormat(
     inAQ : AudioQueueRef,
     inFormat : Pointer[AudioStreamBasicDescription],
-    inLayout : Pointer[AudioChannelLayout]) CLong;
+    inLayout : Pointer[AudioChannelLayout]) : CLong;
 
 external AudioQueueOfflineRender(
     inAQ : AudioQueueRef,
     inTimestamp : Pointer[AudioTimeStamp],
     ioBuffer : AudioQueueBufferRef,
-    inNumberFrames : CULong) CLong;
+    inNumberFrames : CULong) : CLong;
 
 alias kAudioServicesNoError = 0;
 alias kAudioServicesUnsupportedPropertyError = 1886681407;
@@ -804,17 +804,17 @@ external AudioServicesPlaySystemSound(
 
 external AudioServicesCreateSystemSoundID(
     inFileURL : CFURLRef,
-    outSystemSoundID : Pointer[CULong]) CLong;
+    outSystemSoundID : Pointer[CULong]) : CLong;
 
 external AudioServicesDisposeSystemSoundID(
-    inSystemSoundID : CULong) CLong;
+    inSystemSoundID : CULong) : CLong;
 
 external AudioServicesAddSystemSoundCompletion(
     inSystemSoundID : CULong,
     inRunLoop : CFRunLoopRef,
     inRunLoopMode : CFStringRef,
     inCompletionRoutine : AudioServicesSystemSoundCompletionProc,
-    inClientData : RawPointer) CLong;
+    inClientData : RawPointer) : CLong;
 
 external AudioServicesRemoveSystemSoundCompletion(
     inSystemSoundID : CULong);
@@ -824,21 +824,21 @@ external AudioServicesGetPropertyInfo(
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
     outPropertyDataSize : Pointer[CULong],
-    outWritable : Pointer[CUChar]) CLong;
+    outWritable : Pointer[CUChar]) : CLong;
 
 external AudioServicesGetProperty(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
     ioPropertyDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 external AudioServicesSetProperty(
     inPropertyID : CULong,
     inSpecifierSize : CULong,
     inSpecifier : RawPointer,
     inPropertyDataSize : CULong,
-    inPropertyData : RawPointer) CLong;
+    inPropertyData : RawPointer) : CLong;
 
 alias kAudioSessionNoError = 0;
 alias kAudioSessionNotInitialized = 560557673;
@@ -910,43 +910,43 @@ external AudioSessionInitialize(
     inRunLoop : CFRunLoopRef,
     inRunLoopMode : CFStringRef,
     inInterruptionListener : AudioSessionInterruptionListener,
-    inClientData : RawPointer) CLong;
+    inClientData : RawPointer) : CLong;
 
 external AudioSessionSetActive(
-    active : CUChar) CLong;
+    active : CUChar) : CLong;
 
 alias kAudioSessionSetActiveFlag_NotifyOthersOnDeactivation = 1;
 
 external AudioSessionSetActiveWithFlags(
     active : CUChar,
-    inFlags : CULong) CLong;
+    inFlags : CULong) : CLong;
 
 external AudioSessionGetProperty(
     inID : CULong,
     ioDataSize : Pointer[CULong],
-    outData : RawPointer) CLong;
+    outData : RawPointer) : CLong;
 
 external AudioSessionSetProperty(
     inID : CULong,
     inDataSize : CULong,
-    inData : RawPointer) CLong;
+    inData : RawPointer) : CLong;
 
 external AudioSessionGetPropertySize(
     inID : CULong,
-    outDataSize : Pointer[CULong]) CLong;
+    outDataSize : Pointer[CULong]) : CLong;
 
 external AudioSessionAddPropertyListener(
     inID : CULong,
     inProc : AudioSessionPropertyListener,
-    inClientData : RawPointer) CLong;
+    inClientData : RawPointer) : CLong;
 
 external AudioSessionRemovePropertyListener(
-    inID : CULong) CLong;
+    inID : CULong) : CLong;
 
 external AudioSessionRemovePropertyListenerWithUserData(
     inID : CULong,
     inProc : AudioSessionPropertyListener,
-    inClientData : RawPointer) CLong;
+    inClientData : RawPointer) : CLong;
 
 alias kAudioSessionCategory_UserInterfaceSoundEffects = 1969841784;
 alias kAudioSessionCategory_LiveAudio = 1818850917;
@@ -962,34 +962,34 @@ alias kAUGraphErr_CannotDoInCurrentContext = 4294956433;
 alias kAUGraphErr_InvalidAudioUnit = 4294956432;
 
 external NewAUGraph(
-    outGraph : Pointer[AUGraph]) CLong;
+    outGraph : Pointer[AUGraph]) : CLong;
 
 external DisposeAUGraph(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphAddNode(
     inGraph : AUGraph,
     inDescription : Pointer[AudioComponentDescription],
-    outNode : Pointer[CLong]) CLong;
+    outNode : Pointer[CLong]) : CLong;
 
 external AUGraphRemoveNode(
     inGraph : AUGraph,
-    inNode : CLong) CLong;
+    inNode : CLong) : CLong;
 
 external AUGraphGetNodeCount(
     inGraph : AUGraph,
-    outNumberOfNodes : Pointer[CULong]) CLong;
+    outNumberOfNodes : Pointer[CULong]) : CLong;
 
 external AUGraphGetIndNode(
     inGraph : AUGraph,
     inIndex : CULong,
-    outNode : Pointer[CLong]) CLong;
+    outNode : Pointer[CLong]) : CLong;
 
 external AUGraphNodeInfo(
     inGraph : AUGraph,
     inNode : CLong,
     outDescription : Pointer[AudioComponentDescription],
-    outAudioUnit : Pointer[AudioUnit]) CLong;
+    outAudioUnit : Pointer[AudioUnit]) : CLong;
 
 alias kAUNodeInteraction_Connection = 1;
 alias kAUNodeInteraction_InputCallback = 2;
@@ -1025,93 +1025,93 @@ external AUGraphConnectNodeInput(
     inSourceNode : CLong,
     inSourceOutputNumber : CULong,
     inDestNode : CLong,
-    inDestInputNumber : CULong) CLong;
+    inDestInputNumber : CULong) : CLong;
 
 external AUGraphSetNodeInputCallback(
     inGraph : AUGraph,
     inDestNode : CLong,
     inDestInputNumber : CULong,
-    inInputCallback : Pointer[AURenderCallbackStruct]) CLong;
+    inInputCallback : Pointer[AURenderCallbackStruct]) : CLong;
 
 external AUGraphDisconnectNodeInput(
     inGraph : AUGraph,
     inDestNode : CLong,
-    inDestInputNumber : CULong) CLong;
+    inDestInputNumber : CULong) : CLong;
 
 external AUGraphClearConnections(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphGetNumberOfInteractions(
     inGraph : AUGraph,
-    outNumInteractions : Pointer[CULong]) CLong;
+    outNumInteractions : Pointer[CULong]) : CLong;
 
 external AUGraphGetInteractionInfo(
     inGraph : AUGraph,
     inInteractionIndex : CULong,
-    outInteraction : Pointer[AUNodeInteraction]) CLong;
+    outInteraction : Pointer[AUNodeInteraction]) : CLong;
 
 external AUGraphCountNodeInteractions(
     inGraph : AUGraph,
     inNode : CLong,
-    outNumInteractions : Pointer[CULong]) CLong;
+    outNumInteractions : Pointer[CULong]) : CLong;
 
 external AUGraphGetNodeInteractions(
     inGraph : AUGraph,
     inNode : CLong,
     ioNumInteractions : Pointer[CULong],
-    outInteractions : Pointer[AUNodeInteraction]) CLong;
+    outInteractions : Pointer[AUNodeInteraction]) : CLong;
 
 external AUGraphUpdate(
     inGraph : AUGraph,
-    outIsUpdated : Pointer[CUChar]) CLong;
+    outIsUpdated : Pointer[CUChar]) : CLong;
 
 external AUGraphOpen(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphClose(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphInitialize(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphUninitialize(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphStart(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphStop(
-    inGraph : AUGraph) CLong;
+    inGraph : AUGraph) : CLong;
 
 external AUGraphIsOpen(
     inGraph : AUGraph,
-    outIsOpen : Pointer[CUChar]) CLong;
+    outIsOpen : Pointer[CUChar]) : CLong;
 
 external AUGraphIsInitialized(
     inGraph : AUGraph,
-    outIsInitialized : Pointer[CUChar]) CLong;
+    outIsInitialized : Pointer[CUChar]) : CLong;
 
 external AUGraphIsRunning(
     inGraph : AUGraph,
-    outIsRunning : Pointer[CUChar]) CLong;
+    outIsRunning : Pointer[CUChar]) : CLong;
 
 external AUGraphGetCPULoad(
     inGraph : AUGraph,
-    outAverageCPULoad : Pointer[Float]) CLong;
+    outAverageCPULoad : Pointer[Float]) : CLong;
 
 external AUGraphGetMaxCPULoad(
     inGraph : AUGraph,
-    outMaxLoad : Pointer[Float]) CLong;
+    outMaxLoad : Pointer[Float]) : CLong;
 
 external AUGraphAddRenderNotify(
     inGraph : AUGraph,
     inCallback : AURenderCallback,
-    inRefCon : RawPointer) CLong;
+    inRefCon : RawPointer) : CLong;
 
 external AUGraphRemoveRenderNotify(
     inGraph : AUGraph,
     inCallback : AURenderCallback,
-    inRefCon : RawPointer) CLong;
+    inRefCon : RawPointer) : CLong;
 
 alias AudioConverterRef = OpaquePointer;
 
@@ -1190,38 +1190,38 @@ alias kAudioConverterErr_HardwareInUse = 1752656245;
 external AudioConverterNew(
     inSourceFormat : Pointer[AudioStreamBasicDescription],
     inDestinationFormat : Pointer[AudioStreamBasicDescription],
-    outAudioConverter : Pointer[AudioConverterRef]) CLong;
+    outAudioConverter : Pointer[AudioConverterRef]) : CLong;
 
 external AudioConverterNewSpecific(
     inSourceFormat : Pointer[AudioStreamBasicDescription],
     inDestinationFormat : Pointer[AudioStreamBasicDescription],
     inNumberClassDescriptions : CULong,
     inClassDescriptions : Pointer[AudioClassDescription],
-    outAudioConverter : Pointer[AudioConverterRef]) CLong;
+    outAudioConverter : Pointer[AudioConverterRef]) : CLong;
 
 external AudioConverterDispose(
-    inAudioConverter : AudioConverterRef) CLong;
+    inAudioConverter : AudioConverterRef) : CLong;
 
 external AudioConverterReset(
-    inAudioConverter : AudioConverterRef) CLong;
+    inAudioConverter : AudioConverterRef) : CLong;
 
 external AudioConverterGetPropertyInfo(
     inAudioConverter : AudioConverterRef,
     inPropertyID : CULong,
     outSize : Pointer[CULong],
-    outWritable : Pointer[CUChar]) CLong;
+    outWritable : Pointer[CUChar]) : CLong;
 
 external AudioConverterGetProperty(
     inAudioConverter : AudioConverterRef,
     inPropertyID : CULong,
     ioPropertyDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 external AudioConverterSetProperty(
     inAudioConverter : AudioConverterRef,
     inPropertyID : CULong,
     inPropertyDataSize : CULong,
-    inPropertyData : RawPointer) CLong;
+    inPropertyData : RawPointer) : CLong;
 
 alias AudioConverterInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[RawPointer],RawPointer),(CLong)];
 
@@ -1230,7 +1230,7 @@ external AudioConverterConvertBuffer(
     inInputDataSize : CULong,
     inInputData : RawPointer,
     ioOutputDataSize : Pointer[CULong],
-    outOutputData : RawPointer) CLong;
+    outOutputData : RawPointer) : CLong;
 
 alias AudioConverterComplexInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[Struct_AudioBufferList],Pointer[Pointer[Struct_AudioStreamPacketDescription]],RawPointer),(CLong)];
 
@@ -1240,7 +1240,7 @@ external AudioConverterFillComplexBuffer(
     inInputDataProcUserData : RawPointer,
     ioOutputDataPacketSize : Pointer[CULong],
     outOutputData : Pointer[AudioBufferList],
-    outPacketDescription : Pointer[AudioStreamPacketDescription]) CLong;
+    outPacketDescription : Pointer[AudioStreamPacketDescription]) : CLong;
 
 alias ExtAudioFileRef = OpaquePointer;
 
@@ -1276,12 +1276,12 @@ alias kExtAudioFileError_AsyncWriteBufferOverflow = 4294900726;
 
 external ExtAudioFileOpenURL(
     inURL : CFURLRef,
-    outExtAudioFile : Pointer[ExtAudioFileRef]) CLong;
+    outExtAudioFile : Pointer[ExtAudioFileRef]) : CLong;
 
 external ExtAudioFileWrapAudioFileID(
     inFileID : AudioFileID,
     inForWriting : CUChar,
-    outExtAudioFile : Pointer[ExtAudioFileRef]) CLong;
+    outExtAudioFile : Pointer[ExtAudioFileRef]) : CLong;
 
 external ExtAudioFileCreateWithURL(
     inURL : CFURLRef,
@@ -1289,51 +1289,51 @@ external ExtAudioFileCreateWithURL(
     inStreamDesc : Pointer[AudioStreamBasicDescription],
     inChannelLayout : Pointer[AudioChannelLayout],
     inFlags : CULong,
-    outExtAudioFile : Pointer[ExtAudioFileRef]) CLong;
+    outExtAudioFile : Pointer[ExtAudioFileRef]) : CLong;
 
 external ExtAudioFileDispose(
-    inExtAudioFile : ExtAudioFileRef) CLong;
+    inExtAudioFile : ExtAudioFileRef) : CLong;
 
 external ExtAudioFileRead(
     inExtAudioFile : ExtAudioFileRef,
     ioNumberFrames : Pointer[CULong],
-    ioData : Pointer[AudioBufferList]) CLong;
+    ioData : Pointer[AudioBufferList]) : CLong;
 
 external ExtAudioFileWrite(
     inExtAudioFile : ExtAudioFileRef,
     inNumberFrames : CULong,
-    ioData : Pointer[AudioBufferList]) CLong;
+    ioData : Pointer[AudioBufferList]) : CLong;
 
 external ExtAudioFileWriteAsync(
     inExtAudioFile : ExtAudioFileRef,
     inNumberFrames : CULong,
-    ioData : Pointer[AudioBufferList]) CLong;
+    ioData : Pointer[AudioBufferList]) : CLong;
 
 external ExtAudioFileSeek(
     inExtAudioFile : ExtAudioFileRef,
-    inFrameOffset : Int64) CLong;
+    inFrameOffset : Int64) : CLong;
 
 external ExtAudioFileTell(
     inExtAudioFile : ExtAudioFileRef,
-    outFrameOffset : Pointer[Int64]) CLong;
+    outFrameOffset : Pointer[Int64]) : CLong;
 
 external ExtAudioFileGetPropertyInfo(
     inExtAudioFile : ExtAudioFileRef,
     inPropertyID : CULong,
     outSize : Pointer[CULong],
-    outWritable : Pointer[CUChar]) CLong;
+    outWritable : Pointer[CUChar]) : CLong;
 
 external ExtAudioFileGetProperty(
     inExtAudioFile : ExtAudioFileRef,
     inPropertyID : CULong,
     ioPropertyDataSize : Pointer[CULong],
-    outPropertyData : RawPointer) CLong;
+    outPropertyData : RawPointer) : CLong;
 
 external ExtAudioFileSetProperty(
     inExtAudioFile : ExtAudioFileRef,
     inPropertyID : CULong,
     inPropertyDataSize : CULong,
-    inPropertyData : RawPointer) CLong;
+    inPropertyData : RawPointer) : CLong;
 
 external CAShow(
     inObject : RawPointer);

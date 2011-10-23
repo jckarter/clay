@@ -133,7 +133,7 @@ rc2Decrypt(xkey: XKey, cipher: Array[UInt8, 8]) plaintext: Array[UInt8, 8]
         plaintext[7] = UInt8(shiftRight(x76, 8)); 
 }
 
-readPlaintext(str) plaintext: Array[UInt8, 8] {
+readPlaintext(str) --> plaintext: Array[UInt8, 8] {
     for (i in range(min(size(str), SizeT(8))))
         plaintext[i] = UInt8(str[i]);
     if (size(str) < 8)
@@ -155,7 +155,7 @@ hexByte(str) = shiftLeft(hexDigit(str[0]), 4) + hexDigit(str[1]);
 record BadCipher();
 instance Exception = BadCipher;
 
-readCipher(str) cipher: Array[UInt8, 8] {
+readCipher(str) --> cipher: Array[UInt8, 8] {
     if (size(str) != 16) throw BadCipher();
     var hexBytes = mapped(hexByte, grouped(str, 2));
     for (i in range(size(hexBytes)))
@@ -205,7 +205,7 @@ decrypt(args) {
 
 record AlnumKeySpace (key: String, stride: Int);
 
-overload AlnumKeySpace(start, stride) ks: AlnumKeySpace {
+overload AlnumKeySpace(start, stride) --> ks: AlnumKeySpace {
     ks.key <-- String(start);
     ks.stride <-- Int(stride);
 }

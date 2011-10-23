@@ -8294,50 +8294,50 @@ external QTZeroTime : QTTime;
 external QTIndefiniteTime : QTTime;
 
 external QTMakeTimeWithTimeRecord(
-    timeRecord : TimeRecord) QTTime;
+    timeRecord : TimeRecord) : QTTime;
 
 external QTMakeTimeWithTimeInterval(
-    timeInterval : Double) QTTime;
+    timeInterval : Double) : QTTime;
 
 external QTMakeTime(
     timeValue : Int64,
-    timeScale : CLong) QTTime;
+    timeScale : CLong) : QTTime;
 
 external QTMakeTimeScaled(
     time : QTTime,
-    timeScale : CLong) QTTime;
+    timeScale : CLong) : QTTime;
 
 external QTGetTimeRecord(
     time : QTTime,
-    timeRecord : Pointer[TimeRecord]) Bool;
+    timeRecord : Pointer[TimeRecord]) : Bool;
 
 external QTGetTimeInterval(
     time : QTTime,
-    timeInterval : Pointer[Double]) Bool;
+    timeInterval : Pointer[Double]) : Bool;
 
 external QTTimeCompare(
     time : QTTime,
-    otherTime : QTTime) CLong;
+    otherTime : QTTime) : CLong;
 
 external QTTimeIncrement(
     time : QTTime,
-    increment : QTTime) QTTime;
+    increment : QTTime) : QTTime;
 
 external QTTimeDecrement(
     time : QTTime,
-    decrement : QTTime) QTTime;
+    decrement : QTTime) : QTTime;
 
 external QTStringFromTime(
-    time : QTTime) NSString;
+    time : QTTime) : NSString;
 
 external QTTimeFromString(
-    string : NSString) QTTime;
+    string : NSString) : QTTime;
 
 external QTTimeIsIndefinite(
-    time : QTTime) Bool;
+    time : QTTime) : Bool;
 
 external QTStringFromSMPTETime(
-    time : SMPTETime) NSString;
+    time : SMPTETime) : NSString;
 
 record UnnamedStruct125 (
     time : QTTime,
@@ -8348,32 +8348,32 @@ alias QTTimeRange = UnnamedStruct125;
 
 external QTMakeTimeRange(
     time : QTTime,
-    duration : QTTime) QTTimeRange;
+    duration : QTTime) : QTTimeRange;
 
 external QTTimeInTimeRange(
     time : QTTime,
-    range : QTTimeRange) Bool;
+    range : QTTimeRange) : Bool;
 
 external QTEqualTimeRanges(
     range : QTTimeRange,
-    range2 : QTTimeRange) Bool;
+    range2 : QTTimeRange) : Bool;
 
 external QTTimeRangeEnd(
-    range : QTTimeRange) QTTime;
+    range : QTTimeRange) : QTTime;
 
 external QTUnionTimeRange(
     range1 : QTTimeRange,
-    range2 : QTTimeRange) QTTimeRange;
+    range2 : QTTimeRange) : QTTimeRange;
 
 external QTIntersectionTimeRange(
     range1 : QTTimeRange,
-    range2 : QTTimeRange) QTTimeRange;
+    range2 : QTTimeRange) : QTTimeRange;
 
 external QTStringFromTimeRange(
-    range : QTTimeRange) NSString;
+    range : QTTimeRange) : NSString;
 
 external QTTimeRangeFromString(
-    string : NSString) QTTimeRange;
+    string : NSString) : QTTimeRange;
 
 external QTMoviePasteboardType : NSString;
 
@@ -8736,10 +8736,10 @@ external QTMovieViewPreservesAspectRatioBinding : NSString;
 external QTMovieViewFillColorBinding : NSString;
 
 external QTStringForOSType(
-    type : UInt) NSString;
+    type : UInt) : NSString;
 
 external QTOSTypeForString(
-    string : NSString) UInt;
+    string : NSString) : UInt;
 
 external QTCaptureSessionRuntimeErrorNotification : NSString;
 

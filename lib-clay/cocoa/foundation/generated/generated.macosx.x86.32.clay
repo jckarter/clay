@@ -5974,27 +5974,27 @@ alias NSInteger = Int;
 alias NSUInteger = UInt;
 
 external NSStringFromSelector(
-    aSelector : SelectorHandle) NSString;
+    aSelector : SelectorHandle) : NSString;
 
 external NSSelectorFromString(
-    aSelectorName : NSString) SelectorHandle;
+    aSelectorName : NSString) : SelectorHandle;
 
 external NSStringFromClass(
-    aClass : Id) NSString;
+    aClass : Id) : NSString;
 
 external NSClassFromString(
-    aClassName : NSString) Id;
+    aClassName : NSString) : Id;
 
 external NSStringFromProtocol(
-    proto : Id) NSString;
+    proto : Id) : NSString;
 
 external NSProtocolFromString(
-    namestr : NSString) Id;
+    namestr : NSString) : Id;
 
 external NSGetSizeAndAlignment(
     typePtr : Pointer[CChar],
     sizep : Pointer[UInt],
-    alignp : Pointer[UInt]) Pointer[CChar];
+    alignp : Pointer[UInt]) : Pointer[CChar];
 
 external NSLog(
     format : NSString,
@@ -6026,12 +6026,12 @@ alias NSNotFound = 2147483647;
 
 alias NSZone = Opaque;
 
-external NSDefaultMallocZone() Pointer[NSZone];
+external NSDefaultMallocZone() : Pointer[NSZone];
 
 external NSCreateZone(
     startSize : UInt,
     granularity : UInt,
-    canFree : Bool) Pointer[NSZone];
+    canFree : Bool) : Pointer[NSZone];
 
 external NSRecycleZone(
     zone : Pointer[NSZone]);
@@ -6041,24 +6041,24 @@ external NSSetZoneName(
     name : NSString);
 
 external NSZoneName(
-    zone : Pointer[NSZone]) NSString;
+    zone : Pointer[NSZone]) : NSString;
 
 external NSZoneFromPointer(
-    ptr : RawPointer) Pointer[NSZone];
+    ptr : RawPointer) : Pointer[NSZone];
 
 external NSZoneMalloc(
     zone : Pointer[NSZone],
-    size : UInt) RawPointer;
+    size : UInt) : RawPointer;
 
 external NSZoneCalloc(
     zone : Pointer[NSZone],
     numElems : UInt,
-    byteSize : UInt) RawPointer;
+    byteSize : UInt) : RawPointer;
 
 external NSZoneRealloc(
     zone : Pointer[NSZone],
     ptr : RawPointer,
-    size : UInt) RawPointer;
+    size : UInt) : RawPointer;
 
 external NSZoneFree(
     zone : Pointer[NSZone],
@@ -6069,25 +6069,25 @@ alias NSCollectorDisabledOption = 2;
 
 external NSAllocateCollectable(
     size : UInt,
-    options : UInt) RawPointer;
+    options : UInt) : RawPointer;
 
 external NSReallocateCollectable(
     ptr : RawPointer,
     size : UInt,
-    options : UInt) RawPointer;
+    options : UInt) : RawPointer;
 
-external NSPageSize() UInt;
+external NSPageSize() : UInt;
 
-external NSLogPageSize() UInt;
+external NSLogPageSize() : UInt;
 
 external NSRoundUpToMultipleOfPageSize(
-    bytes : UInt) UInt;
+    bytes : UInt) : UInt;
 
 external NSRoundDownToMultipleOfPageSize(
-    bytes : UInt) UInt;
+    bytes : UInt) : UInt;
 
 external NSAllocateMemoryPages(
-    bytes : UInt) RawPointer;
+    bytes : UInt) : RawPointer;
 
 external NSDeallocateMemoryPages(
     ptr : RawPointer,
@@ -6098,12 +6098,12 @@ external NSCopyMemoryPages(
     dest : RawPointer,
     bytes : UInt);
 
-external NSRealMemoryAvailable() UInt;
+external NSRealMemoryAvailable() : UInt;
 
 external NSAllocateObject(
     aClass : Id,
     extraBytes : UInt,
-    zone : Pointer[NSZone]) Id;
+    zone : Pointer[NSZone]) : Id;
 
 external NSDeallocateObject(
     object : Id);
@@ -6111,20 +6111,20 @@ external NSDeallocateObject(
 external NSCopyObject(
     object : Id,
     extraBytes : UInt,
-    zone : Pointer[NSZone]) Id;
+    zone : Pointer[NSZone]) : Id;
 
 external NSShouldRetainWithZone(
     anObject : Id,
-    requestedZone : Pointer[NSZone]) Bool;
+    requestedZone : Pointer[NSZone]) : Bool;
 
 external NSIncrementExtraRefCount(
     object : Id);
 
 external NSDecrementExtraRefCountWasZero(
-    object : Id) Bool;
+    object : Id) : Bool;
 
 external NSExtraRefCount(
-    object : Id) UInt;
+    object : Id) : UInt;
 
 record UnnamedStruct71 (
     state : CULong,
@@ -6146,17 +6146,17 @@ alias NSRangePointer = Pointer[NSRange];
 
 external NSUnionRange(
     range1 : NSRange,
-    range2 : NSRange) NSRange;
+    range2 : NSRange) : NSRange;
 
 external NSIntersectionRange(
     range1 : NSRange,
-    range2 : NSRange) NSRange;
+    range2 : NSRange) : NSRange;
 
 external NSStringFromRange(
-    range : NSRange) NSString;
+    range : NSRange) : NSString;
 
 external NSRangeFromString(
-    aString : NSString) NSRange;
+    aString : NSString) : NSRange;
 
 external NSBundleDidLoadNotification : NSString;
 
@@ -6253,7 +6253,7 @@ external _NSConstantStringClassReference : RawPointer;
 alias NSOpenStepUnicodeReservedBase = 62464;
 
 external NXReadNSObjectFromCoder(
-    decoder : NSCoder) NSObject;
+    decoder : NSCoder) : NSObject;
 
 alias NSDataReadingMapped = 1;
 alias NSDataReadingUncached = 2;
@@ -6309,7 +6309,7 @@ external NSDecimalCompact(
 
 external NSDecimalCompare(
     leftOperand : Pointer[NSDecimal],
-    rightOperand : Pointer[NSDecimal]) Int;
+    rightOperand : Pointer[NSDecimal]) : Int;
 
 external NSDecimalRound(
     result : Pointer[NSDecimal],
@@ -6320,47 +6320,47 @@ external NSDecimalRound(
 external NSDecimalNormalize(
     number1 : Pointer[NSDecimal],
     number2 : Pointer[NSDecimal],
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalAdd(
     result : Pointer[NSDecimal],
     leftOperand : Pointer[NSDecimal],
     rightOperand : Pointer[NSDecimal],
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalSubtract(
     result : Pointer[NSDecimal],
     leftOperand : Pointer[NSDecimal],
     rightOperand : Pointer[NSDecimal],
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalMultiply(
     result : Pointer[NSDecimal],
     leftOperand : Pointer[NSDecimal],
     rightOperand : Pointer[NSDecimal],
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalDivide(
     result : Pointer[NSDecimal],
     leftOperand : Pointer[NSDecimal],
     rightOperand : Pointer[NSDecimal],
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalPower(
     result : Pointer[NSDecimal],
     number : Pointer[NSDecimal],
     power : UInt,
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalMultiplyByPowerOf10(
     result : Pointer[NSDecimal],
     number : Pointer[NSDecimal],
     power : Short,
-    roundingMode : UInt) UInt;
+    roundingMode : UInt) : UInt;
 
 external NSDecimalString(
     dcm : Pointer[NSDecimal],
-    locale : Id) NSString;
+    locale : Id) : NSString;
 
 external NSDecimalNumberExactnessException : NSString;
 
@@ -6449,18 +6449,18 @@ external NSFileHandleNotificationFileHandleItem : NSString;
 
 external NSFileHandleNotificationMonitorModes : NSString;
 
-external NSUserName() NSString;
+external NSUserName() : NSString;
 
-external NSFullUserName() NSString;
+external NSFullUserName() : NSString;
 
-external NSHomeDirectory() NSString;
+external NSHomeDirectory() : NSString;
 
 external NSHomeDirectoryForUser(
-    userName : NSString) NSString;
+    userName : NSString) : NSString;
 
-external NSTemporaryDirectory() NSString;
+external NSTemporaryDirectory() : NSString;
 
-external NSOpenStepRootDirectory() NSString;
+external NSOpenStepRootDirectory() : NSString;
 
 alias NSApplicationDirectory = 1;
 alias NSDemoApplicationDirectory = 2;
@@ -6501,7 +6501,7 @@ alias NSSearchPathDomainMask = UInt;
 external NSSearchPathForDirectoriesInDomains(
     directory : UInt,
     domainMask : UInt,
-    expandTilde : Bool) NSArray;
+    expandTilde : Bool) : NSArray;
 
 alias NSVolumeEnumerationSkipHiddenVolumes = 2;
 alias NSVolumeEnumerationProduceFileReferenceURLs = 4;
@@ -6698,39 +6698,39 @@ external NSZeroRect : NSRect;
 
 external NSEqualPoints(
     aPoint : NSPoint,
-    bPoint : NSPoint) Bool;
+    bPoint : NSPoint) : Bool;
 
 external NSEqualSizes(
     aSize : NSSize,
-    bSize : NSSize) Bool;
+    bSize : NSSize) : Bool;
 
 external NSEqualRects(
     aRect : NSRect,
-    bRect : NSRect) Bool;
+    bRect : NSRect) : Bool;
 
 external NSIsEmptyRect(
-    aRect : NSRect) Bool;
+    aRect : NSRect) : Bool;
 
 external NSInsetRect(
     aRect : NSRect,
     dX : Float,
-    dY : Float) NSRect;
+    dY : Float) : NSRect;
 
 external NSIntegralRect(
-    aRect : NSRect) NSRect;
+    aRect : NSRect) : NSRect;
 
 external NSUnionRect(
     aRect : NSRect,
-    bRect : NSRect) NSRect;
+    bRect : NSRect) : NSRect;
 
 external NSIntersectionRect(
     aRect : NSRect,
-    bRect : NSRect) NSRect;
+    bRect : NSRect) : NSRect;
 
 external NSOffsetRect(
     aRect : NSRect,
     dX : Float,
-    dY : Float) NSRect;
+    dY : Float) : NSRect;
 
 external NSDivideRect(
     inRect : NSRect,
@@ -6741,38 +6741,38 @@ external NSDivideRect(
 
 external NSPointInRect(
     aPoint : NSPoint,
-    aRect : NSRect) Bool;
+    aRect : NSRect) : Bool;
 
 external NSMouseInRect(
     aPoint : NSPoint,
     aRect : NSRect,
-    flipped : Bool) Bool;
+    flipped : Bool) : Bool;
 
 external NSContainsRect(
     aRect : NSRect,
-    bRect : NSRect) Bool;
+    bRect : NSRect) : Bool;
 
 external NSIntersectsRect(
     aRect : NSRect,
-    bRect : NSRect) Bool;
+    bRect : NSRect) : Bool;
 
 external NSStringFromPoint(
-    aPoint : NSPoint) NSString;
+    aPoint : NSPoint) : NSString;
 
 external NSStringFromSize(
-    aSize : NSSize) NSString;
+    aSize : NSSize) : NSString;
 
 external NSStringFromRect(
-    aRect : NSRect) NSString;
+    aRect : NSRect) : NSString;
 
 external NSPointFromString(
-    aString : NSString) NSPoint;
+    aString : NSString) : NSPoint;
 
 external NSSizeFromString(
-    aString : NSString) NSSize;
+    aString : NSString) : NSSize;
 
 external NSRectFromString(
-    aString : NSString) NSRect;
+    aString : NSString) : NSRect;
 
 external NSInvalidArchiveOperationException : NSString;
 
@@ -7595,13 +7595,13 @@ alias NSBlockExpressionType = 19;
 alias NSExpressionType = UInt;
 
 external NSFileTypeForHFSTypeCode(
-    hfsFileTypeCode : CULong) NSString;
+    hfsFileTypeCode : CULong) : NSString;
 
 external NSHFSTypeCodeFromFileType(
-    fileTypeString : NSString) CULong;
+    fileTypeString : NSString) : CULong;
 
 external NSHFSTypeOfFile(
-    fullFilePath : NSString) NSString;
+    fullFilePath : NSString) : NSString;
 
 alias NSPointerFunctionsStrongMemory = 0;
 alias NSPointerFunctionsZeroingWeakMemory = 1;
@@ -7641,15 +7641,15 @@ external NSResetHashTable(
 
 external NSCompareHashTables(
     table1 : NSHashTable,
-    table2 : NSHashTable) Bool;
+    table2 : NSHashTable) : Bool;
 
 external NSCopyHashTableWithZone(
     table : NSHashTable,
-    zone : Pointer[NSZone]) NSHashTable;
+    zone : Pointer[NSZone]) : NSHashTable;
 
 external NSHashGet(
     table : NSHashTable,
-    pointer : RawPointer) RawPointer;
+    pointer : RawPointer) : RawPointer;
 
 external NSHashInsert(
     table : NSHashTable,
@@ -7661,29 +7661,29 @@ external NSHashInsertKnownAbsent(
 
 external NSHashInsertIfAbsent(
     table : NSHashTable,
-    pointer : RawPointer) RawPointer;
+    pointer : RawPointer) : RawPointer;
 
 external NSHashRemove(
     table : NSHashTable,
     pointer : RawPointer);
 
 external NSEnumerateHashTable(
-    table : NSHashTable) NSHashEnumerator;
+    table : NSHashTable) : NSHashEnumerator;
 
 external NSNextHashEnumeratorItem(
-    enumerator : Pointer[NSHashEnumerator]) RawPointer;
+    enumerator : Pointer[NSHashEnumerator]) : RawPointer;
 
 external NSEndHashTableEnumeration(
     enumerator : Pointer[NSHashEnumerator]);
 
 external NSCountHashTable(
-    table : NSHashTable) UInt;
+    table : NSHashTable) : UInt;
 
 external NSStringFromHashTable(
-    table : NSHashTable) NSString;
+    table : NSHashTable) : NSString;
 
 external NSAllHashTableObjects(
-    table : NSHashTable) NSArray;
+    table : NSHashTable) : NSArray;
 
 record UnnamedStruct121 (
     hash : CCodePointer[(NSHashTable,RawPointer),(UInt)],
@@ -7698,11 +7698,11 @@ alias NSHashTableCallBacks = UnnamedStruct121;
 external NSCreateHashTableWithZone(
     callBacks : NSHashTableCallBacks,
     capacity : UInt,
-    zone : Pointer[NSZone]) NSHashTable;
+    zone : Pointer[NSZone]) : NSHashTable;
 
 external NSCreateHashTable(
     callBacks : NSHashTableCallBacks,
-    capacity : UInt) NSHashTable;
+    capacity : UInt) : NSHashTable;
 
 external NSIntegerHashCallBacks : NSHashTableCallBacks;
 
@@ -7743,21 +7743,21 @@ external NSResetMapTable(
 
 external NSCompareMapTables(
     table1 : NSMapTable,
-    table2 : NSMapTable) Bool;
+    table2 : NSMapTable) : Bool;
 
 external NSCopyMapTableWithZone(
     table : NSMapTable,
-    zone : Pointer[NSZone]) NSMapTable;
+    zone : Pointer[NSZone]) : NSMapTable;
 
 external NSMapMember(
     table : NSMapTable,
     key : RawPointer,
     originalKey : Pointer[RawPointer],
-    value : Pointer[RawPointer]) Bool;
+    value : Pointer[RawPointer]) : Bool;
 
 external NSMapGet(
     table : NSMapTable,
-    key : RawPointer) RawPointer;
+    key : RawPointer) : RawPointer;
 
 external NSMapInsert(
     table : NSMapTable,
@@ -7772,34 +7772,34 @@ external NSMapInsertKnownAbsent(
 external NSMapInsertIfAbsent(
     table : NSMapTable,
     key : RawPointer,
-    value : RawPointer) RawPointer;
+    value : RawPointer) : RawPointer;
 
 external NSMapRemove(
     table : NSMapTable,
     key : RawPointer);
 
 external NSEnumerateMapTable(
-    table : NSMapTable) NSMapEnumerator;
+    table : NSMapTable) : NSMapEnumerator;
 
 external NSNextMapEnumeratorPair(
     enumerator : Pointer[NSMapEnumerator],
     key : Pointer[RawPointer],
-    value : Pointer[RawPointer]) Bool;
+    value : Pointer[RawPointer]) : Bool;
 
 external NSEndMapTableEnumeration(
     enumerator : Pointer[NSMapEnumerator]);
 
 external NSCountMapTable(
-    table : NSMapTable) UInt;
+    table : NSMapTable) : UInt;
 
 external NSStringFromMapTable(
-    table : NSMapTable) NSString;
+    table : NSMapTable) : NSString;
 
 external NSAllMapTableKeys(
-    table : NSMapTable) NSArray;
+    table : NSMapTable) : NSArray;
 
 external NSAllMapTableValues(
-    table : NSMapTable) NSArray;
+    table : NSMapTable) : NSArray;
 
 record UnnamedStruct123 (
     hash : CCodePointer[(NSMapTable,RawPointer),(UInt)],
@@ -7824,12 +7824,12 @@ external NSCreateMapTableWithZone(
     keyCallBacks : NSMapTableKeyCallBacks,
     valueCallBacks : NSMapTableValueCallBacks,
     capacity : UInt,
-    zone : Pointer[NSZone]) NSMapTable;
+    zone : Pointer[NSZone]) : NSMapTable;
 
 external NSCreateMapTable(
     keyCallBacks : NSMapTableKeyCallBacks,
     valueCallBacks : NSMapTableValueCallBacks,
-    capacity : UInt) NSMapTable;
+    capacity : UInt) : NSMapTable;
 
 external NSIntegerMapKeyCallBacks : NSMapTableKeyCallBacks;
 

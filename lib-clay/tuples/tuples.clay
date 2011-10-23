@@ -65,7 +65,7 @@ alias overload Tuple(..args:T) = Tuple[..T](..args);
 //
 
 [..T]
-alias overload Tuple[..T](..args:T) returned:Tuple[..T] {
+alias overload Tuple[..T](..args:T) --> returned:Tuple[..T] {
     ..unpackTupleRef(returned) <-- ..args;
 }
 
@@ -76,7 +76,7 @@ alias overload Tuple[..T](..args:T) returned:Tuple[..T] {
 //
 
 [..T]
-inline overload Tuple[..T]() returned:Tuple[..T] {
+inline overload Tuple[..T]() --> returned:Tuple[..T] {
     initializeMulti(..tupleElements(returned));
 }
 
@@ -96,7 +96,7 @@ inline overload initializeTypes() = ;
 //
 
 [..T | not allValues?(BitwiseCopiedType?, ..T)]
-inline overload Tuple[..T](src:Tuple[..T]) returned:Tuple[..T] {
+inline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
     ..tupleElements(returned) <-- ..tupleElements(src);
 }
 
@@ -107,7 +107,7 @@ inline overload Tuple[..T](src:Tuple[..T]) returned:Tuple[..T] {
 //
 
 [..T | not allValues?(BitwiseMovedType?, ..T)]
-inline overload moveUnsafe(src:Tuple[..T]) returned:Tuple[..T] {
+inline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
     alias n = TupleElementCount(Tuple[..T]);
     static for (i in ..staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));

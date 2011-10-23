@@ -17,15 +17,15 @@ Static?(x) = false;
 //
 
 [A]
-inline overload Static[A]() returned:Static[A] {
+inline overload Static[A]() --> returned:Static[A] {
 }
 
 [A]
-inline overload Static[A](src:Static[A]) returned:Static[A] {
+inline overload Static[A](src:Static[A]) --> returned:Static[A] {
 }
 
 [A]
-inline overload moveUnsafe(src:Static[A]) returned:Static[A] {
+inline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 }
 
 

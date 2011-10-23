@@ -30,12 +30,12 @@ ByteBuffer?(static T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType
 // readByte, readChar
 //
 
-readByte(stream, b:Byte) Bool {
+readByte(stream, b:Byte) : Bool {
     var result = read(stream, &b, SizeT(1));
     return result == 1;
 }
 
-readChar(stream, c:Char) Bool {
+readChar(stream, c:Char) : Bool {
     var ptr = Pointer[Byte](&c);
     var result = read(stream, ptr, SizeT(1));
     return result == 1;
@@ -117,7 +117,7 @@ overload readAll(stream, buf:V) {
     readAll(stream, SizeT(4096), buf);
 }
 
-overload readAll(stream) String {
+overload readAll(stream) : String {
     var buf = String();
     readAll(stream, buf);
     return move(buf);
@@ -143,7 +143,7 @@ overload readUpto(stream, upto:T, buf:V) {
 }
 
 [T | ByteLike?(T)]
-overload readUpto(stream, upto:T) String {
+overload readUpto(stream, upto:T) : String {
     var v = String();
     readUpto(stream, upto, v);
     return move(v);

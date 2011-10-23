@@ -25,7 +25,7 @@ overload ContiguousSequence?(static CStringRef) = true;
 //
 
 [T | ByteSizedInteger?(T)]
-inline overload CStringRef(ptr : Pointer[T]) returned:CStringRef {
+inline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
 

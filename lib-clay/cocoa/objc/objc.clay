@@ -149,7 +149,7 @@ private retain(x) {
 
 ObjectType?(T) = false;
 
-[O | ObjectType?(O)] overload objectHandle(x: O) ObjectHandle = x.__handle__;
+[O | ObjectType?(O)] overload objectHandle(x: O) : ObjectHandle = x.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static O) = O;
 
 [O | ObjectRef?(O)] nil(static O) = O();
@@ -204,7 +204,7 @@ record Retained[O] (__handle__: ObjectHandle);
 
 [O | ObjectType?(O)] overload RegularRecord?(static Retained[O]) = false;
 
-[O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) ObjectHandle = obj.__handle__;
+[O | ObjectType?(O)] overload objectHandle(obj: Retained[O]) : ObjectHandle = obj.__handle__;
 [O | ObjectType?(O)] overload ObjectParameterType(static Retained[O]) = O;
 
 [O | ObjectType?(O)] overload Retained[O]() = Retained[O](nilHandle);
@@ -219,7 +219,7 @@ overload O1(obj: Retained[O2]) = O1(obj.__handle__);
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
 overload Retained[O1](ref obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
 [O1, O2 | ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](rvalue obj: Retained[O2]) r: Retained[O1] {
+overload Retained[O1](rvalue obj: Retained[O2]) --> r: Retained[O1] {
     r.__handle__ <-- obj.__handle__;
     resetUnsafe(obj);
 }
@@ -276,7 +276,7 @@ overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
 // raw object handles as parameters
 //
 
-overload objectHandle(x: ObjectHandle) ObjectHandle = x;
+overload objectHandle(x: ObjectHandle) : ObjectHandle = x;
 overload ObjectParameterType(static ObjectHandle) = Id;
 
 
@@ -613,7 +613,7 @@ private _objcNewClassMake(
     classMethodsEnd: Pointer[ObjcNewClassMethod],
     instanceMethodsBegin: Pointer[ObjcNewClassMethod],
     instanceMethodsEnd: Pointer[ObjcNewClassMethod]
-) ClassHandle {
+) : ClassHandle {
     var handle = objc_allocateClassPair(
         super,
         cstring(className),
@@ -646,7 +646,7 @@ private _objcNewClassMake(
 }
 
 [T | ClayClass?(T)]
-inline overload objcClassMake(static T) ClassHandle {
+inline overload objcClassMake(static T) : ClassHandle {
     var handle = _objcNewClassMake(
         objcClass[SuperclassType(T)],
         ClassName(T),

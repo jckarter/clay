@@ -17,7 +17,7 @@ overload RegularRecord?(static Canary) = false;
 
 // overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
 private record CanaryLike ( canary: Canary );
-overload allocateRawMemory(static Canary, n) r: Pointer[Canary] {
+overload allocateRawMemory(static Canary, n) --> r: Pointer[Canary] {
     r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
     for (x in CoordinateRange(r, r+n)) {
         x.id <-- UNINITIALIZED_CANARY;
@@ -37,17 +37,17 @@ private _Canary(r: Canary, throwOnCopy?: Bool) {
     push(canaryTracker, ALIVE);
 }
 
-overload Canary() r:Canary {
+overload Canary() --> r:Canary {
     _Canary(r, false);
     noisyPrintln("-- constructed ", &r, " ", r.id);
 }
 
-overload Canary(throwOnCopy?: Bool) r:Canary {
+overload Canary(throwOnCopy?: Bool) --> r:Canary {
     _Canary(r, throwOnCopy?);
     noisyPrintln("-- constructed ", &r, " ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
 }
 
-overload Canary(x: Canary) r:Canary {
+overload Canary(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
         println("!! tried copy  ", &r, " from ", &x, " uninitialized!");
         r.id <-- UNINITIALIZED_CANARY;
@@ -82,7 +82,7 @@ overload destroy(x: Canary) {
     }
 }
 
-overload moveUnsafe(x: Canary) r:Canary {
+overload moveUnsafe(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
         r.id <-- UNINITIALIZED_CANARY;
         r.throwOnCopy? <-- true;
@@ -113,7 +113,7 @@ overload assign(x: Canary, y: Canary) { }
 
 overload equals?(x: Canary, y: Canary) { return true; }
 
-checkCanariesDestroyed() r: Bool {
+checkCanariesDestroyed() --> r: Bool {
     r <-- true;
     for (n in range(size(canaryTracker))) {
         if (canaryTracker[n] == ALIVE) {
@@ -127,7 +127,7 @@ checkCanariesDestroyed() r: Bool {
 }
 
 [S | Sequence?(S) and SequenceElementType(S) == Canary]
-checkCanariesLiveInSequence(seq: S) r: Bool {
+checkCanariesLiveInSequence(seq: S) --> r: Bool {
     r <-- true;
     for (x in seq) {
         if (x.id >= size(canaryTracker)) {

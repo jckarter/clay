@@ -16,7 +16,8 @@ record TestCase (
 );
 
 [T | String?(T) and T != String]
-overload TestCase(name : T, _case, pending?) TestCase = TestCase(String(name), _case, pending?);
+overload TestCase(name : T, _case, pending?) : TestCase
+    = TestCase(String(name), _case, pending?);
 
 overload TestCase(name, fn) = TestCase(name, Lambda[(TestStatus), ()](fn), false);
 
@@ -49,7 +50,7 @@ reportTest(test: TestStatus, ..prefix) {
     );
 }
 
-runTestSuite(suite: TestSuite) TestStatus {
+runTestSuite(suite: TestSuite) : TestStatus {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
     for (_case in suite.testCases)
@@ -72,7 +73,7 @@ printFailure(..xs) {
   printlnColored(Red, TEST_FAILURE_INDENT, ..xs); 
 }
 
-runTestCase(_case: TestCase) TestStatus {
+runTestCase(_case: TestCase) : TestStatus {
     print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
     flush(stdout);
     

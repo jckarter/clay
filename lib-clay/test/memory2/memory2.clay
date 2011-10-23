@@ -28,11 +28,11 @@ private beginLifeMaybeThrow(x:Canary) {
     beginLife(x);
 }
 
-overload Canary() returned:Canary {
+overload Canary() --> returned:Canary {
     beginLifeMaybeThrow(returned);
 }
 
-overload Canary(src:Canary) returned:Canary {
+overload Canary(src:Canary) --> returned:Canary {
     assertAlive(src);
     beginLifeMaybeThrow(returned);
 }
@@ -42,7 +42,7 @@ overload assign(dest:Canary, src:Canary) {
     assertAlive(src);
 }
 
-overload moveUnsafe(src:Canary) returned:Canary {
+overload moveUnsafe(src:Canary) --> returned:Canary {
     assertAlive(src);
     beginLife(returned);
     endLife(src);

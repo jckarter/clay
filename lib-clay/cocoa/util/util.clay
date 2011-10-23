@@ -87,7 +87,7 @@ fromNSValue(static T, o: O) {
 }
 
 [T, O | ObjectRef?(O)]
-fromNSValueUnsafe(static T, o: O) returned: T {
+fromNSValueUnsafe(static T, o: O) --> returned: T {
     o.getValue(RawPointer(&returned));
 }
 
@@ -184,14 +184,14 @@ private refreshIterator(i: NSFastEnumerationIterator) {
 }
 
 [O | ObjectRef?(O)]
-overload iterator(o: O) returned: NSFastEnumerationIterator {
+overload iterator(o: O) --> returned: NSFastEnumerationIterator {
     returned.delegate = MethodDelegate(Id(o), #"countByEnumeratingWithState:objects:count:");
     returned.state.state = 0;
     refreshIterator(returned);
 }
 
 overload hasNext?(i: NSFastEnumerationIterator) = i.count != 0;
-overload next(i: NSFastEnumerationIterator) returned: Id {
+overload next(i: NSFastEnumerationIterator) --> returned: Id {
     returned = i.state.itemsPtr[i.n];
     inc(i.n);
     if (i.n == i.count)
@@ -337,14 +337,14 @@ overload initObjectMembers(self: O, forward ..args: A) {
 }
 
 [O | Class?(O)]
-copyRootObject(self: O, zone: Pointer[NSZone]) returned: O {
+copyRootObject(self: O, zone: Pointer[NSZone]) --> returned: O {
     var copy = O(self.class().allocWithZone(zone));
     copy = super(copy).init();
     return initObjectMembers(copy, ..objectMembers(self));
 }
 
 [O | Class?(O)]
-copyInheritingObject(self: O, zone: Pointer[NSZone]) returned: O {
+copyInheritingObject(self: O, zone: Pointer[NSZone]) --> returned: O {
     var copy = O(super(self).copyWithZone(zone));
     return initObjectMembers(copy, ..objectMembers(self));
 }

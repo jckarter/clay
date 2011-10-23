@@ -33,7 +33,7 @@ PermissiveRecordConstructor?(x) = false;
 [T, ..A | Record?(T)
            and PermissiveRecordConstructor?(T)
            and (countValues(..A) == countValues(..RecordFieldTypes(T)))]
-T(..args:A) returned:T {
+T(..args:A) --> returned:T {
     returned <-- T();
     alias n = RecordFieldCount(T);
     static for (i in ..staticIntegers(static n)) {

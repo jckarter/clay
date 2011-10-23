@@ -2,17 +2,21 @@
 var x = 10;
 
 foo1() = ref x;             // inferred return type
-foo2() ByRef[Int] = ref x;  // explicit return type
+foo2() : ByRef[Int] = ref x;  // explicit return type
 
 
 // examples of variable-arity return type specification
 [..T]
-incAll(..args:T) ..T =
+incAll(..args:T) : ..T =
     ..mapValues(x => x+1, ..args);
 
 [..T]
-incAll2(..args:T) ..returned:T {
+incAll2(..args:T) --> ..returned:T {
     ..returned <-- ..mapValues(x => x+1, ..args);
+}
+
+returnNothing() : {
+    println("void");
 }
 
 main() {
@@ -24,4 +28,6 @@ main() {
     a, b = ..incAll(a, b);
     a, b = ..incAll2(a, b);
     println("a = ", a, ", b = ", b);
+
+    returnNothing();
 }

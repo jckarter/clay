@@ -476,19 +476,19 @@ external AudioObjectShow(
 
 external AudioObjectHasProperty(
     inObjectID : UInt,
-    inAddress : Pointer[AudioObjectPropertyAddress]) CUChar;
+    inAddress : Pointer[AudioObjectPropertyAddress]) : CUChar;
 
 external AudioObjectIsPropertySettable(
     inObjectID : UInt,
     inAddress : Pointer[AudioObjectPropertyAddress],
-    outIsSettable : Pointer[CUChar]) Int;
+    outIsSettable : Pointer[CUChar]) : Int;
 
 external AudioObjectGetPropertyDataSize(
     inObjectID : UInt,
     inAddress : Pointer[AudioObjectPropertyAddress],
     inQualifierDataSize : UInt,
     inQualifierData : RawPointer,
-    outDataSize : Pointer[UInt]) Int;
+    outDataSize : Pointer[UInt]) : Int;
 
 external AudioObjectGetPropertyData(
     inObjectID : UInt,
@@ -496,7 +496,7 @@ external AudioObjectGetPropertyData(
     inQualifierDataSize : UInt,
     inQualifierData : RawPointer,
     ioDataSize : Pointer[UInt],
-    outData : RawPointer) Int;
+    outData : RawPointer) : Int;
 
 external AudioObjectSetPropertyData(
     inObjectID : UInt,
@@ -504,19 +504,19 @@ external AudioObjectSetPropertyData(
     inQualifierDataSize : UInt,
     inQualifierData : RawPointer,
     inDataSize : UInt,
-    inData : RawPointer) Int;
+    inData : RawPointer) : Int;
 
 external AudioObjectAddPropertyListener(
     inObjectID : UInt,
     inAddress : Pointer[AudioObjectPropertyAddress],
     inListener : AudioObjectPropertyListenerProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 external AudioObjectRemovePropertyListener(
     inObjectID : UInt,
     inAddress : Pointer[AudioObjectPropertyAddress],
     inListener : AudioObjectPropertyListenerProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 alias kAudioControlClassID = 1633907820;
 alias kAudioLevelControlClassID = 1818588780;
@@ -612,36 +612,36 @@ alias kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar = 1650733686;
 alias kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction = 1651930214;
 
 external AudioHardwareAddRunLoopSource(
-    inRunLoopSource : CFRunLoopSourceRef) Int;
+    inRunLoopSource : CFRunLoopSourceRef) : Int;
 
 external AudioHardwareRemoveRunLoopSource(
-    inRunLoopSource : CFRunLoopSourceRef) Int;
+    inRunLoopSource : CFRunLoopSourceRef) : Int;
 
-external AudioHardwareUnload() Int;
+external AudioHardwareUnload() : Int;
 
 external AudioHardwareGetPropertyInfo(
     inPropertyID : UInt,
     outSize : Pointer[UInt],
-    outWritable : Pointer[CUChar]) Int;
+    outWritable : Pointer[CUChar]) : Int;
 
 external AudioHardwareGetProperty(
     inPropertyID : UInt,
     ioPropertyDataSize : Pointer[UInt],
-    outPropertyData : RawPointer) Int;
+    outPropertyData : RawPointer) : Int;
 
 external AudioHardwareSetProperty(
     inPropertyID : UInt,
     inPropertyDataSize : UInt,
-    inPropertyData : RawPointer) Int;
+    inPropertyData : RawPointer) : Int;
 
 external AudioHardwareAddPropertyListener(
     inPropertyID : UInt,
     inProc : AudioHardwarePropertyListenerProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 external AudioHardwareRemovePropertyListener(
     inPropertyID : UInt,
-    inProc : AudioHardwarePropertyListenerProc) Int;
+    inProc : AudioHardwarePropertyListenerProc) : Int;
 
 alias kAudioPlugInClassID = 1634757735;
 
@@ -789,53 +789,53 @@ external AudioDeviceCreateIOProcID(
     inDevice : UInt,
     inProc : AudioDeviceIOProc,
     inClientData : RawPointer,
-    outIOProcID : Pointer[AudioDeviceIOProcID]) Int;
+    outIOProcID : Pointer[AudioDeviceIOProcID]) : Int;
 
 external AudioDeviceDestroyIOProcID(
     inDevice : UInt,
-    inIOProcID : AudioDeviceIOProcID) Int;
+    inIOProcID : AudioDeviceIOProcID) : Int;
 
 external AudioDeviceAddIOProc(
     inDevice : UInt,
     inProc : AudioDeviceIOProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 external AudioDeviceRemoveIOProc(
     inDevice : UInt,
-    inProc : AudioDeviceIOProc) Int;
+    inProc : AudioDeviceIOProc) : Int;
 
 external AudioDeviceStart(
     inDevice : UInt,
-    inProcID : AudioDeviceIOProcID) Int;
+    inProcID : AudioDeviceIOProcID) : Int;
 
 external AudioDeviceStartAtTime(
     inDevice : UInt,
     inProcID : AudioDeviceIOProcID,
     ioRequestedStartTime : Pointer[AudioTimeStamp],
-    inFlags : UInt) Int;
+    inFlags : UInt) : Int;
 
 external AudioDeviceStop(
     inDevice : UInt,
-    inProcID : AudioDeviceIOProcID) Int;
+    inProcID : AudioDeviceIOProcID) : Int;
 
 external AudioDeviceRead(
     inDevice : UInt,
     inStartTime : Pointer[AudioTimeStamp],
-    outData : Pointer[AudioBufferList]) Int;
+    outData : Pointer[AudioBufferList]) : Int;
 
 external AudioDeviceGetCurrentTime(
     inDevice : UInt,
-    outTime : Pointer[AudioTimeStamp]) Int;
+    outTime : Pointer[AudioTimeStamp]) : Int;
 
 external AudioDeviceTranslateTime(
     inDevice : UInt,
     inTime : Pointer[AudioTimeStamp],
-    outTime : Pointer[AudioTimeStamp]) Int;
+    outTime : Pointer[AudioTimeStamp]) : Int;
 
 external AudioDeviceGetNearestStartTime(
     inDevice : UInt,
     ioRequestedStartTime : Pointer[AudioTimeStamp],
-    inFlags : UInt) Int;
+    inFlags : UInt) : Int;
 
 external AudioDeviceGetPropertyInfo(
     inDevice : UInt,
@@ -843,7 +843,7 @@ external AudioDeviceGetPropertyInfo(
     isInput : CUChar,
     inPropertyID : UInt,
     outSize : Pointer[UInt],
-    outWritable : Pointer[CUChar]) Int;
+    outWritable : Pointer[CUChar]) : Int;
 
 external AudioDeviceGetProperty(
     inDevice : UInt,
@@ -851,7 +851,7 @@ external AudioDeviceGetProperty(
     isInput : CUChar,
     inPropertyID : UInt,
     ioPropertyDataSize : Pointer[UInt],
-    outPropertyData : RawPointer) Int;
+    outPropertyData : RawPointer) : Int;
 
 external AudioDeviceSetProperty(
     inDevice : UInt,
@@ -860,7 +860,7 @@ external AudioDeviceSetProperty(
     isInput : CUChar,
     inPropertyID : UInt,
     inPropertyDataSize : UInt,
-    inPropertyData : RawPointer) Int;
+    inPropertyData : RawPointer) : Int;
 
 external AudioDeviceAddPropertyListener(
     inDevice : UInt,
@@ -868,14 +868,14 @@ external AudioDeviceAddPropertyListener(
     isInput : CUChar,
     inPropertyID : UInt,
     inProc : AudioDevicePropertyListenerProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 external AudioDeviceRemovePropertyListener(
     inDevice : UInt,
     inChannel : UInt,
     isInput : CUChar,
     inPropertyID : UInt,
-    inProc : AudioDevicePropertyListenerProc) Int;
+    inProc : AudioDevicePropertyListenerProc) : Int;
 
 alias AudioStreamID = UInt;
 
@@ -922,14 +922,14 @@ external AudioStreamGetPropertyInfo(
     inChannel : UInt,
     inPropertyID : UInt,
     outSize : Pointer[UInt],
-    outWritable : Pointer[CUChar]) Int;
+    outWritable : Pointer[CUChar]) : Int;
 
 external AudioStreamGetProperty(
     inStream : UInt,
     inChannel : UInt,
     inPropertyID : UInt,
     ioPropertyDataSize : Pointer[UInt],
-    outPropertyData : RawPointer) Int;
+    outPropertyData : RawPointer) : Int;
 
 external AudioStreamSetProperty(
     inStream : UInt,
@@ -937,20 +937,20 @@ external AudioStreamSetProperty(
     inChannel : UInt,
     inPropertyID : UInt,
     inPropertyDataSize : UInt,
-    inPropertyData : RawPointer) Int;
+    inPropertyData : RawPointer) : Int;
 
 external AudioStreamAddPropertyListener(
     inStream : UInt,
     inChannel : UInt,
     inPropertyID : UInt,
     inProc : AudioStreamPropertyListenerProc,
-    inClientData : RawPointer) Int;
+    inClientData : RawPointer) : Int;
 
 external AudioStreamRemovePropertyListener(
     inStream : UInt,
     inChannel : UInt,
     inPropertyID : UInt,
-    inProc : AudioStreamPropertyListenerProc) Int;
+    inProc : AudioStreamPropertyListenerProc) : Int;
 
 alias kAudioAggregateDeviceClassID = 1633773415;
 
@@ -972,14 +972,14 @@ alias kAudioSubDevicePropertyExtraLatency = 2020373603;
 alias kAudioSubDevicePropertyDriftCompensation = 1685218932;
 alias kAudioSubDevicePropertyDriftCompensationQuality = 1685218929;
 
-external AudioGetCurrentHostTime() UInt64;
+external AudioGetCurrentHostTime() : UInt64;
 
-external AudioGetHostClockFrequency() Double;
+external AudioGetHostClockFrequency() : Double;
 
-external AudioGetHostClockMinimumTimeDelta() UInt;
+external AudioGetHostClockMinimumTimeDelta() : UInt;
 
 external AudioConvertHostTimeToNanos(
-    inHostTime : UInt64) UInt64;
+    inHostTime : UInt64) : UInt64;
 
 external AudioConvertNanosToHostTime(
-    inNanos : UInt64) UInt64;
+    inNanos : UInt64) : UInt64;

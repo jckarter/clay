@@ -1,5 +1,5 @@
 
-inline overload Bool() returned:Bool {
+inline overload Bool() --> returned:Bool {
 }
 
 [I | Integer?(I)]

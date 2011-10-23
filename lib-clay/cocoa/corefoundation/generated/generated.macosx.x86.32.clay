@@ -48,11 +48,11 @@ alias CFRange = UnnamedStruct9;
 
 external __CFRangeMake(
     loc : CLong,
-    len : CLong) CFRange;
+    len : CLong) : CFRange;
 
 alias CFNullRef = OpaquePointer;
 
-external CFNullGetTypeID() CULong;
+external CFNullGetTypeID() : CULong;
 
 external kCFNull : CFNullRef;
 
@@ -98,27 +98,27 @@ record UnnamedStruct10 (
 
 alias CFAllocatorContext = UnnamedStruct10;
 
-external CFAllocatorGetTypeID() CULong;
+external CFAllocatorGetTypeID() : CULong;
 
 external CFAllocatorSetDefault(
     allocator : CFAllocatorRef);
 
-external CFAllocatorGetDefault() CFAllocatorRef;
+external CFAllocatorGetDefault() : CFAllocatorRef;
 
 external CFAllocatorCreate(
     allocator : CFAllocatorRef,
-    context : Pointer[CFAllocatorContext]) CFAllocatorRef;
+    context : Pointer[CFAllocatorContext]) : CFAllocatorRef;
 
 external CFAllocatorAllocate(
     allocator : CFAllocatorRef,
     size : CLong,
-    hint : CULong) RawPointer;
+    hint : CULong) : RawPointer;
 
 external CFAllocatorReallocate(
     allocator : CFAllocatorRef,
     ptr : RawPointer,
     newsize : CLong,
-    hint : CULong) RawPointer;
+    hint : CULong) : RawPointer;
 
 external CFAllocatorDeallocate(
     allocator : CFAllocatorRef,
@@ -127,42 +127,42 @@ external CFAllocatorDeallocate(
 external CFAllocatorGetPreferredSizeForSize(
     allocator : CFAllocatorRef,
     size : CLong,
-    hint : CULong) CLong;
+    hint : CULong) : CLong;
 
 external CFAllocatorGetContext(
     allocator : CFAllocatorRef,
     context : Pointer[CFAllocatorContext]);
 
 external CFGetTypeID(
-    cf : CFTypeRef) CULong;
+    cf : CFTypeRef) : CULong;
 
 external CFCopyTypeIDDescription(
-    type_id : CULong) CFStringRef;
+    type_id : CULong) : CFStringRef;
 
 external CFRetain(
-    cf : CFTypeRef) CFTypeRef;
+    cf : CFTypeRef) : CFTypeRef;
 
 external CFRelease(
     cf : CFTypeRef);
 
 external CFGetRetainCount(
-    cf : CFTypeRef) CLong;
+    cf : CFTypeRef) : CLong;
 
 external CFMakeCollectable(
-    cf : CFTypeRef) CFTypeRef;
+    cf : CFTypeRef) : CFTypeRef;
 
 external CFEqual(
     cf1 : CFTypeRef,
-    cf2 : CFTypeRef) CUChar;
+    cf2 : CFTypeRef) : CUChar;
 
 external CFHash(
-    cf : CFTypeRef) CULong;
+    cf : CFTypeRef) : CULong;
 
 external CFCopyDescription(
-    cf : CFTypeRef) CFStringRef;
+    cf : CFTypeRef) : CFStringRef;
 
 external CFGetAllocator(
-    cf : CFTypeRef) CFAllocatorRef;
+    cf : CFTypeRef) : CFAllocatorRef;
 
 alias CFArrayRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
 
@@ -190,44 +190,44 @@ alias CFArrayRef = OpaquePointer;
 
 alias CFMutableArrayRef = OpaquePointer;
 
-external CFArrayGetTypeID() CULong;
+external CFArrayGetTypeID() : CULong;
 
 external CFArrayCreate(
     allocator : CFAllocatorRef,
     values : Pointer[RawPointer],
     numValues : CLong,
-    callBacks : Pointer[CFArrayCallBacks]) CFArrayRef;
+    callBacks : Pointer[CFArrayCallBacks]) : CFArrayRef;
 
 external CFArrayCreateCopy(
     allocator : CFAllocatorRef,
-    theArray : CFArrayRef) CFArrayRef;
+    theArray : CFArrayRef) : CFArrayRef;
 
 external CFArrayCreateMutable(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    callBacks : Pointer[CFArrayCallBacks]) CFMutableArrayRef;
+    callBacks : Pointer[CFArrayCallBacks]) : CFMutableArrayRef;
 
 external CFArrayCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    theArray : CFArrayRef) CFMutableArrayRef;
+    theArray : CFArrayRef) : CFMutableArrayRef;
 
 external CFArrayGetCount(
-    theArray : CFArrayRef) CLong;
+    theArray : CFArrayRef) : CLong;
 
 external CFArrayGetCountOfValue(
     theArray : CFArrayRef,
     range : CFRange,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFArrayContainsValue(
     theArray : CFArrayRef,
     range : CFRange,
-    value : RawPointer) CUChar;
+    value : RawPointer) : CUChar;
 
 external CFArrayGetValueAtIndex(
     theArray : CFArrayRef,
-    idx : CLong) RawPointer;
+    idx : CLong) : RawPointer;
 
 external CFArrayGetValues(
     theArray : CFArrayRef,
@@ -243,19 +243,19 @@ external CFArrayApplyFunction(
 external CFArrayGetFirstIndexOfValue(
     theArray : CFArrayRef,
     range : CFRange,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFArrayGetLastIndexOfValue(
     theArray : CFArrayRef,
     range : CFRange,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFArrayBSearchValues(
     theArray : CFArrayRef,
     range : CFRange,
     value : RawPointer,
     comparator : CFComparatorFunction,
-    context : RawPointer) CLong;
+    context : RawPointer) : CLong;
 
 external CFArrayAppendValue(
     theArray : CFMutableArrayRef,
@@ -331,47 +331,47 @@ alias CFBagRef = OpaquePointer;
 
 alias CFMutableBagRef = OpaquePointer;
 
-external CFBagGetTypeID() CULong;
+external CFBagGetTypeID() : CULong;
 
 external CFBagCreate(
     allocator : CFAllocatorRef,
     values : Pointer[RawPointer],
     numValues : CLong,
-    callBacks : Pointer[CFBagCallBacks]) CFBagRef;
+    callBacks : Pointer[CFBagCallBacks]) : CFBagRef;
 
 external CFBagCreateCopy(
     allocator : CFAllocatorRef,
-    theBag : CFBagRef) CFBagRef;
+    theBag : CFBagRef) : CFBagRef;
 
 external CFBagCreateMutable(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    callBacks : Pointer[CFBagCallBacks]) CFMutableBagRef;
+    callBacks : Pointer[CFBagCallBacks]) : CFMutableBagRef;
 
 external CFBagCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    theBag : CFBagRef) CFMutableBagRef;
+    theBag : CFBagRef) : CFMutableBagRef;
 
 external CFBagGetCount(
-    theBag : CFBagRef) CLong;
+    theBag : CFBagRef) : CLong;
 
 external CFBagGetCountOfValue(
     theBag : CFBagRef,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFBagContainsValue(
     theBag : CFBagRef,
-    value : RawPointer) CUChar;
+    value : RawPointer) : CUChar;
 
 external CFBagGetValue(
     theBag : CFBagRef,
-    value : RawPointer) RawPointer;
+    value : RawPointer) : RawPointer;
 
 external CFBagGetValueIfPresent(
     theBag : CFBagRef,
     candidate : RawPointer,
-    value : Pointer[RawPointer]) CUChar;
+    value : Pointer[RawPointer]) : CUChar;
 
 external CFBagGetValues(
     theBag : CFBagRef,
@@ -427,36 +427,36 @@ alias CFBinaryHeapApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
 
 alias CFBinaryHeapRef = OpaquePointer;
 
-external CFBinaryHeapGetTypeID() CULong;
+external CFBinaryHeapGetTypeID() : CULong;
 
 external CFBinaryHeapCreate(
     allocator : CFAllocatorRef,
     capacity : CLong,
     callBacks : Pointer[CFBinaryHeapCallBacks],
-    compareContext : Pointer[CFBinaryHeapCompareContext]) CFBinaryHeapRef;
+    compareContext : Pointer[CFBinaryHeapCompareContext]) : CFBinaryHeapRef;
 
 external CFBinaryHeapCreateCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    heap : CFBinaryHeapRef) CFBinaryHeapRef;
+    heap : CFBinaryHeapRef) : CFBinaryHeapRef;
 
 external CFBinaryHeapGetCount(
-    heap : CFBinaryHeapRef) CLong;
+    heap : CFBinaryHeapRef) : CLong;
 
 external CFBinaryHeapGetCountOfValue(
     heap : CFBinaryHeapRef,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFBinaryHeapContainsValue(
     heap : CFBinaryHeapRef,
-    value : RawPointer) CUChar;
+    value : RawPointer) : CUChar;
 
 external CFBinaryHeapGetMinimum(
-    heap : CFBinaryHeapRef) RawPointer;
+    heap : CFBinaryHeapRef) : RawPointer;
 
 external CFBinaryHeapGetMinimumIfPresent(
     heap : CFBinaryHeapRef,
-    value : Pointer[RawPointer]) CUChar;
+    value : Pointer[RawPointer]) : CUChar;
 
 external CFBinaryHeapGetValues(
     heap : CFBinaryHeapRef,
@@ -483,42 +483,42 @@ alias CFBitVectorRef = OpaquePointer;
 
 alias CFMutableBitVectorRef = OpaquePointer;
 
-external CFBitVectorGetTypeID() CULong;
+external CFBitVectorGetTypeID() : CULong;
 
 external CFBitVectorCreate(
     allocator : CFAllocatorRef,
     bytes : Pointer[CUChar],
-    numBits : CLong) CFBitVectorRef;
+    numBits : CLong) : CFBitVectorRef;
 
 external CFBitVectorCreateCopy(
     allocator : CFAllocatorRef,
-    bv : CFBitVectorRef) CFBitVectorRef;
+    bv : CFBitVectorRef) : CFBitVectorRef;
 
 external CFBitVectorCreateMutable(
     allocator : CFAllocatorRef,
-    capacity : CLong) CFMutableBitVectorRef;
+    capacity : CLong) : CFMutableBitVectorRef;
 
 external CFBitVectorCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    bv : CFBitVectorRef) CFMutableBitVectorRef;
+    bv : CFBitVectorRef) : CFMutableBitVectorRef;
 
 external CFBitVectorGetCount(
-    bv : CFBitVectorRef) CLong;
+    bv : CFBitVectorRef) : CLong;
 
 external CFBitVectorGetCountOfBit(
     bv : CFBitVectorRef,
     range : CFRange,
-    value : CULong) CLong;
+    value : CULong) : CLong;
 
 external CFBitVectorContainsBit(
     bv : CFBitVectorRef,
     range : CFRange,
-    value : CULong) CUChar;
+    value : CULong) : CUChar;
 
 external CFBitVectorGetBitAtIndex(
     bv : CFBitVectorRef,
-    idx : CLong) CULong;
+    idx : CLong) : CULong;
 
 external CFBitVectorGetBits(
     bv : CFBitVectorRef,
@@ -528,12 +528,12 @@ external CFBitVectorGetBits(
 external CFBitVectorGetFirstIndexOfBit(
     bv : CFBitVectorRef,
     range : CFRange,
-    value : CULong) CLong;
+    value : CULong) : CLong;
 
 external CFBitVectorGetLastIndexOfBit(
     bv : CFBitVectorRef,
     range : CFRange,
-    value : CULong) CLong;
+    value : CULong) : CLong;
 
 external CFBitVectorSetCount(
     bv : CFMutableBitVectorRef,
@@ -604,7 +604,7 @@ alias CFDictionaryRef = OpaquePointer;
 
 alias CFMutableDictionaryRef = OpaquePointer;
 
-external CFDictionaryGetTypeID() CULong;
+external CFDictionaryGetTypeID() : CULong;
 
 external CFDictionaryCreate(
     allocator : CFAllocatorRef,
@@ -612,50 +612,50 @@ external CFDictionaryCreate(
     values : Pointer[RawPointer],
     numValues : CLong,
     keyCallBacks : Pointer[CFDictionaryKeyCallBacks],
-    valueCallBacks : Pointer[CFDictionaryValueCallBacks]) CFDictionaryRef;
+    valueCallBacks : Pointer[CFDictionaryValueCallBacks]) : CFDictionaryRef;
 
 external CFDictionaryCreateCopy(
     allocator : CFAllocatorRef,
-    theDict : CFDictionaryRef) CFDictionaryRef;
+    theDict : CFDictionaryRef) : CFDictionaryRef;
 
 external CFDictionaryCreateMutable(
     allocator : CFAllocatorRef,
     capacity : CLong,
     keyCallBacks : Pointer[CFDictionaryKeyCallBacks],
-    valueCallBacks : Pointer[CFDictionaryValueCallBacks]) CFMutableDictionaryRef;
+    valueCallBacks : Pointer[CFDictionaryValueCallBacks]) : CFMutableDictionaryRef;
 
 external CFDictionaryCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    theDict : CFDictionaryRef) CFMutableDictionaryRef;
+    theDict : CFDictionaryRef) : CFMutableDictionaryRef;
 
 external CFDictionaryGetCount(
-    theDict : CFDictionaryRef) CLong;
+    theDict : CFDictionaryRef) : CLong;
 
 external CFDictionaryGetCountOfKey(
     theDict : CFDictionaryRef,
-    key : RawPointer) CLong;
+    key : RawPointer) : CLong;
 
 external CFDictionaryGetCountOfValue(
     theDict : CFDictionaryRef,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFDictionaryContainsKey(
     theDict : CFDictionaryRef,
-    key : RawPointer) CUChar;
+    key : RawPointer) : CUChar;
 
 external CFDictionaryContainsValue(
     theDict : CFDictionaryRef,
-    value : RawPointer) CUChar;
+    value : RawPointer) : CUChar;
 
 external CFDictionaryGetValue(
     theDict : CFDictionaryRef,
-    key : RawPointer) RawPointer;
+    key : RawPointer) : RawPointer;
 
 external CFDictionaryGetValueIfPresent(
     theDict : CFDictionaryRef,
     key : RawPointer,
-    value : Pointer[RawPointer]) CUChar;
+    value : Pointer[RawPointer]) : CUChar;
 
 external CFDictionaryGetKeysAndValues(
     theDict : CFDictionaryRef,
@@ -693,40 +693,40 @@ alias CFDataRef = OpaquePointer;
 
 alias CFMutableDataRef = OpaquePointer;
 
-external CFDataGetTypeID() CULong;
+external CFDataGetTypeID() : CULong;
 
 external CFDataCreate(
     allocator : CFAllocatorRef,
     bytes : Pointer[CUChar],
-    length : CLong) CFDataRef;
+    length : CLong) : CFDataRef;
 
 external CFDataCreateWithBytesNoCopy(
     allocator : CFAllocatorRef,
     bytes : Pointer[CUChar],
     length : CLong,
-    bytesDeallocator : CFAllocatorRef) CFDataRef;
+    bytesDeallocator : CFAllocatorRef) : CFDataRef;
 
 external CFDataCreateCopy(
     allocator : CFAllocatorRef,
-    theData : CFDataRef) CFDataRef;
+    theData : CFDataRef) : CFDataRef;
 
 external CFDataCreateMutable(
     allocator : CFAllocatorRef,
-    capacity : CLong) CFMutableDataRef;
+    capacity : CLong) : CFMutableDataRef;
 
 external CFDataCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    theData : CFDataRef) CFMutableDataRef;
+    theData : CFDataRef) : CFMutableDataRef;
 
 external CFDataGetLength(
-    theData : CFDataRef) CLong;
+    theData : CFDataRef) : CLong;
 
 external CFDataGetBytePtr(
-    theData : CFDataRef) Pointer[CUChar];
+    theData : CFDataRef) : Pointer[CUChar];
 
 external CFDataGetMutableBytePtr(
-    theData : CFMutableDataRef) Pointer[CUChar];
+    theData : CFMutableDataRef) : Pointer[CUChar];
 
 external CFDataGetBytes(
     theData : CFDataRef,
@@ -765,7 +765,7 @@ external CFDataFind(
     theData : CFDataRef,
     dataToFind : CFDataRef,
     searchRange : CFRange,
-    compareOptions : CULong) CFRange;
+    compareOptions : CULong) : CFRange;
 
 alias CFCharacterSetRef = OpaquePointer;
 
@@ -789,57 +789,57 @@ alias kCFCharacterSetIllegal = 12;
 
 alias CFCharacterSetPredefinedSet = CLong;
 
-external CFCharacterSetGetTypeID() CULong;
+external CFCharacterSetGetTypeID() : CULong;
 
 external CFCharacterSetGetPredefined(
-    theSetIdentifier : CLong) CFCharacterSetRef;
+    theSetIdentifier : CLong) : CFCharacterSetRef;
 
 external CFCharacterSetCreateWithCharactersInRange(
     alloc : CFAllocatorRef,
-    theRange : CFRange) CFCharacterSetRef;
+    theRange : CFRange) : CFCharacterSetRef;
 
 external CFCharacterSetCreateWithCharactersInString(
     alloc : CFAllocatorRef,
-    theString : CFStringRef) CFCharacterSetRef;
+    theString : CFStringRef) : CFCharacterSetRef;
 
 external CFCharacterSetCreateWithBitmapRepresentation(
     alloc : CFAllocatorRef,
-    theData : CFDataRef) CFCharacterSetRef;
+    theData : CFDataRef) : CFCharacterSetRef;
 
 external CFCharacterSetCreateInvertedSet(
     alloc : CFAllocatorRef,
-    theSet : CFCharacterSetRef) CFCharacterSetRef;
+    theSet : CFCharacterSetRef) : CFCharacterSetRef;
 
 external CFCharacterSetIsSupersetOfSet(
     theSet : CFCharacterSetRef,
-    theOtherset : CFCharacterSetRef) CUChar;
+    theOtherset : CFCharacterSetRef) : CUChar;
 
 external CFCharacterSetHasMemberInPlane(
     theSet : CFCharacterSetRef,
-    thePlane : CLong) CUChar;
+    thePlane : CLong) : CUChar;
 
 external CFCharacterSetCreateMutable(
-    alloc : CFAllocatorRef) CFMutableCharacterSetRef;
+    alloc : CFAllocatorRef) : CFMutableCharacterSetRef;
 
 external CFCharacterSetCreateCopy(
     alloc : CFAllocatorRef,
-    theSet : CFCharacterSetRef) CFCharacterSetRef;
+    theSet : CFCharacterSetRef) : CFCharacterSetRef;
 
 external CFCharacterSetCreateMutableCopy(
     alloc : CFAllocatorRef,
-    theSet : CFCharacterSetRef) CFMutableCharacterSetRef;
+    theSet : CFCharacterSetRef) : CFMutableCharacterSetRef;
 
 external CFCharacterSetIsCharacterMember(
     theSet : CFCharacterSetRef,
-    theChar : UShort) CUChar;
+    theChar : UShort) : CUChar;
 
 external CFCharacterSetIsLongCharacterMember(
     theSet : CFCharacterSetRef,
-    theChar : CULong) CUChar;
+    theChar : CULong) : CUChar;
 
 external CFCharacterSetCreateBitmapRepresentation(
     alloc : CFAllocatorRef,
-    theSet : CFCharacterSetRef) CFDataRef;
+    theSet : CFCharacterSetRef) : CFDataRef;
 
 external CFCharacterSetAddCharactersInRange(
     theSet : CFMutableCharacterSetRef,
@@ -870,43 +870,43 @@ external CFCharacterSetInvert(
 
 alias CFLocaleRef = OpaquePointer;
 
-external CFLocaleGetTypeID() CULong;
+external CFLocaleGetTypeID() : CULong;
 
-external CFLocaleGetSystem() CFLocaleRef;
+external CFLocaleGetSystem() : CFLocaleRef;
 
-external CFLocaleCopyCurrent() CFLocaleRef;
+external CFLocaleCopyCurrent() : CFLocaleRef;
 
-external CFLocaleCopyAvailableLocaleIdentifiers() CFArrayRef;
+external CFLocaleCopyAvailableLocaleIdentifiers() : CFArrayRef;
 
-external CFLocaleCopyISOLanguageCodes() CFArrayRef;
+external CFLocaleCopyISOLanguageCodes() : CFArrayRef;
 
-external CFLocaleCopyISOCountryCodes() CFArrayRef;
+external CFLocaleCopyISOCountryCodes() : CFArrayRef;
 
-external CFLocaleCopyISOCurrencyCodes() CFArrayRef;
+external CFLocaleCopyISOCurrencyCodes() : CFArrayRef;
 
-external CFLocaleCopyCommonISOCurrencyCodes() CFArrayRef;
+external CFLocaleCopyCommonISOCurrencyCodes() : CFArrayRef;
 
-external CFLocaleCopyPreferredLanguages() CFArrayRef;
+external CFLocaleCopyPreferredLanguages() : CFArrayRef;
 
 external CFLocaleCreateCanonicalLanguageIdentifierFromString(
     allocator : CFAllocatorRef,
-    localeIdentifier : CFStringRef) CFStringRef;
+    localeIdentifier : CFStringRef) : CFStringRef;
 
 external CFLocaleCreateCanonicalLocaleIdentifierFromString(
     allocator : CFAllocatorRef,
-    localeIdentifier : CFStringRef) CFStringRef;
+    localeIdentifier : CFStringRef) : CFStringRef;
 
 external CFLocaleCreateCanonicalLocaleIdentifierFromScriptManagerCodes(
     allocator : CFAllocatorRef,
     lcode : Short,
-    rcode : Short) CFStringRef;
+    rcode : Short) : CFStringRef;
 
 external CFLocaleCreateLocaleIdentifierFromWindowsLocaleCode(
     allocator : CFAllocatorRef,
-    lcid : UInt) CFStringRef;
+    lcid : UInt) : CFStringRef;
 
 external CFLocaleGetWindowsLocaleCodeFromLocaleIdentifier(
-    localeIdentifier : CFStringRef) UInt;
+    localeIdentifier : CFStringRef) : UInt;
 
 alias kCFLocaleLanguageDirectionUnknown = 0;
 alias kCFLocaleLanguageDirectionLeftToRight = 1;
@@ -917,38 +917,38 @@ alias kCFLocaleLanguageDirectionBottomToTop = 4;
 alias CFLocaleLanguageDirection = CLong;
 
 external CFLocaleGetLanguageCharacterDirection(
-    isoLangCode : CFStringRef) CLong;
+    isoLangCode : CFStringRef) : CLong;
 
 external CFLocaleGetLanguageLineDirection(
-    isoLangCode : CFStringRef) CLong;
+    isoLangCode : CFStringRef) : CLong;
 
 external CFLocaleCreateComponentsFromLocaleIdentifier(
     allocator : CFAllocatorRef,
-    localeID : CFStringRef) CFDictionaryRef;
+    localeID : CFStringRef) : CFDictionaryRef;
 
 external CFLocaleCreateLocaleIdentifierFromComponents(
     allocator : CFAllocatorRef,
-    dictionary : CFDictionaryRef) CFStringRef;
+    dictionary : CFDictionaryRef) : CFStringRef;
 
 external CFLocaleCreate(
     allocator : CFAllocatorRef,
-    localeIdentifier : CFStringRef) CFLocaleRef;
+    localeIdentifier : CFStringRef) : CFLocaleRef;
 
 external CFLocaleCreateCopy(
     allocator : CFAllocatorRef,
-    locale : CFLocaleRef) CFLocaleRef;
+    locale : CFLocaleRef) : CFLocaleRef;
 
 external CFLocaleGetIdentifier(
-    locale : CFLocaleRef) CFStringRef;
+    locale : CFLocaleRef) : CFStringRef;
 
 external CFLocaleGetValue(
     locale : CFLocaleRef,
-    key : CFStringRef) CFTypeRef;
+    key : CFStringRef) : CFTypeRef;
 
 external CFLocaleCopyDisplayNameForPropertyValue(
     displayLocale : CFLocaleRef,
     key : CFStringRef,
-    value : CFStringRef) CFStringRef;
+    value : CFStringRef) : CFStringRef;
 
 external kCFLocaleCurrentLocaleDidChangeNotification : CFStringRef;
 
@@ -1033,41 +1033,41 @@ alias kCFStringEncodingUTF32LE = 469762304;
 
 alias CFStringBuiltInEncodings = CULong;
 
-external CFStringGetTypeID() CULong;
+external CFStringGetTypeID() : CULong;
 
 external CFStringCreateWithPascalString(
     alloc : CFAllocatorRef,
     pStr : ConstStr255Param,
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFStringCreateWithCString(
     alloc : CFAllocatorRef,
     cStr : Pointer[CChar],
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFStringCreateWithBytes(
     alloc : CFAllocatorRef,
     bytes : Pointer[CUChar],
     numBytes : CLong,
     encoding : CULong,
-    isExternalRepresentation : CUChar) CFStringRef;
+    isExternalRepresentation : CUChar) : CFStringRef;
 
 external CFStringCreateWithCharacters(
     alloc : CFAllocatorRef,
     chars : Pointer[UShort],
-    numChars : CLong) CFStringRef;
+    numChars : CLong) : CFStringRef;
 
 external CFStringCreateWithPascalStringNoCopy(
     alloc : CFAllocatorRef,
     pStr : ConstStr255Param,
     encoding : CULong,
-    contentsDeallocator : CFAllocatorRef) CFStringRef;
+    contentsDeallocator : CFAllocatorRef) : CFStringRef;
 
 external CFStringCreateWithCStringNoCopy(
     alloc : CFAllocatorRef,
     cStr : Pointer[CChar],
     encoding : CULong,
-    contentsDeallocator : CFAllocatorRef) CFStringRef;
+    contentsDeallocator : CFAllocatorRef) : CFStringRef;
 
 external CFStringCreateWithBytesNoCopy(
     alloc : CFAllocatorRef,
@@ -1075,57 +1075,57 @@ external CFStringCreateWithBytesNoCopy(
     numBytes : CLong,
     encoding : CULong,
     isExternalRepresentation : CUChar,
-    contentsDeallocator : CFAllocatorRef) CFStringRef;
+    contentsDeallocator : CFAllocatorRef) : CFStringRef;
 
 external CFStringCreateWithCharactersNoCopy(
     alloc : CFAllocatorRef,
     chars : Pointer[UShort],
     numChars : CLong,
-    contentsDeallocator : CFAllocatorRef) CFStringRef;
+    contentsDeallocator : CFAllocatorRef) : CFStringRef;
 
 external CFStringCreateWithSubstring(
     alloc : CFAllocatorRef,
     str : CFStringRef,
-    range : CFRange) CFStringRef;
+    range : CFRange) : CFStringRef;
 
 external CFStringCreateCopy(
     alloc : CFAllocatorRef,
-    theString : CFStringRef) CFStringRef;
+    theString : CFStringRef) : CFStringRef;
 
 external CFStringCreateWithFormat(
     alloc : CFAllocatorRef,
     formatOptions : CFDictionaryRef,
     format : CFStringRef,
-    ..) CFStringRef;
+    ..) : CFStringRef;
 
 external CFStringCreateWithFormatAndArguments(
     alloc : CFAllocatorRef,
     formatOptions : CFDictionaryRef,
     format : CFStringRef,
-    arguments : va_list) CFStringRef;
+    arguments : va_list) : CFStringRef;
 
 external CFStringCreateMutable(
     alloc : CFAllocatorRef,
-    maxLength : CLong) CFMutableStringRef;
+    maxLength : CLong) : CFMutableStringRef;
 
 external CFStringCreateMutableCopy(
     alloc : CFAllocatorRef,
     maxLength : CLong,
-    theString : CFStringRef) CFMutableStringRef;
+    theString : CFStringRef) : CFMutableStringRef;
 
 external CFStringCreateMutableWithExternalCharactersNoCopy(
     alloc : CFAllocatorRef,
     chars : Pointer[UShort],
     numChars : CLong,
     capacity : CLong,
-    externalCharactersAllocator : CFAllocatorRef) CFMutableStringRef;
+    externalCharactersAllocator : CFAllocatorRef) : CFMutableStringRef;
 
 external CFStringGetLength(
-    theString : CFStringRef) CLong;
+    theString : CFStringRef) : CLong;
 
 external CFStringGetCharacterAtIndex(
     theString : CFStringRef,
-    idx : CLong) UShort;
+    idx : CLong) : UShort;
 
 external CFStringGetCharacters(
     theString : CFStringRef,
@@ -1136,24 +1136,24 @@ external CFStringGetPascalString(
     theString : CFStringRef,
     buffer : StringPtr,
     bufferSize : CLong,
-    encoding : CULong) CUChar;
+    encoding : CULong) : CUChar;
 
 external CFStringGetCString(
     theString : CFStringRef,
     buffer : Pointer[CChar],
     bufferSize : CLong,
-    encoding : CULong) CUChar;
+    encoding : CULong) : CUChar;
 
 external CFStringGetPascalStringPtr(
     theString : CFStringRef,
-    encoding : CULong) ConstStringPtr;
+    encoding : CULong) : ConstStringPtr;
 
 external CFStringGetCStringPtr(
     theString : CFStringRef,
-    encoding : CULong) Pointer[CChar];
+    encoding : CULong) : Pointer[CChar];
 
 external CFStringGetCharactersPtr(
-    theString : CFStringRef) Pointer[UShort];
+    theString : CFStringRef) : Pointer[UShort];
 
 external CFStringGetBytes(
     theString : CFStringRef,
@@ -1163,42 +1163,42 @@ external CFStringGetBytes(
     isExternalRepresentation : CUChar,
     buffer : Pointer[CUChar],
     maxBufLen : CLong,
-    usedBufLen : Pointer[CLong]) CLong;
+    usedBufLen : Pointer[CLong]) : CLong;
 
 external CFStringCreateFromExternalRepresentation(
     alloc : CFAllocatorRef,
     data : CFDataRef,
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFStringCreateExternalRepresentation(
     alloc : CFAllocatorRef,
     theString : CFStringRef,
     encoding : CULong,
-    lossByte : CUChar) CFDataRef;
+    lossByte : CUChar) : CFDataRef;
 
 external CFStringGetSmallestEncoding(
-    theString : CFStringRef) CULong;
+    theString : CFStringRef) : CULong;
 
 external CFStringGetFastestEncoding(
-    theString : CFStringRef) CULong;
+    theString : CFStringRef) : CULong;
 
-external CFStringGetSystemEncoding() CULong;
+external CFStringGetSystemEncoding() : CULong;
 
 external CFStringGetMaximumSizeForEncoding(
     length : CLong,
-    encoding : CULong) CLong;
+    encoding : CULong) : CLong;
 
 external CFStringGetFileSystemRepresentation(
     string : CFStringRef,
     buffer : Pointer[CChar],
-    maxBufLen : CLong) CUChar;
+    maxBufLen : CLong) : CUChar;
 
 external CFStringGetMaximumSizeOfFileSystemRepresentation(
-    string : CFStringRef) CLong;
+    string : CFStringRef) : CLong;
 
 external CFStringCreateWithFileSystemRepresentation(
     alloc : CFAllocatorRef,
-    buffer : Pointer[CChar]) CFStringRef;
+    buffer : Pointer[CChar]) : CFStringRef;
 
 alias kCFCompareCaseInsensitive = 1;
 alias kCFCompareBackwards = 4;
@@ -1217,18 +1217,18 @@ external CFStringCompareWithOptionsAndLocale(
     theString2 : CFStringRef,
     rangeToCompare : CFRange,
     compareOptions : CULong,
-    locale : CFLocaleRef) CLong;
+    locale : CFLocaleRef) : CLong;
 
 external CFStringCompareWithOptions(
     theString1 : CFStringRef,
     theString2 : CFStringRef,
     rangeToCompare : CFRange,
-    compareOptions : CULong) CLong;
+    compareOptions : CULong) : CLong;
 
 external CFStringCompare(
     theString1 : CFStringRef,
     theString2 : CFStringRef,
-    compareOptions : CULong) CLong;
+    compareOptions : CULong) : CLong;
 
 external CFStringFindWithOptionsAndLocale(
     theString : CFStringRef,
@@ -1236,45 +1236,45 @@ external CFStringFindWithOptionsAndLocale(
     rangeToSearch : CFRange,
     searchOptions : CULong,
     locale : CFLocaleRef,
-    result : Pointer[CFRange]) CUChar;
+    result : Pointer[CFRange]) : CUChar;
 
 external CFStringFindWithOptions(
     theString : CFStringRef,
     stringToFind : CFStringRef,
     rangeToSearch : CFRange,
     searchOptions : CULong,
-    result : Pointer[CFRange]) CUChar;
+    result : Pointer[CFRange]) : CUChar;
 
 external CFStringCreateArrayWithFindResults(
     alloc : CFAllocatorRef,
     theString : CFStringRef,
     stringToFind : CFStringRef,
     rangeToSearch : CFRange,
-    compareOptions : CULong) CFArrayRef;
+    compareOptions : CULong) : CFArrayRef;
 
 external CFStringFind(
     theString : CFStringRef,
     stringToFind : CFStringRef,
-    compareOptions : CULong) CFRange;
+    compareOptions : CULong) : CFRange;
 
 external CFStringHasPrefix(
     theString : CFStringRef,
-    prefix : CFStringRef) CUChar;
+    prefix : CFStringRef) : CUChar;
 
 external CFStringHasSuffix(
     theString : CFStringRef,
-    suffix : CFStringRef) CUChar;
+    suffix : CFStringRef) : CUChar;
 
 external CFStringGetRangeOfComposedCharactersAtIndex(
     theString : CFStringRef,
-    theIndex : CLong) CFRange;
+    theIndex : CLong) : CFRange;
 
 external CFStringFindCharacterFromSet(
     theString : CFStringRef,
     theSet : CFCharacterSetRef,
     rangeToSearch : CFRange,
     searchOptions : CULong,
-    result : Pointer[CFRange]) CUChar;
+    result : Pointer[CFRange]) : CUChar;
 
 external CFStringGetLineBounds(
     theString : CFStringRef,
@@ -1293,18 +1293,18 @@ external CFStringGetParagraphBounds(
 external CFStringCreateByCombiningStrings(
     alloc : CFAllocatorRef,
     theArray : CFArrayRef,
-    separatorString : CFStringRef) CFStringRef;
+    separatorString : CFStringRef) : CFStringRef;
 
 external CFStringCreateArrayBySeparatingStrings(
     alloc : CFAllocatorRef,
     theString : CFStringRef,
-    separatorString : CFStringRef) CFArrayRef;
+    separatorString : CFStringRef) : CFArrayRef;
 
 external CFStringGetIntValue(
-    str : CFStringRef) CLong;
+    str : CFStringRef) : CLong;
 
 external CFStringGetDoubleValue(
-    str : CFStringRef) Double;
+    str : CFStringRef) : Double;
 
 external CFStringAppend(
     theString : CFMutableStringRef,
@@ -1360,7 +1360,7 @@ external CFStringFindAndReplace(
     stringToFind : CFStringRef,
     replacementString : CFStringRef,
     rangeToSearch : CFRange,
-    compareOptions : CULong) CLong;
+    compareOptions : CULong) : CLong;
 
 external CFStringSetExternalCharactersNoCopy(
     theString : CFMutableStringRef,
@@ -1413,7 +1413,7 @@ external CFStringTransform(
     string : CFMutableStringRef,
     range : Pointer[CFRange],
     transform : CFStringRef,
-    reverse : CUChar) CUChar;
+    reverse : CUChar) : CUChar;
 
 external kCFStringTransformStripCombiningMarks : CFStringRef;
 
@@ -1448,33 +1448,33 @@ external kCFStringTransformToUnicodeName : CFStringRef;
 external kCFStringTransformStripDiacritics : CFStringRef;
 
 external CFStringIsEncodingAvailable(
-    encoding : CULong) CUChar;
+    encoding : CULong) : CUChar;
 
-external CFStringGetListOfAvailableEncodings() Pointer[CULong];
+external CFStringGetListOfAvailableEncodings() : Pointer[CULong];
 
 external CFStringGetNameOfEncoding(
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFStringConvertEncodingToNSStringEncoding(
-    encoding : CULong) CULong;
+    encoding : CULong) : CULong;
 
 external CFStringConvertNSStringEncodingToEncoding(
-    encoding : CULong) CULong;
+    encoding : CULong) : CULong;
 
 external CFStringConvertEncodingToWindowsCodepage(
-    encoding : CULong) CULong;
+    encoding : CULong) : CULong;
 
 external CFStringConvertWindowsCodepageToEncoding(
-    codepage : CULong) CULong;
+    codepage : CULong) : CULong;
 
 external CFStringConvertIANACharSetNameToEncoding(
-    theString : CFStringRef) CULong;
+    theString : CFStringRef) : CULong;
 
 external CFStringConvertEncodingToIANACharSetName(
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFStringGetMostCompatibleMacStringEncoding(
-    encoding : CULong) CULong;
+    encoding : CULong) : CULong;
 
 record UnnamedStruct17 (
     buffer : Array[UShort,64],
@@ -1494,11 +1494,11 @@ external CFShowStr(
     str : CFStringRef);
 
 external __CFStringMakeConstantString(
-    cStr : Pointer[CChar]) CFStringRef;
+    cStr : Pointer[CChar]) : CFStringRef;
 
 alias CFErrorRef = OpaquePointer;
 
-external CFErrorGetTypeID() CULong;
+external CFErrorGetTypeID() : CULong;
 
 external kCFErrorDomainPOSIX : CFStringRef;
 
@@ -1522,7 +1522,7 @@ external CFErrorCreate(
     allocator : CFAllocatorRef,
     domain : CFStringRef,
     code : CLong,
-    userInfo : CFDictionaryRef) CFErrorRef;
+    userInfo : CFDictionaryRef) : CFErrorRef;
 
 external CFErrorCreateWithUserInfoKeysAndValues(
     allocator : CFAllocatorRef,
@@ -1530,25 +1530,25 @@ external CFErrorCreateWithUserInfoKeysAndValues(
     code : CLong,
     userInfoKeys : Pointer[RawPointer],
     userInfoValues : Pointer[RawPointer],
-    numUserInfoValues : CLong) CFErrorRef;
+    numUserInfoValues : CLong) : CFErrorRef;
 
 external CFErrorGetDomain(
-    err : CFErrorRef) CFStringRef;
+    err : CFErrorRef) : CFStringRef;
 
 external CFErrorGetCode(
-    err : CFErrorRef) CLong;
+    err : CFErrorRef) : CLong;
 
 external CFErrorCopyUserInfo(
-    err : CFErrorRef) CFDictionaryRef;
+    err : CFErrorRef) : CFDictionaryRef;
 
 external CFErrorCopyDescription(
-    err : CFErrorRef) CFStringRef;
+    err : CFErrorRef) : CFStringRef;
 
 external CFErrorCopyFailureReason(
-    err : CFErrorRef) CFStringRef;
+    err : CFErrorRef) : CFStringRef;
 
 external CFErrorCopyRecoverySuggestion(
-    err : CFErrorRef) CFStringRef;
+    err : CFErrorRef) : CFStringRef;
 
 alias kCFURLPOSIXPathStyle = 0;
 alias kCFURLHFSPathStyle = 1;
@@ -1558,25 +1558,25 @@ alias CFURLPathStyle = CLong;
 
 alias CFURLRef = OpaquePointer;
 
-external CFURLGetTypeID() CULong;
+external CFURLGetTypeID() : CULong;
 
 external CFURLCreateWithBytes(
     allocator : CFAllocatorRef,
     URLBytes : Pointer[CUChar],
     length : CLong,
     encoding : CULong,
-    baseURL : CFURLRef) CFURLRef;
+    baseURL : CFURLRef) : CFURLRef;
 
 external CFURLCreateData(
     allocator : CFAllocatorRef,
     url : CFURLRef,
     encoding : CULong,
-    escapeWhitespace : CUChar) CFDataRef;
+    escapeWhitespace : CUChar) : CFDataRef;
 
 external CFURLCreateWithString(
     allocator : CFAllocatorRef,
     URLString : CFStringRef,
-    baseURL : CFURLRef) CFURLRef;
+    baseURL : CFURLRef) : CFURLRef;
 
 external CFURLCreateAbsoluteURLWithBytes(
     alloc : CFAllocatorRef,
@@ -1584,128 +1584,128 @@ external CFURLCreateAbsoluteURLWithBytes(
     length : CLong,
     encoding : CULong,
     baseURL : CFURLRef,
-    useCompatibilityMode : CUChar) CFURLRef;
+    useCompatibilityMode : CUChar) : CFURLRef;
 
 external CFURLCreateWithFileSystemPath(
     allocator : CFAllocatorRef,
     filePath : CFStringRef,
     pathStyle : CLong,
-    isDirectory : CUChar) CFURLRef;
+    isDirectory : CUChar) : CFURLRef;
 
 external CFURLCreateFromFileSystemRepresentation(
     allocator : CFAllocatorRef,
     buffer : Pointer[CUChar],
     bufLen : CLong,
-    isDirectory : CUChar) CFURLRef;
+    isDirectory : CUChar) : CFURLRef;
 
 external CFURLCreateWithFileSystemPathRelativeToBase(
     allocator : CFAllocatorRef,
     filePath : CFStringRef,
     pathStyle : CLong,
     isDirectory : CUChar,
-    baseURL : CFURLRef) CFURLRef;
+    baseURL : CFURLRef) : CFURLRef;
 
 external CFURLCreateFromFileSystemRepresentationRelativeToBase(
     allocator : CFAllocatorRef,
     buffer : Pointer[CUChar],
     bufLen : CLong,
     isDirectory : CUChar,
-    baseURL : CFURLRef) CFURLRef;
+    baseURL : CFURLRef) : CFURLRef;
 
 external CFURLGetFileSystemRepresentation(
     url : CFURLRef,
     resolveAgainstBase : CUChar,
     buffer : Pointer[CUChar],
-    maxBufLen : CLong) CUChar;
+    maxBufLen : CLong) : CUChar;
 
 external CFURLCopyAbsoluteURL(
-    relativeURL : CFURLRef) CFURLRef;
+    relativeURL : CFURLRef) : CFURLRef;
 
 external CFURLGetString(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLGetBaseURL(
-    anURL : CFURLRef) CFURLRef;
+    anURL : CFURLRef) : CFURLRef;
 
 external CFURLCanBeDecomposed(
-    anURL : CFURLRef) CUChar;
+    anURL : CFURLRef) : CUChar;
 
 external CFURLCopyScheme(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyNetLocation(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyPath(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyStrictPath(
     anURL : CFURLRef,
-    isAbsolute : Pointer[CUChar]) CFStringRef;
+    isAbsolute : Pointer[CUChar]) : CFStringRef;
 
 external CFURLCopyFileSystemPath(
     anURL : CFURLRef,
-    pathStyle : CLong) CFStringRef;
+    pathStyle : CLong) : CFStringRef;
 
 external CFURLHasDirectoryPath(
-    anURL : CFURLRef) CUChar;
+    anURL : CFURLRef) : CUChar;
 
 external CFURLCopyResourceSpecifier(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyHostName(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLGetPortNumber(
-    anURL : CFURLRef) CLong;
+    anURL : CFURLRef) : CLong;
 
 external CFURLCopyUserName(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyPassword(
-    anURL : CFURLRef) CFStringRef;
+    anURL : CFURLRef) : CFStringRef;
 
 external CFURLCopyParameterString(
     anURL : CFURLRef,
-    charactersToLeaveEscaped : CFStringRef) CFStringRef;
+    charactersToLeaveEscaped : CFStringRef) : CFStringRef;
 
 external CFURLCopyQueryString(
     anURL : CFURLRef,
-    charactersToLeaveEscaped : CFStringRef) CFStringRef;
+    charactersToLeaveEscaped : CFStringRef) : CFStringRef;
 
 external CFURLCopyFragment(
     anURL : CFURLRef,
-    charactersToLeaveEscaped : CFStringRef) CFStringRef;
+    charactersToLeaveEscaped : CFStringRef) : CFStringRef;
 
 external CFURLCopyLastPathComponent(
-    url : CFURLRef) CFStringRef;
+    url : CFURLRef) : CFStringRef;
 
 external CFURLCopyPathExtension(
-    url : CFURLRef) CFStringRef;
+    url : CFURLRef) : CFStringRef;
 
 external CFURLCreateCopyAppendingPathComponent(
     allocator : CFAllocatorRef,
     url : CFURLRef,
     pathComponent : CFStringRef,
-    isDirectory : CUChar) CFURLRef;
+    isDirectory : CUChar) : CFURLRef;
 
 external CFURLCreateCopyDeletingLastPathComponent(
     allocator : CFAllocatorRef,
-    url : CFURLRef) CFURLRef;
+    url : CFURLRef) : CFURLRef;
 
 external CFURLCreateCopyAppendingPathExtension(
     allocator : CFAllocatorRef,
     url : CFURLRef,
-    extension : CFStringRef) CFURLRef;
+    extension : CFStringRef) : CFURLRef;
 
 external CFURLCreateCopyDeletingPathExtension(
     allocator : CFAllocatorRef,
-    url : CFURLRef) CFURLRef;
+    url : CFURLRef) : CFURLRef;
 
 external CFURLGetBytes(
     url : CFURLRef,
     buffer : Pointer[CUChar],
-    bufferLength : CLong) CLong;
+    bufferLength : CLong) : CLong;
 
 alias kCFURLComponentScheme = 1;
 alias kCFURLComponentNetLocation = 2;
@@ -1725,65 +1725,65 @@ alias CFURLComponentType = CLong;
 external CFURLGetByteRangeForComponent(
     url : CFURLRef,
     component : CLong,
-    rangeIncludingSeparators : Pointer[CFRange]) CFRange;
+    rangeIncludingSeparators : Pointer[CFRange]) : CFRange;
 
 external CFURLCreateStringByReplacingPercentEscapes(
     allocator : CFAllocatorRef,
     originalString : CFStringRef,
-    charactersToLeaveEscaped : CFStringRef) CFStringRef;
+    charactersToLeaveEscaped : CFStringRef) : CFStringRef;
 
 external CFURLCreateStringByReplacingPercentEscapesUsingEncoding(
     allocator : CFAllocatorRef,
     origString : CFStringRef,
     charsToLeaveEscaped : CFStringRef,
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFURLCreateStringByAddingPercentEscapes(
     allocator : CFAllocatorRef,
     originalString : CFStringRef,
     charactersToLeaveUnescaped : CFStringRef,
     legalURLCharactersToBeEscaped : CFStringRef,
-    encoding : CULong) CFStringRef;
+    encoding : CULong) : CFStringRef;
 
 external CFURLCreateFileReferenceURL(
     allocator : CFAllocatorRef,
     url : CFURLRef,
-    error : Pointer[CFErrorRef]) CFURLRef;
+    error : Pointer[CFErrorRef]) : CFURLRef;
 
 external CFURLCreateFilePathURL(
     allocator : CFAllocatorRef,
     url : CFURLRef,
-    error : Pointer[CFErrorRef]) CFURLRef;
+    error : Pointer[CFErrorRef]) : CFURLRef;
 
 external CFURLCreateFromFSRef(
     allocator : CFAllocatorRef,
-    fsRef : OpaquePointer) CFURLRef;
+    fsRef : OpaquePointer) : CFURLRef;
 
 external CFURLGetFSRef(
     url : CFURLRef,
-    fsRef : OpaquePointer) CUChar;
+    fsRef : OpaquePointer) : CUChar;
 
 external CFURLCopyResourcePropertyForKey(
     url : CFURLRef,
     key : CFStringRef,
     propertyValueTypeRefPtr : RawPointer,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external CFURLCopyResourcePropertiesForKeys(
     url : CFURLRef,
     keys : CFArrayRef,
-    error : Pointer[CFErrorRef]) CFDictionaryRef;
+    error : Pointer[CFErrorRef]) : CFDictionaryRef;
 
 external CFURLSetResourcePropertyForKey(
     url : CFURLRef,
     key : CFStringRef,
     propertValue : CFTypeRef,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external CFURLSetResourcePropertiesForKeys(
     url : CFURLRef,
     keyedPropertyValues : CFDictionaryRef,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external CFURLClearResourcePropertyCacheForKey(
     url : CFURLRef,
@@ -1799,7 +1799,7 @@ external CFURLSetTemporaryResourcePropertyForKey(
 
 external CFURLResourceIsReachable(
     url : CFURLRef,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external kCFURLNameKey : CFStringRef;
 
@@ -1902,7 +1902,7 @@ external CFURLCreateBookmarkData(
     options : CULong,
     resourcePropertiesToInclude : CFArrayRef,
     relativeToURL : CFURLRef,
-    error : Pointer[CFErrorRef]) CFDataRef;
+    error : Pointer[CFErrorRef]) : CFDataRef;
 
 external CFURLCreateByResolvingBookmarkData(
     allocator : CFAllocatorRef,
@@ -1911,32 +1911,32 @@ external CFURLCreateByResolvingBookmarkData(
     relativeToURL : CFURLRef,
     resourcePropertiesToInclude : CFArrayRef,
     isStale : Pointer[CUChar],
-    error : Pointer[CFErrorRef]) CFURLRef;
+    error : Pointer[CFErrorRef]) : CFURLRef;
 
 external CFURLCreateResourcePropertiesForKeysFromBookmarkData(
     allocator : CFAllocatorRef,
     resourcePropertiesToReturn : CFArrayRef,
-    bookmark : CFDataRef) CFDictionaryRef;
+    bookmark : CFDataRef) : CFDictionaryRef;
 
 external CFURLCreateResourcePropertyForKeyFromBookmarkData(
     allocator : CFAllocatorRef,
     resourcePropertyKey : CFStringRef,
-    bookmark : CFDataRef) CFTypeRef;
+    bookmark : CFDataRef) : CFTypeRef;
 
 external CFURLCreateBookmarkDataFromFile(
     allocator : CFAllocatorRef,
     fileURL : CFURLRef,
-    errorRef : Pointer[CFErrorRef]) CFDataRef;
+    errorRef : Pointer[CFErrorRef]) : CFDataRef;
 
 external CFURLWriteBookmarkDataToFile(
     bookmarkRef : CFDataRef,
     fileURL : CFURLRef,
     options : CULong,
-    errorRef : Pointer[CFErrorRef]) CUChar;
+    errorRef : Pointer[CFErrorRef]) : CUChar;
 
 external CFURLCreateBookmarkDataFromAliasRecord(
     allocatorRef : CFAllocatorRef,
-    aliasRecordDataRef : CFDataRef) CFDataRef;
+    aliasRecordDataRef : CFDataRef) : CFDataRef;
 
 alias CFBundleRef = OpaquePointer;
 
@@ -1956,36 +1956,36 @@ external kCFBundleNameKey : CFStringRef;
 
 external kCFBundleLocalizationsKey : CFStringRef;
 
-external CFBundleGetMainBundle() CFBundleRef;
+external CFBundleGetMainBundle() : CFBundleRef;
 
 external CFBundleGetBundleWithIdentifier(
-    bundleID : CFStringRef) CFBundleRef;
+    bundleID : CFStringRef) : CFBundleRef;
 
-external CFBundleGetAllBundles() CFArrayRef;
+external CFBundleGetAllBundles() : CFArrayRef;
 
-external CFBundleGetTypeID() CULong;
+external CFBundleGetTypeID() : CULong;
 
 external CFBundleCreate(
     allocator : CFAllocatorRef,
-    bundleURL : CFURLRef) CFBundleRef;
+    bundleURL : CFURLRef) : CFBundleRef;
 
 external CFBundleCreateBundlesFromDirectory(
     allocator : CFAllocatorRef,
     directoryURL : CFURLRef,
-    bundleType : CFStringRef) CFArrayRef;
+    bundleType : CFStringRef) : CFArrayRef;
 
 external CFBundleCopyBundleURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleGetValueForInfoDictionaryKey(
     bundle : CFBundleRef,
-    key : CFStringRef) CFTypeRef;
+    key : CFStringRef) : CFTypeRef;
 
 external CFBundleGetInfoDictionary(
-    bundle : CFBundleRef) CFDictionaryRef;
+    bundle : CFBundleRef) : CFDictionaryRef;
 
 external CFBundleGetLocalInfoDictionary(
-    bundle : CFBundleRef) CFDictionaryRef;
+    bundle : CFBundleRef) : CFDictionaryRef;
 
 external CFBundleGetPackageInfo(
     bundle : CFBundleRef,
@@ -1993,102 +1993,102 @@ external CFBundleGetPackageInfo(
     packageCreator : Pointer[CULong]);
 
 external CFBundleGetIdentifier(
-    bundle : CFBundleRef) CFStringRef;
+    bundle : CFBundleRef) : CFStringRef;
 
 external CFBundleGetVersionNumber(
-    bundle : CFBundleRef) CULong;
+    bundle : CFBundleRef) : CULong;
 
 external CFBundleGetDevelopmentRegion(
-    bundle : CFBundleRef) CFStringRef;
+    bundle : CFBundleRef) : CFStringRef;
 
 external CFBundleCopySupportFilesDirectoryURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopyResourcesDirectoryURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopyPrivateFrameworksURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopySharedFrameworksURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopySharedSupportURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopyBuiltInPlugInsURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 external CFBundleCopyInfoDictionaryInDirectory(
-    bundleURL : CFURLRef) CFDictionaryRef;
+    bundleURL : CFURLRef) : CFDictionaryRef;
 
 external CFBundleGetPackageInfoInDirectory(
     url : CFURLRef,
     packageType : Pointer[CULong],
-    packageCreator : Pointer[CULong]) CUChar;
+    packageCreator : Pointer[CULong]) : CUChar;
 
 external CFBundleCopyResourceURL(
     bundle : CFBundleRef,
     resourceName : CFStringRef,
     resourceType : CFStringRef,
-    subDirName : CFStringRef) CFURLRef;
+    subDirName : CFStringRef) : CFURLRef;
 
 external CFBundleCopyResourceURLsOfType(
     bundle : CFBundleRef,
     resourceType : CFStringRef,
-    subDirName : CFStringRef) CFArrayRef;
+    subDirName : CFStringRef) : CFArrayRef;
 
 external CFBundleCopyLocalizedString(
     bundle : CFBundleRef,
     key : CFStringRef,
     value : CFStringRef,
-    tableName : CFStringRef) CFStringRef;
+    tableName : CFStringRef) : CFStringRef;
 
 external CFBundleCopyResourceURLInDirectory(
     bundleURL : CFURLRef,
     resourceName : CFStringRef,
     resourceType : CFStringRef,
-    subDirName : CFStringRef) CFURLRef;
+    subDirName : CFStringRef) : CFURLRef;
 
 external CFBundleCopyResourceURLsOfTypeInDirectory(
     bundleURL : CFURLRef,
     resourceType : CFStringRef,
-    subDirName : CFStringRef) CFArrayRef;
+    subDirName : CFStringRef) : CFArrayRef;
 
 external CFBundleCopyBundleLocalizations(
-    bundle : CFBundleRef) CFArrayRef;
+    bundle : CFBundleRef) : CFArrayRef;
 
 external CFBundleCopyPreferredLocalizationsFromArray(
-    locArray : CFArrayRef) CFArrayRef;
+    locArray : CFArrayRef) : CFArrayRef;
 
 external CFBundleCopyLocalizationsForPreferences(
     locArray : CFArrayRef,
-    prefArray : CFArrayRef) CFArrayRef;
+    prefArray : CFArrayRef) : CFArrayRef;
 
 external CFBundleCopyResourceURLForLocalization(
     bundle : CFBundleRef,
     resourceName : CFStringRef,
     resourceType : CFStringRef,
     subDirName : CFStringRef,
-    localizationName : CFStringRef) CFURLRef;
+    localizationName : CFStringRef) : CFURLRef;
 
 external CFBundleCopyResourceURLsOfTypeForLocalization(
     bundle : CFBundleRef,
     resourceType : CFStringRef,
     subDirName : CFStringRef,
-    localizationName : CFStringRef) CFArrayRef;
+    localizationName : CFStringRef) : CFArrayRef;
 
 external CFBundleCopyInfoDictionaryForURL(
-    url : CFURLRef) CFDictionaryRef;
+    url : CFURLRef) : CFDictionaryRef;
 
 external CFBundleCopyLocalizationsForURL(
-    url : CFURLRef) CFArrayRef;
+    url : CFURLRef) : CFArrayRef;
 
 external CFBundleCopyExecutableArchitecturesForURL(
-    url : CFURLRef) CFArrayRef;
+    url : CFURLRef) : CFArrayRef;
 
 external CFBundleCopyExecutableURL(
-    bundle : CFBundleRef) CFURLRef;
+    bundle : CFBundleRef) : CFURLRef;
 
 alias kCFBundleExecutableArchitectureI386 = 7;
 alias kCFBundleExecutableArchitecturePPC = 18;
@@ -2096,28 +2096,28 @@ alias kCFBundleExecutableArchitectureX86_64 = 16777223;
 alias kCFBundleExecutableArchitecturePPC64 = 16777234;
 
 external CFBundleCopyExecutableArchitectures(
-    bundle : CFBundleRef) CFArrayRef;
+    bundle : CFBundleRef) : CFArrayRef;
 
 external CFBundlePreflightExecutable(
     bundle : CFBundleRef,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external CFBundleLoadExecutableAndReturnError(
     bundle : CFBundleRef,
-    error : Pointer[CFErrorRef]) CUChar;
+    error : Pointer[CFErrorRef]) : CUChar;
 
 external CFBundleLoadExecutable(
-    bundle : CFBundleRef) CUChar;
+    bundle : CFBundleRef) : CUChar;
 
 external CFBundleIsExecutableLoaded(
-    bundle : CFBundleRef) CUChar;
+    bundle : CFBundleRef) : CUChar;
 
 external CFBundleUnloadExecutable(
     bundle : CFBundleRef);
 
 external CFBundleGetFunctionPointerForName(
     bundle : CFBundleRef,
-    functionName : CFStringRef) RawPointer;
+    functionName : CFStringRef) : RawPointer;
 
 external CFBundleGetFunctionPointersForNames(
     bundle : CFBundleRef,
@@ -2126,7 +2126,7 @@ external CFBundleGetFunctionPointersForNames(
 
 external CFBundleGetDataPointerForName(
     bundle : CFBundleRef,
-    symbolName : CFStringRef) RawPointer;
+    symbolName : CFStringRef) : RawPointer;
 
 external CFBundleGetDataPointersForNames(
     bundle : CFBundleRef,
@@ -2135,20 +2135,20 @@ external CFBundleGetDataPointersForNames(
 
 external CFBundleCopyAuxiliaryExecutableURL(
     bundle : CFBundleRef,
-    executableName : CFStringRef) CFURLRef;
+    executableName : CFStringRef) : CFURLRef;
 
 external CFBundleGetPlugIn(
-    bundle : CFBundleRef) CFPlugInRef;
+    bundle : CFBundleRef) : CFPlugInRef;
 
 alias CFBundleRefNum = Short;
 
 external CFBundleOpenBundleResourceMap(
-    bundle : CFBundleRef) Short;
+    bundle : CFBundleRef) : Short;
 
 external CFBundleOpenBundleResourceFiles(
     bundle : CFBundleRef,
     refNum : Pointer[Short],
-    localizedRefNum : Pointer[Short]) CLong;
+    localizedRefNum : Pointer[Short]) : CLong;
 
 external CFBundleCloseBundleResourceMap(
     bundle : CFBundleRef,
@@ -2176,7 +2176,7 @@ alias CFTimeInterval = Double;
 
 alias CFAbsoluteTime = Double;
 
-external CFAbsoluteTimeGetCurrent() Double;
+external CFAbsoluteTimeGetCurrent() : Double;
 
 external kCFAbsoluteTimeIntervalSince1970 : Double;
 
@@ -2184,23 +2184,23 @@ external kCFAbsoluteTimeIntervalSince1904 : Double;
 
 alias CFDateRef = OpaquePointer;
 
-external CFDateGetTypeID() CULong;
+external CFDateGetTypeID() : CULong;
 
 external CFDateCreate(
     allocator : CFAllocatorRef,
-    at : Double) CFDateRef;
+    at : Double) : CFDateRef;
 
 external CFDateGetAbsoluteTime(
-    theDate : CFDateRef) Double;
+    theDate : CFDateRef) : Double;
 
 external CFDateGetTimeIntervalSinceDate(
     theDate : CFDateRef,
-    otherDate : CFDateRef) Double;
+    otherDate : CFDateRef) : Double;
 
 external CFDateCompare(
     theDate : CFDateRef,
     otherDate : CFDateRef,
-    context : RawPointer) CLong;
+    context : RawPointer) : CLong;
 
 alias CFTimeZoneRef = OpaquePointer;
 
@@ -2238,53 +2238,53 @@ alias CFGregorianUnitFlags = CULong;
 
 external CFGregorianDateIsValid(
     gdate : CFGregorianDate,
-    unitFlags : CULong) CUChar;
+    unitFlags : CULong) : CUChar;
 
 external CFGregorianDateGetAbsoluteTime(
     gdate : CFGregorianDate,
-    tz : CFTimeZoneRef) Double;
+    tz : CFTimeZoneRef) : Double;
 
 external CFAbsoluteTimeGetGregorianDate(
     at : Double,
-    tz : CFTimeZoneRef) CFGregorianDate;
+    tz : CFTimeZoneRef) : CFGregorianDate;
 
 external CFAbsoluteTimeAddGregorianUnits(
     at : Double,
     tz : CFTimeZoneRef,
-    units : CFGregorianUnits) Double;
+    units : CFGregorianUnits) : Double;
 
 external CFAbsoluteTimeGetDifferenceAsGregorianUnits(
     at1 : Double,
     at2 : Double,
     tz : CFTimeZoneRef,
-    unitFlags : CULong) CFGregorianUnits;
+    unitFlags : CULong) : CFGregorianUnits;
 
 external CFAbsoluteTimeGetDayOfWeek(
     at : Double,
-    tz : CFTimeZoneRef) CLong;
+    tz : CFTimeZoneRef) : CLong;
 
 external CFAbsoluteTimeGetDayOfYear(
     at : Double,
-    tz : CFTimeZoneRef) CLong;
+    tz : CFTimeZoneRef) : CLong;
 
 external CFAbsoluteTimeGetWeekOfYear(
     at : Double,
-    tz : CFTimeZoneRef) CLong;
+    tz : CFTimeZoneRef) : CLong;
 
-external CFTimeZoneGetTypeID() CULong;
+external CFTimeZoneGetTypeID() : CULong;
 
-external CFTimeZoneCopySystem() CFTimeZoneRef;
+external CFTimeZoneCopySystem() : CFTimeZoneRef;
 
 external CFTimeZoneResetSystem();
 
-external CFTimeZoneCopyDefault() CFTimeZoneRef;
+external CFTimeZoneCopyDefault() : CFTimeZoneRef;
 
 external CFTimeZoneSetDefault(
     tz : CFTimeZoneRef);
 
-external CFTimeZoneCopyKnownNames() CFArrayRef;
+external CFTimeZoneCopyKnownNames() : CFArrayRef;
 
-external CFTimeZoneCopyAbbreviationDictionary() CFDictionaryRef;
+external CFTimeZoneCopyAbbreviationDictionary() : CFDictionaryRef;
 
 external CFTimeZoneSetAbbreviationDictionary(
     dict : CFDictionaryRef);
@@ -2292,42 +2292,42 @@ external CFTimeZoneSetAbbreviationDictionary(
 external CFTimeZoneCreate(
     allocator : CFAllocatorRef,
     name : CFStringRef,
-    data : CFDataRef) CFTimeZoneRef;
+    data : CFDataRef) : CFTimeZoneRef;
 
 external CFTimeZoneCreateWithTimeIntervalFromGMT(
     allocator : CFAllocatorRef,
-    ti : Double) CFTimeZoneRef;
+    ti : Double) : CFTimeZoneRef;
 
 external CFTimeZoneCreateWithName(
     allocator : CFAllocatorRef,
     name : CFStringRef,
-    tryAbbrev : CUChar) CFTimeZoneRef;
+    tryAbbrev : CUChar) : CFTimeZoneRef;
 
 external CFTimeZoneGetName(
-    tz : CFTimeZoneRef) CFStringRef;
+    tz : CFTimeZoneRef) : CFStringRef;
 
 external CFTimeZoneGetData(
-    tz : CFTimeZoneRef) CFDataRef;
+    tz : CFTimeZoneRef) : CFDataRef;
 
 external CFTimeZoneGetSecondsFromGMT(
     tz : CFTimeZoneRef,
-    at : Double) Double;
+    at : Double) : Double;
 
 external CFTimeZoneCopyAbbreviation(
     tz : CFTimeZoneRef,
-    at : Double) CFStringRef;
+    at : Double) : CFStringRef;
 
 external CFTimeZoneIsDaylightSavingTime(
     tz : CFTimeZoneRef,
-    at : Double) CUChar;
+    at : Double) : CUChar;
 
 external CFTimeZoneGetDaylightSavingTimeOffset(
     tz : CFTimeZoneRef,
-    at : Double) Double;
+    at : Double) : Double;
 
 external CFTimeZoneGetNextDaylightSavingTimeTransition(
     tz : CFTimeZoneRef,
-    at : Double) Double;
+    at : Double) : Double;
 
 alias kCFTimeZoneNameStyleStandard = 0;
 alias kCFTimeZoneNameStyleShortStandard = 1;
@@ -2341,46 +2341,46 @@ alias CFTimeZoneNameStyle = CLong;
 external CFTimeZoneCopyLocalizedName(
     tz : CFTimeZoneRef,
     style : CLong,
-    locale : CFLocaleRef) CFStringRef;
+    locale : CFLocaleRef) : CFStringRef;
 
 external kCFTimeZoneSystemTimeZoneDidChangeNotification : CFStringRef;
 
 alias CFCalendarRef = OpaquePointer;
 
-external CFCalendarGetTypeID() CULong;
+external CFCalendarGetTypeID() : CULong;
 
-external CFCalendarCopyCurrent() CFCalendarRef;
+external CFCalendarCopyCurrent() : CFCalendarRef;
 
 external CFCalendarCreateWithIdentifier(
     allocator : CFAllocatorRef,
-    identifier : CFStringRef) CFCalendarRef;
+    identifier : CFStringRef) : CFCalendarRef;
 
 external CFCalendarGetIdentifier(
-    calendar : CFCalendarRef) CFStringRef;
+    calendar : CFCalendarRef) : CFStringRef;
 
 external CFCalendarCopyLocale(
-    calendar : CFCalendarRef) CFLocaleRef;
+    calendar : CFCalendarRef) : CFLocaleRef;
 
 external CFCalendarSetLocale(
     calendar : CFCalendarRef,
     locale : CFLocaleRef);
 
 external CFCalendarCopyTimeZone(
-    calendar : CFCalendarRef) CFTimeZoneRef;
+    calendar : CFCalendarRef) : CFTimeZoneRef;
 
 external CFCalendarSetTimeZone(
     calendar : CFCalendarRef,
     tz : CFTimeZoneRef);
 
 external CFCalendarGetFirstWeekday(
-    calendar : CFCalendarRef) CLong;
+    calendar : CFCalendarRef) : CLong;
 
 external CFCalendarSetFirstWeekday(
     calendar : CFCalendarRef,
     wkdy : CLong);
 
 external CFCalendarGetMinimumDaysInFirstWeek(
-    calendar : CFCalendarRef) CLong;
+    calendar : CFCalendarRef) : CLong;
 
 external CFCalendarSetMinimumDaysInFirstWeek(
     calendar : CFCalendarRef,
@@ -2402,42 +2402,42 @@ alias CFCalendarUnit = CULong;
 
 external CFCalendarGetMinimumRangeOfUnit(
     calendar : CFCalendarRef,
-    unit : CULong) CFRange;
+    unit : CULong) : CFRange;
 
 external CFCalendarGetMaximumRangeOfUnit(
     calendar : CFCalendarRef,
-    unit : CULong) CFRange;
+    unit : CULong) : CFRange;
 
 external CFCalendarGetRangeOfUnit(
     calendar : CFCalendarRef,
     smallerUnit : CULong,
     biggerUnit : CULong,
-    at : Double) CFRange;
+    at : Double) : CFRange;
 
 external CFCalendarGetOrdinalityOfUnit(
     calendar : CFCalendarRef,
     smallerUnit : CULong,
     biggerUnit : CULong,
-    at : Double) CLong;
+    at : Double) : CLong;
 
 external CFCalendarGetTimeRangeOfUnit(
     calendar : CFCalendarRef,
     unit : CULong,
     at : Double,
     startp : Pointer[Double],
-    tip : Pointer[Double]) CUChar;
+    tip : Pointer[Double]) : CUChar;
 
 external CFCalendarComposeAbsoluteTime(
     calendar : CFCalendarRef,
     at : Pointer[Double],
     componentDesc : Pointer[CChar],
-    ..) CUChar;
+    ..) : CUChar;
 
 external CFCalendarDecomposeAbsoluteTime(
     calendar : CFCalendarRef,
     at : Double,
     componentDesc : Pointer[CChar],
-    ..) CUChar;
+    ..) : CUChar;
 
 alias kCFCalendarComponentsWrap = 1;
 
@@ -2446,7 +2446,7 @@ external CFCalendarAddComponents(
     at : Pointer[Double],
     options : CULong,
     componentDesc : Pointer[CChar],
-    ..) CUChar;
+    ..) : CUChar;
 
 external CFCalendarGetComponentDifference(
     calendar : CFCalendarRef,
@@ -2454,7 +2454,7 @@ external CFCalendarGetComponentDifference(
     resultAT : Double,
     options : CULong,
     componentDesc : Pointer[CChar],
-    ..) CUChar;
+    ..) : CUChar;
 
 alias CFDateFormatterRef = OpaquePointer;
 
@@ -2462,9 +2462,9 @@ external CFDateFormatterCreateDateFormatFromTemplate(
     allocator : CFAllocatorRef,
     tmplate : CFStringRef,
     options : CULong,
-    locale : CFLocaleRef) CFStringRef;
+    locale : CFLocaleRef) : CFStringRef;
 
-external CFDateFormatterGetTypeID() CULong;
+external CFDateFormatterGetTypeID() : CULong;
 
 alias kCFDateFormatterNoStyle = 0;
 alias kCFDateFormatterShortStyle = 1;
@@ -2478,19 +2478,19 @@ external CFDateFormatterCreate(
     allocator : CFAllocatorRef,
     locale : CFLocaleRef,
     dateStyle : CLong,
-    timeStyle : CLong) CFDateFormatterRef;
+    timeStyle : CLong) : CFDateFormatterRef;
 
 external CFDateFormatterGetLocale(
-    formatter : CFDateFormatterRef) CFLocaleRef;
+    formatter : CFDateFormatterRef) : CFLocaleRef;
 
 external CFDateFormatterGetDateStyle(
-    formatter : CFDateFormatterRef) CLong;
+    formatter : CFDateFormatterRef) : CLong;
 
 external CFDateFormatterGetTimeStyle(
-    formatter : CFDateFormatterRef) CLong;
+    formatter : CFDateFormatterRef) : CLong;
 
 external CFDateFormatterGetFormat(
-    formatter : CFDateFormatterRef) CFStringRef;
+    formatter : CFDateFormatterRef) : CFStringRef;
 
 external CFDateFormatterSetFormat(
     formatter : CFDateFormatterRef,
@@ -2499,24 +2499,24 @@ external CFDateFormatterSetFormat(
 external CFDateFormatterCreateStringWithDate(
     allocator : CFAllocatorRef,
     formatter : CFDateFormatterRef,
-    date : CFDateRef) CFStringRef;
+    date : CFDateRef) : CFStringRef;
 
 external CFDateFormatterCreateStringWithAbsoluteTime(
     allocator : CFAllocatorRef,
     formatter : CFDateFormatterRef,
-    at : Double) CFStringRef;
+    at : Double) : CFStringRef;
 
 external CFDateFormatterCreateDateFromString(
     allocator : CFAllocatorRef,
     formatter : CFDateFormatterRef,
     string : CFStringRef,
-    rangep : Pointer[CFRange]) CFDateRef;
+    rangep : Pointer[CFRange]) : CFDateRef;
 
 external CFDateFormatterGetAbsoluteTimeFromString(
     formatter : CFDateFormatterRef,
     string : CFStringRef,
     rangep : Pointer[CFRange],
-    atp : Pointer[Double]) CUChar;
+    atp : Pointer[Double]) : CUChar;
 
 external CFDateFormatterSetProperty(
     formatter : CFDateFormatterRef,
@@ -2525,7 +2525,7 @@ external CFDateFormatterSetProperty(
 
 external CFDateFormatterCopyProperty(
     formatter : CFDateFormatterRef,
-    key : CFStringRef) CFTypeRef;
+    key : CFStringRef) : CFTypeRef;
 
 external kCFDateFormatterIsLenient : CFStringRef;
 
@@ -2612,17 +2612,17 @@ external kCFRunLoopDefaultMode : CFStringRef;
 
 external kCFRunLoopCommonModes : CFStringRef;
 
-external CFRunLoopGetTypeID() CULong;
+external CFRunLoopGetTypeID() : CULong;
 
-external CFRunLoopGetCurrent() CFRunLoopRef;
+external CFRunLoopGetCurrent() : CFRunLoopRef;
 
-external CFRunLoopGetMain() CFRunLoopRef;
+external CFRunLoopGetMain() : CFRunLoopRef;
 
 external CFRunLoopCopyCurrentMode(
-    rl : CFRunLoopRef) CFStringRef;
+    rl : CFRunLoopRef) : CFStringRef;
 
 external CFRunLoopCopyAllModes(
-    rl : CFRunLoopRef) CFArrayRef;
+    rl : CFRunLoopRef) : CFArrayRef;
 
 external CFRunLoopAddCommonMode(
     rl : CFRunLoopRef,
@@ -2630,17 +2630,17 @@ external CFRunLoopAddCommonMode(
 
 external CFRunLoopGetNextTimerFireDate(
     rl : CFRunLoopRef,
-    mode : CFStringRef) Double;
+    mode : CFStringRef) : Double;
 
 external CFRunLoopRun();
 
 external CFRunLoopRunInMode(
     mode : CFStringRef,
     seconds : Double,
-    returnAfterSourceHandled : CUChar) CLong;
+    returnAfterSourceHandled : CUChar) : CLong;
 
 external CFRunLoopIsWaiting(
-    rl : CFRunLoopRef) CUChar;
+    rl : CFRunLoopRef) : CUChar;
 
 external CFRunLoopWakeUp(
     rl : CFRunLoopRef);
@@ -2656,7 +2656,7 @@ external CFRunLoopPerformBlock(
 external CFRunLoopContainsSource(
     rl : CFRunLoopRef,
     source : CFRunLoopSourceRef,
-    mode : CFStringRef) CUChar;
+    mode : CFStringRef) : CUChar;
 
 external CFRunLoopAddSource(
     rl : CFRunLoopRef,
@@ -2671,7 +2671,7 @@ external CFRunLoopRemoveSource(
 external CFRunLoopContainsObserver(
     rl : CFRunLoopRef,
     observer : CFRunLoopObserverRef,
-    mode : CFStringRef) CUChar;
+    mode : CFStringRef) : CUChar;
 
 external CFRunLoopAddObserver(
     rl : CFRunLoopRef,
@@ -2686,7 +2686,7 @@ external CFRunLoopRemoveObserver(
 external CFRunLoopContainsTimer(
     rl : CFRunLoopRef,
     timer : CFRunLoopTimerRef,
-    mode : CFStringRef) CUChar;
+    mode : CFStringRef) : CUChar;
 
 external CFRunLoopAddTimer(
     rl : CFRunLoopRef,
@@ -2727,21 +2727,21 @@ record UnnamedStruct23 (
 
 alias CFRunLoopSourceContext1 = UnnamedStruct23;
 
-external CFRunLoopSourceGetTypeID() CULong;
+external CFRunLoopSourceGetTypeID() : CULong;
 
 external CFRunLoopSourceCreate(
     allocator : CFAllocatorRef,
     order : CLong,
-    context : Pointer[CFRunLoopSourceContext]) CFRunLoopSourceRef;
+    context : Pointer[CFRunLoopSourceContext]) : CFRunLoopSourceRef;
 
 external CFRunLoopSourceGetOrder(
-    source : CFRunLoopSourceRef) CLong;
+    source : CFRunLoopSourceRef) : CLong;
 
 external CFRunLoopSourceInvalidate(
     source : CFRunLoopSourceRef);
 
 external CFRunLoopSourceIsValid(
-    source : CFRunLoopSourceRef) CUChar;
+    source : CFRunLoopSourceRef) : CUChar;
 
 external CFRunLoopSourceGetContext(
     source : CFRunLoopSourceRef,
@@ -2762,7 +2762,7 @@ alias CFRunLoopObserverContext = UnnamedStruct24;
 
 alias CFRunLoopObserverCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
 
-external CFRunLoopObserverGetTypeID() CULong;
+external CFRunLoopObserverGetTypeID() : CULong;
 
 external CFRunLoopObserverCreate(
     allocator : CFAllocatorRef,
@@ -2770,22 +2770,22 @@ external CFRunLoopObserverCreate(
     repeats : CUChar,
     order : CLong,
     callout : CFRunLoopObserverCallBack,
-    context : Pointer[CFRunLoopObserverContext]) CFRunLoopObserverRef;
+    context : Pointer[CFRunLoopObserverContext]) : CFRunLoopObserverRef;
 
 external CFRunLoopObserverGetActivities(
-    observer : CFRunLoopObserverRef) CULong;
+    observer : CFRunLoopObserverRef) : CULong;
 
 external CFRunLoopObserverDoesRepeat(
-    observer : CFRunLoopObserverRef) CUChar;
+    observer : CFRunLoopObserverRef) : CUChar;
 
 external CFRunLoopObserverGetOrder(
-    observer : CFRunLoopObserverRef) CLong;
+    observer : CFRunLoopObserverRef) : CLong;
 
 external CFRunLoopObserverInvalidate(
     observer : CFRunLoopObserverRef);
 
 external CFRunLoopObserverIsValid(
-    observer : CFRunLoopObserverRef) CUChar;
+    observer : CFRunLoopObserverRef) : CUChar;
 
 external CFRunLoopObserverGetContext(
     observer : CFRunLoopObserverRef,
@@ -2803,7 +2803,7 @@ alias CFRunLoopTimerContext = UnnamedStruct25;
 
 alias CFRunLoopTimerCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
 
-external CFRunLoopTimerGetTypeID() CULong;
+external CFRunLoopTimerGetTypeID() : CULong;
 
 external CFRunLoopTimerCreate(
     allocator : CFAllocatorRef,
@@ -2812,29 +2812,29 @@ external CFRunLoopTimerCreate(
     flags : CULong,
     order : CLong,
     callout : CFRunLoopTimerCallBack,
-    context : Pointer[CFRunLoopTimerContext]) CFRunLoopTimerRef;
+    context : Pointer[CFRunLoopTimerContext]) : CFRunLoopTimerRef;
 
 external CFRunLoopTimerGetNextFireDate(
-    timer : CFRunLoopTimerRef) Double;
+    timer : CFRunLoopTimerRef) : Double;
 
 external CFRunLoopTimerSetNextFireDate(
     timer : CFRunLoopTimerRef,
     fireDate : Double);
 
 external CFRunLoopTimerGetInterval(
-    timer : CFRunLoopTimerRef) Double;
+    timer : CFRunLoopTimerRef) : Double;
 
 external CFRunLoopTimerDoesRepeat(
-    timer : CFRunLoopTimerRef) CUChar;
+    timer : CFRunLoopTimerRef) : CUChar;
 
 external CFRunLoopTimerGetOrder(
-    timer : CFRunLoopTimerRef) CLong;
+    timer : CFRunLoopTimerRef) : CLong;
 
 external CFRunLoopTimerInvalidate(
     timer : CFRunLoopTimerRef);
 
 external CFRunLoopTimerIsValid(
-    timer : CFRunLoopTimerRef) CUChar;
+    timer : CFRunLoopTimerRef) : CUChar;
 
 external CFRunLoopTimerGetContext(
     timer : CFRunLoopTimerRef,
@@ -2863,28 +2863,28 @@ alias CFMessagePortCallBack = CCodePointer[(OpaquePointer,CLong,OpaquePointer,Ra
 
 alias CFMessagePortInvalidationCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
 
-external CFMessagePortGetTypeID() CULong;
+external CFMessagePortGetTypeID() : CULong;
 
 external CFMessagePortCreateLocal(
     allocator : CFAllocatorRef,
     name : CFStringRef,
     callout : CFMessagePortCallBack,
     context : Pointer[CFMessagePortContext],
-    shouldFreeInfo : Pointer[CUChar]) CFMessagePortRef;
+    shouldFreeInfo : Pointer[CUChar]) : CFMessagePortRef;
 
 external CFMessagePortCreateRemote(
     allocator : CFAllocatorRef,
-    name : CFStringRef) CFMessagePortRef;
+    name : CFStringRef) : CFMessagePortRef;
 
 external CFMessagePortIsRemote(
-    ms : CFMessagePortRef) CUChar;
+    ms : CFMessagePortRef) : CUChar;
 
 external CFMessagePortGetName(
-    ms : CFMessagePortRef) CFStringRef;
+    ms : CFMessagePortRef) : CFStringRef;
 
 external CFMessagePortSetName(
     ms : CFMessagePortRef,
-    newName : CFStringRef) CUChar;
+    newName : CFStringRef) : CUChar;
 
 external CFMessagePortGetContext(
     ms : CFMessagePortRef,
@@ -2894,10 +2894,10 @@ external CFMessagePortInvalidate(
     ms : CFMessagePortRef);
 
 external CFMessagePortIsValid(
-    ms : CFMessagePortRef) CUChar;
+    ms : CFMessagePortRef) : CUChar;
 
 external CFMessagePortGetInvalidationCallBack(
-    ms : CFMessagePortRef) CFMessagePortInvalidationCallBack;
+    ms : CFMessagePortRef) : CFMessagePortInvalidationCallBack;
 
 external CFMessagePortSetInvalidationCallBack(
     ms : CFMessagePortRef,
@@ -2910,12 +2910,12 @@ external CFMessagePortSendRequest(
     sendTimeout : Double,
     rcvTimeout : Double,
     replyMode : CFStringRef,
-    returnData : Pointer[CFDataRef]) CLong;
+    returnData : Pointer[CFDataRef]) : CLong;
 
 external CFMessagePortCreateRunLoopSource(
     allocator : CFAllocatorRef,
     local : CFMessagePortRef,
-    order : CLong) CFRunLoopSourceRef;
+    order : CLong) : CFRunLoopSourceRef;
 
 external CFMessagePortSetDispatchQueue(
     ms : CFMessagePortRef,
@@ -2927,10 +2927,10 @@ external kCFBooleanTrue : CFBooleanRef;
 
 external kCFBooleanFalse : CFBooleanRef;
 
-external CFBooleanGetTypeID() CULong;
+external CFBooleanGetTypeID() : CULong;
 
 external CFBooleanGetValue(
-    boolean : CFBooleanRef) CUChar;
+    boolean : CFBooleanRef) : CUChar;
 
 alias kCFNumberSInt8Type = 1;
 alias kCFNumberSInt16Type = 2;
@@ -2960,35 +2960,35 @@ external kCFNumberNegativeInfinity : CFNumberRef;
 
 external kCFNumberNaN : CFNumberRef;
 
-external CFNumberGetTypeID() CULong;
+external CFNumberGetTypeID() : CULong;
 
 external CFNumberCreate(
     allocator : CFAllocatorRef,
     theType : CLong,
-    valuePtr : RawPointer) CFNumberRef;
+    valuePtr : RawPointer) : CFNumberRef;
 
 external CFNumberGetType(
-    number : CFNumberRef) CLong;
+    number : CFNumberRef) : CLong;
 
 external CFNumberGetByteSize(
-    number : CFNumberRef) CLong;
+    number : CFNumberRef) : CLong;
 
 external CFNumberIsFloatType(
-    number : CFNumberRef) CUChar;
+    number : CFNumberRef) : CUChar;
 
 external CFNumberGetValue(
     number : CFNumberRef,
     theType : CLong,
-    valuePtr : RawPointer) CUChar;
+    valuePtr : RawPointer) : CUChar;
 
 external CFNumberCompare(
     number : CFNumberRef,
     otherNumber : CFNumberRef,
-    context : RawPointer) CLong;
+    context : RawPointer) : CLong;
 
 alias CFNumberFormatterRef = OpaquePointer;
 
-external CFNumberFormatterGetTypeID() CULong;
+external CFNumberFormatterGetTypeID() : CULong;
 
 alias kCFNumberFormatterNoStyle = 0;
 alias kCFNumberFormatterDecimalStyle = 1;
@@ -3002,16 +3002,16 @@ alias CFNumberFormatterStyle = CLong;
 external CFNumberFormatterCreate(
     allocator : CFAllocatorRef,
     locale : CFLocaleRef,
-    style : CLong) CFNumberFormatterRef;
+    style : CLong) : CFNumberFormatterRef;
 
 external CFNumberFormatterGetLocale(
-    formatter : CFNumberFormatterRef) CFLocaleRef;
+    formatter : CFNumberFormatterRef) : CFLocaleRef;
 
 external CFNumberFormatterGetStyle(
-    formatter : CFNumberFormatterRef) CLong;
+    formatter : CFNumberFormatterRef) : CLong;
 
 external CFNumberFormatterGetFormat(
-    formatter : CFNumberFormatterRef) CFStringRef;
+    formatter : CFNumberFormatterRef) : CFStringRef;
 
 external CFNumberFormatterSetFormat(
     formatter : CFNumberFormatterRef,
@@ -3020,13 +3020,13 @@ external CFNumberFormatterSetFormat(
 external CFNumberFormatterCreateStringWithNumber(
     allocator : CFAllocatorRef,
     formatter : CFNumberFormatterRef,
-    number : CFNumberRef) CFStringRef;
+    number : CFNumberRef) : CFStringRef;
 
 external CFNumberFormatterCreateStringWithValue(
     allocator : CFAllocatorRef,
     formatter : CFNumberFormatterRef,
     numberType : CLong,
-    valuePtr : RawPointer) CFStringRef;
+    valuePtr : RawPointer) : CFStringRef;
 
 alias kCFNumberFormatterParseIntegersOnly = 1;
 
@@ -3037,14 +3037,14 @@ external CFNumberFormatterCreateNumberFromString(
     formatter : CFNumberFormatterRef,
     string : CFStringRef,
     rangep : Pointer[CFRange],
-    options : CULong) CFNumberRef;
+    options : CULong) : CFNumberRef;
 
 external CFNumberFormatterGetValueFromString(
     formatter : CFNumberFormatterRef,
     string : CFStringRef,
     rangep : Pointer[CFRange],
     numberType : CLong,
-    valuePtr : RawPointer) CUChar;
+    valuePtr : RawPointer) : CUChar;
 
 external CFNumberFormatterSetProperty(
     formatter : CFNumberFormatterRef,
@@ -3053,7 +3053,7 @@ external CFNumberFormatterSetProperty(
 
 external CFNumberFormatterCopyProperty(
     formatter : CFNumberFormatterRef,
-    key : CFStringRef) CFTypeRef;
+    key : CFStringRef) : CFTypeRef;
 
 external kCFNumberFormatterCurrencyCode : CFStringRef;
 
@@ -3151,7 +3151,7 @@ alias CFNumberFormatterPadPosition = CLong;
 external CFNumberFormatterGetDecimalInfoForCurrencyCode(
     currencyCode : CFStringRef,
     defaultFractionDigits : Pointer[Int],
-    roundingIncrement : Pointer[Double]) CUChar;
+    roundingIncrement : Pointer[Double]) : CUChar;
 
 alias CFUUIDRef = OpaquePointer;
 
@@ -3176,10 +3176,10 @@ record UnnamedStruct49 (
 
 alias CFUUIDBytes = UnnamedStruct49;
 
-external CFUUIDGetTypeID() CULong;
+external CFUUIDGetTypeID() : CULong;
 
 external CFUUIDCreate(
-    alloc : CFAllocatorRef) CFUUIDRef;
+    alloc : CFAllocatorRef) : CFUUIDRef;
 
 external CFUUIDCreateWithBytes(
     alloc : CFAllocatorRef,
@@ -3198,15 +3198,15 @@ external CFUUIDCreateWithBytes(
     byte12 : CUChar,
     byte13 : CUChar,
     byte14 : CUChar,
-    byte15 : CUChar) CFUUIDRef;
+    byte15 : CUChar) : CFUUIDRef;
 
 external CFUUIDCreateFromString(
     alloc : CFAllocatorRef,
-    uuidStr : CFStringRef) CFUUIDRef;
+    uuidStr : CFStringRef) : CFUUIDRef;
 
 external CFUUIDCreateString(
     alloc : CFAllocatorRef,
-    uuid : CFUUIDRef) CFStringRef;
+    uuid : CFUUIDRef) : CFStringRef;
 
 external CFUUIDGetConstantUUIDWithBytes(
     alloc : CFAllocatorRef,
@@ -3225,14 +3225,14 @@ external CFUUIDGetConstantUUIDWithBytes(
     byte12 : CUChar,
     byte13 : CUChar,
     byte14 : CUChar,
-    byte15 : CUChar) CFUUIDRef;
+    byte15 : CUChar) : CFUUIDRef;
 
 external CFUUIDGetUUIDBytes(
-    uuid : CFUUIDRef) CFUUIDBytes;
+    uuid : CFUUIDRef) : CFUUIDBytes;
 
 external CFUUIDCreateFromUUIDBytes(
     alloc : CFAllocatorRef,
-    bytes : CFUUIDBytes) CFUUIDRef;
+    bytes : CFUUIDBytes) : CFUUIDRef;
 
 external kCFPlugInDynamicRegistrationKey : CFStringRef;
 
@@ -3250,53 +3250,53 @@ alias CFPlugInUnloadFunction = CCodePointer[(OpaquePointer),()];
 
 alias CFPlugInFactoryFunction = CCodePointer[(OpaquePointer,OpaquePointer),(RawPointer)];
 
-external CFPlugInGetTypeID() CULong;
+external CFPlugInGetTypeID() : CULong;
 
 external CFPlugInCreate(
     allocator : CFAllocatorRef,
-    plugInURL : CFURLRef) CFPlugInRef;
+    plugInURL : CFURLRef) : CFPlugInRef;
 
 external CFPlugInGetBundle(
-    plugIn : CFPlugInRef) CFBundleRef;
+    plugIn : CFPlugInRef) : CFBundleRef;
 
 external CFPlugInSetLoadOnDemand(
     plugIn : CFPlugInRef,
     flag : CUChar);
 
 external CFPlugInIsLoadOnDemand(
-    plugIn : CFPlugInRef) CUChar;
+    plugIn : CFPlugInRef) : CUChar;
 
 external CFPlugInFindFactoriesForPlugInType(
-    typeUUID : CFUUIDRef) CFArrayRef;
+    typeUUID : CFUUIDRef) : CFArrayRef;
 
 external CFPlugInFindFactoriesForPlugInTypeInPlugIn(
     typeUUID : CFUUIDRef,
-    plugIn : CFPlugInRef) CFArrayRef;
+    plugIn : CFPlugInRef) : CFArrayRef;
 
 external CFPlugInInstanceCreate(
     allocator : CFAllocatorRef,
     factoryUUID : CFUUIDRef,
-    typeUUID : CFUUIDRef) RawPointer;
+    typeUUID : CFUUIDRef) : RawPointer;
 
 external CFPlugInRegisterFactoryFunction(
     factoryUUID : CFUUIDRef,
-    func : CFPlugInFactoryFunction) CUChar;
+    func : CFPlugInFactoryFunction) : CUChar;
 
 external CFPlugInRegisterFactoryFunctionByName(
     factoryUUID : CFUUIDRef,
     plugIn : CFPlugInRef,
-    functionName : CFStringRef) CUChar;
+    functionName : CFStringRef) : CUChar;
 
 external CFPlugInUnregisterFactory(
-    factoryUUID : CFUUIDRef) CUChar;
+    factoryUUID : CFUUIDRef) : CUChar;
 
 external CFPlugInRegisterPlugInType(
     factoryUUID : CFUUIDRef,
-    typeUUID : CFUUIDRef) CUChar;
+    typeUUID : CFUUIDRef) : CUChar;
 
 external CFPlugInUnregisterPlugInType(
     factoryUUID : CFUUIDRef,
-    typeUUID : CFUUIDRef) CUChar;
+    typeUUID : CFUUIDRef) : CUChar;
 
 external CFPlugInAddInstanceForFactory(
     factoryID : CFUUIDRef);
@@ -3313,22 +3313,22 @@ alias CFPlugInInstanceDeallocateInstanceDataFunction = CCodePointer[(RawPointer)
 external CFPlugInInstanceGetInterfaceFunctionTable(
     instance_ : CFPlugInInstanceRef,
     interfaceName : CFStringRef,
-    ftbl : Pointer[RawPointer]) CUChar;
+    ftbl : Pointer[RawPointer]) : CUChar;
 
 external CFPlugInInstanceGetFactoryName(
-    instance_ : CFPlugInInstanceRef) CFStringRef;
+    instance_ : CFPlugInInstanceRef) : CFStringRef;
 
 external CFPlugInInstanceGetInstanceData(
-    instance_ : CFPlugInInstanceRef) RawPointer;
+    instance_ : CFPlugInInstanceRef) : RawPointer;
 
-external CFPlugInInstanceGetTypeID() CULong;
+external CFPlugInInstanceGetTypeID() : CULong;
 
 external CFPlugInInstanceCreateWithInstanceDataSize(
     allocator : CFAllocatorRef,
     instanceDataSize : CLong,
     deallocateInstanceFunction : CFPlugInInstanceDeallocateInstanceDataFunction,
     factoryName : CFStringRef,
-    getInterfaceFunction : CFPlugInInstanceGetInterfaceFunction) CFPlugInInstanceRef;
+    getInterfaceFunction : CFPlugInInstanceGetInterfaceFunction) : CFPlugInInstanceRef;
 
 external kCFPreferencesAnyApplication : CFStringRef;
 
@@ -3344,17 +3344,17 @@ external kCFPreferencesCurrentUser : CFStringRef;
 
 external CFPreferencesCopyAppValue(
     key : CFStringRef,
-    applicationID : CFStringRef) CFPropertyListRef;
+    applicationID : CFStringRef) : CFPropertyListRef;
 
 external CFPreferencesGetAppBooleanValue(
     key : CFStringRef,
     applicationID : CFStringRef,
-    keyExistsAndHasValidFormat : Pointer[CUChar]) CUChar;
+    keyExistsAndHasValidFormat : Pointer[CUChar]) : CUChar;
 
 external CFPreferencesGetAppIntegerValue(
     key : CFStringRef,
     applicationID : CFStringRef,
-    keyExistsAndHasValidFormat : Pointer[CUChar]) CLong;
+    keyExistsAndHasValidFormat : Pointer[CUChar]) : CLong;
 
 external CFPreferencesSetAppValue(
     key : CFStringRef,
@@ -3370,19 +3370,19 @@ external CFPreferencesRemoveSuitePreferencesFromApp(
     suiteID : CFStringRef);
 
 external CFPreferencesAppSynchronize(
-    applicationID : CFStringRef) CUChar;
+    applicationID : CFStringRef) : CUChar;
 
 external CFPreferencesCopyValue(
     key : CFStringRef,
     applicationID : CFStringRef,
     userName : CFStringRef,
-    hostName : CFStringRef) CFPropertyListRef;
+    hostName : CFStringRef) : CFPropertyListRef;
 
 external CFPreferencesCopyMultiple(
     keysToFetch : CFArrayRef,
     applicationID : CFStringRef,
     userName : CFStringRef,
-    hostName : CFStringRef) CFDictionaryRef;
+    hostName : CFStringRef) : CFDictionaryRef;
 
 external CFPreferencesSetValue(
     key : CFStringRef,
@@ -3401,20 +3401,20 @@ external CFPreferencesSetMultiple(
 external CFPreferencesSynchronize(
     applicationID : CFStringRef,
     userName : CFStringRef,
-    hostName : CFStringRef) CUChar;
+    hostName : CFStringRef) : CUChar;
 
 external CFPreferencesCopyApplicationList(
     userName : CFStringRef,
-    hostName : CFStringRef) CFArrayRef;
+    hostName : CFStringRef) : CFArrayRef;
 
 external CFPreferencesCopyKeyList(
     applicationID : CFStringRef,
     userName : CFStringRef,
-    hostName : CFStringRef) CFArrayRef;
+    hostName : CFStringRef) : CFArrayRef;
 
 external CFPreferencesAppValueIsForced(
     key : CFStringRef,
-    applicationID : CFStringRef) CUChar;
+    applicationID : CFStringRef) : CUChar;
 
 alias CFSocketNativeHandle = Int;
 
@@ -3463,7 +3463,7 @@ record UnnamedStruct51 (
 
 alias CFSocketContext = UnnamedStruct51;
 
-external CFSocketGetTypeID() CULong;
+external CFSocketGetTypeID() : CULong;
 
 external CFSocketCreate(
     allocator : CFAllocatorRef,
@@ -3472,21 +3472,21 @@ external CFSocketCreate(
     protocol : CLong,
     callBackTypes : CULong,
     callout : CFSocketCallBack,
-    context : Pointer[CFSocketContext]) CFSocketRef;
+    context : Pointer[CFSocketContext]) : CFSocketRef;
 
 external CFSocketCreateWithNative(
     allocator : CFAllocatorRef,
     sock : Int,
     callBackTypes : CULong,
     callout : CFSocketCallBack,
-    context : Pointer[CFSocketContext]) CFSocketRef;
+    context : Pointer[CFSocketContext]) : CFSocketRef;
 
 external CFSocketCreateWithSocketSignature(
     allocator : CFAllocatorRef,
     signature : Pointer[CFSocketSignature],
     callBackTypes : CULong,
     callout : CFSocketCallBack,
-    context : Pointer[CFSocketContext]) CFSocketRef;
+    context : Pointer[CFSocketContext]) : CFSocketRef;
 
 external CFSocketCreateConnectedToSocketSignature(
     allocator : CFAllocatorRef,
@@ -3494,43 +3494,43 @@ external CFSocketCreateConnectedToSocketSignature(
     callBackTypes : CULong,
     callout : CFSocketCallBack,
     context : Pointer[CFSocketContext],
-    timeout : Double) CFSocketRef;
+    timeout : Double) : CFSocketRef;
 
 external CFSocketSetAddress(
     s : CFSocketRef,
-    address : CFDataRef) CLong;
+    address : CFDataRef) : CLong;
 
 external CFSocketConnectToAddress(
     s : CFSocketRef,
     address : CFDataRef,
-    timeout : Double) CLong;
+    timeout : Double) : CLong;
 
 external CFSocketInvalidate(
     s : CFSocketRef);
 
 external CFSocketIsValid(
-    s : CFSocketRef) CUChar;
+    s : CFSocketRef) : CUChar;
 
 external CFSocketCopyAddress(
-    s : CFSocketRef) CFDataRef;
+    s : CFSocketRef) : CFDataRef;
 
 external CFSocketCopyPeerAddress(
-    s : CFSocketRef) CFDataRef;
+    s : CFSocketRef) : CFDataRef;
 
 external CFSocketGetContext(
     s : CFSocketRef,
     context : Pointer[CFSocketContext]);
 
 external CFSocketGetNative(
-    s : CFSocketRef) Int;
+    s : CFSocketRef) : Int;
 
 external CFSocketCreateRunLoopSource(
     allocator : CFAllocatorRef,
     s : CFSocketRef,
-    order : CLong) CFRunLoopSourceRef;
+    order : CLong) : CFRunLoopSourceRef;
 
 external CFSocketGetSocketFlags(
-    s : CFSocketRef) CULong;
+    s : CFSocketRef) : CULong;
 
 external CFSocketSetSocketFlags(
     s : CFSocketRef,
@@ -3548,43 +3548,43 @@ external CFSocketSendData(
     s : CFSocketRef,
     address : CFDataRef,
     data : CFDataRef,
-    timeout : Double) CLong;
+    timeout : Double) : CLong;
 
 external CFSocketRegisterValue(
     nameServerSignature : Pointer[CFSocketSignature],
     timeout : Double,
     name : CFStringRef,
-    value : CFPropertyListRef) CLong;
+    value : CFPropertyListRef) : CLong;
 
 external CFSocketCopyRegisteredValue(
     nameServerSignature : Pointer[CFSocketSignature],
     timeout : Double,
     name : CFStringRef,
     value : Pointer[CFPropertyListRef],
-    nameServerAddress : Pointer[CFDataRef]) CLong;
+    nameServerAddress : Pointer[CFDataRef]) : CLong;
 
 external CFSocketRegisterSocketSignature(
     nameServerSignature : Pointer[CFSocketSignature],
     timeout : Double,
     name : CFStringRef,
-    signature : Pointer[CFSocketSignature]) CLong;
+    signature : Pointer[CFSocketSignature]) : CLong;
 
 external CFSocketCopyRegisteredSocketSignature(
     nameServerSignature : Pointer[CFSocketSignature],
     timeout : Double,
     name : CFStringRef,
     signature : Pointer[CFSocketSignature],
-    nameServerAddress : Pointer[CFDataRef]) CLong;
+    nameServerAddress : Pointer[CFDataRef]) : CLong;
 
 external CFSocketUnregister(
     nameServerSignature : Pointer[CFSocketSignature],
     timeout : Double,
-    name : CFStringRef) CLong;
+    name : CFStringRef) : CLong;
 
 external CFSocketSetDefaultNameRegistryPortNumber(
     port : UShort);
 
-external CFSocketGetDefaultNameRegistryPortNumber() UShort;
+external CFSocketGetDefaultNameRegistryPortNumber() : UShort;
 
 external kCFSocketCommandKey : CFStringRef;
 
@@ -3638,9 +3638,9 @@ alias CFReadStreamClientCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer
 
 alias CFWriteStreamClientCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
 
-external CFReadStreamGetTypeID() CULong;
+external CFReadStreamGetTypeID() : CULong;
 
-external CFWriteStreamGetTypeID() CULong;
+external CFWriteStreamGetTypeID() : CULong;
 
 external kCFStreamPropertyDataWritten : CFStringRef;
 
@@ -3648,24 +3648,24 @@ external CFReadStreamCreateWithBytesNoCopy(
     alloc : CFAllocatorRef,
     bytes : Pointer[CUChar],
     length : CLong,
-    bytesDeallocator : CFAllocatorRef) CFReadStreamRef;
+    bytesDeallocator : CFAllocatorRef) : CFReadStreamRef;
 
 external CFWriteStreamCreateWithBuffer(
     alloc : CFAllocatorRef,
     buffer : Pointer[CUChar],
-    bufferCapacity : CLong) CFWriteStreamRef;
+    bufferCapacity : CLong) : CFWriteStreamRef;
 
 external CFWriteStreamCreateWithAllocatedBuffers(
     alloc : CFAllocatorRef,
-    bufferAllocator : CFAllocatorRef) CFWriteStreamRef;
+    bufferAllocator : CFAllocatorRef) : CFWriteStreamRef;
 
 external CFReadStreamCreateWithFile(
     alloc : CFAllocatorRef,
-    fileURL : CFURLRef) CFReadStreamRef;
+    fileURL : CFURLRef) : CFReadStreamRef;
 
 external CFWriteStreamCreateWithFile(
     alloc : CFAllocatorRef,
-    fileURL : CFURLRef) CFWriteStreamRef;
+    fileURL : CFURLRef) : CFWriteStreamRef;
 
 external CFStreamCreateBoundPair(
     alloc : CFAllocatorRef,
@@ -3703,22 +3703,22 @@ external CFStreamCreatePairWithPeerSocketSignature(
     writeStream : Pointer[CFWriteStreamRef]);
 
 external CFReadStreamGetStatus(
-    stream : CFReadStreamRef) CLong;
+    stream : CFReadStreamRef) : CLong;
 
 external CFWriteStreamGetStatus(
-    stream : CFWriteStreamRef) CLong;
+    stream : CFWriteStreamRef) : CLong;
 
 external CFReadStreamCopyError(
-    stream : CFReadStreamRef) CFErrorRef;
+    stream : CFReadStreamRef) : CFErrorRef;
 
 external CFWriteStreamCopyError(
-    stream : CFWriteStreamRef) CFErrorRef;
+    stream : CFWriteStreamRef) : CFErrorRef;
 
 external CFReadStreamOpen(
-    stream : CFReadStreamRef) CUChar;
+    stream : CFReadStreamRef) : CUChar;
 
 external CFWriteStreamOpen(
-    stream : CFWriteStreamRef) CUChar;
+    stream : CFWriteStreamRef) : CUChar;
 
 external CFReadStreamClose(
     stream : CFReadStreamRef);
@@ -3727,55 +3727,55 @@ external CFWriteStreamClose(
     stream : CFWriteStreamRef);
 
 external CFReadStreamHasBytesAvailable(
-    stream : CFReadStreamRef) CUChar;
+    stream : CFReadStreamRef) : CUChar;
 
 external CFReadStreamRead(
     stream : CFReadStreamRef,
     buffer : Pointer[CUChar],
-    bufferLength : CLong) CLong;
+    bufferLength : CLong) : CLong;
 
 external CFReadStreamGetBuffer(
     stream : CFReadStreamRef,
     maxBytesToRead : CLong,
-    numBytesRead : Pointer[CLong]) Pointer[CUChar];
+    numBytesRead : Pointer[CLong]) : Pointer[CUChar];
 
 external CFWriteStreamCanAcceptBytes(
-    stream : CFWriteStreamRef) CUChar;
+    stream : CFWriteStreamRef) : CUChar;
 
 external CFWriteStreamWrite(
     stream : CFWriteStreamRef,
     buffer : Pointer[CUChar],
-    bufferLength : CLong) CLong;
+    bufferLength : CLong) : CLong;
 
 external CFReadStreamCopyProperty(
     stream : CFReadStreamRef,
-    propertyName : CFStringRef) CFTypeRef;
+    propertyName : CFStringRef) : CFTypeRef;
 
 external CFWriteStreamCopyProperty(
     stream : CFWriteStreamRef,
-    propertyName : CFStringRef) CFTypeRef;
+    propertyName : CFStringRef) : CFTypeRef;
 
 external CFReadStreamSetProperty(
     stream : CFReadStreamRef,
     propertyName : CFStringRef,
-    propertyValue : CFTypeRef) CUChar;
+    propertyValue : CFTypeRef) : CUChar;
 
 external CFWriteStreamSetProperty(
     stream : CFWriteStreamRef,
     propertyName : CFStringRef,
-    propertyValue : CFTypeRef) CUChar;
+    propertyValue : CFTypeRef) : CUChar;
 
 external CFReadStreamSetClient(
     stream : CFReadStreamRef,
     streamEvents : CULong,
     clientCB : CFReadStreamClientCallBack,
-    clientContext : Pointer[CFStreamClientContext]) CUChar;
+    clientContext : Pointer[CFStreamClientContext]) : CUChar;
 
 external CFWriteStreamSetClient(
     stream : CFWriteStreamRef,
     streamEvents : CULong,
     clientCB : CFWriteStreamClientCallBack,
-    clientContext : Pointer[CFStreamClientContext]) CUChar;
+    clientContext : Pointer[CFStreamClientContext]) : CUChar;
 
 external CFReadStreamScheduleWithRunLoop(
     stream : CFReadStreamRef,
@@ -3811,10 +3811,10 @@ record UnnamedStruct53 (
 alias CFStreamError = UnnamedStruct53;
 
 external CFReadStreamGetError(
-    stream : CFReadStreamRef) CFStreamError;
+    stream : CFReadStreamRef) : CFStreamError;
 
 external CFWriteStreamGetError(
-    stream : CFWriteStreamRef) CFStreamError;
+    stream : CFWriteStreamRef) : CFStreamError;
 
 alias kCFPropertyListImmutable = 0;
 alias kCFPropertyListMutableContainers = 1;
@@ -3826,16 +3826,16 @@ external CFPropertyListCreateFromXMLData(
     allocator : CFAllocatorRef,
     xmlData : CFDataRef,
     mutabilityOption : CULong,
-    errorString : Pointer[CFStringRef]) CFPropertyListRef;
+    errorString : Pointer[CFStringRef]) : CFPropertyListRef;
 
 external CFPropertyListCreateXMLData(
     allocator : CFAllocatorRef,
-    propertyList : CFPropertyListRef) CFDataRef;
+    propertyList : CFPropertyListRef) : CFDataRef;
 
 external CFPropertyListCreateDeepCopy(
     allocator : CFAllocatorRef,
     propertyList : CFPropertyListRef,
-    mutabilityOption : CULong) CFPropertyListRef;
+    mutabilityOption : CULong) : CFPropertyListRef;
 
 alias kCFPropertyListOpenStepFormat = 1;
 alias kCFPropertyListXMLFormat_v1_0 = 100;
@@ -3845,13 +3845,13 @@ alias CFPropertyListFormat = CLong;
 
 external CFPropertyListIsValid(
     plist : CFPropertyListRef,
-    format : CLong) CUChar;
+    format : CLong) : CUChar;
 
 external CFPropertyListWriteToStream(
     propertyList : CFPropertyListRef,
     stream : CFWriteStreamRef,
     format : CLong,
-    errorString : Pointer[CFStringRef]) CLong;
+    errorString : Pointer[CFStringRef]) : CLong;
 
 external CFPropertyListCreateFromStream(
     allocator : CFAllocatorRef,
@@ -3859,7 +3859,7 @@ external CFPropertyListCreateFromStream(
     streamLength : CLong,
     mutabilityOption : CULong,
     format : Pointer[CLong],
-    errorString : Pointer[CFStringRef]) CFPropertyListRef;
+    errorString : Pointer[CFStringRef]) : CFPropertyListRef;
 
 alias kCFPropertyListReadCorruptError = 3840;
 alias kCFPropertyListReadUnknownVersionError = 3841;
@@ -3871,7 +3871,7 @@ external CFPropertyListCreateWithData(
     data : CFDataRef,
     options : CULong,
     format : Pointer[CLong],
-    error : Pointer[CFErrorRef]) CFPropertyListRef;
+    error : Pointer[CFErrorRef]) : CFPropertyListRef;
 
 external CFPropertyListCreateWithStream(
     allocator : CFAllocatorRef,
@@ -3879,21 +3879,21 @@ external CFPropertyListCreateWithStream(
     streamLength : CLong,
     options : CULong,
     format : Pointer[CLong],
-    error : Pointer[CFErrorRef]) CFPropertyListRef;
+    error : Pointer[CFErrorRef]) : CFPropertyListRef;
 
 external CFPropertyListWrite(
     propertyList : CFPropertyListRef,
     stream : CFWriteStreamRef,
     format : CLong,
     options : CULong,
-    error : Pointer[CFErrorRef]) CLong;
+    error : Pointer[CFErrorRef]) : CLong;
 
 external CFPropertyListCreateData(
     allocator : CFAllocatorRef,
     propertyList : CFPropertyListRef,
     format : CLong,
     options : CULong,
-    error : Pointer[CFErrorRef]) CFDataRef;
+    error : Pointer[CFErrorRef]) : CFDataRef;
 
 alias CFSetRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
 
@@ -3926,47 +3926,47 @@ alias CFSetRef = OpaquePointer;
 
 alias CFMutableSetRef = OpaquePointer;
 
-external CFSetGetTypeID() CULong;
+external CFSetGetTypeID() : CULong;
 
 external CFSetCreate(
     allocator : CFAllocatorRef,
     values : Pointer[RawPointer],
     numValues : CLong,
-    callBacks : Pointer[CFSetCallBacks]) CFSetRef;
+    callBacks : Pointer[CFSetCallBacks]) : CFSetRef;
 
 external CFSetCreateCopy(
     allocator : CFAllocatorRef,
-    theSet : CFSetRef) CFSetRef;
+    theSet : CFSetRef) : CFSetRef;
 
 external CFSetCreateMutable(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    callBacks : Pointer[CFSetCallBacks]) CFMutableSetRef;
+    callBacks : Pointer[CFSetCallBacks]) : CFMutableSetRef;
 
 external CFSetCreateMutableCopy(
     allocator : CFAllocatorRef,
     capacity : CLong,
-    theSet : CFSetRef) CFMutableSetRef;
+    theSet : CFSetRef) : CFMutableSetRef;
 
 external CFSetGetCount(
-    theSet : CFSetRef) CLong;
+    theSet : CFSetRef) : CLong;
 
 external CFSetGetCountOfValue(
     theSet : CFSetRef,
-    value : RawPointer) CLong;
+    value : RawPointer) : CLong;
 
 external CFSetContainsValue(
     theSet : CFSetRef,
-    value : RawPointer) CUChar;
+    value : RawPointer) : CUChar;
 
 external CFSetGetValue(
     theSet : CFSetRef,
-    value : RawPointer) RawPointer;
+    value : RawPointer) : RawPointer;
 
 external CFSetGetValueIfPresent(
     theSet : CFSetRef,
     candidate : RawPointer,
-    value : Pointer[RawPointer]) CUChar;
+    value : Pointer[RawPointer]) : CUChar;
 
 external CFSetGetValues(
     theSet : CFSetRef,
@@ -4148,31 +4148,31 @@ alias CFTreeApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
 
 alias CFTreeRef = OpaquePointer;
 
-external CFTreeGetTypeID() CULong;
+external CFTreeGetTypeID() : CULong;
 
 external CFTreeCreate(
     allocator : CFAllocatorRef,
-    context : Pointer[CFTreeContext]) CFTreeRef;
+    context : Pointer[CFTreeContext]) : CFTreeRef;
 
 external CFTreeGetParent(
-    tree : CFTreeRef) CFTreeRef;
+    tree : CFTreeRef) : CFTreeRef;
 
 external CFTreeGetNextSibling(
-    tree : CFTreeRef) CFTreeRef;
+    tree : CFTreeRef) : CFTreeRef;
 
 external CFTreeGetFirstChild(
-    tree : CFTreeRef) CFTreeRef;
+    tree : CFTreeRef) : CFTreeRef;
 
 external CFTreeGetContext(
     tree : CFTreeRef,
     context : Pointer[CFTreeContext]);
 
 external CFTreeGetChildCount(
-    tree : CFTreeRef) CLong;
+    tree : CFTreeRef) : CLong;
 
 external CFTreeGetChildAtIndex(
     tree : CFTreeRef,
-    idx : CLong) CFTreeRef;
+    idx : CLong) : CFTreeRef;
 
 external CFTreeGetChildren(
     tree : CFTreeRef,
@@ -4184,7 +4184,7 @@ external CFTreeApplyFunctionToChildren(
     context : RawPointer);
 
 external CFTreeFindRoot(
-    tree : CFTreeRef) CFTreeRef;
+    tree : CFTreeRef) : CFTreeRef;
 
 external CFTreeSetContext(
     tree : CFTreeRef,
@@ -4219,23 +4219,23 @@ external CFURLCreateDataAndPropertiesFromResource(
     resourceData : Pointer[CFDataRef],
     properties : Pointer[CFDictionaryRef],
     desiredProperties : CFArrayRef,
-    errorCode : Pointer[CLong]) CUChar;
+    errorCode : Pointer[CLong]) : CUChar;
 
 external CFURLWriteDataAndPropertiesToResource(
     url : CFURLRef,
     dataToWrite : CFDataRef,
     propertiesToWrite : CFDictionaryRef,
-    errorCode : Pointer[CLong]) CUChar;
+    errorCode : Pointer[CLong]) : CUChar;
 
 external CFURLDestroyResource(
     url : CFURLRef,
-    errorCode : Pointer[CLong]) CUChar;
+    errorCode : Pointer[CLong]) : CUChar;
 
 external CFURLCreatePropertyFromResource(
     alloc : CFAllocatorRef,
     url : CFURLRef,
     property : CFStringRef,
-    errorCode : Pointer[CLong]) CFTypeRef;
+    errorCode : Pointer[CLong]) : CFTypeRef;
 
 alias kCFURLUnknownError = 4294967286;
 alias kCFURLUnknownSchemeError = 4294967285;
@@ -4269,60 +4269,60 @@ alias CFAttributedStringRef = OpaquePointer;
 
 alias CFMutableAttributedStringRef = OpaquePointer;
 
-external CFAttributedStringGetTypeID() CULong;
+external CFAttributedStringGetTypeID() : CULong;
 
 external CFAttributedStringCreate(
     alloc : CFAllocatorRef,
     str : CFStringRef,
-    attributes : CFDictionaryRef) CFAttributedStringRef;
+    attributes : CFDictionaryRef) : CFAttributedStringRef;
 
 external CFAttributedStringCreateWithSubstring(
     alloc : CFAllocatorRef,
     aStr : CFAttributedStringRef,
-    range : CFRange) CFAttributedStringRef;
+    range : CFRange) : CFAttributedStringRef;
 
 external CFAttributedStringCreateCopy(
     alloc : CFAllocatorRef,
-    aStr : CFAttributedStringRef) CFAttributedStringRef;
+    aStr : CFAttributedStringRef) : CFAttributedStringRef;
 
 external CFAttributedStringGetString(
-    aStr : CFAttributedStringRef) CFStringRef;
+    aStr : CFAttributedStringRef) : CFStringRef;
 
 external CFAttributedStringGetLength(
-    aStr : CFAttributedStringRef) CLong;
+    aStr : CFAttributedStringRef) : CLong;
 
 external CFAttributedStringGetAttributes(
     aStr : CFAttributedStringRef,
     loc : CLong,
-    effectiveRange : Pointer[CFRange]) CFDictionaryRef;
+    effectiveRange : Pointer[CFRange]) : CFDictionaryRef;
 
 external CFAttributedStringGetAttribute(
     aStr : CFAttributedStringRef,
     loc : CLong,
     attrName : CFStringRef,
-    effectiveRange : Pointer[CFRange]) CFTypeRef;
+    effectiveRange : Pointer[CFRange]) : CFTypeRef;
 
 external CFAttributedStringGetAttributesAndLongestEffectiveRange(
     aStr : CFAttributedStringRef,
     loc : CLong,
     inRange : CFRange,
-    longestEffectiveRange : Pointer[CFRange]) CFDictionaryRef;
+    longestEffectiveRange : Pointer[CFRange]) : CFDictionaryRef;
 
 external CFAttributedStringGetAttributeAndLongestEffectiveRange(
     aStr : CFAttributedStringRef,
     loc : CLong,
     attrName : CFStringRef,
     inRange : CFRange,
-    longestEffectiveRange : Pointer[CFRange]) CFTypeRef;
+    longestEffectiveRange : Pointer[CFRange]) : CFTypeRef;
 
 external CFAttributedStringCreateMutableCopy(
     alloc : CFAllocatorRef,
     maxLength : CLong,
-    aStr : CFAttributedStringRef) CFMutableAttributedStringRef;
+    aStr : CFAttributedStringRef) : CFMutableAttributedStringRef;
 
 external CFAttributedStringCreateMutable(
     alloc : CFAllocatorRef,
-    maxLength : CLong) CFMutableAttributedStringRef;
+    maxLength : CLong) : CFMutableAttributedStringRef;
 
 external CFAttributedStringReplaceString(
     aStr : CFMutableAttributedStringRef,
@@ -4330,7 +4330,7 @@ external CFAttributedStringReplaceString(
     replacement : CFStringRef);
 
 external CFAttributedStringGetMutableString(
-    aStr : CFMutableAttributedStringRef) CFMutableStringRef;
+    aStr : CFMutableAttributedStringRef) : CFMutableStringRef;
 
 external CFAttributedStringSetAttributes(
     aStr : CFMutableAttributedStringRef,
@@ -4371,13 +4371,13 @@ alias CFNotificationSuspensionBehaviorDeliverImmediately = 4;
 
 alias CFNotificationSuspensionBehavior = CLong;
 
-external CFNotificationCenterGetTypeID() CULong;
+external CFNotificationCenterGetTypeID() : CULong;
 
-external CFNotificationCenterGetLocalCenter() CFNotificationCenterRef;
+external CFNotificationCenterGetLocalCenter() : CFNotificationCenterRef;
 
-external CFNotificationCenterGetDistributedCenter() CFNotificationCenterRef;
+external CFNotificationCenterGetDistributedCenter() : CFNotificationCenterRef;
 
-external CFNotificationCenterGetDarwinNotifyCenter() CFNotificationCenterRef;
+external CFNotificationCenterGetDarwinNotifyCenter() : CFNotificationCenterRef;
 
 external CFNotificationCenterAddObserver(
     center : CFNotificationCenterRef,
@@ -4416,7 +4416,7 @@ external CFNotificationCenterPostNotificationWithOptions(
 
 alias CFURLEnumeratorRef = OpaquePointer;
 
-external CFURLEnumeratorGetTypeID() CULong;
+external CFURLEnumeratorGetTypeID() : CULong;
 
 alias kCFURLEnumeratorDescendRecursively = 1;
 alias kCFURLEnumeratorSkipInvisibles = 2;
@@ -4429,12 +4429,12 @@ external CFURLEnumeratorCreateForDirectoryURL(
     alloc : CFAllocatorRef,
     directoryURL : CFURLRef,
     option : CULong,
-    propertyKeys : CFArrayRef) CFURLEnumeratorRef;
+    propertyKeys : CFArrayRef) : CFURLEnumeratorRef;
 
 external CFURLEnumeratorCreateForMountedVolumes(
     alloc : CFAllocatorRef,
     option : CULong,
-    propertyKeys : CFArrayRef) CFURLEnumeratorRef;
+    propertyKeys : CFArrayRef) : CFURLEnumeratorRef;
 
 alias kCFURLEnumeratorSuccess = 1;
 alias kCFURLEnumeratorEnd = 2;
@@ -4445,16 +4445,16 @@ alias CFURLEnumeratorResult = CLong;
 external CFURLEnumeratorGetNextURL(
     enumerator : CFURLEnumeratorRef,
     url : Pointer[CFURLRef],
-    error : Pointer[CFErrorRef]) CLong;
+    error : Pointer[CFErrorRef]) : CLong;
 
 external CFURLEnumeratorSkipDescendents(
     enumerator : CFURLEnumeratorRef);
 
 external CFURLEnumeratorGetDescendentLevel(
-    enumerator : CFURLEnumeratorRef) CLong;
+    enumerator : CFURLEnumeratorRef) : CLong;
 
 external CFURLEnumeratorGetSourceDidChange(
-    enumerator : CFURLEnumeratorRef) CUChar;
+    enumerator : CFURLEnumeratorRef) : CUChar;
 
 alias CFFileDescriptorNativeDescriptor = Int;
 
@@ -4475,17 +4475,17 @@ record UnnamedStruct56 (
 
 alias CFFileDescriptorContext = UnnamedStruct56;
 
-external CFFileDescriptorGetTypeID() CULong;
+external CFFileDescriptorGetTypeID() : CULong;
 
 external CFFileDescriptorCreate(
     allocator : CFAllocatorRef,
     fd : Int,
     closeOnInvalidate : CUChar,
     callout : CFFileDescriptorCallBack,
-    context : Pointer[CFFileDescriptorContext]) CFFileDescriptorRef;
+    context : Pointer[CFFileDescriptorContext]) : CFFileDescriptorRef;
 
 external CFFileDescriptorGetNativeDescriptor(
-    f : CFFileDescriptorRef) Int;
+    f : CFFileDescriptorRef) : Int;
 
 external CFFileDescriptorGetContext(
     f : CFFileDescriptorRef,
@@ -4503,12 +4503,12 @@ external CFFileDescriptorInvalidate(
     f : CFFileDescriptorRef);
 
 external CFFileDescriptorIsValid(
-    f : CFFileDescriptorRef) CUChar;
+    f : CFFileDescriptorRef) : CUChar;
 
 external CFFileDescriptorCreateRunLoopSource(
     allocator : CFAllocatorRef,
     f : CFFileDescriptorRef,
-    order : CLong) CFRunLoopSourceRef;
+    order : CLong) : CFRunLoopSourceRef;
 
 alias CFMachPortRef = OpaquePointer;
 
@@ -4526,23 +4526,23 @@ alias CFMachPortCallBack = CCodePointer[(OpaquePointer,RawPointer,CLong,RawPoint
 
 alias CFMachPortInvalidationCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
 
-external CFMachPortGetTypeID() CULong;
+external CFMachPortGetTypeID() : CULong;
 
 external CFMachPortCreate(
     allocator : CFAllocatorRef,
     callout : CFMachPortCallBack,
     context : Pointer[CFMachPortContext],
-    shouldFreeInfo : Pointer[CUChar]) CFMachPortRef;
+    shouldFreeInfo : Pointer[CUChar]) : CFMachPortRef;
 
 external CFMachPortCreateWithPort(
     allocator : CFAllocatorRef,
     portNum : UInt,
     callout : CFMachPortCallBack,
     context : Pointer[CFMachPortContext],
-    shouldFreeInfo : Pointer[CUChar]) CFMachPortRef;
+    shouldFreeInfo : Pointer[CUChar]) : CFMachPortRef;
 
 external CFMachPortGetPort(
-    port : CFMachPortRef) UInt;
+    port : CFMachPortRef) : UInt;
 
 external CFMachPortGetContext(
     port : CFMachPortRef,
@@ -4552,10 +4552,10 @@ external CFMachPortInvalidate(
     port : CFMachPortRef);
 
 external CFMachPortIsValid(
-    port : CFMachPortRef) CUChar;
+    port : CFMachPortRef) : CUChar;
 
 external CFMachPortGetInvalidationCallBack(
-    port : CFMachPortRef) CFMachPortInvalidationCallBack;
+    port : CFMachPortRef) : CFMachPortInvalidationCallBack;
 
 external CFMachPortSetInvalidationCallBack(
     port : CFMachPortRef,
@@ -4564,48 +4564,48 @@ external CFMachPortSetInvalidationCallBack(
 external CFMachPortCreateRunLoopSource(
     allocator : CFAllocatorRef,
     port : CFMachPortRef,
-    order : CLong) CFRunLoopSourceRef;
+    order : CLong) : CFRunLoopSourceRef;
 
 alias CFUserNotificationRef = OpaquePointer;
 
 alias CFUserNotificationCallBack = CCodePointer[(OpaquePointer,CULong),()];
 
-external CFUserNotificationGetTypeID() CULong;
+external CFUserNotificationGetTypeID() : CULong;
 
 external CFUserNotificationCreate(
     allocator : CFAllocatorRef,
     timeout : Double,
     flags : CULong,
     error : Pointer[CLong],
-    dictionary : CFDictionaryRef) CFUserNotificationRef;
+    dictionary : CFDictionaryRef) : CFUserNotificationRef;
 
 external CFUserNotificationReceiveResponse(
     userNotification : CFUserNotificationRef,
     timeout : Double,
-    responseFlags : Pointer[CULong]) CLong;
+    responseFlags : Pointer[CULong]) : CLong;
 
 external CFUserNotificationGetResponseValue(
     userNotification : CFUserNotificationRef,
     key : CFStringRef,
-    idx : CLong) CFStringRef;
+    idx : CLong) : CFStringRef;
 
 external CFUserNotificationGetResponseDictionary(
-    userNotification : CFUserNotificationRef) CFDictionaryRef;
+    userNotification : CFUserNotificationRef) : CFDictionaryRef;
 
 external CFUserNotificationUpdate(
     userNotification : CFUserNotificationRef,
     timeout : Double,
     flags : CULong,
-    dictionary : CFDictionaryRef) CLong;
+    dictionary : CFDictionaryRef) : CLong;
 
 external CFUserNotificationCancel(
-    userNotification : CFUserNotificationRef) CLong;
+    userNotification : CFUserNotificationRef) : CLong;
 
 external CFUserNotificationCreateRunLoopSource(
     allocator : CFAllocatorRef,
     userNotification : CFUserNotificationRef,
     callout : CFUserNotificationCallBack,
-    order : CLong) CFRunLoopSourceRef;
+    order : CLong) : CFRunLoopSourceRef;
 
 external CFUserNotificationDisplayNotice(
     timeout : Double,
@@ -4615,7 +4615,7 @@ external CFUserNotificationDisplayNotice(
     localizationURL : CFURLRef,
     alertHeader : CFStringRef,
     alertMessage : CFStringRef,
-    defaultButtonTitle : CFStringRef) CLong;
+    defaultButtonTitle : CFStringRef) : CLong;
 
 external CFUserNotificationDisplayAlert(
     timeout : Double,
@@ -4628,7 +4628,7 @@ external CFUserNotificationDisplayAlert(
     defaultButtonTitle : CFStringRef,
     alternateButtonTitle : CFStringRef,
     otherButtonTitle : CFStringRef,
-    responseFlags : Pointer[CULong]) CLong;
+    responseFlags : Pointer[CULong]) : CLong;
 
 alias kCFUserNotificationStopAlertLevel = 0;
 alias kCFUserNotificationNoteAlertLevel = 1;
@@ -4780,37 +4780,37 @@ record UnnamedStruct68 (
 
 alias CFXMLEntityReferenceInfo = UnnamedStruct68;
 
-external CFXMLNodeGetTypeID() CULong;
+external CFXMLNodeGetTypeID() : CULong;
 
 external CFXMLNodeCreate(
     alloc : CFAllocatorRef,
     xmlType : CLong,
     dataString : CFStringRef,
     additionalInfoPtr : RawPointer,
-    version : CLong) CFXMLNodeRef;
+    version : CLong) : CFXMLNodeRef;
 
 external CFXMLNodeCreateCopy(
     alloc : CFAllocatorRef,
-    origNode : CFXMLNodeRef) CFXMLNodeRef;
+    origNode : CFXMLNodeRef) : CFXMLNodeRef;
 
 external CFXMLNodeGetTypeCode(
-    node : CFXMLNodeRef) CLong;
+    node : CFXMLNodeRef) : CLong;
 
 external CFXMLNodeGetString(
-    node : CFXMLNodeRef) CFStringRef;
+    node : CFXMLNodeRef) : CFStringRef;
 
 external CFXMLNodeGetInfoPtr(
-    node : CFXMLNodeRef) RawPointer;
+    node : CFXMLNodeRef) : RawPointer;
 
 external CFXMLNodeGetVersion(
-    node : CFXMLNodeRef) CLong;
+    node : CFXMLNodeRef) : CLong;
 
 external CFXMLTreeCreateWithNode(
     allocator : CFAllocatorRef,
-    node : CFXMLNodeRef) CFXMLTreeRef;
+    node : CFXMLNodeRef) : CFXMLTreeRef;
 
 external CFXMLTreeGetNode(
-    xmlTree : CFXMLTreeRef) CFXMLNodeRef;
+    xmlTree : CFXMLTreeRef) : CFXMLNodeRef;
 
 alias CFXMLParserRef = OpaquePointer;
 
@@ -4883,7 +4883,7 @@ record UnnamedStruct70 (
 
 alias CFXMLParserContext = UnnamedStruct70;
 
-external CFXMLParserGetTypeID() CULong;
+external CFXMLParserGetTypeID() : CULong;
 
 external CFXMLParserCreate(
     allocator : CFAllocatorRef,
@@ -4892,7 +4892,7 @@ external CFXMLParserCreate(
     parseOptions : CULong,
     versionOfNodes : CLong,
     callBacks : Pointer[CFXMLParserCallBacks],
-    context : Pointer[CFXMLParserContext]) CFXMLParserRef;
+    context : Pointer[CFXMLParserContext]) : CFXMLParserRef;
 
 external CFXMLParserCreateWithDataFromURL(
     allocator : CFAllocatorRef,
@@ -4900,7 +4900,7 @@ external CFXMLParserCreateWithDataFromURL(
     parseOptions : CULong,
     versionOfNodes : CLong,
     callBacks : Pointer[CFXMLParserCallBacks],
-    context : Pointer[CFXMLParserContext]) CFXMLParserRef;
+    context : Pointer[CFXMLParserContext]) : CFXMLParserRef;
 
 external CFXMLParserGetContext(
     parser : CFXMLParserRef,
@@ -4911,22 +4911,22 @@ external CFXMLParserGetCallBacks(
     callBacks : Pointer[CFXMLParserCallBacks]);
 
 external CFXMLParserGetSourceURL(
-    parser : CFXMLParserRef) CFURLRef;
+    parser : CFXMLParserRef) : CFURLRef;
 
 external CFXMLParserGetLocation(
-    parser : CFXMLParserRef) CLong;
+    parser : CFXMLParserRef) : CLong;
 
 external CFXMLParserGetLineNumber(
-    parser : CFXMLParserRef) CLong;
+    parser : CFXMLParserRef) : CLong;
 
 external CFXMLParserGetDocument(
-    parser : CFXMLParserRef) RawPointer;
+    parser : CFXMLParserRef) : RawPointer;
 
 external CFXMLParserGetStatusCode(
-    parser : CFXMLParserRef) CLong;
+    parser : CFXMLParserRef) : CLong;
 
 external CFXMLParserCopyErrorDescription(
-    parser : CFXMLParserRef) CFStringRef;
+    parser : CFXMLParserRef) : CFStringRef;
 
 external CFXMLParserAbort(
     parser : CFXMLParserRef,
@@ -4934,14 +4934,14 @@ external CFXMLParserAbort(
     errorDescription : CFStringRef);
 
 external CFXMLParserParse(
-    parser : CFXMLParserRef) CUChar;
+    parser : CFXMLParserRef) : CUChar;
 
 external CFXMLTreeCreateFromData(
     allocator : CFAllocatorRef,
     xmlData : CFDataRef,
     dataSource : CFURLRef,
     parseOptions : CULong,
-    versionOfNodes : CLong) CFXMLTreeRef;
+    versionOfNodes : CLong) : CFXMLTreeRef;
 
 external CFXMLTreeCreateFromDataWithError(
     allocator : CFAllocatorRef,
@@ -4949,27 +4949,27 @@ external CFXMLTreeCreateFromDataWithError(
     dataSource : CFURLRef,
     parseOptions : CULong,
     versionOfNodes : CLong,
-    errorDict : Pointer[CFDictionaryRef]) CFXMLTreeRef;
+    errorDict : Pointer[CFDictionaryRef]) : CFXMLTreeRef;
 
 external CFXMLTreeCreateWithDataFromURL(
     allocator : CFAllocatorRef,
     dataSource : CFURLRef,
     parseOptions : CULong,
-    versionOfNodes : CLong) CFXMLTreeRef;
+    versionOfNodes : CLong) : CFXMLTreeRef;
 
 external CFXMLTreeCreateXMLData(
     allocator : CFAllocatorRef,
-    xmlTree : CFXMLTreeRef) CFDataRef;
+    xmlTree : CFXMLTreeRef) : CFDataRef;
 
 external CFXMLCreateStringByEscapingEntities(
     allocator : CFAllocatorRef,
     string : CFStringRef,
-    entitiesDictionary : CFDictionaryRef) CFStringRef;
+    entitiesDictionary : CFDictionaryRef) : CFStringRef;
 
 external CFXMLCreateStringByUnescapingEntities(
     allocator : CFAllocatorRef,
     string : CFStringRef,
-    entitiesDictionary : CFDictionaryRef) CFStringRef;
+    entitiesDictionary : CFDictionaryRef) : CFStringRef;
 
 external kCFXMLTreeErrorDescription : CFStringRef;
 
@@ -4981,7 +4981,7 @@ external kCFXMLTreeErrorStatusCode : CFStringRef;
 
 external CFStringTokenizerCopyBestStringLanguage(
     string : CFStringRef,
-    range : CFRange) CFStringRef;
+    range : CFRange) : CFStringRef;
 
 alias CFStringTokenizerRef = OpaquePointer;
 
@@ -5003,14 +5003,14 @@ alias kCFStringTokenizerTokenIsCJWordMask = 32;
 
 alias CFStringTokenizerTokenType = CULong;
 
-external CFStringTokenizerGetTypeID() CULong;
+external CFStringTokenizerGetTypeID() : CULong;
 
 external CFStringTokenizerCreate(
     alloc : CFAllocatorRef,
     string : CFStringRef,
     range : CFRange,
     options : CULong,
-    locale : CFLocaleRef) CFStringTokenizerRef;
+    locale : CFLocaleRef) : CFStringTokenizerRef;
 
 external CFStringTokenizerSetString(
     tokenizer : CFStringTokenizerRef,
@@ -5019,20 +5019,20 @@ external CFStringTokenizerSetString(
 
 external CFStringTokenizerGoToTokenAtIndex(
     tokenizer : CFStringTokenizerRef,
-    index : CLong) CULong;
+    index : CLong) : CULong;
 
 external CFStringTokenizerAdvanceToNextToken(
-    tokenizer : CFStringTokenizerRef) CULong;
+    tokenizer : CFStringTokenizerRef) : CULong;
 
 external CFStringTokenizerGetCurrentTokenRange(
-    tokenizer : CFStringTokenizerRef) CFRange;
+    tokenizer : CFStringTokenizerRef) : CFRange;
 
 external CFStringTokenizerCopyCurrentTokenAttribute(
     tokenizer : CFStringTokenizerRef,
-    attribute : CULong) CFTypeRef;
+    attribute : CULong) : CFTypeRef;
 
 external CFStringTokenizerGetCurrentSubTokens(
     tokenizer : CFStringTokenizerRef,
     ranges : Pointer[CFRange],
     maxRangeLength : CLong,
-    derivedSubTokens : CFMutableArrayRef) CLong;
+    derivedSubTokens : CFMutableArrayRef) : CLong;

@@ -1,6 +1,6 @@
 import externals.*;
 
-impl_sq(x:Double) Double = x*x;
+impl_sq(x:Double) : Double = x*x;
 
 external external_sq(ex:ExternalException, inX:Pointer[Double], outY:Pointer[Double]) {
     wrapAsExternal(impl_sq, static 1, ex, inX, outY);

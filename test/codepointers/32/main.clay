@@ -79,7 +79,7 @@ overload Displayable(x:Displayable) {
 }
 
 // moveUnsafe
-overload moveUnsafe(src:Displayable) returned:Displayable {
+overload moveUnsafe(src:Displayable) --> returned:Displayable {
     returned <-- Displayable(
         src.obj,
         src.size,

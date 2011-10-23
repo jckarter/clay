@@ -1345,13 +1345,14 @@ struct Code : public ANode {
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
     FormalArgPtr formalVarArg;
+    bool returnSpecsDeclared;
     vector<ReturnSpecPtr> returnSpecs;
     ReturnSpecPtr varReturnSpec;
     StatementPtr body;
     LLVMCodePtr llvmBody;
 
     Code()
-        : ANode(CODE) {}
+        : ANode(CODE), returnSpecsDeclared(false) {}
     Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
@@ -1361,11 +1362,12 @@ struct Code : public ANode {
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
+          returnSpecsDeclared(false),
           returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
           body(body) {}
 
     bool hasReturnSpecs() {
-        return (returnSpecs.size() > 0) || varReturnSpec.ptr();
+        return returnSpecsDeclared;
     }
 
     bool isLLVMBody() {

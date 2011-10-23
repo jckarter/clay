@@ -46,7 +46,7 @@ overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-overload moveUnsafe(src:SharedPointer[T]) returned:SharedPointer[T] {
+overload moveUnsafe(src:SharedPointer[T]) --> returned:SharedPointer[T] {
     returned.ptr = src.ptr;
 }
 

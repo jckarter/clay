@@ -141,141 +141,141 @@ alias socklen_t = UInt;
 
 external access(
     __name : Pointer[CChar],
-    __type : Int) Int;
+    __type : Int) : Int;
 
 external faccessat(
     __fd : Int,
     __file : Pointer[CChar],
     __type : Int,
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external lseek(
     __fd : Int,
     __offset : CLong,
-    __whence : Int) CLong;
+    __whence : Int) : CLong;
 
 external close(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
 external read(
     __fd : Int,
     __buf : RawPointer,
-    __nbytes : CULong) CLong;
+    __nbytes : CULong) : CLong;
 
 external write(
     __fd : Int,
     __buf : RawPointer,
-    __n : CULong) CLong;
+    __n : CULong) : CLong;
 
 external pread(
     __fd : Int,
     __buf : RawPointer,
     __nbytes : CULong,
-    __offset : CLong) CLong;
+    __offset : CLong) : CLong;
 
 external pwrite(
     __fd : Int,
     __buf : RawPointer,
     __n : CULong,
-    __offset : CLong) CLong;
+    __offset : CLong) : CLong;
 
 external pipe(
-    __pipedes : Pointer[Int]) Int;
+    __pipedes : Pointer[Int]) : Int;
 
 external alarm(
-    __seconds : UInt) UInt;
+    __seconds : UInt) : UInt;
 
 external sleep(
-    __seconds : UInt) UInt;
+    __seconds : UInt) : UInt;
 
 external ualarm(
     __value : UInt,
-    __interval : UInt) UInt;
+    __interval : UInt) : UInt;
 
 external usleep(
-    __useconds : UInt) Int;
+    __useconds : UInt) : Int;
 
-external pause() Int;
+external pause() : Int;
 
 external chown(
     __file : Pointer[CChar],
     __owner : UInt,
-    __group : UInt) Int;
+    __group : UInt) : Int;
 
 external fchown(
     __fd : Int,
     __owner : UInt,
-    __group : UInt) Int;
+    __group : UInt) : Int;
 
 external lchown(
     __file : Pointer[CChar],
     __owner : UInt,
-    __group : UInt) Int;
+    __group : UInt) : Int;
 
 external fchownat(
     __fd : Int,
     __file : Pointer[CChar],
     __owner : UInt,
     __group : UInt,
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external chdir(
-    __path : Pointer[CChar]) Int;
+    __path : Pointer[CChar]) : Int;
 
 external fchdir(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
 external getcwd(
     __buf : Pointer[CChar],
-    __size : CULong) Pointer[CChar];
+    __size : CULong) : Pointer[CChar];
 
 external getwd(
-    __buf : Pointer[CChar]) Pointer[CChar];
+    __buf : Pointer[CChar]) : Pointer[CChar];
 
 external dup(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
 external dup2(
     __fd : Int,
-    __fd2 : Int) Int;
+    __fd2 : Int) : Int;
 
 external __environ : Pointer[Pointer[CChar]];
 
 external execve(
     __path : Pointer[CChar],
     __argv : Pointer[Pointer[CChar]],
-    __envp : Pointer[Pointer[CChar]]) Int;
+    __envp : Pointer[Pointer[CChar]]) : Int;
 
 external fexecve(
     __fd : Int,
     __argv : Pointer[Pointer[CChar]],
-    __envp : Pointer[Pointer[CChar]]) Int;
+    __envp : Pointer[Pointer[CChar]]) : Int;
 
 external execv(
     __path : Pointer[CChar],
-    __argv : Pointer[Pointer[CChar]]) Int;
+    __argv : Pointer[Pointer[CChar]]) : Int;
 
 external execle(
     __path : Pointer[CChar],
     __arg : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external execl(
     __path : Pointer[CChar],
     __arg : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external execvp(
     __file : Pointer[CChar],
-    __argv : Pointer[Pointer[CChar]]) Int;
+    __argv : Pointer[Pointer[CChar]]) : Int;
 
 external execlp(
     __file : Pointer[CChar],
     __arg : Pointer[CChar],
-    ..) Int;
+    ..) : Int;
 
 external nice(
-    __inc : Int) Int;
+    __inc : Int) : Int;
 
 external _exit(
     __status : Int);
@@ -585,149 +585,149 @@ alias _CS_V7_ENV = 1149;
 
 external pathconf(
     __path : Pointer[CChar],
-    __name : Int) CLong;
+    __name : Int) : CLong;
 
 external fpathconf(
     __fd : Int,
-    __name : Int) CLong;
+    __name : Int) : CLong;
 
 external sysconf(
-    __name : Int) CLong;
+    __name : Int) : CLong;
 
 external confstr(
     __name : Int,
     __buf : Pointer[CChar],
-    __len : CULong) CULong;
+    __len : CULong) : CULong;
 
-external getpid() Int;
+external getpid() : Int;
 
-external getppid() Int;
+external getppid() : Int;
 
-external getpgrp() Int;
+external getpgrp() : Int;
 
 external __getpgid(
-    __pid : Int) Int;
+    __pid : Int) : Int;
 
 external getpgid(
-    __pid : Int) Int;
+    __pid : Int) : Int;
 
 external setpgid(
     __pid : Int,
-    __pgid : Int) Int;
+    __pgid : Int) : Int;
 
-external setpgrp() Int;
+external setpgrp() : Int;
 
-external setsid() Int;
+external setsid() : Int;
 
 external getsid(
-    __pid : Int) Int;
+    __pid : Int) : Int;
 
-external getuid() UInt;
+external getuid() : UInt;
 
-external geteuid() UInt;
+external geteuid() : UInt;
 
-external getgid() UInt;
+external getgid() : UInt;
 
-external getegid() UInt;
+external getegid() : UInt;
 
 external getgroups(
     __size : Int,
-    __list : Pointer[UInt]) Int;
+    __list : Pointer[UInt]) : Int;
 
 external setuid(
-    __uid : UInt) Int;
+    __uid : UInt) : Int;
 
 external setreuid(
     __ruid : UInt,
-    __euid : UInt) Int;
+    __euid : UInt) : Int;
 
 external seteuid(
-    __uid : UInt) Int;
+    __uid : UInt) : Int;
 
 external setgid(
-    __gid : UInt) Int;
+    __gid : UInt) : Int;
 
 external setregid(
     __rgid : UInt,
-    __egid : UInt) Int;
+    __egid : UInt) : Int;
 
 external setegid(
-    __gid : UInt) Int;
+    __gid : UInt) : Int;
 
-external fork() Int;
+external fork() : Int;
 
-external vfork() Int;
+external vfork() : Int;
 
 external ttyname(
-    __fd : Int) Pointer[CChar];
+    __fd : Int) : Pointer[CChar];
 
 external ttyname_r(
     __fd : Int,
     __buf : Pointer[CChar],
-    __buflen : CULong) Int;
+    __buflen : CULong) : Int;
 
 external isatty(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
-external ttyslot() Int;
+external ttyslot() : Int;
 
 external link(
     __from : Pointer[CChar],
-    __to : Pointer[CChar]) Int;
+    __to : Pointer[CChar]) : Int;
 
 external linkat(
     __fromfd : Int,
     __from : Pointer[CChar],
     __tofd : Int,
     __to : Pointer[CChar],
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
 external symlink(
     __from : Pointer[CChar],
-    __to : Pointer[CChar]) Int;
+    __to : Pointer[CChar]) : Int;
 
 external readlink(
     __path : Pointer[CChar],
     __buf : Pointer[CChar],
-    __len : CULong) CLong;
+    __len : CULong) : CLong;
 
 external symlinkat(
     __from : Pointer[CChar],
     __tofd : Int,
-    __to : Pointer[CChar]) Int;
+    __to : Pointer[CChar]) : Int;
 
 external readlinkat(
     __fd : Int,
     __path : Pointer[CChar],
     __buf : Pointer[CChar],
-    __len : CULong) CLong;
+    __len : CULong) : CLong;
 
 external unlink(
-    __name : Pointer[CChar]) Int;
+    __name : Pointer[CChar]) : Int;
 
 external unlinkat(
     __fd : Int,
     __name : Pointer[CChar],
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external rmdir(
-    __path : Pointer[CChar]) Int;
+    __path : Pointer[CChar]) : Int;
 
 external tcgetpgrp(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
 external tcsetpgrp(
     __fd : Int,
-    __pgrp_id : Int) Int;
+    __pgrp_id : Int) : Int;
 
-external getlogin() Pointer[CChar];
+external getlogin() : Pointer[CChar];
 
 external getlogin_r(
     __name : Pointer[CChar],
-    __name_len : CULong) Int;
+    __name_len : CULong) : Int;
 
 external setlogin(
-    __name : Pointer[CChar]) Int;
+    __name : Pointer[CChar]) : Int;
 
 external optarg : Pointer[CChar];
 
@@ -740,42 +740,42 @@ external optopt : Int;
 external getopt(
     ___argc : Int,
     ___argv : Pointer[Pointer[CChar]],
-    __shortopts : Pointer[CChar]) Int;
+    __shortopts : Pointer[CChar]) : Int;
 
 external gethostname(
     __name : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external sethostname(
     __name : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external sethostid(
-    __id : CLong) Int;
+    __id : CLong) : Int;
 
 external getdomainname(
     __name : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external setdomainname(
     __name : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
-external vhangup() Int;
+external vhangup() : Int;
 
 external revoke(
-    __file : Pointer[CChar]) Int;
+    __file : Pointer[CChar]) : Int;
 
 external profil(
     __sample_buffer : Pointer[UShort],
     __size : CULong,
     __offset : CULong,
-    __scale : UInt) Int;
+    __scale : UInt) : Int;
 
 external acct(
-    __name : Pointer[CChar]) Int;
+    __name : Pointer[CChar]) : Int;
 
-external getusershell() Pointer[CChar];
+external getusershell() : Pointer[CChar];
 
 external endusershell();
 
@@ -783,55 +783,55 @@ external setusershell();
 
 external daemon(
     __nochdir : Int,
-    __noclose : Int) Int;
+    __noclose : Int) : Int;
 
 external chroot(
-    __path : Pointer[CChar]) Int;
+    __path : Pointer[CChar]) : Int;
 
 external getpass(
-    __prompt : Pointer[CChar]) Pointer[CChar];
+    __prompt : Pointer[CChar]) : Pointer[CChar];
 
 external fsync(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
-external gethostid() CLong;
+external gethostid() : CLong;
 
 external sync();
 
-external getpagesize() Int;
+external getpagesize() : Int;
 
-external getdtablesize() Int;
+external getdtablesize() : Int;
 
 external truncate(
     __file : Pointer[CChar],
-    __length : CLong) Int;
+    __length : CLong) : Int;
 
 external ftruncate(
     __fd : Int,
-    __length : CLong) Int;
+    __length : CLong) : Int;
 
 external brk(
-    __addr : RawPointer) Int;
+    __addr : RawPointer) : Int;
 
 external sbrk(
-    __delta : CLong) RawPointer;
+    __delta : CLong) : RawPointer;
 
 external syscall(
     __sysno : CLong,
-    ..) CLong;
+    ..) : CLong;
 
 external lockf(
     __fd : Int,
     __cmd : Int,
-    __len : CLong) Int;
+    __len : CLong) : Int;
 
 external fdatasync(
-    __fildes : Int) Int;
+    __fildes : Int) : Int;
 
 external ctermid(
-    __s : Pointer[CChar]) Pointer[CChar];
+    __s : Pointer[CChar]) : Pointer[CChar];
 
-external __errno_location() Pointer[Int];
+external __errno_location() : Pointer[Int];
 
 alias time_t = CLong;
 
@@ -849,12 +849,12 @@ external clone(
     __child_stack : RawPointer,
     __flags : Int,
     __arg : RawPointer,
-    ..) Int;
+    ..) : Int;
 
 external unshare(
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
-external sched_getcpu() Int;
+external sched_getcpu() : Int;
 
 record Struct___sched_param (
     __sched_priority : Int,
@@ -870,41 +870,41 @@ alias cpu_set_t = UnnamedStruct2;
 
 external __sched_cpucount(
     __setsize : CULong,
-    __setp : Pointer[cpu_set_t]) Int;
+    __setp : Pointer[cpu_set_t]) : Int;
 
 external __sched_cpualloc(
-    __count : CULong) Pointer[cpu_set_t];
+    __count : CULong) : Pointer[cpu_set_t];
 
 external __sched_cpufree(
     __set : Pointer[cpu_set_t]);
 
 external sched_setparam(
     __pid : Int,
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external sched_getparam(
     __pid : Int,
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external sched_setscheduler(
     __pid : Int,
     __policy : Int,
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external sched_getscheduler(
-    __pid : Int) Int;
+    __pid : Int) : Int;
 
-external sched_yield() Int;
+external sched_yield() : Int;
 
 external sched_get_priority_max(
-    __algorithm : Int) Int;
+    __algorithm : Int) : Int;
 
 external sched_get_priority_min(
-    __algorithm : Int) Int;
+    __algorithm : Int) : Int;
 
 external sched_rr_get_interval(
     __pid : Int,
-    __t : Pointer[Struct_timespec]) Int;
+    __t : Pointer[Struct_timespec]) : Int;
 
 alias clock_t = CLong;
 
@@ -931,23 +931,23 @@ record Struct_itimerspec (
     it_value : Struct_timespec,
 );
 
-external clock() CLong;
+external clock() : CLong;
 
 external time(
-    __timer : Pointer[CLong]) CLong;
+    __timer : Pointer[CLong]) : CLong;
 
 external difftime(
     __time1 : CLong,
-    __time0 : CLong) Double;
+    __time0 : CLong) : Double;
 
 external mktime(
-    __tp : Pointer[Struct_tm]) CLong;
+    __tp : Pointer[Struct_tm]) : CLong;
 
 external strftime(
     __s : Pointer[CChar],
     __maxsize : CULong,
     __format : Pointer[CChar],
-    __tp : Pointer[Struct_tm]) CULong;
+    __tp : Pointer[Struct_tm]) : CULong;
 
 record Struct___locale_struct (
     __locales : Array[OpaquePointer,13],
@@ -966,35 +966,35 @@ external strftime_l(
     __maxsize : CULong,
     __format : Pointer[CChar],
     __tp : Pointer[Struct_tm],
-    __loc : __locale_t) CULong;
+    __loc : __locale_t) : CULong;
 
 external gmtime(
-    __timer : Pointer[CLong]) Pointer[Struct_tm];
+    __timer : Pointer[CLong]) : Pointer[Struct_tm];
 
 external localtime(
-    __timer : Pointer[CLong]) Pointer[Struct_tm];
+    __timer : Pointer[CLong]) : Pointer[Struct_tm];
 
 external gmtime_r(
     __timer : Pointer[CLong],
-    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+    __tp : Pointer[Struct_tm]) : Pointer[Struct_tm];
 
 external localtime_r(
     __timer : Pointer[CLong],
-    __tp : Pointer[Struct_tm]) Pointer[Struct_tm];
+    __tp : Pointer[Struct_tm]) : Pointer[Struct_tm];
 
 external asctime(
-    __tp : Pointer[Struct_tm]) Pointer[CChar];
+    __tp : Pointer[Struct_tm]) : Pointer[CChar];
 
 external ctime(
-    __timer : Pointer[CLong]) Pointer[CChar];
+    __timer : Pointer[CLong]) : Pointer[CChar];
 
 external asctime_r(
     __tp : Pointer[Struct_tm],
-    __buf : Pointer[CChar]) Pointer[CChar];
+    __buf : Pointer[CChar]) : Pointer[CChar];
 
 external ctime_r(
     __timer : Pointer[CLong],
-    __buf : Pointer[CChar]) Pointer[CChar];
+    __buf : Pointer[CChar]) : Pointer[CChar];
 
 external __tzname : Array[Pointer[CChar],2];
 
@@ -1011,63 +1011,63 @@ external daylight : Int;
 external timezone : CLong;
 
 external stime(
-    __when : Pointer[CLong]) Int;
+    __when : Pointer[CLong]) : Int;
 
 external timegm(
-    __tp : Pointer[Struct_tm]) CLong;
+    __tp : Pointer[Struct_tm]) : CLong;
 
 external timelocal(
-    __tp : Pointer[Struct_tm]) CLong;
+    __tp : Pointer[Struct_tm]) : CLong;
 
 external dysize(
-    __year : Int) Int;
+    __year : Int) : Int;
 
 external nanosleep(
     __requested_time : Pointer[Struct_timespec],
-    __remaining : Pointer[Struct_timespec]) Int;
+    __remaining : Pointer[Struct_timespec]) : Int;
 
 external clock_getres(
     __clock_id : Int,
-    __res : Pointer[Struct_timespec]) Int;
+    __res : Pointer[Struct_timespec]) : Int;
 
 external clock_gettime(
     __clock_id : Int,
-    __tp : Pointer[Struct_timespec]) Int;
+    __tp : Pointer[Struct_timespec]) : Int;
 
 external clock_settime(
     __clock_id : Int,
-    __tp : Pointer[Struct_timespec]) Int;
+    __tp : Pointer[Struct_timespec]) : Int;
 
 external clock_nanosleep(
     __clock_id : Int,
     __flags : Int,
     __req : Pointer[Struct_timespec],
-    __rem : Pointer[Struct_timespec]) Int;
+    __rem : Pointer[Struct_timespec]) : Int;
 
 external clock_getcpuclockid(
     __pid : Int,
-    __clock_id : Pointer[Int]) Int;
+    __clock_id : Pointer[Int]) : Int;
 
 external timer_create(
     __clock_id : Int,
     __evp : Pointer[Struct_sigevent],
-    __timerid : Pointer[timer_t]) Int;
+    __timerid : Pointer[timer_t]) : Int;
 
 external timer_delete(
-    __timerid : timer_t) Int;
+    __timerid : timer_t) : Int;
 
 external timer_settime(
     __timerid : timer_t,
     __flags : Int,
     __value : Pointer[Struct_itimerspec],
-    __ovalue : Pointer[Struct_itimerspec]) Int;
+    __ovalue : Pointer[Struct_itimerspec]) : Int;
 
 external timer_gettime(
     __timerid : timer_t,
-    __value : Pointer[Struct_itimerspec]) Int;
+    __value : Pointer[Struct_itimerspec]) : Int;
 
 external timer_getoverrun(
-    __timerid : timer_t) Int;
+    __timerid : timer_t) : Int;
 
 alias pthread_t = CULong;
 
@@ -1152,132 +1152,132 @@ external pthread_create(
     __newthread : Pointer[CULong],
     __attr : Pointer[pthread_attr_t],
     __start_routine : CCodePointer[(RawPointer),(RawPointer)],
-    __arg : RawPointer) Int;
+    __arg : RawPointer) : Int;
 
 external pthread_exit(
     __retval : RawPointer);
 
 external pthread_join(
     __th : CULong,
-    __thread_return : Pointer[RawPointer]) Int;
+    __thread_return : Pointer[RawPointer]) : Int;
 
 external pthread_detach(
-    __th : CULong) Int;
+    __th : CULong) : Int;
 
-external pthread_self() CULong;
+external pthread_self() : CULong;
 
 external pthread_equal(
     __thread1 : CULong,
-    __thread2 : CULong) Int;
+    __thread2 : CULong) : Int;
 
 external pthread_attr_init(
-    __attr : Pointer[pthread_attr_t]) Int;
+    __attr : Pointer[pthread_attr_t]) : Int;
 
 external pthread_attr_destroy(
-    __attr : Pointer[pthread_attr_t]) Int;
+    __attr : Pointer[pthread_attr_t]) : Int;
 
 external pthread_attr_getdetachstate(
     __attr : Pointer[pthread_attr_t],
-    __detachstate : Pointer[Int]) Int;
+    __detachstate : Pointer[Int]) : Int;
 
 external pthread_attr_setdetachstate(
     __attr : Pointer[pthread_attr_t],
-    __detachstate : Int) Int;
+    __detachstate : Int) : Int;
 
 external pthread_attr_getguardsize(
     __attr : Pointer[pthread_attr_t],
-    __guardsize : Pointer[CULong]) Int;
+    __guardsize : Pointer[CULong]) : Int;
 
 external pthread_attr_setguardsize(
     __attr : Pointer[pthread_attr_t],
-    __guardsize : CULong) Int;
+    __guardsize : CULong) : Int;
 
 external pthread_attr_getschedparam(
     __attr : Pointer[pthread_attr_t],
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external pthread_attr_setschedparam(
     __attr : Pointer[pthread_attr_t],
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external pthread_attr_getschedpolicy(
     __attr : Pointer[pthread_attr_t],
-    __policy : Pointer[Int]) Int;
+    __policy : Pointer[Int]) : Int;
 
 external pthread_attr_setschedpolicy(
     __attr : Pointer[pthread_attr_t],
-    __policy : Int) Int;
+    __policy : Int) : Int;
 
 external pthread_attr_getinheritsched(
     __attr : Pointer[pthread_attr_t],
-    __inherit : Pointer[Int]) Int;
+    __inherit : Pointer[Int]) : Int;
 
 external pthread_attr_setinheritsched(
     __attr : Pointer[pthread_attr_t],
-    __inherit : Int) Int;
+    __inherit : Int) : Int;
 
 external pthread_attr_getscope(
     __attr : Pointer[pthread_attr_t],
-    __scope : Pointer[Int]) Int;
+    __scope : Pointer[Int]) : Int;
 
 external pthread_attr_setscope(
     __attr : Pointer[pthread_attr_t],
-    __scope : Int) Int;
+    __scope : Int) : Int;
 
 external pthread_attr_getstackaddr(
     __attr : Pointer[pthread_attr_t],
-    __stackaddr : Pointer[RawPointer]) Int;
+    __stackaddr : Pointer[RawPointer]) : Int;
 
 external pthread_attr_setstackaddr(
     __attr : Pointer[pthread_attr_t],
-    __stackaddr : RawPointer) Int;
+    __stackaddr : RawPointer) : Int;
 
 external pthread_attr_getstacksize(
     __attr : Pointer[pthread_attr_t],
-    __stacksize : Pointer[CULong]) Int;
+    __stacksize : Pointer[CULong]) : Int;
 
 external pthread_attr_setstacksize(
     __attr : Pointer[pthread_attr_t],
-    __stacksize : CULong) Int;
+    __stacksize : CULong) : Int;
 
 external pthread_attr_getstack(
     __attr : Pointer[pthread_attr_t],
     __stackaddr : Pointer[RawPointer],
-    __stacksize : Pointer[CULong]) Int;
+    __stacksize : Pointer[CULong]) : Int;
 
 external pthread_attr_setstack(
     __attr : Pointer[pthread_attr_t],
     __stackaddr : RawPointer,
-    __stacksize : CULong) Int;
+    __stacksize : CULong) : Int;
 
 external pthread_setschedparam(
     __target_thread : CULong,
     __policy : Int,
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external pthread_getschedparam(
     __target_thread : CULong,
     __policy : Pointer[Int],
-    __param : Pointer[Struct_sched_param]) Int;
+    __param : Pointer[Struct_sched_param]) : Int;
 
 external pthread_setschedprio(
     __target_thread : CULong,
-    __prio : Int) Int;
+    __prio : Int) : Int;
 
 external pthread_once(
     __once_control : Pointer[Int],
-    __init_routine : CCodePointer[(),()]) Int;
+    __init_routine : CCodePointer[(),()]) : Int;
 
 external pthread_setcancelstate(
     __state : Int,
-    __oldstate : Pointer[Int]) Int;
+    __oldstate : Pointer[Int]) : Int;
 
 external pthread_setcanceltype(
     __type : Int,
-    __oldtype : Pointer[Int]) Int;
+    __oldtype : Pointer[Int]) : Int;
 
 external pthread_cancel(
-    __th : CULong) Int;
+    __th : CULong) : Int;
 
 external pthread_testcancel();
 
@@ -1311,245 +1311,245 @@ external __pthread_unwind_next(
 
 external __sigsetjmp(
     __env : OpaquePointer,
-    __savemask : Int) Int;
+    __savemask : Int) : Int;
 
 external pthread_mutex_init(
     __mutex : Pointer[pthread_mutex_t],
-    __mutexattr : Pointer[pthread_mutexattr_t]) Int;
+    __mutexattr : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutex_destroy(
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_trylock(
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_lock(
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_timedlock(
     __mutex : Pointer[pthread_mutex_t],
-    __abstime : Pointer[Struct_timespec]) Int;
+    __abstime : Pointer[Struct_timespec]) : Int;
 
 external pthread_mutex_unlock(
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutex_getprioceiling(
     __mutex : Pointer[pthread_mutex_t],
-    __prioceiling : Pointer[Int]) Int;
+    __prioceiling : Pointer[Int]) : Int;
 
 external pthread_mutex_setprioceiling(
     __mutex : Pointer[pthread_mutex_t],
     __prioceiling : Int,
-    __old_ceiling : Pointer[Int]) Int;
+    __old_ceiling : Pointer[Int]) : Int;
 
 external pthread_mutex_consistent(
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_mutexattr_init(
-    __attr : Pointer[pthread_mutexattr_t]) Int;
+    __attr : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutexattr_destroy(
-    __attr : Pointer[pthread_mutexattr_t]) Int;
+    __attr : Pointer[pthread_mutexattr_t]) : Int;
 
 external pthread_mutexattr_getpshared(
     __attr : Pointer[pthread_mutexattr_t],
-    __pshared : Pointer[Int]) Int;
+    __pshared : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setpshared(
     __attr : Pointer[pthread_mutexattr_t],
-    __pshared : Int) Int;
+    __pshared : Int) : Int;
 
 external pthread_mutexattr_gettype(
     __attr : Pointer[pthread_mutexattr_t],
-    __kind : Pointer[Int]) Int;
+    __kind : Pointer[Int]) : Int;
 
 external pthread_mutexattr_settype(
     __attr : Pointer[pthread_mutexattr_t],
-    __kind : Int) Int;
+    __kind : Int) : Int;
 
 external pthread_mutexattr_getprotocol(
     __attr : Pointer[pthread_mutexattr_t],
-    __protocol : Pointer[Int]) Int;
+    __protocol : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setprotocol(
     __attr : Pointer[pthread_mutexattr_t],
-    __protocol : Int) Int;
+    __protocol : Int) : Int;
 
 external pthread_mutexattr_getprioceiling(
     __attr : Pointer[pthread_mutexattr_t],
-    __prioceiling : Pointer[Int]) Int;
+    __prioceiling : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setprioceiling(
     __attr : Pointer[pthread_mutexattr_t],
-    __prioceiling : Int) Int;
+    __prioceiling : Int) : Int;
 
 external pthread_mutexattr_getrobust(
     __attr : Pointer[pthread_mutexattr_t],
-    __robustness : Pointer[Int]) Int;
+    __robustness : Pointer[Int]) : Int;
 
 external pthread_mutexattr_setrobust(
     __attr : Pointer[pthread_mutexattr_t],
-    __robustness : Int) Int;
+    __robustness : Int) : Int;
 
 external pthread_rwlock_init(
     __rwlock : Pointer[pthread_rwlock_t],
-    __attr : Pointer[pthread_rwlockattr_t]) Int;
+    __attr : Pointer[pthread_rwlockattr_t]) : Int;
 
 external pthread_rwlock_destroy(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_rdlock(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_tryrdlock(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_timedrdlock(
     __rwlock : Pointer[pthread_rwlock_t],
-    __abstime : Pointer[Struct_timespec]) Int;
+    __abstime : Pointer[Struct_timespec]) : Int;
 
 external pthread_rwlock_wrlock(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_trywrlock(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlock_timedwrlock(
     __rwlock : Pointer[pthread_rwlock_t],
-    __abstime : Pointer[Struct_timespec]) Int;
+    __abstime : Pointer[Struct_timespec]) : Int;
 
 external pthread_rwlock_unlock(
-    __rwlock : Pointer[pthread_rwlock_t]) Int;
+    __rwlock : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_rwlockattr_init(
-    __attr : Pointer[pthread_rwlockattr_t]) Int;
+    __attr : Pointer[pthread_rwlockattr_t]) : Int;
 
 external pthread_rwlockattr_destroy(
-    __attr : Pointer[pthread_rwlockattr_t]) Int;
+    __attr : Pointer[pthread_rwlockattr_t]) : Int;
 
 external pthread_rwlockattr_getpshared(
     __attr : Pointer[pthread_rwlockattr_t],
-    __pshared : Pointer[Int]) Int;
+    __pshared : Pointer[Int]) : Int;
 
 external pthread_rwlockattr_setpshared(
     __attr : Pointer[pthread_rwlockattr_t],
-    __pshared : Int) Int;
+    __pshared : Int) : Int;
 
 external pthread_rwlockattr_getkind_np(
     __attr : Pointer[pthread_rwlockattr_t],
-    __pref : Pointer[Int]) Int;
+    __pref : Pointer[Int]) : Int;
 
 external pthread_rwlockattr_setkind_np(
     __attr : Pointer[pthread_rwlockattr_t],
-    __pref : Int) Int;
+    __pref : Int) : Int;
 
 external pthread_cond_init(
     __cond : Pointer[pthread_cond_t],
-    __cond_attr : Pointer[pthread_condattr_t]) Int;
+    __cond_attr : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_cond_destroy(
-    __cond : Pointer[pthread_cond_t]) Int;
+    __cond : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_signal(
-    __cond : Pointer[pthread_cond_t]) Int;
+    __cond : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_broadcast(
-    __cond : Pointer[pthread_cond_t]) Int;
+    __cond : Pointer[pthread_cond_t]) : Int;
 
 external pthread_cond_wait(
     __cond : Pointer[pthread_cond_t],
-    __mutex : Pointer[pthread_mutex_t]) Int;
+    __mutex : Pointer[pthread_mutex_t]) : Int;
 
 external pthread_cond_timedwait(
     __cond : Pointer[pthread_cond_t],
     __mutex : Pointer[pthread_mutex_t],
-    __abstime : Pointer[Struct_timespec]) Int;
+    __abstime : Pointer[Struct_timespec]) : Int;
 
 external pthread_condattr_init(
-    __attr : Pointer[pthread_condattr_t]) Int;
+    __attr : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_condattr_destroy(
-    __attr : Pointer[pthread_condattr_t]) Int;
+    __attr : Pointer[pthread_condattr_t]) : Int;
 
 external pthread_condattr_getpshared(
     __attr : Pointer[pthread_condattr_t],
-    __pshared : Pointer[Int]) Int;
+    __pshared : Pointer[Int]) : Int;
 
 external pthread_condattr_setpshared(
     __attr : Pointer[pthread_condattr_t],
-    __pshared : Int) Int;
+    __pshared : Int) : Int;
 
 external pthread_condattr_getclock(
     __attr : Pointer[pthread_condattr_t],
-    __clock_id : Pointer[Int]) Int;
+    __clock_id : Pointer[Int]) : Int;
 
 external pthread_condattr_setclock(
     __attr : Pointer[pthread_condattr_t],
-    __clock_id : Int) Int;
+    __clock_id : Int) : Int;
 
 external pthread_spin_init(
     __lock : Pointer[Int],
-    __pshared : Int) Int;
+    __pshared : Int) : Int;
 
 external pthread_spin_destroy(
-    __lock : Pointer[Int]) Int;
+    __lock : Pointer[Int]) : Int;
 
 external pthread_spin_lock(
-    __lock : Pointer[Int]) Int;
+    __lock : Pointer[Int]) : Int;
 
 external pthread_spin_trylock(
-    __lock : Pointer[Int]) Int;
+    __lock : Pointer[Int]) : Int;
 
 external pthread_spin_unlock(
-    __lock : Pointer[Int]) Int;
+    __lock : Pointer[Int]) : Int;
 
 external pthread_barrier_init(
     __barrier : Pointer[pthread_barrier_t],
     __attr : Pointer[pthread_barrierattr_t],
-    __count : UInt) Int;
+    __count : UInt) : Int;
 
 external pthread_barrier_destroy(
-    __barrier : Pointer[pthread_barrier_t]) Int;
+    __barrier : Pointer[pthread_barrier_t]) : Int;
 
 external pthread_barrier_wait(
-    __barrier : Pointer[pthread_barrier_t]) Int;
+    __barrier : Pointer[pthread_barrier_t]) : Int;
 
 external pthread_barrierattr_init(
-    __attr : Pointer[pthread_barrierattr_t]) Int;
+    __attr : Pointer[pthread_barrierattr_t]) : Int;
 
 external pthread_barrierattr_destroy(
-    __attr : Pointer[pthread_barrierattr_t]) Int;
+    __attr : Pointer[pthread_barrierattr_t]) : Int;
 
 external pthread_barrierattr_getpshared(
     __attr : Pointer[pthread_barrierattr_t],
-    __pshared : Pointer[Int]) Int;
+    __pshared : Pointer[Int]) : Int;
 
 external pthread_barrierattr_setpshared(
     __attr : Pointer[pthread_barrierattr_t],
-    __pshared : Int) Int;
+    __pshared : Int) : Int;
 
 external pthread_key_create(
     __key : Pointer[UInt],
-    __destr_function : CCodePointer[(RawPointer),()]) Int;
+    __destr_function : CCodePointer[(RawPointer),()]) : Int;
 
 external pthread_key_delete(
-    __key : UInt) Int;
+    __key : UInt) : Int;
 
 external pthread_getspecific(
-    __key : UInt) RawPointer;
+    __key : UInt) : RawPointer;
 
 external pthread_setspecific(
     __key : UInt,
-    __pointer : RawPointer) Int;
+    __pointer : RawPointer) : Int;
 
 external pthread_getcpuclockid(
     __thread_id : CULong,
-    __clock_id : Pointer[Int]) Int;
+    __clock_id : Pointer[Int]) : Int;
 
 external pthread_atfork(
     __prepare : CCodePointer[(),()],
     __parent : CCodePointer[(),()],
-    __child : CCodePointer[(),()]) Int;
+    __child : CCodePointer[(),()]) : Int;
 
 alias u_char = CUChar;
 
@@ -1639,7 +1639,7 @@ external select(
     __readfds : Pointer[fd_set],
     __writefds : Pointer[fd_set],
     __exceptfds : Pointer[fd_set],
-    __timeout : Pointer[Struct_timeval]) Int;
+    __timeout : Pointer[Struct_timeval]) : Int;
 
 external pselect(
     __nfds : Int,
@@ -1647,17 +1647,17 @@ external pselect(
     __writefds : Pointer[fd_set],
     __exceptfds : Pointer[fd_set],
     __timeout : Pointer[Struct_timespec],
-    __sigmask : Pointer[__sigset_t]) Int;
+    __sigmask : Pointer[__sigset_t]) : Int;
 
 external gnu_dev_major(
-    __dev : UInt64) UInt;
+    __dev : UInt64) : UInt;
 
 external gnu_dev_minor(
-    __dev : UInt64) UInt;
+    __dev : UInt64) : UInt;
 
 external gnu_dev_makedev(
     __major : UInt,
-    __minor : UInt) UInt64;
+    __minor : UInt) : UInt64;
 
 alias blksize_t = CLong;
 
@@ -1696,33 +1696,33 @@ record Struct_stat (
 external fcntl(
     __fd : Int,
     __cmd : Int,
-    ..) Int;
+    ..) : Int;
 
 external open(
     __file : Pointer[CChar],
     __oflag : Int,
-    ..) Int;
+    ..) : Int;
 
 external openat(
     __fd : Int,
     __file : Pointer[CChar],
     __oflag : Int,
-    ..) Int;
+    ..) : Int;
 
 external creat(
     __file : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external posix_fadvise(
     __fd : Int,
     __offset : CLong,
     __len : CLong,
-    __advise : Int) Int;
+    __advise : Int) : Int;
 
 external posix_fallocate(
     __fd : Int,
     __offset : CLong,
-    __len : CLong) Int;
+    __len : CLong) : Int;
 
 record Struct_timezone (
     tz_minuteswest : Int,
@@ -1733,15 +1733,15 @@ alias __timezone_ptr_t = Pointer[Struct_timezone];
 
 external gettimeofday(
     __tv : Pointer[Struct_timeval],
-    __tz : __timezone_ptr_t) Int;
+    __tz : __timezone_ptr_t) : Int;
 
 external settimeofday(
     __tv : Pointer[Struct_timeval],
-    __tz : Pointer[Struct_timezone]) Int;
+    __tz : Pointer[Struct_timezone]) : Int;
 
 external adjtime(
     __delta : Pointer[Struct_timeval],
-    __olddelta : Pointer[Struct_timeval]) Int;
+    __olddelta : Pointer[Struct_timeval]) : Int;
 
 alias ITIMER_REAL = 0;
 alias ITIMER_VIRTUAL = 1;
@@ -1756,137 +1756,137 @@ alias __itimer_which_t = Int;
 
 external getitimer(
     __which : Int,
-    __value : Pointer[Struct_itimerval]) Int;
+    __value : Pointer[Struct_itimerval]) : Int;
 
 external setitimer(
     __which : Int,
     __new : Pointer[Struct_itimerval],
-    __old : Pointer[Struct_itimerval]) Int;
+    __old : Pointer[Struct_itimerval]) : Int;
 
 external utimes(
     __file : Pointer[CChar],
-    __tvp : Pointer[Struct_timeval]) Int;
+    __tvp : Pointer[Struct_timeval]) : Int;
 
 external lutimes(
     __file : Pointer[CChar],
-    __tvp : Pointer[Struct_timeval]) Int;
+    __tvp : Pointer[Struct_timeval]) : Int;
 
 external futimes(
     __fd : Int,
-    __tvp : Pointer[Struct_timeval]) Int;
+    __tvp : Pointer[Struct_timeval]) : Int;
 
 external stat(
     __file : Pointer[CChar],
-    __buf : Pointer[Struct_stat]) Int;
+    __buf : Pointer[Struct_stat]) : Int;
 
 external fstat(
     __fd : Int,
-    __buf : Pointer[Struct_stat]) Int;
+    __buf : Pointer[Struct_stat]) : Int;
 
 external fstatat(
     __fd : Int,
     __file : Pointer[CChar],
     __buf : Pointer[Struct_stat],
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external lstat(
     __file : Pointer[CChar],
-    __buf : Pointer[Struct_stat]) Int;
+    __buf : Pointer[Struct_stat]) : Int;
 
 external chmod(
     __file : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external lchmod(
     __file : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external fchmod(
     __fd : Int,
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external fchmodat(
     __fd : Int,
     __file : Pointer[CChar],
     __mode : UInt,
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external umask(
-    __mask : UInt) UInt;
+    __mask : UInt) : UInt;
 
 external mkdir(
     __path : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external mkdirat(
     __fd : Int,
     __path : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external mknod(
     __path : Pointer[CChar],
     __mode : UInt,
-    __dev : CULong) Int;
+    __dev : CULong) : Int;
 
 external mknodat(
     __fd : Int,
     __path : Pointer[CChar],
     __mode : UInt,
-    __dev : CULong) Int;
+    __dev : CULong) : Int;
 
 external mkfifo(
     __path : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external mkfifoat(
     __fd : Int,
     __path : Pointer[CChar],
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external utimensat(
     __fd : Int,
     __path : Pointer[CChar],
     __times : Pointer[Struct_timespec],
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
 external futimens(
     __fd : Int,
-    __times : Pointer[Struct_timespec]) Int;
+    __times : Pointer[Struct_timespec]) : Int;
 
 external __fxstat(
     __ver : Int,
     __fildes : Int,
-    __stat_buf : Pointer[Struct_stat]) Int;
+    __stat_buf : Pointer[Struct_stat]) : Int;
 
 external __xstat(
     __ver : Int,
     __filename : Pointer[CChar],
-    __stat_buf : Pointer[Struct_stat]) Int;
+    __stat_buf : Pointer[Struct_stat]) : Int;
 
 external __lxstat(
     __ver : Int,
     __filename : Pointer[CChar],
-    __stat_buf : Pointer[Struct_stat]) Int;
+    __stat_buf : Pointer[Struct_stat]) : Int;
 
 external __fxstatat(
     __ver : Int,
     __fildes : Int,
     __filename : Pointer[CChar],
     __stat_buf : Pointer[Struct_stat],
-    __flag : Int) Int;
+    __flag : Int) : Int;
 
 external __xmknod(
     __ver : Int,
     __path : Pointer[CChar],
     __mode : UInt,
-    __dev : Pointer[CULong]) Int;
+    __dev : Pointer[CULong]) : Int;
 
 external __xmknodat(
     __ver : Int,
     __fd : Int,
     __path : Pointer[CChar],
     __mode : UInt,
-    __dev : Pointer[CULong]) Int;
+    __dev : Pointer[CULong]) : Int;
 
 external mmap(
     __addr : RawPointer,
@@ -1894,57 +1894,57 @@ external mmap(
     __prot : Int,
     __flags : Int,
     __fd : Int,
-    __offset : CLong) RawPointer;
+    __offset : CLong) : RawPointer;
 
 external munmap(
     __addr : RawPointer,
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external mprotect(
     __addr : RawPointer,
     __len : CULong,
-    __prot : Int) Int;
+    __prot : Int) : Int;
 
 external msync(
     __addr : RawPointer,
     __len : CULong,
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
 external madvise(
     __addr : RawPointer,
     __len : CULong,
-    __advice : Int) Int;
+    __advice : Int) : Int;
 
 external posix_madvise(
     __addr : RawPointer,
     __len : CULong,
-    __advice : Int) Int;
+    __advice : Int) : Int;
 
 external mlock(
     __addr : RawPointer,
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external munlock(
     __addr : RawPointer,
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external mlockall(
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
-external munlockall() Int;
+external munlockall() : Int;
 
 external mincore(
     __start : RawPointer,
     __len : CULong,
-    __vec : Pointer[CUChar]) Int;
+    __vec : Pointer[CUChar]) : Int;
 
 external shm_open(
     __name : Pointer[CChar],
     __oflag : Int,
-    __mode : UInt) Int;
+    __mode : UInt) : Int;
 
 external shm_unlink(
-    __name : Pointer[CChar]) Int;
+    __name : Pointer[CChar]) : Int;
 
 record Struct_iovec (
     iov_base : RawPointer,
@@ -1954,24 +1954,24 @@ record Struct_iovec (
 external readv(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
-    __count : Int) CLong;
+    __count : Int) : CLong;
 
 external writev(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
-    __count : Int) CLong;
+    __count : Int) : CLong;
 
 external preadv(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
-    __offset : CLong) CLong;
+    __offset : CLong) : CLong;
 
 external pwritev(
     __fd : Int,
     __iovec : Pointer[Struct_iovec],
     __count : Int,
-    __offset : CLong) CLong;
+    __offset : CLong) : CLong;
 
 alias SOCK_STREAM = 1;
 alias SOCK_DGRAM = 2;
@@ -2034,7 +2034,7 @@ record Struct_cmsghdr (
 
 external __cmsg_nxthdr(
     __mhdr : Pointer[Struct_msghdr],
-    __cmsg : Pointer[Struct_cmsghdr]) Pointer[Struct_cmsghdr];
+    __cmsg : Pointer[Struct_cmsghdr]) : Pointer[Struct_cmsghdr];
 
 alias SCM_RIGHTS = 1;
 
@@ -2048,7 +2048,7 @@ external recvmmsg(
     __vmessages : OpaquePointer,
     __vlen : UInt,
     __flags : Int,
-    __tmo : Pointer[Struct_timespec]) Int;
+    __tmo : Pointer[Struct_timespec]) : Int;
 
 record Struct_osockaddr (
     sa_family : UShort,
@@ -2062,45 +2062,45 @@ alias SHUT_RDWR = 2;
 external socket(
     __domain : Int,
     __type : Int,
-    __protocol : Int) Int;
+    __protocol : Int) : Int;
 
 external socketpair(
     __domain : Int,
     __type : Int,
     __protocol : Int,
-    __fds : Pointer[Int]) Int;
+    __fds : Pointer[Int]) : Int;
 
 external bind(
     __fd : Int,
     __addr : Pointer[Struct_sockaddr],
-    __len : UInt) Int;
+    __len : UInt) : Int;
 
 external getsockname(
     __fd : Int,
     __addr : Pointer[Struct_sockaddr],
-    __len : Pointer[UInt]) Int;
+    __len : Pointer[UInt]) : Int;
 
 external connect(
     __fd : Int,
     __addr : Pointer[Struct_sockaddr],
-    __len : UInt) Int;
+    __len : UInt) : Int;
 
 external getpeername(
     __fd : Int,
     __addr : Pointer[Struct_sockaddr],
-    __len : Pointer[UInt]) Int;
+    __len : Pointer[UInt]) : Int;
 
 external send(
     __fd : Int,
     __buf : RawPointer,
     __n : CULong,
-    __flags : Int) CLong;
+    __flags : Int) : CLong;
 
 external recv(
     __fd : Int,
     __buf : RawPointer,
     __n : CULong,
-    __flags : Int) CLong;
+    __flags : Int) : CLong;
 
 external sendto(
     __fd : Int,
@@ -2108,7 +2108,7 @@ external sendto(
     __n : CULong,
     __flags : Int,
     __addr : Pointer[Struct_sockaddr],
-    __addr_len : UInt) CLong;
+    __addr_len : UInt) : CLong;
 
 external recvfrom(
     __fd : Int,
@@ -2116,63 +2116,63 @@ external recvfrom(
     __n : CULong,
     __flags : Int,
     __addr : Pointer[Struct_sockaddr],
-    __addr_len : Pointer[UInt]) CLong;
+    __addr_len : Pointer[UInt]) : CLong;
 
 external sendmsg(
     __fd : Int,
     __message : Pointer[Struct_msghdr],
-    __flags : Int) CLong;
+    __flags : Int) : CLong;
 
 external recvmsg(
     __fd : Int,
     __message : Pointer[Struct_msghdr],
-    __flags : Int) CLong;
+    __flags : Int) : CLong;
 
 external getsockopt(
     __fd : Int,
     __level : Int,
     __optname : Int,
     __optval : RawPointer,
-    __optlen : Pointer[UInt]) Int;
+    __optlen : Pointer[UInt]) : Int;
 
 external setsockopt(
     __fd : Int,
     __level : Int,
     __optname : Int,
     __optval : RawPointer,
-    __optlen : UInt) Int;
+    __optlen : UInt) : Int;
 
 external listen(
     __fd : Int,
-    __n : Int) Int;
+    __n : Int) : Int;
 
 external accept(
     __fd : Int,
     __addr : Pointer[Struct_sockaddr],
-    __addr_len : Pointer[UInt]) Int;
+    __addr_len : Pointer[UInt]) : Int;
 
 external shutdown(
     __fd : Int,
-    __how : Int) Int;
+    __how : Int) : Int;
 
 external sockatmark(
-    __fd : Int) Int;
+    __fd : Int) : Int;
 
 external isfdtype(
     __fd : Int,
-    __fdtype : Int) Int;
+    __fdtype : Int) : Int;
 
 external __sigismember(
     argument0 : Pointer[__sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external __sigaddset(
     argument0 : Pointer[__sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 external __sigdelset(
     argument0 : Pointer[__sigset_t],
-    argument1 : Int) Int;
+    argument1 : Int) : Int;
 
 alias sig_atomic_t = Int;
 
@@ -2257,29 +2257,29 @@ alias __sighandler_t = CCodePointer[(Int),()];
 
 external __sysv_signal(
     __sig : Int,
-    __handler : __sighandler_t) __sighandler_t;
+    __handler : __sighandler_t) : __sighandler_t;
 
 external signal(
     __sig : Int,
-    __handler : __sighandler_t) __sighandler_t;
+    __handler : __sighandler_t) : __sighandler_t;
 
 external kill(
     __pid : Int,
-    __sig : Int) Int;
+    __sig : Int) : Int;
 
 external killpg(
     __pgrp : Int,
-    __sig : Int) Int;
+    __sig : Int) : Int;
 
 external raise(
-    __sig : Int) Int;
+    __sig : Int) : Int;
 
 external ssignal(
     __sig : Int,
-    __handler : __sighandler_t) __sighandler_t;
+    __handler : __sighandler_t) : __sighandler_t;
 
 external gsignal(
-    __sig : Int) Int;
+    __sig : Int) : Int;
 
 external psignal(
     __sig : Int,
@@ -2291,35 +2291,35 @@ external psiginfo(
 
 external __sigpause(
     __sig_or_mask : Int,
-    __is_sig : Int) Int;
+    __is_sig : Int) : Int;
 
 external sigblock(
-    __mask : Int) Int;
+    __mask : Int) : Int;
 
 external sigsetmask(
-    __mask : Int) Int;
+    __mask : Int) : Int;
 
-external siggetmask() Int;
+external siggetmask() : Int;
 
 alias sig_t = __sighandler_t;
 
 external sigemptyset(
-    __set : Pointer[sigset_t]) Int;
+    __set : Pointer[sigset_t]) : Int;
 
 external sigfillset(
-    __set : Pointer[sigset_t]) Int;
+    __set : Pointer[sigset_t]) : Int;
 
 external sigaddset(
     __set : Pointer[sigset_t],
-    __signo : Int) Int;
+    __signo : Int) : Int;
 
 external sigdelset(
     __set : Pointer[sigset_t],
-    __signo : Int) Int;
+    __signo : Int) : Int;
 
 external sigismember(
     __set : Pointer[sigset_t],
-    __signo : Int) Int;
+    __signo : Int) : Int;
 
 record Struct_sigaction (
     __sigaction_handler : AUnionType,
@@ -2331,36 +2331,36 @@ record Struct_sigaction (
 external sigprocmask(
     __how : Int,
     __set : Pointer[sigset_t],
-    __oset : Pointer[sigset_t]) Int;
+    __oset : Pointer[sigset_t]) : Int;
 
 external sigsuspend(
-    __set : Pointer[sigset_t]) Int;
+    __set : Pointer[sigset_t]) : Int;
 
 external sigaction(
     __sig : Int,
     __act : Pointer[Struct_sigaction],
-    __oact : Pointer[Struct_sigaction]) Int;
+    __oact : Pointer[Struct_sigaction]) : Int;
 
 external sigpending(
-    __set : Pointer[sigset_t]) Int;
+    __set : Pointer[sigset_t]) : Int;
 
 external sigwait(
     __set : Pointer[sigset_t],
-    __sig : Pointer[Int]) Int;
+    __sig : Pointer[Int]) : Int;
 
 external sigwaitinfo(
     __set : Pointer[sigset_t],
-    __info : Pointer[siginfo_t]) Int;
+    __info : Pointer[siginfo_t]) : Int;
 
 external sigtimedwait(
     __set : Pointer[sigset_t],
     __info : Pointer[siginfo_t],
-    __timeout : Pointer[Struct_timespec]) Int;
+    __timeout : Pointer[Struct_timespec]) : Int;
 
 external sigqueue(
     __pid : Int,
     __sig : Int,
-    __val : AUnionType) Int;
+    __val : AUnionType) : Int;
 
 external _sys_siglist : Array[Pointer[CChar],65];
 
@@ -2375,7 +2375,7 @@ record Struct_sigvec (
 external sigvec(
     __sig : Int,
     __vec : Pointer[Struct_sigvec],
-    __ovec : Pointer[Struct_sigvec]) Int;
+    __ovec : Pointer[Struct_sigvec]) : Int;
 
 record Struct__fpreg (
     significand : Array[UShort,4],
@@ -2438,11 +2438,11 @@ record Struct_sigcontext (
 );
 
 external sigreturn(
-    __scp : Pointer[Struct_sigcontext]) Int;
+    __scp : Pointer[Struct_sigcontext]) : Int;
 
 external siginterrupt(
     __sig : Int,
-    __interrupt : Int) Int;
+    __interrupt : Int) : Int;
 
 record Struct_sigstack (
     ss_sp : RawPointer,
@@ -2511,24 +2511,24 @@ alias ucontext_t = Struct_ucontext;
 
 external sigstack(
     __ss : Pointer[Struct_sigstack],
-    __oss : Pointer[Struct_sigstack]) Int;
+    __oss : Pointer[Struct_sigstack]) : Int;
 
 external sigaltstack(
     __ss : Pointer[Struct_sigaltstack],
-    __oss : Pointer[Struct_sigaltstack]) Int;
+    __oss : Pointer[Struct_sigaltstack]) : Int;
 
 external pthread_sigmask(
     __how : Int,
     __newmask : Pointer[__sigset_t],
-    __oldmask : Pointer[__sigset_t]) Int;
+    __oldmask : Pointer[__sigset_t]) : Int;
 
 external pthread_kill(
     __threadid : CULong,
-    __signo : Int) Int;
+    __signo : Int) : Int;
 
-external __libc_current_sigrtmin() Int;
+external __libc_current_sigrtmin() : Int;
 
-external __libc_current_sigrtmax() Int;
+external __libc_current_sigrtmax() : Int;
 
 alias RLIMIT_CPU = 0;
 alias RLIMIT_FSIZE = 1;
@@ -2590,24 +2590,24 @@ alias __priority_which_t = Int;
 
 external getrlimit(
     __resource : Int,
-    __rlimits : Pointer[Struct_rlimit]) Int;
+    __rlimits : Pointer[Struct_rlimit]) : Int;
 
 external setrlimit(
     __resource : Int,
-    __rlimits : Pointer[Struct_rlimit]) Int;
+    __rlimits : Pointer[Struct_rlimit]) : Int;
 
 external getrusage(
     __who : Int,
-    __usage : Pointer[Struct_rusage]) Int;
+    __usage : Pointer[Struct_rusage]) : Int;
 
 external getpriority(
     __which : Int,
-    __who : UInt) Int;
+    __who : UInt) : Int;
 
 external setpriority(
     __which : Int,
     __who : UInt,
-    __prio : Int) Int;
+    __prio : Int) : Int;
 
 alias __WAIT_STATUS = AUnionType;
 
@@ -2618,29 +2618,29 @@ alias P_PGID = 2;
 alias idtype_t = Int;
 
 external wait(
-    __stat_loc : __WAIT_STATUS) Int;
+    __stat_loc : __WAIT_STATUS) : Int;
 
 external waitpid(
     __pid : Int,
     __stat_loc : Pointer[Int],
-    __options : Int) Int;
+    __options : Int) : Int;
 
 external waitid(
     __idtype : idtype_t,
     __id : UInt,
     __infop : Pointer[siginfo_t],
-    __options : Int) Int;
+    __options : Int) : Int;
 
 external wait3(
     __stat_loc : __WAIT_STATUS,
     __options : Int,
-    __usage : Pointer[Struct_rusage]) Int;
+    __usage : Pointer[Struct_rusage]) : Int;
 
 external wait4(
     __pid : Int,
     __stat_loc : __WAIT_STATUS,
     __options : Int,
-    __usage : Pointer[Struct_rusage]) Int;
+    __usage : Pointer[Struct_rusage]) : Int;
 
 alias uint8_t = CUChar;
 
@@ -2713,29 +2713,29 @@ record Struct_epoll_event (
 );
 
 external epoll_create(
-    __size : Int) Int;
+    __size : Int) : Int;
 
 external epoll_create1(
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
 external epoll_ctl(
     __epfd : Int,
     __op : Int,
     __fd : Int,
-    __event : Pointer[Struct_epoll_event]) Int;
+    __event : Pointer[Struct_epoll_event]) : Int;
 
 external epoll_wait(
     __epfd : Int,
     __events : Pointer[Struct_epoll_event],
     __maxevents : Int,
-    __timeout : Int) Int;
+    __timeout : Int) : Int;
 
 external epoll_pwait(
     __epfd : Int,
     __events : Pointer[Struct_epoll_event],
     __maxevents : Int,
     __timeout : Int,
-    __ss : Pointer[__sigset_t]) Int;
+    __ss : Pointer[__sigset_t]) : Int;
 
 record Struct_dirent (
     d_ino : CULong,
@@ -2758,21 +2758,21 @@ alias DT_WHT = 14;
 alias DIR = Opaque;
 
 external opendir(
-    __name : Pointer[CChar]) Pointer[DIR];
+    __name : Pointer[CChar]) : Pointer[DIR];
 
 external fdopendir(
-    __fd : Int) Pointer[DIR];
+    __fd : Int) : Pointer[DIR];
 
 external closedir(
-    __dirp : Pointer[DIR]) Int;
+    __dirp : Pointer[DIR]) : Int;
 
 external readdir(
-    __dirp : Pointer[DIR]) Pointer[Struct_dirent];
+    __dirp : Pointer[DIR]) : Pointer[Struct_dirent];
 
 external readdir_r(
     __dirp : Pointer[DIR],
     __entry : Pointer[Struct_dirent],
-    __result : Pointer[Pointer[Struct_dirent]]) Int;
+    __result : Pointer[Pointer[Struct_dirent]]) : Int;
 
 external rewinddir(
     __dirp : Pointer[DIR]);
@@ -2782,26 +2782,26 @@ external seekdir(
     __pos : CLong);
 
 external telldir(
-    __dirp : Pointer[DIR]) CLong;
+    __dirp : Pointer[DIR]) : CLong;
 
 external dirfd(
-    __dirp : Pointer[DIR]) Int;
+    __dirp : Pointer[DIR]) : Int;
 
 external scandir(
     __dir : Pointer[CChar],
     __namelist : Pointer[Pointer[Pointer[Struct_dirent]]],
     __selector : CCodePointer[(Pointer[Struct_dirent]),(Int)],
-    __cmp : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) Int;
+    __cmp : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) : Int;
 
 external alphasort(
     __e1 : Pointer[Pointer[Struct_dirent]],
-    __e2 : Pointer[Pointer[Struct_dirent]]) Int;
+    __e2 : Pointer[Pointer[Struct_dirent]]) : Int;
 
 external getdirentries(
     __fd : Int,
     __buf : Pointer[CChar],
     __nbytes : CULong,
-    __basep : Pointer[CLong]) CLong;
+    __basep : Pointer[CLong]) : CLong;
 
 alias wchar_t = Int;
 
@@ -2826,69 +2826,69 @@ record UnnamedStruct9 (
 
 alias lldiv_t = UnnamedStruct9;
 
-external __ctype_get_mb_cur_max() CULong;
+external __ctype_get_mb_cur_max() : CULong;
 
 external atof(
-    __nptr : Pointer[CChar]) Double;
+    __nptr : Pointer[CChar]) : Double;
 
 external atoi(
-    __nptr : Pointer[CChar]) Int;
+    __nptr : Pointer[CChar]) : Int;
 
 external atol(
-    __nptr : Pointer[CChar]) CLong;
+    __nptr : Pointer[CChar]) : CLong;
 
 external atoll(
-    __nptr : Pointer[CChar]) Int64;
+    __nptr : Pointer[CChar]) : Int64;
 
 external strtod(
     __nptr : Pointer[CChar],
-    __endptr : Pointer[Pointer[CChar]]) Double;
+    __endptr : Pointer[Pointer[CChar]]) : Double;
 
 external strtof(
     __nptr : Pointer[CChar],
-    __endptr : Pointer[Pointer[CChar]]) Float;
+    __endptr : Pointer[Pointer[CChar]]) : Float;
 
 external strtold(
     __nptr : Pointer[CChar],
-    __endptr : Pointer[Pointer[CChar]]) UnsupportedCBuiltinType22;
+    __endptr : Pointer[Pointer[CChar]]) : UnsupportedCBuiltinType22;
 
 external strtol(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) CLong;
+    __base : Int) : CLong;
 
 external strtoul(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) CULong;
+    __base : Int) : CULong;
 
 external strtoq(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) Int64;
+    __base : Int) : Int64;
 
 external strtouq(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) UInt64;
+    __base : Int) : UInt64;
 
 external strtoll(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) Int64;
+    __base : Int) : Int64;
 
 external strtoull(
     __nptr : Pointer[CChar],
     __endptr : Pointer[Pointer[CChar]],
-    __base : Int) UInt64;
+    __base : Int) : UInt64;
 
 external l64a(
-    __n : CLong) Pointer[CChar];
+    __n : CLong) : Pointer[CChar];
 
 external a64l(
-    __s : Pointer[CChar]) CLong;
+    __s : Pointer[CChar]) : CLong;
 
-external random() CLong;
+external random() : CLong;
 
 external srandom(
     __seed : UInt);
@@ -2896,10 +2896,10 @@ external srandom(
 external initstate(
     __seed : UInt,
     __statebuf : Pointer[CChar],
-    __statelen : CULong) Pointer[CChar];
+    __statelen : CULong) : Pointer[CChar];
 
 external setstate(
-    __statebuf : Pointer[CChar]) Pointer[CChar];
+    __statebuf : Pointer[CChar]) : Pointer[CChar];
 
 record Struct_random_data (
     fptr : Pointer[Int],
@@ -2913,50 +2913,50 @@ record Struct_random_data (
 
 external random_r(
     __buf : Pointer[Struct_random_data],
-    __result : Pointer[Int]) Int;
+    __result : Pointer[Int]) : Int;
 
 external srandom_r(
     __seed : UInt,
-    __buf : Pointer[Struct_random_data]) Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
 external initstate_r(
     __seed : UInt,
     __statebuf : Pointer[CChar],
     __statelen : CULong,
-    __buf : Pointer[Struct_random_data]) Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
 external setstate_r(
     __statebuf : Pointer[CChar],
-    __buf : Pointer[Struct_random_data]) Int;
+    __buf : Pointer[Struct_random_data]) : Int;
 
-external rand() Int;
+external rand() : Int;
 
 external srand(
     __seed : UInt);
 
 external rand_r(
-    __seed : Pointer[UInt]) Int;
+    __seed : Pointer[UInt]) : Int;
 
-external drand48() Double;
+external drand48() : Double;
 
 external erand48(
-    __xsubi : Pointer[UShort]) Double;
+    __xsubi : Pointer[UShort]) : Double;
 
-external lrand48() CLong;
+external lrand48() : CLong;
 
 external nrand48(
-    __xsubi : Pointer[UShort]) CLong;
+    __xsubi : Pointer[UShort]) : CLong;
 
-external mrand48() CLong;
+external mrand48() : CLong;
 
 external jrand48(
-    __xsubi : Pointer[UShort]) CLong;
+    __xsubi : Pointer[UShort]) : CLong;
 
 external srand48(
     __seedval : CLong);
 
 external seed48(
-    __seed16v : Pointer[UShort]) Pointer[UShort];
+    __seed16v : Pointer[UShort]) : Pointer[UShort];
 
 external lcong48(
     __param : Pointer[UShort]);
@@ -2971,53 +2971,53 @@ record Struct_drand48_data (
 
 external drand48_r(
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[Double]) Int;
+    __result : Pointer[Double]) : Int;
 
 external erand48_r(
     __xsubi : Pointer[UShort],
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[Double]) Int;
+    __result : Pointer[Double]) : Int;
 
 external lrand48_r(
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[CLong]) Int;
+    __result : Pointer[CLong]) : Int;
 
 external nrand48_r(
     __xsubi : Pointer[UShort],
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[CLong]) Int;
+    __result : Pointer[CLong]) : Int;
 
 external mrand48_r(
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[CLong]) Int;
+    __result : Pointer[CLong]) : Int;
 
 external jrand48_r(
     __xsubi : Pointer[UShort],
     __buffer : Pointer[Struct_drand48_data],
-    __result : Pointer[CLong]) Int;
+    __result : Pointer[CLong]) : Int;
 
 external srand48_r(
     __seedval : CLong,
-    __buffer : Pointer[Struct_drand48_data]) Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external seed48_r(
     __seed16v : Pointer[UShort],
-    __buffer : Pointer[Struct_drand48_data]) Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external lcong48_r(
     __param : Pointer[UShort],
-    __buffer : Pointer[Struct_drand48_data]) Int;
+    __buffer : Pointer[Struct_drand48_data]) : Int;
 
 external malloc(
-    __size : CULong) RawPointer;
+    __size : CULong) : RawPointer;
 
 external calloc(
     __nmemb : CULong,
-    __size : CULong) RawPointer;
+    __size : CULong) : RawPointer;
 
 external realloc(
     __ptr : RawPointer,
-    __size : CULong) RawPointer;
+    __size : CULong) : RawPointer;
 
 external free(
     __ptr : RawPointer);
@@ -3026,24 +3026,24 @@ external cfree(
     __ptr : RawPointer);
 
 external alloca(
-    __size : CULong) RawPointer;
+    __size : CULong) : RawPointer;
 
 external valloc(
-    __size : CULong) RawPointer;
+    __size : CULong) : RawPointer;
 
 external posix_memalign(
     __memptr : Pointer[RawPointer],
     __alignment : CULong,
-    __size : CULong) Int;
+    __size : CULong) : Int;
 
 external abort();
 
 external atexit(
-    __func : CCodePointer[(),()]) Int;
+    __func : CCodePointer[(),()]) : Int;
 
 external on_exit(
     __func : CCodePointer[(Int,RawPointer),()],
-    __arg : RawPointer) Int;
+    __arg : RawPointer) : Int;
 
 external exit(
     __status : Int);
@@ -3052,43 +3052,43 @@ external _Exit(
     __status : Int);
 
 external getenv(
-    __name : Pointer[CChar]) Pointer[CChar];
+    __name : Pointer[CChar]) : Pointer[CChar];
 
 external __secure_getenv(
-    __name : Pointer[CChar]) Pointer[CChar];
+    __name : Pointer[CChar]) : Pointer[CChar];
 
 external putenv(
-    __string : Pointer[CChar]) Int;
+    __string : Pointer[CChar]) : Int;
 
 external setenv(
     __name : Pointer[CChar],
     __value : Pointer[CChar],
-    __replace : Int) Int;
+    __replace : Int) : Int;
 
 external unsetenv(
-    __name : Pointer[CChar]) Int;
+    __name : Pointer[CChar]) : Int;
 
-external clearenv() Int;
+external clearenv() : Int;
 
 external mktemp(
-    __template : Pointer[CChar]) Pointer[CChar];
+    __template : Pointer[CChar]) : Pointer[CChar];
 
 external mkstemp(
-    __template : Pointer[CChar]) Int;
+    __template : Pointer[CChar]) : Int;
 
 external mkstemps(
     __template : Pointer[CChar],
-    __suffixlen : Int) Int;
+    __suffixlen : Int) : Int;
 
 external mkdtemp(
-    __template : Pointer[CChar]) Pointer[CChar];
+    __template : Pointer[CChar]) : Pointer[CChar];
 
 external system(
-    __command : Pointer[CChar]) Int;
+    __command : Pointer[CChar]) : Int;
 
 external realpath(
     __name : Pointer[CChar],
-    __resolved : Pointer[CChar]) Pointer[CChar];
+    __resolved : Pointer[CChar]) : Pointer[CChar];
 
 alias __compar_fn_t = CCodePointer[(RawPointer,RawPointer),(Int)];
 
@@ -3097,7 +3097,7 @@ external bsearch(
     __base : RawPointer,
     __nmemb : CULong,
     __size : CULong,
-    __compar : __compar_fn_t) RawPointer;
+    __compar : __compar_fn_t) : RawPointer;
 
 external qsort(
     __base : RawPointer,
@@ -3106,59 +3106,59 @@ external qsort(
     __compar : __compar_fn_t);
 
 external abs(
-    __x : Int) Int;
+    __x : Int) : Int;
 
 external labs(
-    __x : CLong) CLong;
+    __x : CLong) : CLong;
 
 external llabs(
-    __x : Int64) Int64;
+    __x : Int64) : Int64;
 
 external div(
     __numer : Int,
-    __denom : Int) div_t;
+    __denom : Int) : div_t;
 
 external ldiv(
     __numer : CLong,
-    __denom : CLong) ldiv_t;
+    __denom : CLong) : ldiv_t;
 
 external lldiv(
     __numer : Int64,
-    __denom : Int64) lldiv_t;
+    __denom : Int64) : lldiv_t;
 
 external ecvt(
     __value : Double,
     __ndigit : Int,
     __decpt : Pointer[Int],
-    __sign : Pointer[Int]) Pointer[CChar];
+    __sign : Pointer[Int]) : Pointer[CChar];
 
 external fcvt(
     __value : Double,
     __ndigit : Int,
     __decpt : Pointer[Int],
-    __sign : Pointer[Int]) Pointer[CChar];
+    __sign : Pointer[Int]) : Pointer[CChar];
 
 external gcvt(
     __value : Double,
     __ndigit : Int,
-    __buf : Pointer[CChar]) Pointer[CChar];
+    __buf : Pointer[CChar]) : Pointer[CChar];
 
 external qecvt(
     __value : UnsupportedCBuiltinType22,
     __ndigit : Int,
     __decpt : Pointer[Int],
-    __sign : Pointer[Int]) Pointer[CChar];
+    __sign : Pointer[Int]) : Pointer[CChar];
 
 external qfcvt(
     __value : UnsupportedCBuiltinType22,
     __ndigit : Int,
     __decpt : Pointer[Int],
-    __sign : Pointer[Int]) Pointer[CChar];
+    __sign : Pointer[Int]) : Pointer[CChar];
 
 external qgcvt(
     __value : UnsupportedCBuiltinType22,
     __ndigit : Int,
-    __buf : Pointer[CChar]) Pointer[CChar];
+    __buf : Pointer[CChar]) : Pointer[CChar];
 
 external ecvt_r(
     __value : Double,
@@ -3166,7 +3166,7 @@ external ecvt_r(
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
     __buf : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external fcvt_r(
     __value : Double,
@@ -3174,7 +3174,7 @@ external fcvt_r(
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
     __buf : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external qecvt_r(
     __value : UnsupportedCBuiltinType22,
@@ -3182,7 +3182,7 @@ external qecvt_r(
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
     __buf : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external qfcvt_r(
     __value : UnsupportedCBuiltinType22,
@@ -3190,42 +3190,42 @@ external qfcvt_r(
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
     __buf : Pointer[CChar],
-    __len : CULong) Int;
+    __len : CULong) : Int;
 
 external mblen(
     __s : Pointer[CChar],
-    __n : CULong) Int;
+    __n : CULong) : Int;
 
 external mbtowc(
     __pwc : Pointer[Int],
     __s : Pointer[CChar],
-    __n : CULong) Int;
+    __n : CULong) : Int;
 
 external wctomb(
     __s : Pointer[CChar],
-    __wchar : Int) Int;
+    __wchar : Int) : Int;
 
 external mbstowcs(
     __pwcs : Pointer[Int],
     __s : Pointer[CChar],
-    __n : CULong) CULong;
+    __n : CULong) : CULong;
 
 external wcstombs(
     __s : Pointer[CChar],
     __pwcs : Pointer[Int],
-    __n : CULong) CULong;
+    __n : CULong) : CULong;
 
 external rpmatch(
-    __response : Pointer[CChar]) Int;
+    __response : Pointer[CChar]) : Int;
 
 external getsubopt(
     __optionp : Pointer[Pointer[CChar]],
     __tokens : Pointer[Pointer[CChar]],
-    __valuep : Pointer[Pointer[CChar]]) Int;
+    __valuep : Pointer[Pointer[CChar]]) : Int;
 
 external getloadavg(
     __loadavg : Pointer[Double],
-    __nelem : Int) Int;
+    __nelem : Int) : Int;
 
 alias IPPROTO_IP = 0;
 alias IPPROTO_HOPOPTS = 0;
@@ -3377,24 +3377,24 @@ record Struct_in_pktinfo (
 );
 
 external ntohl(
-    __netlong : UInt) UInt;
+    __netlong : UInt) : UInt;
 
 external ntohs(
-    __netshort : UShort) UShort;
+    __netshort : UShort) : UShort;
 
 external htonl(
-    __hostlong : UInt) UInt;
+    __hostlong : UInt) : UInt;
 
 external htons(
-    __hostshort : UShort) UShort;
+    __hostshort : UShort) : UShort;
 
 external bindresvport(
     __sockfd : Int,
-    __sock_in : Pointer[Struct_sockaddr_in]) Int;
+    __sock_in : Pointer[Struct_sockaddr_in]) : Int;
 
 external bindresvport6(
     __sockfd : Int,
-    __sock_in : Pointer[Struct_sockaddr_in6]) Int;
+    __sock_in : Pointer[Struct_sockaddr_in6]) : Int;
 
 record Struct_rpcent (
     r_name : Pointer[CChar],
@@ -3408,32 +3408,32 @@ external setrpcent(
 external endrpcent();
 
 external getrpcbyname(
-    __name : Pointer[CChar]) Pointer[Struct_rpcent];
+    __name : Pointer[CChar]) : Pointer[Struct_rpcent];
 
 external getrpcbynumber(
-    __number : Int) Pointer[Struct_rpcent];
+    __number : Int) : Pointer[Struct_rpcent];
 
-external getrpcent() Pointer[Struct_rpcent];
+external getrpcent() : Pointer[Struct_rpcent];
 
 external getrpcbyname_r(
     __name : Pointer[CChar],
     __result_buf : Pointer[Struct_rpcent],
     __buffer : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+    __result : Pointer[Pointer[Struct_rpcent]]) : Int;
 
 external getrpcbynumber_r(
     __number : Int,
     __result_buf : Pointer[Struct_rpcent],
     __buffer : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+    __result : Pointer[Pointer[Struct_rpcent]]) : Int;
 
 external getrpcent_r(
     __result_buf : Pointer[Struct_rpcent],
     __buffer : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_rpcent]]) Int;
+    __result : Pointer[Pointer[Struct_rpcent]]) : Int;
 
 record Struct_netent (
     n_name : Pointer[CChar],
@@ -3442,13 +3442,13 @@ record Struct_netent (
     n_net : UInt,
 );
 
-external __h_errno_location() Pointer[Int];
+external __h_errno_location() : Pointer[Int];
 
 external herror(
     __str : Pointer[CChar]);
 
 external hstrerror(
-    __err_num : Int) Pointer[CChar];
+    __err_num : Int) : Pointer[CChar];
 
 record Struct_hostent (
     h_name : Pointer[CChar],
@@ -3463,26 +3463,26 @@ external sethostent(
 
 external endhostent();
 
-external gethostent() Pointer[Struct_hostent];
+external gethostent() : Pointer[Struct_hostent];
 
 external gethostbyaddr(
     __addr : RawPointer,
     __len : UInt,
-    __type : Int) Pointer[Struct_hostent];
+    __type : Int) : Pointer[Struct_hostent];
 
 external gethostbyname(
-    __name : Pointer[CChar]) Pointer[Struct_hostent];
+    __name : Pointer[CChar]) : Pointer[Struct_hostent];
 
 external gethostbyname2(
     __name : Pointer[CChar],
-    __af : Int) Pointer[Struct_hostent];
+    __af : Int) : Pointer[Struct_hostent];
 
 external gethostent_r(
     __result_buf : Pointer[Struct_hostent],
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_hostent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external gethostbyaddr_r(
     __addr : RawPointer,
@@ -3492,7 +3492,7 @@ external gethostbyaddr_r(
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_hostent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external gethostbyname_r(
     __name : Pointer[CChar],
@@ -3500,7 +3500,7 @@ external gethostbyname_r(
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_hostent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external gethostbyname2_r(
     __name : Pointer[CChar],
@@ -3509,28 +3509,28 @@ external gethostbyname2_r(
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_hostent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external setnetent(
     __stay_open : Int);
 
 external endnetent();
 
-external getnetent() Pointer[Struct_netent];
+external getnetent() : Pointer[Struct_netent];
 
 external getnetbyaddr(
     __net : UInt,
-    __type : Int) Pointer[Struct_netent];
+    __type : Int) : Pointer[Struct_netent];
 
 external getnetbyname(
-    __name : Pointer[CChar]) Pointer[Struct_netent];
+    __name : Pointer[CChar]) : Pointer[Struct_netent];
 
 external getnetent_r(
     __result_buf : Pointer[Struct_netent],
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_netent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external getnetbyaddr_r(
     __net : UInt,
@@ -3539,7 +3539,7 @@ external getnetbyaddr_r(
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_netent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 external getnetbyname_r(
     __name : Pointer[CChar],
@@ -3547,7 +3547,7 @@ external getnetbyname_r(
     __buf : Pointer[CChar],
     __buflen : CULong,
     __result : Pointer[Pointer[Struct_netent]],
-    __h_errnop : Pointer[Int]) Int;
+    __h_errnop : Pointer[Int]) : Int;
 
 record Struct_servent (
     s_name : Pointer[CChar],
@@ -3561,21 +3561,21 @@ external setservent(
 
 external endservent();
 
-external getservent() Pointer[Struct_servent];
+external getservent() : Pointer[Struct_servent];
 
 external getservbyname(
     __name : Pointer[CChar],
-    __proto : Pointer[CChar]) Pointer[Struct_servent];
+    __proto : Pointer[CChar]) : Pointer[Struct_servent];
 
 external getservbyport(
     __port : Int,
-    __proto : Pointer[CChar]) Pointer[Struct_servent];
+    __proto : Pointer[CChar]) : Pointer[Struct_servent];
 
 external getservent_r(
     __result_buf : Pointer[Struct_servent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_servent]]) Int;
+    __result : Pointer[Pointer[Struct_servent]]) : Int;
 
 external getservbyname_r(
     __name : Pointer[CChar],
@@ -3583,7 +3583,7 @@ external getservbyname_r(
     __result_buf : Pointer[Struct_servent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_servent]]) Int;
+    __result : Pointer[Pointer[Struct_servent]]) : Int;
 
 external getservbyport_r(
     __port : Int,
@@ -3591,7 +3591,7 @@ external getservbyport_r(
     __result_buf : Pointer[Struct_servent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_servent]]) Int;
+    __result : Pointer[Pointer[Struct_servent]]) : Int;
 
 record Struct_protoent (
     p_name : Pointer[CChar],
@@ -3604,56 +3604,56 @@ external setprotoent(
 
 external endprotoent();
 
-external getprotoent() Pointer[Struct_protoent];
+external getprotoent() : Pointer[Struct_protoent];
 
 external getprotobyname(
-    __name : Pointer[CChar]) Pointer[Struct_protoent];
+    __name : Pointer[CChar]) : Pointer[Struct_protoent];
 
 external getprotobynumber(
-    __proto : Int) Pointer[Struct_protoent];
+    __proto : Int) : Pointer[Struct_protoent];
 
 external getprotoent_r(
     __result_buf : Pointer[Struct_protoent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_protoent]]) Int;
+    __result : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external getprotobyname_r(
     __name : Pointer[CChar],
     __result_buf : Pointer[Struct_protoent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_protoent]]) Int;
+    __result : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external getprotobynumber_r(
     __proto : Int,
     __result_buf : Pointer[Struct_protoent],
     __buf : Pointer[CChar],
     __buflen : CULong,
-    __result : Pointer[Pointer[Struct_protoent]]) Int;
+    __result : Pointer[Pointer[Struct_protoent]]) : Int;
 
 external setnetgrent(
-    __netgroup : Pointer[CChar]) Int;
+    __netgroup : Pointer[CChar]) : Int;
 
 external endnetgrent();
 
 external getnetgrent(
     __hostp : Pointer[Pointer[CChar]],
     __userp : Pointer[Pointer[CChar]],
-    __domainp : Pointer[Pointer[CChar]]) Int;
+    __domainp : Pointer[Pointer[CChar]]) : Int;
 
 external innetgr(
     __netgroup : Pointer[CChar],
     __host : Pointer[CChar],
     __user : Pointer[CChar],
-    __domain : Pointer[CChar]) Int;
+    __domain : Pointer[CChar]) : Int;
 
 external getnetgrent_r(
     __hostp : Pointer[Pointer[CChar]],
     __userp : Pointer[Pointer[CChar]],
     __domainp : Pointer[Pointer[CChar]],
     __buffer : Pointer[CChar],
-    __buflen : CULong) Int;
+    __buflen : CULong) : Int;
 
 external rcmd(
     __ahost : Pointer[Pointer[CChar]],
@@ -3661,7 +3661,7 @@ external rcmd(
     __locuser : Pointer[CChar],
     __remuser : Pointer[CChar],
     __cmd : Pointer[CChar],
-    __fd2p : Pointer[Int]) Int;
+    __fd2p : Pointer[Int]) : Int;
 
 external rcmd_af(
     __ahost : Pointer[Pointer[CChar]],
@@ -3670,7 +3670,7 @@ external rcmd_af(
     __remuser : Pointer[CChar],
     __cmd : Pointer[CChar],
     __fd2p : Pointer[Int],
-    __af : UShort) Int;
+    __af : UShort) : Int;
 
 external rexec(
     __ahost : Pointer[Pointer[CChar]],
@@ -3678,7 +3678,7 @@ external rexec(
     __name : Pointer[CChar],
     __pass : Pointer[CChar],
     __cmd : Pointer[CChar],
-    __fd2p : Pointer[Int]) Int;
+    __fd2p : Pointer[Int]) : Int;
 
 external rexec_af(
     __ahost : Pointer[Pointer[CChar]],
@@ -3687,40 +3687,40 @@ external rexec_af(
     __pass : Pointer[CChar],
     __cmd : Pointer[CChar],
     __fd2p : Pointer[Int],
-    __af : UShort) Int;
+    __af : UShort) : Int;
 
 external ruserok(
     __rhost : Pointer[CChar],
     __suser : Int,
     __remuser : Pointer[CChar],
-    __locuser : Pointer[CChar]) Int;
+    __locuser : Pointer[CChar]) : Int;
 
 external ruserok_af(
     __rhost : Pointer[CChar],
     __suser : Int,
     __remuser : Pointer[CChar],
     __locuser : Pointer[CChar],
-    __af : UShort) Int;
+    __af : UShort) : Int;
 
 external iruserok(
     __raddr : UInt,
     __suser : Int,
     __remuser : Pointer[CChar],
-    __locuser : Pointer[CChar]) Int;
+    __locuser : Pointer[CChar]) : Int;
 
 external iruserok_af(
     __raddr : RawPointer,
     __suser : Int,
     __remuser : Pointer[CChar],
     __locuser : Pointer[CChar],
-    __af : UShort) Int;
+    __af : UShort) : Int;
 
 external rresvport(
-    __alport : Pointer[Int]) Int;
+    __alport : Pointer[Int]) : Int;
 
 external rresvport_af(
     __alport : Pointer[Int],
-    __af : UShort) Int;
+    __af : UShort) : Int;
 
 record Struct_addrinfo (
     ai_flags : Int,
@@ -3737,13 +3737,13 @@ external getaddrinfo(
     __name : Pointer[CChar],
     __service : Pointer[CChar],
     __req : Pointer[Struct_addrinfo],
-    __pai : Pointer[Pointer[Struct_addrinfo]]) Int;
+    __pai : Pointer[Pointer[Struct_addrinfo]]) : Int;
 
 external freeaddrinfo(
     __ai : Pointer[Struct_addrinfo]);
 
 external gai_strerror(
-    __ecode : Int) Pointer[CChar];
+    __ecode : Int) : Pointer[CChar];
 
 external getnameinfo(
     __sa : Pointer[Struct_sockaddr],
@@ -3752,7 +3752,7 @@ external getnameinfo(
     __hostlen : UInt,
     __serv : Pointer[CChar],
     __servlen : UInt,
-    __flags : UInt) Int;
+    __flags : UInt) : Int;
 
 external _dl_mcount_wrapper_check(
     __selfpc : RawPointer);
@@ -3761,26 +3761,26 @@ alias Lmid_t = CLong;
 
 external dlopen(
     __file : Pointer[CChar],
-    __mode : Int) RawPointer;
+    __mode : Int) : RawPointer;
 
 external dlclose(
-    __handle : RawPointer) Int;
+    __handle : RawPointer) : Int;
 
 external dlsym(
     __handle : RawPointer,
-    __name : Pointer[CChar]) RawPointer;
+    __name : Pointer[CChar]) : RawPointer;
 
 external dlmopen(
     __nsid : CLong,
     __file : Pointer[CChar],
-    __mode : Int) RawPointer;
+    __mode : Int) : RawPointer;
 
 external dlvsym(
     __handle : RawPointer,
     __name : Pointer[CChar],
-    __version : Pointer[CChar]) RawPointer;
+    __version : Pointer[CChar]) : RawPointer;
 
-external dlerror() Pointer[CChar];
+external dlerror() : Pointer[CChar];
 
 record UnnamedStruct10 (
     dli_fname : Pointer[CChar],
@@ -3793,13 +3793,13 @@ alias Dl_info = UnnamedStruct10;
 
 external dladdr(
     __address : RawPointer,
-    __info : Pointer[Dl_info]) Int;
+    __info : Pointer[Dl_info]) : Int;
 
 external dladdr1(
     __address : RawPointer,
     __info : Pointer[Dl_info],
     __extra_info : Pointer[RawPointer],
-    __flags : Int) Int;
+    __flags : Int) : Int;
 
 alias RTLD_DL_SYMENT = 1;
 alias RTLD_DL_LINKMAP = 2;
@@ -3807,7 +3807,7 @@ alias RTLD_DL_LINKMAP = 2;
 external dlinfo(
     __handle : RawPointer,
     __request : Int,
-    __arg : RawPointer) Int;
+    __arg : RawPointer) : Int;
 
 alias RTLD_DI_LMID = 1;
 alias RTLD_DI_LINKMAP = 2;

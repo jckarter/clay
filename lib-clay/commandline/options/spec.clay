@@ -18,7 +18,7 @@ overload printTo(out, it : OptionSpec){
 enum Flags{ HAS_VALUE, REQUIRED, ALLOWS_REPEATS }
 
 [S | SpecPart?(S)]
-overload OptionSpec(part : S, ..parts) OptionSpec{
+overload OptionSpec(part : S, ..parts) : OptionSpec{
   var result = OptionSpec(Vector[String](), false, false, false);
  
   addSpecPart(result, part); 
