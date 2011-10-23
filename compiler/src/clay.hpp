@@ -41,6 +41,8 @@ using std::ostringstream;
 #define strtoull _strtoui64
 #endif
 
+#define CLAY_LANGUAGE_VERSION "0.1-WIP"
+
 
 //
 // Target-specific types

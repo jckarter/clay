@@ -547,8 +547,12 @@ int main(int argc, char **argv) {
             }
             addSearchPath(path);
         }
-        else if (strstr(argv[i], "-v") == argv[i]) {
-            cerr << "clay compiler ("
+        else if (strstr(argv[i], "-v") == argv[i]
+                 || strcmp(argv[i], "--version") == 0) {
+            cerr << "clay compiler, language version " CLAY_LANGUAGE_VERSION " ("
+#ifdef GIT_ID
+                 << "git id " << GIT_ID << ", "
+#endif
 #ifdef HG_ID
                  << "hg id " << HG_ID << ", "
 #endif
