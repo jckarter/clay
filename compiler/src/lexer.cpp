@@ -85,6 +85,7 @@ static bool identChar1(char &x) {
     if ((x >= 'a') && (x <= 'z')) return true;
     if ((x >= 'A') && (x <= 'Z')) return true;
     if (x == '_') return true;
+    if (x == '?') return true;
     return false;
 }
 
