@@ -1520,6 +1520,28 @@ static bool staticFor(StatementPtr &x) {
     return true;
 }
 
+static bool finallyStatement(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+
+    if (!keyword("finally")) return false;
+    StatementPtr body;
+    if (!statement(body)) return false;
+    x = new Finally(body);
+    x->location = location;
+    return true;
+}
+
+static bool onerrorStatement(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+
+    if (!keyword("onerror")) return false;
+    StatementPtr body;
+    if (!statement(body)) return false;
+    x = new OnError(body);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1538,6 +1560,8 @@ static bool statement(StatementPtr &x) {
     if (restore(p), tryStatement(x)) return true;
     if (restore(p), throwStatement(x)) return true;
     if (restore(p), staticFor(x)) return true;
+    if (restore(p), finallyStatement(x)) return true;
+    if (restore(p), onerrorStatement(x)) return true;
 
     return false;
 }

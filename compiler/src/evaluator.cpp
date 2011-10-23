@@ -2277,6 +2277,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         return NULL;
     }
 
+    case ONERROR :
+    case FINALLY :
+        // exception handling not supported in the evaluator.
+        return NULL;
+
     case UNREACHABLE : {
         error("unreachable statement");
         return NULL;

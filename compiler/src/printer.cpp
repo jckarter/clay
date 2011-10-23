@@ -390,6 +390,16 @@ static void printStatement(ostream &out, const Statement *x) {
             << ", " << y->body << ")";
         break;
     }
+    case FINALLY : {
+        const Finally *y = (const Finally *)x;
+        out << "Finally(" << y->body << ")";
+        break;
+    }
+    case ONERROR : {
+        const OnError *y = (const OnError *)x;
+        out << "OnError(" << y->body << ")";
+        break;
+    }
     case UNREACHABLE : {
         out << "Unreachable()";
         break;

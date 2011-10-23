@@ -32,6 +32,44 @@
     import sharedpointers.*;
     foo = new(Foo(1));
 * Hex float syntax (-0x1.234ABCp2) is now supported.
+* enum and variant syntax has been changed to be more congruent with record syntax:
+    // define enum type Foo with values ZIM, ZANG, ZUNG
+    enum Foo (ZIM, ZANG, ZUNG);
+
+    // define variant type Foo over Zim, Zang, Zung:
+    variant Foo (Zim, Zang, Zung);
+
+    // add Zippity,Doo,Dah to variant Foo
+    instance Foo (Zippity, Doo, Dah);
+* Scope guard statements are now provided. 'finally foo();' performs 'foo();' on scope
+  exit for any reason. 'onerror foo();' performs 'foo();' if the scope is exited by a
+  thrown exception, without catching the exception.
+    // 0.0
+    try {
+      foo();
+    } catch(ex) {
+      bar();
+      throw ex;
+    }
+    bar();
+
+    // 0.1
+    finally bar();
+    foo();
+
+
+    // 0.0
+    try {
+      foo();
+    } catch(ex) {
+      bar();
+      throw ex();
+    }
+
+    // 0.1
+    onerror bar();
+    foo();
+
 
 Planned changes
 ---------------
@@ -65,16 +103,6 @@ cut and pasted above.
 
 * 'record' has been renamed to 'struct', and library functions with 'record' or
   'Record' in the name have been renamed to 'struct'/'Struct'.
-* enum and variant syntax has been changed to be more congruent with record syntax:
-    // define enum type Foo with values ZIM, ZANG, ZUNG
-    enum Foo(ZIM, ZANG, ZUNG);
-
-    // define variant type Foo over Zim, Zang, Zung:
-    variant Foo(Zim, Zang, Zung);
-
-    // add Zippity,Doo,Dah to variant Foo
-    instance Foo(Zippity, Doo, Dah);
-
 * Universe overloads have been unrestricted. '[F|Foo?(F)] F() {}' will now overload
   all symbols matching Foo?(F) instead of just types. Universe overloads also now have
   lower precedence than specific overloads.
@@ -226,34 +254,6 @@ cut and pasted above.
 * Throw is now an expression:
     var p = malloc(123) or throw OutOfMemory();
     var quotient = if (x == 0) throw DivisionByZero() else y/x;
-
-* Scope guard statements are now provided. 'always foo();' performs 'foo();' on scope
-  exit for any reason. 'onerror foo();' performs 'foo();' if the scope is exited by a
-  thrown exception, without catching the exception.
-    // 0.0
-    try {
-      foo();
-    } catch(ex) {
-      bar();
-      throw ex;
-    }
-    bar();
-
-    // 0.1
-    always bar();
-    foo();
-
-    // 0.0
-    try {
-      foo();
-    } catch(ex) {
-      bar();
-      throw ex();
-    }
-
-    // 0.1
-    onerror bar();
-    foo();
 
 * Integer division now uses the div operator. '/' now only does floating-point division:
     var x = 3 div 2; // 1

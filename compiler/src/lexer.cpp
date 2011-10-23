@@ -128,6 +128,7 @@ static void initKeywords() {
          "if", "else", "goto", "return", "while",
          "switch", "case", "default", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
+         "finally", "onerror",
          "__FILE__", "__LINE__", "__COLUMN__", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)

@@ -15,6 +15,7 @@ static CodegenContextPtr destructorsCtx;
 
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
+void codegenStackEntryDestroy(ValueStackEntry const &entry, CodegenContextPtr ctx);
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
@@ -27,7 +28,11 @@ int cgMarkStack(CodegenContextPtr ctx);
 void cgDestroyStack(int marker, CodegenContextPtr ctx);
 void cgPopStack(int marker, CodegenContextPtr ctx);
 void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx);
-void cgPushStack(CValuePtr cv, CodegenContextPtr ctx);
+void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx);
+void cgPushStackStatement(ValueStackEntryType type,
+    EnvPtr env,
+    StatementPtr statement,
+    CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
 
@@ -286,6 +291,25 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
     ctx->checkExceptions = savedCheckExceptions;
 }
 
+void codegenStackEntryDestroy(ValueStackEntry const &entry, CodegenContextPtr ctx)
+{
+    switch (entry.type) {
+    case LOCAL_VALUE:
+        codegenValueDestroy(entry.value, ctx);
+        break;
+    case FINALLY_STATEMENT: {
+            bool savedCheckExceptions = ctx->checkExceptions;
+            ctx->checkExceptions = false;
+            codegenStatement(entry.statement, entry.statementEnv, ctx);
+            ctx->checkExceptions = savedCheckExceptions;
+            break;
+        }
+    case ONERROR_STATEMENT:
+        error("onerror not yet supported");
+        break;
+    }
+}
+
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
@@ -427,7 +451,7 @@ void cgDestroyStack(int marker, CodegenContextPtr ctx)
     assert(marker <= i);
     while (marker < i) {
         --i;
-        codegenValueDestroy(ctx->valueStack[i], ctx);
+        codegenStackEntryDestroy(ctx->valueStack[i], ctx);
     }
 }
 
@@ -442,15 +466,23 @@ void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size()) {
-        CValuePtr cv = ctx->valueStack.back();
+        ValueStackEntry entry = ctx->valueStack.back();
         ctx->valueStack.pop_back();
-        codegenValueDestroy(cv, ctx);
+        codegenStackEntryDestroy(entry, ctx);
     }
 }
 
-void cgPushStack(CValuePtr cv, CodegenContextPtr ctx)
+void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx)
 {
-    ctx->valueStack.push_back(cv);
+    ctx->valueStack.push_back(ValueStackEntry(cv));
+}
+
+void cgPushStackStatement(ValueStackEntryType type,
+    EnvPtr env,
+    StatementPtr statement,
+    CodegenContextPtr ctx)
+{
+    ctx->valueStack.push_back(ValueStackEntry(type, env, statement));
 }
 
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
@@ -637,7 +669,7 @@ static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
     for (unsigned i = 0; i < mpv->size(); ++i) {
         if (mpv->values[i]->isTemp) {
             out->add(mcv->values[i]);
-            cgPushStack(mcv->values[i], ctx);
+            cgPushStackValue(mcv->values[i], ctx);
         }
         else {
             out->add(derefValue(mcv->values[i], ctx));
@@ -772,7 +804,7 @@ void codegenMultiInto(ExprListPtr exprs,
         }
         cgDestroyAndPopStack(marker2, ctx);
         for (unsigned k = prevJ; k < j; ++k)
-            cgPushStack(out->values[k], ctx);
+            cgPushStackValue(out->values[k], ctx);
         marker2 = cgMarkStack(ctx);
     }
     assert(j == out->size());
@@ -805,7 +837,7 @@ void codegenExprInto(ExprPtr expr,
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             codegenValueCopy(out->values[i], cv, ctx);
         }
-        cgPushStack(out->values[i], ctx);
+        cgPushStackValue(out->values[i], ctx);
     }
     cgPopStack(marker2, ctx);
     cgDestroyAndPopStack(marker, ctx);
@@ -860,7 +892,7 @@ void codegenMulti(ExprListPtr exprs,
         }
         cgDestroyAndPopStack(marker2, ctx);
         for (unsigned k = prevJ; k < j; ++k)
-            cgPushStack(out->values[k], ctx);
+            cgPushStackValue(out->values[k], ctx);
         marker2 = cgMarkStack(ctx);
     }
     assert(j == out->size());
@@ -3166,7 +3198,7 @@ bool codegenStatement(StatementPtr stmt,
             }
             codegenMultiInto(x->right, env, ctx, mcvRight);
             for (unsigned i = 0; i < mcvRight->size(); ++i)
-                cgPushStack(mcvRight->values[i], ctx);
+                cgPushStackValue(mcvRight->values[i], ctx);
         }
         unsigned j = 0;
         for (unsigned i = 0; i < x->left->size(); ++i) {
@@ -3565,6 +3597,18 @@ bool codegenStatement(StatementPtr stmt,
         return terminated;
     }
 
+    case FINALLY : {
+        Finally *x = (Finally *)stmt.ptr();
+        cgPushStackStatement(FINALLY_STATEMENT, env, x->body, ctx);
+        return false;
+    }
+
+    case ONERROR : {
+        OnError *x = (OnError *)stmt.ptr();
+        cgPushStackStatement(ONERROR_STATEMENT, env, x->body, ctx);
+        return false;
+    }
+
     case UNREACHABLE : {
         ctx->builder->CreateUnreachable();
         return true;
@@ -3637,7 +3681,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = mcv->values[i];
-            cgPushStack(cv, ctx);
+            cgPushStackValue(cv, ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
@@ -3674,7 +3718,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             CValuePtr cv;
             if (mpv->values[i]->isTemp) {
                 cv = mcv->values[i];
-                cgPushStack(cv, ctx);
+                cgPushStackValue(cv, ctx);
             }
             else {
                 cv = derefValue(mcv->values[i], ctx);

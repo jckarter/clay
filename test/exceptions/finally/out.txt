@@ -1,0 +1,21 @@
+--> foo
+lalala
+<-- foo
+--> foo
+lalala
+<-- foo
+caught 17
+--> bar
+lalala
+<-- abcdef
+--> bar
+lalala
+<-- abcghi
+caught 42
+--> bas
+lalala
+<-- a
+--> bas
+lalala
+<-- aa
+caught 86

@@ -1967,6 +1967,10 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
         return SA_FALLTHROUGH;
     }
 
+    case FINALLY :
+    case ONERROR :
+        return SA_FALLTHROUGH;
+
     case UNREACHABLE :
         return SA_TERMINATED;
 

@@ -261,6 +261,8 @@ struct Try;
 struct Catch;
 struct Throw;
 struct StaticFor;
+struct Finally;
+struct OnError;
 struct Unreachable;
 
 struct FormalArg;
@@ -335,6 +337,7 @@ struct MultiCValue;
 
 struct ObjectTable;
 
+struct ValueStackEntry;
 
 
 //
@@ -404,6 +407,8 @@ typedef Pointer<Try> TryPtr;
 typedef Pointer<Catch> CatchPtr;
 typedef Pointer<Throw> ThrowPtr;
 typedef Pointer<StaticFor> StaticForPtr;
+typedef Pointer<Finally> FinallyPtr;
+typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
@@ -1048,6 +1053,8 @@ enum StatementKind {
     TRY,
     THROW,
     STATIC_FOR,
+    FINALLY,
+    ONERROR,
     UNREACHABLE
 };
 
@@ -1274,6 +1281,18 @@ struct StaticFor : public Statement {
               StatementPtr body)
         : Statement(STATIC_FOR), variable(variable), values(values),
           body(body), clonesInitialized(false) {}
+};
+
+struct Finally : public Statement {
+    StatementPtr body;
+
+    explicit Finally(StatementPtr body) : Statement(FINALLY), body(body) {}
+};
+
+struct OnError : public Statement {
+    StatementPtr body;
+
+    explicit OnError(StatementPtr body) : Statement(ONERROR), body(body) {}
 };
 
 struct Unreachable : public Statement {
@@ -2922,12 +2941,35 @@ struct StackSlot {
         : llType(llType), llValue(llValue) {}
 };
 
+enum ValueStackEntryType {
+    LOCAL_VALUE,
+    FINALLY_STATEMENT,
+    ONERROR_STATEMENT,
+};
+
+struct ValueStackEntry {
+    ValueStackEntryType type;
+    CValuePtr value;
+    EnvPtr statementEnv;
+    StatementPtr statement;
+
+    explicit ValueStackEntry(CValuePtr value)
+        : type(LOCAL_VALUE), value(value), statementEnv(NULL), statement(NULL) {}
+    ValueStackEntry(ValueStackEntryType type,
+        EnvPtr statementEnv,
+        StatementPtr statement)
+        : type(type), value(NULL), statementEnv(statementEnv), statement(statement)
+    {
+        assert(type != LOCAL_VALUE);
+    }
+};
+
 struct CodegenContext : public Object {
     llvm::Function *llvmFunc;
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
 
-    vector<CValuePtr> valueStack;
+    vector<ValueStackEntry> valueStack;
     llvm::Value *valueForStatics;
 
     vector<StackSlot> allocatedSlots;

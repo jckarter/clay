@@ -419,6 +419,18 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case FINALLY : {
+        Finally *y = (Finally *)x.ptr();
+        convertFreeVars(y->body, env, ctx);
+        break;
+    }
+
+    case ONERROR : {
+        OnError *y = (OnError *)x.ptr();
+        convertFreeVars(y->body, env, ctx);
+        break;
+    }
+
     case UNREACHABLE :
         break;
 

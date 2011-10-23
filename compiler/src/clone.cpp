@@ -398,6 +398,18 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case FINALLY : {
+        Finally *y = (Finally *)x.ptr();
+        out = new Finally(clone(y->body));
+        break;
+    }
+
+    case ONERROR : {
+        OnError *y = (OnError *)x.ptr();
+        out = new OnError(clone(y->body));
+        break;
+    }
+
     case UNREACHABLE : {
         out = new Unreachable();
         break;
