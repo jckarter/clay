@@ -1,4 +1,2 @@
-scope working
 destroying 5
-scope finished
 destroyed? true
