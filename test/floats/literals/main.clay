@@ -1,0 +1,18 @@
+show(x:Double) { println(x); }
+
+main() {
+    show(0x0p0);
+    show(-0x0p0);
+    show(0x1p0);
+    show(-0x1p0);
+    show(0x1p2);
+    show(0x1p+2);
+    show(0x1p-2);
+    show(0x1p10);
+    show(0x1p-10);
+    show(-0x1p+2);
+    show(-0x1p-2);
+    show(0x1.8p2);
+    show(0x1.00_80p2);
+    show(0x1_00p2);
+}

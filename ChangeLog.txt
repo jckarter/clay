@@ -23,6 +23,7 @@
     foo() : { // you can now declare no return values
         println("Hello world");
     }
+* Hex float syntax (-0x1.234ABCp2) is now supported.
 
 Planned changes
 ---------------
@@ -33,7 +34,6 @@ These changes may not all get completed at the next point release, but they are
 planned to be made eventually. They're written in past tense so they can be easily
 cut and pasted above.
 
-* Hex float syntax (-0x1.234ABCp2) is now supported.
 * Keywords that do similar things have been combined:
     The 'static' keyword in expressions and argument lists is now the '#' operator.
     Identifiers now lower to StringConstants, and must always be quoted:

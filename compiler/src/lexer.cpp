@@ -327,10 +327,8 @@ static void optNumericSeparator() {
         restore(p);
 }
 
-static bool hexInt() {
-    if (!str("0x")) return false;
+static bool hexDigits() {
     int x;
-    if (!hexDigit(x)) return false;
     while (true) {
         optNumericSeparator();
         char *p = save();
@@ -340,6 +338,13 @@ static bool hexInt() {
         }
     }
     return true;
+}
+
+static bool hexInt() {
+    if (!str("0x")) return false;
+    int x;
+    if (!hexDigit(x)) return false;
+    return hexDigits();
 }
 
 static bool decimalInt() {
@@ -397,24 +402,57 @@ static bool fractionalPart() {
     return decimalInt();
 }
 
+static bool hexExponentPart() {
+    char c;
+    if (!next(c)) return false;
+    if ((c != 'p') && (c != 'P')) return false;
+    char *begin = save();
+    if (!sign()) restore(begin);
+    return decimalInt();
+}
+
+static bool hexFractionalPart() {
+    char c;
+    if (!next(c) || (c != '.')) return false;
+    return hexDigits();
+}
+
 static bool floatToken(TokenPtr &x) {
     char *begin = save();
     if (!sign()) restore(begin);
-    if (!decimalInt()) return false;
-    char *p = save();
-    if (fractionalPart()) {
-        p = save();
-        if (!exponentPart())
+    char *afterSign = save();
+    if (hexInt()) {
+        char *p = save();
+        if (hexFractionalPart()) {
+            if (!hexExponentPart())
+                return false;
+        } else {
             restore(p);
-    }
-    else {
-        restore(p);
-        if (!exponentPart())
+            if (!hexExponentPart())
+                return false;
+        }
+        char *end = save();
+        x = new Token(T_FLOAT_LITERAL, string(begin, end));
+        return true;
+    } else {
+        restore(afterSign);
+        if (decimalInt()) {
+            char *p = save();
+            if (fractionalPart()) {
+                p = save();
+                if (!exponentPart())
+                    restore(p);
+            } else {
+                restore(p);
+                if (!exponentPart())
+                    return false;
+            }
+            char *end = save();
+            x = new Token(T_FLOAT_LITERAL, string(begin, end));
+            return true;
+        } else
             return false;
     }
-    char *end = save();
-    x = new Token(T_FLOAT_LITERAL, string(begin, end));
-    return true;
 }
 
 
