@@ -248,11 +248,6 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "Unpack(" << y->expr << ")";
         break;
     }
-    case NEW : {
-        const New *y = (const New *)x;
-        out << "New(" << y->expr << ")";
-        break;
-    }
     case STATIC_EXPR : {
         const StaticExpr *y = (const StaticExpr *)x;
         out << "StaticExpr(" << y->expr << ")";

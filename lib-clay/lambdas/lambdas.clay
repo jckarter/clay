@@ -14,7 +14,7 @@ record Lambda[In,Out] (
 
 [In, Out, T | CallableWithSignature?(T, In, Out)]
 alias overload Lambda[In, Out](x:T) {
-    return Lambda[In,Out](new LambdaBody[In,Out](x));
+    return Lambda[In,Out](new(LambdaBody[In,Out](x)));
 }
 
 private CallableWithSignature?(T, In, Out) {

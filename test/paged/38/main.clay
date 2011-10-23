@@ -30,7 +30,7 @@ main() {
     var root = NamedScalar[SharedPointer[Node]]("temp_stack.data", nullShared(Node));
 
     var n = listLength(root^);
-    var node = allocateShared(Node(n, root^));
+    var node = new(Node(n, root^));
     root^ = node;
 
     printList(root^);

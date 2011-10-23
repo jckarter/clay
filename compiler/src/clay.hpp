@@ -231,7 +231,6 @@ struct Or;
 struct IfExpr;
 struct Lambda;
 struct Unpack;
-struct New;
 struct StaticExpr;
 struct DispatchExpr;
 struct ForeignExpr;
@@ -375,7 +374,6 @@ typedef Pointer<Or> OrPtr;
 typedef Pointer<IfExpr> IfExprPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<Unpack> UnpackPtr;
-typedef Pointer<New> NewPtr;
 typedef Pointer<StaticExpr> StaticExprPtr;
 typedef Pointer<DispatchExpr> DispatchExprPtr;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
@@ -743,7 +741,6 @@ enum ExprKind {
     IF_EXPR,
     LAMBDA,
     UNPACK,
-    NEW,
     STATIC_EXPR,
     DISPATCH_EXPR,
 
@@ -960,13 +957,6 @@ struct Unpack : public Expr {
     ExprPtr expr;
     Unpack(ExprPtr expr) :
         Expr(UNPACK), expr(expr) {}
-};
-
-struct New : public Expr {
-    ExprPtr expr;
-    ExprPtr desugared;
-    New(ExprPtr expr) :
-        Expr(NEW), expr(expr) {}
 };
 
 struct StaticExpr : public Expr {
@@ -2434,7 +2424,6 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarIfExpr(IfExprPtr x);
-ExprPtr desugarNew(NewPtr x);
 ExprPtr desugarStaticExpr(StaticExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);

@@ -10,10 +10,10 @@ overload RegularRecord?(static UniquePointer[T]) = false;
 
 
 //
-// allocateUnique
+// newUnique
 //
 [T]
-alias allocateUnique(x:T) {
+alias newUnique(x:T) {
     var ptr = allocateRawMemory(T, SizeT(1));
     try {
         ptr^ <-- x;
@@ -87,7 +87,7 @@ inline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
 record UniqueValue[T] (ptr: UniquePointer[T]);
 
 [T]
-alias overload UniqueValue(x:T) = UniqueValue[T](allocateUnique(x));
+alias overload UniqueValue(x:T) = UniqueValue[T](newUnique(x));
 
 [T]
 inline overload UniqueValue[T](x:UniqueValue[T]) =

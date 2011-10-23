@@ -174,12 +174,6 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case NEW : {
-        New *y = (New *)x.ptr();
-        out = new New(clone(y->expr));
-        break;
-    }
-
     case STATIC_EXPR : {
         StaticExpr *y = (StaticExpr *)x.ptr();
         out = new StaticExpr(clone(y->expr));

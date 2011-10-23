@@ -23,6 +23,14 @@
     foo() : { // you can now declare no return values
         println("Hello world");
     }
+* The 'new' keyword has been removed. 'sharedpointers.allocateShared' and
+  'uniquepointers.allocateUnique' have been renamed to 'new' and 'newUnique'.
+    // 0.0
+    foo = new Foo(1); // always called allocateShared
+
+    // 0.1
+    import sharedpointers.*;
+    foo = new(Foo(1));
 * Hex float syntax (-0x1.234ABCp2) is now supported.
 
 Planned changes
@@ -55,18 +63,6 @@ cut and pasted above.
   It is currently ignored, but will be used in the future to provide module-specific
   build flags and module-level parameters.
 
-* The 'new' keyword has been removed. 'sharedpointers.allocateShared' and
-  'uniquepointers.allocateUnique' have been both renamed to 'new' in their respective
-  modules:
-    // 0.0
-    foo = new Foo(1); // always called allocateShared
-
-    // 0.1
-    import sharedpointers.*;
-    foo = new(Foo(1));
-    // -- or to allocate unique --
-    import uniquepointers.*;
-    foo = new(Foo(1));
 * 'record' has been renamed to 'struct', and library functions with 'record' or
   'Record' in the name have been renamed to 'struct'/'Struct'.
 * enum and variant syntax has been changed to be more congruent with record syntax:
@@ -228,8 +224,8 @@ cut and pasted above.
     );
 
 * Throw is now an expression:
-    var p = malloc(123) or throw OutOfMemory;
-    var quotient = if (x == 0) throw DivisionByZero else y/x;
+    var p = malloc(123) or throw OutOfMemory();
+    var quotient = if (x == 0) throw DivisionByZero() else y/x;
 
 * Scope guard statements are now provided. 'always foo();' performs 'foo();' on scope
   exit for any reason. 'onerror foo();' performs 'foo();' if the scope is exited by a
@@ -272,3 +268,6 @@ cut and pasted above.
     """hello world"""
     $$hello world$$
     $end$hello world$end$
+
+* Pair syntax 'a: b' now desugars into two values '#"a", b' instead of a two-element
+  tuple as it did before.

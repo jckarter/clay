@@ -2,6 +2,6 @@ record Foo ( x: SharedPointer[Bar], y: SharedPointer[Bar] );
 variant Bar = Int | Foo;
 
 main() {
-    var z = Foo(allocateShared(Bar(0)), allocateShared(Bar(0)));
+    var z = Foo(new(Bar(0)), new(Bar(0)));
     println(variantAs(z.x^, Int), ", ", variantAs(z.y^, Int));
 }

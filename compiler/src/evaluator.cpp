@@ -1114,14 +1114,6 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case NEW : {
-        New *x = (New *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarNew(x);
-        evalExpr(x->desugared, env, out);
-        break;
-    }
-
     case STATIC_EXPR : {
         StaticExpr *x = (StaticExpr *)expr.ptr();
         if (!x->desugared)

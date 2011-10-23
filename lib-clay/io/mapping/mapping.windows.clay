@@ -83,8 +83,8 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.CloseHandle(mappingObject);
         throw GenericIOError(win32.GetLastError());
     }
-    var p = new InnerFileMapping(fileHandle(f), mappingObject,
-                                 address, SizeT(length));
+    var p = new(InnerFileMapping(fileHandle(f), mappingObject,
+                                 address, SizeT(length)));
     return FileMapping(p);
 }
 

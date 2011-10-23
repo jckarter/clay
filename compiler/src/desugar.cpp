@@ -103,13 +103,6 @@ ExprPtr desugarIfExpr(IfExprPtr x) {
     return call.ptr();
 }
 
-ExprPtr desugarNew(NewPtr x) {
-    ExprPtr callable = prelude_expr_allocateShared();
-    CallPtr call = new Call(callable, new ExprList());
-    call->args->add(x->expr);
-    return call.ptr();
-}
-
 ExprPtr desugarStaticExpr(StaticExprPtr x) {
     ExprPtr callable = prelude_expr_wrapStatic();
     CallPtr call = new Call(callable, new ExprList());

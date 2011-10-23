@@ -116,7 +116,7 @@ overload T() --> returned:T {
 
 [T, ..A | ReferenceType?(T) and (Tuple[..A] == Tuple[..ReferenceTypeFieldTypes(T)])]
 alias overload T(..args:A) --> returned:T {
-    referencePtr(returned) <-- new Tuple(..args);
+    referencePtr(returned) <-- new(Tuple(..args));
 }
 
 
@@ -127,7 +127,7 @@ alias overload T(..args:A) --> returned:T {
 
 [T | ReferenceType?(T)]
 allocateRef(static T) --> returned:T {
-    referencePtr(returned) <-- new Tuple[..ReferenceTypeFieldTypes(T)]();
+    referencePtr(returned) <-- new(Tuple[..ReferenceTypeFieldTypes(T)]());
 }
 
 [T | ReferenceType?(T)]

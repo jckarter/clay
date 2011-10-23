@@ -974,18 +974,8 @@ static bool unpack(ExprPtr &x) {
 
 
 //
-// newExpr, staticExpr, pairExpr
+// staticExpr, pairExpr
 //
-
-static bool newExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("new")) return false;
-    ExprPtr y;
-    if (!expression(y)) return false;
-    x = new New(y);
-    x->location = location;
-    return true;
-}
 
 static bool staticExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
@@ -1027,7 +1017,6 @@ static bool expression(ExprPtr &x) {
     if (restore(p), orExpr(x)) return true;
     if (restore(p), ifExpr(x)) return true;
     if (restore(p), unpack(x)) return true;
-    if (restore(p), newExpr(x)) return true;
     if (restore(p), staticExpr(x)) return true;
     return false;
 }
@@ -1038,7 +1027,6 @@ static bool expressionNoPair(ExprPtr &x) {
     if (restore(p), orExpr(x)) return true;
     if (restore(p), ifExpr(x)) return true;
     if (restore(p), unpack(x)) return true;
-    if (restore(p), newExpr(x)) return true;
     if (restore(p), staticExpr(x)) return true;
     return false;
 }

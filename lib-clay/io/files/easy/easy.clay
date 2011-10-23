@@ -33,13 +33,13 @@ private record FileData (
 
 [S | CCompatibleString?(S)]
 overload File(path:S, mode:OpenMode) =
-    File(new FileData(RawFile(path, mode)));
+    File(new(FileData(RawFile(path, mode))));
 
 [S | CCompatibleString?(S)]
-overload File(path:S) = File(new FileData(RawFile(path)));
+overload File(path:S) = File(new(FileData(RawFile(path))));
 
 overload File(rvalue f:RawFile) =
-    File(new FileData(move(f)));
+    File(new(FileData(move(f))));
 
 overload FileData(rvalue file:RawFile) --> returned:FileData {
     var lineBuffered? = terminal?(file);
@@ -74,9 +74,9 @@ overload destroy(fd:FileData) {
 // stdinFile, stdoutFile, stderrFile
 //
 
-stdinFile()  = File(new FileData(stdinRawFile()));
-stdoutFile() = File(new FileData(stdoutRawFile()));
-stderrFile() = File(new FileData(stderrRawFile()));
+stdinFile()  = File(new(FileData(stdinRawFile())));
+stdoutFile() = File(new(FileData(stdoutRawFile())));
+stderrFile() = File(new(FileData(stderrRawFile())));
 
 
 

@@ -1146,14 +1146,6 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
-    case NEW : {
-        New *x = (New *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarNew(x);
-        codegenExpr(x->desugared, env, ctx, out);
-        break;
-    }
-
     case STATIC_EXPR : {
         StaticExpr *x = (StaticExpr *)expr.ptr();
         if (!x->desugared)

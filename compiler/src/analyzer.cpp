@@ -715,13 +715,6 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return NULL;
     }
 
-    case NEW : {
-        New *x = (New *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarNew(x);
-        return analyzeExpr(x->desugared, env);
-    }
-
     case STATIC_EXPR : {
         StaticExpr *x = (StaticExpr *)expr.ptr();
         if (!x->desugared)

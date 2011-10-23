@@ -5,7 +5,7 @@ record Leaf(value:Int);
 
 [T | VariantMember?(Tree, T)]
 alias overload Branch(l:T, r:T)
-    = Branch(allocateShared(Tree(l)), allocateShared(Tree(r)));
+    = Branch(new(Tree(l)), new(Tree(r)));
 
 main() {
     var tree = Tree(Branch(Leaf(1), Leaf(2)));

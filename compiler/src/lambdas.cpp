@@ -608,12 +608,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case NEW : {
-        New *y = (New *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
-        break;
-    }
-
     case STATIC_EXPR : {
         StaticExpr *y = (StaticExpr *)x.ptr();
         convertFreeVars(y->expr, env, ctx);

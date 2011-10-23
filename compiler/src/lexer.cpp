@@ -124,7 +124,7 @@ static void initKeywords() {
          "define", "overload", "external", "alias",
          "static", "rvalue",
          "inline", "enum", "var", "ref", "forward",
-         "and", "or", "not", "new",
+         "and", "or", "not",
          "if", "else", "goto", "return", "while",
          "switch", "case", "default", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",

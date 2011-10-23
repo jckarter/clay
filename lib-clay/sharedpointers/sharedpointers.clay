@@ -20,11 +20,11 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 
 
 //
-// allocateShared
+// new
 //
 
 [T]
-alias allocateShared(x:T) {
+alias new(x:T) {
     var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
     ptr^.refCount = 1;
     try {
@@ -37,6 +37,7 @@ alias allocateShared(x:T) {
     return SharedPointer(ptr);
 }
 
+alias newShared = new;
 
 
 //

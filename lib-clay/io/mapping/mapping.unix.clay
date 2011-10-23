@@ -68,7 +68,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     );
     if (address == Type(address)(-1))
         throw GenericIOError(unix.errno());
-    return FileMapping(new InnerFileMapping(address, SizeT(length)));
+    return FileMapping(new(InnerFileMapping(address, SizeT(length))));
 }
 
 overload FileMapping(f:File, mode:MappingMode) =
