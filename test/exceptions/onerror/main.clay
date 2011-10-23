@@ -1,0 +1,60 @@
+instance Exception = Int;
+
+foo(throw?) {
+    println("--> foo");
+    onerror println("<-- threw");
+
+    println("lalala");
+    if (throw?) throw 17;
+    println("<-- exited");
+}
+
+bar(str, throw?) {
+    println("--> bar");
+
+    var s = String("abc");
+    push(s, str);
+    onerror println("<-- threw, s = ", s);
+
+    println("lalala");
+    if (throw?) throw 42;
+    println("<-- exited, s = ", s);
+}
+
+main() {
+    try {
+        foo(false);
+        foo(true);
+        println("unreachable");
+    } catch (ex) {
+        println("caught ", ex);
+    }
+
+    try {
+        bar("def", false);
+        bar("ghi", true);
+        println("unreachable");
+    } catch (ex) {
+        println("caught ", ex);
+    }
+
+    var s = String();
+    var bas = (throw?) -> {
+        println("--> bas");
+        onerror println("<-- threw, s = ", s);
+        push(s, 'a');
+
+        println("lalala");
+        if (throw?) throw 86;
+        println("<-- exited, s = ", s);
+    };
+
+    try {
+        bas(false);
+        bas(true);
+        println("unreachable");
+    } catch (ex) {
+        println("caught ", ex);
+    }
+
+}

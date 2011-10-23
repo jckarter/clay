@@ -1,0 +1,21 @@
+--> foo
+lalala
+<-- exited
+--> foo
+lalala
+<-- threw
+caught 17
+--> bar
+lalala
+<-- exited, s = abcdef
+--> bar
+lalala
+<-- threw, s = abcghi
+caught 42
+--> bas
+lalala
+<-- exited, s = a
+--> bas
+lalala
+<-- threw, s = aa
+caught 86

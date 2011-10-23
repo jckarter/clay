@@ -15,7 +15,9 @@ static CodegenContextPtr destructorsCtx;
 
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
-void codegenStackEntryDestroy(ValueStackEntry const &entry, CodegenContextPtr ctx);
+void codegenStackEntryDestroy(ValueStackEntry const &entry,
+    CodegenContextPtr ctx,
+    bool exception);
 void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
 void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
@@ -25,9 +27,9 @@ void codegenValueMoveAssign(CValuePtr dest,
 llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx);
 
 int cgMarkStack(CodegenContextPtr ctx);
-void cgDestroyStack(int marker, CodegenContextPtr ctx);
+void cgDestroyStack(int marker, CodegenContextPtr ctx, bool exception);
 void cgPopStack(int marker, CodegenContextPtr ctx);
-void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx);
+void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx, bool exception);
 void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx);
 void cgPushStackStatement(ValueStackEntryType type,
     EnvPtr env,
@@ -291,7 +293,9 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
     ctx->checkExceptions = savedCheckExceptions;
 }
 
-void codegenStackEntryDestroy(ValueStackEntry const &entry, CodegenContextPtr ctx)
+void codegenStackEntryDestroy(ValueStackEntry const &entry,
+    CodegenContextPtr ctx,
+    bool exception)
 {
     switch (entry.type) {
     case LOCAL_VALUE:
@@ -302,10 +306,16 @@ void codegenStackEntryDestroy(ValueStackEntry const &entry, CodegenContextPtr ct
             ctx->checkExceptions = false;
             codegenStatement(entry.statement, entry.statementEnv, ctx);
             ctx->checkExceptions = savedCheckExceptions;
-            break;
         }
-    case ONERROR_STATEMENT:
-        error("onerror not yet supported");
+        break;
+    case ONERROR_STATEMENT: {
+            if (exception) {
+                bool savedCheckExceptions = ctx->checkExceptions;
+                ctx->checkExceptions = false;
+                codegenStatement(entry.statement, entry.statementEnv, ctx);
+                ctx->checkExceptions = savedCheckExceptions;
+            }
+        }
         break;
     }
 }
@@ -445,13 +455,13 @@ int cgMarkStack(CodegenContextPtr ctx)
     return ctx->valueStack.size();
 }
 
-void cgDestroyStack(int marker, CodegenContextPtr ctx)
+void cgDestroyStack(int marker, CodegenContextPtr ctx, bool exception)
 {
     int i = (int)ctx->valueStack.size();
     assert(marker <= i);
     while (marker < i) {
         --i;
-        codegenStackEntryDestroy(ctx->valueStack[i], ctx);
+        codegenStackEntryDestroy(ctx->valueStack[i], ctx, exception);
     }
 }
 
@@ -462,13 +472,13 @@ void cgPopStack(int marker, CodegenContextPtr ctx)
         ctx->valueStack.pop_back();
 }
 
-void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx)
+void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx, bool exception)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size()) {
         ValueStackEntry entry = ctx->valueStack.back();
         ctx->valueStack.pop_back();
-        codegenStackEntryDestroy(entry, ctx);
+        codegenStackEntryDestroy(entry, ctx, exception);
     }
 }
 
@@ -758,7 +768,7 @@ void codegenOneInto(ExprPtr expr,
         codegenOne(expr, env, ctx, cvPtr);
         codegenValueCopy(out, derefValue(cvPtr, ctx), ctx);
     }
-    cgDestroyAndPopStack(marker, ctx);
+    cgDestroyAndPopStack(marker, ctx, false);
 }
 
 void codegenMultiInto(ExprListPtr exprs,
@@ -802,7 +812,7 @@ void codegenMultiInto(ExprListPtr exprs,
             codegenOneInto(x, env, ctx, out->values[j]);
             ++j;
         }
-        cgDestroyAndPopStack(marker2, ctx);
+        cgDestroyAndPopStack(marker2, ctx, false);
         for (unsigned k = prevJ; k < j; ++k)
             cgPushStackValue(out->values[k], ctx);
         marker2 = cgMarkStack(ctx);
@@ -840,7 +850,7 @@ void codegenExprInto(ExprPtr expr,
         cgPushStackValue(out->values[i], ctx);
     }
     cgPopStack(marker2, ctx);
-    cgDestroyAndPopStack(marker, ctx);
+    cgDestroyAndPopStack(marker, ctx, false);
 }
 
 
@@ -890,7 +900,7 @@ void codegenMulti(ExprListPtr exprs,
             codegenOne(x, env, ctx, out->values[j]);
             ++j;
         }
-        cgDestroyAndPopStack(marker2, ctx);
+        cgDestroyAndPopStack(marker2, ctx, false);
         for (unsigned k = prevJ; k < j; ++k)
             cgPushStackValue(out->values[k], ctx);
         marker2 = cgMarkStack(ctx);
@@ -1115,7 +1125,7 @@ void codegenExpr(ExprPtr expr,
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
         llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
         ctx->builder->CreateStore(v2, out0->llValue);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
         ctx->builder->SetInsertPoint(falseBlock);
@@ -1145,7 +1155,7 @@ void codegenExpr(ExprPtr expr,
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
         llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
         ctx->builder->CreateStore(v2, out0->llValue);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
         ctx->builder->SetInsertPoint(trueBlock);
@@ -1602,7 +1612,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         if (x->returnType2.ptr()) {
             error(x, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx);
+        cgDestroyStack(returnTarget.stackMarker, ctx, false);
         ctx->builder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker, ctx);
@@ -2430,7 +2440,7 @@ void codegenLowlevelCall(llvm::Value *llCallable,
 
     ctx->builder->SetInsertPoint(landing);
     JumpTarget *jt = &ctx->exceptionTargets.back();
-    cgDestroyStack(jt->stackMarker, ctx);
+    cgDestroyStack(jt->stackMarker, ctx, true);
     // jt might be invalidated at this point
     jt = &ctx->exceptionTargets.back();
     ctx->builder->CreateBr(jt->block);
@@ -2837,7 +2847,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
         if ((returns.size() > 0) && !hasNamedReturn) {
             error(entry->code, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx);
+        cgDestroyStack(returnTarget.stackMarker, ctx, false);
         ctx->builder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker, ctx);
@@ -3008,7 +3018,7 @@ void codegenCallInline(InvokeEntryPtr entry,
         if ((returns.size() > 0) && !hasNamedReturn) {
             error(entry->code, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx);
+        cgDestroyStack(returnTarget.stackMarker, ctx, false);
         ctx->builder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker, ctx);
@@ -3104,7 +3114,7 @@ void codegenCallByName(InvokeEntryPtr entry,
         if ((returns.size() > 0) && !hasNamedReturn) {
             error(entry->code, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx);
+        cgDestroyStack(returnTarget.stackMarker, ctx, false);
         ctx->builder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker, ctx);
@@ -3160,7 +3170,7 @@ bool codegenStatement(StatementPtr stmt,
             }
         }
         if (!terminated)
-            cgDestroyStack(blockMarker, ctx);
+            cgDestroyStack(blockMarker, ctx, false);
         cgPopStack(blockMarker, ctx);
         return terminated;
     }
@@ -3228,7 +3238,7 @@ bool codegenStatement(StatementPtr stmt,
         }
         assert(j == mpvRight2->size());
 
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         return false;
     }
@@ -3252,7 +3262,7 @@ bool codegenStatement(StatementPtr stmt,
         int marker = cgMarkStack(ctx);
         MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
         codegenMultiInto(x->right, env, ctx, mcvLeft);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         return false;
     }
@@ -3317,7 +3327,7 @@ bool codegenStatement(StatementPtr stmt,
             error(sout.str());
         }
         JumpTarget &jt = li->second;
-        cgDestroyStack(jt.stackMarker, ctx);
+        cgDestroyStack(jt.stackMarker, ctx, false);
         ctx->builder->CreateBr(jt.block);
         ++ jt.useCount;
         return true;
@@ -3362,7 +3372,7 @@ bool codegenStatement(StatementPtr stmt,
             assert(false);
         }
         JumpTarget *jt = &ctx->returnTargets.back();
-        cgDestroyStack(jt->stackMarker, ctx);
+        cgDestroyStack(jt->stackMarker, ctx, false);
         // jt might be invalidated at this point
         jt = &ctx->returnTargets.back();
         ctx->builder->CreateBr(jt->block);
@@ -3376,7 +3386,7 @@ bool codegenStatement(StatementPtr stmt,
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
 
         llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue", ctx);
@@ -3445,7 +3455,7 @@ bool codegenStatement(StatementPtr stmt,
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenExprAsRef(x->expr, env, ctx);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         return false;
     }
@@ -3464,7 +3474,7 @@ bool codegenStatement(StatementPtr stmt,
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
 
         ctx->builder->CreateCondBr(cond, whileBody, whileEnd);
@@ -3496,7 +3506,7 @@ bool codegenStatement(StatementPtr stmt,
         if (ctx->breaks.empty())
             error("invalid break statement");
         JumpTarget *jt = &ctx->breaks.back();
-        cgDestroyStack(jt->stackMarker, ctx);
+        cgDestroyStack(jt->stackMarker, ctx, false);
         // jt might be invalidated at this point
         jt = &ctx->breaks.back();
         ctx->builder->CreateBr(jt->block);
@@ -3508,7 +3518,7 @@ bool codegenStatement(StatementPtr stmt,
         if (ctx->continues.empty())
             error("invalid continue statement");
         JumpTarget *jt = &ctx->continues.back();
-        cgDestroyStack(jt->stackMarker, ctx);
+        cgDestroyStack(jt->stackMarker, ctx, false);
         // jt might be invalidated at this point
         jt = &ctx->continues.back();
         ctx->builder->CreateBr(jt->block);
@@ -3573,7 +3583,7 @@ bool codegenStatement(StatementPtr stmt,
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         ctx->builder->CreateUnreachable();
         return true;
@@ -3676,7 +3686,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenMultiInto(x->values, env, ctx, mcv);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
@@ -3711,7 +3721,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenMulti(x->values, env, ctx, mcv);
-        cgDestroyAndPopStack(marker, ctx);
+        cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
