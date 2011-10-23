@@ -15,7 +15,7 @@ overload printTo(out, it : OptionSpec){
   }
 }
 
-enum Flags{ HAS_VALUE, REQUIRED, ALLOWS_REPEATS }
+enum Flags( HAS_VALUE, REQUIRED, ALLOWS_REPEATS );
 
 [S | SpecPart?(S)]
 overload OptionSpec(part : S, ..parts) : OptionSpec{

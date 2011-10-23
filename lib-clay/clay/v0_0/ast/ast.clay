@@ -172,19 +172,19 @@ record StaticIndexing = ast(
     index: String,
 );
 
-enum UnaryOpKind {
+enum UnaryOpKind (
     DEREFERENCE, ADDRESS_OF, PLUS, MINUS, NOT,
-}
+);
 
 record UnaryOp = ast(
     kind: UnaryOpKind,
     expr: Expr,
 );
 
-enum BinaryOpKind {
+enum BinaryOpKind (
     ADD, SUBTRACT, MULTIPLY, DIVIDE, REMAINDER,
     EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS, GREATER, GREATER_EQUALS,
-}
+);
 
 record BinaryOp = ast(
     kind:  BinaryOpKind,
@@ -272,7 +272,7 @@ record Label = ast(
     name: Identifier,
 );
 
-enum BindingKind { VAR, REF, ALIAS, }
+enum BindingKind ( VAR, REF, ALIAS, );
 
 record Binding = ast(
     kind: BindingKind,
@@ -290,10 +290,10 @@ record InitAssignment = ast(
     right: Vector[Expr],
 );
 
-enum UpdateOpKind {
+enum UpdateOpKind (
     UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY, UPDATE_DIVIDE,
     UPDATE_REMAINDER,
-}
+);
 
 record UpdateAssignment = ast(
     kind: UpdateOpKind,
@@ -305,9 +305,9 @@ record Goto = ast(
     labelName: Identifier,
 );
 
-enum ReturnKind {
+enum ReturnKind (
     RETURN_VALUE, RETURN_REF, RETURN_FORWARD,
-}
+);
 
 record Return = ast(
     kind: ReturnKind,
@@ -390,12 +390,12 @@ record PatternVar = ast(
     name: Identifier,
 );
 
-enum ArgumentKind {
+enum ArgumentKind (
     ARG_DEFAULT,
     ARG_LVALUE,
     ARG_RVALUE,
     ARG_FORWARD,
-}
+);
 
 record NormalArgument = ast(
     kind: ArgumentKind,
@@ -444,10 +444,10 @@ record Code = top(
 // top level items
 //
 
-enum Visibility {
+enum Visibility (
     PUBLIC,
     PRIVATE,
-}
+);
 
 private top(..fields) = ast(..fields);
 

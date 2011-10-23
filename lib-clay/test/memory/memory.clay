@@ -8,7 +8,7 @@ noisyPrintln(forward ..values) {
         println(..values);
 }
 
-enum CanaryState { DESTROYED, ALIVE, MOVED, RESET, INVALID }
+enum CanaryState ( DESTROYED, ALIVE, MOVED, RESET, INVALID );
 
 private var canaryTracker = Vector[CanaryState]();
 record Canary ( id: SizeT, throwOnCopy?: Bool );

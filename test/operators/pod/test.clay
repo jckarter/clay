@@ -9,7 +9,7 @@ record NonPODRecord (x: Int, y: IrregularRecord);
 variant PODVariant = Int | Char;
 variant NonPODVariant = Int | NonPODRecord;
 
-enum Enum { A, B, C }
+enum Enum ( A, B, C );
 
 expectPOD(test, tf, Type) { expectEqual(test, StaticName(Type), tf, PODType?(Type)); }
 

@@ -10,7 +10,7 @@ import parsing.combinators.wrapper.*;
 // data definitions
 //
 
-enum TokenKind {
+enum TokenKind (
     SENTINEL,
     PUNCTUATION,
     KEYWORD,
@@ -22,7 +22,7 @@ enum TokenKind {
     SPACE,
     COMMENT,
     LLVM,
-}
+);
 
 alias DataRange = Range[SizeT];
 

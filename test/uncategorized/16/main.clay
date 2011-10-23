@@ -1,9 +1,9 @@
 
-enum Kind {
+enum Kind (
     GOOD,
     BAD,
     UGLY,
-}
+);
 
 main() {
     var a, b, = UGLY, BAD, ;

@@ -93,7 +93,7 @@ record ExternalVariable = referenceType(
 // primitives
 //
 
-enum PrimitiveTypeConstructorKind {
+enum PrimitiveTypeConstructorKind (
     PRIM_Pointer,
     PRIM_CodePointer,
     PRIM_CCodePointer,
@@ -104,9 +104,9 @@ enum PrimitiveTypeConstructorKind {
     PRIM_Tuple,
     PRIM_Union,
     PRIM_Static,
-}
+);
 
-enum StaticPrimitiveKind {
+enum StaticPrimitiveKind (
     PRIM_Type?,
     PRIM_CallDefined?,
 
@@ -142,9 +142,9 @@ enum StaticPrimitiveKind {
     PRIM_IdentifierSize,
     PRIM_IdentifierConcat,
     PRIM_IdentifierSlice,
-}
+);
 
-enum PrimitiveKind {
+enum PrimitiveKind (
     PRIM_TypeSize,
     PRIM_TypeAlignment,
 
@@ -200,7 +200,7 @@ enum PrimitiveKind {
     PRIM_EnumMemberName,
     PRIM_enumToInt,
     PRIM_intToEnum,
-}
+);
 
 record PrimitiveTypeConstructor = referenceType(
     kind: PrimitiveTypeConstructorKind

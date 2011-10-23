@@ -46,7 +46,7 @@ record ComplexRecord (
     z: Char,
 );
 
-enum Enum { FOO, BAR, BAS }
+enum Enum ( FOO, BAR, BAS );
 
 record UniquePointerRecord (x: UniquePointer[Int]);
 overload UniquePointerRecord(x: Int) = UniquePointerRecord(newUnique(x));

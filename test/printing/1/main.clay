@@ -1,8 +1,8 @@
 
-enum Gender {
+enum Gender (
     MALE,
     FEMALE,
-}
+);
 
 record Person (
     name : StringConstant,

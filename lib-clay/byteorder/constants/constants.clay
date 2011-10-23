@@ -1,5 +1,5 @@
-enum ByteOrderKind {
+enum ByteOrderKind (
     UnknownByteOrder,
     LittleEndian,
     BigEndian
-}
+);

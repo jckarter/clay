@@ -2401,9 +2401,10 @@ static bool enumeration(TopLevelItemPtr &x) {
     IdentifierPtr y;
     if (!identifier(y)) return false;
     EnumerationPtr z = new Enumeration(y, vis);
-    if (!symbol("{")) return false;
+    if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
-    if (!symbol("}")) return false;
+    if (!symbol(")")) return false;
+    if (!symbol(";")) return false;
     x = z.ptr();
     x->location = location;
     return true;

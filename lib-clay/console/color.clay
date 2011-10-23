@@ -1,7 +1,7 @@
 import io.files.raw.*;
 import system.platform.*;
 
-enum Color { 
+enum Color ( 
   Black,
   Red,
   Green,
@@ -10,7 +10,7 @@ enum Color {
   Magenta,
   Cyan,
   White
-}
+);
 
 private define sgr(code){
   if(supported?())

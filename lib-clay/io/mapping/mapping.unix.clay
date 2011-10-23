@@ -23,11 +23,11 @@ record FileMapping (
 // constructors, destroy
 //
 
-enum MappingMode {
+enum MappingMode (
     MAP_READ,
     MAP_READ_WRITE,
     MAP_COPY_ON_WRITE
-}
+);
 
 private modeProtection(mode) {
     switch (mode) {

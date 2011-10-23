@@ -1,20 +1,20 @@
 
-enum OpenMode {
+enum OpenMode (
     READ,
     READ_WRITE,
     CREATE,
     APPEND
-}
+);
 
 define fileHandle;
 
 define fileSize;
 
-enum SeekOrigin {
+enum SeekOrigin (
     SEEK_SET,
     SEEK_CUR,
     SEEK_END
-}
+);
 
 define seek;    // seek(file, offset, whence)
                    // seek(file, offset)
