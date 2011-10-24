@@ -36,6 +36,14 @@ if(Mercurial_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.hg")
         COMPILE_DEFINITIONS "HG_ID=\"${HG_WC_ID}\"")
 endif()
 
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+        OUTPUT_VARIABLE GIT_WC_ID
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set_property(SOURCE main.cpp APPEND PROPERTY
+        COMPILE_DEFINITIONS "GIT_ID=\"${GIT_WC_ID}\"")
+endif()
+
 add_executable(clay ${SOURCES})
 
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS}")
