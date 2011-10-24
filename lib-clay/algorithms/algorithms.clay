@@ -54,7 +54,7 @@ reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
 
 
 //
-// sum, product
+// sum, product, count
 //
 
 [A | Sequence?(A)]
@@ -67,6 +67,11 @@ sum(a:A) {
 product(a:A) {
     alias T = SequenceElementType(A);
     return reduce(multiply, T(1), a);
+}
+
+[A | Sequence?(A)]
+count(pred, a:A) {
+    return reduce((n,elt) => if (pred(elt)) n+1 else n, SizeT(0), a);
 }
 
 

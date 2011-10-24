@@ -46,7 +46,7 @@ record SourceTokens = referenceType(
 //
 
 private var punctuations = [
-    "<--", "...", "=>",
+    "<--", "...", "=>", "->",
     "==", "!=", "<=", ">=",
     "<", ">",
     "+=", "-=", "*=", "/=", "%=",
@@ -64,7 +64,8 @@ private var keywords = [
     "and", "or", "not", "new",
     "if", "else", "goto", "return", "while",
     "switch", "case", "default", "break", "continue", "for", "in",
-    "true", "false", "try", "catch", "throw"
+    "true", "false", "try", "catch", "throw",
+    "__FILE__", "__LINE__", "__COLUMN__",
 ];
 
 punctuationIndex(s) Int {
