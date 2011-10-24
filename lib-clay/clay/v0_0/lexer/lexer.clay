@@ -68,7 +68,7 @@ private var keywords = [
     "__FILE__", "__LINE__", "__COLUMN__",
 ];
 
-punctuationIndex(s) Int {
+punctuationIndex(s) : Int {
     for (i, x in enumerated(punctuations)) {
         if (x == s)
             return Int(i);
@@ -76,7 +76,7 @@ punctuationIndex(s) Int {
     return -1;
 }
 
-keywordIndex(s) Int {
+keywordIndex(s) : Int {
     for (i, x in enumerated(keywords)) {
         if (x == s)
             return Int(i);
@@ -218,7 +218,7 @@ private var identChar1 = condition(identChar1?);
 private var identChar2 = condition(identChar2?);
 private var identStr = seq(identChar1, zeroPlus(identChar2));
 
-private lexIdentifierOrKeyword(input) Maybe[Token] {
+private lexIdentifierOrKeyword(input) : Maybe[Token] {
     var start = input.current;
     if (not nothing?(identStr(input))) {
         var data = sliced(input.file.data, start, input.current);
@@ -389,7 +389,7 @@ private var lexBlockComment = modify(
 // inline llvm
 //
 
-private llvmBodyItem(input) Maybe[Dummy] = llvmBodyItem2(input);
+private llvmBodyItem(input) : Maybe[Dummy] = llvmBodyItem2(input);
 
 private var llvmComment = seq(';', zeroPlus(notNewline), '\n');
 

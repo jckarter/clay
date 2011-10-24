@@ -2,8 +2,8 @@
 import maybe.*;
 import parsing.combinators.wrapper.*;
 import clay.common.*;
-import clay.lexer.*;
-import clay.ast.*;
+import clay.v0_0.lexer.*;
+import clay.v0_0.ast.*;
 import clay.diagnostics.*;
 
 
@@ -567,7 +567,7 @@ private var lambdaBody = choice(
 );
 
 private var lambdaExpr = exprParser(
-    x => LambdaExpr(x.1, move(x.0), move(x.3)),
+    x => LambdaExpr(x.1, move(x.0), move(x.2)),
     sequence(lambdaArgs, lambdaArrow, lambdaBody),
 );
 
@@ -581,7 +581,7 @@ private var expr2 = choice(
     lambdaExpr, pairExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
 );
 
-private expr(input) Maybe[Expr] { return expr2(input); }
+private expr(input) : Maybe[Expr] { return expr2(input); }
 
 private var exprList = commaList(expr);
 private var optExprList = optCommaList(expr);
@@ -782,7 +782,7 @@ private var statement2 = choice(
     tryStatement, throwStatement, staticForStatement,
 );
 
-private statement(input) Maybe[Statement] = statement2(input);
+private statement(input) : Maybe[Statement] = statement2(input);
 
 
 

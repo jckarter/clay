@@ -1,0 +1,72 @@
+import clay.common.(
+    SourceFile,
+    readSource,
+    ClayError,
+    displayError
+);
+import clayfix.v0_0.(fix as fix_0_0);
+
+record InvalidFixerVersion (version:String);
+instance Exception (InvalidFixerVersion);
+overload printTo(s, ex:InvalidFixerVersion) {
+    printTo(s, "Invalid clayfix version: ", ex.version);
+}
+
+usage(argv0) : {
+    println("usage: ", argv0, " -v <oldversion> <source files>");
+    println("options:");
+    println("  -v <oldversion>   Language version of old source files");
+    println("    Supported versions:");
+    println("      0.0");
+    println();
+    println("*** IMPORTANT ***");
+    println("Source files are updated in-place; make sure you've checked in before");
+    println("running clayfix so you can review or revert its changes!");
+}
+
+alias Fixer = CodePointer[(SourceFile, File), ()];
+
+fixerForVersion(version:String) : Fixer {
+    switch (version) {
+    case "0.0":
+        return Fixer(fix_0_0);
+    default:
+        throw InvalidFixerVersion(version);
+    }
+}
+
+main(args) : Int {
+    if (size(args) < 4 or args[1] != "-v") {
+        usage(args[0]);
+        return 1;
+    }
+
+    try {
+        var fixer = fixerForVersion(args[2]);
+
+        for (filename in slicedFrom(args, 3)) {
+            var tempOutputFilename = filename + ".fixed";
+            try {
+                {
+                    var source = readSource(filename);
+                    var outputFile = File(tempOutputFilename, CREATE);
+                    fixer(source, outputFile);
+                }
+                // XXX get fixed filename too! (e.g. define_.clay)
+                //??moveFile??(filename, tempOutputFilename);
+            } catch (ex) {
+                println();
+                println("Failed to update ", filename, ":");
+                displayError(ex);
+                //??removeFile??(tempOutputFilename);
+                return 1;
+            }
+        }
+    } catch (ex) {
+        println("Failed to update any files:");
+        displayError(ex);
+        return 1;
+    }
+
+    return 0;
+}

@@ -1,5 +1,8 @@
 0.0 -> 0.1 (work in progress)
 ----------
+Language changes:
+* A "clayfix" program is provided to update code written for Clay 0.0 to
+  compile in 0.1.
 * Keywords that do similar things have been combined:
     'callbyname' is now 'alias'
     'lvalue' is now 'ref'
@@ -23,14 +26,7 @@
     foo() : { // you can now declare no return values
         println("Hello world");
     }
-* The 'new' keyword has been removed. 'sharedpointers.allocateShared' and
-  'uniquepointers.allocateUnique' have been renamed to 'new' and 'newUnique'.
-    // 0.0
-    foo = new Foo(1); // always called allocateShared
-
-    // 0.1
-    import sharedpointers.*;
-    foo = new(Foo(1));
+* The 'new' keyword has been removed.
 * Hex float syntax (-0x1.234ABCp2) is now supported.
 * enum and variant syntax has been changed to be more congruent with record syntax:
     // define enum type Foo with values ZIM, ZANG, ZUNG
@@ -69,6 +65,8 @@
     // 0.1
     onerror bar();
     foo();
+
+Library changes:
 * The bitwise operation functions have been given shorter names:
     shiftLeft    ==> bitshl
     shiftRight   ==> bitshr
@@ -81,11 +79,24 @@
     bitwiseAndc  ==> bitandc
     bitwiseBlend ==> bitblend
     bitwiseCast  ==> bitcast
+* 'allocateShared' and 'allocateUnique' have been renamed to 'new' and 'newUnique'.
+    // 0.0
+    foo = new Foo(1);
+
+    // 0.1
+    foo = new(Foo(1));
+
+Compiler frontend changes:
+* -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
+* The redundant -dll option has been removed; use -shared.
+* Externals are now only built for the main module (the source file provided on
+  the commandline). Externals imported from other modules will be not be compiled
+  in the current compilation unit.
+* External entry points for the main module are also now always compiled; "-shared"
+  now only affects the type of file output by the compiler.
 
 Planned changes
 ---------------
-* A "clayfix" program is provided to update code written for Clay 0.0 to
-  compile in 0.1.
 
 These changes may not all get completed at the next point release, but they are
 planned to be made eventually. They're written in past tense so they can be easily
@@ -109,7 +120,7 @@ cut and pasted above.
 
     module bas;
 
-  It is currently ignored, but will be used in the future to provide module-specific
+  Module declarations will be used in the future to provide module-specific
   build flags and module-level parameters.
 
 * 'record' has been renamed to 'struct', and library functions with 'record' or
@@ -269,9 +280,13 @@ cut and pasted above.
 * Integer division now uses the div operator. '/' now only does floating-point division:
     var x = 3 div 2; // 1
     var x = 3/2; // type error
+  The div operator desugars to the quotient(a,b) function.
 
 * Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push' functions
   should be used instead.
+
+* The Int(String) and String(Int) constructors have been removed and <parseInt> and
+  <unparseInt> functions provided instead.
 
 * String literals can be delimited with Python-style triple quotes, or Postgres-style
   $$ and $token$ delimiters:

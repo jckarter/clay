@@ -1,0 +1,316 @@
+import clay.common.(
+    SourceFile,
+    readSource,
+    ClayError,
+    displayError
+);
+
+import clay.v0_0.ast.*;
+import clay.v0_0.lexer.(tokenize, SourceTokens);
+import clay.v0_0.parser.(parse);
+
+import maybe.*;
+
+var newKeywords = ["define", "finally", "onerror"];
+
+private record FixState (
+    tokens:SourceTokens,
+    outputFile:File,
+    printedToken:SizeT,
+    printedIndex:SizeT,
+);
+overload FixState(tokens:SourceTokens, outputFile:File)
+    = FixState(tokens, outputFile, SizeT(0), SizeT(0));
+
+
+//
+// token-level fixup
+//
+
+// keyword and punctuation translations
+// procedure -> define
+// callbyname -> alias
+// lvalue -> ref
+// ... -> ..
+
+// identifier replacement
+// define
+// finally
+// onerror
+
+// identifier translations
+//  shiftLeft    ==> bitshl
+//  shiftRight   ==> bitshr
+//  rotateLeft   ==> bitrol
+//  rotateRight  ==> bitror
+//  bitwiseAnd   ==> bitand
+//  bitwiseOr    ==> bitor
+//  bitwiseXor   ==> bitxor
+//  bitwiseNot   ==> bitnot
+//  bitwiseAndc  ==> bitandc
+//  bitwiseBlend ==> bitblend
+//  bitwiseCast  ==> bitcast
+//  allocateShared ==> newShared
+//  allocateUnique ==> newUnique
+
+
+//
+// utilities
+//
+
+private writeUptoToken(token:SizeT, state:FixState) : {
+    println(token);
+
+    ref tokens = state.tokens.vector;
+    assert(token < size(tokens));
+
+    var toIndex = state.tokens.vector[token].range.begin;
+    assert(toIndex >= state.printedIndex);
+
+    printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
+    state.printedIndex = toIndex;
+    //DEBUGTAGS printTo(state.outputFile, "$upto$");
+}
+
+private replaceUptoToken(token:SizeT, state:FixState) : {
+    ref tokens = state.tokens.vector;
+    assert(token < size(tokens));
+
+    var toIndex = state.tokens.vector[token].range.begin;
+    assert(toIndex >= state.printedIndex);
+
+    state.printedIndex = toIndex;
+    //DEBUGTAGS printTo(state.outputFile, "$replaced$");
+}
+
+private replaceToken(token:SizeT, state:FixState) : {
+    ref tokens = state.tokens.vector;
+    assert(token < size(tokens));
+
+    var toIndex = state.tokens.vector[token].range.end;
+    assert(toIndex >= state.printedIndex);
+
+    state.printedIndex = toIndex;
+    //DEBUGTAGS printTo(state.outputFile, "$replaced$");
+}
+
+private writeToken(token:SizeT, state:FixState) : {
+    println(token);
+
+    ref tokens = state.tokens.vector;
+    assert(token < size(tokens));
+
+    var toIndex = state.tokens.vector[token].range.end;
+    assert(toIndex >= state.printedIndex);
+
+    printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
+    state.printedIndex = toIndex;
+    //DEBUGTAGS printTo(state.outputFile, "$token$");
+}
+
+private ws?(c:Char) {
+    return c == ' ' or c == '\t' or c == '\r' or c == '\n' or c == '\f';
+}
+
+private writeTokenPrefixed(token:SizeT, prefix, state:FixState) : {
+    writeUptoToken(token, state);
+
+    var tokenRange = state.tokens.vector[token].range;
+    ref sourceData = state.tokens.file.data;
+    var trimmedBegin = tokenRange.begin;
+    while (ws?(sourceData[trimmedBegin])) {
+        trimmedBegin += 1;
+    }
+    assert(trimmedBegin < tokenRange.end);
+
+    if (trimmedBegin != tokenRange.begin)
+        printTo(state.outputFile, sliced(sourceData, tokenRange.begin, trimmedBegin));
+    printTo(state.outputFile, prefix);
+    //DEBUGTAGS printTo(state.outputFile, "$prefix$");
+    printTo(state.outputFile, sliced(sourceData, trimmedBegin, tokenRange.end));
+    state.printedIndex = tokenRange.end;
+}
+
+private writeTokenSuffixed(token:SizeT, suffix, state:FixState) : {
+    writeUptoToken(token, state);
+
+    var tokenRange = state.tokens.vector[token].range;
+    ref sourceData = state.tokens.file.data;
+    var trimmedEnd = tokenRange.end;
+    while (ws?(sourceData[trimmedEnd-1])) {
+        trimmedEnd -= 1;
+    }
+    assert(trimmedEnd > tokenRange.begin);
+
+    printTo(state.outputFile, sliced(sourceData, tokenRange.begin, trimmedEnd));
+    //DEBUGTAGS printTo(state.outputFile, "$suffix$");
+    printTo(state.outputFile, suffix);
+    if (trimmedEnd != tokenRange.end)
+        printTo(state.outputFile, sliced(sourceData, trimmedEnd, tokenRange.end));
+    state.printedIndex = tokenRange.end;
+}
+
+private finishFix(state:FixState) : {
+    printTo(state.outputFile, slicedFrom(state.tokens.file.data, state.printedIndex));
+    //DEBUGTAGS printTo(state.outputFile, "$end$");
+}
+
+
+//
+// AST-level fixup
+//
+
+private define fixAst;
+private define fixAstNode;
+
+
+//
+// default AST-walking logic
+//
+
+[A] overload fixAstNode(ast:A, state:FixState) : { println("skipping ", A); }
+overload fixAstNode(ast:SourceAST, state:FixState) : {
+    fixAst(ast.imports, state);
+    fixAst(ast.topLevelItems, state);
+}
+[A | ASTNode?(A)]
+overload fixAstNode(ast:A, state:FixState) : {
+    println("walking ", A);
+    static for (field in ..astFields(ast))
+        fixAst(field, state);
+}
+[V | Variant?(V)]
+overload fixAstNode(ast:V, state:FixState) : {
+    fixAst(*ast, state);
+}
+[A] overload fixAstNode(asts:Vector[A], state:FixState) : {
+    for (ast in asts)
+        fixAst(ast, state);
+}
+[A] overload fixAstNode(?ast:Maybe[A], state:FixState) : {
+    maybe(?ast, ast -> {
+        fixAst(ast, state);
+    });
+}
+[A] overload fixAstNode(asts:VariadicList[A], state:FixState) : {
+    fixAst(asts.items, state);
+    fixAst(asts.variadicItem, state);
+}
+
+overload fixAst(ast, state) : {
+    fixAstNode(ast, state);
+}
+
+
+//
+// fixer logic
+//
+
+// Convert variant syntax.
+// 0.0: variant Foo = A | B;
+// 0.1: variant Foo (A, B);
+overload fixAst(ast:Variant, state:FixState) : {
+    fixAst(ast.visibility, state);
+    fixAst(ast.name, state);
+    fixAst(ast.params, state);
+    if (not empty?(ast.defaultInstances)) {
+        // replace "=" with "("
+        var firstInstance = astTokens(ast.defaultInstances[0]).begin;
+        writeUptoToken(firstInstance - 1, state);
+        printTo(state.outputFile, "(");
+
+        // replace "|" with "," between instances
+        for (inst in ast.defaultInstances) {
+            var tokenRange = astTokens(inst);
+            replaceUptoToken(tokenRange.begin, state);
+            fixAst(inst, state);
+            writeTokenSuffixed(tokenRange.end - 1, ",", state);
+            // preserve whitespace before |
+            writeUptoToken(tokenRange.end, state);
+        }
+
+        // close with ) before semicolon
+        var lastInstance = astTokens(back(ast.defaultInstances)).end;
+        writeTokenPrefixed(lastInstance, ")", state);
+    }
+}
+
+// Convert instance syntax.
+// 0.0: instance Foo = C;
+// 0.1: instance Foo (C);
+overload fixAst(ast:Instance, state:FixState) : {
+    fixAst(ast.patternVars, state);
+    fixAst(ast.predicate, state);
+    fixAst(ast.target, state);
+    writeToken(astTokens(ast.target).end - 1, state);
+    printTo(state.outputFile, " (");
+    replaceUptoToken(astTokens(ast.member).begin, state);
+    fixAst(ast.member, state);
+    writeTokenPrefixed(astTokens(ast.member).end, ")", state);
+}
+
+// Convert enum syntax.
+// 0.0: enum Foo { A, B, C }
+// 0.1: enum Foo (A, B, C);
+overload fixAst(ast:Enum, state:FixState) : {
+    fixAst(ast.visibility, state);
+    fixAst(ast.name, state);
+    writeToken(ast.name.tokens.end - 1, state);
+    if (empty?(ast.members)) {
+        printTo(state.outputFile, " ();");
+    } else {
+        printTo(state.outputFile, " (");
+        replaceUptoToken(ast.members[0].tokens.begin, state);
+        fixAst(ast.members);
+        writeTokenSuffixed(back(ast.members).tokens.end - 1, ");", state);
+    }
+    replaceToken(ast.tokens.end - 1, state);
+}
+
+// Convert return type syntax.
+// 0.0:
+//   foo() Int {} // return types
+//   foo() returned:Int {} // named return values
+// 0.1:
+//   foo() : Int {} // return types
+//   foo() --> returned:Int {} // named return values
+overload fixAst(ast:Code, state:FixState) : {
+    fixAst(ast.patternVars, state);
+    fixAst(ast.predicate, state);
+    fixAst(ast.args, state);
+
+    if (not empty?(ast.returns)) {
+        // We should ensure that named and unnamed returns aren't mixed here.
+        if (nothing?(ast.returns[0].name))
+            writeTokenPrefixed(astTokens(ast.returns[0]).begin, ": ", state);
+        else
+            writeTokenPrefixed(astTokens(ast.returns[0]).begin, "--> ", state);
+        fixAst(ast.returns, state);
+    }
+    fixAst(ast.body, state);
+}
+
+// Convert new operator expressions to use the new() function.
+// 0.0: new X
+// 0.1: new(X)
+overload fixAst(ast:New, state:FixState) : {
+    printTo(state.outputFile, "new(");
+    replaceUptoToken(astTokens(ast.expr).begin, state);
+    fixAst(ast.expr, state);
+    writeToken(astTokens(ast.expr).end - 1, state);
+}
+
+
+//
+// entry point
+//
+
+fix(source:SourceFile, outputFile:File) : {
+    var tokens = tokenize(source);
+    var ast = parse(tokens);
+
+    var state = FixState(tokens, outputFile);
+    fixAst(ast, state);
+    finishFix(state);
+}
+

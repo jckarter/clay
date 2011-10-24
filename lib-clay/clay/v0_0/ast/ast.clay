@@ -1,6 +1,6 @@
 
 import maybe.*;
-import clay.lexer.*;
+import clay.v0_0.lexer.*;
 
 
 
@@ -26,6 +26,8 @@ private ast(..fields) = referenceTypeWithPredicate(
 define ASTNode?;
 overload ASTNode?(x) = false;
 
+[A|ASTNode?(A)] astFields(x:A) = ..dropValues(static 2, ..referenceTypeFields(x));
+
 [T, ..A | ASTNode?(T)
            and (Tuple[..ReferenceTypeFieldTypes(T)] ==
                 Tuple[TokenRange, SizeT, ..A])]
@@ -37,9 +39,13 @@ alias overload T(..args:A) {
 [T | ASTNode?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
-    printReprValuesTo(stream, ..dropValues(static 2, ..referenceTypeFields(x)));
+    printReprValuesTo(stream, ..astFields(x));
 }
 
+[A|ASTNode?(A)]
+astTokens(node:A) = ref node.tokens;
+[V|Variant?(V)]
+overload astTokens(node:V) = ref astTokens(*node);
 
 
 //
