@@ -2685,7 +2685,12 @@ static bool importedMemberList(vector<ImportedMember> &x) {
     x.push_back(y);
     while (true) {
         int p = save();
-        if (!symbol(",") || !importedMember(y)) {
+        if (!symbol(",")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!importedMember(y)) {
             restore(p);
             break;
         }
