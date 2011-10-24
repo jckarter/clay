@@ -69,7 +69,18 @@
     // 0.1
     onerror bar();
     foo();
-
+* The bitwise operation functions have been given shorter names:
+    shiftLeft    ==> bitshl
+    shiftRight   ==> bitshr
+    rotateLeft   ==> bitrol
+    rotateRight  ==> bitror
+    bitwiseAnd   ==> bitand
+    bitwiseOr    ==> bitor
+    bitwiseXor   ==> bitxor
+    bitwiseNot   ==> bitnot
+    bitwiseAndc  ==> bitandc
+    bitwiseBlend ==> bitblend
+    bitwiseCast  ==> bitcast
 
 Planned changes
 ---------------

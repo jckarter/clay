@@ -44,8 +44,8 @@ render(w:Int, h:Int) {
                     break;
             }
 
-            byteAcc = shiftLeft(byteAcc, 2);
-            byteAcc = bitwiseOr(byteAcc, UInt8(mask));
+            byteAcc = bitshl(byteAcc, 2);
+            byteAcc = bitor(byteAcc, UInt8(mask));
             bitNum += 2;
 
             if (bitNum % 8 == 0) {
@@ -57,7 +57,7 @@ render(w:Int, h:Int) {
         }
 
         if (bitNum % 8 != 0) {
-            byteAcc = shiftLeft(byteAcc, 8 - w%8);
+            byteAcc = bitshl(byteAcc, 8 - w%8);
             bitNum += 8;
             (data + bitNum/8)^ = byteAcc;
         }

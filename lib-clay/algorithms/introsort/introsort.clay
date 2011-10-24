@@ -16,7 +16,7 @@ log2(x) {
     var k = 0;
     while (y != 0) {
         k += 1;
-        y = shiftRight(y, 1);
+        y = bitshr(y, 1);
     }
     return k - 1;
 }

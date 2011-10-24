@@ -38,9 +38,9 @@ private openFlags(mode) {
     case READ_WRITE :
         return unix.O_RDWR;
     case CREATE :
-        return bitwiseOr(unix.O_RDWR, unix.O_CREAT, unix.O_TRUNC);
+        return bitor(unix.O_RDWR, unix.O_CREAT, unix.O_TRUNC);
     case APPEND :
-        return bitwiseOr(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
+        return bitor(unix.O_WRONLY, unix.O_CREAT, unix.O_APPEND);
     default :
         assert(false);
         return -1;
@@ -51,7 +51,7 @@ private openFlags(mode) {
 overload RawFile(path:S, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
-    if (bitwiseAnd(flags, unix.O_CREAT) != 0)
+    if (bitand(flags, unix.O_CREAT) != 0)
         handle = unix.open(cstring(path), flags, 0644);
     else
         handle = unix.open(cstring(path), flags);

@@ -93,7 +93,7 @@ overload assign(to:TwoHash[E], ref from:TwoHash[E]) {
 [B]
 overload Table[B](ln2_size: Int) returned:Table[B]
 {
-    var size = shiftLeft(1, ln2_size);
+    var size = bitshl(1, ln2_size);
     returned.ln2_size <-- ln2_size;
     returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
     try {
@@ -107,7 +107,7 @@ overload Table[B](ln2_size: Int) returned:Table[B]
 [B]
 overload Table[B](x: Table[B]) returned:Table[B]
 {
-    var size = shiftLeft(1, x.ln2_size);
+    var size = bitshl(1, x.ln2_size);
     returned.ln2_size <-- x.ln2_size;
     returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
     try {
@@ -302,7 +302,7 @@ overload hasNext?(x: TwoHashEntries[E, F]) = x.entryMask != 0;
 overload next(x: TwoHashEntries[E, F])
 {
     var k = lowBit(x.entryMask);
-    x.entryMask = x.entryMask - shiftLeft(1, k);
+    x.entryMask = x.entryMask - bitshl(1, k);
     ref e = x.data^.tables[x.i][x.j].entries[k];
     if (x.entryMask == 0)
     {
@@ -333,7 +333,7 @@ refillMask(x: TwoHashEntries[E, F])
         for (k in range(16))
         {
             if (th.tables[x.i][x.j].hashBytes[k] != 255u8)
-                x.entryMask = bitwiseOr(x.entryMask, shiftLeft(1, k));
+                x.entryMask = bitor(x.entryMask, bitshl(1, k));
         }
         if (x.entryMask != 0) return;
         nextBucket(x);
@@ -345,7 +345,7 @@ refillMask(x: TwoHashEntries[E, F])
 //
 
 [B]
-overload size(t: Table[B]) = shiftLeft(1, t.ln2_size);
+overload size(t: Table[B]) = bitshl(1, t.ln2_size);
 
 [B]
 overload index(t: Table[B], idx) = ref t.ptr[idx];
@@ -363,15 +363,15 @@ overload end(t: Table[B]) = begin(t) + size(t);
 largeHash(x) 
 {
     var h = UInt64(hash(x));
-    var e = shiftRight(h * 0x70010101, 8);
-    return e + shiftLeft(e, 32);
+    var e = bitshr(h * 0x70010101, 8);
+    return e + bitshl(e, 32);
 }
 
 baseSplitHash(hash: UInt64)
 {
-    var lowHash = SizeT(bitwiseAnd(hash, 127));
-    var hash1 = SizeT(shiftRight(hash, 8));
-    var hash2 = SizeT(shiftRight(hash, 32));
+    var lowHash = SizeT(bitand(hash, 127));
+    var hash1 = SizeT(bitshr(hash, 8));
+    var hash2 = SizeT(bitshr(hash, 32));
     return [hash1, hash2, lowHash];
 }
 
@@ -380,8 +380,8 @@ overload baseSplitHash(th: TwoHash[E], hash: UInt64)
 {
     var sh = baseSplitHash(hash);
     
-    sh[0] = bitwiseAnd(sh[0], size(th.tables[0])-1);
-    sh[1] = bitwiseAnd(sh[1], size(th.tables[1])-1);
+    sh[0] = bitand(sh[0], size(th.tables[0])-1);
+    sh[1] = bitand(sh[1], size(th.tables[1])-1);
     return sh;
 }
 
@@ -496,8 +496,8 @@ indexes(a) = range(size(a));
 ilog2(n: I)
 {
     for (b in reverse(range(TypeSize(I)*8)))
-        if (bitwiseAnd(shiftRight(n, b), 1) == 1) return Int(b);
+        if (bitand(bitshr(n, b), 1) == 1) return Int(b);
     return -1; // actually -infinity
 }
 
-lowBit(m) = ilog2(bitwiseAnd(m, -m));
+lowBit(m) = ilog2(bitand(m, -m));

@@ -121,10 +121,10 @@ alias LUA_HOOKTAILRET = 4;
 /*
 ** Event masks
 */
-alias LUA_MASKCALL  = shiftLeft(1, LUA_HOOKCALL);
-alias LUA_MASKRET   = shiftLeft(1, LUA_HOOKRET);
-alias LUA_MASKLINE  = shiftLeft(1, LUA_HOOKLINE);
-alias LUA_MASKCOUNT = shiftLeft(1, LUA_HOOKCOUNT);
+alias LUA_MASKCALL  = bitshl(1, LUA_HOOKCALL);
+alias LUA_MASKRET   = bitshl(1, LUA_HOOKRET);
+alias LUA_MASKLINE  = bitshl(1, LUA_HOOKLINE);
+alias LUA_MASKCOUNT = bitshl(1, LUA_HOOKCOUNT);
 
 
 //

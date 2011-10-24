@@ -30,9 +30,9 @@ private accessFlags(mode) {
     case READ :
         return win32.GENERIC_READ;
     case READ_WRITE :
-        return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
+        return bitor(win32.GENERIC_READ, win32.GENERIC_WRITE);
     case CREATE :
-        return bitwiseOr(win32.GENERIC_READ, win32.GENERIC_WRITE);
+        return bitor(win32.GENERIC_READ, win32.GENERIC_WRITE);
     case APPEND :
         return win32.GENERIC_WRITE;
     default :

@@ -122,7 +122,7 @@ runStatement(st: SqliteStatement, ..bindings: TT) {
     bindStatementValues(st, ..bindings);
 
     var code = sqlite3_step(st.handle);
-    var baseCode = bitwiseAnd(code, 0xFF);
+    var baseCode = bitand(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
         throw SqliteError(code, sqlite3_db_handle(st.handle));
     resetStatement(st);
@@ -206,7 +206,7 @@ overload iterator(st: SqliteStatement) = SqliteStatementIterator(st.handle);
 // XXX assumes next() is always preceded by hasNext?()
 overload hasNext?(st: SqliteStatementIterator) {
     var code = sqlite3_step(st.handle);
-    var baseCode = bitwiseAnd(code, 0xFF);
+    var baseCode = bitand(code, 0xFF);
     if (not inValues?(baseCode, SQLITE_OK, SQLITE_ROW, SQLITE_DONE))
         throw SqliteError(code, sqlite3_db_handle(st.handle));
     return code != SQLITE_DONE;

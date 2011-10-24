@@ -216,17 +216,17 @@ alias SIG_HOLD  = CCodePointer[(Int),()](3);
 //
 
 private alias _WSTOPPED = 0177;
-private _WSTATUS(x) = bitwiseAnd(Int(x), 0177);
+private _WSTATUS(x) = bitand(Int(x), 0177);
 
 alias WCOREFLAG = 0200;
 
 WIFSTOPPED(x) = _WSTATUS(x) == _WSTOPPED;
-WSTOPSIG(x) = shiftRight(Int(x), 8);
+WSTOPSIG(x) = bitshr(Int(x), 8);
 WIFSIGNALED(x) = _WSTATUS(x) != _WSTOPPED and _WSTATUS(x) != 0;
 WTERMSIG(x) = _WSTATUS(x);
 WIFEXITED(x) = _WSTATUS(x) == 0;
-WEXITSTATUS(x) = shiftRight(Int(x), 8);
+WEXITSTATUS(x) = bitshr(Int(x), 8);
 WIFCONTINUED(x) = x == 0x13;
-WCOREDUMP(x) = bitwiseAnd(Int(x), WCOREFLAG) != 0;
-W_EXITCODE(ret, sig) = bitwiseOr(shiftLeft(Int(ret), 8), Int(sig));
-W_STOPCODE(sig) = bitwiseOr(shiftLeft(Int(sig), 8), _WSTOPPED);
+WCOREDUMP(x) = bitand(Int(x), WCOREFLAG) != 0;
+W_EXITCODE(ret, sig) = bitor(bitshl(Int(ret), 8), Int(sig));
+W_STOPCODE(sig) = bitor(bitshl(Int(sig), 8), _WSTOPPED);

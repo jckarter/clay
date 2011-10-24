@@ -163,13 +163,13 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 //
-// shiftLeft
+// bitshl
 //
 
-define shiftLeft;
+define bitshl;
 
 [T,n | Integer?(T)]
-overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+overload bitshl(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = shl ${Vec[T,n]} %1, %2
@@ -180,13 +180,13 @@ overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 //
-// shiftRight
+// bitshr
 //
 
-define shiftRight;
+define bitshr;
 
 [T,n | SignedInteger?(T)]
-overload shiftRight(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = ashr ${Vec[T,n]} %1, %2
@@ -195,7 +195,7 @@ overload shiftRight(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n | UnsignedInteger?(T)]
-overload shiftRight(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = lshr ${Vec[T,n]} %1, %2
@@ -206,11 +206,11 @@ overload shiftRight(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 //
-// bitwiseAnd, bitwiseOr, bitwiseXor
+// bitand, bitor, bitxor
 //
 
 [T,n | Integer?(T)]
-bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitand(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = and ${Vec[T,n]} %1, %2
@@ -219,7 +219,7 @@ bitwiseAnd(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n | Integer?(T)]
-bitwiseOr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = or ${Vec[T,n]} %1, %2
@@ -228,7 +228,7 @@ bitwiseOr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n | Integer?(T)]
-bitwiseXor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitxor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = xor ${Vec[T,n]} %1, %2

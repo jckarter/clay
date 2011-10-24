@@ -43,9 +43,9 @@ record Header (
 
 private hptr(b:SizeT) = Pointer[Header](dataBegin() + b);
 
-blockSize(b) = bitwiseAnd(hptr(b)^.sizeAndFlag, bitwiseNot(1));
+blockSize(b) = bitand(hptr(b)^.sizeAndFlag, bitnot(1));
 
-blockFree?(b) = (bitwiseAnd(hptr(b)^.sizeAndFlag, 1) != 0);
+blockFree?(b) = (bitand(hptr(b)^.sizeAndFlag, 1) != 0);
 
 blockNext(b) = b + blockSize(b);
 
@@ -56,11 +56,11 @@ blockNextInBucket(b) = hptr(b)^.nextInBucket;
 blockPreviousInBucket(b) = hptr(b)^.previousInBucket;
 
 blockSetSize(b, size) {
-    hptr(b)^.sizeAndFlag = bitwiseOr(SizeT(size), SizeT(blockFree?(b)));
+    hptr(b)^.sizeAndFlag = bitor(SizeT(size), SizeT(blockFree?(b)));
 }
 
 blockSetFree(b, free?) {
-    hptr(b)^.sizeAndFlag = bitwiseOr(blockSize(b), SizeT(free?));
+    hptr(b)^.sizeAndFlag = bitor(blockSize(b), SizeT(free?));
 }
 
 blockSetPrevious(b, previous) {
@@ -327,7 +327,7 @@ printPagingState() {
     ref x = state;
     println("fileName = ", x.fileName);
     for (i in range(size(x.freeListBuckets^)))
-        printBucket(shiftLeft(SizeT(1), i));
+        printBucket(bitshl(SizeT(1), i));
 }
 
 printBucket(i) {

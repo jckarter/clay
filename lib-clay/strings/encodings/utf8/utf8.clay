@@ -7,7 +7,7 @@ record UTF8Decoder[Iterator] (
 alias REPLACEMENT_CHAR = UniChar(0xFFFDu);
 alias MAX_CODE_POINT = UniChar(0x10FFFFu);
 
-private validSequenceChar?(d) = bitwiseAnd(UInt32(d), 0xC0u) == 0x80u;
+private validSequenceChar?(d) = bitand(UInt32(d), 0xC0u) == 0x80u;
 
 private minUniChar(minCode, code) {
     if (code < minCode)
@@ -25,9 +25,9 @@ private rangeUniChar(minCode, maxCode, code) {
 
 decodeTwo(c, d) {
     if (validSequenceChar?(d)) {
-        return minUniChar(0x80u, bitwiseOr(
-            shiftLeft(bitwiseAnd(UInt32(c), 0x1Fu), 6),
-            bitwiseAnd(UInt32(d), 0x3Fu)
+        return minUniChar(0x80u, bitor(
+            bitshl(bitand(UInt32(c), 0x1Fu), 6),
+            bitand(UInt32(d), 0x3Fu)
         ));
     } else {
         return REPLACEMENT_CHAR;
@@ -35,10 +35,10 @@ decodeTwo(c, d) {
 }
 decodeThree(c, d, e) {
     if (validSequenceChar?(d) and validSequenceChar?(e)) {
-        return minUniChar(0x800u, bitwiseOr(
-            shiftLeft(bitwiseAnd(UInt32(c), 0x0Fu), 12),
-            shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu),  6),
-            bitwiseAnd(UInt32(e), 0x3Fu)
+        return minUniChar(0x800u, bitor(
+            bitshl(bitand(UInt32(c), 0x0Fu), 12),
+            bitshl(bitand(UInt32(d), 0x3Fu),  6),
+            bitand(UInt32(e), 0x3Fu)
         ));
     } else {
         return REPLACEMENT_CHAR;
@@ -46,11 +46,11 @@ decodeThree(c, d, e) {
 }
 decodeFour(c, d, e, f) {
     if (validSequenceChar?(d) and validSequenceChar?(e) and validSequenceChar?(f)) {
-        return rangeUniChar(0x10000u, UInt32(MAX_CODE_POINT), bitwiseOr(
-            shiftLeft(bitwiseAnd(UInt32(c), 0x07u), 18),
-            shiftLeft(bitwiseAnd(UInt32(d), 0x3Fu), 12),
-            shiftLeft(bitwiseAnd(UInt32(e), 0x3Fu),  6),
-            bitwiseAnd(UInt32(f), 0x3Fu)
+        return rangeUniChar(0x10000u, UInt32(MAX_CODE_POINT), bitor(
+            bitshl(bitand(UInt32(c), 0x07u), 18),
+            bitshl(bitand(UInt32(d), 0x3Fu), 12),
+            bitshl(bitand(UInt32(e), 0x3Fu),  6),
+            bitand(UInt32(f), 0x3Fu)
         ));
     } else {
         return REPLACEMENT_CHAR;
@@ -95,19 +95,19 @@ record UTF8[Sequence] (
 [T] overload iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
 
 private encodeTwo(code)
-    = bitwiseOr(0xC0, shiftRight(bitwiseAnd(code, 0x7C0), 6)),
-      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+    = bitor(0xC0, bitshr(bitand(code, 0x7C0), 6)),
+      bitor(0x80, bitand(code, 0x3F));
 
 private encodeThree(code)
-    = bitwiseOr(0xE0, shiftRight(bitwiseAnd(code, 0xF000), 12)),
-      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x0FC0),  6)),
-      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+    = bitor(0xE0, bitshr(bitand(code, 0xF000), 12)),
+      bitor(0x80, bitshr(bitand(code, 0x0FC0),  6)),
+      bitor(0x80, bitand(code, 0x3F));
 
 private encodeFour(code)
-    = bitwiseOr(0xF0, shiftRight(bitwiseAnd(code, 0x1C0000), 18)),
-      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x03F000), 12)),
-      bitwiseOr(0x80, shiftRight(bitwiseAnd(code, 0x000FC0),  6)),
-      bitwiseOr(0x80, bitwiseAnd(code, 0x3F));
+    = bitor(0xF0, bitshr(bitand(code, 0x1C0000), 18)),
+      bitor(0x80, bitshr(bitand(code, 0x03F000), 12)),
+      bitor(0x80, bitshr(bitand(code, 0x000FC0),  6)),
+      bitor(0x80, bitand(code, 0x3F));
 
 [T] overload push(u: UTF8[T], c) {
     var code = UInt32(c);

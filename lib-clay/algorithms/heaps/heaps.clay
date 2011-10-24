@@ -63,7 +63,7 @@ adjustHeap(first_, holeIndex_, len_, rvalue value_, compareLess?) {
         (first + holeIndex)^ = move((first + secondChild)^);
         holeIndex = secondChild;
     }
-    if ((bitwiseAnd(len, 1) == 0) and (secondChild == (len - 2) / 2)) {
+    if ((bitand(len, 1) == 0) and (secondChild == (len - 2) / 2)) {
         secondChild = 2*(secondChild + 1);
         (first + holeIndex)^ = move((first + (secondChild - 1))^);
         holeIndex = secondChild - 1;

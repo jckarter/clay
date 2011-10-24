@@ -56,8 +56,8 @@ alignedMalloc(numBytes:SizeT, alignment:SizeT) {
     var ptr = malloc(numBytes + alignment + TypeSize(UInt8));
     if (null?(ptr))
         return null(UInt8);
-    var mask = bitwiseNot(SizeT(alignment) - 1);
-    var roundedDown = bitwiseAnd(SizeT(ptr), mask);
+    var mask = bitnot(SizeT(alignment) - 1);
+    var roundedDown = bitand(SizeT(ptr), mask);
     var alignedPtr = Pointer[UInt8](alignment + roundedDown);
     (alignedPtr - 1)^ = Byte(alignedPtr - ptr);
     return alignedPtr;

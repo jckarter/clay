@@ -71,8 +71,8 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     if (mappingObject == win32.HANDLE(0))
         throw GenericIOError(win32.GetLastError());
     var offset64 = UInt64(offset);
-    var offsetHigh = shiftRight(offset64, 32);
-    var offsetLow = bitwiseAnd(offset64, shiftLeft(1u64,32)-1);
+    var offsetHigh = bitshr(offset64, 32);
+    var offsetLow = bitand(offset64, bitshl(1u64,32)-1);
     var address = win32.MapViewOfFile(
         mappingObject,
         win32.DWORD(modeAccess(mode)),

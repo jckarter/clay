@@ -160,60 +160,60 @@ inline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 //
 
 [T,n]
-inline overload shiftLeft(a:Vec[T,n], b:Vec[T,n]) = prims.shiftLeft(a, b);
+inline overload bitshl(a:Vec[T,n], b:Vec[T,n]) = prims.bitshl(a, b);
 
 [T,n,X | Numeric?(X)]
-inline overload shiftLeft(a:Vec[T,n], x:X) = shiftLeft(a, Vec[T,n](T(x)));
+inline overload bitshl(a:Vec[T,n], x:X) = bitshl(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-inline overload shiftLeft(x:X, a:Vec[T,n]) = shiftLeft(Vec[T,n](T(x)),  a);
+inline overload bitshl(x:X, a:Vec[T,n]) = bitshl(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-inline overload shiftRight(a:Vec[T,n], b:Vec[T,n]) = prims.shiftRight(a, b);
+inline overload bitshr(a:Vec[T,n], b:Vec[T,n]) = prims.bitshr(a, b);
 
 [T,n,X | Numeric?(X)]
-inline overload shiftRight(a:Vec[T,n], x:X) = shiftRight(a, Vec[T,n](T(x)));
+inline overload bitshr(a:Vec[T,n], x:X) = bitshr(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-inline overload shiftRight(x:X, a:Vec[T,n]) = shiftRight(Vec[T,n](T(x)),  a);
+inline overload bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
 
 private inline bitwiseOp(fn, a, b) {
     alias size = Int(TypeSize(Type(a)));
-    return bitwiseCast(
-        fn(bitwiseCast(a, Vec[UInt8, size]), bitwiseCast(b, Vec[UInt8, size])),
+    return bitcast(
+        fn(bitcast(a, Vec[UInt8, size]), bitcast(b, Vec[UInt8, size])),
         Type(a)
     );
 }
 
 [T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseAnd(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseAnd, a, b);
+inline overload bitand(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitand, a, b);
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseAnd(a:Vec[T,n], x:X) = bitwiseAnd(a, Vec[T,n](T(x)));
+inline overload bitand(a:Vec[T,n], x:X) = bitand(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseAnd(x:X, a:Vec[T,n]) = bitwiseAnd(Vec[T,n](T(x)),  a);
+inline overload bitand(x:X, a:Vec[T,n]) = bitand(Vec[T,n](T(x)),  a);
 
 
 [T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseOr(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseOr, a, b);
+inline overload bitor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitor, a, b);
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseOr(a:Vec[T,n], x:X) = bitwiseOr(a, Vec[T,n](T(x)));
+inline overload bitor(a:Vec[T,n], x:X) = bitor(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseOr(x:X, a:Vec[T,n]) = bitwiseOr(Vec[T,n](T(x)),  a);
+inline overload bitor(x:X, a:Vec[T,n]) = bitor(Vec[T,n](T(x)),  a);
 
 
 [T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload bitwiseXor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitwiseXor, a, b);
+inline overload bitxor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitxor, a, b);
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseXor(a:Vec[T,n], x:X) = bitwiseXor(a, Vec[T,n](T(x)));
+inline overload bitxor(a:Vec[T,n], x:X) = bitxor(a, Vec[T,n](T(x)));
 
 [T,n,X | Numeric?(X)]
-inline overload bitwiseXor(x:X, a:Vec[T,n]) = bitwiseXor(Vec[T,n](T(x)),  a);
+inline overload bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
 
 
 
@@ -228,7 +228,7 @@ inline overload plus(a:Vec[T,n]) = a;
 inline overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
-inline overload bitwiseNot(a:Vec[T,n]) = bitwiseXor(Vec[T,n](componentMask(T)), a);
+inline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
 
 
 
@@ -251,7 +251,7 @@ CompatibleVectorTypes?(X, Y) = false;
 overload CompatibleVectorTypes?(static Vec[T,n], static Vec[U,m]) = true;
 
 [T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload Vec[T,n](v: Vec[U,m]) = bitwiseCast(v, Vec[T,n]);
+inline overload Vec[T,n](v: Vec[U,m]) = bitcast(v, Vec[T,n]);
 
 
 
@@ -261,5 +261,5 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitwiseCast(v, Vec[T,n]);
 
 [T | Integer?(T)]
 inline componentMask(static T) = T(-1);
-inline overload componentMask(static Float32) = bitwiseCast(-1_i32, Float32);
-inline overload componentMask(static Float64) = bitwiseCast(-1_i64, Float64);
+inline overload componentMask(static Float32) = bitcast(-1_i32, Float32);
+inline overload componentMask(static Float64) = bitcast(-1_i64, Float64);

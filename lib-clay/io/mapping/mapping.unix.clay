@@ -34,9 +34,9 @@ private modeProtection(mode) {
     case MAP_READ :
         return unix.PROT_READ;
     case MAP_READ_WRITE :
-        return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+        return bitor(unix.PROT_READ, unix.PROT_WRITE);
     case MAP_COPY_ON_WRITE :
-        return bitwiseOr(unix.PROT_READ, unix.PROT_WRITE);
+        return bitor(unix.PROT_READ, unix.PROT_WRITE);
     default :
         assert(false);
         return -1;

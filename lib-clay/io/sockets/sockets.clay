@@ -275,9 +275,9 @@ overload flush(s: StreamSocket) { }
 overload printTo(stream, addr: In_addr) {
     var host = networkToHost(addr.s_addr);
     printTo(stream,
-                   shiftRight(host, 24),         ".",
-        bitwiseAnd(shiftRight(host, 16), 0xFFu), ".",
-        bitwiseAnd(shiftRight(host,  8), 0xFFu), ".",
-        bitwiseAnd(           host,      0xFFu),
+                   bitshr(host, 24),         ".",
+        bitand(bitshr(host, 16), 0xFFu), ".",
+        bitand(bitshr(host,  8), 0xFFu), ".",
+        bitand(           host,      0xFFu),
     );
 }

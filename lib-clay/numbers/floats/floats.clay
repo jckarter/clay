@@ -140,33 +140,33 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i32 0
 }
 
-floatBits(f:Double) = forward bitwiseCast(f, UInt64);
-overload floatBits(f:Float) = forward bitwiseCast(f, UInt32);
+floatBits(f:Double) = forward bitcast(f, UInt64);
+overload floatBits(f:Float) = forward bitcast(f, UInt32);
 
-floatFromBits(b:UInt64) = forward bitwiseCast(b, Double);
-overload floatFromBits(b:UInt32) = forward bitwiseCast(b, Float);
+floatFromBits(b:UInt64) = forward bitcast(b, Double);
+overload floatFromBits(b:UInt32) = forward bitcast(b, Float);
 
 [I | Integer?(I)]
-floatFromParts(neg?:Bool, exp:I, mant:UInt64) = floatFromBits(bitwiseOr(
-    bitwiseAnd(mant, 0x000F_FFFF_FFFF_FFFF_u64),
-    shiftLeft(bitwiseAnd(UInt64(exp), 0x7FF_u64), 52),
+floatFromParts(neg?:Bool, exp:I, mant:UInt64) = floatFromBits(bitor(
+    bitand(mant, 0x000F_FFFF_FFFF_FFFF_u64),
+    bitshl(bitand(UInt64(exp), 0x7FF_u64), 52),
     if (neg?) 0x8000_0000_0000_0000_u64 else 0_u64
 ));
 [I | Integer?(I)]
-overload floatFromParts(neg?:Bool, exp:I, mant:UInt32) = floatFromBits(bitwiseOr(
-    bitwiseAnd(mant, 0x007F_FFFFu),
-    shiftLeft(bitwiseAnd(UInt32(exp), 0xFFu), 23),
+overload floatFromParts(neg?:Bool, exp:I, mant:UInt32) = floatFromBits(bitor(
+    bitand(mant, 0x007F_FFFFu),
+    bitshl(bitand(UInt32(exp), 0xFFu), 23),
     if (neg?) 0x8000_0000u else 0u
 ));
 
-floatNegative?(f:Double) = bitwiseAnd(floatBits(f), 0x8000_0000_0000_0000_u64) != 0;
-overload floatNegative?(f:Float) = bitwiseAnd(floatBits(f), 0x8000_0000u) != 0;
+floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_u64) != 0;
+overload floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
 
-floatExponent(f:Double) = bitwiseAnd(shiftRight(floatBits(f), 52), 0x7FF_u64);
-overload floatExponent(f:Float) = bitwiseAnd(shiftRight(floatBits(f), 23), 0xFFu);
+floatExponent(f:Double) = bitand(bitshr(floatBits(f), 52), 0x7FF_u64);
+overload floatExponent(f:Float) = bitand(bitshr(floatBits(f), 23), 0xFFu);
 
-floatMantissa(f:Double) = bitwiseAnd(floatBits(f), 0x000F_FFFF_FFFF_FFFF_u64);
-overload floatMantissa(f:Float) = bitwiseAnd(floatBits(f), 0x007F_FFFFu);
+floatMantissa(f:Double) = bitand(floatBits(f), 0x000F_FFFF_FFFF_FFFF_u64);
+overload floatMantissa(f:Float) = bitand(floatBits(f), 0x007F_FFFFu);
 
 floatParts(f) = floatNegative?(f), floatExponent(f), floatMantissa(f);
 

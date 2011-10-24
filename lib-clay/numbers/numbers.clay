@@ -275,37 +275,37 @@ inline overload dec(a:A) {
 //
 
 [A,B | Integer?(A,B)]
-inline overload shiftLeft(a:A, b:B) = integerShiftLeft(a, A(b));
+inline overload bitshl(a:A, b:B) = integerShiftLeft(a, A(b));
 
 [A,B | Integer?(A,B)]
-inline overload shiftRight(a:A, b:B) = integerShiftRight(a, A(b));
+inline overload bitshr(a:A, b:B) = integerShiftRight(a, A(b));
 
 [A,B | Integer?(A,B)]
-inline overload bitwiseAnd(a:A, b:B) =
+inline overload bitand(a:A, b:B) =
     integerBitwiseAnd(toBiggerNumericType(A, B, a),
                       toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-inline overload bitwiseAnd(a:A, b:A) = integerBitwiseAnd(a, b);
+inline overload bitand(a:A, b:A) = integerBitwiseAnd(a, b);
 
 [A,B | Integer?(A,B)]
-inline overload bitwiseOr(a:A, b:B) =
+inline overload bitor(a:A, b:B) =
     integerBitwiseOr(toBiggerNumericType(A, B, a),
                      toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-inline overload bitwiseOr(a:A, b:A) = integerBitwiseOr(a, b);
+inline overload bitor(a:A, b:A) = integerBitwiseOr(a, b);
 
 [A,B | Integer?(A,B)]
-inline overload bitwiseXor(a:A, b:B) =
+inline overload bitxor(a:A, b:B) =
     integerBitwiseXor(toBiggerNumericType(A, B, a),
                       toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-inline overload bitwiseXor(a:A, b:A) = integerBitwiseXor(a, b);
+inline overload bitxor(a:A, b:A) = integerBitwiseXor(a, b);
 
 [A | Integer?(A)]
-inline overload bitwiseNot(a:A) = integerBitwiseNot(a);
+inline overload bitnot(a:A) = integerBitwiseNot(a);
 
 
 

@@ -28,12 +28,12 @@ define remainder;
 define inc;
 define dec;
 
-define shiftLeft;
-define shiftRight;
-define bitwiseAnd;
-define bitwiseOr;
-define bitwiseXor;
-define bitwiseNot;
+define bitshl;
+define bitshr;
+define bitand;
+define bitor;
+define bitxor;
+define bitnot;
 
 define dereference;
 define call;
@@ -242,14 +242,14 @@ inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
 
-inline overload bitwiseAnd(a, b, c, ..rest) =
-    bitwiseAnd(bitwiseAnd(a,b), c, ..rest);
+inline overload bitand(a, b, c, ..rest) =
+    bitand(bitand(a,b), c, ..rest);
 
-inline overload bitwiseOr(a, b, c, ..rest) =
-    bitwiseOr(bitwiseOr(a,b), c, ..rest);
+inline overload bitor(a, b, c, ..rest) =
+    bitor(bitor(a,b), c, ..rest);
 
-inline overload bitwiseXor(a, b, c, ..rest) =
-    bitwiseXor(bitwiseXor(a,b), c, ..rest);
+inline overload bitxor(a, b, c, ..rest) =
+    bitxor(bitxor(a,b), c, ..rest);
 
 [FIELD]
 inline overload fieldRefAssign(dest, static FIELD, forward src) {
@@ -346,9 +346,9 @@ inline swap(a, b) {
 [T | BitwiseMovedType?(T)]
 inline overload swap(a:T, b:T) {
     alias TBytes = Array[UInt8, Int(TypeSize(T))];
-    var temp = bitwiseCast(a, TBytes);
-    bitwiseCast(a, TBytes) <-- bitwiseCast(b, TBytes);
-    bitwiseCast(b, TBytes) <-- temp;
+    var temp = bitcast(a, TBytes);
+    bitcast(a, TBytes) <-- bitcast(b, TBytes);
+    bitcast(b, TBytes) <-- temp;
 }
 
 
@@ -420,27 +420,27 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
 
 
 //
-// bitwiseCast, bitwiseAndc, bitwiseBlend
+// bitcast, bitandc, bitblend
 //
 
 [T, U | TypeSize(T) >= TypeSize(U)]
-inline bitwiseCast(x: T, static U) = ref Pointer[U](&x)^;
+inline bitcast(x: T, static U) = ref Pointer[U](&x)^;
 
-inline bitwiseAndc(a, b) = bitwiseAnd(a, bitwiseNot(b));
-inline bitwiseBlend(mask, ones, zeros)
-    = bitwiseOr(bitwiseAnd(ones, mask), bitwiseAndc(zeros, mask));
+inline bitandc(a, b) = bitand(a, bitnot(b));
+inline bitblend(mask, ones, zeros)
+    = bitor(bitand(ones, mask), bitandc(zeros, mask));
 
 
 
 //
-// rotateLeft, rotateRight
+// bitrol, bitror
 //
 
 [I, J | Integer?(I) and Integer?(J)]
-rotateLeft(x:I, n:J) = bitwiseOr(shiftLeft(x, n), shiftRight(x, TypeSize(I)*8 - n));
+bitrol(x:I, n:J) = bitor(bitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
 
 [I, J | Integer?(I) and Integer?(J)]
-rotateRight(x:I, n:J) = bitwiseOr(shiftRight(x, n), shiftLeft(x, TypeSize(I)*8 - n));
+bitror(x:I, n:J) = bitor(bitshr(x, n), bitshl(x, TypeSize(I)*8 - n));
 
 
 
