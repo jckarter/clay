@@ -274,7 +274,7 @@ static void usage(char *argv0)
     cerr << "  -llvm             - emit llvm code\n";
     cerr << "  -asm              - emit assember code\n";
     cerr << "  -c                - emit object code\n";
-    cerr << "  -unoptimized      - generate unoptimized code\n";
+    cerr << "  -O0 -O1 -O2 -O3   - set optimization level\n";
     cerr << "  -exceptions       - enable exception handling\n";
     cerr << "  -no-exceptions    - disable exception handling\n";
     cerr << "  -inline           - inline procedures marked 'inline'\n";
@@ -314,7 +314,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    bool optimize = true;
     bool emitLLVM = false;
     bool emitAsm = false;
     bool emitObject = false;
@@ -326,6 +325,8 @@ int main(int argc, char **argv) {
     bool run = false;
     bool crossCompiling = false;
     bool showTiming = false;
+
+    unsigned optLevel = 3;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -362,8 +363,17 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-c") == 0) {
             emitObject = true;
         }
-        else if (strcmp(argv[i], "-unoptimized") == 0) {
-            optimize = false;
+        else if (strcmp(argv[i], "-O0") == 0) {
+            optLevel = 0;
+        }
+        else if (strcmp(argv[i], "-O1") == 0) {
+            optLevel = 1;
+        }
+        else if (strcmp(argv[i], "-O2") == 0) {
+            optLevel = 2;
+        }
+        else if (strcmp(argv[i], "-O3") == 0) {
+            optLevel = 3;
         }
         else if (strcmp(argv[i], "-inline") == 0) {
             inlineEnabled = true;
@@ -729,7 +739,6 @@ int main(int argc, char **argv) {
     compileTimer.stop();
 
     llvmTimer.start();
-    unsigned optLevel = optimize ? 3 : 0;
     if (optLevel > 0)
         optimizeLLVM(llvmModule, optLevel, !(sharedLib || run));
 
