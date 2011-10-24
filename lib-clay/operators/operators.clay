@@ -469,6 +469,7 @@ overload PrimitiveType?(static Float80) = true;
 [I, O] overload PrimitiveType?(static FastCallCodePointer[I, O]) = true;
 [T] overload PrimitiveType?(static Static[T]) = true;
 [T,n] overload PrimitiveType?(static Vec[T,n]) = true;
+[T] overload PrimitiveType?(static Complex[T]) = true;
 [E | Enum?(E)] overload PrimitiveType?(static E) = true;
 [...T] overload PrimitiveType?(static Union[...T]) = true;
 [] overload PrimitiveType?(static Union[]) = true;

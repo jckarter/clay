@@ -2744,6 +2744,17 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         break;
     }
 
+//    case COMPLEX_TYPE : {
+//        ComplexType *t = (ComplexType *)a->type.ptr();
+//        switch (t->bits) {
+//        case 32 : T<_Complex float>().eval(a, b, out); break;
+//        case 64 : T<_Complex double>().eval(a, b, out); break;
+//        case 80 : T<_Complex long double>().eval(a, b, out); break;
+//        default : assert(false);
+//        }
+//        break;
+//    }
+
     default :
         assert(false);
     }
@@ -2850,6 +2861,17 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
         }
         break;
     }
+
+//    case COMPLEX_TYPE : {
+//        ComplexType *t = (ComplexType *)a->type.ptr();
+//        switch (t->bits) {
+//        case 32 : T<_Complex float>().eval(a, out); break;
+//        case 64 : T<_Complex double>().eval(a, out); break;
+//        case 80 : T<_Complex long double>().eval(a, out); break;
+//        default : assert(false);
+//        }
+//        break;
+//    }
 
     default :
         assert(false);
@@ -3035,6 +3057,17 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         }
         break;
     }
+
+//    case COMPLEX_TYPE : {
+//        ComplexType *t = (ComplexType *)src->type.ptr();
+//        switch (t->bits) {
+//        case 32 : op_numericConvert3<D,_Complex float>(dest, src); break;
+//        case 64 : op_numericConvert3<D,_Complex double>(dest, src); break;
+//        case 80 : op_numericConvert3<D,_Complex long double>(dest, src); break;
+//        default : assert(false);
+//        }
+//        break;
+//    }
     default :
         assert(false);
     }
@@ -3075,6 +3108,16 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         }
         break;
     }
+//    case COMPLEX_TYPE : {
+//        ComplexType *t = (ComplexType *)dest->type.ptr();
+//        switch (t->bits) {
+//        case 32 : op_numericConvert2<_Complex float>(dest, src); break;
+//        case 64 : op_numericConvert2<_Complex double>(dest, src); break;
+//        case 80 : op_numericConvert2<_Complex long double>(dest, src); break;
+//        default : assert(false);
+//        }
+//        break;
+//    }
     default :
         assert(false);
     }
@@ -3685,6 +3728,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("Array type constructor cannot be called");
 
     case PRIM_Vec :
+        error("Vec type constructor cannot be called");
+
+    case PRIM_Complex :
         error("Vec type constructor cannot be called");
 
     case PRIM_arrayRef : {

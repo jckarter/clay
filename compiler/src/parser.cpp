@@ -188,6 +188,8 @@ static bool floatLiteral(ExprPtr &x) {
     return true;
 }
 
+
+
 static bool charLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
@@ -1679,7 +1681,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
                         new NameRef(new Identifier("Static")));
 
     IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
-    
+
     x = new FormalArg(argName, indexing.ptr());
     x->location = location;
     return true;
@@ -2194,7 +2196,7 @@ static bool optCallByName(bool &callByName) {
     callByName = true;
     return true;
 }
-    
+
 static bool llvmCode(LLVMCodePtr &b) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_LLVM))

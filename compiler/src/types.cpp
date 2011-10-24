@@ -23,6 +23,7 @@ static vector<vector<CodePointerTypePtr> > codePointerTypes;
 static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<VecTypePtr> > vecTypes;
+static vector<vector<ComplexTypePtr> > complexTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<UnionTypePtr> > unionTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
@@ -42,6 +43,7 @@ void initTypes() {
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
     float80Type = new FloatType(80);
+
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -63,6 +65,7 @@ void initTypes() {
     cCodePointerTypes.resize(N);
     arrayTypes.resize(N);
     vecTypes.resize(N);
+    complexTypes.resize(N);
     tupleTypes.resize(N);
     unionTypes.resize(N);
     recordTypes.resize(N);
@@ -111,6 +114,8 @@ TypePtr floatType(int bits) {
         return NULL;
     }
 }
+
+
 
 static int pointerHash(void *p) {
     return int(size_t(p));
@@ -218,6 +223,21 @@ TypePtr vecType(TypePtr elementType, int size) {
     }
     VecTypePtr t = new VecType(elementType, size);
     vecTypes[h].push_back(t);
+    return t.ptr();
+}
+
+TypePtr complexType(TypePtr elementType) {
+    int h = pointerHash(elementType.ptr()) + 2;
+    h &= complexTypes.size() - 1;
+    vector<ComplexTypePtr>::iterator i, end;
+    for (i = complexTypes[h].begin(), end = complexTypes[h].end();
+         i != end; ++i) {
+        ComplexType *t = i->ptr();
+        if ((t->elementType == elementType))
+            return t;
+    }
+    ComplexTypePtr t = new ComplexType(elementType);
+    complexTypes[h].push_back(t);
     return t.ptr();
 }
 
@@ -364,6 +384,12 @@ bool isPrimitiveAggregateType(TypePtr t)
         }
         return true;
     }
+    case COMPLEX_TYPE : {
+        ComplexType *x = (ComplexType *)t.ptr();
+        if (!isPrimitiveAggregateType(x->elementType))
+            return false;
+        return true;
+    }
     case ARRAY_TYPE : {
         ArrayType *at = (ArrayType *)t.ptr();
         return isPrimitiveAggregateType(at->elementType);
@@ -391,6 +417,12 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
             if (isPrimitiveAggregateTooLarge(tt->elementTypes[i]))
                 return true;
         }
+        return false;
+    }
+    case COMPLEX_TYPE : {
+        ComplexType *x = (ComplexType *)t.ptr();
+        if (isPrimitiveAggregateTooLarge(x->elementType))
+            return true;
         return false;
     }
     case ARRAY_TYPE : {
@@ -788,6 +820,11 @@ static void verifyRecursionCorrectness(TypePtr t,
         verifyRecursionCorrectness(vt->elementType, visited);
         break;
     }
+    case COMPLEX_TYPE : {
+        ComplexType *vt = (ComplexType *)t.ptr();
+        verifyRecursionCorrectness(vt->elementType, visited);
+        break;
+    }
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
         for (unsigned i = 0; i < tt->elementTypes.size(); ++i)
@@ -807,6 +844,7 @@ static void verifyRecursionCorrectness(TypePtr t,
             verifyRecursionCorrectness(fieldTypes[i], visited);
         break;
     }
+
     case VARIANT_TYPE : {
         VariantType *vt = (VariantType *)t.ptr();
         const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
@@ -844,6 +882,8 @@ const llvm::Type *llvmFloatType(int bits) {
         return NULL;
     }
 }
+
+
 
 const llvm::Type *llvmPointerType(const llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
@@ -912,6 +952,15 @@ static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
         const llvm::Type *et = makeLLVMApproximateType(x->elementType);
         return llvmArrayType(et, x->size);
     }
+    case COMPLEX_TYPE :{
+        ComplexType *x = (ComplexType *)t.ptr();
+        vector<const llvm::Type *> llTypes;
+        llTypes.push_back(makeLLVMApproximateType(x->elementType));
+        llTypes.push_back(makeLLVMApproximateType(x->elementType));
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+
+
     case VEC_TYPE : {
         VecType *x = (VecType *)t.ptr();
         const llvm::Type *et = makeLLVMApproximateType(x->elementType);
@@ -928,6 +977,7 @@ static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
             llTypes.push_back(llvmIntType(8));
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
+
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
         const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
@@ -960,6 +1010,14 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
         return llvmFloatType(x->bits);
+    }
+
+    case COMPLEX_TYPE :{
+        ComplexType *x = (ComplexType *)t.ptr();
+        vector<const llvm::Type *> llTypes;
+        llTypes.push_back(llvmType(x->elementType));
+        llTypes.push_back(llvmType(x->elementType));
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
@@ -1054,6 +1112,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             llTypes.push_back(llvmIntType(8));
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
+
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
         return llvmType(variantReprType(x));
@@ -1112,6 +1171,11 @@ void typePrint(ostream &out, TypePtr t) {
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
         out << "Float" << x->bits;
+        break;
+    }
+    case COMPLEX_TYPE : {
+        ComplexType *x = (ComplexType *)t.ptr();
+        out << "Complex[" << x->elementType << "]";
         break;
     }
     case POINTER_TYPE : {

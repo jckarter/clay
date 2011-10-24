@@ -1,14 +1,25 @@
 // Complex numbers
 
 public import math.*;
+import simd.*;
 
-record Complex[T](re:T,im:T);
+public alias Complex[T] = Vec[T,2];
+
+[T,V | Float?(T) and Numeric?(V)] overload Complex[T](re:V) = Complex[T](T(re),T(0));
+//[T,V] overload Complex[T](re:V) = Complex[T](T(re),T(0));
+
+//[T,F | Float?(T,F)] overload T(z:Complex[F]) = T(z.0);
+
+procedure arg;
+procedure proj;
+procedure negate;
 
 alias Complex32 = Complex[Float];
 alias Complex64 = Complex[Double];
 alias Complex80 = Complex[Real];
 
 
+/*
 //Double functions
 external cacos(
     __z : Complex64) Complex64;
@@ -189,42 +200,50 @@ external cprojl(
     __z : Complex80) Complex80;
 
 
-
+*/
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
 overload Complex?(static Complex80) = true;
 [A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
 
-
-[T | Float?(T)]
-inline complex(re:T,im:T) = Complex[T](re,im);
+procedure complex;
 
 [T | Float?(T)]
 inline overload complex(n:T) = Complex[T](n,T(0));
 
 [T | Float?(T)]
-inline overload complex(z:Complex[T]) = complex(T(z.re),T(z.im));
+inline overload complex(re:T,im:T) = Complex[T](re,im);
 
-//Need to reimplement as casting
-[T,U | Float?(T,U) and TypeSize(T)<TypeSize(U) ]
-inline complexTo(z:Complex[T],static U) = complex(U(z.re),U(z.im));
+[T | Float?(T)]
+inline overload complex(z:Complex[T]) = Complex[T](z[0],z[1]);
 
+//
+// assign
+//
+/*
+[A, B | Float?(A,B)]
+inline overload assign(dest:Complex[A], src:Complex[B]) {
+    copyNonoverlappingMemory(&dest, &src, (&src)+2*size(A));
+}
+*/
 
 [T | Complex?(T)]
-inline real(z:T) = z.re;
+inline real(z:T) = z.0;
 
 [T | Complex?(T)]
-inline imag(z:T) = z.im;
+inline imag(z:T) = z.1;
 
 [T | Complex?(T)]
-inline conj(z:T) = complex(z.re,-z.im);
+inline conj(z:T) = T(z[0],-z[1]);
+
+/*
 
 inline overload abs(z:Complex64) = cabs(z);
 inline overload abs(z:Complex32) = cabsf(z);
 inline overload abs(z:Complex80) = cabsl(z);
 
-inline arg(z:Complex64) = carg(z);
+inline overload arg(z:Complex64) = carg(z);
 inline overload arg(z:Complex32) = cargf(z);
 inline overload arg(z:Complex80) = cargl(z);
 
@@ -300,17 +319,20 @@ inline overload sqrt(z:Complex64) = csqrt(z);
 inline overload sqrt(z:Complex32) = csqrtf(z);
 inline overload sqrt(z:Complex80) = csqrtl(z);
 
-inline proj(z:Complex64) = cproj(z);
+inline overload proj(z:Complex64) = cproj(z);
 inline overload proj(z:Complex32) = cprojf(z);
 inline overload proj(z:Complex80) = cprojl(z);
+
+
+*/
 
 [T | Float?(T)]
 inline fromPolar(m:T,ph:T) = complex(m*sin(ph),m*cos(ph));
 
 [T | Float?(T)]
 inline overload equals?(z:Complex[T], y:T) {
-    return if(z.im != T(0)) false else
-        if(z.re==y) true else false;
+    return if(z.1 != T(0)) false else
+        if(z.1==y) true else false;
 }
 
 [T | Float?(T)]
@@ -318,7 +340,7 @@ inline overload equals?(y:T, z:Complex[T]) = equals?(z,y);
 
 [T | Complex?(T)]
 inline overload equals?(z:T, y:T) {
-    return if(z.re==y.re and z.im==y.im) true else false;
+    return if(z.0==y.0 and z.1==y.1) true else false;
 }
 
 [T | Float?(T)]
@@ -331,68 +353,100 @@ inline overload notEquals?(y:T,z:Complex[T]) = not equals?(z, y);
 inline overload notEquals?(z:T, y:T) = not equals?(z,y);
 
 [T | Complex?(T)]
-inline overload minus(z:T) = complex(-z.re,-z.im);
+inline overload minus(z:T) = T(-z.0,-z.1);
 
 [T | Complex?(T)]
 inline overload plus(z:T) = z;
 
 [T | Complex?(T)]
-inline overload add(z:T, y:T) = complex(z.re + y.re, z.im+y.im);
+inline overload add(z:T, y:T) = T(z.0 + y.0, z.1+y.1);
 
 [T | Complex?(T)]
-inline overload subtract(z:T, y:T) = complex(z.re - y.re,z.im-y.im);
+inline overload subtract(z:T, y:T) = T(z.0 - y.0,z.1-y.1);
 
 [T | Complex?(T)]
-inline overload multiply(z:T, y:T) = complex(z.re*y.re-z.im*y.im,z.im*y.re+z.re*y.im);
+inline overload multiply(z:T, y:T) = T(z.0*y.0-z.1*y.1,z.1*y.0+z.0*y.1);
 
 [T | Complex?(T)]
 inline overload divide(z:T, y:T) r:T {
     r = z*y;
-    var b = y.re*y.re+y.im*y.im;
-    r.re = r.re/b;
-    r.im = r.im/b;
+    var b = y.0*y.0+y.1*y.1;
+    r.0 = r.0/b;
+    r.1 = r.1/b;
 }
 
-[T | Float?(T)]
-inline overload add(z:Complex[T], y:T) = complex(z.re + y,z.im);
+[T | Complex?(T)]
+inline overload negate(z:T) {
+    z.0 = -z.0;
+    z.1 = -z.1;
+}
 
-[T | Float?(T)]
-inline overload add(y:T,z:Complex[T]) = add(z,y);
+[T,F | Float?(T,F)]
+inline overload add(z:Complex[T], y:F) = Complex[T](z.0 + y,z.1);
 
-[T | Float?(T)]
-inline overload subtract(z:Complex[T], y:T) = complex(z.re - y, z.im);
+[T,F | Float?(T,F)]
+inline overload add(y:F,z:Complex[T]) = add(z,y);
 
-[T | Float?(T)]
-inline overload subtract(y:T,z:Complex[T]) = complex(y-z.re, -z.im);
+[T,F | Float?(T,F)]
+inline overload subtract(z:Complex[T], y:F) = Complex[T](z.0 - y, z.1);
 
-[T | Float?(T)]
-inline overload multiply(z:Complex[T], y:T) = complex(z.re*y, z.im*y);
+[T,F | Float?(T,F)]
+inline overload subtract(y:F,z:Complex[T]) = Complex[T](y-z.0, -z.1);
 
-[T | Float?(T)]
-inline overload multiply(y:T,z:Complex[T]) = multiply(z,y);
+[T,F | Float?(T,F)]
+inline overload multiply(z:Complex[T], y:F) = Complex[T](z.0*y, z.1*y);
 
-[T | Float?(T)]
-inline overload divide(z:Complex[T], y:T) = complex(z.re/y, z.im/y);
+[T,F | Float?(T,F)]
+inline overload multiply(y:F,z:Complex[T]) = multiply(z,y);
 
-[T | Float?(T)]
-inline overload divide(y:T,z:Complex[T]) = divide(complex(y),z);
+[T,F | Float?(T,F)]
+inline overload divide(z:Complex[T], y:F) = Complex[T](z.0/y, z.1/y);
+
+[T,F | Float?(T,F)]
+inline overload divide(y:F,z:Complex[T]) = divide(Complex[T](y),z);
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload add(z:Complex[T], y:I) = Complex[T](z.0 + T(y),z.1);
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload add(y:I,z:Complex[T]) = add(z,T(y));
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload subtract(z:Complex[T], y:I) = Complex[T](z.0 - T(y), z.1);
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload subtract(y:I,z:Complex[T]) = Complex[T](T(y)-z.0, -z.1);
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload multiply(z:Complex[T], y:I) = Complex[T](z.0*T(y), z.1*T(y));
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload multiply(y:I,z:Complex[T]) = multiply(z,T(y));
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload divide(z:Complex[T], y:I) = Complex[T](z.0/T(y), z.1/T(y));
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload divide(y:I,z:T) = divide(Complex[T](T(y)),z);
 
 
-/*
+
 main(){
 
-    var z = complex(2.0_f80,3.0_f80);
-    var y = complex(4.0_f80,1.0_f80);
-    var w = complex(4.0_f64);
-    var x = z;
+    var z = Complex[Float](2.0f, 3.0f);
+    var y = Complex[Real](8.0_f80, 6.0_f80);
+    var x = Complex[Double](1.0, 2.0);
+
     println(z);
     println(y);
-    println(w);
     println(x);
 
+    /*
     println(abs(z));
     println(arg(w));
+    */
     println(conj(z));
+    /*
     println(sin(z));
     println(cos(z));
     println(sqrt(z));
@@ -402,6 +456,6 @@ main(){
     println(log(w)," == ",log(4.0));
     println(pow(z,w));
     println(pow(z,y));
-
-}
 */
+}
+

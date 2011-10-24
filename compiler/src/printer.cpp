@@ -102,6 +102,7 @@ static void printExpr(ostream &out, const Expr *x) {
         out << ")";
         break;
     }
+
     case CHAR_LITERAL : {
         const CharLiteral *y = (const CharLiteral *)x;
         out << "CharLiteral(" << y->value << ")";
@@ -983,6 +984,7 @@ void printValue(ostream &out, EValuePtr ev)
         }
         break;
     }
+
     default :
         break;
     }

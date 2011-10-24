@@ -1,6 +1,7 @@
 import numbers.parser.*;
 import numbers.floats.*;
 
+
 
 //
 // numeric type predicates
@@ -55,7 +56,7 @@ private BiggerInteger?(static A, static B) =
 private BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
 
 
-private procedure BiggerNumeric?;
+private procedure  BiggerNumeric?;
 
 [A,B | Float?(A) and Integer?(B)]
 overload BiggerNumeric?(static A, static B) = true;

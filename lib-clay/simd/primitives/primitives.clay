@@ -6,9 +6,9 @@
 
 [T,n]
 vecElementRef(a:Vec[T,n], i:Int) returned:ByRef[T] __llvm__{
-    %iVal = load $Int * %i
-    %ptr = getelementptr ${Vec[T,n]} * %a, i32 0, $Int %iVal
-    store $T * %ptr, $T ** %returned
+    %iVal = load ${Int} * %i
+    %ptr = getelementptr ${Vec[T,n]} * %a, i32 0, ${Int} %iVal
+    store ${T} * %ptr, ${T} ** %returned
     ret i32 0
 }
 

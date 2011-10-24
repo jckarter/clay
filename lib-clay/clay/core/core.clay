@@ -102,6 +102,7 @@ enum PrimitiveTypeConstructorKind {
     PRIM_FastCallCodePointer,
     PRIM_Array,
     PRIM_Tuple,
+    PRIM_Complex,
     PRIM_Union,
     PRIM_Static,
 }
@@ -232,6 +233,7 @@ record StdCallCodePointerTag();
 record FastCallCodePointerTag();
 record ArrayTag();
 record TupleTag();
+record ComplexTag();
 record UnionTag();
 record StaticTag();
 record RecordTag(info:Record);
@@ -250,6 +252,7 @@ variant TypeTag = BoolTag
                 | FastCallCodePointerTag
                 | ArrayTag
                 | TupleTag
+                | ComplexTag
                 | UnionTag
                 | StaticTag
                 | RecordTag

@@ -190,7 +190,7 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-        return t;
+       return t;
     default :
         argumentTypeError(index, "numeric type", t);
         return NULL;
@@ -246,6 +246,13 @@ static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
     return (RecordType *)t.ptr();
 }
 
+static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
+}
 static VariantTypePtr variantTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
@@ -556,12 +563,13 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         ValueHolderPtr v = parseIntLiteral(x);
         return new MultiPValue(new PValue(v->type, true));
     }
-        
+
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
         ValueHolderPtr v = parseFloatLiteral(x);
         return new MultiPValue(new PValue(v->type, true));
     }
+
 
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
@@ -1130,6 +1138,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
         case PRIM_Array :
+        case PRIM_Complex :
         case PRIM_Vec :
         case PRIM_Tuple :
         case PRIM_Union :
@@ -1284,6 +1293,11 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return vecType(t, size);
         }
 
+         case PRIM_Complex : {
+            ensureArity(args, 1);
+            TypePtr t = staticToType(args, 0);
+            return complexType(t);
+        }
         case PRIM_Tuple : {
             vector<TypePtr> types;
             for (unsigned i = 0; i < args->size(); ++i)
@@ -1400,7 +1414,7 @@ void computeArgsKey(MultiPValuePtr args,
 
 MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
                              const vector<TypePtr> &returnTypes)
-                             
+
 {
     MultiPValuePtr x = new MultiPValue();
     for (unsigned i = 0; i < returnTypes.size(); ++i) {
@@ -2302,6 +2316,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Vec :
+        error("Vec type constructor cannot be called");
+
+    case PRIM_Complex :
         error("Vec type constructor cannot be called");
 
     case PRIM_Tuple :

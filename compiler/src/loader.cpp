@@ -513,6 +513,7 @@ static ModulePtr typeModule(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -719,6 +720,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(arrayElements);
 
     PRIMITIVE(Vec);
+    PRIMITIVE(Complex);
 
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
@@ -839,6 +841,7 @@ DEFINE_PRIMITIVE_ACCESSOR(StdCallCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(FastCallCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(Array)
 DEFINE_PRIMITIVE_ACCESSOR(Vec)
+DEFINE_PRIMITIVE_ACCESSOR(Complex)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)
 DEFINE_PRIMITIVE_ACCESSOR(Union)
 DEFINE_PRIMITIVE_ACCESSOR(Static)

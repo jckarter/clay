@@ -2275,6 +2275,8 @@ static llvm::Value *promoteCVarArg(TypePtr t,
         FloatType *ft = (FloatType *)t.ptr();
         if (ft->bits == 32)
             return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+        if (ft->bits == 64)
+            return ctx->builder->CreateFPExt(llv, llvmType(float80Type));
         return llv;
     }
     default :
@@ -3904,6 +3906,14 @@ static TupleTypePtr valueToTupleType(MultiCValuePtr args, unsigned index)
     return (TupleType *)t.ptr();
 }
 
+static ComplexTypePtr valueToComplexType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
+}
+
 static UnionTypePtr valueToUnionType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -3966,7 +3976,7 @@ static llvm::Value *numericValue(MultiCValuePtr args,
         switch (cv->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
-            break;
+        break;
         default :
             argumentTypeError(index, "numeric type", cv->type);
         }
@@ -4081,6 +4091,23 @@ static llvm::Value *tupleValue(MultiCValuePtr args,
         if (cv->type->typeKind != TUPLE_TYPE)
             argumentTypeError(index, "tuple type", cv->type);
         type = (TupleType *)cv->type.ptr();
+    }
+    return cv->llValue;
+}
+
+static llvm::Value *complexValue(MultiCValuePtr args,
+                               unsigned index,
+                               ComplexTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentTypeError(index, type.ptr(), cv->type);
+    }
+    else {
+        if (cv->type->typeKind != COMPLEX_TYPE)
+            argumentTypeError(index, "complex type", cv->type);
+        type = (ComplexType *)cv->type.ptr();
     }
     return cv->llValue;
 }
@@ -4881,6 +4908,8 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Vec :
+        error("Vec type constructor cannot be called");
+    case PRIM_Complex :
         error("Vec type constructor cannot be called");
 
     case PRIM_Tuple :

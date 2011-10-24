@@ -300,6 +300,7 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
+struct ComplexType;
 struct ArrayType;
 struct VecType;
 struct TupleType;
@@ -444,6 +445,7 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
+typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
@@ -781,6 +783,8 @@ struct FloatLiteral : public Expr {
     FloatLiteral(const string &value, const string &suffix)
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
+
+
 
 struct CharLiteral : public Expr {
     char value;
@@ -1976,7 +1980,7 @@ enum PrimOpCode {
     PRIM_Array,
     PRIM_arrayRef,
     PRIM_arrayElements,
-
+    PRIM_Complex,
     PRIM_Vec,
 
     PRIM_Tuple,
@@ -2114,6 +2118,7 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
+    COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
@@ -2144,6 +2149,7 @@ struct FloatType : public Type {
     FloatType(int bits)
         : Type(FLOAT_TYPE), bits(bits) {}
 };
+
 
 struct PointerType : public Type {
     TypePtr pointeeType;
@@ -2191,6 +2197,13 @@ struct VecType : public Type {
     VecType(TypePtr elementType, int size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
 };
+
+struct ComplexType : public Type {
+    TypePtr elementType;
+    ComplexType(TypePtr elementType)
+        : Type(COMPLEX_TYPE), elementType(elementType) {}
+};
+
 
 struct TupleType : public Type {
     vector<TypePtr> elementTypes;
@@ -2293,6 +2306,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr vecType(TypePtr elementType, int size);
+TypePtr complexType(TypePtr elementType);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr unionType(const vector<TypePtr> &memberTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
