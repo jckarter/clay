@@ -14,12 +14,6 @@ if(UNIX)
     find_program(CLANG clang ${LLVM_INSTDIR}/bin 
         DOC "path to clang")
 
-    if(CLANG) 
-        set(BUILD_BINDGEN True)
-    else()
-        message("-- Clang not found. clay-bindgen will not be built")
-    endif()
-
     execute_process(
         COMMAND ${LLVM_CONFIG} --cxxflags
         OUTPUT_VARIABLE LLVM_CXXFLAGS
