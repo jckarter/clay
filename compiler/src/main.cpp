@@ -264,13 +264,12 @@ static bool generateBinary(llvm::Module *module,
 
 static void usage(char *argv0)
 {
-    cerr << "usage: " << argv0 << " <options> <clayfile>\n";
-    cerr << "       " << argv0 << " <options> -e <clay source>\n";
+    cerr << "usage: " << argv0 << " <options> <clay file>\n";
+    cerr << "       " << argv0 << " <options> -e <clay code>\n";
     cerr << "options:\n";
     cerr << "  -o <file>         - specify output file\n";
     cerr << "  -target <target>  - set target platform for code generation\n";
     cerr << "  -shared           - create a dynamically linkable library\n";
-    cerr << "  -dll              - create a dynamically linkable library\n";
     cerr << "  -llvm             - emit llvm code\n";
     cerr << "  -asm              - emit assember code\n";
     cerr << "  -c                - emit object code\n";
@@ -282,9 +281,7 @@ static void usage(char *argv0)
     cerr << "  -pic              - generate position independent code\n";
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
-#if !(defined(_WIN32) || defined(_WIN64))
     cerr << "  -timing           - show timing information\n";
-#endif
 #ifdef __APPLE__
     cerr << "  -arch <arch>      - build for Darwin architecture <arch>\n";
     cerr << "  -F<dir>           - add <dir> to framework search path\n";
@@ -349,8 +346,7 @@ int main(int argc, char **argv) {
 #endif
 
     for (int i = 1; i < argc; ++i) {
-        if ((strcmp(argv[i], "-shared") == 0) ||
-            (strcmp(argv[i], "-dll") == 0))
+        if ((strcmp(argv[i], "-shared") == 0))
         {
             sharedLib = true;
         }
@@ -732,10 +728,7 @@ int main(int argc, char **argv) {
         m = loadProgram(clayFile);
     loadTimer.stop();
     compileTimer.start();
-    if (sharedLib)
-        codegenSharedLib(m);
-    else
-        codegenExe(m);
+    codegenEntryPoints(m);
     compileTimer.stop();
 
     llvmTimer.start();

@@ -3009,8 +3009,8 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 void codegenCodeBody(InvokeEntryPtr entry);
 void codegenCWrapper(InvokeEntryPtr entry);
 
-void codegenSharedLib(ModulePtr module);
-void codegenExe(ModulePtr module);
+void codegenEntryPoints(ModulePtr module);
+void codegenMain(ModulePtr module);
 
 
 #endif

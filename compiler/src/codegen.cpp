@@ -5390,7 +5390,7 @@ void codegenTopLevelLLVM(ModulePtr m) {
 
 
 //
-// codegenSharedLib, codegenExe
+// codegenEntryPoints, codegenMain
 //
 
 static CodegenContextPtr makeSimpleContext(const char *name)
@@ -5523,30 +5523,8 @@ static void generateLLVMCtorsAndDtors() {
                              arrayVal2, "llvm.global_dtors");
 }
 
-
-void codegenSharedLib(ModulePtr module)
+void codegenMain(ModulePtr module)
 {
-    codegenTopLevelLLVM(module);
-    initializeCtorsDtors();
-    generateLLVMCtorsAndDtors();
-
-    for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
-        TopLevelItemPtr x = module->topLevelItems[i];
-        if (x->objKind == EXTERNAL_PROCEDURE) {
-            ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
-            if (y->body.ptr())
-                codegenExternalProcedure(y, true);
-        }
-    }
-    finalizeCtorsDtors();
-}
-
-void codegenExe(ModulePtr module)
-{
-    codegenTopLevelLLVM(module);
-    initializeCtorsDtors();
-    generateLLVMCtorsAndDtors();
-
     IdentifierPtr main = new Identifier("main");
     IdentifierPtr argc = new Identifier("argc");
     IdentifierPtr argv = new Identifier("argv");
@@ -5586,6 +5564,28 @@ void codegenExe(ModulePtr module)
     entryProc->env = module->env;
 
     codegenExternalProcedure(entryProc, true);
+}
+
+
+void codegenEntryPoints(ModulePtr module)
+{
+    codegenTopLevelLLVM(module);
+    initializeCtorsDtors();
+    generateLLVMCtorsAndDtors();
+
+    for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
+        TopLevelItemPtr x = module->topLevelItems[i];
+        if (x->objKind == EXTERNAL_PROCEDURE) {
+            ExternalProcedurePtr y = (ExternalProcedure *)x.ptr();
+            if (y->body.ptr())
+                codegenExternalProcedure(y, true);
+        }
+    }
+
+    ObjectPtr mainProc = lookupPublic(module, new Identifier("main"));
+    if (mainProc != NULL)
+        codegenMain(module);
+
     finalizeCtorsDtors();
 }
 
