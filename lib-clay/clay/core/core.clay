@@ -102,7 +102,6 @@ enum PrimitiveTypeConstructorKind {
     PRIM_FastCallCodePointer,
     PRIM_Array,
     PRIM_Tuple,
-    PRIM_Complex,
     PRIM_Union,
     PRIM_Static,
 }
@@ -224,6 +223,7 @@ record Primitive = referenceType(
 record BoolTag();
 record IntegerTag(signed?:Bool, bits:Int);
 record FloatTag(bits:Int);
+record ComplexTag(bits:Int);
 record PointerTag();
 record CodePointerTag();
 record RefTag();
@@ -233,7 +233,6 @@ record StdCallCodePointerTag();
 record FastCallCodePointerTag();
 record ArrayTag();
 record TupleTag();
-record ComplexTag();
 record UnionTag();
 record StaticTag();
 record RecordTag(info:Record);
@@ -305,6 +304,9 @@ var float32Type = Type(FloatTag(32));
 var float64Type = Type(FloatTag(64));
 var float80Type = Type(FloatTag(80));
 
+var complex32Type = Type(ComplexTag(32));
+var complex64Type = Type(ComplexTag(64));
+var complex80Type = Type(ComplexTag(80));
 
 
 //

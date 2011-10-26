@@ -648,6 +648,9 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
     addPrim(prims, "Float80", float80Type.ptr());
+    addPrim(prims, "Complex32", complex32Type.ptr());
+    addPrim(prims, "Complex64", complex64Type.ptr());
+    addPrim(prims, "Complex80", complex80Type.ptr());
 
     GlobalAliasPtr v =
         new GlobalAlias(new Identifier("ExceptionsEnabled?"),
@@ -720,7 +723,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(arrayElements);
 
     PRIMITIVE(Vec);
-    PRIMITIVE(Complex);
 
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
@@ -841,7 +843,6 @@ DEFINE_PRIMITIVE_ACCESSOR(StdCallCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(FastCallCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(Array)
 DEFINE_PRIMITIVE_ACCESSOR(Vec)
-DEFINE_PRIMITIVE_ACCESSOR(Complex)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)
 DEFINE_PRIMITIVE_ACCESSOR(Union)
 DEFINE_PRIMITIVE_ACCESSOR(Static)

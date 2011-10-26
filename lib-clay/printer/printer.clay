@@ -54,13 +54,29 @@ overload printTo(stream, x:UInt64) {
     printWithSprintf(stream, formatForUInt64, x);
 }
 
-overload printTo(stream, x:Float80) {
-    printWithSprintf(stream, "%.16Lg", Float80(x));
+overload printTo(stream, x:Complex80) {
+    printWithSprintf(stream, "%.16Lg", Pointer[Real](&x)^);
+    printWithSprintf(stream, "+j%.16Lg", (Pointer[Real](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex64) {
+    printWithSprintf(stream, "%.16g", Pointer[Double](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Double](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex32) {
+    printWithSprintf(stream, "%.16g", Pointer[Float](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Float](&x)+1)^);
+}
+
+overload printTo(stream, x:Real) {
+    printWithSprintf(stream, "%.16Lg", Real(x));
 }
 
 overload printTo(stream, x:Double) {
     printWithSprintf(stream, "%.16g", Double(x));
 }
+
 overload printTo(stream, x:Float) {
     printWithSprintf(stream, "%.7g", Double(x));
 }

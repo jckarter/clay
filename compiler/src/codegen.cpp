@@ -5,10 +5,6 @@
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <iostream>
-
 llvm::Module *llvmModule;
 llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
@@ -909,6 +905,13 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr y = parseComplexLiteral(x);
+        codegenValueHolder(y, ctx, out);
+        break;
+    }
+
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
@@ -1003,6 +1006,7 @@ void codegenExpr(ExprPtr expr,
         }
         break;
     }
+
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
@@ -1672,6 +1676,22 @@ void codegenCompileTimeValue(EValuePtr ev,
         break;
     }
 
+    case COMPLEX_TYPE : {
+        ComplexType *tt = (ComplexType *)ev->type.ptr();
+        const llvm::StructLayout *layout = complexTypeLayout(tt);
+        char *srcPtr = ev->addr + layout->getElementOffset(1);
+        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
+        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
+        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
+        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
+        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
+        EValuePtr evSrc2 = new EValue(floatType(tt->bits), srcPtr2);
+        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
+        CValuePtr cgDest2 = new CValue(floatType(tt->bits), destPtr2);
+        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
+        break;
+    }
+
     default : {
         // TODO: support complex constants
         ostringstream sout;
@@ -2282,8 +2302,8 @@ static llvm::Value *promoteCVarArg(TypePtr t,
         FloatType *ft = (FloatType *)t.ptr();
         if (ft->bits == 32)
             return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
-        if (ft->bits == 64)
-            return ctx->builder->CreateFPExt(llv, llvmType(float80Type));
+        //if (ft->bits == 64)
+        //    return ctx->builder->CreateFPExt(llv, llvmType(float80Type));
         return llv;
     }
     default :
@@ -4915,8 +4935,6 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Vec :
-        error("Vec type constructor cannot be called");
-    case PRIM_Complex :
         error("Vec type constructor cannot be called");
 
     case PRIM_Tuple :

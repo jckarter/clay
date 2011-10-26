@@ -13,6 +13,9 @@ TypePtr uint64Type;
 TypePtr float32Type;
 TypePtr float64Type;
 TypePtr float80Type;
+TypePtr complex32Type;
+TypePtr complex64Type;
+TypePtr complex80Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -23,7 +26,6 @@ static vector<vector<CodePointerTypePtr> > codePointerTypes;
 static vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
 static vector<vector<ArrayTypePtr> > arrayTypes;
 static vector<vector<VecTypePtr> > vecTypes;
-static vector<vector<ComplexTypePtr> > complexTypes;
 static vector<vector<TupleTypePtr> > tupleTypes;
 static vector<vector<UnionTypePtr> > unionTypes;
 static vector<vector<RecordTypePtr> > recordTypes;
@@ -43,6 +45,9 @@ void initTypes() {
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
     float80Type = new FloatType(80);
+    complex32Type = new ComplexType(32);
+    complex64Type = new ComplexType(64);
+    complex80Type = new ComplexType(80);
 
 
     cIntType = int32Type;
@@ -65,7 +70,6 @@ void initTypes() {
     cCodePointerTypes.resize(N);
     arrayTypes.resize(N);
     vecTypes.resize(N);
-    complexTypes.resize(N);
     tupleTypes.resize(N);
     unionTypes.resize(N);
     recordTypes.resize(N);
@@ -115,6 +119,16 @@ TypePtr floatType(int bits) {
     }
 }
 
+TypePtr complexType(int bits) {
+    switch (bits) {
+    case 32 : return complex32Type;
+    case 64 : return complex64Type;
+    case 80 : return complex80Type;
+    default :
+        assert(false);
+        return NULL;
+    }
+}
 
 
 static int pointerHash(void *p) {
@@ -223,21 +237,6 @@ TypePtr vecType(TypePtr elementType, int size) {
     }
     VecTypePtr t = new VecType(elementType, size);
     vecTypes[h].push_back(t);
-    return t.ptr();
-}
-
-TypePtr complexType(TypePtr elementType) {
-    int h = pointerHash(elementType.ptr()) + 2;
-    h &= complexTypes.size() - 1;
-    vector<ComplexTypePtr>::iterator i, end;
-    for (i = complexTypes[h].begin(), end = complexTypes[h].end();
-         i != end; ++i) {
-        ComplexType *t = i->ptr();
-        if ((t->elementType == elementType))
-            return t;
-    }
-    ComplexTypePtr t = new ComplexType(elementType);
-    complexTypes[h].push_back(t);
     return t.ptr();
 }
 
@@ -353,6 +352,7 @@ bool isPrimitiveType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -370,6 +370,7 @@ bool isPrimitiveAggregateType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -382,12 +383,6 @@ bool isPrimitiveAggregateType(TypePtr t)
             if (!isPrimitiveAggregateType(tt->elementTypes[i]))
                 return false;
         }
-        return true;
-    }
-    case COMPLEX_TYPE : {
-        ComplexType *x = (ComplexType *)t.ptr();
-        if (!isPrimitiveAggregateType(x->elementType))
-            return false;
         return true;
     }
     case ARRAY_TYPE : {
@@ -405,6 +400,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -419,12 +415,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
         }
         return false;
     }
-    case COMPLEX_TYPE : {
-        ComplexType *x = (ComplexType *)t.ptr();
-        if (isPrimitiveAggregateTooLarge(x->elementType))
-            return true;
-        return false;
-    }
+
     case ARRAY_TYPE : {
         ArrayType *at = (ArrayType *)t.ptr();
         if (at->size > 8)
@@ -776,6 +767,15 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     return t->layout;
 }
 
+const llvm::StructLayout *complexTypeLayout(ComplexType *t) {
+    if (t->layout == NULL) {
+        const llvm::StructType *st =
+            llvm::cast<llvm::StructType>(llvmType(t));
+        t->layout = llvmTargetData->getStructLayout(st);
+    }
+    return t->layout;
+}
+
 const llvm::StructLayout *recordTypeLayout(RecordType *t) {
     if (t->layout == NULL) {
         const llvm::StructType *st =
@@ -817,11 +817,6 @@ static void verifyRecursionCorrectness(TypePtr t,
     }
     case VEC_TYPE : {
         VecType *vt = (VecType *)t.ptr();
-        verifyRecursionCorrectness(vt->elementType, visited);
-        break;
-    }
-    case COMPLEX_TYPE : {
-        ComplexType *vt = (ComplexType *)t.ptr();
         verifyRecursionCorrectness(vt->elementType, visited);
         break;
     }
@@ -884,7 +879,6 @@ const llvm::Type *llvmFloatType(int bits) {
 }
 
 
-
 const llvm::Type *llvmPointerType(const llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
 }
@@ -937,6 +931,7 @@ static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case UNION_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
@@ -952,15 +947,6 @@ static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
         const llvm::Type *et = makeLLVMApproximateType(x->elementType);
         return llvmArrayType(et, x->size);
     }
-    case COMPLEX_TYPE :{
-        ComplexType *x = (ComplexType *)t.ptr();
-        vector<const llvm::Type *> llTypes;
-        llTypes.push_back(makeLLVMApproximateType(x->elementType));
-        llTypes.push_back(makeLLVMApproximateType(x->elementType));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-    }
-
-
     case VEC_TYPE : {
         VecType *x = (VecType *)t.ptr();
         const llvm::Type *et = makeLLVMApproximateType(x->elementType);
@@ -1012,13 +998,6 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         return llvmFloatType(x->bits);
     }
 
-    case COMPLEX_TYPE :{
-        ComplexType *x = (ComplexType *)t.ptr();
-        vector<const llvm::Type *> llTypes;
-        llTypes.push_back(llvmType(x->elementType));
-        llTypes.push_back(llvmType(x->elementType));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-    }
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
         return llvmPointerType(x->pointeeType);
@@ -1069,6 +1048,15 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             llTypes.push_back(llvmIntType(8));
         return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
     }
+
+    case COMPLEX_TYPE :{
+        ComplexType *x = (ComplexType *)t.ptr();
+        vector<const llvm::Type *> llTypes;
+        llTypes.push_back(llvmType(floatType(x->bits)));
+        llTypes.push_back(llvmType(floatType(x->bits)));
+        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+
     case UNION_TYPE : {
         UnionType *x = (UnionType *)t.ptr();
         const llvm::Type *maxAlignType = NULL;
@@ -1173,11 +1161,13 @@ void typePrint(ostream &out, TypePtr t) {
         out << "Float" << x->bits;
         break;
     }
+
     case COMPLEX_TYPE : {
         ComplexType *x = (ComplexType *)t.ptr();
-        out << "Complex[" << x->elementType << "]";
+        out << "Complex" << x->bits;
         break;
     }
+
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
         out << "Pointer[" << x->pointeeType << "]";

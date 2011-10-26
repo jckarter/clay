@@ -204,3 +204,65 @@ overload parseFloat80(s:S) {
         error("Float80 out of range: ", s);
     return Float80(value);
 }
+
+
+
+
+//
+// parseComplex32
+//
+
+[S | String?(S)]
+parseComplex32(s:S) = parseComplex32(String(s));
+
+[S | CCompatibleString?(S)]
+overload parseComplex32(s:S) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtof(p, &end);
+    if (end^ != 0)
+        error("invalid Complex32: ", s);
+    if (errno() == ERANGE)
+        error("Complex32 out of range: ", s);
+    return Complex32(value);
+}
+
+
+
+//
+// parseComplex64
+//
+
+[S | String?(S)]
+parseComplex64(s:S) = parseComplex64(String(s));
+
+[S | CCompatibleString?(S)]
+overload parseComplex64(s:S) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtod(p, &end);
+    if (end^ != 0)
+        error("invalid Complex64: ", s);
+    if (errno() == ERANGE)
+        error("Complex64 out of range: ", s);
+    return Complex64(value);
+}
+
+//
+// parseComplex80
+//
+
+[S | String?(S)]
+parseComplex80(s:S) = parseComplex80(String(s));
+
+[S | CCompatibleString?(S)]
+overload parseComplex80(s:S) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = libc.strtold(p, &end);
+    if (end^ != 0)
+        error("invalid Complex80: ", s);
+    if (errno() == ERANGE)
+        error("Complex80 out of range: ", s);
+    return Complex80(value);
+}

@@ -104,6 +104,35 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
+
+    else if (x->suffix == "j32") {
+        float y = (float)strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex32 literal");
+        if (errno == ERANGE)
+            error("complex32 literal out of range");
+        vh = new ValueHolder(complex32Type);
+        *((float *)vh->buf) = y;
+    }
+    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+        double y = strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex64 literal");
+        if (errno == ERANGE)
+            error("complex64 literal out of range");
+        vh = new ValueHolder(complex64Type);
+        *((double *)vh->buf) = y;
+    }
+    else if (x->suffix == "j80") {
+        long double y = strtold(ptr, &end);
+        if (*end != 0)
+            error("invalid complex80 literal");
+        if (errno == ERANGE)
+            error("complex80 literal out of range");
+        vh = new ValueHolder(complex80Type);
+        *((long double *)vh->buf) = y;
+    }
+
     else {
         error("invalid literal suffix: " + x->suffix);
     }
@@ -133,7 +162,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if ((x->suffix == "f80") || x->suffix.empty()) {
+    else if (x->suffix == "f80") {
         long double y = strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -142,8 +171,76 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
+
+    else if (x->suffix == "j32") {
+        float y = (float)strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex32 literal");
+        if (errno == ERANGE)
+            error("complex32 literal out of range");
+        vh = new ValueHolder(complex32Type);
+        *((float *)vh->buf) = y;
+    }
+    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+        double y = strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex64 literal");
+        if (errno == ERANGE)
+            error("complex64 literal out of range");
+        vh = new ValueHolder(complex64Type);
+        *((double *)vh->buf) = y;
+    }
+    else if (x->suffix == "j80") {
+        long double y = strtold(ptr, &end);
+        if (*end != 0)
+            error("invalid complex80 literal");
+        if (errno == ERANGE)
+            error("complex80 literal out of range");
+        vh = new ValueHolder(complex80Type);
+        *((long double *)vh->buf) = y;
+    }
+
     else {
         error("invalid float literal suffix: " + x->suffix);
     }
     return vh;
 }
+
+ValueHolderPtr parseComplexLiteral(ComplexLiteral *x)
+{
+    char *ptr = const_cast<char *>(x->value.c_str());
+    char *end = ptr;
+    ValueHolderPtr vh;
+    if (x->suffix == "j32") {
+        float y = (float)strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex32 literal");
+        if (errno == ERANGE)
+            error("complex32 literal out of range");
+        vh = new ValueHolder(complex32Type);
+        *((float *)vh->buf) = y;
+    }
+    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+        double y = strtod(ptr, &end);
+        if (*end != 0)
+            error("invalid complex64 literal");
+        if (errno == ERANGE)
+            error("complex64 literal out of range");
+        vh = new ValueHolder(complex64Type);
+        *((double *)vh->buf) = y;
+    }
+    else if (x->suffix == "j80") {
+        long double y = strtold(ptr, &end);
+        if (*end != 0)
+            error("invalid complex80 literal");
+        if (errno == ERANGE)
+            error("complex80 literal out of range");
+        vh = new ValueHolder(complex80Type);
+        *((long double *)vh->buf) = y;
+    }
+    else {
+        error("invalid complex literal suffix: " + x->suffix);
+    }
+    return vh;
+}
+

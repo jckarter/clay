@@ -199,13 +199,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             params->items.push_back(objectToPattern(vh.ptr()));
             return new PatternStruct(head, params.ptr());
         }
-        case COMPLEX_TYPE : {
-            ComplexType *vt = (ComplexType *)t;
-            ObjectPtr head = primitive_Complex();
-            MultiPatternListPtr params = new MultiPatternList();
-            params->items.push_back(objectToPattern(vt->elementType.ptr()));
-            return new PatternStruct(head, params.ptr());
-        }
+
         case TUPLE_TYPE : {
             TupleType *tt = (TupleType *)t;
             ObjectPtr head = primitive_Tuple();
@@ -509,13 +503,11 @@ static bool isPatternHead(ObjectPtr x)
         PrimOpPtr y = (PrimOp *)x.ptr();
         switch (y->primOpCode) {
         case PRIM_Pointer :
-
         case PRIM_CodePointer :
         case PRIM_CCodePointer :
         case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
-        case PRIM_Complex :
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :

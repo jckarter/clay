@@ -209,6 +209,7 @@ struct Expr;
 struct BoolLiteral;
 struct IntLiteral;
 struct FloatLiteral;
+struct ComplexLiteral;
 struct CharLiteral;
 struct StringLiteral;
 struct IdentifierLiteral;
@@ -354,6 +355,7 @@ typedef Pointer<Expr> ExprPtr;
 typedef Pointer<BoolLiteral> BoolLiteralPtr;
 typedef Pointer<IntLiteral> IntLiteralPtr;
 typedef Pointer<FloatLiteral> FloatLiteralPtr;
+typedef Pointer<ComplexLiteral> ComplexLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
@@ -656,6 +658,7 @@ enum TokenKind {
     T_CHAR_LITERAL,
     T_INT_LITERAL,
     T_FLOAT_LITERAL,
+    T_COMPLEX_LITERAL,
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,
@@ -720,6 +723,7 @@ enum ExprKind {
     BOOL_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
+    COMPLEX_LITERAL,
     CHAR_LITERAL,
     STRING_LITERAL,
     IDENTIFIER_LITERAL,
@@ -784,6 +788,15 @@ struct FloatLiteral : public Expr {
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
+struct ComplexLiteral : public Expr {
+    string real;
+    string value;
+    string suffix;
+    ComplexLiteral(const string &real, const string &value)
+        : Expr(COMPLEX_LITERAL), real(real),value(value) {}
+    ComplexLiteral(const string &real,const string &value, const string &suffix)
+        : Expr(COMPLEX_LITERAL), real(real),value(value), suffix(suffix) {}
+};
 
 
 struct CharLiteral : public Expr {
@@ -831,6 +844,7 @@ struct Tuple : public Expr {
     Tuple(ExprListPtr args)
         : Expr(TUPLE), args(args) {}
 };
+
 
 struct Array : public Expr {
     ExprListPtr args;
@@ -1605,7 +1619,8 @@ struct ExternalProcedure : public TopLevelItem {
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
-          analyzed(false), bodyCodegenned(false), llvmFunc(NULL) {}
+//          analyzed(false), bodyCodegenned(false), llvmFunc(NULL) {}
+          analyzed(false), llvmFunc(NULL) {}
 };
 
 struct ExternalArg : public ANode {
@@ -1981,7 +1996,7 @@ enum PrimOpCode {
     PRIM_Array,
     PRIM_arrayRef,
     PRIM_arrayElements,
-    PRIM_Complex,
+
     PRIM_Vec,
 
     PRIM_Tuple,
@@ -2151,6 +2166,12 @@ struct FloatType : public Type {
         : Type(FLOAT_TYPE), bits(bits) {}
 };
 
+struct ComplexType : public Type {
+    int bits;
+    const llvm::StructLayout *layout;
+    ComplexType(int bits)
+        : Type(COMPLEX_TYPE), bits(bits), layout(NULL) {}
+};
 
 struct PointerType : public Type {
     TypePtr pointeeType;
@@ -2197,12 +2218,6 @@ struct VecType : public Type {
     int size;
     VecType(TypePtr elementType, int size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
-};
-
-struct ComplexType : public Type {
-    TypePtr elementType;
-    ComplexType(TypePtr elementType)
-        : Type(COMPLEX_TYPE), elementType(elementType) {}
 };
 
 
@@ -2285,6 +2300,9 @@ extern TypePtr uint64Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 extern TypePtr float80Type;
+extern TypePtr complex32Type;
+extern TypePtr complex64Type;
+extern TypePtr complex80Type;
 
 // aliases
 extern TypePtr cIntType;
@@ -2297,6 +2315,7 @@ TypePtr integerType(int bits, bool isSigned);
 TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
+TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes,
                         const vector<bool> &returnIsRef,
@@ -2307,7 +2326,6 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr vecType(TypePtr elementType, int size);
-TypePtr complexType(TypePtr elementType);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr unionType(const vector<TypePtr> &memberTypes);
 TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
@@ -2330,6 +2348,7 @@ const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
+const llvm::StructLayout *complexTypeLayout(ComplexType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
 const llvm::Type *llvmIntType(int bits);
@@ -2653,6 +2672,7 @@ void initBuiltinConstructor(RecordPtr x);
 
 ValueHolderPtr parseIntLiteral(IntLiteral *x);
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
+ValueHolderPtr parseComplexLiteral(ComplexLiteral *x);
 
 
 

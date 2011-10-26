@@ -10,7 +10,7 @@ import vectors.generic.*;
 record Vector[T] (
     size:SizeT,
     capacity:SizeT,
-    data:Pointer[T]
+    data:Pointer[T],
 );
 
 

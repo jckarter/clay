@@ -920,6 +920,13 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr y = parseComplexLiteral(x);
+        evalValueHolder(y, out);
+        break;
+    }
+
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
@@ -1001,6 +1008,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         }
         break;
     }
+
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
@@ -1401,6 +1409,7 @@ void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
         memcpy(out0->addr, x->buf, typeSize(x->type));
         break;
 
@@ -2500,6 +2509,14 @@ static TupleTypePtr valueToTupleType(MultiEValuePtr args, unsigned index)
     return (TupleType *)t.ptr();
 }
 
+static ComplexTypePtr valueToComplexType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
+}
+
 static UnionTypePtr valueToUnionType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -2559,6 +2576,7 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
         switch (ev->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
+        case COMPLEX_TYPE :
             break;
         default :
             argumentTypeError(index, "numeric type", ev->type);
@@ -2646,6 +2664,22 @@ static EValuePtr tupleValue(MultiEValuePtr args, unsigned index,
         if (ev->type->typeKind != TUPLE_TYPE)
             argumentTypeError(index, "tuple type", ev->type);
         type = (TupleType *)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr complexValue(MultiEValuePtr args, unsigned index,
+                            ComplexTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentTypeError(index, type.ptr(), ev->type);
+    }
+    else {
+        if (ev->type->typeKind != COMPLEX_TYPE)
+            argumentTypeError(index, "complex type", ev->type);
+        type = (ComplexType *)ev->type.ptr();
     }
     return ev;
 }
@@ -2743,17 +2777,6 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         }
         break;
     }
-
-//    case COMPLEX_TYPE : {
-//        ComplexType *t = (ComplexType *)a->type.ptr();
-//        switch (t->bits) {
-//        case 32 : T<_Complex float>().eval(a, b, out); break;
-//        case 64 : T<_Complex double>().eval(a, b, out); break;
-//        case 80 : T<_Complex long double>().eval(a, b, out); break;
-//        default : assert(false);
-//        }
-//        break;
-//    }
 
     default :
         assert(false);
@@ -2862,16 +2885,6 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
         break;
     }
 
-//    case COMPLEX_TYPE : {
-//        ComplexType *t = (ComplexType *)a->type.ptr();
-//        switch (t->bits) {
-//        case 32 : T<_Complex float>().eval(a, out); break;
-//        case 64 : T<_Complex double>().eval(a, out); break;
-//        case 80 : T<_Complex long double>().eval(a, out); break;
-//        default : assert(false);
-//        }
-//        break;
-//    }
 
     default :
         assert(false);
@@ -3058,16 +3071,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         break;
     }
 
-//    case COMPLEX_TYPE : {
-//        ComplexType *t = (ComplexType *)src->type.ptr();
-//        switch (t->bits) {
-//        case 32 : op_numericConvert3<D,_Complex float>(dest, src); break;
-//        case 64 : op_numericConvert3<D,_Complex double>(dest, src); break;
-//        case 80 : op_numericConvert3<D,_Complex long double>(dest, src); break;
-//        default : assert(false);
-//        }
-//        break;
-//    }
+
     default :
         assert(false);
     }
@@ -3108,16 +3112,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         }
         break;
     }
-//    case COMPLEX_TYPE : {
-//        ComplexType *t = (ComplexType *)dest->type.ptr();
-//        switch (t->bits) {
-//        case 32 : op_numericConvert2<_Complex float>(dest, src); break;
-//        case 64 : op_numericConvert2<_Complex double>(dest, src); break;
-//        case 80 : op_numericConvert2<_Complex long double>(dest, src); break;
-//        default : assert(false);
-//        }
-//        break;
-//    }
+
     default :
         assert(false);
     }
@@ -3730,10 +3725,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_Vec :
         error("Vec type constructor cannot be called");
 
-    case PRIM_Complex :
-        error("Vec type constructor cannot be called");
-
-    case PRIM_arrayRef : {
+     case PRIM_arrayRef : {
         ensureArity(args, 2);
         ArrayTypePtr at;
         EValuePtr earray = arrayValue(args, 0, at);
@@ -3804,6 +3796,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         }
         break;
     }
+
+
 
     case PRIM_Union :
         error("Union type constructor cannot be called");

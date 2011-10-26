@@ -10,6 +10,7 @@ static ObjectPtr unwrapStaticType(TypePtr t);
 
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index);
@@ -26,6 +27,7 @@ static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
 static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
 static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index);
 static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
+static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index);
 static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
 
 static PValuePtr staticPValue(ObjectPtr x);
@@ -90,6 +92,14 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
+}
+
+static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();;
 }
 
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
@@ -253,6 +263,7 @@ static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "complex type", t);
     return (ComplexType *)t.ptr();
 }
+
 static VariantTypePtr variantTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index]->type;
@@ -570,6 +581,11 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return new MultiPValue(new PValue(v->type, true));
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr v = parseComplexLiteral(x);
+        return new MultiPValue(new PValue(v->type, true));
+    }
 
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
@@ -632,6 +648,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
                                x->args,
                                env);
     }
+
 
     case ARRAY : {
         Array *x = (Array *)expr.ptr();
@@ -1138,7 +1155,6 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
         case PRIM_Array :
-        case PRIM_Complex :
         case PRIM_Vec :
         case PRIM_Tuple :
         case PRIM_Union :
@@ -1293,11 +1309,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return vecType(t, size);
         }
 
-         case PRIM_Complex : {
-            ensureArity(args, 1);
-            TypePtr t = staticToType(args, 0);
-            return complexType(t);
-        }
+
         case PRIM_Tuple : {
             vector<TypePtr> types;
             for (unsigned i = 0; i < args->size(); ++i)
@@ -2318,8 +2330,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_Vec :
         error("Vec type constructor cannot be called");
 
-    case PRIM_Complex :
-        error("Vec type constructor cannot be called");
 
     case PRIM_Tuple :
         error("Tuple type constructor cannot be called");
@@ -2348,6 +2358,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             mpv->add(new PValue(t->elementTypes[i], false));
         return mpv;
     }
+
+
 
     case PRIM_Union :
         error("Union type constructor cannot be called");

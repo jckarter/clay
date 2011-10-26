@@ -188,6 +188,23 @@ static bool floatLiteral(ExprPtr &x) {
     return true;
 }
 
+static bool complexLiteral(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_COMPLEX_LITERAL))
+        return false;
+    TokenPtr t2;
+    int p = save();
+    if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
+        x = new ComplexLiteral( "0" , cleanNumericSeparator(t->str), t2->str);
+    }
+    else {
+        restore(p);
+        x = new ComplexLiteral( "0"  , cleanNumericSeparator(t->str));
+    }
+    x->location = location;
+    return true;
+}
 
 
 static bool charLiteral(ExprPtr &x) {
@@ -236,6 +253,7 @@ static bool literal(ExprPtr &x) {
     if (boolLiteral(x)) return true;
     if (restore(p), intLiteral(x)) return true;
     if (restore(p), floatLiteral(x)) return true;
+    if (restore(p), complexLiteral(x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     if (restore(p), identifierLiteral(x)) return true;
@@ -317,6 +335,7 @@ static bool tupleExpr(ExprPtr &x) {
     x->location = location;
     return true;
 }
+
 
 static bool nameRef(ExprPtr &x) {
     LocationPtr location = currentLocation();

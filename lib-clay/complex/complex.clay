@@ -1,0 +1,119 @@
+
+
+[T] Complex?(static T) = false;
+overload Complex?(static Complex32) = true;
+overload Complex?(static Complex64) = true;
+overload Complex?(static Complex80) = true;
+[A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
+
+private procedure re;
+private procedure im;
+
+inline overload re(z:Complex32) = Pointer[Float](&z);
+inline overload re(z:Complex64) = Pointer[Double](&z);
+inline overload re(z:Complex80) = Pointer[Real](&z);
+
+inline overload im(z:Complex32) = (Pointer[Float](&z)+1);
+inline overload im(z:Complex64) = (Pointer[Double](&z)+1);
+inline overload im(z:Complex80) = (Pointer[Real](&z)+1);
+
+[C | Complex?(C)]
+inline real(z:C) = re(z)^;
+
+[C | Complex?(C)]
+inline imag(z:C) = im(z)^;
+
+
+inline Complex(a:Float,b:Float) r:Complex32 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:Double,b:Double) r:Complex64 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:Real,b:Real) r:Complex80 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:Float,b:Double) r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
+inline overload Complex(a:Float,b:Real) r:Complex80 { re(r)^ = Real(a); im(r)^ = b;}
+inline overload Complex(a:Double,b:Float) r:Complex64 { re(r)^ = a; im(r)^ = Double(b);}
+inline overload Complex(a:Double,b:Real) r:Complex80 { re(r)^ = Real(a); im(r)^ = b;}
+inline overload Complex(a:Real,b:Float) r:Complex80 { re(r)^ = a; im(r)^ = Real(b);}
+inline overload Complex(a:Real,b:Double) r:Complex80 { re(r)^ = a; im(r)^ = Real(b);}
+
+
+[T | Complex?(T)]
+inline conj(z:T) = Complex(real(z),-imag(z));
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload equals?(z:C, y:T) {
+    return if(imag(z) != T(0)) false else
+        if(real(z)==y) true else false;
+}
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload equals?(y:T, z:C) = equals?(z,y);
+
+[T | Complex?(T)]
+inline overload equals?(z:T, y:T) = if(real(z)==real(y) and imag(z)==imag(y)) true else false;
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload notEquals?(z:C, y:T) = not equals?(z, y);
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload notEquals?(y:T,z:C) = not equals?(z, y);
+
+[T | Complex?(T)]
+inline overload notEquals?(z:T, y:T) = not equals?(z,y);
+
+[T | Complex?(T)]
+inline overload minus(z:T) = Complex(-real(z),-imag(z));
+
+[T | Complex?(T)]
+inline overload plus(z:T) = z;
+
+[T,U | Complex?(T,U)]
+inline overload add(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
+
+[T,U | Complex?(T,U)]
+inline overload subtract(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
+
+[T,U | Complex?(T,U)]
+inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),imag(z)*real(y)+real(z)*imag(y));
+
+[T,U | Complex?(T,U)]
+inline overload divide(z:T, y:U) {
+    var r = z*y;
+    var b = real(y)*real(y)+imag(y)*imag(y);
+    re(r)^ = real(r)/b;
+    im(r)^ = imag(r)/b;
+    return r;
+}
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload add(a:T, z:C) = Complex(a+real(z),imag(z));
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload add(z:C, a:T) = add(a,z);
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload subtract(z:C, y:T) = Complex(real(z) - y, imag(z));
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload subtract(y:T,z:C) = Complex(y-real(z), -imag(z));
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload multiply(z:C, y:T) = Complex(real(z)*y, imag(z)*y);
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload multiply(y:T,z:C) = multiply(z,y);
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload divide(z:C, y:T) = Complex(real(z)/y, imag(z)/y);
+
+[T,C | Float?(T) and Complex?(C)]
+inline overload divide(y:T,z:C) = divide(Complex(y,T(0)),z);
+
+
+[S | String?(S)]
+inline overload Complex32(s:S) = parseComplex32(s);
+
+[S | String?(S)]
+inline overload Complex64(s:S) = parseComplex64(s);
+
+[S | String?(S)]
+inline overload Complex80(s:S) = parseComplex80(s);
+

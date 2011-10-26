@@ -50,6 +50,11 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *y = (ComplexLiteral *)x.ptr();
+        out = new ComplexLiteral(y->real, y->value, y->suffix);
+        break;
+    }
 
     case CHAR_LITERAL : {
         CharLiteral *y = (CharLiteral *)x.ptr();

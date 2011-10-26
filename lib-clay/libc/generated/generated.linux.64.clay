@@ -3097,3 +3097,185 @@ external timer_gettime(
 
 external timer_getoverrun(
     __timerid : timer_t) Int;
+
+
+
+//Double functions
+external cacos(
+    __z : Complex64) Complex64;
+
+external casin(
+    __z : Complex64) Complex64;
+
+external catan(
+    __z : Complex64) Complex64;
+
+external ccos(
+    __z : Complex64) Complex64;
+
+external csin(
+    __z : Complex64) Complex64;
+
+external ctan(
+    __z : Complex64) Complex64;
+
+external cacosh(
+    __z : Complex64) Complex64;
+
+external casinh(
+    __z : Complex64) Complex64;
+
+external catanh(
+    __z : Complex64) Complex64;
+
+external ccosh(
+    __z : Complex64) Complex64;
+
+external csinh(
+    __z : Complex64) Complex64;
+
+external ctanh(
+    __z : Complex64) Complex64;
+
+external cexp(
+    __z : Complex64) Complex64;
+
+external clog(
+    __z : Complex64) Complex64;
+
+external cpow(
+    __x : Complex64,
+    __y : Complex64) Complex64;
+
+external csqrt(
+    __z : Complex64) Complex64;
+
+external cabs(
+    __z : Complex64) Double;
+
+external carg(
+    __z : Complex64) Double;
+
+external cproj(
+    __z : Complex64) Complex64;
+
+
+//Float functions
+external cacosf(
+    __z : Complex32) Complex32;
+
+external casinf(
+    __z : Complex32) Complex32;
+
+external catanf(
+    __z : Complex32) Complex32;
+
+external ccosf(
+    __z : Complex32) Complex32;
+
+external csinf(
+    __z : Complex32) Complex32;
+
+external ctanf(
+    __z : Complex32) Complex32;
+
+external cacoshf(
+    __z : Complex32) Complex32;
+
+external casinhf(
+    __z : Complex32) Complex32;
+
+external catanhf(
+    __z : Complex32) Complex32;
+
+external ccoshf(
+    __z : Complex32) Complex32;
+
+external csinhf(
+    __z : Complex32) Complex32;
+
+external ctanhf(
+    __z : Complex32) Complex32;
+
+external cexpf(
+    __z : Complex32) Complex32;
+
+external clogf(
+    __z : Complex32) Complex32;
+
+external cpowf(
+    __x : Complex32,
+    __y : Complex32) Complex32;
+
+external csqrtf(
+    __z : Complex32) Complex32;
+
+external cabsf(
+    __z : Complex32) Float;
+
+external cargf(
+    __z : Complex32) Float;
+
+external cprojf(
+    __z : Complex32) Complex32;
+
+
+//Real functions
+external cacosl(
+    __z : Complex80) Complex80;
+
+external casinl(
+    __z : Complex80) Complex80;
+
+external catanl(
+    __z : Complex80) Complex80;
+
+external ccosl(
+    __z : Complex80) Complex80;
+
+external csinl(
+    __z : Complex80) Complex80;
+
+external ctanl(
+    __z : Complex80) Complex80;
+
+external cacoshl(
+    __z : Complex80) Complex80;
+
+external casinhl(
+    __z : Complex80) Complex80;
+
+external catanhl(
+    __z : Complex80) Complex80;
+
+external ccoshl(
+    __z : Complex80) Complex80;
+
+external csinhl(
+    __z : Complex80) Complex80;
+
+external ctanhl(
+    __z : Complex80) Complex80;
+
+external cexpl(
+    __z : Complex80) Complex80;
+
+external clogl(
+    __z : Complex80) Complex80;
+
+external cpowl(
+    __x : Complex80,
+    __y : Complex80) Complex80;
+
+external csqrtl(
+    __z : Complex80) Complex80;
+
+external cabsl(
+    __z : Complex80) Real;
+
+external cargl(
+    __z : Complex80) Real;
+
+external cprojl(
+    __z : Complex80) Complex80;
+

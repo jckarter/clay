@@ -416,6 +416,26 @@ static bool floatToken(TokenPtr &x) {
     return true;
 }
 
+static bool complexToken(TokenPtr &x) {
+    char *begin = save();
+    if (!sign()) restore(begin);
+    if (!decimalInt()) return false;
+    char *p = save();
+    if (fractionalPart()) {
+        p = save();
+        if (!exponentPart())
+            restore(p);
+    }
+    else {
+        restore(p);
+        if (!exponentPart())
+            return false;
+    }
+    char *end = save();
+    x = new Token(T_COMPLEX_LITERAL, string(begin, end));
+    return true;
+}
+
 
 
 //
@@ -486,18 +506,18 @@ static bool blockComment(TokenPtr &x) {
 //  LLVMBody -> '__llvm__' ZeroPlus(Space) Braces
 //
 //  Braces -> '{' Body '}'
-// 
+//
 //  Body -> ZeroPlus(BodyItem)
-// 
+//
 //  BodyItem -> Comment
 //            | Braces
 //            | StringLiteral
 //            | Not('}')
-// 
+//
 //  Comment -> ';' ZeroPlus(Not('\n')) '\n'
-// 
+//
 //  StringLiteral -> '"' ZeroPlus(StringChar) '"'
-// 
+//
 //  StringChar -> '\' AnyChar
 //              | Not('"')
 //
@@ -609,6 +629,7 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (charToken(x)) goto success;
     restore(p); if (stringToken(x)) goto success;
     restore(p); if (floatToken(x)) goto success;
+    restore(p); if (complexToken(x)) goto success;
     restore(p); if (intToken(x)) goto success;
     if (p != end) {
         pushLocation(locationFor(maxPtr));
