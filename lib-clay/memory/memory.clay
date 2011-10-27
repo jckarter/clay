@@ -121,6 +121,9 @@ overload freeRawMemory(ptr:Pointer[T]) {
 }
 
 
+
+TypeStep(T) = TypeSize(T)/TypeSize(Pointer[T]);
+
 
 //
 // initializeMemory
@@ -234,14 +237,14 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
 
 [T]
 fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
-    var ptr = &value;
-    eachLocationWithCleanup(begin, end, x => { x <-- ptr^; });
+    eachLocationWithCleanup(begin, end, x => { x <-- Pointer[T](&value)^; });
 }
 
 [T]
 zeroMemory(begin:Pointer[T], end:Pointer[T]) {
     fillMemory(begin, end, T(0));
 }
+
 
 zeroObject(o) { zeroMemory(Pointer[UInt8](&o), Pointer[UInt8](&o + 1)); }
 
@@ -285,32 +288,35 @@ overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T
 
 [T]
 private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {
-    var begin, end = _begin, _end;
+    var _step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*_step;
     var ptr = begin;
     while (ptr != end) {
         f(ptr^);
-        ptr += 1;
+        ptr += _step;
     }
 }
 
 [T]
 private eachLocationBackwards(_begin:Pointer[T], _end:Pointer[T], f) {
-    var begin, end = _begin, _end;
+    var _step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*_step;
     var ptr = end;
     while (ptr != begin) {
-        ptr -= 1;
+        ptr -= _step;
         f(ptr^);
     }
 }
 
 [T]
 private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
-    var begin, end = _begin, _end;
+    var _step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*_step;
     var ptr = begin;
     try {
         while (ptr != end) {
             f(ptr^);
-            ptr += 1;
+            ptr += _step;
         }
     }
     catch (e) {
@@ -321,16 +327,18 @@ private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
 
 [T]
 private eachLocationBackwardsWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
-    var begin, end = _begin, _end;
+    var _step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*_step;
     var ptr = end;
+    var _step = step(T);
     try {
         while (ptr != begin) {
-            ptr -= 1;
+            ptr -= _step;
             f(ptr^);
         }
     }
     catch (e) {
-        destroyMemory(ptr+1, end);
+        destroyMemory(ptr+_step, end);
         throw e;
     }
 }

@@ -2,13 +2,12 @@
 
 TODO:
 
-Add 80-bit floating point support in float lib
+Add 80-bit floating point support in float lib  ----DONE
     * Real/Float80 type functions
 
-Add complex number library using libc
-    * Utilise new Real type
+Add complex number support + math lib using libc   ----DONE
 
-Add math wrapper for libc functions
+Add math wrapper for libc functions  ----DONE
     * Overloaded math functions
 
 
@@ -44,8 +43,8 @@ Build Clay
 ----------
 
 To build Clay, first run cmake to generate the Makefiles and then run make.
-CMake can also build project files for IDE's such as Xcode. Look at CMake 
-documentation for how to build those. It is recommended that Clay be built 
+CMake can also build project files for IDE's such as Xcode. Look at CMake
+documentation for how to build those. It is recommended that Clay be built
 in a separate build directory.
 
     mkdir build
@@ -53,11 +52,11 @@ in a separate build directory.
     cmake -G "Unix Makefiles" ../
     make
 
-The default installation directory for Clay will is /usr/local. To change 
+The default installation directory for Clay will is /usr/local. To change
 the installtion path, pass -DCMAKE_INSTALL_PREFIX=/my/path to cmake.
 
-To install Clay run 
-    
+To install Clay run
+
     make install
 
 To run the test suite

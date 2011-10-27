@@ -131,7 +131,7 @@ record FloatLiteral = ast(
 
 record ComplexLiteral = ast(
     real: String,
-    imag: String,
+    value: String,
     suffix: Maybe[String],
 );
 

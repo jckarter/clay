@@ -1,10 +1,11 @@
 
-
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
 overload Complex?(static Complex80) = true;
 [A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
+
+
 
 private procedure re;
 private procedure im;
@@ -23,7 +24,6 @@ inline real(z:C) = re(z)^;
 [C | Complex?(C)]
 inline imag(z:C) = im(z)^;
 
-
 inline Complex(a:Float,b:Float) r:Complex32 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Double,b:Double) r:Complex64 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Real,b:Real) r:Complex80 { re(r)^ = a; im(r)^ = b;}
@@ -33,6 +33,22 @@ inline overload Complex(a:Double,b:Float) r:Complex64 { re(r)^ = a; im(r)^ = Dou
 inline overload Complex(a:Double,b:Real) r:Complex80 { re(r)^ = Real(a); im(r)^ = b;}
 inline overload Complex(a:Real,b:Float) r:Complex80 { re(r)^ = a; im(r)^ = Real(b);}
 inline overload Complex(a:Real,b:Double) r:Complex80 { re(r)^ = a; im(r)^ = Real(b);}
+
+[T | Float?(T)]
+inline overload Complex(a:T) = Complex(a,T(0));
+inline overload Complex(a:Int) = Complex(Float(a), Float(0));
+inline overload Complex(a:Long) = Complex(Double(a), Double(0));
+
+
+[C | Complex?(C)]
+overload C() returned:C {}
+
+[T | Numeric?(T)]
+inline overload Complex32(a:T) = Complex(Float(a), Float(0));
+[T | Numeric?(T)]
+inline overload Complex64(a:T) = Complex(Double(a), Double(0));
+[T | Numeric?(T)]
+inline overload Complex80(a:T) = Complex(Real(a), Real(0));
 
 
 [T | Complex?(T)]

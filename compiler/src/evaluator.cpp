@@ -2576,7 +2576,6 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
         switch (ev->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
-        case COMPLEX_TYPE :
             break;
         default :
             argumentTypeError(index, "numeric type", ev->type);
