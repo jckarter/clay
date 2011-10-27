@@ -121,9 +121,6 @@ overload freeRawMemory(ptr:Pointer[T]) {
 }
 
 
-
-TypeStep(T) = TypeSize(T)/TypeSize(Pointer[T]);
-
 
 //
 // initializeMemory
@@ -236,7 +233,8 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
 
 [T]
 fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
-    eachLocationWithCleanup(begin, end, x => { x <-- Pointer[T](&value)^; });
+    var ptr = &value;
+    eachLocationWithCleanup(begin, end, x => { x <-- ptr^; });
 }
 
 [T]
@@ -287,35 +285,32 @@ overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T
 
 [T]
 private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {
-    var step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*step;
+    var begin, end = _begin, _end;
     var ptr = begin;
     while (ptr != end) {
         f(ptr^);
-        ptr += step;
+        ptr += 1;
     }
 }
 
 [T]
 private eachLocationBackwards(_begin:Pointer[T], _end:Pointer[T], f) {
-    var step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*step;
+    var begin, end = _begin, _end;
     var ptr = end;
     while (ptr != begin) {
-        ptr -= step;
+        ptr -= 1;
         f(ptr^);
     }
 }
 
 [T]
 private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
-    var step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*step;
+    var begin, end = _begin,_end;
     var ptr = begin;
     try {
         while (ptr != end) {
             f(ptr^);
-            ptr += step;
+            ptr += 1;
         }
     }
     catch (e) {
@@ -326,17 +321,16 @@ private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
 
 [T]
 private eachLocationBackwardsWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
-    var _step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*step;
+    var begin, end = _begin, _end;
     var ptr = end;
     try {
         while (ptr != begin) {
-            ptr -= step;
+            ptr -= 1;
             f(ptr^);
         }
     }
     catch (e) {
-        destroyMemory(ptr+step, end);
+        destroyMemory(ptr+1, end);
         throw e;
     }
 }
