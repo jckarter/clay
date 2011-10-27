@@ -229,7 +229,6 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
     eachLocation(begin, end, resetUnsafe);
 }
 
-
 
 //
 // fillMemory, zeroMemory
@@ -288,35 +287,35 @@ overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T
 
 [T]
 private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {
-    var _step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*_step;
+    var step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*step;
     var ptr = begin;
     while (ptr != end) {
         f(ptr^);
-        ptr += _step;
+        ptr += step;
     }
 }
 
 [T]
 private eachLocationBackwards(_begin:Pointer[T], _end:Pointer[T], f) {
-    var _step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*_step;
+    var step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*step;
     var ptr = end;
     while (ptr != begin) {
-        ptr -= _step;
+        ptr -= step;
         f(ptr^);
     }
 }
 
 [T]
 private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
-    var _step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*_step;
+    var step = TypeStep(T);
+    var begin, end = _begin, _begin+(_end-_begin)*step;
     var ptr = begin;
     try {
         while (ptr != end) {
             f(ptr^);
-            ptr += _step;
+            ptr += step;
         }
     }
     catch (e) {
@@ -328,17 +327,16 @@ private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
 [T]
 private eachLocationBackwardsWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
     var _step = TypeStep(T);
-    var begin, end = _begin, _begin+(_end-_begin)*_step;
+    var begin, end = _begin, _begin+(_end-_begin)*step;
     var ptr = end;
-    var _step = step(T);
     try {
         while (ptr != begin) {
-            ptr -= _step;
+            ptr -= step;
             f(ptr^);
         }
     }
     catch (e) {
-        destroyMemory(ptr+_step, end);
+        destroyMemory(ptr+step, end);
         throw e;
     }
 }
