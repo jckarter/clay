@@ -352,6 +352,30 @@ overload fixAst(ast:New, state:FixState) : {
     replaceToken(ast.tokens.end - 1, state);
 }
 
+// Convert capture-by-reference lambda syntax.
+// 0.0: (...args) ref=> { ... }
+// 0.1: (...args) -> { ... }
+overload fixAst(ast:LambdaExpr, state:FixState) : {
+    fixAst(ast.formalArgs, state);
+    if (ast.captureByRef) {
+        var firstStatementToken = astTokens(ast.body).begin;
+        ref tokens = state.tokens.vector;
+        assert(firstStatementToken >= 1);
+        if (tokens[firstStatementToken - 1].kind == PUNCTUATION
+            and tokens[firstStatementToken - 1].subKind == punctuationIndex("=>")) {
+
+            assert(firstStatementToken == 1 or (
+                tokens[firstStatementToken - 2].kind == KEYWORD
+                and tokens[firstStatementToken - 2].subKind == keywordIndex("ref")
+            ));
+            writeUptoToken(firstStatementToken - 2, state);
+            printTo(state.outputFile, "-> ");
+            replaceUptoToken(firstStatementToken, state);
+        }
+    }
+    fixAst(ast.body, state);
+}
+
 
 //
 // entry point

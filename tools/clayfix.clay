@@ -19,6 +19,7 @@ overload printTo(s, ex:InvalidFixerVersion) {
 
 usage(argv0) : {
     println("usage: ", argv0, " -v <oldversion> <source files>");
+    println("Updates Clay source files to language version 0.1.");
     println("options:");
     println("  -v <oldversion>   Language version of old source files");
     println("    Supported versions:");
