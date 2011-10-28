@@ -589,6 +589,10 @@ private var expr2 = choice(
     lambdaExpr, pairExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
 );
 
+private var caseExpr = choice(
+    lambdaExpr, orExpr, ifExpr, unpackExpr, newExpr, staticExpr,
+);
+
 private expr(input) : Maybe[Expr] { return expr2(input); }
 
 private var exprList = commaList(expr);
@@ -707,7 +711,7 @@ private var ifStatement = statementParser(
 
 private var caseLabel = modify(
     x => x.1,
-    sequence(kw_case, expr, punc(#":")),
+    sequence(kw_case, caseExpr, punc(#":")),
 );
 
 private var caseBody = statementParser(CaseBody, oneOrMore(statement));
