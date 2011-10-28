@@ -6,12 +6,19 @@ import clay.common.(
 );
 
 import clay.v0_0.ast.*;
-import clay.v0_0.lexer.(tokenize, SourceTokens);
+import clay.v0_0.lexer.(
+    tokenize,
+    SourceTokens,
+    PUNCTUATION,
+    KEYWORD,
+    IDENTIFIER,
+    punctuationIndex,
+    keywordIndex
+);
 import clay.v0_0.parser.(parse);
 
 import maybe.*;
 
-var newKeywords = ["define", "finally", "onerror"];
 
 private record FixState (
     tokens:SourceTokens,
@@ -26,6 +33,61 @@ overload FixState(tokens:SourceTokens, outputFile:File)
 //
 // token-level fixup
 //
+
+fixOneToken(tokenNumber:SizeT, state:FixState) {
+    ref token = state.tokens.vector[tokenNumber];
+    println("--> ", tokenNumber, " ", token.range.begin, " ", token.range.end, "\n");
+    ref fileData = state.tokens.file.data;
+    assert(token.range.begin >= state.printedIndex, "token begins at ", token.range.begin, " but we already printed to ", state.printedIndex);
+    if (token.range.begin > state.printedIndex)
+        printTo(state.outputFile, sliced(fileData, state.printedIndex, token.range.begin));
+
+    var printDefault = () -> {
+        printTo(state.outputFile,
+            sliced(fileData, token.range.begin, token.range.end)
+        );
+    };
+
+    switch (token.kind) {
+    case KEYWORD:
+        if (token.subKind == keywordIndex("procedure"))
+            printTo(state.outputFile, "define");
+        else if (token.subKind == keywordIndex("callbyname"))
+            printTo(state.outputFile, "alias");
+        else if (token.subKind == keywordIndex("lvalue"))
+            printTo(state.outputFile, "ref");
+        else
+            printDefault();
+        break;
+    case IDENTIFIER:
+        {
+        var name = sliced(fileData, token.range.begin, token.range.end);
+        printTo(state.outputFile, name);
+        if (beginsWith?(name, "finally")
+            or beginsWith?(name, "onerror")
+            or beginsWith?(name, "define"))
+            printTo(state.outputFile, "_");
+        }
+        break;
+    case PUNCTUATION:
+        if (token.subKind == punctuationIndex("..."))
+            printTo(state.outputFile, "..");
+        else
+            printDefault();
+        break;
+    default:
+        printDefault();
+        break;
+    }
+    state.printedToken = tokenNumber + 1;
+    state.printedIndex = token.range.end;
+}
+
+fixToken(tokenNumber:SizeT, state:FixState) {
+    assert(tokenNumber < size(state.tokens.vector));
+    while (state.printedToken <= tokenNumber)
+        fixOneToken(state.printedToken, state);
+}
 
 // keyword and punctuation translations
 // procedure -> define
@@ -67,8 +129,12 @@ private writeUptoToken(token:SizeT, state:FixState) : {
     var toIndex = state.tokens.vector[token].range.begin;
     assert(toIndex >= state.printedIndex);
 
-    printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
-    state.printedIndex = toIndex;
+    fixToken(token - 1, state);
+    if (toIndex > state.printedIndex) {
+        printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
+        println("then upto ", toIndex);
+        state.printedIndex = toIndex;
+    }
     //DEBUGTAGS printTo(state.outputFile, "$upto$");
 }
 
@@ -79,7 +145,9 @@ private replaceUptoToken(token:SizeT, state:FixState) : {
     var toIndex = state.tokens.vector[token].range.begin;
     assert(toIndex >= state.printedIndex);
 
+    state.printedToken = token;
     state.printedIndex = toIndex;
+    println("replace upto ", token, " ", toIndex);
     //DEBUGTAGS printTo(state.outputFile, "$replaced$");
 }
 
@@ -90,7 +158,9 @@ private replaceToken(token:SizeT, state:FixState) : {
     var toIndex = state.tokens.vector[token].range.end;
     assert(toIndex >= state.printedIndex);
 
+    state.printedToken = token + 1;
     state.printedIndex = toIndex;
+    println("replace upto ", token + 1, " ", toIndex);
     //DEBUGTAGS printTo(state.outputFile, "$replaced$");
 }
 
@@ -103,51 +173,19 @@ private writeToken(token:SizeT, state:FixState) : {
     var toIndex = state.tokens.vector[token].range.end;
     assert(toIndex >= state.printedIndex);
 
-    printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
-    state.printedIndex = toIndex;
+    fixToken(token, state);
     //DEBUGTAGS printTo(state.outputFile, "$token$");
-}
-
-private ws?(c:Char) {
-    return c == ' ' or c == '\t' or c == '\r' or c == '\n' or c == '\f';
 }
 
 private writeTokenPrefixed(token:SizeT, prefix, state:FixState) : {
     writeUptoToken(token, state);
-
-    var tokenRange = state.tokens.vector[token].range;
-    ref sourceData = state.tokens.file.data;
-    var trimmedBegin = tokenRange.begin;
-    while (ws?(sourceData[trimmedBegin])) {
-        trimmedBegin += 1;
-    }
-    assert(trimmedBegin < tokenRange.end);
-
-    if (trimmedBegin != tokenRange.begin)
-        printTo(state.outputFile, sliced(sourceData, tokenRange.begin, trimmedBegin));
     printTo(state.outputFile, prefix);
-    //DEBUGTAGS printTo(state.outputFile, "$prefix$");
-    printTo(state.outputFile, sliced(sourceData, trimmedBegin, tokenRange.end));
-    state.printedIndex = tokenRange.end;
+    writeToken(token, state);
 }
 
 private writeTokenSuffixed(token:SizeT, suffix, state:FixState) : {
-    writeUptoToken(token, state);
-
-    var tokenRange = state.tokens.vector[token].range;
-    ref sourceData = state.tokens.file.data;
-    var trimmedEnd = tokenRange.end;
-    while (ws?(sourceData[trimmedEnd-1])) {
-        trimmedEnd -= 1;
-    }
-    assert(trimmedEnd > tokenRange.begin);
-
-    printTo(state.outputFile, sliced(sourceData, tokenRange.begin, trimmedEnd));
-    //DEBUGTAGS printTo(state.outputFile, "$suffix$");
+    writeToken(token, state);
     printTo(state.outputFile, suffix);
-    if (trimmedEnd != tokenRange.end)
-        printTo(state.outputFile, sliced(sourceData, trimmedEnd, tokenRange.end));
-    state.printedIndex = tokenRange.end;
 }
 
 private finishFix(state:FixState) : {
@@ -261,7 +299,7 @@ overload fixAst(ast:Enum, state:FixState) : {
     } else {
         printTo(state.outputFile, " (");
         replaceUptoToken(ast.members[0].tokens.begin, state);
-        fixAst(ast.members);
+        fixAst(ast.members, state);
         writeTokenSuffixed(back(ast.members).tokens.end - 1, ");", state);
     }
     replaceToken(ast.tokens.end - 1, state);
@@ -294,10 +332,12 @@ overload fixAst(ast:Code, state:FixState) : {
 // 0.0: new X
 // 0.1: new(X)
 overload fixAst(ast:New, state:FixState) : {
+    writeUptoToken(ast.tokens.begin, state);
     printTo(state.outputFile, "new(");
     replaceUptoToken(astTokens(ast.expr).begin, state);
     fixAst(ast.expr, state);
-    writeToken(astTokens(ast.expr).end - 1, state);
+    writeTokenSuffixed(astTokens(ast.expr).end - 1, ")", state);
+    replaceToken(ast.tokens.end - 1, state);
 }
 
 
