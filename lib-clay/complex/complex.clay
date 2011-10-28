@@ -54,26 +54,52 @@ inline overload Complex80(a:T) = Complex(Real(a), Real(0));
 [T | Complex?(T)]
 inline conj(z:T) = Complex(real(z),-imag(z));
 
-[T,C | Float?(T) and Complex?(C)]
-inline overload equals?(z:C, y:T) {
-    return if(imag(z) != T(0)) false else
-        if(real(z)==y) true else false;
-}
 
-[T,C | Float?(T) and Complex?(C)]
+
+
+
+//
+// equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
+//
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload equals?(z:C, y:T) = imag(z) != T(0) and equals?(real(z),y);
+
+[T,C | Numeric?(T) and Complex?(C)]
 inline overload equals?(y:T, z:C) = equals?(z,y);
 
 [T | Complex?(T)]
-inline overload equals?(z:T, y:T) = if(real(z)==real(y) and imag(z)==imag(y)) true else false;
+inline overload equals?(z:T, y:T) = equals?(real(z),real(y)) and equals?(imag(z),imag(y));
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C | Numeric?(T) and Complex?(C)]
 inline overload notEquals?(z:C, y:T) = not equals?(z, y);
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C | Numeric?(T) and Complex?(C)]
 inline overload notEquals?(y:T,z:C) = not equals?(z, y);
 
 [T | Complex?(T)]
 inline overload notEquals?(z:T, y:T) = not equals?(z,y);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload lesser?(a:C, b:T) = numericLesser?(real(a), b);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload lesser?(a:T, b:C) = numericLesser?(a, real(b));
+
+[C | Complex?(C)]
+inline overload lesser?(a:C, b:C) = numericLesser?(real(a), real(b));
+
+[A | Complex?(A) or Numeric?(A)]
+inline overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
+
+[A | Complex?(A) or Numeric?(A)]
+inline overload greater?(a:A, b:A) = lesser?(b, a);
+
+[A | Complex?(A) or Numeric?(A)]
+inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
+
+
+
 
 [T | Complex?(T)]
 inline overload minus(z:T) = Complex(-real(z),-imag(z));
