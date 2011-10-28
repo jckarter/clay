@@ -61,13 +61,57 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
     case IDENTIFIER:
         {
         var name = sliced(fileData, token.range.begin, token.range.end);
-        printTo(state.outputFile, name);
-        if (beginsWith?(name, "finally")
-            or beginsWith?(name, "onerror")
-            or beginsWith?(name, "define"))
-            printTo(state.outputFile, "_");
+        switch (name) {
+        case "shiftLeft":
+            printTo(state.outputFile, "bitshl");
+            break;
+        case "shiftRight":
+            printTo(state.outputFile, "bitshr");
+            break;
+        case "rotateLeft":
+            printTo(state.outputFile, "bitrol");
+            break;
+        case "rotateRight":
+            printTo(state.outputFile, "bitror");
+            break;
+        case "bitwiseAnd":
+            printTo(state.outputFile, "bitand");
+            break;
+        case "bitwiseOr":
+            printTo(state.outputFile, "bitor");
+            break;
+        case "bitwiseXor":
+            printTo(state.outputFile, "bitxor");
+            break;
+        case "bitwiseNot":
+            printTo(state.outputFile, "bitnot");
+            break;
+        case "bitwiseAndc":
+            printTo(state.outputFile, "bitandc");
+            break;
+        case "bitwiseBlend":
+            printTo(state.outputFile, "bitblend");
+            break;
+        case "bitwiseCast":
+            printTo(state.outputFile, "bitcast");
+            break;
+        case "allocateShared":
+            printTo(state.outputFile, "newShared");
+            break;
+        case "allocateUnique":
+            printTo(state.outputFile, "newUnique");
+            break;
+        default:
+            printTo(state.outputFile, name);
+            if (beginsWith?(name, "finally")
+                or beginsWith?(name, "onerror")
+                or beginsWith?(name, "define"))
+
+                printTo(state.outputFile, "_");
+            break;
         }
         break;
+        }
     case PUNCTUATION:
         if (token.subKind == punctuationIndex("..."))
             printTo(state.outputFile, "..");
