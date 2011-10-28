@@ -4,7 +4,12 @@ import clay.common.(
     ClayError,
     displayError
 );
-import clayfix.v0_0.(fix as fix_0_0);
+import clayfix.v0_0.(
+    fix as fix_0_0
+);
+import io.filesystem.(
+    moveFile, deleteFile
+);
 
 record InvalidFixerVersion (version:String);
 instance Exception (InvalidFixerVersion);
@@ -45,6 +50,7 @@ main(args) : Int {
         var fixer = fixerForVersion(args[2]);
 
         for (filename in slicedFrom(args, 3)) {
+            println("Fixing ", filename, "...");
             var tempOutputFilename = filename + ".fixed";
             try {
                 {
@@ -53,13 +59,11 @@ main(args) : Int {
                     fixer(source, outputFile);
                 }
                 // XXX get fixed filename too! (e.g. define_.clay)
-                //??moveFile??(filename, tempOutputFilename);
+                moveFile(tempOutputFilename, filename);
             } catch (ex) {
-                println();
-                println("Failed to update ", filename, ":");
+                println("Failed to fix ", filename, ":");
                 displayError(ex);
-                //??removeFile??(tempOutputFilename);
-                return 1;
+                deleteFile(tempOutputFilename);
             }
         }
     } catch (ex) {
