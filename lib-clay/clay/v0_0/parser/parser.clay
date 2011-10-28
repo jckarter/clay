@@ -188,6 +188,9 @@ private var kw_false = keyword("false");
 private var kw_try = keyword("try");
 private var kw_catch = keyword("catch");
 private var kw_throw = keyword("throw");
+private var kw_FILE = keyword("__FILE__");
+private var kw_LINE = keyword("__LINE__");
+private var kw_COLUMN = keyword("__COLUMN__");
 
 
 
@@ -289,9 +292,14 @@ private var identifierLiteral = exprParser(
     )),
 );
 
+private var fileLiteral = exprParser(x => FILELiteral(), kw_FILE);
+private var lineLiteral = exprParser(x => LINELiteral(), kw_LINE);
+private var columnLiteral = exprParser(x => COLUMNLiteral(), kw_COLUMN);
+
 private var literalExpr = choice(
     boolLiteral, intLiteral, floatLiteral,
     charLiteral, stringLiteral, identifierLiteral,
+    fileLiteral, lineLiteral, columnLiteral
 );
 
 
@@ -1064,11 +1072,17 @@ private var externalVariable = topLevelItemParser(
     ),
 );
 
+private var toplevelLLVMBody = topLevelItemParser(
+    x => x,
+    llvmBody
+);
+
 private var topLevelItem = choice(
     recordDef, variantDef, instanceDef, procedureWithBody,
     procedureWithoutBody, overloadDef, enumDef,
     globalVariableDef, globalAliasDef,
     externalProcedure, externalVariable,
+    toplevelLLVMBody
 );
 
 

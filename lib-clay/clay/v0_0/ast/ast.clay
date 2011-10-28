@@ -116,6 +116,10 @@ variant Expr ( BoolLiteral
              , StaticExpr
              , PairExpr
              , DispatchExpr
+
+             , FILELiteral
+             , LINELiteral
+             , COLUMNLiteral
              );
 
 overload Expr() = Expr(BoolLiteral());
@@ -240,6 +244,10 @@ record PairExpr = ast(
 record DispatchExpr = ast(
     expr: Expr
 );
+
+record FILELiteral = ast();
+record LINELiteral = ast();
+record COLUMNLiteral = ast();
 
 
 
@@ -548,6 +556,7 @@ variant TopLevelItem ( Record
                      , GlobalAlias
                      , ExternalProcedure
                      , ExternalVariable
+                     , LLVMBody
                      );
 
 

@@ -36,6 +36,9 @@ define displayError;
 overload displayError(e) {
     println(e);
 }
+overload displayError(e:Exception) {
+    displayError(*e);
+}
 overload displayError(e:ClayError) {
     displayError(*e);
 }
