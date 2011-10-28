@@ -36,7 +36,6 @@ overload FixState(tokens:SourceTokens, outputFile:File)
 
 fixOneToken(tokenNumber:SizeT, state:FixState) {
     ref token = state.tokens.vector[tokenNumber];
-    println("--> ", tokenNumber, " ", token.range.begin, " ", token.range.end, "\n");
     ref fileData = state.tokens.file.data;
     assert(token.range.begin >= state.printedIndex, "token begins at ", token.range.begin, " but we already printed to ", state.printedIndex);
     if (token.range.begin > state.printedIndex)
@@ -121,8 +120,6 @@ fixToken(tokenNumber:SizeT, state:FixState) {
 //
 
 private writeUptoToken(token:SizeT, state:FixState) : {
-    println(token);
-
     ref tokens = state.tokens.vector;
     assert(token < size(tokens));
 
@@ -132,7 +129,6 @@ private writeUptoToken(token:SizeT, state:FixState) : {
     fixToken(token - 1, state);
     if (toIndex > state.printedIndex) {
         printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
-        println("then upto ", toIndex);
         state.printedIndex = toIndex;
     }
     //DEBUGTAGS printTo(state.outputFile, "$upto$");
@@ -147,7 +143,6 @@ private replaceUptoToken(token:SizeT, state:FixState) : {
 
     state.printedToken = token;
     state.printedIndex = toIndex;
-    println("replace upto ", token, " ", toIndex);
     //DEBUGTAGS printTo(state.outputFile, "$replaced$");
 }
 
@@ -160,12 +155,10 @@ private replaceToken(token:SizeT, state:FixState) : {
 
     state.printedToken = token + 1;
     state.printedIndex = toIndex;
-    println("replace upto ", token + 1, " ", toIndex);
     //DEBUGTAGS printTo(state.outputFile, "$replaced$");
 }
 
 private writeToken(token:SizeT, state:FixState) : {
-    println(token);
 
     ref tokens = state.tokens.vector;
     assert(token < size(tokens));
@@ -206,14 +199,16 @@ private define fixAstNode;
 // default AST-walking logic
 //
 
-[A] overload fixAstNode(ast:A, state:FixState) : { println("skipping ", A); }
+[A] overload fixAstNode(ast:A, state:FixState) : {
+    //LOGGING println("skipping ", A);
+}
 overload fixAstNode(ast:SourceAST, state:FixState) : {
     fixAst(ast.imports, state);
     fixAst(ast.topLevelItems, state);
 }
 [A | ASTNode?(A)]
 overload fixAstNode(ast:A, state:FixState) : {
-    println("walking ", A);
+    //LOGGING println("walking ", A);
     static for (field in ..astFields(ast))
         fixAst(field, state);
 }
