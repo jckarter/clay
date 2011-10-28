@@ -323,6 +323,23 @@ overload fixAst(ast:Code, state:FixState) : {
     fixAst(ast.body, state);
 }
 
+// Convert external return type syntax.
+// 0.0:
+//   external foo() Int;
+// 0.1:
+//   external foo() : Int;
+overload fixAst(ast:ExternalProcedure, state:FixState) : {
+    fixAst(ast.attributes, state);
+    fixAst(ast.args, state);
+
+    maybe(ast.returnType, returnType -> {
+        writeTokenPrefixed(astTokens(returnType).begin, ": ", state);
+    });
+
+    fixAst(ast.returnType, state);
+    fixAst(ast.body, state);
+}
+
 // Convert new operator expressions to use the new() function.
 // 0.0: new X
 // 0.1: new(X)

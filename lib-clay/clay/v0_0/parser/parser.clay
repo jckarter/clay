@@ -1031,7 +1031,7 @@ private var externalAttribtues2 = modify(
     sequence(punc(#"("), exprList, punc(#")")),
 );
 
-private var externalAttribtues = modify(
+private var externalAttributes = modify(
     x => maybe(move(x), move, () => Vector[Expr]()),
     optional(externalAttribtues2),
 );
@@ -1059,7 +1059,7 @@ private var externalBody = choice(
 private var externalProcedure = topLevelItemParser(
     x => ExternalProcedure(x.0, x.3, x.2, (x.5).0, (x.5).1, x.7, x.8),
     sequence(
-        optional(visibility), kw_external, externalAttribtues, identifier,
+        optional(visibility), kw_external, externalAttributes, identifier,
         punc(#"("), externalArgs, punc(#")"), optional(expr), externalBody,
     ),
 );
@@ -1067,7 +1067,7 @@ private var externalProcedure = topLevelItemParser(
 private var externalVariable = topLevelItemParser(
     x => ExternalVariable(x.0, x.3, x.2, x.4),
     sequence(
-        optional(visibility), kw_external, externalAttribtues,
+        optional(visibility), kw_external, externalAttributes,
         identifier, typeSpec, punc(#";"),
     ),
 );
