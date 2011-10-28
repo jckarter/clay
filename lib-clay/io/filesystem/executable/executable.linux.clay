@@ -1,0 +1,3 @@
+import io.filesystem.*;
+
+pathToExecutable() = readLink("/proc/self/exe");

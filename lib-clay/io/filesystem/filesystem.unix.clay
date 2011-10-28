@@ -1,11 +1,7 @@
+import libc.(rename);
 import unix.*;
 import io.errors.*;
-
-
-
-//
-// readLink
-//
+public import io.filesystem.executable.*;
 
 readLink(x) {
     var path_max = pathconf(cstring(x), _PC_PATH_MAX);
@@ -23,10 +19,15 @@ readLink(x) {
     return move(buf);
 }
 
+moveFile(fromPath, toPath) {
+    var ok = rename(cstring(fromPath), cstring(toPath));
+    if (ok != 0)
+        throw GenericIOError(errno());
+}
 
+deleteFile(path) {
+    var ok = unlink(cstring(path));
+    if (ok != 0)
+        throw GenericIOError(errno());
+}
 
-//
-// pathToExecutable
-//
-
-pathToExecutable() = readLink("/proc/self/exe");
