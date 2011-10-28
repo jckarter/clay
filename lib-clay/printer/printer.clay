@@ -237,7 +237,7 @@ overload printReprTo(stream, x:Bool) {
     printTo(stream, x);
 }
 
-[T | Numeric?(T)]
+[T | Numeric?(T) or Complex?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, x);
 }
