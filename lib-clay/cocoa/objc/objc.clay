@@ -363,7 +363,7 @@ overload ClassInstanceVar?(static T, static ivar) = true;
 // bindings to external classes
 //
 
-Class?(T) = CallDefined?(SuperclassType, Static[T]);
+Class?(T) = Type?(T) and CallDefined?(SuperclassType, Static[T]);
 [T | Class?(T)] overload ObjectType?(static T) = true;
 ExternalClass?(T) = false;
 

@@ -9,12 +9,8 @@
 static void initCallable(ObjectPtr x)
 {
     switch (x->objKind) {
-    case TYPE : {
-        Type *y = (Type *)x.ptr();
-        if (!y->overloadsInitialized)
-            initTypeOverloads(y);
+    case TYPE :
         break;
-    }
     case RECORD : {
         Record *y = (Record *)x.ptr();
         if (!y->builtinOverloadInitialized)

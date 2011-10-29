@@ -394,7 +394,7 @@ static void initOverload(OverloadPtr x) {
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr y = derefDeep(pattern);
     if (!y) {
-        addTypeOverload(x);
+        addPatternOverload(x);
     }
     else {
         switch (y->objKind) {
@@ -414,7 +414,8 @@ static void initOverload(OverloadPtr x) {
             break;
         }
         case TYPE : {
-            addTypeOverload(x);
+            Type *z = (Type *)y.ptr();
+            z->overloads.insert(z->overloads.begin(), x);
             break;
         }
         case PRIM_OP : {

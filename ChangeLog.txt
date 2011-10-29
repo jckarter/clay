@@ -71,6 +71,10 @@ Language changes:
 
     // 0.1
     (a,b) -> a+b+c
+* Pattern overloads have been unrestricted. '[F|Foo?(F)] F() {}' will now overload
+  all symbols matching Foo?(F) instead of just types. Universe overloads also now have
+  lower precedence than specific overloads. Note that this change may break code even
+  after it has been clayfix-ed.
 
 Library changes:
 * The bitwise operation functions have been given shorter names:
@@ -134,9 +138,6 @@ cut and pasted above.
 
 * 'record' has been renamed to 'struct', and library functions with 'record' or
   'Record' in the name have been renamed to 'struct'/'Struct'.
-* Universe overloads have been unrestricted. '[F|Foo?(F)] F() {}' will now overload
-  all symbols matching Foo?(F) instead of just types. Universe overloads also now have
-  lower precedence than specific overloads.
 * The mapping of types to LLVM representation is exposed. A type is a symbol for which
   llvmRepresentation(#T) is overloaded. llvmRepresentation(#T) should return an
   identifier containing the LLVM IR description of the type. For example:

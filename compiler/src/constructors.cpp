@@ -9,7 +9,7 @@ vector<OverloadPtr> tupleOverloads;
 vector<OverloadPtr> unionOverloads;
 vector<OverloadPtr> staticOverloads;
 
-vector<OverloadPtr> typeOverloads;
+vector<OverloadPtr> patternOverloads;
 
 bool isOverloadablePrimOp(ObjectPtr x)
 {
@@ -71,17 +71,17 @@ void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
     v.insert(v.begin(), overload);
 }
 
-void addTypeOverload(OverloadPtr x)
+void addPatternOverload(OverloadPtr x)
 {
-    typeOverloads.insert(typeOverloads.begin(), x);
+    patternOverloads.insert(patternOverloads.begin(), x);
 }
 
 void initTypeOverloads(TypePtr t)
 {
     assert(!t->overloadsInitialized);
 
-    for (unsigned i = 0; i < typeOverloads.size(); ++i) {
-        OverloadPtr x = typeOverloads[i];
+    for (unsigned i = 0; i < patternOverloads.size(); ++i) {
+        OverloadPtr x = patternOverloads[i];
         EnvPtr env = new Env(x->env);
         const vector<PatternVar> &pvars = x->code->patternVars;
         for (unsigned i = 0; i < pvars.size(); ++i) {

@@ -2601,10 +2601,12 @@ struct InvokeEntry : public Object {
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
+extern vector<OverloadPtr> patternOverloads;
+
 struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
-    const vector<OverloadPtr> &overloads;
+    vector<OverloadPtr> overloads;
 
     vector<MatchSuccessPtr> matches;
     unsigned nextOverloadIndex;
@@ -2614,9 +2616,12 @@ struct InvokeSet : public Object {
 
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
-              const vector<OverloadPtr> &overloads)
+              const vector<OverloadPtr> &symbolOverloads)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey),
-          overloads(overloads), nextOverloadIndex(0) {}
+          overloads(symbolOverloads), nextOverloadIndex(0)
+    {
+        overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
+    }
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
@@ -2633,12 +2638,10 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
 // constructors
 //
 
-extern vector<OverloadPtr> typeOverloads;
-
 bool isOverloadablePrimOp(ObjectPtr x);
 vector<OverloadPtr> &primOpOverloads(PrimOpPtr x);
 void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload);
-void addTypeOverload(OverloadPtr x);
+void addPatternOverload(OverloadPtr x);
 void initTypeOverloads(TypePtr t);
 void initBuiltinConstructor(RecordPtr x);
 
