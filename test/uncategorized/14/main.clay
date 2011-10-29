@@ -12,13 +12,13 @@ sumWithLambda(a) {
 
 sumWithBlock(a) {
     var sum = 0;
-    foreach(x ref => { sum += x; }, a);
+    foreach(x -> { sum += x; }, a);
     println("sum with block = ", sum);
 }
 
 testReturnByRef() {
     var a = [0, 1, 2];
-    var f = (i ref => ref a[i]);
+    var f = (i -> ref a[i]);
     for (x in a)
         f(x) += 10;
     for (x in a)

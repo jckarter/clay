@@ -313,7 +313,7 @@ private testOptions() {
 testMain(..suites) {
     var test = TestStatus();
     eachValue(
-        suite ref => { 
+        suite -> { 
           if(runSuite?(suite))
             accumulateTestStatus(test, runTestSuite(suite)); 
         },

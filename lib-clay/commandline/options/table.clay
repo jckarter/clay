@@ -85,7 +85,7 @@ overload addToken(ot, e : Separator){}
 overload addToken(ot, e : Error){ push(ot.errors, e.value); }
 overload addToken(ot, e : Argument){ push(ot.arguments, e.value); }
 overload addToken(ot, e : OptionValue){
-  findEntry(ot, e.option, o ref => {
+  findEntry(ot, e.option, o -> {
     o.present = true;
 
     if(variantIs?(e.value, String)){
@@ -95,5 +95,5 @@ overload addToken(ot, e : OptionValue){
 }
 
 valid?(ot : OptionTable) = empty?(ot.errors);
-optionGiven?(ot : OptionTable, name) = findEntry(ot, name, o ref => o.present);
-getOptions(ot : OptionTable, name) = findEntry(ot, name, o ref => o.values);
+optionGiven?(ot : OptionTable, name) = findEntry(ot, name, o -> o.present);
+getOptions(ot : OptionTable, name) = findEntry(ot, name, o -> o.values);

@@ -84,6 +84,6 @@ private AllIndexable?(A, I) {
 
 [A, I | AllIndexable?(A, I)]
 inline overload index(a:Zipped[A], i:I) {
-    var f = (x ref => { return forward ..index(x, i); });
+    var f = (x -> { return forward ..index(x, i); });
     return forward ..mapValues(f, ..unpackSequences(a.seqs));
 }

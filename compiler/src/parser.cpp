@@ -915,16 +915,19 @@ static bool lambdaExprBody(StatementPtr &x) {
     return true;
 }
 
-static bool optCaptureByRef(bool &captureByRef) {
+static bool lambdaArrow(bool &captureByRef) {
     int p = save();
-    if (keyword("ref")) {
+    if (symbol("->")) {
         captureByRef = true;
-    }
-    else {
+        return true;
+    } else {
         restore(p);
-        captureByRef = false;
+        if (symbol("=>")) {
+            captureByRef = false;
+            return true;
+        }
+        return false;
     }
-    return true;
 }
 
 static bool lambdaBody(StatementPtr &x) {
@@ -938,17 +941,10 @@ static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
     vector<IdentifierPtr> formalArgs;
     IdentifierPtr formalVarArg;
-    if (!lambdaArgs(formalArgs, formalVarArg)) return false;
     bool captureByRef;
-    int p = save();
-    if (symbol("->"))
-        captureByRef = true;
-    else {
-        restore(p);
-        if (!optCaptureByRef(captureByRef)) return false;
-        if (!symbol("=>")) return false;
-    }
     StatementPtr body;
+    if (!lambdaArgs(formalArgs, formalVarArg)) return false;
+    if (!lambdaArrow(captureByRef)) return false;
     if (!lambdaBody(body)) return false;
     x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
     x->location = location;
