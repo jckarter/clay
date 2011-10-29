@@ -1,0 +1,34 @@
+
+var global_x = 0;
+var global_y = 0;
+
+record Proxy ();
+
+record Point (x:Int, y:Int);
+
+overload assign(_:Proxy, p:Point) : {
+    global_x = p.x;
+    global_y = p.y;
+}
+
+overload fieldRefAssign(_:Proxy, static #x, x:Int) : {
+    global_x = x;
+}
+
+overload fieldRefAssign(_:Proxy, static #y, y:Int) : {
+    global_y = y;
+}
+
+overload fieldRef(_:Proxy, static #x) : Int = global_x;
+overload fieldRef(_:Proxy, static #y) : Int = global_y;
+
+main() {
+    Proxy() = Point(1, 2);
+    println(global_x, ", ", global_y);
+
+    Proxy().x = 3;
+    println(global_x, ", ", global_y);
+
+    Proxy().y = 4;
+    println(global_x, ", ", global_y);
+}
