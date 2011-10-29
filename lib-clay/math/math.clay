@@ -1,5 +1,5 @@
 
-import libc.*;
+import libc;
 
 alias M_E	=	2.7182818284590452354;	/* e */
 alias M_LOG2E	=1.4426950408889634074;	/* log_2 e */
@@ -106,7 +106,7 @@ procedure llrint;
 procedure llround;
 
 
-overload abs(x:Int) = libc.abs(x);
+overload abs(x:Int) = libc.libc.abs(x);
 overload abs(x:Long) = libc.llabs(x);
 overload abs(x:Float) = libc.fabsf(x);
 overload abs(x:Double) = libc.fabs(x);
@@ -152,7 +152,6 @@ overload sin(x:Real) = libc.sinl(x);
 overload tan(x:Double) = libc.tan(x);
 overload tan(x:Float) = libc.tanf(x);
 overload tan(x:Real) = libc.tanl(x);
-
 
 overload cosh(x:Double) = libc.cosh(x);
 overload cosh(x:Float) = libc.coshf(x);
@@ -447,17 +446,17 @@ overload trunc(x:Real) = libc.truncl(x);
 
 overload remquo(x:Double,y:Double) {
     var quo = Pointer[Int]();
-    var res = remquo(x,y,quo);
+    var res = libc.remquo(x,y,quo);
     return res,quo[0];
 }
 overload remquo(x:Float,y:Float) {
     var quo = Pointer[Int]();
-    var res = remquof(x,y,quo);
+    var res = libc.remquof(x,y,quo);
     return res,quo[0];
 }
 overload remquo(x:Real,y:Real) {
     var quo = Pointer[Int]();
-    var res = remquol(x,y,quo);
+    var res = libc.remquol(x,y,quo);
     return res,quo[0];
 }
 
@@ -472,41 +471,29 @@ overload fdim(x:Real,y:Double) = libc.fdiml(x,Real(y));
 overload fdim(x:Float,y:Real) = libc.fdiml(Real(x),y);
 overload fdim(x:Real,y:Float) = libc.fdiml(x,Real(y));
 
-overload max(x:Double,y:Double) = libc.fmax(x,y);
-overload max(x:Float,y:Float) = libc.fmaxf(x,y);
-overload max(x:Real,y:Real) = libc.fmaxl(x,y);
-overload max(x:Double,y:Float) = libc.fmax(x,Double(y));
-overload max(x:Float,y:Double) = libc.fmax(Double(x),y);
-overload max(x:Double,y:Real) = libc.fmaxl(Real(x),y);
-overload max(x:Real,y:Double) = libc.fmaxl(x,Real(y));
-overload max(x:Float,y:Real) = libc.fmaxl(Real(x),y);
-overload max(x:Real,y:Float) = libc.fmaxl(x,Real(y));
+[T | Numeric?(T)]
+overload max(x:T,y:T) = if(x<y) y else x;
 
-[I,T | Integer?(I) and Float?(T)]
-overload max(a:I,b:T) = max(T(a),b);
-[I,T | Integer?(I) and Float?(T)]
-overload max(a:T,b:I) = max(a,T(b));
-[I,J | Integer?(I,J)]
-overload max(a:I,b:J) = if(SizeT(b)<SizeT(a)) a else b;
+[T,C | Numeric?(T) and Complex?(C)]
+overload max(x:T,y:C) = max(x,abs(y));
 
-overload min(x:Double,y:Double) = libc.fmin(x,y);
-overload min(x:Float,y:Float) = libc.fminf(x,y);
-overload min(x:Real,y:Real) = libc.fminl(x,y);
-overload min(x:Double,y:Float) = libc.fmin(x,Double(y));
-overload min(x:Float,y:Double) = libc.fmin(Double(x),y);
-overload min(x:Double,y:Real) = libc.fminl(Real(x),y);
-overload min(x:Real,y:Double) = libc.fminl(x,Real(y));
-overload min(x:Float,y:Real) = libc.fminl(Real(x),y);
-overload min(x:Real,y:Float) = libc.fminl(x,Real(y));
+[T,C | Numeric?(T) and Complex?(C)]
+overload max(x:C,y:T) = max(abs(x),y);
 
+[T | Complex?(T)]
+overload max(x:T,y:T) = max(abs(x),abs(y));
 
-[I,T | Integer?(I) and Float?(T)]
-overload min(a:I,b:T) = min(T(a),b);
-[I,T | Integer?(I) and Float?(T)]
-overload min(a:T,b:I) = min(a,T(b));
-[I,J | Integer?(I,J)]
-overload min(a:I,b:J) = if(SizeT(a)<SizeT(b)) a else b;
+[T | Numeric?(T)]
+overload min(x:T,y:T) = if(y<x) y else x;
 
+[T,C | Numeric?(T) and Complex?(C)]
+overload min(x:T,y:C) = min(x,abs(y));
+
+[T,C | Numeric?(T) and Complex?(C)]
+overload min(x:C,y:T) = min(abs(x),y);
+
+[C | Complex?(C)]
+overload min(x:C,y:C) = min(abs(x),abs(y));
 
 overload fpclassify(value:Double) = libc.fpclassify(value);
 overload fpclassify(value:Float) = libc.fpclassifyf(value);
@@ -571,90 +558,90 @@ matherr(exc:Pointer[Struct_exception]) = libc.matherr(exc);
 
 
 
-inline overload abs(z:Complex64) = cabs(z);
-inline overload abs(z:Complex32) = cabsf(z);
-inline overload abs(z:Complex80) = cabsl(z);
+inline overload abs(z:Complex64) = libc.cabs(z);
+inline overload abs(z:Complex32) = libc.cabsf(z);
+inline overload abs(z:Complex80) = libc.cabsl(z);
 
-inline arg(z:Complex64) = carg(z);
-inline overload arg(z:Complex32) = cargf(z);
-inline overload arg(z:Complex80) = cargl(z);
+inline arg(z:Complex64) = libc.carg(z);
+inline overload arg(z:Complex32) = libc.cargf(z);
+inline overload arg(z:Complex80) = libc.cargl(z);
 
-inline overload sin(z:Complex64) = csin(z);
-inline overload sin(z:Complex32) = csinf(z);
-inline overload sin(z:Complex80) = csinl(z);
+inline overload sin(z:Complex64) = libc.csin(z);
+inline overload sin(z:Complex32) = libc.csinf(z);
+inline overload sin(z:Complex80) = libc.csinl(z);
 
-inline overload cos(z:Complex64) = ccos(z);
-inline overload cos(z:Complex32) = ccosf(z);
-inline overload cos(z:Complex80) = ccosl(z);
+inline overload cos(z:Complex64) = libc.ccos(z);
+inline overload cos(z:Complex32) = libc.ccosf(z);
+inline overload cos(z:Complex80) = libc.ccosl(z);
 
-inline overload tan(z:Complex64) = ctan(z);
-inline overload tan(z:Complex32) = ctanf(z);
-inline overload tan(z:Complex80) = ctanl(z);
+inline overload tan(z:Complex64) = libc.ctan(z);
+inline overload tan(z:Complex32) = libc.ctanf(z);
+inline overload tan(z:Complex80) = libc.ctanl(z);
 
-inline overload asin(z:Complex64) = casin(z);
-inline overload asin(z:Complex32) = casinf(z);
-inline overload asin(z:Complex80) = casinl(z);
+inline overload asin(z:Complex64) = libc.casin(z);
+inline overload asin(z:Complex32) = libc.casinf(z);
+inline overload asin(z:Complex80) = libc.casinl(z);
 
-inline overload acos(z:Complex64) = cacos(z);
-inline overload acos(z:Complex32) = cacosf(z);
-inline overload acos(z:Complex80) = cacosl(z);
+inline overload acos(z:Complex64) = libc.cacos(z);
+inline overload acos(z:Complex32) = libc.cacosf(z);
+inline overload acos(z:Complex80) = libc.cacosl(z);
 
-inline overload atan(z:Complex64) = catan(z);
-inline overload atan(z:Complex32) = catanf(z);
-inline overload atan(z:Complex80) = catanl(z);
+inline overload atan(z:Complex64) = libc.catan(z);
+inline overload atan(z:Complex32) = libc.catanf(z);
+inline overload atan(z:Complex80) = libc.catanl(z);
 
-inline overload sinh(z:Complex64) = csinh(z);
-inline overload sinh(z:Complex32) = csinhf(z);
-inline overload sinh(z:Complex80) = csinhl(z);
+inline overload sinh(z:Complex64) = libc.csinh(z);
+inline overload sinh(z:Complex32) = libc.csinhf(z);
+inline overload sinh(z:Complex80) = libc.csinhl(z);
 
-inline overload cosh(z:Complex64) = ccosh(z);
-inline overload cosh(z:Complex32) = ccoshf(z);
-inline overload cosh(z:Complex80) = ccoshl(z);
+inline overload cosh(z:Complex64) = libc.ccosh(z);
+inline overload cosh(z:Complex32) = libc.ccoshf(z);
+inline overload cosh(z:Complex80) = libc.ccoshl(z);
 
-inline overload tanh(z:Complex64) = ctanh(z);
-inline overload tanh(z:Complex32) = ctanhf(z);
-inline overload tanh(z:Complex80) = ctanhl(z);
+inline overload tanh(z:Complex64) = libc.ctanh(z);
+inline overload tanh(z:Complex32) = libc.ctanhf(z);
+inline overload tanh(z:Complex80) = libc.ctanhl(z);
 
-inline overload asinh(z:Complex64) = casinh(z);
-inline overload asinh(z:Complex32) = casinhf(z);
-inline overload asinh(z:Complex80) = casinhl(z);
+inline overload asinh(z:Complex64) = libc.casinh(z);
+inline overload asinh(z:Complex32) = libc.casinhf(z);
+inline overload asinh(z:Complex80) = libc.casinhl(z);
 
-inline overload acosh(z:Complex64) = cacosh(z);
-inline overload acosh(z:Complex32) = cacoshf(z);
-inline overload acosh(z:Complex80) = cacoshl(z);
+inline overload acosh(z:Complex64) = libc.cacosh(z);
+inline overload acosh(z:Complex32) = libc.cacoshf(z);
+inline overload acosh(z:Complex80) = libc.cacoshl(z);
 
-inline overload atanh(z:Complex64) = catanh(z);
-inline overload atanh(z:Complex32) = catanhf(z);
-inline overload atanh(z:Complex80) = catanhl(z);
+inline overload atanh(z:Complex64) = libc.catanh(z);
+inline overload atanh(z:Complex32) = libc.catanhf(z);
+inline overload atanh(z:Complex80) = libc.catanhl(z);
 
-inline overload exp(z:Complex64) = cexp(z);
-inline overload exp(z:Complex32) = cexpf(z);
-inline overload exp(z:Complex80) = cexpl(z);
+inline overload exp(z:Complex64) = libc.cexp(z);
+inline overload exp(z:Complex32) = libc.cexpf(z);
+inline overload exp(z:Complex80) = libc.cexpl(z);
 
-inline overload log(z:Complex64) = clog(z);
-inline overload log(z:Complex32) = clogf(z);
-inline overload log(z:Complex80) = clogl(z);
+inline overload log(z:Complex64) = libc.clog(z);
+inline overload log(z:Complex32) = libc.clogf(z);
+inline overload log(z:Complex80) = libc.clogl(z);
 
-inline overload pow(z:Complex64,y:Complex64) = cpow(z,y);
-inline overload pow(z:Complex32,y:Complex32) = cpowf(z,y);
-inline overload pow(z:Complex80,y:Complex80) = cpowl(z,y);
+inline overload pow(z:Complex64,y:Complex64) = libc.cpow(z,y);
+inline overload pow(z:Complex32,y:Complex32) = libc.cpowf(z,y);
+inline overload pow(z:Complex80,y:Complex80) = libc.cpowl(z,y);
 /*
-inline overload pow(z:Complex64,y:Complex32) = cpow(z,complexTo(y,Double));
-inline overload pow(z:Complex80,y:Complex32) = cpowl(z,complexTo(y,Real));
-inline overload pow(z:Complex80,y:Complex64) = cpowl(z,complexTo(y,Real));
-inline overload pow(z:Complex64,y:Complex80) = cpowl(complexTo(z,Real),y);
-inline overload pow(z:Complex32,y:Complex64) = cpowl(complexTo(z,Double),y);
-inline overload pow(z:Complex32,y:Complex80) = cpowl(complexTo(z,Real),y);
+inline overload pow(z:Complex64,y:Complex32) = libc.cpow(z,complexTo(y,Double));
+inline overload pow(z:Complex80,y:Complex32) = libc.cpowl(z,complexTo(y,Real));
+inline overload pow(z:Complex80,y:Complex64) = libc.cpowl(z,complexTo(y,Real));
+inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(complexTo(z,Real),y);
+inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(complexTo(z,Double),y);
+inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(complexTo(z,Real),y);
 */
 
 
-inline overload sqrt(z:Complex64) = csqrt(z);
-inline overload sqrt(z:Complex32) = csqrtf(z);
-inline overload sqrt(z:Complex80) = csqrtl(z);
+inline overload sqrt(z:Complex64) = libc.csqrt(z);
+inline overload sqrt(z:Complex32) = libc.csqrtf(z);
+inline overload sqrt(z:Complex80) = libc.csqrtl(z);
 
-inline proj(z:Complex64) = cproj(z);
-inline overload proj(z:Complex32) = cprojf(z);
-inline overload proj(z:Complex80) = cprojl(z);
+inline proj(z:Complex64) = libc.cproj(z);
+inline overload proj(z:Complex32) = libc.cprojf(z);
+inline overload proj(z:Complex80) = libc.cprojl(z);
 
 [T | Float?(T)]
-inline fromPolar(m:T,ph:T) = complex(m*sin(ph),m*cos(ph));
+inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));

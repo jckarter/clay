@@ -1,6 +1,7 @@
 
 import vectors.generic.*;
 
+enum Orientation { ROW, COLUMN }
 
 
 //
@@ -8,6 +9,7 @@ import vectors.generic.*;
 //
 
 record Vector[T] (
+    row:Orientation,
     size:SizeT,
     capacity:SizeT,
     data:Pointer[T],
@@ -28,6 +30,8 @@ overload ContiguousSequence?(static Vector[T]) = true;
 [T]
 overload SequenceContainer?(static Vector[T]) = true;
 
+[T | Vector?(T)] Row?(A:T) = if(A.row==ROW) true else false;
+[T | Vector?(T)] Column?(A:T) = if(A.row==COLUMN) true else false;
 
 
 
@@ -36,7 +40,8 @@ overload SequenceContainer?(static Vector[T]) = true;
 //
 
 [T]
-overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
+overload Vector[T]() = Vector[T](COLUMN, SizeT(0), SizeT(0), null(T));
+
 
 [T,A | Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
@@ -120,6 +125,14 @@ inline overload vectorSize(a:Vector[T]) = a.size;
 [T]
 inline overload vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
+}
+
+[T]
+inline vectorOrientation(a:Vector[T]) = a.row;
+
+[T]
+inline vectorSetOrientation(a:Vector[T], n:Orientation) {
+    a.row = n;
 }
 
 [T]

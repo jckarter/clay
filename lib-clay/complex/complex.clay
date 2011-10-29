@@ -99,6 +99,8 @@ inline overload greater?(a:A, b:A) = lesser?(b, a);
 inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
 
 
+[T | Complex?(T)]
+Zero?(z:T) = real(z) == T(0) and imag(z) == T(0);
 
 
 [T | Complex?(T)]
