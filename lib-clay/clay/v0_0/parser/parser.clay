@@ -1030,14 +1030,14 @@ private var globalAliasDef = topLevelItemParser(
     ),
 );
 
-private var externalAttribtues2 = modify(
+private var externalAttributes2 = modify(
     x => x.1,
     sequence(punc(#"("), exprList, punc(#")")),
 );
 
 private var externalAttributes = modify(
     x => maybe(move(x), move, () => Vector[Expr]()),
-    optional(externalAttribtues2),
+    optional(externalAttributes2),
 );
 
 private var externalArg = bounds(modify(
@@ -1056,7 +1056,7 @@ private var externalArgs = modify(
 );
 
 private var externalBody = choice(
-    modify(x => Maybe(x), block),
+    modify(x => Maybe(x), clayBody),
     modify(x => nothing(Statement), punc(#";")),
 );
 
