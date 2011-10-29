@@ -65,6 +65,12 @@ Language changes:
     // 0.1
     onerror bar();
     foo();
+* Capture-by-reference lambdas now only support the '() -> {}' syntax.
+    // 0.0
+    (a,b) ref=> a+b+c
+
+    // 0.1
+    (a,b) -> a+b+c
 
 Library changes:
 * The bitwise operation functions have been given shorter names:
