@@ -116,7 +116,7 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        return [clay, "-I" + self.path] + self.buildflags + [self.testfile]
+        return [clay, "-I" + self.path, "-o", "test.exe"] + self.buildflags + [self.testfile]
 
     def pre_build(self) :
         pass
@@ -177,7 +177,7 @@ class TestCase(object):
         return os.path.relpath(self.path, testRoot)
 
     def runtest(self):
-        outfilename = "a.exe" if sys.platform == "win32" else "a.out"
+        outfilename = "test.exe"
         outfilename = os.path.join(".", outfilename)
         process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
         compilerout, compilererr = process.communicate()

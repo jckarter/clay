@@ -100,6 +100,9 @@ Compiler frontend changes:
   in the current compilation unit.
 * External entry points for the main module are also now always compiled; "-shared"
   now only affects the type of file output by the compiler.
+* The default output filename for executables and dynamic libraries is now the
+  basename of the input file instead of "a.out". For instance, "clay hello.clay" will
+  output an executable named "hello" (or "hello.exe" if compiling for a Windows target).
 
 Planned changes
 ---------------

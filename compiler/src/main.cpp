@@ -21,12 +21,8 @@
 #include <cstring>
 
 #ifdef WIN32
-#define DEFAULT_EXE "a.exe"
-#define DEFAULT_DLL "a.dll"
 #define PATH_SEPARATORS "/\\"
 #else
-#define DEFAULT_EXE "a.out"
-#define DEFAULT_DLL "a.out"
 #define PATH_SEPARATORS "/"
 #endif
 
@@ -303,6 +299,28 @@ static string basename(const string &fullname)
     string::size_type length = to == string::npos ? string::npos : to - from;
 
     return fullname.substr(from, length);
+}
+
+static string sharedExtensionForTarget(llvm::Triple const &triple) {
+    if (triple.getOS() == llvm::Triple::Win32
+        || triple.getOS() == llvm::Triple::MinGW32
+        || triple.getOS() == llvm::Triple::Cygwin) {
+        return ".dll";
+    } else if (triple.getOS() == llvm::Triple::Darwin) {
+        return ".dylib";
+    } else {
+        return ".so";
+    }
+}
+
+static string exeExtensionForTarget(llvm::Triple const &triple) {
+    if (triple.getOS() == llvm::Triple::Win32
+        || triple.getOS() == llvm::Triple::MinGW32
+        || triple.getOS() == llvm::Triple::Cygwin) {
+        return ".exe";
+    } else {
+        return "";
+    }
 }
 
 int main(int argc, char **argv) {
@@ -711,9 +729,9 @@ int main(int argc, char **argv) {
         else if (emitObject)
             outputFile = clayFileBasename + ".o";
         else if (sharedLib)
-            outputFile = DEFAULT_DLL;
+            outputFile = clayFileBasename + sharedExtensionForTarget(llvmTriple);
         else
-            outputFile = DEFAULT_EXE;
+            outputFile = clayFileBasename + exeExtensionForTarget(llvmTriple);
     }
     llvm::sys::Path outputFilePath(outputFile);
     llvm::sys::RemoveFileOnSignal(outputFilePath);
