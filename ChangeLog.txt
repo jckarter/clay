@@ -153,37 +153,6 @@ cut and pasted above.
   "struct", "variant", and "enum" syntax is still provided, but they now desugar
   into symbol forms.
 
-    // Normal struct
-      struct Foo[T] (x:T, y:Int, z:Char);
-    // Desugared
-      define Foo[T];
-      [T] overload structFields(#Foo[T]) = x:T, y:Int, z:Char;
-      // parameter-inferring constructor
-      [T] overload Foo(x:T, y:Int, z:Char) = Foo[T](x:T, y:Int, z:Char);
-      // llvmRepresentation is derived from structFields
-
-    // Calculated struct
-      struct Foo[T] = fooStruct(T);
-    // Desugared
-      define Foo[T];
-      [T] overload structFields(#Foo[T]) = fooStruct(T);
-
-    // Variant
-      variant Foo(Bar, Bas);
-      instance Foo(Zim, Zang);
-    // Desugared
-      define Foo;
-      overload variantMembers(Foo) = Bar, Bas;
-      overload variantMembers(Foo) = ..super(Foo), Zim, Zang;
-
-    // Enum
-      enum Foo(BAR, BAS);
-    // Desugared
-      newtype Foo(ordinal:UInt8); // smallest fitting UInt for number of members
-      alias BAR = Foo(0);
-      alias BAS = Foo(1);
-      overload enumMembers(Foo) = BAR, BAS;
-
 * 'union' syntax is provided for defining named union types. Example:
     union FloatBits32(bits:Int32, float:Float32);
   The anonymous union type Union[..T] is still present.
@@ -205,16 +174,14 @@ cut and pasted above.
 
 * The prelude has been shrunk to only include a minimum set of libraries by default.
   Those prelude modules have been moved to core/*, and the default prelude
-  imports core.*.
+  public imports core.*.
   The following modules must now be imported if used:
-    <to be filled in>
+    <tbd>
   The convenience module prelude_0_0 imports all the above modules. You can also
   provide your own prelude.clay in a module search path to override the default
   prelude.
 * Dispatch is now overloadable. The dispatch overload desugars as follows:
-    foo(*a,  b) ==> dispatch(foo, #(0,), a, b)
-    foo( a, *b) ==> dispatch(foo, #(1,), a, b)
-    foo(*a, *b) ==> dispatch(foo, #(0,1), a, b)
+    <tbd>
   The prelude provides a default implementation for variants that works as in Clay 0.0,
   as well as a default implementation for multiple dispatch that decomposes into
   cascading single dispatch.
@@ -260,19 +227,13 @@ cut and pasted above.
     external (C, cat(#"sqrt", LibcMathLetter(T))) sqrt(n:T):T;
 
   External definitions may also be parameterized, but must be given a set of types
-  for which to be instantiated. For example, the
-  following will define C-linkage functions "quadrootf", "quadroot", "quadrootl"
-  in terms of the above sqrt declaration:
-
-    [T in Float, Double, LongDouble]
-    external (C, cat(#"quadroot", LibcMathLetter(T)))
-    quadroot(n:T):T = sqrt(sqrt(n));
+  for which to be instantiated. <...>
 
 * A new external ABI "llvmIntrinsic" is provided to simplify interfacing with LLVM
   intrinsics. Function arguments map one-to-one to LLVM intrinsic arguments except for
-  static integer or boolean arguments, which are expanded into literal arguments,
-  allowing Clay to interface with intrinsics that expect literal arguments.
-  The external symbol name is unmangled. Example:
+  static integer or boolean arguments, which are expanded into literal arguments in LLVM
+  IR, allowing Clay to interface with intrinsics that expect literal arguments.
+  The given external symbol name is unmangled. Example:
     [align,volatile? | Int?(align) and Bool?(volatile?)]
     external (llvmIntrinsic, "llvm.memcpy.p0i8.p0i8.i32") llvm_memcpy32(
         dst:Pointer[UInt8],
@@ -289,7 +250,8 @@ cut and pasted above.
 * Integer division now uses the div operator. '/' now only does floating-point division:
     var x = 3 div 2; // 1
     var x = 3/2; // type error
-  The div operator desugars to the quotient(a,b) function.
+  The div operator desugars to the quotient(a,b) function. An update statement form
+  'div=' is also provided.
 
 * Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push' functions
   should be used instead.
@@ -303,6 +265,3 @@ cut and pasted above.
     """hello world"""
     $$hello world$$
     $end$hello world$end$
-
-* Pair syntax 'a: b' now desugars into two values '#"a", b' instead of a two-element
-  tuple.
