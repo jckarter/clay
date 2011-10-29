@@ -25,7 +25,7 @@ inline overload iterator(a:Range[T]) = a;
 inline overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
 
 [T]
-inline overload hasNext?(a:Range[T]) = a.begin != a.end;
+inline overload hasNext?(a:Range[T]) = a.begin < a.end;
 
 [T]
 inline overload next(a:Range[T]) {
@@ -67,7 +67,7 @@ inline overload iterator(a:ReverseRange[T]) = a;
 inline overload reverseIterator(a:ReverseRange[T]) = Range(a.begin, a.end);
 
 [T]
-inline overload hasNext?(a:ReverseRange[T]) = a.end != a.begin;
+inline overload hasNext?(a:ReverseRange[T]) = a.end > a.begin;
 
 [T]
 inline overload next(a:ReverseRange[T]) {
@@ -151,7 +151,7 @@ inline overload reverseIterator(a:CoordinateRange[T]) =
     ReverseCoordinateRange(a.end, a.begin);
 
 [T]
-inline overload hasNext?(a:CoordinateRange[T]) = a.begin != a.end;
+inline overload hasNext?(a:CoordinateRange[T]) = a.begin < a.end;
 
 [T]
 inline overload next(a:CoordinateRange[T]) {
@@ -194,7 +194,7 @@ inline overload reverseIterator(a:ReverseCoordinateRange[T]) =
     CoordinateRange(a.begin, a.end);
 
 [T]
-inline overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin != a.end;
+inline overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin < a.end;
 
 [T]
 inline overload next(a:ReverseCoordinateRange[T]) {
