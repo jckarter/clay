@@ -75,6 +75,11 @@ Language changes:
   all symbols matching Foo?(F) instead of just types. Universe overloads also now have
   lower precedence than specific overloads. Note that this change may break code even
   after it has been clayfix-ed.
+* Function arguments are now passed by noalias nocapture reference. Mutating arguments
+  that alias or capturing pointers or other references to arguments is now not allowed.
+  (It's currently unchecked by the compiler, though.) If you need to pass potentially
+  aliasing mutable references or capture argument references, use Pointer[T] arguments.
+  Pointers remain unrestricted.
 
 Library changes:
 * The bitwise operation functions have been given shorter names:

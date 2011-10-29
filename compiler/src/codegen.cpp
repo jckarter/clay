@@ -2761,6 +2761,10 @@ void codegenCodeBody(InvokeEntryPtr entry)
                                "clay_" + callableName,
                                llvmModule);
 
+    for (unsigned i = 1; i <= llArgTypes.size(); ++i) {
+        llFunc->addAttribute(i, llvm::Attribute::NoAlias);
+    }
+
     entry->llvmFunc = llFunc;
 
     CodegenContextPtr ctx = new CodegenContext(llFunc);
