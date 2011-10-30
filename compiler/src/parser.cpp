@@ -2740,6 +2740,41 @@ static bool topLevelItems(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
+static bool optModuleDeclarationAttributes(ExprListPtr &x) {
+    int p = save();
+    if (!symbol("(")) {
+        restore(p);
+        x = NULL;
+        return true;
+    }
+    if (!optExpressionList(x))
+        return false;
+    if (!symbol(")"))
+        return false;
+    return true;
+}
+
+static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
+    int p = save();
+    if (!keyword("in")) {
+        restore(p);
+        x = NULL;
+        return true;
+    }
+    DottedNamePtr name;
+    ExprListPtr attributes;
+    if (!dottedName(name))
+        return false;
+    if (!optModuleDeclarationAttributes(attributes))
+        return false;
+    if (!symbol(";"))
+        return false;
+
+    x = new ModuleDeclaration(name, attributes);
+    std::cout << x;
+    return true;
+}
+
 static bool optTopLevelLLVM(LLVMCodePtr &x) {
     int p = save();
     if (!llvmCode(x)) {
@@ -2753,6 +2788,7 @@ static bool module(const string &moduleName, ModulePtr &x) {
     LocationPtr location = currentLocation();
     ModulePtr y = new Module(moduleName);
     if (!imports(y->imports)) return false;
+    if (!optModuleDeclaration(y->declaration)) return false;
     if (!optTopLevelLLVM(y->topLevelLLVM)) return false;
     if (!topLevelItems(y->topLevelItems)) return false;
     x = y.ptr();

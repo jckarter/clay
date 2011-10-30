@@ -165,6 +165,7 @@ enum ObjectKind {
     GLOBAL_ALIAS,
 
     IMPORT,
+    MODULE_DECLARATION,
     MODULE_HOLDER,
     MODULE,
 
@@ -293,6 +294,7 @@ struct ImportStar;
 struct ImportMembers;
 struct ModuleHolder;
 struct Module;
+struct ModuleDeclaration;
 
 struct Env;
 
@@ -438,6 +440,7 @@ typedef Pointer<ImportStar> ImportStarPtr;
 typedef Pointer<ImportMembers> ImportMembersPtr;
 typedef Pointer<ModuleHolder> ModuleHolderPtr;
 typedef Pointer<Module> ModulePtr;
+typedef Pointer<ModuleDeclaration> ModuleDeclarationPtr;
 
 typedef Pointer<Env> EnvPtr;
 
@@ -1725,9 +1728,19 @@ struct ModuleHolder : public Object {
         : Object(MODULE_HOLDER) {}
 };
 
+struct ModuleDeclaration : public ANode {
+    DottedNamePtr name;
+    ExprListPtr attributes;
+
+    ModuleDeclaration(DottedNamePtr name, ExprListPtr attributes)
+        : ANode(MODULE_DECLARATION), name(name), attributes(attributes)
+        {}
+};
+
 struct Module : public ANode {
     string moduleName;
     vector<ImportPtr> imports;
+    ModuleDeclarationPtr declaration;
     LLVMCodePtr topLevelLLVM;
     vector<TopLevelItemPtr> topLevelItems;
 
@@ -1758,9 +1771,11 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false) {}
     Module(const string &moduleName,
            const vector<ImportPtr> &imports,
+           ModuleDeclarationPtr declaration,
            LLVMCodePtr topLevelLLVM,
            const vector<TopLevelItemPtr> &topLevelItems)
         : ANode(MODULE), moduleName(moduleName), imports(imports),
+          declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
           initialized(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),

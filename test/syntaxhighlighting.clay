@@ -31,6 +31,8 @@ import module.path.name.(member1 as alias1, member2, member3,);
 public import module.path.name;
 private import module.path.name;
 
+in some.module;
+
 /* comment */
 notAComment0() {}
 /* "comment */

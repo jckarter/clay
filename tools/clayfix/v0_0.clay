@@ -92,8 +92,7 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
                 or beginsWith?(name, "onerror")
-                or beginsWith?(name, "define")
-                or beginsWith?(name, "module"))
+                or beginsWith?(name, "define"))
 
                 printTo(state.outputFile, "_");
         }

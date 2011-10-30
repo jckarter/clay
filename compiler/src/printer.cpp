@@ -644,6 +644,11 @@ static void print(ostream &out, const Object *x) {
         out << "ModuleHolder()";
         break;
     }
+    case MODULE_DECLARATION : {
+        const ModuleDeclaration *y = (const ModuleDeclaration *)x;
+        out << "ModuleDeclaration(" << y->name << ", " << y->attributes << ")";
+        break;
+    }
     case MODULE : {
         const Module *y = (const Module *)x;
         out << "Module(" << bigVec(y->imports) << ", "
