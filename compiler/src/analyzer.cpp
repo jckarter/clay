@@ -1032,24 +1032,24 @@ void verifyAttributes(ExternalProcedurePtr x)
         else {
             ObjectPtr obj = evaluateOneStatic(expr, x->env);
             if (obj->objKind != PRIM_OP)
-                error(expr, "invalid external attribute");
+                error(expr, "invalid external function attribute");
             PrimOp *y = (PrimOp *)obj.ptr();
             switch (y->primOpCode) {
             case PRIM_AttributeStdCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling conv");
+                    error(expr, "cannot specify more than one calling convention");
                 callingConv = CC_STDCALL;
                 break;
             }
             case PRIM_AttributeFastCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling conv");
+                    error(expr, "cannot specify more than one calling convention");
                 callingConv = CC_FASTCALL;
                 break;
             }
             case PRIM_AttributeCCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling conv");
+                    error(expr, "cannot specify more than one calling convention");
                 callingConv = CC_DEFAULT;
                 break;
             }
@@ -1066,7 +1066,7 @@ void verifyAttributes(ExternalProcedurePtr x)
                 break;
             }
             default :
-                error(expr, "invalid attribute");
+                error(expr, "invalid external function attribute");
             }
         }
     }
@@ -1085,7 +1085,7 @@ void verifyAttributes(ExternalVariablePtr x)
         ExprPtr expr = x->attributes->exprs[i];
         ObjectPtr obj = evaluateOneStatic(expr, x->env);
         if (obj->objKind != PRIM_OP)
-            error(expr, "invalid external attribute");
+            error(expr, "invalid external variable attribute");
         PrimOp *y = (PrimOp *)obj.ptr();
         switch (y->primOpCode) {
         case PRIM_AttributeDLLImport : {
@@ -1101,7 +1101,25 @@ void verifyAttributes(ExternalVariablePtr x)
             break;
         }
         default :
-            error(expr, "invalid attribute");
+            error(expr, "invalid external variable attribute");
+        }
+    }
+}
+
+void verifyAttributes(ModulePtr x)
+{
+    assert(!x->attributesVerified);
+    x->attributesVerified = true;
+
+    if (x->declaration != NULL && x->declaration->attributes != NULL) {
+        for (unsigned i = 0; i < x->declaration->attributes->size(); ++i) {
+            ExprPtr expr = x->declaration->attributes->exprs[i];
+            if (expr->exprKind == STRING_LITERAL) {
+                StringLiteral *y = (StringLiteral *)expr.ptr();
+                x->attrBuildFlags.push_back(y->value);
+            } else {
+                error(expr, "invalid module attribute");
+            }
         }
     }
 }

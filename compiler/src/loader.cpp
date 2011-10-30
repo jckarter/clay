@@ -485,6 +485,8 @@ static void initModule(ModulePtr m) {
     } else if (m->moduleName == "")
         m->moduleName = "__main__";
 
+    verifyAttributes(m);
+
     const vector<TopLevelItemPtr> &items = m->topLevelItems;
     vector<TopLevelItemPtr>::const_iterator ti, tend;
     for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {

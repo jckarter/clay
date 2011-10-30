@@ -1753,6 +1753,9 @@ struct Module : public ANode {
     EnvPtr env;
     bool initialized;
 
+    bool attributesVerified;
+    vector<string> attrBuildFlags;
+
     map<string, set<ObjectPtr> > publicSymbols;
     bool publicSymbolsLoaded;
     int publicSymbolsLoading;
@@ -2746,6 +2749,7 @@ PValuePtr analyzeExternalVariable(ExternalVariablePtr x);
 void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
+void verifyAttributes(ModulePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    ExprListPtr args,
                                    EnvPtr env);
