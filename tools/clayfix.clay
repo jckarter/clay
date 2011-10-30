@@ -33,12 +33,11 @@ usage(argv0) : {
 alias Fixer = CodePointer[(SourceFile, File), ()];
 
 fixerForVersion(version:String) : Fixer {
-    switch (version) {
-    case "0.0":
+    switch (version)
+    case ("0.0")
         return Fixer(fix_0_0);
-    default:
+    else
         throw InvalidFixerVersion(version);
-    }
 }
 
 main(args) : Int {

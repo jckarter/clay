@@ -47,81 +47,66 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
         );
     };
 
-    switch (token.kind) {
-    case KEYWORD:
-        if (token.subKind == keywordIndex("procedure"))
+    switch (token.kind)
+    case (KEYWORD) {
+        switch (token.subKind)
+        case (keywordIndex("procedure"))
             printTo(state.outputFile, "define");
-        else if (token.subKind == keywordIndex("callbyname"))
+        case (keywordIndex("callbyname"))
             printTo(state.outputFile, "alias");
-        else if (token.subKind == keywordIndex("lvalue"))
+        case (keywordIndex("lvalue"))
             printTo(state.outputFile, "ref");
         else
             printDefault();
-        break;
-    case IDENTIFIER:
-        {
+    }
+    case (IDENTIFIER) {
         var name = sliced(fileData, token.range.begin, token.range.end);
-        switch (name) {
-        case "shiftLeft":
+        switch (name)
+        case ("shiftLeft")
             printTo(state.outputFile, "bitshl");
-            break;
-        case "shiftRight":
+        case ("shiftRight")
             printTo(state.outputFile, "bitshr");
-            break;
-        case "rotateLeft":
+        case ("rotateLeft")
             printTo(state.outputFile, "bitrol");
-            break;
-        case "rotateRight":
+        case ("rotateRight")
             printTo(state.outputFile, "bitror");
-            break;
-        case "bitwiseAnd":
+        case ("bitwiseAnd")
             printTo(state.outputFile, "bitand");
-            break;
-        case "bitwiseOr":
+        case ("bitwiseOr")
             printTo(state.outputFile, "bitor");
-            break;
-        case "bitwiseXor":
+        case ("bitwiseXor")
             printTo(state.outputFile, "bitxor");
-            break;
-        case "bitwiseNot":
+        case ("bitwiseNot")
             printTo(state.outputFile, "bitnot");
-            break;
-        case "bitwiseAndc":
+        case ("bitwiseAndc")
             printTo(state.outputFile, "bitandc");
-            break;
-        case "bitwiseBlend":
+        case ("bitwiseBlend")
             printTo(state.outputFile, "bitblend");
-            break;
-        case "bitwiseCast":
+        case ("bitwiseCast")
             printTo(state.outputFile, "bitcast");
-            break;
-        case "allocateShared":
+        case ("allocateShared")
             printTo(state.outputFile, "newShared");
-            break;
-        case "allocateUnique":
+        case ("allocateUnique")
             printTo(state.outputFile, "newUnique");
-            break;
-        default:
+        else {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
                 or beginsWith?(name, "onerror")
-                or beginsWith?(name, "define"))
+                or beginsWith?(name, "define")
+                or beginsWith?(name, "module"))
 
                 printTo(state.outputFile, "_");
-            break;
         }
-        break;
-        }
-    case PUNCTUATION:
+    }
+    case (PUNCTUATION) {
         if (token.subKind == punctuationIndex("..."))
             printTo(state.outputFile, "..");
         else
             printDefault();
-        break;
-    default:
-        printDefault();
-        break;
     }
+    else
+        printDefault();
+
     state.printedToken = tokenNumber + 1;
     state.printedIndex = token.range.end;
 }
@@ -131,32 +116,6 @@ fixToken(tokenNumber:SizeT, state:FixState) {
     while (state.printedToken <= tokenNumber)
         fixOneToken(state.printedToken, state);
 }
-
-// keyword and punctuation translations
-// procedure -> define
-// callbyname -> alias
-// lvalue -> ref
-// ... -> ..
-
-// identifier replacement
-// define
-// finally
-// onerror
-
-// identifier translations
-//  shiftLeft    ==> bitshl
-//  shiftRight   ==> bitshr
-//  rotateLeft   ==> bitrol
-//  rotateRight  ==> bitror
-//  bitwiseAnd   ==> bitand
-//  bitwiseOr    ==> bitor
-//  bitwiseXor   ==> bitxor
-//  bitwiseNot   ==> bitnot
-//  bitwiseAndc  ==> bitandc
-//  bitwiseBlend ==> bitblend
-//  bitwiseCast  ==> bitcast
-//  allocateShared ==> newShared
-//  allocateUnique ==> newUnique
 
 
 //
@@ -297,11 +256,12 @@ overload fixAst(ast:Variant, state:FixState) : {
         printTo(state.outputFile, "(");
 
         // replace "|" with "," between instances
-        for (inst in ast.defaultInstances) {
+        for (i, inst in enumerated(ast.defaultInstances)) {
             var tokenRange = astTokens(inst);
             replaceUptoToken(tokenRange.begin, state);
             fixAst(inst, state);
-            writeTokenSuffixed(tokenRange.end - 1, ",", state);
+            if (i != size(ast.defaultInstances) - 1 )
+                writeTokenSuffixed(tokenRange.end - 1, ",", state);
             // preserve whitespace before |
             writeUptoToken(tokenRange.end, state);
         }
@@ -396,6 +356,11 @@ overload fixAst(ast:New, state:FixState) : {
     replaceToken(ast.tokens.end - 1, state);
 }
 
+isPunctuationToken(token, punc)
+    = token.kind == PUNCTUATION and token.subKind == punctuationIndex(punc);
+isKeywordToken(token, kwd)
+    = token.kind == KEYWORD and token.subKind == keywordIndex(kwd);
+
 // Convert capture-by-reference lambda syntax.
 // 0.0: (...args) ref=> { ... }
 // 0.1: (...args) -> { ... }
@@ -405,19 +370,129 @@ overload fixAst(ast:LambdaExpr, state:FixState) : {
         var firstStatementToken = astTokens(ast.body).begin;
         ref tokens = state.tokens.vector;
         assert(firstStatementToken >= 1);
-        if (tokens[firstStatementToken - 1].kind == PUNCTUATION
-            and tokens[firstStatementToken - 1].subKind == punctuationIndex("=>")) {
-
-            assert(firstStatementToken == 1 or (
-                tokens[firstStatementToken - 2].kind == KEYWORD
-                and tokens[firstStatementToken - 2].subKind == keywordIndex("ref")
-            ));
+        if (isPunctuationToken(tokens[firstStatementToken - 1], "=>")) {
+            assert(firstStatementToken != 1
+                and isKeywordToken(tokens[firstStatementToken - 2], "ref"));
             writeUptoToken(firstStatementToken - 2, state);
             printTo(state.outputFile, "-> ");
             replaceUptoToken(firstStatementToken, state);
         }
     }
     fixAst(ast.body, state);
+}
+
+// Convert switch syntax.
+// 0.0:
+//  switch (input) {
+//  case A:
+//      a();
+//      break;
+//  case B:
+//      b1();
+//      b2();
+//      break;
+//  case C:
+//  case D:
+//      cd();
+//      break;
+//
+//  default:
+//      z();
+//      break;
+//  }
+//
+// 0.1:
+//  switch (input)
+//  case (A)
+//      a();
+//  case (B) {
+//      b1();
+//      b2();
+//  }
+//  case (C, D) {
+//      cd();
+//  }
+//  else {
+//      z();
+//  }
+overload fixAst(ast:Switch, state:FixState) : {
+    fixAst(ast.expr, state);
+    var tokenAfterValue = astTokens(ast.expr).end;
+    ref tokens = state.tokens.vector;
+
+    assert(isPunctuationToken(tokens[tokenAfterValue], ")"));
+    assert(isPunctuationToken(tokens[tokenAfterValue+1], "{"));
+
+    writeToken(tokenAfterValue, state);
+    replaceToken(tokenAfterValue+1, state);
+
+    fixAst(ast.caseBlocks, state);
+    maybe(ast.defaultCase, defaultCase -> {
+        var defaultToken = astTokens(defaultCase).begin;
+        assert(isKeywordToken(tokens[defaultToken - 2], "default")
+            and isPunctuationToken(tokens[defaultToken - 1], ":"));
+        writeUptoToken(defaultToken - 2, state);
+        printTo(state.outputFile, "else {");
+        replaceToken(defaultToken - 1, state);
+        fixAst(defaultCase, state);
+        writeUptoToken(astTokens(ast).end - 1, state);
+        printTo(state.outputFile, "}");
+    });
+    replaceToken(astTokens(ast).end - 1, state);
+}
+
+overload fixAst(ast:CaseBlock, state:FixState) : {
+    ref tokens = state.tokens.vector;
+
+    writeTokenSuffixed(astTokens(ast).begin, " (", state);
+    interleave(ast.caseLabels,
+        () -> { printTo(state.outputFile, ", "); },
+        label -> {
+            replaceUptoToken(astTokens(label).begin, state);
+            fixAst(label, state);
+            writeToken(astTokens(label).end - 1, state);
+        },
+    );
+    printTo(state.outputFile, ") {");
+    assert(not empty?(ast.caseLabels));
+    assert(isPunctuationToken(tokens[astTokens(back(ast.caseLabels)).end], ":"));
+    replaceToken(astTokens(back(ast.caseLabels)).end, state);
+    fixAst(ast.body, state);
+    writeUptoToken(astTokens(ast.body).end, state);
+    printTo(state.outputFile, "} ");
+}
+
+// We need to check if there are breaks within a case body and transform those
+// into gotos.
+overload fixAst(ast:CaseBody, state:FixState) : {
+    var statementCount = size(ast.statements);
+    if (statementCount > 1 and variantIs?(back(ast.statements), Break))
+        dec(statementCount);
+    if (statementCount == 1) {
+        var wasBlock = match(ast.statements[0],
+            Block, block -> {
+                // Since the switch fixing adds a set of braces for us, if
+                // the only statement is a block, we can eliminate the braces.
+                var blockStatementCount = size(block.statements);
+                if (blockStatementCount > 1 and variantIs?(back(ast.statements), Break))
+                    dec(blockStatementCount);
+                replaceToken(astTokens(block).begin, state);
+                for (stmt in slicedUpto(block.statements, blockStatementCount))
+                    fixAst(stmt, state);
+                writeUptoToken(astTokens(block).end - 1, state);
+                replaceToken(astTokens(block).end - 1, state);
+                return true;
+            },
+            MatchDefault, _ -> false
+        );
+        if (wasBlock) return;
+    }
+
+    for (stmt in slicedUpto(ast.statements, statementCount)) {
+        fixAst(stmt, state);
+        writeToken(astTokens(stmt).end - 1, state);
+    }
+    replaceToken(astTokens(ast).end - 1, state);
 }
 
 
