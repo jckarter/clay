@@ -625,7 +625,7 @@ static void print(ostream &out, const Object *x) {
         }
         case IMPORT_MEMBERS : {
             const ImportMembers *z = (const ImportMembers *)y;
-            out << "ImportMembers(" << z->dottedName << ", [";
+            out << "ImportMembers(" << z->visibility << ", " << z->dottedName << ", [";
             for (unsigned i = 0; i < z->members.size(); ++i) {
                 if (i != 0)
                     out << ", ";

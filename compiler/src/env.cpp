@@ -177,13 +177,17 @@ static void addImportedSymbols(ModulePtr module,
         }
         else if (x->importKind == IMPORT_MEMBERS) {
             ImportMembers *y = (ImportMembers *)x;
-            const map<string, ObjectSet> &symbols2 =
+            const map<string, ObjectSet> &publicSymbols =
                 getPublicSymbols(y->module);
+            const map<string, ObjectSet> &allSymbols =
+                getAllSymbols(y->module);
             for (unsigned i = 0; i < y->members.size(); ++i) {
                 const ImportedMember &z = y->members[i];
+                const map<string, ObjectSet> &memberSymbols =
+                    z.visibility == PRIVATE ? allSymbols : publicSymbols;
                 map<string, ObjectSet>::const_iterator si =
-                    symbols2.find(z.name->str);
-                if ((si == symbols2.end()) || si->second.empty())
+                    memberSymbols.find(z.name->str);
+                if ((si == memberSymbols.end()) || si->second.empty())
                     error(z.name, "imported name not found");
                 const ObjectSet &objs = si->second;
                 IdentifierPtr name = z.name;

@@ -2633,6 +2633,8 @@ static bool importStar(ImportPtr &x) {
 }
 
 static bool importedMember(ImportedMember &x) {
+    Visibility vis;
+    if (!topLevelVisibility(x.visibility)) return false;
     if (!identifier(x.name)) return false;
     if (!optImportAlias(x.alias)) return false;
     return true;

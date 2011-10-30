@@ -1,0 +1,6 @@
+import foo.(bar, private bas);
+
+main() {
+    bar();
+    bas();
+}

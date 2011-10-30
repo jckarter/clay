@@ -1,0 +1,2 @@
+bar() { println("bar"); }
+private bas() { println("bas"); }

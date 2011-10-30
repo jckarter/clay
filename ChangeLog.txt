@@ -114,6 +114,17 @@ Language changes:
     else {
         z();
     }
+* A top-level module name declaration may be included in source files, immediately
+  after any 'import' definitions.
+    import foo.*;
+    import bar.*;
+
+    in module.name;
+  Module declarations are not required, but they will be used in the future to
+  provide module-specific build flags and parameterized modules.
+* You may now import private members from modules with the following syntax:
+    import foo.(private member);
+
 
 Library changes:
 * The bitwise operation functions have been given shorter names:
@@ -165,16 +176,6 @@ cut and pasted above.
         [T|Integer?(T)] show(x:T) { println(x); }
 
         overload show(x:UInt8) { print("my little "); super(x); }
-* A top-level 'module' declaration may be included in source files, immediately
-  after any 'import' definitions.
-    import foo.*;
-    import bar.*;
-
-    module bas;
-
-  Module declarations will be used in the future to provide module-specific
-  build flags and module-level parameters.
-
 * 'record' has been renamed to 'struct', and library functions with 'record' or
   'Record' in the name have been renamed to 'struct'/'Struct'.
 * The mapping of types to LLVM representation is exposed. A type is a symbol for which

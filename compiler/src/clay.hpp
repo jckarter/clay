@@ -1701,11 +1701,12 @@ struct ImportStar : public Import {
 };
 
 struct ImportedMember {
+    Visibility visibility;
     IdentifierPtr name;
     IdentifierPtr alias;
     ImportedMember() {}
-    ImportedMember(IdentifierPtr name, IdentifierPtr alias)
-        : name(name), alias(alias) {}
+    ImportedMember(Visibility visibility, IdentifierPtr name, IdentifierPtr alias)
+        : visibility(visibility), name(name), alias(alias) {}
 };
 
 struct ImportMembers : public Import {
