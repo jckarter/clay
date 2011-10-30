@@ -344,7 +344,7 @@ static ModulePtr loadPrelude() {
 }
 
 ModulePtr loadProgram(const string &fileName) {
-    ModulePtr m = parse("__main__", loadFile(fileName));
+    ModulePtr m = parse("", loadFile(fileName));
     ModulePtr prelude = loadPrelude();
     loadDependents(m);
     installGlobals(m);
@@ -354,7 +354,7 @@ ModulePtr loadProgram(const string &fileName) {
 }
 
 ModulePtr loadProgramSource(const string &name, const string &source) {
-    ModulePtr m = parse("__main__", new Source(name,
+    ModulePtr m = parse("", new Source(name,
         const_cast<char*>(source.c_str()),
         source.size())
     );
@@ -473,6 +473,17 @@ static void initModule(ModulePtr m) {
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
         initModule((*ii)->module);
+
+    if (m->declaration != NULL) {
+        if (m->moduleName == "")
+            m->moduleName = toKey(m->declaration->name);
+        else if (m->moduleName != toKey(m->declaration->name))
+            error(m->declaration,
+                "module imported by name " + m->moduleName
+                + " but declared with name " + toKey(m->declaration->name)
+            );
+    } else if (m->moduleName == "")
+        m->moduleName = "__main__";
 
     const vector<TopLevelItemPtr> &items = m->topLevelItems;
     vector<TopLevelItemPtr>::const_iterator ti, tend;

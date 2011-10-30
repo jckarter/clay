@@ -2755,6 +2755,8 @@ static bool optModuleDeclarationAttributes(ExprListPtr &x) {
 }
 
 static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
+    LocationPtr location = currentLocation();
+
     int p = save();
     if (!keyword("in")) {
         restore(p);
@@ -2771,7 +2773,7 @@ static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
         return false;
 
     x = new ModuleDeclaration(name, attributes);
-    std::cout << x;
+    x->location = location;
     return true;
 }
 
