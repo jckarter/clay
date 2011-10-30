@@ -107,14 +107,10 @@ instance InstanceTest (VariantTest);
 keywordsTest(x, ref y, rvalue z, forward w, static v) {
     if (x) {} else {}
 
-    switch (x) {
-    case 0:
-        break;
-    case 1:
-        break;
-    default:
-        break;
-    }
+    switch (x)
+    case (0) {}
+    case (1, 2, 3) {}
+    else {}
 
     for (x in y) {
         continue;

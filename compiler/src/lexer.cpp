@@ -126,7 +126,7 @@ static void initKeywords() {
          "inline", "enum", "var", "ref", "forward",
          "and", "or", "not",
          "if", "else", "goto", "return", "while",
-         "switch", "case", "default", "break", "continue", "for", "in",
+         "switch", "case", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
          "finally", "onerror",
          "__FILE__", "__LINE__", "__COLUMN__", NULL};

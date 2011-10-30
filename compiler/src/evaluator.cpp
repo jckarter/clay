@@ -2185,22 +2185,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         Switch *x = (Switch *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
-        TerminationPtr term = evalStatement(x->desugared, env, ctx);
-        if (term.ptr() && term->terminationKind == TERMINATE_BREAK)
-            term = NULL;
-        return term;
-    }
-
-    case CASE_BODY : {
-        CaseBody *x = (CaseBody *)stmt.ptr();
-        for (unsigned i = 0; i < x->statements.size(); ++i) {
-            StatementPtr y = x->statements[i];
-            TerminationPtr termination = evalStatement(y, env, ctx);
-            if (termination.ptr())
-                return termination;
-        }
-        error("unterminated case block");
-        return NULL;
+        return evalStatement(x->desugared, env, ctx);
     }
 
     case EXPR_STATEMENT : {

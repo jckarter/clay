@@ -30,25 +30,25 @@ enum MappingMode (
 );
 
 private modeProtection(mode) {
-    switch (mode) {
-    case MAP_READ :
+    switch (mode)
+    case (MAP_READ)
         return unix.PROT_READ;
-    case MAP_READ_WRITE :
+    case (MAP_READ_WRITE)
         return bitor(unix.PROT_READ, unix.PROT_WRITE);
-    case MAP_COPY_ON_WRITE :
+    case (MAP_COPY_ON_WRITE)
         return bitor(unix.PROT_READ, unix.PROT_WRITE);
-    default :
+    else {
         assert(false);
         return -1;
     }
 }
 
 private modeFlags(mode) {
-    switch (mode) {
-    case MAP_READ :          return unix.MAP_SHARED;
-    case MAP_READ_WRITE :    return unix.MAP_SHARED;
-    case MAP_COPY_ON_WRITE : return unix.MAP_PRIVATE;
-    default :
+    switch (mode)
+    case (MAP_READ)          return unix.MAP_SHARED;
+    case (MAP_READ_WRITE)    return unix.MAP_SHARED;
+    case (MAP_COPY_ON_WRITE) return unix.MAP_PRIVATE;
+    else {
         assert(false);
         return -1;
     }

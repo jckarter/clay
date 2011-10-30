@@ -3429,29 +3429,7 @@ bool codegenStatement(StatementPtr stmt,
         Switch *x = (Switch *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
-        llvm::BasicBlock *switchEnd = newBasicBlock("switchEnd", ctx);
-        ctx->breaks.push_back(JumpTarget(switchEnd, cgMarkStack(ctx)));
-        codegenStatement(x->desugared, env, ctx);
-        int useCount = ctx->breaks.back().useCount;
-        ctx->breaks.pop_back();
-        if (useCount == 0)
-            switchEnd->eraseFromParent();
-        else
-            ctx->builder->SetInsertPoint(switchEnd);
-        return useCount == 0;
-    }
-
-    case CASE_BODY : {
-        CaseBody *x = (CaseBody *)stmt.ptr();
-        bool terminated = false;
-        for (unsigned i = 0; i < x->statements.size(); ++i) {
-            if (terminated)
-                error(x->statements[i], "unreachable code");
-            terminated = codegenStatement(x->statements[i], env, ctx);
-        }
-        if (!terminated)
-            error("unterminated case block");
-        return terminated;
+        return codegenStatement(x->desugared, env, ctx);
     }
 
     case EXPR_STATEMENT : {

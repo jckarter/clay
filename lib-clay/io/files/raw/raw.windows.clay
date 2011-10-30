@@ -26,48 +26,48 @@ stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false);
 //
 
 private accessFlags(mode) {
-    switch (mode) {
-    case READ :
+    switch (mode)
+    case (READ)
         return win32.GENERIC_READ;
-    case READ_WRITE :
+    case (READ_WRITE)
         return bitor(win32.GENERIC_READ, win32.GENERIC_WRITE);
-    case CREATE :
+    case (CREATE)
         return bitor(win32.GENERIC_READ, win32.GENERIC_WRITE);
-    case APPEND :
+    case (APPEND)
         return win32.GENERIC_WRITE;
-    default :
+    else {
         assert(false);
         return 0u;
     }
 }
 
 private sharingFlags(mode) {
-    switch (mode) {
-    case READ :
+    switch (mode)
+    case (READ)
         return win32.FILE_SHARE_READ;
-    case READ_WRITE :
+    case (READ_WRITE)
         return 0u;
-    case CREATE :
+    case (CREATE)
         return 0u;
-    case APPEND :
+    case (APPEND)
         return 0u;
-    default :
+    else {
         assert(false);
         return 0u;
     }
 }
 
 private creationFlags(mode) {
-    switch (mode) {
-    case READ :
+    switch (mode)
+    case (READ)
         return win32.OPEN_EXISTING;
-    case READ_WRITE :
+    case (READ_WRITE)
         return win32.OPEN_EXISTING;
-    case CREATE :
+    case (CREATE)
         return win32.CREATE_ALWAYS;
-    case APPEND :
+    case (APPEND)
         return win32.OPEN_ALWAYS;
-    default :
+    else {
         assert(false);
         return 0u;
     }
@@ -174,11 +174,11 @@ overload fileSize(f:RawFile) {
 }
 
 private seekMethod(x) {
-    switch (x) {
-    case SEEK_SET : return win32.FILE_BEGIN;
-    case SEEK_CUR : return win32.FILE_CURRENT;
-    case SEEK_END : return win32.FILE_END;
-    default :
+    switch (x)
+    case (SEEK_SET) return win32.FILE_BEGIN;
+    case (SEEK_CUR) return win32.FILE_CURRENT;
+    case (SEEK_END) return win32.FILE_END;
+    else {
         assert(false);
         return 0u;
     }

@@ -80,6 +80,40 @@ Language changes:
   (It's currently unchecked by the compiler, though.) If you need to pass potentially
   aliasing mutable references or capture argument references, use Pointer[T] arguments.
   Pointers remain unrestricted.
+* Switch syntax has been changed.
+    // 0.0
+    switch (input) {
+    case A:
+        a();
+        break;
+    case B:
+        b1();
+        b2();
+        break;
+    case C:
+    case D:
+        cd();
+        break;
+
+    default:
+        z();
+        break;
+    }
+
+    // 0.1
+    switch (input)
+    case (A)
+        a();
+    case (B) {
+        b1();
+        b2();
+    }
+    case (C, D) {
+        cd();
+    }
+    else {
+        z();
+    }
 
 Library changes:
 * The bitwise operation functions have been given shorter names:

@@ -340,11 +340,6 @@ static void printStatement(ostream &out, const Statement *x) {
             << ", " << y->defaultCase << ")";
         break;
     }
-    case CASE_BODY : {
-        const CaseBody *y = (const CaseBody *)x;
-        out << "CaseBody(" << y->statements << ")";
-        break;
-    }
     case EXPR_STATEMENT : {
         const ExprStatement *y = (const ExprStatement *)x;
         out << "ExprStatement(" << y->expr << ")";

@@ -248,7 +248,6 @@ struct UpdateAssignment;
 struct Goto;
 struct Switch;
 struct CaseBlock;
-struct CaseBody;
 struct Return;
 struct If;
 struct ExprStatement;
@@ -394,7 +393,6 @@ typedef Pointer<UpdateAssignment> UpdateAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
 typedef Pointer<Switch> SwitchPtr;
 typedef Pointer<CaseBlock> CaseBlockPtr;
-typedef Pointer<CaseBody> CaseBodyPtr;
 typedef Pointer<Return> ReturnPtr;
 typedef Pointer<If> IfPtr;
 typedef Pointer<ExprStatement> ExprStatementPtr;
@@ -1177,14 +1175,6 @@ struct CaseBlock : public ANode {
     StatementPtr body;
     CaseBlock(ExprListPtr caseLabels, StatementPtr body)
         : ANode(CASE_BLOCK), caseLabels(caseLabels), body(body) {}
-};
-
-struct CaseBody : public Statement {
-    vector<StatementPtr> statements;
-    CaseBody()
-        : Statement(CASE_BODY) {}
-    CaseBody(const vector<StatementPtr> &statements)
-        : Statement(CASE_BODY), statements(statements) {}
 };
 
 struct ExprStatement : public Statement {

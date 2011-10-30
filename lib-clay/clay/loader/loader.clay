@@ -101,17 +101,13 @@ private addGlobal(module, visibility, name:ast.Identifier, x) {
 }
 
 overload addGlobal(module, visibility, name:ast.Identifier, x:SymbolTableEntry) {
-    switch (globalVisibility(visibility)) {
-    case ast.PRIVATE :
+    switch (globalVisibility(visibility))
+    case (ast.PRIVATE)
         addPrivateGlobal(module, name, x);
-        break;
-    case ast.PUBLIC :
+    case (ast.PUBLIC)
         addPublicGlobal(module, name, x);
-        break;
-    default :
+    else
         assert(false);
-        break;
-    }
 }
 
 private addPrivateGlobal(module, name:ast.Identifier, x:SymbolTableEntry) {

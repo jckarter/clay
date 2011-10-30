@@ -466,11 +466,11 @@ overload unmarshalFrom(context: UnmarshalContext,
     static SharedPointer[T]
 ) {
     var mode, begin = ..unmarshalFrom(context, begin_, end, UInt8); 
-    switch (mode) {
-    case SHARED_POINTER_NULL: {
+    switch (mode)
+    case (SHARED_POINTER_NULL) {
         return nullShared(UnmarshaledType(T)), begin;
     }
-    case SHARED_POINTER_REF: {
+    case (SHARED_POINTER_REF) {
         var id = MarshalSize();
         id, begin = ..unmarshalFrom(context, begin, end, MarshalSize);
         var pointerState = lookup(context.pointers, id);
@@ -482,7 +482,7 @@ overload unmarshalFrom(context: UnmarshalContext,
         ptr^.refCount += 1;
         return SharedPointer[UnmarshaledType(T)](ptr), begin;
     }
-    case SHARED_POINTER_DATA: {
+    case (SHARED_POINTER_DATA) {
         var id = MarshalSize();
         id, begin = ..unmarshalFrom(context, begin, end, MarshalSize);
         if (not null?(lookup(context.pointers, id)))
@@ -499,7 +499,7 @@ overload unmarshalFrom(context: UnmarshalContext,
             throw ex;
         }
     }
-    default:
+    else {
         throw UnmarshalInvalidObjectGraphData();
     }
 }

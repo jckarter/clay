@@ -32,28 +32,28 @@ enum MappingMode (
 );
 
 private modeProtection(mode) {
-    switch (mode) {
-    case MAP_READ :
+    switch (mode)
+    case (MAP_READ)
         return win32.PAGE_READONLY;
-    case MAP_READ_WRITE :
+    case (MAP_READ_WRITE)
         return win32.PAGE_READWRITE;
-    case MAP_COPY_ON_WRITE :
+    case (MAP_COPY_ON_WRITE)
         return win32.PAGE_WRITECOPY;
-    default :
+    else {
         assert(false);
         return 0u;
     }
 }
 
 private modeAccess(mode) {
-    switch (mode) {
-    case MAP_READ :
+    switch (mode)
+    case (MAP_READ)
         return win32.FILE_MAP_READ;
-    case MAP_READ_WRITE :
+    case (MAP_READ_WRITE)
         return win32.FILE_MAP_WRITE;
-    case MAP_COPY_ON_WRITE :
+    case (MAP_COPY_ON_WRITE)
         return win32.FILE_MAP_COPY;
-    default :
+    else {
         assert(false);
         return 0u;
     }

@@ -275,7 +275,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     if (x->defaultCase.ptr())
         *nextPtr = x->defaultCase;
     else
-        *nextPtr = new Break();
+        *nextPtr = NULL;
 
     block->statements.push_back(root);
 

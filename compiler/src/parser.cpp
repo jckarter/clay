@@ -1264,19 +1264,26 @@ static bool returnStatement(StatementPtr &x) {
     return true;
 }
 
+static bool optElse(StatementPtr &x) {
+    int p = save();
+    if (!keyword("else")) {
+        restore(p);
+        return true;
+    }
+    return statement(x);
+}
+
 static bool ifStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y;
-    StatementPtr z, z2;
+    ExprPtr condition;
+    StatementPtr thenPart, elsePart;
     if (!keyword("if")) return false;
     if (!symbol("(")) return false;
-    if (!expression(y)) return false;
+    if (!expression(condition)) return false;
     if (!symbol(")")) return false;
-    if (!statement(z)) return false;
-    int p = save();
-    if (!keyword("else") || !statement(z2))
-        restore(p);
-    x = new If(y, z, z2);
+    if (!statement(thenPart)) return false;
+    if (!optElse(elsePart)) return false;
+    x = new If(condition, thenPart, elsePart);
     x->location = location;
     return true;
 }
@@ -1290,37 +1297,11 @@ static bool caseLabel(ExprPtr &x) {
     return true;
 }
 
-static bool caseLabelList(ExprListPtr &x) {
-    ExprPtr a;
-    if (!caseLabel(a)) return false;
-    x = new ExprList(a);
-    while (true) {
-        int p = save();
-        if (!caseLabel(a)) {
-            restore(p);
-            break;
-        }
-        x->add(a);
-    }
-    return true;
-}
-
-static bool caseBody(StatementPtr &x) {
-    LocationPtr location = currentLocation();
-    StatementPtr a;
-    if (!blockItem(a)) return false;
-    vector<StatementPtr> statements;
-    statements.push_back(a);
-    while (true) {
-        int p = save();
-        if (!blockItem(a)) {
-            restore(p);
-            break;
-        }
-        statements.push_back(a);
-    }
-    x = new CaseBody(statements);
-    x->location = location;
+static bool caseList(ExprListPtr &x) {
+    if (!keyword("case")) return false;
+    if (!symbol("(")) return false;
+    if (!expressionList(x)) return false;
+    if (!symbol(")")) return false;
     return true;
 }
 
@@ -1328,8 +1309,8 @@ static bool caseBlock(CaseBlockPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr caseLabels;
     StatementPtr body;
-    if (!caseLabelList(caseLabels)) return false;
-    if (!caseBody(body)) return false;
+    if (!caseList(caseLabels)) return false;
+    if (!statement(body)) return false;
     x = new CaseBlock(caseLabels, body);
     x->location = location;
     return true;
@@ -1351,21 +1332,6 @@ static bool caseBlockList(vector<CaseBlockPtr> &x) {
     return true;
 }
 
-static bool defaultCase(StatementPtr &x) {
-    if (!keyword("default")) return false;
-    if (!symbol(":")) return false;
-    return caseBody(x);
-}
-
-static bool optDefaultCase(StatementPtr &x) {
-    int p = save();
-    if (!defaultCase(x)) {
-        restore(p);
-        x = NULL;
-    }
-    return true;
-}
-
 static bool switchStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr expr;
@@ -1373,12 +1339,10 @@ static bool switchStatement(StatementPtr &x) {
     if (!symbol("(")) return false;
     if (!expression(expr)) return false;
     if (!symbol(")")) return false;
-    if (!symbol("{")) return false;
     vector<CaseBlockPtr> caseBlocks;
     if (!caseBlockList(caseBlocks)) return false;
     StatementPtr defaultCase;
-    if (!optDefaultCase(defaultCase)) return false;
-    if (!symbol("}")) return false;
+    if (!optElse(defaultCase)) return false;
     x = new Switch(expr, caseBlocks, defaultCase);
     x->location = location;
     return true;

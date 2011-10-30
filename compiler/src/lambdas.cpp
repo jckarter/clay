@@ -348,13 +348,6 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case CASE_BODY : {
-        CaseBody *y = (CaseBody *)x.ptr();
-        for (unsigned i = 0; i < y->statements.size(); ++i)
-            convertFreeVars(y->statements[i], env, ctx);
-        break;
-    }
-
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
         convertFreeVars(y->expr, env, ctx);

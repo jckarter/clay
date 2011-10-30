@@ -1893,19 +1893,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
         Switch *x = (Switch *)stmt.ptr();
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
-        analyzeStatement(x->desugared, env, ctx);
-        return SA_FALLTHROUGH;
-    }
-
-    case CASE_BODY : {
-        CaseBody *x = (CaseBody *)stmt.ptr();
-        for (unsigned i = 0; i < x->statements.size(); ++i) {
-            StatementPtr y = x->statements[i];
-            StatementAnalysis sa = analyzeStatement(y, env, ctx);
-            if (sa != SA_FALLTHROUGH)
-                return sa;
-        }
-        return SA_FALLTHROUGH;
+        return analyzeStatement(x->desugared, env, ctx);
     }
 
     case EXPR_STATEMENT :

@@ -335,14 +335,6 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
-    case CASE_BODY : {
-        CaseBody *y = (CaseBody *)x.ptr();
-        CaseBodyPtr z = new CaseBody();
-        clone(y->statements, z->statements);
-        out = z.ptr();
-        break;
-    }
-
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
         out = new ExprStatement(clone(y->expr));

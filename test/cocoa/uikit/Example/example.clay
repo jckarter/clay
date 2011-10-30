@@ -35,22 +35,16 @@ record ExampleController = newClass(#"ExampleController", NSObject,
     ClassMethods(),
     InstanceMethods(
         (#"performMath:", IBAction((self, sender) => {
-            switch (Int(sender.selectedSegmentIndex())) {
-            case 0:
+            switch (Int(sender.selectedSegmentIndex()))
+            case (0)
                 _performMath(self, add);
-                break;
-            case 1:
+            case (1)
                 _performMath(self, subtract);
-                break;
-            case 2:
+            case (2)
                 _performMath(self, multiply);
-                break;
-            case 3:
+            case (3)
                 _performMath(self, divide);
-                break;
-            default:
-                break;
-            }
+            else {}
         })),
     ),
 );
