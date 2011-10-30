@@ -225,3 +225,7 @@ overload _valueIndex(static n, static value, static value, ..etc) = n;
 [value]
 valueIndex(static value, ..etc) = _valueIndex(static 0, static value, ..etc);
 
+
+//
+// generate a list of non-static integers
+[n] integers(static n) = ..mapValues(unwrapStatic, ..staticIntegers(static n));
