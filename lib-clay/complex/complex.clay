@@ -46,12 +46,21 @@ inline overload Complex(a:Long) = Complex(Double(a), Double(0));
 [T | Complex?(T)]
 ComplexType(z:T) = Type(real(z));
 
+[T | Complex?(T)]
+overload ComplexType(static T) = T;
+
 [T | Float?(T)]
 overload ComplexType(static T) = Type(Complex(T()));
 
 [C | Complex?(C)]
 overload C() returned:C {}
 
+[T | Complex?(T)]
+inline overload Complex32(a:T) = Complex(Float(real(a)), Float(imag(a)));
+[T | Complex?(T)]
+inline overload Complex64(a:T) = Complex(Double(real(a)), Double(imag(a)));
+[T | Complex?(T)]
+inline overload Complex80(a:T) = Complex(Real(real(a)), Real(imag(a)));
 [T | Numeric?(T)]
 inline overload Complex32(a:T) = Complex(Float(a), Float(0));
 [T | Numeric?(T)]
