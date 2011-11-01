@@ -94,7 +94,7 @@ class TestCase(object):
             if not os.path.isdir(fullpath):
                 continue
             findTestCase(fullpath, self)
-    
+
     def loadTest(self, testfile):
         TestCase.allCases.append(self)
         self.testfile = testfile
@@ -158,7 +158,7 @@ class TestCase(object):
 
     def removefile(self, filename) :
         # on windows, sometimes, deleting a file
-        # immediately after executing it 
+        # immediately after executing it
         # results in a 'access denied' error.
         # so we wait and try again a few times.
         attempts = 1
@@ -172,7 +172,7 @@ class TestCase(object):
 class TestModuleCase(TestCase):
     def match(self, resultout, resulterr, returncode) :
         return returncode == 0
-        
+
 
 #
 # runtests
@@ -206,9 +206,9 @@ def runTests() :
     if len(failed) == 0:
         print "\nPASSED ALL %d TESTS" % len(testcases)
     else:
-        print "\nFailed tests:" 
+        print "\nFailed tests:"
         print "\n".join(failed)
-        print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases)) 
+        print "\nFAILED %d OF %d TESTS" % (len(failed), len(testcases))
 
 
 def main() :

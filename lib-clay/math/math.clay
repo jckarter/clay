@@ -35,7 +35,6 @@ alias M_SQRT1_2l=	0.7071067811865475244008443621048490_f80;  /* 1/sqrt(2) */
 
 procedure pow;
 procedure abs;
-procedure div;
 procedure acos;
 procedure asin;
 procedure atan;
@@ -104,6 +103,8 @@ procedure fma;
 procedure scalb;
 procedure llrint;
 procedure llround;
+procedure proj;
+procedure arg;
 
 
 overload abs(x:Int) = libc.libc.abs(x);
@@ -112,16 +113,9 @@ overload abs(x:Float) = libc.fabsf(x);
 overload abs(x:Double) = libc.fabs(x);
 overload abs(x:Real) = libc.fabsl(x);
 
-overload div(x:Int,y:Int) = libc.div(x,y);
-overload div(x:Long,y:Long) = libc.lldiv(x,y);
-overload div(x:Int,y:Long) = libc.lldiv(Long(x),y);
-overload div(x:Long,y:Int) = libc.lldiv(x,Long(y));
-
-
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);
 overload acos(x:Real) = libc.acosl(x);
-
 
 overload asin(x:Double) = libc.asin(x);
 overload asin(x:Float) = libc.asinf(x);
@@ -530,39 +524,12 @@ overload llround(x:Double) = libc.llround(x);
 overload llround(x:Float) = libc.llroundf(x);
 overload llround(x:Real) = libc.llroundl(x);
 
-alias FP_NAN = 0;
-alias FP_INFINITE = 1;
-alias FP_ZERO = 2;
-alias FP_SUBNORMAL = 3;
-alias FP_NORMAL = 4;
-
-alias _IEEE_ = 4294967295;
-alias _SVID_ = 0;
-alias _XOPEN_ = 1;
-alias _POSIX_ = 2;
-alias _ISOC_ = 3;
-
-alias _LIB_VERSION_TYPE = Int;
-
-external _LIB_VERSION : _LIB_VERSION_TYPE;
-
-record Struct_exception (
-    type : Int,
-    name : Pointer[CChar],
-    arg1 : Double,
-    arg2 : Double,
-    retval : Double,
-);
-
-matherr(exc:Pointer[Struct_exception]) = libc.matherr(exc);
-
-
 
 inline overload abs(z:Complex64) = libc.cabs(z);
 inline overload abs(z:Complex32) = libc.cabsf(z);
 inline overload abs(z:Complex80) = libc.cabsl(z);
 
-inline arg(z:Complex64) = libc.carg(z);
+inline overload arg(z:Complex64) = libc.carg(z);
 inline overload arg(z:Complex32) = libc.cargf(z);
 inline overload arg(z:Complex80) = libc.cargl(z);
 
@@ -625,21 +592,19 @@ inline overload log(z:Complex80) = libc.clogl(z);
 inline overload pow(z:Complex64,y:Complex64) = libc.cpow(z,y);
 inline overload pow(z:Complex32,y:Complex32) = libc.cpowf(z,y);
 inline overload pow(z:Complex80,y:Complex80) = libc.cpowl(z,y);
-/*
-inline overload pow(z:Complex64,y:Complex32) = libc.cpow(z,complexTo(y,Double));
-inline overload pow(z:Complex80,y:Complex32) = libc.cpowl(z,complexTo(y,Real));
-inline overload pow(z:Complex80,y:Complex64) = libc.cpowl(z,complexTo(y,Real));
-inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(complexTo(z,Real),y);
-inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(complexTo(z,Double),y);
-inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(complexTo(z,Real),y);
-*/
-
+inline overload pow(z:Complex64,y:Complex32) = libc.cpow(z,Complex64(y));
+inline overload pow(z:Complex80,y:Complex32) = libc.cpowl(z,Complex80(y));
+inline overload pow(z:Complex80,y:Complex64) = libc.cpowl(z,Complex80(y));
+inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(Complex80(z),y);
+inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
+inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
+//Add complex^float & float^complex overloads
 
 inline overload sqrt(z:Complex64) = libc.csqrt(z);
 inline overload sqrt(z:Complex32) = libc.csqrtf(z);
 inline overload sqrt(z:Complex80) = libc.csqrtl(z);
 
-inline proj(z:Complex64) = libc.cproj(z);
+inline overload proj(z:Complex64) = libc.cproj(z);
 inline overload proj(z:Complex32) = libc.cprojf(z);
 inline overload proj(z:Complex80) = libc.cprojl(z);
 

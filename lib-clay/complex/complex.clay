@@ -1,10 +1,11 @@
 
+enum ComplexPart {REAL, IMAG}
+
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
 overload Complex?(static Complex80) = true;
 [A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
-
 
 
 private procedure re;
@@ -24,6 +25,8 @@ inline real(z:C) = re(z)^;
 [C | Complex?(C)]
 inline imag(z:C) = im(z)^;
 
+
+
 inline Complex(a:Float,b:Float) r:Complex32 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Double,b:Double) r:Complex64 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Real,b:Real) r:Complex80 { re(r)^ = a; im(r)^ = b;}
@@ -39,6 +42,12 @@ inline overload Complex(a:T) = Complex(a,T(0));
 inline overload Complex(a:Int) = Complex(Float(a), Float(0));
 inline overload Complex(a:Long) = Complex(Double(a), Double(0));
 
+
+[T | Complex?(T)]
+ComplexType(z:T) = Type(real(z));
+
+[T | Float?(T)]
+overload ComplexType(static T) = Type(Complex(T()));
 
 [C | Complex?(C)]
 overload C() returned:C {}
@@ -120,11 +129,16 @@ inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),ima
 
 [T,U | Complex?(T,U)]
 inline overload divide(z:T, y:U) {
-    var r = z*y;
-    var b = real(y)*real(y)+imag(y)*imag(y);
-    re(r)^ = real(r)/b;
-    im(r)^ = imag(r)/b;
-    return r;
+    var a,b,c,d = re(z)^,im(z)^,re(y)^,im(y)^;
+    if (c < d){
+        var ratio = c / d;
+        var denom = (c * ratio) + d;
+        return Complex(((a * ratio) + b) / denom, ((b * ratio) - a) / denom);
+    }else{
+        var ratio = d / c;
+        var denom = (d * ratio) + c;
+        return Complex(((b * ratio) + a) / denom, (b - (a * ratio)) / denom);
+    }
 }
 
 [T,C | Float?(T) and Complex?(C)]
