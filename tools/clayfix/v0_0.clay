@@ -35,59 +35,111 @@ overload FixState(tokens:SourceTokens, outputFile:File)
 //
 
 fixOneToken(tokenNumber:SizeT, state:FixState) {
+    assert(tokenNumber == state.printedToken);
     ref token = state.tokens.vector[tokenNumber];
     ref fileData = state.tokens.file.data;
     assert(token.range.begin >= state.printedIndex, "token begins at ", token.range.begin, " but we already printed to ", state.printedIndex);
     if (token.range.begin > state.printedIndex)
         printTo(state.outputFile, sliced(fileData, state.printedIndex, token.range.begin));
 
+    var name = sliced(fileData, token.range.begin, token.range.end);
+
     var printDefault = () -> {
-        printTo(state.outputFile,
-            sliced(fileData, token.range.begin, token.range.end)
-        );
+        printTo(state.outputFile, name);
+    };
+
+    var printInstead = (..s) -> {
+        printTo(state.outputFile, ..s);
     };
 
     switch (token.kind)
     case (KEYWORD) {
         switch (token.subKind)
         case (keywordIndex("procedure"))
-            printTo(state.outputFile, "define");
+            printInstead("define");
         case (keywordIndex("callbyname"))
-            printTo(state.outputFile, "alias");
+            printInstead("alias");
         case (keywordIndex("lvalue"))
-            printTo(state.outputFile, "ref");
+            printInstead("ref");
         else
             printDefault();
     }
     case (IDENTIFIER) {
-        var name = sliced(fileData, token.range.begin, token.range.end);
         switch (name)
         case ("shiftLeft")
-            printTo(state.outputFile, "bitshl");
+            printInstead("bitshl");
         case ("shiftRight")
-            printTo(state.outputFile, "bitshr");
+            printInstead("bitshr");
         case ("rotateLeft")
-            printTo(state.outputFile, "bitrol");
+            printInstead("bitrol");
         case ("rotateRight")
-            printTo(state.outputFile, "bitror");
+            printInstead("bitror");
         case ("bitwiseAnd")
-            printTo(state.outputFile, "bitand");
+            printInstead("bitand");
         case ("bitwiseOr")
-            printTo(state.outputFile, "bitor");
+            printInstead("bitor");
         case ("bitwiseXor")
-            printTo(state.outputFile, "bitxor");
+            printInstead("bitxor");
         case ("bitwiseNot")
-            printTo(state.outputFile, "bitnot");
+            printInstead("bitnot");
         case ("bitwiseAndc")
-            printTo(state.outputFile, "bitandc");
+            printInstead("bitandc");
         case ("bitwiseBlend")
-            printTo(state.outputFile, "bitblend");
+            printInstead("bitblend");
         case ("bitwiseCast")
-            printTo(state.outputFile, "bitcast");
+            printInstead("bitcast");
         case ("allocateShared")
-            printTo(state.outputFile, "newShared");
+            printInstead("newShared");
         case ("allocateUnique")
-            printTo(state.outputFile, "newUnique");
+            printInstead("newUnique");
+        case ("INT_MIN")
+            printInstead("Least(Int)");
+        case ("INT_MAX")
+            printInstead("Greatest(Int)");
+        case ("UINT_MAX")
+            printInstead("Greatest(UInt)");
+        case ("LONG_MIN")
+            printInstead("Least(Long)");
+        case ("LONG_MAX")
+            printInstead("Greatest(Long)");
+        case ("ULONG_MAX")
+            printInstead("Greatest(ULong)");
+        case ("INT8_MIN")
+            printInstead("Least(Int8)");
+        case ("INT8_MAX")
+            printInstead("Greatest(Int8)");
+        case ("UINT8_MAX")
+            printInstead("Greatest(UInt8)");
+        case ("INT16_MIN")
+            printInstead("Least(Int16)");
+        case ("INT16_MAX")
+            printInstead("Greatest(Int16)");
+        case ("UINT16_MAX")
+            printInstead("Greatest(UInt16)");
+        case ("INT32_MIN")
+            printInstead("Least(Int32)");
+        case ("INT32_MAX")
+            printInstead("Greatest(Int32)");
+        case ("UINT32_MAX")
+            printInstead("Greatest(UInt32)");
+        case ("INT64_MIN")
+            printInstead("Least(Int64)");
+        case ("INT64_MAX")
+            printInstead("Greatest(Int64)");
+        case ("UINT64_MAX")
+            printInstead("Greatest(UInt64)");
+        case ("PTRINT_MIN")
+            printInstead("Least(PtrInt)");
+        case ("PTRINT_MAX")
+            printInstead("Greatest(PtrInt)");
+        case ("UPTRINT_MAX")
+            printInstead("Greatest(UPtrInt)");
+        case ("SSIZET_MIN")
+            printInstead("Least(SSizeT)");
+        case ("SSIZET_MAX")
+            printInstead("Greatest(SSizeT)");
+        case ("SIZET_MAX")
+            printInstead("Greatest(SizeT)");
         else {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
@@ -99,7 +151,7 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
     }
     case (PUNCTUATION) {
         if (token.subKind == punctuationIndex("..."))
-            printTo(state.outputFile, "..");
+            printInstead("..");
         else
             printDefault();
     }
@@ -184,7 +236,8 @@ private writeTokenSuffixed(token:SizeT, suffix, state:FixState) : {
 }
 
 private finishFix(state:FixState) : {
-    printTo(state.outputFile, slicedFrom(state.tokens.file.data, state.printedIndex));
+    fixToken(size(state.tokens.vector) - 1, state);
+    // printTo(state.outputFile, slicedFrom(state.tokens.file.data, state.printedIndex));
     //DEBUGTAGS printTo(state.outputFile, "$end$");
 }
 

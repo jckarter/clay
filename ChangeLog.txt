@@ -145,6 +145,14 @@ Library changes:
 
     // 0.1
     foo = new(Foo(1));
+* The INT_MIN, INT_MAX etc. constants have been replaced with Least(T) and Greatest(T)
+  functions.
+    INT8_MIN    ==> Least(Int8)
+    INT8_MAX    ==> Greatest(Int8)
+    INT16_MIN   ==> Least(Int16)
+    INT16_MAX   ==> Greatest(Int16)
+    etc.
+  LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point types.
 
 Compiler frontend changes:
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
