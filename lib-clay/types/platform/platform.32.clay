@@ -9,13 +9,3 @@ alias UPtrInt = UInt32;
 
 alias CLong = Int32;
 alias CULong = UInt32;
-
-
-
-//
-// limits
-//
-
-alias PTRINT_MIN = INT32_MIN;
-alias PTRINT_MAX = INT32_MAX;
-alias UPTRINT_MAX = UINT32_MAX;

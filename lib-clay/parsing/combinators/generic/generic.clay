@@ -363,19 +363,19 @@ repeatedAs(static TokenInput, result:Result, min:Int, max:Int, forward _parser:P
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
 zeroOrMore(static TokenInput, forward parser:Parser) =
-    repeated(TokenInput, 0, INT_MAX, parser);
+    repeated(TokenInput, 0, Greatest(Int), parser);
 
 [TokenInput, Parser | Parser?(TokenInput, Parser)]
 oneOrMore(static TokenInput, forward parser:Parser) =
-    repeated(TokenInput, 1, INT_MAX, parser);
+    repeated(TokenInput, 1, Greatest(Int), parser);
 
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
 zeroOrMoreAs(static TokenInput, result:Result, forward parser:Parser) =
-    repeatedAs(TokenInput, result, 0, INT_MAX, parser);
+    repeatedAs(TokenInput, result, 0, Greatest(Int), parser);
 
 [TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
 oneOrMoreAs(static TokenInput, result:Result, forward parser:Parser) =
-    repeatedAs(TokenInput, result, 1, INT_MAX, parser);
+    repeatedAs(TokenInput, result, 1, Greatest(Int), parser);
 
 
 

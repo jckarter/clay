@@ -16,7 +16,7 @@ overload parseInt8(s:S) {
     var value = libc.strtol(p, &end, 0);
     if (end^ != 0)
         error("invalid Int8: ", s);
-    if ((errno() == ERANGE) or (value < INT8_MIN) or (value > INT8_MAX))
+    if ((errno() == ERANGE) or value < Least(Int8) or value > Greatest(Int8))
         error("Int8 out of range: ", s);
     return Int8(value);
 }
@@ -31,7 +31,7 @@ overload parseUInt8(s:S) {
     var value = libc.strtoul(p, &end, 0);
     if (end^ != 0)
         error("invalid UInt8: ", s);
-    if ((errno() == ERANGE) or (value > UINT8_MAX))
+    if ((errno() == ERANGE) or value > Greatest(UInt8))
         error("UInt8 out of range: ", s);
     return UInt8(value);
 }
@@ -52,7 +52,7 @@ overload parseInt16(s:S) {
     var value = libc.strtol(p, &end, 0);
     if (end^ != 0)
         error("invalid Int16: ", s);
-    if ((errno() == ERANGE) or (value < INT16_MIN) or (value > INT16_MAX))
+    if ((errno() == ERANGE) or value < Least(Int16) or value > Greatest(Int16))
         error("Int16 out of range: ", s);
     return Int16(value);
 }
@@ -67,7 +67,7 @@ overload parseUInt16(s:S) {
     var value = libc.strtoul(p, &end, 0);
     if (end^ != 0)
         error("invalid UInt16: ", s);
-    if ((errno() == ERANGE) or (value > UINT16_MAX))
+    if ((errno() == ERANGE) or value > Greatest(UInt16))
         error("UInt16 out of range: ", s);
     return UInt16(value);
 }
@@ -88,7 +88,7 @@ overload parseInt32(s:S) {
     var value = libc.strtoll(p, &end, 0);
     if (end^ != 0)
         error("invalid Int32: ", s);
-    if ((errno() == ERANGE) or (value < INT32_MIN) or (value > INT32_MAX))
+    if ((errno() == ERANGE) or (value < Least(Int32)) or (value > Greatest(Int32)))
         error("Int32 out of range: ", s);
     return Int32(value);
 }
@@ -103,7 +103,7 @@ overload parseUInt32(s:S) {
     var value = libc.strtoull(p, &end, 0);
     if (end^ != 0)
         error("invalid UInt32: ", s);
-    if ((errno() == ERANGE) or (value > UINT32_MAX))
+    if ((errno() == ERANGE) or (value > Greatest(UInt32)))
         error("UInt32 out of range: ", s);
     return UInt32(value);
 }
