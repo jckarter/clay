@@ -1,0 +1,46 @@
+test(s) {
+    print(s, "... ");
+    switch (s)
+    case ("chocolate chip")
+        println("My favorite!");
+    case ("molasses")
+        println("Gross!");
+    else
+        println("Dunno...");
+}
+
+main() {
+    var s0 = "chocolate chip";
+    var s1 = "molasses";
+    var s2 = "strawberry";
+    var s3 = "chocolate chip molasses strawberry";
+
+    var S0 = String("chocolate chip");
+    var S1 = String("molasses");
+    var S2 = String("strawberry");
+    var S3 = String("chocolate chip molasses strawberry");
+
+    test(s0);
+    test(s1);
+    test(s2);
+
+    test(sliced(s3, 0,14));
+    test(sliced(s3,15,23));
+    test(sliced(s3,24,34));
+
+    test(slice(s3, 0,14));
+    test(slice(s3,15,23));
+    test(slice(s3,24,34));
+
+    test(S0);
+    test(S1);
+    test(S2);
+
+    test(sliced(S3, 0,14));
+    test(sliced(S3,15,23));
+    test(sliced(S3,24,34));
+
+    test(slice(S3, 0,14));
+    test(slice(S3,15,23));
+    test(slice(S3,24,34));
+}
