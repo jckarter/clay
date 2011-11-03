@@ -152,8 +152,10 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(const string &s) {
+static string cleanNumericSeparator(int op, const string &s) {
     string out;
+    if (op == MINUS)
+        out.push_back('-');
     for (unsigned i = 0; i < s.size(); ++i) {
         if (s[i] != '_')
             out.push_back(s[i]);
@@ -161,7 +163,7 @@ static string cleanNumericSeparator(const string &s) {
     return out;
 }
 
-static bool intLiteral(ExprPtr &x) {
+static bool intLiteral(int op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -169,17 +171,17 @@ static bool intLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new IntLiteral(cleanNumericSeparator(t->str), t2->str);
+        x = new IntLiteral(cleanNumericSeparator(op, t->str), t2->str);
     }
     else {
         restore(p);
-        x = new IntLiteral(cleanNumericSeparator(t->str));
+        x = new IntLiteral(cleanNumericSeparator(op, t->str));
     }
     x->location = location;
     return true;
 }
 
-static bool floatLiteral(ExprPtr &x) {
+static bool floatLiteral(int op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -187,11 +189,11 @@ static bool floatLiteral(ExprPtr &x) {
     TokenPtr t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
-        x = new FloatLiteral(cleanNumericSeparator(t->str), t2->str);
+        x = new FloatLiteral(cleanNumericSeparator(op, t->str), t2->str);
     }
     else {
         restore(p);
-        x = new FloatLiteral(cleanNumericSeparator(t->str));
+        x = new FloatLiteral(cleanNumericSeparator(op, t->str));
     }
     x->location = location;
     return true;
@@ -241,8 +243,8 @@ static bool identifierLiteral(ExprPtr &x) {
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
-    if (restore(p), intLiteral(x)) return true;
-    if (restore(p), floatLiteral(x)) return true;
+    if (restore(p), intLiteral(PLUS, x)) return true;
+    if (restore(p), floatLiteral(PLUS, x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     if (restore(p), identifierLiteral(x)) return true;
@@ -517,11 +519,22 @@ static bool plusOrMinus(int &op) {
     return true;
 }
 
+static bool signedLiteral(int op, ExprPtr &x) {
+    int p = save();
+    if (restore(p), intLiteral(op, x)) return true;
+    if (restore(p), floatLiteral(op, x)) return true;
+    return false;
+}
+
 static bool signExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     int op;
     if (!plusOrMinus(op)) return false;
     ExprPtr b;
+    int p = save();
+    if (signedLiteral(op, x))
+        return true;
+    restore(p);
     if (!suffixExpr(b)) return false;
     x = new UnaryOp(op, b);
     x->location = location;
@@ -1053,7 +1066,7 @@ static bool dottedNameRef(ExprPtr &x) {
 static bool atomicPattern(ExprPtr &x) {
     int p = save();
     if (dottedNameRef(x)) return true;
-    if (restore(p), intLiteral(x)) return true;
+    if (restore(p), intLiteral(PLUS, x)) return true;
     return false;
 }
 
