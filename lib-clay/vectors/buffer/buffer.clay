@@ -6,9 +6,10 @@ import vectors.generic.*;
 //
 
 record BufferVector[T] (
+    row: Orientation,
     begin: Pointer[T],
     end: Pointer[T],
-    current: Pointer[T],
+    current: Pointer[T]
 );
 
 
@@ -32,6 +33,7 @@ overload ContiguousSequence?(static BufferVector[T]) = true;
 
 [T | PODType?(T)]
 overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) returned:BufferVector[T] {
+    returned.row = COLUMN;
     returned.begin = begin;
     returned.end = end;
     returned.current = current;
@@ -81,8 +83,16 @@ overload vectorData(a:BufferVector[T]) = a.begin;
 overload vectorSize(a:BufferVector[T]) = SizeT(a.current - a.begin);
 
 [T]
+overload vectorOrientation(a:BufferVector[T]) = a.row;
+
+[T]
 overload vectorSetSize(a:BufferVector[T], size:SizeT) {
     a.current = a.begin + size;
+}
+
+[T]
+overload vectorSetOrientation(a:BufferVector[T], n:Orientation) {
+    a.row = n;
 }
 
 [T]

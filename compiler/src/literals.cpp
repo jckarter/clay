@@ -1,5 +1,15 @@
 #include "clay.hpp"
 
+static bool _fp80Enabled = false;
+
+bool fp80Enabled(){
+    return _fp80Enabled;
+}
+
+void setfp80Enabled(bool enabled){
+    _fp80Enabled = enabled;
+}
+
 ValueHolderPtr parseIntLiteral(IntLiteral *x)
 {
     char *ptr = const_cast<char *>(x->value.c_str());
@@ -114,7 +124,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+    else if (x->suffix == "j64" || (x->suffix == "j" && !_fp80Enabled)) {
         double y = strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -123,7 +133,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80") {
+    else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
         long double y = strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
@@ -153,7 +163,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float32Type);
         *((float *)vh->buf) = y;
     }
-    else if ((x->suffix == "f64") || x->suffix.empty()) {
+    else if ((x->suffix == "f64") || (x->suffix.empty() && !_fp80Enabled)) {
         double y = strtod(ptr, &end);
         if (*end != 0)
             error("invalid float64 literal");
@@ -162,7 +172,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "f80") {
+    else if (x->suffix == "f80" || (x->suffix.empty() && _fp80Enabled)) {
         long double y = strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -181,7 +191,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+    else if (x->suffix == "j64" || (x->suffix == "j" && !_fp80Enabled)) {
         double y = strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -190,7 +200,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80") {
+    else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
         long double y = strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
@@ -220,7 +230,7 @@ ValueHolderPtr parseComplexLiteral(ComplexLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if ((x->suffix == "j") || (x->suffix == "j64")) {
+    else if (x->suffix == "j64" || (x->suffix == "j" && !_fp80Enabled)) {
         double y = strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -229,7 +239,7 @@ ValueHolderPtr parseComplexLiteral(ComplexLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80") {
+    else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
         long double y = strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");

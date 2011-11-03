@@ -74,9 +74,9 @@ static void runModule(llvm::Module *module)
     llvm::ExecutionEngine *engine = eb.create();
     llvm::Function *mainFunc = module->getFunction("main");
     assert(mainFunc);
-    llvm::Function *globalCtors = 
+    llvm::Function *globalCtors =
         module->getFunction("clayglobals_init");
-    llvm::Function *globalDtors = 
+    llvm::Function *globalDtors =
         module->getFunction("clayglobals_destroy");
 
     engine->runFunction(globalCtors, vector<llvm::GenericValue>());
@@ -280,6 +280,7 @@ static void usage(char *argv0)
     cerr << "  -inline           - inline procedures marked 'inline'\n";
     cerr << "  -no-inline        - ignore 'inline' keyword\n";
     cerr << "  -pic              - generate position independent code\n";
+    cerr << "  -f80              - use 80-bit fp as default\n";
     cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run              - execute the program without writing to disk\n";
 #if !(defined(_WIN32) || defined(_WIN64))
@@ -320,6 +321,7 @@ int main(int argc, char **argv) {
     bool emitObject = false;
     bool sharedLib = false;
     bool genPIC = false;
+    bool fp80Enabled = false;
     bool inlineEnabled = true;
     bool exceptions = true;
     bool abortOnError = false;
@@ -380,6 +382,9 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-pic") == 0) {
             genPIC = true;
         }
+        else if (strcmp(argv[i], "-f80") == 0) {
+            fp80Enabled = true;
+        }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
         }
@@ -400,7 +405,7 @@ int main(int argc, char **argv) {
             clayScript += "\n";
         }
         else if (strncmp(argv[i], "-M", 2) == 0) {
-            string modulespec = argv[i]+2; 
+            string modulespec = argv[i]+2;
             if (modulespec.empty()) {
                 cerr << "error: module missing after -M\n";
                 return -1;
@@ -627,6 +632,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    setfp80Enabled(fp80Enabled);
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 

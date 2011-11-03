@@ -1,7 +1,6 @@
 
 import vectors.generic.*;
 
-enum Orientation { ROW, COLUMN }
 
 
 //
@@ -12,7 +11,7 @@ record Vector[T] (
     row:Orientation,
     size:SizeT,
     capacity:SizeT,
-    data:Pointer[T],
+    data:Pointer[T]
 );
 
 
