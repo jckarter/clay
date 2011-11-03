@@ -1,20 +1,53 @@
 ##########
 
-TODO:
+This fork of the Clay language is used to develop and test language additions
+to aid development of scientific and numerical packages. The intention is to
+exploit the conciseness, type genericity, and performance of Clay for user
+friendly light-weight scientific programming.
 
-Add 80-bit floating point support in float lib  ----DONE
-    * Real/Float80 type functions
+So far additions to the compiler & std lib include:
 
-Add complex number support + math lib using libc   ----DONE
 
-Add math wrapper for libc functions  ----DONE
-    * Overloaded math functions
+80-bit floating point support
+-----------------------------
+Float80 (Real) type added to core language. Uses f80 suffix.
+Added a compiler flag (-f80) which compiles double literals as f80.
+This works well on my intel i5 running ArchLinux, but probably needs further
+work to be a complete language feature.
+
+
+Complex number support
+----------------------
+Complex numbers support in the compiler including imaginary literals (j suffix).
+All floating point types are supported as complex components. Basic complex
+number functionality is provided in the accompanying library which is imported
+in prelude.
+This works well as is, however some attention is probably needed to tidy-up
+the expression of literals and need to add real/imag fieldRef to compiler.
+
+
+Math library
+------------
+Overloaded math functions from libm supporting upto 80-bit floating point.
+Covered just about everything in libm/complex.
+
+
+Upcoming Clay libraries:
+    - linalg: Supporting dense/sparse matrices/vectors and many functions
+    based on the functionality of the Meschach c library.
+
+    - numerics: Numerical routines and wrappers e.g. calculus, etc.
+
+    - stats: Basic statistcal routines either native or c wrappers.
+
+    - modelling codes: Some scientific/math modelling routines e.g. inverse
+    laplace, etc.
+
+See seperate project pages on Github for code and progress.
 
 
 
 ##########
-
-
 
 
 Clay
