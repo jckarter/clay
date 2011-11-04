@@ -43,7 +43,7 @@ record Error(msg:String);
 
 instance Exception (Error);
 
-overload Error(..args) = Error(printString(..args));
+overload Error(..args) = Error(str(..args));
 
 [S | String?(S)]
 overload Error(msg:S) = Error(String(msg));

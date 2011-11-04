@@ -496,7 +496,7 @@ private classMethodImp(static T, static sel, fn)
                     ..fn(objectParameter(T), ..msgSendBox(Static[T], sel, ..args))
                 );
             } catch (ex) {
-                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
+                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(str(ex)));
                 // not actually reached
                 throw ex;
             }
@@ -514,7 +514,7 @@ private instanceMethodImp(static T, static sel, fn)
                     ..fn(T(self), ..msgSendBox(T, sel, ..args))
                 );
             } catch (ex) {
-                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(printString(ex)));
+                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(str(ex)));
                 // not actually reached
                 throw ex;
             }

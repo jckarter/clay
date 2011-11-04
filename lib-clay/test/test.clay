@@ -271,7 +271,7 @@ expectException(test: TestStatus, name, expectedException, fn) {
 }
 
 expectPrinted(test: TestStatus, name, expectedOutput, forward ..values) {
-    expectEqual(test, name, expectedOutput, printString(..values));
+    expectEqual(test, name, expectedOutput, str(..values));
 }
 
 record RequiredExpectationFailed();

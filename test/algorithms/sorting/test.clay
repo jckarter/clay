@@ -32,7 +32,7 @@ main() = testMain(
           last = x;
           isFirst = false; 
         } else {
-          expectTrue(test, printString("size(", last, ") <= size(", x, ")"), size(last) <= size(x));
+          expectTrue(test, str("size(", last, ") <= size(", x, ")"), size(last) <= size(x));
           last = x;
         }
       }
@@ -47,7 +47,7 @@ main() = testMain(
       sortBy(sequence, reversed(comparing(x => x.value)));
 
       for(i in range(10)){
-        expectEqual(test, printString("sequence[", i, "].0"), 9 - i, sequence[i].value);
+        expectEqual(test, str("sequence[", i, "].0"), 9 - i, sequence[i].value);
       }
     })
   ])

@@ -9,7 +9,7 @@ fact(n){
 }
 
 baseTestCase(n) = 
-  TestCase(printString("Permuting 1..", n), test => {
+  TestCase(str("Permuting 1..", n), test => {
     var it = Vector[Int](range(1,n+1));
 
     var counter = 0;

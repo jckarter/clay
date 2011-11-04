@@ -151,25 +151,25 @@ alias Foonion = Union[Int, Foo, Bar];
 
 expectEncoding(test, expected, ..Types) {
     expectEqual(test,
-        printString("encoding of (", ..Types, ")"),
+        str("encoding of (", ..Types, ")"),
         expected, encode(..Types)
     );
 }
 
 expectSubclass(test, Super, Sub) {
-    expectTrue(test, printString(Sub, " subclass of ", Super),
+    expectTrue(test, str(Sub, " subclass of ", Super),
         Subclass?(Super, Sub)
     );
 }
 
 expectNotSubclass(test, Super, Sub) {
-    expectFalse(test, printString(Sub, " subclass of ", Super),
+    expectFalse(test, str(Sub, " subclass of ", Super),
         Subclass?(Super, Sub)
     );
 }
 
 __expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
-    expectTF(test, printString(ParamType, " accepts values of ", ValueType),
+    expectTF(test, str(ParamType, " accepts values of ", ValueType),
         MsgSendCompatible?(ParamType, ValueType)
     );
 }
@@ -204,27 +204,27 @@ expectMsgSendNotCompatible(test, ParamType, ValueType) {
 }
 
 expectSelectorTypeEncoding(test, Class, selector, encoding) {
-    expectEqual(test, printString("SelectorTypeEncoding(", Class, ", ", selector, ")"),
+    expectEqual(test, str("SelectorTypeEncoding(", Class, ", ", selector, ")"),
         encoding, SelectorTypeEncoding(Class, selector)
     );
 }
 
 expectMsgSendParamType(test, Type, ParamType) {
-    expectEqual(test, printString("MsgSendParamType(", Type, ")"),
+    expectEqual(test, str("MsgSendParamType(", Type, ")"),
         ParamType, MsgSendParamType(Type)
     );
 }
 
 expectSelectorCallableWith(test, Class, selector, ..T) {
     expectTrue(test,
-        printString(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+        str(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
         SelectorCallableWith?(Class, selector, ..T)
     );
 }
 
 expectSelectorNotCallableWith(test, Class, selector, ..T) {
     expectFalse(test,
-        printString(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+        str(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
         SelectorCallableWith?(Class, selector, ..T)
     );
 }

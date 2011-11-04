@@ -44,7 +44,7 @@ main() = testMain(
       }
 
       for(i in range(5)){
-        expectTrue(test, printString(i, " appeared"), results[i]);
+        expectTrue(test, str(i, " appeared"), results[i]);
       }
     }),
     TestCase("uniform doubles should be in range", test => {

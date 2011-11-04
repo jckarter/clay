@@ -423,21 +423,14 @@ printlnTo(stream, ..x) {
 
 
 //
-// printString, printlnString
+// str, strln
 //
 
-printString(..x) {
+str(forward ..x) {
     var s = String();
     printTo(s, ..x);
     return move(s);
 }
-
-printlnString(..x) {
-    var s = String();
-    printlnTo(s, ..x);
-    return move(s);
-}
-
 
 
 //

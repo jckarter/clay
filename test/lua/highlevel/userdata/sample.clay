@@ -71,7 +71,7 @@ Foo_gc(s:lua.State) {
 }
 
 Foo_tostring(s:lua.State) {
-    var str = printString("Foo (", checkFoo(s, 1), ")");
+    var str = str("Foo (", checkFoo(s, 1), ")");
     lua.pushString(s, str);
     return 1;
 }

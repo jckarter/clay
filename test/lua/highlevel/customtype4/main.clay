@@ -55,7 +55,7 @@ IntArray_size(x:lua.State) {
 
 IntArray_tostring(x:lua.State) {
     ref v = checkIntArray(x, 1);
-    lua.pushString(x, printString("IntArray(", size(v), ")"));
+    lua.pushString(x, str("IntArray(", size(v), ")"));
     return 1;
 }
 

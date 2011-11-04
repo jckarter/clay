@@ -156,6 +156,7 @@ Library changes:
     INT16_MAX   ==> Greatest(Int16)
     etc.
   LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point types.
+* 'printString' has been renamed to 'str'.
 
 Compiler frontend changes:
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
