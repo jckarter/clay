@@ -140,6 +140,8 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
             printInstead("Greatest(SSizeT)");
         case ("SIZET_MAX")
             printInstead("Greatest(SizeT)");
+        case ("printString")
+            printInstead("str");
         else {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
