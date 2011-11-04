@@ -1,0 +1,11 @@
+Clay was originally written by KS Sreeram <ks@claylabs.com> and Tachyon Technologies.
+This fork is maintained by Joe Groff <joe@duriansoftware.com>. The following people
+have made contributions (in no particular order):
+
+David R. MacIver <david@drmaciver.com>
+Marc Fauconneau
+Daniel Kolesa <quaker66@gmail.com>
+Szabó Antal
+Philipp Brüschweiler <blei42@gmail.com>
+
+If your name is missing from this list, let me know at joe@duriansoftware.com.
