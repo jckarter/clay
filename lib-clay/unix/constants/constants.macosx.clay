@@ -25,34 +25,34 @@ alias O_EVTONLY  = 0x8000;
 // flags for 'chmod'/'stat'
 //
 
-alias S_IRWXU = 0700;
-alias S_IRUSR = 0400;
-alias S_IWUSR = 0200;
-alias S_IXUSR = 0100;
+alias S_IRWXU = octal(#"0700");
+alias S_IRUSR = octal(#"0400");
+alias S_IWUSR = octal(#"0200");
+alias S_IXUSR = octal(#"0100");
 
-alias S_IRWXG = 070;
-alias S_IRGRP = 040;
-alias S_IWGRP = 020;
-alias S_IXGRP = 010;
+alias S_IRWXG = octal(#"070");
+alias S_IRGRP = octal(#"040");
+alias S_IWGRP = octal(#"020");
+alias S_IXGRP = octal(#"010");
 
-alias S_IRWXO = 07;
-alias S_IROTH = 04;
-alias S_IWOTH = 02;
-alias S_IXOTH = 01;
+alias S_IRWXO = octal(#"07");
+alias S_IROTH = octal(#"04");
+alias S_IWOTH = octal(#"02");
+alias S_IXOTH = octal(#"01");
 
-alias S_ISUID = 04000;
-alias S_ISGID = 02000;
-alias S_ISVTX = 01000;
+alias S_ISUID = octal(#"04000");
+alias S_ISGID = octal(#"02000");
+alias S_ISVTX = octal(#"01000");
 
-alias S_IFMT   = 0170000;
-alias S_IFIFO  = 0010000;
-alias S_IFCHR  = 0020000;
-alias S_IFDIR  = 0040000;
-alias S_IFBLK  = 0060000;
-alias S_IFREG  = 0100000;
-alias S_IFLNK  = 0120000;
-alias S_IFSOCK = 0140000;
-alias S_IFWHT  = 0160000;
+alias S_IFMT   = octal(#"0170000");
+alias S_IFIFO  = octal(#"0010000");
+alias S_IFCHR  = octal(#"0020000");
+alias S_IFDIR  = octal(#"0040000");
+alias S_IFBLK  = octal(#"0060000");
+alias S_IFREG  = octal(#"0100000");
+alias S_IFLNK  = octal(#"0120000");
+alias S_IFSOCK = octal(#"0140000");
+alias S_IFWHT  = octal(#"0160000");
 
 
 //

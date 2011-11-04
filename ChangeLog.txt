@@ -128,6 +128,9 @@ Language changes:
 * String literals can be delimited with Python-style triple quotes:
     "hello world"
     """hello world"""
+* The \a, \b, and \v and octal escape sequences have been removed.
+* Octal integer literals have been removed. Literals starting with 0 are now
+  interpreted as decimal.
 
 Library changes:
 * The bitwise operation functions have been given shorter names:
@@ -158,9 +161,14 @@ Library changes:
     INT16_MIN   ==> Least(Int16)
     INT16_MAX   ==> Greatest(Int16)
     etc.
-  LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point types.
+  LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point
+  types.
 * 'printString' has been renamed.
     printString ==> str
+* A static octal(#"777") function has been added to the numbers module. to
+  evaluate to an integer given an octal identifier string.
+* The space? function from the characters module no longer considers ASCII 0x0B
+  (formerly known as '\v') a space character.
 
 Compiler frontend changes:
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.

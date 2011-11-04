@@ -180,7 +180,7 @@ static bool symbol(TokenPtr &x) {
 
 
 //
-// hex, octal, and decimal digits
+// hex and decimal digits
 //
 
 static bool hexDigit(int &x) {
@@ -199,14 +199,6 @@ static bool hexDigit(int &x) {
         return true;
     }
     return false;
-}
-
-static bool octalDigit(int &x) {
-    char c;
-    if (!next(c) || (c < '0') || (c > '7'))
-        return false;
-    x = c - '0';
-    return true;
 }
 
 static bool decimalDigit(int &x) {
@@ -231,27 +223,6 @@ static bool hexEscapeChar(char &x) {
     return true;
 }
 
-static bool octalEscapeChar(char c, char &x) {
-    int i = c - '0';
-    int j;
-    char *p = save();
-    if (!octalDigit(j)) {
-        restore(p);
-        x = (char)i;
-        return true;
-    }
-    i = i*8 + j;
-    p = save();
-    if (!octalDigit(j)) {
-        restore(p);
-        x = (char)i;
-        return true;
-    }
-    i = i*8 + j;
-    x = (char)i;
-    return true;
-}
-
 static bool escapeChar(char &x) {
     char c;
     if (!next(c)) return false;
@@ -261,19 +232,17 @@ static bool escapeChar(char &x) {
     case 'n' : x = '\n'; return true;
     case 'r' : x = '\r'; return true;
     case 't' : x = '\t'; return true;
-    case 'a' : x = '\a'; return true;
-    case 'b' : x = '\b'; return true;
     case 'f' : x = '\f'; return true;
-    case 'v' : x = '\v'; return true;
     case '\\' :
     case '\'' :
     case '"' :
+    case '$' :
         x = c; return true;
+    case '0' :
+        x = '\0'; return true;
     case 'x' :
         return hexEscapeChar(x);
     }
-    if ((c >= '0') && (c <= '7'))
-        return octalEscapeChar(c, x);
     return false;
 }
 

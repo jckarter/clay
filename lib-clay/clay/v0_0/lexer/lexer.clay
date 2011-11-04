@@ -340,7 +340,7 @@ private var lexFloatLiteral = modify(
 //
 
 private space?(c) {
-    for (x in " \t\n\r\f\v") {
+    for (x in " \t\n\r\f\x0B") {
         if (c == x)
             return true;
     }

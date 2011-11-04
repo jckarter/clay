@@ -52,7 +52,7 @@ overload RawFile(path:S, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
     if (bitand(flags, unix.O_CREAT) != 0)
-        handle = unix.open(cstring(path), flags, 0644);
+        handle = unix.open(cstring(path), flags, octal(#"0644"));
     else
         handle = unix.open(cstring(path), flags);
     if (handle == -1)

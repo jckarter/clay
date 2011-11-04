@@ -29,6 +29,11 @@ inline overload foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));
 inline overload foldValues(fn, forward x) = forward x;
 
+define foldlValues;
+inline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
+    = foldlValues(fn, fn(x1, x2), ..xs);
+inline overload foldlValues(fn, forward x) = forward x;
+
 define weaveValues;
 inline overload weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);

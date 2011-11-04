@@ -38,7 +38,7 @@ inline overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
 //
 
 space?(c) {
-    switch (c) case (' ', '\r', '\n', '\t', '\f', '\v')
+    switch (c) case (' ', '\r', '\n', '\t', '\f')
         return true;
     else
         return false;
