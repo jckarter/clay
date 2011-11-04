@@ -299,7 +299,7 @@ static bool charToken(TokenPtr &x) {
     return true;
 }
 
-static bool stringToken(TokenPtr &x) {
+static bool singleQuoteStringToken(TokenPtr &x) {
     char c;
     if (!next(c) || (c != '"')) return false;
     string s;
@@ -309,6 +309,37 @@ static bool stringToken(TokenPtr &x) {
             break;
         restore(p);
         if (!oneChar(c)) return false;
+        s.push_back(c);
+    }
+    x = new Token(T_STRING_LITERAL, s);
+    return true;
+}
+
+static bool stringToken(TokenPtr &x) {
+    char *p = save();
+    char c;
+    if (!next(c) || (c != '"')) return false;
+    if (!next(c) || (c != '"') || !next(c) || (c != '"')) {
+        restore(p);
+        return singleQuoteStringToken(x);
+    }
+    string s;
+    while (true) {
+        p = save();
+        if (next(c) && (c == '"')
+            && next(c) && (c == '"')
+            && next(c) && (c == '"'))
+        {
+            char *q = save();
+            if (!next(c) || c != '"') {
+                restore(q);
+                break;
+            }
+        }
+
+        restore(p);
+        if (!oneChar(c)) return false;
+        std::cout << c << std::endl;
         s.push_back(c);
     }
     x = new Token(T_STRING_LITERAL, s);

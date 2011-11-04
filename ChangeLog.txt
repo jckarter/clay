@@ -76,10 +76,11 @@ Language changes:
   lower precedence than specific overloads. Note that this change may break code even
   after it has been clayfix-ed.
 * Function arguments are now passed by noalias nocapture reference. Mutating arguments
-  that alias or capturing pointers or other references to arguments is now not allowed.
+  that alias or capturing pointers to arguments is now not allowed.
   (It's currently unchecked by the compiler, though.) If you need to pass potentially
   aliasing mutable references or capture argument references, use Pointer[T] arguments.
-  Pointers remain unrestricted.
+  Pointers remain unrestricted. Return-by-reference functions also may still return
+  aliases to their input arguments.
 * Switch syntax has been changed.
     // 0.0
     switch (input) {
@@ -124,7 +125,9 @@ Language changes:
   provide module-specific build flags and parameterized modules.
 * You may now import private members from modules with the following syntax:
     import foo.(private member);
-
+* String literals can be delimited with Python-style triple quotes:
+    "hello world"
+    """hello world"""
 
 Library changes:
 * The bitwise operation functions have been given shorter names:
@@ -239,19 +242,6 @@ cut and pasted above.
   is used for Maybe[Pointer[T]], Maybe[SharedPointer[T]], and Maybe[UniquePointer[T]].
   Pointer types should now be considered non-nullable and Maybe[] used for
   nullable pointers.
-* 'and' and 'or' are now overloadable, and can take a lambda on the right hand side.
-  They desugar as follows:
-    a and b         ==> andThen(a, () -> b)
-    a and x -> b(x) ==> andThen(a, x -> b(x))
-    a or  b         ==> orElse(a, () -> b)
-    a or  x -> b(x) ==> orElse(a, x -> b(x))
-  Overloads are provided in the standard library that behave as usual for Bool, and
-  that apply monadically to Maybe[T]:
-    var a = just(3), b = nothing(Int);
-    println(a or 5); // prints 3, right-hand side not evaluated
-    println(b or 5); // prints 5
-    println(a and x -> x+1); // prints just(4)
-    println(b and x -> x+1); // prints nothing(Int), right-hand side not evaluated
 * Standard containers now implement bounds checking in index(). A new operator
   indexUnsafe(a, ..b) (with operator syntax a<[..b]>) is provided for unchecked
   indexing.
@@ -308,9 +298,5 @@ cut and pasted above.
 * The Int(String) and String(Int) constructors have been removed and <parseInt> and
   <unparseInt> functions provided instead.
 
-* String literals can be delimited with Python-style triple quotes, or Postgres-style
-  $$ and $token$ delimiters:
-    "hello world"
-    """hello world"""
     $$hello world$$
     $end$hello world$end$
