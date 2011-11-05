@@ -1,12 +1,12 @@
-#foobar
-#foo
-#bar
-#foobar
+foobar
+foo
+bar
+foobar
 true
-#%#@% $#%	*^*^
-#%#@
-#% $#%	*^*^
-#%#@% $#%	*^*^
+%#@% $#%	*^*^
+%#@
+% $#%	*^*^
+%#@% $#%	*^*^
 true
 
 true

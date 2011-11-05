@@ -32,4 +32,4 @@ destroy Test 0
 destroy Test 1
 destroy Test 2
 destroy Test 3
-exception: Error("foo")
+exception: Error(foo)

@@ -1,3 +1,3 @@
-List(1, UniqueValue[List](List(2, UniqueValue[List](List(3, UniqueValue[List]())))))
-List(1, UniqueValue[List](List(2, UniqueValue[List](List(3, UniqueValue[List]())))))
-List(4, UniqueValue[List](List(5, UniqueValue[List]())))
+List(Canary(0, false), 1, UniqueValue[List](UniquePointer[List](0x7fbe61c00920)))
+List(Canary(3, false), 1, UniqueValue[List](UniquePointer[List](0x7fbe61c00960)))
+List(Canary(0, false), 4, UniqueValue[List](UniquePointer[List](0x7fbe61c00920)))
