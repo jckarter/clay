@@ -92,6 +92,7 @@ endif(UNIX)
 
 add_subdirectory(compiler)
 add_subdirectory(misc)
+add_subdirectory(tools)
 
 if(PYTHONINTERP_FOUND)
     add_custom_target(test ${PYTHON_EXECUTABLE} "../test/runtests.py")
