@@ -308,7 +308,6 @@ static bool stringToken(TokenPtr &x) {
 
         restore(p);
         if (!oneChar(c)) return false;
-        std::cout << c << std::endl;
         s.push_back(c);
     }
     x = new Token(T_STRING_LITERAL, s);
