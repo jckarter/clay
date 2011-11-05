@@ -1,5 +1,5 @@
 [observed: 2]
-[observed #loneliestNumbers: 2, 1]
+[observed loneliestNumbers: 2, 1]
 [observed: lemons]
 [observed: lemons]
 [observed call add(1, 2)..
