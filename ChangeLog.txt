@@ -181,7 +181,7 @@ Library changes:
 * print*() now prints identifiers as their string contents without a leading "#".
   printRepr*() still prints identifiers with the leading "#".
 * printReprValuesTo no longer puts parens around its output. printReprArgumentsTo()
-  gives the old behavior
+  gives the old behavior.
     printReprValuesTo ==> printReprArgumentsTo
 * A repr() function has been added to the printer.formatter module, to force its
   argument(s) to print using printRepr() within a print* or str() call.

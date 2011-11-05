@@ -9,10 +9,10 @@ import printer.platform.(formatForInt64, formatForUInt64);
 
 define printTo;
 
-overload printTo(stream) {
+inline overload printTo(stream) {
 }
 
-overload printTo(stream, a, b, ..rest) {
+inline overload printTo(stream, a, b, ..rest) {
     static for (x in a, b, ..rest)
         printTo(stream, x);
 }
@@ -265,11 +265,11 @@ overload printReprTo(stream, x:UInt64) {
 }
 
 overload printReprTo(stream, x:Float32) {
-    printWithSprintf(stream, "%.6Af", Float64(x));
+    printWithSprintf(stream, "%.6af", Float64(x));
 }
 
 overload printReprTo(stream, x:Float64) {
-    printWithSprintf(stream, "%.13A", x);
+    printWithSprintf(stream, "%.13a", x);
 }
 
 [T]
@@ -392,7 +392,7 @@ overload printReprTo(stream, x:T) {
 
 
 //
-// printReprTo - Char, String?
+// printReprTo - Char, String
 //
 
 printCharReprTo(stream, c:Char) {
@@ -418,7 +418,7 @@ printCharReprTo(stream, c:Char) {
     else if (c >= '\x20' and c <= '\x7E')
         printTo(stream, c);
     else
-        printWithSprintf(stream, "\\x%02X", UInt(c));
+        printWithSprintf(stream, "\\x%02X", UInt8(c));
 }
 
 overload printReprTo(stream, c:Char) {
@@ -431,7 +431,7 @@ overload printReprTo(stream, c:Char) {
 overload printReprTo(stream, s:S) {
     printTo(stream, '"');
     for (c in s)
-        printTo(stream, c);
+        printCharReprTo(stream, c);
     printTo(stream, '"');
 }
 
@@ -508,18 +508,17 @@ overload printReprTo(stream, v:UniqueValue[T]) {
 // print, println, printlnTo
 //
 
-print(..x) {
+inline print(..x) {
     printTo(stdout, ..x);
 }
 
-println(..x) {
+inline println(..x) {
     printTo(stdout, ..x, '\n');
 }
 
-printlnTo(stream, ..x) {
+inline printlnTo(stream, ..x) {
     printTo(stream, ..x, '\n');
 }
-
 
 
 //

@@ -1,0 +1,41 @@
+import printer.formatter.(repr);
+
+record Foo (x:Int, y:StringConstant);
+
+variant Bar (Int, StringConstant);
+
+main() {
+    println(repr(0i8));
+    println(repr(0u8));
+    println(repr(0i16));
+    println(repr(0u16));
+    println(repr(0i32));
+    println(repr(0u32));
+    println(repr(0i64));
+    println(repr(0u64));
+
+    println(repr(0.0));
+    println(repr(-0.0));
+    println(repr(1.0));
+    println(repr(1.5));
+
+    println(repr(0.0f));
+    println(repr(-0.0f));
+    println(repr(1.0f));
+    println(repr(1.5f));
+
+    println(repr('x', ' ', '~', '\x01', '\x1F', '\x7F', '\x80', '\xFF'));
+    println(repr('\0', '\n', '\r', '\t', '\f', '\'', '\"'));
+
+    println(repr("x ~\x01\x1F\x7F\x80\xFF"));
+    println(repr("\0\n\r\t\f\'\""));
+
+    println(repr(()));
+    println(repr((1,)));
+    println(repr((1, "two")));
+
+    println(repr(Foo(1, "two")));
+
+    println(repr(Bar(1)));
+    println(repr(Bar("two")));
+}
