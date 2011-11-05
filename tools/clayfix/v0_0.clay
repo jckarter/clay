@@ -9,7 +9,6 @@ import clay.v0_0.ast.*;
 import clay.v0_0.lexer.(
     tokenize,
     SourceTokens,
-    INT_LITERAL,
     STRING_LITERAL,
     CHAR_LITERAL,
     PUNCTUATION,
@@ -62,14 +61,6 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
     };
 
     switch (token.kind)
-    case (INT_LITERAL) {
-        if (size(name) >= 2 and name[0] == '0'
-            and name[1] != 'x'
-            and name[1] != 'X')
-            printInstead("octal(#\"", name, "\")");
-        else
-            printDefault();
-    }
     case (STRING_LITERAL, CHAR_LITERAL) {
         var iter = iterator(name);
         var fixed? = false;
@@ -485,6 +476,52 @@ isPunctuationToken(token, punc)
 isKeywordToken(token, kwd)
     = token.kind == KEYWORD and token.subKind == keywordIndex(kwd);
 
+// Convert octal integer literals to use the octal() function.
+// 0.0: 0777
+// 0.1: octal(#"777")
+overload fixAst(ast:IntLiteral, state:FixState) : {
+    if (size(ast.value) < 2
+        or ast.value[0] != '0'
+        or ast.value[1] == 'x' or ast.value[1] == 'X')
+        return;
+    var iter = iterator(ast.value);
+    next(iter);
+    while (hasNext?(iter)) {
+        var c = next(iter);
+        if (c >= '0' and c <= '9') {
+            writeUptoToken(astTokens(ast).begin, state);
+            replaceToken(astTokens(ast).end - 1, state);
+            switch (ast.suffix)
+            case (nothing(String))
+                printTo(state.outputFile, "octal(#\"", ast.value, "\")");
+            case (Maybe(String("i")))
+                printTo(state.outputFile, "octal(Int, #\"", ast.value, "\")");
+            case (Maybe(String("u")))
+                printTo(state.outputFile, "octal(UInt, #\"", ast.value, "\")");
+            case (Maybe(String("i8")))
+                printTo(state.outputFile, "octal(Int8, #\"", ast.value, "\")");
+            case (Maybe(String("i16")))
+                printTo(state.outputFile, "octal(Int16, #\"", ast.value, "\")");
+            case (Maybe(String("i32")))
+                printTo(state.outputFile, "octal(Int32, #\"", ast.value, "\")");
+            case (Maybe(String("i64")))
+                printTo(state.outputFile, "octal(Int64, #\"", ast.value, "\")");
+            case (Maybe(String("u8")))
+                printTo(state.outputFile, "octal(UInt8, #\"", ast.value, "\")");
+            case (Maybe(String("u16")))
+                printTo(state.outputFile, "octal(UInt16, #\"", ast.value, "\")");
+            case (Maybe(String("u32")))
+                printTo(state.outputFile, "octal(UInt32, #\"", ast.value, "\")");
+            case (Maybe(String("u64")))
+                printTo(state.outputFile, "octal(UInt64, #\"", ast.value, "\")");
+            else
+                assert(false);
+            break;
+        }
+        assert(c == '_');
+    }
+}
+
 // Convert capture-by-reference lambda syntax.
 // 0.0: (...args) ref=> { ... }
 // 0.1: (...args) -> { ... }
@@ -498,8 +535,8 @@ overload fixAst(ast:LambdaExpr, state:FixState) : {
             assert(firstStatementToken != 1
                 and isKeywordToken(tokens[firstStatementToken - 2], "ref"));
             writeUptoToken(firstStatementToken - 2, state);
-            printTo(state.outputFile, "-> ");
-            replaceUptoToken(firstStatementToken, state);
+            printTo(state.outputFile, "->");
+            replaceToken(firstStatementToken - 1, state);
         }
     }
     fixAst(ast.body, state);
