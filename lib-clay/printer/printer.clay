@@ -183,7 +183,10 @@ overload printTo(stream, x:S) {
 
 [T]
 overload printTo(stream, x:SharedPointer[T]) {
-    printReprTo(stream, x);
+    printTo(stream, SharedPointer[T], "(");
+    if (not null?(x))
+        printTo(stream, x^);
+    printTo(stream, ")");
 }
 
 
@@ -194,7 +197,11 @@ overload printTo(stream, x:SharedPointer[T]) {
 
 [T | ReferenceType?(T)]
 overload printTo(stream, x:T) {
-    printReprTo(stream, x);
+    if (null?(x)) {
+        printTo(stream, "null");
+        return;
+    }
+    printTo(stream, T, "(", ..weaveValues(", ", ..referenceTypeFields(x)), ")");
 }
 
 
