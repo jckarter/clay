@@ -9,6 +9,7 @@ import clay.v0_0.ast.*;
 import clay.v0_0.lexer.(
     tokenize,
     SourceTokens,
+    INT_LITERAL,
     PUNCTUATION,
     KEYWORD,
     IDENTIFIER,
@@ -53,6 +54,14 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
     };
 
     switch (token.kind)
+    case (INT_LITERAL) {
+        if (size(name) >= 2 and name[0] == '0'
+            and name[1] != 'x'
+            and name[1] != 'X')
+            printInstead("octal(#\"", name, "\")");
+        else
+            printDefault();
+    }
     case (KEYWORD) {
         switch (token.subKind)
         case (keywordIndex("procedure"))
