@@ -12,11 +12,27 @@ Formatter?(X) = false;
 formatter(F, forward x, forward ..params)
     = F[Type(captureValue(x))](captureValue(x), ..params);
 
+// formatTo(stream, formatter, value)
+define formatTo;
+
 [F | Formatter?(F)]
 overload printTo(stream, forward formatter: F) {
     formatTo(stream, formatter, forwardValue(formatter.value));
 }
 
+
+
+//
+// Repr formatter
+//
+
+private record ReprFormatter[T] (values: T);
+
+repr(forward ..values) = ReprFormatter(captureValues(..values));
+
+[T] overload printTo(stream, f:ReprFormatter[T]) {
+    printReprValuesTo(stream, ..forwardValues(f.values));
+}
 
 
 //
@@ -37,9 +53,6 @@ hex(forward x: I) = formatter(HexFormatter, x);
 HEX(forward x: I) = formatter(HEXFormatter, x);
 [I | Integer?(I)]
 oct(forward x: I) = formatter(OctFormatter, x);
-
-// formatTo(stream, formatter, value)
-define formatTo;
 
 private _formatBase(stream, value, fmt) {
     if (value < 0) {
