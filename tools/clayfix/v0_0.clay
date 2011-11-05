@@ -2,7 +2,7 @@ import clay.common.(
     SourceFile,
     readSource,
     ClayError,
-    displayError
+    displayError,
 );
 
 import clay.v0_0.ast.*;
@@ -10,13 +10,19 @@ import clay.v0_0.lexer.(
     tokenize,
     SourceTokens,
     INT_LITERAL,
+    STRING_LITERAL,
+    CHAR_LITERAL,
     PUNCTUATION,
     KEYWORD,
     IDENTIFIER,
     punctuationIndex,
-    keywordIndex
+    keywordIndex,
 );
 import clay.v0_0.parser.(parse);
+import printer.formatter.(
+    rightAlignedWith,
+    hex,
+);
 
 import maybe.*;
 
@@ -34,6 +40,8 @@ overload FixState(tokens:SourceTokens, outputFile:File)
 //
 // token-level fixup
 //
+
+octalValue(c:Char) = Int(c) - Int('0');
 
 fixOneToken(tokenNumber:SizeT, state:FixState) {
     assert(tokenNumber == state.printedToken);
@@ -59,6 +67,57 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
             and name[1] != 'x'
             and name[1] != 'X')
             printInstead("octal(#\"", name, "\")");
+        else
+            printDefault();
+    }
+    case (STRING_LITERAL, CHAR_LITERAL) {
+        var iter = iterator(name);
+        var fixed? = false;
+        var fixed = String();
+        while (hasNext?(iter)) {
+            var c = next(iter);
+            if (c == '\\') {
+                assert(hasNext?(iter));
+                var escape = next(iter);
+                switch (escape)
+                case ('a') {
+                    fixed? = true;
+                    push(fixed, "\\x07");
+                }
+                case ('b') {
+                    fixed? = true;
+                    push(fixed, "\\x08");
+                }
+                case ('v') {
+                    fixed? = true;
+                    push(fixed, "\\x0B");
+                }
+                case ('0', '1', '2', '3') {
+                    fixed? = true;
+                    assert(hasNext?(iter));
+                    var e1 = next(iter);
+                    assert(e1 >= '0' and e1 <= '7');
+                    assert(hasNext?(iter));
+                    var e2 = next(iter);
+                    assert(e2 >= '0' and e2 <= '7');
+                    var ascii = octalValue(escape)*64
+                        + octalValue(e1)*8
+                        + octalValue(e2);
+                    if (ascii == 0)
+                        push(fixed, "\\0");
+                    else {
+                        var asHex = str("\\x", rightAlignedWith(2, '0', hex(ascii)));
+                        push(fixed, asHex);
+                    }
+                }
+                else {
+                    push(fixed, c, escape);
+                }
+            } else
+                push(fixed, c);
+        }
+        if (fixed?)
+            printInstead(fixed);
         else
             printDefault();
     }
