@@ -1,18 +1,43 @@
-show(x:Double) { println(x); }
+import printer.formatter.(repr);
 
 main() {
-    show(0x0p0);
-    show(-0x0p0);
-    show(0x1p0);
-    show(-0x1p0);
-    show(0x1p2);
-    show(0x1p+2);
-    show(0x1p-2);
-    show(0x1p10);
-    show(0x1p-10);
-    show(-0x1p+2);
-    show(-0x1p-2);
-    show(0x1.8p2);
-    show(0x1.00_80p2);
-    show(0x1_00p2);
+    println(repr(0x0p0));
+    println(repr(-0x0p0));
+    println(repr(0x1p0));
+    println(repr(0x2p0));
+    println(repr(0x3p0));
+    println(repr(-0x1p0));
+    println(repr(0x1000p0));
+    println(repr(0x1p10));
+    println(repr(0x1p+10));
+    println(repr(0x1p-10));
+    println(repr(-0x1p+10));
+    println(repr(+0x1p-10));
+    println(repr(+0x1.0123_4567_89AB_Cp0));
+
+    // round to nearest...
+    println(repr(0x1.0000_0000_0000_0_1p0)); // down
+    println(repr(0x1.0000_0000_0000_0_7p0)); // down
+    println(repr(0x1.0000_0000_0000_0_7_Fp0)); // down
+    println(repr(0x1.0000_0000_0000_0_7_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFFp0)); // down
+    println(repr(0x1.0000_0000_0000_0_8_1p0)); // up
+    println(repr(0x1.0000_0000_0000_0_8_0000_0000_0000_0000_0000_0000_0001p0)); // up
+    println(repr(0x1.0000_0000_0000_0_9p0)); // up
+    println(repr(0x1.0000_0000_0000_0_Fp0)); // up
+
+    println(repr(-0x1.0000_0000_0000_0_1p0)); // up
+    println(repr(-0x1.0000_0000_0000_0_7p0)); // up
+    println(repr(-0x1.0000_0000_0000_0_7_Fp0)); // up
+    println(repr(-0x1.0000_0000_0000_0_7_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFFp0)); // up
+    println(repr(-0x1.0000_0000_0000_0_8_1p0)); // down
+    println(repr(-0x1.0000_0000_0000_0_8_0000_0000_0000_0000_0000_0000_0001p0)); // down
+    println(repr(-0x1.0000_0000_0000_0_9p0)); // down
+    println(repr(-0x1.0000_0000_0000_0_Fp0)); // down
+
+    // ...or even
+    println(repr(0x1.0000_0000_0000_0_8p0)); // down
+    println(repr(0x1.0000_0000_0000_1_8p0)); // up
+
+    println(repr(-0x1.0000_0000_0000_0_8p0)); // up
+    println(repr(-0x1.0000_0000_0000_1_8p0)); // down
 }
