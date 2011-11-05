@@ -1016,7 +1016,7 @@ static bool pairExpr(ExprPtr &x) {
 
 
 //
-// expression, expressionNoPair
+// expression
 //
 
 static bool expression(ExprPtr &x) {
@@ -1029,17 +1029,6 @@ static bool expression(ExprPtr &x) {
     if (restore(p), staticExpr(x)) return true;
     return false;
 }
-
-static bool expressionNoPair(ExprPtr &x) {
-    int p = save();
-    if (lambda(x)) return true;
-    if (restore(p), orExpr(x)) return true;
-    if (restore(p), ifExpr(x)) return true;
-    if (restore(p), unpack(x)) return true;
-    if (restore(p), staticExpr(x)) return true;
-    return false;
-}
-
 
 
 //
@@ -1298,15 +1287,6 @@ static bool ifStatement(StatementPtr &x) {
     if (!optElse(elsePart)) return false;
     x = new If(condition, thenPart, elsePart);
     x->location = location;
-    return true;
-}
-
-static bool caseLabel(ExprPtr &x) {
-    if (!keyword("case")) return false;
-    ExprPtr expr;
-    if (!expressionNoPair(expr)) return false;
-    if (!symbol(":")) return false;
-    x = expr;
     return true;
 }
 

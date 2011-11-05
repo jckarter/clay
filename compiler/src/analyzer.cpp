@@ -556,7 +556,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         ValueHolderPtr v = parseIntLiteral(x);
         return new MultiPValue(new PValue(v->type, true));
     }
-        
+
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
         ValueHolderPtr v = parseFloatLiteral(x);
