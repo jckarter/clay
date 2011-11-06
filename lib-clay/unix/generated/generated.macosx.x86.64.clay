@@ -187,13 +187,9 @@ record Struct_accessx_descriptor (
     ad_pad : Array[Int,2],
 );
 
-alias dev_t = Int;
-
 alias gid_t = UInt;
 
 alias intptr_t = CLong;
-
-alias mode_t = UShort;
 
 alias off_t = Int64;
 
@@ -207,10 +203,8 @@ alias uid_t = UInt;
 
 alias useconds_t = UInt;
 
-alias uuid_t = __darwin_uuid_t;
-
 external _exit(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external access(
     argument0 : Pointer[CChar],
@@ -230,28 +224,12 @@ external chown(
 external ("_close") close(
     argument0 : Int) : Int;
 
-external ("_confstr") confstr(
-    argument0 : Int,
-    argument1 : Pointer[CChar],
-    argument2 : CULong) : CULong;
-
-external crypt(
-    argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Pointer[CChar];
-
-external ctermid(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
-
 external dup(
     argument0 : Int) : Int;
 
 external dup2(
     argument0 : Int,
     argument1 : Int) : Int;
-
-external ("_encrypt") encrypt(
-    argument0 : Pointer[CChar],
-    argument1 : Int);
 
 external execl(
     argument0 : Pointer[CChar],
@@ -281,26 +259,11 @@ external execvp(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]]) : Int;
 
-external fchown(
-    argument0 : Int,
-    argument1 : UInt,
-    argument2 : UInt) : Int;
-
-external fchdir(
-    argument0 : Int) : Int;
-
 external fork() : Int;
 
 external fpathconf(
     argument0 : Int,
     argument1 : Int) : CLong;
-
-external ("_fsync") fsync(
-    argument0 : Int) : Int;
-
-external ftruncate(
-    argument0 : Int,
-    argument1 : Int64) : Int;
 
 external getcwd(
     argument0 : Pointer[CChar],
@@ -316,25 +279,7 @@ external getgroups(
     argument0 : Int,
     argument1 : Pointer[UInt]) : Int;
 
-external gethostid() : CLong;
-
-external gethostname(
-    argument0 : Pointer[CChar],
-    argument1 : CULong) : Int;
-
 external getlogin() : Pointer[CChar];
-
-external getlogin_r(
-    argument0 : Pointer[CChar],
-    argument1 : CULong) : Int;
-
-external ("_getopt") getopt(
-    argument0 : Int,
-    argument1 : Pointer[Pointer[CChar]],
-    argument2 : Pointer[CChar]) : Int;
-
-external getpgid(
-    argument0 : Int) : Int;
 
 external getpgrp() : Int;
 
@@ -342,38 +287,19 @@ external getpid() : Int;
 
 external getppid() : Int;
 
-external getsid(
-    argument0 : Int) : Int;
-
 external getuid() : UInt;
-
-external getwd(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external isatty(
     argument0 : Int) : Int;
-
-external ("_lchown") lchown(
-    argument0 : Pointer[CChar],
-    argument1 : UInt,
-    argument2 : UInt) : Int;
 
 external link(
     argument0 : Pointer[CChar],
     argument1 : Pointer[CChar]) : Int;
 
-external ("_lockf") lockf(
-    argument0 : Int,
-    argument1 : Int,
-    argument2 : Int64) : Int;
-
 external lseek(
     argument0 : Int,
     argument1 : Int64,
     argument2 : Int) : Int64;
-
-external ("_nice") nice(
-    argument0 : Int) : Int;
 
 external pathconf(
     argument0 : Pointer[CChar],
@@ -383,6 +309,124 @@ external ("_pause") pause() : Int;
 
 external pipe(
     argument0 : Pointer[Int]) : Int;
+
+external ("_read") read(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : CULong) : CLong;
+
+external rmdir(
+    argument0 : Pointer[CChar]) : Int;
+
+external setgid(
+    argument0 : UInt) : Int;
+
+external setpgid(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external setsid() : Int;
+
+external setuid(
+    argument0 : UInt) : Int;
+
+external ("_sleep") sleep(
+    argument0 : UInt) : UInt;
+
+external sysconf(
+    argument0 : Int) : CLong;
+
+external tcgetpgrp(
+    argument0 : Int) : Int;
+
+external tcsetpgrp(
+    argument0 : Int,
+    argument1 : Int) : Int;
+
+external ttyname(
+    argument0 : Int) : Pointer[CChar];
+
+external ("_ttyname_r") ttyname_r(
+    argument0 : Int,
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : Int;
+
+external unlink(
+    argument0 : Pointer[CChar]) : Int;
+
+external ("_write") write(
+    argument0 : Int,
+    argument1 : RawPointer,
+    argument2 : CULong) : CLong;
+
+external ("_confstr") confstr(
+    argument0 : Int,
+    argument1 : Pointer[CChar],
+    argument2 : CULong) : CULong;
+
+external ("_getopt") getopt(
+    argument0 : Int,
+    argument1 : Pointer[Pointer[CChar]],
+    argument2 : Pointer[CChar]) : Int;
+
+external optarg : Pointer[CChar];
+
+external optind : Int;
+
+external opterr : Int;
+
+external optopt : Int;
+
+external brk(
+    argument0 : RawPointer) : RawPointer;
+
+external chroot(
+    argument0 : Pointer[CChar]) : Int;
+
+external crypt(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Pointer[CChar];
+
+external ctermid(
+    argument0 : Pointer[CChar]) : Pointer[CChar];
+
+external ("_encrypt") encrypt(
+    argument0 : Pointer[CChar],
+    argument1 : Int) : ;
+
+external fchdir(
+    argument0 : Int) : Int;
+
+external gethostid() : CLong;
+
+external getpgid(
+    argument0 : Int) : Int;
+
+external getsid(
+    argument0 : Int) : Int;
+
+external getdtablesize() : Int;
+
+external getpagesize() : Int;
+
+external getpass(
+    argument0 : Pointer[CChar]) : Pointer[CChar];
+
+external getwd(
+    argument0 : Pointer[CChar]) : Pointer[CChar];
+
+external ("_lchown") lchown(
+    argument0 : Pointer[CChar],
+    argument1 : UInt,
+    argument2 : UInt) : Int;
+
+external ("_lockf") lockf(
+    argument0 : Int,
+    argument1 : Int,
+    argument2 : Int64) : Int;
+
+external ("_nice") nice(
+    argument0 : Int) : Int;
 
 external ("_pread") pread(
     argument0 : Int,
@@ -396,31 +440,8 @@ external ("_pwrite") pwrite(
     argument2 : CULong,
     argument3 : Int64) : CLong;
 
-external ("_read") read(
-    argument0 : Int,
-    argument1 : RawPointer,
-    argument2 : CULong) : CLong;
-
-external readlink(
-    argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar],
-    argument2 : CULong) : CLong;
-
-external rmdir(
-    argument0 : Pointer[CChar]) : Int;
-
-external setegid(
-    argument0 : UInt) : Int;
-
-external seteuid(
-    argument0 : UInt) : Int;
-
-external setgid(
-    argument0 : UInt) : Int;
-
-external setpgid(
-    argument0 : Int,
-    argument1 : Int) : Int;
+external sbrk(
+    argument0 : Int) : RawPointer;
 
 external ("_setpgrp") setpgrp() : Int;
 
@@ -432,71 +453,60 @@ external ("_setreuid") setreuid(
     argument0 : UInt,
     argument1 : UInt) : Int;
 
-external setsid() : Int;
-
-external setuid(
-    argument0 : UInt) : Int;
-
-external ("_sleep") sleep(
-    argument0 : UInt) : UInt;
-
 external swab(
     argument0 : RawPointer,
     argument1 : RawPointer,
-    argument2 : CLong);
+    argument2 : CLong) : ;
 
-external symlink(
-    argument0 : Pointer[CChar],
-    argument1 : Pointer[CChar]) : Int;
-
-external sync();
-
-external sysconf(
-    argument0 : Int) : CLong;
-
-external tcgetpgrp(
-    argument0 : Int) : Int;
-
-external tcsetpgrp(
-    argument0 : Int,
-    argument1 : Int) : Int;
+external sync() : ;
 
 external truncate(
     argument0 : Pointer[CChar],
     argument1 : Int64) : Int;
 
-external ttyname(
-    argument0 : Int) : Pointer[CChar];
-
-external ("_ttyname_r") ttyname_r(
-    argument0 : Int,
-    argument1 : Pointer[CChar],
-    argument2 : CULong) : Int;
-
 external ualarm(
     argument0 : UInt,
     argument1 : UInt) : UInt;
-
-external unlink(
-    argument0 : Pointer[CChar]) : Int;
 
 external ("_usleep") usleep(
     argument0 : UInt) : Int;
 
 external vfork() : Int;
 
-external ("_write") write(
+external ("_fsync") fsync(
+    argument0 : Int) : Int;
+
+external ftruncate(
     argument0 : Int,
-    argument1 : RawPointer,
+    argument1 : Int64) : Int;
+
+external getlogin_r(
+    argument0 : Pointer[CChar],
+    argument1 : CULong) : Int;
+
+external fchown(
+    argument0 : Int,
+    argument1 : UInt,
+    argument2 : UInt) : Int;
+
+external gethostname(
+    argument0 : Pointer[CChar],
+    argument1 : CULong) : Int;
+
+external readlink(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar],
     argument2 : CULong) : CLong;
 
-external optarg : Pointer[CChar];
+external setegid(
+    argument0 : UInt) : Int;
 
-external optind : Int;
+external seteuid(
+    argument0 : UInt) : Int;
 
-external opterr : Int;
-
-external optopt : Int;
+external symlink(
+    argument0 : Pointer[CChar],
+    argument1 : Pointer[CChar]) : Int;
 
 record Struct_timespec (
     tv_sec : CLong,
@@ -535,8 +545,14 @@ external ("_select$1050") select(
     argument3 : Pointer[fd_set],
     argument4 : Pointer[Struct_timeval]) : Int;
 
+alias dev_t = Int;
+
+alias mode_t = UShort;
+
+alias uuid_t = __darwin_uuid_t;
+
 external _Exit(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external accessx_np(
     argument0 : Pointer[Struct_accessx_descriptor],
@@ -553,13 +569,7 @@ external add_profil(
     argument2 : CULong,
     argument3 : UInt) : Int;
 
-external brk(
-    argument0 : RawPointer) : RawPointer;
-
-external chroot(
-    argument0 : Pointer[CChar]) : Int;
-
-external endusershell();
+external endusershell() : ;
 
 external execvP(
     argument0 : Pointer[CChar],
@@ -568,8 +578,6 @@ external execvP(
 
 external fflagstostr(
     argument0 : CULong) : Pointer[CChar];
-
-external getdtablesize() : Int;
 
 external getdomainname(
     argument0 : Pointer[CChar],
@@ -588,11 +596,6 @@ external gethostuuid(
 external getmode(
     argument0 : RawPointer,
     argument1 : UShort) : UShort;
-
-external getpagesize() : Int;
-
-external getpass(
-    argument0 : Pointer[CChar]) : Pointer[CChar];
 
 external getpeereid(
     argument0 : Int,
@@ -700,9 +703,6 @@ external ruserok(
     argument2 : Pointer[CChar],
     argument3 : Pointer[CChar]) : Int;
 
-external sbrk(
-    argument0 : Int) : RawPointer;
-
 external setdomainname(
     argument0 : Pointer[CChar],
     argument1 : Int) : Int;
@@ -712,14 +712,14 @@ external setgroups(
     argument1 : Pointer[UInt]) : Int;
 
 external sethostid(
-    argument0 : CLong);
+    argument0 : CLong) : ;
 
 external sethostname(
     argument0 : Pointer[CChar],
     argument1 : Int) : Int;
 
 external ("_setkey") setkey(
-    argument0 : Pointer[CChar]);
+    argument0 : Pointer[CChar]) : ;
 
 external setlogin(
     argument0 : Pointer[CChar]) : Int;
@@ -737,7 +737,7 @@ external setsgroups_np(
     argument0 : Int,
     argument1 : Pointer[CUChar]) : Int;
 
-external setusershell();
+external setusershell() : ;
 
 external setwgroups_np(
     argument0 : Int,
@@ -915,7 +915,7 @@ external ("_strptime") strptime(
 external time(
     argument0 : Pointer[CLong]) : CLong;
 
-external tzset();
+external tzset() : ;
 
 external asctime_r(
     argument0 : Pointer[Struct_tm],
@@ -936,7 +936,7 @@ external localtime_r(
 external posix2time(
     argument0 : CLong) : CLong;
 
-external tzsetwall();
+external tzsetwall() : ;
 
 external time2posix(
     argument0 : CLong) : CLong;
@@ -1111,7 +1111,7 @@ external pthread_equal(
     argument1 : pthread_t) : Int;
 
 external pthread_exit(
-    argument0 : RawPointer);
+    argument0 : RawPointer) : ;
 
 external pthread_getconcurrency() : Int;
 
@@ -1259,13 +1259,37 @@ external pthread_setspecific(
     argument0 : CULong,
     argument1 : RawPointer) : Int;
 
-external ("_pthread_testcancel") pthread_testcancel();
+external ("_pthread_testcancel") pthread_testcancel() : ;
 
 external pthread_is_threaded_np() : Int;
 
 external pthread_threadid_np(
     argument0 : pthread_t,
     argument1 : Pointer[UInt64]) : Int;
+
+external pthread_rwlock_longrdlock_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_yieldwrlock_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_downgrade_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_upgrade_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_tryupgrade_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_held_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_rdheld_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
+
+external pthread_rwlock_wrheld_np(
+    argument0 : Pointer[pthread_rwlock_t]) : Int;
 
 external pthread_getname_np(
     argument0 : pthread_t,
@@ -1313,7 +1337,7 @@ external ("_pthread_sigmask") pthread_sigmask(
     argument1 : Pointer[UInt],
     argument2 : Pointer[UInt]) : Int;
 
-external pthread_yield_np();
+external pthread_yield_np() : ;
 
 record Struct_flock (
     l_start : Int64,
@@ -1402,7 +1426,7 @@ external filesec_dup(
     argument0 : filesec_t) : filesec_t;
 
 external filesec_free(
-    argument0 : filesec_t);
+    argument0 : filesec_t) : ;
 
 external filesec_get_property(
     argument0 : filesec_t,
@@ -1963,7 +1987,7 @@ external sendfile(
 
 external pfctlinput(
     argument0 : Int,
-    argument1 : Pointer[Struct_sockaddr]);
+    argument1 : Pointer[Struct_sockaddr]) : ;
 
 alias sig_atomic_t = Int;
 
@@ -2065,8 +2089,53 @@ record Struct___darwin_i386_float_state (
     __fpu_reserved1 : Int,
 );
 
+record Struct___darwin_i386_avx_state (
+    __fpu_reserved : Array[Int,2],
+    __fpu_fcw : Struct___darwin_fp_control,
+    __fpu_fsw : Struct___darwin_fp_status,
+    __fpu_ftw : CUChar,
+    __fpu_rsrv1 : CUChar,
+    __fpu_fop : UShort,
+    __fpu_ip : UInt,
+    __fpu_cs : UShort,
+    __fpu_rsrv2 : UShort,
+    __fpu_dp : UInt,
+    __fpu_ds : UShort,
+    __fpu_rsrv3 : UShort,
+    __fpu_mxcsr : UInt,
+    __fpu_mxcsrmask : UInt,
+    __fpu_stmm0 : Struct___darwin_mmst_reg,
+    __fpu_stmm1 : Struct___darwin_mmst_reg,
+    __fpu_stmm2 : Struct___darwin_mmst_reg,
+    __fpu_stmm3 : Struct___darwin_mmst_reg,
+    __fpu_stmm4 : Struct___darwin_mmst_reg,
+    __fpu_stmm5 : Struct___darwin_mmst_reg,
+    __fpu_stmm6 : Struct___darwin_mmst_reg,
+    __fpu_stmm7 : Struct___darwin_mmst_reg,
+    __fpu_xmm0 : Struct___darwin_xmm_reg,
+    __fpu_xmm1 : Struct___darwin_xmm_reg,
+    __fpu_xmm2 : Struct___darwin_xmm_reg,
+    __fpu_xmm3 : Struct___darwin_xmm_reg,
+    __fpu_xmm4 : Struct___darwin_xmm_reg,
+    __fpu_xmm5 : Struct___darwin_xmm_reg,
+    __fpu_xmm6 : Struct___darwin_xmm_reg,
+    __fpu_xmm7 : Struct___darwin_xmm_reg,
+    __fpu_rsrv4 : Array[CChar,224],
+    __fpu_reserved1 : Int,
+    __avx_reserved1 : Array[CChar,64],
+    __fpu_ymmh0 : Struct___darwin_xmm_reg,
+    __fpu_ymmh1 : Struct___darwin_xmm_reg,
+    __fpu_ymmh2 : Struct___darwin_xmm_reg,
+    __fpu_ymmh3 : Struct___darwin_xmm_reg,
+    __fpu_ymmh4 : Struct___darwin_xmm_reg,
+    __fpu_ymmh5 : Struct___darwin_xmm_reg,
+    __fpu_ymmh6 : Struct___darwin_xmm_reg,
+    __fpu_ymmh7 : Struct___darwin_xmm_reg,
+);
+
 record Struct___darwin_i386_exception_state (
-    __trapno : UInt,
+    __trapno : UShort,
+    __cpu : UShort,
     __err : UInt,
     __faultvaddr : UInt,
 );
@@ -2149,8 +2218,69 @@ record Struct___darwin_x86_float_state64 (
     __fpu_reserved1 : Int,
 );
 
+record Struct___darwin_x86_avx_state64 (
+    __fpu_reserved : Array[Int,2],
+    __fpu_fcw : Struct___darwin_fp_control,
+    __fpu_fsw : Struct___darwin_fp_status,
+    __fpu_ftw : CUChar,
+    __fpu_rsrv1 : CUChar,
+    __fpu_fop : UShort,
+    __fpu_ip : UInt,
+    __fpu_cs : UShort,
+    __fpu_rsrv2 : UShort,
+    __fpu_dp : UInt,
+    __fpu_ds : UShort,
+    __fpu_rsrv3 : UShort,
+    __fpu_mxcsr : UInt,
+    __fpu_mxcsrmask : UInt,
+    __fpu_stmm0 : Struct___darwin_mmst_reg,
+    __fpu_stmm1 : Struct___darwin_mmst_reg,
+    __fpu_stmm2 : Struct___darwin_mmst_reg,
+    __fpu_stmm3 : Struct___darwin_mmst_reg,
+    __fpu_stmm4 : Struct___darwin_mmst_reg,
+    __fpu_stmm5 : Struct___darwin_mmst_reg,
+    __fpu_stmm6 : Struct___darwin_mmst_reg,
+    __fpu_stmm7 : Struct___darwin_mmst_reg,
+    __fpu_xmm0 : Struct___darwin_xmm_reg,
+    __fpu_xmm1 : Struct___darwin_xmm_reg,
+    __fpu_xmm2 : Struct___darwin_xmm_reg,
+    __fpu_xmm3 : Struct___darwin_xmm_reg,
+    __fpu_xmm4 : Struct___darwin_xmm_reg,
+    __fpu_xmm5 : Struct___darwin_xmm_reg,
+    __fpu_xmm6 : Struct___darwin_xmm_reg,
+    __fpu_xmm7 : Struct___darwin_xmm_reg,
+    __fpu_xmm8 : Struct___darwin_xmm_reg,
+    __fpu_xmm9 : Struct___darwin_xmm_reg,
+    __fpu_xmm10 : Struct___darwin_xmm_reg,
+    __fpu_xmm11 : Struct___darwin_xmm_reg,
+    __fpu_xmm12 : Struct___darwin_xmm_reg,
+    __fpu_xmm13 : Struct___darwin_xmm_reg,
+    __fpu_xmm14 : Struct___darwin_xmm_reg,
+    __fpu_xmm15 : Struct___darwin_xmm_reg,
+    __fpu_rsrv4 : Array[CChar,96],
+    __fpu_reserved1 : Int,
+    __avx_reserved1 : Array[CChar,64],
+    __fpu_ymmh0 : Struct___darwin_xmm_reg,
+    __fpu_ymmh1 : Struct___darwin_xmm_reg,
+    __fpu_ymmh2 : Struct___darwin_xmm_reg,
+    __fpu_ymmh3 : Struct___darwin_xmm_reg,
+    __fpu_ymmh4 : Struct___darwin_xmm_reg,
+    __fpu_ymmh5 : Struct___darwin_xmm_reg,
+    __fpu_ymmh6 : Struct___darwin_xmm_reg,
+    __fpu_ymmh7 : Struct___darwin_xmm_reg,
+    __fpu_ymmh8 : Struct___darwin_xmm_reg,
+    __fpu_ymmh9 : Struct___darwin_xmm_reg,
+    __fpu_ymmh10 : Struct___darwin_xmm_reg,
+    __fpu_ymmh11 : Struct___darwin_xmm_reg,
+    __fpu_ymmh12 : Struct___darwin_xmm_reg,
+    __fpu_ymmh13 : Struct___darwin_xmm_reg,
+    __fpu_ymmh14 : Struct___darwin_xmm_reg,
+    __fpu_ymmh15 : Struct___darwin_xmm_reg,
+);
+
 record Struct___darwin_x86_exception_state64 (
-    __trapno : UInt,
+    __trapno : UShort,
+    __cpu : UShort,
     __err : UInt,
     __faultvaddr : UInt64,
 );
@@ -2172,10 +2302,22 @@ record Struct___darwin_mcontext32 (
     __fs : Struct___darwin_i386_float_state,
 );
 
+record Struct___darwin_mcontext_avx32 (
+    __es : Struct___darwin_i386_exception_state,
+    __ss : Struct___darwin_i386_thread_state,
+    __fs : Struct___darwin_i386_avx_state,
+);
+
 record Struct___darwin_mcontext64 (
     __es : Struct___darwin_x86_exception_state64,
     __ss : Struct___darwin_x86_thread_state64,
     __fs : Struct___darwin_x86_float_state64,
+);
+
+record Struct___darwin_mcontext_avx64 (
+    __es : Struct___darwin_x86_exception_state64,
+    __ss : Struct___darwin_x86_thread_state64,
+    __fs : Struct___darwin_x86_avx_state64,
 );
 
 alias mcontext_t = Pointer[Struct___darwin_mcontext64];
@@ -2508,7 +2650,7 @@ external ("_sigwait") sigwait(
 
 external psignal(
     argument0 : UInt,
-    argument1 : Pointer[CChar]);
+    argument1 : Pointer[CChar]) : ;
 
 external sigblock(
     argument0 : Int) : Int;
@@ -2574,7 +2716,7 @@ external ("_readdir_r$INODE64") readdir_r(
     argument2 : Pointer[Pointer[Struct_dirent]]) : Int;
 
 external ("_rewinddir$INODE64") rewinddir(
-    argument0 : Pointer[DIR]);
+    argument0 : Pointer[DIR]) : ;
 
 external ("_scandir$INODE64") scandir(
     argument0 : Pointer[CChar],
@@ -2590,7 +2732,7 @@ external ("_scandir_b$INODE64") scandir_b(
 
 external ("_seekdir$INODE64") seekdir(
     argument0 : Pointer[DIR],
-    argument1 : CLong);
+    argument1 : CLong) : ;
 
 external ("_telldir$INODE64") telldir(
     argument0 : Pointer[DIR]) : CLong;
@@ -2646,6 +2788,78 @@ record Struct_ip_mreq (
     imr_interface : Struct_in_addr,
 );
 
+record Struct_ip_mreqn (
+    imr_multiaddr : Struct_in_addr,
+    imr_address : Struct_in_addr,
+    imr_ifindex : Int,
+);
+
+record Struct_ip_mreq_source (
+    imr_multiaddr : Struct_in_addr,
+    imr_sourceaddr : Struct_in_addr,
+    imr_interface : Struct_in_addr,
+);
+
+record Struct_group_req (
+    gr_interface : UInt,
+    gr_group : Struct_sockaddr_storage,
+);
+
+record Struct_group_source_req (
+    gsr_interface : UInt,
+    gsr_group : Struct_sockaddr_storage,
+    gsr_source : Struct_sockaddr_storage,
+);
+
+record Struct___msfilterreq (
+    msfr_ifindex : UInt,
+    msfr_fmode : UInt,
+    msfr_nsrcs : UInt,
+    __msfr_align : UInt,
+    msfr_group : Struct_sockaddr_storage,
+    msfr_srcs : Pointer[Struct_sockaddr_storage],
+);
+
+external setipv4sourcefilter(
+    argument0 : Int,
+    argument1 : Struct_in_addr,
+    argument2 : Struct_in_addr,
+    argument3 : UInt,
+    argument4 : UInt,
+    argument5 : Pointer[Struct_in_addr]) : Int;
+
+external getipv4sourcefilter(
+    argument0 : Int,
+    argument1 : Struct_in_addr,
+    argument2 : Struct_in_addr,
+    argument3 : Pointer[UInt],
+    argument4 : Pointer[UInt],
+    argument5 : Pointer[Struct_in_addr]) : Int;
+
+external setsourcefilter(
+    argument0 : Int,
+    argument1 : UInt,
+    argument2 : Pointer[Struct_sockaddr],
+    argument3 : UInt,
+    argument4 : UInt,
+    argument5 : UInt,
+    argument6 : Pointer[Struct_sockaddr_storage]) : Int;
+
+external getsourcefilter(
+    argument0 : Int,
+    argument1 : UInt,
+    argument2 : Pointer[Struct_sockaddr],
+    argument3 : UInt,
+    argument4 : Pointer[UInt],
+    argument5 : Pointer[UInt],
+    argument6 : Pointer[Struct_sockaddr_storage]) : Int;
+
+record Struct_in_pktinfo (
+    ipi_ifindex : UInt,
+    ipi_spec_dst : Struct_in_addr,
+    ipi_addr : Struct_in_addr,
+);
+
 record Struct_in6_addr (
     __u6_addr : AUnionType,
 );
@@ -2669,6 +2883,8 @@ external in6addr_linklocal_allnodes : Struct_in6_addr;
 
 external in6addr_linklocal_allrouters : Struct_in6_addr;
 
+external in6addr_linklocal_allv2routers : Struct_in6_addr;
+
 record Struct_ipv6_mreq (
     ipv6mr_multiaddr : Struct_in6_addr,
     ipv6mr_interface : UInt,
@@ -2677,6 +2893,11 @@ record Struct_ipv6_mreq (
 record Struct_in6_pktinfo (
     ipi6_addr : Struct_in6_addr,
     ipi6_ifindex : UInt,
+);
+
+record Struct_ip6_mtuinfo (
+    ip6m_addr : Struct_sockaddr_in6,
+    ip6m_mtu : UInt,
 );
 
 external inet6_option_space(
@@ -2738,57 +2959,57 @@ external inet6_rthdr_getflags(
 
 external inet6_opt_init(
     argument0 : RawPointer,
-    argument1 : CULong) : Int;
+    argument1 : UInt) : Int;
 
 external inet6_opt_append(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : UInt,
     argument2 : Int,
     argument3 : CUChar,
-    argument4 : CULong,
+    argument4 : UInt,
     argument5 : CUChar,
     argument6 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_finish(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : UInt,
     argument2 : Int) : Int;
 
 external inet6_opt_set_val(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : Int,
     argument2 : RawPointer,
-    argument3 : Int) : Int;
+    argument3 : UInt) : Int;
 
 external inet6_opt_next(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : UInt,
     argument2 : Int,
     argument3 : Pointer[CUChar],
-    argument4 : Pointer[CULong],
+    argument4 : Pointer[UInt],
     argument5 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_find(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : UInt,
     argument2 : Int,
     argument3 : CUChar,
-    argument4 : Pointer[CULong],
+    argument4 : Pointer[UInt],
     argument5 : Pointer[RawPointer]) : Int;
 
 external inet6_opt_get_val(
     argument0 : RawPointer,
-    argument1 : CULong,
+    argument1 : Int,
     argument2 : RawPointer,
-    argument3 : Int) : Int;
+    argument3 : UInt) : Int;
 
 external inet6_rth_space(
     argument0 : Int,
-    argument1 : Int) : CULong;
+    argument1 : Int) : UInt;
 
 external inet6_rth_init(
     argument0 : RawPointer,
-    argument1 : Int,
+    argument1 : UInt,
     argument2 : Int,
     argument3 : Int) : RawPointer;
 
@@ -2806,6 +3027,8 @@ external inet6_rth_segments(
 external inet6_rth_getaddr(
     argument0 : RawPointer,
     argument1 : Int) : Pointer[Struct_in6_addr];
+
+external addrsel_policy_init() : ;
 
 external bindresvport(
     argument0 : Int,
@@ -2862,16 +3085,16 @@ record Struct_rpcent (
     r_number : Int,
 );
 
-external endhostent();
+external endhostent() : ;
 
-external endnetent();
+external endnetent() : ;
 
-external endprotoent();
+external endprotoent() : ;
 
-external endservent();
+external endservent() : ;
 
 external freeaddrinfo(
-    argument0 : Pointer[Struct_addrinfo]);
+    argument0 : Pointer[Struct_addrinfo]) : ;
 
 external gai_strerror(
     argument0 : Int) : Pointer[CChar];
@@ -2929,19 +3152,19 @@ external getservbyport(
 external getservent() : Pointer[Struct_servent];
 
 external sethostent(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external setnetent(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external setprotoent(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external setservent(
-    argument0 : Int);
+    argument0 : Int) : ;
 
 external freehostent(
-    argument0 : Pointer[Struct_hostent]);
+    argument0 : Pointer[Struct_hostent]) : ;
 
 external gethostbyname2(
     argument0 : Pointer[CChar],
@@ -2968,12 +3191,12 @@ external getrpcbynumber(
 external getrpcent() : Pointer[Struct_rpcent];
 
 external setrpcent(
-    stayopen : Int);
+    stayopen : Int) : ;
 
-external endrpcent();
+external endrpcent() : ;
 
 external herror(
-    argument0 : Pointer[CChar]);
+    argument0 : Pointer[CChar]) : ;
 
 external hstrerror(
     argument0 : Int) : Pointer[CChar];
@@ -2989,7 +3212,7 @@ external getnetgrent(
     argument1 : Pointer[Pointer[CChar]],
     argument2 : Pointer[Pointer[CChar]]) : Int;
 
-external endnetgrent();
+external endnetgrent() : ;
 
 external setnetgrent(
-    argument0 : Pointer[CChar]);
+    argument0 : Pointer[CChar]) : ;
