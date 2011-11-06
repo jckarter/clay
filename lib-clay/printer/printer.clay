@@ -275,7 +275,7 @@ overload printReprTo(stream, x:Float64) {
 [T]
 overload printReprTo(stream, x:Pointer[T]) {
     printTo(stream, Pointer[T], "(");
-    printReprTo(stream, x);
+    printTo(stream, x);
     printTo(stream, ")");
 }
 
