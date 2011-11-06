@@ -21,7 +21,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Target/TargetData.h>
-#include <llvm/Target/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
@@ -1770,6 +1770,7 @@ struct Module : public ANode {
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initialized(false),
+          attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false) {}
@@ -2113,7 +2114,7 @@ private :
 
 struct Type : public Object {
     int typeKind;
-    llvm::PATypeHolder *llTypeHolder;
+    llvm::Type *llType;
     bool refined;
 
     bool typeInfoInitialized;
@@ -2125,12 +2126,8 @@ struct Type : public Object {
 
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind),
-          llTypeHolder(NULL), refined(false),
+          llType(NULL), refined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
-    ~Type() {
-        if (llTypeHolder)
-            delete llTypeHolder;
-    }
 };
 
 enum TypeKind {
@@ -2339,15 +2336,15 @@ TypePtr variantReprType(VariantTypePtr t);
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
-const llvm::Type *llvmIntType(int bits);
-const llvm::Type *llvmFloatType(int bits);
-const llvm::Type *llvmPointerType(const llvm::Type *llType);
-const llvm::Type *llvmPointerType(TypePtr t);
-const llvm::Type *llvmArrayType(const llvm::Type *llType, int size);
-const llvm::Type *llvmArrayType(TypePtr type, int size);
-const llvm::Type *llvmVoidType();
+llvm::Type *llvmIntType(int bits);
+llvm::Type *llvmFloatType(int bits);
+llvm::Type *llvmPointerType(llvm::Type *llType);
+llvm::Type *llvmPointerType(TypePtr t);
+llvm::Type *llvmArrayType(llvm::Type *llType, int size);
+llvm::Type *llvmArrayType(TypePtr type, int size);
+llvm::Type *llvmVoidType();
 
-const llvm::Type *llvmType(TypePtr t);
+llvm::Type *llvmType(TypePtr t);
 
 size_t typeSize(TypePtr t);
 size_t typeAlignment(TypePtr t);
@@ -2948,9 +2945,9 @@ struct CReturn {
 };
 
 struct StackSlot {
-    const llvm::Type *llType;
+    llvm::Type *llType;
     llvm::Value *llValue;
-    StackSlot(const llvm::Type *llType, llvm::Value *llValue)
+    StackSlot(llvm::Type *llType, llvm::Value *llValue)
         : llType(llType), llValue(llValue) {}
 };
 

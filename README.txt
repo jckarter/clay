@@ -10,11 +10,7 @@ Visit http://claylabs.com/clay for more information.
 Pre-requisites
 --------------
 
-Clay requires LLVM 2.9 and the Clang source to build. The Clang source
-is currently used by the clay-bindgen tool which generates Clay interfaces
-by parsing C header files; unfortunately it predates libclang, so libclang
-by itself is not sufficient. The Clay build system needs CMake. Make sure
-you have CMake version 2.6 or later.
+Clay requires LLVM 3.0 and CMake version 2.6 or later.
 
 NOTE: LLVM builds in debug mode by default. This makes the
 Clay compiler crawl. If you're building LLVM from source, configure it
@@ -35,7 +31,7 @@ in a separate build directory.
     make
 
 The default installation directory for Clay will is /usr/local. To change 
-the installtion path, pass -DCMAKE_INSTALL_PREFIX=/my/path to cmake.
+the installation path, pass -DCMAKE_INSTALL_PREFIX=/my/path to cmake.
 
 To install Clay run 
     
@@ -51,4 +47,4 @@ To compile a clay source file run
 
 The generated binary
 
-    ./a.out
+    ./hello

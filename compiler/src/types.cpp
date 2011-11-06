@@ -736,7 +736,7 @@ TypePtr variantReprType(VariantTypePtr t) {
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     if (t->layout == NULL) {
-        const llvm::StructType *st =
+        llvm::StructType *st =
             llvm::cast<llvm::StructType>(llvmType(t));
         t->layout = llvmTargetData->getStructLayout(st);
     }
@@ -745,7 +745,7 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
 
 const llvm::StructLayout *recordTypeLayout(RecordType *t) {
     if (t->layout == NULL) {
-        const llvm::StructType *st =
+        llvm::StructType *st =
             llvm::cast<llvm::StructType>(llvmType(t));
         t->layout = llvmTargetData->getStructLayout(st);
     }
@@ -826,11 +826,11 @@ static void verifyRecursionCorrectness(TypePtr t,
 // llvmIntType, llvmFloatType, llvmPointerType, llvmArrayType, llvmVoidType
 //
 
-const llvm::Type *llvmIntType(int bits) {
+llvm::Type *llvmIntType(int bits) {
     return llvm::IntegerType::get(llvm::getGlobalContext(), bits);
 }
 
-const llvm::Type *llvmFloatType(int bits) {
+llvm::Type *llvmFloatType(int bits) {
     switch (bits) {
     case 32 :
         return llvm::Type::getFloatTy(llvm::getGlobalContext());
@@ -842,23 +842,23 @@ const llvm::Type *llvmFloatType(int bits) {
     }
 }
 
-const llvm::Type *llvmPointerType(const llvm::Type *llType) {
+llvm::Type *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
 }
 
-const llvm::Type *llvmPointerType(TypePtr t) {
+llvm::Type *llvmPointerType(TypePtr t) {
     return llvmPointerType(llvmType(t));
 }
 
-const llvm::Type *llvmArrayType(const llvm::Type *llType, int size) {
+llvm::Type *llvmArrayType(llvm::Type *llType, int size) {
     return llvm::ArrayType::get(llType, size);
 }
 
-const llvm::Type *llvmArrayType(TypePtr type, int size) {
+llvm::Type *llvmArrayType(TypePtr type, int size) {
     return llvmArrayType(llvmType(type), size);
 }
 
-const llvm::Type *llvmVoidType() {
+llvm::Type *llvmVoidType() {
     return llvm::Type::getVoidTy(llvm::getGlobalContext());
 }
 
@@ -868,103 +868,42 @@ const llvm::Type *llvmVoidType() {
 // llvmType
 //
 
-static const llvm::Type *makeLLVMType(TypePtr t);
+static void makeLLVMType(TypePtr t);
 
-const llvm::Type *llvmType(TypePtr t) {
-    if (t->llTypeHolder == NULL) {
+llvm::Type *llvmType(TypePtr t) {
+    if (t->llType == NULL) {
         verifyRecursionCorrectness(t);
-        llvm::OpaqueType *opaque =
-            llvm::OpaqueType::get(llvm::getGlobalContext());
-        t->llTypeHolder = new llvm::PATypeHolder(opaque);
-        const llvm::Type *llt = makeLLVMType(t);
-        opaque->refineAbstractTypeTo(llt);
-        t->refined = true;
+        makeLLVMType(t);
     }
-    return t->llTypeHolder->get();
+    return t->llType;
 }
 
-// return opaque llvm pointers for all clay pointer types
-// otherwise behaves like llvmType
-static const llvm::Type *makeLLVMApproximateType(TypePtr t) {
-    if (t->refined)
-        return t->llTypeHolder->get();
+static void makeLLVMType(TypePtr t) {
+    assert(t->llType == NULL);
 
     switch (t->typeKind) {
-
-    case BOOL_TYPE :
-    case INTEGER_TYPE :
-    case FLOAT_TYPE :
-    case UNION_TYPE :
-    case STATIC_TYPE :
-    case ENUM_TYPE :
-        return makeLLVMType(t);
-
-    case POINTER_TYPE :
-    case CODE_POINTER_TYPE :
-    case CCODE_POINTER_TYPE :
-        return llvmPointerType(llvmIntType(8));
-
-    case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.ptr();
-        const llvm::Type *et = makeLLVMApproximateType(x->elementType);
-        return llvmArrayType(et, x->size);
+    case BOOL_TYPE : {
+        t->llType = llvmIntType(8);
+        break;
     }
-    case VEC_TYPE : {
-        VecType *x = (VecType *)t.ptr();
-        const llvm::Type *et = makeLLVMApproximateType(x->elementType);
-        return llvm::VectorType::get(et, x->size);
-    }
-    case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.ptr();
-        vector<const llvm::Type *> llTypes;
-        vector<TypePtr>::iterator i, end;
-        for (i = x->elementTypes.begin(), end = x->elementTypes.end();
-             i != end; ++i)
-            llTypes.push_back(makeLLVMApproximateType(*i));
-        if (x->elementTypes.empty())
-            llTypes.push_back(llvmIntType(8));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-    }
-    case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
-        vector<const llvm::Type *> llTypes;
-        vector<TypePtr>::const_iterator i, end;
-        for (i = fieldTypes.begin(), end = fieldTypes.end(); i != end; ++i)
-            llTypes.push_back(makeLLVMApproximateType(*i));
-        if (fieldTypes.empty())
-            llTypes.push_back(llvmIntType(8));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-    }
-    case VARIANT_TYPE : {
-        VariantType *x = (VariantType *)t.ptr();
-        return makeLLVMApproximateType(variantReprType(x));
-    }
-
-    default :
-        assert(false);
-        return NULL;
-    }
-}
-
-static const llvm::Type *makeLLVMType(TypePtr t) {
-    switch (t->typeKind) {
-    case BOOL_TYPE : return llvmIntType(8);
     case INTEGER_TYPE : {
         IntegerType *x = (IntegerType *)t.ptr();
-        return llvmIntType(x->bits);
+        t->llType = llvmIntType(x->bits);
+        break;
     }
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
-        return llvmFloatType(x->bits);
+        t->llType = llvmFloatType(x->bits);
+        break;
     }
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
-        return llvmPointerType(x->pointeeType);
+        t->llType = llvmPointerType(x->pointeeType);
+        break;
     }
     case CODE_POINTER_TYPE : {
         CodePointerType *x = (CodePointerType *)t.ptr();
-        vector<const llvm::Type *> llArgTypes;
+        vector<llvm::Type *> llArgTypes;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             llArgTypes.push_back(llvmPointerType(x->argTypes[i]));
         for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
@@ -976,47 +915,61 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
         }
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
-        return llvm::PointerType::getUnqual(llFuncType);
+        t->llType = llvm::PointerType::getUnqual(llFuncType);
+        break;
     }
     case CCODE_POINTER_TYPE : {
         CCodePointerType *x = (CCodePointerType *)t.ptr();
-        vector<const llvm::Type *> llArgTypes;
+        vector<llvm::Type *> llArgTypes;
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
             llArgTypes.push_back(llvmType(x->argTypes[i]));
-        const llvm::Type *llReturnType =
+        llvm::Type *llReturnType =
             x->returnType.ptr() ? llvmType(x->returnType) : llvmVoidType();
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llReturnType, llArgTypes, x->hasVarArgs);
-        return llvm::PointerType::getUnqual(llFuncType);
+        t->llType = llvm::PointerType::getUnqual(llFuncType);
+        break;
     }
     case ARRAY_TYPE : {
         ArrayType *x = (ArrayType *)t.ptr();
-        return llvmArrayType(x->elementType, x->size);
+        t->llType = llvmArrayType(x->elementType, x->size);
+        break;
     }
     case VEC_TYPE : {
         VecType *x = (VecType *)t.ptr();
-        return llvm::VectorType::get(llvmType(x->elementType), x->size);
+        t->llType = llvm::VectorType::get(llvmType(x->elementType), x->size);
+        break;
     }
     case TUPLE_TYPE : {
         TupleType *x = (TupleType *)t.ptr();
-        vector<const llvm::Type *> llTypes;
+
+        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = theType;
+
+        vector<llvm::Type *> llTypes;
         vector<TypePtr>::iterator i, end;
         for (i = x->elementTypes.begin(), end = x->elementTypes.end();
              i != end; ++i)
             llTypes.push_back(llvmType(*i));
         if (x->elementTypes.empty())
             llTypes.push_back(llvmIntType(8));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+
+        theType->setBody(llTypes);
+        break;
     }
     case UNION_TYPE : {
         UnionType *x = (UnionType *)t.ptr();
-        const llvm::Type *maxAlignType = NULL;
+
+        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = theType;
+
+        llvm::Type *maxAlignType = NULL;
         size_t maxAlign = 0;
         size_t maxAlignSize = 0;
         size_t maxSize = 0;
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
-            const llvm::Type *llt =
-                makeLLVMApproximateType(x->memberTypes[i]);
+            llvm::Type *llt =
+                llvmType(x->memberTypes[i]);
             size_t align = llvmTargetData->getABITypeAlignment(llt);
             size_t size = llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
@@ -1031,41 +984,51 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
             maxAlignType = llvmIntType(8);
             maxAlign = 1;
         }
-        vector<const llvm::Type *> llTypes;
+        vector<llvm::Type *> llTypes;
         llTypes.push_back(maxAlignType);
         if (maxSize > maxAlignSize) {
-            const llvm::Type *padding =
+            llvm::Type *padding =
                 llvm::ArrayType::get(llvmIntType(8), maxSize-maxAlignSize);
             llTypes.push_back(padding);
         }
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+
+        theType->setBody(llTypes);
+        break;
     }
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
+
+        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = theType;
+
         const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
-        vector<const llvm::Type *> llTypes;
+        vector<llvm::Type *> llTypes;
         vector<TypePtr>::const_iterator i, end;
         for (i = fieldTypes.begin(), end = fieldTypes.end(); i != end; ++i)
             llTypes.push_back(llvmType(*i));
         if (fieldTypes.empty())
             llTypes.push_back(llvmIntType(8));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+
+        theType->setBody(llTypes);
+        break;
     }
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
-        return llvmType(variantReprType(x));
+        t->llType = llvmType(variantReprType(x));
+        break;
     }
     case STATIC_TYPE : {
-        vector<const llvm::Type *> llTypes;
+        vector<llvm::Type *> llTypes;
         llTypes.push_back(llvmIntType(8));
-        return llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        break;
     }
     case ENUM_TYPE : {
-        return llvmType(cIntType);
+        t->llType = llvmType(cIntType);
+        break;
     }
     default :
         assert(false);
-        return NULL;
     }
 }
 
@@ -1078,7 +1041,7 @@ static const llvm::Type *makeLLVMType(TypePtr t) {
 static void initTypeInfo(Type *t) {
     if (!t->typeInfoInitialized) {
         t->typeInfoInitialized = true;
-        const llvm::Type *llt = llvmType(t);
+        llvm::Type *llt = llvmType(t);
         t->typeSize = llvmTargetData->getTypeAllocSize(llt);
         t->typeAlignment = llvmTargetData->getABITypeAlignment(llt);
     }

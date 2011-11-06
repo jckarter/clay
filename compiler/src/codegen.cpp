@@ -1,7 +1,9 @@
 #include "clay.hpp"
 #include "libclaynames.hpp"
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
 
@@ -417,7 +419,7 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 // temps
 //
 
-static llvm::Value *allocTemp(const llvm::Type *llType, CodegenContextPtr ctx)
+static llvm::Value *allocTemp(llvm::Type *llType, CodegenContextPtr ctx)
 {
     llvm::Value *llv = NULL;
     for (unsigned i = ctx->discardedSlots.size(); i > 0; --i) {
@@ -503,7 +505,7 @@ CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
 
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
 {
-    const llvm::Type *llt = llvmType(t);
+    llvm::Type *llt = llvmType(t);
     llvm::Value *llv = ctx->initBuilder->CreateAlloca(llt);
     return new CValue(t, llv);
 }
@@ -1507,10 +1509,10 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         analyzeExternalProcedure(x);
     assert(x->analyzed);
     assert(!x->llvmFunc);
-    vector<const llvm::Type *> llArgTypes;
+    vector<llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < x->args.size(); ++i)
         llArgTypes.push_back(llvmType(x->args[i]->type2));
-    const llvm::Type *llRetType =
+    llvm::Type *llRetType =
         x->returnType2.ptr() ? llvmType(x->returnType2) : llvmVoidType();
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
@@ -2338,9 +2340,7 @@ void codegenCallCCode(CCodePointerTypePtr t,
         }
     }
     llvm::CallInst *callInst =
-        ctx->builder->CreateCall(llCallable,
-                                 llArgs.begin(),
-                                 llArgs.end());
+        ctx->builder->CreateCall(llCallable, llvm::makeArrayRef(llArgs));
     switch (t->callingConv) {
     case CC_DEFAULT :
         break;
@@ -2427,7 +2427,8 @@ void codegenLowlevelCall(llvm::Value *llCallable,
                          CodegenContextPtr ctx)
 {
     llvm::Value *result =
-        ctx->builder->CreateCall(llCallable, argBegin, argEnd);
+        ctx->builder->CreateCall(llCallable,
+            llvm::makeArrayRef(&*argBegin, &*argEnd));
     if (!exceptionsEnabled())
         return;
     if (!ctx->checkExceptions)
@@ -2530,7 +2531,7 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
     LocationContext loc(expr->location);
     if (x->objKind == TYPE) {
         Type *type = (Type *)x.ptr();
-        WriteTypeSymbolic(outstream, llvmType(type), NULL);
+        llvmType(type)->print(outstream);
     }
     else if (x->objKind == VALUE_HOLDER) {
         ValueHolder *vh = (ValueHolder *)x.ptr();
@@ -2625,23 +2626,23 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     out << string("define internal i32 @\"") 
         << functionName.str() << string("\"(");
 
-    vector<const llvm::Type *> llArgTypes;
+    vector<llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
-        const llvm::Type *argType = llvmPointerType(entry->argsKey[i]);
+        llvm::Type *argType = llvmPointerType(entry->argsKey[i]);
         if (argCount > 0) out << string(", ");
-        WriteTypeSymbolic(out, argType, NULL);
+        argType->print(out);
         out << string(" %\"") << entry->fixedArgNames[i]->str << string("\"");
         argCount ++;
     }
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
-        const llvm::Type *argType;
+        llvm::Type *argType;
         TypePtr rt = entry->returnTypes[i];
         if (entry->returnIsRef[i])
             argType = llvmPointerType(pointerType(rt));
         else
             argType = llvmPointerType(rt);
         if (argCount > 0) out << string(", ");
-        WriteTypeSymbolic(out, argType, NULL);
+        argType->print(out);
         assert(i < entry->code->returnSpecs.size());
         const ReturnSpecPtr spec = entry->code->returnSpecs[i];
         assert(spec->name.ptr());
@@ -2665,7 +2666,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
     if(!llvm::ParseAssembly(buf, llvmModule, err, 
                 llvm::getGlobalContext())) {
-        err.Print("\n", out);
+        err.print("\n", out);
         std::cerr << out.str() << std::endl;
         error("llvm assembly parse error");
     }
@@ -2741,7 +2742,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
         return;
     }
 
-    vector<const llvm::Type *> llArgTypes;
+    vector<llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i)
         llArgTypes.push_back(llvmPointerType(entry->argsKey[i]));
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -2879,12 +2880,12 @@ void codegenCWrapper(InvokeEntryPtr entry)
 
     string callableName = getCodeName(entry);
 
-    vector<const llvm::Type *> llArgTypes;
+    vector<llvm::Type *> llArgTypes;
     for (unsigned i = 0; i < entry->argsKey.size(); ++i)
         llArgTypes.push_back(llvmType(entry->argsKey[i]));
 
     TypePtr returnType;
-    const llvm::Type *llReturnType = NULL;
+    llvm::Type *llReturnType = NULL;
     if (entry->returnTypes.empty()) {
         returnType = NULL;
         llReturnType = llvmVoidType();
@@ -2923,15 +2924,13 @@ void codegenCWrapper(InvokeEntryPtr entry)
     }
 
     if (!returnType) {
-        llBuilder.CreateCall(entry->llvmFunc,
-                             innerArgs.begin(), innerArgs.end());
+        llBuilder.CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
         llBuilder.CreateRetVoid();
     }
     else {
         llvm::Value *llRetVal = llBuilder.CreateAlloca(llvmType(returnType));
         innerArgs.push_back(llRetVal);
-        llBuilder.CreateCall(entry->llvmFunc,
-                             innerArgs.begin(), innerArgs.end());
+        llBuilder.CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
         llvm::Value *llRet = llBuilder.CreateLoad(llRetVal);
         llBuilder.CreateRet(llRet);
     }
@@ -4662,8 +4661,7 @@ void codegenPrimOp(PrimOpPtr x,
         vector<llvm::Value *> indices;
         indices.push_back(v1);
         llvm::Value *result = ctx->builder->CreateGEP(v0,
-                                                     indices.begin(),
-                                                     indices.end());
+                                                    llvm::makeArrayRef(indices));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == t.ptr());
@@ -4674,7 +4672,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
         IntegerTypePtr dest = valueToIntegerType(args, 0);
-        const llvm::Type *llDest = llvmType(dest.ptr());
+        llvm::Type *llDest = llvmType(dest.ptr());
         PointerTypePtr pt;
         llvm::Value *v = pointerValue(args, 1, pt, ctx);
         llvm::Value *result = ctx->builder->CreatePtrToInt(v, llDest);
@@ -4876,7 +4874,7 @@ void codegenPrimOp(PrimOpPtr x,
         indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));
         indices.push_back(iv);
         llvm::Value *ptr =
-            ctx->builder->CreateGEP(av, indices.begin(), indices.end());
+            ctx->builder->CreateGEP(av, llvm::makeArrayRef(indices));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(at->elementType));
@@ -5358,7 +5356,7 @@ static void codegenTopLevelLLVMRecursive(ModulePtr m)
                              llvm::getGlobalContext())) {
         string errBuf;
         llvm::raw_string_ostream errOut(errBuf);
-        err.Print("\n", errOut);
+        err.print("\n", errOut);
         std::cerr << errOut.str() << std::endl;
         error("llvm assembly parse error");
     }
@@ -5379,7 +5377,7 @@ static CodegenContextPtr makeSimpleContext(const char *name)
 {
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(llvmVoidType(),
-                                vector<const llvm::Type *>(),
+                                vector<llvm::Type *>(),
                                 false);
     llvm::Function *initGlobals =
         llvm::Function::Create(llFuncType,
@@ -5457,14 +5455,14 @@ static void finalizeCtorsDtors()
 static void generateLLVMCtorsAndDtors() {
 
     // make types for llvm.global_ctors, llvm.global_dtors
-    vector<const llvm::Type *> fieldTypes;
+    vector<llvm::Type *> fieldTypes;
     fieldTypes.push_back(llvmIntType(32));
-    const llvm::Type *funcType = constructorsCtx->llvmFunc->getFunctionType();
-    const llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
+    llvm::Type *funcType = constructorsCtx->llvmFunc->getFunctionType();
+    llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
     fieldTypes.push_back(funcPtrType);
-    const llvm::StructType *structType =
+    llvm::StructType *structType =
         llvm::StructType::get(llvm::getGlobalContext(), fieldTypes);
-    const llvm::ArrayType *arrayType = llvm::ArrayType::get(structType, 1);
+    llvm::ArrayType *arrayType = llvm::ArrayType::get(structType, 1);
 
     // make constants for llvm.global_ctors
     vector<llvm::Constant*> structElems1;
@@ -5580,7 +5578,9 @@ void codegenEntryPoints(ModulePtr module)
 bool initLLVM(std::string const &targetTriple)
 {
     llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllAsmParsers();
     llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
     llvmModule->setTargetTriple(targetTriple);
     llvm::EngineBuilder eb(llvmModule);

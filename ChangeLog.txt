@@ -1,13 +1,29 @@
+==========
 0.0 -> 0.1 (work in progress)
-----------
-Language changes:
+==========
+
+Tool changes:
+-------------
 * A "clayfix" program is provided to update code written for Clay 0.0 to
-  compile in 0.1.
+  compile in 0.1. It is fairly simple at this point, but most converted code should
+  just work. For some library changes clayfix isn't smart enough to
+  accommodate, a 'clayfixed.v0_0' module provides backward compatibility.
+  clayfix automaticallys adds 'import clayfixed.v0_0;' to files it converts.
+  Changes that clayfix cannot handle 100% are noted in this changelog.  Other
+  conversion failures should be reported as issues.
+
+Language changes:
+-----------------
 * Keywords that do similar things have been combined:
-    'callbyname' is now 'alias'
-    'lvalue' is now 'ref'
+    callbyname ==> alias
+    lvalue     ==> ref
+
 * Two-dot ellipsis '..' can now be used interchangeably with three-dot ellipsis '...'.
+    ...        ==> ..
+
 * The 'procedure' keyword has been changed to 'define'.
+    procedure  ==> define
+
 * Return type syntax has been changed.
     // 0.0
     foo(x:Int, y:Int) Int = x + y; // anonymous returns
@@ -26,8 +42,12 @@ Language changes:
     foo() : { // you can now declare no return values
         println("Hello world");
     }
-* The 'new' keyword has been removed.
+
+* The 'new' keyword has been removed. A 'new()' function is provided in the library
+  that does the exact same thing.
+
 * Hex float syntax (-0x1.234ABCp2) is now supported.
+
 * enum and variant syntax has been changed to be more congruent with record syntax:
     // define enum type Foo with values ZIM, ZANG, ZUNG
     enum Foo (ZIM, ZANG, ZUNG);
@@ -37,6 +57,7 @@ Language changes:
 
     // add Zippity,Doo,Dah to variant Foo
     instance Foo (Zippity, Doo, Dah);
+
 * Scope guard statements are now provided. 'finally foo();' performs 'foo();' on scope
   exit for any reason. 'onerror foo();' performs 'foo();' if the scope is exited by a
   thrown exception, without catching the exception.
@@ -53,7 +74,6 @@ Language changes:
     finally bar();
     foo();
 
-
     // 0.0
     try {
       foo();
@@ -65,22 +85,26 @@ Language changes:
     // 0.1
     onerror bar();
     foo();
+
 * Capture-by-reference lambdas now only support the '() -> {}' syntax.
     // 0.0
     (a,b) ref=> a+b+c
 
     // 0.1
     (a,b) -> a+b+c
+
 * Pattern overloads have been unrestricted. '[F|Foo?(F)] F() {}' will now overload
   all symbols matching Foo?(F) instead of just types. Universe overloads also now have
-  lower precedence than specific overloads. Note that this change may break code even
+  lower precedence than specific overloads. This change may break code even
   after it has been clayfix-ed.
-* Function arguments are now passed by noalias nocapture reference. Mutating arguments
-  that alias or capturing pointers to arguments is now not allowed.
-  (It's currently unchecked by the compiler, though.) If you need to pass potentially
-  aliasing mutable references or capture argument references, use Pointer[T] arguments.
-  Pointers remain unrestricted. Return-by-reference functions also may still return
-  aliases to their input arguments.
+
+* Function arguments are now passed by noalias nocapture reference. Mutated arguments
+  should not alias, and taking pointers to arguments that outlive the function scope
+  are not allowed. (It's currently unchecked by the compiler, though.) If you need to
+  pass potentially aliasing mutable references or capture argument references, use
+  Pointer[T] arguments.  Pointers remain unrestricted. Return-by-reference functions
+  also may still return aliases to their input arguments.
+
 * Switch syntax has been changed.
     // 0.0
     switch (input) {
@@ -115,6 +139,7 @@ Language changes:
     else {
         z();
     }
+
 * A top-level module name declaration may be included in source files, immediately
   after any 'import' definitions.
     import foo.*;
@@ -123,16 +148,21 @@ Language changes:
     in module.name;
   Module declarations are not required, but they will be used in the future to
   provide module-specific build flags and parameterized modules.
+
 * You may now import private members from modules with the following syntax:
     import foo.(private member);
+
 * String literals can be delimited with Python-style triple quotes:
     "hello world"
     """hello world"""
+
 * The \a, \b, and \v and octal escape sequences have been removed.
+
 * Octal integer literals have been removed. Literals starting with 0 are now
   interpreted as decimal.
 
 Library changes:
+----------------
 * The bitwise operation functions have been given shorter names:
     shiftLeft    ==> bitshl
     shiftRight   ==> bitshr
@@ -145,6 +175,7 @@ Library changes:
     bitwiseAndc  ==> bitandc
     bitwiseBlend ==> bitblend
     bitwiseCast  ==> bitcast
+
 * 'allocateShared' and 'allocateUnique' have been renamed.
     allocateShared ==> newShared or new
     allocateUnique ==> newUnique
@@ -154,6 +185,7 @@ Library changes:
 
     // 0.1
     foo = new(Foo(1));
+
 * The INT_MIN, INT_MAX etc. constants have been replaced with Least(T) and Greatest(T)
   functions.
     INT8_MIN    ==> Least(Int8)
@@ -163,10 +195,11 @@ Library changes:
     etc.
   LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point
   types.
+
 * 'printString' has been renamed.
     printString ==> str
-* A static octal(#"777") function has been added to the numbers module. to
-  evaluate to an integer given an octal identifier string.
+
+* A static octal(#"777") function has been added to the numbers module.
     // 0.0
     0177
     0177u8
@@ -174,21 +207,28 @@ Library changes:
     // 0.1
     octal(#"177")
     octal(UInt8, #"177")
+
 * The space? function from the characters module no longer considers ASCII 0x0B
   (formerly known as '\v') a space character.
+
 * The format of the printRepr* functions has been changed to output more accurate
   parseable representations of Clay objects.
+
 * print*() now prints identifiers as their string contents without a leading "#".
   printRepr*() still prints identifiers with the leading "#".
+
 * printReprValuesTo no longer puts parens around its output. printReprArgumentsTo()
   gives the old behavior.
     printReprValuesTo ==> printReprArgumentsTo
-* A repr() function has been added to the printer.formatter module, to force its
-  argument(s) to print using printRepr() within a print* or str() call.
+
+* A repr() function has been added to the printer.formatter module, which prints its
+  argument(s) using printRepr() within a print* or str() call.
     println("x = ", 128_u8, " ", 128_u16); // output: x = 128 128
     println("x = ", repr(128_u8, " ", 128_u16)); // output: x = 128u8, " ", 128u16
 
 Compiler frontend changes:
+--------------------------
+* The compiler now requires LLVM 3.0 with Clang.
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
 * The redundant -dll option has been removed; use -shared.
 * Externals are now only built for the main module (the source file provided on
@@ -200,13 +240,15 @@ Compiler frontend changes:
   basename of the input file instead of "a.out". For instance, "clay hello.clay" will
   output an executable named "hello" (or "hello.exe" if compiling for a Windows target).
 
+===============
 Planned changes
----------------
+===============
 
-These changes may not all get completed at the next point release, but they are
-planned to be made eventually. They're written in past tense so they can be easily
-cut and pasted above.
+These changes are planned for future releases. They're written in past tense so they
+can be easily cut and pasted above.
 
+* The representation of StringConstants has been changed to be compatible with
+  C strings.
 * Keywords that do similar things have been combined:
     The 'static' keyword in expressions and argument lists is now the '#' operator.
     Identifiers now lower to StringConstants, and must always be quoted:
@@ -260,9 +302,8 @@ cut and pasted above.
   public imports core.*.
   The following modules must now be imported if used:
     <tbd>
-  The convenience module prelude_0_0 imports all the above modules. You can also
-  provide your own prelude.clay in a module search path to override the default
-  prelude.
+  The module clayfixed.v0_0.fatprelude imports the above modules for backward
+  compatibility.
 * Dispatch is now overloadable. The dispatch overload desugars as follows:
     <tbd>
   The prelude provides a default implementation for variants that works as in Clay 0.0,
@@ -323,11 +364,50 @@ cut and pasted above.
   The div operator desugars to the quotient(a,b) function. An update statement form
   'div=' is also provided.
 
-* Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push' functions
-  should be used instead.
+* Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push'
+  functions should be used instead.
+  The 'clayfixed.v0_0.sequenceaddition' module includes these overloads for backward
+  compatibility.
 
-* The Int(String) and String(Int) constructors have been removed and <parseInt> and
-  <unparseInt> functions provided instead.
+* The Number(String) and String(Number) constructors have been removed. 'str' should
+  be used to convert numbers to strings, and 'parse' to convert strings to numbers:
+    // 0.0
+    var x = String(1);
+    var y = Int("1");
 
-    $$hello world$$
-    $end$hello world$end$
+    // 0.1
+    var x = str(1);
+    var y = parse("1", Int);
+  The 'clayfixed.v0_0.stringconversionconstructors' module includes the old constructor
+  overloads for backward compatibility.
+
+* String literals now support interpolation, which desugars into calls to the
+  str() function. Single identifiers or function calls can be interpolated with
+  $identifier or $identifier(..args), and arbitrary expressions with ${ ..expr }:
+    "$x $y $z"
+        ==> str(x, #" ", y, #" ", z)
+    "Yes, we have $n bananas"
+        ==> str(#"Yes, we have ", n, #" bananas")
+    "Yes, we have $bananaCount() bananas"
+        ==> str(#"Yes, we have ", bananaCount(), #" bananas")
+    "Yes, we have ${n + m} bananas"
+        ==> str(#"Yes, we have ", n + m, #" bananas")
+    "Yes, we have ${n + m} bananas"
+        ==> str(#"Yes, we have ", n + m, #" bananas")
+  Identifier strings with interpolants desugar to identifier():
+    #"$x $y"
+        ==> static identifier(x, #" ", y)
+
+  A custom desugar can be specified by placing a function name before a string
+  literal:
+    utf8 "foo"                  ==> utf8(#"foo")
+    println "x + y = ${x + y}"; ==> println(#"x + y = ", x + y);
+
+* A shorthand for single-argument pattern variable predicates is provided:
+    // Longhand
+    [T | Sequence?(T)]
+    incSequence(seq:T) { for (s in seq) inc(s); }
+
+    // Shorthand
+    [T:Sequence?]
+    incSequence(seq:T) { for (s in seq) inc(s); }

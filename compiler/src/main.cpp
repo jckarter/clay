@@ -12,10 +12,11 @@
 #include "llvm/Target/TargetData.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/StandardPasses.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Target/TargetRegistry.h"
+#include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Transforms/IPO.h"
 
 #include <iostream>
 #include <cstring>
@@ -39,8 +40,6 @@ static void addOptimizationPasses(llvm::PassManager &passes,
                                   unsigned optLevel,
                                   bool internalize)
 {
-    llvm::createStandardFunctionPasses(&fpasses, optLevel);
-
     llvm::Pass *inliningPass = 0;
     if (optLevel) {
         unsigned threshold = 200;
@@ -50,18 +49,15 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     } else {
         inliningPass = llvm::createAlwaysInlinerPass();
     }
-    llvm::createStandardModulePasses(&passes,
-                                     optLevel,
-                                     /*OptimizeSize=*/ false,
-                                     /*UnitAtATime=*/ true,
-                                     /*UnrollLoops=*/ optLevel > 1,
-                                     /*SimplifyLibCalls=*/ true,
-                                     /*HaveExceptions=*/ true,
-                                     inliningPass);
-    llvm::createStandardLTOPasses(&passes,
-                                  /*Internalize=*/ internalize,
-                                  /*RunInliner=*/ true,
-                                  /*VerifyEach=*/ false);
+
+    llvm::PassManagerBuilder builder;
+    builder.OptLevel = optLevel;
+    builder.SizeLevel = 0;
+    builder.Inliner = inliningPass;
+
+    builder.populateFunctionPassManager(fpasses);
+    builder.populateModulePassManager(passes);
+    builder.populateLTOPassManager(passes, internalize, true);
 }
 
 static void runModule(llvm::Module *module)
@@ -136,11 +132,15 @@ static void generateAssembly(llvm::Module *module,
     assert(theTarget != NULL);
     if (optLevel < 2)
         llvm::NoFramePointerElim = true;
-    if (sharedLib || genPIC)
-        llvm::TargetMachine::setRelocationModel(llvm::Reloc::PIC_);
-    llvm::TargetMachine::setCodeModel(llvm::CodeModel::Default);
+
+    llvm::Reloc::Model reloc = (sharedLib || genPIC)
+        ? llvm::Reloc::PIC_
+        : llvm::Reloc::Default;
+    llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
+
     llvm::TargetMachine *target =
-        theTarget->createTargetMachine(theTriple.getTriple(), "");
+        theTarget->createTargetMachine(theTriple.getTriple(), "", "",
+            reloc, codeModel);
     assert(target != NULL);
 
     llvm::FunctionPassManager fpasses(module);
@@ -180,7 +180,7 @@ static void generateAssembly(llvm::Module *module,
 
 static bool generateBinary(llvm::Module *module,
                            const llvm::sys::Path &outputFilePath,
-                           const llvm::sys::Path &gccPath,
+                           const llvm::sys::Path &clangPath,
                            unsigned optLevel,
                            bool /*exceptions*/,
                            bool sharedLib,
@@ -207,15 +207,15 @@ static bool generateBinary(llvm::Module *module,
     generateAssembly(module, &asmOut, false, optLevel, sharedLib, genPIC);
     asmOut.close();
 
-    vector<const char *> gccArgs;
-    gccArgs.push_back(gccPath.c_str());
+    vector<const char *> clangArgs;
+    clangArgs.push_back(clangPath.c_str());
 
     switch (llvmTargetData->getPointerSizeInBits()) {
     case 32 :
-        gccArgs.push_back("-m32");
+        clangArgs.push_back("-m32");
         break;
     case 64 :
-        gccArgs.push_back("-m64");
+        clangArgs.push_back("-m64");
         break;
     default :
         assert(false);
@@ -223,7 +223,7 @@ static bool generateBinary(llvm::Module *module,
 
     string linkerFlags;
     if (sharedLib) {
-        gccArgs.push_back("-shared");
+        clangArgs.push_back("-shared");
         llvm::Triple triple(llvmModule->getTargetTriple());
 
         if (triple.getOS() == llvm::Triple::Win32
@@ -236,19 +236,19 @@ static bool generateBinary(llvm::Module *module,
 
             linkerFlags = "-Wl,--output-def," + defPath.str();
 
-            gccArgs.push_back(linkerFlags.c_str());
+            clangArgs.push_back(linkerFlags.c_str());
         }
     }
-    gccArgs.push_back("-o");
-    gccArgs.push_back(outputFilePath.c_str());
-    gccArgs.push_back("-x");
-    gccArgs.push_back("assembler");
-    gccArgs.push_back(tempAsm.c_str());
+    clangArgs.push_back("-o");
+    clangArgs.push_back(outputFilePath.c_str());
+    clangArgs.push_back("-x");
+    clangArgs.push_back("assembler");
+    clangArgs.push_back(tempAsm.c_str());
     for (unsigned i = 0; i < arguments.size(); ++i)
-        gccArgs.push_back(arguments[i].c_str());
-    gccArgs.push_back(NULL);
+        clangArgs.push_back(arguments[i].c_str());
+    clangArgs.push_back(NULL);
 
-    int result = llvm::sys::Program::ExecuteAndWait(gccPath, &gccArgs[0]);
+    int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
     if (tempAsm.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
 
     string clayFile;
     string outputFile;
-    string targetTriple = llvm::sys::getHostTriple();
+    string targetTriple = llvm::sys::getDefaultTargetTriple();
 
     string clayScriptImports;
     string clayScript;
@@ -521,7 +521,7 @@ int main(int argc, char **argv) {
                 cerr << "error: target name missing after -target\n";
                 return -1;
             }
-            crossCompiling = targetTriple != llvm::sys::getHostTriple();
+            crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
         }
         else if (strstr(argv[i], "-L") == argv[i]) {
             string libDir = argv[i] + strlen("-L");
@@ -771,23 +771,23 @@ int main(int argc, char **argv) {
     }
     else {
         bool result;
-        llvm::sys::Path gccPath;
+        llvm::sys::Path clangPath;
 #ifdef WIN32
-        gccPath = clayDir;
-        result = gccPath.appendComponent("mingw");
+        clangPath = clayDir;
+        result = clangPath.appendComponent("mingw");
         assert(result);
-        result = gccPath.appendComponent("bin");
+        result = clangPath.appendComponent("bin");
         assert(result);
-        result = gccPath.appendComponent("gcc.exe");
+        result = clangPath.appendComponent("clang.exe");
         assert(result);
-        if (!gccPath.exists())
-            gccPath = llvm::sys::Path();
+        if (!clangPath.exists())
+            clangPath = llvm::sys::Path();
 #endif
-        if (!gccPath.isValid()) {
-            gccPath = llvm::sys::Program::FindProgramByName("gcc");
+        if (!clangPath.isValid()) {
+            clangPath = llvm::sys::Program::FindProgramByName("clang");
         }
-        if (!gccPath.isValid()) {
-            cerr << "error: unable to find gcc on the path\n";
+        if (!clangPath.isValid()) {
+            cerr << "error: unable to find clang on the path\n";
             return false;
         }
 
@@ -811,7 +811,7 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
-        result = generateBinary(llvmModule, outputFilePath, gccPath,
+        result = generateBinary(llvmModule, outputFilePath, clangPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
         if (!result)
