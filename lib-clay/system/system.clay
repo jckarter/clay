@@ -48,6 +48,17 @@ overload callMain(static Main) {
     }
 }
 
+[Main | CallDefined?(Main, ..Type(argc, argv))]
+overload callMain(static Main) {
+    try {
+        return getExitCode(..Main(argc, argv));
+    }
+    catch (e) {
+        printlnTo(stderr, "unhandled exception: ", e);
+        return -1;
+    }
+}
+
 private define getExitCode;
 overload getExitCode() = 0;
 overload getExitCode(x) = Int(x);
