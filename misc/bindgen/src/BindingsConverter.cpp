@@ -5,6 +5,10 @@
  *
  */
 
+#define __STDC_LIMIT_MACROS
+#define __STDC_CONSTANT_MACROS
+
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -538,18 +542,20 @@ void BindingsConverter::generateObjC()
 }
 
 bool BindingsConverter::isClayKeyword(const string &cIdent) {
-    // list from compiler/src/lexer.cpp:121
+    // list from compiler/src/lexer.cpp
     static char const * const keywords[] =
         {"public", "private", "import", "as",
          "record", "variant", "instance",
-         "procedure", "overload", "external", "alias",
-         "static", "callbyname", "lvalue", "rvalue",
+         "define", "overload", "external", "alias",
+         "static", "rvalue",
          "inline", "enum", "var", "ref", "forward",
-         "and", "or", "not", "new",
+         "and", "or", "not",
          "if", "else", "goto", "return", "while",
-         "switch", "case", "default", "break", "continue", "for", "in",
-         "true", "false", "try", "catch", "throw", NULL};
-    
+         "switch", "case", "break", "continue", "for", "in",
+         "true", "false", "try", "catch", "throw",
+         "finally", "onerror",
+         "__FILE__", "__LINE__", "__COLUMN__", NULL};
+
     for (char const * const *k = keywords; *k; ++k)
         if (cIdent == *k)
             return true;
@@ -679,14 +685,14 @@ void BindingsConverter::generateDecl(Decl *decl)
                     if (index != 0)
                         out << ",";
                     out << "\n    ";
-                    out << "...";
+                    out << "..";
                 }
             }
-            out << ")";
+            out << ") : ";
             const Type *rt = x->getResultType().getTypePtr();
             string s = convertType(rt);
             if (s != "Void")
-                out << " " << s;
+                out << s;
             out << ";\n";
         }
         break;
