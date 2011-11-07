@@ -14,8 +14,6 @@ procedure vectorSetSize;
 procedure vectorCapacity;
 procedure vectorRequestCapacity;
 
-enum Orientation { ROW, COLUMN }
-
 
 
 //

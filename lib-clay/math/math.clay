@@ -182,7 +182,6 @@ overload log10(x:Double) = libc.log10(x);
 overload log10(x:Float) = libc.log10f(x);
 overload log10(x:Real) = libc.log10l(x);
 
-
 overload frexp(x:Double) {
     var ex = Pointer[Int]();
     var a = libc.frexp(x,ex);
