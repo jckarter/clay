@@ -74,7 +74,8 @@ void codegenOneInto(ExprPtr expr,
 void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
                       CodegenContextPtr ctx,
-                      MultiCValuePtr out);
+                      MultiCValuePtr out,
+                      unsigned count);
 void codegenExprInto(ExprPtr expr,
                      EnvPtr env,
                      CodegenContextPtr ctx,
@@ -83,7 +84,8 @@ void codegenExprInto(ExprPtr expr,
 void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
                   CodegenContextPtr ctx,
-                  MultiCValuePtr out);
+                  MultiCValuePtr out,
+                  unsigned count);
 void codegenOne(ExprPtr expr,
                 EnvPtr env,
                 CodegenContextPtr ctx,
@@ -776,24 +778,34 @@ void codegenOneInto(ExprPtr expr,
 void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
                       CodegenContextPtr ctx,
-                      MultiCValuePtr out)
+                      MultiCValuePtr out,
+                      unsigned wantCount)
 {
     int marker = cgMarkStack(ctx);
     int marker2 = marker;
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
+    if (unpackExpr != NULL) {
+        MultiPValuePtr mpv = safeAnalyzeExpr(unpackExpr, env);
+        assert(j + mpv->size() <= out->size());
+        MultiCValuePtr out2 = new MultiCValue();
+        for (unsigned k = 0; k < mpv->size(); ++k)
+            out2->add(out->values[j + k]);
+        codegenExprInto(unpackExpr, env, ctx, out2);
+        j += mpv->size();
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         unsigned prevJ = j;
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             if (y->expr->exprKind == TUPLE) {
                 Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env);
+                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
                 assert(j + mpv->size() <= out->size());
                 MultiCValuePtr out2 = new MultiCValue();
                 for (unsigned k = 0; k < mpv->size(); ++k)
                     out2->add(out->values[j + k]);
-                codegenMultiInto(y2->args, env, ctx, out2);
+                codegenMultiInto(y2->args, env, ctx, out2, 0);
                 j += mpv->size();
             }
             else {
@@ -864,24 +876,34 @@ void codegenExprInto(ExprPtr expr,
 void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
                   CodegenContextPtr ctx,
-                  MultiCValuePtr out)
+                  MultiCValuePtr out,
+                  unsigned wantCount)
 {
     int marker = cgMarkStack(ctx);
     int marker2 = marker;
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
+    if (unpackExpr != NULL) {
+        MultiPValuePtr mpv = safeAnalyzeExpr(unpackExpr, env);
+        assert(j + mpv->size() <= out->size());
+        MultiCValuePtr out2 = new MultiCValue();
+        for (unsigned k = 0; k < mpv->size(); ++k)
+            out2->add(out->values[j + k]);
+        codegenExpr(unpackExpr, env, ctx, out2);
+        j += mpv->size();
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         unsigned prevJ = j;
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             if (y->expr->exprKind == TUPLE) {
                 Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env);
+                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
                 assert(j + mpv->size() <= out->size());
                 MultiCValuePtr out2 = new MultiCValue();
                 for (unsigned k = 0; k < mpv->size(); ++k)
                     out2->add(out->values[j + k]);
-                codegenMulti(y2->args, env, ctx, out2);
+                codegenMulti(y2->args, env, ctx, out2, 0);
                 j += mpv->size();
             }
             else {
@@ -1022,7 +1044,7 @@ void codegenExpr(ExprPtr expr,
         }
         else if (y->objKind == EXPR_LIST) {
             ExprListPtr z = (ExprList *)y.ptr();
-            codegenMulti(z, env, ctx, out);
+            codegenMulti(z, env, ctx, out, 0);
         }
         else {
             codegenStaticObject(y, ctx, out);
@@ -3186,8 +3208,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
         int tempMarker = markTemps(ctx);
@@ -3209,7 +3231,7 @@ bool codegenStatement(StatementPtr stmt,
                 CValuePtr cv = codegenAllocValue(pv->type, ctx);
                 mcvRight->add(cv);
             }
-            codegenMultiInto(x->right, env, ctx, mcvRight);
+            codegenMultiInto(x->right, env, ctx, mcvRight, mpvLeft->size());
             for (unsigned i = 0; i < mcvRight->size(); ++i)
                 cgPushStackValue(mcvRight->values[i], ctx);
         }
@@ -3219,7 +3241,7 @@ bool codegenStatement(StatementPtr stmt,
             if (leftExpr->exprKind == UNPACK) {
                 ExprListPtr leftExprList = new ExprList();
                 leftExprList->add(leftExpr);
-                MultiPValuePtr mpvLeftI = safeAnalyzeMulti(leftExprList, env);
+                MultiPValuePtr mpvLeftI = safeAnalyzeMulti(leftExprList, env, 0);
                 MultiPValuePtr mpvRightI = new MultiPValue();
                 MultiCValuePtr mcvRightI = new MultiCValue();
                 for (unsigned k = 0; k < mpvLeftI->size(); ++k) {
@@ -3248,8 +3270,8 @@ bool codegenStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
@@ -3264,7 +3286,7 @@ bool codegenStatement(StatementPtr stmt,
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         MultiCValuePtr mcvLeft = codegenMultiAsRef(x->left, env, ctx);
-        codegenMultiInto(x->right, env, ctx, mcvLeft);
+        codegenMultiInto(x->right, env, ctx, mcvLeft, mpvLeft->size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         return false;
@@ -3338,7 +3360,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 0);
         MultiCValuePtr mcv = new MultiCValue();
         const vector<CReturn> &returns = ctx->returnLists.back();
         ensureArity(mpv, returns.size());
@@ -3356,7 +3378,7 @@ bool codegenStatement(StatementPtr stmt,
         }
         switch (x->returnKind) {
         case RETURN_VALUE :
-            codegenMultiInto(x->values, env, ctx, mcv);
+            codegenMultiInto(x->values, env, ctx, mcv, 0);
             break;
         case RETURN_REF : {
             MultiCValuePtr mcvRef = codegenMultiAsRef(x->values, env, ctx);
@@ -3369,7 +3391,7 @@ bool codegenStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            codegenMulti(x->values, env, ctx, mcv);
+            codegenMulti(x->values, env, ctx, mcv, 0);
             break;
         default :
             assert(false);
@@ -3656,7 +3678,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -3666,7 +3688,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMultiInto(x->values, env, ctx, mcv);
+        codegenMultiInto(x->values, env, ctx, mcv, x->names.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
@@ -3683,7 +3705,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
@@ -3701,7 +3723,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMulti(x->values, env, ctx, mcv);
+        codegenMulti(x->values, env, ctx, mcv, x->names.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
@@ -3759,7 +3781,7 @@ void codegenExprAssign(ExprPtr left,
         PValuePtr pvIndexable = safeAnalyzeOne(indexable, env);
         if (pvIndexable->type->typeKind != STATIC_TYPE) {
             MultiPValuePtr pvArgs = new MultiPValue(pvIndexable);
-            pvArgs->add(safeAnalyzeMulti(args, env));
+            pvArgs->add(safeAnalyzeMulti(args, env, 0));
             pvArgs->add(pvRight);
             CValuePtr cvIndexable = codegenOneAsRef(indexable, env, ctx);
             MultiCValuePtr cvArgs = new MultiCValue(cvIndexable);

@@ -13,10 +13,10 @@ MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
 
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
-void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out);
+void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount);
 void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
 
-void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out);
+void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount);
 void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
 void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
 void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
@@ -765,21 +765,30 @@ void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
 }
 
 
-void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out)
+void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount)
 {
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
+    if (unpackExpr != NULL) {
+        MultiPValuePtr mpv = safeAnalyzeExpr(unpackExpr, env);
+        assert(j + mpv->size() <= out->size());
+        MultiEValuePtr out2 = new MultiEValue();
+        for (unsigned k = 0; k < mpv->size(); ++k)
+            out2->add(out->values[j + k]);
+        evalExprInto(unpackExpr, env, out2);
+        j += mpv->size();
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             if (y->expr->exprKind == TUPLE) {
                 Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env);
+                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
                 assert(j + mpv->size() <= out->size());
                 MultiEValuePtr out2 = new MultiEValue();
                 for (unsigned k = 0; k < mpv->size(); ++k)
                     out2->add(out->values[j + k]);
-                evalMultiInto(y2->args, env, out2);
+                evalMultiInto(y2->args, env, out2, 0);
                 j += mpv->size();
             }
             else {
@@ -833,21 +842,30 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 // evalMulti
 //
 
-void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out)
+void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount)
 {
     unsigned j = 0;
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
+    if (unpackExpr != NULL) {
+        MultiPValuePtr mpv = safeAnalyzeExpr(unpackExpr, env);
+        assert(j + mpv->size() <= out->size());
+        MultiEValuePtr out2 = new MultiEValue();
+        for (unsigned k = 0; k < mpv->size(); ++k)
+            out2->add(out->values[j + k]);
+        evalExpr(unpackExpr, env, out2);
+        j += mpv->size();
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             if (y->expr->exprKind == TUPLE) {
                 Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env);
+                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
                 assert(j + mpv->size() <= out->size());
                 MultiEValuePtr out2 = new MultiEValue();
                 for (unsigned k = 0; k < mpv->size(); ++k)
                     out2->add(out->values[j + k]);
-                evalMulti(y2->args, env, out2);
+                evalMulti(y2->args, env, out2, 0);
                 j += mpv->size();
             }
             else {
@@ -974,7 +992,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         }
         else if (y->objKind == EXPR_LIST) {
             ExprListPtr z = (ExprList *)y.ptr();
-            evalMulti(z, env, out);
+            evalMulti(z, env, out, 0);
         }
         else {
             evalStaticObject(y, out);
@@ -2051,8 +2069,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case ASSIGNMENT : {
         Assignment *x = (Assignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
@@ -2074,7 +2092,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 EValuePtr ev = evalAllocValue(pv->type);
                 mevRight->add(ev);
             }
-            evalMultiInto(x->right, env, mevRight);
+            evalMultiInto(x->right, env, mevRight, mpvLeft->size());
             MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
             assert(mevLeft->size() == mevRight->size());
             for (unsigned i = 0; i < mevLeft->size(); ++i) {
@@ -2089,8 +2107,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case INIT_ASSIGNMENT : {
         InitAssignment *x = (InitAssignment *)stmt.ptr();
-        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env);
-        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env);
+        MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
+        MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
@@ -2104,7 +2122,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         }
         int marker = evalMarkStack();
         MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
-        evalMultiInto(x->right, env, mevLeft);
+        evalMultiInto(x->right, env, mevLeft, mpvLeft->size());
         evalDestroyAndPopStack(marker);
         return NULL;
     }
@@ -2128,7 +2146,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 0);
         MultiEValuePtr mev = new MultiEValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2146,7 +2164,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         int marker = evalMarkStack();
         switch (x->returnKind) {
         case RETURN_VALUE :
-            evalMultiInto(x->values, env, mev);
+            evalMultiInto(x->values, env, mev, 0);
             break;
         case RETURN_REF : {
             MultiEValuePtr mevRef = evalMultiAsRef(x->values, env);
@@ -2159,7 +2177,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            evalMulti(x->values, env, mev);
+            evalMulti(x->values, env, mev, 0);
             break;
         default :
             assert(false);
@@ -2321,7 +2339,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
@@ -2330,7 +2348,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             mev->add(ev);
         }
         int marker = evalMarkStack();
-        evalMultiInto(x->values, env, mev);
+        evalMultiInto(x->values, env, mev, x->names.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i)
@@ -2339,7 +2357,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
             arityError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
@@ -2355,7 +2373,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             }
         }
         int marker = evalMarkStack();
-        evalMulti(x->values, env, mev);
+        evalMulti(x->values, env, mev, x->names.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {

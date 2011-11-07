@@ -545,7 +545,7 @@ void initializeRecordFields(RecordTypePtr t) {
     if (body->isComputed) {
         LocationContext loc(body->location);
         AnalysisCachingDisabler disabler;
-        MultiPValuePtr mpv = analyzeMulti(body->computed, env);
+        MultiPValuePtr mpv = analyzeMulti(body->computed, env, 0);
         vector<TypePtr> fieldInfoTypes;
         if ((mpv->size() == 1) &&
             (mpv->values[0]->type->typeKind == RECORD_TYPE) &&

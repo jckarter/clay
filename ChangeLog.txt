@@ -161,6 +161,15 @@ Language changes:
 * Octal integer literals have been removed. Literals starting with 0 are now
   interpreted as decimal.
 
+* A single multiple-value expression can now be bound or assigned to multiple variables
+  without a required ellipsis.
+    // 0.0
+    var a, b = ...multiValues();
+
+    // 0.1
+    var a, b = multiValues();
+
+
 Library changes:
 ----------------
 * The bitwise operation functions have been given shorter names:

@@ -2700,7 +2700,7 @@ struct AnalysisCachingDisabler {
 
 
 PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env);
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env);
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
 MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
@@ -2717,7 +2717,7 @@ MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
                                      EnvPtr env);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env);
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
 PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
 
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
@@ -3022,5 +3022,11 @@ void codegenCWrapper(InvokeEntryPtr entry);
 void codegenEntryPoints(ModulePtr module);
 void codegenMain(ModulePtr module);
 
+static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
+    if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
+        return exprs->exprs[0];
+    else
+        return NULL;
+}
 
 #endif

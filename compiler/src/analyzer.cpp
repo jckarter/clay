@@ -299,10 +299,10 @@ PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env)
     return result;
 }
 
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env)
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
 {
     ClearAnalysisError clear;
-    MultiPValuePtr result = analyzeMulti(exprs, env);
+    MultiPValuePtr result = analyzeMulti(exprs, env, wantCount);
     if (!result)
         analysisError();
     return result;
@@ -377,28 +377,34 @@ MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x)
 // analyzeMulti
 //
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env);
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
 
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env)
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
 {
     if (analysisCachingDisabled > 0)
-        return analyzeMulti2(exprs, env);
+        return analyzeMulti2(exprs, env, wantCount);
     if (!exprs->cachedAnalysis)
-        exprs->cachedAnalysis = analyzeMulti2(exprs, env);
+        exprs->cachedAnalysis = analyzeMulti2(exprs, env, wantCount);
     return exprs->cachedAnalysis;
 }
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env)
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
 {
     MultiPValuePtr out = new MultiPValue();
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
+    if (unpackExpr != NULL) {
+        MultiPValuePtr z = analyzeExpr(unpackExpr, env);
+        if (!z)
+            return NULL;
+        out->add(z);
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr z;
             if (y->expr->exprKind == TUPLE) {
                 Tuple *y2 = (Tuple *)y->expr.ptr();
-                z = analyzeMulti(y2->args, env);
+                z = analyzeMulti(y2->args, env, 0);
             }
             else {
                 z = analyzeExpr(y->expr, env);
@@ -594,7 +600,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         }
         else if (y->objKind == EXPR_LIST) {
             ExprListPtr z = (ExprList *)y.ptr();
-            return analyzeMulti(z, env);
+            return analyzeMulti(z, env, 0);
         }
         return analyzeStaticObject(y);
     }
@@ -1436,7 +1442,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         return NULL;
     switch (pv->type->typeKind) {
     case CODE_POINTER_TYPE :
-        MultiPValuePtr mpv = analyzeMulti(args, env);
+        MultiPValuePtr mpv = analyzeMulti(args, env, 0);
         if (!mpv)
             return NULL;
         return analyzeCallPointer(pv, mpv);
@@ -1457,7 +1463,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
-            MultiPValuePtr mpv = analyzeMulti(args, env);
+            MultiPValuePtr mpv = analyzeMulti(args, env, 0);
             if (!mpv)
                 return NULL;
             return analyzePrimOp(x, mpv);
@@ -1862,7 +1868,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, 0);
         if (!mpv) {
             ctx->hasRecursivePropagation = true;
             return SA_RECURSIVE;
@@ -1956,7 +1962,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values, env);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, 0);
         if (!mpv) {
             ctx->hasRecursivePropagation = true;
             return SA_RECURSIVE;
@@ -2008,7 +2014,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 
     case VAR :
     case REF : {
-        MultiPValuePtr right = analyzeMulti(x->values, env);
+        MultiPValuePtr right = analyzeMulti(x->values, env, x->names.size());
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
