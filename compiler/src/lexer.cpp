@@ -327,6 +327,19 @@ static void optNumericSeparator() {
         restore(p);
 }
 
+static bool decimalDigits() {
+    int x;
+    while (true) {
+        optNumericSeparator();
+        char *p = save();
+        if (!decimalDigit(x)) {
+            restore(p);
+            break;
+        }
+    }
+    return true;
+}
+
 static bool hexDigits() {
     int x;
     while (true) {
@@ -399,7 +412,7 @@ static bool exponentPart() {
 static bool fractionalPart() {
     char c;
     if (!next(c) || (c != '.')) return false;
-    return decimalInt();
+    return decimalDigits();
 }
 
 static bool hexExponentPart() {
