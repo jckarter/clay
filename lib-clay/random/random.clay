@@ -1,4 +1,5 @@
 import libc;
+import printer.formatter.(hex, repr);
 
 // Implementation of XOR-shift RNGs by George Marsaglia  
 record XORShiftRNG(
@@ -89,13 +90,19 @@ private define safeFromOverflow?;
 private define toMask;
 
 private inline pb(x, n){ x = bitor(x, bitshr(x, n)); }
-overload toMask(x){
+[T] overload toMask(x:T){
   var t = x;
   pb(t, 1); 
   pb(t, 2); 
   pb(t, 4); 
-  pb(t, 8); 
-  pb(t, 16); 
-  pb(t, 32); 
+  if (TypeSize(T) > 1) {
+    pb(t, 8); 
+    if (TypeSize(T) > 2) {
+      pb(t, 16); 
+      if (TypeSize(T) > 4) {
+        pb(t, 32); 
+      }
+    }
+  }
   return t;
 }
