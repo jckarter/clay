@@ -111,10 +111,13 @@ static void optimizeLLVM(llvm::Module *module, unsigned optLevel, bool internali
     passes.run(*module);
 }
 
-static void generateLLVM(llvm::Module *module, llvm::raw_ostream *out)
+static void generateLLVM(llvm::Module *module, bool emitAsm, llvm::raw_ostream *out)
 {
     llvm::PassManager passes;
-    passes.add(llvm::createPrintModulePass(out));
+    if (emitAsm)
+        passes.add(llvm::createPrintModulePass(out));
+    else
+        passes.add(llvm::createBitcodeWriterPass(*out));
     passes.run(*module);
 }
 
@@ -266,8 +269,8 @@ static void usage(char *argv0)
     cerr << "  -o <file>         - specify output file\n";
     cerr << "  -target <target>  - set target platform for code generation\n";
     cerr << "  -shared           - create a dynamically linkable library\n";
-    cerr << "  -llvm             - emit llvm code\n";
-    cerr << "  -asm              - emit assember code\n";
+    cerr << "  -emit-llvm        - emit llvm code\n";
+    cerr << "  -S                - emit assember code\n";
     cerr << "  -c                - emit object code\n";
     cerr << "  -O0 -O1 -O2 -O3   - set optimization level\n";
     cerr << "  -exceptions       - enable exception handling\n";
@@ -284,6 +287,7 @@ static void usage(char *argv0)
     cerr << "  -framework <name> - link with framework <name>\n";
 #endif
     cerr << "  -L<dir>           - add <dir> to library search path\n";
+    cerr << "  -Wl,<opts>        - pass flags to linker\n";
     cerr << "  -l<lib>           - link with library <lib>\n";
     cerr << "  -I<path>          - add <path> to clay module search path\n";
     cerr << "  -e <source>       - compile and run <source> (implies -run)\n";
@@ -357,6 +361,7 @@ int main(int argc, char **argv) {
     string clayScript;
 
     vector<string> libSearchPath;
+    string linkerFlags;
     vector<string> libraries;
 #ifdef __APPLE__
     vector<string> frameworkSearchPath;
@@ -368,10 +373,10 @@ int main(int argc, char **argv) {
         {
             sharedLib = true;
         }
-        else if (strcmp(argv[i], "-llvm") == 0) {
+        else if (strcmp(argv[i], "-emit-llvm") == 0) {
             emitLLVM = true;
         }
-        else if (strcmp(argv[i], "-asm") == 0) {
+        else if (strcmp(argv[i], "-S") == 0) {
             emitAsm = true;
         }
         else if (strcmp(argv[i], "-c") == 0) {
@@ -523,6 +528,9 @@ int main(int argc, char **argv) {
             }
             crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
         }
+        else if (strstr(argv[i], "-Wl") == argv[i]) {
+            linkerFlags += argv[i] + strlen("-Wl");
+        }
         else if (strstr(argv[i], "-L") == argv[i]) {
             string libDir = argv[i] + strlen("-L");
             if (libDir.empty()) {
@@ -636,8 +644,8 @@ int main(int argc, char **argv) {
         cerr << "error: -M specified without -e\n";
     }
 
-    if (emitLLVM + emitAsm + emitObject > 1) {
-        cerr << "error: use only one of -llvm, -asm, or -c\n";
+    if (emitAsm && emitObject) {
+        cerr << "error: -S or -c cannot be used together\n";
         return -1;
     }
 
@@ -651,7 +659,7 @@ int main(int argc, char **argv) {
         && arch.empty()
 #endif
     ) {
-        cerr << "error: must use -llvm, -asm, or -c when cross compiling\n";
+        cerr << "error: must use -emit-llvm, -S, or -c when cross compiling\n";
         return -1;
     }
 
@@ -722,11 +730,11 @@ int main(int argc, char **argv) {
     if (outputFile.empty()) {
         string clayFileBasename = basename(clayFile);
 
-        if (emitLLVM)
+        if (emitLLVM && emitAsm)
             outputFile = clayFileBasename + ".ll";
         else if (emitAsm)
             outputFile = clayFileBasename + ".s";
-        else if (emitObject)
+        else if (emitObject || emitLLVM)
             outputFile = clayFileBasename + ".o";
         else if (sharedLib)
             outputFile = clayFileBasename + sharedExtensionForTarget(llvmTriple);
@@ -765,7 +773,7 @@ int main(int argc, char **argv) {
             return -1;
         }
         if (emitLLVM)
-            generateLLVM(llvmModule, &out);
+            generateLLVM(llvmModule, emitAsm, &out);
         else if (emitAsm || emitObject)
             generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC);
     }
@@ -797,6 +805,10 @@ int main(int argc, char **argv) {
             arguments.push_back("-arch");
             arguments.push_back(arch);
         }
+#endif
+        if (!linkerFlags.empty())
+            arguments.push_back("-Wl" + linkerFlags);
+#ifdef __APPLE__
         copy(
             frameworkSearchPath.begin(),
             frameworkSearchPath.end(),
