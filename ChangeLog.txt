@@ -6,11 +6,7 @@ Tool changes:
 -------------
 * A "clayfix" program is provided to update code written for Clay 0.0 to
   compile in 0.1. It is fairly simple at this point, but most converted code should
-  just work. For some library changes clayfix isn't smart enough to
-  accommodate, a 'clayfixed.v0_0' module provides backward compatibility.
-  clayfix automaticallys adds 'import clayfixed.v0_0;' to files it converts.
-  Changes that clayfix cannot handle 100% are noted in this changelog.  Other
-  conversion failures should be reported as issues.
+  just work. Changes that can't be clayfix-ed are noted in this changelog.
 
 Language changes:
 -----------------
@@ -202,8 +198,8 @@ Library changes:
     INT16_MIN   ==> Least(Int16)
     INT16_MAX   ==> Greatest(Int16)
     etc.
-  LeastPositive(T) and GreatestPositiveFinite(T) are also provided for floating-point
-  types.
+  LeastPositive(T), LeastPositiveNormalized(T), and GreatestPositiveFinite(T) are
+  also provided for floating-point types.
 
 * 'printString' has been renamed.
     printString ==> str
@@ -220,8 +216,8 @@ Library changes:
 * The space? function from the characters module no longer considers ASCII 0x0B
   (formerly known as '\v') a space character.
 
-* The format of the printRepr* functions has been changed to output more accurate
-  parseable representations of Clay objects.
+* The format of the output from the printRepr function has been changed to give
+  more accurate parseable representations of Clay objects.
 
 * print*() now prints identifiers as their string contents without a leading "#".
   printRepr*() still prints identifiers with the leading "#".
@@ -237,7 +233,7 @@ Library changes:
 
 Compiler frontend changes:
 --------------------------
-* The compiler now requires LLVM 3.0 with Clang.
+* The compiler now requires LLVM 3.0.
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
 * '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency with
   Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by default; use

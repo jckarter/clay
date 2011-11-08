@@ -130,13 +130,17 @@ inline overload Greatest(static UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_u64;
 //
 
 define LeastPositive;
+define LeastPositiveNormalized;
 define GreatestPositiveFinite;
 
-inline overload LeastPositive(static Float32) : Float32 = -0x0.0000_0002p-126;
+inline overload LeastPositive(static Float32) : Float32 = 0x0.0000_0002p-126;
+inline overload LeastPositiveNormalized(static Float32) : Float32 = 0x1.0000_0000p-126;
 inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FFFEp127;
 
 inline overload LeastPositive(static Float64) : Float64
     = 0x0.0000_0000_0000_1p-1022;
+inline overload LeastPositiveNormalized(static Float64) : Float64
+    = 0x1.0000_0000_0000_0p-1022;
 inline overload GreatestPositiveFinite(static Float64) : Float64
     = 0x1.FFFF_FFFF_FFFF_Fp1023;
 
