@@ -1,0 +1,159 @@
+===
+0.2
+===
+
+0.2 will focus on cleaning up and improving the standard library.
+
+* shrink prelude
+* core/std/contrib separation
+* ranges
+* type-safe concurrency
+* cleanups
+
+* The prelude has been shrunk to only include a minimum set of libraries by default.
+  Those prelude modules have been moved to core/*, and the default prelude
+  public imports core.*.
+  The following modules must now be imported if used:
+    <tbd>
+  The module clayfixed.v0_0.fatprelude imports the above modules for backward
+  compatibility.
+
+* The Number(String) and String(Number) constructors have been removed. 'str' should
+  be used to convert numbers to strings, and 'parse' to convert strings to numbers:
+    // 0.0
+    var x = String(1);
+    var y = Int("1");
+
+    // 0.1
+    var x = str(1);
+    var y = parse("1", Int);
+  The 'clayfixed.v0_0.stringconversionconstructors' module includes the old constructor
+  overloads for backward compatibility.
+
+* Sequences can no longer be concatenated with '+' or '+='. The 'cat' or 'push'
+  functions should be used instead.
+  The 'clayfixed.v0_0.sequenceaddition' module includes these overloads for backward
+  compatibility.
+
+* Standard containers now implement bounds checking in index(). A new operator
+  indexUnsafe(a, ..b) (with operator syntax a<[..b]>) is provided for unchecked
+  indexing.
+
+===
+0.3
+===
+
+0.3 will improve the language semantics and implementation.
+
+* unify type and procedure symbols
+* typeclasses
+* region typing
+* pattern matching and destructuring
+* better type system
+
+* The mapping of types to LLVM representation is exposed. A type is a symbol for which
+  llvmRepresentation(#T) is overloaded. llvmRepresentation(#T) should return an
+  identifier containing the LLVM IR description of the type. For example:
+    define Int;
+    overload llvmRepresentation(#Int) = #"i32";
+
+    define Vec[T,n];
+    [T,n | Type?(T)] overload llvmRepresentation(#Vec[T,n])
+        = cat(
+            #"<",
+            LLVMRepresentation(T), #" * ", StaticName(n),
+            #">"
+        );
+  "struct", "variant", and "enum" syntax is still provided, but they now desugar
+  into symbol forms.
+
+* 'union' syntax is provided for defining named union types. Example:
+    union FloatBits32(bits:Int32, float:Float32);
+  The anonymous union type Union[..T] is still present.
+
+* 'newtype' syntax is provided for strong typedefs. A newtype shares the exact
+  low-level representation and ABI of the original type, but its type is distinct.
+  The type can be defined to delegate its overloads to the original type by default,
+  or to provide access to the original type representation by field reference.
+  Examples:
+    newtype PositionToken = Int; // delegate to Int
+    newtype PositionToken (value:Int); // use "token.value" to access Int
+
+* All structs now have "RegularRecord" value semantics, and the "RegularRecord?"
+  predicate is gone. Structs should not provide custom value semantics. A new
+  syntax '<bikeshed>' is provided for types with custom value semantics.
+
+    <bikeshed> Vector[T](buffer:Pointer[T], size:SizeT, capacity:SizeT);
+
+  In addition to custom value semantics, <bikeshed> types also have unspecified
+  memory layouts and are not necessarily ABI-compatible with equivalent C structs.
+
+* A new keyword 'super' is provided to call the next matching overload.
+        [T|Integer?(T)] show(x:T) { println(x); }
+
+        overload show(x:UInt8) { print("my little "); super(x); }
+
+* Throw is now an expression:
+    var p = malloc(123) or throw OutOfMemory();
+    var quotient = if (x == 0) throw DivisionByZero() else y/x;
+
+* Dispatch is now overloadable. The dispatch overload desugars as follows:
+    <tbd>
+  The prelude provides a default implementation for variants that works as in Clay 0.0,
+  as well as a default implementation for multiple dispatch that decomposes into
+  cascading single dispatch.
+
+* Variant representation is now overloadable. In addition to the default tagged-union
+  representation, the prelude also provides a nullable pointer representation, which
+  is used for Maybe[Pointer[T]], Maybe[SharedPointer[T]], and Maybe[UniquePointer[T]].
+  Pointer types should now be considered non-nullable and Maybe[] used for
+  nullable pointers.
+
+* The compiler now does deep unreachability propagation. Functions can also be defined
+  'noreturn' in lieu of return types.
+
+* External declarations may now be parameterized. For example, the libc family of
+  "sqrt" functions may be bound as follows:
+    define LibcMathLetter;
+    overload LibcMathLetter(#Float) = #"f";
+    overload LibcMathLetter(#Double) = #"";
+    overload LibcMathLetter(#LongDouble) = #"l";
+
+    [T|T == Float or T == Double or T == LongDouble]
+    external (C, cat(#"sqrt", LibcMathLetter(T))) sqrt(n:T):T;
+
+  External definitions may also be parameterized, but must be given a set of types
+  for which to be instantiated. <...>
+
+* External functions now have Clay linkage by default. External C functions must be
+  declared with the C ABI (or stdcall or fastcall):
+    // 0.0
+    external foo(x:Int) Int;
+    // 0.1
+    external (C) foo(x:Int):Int;
+  Clay-linkage externals may return multiple values and throw exceptions.
+  cdecl/stdcall/fastcall externals will now throw an error if they are declared to
+  use non-POD types as arguments or return values, or if they are declared as returning
+  multiple return values.
+
+* String literals now support interpolation, which desugars into calls to the
+  str() function. Single identifiers or function calls can be interpolated with
+  $identifier or $identifier(..args), and arbitrary expressions with ${ ..expr }:
+    "$x $y $z"
+        ==> str(x, #" ", y, #" ", z)
+    "Yes, we have $n bananas"
+        ==> str(#"Yes, we have ", n, #" bananas")
+    "Yes, we have $bananaCount() bananas"
+        ==> str(#"Yes, we have ", bananaCount(), #" bananas")
+    "Yes, we have ${n + m} bananas"
+        ==> str(#"Yes, we have ", n + m, #" bananas")
+    "Yes, we have ${n + m} bananas"
+        ==> str(#"Yes, we have ", n + m, #" bananas")
+  Identifier strings with interpolants desugar to identifier():
+    #"$x $y"
+        ==> static identifier(x, #" ", y)
+
+  A custom desugar can be specified by placing a function name before a string
+  literal:
+    utf8 "foo"                  ==> utf8(#"foo")
+    println "x + y = ${x + y}"; ==> println(#"x + y = ", x + y);
