@@ -242,6 +242,7 @@ Compiler frontend changes:
 * '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency with
   Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by default; use
   '-emit-llvm -S' to emit LLVM IR.
+* The compiler now supports "-Wl,..." syntax for sending options to the linker.
 * The redundant -dll option has been removed; use -shared.
 * Externals are now only built for the main module (the source file provided on
   the commandline). Externals imported from other modules will be not be compiled

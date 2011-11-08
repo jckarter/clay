@@ -660,6 +660,7 @@ enum TokenKind {
     T_CHAR_LITERAL,
     T_INT_LITERAL,
     T_FLOAT_LITERAL,
+    T_STATIC_INDEX,
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,

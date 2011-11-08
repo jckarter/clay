@@ -1,0 +1,33 @@
+multiValues() = 1, 3.5;
+moreMultiValues() = 6, 7.0;
+yetMoreMultiValues() = 9, 10.0;
+
+staticMultiValues() {
+    var a, b = 0, 0.0;
+
+    var x, y = multiValues();
+    a += x; b += y;
+
+    x, y = moreMultiValues();
+    a += x; b += y;
+
+    x, y <-- yetMoreMultiValues();
+    a += x; b += y;
+
+    return a, b;
+}
+
+record WackyType[..T] ();
+
+main() {
+    var x, y = multiValues();
+    println(x, ' ', y);
+
+    x, y = moreMultiValues();
+    println(x, ' ', y);
+
+    x, y <-- yetMoreMultiValues();
+    println(x, ' ', y);
+
+    println(WackyType[..staticMultiValues()]);
+}

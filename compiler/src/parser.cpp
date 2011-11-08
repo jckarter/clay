@@ -412,9 +412,8 @@ static bool fieldRefSuffix(ExprPtr &x) {
 
 static bool staticIndexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol(".")) return false;
     TokenPtr t;
-    if (!next(t) || (t->tokenKind != T_INT_LITERAL))
+    if (!next(t) || (t->tokenKind != T_STATIC_INDEX))
         return false;
     char *b = const_cast<char *>(t->str.c_str());
     char *end = b;

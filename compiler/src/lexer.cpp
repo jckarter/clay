@@ -644,6 +644,31 @@ static bool llvmStringChar() {
     return c != '"';
 }
 
+
+//
+// static index
+//
+
+static bool staticIndex(TokenPtr &x) {
+    char c;
+    if (!next(c)) return false;
+    if (c != '.') return false;
+
+    char *begin = save();
+    if (hexInt()) {
+        char *end = save();
+        x = new Token(T_STATIC_INDEX, string(begin, end));
+        return true;
+    } else {
+        restore(begin);
+        if (decimalInt()) {
+            char *end = save();
+            x = new Token(T_STATIC_INDEX, string(begin, end));
+            return true;
+        } else
+            return false;
+    }
+}
 
 
 //
@@ -655,6 +680,7 @@ static bool nextToken(TokenPtr &x) {
     if (space(x)) goto success;
     restore(p); if (lineComment(x)) goto success;
     restore(p); if (blockComment(x)) goto success;
+    restore(p); if (staticIndex(x)) goto success;
     restore(p); if (symbol(x)) goto success;
     restore(p); if (llvmToken(x)) goto success;
     restore(p); if (keywordIdentifier(x)) goto success;
