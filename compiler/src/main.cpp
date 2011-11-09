@@ -41,10 +41,10 @@ static void addOptimizationPasses(llvm::PassManager &passes,
                                   bool internalize)
 {
     llvm::Pass *inliningPass = 0;
-    if (optLevel) {
-        unsigned threshold = 200;
+    if (optLevel > 1) {
+        unsigned threshold = 225;
         if (optLevel > 2)
-            threshold = 250;
+            threshold = 275;
         inliningPass = llvm::createFunctionInliningPass(threshold);
     } else {
         inliningPass = llvm::createAlwaysInlinerPass();
@@ -52,12 +52,12 @@ static void addOptimizationPasses(llvm::PassManager &passes,
 
     llvm::PassManagerBuilder builder;
     builder.OptLevel = optLevel;
-    builder.SizeLevel = 0;
     builder.Inliner = inliningPass;
 
     builder.populateFunctionPassManager(fpasses);
     builder.populateModulePassManager(passes);
-    builder.populateLTOPassManager(passes, internalize, true);
+    if (optLevel > 2)
+        builder.populateLTOPassManager(passes, internalize, true);
 }
 
 static void runModule(llvm::Module *module)
@@ -744,7 +744,7 @@ int main(int argc, char **argv) {
     llvm::sys::Path outputFilePath(outputFile);
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
-    HiResTimer loadTimer, compileTimer, llvmTimer;
+    HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
     loadTimer.start();
     ModulePtr m;
@@ -757,9 +757,10 @@ int main(int argc, char **argv) {
     codegenEntryPoints(m);
     compileTimer.stop();
 
-    llvmTimer.start();
+    optTimer.start();
     if (optLevel > 0)
         optimizeLLVM(llvmModule, optLevel, !(sharedLib || run));
+    optTimer.stop();
 
     if (run)
         runModule(llvmModule);
@@ -772,10 +773,12 @@ int main(int argc, char **argv) {
             cerr << "error: " << errorInfo << '\n';
             return -1;
         }
+        outputTimer.start();
         if (emitLLVM)
             generateLLVM(llvmModule, emitAsm, &out);
         else if (emitAsm || emitObject)
             generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC);
+        outputTimer.stop();
     }
     else {
         bool result;
@@ -823,18 +826,20 @@ int main(int argc, char **argv) {
         );
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
+        outputTimer.start();
         result = generateBinary(llvmModule, outputFilePath, clangPath,
                                 optLevel, exceptions, sharedLib, genPIC,
                                 arguments);
+        outputTimer.stop();
         if (!result)
             return -1;
     }
-    llvmTimer.stop();
 
     if (showTiming) {
         cerr << "load time = " << loadTimer.elapsedMillis() << " ms\n";
         cerr << "compile time = " << compileTimer.elapsedMillis() << " ms\n";
-        cerr << "llvm time = " << llvmTimer.elapsedMillis() << " ms\n";
+        cerr << "optimization time = " << optTimer.elapsedMillis() << " ms\n";
+        cerr << "codegen time = " << outputTimer.elapsedMillis() << " ms\n";
     }
 
     return 0;
