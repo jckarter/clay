@@ -46,7 +46,11 @@ endif()
 
 add_executable(clay ${SOURCES})
 
-set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS}")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS}")
+else()
+    set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
+endif()
 
 if (UNIX)
     set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
@@ -59,4 +63,5 @@ target_link_libraries(clay ${LLVM_LIBS})
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(clay "rt")
+    target_link_libraries(clay "dl")
 endif()
