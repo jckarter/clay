@@ -2116,7 +2116,7 @@ private :
 struct Type : public Object {
     int typeKind;
     llvm::Type *llType;
-    bool refined;
+    bool defined;
 
     bool typeInfoInitialized;
     size_t typeSize;
@@ -2127,7 +2127,7 @@ struct Type : public Object {
 
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind),
-          llType(NULL), refined(false),
+          llType(NULL), defined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
 };
 
@@ -2908,7 +2908,10 @@ struct CValue : public Object {
     bool forwardedRValue;
     CValue(TypePtr type, llvm::Value *llValue)
         : Object(CVALUE), type(type), llValue(llValue),
-          forwardedRValue(false) {}
+          forwardedRValue(false)
+    {
+        llvmType(type); // force full definition of type
+    }
 };
 
 struct MultiCValue : public Object {

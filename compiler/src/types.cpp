@@ -846,8 +846,12 @@ llvm::Type *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
 }
 
+static void declareLLVMType(TypePtr t);
+
 llvm::Type *llvmPointerType(TypePtr t) {
-    return llvmPointerType(llvmType(t));
+    if (!t->llType)
+        declareLLVMType(t);
+    return llvmPointerType(t->llType);
 }
 
 llvm::Type *llvmArrayType(llvm::Type *llType, int size) {
@@ -868,17 +872,21 @@ llvm::Type *llvmVoidType() {
 // llvmType
 //
 
-static void makeLLVMType(TypePtr t);
+static void defineLLVMType(TypePtr t);
 
 llvm::Type *llvmType(TypePtr t) {
     if (t->llType == NULL) {
         verifyRecursionCorrectness(t);
-        makeLLVMType(t);
+        declareLLVMType(t);
     }
+    if (!t->defined) {
+        defineLLVMType(t);
+    }
+
     return t->llType;
 }
 
-static void makeLLVMType(TypePtr t) {
+static void declareLLVMType(TypePtr t) {
     assert(t->llType == NULL);
 
     switch (t->typeKind) {
@@ -941,10 +949,58 @@ static void makeLLVMType(TypePtr t) {
         break;
     }
     case TUPLE_TYPE : {
+        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        break;
+    }
+    case UNION_TYPE : {
+        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        break;
+    }
+    case RECORD_TYPE : {
+        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        break;
+    }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        t->llType = llvmType(variantReprType(x));
+        break;
+    }
+    case STATIC_TYPE : {
+        vector<llvm::Type *> llTypes;
+        llTypes.push_back(llvmIntType(8));
+        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        break;
+    }
+    case ENUM_TYPE : {
+        t->llType = llvmType(cIntType);
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
+
+static void defineLLVMType(TypePtr t) {
+    assert(t->llType != NULL && !t->defined);
+
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+    case INTEGER_TYPE :
+    case FLOAT_TYPE :
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE :
+    case ARRAY_TYPE :
+    case VEC_TYPE :
+    case VARIANT_TYPE :
+    case STATIC_TYPE :
+    case ENUM_TYPE :
+        break;
+
+    case TUPLE_TYPE : {
         TupleType *x = (TupleType *)t.ptr();
 
-        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
-        t->llType = theType;
+        llvm::StructType *theType = llvm::cast<llvm::StructType>(t->llType);
 
         vector<llvm::Type *> llTypes;
         vector<TypePtr>::iterator i, end;
@@ -960,8 +1016,7 @@ static void makeLLVMType(TypePtr t) {
     case UNION_TYPE : {
         UnionType *x = (UnionType *)t.ptr();
 
-        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
-        t->llType = theType;
+        llvm::StructType *theType = llvm::cast<llvm::StructType>(t->llType);
 
         llvm::Type *maxAlignType = NULL;
         size_t maxAlign = 0;
@@ -998,8 +1053,7 @@ static void makeLLVMType(TypePtr t) {
     case RECORD_TYPE : {
         RecordType *x = (RecordType *)t.ptr();
 
-        llvm::StructType *theType = llvm::StructType::create(llvm::getGlobalContext());
-        t->llType = theType;
+        llvm::StructType *theType = llvm::cast<llvm::StructType>(t->llType);
 
         const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
         vector<llvm::Type *> llTypes;
@@ -1012,24 +1066,10 @@ static void makeLLVMType(TypePtr t) {
         theType->setBody(llTypes);
         break;
     }
-    case VARIANT_TYPE : {
-        VariantType *x = (VariantType *)t.ptr();
-        t->llType = llvmType(variantReprType(x));
-        break;
-    }
-    case STATIC_TYPE : {
-        vector<llvm::Type *> llTypes;
-        llTypes.push_back(llvmIntType(8));
-        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
-        break;
-    }
-    case ENUM_TYPE : {
-        t->llType = llvmType(cIntType);
-        break;
-    }
     default :
         assert(false);
     }
+    t->defined = true;
 }
 
 

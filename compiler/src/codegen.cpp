@@ -4049,6 +4049,7 @@ static llvm::Value *pointerValue(MultiCValuePtr args,
         if (cv->type->typeKind != POINTER_TYPE)
             argumentTypeError(index, "pointer type", cv->type);
         type = (PointerType *)cv->type.ptr();
+        llvmType(type->pointeeType); // force the pointee type to be refined
     }
     return ctx->builder->CreateLoad(cv->llValue);
 }
