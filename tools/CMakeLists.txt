@@ -16,6 +16,7 @@ add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clayfix${EXE}
     COMMAND ${clay_BINARY_DIR}/compiler/src/clay
         -I${clay_SOURCE_DIR}/lib-clay
         -I${clay_SOURCE_DIR}/tools
+        -O1
         -o ${clay_BINARY_DIR}/tools/clayfix${EXE}
         ${clay_SOURCE_DIR}/tools/clayfix.clay)
 
