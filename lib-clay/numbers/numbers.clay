@@ -359,7 +359,9 @@ overload octalDigit(static #"6") = 6;
 overload octalDigit(static #"7") = 7;
 //
 [T,I |Integer?(T) and Identifier?(I)]
-alias octal(static T, static I)
-    = foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
+private _octal(static T, static I)
+    = static foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
 
-alias overload octal(I) = octal(Int, I);
+define octal;
+overload octal(T, I) = unwrapStatic(_octal(T, I));
+overload octal(I) = octal(Int, I);
