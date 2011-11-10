@@ -741,7 +741,12 @@ int main(int argc, char **argv) {
         else
             outputFile = clayFileBasename + exeExtensionForTarget(llvmTriple);
     }
-    llvm::sys::Path outputFilePath(outputFile);
+    llvm::sys::PathWithStatus outputFilePath(outputFile);
+    const llvm::sys::FileStatus *outputFileStatus = outputFilePath.getFileStatus();
+    if (outputFileStatus != NULL && outputFileStatus->isDir) {
+	    cerr << "error: output file '" << outputFile << "' is a directory\n";
+	    return -1;
+    }
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
