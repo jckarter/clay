@@ -128,9 +128,9 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "Tuple(" << y->args << ")";
         break;
     }
-    case ARRAY : {
-        const Array *y = (const Array *)x;
-        out << "Array(" << y->args << ")";
+    case PAREN : {
+        const Paren *y = (const Paren *)x;
+        out << "Paren(" << y->args << ")";
         break;
     }
     case INDEXING : {

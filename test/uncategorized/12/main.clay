@@ -8,7 +8,7 @@ map(f, a) {
 }
 
 main() {
-    var a = Vector([1, 2, 3, 4, 5, 6]);
+    var a = Vector[Int](1, 2, 3, 4, 5, 6);
 
     var f = (x => x*10);
     var b = map(f, a);

@@ -305,24 +305,24 @@ static bool optExpressionList(ExprListPtr &x) {
 // atomic expr
 //
 
-static bool arrayExpr(ExprPtr &x) {
+static bool tupleExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
-    if (!expressionList(args)) return false;
+    if (!optExpressionList(args)) return false;
     if (!symbol("]")) return false;
-    x = new Array(args);
+    x = new Tuple(args);
     x->location = location;
     return true;
 }
 
-static bool tupleExpr(ExprPtr &x) {
+static bool parenExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
-    x = new Tuple(args);
+    x = new Paren(args);
     x->location = location;
     return true;
 }
@@ -362,7 +362,7 @@ static bool columnExpr(ExprPtr &x) {
 
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
-    if (arrayExpr(x)) return true;
+    if (parenExpr(x)) return true;
     if (restore(p), tupleExpr(x)) return true;
     if (restore(p), nameRef(x)) return true;
     if (restore(p), literal(x)) return true;

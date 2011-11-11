@@ -220,7 +220,7 @@ struct FILEExpr;
 struct LINEExpr;
 struct COLUMNExpr;
 struct Tuple;
-struct Array;
+struct Paren;
 struct Indexing;
 struct Call;
 struct FieldRef;
@@ -366,7 +366,7 @@ typedef Pointer<FILEExpr> FILEExprPtr;
 typedef Pointer<LINEExpr> LINEExprPtr;
 typedef Pointer<COLUMNExpr> COLUMNExprPtr;
 typedef Pointer<Tuple> TuplePtr;
-typedef Pointer<Array> ArrayPtr;
+typedef Pointer<Paren> ParenPtr;
 typedef Pointer<Indexing> IndexingPtr;
 typedef Pointer<Call> CallPtr;
 typedef Pointer<FieldRef> FieldRefPtr;
@@ -735,7 +735,7 @@ enum ExprKind {
 
     NAME_REF,
     TUPLE,
-    ARRAY,
+    PAREN,
     INDEXING,
     CALL,
     FIELD_REF,
@@ -834,10 +834,10 @@ struct Tuple : public Expr {
         : Expr(TUPLE), args(args) {}
 };
 
-struct Array : public Expr {
+struct Paren : public Expr {
     ExprListPtr args;
-    Array(ExprListPtr args)
-        : Expr(ARRAY), args(args) {}
+    Paren(ExprListPtr args)
+        : Expr(PAREN), args(args) {}
 };
 
 struct Indexing : public Expr {

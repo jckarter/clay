@@ -54,11 +54,11 @@ main() {
     lua.openLibs(x);
     lua.registerModule(x,
         "IntArray",
-        ("new", IntArray_new),
-        ("destroy", IntArray_destroy),
-        ("set", IntArray_set),
-        ("get", IntArray_get),
-        ("size", IntArray_size),
+        ["new", IntArray_new],
+        ["destroy", IntArray_destroy],
+        ["set", IntArray_set],
+        ["get", IntArray_get],
+        ["size", IntArray_size],
     );
     try {
         lua.doString(x, "

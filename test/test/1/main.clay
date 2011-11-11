@@ -9,9 +9,9 @@ throwNothing() { }
 
 main() = testMain(
     TestSuite(
-        "test test suite", [
+        "test test suite", array(
             TestCase("should pass", test => {
-                var seq = [2, 3, 5, 7, 11];
+                var seq = array(2, 3, 5, 7, 11);
 
                 expectTrue(test, "truth", true);
                 expectFalse(test, "falsehood", false);
@@ -28,7 +28,7 @@ main() = testMain(
                 expectException(test, "throws 7", 7, throwInt);
             }),
             TestCase("should fail", test => {
-                var seq = [2, 3, 5, 7, 11];
+                var seq = array(2, 3, 5, 7, 11);
                 var iter = iterator(seq);
 
                 expectTrue(test, "truth", false);
@@ -78,6 +78,6 @@ main() = testMain(
                     expectTrue(test, "truth 4", true);
                 });
             }),
-        ]
+        )
     )
 );

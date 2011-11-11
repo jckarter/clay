@@ -26,8 +26,8 @@ record Any (
     ptr : Pointer[Byte],
     size : SizeT,
     alignment : SizeT,
-    copyConstructor : CodePointer[Opaque, Opaque],
-    destructor : CodePointer[Opaque, ()],
+    copyConstructor : CodePointer[[Opaque], [Opaque]],
+    destructor : CodePointer[[Opaque], []],
 );
 
 // disable default value semantics
@@ -39,8 +39,8 @@ overload Any() {
         null(Byte),
         SizeT(0),
         SizeT(0),
-        CodePointer[Opaque,Opaque](0),
-        CodePointer[Opaque,()](0)
+        CodePointer[[Opaque],[Opaque]](0),
+        CodePointer[[Opaque],[]](0)
     );
 }
 
@@ -99,8 +99,8 @@ alias box(x:T) {
         Pointer[Byte](ptr),
         TypeSize(T),
         TypeAlignment(T),
-        CodePointer[Opaque,Opaque](copyConstructor),
-        CodePointer[Opaque,()](destructor)
+        CodePointer[[Opaque],[Opaque]](copyConstructor),
+        CodePointer[[Opaque],[]](destructor)
     );
 }
 

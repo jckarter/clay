@@ -8,7 +8,7 @@ errorNames() {
             if (empty?(code))
                 break;
             assert(not empty?(name));
-            push(errorNamesVector, (Int(code), name));
+            push(errorNamesVector, [Int(code), name]);
         }
     }
     return ref errorNamesVector;
@@ -39,7 +39,7 @@ generateAliases() {
         if (empty?(code))
             break;
         assert(not empty?(name));
-        push(entries, (code, name));
+        push(entries, [code, name]);
     }
     var maxNameSize = max(mapped(x => size(x.1), entries));
     for (entry in entries) {

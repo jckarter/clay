@@ -13,7 +13,7 @@ record PtrTuple[..T] (
 
 [..T]
 overload PtrTuple(..args:T) =
-    PtrTuple[..T]( (..pointerValues(..args)) );
+    PtrTuple[..T]( [..pointerValues(..args)] );
 
 main() {
     var a = PtrTuple("foo", #bar, 10);

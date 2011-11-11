@@ -173,10 +173,10 @@ alias SIGPWR    = 30;
 alias SIGSYS    = 31;
 
 
-alias SIG_ERR  = CCodePointer[(Int),()](-1);
-alias SIG_DFL  = CCodePointer[(Int),()](0);
-alias SIG_IGN  = CCodePointer[(Int),()](1);
-alias SIG_HOLD = CCodePointer[(Int),()](2);
+alias SIG_ERR  = CCodePointer[[Int],[]](-1);
+alias SIG_DFL  = CCodePointer[[Int],[]](0);
+alias SIG_IGN  = CCodePointer[[Int],[]](1);
+alias SIG_HOLD = CCodePointer[[Int],[]](2);
 
 //
 // status flags for wait() calls

@@ -89,18 +89,18 @@ registerPoint(s:lua.State) {
         lua.setField(s, -2, StaticName(RecordFieldName(Point, i)));
     }
     lua.registerTable(s,
-        ("xyValues", Point_xyValues),
-        ("xyArray", Point_xyArray),
+        ["xyValues", Point_xyValues],
+        ["xyArray", Point_xyArray],
     );
     lua.pop(s, 1);
     lua.newMetaTable(s, "Point");
     lua.registerTable(s,
-        ("__index", Point_index),
-        ("__newindex", Point_newIndex),
+        ["__index", Point_index],
+        ["__newindex", Point_newIndex],
     );
     lua.pop(s, 1);
     lua.registerModule(s, "Module",
-        ("newPoint", Point_new),
+        ["newPoint", Point_new],
     );
     lua.pop(s, 1);
 }

@@ -5,7 +5,7 @@ import random.*;
 // is relatively low in the case that there is a genuine failure (<= 2^-64 is the general goal).
 // Failures in this test suite that do not occur again on rerunning are troubling but not necessarily a major problem. 
 main() = testMain(
-  TestSuite("Random number generation", [
+  TestSuite("Random number generation", array(
     TestCase("consecutive runs from the same RNG", test => {
       var rng = XORShiftRNG();
 
@@ -56,5 +56,5 @@ main() = testMain(
         expectTrue(test, "x < 3.0", x < 3.0);
       }
     }),
-  ])
+  ))
 );

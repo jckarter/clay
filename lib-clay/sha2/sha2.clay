@@ -9,7 +9,7 @@ overload printTo(stream, forward sha:SHA256) {
     printTo(stream, hexString(sha.digest));
 }
 
-private var sha256RoundConstants = [
+private var sha256RoundConstants = array(
    0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
    0x3956c25b_u, 0x59f111f1_u, 0x923f82a4_u, 0xab1c5ed5_u,
    0xd807aa98_u, 0x12835b01_u, 0x243185be_u, 0x550c7dc3_u,
@@ -26,7 +26,7 @@ private var sha256RoundConstants = [
    0x391c0cb3_u, 0x4ed8aa4a_u, 0x5b9cca4f_u, 0x682e6ff3_u,
    0x748f82ee_u, 0x78a5636f_u, 0x84c87814_u, 0x8cc70208_u,
    0x90befffa_u, 0xa4506ceb_u, 0xbef9a3f7_u, 0xc67178f2_u,
-];
+);
 
 alias ChunkBytes = Array[UInt8,  64];
 alias ChunkWords = Array[UInt32, 16];
@@ -95,7 +95,7 @@ sha256(message: S) --> returned: SHA256 {
     var messageTailBegin = Pointer[UInt8](messageHeadEnd);
     var messageTailEnd   = Pointer[UInt8](end(message));
 
-    var state = [
+    var state = array(
         0x6a09e667_u,
         0xbb67ae85_u,
         0x3c6ef372_u,
@@ -104,7 +104,7 @@ sha256(message: S) --> returned: SHA256 {
         0x9b05688c_u,
         0x1f83d9ab_u,
         0x5be0cd19_u,
-    ];
+    );
     var tempState = Array[UInt32, 8]();
     var chunkSpace = Array[UInt32, 64]();
 

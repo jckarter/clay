@@ -6,6 +6,6 @@ overload wrap() = ;
 
 main() {
     var x = 10;
-    var a = (..wrap(10, x, 10, x));
+    var a = [..wrap(10, x, 10, x)];
     println(Type(a));
 }

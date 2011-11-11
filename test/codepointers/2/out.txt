@@ -1,4 +1,4 @@
-VarArgsCCodePointer[Pointer[Int8], Int32]
+VarArgsCCodePointer[[Pointer[Int8]], [Int32]]
 
 VarArgsCCodePointer
 In = Pointer[Int8]

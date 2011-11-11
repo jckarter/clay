@@ -64,7 +64,7 @@ alias __darwin_ssize_t = CLong;
 alias __darwin_time_t = CLong;
 
 record Struct___darwin_pthread_handler_rec (
-    __routine : CCodePointer[(RawPointer),()],
+    __routine : CCodePointer[[RawPointer],[]],
     __arg : RawPointer,
     __next : Pointer[Struct___darwin_pthread_handler_rec],
 );
@@ -974,9 +974,9 @@ alias pthread_t = __darwin_pthread_t;
 alias mach_port_t = UInt;
 
 external pthread_atfork(
-    argument0 : CCodePointer[(),()],
-    argument1 : CCodePointer[(),()],
-    argument2 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]],
+    argument1 : CCodePointer[[],[]],
+    argument2 : CCodePointer[[],[]]) : Int;
 
 external pthread_attr_destroy(
     argument0 : Pointer[pthread_attr_t]) : Int;
@@ -1100,7 +1100,7 @@ external pthread_condattr_setpshared(
 external pthread_create(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
-    argument2 : CCodePointer[(RawPointer),(RawPointer)],
+    argument2 : CCodePointer[[RawPointer],[RawPointer]],
     argument3 : RawPointer) : Int;
 
 external pthread_detach(
@@ -1129,7 +1129,7 @@ external ("_pthread_join") pthread_join(
 
 external pthread_key_create(
     argument0 : Pointer[CULong],
-    argument1 : CCodePointer[(RawPointer),()]) : Int;
+    argument1 : CCodePointer[[RawPointer],[]]) : Int;
 
 external pthread_key_delete(
     argument0 : CULong) : Int;
@@ -1199,7 +1199,7 @@ external pthread_mutexattr_settype(
 
 external pthread_once(
     argument0 : Pointer[pthread_once_t],
-    argument1 : CCodePointer[(),()]) : Int;
+    argument1 : CCodePointer[[],[]]) : Int;
 
 external ("_pthread_rwlock_destroy") pthread_rwlock_destroy(
     argument0 : Pointer[pthread_rwlock_t]) : Int;
@@ -1322,7 +1322,7 @@ external pthread_cond_timedwait_relative_np(
 external pthread_create_suspended_np(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
-    argument2 : CCodePointer[(RawPointer),(RawPointer)],
+    argument2 : CCodePointer[[RawPointer],[RawPointer]],
     argument3 : RawPointer) : Int;
 
 external pthread_kill(
@@ -2345,7 +2345,7 @@ record Struct_sigevent (
     sigev_notify : Int,
     sigev_signo : Int,
     sigev_value : AUnionType,
-    sigev_notify_function : CCodePointer[(AUnionType),()],
+    sigev_notify_function : CCodePointer[[AUnionType],[]],
     sigev_notify_attributes : Pointer[pthread_attr_t],
 );
 
@@ -2366,7 +2366,7 @@ alias siginfo_t = Struct___siginfo;
 
 record Struct___sigaction (
     __sigaction_u : AUnionType,
-    sa_tramp : CCodePointer[(RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer),()],
+    sa_tramp : CCodePointer[[RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer],[]],
     sa_mask : UInt,
     sa_flags : Int,
 );
@@ -2377,10 +2377,10 @@ record Struct_sigaction (
     sa_flags : Int,
 );
 
-alias sig_t = CCodePointer[(Int),()];
+alias sig_t = CCodePointer[[Int],[]];
 
 record Struct_sigvec (
-    sv_handler : CCodePointer[(Int),()],
+    sv_handler : CCodePointer[[Int],[]],
     sv_mask : Int,
     sv_flags : Int,
 );
@@ -2392,7 +2392,7 @@ record Struct_sigstack (
 
 external signal(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) : CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 alias P_ALL = 0;
 alias P_PID = 1;
@@ -2576,7 +2576,7 @@ external raise(
 
 external bsd_signal(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) : CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 external ("_kill") kill(
     argument0 : Int,
@@ -2639,7 +2639,7 @@ external sigrelse(
 
 external sigset(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) : CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 external ("_sigsuspend") sigsuspend(
     argument0 : Pointer[UInt]) : Int;
@@ -2721,8 +2721,8 @@ external ("_rewinddir$INODE64") rewinddir(
 external ("_scandir$INODE64") scandir(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[Pointer[Struct_dirent]]],
-    argument2 : CCodePointer[(Pointer[Struct_dirent]),(Int)],
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) : Int;
+    argument2 : CCodePointer[[Pointer[Struct_dirent]],[Int]],
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]) : Int;
 
 external ("_scandir_b$INODE64") scandir_b(
     argument0 : Pointer[CChar],

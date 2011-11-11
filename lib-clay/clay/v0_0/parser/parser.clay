@@ -144,7 +144,7 @@ private keyword(s) {
     var i = keywordIndex(s);
     assert(i >= 0, "invalid keyword");
     var pred = (x => ((x.kind == KEYWORD) and (x.subKind == i)));
-    return modify(x => (), condition(pred));
+    return modify(x => [], condition(pred));
 }
 
 private var kw_public = keyword("public");
@@ -202,7 +202,7 @@ private punctuationParser(Ident) {
     var i = punctuationIndex(StaticName(Ident));
     assert(i >= 0, "invalid punctuation");
     var pred = (x => ((x.kind == PUNCTUATION) and (x.subKind == i)));
-    return modify(x => (), condition(pred));
+    return modify(x => [], condition(pred));
 }
 
 private var punctuationParserTable[Ident] = punctuationParser(Ident);

@@ -45,7 +45,7 @@ record SourceTokens = referenceType(
 // punctuations and keywords
 //
 
-private var punctuations = [
+private var punctuations = array(
     "<--", "...", "=>", "->",
     "==", "!=", "<=", ">=",
     "<", ">",
@@ -53,9 +53,9 @@ private var punctuations = [
     "+", "-", "*", "/", "%", "=", "&", "^", "|",
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#"
-];
+);
 
-private var keywords = [
+private var keywords = array(
     "public", "private", "import", "as",
     "record", "variant", "instance",
     "procedure", "overload", "external", "alias",
@@ -66,7 +66,7 @@ private var keywords = [
     "switch", "case", "default", "break", "continue", "for", "in",
     "true", "false", "try", "catch", "throw",
     "__FILE__", "__LINE__", "__COLUMN__",
-];
+);
 
 punctuationIndex(s) : Int {
     for (i, x in enumerated(punctuations)) {

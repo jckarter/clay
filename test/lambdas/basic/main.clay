@@ -12,6 +12,6 @@ main() {
     z.fn(10);
     foo(10, ", ", 20);
 
-    var g = x => ..(x, x+1, x+2);
+    var g = x => (x, x+1, x+2);
     println(..weaveValues(", ", ..g(99)));
 }

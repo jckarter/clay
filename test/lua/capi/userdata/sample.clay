@@ -76,24 +76,24 @@ Foo_dot(x:Pointer[lua_State]) Int {
     return 1;
 }
 
-var Foo_methods = [
+var Foo_methods = array(
     ..mapValues(
         x => luaL_Reg(
             cstring(x.0),
             makeCCodePointer(x.1, Pointer[lua_State])
         ),
-        ("new", Foo_new),
-        ("yourCfunction", Foo_yourCfunction),
-        ("setx", Foo_setx),
-        ("sety", Foo_sety),
-        ("add", Foo_add),
-        ("dot", Foo_dot),
+        ["new", Foo_new],
+        ["yourCfunction", Foo_yourCfunction],
+        ["setx", Foo_setx],
+        ["sety", Foo_sety],
+        ["add", Foo_add],
+        ["dot", Foo_dot],
     ),
     luaL_Reg(
         null(CChar),
         CCodePointer[Pointer[lua_State], Int](0),
     ),
-];
+);
 
 Foo_gc(x:Pointer[lua_State]) Int {
     println("bye, bye, bar = ", toFoo(x, 1));
@@ -109,21 +109,21 @@ Foo_tostring(x:Pointer[lua_State]) Int {
     return 1;
 }
 
-var Foo_meta = [
+var Foo_meta = array(
     ..mapValues(
         x => luaL_Reg(
             cstring(x.0),
             makeCCodePointer(x.1, Pointer[lua_State])
         ),
-        ("__gc", Foo_gc),
-        ("__tostring", Foo_tostring),
-        ("__add", Foo_add),
+        ["__gc", Foo_gc],
+        ["__tostring", Foo_tostring],
+        ["__add", Foo_add],
     ),
     luaL_Reg(
         null(CChar),
         CCodePointer[Pointer[lua_State], Int](0),
     ),
-];
+);
 
 Foo_register(x:Pointer[lua_State]) Int {
     luaL_openlib(x, cstring(FOO), begin(Foo_methods), 0);

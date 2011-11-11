@@ -23,8 +23,8 @@ main() {
     lua.openLibs(x);
     lua.registerModule(x,
         "mylib",
-        ("sayHello", sayHello),
-        ("sumAndAverage", sumAndAverage),
+        ["sayHello", sayHello],
+        ["sumAndAverage", sumAndAverage],
     );
     try {
         lua.doString(x, "

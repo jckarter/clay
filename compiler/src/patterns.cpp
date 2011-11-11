@@ -11,8 +11,6 @@ static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params)
 {
     if (!head) {
         const vector<ObjectPtr> &elements = params->values;
-        if (elements.size() == 1)
-            return elements[0];
         return makeTupleValue(params->values);
     }
     else {
@@ -608,11 +606,6 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args->size() == 1) &&
-            (x->args->exprs[0]->exprKind != UNPACK))
-        {
-            return evaluateOnePattern(x->args->exprs[0], env);
-        }
         MultiPatternPtr params = evaluateMultiPattern(x->args, env);
         return new PatternStruct(NULL, params);
     }
@@ -715,31 +708,29 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPatternPtr mp = evaluateMultiPattern(y2->args, env);
-                if (!appendPattern(cur, mp)) {
+            MultiPatternPtr mp = checkMultiPatternNameRef(y->expr, env);
+            if (mp.ptr()) {
+                if (!appendPattern(cur, mp))
                     error(x, "expressions cannot occur after "
                           "multi-pattern variable");
-                }
             }
             else {
-                MultiPatternPtr mp = checkMultiPatternNameRef(y->expr, env);
-                if (mp.ptr()) {
-                    if (!appendPattern(cur, mp))
-                        error(x, "expressions cannot occur after "
-                              "multi-pattern variable");
+                MultiStaticPtr z = evaluateExprStatic(y->expr, env);
+                if (!cur && (z->size() > 0))
+                    error(x, "expressions cannot occur after "
+                          "multi-pattern variable");
+                for (unsigned j = 0; j < z->size(); ++j) {
+                    PatternPtr p = new PatternCell(z->values[i]);
+                    cur->items.push_back(p);
                 }
-                else {
-                    MultiStaticPtr z = evaluateExprStatic(y->expr, env);
-                    if (!cur && (z->size() > 0))
-                        error(x, "expressions cannot occur after "
-                              "multi-pattern variable");
-                    for (unsigned j = 0; j < z->size(); ++j) {
-                        PatternPtr p = new PatternCell(z->values[i]);
-                        cur->items.push_back(p);
-                    }
-                }
+            }
+        }
+        else if (x->exprKind == PAREN) {
+            Paren *y = (Paren *)x.ptr();
+            MultiPatternPtr mp = evaluateMultiPattern(y->args, env);
+            if (!appendPattern(cur, mp)) {
+                error(x, "expressions cannot occur after "
+                      "multi-pattern variable");
             }
         }
         else {

@@ -21,7 +21,7 @@ inline overload wrapSequence(ref x:A) = x;
 // packSequences, unpackSequences
 //
 
-inline packSequences(forward ..args) = (..mapValues(wrapSequence, ..args));
+inline packSequences(forward ..args) = [..mapValues(wrapSequence, ..args)];
 
 [..T]
 inline unpackSequences(x:Tuple[..T]) = ref ..unpackTupleRef(x);
@@ -47,10 +47,10 @@ inline dummyElements(..seqs) = forward ..mapValues(dummyElement, ..seqs);
 //
 
 inline multiIterators(packedSeq) =
-    (..mapValues(iterator, ..unpackTupleRef(packedSeq)));
+    [..mapValues(iterator, ..unpackTupleRef(packedSeq))];
 
 inline multiReverseIterators(packedSeq) =
-    (..mapValues(reverseIterator, ..unpackTupleRef(packedSeq)));
+    [..mapValues(reverseIterator, ..unpackTupleRef(packedSeq))];
 
 
 

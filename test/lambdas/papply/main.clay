@@ -1,7 +1,7 @@
 
 main() {
     var plus100 = partialApply(add, 100);
-    for (x in [1, 2, 3, 4])
+    for (x in array(1, 2, 3, 4))
         println( plus100(x) );
 }
 

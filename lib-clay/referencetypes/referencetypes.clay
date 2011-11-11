@@ -20,27 +20,27 @@ define ReferenceTypeFieldTypes;
 
 [..F | (countValues(..F) > 0)]
 referenceTypeWithProperties(properties, ..fields:F) = recordWithProperties(
-    (
-        (RegularRecord?, static false),
-        (ReferenceType?, static true),
-        (ReferenceTypeFieldCount, static countValues(..F)),
-        (ReferenceTypeFieldNames, ..mapValues(x => x.0, ..fields)),
-        (ReferenceTypeFieldTypes, ..mapValues(x => x.1, ..fields)),
+    [
+        [RegularRecord?, static false],
+        [ReferenceType?, static true],
+        [ReferenceTypeFieldCount, static countValues(..F)],
+        [ReferenceTypeFieldNames, ..mapValues(x => x.0, ..fields)],
+        [ReferenceTypeFieldTypes, ..mapValues(x => x.1, ..fields)],
         ..unpack(properties),
-    ),
-    (#ptr, SharedPointer[Tuple[..mapValues(x => x.1, ..fields)]]),
+    ],
+    [#ptr, SharedPointer[Tuple[..mapValues(x => x.1, ..fields)]]],
 );
 
 [..F | (countValues(..F) > 0)]
 referenceTypeWithProperty(property, ..fields:F) =
-    referenceTypeWithProperties(Tuple(property), ..fields);
+    referenceTypeWithProperties([property], ..fields);
 
 [..F | (countValues(..F) > 0)]
 referenceTypeWithPredicate(predicate, ..fields:F) =
-    referenceTypeWithProperty((predicate, static true), ..fields);
+    referenceTypeWithProperty([predicate, static true], ..fields);
 
 [..F | (countValues(..F) > 0)]
-referenceType(..fields:F) = referenceTypeWithProperties(Tuple(), ..fields);
+referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
 
 
 

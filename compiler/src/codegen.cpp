@@ -527,14 +527,11 @@ MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiCValuePtr mcv;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mcv = codegenMultiArgsAsRef(y2->args, env, ctx);
-            }
-            else {
-                mcv = codegenArgExprAsRef(y->expr, env, ctx);
-            }
+            MultiCValuePtr mcv = codegenArgExprAsRef(y->expr, env, ctx);
+            out->add(mcv);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiCValuePtr mcv = codegenArgExprAsRef(x, env, ctx);
             out->add(mcv);
         }
         else {
@@ -581,14 +578,11 @@ MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiCValuePtr mcv;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mcv = codegenForwardMultiAsRef(y2->args, env, ctx);
-            }
-            else {
-                mcv = codegenForwardExprAsRef(y->expr, env, ctx);
-            }
+            MultiCValuePtr mcv = codegenForwardExprAsRef(y->expr, env, ctx);
+            out->add(mcv);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiCValuePtr mcv = codegenForwardExprAsRef(x, env, ctx);
             out->add(mcv);
         }
         else {
@@ -643,14 +637,11 @@ MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiCValuePtr mcv;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mcv = codegenMultiAsRef(y2->args, env, ctx);
-            }
-            else {
-                mcv = codegenExprAsRef(y->expr, env, ctx);
-            }
+            MultiCValuePtr mcv = codegenExprAsRef(y->expr, env, ctx);
+            out->add(mcv);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiCValuePtr mcv = codegenExprAsRef(x, env, ctx);
             out->add(mcv);
         }
         else {
@@ -798,25 +789,22 @@ void codegenMultiInto(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
-                assert(j + mpv->size() <= out->size());
-                MultiCValuePtr out2 = new MultiCValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                codegenMultiInto(y2->args, env, ctx, out2, 0);
-                j += mpv->size();
-            }
-            else {
-                MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
-                assert(j + mpv->size() <= out->size());
-                MultiCValuePtr out2 = new MultiCValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                codegenExprInto(y->expr, env, ctx, out2);
-                j += mpv->size();
-            }
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
+            assert(j + mpv->size() <= out->size());
+            MultiCValuePtr out2 = new MultiCValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            codegenExprInto(y->expr, env, ctx, out2);
+            j += mpv->size();
+        }
+        else if (x->exprKind == PAREN) {
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
+            assert(j + mpv->size() <= out->size());
+            MultiCValuePtr out2 = new MultiCValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            codegenExprInto(x, env, ctx, out2);
+            j += mpv->size();
         }
         else {
             MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
@@ -896,25 +884,23 @@ void codegenMulti(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
-                assert(j + mpv->size() <= out->size());
-                MultiCValuePtr out2 = new MultiCValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                codegenMulti(y2->args, env, ctx, out2, 0);
-                j += mpv->size();
-            }
-            else {
-                MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
-                assert(j + mpv->size() <= out->size());
-                MultiCValuePtr out2 = new MultiCValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                codegenExpr(y->expr, env, ctx, out2);
-                j += mpv->size();
-            }
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
+            assert(j + mpv->size() <= out->size());
+            MultiCValuePtr out2 = new MultiCValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            codegenExpr(y->expr, env, ctx, out2);
+            j += mpv->size();
+        }
+        else if (x->exprKind == PAREN) {
+            Unpack *y = (Unpack *)x.ptr();
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
+            assert(j + mpv->size() <= out->size());
+            MultiCValuePtr out2 = new MultiCValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            codegenExpr(x, env, ctx, out2);
+            j += mpv->size();
         }
         else {
             MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
@@ -1054,21 +1040,14 @@ void codegenExpr(ExprPtr expr,
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args->size() == 1) &&
-            (x->args->exprs[0]->exprKind != UNPACK))
-        {
-            codegenExpr(x->args->exprs[0], env, ctx, out);
-        }
-        else {
-            ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
-            codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
-        }
+        ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
+        codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
         break;
     }
 
-    case ARRAY : {
-        Array *x = (Array *)expr.ptr();
-        codegenCallExpr(prelude_expr_arrayLiteral(), x->args, env, ctx, out);
+    case PAREN : {
+        Paren *x = (Paren *)expr.ptr();
+        codegenMulti(x->args, env, ctx, out, 0);
         break;
     }
 

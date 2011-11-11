@@ -12,7 +12,7 @@ main() {
     var P2 = Point2[Int];
     println(Node?(P2));
     println(NodeFieldCount(P2));
-    println(Tuple(..NodeFields(P2)));
+    println([..NodeFields(P2)]);
 }
 
 
@@ -36,17 +36,17 @@ overload NodeFields(x) = false;
 //
 
 obj1(..fields) = recordWithProperty(
-    (Node?, static true),
+    [Node?, static true],
     ..fields,
 );
 
 [..F]
 obj2(..fields:F) = recordWithProperties(
-    (
-        (Node?, static true),
-        (NodeFieldCount, static countValues(..F)),
-        (NodeFields, ..fields),
-    ),
+    [
+        [Node?, static true],
+        [NodeFieldCount, static countValues(..F)],
+        [NodeFields, ..fields],
+    ],
     extra: Double,
     ..fields,
 );

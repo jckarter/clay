@@ -96,9 +96,9 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case ARRAY : {
-        Array *y = (Array *)x.ptr();
-        out = new Array(clone(y->args));
+    case PAREN : {
+        Paren *y = (Paren *)x.ptr();
+        out = new Paren(clone(y->args));
         break;
     }
 

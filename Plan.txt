@@ -9,6 +9,7 @@
 * ranges
 * type-safe concurrency
 * cleanups
+* solidify and stick to naming conventions
 
 * The prelude has been shrunk to only include a minimum set of libraries by default.
   Those prelude modules have been moved to core/*, and the default prelude
@@ -47,9 +48,12 @@
 
 * unify type and procedure symbols
 * typeclasses
+* interface restrictions
 * region typing
 * pattern matching and destructuring
 * better type system
+* mutability control
+* definition-time error checking
 
 * The mapping of types to LLVM representation is exposed. A type is a symbol for which
   llvmRepresentation(#T) is overloaded. llvmRepresentation(#T) should return an

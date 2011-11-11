@@ -68,31 +68,31 @@ record MyNSNumber = externalClass(#"NSNumber", NSString);
 
 record SubString1 = newClass(NSString,
     InstanceVars(
-        (#foo, Int),
+        [#foo, Int],
     ),
     ClassMethods(
-        (#"classVersion", (class) => 7, Int),
+        [#"classVersion", (class) => 7, Int],
     ),
     InstanceMethods(
-        (#"version", (self) => 7, Int),
+        [#"version", (self) => 7, Int],
     )
 );
 
 record SubString2 = newClass(#"ClaySubString2", NSString,
     InstanceVars(
-        (#foo, Double),
+        [#foo, Double],
     ),
     ClassMethods(
-        (#"classVersion", (class) => nil(Id)),
+        [#"classVersion", (class) => nil(Id)],
     ),
     InstanceMethods(
-        (#"version", (self) => nil(Id)),
+        [#"version", (self) => nil(Id)],
     )
 );
 
 record SubSubString = newExternalClass(SubString1,
     InstanceVars(
-        (#bar, StringConstant),
+        [#bar, StringConstant],
     ),
     ClassMethods(),
     InstanceMethods()
@@ -100,39 +100,39 @@ record SubSubString = newExternalClass(SubString1,
 
 record SubSubSubString = newClass(SubSubString,
     InstanceVars(
-        (#bar, StringConstant),
+        [#bar, StringConstant],
     ),
     ClassMethods(
-        (#"classVersion", (class) => 8),
+        [#"classVersion", (class) => 8],
     ),
     InstanceMethods(
-        (#"classVersion", (self) => 8),
+        [#"classVersion", (self) => 8],
     ),
 );
 
 record CocoaCanary = newClass(NSObject,
     InstanceVars(
-        (#canary, Canary),
+        [#canary, Canary],
     ),
     ClassMethods(),
     InstanceMethods(
-        (#"init", self => {
+        [#"init", self => {
             self = super(self).init();
             if (not nil?(self)) {
                 self^.canary <-- Canary();
             }
             return self;
-        }),
-        (#"copyWithZone:", (self, zone) => {
+        }],
+        [#"copyWithZone:", (self, zone) => {
             var copy = CocoaCanary(self.class().allocWithZone(zone));
             copy = super(copy).init();
             copy^.canary <-- self^.canary;
             return copy;
-        }),
-        (#"dealloc", self => {
+        }],
+        [#"dealloc", self => {
             destroy(self^.canary);
             super(self).dealloc();
-        }),
+        }],
     )
 );
 
@@ -264,7 +264,7 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         expectEncoding(test, "^(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Pointer[Foonion]);
         expectEncoding(test, "^^(Union)", Pointer[Pointer[Foonion]]);
         expectEncoding(test, "^^^(Union)", Pointer[Pointer[Pointer[Foonion]]]);
-        expectEncoding(test, "?", CCodePointer[(),()]);
+        expectEncoding(test, "?", CCodePointer[[],[]]);
         expectEncoding(test, "@@:", Id, Id, SelectorHandle);
         expectEncoding(test, "v@:", Void, Id, SelectorHandle);
     }),
@@ -398,7 +398,7 @@ main() = testMain(TestSuite("Objective-C binding internals", [
     TestCase("parameter type conversion", test => {
         expectMsgSendParamType(test, Id, ObjectHandle);
         expectMsgSendParamType(test, NSObject, ObjectHandle);
-        expectMsgSendParamType(test, Void, static ());
+        expectMsgSendParamType(test, Void, static []);
         expectMsgSendParamType(test, Int, Int);
         expectMsgSendParamType(test, Bool, BOOL);
         expectMsgSendParamType(test, Foo, Foo);
@@ -549,7 +549,7 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         );
     }),
     TestCase("msgSendUnbox types", test => {
-        expectEqualValues(test, "alloc", (),
+        expectEqualValues(test, "alloc", [],
             ..Type(..msgSendUnbox(Id, #"alloc"))
         );
         expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
@@ -566,7 +566,7 @@ main() = testMain(TestSuite("Objective-C binding internals", [
         );
     }),
     TestCase("msgSendBox types", test => {
-        expectEqualValues(test, "alloc", (),
+        expectEqualValues(test, "alloc", [],
             ..Type(..msgSendBox(Id, #"alloc"))
         );
         expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),

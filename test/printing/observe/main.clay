@@ -14,7 +14,7 @@ main() {
     println(tellRvalue(observe(x)) + 4);
     println(tellRvalue(observe(String("lemons"))) + 4);
 
-    var a = [1, 2, 3];
+    var a = array(1, 2, 3);
     println(tellRvalueString(observeCall(add, a[0], a[1])));
     println(tellRvalueString(observeCall(index, a, 1)));
     try {

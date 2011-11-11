@@ -12,7 +12,7 @@ record Vectorized[R] = ..mapValues(vectorizeField, ..RecordFields(R));
 
 vectorizeField(field) {
     var name, type = ..unpack(field);
-    return (name, Vector[type]);
+    return [name, Vector[type]];
 }
 
 
@@ -30,7 +30,7 @@ alias VPoint = Vectorized[Point];
 
 main() {
     var a = VPoint();
-    push(a.x, [1, 2, 3]);
-    push(a.y, [4, 5, 6]);
+    push(a.x, array(1, 2, 3));
+    push(a.y, array(4, 5, 6));
     println(a);
 }

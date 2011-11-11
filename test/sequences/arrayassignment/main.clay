@@ -1,7 +1,7 @@
 main() {
-    var x = [1, 2, 3];
-    var y = [4_u64, 5_u64, 6_u64];
-    var z = [7, 8, 9];
+    var x = array(1, 2, 3);
+    var y = array(4_u64, 5_u64, 6_u64);
+    var z = array(7, 8, 9);
 
     x = z;
     println(x);
@@ -9,9 +9,9 @@ main() {
     y = z;
     println(y);
 
-    z = [10, 11, 12];
+    z = array(10, 11, 12);
     println(z);
 
-    y = [13, 14, 15];
+    y = array(13, 14, 15);
     println(y);
 }

@@ -302,7 +302,7 @@ initObjectWith(
     ref initFn = initFn_;
     var superArgCount = static SelectorArgumentCount(superSelector);
 
-    // self = super(self).init..(..);
+    // self = super(self).init*(..);
     self = callMethod(super(self), superSelector,
         ..takeValues(superArgCount, ..args)
     );
@@ -543,7 +543,7 @@ overload regularClassInitMethod(..fields)
 
 private regularClassInitMethodName(field1, ..fields)
     = IdentifierConcat(#"initWith", IdentifierCapitalize(field1.0), #":",
-        ..mapValues(x => ..(x.0, #":"), ..fields)
+        ..mapValues(x => (x.0, #":"), ..fields)
     );
 
 private regularClassPropertyMethods(..fields)

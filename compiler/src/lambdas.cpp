@@ -529,8 +529,8 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case ARRAY : {
-        Array *y = (Array *)x.ptr();
+    case PAREN : {
+        Paren *y = (Paren *)x.ptr();
         convertFreeVars(y->args, env, ctx);
         break;
     }

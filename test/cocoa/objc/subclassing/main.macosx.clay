@@ -12,31 +12,31 @@ overload selector(static #"someCGPoint") = CGPoint;
 overload selector(static #"someCGSize") = CGSize;
 
 record NumberConvertingString = newClass(NSString,
-    InstanceVars((#value, Int)),
+    InstanceVars([#value, Int]),
     ClassMethods(
-        (#"ncStringWithInt:",
+        [#"ncStringWithInt:",
             (class, value) => class.alloc().initWithInt(value).autorelease()
-        ),
-        (#"ncStringWithNumber:",
+        ],
+        [#"ncStringWithNumber:",
             (class, value) => class.alloc().initWithNumber(value).autorelease()
-        ),
+        ],
     ),
     InstanceMethods(
-        (#"initWithInt:", (self, value) => {
+        [#"initWithInt:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
                 self^.value = value;
             }
             return self;
-        }),
-        (#"initWithNumber:", (self, value) => {
+        }],
+        [#"initWithNumber:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
                 self^.value = value.intValue();
             }
             return self;
-        }),
-        (#"length", (self) => {
+        }],
+        [#"length", (self) => {
             var length = NSUInteger(0);
             var value = self^.value;
 
@@ -49,8 +49,8 @@ record NumberConvertingString = newClass(NSString,
                 value /= 10;
             }
             return length;
-        }),
-        (#"characterAtIndex:", (self, index) => {
+        }],
+        [#"characterAtIndex:", (self, index) => {
             var value = self^.value;
             var length = self.length();
 
@@ -67,10 +67,10 @@ record NumberConvertingString = newClass(NSString,
 
             var digit = (value/base) % 10;
             return unichar(Int('0') + digit);
-        }),
+        }],
 
         // XXX struct returns are currently broken because of a lack of LLVM support
-        // (#"someCGRect", self => CGRect(
+        // [#"someCGRect", self => CGRect(
         //     CGPoint(
         //         CGFloat(10.0),
         //         CGFloat(20.0),
@@ -79,15 +79,15 @@ record NumberConvertingString = newClass(NSString,
         //         CGFloat(30.0),
         //         CGFloat(40.0),
         //     ),
-        // )),
-        // (#"someCGPoint", self => CGPoint(
+        // )],
+        // [#"someCGPoint", self => CGPoint(
         //     CGFloat(50.0),
         //     CGFloat(60.0),
-        // )),
-        // (#"someCGSize", self => CGSize(
+        // )],
+        // [#"someCGSize", self => CGSize(
         //     CGFloat(70.0),
         //     CGFloat(80.0),
-        // )),
+        // )],
     )
 );
 

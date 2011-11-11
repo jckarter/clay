@@ -5,7 +5,7 @@ main() {
     verifyCanaryLevel(() => {
         println("testing array construction");
         throwAfter(3);
-        var a = [Canary(), Canary(), Canary(), Canary()];
+        var a = array(Canary(), Canary(), Canary(), Canary());
     });
     verifyCanaryLevel(() => {
         println("testing array construction 2");

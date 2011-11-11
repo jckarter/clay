@@ -34,7 +34,7 @@ RecordFieldTypes(static T) = ..Type(..recordFields(null(T)^));
 
 RecordFields(R) {
     alias n = RecordFieldCount(R);
-    var f = i => (RecordFieldName(R,i), RecordFieldType(R,i));
+    var f = i => [RecordFieldName(R,i), RecordFieldType(R,i)];
     return ..mapValues(f, ..staticIntegers(static n));
 }
 
@@ -204,4 +204,4 @@ recordWithProperty(property, ..fields) =
     recordWithProperties(Tuple(property), ..fields);
 
 recordWithPredicate(predicate, ..fields) =
-    recordWithProperty((predicate, static true), ..fields);
+    recordWithProperty([predicate, static true], ..fields);

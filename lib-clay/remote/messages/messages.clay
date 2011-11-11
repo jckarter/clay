@@ -32,7 +32,7 @@ alias DefaultProtocol = call;
 //
 // entry point generation
 //
-alias RemoteEntryPoint = CodePointer[(Vector[Byte]), ()];
+alias RemoteEntryPoint = CodePointer[[Vector[Byte]], []];
 
 private var remoteEntryPoints[Protocol] = Vector[RemoteEntryPoint]();
 

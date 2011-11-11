@@ -231,6 +231,46 @@ Library changes:
     println("x = ", 128_u8, " ", 128_u16); // output: x = 128 128
     println("x = ", repr(128_u8, " ", 128_u16)); // output: x = 128u8, " ", 128u16
 
+* The 'arrayLiteral' and 'tupleLiteral' functions have been renamed 'array' and 'tuple'.
+    arrayLiteral ==> array
+    tupleLiteral ==> tuple
+
+* Tuple syntax has been changed to use square brackets. Parens are now used only for
+  grouping.
+    // 0.0
+    ()
+    (1,)
+    (1, 2, 3)
+
+    // 0.1
+    []
+    [1]
+    [1, 2, 3]
+
+  Arrays (formerly occupying []) can be constructed with the array() function.
+    // 0.0
+    [1, 2, 3] // array
+
+    // 0.1
+    array(1, 2, 3)
+
+  The "...()" hack to parenthesize multiple values is no longer necessary.
+    // 0.0
+    (x, y) -> ...(x+1, y-1)
+
+    // 0.1
+    (x, y) -> (x+1, y-1)
+
+  CodePointer (and CCodePointer, etc.) types now must always have their input and
+  output type lists in tuples, even if there is one input or output:
+    // 0.0
+    CodePointer[(Int, Float), String]
+    CodePointer[Int, (String, Char)]
+
+    // 0.1
+    CodePointer[[Int, Float], [String]]
+    CodePointer[[Int], [String, Char]]
+
 Compiler frontend changes:
 --------------------------
 * The compiler now requires LLVM 3.0.
@@ -257,25 +297,6 @@ TO BE DONE FOR 0.1
 * The representation of StringConstants has been changed to be compatible with
   C strings.
 
-* Tuple syntax has been changed to use square brackets. Parens are now used only for
-  grouping.
-    // 0.0
-    ()
-    (1,)
-    (1, 2, 3)
-
-    // 0.1
-    []
-    [1]
-    [1, 2, 3]
-
-  Arrays (formerly occupying []) can be constructed with the array() function.
-    // 0.0
-    [1, 2, 3] // array
-
-    // 0.1
-    array(1, 2, 3)
-
 * The frontend now supports a -D flag, which populates the __defines__ module:
 
     clay -DNDEBUG -DFLAVOR=Raspberry foo.clay
@@ -290,10 +311,17 @@ TO BE DONE FOR 0.1
 
 * The 'static' keyword in expressions and argument lists is now the '#' operator.
   Identifiers must now always be quoted:
-        static 9 => #9
-        static foo => #foo
-        static #foo => #"foo"
-        #foo => #"foo"
+    // 0.0
+    static 9
+    static foo
+    static #foo
+    #foo
+
+    // 0.1
+    9
+    #foo
+    #"foo"
+    #"foo"
 
 * 'record' has been renamed to 'struct', and library functions with 'record' or
   'Record' in the name have been renamed to 'struct'/'Struct'.

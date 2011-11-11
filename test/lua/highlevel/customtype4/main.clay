@@ -65,16 +65,16 @@ main() {
 
     lua.newMetaTable(x, "IntArray");
     lua.registerTable(x,
-        ("__tostring", IntArray_tostring),
-        ("__index", IntArray_get),
-        ("__newindex", IntArray_set),
-        ("__len", IntArray_size),
-        ("__gc", IntArray_destroy),
+        ["__tostring", IntArray_tostring],
+        ["__index", IntArray_get],
+        ["__newindex", IntArray_set],
+        ["__len", IntArray_size],
+        ["__gc", IntArray_destroy],
     );
 
     lua.registerModule(x,
         "IntArray",
-        ("new", IntArray_new),
+        ["new", IntArray_new],
     );
     try {
         lua.doString(x, "

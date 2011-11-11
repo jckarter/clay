@@ -5,15 +5,15 @@ overload selector(static #"performMath:") = Void, UISegmentedControl;
 
 record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
     InstanceVars(
-        (#window, IBOutlet(Retained[UIWindow])),
-        (#viewController, IBOutlet(Retained[ExampleViewController])),
+        [#window, IBOutlet(Retained[UIWindow])],
+        [#viewController, IBOutlet(Retained[ExampleViewController])],
     ),
     ClassMethods(),
     InstanceMethods(
-        (#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
+        [#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
             self^.window.addSubview(self^.viewController.view());
             self^.window.makeKeyAndVisible();
-        }),
+        }],
         DeallocInstanceMethod(),
     ),
 );
@@ -22,19 +22,19 @@ record ExampleViewController = newClass(#"ExampleViewController", UIViewControll
     InstanceVars(),
     ClassMethods(),
     InstanceMethods(
-        (#"shouldAutorotateToInterfaceOrientation:", (self, orientation) => true),
+        [#"shouldAutorotateToInterfaceOrientation:", (self, orientation) => true],
     ),
 );
 
 record ExampleController = newClass(#"ExampleController", NSObject,
     InstanceVars(
-        (#leftField,   IBOutlet(UITextField)),
-        (#rightField,  IBOutlet(UITextField)),
-        (#resultLabel, IBOutlet(UILabel)),
+        [#leftField,   IBOutlet(UITextField)],
+        [#rightField,  IBOutlet(UITextField)],
+        [#resultLabel, IBOutlet(UILabel)],
     ),
     ClassMethods(),
     InstanceMethods(
-        (#"performMath:", IBAction((self, sender) => {
+        [#"performMath:", IBAction((self, sender) => {
             switch (Int(sender.selectedSegmentIndex()))
             case (0)
                 _performMath(self, add);
@@ -45,7 +45,7 @@ record ExampleController = newClass(#"ExampleController", NSObject,
             case (3)
                 _performMath(self, divide);
             else {}
-        })),
+        })],
     ),
 );
 

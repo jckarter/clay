@@ -29,7 +29,7 @@ main() {
 
     var v = Vector(range(100));
 
-    for (value in [a,b]) {
+    for (value in array(a,b)) {
         // test return-by-ref from 'maybe'
         ref y = maybe(value, x -> ref v[x], () -> ref v[0]);
         y += 1;

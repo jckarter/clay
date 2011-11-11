@@ -22,7 +22,7 @@ private define filterStatics;
 
 [V,M | Variant?(V)]
 VariantNestingPaths(static V, static M) =
-    ..VariantNestingPaths2(V, M, ());
+    ..VariantNestingPaths2(V, M, []);
 
 [V,M]
 private VariantNestingPaths2(static V, static M, Prefix) {

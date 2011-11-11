@@ -43,7 +43,7 @@ even?(x) = x % 2 == 0;
 main() {
     {
         // test enumerated
-        var a = Vector([10, 20, 40, 80, 160]);
+        var a = Vector[Int](10, 20, 40, 80, 160);
         for (i, x in enumerated(a))
             println(i, ") ", x);
     }
@@ -79,7 +79,7 @@ main() {
 
     {
         // test find, binarySearch
-        var a = Vector([1, 1, 2, 4, 7, 7, 7, 9, 15, 15, 19]);
+        var a = Vector[Int](1, 1, 2, 4, 7, 7, 7, 9, 15, 15, 19);
         printList(a);
         testFind(a, 10);
         testFind(a, 1);

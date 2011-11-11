@@ -1,15 +1,15 @@
 
 main() {
-    println(() == ());
-    println(Tuple(1) == Tuple(1));
-    println(Tuple(1) != Tuple(2));
-    println(Tuple(1, 2) == Tuple(1, 2));
-    println(Tuple(1, 2) != Tuple(1, 3));
+    println([] == []);
+    println([1] == Tuple(1));
+    println([1] != Tuple(2));
+    println([1, 2] == Tuple(1, 2));
+    println([1, 2] != Tuple(1, 3));
 
-    unpackAndShow(());
+    unpackAndShow([]);
     unpackAndShow(1);
-    unpackAndShow((1, 2));
-    unpackAndShow((1, 2, 3));
+    unpackAndShow([1, 2]);
+    unpackAndShow([1, 2, 3]);
 }
 
 unpackAndShow(x) {

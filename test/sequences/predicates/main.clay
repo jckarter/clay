@@ -14,7 +14,7 @@ sequenceInfo(x:T) {
 main() {
     alias f = sequenceInfo;
 
-    var a = [1, 2, 3];
+    var a = array(1, 2, 3);
     f( a );
 
     var b = mapped(addressOf, a);

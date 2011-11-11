@@ -1121,39 +1121,22 @@ void typePrint(ostream &out, TypePtr t) {
     }
     case CODE_POINTER_TYPE : {
         CodePointerType *x = (CodePointerType *)t.ptr();
-        out << "CodePointer[";
-        if (x->argTypes.size() == 1) {
-            out << x->argTypes[0];
+        out << "CodePointer[[";
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            out << x->argTypes[i];
         }
-        else {
-            out << "(";
-            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
-                if (i != 0)
-                    out << ", ";
-                out << x->argTypes[i];
-            }
-            out << ")";
-        }
-        out << ", ";
-        if (x->returnTypes.size() == 1) {
-            if (x->returnIsRef[0])
-                out << "ByRef[" << x->returnTypes[0] << "]";
+        out << "], [";
+        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            if (x->returnIsRef[i])
+                out << "ByRef[" << x->returnTypes[i] << "]";
             else
-                out << x->returnTypes[0];
+                out << x->returnTypes[i];
         }
-        else {
-            out << "(";
-            for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
-                if (i != 0)
-                    out << ", ";
-                if (x->returnIsRef[i])
-                    out << "ByRef[" << x->returnTypes[i] << "]";
-                else
-                    out << x->returnTypes[i];
-            }
-            out << ")";
-        }
-        out << "]";
+        out << "]]";
         break;
     }
     case CCODE_POINTER_TYPE : {
@@ -1175,24 +1158,16 @@ void typePrint(ostream &out, TypePtr t) {
             assert(false);
         }
         out << "[";
-        if (x->argTypes.size() == 1) {
-            out << x->argTypes[0];
+        out << "[";
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            out << x->argTypes[i];
         }
-        else {
-            out << "(";
-            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
-                if (i != 0)
-                    out << ", ";
-                out << x->argTypes[i];
-            }
-            out << ")";
-        }
-        out << ", ";
+        out << "], [";
         if (x->returnType.ptr())
             out << x->returnType;
-        else
-            out << "()";
-        out << "]";
+        out << "]]";
         break;
     }
     case ARRAY_TYPE : {

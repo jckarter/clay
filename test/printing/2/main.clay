@@ -1,9 +1,9 @@
 
 main() {
-    println((1, true, 3.5));
-    println([10, 20, 30]);
-    println(Vector([true, false, true]));
+    println([1, true, 3.5]);
+    println(array(10, 20, 30));
+    println(Vector[Bool](true, false, true));
     
-    var s = str(Vector([true, false, true]));
+    var s = str(Vector[Bool](true, false, true));
     println(s);
 }

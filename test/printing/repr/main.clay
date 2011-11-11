@@ -30,9 +30,9 @@ main() {
     println(repr("x ~\x01\x1F\x7F\x80\xFF"));
     println(repr("\0\n\r\t\f\'\""));
 
-    println(repr(()));
-    println(repr((1,)));
-    println(repr((1, "two")));
+    println(repr([]));
+    println(repr([1]));
+    println(repr([1, "two"]));
 
     println(repr(Foo(1, "two")));
 

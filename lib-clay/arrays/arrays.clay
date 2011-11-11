@@ -233,14 +233,12 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
 
 
 //
-// arrayLiteral - type inferring constructor
+// array - type inferring constructor
 //
 
-[..A | (countValues(..A) > 0) and equalValues?(..A)]
-alias arrayLiteral(..args:A) {
-    alias n = static countValues(..A);
-    alias T = firstValue(..A);
-    return Array[T, n](..args);
+[..A | countValues(..A) > 0 and equalValues?(..A)]
+alias array(..args:A) {
+    return Array[takeValues(static 1, ..A), countValues(..A)](..args);
 }
 
 

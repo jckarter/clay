@@ -226,10 +226,10 @@ alias SIGINFO   = 29;
 alias SIGUSR1   = 30;
 alias SIGUSR2   = 31;
 
-alias SIG_DFL   = CCodePointer[(Int),()](0);
-alias SIG_IGN   = CCodePointer[(Int),()](1);
-alias SIG_HOLD  = CCodePointer[(Int),()](5);
-alias SIG_ERR   = CCodePointer[(Int),()](-1);
+alias SIG_DFL   = CCodePointer[[Int],[]](0);
+alias SIG_IGN   = CCodePointer[[Int],[]](1);
+alias SIG_HOLD  = CCodePointer[[Int],[]](5);
+alias SIG_ERR   = CCodePointer[[Int],[]](-1);
 
 private alias _WSTOPPED = 0x7f;
 private _WSTATUS(x) = bitand(Int(x), 0x7f);

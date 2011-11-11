@@ -77,7 +77,7 @@ overload RegularRecord?(static Bucket[E]) = false;
 overload TwoHash[E]() 
 {
     alias TABLE = Table[Bucket[E]](0);
-    return TwoHash[E]([TABLE, TABLE], SizeT(0));
+    return TwoHash[E](array(TABLE, TABLE), SizeT(0));
 }
 
 [E]
@@ -222,7 +222,7 @@ allocateEntryAt(th: TwoHash[E], key: K, rvalue entry: E)
     
 retry:
     var hash = splitHash(th, key);
-    var entryCount = [0,0];
+    var entryCount = array(0,0);
     for (i in range(2))
     {
         for (k in range(16))
@@ -372,7 +372,7 @@ baseSplitHash(hash: UInt64)
     var lowHash = SizeT(bitand(hash, 127));
     var hash1 = SizeT(bitshr(hash, 8));
     var hash2 = SizeT(bitshr(hash, 32));
-    return [hash1, hash2, lowHash];
+    return array(hash1, hash2, lowHash);
 }
 
 [E]

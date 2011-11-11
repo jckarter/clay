@@ -46,7 +46,7 @@ main() {
     println("3 ", if (inValues?(3, 1, 2)) "" else "not ", "in 1, 2");
 
     println("array: ", ..weaveValues(", ",
-        ..sequenceValues([3, 7, 15, 1, 292, 1, 1, 1], static 8)
+        ..sequenceValues(array(3, 7, 15, 1, 292, 1, 1, 1), static 8)
     ));
 
     eachValue2(
@@ -63,10 +63,10 @@ main() {
         )
     ));
 
-    println(assocValue?(#foo, (#foo, 1, 2, 3), (#bar, 4)));
-    println(assocValue?(#bar, (#foo, 1, 2, 3), (#bar, 4)));
-    println(assocValue?(#bas, (#foo, 1, 2, 3), (#bar, 4)));
+    println(assocValue?(#foo, [#foo, 1, 2, 3], [#bar, 4]));
+    println(assocValue?(#bar, [#foo, 1, 2, 3], [#bar, 4]));
+    println(assocValue?(#bas, [#foo, 1, 2, 3], [#bar, 4]));
 
-    println(..weaveValues(", ", ..assocValue(#foo, (#foo, 1, 2, 3), (#bar, 4))));
-    println(assocValue(#bar, (#foo, 1, 2, 3), (#bar, 4)));
+    println(..weaveValues(", ", ..assocValue(#foo, [#foo, 1, 2, 3], [#bar, 4])));
+    println(assocValue(#bar, [#foo, 1, 2, 3], [#bar, 4]));
 }

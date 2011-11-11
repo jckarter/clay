@@ -19,7 +19,7 @@ expectSockaddrIn(test, name, expectedHost, expectedPort, address) {
 main() {
     startSockets();
     var r = testMain(
-        TestSuite("socket IPv4 addresses", [
+        TestSuite("socket IPv4 addresses", array(
             TestCase("numeric addresses", test => {
                 expectSockaddrIn(test, "0x7F_00_00_01:1234",
                     0x7F_00_00_01u,
@@ -46,7 +46,7 @@ main() {
                     Inet("localhost", 1234)
                 );
             }),
-        ]),
+        )),
     );
     finishSockets();
     return r;

@@ -14,7 +14,7 @@ main() {
     printList(a);
     printList(reversed(a));
 
-    var b = [1, 2, 3, 4, 5];
+    var b = array(1, 2, 3, 4, 5);
     printList(reversed(b));
 
     var c = reversed(Vector(b));

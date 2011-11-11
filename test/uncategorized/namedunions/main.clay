@@ -4,7 +4,7 @@
 // sample code for named unions
 //
 
-alias MyUnion = NamedUnion[(#foo, Int), (#bar, UInt8)];
+alias MyUnion = NamedUnion[foo:Int, bar:UInt8];
 
 main() {
     var a = MyUnion();

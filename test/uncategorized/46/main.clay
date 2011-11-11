@@ -1,5 +1,5 @@
 
-fields(I) = (#x, I), (#y, I);
+fields(I) = [#x, I], [#y, I];
 
 record Point[I] = ..fields(I);
 

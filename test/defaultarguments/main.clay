@@ -1,7 +1,7 @@
 import defaultarguments.*;
 
 foo(..args) {
-    var name, number = ..defaultArguments(("John Doe", 42), ..args);
+    var name, number = ..defaultArguments(["John Doe", 42], ..args);
     println(name, ": ", number);
 }
 

@@ -3,16 +3,16 @@ import test.memory.*;
 import deques.*;
 
 record TestInterface = interfaceType(
-    (print, (),    ()),
-    (size,  (),    SizeT),
+    [print, [],    []],
+    [size,  [],    SizeT],
 );
 
 main() {
-    var objects = [
+    var objects = array(
         allocateBox(TestInterface, "hello world"),
-        allocateBox(TestInterface, [1, 2, 3, 4]),
+        allocateBox(TestInterface, array(1, 2, 3, 4)),
         allocateBox(TestInterface, Vector[Float](5.0f, 6.0f, 7.0f)),
-    ];
+    );
 
     for (object in objects) {
         invoke(print, object);

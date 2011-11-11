@@ -67,16 +67,16 @@ main() {
     lua.pushValue(x, -1);
     lua.setField(x, -2, "__index");
     lua.registerTable(x,
-        ("set", IntArray_set),
-        ("get", IntArray_get),
-        ("size", IntArray_size),
-        ("__tostring", IntArray_tostring),
-        ("__gc", IntArray_destroy),
+        ["set", IntArray_set],
+        ["get", IntArray_get],
+        ["size", IntArray_size],
+        ["__tostring", IntArray_tostring],
+        ["__gc", IntArray_destroy],
     );
 
     lua.registerModule(x,
         "IntArray",
-        ("new", IntArray_new),
+        ["new", IntArray_new],
     );
     try {
         lua.doString(x, "

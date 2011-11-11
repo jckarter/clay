@@ -401,19 +401,17 @@ static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned want
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr z;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                z = analyzeMulti(y2->args, env, 0);
-            }
-            else {
-                z = analyzeExpr(y->expr, env);
-            }
+            MultiPValuePtr z = analyzeExpr(y->expr, env);
             if (!z)
                 return NULL;
             out->add(z);
         }
-        else {
+        else if (x->exprKind == PAREN) {
+            MultiPValuePtr y = analyzeExpr(x, env);
+            if (!y)
+                return NULL;
+            out->add(y);
+        } else {
             PValuePtr y = analyzeOne(x, env);
             if (!y)
                 return NULL;
@@ -476,20 +474,19 @@ static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiPValuePtr z;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                z = analyzeMultiArgs2(y2->args, env, index, dispatchIndices);
-            }
-            else {
-                z = analyzeArgExpr(y->expr, env, index, dispatchIndices);
-            }
+            MultiPValuePtr z = analyzeArgExpr(y->expr, env, index, dispatchIndices);
             if (!z)
                 return NULL;
             index += z->size();
             out->add(z);
         }
-        else {
+        else if (x->exprKind == PAREN) {
+            MultiPValuePtr z = analyzeArgExpr(x, env, index, dispatchIndices);
+            if (!z)
+                return NULL;
+            index += z->size();
+            out->add(z);
+        } else {
             PValuePtr y = analyzeOneArg(x, env, index, dispatchIndices);
             if (!y)
                 return NULL;
@@ -621,19 +618,14 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args->size() == 1) &&
-            (x->args->exprs[0]->exprKind != UNPACK))
-        {
-            return analyzeExpr(x->args->exprs[0], env);
-        }
         return analyzeCallExpr(prelude_expr_tupleLiteral(),
                                x->args,
                                env);
     }
 
-    case ARRAY : {
-        Array *x = (Array *)expr.ptr();
-        return analyzeCallExpr(prelude_expr_arrayLiteral(), x->args, env);
+    case PAREN : {
+        Paren *x = (Paren *)expr.ptr();
+        return analyzeMulti(x->args, env, 0);
     }
 
     case INDEXING : {

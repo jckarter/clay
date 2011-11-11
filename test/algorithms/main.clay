@@ -1,6 +1,6 @@
 
 main() {
-    var a = ["", "foo", "foobar", "afoobarfoo"];
+    var a = array("", "foo", "foobar", "afoobarfoo");
 
     // (seq, seq) - find, beginsWith?, endsWith?, split
     for (x in a) {
@@ -23,6 +23,6 @@ main() {
     println(join("", a));
     println(join(".", a));
     println(join('/', a));
-    println(join(0, [[1, 2], [2, 3], [3, 4]]));
+    println(join(0, array(array(1, 2), array(2, 3), array(3, 4))));
     println(join(".", map(String, a)));
 }

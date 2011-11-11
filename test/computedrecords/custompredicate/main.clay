@@ -7,7 +7,7 @@ main() {
     var a = Point[Int](10, 20);
     var b = Point[Int](1.2, 3.4);
     var c = Point[Int]('a', 'z');
-    for (x in [a, b, c])
+    for (x in array(a, b, c))
         println(x);
 }
 

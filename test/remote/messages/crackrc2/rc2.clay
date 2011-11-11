@@ -4,7 +4,7 @@ import maybe.*;
 import io.sockets.*;
 import remote.messages.*;
 
-var rc2Permute = [
+var rc2Permute = array(
         217u8,120u8,249u8,196u8, 25u8,221u8,181u8,237u8, 40u8,233u8,253u8,121u8, 74u8,160u8,216u8,157u8, 
         198u8,126u8, 55u8,131u8, 43u8,118u8, 83u8,142u8, 98u8, 76u8,100u8,136u8, 68u8,139u8,251u8,162u8, 
          23u8,154u8, 89u8,245u8,135u8,179u8, 79u8, 19u8, 97u8, 69u8,109u8,141u8,  9u8,129u8,125u8, 50u8, 
@@ -21,7 +21,7 @@ var rc2Permute = [
         211u8,  0u8,230u8,207u8,225u8,158u8,168u8, 44u8, 99u8, 22u8,  1u8, 63u8, 88u8,226u8,137u8,169u8, 
          13u8, 56u8, 52u8, 27u8,171u8, 51u8,255u8,176u8,187u8, 72u8, 12u8, 95u8,185u8,177u8,205u8, 46u8, 
         197u8,243u8,219u8, 71u8,229u8,165u8,156u8,119u8, 10u8,166u8, 32u8,104u8,254u8,127u8,193u8,173u8 
-];
+);
 
 alias XKey = Array[UInt16, 64];
 
@@ -172,11 +172,11 @@ showCipher(cipher) {
 }
 
 main() = dispatchMain(
-    (encrypt,     "key plaintext => cipher"),
-    (decrypt,     "key cipher => plaintext"),
-    (crack,       "plaintext cipher => key (single process, assumes alphanumeric key)"),
-    (crackNode,   "port => listen for crack jobs from crackServer"),
-    (crackRun,    "plaintext cipher host:port.. => distribute crack jobs to crackNodes"),
+    [encrypt,     "key plaintext => cipher"],
+    [decrypt,     "key cipher => plaintext"],
+    [crack,       "plaintext cipher => key (single process, assumes alphanumeric key)"],
+    [crackNode,   "port => listen for crack jobs from crackServer"],
+    [crackRun,    "plaintext cipher host:port.. => distribute crack jobs to crackNodes"],
 );
 
 encrypt(args) {

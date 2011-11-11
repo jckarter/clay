@@ -22,10 +22,10 @@ inline wrapAsExternal(impl_fn, static inCount, exp:ExternalException, ..inoutp) 
 [T] private unpointer(static Pointer[T]) = T;
 
 [..IO, ..T |
-    (..T) == (..mapValues(unpointer, ..takeValues(static countValues(..T), ..IO)))
+    [..T] == [..mapValues(unpointer, ..takeValues(static countValues(..T), ..IO))]
 ]
 inline callExternal(
-    external_fn:CCodePointer[(ExternalException, ..IO), ()],
+    external_fn:CCodePointer[[ExternalException, ..IO], []],
     ..args:T
 )
     --> ..out:mapValues(unpointer, ..dropValues(static countValues(..T), ..IO))

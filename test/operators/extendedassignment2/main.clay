@@ -8,7 +8,7 @@ overload index(x:Foo[A], i) = x.inner[i] + 1;
 overload indexAssign(x:Foo[A], i, v) { x.inner[i] = v-1; }
 
 main() {
-    var a = Foo([1, 2, 3]);
+    var a = Foo(array(1, 2, 3));
     for (i in range(3))
         println(a[i]);
     println();

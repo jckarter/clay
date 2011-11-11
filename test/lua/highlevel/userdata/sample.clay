@@ -79,18 +79,18 @@ Foo_tostring(s:lua.State) {
 Foo_register(s:lua.State) {
     lua.registerModule(s,
         "Foo",
-        ("new", Foo_new),
-        ("yourCfunction", Foo_yourCfunction),
-        ("setx", Foo_setx),
-        ("sety", Foo_sety),
-        ("add", Foo_add),
-        ("dot", Foo_dot),
+        ["new", Foo_new],
+        ["yourCfunction", Foo_yourCfunction],
+        ["setx", Foo_setx],
+        ["sety", Foo_sety],
+        ["add", Foo_add],
+        ["dot", Foo_dot],
     );
     lua.newMetaTable(s, "Foo");
     lua.registerTable(s,
-        ("__gc", Foo_gc),
-        ("__tostring", Foo_tostring),
-        ("__add", Foo_add),
+        ["__gc", Foo_gc],
+        ["__tostring", Foo_tostring],
+        ["__add", Foo_add],
     );
     lua.pushString(s, "__index");
     lua.pushValue(s, -3);

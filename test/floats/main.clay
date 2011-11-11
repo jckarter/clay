@@ -1,7 +1,7 @@
 import numbers.floats.*;
 
 main() {
-    var orderedComparisons = (
+    var orderedComparisons = [
         floatOrderedAndEquals?,
         floatOrderedAndGreater?,
         floatOrderedAndGreaterEquals?,
@@ -9,9 +9,9 @@ main() {
         floatOrderedAndLesserEquals?,
         floatOrderedAndNotEquals?,
         floatOrdered?,
-    );
+    ];
 
-    var unorderedComparisons = (
+    var unorderedComparisons = [
         floatUnorderedOrEquals?,
         floatUnorderedOrGreater?,
         floatUnorderedOrGreaterEquals?,
@@ -19,9 +19,9 @@ main() {
         floatUnorderedOrLesserEquals?,
         floatUnorderedOrNotEquals?,
         floatUnordered?,
-    );
+    ];
 
-    var operators = (
+    var operators = [
         equals?,
         notEquals?,
         lesser?,
@@ -29,12 +29,12 @@ main() {
         greater?,
         greaterEquals?,
         ordered?,
-    );
+    ];
 
     var zero, one = 0.0, 1.0;
     var inf, ninf, nan = infinity(Double), negativeInfinity(Double), nan(Double);
 
-    var values = [zero, one, inf, ninf, nan];
+    var values = array(zero, one, inf, ninf, nan);
 
     testFuncs("ORDERED COMPARISONS", orderedComparisons, values);
     testFuncs("UNORDERED COMPARISONS", unorderedComparisons, values);

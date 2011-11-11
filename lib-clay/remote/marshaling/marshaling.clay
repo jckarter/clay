@@ -329,13 +329,13 @@ overload marshalTo(context, buffer: Pointer[Byte], r: R) = buffer;
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static R)
     = R(), begin;
 
-[T | T == Type(())]
+[T | T == Type([])]
 overload marshaledSize(context, r: T) = MarshalSize(0);
-[T | T == Type(())]
+[T | T == Type([])]
 overload marshalTo(context, buffer: Pointer[Byte], r: T) = buffer;
-[T | T == Type(())]
+[T | T == Type([])]
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static T)
-    = (), begin;
+    = [], begin;
 
 
 

@@ -22,8 +22,8 @@ private CallableWithSignature?(T, In, Out) {
     return Out == CodePointerReturnTypes(CodePtr);
 }
 
-[In,Out]
-private CodePointerReturnTypes(static CodePointer[In,Out]) = Out;
+[In,..Out]
+private CodePointerReturnTypes(static CodePointer[In,[..Out]]) = [..Out];
 
 
 // redefine constructors shadowed by the primary constructor
@@ -52,7 +52,7 @@ makeLambda(forward x:T, ..In) {
 // call operator
 
 [..I, ..O]
-overload call(x:Lambda[(..I), (..O)], forward ..args:I) : ..O {
+overload call(x:Lambda[[..I], [..O]], forward ..args:I) : ..O {
     return forward ..x.body^.code(x.body^.obj^, ..args);
 }
 
@@ -64,16 +64,16 @@ overload call(x:Lambda[(..I), (..O)], forward ..args:I) : ..O {
 
 private record LambdaBody[In, Out] (
     obj : Pointer[Opaque],
-    code : CodePointer[(Opaque, ..unpack(In)), Out],
-    destructor : CodePointer[Opaque,()],
+    code : CodePointer[[Opaque, ..unpack(In)], Out],
+    destructor : CodePointer[[Opaque],[]],
 );
 
 [..I, ..O, T]
-alias overload LambdaBody[(..I),(..O)](x:T) --> returned:LambdaBody[(..I),(..O)] {
+alias overload LambdaBody[[..I],[..O]](x:T) --> returned:LambdaBody[[..I],[..O]] {
     var codePtr = makeCodePointer(call, T, ..I);
     var destructor = makeCodePointer(destroy, T);
-    returned.code = CodePointer[(Opaque, ..I), (..O)](codePtr);
-    returned.destructor = CodePointer[Opaque,()](destructor);
+    returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);
+    returned.destructor = CodePointer[[Opaque],[]](destructor);
 
     var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     try {
@@ -98,7 +98,7 @@ overload destroy(x:LambdaBody[In, Out]) {
 // helper procs for closure conversion
 //
 
-packMultiValuedFreeVar(..x) = Tuple(..x);
+packMultiValuedFreeVar(..x) = [..x];
 
 packMultiValuedFreeVarByRef(..x) =
     Tuple(..mapValues(addressOf, ..x));

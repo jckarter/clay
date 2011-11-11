@@ -265,14 +265,11 @@ MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiStaticPtr z;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                z = evaluateMultiStatic(y2->args, env);
-            }
-            else {
-                z = evaluateExprStatic(y->expr, env);
-            }
+            MultiStaticPtr z = evaluateExprStatic(y->expr, env);
+            out->add(z);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiStaticPtr z = evaluateExprStatic(x, env);
             out->add(z);
         }
         else {
@@ -583,14 +580,11 @@ MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiEValuePtr mev;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mev = evalMultiArgsAsRef(y2->args, env);
-            }
-            else {
-                mev = evalArgExprAsRef(y->expr, env);
-            }
+            MultiEValuePtr mev = evalArgExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiEValuePtr mev = evalArgExprAsRef(x, env);
             out->add(mev);
         }
         else {
@@ -631,14 +625,11 @@ MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiEValuePtr mev;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mev = evalForwardMultiAsRef(y2->args, env);
-            }
-            else {
-                mev = evalForwardExprAsRef(y->expr, env);
-            }
+            MultiEValuePtr mev = evalForwardExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiEValuePtr mev = evalForwardExprAsRef(x, env);
             out->add(mev);
         }
         else {
@@ -701,14 +692,11 @@ MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env)
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            MultiEValuePtr mev;
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                mev = evalMultiAsRef(y2->args, env);
-            }
-            else {
-                mev = evalExprAsRef(y->expr, env);
-            }
+            MultiEValuePtr mev = evalExprAsRef(y->expr, env);
+            out->add(mev);
+        }
+        else if (x->exprKind == PAREN) {
+            MultiEValuePtr mev = evalExprAsRef(x, env);
             out->add(mev);
         }
         else {
@@ -781,25 +769,22 @@ void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned w
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
-                assert(j + mpv->size() <= out->size());
-                MultiEValuePtr out2 = new MultiEValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                evalMultiInto(y2->args, env, out2, 0);
-                j += mpv->size();
-            }
-            else {
-                MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
-                assert(j + mpv->size() <= out->size());
-                MultiEValuePtr out2 = new MultiEValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                evalExprInto(y->expr, env, out2);
-                j += mpv->size();
-            }
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
+            assert(j + mpv->size() <= out->size());
+            MultiEValuePtr out2 = new MultiEValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            evalExprInto(y->expr, env, out2);
+            j += mpv->size();
+        }
+        else if (x->exprKind == PAREN) {
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
+            assert(j + mpv->size() <= out->size());
+            MultiEValuePtr out2 = new MultiEValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            evalExprInto(x, env, out2);
+            j += mpv->size();
         }
         else {
             MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
@@ -858,25 +843,22 @@ void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantC
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
-            if (y->expr->exprKind == TUPLE) {
-                Tuple *y2 = (Tuple *)y->expr.ptr();
-                MultiPValuePtr mpv = safeAnalyzeMulti(y2->args, env, 0);
-                assert(j + mpv->size() <= out->size());
-                MultiEValuePtr out2 = new MultiEValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                evalMulti(y2->args, env, out2, 0);
-                j += mpv->size();
-            }
-            else {
-                MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
-                assert(j + mpv->size() <= out->size());
-                MultiEValuePtr out2 = new MultiEValue();
-                for (unsigned k = 0; k < mpv->size(); ++k)
-                    out2->add(out->values[j + k]);
-                evalExpr(y->expr, env, out2);
-                j += mpv->size();
-            }
+            MultiPValuePtr mpv = safeAnalyzeExpr(y->expr, env);
+            assert(j + mpv->size() <= out->size());
+            MultiEValuePtr out2 = new MultiEValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            evalExpr(y->expr, env, out2);
+            j += mpv->size();
+        }
+        else if (x->exprKind == PAREN) {
+            MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
+            assert(j + mpv->size() <= out->size());
+            MultiEValuePtr out2 = new MultiEValue();
+            for (unsigned k = 0; k < mpv->size(); ++k)
+                out2->add(out->values[j + k]);
+            evalExpr(x, env, out2);
+            j += mpv->size();
         }
         else {
             MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
@@ -1002,23 +984,16 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        if ((x->args->size() == 1) &&
-            (x->args->exprs[0]->exprKind != UNPACK))
-        {
-            evalExpr(x->args->exprs[0], env, out);
-        }
-        else {
-            evalCallExpr(prelude_expr_tupleLiteral(),
-                         x->args,
-                         env,
-                         out);
-        }
+        evalCallExpr(prelude_expr_tupleLiteral(),
+                     x->args,
+                     env,
+                     out);
         break;
     }
 
-    case ARRAY : {
-        Array *x = (Array *)expr.ptr();
-        evalCallExpr(prelude_expr_arrayLiteral(), x->args, env, out);
+    case PAREN : {
+        Paren *x = (Paren *)expr.ptr();
+        evalMulti(x->args, env, out, 0);
         break;
     }
 

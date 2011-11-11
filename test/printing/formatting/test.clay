@@ -2,7 +2,7 @@ import test.*;
 import printer.formatter.*;
 
 main() = testMain(
-    TestSuite("formatting", [
+    TestSuite("formatting", array(
         TestCase("number base formatters", test => {
             expectPrinted(test, "oct(12345)", "30071",
                 oct(12345)
@@ -133,10 +133,10 @@ main() = testMain(
         }),
         TestCase("hexString", test => {
             expectPrinted(test,
-                "hexString([0_u8, 0xFF_u8, 0x0F_u8])",
+                "hexString(array(0_u8, 0xFF_u8, 0x0F_u8))",
                 "00FF0F",
-                hexString([0_u8, 0xFF_u8, 0x0F_u8]),
+                hexString(array(0_u8, 0xFF_u8, 0x0F_u8)),
             );
         }),
-    ]),
+    )),
 );

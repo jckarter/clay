@@ -24,9 +24,9 @@ overload display(x) {
 record DisplayableVTable (
     size : SizeT,
     alignment : SizeT,
-    destructor : CodePointer[Opaque,()],
-    copyConstructor : CodePointer[Opaque,Opaque],
-    display : CodePointer[Opaque,()],
+    destructor : CodePointer[[Opaque],[]],
+    copyConstructor : CodePointer[[Opaque],[Opaque]],
+    display : CodePointer[[Opaque],[]],
 );
 
 [T]
@@ -36,9 +36,9 @@ makeDisplayableVTable(static T) {
     var display = makeCodePointer(display, T);
     return DisplayableVTable(TypeSize(T),
                              TypeAlignment(T),
-                             CodePointer[Opaque,()](destructor),
-                             CodePointer[Opaque,Opaque](copyConstructor),
-                             CodePointer[Opaque,()](display));
+                             CodePointer[[Opaque],[]](destructor),
+                             CodePointer[[Opaque],[Opaque]](copyConstructor),
+                             CodePointer[[Opaque],[]](display));
 }
 
 

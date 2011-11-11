@@ -73,16 +73,16 @@ overload equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
 variant TestVariant (Int, Vector[Int], Char, Double);
 
 main() = testMain(
-    TestSuite("marshaling", [
+    TestSuite("marshaling", array(
         TestCase("POD types", test => {
             expectMarshalingInvariants(test, "1", 1);
             expectMarshalingInvariants(test, "'a'", 'a');
             expectMarshalingInvariants(test, "0.0", 0.0);
-            expectMarshalingInvariants(test, "(1, 'a', 0.0)", (1, 'a', 0.0));
+            expectMarshalingInvariants(test, "[1, 'a', 0.0]", [1, 'a', 0.0]);
             expectMarshalingInvariants(test,
                 "PODRecord(1, 'a', 0.0)", PODRecord(1, 'a', 0.0)
             );
-            expectMarshalingInvariants(test, "[1, 2, 3]", [1, 2, 3]);
+            expectMarshalingInvariants(test, "array(1, 2, 3)", array(1, 2, 3));
         }),
         TestCase("reference types", test => {
             expectMarshalingInvariants(test, "ReferenceRecord(3)", ReferenceRecord(3));
@@ -113,28 +113,28 @@ main() = testMain(
         }),
         TestCase("composites", test => {
             expectMarshalingInvariants(test,
-                "(1, Vector[Int](1, 2, 3), 'a')",
-                (1, Vector[Int](1, 2, 3), 'a')
+                "[1, Vector[Int](1, 2, 3), 'a']",
+                [1, Vector[Int](1, 2, 3), 'a']
             );
             expectMarshalingInvariants(test,
-                "(1, Vector[Int](1, 2, 3), 'a')",
-                (1, Vector[Int](1, 2, 3), 'a')
+                "[1, Vector[Int](1, 2, 3), 'a']",
+                [1, Vector[Int](1, 2, 3), 'a']
             );
             expectMarshalingInvariants(test,
                 "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
                 ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
             );
             expectMarshalingInvariants(test,
-                "(ReferenceRecord(3), ReferenceRecord(5))",
-                (ReferenceRecord(3), ReferenceRecord(5))
+                "[ReferenceRecord(3), ReferenceRecord(5)]",
+                [ReferenceRecord(3), ReferenceRecord(5)]
             );
             expectMarshalingInvariants(test,
                 "Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))",
                 Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5)),
             );
             expectMarshalingInvariants(test,
-                "(ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5)))",
-                (ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))),
+                "[ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))]",
+                [ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))],
             );
             expectMarshalingInvariants(test,
                 "Range[Int](1, 3)",
@@ -144,7 +144,7 @@ main() = testMain(
                 "Range[SizeT](1, 3)",
                 Range[SizeT](SizeT(1), SizeT(3)),
             );
-            expectNullMarshaling(test, "()", ());
+            expectNullMarshaling(test, "[]", []);
             expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
         }),
         TestCase("variants", test => {
@@ -176,12 +176,12 @@ main() = testMain(
             expectMarshalingInvariants(test, "() => char", () => char);
             expectMarshalingInvariants(test, "() => vectorInt", () => vectorInt);
             expectMarshalingInvariants(test, "() => vectorString", () => vectorString);
-            expectMarshalingInvariants(test, "() => ..(int, char)", () => ..(int, char));
-            expectMarshalingInvariants(test, "() => ..(int, vectorInt)",
-                () => ..(int, vectorInt)
+            expectMarshalingInvariants(test, "() => (int, char)", () => (int, char));
+            expectMarshalingInvariants(test, "() => (int, vectorInt)",
+                () => (int, vectorInt)
             );
-            expectMarshalingInvariants(test, "() => ..(int, vectorString, char)",
-                () => ..(int, vectorString, char)
+            expectMarshalingInvariants(test, "() => (int, vectorString, char)",
+                () => (int, vectorString, char)
             );
             expectNullMarshaling(test, "() => {}", () => {});
         }),
@@ -222,5 +222,5 @@ main() = testMain(
         TestCase("enums", test => {
             expectMarshalingInvariants(test, "FOO", FOO);
         }),
-    ]),
+    )),
 );

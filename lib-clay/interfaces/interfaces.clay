@@ -3,7 +3,7 @@ import libc.(malloc, free);
 InterfaceType?(X) = false;
 define InterfaceMembers;
 
-private ImplicitInterfaceMembers() = (destroy, (), ());
+private ImplicitInterfaceMembers() = [destroy, [], []];
 
 private VtblSlotFunction(memFun) = memFun.0;
 private VtblSlotInputTypes(memFun) = ..unpack(memFun.1);
@@ -16,23 +16,23 @@ overload InterfaceMember?(static I, static fn)
     = inValues?(fn, ..mapValues(VtblSlotFunction, ..InterfaceMembers(I)));
 
 private VtblSlotType(memFun) = CodePointer[
-    (Opaque, ..VtblSlotInputTypes(memFun)),
-    (..VtblSlotOutputTypes(memFun))
+    [Opaque, ..VtblSlotInputTypes(memFun)],
+    [..VtblSlotOutputTypes(memFun)]
 ];
 
 private record InterfaceVtbl[..memberFunctions]
-    = (#methods, Tuple[..mapValues(VtblSlotType, ..memberFunctions)]);
+    = [#methods, Tuple[..mapValues(VtblSlotType, ..memberFunctions)]];
 
 interfaceType(..memberFunctions) = recordWithProperties(
-    (
-        (InterfaceType?, static true),
-        (InterfaceMembers, 
+    [
+        [InterfaceType?, static true],
+        [InterfaceMembers, 
             ..ImplicitInterfaceMembers(),
             ..memberFunctions
-        ),
-    ),
-    (#vtbl, Pointer[InterfaceVtbl[..ImplicitInterfaceMembers(), ..memberFunctions]]),
-    (#this, Opaque),
+        ],
+    ],
+    [#vtbl, Pointer[InterfaceVtbl[..ImplicitInterfaceMembers(), ..memberFunctions]]],
+    [#this, Opaque],
 );
 
 [I | InterfaceType?(I)]
