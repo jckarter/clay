@@ -30,7 +30,7 @@ usage(argv0) : {
     println("running clayfix so you can review or revert its changes!");
 }
 
-alias Fixer = CodePointer[(SourceFile, File), ()];
+alias Fixer = CodePointer[[SourceFile, File], []];
 
 fixerForVersion(version:String) : Fixer {
     switch (version)

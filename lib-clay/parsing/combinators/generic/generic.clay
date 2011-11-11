@@ -299,7 +299,7 @@ modify(static TokenInput, modifier:Modifier, forward _parser:Parser) {
     return input => {
         alias T = Type(modifier(require(parser(input))));
         return maybe(parser(input),
-            (x -> Maybe(modifier(move(x)))),
+            x -> Maybe(modifier(move(x))),
             () -> nothing(T),
         );
     };

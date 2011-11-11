@@ -813,12 +813,12 @@ private var optPredicate = optional(modify(
 ));
 
 private var patternVarsWithPredicate2 = modify(
-    x => (move(x.1), x.2),
+    x => [move(x.1), x.2],
     sequence(punc(#"["), optCommaList(patternVar), optPredicate, punc(#"]")),
 );
 
 private var patternVarsWithPredicate = modify(
-    x => maybe(move(x), move, () => (Vector[PatternVar](), nothing(Expr))),
+    x => maybe(move(x), move, () => [Vector[PatternVar](), nothing(Expr)]),
     optional(patternVarsWithPredicate2),
 );
 
@@ -1051,7 +1051,7 @@ private var variadicExternalArg = bounds(modify(
 ));
 
 private var externalArgs = modify(
-    x => (move(x.items), not nothing?(x.variadicItem)),
+    x => [move(x.items), not nothing?(x.variadicItem)],
     variadicList(externalArg, variadicExternalArg),
 );
 
