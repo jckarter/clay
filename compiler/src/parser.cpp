@@ -958,7 +958,8 @@ static bool lambda(ExprPtr &x) {
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;
     if (!lambdaArrow(captureByRef)) return false;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
+    LocationPtr endLocation = currentLocation();
+    x = new Lambda(captureByRef, formalArgs, formalVarArg, body, endLocation);
     x->location = location;
     return true;
 }

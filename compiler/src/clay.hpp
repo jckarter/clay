@@ -948,16 +948,19 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
+    LocationPtr endLocation;
+
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
         initialized(false) {}
     Lambda(bool captureByRef,
            const vector<IdentifierPtr> &formalArgs,
            IdentifierPtr formalVarArg,
-           StatementPtr body)
+           StatementPtr body,
+           LocationPtr endLocation)
         : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
-          body(body), initialized(false) {}
+          body(body), initialized(false), endLocation(endLocation) {}
 };
 
 struct Unpack : public Expr {

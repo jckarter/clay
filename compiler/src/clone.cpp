@@ -164,6 +164,7 @@ ExprPtr clone(ExprPtr x)
         clone(y->formalArgs, z->formalArgs);
         z->formalVarArg = y->formalVarArg;
         z->body = clone(y->body);
+        z->endLocation = y->endLocation;
         out = z.ptr();
         break;
     }

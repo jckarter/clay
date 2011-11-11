@@ -95,17 +95,33 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     }
 }
 
+static string lambdaName(LambdaPtr x)
+{
+    assert(x->location->source == x->endLocation->source);
+    char *data = x->location->source->data;
+    string fullName(data + x->location->offset, data + x->endLocation->offset);
+
+    if (fullName.size() <= 40 && fullName.find('\n') == string::npos)
+        return "(" + fullName + ")";
+    else {
+        int line, column, tabColumn;
+        computeLineCol(x->location, line, column, tabColumn);
+        ostringstream shortName;
+        shortName << "<lambda " << x->location->source->fileName
+            << "(" << line+1 << "," << column+tabColumn << ")>";
+
+        return shortName.str();
+    }
+}
+
 static void initializeLambdaWithFreeVars(LambdaPtr x,
                                          EnvPtr env,
                                          const string &closureDataName,
                                          int lambdaObjectIndex)
 {
-    ostringstream sout;
-    sout << "LambdaObject" << lambdaObjectIndex;
-
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier(sout.str());
+    r->name = new Identifier(lambdaName(x));
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
@@ -202,7 +218,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
 
 static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
 {
-    IdentifierPtr name = new Identifier("LambdaProcedure");
+    IdentifierPtr name = new Identifier(lambdaName(x));
     name->location = x->location;
     x->lambdaProc = new Procedure(name, PRIVATE);
 
