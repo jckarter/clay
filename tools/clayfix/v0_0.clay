@@ -490,6 +490,76 @@ overload fixAst(ast:TupleExpr, state:FixState) : {
     }
 }
 
+// Convert CodePointer types to always tuple their arguments.
+private codeType?(s) : Bool {
+    switch (s)
+    case (
+        "CodePointer",
+        "CCodePointer",
+        "VarArgsCCodePointer",
+        "FastCallCodePointer",
+        "StdCallCodePointer",
+        "Lambda",
+        "GLCodePointer",
+        "WinApiCodePointer",
+    )
+        return true;
+    else
+        return false;
+}
+private codeTypeIndexee?(expr:Expr) : Bool {
+    return match(expr,
+        NameRef, nameref -> codeType?(nameref.name.str),
+        MatchDefault, _ -> false,
+    );
+}
+
+private fixCodeTypeArgument(arg:Expr, state:FixState) : {
+    match(arg,
+        TupleExpr, tup -> {
+            fixTuple(tup, state);
+        },
+        MatchDefault, _ -> {
+            writeUptoToken(astTokens(arg).begin, state);
+            printTo(state.outputFile, "[");
+            fixAst(arg, state);
+            writeToken(astTokens(arg).end - 1, state);
+            printTo(state.outputFile, "]");
+        },
+    );
+}
+
+overload fixAst(ast:Indexing, state:FixState) : {
+    fixAst(ast.expr, state);
+    if (codeTypeIndexee?(ast.expr)) {
+        if (size(ast.args) == 2) {
+            fixCodeTypeArgument(ast.args[0], state);
+            fixCodeTypeArgument(ast.args[1], state);
+        }
+    } else {
+        fixAst(ast.args, state);
+    }
+}
+
+private fixTuple(ast:TupleExpr, state:FixState) : {
+    writeUptoToken(ast.tokens.begin, state);
+    printTo(state.outputFile, "[");
+    replaceToken(ast.tokens.begin, state);
+    fixAst(ast.args, state);
+    writeUptoToken(ast.tokens.end - 1, state);
+    printTo(state.outputFile, "]");
+    replaceToken(ast.tokens.end - 1, state);
+}
+
+overload fixAst(ast:TupleExpr, state:FixState) : {
+    // If there's a single non-unpack expression, leave it alone, because it's just parens
+    if (size(ast.args) == 1 and not variantIs?(ast.args[0], Unpack)) {
+        fixAst(ast.args, state);
+    } else {
+        fixTuple(ast, state);
+    }
+}
+
 // Convert new operator expressions to use the new() function.
 // 0.0: new X
 // 0.1: new(X)
