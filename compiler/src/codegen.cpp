@@ -5548,13 +5548,9 @@ void codegenMain(ModulePtr module)
     codegenExternalProcedure(entryProc, true);
 }
 
-
-void codegenEntryPoints(ModulePtr module)
+static void codegenModuleEntryPoints(ModulePtr module, bool importedExternals)
 {
-    codegenTopLevelLLVM(module);
-    initializeCtorsDtors();
-    generateLLVMCtorsAndDtors();
-
+    module->externalsGenerated = true;
     for (unsigned i = 0; i < module->topLevelItems.size(); ++i) {
         TopLevelItemPtr x = module->topLevelItems[i];
         if (x->objKind == EXTERNAL_PROCEDURE) {
@@ -5563,6 +5559,22 @@ void codegenEntryPoints(ModulePtr module)
                 codegenExternalProcedure(y, true);
         }
     }
+
+    if (importedExternals) {
+        vector<ImportPtr>::iterator ii, iend;
+        for (ii = module->imports.begin(), iend = module->imports.end(); ii != iend; ++ii)
+            if (!(*ii)->module->externalsGenerated)
+                codegenModuleEntryPoints((*ii)->module, importedExternals);
+    }
+}
+
+void codegenEntryPoints(ModulePtr module, bool importedExternals)
+{
+    codegenTopLevelLLVM(module);
+    initializeCtorsDtors();
+    generateLLVMCtorsAndDtors();
+
+    codegenModuleEntryPoints(module, importedExternals);
 
     ObjectPtr mainProc = lookupPublic(module, new Identifier("main"));
     if (mainProc != NULL)

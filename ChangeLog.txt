@@ -283,9 +283,12 @@ Compiler frontend changes:
   '-emit-llvm -S' to emit LLVM IR.
 * The compiler now supports "-Wl,..." syntax for sending options to the linker.
 * The redundant -dll option has been removed; use -shared.
-* Externals are now only built for the main module (the source file provided on
-  the commandline). Externals imported from other modules will be not be compiled
-  in the current compilation unit.
+* Externals are now only built by default for the main module (the source file provided on
+  the commandline) when building with the -c or -S flags. Externals imported from other modules
+  will still be compiled in the current compilation unit by default for executable and shared
+  library output types, but not for object or assembly output. '-import-externals' and
+  '-no-import-externals' flags are provided to control this behavior independent of the output
+  type.
 * External entry points for the main module are also now always compiled; "-shared"
   now only affects the type of file output by the compiler.
 * The default output filename for executables and dynamic libraries is now the
@@ -325,9 +328,6 @@ TO BE DONE FOR 0.1
     #foo
     #"foo"
     #"foo"
-
-* 'record' has been renamed to 'struct', and library functions with 'record' or
-  'Record' in the name have been renamed to 'struct'/'Struct'.
 
 * Integer division now uses the new 'div' operator. '/' now only does floating-point division:
     var x = 3 div 2; // 1

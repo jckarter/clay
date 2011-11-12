@@ -1770,6 +1770,7 @@ struct Module : public ANode {
     int allSymbolsLoading;
 
     bool topLevelLLVMGenerated;
+    bool externalsGenerated;
 
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
@@ -1777,7 +1778,8 @@ struct Module : public ANode {
           attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
-          topLevelLLVMGenerated(false) {}
+          topLevelLLVMGenerated(false),
+          externalsGenerated(false) {}
     Module(const string &moduleName,
            const vector<ImportPtr> &imports,
            ModuleDeclarationPtr declaration,
@@ -1789,7 +1791,8 @@ struct Module : public ANode {
           initialized(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
-          topLevelLLVMGenerated(false) {}
+          topLevelLLVMGenerated(false),
+          externalsGenerated(false) {}
 };
 
 
@@ -3026,7 +3029,7 @@ InvokeEntryPtr codegenCallable(ObjectPtr x,
 void codegenCodeBody(InvokeEntryPtr entry);
 void codegenCWrapper(InvokeEntryPtr entry);
 
-void codegenEntryPoints(ModulePtr module);
+void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
 
 static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {

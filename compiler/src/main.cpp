@@ -266,33 +266,40 @@ static void usage(char *argv0)
     cerr << "usage: " << argv0 << " <options> <clay file>\n";
     cerr << "       " << argv0 << " <options> -e <clay code>\n";
     cerr << "options:\n";
-    cerr << "  -o <file>         - specify output file\n";
-    cerr << "  -target <target>  - set target platform for code generation\n";
-    cerr << "  -shared           - create a dynamically linkable library\n";
-    cerr << "  -emit-llvm        - emit llvm code\n";
-    cerr << "  -S                - emit assember code\n";
-    cerr << "  -c                - emit object code\n";
-    cerr << "  -O0 -O1 -O2 -O3   - set optimization level\n";
-    cerr << "  -exceptions       - enable exception handling\n";
-    cerr << "  -no-exceptions    - disable exception handling\n";
-    cerr << "  -inline           - inline procedures marked 'inline'\n";
-    cerr << "  -no-inline        - ignore 'inline' keyword\n";
-    cerr << "  -pic              - generate position independent code\n";
-    cerr << "  -abort            - abort on error (to get stacktrace in gdb)\n";
-    cerr << "  -run              - execute the program without writing to disk\n";
-    cerr << "  -timing           - show timing information\n";
+    cerr << "  -o <file>             specify output file\n";
+    cerr << "  -target <target>      set target platform for code generation\n";
+    cerr << "  -shared               create a dynamically linkable library\n";
+    cerr << "  -emit-llvm            emit llvm code\n";
+    cerr << "  -S                    emit assember code\n";
+    cerr << "  -c                    emit object code\n";
+    cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
+    cerr << "  -exceptions           enable exception handling\n";
+    cerr << "  -no-exceptions        disable exception handling\n";
+    cerr << "  -inline               inline procedures marked 'inline'\n";
+    cerr << "  -no-inline            ignore 'inline' keyword\n";
+    cerr << "  -import-externals     include externals from imported modules\n"
+         << "                        in compilation unit\n"
+         << "                        (default when building standalone or -shared)\n";
+    cerr << "  -no-import-externals  don't include externals from imported modules\n"
+         << "                        in compilation unit\n"
+         << "                        (default when building -c or -S)\n";
+    cerr << "  -no-inline            ignore 'inline' keyword\n";
+    cerr << "  -pic                  generate position independent code\n";
+    cerr << "  -abort                abort on error (to get stacktrace in gdb)\n";
+    cerr << "  -run                  execute the program without writing to disk\n";
+    cerr << "  -timing               show timing information\n";
 #ifdef __APPLE__
-    cerr << "  -arch <arch>      - build for Darwin architecture <arch>\n";
-    cerr << "  -F<dir>           - add <dir> to framework search path\n";
-    cerr << "  -framework <name> - link with framework <name>\n";
+    cerr << "  -arch <arch>          build for Darwin architecture <arch>\n";
+    cerr << "  -F<dir>               add <dir> to framework search path\n";
+    cerr << "  -framework <name>     link with framework <name>\n";
 #endif
-    cerr << "  -L<dir>           - add <dir> to library search path\n";
-    cerr << "  -Wl,<opts>        - pass flags to linker\n";
-    cerr << "  -l<lib>           - link with library <lib>\n";
-    cerr << "  -I<path>          - add <path> to clay module search path\n";
-    cerr << "  -e <source>       - compile and run <source> (implies -run)\n";
-    cerr << "  -M<module>        - \"import <module>.*;\" for -e\n";
-    cerr << "  -v                - display version info\n";
+    cerr << "  -L<dir>               add <dir> to library search path\n";
+    cerr << "  -Wl,<opts>            pass flags to linker\n";
+    cerr << "  -l<lib>               link with library <lib>\n";
+    cerr << "  -I<path>              add <path> to clay module search path\n";
+    cerr << "  -e <source>           compile and run <source> (implies -run)\n";
+    cerr << "  -M<module>            \"import <module>.*;\" for -e\n";
+    cerr << "  -v                    display version info\n";
 }
 
 static string basename(const string &fullname)
@@ -344,6 +351,8 @@ int main(int argc, char **argv) {
     bool run = false;
     bool crossCompiling = false;
     bool showTiming = false;
+    bool codegenExternals = false;
+    bool codegenExternalsSet = false;
 
     unsigned optLevel = 3;
 
@@ -594,6 +603,14 @@ int main(int argc, char **argv) {
                  << __DATE__ << ")\n";
             return 0;
         }
+        else if (strcmp(argv[i], "-import-externals") == 0) {
+            codegenExternals = true;
+            codegenExternalsSet = true;
+        }
+        else if (strcmp(argv[i], "-no-import-externals") == 0) {
+            codegenExternals = false;
+            codegenExternalsSet = true;
+        }
         else if (strcmp(argv[i], "--") == 0) {
             ++i;
             if (clayFile.empty()) {
@@ -662,6 +679,9 @@ int main(int argc, char **argv) {
         cerr << "error: must use -emit-llvm, -S, or -c when cross compiling\n";
         return -1;
     }
+
+    if (!codegenExternalsSet)
+        codegenExternals = !(emitLLVM || emitAsm || emitObject);
 
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
@@ -744,8 +764,8 @@ int main(int argc, char **argv) {
     llvm::sys::PathWithStatus outputFilePath(outputFile);
     const llvm::sys::FileStatus *outputFileStatus = outputFilePath.getFileStatus();
     if (outputFileStatus != NULL && outputFileStatus->isDir) {
-	    cerr << "error: output file '" << outputFile << "' is a directory\n";
-	    return -1;
+        cerr << "error: output file '" << outputFile << "' is a directory\n";
+        return -1;
     }
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
@@ -759,7 +779,7 @@ int main(int argc, char **argv) {
         m = loadProgram(clayFile);
     loadTimer.stop();
     compileTimer.start();
-    codegenEntryPoints(m);
+    codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
 
     optTimer.start();
