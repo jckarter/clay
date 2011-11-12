@@ -562,6 +562,22 @@ overload fixAst(ast:TupleExpr, state:FixState) : {
     }
 }
 
+// Fix multi-value paren expressions
+// 0.0: ...(...)
+// 0.1: (...)
+overload fixAst(ast:Unpack, state:FixState) : {
+    match(ast.expr,
+        TupleExpr, tup -> {
+            writeUptoToken(ast.tokens.begin, state);
+            replaceToken(ast.tokens.begin, state);
+            fixAst(tup.args, state);
+        },
+        MatchDefault, _ -> {
+            fixAst(ast.expr, state);
+        },
+    );
+}
+
 // Convert new operator expressions to use the new() function.
 // 0.0: new X
 // 0.1: new(X)
