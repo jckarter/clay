@@ -203,6 +203,8 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
             printInstead("str");
         case ("printReprValuesTo")
             printInstead("printReprArgumentsTo");
+        case ("arrayLiteral")
+            printInstead("array");
         else {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
