@@ -7,14 +7,14 @@ record Foo (
     y: Int,
 );
 
-toFoo(x:Pointer[lua_State], index:Int) Pointer[Foo] {
+toFoo(x:Pointer[lua_State], index:Int) : Pointer[Foo] {
     var bar = Pointer[Foo](lua_touserdata(x, index));
     if (null?(bar))
         luaL_typerror(x, index, cstring(FOO));
     return bar;
 }
 
-checkFoo(x:Pointer[lua_State], index:Int) Pointer[Foo] {
+checkFoo(x:Pointer[lua_State], index:Int) : Pointer[Foo] {
     luaL_checktype(x, index, LUA_TUSERDATA);
     var bar = Pointer[Foo](luaL_checkudata(x, index, cstring(FOO)));
     if (null?(bar))
@@ -22,14 +22,14 @@ checkFoo(x:Pointer[lua_State], index:Int) Pointer[Foo] {
     return bar;
 }
 
-pushFoo(x:Pointer[lua_State]) Pointer[Foo] {
+pushFoo(x:Pointer[lua_State]) : Pointer[Foo] {
     var bar = Pointer[Foo](lua_newuserdata(x, TypeSize(Foo)));
     luaL_getmetatable(x, cstring(FOO));
     lua_setmetatable(x, -2);
     return bar;
 }
 
-Foo_new(l:Pointer[lua_State]) Int {
+Foo_new(l:Pointer[lua_State]) : Int {
     var x = luaL_optint(l, 1, 0);
     var y = luaL_optint(l, 2, 0);
     var bar = pushFoo(l);
@@ -38,7 +38,7 @@ Foo_new(l:Pointer[lua_State]) Int {
     return 1;
 }
 
-Foo_yourCfunction(x:Pointer[lua_State]) Int {
+Foo_yourCfunction(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
     println("this is yourCfunction\t");
     lua_pushnumber(x, Double(bar^.x));
@@ -46,21 +46,21 @@ Foo_yourCfunction(x:Pointer[lua_State]) Int {
     return 2;
 }
 
-Foo_setx(x:Pointer[lua_State]) Int {
+Foo_setx(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
     bar^.x = luaL_checkint(x, 2);
     lua_settop(x, 1);
     return 1;
 }
 
-Foo_sety(x:Pointer[lua_State]) Int {
+Foo_sety(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
     bar^.y = luaL_checkint(x, 2);
     lua_settop(x, 1);
     return 1;
 }
 
-Foo_add(x:Pointer[lua_State]) Int {
+Foo_add(x:Pointer[lua_State]) : Int {
     var bar1 = checkFoo(x, 1);
     var bar2 = checkFoo(x, 2);
     var sum = pushFoo(x);
@@ -69,7 +69,7 @@ Foo_add(x:Pointer[lua_State]) Int {
     return 1;
 }
 
-Foo_dot(x:Pointer[lua_State]) Int {
+Foo_dot(x:Pointer[lua_State]) : Int {
     var bar1 = checkFoo(x, 1);
     var bar2 = checkFoo(x, 2);
     lua_pushnumber(x, Double(bar1^.x * bar2^.x + bar1^.y * bar2^.y));
@@ -95,12 +95,12 @@ var Foo_methods = array(
     ),
 );
 
-Foo_gc(x:Pointer[lua_State]) Int {
+Foo_gc(x:Pointer[lua_State]) : Int {
     println("bye, bye, bar = ", toFoo(x, 1));
     return 0;
 }
 
-Foo_tostring(x:Pointer[lua_State]) Int {
+Foo_tostring(x:Pointer[lua_State]) : Int {
     var buf = Array[Char, 40]();
     var bv = BufferVector(buf);
     printTo(bv, "Foo (", toFoo(x, 1), ")");
@@ -125,7 +125,7 @@ var Foo_meta = array(
     ),
 );
 
-Foo_register(x:Pointer[lua_State]) Int {
+Foo_register(x:Pointer[lua_State]) : Int {
     luaL_openlib(x, cstring(FOO), begin(Foo_methods), 0);
     luaL_newmetatable(x, cstring(FOO));
     luaL_openlib(x, null(CChar), begin(Foo_meta), 0);

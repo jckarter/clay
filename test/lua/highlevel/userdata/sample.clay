@@ -49,7 +49,7 @@ Foo_sety(s:lua.State) {
     return 1;
 }
 
-Foo_add(s:lua.State) Int {
+Foo_add(s:lua.State) : Int {
     var p1 = checkFoo(s, 1);
     var p2 = checkFoo(s, 2);
     var sum = pushFoo(s);

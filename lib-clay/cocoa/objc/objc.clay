@@ -991,14 +991,14 @@ private msgSender(C, S)
 [C, S | FixedSelector?(S)]
 private msgSenderSuper(static C, static S)
     = CCodePointer[
-        (Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
+        [Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
 [C, S | VarargSelector?(S)]
 overload msgSenderSuper(static C, static S)
     = VarArgsCCodePointer[
-        (Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
+        [Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
