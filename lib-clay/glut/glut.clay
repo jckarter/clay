@@ -322,7 +322,7 @@ external (GLAPI) glutSurfaceTexture(
     surfacewin : Int);
 
 external (GLAPI) glutWMCloseFunc(
-    func : CCodePointer[(),()]);
+    func : CCodePointer[[],[]]);
 
 external (GLAPI) glutCheckLoop();
 
@@ -343,7 +343,7 @@ external (GLAPI) glutShowOverlay();
 external (GLAPI) glutHideOverlay();
 
 external (GLAPI) glutCreateMenu(
-    argument0 : CCodePointer[(Int),()]) : Int;
+    argument0 : CCodePointer[[Int],[]]) : Int;
 
 external (GLAPI) glutDestroyMenu(
     menu : Int);
@@ -381,81 +381,81 @@ external (GLAPI) glutDetachMenu(
     button : Int);
 
 external (GLAPI) glutDisplayFunc(
-    func : CCodePointer[(),()]);
+    func : CCodePointer[[],[]]);
 
 external (GLAPI) glutReshapeFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutKeyboardFunc(
-    func : CCodePointer[(CUChar,Int,Int),()]);
+    func : CCodePointer[[CUChar,Int,Int],[]]);
 
 external (GLAPI) glutMouseFunc(
-    func : CCodePointer[(Int,Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int,Int],[]]);
 
 external (GLAPI) glutMotionFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutPassiveMotionFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutEntryFunc(
-    func : CCodePointer[(Int),()]);
+    func : CCodePointer[[Int],[]]);
 
 external (GLAPI) glutVisibilityFunc(
-    func : CCodePointer[(Int),()]);
+    func : CCodePointer[[Int],[]]);
 
 external (GLAPI) glutIdleFunc(
-    func : CCodePointer[(),()]);
+    func : CCodePointer[[],[]]);
 
 external (GLAPI) glutTimerFunc(
     millis : UInt,
-    func : CCodePointer[(Int),()],
+    func : CCodePointer[[Int],[]],
     value : Int);
 
 external (GLAPI) glutMenuStateFunc(
-    func : CCodePointer[(Int),()]);
+    func : CCodePointer[[Int],[]]);
 
 external (GLAPI) glutSpecialFunc(
-    func : CCodePointer[(Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int],[]]);
 
 external (GLAPI) glutSpaceballMotionFunc(
-    func : CCodePointer[(Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int],[]]);
 
 external (GLAPI) glutSpaceballRotateFunc(
-    func : CCodePointer[(Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int],[]]);
 
 external (GLAPI) glutSpaceballButtonFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutButtonBoxFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutDialsFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutTabletMotionFunc(
-    func : CCodePointer[(Int,Int),()]);
+    func : CCodePointer[[Int,Int],[]]);
 
 external (GLAPI) glutTabletButtonFunc(
-    func : CCodePointer[(Int,Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int,Int],[]]);
 
 external (GLAPI) glutMenuStatusFunc(
-    func : CCodePointer[(Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int],[]]);
 
 external (GLAPI) glutOverlayDisplayFunc(
-    func : CCodePointer[(),()]);
+    func : CCodePointer[[],[]]);
 
 external (GLAPI) glutWindowStatusFunc(
-    func : CCodePointer[(Int),()]);
+    func : CCodePointer[[Int],[]]);
 
 external (GLAPI) glutKeyboardUpFunc(
-    func : CCodePointer[(CUChar,Int,Int),()]);
+    func : CCodePointer[[CUChar,Int,Int],[]]);
 
 external (GLAPI) glutSpecialUpFunc(
-    func : CCodePointer[(Int,Int,Int),()]);
+    func : CCodePointer[[Int,Int,Int],[]]);
 
 external (GLAPI) glutJoystickFunc(
-    func : CCodePointer[(UInt,Int,Int,Int),()],
+    func : CCodePointer[[UInt,Int,Int,Int],[]],
     pollInterval : Int);
 
 external (GLAPI) glutSetColor(

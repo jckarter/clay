@@ -980,7 +980,7 @@ external putw(
 
 external rmtmp() : Int;
 
-alias _onexit_t = CCodePointer[(),(Int)];
+alias _onexit_t = CCodePointer[[],[Int]];
 
 record Struct__div_t (
     quot : Int,
@@ -1030,14 +1030,14 @@ external __imp___mb_cur_max : Pointer[Int];
 
 external __imp___mbcur_max : Pointer[Int];
 
-alias _purecall_handler = CCodePointer[(),()];
+alias _purecall_handler = CCodePointer[[],[]];
 
 external _set_purecall_handler(
     _Handler : _purecall_handler) : _purecall_handler;
 
 external _get_purecall_handler() : _purecall_handler;
 
-alias _invalid_parameter_handler = CCodePointer[(Pointer[UShort],Pointer[UShort],Pointer[UShort],UInt,UInt64),()];
+alias _invalid_parameter_handler = CCodePointer[[Pointer[UShort],Pointer[UShort],Pointer[UShort],UInt,UInt64],[]];
 
 external _set_invalid_parameter_handler(
     _Handler : _invalid_parameter_handler) : _invalid_parameter_handler;
@@ -1142,7 +1142,7 @@ external _abs64(
     argument0 : Int64) : Int64;
 
 external atexit(
-    argument0 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]]) : Int;
 
 external atof(
     _String : Pointer[CChar]) : Double;
@@ -1170,13 +1170,13 @@ external bsearch(
     _Base : RawPointer,
     _NumOfElements : UInt64,
     _SizeOfElements : UInt64,
-    _PtFuncCompare : CCodePointer[(RawPointer,RawPointer),(Int)]) : RawPointer;
+    _PtFuncCompare : CCodePointer[[RawPointer,RawPointer],[Int]]) : RawPointer;
 
 external qsort(
     _Base : RawPointer,
     _NumOfElements : UInt64,
     _SizeOfElements : UInt64,
-    _PtFuncCompare : CCodePointer[(RawPointer,RawPointer),(Int)]);
+    _PtFuncCompare : CCodePointer[[RawPointer,RawPointer],[Int]]);
 
 external _byteswap_ushort(
     _Short : UShort) : UShort;
@@ -2340,10 +2340,10 @@ external __mingw_raise_matherr(
     rslt : Double);
 
 external __mingw_setusermatherr(
-    argument0 : CCodePointer[(Pointer[Struct__exception]),(Int)]);
+    argument0 : CCodePointer[[Pointer[Struct__exception]],[Int]]);
 
 external __setusermatherr(
-    argument0 : CCodePointer[(Pointer[Struct__exception]),(Int)]);
+    argument0 : CCodePointer[[Pointer[Struct__exception]],[Int]]);
 
 external sin(
     _X : Double) : Double;

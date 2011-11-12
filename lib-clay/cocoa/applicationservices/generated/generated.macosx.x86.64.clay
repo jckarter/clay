@@ -1344,9 +1344,9 @@ alias kFMFontFileRefFilterSelector = 10;
 alias kFMTrueTypeFontTechnology = 1953658213;
 alias kFMPostScriptFontTechnology = 1954115633;
 
-alias FMFontFamilyCallbackFilterProcPtr = CCodePointer[(Short,RawPointer),(Int)];
+alias FMFontFamilyCallbackFilterProcPtr = CCodePointer[[Short,RawPointer],[Int]];
 
-alias FMFontCallbackFilterProcPtr = CCodePointer[(UInt,RawPointer),(Int)];
+alias FMFontCallbackFilterProcPtr = CCodePointer[[UInt,RawPointer],[Int]];
 
 alias FMFontFamilyCallbackFilterUPP = FMFontFamilyCallbackFilterProcPtr;
 
@@ -1587,7 +1587,7 @@ alias ATSJustPriorityWidthDeltaOverrides = Array[ATSJustWidthDeltaEntryOverride,
 
 alias ATSULineRef = OpaquePointer;
 
-alias ATSUDirectLayoutOperationOverrideProcPtr = CCodePointer[(UInt,OpaquePointer,RawPointer,RawPointer,Pointer[UInt]),(Int)];
+alias ATSUDirectLayoutOperationOverrideProcPtr = CCodePointer[[UInt,OpaquePointer,RawPointer,RawPointer,Pointer[UInt]],[Int]];
 
 alias ATSUDirectLayoutOperationOverrideUPP = ATSUDirectLayoutOperationOverrideProcPtr;
 
@@ -2058,9 +2058,9 @@ alias kATSOptionFlagsDefaultScope = 0;
 alias kATSOptionFlagsUnRestrictedScope = 4096;
 alias kATSOptionFlagsRestrictedScope = 8192;
 
-alias ATSFontFamilyApplierFunction = CCodePointer[(UInt,RawPointer),(Int)];
+alias ATSFontFamilyApplierFunction = CCodePointer[[UInt,RawPointer],[Int]];
 
-alias ATSFontApplierFunction = CCodePointer[(UInt,RawPointer),(Int)];
+alias ATSFontApplierFunction = CCodePointer[[UInt,RawPointer],[Int]];
 
 alias ATSFontFamilyIterator = OpaquePointer;
 
@@ -2099,7 +2099,7 @@ alias kATSFontNotifyActionDirectoriesChanged = 2;
 
 alias ATSFontNotifyAction = Int;
 
-alias ATSNotificationCallback = CCodePointer[(OpaquePointer,RawPointer),()];
+alias ATSNotificationCallback = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external ATSGetGeneration() : UInt;
 
@@ -2304,7 +2304,7 @@ alias kATSQueryActivateFontMessage = 1635021665;
 
 alias ATSFontQueryMessageID = Int;
 
-alias ATSFontQueryCallback = CCodePointer[(Int,RawPointer,RawPointer),(RawPointer)];
+alias ATSFontQueryCallback = CCodePointer[[Int,RawPointer,RawPointer],[RawPointer]];
 
 external ATSCreateFontQueryRunLoopSource(
     queryOrder : CLong,
@@ -2472,13 +2472,13 @@ alias CGColorSpaceRef = OpaquePointer;
 
 alias CGDataProviderRef = OpaquePointer;
 
-alias CGDataProviderGetBytesCallback = CCodePointer[(RawPointer,RawPointer,CULong),(CULong)];
+alias CGDataProviderGetBytesCallback = CCodePointer[[RawPointer,RawPointer,CULong],[CULong]];
 
-alias CGDataProviderSkipForwardCallback = CCodePointer[(RawPointer,Int64),(Int64)];
+alias CGDataProviderSkipForwardCallback = CCodePointer[[RawPointer,Int64],[Int64]];
 
-alias CGDataProviderRewindCallback = CCodePointer[(RawPointer),()];
+alias CGDataProviderRewindCallback = CCodePointer[[RawPointer],[]];
 
-alias CGDataProviderReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGDataProviderReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGDataProviderSequentialCallbacks (
     version : UInt,
@@ -2490,11 +2490,11 @@ record Struct_CGDataProviderSequentialCallbacks (
 
 alias CGDataProviderSequentialCallbacks = Struct_CGDataProviderSequentialCallbacks;
 
-alias CGDataProviderGetBytePointerCallback = CCodePointer[(RawPointer),(RawPointer)];
+alias CGDataProviderGetBytePointerCallback = CCodePointer[[RawPointer],[RawPointer]];
 
-alias CGDataProviderReleaseBytePointerCallback = CCodePointer[(RawPointer,RawPointer),()];
+alias CGDataProviderReleaseBytePointerCallback = CCodePointer[[RawPointer,RawPointer],[]];
 
-alias CGDataProviderGetBytesAtPositionCallback = CCodePointer[(RawPointer,RawPointer,Int64,CULong),(CULong)];
+alias CGDataProviderGetBytesAtPositionCallback = CCodePointer[[RawPointer,RawPointer,Int64,CULong],[CULong]];
 
 record Struct_CGDataProviderDirectCallbacks (
     version : UInt,
@@ -2517,7 +2517,7 @@ external CGDataProviderCreateDirect(
     size : Int64,
     callbacks : Pointer[CGDataProviderDirectCallbacks]) : CGDataProviderRef;
 
-alias CGDataProviderReleaseDataCallback = CCodePointer[(RawPointer,RawPointer,CULong),()];
+alias CGDataProviderReleaseDataCallback = CCodePointer[[RawPointer,RawPointer,CULong],[]];
 
 external CGDataProviderCreateWithData(
     info : RawPointer,
@@ -2543,7 +2543,7 @@ external CGDataProviderRelease(
 external CGDataProviderCopyData(
     provider : CGDataProviderRef) : CFDataRef;
 
-alias CGDataProviderSkipBytesCallback = CCodePointer[(RawPointer,CULong),()];
+alias CGDataProviderSkipBytesCallback = CCodePointer[[RawPointer,CULong],[]];
 
 record Struct_CGDataProviderCallbacks (
     getBytes : CGDataProviderGetBytesCallback,
@@ -2554,7 +2554,7 @@ record Struct_CGDataProviderCallbacks (
 
 alias CGDataProviderCallbacks = Struct_CGDataProviderCallbacks;
 
-alias CGDataProviderGetBytesAtOffsetCallback = CCodePointer[(RawPointer,RawPointer,CULong,CULong),(CULong)];
+alias CGDataProviderGetBytesAtOffsetCallback = CCodePointer[[RawPointer,RawPointer,CULong,CULong],[CULong]];
 
 record Struct_CGDataProviderDirectAccessCallbacks (
     getBytePointer : CGDataProviderGetBytePointerCallback,
@@ -2690,9 +2690,9 @@ alias kCGPatternTilingConstantSpacing = 2;
 
 alias CGPatternTiling = Int;
 
-alias CGPatternDrawPatternCallback = CCodePointer[(RawPointer,OpaquePointer),()];
+alias CGPatternDrawPatternCallback = CCodePointer[[RawPointer,OpaquePointer],[]];
 
-alias CGPatternReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGPatternReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGPatternCallbacks (
     version : UInt,
@@ -3213,7 +3213,7 @@ record Struct_CGPathElement (
 
 alias CGPathElement = Struct_CGPathElement;
 
-alias CGPathApplierFunction = CCodePointer[(RawPointer,Pointer[Struct_CGPathElement]),()];
+alias CGPathApplierFunction = CCodePointer[[RawPointer,Pointer[Struct_CGPathElement]],[]];
 
 external CGPathApply(
     path : CGPathRef,
@@ -3385,7 +3385,7 @@ external CGPDFDictionaryGetStream(
     key : Pointer[CChar],
     value : Pointer[CGPDFStreamRef]) : Bool;
 
-alias CGPDFDictionaryApplierFunction = CCodePointer[(Pointer[CChar],OpaquePointer,RawPointer),()];
+alias CGPDFDictionaryApplierFunction = CCodePointer[[Pointer[CChar],OpaquePointer,RawPointer],[]];
 
 external CGPDFDictionaryApplyFunction(
     dict : CGPDFDictionaryRef,
@@ -3508,9 +3508,9 @@ external CGPDFDocumentGetRotationAngle(
 
 alias CGFunctionRef = OpaquePointer;
 
-alias CGFunctionEvaluateCallback = CCodePointer[(RawPointer,Pointer[Double],Pointer[Double]),()];
+alias CGFunctionEvaluateCallback = CCodePointer[[RawPointer,Pointer[Double],Pointer[Double]],[]];
 
-alias CGFunctionReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGFunctionReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGFunctionCallbacks (
     version : UInt,
@@ -4167,7 +4167,7 @@ external CGContextConvertRectToUserSpace(
     context : CGContextRef,
     rect : CGRect) : CGRect;
 
-alias CGBitmapContextReleaseDataCallback = CCodePointer[(RawPointer,RawPointer),()];
+alias CGBitmapContextReleaseDataCallback = CCodePointer[[RawPointer,RawPointer],[]];
 
 external CGBitmapContextCreateWithData(
     data : RawPointer,
@@ -4221,9 +4221,9 @@ external CGBitmapContextCreateImage(
 
 alias CGDataConsumerRef = OpaquePointer;
 
-alias CGDataConsumerPutBytesCallback = CCodePointer[(RawPointer,RawPointer,CULong),(CULong)];
+alias CGDataConsumerPutBytesCallback = CCodePointer[[RawPointer,RawPointer,CULong],[CULong]];
 
-alias CGDataConsumerReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGDataConsumerReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGDataConsumerCallbacks (
     putBytes : CGDataConsumerPutBytesCallback,
@@ -4470,7 +4470,7 @@ external CGPDFScannerPopStream(
     scanner : CGPDFScannerRef,
     value : Pointer[CGPDFStreamRef]) : Bool;
 
-alias CGPDFOperatorCallback = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CGPDFOperatorCallback = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external CGPDFOperatorTableCreate() : CGPDFOperatorTableRef;
 
@@ -4893,7 +4893,7 @@ alias kCGDisplayDesktopShapeChangedFlag = 4096;
 
 alias CGDisplayChangeSummaryFlags = UInt;
 
-alias CGDisplayReconfigurationCallBack = CCodePointer[(UInt,UInt,RawPointer),()];
+alias CGDisplayReconfigurationCallBack = CCodePointer[[UInt,UInt,RawPointer],[]];
 
 external CGDisplayRegisterReconfigurationCallback(
     callback : CGDisplayReconfigurationCallBack,
@@ -5019,7 +5019,7 @@ alias CGCharCode = UShort;
 
 alias CGKeyCode = UShort;
 
-alias CGScreenRefreshCallback = CCodePointer[(UInt,Pointer[Struct_CGRect],RawPointer),()];
+alias CGScreenRefreshCallback = CCodePointer[[UInt,Pointer[Struct_CGRect],RawPointer],[]];
 
 external CGRegisterScreenRefreshCallback(
     callback : CGScreenRefreshCallback,
@@ -5046,7 +5046,7 @@ record Struct_CGScreenUpdateMoveDelta (
 
 alias CGScreenUpdateMoveDelta = Struct_CGScreenUpdateMoveDelta;
 
-alias CGScreenUpdateMoveCallback = CCodePointer[(Struct_CGScreenUpdateMoveDelta,CULong,Pointer[Struct_CGRect],RawPointer),()];
+alias CGScreenUpdateMoveCallback = CCodePointer[[Struct_CGScreenUpdateMoveDelta,CULong,Pointer[Struct_CGRect],RawPointer],[]];
 
 external CGScreenRegisterMoveCallback(
     callback : CGScreenUpdateMoveCallback,
@@ -5253,7 +5253,7 @@ alias CGEventMask = UInt64;
 
 alias CGEventTapProxy = OpaquePointer;
 
-alias CGEventTapCallBack = CCodePointer[(OpaquePointer,UInt,OpaquePointer,RawPointer),(OpaquePointer)];
+alias CGEventTapCallBack = CCodePointer[[OpaquePointer,UInt,OpaquePointer,RawPointer],[OpaquePointer]];
 
 record Struct___CGEventTapInformation (
     eventTapID : UInt,
@@ -5496,19 +5496,19 @@ external CGGLContextUpdateViewportSize(
 
 alias CGPSConverterRef = OpaquePointer;
 
-alias CGPSConverterBeginDocumentCallback = CCodePointer[(RawPointer),()];
+alias CGPSConverterBeginDocumentCallback = CCodePointer[[RawPointer],[]];
 
-alias CGPSConverterEndDocumentCallback = CCodePointer[(RawPointer,Bool),()];
+alias CGPSConverterEndDocumentCallback = CCodePointer[[RawPointer,Bool],[]];
 
-alias CGPSConverterBeginPageCallback = CCodePointer[(RawPointer,CULong,OpaquePointer),()];
+alias CGPSConverterBeginPageCallback = CCodePointer[[RawPointer,CULong,OpaquePointer],[]];
 
-alias CGPSConverterEndPageCallback = CCodePointer[(RawPointer,CULong,OpaquePointer),()];
+alias CGPSConverterEndPageCallback = CCodePointer[[RawPointer,CULong,OpaquePointer],[]];
 
-alias CGPSConverterProgressCallback = CCodePointer[(RawPointer),()];
+alias CGPSConverterProgressCallback = CCodePointer[[RawPointer],[]];
 
-alias CGPSConverterMessageCallback = CCodePointer[(RawPointer,OpaquePointer),()];
+alias CGPSConverterMessageCallback = CCodePointer[[RawPointer,OpaquePointer],[]];
 
-alias CGPSConverterReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGPSConverterReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGPSConverterCallbacks (
     version : UInt,
@@ -6421,15 +6421,15 @@ alias cmLinearChromaticAdaptation = 1;
 alias cmVonKriesChromaticAdaptation = 2;
 alias cmBradfordChromaticAdaptation = 3;
 
-alias CMFlattenProcPtr = CCodePointer[(Int,Pointer[CLong],RawPointer,RawPointer),(Short)];
+alias CMFlattenProcPtr = CCodePointer[[Int,Pointer[CLong],RawPointer,RawPointer],[Short]];
 
 alias CMFlattenUPP = CMFlattenProcPtr;
 
-alias CMBitmapCallBackProcPtr = CCodePointer[(Int,RawPointer),(CUChar)];
+alias CMBitmapCallBackProcPtr = CCodePointer[[Int,RawPointer],[CUChar]];
 
 alias CMBitmapCallBackUPP = CMBitmapCallBackProcPtr;
 
-alias CMConcatCallBackProcPtr = CCodePointer[(Int,RawPointer),(CUChar)];
+alias CMConcatCallBackProcPtr = CCodePointer[[Int,RawPointer],[CUChar]];
 
 alias CMConcatCallBackUPP = CMConcatCallBackProcPtr;
 
@@ -6796,15 +6796,15 @@ record Struct_CMProfileIterateData (
 
 alias CMProfileIterateData = Struct_CMProfileIterateData;
 
-alias CMProfileIterateProcPtr = CCodePointer[(Pointer[Struct_CMProfileIterateData],RawPointer),(Short)];
+alias CMProfileIterateProcPtr = CCodePointer[[Pointer[Struct_CMProfileIterateData],RawPointer],[Short]];
 
 alias CMProfileIterateUPP = CMProfileIterateProcPtr;
 
-alias CMMIterateProcPtr = CCodePointer[(Pointer[Struct_CMMInfo],RawPointer),(Short)];
+alias CMMIterateProcPtr = CCodePointer[[Pointer[Struct_CMMInfo],RawPointer],[Short]];
 
 alias CMMIterateUPP = CMMIterateProcPtr;
 
-alias CMLabToLabProcPtr = CCodePointer[(Pointer[Float],Pointer[Float],Pointer[Float],RawPointer),()];
+alias CMLabToLabProcPtr = CCodePointer[[Pointer[Float],Pointer[Float],Pointer[Float],RawPointer],[]];
 
 external CMNewProfile(
     prof : Pointer[CMProfileRef],
@@ -7335,9 +7335,9 @@ alias CMDeviceProfileArray = Struct_CMDeviceProfileArray;
 
 alias CMDeviceProfileArrayPtr = Pointer[Struct_CMDeviceProfileArray];
 
-alias CMIterateDeviceInfoProcPtr = CCodePointer[(Pointer[Struct_CMDeviceInfo],RawPointer),(Short)];
+alias CMIterateDeviceInfoProcPtr = CCodePointer[[Pointer[Struct_CMDeviceInfo],RawPointer],[Short]];
 
-alias CMIterateDeviceProfileProcPtr = CCodePointer[(Pointer[Struct_CMDeviceInfo],Pointer[Struct_NCMDeviceProfileInfo],RawPointer),(Short)];
+alias CMIterateDeviceProfileProcPtr = CCodePointer[[Pointer[Struct_CMDeviceInfo],Pointer[Struct_NCMDeviceProfileInfo],RawPointer],[Short]];
 
 external CMRegisterColorDevice(
     deviceClass : UInt,
@@ -7476,7 +7476,7 @@ alias FormatOrder = Array[Short,1];
 
 alias FormatOrderPtr = Pointer[FormatOrder];
 
-alias StyleRunDirectionProcPtr = CCodePointer[(Short,RawPointer),(CUChar)];
+alias StyleRunDirectionProcPtr = CCodePointer[[Short,RawPointer],[CUChar]];
 
 alias StyleRunDirectionUPP = StyleRunDirectionProcPtr;
 
@@ -7708,37 +7708,37 @@ alias PolyPtr = Pointer[MacPolygon];
 
 alias PolyHandle = Pointer[PolyPtr];
 
-alias QDTextProcPtr = CCodePointer[(Short,RawPointer,Struct_Point,Struct_Point),()];
+alias QDTextProcPtr = CCodePointer[[Short,RawPointer,Struct_Point,Struct_Point],[]];
 
-alias QDLineProcPtr = CCodePointer[(Struct_Point),()];
+alias QDLineProcPtr = CCodePointer[[Struct_Point],[]];
 
-alias QDRectProcPtr = CCodePointer[(CChar,Pointer[Struct_Rect]),()];
+alias QDRectProcPtr = CCodePointer[[CChar,Pointer[Struct_Rect]],[]];
 
-alias QDRRectProcPtr = CCodePointer[(CChar,Pointer[Struct_Rect],Short,Short),()];
+alias QDRRectProcPtr = CCodePointer[[CChar,Pointer[Struct_Rect],Short,Short],[]];
 
-alias QDOvalProcPtr = CCodePointer[(CChar,Pointer[Struct_Rect]),()];
+alias QDOvalProcPtr = CCodePointer[[CChar,Pointer[Struct_Rect]],[]];
 
-alias QDArcProcPtr = CCodePointer[(CChar,Pointer[Struct_Rect],Short,Short),()];
+alias QDArcProcPtr = CCodePointer[[CChar,Pointer[Struct_Rect],Short,Short],[]];
 
-alias QDPolyProcPtr = CCodePointer[(CChar,Pointer[Pointer[Struct_MacPolygon]]),()];
+alias QDPolyProcPtr = CCodePointer[[CChar,Pointer[Pointer[Struct_MacPolygon]]],[]];
 
-alias QDRgnProcPtr = CCodePointer[(CChar,OpaquePointer),()];
+alias QDRgnProcPtr = CCodePointer[[CChar,OpaquePointer],[]];
 
-alias QDBitsProcPtr = CCodePointer[(Pointer[Struct_BitMap],Pointer[Struct_Rect],Pointer[Struct_Rect],Short,OpaquePointer),()];
+alias QDBitsProcPtr = CCodePointer[[Pointer[Struct_BitMap],Pointer[Struct_Rect],Pointer[Struct_Rect],Short,OpaquePointer],[]];
 
-alias QDCommentProcPtr = CCodePointer[(Short,Short,Pointer[Pointer[CChar]]),()];
+alias QDCommentProcPtr = CCodePointer[[Short,Short,Pointer[Pointer[CChar]]],[]];
 
-alias QDTxMeasProcPtr = CCodePointer[(Short,RawPointer,Pointer[Struct_Point],Pointer[Struct_Point],Pointer[Struct_FontInfo]),(Short)];
+alias QDTxMeasProcPtr = CCodePointer[[Short,RawPointer,Pointer[Struct_Point],Pointer[Struct_Point],Pointer[Struct_FontInfo]],[Short]];
 
-alias QDGetPicProcPtr = CCodePointer[(RawPointer,Short),()];
+alias QDGetPicProcPtr = CCodePointer[[RawPointer,Short],[]];
 
-alias QDPutPicProcPtr = CCodePointer[(RawPointer,Short),()];
+alias QDPutPicProcPtr = CCodePointer[[RawPointer,Short],[]];
 
-alias QDOpcodeProcPtr = CCodePointer[(Pointer[Struct_Rect],Pointer[Struct_Rect],UShort,Short),()];
+alias QDOpcodeProcPtr = CCodePointer[[Pointer[Struct_Rect],Pointer[Struct_Rect],UShort,Short],[]];
 
-alias QDStdGlyphsProcPtr = CCodePointer[(RawPointer,CULong),(Int)];
+alias QDStdGlyphsProcPtr = CCodePointer[[RawPointer,CULong],[Int]];
 
-alias QDJShieldCursorProcPtr = CCodePointer[(Short,Short,Short,Short),()];
+alias QDJShieldCursorProcPtr = CCodePointer[[Short,Short,Short,Short],[]];
 
 alias QDTextUPP = QDTextProcPtr;
 
@@ -7998,7 +7998,7 @@ alias kNoConstraint = 0;
 alias kVerticalConstraint = 1;
 alias kHorizontalConstraint = 2;
 
-alias DragGrayRgnProcPtr = CCodePointer[(),()];
+alias DragGrayRgnProcPtr = CCodePointer[[],[]];
 
 record Struct_RGBColor (
     red : UShort,
@@ -8012,9 +8012,9 @@ alias RGBColorPtr = Pointer[RGBColor];
 
 alias RGBColorHdl = Pointer[RGBColorPtr];
 
-alias ColorSearchProcPtr = CCodePointer[(Pointer[Struct_RGBColor],Pointer[CLong]),(CUChar)];
+alias ColorSearchProcPtr = CCodePointer[[Pointer[Struct_RGBColor],Pointer[CLong]],[CUChar]];
 
-alias ColorComplementProcPtr = CCodePointer[(Pointer[Struct_RGBColor]),(CUChar)];
+alias ColorComplementProcPtr = CCodePointer[[Pointer[Struct_RGBColor]],[CUChar]];
 
 alias DragGrayRgnUPP = DragGrayRgnProcPtr;
 
@@ -8280,7 +8280,7 @@ alias GVarHandle = Pointer[GVarPtr];
 
 alias CGrafPtr = GrafPtr;
 
-alias QDPrinterStatusProcPtr = CCodePointer[(Int,OpaquePointer,RawPointer),(Int)];
+alias QDPrinterStatusProcPtr = CCodePointer[[Int,OpaquePointer,RawPointer],[Int]];
 
 alias QDPrinterStatusUPP = QDPrinterStatusProcPtr;
 
@@ -8331,7 +8331,7 @@ record Struct_OpenCPicParams (
 
 alias OpenCPicParams = Struct_OpenCPicParams;
 
-alias DeviceLoopDrawingProcPtr = CCodePointer[(Short,Short,Pointer[Pointer[Struct_GDevice]],RawPointer),()];
+alias DeviceLoopDrawingProcPtr = CCodePointer[[Short,Short,Pointer[Pointer[Struct_GDevice]],RawPointer],[]];
 
 alias DeviceLoopDrawingUPP = DeviceLoopDrawingProcPtr;
 
@@ -8361,7 +8361,7 @@ alias kQDParseRegionFromBottomRight = 10;
 
 alias QDRegionParseDirection = Int;
 
-alias RegionToRectsProcPtr = CCodePointer[(UShort,OpaquePointer,Pointer[Struct_Rect],RawPointer),(Int)];
+alias RegionToRectsProcPtr = CCodePointer[[UShort,OpaquePointer,Pointer[Struct_Rect],RawPointer],[Int]];
 
 alias RegionToRectsUPP = RegionToRectsProcPtr;
 
@@ -8487,7 +8487,7 @@ alias CustomXFerRec = Struct_CustomXFerRec;
 
 alias CustomXFerRecPtr = Pointer[CustomXFerRec];
 
-alias CustomXFerProcPtr = CCodePointer[(Pointer[Struct_CustomXFerRec]),()];
+alias CustomXFerProcPtr = CCodePointer[[Pointer[Struct_CustomXFerRec]],[]];
 
 alias kCursorComponentsVersion = 65537;
 
@@ -8951,13 +8951,13 @@ alias PictInfoPtr = Pointer[PictInfo];
 
 alias PictInfoHandle = Pointer[PictInfoPtr];
 
-alias InitPickMethodProcPtr = CCodePointer[(Short,Pointer[UInt],Pointer[Short]),(Short)];
+alias InitPickMethodProcPtr = CCodePointer[[Short,Pointer[UInt],Pointer[Short]],[Short]];
 
-alias RecordColorsProcPtr = CCodePointer[(UInt,Pointer[Struct_RGBColor],Int,Pointer[Int]),(Short)];
+alias RecordColorsProcPtr = CCodePointer[[UInt,Pointer[Struct_RGBColor],Int,Pointer[Int]],[Short]];
 
-alias CalcColorTableProcPtr = CCodePointer[(UInt,Short,RawPointer,Pointer[Struct_ColorSpec]),(Short)];
+alias CalcColorTableProcPtr = CCodePointer[[UInt,Short,RawPointer,Pointer[Struct_ColorSpec]],[Short]];
 
-alias DisposeColorPickMethodProcPtr = CCodePointer[(UInt),(Short)];
+alias DisposeColorPickMethodProcPtr = CCodePointer[[UInt],[Short]];
 
 alias InitPickMethodUPP = InitPickMethodProcPtr;
 
@@ -10243,17 +10243,17 @@ alias DMProfileListEntryRec = Struct_DMProfileListEntryRec;
 
 alias DMProfileListEntryPtr = Pointer[DMProfileListEntryRec];
 
-alias DMNotificationProcPtr = CCodePointer[(Pointer[Struct_AEDesc]),()];
+alias DMNotificationProcPtr = CCodePointer[[Pointer[Struct_AEDesc]],[]];
 
-alias DMExtendedNotificationProcPtr = CCodePointer[(RawPointer,Short,RawPointer),()];
+alias DMExtendedNotificationProcPtr = CCodePointer[[RawPointer,Short,RawPointer],[]];
 
-alias DMComponentListIteratorProcPtr = CCodePointer[(RawPointer,UInt,Pointer[Struct_DMComponentListEntryRec]),()];
+alias DMComponentListIteratorProcPtr = CCodePointer[[RawPointer,UInt,Pointer[Struct_DMComponentListEntryRec]],[]];
 
-alias DMDisplayModeListIteratorProcPtr = CCodePointer[(RawPointer,UInt,Pointer[Struct_DMDisplayModeListEntryRec]),()];
+alias DMDisplayModeListIteratorProcPtr = CCodePointer[[RawPointer,UInt,Pointer[Struct_DMDisplayModeListEntryRec]],[]];
 
-alias DMProfileListIteratorProcPtr = CCodePointer[(RawPointer,UInt,Pointer[Struct_DMProfileListEntryRec]),()];
+alias DMProfileListIteratorProcPtr = CCodePointer[[RawPointer,UInt,Pointer[Struct_DMProfileListEntryRec]],[]];
 
-alias DMDisplayListIteratorProcPtr = CCodePointer[(RawPointer,UInt,Pointer[Struct_DisplayListEntryRec]),()];
+alias DMDisplayListIteratorProcPtr = CCodePointer[[RawPointer,UInt,Pointer[Struct_DisplayListEntryRec]],[]];
 
 alias DMNotificationUPP = DMNotificationProcPtr;
 
@@ -10601,7 +10601,7 @@ alias kATSUBackgroundCallback = 1;
 
 alias ATSUBackgroundColor = ATSURGBAlphaColor;
 
-alias RedrawBackgroundProcPtr = CCodePointer[(OpaquePointer,CULong,CULong,Pointer[Struct_ATSTrapezoid],CULong),(CUChar)];
+alias RedrawBackgroundProcPtr = CCodePointer[[OpaquePointer,CULong,CULong,Pointer[Struct_ATSTrapezoid],CULong],[CUChar]];
 
 alias RedrawBackgroundUPP = RedrawBackgroundProcPtr;
 
@@ -10740,7 +10740,7 @@ external ATSUSetFontFeatures(
     iType : Pointer[UShort],
     iSelector : Pointer[UShort]) : Int;
 
-alias ATSQuadraticNewPathProcPtr = CCodePointer[(RawPointer),(Int)];
+alias ATSQuadraticNewPathProcPtr = CCodePointer[[RawPointer],[Int]];
 
 alias ATSQuadraticNewPathUPP = ATSQuadraticNewPathProcPtr;
 
@@ -10754,7 +10754,7 @@ external InvokeATSQuadraticNewPathUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSQuadraticNewPathUPP) : Int;
 
-alias ATSQuadraticLineProcPtr = CCodePointer[(Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer),(Int)];
+alias ATSQuadraticLineProcPtr = CCodePointer[[Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer],[Int]];
 
 alias ATSQuadraticLineUPP = ATSQuadraticLineProcPtr;
 
@@ -10770,7 +10770,7 @@ external InvokeATSQuadraticLineUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSQuadraticLineUPP) : Int;
 
-alias ATSQuadraticCurveProcPtr = CCodePointer[(Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer),(Int)];
+alias ATSQuadraticCurveProcPtr = CCodePointer[[Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer],[Int]];
 
 alias ATSQuadraticCurveUPP = ATSQuadraticCurveProcPtr;
 
@@ -10787,7 +10787,7 @@ external InvokeATSQuadraticCurveUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSQuadraticCurveUPP) : Int;
 
-alias ATSQuadraticClosePathProcPtr = CCodePointer[(RawPointer),(Int)];
+alias ATSQuadraticClosePathProcPtr = CCodePointer[[RawPointer],[Int]];
 
 alias ATSQuadraticClosePathUPP = ATSQuadraticClosePathProcPtr;
 
@@ -10801,7 +10801,7 @@ external InvokeATSQuadraticClosePathUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSQuadraticClosePathUPP) : Int;
 
-alias ATSCubicMoveToProcPtr = CCodePointer[(Pointer[Struct_Float32Point],RawPointer),(Int)];
+alias ATSCubicMoveToProcPtr = CCodePointer[[Pointer[Struct_Float32Point],RawPointer],[Int]];
 
 alias ATSCubicMoveToUPP = ATSCubicMoveToProcPtr;
 
@@ -10816,7 +10816,7 @@ external InvokeATSCubicMoveToUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSCubicMoveToUPP) : Int;
 
-alias ATSCubicLineToProcPtr = CCodePointer[(Pointer[Struct_Float32Point],RawPointer),(Int)];
+alias ATSCubicLineToProcPtr = CCodePointer[[Pointer[Struct_Float32Point],RawPointer],[Int]];
 
 alias ATSCubicLineToUPP = ATSCubicLineToProcPtr;
 
@@ -10831,7 +10831,7 @@ external InvokeATSCubicLineToUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSCubicLineToUPP) : Int;
 
-alias ATSCubicCurveToProcPtr = CCodePointer[(Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer),(Int)];
+alias ATSCubicCurveToProcPtr = CCodePointer[[Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],Pointer[Struct_Float32Point],RawPointer],[Int]];
 
 alias ATSCubicCurveToUPP = ATSCubicCurveToProcPtr;
 
@@ -10848,7 +10848,7 @@ external InvokeATSCubicCurveToUPP(
     callBackDataPtr : RawPointer,
     userUPP : ATSCubicCurveToUPP) : Int;
 
-alias ATSCubicClosePathProcPtr = CCodePointer[(RawPointer),(Int)];
+alias ATSCubicClosePathProcPtr = CCodePointer[[RawPointer],[Int]];
 
 alias ATSCubicClosePathUPP = ATSCubicClosePathProcPtr;
 
@@ -11037,7 +11037,7 @@ alias kHIShapeParseFromRight = 2;
 alias kHIShapeParseFromTopLeft = 0;
 alias kHIShapeParseFromBottomRight = 3;
 
-alias HIShapeEnumerateProcPtr = CCodePointer[(Int,OpaquePointer,Pointer[Struct_CGRect],RawPointer),(Int)];
+alias HIShapeEnumerateProcPtr = CCodePointer[[Int,OpaquePointer,Pointer[Struct_CGRect],RawPointer],[Int]];
 
 external HIShapeGetTypeID() : CULong;
 
@@ -11266,9 +11266,9 @@ alias svAll4BitData = 33686018;
 alias svAll8BitData = 67372036;
 alias svAllAvailableData = 4294967295;
 
-alias IconActionProcPtr = CCodePointer[(UInt,Pointer[Pointer[Pointer[CChar]]],RawPointer),(Short)];
+alias IconActionProcPtr = CCodePointer[[UInt,Pointer[Pointer[Pointer[CChar]]],RawPointer],[Short]];
 
-alias IconGetterProcPtr = CCodePointer[(UInt,RawPointer),(Pointer[Pointer[CChar]])];
+alias IconGetterProcPtr = CCodePointer[[UInt,RawPointer],[Pointer[Pointer[CChar]]]];
 
 alias IconActionUPP = IconActionProcPtr;
 
@@ -12080,7 +12080,7 @@ external PasteboardSetPasteLocation(
     inPasteboard : PasteboardRef,
     inPasteLocation : CFURLRef) : Int;
 
-alias PasteboardPromiseKeeperProcPtr = CCodePointer[(OpaquePointer,RawPointer,OpaquePointer,RawPointer),(Int)];
+alias PasteboardPromiseKeeperProcPtr = CCodePointer[[OpaquePointer,RawPointer,OpaquePointer,RawPointer],[Int]];
 
 external PasteboardSetPromiseKeeper(
     inPasteboard : PasteboardRef,
@@ -12264,7 +12264,7 @@ external AXUIElementPostKeyboardEvent(
 
 alias AXObserverRef = OpaquePointer;
 
-alias AXObserverCallback = CCodePointer[(OpaquePointer,OpaquePointer,OpaquePointer,RawPointer),()];
+alias AXObserverCallback = CCodePointer[[OpaquePointer,OpaquePointer,OpaquePointer,RawPointer],[]];
 
 external AXObserverGetTypeID() : CULong;
 
@@ -12493,7 +12493,7 @@ external ColorSyncProfileRemoveTag(
     prof : ColorSyncMutableProfileRef,
     signature : CFStringRef);
 
-alias ColorSyncProfileIterateCallback = CCodePointer[(OpaquePointer,RawPointer),(Bool)];
+alias ColorSyncProfileIterateCallback = CCodePointer[[OpaquePointer,RawPointer],[Bool]];
 
 external ColorSyncIterateInstalledProfiles(
     callBack : ColorSyncProfileIterateCallback,
@@ -12659,19 +12659,19 @@ external ColorSyncCMMCopyLocalizedName(
 external ColorSyncCMMCopyCMMIdentifier(
     argument0 : ColorSyncCMMRef) : CFStringRef;
 
-alias ColorSyncCMMIterateCallback = CCodePointer[(OpaquePointer,RawPointer),(Bool)];
+alias ColorSyncCMMIterateCallback = CCodePointer[[OpaquePointer,RawPointer],[Bool]];
 
 external ColorSyncIterateInstalledCMMs(
     callBack : ColorSyncCMMIterateCallback,
     userInfo : RawPointer);
 
-alias CMMInitializeLinkProfileProc = CCodePointer[(OpaquePointer,OpaquePointer,OpaquePointer),(Bool)];
+alias CMMInitializeLinkProfileProc = CCodePointer[[OpaquePointer,OpaquePointer,OpaquePointer],[Bool]];
 
-alias CMMInitializeTransformProc = CCodePointer[(OpaquePointer,OpaquePointer,OpaquePointer),(Bool)];
+alias CMMInitializeTransformProc = CCodePointer[[OpaquePointer,OpaquePointer,OpaquePointer],[Bool]];
 
-alias CMMApplyTransformProc = CCodePointer[(OpaquePointer,CULong,CULong,CULong,Pointer[RawPointer],Int,UInt,CULong,CULong,Pointer[RawPointer],Int,UInt,CULong,OpaquePointer),(Bool)];
+alias CMMApplyTransformProc = CCodePointer[[OpaquePointer,CULong,CULong,CULong,Pointer[RawPointer],Int,UInt,CULong,CULong,Pointer[RawPointer],Int,UInt,CULong,OpaquePointer],[Bool]];
 
-alias CMMCreateTransformPropertyProc = CCodePointer[(OpaquePointer,RawPointer,OpaquePointer),(RawPointer)];
+alias CMMCreateTransformPropertyProc = CCodePointer[[OpaquePointer,RawPointer,OpaquePointer],[RawPointer]];
 
 external kCMMInitializeLinkProfileProcName : CFStringRef;
 
@@ -12751,7 +12751,7 @@ external ColorSyncDeviceCopyDeviceInfo(
     deviceClass : CFStringRef,
     devID : CFUUIDRef) : CFDictionaryRef;
 
-alias ColorSyncDeviceProfileIterateCallback = CCodePointer[(OpaquePointer,RawPointer),(Bool)];
+alias ColorSyncDeviceProfileIterateCallback = CCodePointer[[OpaquePointer,RawPointer],[Bool]];
 
 external ColorSyncIterateDeviceProfiles(
     callBack : ColorSyncDeviceProfileIterateCallback,
@@ -13701,7 +13701,7 @@ record Struct_DCMDictionaryHeader (
 
 alias DCMDictionaryHeader = Struct_DCMDictionaryHeader;
 
-alias DCMProgressFilterProcPtr = CCodePointer[(CUChar,UShort,UInt),(CUChar)];
+alias DCMProgressFilterProcPtr = CCodePointer[[CUChar,UShort,UInt],[CUChar]];
 
 alias DCMProgressFilterUPP = DCMProgressFilterProcPtr;
 
@@ -14180,17 +14180,17 @@ external kSpeechErrorCallbackSpokenString : CFStringRef;
 
 external kSpeechErrorCallbackCharacterOffset : CFStringRef;
 
-alias SpeechTextDoneProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,Pointer[RawPointer],Pointer[CULong],Pointer[Int]),()];
+alias SpeechTextDoneProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,Pointer[RawPointer],Pointer[CULong],Pointer[Int]],[]];
 
-alias SpeechDoneProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer),()];
+alias SpeechDoneProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer],[]];
 
-alias SpeechSyncProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,UInt),()];
+alias SpeechSyncProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,UInt],[]];
 
-alias SpeechErrorProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,Short,CLong),()];
+alias SpeechErrorProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,Short,CLong],[]];
 
-alias SpeechPhonemeProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,Short),()];
+alias SpeechPhonemeProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,Short],[]];
 
-alias SpeechWordProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,CULong,UShort),()];
+alias SpeechWordProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,CULong,UShort],[]];
 
 alias SpeechTextDoneUPP = SpeechTextDoneProcPtr;
 
@@ -14279,9 +14279,9 @@ external InvokeSpeechWordUPP(
     wordLen : UShort,
     userUPP : SpeechWordUPP);
 
-alias SpeechErrorCFProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,OpaquePointer),()];
+alias SpeechErrorCFProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,OpaquePointer],[]];
 
-alias SpeechWordCFProcPtr = CCodePointer[(Pointer[Struct_SpeechChannelRecord],RawPointer,OpaquePointer,UnnamedStruct9),()];
+alias SpeechWordCFProcPtr = CCodePointer[[Pointer[Struct_SpeechChannelRecord],RawPointer,OpaquePointer,UnnamedStruct9],[]];
 
 external SpeechManagerVersion() : NumVersion;
 
@@ -14944,7 +14944,7 @@ alias CTFontCollectionRef = OpaquePointer;
 
 external CTFontCollectionGetTypeID() : CULong;
 
-alias CTFontCollectionSortDescriptorsCallback = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer),(CLong)];
+alias CTFontCollectionSortDescriptorsCallback = CCodePointer[[OpaquePointer,OpaquePointer,RawPointer],[CLong]];
 
 external kCTFontCollectionRemoveDuplicatesOption : CFStringRef;
 

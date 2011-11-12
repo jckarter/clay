@@ -1663,14 +1663,14 @@ overload selector(static #"sortDescriptorWithKey:ascending:comparator:") = Id, N
 overload selector(static #"sortDescriptorWithKey:ascending:selector:") = Id, NSString, Bool, SelectorHandle;
 overload selector(static #"sortUsingComparator:") = Void, NSComparator;
 overload selector(static #"sortUsingDescriptors:") = Void, NSArray;
-overload selector(static #"sortUsingFunction:context:") = Void, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer;
+overload selector(static #"sortUsingFunction:context:") = Void, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer;
 overload selector(static #"sortUsingSelector:") = Void, SelectorHandle;
 overload selector(static #"sortWithOptions:usingComparator:") = Void, UInt, NSComparator;
 overload selector(static #"sortedArrayHint") = NSData;
 overload selector(static #"sortedArrayUsingComparator:") = NSArray, NSComparator;
 overload selector(static #"sortedArrayUsingDescriptors:") = NSArray, NSArray;
-overload selector(static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer;
-overload selector(static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer, NSData;
+overload selector(static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer;
+overload selector(static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer, NSData;
 overload selector(static #"sortedArrayUsingSelector:") = NSArray, SelectorHandle;
 overload selector(static #"sortedArrayWithOptions:usingComparator:") = NSArray, UInt, NSComparator;
 overload selector(static #"spellCheckingResultWithRange:") = NSTextCheckingResult, NSRange;
@@ -1903,8 +1903,8 @@ overload externalInstanceMethod(static NSArray, static #"lastObject") = Id;
 overload externalInstanceMethod(static NSArray, static #"objectEnumerator") = NSEnumerator;
 overload externalInstanceMethod(static NSArray, static #"reverseObjectEnumerator") = NSEnumerator;
 overload externalInstanceMethod(static NSArray, static #"sortedArrayHint") = NSData;
-overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer;
-overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer, NSData;
+overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer;
+overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer, NSData;
 overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingSelector:") = NSArray, SelectorHandle;
 overload externalInstanceMethod(static NSArray, static #"subarrayWithRange:") = NSArray, NSRange;
 overload externalInstanceMethod(static NSArray, static #"writeToFile:atomically:") = Bool, NSString, Bool;
@@ -2955,7 +2955,7 @@ overload externalInstanceMethod(static NSMutableArray, static #"removeObjectsInR
 overload externalInstanceMethod(static NSMutableArray, static #"replaceObjectsInRange:withObjectsFromArray:range:") = Void, NSRange, NSArray, NSRange;
 overload externalInstanceMethod(static NSMutableArray, static #"replaceObjectsInRange:withObjectsFromArray:") = Void, NSRange, NSArray;
 overload externalInstanceMethod(static NSMutableArray, static #"setArray:") = Void, NSArray;
-overload externalInstanceMethod(static NSMutableArray, static #"sortUsingFunction:context:") = Void, CCodePointer[(Id,Id,RawPointer),(Int)], RawPointer;
+overload externalInstanceMethod(static NSMutableArray, static #"sortUsingFunction:context:") = Void, CCodePointer[[Id,Id,RawPointer],[Int]], RawPointer;
 overload externalInstanceMethod(static NSMutableArray, static #"sortUsingSelector:") = Void, SelectorHandle;
 overload externalInstanceMethod(static NSMutableArray, static #"insertObjects:atIndexes:") = Void, NSArray, NSIndexSet;
 overload externalInstanceMethod(static NSMutableArray, static #"removeObjectsAtIndexes:") = Void, NSIndexSet;
@@ -4756,10 +4756,10 @@ external NSPortReceiveException : NSString;
 
 external NSOldStyleException : NSString;
 
-external NSGetUncaughtExceptionHandler() CCodePointer[(NSException),()];
+external NSGetUncaughtExceptionHandler() : CCodePointer[[NSException],[]];
 
 external NSSetUncaughtExceptionHandler(
-    argument0 : CCodePointer[(NSException),()]);
+    argument0 : CCodePointer[[NSException],[]]);
 
 external NSAssertionHandlerKey : NSString;
 

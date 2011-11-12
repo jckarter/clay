@@ -11,13 +11,13 @@ private alias AUnionType = Int;
 
 alias lua_State = Opaque;
 
-alias lua_CFunction = CCodePointer[(OpaquePointer),(Int)];
+alias lua_CFunction = CCodePointer[[OpaquePointer],[Int]];
 
-alias lua_Reader = CCodePointer[(OpaquePointer,RawPointer,Pointer[CULong]),(Pointer[CChar])];
+alias lua_Reader = CCodePointer[[OpaquePointer,RawPointer,Pointer[CULong]],[Pointer[CChar]]];
 
-alias lua_Writer = CCodePointer[(OpaquePointer,RawPointer,CULong,RawPointer),(Int)];
+alias lua_Writer = CCodePointer[[OpaquePointer,RawPointer,CULong,RawPointer],[Int]];
 
-alias lua_Alloc = CCodePointer[(RawPointer,RawPointer,CULong,CULong),(RawPointer)];
+alias lua_Alloc = CCodePointer[[RawPointer,RawPointer,CULong,CULong],[RawPointer]];
 
 alias lua_Number = Double;
 
@@ -320,7 +320,7 @@ external lua_setlevel(
 
 alias lua_Debug = Struct_lua_Debug;
 
-alias lua_Hook = CCodePointer[(OpaquePointer,Pointer[Struct_lua_Debug]),()];
+alias lua_Hook = CCodePointer[[OpaquePointer,Pointer[Struct_lua_Debug]],[]];
 
 external lua_getstack(
     L : Pointer[lua_State],

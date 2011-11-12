@@ -1017,10 +1017,10 @@ external posix_memalign(
 external abort();
 
 external atexit(
-    __func : CCodePointer[(),()]) : Int;
+    __func : CCodePointer[[],[]]) : Int;
 
 external on_exit(
-    __func : CCodePointer[(Int,RawPointer),()],
+    __func : CCodePointer[[Int,RawPointer],[]],
     __arg : RawPointer) : Int;
 
 external exit(
@@ -1068,7 +1068,7 @@ external realpath(
     __name : Pointer[CChar],
     __resolved : Pointer[CChar]) : Pointer[CChar];
 
-alias __compar_fn_t = CCodePointer[(RawPointer,RawPointer),(Int)];
+alias __compar_fn_t = CCodePointer[[RawPointer,RawPointer],[Int]];
 
 external bsearch(
     __key : RawPointer,

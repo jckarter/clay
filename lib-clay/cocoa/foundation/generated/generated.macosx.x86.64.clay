@@ -83,7 +83,7 @@ overload selector(static #"acceptConnectionInBackgroundAndNotify") = Void;
 overload selector(static #"acceptConnectionInBackgroundAndNotifyForModes:") = Void, NSArray;
 overload selector(static #"acceptInputForMode:beforeDate:") = Void, NSString, NSDate;
 overload selector(static #"accessInstanceVariablesDirectly") = Bool;
-overload selector(static #"acquireFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)];
+overload selector(static #"acquireFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]],CChar],[RawPointer]];
 overload selector(static #"activeProcessorCount") = CULong;
 overload selector(static #"addAttribute:") = Void, NSXMLNode;
 overload selector(static #"addAttribute:value:range:") = Void, NSString, Id, NSRange;
@@ -570,7 +570,7 @@ overload selector(static #"deletesFileUponFailure") = Bool;
 overload selector(static #"dependencies") = NSArray;
 overload selector(static #"dequeueNotificationsMatching:coalesceMask:") = Void, NSNotification, CULong;
 overload selector(static #"description") = NSString;
-overload selector(static #"descriptionFunction") = CCodePointer[(RawPointer),(NSString)];
+overload selector(static #"descriptionFunction") = CCodePointer[[RawPointer],[NSString]];
 overload selector(static #"descriptionInStringsFileFormat") = NSString;
 overload selector(static #"descriptionWithCalendarFormat:") = NSString, NSString;
 overload selector(static #"descriptionWithCalendarFormat:locale:") = NSString, NSString, Id;
@@ -916,7 +916,7 @@ overload selector(static #"hasSuffix:") = Bool, NSString;
 overload selector(static #"hasThousandSeparators") = Bool;
 overload selector(static #"hasWritablePropertyForKey:") = Bool, NSString;
 overload selector(static #"hash") = CULong;
-overload selector(static #"hashFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)];
+overload selector(static #"hashFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[CULong]];
 overload selector(static #"hashTableWithOptions:") = Id, CULong;
 overload selector(static #"hashTableWithWeakObjects") = Id;
 overload selector(static #"helpAnchor") = NSString;
@@ -1208,7 +1208,7 @@ overload selector(static #"isDaylightSavingTimeForDate:") = Bool, NSDate;
 overload selector(static #"isDeletableFileAtPath:") = Bool, NSString;
 overload selector(static #"isEnabled") = Bool;
 overload selector(static #"isEqual:") = Bool, Id;
-overload selector(static #"isEqualFunction") = CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)];
+overload selector(static #"isEqualFunction") = CCodePointer[[RawPointer,RawPointer,CCodePointer[[RawPointer],[CULong]]],[CChar]];
 overload selector(static #"isEqualTo:") = Bool, Id;
 overload selector(static #"isEqualToArray:") = Bool, NSArray;
 overload selector(static #"isEqualToAttributedString:") = Bool, NSAttributedString;
@@ -1742,7 +1742,7 @@ overload selector(static #"relativePath") = NSString;
 overload selector(static #"relativePosition") = CULong;
 overload selector(static #"relativeString") = NSString;
 overload selector(static #"release") = Void;
-overload selector(static #"relinquishFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()];
+overload selector(static #"relinquishFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[]];
 overload selector(static #"remoteObjects") = NSArray;
 overload selector(static #"removeAllActions") = Void;
 overload selector(static #"removeAllActionsWithTarget:") = Void, Id;
@@ -1948,7 +1948,7 @@ overload selector(static #"servicePortWithName:") = NSPort, NSString;
 overload selector(static #"set") = Id;
 overload selector(static #"setAMSymbol:") = Void, NSString;
 overload selector(static #"setAbbreviationDictionary:") = Void, NSDictionary;
-overload selector(static #"setAcquireFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)];
+overload selector(static #"setAcquireFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]],CChar],[RawPointer]];
 overload selector(static #"setActionName:") = Void, NSString;
 overload selector(static #"setAllHTTPHeaderFields:") = Void, NSDictionary;
 overload selector(static #"setAllowsFloats:") = Void, Bool;
@@ -2012,7 +2012,7 @@ overload selector(static #"setDefaultNameServerPortNumber:") = Void, UShort;
 overload selector(static #"setDefaultTimeZone:") = Void, NSTimeZone;
 overload selector(static #"setDelegate:") = Void, Id;
 overload selector(static #"setDeletesFileUponFailure:") = Void, Bool;
-overload selector(static #"setDescriptionFunction:") = Void, CCodePointer[(RawPointer),(NSString)];
+overload selector(static #"setDescriptionFunction:") = Void, CCodePointer[[RawPointer],[NSString]];
 overload selector(static #"setDescriptor:forKeyword:") = Void, NSAppleEventDescriptor, UInt;
 overload selector(static #"setDestination:allowOverwrite:") = Void, NSString, Bool;
 overload selector(static #"setDictionary:") = Void, NSDictionary;
@@ -2049,7 +2049,7 @@ overload selector(static #"setHTTPBodyStream:") = Void, NSInputStream;
 overload selector(static #"setHTTPMethod:") = Void, NSString;
 overload selector(static #"setHTTPShouldHandleCookies:") = Void, Bool;
 overload selector(static #"setHasThousandSeparators:") = Void, Bool;
-overload selector(static #"setHashFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)];
+overload selector(static #"setHashFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[CULong]];
 overload selector(static #"setHostCacheEnabled:") = Void, Bool;
 overload selector(static #"setHour:") = Void, CLong;
 overload selector(static #"setIndependentConversationQueueing:") = Void, Bool;
@@ -2057,7 +2057,7 @@ overload selector(static #"setIndex:") = Void, CLong;
 overload selector(static #"setInsertionClassDescription:") = Void, NSScriptClassDescription;
 overload selector(static #"setInteger:forKey:") = Void, CLong, NSString;
 overload selector(static #"setInternationalCurrencySymbol:") = Void, NSString;
-overload selector(static #"setIsEqualFunction:") = Void, CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)];
+overload selector(static #"setIsEqualFunction:") = Void, CCodePointer[[RawPointer,RawPointer,CCodePointer[[RawPointer],[CULong]]],[CChar]];
 overload selector(static #"setKey:") = Void, NSString;
 overload selector(static #"setKeys:triggerChangeNotificationsForDependentKey:") = Void, NSArray, NSString;
 overload selector(static #"setLaunchPath:") = Void, NSString;
@@ -2131,7 +2131,7 @@ overload selector(static #"setQueuePriority:") = Void, CLong;
 overload selector(static #"setRangeContainerObject:") = Void, Id;
 overload selector(static #"setReceiversSpecifier:") = Void, NSScriptObjectSpecifier;
 overload selector(static #"setRelativePosition:") = Void, CULong;
-overload selector(static #"setRelinquishFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()];
+overload selector(static #"setRelinquishFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[]];
 overload selector(static #"setReplyTimeout:") = Void, Double;
 overload selector(static #"setRepresentation") = NSSet;
 overload selector(static #"setRequestTimeout:") = Void, Double;
@@ -2167,7 +2167,7 @@ overload selector(static #"setShortWeekdaySymbols:") = Void, NSArray;
 overload selector(static #"setShouldProcessNamespaces:") = Void, Bool;
 overload selector(static #"setShouldReportNamespacePrefixes:") = Void, Bool;
 overload selector(static #"setShouldResolveExternalEntities:") = Void, Bool;
-overload selector(static #"setSizeFunction:") = Void, CCodePointer[(RawPointer),(CULong)];
+overload selector(static #"setSizeFunction:") = Void, CCodePointer[[RawPointer],[CULong]];
 overload selector(static #"setSortDescriptors:") = Void, NSArray;
 overload selector(static #"setStackSize:") = Void, CULong;
 overload selector(static #"setStandalone:") = Void, Bool;
@@ -2262,7 +2262,7 @@ overload selector(static #"shouldReportNamespacePrefixes") = Bool;
 overload selector(static #"shouldResolveExternalEntities") = Bool;
 overload selector(static #"signal") = Void;
 overload selector(static #"signatureWithObjCTypes:") = NSMethodSignature, Pointer[CChar];
-overload selector(static #"sizeFunction") = CCodePointer[(RawPointer),(CULong)];
+overload selector(static #"sizeFunction") = CCodePointer[[RawPointer],[CULong]];
 overload selector(static #"sizeValue") = NSSize;
 overload selector(static #"skipDescendants") = Void;
 overload selector(static #"skipDescendents") = Void;
@@ -2277,14 +2277,14 @@ overload selector(static #"sortDescriptorWithKey:ascending:selector:") = Id, NSS
 overload selector(static #"sortDescriptors") = NSArray;
 overload selector(static #"sortUsingComparator:") = Void, NSComparator;
 overload selector(static #"sortUsingDescriptors:") = Void, NSArray;
-overload selector(static #"sortUsingFunction:context:") = Void, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer;
+overload selector(static #"sortUsingFunction:context:") = Void, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer;
 overload selector(static #"sortUsingSelector:") = Void, SelectorHandle;
 overload selector(static #"sortWithOptions:usingComparator:") = Void, CULong, NSComparator;
 overload selector(static #"sortedArrayHint") = NSData;
 overload selector(static #"sortedArrayUsingComparator:") = NSArray, NSComparator;
 overload selector(static #"sortedArrayUsingDescriptors:") = NSArray, NSArray;
-overload selector(static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer;
-overload selector(static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer, NSData;
+overload selector(static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer;
+overload selector(static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer, NSData;
 overload selector(static #"sortedArrayUsingSelector:") = NSArray, SelectorHandle;
 overload selector(static #"sortedArrayWithOptions:usingComparator:") = NSArray, CULong, NSComparator;
 overload selector(static #"source") = NSString;
@@ -2685,8 +2685,8 @@ overload externalInstanceMethod(static NSArray, static #"lastObject") = Id;
 overload externalInstanceMethod(static NSArray, static #"objectEnumerator") = NSEnumerator;
 overload externalInstanceMethod(static NSArray, static #"reverseObjectEnumerator") = NSEnumerator;
 overload externalInstanceMethod(static NSArray, static #"sortedArrayHint") = NSData;
-overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer;
-overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer, NSData;
+overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:") = NSArray, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer;
+overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingFunction:context:hint:") = NSArray, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer, NSData;
 overload externalInstanceMethod(static NSArray, static #"sortedArrayUsingSelector:") = NSArray, SelectorHandle;
 overload externalInstanceMethod(static NSArray, static #"subarrayWithRange:") = NSArray, NSRange;
 overload externalInstanceMethod(static NSArray, static #"writeToFile:atomically:") = Bool, NSString, Bool;
@@ -4007,7 +4007,7 @@ overload externalInstanceMethod(static NSMutableArray, static #"removeObjectsInR
 overload externalInstanceMethod(static NSMutableArray, static #"replaceObjectsInRange:withObjectsFromArray:range:") = Void, NSRange, NSArray, NSRange;
 overload externalInstanceMethod(static NSMutableArray, static #"replaceObjectsInRange:withObjectsFromArray:") = Void, NSRange, NSArray;
 overload externalInstanceMethod(static NSMutableArray, static #"setArray:") = Void, NSArray;
-overload externalInstanceMethod(static NSMutableArray, static #"sortUsingFunction:context:") = Void, CCodePointer[(Id,Id,RawPointer),(CLong)], RawPointer;
+overload externalInstanceMethod(static NSMutableArray, static #"sortUsingFunction:context:") = Void, CCodePointer[[Id,Id,RawPointer],[CLong]], RawPointer;
 overload externalInstanceMethod(static NSMutableArray, static #"sortUsingSelector:") = Void, SelectorHandle;
 overload externalInstanceMethod(static NSMutableArray, static #"insertObjects:atIndexes:") = Void, NSArray, NSIndexSet;
 overload externalInstanceMethod(static NSMutableArray, static #"removeObjectsAtIndexes:") = Void, NSIndexSet;
@@ -4681,18 +4681,18 @@ record NSPointerFunctions = externalClass(NSObject);
 overload externalInstanceMethod(static NSPointerFunctions, static #"copyWithZone:") = Id, Pointer[NSZone];
 overload externalInstanceMethod(static NSPointerFunctions, static #"initWithOptions:") = Id, CULong;
 overload externalClassMethod(static NSPointerFunctions, static #"pointerFunctionsWithOptions:") = Id, CULong;
-overload externalInstanceMethod(static NSPointerFunctions, static #"hashFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setHashFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),(CULong)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"isEqualFunction") = CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setIsEqualFunction:") = Void, CCodePointer[(RawPointer,RawPointer,CCodePointer[(RawPointer),(CULong)]),(CChar)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"sizeFunction") = CCodePointer[(RawPointer),(CULong)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setSizeFunction:") = Void, CCodePointer[(RawPointer),(CULong)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"descriptionFunction") = CCodePointer[(RawPointer),(NSString)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setDescriptionFunction:") = Void, CCodePointer[(RawPointer),(NSString)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"relinquishFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setRelinquishFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)]),()];
-overload externalInstanceMethod(static NSPointerFunctions, static #"acquireFunction") = CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)];
-overload externalInstanceMethod(static NSPointerFunctions, static #"setAcquireFunction:") = Void, CCodePointer[(RawPointer,CCodePointer[(RawPointer),(CULong)],CChar),(RawPointer)];
+overload externalInstanceMethod(static NSPointerFunctions, static #"hashFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[CULong]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setHashFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[CULong]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"isEqualFunction") = CCodePointer[[RawPointer,RawPointer,CCodePointer[[RawPointer],[CULong]]],[CChar]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setIsEqualFunction:") = Void, CCodePointer[[RawPointer,RawPointer,CCodePointer[[RawPointer],[CULong]]],[CChar]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"sizeFunction") = CCodePointer[[RawPointer],[CULong]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setSizeFunction:") = Void, CCodePointer[[RawPointer],[CULong]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"descriptionFunction") = CCodePointer[[RawPointer],[NSString]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setDescriptionFunction:") = Void, CCodePointer[[RawPointer],[NSString]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"relinquishFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setRelinquishFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]]],[]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"acquireFunction") = CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]],CChar],[RawPointer]];
+overload externalInstanceMethod(static NSPointerFunctions, static #"setAcquireFunction:") = Void, CCodePointer[[RawPointer,CCodePointer[[RawPointer],[CULong]],CChar],[RawPointer]];
 overload externalInstanceMethod(static NSPointerFunctions, static #"usesStrongWriteBarrier") = Bool;
 overload externalInstanceMethod(static NSPointerFunctions, static #"setUsesStrongWriteBarrier:") = Void, Bool;
 overload externalInstanceMethod(static NSPointerFunctions, static #"usesWeakReadAndWriteBarriers") = Bool;
@@ -6424,10 +6424,10 @@ external NSPortReceiveException : NSString;
 
 external NSOldStyleException : NSString;
 
-external NSGetUncaughtExceptionHandler() : CCodePointer[(NSException),()];
+external NSGetUncaughtExceptionHandler() : CCodePointer[[NSException],[]];
 
 external NSSetUncaughtExceptionHandler(
-    argument0 : CCodePointer[(NSException),()]);
+    argument0 : CCodePointer[[NSException],[]]);
 
 external NSAssertionHandlerKey : NSString;
 
@@ -7664,11 +7664,11 @@ external NSAllHashTableObjects(
     table : NSHashTable) : NSArray;
 
 record UnnamedStruct120 (
-    hash : CCodePointer[(NSHashTable,RawPointer),(CULong)],
-    isEqual : CCodePointer[(NSHashTable,RawPointer,RawPointer),(CChar)],
-    retain : CCodePointer[(NSHashTable,RawPointer),()],
-    release : CCodePointer[(NSHashTable,RawPointer),()],
-    describe : CCodePointer[(NSHashTable,RawPointer),(NSString)],
+    hash : CCodePointer[[NSHashTable,RawPointer],[CULong]],
+    isEqual : CCodePointer[[NSHashTable,RawPointer,RawPointer],[CChar]],
+    retain : CCodePointer[[NSHashTable,RawPointer],[]],
+    release : CCodePointer[[NSHashTable,RawPointer],[]],
+    describe : CCodePointer[[NSHashTable,RawPointer],[NSString]],
 );
 
 alias NSHashTableCallBacks = UnnamedStruct120;
@@ -7780,20 +7780,20 @@ external NSAllMapTableValues(
     table : NSMapTable) : NSArray;
 
 record UnnamedStruct122 (
-    hash : CCodePointer[(NSMapTable,RawPointer),(CULong)],
-    isEqual : CCodePointer[(NSMapTable,RawPointer,RawPointer),(CChar)],
-    retain : CCodePointer[(NSMapTable,RawPointer),()],
-    release : CCodePointer[(NSMapTable,RawPointer),()],
-    describe : CCodePointer[(NSMapTable,RawPointer),(NSString)],
+    hash : CCodePointer[[NSMapTable,RawPointer],[CULong]],
+    isEqual : CCodePointer[[NSMapTable,RawPointer,RawPointer],[CChar]],
+    retain : CCodePointer[[NSMapTable,RawPointer],[]],
+    release : CCodePointer[[NSMapTable,RawPointer],[]],
+    describe : CCodePointer[[NSMapTable,RawPointer],[NSString]],
     notAKeyMarker : RawPointer,
 );
 
 alias NSMapTableKeyCallBacks = UnnamedStruct122;
 
 record UnnamedStruct123 (
-    retain : CCodePointer[(NSMapTable,RawPointer),()],
-    release : CCodePointer[(NSMapTable,RawPointer),()],
-    describe : CCodePointer[(NSMapTable,RawPointer),(NSString)],
+    retain : CCodePointer[[NSMapTable,RawPointer],[]],
+    release : CCodePointer[[NSMapTable,RawPointer],[]],
+    describe : CCodePointer[[NSMapTable,RawPointer],[NSString]],
 );
 
 alias NSMapTableValueCallBacks = UnnamedStruct123;

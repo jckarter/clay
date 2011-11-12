@@ -89,28 +89,28 @@ record Struct_XML_cp (
     children : Pointer[XML_Content],
 );
 
-alias XML_ElementDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[Struct_XML_cp]),()];
+alias XML_ElementDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[Struct_XML_cp]],[]];
 
 external XML_SetElementDeclHandler(
     parser : XML_Parser,
     eldecl : XML_ElementDeclHandler);
 
-alias XML_AttlistDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],Int),()];
+alias XML_AttlistDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],Int],[]];
 
 external XML_SetAttlistDeclHandler(
     parser : XML_Parser,
     attdecl : XML_AttlistDeclHandler);
 
-alias XML_XmlDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar],Int),()];
+alias XML_XmlDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar],Int],[]];
 
 external XML_SetXmlDeclHandler(
     parser : XML_Parser,
     xmldecl : XML_XmlDeclHandler);
 
 record UnnamedStruct4 (
-    malloc_fcn : CCodePointer[(CULong),(RawPointer)],
-    realloc_fcn : CCodePointer[(RawPointer,CULong),(RawPointer)],
-    free_fcn : CCodePointer[(RawPointer),()],
+    malloc_fcn : CCodePointer[[CULong],[RawPointer]],
+    realloc_fcn : CCodePointer[[RawPointer,CULong],[RawPointer]],
+    free_fcn : CCodePointer[[RawPointer],[]],
 );
 
 alias XML_Memory_Handling_Suite = UnnamedStruct4;
@@ -131,56 +131,56 @@ external XML_ParserReset(
     parser : XML_Parser,
     encoding : Pointer[CChar]) : CUChar;
 
-alias XML_StartElementHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[Pointer[CChar]]),()];
+alias XML_StartElementHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[Pointer[CChar]]],[]];
 
-alias XML_EndElementHandler = CCodePointer[(RawPointer,Pointer[CChar]),()];
+alias XML_EndElementHandler = CCodePointer[[RawPointer,Pointer[CChar]],[]];
 
-alias XML_CharacterDataHandler = CCodePointer[(RawPointer,Pointer[CChar],Int),()];
+alias XML_CharacterDataHandler = CCodePointer[[RawPointer,Pointer[CChar],Int],[]];
 
-alias XML_ProcessingInstructionHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar]),()];
+alias XML_ProcessingInstructionHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar]],[]];
 
-alias XML_CommentHandler = CCodePointer[(RawPointer,Pointer[CChar]),()];
+alias XML_CommentHandler = CCodePointer[[RawPointer,Pointer[CChar]],[]];
 
-alias XML_StartCdataSectionHandler = CCodePointer[(RawPointer),()];
+alias XML_StartCdataSectionHandler = CCodePointer[[RawPointer],[]];
 
-alias XML_EndCdataSectionHandler = CCodePointer[(RawPointer),()];
+alias XML_EndCdataSectionHandler = CCodePointer[[RawPointer],[]];
 
-alias XML_DefaultHandler = CCodePointer[(RawPointer,Pointer[CChar],Int),()];
+alias XML_DefaultHandler = CCodePointer[[RawPointer,Pointer[CChar],Int],[]];
 
-alias XML_StartDoctypeDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Int),()];
+alias XML_StartDoctypeDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Int],[]];
 
-alias XML_EndDoctypeDeclHandler = CCodePointer[(RawPointer),()];
+alias XML_EndDoctypeDeclHandler = CCodePointer[[RawPointer],[]];
 
-alias XML_EntityDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Int,Pointer[CChar],Int,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),()];
+alias XML_EntityDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Int,Pointer[CChar],Int,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[]];
 
 external XML_SetEntityDeclHandler(
     parser : XML_Parser,
     handler : XML_EntityDeclHandler);
 
-alias XML_UnparsedEntityDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),()];
+alias XML_UnparsedEntityDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[]];
 
-alias XML_NotationDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),()];
+alias XML_NotationDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[]];
 
-alias XML_StartNamespaceDeclHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[CChar]),()];
+alias XML_StartNamespaceDeclHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[CChar]],[]];
 
-alias XML_EndNamespaceDeclHandler = CCodePointer[(RawPointer,Pointer[CChar]),()];
+alias XML_EndNamespaceDeclHandler = CCodePointer[[RawPointer,Pointer[CChar]],[]];
 
-alias XML_NotStandaloneHandler = CCodePointer[(RawPointer),(Int)];
+alias XML_NotStandaloneHandler = CCodePointer[[RawPointer],[Int]];
 
-alias XML_ExternalEntityRefHandler = CCodePointer[(OpaquePointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),(Int)];
+alias XML_ExternalEntityRefHandler = CCodePointer[[OpaquePointer,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[Int]];
 
-alias XML_SkippedEntityHandler = CCodePointer[(RawPointer,Pointer[CChar],Int),()];
+alias XML_SkippedEntityHandler = CCodePointer[[RawPointer,Pointer[CChar],Int],[]];
 
 record UnnamedStruct5 (
     map : Array[Int,256],
     data : RawPointer,
-    convert : CCodePointer[(RawPointer,Pointer[CChar]),(Int)],
-    release : CCodePointer[(RawPointer),()],
+    convert : CCodePointer[[RawPointer,Pointer[CChar]],[Int]],
+    release : CCodePointer[[RawPointer],[]],
 );
 
 alias XML_Encoding = UnnamedStruct5;
 
-alias XML_UnknownEncodingHandler = CCodePointer[(RawPointer,Pointer[CChar],Pointer[UnnamedStruct5]),(Int)];
+alias XML_UnknownEncodingHandler = CCodePointer[[RawPointer,Pointer[CChar],Pointer[UnnamedStruct5]],[Int]];
 
 external XML_SetElementHandler(
     parser : XML_Parser,

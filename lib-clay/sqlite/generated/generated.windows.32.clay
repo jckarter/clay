@@ -38,12 +38,12 @@ alias sqlite3_uint64 = UInt64;
 external sqlite3_close(
     argument0 : Pointer[sqlite3]) : Int;
 
-alias sqlite3_callback = CCodePointer[(RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[CChar]]),(Int)];
+alias sqlite3_callback = CCodePointer[[RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[CChar]]],[Int]];
 
 external sqlite3_exec(
     argument0 : Pointer[sqlite3],
     sql : Pointer[CChar],
-    callback : CCodePointer[(RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[CChar]]),(Int)],
+    callback : CCodePointer[[RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[CChar]]],[Int]],
     argument3 : RawPointer,
     errmsg : Pointer[Pointer[CChar]]) : Int;
 
@@ -57,29 +57,29 @@ alias sqlite3_io_methods = Struct_sqlite3_io_methods;
 
 record Struct_sqlite3_io_methods (
     iVersion : Int,
-    xClose : CCodePointer[(Pointer[Struct_sqlite3_file]),(Int)],
-    xRead : CCodePointer[(Pointer[Struct_sqlite3_file],RawPointer,Int,Int64),(Int)],
-    xWrite : CCodePointer[(Pointer[Struct_sqlite3_file],RawPointer,Int,Int64),(Int)],
-    xTruncate : CCodePointer[(Pointer[Struct_sqlite3_file],Int64),(Int)],
-    xSync : CCodePointer[(Pointer[Struct_sqlite3_file],Int),(Int)],
-    xFileSize : CCodePointer[(Pointer[Struct_sqlite3_file],Pointer[Int64]),(Int)],
-    xLock : CCodePointer[(Pointer[Struct_sqlite3_file],Int),(Int)],
-    xUnlock : CCodePointer[(Pointer[Struct_sqlite3_file],Int),(Int)],
-    xCheckReservedLock : CCodePointer[(Pointer[Struct_sqlite3_file],Pointer[Int]),(Int)],
-    xFileControl : CCodePointer[(Pointer[Struct_sqlite3_file],Int,RawPointer),(Int)],
-    xSectorSize : CCodePointer[(Pointer[Struct_sqlite3_file]),(Int)],
-    xDeviceCharacteristics : CCodePointer[(Pointer[Struct_sqlite3_file]),(Int)],
-    xShmMap : CCodePointer[(Pointer[Struct_sqlite3_file],Int,Int,Int,Pointer[RawPointer]),(Int)],
-    xShmLock : CCodePointer[(Pointer[Struct_sqlite3_file],Int,Int,Int),(Int)],
-    xShmBarrier : CCodePointer[(Pointer[Struct_sqlite3_file]),()],
-    xShmUnmap : CCodePointer[(Pointer[Struct_sqlite3_file],Int),(Int)],
+    xClose : CCodePointer[[Pointer[Struct_sqlite3_file]],[Int]],
+    xRead : CCodePointer[[Pointer[Struct_sqlite3_file],RawPointer,Int,Int64],[Int]],
+    xWrite : CCodePointer[[Pointer[Struct_sqlite3_file],RawPointer,Int,Int64],[Int]],
+    xTruncate : CCodePointer[[Pointer[Struct_sqlite3_file],Int64],[Int]],
+    xSync : CCodePointer[[Pointer[Struct_sqlite3_file],Int],[Int]],
+    xFileSize : CCodePointer[[Pointer[Struct_sqlite3_file],Pointer[Int64]],[Int]],
+    xLock : CCodePointer[[Pointer[Struct_sqlite3_file],Int],[Int]],
+    xUnlock : CCodePointer[[Pointer[Struct_sqlite3_file],Int],[Int]],
+    xCheckReservedLock : CCodePointer[[Pointer[Struct_sqlite3_file],Pointer[Int]],[Int]],
+    xFileControl : CCodePointer[[Pointer[Struct_sqlite3_file],Int,RawPointer],[Int]],
+    xSectorSize : CCodePointer[[Pointer[Struct_sqlite3_file]],[Int]],
+    xDeviceCharacteristics : CCodePointer[[Pointer[Struct_sqlite3_file]],[Int]],
+    xShmMap : CCodePointer[[Pointer[Struct_sqlite3_file],Int,Int,Int,Pointer[RawPointer]],[Int]],
+    xShmLock : CCodePointer[[Pointer[Struct_sqlite3_file],Int,Int,Int],[Int]],
+    xShmBarrier : CCodePointer[[Pointer[Struct_sqlite3_file]],[]],
+    xShmUnmap : CCodePointer[[Pointer[Struct_sqlite3_file],Int],[Int]],
 );
 
 alias sqlite3_mutex = Opaque;
 
 alias sqlite3_vfs = Struct_sqlite3_vfs;
 
-alias sqlite3_syscall_ptr = CCodePointer[(),()];
+alias sqlite3_syscall_ptr = CCodePointer[[],[]];
 
 record Struct_sqlite3_vfs (
     iVersion : Int,
@@ -88,22 +88,22 @@ record Struct_sqlite3_vfs (
     pNext : Pointer[sqlite3_vfs],
     zName : Pointer[CChar],
     pAppData : RawPointer,
-    xOpen : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar],Pointer[Struct_sqlite3_file],Int,Pointer[Int]),(Int)],
-    xDelete : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int),(Int)],
-    xAccess : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int,Pointer[Int]),(Int)],
-    xFullPathname : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int,Pointer[CChar]),(Int)],
-    xDlOpen : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar]),(RawPointer)],
-    xDlError : CCodePointer[(Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]),()],
-    xDlSym : CCodePointer[(Pointer[Struct_sqlite3_vfs],RawPointer,Pointer[CChar]),(CCodePointer[(),()])],
-    xDlClose : CCodePointer[(Pointer[Struct_sqlite3_vfs],RawPointer),()],
-    xRandomness : CCodePointer[(Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]),(Int)],
-    xSleep : CCodePointer[(Pointer[Struct_sqlite3_vfs],Int),(Int)],
-    xCurrentTime : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[Double]),(Int)],
-    xGetLastError : CCodePointer[(Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]),(Int)],
-    xCurrentTimeInt64 : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[Int64]),(Int)],
-    xSetSystemCall : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar],CCodePointer[(),()]),(Int)],
-    xGetSystemCall : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar]),(CCodePointer[(),()])],
-    xNextSystemCall : CCodePointer[(Pointer[Struct_sqlite3_vfs],Pointer[CChar]),(Pointer[CChar])],
+    xOpen : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar],Pointer[Struct_sqlite3_file],Int,Pointer[Int]],[Int]],
+    xDelete : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int],[Int]],
+    xAccess : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int,Pointer[Int]],[Int]],
+    xFullPathname : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar],Int,Pointer[CChar]],[Int]],
+    xDlOpen : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar]],[RawPointer]],
+    xDlError : CCodePointer[[Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]],[]],
+    xDlSym : CCodePointer[[Pointer[Struct_sqlite3_vfs],RawPointer,Pointer[CChar]],[CCodePointer[[],[]]]],
+    xDlClose : CCodePointer[[Pointer[Struct_sqlite3_vfs],RawPointer],[]],
+    xRandomness : CCodePointer[[Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]],[Int]],
+    xSleep : CCodePointer[[Pointer[Struct_sqlite3_vfs],Int],[Int]],
+    xCurrentTime : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[Double]],[Int]],
+    xGetLastError : CCodePointer[[Pointer[Struct_sqlite3_vfs],Int,Pointer[CChar]],[Int]],
+    xCurrentTimeInt64 : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[Int64]],[Int]],
+    xSetSystemCall : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar],CCodePointer[[],[]]],[Int]],
+    xGetSystemCall : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar]],[CCodePointer[[],[]]]],
+    xNextSystemCall : CCodePointer[[Pointer[Struct_sqlite3_vfs],Pointer[CChar]],[Pointer[CChar]]],
 );
 
 external sqlite3_initialize() : Int;
@@ -126,13 +126,13 @@ external sqlite3_db_config(
 alias sqlite3_mem_methods = Struct_sqlite3_mem_methods;
 
 record Struct_sqlite3_mem_methods (
-    xMalloc : CCodePointer[(Int),(RawPointer)],
-    xFree : CCodePointer[(RawPointer),()],
-    xRealloc : CCodePointer[(RawPointer,Int),(RawPointer)],
-    xSize : CCodePointer[(RawPointer),(Int)],
-    xRoundup : CCodePointer[(Int),(Int)],
-    xInit : CCodePointer[(RawPointer),(Int)],
-    xShutdown : CCodePointer[(RawPointer),()],
+    xMalloc : CCodePointer[[Int],[RawPointer]],
+    xFree : CCodePointer[[RawPointer],[]],
+    xRealloc : CCodePointer[[RawPointer,Int],[RawPointer]],
+    xSize : CCodePointer[[RawPointer],[Int]],
+    xRoundup : CCodePointer[[Int],[Int]],
+    xInit : CCodePointer[[RawPointer],[Int]],
+    xShutdown : CCodePointer[[RawPointer],[]],
     pAppData : RawPointer,
 );
 
@@ -160,7 +160,7 @@ external sqlite3_complete16(
 
 external sqlite3_busy_handler(
     argument0 : Pointer[sqlite3],
-    argument1 : CCodePointer[(RawPointer,Int),(Int)],
+    argument1 : CCodePointer[[RawPointer,Int],[Int]],
     argument2 : RawPointer) : Int;
 
 external sqlite3_busy_timeout(
@@ -219,23 +219,23 @@ external sqlite3_randomness(
 
 external sqlite3_set_authorizer(
     argument0 : Pointer[sqlite3],
-    xAuth : CCodePointer[(RawPointer,Int,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),(Int)],
+    xAuth : CCodePointer[[RawPointer,Int,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[Int]],
     pUserData : RawPointer) : Int;
 
 external sqlite3_trace(
     argument0 : Pointer[sqlite3],
-    xTrace : CCodePointer[(RawPointer,Pointer[CChar]),()],
+    xTrace : CCodePointer[[RawPointer,Pointer[CChar]],[]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_profile(
     argument0 : Pointer[sqlite3],
-    xProfile : CCodePointer[(RawPointer,Pointer[CChar],UInt64),()],
+    xProfile : CCodePointer[[RawPointer,Pointer[CChar],UInt64],[]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_progress_handler(
     argument0 : Pointer[sqlite3],
     argument1 : Int,
-    argument2 : CCodePointer[(RawPointer),(Int)],
+    argument2 : CCodePointer[[RawPointer],[Int]],
     argument3 : RawPointer);
 
 external sqlite3_open(
@@ -314,7 +314,7 @@ external sqlite3_bind_blob(
     argument1 : Int,
     argument2 : RawPointer,
     n : Int,
-    argument4 : CCodePointer[(RawPointer),()]) : Int;
+    argument4 : CCodePointer[[RawPointer],[]]) : Int;
 
 external sqlite3_bind_double(
     argument0 : Pointer[sqlite3_stmt],
@@ -340,14 +340,14 @@ external sqlite3_bind_text(
     argument1 : Int,
     argument2 : Pointer[CChar],
     n : Int,
-    argument4 : CCodePointer[(RawPointer),()]) : Int;
+    argument4 : CCodePointer[[RawPointer],[]]) : Int;
 
 external sqlite3_bind_text16(
     argument0 : Pointer[sqlite3_stmt],
     argument1 : Int,
     argument2 : RawPointer,
     argument3 : Int,
-    argument4 : CCodePointer[(RawPointer),()]) : Int;
+    argument4 : CCodePointer[[RawPointer],[]]) : Int;
 
 external sqlite3_bind_value(
     argument0 : Pointer[sqlite3_stmt],
@@ -474,9 +474,9 @@ external sqlite3_create_function(
     nArg : Int,
     eTextRep : Int,
     pApp : RawPointer,
-    xFunc : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xStep : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xFinal : CCodePointer[(OpaquePointer),()]) : Int;
+    xFunc : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xStep : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xFinal : CCodePointer[[OpaquePointer],[]]) : Int;
 
 external sqlite3_create_function16(
     db : Pointer[sqlite3],
@@ -484,9 +484,9 @@ external sqlite3_create_function16(
     nArg : Int,
     eTextRep : Int,
     pApp : RawPointer,
-    xFunc : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xStep : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xFinal : CCodePointer[(OpaquePointer),()]) : Int;
+    xFunc : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xStep : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xFinal : CCodePointer[[OpaquePointer],[]]) : Int;
 
 external sqlite3_create_function_v2(
     db : Pointer[sqlite3],
@@ -494,10 +494,10 @@ external sqlite3_create_function_v2(
     nArg : Int,
     eTextRep : Int,
     pApp : RawPointer,
-    xFunc : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xStep : CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()],
-    xFinal : CCodePointer[(OpaquePointer),()],
-    xDestroy : CCodePointer[(RawPointer),()]) : Int;
+    xFunc : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xStep : CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]],
+    xFinal : CCodePointer[[OpaquePointer],[]],
+    xDestroy : CCodePointer[[RawPointer],[]]) : Int;
 
 external sqlite3_aggregate_count(
     argument0 : Pointer[sqlite3_context]) : Int;
@@ -514,7 +514,7 @@ external sqlite3_global_recover() : Int;
 external sqlite3_thread_cleanup();
 
 external sqlite3_memory_alarm(
-    argument0 : CCodePointer[(RawPointer,Int64,Int),()],
+    argument0 : CCodePointer[[RawPointer,Int64,Int],[]],
     argument1 : RawPointer,
     argument2 : Int64) : Int;
 
@@ -572,15 +572,15 @@ external sqlite3_set_auxdata(
     argument0 : Pointer[sqlite3_context],
     N : Int,
     argument2 : RawPointer,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
-alias sqlite3_destructor_type = CCodePointer[(RawPointer),()];
+alias sqlite3_destructor_type = CCodePointer[[RawPointer],[]];
 
 external sqlite3_result_blob(
     argument0 : Pointer[sqlite3_context],
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
 external sqlite3_result_double(
     argument0 : Pointer[sqlite3_context],
@@ -621,25 +621,25 @@ external sqlite3_result_text(
     argument0 : Pointer[sqlite3_context],
     argument1 : Pointer[CChar],
     argument2 : Int,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
 external sqlite3_result_text16(
     argument0 : Pointer[sqlite3_context],
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
 external sqlite3_result_text16le(
     argument0 : Pointer[sqlite3_context],
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
 external sqlite3_result_text16be(
     argument0 : Pointer[sqlite3_context],
     argument1 : RawPointer,
     argument2 : Int,
-    argument3 : CCodePointer[(RawPointer),()]);
+    argument3 : CCodePointer[[RawPointer],[]]);
 
 external sqlite3_result_value(
     argument0 : Pointer[sqlite3_context],
@@ -654,32 +654,32 @@ external sqlite3_create_collation(
     zName : Pointer[CChar],
     eTextRep : Int,
     pArg : RawPointer,
-    xCompare : CCodePointer[(RawPointer,Int,RawPointer,Int,RawPointer),(Int)]) : Int;
+    xCompare : CCodePointer[[RawPointer,Int,RawPointer,Int,RawPointer],[Int]]) : Int;
 
 external sqlite3_create_collation_v2(
     argument0 : Pointer[sqlite3],
     zName : Pointer[CChar],
     eTextRep : Int,
     pArg : RawPointer,
-    xCompare : CCodePointer[(RawPointer,Int,RawPointer,Int,RawPointer),(Int)],
-    xDestroy : CCodePointer[(RawPointer),()]) : Int;
+    xCompare : CCodePointer[[RawPointer,Int,RawPointer,Int,RawPointer],[Int]],
+    xDestroy : CCodePointer[[RawPointer],[]]) : Int;
 
 external sqlite3_create_collation16(
     argument0 : Pointer[sqlite3],
     zName : RawPointer,
     eTextRep : Int,
     pArg : RawPointer,
-    xCompare : CCodePointer[(RawPointer,Int,RawPointer,Int,RawPointer),(Int)]) : Int;
+    xCompare : CCodePointer[[RawPointer,Int,RawPointer,Int,RawPointer],[Int]]) : Int;
 
 external sqlite3_collation_needed(
     argument0 : Pointer[sqlite3],
     argument1 : RawPointer,
-    argument2 : CCodePointer[(RawPointer,OpaquePointer,Int,Pointer[CChar]),()]) : Int;
+    argument2 : CCodePointer[[RawPointer,OpaquePointer,Int,Pointer[CChar]],[]]) : Int;
 
 external sqlite3_collation_needed16(
     argument0 : Pointer[sqlite3],
     argument1 : RawPointer,
-    argument2 : CCodePointer[(RawPointer,OpaquePointer,Int,RawPointer),()]) : Int;
+    argument2 : CCodePointer[[RawPointer,OpaquePointer,Int,RawPointer],[]]) : Int;
 
 external sqlite3_sleep(
     argument0 : Int) : Int;
@@ -698,17 +698,17 @@ external sqlite3_next_stmt(
 
 external sqlite3_commit_hook(
     argument0 : Pointer[sqlite3],
-    argument1 : CCodePointer[(RawPointer),(Int)],
+    argument1 : CCodePointer[[RawPointer],[Int]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_rollback_hook(
     argument0 : Pointer[sqlite3],
-    argument1 : CCodePointer[(RawPointer),()],
+    argument1 : CCodePointer[[RawPointer],[]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_update_hook(
     argument0 : Pointer[sqlite3],
-    argument1 : CCodePointer[(RawPointer,Int,Pointer[CChar],Pointer[CChar],Int64),()],
+    argument1 : CCodePointer[[RawPointer,Int,Pointer[CChar],Pointer[CChar],Int64],[]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_enable_shared_cache(
@@ -745,7 +745,7 @@ external sqlite3_enable_load_extension(
     onoff : Int) : Int;
 
 external sqlite3_auto_extension(
-    xEntryPoint : CCodePointer[(),()]) : Int;
+    xEntryPoint : CCodePointer[[],[]]) : Int;
 
 external sqlite3_reset_auto_extension();
 
@@ -759,25 +759,25 @@ alias sqlite3_module = Struct_sqlite3_module;
 
 record Struct_sqlite3_module (
     iVersion : Int,
-    xCreate : CCodePointer[(OpaquePointer,RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[Struct_sqlite3_vtab]],Pointer[Pointer[CChar]]),(Int)],
-    xConnect : CCodePointer[(OpaquePointer,RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[Struct_sqlite3_vtab]],Pointer[Pointer[CChar]]),(Int)],
-    xBestIndex : CCodePointer[(Pointer[Struct_sqlite3_vtab],Pointer[Struct_sqlite3_index_info]),(Int)],
-    xDisconnect : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xDestroy : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xOpen : CCodePointer[(Pointer[Struct_sqlite3_vtab],Pointer[Pointer[Struct_sqlite3_vtab_cursor]]),(Int)],
-    xClose : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor]),(Int)],
-    xFilter : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor],Int,Pointer[CChar],Int,Pointer[OpaquePointer]),(Int)],
-    xNext : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor]),(Int)],
-    xEof : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor]),(Int)],
-    xColumn : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor],OpaquePointer,Int),(Int)],
-    xRowid : CCodePointer[(Pointer[Struct_sqlite3_vtab_cursor],Pointer[Int64]),(Int)],
-    xUpdate : CCodePointer[(Pointer[Struct_sqlite3_vtab],Int,Pointer[OpaquePointer],Pointer[Int64]),(Int)],
-    xBegin : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xSync : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xCommit : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xRollback : CCodePointer[(Pointer[Struct_sqlite3_vtab]),(Int)],
-    xFindFunction : CCodePointer[(Pointer[Struct_sqlite3_vtab],Int,Pointer[CChar],Pointer[CCodePointer[(OpaquePointer,Int,Pointer[OpaquePointer]),()]],Pointer[RawPointer]),(Int)],
-    xRename : CCodePointer[(Pointer[Struct_sqlite3_vtab],Pointer[CChar]),(Int)],
+    xCreate : CCodePointer[[OpaquePointer,RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[Struct_sqlite3_vtab]],Pointer[Pointer[CChar]]],[Int]],
+    xConnect : CCodePointer[[OpaquePointer,RawPointer,Int,Pointer[Pointer[CChar]],Pointer[Pointer[Struct_sqlite3_vtab]],Pointer[Pointer[CChar]]],[Int]],
+    xBestIndex : CCodePointer[[Pointer[Struct_sqlite3_vtab],Pointer[Struct_sqlite3_index_info]],[Int]],
+    xDisconnect : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xDestroy : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xOpen : CCodePointer[[Pointer[Struct_sqlite3_vtab],Pointer[Pointer[Struct_sqlite3_vtab_cursor]]],[Int]],
+    xClose : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor]],[Int]],
+    xFilter : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor],Int,Pointer[CChar],Int,Pointer[OpaquePointer]],[Int]],
+    xNext : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor]],[Int]],
+    xEof : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor]],[Int]],
+    xColumn : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor],OpaquePointer,Int],[Int]],
+    xRowid : CCodePointer[[Pointer[Struct_sqlite3_vtab_cursor],Pointer[Int64]],[Int]],
+    xUpdate : CCodePointer[[Pointer[Struct_sqlite3_vtab],Int,Pointer[OpaquePointer],Pointer[Int64]],[Int]],
+    xBegin : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xSync : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xCommit : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xRollback : CCodePointer[[Pointer[Struct_sqlite3_vtab]],[Int]],
+    xFindFunction : CCodePointer[[Pointer[Struct_sqlite3_vtab],Int,Pointer[CChar],Pointer[CCodePointer[[OpaquePointer,Int,Pointer[OpaquePointer]],[]]],Pointer[RawPointer]],[Int]],
+    xRename : CCodePointer[[Pointer[Struct_sqlite3_vtab],Pointer[CChar]],[Int]],
 );
 
 record Struct_sqlite3_index_info (
@@ -804,7 +804,7 @@ external sqlite3_create_module_v2(
     zName : Pointer[CChar],
     p : Pointer[sqlite3_module],
     pClientData : RawPointer,
-    xDestroy : CCodePointer[(RawPointer),()]) : Int;
+    xDestroy : CCodePointer[[RawPointer],[]]) : Int;
 
 record Struct_sqlite3_vtab (
     pModule : Pointer[sqlite3_module],
@@ -886,15 +886,15 @@ external sqlite3_mutex_leave(
 alias sqlite3_mutex_methods = Struct_sqlite3_mutex_methods;
 
 record Struct_sqlite3_mutex_methods (
-    xMutexInit : CCodePointer[(),(Int)],
-    xMutexEnd : CCodePointer[(),(Int)],
-    xMutexAlloc : CCodePointer[(Int),(OpaquePointer)],
-    xMutexFree : CCodePointer[(OpaquePointer),()],
-    xMutexEnter : CCodePointer[(OpaquePointer),()],
-    xMutexTry : CCodePointer[(OpaquePointer),(Int)],
-    xMutexLeave : CCodePointer[(OpaquePointer),()],
-    xMutexHeld : CCodePointer[(OpaquePointer),(Int)],
-    xMutexNotheld : CCodePointer[(OpaquePointer),(Int)],
+    xMutexInit : CCodePointer[[],[Int]],
+    xMutexEnd : CCodePointer[[],[Int]],
+    xMutexAlloc : CCodePointer[[Int],[OpaquePointer]],
+    xMutexFree : CCodePointer[[OpaquePointer],[]],
+    xMutexEnter : CCodePointer[[OpaquePointer],[]],
+    xMutexTry : CCodePointer[[OpaquePointer],[Int]],
+    xMutexLeave : CCodePointer[[OpaquePointer],[]],
+    xMutexHeld : CCodePointer[[OpaquePointer],[Int]],
+    xMutexNotheld : CCodePointer[[OpaquePointer],[Int]],
 );
 
 external sqlite3_mutex_held(
@@ -940,16 +940,16 @@ alias sqlite3_pcache_methods = Struct_sqlite3_pcache_methods;
 
 record Struct_sqlite3_pcache_methods (
     pArg : RawPointer,
-    xInit : CCodePointer[(RawPointer),(Int)],
-    xShutdown : CCodePointer[(RawPointer),()],
-    xCreate : CCodePointer[(Int,Int),(OpaquePointer)],
-    xCachesize : CCodePointer[(OpaquePointer,Int),()],
-    xPagecount : CCodePointer[(OpaquePointer),(Int)],
-    xFetch : CCodePointer[(OpaquePointer,UInt,Int),(RawPointer)],
-    xUnpin : CCodePointer[(OpaquePointer,RawPointer,Int),()],
-    xRekey : CCodePointer[(OpaquePointer,RawPointer,UInt,UInt),()],
-    xTruncate : CCodePointer[(OpaquePointer,UInt),()],
-    xDestroy : CCodePointer[(OpaquePointer),()],
+    xInit : CCodePointer[[RawPointer],[Int]],
+    xShutdown : CCodePointer[[RawPointer],[]],
+    xCreate : CCodePointer[[Int,Int],[OpaquePointer]],
+    xCachesize : CCodePointer[[OpaquePointer,Int],[]],
+    xPagecount : CCodePointer[[OpaquePointer],[Int]],
+    xFetch : CCodePointer[[OpaquePointer,UInt,Int],[RawPointer]],
+    xUnpin : CCodePointer[[OpaquePointer,RawPointer,Int],[]],
+    xRekey : CCodePointer[[OpaquePointer,RawPointer,UInt,UInt],[]],
+    xTruncate : CCodePointer[[OpaquePointer,UInt],[]],
+    xDestroy : CCodePointer[[OpaquePointer],[]],
 );
 
 alias sqlite3_backup = Opaque;
@@ -975,7 +975,7 @@ external sqlite3_backup_pagecount(
 
 external sqlite3_unlock_notify(
     pBlocked : Pointer[sqlite3],
-    xNotify : CCodePointer[(Pointer[RawPointer],Int),()],
+    xNotify : CCodePointer[[Pointer[RawPointer],Int],[]],
     pNotifyArg : RawPointer) : Int;
 
 external sqlite3_strnicmp(
@@ -990,7 +990,7 @@ external sqlite3_log(
 
 external sqlite3_wal_hook(
     argument0 : Pointer[sqlite3],
-    argument1 : CCodePointer[(RawPointer,OpaquePointer,Pointer[CChar],Int),(Int)],
+    argument1 : CCodePointer[[RawPointer,OpaquePointer,Pointer[CChar],Int],[Int]],
     argument2 : RawPointer) : RawPointer;
 
 external sqlite3_wal_autocheckpoint(
@@ -1013,7 +1013,7 @@ alias sqlite3_rtree_geometry = Struct_sqlite3_rtree_geometry;
 external sqlite3_rtree_geometry_callback(
     db : Pointer[sqlite3],
     zGeom : Pointer[CChar],
-    xGeom : CCodePointer[(Pointer[Struct_sqlite3_rtree_geometry],Int,Pointer[Double],Pointer[Int]),(Int)],
+    xGeom : CCodePointer[[Pointer[Struct_sqlite3_rtree_geometry],Int,Pointer[Double],Pointer[Int]],[Int]],
     pContext : RawPointer) : Int;
 
 record Struct_sqlite3_rtree_geometry (
@@ -1021,5 +1021,5 @@ record Struct_sqlite3_rtree_geometry (
     nParam : Int,
     aParam : Pointer[Double],
     pUser : RawPointer,
-    xDelUser : CCodePointer[(RawPointer),()],
+    xDelUser : CCodePointer[[RawPointer],[]],
 );

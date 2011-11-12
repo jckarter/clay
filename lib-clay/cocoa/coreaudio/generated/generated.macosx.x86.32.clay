@@ -451,7 +451,7 @@ alias AudioClassID = CULong;
 
 alias AudioObjectID = CULong;
 
-alias AudioObjectPropertyListenerProc = CCodePointer[(CULong,CULong,Pointer[Struct_AudioObjectPropertyAddress],RawPointer),(CLong)];
+alias AudioObjectPropertyListenerProc = CCodePointer[[CULong,CULong,Pointer[Struct_AudioObjectPropertyAddress],RawPointer],[CLong]];
 
 alias kAudioObjectPropertyScopeGlobal = 1735159650;
 alias kAudioObjectPropertyElementMaster = 0;
@@ -582,7 +582,7 @@ alias kAudioStereoPanControlPropertyPanningChannels = 1936745315;
 
 alias AudioHardwarePropertyID = CULong;
 
-alias AudioHardwarePropertyListenerProc = CCodePointer[(CULong,RawPointer),(CLong)];
+alias AudioHardwarePropertyListenerProc = CCodePointer[[CULong,RawPointer],[CLong]];
 
 alias kAudioSystemObjectClassID = 1634957683;
 alias kAudioObjectSystemObject = 1;
@@ -653,7 +653,7 @@ alias AudioDeviceID = CULong;
 
 alias AudioDevicePropertyID = CULong;
 
-alias AudioDeviceIOProc = CCodePointer[(CULong,Pointer[Struct_AudioTimeStamp],Pointer[Struct_AudioBufferList],Pointer[Struct_AudioTimeStamp],Pointer[Struct_AudioBufferList],Pointer[Struct_AudioTimeStamp],RawPointer),(CLong)];
+alias AudioDeviceIOProc = CCodePointer[[CULong,Pointer[Struct_AudioTimeStamp],Pointer[Struct_AudioBufferList],Pointer[Struct_AudioTimeStamp],Pointer[Struct_AudioBufferList],Pointer[Struct_AudioTimeStamp],RawPointer],[CLong]];
 
 alias AudioDeviceIOProcID = AudioDeviceIOProc;
 
@@ -665,7 +665,7 @@ record Struct_AudioHardwareIOProcStreamUsage (
 
 alias AudioHardwareIOProcStreamUsage = Struct_AudioHardwareIOProcStreamUsage;
 
-alias AudioDevicePropertyListenerProc = CCodePointer[(CULong,CULong,CUChar,CULong,RawPointer),(CLong)];
+alias AudioDevicePropertyListenerProc = CCodePointer[[CULong,CULong,CUChar,CULong,RawPointer],[CLong]];
 
 alias kAudioDevicePropertyScopeInput = 1768845428;
 alias kAudioDevicePropertyScopeOutput = 1869968496;
@@ -886,7 +886,7 @@ record Struct_AudioStreamRangedDescription (
 
 alias AudioStreamRangedDescription = Struct_AudioStreamRangedDescription;
 
-alias AudioStreamPropertyListenerProc = CCodePointer[(CULong,CULong,CULong,RawPointer),(CLong)];
+alias AudioStreamPropertyListenerProc = CCodePointer[[CULong,CULong,CULong,RawPointer],[CLong]];
 
 alias kAudioStreamClassID = 1634956402;
 alias kAudioStreamUnknown = 0;

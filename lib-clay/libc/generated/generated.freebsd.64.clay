@@ -209,10 +209,10 @@ record Struct___sFILE (
     _bf : Struct___sbuf,
     _lbfsize : Int,
     _cookie : RawPointer,
-    _close : CCodePointer[(RawPointer),(Int)],
-    _read : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    _seek : CCodePointer[(RawPointer,CLong,Int),(CLong)],
-    _write : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
+    _close : CCodePointer[[RawPointer],[Int]],
+    _read : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    _seek : CCodePointer[[RawPointer,CLong,Int],[CLong]],
+    _write : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
     _ub : Struct___sbuf,
     _up : Pointer[CUChar],
     _ur : Int,
@@ -548,10 +548,10 @@ external sys_errlist : Array[Pointer[CChar],0];
 
 external funopen(
     argument0 : RawPointer,
-    argument1 : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    argument2 : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    argument3 : CCodePointer[(RawPointer,CLong,Int),(CLong)],
-    argument4 : CCodePointer[(RawPointer),(Int)]) : Pointer[FILE];
+    argument1 : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    argument2 : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    argument3 : CCodePointer[[RawPointer,CLong,Int],[CLong]],
+    argument4 : CCodePointer[[RawPointer],[Int]]) : Pointer[FILE];
 
 external ftruncate(
     argument0 : Int,
@@ -609,7 +609,7 @@ external abs(
     argument0 : Int) : Int;
 
 external atexit(
-    argument0 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]]) : Int;
 
 external atof(
     argument0 : Pointer[CChar]) : Double;
@@ -625,7 +625,7 @@ external bsearch(
     argument1 : RawPointer,
     argument2 : CULong,
     argument3 : CULong,
-    argument4 : CCodePointer[(RawPointer,RawPointer),(Int)]) : RawPointer;
+    argument4 : CCodePointer[[RawPointer,RawPointer],[Int]]) : RawPointer;
 
 external calloc(
     argument0 : CULong,
@@ -672,7 +672,7 @@ external qsort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]);
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]);
 
 external rand() : Int;
 
@@ -844,7 +844,7 @@ external unlockpt(
 
 external _malloc_options : Pointer[CChar];
 
-external _malloc_message : CCodePointer[(Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]),()];
+external _malloc_message : CCodePointer[[Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar]],[]];
 
 external abort2(
     argument0 : Pointer[CChar],
@@ -944,7 +944,7 @@ external heapsort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) : Int;
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]) : Int;
 
 external l64a_r(
     argument0 : CLong,
@@ -955,14 +955,14 @@ external mergesort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) : Int;
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]) : Int;
 
 external qsort_r(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
     argument3 : RawPointer,
-    argument4 : CCodePointer[(RawPointer,RawPointer,RawPointer),(Int)]);
+    argument4 : CCodePointer[[RawPointer,RawPointer,RawPointer],[Int]]);
 
 external radixsort(
     argument0 : Pointer[Pointer[CUChar]],

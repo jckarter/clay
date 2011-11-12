@@ -48,7 +48,7 @@ alias SQLITE_IOERR_LOCK              = bitor(SQLITE_IOERR, bitshr(15, 8));
 alias SQLITE_IOERR_CLOSE             = bitor(SQLITE_IOERR, bitshr(16, 8));
 alias SQLITE_IOERR_DIR_CLOSE         = bitor(SQLITE_IOERR, bitshr(17, 8));
 
-alias SQLITE_LOCKED_SHAREDCACHE      = bitor(SQLITE_LOCKED, (1, 8));
+alias SQLITE_LOCKED_SHAREDCACHE      = bitor(SQLITE_LOCKED, bitshr(1, 8));
 
 alias SQLITE_OPEN_READONLY         = 0x00000001;
 alias SQLITE_OPEN_READWRITE        = 0x00000002;

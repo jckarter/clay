@@ -156,13 +156,13 @@ external AudioFileOpenURL(
     inFileTypeHint : CULong,
     outAudioFile : Pointer[AudioFileID]) : CLong;
 
-alias AudioFile_ReadProc = CCodePointer[(RawPointer,Int64,CULong,RawPointer,Pointer[CULong]),(CLong)];
+alias AudioFile_ReadProc = CCodePointer[[RawPointer,Int64,CULong,RawPointer,Pointer[CULong]],[CLong]];
 
-alias AudioFile_WriteProc = CCodePointer[(RawPointer,Int64,CULong,RawPointer,Pointer[CULong]),(CLong)];
+alias AudioFile_WriteProc = CCodePointer[[RawPointer,Int64,CULong,RawPointer,Pointer[CULong]],[CLong]];
 
-alias AudioFile_GetSizeProc = CCodePointer[(RawPointer),(Int64)];
+alias AudioFile_GetSizeProc = CCodePointer[[RawPointer],[Int64]];
 
-alias AudioFile_SetSizeProc = CCodePointer[(RawPointer,Int64),(CLong)];
+alias AudioFile_SetSizeProc = CCodePointer[[RawPointer,Int64],[CLong]];
 
 external AudioFileInitializeWithCallbacks(
     inClientData : RawPointer,
@@ -348,9 +348,9 @@ alias AudioFileStreamPropertyID = CULong;
 
 alias AudioFileStreamID = OpaquePointer;
 
-alias AudioFileStream_PropertyListenerProc = CCodePointer[(RawPointer,OpaquePointer,CULong,Pointer[CULong]),()];
+alias AudioFileStream_PropertyListenerProc = CCodePointer[[RawPointer,OpaquePointer,CULong,Pointer[CULong]],[]];
 
-alias AudioFileStream_PacketsProc = CCodePointer[(RawPointer,CULong,CULong,RawPointer,Pointer[Struct_AudioStreamPacketDescription]),()];
+alias AudioFileStream_PacketsProc = CCodePointer[[RawPointer,CULong,CULong,RawPointer,Pointer[Struct_AudioStreamPacketDescription]],[]];
 
 alias kAudioFileStreamPropertyFlag_PropertyIsCached = 1;
 alias kAudioFileStreamPropertyFlag_CacheProperty = 2;
@@ -617,11 +617,11 @@ record Struct_AudioQueueLevelMeterState (
 
 alias AudioQueueLevelMeterState = Struct_AudioQueueLevelMeterState;
 
-alias AudioQueueOutputCallback = CCodePointer[(RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer]),()];
+alias AudioQueueOutputCallback = CCodePointer[[RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer]],[]];
 
-alias AudioQueueInputCallback = CCodePointer[(RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer],Pointer[Struct_AudioTimeStamp],CULong,Pointer[Struct_AudioStreamPacketDescription]),()];
+alias AudioQueueInputCallback = CCodePointer[[RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer],Pointer[Struct_AudioTimeStamp],CULong,Pointer[Struct_AudioStreamPacketDescription]],[]];
 
-alias AudioQueuePropertyListenerProc = CCodePointer[(RawPointer,OpaquePointer,CULong),()];
+alias AudioQueuePropertyListenerProc = CCodePointer[[RawPointer,OpaquePointer,CULong],[]];
 
 external AudioQueueNewOutput(
     inFormat : Pointer[AudioStreamBasicDescription],
@@ -789,7 +789,7 @@ alias SystemSoundID = CULong;
 
 alias AudioServicesPropertyID = CULong;
 
-alias AudioServicesSystemSoundCompletionProc = CCodePointer[(CULong,RawPointer),()];
+alias AudioServicesSystemSoundCompletionProc = CCodePointer[[CULong,RawPointer],[]];
 
 alias kSystemSoundID_Vibrate = 4095;
 
@@ -902,9 +902,9 @@ alias kAudioSessionProperty_OverrideCategoryDefaultToSpeaker = 1668509803;
 alias kAudioSessionProperty_OverrideCategoryEnableBluetoothInput = 1667394677;
 alias kAudioSessionProperty_InterruptionType = 1954115685;
 
-alias AudioSessionInterruptionListener = CCodePointer[(RawPointer,CULong),()];
+alias AudioSessionInterruptionListener = CCodePointer[[RawPointer,CULong],[]];
 
-alias AudioSessionPropertyListener = CCodePointer[(RawPointer,CULong,CULong,RawPointer),()];
+alias AudioSessionPropertyListener = CCodePointer[[RawPointer,CULong,CULong,RawPointer],[]];
 
 external AudioSessionInitialize(
     inRunLoop : CFRunLoopRef,
@@ -1223,7 +1223,7 @@ external AudioConverterSetProperty(
     inPropertyDataSize : CULong,
     inPropertyData : RawPointer) : CLong;
 
-alias AudioConverterInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[RawPointer],RawPointer),(CLong)];
+alias AudioConverterInputDataProc = CCodePointer[[OpaquePointer,Pointer[CULong],Pointer[RawPointer],RawPointer],[CLong]];
 
 external AudioConverterConvertBuffer(
     inAudioConverter : AudioConverterRef,
@@ -1232,7 +1232,7 @@ external AudioConverterConvertBuffer(
     ioOutputDataSize : Pointer[CULong],
     outOutputData : RawPointer) : CLong;
 
-alias AudioConverterComplexInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[Struct_AudioBufferList],Pointer[Pointer[Struct_AudioStreamPacketDescription]],RawPointer),(CLong)];
+alias AudioConverterComplexInputDataProc = CCodePointer[[OpaquePointer,Pointer[CULong],Pointer[Struct_AudioBufferList],Pointer[Pointer[Struct_AudioStreamPacketDescription]],RawPointer],[CLong]];
 
 external AudioConverterFillComplexBuffer(
     inAudioConverter : AudioConverterRef,

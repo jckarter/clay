@@ -127,9 +127,9 @@ alias ResTypePtr = Pointer[UInt];
 
 alias Boolean = CUChar;
 
-alias ProcPtr = CCodePointer[(),(CLong)];
+alias ProcPtr = CCodePointer[[],[CLong]];
 
-alias Register68kProcPtr = CCodePointer[(),()];
+alias Register68kProcPtr = CCodePointer[[],[]];
 
 alias UniversalProcPtr = ProcPtr;
 
@@ -4824,9 +4824,9 @@ alias Collection = OpaquePointer;
 
 alias CollectionTag = UInt;
 
-alias CollectionFlattenProcPtr = CCodePointer[(Int,RawPointer,RawPointer),(Short)];
+alias CollectionFlattenProcPtr = CCodePointer[[Int,RawPointer,RawPointer],[Short]];
 
-alias CollectionExceptionProcPtr = CCodePointer[(OpaquePointer,Short),(Short)];
+alias CollectionExceptionProcPtr = CCodePointer[[OpaquePointer,Short],[Short]];
 
 alias CollectionFlattenUPP = CollectionFlattenProcPtr;
 
@@ -5106,7 +5106,7 @@ alias BigEndianOSType = Struct_BigEndianOSType;
 alias kCoreEndianResourceManagerDomain = 1920168547;
 alias kCoreEndianAppleEventManagerDomain = 1634039412;
 
-alias CoreEndianFlipProc = CCodePointer[(UInt,UInt,Short,RawPointer,CULong,CUChar,RawPointer),(Int)];
+alias CoreEndianFlipProc = CCodePointer[[UInt,UInt,Short,RawPointer,CULong,CUChar,RawPointer],[Int]];
 
 external CoreEndianInstallFlipper(
     dataDomain : UInt,
@@ -5128,7 +5128,7 @@ external CoreEndianFlipData(
     dataLen : CULong,
     currentlyNative : CUChar) : Int;
 
-alias SelectorFunctionProcPtr = CCodePointer[(UInt,Pointer[Int]),(Short)];
+alias SelectorFunctionProcPtr = CCodePointer[[UInt,Pointer[Int]],[Short]];
 
 alias SelectorFunctionUPP = SelectorFunctionProcPtr;
 
@@ -6919,7 +6919,7 @@ alias true32b = 1;
 
 alias SysPPtr = RawPointer;
 
-alias DeferredTaskProcPtr = CCodePointer[(CLong),()];
+alias DeferredTaskProcPtr = CCodePointer[[CLong],[]];
 
 alias DeferredTaskUPP = DeferredTaskProcPtr;
 
@@ -7161,7 +7161,7 @@ alias ParamBlockRec = AUnionType;
 
 alias ParmBlkPtr = RawPointer;
 
-alias IOCompletionProcPtr = CCodePointer[(RawPointer),()];
+alias IOCompletionProcPtr = CCodePointer[[RawPointer],[]];
 
 alias IOCompletionUPP = IOCompletionProcPtr;
 
@@ -8175,7 +8175,7 @@ alias FNSubscriptionRef = OpaquePointer;
 alias kFNNoImplicitAllSubscription = 1;
 alias kFNNotifyInBackground = 2;
 
-alias FNSubscriptionProcPtr = CCodePointer[(UInt,UInt,RawPointer,OpaquePointer),()];
+alias FNSubscriptionProcPtr = CCodePointer[[UInt,UInt,RawPointer,OpaquePointer],[]];
 
 alias FNSubscriptionUPP = FNSubscriptionProcPtr;
 
@@ -8228,11 +8228,11 @@ alias FSUnmountStatus = UInt;
 
 alias FSVolumeOperation = OpaquePointer;
 
-alias FSVolumeMountProcPtr = CCodePointer[(OpaquePointer,RawPointer,Int,Short),()];
+alias FSVolumeMountProcPtr = CCodePointer[[OpaquePointer,RawPointer,Int,Short],[]];
 
-alias FSVolumeUnmountProcPtr = CCodePointer[(OpaquePointer,RawPointer,Int,Short,Int),()];
+alias FSVolumeUnmountProcPtr = CCodePointer[[OpaquePointer,RawPointer,Int,Short,Int],[]];
 
-alias FSVolumeEjectProcPtr = CCodePointer[(OpaquePointer,RawPointer,Int,Short,Int),()];
+alias FSVolumeEjectProcPtr = CCodePointer[[OpaquePointer,RawPointer,Int,Short,Int],[]];
 
 alias FSVolumeMountUPP = FSVolumeMountProcPtr;
 
@@ -8420,9 +8420,9 @@ record Struct_FSFileOperationClientContext (
 
 alias FSFileOperationClientContext = Struct_FSFileOperationClientContext;
 
-alias FSFileOperationStatusProcPtr = CCodePointer[(OpaquePointer,Pointer[Struct_FSRef],UInt,Int,OpaquePointer,RawPointer),()];
+alias FSFileOperationStatusProcPtr = CCodePointer[[OpaquePointer,Pointer[Struct_FSRef],UInt,Int,OpaquePointer,RawPointer],[]];
 
-alias FSPathFileOperationStatusProcPtr = CCodePointer[(OpaquePointer,Pointer[CChar],UInt,Int,OpaquePointer,RawPointer),()];
+alias FSPathFileOperationStatusProcPtr = CCodePointer[[OpaquePointer,Pointer[CChar],UInt,Int,OpaquePointer,RawPointer],[]];
 
 alias kFSFileOperationDefaultOptions = 0;
 alias kFSFileOperationOverwrite = 1;
@@ -8869,7 +8869,7 @@ alias mapChanged = 32;
 alias kResFileNotOpened = 4294967295;
 alias kSystemResFile = 0;
 
-alias ResErrProcPtr = CCodePointer[(Short),()];
+alias ResErrProcPtr = CCodePointer[[Short],[]];
 
 alias ResErrUPP = ResErrProcPtr;
 
@@ -8883,7 +8883,7 @@ external InvokeResErrUPP(
     thErr : Short,
     userUPP : ResErrUPP);
 
-alias ResourceEndianFilterPtr = CCodePointer[(Pointer[Pointer[CChar]],CUChar),(Short)];
+alias ResourceEndianFilterPtr = CCodePointer[[Pointer[Pointer[CChar]],CUChar],[Short]];
 
 external CloseResFile(
     refNum : Int);
@@ -9317,11 +9317,11 @@ alias ComponentMPWorkFunctionHeaderRecord = Struct_ComponentMPWorkFunctionHeader
 
 alias ComponentMPWorkFunctionHeaderRecordPtr = Pointer[ComponentMPWorkFunctionHeaderRecord];
 
-alias ComponentMPWorkFunctionProcPtr = CCodePointer[(RawPointer,Pointer[Struct_ComponentMPWorkFunctionHeaderRecord]),(Int)];
+alias ComponentMPWorkFunctionProcPtr = CCodePointer[[RawPointer,Pointer[Struct_ComponentMPWorkFunctionHeaderRecord]],[Int]];
 
-alias ComponentRoutineProcPtr = CCodePointer[(Pointer[Struct_ComponentParameters],Pointer[Pointer[CChar]]),(Int)];
+alias ComponentRoutineProcPtr = CCodePointer[[Pointer[Struct_ComponentParameters],Pointer[Pointer[CChar]]],[Int]];
 
-alias GetMissingComponentResourceProcPtr = CCodePointer[(Pointer[Struct_ComponentRecord],UInt,Short,RawPointer,Pointer[Pointer[Pointer[CChar]]]),(Short)];
+alias GetMissingComponentResourceProcPtr = CCodePointer[[Pointer[Struct_ComponentRecord],UInt,Short,RawPointer,Pointer[Pointer[Pointer[CChar]]]],[Short]];
 
 alias ComponentMPWorkFunctionUPP = ComponentMPWorkFunctionProcPtr;
 
@@ -9677,7 +9677,7 @@ alias kMPCreateTaskTakesAllExceptionsMask = 2;
 alias kMPCreateTaskNotDebuggableMask = 4;
 alias kMPCreateTaskValidOptionsMask = 7;
 
-alias TaskProc = CCodePointer[(RawPointer),(Int)];
+alias TaskProc = CCodePointer[[RawPointer],[Int]];
 
 external MPCreateTask(
     entryPoint : TaskProc,
@@ -9984,7 +9984,7 @@ external MPRegisterDebugger(
 external MPUnregisterDebugger(
     queue : MPQueueID) : Int;
 
-alias MPRemoteProcedure = CCodePointer[(RawPointer),(RawPointer)];
+alias MPRemoteProcedure = CCodePointer[[RawPointer],[RawPointer]];
 
 alias MPRemoteContext = CUChar;
 
@@ -10005,7 +10005,7 @@ external MPRemoteCallCFM(
 
 external _MPIsFullyInitialized() : CUChar;
 
-alias MPIsFullyInitializedProc = CCodePointer[(),(CUChar)];
+alias MPIsFullyInitializedProc = CCodePointer[[],[CUChar]];
 
 external _MPLibraryVersion(
     versionCString : Pointer[Pointer[CChar]],
@@ -10083,7 +10083,7 @@ alias FSAliasInfoPtr = Pointer[FSAliasInfo];
 
 alias AliasInfoType = Short;
 
-alias FSAliasFilterProcPtr = CCodePointer[(Pointer[Struct_FSRef],Pointer[CUChar],Pointer[CChar]),(CUChar)];
+alias FSAliasFilterProcPtr = CCodePointer[[Pointer[Struct_FSRef],Pointer[CUChar],Pointer[CChar]],[CUChar]];
 
 external FSNewAlias(
     fromFile : Pointer[FSRef],
@@ -10326,7 +10326,7 @@ alias kComponentDebugOption = 0;
 alias kGetDebugOption = 1;
 alias kSetDebugOption = 2;
 
-alias DebugComponentCallbackProcPtr = CCodePointer[(Int,UInt,Pointer[CUChar]),()];
+alias DebugComponentCallbackProcPtr = CCodePointer[[Int,UInt,Pointer[CUChar]],[]];
 
 alias DebugComponentCallbackUPP = DebugComponentCallbackProcPtr;
 
@@ -10360,7 +10360,7 @@ external SetDebugOptionValue(
     optionSelectorNum : Int,
     newOptionSetting : CUChar) : Int;
 
-alias DebugAssertOutputHandlerProcPtr = CCodePointer[(UInt,UInt,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],CLong,RawPointer,Pointer[CUChar]),()];
+alias DebugAssertOutputHandlerProcPtr = CCodePointer[[UInt,UInt,Pointer[CChar],Pointer[CChar],Pointer[CChar],Pointer[CChar],CLong,RawPointer,Pointer[CUChar]],[]];
 
 alias DebugAssertOutputHandlerUPP = DebugAssertOutputHandlerProcPtr;
 
@@ -10737,7 +10737,7 @@ record Struct_ExceptionInformation (
 
 alias ExceptionInformation = Struct_ExceptionInformation;
 
-alias ExceptionHandlerProcPtr = CCodePointer[(Pointer[Struct_ExceptionInformation]),(Int)];
+alias ExceptionHandlerProcPtr = CCodePointer[[Pointer[Struct_ExceptionInformation]],[Int]];
 
 alias ExceptionHandlerUPP = ExceptionHandlerProcPtr;
 
@@ -11092,7 +11092,7 @@ alias kUCTSOptionsNoneMask = 0;
 alias kUCTSOptionsReleaseStringMask = 1;
 alias kUCTSOptionsDataIsOrderedMask = 2;
 
-alias IndexToUCStringProcPtr = CCodePointer[(UInt,RawPointer,RawPointer,Pointer[OpaquePointer],Pointer[UShort]),(CUChar)];
+alias IndexToUCStringProcPtr = CCodePointer[[UInt,RawPointer,RawPointer,Pointer[OpaquePointer],Pointer[UShort]],[CUChar]];
 
 alias IndexToUCStringUPP = IndexToUCStringProcPtr;
 
@@ -11659,7 +11659,7 @@ alias kUnicodeFallbackCustomOnly = 1;
 alias kUnicodeFallbackDefaultFirst = 2;
 alias kUnicodeFallbackCustomFirst = 3;
 
-alias UnicodeToTextFallbackProcPtr = CCodePointer[(Pointer[UShort],CULong,Pointer[CULong],Pointer[CUChar],CULong,Pointer[CULong],RawPointer,Pointer[Struct_UnicodeMapping]),(Int)];
+alias UnicodeToTextFallbackProcPtr = CCodePointer[[Pointer[UShort],CULong,Pointer[CULong],Pointer[CUChar],CULong,Pointer[CULong],RawPointer,Pointer[Struct_UnicodeMapping]],[Int]];
 
 alias UnicodeToTextFallbackUPP = UnicodeToTextFallbackProcPtr;
 
@@ -11891,19 +11891,19 @@ alias SchedulerInfoRecPtr = Pointer[SchedulerInfoRec];
 
 alias voidPtr = RawPointer;
 
-alias ThreadEntryProcPtr = CCodePointer[(RawPointer),(RawPointer)];
+alias ThreadEntryProcPtr = CCodePointer[[RawPointer],[RawPointer]];
 
-alias ThreadSchedulerProcPtr = CCodePointer[(Pointer[Struct_SchedulerInfoRec]),(CULong)];
+alias ThreadSchedulerProcPtr = CCodePointer[[Pointer[Struct_SchedulerInfoRec]],[CULong]];
 
-alias ThreadSwitchProcPtr = CCodePointer[(CULong,RawPointer),()];
+alias ThreadSwitchProcPtr = CCodePointer[[CULong,RawPointer],[]];
 
-alias ThreadTerminationProcPtr = CCodePointer[(CULong,RawPointer),()];
+alias ThreadTerminationProcPtr = CCodePointer[[CULong,RawPointer],[]];
 
-alias DebuggerNewThreadProcPtr = CCodePointer[(CULong),()];
+alias DebuggerNewThreadProcPtr = CCodePointer[[CULong],[]];
 
-alias DebuggerDisposeThreadProcPtr = CCodePointer[(CULong),()];
+alias DebuggerDisposeThreadProcPtr = CCodePointer[[CULong],[]];
 
-alias DebuggerThreadSchedulerProcPtr = CCodePointer[(Pointer[Struct_SchedulerInfoRec]),(CULong)];
+alias DebuggerThreadSchedulerProcPtr = CCodePointer[[Pointer[Struct_SchedulerInfoRec]],[CULong]];
 
 alias ThreadEntryUPP = ThreadEntryProcPtr;
 
@@ -12420,7 +12420,7 @@ external DetermineIfPathIsEnclosedByFolder(
     pathIsRealPath : CUChar,
     outResult : Pointer[CUChar]) : Short;
 
-alias FolderManagerNotificationProcPtr = CCodePointer[(UInt,RawPointer,RawPointer),(Int)];
+alias FolderManagerNotificationProcPtr = CCodePointer[[UInt,RawPointer,RawPointer],[Int]];
 
 alias FolderManagerNotificationUPP = FolderManagerNotificationProcPtr;
 
@@ -12445,7 +12445,7 @@ alias TMTask = Struct_TMTask;
 
 alias TMTaskPtr = Pointer[TMTask];
 
-alias TimerProcPtr = CCodePointer[(Pointer[Struct_TMTask]),()];
+alias TimerProcPtr = CCodePointer[[Pointer[Struct_TMTask]],[]];
 
 alias TimerUPP = TimerProcPtr;
 
@@ -12661,13 +12661,13 @@ alias AVLTreeStruct = Struct_AVLTreeStruct;
 
 alias AVLTreePtr = Pointer[AVLTreeStruct];
 
-alias AVLCompareItemsProcPtr = CCodePointer[(Pointer[Struct_AVLTreeStruct],RawPointer,RawPointer,UShort),(Int)];
+alias AVLCompareItemsProcPtr = CCodePointer[[Pointer[Struct_AVLTreeStruct],RawPointer,RawPointer,UShort],[Int]];
 
-alias AVLItemSizeProcPtr = CCodePointer[(Pointer[Struct_AVLTreeStruct],RawPointer),(CULong)];
+alias AVLItemSizeProcPtr = CCodePointer[[Pointer[Struct_AVLTreeStruct],RawPointer],[CULong]];
 
-alias AVLDisposeItemProcPtr = CCodePointer[(Pointer[Struct_AVLTreeStruct],RawPointer),()];
+alias AVLDisposeItemProcPtr = CCodePointer[[Pointer[Struct_AVLTreeStruct],RawPointer],[]];
 
-alias AVLWalkProcPtr = CCodePointer[(Pointer[Struct_AVLTreeStruct],RawPointer,UShort,UShort,UInt,Int,RawPointer),(Short)];
+alias AVLWalkProcPtr = CCodePointer[[Pointer[Struct_AVLTreeStruct],RawPointer,UShort,UShort,UInt,Int,RawPointer],[Short]];
 
 alias AVLCompareItemsUPP = AVLCompareItemsProcPtr;
 
@@ -13374,41 +13374,41 @@ record Struct_TECSnifferContextRec (
 
 alias TECSnifferContextRec = Struct_TECSnifferContextRec;
 
-alias TECPluginNewEncodingConverterPtr = CCodePointer[(Pointer[OpaquePointer],Pointer[Struct_TECConverterContextRec],UInt,UInt),(Int)];
+alias TECPluginNewEncodingConverterPtr = CCodePointer[[Pointer[OpaquePointer],Pointer[Struct_TECConverterContextRec],UInt,UInt],[Int]];
 
-alias TECPluginClearContextInfoPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECConverterContextRec]),(Int)];
+alias TECPluginClearContextInfoPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECConverterContextRec]],[Int]];
 
-alias TECPluginConvertTextEncodingPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECConverterContextRec]),(Int)];
+alias TECPluginConvertTextEncodingPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECConverterContextRec]],[Int]];
 
-alias TECPluginFlushConversionPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECConverterContextRec]),(Int)];
+alias TECPluginFlushConversionPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECConverterContextRec]],[Int]];
 
-alias TECPluginDisposeEncodingConverterPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECConverterContextRec]),(Int)];
+alias TECPluginDisposeEncodingConverterPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECConverterContextRec]],[Int]];
 
-alias TECPluginNewEncodingSnifferPtr = CCodePointer[(Pointer[OpaquePointer],Pointer[Struct_TECSnifferContextRec],UInt),(Int)];
+alias TECPluginNewEncodingSnifferPtr = CCodePointer[[Pointer[OpaquePointer],Pointer[Struct_TECSnifferContextRec],UInt],[Int]];
 
-alias TECPluginClearSnifferContextInfoPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECSnifferContextRec]),(Int)];
+alias TECPluginClearSnifferContextInfoPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECSnifferContextRec]],[Int]];
 
-alias TECPluginSniffTextEncodingPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECSnifferContextRec]),(Int)];
+alias TECPluginSniffTextEncodingPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECSnifferContextRec]],[Int]];
 
-alias TECPluginDisposeEncodingSnifferPtr = CCodePointer[(OpaquePointer,Pointer[Struct_TECSnifferContextRec]),(Int)];
+alias TECPluginDisposeEncodingSnifferPtr = CCodePointer[[OpaquePointer,Pointer[Struct_TECSnifferContextRec]],[Int]];
 
-alias TECPluginGetCountAvailableTextEncodingsPtr = CCodePointer[(Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountAvailableTextEncodingsPtr = CCodePointer[[Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetCountAvailableTextEncodingPairsPtr = CCodePointer[(Pointer[Struct_TECConversionInfo],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountAvailableTextEncodingPairsPtr = CCodePointer[[Pointer[Struct_TECConversionInfo],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetCountDestinationTextEncodingsPtr = CCodePointer[(UInt,Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountDestinationTextEncodingsPtr = CCodePointer[[UInt,Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetCountSubTextEncodingsPtr = CCodePointer[(UInt,Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountSubTextEncodingsPtr = CCodePointer[[UInt,Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetCountAvailableSniffersPtr = CCodePointer[(Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountAvailableSniffersPtr = CCodePointer[[Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetTextEncodingInternetNamePtr = CCodePointer[(UInt,Pointer[CUChar]),(Int)];
+alias TECPluginGetTextEncodingInternetNamePtr = CCodePointer[[UInt,Pointer[CUChar]],[Int]];
 
-alias TECPluginGetTextEncodingFromInternetNamePtr = CCodePointer[(Pointer[UInt],Pointer[CUChar]),(Int)];
+alias TECPluginGetTextEncodingFromInternetNamePtr = CCodePointer[[Pointer[UInt],Pointer[CUChar]],[Int]];
 
-alias TECPluginGetCountWebEncodingsPtr = CCodePointer[(Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountWebEncodingsPtr = CCodePointer[[Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
-alias TECPluginGetCountMailEncodingsPtr = CCodePointer[(Pointer[UInt],CULong,Pointer[CULong]),(Int)];
+alias TECPluginGetCountMailEncodingsPtr = CCodePointer[[Pointer[UInt],CULong,Pointer[CULong]],[Int]];
 
 alias kTECPluginDispatchTableVersion1 = 65536;
 alias kTECPluginDispatchTableVersion1_1 = 65537;
@@ -13441,7 +13441,7 @@ record Struct_TECPluginDispatchTable (
 
 alias TECPluginDispatchTable = Struct_TECPluginDispatchTable;
 
-alias TECPluginGetPluginDispatchTablePtr = CCodePointer[(),(Pointer[Struct_TECPluginDispatchTable])];
+alias TECPluginGetPluginDispatchTablePtr = CCodePointer[[],[Pointer[Struct_TECPluginDispatchTable]]];
 
 alias FSEventStreamCreateFlags = UInt;
 
@@ -13481,7 +13481,7 @@ record Struct_FSEventStreamContext (
 
 alias FSEventStreamContext = Struct_FSEventStreamContext;
 
-alias FSEventStreamCallback = CCodePointer[(OpaquePointer,RawPointer,CULong,RawPointer,Pointer[UInt],Pointer[UInt64]),()];
+alias FSEventStreamCallback = CCodePointer[[OpaquePointer,RawPointer,CULong,RawPointer,Pointer[UInt],Pointer[UInt64]],[]];
 
 external FSEventStreamCreate(
     allocator : CFAllocatorRef,
@@ -13782,9 +13782,9 @@ alias kAEProcessNonReplyEvents = 32768;
 alias kAEDefaultTimeout = 4294967295;
 alias kNoTimeOut = 4294967294;
 
-alias AECoerceDescProcPtr = CCodePointer[(Pointer[Struct_AEDesc],UInt,RawPointer,Pointer[Struct_AEDesc]),(Short)];
+alias AECoerceDescProcPtr = CCodePointer[[Pointer[Struct_AEDesc],UInt,RawPointer,Pointer[Struct_AEDesc]],[Short]];
 
-alias AECoercePtrProcPtr = CCodePointer[(UInt,RawPointer,CLong,UInt,RawPointer,Pointer[Struct_AEDesc]),(Short)];
+alias AECoercePtrProcPtr = CCodePointer[[UInt,RawPointer,CLong,UInt,RawPointer,Pointer[Struct_AEDesc]],[Short]];
 
 alias AECoerceDescUPP = AECoerceDescProcPtr;
 
@@ -13870,7 +13870,7 @@ external AEDuplicateDesc(
     theAEDesc : Pointer[AEDesc],
     result : Pointer[AEDesc]) : Short;
 
-alias AEDisposeExternalProcPtr = CCodePointer[(RawPointer,CLong,RawPointer),()];
+alias AEDisposeExternalProcPtr = CCodePointer[[RawPointer,CLong,RawPointer],[]];
 
 alias AEDisposeExternalUPP = AEDisposeExternalProcPtr;
 
@@ -14062,7 +14062,7 @@ external AEGetDescDataRange(
     offset : CLong,
     length : CLong) : Int;
 
-alias AEEventHandlerProcPtr = CCodePointer[(Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],RawPointer),(Short)];
+alias AEEventHandlerProcPtr = CCodePointer[[Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],RawPointer],[Short]];
 
 alias AEEventHandlerUPP = AEEventHandlerProcPtr;
 
@@ -14194,7 +14194,7 @@ external AERemoteProcessResolverGetProcesses(
     ref_ : AERemoteProcessResolverRef,
     outError : Pointer[CFStreamError]) : CFArrayRef;
 
-alias AERemoteProcessResolverCallback = CCodePointer[(OpaquePointer,RawPointer),()];
+alias AERemoteProcessResolverCallback = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external AERemoteProcessResolverScheduleWithRunLoop(
     ref_ : AERemoteProcessResolverRef,
@@ -14310,21 +14310,21 @@ alias ccntTokenRecPtr = Pointer[ccntTokenRecord];
 
 alias ccntTokenRecHandle = Pointer[ccntTokenRecPtr];
 
-alias OSLAccessorProcPtr = CCodePointer[(UInt,Pointer[Struct_AEDesc],UInt,UInt,Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],RawPointer),(Short)];
+alias OSLAccessorProcPtr = CCodePointer[[UInt,Pointer[Struct_AEDesc],UInt,UInt,Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],RawPointer],[Short]];
 
-alias OSLCompareProcPtr = CCodePointer[(UInt,Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],Pointer[CUChar]),(Short)];
+alias OSLCompareProcPtr = CCodePointer[[UInt,Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],Pointer[CUChar]],[Short]];
 
-alias OSLCountProcPtr = CCodePointer[(UInt,UInt,Pointer[Struct_AEDesc],Pointer[CLong]),(Short)];
+alias OSLCountProcPtr = CCodePointer[[UInt,UInt,Pointer[Struct_AEDesc],Pointer[CLong]],[Short]];
 
-alias OSLDisposeTokenProcPtr = CCodePointer[(Pointer[Struct_AEDesc]),(Short)];
+alias OSLDisposeTokenProcPtr = CCodePointer[[Pointer[Struct_AEDesc]],[Short]];
 
-alias OSLGetMarkTokenProcPtr = CCodePointer[(Pointer[Struct_AEDesc],UInt,Pointer[Struct_AEDesc]),(Short)];
+alias OSLGetMarkTokenProcPtr = CCodePointer[[Pointer[Struct_AEDesc],UInt,Pointer[Struct_AEDesc]],[Short]];
 
-alias OSLGetErrDescProcPtr = CCodePointer[(Pointer[Pointer[Struct_AEDesc]]),(Short)];
+alias OSLGetErrDescProcPtr = CCodePointer[[Pointer[Pointer[Struct_AEDesc]]],[Short]];
 
-alias OSLMarkProcPtr = CCodePointer[(Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],CLong),(Short)];
+alias OSLMarkProcPtr = CCodePointer[[Pointer[Struct_AEDesc],Pointer[Struct_AEDesc],CLong],[Short]];
 
-alias OSLAdjustMarksProcPtr = CCodePointer[(CLong,CLong,Pointer[Struct_AEDesc]),(Short)];
+alias OSLAdjustMarksProcPtr = CCodePointer[[CLong,CLong,Pointer[Struct_AEDesc]],[Short]];
 
 alias OSLAccessorUPP = OSLAccessorProcPtr;
 
@@ -15767,7 +15767,7 @@ external CSIdentityCommit(
 
 alias kCSIdentityCommitCompleted = 1;
 
-alias CSIdentityStatusUpdatedCallback = CCodePointer[(OpaquePointer,CLong,OpaquePointer,RawPointer),()];
+alias CSIdentityStatusUpdatedCallback = CCodePointer[[OpaquePointer,CLong,OpaquePointer,RawPointer],[]];
 
 record Struct_CSIdentityClientContext (
     version : CLong,
@@ -15851,7 +15851,7 @@ alias kCSIdentityQueryEventErrorOccurred = 5;
 
 alias CSIdentityQueryEvent = CLong;
 
-alias CSIdentityQueryReceiveEventCallback = CCodePointer[(OpaquePointer,CLong,OpaquePointer,OpaquePointer,RawPointer),()];
+alias CSIdentityQueryReceiveEventCallback = CCodePointer[[OpaquePointer,CLong,OpaquePointer,OpaquePointer,RawPointer],[]];
 
 record Struct_CSIdentityQueryClientContext (
     version : CLong,
@@ -15948,7 +15948,7 @@ alias kSystemSoundClientTimedOutError = 4294965795;
 
 alias SystemSoundActionID = UInt;
 
-alias SystemSoundCompletionProcPtr = CCodePointer[(UInt,RawPointer),(Int)];
+alias SystemSoundCompletionProcPtr = CCodePointer[[UInt,RawPointer],[Int]];
 
 alias SystemSoundCompletionUPP = SystemSoundCompletionProcPtr;
 
@@ -16006,11 +16006,11 @@ alias eWSDictionaryType = 9;
 
 alias WSTypeID = Int;
 
-alias WSClientContextRetainCallBackProcPtr = CCodePointer[(RawPointer),(RawPointer)];
+alias WSClientContextRetainCallBackProcPtr = CCodePointer[[RawPointer],[RawPointer]];
 
-alias WSClientContextReleaseCallBackProcPtr = CCodePointer[(RawPointer),()];
+alias WSClientContextReleaseCallBackProcPtr = CCodePointer[[RawPointer],[]];
 
-alias WSClientContextCopyDescriptionCallBackProcPtr = CCodePointer[(RawPointer),(OpaquePointer)];
+alias WSClientContextCopyDescriptionCallBackProcPtr = CCodePointer[[RawPointer],[OpaquePointer]];
 
 record Struct_WSClientContext (
     version : CLong,
@@ -16126,7 +16126,7 @@ external WSMethodInvocationCopyProperty(
 external WSMethodInvocationInvoke(
     invocation : WSMethodInvocationRef) : CFDictionaryRef;
 
-alias WSMethodInvocationCallBackProcPtr = CCodePointer[(OpaquePointer,RawPointer,OpaquePointer),()];
+alias WSMethodInvocationCallBackProcPtr = CCodePointer[[OpaquePointer,RawPointer,OpaquePointer],[]];
 
 external WSMethodInvocationSetCallBack(
     invocation : WSMethodInvocationRef,
@@ -16146,7 +16146,7 @@ external WSMethodInvocationUnscheduleFromRunLoop(
 external WSMethodResultIsFault(
     methodResult : CFDictionaryRef) : CUChar;
 
-alias WSMethodInvocationSerializationProcPtr = CCodePointer[(OpaquePointer,RawPointer,RawPointer),(OpaquePointer)];
+alias WSMethodInvocationSerializationProcPtr = CCodePointer[[OpaquePointer,RawPointer,RawPointer],[OpaquePointer]];
 
 external WSMethodInvocationAddSerializationOverride(
     invocation : WSMethodInvocationRef,
@@ -16154,7 +16154,7 @@ external WSMethodInvocationAddSerializationOverride(
     serializationProc : WSMethodInvocationSerializationProcPtr,
     context : Pointer[WSClientContext]);
 
-alias WSMethodInvocationDeserializationProcPtr = CCodePointer[(OpaquePointer,OpaquePointer,OpaquePointer,RawPointer),(RawPointer)];
+alias WSMethodInvocationDeserializationProcPtr = CCodePointer[[OpaquePointer,OpaquePointer,OpaquePointer,RawPointer],[RawPointer]];
 
 external WSMethodInvocationAddDeserializationOverride(
     invocation : WSMethodInvocationRef,
@@ -16206,7 +16206,7 @@ external WSProtocolHandlerSetProperty(
     propertyName : CFStringRef,
     propertyValue : CFTypeRef);
 
-alias WSProtocolHandlerSerializationProcPtr = CCodePointer[(OpaquePointer,RawPointer,RawPointer),(OpaquePointer)];
+alias WSProtocolHandlerSerializationProcPtr = CCodePointer[[OpaquePointer,RawPointer,RawPointer],[OpaquePointer]];
 
 external WSProtocolHandlerSetSerializationOverride(
     protocol : WSProtocolHandlerRef,
@@ -16214,7 +16214,7 @@ external WSProtocolHandlerSetSerializationOverride(
     serializationProc : WSProtocolHandlerSerializationProcPtr,
     context : Pointer[WSClientContext]);
 
-alias WSProtocolHandlerDeserializationProcPtr = CCodePointer[(OpaquePointer,OpaquePointer,OpaquePointer,RawPointer),(RawPointer)];
+alias WSProtocolHandlerDeserializationProcPtr = CCodePointer[[OpaquePointer,OpaquePointer,OpaquePointer,RawPointer],[RawPointer]];
 
 external WSProtocolHandlerSetDeserializationOverride(
     protocol : WSProtocolHandlerRef,
@@ -16266,7 +16266,7 @@ alias SleepQRec = Struct_SleepQRec;
 
 alias SleepQRecPtr = Pointer[SleepQRec];
 
-alias SleepQProcPtr = CCodePointer[(CLong,Pointer[Struct_SleepQRec]),(CLong)];
+alias SleepQProcPtr = CCodePointer[[CLong,Pointer[Struct_SleepQRec]],[CLong]];
 
 alias SleepQUPP = SleepQProcPtr;
 
@@ -16309,7 +16309,7 @@ external UpdateSystemActivity(
 
 alias RegEntryID = CULong;
 
-alias PowerHandlerProcPtr = CCodePointer[(UInt,RawPointer,UInt,Pointer[CULong]),(Int)];
+alias PowerHandlerProcPtr = CCodePointer[[UInt,RawPointer,UInt,Pointer[CULong]],[Int]];
 
 alias PowerHandlerUPP = PowerHandlerProcPtr;
 
@@ -16317,9 +16317,9 @@ alias HDQueueElement = Opaque;
 
 alias PMgrQueueElement = Opaque;
 
-alias HDSpindownProcPtr = CCodePointer[(OpaquePointer),()];
+alias HDSpindownProcPtr = CCodePointer[[OpaquePointer],[]];
 
-alias PMgrStateChangeProcPtr = CCodePointer[(OpaquePointer,CLong),()];
+alias PMgrStateChangeProcPtr = CCodePointer[[OpaquePointer,CLong],[]];
 
 alias HDSpindownUPP = HDSpindownProcPtr;
 
@@ -16439,9 +16439,9 @@ alias NSLPluginAsyncInfo = Struct_NSLPluginAsyncInfo;
 
 alias NSLPluginAsyncInfoPtr = Pointer[NSLPluginAsyncInfo];
 
-alias NSLMgrNotifyProcPtr = CCodePointer[(Pointer[Struct_NSLPluginAsyncInfo]),()];
+alias NSLMgrNotifyProcPtr = CCodePointer[[Pointer[Struct_NSLPluginAsyncInfo]],[]];
 
-alias NSLClientNotifyProcPtr = CCodePointer[(Pointer[Struct_NSLClientAsyncInfo]),()];
+alias NSLClientNotifyProcPtr = CCodePointer[[Pointer[Struct_NSLClientAsyncInfo]],[]];
 
 alias NSLMgrNotifyUPP = NSLMgrNotifyProcPtr;
 
@@ -16745,7 +16745,7 @@ external KCGetIndKeychain(
     index : UShort,
     keychain : Pointer[KCRef]) : Int;
 
-alias KCCallbackProcPtr = CCodePointer[(UShort,Pointer[Struct_KCCallbackInfo],RawPointer),(Int)];
+alias KCCallbackProcPtr = CCodePointer[[UShort,Pointer[Struct_KCCallbackInfo],RawPointer],[Int]];
 
 alias KCCallbackUPP = KCCallbackProcPtr;
 
@@ -17042,7 +17042,7 @@ record Struct_CFHostClientContext (
 
 alias CFHostClientContext = Struct_CFHostClientContext;
 
-alias CFHostClientCallBack = CCodePointer[(OpaquePointer,Int,Pointer[UnnamedStruct53],RawPointer),()];
+alias CFHostClientCallBack = CCodePointer[[OpaquePointer,Int,Pointer[UnnamedStruct53],RawPointer],[]];
 
 external CFHostGetTypeID() : CULong;
 
@@ -17137,11 +17137,11 @@ record Struct_CFNetServiceClientContext (
 
 alias CFNetServiceClientContext = Struct_CFNetServiceClientContext;
 
-alias CFNetServiceClientCallBack = CCodePointer[(OpaquePointer,Pointer[UnnamedStruct53],RawPointer),()];
+alias CFNetServiceClientCallBack = CCodePointer[[OpaquePointer,Pointer[UnnamedStruct53],RawPointer],[]];
 
-alias CFNetServiceMonitorClientCallBack = CCodePointer[(OpaquePointer,OpaquePointer,Int,OpaquePointer,Pointer[UnnamedStruct53],RawPointer),()];
+alias CFNetServiceMonitorClientCallBack = CCodePointer[[OpaquePointer,OpaquePointer,Int,OpaquePointer,Pointer[UnnamedStruct53],RawPointer],[]];
 
-alias CFNetServiceBrowserClientCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer,Pointer[UnnamedStruct53],RawPointer),()];
+alias CFNetServiceBrowserClientCallBack = CCodePointer[[OpaquePointer,CULong,RawPointer,Pointer[UnnamedStruct53],RawPointer],[]];
 
 external CFNetServiceGetTypeID() : CULong;
 
@@ -17697,7 +17697,7 @@ external CFNetworkCopyProxiesForURL(
     url : CFURLRef,
     proxySettings : CFDictionaryRef) : CFArrayRef;
 
-alias CFProxyAutoConfigurationResultCallback = CCodePointer[(RawPointer,OpaquePointer,OpaquePointer),()];
+alias CFProxyAutoConfigurationResultCallback = CCodePointer[[RawPointer,OpaquePointer,OpaquePointer],[]];
 
 external CFNetworkCopyProxiesForAutoConfigurationScript(
     proxyAutoConfigurationScript : CFStringRef,
@@ -18593,7 +18593,7 @@ external kLSSharedFileListLoginItemHidden : CFStringRef;
 alias kLSSharedFileListNoUserInteraction = 1;
 alias kLSSharedFileListDoNotMountVolumes = 2;
 
-alias LSSharedFileListChangedProcPtr = CCodePointer[(OpaquePointer,RawPointer),()];
+alias LSSharedFileListChangedProcPtr = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external LSSharedFileListGetTypeID() : CULong;
 
@@ -19159,7 +19159,7 @@ alias kSKSearchPrefixRanked = 3;
 
 alias SKSearchType = Int;
 
-alias SKSearchResultsFilterCallBack = CCodePointer[(OpaquePointer,RawPointer,RawPointer),(CUChar)];
+alias SKSearchResultsFilterCallBack = CCodePointer[[OpaquePointer,RawPointer,RawPointer],[CUChar]];
 
 external SKSearchGroupCreate(
     inArrayOfInIndexes : CFArrayRef) : SKSearchGroupRef;
@@ -19606,7 +19606,7 @@ external MDQuerySetBatchingParameters(
     query : MDQueryRef,
     params : MDQueryBatchingParams);
 
-alias MDQueryCreateResultFunction = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer),(RawPointer)];
+alias MDQueryCreateResultFunction = CCodePointer[[OpaquePointer,OpaquePointer,RawPointer],[RawPointer]];
 
 external MDQuerySetCreateResultFunction(
     query : MDQueryRef,
@@ -19614,7 +19614,7 @@ external MDQuerySetCreateResultFunction(
     context : RawPointer,
     cb : Pointer[CFArrayCallBacks]);
 
-alias MDQueryCreateValueFunction = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer,RawPointer),(RawPointer)];
+alias MDQueryCreateValueFunction = CCodePointer[[OpaquePointer,OpaquePointer,RawPointer,RawPointer],[RawPointer]];
 
 external MDQuerySetCreateValueFunction(
     query : MDQueryRef,
@@ -19667,7 +19667,7 @@ external MDQueryGetCountOfResultsWithAttributeValue(
     name : CFStringRef,
     value : CFTypeRef) : CLong;
 
-alias MDQuerySortComparatorFunction = CCodePointer[(Pointer[RawPointer],Pointer[RawPointer],RawPointer),(CLong)];
+alias MDQuerySortComparatorFunction = CCodePointer[[Pointer[RawPointer],Pointer[RawPointer],RawPointer],[CLong]];
 
 external MDQuerySetSortComparator(
     query : MDQueryRef,

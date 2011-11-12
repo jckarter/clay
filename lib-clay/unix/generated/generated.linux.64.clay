@@ -845,7 +845,7 @@ record Struct_sched_param (
 );
 
 external clone(
-    __fn : CCodePointer[(RawPointer),(Int)],
+    __fn : CCodePointer[[RawPointer],[Int]],
     __child_stack : RawPointer,
     __flags : Int,
     __arg : RawPointer,
@@ -1136,7 +1136,7 @@ alias PTHREAD_PROCESS_PRIVATE = 0;
 alias PTHREAD_PROCESS_SHARED = 1;
 
 record Struct__pthread_cleanup_buffer (
-    __routine : CCodePointer[(RawPointer),()],
+    __routine : CCodePointer[[RawPointer],[]],
     __arg : RawPointer,
     __canceltype : Int,
     __prev : Pointer[Struct__pthread_cleanup_buffer],
@@ -1151,7 +1151,7 @@ alias PTHREAD_CANCEL_ASYNCHRONOUS = 1;
 external pthread_create(
     __newthread : Pointer[CULong],
     __attr : Pointer[pthread_attr_t],
-    __start_routine : CCodePointer[(RawPointer),(RawPointer)],
+    __start_routine : CCodePointer[[RawPointer],[RawPointer]],
     __arg : RawPointer) : Int;
 
 external pthread_exit(
@@ -1266,7 +1266,7 @@ external pthread_setschedprio(
 
 external pthread_once(
     __once_control : Pointer[Int],
-    __init_routine : CCodePointer[(),()]) : Int;
+    __init_routine : CCodePointer[[],[]]) : Int;
 
 external pthread_setcancelstate(
     __state : Int,
@@ -1294,7 +1294,7 @@ record UnnamedRecord (
 alias __pthread_unwind_buf_t = UnnamedStruct3;
 
 record Struct___pthread_cleanup_frame (
-    __cancel_routine : CCodePointer[(RawPointer),()],
+    __cancel_routine : CCodePointer[[RawPointer],[]],
     __cancel_arg : RawPointer,
     __do_it : Int,
     __cancel_type : Int,
@@ -1530,7 +1530,7 @@ external pthread_barrierattr_setpshared(
 
 external pthread_key_create(
     __key : Pointer[UInt],
-    __destr_function : CCodePointer[(RawPointer),()]) : Int;
+    __destr_function : CCodePointer[[RawPointer],[]]) : Int;
 
 external pthread_key_delete(
     __key : UInt) : Int;
@@ -1547,9 +1547,9 @@ external pthread_getcpuclockid(
     __clock_id : Pointer[Int]) : Int;
 
 external pthread_atfork(
-    __prepare : CCodePointer[(),()],
-    __parent : CCodePointer[(),()],
-    __child : CCodePointer[(),()]) : Int;
+    __prepare : CCodePointer[[],[]],
+    __parent : CCodePointer[[],[]],
+    __child : CCodePointer[[],[]]) : Int;
 
 alias u_char = CUChar;
 
@@ -2253,7 +2253,7 @@ alias SIGEV_NONE = 1;
 alias SIGEV_THREAD = 2;
 alias SIGEV_THREAD_ID = 4;
 
-alias __sighandler_t = CCodePointer[(Int),()];
+alias __sighandler_t = CCodePointer[[Int],[]];
 
 external __sysv_signal(
     __sig : Int,
@@ -2325,7 +2325,7 @@ record Struct_sigaction (
     __sigaction_handler : AUnionType,
     sa_mask : __sigset_t,
     sa_flags : Int,
-    sa_restorer : CCodePointer[(),()],
+    sa_restorer : CCodePointer[[],[]],
 );
 
 external sigprocmask(
@@ -2790,8 +2790,8 @@ external dirfd(
 external scandir(
     __dir : Pointer[CChar],
     __namelist : Pointer[Pointer[Pointer[Struct_dirent]]],
-    __selector : CCodePointer[(Pointer[Struct_dirent]),(Int)],
-    __cmp : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) : Int;
+    __selector : CCodePointer[[Pointer[Struct_dirent]],[Int]],
+    __cmp : CCodePointer[[Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]],[Int]]) : Int;
 
 external alphasort(
     __e1 : Pointer[Pointer[Struct_dirent]],
@@ -3039,10 +3039,10 @@ external posix_memalign(
 external abort();
 
 external atexit(
-    __func : CCodePointer[(),()]) : Int;
+    __func : CCodePointer[[],[]]) : Int;
 
 external on_exit(
-    __func : CCodePointer[(Int,RawPointer),()],
+    __func : CCodePointer[[Int,RawPointer],[]],
     __arg : RawPointer) : Int;
 
 external exit(
@@ -3090,7 +3090,7 @@ external realpath(
     __name : Pointer[CChar],
     __resolved : Pointer[CChar]) : Pointer[CChar];
 
-alias __compar_fn_t = CCodePointer[(RawPointer,RawPointer),(Int)];
+alias __compar_fn_t = CCodePointer[[RawPointer,RawPointer],[Int]];
 
 external bsearch(
     __key : RawPointer,

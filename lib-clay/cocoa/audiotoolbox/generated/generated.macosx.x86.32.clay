@@ -153,13 +153,13 @@ external AudioFileOpenURL(
     inFileTypeHint : CULong,
     outAudioFile : Pointer[AudioFileID]) : CLong;
 
-alias AudioFile_ReadProc = CCodePointer[(RawPointer,Int64,CULong,RawPointer,Pointer[CULong]),(CLong)];
+alias AudioFile_ReadProc = CCodePointer[[RawPointer,Int64,CULong,RawPointer,Pointer[CULong]],[CLong]];
 
-alias AudioFile_WriteProc = CCodePointer[(RawPointer,Int64,CULong,RawPointer,Pointer[CULong]),(CLong)];
+alias AudioFile_WriteProc = CCodePointer[[RawPointer,Int64,CULong,RawPointer,Pointer[CULong]],[CLong]];
 
-alias AudioFile_GetSizeProc = CCodePointer[(RawPointer),(Int64)];
+alias AudioFile_GetSizeProc = CCodePointer[[RawPointer],[Int64]];
 
-alias AudioFile_SetSizeProc = CCodePointer[(RawPointer,Int64),(CLong)];
+alias AudioFile_SetSizeProc = CCodePointer[[RawPointer,Int64],[CLong]];
 
 external AudioFileInitializeWithCallbacks(
     inClientData : RawPointer,
@@ -367,9 +367,9 @@ alias AudioFileStreamPropertyID = CULong;
 
 alias AudioFileStreamID = OpaquePointer;
 
-alias AudioFileStream_PropertyListenerProc = CCodePointer[(RawPointer,OpaquePointer,CULong,Pointer[CULong]),()];
+alias AudioFileStream_PropertyListenerProc = CCodePointer[[RawPointer,OpaquePointer,CULong,Pointer[CULong]],[]];
 
-alias AudioFileStream_PacketsProc = CCodePointer[(RawPointer,CULong,CULong,RawPointer,Pointer[Struct_AudioStreamPacketDescription]),()];
+alias AudioFileStream_PacketsProc = CCodePointer[[RawPointer,CULong,CULong,RawPointer,Pointer[Struct_AudioStreamPacketDescription]],[]];
 
 alias kAudioFileStreamPropertyFlag_PropertyIsCached = 1;
 alias kAudioFileStreamPropertyFlag_CacheProperty = 2;
@@ -626,11 +626,11 @@ alias AudioQueueOutputCallbackBlock = UnknownType;
 
 alias AudioQueueInputCallbackBlock = UnknownType;
 
-alias AudioQueueOutputCallback = CCodePointer[(RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer]),()];
+alias AudioQueueOutputCallback = CCodePointer[[RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer]],[]];
 
-alias AudioQueueInputCallback = CCodePointer[(RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer],Pointer[Struct_AudioTimeStamp],CULong,Pointer[Struct_AudioStreamPacketDescription]),()];
+alias AudioQueueInputCallback = CCodePointer[[RawPointer,OpaquePointer,Pointer[Struct_AudioQueueBuffer],Pointer[Struct_AudioTimeStamp],CULong,Pointer[Struct_AudioStreamPacketDescription]],[]];
 
-alias AudioQueuePropertyListenerProc = CCodePointer[(RawPointer,OpaquePointer,CULong),()];
+alias AudioQueuePropertyListenerProc = CCodePointer[[RawPointer,OpaquePointer,CULong],[]];
 
 external AudioQueueNewOutput(
     inFormat : Pointer[AudioStreamBasicDescription],
@@ -812,7 +812,7 @@ alias SystemSoundID = CULong;
 
 alias AudioServicesPropertyID = CULong;
 
-alias AudioServicesSystemSoundCompletionProc = CCodePointer[(CULong,RawPointer),()];
+alias AudioServicesSystemSoundCompletionProc = CCodePointer[[CULong,RawPointer],[]];
 
 alias kSystemSoundID_UserPreferredAlert = 4096;
 alias kSystemSoundID_FlashScreen = 4094;
@@ -1233,7 +1233,7 @@ external AudioConverterSetProperty(
     inPropertyDataSize : CULong,
     inPropertyData : RawPointer) : CLong;
 
-alias AudioConverterInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[RawPointer],RawPointer),(CLong)];
+alias AudioConverterInputDataProc = CCodePointer[[OpaquePointer,Pointer[CULong],Pointer[RawPointer],RawPointer],[CLong]];
 
 external AudioConverterFillBuffer(
     inAudioConverter : AudioConverterRef,
@@ -1249,7 +1249,7 @@ external AudioConverterConvertBuffer(
     ioOutputDataSize : Pointer[CULong],
     outOutputData : RawPointer) : CLong;
 
-alias AudioConverterComplexInputDataProc = CCodePointer[(OpaquePointer,Pointer[CULong],Pointer[Struct_AudioBufferList],Pointer[Pointer[Struct_AudioStreamPacketDescription]],RawPointer),(CLong)];
+alias AudioConverterComplexInputDataProc = CCodePointer[[OpaquePointer,Pointer[CULong],Pointer[Struct_AudioBufferList],Pointer[Pointer[Struct_AudioStreamPacketDescription]],RawPointer],[CLong]];
 
 external AudioConverterFillComplexBuffer(
     inAudioConverter : AudioConverterRef,
@@ -1568,29 +1568,29 @@ alias kAudioFileOpenURLSelect = 26;
 alias kAudioFileFileDataIsThisFormatSelect = 27;
 alias kAudioFileReadPacketDataSelect = 28;
 
-alias ReadBytesFDF = CCodePointer[(RawPointer,CUChar,Int64,Pointer[CULong],RawPointer),(CLong)];
+alias ReadBytesFDF = CCodePointer[[RawPointer,CUChar,Int64,Pointer[CULong],RawPointer],[CLong]];
 
-alias WriteBytesFDF = CCodePointer[(RawPointer,CUChar,Int64,Pointer[CULong],RawPointer),(CLong)];
+alias WriteBytesFDF = CCodePointer[[RawPointer,CUChar,Int64,Pointer[CULong],RawPointer],[CLong]];
 
-alias ReadPacketsFDF = CCodePointer[(RawPointer,CUChar,Pointer[CULong],Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer),(CLong)];
+alias ReadPacketsFDF = CCodePointer[[RawPointer,CUChar,Pointer[CULong],Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer],[CLong]];
 
-alias ReadPacketDataFDF = CCodePointer[(RawPointer,CUChar,Pointer[CULong],Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer),(CLong)];
+alias ReadPacketDataFDF = CCodePointer[[RawPointer,CUChar,Pointer[CULong],Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer],[CLong]];
 
-alias WritePacketsFDF = CCodePointer[(RawPointer,CUChar,CULong,Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer),(CLong)];
+alias WritePacketsFDF = CCodePointer[[RawPointer,CUChar,CULong,Pointer[Struct_AudioStreamPacketDescription],Int64,Pointer[CULong],RawPointer],[CLong]];
 
-alias GetPropertyInfoFDF = CCodePointer[(RawPointer,CULong,Pointer[CULong],Pointer[CULong]),(CLong)];
+alias GetPropertyInfoFDF = CCodePointer[[RawPointer,CULong,Pointer[CULong],Pointer[CULong]],[CLong]];
 
-alias GetPropertyFDF = CCodePointer[(RawPointer,CULong,Pointer[CULong],RawPointer),(CLong)];
+alias GetPropertyFDF = CCodePointer[[RawPointer,CULong,Pointer[CULong],RawPointer],[CLong]];
 
-alias SetPropertyFDF = CCodePointer[(RawPointer,CULong,CULong,RawPointer),(CLong)];
+alias SetPropertyFDF = CCodePointer[[RawPointer,CULong,CULong,RawPointer],[CLong]];
 
-alias CountUserDataFDF = CCodePointer[(RawPointer,CULong,Pointer[CULong]),(CLong)];
+alias CountUserDataFDF = CCodePointer[[RawPointer,CULong,Pointer[CULong]],[CLong]];
 
-alias GetUserDataSizeFDF = CCodePointer[(RawPointer,CULong,CULong,Pointer[CULong]),(CLong)];
+alias GetUserDataSizeFDF = CCodePointer[[RawPointer,CULong,CULong,Pointer[CULong]],[CLong]];
 
-alias GetUserDataFDF = CCodePointer[(RawPointer,CULong,CULong,Pointer[CULong],RawPointer),(CLong)];
+alias GetUserDataFDF = CCodePointer[[RawPointer,CULong,CULong,Pointer[CULong],RawPointer],[CLong]];
 
-alias SetUserDataFDF = CCodePointer[(RawPointer,CULong,CULong,CULong,RawPointer),(CLong)];
+alias SetUserDataFDF = CCodePointer[[RawPointer,CULong,CULong,CULong,RawPointer],[CLong]];
 
 record Struct_AudioFileFDFTable (
     mComponentStorage : RawPointer,
@@ -1671,9 +1671,9 @@ alias AUParameterListenerBlock = UnknownType;
 
 alias AUEventListenerBlock = UnknownType;
 
-alias AUParameterListenerProc = CCodePointer[(RawPointer,RawPointer,Pointer[Struct_AudioUnitParameter],Float),()];
+alias AUParameterListenerProc = CCodePointer[[RawPointer,RawPointer,Pointer[Struct_AudioUnitParameter],Float],[]];
 
-alias AUEventListenerProc = CCodePointer[(RawPointer,RawPointer,Pointer[Struct_AudioUnitEvent],UInt64,Float),()];
+alias AUEventListenerProc = CCodePointer[[RawPointer,RawPointer,Pointer[Struct_AudioUnitEvent],UInt64,Float],[]];
 
 external AUListenerCreateWithDispatchQueue(
     outListener : Pointer[AUParameterListenerRef],
@@ -2108,7 +2108,7 @@ alias CAClockSamples = Double;
 
 alias CAClockSeconds = Double;
 
-alias CAClockListenerProc = CCodePointer[(RawPointer,CULong,RawPointer),()];
+alias CAClockListenerProc = CCodePointer[[RawPointer,CULong,RawPointer],[]];
 
 record Struct_CAClockTime (
     format : CULong,
@@ -2382,7 +2382,7 @@ alias MusicTrack = OpaquePointer;
 
 alias MusicEventIterator = OpaquePointer;
 
-alias MusicSequenceUserCallback = CCodePointer[(RawPointer,OpaquePointer,OpaquePointer,Double,Pointer[Struct_MusicEventUserData],Double,Double),()];
+alias MusicSequenceUserCallback = CCodePointer[[RawPointer,OpaquePointer,OpaquePointer,Double,Pointer[Struct_MusicEventUserData],Double,Double],[]];
 
 alias kAudioToolboxErr_InvalidSequenceType = 4294956450;
 alias kAudioToolboxErr_TrackIndexError = 4294956437;

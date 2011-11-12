@@ -29,7 +29,7 @@ record Struct__iobuf (
 
 alias FILE = Struct__iobuf;
 
-external (dllimport) : _iob : Array[FILE,0];
+external (dllimport) _iob : Array[FILE,0];
 
 external fopen(
     argument0 : Pointer[CChar],
@@ -614,7 +614,7 @@ external __p___argv() : Pointer[Pointer[Pointer[CChar]]];
 
 external __p___wargv() : Pointer[Pointer[Pointer[UShort]]];
 
-external (dllimport) : __mb_cur_max : Int;
+external (dllimport) __mb_cur_max : Int;
 
 external _errno() : Pointer[Int];
 
@@ -624,9 +624,9 @@ external __p__environ() : Pointer[Pointer[Pointer[CChar]]];
 
 external __p__wenviron() : Pointer[Pointer[Pointer[UShort]]];
 
-external (dllimport) : _sys_nerr : Int;
+external (dllimport) _sys_nerr : Int;
 
-external (dllimport) : _sys_errlist : Array[Pointer[CChar],0];
+external (dllimport) _sys_errlist : Array[Pointer[CChar],0];
 
 external __p__osver() : Pointer[UInt];
 
@@ -636,19 +636,19 @@ external __p__winmajor() : Pointer[UInt];
 
 external __p__winminor() : Pointer[UInt];
 
-external (dllimport) : _osver : UInt;
+external (dllimport) _osver : UInt;
 
-external (dllimport) : _winver : UInt;
+external (dllimport) _winver : UInt;
 
-external (dllimport) : _winmajor : UInt;
+external (dllimport) _winmajor : UInt;
 
-external (dllimport) : _winminor : UInt;
+external (dllimport) _winminor : UInt;
 
 external __p__pgmptr() : Pointer[Pointer[CChar]];
 
 external __p__wpgmptr() : Pointer[Pointer[UShort]];
 
-external (dllimport) : _fmode : Int;
+external (dllimport) _fmode : Int;
 
 external atof(
     argument0 : Pointer[CChar]) : Double;
@@ -793,7 +793,7 @@ external exit(
     argument0 : Int);
 
 external atexit(
-    argument0 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]]) : Int;
 
 external system(
     argument0 : Pointer[CChar]) : Int;
@@ -806,13 +806,13 @@ external bsearch(
     argument1 : RawPointer,
     argument2 : UInt,
     argument3 : UInt,
-    argument4 : CCodePointer[(RawPointer,RawPointer),(Int)]) : RawPointer;
+    argument4 : CCodePointer[[RawPointer,RawPointer],[Int]]) : RawPointer;
 
 external qsort(
     argument0 : RawPointer,
     argument1 : UInt,
     argument2 : UInt,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]);
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]);
 
 external abs(
     argument0 : Int) : Int;
@@ -855,7 +855,7 @@ external _sleep(
 external _exit(
     argument0 : Int);
 
-alias _onexit_t = CCodePointer[(),(Int)];
+alias _onexit_t = CCodePointer[[],[Int]];
 
 external _onexit(
     argument0 : _onexit_t) : _onexit_t;
@@ -2522,17 +2522,17 @@ external __p__timezone() : Pointer[CLong];
 
 external __p__tzname() : Pointer[Pointer[CChar]];
 
-external (dllimport) : _daylight : Int;
+external (dllimport) _daylight : Int;
 
-external (dllimport) : _timezone : CLong;
+external (dllimport) _timezone : CLong;
 
-external (dllimport) : _tzname : Array[Pointer[CChar],2];
+external (dllimport) _tzname : Array[Pointer[CChar],2];
 
-external (dllimport) : daylight : Int;
+external (dllimport) daylight : Int;
 
-external (dllimport) : timezone : CLong;
+external (dllimport) timezone : CLong;
 
-external (dllimport) : tzname : Array[Pointer[CChar],2];
+external (dllimport) tzname : Array[Pointer[CChar],2];
 
 external _wasctime(
     argument0 : Pointer[Struct_tm]) : Pointer[UShort];

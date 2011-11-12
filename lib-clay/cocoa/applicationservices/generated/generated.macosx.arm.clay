@@ -235,13 +235,13 @@ alias CGColorSpaceRef = OpaquePointer;
 
 alias CGDataProviderRef = OpaquePointer;
 
-alias CGDataProviderGetBytesCallback = CCodePointer[(RawPointer,RawPointer,UInt),(UInt)];
+alias CGDataProviderGetBytesCallback = CCodePointer[[RawPointer,RawPointer,UInt],[UInt]];
 
-alias CGDataProviderSkipForwardCallback = CCodePointer[(RawPointer,Int64),(Int64)];
+alias CGDataProviderSkipForwardCallback = CCodePointer[[RawPointer,Int64],[Int64]];
 
-alias CGDataProviderRewindCallback = CCodePointer[(RawPointer),()];
+alias CGDataProviderRewindCallback = CCodePointer[[RawPointer],[]];
 
-alias CGDataProviderReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGDataProviderReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGDataProviderSequentialCallbacks (
     version : UInt,
@@ -253,11 +253,11 @@ record Struct_CGDataProviderSequentialCallbacks (
 
 alias CGDataProviderSequentialCallbacks = Struct_CGDataProviderSequentialCallbacks;
 
-alias CGDataProviderGetBytePointerCallback = CCodePointer[(RawPointer),(RawPointer)];
+alias CGDataProviderGetBytePointerCallback = CCodePointer[[RawPointer],[RawPointer]];
 
-alias CGDataProviderReleaseBytePointerCallback = CCodePointer[(RawPointer,RawPointer),()];
+alias CGDataProviderReleaseBytePointerCallback = CCodePointer[[RawPointer,RawPointer],[]];
 
-alias CGDataProviderGetBytesAtPositionCallback = CCodePointer[(RawPointer,RawPointer,Int64,UInt),(UInt)];
+alias CGDataProviderGetBytesAtPositionCallback = CCodePointer[[RawPointer,RawPointer,Int64,UInt],[UInt]];
 
 record Struct_CGDataProviderDirectCallbacks (
     version : UInt,
@@ -280,7 +280,7 @@ external CGDataProviderCreateDirect(
     size : Int64,
     callbacks : Pointer[CGDataProviderDirectCallbacks]) : CGDataProviderRef;
 
-alias CGDataProviderReleaseDataCallback = CCodePointer[(RawPointer,RawPointer,UInt),()];
+alias CGDataProviderReleaseDataCallback = CCodePointer[[RawPointer,RawPointer,UInt],[]];
 
 external CGDataProviderCreateWithData(
     info : RawPointer,
@@ -306,7 +306,7 @@ external CGDataProviderRelease(
 external CGDataProviderCopyData(
     provider : CGDataProviderRef) : CFDataRef;
 
-alias CGDataProviderSkipBytesCallback = CCodePointer[(RawPointer,UInt),()];
+alias CGDataProviderSkipBytesCallback = CCodePointer[[RawPointer,UInt],[]];
 
 record Struct_CGDataProviderCallbacks (
     getBytes : CGDataProviderGetBytesCallback,
@@ -317,7 +317,7 @@ record Struct_CGDataProviderCallbacks (
 
 alias CGDataProviderCallbacks = Struct_CGDataProviderCallbacks;
 
-alias CGDataProviderGetBytesAtOffsetCallback = CCodePointer[(RawPointer,RawPointer,UInt,UInt),(UInt)];
+alias CGDataProviderGetBytesAtOffsetCallback = CCodePointer[[RawPointer,RawPointer,UInt,UInt],[UInt]];
 
 record Struct_CGDataProviderDirectAccessCallbacks (
     getBytePointer : CGDataProviderGetBytePointerCallback,
@@ -453,9 +453,9 @@ alias kCGPatternTilingConstantSpacing = 2;
 
 alias CGPatternTiling = Int;
 
-alias CGPatternDrawPatternCallback = CCodePointer[(RawPointer,OpaquePointer),()];
+alias CGPatternDrawPatternCallback = CCodePointer[[RawPointer,OpaquePointer],[]];
 
-alias CGPatternReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGPatternReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGPatternCallbacks (
     version : UInt,
@@ -976,7 +976,7 @@ record Struct_CGPathElement (
 
 alias CGPathElement = Struct_CGPathElement;
 
-alias CGPathApplierFunction = CCodePointer[(RawPointer,Pointer[Struct_CGPathElement]),()];
+alias CGPathApplierFunction = CCodePointer[[RawPointer,Pointer[Struct_CGPathElement]],[]];
 
 external CGPathApply(
     path : CGPathRef,
@@ -1148,7 +1148,7 @@ external CGPDFDictionaryGetStream(
     key : Pointer[CChar],
     value : Pointer[CGPDFStreamRef]) : Bool;
 
-alias CGPDFDictionaryApplierFunction = CCodePointer[(Pointer[CChar],OpaquePointer,RawPointer),()];
+alias CGPDFDictionaryApplierFunction = CCodePointer[[Pointer[CChar],OpaquePointer,RawPointer],[]];
 
 external CGPDFDictionaryApplyFunction(
     dict : CGPDFDictionaryRef,
@@ -1271,9 +1271,9 @@ external CGPDFDocumentGetRotationAngle(
 
 alias CGFunctionRef = OpaquePointer;
 
-alias CGFunctionEvaluateCallback = CCodePointer[(RawPointer,Pointer[Float],Pointer[Float]),()];
+alias CGFunctionEvaluateCallback = CCodePointer[[RawPointer,Pointer[Float],Pointer[Float]],[]];
 
-alias CGFunctionReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGFunctionReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGFunctionCallbacks (
     version : UInt,
@@ -1930,7 +1930,7 @@ external CGContextConvertRectToUserSpace(
     context : CGContextRef,
     rect : CGRect) : CGRect;
 
-alias CGBitmapContextReleaseDataCallback = CCodePointer[(RawPointer,RawPointer),()];
+alias CGBitmapContextReleaseDataCallback = CCodePointer[[RawPointer,RawPointer],[]];
 
 external CGBitmapContextCreateWithData(
     data : RawPointer,
@@ -1984,9 +1984,9 @@ external CGBitmapContextCreateImage(
 
 alias CGDataConsumerRef = OpaquePointer;
 
-alias CGDataConsumerPutBytesCallback = CCodePointer[(RawPointer,RawPointer,UInt),(UInt)];
+alias CGDataConsumerPutBytesCallback = CCodePointer[[RawPointer,RawPointer,UInt],[UInt]];
 
-alias CGDataConsumerReleaseInfoCallback = CCodePointer[(RawPointer),()];
+alias CGDataConsumerReleaseInfoCallback = CCodePointer[[RawPointer],[]];
 
 record Struct_CGDataConsumerCallbacks (
     putBytes : CGDataConsumerPutBytesCallback,
@@ -2237,7 +2237,7 @@ external CGPDFScannerPopStream(
     scanner : CGPDFScannerRef,
     value : Pointer[CGPDFStreamRef]) : Bool;
 
-alias CGPDFOperatorCallback = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CGPDFOperatorCallback = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external CGPDFOperatorTableCreate() : CGPDFOperatorTableRef;
 
@@ -2770,7 +2770,7 @@ alias CTMutableFontCollectionRef = OpaquePointer;
 
 external CTFontCollectionGetTypeID() : CULong;
 
-alias CTFontCollectionSortDescriptorsCallback = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer),(CLong)];
+alias CTFontCollectionSortDescriptorsCallback = CCodePointer[[OpaquePointer,OpaquePointer,RawPointer],[CLong]];
 
 external kCTFontCollectionRemoveDuplicatesOption : CFStringRef;
 
@@ -3306,13 +3306,13 @@ alias CTRunDelegateRef = OpaquePointer;
 
 external CTRunDelegateGetTypeID() : CULong;
 
-alias CTRunDelegateDeallocateCallback = CCodePointer[(RawPointer),()];
+alias CTRunDelegateDeallocateCallback = CCodePointer[[RawPointer],[]];
 
-alias CTRunDelegateGetAscentCallback = CCodePointer[(RawPointer),(Float)];
+alias CTRunDelegateGetAscentCallback = CCodePointer[[RawPointer],[Float]];
 
-alias CTRunDelegateGetDescentCallback = CCodePointer[(RawPointer),(Float)];
+alias CTRunDelegateGetDescentCallback = CCodePointer[[RawPointer],[Float]];
 
-alias CTRunDelegateGetWidthCallback = CCodePointer[(RawPointer),(Float)];
+alias CTRunDelegateGetWidthCallback = CCodePointer[[RawPointer],[Float]];
 
 record UnnamedStruct58 (
     version : CLong,

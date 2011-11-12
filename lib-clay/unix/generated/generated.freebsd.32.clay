@@ -204,7 +204,7 @@ alias pthread_spinlock_t = OpaquePointer;
 
 alias pthread_addr_t = RawPointer;
 
-alias pthread_startroutine_t = CCodePointer[(RawPointer),(RawPointer)];
+alias pthread_startroutine_t = CCodePointer[[RawPointer],[RawPointer]];
 
 record Struct_pthread_once (
     state : Int,
@@ -926,7 +926,7 @@ external rfork(
 external rfork_thread(
     argument0 : Int,
     argument1 : RawPointer,
-    argument2 : CCodePointer[(RawPointer),(Int)],
+    argument2 : CCodePointer[[RawPointer],[Int]],
     argument3 : RawPointer) : Int;
 
 external rresvport(
@@ -1183,9 +1183,9 @@ record Struct__pthread_cleanup_info (
 );
 
 external pthread_atfork(
-    argument0 : CCodePointer[(),()],
-    argument1 : CCodePointer[(),()],
-    argument2 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]],
+    argument1 : CCodePointer[[],[]],
+    argument2 : CCodePointer[[],[]]) : Int;
 
 external pthread_attr_destroy(
     argument0 : Pointer[pthread_attr_t]) : Int;
@@ -1307,7 +1307,7 @@ external pthread_cond_wait(
 external pthread_create(
     argument0 : Pointer[pthread_t],
     argument1 : Pointer[pthread_attr_t],
-    argument2 : CCodePointer[(RawPointer),(RawPointer)],
+    argument2 : CCodePointer[[RawPointer],[RawPointer]],
     argument3 : RawPointer) : Int;
 
 external pthread_detach(
@@ -1333,7 +1333,7 @@ external pthread_join(
 
 external pthread_key_create(
     argument0 : Pointer[Int],
-    argument1 : CCodePointer[(RawPointer),()]) : Int;
+    argument1 : CCodePointer[[RawPointer],[]]) : Int;
 
 external pthread_key_delete(
     argument0 : Int) : Int;
@@ -1382,7 +1382,7 @@ external pthread_mutex_unlock(
 
 external pthread_once(
     argument0 : Pointer[pthread_once_t],
-    argument1 : CCodePointer[(),()]) : Int;
+    argument1 : CCodePointer[[],[]]) : Int;
 
 external pthread_rwlock_destroy(
     argument0 : Pointer[pthread_rwlock_t]) : Int;
@@ -1545,7 +1545,7 @@ external pthread_setconcurrency(
     argument0 : Int) : Int;
 
 external __pthread_cleanup_push_imp(
-    argument0 : CCodePointer[(RawPointer),()],
+    argument0 : CCodePointer[[RawPointer],[]],
     argument1 : RawPointer,
     argument2 : Pointer[Struct__pthread_cleanup_info]);
 
@@ -2114,7 +2114,7 @@ record Struct_sigaction (
     sa_mask : sigset_t,
 );
 
-alias sig_t = CCodePointer[(Int),()];
+alias sig_t = CCodePointer[[Int],[]];
 
 record Struct_sigaltstack (
     ss_sp : Pointer[CChar],
@@ -2125,7 +2125,7 @@ record Struct_sigaltstack (
 alias stack_t = Struct_sigaltstack;
 
 record Struct_sigvec (
-    sv_handler : CCodePointer[(Int),()],
+    sv_handler : CCodePointer[[Int],[]],
     sv_mask : Int,
     sv_flags : Int,
 );
@@ -2137,7 +2137,7 @@ record Struct_sigstack (
 
 external signal(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 external wait(
     argument0 : Pointer[Int]) : Int;
@@ -2177,10 +2177,10 @@ record Struct_kqlist (
 
 record Struct_knlist (
     kl_list : Struct_klist,
-    kl_lock : CCodePointer[(RawPointer),()],
-    kl_unlock : CCodePointer[(RawPointer),()],
-    kl_assert_locked : CCodePointer[(RawPointer),()],
-    kl_assert_unlocked : CCodePointer[(RawPointer),()],
+    kl_lock : CCodePointer[[RawPointer],[]],
+    kl_unlock : CCodePointer[[RawPointer],[]],
+    kl_assert_locked : CCodePointer[[RawPointer],[]],
+    kl_assert_unlocked : CCodePointer[[RawPointer],[]],
     kl_lockarg : RawPointer,
 );
 
@@ -2292,7 +2292,7 @@ external sigrelse(
 
 external sigset(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 external xsi_sigpause(
     argument0 : Int) : Int;
@@ -2385,8 +2385,8 @@ external rewinddir(
 external scandir(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[Pointer[Struct_dirent]]],
-    argument2 : CCodePointer[(Pointer[Struct_dirent]),(Int)],
-    argument3 : CCodePointer[(Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]),(Int)]) : Int;
+    argument2 : CCodePointer[[Pointer[Struct_dirent]],[Int]],
+    argument3 : CCodePointer[[Pointer[Pointer[Struct_dirent]],Pointer[Pointer[Struct_dirent]]],[Int]]) : Int;
 
 external seekdir(
     argument0 : Pointer[DIR],
@@ -2411,7 +2411,7 @@ record Struct___dlfunc_arg (
     __dlfunc_dummy : Int,
 );
 
-alias dlfunc_t = CCodePointer[(Struct___dlfunc_arg),()];
+alias dlfunc_t = CCodePointer[[Struct___dlfunc_arg],[]];
 
 record Struct_dl_serpath (
     dls_name : Pointer[CChar],
@@ -2456,12 +2456,12 @@ external dlinfo(
 
 external dllockinit(
     _context : RawPointer,
-    _lock_create : CCodePointer[(RawPointer),(RawPointer)],
-    _rlock_acquire : CCodePointer[(RawPointer),()],
-    _wlock_acquire : CCodePointer[(RawPointer),()],
-    _lock_release : CCodePointer[(RawPointer),()],
-    _lock_destroy : CCodePointer[(RawPointer),()],
-    _context_destroy : CCodePointer[(RawPointer),()]);
+    _lock_create : CCodePointer[[RawPointer],[RawPointer]],
+    _rlock_acquire : CCodePointer[[RawPointer],[]],
+    _wlock_acquire : CCodePointer[[RawPointer],[]],
+    _lock_release : CCodePointer[[RawPointer],[]],
+    _lock_destroy : CCodePointer[[RawPointer],[]],
+    _context_destroy : CCodePointer[[RawPointer],[]]);
 
 external dlvsym(
     argument0 : RawPointer,

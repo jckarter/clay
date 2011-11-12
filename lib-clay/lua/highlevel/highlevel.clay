@@ -515,7 +515,7 @@ optNumber(x:State, index:Int, _default:T) {
     );
 }
 
-// optString - the default string has to be a ref string.
+// optString - the default string has to be a lvalue string.
 // only rvalue string allowed is StringConstant
 
 optString(x:State, index:Int, rvalue _default:StringConstant) {

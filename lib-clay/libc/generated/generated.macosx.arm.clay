@@ -64,7 +64,7 @@ alias __darwin_ssize_t = CLong;
 alias __darwin_time_t = CLong;
 
 record Struct___darwin_pthread_handler_rec (
-    __routine : CCodePointer[(RawPointer),()],
+    __routine : CCodePointer[[RawPointer],[]],
     __arg : RawPointer,
     __next : Pointer[Struct___darwin_pthread_handler_rec],
 );
@@ -203,10 +203,10 @@ record Struct___sFILE (
     _bf : Struct___sbuf,
     _lbfsize : Int,
     _cookie : RawPointer,
-    _close : CCodePointer[(RawPointer),(Int)],
-    _read : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    _seek : CCodePointer[(RawPointer,Int64,Int),(Int64)],
-    _write : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
+    _close : CCodePointer[[RawPointer],[Int]],
+    _read : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    _seek : CCodePointer[[RawPointer,Int64,Int],[Int64]],
+    _write : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
     _ub : Struct___sbuf,
     _extra : OpaquePointer,
     _ur : Int,
@@ -511,10 +511,10 @@ external zopen(
 
 external funopen(
     argument0 : RawPointer,
-    argument1 : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    argument2 : CCodePointer[(RawPointer,Pointer[CChar],Int),(Int)],
-    argument3 : CCodePointer[(RawPointer,Int64,Int),(Int64)],
-    argument4 : CCodePointer[(RawPointer),(Int)]) : Pointer[FILE];
+    argument1 : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    argument2 : CCodePointer[[RawPointer,Pointer[CChar],Int],[Int]],
+    argument3 : CCodePointer[[RawPointer,Int64,Int],[Int64]],
+    argument4 : CCodePointer[[RawPointer],[Int]]) : Pointer[FILE];
 
 external __srget(
     argument0 : Pointer[FILE]) : Int;
@@ -631,7 +631,7 @@ record Struct_sigevent (
     sigev_notify : Int,
     sigev_signo : Int,
     sigev_value : AUnionType,
-    sigev_notify_function : CCodePointer[(AUnionType),()],
+    sigev_notify_function : CCodePointer[[AUnionType],[]],
     sigev_notify_attributes : Pointer[pthread_attr_t],
 );
 
@@ -652,7 +652,7 @@ alias siginfo_t = Struct___siginfo;
 
 record Struct___sigaction (
     __sigaction_u : AUnionType,
-    sa_tramp : CCodePointer[(RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer),()],
+    sa_tramp : CCodePointer[[RawPointer,Int,Int,Pointer[Struct___siginfo],RawPointer],[]],
     sa_mask : UInt,
     sa_flags : Int,
 );
@@ -663,10 +663,10 @@ record Struct_sigaction (
     sa_flags : Int,
 );
 
-alias sig_t = CCodePointer[(Int),()];
+alias sig_t = CCodePointer[[Int],[]];
 
 record Struct_sigvec (
-    sv_handler : CCodePointer[(Int),()],
+    sv_handler : CCodePointer[[Int],[]],
     sv_mask : Int,
     sv_flags : Int,
 );
@@ -678,7 +678,7 @@ record Struct_sigstack (
 
 external signal(
     argument0 : Int,
-    argument1 : CCodePointer[(Int),()]) CCodePointer[(Int),()];
+    argument1 : CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 record Struct_timeval (
     tv_sec : CLong,
@@ -860,7 +860,7 @@ external abs(
     argument0 : Int) : Int;
 
 external atexit(
-    argument0 : CCodePointer[(),()]) : Int;
+    argument0 : CCodePointer[[],[]]) : Int;
 
 external atof(
     argument0 : Pointer[CChar]) : Double;
@@ -879,7 +879,7 @@ external bsearch(
     argument1 : RawPointer,
     argument2 : CULong,
     argument3 : CULong,
-    argument4 : CCodePointer[(RawPointer,RawPointer),(Int)]) : RawPointer;
+    argument4 : CCodePointer[[RawPointer,RawPointer],[Int]]) : RawPointer;
 
 external calloc(
     argument0 : CULong,
@@ -938,7 +938,7 @@ external qsort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]);
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]);
 
 external rand() : Int;
 
@@ -1218,7 +1218,7 @@ external heapsort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) : Int;
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]) : Int;
 
 external heapsort_b(
     argument0 : RawPointer,
@@ -1230,7 +1230,7 @@ external mergesort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]) : Int;
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]) : Int;
 
 external mergesort_b(
     argument0 : RawPointer,
@@ -1242,7 +1242,7 @@ external psort(
     argument0 : RawPointer,
     argument1 : CULong,
     argument2 : CULong,
-    argument3 : CCodePointer[(RawPointer,RawPointer),(Int)]);
+    argument3 : CCodePointer[[RawPointer,RawPointer],[Int]]);
 
 external psort_b(
     argument0 : RawPointer,
@@ -1255,7 +1255,7 @@ external psort_r(
     argument1 : CULong,
     argument2 : CULong,
     argument3 : RawPointer,
-    argument4 : CCodePointer[(RawPointer,RawPointer,RawPointer),(Int)]);
+    argument4 : CCodePointer[[RawPointer,RawPointer,RawPointer],[Int]]);
 
 external qsort_b(
     argument0 : RawPointer,
@@ -1268,7 +1268,7 @@ external qsort_r(
     argument1 : CULong,
     argument2 : CULong,
     argument3 : RawPointer,
-    argument4 : CCodePointer[(RawPointer,RawPointer,RawPointer),(Int)]);
+    argument4 : CCodePointer[[RawPointer,RawPointer,RawPointer],[Int]]);
 
 external radixsort(
     argument0 : Pointer[Pointer[CUChar]],

@@ -205,11 +205,11 @@ alias SIGLWP    = SIGTHR;
 alias SIGRTMIN  = 65;
 alias SIGRTMAX  = 126;
 
-alias SIG_ERR   = CCodePointer[(Int),()](-1);
-alias SIG_DFL   = CCodePointer[(Int),()](0);
-alias SIG_IGN   = CCodePointer[(Int),()](1);
-alias SIG_CATCH = CCodePointer[(Int),()](2);
-alias SIG_HOLD  = CCodePointer[(Int),()](3);
+alias SIG_ERR   = CCodePointer[[Int],[]](-1);
+alias SIG_DFL   = CCodePointer[[Int],[]](0);
+alias SIG_IGN   = CCodePointer[[Int],[]](1);
+alias SIG_CATCH = CCodePointer[[Int],[]](2);
+alias SIG_HOLD  = CCodePointer[[Int],[]](3);
 
 //
 // status flags for wait() calls

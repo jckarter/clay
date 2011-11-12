@@ -100,7 +100,7 @@ overload encodeIdentifier(static Float32) = #"f";
 overload encodeIdentifier(static Float64) = #"d";
 overload encodeIdentifier(static Bool) = #"c";
 overload encodeIdentifier(static Void) = #"v";
-overload encodeIdentifier(static ()) = #"v";
+overload encodeIdentifier(static []) = #"v";
 
 [..T | countValues(..T) > 1]
 overload encodeIdentifier(..types: T)
@@ -316,7 +316,7 @@ overload InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tupl
 //
 
 [T | Class?(T)]
-ClassInstanceVars(static T) = ();
+ClassInstanceVars(static T) = [];
 define ClassClassMethods;
 define ClassInstanceMethods;
 
@@ -373,21 +373,21 @@ ValidSuperclass?(T) = Class?(T) or T == Void;
 
 [Super | ValidSuperclass?(Super)]
 externalClass(static Super) = recordWithProperties(
-    (
-        (SuperclassType, Super),
-        (ExternalClass?, static true),
-    ), 
-    (#__handle__, ObjectHandle)
+    [
+        [SuperclassType, Super],
+        [ExternalClass?, static true],
+    ], 
+    [#__handle__, ObjectHandle]
 );
 
 [name, Super | Identifier?(name) and ValidSuperclass?(Super)]
 overload externalClass(static name, static Super) = recordWithProperties(
-    (
-        (SuperclassType, Super),
-        (ExternalClass?, static true),
-        (ClassStaticName, name),
-    ), 
-    (#__handle__, ObjectHandle)
+    [
+        [SuperclassType, Super],
+        [ExternalClass?, static true],
+        [ClassStaticName, name],
+    ], 
+    [#__handle__, ObjectHandle]
 );
 
 record ExternalClassNotFound (name: StringConstant);
@@ -428,14 +428,14 @@ newClass(static Super,
     classmethods: ClassMethods[CM],
     instancemethods: InstanceMethods[IM]
 ) = recordWithProperties(
-    (
-        (SuperclassType, Super),
-        (ClayClass?, static true),
+    [
+        [SuperclassType, Super],
+        [ClayClass?, static true],
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ), 
-    (#__handle__, ObjectHandle)
+    ], 
+    [#__handle__, ObjectHandle]
 );
 
 [name, Super, IV, CM, IM] // XXX ValidSuperclass?(Super)]
@@ -444,15 +444,15 @@ overload newClass(static name, static Super,
     classmethods: ClassMethods[CM],
     instancemethods: InstanceMethods[IM]
 ) = recordWithProperties(
-    (
-        (SuperclassType, Super),
-        (ClayClass?, static true),
-        (ClassStaticName, name),
+    [
+        [SuperclassType, Super],
+        [ClayClass?, static true],
+        [ClassStaticName, name],
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ), 
-    (#__handle__, ObjectHandle)
+    ], 
+    [#__handle__, ObjectHandle]
 );
 
 [Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
@@ -461,22 +461,25 @@ newExternalClass(static Super,
     classmethods: ClassMethods[CM],
     instancemethods: InstanceMethods[IM]
 ) = recordWithProperties(
-    (
-        (SuperclassType, Super),
-        (ClayClass?, static true),
-        (ExternalClayClass?, static true),
+    [
+        [SuperclassType, Super],
+        [ClayClass?, static true],
+        [ExternalClayClass?, static true],
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ), 
-    (#__handle__, ObjectHandle)
+    ], 
+    [#__handle__, ObjectHandle]
 );
 
 record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
-record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
-record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
+instance Exception (NewClassCouldNotBeCreated);
 
-instance Exception (NewClassCouldNotBeCreated, NewClassCouldNotAddIvar, NewClassCouldNotAddMethod);
+record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
+instance Exception (NewClassCouldNotAddIvar);
+
+record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
+instance Exception (NewClassCouldNotAddMethod);
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
     objc_msgSend(
@@ -871,7 +874,7 @@ MsgSendParamType(Param) = Param;
 [Param | ObjectRef?(Param)]
 overload MsgSendParamType(static Param) = ObjectHandle;
 
-overload MsgSendParamType(static Void) = static ();
+overload MsgSendParamType(static Void) = static [];
 overload MsgSendParamType(static Bool) = BOOL;
 
 [Param]
@@ -972,13 +975,13 @@ private _SelectorCallableWith?(C, S, ..T) {
 
 [C, S | FixedSelector?(S)]
 SelectorImpType(static C, static S) = CCodePointer[
-        (ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
+        [ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ];
 
 [C, S | VarargSelector?(S)]
 overload SelectorImpType(static C, static S) = VarArgsCCodePointer[
-        (ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)),
+        [ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ];
 
@@ -1050,7 +1053,7 @@ private _ValidMethodIdentifier?(static identifier, static minArity)
 ValidMethodIdentifier?(static identifier) = true;
     //= _ValidMethodIdentifier?(
     //    static identifier,
-    //    static countOccurrences(#_, ..IdentifierChars(identifier))
+    //    static countOccurrences(#_, ...IdentifierChars(identifier))
     //);
 
 

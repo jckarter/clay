@@ -35,7 +35,7 @@ alias kCFCompareGreaterThan = 1;
 
 alias CFComparisonResult = CLong;
 
-alias CFComparatorFunction = CCodePointer[(RawPointer,RawPointer,RawPointer),(CLong)];
+alias CFComparatorFunction = CCodePointer[[RawPointer,RawPointer,RawPointer],[CLong]];
 
 alias kCFNotFound = 4294967295;
 
@@ -70,19 +70,19 @@ external kCFAllocatorNull : CFAllocatorRef;
 
 external kCFAllocatorUseContext : CFAllocatorRef;
 
-alias CFAllocatorRetainCallBack = CCodePointer[(RawPointer),(RawPointer)];
+alias CFAllocatorRetainCallBack = CCodePointer[[RawPointer],[RawPointer]];
 
-alias CFAllocatorReleaseCallBack = CCodePointer[(RawPointer),()];
+alias CFAllocatorReleaseCallBack = CCodePointer[[RawPointer],[]];
 
-alias CFAllocatorCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFAllocatorCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
-alias CFAllocatorAllocateCallBack = CCodePointer[(CLong,CULong,RawPointer),(RawPointer)];
+alias CFAllocatorAllocateCallBack = CCodePointer[[CLong,CULong,RawPointer],[RawPointer]];
 
-alias CFAllocatorReallocateCallBack = CCodePointer[(RawPointer,CLong,CULong,RawPointer),(RawPointer)];
+alias CFAllocatorReallocateCallBack = CCodePointer[[RawPointer,CLong,CULong,RawPointer],[RawPointer]];
 
-alias CFAllocatorDeallocateCallBack = CCodePointer[(RawPointer,RawPointer),()];
+alias CFAllocatorDeallocateCallBack = CCodePointer[[RawPointer,RawPointer],[]];
 
-alias CFAllocatorPreferredSizeCallBack = CCodePointer[(CLong,CULong,RawPointer),(CLong)];
+alias CFAllocatorPreferredSizeCallBack = CCodePointer[[CLong,CULong,RawPointer],[CLong]];
 
 record UnnamedStruct10 (
     version : CLong,
@@ -164,13 +164,13 @@ external CFCopyDescription(
 external CFGetAllocator(
     cf : CFTypeRef) : CFAllocatorRef;
 
-alias CFArrayRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
+alias CFArrayRetainCallBack = CCodePointer[[OpaquePointer,RawPointer],[RawPointer]];
 
-alias CFArrayReleaseCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFArrayReleaseCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
-alias CFArrayCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFArrayCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
-alias CFArrayEqualCallBack = CCodePointer[(RawPointer,RawPointer),(CUChar)];
+alias CFArrayEqualCallBack = CCodePointer[[RawPointer,RawPointer],[CUChar]];
 
 record UnnamedStruct11 (
     version : CLong,
@@ -184,7 +184,7 @@ alias CFArrayCallBacks = UnnamedStruct11;
 
 external kCFTypeArrayCallBacks : CFArrayCallBacks;
 
-alias CFArrayApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
+alias CFArrayApplierFunction = CCodePointer[[RawPointer,RawPointer],[]];
 
 alias CFArrayRef = OpaquePointer;
 
@@ -300,15 +300,15 @@ external CFArrayAppendArray(
     otherArray : CFArrayRef,
     otherRange : CFRange);
 
-alias CFBagRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
+alias CFBagRetainCallBack = CCodePointer[[OpaquePointer,RawPointer],[RawPointer]];
 
-alias CFBagReleaseCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFBagReleaseCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
-alias CFBagCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFBagCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
-alias CFBagEqualCallBack = CCodePointer[(RawPointer,RawPointer),(CUChar)];
+alias CFBagEqualCallBack = CCodePointer[[RawPointer,RawPointer],[CUChar]];
 
-alias CFBagHashCallBack = CCodePointer[(RawPointer),(CULong)];
+alias CFBagHashCallBack = CCodePointer[[RawPointer],[CULong]];
 
 record UnnamedStruct12 (
     version : CLong,
@@ -325,7 +325,7 @@ external kCFTypeBagCallBacks : CFBagCallBacks;
 
 external kCFCopyStringBagCallBacks : CFBagCallBacks;
 
-alias CFBagApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
+alias CFBagApplierFunction = CCodePointer[[RawPointer,RawPointer],[]];
 
 alias CFBagRef = OpaquePointer;
 
@@ -404,26 +404,26 @@ external CFBagRemoveAllValues(
 record UnnamedStruct13 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFBinaryHeapCompareContext = UnnamedStruct13;
 
 record UnnamedStruct14 (
     version : CLong,
-    retain : CCodePointer[(OpaquePointer,RawPointer),(RawPointer)],
-    release : CCodePointer[(OpaquePointer,RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
-    compare : CCodePointer[(RawPointer,RawPointer,RawPointer),(CLong)],
+    retain : CCodePointer[[OpaquePointer,RawPointer],[RawPointer]],
+    release : CCodePointer[[OpaquePointer,RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
+    compare : CCodePointer[[RawPointer,RawPointer,RawPointer],[CLong]],
 );
 
 alias CFBinaryHeapCallBacks = UnnamedStruct14;
 
 external kCFStringBinaryHeapCallBacks : CFBinaryHeapCallBacks;
 
-alias CFBinaryHeapApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
+alias CFBinaryHeapApplierFunction = CCodePointer[[RawPointer,RawPointer],[]];
 
 alias CFBinaryHeapRef = OpaquePointer;
 
@@ -561,15 +561,15 @@ external CFBitVectorSetAllBits(
     bv : CFMutableBitVectorRef,
     value : CULong);
 
-alias CFDictionaryRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
+alias CFDictionaryRetainCallBack = CCodePointer[[OpaquePointer,RawPointer],[RawPointer]];
 
-alias CFDictionaryReleaseCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFDictionaryReleaseCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
-alias CFDictionaryCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFDictionaryCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
-alias CFDictionaryEqualCallBack = CCodePointer[(RawPointer,RawPointer),(CUChar)];
+alias CFDictionaryEqualCallBack = CCodePointer[[RawPointer,RawPointer],[CUChar]];
 
-alias CFDictionaryHashCallBack = CCodePointer[(RawPointer),(CULong)];
+alias CFDictionaryHashCallBack = CCodePointer[[RawPointer],[CULong]];
 
 record UnnamedStruct15 (
     version : CLong,
@@ -598,7 +598,7 @@ alias CFDictionaryValueCallBacks = UnnamedStruct16;
 
 external kCFTypeDictionaryValueCallBacks : CFDictionaryValueCallBacks;
 
-alias CFDictionaryApplierFunction = CCodePointer[(RawPointer,RawPointer,RawPointer),()];
+alias CFDictionaryApplierFunction = CCodePointer[[RawPointer,RawPointer,RawPointer],[]];
 
 alias CFDictionaryRef = OpaquePointer;
 
@@ -2701,14 +2701,14 @@ external CFRunLoopRemoveTimer(
 record UnnamedStruct22 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
-    equal : CCodePointer[(RawPointer,RawPointer),(CUChar)],
-    hash : CCodePointer[(RawPointer),(CULong)],
-    schedule : CCodePointer[(RawPointer,OpaquePointer,OpaquePointer),()],
-    cancel : CCodePointer[(RawPointer,OpaquePointer,OpaquePointer),()],
-    perform : CCodePointer[(RawPointer),()],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
+    equal : CCodePointer[[RawPointer,RawPointer],[CUChar]],
+    hash : CCodePointer[[RawPointer],[CULong]],
+    schedule : CCodePointer[[RawPointer,OpaquePointer,OpaquePointer],[]],
+    cancel : CCodePointer[[RawPointer,OpaquePointer,OpaquePointer],[]],
+    perform : CCodePointer[[RawPointer],[]],
 );
 
 alias CFRunLoopSourceContext = UnnamedStruct22;
@@ -2716,13 +2716,13 @@ alias CFRunLoopSourceContext = UnnamedStruct22;
 record UnnamedStruct23 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
-    equal : CCodePointer[(RawPointer,RawPointer),(CUChar)],
-    hash : CCodePointer[(RawPointer),(CULong)],
-    getPort : CCodePointer[(RawPointer),(UInt)],
-    perform : CCodePointer[(RawPointer,CLong,OpaquePointer,RawPointer),(RawPointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
+    equal : CCodePointer[[RawPointer,RawPointer],[CUChar]],
+    hash : CCodePointer[[RawPointer],[CULong]],
+    getPort : CCodePointer[[RawPointer],[UInt]],
+    perform : CCodePointer[[RawPointer,CLong,OpaquePointer,RawPointer],[RawPointer]],
 );
 
 alias CFRunLoopSourceContext1 = UnnamedStruct23;
@@ -2753,14 +2753,14 @@ external CFRunLoopSourceSignal(
 record UnnamedStruct24 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFRunLoopObserverContext = UnnamedStruct24;
 
-alias CFRunLoopObserverCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
+alias CFRunLoopObserverCallBack = CCodePointer[[OpaquePointer,CULong,RawPointer],[]];
 
 external CFRunLoopObserverGetTypeID() : CULong;
 
@@ -2794,14 +2794,14 @@ external CFRunLoopObserverGetContext(
 record UnnamedStruct25 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFRunLoopTimerContext = UnnamedStruct25;
 
-alias CFRunLoopTimerCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFRunLoopTimerCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external CFRunLoopTimerGetTypeID() : CULong;
 
@@ -2852,16 +2852,16 @@ alias kCFMessagePortBecameInvalidError = 4294967291;
 record UnnamedStruct48 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFMessagePortContext = UnnamedStruct48;
 
-alias CFMessagePortCallBack = CCodePointer[(OpaquePointer,CLong,OpaquePointer,RawPointer),(OpaquePointer)];
+alias CFMessagePortCallBack = CCodePointer[[OpaquePointer,CLong,OpaquePointer,RawPointer],[OpaquePointer]];
 
-alias CFMessagePortInvalidationCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFMessagePortInvalidationCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external CFMessagePortGetTypeID() : CULong;
 
@@ -3244,11 +3244,11 @@ external kCFPlugInFactoriesKey : CFStringRef;
 
 external kCFPlugInTypesKey : CFStringRef;
 
-alias CFPlugInDynamicRegisterFunction = CCodePointer[(OpaquePointer),()];
+alias CFPlugInDynamicRegisterFunction = CCodePointer[[OpaquePointer],[]];
 
-alias CFPlugInUnloadFunction = CCodePointer[(OpaquePointer),()];
+alias CFPlugInUnloadFunction = CCodePointer[[OpaquePointer],[]];
 
-alias CFPlugInFactoryFunction = CCodePointer[(OpaquePointer,OpaquePointer),(RawPointer)];
+alias CFPlugInFactoryFunction = CCodePointer[[OpaquePointer,OpaquePointer],[RawPointer]];
 
 external CFPlugInGetTypeID() : CULong;
 
@@ -3306,9 +3306,9 @@ external CFPlugInRemoveInstanceForFactory(
 
 alias CFPlugInInstanceRef = OpaquePointer;
 
-alias CFPlugInInstanceGetInterfaceFunction = CCodePointer[(OpaquePointer,OpaquePointer,Pointer[RawPointer]),(CUChar)];
+alias CFPlugInInstanceGetInterfaceFunction = CCodePointer[[OpaquePointer,OpaquePointer,Pointer[RawPointer]],[CUChar]];
 
-alias CFPlugInInstanceDeallocateInstanceDataFunction = CCodePointer[(RawPointer),()];
+alias CFPlugInInstanceDeallocateInstanceDataFunction = CCodePointer[[RawPointer],[]];
 
 external CFPlugInInstanceGetInterfaceFunctionTable(
     instance_ : CFPlugInInstanceRef,
@@ -3451,14 +3451,14 @@ alias kCFSocketAutomaticallyReenableWriteCallBack = 8;
 alias kCFSocketLeaveErrors = 64;
 alias kCFSocketCloseOnInvalidate = 128;
 
-alias CFSocketCallBack = CCodePointer[(OpaquePointer,CULong,OpaquePointer,RawPointer,RawPointer),()];
+alias CFSocketCallBack = CCodePointer[[OpaquePointer,CULong,OpaquePointer,RawPointer,RawPointer],[]];
 
 record UnnamedStruct51 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFSocketContext = UnnamedStruct51;
@@ -3623,9 +3623,9 @@ alias CFStreamEventType = CULong;
 record UnnamedStruct52 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFStreamClientContext = UnnamedStruct52;
@@ -3634,9 +3634,9 @@ alias CFReadStreamRef = OpaquePointer;
 
 alias CFWriteStreamRef = OpaquePointer;
 
-alias CFReadStreamClientCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
+alias CFReadStreamClientCallBack = CCodePointer[[OpaquePointer,CULong,RawPointer],[]];
 
-alias CFWriteStreamClientCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
+alias CFWriteStreamClientCallBack = CCodePointer[[OpaquePointer,CULong,RawPointer],[]];
 
 external CFReadStreamGetTypeID() : CULong;
 
@@ -3895,15 +3895,15 @@ external CFPropertyListCreateData(
     options : CULong,
     error : Pointer[CFErrorRef]) : CFDataRef;
 
-alias CFSetRetainCallBack = CCodePointer[(OpaquePointer,RawPointer),(RawPointer)];
+alias CFSetRetainCallBack = CCodePointer[[OpaquePointer,RawPointer],[RawPointer]];
 
-alias CFSetReleaseCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFSetReleaseCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
-alias CFSetCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFSetCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
-alias CFSetEqualCallBack = CCodePointer[(RawPointer,RawPointer),(CUChar)];
+alias CFSetEqualCallBack = CCodePointer[[RawPointer,RawPointer],[CUChar]];
 
-alias CFSetHashCallBack = CCodePointer[(RawPointer),(CULong)];
+alias CFSetHashCallBack = CCodePointer[[RawPointer],[CULong]];
 
 record UnnamedStruct54 (
     version : CLong,
@@ -3920,7 +3920,7 @@ external kCFTypeSetCallBacks : CFSetCallBacks;
 
 external kCFCopyStringSetCallBacks : CFSetCallBacks;
 
-alias CFSetApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
+alias CFSetApplierFunction = CCodePointer[[RawPointer,RawPointer],[]];
 
 alias CFSetRef = OpaquePointer;
 
@@ -4128,11 +4128,11 @@ alias kCFStringEncodingShiftJIS_X0213_00 = 1576;
 
 alias CFStringEncodings = CLong;
 
-alias CFTreeRetainCallBack = CCodePointer[(RawPointer),(RawPointer)];
+alias CFTreeRetainCallBack = CCodePointer[[RawPointer],[RawPointer]];
 
-alias CFTreeReleaseCallBack = CCodePointer[(RawPointer),()];
+alias CFTreeReleaseCallBack = CCodePointer[[RawPointer],[]];
 
-alias CFTreeCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFTreeCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
 record UnnamedStruct55 (
     version : CLong,
@@ -4144,7 +4144,7 @@ record UnnamedStruct55 (
 
 alias CFTreeContext = UnnamedStruct55;
 
-alias CFTreeApplierFunction = CCodePointer[(RawPointer,RawPointer),()];
+alias CFTreeApplierFunction = CCodePointer[[RawPointer,RawPointer],[]];
 
 alias CFTreeRef = OpaquePointer;
 
@@ -4362,7 +4362,7 @@ external CFAttributedStringEndEditing(
 
 alias CFNotificationCenterRef = OpaquePointer;
 
-alias CFNotificationCallback = CCodePointer[(OpaquePointer,RawPointer,OpaquePointer,RawPointer,OpaquePointer),()];
+alias CFNotificationCallback = CCodePointer[[OpaquePointer,RawPointer,OpaquePointer,RawPointer,OpaquePointer],[]];
 
 alias CFNotificationSuspensionBehaviorDrop = 1;
 alias CFNotificationSuspensionBehaviorCoalesce = 2;
@@ -4463,14 +4463,14 @@ alias CFFileDescriptorRef = OpaquePointer;
 alias kCFFileDescriptorReadCallBack = 1;
 alias kCFFileDescriptorWriteCallBack = 2;
 
-alias CFFileDescriptorCallBack = CCodePointer[(OpaquePointer,CULong,RawPointer),()];
+alias CFFileDescriptorCallBack = CCodePointer[[OpaquePointer,CULong,RawPointer],[]];
 
 record UnnamedStruct56 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFFileDescriptorContext = UnnamedStruct56;
@@ -4515,16 +4515,16 @@ alias CFMachPortRef = OpaquePointer;
 record UnnamedStruct57 (
     version : CLong,
     info : RawPointer,
-    retain : CCodePointer[(RawPointer),(RawPointer)],
-    release : CCodePointer[(RawPointer),()],
-    copyDescription : CCodePointer[(RawPointer),(OpaquePointer)],
+    retain : CCodePointer[[RawPointer],[RawPointer]],
+    release : CCodePointer[[RawPointer],[]],
+    copyDescription : CCodePointer[[RawPointer],[OpaquePointer]],
 );
 
 alias CFMachPortContext = UnnamedStruct57;
 
-alias CFMachPortCallBack = CCodePointer[(OpaquePointer,RawPointer,CLong,RawPointer),()];
+alias CFMachPortCallBack = CCodePointer[[OpaquePointer,RawPointer,CLong,RawPointer],[]];
 
-alias CFMachPortInvalidationCallBack = CCodePointer[(OpaquePointer,RawPointer),()];
+alias CFMachPortInvalidationCallBack = CCodePointer[[OpaquePointer,RawPointer],[]];
 
 external CFMachPortGetTypeID() : CULong;
 
@@ -4568,7 +4568,7 @@ external CFMachPortCreateRunLoopSource(
 
 alias CFUserNotificationRef = OpaquePointer;
 
-alias CFUserNotificationCallBack = CCodePointer[(OpaquePointer,CULong),()];
+alias CFUserNotificationCallBack = CCodePointer[[OpaquePointer,CULong],[]];
 
 external CFUserNotificationGetTypeID() : CULong;
 
@@ -4846,15 +4846,15 @@ alias kCFXMLErrorNoData = 15;
 
 alias CFXMLParserStatusCode = CLong;
 
-alias CFXMLParserCreateXMLStructureCallBack = CCodePointer[(OpaquePointer,OpaquePointer,RawPointer),(RawPointer)];
+alias CFXMLParserCreateXMLStructureCallBack = CCodePointer[[OpaquePointer,OpaquePointer,RawPointer],[RawPointer]];
 
-alias CFXMLParserAddChildCallBack = CCodePointer[(OpaquePointer,RawPointer,RawPointer,RawPointer),()];
+alias CFXMLParserAddChildCallBack = CCodePointer[[OpaquePointer,RawPointer,RawPointer,RawPointer],[]];
 
-alias CFXMLParserEndXMLStructureCallBack = CCodePointer[(OpaquePointer,RawPointer,RawPointer),()];
+alias CFXMLParserEndXMLStructureCallBack = CCodePointer[[OpaquePointer,RawPointer,RawPointer],[]];
 
-alias CFXMLParserResolveExternalEntityCallBack = CCodePointer[(OpaquePointer,Pointer[UnnamedStruct61],RawPointer),(OpaquePointer)];
+alias CFXMLParserResolveExternalEntityCallBack = CCodePointer[[OpaquePointer,Pointer[UnnamedStruct61],RawPointer],[OpaquePointer]];
 
-alias CFXMLParserHandleErrorCallBack = CCodePointer[(OpaquePointer,CLong,RawPointer),(CUChar)];
+alias CFXMLParserHandleErrorCallBack = CCodePointer[[OpaquePointer,CLong,RawPointer],[CUChar]];
 
 record UnnamedStruct69 (
     version : CLong,
@@ -4867,11 +4867,11 @@ record UnnamedStruct69 (
 
 alias CFXMLParserCallBacks = UnnamedStruct69;
 
-alias CFXMLParserRetainCallBack = CCodePointer[(RawPointer),(RawPointer)];
+alias CFXMLParserRetainCallBack = CCodePointer[[RawPointer],[RawPointer]];
 
-alias CFXMLParserReleaseCallBack = CCodePointer[(RawPointer),()];
+alias CFXMLParserReleaseCallBack = CCodePointer[[RawPointer],[]];
 
-alias CFXMLParserCopyDescriptionCallBack = CCodePointer[(RawPointer),(OpaquePointer)];
+alias CFXMLParserCopyDescriptionCallBack = CCodePointer[[RawPointer],[OpaquePointer]];
 
 record UnnamedStruct70 (
     version : CLong,
