@@ -459,6 +459,37 @@ overload fixAst(ast:ExternalProcedure, state:FixState) : {
     fixAst(ast.body, state);
 }
 
+// Convert array literal expressions to use the array() function.
+// 0.0: [...]
+// 0.1: array(...)
+overload fixAst(ast:ArrayExpr, state:FixState) : {
+    writeUptoToken(ast.tokens.begin, state);
+    printTo(state.outputFile, "array(");
+    replaceToken(ast.tokens.begin, state);
+    fixAst(ast.args, state);
+    writeUptoToken(ast.tokens.end - 1, state);
+    printTo(state.outputFile, ")");
+    replaceToken(ast.tokens.end - 1, state);
+}
+
+// Convert tuple literal expressions.
+// 0.0: (...)
+// 0.1: [...]
+overload fixAst(ast:TupleExpr, state:FixState) : {
+    // If there's a single non-unpack expression, leave it alone, because it's just parens
+    if (size(ast.args) == 1 and not variantIs?(ast.args[0], Unpack)) {
+        fixAst(ast.args, state);
+    } else {
+        writeUptoToken(ast.tokens.begin, state);
+        printTo(state.outputFile, "[");
+        replaceToken(ast.tokens.begin, state);
+        fixAst(ast.args, state);
+        writeUptoToken(ast.tokens.end - 1, state);
+        printTo(state.outputFile, "]");
+        replaceToken(ast.tokens.end - 1, state);
+    }
+}
+
 // Convert new operator expressions to use the new() function.
 // 0.0: new X
 // 0.1: new(X)
