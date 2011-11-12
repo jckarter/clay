@@ -8,8 +8,18 @@
 * core/std/contrib separation
 * ranges
 * type-safe concurrency
-* cleanups
+* IEEE 754 environment
+* support for GPU computing (see C++ AMP, CUDA)
 * solidify and stick to naming conventions
+    * mixin predicates vs. protocol predicates
+    * type predicate functions vs other predicate/static functions
+* disallow null and arithmetic on Pointer[T]
+    * MaybePointer for null
+    * Address[T] for arithmetic
+* huffman-code common types and functions
+    * Pointer -> Ptr
+    * Maybe -> ?
+    * MaybePointer -> ?Ptr
 
 * The prelude has been shrunk to only include a minimum set of libraries by default.
   Those prelude modules have been moved to core/*, and the default prelude
@@ -54,6 +64,7 @@
 * better type system
 * mutability control
 * definition-time error checking
+* lexically-scoped overloads
 
 * The mapping of types to LLVM representation is exposed. A type is a symbol for which
   llvmRepresentation(#T) is overloaded. llvmRepresentation(#T) should return an

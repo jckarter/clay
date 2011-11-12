@@ -271,6 +271,9 @@ Library changes:
     CodePointer[[Int, Float], [String]]
     CodePointer[[Int], [String, Char]]
 
+  clayfix's logic for fixing CodePointer types is pretty rudimentary and may break
+  code that tries to be fancy.
+
 Compiler frontend changes:
 --------------------------
 * The compiler now requires LLVM 3.0.
