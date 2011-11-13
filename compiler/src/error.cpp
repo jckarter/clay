@@ -16,7 +16,13 @@ static const unsigned RECURSION_WARNING_LEVEL = 1000;
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
     if (contextStack.size() >= RECURSION_WARNING_LEVEL)
         warning("potential runaway recursion");
-    contextStack.push_back(make_pair(obj, params));
+    contextStack.push_back(CompileContextEntry(obj, params));
+}
+
+void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params, const vector<unsigned> &dispatchIndices) {
+    if (contextStack.size() >= RECURSION_WARNING_LEVEL)
+        warning("potential runaway recursion");
+    contextStack.push_back(CompileContextEntry(obj, params, dispatchIndices));
 }
 
 void popCompileContext() {
@@ -157,8 +163,8 @@ static void displayCompileContext() {
     fprintf(stderr, "\n");
     fprintf(stderr, "compilation context: \n");
     for (unsigned i = contextStack.size(); i > 0; --i) {
-        ObjectPtr obj = contextStack[i-1].first;
-        const vector<ObjectPtr> &params = contextStack[i-1].second;
+        ObjectPtr obj = contextStack[i-1].callable;
+        const vector<ObjectPtr> &params = contextStack[i-1].params;
 
         ostringstream sout;
         if (obj->objKind == GLOBAL_VARIABLE) {
@@ -173,7 +179,7 @@ static void displayCompileContext() {
         else {
             printName(sout, obj);
             sout << "(";
-            printNameList(sout, params);
+            printNameList(sout, params, contextStack[i-1].dispatchIndices);
             sout << ")";
         }
         fprintf(stderr, "  %s\n", sout.str().c_str());

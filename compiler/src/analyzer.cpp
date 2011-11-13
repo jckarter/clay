@@ -1528,7 +1528,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
     computeArgsKey(args, argsKey, argsTempness);
-    CompileContextPusher pusher(obj, argsKey);
+    CompileContextPusher pusher(obj, argsKey, dispatchIndices);
 
     unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,

@@ -775,6 +775,17 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x)
     }
 }
 
+void printNameList(ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices)
+{
+    for (unsigned i = 0; i < x.size(); ++i) {
+        if (i != 0)
+            out << ", ";
+        if (find(dispatchIndices.begin(), dispatchIndices.end(), i) != dispatchIndices.end())
+            out << "*";
+        printName(out, x[i]);
+    }
+}
+
 void printNameList(ostream &out, const vector<TypePtr> &x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
