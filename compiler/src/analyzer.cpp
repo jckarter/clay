@@ -10,6 +10,7 @@ static ObjectPtr unwrapStaticType(TypePtr t);
 
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
+static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index);
@@ -26,6 +27,7 @@ static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
 static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
 static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index);
 static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
+static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index);
 static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
 
 static PValuePtr staticPValue(ObjectPtr x);
@@ -90,6 +92,14 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
+}
+
+static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = valueToType(x, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();;
 }
 
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
@@ -195,6 +205,15 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
+}
+
+
+static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
+{
+    TypePtr t = x->values[index]->type;
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
 }
 
 static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
@@ -563,6 +582,12 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
         ValueHolderPtr v = parseFloatLiteral(x);
+        return new MultiPValue(new PValue(v->type, true));
+    }
+
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr v = parseComplexLiteral(x);
         return new MultiPValue(new PValue(v->type, true));
     }
 
@@ -1409,7 +1434,7 @@ void computeArgsKey(MultiPValuePtr args,
 
 MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
                              const vector<TypePtr> &returnTypes)
-                             
+
 {
     MultiPValuePtr x = new MultiPValue();
     for (unsigned i = 0; i < returnTypes.size(); ++i) {

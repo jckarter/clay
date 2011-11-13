@@ -12,6 +12,10 @@ TypePtr uint32Type;
 TypePtr uint64Type;
 TypePtr float32Type;
 TypePtr float64Type;
+TypePtr float80Type;
+TypePtr complex32Type;
+TypePtr complex64Type;
+TypePtr complex80Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -40,6 +44,10 @@ void initTypes() {
     uint64Type = new IntegerType(64, false);
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
+    float80Type = new FloatType(80);
+    complex32Type = new ComplexType(32);
+    complex64Type = new ComplexType(64);
+    complex80Type = new ComplexType(80);
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -103,6 +111,18 @@ TypePtr floatType(int bits) {
     switch (bits) {
     case 32 : return float32Type;
     case 64 : return float64Type;
+    case 80 : return float80Type;
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+TypePtr complexType(int bits) {
+    switch (bits) {
+    case 32 : return complex32Type;
+    case 64 : return complex64Type;
+    case 80 : return complex80Type;
     default :
         assert(false);
         return NULL;
@@ -330,6 +350,7 @@ bool isPrimitiveType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -347,6 +368,7 @@ bool isPrimitiveAggregateType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -376,6 +398,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -743,6 +766,15 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     return t->layout;
 }
 
+const llvm::StructLayout *complexTypeLayout(ComplexType *t) {
+    if (t->layout == NULL) {
+        llvm::StructType *st =
+            llvm::cast<llvm::StructType>(llvmType(t));
+        t->layout = llvmTargetData->getStructLayout(st);
+    }
+    return t->layout;
+}
+
 const llvm::StructLayout *recordTypeLayout(RecordType *t) {
     if (t->layout == NULL) {
         llvm::StructType *st =
@@ -836,6 +868,8 @@ llvm::Type *llvmFloatType(int bits) {
         return llvm::Type::getFloatTy(llvm::getGlobalContext());
     case 64 :
         return llvm::Type::getDoubleTy(llvm::getGlobalContext());
+    case 80 :
+        return llvm::Type::getX86_FP80Ty(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;
@@ -902,6 +936,14 @@ static void declareLLVMType(TypePtr t) {
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
         t->llType = llvmFloatType(x->bits);
+        break;
+    }
+    case COMPLEX_TYPE :{
+        ComplexType *x = (ComplexType *)t.ptr();
+        vector<llvm::Type *> llTypes;
+        llTypes.push_back(llvmType(floatType(x->bits)));
+        llTypes.push_back(llvmType(floatType(x->bits)));
+        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         break;
     }
     case POINTER_TYPE : {
@@ -987,6 +1029,7 @@ static void defineLLVMType(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -1112,6 +1155,11 @@ void typePrint(ostream &out, TypePtr t) {
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
         out << "Float" << x->bits;
+        break;
+    }
+    case COMPLEX_TYPE : {
+        ComplexType *x = (ComplexType *)t.ptr();
+        out << "Complex" << x->bits;
         break;
     }
     case POINTER_TYPE : {

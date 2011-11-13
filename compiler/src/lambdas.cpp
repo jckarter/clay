@@ -409,7 +409,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
                 convertFreeVars(y->catchBlocks[i]->exceptionType, env, ctx);
             convertFreeVars(y->catchBlocks[i]->body, env2, ctx);
         }
-        
+
         break;
     }
 
@@ -456,6 +456,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case BOOL_LITERAL :
     case INT_LITERAL :
     case FLOAT_LITERAL :
+    case COMPLEX_LITERAL :
     case CHAR_LITERAL :
     case STRING_LITERAL :
     case IDENTIFIER_LITERAL :

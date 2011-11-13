@@ -212,6 +212,7 @@ struct Expr;
 struct BoolLiteral;
 struct IntLiteral;
 struct FloatLiteral;
+struct ComplexLiteral;
 struct CharLiteral;
 struct StringLiteral;
 struct IdentifierLiteral;
@@ -304,6 +305,7 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
+struct ComplexType;
 struct ArrayType;
 struct VecType;
 struct TupleType;
@@ -358,6 +360,7 @@ typedef Pointer<Expr> ExprPtr;
 typedef Pointer<BoolLiteral> BoolLiteralPtr;
 typedef Pointer<IntLiteral> IntLiteralPtr;
 typedef Pointer<FloatLiteral> FloatLiteralPtr;
+typedef Pointer<ComplexLiteral> ComplexLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
@@ -450,6 +453,7 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
+typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
@@ -603,7 +607,7 @@ void ensureArity(const vector<T> &args, int size)
 template <class T>
 void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
 {
-    if (!hasVarArgs) 
+    if (!hasVarArgs)
         ensureArity(args, size);
     else if ((int)args.size() < size)
         arityError2(size, args.size());
@@ -659,6 +663,7 @@ enum TokenKind {
     T_CHAR_LITERAL,
     T_INT_LITERAL,
     T_FLOAT_LITERAL,
+    T_COMPLEX_LITERAL,
     T_STATIC_INDEX,
     T_SPACE,
     T_LINE_COMMENT,
@@ -724,6 +729,7 @@ enum ExprKind {
     BOOL_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
+    COMPLEX_LITERAL,
     CHAR_LITERAL,
     STRING_LITERAL,
     IDENTIFIER_LITERAL,
@@ -785,6 +791,17 @@ struct FloatLiteral : public Expr {
         : Expr(FLOAT_LITERAL), value(value) {}
     FloatLiteral(const string &value, const string &suffix)
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
+};
+
+
+struct ComplexLiteral : public Expr {
+    string real;
+    string value;
+    string suffix;
+    ComplexLiteral(const string &real, const string &value)
+        : Expr(COMPLEX_LITERAL), real(real),value(value) {}
+    ComplexLiteral(const string &real,const string &value, const string &suffix)
+        : Expr(COMPLEX_LITERAL), real(real),value(value), suffix(suffix) {}
 };
 
 struct CharLiteral : public Expr {
@@ -2145,6 +2162,7 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
+    COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
@@ -2174,6 +2192,13 @@ struct FloatType : public Type {
     int bits;
     FloatType(int bits)
         : Type(FLOAT_TYPE), bits(bits) {}
+};
+
+struct ComplexType : public Type {
+    int bits;
+    const llvm::StructLayout *layout;
+    ComplexType(int bits)
+        : Type(COMPLEX_TYPE), bits(bits), layout(NULL) {}
 };
 
 struct PointerType : public Type {
@@ -2301,6 +2326,10 @@ extern TypePtr uint32Type;
 extern TypePtr uint64Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
+extern TypePtr float80Type;
+extern TypePtr complex32Type;
+extern TypePtr complex64Type;
+extern TypePtr complex80Type;
 
 // aliases
 extern TypePtr cIntType;
@@ -2313,6 +2342,7 @@ TypePtr integerType(int bits, bool isSigned);
 TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
+TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes,
                         const vector<bool> &returnIsRef,
@@ -2345,6 +2375,7 @@ const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
+const llvm::StructLayout *complexTypeLayout(ComplexType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
 llvm::Type *llvmIntType(int bits);
@@ -2682,9 +2713,11 @@ void initBuiltinConstructor(RecordPtr x);
 // literals
 //
 
+bool fp80Enabled();
+void setfp80Enabled(bool enabled);
 ValueHolderPtr parseIntLiteral(IntLiteral *x);
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
-
+ValueHolderPtr parseComplexLiteral(ComplexLiteral *x);
 
 
 //

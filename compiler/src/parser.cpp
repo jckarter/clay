@@ -199,6 +199,24 @@ static bool floatLiteral(int op, ExprPtr &x) {
     return true;
 }
 
+static bool complexLiteral(int op, ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_COMPLEX_LITERAL))
+        return false;
+    TokenPtr t2;
+    int p = save();
+    if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
+        x = new ComplexLiteral( "0" , cleanNumericSeparator(op, t->str), t2->str);
+    }
+    else {
+        restore(p);
+        x = new ComplexLiteral( "0"  , cleanNumericSeparator(op, t->str));
+    }
+    x->location = location;
+    return true;
+}
+
 static bool charLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
@@ -245,6 +263,7 @@ static bool literal(ExprPtr &x) {
     if (boolLiteral(x)) return true;
     if (restore(p), intLiteral(PLUS, x)) return true;
     if (restore(p), floatLiteral(PLUS, x)) return true;
+    if (restore(p), complexLiteral(PLUS, x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     if (restore(p), identifierLiteral(x)) return true;
@@ -1653,7 +1672,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
                         new NameRef(new Identifier("Static")));
 
     IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
-    
+
     x = new FormalArg(argName, indexing.ptr());
     x->location = location;
     return true;
@@ -2212,7 +2231,7 @@ static bool optCallByName(bool &callByName) {
     callByName = true;
     return true;
 }
-    
+
 static bool llvmCode(LLVMCodePtr &b) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_LLVM))

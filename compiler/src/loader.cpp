@@ -532,6 +532,7 @@ static ModulePtr typeModule(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -665,6 +666,10 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "UInt64", uint64Type.ptr());
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
+    addPrim(prims, "Float80", float80Type.ptr());
+    addPrim(prims, "Complex32", complex32Type.ptr());
+    addPrim(prims, "Complex64", complex64Type.ptr());
+    addPrim(prims, "Complex80", complex80Type.ptr());
 
     GlobalAliasPtr v =
         new GlobalAlias(new Identifier("ExceptionsEnabled?"),

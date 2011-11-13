@@ -957,6 +957,12 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr y = parseComplexLiteral(x);
+        codegenValueHolder(y, ctx, out);
+        break;
+    }
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
@@ -1705,8 +1711,23 @@ void codegenCompileTimeValue(EValuePtr ev,
         break;
     }
 
+    case COMPLEX_TYPE : {
+        ComplexType *tt = (ComplexType *)ev->type.ptr();
+        const llvm::StructLayout *layout = complexTypeLayout(tt);
+        char *srcPtr = ev->addr + layout->getElementOffset(1);
+        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
+        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
+        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
+        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
+        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
+        EValuePtr evSrc2 = new EValue(floatType(tt->bits), srcPtr2);
+        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
+        CValuePtr cgDest2 = new CValue(floatType(tt->bits), destPtr2);
+        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
+        break;
+    }
+
     default : {
-        // TODO: support complex constants
         ostringstream sout;
         sout << "constants of type " << ev->type
              << " are not yet supported";
@@ -1742,6 +1763,8 @@ _uintConstant(EValuePtr ev)
 llvm::Value *codegenSimpleConstant(EValuePtr ev)
 {
     llvm::Value *val = NULL;
+    uint64_t bits[] = {0, 0};
+
     switch (ev->type->typeKind) {
     case BOOL_TYPE : {
         int bv = (*(bool *)ev->addr) ? 1 : 0;
@@ -1795,6 +1818,12 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             break;
         case 64 :
             val = llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
+            break;
+        case 80 :
+            //use APfloat to get an 80bit value
+            bits[0] = *(uint64_t*)ev->addr;
+            bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
+            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
             break;
         default :
             assert(false);
@@ -2100,7 +2129,7 @@ void codegenDispatch(ObjectPtr obj,
         pvArgs2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
         pvArgs2->add(pvSuffix);
         codegenDispatch(obj, args2, pvArgs2, dispatchIndices2, ctx, out);
-        
+
         ctx->builder->CreateBr(finalBlock);
 
         ctx->builder->SetInsertPoint(elseBlocks[i]);
@@ -2613,7 +2642,7 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 // codegenLLVMBody
 //
 
-void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName) 
+void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 {
     string llFunc;
     llvm::raw_string_ostream out(llFunc);
@@ -2624,7 +2653,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     functionName << "clay_" << callableName << id;
     id++;
 
-    out << string("define internal i32 @\"") 
+    out << string("define internal i32 @\"")
         << functionName.str() << string("\"(");
 
     vector<llvm::Type *> llArgTypes;
@@ -2662,10 +2691,10 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     out << body;
 
     llvm::SMDiagnostic err;
-    llvm::MemoryBuffer *buf = 
+    llvm::MemoryBuffer *buf =
         llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(out.str()));
 
-    if(!llvm::ParseAssembly(buf, llvmModule, err, 
+    if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
         err.print("\n", out);
         std::cerr << out.str() << std::endl;
@@ -3901,6 +3930,14 @@ static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
     }
 }
 
+static ComplexTypePtr valueToComplexType(MultiCValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
+}
+
 static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -3994,6 +4031,23 @@ static llvm::Value *numericValue(MultiCValuePtr args,
         type = cv->type;
     }
     return ctx->builder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *complexValue(MultiCValuePtr args,
+                               unsigned index,
+                               ComplexTypePtr &type)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != (Type *)type.ptr())
+            argumentTypeError(index, type.ptr(), cv->type);
+    }
+    else {
+        if (cv->type->typeKind != COMPLEX_TYPE)
+            argumentTypeError(index, "complex type", cv->type);
+        type = (ComplexType *)cv->type.ptr();
+    }
+    return cv->llValue;
 }
 
 static llvm::Value *integerValue(MultiCValuePtr args,

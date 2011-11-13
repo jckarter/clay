@@ -916,6 +916,12 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case COMPLEX_LITERAL : {
+        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
+        ValueHolderPtr y = parseComplexLiteral(x);
+        evalValueHolder(y, out);
+        break;
+    }
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)
@@ -1382,6 +1388,7 @@ void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case COMPLEX_TYPE :
         memcpy(out0->addr, x->buf, typeSize(x->type));
         break;
 
@@ -2447,6 +2454,14 @@ static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
     }
 }
 
+static ComplexTypePtr valueToComplexType(MultiEValuePtr args, unsigned index)
+{
+    TypePtr t = valueToType(args, index);
+    if (t->typeKind != COMPLEX_TYPE)
+        argumentTypeError(index, "complex type", t);
+    return (ComplexType *)t.ptr();
+}
+
 static IntegerTypePtr valueToIntegerType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -2535,6 +2550,22 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
             argumentTypeError(index, "numeric type", ev->type);
         }
         type = ev->type;
+    }
+    return ev;
+}
+
+static EValuePtr complexValue(MultiEValuePtr args, unsigned index,
+                            ComplexTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != (Type *)type.ptr())
+            argumentTypeError(index, type.ptr(), ev->type);
+    }
+    else {
+        if (ev->type->typeKind != COMPLEX_TYPE)
+            argumentTypeError(index, "complex type", ev->type);
+        type = (ComplexType *)ev->type.ptr();
     }
     return ev;
 }
@@ -2709,6 +2740,7 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         switch (t->bits) {
         case 32 : T<float>().eval(a, b, out); break;
         case 64 : T<double>().eval(a, b, out); break;
+        case 80 : T<long double>().eval(a, b, out); break;
         default : assert(false);
         }
         break;
@@ -2815,6 +2847,7 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
         switch (t->bits) {
         case 32 : T<float>().eval(a, out); break;
         case 64 : T<double>().eval(a, out); break;
+        case 80 : T<long double>().eval(a, out); break;
         default : assert(false);
         }
         break;
@@ -3000,6 +3033,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         switch (t->bits) {
         case 32 : op_numericConvert3<D,float>(dest, src); break;
         case 64 : op_numericConvert3<D,double>(dest, src); break;
+        case 80 : op_numericConvert3<D,long double>(dest, src); break;
         default : assert(false);
         }
         break;
@@ -3039,6 +3073,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         switch (t->bits) {
         case 32 : op_numericConvert2<float>(dest, src); break;
         case 64 : op_numericConvert2<double>(dest, src); break;
+        case 80 : op_numericConvert2<long double>(dest, src); break;
         default : assert(false);
         }
         break;
