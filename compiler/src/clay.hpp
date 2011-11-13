@@ -638,7 +638,6 @@ void computeLineCol(LocationPtr location,
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
 
-
 struct DebugPrinter {
     static int indent;
     ObjectPtr obj;
@@ -2560,8 +2559,9 @@ struct MatchArityError : public MatchResult {
 
 struct MatchArgumentError : public MatchResult {
     unsigned argIndex;
-    MatchArgumentError(unsigned argIndex)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex) {}
+    FormalArgPtr argument;
+    MatchArgumentError(unsigned argIndex, FormalArgPtr argument)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex), argument(argument) {}
 };
 
 struct MatchPredicateError : public MatchResult {
@@ -2573,8 +2573,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            const vector<TypePtr> &argsKey);
 
-void signalMatchError(MatchResultPtr result,
-                      const vector<LocationPtr> &argLocations);
+void printMatchError(ostream &os, MatchResultPtr result);
 
 
 
@@ -2646,12 +2645,16 @@ struct InvokeSet : public Object {
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
+typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey);
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness);
+                                 const vector<ValueTempness> &argsTempness,
+                                 MatchFailureVector &failures);
+
+void matchFailureError(MatchFailureVector const &failures);
 
 
 
