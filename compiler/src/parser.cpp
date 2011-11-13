@@ -2250,35 +2250,58 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
+static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
+    LocationPtr location = currentLocation();
+    CodePtr interfaceCode = new Code();
+    if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    if (!keyword("define")) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    if (!arguments(interfaceCode->formalArgs, interfaceCode->formalVarArg)) return false;
+    interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
+    if (!symbol(";")) return false;
+    interfaceCode->location = location;
+
+    ExprPtr target = new NameRef(name);
+    target->location = location;
+    OverloadPtr interface = new Overload(target, interfaceCode, false, false);
+    interface->location = location;
+
+    ProcedurePtr proc = new Procedure(name, vis, interface);
+    proc->location = location;
+    x.push_back(proc.ptr());
+
+    return true;
+}
+
 static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     LocationPtr location = currentLocation();
-    CodePtr y = new Code();
-    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    CodePtr code = new Code();
+    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     bool isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
-    int p = save();
-    if (!keyword("define"))
-        restore(p);
-    IdentifierPtr z;
-    if (!identifier(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
-    if (!body(y->body)) return false;
-    y->location = location;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    if (!arguments(code->formalArgs, code->formalVarArg)) return false;
+    code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
+    if (!body(code->body)) return false;
+    code->location = location;
 
-    ProcedurePtr u = new Procedure(z, vis);
-    u->location = location;
-    x.push_back(u.ptr());
+    ProcedurePtr proc = new Procedure(name, vis);
+    proc->location = location;
+    x.push_back(proc.ptr());
 
-    ExprPtr target = new NameRef(z);
+    ExprPtr target = new NameRef(name);
     target->location = location;
-    OverloadPtr v = new Overload(target, y, callByName, isInline);
-    v->location = location;
-    x.push_back(v.ptr());
+    OverloadPtr oload = new Overload(target, code, callByName, isInline);
+    oload->location = location;
+    x.push_back(oload.ptr());
 
     return true;
 }
@@ -2707,6 +2730,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), variant(y)) goto success;
     if (restore(p), instance(y)) goto success;
     if (restore(p), procedure(y)) goto success;
+    if (restore(p), procedureWithInterface(x)) goto success2;
     if (restore(p), procedureWithBody(x)) goto success2;
     if (restore(p), llvmProcedure(x)) goto success2;
     if (restore(p), overload(y)) goto success;

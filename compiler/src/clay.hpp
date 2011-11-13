@@ -1511,10 +1511,15 @@ struct Overload : public TopLevelItem {
 };
 
 struct Procedure : public TopLevelItem {
+    OverloadPtr interface;
     vector<OverloadPtr> overloads;
-    ObjectTablePtr evaluatorCache; // HACK: used only for preducates
+    ObjectTablePtr evaluatorCache; // HACK: used only for predicates
+
     Procedure(IdentifierPtr name, Visibility visibility)
         : TopLevelItem(PROCEDURE, name, visibility) {}
+
+    Procedure(IdentifierPtr name, Visibility visibility, OverloadPtr interface)
+        : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -2619,6 +2624,7 @@ extern vector<OverloadPtr> patternOverloads;
 struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
+    OverloadPtr interface;
     vector<OverloadPtr> overloads;
 
     vector<MatchSuccessPtr> matches;
@@ -2629,8 +2635,10 @@ struct InvokeSet : public Object {
 
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
+              OverloadPtr symbolInterface,
               const vector<OverloadPtr> &symbolOverloads)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+          interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0)
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());

@@ -30,6 +30,19 @@ static void initCallable(ObjectPtr x)
     }
 }
 
+const OverloadPtr callableInterface(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        return y->interface;
+    }
+    default : {
+        return NULL;
+    }
+    }
+}
+
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 {
     initCallable(x);
@@ -102,8 +115,9 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
             return invokeSet;
         }
     }
+    OverloadPtr interface = callableInterface(callable);
     const vector<OverloadPtr> &overloads = callableOverloads(callable);
-    InvokeSetPtr invokeSet = new InvokeSet(callable, argsKey, overloads);
+    InvokeSetPtr invokeSet = new InvokeSet(callable, argsKey, interface, overloads);
     bucket.push_back(invokeSet);
     return invokeSet;
 }
