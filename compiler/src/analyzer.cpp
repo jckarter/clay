@@ -1582,8 +1582,23 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
             }
             if (!ok) {
                 ostringstream ostr;
-                ostr << "mismatching result with variant member: ";
-                ostr << memberTypes[i];
+                ostr << "mismatching result types with variant dispatch";
+                ostr << "\n    expected ";
+                for (unsigned j = 0; j < result->size(); ++j) {
+                    if (j != 0) ostr << ", ";
+                    ostr << result->values[j]->type;
+                }
+                ostr << "\n        from dispatching on ";
+                for (unsigned j = 0; j < i; ++j) {
+                    if (j != 0) ostr << ", ";
+                    ostr << memberTypes[j];
+                }
+                ostr << "\n     but got ";
+                for (unsigned j = 0; j < result->size(); ++j) {
+                    if (j != 0) ostr << ", ";
+                    ostr << result2->values[j]->type;
+                }
+                ostr << "\n        when dispatching on " << memberTypes[i];
                 argumentError(index, ostr.str());
             }
         }
