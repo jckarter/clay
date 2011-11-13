@@ -110,77 +110,77 @@ overload abs(x:Int) = libc.libc.abs(x);
 overload abs(x:Long) = libc.llabs(x);
 overload abs(x:Float) = libc.fabsf(x);
 overload abs(x:Double) = libc.fabs(x);
-overload abs(x:Real) = libc.fabsl(x);
+overload abs(x:LongDouble) = libc.fabsl(x);
 
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);
-overload acos(x:Real) = libc.acosl(x);
+overload acos(x:LongDouble) = libc.acosl(x);
 
 overload asin(x:Double) = libc.asin(x);
 overload asin(x:Float) = libc.asinf(x);
-overload asin(x:Real) = libc.asinl(x);
+overload asin(x:LongDouble) = libc.asinl(x);
 
 overload atan(x:Double) = libc.atan(x);
 overload atan(x:Float) = libc.atanf(x);
-overload atan(x:Real) = libc.atanl(x);
+overload atan(x:LongDouble) = libc.atanl(x);
 
 overload atan2(x:Double,y:Double) = libc.atan2(x,y);
 overload atan2(x:Float,y:Float) = libc.atan2f(x,y);
-overload atan2(x:Real,y:Real) = libc.atan2l(x,y);
+overload atan2(x:LongDouble,y:LongDouble) = libc.atan2l(x,y);
 overload atan2(x:Double,y:Float) = libc.atan2(x,Double(y));
 overload atan2(x:Float,y:Double) = libc.atan2(Double(x),y);
-overload atan2(x:Double,y:Real) = libc.atan2l(Real(x),y);
-overload atan2(x:Real,y:Double) = libc.atan2l(x,Real(y));
-overload atan2(x:Float,y:Real) = libc.atan2l(Real(x),y);
-overload atan2(x:Real,y:Float) = libc.atan2l(x,Real(y));
+overload atan2(x:Double,y:LongDouble) = libc.atan2l(LongDouble(x),y);
+overload atan2(x:LongDouble,y:Double) = libc.atan2l(x,LongDouble(y));
+overload atan2(x:Float,y:LongDouble) = libc.atan2l(LongDouble(x),y);
+overload atan2(x:LongDouble,y:Float) = libc.atan2l(x,LongDouble(y));
 
 overload cos(x:Double) = libc.cos(x);
 overload cos(x:Float) = libc.cosf(x);
-overload cos(x:Real) = libc.cosl(x);
+overload cos(x:LongDouble) = libc.cosl(x);
 
 overload sin(x:Double) = libc.sin(x);
 overload sin(x:Float) = libc.sinf(x);
-overload sin(x:Real) = libc.sinl(x);
+overload sin(x:LongDouble) = libc.sinl(x);
 
 overload tan(x:Double) = libc.tan(x);
 overload tan(x:Float) = libc.tanf(x);
-overload tan(x:Real) = libc.tanl(x);
+overload tan(x:LongDouble) = libc.tanl(x);
 
 overload cosh(x:Double) = libc.cosh(x);
 overload cosh(x:Float) = libc.coshf(x);
-overload cosh(x:Real) = libc.coshl(x);
+overload cosh(x:LongDouble) = libc.coshl(x);
 
 overload sinh(x:Double) = libc.sinh(x);
 overload sinh(x:Float) = libc.sinhf(x);
-overload sinh(x:Real) = libc.sinhl(x);
+overload sinh(x:LongDouble) = libc.sinhl(x);
 
 overload tanh(x:Double) = libc.tanh(x);
 overload tanh(x:Float) = libc.tanhf(x);
-overload tanh(x:Real) = libc.tanhl(x);
+overload tanh(x:LongDouble) = libc.tanhl(x);
 
 overload acosh(x:Double) = libc.acosh(x);
 overload acosh(x:Float) = libc.acoshf(x);
-overload acosh(x:Real) = libc.acoshl(x);
+overload acosh(x:LongDouble) = libc.acoshl(x);
 
 overload asinh(x:Double) = libc.asinh(x);
 overload asinh(x:Float) = libc.asinhf(x);
-overload asinh(x:Real) = libc.asinhl(x);
+overload asinh(x:LongDouble) = libc.asinhl(x);
 
 overload atanh(x:Double) = libc.atanh(x);
 overload atanh(x:Float) = libc.atanhf(x);
-overload atanh(x:Real) = libc.atanhl(x);
+overload atanh(x:LongDouble) = libc.atanhl(x);
 
 overload exp(x:Double) = libc.exp(x);
 overload exp(x:Float) = libc.expf(x);
-overload exp(x:Real) = libc.expl(x);
+overload exp(x:LongDouble) = libc.expl(x);
 
 overload log(x:Double) = libc.log(x);
 overload log(x:Float) = libc.logf(x);
-overload log(x:Real) = libc.logl(x);
+overload log(x:LongDouble) = libc.logl(x);
 
 overload log10(x:Double) = libc.log10(x);
 overload log10(x:Float) = libc.log10f(x);
-overload log10(x:Real) = libc.log10l(x);
+overload log10(x:LongDouble) = libc.log10l(x);
 
 overload frexp(x:Double) {
     var ex = Pointer[Int]();
@@ -192,7 +192,7 @@ overload frexp(x:Float) {
     var a = libc.frexpf(x,ex);
     return a,ex[0];
 }
-overload frexp(x:Real) {
+overload frexp(x:LongDouble) {
     var ex = Pointer[Int]();
     var a = libc.frexpl(x,ex);
     return a,ex[0];
@@ -200,7 +200,7 @@ overload frexp(x:Real) {
 
 overload ldexp(x:Double,y:Int) = libc.ldexp(x,y);
 overload ldexp(x:Float,y:Int) = libc.ldexpf(x,y);
-overload ldexp(x:Real,y:Int) = libc.ldexpl(x,y);
+overload ldexp(x:LongDouble,y:Int) = libc.ldexpl(x,y);
 
 overload modf(x:Double) {
     var iptr = Pointer[Double]();
@@ -212,7 +212,7 @@ overload modf(x:Float) {
     var a = libc.modff(x,iptr);
     return a,iptr[0];
 }
-overload modf(x:Real) {
+overload modf(x:LongDouble) {
     var iptr = Pointer[Double]();
     var a = libc.modfl(x,iptr);
     return a,iptr[0];
@@ -220,153 +220,153 @@ overload modf(x:Real) {
 
 overload expm1(x:Double) = libc.expm1(x);
 overload expm1(x:Float) = libc.expm1f(x);
-overload expm1(x:Real) = libc.expm1l(x);
+overload expm1(x:LongDouble) = libc.expm1l(x);
 
 overload log1p(x:Double) = libc.log1p(x);
 overload log1p(x:Float) = libc.log1pf(x);
-overload log1p(x:Real) = libc.log1pl(x);
+overload log1p(x:LongDouble) = libc.log1pl(x);
 
 overload logb(x:Double) = libc.logb(x);
 overload logb(x:Float) = libc.logbf(x);
-overload logb(x:Real) = libc.logbl(x);
+overload logb(x:LongDouble) = libc.logbl(x);
 
 overload exp2(x:Double) = libc.exp2(x);
 overload exp2(x:Float) = libc.exp2f(x);
-overload exp2(x:Real) = libc.exp2l(x);
+overload exp2(x:LongDouble) = libc.exp2l(x);
 
 overload log2(x:Double) = libc.log2(x);
 overload log2(x:Float) = libc.log2f(x);
-overload log2(x:Real) = libc.log2l(x);
+overload log2(x:LongDouble) = libc.log2l(x);
 
 overload sqrt(x:Double) = libc.sqrt(x);
 overload sqrt(x:Float) = libc.sqrtf(x);
-overload sqrt(x:Real) = libc.sqrtl(x);
+overload sqrt(x:LongDouble) = libc.sqrtl(x);
 
 overload cbrt(x:Double) = libc.cbrt(x);
 overload cbrt(x:Float) = libc.cbrtf(x);
-overload cbrt(x:Real) = libc.cbrtl(x);
+overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
 overload ceil(x:Double) = libc.ceil(x);
 overload ceil(x:Float) = libc.ceilf(x);
-overload ceil(x:Real) = libc.ceill(x);
+overload ceil(x:LongDouble) = libc.ceill(x);
 
 overload floor(x:Double) = libc.floor(x);
 overload floor(x:Float) = libc.floorf(x);
-overload floor(x:Real) = libc.floorl(x);
+overload floor(x:LongDouble) = libc.floorl(x);
 
 overload significand(x:Double) = libc.significand(x);
 overload significand(x:Float) = libc.significandf(x);
-overload significand(x:Real) = libc.significandl(x);
+overload significand(x:LongDouble) = libc.significandl(x);
 
 overload pow(x:Double,y:Double) = libc.pow(x,y);
 overload pow(x:Float,y:Float) = libc.powf(x,y);
-overload pow(x:Real,y:Real) = libc.powl(x,y);
+overload pow(x:LongDouble,y:LongDouble) = libc.powl(x,y);
 overload pow(x:Double,y:Float) = libc.pow(x,Double(y));
 overload pow(x:Float,y:Double) = libc.pow(Double(x),y);
-overload pow(x:Double,y:Real) = libc.powl(Real(x),y);
-overload pow(x:Real,y:Double) = libc.powl(x,Real(y));
-overload pow(x:Float,y:Real) = libc.powl(Real(x),y);
-overload pow(x:Real,y:Float) = libc.powl(x,Real(y));
+overload pow(x:Double,y:LongDouble) = libc.powl(LongDouble(x),y);
+overload pow(x:LongDouble,y:Double) = libc.powl(x,LongDouble(y));
+overload pow(x:Float,y:LongDouble) = libc.powl(LongDouble(x),y);
+overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 //Should probably use powi here.
 [T | Integer?(T)] overload pow(x:Double,y:T) = libc.pow(x,Double(y));
 [T | Integer?(T)] overload pow(x:Float,y:T) = libc.powf(x,Float(y));
-[T | Integer?(T)] overload pow(x:Real,y:T) = libc.powl(x,Real(y));
+[T | Integer?(T)] overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
 overload hypot(x:Double,y:Double) = libc.hypot(x,y);
 overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
-overload hypot(x:Real,y:Real) = libc.hypotl(x,y);
+overload hypot(x:LongDouble,y:LongDouble) = libc.hypotl(x,y);
 overload hypot(x:Double,y:Float) = libc.hypot(x,Double(y));
 overload hypot(x:Float,y:Double) = libc.hypot(Double(x),y);
-overload hypot(x:Double,y:Real) = libc.hypotl(Real(x),y);
-overload hypot(x:Real,y:Double) = libc.hypotl(x,Real(y));
-overload hypot(x:Float,y:Real) = libc.hypotl(Real(x),y);
-overload hypot(x:Real,y:Float) = libc.hypotl(x,Real(y));
+overload hypot(x:Double,y:LongDouble) = libc.hypotl(LongDouble(x),y);
+overload hypot(x:LongDouble,y:Double) = libc.hypotl(x,LongDouble(y));
+overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
+overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
 overload mod(x:Double,y:Double) = libc.fmod(x,y);
 overload mod(x:Float,y:Float) = libc.fmodf(x,y);
-overload mod(x:Real,y:Real) = libc.fmodl(x,y);
+overload mod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
 overload mod(x:Double,y:Float) = libc.fmod(x,Double(y));
 overload mod(x:Float,y:Double) = libc.fmod(Double(x),y);
-overload mod(x:Double,y:Real) = libc.fmodl(Real(x),y);
-overload mod(x:Real,y:Double) = libc.fmodl(x,Real(y));
-overload mod(x:Float,y:Real) = libc.fmodl(Real(x),y);
-overload mod(x:Real,y:Float) = libc.fmodl(x,Real(y));
+overload mod(x:Double,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
+overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
 
 overload isinf(x:Double) = libc.isinf(x);
 overload isinf(x:Float) = libc.isinff(x);
-overload isinf(x:Real) = libc.isinfl(x);
+overload isinf(x:LongDouble) = libc.isinfl(x);
 
 overload finite(x:Double) = libc.finite(x);
 overload finite(x:Float) = libc.finitef(x);
-overload finite(x:Real) = libc.finitel(x);
+overload finite(x:LongDouble) = libc.finitel(x);
 
 overload drem(x:Double,y:Double) = libc.drem(x,y);
 overload drem(x:Float,y:Float) = libc.dremf(x,y);
-overload drem(x:Real,y:Real) = libc.dreml(x,y);
+overload drem(x:LongDouble,y:LongDouble) = libc.dreml(x,y);
 overload drem(x:Double,y:Float) = libc.drem(x,Double(y));
 overload drem(x:Float,y:Double) = libc.drem(Double(x),y);
-overload drem(x:Double,y:Real) = libc.dreml(Real(x),y);
-overload drem(x:Real,y:Double) = libc.dreml(x,Real(y));
-overload drem(x:Float,y:Real) = libc.dreml(Real(x),y);
-overload drem(x:Real,y:Float) = libc.dreml(x,Real(y));
+overload drem(x:Double,y:LongDouble) = libc.dreml(LongDouble(x),y);
+overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
+overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
+overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
 overload copysign(x:Double,y:Double) = libc.copysign(x,y);
 overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
-overload copysign(x:Real,y:Real) = libc.copysignl(x,y);
+overload copysign(x:LongDouble,y:LongDouble) = libc.copysignl(x,y);
 overload copysign(x:Double,y:Float) = libc.copysign(x,Double(y));
 overload copysign(x:Float,y:Double) = libc.copysign(Double(x),y);
-overload copysign(x:Double,y:Real) = libc.copysignl(Real(x),y);
-overload copysign(x:Real,y:Double) = libc.copysignl(x,Real(y));
-overload copysign(x:Float,y:Real) = libc.copysignl(Real(x),y);
-overload copysign(x:Real,y:Float) = libc.copysignl(x,Real(y));
+overload copysign(x:Double,y:LongDouble) = libc.copysignl(LongDouble(x),y);
+overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
+overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
+overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 
 overload isnan(x:Double) = libc.isnan(x);
 overload isnan(x:Float) = libc.isnanf(x);
-overload isnan(x:Real) = libc.isnanl(x);
+overload isnan(x:LongDouble) = libc.isnanl(x);
 
 overload j0(x:Double) = libc.j0(x);
 overload j0(x:Float) = libc.j0f(x);
-overload j0(x:Real) = libc.j0l(x);
+overload j0(x:LongDouble) = libc.j0l(x);
 
 overload j1(x:Double) = libc.j1(x);
 overload j1(x:Float) = libc.j1f(x);
-overload j1(x:Real) = libc.j1l(x);
+overload j1(x:LongDouble) = libc.j1l(x);
 
 overload jn(x:Int,y:Double) = libc.jn(x,y);
 overload jn(x:Int,y:Float) = libc.jnf(x,y);
-overload jn(x:Int,y:Real) = libc.jnl(x,y);
+overload jn(x:Int,y:LongDouble) = libc.jnl(x,y);
 
 overload y0(x:Double) = libc.y0(x);
 overload y0(x:Float) = libc.y0f(x);
-overload y0(x:Real) = libc.y0l(x);
+overload y0(x:LongDouble) = libc.y0l(x);
 
 overload y1(x:Double) = libc.y1(x);
 overload y1(x:Float) = libc.y1f(x);
-overload y1(x:Real) = libc.y1l(x);
+overload y1(x:LongDouble) = libc.y1l(x);
 
 overload yn(x:Int,y:Double) = libc.yn(x,y);
 overload yn(x:Int,y:Float) = libc.ynf(x,y);
-overload yn(x:Int,y:Real) = libc.ynl(x,y);
+overload yn(x:Int,y:LongDouble) = libc.ynl(x,y);
 
 overload erf(x:Double) = libc.erf(x);
 overload erf(x:Float) = libc.erff(x);
-overload erf(x:Real) = libc.erfl(x);
+overload erf(x:LongDouble) = libc.erfl(x);
 
 overload erfc(x:Double) = libc.erfc(x);
 overload erfc(x:Float) = libc.erfcf(x);
-overload erfc(x:Real) = libc.erfcl(x);
+overload erfc(x:LongDouble) = libc.erfcl(x);
 
 overload lgamma(x:Double) = libc.lgamma(x);
 overload lgamma(x:Float) = libc.lgammaf(x);
-overload lgamma(x:Real) = libc.lgammal(x);
+overload lgamma(x:LongDouble) = libc.lgammal(x);
 
 overload tgamma(x:Double) = libc.tgamma(x);
 overload tgamma(x:Float) = libc.tgammaf(x);
-overload tgamma(x:Real) = libc.tgammal(x);
+overload tgamma(x:LongDouble) = libc.tgammal(x);
 
 overload gamma(x:Double) = libc.gamma(x);
 overload gamma(x:Float) = libc.gammaf(x);
-overload gamma(x:Real) = libc.gammal(x);
+overload gamma(x:LongDouble) = libc.gammal(x);
 
 overload lgamma_r(x:Double) {
     var signgamp = Pointer[Int]();
@@ -378,7 +378,7 @@ overload lgamma_r(x:Float) {
     var res = libc.lgammaf_r(x,signgamp);
     return res,signgamp[0];
 }
-overload lgamma_r(x:Real) {
+overload lgamma_r(x:LongDouble) {
     var signgamp = Pointer[Int]();
     var res = libc.lgammal_r(x,signgamp);
     return res,signgamp[0];
@@ -386,55 +386,55 @@ overload lgamma_r(x:Real) {
 
 overload rint(x:Double) = libc.rint(x);
 overload rint(x:Float) = libc.rintf(x);
-overload rint(x:Real) = libc.rintl(x);
+overload rint(x:LongDouble) = libc.rintl(x);
 
 overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
 overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
-overload nextafter(x:Real,y:Real) = libc.nextafterl(x,y);
+overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
 overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
 overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
-overload nextafter(x:Double,y:Real) = libc.nextafterl(Real(x),y);
-overload nextafter(x:Real,y:Double) = libc.nextafterl(x,Real(y));
-overload nextafter(x:Float,y:Real) = libc.nextafterl(Real(x),y);
-overload nextafter(x:Real,y:Float) = libc.nextafterl(x,Real(y));
+overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
+overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
+overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
+overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
 
-overload nexttoward(x:Double,y:Real) = libc.nexttoward(x,y);
-overload nexttoward(x:Float,y:Real) = libc.nexttowardf(x,y);
-overload nexttoward(x:Real,y:Real) = libc.nexttowardl(x,y);
+overload nexttoward(x:Double,y:LongDouble) = libc.nexttoward(x,y);
+overload nexttoward(x:Float,y:LongDouble) = libc.nexttowardf(x,y);
+overload nexttoward(x:LongDouble,y:LongDouble) = libc.nexttowardl(x,y);
 
 overload remainder(x:Double,y:Double) = libc.remainder(x,y);
 overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
-overload remainder(x:Real,y:Real) = libc.remainderl(x,y);
+overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
 overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
 overload remainder(x:Float,y:Double) = libc.remainder(Double(x),y);
-overload remainder(x:Double,y:Real) = libc.remainderl(Real(x),y);
-overload remainder(x:Real,y:Double) = libc.remainderl(x,Real(y));
-overload remainder(x:Float,y:Real) = libc.remainderl(Real(x),y);
-overload remainder(x:Real,y:Float) = libc.remainderl(x,Real(y));
+overload remainder(x:Double,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDouble(y));
+overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
 
 overload scalbn(x:Double,y:Int) = libc.scalbn(x,y);
 overload scalbn(x:Float,y:Int) = libc.scalbnf(x,y);
-overload scalbn(x:Real,y:Int) = libc.scalbnl(x,y);
+overload scalbn(x:LongDouble,y:Int) = libc.scalbnl(x,y);
 
 overload scalbln(x:Double,y:Long) = libc.scalbln(x,y);
 overload scalbln(x:Float,y:Long) = libc.scalblnf(x,y);
-overload scalbln(x:Real,y:Long) = libc.scalblnl(x,y);
+overload scalbln(x:LongDouble,y:Long) = libc.scalblnl(x,y);
 
 overload ilogb(x:Double) = libc.ilogb(x);
 overload ilogb(x:Float) = libc.ilogbf(x);
-overload ilogb(x:Real) = libc.ilogbl(x);
+overload ilogb(x:LongDouble) = libc.ilogbl(x);
 
 overload nearbyint(x:Double) = libc.nearbyint(x);
 overload nearbyint(x:Float) = libc.nearbyintf(x);
-overload nearbyint(x:Real) = libc.nearbyintl(x);
+overload nearbyint(x:LongDouble) = libc.nearbyintl(x);
 
 overload round(x:Double) = libc.round(x);
 overload round(x:Float) = libc.roundf(x);
-overload round(x:Real) = libc.roundl(x);
+overload round(x:LongDouble) = libc.roundl(x);
 
 overload trunc(x:Double) = libc.trunc(x);
 overload trunc(x:Float) = libc.truncf(x);
-overload trunc(x:Real) = libc.truncl(x);
+overload trunc(x:LongDouble) = libc.truncl(x);
 
 overload remquo(x:Double,y:Double) {
     var quo = Pointer[Int]();
@@ -446,7 +446,7 @@ overload remquo(x:Float,y:Float) {
     var res = libc.remquof(x,y,quo);
     return res,quo[0];
 }
-overload remquo(x:Real,y:Real) {
+overload remquo(x:LongDouble,y:LongDouble) {
     var quo = Pointer[Int]();
     var res = libc.remquol(x,y,quo);
     return res,quo[0];
@@ -455,16 +455,14 @@ overload remquo(x:Real,y:Real) {
 
 overload fdim(x:Double,y:Double) = libc.fdim(x,y);
 overload fdim(x:Float,y:Float) = libc.fdimf(x,y);
-overload fdim(x:Real,y:Real) = libc.fdiml(x,y);
+overload fdim(x:LongDouble,y:LongDouble) = libc.fdiml(x,y);
 overload fdim(x:Double,y:Float) = libc.fdim(x,Double(y));
 overload fdim(x:Float,y:Double) = libc.fdim(Double(x),y);
-overload fdim(x:Double,y:Real) = libc.fdiml(Real(x),y);
-overload fdim(x:Real,y:Double) = libc.fdiml(x,Real(y));
-overload fdim(x:Float,y:Real) = libc.fdiml(Real(x),y);
-overload fdim(x:Real,y:Float) = libc.fdiml(x,Real(y));
+overload fdim(x:Double,y:LongDouble) = libc.fdiml(LongDouble(x),y);
+overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
+overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
+overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
-[T | Numeric?(T)]
-overload max(x:T,y:T) = if(x<y) y else x;
 
 [T,C | Numeric?(T) and Complex?(C)]
 overload max(x:T,y:C) = max(x,abs(y));
@@ -474,9 +472,6 @@ overload max(x:C,y:T) = max(abs(x),y);
 
 [T | Complex?(T)]
 overload max(x:T,y:T) = max(abs(x),abs(y));
-
-[T | Numeric?(T)]
-overload min(x:T,y:T) = if(y<x) y else x;
 
 [T,C | Numeric?(T) and Complex?(C)]
 overload min(x:T,y:C) = min(x,abs(y));
@@ -489,25 +484,25 @@ overload min(x:C,y:C) = min(abs(x),abs(y));
 
 overload fpclassify(value:Double) = libc.fpclassify(value);
 overload fpclassify(value:Float) = libc.fpclassifyf(value);
-overload fpclassify(value:Real) = libc.fpclassifyl(value);
+overload fpclassify(value:LongDouble) = libc.fpclassifyl(value);
 
 overload signbit(value:Double) = libc.signbit(value);
 overload signbit(value:Float) = libc.signbitf(value);
-overload signbit(value:Real) = libc.signbitl(value);
+overload signbit(value:LongDouble) = libc.signbitl(value);
 
 overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
 overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
-overload fma(x:Real,y:Real,z:Real) = libc.fmal(x,y,z);
+overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
 
 overload scalb(x:Double,y:Double) = libc.scalb(x,y);
 overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
-overload scalb(x:Real,y:Real) = libc.scalbl(x,y);
+overload scalb(x:LongDouble,y:LongDouble) = libc.scalbl(x,y);
 overload scalb(x:Double,y:Float) = libc.scalb(x,Double(y));
 overload scalb(x:Float,y:Double) = libc.scalb(Double(x),y);
-overload scalb(x:Double,y:Real) = libc.scalbl(Real(x),y);
-overload scalb(x:Real,y:Double) = libc.scalbl(x,Real(y));
-overload scalb(x:Float,y:Real) = libc.scalbl(Real(x),y);
-overload scalb(x:Real,y:Float) = libc.scalbl(x,Real(y));
+overload scalb(x:Double,y:LongDouble) = libc.scalbl(LongDouble(x),y);
+overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
+overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
+overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
 
 nan(tagb : Pointer[CChar]) = libc.nan(tagb);
 nanf(tagb : Pointer[CChar]) = libc.nanf(tagb);
@@ -516,11 +511,11 @@ nanl(tagb : Pointer[CChar]) = libc.nanl(tagb);
 
 overload llrint(x:Double) = libc.llrint(x);
 overload llrint(x:Float) = libc.llrintf(x);
-overload llrint(x:Real) = libc.llrintl(x);
+overload llrint(x:LongDouble) = libc.llrintl(x);
 
 overload llround(x:Double) = libc.llround(x);
 overload llround(x:Float) = libc.llroundf(x);
-overload llround(x:Real) = libc.llroundl(x);
+overload llround(x:LongDouble) = libc.llroundl(x);
 
 
 inline overload abs(z:Complex64) = libc.cabs(z);
