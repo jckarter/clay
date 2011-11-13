@@ -2647,14 +2647,21 @@ typedef Pointer<InvokeSet> InvokeSetPtr;
 
 typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
 
+struct MatchFailureError {
+    MatchFailureVector failures;
+    bool failedInterface;
+
+    MatchFailureError() : failedInterface(false) {}
+};
+
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey);
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
                                  const vector<ValueTempness> &argsTempness,
-                                 MatchFailureVector &failures);
+                                 MatchFailureError &failures);
 
-void matchFailureError(MatchFailureVector const &failures);
+void matchFailureError(MatchFailureError const &err);
 
 
 

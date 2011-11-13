@@ -133,7 +133,7 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
                                    unsigned &overloadIndex,
                                    ObjectPtr callable,
                                    const vector<TypePtr> &argsKey,
-                                   MatchFailureVector &failures)
+                                   MatchFailureError &failures)
 {
     while (overloadIndex < overloads.size()) {
         OverloadPtr x = overloads[overloadIndex++];
@@ -142,7 +142,7 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
             MatchSuccess *y = (MatchSuccess *)result.ptr();
             return y;
         } else {
-            failures.push_back(make_pair(x, result));
+            failures.failures.push_back(make_pair(x, result));
         }
     }
     return NULL;
@@ -150,11 +150,12 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
 
 static MatchSuccessPtr getMatch(InvokeSetPtr invokeSet,
                                 unsigned entryIndex,
-                                MatchFailureVector &failures)
+                                MatchFailureError &failures)
 {
     if (entryIndex < invokeSet->matches.size())
         return invokeSet->matches[entryIndex];
     assert(entryIndex == invokeSet->matches.size());
+
     unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
     MatchSuccessPtr match = findMatchingInvoke(invokeSet->overloads,
                                                nextOverloadIndex,
@@ -274,7 +275,7 @@ static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
                                  const vector<ValueTempness> &argsTempness,
-                                 MatchFailureVector &failures)
+                                 MatchFailureError &failures)
 {
     InvokeSetPtr invokeSet = lookupInvokeSet(callable, argsKey);
 
@@ -282,6 +283,17 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
         invokeSet->tempnessMap.find(argsTempness);
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
+
+    if (invokeSet->interface != NULL) {
+        MatchResultPtr interfaceResult = matchInvoke(invokeSet->interface,
+                                                     invokeSet->callable,
+                                                     invokeSet->argsKey);
+        if (interfaceResult->matchCode != MATCH_SUCCESS) {
+            failures.failedInterface = true;
+            failures.failures.push_back(make_pair(invokeSet->interface, interfaceResult));
+            return NULL;
+        }
+    }
 
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;

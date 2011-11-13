@@ -233,6 +233,11 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
+        case PROCEDURE : {
+            Procedure *proc = (Procedure *)x;
+            if (proc->interface != NULL)
+                proc->interface->env = m->env;
+        }
         default :
             if (x->name.ptr())
                 addGlobal(m, x->name, x->visibility, x);

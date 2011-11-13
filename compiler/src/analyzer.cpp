@@ -1651,7 +1651,7 @@ bool analyzeIsDefined(ObjectPtr x,
                       const vector<TypePtr> &argsKey,
                       const vector<ValueTempness> &argsTempness)
 {
-    MatchFailureVector failures;
+    MatchFailureError failures;
     InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
 
     if (!entry || !entry->code->hasBody())
@@ -1663,7 +1663,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness)
 {
-    MatchFailureVector failures;
+    MatchFailureError failures;
     InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
 
     if (!entry || !entry->code->hasBody()) {

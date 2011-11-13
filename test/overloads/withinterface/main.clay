@@ -1,0 +1,13 @@
+
+[T | T == Int or T == Double]
+define foo(x:T, y:T) : T;
+
+overload foo(x:Int, y:Int) = x + y;
+overload foo(x:Double, y:Double) = x + y;
+overload foo(x:Float, y:Float) = x + y;
+
+main() {
+    println(CallDefined?(foo, Int, Int));
+    println(CallDefined?(foo, Double, Double));
+    println(CallDefined?(foo, Float, Float));
+}

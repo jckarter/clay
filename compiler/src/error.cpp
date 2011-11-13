@@ -361,13 +361,16 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     argumentError(index, sout.str());
 }
 
-void matchFailureError(MatchFailureVector const &failures)
+void matchFailureError(MatchFailureError const &err)
 {
     ostringstream sout;
-    sout << "no matching overload found. tried:";
+    if (err.failedInterface)
+        sout << "call does not conform to function interface";
+    else
+        sout << "no matching overload found";
 
-    for (MatchFailureVector::const_iterator i = failures.begin();
-         i != failures.end();
+    for (MatchFailureVector::const_iterator i = err.failures.begin();
+         i != err.failures.end();
          ++i)
     {
         sout << "\n    ";
@@ -375,7 +378,7 @@ void matchFailureError(MatchFailureVector const &failures)
         int line, column, tabColumn;
         computeLineCol(location, line, column, tabColumn);
         sout << location->source->fileName.c_str()
-            << "(" << line << "," << column << ")"
+            << "(" << line+1 << "," << column << ")"
             << "\n        ";
         printMatchError(sout, i->second);
     }

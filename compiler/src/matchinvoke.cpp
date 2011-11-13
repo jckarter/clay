@@ -175,7 +175,7 @@ void printMatchError(ostream &os, MatchResultPtr result)
     }
     case MATCH_ARGUMENT_ERROR : {
         MatchArgumentError *e = (MatchArgumentError *)result.ptr();
-        os << "argument pattern did not match at argument " << e->argIndex;
+        os << "argument pattern did not match at argument " << e->argIndex + 1;
         break;
     }
     case MATCH_PREDICATE_ERROR :
