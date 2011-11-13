@@ -5,7 +5,8 @@ have made contributions (in no particular order):
 David R. MacIver <david@drmaciver.com>
 Marc Fauconneau
 Daniel Kolesa <quaker66@gmail.com>
-Szabó Antal
+Szabó Antal (github @Sh4rK)
 Philipp Brüschweiler <blei42@gmail.com>
+TODO (github @agemogolk)
 
 If your name is missing from this list, let me know at joe@duriansoftware.com.
