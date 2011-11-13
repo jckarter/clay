@@ -108,7 +108,7 @@ static string lambdaName(LambdaPtr x)
         computeLineCol(x->location, line, column, tabColumn);
         ostringstream shortName;
         shortName << "<lambda " << x->location->source->fileName
-            << "(" << line+1 << "," << column+tabColumn << ")>";
+            << "(" << line+1 << "," << column << ")>";
 
         return shortName.str();
     }

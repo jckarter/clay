@@ -360,3 +360,27 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     sout << "invalid static object: " << obj;
     argumentError(index, sout.str());
 }
+
+void matchFailureError(MatchFailureError const &err)
+{
+    ostringstream sout;
+    if (err.failedInterface)
+        sout << "call does not conform to function interface";
+    else
+        sout << "no matching overload found";
+
+    for (MatchFailureVector::const_iterator i = err.failures.begin();
+         i != err.failures.end();
+         ++i)
+    {
+        sout << "\n    ";
+        LocationPtr location = i->first->location;
+        int line, column, tabColumn;
+        computeLineCol(location, line, column, tabColumn);
+        sout << location->source->fileName.c_str()
+            << "(" << line+1 << "," << column << ")"
+            << "\n        ";
+        printMatchError(sout, i->second);
+    }
+    error(sout.str());
+}

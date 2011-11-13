@@ -315,20 +315,6 @@ TO BE DONE FOR 0.1
 
     main() { println("Compiled for ", FLAVOR); }
 
-* The 'static' keyword in expressions and argument lists is now the '#' operator.
-  Identifiers must now always be quoted:
-    // 0.0
-    static 9
-    static foo
-    static #foo
-    #foo
-
-    // 0.1
-    9
-    #foo
-    #"foo"
-    #"foo"
-
 * Integer division now uses the new 'div' operator. '/' now only does floating-point division:
     var x = 3 div 2; // 1
     var x = 3/2; // type error
@@ -351,8 +337,8 @@ TO BE DONE FOR 0.1
 
 * The fieldRef, index, and staticIndex operators have been unified. Field and tuple reference
   syntax now desugars to indexing with identifiers or static integers:
-    foo.bar     ==> foo[#"bar"] ==> index(foo, #"bar")
-    foo.1       ==> foo[#1]     ==> index(foo, #1)
+    foo.bar ==> foo[#"bar"]   ==> index(foo, #"bar")
+    foo.1   ==> foo[static 1] ==> index(foo, static 1)
 
 * make x86-64 C abi work
 * more frontend normalization with clang/llc

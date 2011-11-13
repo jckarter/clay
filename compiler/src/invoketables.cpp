@@ -30,6 +30,19 @@ static void initCallable(ObjectPtr x)
     }
 }
 
+const OverloadPtr callableInterface(ObjectPtr x)
+{
+    switch (x->objKind) {
+    case PROCEDURE : {
+        Procedure *y = (Procedure *)x.ptr();
+        return y->interface;
+    }
+    default : {
+        return NULL;
+    }
+    }
+}
+
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 {
     initCallable(x);
@@ -102,8 +115,9 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
             return invokeSet;
         }
     }
+    OverloadPtr interface = callableInterface(callable);
     const vector<OverloadPtr> &overloads = callableOverloads(callable);
-    InvokeSetPtr invokeSet = new InvokeSet(callable, argsKey, overloads);
+    InvokeSetPtr invokeSet = new InvokeSet(callable, argsKey, interface, overloads);
     bucket.push_back(invokeSet);
     return invokeSet;
 }
@@ -118,7 +132,8 @@ static
 MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
                                    unsigned &overloadIndex,
                                    ObjectPtr callable,
-                                   const vector<TypePtr> &argsKey)
+                                   const vector<TypePtr> &argsKey,
+                                   MatchFailureError &failures)
 {
     while (overloadIndex < overloads.size()) {
         OverloadPtr x = overloads[overloadIndex++];
@@ -126,22 +141,27 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
         if (result->matchCode == MATCH_SUCCESS) {
             MatchSuccess *y = (MatchSuccess *)result.ptr();
             return y;
+        } else {
+            failures.failures.push_back(make_pair(x, result));
         }
     }
     return NULL;
 }
 
 static MatchSuccessPtr getMatch(InvokeSetPtr invokeSet,
-                                unsigned entryIndex)
+                                unsigned entryIndex,
+                                MatchFailureError &failures)
 {
     if (entryIndex < invokeSet->matches.size())
         return invokeSet->matches[entryIndex];
     assert(entryIndex == invokeSet->matches.size());
+
     unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
     MatchSuccessPtr match = findMatchingInvoke(invokeSet->overloads,
                                                nextOverloadIndex,
                                                invokeSet->callable,
-                                               invokeSet->argsKey);
+                                               invokeSet->argsKey,
+                                               failures);
     if (!match)
         return NULL;
     invokeSet->matches.push_back(match);
@@ -254,7 +274,8 @@ static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
 
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness)
+                                 const vector<ValueTempness> &argsTempness,
+                                 MatchFailureError &failures)
 {
     InvokeSetPtr invokeSet = lookupInvokeSet(callable, argsKey);
 
@@ -263,11 +284,22 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
 
+    if (invokeSet->interface != NULL) {
+        MatchResultPtr interfaceResult = matchInvoke(invokeSet->interface,
+                                                     invokeSet->callable,
+                                                     invokeSet->argsKey);
+        if (interfaceResult->matchCode != MATCH_SUCCESS) {
+            failures.failedInterface = true;
+            failures.failures.push_back(make_pair(invokeSet->interface, interfaceResult));
+            return NULL;
+        }
+    }
+
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<bool> forwardedRValueFlags;
     unsigned i = 0;
-    while ((match = getMatch(invokeSet,i)).ptr() != NULL) {
+    while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,
                           match->callByName,

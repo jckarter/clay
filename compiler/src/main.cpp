@@ -270,7 +270,7 @@ static void usage(char *argv0)
     cerr << "  -target <target>      set target platform for code generation\n";
     cerr << "  -shared               create a dynamically linkable library\n";
     cerr << "  -emit-llvm            emit llvm code\n";
-    cerr << "  -S                    emit assember code\n";
+    cerr << "  -S                    emit assembler code\n";
     cerr << "  -c                    emit object code\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
     cerr << "  -exceptions           enable exception handling\n";

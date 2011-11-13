@@ -638,7 +638,6 @@ void computeLineCol(LocationPtr location,
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
 
-
 struct DebugPrinter {
     static int indent;
     ObjectPtr obj;
@@ -1511,10 +1510,15 @@ struct Overload : public TopLevelItem {
 };
 
 struct Procedure : public TopLevelItem {
+    OverloadPtr interface;
     vector<OverloadPtr> overloads;
-    ObjectTablePtr evaluatorCache; // HACK: used only for preducates
+    ObjectTablePtr evaluatorCache; // HACK: used only for predicates
+
     Procedure(IdentifierPtr name, Visibility visibility)
         : TopLevelItem(PROCEDURE, name, visibility) {}
+
+    Procedure(IdentifierPtr name, Visibility visibility, OverloadPtr interface)
+        : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -2555,8 +2559,9 @@ struct MatchArityError : public MatchResult {
 
 struct MatchArgumentError : public MatchResult {
     unsigned argIndex;
-    MatchArgumentError(unsigned argIndex)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex) {}
+    FormalArgPtr argument;
+    MatchArgumentError(unsigned argIndex, FormalArgPtr argument)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex), argument(argument) {}
 };
 
 struct MatchPredicateError : public MatchResult {
@@ -2568,8 +2573,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            const vector<TypePtr> &argsKey);
 
-void signalMatchError(MatchResultPtr result,
-                      const vector<LocationPtr> &argLocations);
+void printMatchError(ostream &os, MatchResultPtr result);
 
 
 
@@ -2619,6 +2623,7 @@ extern vector<OverloadPtr> patternOverloads;
 struct InvokeSet : public Object {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
+    OverloadPtr interface;
     vector<OverloadPtr> overloads;
 
     vector<MatchSuccessPtr> matches;
@@ -2629,8 +2634,10 @@ struct InvokeSet : public Object {
 
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
+              OverloadPtr symbolInterface,
               const vector<OverloadPtr> &symbolOverloads)
         : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+          interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0)
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
@@ -2638,12 +2645,23 @@ struct InvokeSet : public Object {
 };
 typedef Pointer<InvokeSet> InvokeSetPtr;
 
+typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
+
+struct MatchFailureError {
+    MatchFailureVector failures;
+    bool failedInterface;
+
+    MatchFailureError() : failedInterface(false) {}
+};
 
 InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey);
 InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
                                  const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness);
+                                 const vector<ValueTempness> &argsTempness,
+                                 MatchFailureError &failures);
+
+void matchFailureError(MatchFailureError const &err);
 
 
 

@@ -106,7 +106,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (x->type.ptr()) {
             PatternPtr pattern = overload->argPatterns[i];
             if (!unifyPatternObj(pattern, argsKey[i].ptr()))
-                return new MatchArgumentError(i);
+                return new MatchArgumentError(i, x);
         }
     }
     if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
@@ -114,7 +114,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i)
             types->add(argsKey[i].ptr());
         if (!unifyMulti(overload->varArgPattern, types))
-            return new MatchArgumentError(formalArgs.size());
+            return new MatchArgumentError(formalArgs.size(), NULL);
     }
 
     EnvPtr staticEnv = new Env(overload->env);
@@ -159,31 +159,30 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     return result.ptr();
 }
 
-void signalMatchError(MatchResultPtr result,
-                      const vector<LocationPtr> &argLocations)
+void printMatchError(ostream &os, MatchResultPtr result)
 {
     switch (result->matchCode) {
     case MATCH_SUCCESS :
         assert(false);
         break;
     case MATCH_CALLABLE_ERROR : {
-        error("callable mismatch");
+        os << "callable pattern did not match";
         break;
     }
     case MATCH_ARITY_ERROR : {
-        error("incorrect no. of arguments");
+        os << "incorrect number of arguments";
+        break;
     }
     case MATCH_ARGUMENT_ERROR : {
         MatchArgumentError *e = (MatchArgumentError *)result.ptr();
-        LocationPtr loc = argLocations[e->argIndex];
-        if (loc.ptr())
-            pushLocation(loc);
-        error("argument mismatch");
+        os << "argument pattern did not match at argument " << e->argIndex + 1;
         break;
     }
     case MATCH_PREDICATE_ERROR :
-        error("invoke predicate failure");
+        os << "predicate failed";
+        break;
     default :
         assert(false);
+        break;
     }
 }

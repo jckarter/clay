@@ -12,7 +12,7 @@ enum Color (
   White
 );
 
-private define sgr(code){
+private sgr(code){
   if(supported?())
     print(Char(27), '[', code, 'm');
 }
