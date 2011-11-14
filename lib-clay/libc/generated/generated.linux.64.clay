@@ -678,7 +678,7 @@ external strtof(
 
 external strtold(
     __nptr : Pointer[CChar],
-    __endptr : Pointer[Pointer[CChar]]) : UnsupportedCBuiltinType22;
+    __endptr : Pointer[Pointer[CChar]]) : LongDouble;
 
 external strtol(
     __nptr : Pointer[CChar],
@@ -1140,19 +1140,19 @@ external gcvt(
     __buf : Pointer[CChar]) : Pointer[CChar];
 
 external qecvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : LongDouble,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int]) : Pointer[CChar];
 
 external qfcvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : LongDouble,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int]) : Pointer[CChar];
 
 external qgcvt(
-    __value : UnsupportedCBuiltinType22,
+    __value : LongDouble,
     __ndigit : Int,
     __buf : Pointer[CChar]) : Pointer[CChar];
 
@@ -1173,7 +1173,7 @@ external fcvt_r(
     __len : CULong) : Int;
 
 external qecvt_r(
-    __value : UnsupportedCBuiltinType22,
+    __value : LongDouble,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
@@ -1181,7 +1181,7 @@ external qecvt_r(
     __len : CULong) : Int;
 
 external qfcvt_r(
-    __value : UnsupportedCBuiltinType22,
+    __value : LongDouble,
     __ndigit : Int,
     __decpt : Pointer[Int],
     __sign : Pointer[Int],
@@ -1790,11 +1790,11 @@ external __nextafter(
 
 external nexttoward(
     __x : Double,
-    __y : UnsupportedCBuiltinType22) : Double;
+    __y : LongDouble) : Double;
 
 external __nexttoward(
     __x : Double,
-    __y : UnsupportedCBuiltinType22) : Double;
+    __y : LongDouble) : Double;
 
 external remainder(
     __x : Double,
@@ -2272,11 +2272,11 @@ external __nextafterf(
 
 external nexttowardf(
     __x : Float,
-    __y : UnsupportedCBuiltinType22) : Float;
+    __y : LongDouble) : Float;
 
 external __nexttowardf(
     __x : Float,
-    __y : UnsupportedCBuiltinType22) : Float;
+    __y : LongDouble) : Float;
 
 external remainderf(
     __x : Float,
@@ -2409,486 +2409,486 @@ external __scalbf(
     __n : Float) : Float;
 
 external acosl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __acosl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external asinl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __asinl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external atanl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __atanl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external atan2l(
-    __y : UnsupportedCBuiltinType22,
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __y : LongDouble,
+    __x : LongDouble) : LongDouble;
 
 external __atan2l(
-    __y : UnsupportedCBuiltinType22,
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __y : LongDouble,
+    __x : LongDouble) : LongDouble;
 
 external cosl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __cosl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external sinl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __sinl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external tanl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __tanl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external coshl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __coshl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external sinhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __sinhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external tanhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __tanhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external acoshl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __acoshl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external asinhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __asinhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external atanhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __atanhl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external expl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __expl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external frexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Pointer[Int]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __exponent : Pointer[Int]) : LongDouble;
 
 external __frexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Pointer[Int]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __exponent : Pointer[Int]) : LongDouble;
 
 external ldexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Int) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __exponent : Int) : LongDouble;
 
 external __ldexpl(
-    __x : UnsupportedCBuiltinType22,
-    __exponent : Int) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __exponent : Int) : LongDouble;
 
 external logl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __logl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external log10l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __log10l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external modfl(
-    __x : UnsupportedCBuiltinType22,
-    __iptr : Pointer[UnsupportedCBuiltinType22]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __iptr : Pointer[LongDouble]) : LongDouble;
 
 external __modfl(
-    __x : UnsupportedCBuiltinType22,
-    __iptr : Pointer[UnsupportedCBuiltinType22]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __iptr : Pointer[LongDouble]) : LongDouble;
 
 external expm1l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __expm1l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external log1pl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __log1pl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external logbl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __logbl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external exp2l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __exp2l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external log2l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __log2l(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external powl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __powl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external sqrtl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __sqrtl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external hypotl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __hypotl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external cbrtl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __cbrtl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external ceill(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __ceill(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external fabsl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __fabsl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external floorl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __floorl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external fmodl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __fmodl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __isinfl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external __finitel(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external isinfl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external finitel(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external dreml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __dreml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external significandl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __significandl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external copysignl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __copysignl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external nanl(
-    __tagb : Pointer[CChar]) : UnsupportedCBuiltinType22;
+    __tagb : Pointer[CChar]) : LongDouble;
 
 external __nanl(
-    __tagb : Pointer[CChar]) : UnsupportedCBuiltinType22;
+    __tagb : Pointer[CChar]) : LongDouble;
 
 external __isnanl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external isnanl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external j0l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __j0l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external j1l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __j1l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external jnl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument1 : LongDouble) : LongDouble;
 
 external __jnl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument1 : LongDouble) : LongDouble;
 
 external y0l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __y0l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external y1l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __y1l(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external ynl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument1 : LongDouble) : LongDouble;
 
 external __ynl(
     argument0 : Int,
-    argument1 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument1 : LongDouble) : LongDouble;
 
 external erfl(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __erfl(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external erfcl(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __erfcl(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external lgammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __lgammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external tgammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __tgammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external gammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external __gammal(
-    argument0 : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble) : LongDouble;
 
 external lgammal_r(
-    argument0 : UnsupportedCBuiltinType22,
-    __signgamp : Pointer[Int]) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble,
+    __signgamp : Pointer[Int]) : LongDouble;
 
 external __lgammal_r(
-    argument0 : UnsupportedCBuiltinType22,
-    __signgamp : Pointer[Int]) : UnsupportedCBuiltinType22;
+    argument0 : LongDouble,
+    __signgamp : Pointer[Int]) : LongDouble;
 
 external rintl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __rintl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external nextafterl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __nextafterl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external nexttowardl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __nexttowardl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external remainderl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __remainderl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external scalbnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : Int) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : Int) : LongDouble;
 
 external __scalbnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : Int) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : Int) : LongDouble;
 
 external ilogbl(
-    __x : UnsupportedCBuiltinType22) : Int;
+    __x : LongDouble) : Int;
 
 external __ilogbl(
-    __x : UnsupportedCBuiltinType22) : Int;
+    __x : LongDouble) : Int;
 
 external scalblnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : CLong) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : CLong) : LongDouble;
 
 external __scalblnl(
-    __x : UnsupportedCBuiltinType22,
-    __n : CLong) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : CLong) : LongDouble;
 
 external nearbyintl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __nearbyintl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external roundl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __roundl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external truncl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external __truncl(
-    __x : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble) : LongDouble;
 
 external remquol(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __quo : Pointer[Int]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble,
+    __quo : Pointer[Int]) : LongDouble;
 
 external __remquol(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __quo : Pointer[Int]) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble,
+    __quo : Pointer[Int]) : LongDouble;
 
 external lrintl(
-    __x : UnsupportedCBuiltinType22) : CLong;
+    __x : LongDouble) : CLong;
 
 external __lrintl(
-    __x : UnsupportedCBuiltinType22) : CLong;
+    __x : LongDouble) : CLong;
 
 external llrintl(
-    __x : UnsupportedCBuiltinType22) : Int64;
+    __x : LongDouble) : Int64;
 
 external __llrintl(
-    __x : UnsupportedCBuiltinType22) : Int64;
+    __x : LongDouble) : Int64;
 
 external lroundl(
-    __x : UnsupportedCBuiltinType22) : CLong;
+    __x : LongDouble) : CLong;
 
 external __lroundl(
-    __x : UnsupportedCBuiltinType22) : CLong;
+    __x : LongDouble) : CLong;
 
 external llroundl(
-    __x : UnsupportedCBuiltinType22) : Int64;
+    __x : LongDouble) : Int64;
 
 external __llroundl(
-    __x : UnsupportedCBuiltinType22) : Int64;
+    __x : LongDouble) : Int64;
 
 external fdiml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __fdiml(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external fmaxl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __fmaxl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external fminl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __fminl(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble) : LongDouble;
 
 external __fpclassifyl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external __signbitl(
-    __value : UnsupportedCBuiltinType22) : Int;
+    __value : LongDouble) : Int;
 
 external fmal(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __z : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble,
+    __z : LongDouble) : LongDouble;
 
 external __fmal(
-    __x : UnsupportedCBuiltinType22,
-    __y : UnsupportedCBuiltinType22,
-    __z : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __y : LongDouble,
+    __z : LongDouble) : LongDouble;
 
 external scalbl(
-    __x : UnsupportedCBuiltinType22,
-    __n : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : LongDouble) : LongDouble;
 
 external __scalbl(
-    __x : UnsupportedCBuiltinType22,
-    __n : UnsupportedCBuiltinType22) : UnsupportedCBuiltinType22;
+    __x : LongDouble,
+    __n : LongDouble) : LongDouble;
 
 external signgam : Int;
 
@@ -3097,3 +3097,185 @@ external timer_gettime(
 
 external timer_getoverrun(
     __timerid : timer_t) : Int;
+
+
+
+//Double functions
+external cacos(
+    __z : Complex64) : Complex64;
+
+external casin(
+    __z : Complex64) : Complex64;
+
+external catan(
+    __z : Complex64) : Complex64;
+
+external ccos(
+    __z : Complex64) : Complex64;
+
+external csin(
+    __z : Complex64) : Complex64;
+
+external ctan(
+    __z : Complex64) : Complex64;
+
+external cacosh(
+    __z : Complex64) : Complex64;
+
+external casinh(
+    __z : Complex64) : Complex64;
+
+external catanh(
+    __z : Complex64) : Complex64;
+
+external ccosh(
+    __z : Complex64) : Complex64;
+
+external csinh(
+    __z : Complex64) : Complex64;
+
+external ctanh(
+    __z : Complex64) : Complex64;
+
+external cexp(
+    __z : Complex64) : Complex64;
+
+external clog(
+    __z : Complex64) : Complex64;
+
+external cpow(
+    __x : Complex64,
+    __y : Complex64) : Complex64;
+
+external csqrt(
+    __z : Complex64) : Complex64;
+
+external cabs(
+    __z : Complex64) : Double;
+
+external carg(
+    __z : Complex64) : Double;
+
+external cproj(
+    __z : Complex64) : Complex64;
+
+
+//Float functions
+external cacosf(
+    __z : Complex32) : Complex32;
+
+external casinf(
+    __z : Complex32) : Complex32;
+
+external catanf(
+    __z : Complex32) : Complex32;
+
+external ccosf(
+    __z : Complex32) : Complex32;
+
+external csinf(
+    __z : Complex32) : Complex32;
+
+external ctanf(
+    __z : Complex32) : Complex32;
+
+external cacoshf(
+    __z : Complex32) : Complex32;
+
+external casinhf(
+    __z : Complex32) : Complex32;
+
+external catanhf(
+    __z : Complex32) : Complex32;
+
+external ccoshf(
+    __z : Complex32) : Complex32;
+
+external csinhf(
+    __z : Complex32) : Complex32;
+
+external ctanhf(
+    __z : Complex32) : Complex32;
+
+external cexpf(
+    __z : Complex32) : Complex32;
+
+external clogf(
+    __z : Complex32) : Complex32;
+
+external cpowf(
+    __x : Complex32,
+    __y : Complex32) : Complex32;
+
+external csqrtf(
+    __z : Complex32) : Complex32;
+
+external cabsf(
+    __z : Complex32) : Float;
+
+external cargf(
+    __z : Complex32) : Float;
+
+external cprojf(
+    __z : Complex32) : Complex32;
+
+
+//LongDouble functions
+external cacosl(
+    __z : Complex80) : Complex80;
+
+external casinl(
+    __z : Complex80) : Complex80;
+
+external catanl(
+    __z : Complex80) : Complex80;
+
+external ccosl(
+    __z : Complex80) : Complex80;
+
+external csinl(
+    __z : Complex80) : Complex80;
+
+external ctanl(
+    __z : Complex80) : Complex80;
+
+external cacoshl(
+    __z : Complex80) : Complex80;
+
+external casinhl(
+    __z : Complex80) : Complex80;
+
+external catanhl(
+    __z : Complex80) : Complex80;
+
+external ccoshl(
+    __z : Complex80) : Complex80;
+
+external csinhl(
+    __z : Complex80) : Complex80;
+
+external ctanhl(
+    __z : Complex80) : Complex80;
+
+external cexpl(
+    __z : Complex80) : Complex80;
+
+external clogl(
+    __z : Complex80) : Complex80;
+
+external cpowl(
+    __x : Complex80,
+    __y : Complex80) : Complex80;
+
+external csqrtl(
+    __z : Complex80) : Complex80;
+
+external cabsl(
+    __z : Complex80) : LongDouble;
+
+external cargl(
+    __z : Complex80) : LongDouble;
+
+external cprojl(
+    __z : Complex80) : Complex80;
+

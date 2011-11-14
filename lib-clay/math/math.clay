@@ -463,6 +463,8 @@ overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
 overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
 overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
+[T | Numeric?(T)]
+overload max(x:T,y:T) = if(x<y) y else x;
 
 [T,C | Numeric?(T) and Complex?(C)]
 overload max(x:T,y:C) = max(x,abs(y));
@@ -473,6 +475,9 @@ overload max(x:C,y:T) = max(abs(x),y);
 [T | Complex?(T)]
 overload max(x:T,y:T) = max(abs(x),abs(y));
 
+[T | Numeric?(T)]
+overload min(x:T,y:T) = if(y<x) y else x;
+
 [T,C | Numeric?(T) and Complex?(C)]
 overload min(x:T,y:C) = min(x,abs(y));
 
@@ -481,6 +486,7 @@ overload min(x:C,y:T) = min(abs(x),y);
 
 [C | Complex?(C)]
 overload min(x:C,y:C) = min(abs(x),abs(y));
+
 
 overload fpclassify(value:Double) = libc.fpclassify(value);
 overload fpclassify(value:Float) = libc.fpclassifyf(value);

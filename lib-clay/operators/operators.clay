@@ -113,7 +113,7 @@ define reverseIterator;
 define size;
 define index;
 
-define begin; 
+define begin;
 define end;
 
 define front;
@@ -460,6 +460,10 @@ overload PrimitiveType?(static UInt32) = true;
 overload PrimitiveType?(static UInt64) = true;
 overload PrimitiveType?(static Float32) = true;
 overload PrimitiveType?(static Float64) = true;
+overload PrimitiveType?(static Float80) = true;
+overload PrimitiveType?(static Complex32) = true;
+overload PrimitiveType?(static Complex64) = true;
+overload PrimitiveType?(static Complex80) = true;
 [T] overload PrimitiveType?(static Pointer[T]) = true;
 [I, O] overload PrimitiveType?(static CodePointer[I, O]) = true;
 [I, O] overload PrimitiveType?(static CCodePointer[I, O]) = true;
