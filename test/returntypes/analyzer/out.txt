@@ -1,5 +1,5 @@
-(Int32, Int32)
-(ByRef[Int32], Int32)
-(Int32, Int32)
-(ByRef[Int32], Int32)
-(10, 11)
+[Int32, Int32]
+[ByRef[Int32], Int32]
+[Int32, Int32]
+[ByRef[Int32], Int32]
+[10, 11]

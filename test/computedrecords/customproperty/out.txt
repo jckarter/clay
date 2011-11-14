@@ -3,4 +3,4 @@ true
 false
 true
 2
-((x, Int32), (y, Int32))
+[[x, Int32], [y, Int32]]

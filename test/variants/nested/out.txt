@@ -1,7 +1,7 @@
-((Literal, IntLiteral))
-()
-((UnaryOp))
-((UnaryOp, Plus))
+[[Literal, IntLiteral]]
+[]
+[[UnaryOp]]
+[[UnaryOp, Plus]]
 false
 true
 true
