@@ -1,12 +1,16 @@
 
 enum ComplexPart (REAL, IMAG);
 
+
+
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
 overload Complex?(static Complex80) = true;
 [A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
 
+// [T | Complex?(T)]
+// overload BitwiseMovedType?(static T) = true;
 
 private define re;
 private define im;
@@ -134,7 +138,7 @@ inline overload add(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
 inline overload subtract(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
 
 [T,U | Complex?(T,U)]
-inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),imag(z)*LongDouble(y)+LongDouble(z)*imag(y));
+inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),imag(z)*real(y)+real(z)*imag(y));
 
 [T,U | Complex?(T,U)]
 inline overload divide(z:T, y:U) {
