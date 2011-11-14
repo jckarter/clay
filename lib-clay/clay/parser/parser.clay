@@ -270,6 +270,11 @@ private var floatLiteral = exprParser(
     sequence(tokenData(FLOAT_LITERAL), optional(identStr)),
 );
 
+private var complexLiteral = exprParser(
+    x => ComplexLiteral(String(x.0), x.1),
+    sequence(tokenData(COMPLEX_LITERAL), optional(identStr)),
+);
+
 private var charLiteral = exprParser(
     x => CharLiteral(String(x)),
     tokenData(CHAR_LITERAL),
@@ -288,7 +293,7 @@ private var identifierLiteral = exprParser(
 );
 
 private var literalExpr = choice(
-    boolLiteral, intLiteral, floatLiteral,
+    boolLiteral, intLiteral, floatLiteral, complexLiteral,
     charLiteral, stringLiteral, identifierLiteral,
 );
 

@@ -54,6 +54,26 @@ overload printTo(stream, x:UInt64) {
     printWithSprintf(stream, formatForUInt64, x);
 }
 
+
+overload printTo(stream, x:Complex80) {
+    printWithSprintf(stream, "%.16Lg", Pointer[LongDouble](&x)^);
+    printWithSprintf(stream, "+j%.16Lg", (Pointer[LongDouble](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex64) {
+    printWithSprintf(stream, "%.16g", Pointer[Double](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Double](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex32) {
+    printWithSprintf(stream, "%.16g", Pointer[Float](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Float](&x)+1)^);
+}
+
+overload printTo(stream, x:LongDouble) {
+    printWithSprintf(stream, "%.16Lg", LongDouble(x));
+}
+
 overload printTo(stream, x:Double) {
     printWithSprintf(stream, "%.16g", Double(x));
 }
@@ -270,6 +290,25 @@ overload printReprTo(stream, x:Float32) {
 
 overload printReprTo(stream, x:Float64) {
     printWithSprintf(stream, "%.13a", x);
+}
+
+overload printReprTo(stream, x:Float80) {
+    printWithSprintf(stream, "%.13La", x);
+}
+
+overload printTo(stream, x:Complex80) {
+    printWithSprintf(stream, "%.16Lg", Pointer[LongDouble](&x)^);
+    printWithSprintf(stream, "+j%.16Lg", (Pointer[LongDouble](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex64) {
+    printWithSprintf(stream, "%.16g", Pointer[Double](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Double](&x)+1)^);
+}
+
+overload printTo(stream, x:Complex32) {
+    printWithSprintf(stream, "%.16g", Pointer[Float](&x)^);
+    printWithSprintf(stream, "+j%.16g", (Pointer[Float](&x)+1)^);
 }
 
 [T]
