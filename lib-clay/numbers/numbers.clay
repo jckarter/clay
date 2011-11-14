@@ -192,6 +192,10 @@ inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
 [A | Float?(A)]
 inline overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
 
+inline inRange?(x,l,u) =  x<u and l<=x;
+
+inline inRangeEquals?(x,l,u) =  x<=u and l<=x;
+
 
 
 //
