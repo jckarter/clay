@@ -18,6 +18,11 @@ import time
 testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
 
+#
+# testLogFile
+# 
+
+testLogFile = open("testlog.txt", "w")
 
 
 #
@@ -131,22 +136,38 @@ class TestCase(object):
     def match(self, resultout, resulterr, returncode) :
         compilererrfile = fileForPlatform(".", "compilererr", "txt")
         if os.path.isfile(compilererrfile):
-            if returncode != "compiler error":
-                return "compiler did not fail"
             errpattern = open(compilererrfile).read()
             errpattern = errpattern.replace('\r', '').strip()
 
+            if returncode != "compiler error":
+                print >>testLogFile, "compiler did not fail"
+                print >>testLogFile, "expected error pattern"
+                print >>testLogFile, "----------------------"
+                print >>testLogFile, errpattern
+                return "compiler did not fail"
             if re.search(errpattern, resulterr):
                 return "ok"
             else:
+                print >>testLogFile, "unexpected compiler error"
+                print >>testLogFile, "expected error pattern"
+                print >>testLogFile, "----------------------"
+                print >>testLogFile, errpattern
+                print >>testLogFile, "---------------------"
+                print >>testLogFile, "actual compiler error"
+                print >>testLogFile, "---------------------"
+                print >>testLogFile, resulterr
                 return "unexpected compiler error"
 
         else:
             if returncode == "compiler error":
+                print >>testLogFile, "compiler error"
+                print >>testLogFile, "--------------"
+                print >>testLogFile, resulterr
                 return "compiler error"
             outfile = fileForPlatform(".", "out", "txt")
             errfile = fileForPlatform(".", "err", "txt")
             if not os.path.isfile(outfile) :
+                print >>testLogFile, "out.txt missing"
                 return "out.txt missing"
             refout = open(outfile).read()
             referr = ""
@@ -159,13 +180,50 @@ class TestCase(object):
             if resultout == refout and resulterr == referr:
                 return "ok"
             elif resultout != refout and resulterr != referr:
+                print >>testLogFile, "out.txt and err.txt mismatch"
+                print >>testLogFile, "expected out.txt"
+                print >>testLogFile, "----------------"
+                print >>testLogFile, refout
+                print >>testLogFile, "-------------"
+                print >>testLogFile, "actual output"
+                print >>testLogFile, "-------------"
+                print >>testLogFile, resultout
+                print >>testLogFile, "----------------"
+                print >>testLogFile, "expected err.txt"
+                print >>testLogFile, "----------------"
+                print >>testLogFile, referr
+                print >>testLogFile, "-------------"
+                print >>testLogFile, "actual stderr"
+                print >>testLogFile, "-------------"
+                print >>testLogFile, resulterr
                 return "out.txt and err.txt mismatch"
             elif resultout != refout:
+                print >>testLogFile, "out.txt mismatch"
+                print >>testLogFile, "expected out.txt"
+                print >>testLogFile, "----------------"
+                print >>testLogFile, refout
+                print >>testLogFile, "-------------"
+                print >>testLogFile, "actual output"
+                print >>testLogFile, "-------------"
+                print >>testLogFile, resultout
                 return "out.txt mismatch"
             elif resulterr != referr:
+                print >>testLogFile, "err.txt mismatch"
+                print >>testLogFile, "expected err.txt"
+                print >>testLogFile, "----------------"
+                print >>testLogFile, referr
+                print >>testLogFile, "-------------"
+                print >>testLogFile, "actual stderr"
+                print >>testLogFile, "-------------"
+                print >>testLogFile, resulterr
                 return "err.txt mismatch"
 
     def run(self):
+        testLogFile.flush()
+        print >>testLogFile
+        print >>testLogFile, "====================="
+        print >>testLogFile, self.name()
+        print >>testLogFile, "====================="
         os.chdir(self.path)
         self.pre_build()
         self.post_build()
@@ -211,8 +269,14 @@ class TestModuleCase(TestCase):
         if returncode == 0:
             return "ok"
         elif returncode == "compiler error":
+            print >>testLogFile, "compiler error"
+            print >>testLogFile, "--------------"
+            print >>testLogFile, resulterr
             return "compiler error"
         else:
+            print >>testLogFile, "fail"
+            print >>testLogFile, "----"
+            print >>testLogFile, resultout
             return "fail"
 
 class TestDisabledCase(TestCase):
@@ -278,12 +342,22 @@ def runTests() :
         print "\nFAILED %d TESTS" % len(failed)
         print "Failed tests:\n ",
         print "\n  ".join(failed)
+    testLogFile.flush()
+    print "Test log written to testlog.txt"
 
+def usage(argv0):
+    print "Usage: %s [root] [root...]" % argv0
+    print "  Runs the Clay test suite. If any root paths are given, only tests"
+    print "  in those subdirectories (paths relative to the test/ directory) will"
+    print "  be run."
 
 def main() :
     global testRoot
     global runTestRoot
     if len(sys.argv) > 1 :
+        if sys.argv[1] == "--help" or sys.argv[1] == "/?":
+            usage(sys.argv[0])
+            return
         runTestRoot = os.path.join(testRoot, *sys.argv[1:])
     else:
         runTestRoot = testRoot
