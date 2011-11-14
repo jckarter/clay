@@ -7,6 +7,7 @@ public import unions.*;
 public import statics.*;
 public import booleans.*;
 public import numbers.*;
+public import complex.*;
 public import enumerations.*;
 public import pointers.*;
 public import memory.*;
