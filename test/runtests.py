@@ -240,7 +240,7 @@ class TestCase(object):
         process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
         compilerout, compilererr = process.communicate()
         if process.returncode != 0 :
-            return "", compilerout, "compiler error"
+            return "", "%s\n%s" % (compilerout, compilererr), "compiler error"
         if self.runscript is None:
             commandline = [outfilename]
         else:
