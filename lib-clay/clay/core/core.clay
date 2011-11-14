@@ -33,7 +33,7 @@ define lookupModule;
 [S | String?(S)]
 overload lookupModule(name:S) = lookupModule(String(name));
 
-overload lookupModule(name:String) Maybe[Module] { 
+overload lookupModule(name:String) Maybe[Module] {
     var ptr = lookup(modulesMap, name);
     if (null?(ptr))
         return nothing(Module);
@@ -223,6 +223,7 @@ record Primitive = referenceType(
 record BoolTag();
 record IntegerTag(signed?:Bool, bits:Int);
 record FloatTag(bits:Int);
+record ComplexTag(bits:Int);
 record PointerTag();
 record CodePointerTag();
 record RefTag();
@@ -241,6 +242,7 @@ record EnumTag(info:Enum);
 variant TypeTag ( BoolTag
                 , IntegerTag
                 , FloatTag
+                , ComplexTag
                 , PointerTag
                 , CodePointerTag
                 , RefTag
@@ -296,10 +298,15 @@ var int64Type = Type(IntegerTag(true, 64));
 var uint8Type = Type(IntegerTag(false, 8));
 var uint16Type = Type(IntegerTag(false, 16));
 var uint32Type = Type(IntegerTag(false, 32));
-var uint64Type = Type(IntegerTag(false, 64)); 
+var uint64Type = Type(IntegerTag(false, 64));
 
 var float32Type = Type(FloatTag(32));
 var float64Type = Type(FloatTag(64));
+var float80Type = Type(FloatTag(80));
+
+var complex32Type = Type(ComplexTag(32));
+var complex64Type = Type(ComplexTag(64));
+var complex80Type = Type(ComplexTag(80));
 
 
 
