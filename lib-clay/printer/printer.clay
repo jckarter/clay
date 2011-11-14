@@ -116,7 +116,7 @@ overload printTo(stream, x:E) {
 
 [..T]
 overload printTo(stream, x:Tuple[..T]) {
-    printTo(stream, "(", ..weaveValues(", ", ..unpackTuple(x)), ")");
+    printTo(stream, "[", ..weaveValues(", ", ..unpackTuple(x)), "]");
 }
 
 [T | Record?(T)]
@@ -125,12 +125,12 @@ overload printTo(stream, x:T) {
 }
 
 printSequenceTo(stream, xs) {
-    printTo(stream, "[");
+    printTo(stream, "{");
     interleave(xs,
         () -> { printTo(stream, ", "); },
         x  -> { printTo(stream, x);    },
     );
-    printTo(stream, "]");
+    printTo(stream, "}");
 }
 
 [T,n]
@@ -307,14 +307,9 @@ overload printReprTo(stream, x:Static[X]) {
 
 [..T]
 overload printReprTo(stream, x:Tuple[..T]) {
-    printReprArgumentsTo(stream, ..tupleElements(x));
-}
-
-[T]
-overload printReprTo(stream, x:Tuple[T]) {
-    printTo(stream, "(");
-    printReprTo(stream, x.0);
-    printTo(stream, ",)");
+    printTo(stream, "[");
+    printReprValuesTo(stream, ..tupleElements(x));
+    printTo(stream, "]");
 }
 
 
@@ -364,9 +359,9 @@ printReprElementsTo(stream, seq) {
 
 [T,n]
 overload printReprTo(stream, a:Array[T,n]) {
-    printTo(stream, '[');
+    printTo(stream, Array[T,n], '(');
     printReprElementsTo(stream, a);
-    printTo(stream, ']');
+    printTo(stream, ')');
 }
 
 [T]
