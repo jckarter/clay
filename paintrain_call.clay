@@ -1,0 +1,59 @@
+import simd.*;
+
+external simple(x:Int, y:Bool, z:Float);
+
+external oneWordTuple0(x:Tuple[Int32,Int32]) : Int32;
+
+external twoWordTuple0(x:Tuple[Int32,Int32,Int64]) : Int32;
+
+external bigTuple0(x:Tuple[Int64,Int64,Int64]) : Int64;
+
+external mixedTuple0(x:Tuple[Int32,Double]) : Int32;
+
+external bigTupleOut0(x:Int64,y:Int64,z:Int64) : Tuple[Int64,Int64,Int64];
+
+external complexOut() : Complex64;
+external complexIn0(x:Complex64) : Float64;
+
+external complexFloatOut() : Complex32;
+external complexFloatIn0(x:Complex32) : Float32;
+
+external complexLongDoubleOut() : Complex80;
+external complexLongDoubleIn0(x:Complex80) : Float80;
+
+external vec(x:Vec[Byte,16], y:Vec[Byte,16]) : Vec[Byte,16];
+
+external mutantUnion0(x:Union[Int,Vec[Double,2]]) : Int;
+external mutantUnion1(x:Union[Int,Vec[Double,2]]) : Vec[Double,2];
+
+external paintrain(
+    int:Int, bool:Bool, float:Float, int64:Int64,
+    smallTuple:Tuple[Int32,Int32], mediumTuple:Tuple[Int32,Int32,Int64],
+    largeTuple:Tuple[Int64,Int64,Int64],
+    mixedTuple:Tuple[Int32,Double],
+    complex:Complex64,
+    complex32:Complex32,
+    complex80:Complex80,
+    vec:Vec[Byte,16],
+    mutant:Union[Int,Vec[Double,2]]
+) {
+    simple(int, bool, float);
+    oneWordTuple0(smallTuple);
+    oneWordTuple0([int,int]);
+    twoWordTuple0(mediumTuple);
+    bigTuple0(largeTuple);
+    var largeTuple2 = bigTupleOut0(int64, int64, int64);
+    bigTuple0(largeTuple2);
+
+    complexIn0(complex);
+    var complex_2 = complexOut();
+    complexIn0(complex_2);
+
+    complexFloatIn0(complex32);
+    var complex32_2 = complexFloatOut();
+    complexFloatIn0(complex32_2);
+
+    complexLongDoubleIn0(complex80);
+    var complex80_2 = complexLongDoubleOut();
+    complexLongDoubleIn0(complex80_2);
+}

@@ -970,13 +970,16 @@ static void declareLLVMType(TypePtr t) {
     }
     case CCODE_POINTER_TYPE : {
         CCodePointerType *x = (CCodePointerType *)t.ptr();
+        ExternalTargetPtr target = getExternalTarget();
+
         vector<llvm::Type *> llArgTypes;
+        vector< pair<unsigned, llvm::Attributes> > llAttributes;
+        llvm::Type *llRetType =
+            target->pushReturnType(x->returnType, llArgTypes, llAttributes);
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            llArgTypes.push_back(llvmType(x->argTypes[i]));
-        llvm::Type *llReturnType =
-            x->returnType.ptr() ? llvmType(x->returnType) : llvmVoidType();
+            target->pushArgumentType(x->argTypes[i], llArgTypes, llAttributes);
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llReturnType, llArgTypes, x->hasVarArgs);
+            llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
         t->llType = llvm::PointerType::getUnqual(llFuncType);
         break;
     }

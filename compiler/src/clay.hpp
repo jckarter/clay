@@ -11,6 +11,7 @@
 #include <climits>
 #include <cerrno>
 
+#include <llvm/ADT/Triple.h>
 #include <llvm/Type.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
@@ -1618,7 +1619,8 @@ struct GVarInstance : public Object {
 enum CallingConv {
     CC_DEFAULT,
     CC_STDCALL,
-    CC_FASTCALL
+    CC_FASTCALL,
+    CC_LLVM
 };
 
 struct ExternalProcedure : public TopLevelItem {
@@ -3113,5 +3115,59 @@ static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
     else
         return NULL;
 }
+
+// externals
+
+struct ExternalTarget : public Object {
+    ExternalTarget() : Object(DONT_CARE) {}
+    virtual ~ExternalTarget() {}
+
+    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) = 0;
+
+    // for generating C function declarations
+    virtual llvm::Type *pushReturnType(TypePtr type,
+                                       vector<llvm::Type *> &llArgTypes,
+                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
+    virtual void pushArgumentType(TypePtr type,
+                                  vector<llvm::Type *> &llArgTypes,
+                                  vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
+
+    // for generating C function definitions
+    virtual void allocReturnValue(TypePtr type,
+                                  llvm::Function::arg_iterator &ai,
+                                  vector<CReturn> &returns,
+                                  CodegenContextPtr ctx) = 0;
+    virtual CValuePtr allocArgumentValue(TypePtr type,
+                                         string const &name,
+                                         llvm::Function::arg_iterator &ai,
+                                         CodegenContextPtr ctx) = 0;
+    virtual void returnStatement(TypePtr type,
+                                 vector<CReturn> &returns,
+                                 CodegenContextPtr ctx) = 0;
+
+    // for calling C functions
+    virtual void loadStructRetArgument(TypePtr type,
+                                       vector<llvm::Value *> &llArgs,
+                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                                       CodegenContextPtr ctx,
+                                       MultiCValuePtr out) = 0;
+    virtual void loadArgument(CValuePtr cv,
+                              vector<llvm::Value *> &llArgs,
+                              vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                              CodegenContextPtr ctx) = 0;
+    virtual void loadVarArgument(CValuePtr cv,
+                                 vector<llvm::Value *> &llArgs,
+                                 vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                                 CodegenContextPtr ctx) = 0;
+    virtual void storeReturnValue(llvm::Value *callReturnValue,
+                                  TypePtr returnType,
+                                  CodegenContextPtr ctx,
+                                  MultiCValuePtr out) = 0;
+};
+
+typedef Pointer<ExternalTarget> ExternalTargetPtr;
+
+void initExternalTarget(string target);
+ExternalTargetPtr getExternalTarget();
 
 #endif

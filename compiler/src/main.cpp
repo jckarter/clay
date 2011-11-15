@@ -706,6 +706,7 @@ int main(int argc, char **argv) {
     };
 
     initTypes();
+    initExternalTarget(targetTriple);
 
     setAbortOnError(abortOnError);
 

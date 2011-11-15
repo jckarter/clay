@@ -7,6 +7,7 @@ set(SOURCES
     env.cpp
     error.cpp
     evaluator.cpp
+    externals.cpp
     invoketables.cpp
     lambdas.cpp
     lexer.cpp
