@@ -111,14 +111,14 @@ inline overload lesser?(a:T, b:C) = numericLesser?(a, real(b));
 [C | Complex?(C)]
 inline overload lesser?(a:C, b:C) = numericLesser?(real(a), real(b));
 
-[A | Complex?(A) or Numeric?(A)]
-inline overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
+[A,B | Complex?(A) or Complex?(B)]
+inline overload lesserEquals?(a:A, b:B) = not lesser?(b, a);
 
-[A | Complex?(A) or Numeric?(A)]
-inline overload greater?(a:A, b:A) = lesser?(b, a);
+[A,B | Complex?(A) or Complex?(B)]
+inline overload greater?(a:A, b:B) = lesser?(b, a);
 
-[A | Complex?(A) or Numeric?(A)]
-inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
+[A,B | Complex?(A) or Complex?(B)]
+inline overload greaterEquals?(a:A, b:B) = not lesser?(a, b);
 
 
 [T | Complex?(T)]
