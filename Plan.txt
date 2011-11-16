@@ -21,6 +21,22 @@
     * Maybe -> ?
     * MaybePointer -> ?Ptr
 
+* The fieldRef, index, and staticIndex operators have been unified. Field and tuple reference
+  syntax now desugars to indexing with identifiers or static integers:
+    foo.bar ==> foo[#"bar"]   ==> index(foo, #"bar")
+    foo.1   ==> foo[static 1] ==> index(foo, static 1)
+
+* Integer division now uses the new 'div' operator. '/' now only does floating-point division:
+    var x = 3 div 2; // 1
+    var x = 3/2; // type error
+  The div operator desugars to the quotient(a,b) function. An update statement form
+  'div=' is also provided.
+  The 'clayfixed.v0_0.integerdivide' module provides divide(a,b) overloads for truncating
+  integer division for backward compatibility.
+
+* The representation of StringConstants has been changed to be compatible with
+  C strings.
+
 * The prelude has been shrunk to only include a minimum set of libraries by default.
   Those prelude modules have been moved to core/*, and the default prelude
   public imports core.*.
