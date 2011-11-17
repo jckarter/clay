@@ -25,6 +25,14 @@ external twoWordTupleOut0(x:Int64,y:Int64) : Tuple[Int64,Int64] = [x,y];
 
 external bigTupleOut0(x:Int64,y:Int64,z:Int64) : Tuple[Int64,Int64,Int64] = [x,y,z];
 
+external vectorTuple0(x:Tuple[Vec[Double,2]]) : Vec[Double,2] = x.0 + x.0;
+external vectorTuple1(x:Tuple[Vec[Float,4]]) : Vec[Float,4] = x.0 + x.0;
+external vectorTuple2(x:Tuple[Vec[Byte,16]]) : Vec[Byte,16] = x.0 + x.0;
+
+external twoVectorTuple0(x:Tuple[Vec[Byte,16],Vec[Byte,16]]) : Vec[Byte,16] = x.0 + x.1;
+
+external ymmVectorTuple0(x:Tuple[Vec[Byte,32]]) : Vec[Byte,32] = x.0 + x.0;
+
 external complexOut() : Complex64 = 1.0 + 2.0j;
 external complexIn0(x:Complex64) : Float64 = real(x);
 external complexIn1(x:Complex64) : Float64 = imag(x);
@@ -41,3 +49,12 @@ external vec(x:Vec[Byte,16], y:Vec[Byte,16]) : Vec[Byte,16] = x + y;
 
 external mutantUnion0(x:Union[Int,Vec[Double,2]]) : Int = x.0;
 external mutantUnion1(x:Union[Int,Vec[Double,2]]) : Vec[Double,2] = x.1;
+
+external x87Union0(x:Union[Int,Float80]) : Int = x.0;
+external x87Union1(x:Union[Int,Complex80]) : Int = x.0;
+external x87Union2(x:Union[Float80,Float80]) : Float80 = x.0;
+external x87Union3(x:Union[Float80,Complex80]) : Float80 = x.0;
+
+external x87UnionOut0(x:Union[Float80,Float80]) : Union[Float80,Float80] = x;
+
+external emptyTuple(x:Tuple[]) {}
