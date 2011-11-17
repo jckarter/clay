@@ -515,13 +515,15 @@ static void _classifyStructType(vector<TypePtr>::const_iterator fieldBegin,
 {
     if (fieldBegin == fieldEnd)
         _classifyType(intType(8), begin, offset);
-    size_t fieldOffset = offset;
-    for (vector<TypePtr>::const_iterator i = fieldBegin; i != fieldEnd; ++i) {
-        size_t align = typeAlignment(*i);
-        fieldOffset = (fieldOffset+align-1)/align*align;
-        _classifyType(*i, begin, fieldOffset);
-        size_t size = typeSize(*i);
-        fieldOffset += size;
+    else {
+        size_t fieldOffset = offset;
+        for (vector<TypePtr>::const_iterator i = fieldBegin; i != fieldEnd; ++i) {
+            size_t align = typeAlignment(*i);
+            fieldOffset = (fieldOffset+align-1)/align*align;
+            _classifyType(*i, begin, fieldOffset);
+            size_t size = typeSize(*i);
+            fieldOffset += size;
+        }
     }
 }
 
