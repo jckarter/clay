@@ -15,6 +15,8 @@ external twoWordTuple5(x:Tuple[Int32,Int32,Int64]) : Int64 = x.2;
 
 external mixedTuple0(x:Tuple[Int32,Double]) : Int32 = x.0;
 external mixedTuple1(x:Tuple[Int32,Double]) : Double = x.1;
+external mixedTuple2(x:Tuple[Float,Int64]) : Float = x.0;
+external mixedTuple3(x:Tuple[Float,Int64]) : Int64 = x.1;
 
 external bigTuple0(x:Tuple[Int64,Int64,Int64]) : Int64 = x.0;
 external bigTuple1(x:Tuple[Int64,Int64,Int64]) : Int64 = x.1;

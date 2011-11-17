@@ -202,7 +202,10 @@ void VanillaExternalTarget::storeReturnValue(llvm::Value *callReturnValue,
 enum WordClass {
     NO_CLASS,
     INTEGER,
-    SSE,
+    // Vector and scalar SSE values are treated equivalently by the classification
+    // algorithm, but LLVM's optimizer likes it better if we emit the proper type
+    SSE_VECTOR,
+    SSE_SCALAR,
     SSEUP,
     X87,
     X87UP,
@@ -312,9 +315,9 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
             return false;
         // __m256 varargs are passed on the stack
         if ((wordClasses.size() > 2
-            && wordClasses[0] == SSE && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
+            && wordClasses[0] == SSE_VECTOR && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
             || (wordClasses.size() > 3
-            && wordClasses[1] == SSE && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP))
+            && wordClasses[1] == SSE_VECTOR && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP))
             return false;
         return true;
     }
@@ -338,15 +341,16 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
                 llWordTypes.push_back(llvmIntType(64));
                 ++i;
                 break;
-            case SSE: {
+            case SSE_VECTOR: {
                 int vectorRun = 0;
                 do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-                if (vectorRun > 1)
-                    llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
-                else
-                    llWordTypes.push_back(llvmFloatType(64));
+                llWordTypes.push_back(llvm::VectorType::get(llvmIntType(8), vectorRun*8));
                 break;
             }
+            case SSE_SCALAR:
+                llWordTypes.push_back(llvmFloatType(64));
+                ++i;
+                break;
             case SSEUP:
                 assert(false);
                 break;
@@ -396,8 +400,10 @@ static void unifyWordClass(vector<WordClass>::iterator wordi, WordClass newClass
     else if (*wordi == X87 || *wordi == X87UP || *wordi == COMPLEX_X87
              || newClass == X87 || newClass == X87UP || newClass == COMPLEX_X87)
         *wordi = MEMORY;
-    else
-        *wordi = SSE;
+    else {
+        assert(newClass == SSE_SCALAR || newClass == SSE_VECTOR);
+        *wordi = newClass;
+    }
 }
 
 static void _classifyStructType(vector<TypePtr>::const_iterator fieldBegin,
@@ -429,10 +435,10 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         FloatType *x = (FloatType *)type.ptr();
         switch (x->bits) {
         case 32:
-            unifyWordClass(begin + offset/8, SSE);
+            unifyWordClass(begin + offset/8, SSE_VECTOR);
             break;
         case 64:
-            unifyWordClass(begin + offset/8, SSE);
+            unifyWordClass(begin + offset/8, SSE_SCALAR);
             break;
         case 80:
             unifyWordClass(begin + offset/8, X87);
@@ -472,7 +478,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         break;
     }
     case VEC_TYPE: {
-        unifyWordClass(begin + offset/8, SSE);
+        unifyWordClass(begin + offset/8, SSE_VECTOR);
         for (size_t i = 1; i < (typeSize(type)+7)/8; ++i)
             unifyWordClass(begin + offset/8 + i, SSEUP);
         break;
@@ -537,7 +543,7 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
     vector<WordClass>::iterator i = wordClasses.begin(),
                                 end = wordClasses.end();
     if (wordClasses.size() > 2) {
-        if (*i == SSE) {
+        if (*i == SSE_VECTOR || *i == SSE_SCALAR) {
             ++i;
             for (; i != end; ++i) {
                 if (*i != SSEUP) {
@@ -569,8 +575,8 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
             return;
         }
         if (*i == SSEUP) {
-            *i = SSE;
-        } else if (*i == SSE) {
+            *i = SSE_VECTOR;
+        } else if (*i == SSE_VECTOR || *i == SSE_SCALAR) {
             do { ++i; } while (*i == SSEUP);
         } else if (*i == X87) {
             do { ++i; } while (*i == X87UP);
