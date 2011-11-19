@@ -943,7 +943,7 @@ static void declareLLVMType(TypePtr t) {
         vector<llvm::Type *> llTypes;
         llTypes.push_back(llvmType(floatType(x->bits)));
         llTypes.push_back(llvmType(floatType(x->bits)));
-        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
         break;
     }
     case POINTER_TYPE : {
@@ -994,15 +994,15 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case TUPLE_TYPE : {
-        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         break;
     }
     case UNION_TYPE : {
-        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         break;
     }
     case RECORD_TYPE : {
-        t->llType = llvm::StructType::create(llvm::getGlobalContext());
+        t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         break;
     }
     case VARIANT_TYPE : {
@@ -1276,4 +1276,11 @@ void typePrint(ostream &out, TypePtr t) {
     default :
         assert(false);
     }
+}
+
+string typeName(TypePtr type)
+{
+    ostringstream os;
+    typePrint(os, type);
+    return os.str();
 }

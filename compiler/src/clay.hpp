@@ -2417,6 +2417,7 @@ llvm::Type *llvmType(TypePtr t);
 size_t typeSize(TypePtr t);
 size_t typeAlignment(TypePtr t);
 void typePrint(ostream &out, TypePtr t);
+string typeName(TypePtr t);
 
 
 

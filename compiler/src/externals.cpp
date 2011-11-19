@@ -327,7 +327,7 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
         vector<WordClass> const &wordClasses = getTypeClassification(type);
         assert(!wordClasses.empty());
 
-        llvm::StructType *llType = llvm::StructType::create(llvm::getGlobalContext());
+        llvm::StructType *llType = llvm::StructType::create(llvm::getGlobalContext(), "x86-64 " + typeName(type));
         vector<llvm::Type*> llWordTypes;
         vector<WordClass>::const_iterator i = wordClasses.begin();
         while (i != wordClasses.end()) {
