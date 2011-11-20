@@ -14,6 +14,9 @@ typedef int (*fparg)(char (*)(float));
 
 typedef int (*(*fpret)(char))(float);
 
+typedef int typedef_t;
+typedef typedef_t typedef_typedef_t;
+
 int (*fpretf(char))(float);
 
 int barpf(struct bar *x);
@@ -34,3 +37,7 @@ int __attribute__((stdcall)) stdcalled(int x);
 enum plain_enum_t { APPLE, BANANA, CHERRY };
 enum valued_enum_t { STRAWBERRY = -1, VANILLA = 7 + 2, CHOCOLATE = 88 };
 enum big_enum_t { KIWI, PASSIONFRUIT, forceLongLong = 0x7fffffffffffffffULL };
+
+typedef int __attribute__((vector_size(16))) intx4;
+typedef int __attribute__((vector_size(32))) intx8;
+typedef double __attribute__((vector_size(16))) doublex2;;

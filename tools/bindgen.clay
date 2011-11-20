@@ -41,22 +41,6 @@ nameForDeclaration(cursor:CXCursor) : String
         return namep^;
 }
 
-visitFunctionPointerParam(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
-{
-    ref name = Pointer[Tuple[String, Bool]](data)^;
-    switch (cursor.kind)
-    case (CXCursor_ParmDecl) {
-        if (name.1)
-            printTo(name.0, ",");
-        else
-            name.1 = true;
-        printTo(name.0, convertType(clang_getCursorType(cursor), cursor));
-    }
-    else {
-    }
-    return CXChildVisit_Continue;
-}
-
 convertPointerType(type:CXType, refCursor:CXCursor) : String {
     switch (type.kind)
     case (CXType_Void)
@@ -65,28 +49,36 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
         // XXX Function pointer types inside fields or parms show up as "unexposed"
         // but we can still extract the return type and visit parms
         // XXX Pointers to forward-declared structs also show up as "unexposed"
-        // XXX detect varargs for Proto functions
         // XXX calling convention
-        // XXX return function pointer type parms get visited in tandem with
-        // function params
-        var varargs = type.kind == CXType_FunctionNoProto;
         var returnType = clang_getResultType(type);
         var decl = clang_getTypeDeclaration(type);
         if (returnType.kind != CXType_Invalid) {
-            var name = [
-                str(if (varargs) "VarArgsCCodePointer" else "CCodePointer"),
-                false
-            ];
-            printTo(name.0, "[[");
-            if (returnType.kind != CXType_FunctionNoProto)
-                clang_visitChildren(refCursor,
-                    CXCursorVisitor(visitFunctionPointerParam),
-                    CXClientData(&name));
-            printTo(name.0,
+            var name = String();
+            var varargs = clang_isFunctionTypeVariadic(type) != 0;
+
+            switch (clang_getFunctionTypeCallingConv(type))
+            case (CXCallingConv_X86StdCall)
+                printTo(name, "StdCallCodePointer");
+            case (CXCallingConv_X86FastCall)
+                printTo(name, "FastCallCodePointer");
+            else if (varargs)
+                printTo(name, "VarArgsCCodePointer");
+            else
+                printTo(name, "CCodePointer");
+
+            printTo(name, "[[");
+
+            for (arg in range(clang_getNumArgTypes(type))) {
+                if (arg > 0)
+                    printTo(name, ", ");
+                printTo(name, convertType(clang_getArgType(type, arg), refCursor));
+            }
+
+            printTo(name,
                 "],[",
                 if (returnType.kind == CXType_Void) str("") else convertType(returnType, refCursor),
                 "]]");
-            return move(name.0);
+            return move(name);
         } else if (decl.kind != CXCursor_NoDeclFound) {
             return str("Pointer[", convertTypeFromDeclaration(decl), "]");
         } else {
@@ -146,17 +138,16 @@ convertType(type:CXType, refCursor:CXCursor) : String {
     case (CXType_LongDouble)
         return str("LongDouble");
     case (CXType_Complex) {
-        // XXX complex element type
-        var elementType = clang_getArrayElementType(type);
+        var elementType = clang_getElementType(type);
         switch (elementType.kind)
         case (CXType_Float)
             return str("Complex32");
         case (CXType_LongDouble)
             return str("ComplexLongDouble");
-        case (CXType_Double, CXType_Invalid) // XXX
+        case (CXType_Double)
             return str("Complex64");
         else
-            return str("Opaque /* unknown complex ",
+            return str("Opaque /* unsupported complex type ",
                 clang_getTypeKindSpelling(elementType.kind), " */");
     }
     case (CXType_Pointer)
@@ -170,6 +161,14 @@ convertType(type:CXType, refCursor:CXCursor) : String {
             convertType(clang_getArrayElementType(type), refCursor),
             ", ",
             clang_getArraySize(type),
+            "]",
+        );
+    }
+    case (CXType_Vector) {
+        return str("Vec[",
+            convertType(clang_getElementType(type), refCursor),
+            ", ",
+            clang_getNumElements(type),
             "]",
         );
     }
@@ -207,35 +206,23 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     return CXChildVisit_Continue;
 }
 
-visitFunctionParm(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+record FunctionDeclAttributes (asmLabel:String);
+
+visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref parmIndex = Pointer[Int](data)^;
+    ref attributes = Pointer[FunctionDeclAttributes](data)^;
     switch (cursor.kind)
-    case (CXCursor_ParmDecl) {
-        if (parmIndex > 0)
-            print(", ");
-        var name = str(clang_getCursorSpelling(cursor));
-        if (empty?(name))
-            print("arg", parmIndex);
-        else
-            print(name);
-        print(":", convertType(clang_getCursorType(cursor), cursor));
-        inc(parmIndex);
-    }
-    else {
-    }
+    case (CXCursor_AsmLabelAttr)
+        attributes.asmLabel = str(clang_getCursorSpelling(cursor));
     return CXChildVisit_Continue;
 }
 
 visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref enumCounter = Pointer[Int64](data)^;
-
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
-        // XXX get actual enum value
-        println("alias ", clang_getCursorSpelling(cursor), " = ", enumCounter, ";");
-        inc(enumCounter);
+        println("alias ", clang_getCursorSpelling(cursor), " = ",
+            clang_getEnumConstantDeclValue(cursor), ";");
     }
     else {
     }
@@ -273,11 +260,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         return CXChildVisit_Continue;
     }
     case (CXCursor_EnumDecl) {
-        // XXX get enum int type
         withForwardDecl(cursor, () -> {
-            var enumCounter = 0_i64;
-            println("alias ", nameForDeclaration(cursor), " = Int;");
-            clang_visitChildren(cursor, CXCursorVisitor(visitEnum), CXClientData(&enumCounter));
+            println("alias ", nameForDeclaration(cursor), " = ",
+                convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
+            clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
         });
         return CXChildVisit_Continue;
     }
@@ -285,10 +271,31 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX __asm__ name
         // XXX calling convention
         // XXX dllimport/dllexport
-        print("external ", clang_getCursorSpelling(cursor), "(");
-        var parmIndex = 0;
-        clang_visitChildren(cursor, CXCursorVisitor(visitFunctionParm),
-            CXClientData(&parmIndex));
+        // XXX separate return function pointer type params
+        var attributes = FunctionDeclAttributes();
+        clang_visitChildren(cursor, CXCursorVisitor(visitFunctionAttr),
+            CXClientData(&attributes));
+
+        var type = clang_getCursorType(cursor);
+
+        print("external (");
+        switch (clang_getFunctionTypeCallingConv(type))
+        case (CXCallingConv_X86StdCall)
+            print("stdcall");
+        case (CXCallingConv_X86FastCall)
+            print("fastcall");
+        else
+            print("cdecl");
+
+        if (not empty?(attributes.asmLabel))
+            print(", ", repr(attributes.asmLabel));
+
+        print(") ", clang_getCursorSpelling(cursor), "(");
+        for (arg in range(clang_getNumArgTypes(type))) {
+            if (arg > 0)
+                print(", ");
+            print("arg", arg, ":", convertType(clang_getArgType(type, arg), cursor));
+        }
         print(") : ");
         var returnType = clang_getCursorResultType(cursor);
         if (returnType.kind != CXType_Void)
@@ -301,7 +308,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX if the typedef is an untagged struct or union, eliminate the intermediate
         // and use the typedef name as the record name
         println("alias ", clang_getCursorSpelling(cursor), " = ",
-            convertType(clang_getCanonicalType(clang_getCursorType(cursor)), cursor), ";");
+            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";");
         return CXChildVisit_Continue;
     }
     return CXChildVisit_Recurse;
