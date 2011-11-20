@@ -12,6 +12,7 @@ overload SignedInteger?(static Int8) = true;
 overload SignedInteger?(static Int16) = true;
 overload SignedInteger?(static Int32) = true;
 overload SignedInteger?(static Int64) = true;
+overload SignedInteger?(static Int128) = true;
 
 
 [T] UnsignedInteger?(static T) = false;
@@ -19,6 +20,7 @@ overload UnsignedInteger?(static UInt8) = true;
 overload UnsignedInteger?(static UInt16) = true;
 overload UnsignedInteger?(static UInt32) = true;
 overload UnsignedInteger?(static UInt64) = true;
+overload UnsignedInteger?(static UInt128) = true;
 
 
 [T] Integer?(static T) = SignedInteger?(T) or UnsignedInteger?(T);
