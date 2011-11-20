@@ -16,6 +16,9 @@ NOTE: LLVM builds in debug mode by default. This makes the
 Clay compiler crawl. If you're building LLVM from source, configure it
 with "./configure --enable-optimized" for good performance.
 
+NOTE 2: The stock version of libclang included in LLVM 3.0 is missing
+some features necessary to build the bindgen tool. To build bindgen, a patch
+against the clang source is provided in tools/libclang.diff.
 
 Build Clay
 ----------
