@@ -660,10 +660,12 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Int16", int16Type.ptr());
     addPrim(prims, "Int32", int32Type.ptr());
     addPrim(prims, "Int64", int64Type.ptr());
+    addPrim(prims, "Int128", int128Type.ptr());
     addPrim(prims, "UInt8", uint8Type.ptr());
     addPrim(prims, "UInt16", uint16Type.ptr());
     addPrim(prims, "UInt32", uint32Type.ptr());
     addPrim(prims, "UInt64", uint64Type.ptr());
+    addPrim(prims, "UInt128", uint128Type.ptr());
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
     addPrim(prims, "Float80", float80Type.ptr());
