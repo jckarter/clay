@@ -3,6 +3,10 @@ set(CLAYFIX_SOURCES
     clayfix/v0_0.clay
 )
 
+set(BINDGEN_SOURCES
+    bindgen.clay
+)
+
 if (WIN32)
     set(EXE .exe)
 else (WIN32)
@@ -20,11 +24,28 @@ add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clayfix${EXE}
         -o ${clay_BINARY_DIR}/tools/clayfix${EXE}
         ${clay_SOURCE_DIR}/tools/clayfix.clay)
 
+add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
+    DEPENDS
+        ${clay_BINARY_DIR}/compiler/src/clay
+        ${BINDGEN_SOURCES}
+    COMMAND ${clay_BINARY_DIR}/compiler/src/clay
+        -I${clay_SOURCE_DIR}/lib-clay
+        -I${clay_SOURCE_DIR}/tools
+        -o ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
+        -L${LLVM_PREFIX}/lib
+        -Wl,-rpath,${LLVM_PREFIX}/lib
+        -lclang
+        ${clay_SOURCE_DIR}/tools/bindgen.clay)
+
 add_custom_target(clayfix ALL DEPENDS ${clay_BINARY_DIR}/tools/clayfix${EXE})
+add_custom_target(clay-bindgen ALL DEPENDS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE})
 
 if (UNIX)
-    install(PROGRAMS ${clay_BINARY_DIR}/tools/clayfix${EXE} DESTINATION bin)
-else (UNIX)
-    install(PROGRAMS ${clay_BINARY_DIR}/tools/clayfix${EXE} DESTINATION .)
-endif (UNIX)
+    set(DEST bin)
+else ()
+    set(DEST .)
+endif ()
+
+install(PROGRAMS ${clay_BINARY_DIR}/tools/clayfix${EXE} DESTINATION ${DEST})
+install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE} DESTINATION ${DEST})
 
