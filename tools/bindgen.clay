@@ -241,19 +241,46 @@ withForwardDecl(cursor:CXCursor, f) {
         f();
     else {
         if (inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile))
-            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Opaque;");
+            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Opaque;\n");
     }
+}
+
+cursorMatchesPatterns(cursor:CXCursor, options:BindgenOptions) : Bool {
+    var file = CXFile();
+    clang_getSpellingLocation(clang_getCursorLocation(cursor),
+        &file, null(UInt), null(UInt), null(UInt));
+
+    // builtin definitions have a null file
+    if (null?(file)) {
+        return options.matchBuiltins;
+    }
+
+    if (empty?(options.matchPatterns))
+        return true;
+
+    var filename = str(clang_getFileName(file));
+    
+    for (pattern in options.matchPatterns)
+        if (in?(filename, pattern))
+            return true;
+
+    return false;
 }
 
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
+    ref options = Pointer[BindgenOptions](data)^;
+
+    if (not cursorMatchesPatterns(cursor, options))
+        return CXChildVisit_Continue;
+
     var kind = clang_getCursorKind(cursor);
     switch (kind)
     case (CXCursor_StructDecl) {
         withForwardDecl(cursor, () -> {
             printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
             clang_visitChildren(cursor, CXCursorVisitor(visitStruct), data);
-            printlnTo(g_bindingsOut, ");");
+            printlnTo(g_bindingsOut, ");\n");
         });
         return CXChildVisit_Continue;
     }
@@ -261,7 +288,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         withForwardDecl(cursor, () -> {
             printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Union[");
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
-            printlnTo(g_bindingsOut, "];");
+            printlnTo(g_bindingsOut, "];\n");
         });
         return CXChildVisit_Continue;
     }
@@ -271,6 +298,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
                 convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
             clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
         });
+        printlnTo(g_bindingsOut);
         return CXChildVisit_Continue;
     }
     case (CXCursor_FunctionDecl) {
@@ -307,7 +335,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         var returnType = clang_getCursorResultType(cursor);
         if (returnType.kind != CXType_Void)
             printTo(g_bindingsOut, convertType(returnType, cursor));
-        printlnTo(g_bindingsOut, ";");
+        printlnTo(g_bindingsOut, ";\n");
         return CXChildVisit_Continue;
     }
     case (CXCursor_TypedefDecl) {
@@ -315,7 +343,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX if the typedef is an untagged struct or union, eliminate the intermediate
         // and use the typedef name as the record name
         printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
-            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";");
+            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
         return CXChildVisit_Continue;
     }
     return CXChildVisit_Recurse;
@@ -324,14 +352,26 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 record Usage ();
 record MissingOutputFileName ();
 record MissingImportModuleName ();
+record MissingMatchPattern ();
 
-instance Exception (Usage, MissingOutputFileName, MissingImportModuleName);
+instance Exception (
+    Usage,
+    MissingOutputFileName,
+    MissingImportModuleName,
+    MissingMatchPattern
+);
 
 overload printTo(s, _:Usage) {
     printlnTo(s, "Usage: clay-bindgen [clang options...] [bindgen options...] input.h");
     printlnTo(s, "Bindgen options:");
     printlnTo(s, "  -o <output.clay>   Write bindings to <output.clay> (default stdout)");
     printlnTo(s, "  -import <module>   Prefix \"import <module>.*;\" to generated bindings");
+    printlnTo(s, "  -match <name>      Only output bindings for definitions from files");
+    printlnTo(s, "                     whose name contains <name>");
+    printlnTo(s, "                     If multiple -match options are provided, files");
+    printlnTo(s, "                     matching any rule are bound to.");
+    printlnTo(s, "  -builtins          Output bindings for builtin definitions");
+    printlnTo(s, "                     (for example __builtin_va_list)");
     printlnTo(s, "Most clang options (such as -I and -D) are also supported.");
 }
 
@@ -343,9 +383,19 @@ overload printTo(s, _:MissingImportModuleName) {
     printlnTo(s, "no module name specified after -import option");
 }
 
+overload printTo(s, _:MissingMatchPattern) {
+    printlnTo(s, "no filename pattern specified after -match option");
+}
+
 record BindgenOptions (
     outputFileName:Maybe[String],
     imports:Vector[String],
+    matchPatterns:Vector[String],
+    matchBuiltins:Bool
+);
+
+overload BindgenOptions() = BindgenOptions(
+    nothing(String), Vector[String](), Vector[String](), false
 );
 
 parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
@@ -372,6 +422,16 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
             push(options.imports, String(argv[arg + 1]));
             arg += 2;
         }
+        case ("-match") {
+            if (arg + 1 >= argc)
+                throw MissingMatchPattern();
+            push(options.matchPatterns, String(argv[arg + 1]));
+            arg += 2;
+        }
+        case ("-builtins") {
+            options.matchBuiltins = true;
+            arg += 1;
+        }
         case ("--") {
             clang_argc += argc - arg;
             for (i in range(arg, argc))
@@ -381,7 +441,7 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
         else {
             inc(clang_argc);
             push(clang_argv, argv[arg]);
-            inc(arg);
+            arg += 1;
         }
     }
 
@@ -438,11 +498,13 @@ main(argc, argv)
     if (error?)
         return 1;
 
+    printlnTo(g_bindingsOut, "/* automatically generated by clay-bindgen */");
     for (imp in options.imports)
         printlnTo(g_bindingsOut, "import ", imp, ".*;");
+    printlnTo(g_bindingsOut);
 
     var cursor = clang_getTranslationUnitCursor(unit);
 
-    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData());
+    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(&options));
     return 0;
 }
