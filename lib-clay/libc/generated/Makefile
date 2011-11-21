@@ -6,51 +6,33 @@ default :
 macosx : macosx64 macosx32
 
 macosx64 :
-	gcc -E generated_from_unix.h > temp64.h
-	clay-bindgen temp64.h > generated.macosx.x86.64.clay
-	rm -f temp64.h
+	clay-bindgen -builtins -m64 generated_from_unix.h -o generated.macosx.x86.64.clay
 
 macosx32 :
-	gcc -E -m32 generated_from_unix.h > temp32.h
-	clay-bindgen temp32.h > generated.macosx.x86.32.clay
-	rm -f temp32.h
+	clay-bindgen -builtins -m32 generated_from_unix.h -o generated.macosx.x86.32.clay
 
 IOS_GCC=/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/gcc
 
 ios:
-	$(IOS_GCC) -isysroot $(IOS_SDK_ROOT) -arch armv6 -E generated_from_unix.h >temp32.h
-	clay-bindgen temp32.h > generated.macosx.arm.clay
-	rm -f temp32.h
+	clay-bindgen -builtins -isysroot $(IOS_SDK_ROOT) -arch armv6 \
+	    generated_from_unix.h -o generated.macosx.arm.clay
 
 linux32 :
-	gcc -E -D_FILE_OFFSET_BITS=64 generated_from_unix.h > temp32.h
-	clay-bindgen temp32.h > generated.linux.32.clay
-	rm -f temp32.h
+	clay-bindgen -builtins -D_FILE_OFFSET_BITS=64 generated_from_unix.h -o generated.linux.32.clay
 
 linux64 :
-	gcc -E generated_from_unix.h > temp64.h
-	clay-bindgen temp64.h > generated.linux.64.clay
-	rm -f temp64.h
+	clay-bindgen -builtins generated_from_unix.h -o generated.linux.64.clay
 
 freebsd32 :
-	gcc -E -D_FILE_OFFSET_BITS=64 generated_from_unix.h > temp32.h
-	clay-bindgen temp32.h > generated.freebsd.32.clay
-	rm -f temp32.h
+	clay-bindgen -builtins -D_FILE_OFFSET_BITS=64 generated_from_unix.h -o generated.freebsd.32.clay
 
 freebsd64 :
-	gcc -E generated_from_unix.h > temp64.h
-	clay-bindgen temp64.h > generated.freebsd.64.clay
-	rm -f temp64.h
-
+	clay-bindgen -builtins generated_from_unix.h -o generated.freebsd.64.clay
 
 windows : windows32
 
 windows32 :
-	gcc -E generated_from_win32.h > temp32.h
-	clay-bindgen temp32.h > generated.windows.32.clay
-	del /f temp32.h
+	clay-bindgen -builtins generated_from_win32.h -o generated.windows.32.clay
 
 windows64 :
-	gcc -E generated_from_win32.h > temp64.h
-	clay-bindgen temp64.h > generated.windows.64.clay
-	del /f temp64.h
+	clay-bindgen -builtins generated_from_win32.h -o generated.windows.64.clay
