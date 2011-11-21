@@ -344,7 +344,7 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
             case SSE_VECTOR: {
                 int vectorRun = 0;
                 do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-                llWordTypes.push_back(llvm::VectorType::get(llvmIntType(8), vectorRun*8));
+                llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
                 break;
             }
             case SSE_SCALAR:
