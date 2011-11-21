@@ -459,7 +459,8 @@ alias CXCursor_IBOutletCollectionAttr = 403;
 alias CXCursor_CXXFinalAttr = 404;
 alias CXCursor_CXXOverrideAttr = 405;
 alias CXCursor_AnnotateAttr = 406;
-alias CXCursor_LastAttr = 406;
+alias CXCursor_AsmLabelAttr = 407;
+alias CXCursor_LastAttr = 407;
 alias CXCursor_PreprocessingDirective = 500;
 alias CXCursor_MacroDefinition = 501;
 alias CXCursor_MacroExpansion = 502;
@@ -631,6 +632,18 @@ alias CXType_ObjCObjectPointer = 109;
 alias CXType_FunctionNoProto = 110;
 alias CXType_FunctionProto = 111;
 alias CXType_ConstantArray = 112;
+alias CXType_Vector = 113;
+
+alias CXCallingConv_Default = 0;
+alias CXCallingConv_C = 1;
+alias CXCallingConv_X86StdCall = 2;
+alias CXCallingConv_X86FastCall = 3;
+alias CXCallingConv_X86ThisCall = 4;
+alias CXCallingConv_X86Pascal = 5;
+alias CXCallingConv_AAPCS = 6;
+alias CXCallingConv_AAPCS_VFP = 7;
+alias CXCallingConv_Invalid = 100;
+alias CXCallingConv_Unexposed = 200;
 
 record UnnamedStruct5 (
     kind : Int,
@@ -641,6 +654,18 @@ alias CXType = UnnamedStruct5;
 
 external clang_getCursorType(
     C : CXCursor) : CXType;
+
+external clang_getTypedefDeclUnderlyingType(
+    C : CXCursor) : CXType;
+
+external clang_getEnumDeclIntegerType(
+    C : CXCursor) : CXType;
+
+external clang_getEnumConstantDeclValue(
+    C : CXCursor) : Int64;
+
+external clang_getEnumConstantDeclUnsignedValue(
+    C : CXCursor) : UInt64;
 
 external clang_equalTypes(
     A : CXType,
@@ -670,6 +695,19 @@ external clang_getDeclObjCTypeEncoding(
 external clang_getTypeKindSpelling(
     K : Int) : CXString;
 
+external clang_getFunctionTypeCallingConv(
+    T : CXType) : Int;
+
+external clang_isFunctionTypeVariadic(
+    T : CXType) : UInt;
+
+external clang_getNumArgTypes(
+    T : CXType) : Int64;
+
+external clang_getArgType(
+    T : CXType,
+    i : Int64) : CXType;
+
 external clang_getResultType(
     T : CXType) : CXType;
 
@@ -678,6 +716,12 @@ external clang_getCursorResultType(
 
 external clang_isPODType(
     T : CXType) : UInt;
+
+external clang_getElementType(
+    T : CXType) : CXType;
+
+external clang_getNumElements(
+    T : CXType) : Int64;
 
 external clang_getArrayElementType(
     T : CXType) : CXType;

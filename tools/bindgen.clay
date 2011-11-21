@@ -1,8 +1,10 @@
 import llvm.libclang.*;
 import printer.formatter.(repr);
+import maybe.*;
 
 var g_declNames = HashMap[CXCursor, String]();
 var g_unnamedIndex = 0;
+var g_bindingsOut = stdoutFile();
 
 overload printTo(stream, s:CXString) : {
     printTo(stream, CStringRef(clang_getCString(s)));
@@ -41,22 +43,6 @@ nameForDeclaration(cursor:CXCursor) : String
         return namep^;
 }
 
-visitFunctionPointerParam(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
-{
-    ref name = Pointer[Tuple[String, Bool]](data)^;
-    switch (cursor.kind)
-    case (CXCursor_ParmDecl) {
-        if (name.1)
-            printTo(name.0, ",");
-        else
-            name.1 = true;
-        printTo(name.0, convertType(clang_getCursorType(cursor), cursor));
-    }
-    else {
-    }
-    return CXChildVisit_Continue;
-}
-
 convertPointerType(type:CXType, refCursor:CXCursor) : String {
     switch (type.kind)
     case (CXType_Void)
@@ -65,28 +51,36 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
         // XXX Function pointer types inside fields or parms show up as "unexposed"
         // but we can still extract the return type and visit parms
         // XXX Pointers to forward-declared structs also show up as "unexposed"
-        // XXX detect varargs for Proto functions
         // XXX calling convention
-        // XXX return function pointer type parms get visited in tandem with
-        // function params
-        var varargs = type.kind == CXType_FunctionNoProto;
         var returnType = clang_getResultType(type);
         var decl = clang_getTypeDeclaration(type);
         if (returnType.kind != CXType_Invalid) {
-            var name = [
-                str(if (varargs) "VarArgsCCodePointer" else "CCodePointer"),
-                false
-            ];
-            printTo(name.0, "[[");
-            if (returnType.kind != CXType_FunctionNoProto)
-                clang_visitChildren(refCursor,
-                    CXCursorVisitor(visitFunctionPointerParam),
-                    CXClientData(&name));
-            printTo(name.0,
+            var name = String();
+            var varargs = clang_isFunctionTypeVariadic(type) != 0;
+
+            switch (clang_getFunctionTypeCallingConv(type))
+            case (CXCallingConv_X86StdCall)
+                printTo(name, "StdCallCodePointer");
+            case (CXCallingConv_X86FastCall)
+                printTo(name, "FastCallCodePointer");
+            else if (varargs)
+                printTo(name, "VarArgsCCodePointer");
+            else
+                printTo(name, "CCodePointer");
+
+            printTo(name, "[[");
+
+            for (arg in range(clang_getNumArgTypes(type))) {
+                if (arg > 0)
+                    printTo(name, ", ");
+                printTo(name, convertType(clang_getArgType(type, arg), refCursor));
+            }
+
+            printTo(name,
                 "],[",
                 if (returnType.kind == CXType_Void) str("") else convertType(returnType, refCursor),
                 "]]");
-            return move(name.0);
+            return move(name);
         } else if (decl.kind != CXCursor_NoDeclFound) {
             return str("Pointer[", convertTypeFromDeclaration(decl), "]");
         } else {
@@ -131,6 +125,8 @@ convertType(type:CXType, refCursor:CXCursor) : String {
         return str("CULong");
     case (CXType_ULongLong)
         return str("UInt64");
+    case (CXType_UInt128)
+        return str("UInt128");
     case (CXType_Short)
         return str("Short");
     case (CXType_Int)
@@ -139,6 +135,8 @@ convertType(type:CXType, refCursor:CXCursor) : String {
         return str("CLong");
     case (CXType_LongLong)
         return str("Int64");
+    case (CXType_Int128)
+        return str("Int128");
     case (CXType_Float)
         return str("Float");
     case (CXType_Double)
@@ -146,17 +144,16 @@ convertType(type:CXType, refCursor:CXCursor) : String {
     case (CXType_LongDouble)
         return str("LongDouble");
     case (CXType_Complex) {
-        // XXX complex element type
-        var elementType = clang_getArrayElementType(type);
+        var elementType = clang_getElementType(type);
         switch (elementType.kind)
         case (CXType_Float)
             return str("Complex32");
         case (CXType_LongDouble)
             return str("ComplexLongDouble");
-        case (CXType_Double, CXType_Invalid) // XXX
+        case (CXType_Double)
             return str("Complex64");
         else
-            return str("Opaque /* unknown complex ",
+            return str("Opaque /* unsupported complex type ",
                 clang_getTypeKindSpelling(elementType.kind), " */");
     }
     case (CXType_Pointer)
@@ -173,6 +170,14 @@ convertType(type:CXType, refCursor:CXCursor) : String {
             "]",
         );
     }
+    case (CXType_Vector) {
+        return str("Vec[",
+            convertType(clang_getElementType(type), refCursor),
+            ", ",
+            clang_getNumElements(type),
+            "]",
+        );
+    }
     else
         return str("/* unknown kind ",
             clang_getTypeKindSpelling(type.kind), " */ Opaque");
@@ -186,7 +191,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (kind)
     case (CXCursor_FieldDecl) {
         var type = clang_getCursorType(cursor);
-        println("    ", clang_getCursorSpelling(cursor), ": ", convertType(type, cursor), ",");
+        printlnTo(g_bindingsOut, "    ", clang_getCursorSpelling(cursor), ": ", convertType(type, cursor), ",");
     }
     else {}
 
@@ -200,42 +205,30 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (kind)
     case (CXCursor_FieldDecl) {
         var type = clang_getCursorType(cursor);
-        println("    /* ", clang_getCursorSpelling(cursor), " */ ", convertType(type, cursor), ",");
+        printlnTo(g_bindingsOut, "    /* ", clang_getCursorSpelling(cursor), " */ ", convertType(type, cursor), ",");
     }
     else {}
 
     return CXChildVisit_Continue;
 }
 
-visitFunctionParm(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+record FunctionDeclAttributes (asmLabel:Maybe[String]);
+
+visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref parmIndex = Pointer[Int](data)^;
+    ref attributes = Pointer[FunctionDeclAttributes](data)^;
     switch (cursor.kind)
-    case (CXCursor_ParmDecl) {
-        if (parmIndex > 0)
-            print(", ");
-        var name = str(clang_getCursorSpelling(cursor));
-        if (empty?(name))
-            print("arg", parmIndex);
-        else
-            print(name);
-        print(":", convertType(clang_getCursorType(cursor), cursor));
-        inc(parmIndex);
-    }
-    else {
-    }
+    case (CXCursor_AsmLabelAttr)
+        attributes.asmLabel = Maybe(str(clang_getCursorSpelling(cursor)));
     return CXChildVisit_Continue;
 }
 
 visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref enumCounter = Pointer[Int64](data)^;
-
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
-        // XXX get actual enum value
-        println("alias ", clang_getCursorSpelling(cursor), " = ", enumCounter, ";");
-        inc(enumCounter);
+        printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
+            clang_getEnumConstantDeclValue(cursor), ";");
     }
     else {
     }
@@ -248,7 +241,7 @@ withForwardDecl(cursor:CXCursor, f) {
         f();
     else {
         if (inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile))
-            println("alias ", nameForDeclaration(cursor), " = Opaque;");
+            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Opaque;");
     }
 }
 
@@ -258,26 +251,25 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (kind)
     case (CXCursor_StructDecl) {
         withForwardDecl(cursor, () -> {
-            println("record ", nameForDeclaration(cursor), " (");
+            printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
             clang_visitChildren(cursor, CXCursorVisitor(visitStruct), data);
-            println(");");
+            printlnTo(g_bindingsOut, ");");
         });
         return CXChildVisit_Continue;
     }
     case (CXCursor_UnionDecl) {
         withForwardDecl(cursor, () -> {
-            println("alias ", nameForDeclaration(cursor), " = Union[");
+            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Union[");
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
-            println("];");
+            printlnTo(g_bindingsOut, "];");
         });
         return CXChildVisit_Continue;
     }
     case (CXCursor_EnumDecl) {
-        // XXX get enum int type
         withForwardDecl(cursor, () -> {
-            var enumCounter = 0_i64;
-            println("alias ", nameForDeclaration(cursor), " = Int;");
-            clang_visitChildren(cursor, CXCursorVisitor(visitEnum), CXClientData(&enumCounter));
+            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = ",
+                convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
+            clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
         });
         return CXChildVisit_Continue;
     }
@@ -285,26 +277,115 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX __asm__ name
         // XXX calling convention
         // XXX dllimport/dllexport
-        print("external ", clang_getCursorSpelling(cursor), "(");
-        var parmIndex = 0;
-        clang_visitChildren(cursor, CXCursorVisitor(visitFunctionParm),
-            CXClientData(&parmIndex));
-        print(") : ");
+        // XXX separate return function pointer type params
+        var attributes = FunctionDeclAttributes();
+        clang_visitChildren(cursor, CXCursorVisitor(visitFunctionAttr),
+            CXClientData(&attributes));
+
+        var type = clang_getCursorType(cursor);
+
+        printTo(g_bindingsOut, "external (");
+        switch (clang_getFunctionTypeCallingConv(type))
+        case (CXCallingConv_X86StdCall)
+            printTo(g_bindingsOut, "stdcall");
+        case (CXCallingConv_X86FastCall)
+            printTo(g_bindingsOut, "fastcall");
+        else
+            printTo(g_bindingsOut, "cdecl");
+
+        maybe(attributes.asmLabel, asmLabel -> {
+            printTo(g_bindingsOut, ", ", repr(asmLabel));
+        });
+
+        printTo(g_bindingsOut, ") ", clang_getCursorSpelling(cursor), "(");
+        for (arg in range(clang_getNumArgTypes(type))) {
+            if (arg > 0)
+                printTo(g_bindingsOut, ", ");
+            printTo(g_bindingsOut, "arg", arg, ":", convertType(clang_getArgType(type, arg), cursor));
+        }
+        printTo(g_bindingsOut, ") : ");
         var returnType = clang_getCursorResultType(cursor);
         if (returnType.kind != CXType_Void)
-            print(convertType(returnType, cursor));
-        println(";");
+            printTo(g_bindingsOut, convertType(returnType, cursor));
+        printlnTo(g_bindingsOut, ";");
         return CXChildVisit_Continue;
     }
     case (CXCursor_TypedefDecl) {
         // XXX get typedef type instead of going all the way to the canonical type
         // XXX if the typedef is an untagged struct or union, eliminate the intermediate
         // and use the typedef name as the record name
-        println("alias ", clang_getCursorSpelling(cursor), " = ",
-            convertType(clang_getCanonicalType(clang_getCursorType(cursor)), cursor), ";");
+        printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
+            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";");
         return CXChildVisit_Continue;
     }
     return CXChildVisit_Recurse;
+}
+
+record Usage ();
+record MissingOutputFileName ();
+record MissingImportModuleName ();
+
+instance Exception (Usage, MissingOutputFileName, MissingImportModuleName);
+
+overload printTo(s, _:Usage) {
+    printlnTo(s, "Usage: clay-bindgen [clang options...] [bindgen options...] input.h");
+    printlnTo(s, "Bindgen options:");
+    printlnTo(s, "  -o <output.clay>   Write bindings to <output.clay> (default stdout)");
+    printlnTo(s, "  -import <module>   Prefix \"import <module>.*;\" to generated bindings");
+    printlnTo(s, "Most clang options (such as -I and -D) are also supported.");
+}
+
+overload printTo(s, _:MissingOutputFileName) {
+    printlnTo(s, "no output file specified after -o option");
+}
+
+overload printTo(s, _:MissingImportModuleName) {
+    printlnTo(s, "no module name specified after -import option");
+}
+
+record BindgenOptions (
+    outputFileName:Maybe[String],
+    imports:Vector[String],
+);
+
+parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
+{
+    var clang_argc = 0;
+    var clang_argv = Vector[Pointer[CChar]]();
+    var options = BindgenOptions();
+
+    var arg = 1;
+    while (arg < argc) {
+        switch (CStringRef(argv[arg]))
+        case ("-help", "--help", "/?") {
+            throw Usage();
+        }
+        case ("-o") {
+            if (arg + 1 >= argc)
+                throw MissingOutputFileName();
+            options.outputFileName = Maybe(String(argv[arg + 1]));
+            arg += 2;
+        }
+        case ("-import") {
+            if (arg + 1 >= argc)
+                throw MissingImportModuleName();
+            push(options.imports, String(argv[arg + 1]));
+            arg += 2;
+        }
+        case ("--") {
+            clang_argc += argc - arg;
+            for (i in range(arg, argc))
+                push(clang_argv, argv[i]);
+            break;
+        }
+        else {
+            inc(clang_argc);
+            push(clang_argv, argv[arg]);
+            inc(arg);
+        }
+    }
+
+    return clang_argc, move(clang_argv), move(options);
 }
 
 main(argc, argv)
@@ -316,17 +397,31 @@ main(argc, argv)
     }
     finally clang_disposeIndex(index);
 
+    var clang_argc = 0;
+    var clang_argv = Vector[Pointer[CChar]]();
+    var options = BindgenOptions();
+
+    try {
+        clang_argc, clang_argv, options = parseOptions(argc, argv);
+        maybe(options.outputFileName, outputFileName -> {
+            g_bindingsOut = File(outputFileName, CREATE);
+        });
+    } catch (ex) {
+        print(ex);
+        return 1;
+    }
+
     var unit = clang_parseTranslationUnit(
         index,
         null(CChar),
-        argv,
-        argc,
+        begin(clang_argv),
+        clang_argc,
         null(Struct_CXUnsavedFile),
         0u,
         0u,
     );
     if (null?(unit)) {
-        println("clang failed to create translation unit");
+        printlnTo(stderr, "clang failed to create translation unit");
         return 1;
     }
     finally clang_disposeTranslationUnit(unit);
@@ -334,19 +429,20 @@ main(argc, argv)
     var error? = false;
     for (i in range(0u, clang_getNumDiagnostics(unit))) {
          var diag = clang_getDiagnostic(unit, i);
-         var diagStr = clang_formatDiagnostic(diag,
-            clang_defaultDiagnosticDisplayOptions());
-         finally clang_disposeString(diagStr);
+         printlnTo(stderr, clang_formatDiagnostic(diag,
+            clang_defaultDiagnosticDisplayOptions()));
 
-         println(CStringRef(clang_getCString(diagStr)));
          if (clang_getDiagnosticSeverity(diag) >= CXDiagnostic_Error)
             error? = true;
     }
     if (error?)
         return 1;
 
+    for (imp in options.imports)
+        printlnTo(g_bindingsOut, "import ", imp, ".*;");
+
     var cursor = clang_getTranslationUnitCursor(unit);
 
-    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(777));
+    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData());
     return 0;
 }

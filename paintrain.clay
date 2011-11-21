@@ -60,3 +60,6 @@ external x87Union3(x:Union[Float80,Complex80]) : Float80 = x.0;
 external x87UnionOut0(x:Union[Float80,Float80]) : Union[Float80,Float80] = x;
 
 external emptyTuple(x:Tuple[]) {}
+
+external int128(x:Int128, y:Int128) : Int128 = x + y;
+external int128_1(x:Int128) : Int128 = x + Int128(1);

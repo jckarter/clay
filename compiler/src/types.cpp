@@ -6,10 +6,12 @@ TypePtr int8Type;
 TypePtr int16Type;
 TypePtr int32Type;
 TypePtr int64Type;
+TypePtr int128Type;
 TypePtr uint8Type;
 TypePtr uint16Type;
 TypePtr uint32Type;
 TypePtr uint64Type;
+TypePtr uint128Type;
 TypePtr float32Type;
 TypePtr float64Type;
 TypePtr float80Type;
@@ -38,10 +40,12 @@ void initTypes() {
     int16Type = new IntegerType(16, true);
     int32Type = new IntegerType(32, true);
     int64Type = new IntegerType(64, true);
+    int128Type = new IntegerType(128, true);
     uint8Type = new IntegerType(8, false);
     uint16Type = new IntegerType(16, false);
     uint32Type = new IntegerType(32, false);
     uint64Type = new IntegerType(64, false);
+    uint128Type = new IntegerType(128, false);
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
     float80Type = new FloatType(80);
@@ -89,6 +93,7 @@ TypePtr intType(int bits) {
     case 16 : return int16Type;
     case 32 : return int32Type;
     case 64 : return int64Type;
+    case 128 : return int128Type;
     default :
         assert(false);
         return NULL;
@@ -101,6 +106,7 @@ TypePtr uintType(int bits) {
     case 16 : return uint16Type;
     case 32 : return uint32Type;
     case 64 : return uint64Type;
+    case 128 : return uint128Type;
     default :
         assert(false);
         return NULL;

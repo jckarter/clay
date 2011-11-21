@@ -248,7 +248,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
-    else if (x->suffix == "j32") {
+    else if (x->suffix == "j32" || x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
@@ -315,7 +315,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((long double *)vh->buf) = y;
     }
 
-    else if (x->suffix == "j32") {
+    else if (x->suffix == "j32" || x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
@@ -353,7 +353,7 @@ ValueHolderPtr parseComplexLiteral(ComplexLiteral *x)
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     ValueHolderPtr vh;
-    if (x->suffix == "j32") {
+    if (x->suffix == "j32" || x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
