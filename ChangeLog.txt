@@ -224,6 +224,7 @@ Language changes:
     var x = sqrt(4.0f); // 2.0f
     var y = sqrt(4.0); // 2.0 
     var z = sqrt(-4.0+0.0j); // 2.0j
+    var z = sqrt(-4.0f+0.0fj); // 2.0fj
   Thanks to Jeremy Clifford.
 
 Library changes:
