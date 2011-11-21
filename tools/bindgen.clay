@@ -5,6 +5,7 @@ import maybe.*;
 var g_declNames = HashMap[CXCursor, String]();
 var g_unnamedIndex = 0;
 var g_bindingsOut = stdoutFile();
+var g_visitedSymbols = HashMap[String, Bool]();
 
 overload printTo(stream, s:CXString) : {
     printTo(stream, CStringRef(clang_getCString(s)));
@@ -186,12 +187,20 @@ convertType(type:CXType, refCursor:CXCursor) : String {
 
 visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
+    ref unnamedFieldIndex = Pointer[Int](data)^;
+
     assert(clang_getCursorKind(parent) == CXCursor_StructDecl);
     var kind = clang_getCursorKind(cursor);
     switch (kind)
     case (CXCursor_FieldDecl) {
         var type = clang_getCursorType(cursor);
-        printlnTo(g_bindingsOut, "    ", clang_getCursorSpelling(cursor), ": ", convertType(type, cursor), ",");
+        var name = str(clang_getCursorSpelling(cursor));
+        if (empty?(name)) {
+            name = str("?padding", unnamedFieldIndex);
+            unnamedFieldIndex += 1;
+        }
+        printlnTo(g_bindingsOut, "    ", name, " : ",
+            convertType(type, cursor), ",");
     }
     else {}
 
@@ -267,6 +276,15 @@ cursorMatchesPatterns(cursor:CXCursor, options:BindgenOptions) : Bool {
     return false;
 }
 
+symbolVisited(name:String) : Bool
+{
+    if (not null?(lookup(g_visitedSymbols, name)))
+        return true;
+    println("visiting ", name);
+    g_visitedSymbols[name] = true;
+    return false;
+}
+
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref options = Pointer[BindgenOptions](data)^;
@@ -278,8 +296,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (kind)
     case (CXCursor_StructDecl) {
         withForwardDecl(cursor, () -> {
+            var unnamedFieldIndex = 0;
             printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
-            clang_visitChildren(cursor, CXCursorVisitor(visitStruct), data);
+            clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
+                CXClientData(&unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         });
         return CXChildVisit_Continue;
@@ -302,10 +322,11 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         return CXChildVisit_Continue;
     }
     case (CXCursor_FunctionDecl) {
-        // XXX __asm__ name
-        // XXX calling convention
+        var name = str(clang_getCursorSpelling(cursor));
+        if (symbolVisited(name))
+            return CXChildVisit_Continue;
+
         // XXX dllimport/dllexport
-        // XXX separate return function pointer type params
         var attributes = FunctionDeclAttributes();
         clang_visitChildren(cursor, CXCursorVisitor(visitFunctionAttr),
             CXClientData(&attributes));
@@ -325,12 +346,21 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             printTo(g_bindingsOut, ", ", repr(asmLabel));
         });
 
-        printTo(g_bindingsOut, ") ", clang_getCursorSpelling(cursor), "(");
-        for (arg in range(clang_getNumArgTypes(type))) {
+        printTo(g_bindingsOut, ") ", name, "(");
+        var argCount = clang_getNumArgTypes(type);
+        for (arg in range(argCount)) {
             if (arg > 0)
                 printTo(g_bindingsOut, ", ");
-            printTo(g_bindingsOut, "arg", arg, ":", convertType(clang_getArgType(type, arg), cursor));
+            printTo(g_bindingsOut, "arg", arg, ":",
+                convertType(clang_getArgType(type, arg), cursor));
         }
+
+        if (clang_isFunctionTypeVariadic(type) != 0) {
+            if (argCount > 0)
+                printTo(g_bindingsOut, ", ");
+            printTo(g_bindingsOut, "..");
+        }
+
         printTo(g_bindingsOut, ") : ");
         var returnType = clang_getCursorResultType(cursor);
         if (returnType.kind != CXType_Void)
@@ -338,10 +368,15 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         printlnTo(g_bindingsOut, ";\n");
         return CXChildVisit_Continue;
     }
+    case (CXCursor_VarDecl) {
+        var name = str(clang_getCursorSpelling(cursor));
+        if (symbolVisited(name))
+            return CXChildVisit_Continue;
+
+        printlnTo(g_bindingsOut, "external ", name, " : ",
+            convertType(clang_getCursorType(cursor), cursor), ";\n");
+    }
     case (CXCursor_TypedefDecl) {
-        // XXX get typedef type instead of going all the way to the canonical type
-        // XXX if the typedef is an untagged struct or union, eliminate the intermediate
-        // and use the typedef name as the record name
         printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
         return CXChildVisit_Continue;
