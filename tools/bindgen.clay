@@ -280,7 +280,6 @@ symbolVisited(name:String) : Bool
 {
     if (not null?(lookup(g_visitedSymbols, name)))
         return true;
-    println("visiting ", name);
     g_visitedSymbols[name] = true;
     return false;
 }
