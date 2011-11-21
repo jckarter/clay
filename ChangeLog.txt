@@ -7,6 +7,7 @@ Tool changes:
 * A "clayfix" program is provided to update code written for Clay 0.0 to
   compile in 0.1. It is fairly simple at this point, but most converted code should
   just work. Changes that can't be clayfix-ed are noted in this changelog.
+* "clay-bindgen" has been rewritten in Clay, using the libclang C library.
 
 Language changes:
 -----------------
@@ -217,8 +218,9 @@ Language changes:
   future.
 
 * C99-compatible complex numbers are now supported with the Complex32, Complex64,
-  and Complex80 types. Suffixing a floating-point literal with 'j' creates an imaginary literal.
-  The 'math' module provides type-generic overloads for the standard C99 math library functions:
+  and Complex80 types. Suffixing a floating-point literal with 'j' creates an imaginary
+  literal.  The 'math' module provides type-generic overloads for the standard C99 math
+  library functions:
     import math.(sqrt);
     ...
     var x = sqrt(4.0f); // 2.0f
@@ -292,9 +294,8 @@ Library changes:
     println("x = ", 128_u8, " ", 128_u16); // output: x = 128 128
     println("x = ", repr(128_u8, " ", 128_u16)); // output: x = 128u8, " ", 128u16
 
-* The 'arrayLiteral' and 'tupleLiteral' functions have been renamed 'array' and 'tuple'.
+* The 'arrayLiteral' function has been renamed 'array'.
     arrayLiteral ==> array
-    tupleLiteral ==> tuple
 
 * A new 'math' module provides type-generic access to the C99 standard math library.
 

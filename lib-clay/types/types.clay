@@ -24,6 +24,7 @@ alias Double = Float64;
 alias LongDouble = Float80;
 
 alias RawPointer = Pointer[Byte];
+alias OpaquePointer = Pointer[Byte];
 
 alias SizeT = UPtrInt;
 alias SSizeT = PtrInt;

@@ -11,8 +11,6 @@ include(FindPythonInterp)
 if(UNIX)
     find_program(LLVM_CONFIG llvm-config ${LLVM_INSTDIR}/bin 
         DOC "path to llvm-config")
-    find_program(CLANG clang ${LLVM_INSTDIR}/bin 
-        DOC "path to clang")
 
     execute_process(
         COMMAND ${LLVM_CONFIG} --cxxflags
@@ -41,10 +39,33 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    execute_process(
+        COMMAND ${LLVM_CONFIG} --prefix
+        OUTPUT_VARIABLE LLVM_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message("-- Testing whether bindgen can be built")
+    execute_process(
+        COMMAND ${clay_SOURCE_DIR}/tools/can-build-bindgen.sh
+            ${LLVM_PREFIX}
+            ${LLVM_LDFLAGS}
+            ${LLVM_LIBS}
+            ${LLVM_CXXFLAGS}
+        RESULT_VARIABLE BUILD_BINDGEN_RESULT
+    )
+    if(${BUILD_BINDGEN_RESULT} EQUAL 0)
+        set(BUILD_BINDGEN True)
+        message("   Yes")
+    else()
+        set(BUILD_BINDGEN False)
+        message("   libclang is either missing or needs to be patched to support")
+        message("   bindgen. bindgen will not be built. Try applying the patch in")
+        message("   tools/libclang.diff to the Clang source.")
+    endif()
 elseif(MSVC)
+    # This smells pretty bit-rotten
     set(LLVM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm CACHE PATH "llvm source path")
     set(LLVM_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm-build CACHE PATH "llvm build path")
-    set(CLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/tools/clang CACHE PATH "clang source path")
 
     if(IS_DIRECTORY ${LLVM_BUILD_DIR})
         link_directories(${LLVM_BUILD_DIR}/lib/Release)
@@ -56,15 +77,6 @@ elseif(MSVC)
         include_directories(${LLVM_BUILD_DIR}/include ${LLVM_DIR}/include)
     else()
         message(FATAL_ERROR "Could not find LLVM souce directory")
-    endif()
-
-    if(IS_DIRECTORY ${CLANG_DIR})
-        set(BUILD_BINDGEN True)
-        set(CLANG ${CLANG_DIR}/bin)
-        include_directories(${CLANG_DIR}/include)
-        include_directories(${LLVM_BUILD_DIR}/tools/clang/include)
-    else()
-        message("-- Clang not found. clay-bindgen will not be built")
     endif()
 
     set(IGNORE_WARNINGS 4146 4503 4996 4800 4244 4624 4355

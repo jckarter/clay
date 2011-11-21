@@ -1,0 +1,13 @@
+import libc.(csqrtf, crealf, cimagf);
+import math.(sqrt);
+import printer.formatter.(repr);
+
+main() {
+    println(repr(sqrt(4.0f)));
+    println(repr(sqrt(4.0)));
+
+    println(repr(sqrt(-4.0f+0.0fj)));
+    println(repr(sqrt(4.0fj)));
+    println(repr(sqrt(-4.0+0.0j)));
+    println(repr(sqrt(4.0j)));
+}

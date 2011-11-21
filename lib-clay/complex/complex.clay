@@ -43,7 +43,7 @@ inline overload Complex(a:LongDouble,b:Double) --> r:Complex80 { re(r)^ = a; im(
 
 [T | Float?(T)]
 inline overload Complex(a:T) = Complex(a,T(0));
-inline overload Complex(a:Int) = Complex(Float(a), Float(0));
+inline overload Complex(a:Int) = Complex(Double(a), Double(0));
 inline overload Complex(a:Long) = Complex(Double(a), Double(0));
 
 
@@ -188,3 +188,7 @@ inline overload Complex64(s:S) = parseComplex64(s);
 [S | String?(S)]
 inline overload Complex80(s:S) = parseComplex80(s);
 
+alias ComplexLongDouble = Complex80;
+
+[C | Complex?(C)]
+inline rect(c:C) = real(c), imag(c);
