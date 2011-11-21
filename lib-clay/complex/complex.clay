@@ -189,3 +189,6 @@ inline overload Complex64(s:S) = parseComplex64(s);
 inline overload Complex80(s:S) = parseComplex80(s);
 
 alias ComplexLongDouble = Complex80;
+
+[C | Complex?(C)]
+inline rect(c:C) = real(c), imag(c);
