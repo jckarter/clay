@@ -188,3 +188,4 @@ inline overload Complex64(s:S) = parseComplex64(s);
 [S | String?(S)]
 inline overload Complex80(s:S) = parseComplex80(s);
 
+alias ComplexLongDouble = Complex80;
