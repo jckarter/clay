@@ -24,6 +24,26 @@ main() {
     println(repr(1.0f));
     println(repr(1.5f));
 
+    println(repr( 0.0f+0.0fj));
+    println(repr( 0.0f-0.0fj));
+    println(repr(-0.0f+0.0fj));
+    println(repr(-0.0f-0.0fj));
+
+    println(repr( 1.0f+1.0fj));
+    println(repr( 1.0f-1.0fj));
+    println(repr(-1.0f+1.0fj));
+    println(repr(-1.0f-1.0fj));
+
+    println(repr( 0.0+0.0j));
+    println(repr( 0.0-0.0j));
+    println(repr(-0.0+0.0j));
+    println(repr(-0.0-0.0j));
+
+    println(repr( 1.0+1.0j));
+    println(repr( 1.0-1.0j));
+    println(repr(-1.0+1.0j));
+    println(repr(-1.0-1.0j));
+
     println(repr('x', ' ', '~', '\x01', '\x1F', '\x7F', '\x80', '\xFF'));
     println(repr('\0', '\n', '\r', '\t', '\f', '\'', '\"'));
 

@@ -56,29 +56,26 @@ overload printTo(stream, x:UInt64) {
 
 
 overload printTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.16Lg", Pointer[LongDouble](&x)^);
-    printWithSprintf(stream, "+j%.16Lg", (Pointer[LongDouble](&x)+1)^);
+    printWithSprintf(stream, "%.20Lg%+.20Lgj", ..rect(x));
 }
 
 overload printTo(stream, x:Complex64) {
-    printWithSprintf(stream, "%.16g", Pointer[Double](&x)^);
-    printWithSprintf(stream, "+j%.16g", (Pointer[Double](&x)+1)^);
+    printWithSprintf(stream, "%.16g%+.16gj", ..rect(x));
 }
 
 overload printTo(stream, x:Complex32) {
-    printWithSprintf(stream, "%.16g", Pointer[Float](&x)^);
-    printWithSprintf(stream, "+j%.16g", (Pointer[Float](&x)+1)^);
+    printWithSprintf(stream, "%.16g%+.16gj", ..mapValues(Double, ..rect(x)));
 }
 
 overload printTo(stream, x:LongDouble) {
-    printWithSprintf(stream, "%.16Lg", LongDouble(x));
+    printWithSprintf(stream, "%.20Lg", LongDouble(x));
 }
 
 overload printTo(stream, x:Double) {
     printWithSprintf(stream, "%.16g", Double(x));
 }
 overload printTo(stream, x:Float) {
-    printWithSprintf(stream, "%.7g", Double(x));
+    printWithSprintf(stream, "%.8g", Double(x));
 }
 
 [T]
@@ -94,9 +91,9 @@ overload printTo(stream, x:CP) {
     printWithSprintf(stream, "%p", x);
 }
 
-printWithSprintf(stream, formatString, value) {
+printWithSprintf(stream, formatString, ..values) {
     var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring(formatString), value);
+    libc.sprintf(&buf[0], cstring(formatString), ..values);
     var n = libc.strlen(&buf[0]);
     var ptr = Pointer[Byte](&buf[0]);
     write(stream, ptr, SizeT(n));
@@ -293,22 +290,19 @@ overload printReprTo(stream, x:Float64) {
 }
 
 overload printReprTo(stream, x:Float80) {
-    printWithSprintf(stream, "%.13La", x);
+    printWithSprintf(stream, "%.16Laf80", x);
 }
 
-overload printTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.16Lg", Pointer[LongDouble](&x)^);
-    printWithSprintf(stream, "+j%.16Lg", (Pointer[LongDouble](&x)+1)^);
+overload printReprTo(stream, x:Complex80) {
+    printWithSprintf(stream, "%.16Laf80%+.16Laj80", ..rect(x));
 }
 
-overload printTo(stream, x:Complex64) {
-    printWithSprintf(stream, "%.16g", Pointer[Double](&x)^);
-    printWithSprintf(stream, "+j%.16g", (Pointer[Double](&x)+1)^);
+overload printReprTo(stream, x:Complex64) {
+    printWithSprintf(stream, "%.13a%+.13aj", ..rect(x));
 }
 
-overload printTo(stream, x:Complex32) {
-    printWithSprintf(stream, "%.16g", Pointer[Float](&x)^);
-    printWithSprintf(stream, "+j%.16g", (Pointer[Float](&x)+1)^);
+overload printReprTo(stream, x:Complex32) {
+    printWithSprintf(stream, "%.6af%+.6afj", ..mapValues(Double, ..rect(x)));
 }
 
 [T]
