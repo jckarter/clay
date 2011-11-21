@@ -481,7 +481,8 @@ main(argc, argv)
         0u,
     );
     if (null?(unit)) {
-        printlnTo(stderr, "clang failed to create translation unit");
+        printlnTo(stderr, "no input files given");
+        print(Usage());
         return 1;
     }
     finally clang_disposeTranslationUnit(unit);
