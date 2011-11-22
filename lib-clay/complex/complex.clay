@@ -2,15 +2,11 @@
 enum ComplexPart (REAL, IMAG);
 
 
-
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
 overload Complex?(static Complex80) = true;
 [A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
-
-// [T | Complex?(T)]
-// overload BitwiseMovedType?(static T) = true;
 
 private define re;
 private define im;
@@ -142,15 +138,16 @@ inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),ima
 
 [T,U | Complex?(T,U)]
 inline overload divide(z:T, y:U) {
-    var a,b,c,d = re(z)^,im(z)^,re(y)^,im(y)^;
-    if (c < d){
-        var ratio = c / d;
-        var denom = (c * ratio) + d;
-        return Complex(((a * ratio) + b) / denom, ((b * ratio) - a) / denom);
+    var ra = if(re(y)^ < 0) -re(y)^ else re(y)^;
+    var ia = if(im(y)^ < 0) -im(y)^ else im(y)^;
+    if(ra < ia){
+        var r = re(y)^ / im(y)^;
+        var den = im(y)^ + r * re(y)^;
+        return Complex((re(z)^ * r + im(z)^) / den, (im(z)^ * r - re(z)^) / den);
     }else{
-        var ratio = d / c;
-        var denom = (d * ratio) + c;
-        return Complex(((b * ratio) + a) / denom, (b - (a * ratio)) / denom);
+        var r = im(y)^ / re(y)^;
+        var den = re(y)^ + r * im(y)^;
+        return Complex((re(z)^ + r * im(z)^) / den, (im(z)^ - r * re(z)^) / den);
     }
 }
 
