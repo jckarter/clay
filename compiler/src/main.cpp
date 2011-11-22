@@ -346,7 +346,6 @@ int main(int argc, char **argv) {
     bool emitObject = false;
     bool sharedLib = false;
     bool genPIC = false;
-    bool fp80Enabled = false;
     bool inlineEnabled = true;
     bool exceptions = true;
     bool abortOnError = false;
@@ -419,9 +418,6 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-pic") == 0) {
             genPIC = true;
-        }
-        else if (strcmp(argv[i], "-f80") == 0) {
-            fp80Enabled = true;
         }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
@@ -688,7 +684,6 @@ int main(int argc, char **argv) {
     if (!codegenExternalsSet)
         codegenExternals = !(emitLLVM || emitAsm || emitObject);
 
-    setfp80Enabled(fp80Enabled);
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 

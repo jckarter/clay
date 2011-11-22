@@ -2742,8 +2742,6 @@ void initBuiltinConstructor(RecordPtr x);
 // literals
 //
 
-bool fp80Enabled();
-void setfp80Enabled(bool enabled);
 ValueHolderPtr parseIntLiteral(IntLiteral *x);
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
 ValueHolderPtr parseComplexLiteral(ComplexLiteral *x);
