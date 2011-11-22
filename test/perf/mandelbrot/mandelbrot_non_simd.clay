@@ -21,7 +21,7 @@ mandelbrot(n){
 }
 
 compute(y){
-    var bits = 0i8;
+    var bits = 0ss;
     var ycd = (y*fac - 1.0);//the resized coordinates
 
     for (x in range(n)) { // for each column x in the yth row
@@ -41,18 +41,18 @@ compute(y){
             i-=1; 
         }
  
-        bits *= 2i8;
+        bits *= 2ss;
         if (i == 0) 
-            bits += 1i8; // set the LSB to 1 if the pt is in the mandelbrot set
+            bits += 1ss; // set the LSB to 1 if the pt is in the mandelbrot set
 
         if (x % 8 == 7){ 
             print( Char( bits));        
-            bits = 0i8;
+            bits = 0ss;
         }
     }
    if (shift != 0) { //if shift is not 0 .. i.e the size is not an exact multiple of 8
        for( d in range(shift))
-           bits *= 2i8; 
+           bits *= 2ss; 
        print( Char( bits));
    }
 }

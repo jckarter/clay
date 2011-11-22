@@ -5,22 +5,22 @@ import io.sockets.*;
 import remote.messages.*;
 
 var rc2Permute = array(
-        217u8,120u8,249u8,196u8, 25u8,221u8,181u8,237u8, 40u8,233u8,253u8,121u8, 74u8,160u8,216u8,157u8, 
-        198u8,126u8, 55u8,131u8, 43u8,118u8, 83u8,142u8, 98u8, 76u8,100u8,136u8, 68u8,139u8,251u8,162u8, 
-         23u8,154u8, 89u8,245u8,135u8,179u8, 79u8, 19u8, 97u8, 69u8,109u8,141u8,  9u8,129u8,125u8, 50u8, 
-        189u8,143u8, 64u8,235u8,134u8,183u8,123u8, 11u8,240u8,149u8, 33u8, 34u8, 92u8,107u8, 78u8,130u8, 
-         84u8,214u8,101u8,147u8,206u8, 96u8,178u8, 28u8,115u8, 86u8,192u8, 20u8,167u8,140u8,241u8,220u8, 
-         18u8,117u8,202u8, 31u8, 59u8,190u8,228u8,209u8, 66u8, 61u8,212u8, 48u8,163u8, 60u8,182u8, 38u8, 
-        111u8,191u8, 14u8,218u8, 70u8,105u8,  7u8, 87u8, 39u8,242u8, 29u8,155u8,188u8,148u8, 67u8,  3u8, 
-        248u8, 17u8,199u8,246u8,144u8,239u8, 62u8,231u8,  6u8,195u8,213u8, 47u8,200u8,102u8, 30u8,215u8, 
-          8u8,232u8,234u8,222u8,128u8, 82u8,238u8,247u8,132u8,170u8,114u8,172u8, 53u8, 77u8,106u8, 42u8, 
-        150u8, 26u8,210u8,113u8, 90u8, 21u8, 73u8,116u8, 75u8,159u8,208u8, 94u8,  4u8, 24u8,164u8,236u8, 
-        194u8,224u8, 65u8,110u8, 15u8, 81u8,203u8,204u8, 36u8,145u8,175u8, 80u8,161u8,244u8,112u8, 57u8, 
-        153u8,124u8, 58u8,133u8, 35u8,184u8,180u8,122u8,252u8,  2u8, 54u8, 91u8, 37u8, 85u8,151u8, 49u8, 
-         45u8, 93u8,250u8,152u8,227u8,138u8,146u8,174u8,  5u8,223u8, 41u8, 16u8,103u8,108u8,186u8,201u8, 
-        211u8,  0u8,230u8,207u8,225u8,158u8,168u8, 44u8, 99u8, 22u8,  1u8, 63u8, 88u8,226u8,137u8,169u8, 
-         13u8, 56u8, 52u8, 27u8,171u8, 51u8,255u8,176u8,187u8, 72u8, 12u8, 95u8,185u8,177u8,205u8, 46u8, 
-        197u8,243u8,219u8, 71u8,229u8,165u8,156u8,119u8, 10u8,166u8, 32u8,104u8,254u8,127u8,193u8,173u8 
+        217uss,120uss,249uss,196uss, 25uss,221uss,181uss,237uss, 40uss,233uss,253uss,121uss, 74uss,160uss,216uss,157uss, 
+        198uss,126uss, 55uss,131uss, 43uss,118uss, 83uss,142uss, 98uss, 76uss,100uss,136uss, 68uss,139uss,251uss,162uss, 
+         23uss,154uss, 89uss,245uss,135uss,179uss, 79uss, 19uss, 97uss, 69uss,109uss,141uss,  9uss,129uss,125uss, 50uss, 
+        189uss,143uss, 64uss,235uss,134uss,183uss,123uss, 11uss,240uss,149uss, 33uss, 34uss, 92uss,107uss, 78uss,130uss, 
+         84uss,214uss,101uss,147uss,206uss, 96uss,178uss, 28uss,115uss, 86uss,192uss, 20uss,167uss,140uss,241uss,220uss, 
+         18uss,117uss,202uss, 31uss, 59uss,190uss,228uss,209uss, 66uss, 61uss,212uss, 48uss,163uss, 60uss,182uss, 38uss, 
+        111uss,191uss, 14uss,218uss, 70uss,105uss,  7uss, 87uss, 39uss,242uss, 29uss,155uss,188uss,148uss, 67uss,  3uss, 
+        248uss, 17uss,199uss,246uss,144uss,239uss, 62uss,231uss,  6uss,195uss,213uss, 47uss,200uss,102uss, 30uss,215uss, 
+          8uss,232uss,234uss,222uss,128uss, 82uss,238uss,247uss,132uss,170uss,114uss,172uss, 53uss, 77uss,106uss, 42uss, 
+        150uss, 26uss,210uss,113uss, 90uss, 21uss, 73uss,116uss, 75uss,159uss,208uss, 94uss,  4uss, 24uss,164uss,236uss, 
+        194uss,224uss, 65uss,110uss, 15uss, 81uss,203uss,204uss, 36uss,145uss,175uss, 80uss,161uss,244uss,112uss, 57uss, 
+        153uss,124uss, 58uss,133uss, 35uss,184uss,180uss,122uss,252uss,  2uss, 54uss, 91uss, 37uss, 85uss,151uss, 49uss, 
+         45uss, 93uss,250uss,152uss,227uss,138uss,146uss,174uss,  5uss,223uss, 41uss, 16uss,103uss,108uss,186uss,201uss, 
+        211uss,  0uss,230uss,207uss,225uss,158uss,168uss, 44uss, 99uss, 22uss,  1uss, 63uss, 88uss,226uss,137uss,169uss, 
+         13uss, 56uss, 52uss, 27uss,171uss, 51uss,255uss,176uss,187uss, 72uss, 12uss, 95uss,185uss,177uss,205uss, 46uss, 
+        197uss,243uss,219uss, 71uss,229uss,165uss,156uss,119uss, 10uss,166uss, 32uss,104uss,254uss,127uss,193uss,173uss 
 );
 
 alias XKey = Array[UInt16, 64];
@@ -33,7 +33,7 @@ alias XKey = Array[UInt16, 64];
 rc2KeySchedule(key: K) xkey: XKey
 {
         var len = size(key);
-        assert(len > 0u8 and len <= 128u8);
+        assert(len > 0uss and len <= 128uss);
 
         var xkeyb = Pointer[UInt8](begin(xkey));
         for (i in range(len))
@@ -41,7 +41,7 @@ rc2KeySchedule(key: K) xkey: XKey
 
         if (len < 128) { 
                 var x = xkeyb[len-1]; 
-                for (i in range(128u8 - len)) {
+                for (i in range(128uss - len)) {
                         x = rc2Permute[bitand(x + xkeyb[i], 255)]; 
                         xkeyb[len+i] = x; 
                 }
@@ -59,32 +59,32 @@ rc2Encrypt(xkey: XKey, plaintext: Array[UInt8, 8]) cipher: Array[UInt8, 8]
         var x54 = bitshl(UInt32(plaintext[5]), 8) + UInt32(plaintext[4]); 
         var x32 = bitshl(UInt32(plaintext[3]), 8) + UInt32(plaintext[2]); 
         var x10 = bitshl(UInt32(plaintext[1]), 8) + UInt32(plaintext[0]); 
-        for (i in range(16u32)) {
+        for (i in range(16u)) {
                 x10 += bitand(x32, bitnot(x76))
                     + bitand(x54, x76)
                     + xkey[4*i+0]; 
-                x10 = bitshl(x10, 1) + bitand(bitshr(x10, 15), 1u32); 
+                x10 = bitshl(x10, 1) + bitand(bitshr(x10, 15), 1u); 
 
                 x32 += bitand(x54, bitnot(x10))
                     + bitand(x76, x10)
                     + xkey[4*i+1]; 
-                x32 = bitshl(x32, 2) + bitand(bitshr(x32, 14), 3u32); 
+                x32 = bitshl(x32, 2) + bitand(bitshr(x32, 14), 3u); 
 
                 x54 += bitand(x76, bitnot(x32))
                     + bitand(x10, x32)
                     + xkey[4*i+2]; 
-                x54 = bitshl(x54, 3) + bitand(bitshr(x54, 13), 7u32); 
+                x54 = bitshl(x54, 3) + bitand(bitshr(x54, 13), 7u); 
 
                 x76 += bitand(x10, bitnot(x54))
                     + bitand(x32, x54)
                     + xkey[4*i+3]; 
-                x76 = bitshl(x76, 5) + bitand(bitshr(x76, 11), 31u32); 
+                x76 = bitshl(x76, 5) + bitand(bitshr(x76, 11), 31u); 
 
                 if (i == 4 or i == 10) { 
-                        x10 += xkey[bitand(x76, 63u32)]; 
-                        x32 += xkey[bitand(x10, 63u32)]; 
-                        x54 += xkey[bitand(x32, 63u32)]; 
-                        x76 += xkey[bitand(x54, 63u32)]; 
+                        x10 += xkey[bitand(x76, 63u)]; 
+                        x32 += xkey[bitand(x10, 63u)]; 
+                        x54 += xkey[bitand(x32, 63u)]; 
+                        x76 += xkey[bitand(x54, 63u)]; 
                 } 
         } 
         cipher[0] = UInt8(x10); 
@@ -103,24 +103,24 @@ rc2Decrypt(xkey: XKey, cipher: Array[UInt8, 8]) plaintext: Array[UInt8, 8]
         var x54 = bitshl(UInt32(cipher[5]), 8) + UInt32(cipher[4]); 
         var x32 = bitshl(UInt32(cipher[3]), 8) + UInt32(cipher[2]); 
         var x10 = bitshl(UInt32(cipher[1]), 8) + UInt32(cipher[0]); 
-        for (i in reverseRange(16u32)) {
-                x76 = bitand(x76, 65535u32);
+        for (i in reverseRange(16u)) {
+                x76 = bitand(x76, 65535u);
                 x76 = bitshl(x76, 11) + bitshr(x76, 5); 
                 x76 -= bitand(x10, bitnot(x54)) + bitand(x32, x54) + xkey[4*i+3]; 
-                x54 = bitand(x54, 65535u32);
+                x54 = bitand(x54, 65535u);
                 x54 = bitshl(x54, 13) + bitshr(x54, 3); 
                 x54 -= bitand(x76, bitnot(x32)) + bitand(x10, x32) + xkey[4*i+2]; 
-                x32 = bitand(x32, 65535u32);
+                x32 = bitand(x32, 65535u);
                 x32 = bitshl(x32, 14) + bitshr(x32, 2); 
                 x32 -= bitand(x54, bitnot(x10)) + bitand(x76, x10) + xkey[4*i+1]; 
-                x10 = bitand(x10, 65535u32);
+                x10 = bitand(x10, 65535u);
                 x10 = bitshl(x10, 15) + bitshr(x10, 1); 
                 x10 -= bitand(x32, bitnot(x76)) + bitand(x54, x76) + xkey[4*i+0]; 
                 if (i == 5 or i == 11) { 
-                        x76 -= xkey[bitand(x54, 63u32)]; 
-                        x54 -= xkey[bitand(x32, 63u32)]; 
-                        x32 -= xkey[bitand(x10, 63u32)]; 
-                        x10 -= xkey[bitand(x76, 63u32)]; 
+                        x76 -= xkey[bitand(x54, 63u)]; 
+                        x54 -= xkey[bitand(x32, 63u)]; 
+                        x32 -= xkey[bitand(x10, 63u)]; 
+                        x10 -= xkey[bitand(x76, 63u)]; 
                 } 
         }
         plaintext[0] = UInt8(x10); 
@@ -147,8 +147,8 @@ record BadHexDigit();
 instance Exception (BadHexDigit);
 badHexDigit(c) UInt8 { throw BadHexDigit(); }
 hexDigit(c) = if (c >= '0' and c <= '9') UInt8(c) - UInt8('0')
-         else if (c >= 'A' and c <= 'F') UInt8(c) - UInt8('A') + 10u8
-         else if (c >= 'a' and c <= 'f') UInt8(c) - UInt8('a') + 10u8
+         else if (c >= 'A' and c <= 'F') UInt8(c) - UInt8('A') + 10uss
+         else if (c >= 'a' and c <= 'f') UInt8(c) - UInt8('a') + 10uss
          else badHexDigit(c);
 hexByte(str) = bitshl(hexDigit(str[0]), 4) + hexDigit(str[1]);
 

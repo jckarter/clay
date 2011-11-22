@@ -118,7 +118,7 @@ sha256(message: S) --> returned: SHA256 {
         messageTailBegin,
         messageTailBegin + messageTailSize
     );
-    tailChunkBytes[messageTailSize] = 0x80_u8;
+    tailChunkBytes[messageTailSize] = 0x80_uss;
 
     if (messageTailSize >= 56) {
         zeroMemory(

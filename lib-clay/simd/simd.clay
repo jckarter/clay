@@ -261,5 +261,5 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(v, Vec[T,n]);
 
 [T | Integer?(T)]
 inline componentMask(static T) = T(-1);
-inline overload componentMask(static Float32) = bitcast(-1_i32, Float32);
-inline overload componentMask(static Float64) = bitcast(-1_i64, Float64);
+inline overload componentMask(static Float32) = bitcast(-1_i, Float32);
+inline overload componentMask(static Float64) = bitcast(-1_l, Float64);

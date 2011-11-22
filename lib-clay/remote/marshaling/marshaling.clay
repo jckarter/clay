@@ -389,9 +389,9 @@ overload UnmarshaledType(static UniquePointer[T]) = UniquePointer[UnmarshaledTyp
 //
 // shared pointers
 //
-private alias SHARED_POINTER_NULL = 0u8;
-private alias SHARED_POINTER_REF = 1u8;
-private alias SHARED_POINTER_DATA = 2u8;
+private alias SHARED_POINTER_NULL = 0uss;
+private alias SHARED_POINTER_REF = 1uss;
+private alias SHARED_POINTER_DATA = 2uss;
 
 [T]
 overload marshaledSize(context: MarshalContext, p: SharedPointer[T]) {

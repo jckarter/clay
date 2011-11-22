@@ -4,7 +4,7 @@ import opengl.nolookup.*;
 var gl = GLFunctions();
 
 render() {
-    gl.ClearColor(1.0f32, 1.0f32, 1.0f32, 1.0f32);
+    gl.ClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     gl.Clear(GL_COLOR_BUFFER_BIT);
     glutSwapBuffers();
 }

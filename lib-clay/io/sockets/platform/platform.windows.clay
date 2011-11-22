@@ -27,10 +27,10 @@ instance Exception (WSAStartupVersionError);
 
 startSockets() {
     var wsaData = win32.WSADATA();
-    var err = win32.WSAStartup(0x0202u16, &wsaData);
+    var err = win32.WSAStartup(0x0202us, &wsaData);
     if (err == -1)
         throw WSAStartupError(win32.WSAGetLastError());
-    if (wsaData.wVersion != 0x0202u16) {
+    if (wsaData.wVersion != 0x0202us) {
         win32.WSACleanup();
         throw WSAStartupVersionError();
     }

@@ -121,7 +121,7 @@ overload Table[B](x: Table[B]) returned:Table[B]
 [E]
 overload initialize(b: Bucket[E])
 {
-    for (x in b.hashBytes) x = 255u8;
+    for (x in b.hashBytes) x = 255uss;
 }
 
 [E]
@@ -268,7 +268,7 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
     var k = (SizeT(pEntry)-SizeT(&th.tables[i][j].entries[0]))/TypeSize(E);
     assert(&th.tables[i][j].entries[k] == pEntry);
 
-    th.tables[i][j].hashBytes[k] = 255u8;
+    th.tables[i][j].hashBytes[k] = 255uss;
     destroy(th.tables[i][j].entries[k]);
 }
 
@@ -332,7 +332,7 @@ refillMask(x: TwoHashEntries[E, F])
         if (x.i == 2) return;
         for (k in range(16))
         {
-            if (th.tables[x.i][x.j].hashBytes[k] != 255u8)
+            if (th.tables[x.i][x.j].hashBytes[k] != 255uss)
                 x.entryMask = bitor(x.entryMask, bitshl(1, k));
         }
         if (x.entryMask != 0) return;

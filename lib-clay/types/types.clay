@@ -102,29 +102,29 @@ inline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..a);
 define Least;
 define Greatest;
 
-inline overload Least(static Int8) : Int8 = -128_i8;
-inline overload Greatest(static Int8) : Int8 = 127_i8;
+inline overload Least(static Int8) : Int8 = -128_ss;
+inline overload Greatest(static Int8) : Int8 = 127_ss;
 
-inline overload Least(static UInt8) : UInt8 = 0_u8;
-inline overload Greatest(static UInt8) : UInt8 = 255_u8;
+inline overload Least(static UInt8) : UInt8 = 0_uss;
+inline overload Greatest(static UInt8) : UInt8 = 255_uss;
 
-inline overload Least(static Int16) : Int16 = -0x8000_i16;
-inline overload Greatest(static Int16) : Int16 = 0x7FFF_i16;
+inline overload Least(static Int16) : Int16 = -0x8000_s;
+inline overload Greatest(static Int16) : Int16 = 0x7FFF_s;
 
-inline overload Least(static UInt16) : UInt16 = 0_u16;
-inline overload Greatest(static UInt16) : UInt16 = 0xFFFF_u16;
+inline overload Least(static UInt16) : UInt16 = 0_us;
+inline overload Greatest(static UInt16) : UInt16 = 0xFFFF_us;
 
-inline overload Least(static Int32) : Int32 = -0x8000_0000_i32;
-inline overload Greatest(static Int32) : Int32 = 0x7FFF_FFFF_i32;
+inline overload Least(static Int32) : Int32 = -0x8000_0000_i;
+inline overload Greatest(static Int32) : Int32 = 0x7FFF_FFFF_i;
 
-inline overload Least(static UInt32) : UInt32 = 0_u32;
-inline overload Greatest(static UInt32) : UInt32 = 0xFFFF_FFFF_u32;
+inline overload Least(static UInt32) : UInt32 = 0_u;
+inline overload Greatest(static UInt32) : UInt32 = 0xFFFF_FFFF_u;
 
-inline overload Least(static Int64) : Int64 = -0x8000_0000_0000_0000_i64;
-inline overload Greatest(static Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_i64;
+inline overload Least(static Int64) : Int64 = -0x8000_0000_0000_0000_l;
+inline overload Greatest(static Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_l;
 
-inline overload Least(static UInt64) : UInt64 = 0_u64;
-inline overload Greatest(static UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_u64;
+inline overload Least(static UInt64) : UInt64 = 0_ul;
+inline overload Greatest(static UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_ul;
 
 
 //

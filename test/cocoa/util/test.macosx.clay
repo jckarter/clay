@@ -86,8 +86,8 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
         expectEqual(test, "NSNumber(integer)", 5, NSNumber(5).intValue());
         expectEqual(test, "NSNumber(double)", 5.5, NSNumber(5.5).doubleValue());
-        expectEqual(test, "NSNumber(64-bit integer)", 0x1_0000_0000_u64,
-            NSNumber(0x1_0000_0000_u64).unsignedLongLongValue()
+        expectEqual(test, "NSNumber(64-bit integer)", 0x1_0000_0000_ul,
+            NSNumber(0x1_0000_0000_ul).unsignedLongLongValue()
         );
 
         expectEqual(test, "NSString(identifier)", "bees",
@@ -116,8 +116,8 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
     TestCase("boxing of clay primitives", test => {
         expectEqual(test, "integer", 5, Id(5).intValue());
         expectEqual(test, "double", 5.5, Id(5.5).doubleValue());
-        expectEqual(test, "64-bit integer", 0x1_0000_0000_u64,
-            Id(0x1_0000_0000_u64).unsignedLongLongValue()
+        expectEqual(test, "64-bit integer", 0x1_0000_0000_ul,
+            Id(0x1_0000_0000_ul).unsignedLongLongValue()
         );
         expectEqual(test, "bool", true,
             Id(true).boolValue()
@@ -270,7 +270,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             // s gets released here, so setBar had better have retained it
         }
         expectEqual(test, "foo", 27, x.foo());
-        expectEqual(test, "foo64", 27_i64, x.foo64());
+        expectEqual(test, "foo64", 27_l, x.foo64());
         expectEqual(test, "bar retainCount", NSUInteger(1), x.bar().retainCount());
         expectEqual(test, "bar", "catch-22", x.bar());
         expectEqual(test, "isBas", true, x.isBas());

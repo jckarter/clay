@@ -9,22 +9,22 @@ main() {
         println("0x", hex(floatBits(f)));
 
     // 0, -0
-    println(floatFromParts(false, 0, 0u32));
-    println(floatFromParts(true,  0, 0u32));
-    println(floatFromParts(false, 0, 0u64));
-    println(floatFromParts(true,  0, 0u64));
+    println(floatFromParts(false, 0, 0u));
+    println(floatFromParts(true,  0, 0u));
+    println(floatFromParts(false, 0, 0ul));
+    println(floatFromParts(true,  0, 0ul));
 
     // 1, -1
-    println(floatFromParts(false,  127, 0u32));
-    println(floatFromParts(true,   127, 0u32));
-    println(floatFromParts(false, 1023, 0u64));
-    println(floatFromParts(true,  1023, 0u64));
+    println(floatFromParts(false,  127, 0u));
+    println(floatFromParts(true,   127, 0u));
+    println(floatFromParts(false, 1023, 0ul));
+    println(floatFromParts(true,  1023, 0ul));
 
     // 1.5, -1.5
-    println(floatFromParts(false,  127, 0x40_0000u32));
-    println(floatFromParts(true,   127, 0x40_0000u32));
-    println(floatFromParts(false, 1023, 0x8_0000_0000_0000u64));
-    println(floatFromParts(true,  1023, 0x8_0000_0000_0000u64));
+    println(floatFromParts(false,  127, 0x40_0000u));
+    println(floatFromParts(true,   127, 0x40_0000u));
+    println(floatFromParts(false, 1023, 0x8_0000_0000_0000ul));
+    println(floatFromParts(true,  1023, 0x8_0000_0000_0000ul));
 
     // 1.5 parts
     var neg?, exp, mant = ..floatParts(1.5);

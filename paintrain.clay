@@ -39,11 +39,11 @@ external complexOut() : Complex64 = 1.0 + 2.0j;
 external complexIn0(x:Complex64) : Float64 = real(x);
 external complexIn1(x:Complex64) : Float64 = imag(x);
 
-external complexFloatOut() : Complex32 = 1.0f + 2.0j32;
+external complexFloatOut() : Complex32 = 1.0f + 2.0fj;
 external complexFloatIn0(x:Complex32) : Float32 = real(x);
 external complexFloatIn1(x:Complex32) : Float32 = imag(x);
 
-external complexLongDoubleOut() : Complex80 = 1.0f80 + 2.0j80;
+external complexLongDoubleOut() : Complex80 = 1.0l + 2.0lj;
 external complexLongDoubleIn0(x:Complex80) : Float80 = real(x);
 external complexLongDoubleIn1(x:Complex80) : Float80 = imag(x);
 
