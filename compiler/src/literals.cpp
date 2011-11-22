@@ -49,7 +49,8 @@ static double floatFromParts(bool negp, int exponent, unsigned long long mantiss
     return x.f;
 }
 
-static double hextod(char *number, char **end) {
+template<typename F>
+static F parseHexFloat(char *number, char **end) {
     bool negp = false;
     bool negExponentp = false;
     unsigned long long mantissa = 0;
@@ -138,9 +139,14 @@ static double hextod(char *number, char **end) {
 
 static double clay_strtod(char *ptr, char **end) {
     if (ishex(ptr))
-        return hextod(ptr, end);
+        return parseHexFloat<double>(ptr, end);
     else
         return strtod(ptr, end);
+}
+
+static long double clay_strtold(char *ptr, char **end) {
+    // XXX parse hex long doubles
+    return strtold(ptr, end);
 }
 
 ValueHolderPtr parseIntLiteral(IntLiteral *x)
@@ -240,7 +246,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         *((double *)vh->buf) = y;
     }
     else if (x->suffix == "f80") {
-        long double y = strtold(ptr, &end);
+        long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
         if (errno == ERANGE)
@@ -267,7 +273,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         *((double *)vh->buf) = y;
     }
     else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
-        long double y = strtold(ptr, &end);
+        long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
         if (errno == ERANGE)
@@ -306,7 +312,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((double *)vh->buf) = y;
     }
     else if (x->suffix == "f80" || (x->suffix.empty() && _fp80Enabled)) {
-        long double y = strtold(ptr, &end);
+        long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
         if (errno == ERANGE)
@@ -334,7 +340,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((double *)vh->buf) = y;
     }
     else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
-        long double y = strtold(ptr, &end);
+        long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
         if (errno == ERANGE)
