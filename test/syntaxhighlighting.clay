@@ -251,8 +251,8 @@ valueTest() {
     -0x123abc;
     -0x123_abc;
 
-    123i8; 123i16; 123i32; 123i64;
-    123u8; 123u16; 123u32; 123u64;
+    123i8; 123i16; 123i32; 123i64; 123i128;
+    123u8; 123u16; 123u32; 123u64; 123u128;
     123f32; 123f64;
     123u; 123f;
 
@@ -324,6 +324,15 @@ valueTest() {
     1.2e3f;
     1.2e3f32;
     1.2e3f64;
+    1.2e3f80;
+    1.2e3f128;
+
+    1.2e3fj;
+    1.2e3j;
+    1.2e3j32;
+    1.2e3j64;
+    1.2e3j80;
+    1.2e3j128;
 
     0x1p0;
     0x1p+0;
@@ -367,6 +376,7 @@ string
 
     """""";
     """triple "quoted" string""";
+    """triple \""" quoted string""";
     """"triple quoted string"""";
 
     #zim;
@@ -380,6 +390,7 @@ string
     #"diddly squat";
 
     #doodly?;
+    #?doodly;
 
     #"\"symbol\"";
     #"symbol\\";
