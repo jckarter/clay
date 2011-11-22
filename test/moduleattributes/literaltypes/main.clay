@@ -1,0 +1,7 @@
+import printer.formatter.(repr);
+in __main__ (Float32, Int64);
+
+main() {
+    println(repr(1.0 + 2.0));
+    println(repr(1 + 2));
+}

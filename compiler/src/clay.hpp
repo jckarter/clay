@@ -1792,6 +1792,8 @@ struct Module : public ANode {
 
     bool attributesVerified;
     vector<string> attrBuildFlags;
+    IntegerTypePtr attrDefaultIntegerType;
+    FloatTypePtr attrDefaultFloatType;
 
     map<string, set<ObjectPtr> > publicSymbols;
     bool publicSymbolsLoaded;
@@ -1821,6 +1823,7 @@ struct Module : public ANode {
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
           initialized(false),
+          attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false),

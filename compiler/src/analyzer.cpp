@@ -1092,29 +1092,29 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->callingConv = (CallingConv)callingConv;
 }
 
-void verifyAttributes(ExternalVariablePtr x)
+void verifyAttributes(ExternalVariablePtr var)
 {
-    assert(!x->attributesVerified);
-    x->attributesVerified = true;
-    x->attrDLLImport = false;
-    x->attrDLLExport = false;
-    for (unsigned i = 0; i < x->attributes->size(); ++i) {
-        ExprPtr expr = x->attributes->exprs[i];
-        ObjectPtr obj = evaluateOneStatic(expr, x->env);
+    assert(!var->attributesVerified);
+    var->attributesVerified = true;
+    var->attrDLLImport = false;
+    var->attrDLLExport = false;
+    for (unsigned i = 0; i < var->attributes->size(); ++i) {
+        ExprPtr expr = var->attributes->exprs[i];
+        ObjectPtr obj = evaluateOneStatic(expr, var->env);
         if (obj->objKind != PRIM_OP)
             error(expr, "invalid external variable attribute");
         PrimOp *y = (PrimOp *)obj.ptr();
         switch (y->primOpCode) {
         case PRIM_AttributeDLLImport : {
-            if (x->attrDLLExport)
+            if (var->attrDLLExport)
                 error(expr, "dllimport specified after dllexport");
-            x->attrDLLImport = true;
+            var->attrDLLImport = true;
             break;
         }
         case PRIM_AttributeDLLExport : {
-            if (x->attrDLLImport)
+            if (var->attrDLLImport)
                 error(expr, "dllexport specified after dllimport");
-            x->attrDLLExport = true;
+            var->attrDLLExport = true;
             break;
         }
         default :
@@ -1123,18 +1123,30 @@ void verifyAttributes(ExternalVariablePtr x)
     }
 }
 
-void verifyAttributes(ModulePtr x)
+void verifyAttributes(ModulePtr mod)
 {
-    assert(!x->attributesVerified);
-    x->attributesVerified = true;
+    assert(!mod->attributesVerified);
+    mod->attributesVerified = true;
 
-    if (x->declaration != NULL && x->declaration->attributes != NULL) {
-        for (unsigned i = 0; i < x->declaration->attributes->size(); ++i) {
-            ExprPtr expr = x->declaration->attributes->exprs[i];
+    if (mod->declaration != NULL && mod->declaration->attributes != NULL) {
+        for (unsigned i = 0; i < mod->declaration->attributes->size(); ++i) {
+            ExprPtr expr = mod->declaration->attributes->exprs[i];
             if (expr->exprKind == STRING_LITERAL) {
                 StringLiteral *y = (StringLiteral *)expr.ptr();
-                x->attrBuildFlags.push_back(y->value);
+                mod->attrBuildFlags.push_back(y->value);
             } else {
+                ObjectPtr obj = evaluateOneStatic(expr, mod->env);
+                if (obj->objKind == TYPE) {
+                    Type *ty = (Type*)obj.ptr();
+                    if (ty->typeKind == FLOAT_TYPE) {
+                        mod->attrDefaultFloatType = (FloatType*)ty;
+                        continue;
+                    } else if (ty->typeKind == INTEGER_TYPE) {
+                        mod->attrDefaultIntegerType = (IntegerType*)ty;
+                        continue;
+                    }
+                }
+
                 error(expr, "invalid module attribute");
             }
         }
