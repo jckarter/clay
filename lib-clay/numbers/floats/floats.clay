@@ -140,10 +140,15 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i32 0
 }
 
-floatBits(f:Double) = forward bitcast(f, UInt64);
+
+record UInt64x2 (exponent:UInt64,mantissa:UInt64);
+
+floatBits(f:Float80) = forward bitcast(f, UInt64x2);
+overload floatBits(f:Double) = forward bitcast(f, UInt64);
 overload floatBits(f:Float) = forward bitcast(f, UInt32);
 
-floatFromBits(b:UInt64) = forward bitcast(b, Double);
+floatFromBits(b:UInt64x2) = forward bitcast(b, LongDouble);
+overload floatFromBits(b:UInt64) = forward bitcast(b, Double);
 overload floatFromBits(b:UInt32) = forward bitcast(b, Float);
 
 [I | Integer?(I)]
@@ -162,7 +167,8 @@ overload floatFromParts(neg?:Bool, exp:I, mant:UInt32) = floatFromBits(bitor(
 floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_u64) != 0;
 overload floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
 
-floatExponent(f:Double) = bitand(bitshr(floatBits(f), 52), 0x7FF_u64);
+floatExponent(f:LongDouble) = bitand(bitshr(floatBits(f), 64), 0x7FF_u64);
+overload floatExponent(f:Double) = bitand(bitshr(floatBits(f), 52), 0x7FF_u64);
 overload floatExponent(f:Float) = bitand(bitshr(floatBits(f), 23), 0xFFu);
 
 floatMantissa(f:Double) = bitand(floatBits(f), 0x000F_FFFF_FFFF_FFFF_u64);
@@ -176,14 +182,15 @@ overload infinity(static Float) = floatFromBits(0x7F80_0000u);
 negativeInfinity(static Double) = floatFromBits(0xFFF0_0000_0000_0000_u64);
 overload negativeInfinity(static Float) = floatFromBits(0xFF80_0000u);
 
-nan(static Double) = floatFromBits(0xFFF8_0000_0000_0000_u64);
+nan(static Double) = floatFromBits(0x7FF8_0000_0000_0000_u64);
 overload nan(static Float) = floatFromBits(0xFFC0_0000u);
 
-snan(static Double) = floatFromBits(0xFFF0_0000_0000_0001_u64);
-overload snan(static Float) = floatFromBits(0xFF80_0001u);
+snan(static Double) = floatFromBits(0x7FF9_0000_0000_0000_u64);
+overload snan(static Float) = floatFromBits(0xFF80_0000u);
 
 overload nan(static Double, sign?:Bool, payload:UInt64) = floatFromParts(sign?, 0x7FF, payload);
 overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, 0xFF, payload);
 
-exponentBias(static Double) = 1023;
+exponentBias(static LongDouble) = 16383;
+overload exponentBias(static Double) = 1023;
 overload exponentBias(static Float) = 127;

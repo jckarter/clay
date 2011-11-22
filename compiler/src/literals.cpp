@@ -1,14 +1,5 @@
 #include "clay.hpp"
 
-static bool _fp80Enabled = false;
-
-bool fp80Enabled(){
-    return _fp80Enabled;
-}
-
-void setfp80Enabled(bool enabled){
-    _fp80Enabled = enabled;
-}
 
 static bool ishex(char *ptr) {
     return
@@ -263,7 +254,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "j64" || (x->suffix == "j" && !_fp80Enabled)) {
+    else if (x->suffix == "j64" || x->suffix == "j") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -272,7 +263,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
+    else if (x->suffix == "j80") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
@@ -311,7 +302,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "f80" || (x->suffix.empty() && _fp80Enabled)) {
+    else if (x->suffix == "f80") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -330,7 +321,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "j64" || (x->suffix == "j" && !_fp80Enabled)) {
+    else if (x->suffix == "j64" || x->suffix == "j") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -339,7 +330,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80" || (x->suffix == "j" && _fp80Enabled)) {
+    else if (x->suffix == "j80") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");

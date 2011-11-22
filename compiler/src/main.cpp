@@ -285,7 +285,6 @@ static void usage(char *argv0)
          << "                        (default when building -c or -S)\n";
     cerr << "  -no-inline            ignore 'inline' keyword\n";
     cerr << "  -pic                  generate position independent code\n";
-    cerr << "  -f80                  use 80-bit fp as default\n";
     cerr << "  -abort                abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run                  execute the program without writing to disk\n";
     cerr << "  -timing               show timing information\n";
@@ -346,7 +345,6 @@ int main(int argc, char **argv) {
     bool emitObject = false;
     bool sharedLib = false;
     bool genPIC = false;
-    bool fp80Enabled = false;
     bool inlineEnabled = true;
     bool exceptions = true;
     bool abortOnError = false;
@@ -419,9 +417,6 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-pic") == 0) {
             genPIC = true;
-        }
-        else if (strcmp(argv[i], "-f80") == 0) {
-            fp80Enabled = true;
         }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
@@ -688,7 +683,6 @@ int main(int argc, char **argv) {
     if (!codegenExternalsSet)
         codegenExternals = !(emitLLVM || emitAsm || emitObject);
 
-    setfp80Enabled(fp80Enabled);
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 
