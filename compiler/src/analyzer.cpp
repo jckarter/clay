@@ -585,12 +585,6 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return new MultiPValue(new PValue(v->type, true));
     }
 
-    case COMPLEX_LITERAL : {
-        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
-        ValueHolderPtr v = parseComplexLiteral(x);
-        return new MultiPValue(new PValue(v->type, true));
-    }
-
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)

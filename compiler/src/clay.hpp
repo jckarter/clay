@@ -213,7 +213,6 @@ struct Expr;
 struct BoolLiteral;
 struct IntLiteral;
 struct FloatLiteral;
-struct ComplexLiteral;
 struct CharLiteral;
 struct StringLiteral;
 struct IdentifierLiteral;
@@ -361,7 +360,6 @@ typedef Pointer<Expr> ExprPtr;
 typedef Pointer<BoolLiteral> BoolLiteralPtr;
 typedef Pointer<IntLiteral> IntLiteralPtr;
 typedef Pointer<FloatLiteral> FloatLiteralPtr;
-typedef Pointer<ComplexLiteral> ComplexLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
 typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
@@ -687,7 +685,6 @@ enum TokenKind {
     T_CHAR_LITERAL,
     T_INT_LITERAL,
     T_FLOAT_LITERAL,
-    T_COMPLEX_LITERAL,
     T_STATIC_INDEX,
     T_SPACE,
     T_LINE_COMMENT,
@@ -753,7 +750,6 @@ enum ExprKind {
     BOOL_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
-    COMPLEX_LITERAL,
     CHAR_LITERAL,
     STRING_LITERAL,
     IDENTIFIER_LITERAL,
@@ -817,16 +813,6 @@ struct FloatLiteral : public Expr {
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
-
-struct ComplexLiteral : public Expr {
-    string real;
-    string value;
-    string suffix;
-    ComplexLiteral(const string &real, const string &value)
-        : Expr(COMPLEX_LITERAL), real(real),value(value) {}
-    ComplexLiteral(const string &real,const string &value, const string &suffix)
-        : Expr(COMPLEX_LITERAL), real(real),value(value), suffix(suffix) {}
-};
 
 struct CharLiteral : public Expr {
     char value;
@@ -2746,7 +2732,6 @@ bool fp80Enabled();
 void setfp80Enabled(bool enabled);
 ValueHolderPtr parseIntLiteral(IntLiteral *x);
 ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
-ValueHolderPtr parseComplexLiteral(ComplexLiteral *x);
 
 
 //

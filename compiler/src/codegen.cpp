@@ -957,12 +957,6 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
-    case COMPLEX_LITERAL : {
-        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
-        ValueHolderPtr y = parseComplexLiteral(x);
-        codegenValueHolder(y, ctx, out);
-        break;
-    }
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)

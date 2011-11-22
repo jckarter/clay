@@ -916,12 +916,6 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case COMPLEX_LITERAL : {
-        ComplexLiteral *x = (ComplexLiteral *)expr.ptr();
-        ValueHolderPtr y = parseComplexLiteral(x);
-        evalValueHolder(y, out);
-        break;
-    }
     case CHAR_LITERAL : {
         CharLiteral *x = (CharLiteral *)expr.ptr();
         if (!x->desugared)

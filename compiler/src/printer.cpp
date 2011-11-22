@@ -102,14 +102,6 @@ static void printExpr(ostream &out, const Expr *x) {
         out << ")";
         break;
     }
-    case COMPLEX_LITERAL : {
-        const ComplexLiteral *y = (const ComplexLiteral *)x;
-        out << "ComplexLiteral(" << y->real << "," << y->value;
-        if (!y->suffix.empty())
-            out << ", " << y->suffix;
-        out << ")";
-        break;
-    }
     case CHAR_LITERAL : {
         const CharLiteral *y = (const CharLiteral *)x;
         out << "CharLiteral(" << y->value << ")";
@@ -452,9 +444,6 @@ static void print(ostream &out, const Object *x) {
             break;
         case T_FLOAT_LITERAL :
             out << "T_FLOAT_LITERAL";
-            break;
-        case T_COMPLEX_LITERAL :
-            out << "T_COMPLEX_LITERAL";
             break;
         case T_SPACE :
             out << "T_SPACE";

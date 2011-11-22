@@ -456,7 +456,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case BOOL_LITERAL :
     case INT_LITERAL :
     case FLOAT_LITERAL :
-    case COMPLEX_LITERAL :
     case CHAR_LITERAL :
     case STRING_LITERAL :
     case IDENTIFIER_LITERAL :
