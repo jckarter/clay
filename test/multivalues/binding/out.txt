@@ -1,4 +1,4 @@
 1 3.5
 6 7
 9 10
-WackyType[ValueHolder(Int32(16)), ValueHolder(Float64(20.5))]
+WackyType[16, 20.5]
