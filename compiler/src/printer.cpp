@@ -907,9 +907,7 @@ void printName(ostream &out, ObjectPtr x)
         }
         else {
             EValuePtr ev = new EValue(y->type, y->buf);
-            out << "ValueHolder(";
-            printTypeAndValue(out, ev);
-            out << ")";
+            printValue(out, ev);
         }
         break;
     }
