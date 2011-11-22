@@ -6,7 +6,7 @@ ExprPtr desugarCharLiteral(char c) {
     CallPtr call = new Call(nameRef, new ExprList());
     ostringstream out;
     out << (int)c;
-    call->args->add(new IntLiteral(out.str(), "i8"));
+    call->args->add(new IntLiteral(out.str(), "ss"));
     return call.ptr();
 }
 
