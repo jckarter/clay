@@ -229,6 +229,23 @@ Language changes:
     var z = sqrt(-4.0f+0.0fj); // 2.0fj
   Thanks to Jeremy Clifford.
 
+* The suffixes for literal integers and floats have been changed.
+    i8   ==> ss ("short short")
+    i16  ==> s  ("short")
+    i32  ==> i  ("int")
+    i64  ==> l  ("long")
+    i128 ==> ll ("long long")
+
+    u8   ==> uss
+    u16  ==> us
+    u32  ==> u
+    u64  ==> ul
+    u128 ==> ull
+
+    f32 ==> f
+    f64 ==> ff
+    f80 ==> l or (to coerce an integer-looking literal) fl
+
 Library changes:
 ----------------
 * The bitwise operation functions have been given shorter names:
