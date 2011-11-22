@@ -285,7 +285,6 @@ static void usage(char *argv0)
          << "                        (default when building -c or -S)\n";
     cerr << "  -no-inline            ignore 'inline' keyword\n";
     cerr << "  -pic                  generate position independent code\n";
-    cerr << "  -f80                  use 80-bit fp as default\n";
     cerr << "  -abort                abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run                  execute the program without writing to disk\n";
     cerr << "  -timing               show timing information\n";
