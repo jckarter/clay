@@ -598,11 +598,58 @@ isKeywordToken(token, kwd)
 // Convert octal integer literals to use the octal() function.
 // 0.0: 0777
 // 0.1: octal(#"777")
+// Convert integer literal suffixes.
+// 0.0: 0i8, 0i16, 0i32, 0i64, 0u8,  0u16, 0u32, 0u64, 0f32, 0f64
+// 0.1: 0ss, 0s,   0i,   0l,   0uss, 0us,  0u,   0ul,  0f,   0ff
 overload fixAst(ast:IntLiteral, state:FixState) : {
-    if (size(ast.value) < 2
-        or ast.value[0] != '0'
-        or ast.value[1] == 'x' or ast.value[1] == 'X')
-        return;
+    if (size(ast.value) >= 2
+        and ast.value[0] == '0'
+        and not (ast.value[1] == 'x' or ast.value[1] == 'X'))
+        fixOctal(ast, state);
+    else
+        fixLiteralSuffix(ast, state);
+}
+
+// Convert float literal suffixes.
+// 0.0: 0.0f32, 0.0f64
+// 0.1: 0.0f,   0.0ff
+overload fixAst(ast:FloatLiteral, state:FixState) : {
+    fixLiteralSuffix(ast, state);
+}
+
+[T | inValues?(T, IntLiteral, FloatLiteral)]
+fixLiteralSuffix(ast:T, state:FixState) : {
+    writeUptoToken(astTokens(ast).begin, state);
+    replaceToken(astTokens(ast).end - 1, state);
+    printTo(state.outputFile, ast.value);
+    maybe(ast.suffix, suffix -> {
+        switch (suffix)
+        case ("i8")
+            printTo(state.outputFile, "ss");
+        case ("i16")
+            printTo(state.outputFile, "s");
+        case ("i32")
+            printTo(state.outputFile, "i");
+        case ("i64")
+            printTo(state.outputFile, "l");
+        case ("u8")
+            printTo(state.outputFile, "uss");
+        case ("u16")
+            printTo(state.outputFile, "us");
+        case ("u32")
+            printTo(state.outputFile, "u");
+        case ("u64")
+            printTo(state.outputFile, "ul");
+        case ("f32")
+            printTo(state.outputFile, "f");
+        case ("f64")
+            printTo(state.outputFile, "ff");
+        else
+            printTo(state.outputFile, suffix);
+    });
+}
+
+fixOctal(ast:IntLiteral, state:FixState) : {
     var iter = iterator(ast.value);
     next(iter);
     while (hasNext?(iter)) {
