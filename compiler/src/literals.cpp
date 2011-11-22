@@ -146,7 +146,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
     char *end = ptr;
     int base = ishex(ptr) ? 16 : 10;
     ValueHolderPtr vh;
-    if (x->suffix == "i8") {
+    if (x->suffix == "ss") {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int8 literal");
@@ -155,7 +155,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int8Type);
         *((char *)vh->buf) = (char)y;
     }
-    else if (x->suffix == "i16") {
+    else if (x->suffix == "s") {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int16 literal");
@@ -164,7 +164,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int16Type);
         *((short *)vh->buf) = (short)y;
     }
-    else if ((x->suffix == "i32") || x->suffix.empty()) {
+    else if ((x->suffix == "i") || x->suffix.empty()) {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int32 literal");
@@ -173,7 +173,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int32Type);
         *((int *)vh->buf) = (int)y;
     }
-    else if (x->suffix == "i64") {
+    else if (x->suffix == "l") {
         long long y = strtoll(ptr, &end, base);
         if (*end != 0)
             error("invalid int64 literal");
@@ -182,7 +182,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int64Type);
         *((long long *)vh->buf) = y;
     }
-    else if (x->suffix == "u8") {
+    else if (x->suffix == "uss") {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint8 literal");
@@ -191,7 +191,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint8Type);
         *((unsigned char *)vh->buf) = (unsigned char)y;
     }
-    else if (x->suffix == "u16") {
+    else if (x->suffix == "us") {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint16 literal");
@@ -200,7 +200,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint16Type);
         *((unsigned short *)vh->buf) = (unsigned short)y;
     }
-    else if ((x->suffix == "u") || (x->suffix == "u32")) {
+    else if (x->suffix == "u") {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint32 literal");
@@ -209,7 +209,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint32Type);
         *((unsigned int *)vh->buf) = (unsigned int)y;
     }
-    else if (x->suffix == "u64") {
+    else if (x->suffix == "ul") {
         unsigned long long y = strtoull(ptr, &end, base);
         if (*end != 0)
             error("invalid uint64 literal");
@@ -218,7 +218,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint64Type);
         *((unsigned long long *)vh->buf) = y;
     }
-    else if ((x->suffix == "f") || (x->suffix == "f32")) {
+    else if (x->suffix == "f") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
@@ -227,7 +227,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "f64") {
+    else if (x->suffix == "ff") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float64 literal");
@@ -236,7 +236,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "f80") {
+    else if (x->suffix == "fl") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -245,7 +245,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
-    else if (x->suffix == "j32" || x->suffix == "fj") {
+    else if (x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
@@ -254,7 +254,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "j64" || x->suffix == "j") {
+    else if (x->suffix == "j" || x->suffix == "ffj") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -263,7 +263,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80") {
+    else if (x->suffix == "lj" || x->suffix == "flj") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
@@ -284,7 +284,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     ValueHolderPtr vh;
-    if ((x->suffix == "f") || (x->suffix == "f32")) {
+    if (x->suffix == "f") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
@@ -293,7 +293,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float32Type);
         *((float *)vh->buf) = y;
     }
-    else if ((x->suffix == "f64") || x->suffix.empty()) {
+    else if (x->suffix == "ff" || x->suffix.empty()) {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float64 literal");
@@ -302,7 +302,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "f80") {
+    else if (x->suffix == "fl" || x->suffix == "l") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -312,7 +312,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((long double *)vh->buf) = y;
     }
 
-    else if (x->suffix == "j32" || x->suffix == "fj") {
+    else if (x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
@@ -321,7 +321,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "j64" || x->suffix == "j") {
+    else if (x->suffix == "j" || x->suffix == "ffj") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -330,7 +330,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "j80") {
+    else if (x->suffix == "lj" || x->suffix == "flj") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");
