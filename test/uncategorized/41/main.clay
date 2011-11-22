@@ -29,8 +29,8 @@ main() {
     testMinMaxParser(Int64);
     testMinMaxParser(UInt64);
 
-    testParser2(Float32, 1.2, -3.4);
-    testParser2(Float64, 1.2, -3.4);
+    testParser2(Float32, 1.2, -3.5);
+    testParser2(Float64, 1.2, -3.5);
 
     println(Int("42"));
 }

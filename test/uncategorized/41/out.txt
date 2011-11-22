@@ -24,8 +24,8 @@ min = 0
 max = 18446744073709551615
 testing Float32
 a = 1.2
-b = -3.4
+b = -3.5
 testing Float64
 a = 1.2
-b = -3.4
+b = -3.5
 42
