@@ -135,9 +135,9 @@ define LeastPositive;
 define LeastPositiveNormalized;
 define GreatestPositiveFinite;
 
-inline overload LeastPositive(static Float32) : Float32 = 0x0.0000_0002p-126;
-inline overload LeastPositiveNormalized(static Float32) : Float32 = 0x1.0000_0000p-126;
-inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FFFEp127;
+inline overload LeastPositive(static Float32) : Float32 = 0x0.0000_0002p-126f;
+inline overload LeastPositiveNormalized(static Float32) : Float32 = 0x1.0000_0000p-126f;
+inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FFFEp127f;
 
 inline overload LeastPositive(static Float64) : Float64
     = 0x0.0000_0000_0000_1p-1022;
