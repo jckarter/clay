@@ -635,6 +635,20 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return new MultiPValue(new PValue(cSizeTType, true));
     }
 
+    case ARG_EXPR : {
+        ARGExpr *arg = (ARGExpr *)expr.ptr();
+        ObjectPtr obj = safeLookupEnv(env, arg->name);
+        if (obj->objKind == EXPRESSION) {
+            Expr *expr = (Expr*)obj.ptr();
+            if (expr->exprKind == FOREIGN_EXPR) {
+                ForeignExpr *fexpr = (ForeignExpr*)expr;
+                string argString = fexpr->expr->asString();
+                return analyzeStaticObject(new Identifier(argString));
+            }
+        }
+        error("__ARG__ may only be applied to an alias value or alias function argument");
+    }
+
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
         return analyzeCallExpr(prelude_expr_tupleLiteral(),

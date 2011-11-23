@@ -130,7 +130,7 @@ static void initKeywords() {
          "true", "false", "try", "catch", "throw",
          "finally", "onerror",
          "eval",
-         "__FILE__", "__LINE__", "__COLUMN__", NULL};
+         "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)
         keywords->insert(*p);

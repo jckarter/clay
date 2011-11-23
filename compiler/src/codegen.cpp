@@ -999,6 +999,7 @@ void codegenExpr(ExprPtr expr,
         break;
 
     case FILE_EXPR :
+    case ARG_EXPR :
         break;
 
     case LINE_EXPR : {

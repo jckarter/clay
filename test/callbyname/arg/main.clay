@@ -1,0 +1,11 @@
+alias show(x) {
+    println(__ARG__ x, " = ", x);
+}
+
+main() {
+    var a, b = 3, 4;
+    show(2);
+    show(2 + 2);
+    show(add(2,  2));
+    show(a + b);
+}

@@ -944,6 +944,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
 
     case FILE_EXPR :
+    case ARG_EXPR :
         break;
 
     case LINE_EXPR : {

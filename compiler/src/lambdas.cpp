@@ -97,9 +97,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
 static string lambdaName(LambdaPtr x)
 {
-    assert(x->location->source == x->endLocation->source);
-    char *data = x->location->source->data;
-    string fullName(data + x->location->offset, data + x->endLocation->offset);
+    string fullName = x->asString();
 
     if (fullName.size() <= 40 && fullName.find('\n') == string::npos)
         return "(" + fullName + ")";

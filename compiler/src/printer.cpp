@@ -268,6 +268,28 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "ObjectExpr(" << y->obj << ")";
         break;
     }
+    case EVAL_EXPR : {
+        const EvalExpr *eval = (const EvalExpr *)x;
+        out << "EvalExpr(" << eval->args << ")";
+        break;
+    }
+    case FILE_EXPR : {
+        out << "FILEExpr()";
+        break;
+    }
+    case LINE_EXPR : {
+        out << "LINEExpr()";
+        break;
+    }
+    case COLUMN_EXPR : {
+        out << "COLUMNExpr()";
+        break;
+    }
+    case ARG_EXPR : {
+        const ARGExpr *arg = (const ARGExpr *)x;
+        out << "ARGExpr(" << arg->name << ")";
+        break;
+    }
     }
 }
 
@@ -398,6 +420,10 @@ static void printStatement(ostream &out, const Statement *x) {
     case UNREACHABLE : {
         out << "Unreachable()";
         break;
+    }
+    case EVAL_STATEMENT : {
+        const EvalStatement *eval = (const EvalStatement *)x;
+        out << "EvalStatement(" << eval->args << ")";
     }
     }
 }
@@ -640,6 +666,13 @@ static void print(ostream &out, const Object *x) {
         }
         break;
     }
+
+    case EVAL_TOPLEVEL : {
+        const EvalTopLevel *eval = (const EvalTopLevel *)x;
+        out << "EvalTopLevel(" << eval->args << ")";
+        break;
+    }
+
     case MODULE_HOLDER : {
         out << "ModuleHolder()";
         break;

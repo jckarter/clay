@@ -221,6 +221,7 @@ struct NameRef;
 struct FILEExpr;
 struct LINEExpr;
 struct COLUMNExpr;
+struct ARGExpr;
 struct Tuple;
 struct Paren;
 struct Indexing;
@@ -371,6 +372,7 @@ typedef Pointer<NameRef> NameRefPtr;
 typedef Pointer<FILEExpr> FILEExprPtr;
 typedef Pointer<LINEExpr> LINEExprPtr;
 typedef Pointer<COLUMNExpr> COLUMNExprPtr;
+typedef Pointer<ARGExpr> ARGExprPtr;
 typedef Pointer<Tuple> TuplePtr;
 typedef Pointer<Paren> ParenPtr;
 typedef Pointer<Indexing> IndexingPtr;
@@ -764,6 +766,7 @@ enum ExprKind {
     FILE_EXPR,
     LINE_EXPR,
     COLUMN_EXPR,
+    ARG_EXPR,
 
     NAME_REF,
     TUPLE,
@@ -791,11 +794,19 @@ enum ExprKind {
 
 struct Expr : public ANode {
     ExprKind exprKind;
+    LocationPtr startLocation;
+    LocationPtr endLocation;
 
     MultiPValuePtr cachedAnalysis;
 
     Expr(ExprKind exprKind)
         : ANode(EXPRESSION), exprKind(exprKind) {}
+
+    string asString() {
+        assert(startLocation->source == endLocation->source);
+        char *data = startLocation->source->data;
+        return string(data + startLocation->offset, data + endLocation->offset);
+    }
 };
 
 struct BoolLiteral : public Expr {
@@ -861,6 +872,12 @@ struct LINEExpr : public Expr {
 struct COLUMNExpr : public Expr {
     COLUMNExpr()
         : Expr(COLUMN_EXPR) {}
+};
+
+struct ARGExpr : public Expr {
+    IdentifierPtr name;
+    ARGExpr(IdentifierPtr name)
+        : Expr(ARG_EXPR), name(name) {}
 };
 
 struct Tuple : public Expr {
@@ -983,19 +1000,16 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
-    LocationPtr endLocation;
-
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
         initialized(false) {}
     Lambda(bool captureByRef,
            const vector<IdentifierPtr> &formalArgs,
            IdentifierPtr formalVarArg,
-           StatementPtr body,
-           LocationPtr endLocation)
+           StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
-          body(body), initialized(false), endLocation(endLocation) {}
+          body(body), initialized(false) {}
 };
 
 struct Unpack : public Expr {

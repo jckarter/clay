@@ -360,6 +360,26 @@ static bool columnExpr(ExprPtr &x) {
     return true;
 }
 
+static bool argExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("__ARG__")) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    x = new ARGExpr(name);
+    x->location = location;
+    return true;
+}
+
+static bool evalExpr(ExprPtr &ev) {
+    LocationPtr location = currentLocation();
+    if (!keyword("eval")) return false;
+    ExprPtr args;
+    if (!expression(args)) return false;
+    ev = new EvalExpr(args);
+    ev->location = location;
+    return true;
+}
+
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
     if (parenExpr(x)) return true;
@@ -369,6 +389,8 @@ static bool atomicExpr(ExprPtr &x) {
     if (restore(p), fileExpr(x)) return true;
     if (restore(p), lineExpr(x)) return true;
     if (restore(p), columnExpr(x)) return true;
+    if (restore(p), argExpr(x)) return true;
+    if (restore(p), evalExpr(x)) return true;
     return false;
 }
 
@@ -958,8 +980,7 @@ static bool lambda(ExprPtr &x) {
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;
     if (!lambdaArrow(captureByRef)) return false;
     if (!lambdaBody(body)) return false;
-    LocationPtr endLocation = currentLocation();
-    x = new Lambda(captureByRef, formalArgs, formalVarArg, body, endLocation);
+    x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
     x->location = location;
     return true;
 }
@@ -1015,34 +1036,24 @@ static bool pairExpr(ExprPtr &x) {
 
 
 //
-// evalExpr
-//
-
-static bool evalExpr(ExprPtr &ev) {
-    LocationPtr location = currentLocation();
-    if (!keyword("eval")) return false;
-    ExprPtr args;
-    if (!expression(args)) return false;
-    ev = new EvalExpr(args);
-    ev->location = location;
-    return true;
-}
-
-
-//
 // expression
 //
 
 static bool expression(ExprPtr &x) {
+    LocationPtr startLocation = currentLocation();
     int p = save();
-    if (evalExpr(x)) return true;
-    if (restore(p), lambda(x)) return true;
-    if (restore(p), pairExpr(x)) return true;
-    if (restore(p), orExpr(x)) return true;
-    if (restore(p), ifExpr(x)) return true;
-    if (restore(p), unpack(x)) return true;
-    if (restore(p), staticExpr(x)) return true;
+    if (restore(p), lambda(x)) goto success;
+    if (restore(p), pairExpr(x)) goto success;
+    if (restore(p), orExpr(x)) goto success;
+    if (restore(p), ifExpr(x)) goto success;
+    if (restore(p), unpack(x)) goto success;
+    if (restore(p), staticExpr(x)) goto success;
     return false;
+
+success:
+    x->startLocation = startLocation;
+    x->endLocation = currentLocation();
+    return true;
 }
 
 

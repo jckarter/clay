@@ -84,6 +84,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case ARG_EXPR : {
+        ARGExpr *arg = (ARGExpr *)x.ptr();
+        out = new ARGExpr(arg->name);
+        break;
+    }
+
     case NAME_REF : {
         NameRef *y = (NameRef *)x.ptr();
         out = new NameRef(y->name);
@@ -164,7 +170,6 @@ ExprPtr clone(ExprPtr x)
         clone(y->formalArgs, z->formalArgs);
         z->formalVarArg = y->formalVarArg;
         z->body = clone(y->body);
-        z->endLocation = y->endLocation;
         out = z.ptr();
         break;
     }
@@ -198,6 +203,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case EVAL_EXPR : {
+        EvalExpr *eval = (EvalExpr*)x.ptr();
+        out = new EvalExpr(clone(eval->args));
+        break;
+    }
+
     default :
         assert(false);
         break;
@@ -205,6 +216,8 @@ ExprPtr clone(ExprPtr x)
     }
 
     out->location = x->location;
+    out->startLocation = x->startLocation;
+    out->endLocation = x->endLocation;
     return out;
 }
 
@@ -405,6 +418,12 @@ StatementPtr clone(StatementPtr x)
 
     case UNREACHABLE : {
         out = new Unreachable();
+        break;
+    }
+
+    case EVAL_STATEMENT : {
+        EvalStatement *eval = (EvalStatement *)x.ptr();
+        out = new EvalStatement(eval->args);
         break;
     }
 
