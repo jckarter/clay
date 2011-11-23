@@ -9,6 +9,12 @@ from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
 import time
 
+
+#
+# testLogFile
+# 
+
+testLogFile = open("testlog.txt", "w")
 
 
 #
@@ -17,12 +23,6 @@ import time
 
 testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
-
-#
-# testLogFile
-# 
-
-testLogFile = open("testlog.txt", "w")
 
 
 #
@@ -219,7 +219,6 @@ class TestCase(object):
                 return "err.txt mismatch"
 
     def run(self):
-        testLogFile.flush()
         print >>testLogFile
         print >>testLogFile, "====================="
         print >>testLogFile, self.name()
@@ -229,7 +228,9 @@ class TestCase(object):
         self.post_build()
         resultout, resulterr, returncode = self.runtest()
         self.post_run()
-        return self.match(resultout, resulterr, returncode)
+        r = self.match(resultout, resulterr, returncode)
+        testLogFile.flush()
+        return r
 
     def name(self):
         return os.path.relpath(self.path, testRoot)
