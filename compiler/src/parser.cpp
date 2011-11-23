@@ -1013,6 +1013,20 @@ static bool pairExpr(ExprPtr &x) {
     return true;
 }
 
+
+//
+// evalExpr
+//
+
+static bool evalExpr(ExprPtr &ev) {
+    LocationPtr location = currentLocation();
+    if (!keyword("eval")) return false;
+    ExprPtr args;
+    if (!expression(args)) return false;
+    ev = new EvalExpr(args);
+    ev->location = location;
+    return true;
+}
 
 
 //
@@ -1021,7 +1035,8 @@ static bool pairExpr(ExprPtr &x) {
 
 static bool expression(ExprPtr &x) {
     int p = save();
-    if (lambda(x)) return true;
+    if (evalExpr(x)) return true;
+    if (restore(p), lambda(x)) return true;
     if (restore(p), pairExpr(x)) return true;
     if (restore(p), orExpr(x)) return true;
     if (restore(p), ifExpr(x)) return true;
@@ -1171,10 +1186,7 @@ static bool blockItem(StatementPtr &x) {
     return false;
 }
 
-static bool block(StatementPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!symbol("{")) return false;
-    BlockPtr y = new Block();
+static bool blockItems(vector<StatementPtr> &stmts) {
     while (true) {
         int p = save();
         StatementPtr z;
@@ -1182,8 +1194,16 @@ static bool block(StatementPtr &x) {
             restore(p);
             break;
         }
-        y->statements.push_back(z);
+        stmts.push_back(z);
     }
+    return true;
+}
+
+static bool block(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("{")) return false;
+    BlockPtr y = new Block();
+    if (!blockItems(y->statements)) return false;
     if (!symbol("}")) return false;
     x = y.ptr();
     x->location = location;
@@ -1495,6 +1515,18 @@ static bool onerrorStatement(StatementPtr &x) {
     return true;
 }
 
+static bool evalStatement(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+
+    if (!keyword("eval")) return false;
+    ExprListPtr args;
+    if (!expressionList(args)) return false;
+    if (!symbol(";")) return false;
+    x = new EvalStatement(args);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1505,6 +1537,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), gotoStatement(x)) return true;
     if (restore(p), switchStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
+    if (restore(p), evalStatement(x)) return true;
     if (restore(p), exprStatement(x)) return true;
     if (restore(p), whileStatement(x)) return true;
     if (restore(p), breakStatement(x)) return true;
@@ -2717,6 +2750,16 @@ static bool imports(vector<ImportPtr> &x) {
     return true;
 }
 
+static bool evalTopLevel(TopLevelItemPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!keyword("eval")) return false;
+    ExprListPtr args;
+    if (!expressionList(args)) return false;
+    if (!symbol(";")) return false;
+    x = new EvalTopLevel(args);
+    x->location = location;
+    return true;
+}
 
 
 //
@@ -2739,6 +2782,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), external(y)) goto success;
     if (restore(p), externalVariable(y)) goto success;
     if (restore(p), globalAlias(y)) goto success;
+    if (restore(p), evalTopLevel(y)) goto success;
     return false;
 success :
     assert(y.ptr());
@@ -2823,15 +2867,16 @@ static bool module(const string &moduleName, ModulePtr &x) {
 // parse
 //
 
-ModulePtr parse(const string &moduleName, SourcePtr source) {
+template<typename Parser, typename Node>
+void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
+{
     vector<TokenPtr> t;
-    tokenize(source, t);
+    tokenize(source, offset, length, t);
 
     tokens = &t;
     position = maxPosition = 0;
 
-    ModulePtr m;
-    if (!module(moduleName, m) || (position < (int)t.size())) {
+    if (!parser(node) || (position < (int)t.size())) {
         LocationPtr location;
         if (maxPosition == (int)t.size())
             location = new Location(source, source->size);
@@ -2843,10 +2888,19 @@ ModulePtr parse(const string &moduleName, SourcePtr source) {
 
     tokens = NULL;
     position = maxPosition = 0;
-
-    return m;
 }
 
+struct ModuleParser {
+    const string &moduleName;
+    bool operator()(ModulePtr &m) { return module(moduleName, m); }
+};
+
+ModulePtr parse(const string &moduleName, SourcePtr source) {
+    ModulePtr m;
+    ModuleParser p = { moduleName };
+    applyParser(source, 0, source->size, p, m);
+    return m;
+}
 
 
 //
@@ -2854,25 +2908,40 @@ ModulePtr parse(const string &moduleName, SourcePtr source) {
 //
 
 ExprPtr parseExpr(SourcePtr source, int offset, int length) {
-    vector<TokenPtr> t;
-    tokenize(source, offset, length, t);
-
-    tokens = &t;
-    position = maxPosition = 0;
-
     ExprPtr expr;
-    if (!expression(expr) || (position < (int)t.size())) {
-        LocationPtr location;
-        if (maxPosition == (int)t.size())
-            location = new Location(source, offset + length);
-        else
-            location = t[maxPosition]->location;
-        pushLocation(location);
-        error("parse error");
-    }
-
-    tokens = NULL;
-    position = maxPosition = 0;
-
+    applyParser(source, offset, length, expression, expr);
     return expr;
+}
+
+
+//
+// parseExprList
+//
+
+ExprListPtr parseExprList(SourcePtr source, int offset, int length) {
+    ExprListPtr exprList;
+    applyParser(source, offset, length, expressionList, exprList);
+    return exprList;
+}
+
+
+//
+// parseStatements
+//
+
+void parseStatements(SourcePtr source, int offset, int length,
+    vector<StatementPtr> &stmts)
+{
+    applyParser(source, offset, length, blockItems, stmts);
+}
+
+
+//
+// parseTopLevelItems
+//
+
+void parseTopLevelItems(SourcePtr source, int offset, int length,
+    vector<TopLevelItemPtr> &topLevels)
+{
+    applyParser(source, offset, length, topLevelItems, topLevels);
 }

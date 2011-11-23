@@ -162,6 +162,7 @@ enum ObjectKind {
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
     EXTERNAL_VARIABLE,
+    EVAL_TOPLEVEL,
 
     GLOBAL_ALIAS,
 
@@ -237,6 +238,7 @@ struct StaticExpr;
 struct DispatchExpr;
 struct ForeignExpr;
 struct ObjectExpr;
+struct EvalExpr;
 
 struct ExprList;
 
@@ -265,6 +267,7 @@ struct StaticFor;
 struct Finally;
 struct OnError;
 struct Unreachable;
+struct EvalStatement;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -286,6 +289,7 @@ struct GVarInstance;
 struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
+struct EvalTopLevel;
 
 struct GlobalAlias;
 
@@ -384,6 +388,7 @@ typedef Pointer<StaticExpr> StaticExprPtr;
 typedef Pointer<DispatchExpr> DispatchExprPtr;
 typedef Pointer<ForeignExpr> ForeignExprPtr;
 typedef Pointer<ObjectExpr> ObjectExprPtr;
+typedef Pointer<EvalExpr> EvalExprPtr;
 
 typedef Pointer<ExprList> ExprListPtr;
 
@@ -412,6 +417,7 @@ typedef Pointer<StaticFor> StaticForPtr;
 typedef Pointer<Finally> FinallyPtr;
 typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
+typedef Pointer<EvalStatement> EvalStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -433,6 +439,7 @@ typedef Pointer<GVarInstance> GVarInstancePtr;
 typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
+typedef Pointer<EvalTopLevel> EvalTopLevelPtr;
 
 typedef Pointer<GlobalAlias> GlobalAliasPtr;
 
@@ -777,7 +784,9 @@ enum ExprKind {
     DISPATCH_EXPR,
 
     FOREIGN_EXPR,
-    OBJECT_EXPR
+    OBJECT_EXPR,
+
+    EVAL_EXPR
 };
 
 struct Expr : public ANode {
@@ -1031,6 +1040,15 @@ struct ObjectExpr : public Expr {
         : Expr(OBJECT_EXPR), obj(obj) {}
 };
 
+struct EvalExpr : public Expr {
+    ExprPtr args;
+    bool evaled;
+    ExprListPtr value;
+
+    EvalExpr(ExprPtr args)
+        : Expr(EVAL_EXPR), args(args), evaled(false) {}
+};
+
 
 
 //
@@ -1086,7 +1104,8 @@ enum StatementKind {
     STATIC_FOR,
     FINALLY,
     ONERROR,
-    UNREACHABLE
+    UNREACHABLE,
+    EVAL_STATEMENT
 };
 
 struct Statement : public ANode {
@@ -1321,6 +1340,15 @@ struct OnError : public Statement {
 struct Unreachable : public Statement {
     Unreachable()
         : Statement(UNREACHABLE) {}
+};
+
+struct EvalStatement : public Statement {
+    ExprListPtr args;
+    bool evaled;
+    vector<StatementPtr> value;
+
+    EvalStatement(ExprListPtr args)
+        : Statement(EVAL_STATEMENT), evaled(false) {}
 };
 
 
@@ -1678,6 +1706,15 @@ struct ExternalVariable : public TopLevelItem {
           attributesVerified(false), llGlobal(NULL) {}
 };
 
+struct EvalTopLevel : public TopLevelItem {
+    ExprListPtr args;
+    bool evaled;
+    vector<TopLevelItemPtr> value;
+
+    EvalTopLevel(ExprListPtr args)
+        : TopLevelItem(EVAL_TOPLEVEL), args(args), evaled(false)
+        {}
+};
 
 
 //
@@ -1751,7 +1788,6 @@ struct ImportMembers : public Import {
     ImportMembers(DottedNamePtr dottedName, Visibility visibility)
         : Import(IMPORT_MEMBERS, dottedName, visibility) {}
 };
-
 
 
 //
@@ -1838,6 +1874,11 @@ struct Module : public ANode {
 
 ModulePtr parse(const string &moduleName, SourcePtr source);
 ExprPtr parseExpr(SourcePtr source, int offset, int length);
+ExprListPtr parseExprList(SourcePtr source, int offset, int length);
+void parseStatements(SourcePtr source, int offset, int length,
+    vector<StatementPtr> &statements);
+void parseTopLevelItems(SourcePtr source, int offset, int length,
+    vector<TopLevelItemPtr> &topLevels);
 
 
 
