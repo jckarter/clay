@@ -112,3 +112,15 @@ overload IdentifierLowerChar(static #W) = #w;
 overload IdentifierLowerChar(static #X) = #x;
 overload IdentifierLowerChar(static #Y) = #y;
 overload IdentifierLowerChar(static #Z) = #z;
+
+define ident;
+
+overload ident(..xx) = IdentifierConcat(..mapValues(ident, ..xx));
+
+[x]
+overload ident(static x) = IdentifierStaticName(static x);
+[i | Identifier?(i)]
+overload ident(static i) = i;
+
+overload ident() = #"";
+
