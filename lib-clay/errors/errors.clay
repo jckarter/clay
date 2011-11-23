@@ -42,10 +42,10 @@ overload error(..e) {
 
 alias assert(cond:Bool, ..message) {
     if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed: ", ..message);
+        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
 alias overload assert(cond:Bool) {
     if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion failed");
+        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
