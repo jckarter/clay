@@ -296,6 +296,21 @@ ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
     }
 }
 
+ModulePtr safeLookupModule(EnvPtr env) {
+    switch (env->parent->objKind) {
+    case ENV : {
+        Env *parent = (Env *)env->parent.ptr();
+        return safeLookupModule(parent);
+    }
+    case MODULE : {
+        Module *module = (Module *)env->parent.ptr();
+        return module;
+    }
+    default :
+        assert(false);
+        return NULL;
+    }
+}
 
 
 //

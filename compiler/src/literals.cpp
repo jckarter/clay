@@ -140,13 +140,33 @@ static long double clay_strtold(char *ptr, char **end) {
     return strtold(ptr, end);
 }
 
-ValueHolderPtr parseIntLiteral(IntLiteral *x)
+static bool typeSuffix(string const &suffix,
+                       TypePtr defaultType,
+                       string const &testSuffix,
+                       TypePtr testDefaultType)
 {
+    return suffix == testSuffix || (suffix.empty() && defaultType == testDefaultType);
+}
+
+static bool complexTypeSuffix(string const &suffix,
+                              TypePtr defaultType,
+                              string const &testSuffix,
+                              TypePtr testDefaultType)
+{
+    return suffix == testSuffix || (suffix == "j" && defaultType == testDefaultType);
+}
+
+ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
+{
+    TypePtr defaultType = module->attrDefaultIntegerType.ptr();
+    if (defaultType == NULL)
+        defaultType = int32Type;
+
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     int base = ishex(ptr) ? 16 : 10;
     ValueHolderPtr vh;
-    if (x->suffix == "ss") {
+    if (typeSuffix(x->suffix, defaultType, "ss", int8Type)) {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int8 literal");
@@ -155,7 +175,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int8Type);
         *((char *)vh->buf) = (char)y;
     }
-    else if (x->suffix == "s") {
+    else if (typeSuffix(x->suffix, defaultType, "s", int16Type)) {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int16 literal");
@@ -164,7 +184,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int16Type);
         *((short *)vh->buf) = (short)y;
     }
-    else if ((x->suffix == "i") || x->suffix.empty()) {
+    else if (typeSuffix(x->suffix, defaultType, "i", int32Type)) {
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int32 literal");
@@ -173,7 +193,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int32Type);
         *((int *)vh->buf) = (int)y;
     }
-    else if (x->suffix == "l") {
+    else if (typeSuffix(x->suffix, defaultType, "l", int64Type)) {
         long long y = strtoll(ptr, &end, base);
         if (*end != 0)
             error("invalid int64 literal");
@@ -182,7 +202,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(int64Type);
         *((long long *)vh->buf) = y;
     }
-    else if (x->suffix == "uss") {
+    else if (typeSuffix(x->suffix, defaultType, "uss", uint8Type)) {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint8 literal");
@@ -191,7 +211,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint8Type);
         *((unsigned char *)vh->buf) = (unsigned char)y;
     }
-    else if (x->suffix == "us") {
+    else if (typeSuffix(x->suffix, defaultType, "us", uint16Type)) {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint16 literal");
@@ -200,7 +220,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint16Type);
         *((unsigned short *)vh->buf) = (unsigned short)y;
     }
-    else if (x->suffix == "u") {
+    else if (typeSuffix(x->suffix, defaultType, "u", uint32Type)) {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
             error("invalid uint32 literal");
@@ -209,7 +229,7 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
         vh = new ValueHolder(uint32Type);
         *((unsigned int *)vh->buf) = (unsigned int)y;
     }
-    else if (x->suffix == "ul") {
+    else if (typeSuffix(x->suffix, defaultType, "ul", uint64Type)) {
         unsigned long long y = strtoull(ptr, &end, base);
         if (*end != 0)
             error("invalid uint64 literal");
@@ -279,12 +299,16 @@ ValueHolderPtr parseIntLiteral(IntLiteral *x)
     return vh;
 }
 
-ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
+ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x)
 {
+    TypePtr defaultType = module->attrDefaultFloatType.ptr();
+    if (defaultType == NULL)
+        defaultType = float64Type;
+
     char *ptr = const_cast<char *>(x->value.c_str());
     char *end = ptr;
     ValueHolderPtr vh;
-    if (x->suffix == "f") {
+    if (typeSuffix(x->suffix, defaultType, "f", float32Type)) {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float32 literal");
@@ -293,7 +317,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "ff" || x->suffix.empty()) {
+    else if (typeSuffix(x->suffix, defaultType, "ff", float64Type)) {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid float64 literal");
@@ -302,7 +326,9 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(float64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "fl" || x->suffix == "l") {
+    else if (x->suffix == "fl" || x->suffix == "l"
+        || (x->suffix.empty() && defaultType == float80Type))
+    {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid float80 literal");
@@ -312,7 +338,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         *((long double *)vh->buf) = y;
     }
 
-    else if (x->suffix == "fj") {
+    else if (complexTypeSuffix(x->suffix, defaultType, "fj", float32Type)) {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex32 literal");
@@ -321,7 +347,7 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex32Type);
         *((float *)vh->buf) = y;
     }
-    else if (x->suffix == "j" || x->suffix == "ffj") {
+    else if (complexTypeSuffix(x->suffix, defaultType, "ffj", float64Type)) {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
             error("invalid complex64 literal");
@@ -330,7 +356,9 @@ ValueHolderPtr parseFloatLiteral(FloatLiteral *x)
         vh = new ValueHolder(complex64Type);
         *((double *)vh->buf) = y;
     }
-    else if (x->suffix == "lj" || x->suffix == "flj") {
+    else if (x->suffix == "lj" || x->suffix == "flj"
+        || (x->suffix == "j" && defaultType == float80Type))
+    {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
             error("invalid complex80 literal");

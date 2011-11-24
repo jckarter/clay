@@ -2009,6 +2009,7 @@ ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name);
 
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name);
+ModulePtr safeLookupModule(EnvPtr env);
 
 ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,
@@ -2797,8 +2798,8 @@ void initBuiltinConstructor(RecordPtr x);
 // literals
 //
 
-ValueHolderPtr parseIntLiteral(IntLiteral *x);
-ValueHolderPtr parseFloatLiteral(FloatLiteral *x);
+ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x);
+ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x);
 
 
 //

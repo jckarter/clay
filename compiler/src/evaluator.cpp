@@ -904,14 +904,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        ValueHolderPtr y = parseIntLiteral(x);
+        ValueHolderPtr y = parseIntLiteral(safeLookupModule(env), x);
         evalValueHolder(y, out);
         break;
     }
 
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        ValueHolderPtr y = parseFloatLiteral(x);
+        ValueHolderPtr y = parseFloatLiteral(safeLookupModule(env), x);
         evalValueHolder(y, out);
         break;
     }

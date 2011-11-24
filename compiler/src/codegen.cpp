@@ -945,14 +945,14 @@ void codegenExpr(ExprPtr expr,
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        ValueHolderPtr y = parseIntLiteral(x);
+        ValueHolderPtr y = parseIntLiteral(safeLookupModule(env), x);
         codegenValueHolder(y, ctx, out);
         break;
     }
 
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        ValueHolderPtr y = parseFloatLiteral(x);
+        ValueHolderPtr y = parseFloatLiteral(safeLookupModule(env), x);
         codegenValueHolder(y, ctx, out);
         break;
     }

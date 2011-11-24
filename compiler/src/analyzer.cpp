@@ -575,13 +575,13 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case INT_LITERAL : {
         IntLiteral *x = (IntLiteral *)expr.ptr();
-        ValueHolderPtr v = parseIntLiteral(x);
+        ValueHolderPtr v = parseIntLiteral(safeLookupModule(env), x);
         return new MultiPValue(new PValue(v->type, true));
     }
 
     case FLOAT_LITERAL : {
         FloatLiteral *x = (FloatLiteral *)expr.ptr();
-        ValueHolderPtr v = parseFloatLiteral(x);
+        ValueHolderPtr v = parseFloatLiteral(safeLookupModule(env), x);
         return new MultiPValue(new PValue(v->type, true));
     }
 
