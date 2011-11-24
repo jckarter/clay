@@ -143,8 +143,13 @@ Language changes:
     import bar.*;
 
     in module.name;
-  Module declarations are not required, but they will be used in the future to
-  provide module-specific build flags and parameterized modules.
+  Module declarations are not required, but if specified the declared name must match
+  the name used to import the module. The module name can be followed by an attribute
+  expression list in parens:
+    in module.name (Int64, Float32);
+  Specifying an integer type as a module attribute sets the default type for unsuffixed
+  integer literals in the module source code. Likewise, specifying a float type sets
+  the default type for unsuffixed floating-point literals.
 
 * You may now import private members from modules with the following syntax:
     import foo.(private member);
@@ -245,6 +250,11 @@ Language changes:
     f32 ==> f
     f64 ==> ff
     f80 ==> l or (to coerce an integer-looking literal) fl
+
+* A new eval form supports evaluation of static strings as code. eval can be used
+  as a statement or expression.
+    eval #"""println("Hello world");""";
+    var x = eval #"1 + 2";
 
 Library changes:
 ----------------
