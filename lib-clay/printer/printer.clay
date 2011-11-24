@@ -250,35 +250,35 @@ overload printReprTo(stream, x:Bool) {
 }
 
 overload printReprTo(stream, x:Int8) {
-    printTo(stream, x, "i8");
+    printTo(stream, x, "ss");
 }
 
 overload printReprTo(stream, x:Int16) {
-    printTo(stream, x, "i16");
+    printTo(stream, x, "s");
 }
 
 overload printReprTo(stream, x:Int32) {
-    printTo(stream, x, "i32");
+    printTo(stream, x, "i");
 }
 
 overload printReprTo(stream, x:Int64) {
-    printTo(stream, x, "i64");
+    printTo(stream, x, "l");
 }
 
 overload printReprTo(stream, x:UInt8) {
-    printTo(stream, x, "u8");
+    printTo(stream, x, "uss");
 }
 
 overload printReprTo(stream, x:UInt16) {
-    printTo(stream, x, "u16");
+    printTo(stream, x, "us");
 }
 
 overload printReprTo(stream, x:UInt32) {
-    printTo(stream, x, "u32");
+    printTo(stream, x, "u");
 }
 
 overload printReprTo(stream, x:UInt64) {
-    printTo(stream, x, "u64");
+    printTo(stream, x, "ul");
 }
 
 overload printReprTo(stream, x:Float32) {
@@ -290,11 +290,11 @@ overload printReprTo(stream, x:Float64) {
 }
 
 overload printReprTo(stream, x:Float80) {
-    printWithSprintf(stream, "%.16Laf80", x);
+    printWithSprintf(stream, "%.16Lafl", x);
 }
 
 overload printReprTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.16Laf80%+.16Laj80", ..rect(x));
+    printWithSprintf(stream, "%.16Lafl%+.16Laflj", ..rect(x));
 }
 
 overload printReprTo(stream, x:Complex64) {
