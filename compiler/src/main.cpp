@@ -107,7 +107,6 @@ static void optimizeLLVM(llvm::Module *module, unsigned optLevel, bool internali
     }
 
     passes.add(llvm::createVerifierPass());
-
     passes.run(*module);
 }
 
@@ -283,7 +282,6 @@ static void usage(char *argv0)
     cerr << "  -no-import-externals  don't include externals from imported modules\n"
          << "                        in compilation unit\n"
          << "                        (default when building -c or -S)\n";
-    cerr << "  -no-inline            ignore 'inline' keyword\n";
     cerr << "  -pic                  generate position independent code\n";
     cerr << "  -abort                abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run                  execute the program without writing to disk\n";

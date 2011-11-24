@@ -65,9 +65,9 @@ define floor;
 define significand;
 define hypot;
 define mod;
-define isinf;
-define finite;
-define isnan;
+define inf?;
+define finite?;
+define nan?;
 define drem;
 define copysign;
 define j0;
@@ -292,13 +292,13 @@ overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
 overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
 overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
 
-overload isinf(x:Double) = libc.isinf(x);
-overload isinf(x:Float) = libc.isinff(x);
-overload isinf(x:LongDouble) = libc.isinfl(x);
+overload inf?(x:Double) = libc.isinf(x);
+overload inf?(x:Float) = libc.isinff(x);
+overload inf?(x:LongDouble) = libc.isinfl(x);
 
-overload finite(x:Double) = libc.finite(x);
-overload finite(x:Float) = libc.finitef(x);
-overload finite(x:LongDouble) = libc.finitel(x);
+overload finite?(x:Double) = libc.finite(x);
+overload finite?(x:Float) = libc.finitef(x);
+overload finite?(x:LongDouble) = libc.finitel(x);
 
 overload drem(x:Double,y:Double) = libc.drem(x,y);
 overload drem(x:Float,y:Float) = libc.dremf(x,y);
@@ -320,9 +320,9 @@ overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
 overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
 overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 
-overload isnan(x:Double) = libc.isnan(x);
-overload isnan(x:Float) = libc.isnanf(x);
-overload isnan(x:LongDouble) = libc.isnanl(x);
+overload nan?(x:Double) = libc.isnan(x);
+overload nan?(x:Float) = libc.isnanf(x);
+overload nan?(x:LongDouble) = libc.isnanl(x);
 
 overload j0(x:Double) = libc.j0(x);
 overload j0(x:Float) = libc.j0f(x);
