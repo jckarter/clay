@@ -1,0 +1,5 @@
+main() {
+    println(Type([]) == Tuple[]);
+    println(Type([1]) == Tuple[Int]);
+    println(Type([1, 2.0]) == Tuple[Int, Double]);
+}
