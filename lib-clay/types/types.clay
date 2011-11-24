@@ -146,6 +146,13 @@ inline overload LeastPositiveNormalized(static Float64) : Float64
 inline overload GreatestPositiveFinite(static Float64) : Float64
     = 0x1.FFFF_FFFF_FFFF_Fp1023;
 
+inline overload LeastPositive(static Float80) : Float80
+    = 0x0.0000_0000_0000_0002p-32766l;
+inline overload LeastPositiveNormalized(static Float80) : Float80
+    = 0x1.0000_0000_0000_0000p-32766l;
+inline overload GreatestPositiveFinite(static Float80) : Float80
+    = 0x1.FFFF_FFFF_FFFF_FFFEp32767l;
+
 
 //
 // valueSize()
