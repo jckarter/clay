@@ -390,3 +390,10 @@ void matchFailureError(MatchFailureError const &err)
     }
     error(sout.str());
 }
+
+void printFileLineCol(ostream &out, LocationPtr location)
+{
+    int line, column, tabColumn;
+    computeLineCol(location, line, column, tabColumn);
+    out << location->source->fileName << "(" << line+1 << "," << column << ")";
+}

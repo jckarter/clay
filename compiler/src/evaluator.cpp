@@ -1057,6 +1057,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case EVAL_EXPR : {
+        EvalExpr *eval = (EvalExpr *)expr.ptr();
+        // XXX compilation context
+        ExprListPtr evaled = desugarEvalExpr(eval, env);
+        evalMulti(evaled, env, out, 0);
+        break;
+    }
+
     case AND : {
         And *x = (And *)expr.ptr();
         EValuePtr ev1 = evalOneAsRef(x->expr1, env);

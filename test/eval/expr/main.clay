@@ -1,0 +1,10 @@
+import printer.formatter.(repr);
+
+main() {
+    var x, y, z1, z2 = eval #"123", eval (#"456", #us), ..eval #"789, 1011";
+
+    println(repr(x));
+    println(repr(y));
+    println(repr(z1));
+    println(repr(z2));
+}

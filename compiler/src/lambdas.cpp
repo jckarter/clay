@@ -102,11 +102,10 @@ static string lambdaName(LambdaPtr x)
     if (fullName.size() <= 40 && fullName.find('\n') == string::npos)
         return "(" + fullName + ")";
     else {
-        int line, column, tabColumn;
-        computeLineCol(x->location, line, column, tabColumn);
         ostringstream shortName;
-        shortName << "<lambda " << x->location->source->fileName
-            << "(" << line+1 << "," << column << ")>";
+        shortName << "<lambda ";
+        printFileLineCol(shortName, x->location);
+        shortName << ">";
 
         return shortName.str();
     }

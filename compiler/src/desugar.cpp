@@ -281,3 +281,59 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
 
     return block.ptr();
 }
+
+static SourcePtr evalToSource(LocationPtr location, ExprListPtr args, EnvPtr env)
+{
+    ostringstream sourceTextOut;
+    MultiStaticPtr values = evaluateMultiStatic(args, env);
+    for (unsigned i = 0; i < values->size(); ++i) {
+        printStaticName(sourceTextOut, values->values[i]);
+    }
+
+    ostringstream sourceNameOut;
+    sourceNameOut << "<eval ";
+    printFileLineCol(sourceNameOut, location);
+    sourceNameOut << ">";
+
+    string sourceText = sourceTextOut.str();
+    char *sourceTextData = new char[sourceText.size() + 1];
+    strcpy(sourceTextData, sourceText.c_str());
+
+    return new Source(sourceNameOut.str(), sourceTextData, sourceText.size());
+}
+
+ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
+{
+    if (eval->evaled)
+        return eval->value;
+    else {
+        SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
+        eval->value = parseExprList(source, 0, source->size);
+        eval->evaled = true;
+        return eval->value;
+    }
+}
+
+vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env)
+{
+    if (eval->evaled)
+        return eval->value;
+    else {
+        SourcePtr source = evalToSource(eval->location, eval->args, env);
+        parseStatements(source, 0, source->size, eval->value);
+        eval->evaled = true;
+        return eval->value;
+    }
+}
+
+vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env)
+{
+    if (eval->evaled)
+        return eval->value;
+    else {
+        SourcePtr source = evalToSource(eval->location, eval->args, env);
+        parseTopLevelItems(source, 0, source->size, eval->value);
+        eval->evaled = true;
+        return eval->value;
+    }
+}

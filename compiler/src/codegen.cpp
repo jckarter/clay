@@ -1111,6 +1111,14 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case EVAL_EXPR : {
+        EvalExpr *eval = (EvalExpr *)expr.ptr();
+        // XXX compilation context
+        ExprListPtr evaled = desugarEvalExpr(eval, env);
+        codegenMulti(evaled, env, ctx, out, 0);
+        break;
+    }
+
     case AND : {
         And *x = (And *)expr.ptr();
         CValuePtr cv1 = codegenOneAsRef(x->expr1, env, ctx);

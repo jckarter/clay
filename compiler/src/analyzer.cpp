@@ -717,6 +717,13 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return analyzeExpr(x->desugared, env);
     }
 
+    case EVAL_EXPR : {
+        EvalExpr *eval = (EvalExpr *)expr.ptr();
+        // XXX compilation context
+        ExprListPtr evaled = desugarEvalExpr(eval, env);
+        return analyzeMulti(evaled, env, 0);
+    }
+
     case AND : {
         PValuePtr pv = new PValue(boolType, true);
         return new MultiPValue(pv);

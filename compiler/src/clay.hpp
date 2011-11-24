@@ -670,6 +670,8 @@ void computeLineCol(LocationPtr location,
                     int &column,
                     int &tabColumn);
 
+void printFileLineCol(ostream &out, LocationPtr location);
+
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
 
@@ -2570,6 +2572,9 @@ StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);
 
+ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
+vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);
+vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env);
 
 
 //
