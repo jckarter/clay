@@ -30,8 +30,8 @@ syn region clayTripleIdentifier start=+#"""+ skip=+\\\\\|\\"+ end=+""""\@!+
 syn region clayComment start="/\*" end="\*/"
 syn region clayComment start="//" end="$"
 
-syn match clayDecimal /\.\@<![+\-]\?\<\([0-9][0-9_]*\)\([.][0-9_]*\)\?\([eE][+\-]\?[0-9][0-9_]*\)\?\(i\|i8\|u8\|i16\|u16\|i32\|u32\|i64\|i128\|u64\|u128\|f32\|f64\|f80\|f128\|u\|f\|fj\|j\|j32\|j64\|j80\|j128\)\?\w\@!/
-syn match clayHex /\.\@<![+\-]\?\<0x[0-9A-Fa-f][0-9A-Fa-f_]*\(\([.][0-9A-Fa-f_]*\)\?[pP][+\-]\?[0-9][0-9_]*\)\?\(i\|i8\|u8\|i16\|u16\|i32\|u32\|i64\|u64\|f32\|f64\|f80\|f128\|u\|f\|fj\|j\|j32\|j64\|j80\|j128\)\?\>/
+syn match clayDecimal /\.\@<![+\-]\?\<\([0-9][0-9_]*\)\([.][0-9_]*\)\?\([eE][+\-]\?[0-9][0-9_]*\)\?\(ss\|uss\|s\|us\|i\|u\|l\|ll\|ul\|ull\|f\|ff\|fl\|fll\|fj\|j\|ffj\|lj\|flj\|fllj\)\?\w\@!/
+syn match clayHex /\.\@<![+\-]\?\<0x[0-9A-Fa-f][0-9A-Fa-f_]*\(\([.][0-9A-Fa-f_]*\)\?[pP][+\-]\?[0-9][0-9_]*\)\?\(ss\|uss\|s\|us\|i\|u\|l\|ll\|ul\|ull\|f\|ff\|fl\|fll\|fj\|j\|ffj\|lj\|flj\|fllj\)\?\>/
 syn match claySimpleIdentifier /#[A-Za-z_?][A-Za-z0-9_?]*\>/
 syn match clayChar /'\([^'\\]\|\\\(["'trnf0$\\]\|x[0-9a-fA-F]\{2}\)\)'/
 syn match clayGotoLabel /^\s*[A-Za-z_?][A-Za-z0-9_?]*\(:\s*$\)\@=/
