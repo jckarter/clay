@@ -2191,6 +2191,18 @@ TerminationPtr evalStatement(StatementPtr stmt,
         return evalStatement(x->desugared, env, ctx);
     }
 
+    case EVAL_STATEMENT : {
+        EvalStatement *eval = (EvalStatement*)stmt.ptr();
+        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        TerminationPtr termination;
+        for (unsigned i = 0; i < evaled.size(); ++i) {
+            termination = evalStatement(evaled[i], env, ctx);
+            if (termination != NULL)
+                return termination;
+        }
+        return NULL;
+    }
+
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
         int marker = evalMarkStack();

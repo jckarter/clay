@@ -1892,6 +1892,30 @@ static StatementAnalysis combineStatementAnalysis(StatementAnalysis a,
     return SA_TERMINATED;
 }
 
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+
+static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContextPtr ctx)
+{
+    if (stmt->stmtKind == BINDING) {
+        env = analyzeBinding((Binding *)stmt.ptr(), env);
+        if (!env) {
+            ctx->hasRecursivePropagation = true;
+            return SA_RECURSIVE;
+        }
+        return SA_FALLTHROUGH;
+    } else if (stmt->stmtKind == EVAL_STATEMENT) {
+        EvalStatement *eval = (EvalStatement*)stmt.ptr();
+        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        for (unsigned i = 0; i < evaled.size(); ++i) {
+            StatementAnalysis sa = analyzeBlockStatement(evaled[i], env, ctx);
+            if (sa != SA_FALLTHROUGH)
+                return sa;
+        }
+        return SA_FALLTHROUGH;
+    } else
+        return analyzeStatement(stmt, env, ctx);
+}
+
 StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 {
     LocationContext loc(stmt->location);
@@ -1899,21 +1923,11 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
     switch (stmt->stmtKind) {
 
     case BLOCK : {
-        Block *x = (Block *)stmt.ptr();
-        for (unsigned i = 0; i < x->statements.size(); ++i) {
-            StatementPtr y = x->statements[i];
-            if (y->stmtKind == BINDING) {
-                env = analyzeBinding((Binding *)y.ptr(), env);
-                if (!env) {
-                    ctx->hasRecursivePropagation = true;
-                    return SA_RECURSIVE;
-                }
-            }
-            else {
-                StatementAnalysis sa = analyzeStatement(y, env, ctx);
-                if (sa != SA_FALLTHROUGH)
-                    return sa;
-            }
+        Block *block = (Block *)stmt.ptr();
+        for (unsigned i = 0; i < block->statements.size(); ++i) {
+            StatementAnalysis sa = analyzeBlockStatement(block->statements[i], env, ctx);
+            if (sa != SA_FALLTHROUGH)
+                return sa;
         }
         return SA_FALLTHROUGH;
     }
@@ -1980,6 +1994,17 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
         return analyzeStatement(x->desugared, env, ctx);
+    }
+
+    case EVAL_STATEMENT : {
+        EvalStatement *eval = (EvalStatement*)stmt.ptr();
+        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        for (unsigned i = 0; i < evaled.size(); ++i) {
+            StatementAnalysis sa = analyzeStatement(evaled[i], env, ctx);
+            if (sa != SA_FALLTHROUGH)
+                return sa;
+        }
+        return SA_FALLTHROUGH;
     }
 
     case EXPR_STATEMENT :

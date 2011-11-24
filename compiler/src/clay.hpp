@@ -1364,7 +1364,7 @@ struct EvalStatement : public Statement {
     vector<StatementPtr> value;
 
     EvalStatement(ExprListPtr args)
-        : Statement(EVAL_STATEMENT), evaled(false) {}
+        : Statement(EVAL_STATEMENT), args(args), evaled(false) {}
 };
 
 

@@ -3119,6 +3119,47 @@ void codegenCallByName(InvokeEntryPtr entry,
 // codegenStatement
 //
 
+
+bool codegenStatement(StatementPtr stmt,
+                      EnvPtr env,
+                      CodegenContextPtr ctx);
+
+static void codegenBlockStatement(BlockPtr block,
+                                  unsigned i,
+                                  StatementPtr stmt,
+                                  EnvPtr &env,
+                                  CodegenContextPtr ctx,
+                                  bool &terminated)
+{
+    if (stmt->stmtKind == LABEL) {
+        Label *label = (Label *)stmt.ptr();
+        map<string, JumpTarget>::iterator li =
+            ctx->labels.find(label->name->str);
+        assert(li != ctx->labels.end());
+        JumpTarget &jt = li->second;
+        if (!terminated) {
+            ctx->builder->CreateBr(jt.block);
+            ++jt.useCount;
+        }
+        ctx->builder->SetInsertPoint(jt.block);
+    }
+    else if (terminated) {
+        error(stmt, "unreachable code");
+    }
+    else if (stmt->stmtKind == BINDING) {
+        env = codegenBinding((Binding *)stmt.ptr(), env, ctx);
+        codegenCollectLabels(block->statements, i+1, ctx);
+    }
+    else if (stmt->stmtKind == EVAL_STATEMENT) {
+        EvalStatement *eval = (EvalStatement*)stmt.ptr();
+        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        for (unsigned i = 0; i < evaled.size(); ++i)
+            codegenBlockStatement(block, i, evaled[i], env, ctx, terminated);
+    } else {
+        terminated = codegenStatement(stmt, env, ctx);
+    }
+}
+
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx)
@@ -3128,34 +3169,12 @@ bool codegenStatement(StatementPtr stmt,
     switch (stmt->stmtKind) {
 
     case BLOCK : {
-        Block *x = (Block *)stmt.ptr();
+        Block *block = (Block *)stmt.ptr();
         int blockMarker = cgMarkStack(ctx);
-        codegenCollectLabels(x->statements, 0, ctx);
+        codegenCollectLabels(block->statements, 0, ctx);
         bool terminated = false;
-        for (unsigned i = 0; i < x->statements.size(); ++i) {
-            StatementPtr y = x->statements[i];
-            if (y->stmtKind == LABEL) {
-                Label *z = (Label *)y.ptr();
-                map<string, JumpTarget>::iterator li =
-                    ctx->labels.find(z->name->str);
-                assert(li != ctx->labels.end());
-                JumpTarget &jt = li->second;
-                if (!terminated) {
-                    ctx->builder->CreateBr(jt.block);
-                    ++ jt.useCount;
-                }
-                ctx->builder->SetInsertPoint(jt.block);
-            }
-            else if (terminated) {
-                error(y, "unreachable code");
-            }
-            else if (y->stmtKind == BINDING) {
-                env = codegenBinding((Binding *)y.ptr(), env, ctx);
-                codegenCollectLabels(x->statements, i+1, ctx);
-            }
-            else {
-                terminated = codegenStatement(y, env, ctx);
-            }
+        for (unsigned i = 0; i < block->statements.size(); ++i) {
+            codegenBlockStatement(block, i, block->statements[i], env, ctx, terminated);
         }
         if (!terminated)
             cgDestroyStack(blockMarker, ctx, false);
@@ -3414,6 +3433,18 @@ bool codegenStatement(StatementPtr stmt,
         if (!x->desugared)
             x->desugared = desugarSwitchStatement(x);
         return codegenStatement(x->desugared, env, ctx);
+    }
+
+    case EVAL_STATEMENT : {
+        EvalStatement *eval = (EvalStatement*)stmt.ptr();
+        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        bool terminated = false;
+        for (unsigned i = 0; i < evaled.size(); ++i) {
+            if (terminated)
+                error(evaled[i], "unreachable code");
+            terminated = codegenStatement(evaled[i], env, ctx);
+        }
+        return terminated;
     }
 
     case EXPR_STATEMENT : {

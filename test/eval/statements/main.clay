@@ -1,0 +1,36 @@
+import identifiers.(ident);
+
+[T | Record?(T)]
+alias bind(this:T) {
+    return ident(#"ref ",
+        ..weaveValues(#", ", ..RecordFieldNames(T)),
+        #" = ..recordFields(", __ARG__ this, #");"
+    );
+}
+
+aPlusB(this:Foo) {
+    eval bind(this);
+    return a + b;
+}
+
+record Foo (a:Int, b:Int);
+record Bar (x:Foo);
+
+xaPlusXB(this:Bar) {
+    eval bind(this);
+    eval bind(x);
+    return a + b;
+}
+
+main() {
+    var foo = Foo(10, 2);
+    println(aPlusB(foo));
+
+    var bar = Bar(Foo(30, 4));
+    println(xaPlusXB(bar));
+
+    if (true)
+        eval #"""println("bye"); return 0;""";
+    else
+        return 1;
+}
