@@ -1,0 +1,3 @@
+main() {
+    println(((x:Int) -> x+x)(2));
+}

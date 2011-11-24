@@ -986,8 +986,8 @@ struct IfExpr : public Expr {
 
 struct Lambda : public Expr {
     bool captureByRef;
-    vector<IdentifierPtr> formalArgs;
-    IdentifierPtr formalVarArg;
+    vector<FormalArgPtr> formalArgs;
+    FormalArgPtr formalVarArg;
     StatementPtr body;
 
     ExprPtr converted;
@@ -1006,8 +1006,8 @@ struct Lambda : public Expr {
         Expr(LAMBDA), captureByRef(captureByRef),
         initialized(false) {}
     Lambda(bool captureByRef,
-           const vector<IdentifierPtr> &formalArgs,
-           IdentifierPtr formalVarArg,
+           const vector<FormalArgPtr> &formalArgs,
+           FormalArgPtr formalVarArg,
            StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), formalVarArg(formalVarArg),

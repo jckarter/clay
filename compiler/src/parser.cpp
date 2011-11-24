@@ -891,51 +891,23 @@ static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
 
 static bool block(StatementPtr &x);
 
-static bool lambdaArgs4(vector<IdentifierPtr> &formalArgs,
-                        IdentifierPtr &formalVarArg) {
-    if (!ellipsis()) return false;
-    if (!identifier(formalVarArg)) return false;
-    formalArgs.clear();
-    return true;
-}
+static bool arguments(vector<FormalArgPtr> &args,
+                      FormalArgPtr &varg);
 
-static bool lambdaArgs3(vector<IdentifierPtr> &formalArgs,
-                        IdentifierPtr &formalVarArg) {
-    if (!identifierListNoTail(formalArgs)) return false;
-    int p = save();
-    if (!symbol(",") || !ellipsis() || !identifier(formalVarArg)) {
-        restore(p);
-        formalVarArg = NULL;
-    }
-    return true;
-}
-
-static bool lambdaArgs2(vector<IdentifierPtr> &formalArgs,
-                        IdentifierPtr &formalVarArg) {
-    int p = save();
-    if (lambdaArgs3(formalArgs, formalVarArg)) return true;
-    restore(p);
-    if (lambdaArgs4(formalArgs, formalVarArg)) return true;
-    restore(p);
-    formalArgs.clear();
-    formalVarArg = NULL;
-    return true;
-}
-
-static bool lambdaArgs(vector<IdentifierPtr> &formalArgs,
-                       IdentifierPtr &formalVarArg) {
+static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
+                       FormalArgPtr &formalVarArg) {
     int p = save();
     IdentifierPtr name;
     if (identifier(name)) {
         formalArgs.clear();
-        formalArgs.push_back(name);
+        FormalArgPtr arg = new FormalArg(name, NULL, TEMPNESS_DONTCARE);
+        arg->location = name->location;
+        formalArgs.push_back(arg);
         formalVarArg = NULL;
         return true;
     }
     restore(p);
-    if (!symbol("(")) return false;
-    if (!lambdaArgs2(formalArgs, formalVarArg)) return false;
-    if (!symbol(")")) return false;
+    if (!arguments(formalArgs, formalVarArg)) return false;
     return true;
 }
 
@@ -973,8 +945,8 @@ static bool lambdaBody(StatementPtr &x) {
 
 static bool lambda(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    vector<IdentifierPtr> formalArgs;
-    IdentifierPtr formalVarArg;
+    vector<FormalArgPtr> formalArgs;
+    FormalArgPtr formalVarArg;
     bool captureByRef;
     StatementPtr body;
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;

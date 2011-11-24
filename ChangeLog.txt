@@ -379,7 +379,6 @@ TO BE DONE FOR 0.1
 
 * llvm 3.0 atomic primitives
 * check output types of interfaced overloads
-* write clay-bindgen in clay, using libclang
 * clayfix to remove 'define' before proc definition with body
-* generate C99 math bindings for windows, mac, ios, freebsd
+* generate C99 math bindings for windows, ios, freebsd
 

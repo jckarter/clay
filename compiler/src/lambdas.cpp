@@ -190,14 +190,10 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     FormalArgPtr closureDataArg = new FormalArg(closureDataIdent, typeExpr);
     code->formalArgs.push_back(closureDataArg.ptr());
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
-        FormalArgPtr y = new FormalArg(x->formalArgs[i], NULL);
-        y->location = x->formalArgs[i]->location;
-        code->formalArgs.push_back(y.ptr());
+        code->formalArgs.push_back(x->formalArgs[i]);
     }
     if (x->formalVarArg.ptr()) {
-        FormalArgPtr y = new FormalArg(x->formalVarArg, NULL);
-        y->location = x->formalVarArg->location;
-        code->formalVarArg = y;
+        code->formalVarArg = x->formalVarArg;
     }
     code->body = x->body;
 
@@ -222,14 +218,10 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
     CodePtr code = new Code();
     code->location = x->location;
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
-        FormalArgPtr y = new FormalArg(x->formalArgs[i], NULL);
-        y->location = x->formalArgs[i]->location;
-        code->formalArgs.push_back(y.ptr());
+        code->formalArgs.push_back(x->formalArgs[i]);
     }
     if (x->formalVarArg.ptr()) {
-        FormalArgPtr y = new FormalArg(x->formalVarArg, NULL);
-        y->location = x->formalVarArg->location;
-        code->formalVarArg = y;
+        code->formalVarArg = x->formalVarArg;
     }
     code->body = x->body;
 
@@ -270,11 +262,11 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
 {
     EnvPtr env2 = new Env(env);
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
-        IdentifierPtr name = x->formalArgs[i];
-        addLocal(env2, name, name.ptr());
+        FormalArgPtr arg = x->formalArgs[i];
+        addLocal(env2, arg->name, arg->name.ptr());
     }
     if (x->formalVarArg.ptr()) {
-        addLocal(env2, x->formalVarArg, x->formalVarArg.ptr());
+        addLocal(env2, x->formalVarArg->name, x->formalVarArg->name.ptr());
     }
     LambdaContext ctx(x->captureByRef, env, closureDataName, freeVars);
     convertFreeVars(x->body, env2, ctx);
@@ -613,9 +605,9 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         Lambda *y = (Lambda *)x.ptr();
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < y->formalArgs.size(); ++i)
-            addLocal(env2, y->formalArgs[i], y->formalArgs[i].ptr());
+            addLocal(env2, y->formalArgs[i]->name, y->formalArgs[i]->name.ptr());
         if (y->formalVarArg.ptr())
-            addLocal(env2, y->formalVarArg, y->formalVarArg.ptr());
+            addLocal(env2, y->formalVarArg->name, y->formalVarArg->name.ptr());
         convertFreeVars(y->body, env2, ctx);
         break;
     }
