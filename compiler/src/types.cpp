@@ -230,6 +230,8 @@ TypePtr arrayType(TypePtr elementType, int size) {
 }
 
 TypePtr vecType(TypePtr elementType, int size) {
+    if (elementType->typeKind != INTEGER_TYPE && elementType->typeKind != FLOAT_TYPE)
+        error("Vec element type must be an integer or floating-point type");
     int h = pointerHash(elementType.ptr()) + size;
     h &= vecTypes.size() - 1;
     vector<VecTypePtr>::iterator i, end;
