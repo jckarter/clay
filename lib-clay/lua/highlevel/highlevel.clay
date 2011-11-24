@@ -600,7 +600,7 @@ registerTable(x:State, ..entries:E) {
     alias N = countValues(..E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
-    static for (entry in ..entries) {
+    ..for (entry in entries) {
         ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }
@@ -614,7 +614,7 @@ registerModule(x:State, name:S, ..entries:E) {
     alias N = countValues(..E) + 1;
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
-    static for (entry in ..entries) {
+    ..for (entry in entries) {
         ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }

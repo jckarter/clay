@@ -136,7 +136,7 @@ define joinPath;
 [..S | allValues?(String?, ..S)]
 overload joinPath(..parts:S) {
     var volume, directory, name = String(), String(), String();
-    static for (part in ..parts)
+    ..for (part in parts)
         appendPath(volume, directory, name, part);
     ref result = volume;
     appendComponent(result, directory);

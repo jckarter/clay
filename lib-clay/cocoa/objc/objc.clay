@@ -660,7 +660,7 @@ inline overload objcClassMake(static T) : ClassHandle {
         end  (objcNewClassInstanceMethodsTable[T]),
     );
 
-    static for (ivarPair in ..ClassInstanceVars(T)) {
+    ..for (ivarPair in ClassInstanceVars(T)) {
         var ivar = ivarPair.0;
         objcIvar[T, ivar] = class_getInstanceVariable(handle, cstring(StaticName(ivar)));
         objcIvarOffset[T, ivar] = ivar_getOffset(objcIvar[T, ivar]);
@@ -966,7 +966,7 @@ overload SelectorCallableWith?(static C, static S, ..T: TT)
 private _SelectorCallableWith?(C, S, ..T) {
     alias Params = Tuple(..SelectorArgumentTypes(C, S));
     alias Values = Tuple(..T);
-    static for (n in ..staticIntegers(static countValues(..T))) {
+    ..for (n in staticIntegers(static countValues(..T))) {
         if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Values, n))) 
             return false;
     }

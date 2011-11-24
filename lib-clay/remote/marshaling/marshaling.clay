@@ -120,7 +120,7 @@ overload marshaledSize(context, r: R)
     );
 
 marshalMemberwise(context, buffer:Pointer[Byte], forward ..fields) {
-    static for (x in ..fields)
+    ..for (x in fields)
         buffer = marshalTo(context, buffer, x);
 }
 
@@ -175,7 +175,7 @@ overload marshaledSize(context, t: T)
 [T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward t: T) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
-    static for (x in ..unpack(t))
+    ..for (x in unpack(t))
         buffer = marshalTo(context, buffer, x);
 }
 
@@ -522,7 +522,7 @@ overload marshal(context: MarshalContext, forward ..values) --> returned: Vector
     resize(returned, sz);
 
     var buffer = begin(returned);
-    static for (value in ..values) {
+    ..for (value in values) {
         buffer = marshalTo(context, buffer, value);
     }
     assert(buffer == end(returned));

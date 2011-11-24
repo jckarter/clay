@@ -2097,7 +2097,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case STATIC_FOR : {
         StaticFor *x = (StaticFor *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values, env, 0);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, 2);
         if (!mpv) {
             ctx->hasRecursivePropagation = true;
             return SA_RECURSIVE;

@@ -249,7 +249,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
                 var copied3 = autoreleased3.copy();
                 var copied4 = inited3.copy();
 
-                static for (o in inited1, inited2, inited3, inited4, inited5,
+                ..for (o in inited1, inited2, inited3, inited4, inited5,
                                  copied1, copied2, copied3, copied4)
                     o.release();
             });

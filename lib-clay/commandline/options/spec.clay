@@ -23,7 +23,7 @@ overload OptionSpec(part : S, ..parts) : OptionSpec{
  
   addSpecPart(result, part); 
 
-  static for(part in ..parts){
+  ..for(part in parts){
     addSpecPart(result, part);
   }
 

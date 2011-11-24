@@ -31,7 +31,7 @@ overload Queue[S](forward seq: S2) --> returned: Queue[S] {
 overload Queue[S](forward ..values: A) --> returned: Queue[S] {
     returned <-- Queue[S]();
     try {
-        static for (v in ..values)
+        ..for (v in values)
             queuePush(returned, v);
     } catch (ex) {
         destroy(returned);

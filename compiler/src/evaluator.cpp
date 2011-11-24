@@ -628,13 +628,9 @@ MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env)
             MultiEValuePtr mev = evalForwardExprAsRef(y->expr, env);
             out->add(mev);
         }
-        else if (x->exprKind == PAREN) {
+        else {
             MultiEValuePtr mev = evalForwardExprAsRef(x, env);
             out->add(mev);
-        }
-        else {
-            EValuePtr ev = evalForwardOneAsRef(x, env);
-            out->add(ev);
         }
     }
     return out;

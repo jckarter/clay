@@ -325,7 +325,7 @@ private objectMembers(self: O)
 
 [O | Class?(O)]
 initObjectMembers(self: O) {
-    static for (member in ..objectMembers(self))
+    ..for (member in objectMembers(self))
         member <-- Type(member)();
     return self;
 }
@@ -354,7 +354,7 @@ copyImmutableObject(self: O, zone: Pointer[NSZone]) = self.retain();
 
 [O | Class?(O)]
 deallocObject(self: O) {
-    static for (member in ..objectMembers(self))
+    ..for (member in objectMembers(self))
         destroy(member);
     super(self).dealloc();
 }

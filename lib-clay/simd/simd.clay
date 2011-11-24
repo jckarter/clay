@@ -32,7 +32,7 @@ inline overload Vec(..args:A) {
 inline overload Vec[T,n](..args:A) {
     var a = Vec[T,n]();
     var i = 0;
-    static for (x in ..args) {
+    ..for (x in args) {
         a[i] = x;
         i += 1;
     }

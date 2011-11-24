@@ -1460,7 +1460,7 @@ static bool throwStatement(StatementPtr &x) {
 
 static bool staticFor(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    if (!keyword("static")) return false;
+    if (!ellipsis()) return false;
     if (!keyword("for")) return false;
     if (!symbol("(")) return false;
     IdentifierPtr a;

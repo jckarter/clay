@@ -233,7 +233,7 @@ UniformParsers?(TokenInput, ..Parsers) =
 choice(static TokenInput, forward first:First, forward ..rest:Rest) {
     var parsers = Tuple(..convertParsers(TokenInput, first, ..rest));
     return input => {
-        static for (parser in ..unpackRef(parsers)) {
+        ..for (parser in unpackRef(parsers)) {
             var result = parser(input);
             if (not nothing?(result))
                 return move(result);
@@ -270,7 +270,7 @@ sequenceAs(static TokenInput, result:Result, forward .._parsers:Parsers) {
     var parsers = Tuple(..convertParsers(TokenInput, .._parsers));
     return input => {
         var saved = input;
-        static for (parser in ..unpackRef(parsers)) {
+        ..for (parser in unpackRef(parsers)) {
             var result = parser(input);
             if (nothing?(result)) {
                 input = saved;

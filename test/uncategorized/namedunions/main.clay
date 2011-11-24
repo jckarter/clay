@@ -30,7 +30,7 @@ overload fieldRef(x:NamedUnion[..fields], name) {
 
 private fieldIndex(name, ..fields) {
     var i = 0;
-    static for (field in ..fields) {
+    ..for (field in fields) {
         if (name == field.0)
             goto end;
         i += 1;

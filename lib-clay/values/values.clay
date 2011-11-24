@@ -7,7 +7,7 @@
 //
 
 inline eachValue(fn, ..xs) {
-    static for (x in ..xs) {
+    ..for (x in xs) {
         fn(x);
     }
 }
@@ -62,7 +62,7 @@ define dropValues;
 
 countValues(..args) {
     var n = 0;
-    static for (x in ..args)
+    ..for (x in args)
         n += 1;
     return n;
 }
@@ -99,7 +99,7 @@ inline replicateValue(a, static n) = a, ..replicateValue(a, static n-1);
 inline overload replicateValue(a, static 0) = ;
 
 inline allValues?(pred, ..rest) {
-    static for (x in ..rest) {
+    ..for (x in rest) {
         if (not pred(x))
             return false;
     }
@@ -107,7 +107,7 @@ inline allValues?(pred, ..rest) {
 }
 
 inline anyValues?(pred, ..rest) {
-    static for (x in ..rest) {
+    ..for (x in rest) {
         if (pred(x))
             return true;
     }

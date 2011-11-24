@@ -23,7 +23,7 @@ private usage(..commandTuples) {
     var longestName = foldValues(max, ..mapValues(c => size(commandName(c)), ..commandTuples));
 
     printlnUsage("Available commands:");
-    static for (commandTuple in ..commandTuples) {
+    ..for (commandTuple in commandTuples) {
         var name = commandName(commandTuple);
         printlnUsage("  ", name, pad(size(name), longestName), "    ", ..commandDescription(commandTuple));
     }
@@ -95,7 +95,7 @@ dispatchMain(..commandTuples) {
     var maybeCmd, args = ..dispatchCommand();
 
     return maybe(maybeCmd, cmd => {
-        static for (commandTuple in ..commandTuples) {
+        ..for (commandTuple in commandTuples) {
             if (cmd == commandName(commandTuple))
                 return invokeCommand(commandTuple, args);
         }

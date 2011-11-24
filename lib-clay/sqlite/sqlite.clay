@@ -90,7 +90,7 @@ overload bindStatement(st: SqliteStatement, n: N, value: Maybe[T])
 [..TT | allValues?(BindableType?, ..TT)]
 bindStatementValues(st: SqliteStatement, ..bindings: TT) {
     var i = 1;
-    static for (binding in ..bindings) {
+    ..for (binding in bindings) {
         bindStatement(st, i, binding);
         inc(i);
     }

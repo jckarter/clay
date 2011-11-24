@@ -109,13 +109,13 @@ inline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
 [..T | not allValues?(BitwiseMovedType?, ..T)]
 inline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
     alias n = TupleElementCount(Tuple[..T]);
-    static for (i in ..staticIntegers(static n))
+    ..for (i in staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [..T | not allValues?(NotResetType?, ..T)]
 inline overload resetUnsafe(a:Tuple[..T]) {
-    static for (x in ..tupleElements(a))
+    ..for (x in tupleElements(a))
         resetUnsafe(x);
 }
 
@@ -127,7 +127,7 @@ inline overload resetUnsafe(a:Tuple[..T]) {
 
 [..T | not allValues?(NotDestroyedType?, ..T)]
 inline overload destroy(a:Tuple[..T]) {
-    static for (x in ..tupleElements(a))
+    ..for (x in tupleElements(a))
         destroy(x);
 }
 
@@ -140,7 +140,7 @@ inline overload destroy(a:Tuple[..T]) {
 [..T | not allValues?(BitwiseAssignedType?, ..T)]
 inline overload assign(dest:Tuple[..T], ref src:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    static for (i in ..staticIntegers(static n))
+    ..for (i in staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
@@ -153,7 +153,7 @@ inline overload assign(dest:Tuple[..T], ref src:Tuple[..T]) {
 [..T]
 inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    static for (i in ..staticIntegers(static n)) {
+    ..for (i in staticIntegers(static n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
             return false;
     }
@@ -169,7 +169,7 @@ inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
 [..T]
 inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    static for (i in ..staticIntegers(static n)) {
+    ..for (i in staticIntegers(static n)) {
         ref av = staticIndex(a, i);
         ref bv = staticIndex(b, i);
         if (lesser?(av, bv))

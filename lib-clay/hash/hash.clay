@@ -37,7 +37,7 @@ inline overload hash(a:Array[T,n]) = hashSequence(a);
 
 inline hashValues(..values) {
     var h = SizeT(0);
-    static for (x in ..values)
+    ..for (x in values)
         h = 7*h + 13*hash(x);
     return h;
 }

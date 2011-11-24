@@ -148,7 +148,7 @@ overload Deque[T](forward ..from: A) --> to: Deque[T] {
 
     var i = to.begin;
     try {
-        static for (x in ..from) {
+        ..for (x in from) {
             i^ <-- x;
             inc(i);
         }

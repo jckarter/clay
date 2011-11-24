@@ -329,7 +329,7 @@ overload fixAstNode(ast:SourceAST, state:FixState) : {
 [A | ASTNode?(A)]
 overload fixAstNode(ast:A, state:FixState) : {
     //LOGGING println("walking ", A);
-    static for (field in ..astFields(ast))
+    ..for (field in astFields(ast))
         fixAst(field, state);
 }
 [V | Variant?(V)]

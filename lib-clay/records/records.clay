@@ -108,13 +108,13 @@ overload T(src:T) --> returned:T {
 [T | RegularRecord?(T) and not BitwiseMovedType?(T)]
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
-    static for (i in ..staticIntegers(static n))
+    ..for (i in staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [T | RegularRecord?(T) and not NotResetType?(T)]
 overload resetUnsafe(a:T) {
-    static for (x in ..recordFields(a))
+    ..for (x in recordFields(a))
         resetUnsafe(x);
 }
 
@@ -126,7 +126,7 @@ overload resetUnsafe(a:T) {
 
 [T | RegularRecord?(T) and not NotDestroyedType?(T)]
 overload destroy(a:T) {
-    static for (x in ..recordFields(a))
+    ..for (x in recordFields(a))
         destroy(x);
 }
 
@@ -139,7 +139,7 @@ overload destroy(a:T) {
 [T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
 overload assign(dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ..staticIntegers(static n))
+    ..for (i in staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
@@ -152,7 +152,7 @@ overload assign(dest:T, ref src:T) {
 [T | RegularRecord?(T)]
 overload equals?(a:T, b:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ..staticIntegers(static n)) {
+    ..for (i in staticIntegers(static n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
             return false;
     }
@@ -168,7 +168,7 @@ overload equals?(a:T, b:T) {
 [T | RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
     alias n = RecordFieldCount(T);
-    static for (i in ..staticIntegers(static n)) {
+    ..for (i in staticIntegers(static n)) {
         ref av = staticIndex(a, i);
         ref bv = staticIndex(b, i);
         if (lesser?(av, bv))

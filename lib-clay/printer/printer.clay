@@ -13,7 +13,7 @@ inline overload printTo(stream) {
 }
 
 inline overload printTo(stream, a, b, ..rest) {
-    static for (x in a, b, ..rest)
+    ..for (x in a, b, ..rest)
         printTo(stream, x);
 }
 
@@ -364,7 +364,7 @@ overload printReprTo(stream, x:T) {
 
 printReprValuesTo(stream, value, ..values) {
     printReprTo(stream, value);
-    static for (y in ..values) {
+    ..for (y in values) {
         printTo(stream, ", ");
         printReprTo(stream, y);
     }

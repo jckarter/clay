@@ -581,13 +581,9 @@ MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
             MultiCValuePtr mcv = codegenForwardExprAsRef(y->expr, env, ctx);
             out->add(mcv);
         }
-        else if (x->exprKind == PAREN) {
+        else {
             MultiCValuePtr mcv = codegenForwardExprAsRef(x, env, ctx);
             out->add(mcv);
-        }
-        else {
-            CValuePtr cv = codegenForwardOneAsRef(x, env, ctx);
-            out->add(cv);
         }
     }
     return out;

@@ -43,7 +43,7 @@ printObjcInterfaceTo(stream, Class) {
         printTo(stream, " : ", ClassName(SuperclassType(Class)), " ");
     printlnTo(stream, "{");
 
-    static for (ivar in ...ClassInstanceVars(Class)) {
+    ..for (ivar in ClassInstanceVars(Class)) {
         printTo(stream, "    ");
         printIvarTo(stream, ivar.0, ivar.1);
     }
@@ -51,13 +51,13 @@ printObjcInterfaceTo(stream, Class) {
     printlnTo(stream, "}");
     printlnTo(stream);
 
-    static for (method in ...ClassClassMethods(Class)) {
+    ..for (method in ClassClassMethods(Class)) {
         printTo(stream, "+ ");
         printMethodTo(stream, Class, method.0);
     }
     printlnTo(stream);
     
-    static for (method in ...ClassInstanceMethods(Class)) {
+    ..for (method in ClassInstanceMethods(Class)) {
         printTo(stream, "- ");
         printMethodTo(stream, Class, method.0, method.1);
     }
@@ -108,7 +108,7 @@ printObjcHeaderWithInterfacesTo(stream, framework, ...Classes) {
     printlnTo(stream, "#import <", framework, "/", framework, ".h>");
     printlnTo(stream);
 
-    static for (Class in ...Classes) {
+    ..for (Class in Classes) {
         printObjcInterfaceTo(stream, Class);
     }
 }

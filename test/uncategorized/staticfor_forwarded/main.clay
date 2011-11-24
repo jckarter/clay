@@ -29,7 +29,7 @@ overload destroy(x:Foo) {
 [T, ..A | equalValues?(T, ..A)]
 makeArray(forward first:T, forward ..rest:A) --> returned:Array[T,countValues(T,..A)] {
     var i = 0;
-    static for (x in first, ..rest) {
+    ..for (x in first, ..rest) {
         returned[i] <-- x;
         i += 1;
     }

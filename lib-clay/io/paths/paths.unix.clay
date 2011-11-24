@@ -64,7 +64,7 @@ define joinPath;
 [..S | allValues?(String?, ..S)]
 overload joinPath(..parts:S) {
     var result = String();
-    static for (part in ..parts)
+    ..for (part in parts)
         appendPath(result, part);
     trimDirectoryTail(result);
     return move(result);

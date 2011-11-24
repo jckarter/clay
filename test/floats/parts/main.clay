@@ -2,10 +2,10 @@ import numbers.floats.*;
 import printer.formatter.*;
 
 main() {
-    static for (f in 0.0, -1.0, 1.0, infinity(Double), negativeInfinity(Double))
+    ..for (f in 0.0, -1.0, 1.0, infinity(Double), negativeInfinity(Double))
         println("0x", hex(floatBits(f)));
 
-    static for (f in 0.0f, -1.0f, 1.0f, infinity(Float), negativeInfinity(Float))
+    ..for (f in 0.0f, -1.0f, 1.0f, infinity(Float), negativeInfinity(Float))
         println("0x", hex(floatBits(f)));
 
     // 0, -0

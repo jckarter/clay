@@ -113,7 +113,7 @@ overload push(a:V, forward x:T) {
 [V, A1, A2, ..AA | Vector?(V)]
 inline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
     reserve(v, countValues(A1, A2, ..AA));
-    static for (x in e1, e2, ..ee) {
+    ..for (x in e1, e2, ..ee) {
         push(v, x);
     }
 }

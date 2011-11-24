@@ -36,7 +36,7 @@ PermissiveRecordConstructor?(x) = false;
 T(..args:A) --> returned:T {
     returned <-- T();
     alias n = RecordFieldCount(T);
-    static for (i in ..staticIntegers(static n)) {
+    ..for (i in staticIntegers(static n)) {
         ref field = staticIndex(returned, i);
         ref value = nthValue(i, ..args);
         permissiveAssign(field, value);
