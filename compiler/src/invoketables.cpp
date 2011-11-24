@@ -257,18 +257,22 @@ static bool matchTempness(CodePtr code,
     return true;
 }
 
-static InvokeEntryPtr newInvokeEntry(MatchSuccessPtr x)
+static InvokeEntryPtr newInvokeEntry(InvokeSetPtr parent,
+                                     MatchSuccessPtr match,
+                                     MatchSuccessPtr interfaceMatch)
 {
-    InvokeEntryPtr entry = new InvokeEntry(x->callable, x->argsKey);
-    entry->origCode = x->code;
-    entry->code = clone(x->code);
-    entry->env = x->env;
-    entry->fixedArgNames = x->fixedArgNames;
-    entry->fixedArgTypes = x->fixedArgTypes;
-    entry->varArgName = x->varArgName;
-    entry->varArgTypes = x->varArgTypes;
-    entry->callByName = x->callByName;
-    entry->isInline = x->isInline;
+    InvokeEntryPtr entry = new InvokeEntry(parent.ptr(), match->callable, match->argsKey);
+    entry->origCode = match->code;
+    entry->code = clone(match->code);
+    entry->env = match->env;
+    if (interfaceMatch != NULL)
+        entry->interfaceEnv = interfaceMatch->env;
+    entry->fixedArgNames = match->fixedArgNames;
+    entry->fixedArgTypes = match->fixedArgTypes;
+    entry->varArgName = match->varArgName;
+    entry->varArgTypes = match->varArgTypes;
+    entry->callByName = match->callByName;
+    entry->isInline = match->isInline;
     return entry;
 }
 
@@ -284,8 +288,9 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
 
+    MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
-        MatchResultPtr interfaceResult = matchInvoke(invokeSet->interface,
+        interfaceResult = matchInvoke(invokeSet->interface,
                                                      invokeSet->callable,
                                                      invokeSet->argsKey);
         if (interfaceResult->matchCode != MATCH_SUCCESS) {
@@ -319,7 +324,8 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
         return iter->second;
     }
 
-    InvokeEntryPtr entry = newInvokeEntry(match);
+    InvokeEntryPtr entry = newInvokeEntry(invokeSet, match,
+        (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
 
     invokeSet->tempnessMap2[tempnessKey] = entry;

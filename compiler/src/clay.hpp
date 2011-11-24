@@ -2692,7 +2692,10 @@ void printMatchError(ostream &os, MatchResultPtr result);
 
 const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
 
+struct InvokeSet;
+
 struct InvokeEntry : public Object {
+    InvokeSet *parent;
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     vector<bool> forwardedRValueFlags;
@@ -2703,6 +2706,7 @@ struct InvokeEntry : public Object {
     CodePtr origCode;
     CodePtr code;
     EnvPtr env;
+    EnvPtr interfaceEnv;
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
@@ -2718,9 +2722,11 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmFunc;
     llvm::Function *llvmCWrapper;
 
-    InvokeEntry(ObjectPtr callable,
+    InvokeEntry(InvokeSet *parent,
+                ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
         : Object(DONT_CARE),
+          parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(false), llvmFunc(NULL), llvmCWrapper(NULL) {}

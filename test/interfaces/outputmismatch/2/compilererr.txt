@@ -1,0 +1,1 @@
+interface declares return by reference, but got return by value

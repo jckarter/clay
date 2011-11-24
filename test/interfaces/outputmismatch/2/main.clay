@@ -1,0 +1,19 @@
+[T] define byval(x:T) : T;
+[T] define byref(ref x:T) : ByRef[T];
+
+overload byval(x:Int) = ref x;
+overload byval(x:Double) = x;
+
+overload byref(ref x:Int) = ref x;
+overload byref(ref x:Double) = x;
+
+main() {
+    println(byval(1));
+    println(byval(1.0));
+
+    var i = 1;
+    var f = 1.0;
+
+    println(byref(i));
+    println(byref(f));
+}

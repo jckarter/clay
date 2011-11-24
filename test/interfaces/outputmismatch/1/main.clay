@@ -1,0 +1,7 @@
+[T] define foo(x:T) : T;
+
+overload foo(x) = Int(x);
+
+main() {
+    println(foo(1.0));
+}

@@ -1823,6 +1823,51 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
 // analyzeCodeBody
 //
 
+static void unifyInterfaceReturns(InvokeEntryPtr entry)
+{
+    if (entry->parent->interface == NULL)
+        return;
+
+    CodePtr interfaceCode = entry->parent->interface->code;
+    if (!interfaceCode->returnSpecsDeclared)
+        return;
+
+    vector<bool> interfaceReturnIsRef;
+    vector<TypePtr> interfaceReturnTypes;
+
+    evaluateReturnSpecs(interfaceCode->returnSpecs,
+                        interfaceCode->varReturnSpec,
+                        entry->interfaceEnv,
+                        interfaceReturnIsRef, interfaceReturnTypes);
+    if (entry->returnTypes.size() != interfaceReturnTypes.size()) {
+        ostringstream out;
+        out << "interface declares " << interfaceReturnTypes.size()
+            << " arguments, but got " << entry->returnTypes.size() << "\n"
+            << "    interface at ";
+        printFileLineCol(out, entry->parent->interface->location);
+        error(entry->code, out.str());
+    }
+    for (unsigned i = 0; i < interfaceReturnTypes.size(); ++i) {
+        if (interfaceReturnTypes[i] != entry->returnTypes[i]) {
+            ostringstream out;
+            out << "return value " << i+1 << ": "
+                << "interface declares type " << interfaceReturnTypes[i]
+                << ", but got type " << entry->returnTypes[i] << "\n"
+                << "    interface at ";
+            printFileLineCol(out, entry->parent->interface->location);
+            error(entry->code, out.str());
+        }
+        if (interfaceReturnIsRef[i] && !entry->returnIsRef[i]) {
+            ostringstream out;
+            out << "return value " << i+1 << ": "
+                << "interface declares return by reference, but got return by value\n"
+                << "    interface at ";
+            printFileLineCol(out, entry->parent->interface->location);
+            error(entry->code, out.str());
+        }
+    }
+}
+
 void analyzeCodeBody(InvokeEntryPtr entry)
 {
     assert(!entry->analyzed);
@@ -1868,6 +1913,9 @@ void analyzeCodeBody(InvokeEntryPtr entry)
     else if ((sa == SA_TERMINATED) && ctx->hasRecursivePropagation) {
         analysisError();
     }
+
+    unifyInterfaceReturns(entry);
+
     entry->analyzed = true;
 }
 
