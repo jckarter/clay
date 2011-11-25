@@ -209,7 +209,8 @@ fixOneToken(tokenNumber:SizeT, state:FixState) {
             printTo(state.outputFile, name);
             if (beginsWith?(name, "finally")
                 or beginsWith?(name, "onerror")
-                or beginsWith?(name, "define"))
+                or beginsWith?(name, "define")
+                or beginsWith?(name, "eval"))
 
                 printTo(state.outputFile, "_");
         }
@@ -820,6 +821,25 @@ overload fixAst(ast:CaseBody, state:FixState) : {
         writeToken(astTokens(stmt).end - 1, state);
     }
     replaceToken(astTokens(ast).end - 1, state);
+}
+
+
+// Convert multi-value for loop syntax.
+// 0.0: static for (x in ...xs) { }
+// 0.1: ..for (x in ..xs) { }
+overload fixAst(ast:StaticFor, state:FixState) : {
+    ref tokens = state.tokens.vector;
+
+    assert(size(ast.tokens) >= 2);
+    assert(isKeywordToken(tokens[ast.tokens.begin], "static"));
+    assert(isKeywordToken(tokens[ast.tokens.begin + 1], "for"));
+
+    writeUptoToken(ast.tokens.begin, state);
+    printTo(state.outputFile, "..");
+    replaceUptoToken(ast.tokens.begin + 1, state);
+    fixAst(ast.variable, state);
+    fixAst(ast.values, state);
+    fixAst(ast.body, state);
 }
 
 
