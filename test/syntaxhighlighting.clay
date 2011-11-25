@@ -119,6 +119,11 @@ keywordsTest(x, ref y, rvalue z, forward w, static v) {
         break;
     }
 
+    ..for (x in y, z) {
+        continue;
+        break;
+    }
+
     while (x) {}
 
     goto labelTest;
