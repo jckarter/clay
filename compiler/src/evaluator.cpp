@@ -4154,6 +4154,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_atomicFence:
+    case PRIM_atomicRMW:
+    case PRIM_atomicLoad:
+    case PRIM_atomicStore:
+    case PRIM_atomicCompareExchange:
+        error("atomic operations not supported in evaluator");
+        break;
+
     default :
         assert(false);
 

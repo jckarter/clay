@@ -6,7 +6,6 @@ void disableAnalysisCaching() { analysisCachingDisabled += 1; }
 void enableAnalysisCaching() { analysisCachingDisabled -= 1; }
 
 static TypePtr objectType(ObjectPtr x);
-static ObjectPtr unwrapStaticType(TypePtr t);
 
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
@@ -63,7 +62,7 @@ static TypePtr objectType(ObjectPtr x)
     }
 }
 
-static ObjectPtr unwrapStaticType(TypePtr t) {
+ObjectPtr unwrapStaticType(TypePtr t) {
     if (t->typeKind != STATIC_TYPE)
         return NULL;
     StaticType *st = (StaticType *)t.ptr();
@@ -2726,6 +2725,40 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ostringstream sout;
         printStaticName(sout, obj);
         return analyzeStaticObject(new Identifier(sout.str()));
+    }
+
+    case PRIM_atomicFence : {
+        ensureArity(args, 1);
+        return new MultiPValue();
+    }
+
+    case PRIM_atomicRMW : {
+        // order op ptr val
+        ensureArity(args, 4);
+        pointerTypeOfValue(args, 2);
+        return new MultiPValue(new PValue(args->values[3]->type, true));
+    }
+
+    case PRIM_atomicLoad : {
+        // order ptr
+        ensureArity(args, 2);
+        PointerTypePtr pt = pointerTypeOfValue(args, 1);
+        return new MultiPValue(new PValue(pt->pointeeType, true));
+    }
+
+    case PRIM_atomicStore : {
+        // order ptr val
+        ensureArity(args, 3);
+        pointerTypeOfValue(args, 1);
+        return new MultiPValue();
+    }
+
+    case PRIM_atomicCompareExchange : {
+        // order ptr old new
+        ensureArity(args, 4);
+        PointerTypePtr pt = pointerTypeOfValue(args, 1);
+
+        return new MultiPValue(new PValue(args->values[2]->type, true));
     }
 
     default :

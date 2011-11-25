@@ -2149,7 +2149,25 @@ enum PrimOpCode {
     PRIM_OrderAcquire,
     PRIM_OrderRelease,
     PRIM_OrderAcqRel,
-    PRIM_OrderSeqCst
+    PRIM_OrderSeqCst,
+
+    PRIM_atomicFence,
+    PRIM_atomicRMW,
+    PRIM_atomicLoad,
+    PRIM_atomicStore,
+    PRIM_atomicCompareExchange,
+
+    PRIM_RMWXchg,
+    PRIM_RMWAdd,
+    PRIM_RMWSubtract,
+    PRIM_RMWAnd,
+    PRIM_RMWNAnd,
+    PRIM_RMWOr,
+    PRIM_RMWXor,
+    PRIM_RMWMin,
+    PRIM_RMWMax,
+    PRIM_RMWUMin,
+    PRIM_RMWUMax
 };
 
 struct PrimOp : public Object {
@@ -2956,6 +2974,7 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
+ObjectPtr unwrapStaticType(TypePtr t);
 
 
 //

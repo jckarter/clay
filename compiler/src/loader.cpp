@@ -792,6 +792,24 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(OrderAcqRel);
     PRIMITIVE(OrderSeqCst);
 
+    PRIMITIVE(atomicFence);
+    PRIMITIVE(atomicRMW);
+    PRIMITIVE(atomicLoad);
+    PRIMITIVE(atomicStore);
+    PRIMITIVE(atomicCompareExchange);
+
+    PRIMITIVE(RMWXchg);
+    PRIMITIVE(RMWAdd);
+    PRIMITIVE(RMWSubtract);
+    PRIMITIVE(RMWAnd);
+    PRIMITIVE(RMWNAnd);
+    PRIMITIVE(RMWOr);
+    PRIMITIVE(RMWXor);
+    PRIMITIVE(RMWMin);
+    PRIMITIVE(RMWMax);
+    PRIMITIVE(RMWUMin);
+    PRIMITIVE(RMWUMax);
+
 #undef PRIMITIVE
 
     return prims;

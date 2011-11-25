@@ -4192,6 +4192,66 @@ static llvm::Value *enumValue(MultiCValuePtr args,
     return ctx->builder->CreateLoad(cv->llValue);
 }
 
+llvm::AtomicOrdering atomicOrderValue(MultiCValuePtr args, unsigned index)
+{
+    CValuePtr cv = args->values[index];
+    ObjectPtr obj = unwrapStaticType(cv->type);
+    if (obj != NULL && obj->objKind == PRIM_OP) {
+        PrimOp *prim = (PrimOp*)obj.ptr();
+        switch (prim->primOpCode) {
+        case PRIM_OrderUnordered:
+            return llvm::Unordered;
+        case PRIM_OrderMonotonic:
+            return llvm::Monotonic;
+        case PRIM_OrderAcquire:
+            return llvm::Acquire;
+        case PRIM_OrderRelease:
+            return llvm::Release;
+        case PRIM_OrderAcqRel:
+            return llvm::AcquireRelease;
+        case PRIM_OrderSeqCst:
+            return llvm::SequentiallyConsistent;
+        }
+    }
+    argumentTypeError(index, "atomic ordering", cv->type);
+    return llvm::Unordered;
+}
+
+llvm::AtomicRMWInst::BinOp atomicRMWOpValue(MultiCValuePtr args, unsigned index)
+{
+    CValuePtr cv = args->values[index];
+    ObjectPtr obj = unwrapStaticType(cv->type);
+    if (obj != NULL && obj->objKind == PRIM_OP) {
+        PrimOp *prim = (PrimOp*)obj.ptr();
+        switch (prim->primOpCode) {
+        case PRIM_RMWXchg:
+            return llvm::AtomicRMWInst::Xchg;
+        case PRIM_RMWAdd:
+            return llvm::AtomicRMWInst::Add;
+        case PRIM_RMWSubtract:
+            return llvm::AtomicRMWInst::Sub;
+        case PRIM_RMWAnd:
+            return llvm::AtomicRMWInst::And;
+        case PRIM_RMWNAnd:
+            return llvm::AtomicRMWInst::Nand;
+        case PRIM_RMWOr:
+            return llvm::AtomicRMWInst::Or;
+        case PRIM_RMWXor:
+            return llvm::AtomicRMWInst::Xor;
+        case PRIM_RMWMin:
+            return llvm::AtomicRMWInst::Min;
+        case PRIM_RMWMax:
+            return llvm::AtomicRMWInst::Max;
+        case PRIM_RMWUMin:
+            return llvm::AtomicRMWInst::UMin;
+        case PRIM_RMWUMax:
+            return llvm::AtomicRMWInst::UMax;
+        }
+    }
+    argumentTypeError(index, "atomic rmw operation", cv->type);
+    return llvm::AtomicRMWInst::Xchg;
+}
+
 
 
 //
@@ -5343,6 +5403,98 @@ void codegenPrimOp(PrimOpPtr x,
         ostringstream sout;
         printStaticName(sout, obj);
         codegenStaticObject(new Identifier(sout.str()), ctx, out);
+        break;
+    }
+
+    case PRIM_atomicFence : {
+        ensureArity(args, 1);
+        llvm::AtomicOrdering order = atomicOrderValue(args, 0);
+
+        ctx->builder->CreateFence(order);
+        assert(out->size() == 0);
+        break;
+    }
+
+    case PRIM_atomicRMW : {
+        ensureArity(args, 4);
+        llvm::AtomicOrdering order = atomicOrderValue(args, 0);
+        llvm::AtomicRMWInst::BinOp op = atomicRMWOpValue(args, 1);
+
+        PointerTypePtr ptrT;
+        llvm::Value *ptr = pointerValue(args, 2, ptrT, ctx);
+        TypePtr argT = args->values[3]->type;
+        llvm::Value *arg = ctx->builder->CreateLoad(args->values[3]->llValue);
+
+        if (ptrT->pointeeType != argT)
+            argumentTypeError(3, ptrT->pointeeType, argT);
+
+        llvm::Value *result = ctx->builder->CreateAtomicRMW(op, ptr, arg, order);
+
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == argT);
+        ctx->builder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_atomicLoad : {
+        ensureArity(args, 2);
+        llvm::AtomicOrdering order = atomicOrderValue(args, 0);
+
+        PointerTypePtr ptrT;
+        llvm::Value *ptr = pointerValue(args, 1, ptrT, ctx);
+
+        llvm::Value *result = ctx->builder->Insert(
+            new llvm::LoadInst(ptr, "", false, typeAlignment(ptrT->pointeeType), order));
+
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == ptrT->pointeeType);
+        ctx->builder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_atomicStore : {
+        ensureArity(args, 3);
+        llvm::AtomicOrdering order = atomicOrderValue(args, 0);
+
+        PointerTypePtr ptrT;
+        llvm::Value *ptr = pointerValue(args, 1, ptrT, ctx);
+        TypePtr argT = args->values[2]->type;
+        llvm::Value *arg = ctx->builder->CreateLoad(args->values[2]->llValue);
+
+        if (ptrT->pointeeType != argT)
+            argumentTypeError(2, ptrT->pointeeType, argT);
+
+        ctx->builder->Insert(new llvm::StoreInst(
+            arg, ptr, false, typeAlignment(argT), order));
+
+        assert(out->size() == 0);
+        break;
+    }
+
+    case PRIM_atomicCompareExchange : {
+        ensureArity(args, 4);
+        llvm::AtomicOrdering order = atomicOrderValue(args, 0);
+
+        PointerTypePtr ptrT;
+        llvm::Value *ptr = pointerValue(args, 1, ptrT, ctx);
+        TypePtr oldvT = args->values[2]->type;
+        llvm::Value *oldv = ctx->builder->CreateLoad(args->values[2]->llValue);
+        TypePtr newvT = args->values[3]->type;
+        llvm::Value *newv = ctx->builder->CreateLoad(args->values[3]->llValue);
+
+        if (ptrT->pointeeType != oldvT)
+            argumentTypeError(2, ptrT->pointeeType, oldvT);
+        if (ptrT->pointeeType != newvT)
+            argumentTypeError(3, ptrT->pointeeType, newvT);
+
+        llvm::Value *result = ctx->builder->CreateAtomicCmpXchg(ptr, oldv, newv, order);
+
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == oldvT);
+        ctx->builder->CreateStore(result, out0->llValue);
         break;
     }
 
