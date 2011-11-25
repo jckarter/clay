@@ -377,8 +377,6 @@ TO BE DONE FOR 0.1
         static volatile?
     );
 
-* llvm 3.0 atomic primitives
-* check output types of interfaced overloads
 * clayfix to remove 'define' before proc definition with body
 * generate C99 math bindings for windows, ios, freebsd
 
