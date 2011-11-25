@@ -353,6 +353,12 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
+    case EVAL_STATEMENT : {
+        EvalStatement *eval = (EvalStatement *)x.ptr();
+        convertFreeVars(eval->args, env, ctx);
+        break;
+    }
+
     case EXPR_STATEMENT : {
         ExprStatement *y = (ExprStatement *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
@@ -627,6 +633,12 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case DISPATCH_EXPR : {
         DispatchExpr *y = (DispatchExpr *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
+        break;
+    }
+
+    case EVAL_EXPR : {
+        EvalExpr *eval = (EvalExpr *)x.ptr();
+        convertFreeVars(eval->args, env, ctx);
         break;
     }
 
