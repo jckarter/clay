@@ -2144,7 +2144,12 @@ enum PrimOpCode {
     PRIM_IdentifierModuleName,
     PRIM_IdentifierStaticName,
 
-    PRIM_CallbynameLocation,
+    PRIM_OrderUnordered,
+    PRIM_OrderMonotonic,
+    PRIM_OrderAcquire,
+    PRIM_OrderRelease,
+    PRIM_OrderAcqRel,
+    PRIM_OrderSeqCst
 };
 
 struct PrimOp : public Object {

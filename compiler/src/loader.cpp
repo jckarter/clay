@@ -785,6 +785,13 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(IdentifierModuleName);
     PRIMITIVE(IdentifierStaticName);
 
+    PRIMITIVE(OrderUnordered);
+    PRIMITIVE(OrderMonotonic);
+    PRIMITIVE(OrderAcquire);
+    PRIMITIVE(OrderRelease);
+    PRIMITIVE(OrderAcqRel);
+    PRIMITIVE(OrderSeqCst);
+
 #undef PRIMITIVE
 
     return prims;
