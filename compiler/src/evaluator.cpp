@@ -2356,6 +2356,29 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
+            if (pv->isTemp)
+                argumentError(i, "ref can only bind to an rvalue");
+            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
+            mev->add(evPtr);
+        }
+        int marker = evalMarkStack();
+        evalMulti(x->values, env, mev, x->names.size());
+        evalDestroyAndPopStack(marker);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            EValuePtr evPtr = mev->values[i];
+            addLocal(env2, x->names[i], derefValue(evPtr).ptr());
+        }
+        return env2;
+    }
+
+    case FORWARD : {
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
+        if (mpv->size() != x->names.size())
+            arityError(x->names.size(), mpv->size());
+        MultiEValuePtr mev = new MultiEValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            PValuePtr pv = mpv->values[i];
             if (pv->isTemp) {
                 EValuePtr ev = evalAllocValue(pv->type);
                 mev->add(ev);

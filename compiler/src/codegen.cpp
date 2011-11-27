@@ -3701,6 +3701,37 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
+            if (pv->isTemp)
+                argumentError(i, "ref can only bind to an lvalue");
+            TypePtr ptrType = pointerType(pv->type);
+            CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
+            mcv->add(cvRef);
+        }
+        int tempMarker = markTemps(ctx);
+        int marker = cgMarkStack(ctx);
+        codegenMulti(x->values, env, ctx, mcv, x->names.size());
+        cgDestroyAndPopStack(marker, ctx, false);
+        clearTemps(tempMarker, ctx);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            CValuePtr cv;
+            cv = derefValue(mcv->values[i], ctx);
+            addLocal(env2, x->names[i], cv.ptr());
+
+            ostringstream ostr;
+            ostr << x->names[i]->str << "_" << cv->type;
+            cv->llValue->setName(ostr.str());
+        }
+        return env2;
+    }
+
+    case FORWARD : {
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
+        if (mpv->size() != x->names.size())
+            arityError(x->names.size(), mpv->size());
+        MultiCValuePtr mcv = new MultiCValue();
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            PValuePtr pv = mpv->values[i];
             if (pv->isTemp) {
                 CValuePtr cv = codegenAllocNewValue(pv->type, ctx);
                 mcv->add(cv);

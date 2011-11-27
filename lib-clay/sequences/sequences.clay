@@ -55,7 +55,7 @@ overload lesser?(a:A, b:B) {
     while (hasNext?(i)) {
         if (not hasNext?(j))
             return false;
-        ref x, y = next(i), next(j);
+        forward x, y = next(i), next(j);
         if (x != y)
             return x < y;
     }

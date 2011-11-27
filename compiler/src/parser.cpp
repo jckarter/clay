@@ -1141,6 +1141,8 @@ static bool bindingKind(int &bindingKind) {
         bindingKind = REF;
     else if (restore(p), keyword("alias"))
         bindingKind = ALIAS;
+    else if (restore(p), keyword("forward"))
+        bindingKind = FORWARD;
     else
         return false;
     return true;

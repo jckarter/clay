@@ -136,7 +136,7 @@ StatementPtr desugarForStatement(ForPtr x) {
 
     BlockPtr block = new Block();
     vector<StatementPtr> &bs = block->statements;
-    bs.push_back(new Binding(REF, identV(exprVar), new ExprList(x->expr)));
+    bs.push_back(new Binding(FORWARD, identV(exprVar), new ExprList(x->expr)));
 
     CallPtr iteratorCall = new Call(prelude_expr_iterator(), new ExprList());
     iteratorCall->args->add(new NameRef(exprVar));
@@ -151,7 +151,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
     vector<StatementPtr> &ws = whileBody->statements;
-    ws.push_back(new Binding(REF, x->variables, new ExprList(unpackNext)));
+    ws.push_back(new Binding(FORWARD, x->variables, new ExprList(unpackNext)));
     ws.push_back(x->body);
 
     bs.push_back(new While(hasNextCall.ptr(), whileBody.ptr()));
@@ -240,7 +240,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
 
     // initialize %thing
     {
-        BindingPtr b = new Binding(REF, identV(thing), new ExprList(x->expr));
+        BindingPtr b = new Binding(FORWARD, identV(thing), new ExprList(x->expr));
         block->statements.push_back(b.ptr());
     }
 

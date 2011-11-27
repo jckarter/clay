@@ -1147,7 +1147,8 @@ struct Label : public Statement {
 enum BindingKind {
     VAR,
     REF,
-    ALIAS
+    ALIAS,
+    FORWARD
 };
 
 struct Binding : public Statement {

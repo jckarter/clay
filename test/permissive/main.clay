@@ -38,7 +38,7 @@ T(..args:A) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n)) {
         ref field = staticIndex(returned, i);
-        ref value = nthValue(i, ..args);
+        var value = nthValue(i, ..args);
         permissiveAssign(field, value);
     }
 }

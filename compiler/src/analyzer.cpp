@@ -2147,7 +2147,8 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR :
-    case REF : {
+    case REF :
+    case FORWARD : {
         MultiPValuePtr right = analyzeMulti(x->values, env, x->names.size());
         if (!right)
             return NULL;

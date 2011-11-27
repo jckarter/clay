@@ -318,6 +318,9 @@ static void printStatement(ostream &out, const Statement *x) {
         case ALIAS :
             out << "ALIAS";
             break;
+        case FORWARD :
+            out << "FORWARD";
+            break;
         default :
             assert(false);
         }

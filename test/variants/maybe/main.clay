@@ -50,7 +50,7 @@ main() {
     println(a);
 
     // require (value)
-    ref y = require(copy(a));
+    forward y = require(copy(a));
     y *= 1000;
     println(a);
 

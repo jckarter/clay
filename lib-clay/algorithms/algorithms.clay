@@ -15,7 +15,7 @@ reduce(f:F, a:A) {
     assert(hasNext?(iter));
     var result = next(iter);
     while (hasNext?(iter)) {
-        ref v = next(iter);
+        forward v = next(iter);
         result = f(result, v);
     }
     return result;
@@ -88,7 +88,7 @@ overload select(a:A, f) {
     assert(hasNext?(iter));
     var result = next(iter);
     while (hasNext?(iter)) {
-        ref v = next(iter);
+        forward v = next(iter);
         if (f(v, result))
             result = v;
     }
@@ -101,7 +101,7 @@ overload select(a:A, f) {
     assert(hasNext?(iter));
     var result = &next(iter);
     while (hasNext?(iter)) {
-        ref v = next(iter);
+        forward v = next(iter);
         if (f(v, result^))
             result = &v;
     }

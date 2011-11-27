@@ -303,7 +303,7 @@ private testOptions() {
 }
 
 [..T] ifPasses(expectFn, test: TestStatus, ..args:T) {
-    ref fn = dropValues(static countValues(..T) - 1, ..args);
+    forward fn = dropValues(static countValues(..T) - 1, ..args);
     var preFailed = test.failed;
     expectFn(test, ..takeValues(static countValues(..T) - 1, ..args));
     if (test.failed == preFailed)
@@ -341,7 +341,7 @@ private runCase?(_case) = optionsInclude?("case", _case.name);
 private colored?() = not(optionGiven?(testOptions(), "no-color"));
 
 private optionsInclude?(name, elt){
-  ref seq = getOptions(testOptions(), name);
+  forward seq = getOptions(testOptions(), name);
   return empty?(seq) or include?(seq, elt);
 }
 
