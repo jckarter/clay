@@ -843,6 +843,23 @@ overload fixAst(ast:StaticFor, state:FixState) : {
 }
 
 
+// Convert "ref" bindings to "forward" bindings.
+// 0.0: ref x = y;
+// 0.1: forward x = y;
+overload fixAst(ast:Binding, state:FixState) : {
+    ref tokens = state.tokens.vector;
+    if (ast.kind == REF) {
+        assert(size(ast.tokens) >= 1);
+        assert(isKeywordToken(tokens[ast.tokens.begin], "ref"));
+        writeUptoToken(ast.tokens.begin, state);
+        printTo(state.outputFile, "forward");
+        replaceToken(ast.tokens.begin, state);
+    }
+    fixAst(ast.names, state);
+    fixAst(ast.values, state);
+}
+
+
 //
 // entry point
 //
