@@ -296,10 +296,10 @@ withAutoreleasePool(fn) {
     )
 ]
 initObjectWith(
-    self_: O, static superSelector, initFn_: F, forward ..args:A
+    self_: O, static superSelector, forward initFn_: F, forward ..args:A
 ) {
     var self = self_;
-    ref initFn = initFn_;
+    forward initFn = initFn_;
     var superArgCount = static SelectorArgumentCount(superSelector);
 
     // self = super(self).init...(...);
