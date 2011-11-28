@@ -40,12 +40,33 @@ overload error(..e) {
 // assert
 //
 
-alias assert(cond:Bool, ..message) {
+define AssertionEnabled?;
+overload AssertionEnabled?() = not Flag?(#"clay.DisableAssertions");
+overload AssertionEnabled?(tag) = AssertionEnabled?()
+    and not Flag?(IdentifierConcat(#"clay.DisableAssertions.", tag));
+
+alias assert(..whatever) {}
+
+[| AssertionEnabled?()]
+alias overload assert(cond:Bool, ..message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
+[tag | AssertionEnabled?(tag)]
+alias overload assert(static tag, cond:Bool, ..message) {
+    if (not cond)
+        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
+}
+
+[| AssertionEnabled?()]
 alias overload assert(cond:Bool) {
+    if (not cond)
+        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
+}
+
+[tag | AssertionEnabled?(tag)]
+alias overload assert(static tag, cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
