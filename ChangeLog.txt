@@ -294,15 +294,15 @@ Library changes:
     // 0.1
     foo = new(Foo(1));
 
-* The INT_MIN, INT_MAX etc. constants have been replaced with Least(T) and Greatest(T)
-  functions.
+* The INT_MIN, INT_MAX etc. constants have been replaced with Least(T) and
+  Greatest(T) functions.
     INT8_MIN    ==> Least(Int8)
     INT8_MAX    ==> Greatest(Int8)
     INT16_MIN   ==> Least(Int16)
     INT16_MAX   ==> Greatest(Int16)
     etc.
-  LeastPositive(T), LeastPositiveNormalized(T), and GreatestPositiveFinite(T) are
-  also provided for floating-point types.
+  LeastPositive(T), LeastPositiveNormalized(T), and GreatestPositiveFinite(T)
+  are also provided for floating-point types.
 
 * 'printString' has been renamed.
     printString ==> str
@@ -322,60 +322,73 @@ Library changes:
 * The format of the output from the printRepr function has been changed to give
   more accurate parseable representations of Clay objects.
 
-* print*() now prints identifiers as their string contents without a leading "#".
+* print*() now prints identifiers as their string contents without a
+  leading "#".
   printRepr*() still prints identifiers with the leading "#".
 
-* printReprValuesTo no longer puts parens around its output. printReprArgumentsTo()
-  gives the old behavior.
+* printReprValuesTo no longer puts parens around its output.
+  printReprArgumentsTo() gives the old behavior.
     printReprValuesTo ==> printReprArgumentsTo
 
-* A repr() function has been added to the printer.formatter module, which prints its
-  argument(s) using printRepr() within a print* or str() call.
-    println("x = ", 128_u8, " ", 128_u16); // output: x = 128 128
-    println("x = ", repr(128_u8, " ", 128_u16)); // output: x = 128u8, " ", 128u16
+* A repr() function has been added to the printer.formatter module, which
+  prints its argument(s) using printRepr() within a print* or str() call.
+    println("x = ", 128uss, " ", 128us); // output: x = 128 128
+    println("x = ", repr(128uss, " ", 128us)); // output: x = 128uss, " ", 128us
 
 * The 'arrayLiteral' function has been renamed 'array'.
     arrayLiteral ==> array
 
-* A new 'math' module provides type-generic access to the C99 standard math library.
+* A new 'math' module provides type-generic access to the C99 standard math
+  library.
+
+* Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
+  Assertions can also be given a static string tag as their first parameter,
+  to be selectively disabled with '-Dclay.DisableAssertions.<tag>'.
+
+    assert(false); // disable with -Dclay.DisableAssertions
+    assert(#foo, false); // disable with -Dclay.DisableAssertions
+                         // or -Dclay.DisableAssertions.foo
 
 Compiler frontend changes:
 --------------------------
 * The compiler now requires LLVM 3.0.
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
-* '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency with
-  Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by default; use
-  '-emit-llvm -S' to emit LLVM IR.
+* '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency
+  with Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by
+  default; use '-emit-llvm -S' to emit LLVM IR.
 * The compiler now supports "-Wl,..." syntax for sending options to the linker.
 * The redundant -dll option has been removed; use -shared.
-* Externals are now only built by default for the main module (the source file provided on
-  the commandline) when building with the -c or -S flags. Externals imported from other modules
-  will still be compiled in the current compilation unit by default for executable and shared
-  library output types, but not for object or assembly output. '-import-externals' and
-  '-no-import-externals' flags are provided to control this behavior independent of the output
+* Externals are now only built by default for the main module (the source file
+  provided on the commandline) when building with the -c or -S flags. Externals
+  imported from other modules will still be compiled in the current compilation
+  unit by default for executable and shared library output types, but not for
+  object or assembly output. '-import-externals' and '-no-import-externals'
+  flags are provided to control this behavior independent of the output
   type.
-* External entry points for the main module are also now always compiled; "-shared"
-  now only affects the type of file output by the compiler.
+* External entry points for the main module are also now always compiled;
+  "-shared" now only affects the type of file output by the compiler.
 * The default output filename for executables and dynamic libraries is now the
-  basename of the input file instead of "a.out". For instance, "clay hello.clay" will
-  output an executable named "hello" (or "hello.exe" if compiling for a Windows target).
+  basename of the input file instead of "a.out". For instance, "clay hello.clay"
+  will output an executable named "hello" (or "hello.exe" if compiling for a
+  Windows target).
 * FreeBSD is now supported. Thanks to Daniel Kolesa.
+* A new -D flag sets compiler flags, which may be queried by the "Flag?" or
+  "Flag" primitives.
+    // foo.clay
+    main() { println(Flag?(#"FOO")); println(Flag(#"BAR")); }
+
+    # command line
+    $ clay -DFOO -DBAR=bar -run foo.clay
+    true
+    bar
+    $ clay -DBAR -run foo.clay
+    false
+
+    $
 
 ==================
 TO BE DONE FOR 0.1
 ==================
-* The frontend now supports a -D flag, which populates the __defines__ module:
-
-    clay -DNDEBUG -DFLAVOR=Raspberry foo.clay
-
-    // foo.clay
-    import __defines__.(NDEBUG?, FLAVOR);
-
-    [| NDEBUG?]
-    assert(s) { }
-
-    main() { println("Compiled for ", FLAVOR); }
-
 * A new external ABI "llvm" is provided for access to the native LLVM "ccc" calling convention.
   (This differs from the C calling convention on x86-64 and possibly other platforms.)
   It also special-cases static integer and boolean arguments, interpolating them as literal
@@ -390,6 +403,7 @@ TO BE DONE FOR 0.1
         static volatile?
     );
 
+* complex types pass incorrectly to externals on 32-bit macosx
 * clayfix to remove 'define' before proc definition with body
 * generate C99 math bindings for windows, ios, freebsd
 
