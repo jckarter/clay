@@ -17,6 +17,7 @@ static vector<string> searchPath;
 static vector<string> moduleSuffixes;
 static map<string, ModulePtr> modules;
 
+map<string, string> globalFlags;
 
 
 //
@@ -791,6 +792,9 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(OrderRelease);
     PRIMITIVE(OrderAcqRel);
     PRIMITIVE(OrderSeqCst);
+
+    PRIMITIVE(FlagP);
+    PRIMITIVE(Flag);
 
     PRIMITIVE(atomicFence);
     PRIMITIVE(atomicRMW);

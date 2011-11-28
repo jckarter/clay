@@ -2728,6 +2728,27 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeStaticObject(new Identifier(sout.str()));
     }
 
+    case PRIM_FlagP : {
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_Flag : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (obj != NULL && obj->objKind == IDENTIFIER) {
+            Identifier *ident = (Identifier*)obj.ptr();
+
+            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+            string value;
+            if (flag != globalFlags.end())
+                value = flag->second;
+
+            return analyzeStaticObject(new Identifier(value));
+        } else
+            argumentTypeError(0, "identifier", args->values[0]->type);
+        return NULL;
+    }
+
     case PRIM_atomicFence : {
         ensureArity(args, 1);
         return new MultiPValue();

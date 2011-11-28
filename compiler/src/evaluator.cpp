@@ -4177,6 +4177,25 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_FlagP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (obj != NULL && obj->objKind == IDENTIFIER) {
+            Identifier *ident = (Identifier*)obj.ptr();
+
+            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+            assert(out->size() == 1);
+            EValuePtr out0 = out->values[0];
+            assert(out0->type == boolType);
+            *((char *)out0->addr) = flag != globalFlags.end();
+        } else
+            argumentTypeError(0, "identifier", args->values[0]->type);
+        break;
+    }
+
+    case PRIM_Flag :
+        break;
+
     case PRIM_atomicFence:
     case PRIM_atomicRMW:
     case PRIM_atomicLoad:

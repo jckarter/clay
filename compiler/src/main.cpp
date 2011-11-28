@@ -271,6 +271,8 @@ static void usage(char *argv0)
     cerr << "  -emit-llvm            emit llvm code\n";
     cerr << "  -S                    emit assembler code\n";
     cerr << "  -c                    emit object code\n";
+    cerr << "  -DFLAG[=value]        set flag value\n"
+         << "                        (queryable with Flag?() and Flag())\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
     cerr << "  -exceptions           enable exception handling\n";
     cerr << "  -no-exceptions        disable exception handling\n";
@@ -569,6 +571,30 @@ int main(int argc, char **argv) {
                 }
             }
             libraries.push_back("-l" + lib);
+        }
+        else if (strstr(argv[i], "-D") == argv[i]) {
+            char *namep = argv[i] + strlen("-D");
+            if (namep[0] == '\0') {
+                if (i+1 == argc) {
+                    cerr << "error: definition missing after -D\n";
+                    return -1;
+                }
+                ++i;
+                namep = argv[i];
+                if (namep[0] == '\0' || namep[0] == '-') {
+                    cerr << "error: definition missing after -D\n";
+                    return -1;
+                }
+            }
+            char *equalSignp = strchr(namep, '=');
+            string name = equalSignp == NULL
+                ? string(namep)
+                : string(namep, equalSignp);
+            string value = equalSignp == NULL
+                ? string()
+                : string(equalSignp + 1);
+
+            globalFlags[name] = value;
         }
         else if (strstr(argv[i], "-I") == argv[i]) {
             string path = argv[i] + strlen("-I");

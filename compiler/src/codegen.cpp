@@ -5437,6 +5437,23 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_FlagP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (obj != NULL && obj->objKind == IDENTIFIER) {
+            Identifier *ident = (Identifier*)obj.ptr();
+
+            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+            ValueHolderPtr vh = boolToValueHolder(flag != globalFlags.end());
+            codegenStaticObject(vh.ptr(), ctx, out);
+        } else
+            argumentTypeError(0, "identifier", args->values[0]->type);
+        break;
+    }
+
+    case PRIM_Flag :
+        break;
+
     case PRIM_atomicFence : {
         ensureArity(args, 1);
         llvm::AtomicOrdering order = atomicOrderValue(args, 0);

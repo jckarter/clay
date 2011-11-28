@@ -1,0 +1,11 @@
+import printer.formatter.(repr);
+
+probeFlags() = Flag?(#FOO), Flag?(#BAR), Flag?(#BAS),
+    Flag(#FOO), Flag(#BAR), Flag(#BAS);
+
+record WackyType[..X] ();
+
+main() {
+    println(repr(..probeFlags()));
+    println(WackyType[..probeFlags()]);
+}

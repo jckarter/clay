@@ -2027,6 +2027,8 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 // loader module
 //
 
+extern map<string, string> globalFlags;
+
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
 ModulePtr loadProgramSource(const string &name, const string &source);
@@ -2145,18 +2147,21 @@ enum PrimOpCode {
     PRIM_IdentifierModuleName,
     PRIM_IdentifierStaticName,
 
-    PRIM_OrderUnordered,
-    PRIM_OrderMonotonic,
-    PRIM_OrderAcquire,
-    PRIM_OrderRelease,
-    PRIM_OrderAcqRel,
-    PRIM_OrderSeqCst,
+    PRIM_FlagP,
+    PRIM_Flag,
 
     PRIM_atomicFence,
     PRIM_atomicRMW,
     PRIM_atomicLoad,
     PRIM_atomicStore,
     PRIM_atomicCompareExchange,
+
+    PRIM_OrderUnordered,
+    PRIM_OrderMonotonic,
+    PRIM_OrderAcquire,
+    PRIM_OrderRelease,
+    PRIM_OrderAcqRel,
+    PRIM_OrderSeqCst,
 
     PRIM_RMWXchg,
     PRIM_RMWAdd,
