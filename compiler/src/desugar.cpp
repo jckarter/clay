@@ -233,41 +233,36 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     block->location = x->location;
 
     // %thing is the value being switched on
-    IdentifierPtr thing = new Identifier("%thing");
+    IdentifierPtr thing = new Identifier("%case");
     thing->location = x->expr->location;
     NameRefPtr thingRef = new NameRef(thing);
     thingRef->location = x->expr->location;
 
-    // initialize %thing
+    // initialize %case
     {
         BindingPtr b = new Binding(FORWARD, identV(thing), new ExprList(x->expr));
         block->statements.push_back(b.ptr());
     }
+
+    ExprPtr caseCallable = prelude_expr_caseP();
 
     StatementPtr root;
     StatementPtr *nextPtr = &root;
 
     // dispatch logic
     for (unsigned i = 0; i < x->caseBlocks.size(); ++i) {
-        CaseBlockPtr y = x->caseBlocks[i];
+        CaseBlockPtr caseBlock = x->caseBlocks[i];
 
-        ExprPtr condition;
-        for (unsigned j = 0; j < y->caseLabels->size(); ++j) {
-            ExprPtr caseValue = y->caseLabels->exprs[j];
-            ExprPtr compare = new BinaryOp(EQUALS, thingRef.ptr(), caseValue);
-            compare->location = caseValue->location;
-            if (!condition) {
-                condition = compare;
-            }
-            else {
-                condition = new Or(condition, compare);
-                condition->location = y->location;
-            }
-        }
-        assert(condition.ptr());
+        ExprListPtr caseArgs = new ExprList(thingRef.ptr());
+        ExprPtr caseCompareArgs = new Paren(caseBlock->caseLabels);
+        caseCompareArgs->location = caseBlock->location;
+        caseArgs->add(caseCompareArgs);
 
-        IfPtr ifStmt = new If(condition, y->body);
-        ifStmt->location = y->location;
+        ExprPtr condition = new Call(caseCallable, caseArgs);
+        condition->location = caseBlock->location;
+
+        IfPtr ifStmt = new If(condition, caseBlock->body);
+        ifStmt->location = caseBlock->location;
         *nextPtr = ifStmt.ptr();
         nextPtr = &(ifStmt->elsePart);
     }

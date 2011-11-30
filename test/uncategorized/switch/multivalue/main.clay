@@ -1,0 +1,7 @@
+multi() = 1, 2;
+
+main() {
+    switch (2)
+    case (..multi())
+        println("ok");
+}

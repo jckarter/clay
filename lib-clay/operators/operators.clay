@@ -559,3 +559,15 @@ overload BitwiseMoveAssignedType?(static T)
 
 inline is?(x, y) = &x == &y;
 inline isNot?(x, y) = not is?(x, y);
+
+
+//
+// case?
+//
+
+inline case?(x, forward ..ys) : Bool {
+    ..for (y in ..ys)
+        if (equals?(x, y))
+            return true;
+    return false;
+}
