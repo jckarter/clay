@@ -70,9 +70,9 @@ inline overload Complex80(a:T) = Complex(LongDouble(a), LongDouble(0));
 
 
 [T | Complex?(T)]
-inline conj(z:T) = Complex(real(z),-imag(z));
-
-
+inline conj(z:T) --> r:T {
+    re(r)^, im(r)^ = re(z)^,-im(z)^;
+}
 
 
 
@@ -116,65 +116,82 @@ inline overload greater?(a:A, b:B) = lesser?(b, a);
 [A,B | Complex?(A) or Complex?(B)]
 inline overload greaterEquals?(a:A, b:B) = not lesser?(a, b);
 
+[T | Complex?(T)]
+zero?(z:T) = real(z) == T(0) and imag(z) == T(0);
 
 [T | Complex?(T)]
-Zero?(z:T) = real(z) == T(0) and imag(z) == T(0);
-
-
-[T | Complex?(T)]
-inline overload minus(z:T) = Complex(-real(z),-imag(z));
+inline overload minus(z:T) --> r:T {
+    re(r)^, im(r)^ = -re(z)^,-im(z)^;
+}
 
 [T | Complex?(T)]
 inline overload plus(z:T) = z;
 
 [T,U | Complex?(T,U)]
-inline overload add(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
+inline overload add(z:T, y:U) --> r:T {
+    re(r)^, im(r)^ = re(z)^+re(y)^, im(z)^+im(y)^;
+}
 
 [T,U | Complex?(T,U)]
-inline overload subtract(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
+inline overload subtract(z:T, y:U) --> r:T {
+    re(r)^, im(r)^ = re(z)^-re(y)^, im(z)^-im(y)^;
+}
 
 [T,U | Complex?(T,U)]
-inline overload multiply(z:T, y:U) = Complex(real(z)*real(y)-imag(z)*imag(y),imag(z)*real(y)+real(z)*imag(y));
+inline overload multiply(z:T, y:U) --> r:T {
+    var ac,bd = re(z)^ * re(y)^, im(z)^ * im(y)^;
+    re(r)^ ,im(r)^ = ac-bd, (re(z)^ + im(z)^) * (re(y)^ + im(y)^) - ac - bd;
+}
 
 [T,U | Complex?(T,U)]
-inline overload divide(z:T, y:U) {
+inline overload divide(z:T, y:U) --> r:T {
     var ra = if(re(y)^ < 0) -re(y)^ else re(y)^;
     var ia = if(im(y)^ < 0) -im(y)^ else im(y)^;
     if(ra < ia){
-        var r = re(y)^ / im(y)^;
-        var den = im(y)^ + r * re(y)^;
-        return Complex((re(z)^ * r + im(z)^) / den, (im(z)^ * r - re(z)^) / den);
+        var rat = re(y)^ / im(y)^;
+        var den = im(y)^ + rat * re(y)^;
+        re(r)^, im(r)^ = (re(z)^ * rat + im(z)^) / den, (im(z)^ * rat - re(z)^) / den;
     }else{
-        var r = im(y)^ / re(y)^;
-        var den = re(y)^ + r * im(y)^;
-        return Complex((re(z)^ + r * im(z)^) / den, (im(z)^ - r * re(z)^) / den);
+        var rat = im(y)^ / re(y)^;
+        var den = re(y)^ + rat * im(y)^;
+        re(r)^, im(r)^ = (re(z)^ + rat * im(z)^) / den, (im(z)^ - rat * re(z)^) / den;
     }
 }
 
 [T,C | Float?(T) and Complex?(C)]
-inline overload add(a:T, z:C) = Complex(a+real(z),imag(z));
+inline overload add(a:T, z:C) --> r:C {
+    re(r)^, im(r)^ = a + re(z)^,im(z)^;
+}
 
 [T,C | Float?(T) and Complex?(C)]
 inline overload add(z:C, a:T) = add(a,z);
 
 [T,C | Float?(T) and Complex?(C)]
-inline overload subtract(z:C, y:T) = Complex(real(z) - y, imag(z));
+inline overload subtract(z:C, y:T) --> r:C {
+    re(r)^, im(r)^ = re(z)^-y,im(z)^;
+}
 
 [T,C | Float?(T) and Complex?(C)]
-inline overload subtract(y:T,z:C) = Complex(y-real(z), -imag(z));
+inline overload subtract(y:T,z:C) --> r:C {
+    re(r)^, im(r)^ = y + re(z)^, -im(z)^;
+}
 
 [T,C | Float?(T) and Complex?(C)]
-inline overload multiply(z:C, y:T) = Complex(real(z)*y, imag(z)*y);
+inline overload multiply(z:C, y:T) --> r:C {
+    re(r)^, im(r)^ = re(z)^*y,im(z)^*y;
+}
 
 [T,C | Float?(T) and Complex?(C)]
 inline overload multiply(y:T,z:C) = multiply(z,y);
 
 [T,C | Float?(T) and Complex?(C)]
-inline overload divide(z:C, y:T) = Complex(real(z)/y, imag(z)/y);
+inline overload divide(z:C, y:T) --> r:C {
+    var d = T(1)/y;
+    re(r)^, im(r)^ = re(z)^*d,im(z)^*d;
+}
 
 [T,C | Float?(T) and Complex?(C)]
 inline overload divide(y:T,z:C) = divide(Complex(y,T(0)),z);
-
 
 [S | String?(S)]
 inline overload Complex32(s:S) = parseComplex32(s);
