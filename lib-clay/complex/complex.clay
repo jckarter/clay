@@ -43,8 +43,8 @@ inline overload Complex(a:Int) = Complex(Double(a), Double(0));
 inline overload Complex(a:Long) = Complex(Double(a), Double(0));
 
 
-[T]
-ComplexType(z:Complex[T]) = T;
+[T | Complex?(T)]
+ComplexType(z:T) = Type(real(z));
 
 [T | Complex?(T)]
 overload ComplexType(static T) = T;
