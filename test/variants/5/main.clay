@@ -1,0 +1,12 @@
+variant Variant[..T] (..T);
+
+foo(x:Variant[Int,Float]) {
+    println(x);
+}
+
+main() {
+    var x = Variant[Int, Float](5);
+    var y = Variant[Int, Float](4.0f);
+    foo(x);
+    foo(y);
+}

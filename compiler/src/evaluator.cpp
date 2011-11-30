@@ -283,9 +283,27 @@ MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env)
 TypePtr evaluateType(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateOneStatic(expr, env);
-    if (v->objKind != TYPE)
-        error(expr, "expecting a type");
+    if (v->objKind != TYPE) {
+        ostringstream sout;
+        sout << "expecting a type but got ";
+        printStaticName(sout, v);
+        error(expr, sout.str());
+    }
     return (Type *)v.ptr();
+}
+
+void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out)
+{
+    MultiStaticPtr types = evaluateMultiStatic(exprs, env);
+    for (unsigned i = 0; i < types->size(); ++i) {
+        if (types->values[i]->objKind != TYPE) {
+            ostringstream sout;
+            sout << "expecting a type but got ";
+            printStaticName(sout, types->values[i]);
+            error(sout.str());
+        }
+        out.push_back((Type*)types->values[i].ptr());
+    }
 }
 
 bool evaluateBool(ExprPtr expr, EnvPtr env)

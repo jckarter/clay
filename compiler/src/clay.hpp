@@ -3001,6 +3001,7 @@ ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
 MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env);
 
 TypePtr evaluateType(ExprPtr expr, EnvPtr env);
+void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
 

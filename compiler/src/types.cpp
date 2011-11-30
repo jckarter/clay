@@ -684,11 +684,7 @@ static void initializeVariantType(VariantTypePtr t) {
         }
     }
     ExprListPtr defaultInstances = t->variant->defaultInstances;
-    for (unsigned i = 0; i < defaultInstances->size(); ++i) {
-        ExprPtr x = defaultInstances->exprs[i];
-        TypePtr memberType = evaluateType(x, variantEnv);
-        t->memberTypes.push_back(memberType);
-    }
+    evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
     const vector<InstancePtr> &instances = t->variant->instances;
     for (unsigned i = 0; i < instances.size(); ++i) {
@@ -732,10 +728,7 @@ static void initializeVariantType(VariantTypePtr t) {
         if (x->predicate.ptr())
             if (!evaluateBool(x->predicate, staticEnv))
                 continue;
-        for (unsigned i = 0; i < x->members->size(); ++i) {
-            TypePtr memberType = evaluateType(x->members->exprs[i], staticEnv);
-            t->memberTypes.push_back(memberType);
-        }
+        evaluateMultiType(x->members, staticEnv, t->memberTypes);
     }
 
     RecordPtr reprRecord = getVariantReprRecord();
