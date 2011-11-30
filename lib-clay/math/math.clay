@@ -320,9 +320,9 @@ overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
 overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
 overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 
-overload nan?(x:Double) = libc.isnan(x);
-overload nan?(x:Float) = libc.isnanf(x);
-overload nan?(x:LongDouble) = libc.isnanl(x);
+overload nan?(x:Double) = Bool(libc.isnan(x));
+overload nan?(x:Float) = Bool(libc.isnanf(x));
+overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
 
 overload j0(x:Double) = libc.j0(x);
 overload j0(x:Float) = libc.j0f(x);
@@ -510,10 +510,6 @@ overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
 overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
 overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
 
-nan(tagb : Pointer[CChar]) = libc.nan(tagb);
-nanf(tagb : Pointer[CChar]) = libc.nanf(tagb);
-nanl(tagb : Pointer[CChar]) = libc.nanl(tagb);
-
 
 overload llrint(x:Double) = libc.llrint(x);
 overload llrint(x:Float) = libc.llrintf(x);
@@ -609,6 +605,9 @@ inline overload sqrt(z:Complex80) = libc.csqrtl(z);
 inline overload proj(z:Complex64) = libc.cproj(z);
 inline overload proj(z:Complex32) = libc.cprojf(z);
 inline overload proj(z:Complex80) = libc.cprojl(z);
+
+[T | Complex?(T)]
+overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
 [T | Float?(T)]
 inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
