@@ -1,4 +1,5 @@
 import libc;
+import math.(sqrt,cos,log,M_PI);
 import printer.formatter.(hex, repr);
 
 // Implementation of XOR-shift RNGs by George Marsaglia
@@ -69,6 +70,11 @@ define uniform;
 overload uniform(rnd, from : Float32, to : Float32) = from + (to - from) * smallFloat(rnd);
 overload uniform(rnd, from : Float64, to : Float64) = from + (to - from) * smallDouble(rnd);
 
+define normal;
+
+[T | Numeric?(T)] overload normal(rnd, mean:T, stdev:T)
+    = mean + stdev * sqrt(-T(2) * log(uniform(rnd,T(0),T(1)))) * cos(T(2) * M_PI * uniform(rnd,T(0),T(1)));
+[T | Numeric?(T)] overload normal(rnd, mean:T) = normal(rnd, mean, T(1));
 
 private smallDouble(r) =
   bitcast(Double, bitor(mask(generate(r, Int64), 52), bitcast(UInt64,1.0)))-1;
