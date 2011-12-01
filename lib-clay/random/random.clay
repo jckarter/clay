@@ -1,7 +1,7 @@
 import libc;
 import printer.formatter.(hex, repr);
 
-// Implementation of XOR-shift RNGs by George Marsaglia  
+// Implementation of XOR-shift RNGs by George Marsaglia
 record XORShiftRNG(
   w : UInt32,
   x : UInt32,
@@ -55,20 +55,20 @@ define uniform;
     var result = bitand(mask, generate(rnd, T));
 
     while(result >= ub) result = bitand(mask, generate(rnd, T));
-    
+
     return result + from;
   } else {
     var result = generate(rnd, T);
 
     while(result < from or result >= to) result = generate(rnd, T);
-    
+
     return result;
   }
 }
 
 overload uniform(rnd, from : Float32, to : Float32) = from + (to - from) * smallFloat(rnd);
 overload uniform(rnd, from : Float64, to : Float64) = from + (to - from) * smallDouble(rnd);
-  
+
 
 private smallDouble(r) =
   bitcast(Double, bitor(mask(generate(r, Int64), 52), bitcast(UInt64,1.0)))-1;
@@ -78,7 +78,7 @@ private smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(bitshl(1, 24));
 private xor(x, y) = bitxor(x, y);
 private xsl(x, n) = xor(x, bitshl(x, n));
 private xsr(x, n) = xor(x, bitshr(x, n));
-private mask(x, n) = bitand(x, bitshl(1, n) - 1);
+[I] private mask(x:I, n) = bitand(x, bitshl(I(1), n) - I(1));
 private pr() = UInt32(libc.random());
 private bitcast(T, x) = Pointer[T](&x)^;
 
@@ -92,15 +92,15 @@ private define toMask;
 private inline pb(x, n){ x = bitor(x, bitshr(x, n)); }
 [T] overload toMask(x:T){
   var t = x;
-  pb(t, 1); 
-  pb(t, 2); 
-  pb(t, 4); 
+  pb(t, 1);
+  pb(t, 2);
+  pb(t, 4);
   if (TypeSize(T) > 1) {
-    pb(t, 8); 
+    pb(t, 8);
     if (TypeSize(T) > 2) {
-      pb(t, 16); 
+      pb(t, 16);
       if (TypeSize(T) > 4) {
-        pb(t, 32); 
+        pb(t, 32);
       }
     }
   }
