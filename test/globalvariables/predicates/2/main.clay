@@ -1,0 +1,10 @@
+private Ok?() = true;
+
+[| Ok?()] var touchable = 1;
+
+[| false] var untouchable = 1;
+
+main() {
+    println(touchable);
+    println(untouchable);
+}

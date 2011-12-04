@@ -831,6 +831,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
             PValuePtr pv = new PValue(t, true);
             return new MultiPValue(pv);
         }
+        evaluateToplevelPredicate(y->patternVars, y->predicate, y->env);
         return analyzeExpr(y->expr, y->env);
     }
 
@@ -1000,6 +1001,7 @@ MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
         }
     }
     x->analyzing = true;
+    evaluateToplevelPredicate(x->gvar->patternVars, x->gvar->predicate, x->env);
     PValuePtr pv = analyzeOne(x->expr, x->env);
     x->analyzing = false;
     if (!pv)
@@ -1440,6 +1442,7 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
+    evaluateToplevelPredicate(x->patternVars, x->predicate, bodyEnv);
     AnalysisCachingDisabler disabler;
     return analyzeExpr(x->expr, bodyEnv);
 }

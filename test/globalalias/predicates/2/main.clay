@@ -1,0 +1,11 @@
+private Ok?() = true;
+
+[| Ok?()] alias touchable = 1;
+
+[| false] alias untouchable = 1;
+
+main() {
+    println(touchable);
+    println(untouchable);
+}
+

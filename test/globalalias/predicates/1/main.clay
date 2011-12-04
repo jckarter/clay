@@ -1,0 +1,12 @@
+[T] alias anyTwo[T] = T(2);
+
+[T | Integer?(T)]
+alias intTwo[T] = T(2);
+
+main() {
+    println(anyTwo[Int]);
+    println(anyTwo[Float]);
+    println(intTwo[Int]);
+    println(intTwo[Float]);
+}
+

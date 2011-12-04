@@ -1,0 +1,11 @@
+[T] var anyTwo[T] = T(2);
+
+[T | Integer?(T)]
+var intTwo[T] = T(2);
+
+main() {
+    println(anyTwo[Int]);
+    println(anyTwo[Float]);
+    println(intTwo[Int]);
+    println(intTwo[Float]);
+}
