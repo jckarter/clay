@@ -364,7 +364,7 @@ int main(int argc, char **argv) {
 
     string clayFile;
     string outputFile;
-    string targetTriple = llvm::sys::getDefaultTargetTriple();
+    string targetTriple = llvm::sys::getHostTriple();
 
     string clayScriptImports;
     string clayScript;
@@ -535,7 +535,7 @@ int main(int argc, char **argv) {
                 cerr << "error: target name missing after -target\n";
                 return -1;
             }
-            crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
+            crossCompiling = targetTriple != llvm::sys::getHostTriple();
         }
         else if (strstr(argv[i], "-Wl") == argv[i]) {
             linkerFlags += argv[i] + strlen("-Wl");

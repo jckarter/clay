@@ -2636,7 +2636,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
     if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
-        err.print("\n", out);
+        err.Print("\n", out);
         std::cerr << out.str() << std::endl;
         error("llvm assembly parse error");
     }
@@ -5594,7 +5594,7 @@ static void codegenTopLevelLLVMRecursive(ModulePtr m)
                              llvm::getGlobalContext())) {
         string errBuf;
         llvm::raw_string_ostream errOut(errBuf);
-        err.print("\n", errOut);
+        err.Print("\n", errOut);
         std::cerr << errOut.str() << std::endl;
         error("llvm assembly parse error");
     }
