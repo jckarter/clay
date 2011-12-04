@@ -13,15 +13,27 @@ static vector<CompileContextEntry> contextStack;
 
 static const unsigned RECURSION_WARNING_LEVEL = 1000;
 
+void pushCompileContext(ObjectPtr obj) {
+    if (contextStack.size() >= RECURSION_WARNING_LEVEL)
+        warning("potential runaway recursion");
+    if (!contextStack.empty())
+        contextStack.back().location = topLocation();
+    contextStack.push_back(CompileContextEntry(obj));
+}
+
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
     if (contextStack.size() >= RECURSION_WARNING_LEVEL)
         warning("potential runaway recursion");
+    if (!contextStack.empty())
+        contextStack.back().location = topLocation();
     contextStack.push_back(CompileContextEntry(obj, params));
 }
 
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params, const vector<unsigned> &dispatchIndices) {
     if (contextStack.size() >= RECURSION_WARNING_LEVEL)
         warning("potential runaway recursion");
+    if (!contextStack.empty())
+        contextStack.back().location = topLocation();
     contextStack.push_back(CompileContextEntry(obj, params, dispatchIndices));
 }
 
@@ -166,6 +178,12 @@ static void displayCompileContext() {
         ObjectPtr obj = contextStack[i-1].callable;
         const vector<ObjectPtr> &params = contextStack[i-1].params;
 
+        if (i >= 1 && contextStack[i-1].location != NULL) {
+            ostringstream locout;
+            printFileLineCol(locout, contextStack[i-1].location);
+            fprintf(stderr, "  %s:\n", locout.str().c_str());
+        }
+
         ostringstream sout;
         if (obj->objKind == GLOBAL_VARIABLE) {
             sout << "global ";
@@ -178,11 +196,13 @@ static void displayCompileContext() {
         }
         else {
             printName(sout, obj);
-            sout << "(";
-            printNameList(sout, params, contextStack[i-1].dispatchIndices);
-            sout << ")";
+            if (contextStack[i-1].hasParams) {
+                sout << "(";
+                printNameList(sout, params, contextStack[i-1].dispatchIndices);
+                sout << ")";
+            }
         }
-        fprintf(stderr, "  %s\n", sout.str().c_str());
+        fprintf(stderr, "    %s\n", sout.str().c_str());
     }
 }
 

@@ -546,18 +546,25 @@ struct Location : public Object {
 
 struct CompileContextEntry {
     ObjectPtr callable;
+    bool hasParams;
     vector<ObjectPtr> params;
     vector<unsigned> dispatchIndices;
 
+    LocationPtr location;
+
+    CompileContextEntry(ObjectPtr callable)
+        : callable(callable), hasParams(false) {}
+
     CompileContextEntry(ObjectPtr callable, const vector<ObjectPtr> &params)
-        : callable(callable), params(params) {}
+        : callable(callable), hasParams(true), params(params) {}
 
     CompileContextEntry(ObjectPtr callable,
                         const vector<ObjectPtr> &params,
                         const vector<unsigned> &dispatchIndices)
-        : callable(callable), params(params), dispatchIndices(dispatchIndices) {}
+        : callable(callable), hasParams(true), params(params), dispatchIndices(dispatchIndices) {}
 };
 
+void pushCompileContext(ObjectPtr obj);
 void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params);
 void pushCompileContext(ObjectPtr obj,
                         const vector<ObjectPtr> &params,
@@ -567,6 +574,9 @@ vector<CompileContextEntry> getCompileContext();
 void setCompileContext(const vector<CompileContextEntry> &x);
 
 struct CompileContextPusher {
+    CompileContextPusher(ObjectPtr obj) {
+        pushCompileContext(obj);
+    }
     CompileContextPusher(ObjectPtr obj, const vector<ObjectPtr> &params) {
         pushCompileContext(obj, params);
     }
