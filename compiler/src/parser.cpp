@@ -1986,10 +1986,13 @@ static bool recordBody(RecordBodyPtr &x) {
 
 static bool record(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
     Visibility vis;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordPtr y = new Record(vis);
+    RecordPtr y = new Record(vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
     if (!recordBody(y->body)) return false;
@@ -2021,7 +2024,10 @@ static bool optInstances(ExprListPtr &x) {
 
 static bool variant(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
     Visibility vis;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("variant")) return false;
     IdentifierPtr name;
@@ -2032,7 +2038,7 @@ static bool variant(TopLevelItemPtr &x) {
     ExprListPtr defaultInstances;
     if (!optInstances(defaultInstances)) return false;
     if (!symbol(";")) return false;
-    x = new Variant(name, vis, params, varParam, defaultInstances);
+    x = new Variant(name, vis, patternVars, predicate, params, varParam, defaultInstances);
     x->location = location;
     return true;
 }
@@ -2400,12 +2406,15 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
 
 static bool enumeration(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
     Visibility vis;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumerationPtr z = new Enumeration(y, vis);
+    EnumerationPtr z = new Enumeration(y, vis, patternVars, predicate);
     if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol(")")) return false;
@@ -2423,7 +2432,10 @@ static bool enumeration(TopLevelItemPtr &x) {
 
 static bool globalVariable(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
     Visibility vis;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
     IdentifierPtr name;
@@ -2435,7 +2447,7 @@ static bool globalVariable(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalVariable(name, vis, params, varParam, expr);
+    x = new GlobalVariable(name, vis, patternVars, predicate, params, varParam, expr);
     x->location = location;
     return true;
 }
@@ -2598,7 +2610,10 @@ static bool externalVariable(TopLevelItemPtr &x) {
 
 static bool globalAlias(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
     Visibility vis;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("alias")) return false;
     IdentifierPtr name;
@@ -2610,7 +2625,7 @@ static bool globalAlias(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalAlias(name, vis, params, varParam, expr);
+    x = new GlobalAlias(name, vis, patternVars, predicate, params, varParam, expr);
     x->location = location;
     return true;
 }

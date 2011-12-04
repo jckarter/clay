@@ -1,0 +1,6 @@
+[| false]
+enum Untouchable (FOO);
+
+main() {
+    println(FOO);
+}

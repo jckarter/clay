@@ -1,0 +1,9 @@
+[T] variant Foo[T] (Int, T);
+
+[T | Integer?(T)]
+variant Bar[T] (Int, T);
+
+main() {
+    println(Foo[Float](3.0f));
+    println(Bar[Float](3.0f));
+}

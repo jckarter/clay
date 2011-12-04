@@ -1,0 +1,10 @@
+[T] record Foo[T] (x:T);
+
+[T | Integer?(T)] record Bar[T] (x:T);
+
+main() {
+    println(Foo(1));
+    println(Foo(1.0));
+    println(Bar(1));
+    println(Bar(1.0));
+}

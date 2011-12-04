@@ -677,6 +677,8 @@ static ModulePtr makePrimitivesModule() {
     GlobalAliasPtr v =
         new GlobalAlias(new Identifier("ExceptionsEnabled?"),
                         PUBLIC,
+                        vector<PatternVar>(),
+                        NULL,
                         vector<IdentifierPtr>(),
                         NULL,
                         new BoolLiteral(exceptionsEnabled()));

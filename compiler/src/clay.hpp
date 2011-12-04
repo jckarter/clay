@@ -40,6 +40,9 @@ using std::ostringstream;
 #ifdef _MSC_VER
 #define strtoll _strtoi64
 #define strtoull _strtoui64
+#define CLAY_ALIGN(n) __declspec(align(n))
+#else
+#define CLAY_ALIGN(n) __attribute__((aligned(n)))
 #endif
 
 #define CLAY_LANGUAGE_VERSION "0.1-WIP"
@@ -53,6 +56,22 @@ typedef long long ptrdiff64_t;
 
 typedef unsigned size32_t;
 typedef unsigned long long size64_t;
+
+
+//
+// fake int128 type
+// XXX use real int128 on MSVC, clang, and gcc >= 4.6
+//
+
+struct int128_holder {
+    ptrdiff64_t lowValue;
+    ptrdiff64_t highPad; // not used in static math
+} CLAY_ALIGN(16);
+
+struct uint128_holder {
+    size64_t lowValue;
+    size64_t highPad; // not used in static math
+} CLAY_ALIGN(16);
 
 
 //
@@ -1485,6 +1504,9 @@ struct TopLevelItem : public ANode {
 };
 
 struct Record : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
 
@@ -1496,12 +1518,21 @@ struct Record : public TopLevelItem {
     Record(Visibility visibility)
         : TopLevelItem(RECORD, visibility),
           builtinOverloadInitialized(false) {}
+    Record(Visibility visibility,
+           const vector<PatternVar> &patternVars, ExprPtr predicate)
+        : TopLevelItem(RECORD, visibility),
+          patternVars(patternVars),
+          predicate(predicate),
+          builtinOverloadInitialized(false) {}
     Record(IdentifierPtr name,
            Visibility visibility,
+           const vector<PatternVar> &patternVars,
+           ExprPtr predicate,
            const vector<IdentifierPtr> &params,
            IdentifierPtr varParam,
            RecordBodyPtr body)
         : TopLevelItem(RECORD, name, visibility),
+          patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), body(body),
           builtinOverloadInitialized(false) {}
 };
@@ -1524,8 +1555,12 @@ struct RecordField : public ANode {
 };
 
 struct Variant : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
+
     ExprListPtr defaultInstances;
 
     vector<InstancePtr> instances;
@@ -1534,10 +1569,13 @@ struct Variant : public TopLevelItem {
 
     Variant(IdentifierPtr name,
             Visibility visibility,
+            const vector<PatternVar> &patternVars,
+            ExprPtr predicate,
             const vector<IdentifierPtr> &params,
             IdentifierPtr varParam,
             ExprListPtr defaultInstances)
         : TopLevelItem(VARIANT, name, visibility),
+          patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
           defaultInstances(defaultInstances) {}
 };
@@ -1594,13 +1632,21 @@ struct Procedure : public TopLevelItem {
 };
 
 struct Enumeration : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+
     vector<EnumMemberPtr> members;
     TypePtr type;
-    Enumeration(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(ENUMERATION, name, visibility) {}
     Enumeration(IdentifierPtr name, Visibility visibility,
+        const vector<PatternVar> &patternVars, ExprPtr predicate)
+        : TopLevelItem(ENUMERATION, name, visibility),
+          patternVars(patternVars), predicate(predicate) {}
+    Enumeration(IdentifierPtr name, Visibility visibility,
+                const vector<PatternVar> &patternVars, ExprPtr predicate,
                 const vector<EnumMemberPtr> &members)
-        : TopLevelItem(ENUMERATION, name, visibility), members(members) {}
+        : TopLevelItem(ENUMERATION, name, visibility),
+          patternVars(patternVars), predicate(predicate),
+          members(members) {}
 };
 
 struct EnumMember : public ANode {
@@ -1612,6 +1658,9 @@ struct EnumMember : public ANode {
 };
 
 struct GlobalVariable : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     ExprPtr expr;
@@ -1620,10 +1669,13 @@ struct GlobalVariable : public TopLevelItem {
 
     GlobalVariable(IdentifierPtr name,
                    Visibility visibility,
+                   const vector<PatternVar> &patternVars,
+                   ExprPtr predicate,
                    const vector<IdentifierPtr> &params,
                    IdentifierPtr varParam,
                    ExprPtr expr)
         : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
+          patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), expr(expr) {}
     bool hasParams() const {
         return !params.empty() || (varParam.ptr() != NULL);
@@ -1739,16 +1791,22 @@ struct EvalTopLevel : public TopLevelItem {
 //
 
 struct GlobalAlias : public TopLevelItem {
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     ExprPtr expr;
 
     GlobalAlias(IdentifierPtr name,
                 Visibility visibility,
+                const vector<PatternVar> &patternVars,
+                ExprPtr predicate,
                 const vector<IdentifierPtr> &params,
                 IdentifierPtr varParam,
                 ExprPtr expr)
         : TopLevelItem(GLOBAL_ALIAS, name, visibility),
+          patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), expr(expr) {}
     bool hasParams() const {
         return !params.empty() || (varParam.ptr() != NULL);
