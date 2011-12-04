@@ -793,6 +793,9 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
+        assert(y->type->typeKind == ENUM_TYPE);
+        initializeEnumType((EnumType*)y->type.ptr());
+
         PValuePtr pv = new PValue(y->type, true);
         return new MultiPValue(pv);
     }
@@ -2662,6 +2665,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_intToEnum : {
         ensureArity(args, 2);
         TypePtr t = valueToEnumerationType(args, 0);
+        initializeEnumType((EnumType*)t.ptr());
         return new MultiPValue(new PValue(t, true));
     }
 

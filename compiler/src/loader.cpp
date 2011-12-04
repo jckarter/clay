@@ -223,14 +223,14 @@ static void installGlobals(ModulePtr m) {
         x->env = m->env;
         switch (x->objKind) {
         case ENUMERATION : {
-            Enumeration *y = (Enumeration *)x;
-            TypePtr t = enumType(y);
-            addGlobal(m, y->name, y->visibility, t.ptr());
-            for (unsigned i = 0 ; i < y->members.size(); ++i) {
-                EnumMember *z = y->members[i].ptr();
-                z->index = (int)i;
-                z->type = t;
-                addGlobal(m, z->name, y->visibility, z);
+            Enumeration *enumer = (Enumeration *)x;
+            TypePtr t = enumType(enumer);
+            addGlobal(m, enumer->name, enumer->visibility, t.ptr());
+            for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+                EnumMember *member = enumer->members[i].ptr();
+                member->index = (int)i;
+                member->type = t;
+                addGlobal(m, member->name, enumer->visibility, member);
             }
             break;
         }

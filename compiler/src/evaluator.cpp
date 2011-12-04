@@ -318,6 +318,19 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
     return (*(char *)vh->buf) != 0;
 }
 
+void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
+    ExprPtr predicate, EnvPtr env)
+{
+    for (unsigned i = 0; i < patternVars.size(); ++i) {
+        if (lookupEnv(env, patternVars[i].name) == NULL)
+            error(patternVars[i].name, "unbound pattern variable");
+    }
+    if (predicate != NULL) {
+        if (!evaluateBool(predicate, env))
+            error(predicate, "definition predicate failed");
+    }
+}
+
 ValueHolderPtr intToValueHolder(int x)
 {
     ValueHolderPtr v = new ValueHolder(cIntType);
@@ -1176,6 +1189,8 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == y->type);
+        assert(out0->type->typeKind == ENUM_TYPE);
+        initializeEnumType((EnumType*)out0->type.ptr());
         *((int *)out0->addr) = y->index;
         break;
     }
@@ -2567,6 +2582,7 @@ static EnumTypePtr valueToEnumType(MultiEValuePtr args, unsigned index)
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
         argumentTypeError(index, "enum type", t);
+    initializeEnumType((EnumType*)t.ptr());
     return (EnumType *)t.ptr();
 }
 

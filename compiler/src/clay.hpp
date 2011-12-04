@@ -1687,6 +1687,7 @@ struct GlobalVariable : public TopLevelItem {
         : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), expr(expr) {}
+
     bool hasParams() const {
         return !params.empty() || (varParam.ptr() != NULL);
     }
@@ -2077,6 +2078,7 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name);
 
 void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
+ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name);
 ModulePtr safeLookupModule(EnvPtr env);
 
@@ -2480,8 +2482,10 @@ struct StaticType : public Type {
 
 struct EnumType : public Type {
     EnumerationPtr enumeration;
+    bool initialized;
+
     EnumType(EnumerationPtr enumeration)
-        : Type(ENUM_TYPE), enumeration(enumeration) {}
+        : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
 };
 
 
@@ -2545,6 +2549,8 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
+
+void initializeEnumType(EnumTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *complexTypeLayout(ComplexType *t);
@@ -3072,6 +3078,8 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
+void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
+    ExprPtr expr, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);
 ValueHolderPtr sizeTToValueHolder(size_t x);

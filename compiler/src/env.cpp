@@ -268,7 +268,7 @@ void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value) {
     env->entries[name->str] = value;
 }
 
-ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
+ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
     MapIter i = env->entries.find(name->str);
     if (i != env->entries.end())
         return i->second;
@@ -276,13 +276,11 @@ ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
         switch (env->parent->objKind) {
         case ENV : {
             Env *y = (Env *)env->parent.ptr();
-            return safeLookupEnv(y, name);
+            return lookupEnv(y, name);
         }
         case MODULE : {
             Module *y = (Module *)env->parent.ptr();
             ObjectPtr z = lookupPrivate(y, name);
-            if (!z)
-                error(name, "undefined name: " + name->str);
             return z;
         }
         default :
@@ -290,10 +288,15 @@ ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
             return NULL;
         }
     }
-    else {
-        error(name, "undefined name: " + name->str);
+    else
         return NULL;
-    }
+}
+
+ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
+    ObjectPtr obj = lookupEnv(env, name);
+    if (obj == NULL)
+        error(name, "undefined name: " + name->str);
+    return obj;
 }
 
 ModulePtr safeLookupModule(EnvPtr env) {

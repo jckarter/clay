@@ -1244,6 +1244,8 @@ void codegenStaticObject(ObjectPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == y->type);
+        assert(out0->type->typeKind == ENUM_TYPE);
+        initializeEnumType((EnumType*)out0->type.ptr());
         llvm::Value *llv = llvm::ConstantInt::getSigned(
             llvmType(y->type), y->index);
         ctx->builder->CreateStore(llv, out0->llValue);
@@ -4004,6 +4006,7 @@ static EnumTypePtr valueToEnumType(MultiCValuePtr args, unsigned index)
     TypePtr t = valueToType(args, index);
     if (t->typeKind != ENUM_TYPE)
         argumentTypeError(index, "enum type", t);
+    initializeEnumType((EnumType*)t.ptr());
     return (EnumType *)t.ptr();
 }
 

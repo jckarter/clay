@@ -339,6 +339,17 @@ TypePtr staticType(ObjectPtr obj)
     return t.ptr();
 }
 
+void initializeEnumType(EnumTypePtr t) {
+    if (t->initialized)
+        return;
+
+    CompileContextPusher pusher(t.ptr());
+
+    EnvPtr env = new Env(t->enumeration->env);
+    evaluateToplevelPredicate(t->enumeration->patternVars, t->enumeration->predicate, env);
+    t->initialized = true;
+}
+
 TypePtr enumType(EnumerationPtr enumeration)
 {
     if (!enumeration->type)
@@ -556,6 +567,8 @@ static void setProperties(TypePtr type, const vector<TypePtr> &props) {
 }
 
 void initializeRecordFields(RecordTypePtr t) {
+    CompileContextPusher pusher(t.ptr());
+
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
     RecordPtr r = t->record;
@@ -572,6 +585,9 @@ void initializeRecordFields(RecordTypePtr t) {
             rest->add(t->params[i]);
         addLocal(env, r->varParam, rest.ptr());
     }
+
+    evaluateToplevelPredicate(r->patternVars, r->predicate, env);
+
     RecordBodyPtr body = r->body;
     if (body->isComputed) {
         LocationContext loc(body->location);
@@ -666,6 +682,8 @@ static RecordPtr getVariantReprRecord() {
 static void initializeVariantType(VariantTypePtr t) {
     assert(!t->initialized);
 
+    CompileContextPusher pusher(t.ptr());
+
     EnvPtr variantEnv = new Env(t->variant->env);
     {
         const vector<IdentifierPtr> &params = t->variant->params;
@@ -683,6 +701,11 @@ static void initializeVariantType(VariantTypePtr t) {
             assert(params.size() == t->params.size());
         }
     }
+
+    evaluateToplevelPredicate(t->variant->patternVars,
+        t->variant->predicate,
+        variantEnv);
+
     ExprListPtr defaultInstances = t->variant->defaultInstances;
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 

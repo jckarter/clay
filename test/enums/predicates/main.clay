@@ -1,6 +1,12 @@
+private Ok?() = true;
+
+[| Ok?()]
+enum Touchable (FOO);
+
 [| false]
-enum Untouchable (FOO);
+enum Untouchable (BAR);
 
 main() {
     println(FOO);
+    println(BAR);
 }
