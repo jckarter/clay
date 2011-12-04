@@ -531,16 +531,16 @@ static ExprPtr convertStaticObjectToExpr(TypePtr t) {
 
 static void setProperty(TypePtr type, TypePtr propType) {
     if (propType->typeKind != TUPLE_TYPE)
-        error("each property should be a tuple (procedure, ... static values)");
+        error("each property should be a tuple [procedure, ... static values]");
     TupleTypePtr tt = (TupleType *)propType.ptr();
     if (tt->elementTypes.size() < 1)
-        error("each property should be a tuple (procedure, ... static values)");
+        error("each property should be a tuple [procedure, ... static values]");
     TypePtr t0 = tt->elementTypes[0];
     if (t0->typeKind != STATIC_TYPE)
-        error("each property should be a tuple (procedure, ... static values)");
+        error("each property should be a tuple [procedure, ... static values]");
     StaticTypePtr st0 = (StaticType *)t0.ptr();
     if (st0->obj->objKind != PROCEDURE)
-        error("each property should be a tuple (procedure, ... static values)");
+        error("each property should be a tuple [procedure, ... static values]");
     ProcedurePtr proc = (Procedure *)st0->obj.ptr();
     vector<ExprPtr> exprs;
     for (unsigned i = 1; i < tt->elementTypes.size(); ++i) {
