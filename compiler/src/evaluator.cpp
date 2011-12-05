@@ -2788,6 +2788,7 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
             case 16 : T<short>().eval(a, b, out); break;
             case 32 : T<int>().eval(a, b, out); break;
             case 64 : T<long long>().eval(a, b, out); break;
+            case 128 : T<clay_int128>().eval(a, b, out); break;
             default : assert(false);
             }
         }
@@ -2797,6 +2798,7 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
             case 16 : T<unsigned short>().eval(a, b, out); break;
             case 32 : T<unsigned int>().eval(a, b, out); break;
             case 64 : T<unsigned long long>().eval(a, b, out); break;
+            case 128 : T<clay_uint128>().eval(a, b, out); break;
             default : assert(false);
             }
         }
@@ -2895,6 +2897,7 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
             case 16 : T<short>().eval(a, out); break;
             case 32 : T<int>().eval(a, out); break;
             case 64 : T<long long>().eval(a, out); break;
+            case 128 : T<clay_int128>().eval(a, out); break;
             default : assert(false);
             }
         }
@@ -2904,6 +2907,7 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
             case 16 : T<unsigned short>().eval(a, out); break;
             case 32 : T<unsigned int>().eval(a, out); break;
             case 64 : T<unsigned long long>().eval(a, out); break;
+            case 128 : T<clay_uint128>().eval(a, out); break;
             default : assert(false);
             }
         }
@@ -2961,6 +2965,7 @@ static void binaryIntegerOp(EValuePtr a, EValuePtr b, EValuePtr out)
         case 16 : T<short>().eval(a, b, out); break;
         case 32 : T<int>().eval(a, b, out); break;
         case 64 : T<long long>().eval(a, b, out); break;
+        case 128 : T<clay_int128>().eval(a, b, out); break;
         default : assert(false);
         }
     }
@@ -2970,6 +2975,7 @@ static void binaryIntegerOp(EValuePtr a, EValuePtr b, EValuePtr out)
         case 16 : T<unsigned short>().eval(a, b, out); break;
         case 32 : T<unsigned int>().eval(a, b, out); break;
         case 64 : T<unsigned long long>().eval(a, b, out); break;
+        case 128 : T<clay_uint128>().eval(a, b, out); break;
         default : assert(false);
         }
     }
@@ -3034,6 +3040,7 @@ static void unaryIntegerOp(EValuePtr a, EValuePtr out)
         case 16 : T<short>().eval(a, out); break;
         case 32 : T<int>().eval(a, out); break;
         case 64 : T<long long>().eval(a, out); break;
+        case 128 : T<clay_int128>().eval(a, out); break;
         default : assert(false);
         }
     }
@@ -3043,6 +3050,7 @@ static void unaryIntegerOp(EValuePtr a, EValuePtr out)
         case 16 : T<unsigned short>().eval(a, out); break;
         case 32 : T<unsigned int>().eval(a, out); break;
         case 64 : T<unsigned long long>().eval(a, out); break;
+        case 128 : T<clay_uint128>().eval(a, out); break;
         default : assert(false);
         }
     }
@@ -3081,6 +3089,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
             case 16 : op_numericConvert3<D,short>(dest, src); break;
             case 32 : op_numericConvert3<D,int>(dest, src); break;
             case 64 : op_numericConvert3<D,long long>(dest, src); break;
+            case 128 : op_numericConvert3<D,clay_int128>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3089,8 +3098,8 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
             case 8 : op_numericConvert3<D,unsigned char>(dest, src); break;
             case 16 : op_numericConvert3<D,unsigned short>(dest, src); break;
             case 32 : op_numericConvert3<D,unsigned int>(dest, src); break;
-            case 64 :
-                op_numericConvert3<D,unsigned long long>(dest, src); break;
+            case 64 : op_numericConvert3<D,unsigned long long>(dest, src); break;
+            case 128 : op_numericConvert3<D,clay_uint128>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3122,6 +3131,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
             case 16 : op_numericConvert2<short>(dest, src); break;
             case 32 : op_numericConvert2<int>(dest, src); break;
             case 64 : op_numericConvert2<long long>(dest, src); break;
+            case 128 : op_numericConvert2<clay_int128>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3131,6 +3141,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
             case 16 : op_numericConvert2<unsigned short>(dest, src); break;
             case 32 : op_numericConvert2<unsigned int>(dest, src); break;
             case 64 : op_numericConvert2<unsigned long long>(dest, src); break;
+            case 128 : op_numericConvert2<clay_uint128>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3173,6 +3184,7 @@ static ptrdiff_t op_intToPtrInt(EValuePtr a)
         case 16 : return op_intToPtrInt2<short>(a);
         case 32 : return op_intToPtrInt2<int>(a);
         case 64 : return op_intToPtrInt2<long long>(a);
+        case 128 : return op_intToPtrInt2<clay_int128>(a);
         default : assert(false);
         }
     }
@@ -3182,6 +3194,7 @@ static ptrdiff_t op_intToPtrInt(EValuePtr a)
         case 16 : return op_intToPtrInt2<unsigned short>(a);
         case 32 : return op_intToPtrInt2<unsigned int>(a);
         case 64 : return op_intToPtrInt2<unsigned long long>(a);
+        case 128 : return op_intToPtrInt2<clay_uint128>(a);
         default : assert(false);
         }
     }
@@ -3210,6 +3223,7 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
         case 16 : op_pointerToInt2<short>(dest, ptr); break;
         case 32 : op_pointerToInt2<int>(dest, ptr); break;
         case 64 : op_pointerToInt2<long long>(dest, ptr); break;
+        case 128 : op_pointerToInt2<clay_int128>(dest, ptr); break;
         default : assert(false);
         }
     }
@@ -3219,6 +3233,7 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
         case 16 : op_pointerToInt2<unsigned short>(dest, ptr); break;
         case 32 : op_pointerToInt2<unsigned int>(dest, ptr); break;
         case 64 : op_pointerToInt2<unsigned long long>(dest, ptr); break;
+        case 128 : op_pointerToInt2<clay_uint128>(dest, ptr); break;
         default : assert(false);
         }
     }
