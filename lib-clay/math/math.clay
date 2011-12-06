@@ -1,6 +1,9 @@
 
 import libc;
+
+//Import native Clay functions
 public import math.native.gamma.*;
+public import math.native.beta.*;
 
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
