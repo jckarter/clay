@@ -5,6 +5,7 @@ import libc;
 public import math.native.gamma.*;
 public import math.native.beta.*;
 public import math.native.erf.*;
+public import math.native.cbrt.*;
 
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
@@ -70,7 +71,6 @@ define exp2;
 define expm1;
 define log2;
 define sqrt;
-define cbrt;
 define ceil;
 define floor;
 define significand;
@@ -111,12 +111,16 @@ define llround;
 define proj;
 define arg;
 
-
-overload abs(x:Int) = libc.abs(x);
-overload abs(x:Long) = libc.llabs(x);
-overload abs(x:Float) = libc.fabsf(x);
-overload abs(x:Double) = libc.fabs(x);
-overload abs(x:LongDouble) = libc.fabsl(x);
+[T | Numeric?(T) or Integer?(T)]
+inline overload abs(x:T) = if(x >= T(0)) x else -x;
+[U | Complex?(U)]
+inline overload abs(x:U) = hypot(real(x),imag(x));
+[T | Numeric?(T)]
+inline overload floor(x:T) = Int(x + (T(1) - Int(x))) - (T(1) - Int(x));
+[T | Numeric?(T)]
+inline overload ceil(x) = (T(2) + Int(x)) - Int((T(2) + Int(x)) - x);
+[T | Numeric?(T)]
+inline overload round(x) = if(x >= 0) Int(x + T(0.5)) else -(Int(T(0.5) - x));
 
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);
@@ -247,18 +251,6 @@ overload log2(x:LongDouble) = libc.log2l(x);
 overload sqrt(x:Double) = libc.sqrt(x);
 overload sqrt(x:Float) = libc.sqrtf(x);
 overload sqrt(x:LongDouble) = libc.sqrtl(x);
-
-overload cbrt(x:Double) = libc.cbrt(x);
-overload cbrt(x:Float) = libc.cbrtf(x);
-overload cbrt(x:LongDouble) = libc.cbrtl(x);
-
-overload ceil(x:Double) = libc.ceil(x);
-overload ceil(x:Float) = libc.ceilf(x);
-overload ceil(x:LongDouble) = libc.ceill(x);
-
-overload floor(x:Double) = libc.floor(x);
-overload floor(x:Float) = libc.floorf(x);
-overload floor(x:LongDouble) = libc.floorl(x);
 
 overload significand(x:Double) = libc.significand(x);
 overload significand(x:Float) = libc.significandf(x);
@@ -414,10 +406,6 @@ overload nearbyint(x:Double) = libc.nearbyint(x);
 overload nearbyint(x:Float) = libc.nearbyintf(x);
 overload nearbyint(x:LongDouble) = libc.nearbyintl(x);
 
-overload round(x:Double) = libc.round(x);
-overload round(x:Float) = libc.roundf(x);
-overload round(x:LongDouble) = libc.roundl(x);
-
 overload trunc(x:Double) = libc.trunc(x);
 overload trunc(x:Float) = libc.truncf(x);
 overload trunc(x:LongDouble) = libc.truncl(x);
@@ -504,11 +492,6 @@ overload llrint(x:LongDouble) = libc.llrintl(x);
 overload llround(x:Double) = libc.llround(x);
 overload llround(x:Float) = libc.llroundf(x);
 overload llround(x:LongDouble) = libc.llroundl(x);
-
-
-inline overload abs(z:Complex64) = libc.cabs(z);
-inline overload abs(z:Complex32) = libc.cabsf(z);
-inline overload abs(z:Complex80) = libc.cabsl(z);
 
 inline overload arg(z:Complex64) = libc.carg(z);
 inline overload arg(z:Complex32) = libc.cargf(z);
