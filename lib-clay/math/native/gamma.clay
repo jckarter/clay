@@ -10,8 +10,8 @@ define igammac;
 public alias gamma = tgamma;
 
 maxGamma(static Float) = 35.04f;
-maxGamma(static Double) = 171.6025;
-maxGamma(static LongDouble) = 1755.5323977l;
+overload maxGamma(static Double) = 171.6025;
+overload maxGamma(static LongDouble) = 1755.5323977l;
 
 
 [T | Numeric?(T)]
@@ -310,35 +310,35 @@ overload lgamma(x:T) --> y:T {
         w = ONE - x;
     if (w < HALF) {
         var k = if(w < T(0.25)) 0 else 11;
-        y = ((((((((((la[k] * w + la[k + 1]) * w +
-            la[k + 2]) * w + la[k + 3]) * w + la[k + 4]) * w +
-            la[k + 5]) * w + la[k + 6]) * w + la[k + 7]) * w +
-            la[k + 8]) * w + la[k + 9]) * w + la[k + 10]) * w;
+        y = ((((((((((T(la[k]) * w + T(la[k + 1])) * w +
+            T(la[k + 2])) * w + T(la[k + 3])) * w + T(la[k + 4])) * w +
+            T(la[k + 5])) * w + T(la[k + 6])) * w + T(la[k + 7])) * w +
+            T(la[k + 8])) * w + T(la[k + 9])) * w + T(la[k + 10])) * w;
         y = -log(y);
     } else if (w < TFIVE) {
         var t = w - T(4.5) / (w + HALF);
         var k = Int(t + 4);
         t -= k - TFIVE;
         k *= 14;
-        y = ((((((((((((lb[k] * t + lb[k + 1]) * t +
-            lb[k + 2]) * t + lb[k + 3]) * t + lb[k + 4]) * t +
-            lb[k + 5]) * t + lb[k + 6]) * t + lb[k + 7]) * t +
-            lb[k + 8]) * t + lb[k + 9]) * t + lb[k + 10]) * t +
-            lb[k + 11]) * t + lb[k + 12]) * t + lb[k + 13];
+        y = ((((((((((((T(lb[k]) * t + T(lb[k + 1])) * t +
+            T(lb[k + 2])) * t + T(lb[k + 3])) * t + T(lb[k + 4])) * t +
+            T(lb[k + 5])) * t + T(lb[k + 6])) * t + T(lb[k + 7])) * t +
+            T(lb[k + 8])) * t + T(lb[k + 9])) * t + T(lb[k + 10])) * t +
+            T(lb[k + 11])) * t + T(lb[k + 12])) * t + T(lb[k + 13]);
     } else if (w < 8) {
         var k = Int(w) - 3;
         var t = w - (k + TFIVE);
         k *= 13;
-        y = (((((((((((lc[k] * t + lc[k + 1]) * t +
-            lc[k + 2]) * t + lc[k + 3]) * t + lc[k + 4]) * t +
-            lc[k + 5]) * t + lc[k + 6]) * t + lc[k + 7]) * t +
-            lc[k + 8]) * t + lc[k + 9]) * t + lc[k + 10]) * t +
-            lc[k + 11]) * t + lc[k + 12];
+        y = (((((((((((T(lc[k]) * t + T(lc[k + 1])) * t +
+            T(lc[k + 2])) * t + T(lc[k + 3])) * t + T(lc[k + 4])) * t +
+            T(lc[k + 5])) * t + T(lc[k + 6])) * t + T(lc[k + 7])) * t +
+            T(lc[k + 8])) * t + T(lc[k + 9])) * t + T(lc[k + 10])) * t +
+            T(lc[k + 11])) * t + T(lc[k + 12]);
     } else {
         var v = ONE / w;
         var t = v * v;
-        y = (((((ld[0] * t + ld[1]) * t + ld[2]) * t +
-            ld[3]) * t + ld[4]) * t + ld[5]) * v + ld[6];
+        y = (((((T(ld[0]) * t + T(ld[1])) * t + T(ld[2])) * t +
+            T(ld[3])) * t + T(ld[4])) * t + T(ld[5])) * v + T(ld[6]);
         y += (w - HALF) * log(w) - w;
     }
     if (x < ZERO)
