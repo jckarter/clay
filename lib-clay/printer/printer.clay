@@ -1,6 +1,9 @@
 
 import libc;
-import printer.platform.(formatForInt64, formatForUInt64);
+import printer.platform.(
+    formatForInt64, formatForUInt64,
+    formatForPartialInt128,
+);
 
 
 //
@@ -52,6 +55,31 @@ overload printTo(stream, x:Int64) {
 
 overload printTo(stream, x:UInt64) {
     printWithSprintf(stream, formatForUInt64, x);
+}
+
+overload printTo(stream, x:Int128) {
+    if (x >= Least(Int64) and x <= Greatest(Int64))
+        printTo(stream, Int64(x));
+    else {
+        var abs = UInt128(if (x < 0) -x else x);
+        var lo = UInt64(abs % 1_000_000_000_000_000_000ull);
+        var hi = x / 1_000_000_000_000_000_000ll;
+
+        printTo(stream, hi);
+        printWithSprintf(stream, formatForPartialInt128, lo);
+    }
+}
+
+overload printTo(stream, x:UInt128) {
+    if (x <= Greatest(UInt64))
+        printTo(stream, UInt64(x));
+    else {
+        var lo = UInt64(x % 1_000_000_000_000_000_000ull);
+        var hi = x / 1_000_000_000_000_000_000ull;
+
+        printTo(stream, hi);
+        printWithSprintf(stream, formatForPartialInt128, lo);
+    }
 }
 
 
@@ -265,6 +293,10 @@ overload printReprTo(stream, x:Int64) {
     printTo(stream, x, "l");
 }
 
+overload printReprTo(stream, x:Int128) {
+    printTo(stream, x, "ll");
+}
+
 overload printReprTo(stream, x:UInt8) {
     printTo(stream, x, "uss");
 }
@@ -279,6 +311,10 @@ overload printReprTo(stream, x:UInt32) {
 
 overload printReprTo(stream, x:UInt64) {
     printTo(stream, x, "ul");
+}
+
+overload printReprTo(stream, x:UInt128) {
+    printTo(stream, x, "ull");
 }
 
 overload printReprTo(stream, x:Float32) {

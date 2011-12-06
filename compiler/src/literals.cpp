@@ -202,6 +202,15 @@ ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
         vh = new ValueHolder(int64Type);
         *((long long *)vh->buf) = y;
     }
+    else if (typeSuffix(x->suffix, defaultType, "ll", int128Type)) {
+        long long y = strtoll(ptr, &end, base);
+        if (*end != 0)
+            error("invalid int128 literal");
+        if (errno == ERANGE)
+            error("int128 literal out of range");
+        vh = new ValueHolder(int128Type);
+        *((clay_int128 *)vh->buf) = y;
+    }
     else if (typeSuffix(x->suffix, defaultType, "uss", uint8Type)) {
         unsigned long y = strtoul(ptr, &end, base);
         if (*end != 0)
@@ -237,6 +246,15 @@ ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
             error("uint64 literal out of range");
         vh = new ValueHolder(uint64Type);
         *((unsigned long long *)vh->buf) = y;
+    }
+    else if (typeSuffix(x->suffix, defaultType, "ull", uint128Type)) {
+        unsigned long long y = strtoull(ptr, &end, base);
+        if (*end != 0)
+            error("invalid uint128 literal");
+        if (errno == ERANGE)
+            error("uint128 literal out of range");
+        vh = new ValueHolder(uint128Type);
+        *((clay_uint128 *)vh->buf) = y;
     }
     else if (x->suffix == "f") {
         float y = (float)clay_strtod(ptr, &end);

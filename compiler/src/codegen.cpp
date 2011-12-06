@@ -1767,6 +1767,9 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             case 64 :
                 val = _sintConstant<long long>(ev);
                 break;
+            case 128 :
+                val = _sintConstant<clay_int128>(ev);
+                break;
             default :
                 assert(false);
             }
@@ -1784,6 +1787,9 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
                 break;
             case 64 :
                 val = _uintConstant<unsigned long long>(ev);
+                break;
+            case 128 :
+                val = _uintConstant<clay_uint128>(ev);
                 break;
             default :
                 assert(false);
