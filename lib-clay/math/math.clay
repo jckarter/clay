@@ -8,6 +8,7 @@ alias M_LOG10E      = 0.43429448190325182765;	/* log_10 e */
 alias M_LN2		    = 0.69314718055994530942;	/* log_e 2 */
 alias M_LN10	    = 2.30258509299404568402;	/* log_e 10 */
 alias M_PI	        = 3.14159265358979323846;	/* pi */
+alias M_TWOPI       = 6.28318530717958647693;   /* 2*pi */
 alias M_PI_2        = 1.57079632679489661923;	/* pi/2 */
 alias M_PI_4        = 0.78539816339744830962;	/* pi/4 */
 alias M_1_PI        = 0.31830988618379067154;	/* 1/pi */
@@ -23,6 +24,7 @@ alias M_LOG10El	    = 0.4342944819032518276511289189166051_l;  /* log_10 e */
 alias M_LN2l	    = 0.6931471805599453094172321214581766_l;  /* log_e 2 */
 alias M_LN10l       = 2.3025850929940456840179914546843642_l;  /* log_e 10 */
 alias M_PIl		    = 3.1415926535897932384626433832795029_l;  /* pi */
+alias M_TWOPIl      = 6.2831853071795864769252867665590058_l;   /* 2*pi */
 alias M_PI_2l	    = 1.5707963267948966192313216916397514_l;  /* pi/2 */
 alias M_PI_4l	    = 0.7853981633974483096156608458198757_l;  /* pi/4 */
 alias M_1_PIl	    = 0.3183098861837906715377675267450287_l;  /* 1/pi */
@@ -106,7 +108,7 @@ define proj;
 define arg;
 
 
-overload abs(x:Int) = libc.libc.abs(x);
+overload abs(x:Int) = libc.abs(x);
 overload abs(x:Long) = libc.llabs(x);
 overload abs(x:Float) = libc.fabsf(x);
 overload abs(x:Double) = libc.fabs(x);
