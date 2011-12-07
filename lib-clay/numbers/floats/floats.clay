@@ -201,3 +201,7 @@ overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, 0
 exponentBias(static LongDouble) = 16383;
 overload exponentBias(static Double) = 1023;
 overload exponentBias(static Float) = 127;
+
+abs(x:LongDouble) = floatFromBits(floatBits(x).mantissa,bitand(floatBits(x).exponent,0xFFFF_FFFF_FFFF_7FFFul));
+overload abs(x:Double) = floatFromBits(bitand(floatBits(x), 0x7FFF_FFFF_FFFF_FFFFul));
+overload abs(x:Float) = floatFromBits(bitand(floatBits(x), 0x7FFF_FFFFu));

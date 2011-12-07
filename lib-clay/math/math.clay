@@ -8,6 +8,7 @@ public import math.native.erf.*;
 public import math.native.cbrt.*;
 public import math.native.lowlevel.*;
 public import math.native.bessel.*;
+public import numbers.floats.floats.(abs);
 
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
@@ -47,7 +48,6 @@ alias M_SIN_PI_8l   = 0.382683432365089771728459984030398866761344562485_l; /* s
 
 
 define pow;
-define abs;
 define acos;
 define asin;
 define atan;
@@ -110,8 +110,8 @@ define llround;
 define proj;
 define arg;
 
-[T | Numeric?(T) or Integer?(T)]
-inline overload abs(x:T) = if(x >= T(0)) x else -x;
+[I | Integer?(I)]
+inline overload abs(x:I) = if(x >= 0) x else -x;
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imag(x));
 [T | Numeric?(T)]
