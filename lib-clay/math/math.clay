@@ -7,6 +7,7 @@ public import math.native.beta.*;
 public import math.native.erf.*;
 public import math.native.cbrt.*;
 public import math.native.lowlevel.*;
+public import math.native.bessel.*;
 
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
@@ -82,8 +83,6 @@ define finite?;
 define nan?;
 define drem;
 define copysign;
-define j0;
-define j1;
 define jn;
 define y0;
 define y1;
@@ -321,14 +320,6 @@ overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 overload nan?(x:Double) = Bool(libc.isnan(x));
 overload nan?(x:Float) = Bool(libc.isnanf(x));
 overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
-
-overload j0(x:Double) = libc.j0(x);
-overload j0(x:Float) = libc.j0f(x);
-overload j0(x:LongDouble) = libc.j0l(x);
-
-overload j1(x:Double) = libc.j1(x);
-overload j1(x:Float) = libc.j1f(x);
-overload j1(x:LongDouble) = libc.j1l(x);
 
 overload jn(x:Int,y:Double) = libc.jn(x,y);
 overload jn(x:Int,y:Float) = libc.jnf(x,y);
