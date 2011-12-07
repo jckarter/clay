@@ -6,6 +6,7 @@ public import math.native.gamma.*;
 public import math.native.beta.*;
 public import math.native.erf.*;
 public import math.native.cbrt.*;
+public import math.native.lowlevel.*;
 
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
@@ -104,7 +105,6 @@ define min;
 define max;
 define fpclassify;
 define signbit;
-define fma;
 define scalb;
 define llrint;
 define llround;
@@ -470,10 +470,6 @@ overload signbit(value:Double) = libc.signbit(value);
 overload signbit(value:Float) = libc.signbitf(value);
 overload signbit(value:LongDouble) = libc.signbitl(value);
 
-overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
-overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
-overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
-
 overload scalb(x:Double,y:Double) = libc.scalb(x,y);
 overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
 overload scalb(x:LongDouble,y:LongDouble) = libc.scalbl(x,y);
@@ -483,7 +479,6 @@ overload scalb(x:Double,y:LongDouble) = libc.scalbl(LongDouble(x),y);
 overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
 overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
 overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
-
 
 overload llrint(x:Double) = libc.llrint(x);
 overload llrint(x:Float) = libc.llrintf(x);
