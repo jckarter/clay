@@ -307,7 +307,7 @@ j1(x:T) --> y:T {
             T(j1d[k + 12])) * v - T(M_PI_4l);
         y *= sin(w + theta);
     }
-    y <-- if(x < T(0) -y else y;
+    y <-- if(x < T(0)) -y else y;
 }
 
 // Bessel I_0(x) function in double precision
@@ -572,13 +572,13 @@ i1(x:T) --> y:T {
             T(i1b[k + 11])) * t + T(i1b[k + 12])) * t + T(i1b[k + 13]);
     } else {
         var t = T(60) / w;
-        var = 9 * Int(t);
+        var k = 9 * Int(t);
         y = ((((((((T(i1c[k]) * t + T(i1c[k + 1])) * t +
             T(i1c[k + 2])) * t + T(i1c[k + 3])) * t + T(i1c[k + 4])) * t +
             T(i1c[k + 5])) * t + T(i1c[k + 6])) * t + T(i1c[k + 7])) * t +
             T(i1c[k + 8])) * sqrt(t) * exp(w);
     }
-    y <-- if(x < T(0) -y else y;
+    y <-- if(x < T(0)) -y else y;
 }
 
 
