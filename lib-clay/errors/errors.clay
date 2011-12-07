@@ -40,33 +40,37 @@ overload error(..e) {
 // assert
 //
 
-define AssertionEnabled?;
-overload AssertionEnabled?() = not Flag?(#"clay.DisableAssertions");
-overload AssertionEnabled?(tag) = AssertionEnabled?()
-    and not Flag?(IdentifierConcat(#"clay.DisableAssertions.", tag));
+AllAssertionsEnabled?() = not Flag?(#"clay.DisableAssertions");
+AssertionEnabled?(tag) = not Flag?(IdentifierConcat(#"clay.DisableAssertions.", tag));
 
-alias assert(..whatever) {}
+[..tags | allValues?(Identifier?, ..tags)]
+record assert[..tags] ();
 
-[| AssertionEnabled?()]
+[..tags]
+alias overload assert[..tags](..whatever) {}
+
+alias overload assert(..whatever) {}
+
+[| AllAssertionsEnabled?()]
 alias overload assert(cond:Bool, ..message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
-[tag | AssertionEnabled?(tag)]
-alias overload assert(static tag, cond:Bool, ..message) {
+[..tags | AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+alias overload assert[..tags](cond:Bool, ..message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
-[| AssertionEnabled?()]
+[| AllAssertionsEnabled?()]
 alias overload assert(cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
 
-[tag | AssertionEnabled?(tag)]
-alias overload assert(static tag, cond:Bool) {
+[..tags | AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+alias overload assert[..tags](cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
