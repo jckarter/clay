@@ -117,9 +117,9 @@ inline overload abs(x:U) = hypot(real(x),imag(x));
 [T | Numeric?(T)]
 inline overload floor(x:T) = Long(x + (T(1) - Long(x))) - (T(1) - Long(x));
 [T | Numeric?(T)]
-inline overload ceil(x) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
+inline overload ceil(x:T) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
 [T | Numeric?(T)]
-inline overload round(x) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
+inline overload round(x:T) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
 
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);
