@@ -141,13 +141,13 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
 }
 
 
-record UInt64x2 (exponent:UInt64,mantissa:UInt64);
+record UInt64x2 (mantissa:UInt64,exponent:UInt64);
 
 floatBits(f:LongDouble) = bitcast(f, UInt64x2);
 overload floatBits(f:Double) = bitcast(f, UInt64);
 overload floatBits(f:Float) = bitcast(f, UInt32);
 
-floatFromBits(e:UInt64,m:UInt64) = bitcast(UInt64x2(e,m), LongDouble);
+floatFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), LongDouble);
 overload floatFromBits(b:UInt64) = bitcast(b, Double);
 overload floatFromBits(b:UInt32) = bitcast(b, Float);
 
