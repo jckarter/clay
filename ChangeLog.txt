@@ -352,12 +352,15 @@ Library changes:
   library.
 
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
-  Assertions can also be given a static string tag as their first parameter,
+  assert[] can also be parameterized with one or more static string tags,
   to be selectively disabled with '-Dclay.DisableAssertions.<tag>'.
 
     assert(false); // disable with -Dclay.DisableAssertions
-    assert(#foo, false); // disable with -Dclay.DisableAssertions
+    assert[#foo](false); // disable with -Dclay.DisableAssertions
                          // or -Dclay.DisableAssertions.foo
+    assert[#foo,#bar](false); // disable with -Dclay.DisableAssertions
+                              // or -Dclay.DisableAssertions.foo
+                              // or -Dclay.DisableAssertions.bar
 
 Compiler frontend changes:
 --------------------------
