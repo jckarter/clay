@@ -15,4 +15,9 @@ main() {
     println(1ull);
     println(12_345_678_901_234_567_890ull * 100ull);
     println(10_000_000_000_000_000_002ull * 100ull);
+
+    println(Least(Int128));
+    println(Greatest(Int128));
+    println(Least(UInt128));
+    println(Greatest(UInt128));
 }
