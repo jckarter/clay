@@ -1812,6 +1812,12 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
             val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
             break;
+        case 128 :
+            //use APfloat to get a 128bit value -> should int128 be used here?
+            bits[0] = *(uint64_t*)ev->addr;
+            bits[1] = *(uint64_t*)(ev->addr + 1);
+            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(128, 2, bits)));
+            break;
         default :
             assert(false);
         }

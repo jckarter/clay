@@ -303,10 +303,12 @@ var uint64Type = Type(IntegerTag(false, 64));
 var float32Type = Type(FloatTag(32));
 var float64Type = Type(FloatTag(64));
 var float80Type = Type(FloatTag(80));
+var float128Type = Type(FloatTag(128));
 
 var complex32Type = Type(ComplexTag(32));
 var complex64Type = Type(ComplexTag(64));
 var complex80Type = Type(ComplexTag(80));
+var complex128Type = Type(ComplexTag(128));
 
 
 
