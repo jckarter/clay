@@ -126,6 +126,13 @@ inline overload Greatest(static Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_l;
 inline overload Least(static UInt64) : UInt64 = 0_ul;
 inline overload Greatest(static UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_ul;
 
+inline overload Least(static Int128) : Int128 = bitshl(1_ll, 127);
+inline overload Greatest(static Int128) : Int128
+    = numericSubtract(Least(Int128), 1ll);
+
+inline overload Least(static UInt128) : UInt128 = 0_ull;
+inline overload Greatest(static UInt128) : UInt128 = numericSubtract(0_ull, 1_ull);
+
 
 //
 // float limits
