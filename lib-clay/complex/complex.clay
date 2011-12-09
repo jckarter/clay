@@ -177,6 +177,7 @@ inline overload divide(z:C, y:T) {
 [T,C | Float?(T) and Complex?(C)]
 inline overload divide(y:T,z:C) = divide(Complex(y,T(0)),z);
 
+
 [S | String?(S)]
 inline overload Complex32(s:S) = parseComplex32(s);
 
