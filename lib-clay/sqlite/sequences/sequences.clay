@@ -105,7 +105,8 @@ private indexFromBuffer(buffer: SqliteStatementBuffer[T,n], i: I)
 private offsetForIndex(n, i) = (i / n) * n;
 
 [T,n]
-private inBuffer?(buffer: SqliteStatementBuffer[T,n], i) = i - buffer.offset < n;
+private inBuffer?(buffer: SqliteStatementBuffer[T,n], i)
+    = i >= buffer.offset and i < buffer.offset + n;
 
 [T,n,I | Integer?(I)]
 overload index(seq: SqliteStatementSequence[T,n], i: I) {

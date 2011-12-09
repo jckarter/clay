@@ -8,7 +8,6 @@ alias staticTest(n, expr) {
 }
 
 main() {
-    staticTest( 1, SizeT(-1) + SizeT(-1));
     staticTest( 2, SizeT(128) + SizeT(128));
     staticTest( 3, SizeT(128) * SizeT(128));
     staticTest( 4, staticIndex([1, 2.0, 3u], static 0));

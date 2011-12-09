@@ -61,12 +61,12 @@ overload printTo(stream, x:Int128) {
     if (x >= Least(Int64) and x <= Greatest(Int64))
         printTo(stream, Int64(x));
     else {
-        var abs = UInt128(if (x < 0) -x else x);
-        var lo = UInt64(abs % 1_000_000_000_000_000_000ull);
+        var lo = Int64(x % 1_000_000_000_000_000_000ll);
+        var loabs = UInt64(if (lo < 0) -lo else lo);
         var hi = x / 1_000_000_000_000_000_000ll;
 
         printTo(stream, hi);
-        printWithSprintf(stream, formatForPartialInt128, lo);
+        printWithSprintf(stream, formatForPartialInt128, loabs);
     }
 }
 
