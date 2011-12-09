@@ -2811,7 +2811,6 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         case 32 : T<float>().eval(a, b, out); break;
         case 64 : T<double>().eval(a, b, out); break;
         case 80 : T<long double>().eval(a, b, out); break;
-        case 128 : T<__float128>().eval(a, b, out); break;
         default : assert(false);
         }
         break;
@@ -2938,7 +2937,6 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
         case 32 : T<float>().eval(a, out); break;
         case 64 : T<double>().eval(a, out); break;
         case 80 : T<long double>().eval(a, out); break;
-        case 128 : T<__float128>().eval(a, out); break;
         default : assert(false);
         }
         break;
@@ -3229,7 +3227,6 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         case 32 : op_numericConvert3<D,float,CHECK>::perform(dest, src); break;
         case 64 : op_numericConvert3<D,double,CHECK>::perform(dest, src); break;
         case 80 : op_numericConvert3<D,long double,CHECK>::perform(dest, src); break;
-        case 128 : op_numericConvert3<D, __float128,CHECK>::perform(dest, src); break;
         default : assert(false);
         }
         break;
@@ -3273,7 +3270,6 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         case 32 : op_numericConvert2<float,false>(dest, src); break;
         case 64 : op_numericConvert2<double,false>(dest, src); break;
         case 80 : op_numericConvert2<long double,false>(dest, src); break;
-        case 128 : op_numericConvert2<__float128,false>(dest, src); break;
         default : assert(false);
         }
         break;
