@@ -63,10 +63,12 @@ typedef unsigned long long size64_t;
 //
 
 #if (defined(_MSC_VER) && defined(_M_X64)) \
-    || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))) \
-    || (defined(__clang__))
+    || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
+#elif (defined(__clang__))
+typedef __int128_t clay_int128;
+typedef __uint128_t clay_uint128;
 #else
 // fake it by doing 64-bit math in a 128-bit padded container
 struct uint128_holder;
@@ -173,6 +175,13 @@ inline int128_holder::int128_holder(uint128_holder y)
 typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
 #endif
+
+inline std::ostream &operator<<(std::ostream &os, clay_int128 x) {
+    return os << ptrdiff64_t(x);
+}
+inline std::ostream &operator<<(std::ostream &os, clay_uint128 x) {
+    return os << size64_t(x);
+}
 
 
 //
@@ -1238,7 +1247,6 @@ enum StatementKind {
     RETURN,
     IF,
     SWITCH,
-    CASE_BODY,
     EXPR_STATEMENT,
     WHILE,
     BREAK,

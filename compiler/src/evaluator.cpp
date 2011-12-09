@@ -3226,10 +3226,10 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)src->type.ptr();
         switch (t->bits) {
-        case 32 : op_numericConvert3<D,float,CHECK>(dest, src); break;
-        case 64 : op_numericConvert3<D,double,CHECK>(dest, src); break;
-        case 80 : op_numericConvert3<D,long double,CHECK>(dest, src); break;
-        case 128 : op_numericConvert3<D, __float128,CHECK>(dest, src); break;
+        case 32 : op_numericConvert3<D,float,CHECK>::perform(dest, src); break;
+        case 64 : op_numericConvert3<D,double,CHECK>::perform(dest, src); break;
+        case 80 : op_numericConvert3<D,long double,CHECK>::perform(dest, src); break;
+        case 128 : op_numericConvert3<D, __float128,CHECK>::perform(dest, src); break;
         default : assert(false);
         }
         break;

@@ -406,6 +406,9 @@ ExprPtr lookupCallByNameExprHead(EnvPtr env)
         }
         }
     }
+
+    assert(false);
+    return NULL;
 }
 
 

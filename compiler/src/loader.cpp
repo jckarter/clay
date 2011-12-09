@@ -75,7 +75,7 @@ static std::string getPtrSize(const llvm::TargetData *targetData) {
     switch (targetData->getPointerSizeInBits()) {
     case 32 : return "32";
     case 64 : return "64";
-    default : assert(false);
+    default : assert(false); return "";
     }
 }
 

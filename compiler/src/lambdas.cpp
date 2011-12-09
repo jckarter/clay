@@ -644,6 +644,10 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case FOREIGN_EXPR :
     case OBJECT_EXPR :
+    case FILE_EXPR :
+    case LINE_EXPR :
+    case COLUMN_EXPR :
+    case ARG_EXPR :
         break;
     }
 }
