@@ -76,30 +76,32 @@ struct int128_holder {
     ptrdiff64_t highPad; // not used in static math
 
     int128_holder() {}
-    int128_holder(ptrdiff64_t low) : lowValue(low), highPad(low < 0 ? -1 : 0) {}
-    int128_holder(uint128_holder y);
+    explicit int128_holder(ptrdiff64_t low) : lowValue(low), highPad(low < 0 ? -1 : 0) {}
+    int128_holder(ptrdiff64_t low, ptrdiff64_t high)
+        : lowValue(low), highPad(high) {}
+    explicit int128_holder(uint128_holder y);
 
     int128_holder &operator=(ptrdiff64_t low) {
         new ((void*)this) int128_holder(low);
         return *this;
     }
 
-    int128_holder operator-() const { return -lowValue; }
-    int128_holder operator~() const { return ~lowValue; }
+    int128_holder operator-() const { return int128_holder(-lowValue); }
+    int128_holder operator~() const { return int128_holder(~lowValue); }
 
     bool operator==(int128_holder y) const { return lowValue == y.lowValue; }
     bool operator< (int128_holder y) const { return lowValue <  y.lowValue; }
 
-    int128_holder operator+ (int128_holder y) const { return lowValue +  y.lowValue; }
-    int128_holder operator- (int128_holder y) const { return lowValue -  y.lowValue; }
-    int128_holder operator* (int128_holder y) const { return lowValue *  y.lowValue; }
-    int128_holder operator/ (int128_holder y) const { return lowValue /  y.lowValue; }
-    int128_holder operator% (int128_holder y) const { return lowValue %  y.lowValue; }
-    int128_holder operator<<(int128_holder y) const { return lowValue << y.lowValue; }
-    int128_holder operator>>(int128_holder y) const { return lowValue >> y.lowValue; }
-    int128_holder operator& (int128_holder y) const { return lowValue &  y.lowValue; }
-    int128_holder operator| (int128_holder y) const { return lowValue |  y.lowValue; }
-    int128_holder operator^ (int128_holder y) const { return lowValue ^  y.lowValue; }
+    int128_holder operator+ (int128_holder y) const { return int128_holder(lowValue +  y.lowValue); }
+    int128_holder operator- (int128_holder y) const { return int128_holder(lowValue -  y.lowValue); }
+    int128_holder operator* (int128_holder y) const { return int128_holder(lowValue *  y.lowValue); }
+    int128_holder operator/ (int128_holder y) const { return int128_holder(lowValue /  y.lowValue); }
+    int128_holder operator% (int128_holder y) const { return int128_holder(lowValue %  y.lowValue); }
+    int128_holder operator<<(int128_holder y) const { return int128_holder(lowValue << y.lowValue); }
+    int128_holder operator>>(int128_holder y) const { return int128_holder(lowValue >> y.lowValue); }
+    int128_holder operator& (int128_holder y) const { return int128_holder(lowValue &  y.lowValue); }
+    int128_holder operator| (int128_holder y) const { return int128_holder(lowValue |  y.lowValue); }
+    int128_holder operator^ (int128_holder y) const { return int128_holder(lowValue ^  y.lowValue); }
 
     operator ptrdiff64_t() const { return lowValue; }
 } CLAY_ALIGN(16);
@@ -109,33 +111,61 @@ struct uint128_holder {
     size64_t highPad; // not used in static math
 
     uint128_holder() {}
-    uint128_holder(size64_t low) : lowValue(low), highPad(0) {}
-    uint128_holder(int128_holder y) : lowValue(y.lowValue), highPad(y.highPad) {}
+    explicit uint128_holder(size64_t low) : lowValue(low), highPad(0) {}
+    uint128_holder(size64_t low, size64_t high) : lowValue(low), highPad(high) {}
+    explicit uint128_holder(int128_holder y) : lowValue(y.lowValue), highPad(y.highPad) {}
 
     uint128_holder &operator=(size64_t low) {
         new ((void*)this) uint128_holder(low);
         return *this;
     }
 
-    uint128_holder operator-() const { return -lowValue; }
-    uint128_holder operator~() const { return ~lowValue; }
+    uint128_holder operator-() const { return uint128_holder(-lowValue); }
+    uint128_holder operator~() const { return uint128_holder(~lowValue); }
 
     bool operator==(uint128_holder y) const { return lowValue == y.lowValue; }
     bool operator< (uint128_holder y) const { return lowValue <  y.lowValue; }
 
-    uint128_holder operator+ (uint128_holder y) const { return lowValue +  y.lowValue; }
-    uint128_holder operator- (uint128_holder y) const { return lowValue -  y.lowValue; }
-    uint128_holder operator* (uint128_holder y) const { return lowValue *  y.lowValue; }
-    uint128_holder operator/ (uint128_holder y) const { return lowValue /  y.lowValue; }
-    uint128_holder operator% (uint128_holder y) const { return lowValue %  y.lowValue; }
-    uint128_holder operator<<(uint128_holder y) const { return lowValue << y.lowValue; }
-    uint128_holder operator>>(uint128_holder y) const { return lowValue >> y.lowValue; }
-    uint128_holder operator& (uint128_holder y) const { return lowValue &  y.lowValue; }
-    uint128_holder operator| (uint128_holder y) const { return lowValue |  y.lowValue; }
-    uint128_holder operator^ (uint128_holder y) const { return lowValue ^  y.lowValue; }
+    uint128_holder operator+ (uint128_holder y) const { return uint128_holder(lowValue +  y.lowValue); }
+    uint128_holder operator- (uint128_holder y) const { return uint128_holder(lowValue -  y.lowValue); }
+    uint128_holder operator* (uint128_holder y) const { return uint128_holder(lowValue *  y.lowValue); }
+    uint128_holder operator/ (uint128_holder y) const { return uint128_holder(lowValue /  y.lowValue); }
+    uint128_holder operator% (uint128_holder y) const { return uint128_holder(lowValue %  y.lowValue); }
+    uint128_holder operator<<(uint128_holder y) const { return uint128_holder(lowValue << y.lowValue); }
+    uint128_holder operator>>(uint128_holder y) const { return uint128_holder(lowValue >> y.lowValue); }
+    uint128_holder operator& (uint128_holder y) const { return uint128_holder(lowValue &  y.lowValue); }
+    uint128_holder operator| (uint128_holder y) const { return uint128_holder(lowValue |  y.lowValue); }
+    uint128_holder operator^ (uint128_holder y) const { return uint128_holder(lowValue ^  y.lowValue); }
 
     operator size64_t() const { return lowValue; }
 } CLAY_ALIGN(16);
+
+namespace std {
+template<>
+class numeric_limits<int128_holder> {
+public:
+    static int128_holder min() throw() {
+        return int128_holder(0, std::numeric_limits<ptrdiff64_t>::min());
+    }
+    static int128_holder max() throw() {
+        return int128_holder(-1, std::numeric_limits<ptrdiff64_t>::max());
+    }
+};
+
+template<>
+class numeric_limits<uint128_holder> {
+public:
+    static uint128_holder min() throw() {
+        return uint128_holder(0, 0);
+    }
+    static uint128_holder max() throw() {
+        return uint128_holder(
+            std::numeric_limits<size64_t>::max(),
+            std::numeric_limits<size64_t>::max()
+        );
+    }
+};
+}
 
 inline int128_holder::int128_holder(uint128_holder y)
     : lowValue(y.lowValue), highPad(y.highPad) {}
@@ -2212,6 +2242,14 @@ enum PrimOpCode {
     PRIM_integerBitwiseNot,
 
     PRIM_numericConvert,
+
+    PRIM_integerAddChecked,
+    PRIM_integerSubtractChecked,
+    PRIM_integerMultiplyChecked,
+    PRIM_integerDivideChecked,
+    PRIM_integerRemainderChecked,
+    PRIM_integerNegateChecked,
+    PRIM_integerConvertChecked,
 
     PRIM_Pointer,
 
