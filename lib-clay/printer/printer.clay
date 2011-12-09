@@ -121,9 +121,9 @@ overload printTo(stream, x:CP) {
 
 printWithSprintf(stream, formatString, ..values) {
     var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring(formatString), ..values);
-    var n = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
+    libc.sprintf(begin(buf), cstring(formatString), ..values);
+    var n = libc.strlen(begin(buf));
+    var ptr = Pointer[Byte](begin(buf));
     write(stream, ptr, SizeT(n));
 }
 

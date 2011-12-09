@@ -37,14 +37,14 @@ printErrorMessageTo(stream, errorCode) {
         RawPointer(0),
         CULong(errorCode),
         CULong(0),
-        LPSTR(&buf[0]),
+        LPSTR(begin(buf)),
         CULong(size(buf)),
         null(va_list),
     );
     if (result == 0)
         printTo(stream, "unknown error");
     else
-        printTo(stream, CStringRef(&buf[0]));
+        printTo(stream, CStringRef(begin(buf)));
 }
 
 errorCodeName(code:Int) {

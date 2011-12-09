@@ -1,6 +1,6 @@
 public import libc.generated.*;
 
-var stdin = &_iob[0];
+var stdin = begin(_iob);
 var stdout = &_iob[1];
 var stderr = &_iob[2];
 

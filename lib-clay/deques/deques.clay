@@ -101,6 +101,10 @@ record Deque[T] (
     end: DequeCoordinate[T],
 );
 
+[T] private validDequeCoordinate?(d: Deque[T], coord: DequeCoordinate[T]) : Bool
+    = coord.node >= d.map and coord.node < d.map + d.mapSize
+      and coord >= d.begin and coord <= d.end;
+
 [T] overload RegularRecord?(static Deque[T]) = false;
 
 [T] overload SequenceContainer?(static Deque[T]) = true;
@@ -201,10 +205,21 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
 [T] overload reverseIterator(d: Deque[T]) = reverseCoordinateRange(d.end, d.begin);
 
 [T] overload size(d: Deque[T]) = SizeT(d.end - d.begin);
-[T, I | Integer?(I)] overload index(d: Deque[T], i: I) = ref (d.begin + i)^;
+[T, I | Integer?(I)] overload index(d: Deque[T], i: I) {
+    assert[#boundsChecks](i >= 0 and i < size(d), Deque[T], " index out of bounds");
+    return ref (d.begin + i)^;
+}
 
-[T] overload front(d: Deque[T]) = ref d.begin^;
-[T] overload back(d: Deque[T]) { var backi = d.end; dec(backi); return ref backi^; }
+[T] overload front(d: Deque[T]) {
+    assert[#boundsChecks](not empty?(d), "front of empty ", Deque[T]);
+    return ref d.begin^;
+}
+[T] overload back(d: Deque[T]) {
+    assert[#boundsChecks](not empty?(d), "back of empty ", Deque[T]);
+    var backi = d.end;
+    dec(backi);
+    return ref backi^;
+}
 
 [T] overload pushFront(deque: Deque[T], forward value) {
     if (deque.begin.current != deque.begin.first) {
@@ -269,6 +284,7 @@ overload push(deque: Deque[T], forward seq: S) {
 }
 
 [T] overload popFront(deque: Deque[T]) --> value: T {
+    assert[#boundsChecks](not empty?(deque), "popFront of empty ", Deque[T]);
     if (deque.begin.current != deque.begin.last - 1) {
         value <-- moveUnsafe(deque.begin.current^);
         deque.begin.current += 1;
@@ -277,6 +293,7 @@ overload push(deque: Deque[T], forward seq: S) {
 }
 
 [T] overload pop(deque: Deque[T]) {
+    assert[#boundsChecks](not empty?(deque), "pop of empty ", Deque[T]);
     if (deque.end.current != deque.end.first) {
         deque.end.current -= 1;
         return moveUnsafe(deque.end.current^);
@@ -295,6 +312,8 @@ overload insert(deque: Deque[T], n: I, forward value) {
 }
 
 [T] overload insert(deque: Deque[T], i: DequeCoordinate[T], forward value) {
+    assert[#boundsChecks](validDequeCoordinate?(deque, i),
+        "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
         pushFront(deque, value);
     else if (i.current == deque.end.current)
@@ -310,6 +329,8 @@ overload insert(deque: Deque[T], n: I, forward seq: S) {
 
 [T, S | Sequence?(S) and SequenceElementType(S) == T]
 overload insert(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+    assert[#boundsChecks](validDequeCoordinate?(deque, i),
+        "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
         pushFront(deque, seq);
     else if (i.current == deque.end.current)
@@ -325,6 +346,10 @@ overload remove(deque: Deque[T], fromN: I, toN: J) {
 
 [T]
 overload remove(deque: Deque[T], from: DequeCoordinate[T], to: DequeCoordinate[T]) {
+    assert[#boundsChecks](validDequeCoordinate?(deque, from),
+        "invalid remove start coordinate into ", Deque[T]);
+    assert[#boundsChecks](validDequeCoordinate?(deque, to),
+        "invalid remove end coordinate into ", Deque[T]);
     if (from == deque.begin and to == deque.end)
         clear(deque);
     else {
@@ -353,6 +378,8 @@ overload remove(deque: Deque[T], n: I) {
 
 [T]
 overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
+    assert[#boundsChecks](validDequeCoordinate?(deque, i),
+        "invalid remove coordinate into ", Deque[T]);
     destroy(i^);
     var next = i;
     inc(next);

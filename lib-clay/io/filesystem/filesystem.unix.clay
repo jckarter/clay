@@ -11,7 +11,7 @@ readLink(x) {
     var buf = String();
     resize(buf, path_max);
 
-    var size = readlink(cstring(x), Pointer[CChar](&buf[0]), size_t(path_max));
+    var size = readlink(cstring(x), Pointer[CChar](begin(buf)), size_t(path_max));
     if (size < 0)
         throw GenericIOError(errno());
 

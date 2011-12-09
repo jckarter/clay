@@ -81,6 +81,6 @@ inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 cstring(s:String) {
     reserve(s, size(s)+1);
-    s[size(s)] = Char(0);
+    end(s)^ = Char(0);
     return Pointer[Int8](s.data);
 }

@@ -33,7 +33,11 @@ overload ContiguousSequence?(static V) = true;
 inline overload size(a:V) = vectorSize(a);
 
 [V,I | Vector?(V) and Integer?(I)]
-inline overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
+inline overload index(a:V, i:I) {
+    assert[#boundsChecks](i >= 0 and i < size(a),
+        V, " index out of bounds");
+    return ref (vectorData(a) + SizeT(i))^;
+}
 
 
 
@@ -44,10 +48,10 @@ inline overload index(a:V, i:I) = ref (vectorData(a) + SizeT(i))^;
 alias VectorCoordinate[T] = Pointer[T];
 
 [V | Vector?(V)]
-inline overload begin(a:V) = &a[0];
+inline overload begin(a:V) = vectorData(a);
 
 [V | Vector?(V)]
-inline overload end(a:V) = &a[0] + size(a);
+inline overload end(a:V) = vectorData(a) + size(a);
 
 
 
@@ -123,6 +127,7 @@ inline overload push(v:V) { }
 
 [V | Vector?(V)]
 overload pop(a:V) {
+    assert(not empty?(a), "pop of empty ", V);
     var temp = moveUnsafe(back(a));
     removeLocations(a, end(a)-1, end(a));
     return move(temp);
@@ -189,6 +194,7 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
 [V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
+    assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var pos = SizeT(i);
     var iter = iterator(seq);
     while (hasNext?(iter)) {
@@ -200,6 +206,7 @@ overload insert(a:V, i:I, seq:S) {
 [V,I,S | Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
+    assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
         var iter = iterator(seq);
@@ -218,9 +225,10 @@ overload insert(a:V, i:I, seq:S) {
          and SizedSequence?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
+    assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
-        var src = &seq[0];
+        var src = begin(seq);
         copyNonoverlappingMemory(first, src, src+size(seq));
     }
     catch (e) {
@@ -233,6 +241,7 @@ overload insert(a:V, i:I, seq:S) {
          and SequenceContainer?(S) and SizedSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
+    assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     for (x in seq) {
         first^ <-- move(x);
@@ -244,8 +253,9 @@ overload insert(a:V, i:I, rvalue seq:S) {
          and SequenceContainer?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
+    assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
-    var src = &seq[0];
+    var src = begin(seq);
     moveNonoverlappingMemory(first, src, src+size(seq));
 }
 
@@ -284,8 +294,16 @@ inline overload clear(a:V) {
     remove(a, begin(a), end(a));
 }
 
+[V,T | Vector?(V) and SequenceElementType(V) == T]
+private validVectorCoordinate?(v:V, i:VectorCoordinate[T])
+    = i >= begin(v) and i <= end(v);
+
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
+    assert[#boundsChecks](validVectorCoordinate?(a, i),
+        "invalid first coordinate for remove from ", V);
+    assert[#boundsChecks](validVectorCoordinate?(a, j),
+        "invalid last coordinate for remove from ", V);
     var n = end(a) - j;
     moveMemoryUnsafe(i, j, end(a));
     vectorSetSize(a, vectorSize(a) - (j-i));
@@ -293,6 +311,10 @@ private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
 
 [V,T | Vector?(V) and (SequenceElementType(V) == T)]
 overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
+    assert[#boundsChecks](validVectorCoordinate?(a, i),
+        "invalid first coordinate for remove from ", V);
+    assert[#boundsChecks](validVectorCoordinate?(a, j),
+        "invalid last coordinate for remove from ", V);
     destroyMemory(i, j);
     removeLocations(a, i, j);
 }
