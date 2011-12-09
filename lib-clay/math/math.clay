@@ -109,6 +109,7 @@ define llrint;
 define llround;
 define proj;
 define arg;
+define sign;
 
 [I | Integer?(I)]
 inline overload abs(x:I) = if(x >= 0) x else -x;
@@ -120,6 +121,11 @@ inline overload floor(x:T) = Long(x + (T(1) - Long(x))) - (T(1) - Long(x));
 inline overload ceil(x:T) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
 [T | Numeric?(T)]
 inline overload round(x:T) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
+
+overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
+overload sign(x:Int) = bitor(bitshr(x,31),I(bitshr(UInt(-x),31)));
+overload sign(x:Short) = bitor(bitshr(x,15),I(bitshr(UShort(-x),15)));
+overload sign(x:Byte) = bitor(bitshr(x,7),I(bitshr(UByte(-x),7)));
 
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);

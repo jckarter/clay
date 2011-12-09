@@ -670,9 +670,11 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Float32", float32Type.ptr());
     addPrim(prims, "Float64", float64Type.ptr());
     addPrim(prims, "Float80", float80Type.ptr());
+    addPrim(prims, "Float128", float80Type.ptr());
     addPrim(prims, "Complex32", complex32Type.ptr());
     addPrim(prims, "Complex64", complex64Type.ptr());
     addPrim(prims, "Complex80", complex80Type.ptr());
+    addPrim(prims, "Complex128", complex128Type.ptr());
 
     GlobalAliasPtr v =
         new GlobalAlias(new Identifier("ExceptionsEnabled?"),

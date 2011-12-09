@@ -184,7 +184,7 @@ convertType(type:CXType, refCursor:CXCursor) : String {
 
 }
 
-visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
+visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref unnamedFieldIndex = Pointer[Int](data)^;
 
@@ -203,10 +203,10 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
     }
     else {}
 
-    return UInt8(CXChildVisit_Continue);
+    return (CXChildVisit_Continue);
 }
 
-visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
+visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     assert(clang_getCursorKind(parent) == CXCursor_UnionDecl);
     var kind = clang_getCursorKind(cursor);
@@ -217,21 +217,21 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
     }
     else {}
 
-    return UInt8(CXChildVisit_Continue);
+    return (CXChildVisit_Continue);
 }
 
 record FunctionDeclAttributes (asmLabel:Maybe[String]);
 
-visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
+visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref attributes = Pointer[FunctionDeclAttributes](data)^;
     switch (cursor.kind)
     case (CXCursor_AsmLabelAttr)
         attributes.asmLabel = Maybe(str(clang_getCursorSpelling(cursor)));
-    return UInt8(CXChildVisit_Continue);
+    return (CXChildVisit_Continue);
 }
 
-visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
+visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
@@ -240,7 +240,7 @@ visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
     }
     else {
     }
-    return UInt8(CXChildVisit_Continue);
+    return (CXChildVisit_Continue);
 }
 
 withForwardDecl(cursor:CXCursor, f) {
@@ -283,12 +283,12 @@ symbolVisited(name:String) : Bool
     return false;
 }
 
-visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
+visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref options = Pointer[BindgenOptions](data)^;
 
     if (not cursorMatchesPatterns(cursor, options))
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
 
     var kind = clang_getCursorKind(cursor);
     switch (kind)
@@ -300,7 +300,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
                 CXClientData(&unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         });
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
     }
     case (CXCursor_UnionDecl) {
         withForwardDecl(cursor, () -> {
@@ -308,7 +308,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
             printlnTo(g_bindingsOut, "];\n");
         });
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
     }
     case (CXCursor_EnumDecl) {
         withForwardDecl(cursor, () -> {
@@ -317,12 +317,12 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
             clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
         });
         printlnTo(g_bindingsOut);
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
     }
     case (CXCursor_FunctionDecl) {
         var name = str(clang_getCursorSpelling(cursor));
         if (symbolVisited(name))
-            return UInt8(CXChildVisit_Continue);
+            return (CXChildVisit_Continue);
 
         // XXX dllimport/dllexport
         var attributes = FunctionDeclAttributes();
@@ -364,12 +364,12 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
         if (returnType.kind != CXType_Void)
             printTo(g_bindingsOut, convertType(returnType, cursor));
         printlnTo(g_bindingsOut, ";\n");
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
     }
     case (CXCursor_VarDecl) {
         var name = str(clang_getCursorSpelling(cursor));
         if (symbolVisited(name))
-            return UInt8(CXChildVisit_Continue);
+            return (CXChildVisit_Continue);
 
         printlnTo(g_bindingsOut, "external ", name, " : ",
             convertType(clang_getCursorType(cursor), cursor), ";\n");
@@ -377,9 +377,9 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt8
     case (CXCursor_TypedefDecl) {
         printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
-        return UInt8(CXChildVisit_Continue);
+        return (CXChildVisit_Continue);
     }
-    return UInt8(CXChildVisit_Recurse);
+    return (CXChildVisit_Recurse);
 }
 
 record Usage ();

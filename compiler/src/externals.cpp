@@ -444,6 +444,10 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
             unifyWordClass(begin + offset/8, X87);
             unifyWordClass(begin + offset/8 + 1, X87UP);
             break;
+        case 128:
+            unifyWordClass(begin + offset/8, X87);
+            unifyWordClass(begin + offset/8 + 1, X87UP);
+            break;
         default:
             assert(false);
             break;
@@ -459,6 +463,12 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
             _classifyType(floatType(complexType->bits), begin, offset + complexType->bits/8);
             break;
         case 80:
+            unifyWordClass(begin + offset/8, COMPLEX_X87);
+            unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
+            unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);
+            unifyWordClass(begin + offset/8 + 3, COMPLEX_X87);
+            break;
+        case 128:
             unifyWordClass(begin + offset/8, COMPLEX_X87);
             unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
             unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);

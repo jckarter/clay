@@ -15,9 +15,11 @@ TypePtr uint128Type;
 TypePtr float32Type;
 TypePtr float64Type;
 TypePtr float80Type;
+TypePtr float128Type;
 TypePtr complex32Type;
 TypePtr complex64Type;
 TypePtr complex80Type;
+TypePtr complex128Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -49,9 +51,11 @@ void initTypes() {
     float32Type = new FloatType(32);
     float64Type = new FloatType(64);
     float80Type = new FloatType(80);
+    float128Type = new FloatType(128);
     complex32Type = new ComplexType(32);
     complex64Type = new ComplexType(64);
     complex80Type = new ComplexType(80);
+    complex128Type = new ComplexType(128);
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -118,6 +122,7 @@ TypePtr floatType(int bits) {
     case 32 : return float32Type;
     case 64 : return float64Type;
     case 80 : return float80Type;
+    case 128 : return float128Type;
     default :
         assert(false);
         return NULL;
@@ -129,6 +134,7 @@ TypePtr complexType(int bits) {
     case 32 : return complex32Type;
     case 64 : return complex64Type;
     case 80 : return complex80Type;
+    case 128 : return complex128Type;
     default :
         assert(false);
         return NULL;
@@ -894,6 +900,8 @@ llvm::Type *llvmFloatType(int bits) {
         return llvm::Type::getDoubleTy(llvm::getGlobalContext());
     case 80 :
         return llvm::Type::getX86_FP80Ty(llvm::getGlobalContext());
+    case 128 :
+        return llvm::Type::getFP128Ty(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;

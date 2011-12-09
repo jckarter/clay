@@ -2612,9 +2612,11 @@ extern TypePtr uint128Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 extern TypePtr float80Type;
+extern TypePtr float128Type;
 extern TypePtr complex32Type;
 extern TypePtr complex64Type;
 extern TypePtr complex80Type;
+extern TypePtr complex128Type;
 
 // aliases
 extern TypePtr cIntType;
