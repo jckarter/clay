@@ -141,7 +141,11 @@ overload LightweightSequence?(static CoordinateRange[T]) = true;
 inline overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-inline overload index(a:CoordinateRange[T], i:I) = forward ..(a.begin + i)^;
+inline overload index(a:CoordinateRange[T], i:I) {
+    assert[#boundsChecks](i >= 0 and i < size(a),
+        CoordinateRange[T], " index out of bounds");
+    return forward ..(a.begin + i)^;
+}
 
 [T]
 inline overload iterator(a:CoordinateRange[T]) = a;
@@ -155,6 +159,7 @@ inline overload hasNext?(a:CoordinateRange[T]) = a.begin < a.end;
 
 [T]
 inline overload next(a:CoordinateRange[T]) {
+    assert[#boundsChecks](hasNext?(a), "next of empty ", CoordinateRange[T]);
     var x = captureValues(..a.begin^);
     inc(a.begin);
     return forward ..forwardValues(x);
@@ -184,7 +189,11 @@ overload LightweightSequence?(static ReverseCoordinateRange[T]) = true;
 inline overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
-inline overload index(a:ReverseCoordinateRange[T], i:I) = forward ..(a.end - i - 1)^;
+inline overload index(a:ReverseCoordinateRange[T], i:I) {
+    assert[#boundsChecks](i >= 0 and i < size(a),
+        ReverseCoordinateRange[T], " index out of bounds");
+    return forward ..(a.end - i - 1)^;
+}
 
 [T]
 inline overload iterator(a:ReverseCoordinateRange[T]) = a;
@@ -198,6 +207,7 @@ inline overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin < a.end;
 
 [T]
 inline overload next(a:ReverseCoordinateRange[T]) {
+    assert[#boundsChecks](hasNext?(a), "next of empty ", ReverseCoordinateRange[T]);
     dec(a.end);
     return forward ..a.end^;
 }

@@ -75,7 +75,7 @@ static std::string getPtrSize(const llvm::TargetData *targetData) {
     switch (targetData->getPointerSizeInBits()) {
     case 32 : return "32";
     case 64 : return "64";
-    default : assert(false);
+    default : assert(false); return "";
     }
 }
 
@@ -715,6 +715,14 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(numericConvert);
 
+    PRIMITIVE(integerAddChecked);
+    PRIMITIVE(integerSubtractChecked);
+    PRIMITIVE(integerMultiplyChecked);
+    PRIMITIVE(integerDivideChecked);
+    PRIMITIVE(integerRemainderChecked);
+    PRIMITIVE(integerNegateChecked);
+    PRIMITIVE(integerConvertChecked);
+
     PRIMITIVE(Pointer);
 
     PRIMITIVE(addressOf);
@@ -977,3 +985,10 @@ DEFINE_PRELUDE_ACCESSOR(ifExpression)
 DEFINE_PRELUDE_ACCESSOR(RecordWithProperties)
 DEFINE_PRELUDE_ACCESSOR(typeToRValue)
 DEFINE_PRELUDE_ACCESSOR(typesToRValues)
+DEFINE_PRELUDE_ACCESSOR(doIntegerAddChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerSubtractChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerMultiplyChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerDivideChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerRemainderChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerNegateChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerConvertChecked);

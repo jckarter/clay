@@ -1,4 +1,3 @@
-
 
 //
 // predicates
@@ -23,7 +22,10 @@ inline overload size(a:Array[T,n]) = SizeT(n);
 inline overload StaticSize(static Array[T,n]) = SizeT(n);
 
 [T,n,I | Integer?(I)]
-inline overload index(a:Array[T,n], i:I) = ref arrayRef(a, SizeT(i));
+inline overload index(a:Array[T,n], i:I) {
+    assert[#boundsChecks](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
+    return ref arrayRef(a, SizeT(i));
+}
 
 [T,n]
 inline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
@@ -33,10 +35,10 @@ inline overload reverseIterator(a:Array[T,n]) =
     reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-inline overload begin(a:Array[T,n]) = &a[0];
+inline overload begin(a:Array[T,n]) = Pointer[T](&a);
 
 [T,n]
-inline overload end(a:Array[T,n]) = &a[n];
+inline overload end(a:Array[T,n]) = Pointer[T](&a + 1);
 
 [T,n]
 inline overload front(a:Array[T,n]) = ref a[0];

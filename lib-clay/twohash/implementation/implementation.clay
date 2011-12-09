@@ -351,7 +351,7 @@ overload size(t: Table[B]) = bitshl(1, t.ln2_size);
 overload index(t: Table[B], idx) = ref t.ptr[idx];
 
 [B]
-overload begin(t: Table[B]) = &t.ptr[0];
+overload begin(t: Table[B]) = t.ptr;
 
 [B]
 overload end(t: Table[B]) = begin(t) + size(t);

@@ -332,7 +332,7 @@ Library changes:
 * The format of the output from the printRepr function has been changed to give
   more accurate parseable representations of Clay objects.
 
-* print*() now prints identifiers as their string contents without a
+* printTo() now prints identifiers as their string contents without a
   leading "#".
   printRepr*() still prints identifiers with the leading "#".
 
@@ -348,8 +348,17 @@ Library changes:
 * The 'arrayLiteral' function has been renamed 'array'.
     arrayLiteral ==> array
 
-* A new 'math' module provides type-generic access to the C99 standard math
-  library.
+* A new 'math' module provides type-generic floating-point and complex math
+  functions implemented in Clay. (Standard C99 math is still available from the
+  libc module.) Thanks to Jeremy Clifford.
+
+* The standard integer math operators can have overflow and division-by-zero
+  checking enabled with '-Dclay.IntegerOverflowChecks'. This flag affects
+  addition, subtraction, multiplication, division, remainder, and negation
+  for all standard integer types. Conversion and left-shift currently do not
+  have integer overflow checks enabled by this flag, due to the usefulness
+  of idioms like UInt(-1) or shifting to truncate or saturate. This may
+  change in the future.
 
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
   assert[] can also be parameterized with one or more static string tags,
@@ -361,6 +370,10 @@ Library changes:
     assert[#foo,#bar](false); // disable with -Dclay.DisableAssertions
                               // or -Dclay.DisableAssertions.foo
                               // or -Dclay.DisableAssertions.bar
+
+* In-memory containers now have bounds check assertions on operations such
+  as indexing, front, and back. These assertions are tagged #boundsChecks
+  and can be disabled with -Dclay.DisableAssertions.boundsChecks .
 
 Compiler frontend changes:
 --------------------------

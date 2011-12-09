@@ -91,6 +91,13 @@ ObjectPtr prelude_ifExpression();
 ObjectPtr prelude_RecordWithProperties();
 ObjectPtr prelude_typeToRValue();
 ObjectPtr prelude_typesToRValues();
+ObjectPtr prelude_doIntegerAddChecked();
+ObjectPtr prelude_doIntegerSubtractChecked();
+ObjectPtr prelude_doIntegerMultiplyChecked();
+ObjectPtr prelude_doIntegerDivideChecked();
+ObjectPtr prelude_doIntegerRemainderChecked();
+ObjectPtr prelude_doIntegerNegateChecked();
+ObjectPtr prelude_doIntegerConvertChecked();
 
 ExprPtr prelude_expr_dereference();
 ExprPtr prelude_expr_plus();
@@ -151,6 +158,13 @@ ExprPtr prelude_expr_ifExpression();
 ExprPtr prelude_expr_RecordWithProperties();
 ExprPtr prelude_expr_typeToRValue();
 ExprPtr prelude_expr_typesToRValues();
+ExprPtr prelude_expr_doIntegerAddChecked();
+ExprPtr prelude_expr_doIntegerSubtractChecked();
+ExprPtr prelude_expr_doIntegerMultiplyChecked();
+ExprPtr prelude_expr_doIntegerDivideChecked();
+ExprPtr prelude_expr_doIntegerRemainderChecked();
+ExprPtr prelude_expr_doIntegerNegateChecked();
+ExprPtr prelude_expr_doIntegerConvertChecked();
 
 
 #endif

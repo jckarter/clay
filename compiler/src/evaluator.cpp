@@ -2822,6 +2822,24 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
     }
 }
 
+template<typename T>
+static void overflowError(const char *op, T a, T b) {
+    ostringstream sout;
+    sout << "integer overflow: " << a << " " << op << " " << b;
+    error(sout.str());
+}
+
+template<typename T>
+static void overflowError(const char *op, T a) {
+    ostringstream sout;
+    sout << "integer overflow: " << op << a;
+    error(sout.str());
+}
+
+static void divideByZeroError() {
+    error("integer division by zero");
+}
+
 template <typename T>
 class BinaryOpHelper {
 public :
@@ -2878,7 +2896,6 @@ public :
         *((T *)out) = a / b;
     }
 };
-
 
 
 //
@@ -3025,6 +3042,78 @@ class Op_integerBitwiseXor : public BinaryOpHelper<T> {
     }
 };
 
+template <typename T>
+class Op_integerAddChecked : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        if ((b < T(0) && a < std::numeric_limits<T>::min() - b)
+            || (b > T(0) && a > std::numeric_limits<T>::max() - b))
+                overflowError("+", a, b);
+        else
+            *((T *)out) = a + b;
+    }
+};
+
+template <typename T>
+class Op_integerSubtractChecked : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        if ((b < T(0) && a > std::numeric_limits<T>::max() + b)
+            || (b > T(0) && a < std::numeric_limits<T>::min() + b))
+                overflowError("-", a, b);
+        else
+            *((T *)out) = a - b;
+    }
+};
+
+template <typename T>
+class Op_integerRemainderChecked : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        if (b == 0)
+            divideByZeroError();
+        *((T *)out) = a % b;
+    }
+};
+
+template<typename T> struct next_larger_type;
+template<> struct next_larger_type<char> { typedef short type; };
+template<> struct next_larger_type<short> { typedef int type; };
+template<> struct next_larger_type<int> { typedef ptrdiff64_t type; };
+template<> struct next_larger_type<ptrdiff64_t> { typedef clay_int128 type; };
+template<> struct next_larger_type<clay_int128> { typedef clay_int128 type; };
+template<> struct next_larger_type<unsigned char> { typedef unsigned short type; };
+template<> struct next_larger_type<unsigned short> { typedef unsigned type; };
+template<> struct next_larger_type<unsigned> { typedef size64_t type; };
+template<> struct next_larger_type<size64_t> { typedef clay_uint128 type; };
+template<> struct next_larger_type<clay_uint128> { typedef clay_uint128 type; };
+
+template <typename T>
+class Op_integerMultiplyChecked : public BinaryOpHelper<T> {
+public :
+    typedef typename next_larger_type<T>::type BigT;
+    virtual void perform(T &a, T &b, void *out) {
+        // XXX this won't work for 128-bit types or 64-bit types without
+        // compiler int128 support
+        BigT bigout = BigT(a) * BigT(b);
+        if (b < std::numeric_limits<T>::min() or std::numeric_limits<T>::max() < b)
+            overflowError("*", a, b);
+        *((T *)out) = a * b;
+    }
+};
+
+template <typename T>
+class Op_integerDivideChecked : public BinaryOpHelper<T> {
+public :
+    virtual void perform(T &a, T &b, void *out) {
+        if (std::numeric_limits<T>::min() < 0
+            && a == std::numeric_limits<T>::min()
+            && b == -1)
+            overflowError("/", a, b);
+        if (b == 0)
+            divideByZeroError();
+        *((T *)out) = a / b;
+    }
+};
 
 
 //
@@ -3067,19 +3156,46 @@ public :
     }
 };
 
+template <typename T>
+class Op_integerNegateChecked : public UnaryOpHelper<T> {
+public :
+    virtual void perform(T &a, void *out) {
+        if (std::numeric_limits<T>::min() < 0
+            && a == std::numeric_limits<T>::min())
+            overflowError("-", a);
+        *((T *)out) = -a;
+    }
+};
+
 
 
 //
 // op_numericConvert
 //
 
-template <typename DEST, typename SRC>
-static void op_numericConvert3(EValuePtr dest, EValuePtr src)
-{
-    *((DEST *)dest->addr) = DEST(*((SRC *)src->addr));
-}
+template <typename DEST, typename SRC, bool CHECK>
+struct op_numericConvert3;
 
-template <typename D>
+template <typename DEST, typename SRC>
+struct op_numericConvert3<DEST, SRC, false> {
+    static void perform(EValuePtr dest, EValuePtr src)
+    {
+        SRC value = *((SRC *)src->addr);
+        *((DEST *)dest->addr) = DEST(value);
+    }
+};
+
+template <typename DEST, typename SRC>
+struct op_numericConvert3<DEST, SRC, true> {
+    static void perform(EValuePtr dest, EValuePtr src)
+    {
+        SRC value = *((SRC *)src->addr);
+        // ???
+        *((DEST *)dest->addr) = DEST(value);
+    }
+};
+
+template <typename D, bool CHECK>
 static void op_numericConvert2(EValuePtr dest, EValuePtr src)
 {
     switch (src->type->typeKind) {
@@ -3087,21 +3203,21 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         IntegerType *t = (IntegerType *)src->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
-            case 8 : op_numericConvert3<D,char>(dest, src); break;
-            case 16 : op_numericConvert3<D,short>(dest, src); break;
-            case 32 : op_numericConvert3<D,int>(dest, src); break;
-            case 64 : op_numericConvert3<D,long long>(dest, src); break;
-            case 128 : op_numericConvert3<D,clay_int128>(dest, src); break;
+            case 8 : op_numericConvert3<D,char,CHECK>::perform(dest, src); break;
+            case 16 : op_numericConvert3<D,short,CHECK>::perform(dest, src); break;
+            case 32 : op_numericConvert3<D,int,CHECK>::perform(dest, src); break;
+            case 64 : op_numericConvert3<D,long long,CHECK>::perform(dest, src); break;
+            case 128 : op_numericConvert3<D,clay_int128,CHECK>::perform(dest, src); break;
             default : assert(false);
             }
         }
         else {
             switch (t->bits) {
-            case 8 : op_numericConvert3<D,unsigned char>(dest, src); break;
-            case 16 : op_numericConvert3<D,unsigned short>(dest, src); break;
-            case 32 : op_numericConvert3<D,unsigned int>(dest, src); break;
-            case 64 : op_numericConvert3<D,unsigned long long>(dest, src); break;
-            case 128 : op_numericConvert3<D,clay_uint128>(dest, src); break;
+            case 8 : op_numericConvert3<D,unsigned char,CHECK>::perform(dest, src); break;
+            case 16 : op_numericConvert3<D,unsigned short,CHECK>::perform(dest, src); break;
+            case 32 : op_numericConvert3<D,unsigned int,CHECK>::perform(dest, src); break;
+            case 64 : op_numericConvert3<D,unsigned long long,CHECK>::perform(dest, src); break;
+            case 128 : op_numericConvert3<D,clay_uint128,CHECK>::perform(dest, src); break;
             default : assert(false);
             }
         }
@@ -3110,10 +3226,10 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)src->type.ptr();
         switch (t->bits) {
-        case 32 : op_numericConvert3<D,float>(dest, src); break;
-        case 64 : op_numericConvert3<D,double>(dest, src); break;
-        case 80 : op_numericConvert3<D,long double>(dest, src); break;
-        case 128 : op_numericConvert3<D, __float128>(dest, src); break;
+        case 32 : op_numericConvert3<D,float,CHECK>::perform(dest, src); break;
+        case 64 : op_numericConvert3<D,double,CHECK>::perform(dest, src); break;
+        case 80 : op_numericConvert3<D,long double,CHECK>::perform(dest, src); break;
+        case 128 : op_numericConvert3<D, __float128,CHECK>::perform(dest, src); break;
         default : assert(false);
         }
         break;
@@ -3123,6 +3239,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
     }
 }
 
+template <bool CHECK>
 static void op_numericConvert(EValuePtr dest, EValuePtr src)
 {
     switch (dest->type->typeKind) {
@@ -3130,21 +3247,21 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         IntegerType *t = (IntegerType *)dest->type.ptr();
         if (t->isSigned) {
             switch (t->bits) {
-            case 8 : op_numericConvert2<char>(dest, src); break;
-            case 16 : op_numericConvert2<short>(dest, src); break;
-            case 32 : op_numericConvert2<int>(dest, src); break;
-            case 64 : op_numericConvert2<long long>(dest, src); break;
-            case 128 : op_numericConvert2<clay_int128>(dest, src); break;
+            case 8 : op_numericConvert2<char,CHECK>(dest, src); break;
+            case 16 : op_numericConvert2<short,CHECK>(dest, src); break;
+            case 32 : op_numericConvert2<int,CHECK>(dest, src); break;
+            case 64 : op_numericConvert2<long long,CHECK>(dest, src); break;
+            case 128 : op_numericConvert2<clay_int128,CHECK>(dest, src); break;
             default : assert(false);
             }
         }
         else {
             switch (t->bits) {
-            case 8 : op_numericConvert2<unsigned char>(dest, src); break;
-            case 16 : op_numericConvert2<unsigned short>(dest, src); break;
-            case 32 : op_numericConvert2<unsigned int>(dest, src); break;
-            case 64 : op_numericConvert2<unsigned long long>(dest, src); break;
-            case 128 : op_numericConvert2<clay_uint128>(dest, src); break;
+            case 8 : op_numericConvert2<unsigned char,CHECK>(dest, src); break;
+            case 16 : op_numericConvert2<unsigned short,CHECK>(dest, src); break;
+            case 32 : op_numericConvert2<unsigned int,CHECK>(dest, src); break;
+            case 64 : op_numericConvert2<unsigned long long,CHECK>(dest, src); break;
+            case 128 : op_numericConvert2<clay_uint128,CHECK>(dest, src); break;
             default : assert(false);
             }
         }
@@ -3153,10 +3270,10 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)dest->type.ptr();
         switch (t->bits) {
-        case 32 : op_numericConvert2<float>(dest, src); break;
-        case 64 : op_numericConvert2<double>(dest, src); break;
-        case 80 : op_numericConvert2<long double>(dest, src); break;
-        case 128 : op_numericConvert2<__float128>(dest, src); break;
+        case 32 : op_numericConvert2<float,false>(dest, src); break;
+        case 64 : op_numericConvert2<double,false>(dest, src); break;
+        case 80 : op_numericConvert2<long double,false>(dest, src); break;
+        case 128 : op_numericConvert2<__float128,false>(dest, src); break;
         default : assert(false);
         }
         break;
@@ -3437,6 +3554,77 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_integerAddChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        binaryIntegerOp<Op_integerAddChecked>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerSubtractChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        binaryIntegerOp<Op_integerSubtractChecked>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerMultiplyChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        binaryIntegerOp<Op_integerMultiplyChecked>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerDivideChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        binaryIntegerOp<Op_integerDivideChecked>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerRemainderChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        binaryIntegerOp<Op_integerRemainderChecked>(ev0, ev1, out0);
+        break;
+    }
+
+    case PRIM_integerNegateChecked : {
+        ensureArity(args, 1);
+        IntegerTypePtr t;
+        EValuePtr ev = integerValue(args, 0, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        unaryIntegerOp<Op_integerNegateChecked>(ev, out0);
+        break;
+    }
+
     case PRIM_integerShiftLeft : {
         ensureArity(args, 2);
         IntegerTypePtr t;
@@ -3516,7 +3704,19 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
-        op_numericConvert(out0, ev);
+        op_numericConvert<false>(out0, ev);
+        break;
+    }
+
+    case PRIM_integerConvertChecked : {
+        ensureArity(args, 2);
+        TypePtr dest = valueToIntegerType(args, 0).ptr();
+        TypePtr src;
+        EValuePtr ev = numericValue(args, 1, src);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        op_numericConvert<true>(out0, ev);
         break;
     }
 

@@ -85,7 +85,7 @@ lua_isnoneornil(l:Pointer[lua_State], n:Int) = lua_type(l, n) <= 0;
 
 [S | ContiguousString?(S)]
 lua_pushliteral(l:Pointer[lua_State], s:S) {
-    lua_pushlstring(l, Pointer[CChar](&s[0]), size(s));
+    lua_pushlstring(l, Pointer[CChar](begin(s)), size(s));
 }
 
 lua_setglobal(l:Pointer[lua_State], s:Pointer[CChar]) {

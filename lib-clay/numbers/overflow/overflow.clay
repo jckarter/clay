@@ -1,3 +1,5 @@
+import printer.formatter.(repr);
+
 __llvm__{
 declare {i16, i1} @llvm.sadd.with.overflow.i16(i16 %a, i16 %b)
 declare {i32, i1} @llvm.sadd.with.overflow.i32(i32 %a, i32 %b)
@@ -40,62 +42,62 @@ __llvm__{
     ret i32 0
 }
 
-[T | Integer?(T)] define integerAddChecked(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerSubtractChecked(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerMultiplyChecked(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerDivideChecked(x:T, y:T) : T, Bool;
+[T | Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;
+[T | Integer?(T)] define integerSubtractWithOverflow(x:T, y:T) : T, Bool;
+[T | Integer?(T)] define integerMultiplyWithOverflow(x:T, y:T) : T, Bool;
+[T | Integer?(T)] define integerDivideWithOverflow(x:T, y:T) : T, Bool;
 
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
-inline overload integerAddChecked(x:T, y:T) : T, Bool
+inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#sadd, x, y);
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
-inline overload integerSubtractChecked(x:T, y:T) : T, Bool
+inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#ssub, x, y);
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
-inline overload integerMultiplyChecked(x:T, y:T) : T, Bool
+inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#smul, x, y);
 
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-inline overload integerAddChecked(x:T, y:T) : T, Bool
+inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#uadd, x, y);
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-inline overload integerSubtractChecked(x:T, y:T) : T, Bool
+inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#usub, x, y);
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-inline overload integerMultiplyChecked(x:T, y:T) : T, Bool
+inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic(#umul, x, y);
 
 // LLVM doesn't provide intrinsics for 8- or 128-bit math with overflow
 
 private inline overflow?(T, x) = x < Least(T) or x > Greatest(T);
 
-inline overload integerAddChecked(x:Int8, y:Int8) : Int8, Bool
+inline overload integerAddWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericAdd(Int16(x), Int16(y));
     return Int8(out), overflow?(Int8, out);
 }
-inline overload integerSubtractChecked(x:Int8, y:Int8) : Int8, Bool
+inline overload integerSubtractWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericSubtract(Int16(x), Int16(y));
     return Int8(out), overflow?(Int8, out);
 }
-inline overload integerMultiplyChecked(x:Int8, y:Int8) : Int8, Bool
+inline overload integerMultiplyWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericMultiply(Int16(x), Int16(y));
     return Int8(out), overflow?(Int8, out);
 }
 
-inline overload integerAddChecked(x:UInt8, y:UInt8) : UInt8, Bool
+inline overload integerAddWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericAdd(UInt16(x), UInt16(y));
     return UInt8(out), overflow?(UInt8, out);
 }
-inline overload integerSubtractChecked(x:UInt8, y:UInt8) : UInt8, Bool
+inline overload integerSubtractWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericSubtract(UInt16(x), UInt16(y));
     return UInt8(out), overflow?(UInt8, out);
 }
-inline overload integerMultiplyChecked(x:UInt8, y:UInt8) : UInt8, Bool
+inline overload integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericMultiply(UInt16(x), UInt16(y));
     return UInt8(out), overflow?(UInt8, out);
@@ -103,29 +105,108 @@ inline overload integerMultiplyChecked(x:UInt8, y:UInt8) : UInt8, Bool
 
 // XXX need to do int128 overflow checking properly
 
-inline overload integerAddChecked(x:Int128, y:Int128) : Int128, Bool
+inline overload integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericAdd(x, y), false;
-inline overload integerSubtractChecked(x:Int128, y:Int128) : Int128, Bool
+inline overload integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericSubtract(x, y), false;
-inline overload integerMultiplyChecked(x:Int128, y:Int128) : Int128, Bool
+inline overload integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericMultiply(x, y), false;
-inline overload integerAddChecked(x:UInt128, y:UInt128) : UInt128, Bool
+inline overload integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericAdd(x, y), false;
-inline overload integerSubtractChecked(x:UInt128, y:UInt128) : UInt128, Bool
+inline overload integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericSubtract(x, y), false;
-inline overload integerMultiplyChecked(x:UInt128, y:UInt128) : UInt128, Bool
+inline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericMultiply(x, y), false;
 
-// division, negation
+// division, remainder negation
 
 [T | SignedInteger?(T)]
-inline overload integerDivideChecked(x:T, y:T) : T, Bool
+inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
     = numericDivide(x, y), y == 0 or (x == Least(T) and y == -1);
 
 [T | UnsignedInteger?(T)]
-inline overload integerDivideChecked(x:T, y:T) : T, Bool
+inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
     = numericDivide(x, y), y == 0;
 
+[T | Integer?(T)]
+inline integerRemainderWithOverflow(x:T, y:T) : T, Bool
+    = integerRemainder(x, y), y == 0;
+
 [T | SignedInteger?(T)]
-inline integerNegateChecked(x:T) : T, Bool
+inline integerNegateWithOverflow(x:T) : T, Bool
     = numericNegate(x), x == Least(T);
+
+// integer conversion
+
+[A, B | Integer?(A) and Numeric?(B)]
+define integerConvertWithOverflow(static A, b:B) : A, Bool;
+
+[A, B | SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), false;
+
+[A, B | SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b < Least(A) or b > Greatest(A);
+
+[A, B | SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) > TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), false;
+
+[A, B | SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) <= TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b > B(Greatest(A));
+
+[A, B | UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b < 0;
+
+[A, B | UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b < 0 or b > Greatest(A);
+
+[A, B | UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), false;
+
+[A, B | UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b > Greatest(A);
+
+[A, B | Integer?(A) and Float?(B)]
+inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+    = numericConvert(A, b), b < B(Least(A)) or b > B(Greatest(A));
+
+// callbacks for integer*Checked primitives
+
+private inline checked(checkedFn, ..args) {
+    var out, overflow? = checkedFn(..args);
+    if (overflow?)
+        errorNoThrow("invalid integer math: ", checkedFn, "(", repr(..args), ")");
+    return out;
+}
+
+[A | Integer?(A)]
+inline doIntegerAddChecked(a:A, b:A) : A
+    = checked(integerAddWithOverflow, a, b);
+[A | Integer?(A)]
+inline doIntegerSubtractChecked(a:A, b:A) : A
+    = checked(integerSubtractWithOverflow, a, b);
+[A | Integer?(A)]
+inline doIntegerMultiplyChecked(a:A, b:A) : A
+    = checked(integerMultiplyWithOverflow, a, b);
+[A | Integer?(A)]
+inline doIntegerDivideChecked(a:A, b:A) : A
+    = checked(integerDivideWithOverflow, a, b);
+[A | Integer?(A)]
+inline doIntegerRemainderChecked(a:A, b:A) : A
+    = checked(integerRemainderWithOverflow, a, b);
+
+[A | SignedInteger?(A)]
+inline doIntegerNegateChecked(a:A) : A
+    = checked(integerNegateWithOverflow, a);
+
+[A, B | Integer?(A) and Numeric?(B)]
+inline doIntegerConvertChecked(static A, b:B) : A
+    = checked(integerConvertWithOverflow, A, b);
+

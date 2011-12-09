@@ -1,5 +1,6 @@
 import numbers.parser.*;
 import numbers.floats.*;
+import numbers.overflow.*;
 import identifiers.(IdentifierChars);
 
 
@@ -384,3 +385,30 @@ private _octal(static T, static I)
 define octal;
 overload octal(T, I) = unwrapStatic(_octal(T, I));
 overload octal(I) = octal(Int, I);
+
+
+//
+// overflow-checked math
+//
+
+IntegerOverflowChecks?() = Flag?(#"clay.IntegerOverflowChecks");
+
+[A | Integer?(A) and IntegerOverflowChecks?()]
+inline overload add(a:A, b:A) : A
+    = integerAddChecked(a, b);
+[A | Integer?(A) and IntegerOverflowChecks?()]
+inline overload subtract(a:A, b:A) : A
+    = integerSubtractChecked(a, b);
+[A | Integer?(A) and IntegerOverflowChecks?()]
+inline overload multiply(a:A, b:A) : A
+    = integerMultiplyChecked(a, b);
+[A | Integer?(A) and IntegerOverflowChecks?()]
+inline overload divide(a:A, b:A) : A
+    = integerDivideChecked(a, b);
+[A | Integer?(A) and IntegerOverflowChecks?()]
+inline overload remainder(a:A, b:A) : A
+    = integerRemainderChecked(a, b);
+
+[A | SignedInteger?(A) and IntegerOverflowChecks?()]
+inline overload minus(a:A) : A
+    = integerNegateChecked(a);

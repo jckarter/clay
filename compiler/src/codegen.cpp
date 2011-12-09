@@ -4078,10 +4078,10 @@ static llvm::Value *complexValue(MultiCValuePtr args,
     return cv->llValue;
 }
 
-static llvm::Value *integerValue(MultiCValuePtr args,
-                                 unsigned index,
-                                 IntegerTypePtr &type,
-                                 CodegenContextPtr ctx)
+static void checkIntegerValue(MultiCValuePtr args,
+                              unsigned index,
+                              IntegerTypePtr &type,
+                              CodegenContextPtr ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4093,6 +4093,15 @@ static llvm::Value *integerValue(MultiCValuePtr args,
             argumentTypeError(index, "integer type", cv->type);
         type = (IntegerType *)cv->type.ptr();
     }
+}
+
+static llvm::Value *integerValue(MultiCValuePtr args,
+                                 unsigned index,
+                                 IntegerTypePtr &type,
+                                 CodegenContextPtr ctx)
+{
+    checkIntegerValue(args, index, type, ctx);
+    CValuePtr cv = args->values[index];
     return ctx->builder->CreateLoad(cv->llValue);
 }
 
@@ -4741,6 +4750,109 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == dest);
         ctx->builder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerAddChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerAddChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerSubtractChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerSubtractChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerMultiplyChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerMultiplyChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerDivideChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerDivideChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerRemainderChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerRemainderChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerNegateChecked : {
+        ensureArity(args, 1);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerNegateChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
+    case PRIM_integerConvertChecked : {
+        ensureArity(args, 1);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerConvertChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
         break;
     }
 

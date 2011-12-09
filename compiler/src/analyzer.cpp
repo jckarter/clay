@@ -2266,6 +2266,28 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t, true));
     }
 
+    case PRIM_integerAddChecked :
+    case PRIM_integerSubtractChecked :
+    case PRIM_integerMultiplyChecked :
+    case PRIM_integerDivideChecked :
+    case PRIM_integerRemainderChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
+    case PRIM_integerNegateChecked : {
+        ensureArity(args, 1);
+        IntegerTypePtr t = integerTypeOfValue(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
+    case PRIM_integerConvertChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t = valueToIntegerType(args, 0);
+        return new MultiPValue(new PValue(t.ptr(), true));
+    }
+
     case PRIM_Pointer :
         error("Pointer type constructor cannot be called");
 

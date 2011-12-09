@@ -58,7 +58,7 @@ overload FileData(rvalue file:RawFile) --> returned:FileData {
 overload destroy(fd:FileData) {
     if (fd.writeCount > 0) {
         try {
-            write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+            write(fd.file, begin(fd.writeBuffer), fd.writeCount);
         }
         catch (e) {
             errorNoThrow(e);
@@ -109,7 +109,7 @@ overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
             pending -= n;
         }
         else {
-            src = &fd.readBuffer[0];
+            src = begin(fd.readBuffer);
             end = src; // initialize 'end' too as read may throw
             var nRead = read(fd.file, src, SizeT(BUFFER_SIZE));
             end += nRead;
@@ -125,16 +125,16 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
 
     var src = buffer;
     var srcEnd = src + n;
-    var dest = &fd.writeBuffer[0] + fd.writeCount;
-    var destEnd = &fd.writeBuffer[0] + BUFFER_SIZE;
+    var dest = begin(fd.writeBuffer) + fd.writeCount;
+    var destEnd = begin(fd.writeBuffer) + BUFFER_SIZE;
 
     var pendingNewlines = SizeT(0);
 
     while (src != srcEnd) {
         if (dest == destEnd) {
-            fd.writeCount = dest - &fd.writeBuffer[0];
+            fd.writeCount = dest - begin(fd.writeBuffer);
             flushData(fd);
-            dest = &fd.writeBuffer[0];
+            dest = begin(fd.writeBuffer);
             pendingNewlines = 0;
         }
 
@@ -145,7 +145,7 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
         inc(src);
     }
 
-    fd.writeCount = dest - &fd.writeBuffer[0];
+    fd.writeCount = dest - begin(fd.writeBuffer);
 
     if (fd.lineBuffered? and (pendingNewlines > 0))
         flushData(fd);
@@ -158,7 +158,7 @@ overload flush(f:File) {
 
 private flushData(fd:FileData) {
     if (fd.writeCount > 0) {
-        write(fd.file, &fd.writeBuffer[0], fd.writeCount);
+        write(fd.file, begin(fd.writeBuffer), fd.writeCount);
         fd.writeCount = 0;
     }
 }
@@ -176,7 +176,7 @@ overload fileSize(f:File) {
 
 overload seek(f:File, offset, whence) {
     ref fd = f.ptr^;
-    fd.readBegin = &fd.readBuffer[0];
+    fd.readBegin = begin(fd.readBuffer);
     fd.readEnd = fd.readBegin;
     flushData(fd);
     return seek(fd.file, offset, whence);

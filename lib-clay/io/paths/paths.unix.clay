@@ -123,7 +123,7 @@ currentDirectory() {
     resize(buf, 1024);
 
     while (true) {
-        var result = unix.getcwd(Pointer[CChar](&buf[0]), size(buf));
+        var result = unix.getcwd(Pointer[CChar](begin(buf)), size(buf));
         if (not null?(result))
             break;
         var err = unix.errno();
@@ -132,7 +132,7 @@ currentDirectory() {
         resize(buf, 2*size(buf));
     }
  
-    resize(buf, libc.strlen(Pointer[CChar](&buf[0])));
+    resize(buf, libc.strlen(Pointer[CChar](begin(buf))));
     return move(buf);
 }
 
