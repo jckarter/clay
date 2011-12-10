@@ -1,0 +1,17 @@
+// issue #36
+
+import printer.formatter.(repr);
+
+record Thingy[XX] ();
+
+foo(x) { println("not a tuple"); }
+
+[..X] overload foo(static Thingy[[..X]]) { println(repr(..X)); }
+
+main() {
+    foo(Thingy[[]]);
+    foo(Thingy[[Int]]);
+    foo(Thingy[[Int, Char]]);
+
+    foo(Thingy[Int]);
+}
