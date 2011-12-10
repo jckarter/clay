@@ -30,7 +30,7 @@ inline overload Vec(..args:A) {
 
 [T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
 inline overload Vec[T,n](..args:A) {
-    var a = Vec[T,n]();
+    var a = uninitializedUnsafe(Vec[T,n]);
     var i = 0;
     ..for (x in args) {
         a[i] = x;
@@ -47,7 +47,7 @@ inline overload Vec[T,n](..args:A) {
 
 [T,n]
 inline overload Vec[T,n](x:T) {
-    var a = Vec[T,n]();
+    var a = uninitializedUnsafe(Vec[T,n]);
     for (i in range(n))
         a[i] = x;
     return a;
@@ -60,8 +60,7 @@ inline overload Vec[T,n](x:T) {
 //
 
 [T,n]
-inline overload Vec[T,n]() --> returned:Vec[T,n] {
-}
+inline overload Vec[T,n]() = Vec[T,n](T());
 
 [T,n]
 overload Vec[T,n](src:Vec[T,n]) --> returned:Vec[T,n] __llvm__{

@@ -373,6 +373,10 @@ Library changes:
   as indexing, front, and back. These assertions are tagged #boundsChecks
   and can be disabled with '-Dclay.DisableAssertions.boundsChecks'.
 
+* Primitive type default constructors (such as Int(), Char(), etc.) now zero-
+  initialize instead of being no-ops. Use 'uninitializedUnsafe(T)' to get an
+  uninitialized object-sized hunk of memory as before.
+
 Compiler frontend changes:
 --------------------------
 * The compiler now requires LLVM 3.0.
