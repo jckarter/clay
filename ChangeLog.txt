@@ -356,7 +356,17 @@ Library changes:
   checking enabled with '-Dclay.IntegerOverflowChecks'. This flag affects
   addition, subtraction, multiplication, division, remainder, and negation
   for all standard integer types. Conversion and left-shift currently do not
-  have integer overflow checks enabled by this flag.
+  have integer overflow checks enabled by this flag. New functions are
+  provided that perform unchecked math regardless of
+  '-Dclay.IntegerOverflowChecks', which provide defined wrap-around behavior
+  on overflow:
+    wrapAdd
+    wrapSubtract
+    wrapMultiply
+    wrapDivide
+    wrapRemainder
+    wrapMinus
+    wrapCast
 
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
   assert[] can also be parameterized with one or more static string tags,

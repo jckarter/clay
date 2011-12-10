@@ -38,14 +38,14 @@ private sha256chunk(state, tempState, chunkSpace, chunk) {
         var s0 = bitxor(
             bitror(chunkSpace[i-15],  7),
             bitror(chunkSpace[i-15], 18),
-            bitshr (chunkSpace[i-15],  3),
+            bitshr(chunkSpace[i-15],  3),
         );
         var s1 = bitxor(
             bitror(chunkSpace[i-2], 17),
             bitror(chunkSpace[i-2], 19),
-            bitshr (chunkSpace[i-2], 10),
+            bitshr(chunkSpace[i-2], 10),
         );
-        chunkSpace[i] = chunkSpace[i-16] + s0 + chunkSpace[i-7] + s1;
+        chunkSpace[i] = wrapAdd(chunkSpace[i-16], s0, chunkSpace[i-7], s1);
     }
 
     tempState = state;
@@ -60,7 +60,7 @@ private sha256chunk(state, tempState, chunkSpace, chunk) {
             bitand(tempState[0], tempState[2]),
             bitand(tempState[1], tempState[2]),
         );
-        var t2 = s0 + maj;
+        var t2 = wrapAdd(s0, maj);
         var s1 = bitxor(
             bitror(tempState[4],  6),
             bitror(tempState[4], 11),
@@ -70,18 +70,18 @@ private sha256chunk(state, tempState, chunkSpace, chunk) {
             bitand (tempState[4], tempState[5]),
             bitandc(tempState[6], tempState[4]),
         );
-        var t1 = tempState[7] + s1 + ch + roundWord + chunkWord;
+        var t1 = wrapAdd(tempState[7], s1, ch, roundWord, chunkWord);
         tempState[7] = tempState[6];
         tempState[6] = tempState[5];
         tempState[5] = tempState[4];
-        tempState[4] = tempState[3] + t1;
+        tempState[4] = wrapAdd(tempState[3], t1);
         tempState[3] = tempState[2];
         tempState[2] = tempState[1];
         tempState[1] = tempState[0];
-        tempState[0] = t1 + t2;
+        tempState[0] = wrapAdd(t1, t2);
     }
     for (stateWord, tempStateWord in zipped(state, tempState))
-        stateWord += tempStateWord;
+        stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
 [S | ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
