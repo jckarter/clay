@@ -62,38 +62,44 @@ if(UNIX)
         message("   bindgen. bindgen will not be built. Try applying the patch in")
         message("   tools/libclang.diff to the Clang source.")
     endif()
-elseif(MSVC)
-    # This smells pretty bit-rotten
-    set(LLVM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm CACHE PATH "llvm source path")
-    set(LLVM_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm-build CACHE PATH "llvm build path")
-
-    if(IS_DIRECTORY ${LLVM_BUILD_DIR})
-        link_directories(${LLVM_BUILD_DIR}/lib/Release)
-    else()
-        message(FATAL_ERROR "Could not find LLVM build directory")
-    endif()
+elseif(WIN32)
+    set(LLVM_DIR "$ENV{ProgramFiles}/LLVM" CACHE PATH "llvm install path")
 
     if(IS_DIRECTORY ${LLVM_DIR})
-        include_directories(${LLVM_BUILD_DIR}/include ${LLVM_DIR}/include)
+		set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}/share/llvm/cmake")
+		include(LLVMConfig)
+
+		include_directories( ${LLVM_DIR}/include )
+		link_directories( ${LLVM_DIR}/lib )
+		add_definitions( ${LLVM_DEFINITIONS} )
+		llvm_map_components_to_libraries(LLVM_LIBS jit interpreter native asmparser bitreader bitwriter ipo)
+		find_file(CLANG clang.exe HINTS ${LLVM_DIR}/bin)
     else()
-        message(FATAL_ERROR "Could not find LLVM souce directory")
+        message(FATAL_ERROR "Could not find LLVM")
     endif()
 
-    set(IGNORE_WARNINGS 4146 4503 4996 4800 4244 4624 4355
-        4715 4180 4345 4224 4351)
-    set(LLVM_CXXFLAGS 
-        "/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS 
-         /D_SCL_SECURE_NO_WARNINGS /DCRT_NONSTDC_NO_WARNINGS 
-         /D_SCL_SECURE_NO_DEPRECATE /wd${IGNORE_WARNINGS}")
-
-    set(LLVM_LIBS 
-        "LLVMJIT" "LLVMInterpreter" "LLVMExecutionEngine" "LLVMX86AsmPrinter" 
-        "LLVMX86AsmParser" "LLVMX86Disassembler" "LLVMBitReader" 
-        "LLVMBitWriter" "LLVMipo" "LLVMX86CodeGen" "LLVMMCParser" 
-        "LLVMSelectionDAG" "LLVMX86Info" "LLVMAsmParser" "LLVMAsmPrinter"
-        "LLVMCodeGen" "LLVMScalarOpts" "LLVMInstCombine" "LLVMTransformUtils"
-        "LLVMipa" "LLVMAnalysis" "LLVMTarget" "LLVMCore" "LLVMMC"
-        "LLVMSupport" "LLVMX86Utils")
+    if(CLANG)
+		find_path(GCC_DIR gcc.exe)
+		if(EXISTS ${GCC_DIR}/../include)
+			file(WRITE ${PROJECT_BINARY_DIR}/test-libclang.c
+				"#include <clang-c/Index.h>\nint main() {CXCursor c;CXType t = clang_getTypedefDeclUnderlyingType(c);}"
+			)
+			execute_process(
+				COMMAND ${CLANG} ${PROJECT_BINARY_DIR}/test-libclang.c -I${GCC_DIR}/../include ${LLVM_DIR}/lib/liblibclang.dll.a
+				OUTPUT_QUIET
+				RESULT_VARIABLE BUILD_BINDGEN_RESULT
+			)
+		else()
+			message("mingw headers not found, cannot test for patched libclang")
+		endif()
+		if(BUILD_BINDGEN_RESULT EQUAL 0)
+			set(BUILD_BINDGEN True)
+		else()
+			message("no compatibly patched libclang found, bindgen will not be built")
+		endif()
+    else()
+        message("-- Clang not found. clay-bindgen will not be built")
+    endif()
 endif(UNIX)
 
 if(UNIX)
@@ -107,7 +113,7 @@ add_subdirectory(misc)
 add_subdirectory(tools)
 
 if(PYTHONINTERP_FOUND)
-    add_custom_target(test ${PYTHON_EXECUTABLE} "../test/runtests.py")
+    add_custom_target(test ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/test/runtests.py")
     add_dependencies(test clay)
 else()
     message("-- Python not found. You will not be able to run tests")

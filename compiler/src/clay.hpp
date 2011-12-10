@@ -63,7 +63,7 @@ typedef unsigned long long size64_t;
 //
 
 #if (defined(_MSC_VER) && defined(_M_X64)) \
-    || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+    || (defined(__GNUC__) && defined(_INT128_DEFINED))
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
 #elif (defined(__clang__))
