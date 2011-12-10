@@ -123,3 +123,11 @@ overload hash(x:T) = 23*variantTag(x) + hash(*x);
 
 [T | ReferenceType?(T)]
 overload hash(x:T) = hash(referencePtr(x));
+
+
+//
+// statics
+//
+
+[x]
+overload hash(s:Static[x]) = SizeT(0);
