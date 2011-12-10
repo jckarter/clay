@@ -356,9 +356,7 @@ Library changes:
   checking enabled with '-Dclay.IntegerOverflowChecks'. This flag affects
   addition, subtraction, multiplication, division, remainder, and negation
   for all standard integer types. Conversion and left-shift currently do not
-  have integer overflow checks enabled by this flag, due to the usefulness
-  of idioms like UInt(-1) or shifting to truncate or saturate. This may
-  change in the future.
+  have integer overflow checks enabled by this flag.
 
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
   assert[] can also be parameterized with one or more static string tags,
@@ -409,25 +407,3 @@ Compiler frontend changes:
     false
 
     $
-
-==================
-TO BE DONE FOR 0.1
-==================
-* A new external ABI "llvm" is provided for access to the native LLVM "ccc" calling convention.
-  (This differs from the C calling convention on x86-64 and possibly other platforms.)
-  It also special-cases static integer and boolean arguments, interpolating them as literal
-  values into the function call. This allows for interfacing with LLVM intrinsics that only
-  accept literal arguments.
-    [align,volatile?]
-    external (llvm, "llvm.memcpy.p0i8.p0i8.i32") llvm_memcpy32(
-        dst:Pointer[UInt8],
-        src:Pointer[UInt8],
-        len:Int32,
-        static align,
-        static volatile?
-    );
-
-* complex types pass incorrectly to externals on 32-bit macosx
-* clayfix to remove 'define' before proc definition with body
-* generate C99 math bindings for windows, ios, freebsd
-
