@@ -654,6 +654,8 @@ struct Location : public Object {
 // error module
 //
 
+extern bool shouldPrintFullMatchErrors;
+
 struct CompileContextEntry {
     ObjectPtr callable;
     bool hasParams;
@@ -1722,6 +1724,7 @@ struct Overload : public TopLevelItem {
 
     // pre-computed patterns for matchInvoke
     int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
+    bool nameIsPattern;
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     EnvPtr patternEnv;
@@ -1735,7 +1738,7 @@ struct Overload : public TopLevelItem {
              bool isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
-          patternsInitializedState(0) {}
+          patternsInitializedState(0), nameIsPattern(false) {}
 };
 
 struct Procedure : public TopLevelItem {

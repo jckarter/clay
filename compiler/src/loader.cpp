@@ -400,6 +400,7 @@ static void initOverload(OverloadPtr x) {
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr y = derefDeep(pattern);
     if (!y) {
+        x->nameIsPattern = true;
         addPatternOverload(x);
     }
     else {
