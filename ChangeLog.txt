@@ -373,7 +373,7 @@ Library changes:
 
 * In-memory containers now have bounds check assertions on operations such
   as indexing, front, and back. These assertions are tagged #boundsChecks
-  and can be disabled with -Dclay.DisableAssertions.boundsChecks .
+  and can be disabled with '-Dclay.DisableAssertions.boundsChecks'.
 
 Compiler frontend changes:
 --------------------------
