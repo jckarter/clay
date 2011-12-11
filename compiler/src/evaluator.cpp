@@ -3040,6 +3040,14 @@ class Op_integerBitwiseXor : public BinaryOpHelper<T> {
     }
 };
 
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wtautological-compare"
+#elif defined(__GCC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
+
 template <typename T>
 class Op_integerAddChecked : public BinaryOpHelper<T> {
 public :
@@ -3063,6 +3071,12 @@ public :
             *((T *)out) = a - b;
     }
 };
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GCC__)
+#  pragma GCC diagnostic pop
+#endif
 
 template <typename T>
 class Op_integerRemainderChecked : public BinaryOpHelper<T> {
@@ -3103,7 +3117,7 @@ template <typename T>
 class Op_integerDivideChecked : public BinaryOpHelper<T> {
 public :
     virtual void perform(T &a, T &b, void *out) {
-        if (std::numeric_limits<T>::min() < 0
+        if (std::numeric_limits<T>::min() != 0
             && a == std::numeric_limits<T>::min()
             && b == -1)
             overflowError("/", a, b);
@@ -3158,7 +3172,7 @@ template <typename T>
 class Op_integerNegateChecked : public UnaryOpHelper<T> {
 public :
     virtual void perform(T &a, void *out) {
-        if (std::numeric_limits<T>::min() < 0
+        if (std::numeric_limits<T>::min() != 0
             && a == std::numeric_limits<T>::min())
             overflowError("-", a);
         *((T *)out) = -a;
