@@ -74,3 +74,13 @@ alias overload assert[..tags](cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
+
+
+//
+// sourceLocation(), argAndValue() helpers
+//
+
+alias sourceLocation() = StaticName(__FILE__), __LINE__, __COLUMN__;
+
+alias argAndValue(x) = __ARG__ x, x;
+
