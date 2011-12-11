@@ -2,6 +2,9 @@
 import libc;
 
 //Import native Clay functions
+public import math.native.core.*;
+public import math.native.exp.*;
+public import math.native.trig.*;
 public import math.native.gamma.*;
 public import math.native.beta.*;
 public import math.native.erf.*;
@@ -58,11 +61,7 @@ define sin;
 define tan;
 define log;
 define log10;
-define exp;
 define atan2;
-define cosh;
-define sinh;
-define tanh;
 define acosh;
 define asinh;
 define atanh;
@@ -78,7 +77,6 @@ define sqrt;
 define ceil;
 define floor;
 define significand;
-define hypot;
 define mod;
 define inf?;
 define finite?;
@@ -123,31 +121,6 @@ inline overload floor(x:T) = Long(x + (T(1) - Long(x))) - (T(1) - Long(x));
 inline overload ceil(x:T) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
 [T | Float?(T)]
 inline overload round(x:T) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
-[T | Float?(T,U)]
-inline overload hypot(m:T,n:U) {
-    var a = toBiggerNumericType(T,U,m);
-    var b = toBiggerNumericType(T,U,n);
-    alias T = Type(a);
-    alias ZERO = T(0);
-    alias ONE = T(1);
-    var r = ZERO;
-    if (a == ZERO)
-        r = abs(b);
-    else if (b == ZERO)
-        r = abs(a);
-    else {
-        var x,y = abs(a),abs(b);
-        if (x > y){
-            var temp = y / x;
-            r = x * sqrt(ONE + temp * temp);
-        }
-        else{
-            var temp = x / y;
-            r = y * sqrt(ONE + temp * temp);
-        }
-    }
-    return r;
-}
 
 overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
 overload sign(x:Int) = bitor(bitshr(x,31),I(bitshr(UInt(-x),31)));
@@ -188,18 +161,6 @@ overload tan(x:Double) = libc.tan(x);
 overload tan(x:Float) = libc.tanf(x);
 overload tan(x:LongDouble) = libc.tanl(x);
 
-overload cosh(x:Double) = libc.cosh(x);
-overload cosh(x:Float) = libc.coshf(x);
-overload cosh(x:LongDouble) = libc.coshl(x);
-
-overload sinh(x:Double) = libc.sinh(x);
-overload sinh(x:Float) = libc.sinhf(x);
-overload sinh(x:LongDouble) = libc.sinhl(x);
-
-overload tanh(x:Double) = libc.tanh(x);
-overload tanh(x:Float) = libc.tanhf(x);
-overload tanh(x:LongDouble) = libc.tanhl(x);
-
 overload acosh(x:Double) = libc.acosh(x);
 overload acosh(x:Float) = libc.acoshf(x);
 overload acosh(x:LongDouble) = libc.acoshl(x);
@@ -211,10 +172,6 @@ overload asinh(x:LongDouble) = libc.asinhl(x);
 overload atanh(x:Double) = libc.atanh(x);
 overload atanh(x:Float) = libc.atanhf(x);
 overload atanh(x:LongDouble) = libc.atanhl(x);
-
-overload exp(x:Double) = libc.exp(x);
-overload exp(x:Float) = libc.expf(x);
-overload exp(x:LongDouble) = libc.expl(x);
 
 overload log(x:Double) = libc.log(x);
 overload log(x:Float) = libc.logf(x);
