@@ -860,6 +860,31 @@ overload fixAst(ast:Binding, state:FixState) : {
 }
 
 
+// Remove 'procedure' (if present) from procedure definitions with bodies.
+// 0.0: procedure foo() { }
+// 0.1: foo() { }
+overload fixAst(ast:Procedure, state:FixState) : {
+    maybe(ast.code, code -> {
+        fixAst(code.patternVars, state);
+        fixAst(code.predicate, state);
+        fixAst(ast.visibility, state);
+
+        ref tokens = state.tokens.vector;
+        if (ast.name.tokens.begin > 0
+            and isKeywordToken(tokens[ast.name.tokens.begin - 1], "procedure"))
+        {
+            writeUptoToken(ast.name.tokens.begin - 1, state);
+            replaceUptoToken(ast.name.tokens.begin, state);
+        }
+
+        fixAst(ast.name, state);
+        fixAst(code.args, state);
+        fixAst(code.returns, state);
+        fixAst(code.body, state);
+    });
+}
+
+
 //
 // entry point
 //
