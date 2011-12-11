@@ -15,6 +15,13 @@ static vector<CValuePtr> initializedGlobals;
 static CodegenContextPtr constructorsCtx;
 static CodegenContextPtr destructorsCtx;
 
+llvm::PointerType *exceptionReturnType() {
+    return llvmPointerType(int8Type);
+}
+llvm::Value *noExceptionReturnValue() {
+    return llvm::ConstantPointerNull::get(exceptionReturnType());
+}
+
 void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
 void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
 void codegenStackEntryDestroy(ValueStackEntry const &entry,
@@ -1585,6 +1592,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
 
+    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
+
     EnvPtr env = new Env(x->env);
     vector<CReturn> returns;
 
@@ -2417,13 +2426,15 @@ void codegenLowlevelCall(llvm::Value *llCallable,
         return;
     if (!ctx->checkExceptions)
         return;
-    llvm::Value *zero = llvm::ConstantInt::get(llvmIntType(32), 0);
-    llvm::Value *cond = ctx->builder->CreateICmpEQ(result, zero);
+    llvm::Value *noException = noExceptionReturnValue();
+    llvm::Value *cond = ctx->builder->CreateICmpEQ(result, noException);
     llvm::BasicBlock *landing = newBasicBlock("landing", ctx);
     llvm::BasicBlock *normal = newBasicBlock("normal", ctx);
     ctx->builder->CreateCondBr(cond, normal, landing);
 
     ctx->builder->SetInsertPoint(landing);
+    assert(ctx->exceptionValue != NULL);
+    ctx->builder->CreateStore(result, ctx->exceptionValue);
     JumpTarget *jt = &ctx->exceptionTargets.back();
     cgDestroyStack(jt->stackMarker, ctx, true);
     // jt might be invalidated at this point
@@ -2607,7 +2618,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     functionName << "clay_" << callableName << id;
     id++;
 
-    out << string("define internal i32 @\"")
+    out << string("define internal i8* @\"")
         << functionName.str() << string("\"(");
 
     vector<llvm::Type *> llArgTypes;
@@ -2738,7 +2749,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
     }
 
     llvm::FunctionType *llFuncType =
-        llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
+        llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
 
     llvm::Function *llFunc =
         llvm::Function::Create(llFuncType,
@@ -2761,6 +2772,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     EnvPtr env = new Env(entry->env);
 
@@ -2844,11 +2857,12 @@ void codegenCodeBody(InvokeEntryPtr entry)
     ctx->initBuilder->CreateBr(codeBlock);
 
     ctx->builder->SetInsertPoint(returnBlock);
-    llvm::Value *llRet = llvm::ConstantInt::get(llvmIntType(32), 0);
+    llvm::Value *llRet = noExceptionReturnValue();
     ctx->builder->CreateRet(llRet);
 
     ctx->builder->SetInsertPoint(exceptionBlock);
-    llvm::Value *llExcept = llvm::ConstantInt::get(llvmIntType(32), 1);
+    assert(ctx->exceptionValue != NULL);
+    llvm::Value *llExcept = ctx->builder->CreateLoad(ctx->exceptionValue);
     ctx->builder->CreateRet(llExcept);
 }
 
@@ -2908,6 +2922,8 @@ void codegenCWrapper(InvokeEntryPtr entry)
                                  llCWrapper);
     ctx->initBuilder = new llvm::IRBuilder<>(llInitBlock);
     ctx->builder     = new llvm::IRBuilder<>(llBlock);
+
+    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     vector<llvm::Value *> innerArgs;
     vector<CReturn> returns;
@@ -5672,6 +5688,19 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_activeException : {
+        ensureArity(args, 0);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(uint8Type));
+
+        assert(ctx->exceptionValue != NULL);
+
+        llvm::Value *expv = ctx->builder->CreateLoad(ctx->exceptionValue);
+        ctx->builder->CreateStore(expv, out0->llValue);
+        break;
+    }
+
     default :
         assert(false);
         break;
@@ -5758,6 +5787,8 @@ static CodegenContextPtr makeSimpleContext(const char *name)
 
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     ctx->returnLists.push_back(vector<CReturn>());
     JumpTarget returnTarget(returnBlock, cgMarkStack(ctx));

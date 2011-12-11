@@ -17,6 +17,7 @@ ObjectPtr primitive_Vec();
 ObjectPtr primitive_Tuple();
 ObjectPtr primitive_Union();
 ObjectPtr primitive_Static();
+ObjectPtr primitive_activeException();
 
 ExprPtr primitive_expr_addressOf();
 ExprPtr primitive_expr_boolNot();
@@ -31,6 +32,7 @@ ExprPtr primitive_expr_Vec();
 ExprPtr primitive_expr_Tuple();
 ExprPtr primitive_expr_Union();
 ExprPtr primitive_expr_Static();
+ExprPtr primitive_expr_activeException();
 
 ObjectPtr prelude_dereference();
 ObjectPtr prelude_plus();

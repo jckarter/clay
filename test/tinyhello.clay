@@ -32,7 +32,7 @@ exit() __llvm__{
         xor     %ebx,%ebx
         int     $$$$0x80
     ", ""()
-    ret i32 0
+    ret i8* null
 }
 
 // 'write' syscall
@@ -46,5 +46,5 @@ write(s : Pointer[Int8], len : SizeT) __llvm__{
         popl    %eax
     ", "{edx},{ecx},{ebx},{eax}" (i32 %1, i8* %2, i32 1, i32 4)
 
-    ret i32 0
+    ret i8* null
 }

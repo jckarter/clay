@@ -39,7 +39,7 @@ __llvm__{
 
     store $T %outv, $T* %out
     store $Bool %overflowv, $Bool* %overflow
-    ret i32 0
+    ret i8* null
 }
 
 [T | Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;

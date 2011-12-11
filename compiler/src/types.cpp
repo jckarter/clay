@@ -911,13 +911,13 @@ llvm::Type *llvmFloatType(int bits) {
     }
 }
 
-llvm::Type *llvmPointerType(llvm::Type *llType) {
+llvm::PointerType *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
 }
 
 static void declareLLVMType(TypePtr t);
 
-llvm::Type *llvmPointerType(TypePtr t) {
+llvm::PointerType *llvmPointerType(TypePtr t) {
     if (!t->llType)
         declareLLVMType(t);
     return llvmPointerType(t->llType);
@@ -999,7 +999,7 @@ static void declareLLVMType(TypePtr t) {
                 llArgTypes.push_back(llvmPointerType(t));
         }
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
+            llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
         t->llType = llvm::PointerType::getUnqual(llFuncType);
         break;
     }

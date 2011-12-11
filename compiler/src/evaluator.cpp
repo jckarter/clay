@@ -4467,6 +4467,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("atomic operations not supported in evaluator");
         break;
 
+    case PRIM_activeException:
+        error("exceptions not supported in evaluator");
+        break;
+
     default :
         assert(false);
 

@@ -7,7 +7,7 @@ overload networkToHost(n:I32) --> returned:I32 __llvm__ {
     %nn = load $I32 * %n
     %rr = call $I32 asm "bswapl $0", "=r,r"($I32 %nn)
     store $I32 %rr, $I32 * %returned
-    ret i32 0
+    ret i8* null
 }
 
 [I64| inValues?(I64, Int64, UInt64)]

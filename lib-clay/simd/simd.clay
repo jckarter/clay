@@ -66,7 +66,7 @@ inline overload Vec[T,n]() = Vec[T,n](T());
 overload Vec[T,n](src:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %src
     store ${Vec[T,n]} %1, ${Vec[T,n]} * %returned
-    ret i32 0
+    ret i8* null
 }
 
 [T,n]

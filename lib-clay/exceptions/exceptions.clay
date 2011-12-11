@@ -13,8 +13,7 @@ record NoException ();
 
 overload Exception() = Exception(NoException());
 
-private var currentException = Exception();
-
+private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 
 
 //
@@ -27,16 +26,17 @@ throwValue(x) {
 
 [ | ExceptionsEnabled?]
 overload throwValue(forward x) {
-    currentException = Exception(x);
-    signalException();
+    var exp = allocateObject(Exception(x));
+    signalException(RawPointer(exp));
 }
 
-continueException() {
-    signalException();
+continueException(exp:RawPointer) {
+    signalException(exp);
 }
 
-private signalException() __llvm__{
-    ret i32 1
+private signalException(exp:RawPointer) __llvm__{
+    %expv = load i8** %exp
+    ret i8* %expv
 }
 
 
@@ -66,19 +66,17 @@ alias throwButPropagateLike(ex, ..expr) {
 //
 
 [T]
-exceptionIs?(static T) = nestedVariantIs?(currentException, T);
+exceptionIs?(static T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
 
 [T]
-exceptionAs(static T) {
-    var result = move(nestedVariantAs(currentException, T));
-    currentException = Exception();
-    return move(result);
+exceptionAs(static T, exp:RawPointer) --> ex:T {
+    ex <-- moveUnsafe(nestedVariantAs(exceptionObject(exp), T));
+    freeRawMemory(exp);
 }
 
-exceptionAsAny() {
-    var result = move(currentException);
-    currentException = Exception();
-    return move(result);
+exceptionAsAny(exp:RawPointer) --> ex:Exception {
+    ex <-- moveUnsafe(exceptionObject(exp));
+    freeRawMemory(exp);
 }
 
 

@@ -6,7 +6,7 @@ overload myadd(x:T, y:T) --> returned:T __llvm__{
     %2 = load $T* %y
     %3 = add $T %1, %2
     store $T %3, $T* %returned
-    ret i32 0
+    ret i8* null
 }
 
 
@@ -16,7 +16,7 @@ overload myadd(x:T, y:T) --> returned:T __llvm__{
     %2 = load $T* %y
     %3 = fadd $T %1, %2
     store $T %3, $T* %returned
-    ret i32 0
+    ret i8* null
 }
 
 main() {
