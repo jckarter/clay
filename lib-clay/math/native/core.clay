@@ -1,0 +1,30 @@
+
+import math.(abs,sqrt);
+
+define hypot;
+
+[T | Float?(T,U)]
+inline overload hypot(m:T,n:U) {
+    var a = toBiggerNumericType(T,U,m);
+    var b = toBiggerNumericType(T,U,n);
+    alias T = Type(a);
+    alias ZERO = T(0);
+    alias ONE = T(1);
+    var r = ZERO;
+    if (a == ZERO)
+        r = abs(b);
+    else if (b == ZERO)
+        r = abs(a);
+    else {
+        var x,y = abs(a),abs(b);
+        if (x > y){
+            var temp = y / x;
+            r = x * sqrt(ONE + temp * temp);
+        }
+        else{
+            var temp = x / y;
+            r = y * sqrt(ONE + temp * temp);
+        }
+    }
+    return r;
+}
