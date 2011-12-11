@@ -207,11 +207,12 @@ private initializePrimitivesModule(module) {
     simpleType("Float32", float32Type);
     simpleType("Float64", float64Type);
     simpleType("Float80", float80Type);
-    simpleType("Float128", float128Type);
+    simpleType("Imag32", float32Type);
+    simpleType("Imag64", float64Type);
+    simpleType("Imag80", float80Type);
     simpleType("Complex32", complex32Type);
     simpleType("Complex64", complex64Type);
     simpleType("Complex80", complex80Type);
-    simpleType("Complex128", complex128Type);
 
     installPrimitives(module, PrimitiveTypeConstructor, PrimitiveTypeConstructorKind);
     installPrimitives(module, StaticPrimitive, StaticPrimitiveKind);

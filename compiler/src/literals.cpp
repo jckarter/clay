@@ -148,7 +148,7 @@ static bool typeSuffix(string const &suffix,
     return suffix == testSuffix || (suffix.empty() && defaultType == testDefaultType);
 }
 
-static bool complexTypeSuffix(string const &suffix,
+static bool imagTypeSuffix(string const &suffix,
                               TypePtr defaultType,
                               string const &testSuffix,
                               TypePtr testDefaultType)
@@ -283,55 +283,33 @@ ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
-//    else if (x->suffix == "fll") {
-//        __float128 y = (__float128)clay_strtold(ptr, &end);
-//        if (*end != 0)
-//            error("invalid float128 literal");
-//        if (errno == ERANGE)
-//            error("float128 literal out of range");
-//        vh = new ValueHolder(float128Type);
-//        *((__float128 *)vh->buf) = y;
-//    }
     else if (x->suffix == "fj") {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
-            error("invalid complex32 literal");
+            error("invalid imag32 literal");
         if (errno == ERANGE)
-            error("complex32 literal out of range");
-        vh = new ValueHolder(complex32Type);
+            error("imag32 literal out of range");
+        vh = new ValueHolder(imag32Type);
         *((float *)vh->buf) = y;
-        *(((float *)vh->buf)+1) = copysign(0.0F,y);
     }
     else if (x->suffix == "j" || x->suffix == "ffj") {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
-            error("invalid complex64 literal");
+            error("invalid imag64 literal");
         if (errno == ERANGE)
-            error("complex64 literal out of range");
-        vh = new ValueHolder(complex64Type);
+            error("imag64 literal out of range");
+        vh = new ValueHolder(imag64Type);
         *((double *)vh->buf) = y;
-        *(((double *)vh->buf)+1) = copysign(0.0,y);
     }
     else if (x->suffix == "lj" || x->suffix == "flj") {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
-            error("invalid complex80 literal");
+            error("invalid imag80 literal");
         if (errno == ERANGE)
-            error("complex80 literal out of range");
-        vh = new ValueHolder(complex80Type);
+            error("imag80 literal out of range");
+        vh = new ValueHolder(imag80Type);
         *((long double *)vh->buf) = y;
-        *(((long double *)vh->buf)+1) = copysign(0.0L,y);
     }
-//    else if (x->suffix == "fllj") {
-//        __float128 y = (__float128)clay_strtold(ptr, &end);
-//        if (*end != 0)
-//            error("invalid complex128 literal");
-//        if (errno == ERANGE)
-//            error("complex128 literal out of range");
-//        vh = new ValueHolder(complex128Type);
-//        *((__float128 *)vh->buf) = y;
-//    }
-
     else {
         error("invalid literal suffix: " + x->suffix);
     }
@@ -376,57 +354,35 @@ ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x)
         vh = new ValueHolder(float80Type);
         *((long double *)vh->buf) = y;
     }
-//    else if (x->suffix == "fll") {
-//        __float128 y = (__float128)clay_strtold(ptr, &end);
-//        if (*end != 0)
-//            error("invalid float128 literal");
-//        if (errno == ERANGE)
-//            error("float128 literal out of range");
-//        vh = new ValueHolder(float128Type);
-//        *((__float128 *)vh->buf) = y;
-//    }
-    else if (complexTypeSuffix(x->suffix, defaultType, "fj", float32Type)) {
+    else if (imagTypeSuffix(x->suffix, defaultType, "fj", float32Type)) {
         float y = (float)clay_strtod(ptr, &end);
         if (*end != 0)
-            error("invalid complex32 literal");
+            error("invalid imag32 literal");
         if (errno == ERANGE)
-            error("complex32 literal out of range");
-        vh = new ValueHolder(complex32Type);
+            error("imag32 literal out of range");
+        vh = new ValueHolder(imag32Type);
         *((float *)vh->buf) = y;
-        *(((float *)vh->buf)+1) = copysign(0.0F,y);
     }
-    else if (complexTypeSuffix(x->suffix, defaultType, "ffj", float64Type)) {
+    else if (imagTypeSuffix(x->suffix, defaultType, "ffj", float64Type)) {
         double y = clay_strtod(ptr, &end);
         if (*end != 0)
-            error("invalid complex64 literal");
+            error("invalid imag64 literal");
         if (errno == ERANGE)
-            error("complex64 literal out of range");
-        vh = new ValueHolder(complex64Type);
+            error("imag64 literal out of range");
+        vh = new ValueHolder(imag64Type);
         *((double *)vh->buf) = y;
-        *(((double *)vh->buf)+1) = copysign(0.0,y);
     }
     else if (x->suffix == "lj" || x->suffix == "flj"
         || (x->suffix == "j" && defaultType == float80Type))
     {
         long double y = clay_strtold(ptr, &end);
         if (*end != 0)
-            error("invalid complex80 literal");
+            error("invalid imag80 literal");
         if (errno == ERANGE)
-            error("complex80 literal out of range");
-        vh = new ValueHolder(complex80Type);
+            error("imag80 literal out of range");
+        vh = new ValueHolder(imag80Type);
         *((long double *)vh->buf) = y;
-        *(((long double *)vh->buf)+1) = copysign(0.0L,y);
     }
-//    else if (x->suffix == "fllj") {
-//        __float128 y = (__float128)clay_strtold(ptr, &end);
-//        if (*end != 0)
-//            error("invalid complex128 literal");
-//        if (errno == ERANGE)
-//            error("complex128 literal out of range");
-//        vh = new ValueHolder(complex128Type);
-//        *((__float128 *)vh->buf) = y;
-//    }
-
     else {
         error("invalid float literal suffix: " + x->suffix);
     }

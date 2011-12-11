@@ -86,6 +86,7 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);
@@ -199,6 +200,7 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);

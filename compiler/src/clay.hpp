@@ -439,6 +439,7 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
+struct ImagType;
 struct ComplexType;
 struct ArrayType;
 struct VecType;
@@ -590,6 +591,7 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
+typedef Pointer<ImagType> ImagTypePtr;
 typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
@@ -2456,6 +2458,7 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
+    IMAG_TYPE,
     COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
@@ -2486,6 +2489,12 @@ struct FloatType : public Type {
     int bits;
     FloatType(int bits)
         : Type(FLOAT_TYPE), bits(bits) {}
+};
+
+struct ImagType : public Type {
+    int bits;
+    ImagType(int bits)
+        : Type(IMAG_TYPE), bits(bits) {}
 };
 
 struct ComplexType : public Type {
@@ -2625,11 +2634,12 @@ extern TypePtr uint128Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 extern TypePtr float80Type;
-extern TypePtr float128Type;
+extern TypePtr imag32Type;
+extern TypePtr imag64Type;
+extern TypePtr imag80Type;
 extern TypePtr complex32Type;
 extern TypePtr complex64Type;
 extern TypePtr complex80Type;
-extern TypePtr complex128Type;
 
 // aliases
 extern TypePtr cIntType;
@@ -2642,6 +2652,7 @@ TypePtr integerType(int bits, bool isSigned);
 TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
+TypePtr imagType(int bits);
 TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes,

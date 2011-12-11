@@ -223,6 +223,7 @@ record Primitive = referenceType(
 record BoolTag();
 record IntegerTag(signed?:Bool, bits:Int);
 record FloatTag(bits:Int);
+record ImagTag(bits:Int);
 record ComplexTag(bits:Int);
 record PointerTag();
 record CodePointerTag();
@@ -242,6 +243,7 @@ record EnumTag(info:Enum);
 variant TypeTag ( BoolTag
                 , IntegerTag
                 , FloatTag
+                , ImagTag
                 , ComplexTag
                 , PointerTag
                 , CodePointerTag
@@ -303,12 +305,14 @@ var uint64Type = Type(IntegerTag(false, 64));
 var float32Type = Type(FloatTag(32));
 var float64Type = Type(FloatTag(64));
 var float80Type = Type(FloatTag(80));
-var float128Type = Type(FloatTag(128));
+
+var imag32Type = Type(ImagTag(32));
+var imag64Type = Type(ImagTag(64));
+var imag80Type = Type(ImagTag(80));
 
 var complex32Type = Type(ComplexTag(32));
 var complex64Type = Type(ComplexTag(64));
 var complex80Type = Type(ComplexTag(80));
-var complex128Type = Type(ComplexTag(128));
 
 
 

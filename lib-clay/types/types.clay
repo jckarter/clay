@@ -23,7 +23,10 @@ alias ULong = UInt64;
 alias Float = Float32;
 alias Double = Float64;
 alias LongDouble = Float80;
-alias Quad = Float128;
+
+alias ImagFloat = Float32;
+alias ImagDouble = Float64;
+alias ImagLongDouble = Float80;
 
 alias RawPointer = Pointer[Byte];
 alias OpaquePointer = Pointer[Byte];

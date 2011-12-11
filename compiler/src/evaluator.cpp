@@ -1420,6 +1420,7 @@ void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case IMAG_TYPE :
     case COMPLEX_TYPE :
         memcpy(out0->addr, x->buf, typeSize(x->type));
         break;
@@ -2514,6 +2515,7 @@ static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);
@@ -2613,6 +2615,7 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
         switch (ev->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
+        case IMAG_TYPE :
             break;
         default :
             argumentTypeError(index, "numeric type", ev->type);
@@ -2816,6 +2819,17 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         break;
     }
 
+    case IMAG_TYPE : {
+        ImagType *t = (ImagType *)a->type.ptr();
+        switch (t->bits) {
+        case 32 : T<float>().eval(a, b, out); break;
+        case 64 : T<double>().eval(a, b, out); break;
+        case 80 : T<long double>().eval(a, b, out); break;
+        default : assert(false);
+        }
+        break;
+    }
+
     default :
         assert(false);
     }
@@ -2933,6 +2947,17 @@ static void unaryNumericOp(EValuePtr a, EValuePtr out)
 
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)a->type.ptr();
+        switch (t->bits) {
+        case 32 : T<float>().eval(a, out); break;
+        case 64 : T<double>().eval(a, out); break;
+        case 80 : T<long double>().eval(a, out); break;
+        default : assert(false);
+        }
+        break;
+    }
+
+    case IMAG_TYPE : {
+        ImagType *t = (ImagType *)a->type.ptr();
         switch (t->bits) {
         case 32 : T<float>().eval(a, out); break;
         case 64 : T<double>().eval(a, out); break;
@@ -3245,6 +3270,16 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         }
         break;
     }
+    case IMAG_TYPE : {
+        ImagType *t = (ImagType *)src->type.ptr();
+        switch (t->bits) {
+        case 32 : op_numericConvert3<D,float,CHECK>::perform(dest, src); break;
+        case 64 : op_numericConvert3<D,double,CHECK>::perform(dest, src); break;
+        case 80 : op_numericConvert3<D,long double,CHECK>::perform(dest, src); break;
+        default : assert(false);
+        }
+        break;
+    }
     default :
         assert(false);
     }
@@ -3280,6 +3315,16 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
     }
     case FLOAT_TYPE : {
         FloatType *t = (FloatType *)dest->type.ptr();
+        switch (t->bits) {
+        case 32 : op_numericConvert2<float,false>(dest, src); break;
+        case 64 : op_numericConvert2<double,false>(dest, src); break;
+        case 80 : op_numericConvert2<long double,false>(dest, src); break;
+        default : assert(false);
+        }
+        break;
+    }
+    case IMAG_TYPE : {
+        ImagType *t = (ImagType *)dest->type.ptr();
         switch (t->bits) {
         case 32 : op_numericConvert2<float,false>(dest, src); break;
         case 64 : op_numericConvert2<double,false>(dest, src); break;
