@@ -352,22 +352,6 @@ Library changes:
   functions implemented in Clay. (Standard C99 math is still available from the
   libc module.) Thanks to Jeremy Clifford.
 
-* The standard integer math operators can have overflow and division-by-zero
-  checking enabled with '-Dclay.IntegerOverflowChecks'. This flag affects
-  addition, subtraction, multiplication, division, remainder, and negation
-  for all standard integer types. Conversion and left-shift currently do not
-  have integer overflow checks enabled by this flag. New functions are
-  provided that perform unchecked math regardless of
-  '-Dclay.IntegerOverflowChecks', which provide defined wrap-around behavior
-  on overflow:
-    wrapAdd
-    wrapSubtract
-    wrapMultiply
-    wrapDivide
-    wrapRemainder
-    wrapMinus
-    wrapCast
-
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
   assert[] can also be parameterized with one or more static string tags,
   to be selectively disabled with '-Dclay.DisableAssertions.<tag>'.
@@ -382,6 +366,23 @@ Library changes:
 * In-memory containers now have bounds check assertions on operations such
   as indexing, front, and back. These assertions are tagged #boundsChecks
   and can be disabled with '-Dclay.DisableAssertions.boundsChecks'.
+
+* The standard integer math operators now have overflow and division-by-zero
+  checking. These checks can be disabled with
+  '-Dclay.DisableAssertions.overflowChecks' (or '-Dclay.DisableAssertions').
+  This flag affects addition, subtraction, multiplication, division, remainder,
+  negation and conversion for all standard integer types. Left shift currently
+  does not have integer overflow checks enabled by this flag.
+
+* New functions are provided that perform integer math with defined two's-
+  complement wrap-around behavior.
+    wrapAdd
+    wrapSubtract
+    wrapMultiply
+    wrapDivide
+    wrapRemainder
+    wrapMinus
+    wrapCast
 
 * Primitive type default constructors (such as Int(), Char(), etc.) now zero-
   initialize instead of being no-ops. Use 'uninitializedUnsafe(T)' to get an

@@ -402,7 +402,8 @@ overload octal(I) = octal(Int, I);
 // overflow-checked math
 //
 
-IntegerOverflowChecks?() = true; //Flag?(#"clay.IntegerOverflowChecks");
+IntegerOverflowChecks?() = AllAssertionsEnabled?()
+    and AssertionEnabled?(#overflowChecks);
 
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload add(a:A, b:A) : A
