@@ -4843,12 +4843,11 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_integerConvertChecked : {
-        ensureArity(args, 1);
-        IntegerTypePtr t;
-        checkIntegerValue(args, 0, t, ctx);
+        ensureArity(args, 2);
+        IntegerTypePtr dest = valueToIntegerType(args, 0);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == dest.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerConvertChecked(), ctx),
                          args,
                          ctx,
