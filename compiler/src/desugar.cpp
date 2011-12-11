@@ -6,7 +6,7 @@ ExprPtr desugarCharLiteral(char c) {
     CallPtr call = new Call(nameRef, new ExprList());
     ostringstream out;
     out << (int)c;
-    call->args->add(new IntLiteral(out.str(), "ss"));
+    call->parenArgs->add(new IntLiteral(out.str(), "ss"));
     return call.ptr();
 }
 
@@ -45,7 +45,7 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
         assert(false);
     }
     CallPtr call = new Call(callable, new ExprList());
-    call->args->add(x->expr);
+    call->parenArgs->add(x->expr);
     return call.ptr();
 }
 
@@ -89,24 +89,24 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
         assert(false);
     }
     CallPtr call = new Call(callable, new ExprList());
-    call->args->add(x->expr1);
-    call->args->add(x->expr2);
+    call->parenArgs->add(x->expr1);
+    call->parenArgs->add(x->expr2);
     return call.ptr();
 }
 
 ExprPtr desugarIfExpr(IfExprPtr x) {
     ExprPtr callable = prelude_expr_ifExpression();
     CallPtr call = new Call(callable, new ExprList());
-    call->args->add(x->condition);
-    call->args->add(x->thenPart);
-    call->args->add(x->elsePart);
+    call->parenArgs->add(x->condition);
+    call->parenArgs->add(x->thenPart);
+    call->parenArgs->add(x->elsePart);
     return call.ptr();
 }
 
 ExprPtr desugarStaticExpr(StaticExprPtr x) {
     ExprPtr callable = prelude_expr_wrapStatic();
     CallPtr call = new Call(callable, new ExprList());
-    call->args->add(x->expr);
+    call->parenArgs->add(x->expr);
     return call.ptr();
 }
 
@@ -139,15 +139,15 @@ StatementPtr desugarForStatement(ForPtr x) {
     bs.push_back(new Binding(FORWARD, identV(exprVar), new ExprList(x->expr)));
 
     CallPtr iteratorCall = new Call(prelude_expr_iterator(), new ExprList());
-    iteratorCall->args->add(new NameRef(exprVar));
+    iteratorCall->parenArgs->add(new NameRef(exprVar));
     bs.push_back(new Binding(VAR,
                              identV(iterVar),
                              new ExprList(iteratorCall.ptr())));
 
     CallPtr hasNextCall = new Call(prelude_expr_hasNextP(), new ExprList());
-    hasNextCall->args->add(new NameRef(iterVar));
+    hasNextCall->parenArgs->add(new NameRef(iterVar));
     CallPtr nextCall = new Call(prelude_expr_next(), new ExprList());
-    nextCall->args->add(new NameRef(iterVar));
+    nextCall->parenArgs->add(new NameRef(iterVar));
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
     BlockPtr whileBody = new Block();
     vector<StatementPtr> &ws = whileBody->statements;

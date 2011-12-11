@@ -1033,7 +1033,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        evalCallExpr(x->expr, x->args, env, out);
+        evalCallExpr(x->expr, x->allArgs(), env, out);
         break;
     }
 
@@ -2147,9 +2147,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
-        call->args->add(updateOperatorExpr(x->op));
-        call->args->add(x->left);
-        call->args->add(x->right);
+        call->parenArgs->add(updateOperatorExpr(x->op));
+        call->parenArgs->add(x->left);
+        call->parenArgs->add(x->right);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

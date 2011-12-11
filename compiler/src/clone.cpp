@@ -116,7 +116,7 @@ ExprPtr clone(ExprPtr x)
 
     case CALL : {
         Call *y = (Call *)x.ptr();
-        out = new Call(clone(y->expr), clone(y->args));
+        out = new Call(clone(y->expr), clone(y->parenArgs), clone(y->lambdaArgs));
         break;
     }
 

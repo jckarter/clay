@@ -279,6 +279,28 @@ Language changes:
     //ref ry = 2; // now an error
     forward ry = 2;
 
+* Higher-order functions can be called with the block arguments outside the
+  call parens. In a statement form, the semicolon is not required with a
+  block form:
+    // 0.0
+    maybe(mx, x -> { useX(x); });
+
+    // 0.1
+    maybe(mx): x -> {
+        useX(x);
+    }
+
+  Multiple blocks can be passed in this manner separated by '::':
+    // 0.0
+    maybe(mx, x -> { useX(x); }, () -> { useNothing(); });
+
+    // 0.1
+    maybe(mx): x -> {
+        useX(x);
+    } :: () -> {
+        useNothing();
+    }
+
 Library changes:
 ----------------
 * The bitwise operation functions have been given shorter names:

@@ -1063,7 +1063,7 @@ void codegenExpr(ExprPtr expr,
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        codegenCallExpr(x->expr, x->args, env, ctx, out);
+        codegenCallExpr(x->expr, x->allArgs(), env, ctx, out);
         break;
     }
 
@@ -3310,10 +3310,10 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     prelude_expr_indexUpdateAssign(), new ExprList()
                 );
-                call->args->add(updateOperatorExpr(x->op));
-                call->args->add(y->expr);
-                call->args->add(y->args);
-                call->args->add(x->right);
+                call->parenArgs->add(updateOperatorExpr(x->op));
+                call->parenArgs->add(y->expr);
+                call->parenArgs->add(y->args);
+                call->parenArgs->add(x->right);
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
@@ -3322,11 +3322,11 @@ bool codegenStatement(StatementPtr stmt,
             CallPtr call = new Call(
                 prelude_expr_staticIndexUpdateAssign(), new ExprList()
             );
-            call->args->add(updateOperatorExpr(x->op));
-            call->args->add(y->expr);
+            call->parenArgs->add(updateOperatorExpr(x->op));
+            call->parenArgs->add(y->expr);
             ValueHolderPtr vh = sizeTToValueHolder(y->index);
-            call->args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-            call->args->add(x->right);
+            call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+            call->parenArgs->add(x->right);
             return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
         }
         else if (x->left->exprKind == FIELD_REF) {
@@ -3336,17 +3336,17 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     prelude_expr_fieldRefUpdateAssign(), new ExprList()
                 );
-                call->args->add(updateOperatorExpr(x->op));
-                call->args->add(y->expr);
-                call->args->add(new ObjectExpr(y->name.ptr()));
-                call->args->add(x->right);
+                call->parenArgs->add(updateOperatorExpr(x->op));
+                call->parenArgs->add(y->expr);
+                call->parenArgs->add(new ObjectExpr(y->name.ptr()));
+                call->parenArgs->add(x->right);
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
         CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
-        call->args->add(updateOperatorExpr(x->op));
-        call->args->add(x->left);
-        call->args->add(x->right);
+        call->parenArgs->add(updateOperatorExpr(x->op));
+        call->parenArgs->add(x->left);
+        call->parenArgs->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

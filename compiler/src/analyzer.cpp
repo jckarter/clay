@@ -667,7 +667,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        return analyzeCallExpr(x->expr, x->args, env);
+        return analyzeCallExpr(x->expr, x->allArgs(), env);
     }
 
     case FIELD_REF : {

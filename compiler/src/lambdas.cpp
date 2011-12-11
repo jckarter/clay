@@ -136,10 +136,10 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
             if (x->captureByRef) {
                 type = pointerType(type);
                 ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
-                converted->args->add(addr);
+                converted->parenArgs->add(addr);
             }
             else {
-                converted->args->add(nameRef.ptr());
+                converted->parenArgs->add(nameRef.ptr());
             }
             break;
         }
@@ -157,14 +157,14 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
             if (x->captureByRef) {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
                 CallPtr call = new Call(e, new ExprList());
-                call->args->add(new Unpack(nameRef.ptr()));
-                converted->args->add(call.ptr());
+                call->parenArgs->add(new Unpack(nameRef.ptr()));
+                converted->parenArgs->add(call.ptr());
             }
             else {
                 ExprPtr e = prelude_expr_packMultiValuedFreeVar();
                 CallPtr call = new Call(e, new ExprList());
-                call->args->add(new Unpack(nameRef.ptr()));
-                converted->args->add(call.ptr());
+                call->parenArgs->add(new Unpack(nameRef.ptr()));
+                converted->parenArgs->add(call.ptr());
             }
             break;
         }
@@ -519,13 +519,13 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                         ExprPtr f =
                             prelude_expr_unpackMultiValuedFreeVarAndDereference();
                         CallPtr d = new Call(f, new ExprList());
-                        d->args->add(c.ptr());
+                        d->parenArgs->add(c.ptr());
                         x = d.ptr();
                     }
                     else {
                         ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
                         CallPtr d = new Call(f, new ExprList());
-                        d->args->add(c.ptr());
+                        d->parenArgs->add(c.ptr());
                         x = d.ptr();
                     }
                 }
@@ -556,7 +556,8 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case CALL : {
         Call *y = (Call *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        convertFreeVars(y->args, env, ctx);
+        convertFreeVars(y->parenArgs, env, ctx);
+        convertFreeVars(y->lambdaArgs, env, ctx);
         break;
     }
 

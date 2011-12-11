@@ -140,7 +140,7 @@ static void printExpr(ostream &out, const Expr *x) {
     }
     case CALL : {
         const Call *y = (const Call *)x;
-        out << "Call(" << y->expr << ", " << y->args << ")";
+        out << "Call(" << y->expr << ", " << y->parenArgs << ", " << y->lambdaArgs << ")";
         break;
     }
     case FIELD_REF : {
