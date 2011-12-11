@@ -1,0 +1,7 @@
+foo(..args) --> returned:Char {
+    ref value = nthValue(static 1, ..args);
+}
+
+main() {
+    foo(1, "2");
+}

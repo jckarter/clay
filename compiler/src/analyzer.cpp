@@ -2812,6 +2812,11 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(args->values[2]->type, true));
     }
 
+    case PRIM_activeException : {
+        ensureArity(args, 0);
+        return new MultiPValue(new PValue(pointerType(uint8Type), true));
+    }
+
     default :
         assert(false);
         return NULL;

@@ -90,6 +90,17 @@ inline overload toBiggerNumericType(static A, static B, v) = A(v);
 [A,B | Numeric?(A,B) and BiggerNumeric?(B,A)]
 inline overload toBiggerNumericType(static A, static B, v) = B(v);
 
+define wrapToBiggerNumericType;
+
+[A | Numeric?(A)]
+inline overload wrapToBiggerNumericType(static A, static A, v) = v;
+
+[A,B | Numeric?(A,B) and BiggerNumeric?(A,B)]
+inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(A, v);
+
+[A,B | Numeric?(A,B) and BiggerNumeric?(B,A)]
+inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(B, v);
+
 
 
 //
@@ -97,7 +108,7 @@ inline overload toBiggerNumericType(static A, static B, v) = B(v);
 //
 
 [T | Numeric?(T)]
-inline overload T() --> returned:T { }
+inline overload T() = numericConvert(T, 0);
 
 [T1,T2 | Numeric?(T1,T2)]
 inline overload T1(src:T2) = numericConvert(T1, src);
@@ -291,24 +302,24 @@ inline overload bitshr(a:A, b:B) = integerShiftRight(a, A(b));
 
 [A,B | Integer?(A,B)]
 inline overload bitand(a:A, b:B) =
-    integerBitwiseAnd(toBiggerNumericType(A, B, a),
-                      toBiggerNumericType(A, B, b));
+    integerBitwiseAnd(wrapToBiggerNumericType(A, B, a),
+                      wrapToBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
 inline overload bitand(a:A, b:A) = integerBitwiseAnd(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload bitor(a:A, b:B) =
-    integerBitwiseOr(toBiggerNumericType(A, B, a),
-                     toBiggerNumericType(A, B, b));
+    integerBitwiseOr(wrapToBiggerNumericType(A, B, a),
+                     wrapToBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
 inline overload bitor(a:A, b:A) = integerBitwiseOr(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload bitxor(a:A, b:B) =
-    integerBitwiseXor(toBiggerNumericType(A, B, a),
-                      toBiggerNumericType(A, B, b));
+    integerBitwiseXor(wrapToBiggerNumericType(A, B, a),
+                      wrapToBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
 inline overload bitxor(a:A, b:A) = integerBitwiseXor(a, b);
@@ -391,7 +402,8 @@ overload octal(I) = octal(Int, I);
 // overflow-checked math
 //
 
-IntegerOverflowChecks?() = Flag?(#"clay.IntegerOverflowChecks");
+IntegerOverflowChecks?() = AllAssertionsEnabled?()
+    and AssertionEnabled?(#overflowChecks);
 
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload add(a:A, b:A) : A
@@ -412,3 +424,36 @@ inline overload remainder(a:A, b:A) : A
 [A | SignedInteger?(A) and IntegerOverflowChecks?()]
 inline overload minus(a:A) : A
     = integerNegateChecked(a);
+
+[A, B | Integer?(A) and Numeric?(B) and IntegerOverflowChecks?()]
+inline overload A(b:B) : A
+    = integerConvertChecked(A, b);
+
+
+//
+// never-checked wrap-on-overflow math
+//
+
+[A | Integer?(A)]
+inline wrapAdd(a:A, b:A) : A = numericAdd(a, b);
+[A | Integer?(A)]
+inline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
+[A | Integer?(A)]
+inline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
+[A | Integer?(A)]
+inline wrapDivide(a:A, b:A) : A = numericDivide(a, b);
+[A | Integer?(A)]
+inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
+
+[A, ..AA | equalValues?(A, ..AA) and countValues(..AA) != 1]
+inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
+
+[..AA | equalValues?(..AA) and countValues(..AA) != 1]
+inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
+
+[A | SignedInteger?(A)]
+inline wrapMinus(a:A) : A = numericNegate(a, b);
+
+[A, B | Integer?(A) and Numeric?(B)]
+inline wrapCast(static A, b:B) : A = numericConvert(A, b);
+

@@ -93,10 +93,10 @@ Language changes:
     // 0.1
     (a,b) -> a+b+c
 
-* Pattern overloads have been unrestricted. '[F|Foo?(F)] F() {}' will now
-  overload all symbols matching Foo?(F) instead of just types. Such
-  overloads also now have lower precedence than specific overloads. This
-  change may break code even after it has been clayfix-ed.
+* Universal pattern overloads have been unrestricted. '[F|Foo?(F)] F() {}'
+  will now overload all symbols matching 'Foo?(F)' instead of only type
+  symbols. Universe overloads also now have lower precedence than specific
+  overloads. This change may break code even after it has been clayfix-ed.
 
 * Function arguments are now passed by noalias nocapture reference. Mutated
   arguments should not alias, and taking pointers to arguments that outlive
@@ -104,7 +104,7 @@ Language changes:
   compiler, though.) If you need to pass potentially aliasing mutable
   references or capture argument references, use Pointer[T] arguments.
   Pointers remain unrestricted. Return-by-reference functions also may
-  still return aliases to their input arguments.
+  still return aliases into their input arguments.
 
 * Switch syntax has been changed.
     // 0.0
@@ -219,7 +219,7 @@ Language changes:
   expression in the input or output field that isn't already in parentheses.
 
 * Interface restrictions for generic functions can now be declared:
-    define foo(x:T, y:T) : T;
+    [T] define foo(x:T, y:T) : T;
 
     bar() {
         var a = foo(1, 3); // ok
@@ -352,14 +352,6 @@ Library changes:
   functions implemented in Clay. (Standard C99 math is still available from the
   libc module.) Thanks to Jeremy Clifford.
 
-* The standard integer math operators can have overflow and division-by-zero
-  checking enabled with '-Dclay.IntegerOverflowChecks'. This flag affects
-  addition, subtraction, multiplication, division, remainder, and negation
-  for all standard integer types. Conversion and left-shift currently do not
-  have integer overflow checks enabled by this flag, due to the usefulness
-  of idioms like UInt(-1) or shifting to truncate or saturate. This may
-  change in the future.
-
 * Assertions can be disabled with the '-Dclay.DisableAssertions' flag.
   assert[] can also be parameterized with one or more static string tags,
   to be selectively disabled with '-Dclay.DisableAssertions.<tag>'.
@@ -374,6 +366,27 @@ Library changes:
 * In-memory containers now have bounds check assertions on operations such
   as indexing, front, and back. These assertions are tagged #boundsChecks
   and can be disabled with '-Dclay.DisableAssertions.boundsChecks'.
+
+* The standard integer math operators now have overflow and division-by-zero
+  checking. These checks can be disabled with
+  '-Dclay.DisableAssertions.overflowChecks' (or '-Dclay.DisableAssertions').
+  This flag affects addition, subtraction, multiplication, division, remainder,
+  negation and conversion for all standard integer types. Left shift currently
+  does not have integer overflow checks enabled by this flag.
+
+* New functions are provided that perform integer math with defined two's-
+  complement wrap-around behavior.
+    wrapAdd
+    wrapSubtract
+    wrapMultiply
+    wrapDivide
+    wrapRemainder
+    wrapMinus
+    wrapCast
+
+* Primitive type default constructors (such as Int(), Char(), etc.) now zero-
+  initialize instead of being no-ops. Use 'uninitializedUnsafe(T)' to get an
+  uninitialized object-sized hunk of memory as before.
 
 Compiler frontend changes:
 --------------------------
@@ -409,25 +422,3 @@ Compiler frontend changes:
     false
 
     $
-
-==================
-TO BE DONE FOR 0.1
-==================
-* A new external ABI "llvm" is provided for access to the native LLVM "ccc" calling convention.
-  (This differs from the C calling convention on x86-64 and possibly other platforms.)
-  It also special-cases static integer and boolean arguments, interpolating them as literal
-  values into the function call. This allows for interfacing with LLVM intrinsics that only
-  accept literal arguments.
-    [align,volatile?]
-    external (llvm, "llvm.memcpy.p0i8.p0i8.i32") llvm_memcpy32(
-        dst:Pointer[UInt8],
-        src:Pointer[UInt8],
-        len:Int32,
-        static align,
-        static volatile?
-    );
-
-* complex types pass incorrectly to externals on 32-bit macosx
-* clayfix to remove 'define' before proc definition with body
-* generate C99 math bindings for windows, ios, freebsd
-

@@ -3,7 +3,7 @@ myadd(x:Int32, y:Int32) --> returned:Int32 __llvm__ {
     %2 = load i32* %y
     %3 = add i32 %1, %2
     store i32 %3, i32* %returned
-    ret i32 0
+    ret i8* null
 }
 
 inline myadd2(x:Int32, y:Int32) --> returned:Int32 __llvm__ {
@@ -11,7 +11,7 @@ inline myadd2(x:Int32, y:Int32) --> returned:Int32 __llvm__ {
     %2 = load i32* %y
     %3 = add i32 %1, %2
     store i32 %3, i32* %returned
-    ret i32 0
+    ret i8* null
 }
 
 main() {

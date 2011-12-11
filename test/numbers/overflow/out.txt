@@ -32,13 +32,13 @@
 9223372036854775808ll, false
 
 127ss, false
-127ss, true
+-128ss, true
 32767s, false
-32767s, true
+-32768s, true
 2147483647i, false
-2147483647i, true
+-2147483648i, true
 9223372036854775807l, false
-9223372036854775807l, true
+-9223372036854775808l, true
 9223372036854775807ll, false
 9223372036854775808ll, false
 
@@ -52,3 +52,28 @@
 -9223372036854775808l, true
 -9223372036854775807ll, false
 9223372036854775808ll, false
+
+127ss, false
+-128ss, true
+-128ss, false
+127ss, true
+32767s, false
+-32768s, true
+-32768s, false
+32767s, true
+2147483647i, false
+-2147483648i, true
+-2147483648i, false
+2147483647i, true
+255uss, false
+0uss, true
+0uss, false
+255uss, true
+65535us, false
+0us, true
+0us, false
+65535us, true
+4294967295u, false
+0u, true
+0u, false
+4294967295u, true

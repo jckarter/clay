@@ -18,7 +18,7 @@ __llvm__ {
     %lenv = load $SizeT* %len
 
     call void @llvm.memcpy.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT %lenv, i32 $align, i1 $volatile?);
-    ret i32 0
+    ret i8* null
 }
 
 [len, align, volatile?]
@@ -28,7 +28,7 @@ __llvm__ {
     %srcv = load i8** %src
 
     call void @llvm.memcpy.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT $len, i32 $align, i1 $volatile?);
-    ret i32 0
+    ret i8* null
 }
 
 [align, volatile?]
@@ -39,7 +39,7 @@ __llvm__ {
     %lenv = load $SizeT* %len
 
     call void @llvm.memmove.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT %lenv, i32 $align, i1 $volatile?);
-    ret i32 0
+    ret i8* null
 }
 
 [len, align, volatile?]
@@ -49,7 +49,7 @@ __llvm__ {
     %srcv = load i8** %src
 
     call void @llvm.memmove.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT $len, i32 $align, i1 $volatile?);
-    ret i32 0
+    ret i8* null
 }
 
 [P] private inline _memcpy(dest: Pointer[P], src: Pointer[P], len) { llvm_memcpy(RawPointer(dest), RawPointer(src), len, static TypeAlignment(P), static 0); }

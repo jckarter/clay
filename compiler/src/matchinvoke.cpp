@@ -85,6 +85,11 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
 {
     initializePatterns(overload);
 
+    PatternReseter reseter(overload);
+
+    if (!unifyPatternObj(overload->callablePattern, callable))
+        return new MatchCallableError();
+
     CodePtr code = overload->code;
     if (code->formalVarArg.ptr()) {
         if (argsKey.size() < code->formalArgs.size())
@@ -94,11 +99,6 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (code->formalArgs.size() != argsKey.size())
             return new MatchArityError();
     }
-
-    PatternReseter reseter(overload);
-
-    if (!unifyPatternObj(overload->callablePattern, callable))
-        return new MatchCallableError();
 
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {

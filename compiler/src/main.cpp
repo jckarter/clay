@@ -288,6 +288,7 @@ static void usage(char *argv0)
     cerr << "  -abort                abort on error (to get stacktrace in gdb)\n";
     cerr << "  -run                  execute the program without writing to disk\n";
     cerr << "  -timing               show timing information\n";
+    cerr << "  -full-match-errors    show universal patterns in match failure errors\n";
 #ifdef __APPLE__
     cerr << "  -arch <arch>          build for Darwin architecture <arch>\n";
     cerr << "  -F<dir>               add <dir> to framework search path\n";
@@ -426,6 +427,9 @@ int main(int argc, char **argv) {
         }
         else if (strcmp(argv[i], "-timing") == 0) {
             showTiming = true;
+        }
+        else if (strcmp(argv[i], "-full-match-errors") == 0) {
+            shouldPrintFullMatchErrors = true;
         }
         else if (strcmp(argv[i], "-e") == 0) {
             if (i+1 == argc) {

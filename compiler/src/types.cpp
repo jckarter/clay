@@ -760,6 +760,9 @@ static void initializeVariantType(VariantTypePtr t) {
         evaluateMultiType(x->members, staticEnv, t->memberTypes);
     }
 
+    if (t->memberTypes.empty())
+        error(t->variant, "variant type must have at least one instance");
+
     RecordPtr reprRecord = getVariantReprRecord();
     vector<ObjectPtr> params;
     for (unsigned i = 0; i < t->memberTypes.size(); ++i)
@@ -908,13 +911,13 @@ llvm::Type *llvmFloatType(int bits) {
     }
 }
 
-llvm::Type *llvmPointerType(llvm::Type *llType) {
+llvm::PointerType *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
 }
 
 static void declareLLVMType(TypePtr t);
 
-llvm::Type *llvmPointerType(TypePtr t) {
+llvm::PointerType *llvmPointerType(TypePtr t) {
     if (!t->llType)
         declareLLVMType(t);
     return llvmPointerType(t->llType);
@@ -996,7 +999,7 @@ static void declareLLVMType(TypePtr t) {
                 llArgTypes.push_back(llvmPointerType(t));
         }
         llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llvmIntType(32), llArgTypes, false);
+            llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
         t->llType = llvm::PointerType::getUnqual(llFuncType);
         break;
     }

@@ -39,7 +39,7 @@ alias OPEN_EXISTING     = 3u;
 alias OPEN_ALWAYS       = 4u;
 alias TRUNCATE_EXISTING = 5u;
 
-alias INVALID_FILE_ATTRIBUTES = DWORD(-1);
+alias INVALID_FILE_ATTRIBUTES = Greatest(DWORD);
 
 alias FILE_ATTRIBUTE_READONLY            = 0x00000001u;
 alias FILE_ATTRIBUTE_HIDDEN              = 0x00000002u;

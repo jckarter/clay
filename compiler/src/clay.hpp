@@ -63,7 +63,7 @@ typedef unsigned long long size64_t;
 //
 
 #if (defined(_MSC_VER) && defined(_M_X64)) \
-    || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+    || (defined(__GNUC__) && defined(_INT128_DEFINED))
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
 #elif (defined(__clang__))
@@ -653,6 +653,8 @@ struct Location : public Object {
 //
 // error module
 //
+
+extern bool shouldPrintFullMatchErrors;
 
 struct CompileContextEntry {
     ObjectPtr callable;
@@ -1722,6 +1724,7 @@ struct Overload : public TopLevelItem {
 
     // pre-computed patterns for matchInvoke
     int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
+    bool nameIsPattern;
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     EnvPtr patternEnv;
@@ -1735,7 +1738,7 @@ struct Overload : public TopLevelItem {
              bool isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
-          patternsInitializedState(0) {}
+          patternsInitializedState(0), nameIsPattern(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2360,7 +2363,9 @@ enum PrimOpCode {
     PRIM_RMWMin,
     PRIM_RMWMax,
     PRIM_RMWUMin,
-    PRIM_RMWUMax
+    PRIM_RMWUMax,
+
+    PRIM_activeException
 };
 
 struct PrimOp : public Object {
@@ -2677,8 +2682,8 @@ const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
 llvm::Type *llvmIntType(int bits);
 llvm::Type *llvmFloatType(int bits);
-llvm::Type *llvmPointerType(llvm::Type *llType);
-llvm::Type *llvmPointerType(TypePtr t);
+llvm::PointerType *llvmPointerType(llvm::Type *llType);
+llvm::PointerType *llvmPointerType(TypePtr t);
 llvm::Type *llvmArrayType(llvm::Type *llType, int size);
 llvm::Type *llvmArrayType(TypePtr type, int size);
 llvm::Type *llvmVoidType();
@@ -3260,6 +3265,9 @@ extern llvm::Module *llvmModule;
 extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
+llvm::PointerType *exceptionReturnType();
+llvm::Value *noExceptionReturnValue();
+
 bool initLLVM(std::string const &targetTriple);
 
 bool inlineEnabled();
@@ -3361,6 +3369,7 @@ struct CodegenContext : public Object {
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
     bool checkExceptions;
+    llvm::Value *exceptionValue;
 
     CodegenContext(llvm::Function *llvmFunc)
         : Object(DONT_CARE),
@@ -3368,7 +3377,8 @@ struct CodegenContext : public Object {
           initBuilder(NULL),
           builder(NULL),
           valueForStatics(NULL),
-          checkExceptions(true) {}
+          checkExceptions(true),
+          exceptionValue(NULL) {}
 
     ~CodegenContext() {
         delete builder;

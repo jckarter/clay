@@ -159,6 +159,15 @@ StatementPtr desugarForStatement(ForPtr x) {
 }
 
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
+    IdentifierPtr expVar = new Identifier("%exp");
+
+    CallPtr activeException = new Call(primitive_expr_activeException(), new ExprList());
+
+    BindingPtr expBinding =
+        new Binding(VAR,
+                    vector<IdentifierPtr>(1, expVar),
+                    new ExprList(activeException.ptr()));
+
     bool lastWasAny = false;
     IfPtr lastIf;
     StatementPtr result;
@@ -167,12 +176,13 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         if (lastWasAny)
             error(x, "unreachable catch block");
         if (x->exceptionType.ptr()) {
-            ExprListPtr typeArg = new ExprList(x->exceptionType);
-            CallPtr cond = new Call(prelude_expr_exceptionIsP(), typeArg);
+            ExprListPtr asTypeArgs = new ExprList(x->exceptionType);
+            asTypeArgs->add(new NameRef(expVar));
+            CallPtr cond = new Call(prelude_expr_exceptionIsP(), asTypeArgs);
             cond->location = x->exceptionType->location;
 
             BlockPtr block = new Block();
-            CallPtr getter = new Call(prelude_expr_exceptionAs(), typeArg);
+            CallPtr getter = new Call(prelude_expr_exceptionAs(), asTypeArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -194,8 +204,9 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         else {
             BlockPtr block = new Block();
             block->location = x->location;
+            ExprListPtr asAnyArgs = new ExprList(new NameRef(expVar));
             CallPtr getter = new Call(prelude_expr_exceptionAsAny(),
-                                      new ExprList());
+                                      asAnyArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -218,14 +229,20 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     if (!lastWasAny) {
         assert(lastIf.ptr());
         BlockPtr block = new Block();
+        ExprListPtr continueArgs = new ExprList(new NameRef(expVar));
         CallPtr continueException = new Call(prelude_expr_continueException(),
-                                             new ExprList());
+                                             continueArgs);
         StatementPtr stmt = new ExprStatement(continueException.ptr());
         block->statements.push_back(stmt);
         block->statements.push_back(new Unreachable());
         lastIf->elsePart = block.ptr();
     }
-    return result;
+
+    BlockPtr block = new Block();
+    block->statements.push_back(expBinding.ptr());
+    block->statements.push_back(result.ptr());
+
+    return block.ptr();
 }
 
 StatementPtr desugarSwitchStatement(SwitchPtr x) {

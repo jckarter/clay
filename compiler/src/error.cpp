@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdarg>
 
+bool shouldPrintFullMatchErrors;
 
 
 //
@@ -395,12 +396,19 @@ void matchFailureError(MatchFailureError const &err)
     else
         sout << "no matching overload found";
 
+    int hiddenPatternOverloads = 0;
+
     for (MatchFailureVector::const_iterator i = err.failures.begin();
          i != err.failures.end();
          ++i)
     {
+        OverloadPtr overload = i->first;
+        if (!shouldPrintFullMatchErrors && overload->nameIsPattern) {
+            ++hiddenPatternOverloads;
+            continue;
+        }
         sout << "\n    ";
-        LocationPtr location = i->first->location;
+        LocationPtr location = overload->location;
         int line, column, tabColumn;
         computeLineCol(location, line, column, tabColumn);
         sout << location->source->fileName.c_str()
@@ -408,6 +416,8 @@ void matchFailureError(MatchFailureError const &err)
             << "\n        ";
         printMatchError(sout, i->second);
     }
+    if (hiddenPatternOverloads > 0)
+        sout << "\n    " << hiddenPatternOverloads << " universal overloads not shown (show with -full-match-errors option)";
     error(sout.str());
 }
 

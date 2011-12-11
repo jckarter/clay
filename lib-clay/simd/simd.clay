@@ -30,7 +30,7 @@ inline overload Vec(..args:A) {
 
 [T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
 inline overload Vec[T,n](..args:A) {
-    var a = Vec[T,n]();
+    var a = uninitializedUnsafe(Vec[T,n]);
     var i = 0;
     ..for (x in args) {
         a[i] = x;
@@ -47,7 +47,7 @@ inline overload Vec[T,n](..args:A) {
 
 [T,n]
 inline overload Vec[T,n](x:T) {
-    var a = Vec[T,n]();
+    var a = uninitializedUnsafe(Vec[T,n]);
     for (i in range(n))
         a[i] = x;
     return a;
@@ -60,14 +60,13 @@ inline overload Vec[T,n](x:T) {
 //
 
 [T,n]
-inline overload Vec[T,n]() --> returned:Vec[T,n] {
-}
+inline overload Vec[T,n]() = Vec[T,n](T());
 
 [T,n]
 overload Vec[T,n](src:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %src
     store ${Vec[T,n]} %1, ${Vec[T,n]} * %returned
-    ret i32 0
+    ret i8* null
 }
 
 [T,n]
@@ -260,6 +259,6 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(v, Vec[T,n]);
 //
 
 [T | Integer?(T)]
-inline componentMask(static T) = T(-1);
+inline componentMask(static T) = wrapCast(T, -1);
 inline overload componentMask(static Float32) = bitcast(-1_i, Float32);
 inline overload componentMask(static Float64) = bitcast(-1_l, Float64);

@@ -39,7 +39,7 @@ __llvm__{
 
     store $T %outv, $T* %out
     store $Bool %overflowv, $Bool* %overflow
-    ret i32 0
+    ret i8* null
 }
 
 [T | Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;
@@ -74,33 +74,33 @@ private inline overflow?(T, x) = x < Least(T) or x > Greatest(T);
 inline overload integerAddWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericAdd(Int16(x), Int16(y));
-    return Int8(out), overflow?(Int8, out);
+    return numericConvert(Int8, out), overflow?(Int8, out);
 }
 inline overload integerSubtractWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericSubtract(Int16(x), Int16(y));
-    return Int8(out), overflow?(Int8, out);
+    return numericConvert(Int8, out), overflow?(Int8, out);
 }
 inline overload integerMultiplyWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericMultiply(Int16(x), Int16(y));
-    return Int8(out), overflow?(Int8, out);
+    return numericConvert(Int8, out), overflow?(Int8, out);
 }
 
 inline overload integerAddWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericAdd(UInt16(x), UInt16(y));
-    return UInt8(out), overflow?(UInt8, out);
+    return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
 inline overload integerSubtractWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericSubtract(UInt16(x), UInt16(y));
-    return UInt8(out), overflow?(UInt8, out);
+    return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
 inline overload integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericMultiply(UInt16(x), UInt16(y));
-    return UInt8(out), overflow?(UInt8, out);
+    return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
 
 // XXX need to do int128 overflow checking properly

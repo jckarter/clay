@@ -53,7 +53,10 @@ ComplexType(static T) = T;
 overload ComplexType(static T) = Type(Complex(T()));
 
 [C | Complex?(C)]
-overload C() --> returned:C {}
+overload C() {
+    var zero = ComplexElementType(C)(0.0);
+    return C(zero, zero);
+}
 
 [T | Complex?(T)]
 inline overload Complex32(a:T) = Complex(Float(real(a)), Float(imag(a)));

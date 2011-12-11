@@ -1,6 +1,6 @@
 import test.(expect, printFailure);
 
-alias UNINITIALIZED_CANARY = SizeT(-1);
+alias UNINITIALIZED_CANARY = Greatest(SizeT);
 alias NOISY_CANARIES = false;
 
 noisyPrintln(forward ..values) {

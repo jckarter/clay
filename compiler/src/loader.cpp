@@ -400,6 +400,7 @@ static void initOverload(OverloadPtr x) {
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr y = derefDeep(pattern);
     if (!y) {
+        x->nameIsPattern = true;
         addPatternOverload(x);
     }
     else {
@@ -826,6 +827,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(RMWUMin);
     PRIMITIVE(RMWUMax);
 
+    PRIMITIVE(activeException);
+
 #undef PRIMITIVE
 
     return prims;
@@ -908,6 +911,7 @@ DEFINE_PRIMITIVE_ACCESSOR(Vec)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)
 DEFINE_PRIMITIVE_ACCESSOR(Union)
 DEFINE_PRIMITIVE_ACCESSOR(Static)
+DEFINE_PRIMITIVE_ACCESSOR(activeException)
 
 #define DEFINE_PRELUDE_ACCESSOR(name) \
     ObjectPtr prelude_##name() { \
