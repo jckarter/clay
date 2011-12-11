@@ -46,8 +46,9 @@ HiResTimer::HiResTimer()
 static unsigned long long _get_counter()
 {
     LARGE_INTEGER counter;
-    assert(QueryPerformanceCounter(&counter) != 0);
-    
+    BOOL status = QueryPerformanceCounter(&counter);
+    assert(status != 0);
+
     return (unsigned long long)counter.QuadPart;
 }
 
@@ -68,7 +69,8 @@ void HiResTimer::stop()
 unsigned long long HiResTimer::elapsedNanos()
 {
     LARGE_INTEGER frequency;
-    assert(QueryPerformanceFrequency(&frequency) != 0);
+    BOOL status = QueryPerformanceFrequency(&frequency);
+    assert(status != 0);
 
     double performanceCounterRate = 1000000000.0 / (double)frequency.QuadPart;
 
