@@ -151,14 +151,20 @@ floatFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), LongDouble);
 overload floatFromBits(b:UInt64) = bitcast(b, Double);
 overload floatFromBits(b:UInt32) = bitcast(b, Float);
 
+
 [I | Integer?(I)]
-floatFromParts(neg?:Bool, exp:I, mant:UInt64)
+floatFromParts(static LongDouble, neg?:Bool, exp:I, mant:UInt64)
+    = floatFromBits(mant, bitor( UInt64(exp),
+        if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
+
+[I | Integer?(I)]
+overload floatFromParts(static Double, neg?:Bool, exp:I, mant:UInt64)
     = floatFromBits(bitor(bitand(mant, 0x000F_FFFF_FFFF_FFFF_ul),
         bitshl(bitand(UInt64(exp), 0x7FF_ul), 52),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
 [I | Integer?(I)]
-overload floatFromParts(neg?:Bool, exp:I, mant:UInt32)
+overload floatFromParts(static Float ,neg?:Bool, exp:I, mant:UInt32)
     = floatFromBits(bitor(
         bitand(mant, 0x007F_FFFFu),
         bitshl(bitand(UInt32(exp), 0xFFu), 23),
@@ -201,6 +207,22 @@ overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, 0
 exponentBias(static LongDouble) = 16383;
 overload exponentBias(static Double) = 1023;
 overload exponentBias(static Float) = 127;
+
+mantissaSize(static LongDouble) = 64;
+overload mantissaSize(static Double) = 52;
+overload mantissaSize(static Float) = 23;
+
+mantissaMask(static LongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
+overload mantissaMask(static Double) = 0x000F_FFFF_FFFF_FFFFul;
+overload mantissaMask(static Float) = 0x007F_FFFFu;
+
+exponentMask(static LongDouble) = 0x7FFFul;
+overload exponentMask(static Double) = 0x7FFul;
+overload exponentMask(static Float) = 0xFFu;
+
+floatMantissaZero(static LongDouble) = 0x8000_0000_0000_0000_ul;
+overload floatMantissaZero(static Double) = 0x0000_0000_0000_0000_ul;
+overload floatMantissaZero(static Float) = 0x0000_0000_u;
 
 abs(x:LongDouble) = floatFromBits(floatBits(x).mantissa,bitand(floatBits(x).exponent,0xFFFF_FFFF_FFFF_7FFFul));
 overload abs(x:Double) = floatFromBits(bitand(floatBits(x), 0x7FFF_FFFF_FFFF_FFFFul));
