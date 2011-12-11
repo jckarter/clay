@@ -760,6 +760,9 @@ static void initializeVariantType(VariantTypePtr t) {
         evaluateMultiType(x->members, staticEnv, t->memberTypes);
     }
 
+    if (t->memberTypes.empty())
+        error(t->variant, "variant type must have at least one instance");
+
     RecordPtr reprRecord = getVariantReprRecord();
     vector<ObjectPtr> params;
     for (unsigned i = 0; i < t->memberTypes.size(); ++i)

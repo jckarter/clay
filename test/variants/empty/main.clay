@@ -1,0 +1,5 @@
+variant Empty ();
+
+main() {
+    uninitializedUnsafe(Empty);
+}
