@@ -1,4 +1,5 @@
 public import types.platform.*;
+import numbers.floats.(floatFromBits);
 
 
 //
@@ -145,7 +146,7 @@ define GreatestPositiveFinite;
 
 inline overload LeastPositive(static Float32) : Float32 = 0x0.0000_0002p-126f;
 inline overload LeastPositiveNormalized(static Float32) : Float32 = 0x1.0000_0000p-126f;
-inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FFFEp127f;
+inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FEFEp127f;
 
 inline overload LeastPositive(static Float64) : Float64
     = 0x0.0000_0000_0000_1p-1022;
@@ -158,8 +159,11 @@ inline overload LeastPositive(static Float80) : Float80
     = 0x0.0000_0000_0000_0002p-32766l;
 inline overload LeastPositiveNormalized(static Float80) : Float80
     = 0x1.0000_0000_0000_0000p-32766l;
+// inline overload GreatestPositiveFinite(static Float80) : Float80
+//     = 0x1.FFFF_FFFF_FFFF_FFFFp32767l;
+// XXX temporary until long double hex float parser implemented
 inline overload GreatestPositiveFinite(static Float80) : Float80
-    = 0x1.FFFF_FFFF_FFFF_FFFEp32767l;
+    = floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul);
 
 
 //
