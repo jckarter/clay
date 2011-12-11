@@ -50,17 +50,17 @@ record DequeCoordinate[T] (
 
 [T] overload updateAssign(static add, i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
-    if (offset >= 0 and offset < DequeBufferSize(T))
+    if (offset >= 0 and offset < DequeBufferSSize(T))
         i.current += n;
     else {
-        var nodeOffset = 
+        var nodeOffset =
             if (offset > 0)
-                PtrInt(offset/DequeBufferSize(T))
+                PtrInt(offset)/DequeBufferSSize(T)
             else
-                -PtrInt((-offset - 1)/DequeBufferSize(T)) - 1;
+                -PtrInt(-offset - 1)/DequeBufferSSize(T) - 1;
 
         setNode(i, i.node + nodeOffset);
-        i.current = i.first + (offset - nodeOffset * DequeBufferSize(T));
+        i.current = i.first + (offset - nodeOffset * DequeBufferSSize(T));
     }
 }
 
@@ -78,10 +78,12 @@ record DequeCoordinate[T] (
     j += -PtrInt(n);
 }
 
-[T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt
-    = PtrInt(DequeBufferSize(T) * (i.node - j.node - 1))
-    + PtrInt(i.current - i.first)
-    + PtrInt(j.last - j.current);
+[T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
+    var mapDistance = PtrInt(i.node - j.node - 1);
+    var iNodeDistance = PtrInt(i.current - i.first);
+    var jNodeDistance = PtrInt(j.last - j.current);
+    return DequeBufferSSize(T) * mapDistance + iNodeDistance + jNodeDistance;
+}
 
 [T] overload dereference(i: DequeCoordinate[T]) = ref i.current^;
 [T, I | Integer?(I)] overload index(i: DequeCoordinate[T], n: I) = ref (i + n)^;
@@ -436,6 +438,8 @@ DequeBufferSize(T) {
     else
         return SizeT(1);
 }
+
+DequeBufferSSize(T) = PtrInt(DequeBufferSize(T));
 
 private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
 

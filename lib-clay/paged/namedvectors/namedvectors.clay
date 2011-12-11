@@ -42,7 +42,7 @@ record Header (
 // constructor
 //
 
-private headerSpace() = alignUp(TypeSize(Header), 16);
+private headerSpace() = alignUp(TypeSize(Header), 16u);
 
 [T]
 private requiredFileSize(static T, capacity) =

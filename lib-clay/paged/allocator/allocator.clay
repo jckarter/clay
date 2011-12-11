@@ -8,7 +8,7 @@ import paged.misc.*;
 // paged allocator global state
 //
 
-alias nullBlock = SizeT(-1);
+alias nullBlock = Greatest(SizeT);
 nullBlock?(b) = (b == nullBlock);
 
 alias BucketCount = Int(TypeSize(SizeT) * 8);
@@ -257,7 +257,7 @@ allocatePaged(static T, n_:I) {
 
     // include header in size and align up to 16
     n += TypeSize(Header);
-    n = alignUp(n, 16);
+    n = alignUp(n, 16u);
 
     var b = popFreeList(n);
     if (nullBlock?(b)) {
