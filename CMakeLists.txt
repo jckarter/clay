@@ -66,37 +66,37 @@ elseif(WIN32)
     set(LLVM_DIR "$ENV{ProgramFiles}/LLVM" CACHE PATH "llvm install path")
 
     if(IS_DIRECTORY ${LLVM_DIR})
-		set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}/share/llvm/cmake")
-		include(LLVMConfig)
+        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}/share/llvm/cmake")
+        include(LLVMConfig)
 
-		include_directories( ${LLVM_DIR}/include )
-		link_directories( ${LLVM_DIR}/lib )
-		add_definitions( ${LLVM_DEFINITIONS} )
-		llvm_map_components_to_libraries(LLVM_LIBS jit interpreter native asmparser bitreader bitwriter ipo)
-		find_file(CLANG clang.exe HINTS ${LLVM_DIR}/bin)
+        include_directories( ${LLVM_DIR}/include )
+        link_directories( ${LLVM_DIR}/lib )
+        add_definitions( ${LLVM_DEFINITIONS} )
+        llvm_map_components_to_libraries(LLVM_LIBS jit interpreter native asmparser bitreader bitwriter ipo)
+        find_file(CLANG clang.exe HINTS ${LLVM_DIR}/bin)
     else()
         message(FATAL_ERROR "Could not find LLVM")
     endif()
 
     if(CLANG)
-		find_path(GCC_DIR gcc.exe)
-		if(EXISTS ${GCC_DIR}/../include)
-			file(WRITE ${PROJECT_BINARY_DIR}/test-libclang.c
-				"#include <clang-c/Index.h>\nint main() {CXCursor c;CXType t = clang_getTypedefDeclUnderlyingType(c);}"
-			)
-			execute_process(
-				COMMAND ${CLANG} ${PROJECT_BINARY_DIR}/test-libclang.c -I${GCC_DIR}/../include ${LLVM_DIR}/lib/liblibclang.dll.a
-				OUTPUT_QUIET
-				RESULT_VARIABLE BUILD_BINDGEN_RESULT
-			)
-		else()
-			message("mingw headers not found, cannot test for patched libclang")
-		endif()
-		if(BUILD_BINDGEN_RESULT EQUAL 0)
-			set(BUILD_BINDGEN True)
-		else()
-			message("no compatibly patched libclang found, bindgen will not be built")
-		endif()
+        find_path(GCC_DIR gcc.exe)
+        if(EXISTS ${GCC_DIR}/../include)
+            file(WRITE ${PROJECT_BINARY_DIR}/test-libclang.c
+                "#include <clang-c/Index.h>\nint main() {CXCursor c;CXType t = clang_getTypedefDeclUnderlyingType(c);}"
+            )
+            execute_process(
+                COMMAND ${CLANG} ${PROJECT_BINARY_DIR}/test-libclang.c -I${GCC_DIR}/../include ${LLVM_DIR}/lib/liblibclang.dll.a
+                OUTPUT_QUIET
+                RESULT_VARIABLE BUILD_BINDGEN_RESULT
+            )
+        else()
+            message("mingw headers not found, cannot test for patched libclang")
+        endif()
+        if(BUILD_BINDGEN_RESULT EQUAL 0)
+            set(BUILD_BINDGEN True)
+        else()
+            message("no compatibly patched libclang found, bindgen will not be built")
+        endif()
     else()
         message("-- Clang not found. clay-bindgen will not be built")
     endif()
