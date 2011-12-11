@@ -413,6 +413,10 @@ inline overload remainder(a:A, b:A) : A
 inline overload minus(a:A) : A
     = integerNegateChecked(a);
 
+[A, B | Integer?(A) and Numeric?(B) and IntegerOverflowChecks?()]
+inline overload A(b:B) : A
+    = integerConvertChecked(A, b);
+
 
 //
 // never-checked wrap-on-overflow math
