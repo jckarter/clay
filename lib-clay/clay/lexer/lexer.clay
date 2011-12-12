@@ -19,7 +19,6 @@ enum TokenKind (
     CHAR_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
-    IMAG_LITERAL,
     SPACE,
     COMMENT,
     LLVM,
@@ -345,14 +344,6 @@ private var lexFloatLiteral = modify(
     ),
 );
 
-private var lexImagLiteral = modify(
-    x => Token(IMAG_LITERAL),
-    choice(
-        seq(optional(sign), hexInt, hexFloatTail),
-        seq(optional(sign), decimalInt, floatTail),
-    ),
-);
-
 
 
 //
@@ -450,7 +441,6 @@ private var lexToken = bounds(choice(
     lexCharLiteral,
     lexStringLiteral,
     lexFloatLiteral,
-    lexImagLiteral,
     lexIntLiteral,
 ));
 

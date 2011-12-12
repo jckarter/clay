@@ -439,7 +439,6 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
-struct ImagType;
 struct ComplexType;
 struct ArrayType;
 struct VecType;
@@ -591,7 +590,6 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
-typedef Pointer<ImagType> ImagTypePtr;
 typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
@@ -2048,7 +2046,6 @@ struct Module : public ANode {
     vector<string> attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
-    ImagTypePtr attrDefaultImagType;
 
     map<string, set<ObjectPtr> > publicSymbols;
     bool publicSymbolsLoaded;
@@ -2478,7 +2475,6 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
-    IMAG_TYPE,
     COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
@@ -2507,14 +2503,9 @@ struct IntegerType : public Type {
 
 struct FloatType : public Type {
     int bits;
-    FloatType(int bits)
-        : Type(FLOAT_TYPE), bits(bits) {}
-};
-
-struct ImagType : public Type {
-    int bits;
-    ImagType(int bits)
-        : Type(IMAG_TYPE), bits(bits) {}
+    bool isImaginary;
+    FloatType(int bits, bool isImaginary)
+        : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {

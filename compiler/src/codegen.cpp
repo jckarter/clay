@@ -1671,10 +1671,25 @@ void codegenCompileTimeValue(EValuePtr ev,
 
     case BOOL_TYPE :
     case INTEGER_TYPE :
-    case FLOAT_TYPE :
-    case IMAG_TYPE : {
+    case FLOAT_TYPE : {
         llvm::Value *llv = codegenSimpleConstant(ev);
         ctx->builder->CreateStore(llv, out0->llValue);
+        break;
+    }
+
+    case COMPLEX_TYPE : {
+        ComplexType *tt = (ComplexType *)ev->type.ptr();
+        const llvm::StructLayout *layout = complexTypeLayout(tt);
+        char *srcPtr = ev->addr + layout->getElementOffset(1);
+        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
+        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
+        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
+        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
+        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
+        EValuePtr evSrc2 = new EValue(imagType(tt->bits), srcPtr2);
+        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
+        CValuePtr cgDest2 = new CValue(imagType(tt->bits), destPtr2);
+        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
         break;
     }
 
@@ -1795,42 +1810,23 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
         FloatType *t = (FloatType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            return llvm::ConstantFP::get(llvmType(t), *((float *)ev->addr));
+            val = llvm::ConstantFP::get(llvmType(t), *((float *)ev->addr));
             break;
         case 64 :
-            return llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
+            val = llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
             break;
         case 80 :
             //use APfloat to get an 80bit value
             bits[0] = *(uint64_t*)ev->addr;
             bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
-            return llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
+            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
             break;
         default :
             assert(false);
         }
         break;
     }
-    case IMAG_TYPE : {
-        ImagType *t = (ImagType *)ev->type.ptr();
-        switch (t->bits) {
-        case 32 :
-            return llvm::ConstantFP::get(llvmType(t), *((float *)ev->addr));
-            break;
-        case 64 :
-            return llvm::ConstantFP::get(llvmType(t), *((double *)ev->addr));
-            break;
-        case 80 :
-            //use APfloat to get an 80bit value
-            bits[0] = *(uint64_t*)ev->addr;
-            bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
-            return llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
-            break;
-        default :
-            assert(false);
-        }
-        break;
-    }
+
     default :
         assert(false);
     }
@@ -2537,15 +2533,14 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
             outstream << (result ? 1 : 0);
         }
         else if ((vh->type->typeKind == INTEGER_TYPE)
-                 ||(vh->type->typeKind == FLOAT_TYPE)
-                 ||(vh->type->typeKind == IMAG_TYPE))
+                 ||(vh->type->typeKind == FLOAT_TYPE))
         {
             ostringstream sout;
             printValue(sout, new EValue(vh->type, vh->buf));
             outstream << sout.str();
         }
         else {
-            error("only booleans, integers, floats, and imag values are supported");
+            error("only booleans, integers, and float values are supported");
         }
     }
     else if (x->objKind == IDENTIFIER) {
@@ -3969,7 +3964,6 @@ static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);
@@ -4072,7 +4066,6 @@ static llvm::Value *numericValue(MultiCValuePtr args,
         switch (cv->type->typeKind) {
         case INTEGER_TYPE :
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             break;
         default :
             argumentTypeError(index, "numeric type", cv->type);
@@ -4443,7 +4436,6 @@ void codegenPrimOp(PrimOpPtr x,
             flag = ctx->builder->CreateICmpEQ(v0, v1);
             break;
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             flag = ctx->builder->CreateFCmpUEQ(v0, v1);
             break;
         default :
@@ -4474,7 +4466,6 @@ void codegenPrimOp(PrimOpPtr x,
             break;
         }
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             flag = ctx->builder->CreateFCmpULT(v0, v1);
             break;
         default :
@@ -4500,7 +4491,6 @@ void codegenPrimOp(PrimOpPtr x,
             result = ctx->builder->CreateAdd(v0, v1);
             break;
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             result = ctx->builder->CreateFAdd(v0, v1);
             break;
         default :
@@ -4524,7 +4514,6 @@ void codegenPrimOp(PrimOpPtr x,
             result = ctx->builder->CreateSub(v0, v1);
             break;
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             result = ctx->builder->CreateFSub(v0, v1);
             break;
         default :
@@ -4548,7 +4537,6 @@ void codegenPrimOp(PrimOpPtr x,
             result = ctx->builder->CreateMul(v0, v1);
             break;
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             result = ctx->builder->CreateFMul(v0, v1);
             break;
         default :
@@ -4577,7 +4565,6 @@ void codegenPrimOp(PrimOpPtr x,
             break;
         }
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             result = ctx->builder->CreateFDiv(v0, v1);
             break;
         default :
@@ -4600,7 +4587,6 @@ void codegenPrimOp(PrimOpPtr x,
             result = ctx->builder->CreateNeg(v);
             break;
         case FLOAT_TYPE :
-        case IMAG_TYPE :
             result = ctx->builder->CreateFNeg(v);
             break;
         default :
@@ -4768,28 +4754,7 @@ void codegenPrimOp(PrimOpPtr x,
                 }
                 break;
             }
-            case IMAG_TYPE : {
-                ImagType *dest2 = (ImagType *)dest.ptr();
-                if (src->typeKind == INTEGER_TYPE) {
-                    IntegerType *src2 = (IntegerType *)src.ptr();
-                    if (src2->isSigned)
-                        result = ctx->builder->CreateSIToFP(v, llvmType(dest));
-                    else
-                        result = ctx->builder->CreateUIToFP(v, llvmType(dest));
-                }
-                else if (src->typeKind == IMAG_TYPE) {
-                    ImagType *src2 = (ImagType *)src.ptr();
-                    if (dest2->bits < src2->bits)
-                        result = ctx->builder->CreateFPTrunc(v, llvmType(dest));
-                    else
-                        result = ctx->builder->CreateFPExt(v, llvmType(dest));
-                }
-                else {
-                    assert(false);
-                    result = NULL;
-                }
-                break;
-            }
+
             default :
                 assert(false);
                 result = NULL;

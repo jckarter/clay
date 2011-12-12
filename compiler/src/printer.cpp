@@ -1033,23 +1033,6 @@ void printValue(ostream &out, EValuePtr ev)
         }
         break;
     }
-    case IMAG_TYPE : {
-        ImagType *t = (ImagType *)ev->type.ptr();
-        switch (t->bits) {
-        case 32 :
-            out << *((float *)ev->addr);
-            break;
-        case 64 :
-            out << *((double *)ev->addr);
-            break;
-        case 80 :
-            out << *((long double *)ev->addr);
-            break;
-        default :
-            assert(false);
-        }
-        break;
-    }
     case COMPLEX_TYPE : {
         ComplexType *t = (ComplexType *)ev->type.ptr();
         switch (t->bits) {

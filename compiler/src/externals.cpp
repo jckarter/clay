@@ -18,13 +18,10 @@ static llvm::Value *promoteCVarArg(TypePtr t,
     case FLOAT_TYPE : {
         FloatType *ft = (FloatType *)t.ptr();
         if (ft->bits == 32)
-            return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
-        return llv;
-    }
-    case IMAG_TYPE : {
-        ImagType *ft = (ImagType *)t.ptr();
-        if (ft->bits == 32)
-            return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+            if(ft->isImaginary)
+                return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+            else
+                return ctx->builder->CreateFPExt(llv, llvmType(imag64Type));
         return llv;
     }
     default :
@@ -273,7 +270,6 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
         case BOOL_TYPE:
         case INTEGER_TYPE:
         case FLOAT_TYPE:
-        case IMAG_TYPE:
         case POINTER_TYPE:
         case CODE_POINTER_TYPE:
         case CCODE_POINTER_TYPE:
@@ -440,29 +436,6 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     }
     case FLOAT_TYPE: {
         FloatType *x = (FloatType *)type.ptr();
-        switch (x->bits) {
-        case 32:
-            unifyWordClass(begin + offset/8, SSE_VECTOR);
-            break;
-        case 64:
-            unifyWordClass(begin + offset/8, SSE_SCALAR);
-            break;
-        case 80:
-            unifyWordClass(begin + offset/8, X87);
-            unifyWordClass(begin + offset/8 + 1, X87UP);
-            break;
-        case 128:
-            unifyWordClass(begin + offset/8, X87);
-            unifyWordClass(begin + offset/8 + 1, X87UP);
-            break;
-        default:
-            assert(false);
-            break;
-        }
-        break;
-    }
-    case IMAG_TYPE: {
-        ImagType *x = (ImagType *)type.ptr();
         switch (x->bits) {
         case 32:
             unifyWordClass(begin + offset/8, SSE_VECTOR);

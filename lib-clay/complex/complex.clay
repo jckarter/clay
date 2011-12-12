@@ -70,9 +70,9 @@ inline overload Complex80(a:T) = Complex(LongDouble(a), LongDouble(0));
 
 [T | Complex?(T)]
 inline conj(z:T) = Complex(re(z)^,-im(z)^);
-//
-// [T | Imaginary?(T)]
-// inline overload conj(z:T) = -z;
+
+[T | Imaginary?(T)]
+inline overload conj(z:T) = -z;
 
 
 

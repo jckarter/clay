@@ -32,19 +32,19 @@ overload UnsignedInteger?(static UInt128) = true;
 overload ByteSizedInteger?(static Int8) = true;
 overload ByteSizedInteger?(static UInt8) = true;
 
-
 [T] Float?(static T) = false;
 overload Float?(static Float32) = true;
 overload Float?(static Float64) = true;
 overload Float?(static Float80) = true;
 [A, B] overload Float?(static A, static B) = Float?(A) and Float?(B);
 
-[T] Imag?(static T) = false;
-overload Imag?(static Imag64) = true;
-// overload Imag?(T) = true;
-// overload Imag?(T) = true;
+[T] Imaginary?(static T) = false;
+overload Imaginary?(static Imag32) = true;
+overload Imaginary?(static Imag64) = true;
+overload Imaginary?(static Imag80) = true;
+[A, B] overload Imaginary?(static A, static B) = Imaginary?(A) and Imaginary?(B);
 
-[T] Numeric?(static T) = Integer?(T) or Float?(T) or Imag?(T);
+[T] Numeric?(static T) = Integer?(T) or Float?(T) or Imaginary?(T);
 [A, B] overload Numeric?(static A, static B) = Numeric?(A) and Numeric?(B);
 
 
@@ -59,24 +59,31 @@ private BiggerInteger?(static A, static B) =
                                     UnsignedInteger?(A) and
                                     SignedInteger?(B));
 
+private define BiggerFloat?;
+
 [A,B | Float?(A,B) or Imaginary?(A,B)]
-private BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
+overload BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
+
+[A,B | (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
+overload BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
 
 
 private define BiggerNumeric?;
 
-[A,B | Float?(A) and Integer?(B)]
+[A,B | (Float?(A) or Imaginary?(A)) and Integer?(B)]
 overload BiggerNumeric?(static A, static B) = true;
 
-[A,B | Integer?(A) and Float?(B)]
+[A,B | Integer?(A) and (Float?(A) or Imaginary?(A))]
 overload BiggerNumeric?(static A, static B) = false;
 
 [A,B | Integer?(A,B)]
 overload BiggerNumeric?(static A, static B) = BiggerInteger?(A,B);
 
-[A,B | Float?(A,B)]
+[A,B | Float?(A,B) or Imaginary?(A,B)]
 overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 
+[A,B | (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
+overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 
 
 //
@@ -147,7 +154,7 @@ inline overload equals?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload equals?(a:A, b:A) = numericEquals?(a, b);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload equals?(a:A, b:A) = floatOrderedAndEquals?(a, b);
 
 
@@ -159,7 +166,7 @@ inline overload notEquals?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload notEquals?(a:A, b:A) = not equals?(a, b);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload notEquals?(a:A, b:A) = floatUnorderedOrNotEquals?(a, b);
 
 
@@ -171,7 +178,7 @@ inline overload lesser?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload lesser?(a:A, b:A) = numericLesser?(a, b);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload lesser?(a:A, b:A) = floatOrderedAndLesser?(a, b);
 
 
@@ -183,7 +190,7 @@ inline overload lesserEquals?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload lesserEquals?(a:A, b:A) = floatOrderedAndLesserEquals?(a, b);
 
 
@@ -195,7 +202,7 @@ inline overload greater?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload greater?(a:A, b:A) = lesser?(b, a);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload greater?(a:A, b:A) = floatOrderedAndGreater?(a, b);
 
 
@@ -207,7 +214,7 @@ inline overload greaterEquals?(a:A, b:B) =
 [A | Numeric?(A)]
 inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
 
-[A | Float?(A)]
+[A | Float?(A) or Imaginary?(A)]
 inline overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
 
 inline inRange?(x,l,u) =  x<u and l<=x;

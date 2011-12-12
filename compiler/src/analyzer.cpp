@@ -1,3 +1,4 @@
+
 #include "clay.hpp"
 #include "libclaynames.hpp"
 
@@ -86,7 +87,6 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);
@@ -200,14 +200,12 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
     switch (t->typeKind) {
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case IMAG_TYPE :
         return t;
     default :
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
 }
-
 
 static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
 {
@@ -1167,9 +1165,6 @@ void verifyAttributes(ModulePtr mod)
                     Type *ty = (Type*)obj.ptr();
                     if (ty->typeKind == FLOAT_TYPE) {
                         mod->attrDefaultFloatType = (FloatType*)ty;
-                        continue;
-                    } else if (ty->typeKind == IMAG_TYPE) {
-                        mod->attrDefaultImagType = (ImagType*)ty;
                         continue;
                     } else if (ty->typeKind == INTEGER_TYPE) {
                         mod->attrDefaultIntegerType = (IntegerType*)ty;

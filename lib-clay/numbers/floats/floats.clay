@@ -1,5 +1,5 @@
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -9,7 +9,7 @@ floatOrderedAndEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -19,7 +19,7 @@ floatOrderedAndGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -29,7 +29,7 @@ floatOrderedAndGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -39,7 +39,7 @@ floatOrderedAndLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -49,7 +49,7 @@ floatOrderedAndLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrderedAndNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -59,7 +59,7 @@ floatOrderedAndNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatOrdered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -70,7 +70,7 @@ floatOrdered?(a:T, b:T) --> returned:Bool __llvm__ {
 }
 
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -80,7 +80,7 @@ floatUnorderedOrEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -90,7 +90,7 @@ floatUnorderedOrGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -100,7 +100,7 @@ floatUnorderedOrGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -110,7 +110,7 @@ floatUnorderedOrLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -120,7 +120,7 @@ floatUnorderedOrLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnorderedOrNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
@@ -130,7 +130,7 @@ floatUnorderedOrNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     ret i8* null
 }
 
-[T | Float?(T)]
+[T | Float?(T) or Imaginary?(T)]
 floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
