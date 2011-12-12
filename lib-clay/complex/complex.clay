@@ -24,8 +24,6 @@ inline real(z:C) = re(z)^;
 [C | Complex?(C)]
 inline imag(z:C) = im(z)^;
 
-
-
 inline Complex(a:Float,b:Float) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Double,b:Double) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:LongDouble,b:LongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
@@ -37,10 +35,9 @@ inline overload Complex(a:LongDouble,b:Float) --> r:Complex80 { re(r)^ = a; im(r
 inline overload Complex(a:LongDouble,b:Double) --> r:Complex80 { re(r)^ = a; im(r)^ = LongDouble(b);}
 
 [T | Float?(T)]
-inline overload Complex(a:T) = Complex(a,copysign(T(0),a));
-inline overload Complex(a:Int) = Complex(Double(a), copysign(Double(0),a));
-inline overload Complex(a:Long) = Complex(Double(a), copysign(Double(0),a));
-
+inline overload Complex(a:T) = Complex(a,T(0));
+inline overload Complex(a:Int) = Complex(Double(a), Double(0));
+inline overload Complex(a:Long) = Complex(Double(a), Double(0));
 
 [T | Complex?(T)]
 ComplexElementType(z:T) = Type(real(z));
@@ -73,6 +70,9 @@ inline overload Complex80(a:T) = Complex(LongDouble(a), LongDouble(0));
 
 [T | Complex?(T)]
 inline conj(z:T) = Complex(re(z)^,-im(z)^);
+//
+// [T | Imaginary?(T)]
+// inline overload conj(z:T) = -z;
 
 
 

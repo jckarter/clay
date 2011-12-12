@@ -918,13 +918,12 @@ llvm::Type *llvmFloatType(int bits) {
         return llvm::Type::getDoubleTy(llvm::getGlobalContext());
     case 80 :
         return llvm::Type::getX86_FP80Ty(llvm::getGlobalContext());
-    case 128 :
-        return llvm::Type::getFP128Ty(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;
     }
 }
+
 
 llvm::PointerType *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
@@ -990,14 +989,14 @@ static void declareLLVMType(TypePtr t) {
     }
     case IMAG_TYPE : {
         ImagType *x = (ImagType *)t.ptr();
-        t->llType = llvmFloatType(x->bits);
+        t->llType = llvmType(floatType(x->bits));
         break;
     }
     case COMPLEX_TYPE :{
         ComplexType *x = (ComplexType *)t.ptr();
         vector<llvm::Type *> llTypes;
         llTypes.push_back(llvmType(floatType(x->bits)));
-        llTypes.push_back(llvmType(floatType(x->bits)));
+        llTypes.push_back(llvmType(imagType(x->bits)));
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
         break;
     }

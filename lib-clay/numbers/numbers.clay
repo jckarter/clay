@@ -39,8 +39,12 @@ overload Float?(static Float64) = true;
 overload Float?(static Float80) = true;
 [A, B] overload Float?(static A, static B) = Float?(A) and Float?(B);
 
+[T] Imag?(static T) = false;
+overload Imag?(static Imag64) = true;
+// overload Imag?(T) = true;
+// overload Imag?(T) = true;
 
-[T] Numeric?(static T) = Integer?(T) or Float?(T);
+[T] Numeric?(static T) = Integer?(T) or Float?(T) or Imag?(T);
 [A, B] overload Numeric?(static A, static B) = Numeric?(A) and Numeric?(B);
 
 
@@ -55,7 +59,7 @@ private BiggerInteger?(static A, static B) =
                                     UnsignedInteger?(A) and
                                     SignedInteger?(B));
 
-[A,B | Float?(A,B)]
+[A,B | Float?(A,B) or Imaginary?(A,B)]
 private BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
 
 
@@ -365,6 +369,15 @@ inline overload Float64(s:S) = parseFloat64(s);
 
 [S | String?(S)]
 inline overload Float80(s:S) = parseFloat80(s);
+
+[S | String?(S)]
+inline overload Imag32(s:S) = parseImag32(s);
+
+[S | String?(S)]
+inline overload Imag64(s:S) = parseImag64(s);
+
+[S | String?(S)]
+inline overload Imag80(s:S) = parseImag80(s);
 
 [S | String?(S)]
 inline overload Complex32(s:S) = parseComplex32(s);

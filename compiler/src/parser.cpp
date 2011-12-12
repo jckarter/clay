@@ -199,6 +199,7 @@ static bool floatLiteral(int op, ExprPtr &x) {
     return true;
 }
 
+
 static bool charLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;

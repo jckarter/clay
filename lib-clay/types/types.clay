@@ -24,10 +24,6 @@ alias Float = Float32;
 alias Double = Float64;
 alias LongDouble = Float80;
 
-alias ImagFloat = Float32;
-alias ImagDouble = Float64;
-alias ImagLongDouble = Float80;
-
 alias RawPointer = Pointer[Byte];
 alias OpaquePointer = Pointer[Byte];
 
@@ -149,7 +145,7 @@ define GreatestPositiveFinite;
 
 inline overload LeastPositive(static Float32) : Float32 = 0x0.0000_0002p-126f;
 inline overload LeastPositiveNormalized(static Float32) : Float32 = 0x1.0000_0000p-126f;
-inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FEFEp127f;
+inline overload GreatestPositiveFinite(static Float32) : Float32 = 0x1.FFFF_FEp127f;
 
 inline overload LeastPositive(static Float64) : Float64
     = 0x0.0000_0000_0000_1p-1022;

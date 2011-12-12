@@ -1701,23 +1701,6 @@ void codegenCompileTimeValue(EValuePtr ev,
         }
         break;
     }
-
-//    case COMPLEX_TYPE : {
-//        ComplexType *tt = (ComplexType *)ev->type.ptr();
-//        const llvm::StructLayout *layout = complexTypeLayout(tt);
-//        char *srcPtr = ev->addr + layout->getElementOffset(1);
-//        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
-//        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
-//        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
-//        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
-//        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
-//        EValuePtr evSrc2 = new EValue(floatType(tt->bits), srcPtr2);
-//        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
-//        CValuePtr cgDest2 = new CValue(floatType(tt->bits), destPtr2);
-//        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
-//        break;
-//    }
-
     default : {
         ostringstream sout;
         sout << "constants of type " << ev->type
@@ -4751,7 +4734,7 @@ void codegenPrimOp(PrimOpPtr x,
                     else
                         result = ctx->builder->CreateZExt(v, llvmType(dest));
                 }
-                else if (src->typeKind == FLOAT_TYPE || src->typeKind == IMAG_TYPE) {
+                else if (src->typeKind == FLOAT_TYPE) {
                     if (dest2->isSigned)
                         result = ctx->builder->CreateFPToSI(v, llvmType(dest));
                     else
@@ -4772,8 +4755,30 @@ void codegenPrimOp(PrimOpPtr x,
                     else
                         result = ctx->builder->CreateUIToFP(v, llvmType(dest));
                 }
-                else if (src->typeKind == FLOAT_TYPE || src->typeKind == IMAG_TYPE) {
+                else if (src->typeKind == FLOAT_TYPE) {
                     FloatType *src2 = (FloatType *)src.ptr();
+                    if (dest2->bits < src2->bits)
+                        result = ctx->builder->CreateFPTrunc(v, llvmType(dest));
+                    else
+                        result = ctx->builder->CreateFPExt(v, llvmType(dest));
+                }
+                else {
+                    assert(false);
+                    result = NULL;
+                }
+                break;
+            }
+            case IMAG_TYPE : {
+                ImagType *dest2 = (ImagType *)dest.ptr();
+                if (src->typeKind == INTEGER_TYPE) {
+                    IntegerType *src2 = (IntegerType *)src.ptr();
+                    if (src2->isSigned)
+                        result = ctx->builder->CreateSIToFP(v, llvmType(dest));
+                    else
+                        result = ctx->builder->CreateUIToFP(v, llvmType(dest));
+                }
+                else if (src->typeKind == IMAG_TYPE) {
+                    ImagType *src2 = (ImagType *)src.ptr();
                     if (dest2->bits < src2->bits)
                         result = ctx->builder->CreateFPTrunc(v, llvmType(dest));
                     else

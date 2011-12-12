@@ -87,6 +87,7 @@ overload DottedName(a:A) =
 variant Expr ( BoolLiteral
              , IntLiteral
              , FloatLiteral
+             , ImagLiteral
              , CharLiteral
              , StringLiteral
              , IdentifierLiteral
@@ -123,6 +124,11 @@ record IntLiteral = ast(
 );
 
 record FloatLiteral = ast(
+    value: String,
+    suffix: Maybe[String],
+);
+
+record ImagLiteral = ast(
     value: String,
     suffix: Maybe[String],
 );

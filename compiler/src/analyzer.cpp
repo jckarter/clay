@@ -1168,6 +1168,9 @@ void verifyAttributes(ModulePtr mod)
                     if (ty->typeKind == FLOAT_TYPE) {
                         mod->attrDefaultFloatType = (FloatType*)ty;
                         continue;
+                    } else if (ty->typeKind == IMAG_TYPE) {
+                        mod->attrDefaultImagType = (ImagType*)ty;
+                        continue;
                     } else if (ty->typeKind == INTEGER_TYPE) {
                         mod->attrDefaultIntegerType = (IntegerType*)ty;
                         continue;

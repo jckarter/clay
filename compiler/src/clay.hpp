@@ -978,7 +978,6 @@ struct FloatLiteral : public Expr {
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
-
 struct CharLiteral : public Expr {
     char value;
     ExprPtr desugared;
@@ -2030,6 +2029,7 @@ struct Module : public ANode {
     vector<string> attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
+    ImagTypePtr attrDefaultImagType;
 
     map<string, set<ObjectPtr> > publicSymbols;
     bool publicSymbolsLoaded;

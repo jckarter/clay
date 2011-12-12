@@ -534,6 +534,7 @@ static ModulePtr typeModule(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
+    case IMAG_TYPE :
     case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :

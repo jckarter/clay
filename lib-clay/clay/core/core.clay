@@ -491,7 +491,7 @@ overload displayError(e:ModuleNotFoundError) {
     displaySemanticError(
         e, e.name,
         "module not found: ",
-        join(".", mapped(ident => ident.str, e.name.parts)),
+        join(".", mapped(ident => ident.ustr, e.name.parts)),
     );
 }
 
