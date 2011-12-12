@@ -1,8 +1,7 @@
-Index: include/clang-c/Index.h
-===================================================================
---- include/clang-c/Index.h	(revision 145002)
-+++ include/clang-c/Index.h	(working copy)
-@@ -1911,7 +1911,8 @@
+diff -ur clang-3.0.src.orig/include/clang-c/Index.h clang-3.0.src/include/clang-c/Index.h
+--- clang-3.0.src.orig/include/clang-c/Index.h	2011-12-12 10:17:41.000000000 -0800
++++ clang-3.0.src/include/clang-c/Index.h	2011-12-12 10:59:50.000000000 -0800
+@@ -1831,7 +1831,8 @@
    CXCursor_CXXFinalAttr                  = 404,
    CXCursor_CXXOverrideAttr               = 405,
    CXCursor_AnnotateAttr                  = 406,
@@ -12,7 +11,7 @@ Index: include/clang-c/Index.h
       
    /* Preprocessing */
    CXCursor_PreprocessingDirective        = 500,
-@@ -2383,10 +2384,29 @@
+@@ -2303,10 +2304,29 @@
    CXType_ObjCObjectPointer = 109,
    CXType_FunctionNoProto = 110,
    CXType_FunctionProto = 111,
@@ -43,7 +42,7 @@ Index: include/clang-c/Index.h
   * \brief The type of an element in the abstract syntax tree.
   *
   */
-@@ -2401,6 +2421,42 @@
+@@ -2321,6 +2341,42 @@
  CINDEX_LINKAGE CXType clang_getCursorType(CXCursor C);
  
  /**
@@ -86,7 +85,7 @@ Index: include/clang-c/Index.h
   * \determine Determine whether two CXTypes represent the same type.
   *
   * \returns non-zero if the CXTypes represent the same type and 
-@@ -2458,14 +2514,45 @@
+@@ -2378,13 +2434,44 @@
  CINDEX_LINKAGE CXString clang_getTypeKindSpelling(enum CXTypeKind K);
  
  /**
@@ -109,7 +108,7 @@ Index: include/clang-c/Index.h
 + * \brief Retrieve the number of non-variadic arguments associated with a function type.
 + *
 + * If a non-function type is passed in, -1 is returned.
-  */
++ */
 +CINDEX_LINKAGE long long clang_getNumArgTypes(CXType T);
 +
 +/**
@@ -130,11 +129,10 @@ Index: include/clang-c/Index.h
 + * \brief Retrieve the result type associated with a given cursor.
 + *
 + * This only returns a valid type if the cursor refers to a function or method.
-+ */
+  */
  CINDEX_LINKAGE CXType clang_getCursorResultType(CXCursor C);
  
- /**
-@@ -2475,6 +2562,22 @@
+@@ -2395,6 +2482,22 @@
  CINDEX_LINKAGE unsigned clang_isPODType(CXType T);
  
  /**
@@ -157,10 +155,44 @@ Index: include/clang-c/Index.h
   * \brief Return the element type of an array type.
   *
   * If a non-array type is passed in, an invalid type is returned.
-Index: tools/libclang/CXType.cpp
-===================================================================
---- tools/libclang/CXType.cpp	(revision 145002)
-+++ tools/libclang/CXType.cpp	(working copy)
+diff -ur clang-3.0.src.orig/tools/libclang/CIndex.cpp clang-3.0.src/tools/libclang/CIndex.cpp
+--- clang-3.0.src.orig/tools/libclang/CIndex.cpp	2011-12-12 10:17:52.000000000 -0800
++++ clang-3.0.src/tools/libclang/CIndex.cpp	2011-12-12 10:27:37.000000000 -0800
+@@ -3206,6 +3206,11 @@
+     return createCXString(AA->getAnnotation());
+   }
+ 
++  if (C.kind == CXCursor_AsmLabelAttr) {
++    AsmLabelAttr *AA = cast<AsmLabelAttr>(cxcursor::getCursorAttr(C));
++    return createCXString(AA->getLabel());
++  }
++
+   return createCXString("");
+ }
+ 
+@@ -3529,6 +3534,8 @@
+       return createCXString("attribute(override)");
+   case CXCursor_AnnotateAttr:
+     return createCXString("attribute(annotate)");
++  case CXCursor_AsmLabelAttr:
++    return createCXString("asm label");
+   case CXCursor_PreprocessingDirective:
+     return createCXString("preprocessing directive");
+   case CXCursor_MacroDefinition:
+diff -ur clang-3.0.src.orig/tools/libclang/CXCursor.cpp clang-3.0.src/tools/libclang/CXCursor.cpp
+--- clang-3.0.src.orig/tools/libclang/CXCursor.cpp	2011-12-12 10:17:52.000000000 -0800
++++ clang-3.0.src/tools/libclang/CXCursor.cpp	2011-12-12 10:27:37.000000000 -0800
+@@ -46,6 +46,7 @@
+     case attr::Final: return CXCursor_CXXFinalAttr;
+     case attr::Override: return CXCursor_CXXOverrideAttr;
+     case attr::Annotate: return CXCursor_AnnotateAttr;
++    case attr::AsmLabel: return CXCursor_AsmLabelAttr;
+   }
+ 
+   return CXCursor_UnexposedAttr;
+diff -ur clang-3.0.src.orig/tools/libclang/CXType.cpp clang-3.0.src/tools/libclang/CXType.cpp
+--- clang-3.0.src.orig/tools/libclang/CXType.cpp	2011-12-12 10:17:52.000000000 -0800
++++ clang-3.0.src/tools/libclang/CXType.cpp	2011-12-12 10:27:37.000000000 -0800
 @@ -85,6 +85,7 @@
      TKCASE(FunctionNoProto);
      TKCASE(FunctionProto);
@@ -384,11 +416,10 @@ Index: tools/libclang/CXType.cpp
  CXType clang_getArrayElementType(CXType CT) {
    QualType ET = QualType();
    QualType T = GetQualType(CT);
-Index: tools/libclang/libclang.exports
-===================================================================
---- tools/libclang/libclang.exports	(revision 145002)
-+++ tools/libclang/libclang.exports	(working copy)
-@@ -47,6 +47,7 @@
+diff -ur clang-3.0.src.orig/tools/libclang/libclang.exports clang-3.0.src/tools/libclang/libclang.exports
+--- clang-3.0.src.orig/tools/libclang/libclang.exports	2011-12-12 10:17:52.000000000 -0800
++++ clang-3.0.src/tools/libclang/libclang.exports	2011-12-12 10:59:36.000000000 -0800
+@@ -45,6 +45,7 @@
  clang_findReferencesInFile
  clang_findReferencesInFileWithBlock
  clang_formatDiagnostic
@@ -396,7 +427,7 @@ Index: tools/libclang/libclang.exports
  clang_getArrayElementType
  clang_getArraySize
  clang_getCString
-@@ -96,10 +97,15 @@
+@@ -92,9 +93,14 @@
  clang_getDiagnosticRange
  clang_getDiagnosticSeverity
  clang_getDiagnosticSpelling
@@ -404,7 +435,6 @@ Index: tools/libclang/libclang.exports
 +clang_getEnumConstantDeclValue
 +clang_getEnumConstantDeclUnsignedValue
 +clang_getEnumDeclIntegerType
- clang_getExpansionLocation
  clang_getFile
  clang_getFileName
  clang_getFileTime
@@ -412,27 +442,26 @@ Index: tools/libclang/libclang.exports
  clang_getIBOutletCollectionType
  clang_getIncludedFile
  clang_getInclusions
-@@ -109,9 +115,11 @@
+@@ -104,8 +110,10 @@
  clang_getNullCursor
  clang_getNullLocation
  clang_getNullRange
 +clang_getNumArgTypes
  clang_getNumCompletionChunks
  clang_getNumDiagnostics
- clang_getNumDiagnosticsInSet
 +clang_getNumElements
  clang_getNumOverloadedDecls
  clang_getOverloadedDecl
  clang_getOverriddenCursors
-@@ -134,6 +142,7 @@
+@@ -127,6 +135,7 @@
+ clang_getTranslationUnitCursor
  clang_getTranslationUnitSpelling
  clang_getTypeDeclaration
- clang_getTypeKindSpelling
 +clang_getTypedefDeclUnderlyingType
+ clang_getTypeKindSpelling
  clang_hashCursor
- clang_index_getIBOutletCollectionAttrInfo
- clang_index_getObjCCategoryDeclInfo
-@@ -151,6 +160,7 @@
+ clang_isAttribute
+@@ -135,6 +144,7 @@
  clang_isDeclaration
  clang_isExpression
  clang_isFileMultipleIncludeGuarded
@@ -440,40 +469,3 @@ Index: tools/libclang/libclang.exports
  clang_isInvalid
  clang_isPODType
  clang_isPreprocessing
-Index: tools/libclang/CXCursor.cpp
-===================================================================
---- tools/libclang/CXCursor.cpp	(revision 145002)
-+++ tools/libclang/CXCursor.cpp	(working copy)
-@@ -46,6 +46,7 @@
-     case attr::Final: return CXCursor_CXXFinalAttr;
-     case attr::Override: return CXCursor_CXXOverrideAttr;
-     case attr::Annotate: return CXCursor_AnnotateAttr;
-+    case attr::AsmLabel: return CXCursor_AsmLabelAttr;
-   }
- 
-   return CXCursor_UnexposedAttr;
-Index: tools/libclang/CIndex.cpp
-===================================================================
---- tools/libclang/CIndex.cpp	(revision 145002)
-+++ tools/libclang/CIndex.cpp	(working copy)
-@@ -3002,6 +3002,11 @@
-     return createCXString(AA->getAnnotation());
-   }
- 
-+  if (C.kind == CXCursor_AsmLabelAttr) {
-+    AsmLabelAttr *AA = cast<AsmLabelAttr>(cxcursor::getCursorAttr(C));
-+    return createCXString(AA->getLabel());
-+  }
-+
-   return createCXString("");
- }
- 
-@@ -3325,6 +3330,8 @@
-       return createCXString("attribute(override)");
-   case CXCursor_AnnotateAttr:
-     return createCXString("attribute(annotate)");
-+  case CXCursor_AsmLabelAttr:
-+    return createCXString("asm label");
-   case CXCursor_PreprocessingDirective:
-     return createCXString("preprocessing directive");
-   case CXCursor_MacroDefinition:
