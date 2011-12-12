@@ -393,16 +393,17 @@ Library changes:
   checking. These checks can be disabled with
   '-Dclay.DisableAssertions.overflowChecks' (or '-Dclay.DisableAssertions').
   This flag affects addition, subtraction, multiplication, division, remainder,
-  negation and conversion for all standard integer types. Left shift currently
-  does not have integer overflow checks enabled by this flag.
+  left shift, negation and conversion for all standard integer types.
 
 * New functions are provided that perform integer math with defined two's-
-  complement wrap-around behavior.
+  complement wrap-around behavior. These functions should be used when
+  overflow is intended.
     wrapAdd
     wrapSubtract
     wrapMultiply
     wrapDivide
     wrapRemainder
+    wrapBitshl
     wrapMinus
     wrapCast
 
