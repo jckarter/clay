@@ -112,11 +112,16 @@ inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(A, v);
 [A,B | Numeric?(A,B) and BiggerNumeric?(B,A)]
 inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(B, v);
 
+ImagBaseType(static Imag32) = Float;
+overload ImagBaseType(static Imag64) = Double;
+overload ImagBaseType(static Imag80) = LongDouble;
 
 
 //
 // constructors
 //
+
+
 
 [T | Numeric?(T)]
 inline overload T() = numericConvert(T, 0);
@@ -124,6 +129,11 @@ inline overload T() = numericConvert(T, 0);
 [T1,T2 | Numeric?(T1,T2)]
 inline overload T1(src:T2) = numericConvert(T1, src);
 
+[T,I | Float?(T) and Imaginary?(I)]
+overload T(b:I) = T(0);
+
+[T,I | Float?(T) and Imaginary?(I)]
+overload I(b:T) = I(0);
 
 
 //
@@ -275,50 +285,24 @@ inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 // Imaginary binary ops
 //
 
-[A,B | Numeric?(A,B)]
-inline overload add(a:A, b:B) =
-    numericAdd(toBiggerNumericType(A, B, a),
-               toBiggerNumericType(A, B, b));
 
-[A | Numeric?(A)]
-inline overload add(a:A, b:A) = numericAdd(a, b);
+[A,B | Numeric?(A) and Imaginary?(B)]
+inline overload multiply(a:A, b:B) = numericMultiply(B(a), b);
 
+[A,B | Numeric?(B) and Imaginary?(A)]
+inline overload multiply(a:A, b:B) = numericMultiply(a, A(b));
 
-[A,B | Numeric?(A,B)]
-inline overload subtract(a:A, b:B) =
-    numericSubtract(toBiggerNumericType(A, B, a),
-                    toBiggerNumericType(A, B, b));
+[A | Imaginary?(A)]
+inline overload multiply(a:A, b:A) = ImagBaseType(A)(-numericMultiply(a, b));
 
-[A | Numeric?(A)]
-inline overload subtract(a:A, b:A) = numericSubtract(a, b);
+[A,B | Numeric?(A) and Imaginary?(B)]
+inline overload divide(a:A, b:B) = numericDivide(B(-a), b);
 
+[A,B | Numeric?(B) and Imaginary?(A)]
+inline overload divide(a:A, b:B) = numericDivide(a, A(b));
 
-[A,B | Numeric?(A,B)]
-inline overload multiply(a:A, b:B) =
-    numericMultiply(toBiggerNumericType(A, B, a),
-                    toBiggerNumericType(A, B, b));
-
-[A | Numeric?(A)]
-inline overload multiply(a:A, b:A) = numericMultiply(a, b);
-
-
-[A,B | Numeric?(A,B)]
-inline overload divide(a:A, b:B) =
-    numericDivide(toBiggerNumericType(A, B, a),
-                  toBiggerNumericType(A, B, b));
-
-[A | Numeric?(A)]
-inline overload divide(a:A, b:A) = numericDivide(a, b);
-
-
-[A,B | Integer?(A,B)]
-inline overload remainder(a:A, b:B) =
-    integerRemainder(toBiggerNumericType(A, B, a),
-                     toBiggerNumericType(A, B, b));
-
-[A | Integer?(A)]
-inline overload remainder(a:A, b:A) = integerRemainder(a, b);
-
+[A | Imaginary?(A)]
+inline overload divide(a:A, b:A) = ImagBaseType(A)(numericDivide(a, b));
 
 
 //
