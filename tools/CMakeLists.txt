@@ -45,6 +45,7 @@ if(BUILD_BINDGEN)
             -I${clay_SOURCE_DIR}/tools
             -o ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
             -L${LLVM_PREFIX}/lib
+	    -L${LLVM_LIBDIR}
             -Wl,-rpath,${LLVM_PREFIX}/lib
             -l${LIBCLANG}
             ${clay_SOURCE_DIR}/tools/bindgen.clay)
