@@ -89,7 +89,7 @@ overload erf(x:T) {
     if (w < T(2.2)) {
         var t = w * w;
         var k = Int(t);
-        t -= k;
+        t -= T(k);
         k *= 13;
         y = ((((((((((((T(a[k]) * t + T(a[k + 1])) * t +
             T(a[k + 2])) * t + T(a[k + 3])) * t + T(a[k + 4])) * t +
@@ -98,7 +98,7 @@ overload erf(x:T) {
             T(a[k + 11])) * t + T(a[k + 12])) * w;
     } else if (w < T(6.9)) {
         var k = Int(w);
-        var t = w - k;
+        var t = w - T(k);
         k = 13 * (k - 2);
         y = (((((((((((T(b[k]) * t + T(b[k + 1])) * t +
             T(b[k + 2])) * t + T(b[k + 3])) * t + T(b[k + 4])) * t +

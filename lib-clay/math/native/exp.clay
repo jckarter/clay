@@ -4,7 +4,7 @@
 //
 
 import math.(M_LOG2El);
-import numbers.floats.floats.(infinity,exponentBias,exponentMask,floatMantissaZero);
+import numbers.floats.floats.(floatFromParts,infinity,exponentBias,exponentMask,floatMantissaZero);
 
 
 define exp;
@@ -43,13 +43,13 @@ inline overload exp(x:T) = T(exp(Double(x)));
 
 [T | Float?(T)]
 overload exp(x:T) --> r:T {
-    if(value > expmax(T))
+    if(x > expmax(T))
         r <-- infinity(T);
     else{
         r <-- x;
         /* n = floor(x / log 2) */
         var a = T(M_LOG2El) * r;
-        a -= if(a < 0) T(1) else T(0);
+        a -= if(a < T(0)) T(1) else T(0);
         var n = toUInt(a);
         /* x -= n * log2 */
         var px = T(n);
