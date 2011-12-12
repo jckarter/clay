@@ -185,9 +185,6 @@ inline overload LeastPositiveNormalized(static Imag80) : Imag80
     = 0x1.0000_0000_0000_0000p-32766lj;
 // inline overload GreatestPositiveFinite(static Imag80) : Imag80
 //     = 0x1.FFFF_FFFF_FFFF_FFFFp32767lj;
-// XXX temporary until long double hex Imag parser implemented
-inline overload GreatestPositiveFinite(static Imag80) : Imag80
-    = numericConvert(Imag80, floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul));
 
 
 //
