@@ -976,7 +976,6 @@ struct FloatLiteral : public Expr {
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
-
 struct CharLiteral : public Expr {
     char value;
     ExprPtr desugared;
@@ -2504,8 +2503,9 @@ struct IntegerType : public Type {
 
 struct FloatType : public Type {
     int bits;
-    FloatType(int bits)
-        : Type(FLOAT_TYPE), bits(bits) {}
+    bool isImaginary;
+    FloatType(int bits, bool isImaginary)
+        : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
@@ -2645,11 +2645,12 @@ extern TypePtr uint128Type;
 extern TypePtr float32Type;
 extern TypePtr float64Type;
 extern TypePtr float80Type;
-extern TypePtr float128Type;
+extern TypePtr imag32Type;
+extern TypePtr imag64Type;
+extern TypePtr imag80Type;
 extern TypePtr complex32Type;
 extern TypePtr complex64Type;
 extern TypePtr complex80Type;
-extern TypePtr complex128Type;
 
 // aliases
 extern TypePtr cIntType;
@@ -2662,6 +2663,7 @@ TypePtr integerType(int bits, bool isSigned);
 TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
+TypePtr imagType(int bits);
 TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(const vector<TypePtr> &argTypes,

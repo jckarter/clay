@@ -3277,6 +3277,7 @@ static void op_numericConvert2(EValuePtr dest, EValuePtr src)
         }
         break;
     }
+
     default :
         assert(false);
     }
@@ -3320,6 +3321,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
         }
         break;
     }
+
     default :
         assert(false);
     }

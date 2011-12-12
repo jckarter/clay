@@ -95,6 +95,18 @@ overload printTo(stream, x:Complex32) {
     printWithSprintf(stream, "%.16g%+.16gj", ..mapValues(Double, ..rect(x)));
 }
 
+overload printTo(stream, x:Imag80) {
+    printWithSprintf(stream, "%.20Lgj", LongDouble(x));
+}
+
+overload printTo(stream, x:Imag64) {
+    printWithSprintf(stream, "%.16gj", Double(x));
+}
+
+overload printTo(stream, x:Imag32) {
+    printWithSprintf(stream, "%.8gj", Double(x));
+}
+
 overload printTo(stream, x:LongDouble) {
     printWithSprintf(stream, "%.20Lg", LongDouble(x));
 }
@@ -327,6 +339,18 @@ overload printReprTo(stream, x:Float64) {
 
 overload printReprTo(stream, x:Float80) {
     printWithSprintf(stream, "%.16Lafl", x);
+}
+
+overload printReprTo(stream, x:Imag32) {
+    printWithSprintf(stream, "%.6afj", Float64(x));
+}
+
+overload printReprTo(stream, x:Imag64) {
+    printWithSprintf(stream, "%.13aj", x);
+}
+
+overload printReprTo(stream, x:Imag80) {
+    printWithSprintf(stream, "%.16Laflj", x);
 }
 
 overload printReprTo(stream, x:Complex80) {

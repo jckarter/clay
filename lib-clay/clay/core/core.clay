@@ -222,7 +222,7 @@ record Primitive = referenceType(
 
 record BoolTag();
 record IntegerTag(signed?:Bool, bits:Int);
-record FloatTag(bits:Int);
+record FloatTag(imaginary?:Bool, bits:Int);
 record ComplexTag(bits:Int);
 record PointerTag();
 record CodePointerTag();
@@ -300,15 +300,17 @@ var uint16Type = Type(IntegerTag(false, 16));
 var uint32Type = Type(IntegerTag(false, 32));
 var uint64Type = Type(IntegerTag(false, 64));
 
-var float32Type = Type(FloatTag(32));
-var float64Type = Type(FloatTag(64));
-var float80Type = Type(FloatTag(80));
-var float128Type = Type(FloatTag(128));
+var float32Type = Type(FloatTag(false, 32));
+var float64Type = Type(FloatTag(false,64));
+var float80Type = Type(FloatTag(false,80));
+
+var imag32Type = Type(FloatTag(true, 32));
+var imag64Type = Type(FloatTag(true, 64));
+var imag80Type = Type(FloatTag(true, 80));
 
 var complex32Type = Type(ComplexTag(32));
 var complex64Type = Type(ComplexTag(64));
 var complex80Type = Type(ComplexTag(80));
-var complex128Type = Type(ComplexTag(128));
 
 
 
@@ -487,7 +489,7 @@ overload displayError(e:ModuleNotFoundError) {
     displaySemanticError(
         e, e.name,
         "module not found: ",
-        join(".", mapped(ident => ident.str, e.name.parts)),
+        join(".", mapped(ident => ident.ustr, e.name.parts)),
     );
 }
 

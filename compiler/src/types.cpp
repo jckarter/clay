@@ -15,11 +15,12 @@ TypePtr uint128Type;
 TypePtr float32Type;
 TypePtr float64Type;
 TypePtr float80Type;
-TypePtr float128Type;
+TypePtr imag32Type;
+TypePtr imag64Type;
+TypePtr imag80Type;
 TypePtr complex32Type;
 TypePtr complex64Type;
 TypePtr complex80Type;
-TypePtr complex128Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -48,14 +49,15 @@ void initTypes() {
     uint32Type = new IntegerType(32, false);
     uint64Type = new IntegerType(64, false);
     uint128Type = new IntegerType(128, false);
-    float32Type = new FloatType(32);
-    float64Type = new FloatType(64);
-    float80Type = new FloatType(80);
-    float128Type = new FloatType(128);
+    float32Type = new FloatType(32, false);
+    float64Type = new FloatType(64, false);
+    float80Type = new FloatType(80, false);
+    imag32Type = new FloatType(32, true);
+    imag64Type = new FloatType(64, true);
+    imag80Type = new FloatType(80, true);
     complex32Type = new ComplexType(32);
     complex64Type = new ComplexType(64);
     complex80Type = new ComplexType(80);
-    complex128Type = new ComplexType(128);
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -122,7 +124,17 @@ TypePtr floatType(int bits) {
     case 32 : return float32Type;
     case 64 : return float64Type;
     case 80 : return float80Type;
-    case 128 : return float128Type;
+    default :
+        assert(false);
+        return NULL;
+    }
+}
+
+TypePtr imagType(int bits) {
+    switch (bits) {
+    case 32 : return imag32Type;
+    case 64 : return imag64Type;
+    case 80 : return imag80Type;
     default :
         assert(false);
         return NULL;
@@ -134,7 +146,6 @@ TypePtr complexType(int bits) {
     case 32 : return complex32Type;
     case 64 : return complex64Type;
     case 80 : return complex80Type;
-    case 128 : return complex128Type;
     default :
         assert(false);
         return NULL;
@@ -237,7 +248,7 @@ TypePtr arrayType(TypePtr elementType, int size) {
 
 TypePtr vecType(TypePtr elementType, int size) {
     if (elementType->typeKind != INTEGER_TYPE && elementType->typeKind != FLOAT_TYPE)
-        error("Vec element type must be an integer or floating-point type");
+        error("Vec element type must be an integer or float type");
     int h = pointerHash(elementType.ptr()) + size;
     h &= vecTypes.size() - 1;
     vector<VecTypePtr>::iterator i, end;
@@ -903,13 +914,12 @@ llvm::Type *llvmFloatType(int bits) {
         return llvm::Type::getDoubleTy(llvm::getGlobalContext());
     case 80 :
         return llvm::Type::getX86_FP80Ty(llvm::getGlobalContext());
-    case 128 :
-        return llvm::Type::getFP128Ty(llvm::getGlobalContext());
     default :
         assert(false);
         return NULL;
     }
 }
+
 
 llvm::PointerType *llvmPointerType(llvm::Type *llType) {
     return llvm::PointerType::getUnqual(llType);
@@ -977,7 +987,7 @@ static void declareLLVMType(TypePtr t) {
         ComplexType *x = (ComplexType *)t.ptr();
         vector<llvm::Type *> llTypes;
         llTypes.push_back(llvmType(floatType(x->bits)));
-        llTypes.push_back(llvmType(floatType(x->bits)));
+        llTypes.push_back(llvmType(imagType(x->bits)));
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
         break;
     }
@@ -1192,7 +1202,11 @@ void typePrint(ostream &out, TypePtr t) {
     }
     case FLOAT_TYPE : {
         FloatType *x = (FloatType *)t.ptr();
-        out << "Float" << x->bits;
+        if(x->isImaginary) {
+            out << "Imag" << x->bits;
+        } else {
+            out << "Float" << x->bits;
+        }
         break;
     }
     case COMPLEX_TYPE : {

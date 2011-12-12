@@ -2,6 +2,9 @@
 import libc;
 
 //Import native Clay functions
+public import math.native.core.*;
+public import math.native.exp.*;
+public import math.native.trig.*;
 public import math.native.gamma.*;
 public import math.native.beta.*;
 public import math.native.erf.*;
@@ -18,6 +21,7 @@ alias M_LN2		    = 0.69314718055994530942;	/* log_e 2 */
 alias M_LN10	    = 2.30258509299404568402;	/* log_e 10 */
 alias M_PI	        = 3.14159265358979323846;	/* pi */
 alias M_TWOPI       = 6.28318530717958647693;   /* 2*pi */
+alias M_1_TWOPI     = 0.15915494309189533577;   /* 1/(2*pi) */
 alias M_PI_2        = 1.57079632679489661923;	/* pi/2 */
 alias M_PI_4        = 0.78539816339744830962;	/* pi/4 */
 alias M_1_PI        = 0.31830988618379067154;	/* 1/pi */
@@ -34,6 +38,7 @@ alias M_LN2l	    = 0.6931471805599453094172321214581766_l;  /* log_e 2 */
 alias M_LN10l       = 2.3025850929940456840179914546843642_l;  /* log_e 10 */
 alias M_PIl		    = 3.1415926535897932384626433832795029_l;  /* pi */
 alias M_TWOPIl      = 6.2831853071795864769252867665590058_l;   /* 2*pi */
+alias M_1_TWOPIl    = 0.1591549430918953357688837633725143620344596457405_l; /* 1/(2*pi) */
 alias M_PI_2l	    = 1.570796326794896619231321691639751442098584699687_l;  /* pi/2 */
 alias M_PI_4l	    = 0.7853981633974483096156608458198757_l;  /* pi/4 */
 alias M_1_PIl	    = 0.3183098861837906715377675267450287_l;  /* 1/pi */
@@ -56,11 +61,7 @@ define sin;
 define tan;
 define log;
 define log10;
-define exp;
 define atan2;
-define cosh;
-define sinh;
-define tanh;
 define acosh;
 define asinh;
 define atanh;
@@ -76,7 +77,6 @@ define sqrt;
 define ceil;
 define floor;
 define significand;
-define hypot;
 define mod;
 define inf?;
 define finite?;
@@ -115,11 +115,11 @@ define sign;
 inline overload abs(x:I) = if(x >= 0) x else -x;
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imag(x));
-[T | Numeric?(T)]
+[T | Float?(T)]
 inline overload floor(x:T) = Long(x + (T(1) - Long(x))) - (T(1) - Long(x));
-[T | Numeric?(T)]
+[T | Float?(T)]
 inline overload ceil(x:T) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
-[T | Numeric?(T)]
+[T | Float?(T)]
 inline overload round(x:T) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
 
 overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
@@ -161,18 +161,6 @@ overload tan(x:Double) = libc.tan(x);
 overload tan(x:Float) = libc.tanf(x);
 overload tan(x:LongDouble) = libc.tanl(x);
 
-overload cosh(x:Double) = libc.cosh(x);
-overload cosh(x:Float) = libc.coshf(x);
-overload cosh(x:LongDouble) = libc.coshl(x);
-
-overload sinh(x:Double) = libc.sinh(x);
-overload sinh(x:Float) = libc.sinhf(x);
-overload sinh(x:LongDouble) = libc.sinhl(x);
-
-overload tanh(x:Double) = libc.tanh(x);
-overload tanh(x:Float) = libc.tanhf(x);
-overload tanh(x:LongDouble) = libc.tanhl(x);
-
 overload acosh(x:Double) = libc.acosh(x);
 overload acosh(x:Float) = libc.acoshf(x);
 overload acosh(x:LongDouble) = libc.acoshl(x);
@@ -184,10 +172,6 @@ overload asinh(x:LongDouble) = libc.asinhl(x);
 overload atanh(x:Double) = libc.atanh(x);
 overload atanh(x:Float) = libc.atanhf(x);
 overload atanh(x:LongDouble) = libc.atanhl(x);
-
-overload exp(x:Double) = libc.exp(x);
-overload exp(x:Float) = libc.expf(x);
-overload exp(x:LongDouble) = libc.expl(x);
 
 overload log(x:Double) = libc.log(x);
 overload log(x:Float) = libc.logf(x);
@@ -274,16 +258,6 @@ overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [T | Integer?(T)] overload pow(x:Double,y:T) = libc.pow(x,Double(y));
 [T | Integer?(T)] overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T | Integer?(T)] overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
-
-overload hypot(x:Double,y:Double) = libc.hypot(x,y);
-overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
-overload hypot(x:LongDouble,y:LongDouble) = libc.hypotl(x,y);
-overload hypot(x:Double,y:Float) = libc.hypot(x,Double(y));
-overload hypot(x:Float,y:Double) = libc.hypot(Double(x),y);
-overload hypot(x:Double,y:LongDouble) = libc.hypotl(LongDouble(x),y);
-overload hypot(x:LongDouble,y:Double) = libc.hypotl(x,LongDouble(y));
-overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
-overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
 overload mod(x:Double,y:Double) = libc.fmod(x,y);
 overload mod(x:Float,y:Float) = libc.fmodf(x,y);
@@ -559,9 +533,33 @@ inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
 inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
 //Add complex^float & float^complex overloads
 
-inline overload sqrt(z:Complex64) = libc.csqrt(z);
-inline overload sqrt(z:Complex32) = libc.csqrtf(z);
-inline overload sqrt(z:Complex80) = libc.csqrtl(z);
+[U | Complex?(U)]
+inline overload sqrt(z:U) {
+    alias T = ComplexElementType(z);
+    alias ZERO = T(0);
+    alias HALF = T(0.5);
+    alias ONE = T(1);
+    var c = U();
+    if (zero?(z)) c = z;
+    else {
+        var x,y,r,w = abs(real(z)),abs(imag(z)),ZERO,ZERO;
+        if (x >= y) {
+            r = y / x;
+            w = sqrt(x) * sqrt(HALF * (ONE + sqrt(ONE + r * r)));
+        }
+        else{
+            r = x / y;
+            w = sqrt(y) * sqrt(HALF * (r + sqrt(ONE + r * r)));
+        }
+        if (real(z) >= ZERO)
+            c = Complex(w, imag(z) / (w + w));
+        else {
+            c = Complex(imag(z) / (imag(c) + imag(c)),
+                (if(imag(z) >= ZERO) w else -w));
+        }
+    }
+    return c;
+}
 
 inline overload proj(z:Complex64) = libc.cproj(z);
 inline overload proj(z:Complex32) = libc.cprojf(z);

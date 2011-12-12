@@ -18,7 +18,10 @@ static llvm::Value *promoteCVarArg(TypePtr t,
     case FLOAT_TYPE : {
         FloatType *ft = (FloatType *)t.ptr();
         if (ft->bits == 32)
-            return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+            if(ft->isImaginary)
+                return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+            else
+                return ctx->builder->CreateFPExt(llv, llvmType(imag64Type));
         return llv;
     }
     default :
@@ -444,10 +447,6 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
             unifyWordClass(begin + offset/8, X87);
             unifyWordClass(begin + offset/8 + 1, X87UP);
             break;
-        case 128:
-            unifyWordClass(begin + offset/8, X87);
-            unifyWordClass(begin + offset/8 + 1, X87UP);
-            break;
         default:
             assert(false);
             break;
@@ -460,15 +459,9 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         case 32:
         case 64:
             _classifyType(floatType(complexType->bits), begin, offset);
-            _classifyType(floatType(complexType->bits), begin, offset + complexType->bits/8);
+            _classifyType(imagType(complexType->bits), begin, offset + complexType->bits/8);
             break;
         case 80:
-            unifyWordClass(begin + offset/8, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 3, COMPLEX_X87);
-            break;
-        case 128:
             unifyWordClass(begin + offset/8, COMPLEX_X87);
             unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
             unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);

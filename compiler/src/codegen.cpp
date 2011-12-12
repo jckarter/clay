@@ -1677,6 +1677,22 @@ void codegenCompileTimeValue(EValuePtr ev,
         break;
     }
 
+    case COMPLEX_TYPE : {
+        ComplexType *tt = (ComplexType *)ev->type.ptr();
+        const llvm::StructLayout *layout = complexTypeLayout(tt);
+        char *srcPtr = ev->addr + layout->getElementOffset(1);
+        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
+        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
+        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
+        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
+        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
+        EValuePtr evSrc2 = new EValue(imagType(tt->bits), srcPtr2);
+        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
+        CValuePtr cgDest2 = new CValue(imagType(tt->bits), destPtr2);
+        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
+        break;
+    }
+
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -1700,23 +1716,6 @@ void codegenCompileTimeValue(EValuePtr ev,
         }
         break;
     }
-
-    case COMPLEX_TYPE : {
-        ComplexType *tt = (ComplexType *)ev->type.ptr();
-        const llvm::StructLayout *layout = complexTypeLayout(tt);
-        char *srcPtr = ev->addr + layout->getElementOffset(1);
-        EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
-        llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
-        CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
-        codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
-        char *srcPtr2 = ev->addr + layout->getElementOffset(0);
-        EValuePtr evSrc2 = new EValue(floatType(tt->bits), srcPtr2);
-        llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
-        CValuePtr cgDest2 = new CValue(floatType(tt->bits), destPtr2);
-        codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
-        break;
-    }
-
     default : {
         ostringstream sout;
         sout << "constants of type " << ev->type
@@ -1749,6 +1748,7 @@ _uintConstant(EValuePtr ev)
     return llvm::ConstantInt::get(llvmType(ev->type),
                                   *((T *)ev->addr));
 }
+
 
 llvm::Value *codegenSimpleConstant(EValuePtr ev)
 {
@@ -1821,22 +1821,20 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
             val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
             break;
-        case 128 :
-            //use APfloat to get a 128bit value -> should int128 be used here?
-            bits[0] = *(uint64_t*)ev->addr;
-            bits[1] = *(uint64_t*)(ev->addr + 1);
-            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(128, 2, bits)));
-            break;
         default :
             assert(false);
         }
         break;
     }
+
     default :
         assert(false);
     }
     return val;
 }
+
+
+
 
 
 
@@ -4756,6 +4754,7 @@ void codegenPrimOp(PrimOpPtr x,
                 }
                 break;
             }
+
             default :
                 assert(false);
                 result = NULL;

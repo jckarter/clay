@@ -19,7 +19,6 @@ enum TokenKind (
     CHAR_LITERAL,
     INT_LITERAL,
     FLOAT_LITERAL,
-    COMPLEX_LITERAL,
     SPACE,
     COMMENT,
     LLVM,
@@ -345,15 +344,6 @@ private var lexFloatLiteral = modify(
     ),
 );
 
-//
-// complex literal
-//
-
-private var lexComplexLiteral = modify(
-    x => Token(COMPLEX_LITERAL),
-    seq(optional(sign), decimalInt, floatTail),
-);
-
 
 
 //
@@ -451,7 +441,6 @@ private var lexToken = bounds(choice(
     lexCharLiteral,
     lexStringLiteral,
     lexFloatLiteral,
-    lexComplexLiteral,
     lexIntLiteral,
 ));
 

@@ -1,3 +1,4 @@
+
 #include "clay.hpp"
 #include "libclaynames.hpp"
 
@@ -205,7 +206,6 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
         return NULL;
     }
 }
-
 
 static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
 {
