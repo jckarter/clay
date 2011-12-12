@@ -437,10 +437,10 @@ inline bitblend(mask, ones, zeros)
 //
 
 [I, J | Integer?(I) and Integer?(J)]
-bitrol(x:I, n:J) = bitor(bitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
+bitrol(x:I, n:J) = bitor(wrapBitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
 
 [I, J | Integer?(I) and Integer?(J)]
-bitror(x:I, n:J) = bitor(bitshr(x, n), bitshl(x, TypeSize(I)*8 - n));
+bitror(x:I, n:J) = bitor(bitshr(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 
 

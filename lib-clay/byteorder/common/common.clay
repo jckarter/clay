@@ -1,5 +1,7 @@
 import byteorder.constants.*;
 import byteorder.platform.*;
+import numbers.(wrapBitshl as shl);
+import operators.(bitshr as shr);
 
 alias BigEndian? = ByteOrder == BigEndian;
 alias LittleEndian? = ByteOrder == LittleEndian;
@@ -16,61 +18,61 @@ overload hostToNetwork(n:I8) = n;
 overload networkToHost(n:I16) {
     ref bytes = bitcast(n, Array[UInt8, 2]);
     return bitor(
-        bitshl(UInt16(bytes[0]), 8),
-                  UInt16(bytes[1]),
+        shl(UInt16(bytes[0]), 8),
+            UInt16(bytes[1]),
     );
 }
 [I16 | inValues?(I16, Int16, UInt16)]
 overload hostToNetwork(n:I16) --> returned:UInt16 {
     ref bytes = bitcast(returned, Array[UInt8, 2]);
-    bytes[0] = UInt16(bitshr(n,  8));
-    bytes[1] = UInt16(           n     );
+    bytes[0] = UInt16(shr(n,  8));
+    bytes[1] = UInt16(    n     );
 }
 
 [I32 | inValues?(I32, Int32, UInt32)]
 overload networkToHost(n:I32) {
     ref bytes = bitcast(n, Array[UInt8, 4]);
     return bitor(
-        bitshl(UInt32(bytes[0]), 24),
-        bitshl(UInt32(bytes[1]), 16),
-        bitshl(UInt32(bytes[2]),  8),
-                  UInt32(bytes[3])
+        shl(UInt32(bytes[0]), 24),
+        shl(UInt32(bytes[1]), 16),
+        shl(UInt32(bytes[2]),  8),
+            UInt32(bytes[3])
     );
 }
 [I32 | inValues?(I32, Int32, UInt32)]
 overload hostToNetwork(n:I32) --> returned:UInt32 {
     ref bytes = bitcast(returned, Array[UInt8, 4]);
-    bytes[0] = UInt8(bitshr(n, 24));
-    bytes[1] = UInt8(bitshr(n, 16));
-    bytes[2] = UInt8(bitshr(n,  8));
-    bytes[3] = UInt8(           n     );
+    bytes[0] = UInt8(shr(n, 24));
+    bytes[1] = UInt8(shr(n, 16));
+    bytes[2] = UInt8(shr(n,  8));
+    bytes[3] = UInt8(    n     );
 }
 
 [I64 | inValues?(I64, Int64, UInt64)]
 overload networkToHost(n:I64) {
     ref bytes = bitcast(n, Array[UInt8, 8]);
     return bitor(
-        bitshl(UInt64(bytes[0]), 56),
-        bitshl(UInt64(bytes[1]), 48),
-        bitshl(UInt64(bytes[2]), 40),
-        bitshl(UInt64(bytes[3]), 32),
-        bitshl(UInt64(bytes[4]), 24),
-        bitshl(UInt64(bytes[5]), 16),
-        bitshl(UInt64(bytes[6]),  8),
-                  UInt64(bytes[7])
+        shl(UInt64(bytes[0]), 56),
+        shl(UInt64(bytes[1]), 48),
+        shl(UInt64(bytes[2]), 40),
+        shl(UInt64(bytes[3]), 32),
+        shl(UInt64(bytes[4]), 24),
+        shl(UInt64(bytes[5]), 16),
+        shl(UInt64(bytes[6]),  8),
+            UInt64(bytes[7])
     );
 }
 [I64 | inValues?(I64, Int64, UInt64)]
 overload hostToNetwork(n:I64) --> returned:UInt64 {
     ref bytes = bitcast(returned, Array[UInt8, 8]);
-    bytes[0] = UInt8(bitshr(n, 56));
-    bytes[1] = UInt8(bitshr(n, 48));
-    bytes[2] = UInt8(bitshr(n, 40));
-    bytes[3] = UInt8(bitshr(n, 32));
-    bytes[4] = UInt8(bitshr(n, 24));
-    bytes[5] = UInt8(bitshr(n, 16));
-    bytes[6] = UInt8(bitshr(n,  8));
-    bytes[7] = UInt8(           n     );
+    bytes[0] = UInt8(shr(n, 56));
+    bytes[1] = UInt8(shr(n, 48));
+    bytes[2] = UInt8(shr(n, 40));
+    bytes[3] = UInt8(shr(n, 32));
+    bytes[4] = UInt8(shr(n, 24));
+    bytes[5] = UInt8(shr(n, 16));
+    bytes[6] = UInt8(shr(n,  8));
+    bytes[7] = UInt8(    n     );
 }
 
 [| BigEndian?]
@@ -83,7 +85,7 @@ overload networkToHost(n:I16) = bitror(n, 8);
 
 [I32| LittleEndian? and inValues?(I32, Int32, UInt32)]
 overload networkToHost(n:I32) = bitxor(
-        bitshr(bitandc(bitxor(n, bitror(n, 16)), I32(0x00FF0000)), 8),
+        shr(bitandc(bitxor(n, bitror(n, 16)), I32(0x00FF0000)), 8),
         bitror(n, 8),
     );
 

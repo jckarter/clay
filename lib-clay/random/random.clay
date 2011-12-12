@@ -31,7 +31,7 @@ overload generate(r, static UInt64){
   var x = UInt64(generate(r, UInt32));
   var y = UInt64(generate(r, UInt32));
 
-  return bitor(bitshl(x, 32), y);
+  return bitor(wrapBitshl(x, 32), y);
 }
 
 overload generate(r, static Int64) = wrapCast(Int64, generate(r, UInt64));
@@ -85,7 +85,7 @@ private smallDouble(r) =
 private smallFloat(r) = mask(generate(r, UInt32), 24) / Float32(bitshl(1, 24));
 
 private xor(x, y) = bitxor(x, y);
-private xsl(x, n) = xor(x, bitshl(x, n));
+private xsl(x, n) = xor(x, wrapBitshl(x, n));
 private xsr(x, n) = xor(x, bitshr(x, n));
 [I] private mask(x:I, n) = bitand(x, bitshl(I(1), n) - I(1));
 private pr() = UInt32(libc.random());
