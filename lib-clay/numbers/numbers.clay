@@ -271,6 +271,54 @@ inline overload remainder(a:A, b:B) =
 [A | Integer?(A)]
 inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 
+//
+// Imaginary binary ops
+//
+
+[A,B | Numeric?(A,B)]
+inline overload add(a:A, b:B) =
+    numericAdd(toBiggerNumericType(A, B, a),
+               toBiggerNumericType(A, B, b));
+
+[A | Numeric?(A)]
+inline overload add(a:A, b:A) = numericAdd(a, b);
+
+
+[A,B | Numeric?(A,B)]
+inline overload subtract(a:A, b:B) =
+    numericSubtract(toBiggerNumericType(A, B, a),
+                    toBiggerNumericType(A, B, b));
+
+[A | Numeric?(A)]
+inline overload subtract(a:A, b:A) = numericSubtract(a, b);
+
+
+[A,B | Numeric?(A,B)]
+inline overload multiply(a:A, b:B) =
+    numericMultiply(toBiggerNumericType(A, B, a),
+                    toBiggerNumericType(A, B, b));
+
+[A | Numeric?(A)]
+inline overload multiply(a:A, b:A) = numericMultiply(a, b);
+
+
+[A,B | Numeric?(A,B)]
+inline overload divide(a:A, b:B) =
+    numericDivide(toBiggerNumericType(A, B, a),
+                  toBiggerNumericType(A, B, b));
+
+[A | Numeric?(A)]
+inline overload divide(a:A, b:A) = numericDivide(a, b);
+
+
+[A,B | Integer?(A,B)]
+inline overload remainder(a:A, b:B) =
+    integerRemainder(toBiggerNumericType(A, B, a),
+                     toBiggerNumericType(A, B, b));
+
+[A | Integer?(A)]
+inline overload remainder(a:A, b:A) = integerRemainder(a, b);
+
 
 
 //

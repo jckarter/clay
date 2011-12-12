@@ -1,6 +1,10 @@
 
 enum ComplexPart (REAL, IMAG);
 
+alias ComplexFloat = Complex32;
+alias ComplexDouble = Complex64;
+alias ComplexLongDouble = Complex80;
+
 [T] Complex?(static T) = false;
 overload Complex?(static Complex32) = true;
 overload Complex?(static Complex64) = true;
@@ -14,9 +18,9 @@ inline overload re(z:Complex32) = Pointer[Float](&z);
 inline overload re(z:Complex64) = Pointer[Double](&z);
 inline overload re(z:Complex80) = Pointer[LongDouble](&z);
 
-inline overload im(z:Complex32) = (Pointer[Float](&z)+1);
-inline overload im(z:Complex64) = (Pointer[Double](&z)+1);
-inline overload im(z:Complex80) = (Pointer[LongDouble](&z)+1);
+inline overload im(z:Complex32) = (Pointer[IFloat](&z)+1);
+inline overload im(z:Complex64) = (Pointer[IDouble](&z)+1);
+inline overload im(z:Complex80) = (Pointer[ILongDouble](&z)+1);
 
 [C | Complex?(C)]
 inline real(z:C) = re(z)^;
@@ -24,23 +28,44 @@ inline real(z:C) = re(z)^;
 [C | Complex?(C)]
 inline imag(z:C) = im(z)^;
 
-inline Complex(a:Float,b:Float) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:Double,b:Double) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:LongDouble,b:LongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:Float,b:Double) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
-inline overload Complex(a:Float,b:LongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-inline overload Complex(a:Double,b:Float) --> r:Complex64 { re(r)^ = a; im(r)^ = Double(b);}
-inline overload Complex(a:Double,b:LongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-inline overload Complex(a:LongDouble,b:Float) --> r:Complex80 { re(r)^ = a; im(r)^ = LongDouble(b);}
-inline overload Complex(a:LongDouble,b:Double) --> r:Complex80 { re(r)^ = a; im(r)^ = LongDouble(b);}
+inline Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
+inline overload Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
+inline overload Complex(a:Float,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
+inline overload Complex(a:Double,b:IFloat) --> r:Complex64 { re(r)^ = a; im(r)^ = IDouble(b);}
+inline overload Complex(a:Double,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
+inline overload Complex(a:LongDouble,b:IFloat) --> r:Complex80 { re(r)^ = a; im(r)^ = ILongDouble(b);}
+inline overload Complex(a:LongDouble,b:IDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = ILongDouble(b);}
+inline overload Complex(a:Float,b:Float) = Complex(a, IFloat(b));
+inline overload Complex(a:Double,b:Double) = Complex(a, IDouble(b));
+inline overload Complex(a:LongDouble,b:LongDouble) = Complex(a, ILongDouble(b));
+inline overload Complex(a:Float,b:Double) = Complex(Double(a), IDouble(b));
+inline overload Complex(a:Float,b:LongDouble) = Complex(LongDouble(a), ILongDouble(b));
+inline overload Complex(a:Double,b:Float) = Complex(a, IDouble(b));
+inline overload Complex(a:Double,b:LongDouble) = Complex(LongDouble(a), ILongDouble(b));
+inline overload Complex(a:LongDouble,b:Float) = Complex(a, ILongDouble(b));
+inline overload Complex(a:LongDouble,b:Double) = Complex(a, ILongDouble(b));
 
 [T | Float?(T)]
-inline overload Complex(a:T) = Complex(a,T(0));
-inline overload Complex(a:Int) = Complex(Double(a), Double(0));
-inline overload Complex(a:Long) = Complex(Double(a), Double(0));
+inline overload Complex(a:T) = Complex(a,0.f);
+
+[T | Imaginary?(T)]
+inline overload Complex(a:T) = Complex(0.f,a);
+
+ComplexBaseType(static Complex32) = Float;
+overload ComplexBaseType(static Complex64) = Double;
+overload ComplexBaseType(static Complex80) = LongDouble;
+ComplexRealType(static T) = ComplexBaseType(T);
+
+ComplexImagType(static Complex32) = IFloat;
+overload ComplexImagType(static Complex64) = IDouble;
+overload ComplexImagType(static Complex80) = ILongDouble;
 
 [T | Complex?(T)]
-ComplexElementType(z:T) = Type(real(z));
+overload ComplexRealType(z:T) = Type(real(z));
+[T | Complex?(T)]
+overload ComplexImagType(z:T) = Type(imag(z));
 
 [T | Complex?(T)]
 ComplexType(static T) = T;
@@ -48,24 +73,26 @@ ComplexType(static T) = T;
 [T | Float?(T)]
 overload ComplexType(static T) = Type(Complex(T()));
 
-[C | Complex?(C)]
-overload C() {
-    var zero = ComplexElementType(C)(0.0);
-    return C(zero, zero);
-}
-
 [T | Complex?(T)]
-inline overload Complex32(a:T) = Complex(Float(real(a)), Float(imag(a)));
+overload T() = T(0.);
 [T | Complex?(T)]
-inline overload Complex64(a:T) = Complex(Double(real(a)), Double(imag(a)));
+inline overload Complex32(a:T) = Complex(Float(real(a)), IFloat(imag(a)));
 [T | Complex?(T)]
-inline overload Complex80(a:T) = Complex(LongDouble(real(a)), LongDouble(imag(a)));
+inline overload Complex64(a:T) = Complex(Double(real(a)), IDouble(imag(a)));
+[T | Complex?(T)]
+inline overload Complex80(a:T) = Complex(LongDouble(real(a)), ILongDouble(imag(a)));
 [T | Numeric?(T)]
-inline overload Complex32(a:T) = Complex(Float(a), Float(0));
+inline overload Complex32(a:T) = Complex(Float(a));
 [T | Numeric?(T)]
-inline overload Complex64(a:T) = Complex(Double(a), Double(0));
+inline overload Complex64(a:T) = Complex(Double(a));
 [T | Numeric?(T)]
-inline overload Complex80(a:T) = Complex(LongDouble(a), LongDouble(0));
+inline overload Complex80(a:T) = Complex(LongDouble(a));
+[T | Imaginary?(T)]
+inline overload Complex32(a:T) = Complex(IFloat(a));
+[T | Imaginary?(T)]
+inline overload Complex64(a:T) = Complex(IDouble(a));
+[T | Imaginary?(T)]
+inline overload Complex80(a:T) = Complex(ILongDouble(a));
 
 
 [T | Complex?(T)]
@@ -188,8 +215,6 @@ inline overload Complex64(s:S) = parseComplex64(s);
 
 [S | String?(S)]
 inline overload Complex80(s:S) = parseComplex80(s);
-
-alias ComplexLongDouble = Complex80;
 
 [C | Complex?(C)]
 inline rect(c:C) = real(c), imag(c);
