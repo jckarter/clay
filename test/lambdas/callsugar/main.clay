@@ -1,0 +1,16 @@
+ifNonzero(x, ifTrue, ifFalse) {
+    if (x != 0)
+        return ..ifTrue(x);
+    else
+        return ..ifFalse();
+}
+
+main() {
+    ifNonzero(1): x -> {
+        println(x, " is not zero");
+    } :: () -> {
+        println("zero");
+    }
+
+    println(1, ifNonzero(1): x -> " is not zero" :: () -> " is zero");
+}

@@ -118,7 +118,7 @@ inline overload integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Boo
 inline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericMultiply(x, y), false;
 
-// division, remainder negation
+// division, remainder, negation
 
 [T | SignedInteger?(T)]
 inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
@@ -135,6 +135,33 @@ inline integerRemainderWithOverflow(x:T, y:T) : T, Bool
 [T | SignedInteger?(T)]
 inline integerNegateWithOverflow(x:T) : T, Bool
     = numericNegate(x), x == Least(T);
+
+// left shift
+
+private define shiftOverflow?;
+[T | SignedInteger?(T)]
+inline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
+    var nonSignBits = bits; dec(nonSignBits);
+    if (y > nonSignBits) return true;
+    var testx = if (x < 0) integerBitwiseNot(x) else x;
+    var head = integerShiftRight(testx, nonSignBits - y);
+    return head != numericConvert(T, 0);
+}
+[T | UnsignedInteger?(T)]
+inline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
+    if (y > bits) return true;
+    var head = integerShiftRight(x, bits - y);
+    return head != numericConvert(T, 0);
+}
+
+[T | Integer?(T)]
+inline integerShiftLeftWithOverflow(x:T, y:T) : T, Bool {
+    if (y < 0)
+        return x, true;
+    var bits = numericConvert(T, TypeSize(T)*8);
+    var overflow? = y > 0 and shiftOverflow?(x, y, bits);
+    return integerShiftLeft(x, y), overflow?;
+}
 
 // integer conversion
 
@@ -201,6 +228,9 @@ inline doIntegerDivideChecked(a:A, b:A) : A
 [A | Integer?(A)]
 inline doIntegerRemainderChecked(a:A, b:A) : A
     = checked(integerRemainderWithOverflow, a, b);
+[A | Integer?(A)]
+inline doIntegerShiftLeftChecked(a:A, b:A) : A
+    = checked(integerShiftLeftWithOverflow, a, b);
 
 [A | SignedInteger?(A)]
 inline doIntegerNegateChecked(a:A) : A

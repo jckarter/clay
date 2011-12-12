@@ -154,7 +154,7 @@ void initBuiltinConstructor(RecordPtr x)
     for (unsigned i = 0; i < y->fields.size(); ++i) {
         ExprPtr callArg = new NameRef(y->fields[i]->name);
         callArg->location = y->fields[i]->location;
-        returnExpr->args->add(callArg);
+        returnExpr->parenArgs->add(callArg);
     }
 
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr.ptr()));

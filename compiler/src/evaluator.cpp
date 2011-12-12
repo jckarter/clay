@@ -1033,7 +1033,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case CALL : {
         Call *x = (Call *)expr.ptr();
-        evalCallExpr(x->expr, x->args, env, out);
+        evalCallExpr(x->expr, x->allArgs(), env, out);
         break;
     }
 
@@ -2148,9 +2148,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
-        call->args->add(updateOperatorExpr(x->op));
-        call->args->add(x->left);
-        call->args->add(x->right);
+        call->parenArgs->add(updateOperatorExpr(x->op));
+        call->parenArgs->add(x->left);
+        call->parenArgs->add(x->right);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
@@ -2843,6 +2843,13 @@ static void overflowError(const char *op, T a, T b) {
 }
 
 template<typename T>
+static void invalidShiftError(const char *op, T a, T b) {
+    ostringstream sout;
+    sout << "invalid shift: " << a << " " << op << " " << b;
+    error(sout.str());
+}
+
+template<typename T>
 static void overflowError(const char *op, T a) {
     ostringstream sout;
     sout << "integer overflow: " << op << a;
@@ -3094,6 +3101,31 @@ public :
                 overflowError("-", a, b);
         else
             *((T *)out) = a - b;
+    }
+};
+
+template <typename T>
+class Op_integerShiftLeftChecked : public BinaryOpHelper<T> {
+    virtual void perform(T &a, T &b, void *out) {
+        if (b < 0)
+            invalidShiftError("bitshl", a, b);
+
+        if (b == 0) {
+            *((T *)out) = a;
+            return;
+        }
+
+        if (std::numeric_limits<T>::min() != 0) {
+            // signed
+            T testa = a < 0 ? ~a : a;
+            if (b > sizeof(T)*8 - 1 || (testa >> (sizeof(T)*8 - b - 1)) != 0)
+                overflowError("bitshl", a, b);
+        } else {
+            // unsigned
+            if (b > sizeof(T)*8 || (a >> (sizeof(T)*8 - b)) != 0)
+                overflowError("bitshl", a, b);
+        }
+        *((T *)out) = a << b;
     }
 };
 
@@ -3772,6 +3804,18 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
         op_numericConvert<true>(out0, ev);
+        break;
+    }
+
+    case PRIM_integerShiftLeftChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == t.ptr());
+        binaryIntegerOp<Op_integerShiftLeftChecked>(ev0, ev1, out0);
         break;
     }
 

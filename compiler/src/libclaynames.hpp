@@ -98,6 +98,7 @@ ObjectPtr prelude_doIntegerSubtractChecked();
 ObjectPtr prelude_doIntegerMultiplyChecked();
 ObjectPtr prelude_doIntegerDivideChecked();
 ObjectPtr prelude_doIntegerRemainderChecked();
+ObjectPtr prelude_doIntegerShiftLeftChecked();
 ObjectPtr prelude_doIntegerNegateChecked();
 ObjectPtr prelude_doIntegerConvertChecked();
 
@@ -165,8 +166,8 @@ ExprPtr prelude_expr_doIntegerSubtractChecked();
 ExprPtr prelude_expr_doIntegerMultiplyChecked();
 ExprPtr prelude_expr_doIntegerDivideChecked();
 ExprPtr prelude_expr_doIntegerRemainderChecked();
+ExprPtr prelude_expr_doIntegerShiftLeftChecked();
 ExprPtr prelude_expr_doIntegerNegateChecked();
 ExprPtr prelude_expr_doIntegerConvertChecked();
-
 
 #endif

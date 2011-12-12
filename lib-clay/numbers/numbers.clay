@@ -434,6 +434,10 @@ inline overload divide(a:A, b:A) : A
 inline overload remainder(a:A, b:A) : A
     = integerRemainderChecked(a, b);
 
+[A, B | Integer?(A, B) and IntegerOverflowChecks?()]
+inline overload bitshl(a:A, b:B) : A
+    = integerShiftLeftChecked(a, A(b));
+
 [A | SignedInteger?(A) and IntegerOverflowChecks?()]
 inline overload minus(a:A) : A
     = integerNegateChecked(a);
@@ -463,6 +467,9 @@ inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
 
 [..AA | equalValues?(..AA) and countValues(..AA) != 1]
 inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
+
+[A, B | Integer?(A, B)]
+inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
 
 [A | SignedInteger?(A)]
 inline wrapMinus(a:A) : A = numericNegate(a, b);

@@ -14,6 +14,7 @@ import clay.v0_0.lexer.(
     PUNCTUATION,
     KEYWORD,
     IDENTIFIER,
+    LLVM,
     punctuationIndex,
     keywordIndex,
 );
@@ -246,6 +247,7 @@ private writeUptoToken(token:SizeT, state:FixState) : {
     var toIndex = state.tokens.vector[token].range.begin;
     assert(toIndex >= state.printedIndex);
 
+    if (token == 0) return;
     fixToken(token - 1, state);
     if (toIndex > state.printedIndex) {
         printTo(state.outputFile, sliced(state.tokens.file.data, state.printedIndex, toIndex));
@@ -342,9 +344,9 @@ overload fixAstNode(ast:V, state:FixState) : {
         fixAst(ast, state);
 }
 [A] overload fixAstNode(?ast:Maybe[A], state:FixState) : {
-    maybe(?ast, ast -> {
+    maybe(?ast): ast -> {
         fixAst(ast, state);
-    });
+    }
 }
 [A] overload fixAstNode(asts:VariadicList[A], state:FixState) : {
     fixAst(asts.items, state);
@@ -454,9 +456,9 @@ overload fixAst(ast:ExternalProcedure, state:FixState) : {
     fixAst(ast.attributes, state);
     fixAst(ast.args, state);
 
-    maybe(ast.returnType, returnType -> {
+    maybe(ast.returnType): returnType -> {
         writeTokenPrefixed(astTokens(returnType).begin, ": ", state);
-    });
+    }
 
     fixAst(ast.returnType, state);
     fixAst(ast.body, state);
@@ -623,7 +625,7 @@ fixLiteralSuffix(ast:T, state:FixState) : {
     writeUptoToken(astTokens(ast).begin, state);
     replaceToken(astTokens(ast).end - 1, state);
     printTo(state.outputFile, ast.value);
-    maybe(ast.suffix, suffix -> {
+    maybe(ast.suffix): suffix -> {
         switch (suffix)
         case ("i8")
             printTo(state.outputFile, "ss");
@@ -647,7 +649,7 @@ fixLiteralSuffix(ast:T, state:FixState) : {
             printTo(state.outputFile, "ff");
         else
             printTo(state.outputFile, suffix);
-    });
+    }
 }
 
 fixOctal(ast:IntLiteral, state:FixState) : {
@@ -755,7 +757,7 @@ overload fixAst(ast:Switch, state:FixState) : {
     replaceToken(tokenAfterValue+1, state);
 
     fixAst(ast.caseBlocks, state);
-    maybe(ast.defaultCase, defaultCase -> {
+    maybe(ast.defaultCase): defaultCase -> {
         var defaultToken = astTokens(defaultCase).begin;
         assert(isKeywordToken(tokens[defaultToken - 2], "default")
             and isPunctuationToken(tokens[defaultToken - 1], ":"));
@@ -765,7 +767,7 @@ overload fixAst(ast:Switch, state:FixState) : {
         fixAst(defaultCase, state);
         writeUptoToken(astTokens(ast).end - 1, state);
         printTo(state.outputFile, "}");
-    });
+    }
     replaceToken(astTokens(ast).end - 1, state);
 }
 
@@ -864,7 +866,7 @@ overload fixAst(ast:Binding, state:FixState) : {
 // 0.0: procedure foo() { }
 // 0.1: foo() { }
 overload fixAst(ast:Procedure, state:FixState) : {
-    maybe(ast.code, code -> {
+    maybe(ast.code): code -> {
         fixAst(code.patternVars, state);
         fixAst(code.predicate, state);
         fixAst(ast.visibility, state);
@@ -881,7 +883,52 @@ overload fixAst(ast:Procedure, state:FixState) : {
         fixAst(code.args, state);
         fixAst(code.returns, state);
         fixAst(code.body, state);
-    });
+    }
+}
+
+
+//
+// Update inline LLVM bodies containing explicit 'ret i32 0' code sequences.
+// 0.0: __llvm__ { ret i32 0 }
+// 0.1: __llvm__ { ret i8* null }
+overload fixAst(ast:LLVMBody, state:FixState) : {
+    ref tokens = state.tokens.vector;
+    assert(size(ast.tokens) == 1);
+    ref llvmToken = tokens[ast.tokens.begin];
+    assert(llvmToken.kind == LLVM);
+
+    writeUptoToken(ast.tokens.begin, state);
+    replaceToken(ast.tokens.begin, state);
+
+    ref fileData = state.tokens.file.data;
+    var tokenData = CoordinateRange(
+        begin(fileData) + llvmToken.range.begin,
+        begin(fileData) + llvmToken.range.end,
+    );
+
+    var openBrace = find(tokenData, '{');
+    assert(openBrace != end(tokenData));
+    var closeBrace = reverseFind(tokenData, '}');
+    assert(closeBrace != begin(tokenData));
+    assert(closeBrace - openBrace > 2);
+
+    var search = CoordinateRange(openBrace + 1, closeBrace - 1);
+
+    while (not empty?(search)) {
+        var newline = find(search, '\n');
+        var line = CoordinateRange(begin(search), newline);
+        var textBegin = findIf(line, c -> not space?(c));
+        var textEnd = reverseFindIf(line, c -> not space?(c));
+        if (CoordinateRange(textBegin, textEnd) == "ret i32 0") {
+            printTo(state.outputFile,
+                CoordinateRange(tokenData.begin, textBegin),
+                "ret i8* null",
+                CoordinateRange(textEnd, line.end));
+            tokenData.begin = line.end;
+        }
+        search.begin = min(newline + 1, search.end);
+    }
+    printTo(state.outputFile, tokenData);
 }
 
 
