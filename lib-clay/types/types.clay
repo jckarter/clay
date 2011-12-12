@@ -168,26 +168,26 @@ inline overload LeastPositiveNormalized(static Float80) : Float80
 inline overload GreatestPositiveFinite(static Float80) : Float80
     = floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul);
 
-inline overload LeastPositive(static Imag32) : Imag32 = 0x0.0000_0002p-126f;
-inline overload LeastPositiveNormalized(static Imag32) : Imag32 = 0x1.0000_0000p-126f;
-inline overload GreatestPositiveFinite(static Imag32) : Imag32 = 0x1.FFFF_FEp127f;
+inline overload LeastPositive(static Imag32) : Imag32 = 0x0.0000_0002p-126fj;
+inline overload LeastPositiveNormalized(static Imag32) : Imag32 = 0x1.0000_0000p-126fj;
+inline overload GreatestPositiveFinite(static Imag32) : Imag32 = 0x1.FFFF_FEp127fj;
 
 inline overload LeastPositive(static Imag64) : Imag64
-    = 0x0.0000_0000_0000_1p-1022;
+    = 0x0.0000_0000_0000_1p-1022j;
 inline overload LeastPositiveNormalized(static Imag64) : Imag64
-    = 0x1.0000_0000_0000_0p-1022;
+    = 0x1.0000_0000_0000_0p-1022j;
 inline overload GreatestPositiveFinite(static Imag64) : Imag64
-    = 0x1.FFFF_FFFF_FFFF_Fp1023;
+    = 0x1.FFFF_FFFF_FFFF_Fp1023j;
 
 inline overload LeastPositive(static Imag80) : Imag80
-    = 0x0.0000_0000_0000_0002p-32766l;
+    = 0x0.0000_0000_0000_0002p-32766lj;
 inline overload LeastPositiveNormalized(static Imag80) : Imag80
-    = 0x1.0000_0000_0000_0000p-32766l;
+    = 0x1.0000_0000_0000_0000p-32766lj;
 // inline overload GreatestPositiveFinite(static Imag80) : Imag80
-//     = 0x1.FFFF_FFFF_FFFF_FFFFp32767l;
+//     = 0x1.FFFF_FFFF_FFFF_FFFFp32767lj;
 // XXX temporary until long double hex Imag parser implemented
 inline overload GreatestPositiveFinite(static Imag80) : Imag80
-    = floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul);
+    = numericConvert(Imag80, floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul));
 
 
 //
