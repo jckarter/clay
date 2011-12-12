@@ -721,6 +721,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(integerMultiplyChecked);
     PRIMITIVE(integerDivideChecked);
     PRIMITIVE(integerRemainderChecked);
+    PRIMITIVE(integerShiftLeftChecked);
     PRIMITIVE(integerNegateChecked);
     PRIMITIVE(integerConvertChecked);
 
@@ -994,5 +995,6 @@ DEFINE_PRELUDE_ACCESSOR(doIntegerSubtractChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerMultiplyChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerDivideChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerRemainderChecked);
+DEFINE_PRELUDE_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerNegateChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerConvertChecked);

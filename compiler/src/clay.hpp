@@ -2279,6 +2279,7 @@ enum PrimOpCode {
     PRIM_integerDivideChecked,
     PRIM_integerRemainderChecked,
     PRIM_integerNegateChecked,
+    PRIM_integerShiftLeftChecked,
     PRIM_integerConvertChecked,
 
     PRIM_Pointer,

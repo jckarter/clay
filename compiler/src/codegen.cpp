@@ -4844,6 +4844,21 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_integerShiftLeftChecked : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        checkIntegerValue(args, 0, t, ctx);
+        checkIntegerValue(args, 1, t, ctx);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        codegenCallValue(staticCValue(prelude_doIntegerShiftLeftChecked(), ctx),
+                         args,
+                         ctx,
+                         out);
+        break;
+    }
+
     case PRIM_integerNegateChecked : {
         ensureArity(args, 1);
         IntegerTypePtr t;

@@ -2248,13 +2248,20 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_integerShiftRight :
     case PRIM_integerBitwiseAnd :
     case PRIM_integerBitwiseOr :
-    case PRIM_integerBitwiseXor : {
+    case PRIM_integerBitwiseXor :
+    case PRIM_integerAddChecked :
+    case PRIM_integerSubtractChecked :
+    case PRIM_integerMultiplyChecked :
+    case PRIM_integerDivideChecked :
+    case PRIM_integerRemainderChecked :
+    case PRIM_integerShiftLeftChecked : {
         ensureArity(args, 2);
         IntegerTypePtr t = integerTypeOfValue(args, 0);
         return new MultiPValue(new PValue(t.ptr(), true));
     }
 
-    case PRIM_integerBitwiseNot : {
+    case PRIM_integerBitwiseNot :
+    case PRIM_integerNegateChecked : {
         ensureArity(args, 1);
         IntegerTypePtr t = integerTypeOfValue(args, 0);
         return new MultiPValue(new PValue(t.ptr(), true));
@@ -2264,22 +2271,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ensureArity(args, 2);
         TypePtr t = valueToNumericType(args, 0);
         return new MultiPValue(new PValue(t, true));
-    }
-
-    case PRIM_integerAddChecked :
-    case PRIM_integerSubtractChecked :
-    case PRIM_integerMultiplyChecked :
-    case PRIM_integerDivideChecked :
-    case PRIM_integerRemainderChecked : {
-        ensureArity(args, 2);
-        IntegerTypePtr t = integerTypeOfValue(args, 0);
-        return new MultiPValue(new PValue(t.ptr(), true));
-    }
-
-    case PRIM_integerNegateChecked : {
-        ensureArity(args, 1);
-        IntegerTypePtr t = integerTypeOfValue(args, 0);
-        return new MultiPValue(new PValue(t.ptr(), true));
     }
 
     case PRIM_integerConvertChecked : {
