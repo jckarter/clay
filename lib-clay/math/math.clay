@@ -13,6 +13,10 @@ public import math.native.lowlevel.*;
 public import math.native.bessel.*;
 public import numbers.floats.floats.(abs);
 
+//Import native Clay complex functions
+public import math.native.ccore.*;
+
+
 //Constants for double precision
 alias M_E	        = 2.7182818284590452354;	/* e */
 alias M_LOG2E	    = 1.4426950408889634074;	/* log_2 e */
@@ -539,39 +543,6 @@ inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(Complex80(z),y);
 inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
 inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
 //Add complex^float & float^complex overloads
-
-
-inline overload sqrt(z:Complex64) = libc.csqrt(z);
-inline overload sqrt(z:Complex32) = libc.csqrtf(z);
-inline overload sqrt(z:Complex80) = libc.csqrtl(z);
-
-
-// XXX Fixme to use new imag type stuff!!!!!!
-// [U | Complex?(U)]
-// inline overload sqrt(z:U) --> c:U {
-//     alias T = ComplexBaseType(z);
-//     alias ZERO = T(0);
-//     alias HALF = T(0.5);
-//     alias ONE = T(1);
-//     if (zero?(z)) c <-- z;
-//     else {
-//         var x,y,w = abs(real(z)),abs(imagValue(z)),ZERO;
-//         if (x >= y) {
-//             var r = y / x;
-//             w = sqrt(x) * sqrt(HALF * (ONE + sqrt(ONE + r * r)));
-//         }
-//         else{
-//             var r = x / y;
-//             w = sqrt(y) * sqrt(HALF * (r + sqrt(ONE + r * r)));
-//         }
-//         if (real(z) >= ZERO)
-//             c <-- Complex(w, imagValue(z) / (w + w));
-//         else {
-//             c <-- Complex(imagValue(z) / (imagValue(c) + imagValue(c)),
-//                 (if(imagValue(z) >= ZERO) w else -w));
-//         }
-//     }
-// }
 
 inline overload proj(z:Complex64) = libc.cproj(z);
 inline overload proj(z:Complex32) = libc.cprojf(z);

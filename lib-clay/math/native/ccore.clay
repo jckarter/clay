@@ -1,0 +1,29 @@
+
+import math.(abs,sqrt);
+
+[U | Complex?(U)]
+inline overload sqrt(z:U) --> c:U {
+    alias T = ComplexBaseType(U);
+    alias ZERO = T(0);
+    alias HALF = T(0.5);
+    alias ONE = T(1);
+    if (zero?(z))
+         c <-- z;
+    else {
+        var x,y,w = abs(real(z)),abs(imagValue(z)),ZERO;
+        if (x >= y) {
+            var r = y / x;
+            w = sqrt(x) * sqrt(HALF * (ONE + sqrt(ONE + r * r)));
+        }
+        else{
+            var r = x / y;
+            w = sqrt(y) * sqrt(HALF * (r + sqrt(ONE + r * r)));
+        }
+        if (real(z) >= ZERO)
+            c <-- Complex(w, imag(z) / (w + w));
+        else {
+            c <-- Complex(imagValue(z) / (w + w),
+                (if(imagValue(z) >= ZERO) w else -w));
+        }
+    }
+}
