@@ -2,6 +2,11 @@
 import math.(abs,sqrt);
 
 define hypot;
+define fma;
+define fms;
+
+[T] overload fma(a:T,b:T,c:T) = (a * b) + c;
+[T] overload fms(a:T,b:T,c:T) = (a * b) - c;
 
 [T | Float?(T,U)]
 inline overload hypot(m:T,n:U) {
