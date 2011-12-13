@@ -110,28 +110,12 @@ define llround;
 define proj;
 define arg;
 define sign;
-define ifloor;
-define iceil;
-define iround;
 
 
 [I | Integer?(I)]
 inline overload abs(x:I) = if(x >= 0) x else -x;
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imag(x));
-[T | Float?(T)]
-inline overload ifloor(x:T) = Long(x + (1l - Long(x))) - (1l - Long(x));
-[T | Float?(T)]
-inline overload floor(x:T) = T(Long(x + (1l - Long(x))) - (1l - Long(x)));
-[T | Float?(T)]
-inline overload iceil(x:T) = ((2l + Long(x)) - Long(2l + Long(x)) - x);
-[T | Float?(T)]
-inline overload ceil(x:T) = ((2l + Long(x)) - Long(2l + Long(x)) - x);
-[T | Float?(T)]
-inline overload iround(x:T) = if(x >= T(0)) Long(x + T(0.5)) else -(Long(T(0.5) - x));
-[T | Float?(T)]
-inline overload round(x:T) = T(if(x >= T(0)) Long(x + T(0.5)) else -(Long(T(0.5) - x)));
-
 
 overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
 overload sign(x:Int) = bitor(bitshr(x,31),I(bitshr(UInt(-x),31)));
@@ -251,6 +235,18 @@ overload log2(x:LongDouble) = libc.log2l(x);
 overload sqrt(x:Double) = libc.sqrt(x);
 overload sqrt(x:Float) = libc.sqrtf(x);
 overload sqrt(x:LongDouble) = libc.sqrtl(x);
+
+overload floor(x:Double) = libc.floor(x);
+overload floor(x:Float) = libc.floorf(x);
+overload floor(x:LongDouble) = libc.floorl(x);
+
+overload ceil(x:Double) = libc.ceil(x);
+overload ceil(x:Float) = libc.ceilf(x);
+overload ceil(x:LongDouble) = libc.ceill(x);
+
+overload round(x:Double) = libc.round(x);
+overload round(x:Float) = libc.roundf(x);
+overload round(x:LongDouble) = libc.roundl(x);
 
 overload significand(x:Double) = libc.significand(x);
 overload significand(x:Float) = libc.significandf(x);
