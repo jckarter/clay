@@ -1,6 +1,7 @@
 // Gamma functions adapted from Ooura and D/Phobos
 
 import math.(abs,exp,log,sqrt,atan2,cos,sin,M_PIl);
+import numbers.floats.floats.(nan);
 
 define tgamma;
 define lgamma;
