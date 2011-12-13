@@ -171,24 +171,31 @@ inline overload subtract(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
 
 [T,U | Complex?(T,U)]
 inline overload multiply(z:T, y:U) {
-    var ac,bd = real(z) * real(y), imagValue(z) * imagValue(y);
-    return Complex(ac-bd, (real(z) + imagValue(z)) * (real(y) + imagValue(y)) - ac - bd);
+    alias iy = imagValue(y);
+    alias ry = real(y);
+    alias iz = imagValue(z);
+    alias rz = real(z);
+    var ac, bd = rz * ry, iz * iy;
+    return Complex(ac-bd, fms(rz+iz, ry+iy, ac+bd));
 }
 
 [T,U | Complex?(T,U)]
 inline overload divide(z:T, y:U) {
-    var ra = if(real(y) < 0.) -real(y) else real(y);
-    var ia = if(imag(y) < 0.j) -imagValue(y) else imagValue(y);
-    if(ra < ia){
-        var rat = real(y) / imagValue(y);
-        var den = imagValue(y) + rat * real(y);
-        return Complex((real(z) * rat + imagValue(z)) / den, (imagValue(z) * rat - real(z)) / den);
+    alias iy = imagValue(y);
+    alias ry = real(y);
+    alias iz = imagValue(z);
+    alias rz = real(z);
+    if(abs(ry) < abs(iy)){
+        var rat = ry / iy;
+        var den = 1./(fma(rat,ry,iy));
+        return Complex(fma(rat,rz,iz) * den, fms(rat,iz,rz) * den);
     }else{
-        var rat = imagValue(y) / real(y);
-        var den = real(y) + rat * imagValue(y);
-        return Complex((real(z) + rat * imagValue(z)) / den, (imagValue(z) - rat * real(z)) / den);
+        var rat = iy / ry;
+        var den = 1./(fma(rat,iy,ry));
+        return Complex(fma(rat,iz,rz) * den, fma(-rat,rz,iz) * den);
     }
 }
+
 
 // Float/imaginary -> complex
 
