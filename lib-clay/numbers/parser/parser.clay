@@ -225,7 +225,7 @@ overload parseImag32(s:S) {
         error("invalid Imag32: ", s);
     if (errno() == ERANGE)
         error("Imag32 out of range: ", s);
-    return Imag32(value);
+    return numericConvert(Imag32,value);
 }
 
 
@@ -246,7 +246,7 @@ overload parseImag64(s:S) {
         error("invalid Complex64: ", s);
     if (errno() == ERANGE)
         error("Complex64 out of range: ", s);
-    return Imag64(value);
+    return numericConvert(Imag64,value);
 }
 
 //
@@ -265,5 +265,5 @@ overload parseImag80(s:S) {
         error("invalid Complex80: ", s);
     if (errno() == ERANGE)
         error("Complex80 out of range: ", s);
-    return Imag80(value);
+    return numericConvert(Imag80,value);
 }
