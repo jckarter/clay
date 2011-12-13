@@ -13,6 +13,15 @@ if(UNIX)
         DOC "path to llvm-config")
 
     execute_process(
+        COMMAND ${LLVM_CONFIG} --version
+        OUTPUT_VARIABLE LLVM_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT ${LLVM_VERSION} STREQUAL "3.0")
+        message(FATAL_ERROR "   Clay requires LLVM 3.0.")
+    endif()
+
+    execute_process(
         COMMAND ${LLVM_CONFIG} --cxxflags
         OUTPUT_VARIABLE LLVM_CXXFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
