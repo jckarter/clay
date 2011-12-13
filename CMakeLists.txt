@@ -18,7 +18,7 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if(NOT ${LLVM_VERSION} STREQUAL "3.0")
-        message(FATAL_ERROR "   Clay requires LLVM 3.0.")
+        message(FATAL_ERROR "Clay requires LLVM 3.0.")
     endif()
 
     execute_process(
