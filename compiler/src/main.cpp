@@ -802,9 +802,11 @@ int main(int argc, char **argv) {
 
     loadTimer.start();
     ModulePtr m;
-    if (!clayScript.empty())
-        m = loadProgramSource("-e", clayScriptImports + "main() { " + clayScript + " }");
-    else
+    string clayScriptSource;
+    if (!clayScript.empty()) {
+        clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
+        m = loadProgramSource("-e", clayScriptSource);
+    } else
         m = loadProgram(clayFile);
     loadTimer.stop();
     compileTimer.start();
