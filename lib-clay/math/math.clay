@@ -533,9 +533,10 @@ inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
 inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
 //Add complex^float & float^complex overloads
 
+// XXX Fixme to use new imag type stuff!!!!!!
 [U | Complex?(U)]
 inline overload sqrt(z:U) {
-    alias T = ComplexElementType(z);
+    alias T = ComplexBaseType(z);
     alias ZERO = T(0);
     alias HALF = T(0.5);
     alias ONE = T(1);
