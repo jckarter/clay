@@ -116,11 +116,11 @@ inline overload abs(x:I) = if(x >= 0) x else -x;
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imag(x));
 [T | Float?(T)]
-inline overload floor(x:T) = Long(x + (T(1) - Long(x))) - (T(1) - Long(x));
+inline overload floor(x:T) = Long(x + (1l - Long(x))) - (1l - Long(x));
 [T | Float?(T)]
-inline overload ceil(x:T) = (T(2) + Long(x)) - Long((T(2) + Long(x)) - x);
+inline overload ceil(x:T) = ((2l + Long(x)) - Long(2l + Long(x)) - x);
 [T | Float?(T)]
-inline overload round(x:T) = if(x >= 0) Long(x + T(0.5)) else -(Long(T(0.5) - x));
+inline overload round(x:T) = if(x >= T(0)) Long(x + T(0.5)) else -(Long(T(0.5) - x));
 
 overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
 overload sign(x:Int) = bitor(bitshr(x,31),I(bitshr(UInt(-x),31)));

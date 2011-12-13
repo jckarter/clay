@@ -73,7 +73,7 @@ private define BiggerNumeric?;
 [A,B | (Float?(A) or Imaginary?(A)) and Integer?(B)]
 overload BiggerNumeric?(static A, static B) = true;
 
-[A,B | Integer?(A) and (Float?(A) or Imaginary?(A))]
+[A,B | Integer?(A) and (Float?(B) or Imaginary?(B))]
 overload BiggerNumeric?(static A, static B) = false;
 
 [A,B | Integer?(A,B)]
@@ -84,6 +84,8 @@ overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 
 [A,B | (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
 overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
+
+
 
 
 //
@@ -96,10 +98,10 @@ define toBiggerNumericType;
 inline overload toBiggerNumericType(static A, static A, v) = v;
 
 [A,B | Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload toBiggerNumericType(static A, static B, v) = A(v);
+inline overload toBiggerNumericType(static A, static B, v) = numericConvert(A,v);
 
 [A,B | Numeric?(A,B) and BiggerNumeric?(B,A)]
-inline overload toBiggerNumericType(static A, static B, v) = B(v);
+inline overload toBiggerNumericType(static A, static B, v) = numericConvert(B,v);
 
 define wrapToBiggerNumericType;
 
@@ -418,14 +420,6 @@ inline overload Imag64(s:S) = parseImag64(s);
 [S | String?(S)]
 inline overload Imag80(s:S) = parseImag80(s);
 
-[S | String?(S)]
-inline overload Complex32(s:S) = parseComplex32(s);
-
-[S | String?(S)]
-inline overload Complex64(s:S) = parseComplex64(s);
-
-[S | String?(S)]
-inline overload Complex80(s:S) = parseComplex80(s);
 
 
 //
