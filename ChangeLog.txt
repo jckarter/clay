@@ -16,8 +16,7 @@ Language changes:
     callbyname ==> alias
     lvalue     ==> ref
 
-* Two-dot ellipsis '..' can now be used interchangeably with three-dot
-  ellipsis.
+* An ellipsis now only has two dots.
     ...        ==> ..
 
 * The 'procedure' keyword has been changed to 'define'.
@@ -281,7 +280,7 @@ Language changes:
 
 * Higher-order functions can be called with the block arguments outside the
   call parens. In a statement form, the semicolon is not required with a
-  block form:
+  block:
     // 0.0
     maybe(mx, x -> { useX(x); });
 

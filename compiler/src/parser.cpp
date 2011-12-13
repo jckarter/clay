@@ -52,13 +52,7 @@ static bool keyword(const char *s) {
 }
 
 static bool ellipsis() {
-    int p = save();
-    if (symbol("..."))
-        return true;
-    else {
-        restore(p);
-        return symbol("..");
-    }
+    return symbol("..");
 }
 
 
