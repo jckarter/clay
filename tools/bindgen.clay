@@ -1,3 +1,4 @@
+import clay.lexer.(keywords as clayKeywords);
 import llvm.libclang.*;
 import printer.formatter.(repr);
 import maybe.*;
@@ -9,6 +10,16 @@ var g_visitedSymbols = HashMap[String, Bool]();
 
 overload printTo(stream, s:CXString) : {
     printTo(stream, CStringRef(clang_getCString(s)));
+}
+
+clayKeyword?(s:String) : Bool = in?(clayKeywords, s);
+
+clayIdentifier(s:String) : String {
+    if (clayKeyword?(s)) {
+        return str(s, "_");
+    } else {
+        return str(s);
+    }
 }
 
 unnamedName() : String {
@@ -103,7 +114,7 @@ convertTypeFromDeclaration(declaration:CXCursor) : String {
     case (CXCursor_StructDecl, CXCursor_UnionDecl)
         return nameForDeclaration(declaration);
     case (CXCursor_TypedefDecl)
-        return str(clang_getCursorSpelling(declaration));
+        return clayIdentifier(str(clang_getCursorSpelling(declaration)));
     else
         return str("Opaque /* unknown ",
             clang_getCursorKindSpelling(clang_getCursorKind(declaration)), " ",
@@ -198,7 +209,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             name = str("?padding", unnamedFieldIndex);
             unnamedFieldIndex += 1;
         }
-        printlnTo(g_bindingsOut, "    ", name, " : ",
+        printlnTo(g_bindingsOut, "    ", clayIdentifier(name), " : ",
             convertType(type, cursor), ",");
     }
     else {}
@@ -248,8 +259,11 @@ withForwardDecl(cursor:CXCursor, f) {
     if (cursor == definition)
         f();
     else {
-        if (inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile))
-            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Opaque;\n");
+        if (inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile)) {
+            var name = nameForDeclaration(cursor);
+            if (not symbolVisited(name))
+                printlnTo(g_bindingsOut, "alias ", name, " = Opaque;\n");
+        }
     }
 }
 
@@ -293,29 +307,29 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     var kind = clang_getCursorKind(cursor);
     switch (kind)
     case (CXCursor_StructDecl) {
-        withForwardDecl(cursor, () -> {
+        withForwardDecl(cursor): () -> {
             var unnamedFieldIndex = 0;
             printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
             clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
                 CXClientData(&unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
-        });
+        }
         return (CXChildVisit_Continue);
     }
     case (CXCursor_UnionDecl) {
-        withForwardDecl(cursor, () -> {
+        withForwardDecl(cursor): () -> {
             printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Union[");
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
             printlnTo(g_bindingsOut, "];\n");
-        });
+        }
         return (CXChildVisit_Continue);
     }
     case (CXCursor_EnumDecl) {
-        withForwardDecl(cursor, () -> {
+        withForwardDecl(cursor): () -> {
             printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = ",
                 convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
             clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
-        });
+        }
         printlnTo(g_bindingsOut);
         return (CXChildVisit_Continue);
     }
@@ -340,11 +354,14 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         else
             printTo(g_bindingsOut, "cdecl");
 
-        maybe(attributes.asmLabel, asmLabel -> {
+        maybe(attributes.asmLabel): asmLabel -> {
             printTo(g_bindingsOut, ", ", repr(asmLabel));
-        });
+        } :: () -> {
+            if (clayKeyword?(name))
+                printTo(g_bindingsOut, ", ", repr(name));
+        }
 
-        printTo(g_bindingsOut, ") ", name, "(");
+        printTo(g_bindingsOut, ") ", clayIdentifier(name), "(");
         var argCount = clang_getNumArgTypes(type);
         for (arg in range(argCount)) {
             if (arg > 0)
@@ -371,11 +388,17 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         if (symbolVisited(name))
             return (CXChildVisit_Continue);
 
-        printlnTo(g_bindingsOut, "external ", name, " : ",
-            convertType(clang_getCursorType(cursor), cursor), ";\n");
+        if (clayKeyword?(name))
+            printlnTo(g_bindingsOut, "external (", repr(name), ")",
+                clayIdentifier(name), " : ",
+                convertType(clang_getCursorType(cursor), cursor), ";\n");
+        else
+            printlnTo(g_bindingsOut, "external ", name, " : ",
+                convertType(clang_getCursorType(cursor), cursor), ";\n");
     }
     case (CXCursor_TypedefDecl) {
-        printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
+        var name = str(clang_getCursorSpelling(cursor));
+        printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
         return (CXChildVisit_Continue);
     }
@@ -496,9 +519,9 @@ main(argc, argv)
 
     try {
         clang_argc, clang_argv, options = parseOptions(argc, argv);
-        maybe(options.outputFileName, outputFileName -> {
+        maybe(options.outputFileName): outputFileName -> {
             g_bindingsOut = File(outputFileName, CREATE);
-        });
+        }
     } catch (ex) {
         print(ex);
         return 1;
