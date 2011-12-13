@@ -116,12 +116,11 @@ ImagBaseType(static Imag32) = Float;
 overload ImagBaseType(static Imag64) = Double;
 overload ImagBaseType(static Imag80) = LongDouble;
 
+
 
 //
 // constructors
 //
-
-
 
 [T | Numeric?(T)]
 inline overload T() = numericConvert(T, 0);
@@ -130,10 +129,11 @@ inline overload T() = numericConvert(T, 0);
 inline overload T1(src:T2) = numericConvert(T1, src);
 
 [T,I | Float?(T) and Imaginary?(I)]
-overload T(b:I) = T(0);
+inline overload T(a:I) = T(0.);
 
 [T,I | Float?(T) and Imaginary?(I)]
-overload I(b:T) = I(0);
+inline overload I(a:T) = I(0.j);
+
 
 
 //
@@ -142,7 +142,7 @@ overload I(b:T) = I(0);
 
 [A, B | Numeric?(A,B) and BiggerNumeric?(A,B)]
 inline overload assign(dest:A, src:B) {
-    primitiveCopy(dest, A(src));
+    primitiveCopy(dest, numericConvert(A,src));
 }
 
 [A, B | Integer?(A,B) and (TypeSize(A) == TypeSize(B))]
@@ -287,22 +287,22 @@ inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 
 [A,B | Numeric?(A) and Imaginary?(B)]
-inline overload multiply(a:A, b:B) = numericMultiply(B(a), b);
+inline overload multiply(a:A, b:B) = numericMultiply(numericConvert(B,a), b);
 
 [A,B | Numeric?(B) and Imaginary?(A)]
-inline overload multiply(a:A, b:B) = numericMultiply(a, A(b));
+inline overload multiply(a:A, b:B) = numericMultiply(a, numericConvert(A,b));
 
 [A | Imaginary?(A)]
-inline overload multiply(a:A, b:A) = ImagBaseType(A)(-numericMultiply(a, b));
+inline overload multiply(a:A, b:A) = numericConvert(ImagBaseType(A),-numericMultiply(a, b));
 
 [A,B | Numeric?(A) and Imaginary?(B)]
-inline overload divide(a:A, b:B) = numericDivide(B(-a), b);
+inline overload divide(a:A, b:B) = numericDivide(numericConvert(B,-a), b);
 
 [A,B | Numeric?(B) and Imaginary?(A)]
-inline overload divide(a:A, b:B) = numericDivide(a, A(b));
+inline overload divide(a:A, b:B) = numericDivide(a, numericConvert(A,b));
 
 [A | Imaginary?(A)]
-inline overload divide(a:A, b:A) = ImagBaseType(A)(numericDivide(a, b));
+inline overload divide(a:A, b:A) = numericConvert(ImagBaseType(A),numericDivide(a, b));
 
 
 //

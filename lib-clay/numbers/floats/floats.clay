@@ -184,30 +184,30 @@ overload floatMantissa(f:Float) = bitand(floatBits(f), 0x007F_FFFFu);
 
 floatParts(f) = floatNegative?(f), floatExponent(f), floatMantissa(f);
 
-infinity(static ILongDouble) = infinity(LongDouble);
-overload infinity(static IDouble) = infinity(Double);
-overload infinity(static IFloat) = infinity(Float);
+infinity(static ILongDouble) = numericConvert(ILongDouble,infinity(LongDouble));
+overload infinity(static IDouble) = numericConvert(IDouble,infinity(Double));
+overload infinity(static IFloat) = numericConvert(IFloat,infinity(Float));
 overload infinity(static LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
 overload infinity(static Double) = floatFromBits(0x7FF0_0000_0000_0000_ul);
 overload infinity(static Float) = floatFromBits(0x7F80_0000u);
 
-negativeInfinity(static ILongDouble) = negativeInfinity(LongDouble);
-overload negativeInfinity(static IDouble) = negativeInfinity(Double);
-overload negativeInfinity(static IFloat) = negativeInfinity(Float);
+negativeInfinity(static ILongDouble) = numericConvert(ILongDouble,negativeInfinity(LongDouble));
+overload negativeInfinity(static IDouble) = numericConvert(IDouble,negativeInfinity(Double));
+overload negativeInfinity(static IFloat) = numericConvert(IFloat,negativeInfinity(Float));
 overload negativeInfinity(static LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
 overload negativeInfinity(static Double) = floatFromBits(0xFFF0_0000_0000_0000_ul);
 overload negativeInfinity(static Float) = floatFromBits(0xFF80_0000u);
 
-nan(static ILongDouble) = nan(LongDouble);
-overload nan(static IDouble) = nan(Double);
-overload nan(static IFloat) = nan(Float);
+nan(static ILongDouble) = numericConvert(ILongDouble,nan(LongDouble));
+overload nan(static IDouble) = numericConvert(IDouble,nan(Double));
+overload nan(static IFloat) = numericConvert(IFloat,nan(Float));
 overload nan(static LongDouble) = floatFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
 overload nan(static Double) = floatFromBits(0x7FF8_0000_0000_0000_ul);
 overload nan(static Float) = floatFromBits(0x7FC0_0000u);
 
-snan(static ILongDouble) = snan(LongDouble);
-overload snan(static IDouble) = snan(Double);
-overload snan(static IFloat) = snan(Float);
+snan(static ILongDouble) = numericConvert(ILongDouble,snan(LongDouble));
+overload snan(static IDouble) = numericConvert(IDouble,snan(Double));
+overload snan(static IFloat) = numericConvert(IFloat,snan(Float));
 overload snan(static LongDouble) = floatFromBits(0xE000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
 overload snan(static Double) = floatFromBits(0x7FF9_0000_0000_0000_ul);
 overload snan(static Float) = floatFromBits(0x7FE0_0000u);
