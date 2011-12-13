@@ -70,7 +70,7 @@ printObjcInterfaceTo(stream, Class) {
 private _printMethodTo(stream, T, selector, returnType) {
     var selectorNames = split(String(StaticName(selector)), ':');
     var selectorArgumentTypes = Vector[String](
-        ...mapValues(T => String(objcType(T)), ...SelectorArgumentTypes(T, selector))
+        ..mapValues(T => String(objcType(T)), ..SelectorArgumentTypes(T, selector))
     );
 
     printTo(stream, "(", returnType, ")", selectorNames[0]);
@@ -104,7 +104,7 @@ overload printIvarTo(stream, name, static IBOutletWrapper[T]) {
     printIvarTo(stream, name, T);
 }
 
-printObjcHeaderWithInterfacesTo(stream, framework, ...Classes) {
+printObjcHeaderWithInterfacesTo(stream, framework, ..Classes) {
     printlnTo(stream, "#import <", framework, "/", framework, ".h>");
     printlnTo(stream);
 
