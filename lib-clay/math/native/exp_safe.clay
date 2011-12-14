@@ -792,7 +792,7 @@ inline exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
 // Exponential function - rounded to nearest
 //      - adapted from crlibm project
 //
-private exp_rn(x:Double) --> ans:Double {
+private inline exp_rn(x:Double) --> ans:Double {
 
     var shiftedXMultdb,
         twoPowerMdb,

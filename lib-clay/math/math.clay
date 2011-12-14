@@ -4,6 +4,7 @@ import libc;
 //Import native Clay functions
 public import math.native.core.*;
 public import math.native.exp.*;
+public import math.native.log.*;
 public import math.native.trig.*;
 public import math.native.gamma.*;
 public import math.native.beta.*;
@@ -62,7 +63,6 @@ define atan;
 define cos;
 define sin;
 define tan;
-define log;
 define log10;
 define atan2;
 define acosh;
@@ -170,10 +170,6 @@ overload asinh(x:LongDouble) = libc.asinhl(x);
 overload atanh(x:Double) = libc.atanh(x);
 overload atanh(x:Float) = libc.atanhf(x);
 overload atanh(x:LongDouble) = libc.atanhl(x);
-
-overload log(x:Double) = libc.log(x);
-overload log(x:Float) = libc.logf(x);
-overload log(x:LongDouble) = libc.logl(x);
 
 overload log10(x:Double) = libc.log10(x);
 overload log10(x:Float) = libc.log10f(x);
