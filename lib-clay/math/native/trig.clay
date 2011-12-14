@@ -4,6 +4,7 @@ import math.(exp);
 define sinh;
 define cosh;
 define tanh;
+define sigmoid;
 
 [T | Float?(T)]
 inline overload sinh (p:T) = T(0.5) * (exp(p) - exp(-p));
@@ -13,3 +14,6 @@ inline overload cosh (p:T) = T(0.5) * (exp(p) + exp(-p));
 
 [T | Float?(T)]
 inline overload tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
+
+[T | Float?(T)]
+inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
