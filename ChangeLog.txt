@@ -410,6 +410,35 @@ Library changes:
   initialize instead of being no-ops. Use 'uninitializedUnsafe(T)' to get an
   uninitialized object-sized hunk of memory as before.
 
+* The variant 'match' function has been changed. Instead of taking pairs of
+  types followed by lambdas, it now takes just a set of lambdas, and calls
+  the first one whose input types match the value inside the variant.
+    // 0.0
+    variant Shape = Circle | Square;
+
+    match(shape,
+        Circle, c => { ... },
+        Square, s => { ... },
+    );
+
+    // 0.1
+    variant Shape (Circle, Square);
+
+    match(shape,
+        (c:Circle) => { ... },
+        (s:Square) => { ... },
+    );
+
+    // 0.1, using block syntax
+    match(shape): (c:Circle) => {
+        ...
+    } :: (s:Square) => {
+        ...
+    }
+
+  clayfix conservatively converts calls to "match" to "matchByType", which
+  retains the previous interface.
+
 Compiler frontend changes:
 --------------------------
 * The compiler now requires LLVM 3.0.
