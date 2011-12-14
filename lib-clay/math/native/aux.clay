@@ -155,33 +155,24 @@ alias Mul22cond = Mul22;
 }
 
 
-// [T] inline Add233(resh, resm, resl, ah, al, bh, bm, bl)
-// {
-//     double _t1, _t2, _t3, _t4, _t5, _t6, _t7;
-//
-//     Add12((*(resh)),_t1,(ah),(bh));
-//     Add12Cond(_t2,_t3,(al),(bm));
-//     Add12Cond(_t4,_t5,_t1,_t2);
-//     _t6 = _t3 + (bl);
-//     _t7 = _t6 + _t5;
-//     Add12Cond((*(resm)),(*(resl)),_t4,_t7);
-// }
+[T] inline Add233(ah:T, al:T, bh:T, bm:T, bl:T)  --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(bh));
+    var _t2,_t3 = Add12Cond((al),(bm));
+    var _t4,_t5 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + (bl);
+    var _t7 = _t6 + _t5;
+    resh,resm,resl = x,..Add12Cond(_t4,_t7);
+}
 
-// [T] inline Add123(resh, resm, resl, a, bh, bl)
-// {
-//     double _t1;
-//
-//     Add12((*(resh)),_t1,(a),(bh));
-//     Add12((*(resm)),(*(resl)),_t1,(bl));
-// }
+[T] inline Add123(a:T, bh:T, bl:T)  --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((a),(bh));
+    resh, resm, resl = x,..Add12(_t1,(bl));
+}
 
-// [T] inline Add213(resh, resm, resl, ah, al, b)
-// {
-//     double _t1;
-//
-//     Add12((*(resh)),_t1,(ah),(b));
-//     Add12Cond((*(resm)),(*(resl)),(al),(b));
-// }
+[T] inline Add213(ah:T, al:T, b:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(b));
+    resh,resm,resl = Add12Cond((al),(b));
+}
 
 
 [T] inline Add23(ah:T, al:T, bh:T, bl:T) --> resh:T, resm:T, resl:T {
@@ -200,15 +191,12 @@ alias Mul22cond = Mul22;
     resh,resm,resl <-- x,..Add12Cond(_t2,_t4);
 }
 
-// [T] inline Add133Cond(resh, resm, resl, a, bh, bm, bl)
-// {
-//     double _t1, _t2, _t3, _t4;
-//
-//     Add12Cond((*(resh)),_t1,(a),(bh));
-//     Add12Cond(_t2,_t3,_t1,(bm));
-//     _t4 = _t3 + (bl);
-//     Add12Cond((*(resm)),(*(resl)),_t2,_t4);
-// }
+[T] inline Add133Cond(a:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12Cond((a),(bh));
+    var _t2,_t3 = Add12Cond(_t1,(bm));
+    var _t4 = _t3 + (bl);
+    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t2,_t4);
+}
 
 [T] inline Add233Cond(ah:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
     var x,_t1 = Add12Cond((ah),(bh));
@@ -218,7 +206,6 @@ alias Mul22cond = Mul22;
     var _t7 = _t6 + _t5;
     resh,resm,resl <-- x, ..Add12Cond(_t4,_t7);
 }
-
 
 [T] inline Mul33(ah:T, am:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
     var x,_t1 = Mul12((ah),(bh));
@@ -251,16 +238,13 @@ alias Mul22cond = Mul22;
     resh,resm,resl <-- x, ..Add12Cond(_t9,_t10);
 }
 
-// [T] inline Mul123(resh, resm, resl, a, bh, bl)
-// {
-//     double _t1, _t2, _t3, _t4, _t5, _t6;
-//
-//     Mul12((resh),&_t1,(a),(bh));
-//     Mul12(&_t2,&_t3,(a),(bl));
-//     Add12Cond(_t5,_t4,_t1,_t2);
-//     _t6 = _t3 + _t4;
-//     Add12Cond((*(resm)),(*(resl)),_t5,_t6);
-// }
+[T] inline Mul123( a:T, bh:T, bl:T){
+    var x,_t1 = Mul12((a),(bh));
+    var _t2,_t3 = Mul12((a),(bl));
+    var _t5,_t4 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + _t4;
+    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t5,_t6);
+}
 
 
 [T] inline ReturnRoundToNearest3(xh:T,xm:T,xl:T) {

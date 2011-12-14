@@ -3,6 +3,7 @@ import libc;
 
 //Import native Clay functions
 public import math.native.core.*;
+public import math.native.pow.*;
 public import math.native.exp.*;
 public import math.native.log.*;
 public import math.native.trig.*;
@@ -56,7 +57,6 @@ alias M_COS_PI_8l   = 0.923879532511286756128183189396788286822416625863_l; /* c
 alias M_SIN_PI_8l   = 0.382683432365089771728459984030398866761344562485_l; /* sin(M_PI_4*0.5) */
 
 
-define pow;
 define acos;
 define asin;
 define atan;
@@ -251,19 +251,10 @@ overload significand(x:Double) = libc.significand(x);
 overload significand(x:Float) = libc.significandf(x);
 overload significand(x:LongDouble) = libc.significandl(x);
 
-overload pow(x:Double,y:Double) = libc.pow(x,y);
-overload pow(x:Float,y:Float) = libc.powf(x,y);
-overload pow(x:LongDouble,y:LongDouble) = libc.powl(x,y);
-overload pow(x:Double,y:Float) = libc.pow(x,Double(y));
-overload pow(x:Float,y:Double) = libc.pow(Double(x),y);
-overload pow(x:Double,y:LongDouble) = libc.powl(LongDouble(x),y);
-overload pow(x:LongDouble,y:Double) = libc.powl(x,LongDouble(y));
-overload pow(x:Float,y:LongDouble) = libc.powl(LongDouble(x),y);
-overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 //Should probably use powi here.
-[T | Integer?(T)] overload pow(x:Double,y:T) = libc.pow(x,Double(y));
-[T | Integer?(T)] overload pow(x:Float,y:T) = libc.powf(x,Float(y));
-[T | Integer?(T)] overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
+[T | Integer?(T)] overload pow(x:Double,y:T) = pow(x,Double(y));
+[T | Integer?(T)] overload pow(x:Float,y:T) = powf(x,Float(y));
+[T | Integer?(T)] overload pow(x:LongDouble,y:T) = powl(x,LongDouble(y));
 
 overload mod(x:Double,y:Double) = libc.fmod(x,y);
 overload mod(x:Float,y:Float) = libc.fmodf(x,y);
