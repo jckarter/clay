@@ -6,6 +6,7 @@ find_package(Subversion)
 find_package(Mercurial)
 find_package(Git)
 
+set(Python_ADDITIONAL_VERSIONS "2.7")
 include(FindPythonInterp)
 
 if(UNIX)
