@@ -657,8 +657,7 @@ static MultiPatternPtr checkMultiPatternNameRef(ExprPtr expr, EnvPtr env)
     NameRef *x = (NameRef *)expr.ptr();
     ObjectPtr obj = safeLookupEnv(env, x->name);
     if (obj->objKind == PATTERN) {
-        error(expr, "single-valued pattern incorrectly "
-              "used in mulit-valued context");
+        error(expr, "single-valued pattern incorrectly used in multi-valued context");
     }
     if (obj->objKind != MULTI_PATTERN)
         return NULL;

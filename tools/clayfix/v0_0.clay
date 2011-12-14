@@ -514,24 +514,21 @@ private codeType?(s) : Bool {
 }
 private codeTypeIndexee?(expr:Expr) : Bool {
     return match(expr,
-        NameRef, nameref -> codeType?(nameref.name.str),
-        MatchDefault, _ -> false,
+        (nameref:NameRef) -> codeType?(nameref.name.str),
+        _ -> false,
     );
 }
 
 private fixCodeTypeArgument(arg:Expr, state:FixState) : {
-    match(arg,
-        TupleExpr, tup -> {
-            fixTuple(tup, state);
-        },
-        MatchDefault, _ -> {
-            writeUptoToken(astTokens(arg).begin, state);
-            printTo(state.outputFile, "[");
-            fixAst(arg, state);
-            writeToken(astTokens(arg).end - 1, state);
-            printTo(state.outputFile, "]");
-        },
-    );
+    match(arg): (tup:TupleExpr) -> {
+        fixTuple(tup, state);
+    } :: _ -> {
+        writeUptoToken(astTokens(arg).begin, state);
+        printTo(state.outputFile, "[");
+        fixAst(arg, state);
+        writeToken(astTokens(arg).end - 1, state);
+        printTo(state.outputFile, "]");
+    }
 }
 
 overload fixAst(ast:Indexing, state:FixState) : {
@@ -569,16 +566,13 @@ overload fixAst(ast:TupleExpr, state:FixState) : {
 // 0.0: ...(...)
 // 0.1: (...)
 overload fixAst(ast:Unpack, state:FixState) : {
-    match(ast.expr,
-        TupleExpr, tup -> {
-            writeUptoToken(ast.tokens.begin, state);
-            replaceToken(ast.tokens.begin, state);
-            fixAst(tup.args, state);
-        },
-        MatchDefault, _ -> {
-            fixAst(ast.expr, state);
-        },
-    );
+    match(ast.expr): (tup:TupleExpr) -> {
+        writeUptoToken(ast.tokens.begin, state);
+        replaceToken(ast.tokens.begin, state);
+        fixAst(tup.args, state);
+    } :: _ -> {
+        fixAst(ast.expr, state);
+    }
 }
 
 // Convert new operator expressions to use the new() function.
@@ -799,22 +793,20 @@ overload fixAst(ast:CaseBody, state:FixState) : {
     if (statementCount > 1 and variantIs?(back(ast.statements), Break))
         dec(statementCount);
     if (statementCount == 1) {
-        var wasBlock = match(ast.statements[0],
-            Block, block -> {
-                // Since the switch fixing adds a set of braces for us, if
-                // the only statement is a block, we can eliminate the braces.
-                var blockStatementCount = size(block.statements);
-                if (blockStatementCount > 1 and variantIs?(back(ast.statements), Break))
-                    dec(blockStatementCount);
-                replaceToken(astTokens(block).begin, state);
-                for (stmt in slicedUpto(block.statements, blockStatementCount))
-                    fixAst(stmt, state);
-                writeUptoToken(astTokens(block).end - 1, state);
-                replaceToken(astTokens(block).end - 1, state);
-                return true;
-            },
-            MatchDefault, _ -> false
-        );
+        var wasBlock = match(ast.statements[0]): (block:Block) -> {
+            // Since the switch fixing adds a set of braces for us, if
+            // the only statement is a block, we can eliminate the braces.
+            var blockStatementCount = size(block.statements);
+            if (blockStatementCount > 1 and variantIs?(back(ast.statements), Break))
+                dec(blockStatementCount);
+            replaceToken(astTokens(block).begin, state);
+            for (stmt in slicedUpto(block.statements, blockStatementCount))
+                fixAst(stmt, state);
+            writeUptoToken(astTokens(block).end - 1, state);
+            replaceToken(astTokens(block).end - 1, state);
+            return true;
+        } :: _ -> false;
+
         if (wasBlock) return;
     }
 

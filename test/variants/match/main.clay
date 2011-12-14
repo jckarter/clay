@@ -1,18 +1,14 @@
 variant Foo (Int, Double, StringConstant);
 
 foo(x) {
-    match(x,
-        Int, i => { println("I saw an Int ", i); },
-        Double, f => { println("I saw a Double ", f); },
-        StringConstant, s => { println("I saw a String ", s); }
-    );
+    match(x): (i:Int) => { println("I saw an Int ", i); }
+        :: (f:Double) => { println("I saw a Double ", f); }
+        :: (s:StringConstant) => { println("I saw a String ", s); }
 }
 
 bar(x) {
-    match(x,
-        Int, i => { println("I saw an Int ", i); },
-        MatchDefault, x => { println("I saw a non-Int ", x); },
-    );
+    match(x): (i:Int) => { println("I saw an Int ", i); }
+        :: (x) => { println("I saw a non-Int ", x); }
 }
 
 main() {
