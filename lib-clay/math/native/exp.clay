@@ -5,12 +5,12 @@
 //  rounded/checked function is used
 //
 
-import exp_safe;
-import exp_unsafe;
+import math.native.exp_safe.(exp_safe);
+import math.native.exp_unsafe.(exp_unsafe);
 
 define exp;
 
-[| Flag?(#"FAST_MATH")]
-inline overload exp(x) = exp_unsafe.exp(x);
-[| not Flag?(#"FAST_MATH")]
-inline overload exp(x) = exp_safe.exp(x);
+[T | Float?(T) and Flag?(#"FAST_MATH")]
+inline overload exp(x:T) = exp_unsafe(x);
+[T | Float?(T) and not Flag?(#"FAST_MATH")]
+inline overload exp(x:T) = exp_safe(x);

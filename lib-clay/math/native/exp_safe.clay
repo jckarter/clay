@@ -1,7 +1,5 @@
-import aux.*;
+import math.native.aux.*;
 import math.(abs);
-
-define exp;
 
 alias L = 12;
 alias LHALF = 6;
@@ -1055,5 +1053,5 @@ private exp_rn(x:Double) --> ans:Double {
 
 }
 
-[T | Numeric?(T)]
-inline overload exp(x:T) = numericConvert(T,exp_rn(numericConvert(Double,x)));
+[T | Float?(T)]
+inline exp_safe(x:T) = T(exp_rn(Double(x)));

@@ -6,7 +6,6 @@
 import math.(M_LOG2El);
 import numbers.floats.floats.(floatFromParts,infinity,exponentBias,exponentMask,floatMantissaZero);
 
-define exp;
 
 private alias C1 = 6.93145751953125E-1;
 private alias C2 = 1.42860682030941723212E-6;
@@ -34,12 +33,8 @@ private inline toUInt(a:T) = uType(T)(a);
 [I | Integer?(I)]
 private inline toFloat(a:I) = fType(TypeSize(SizeT))(a);
 
-
-[T | Integer?(T)]
-inline overload exp(x:T) = T(exp(Double(x)));
-
 [T | Float?(T)]
-overload exp(x:T) --> r:T {
+exp_unsafe(x:T) --> r:T {
     if(x > expmax(T))
         r <-- infinity(T);
     else{
