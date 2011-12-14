@@ -1,4 +1,6 @@
 
+import math.(fma,fms,abs);
+
 enum ComplexPart (REAL, IMAG);
 
 alias ComplexFloat = Complex32;
