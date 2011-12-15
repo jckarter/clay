@@ -12,7 +12,7 @@ public import math.native.beta.*;
 public import math.native.erf.*;
 public import math.native.cbrt.*;
 public import math.native.bessel.*;
-public import numbers.floats.floats.(abs);
+public import numbers.floats.floats.(abs,copySign,signBit);
 
 //Import native Clay complex functions
 public import math.native.ccore.*;
@@ -85,7 +85,6 @@ define inf?;
 define finite?;
 define nan?;
 define drem;
-define copysign;
 define jn;
 define y0;
 define y1;
@@ -106,7 +105,6 @@ define fdim;
 define min;
 define max;
 define fpclassify;
-define signbit;
 define scalb;
 define llrint;
 define llround;
@@ -120,10 +118,11 @@ inline overload abs(x:I) = if(x >= 0) x else -x;
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imag(x));
 
-overload sign(x:Long) = bitor(bitshr(x,63),I(bitshr(ULong(-x),63)));
-overload sign(x:Int) = bitor(bitshr(x,31),I(bitshr(UInt(-x),31)));
-overload sign(x:Short) = bitor(bitshr(x,15),I(bitshr(UShort(-x),15)));
-overload sign(x:Byte) = bitor(bitshr(x,7),I(bitshr(UByte(-x),7)));
+
+overload sign(x:Long) = bitor(bitshr(x,63),Long(bitshr(ULong(-x),63)));
+overload sign(x:Int) = bitor(bitshr(x,31),Int(bitshr(UInt(-x),31)));
+overload sign(x:Short) = bitor(bitshr(x,15),Short(bitshr(UShort(-x),15)));
+overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
 overload acos(x:Double) = libc.acos(x);
 overload acos(x:Float) = libc.acosf(x);
@@ -284,16 +283,6 @@ overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
 overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
 overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
-overload copysign(x:Double,y:Double) = libc.copysign(x,y);
-overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
-overload copysign(x:LongDouble,y:LongDouble) = libc.copysignl(x,y);
-overload copysign(x:Double,y:Float) = libc.copysign(x,Double(y));
-overload copysign(x:Float,y:Double) = libc.copysign(Double(x),y);
-overload copysign(x:Double,y:LongDouble) = libc.copysignl(LongDouble(x),y);
-overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
-overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
-overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
-
 overload nan?(x:Double) = Bool(libc.isnan(x));
 overload nan?(x:Float) = Bool(libc.isnanf(x));
 overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
@@ -433,10 +422,6 @@ overload min(x:C,y:C) = min(abs(x),abs(y));
 overload fpclassify(value:Double) = libc.fpclassify(value);
 overload fpclassify(value:Float) = libc.fpclassifyf(value);
 overload fpclassify(value:LongDouble) = libc.fpclassifyl(value);
-
-overload signbit(value:Double) = libc.signbit(value);
-overload signbit(value:Float) = libc.signbitf(value);
-overload signbit(value:LongDouble) = libc.signbitl(value);
 
 overload scalb(x:Double,y:Double) = libc.scalb(x,y);
 overload scalb(x:Float,y:Float) = libc.scalbf(x,y);

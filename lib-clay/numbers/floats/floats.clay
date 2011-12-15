@@ -228,6 +228,10 @@ mantissaMask(static LongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
 overload mantissaMask(static Double) = 0x000F_FFFF_FFFF_FFFFul;
 overload mantissaMask(static Float) = 0x007F_FFFFu;
 
+exponentSize(static LongDouble) = 15;
+overload exponentSize(static Double) = 11;
+overload exponentSize(static Float) = 8;
+
 exponentMask(static LongDouble) = 0x7FFFul;
 overload exponentMask(static Double) = 0x7FFul;
 overload exponentMask(static Float) = 0xFFu;
@@ -236,6 +240,30 @@ floatMantissaZero(static LongDouble) = 0x8000_0000_0000_0000_ul;
 overload floatMantissaZero(static Double) = 0x0000_0000_0000_0000_ul;
 overload floatMantissaZero(static Float) = 0x0000_0000_u;
 
-abs(x:LongDouble) = floatFromBits(floatBits(x).mantissa,bitand(floatBits(x).exponent,0xFFFF_FFFF_FFFF_7FFFul));
-overload abs(x:Double) = floatFromBits(bitand(floatBits(x), 0x7FFF_FFFF_FFFF_FFFFul));
-overload abs(x:Float) = floatFromBits(bitand(floatBits(x), 0x7FFF_FFFFu));
+signBit(x:LongDouble) = bitshr(floatBits(x).exponent,15);
+overload signBit(x:Double) = bitshr(floatBits(x),63);
+overload signBit(x:Float) = bitand(floatBits(x),31);
+
+floatBitsUnsigned(x:LongDouble) {
+    var tmp = floatBits(x);
+    tmp.exponent = bitand(tmp.exponent,0x0000_0000_0000_7FFFul);
+    return tmp;
+}
+overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
+overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
+
+[T | Float?(T)]
+abs(x:T) = floatFromBits(floatBitsUnsigned(x));
+
+[T,U | Float?(T,U)]
+copySign(a:T,b:U) : {
+    Pointer[UInt64](&a)^ = bitor(floatBitsUnsigned(a)
+        ,bitshl(signBit(b),mantissaSize(T)+exponentSize(T)-1));
+}
+
+[T | Float?(T)]
+overload copySign(a:LongDouble,b:T) : {
+    (Pointer[UInt64](&a)+1)^ = bitor(floatBitsUnsigned(a).exponent,
+        bitshl(signBit(b),exponentSize(LongDouble)));
+}
+
