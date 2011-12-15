@@ -733,4 +733,22 @@ inline sqrt12(x:Double) --> resh:Double, resl:Double {
 //     Renormalize3((resh),(resm),(resl),_rec_t21,_rec_t22,_rec_t23);
 // }
 
+/*
+ * i = d in rounding to nearest The constant added is 2^52 + 2^51
+ */
+DOUBLE2INT(_d:Double) --> _i:Int {
+    var _t = db_number();
+    _t.2 = _d+6755399441055744.0;
+    _i <-- _t.0[0];
+}
+
+/* Same idea but beware: works only for |_i| < 2^51 -1 */
+DOUBLE2LONGINT(_d) --> _i:l {
+    var _t = db_number();
+    _t.2 = _d+6755399441055744.0;
+    if(_d >= 0) /* sign extend */
+        _i <-- bitand(_t.1 , 0x0007FFFFFFFFFFFF);
+    else
+      _i <-- bitor(bitand(_t.1 , 0x0007FFFFFFFFFFFF) ,  0xFFF8000000000000);
+}
 
