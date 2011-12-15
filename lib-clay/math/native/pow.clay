@@ -1,0 +1,16 @@
+//
+//  Pow function
+//
+//  FAST_MATH flag determines whether correctly
+//  rounded/checked function is used
+//
+
+import math.native.pow_safe.(pow_safe);
+// import math.native.pow_unsafe.(pow_unsafe);
+
+define pow;
+
+[T | Float?(T) and Flag?(#"FAST_MATH")]
+inline overload pow(x:T,y:T) = pow_safe(x,y);
+[T | Float?(T) and not Flag?(#"FAST_MATH")]
+inline overload pow(x:T,y:T) = pow_safe(x,y);
