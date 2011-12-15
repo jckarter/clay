@@ -6,7 +6,7 @@ define fma;
 [T] inline overload fma(a:T,b:T,c:T) = (a * b) + c;
 
 
-[T | Float?(T,U)]
+[T,U | Float?(T,U)]
 inline overload hypot(m:T,n:U) {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);
