@@ -1,0 +1,753 @@
+import math.(fma);
+
+alias db_number = Union[Array[Int32,2], Int64, Float64];
+
+[T] inline Add12Cond(a:T, b:T) --> s:T, r:T {
+    s <-- a + b;
+    var _u1 = s - a;
+    var _u2 = s - _u1;
+    var _u3 = b - _u1;
+    var _u4 = a - _u2;
+    r <-- _u4 + _u3;
+}
+
+[T] inline Add12( a:T, b:T) --> s:T, r:T {
+    s <-- a + b;
+    r <-- b - (s - a);
+}
+
+[T] inline Fast2Sum(a:T, b:T) --> r1:T, r2:T {
+    r1 <-- a + b;
+    r2 <-- (a - r1) + b;
+}
+
+[T] inline Fast3Sum(a:T, b:T,  c:T) --> r1:T, r2:T, r3:T {
+    var u, v = Fast2Sum( b, c);
+    var y, w = Fast2Sum( a, u);
+    r1, r2, r3 <-- y, ..Fast2Sum( w, v);
+}
+
+[T] inline Add22Cond(xh:T,xl:T,yh:T,yl:T) --> zh:T,zl:T {
+    var _v1,_v2 = Add12Cond(xh, yh);
+    var _v3 = xl + yl;
+    var _v4 = _v2 + _v3;
+    zh,zl <-- Add12(_v1,_v4);
+}
+
+[T] inline Add22(xh:T,xl:T,yh:T,yl:T) --> zh:T,zl:T {
+    var _r = xh + yh;
+    var _s = (((xh-_r) + yh) + yl) + xl;
+    zh <-- _r + _s;
+    zl <-- (_r - zh) + _s;
+}
+
+[T] inline Mul12(u:T,v:T) --> rh:T,rl:T {
+    rh <-- u*v;
+    rl <-- fma(u,v,-rh);
+}
+
+[T] inline Mul22( xh:T,xl:T, yh:T,yl:T) --> pzh:T,pzl:T {
+    var ph = xh*yh;
+    var pl = fma(xh, yh,  -ph);
+    pl = fma(xh,yl, pl);
+    pl = fma(xl,yh,pl);
+    pzh <-- ph+pl;
+    pzl <-- (ph - pzh) +pl;
+}
+
+alias Mul12Cond = Mul12;
+alias Mul22cond = Mul22;
+
+[T] inline Mul122(a:T,bh:T,bl:T) --> resh:T,resl:T {
+    var _t1, _t2 = Mul12(a,bh);
+    resh,resl <-- Add12(_t1, _t2 + (a * bl));
+}
+
+[T] inline MulAdd212(ch:T,cl:T,a:T,bh:T,bl:T) --> resh:T,resl:T {
+    var _t1, _t2 = Mul12(a,bh);
+    var _t3,_t4 = Add12(ch,_t1);
+    var _t7 = (bl * a) + (cl + _t2);
+    resh,resl <-- Add12(_t3,_t7 + _t4);
+}
+
+[T] inline MulAdd22(ch:T,cl:T,ah:T,al:T,bh:T,bl:T) --> resh:T,resl:T {
+    var _t1,_t2 = Mul12(ah,bh);
+    var _t3,_t4 = Add12(ch,_t1);
+    resh,resl <-- Add12(_t3, ((_t4 + (_t2 + cl)) + ((ah * bl) + (al * bh))));
+}
+
+[T] inline Add122(a:T,bh:T,bl:T) --> resh:T,resl:T {
+    var _t1,_t2 = Add12(a,bh);
+    resh,resl <-- Add12(_t1,(_t2 + bl));
+}
+
+[T] inline Add122Cond(a:T,bh:T,bl:T) --> resh:T,resl:T {
+    var _t1,_t2 = Add12Cond(a,bh);
+    resh,resl <-- Add12(_t1, (_t2 + bl));
+}
+
+
+[T] inline Add212(ah:T,al:T,b:T) --> resh:T,resl:T {
+    var _t1,_t2 = Add12(ah,b);
+    resh,resl <-- Add12(_t1,(_t2 + al));
+}
+
+[T] inline Div22(xh:T,xl:T,yh:T,yl:T) --> pzh:T,pzl:T {
+    var _ch = xh/yh;
+    var _uh,_ul = Mul12(_ch,yh);
+    var _cl = ((((xh-_uh)-_ul)+xl)-_ch*yl)/yh;
+    pzh <-- _ch + _cl;
+    pzl <-- (_ch - pzh) + _cl;
+}
+
+[T] inline Renormalize3(ah:T, am:T, al:T) --> resh:T, resm:T, resl:T {
+    var _t1h, _t1l = Add12(am, al);
+    var x, _t2l = Add12(ah, _t1h);
+    resh, resm, resl <-- x, ..Add12(_t2l, _t1l);
+}
+
+[T] inline Mul23(ah:T, al:T, bh:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Mul12(ah,bh);
+    var _t2,_t3 = Mul12(ah,bl);
+    var _t4,_t5 = Mul12(al,bh);
+    var _t6 = al * bl;
+    var _t7,_t8 = Add22Cond(_t2,_t3,_t4,_t5);
+    var _t9,_t10 = Add12(_t1,_t6);
+    resh,resm,resl <-- x, ..Add22Cond(_t7,_t8,_t9,_t10);
+}
+
+
+[T] inline Mul233(ah:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Mul12(ah,bh);
+    var _t2,_t3 = Mul12(ah,bm);
+    var _t4,_t5 = Mul12(ah,bl);
+    var _t6,_t7 = Mul12(al,bh);
+    var _t8,_t9 = Mul12((al),(bm));
+    var _t10 = (al) * (bl);
+    var _t11,_t12 = Add22Cond(_t2,_t3,_t4,_t5);
+    var _t13,_t14 = Add22Cond(_t6,_t7,_t8,_t9);
+    var _t15,_t16 = Add22Cond(_t11,_t12,_t13,_t14);
+    var _t17,_t18 = Add12Cond(_t1,_t10);
+    resh,resm,resl <-- x, ..Add22Cond(_t17,_t18,_t15,_t16);
+}
+
+
+[T] inline Add33(ah:T, am:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(bh));
+    var _t2,_t3 = Add12Cond((am),(bm));
+    var _t6 = (al) + (bl);
+    var _t7,_t4 = Add12Cond(_t1,_t2);
+    var _t5 = _t3 + _t4;
+    var _t8 = _t5 + _t6;
+    resh,resm,resl <-- x, ..Add12Cond(_t7,_t8);
+}
+
+
+[T] inline Add33Cond(ah:T, am:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x, _t1 = Add12Cond((ah),(bh));
+    var _t2,_t3 = Add12Cond((am),(bm));
+    var _t6 = (al) + (bl);
+    var _t7,_t4 = Add12Cond(_t1,_t2);
+    var _t5 = _t3 + _t4;
+    var _t8 = _t5 + _t6;
+    resh,resm,resl <-- x,..Add12Cond(_t7,_t8);
+}
+
+
+[T] inline Add233(ah:T, al:T, bh:T, bm:T, bl:T)  --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(bh));
+    var _t2,_t3 = Add12Cond((al),(bm));
+    var _t4,_t5 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + (bl);
+    var _t7 = _t6 + _t5;
+    resh,resm,resl = x,..Add12Cond(_t4,_t7);
+}
+
+[T] inline Add123(a:T, bh:T, bl:T)  --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((a),(bh));
+    resh, resm, resl = x,..Add12(_t1,(bl));
+}
+
+[T] inline Add213(ah:T, al:T, b:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(b));
+    resh,resm,resl = Add12Cond((al),(b));
+}
+
+
+[T] inline Add23(ah:T, al:T, bh:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12((ah),(bh));
+    var _t2,_t3 = Add12Cond((al),(bl));
+    var _t4,_t5 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + _t5;
+    resh,resm,resl <-- x,..Add12Cond(_t4,_t6);
+}
+
+
+[T] inline Add133(a:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x, _t1 = Add12((a),(bh));
+    var _t2,_t3 = Add12Cond(_t1,(bm));
+    var _t4 = _t3 + (bl);
+    resh,resm,resl <-- x,..Add12Cond(_t2,_t4);
+}
+
+[T] inline Add133Cond(a:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12Cond((a),(bh));
+    var _t2,_t3 = Add12Cond(_t1,(bm));
+    var _t4 = _t3 + (bl);
+    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t2,_t4);
+}
+
+[T] inline Add233Cond(ah:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Add12Cond((ah),(bh));
+    var _t2,_t3 = Add12Cond((al),(bm));
+    var _t4,_t5 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + (bl);
+    var _t7 = _t6 + _t5;
+    resh,resm,resl <-- x, ..Add12Cond(_t4,_t7);
+}
+
+[T] inline Mul33(ah:T, am:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t1 = Mul12((ah),(bh));
+    var _t2,_t3 = Mul12((ah),(bm));
+    var _t4,_t5 = Mul12((am),(bh));
+    var _t6,_t7 = Mul12((am),(bm));
+    var _t8 = (ah) * (bl);
+    var _t9 = (al) * (bh);
+    var _t10 = (am) * (bl);
+    var _t11 = (al) * (bm);
+    var _t12 = _t8 + _t9;
+    var _t13 = _t10 + _t11;
+    var _t14,_t15 = Add12Cond(_t1,_t6);
+    var _t16 = _t7 + _t15;
+    var _t17 = _t12 + _t13;
+    var _t18 = _t16 + _t17;
+    var _t19,_t20 = Add12Cond(_t14,_t18);
+    var _t21,_t22 = Add22Cond(_t2,_t3,_t4,_t5);
+    resh,resm,resl <-- x, ..Add22Cond(_t21,_t22,_t19,_t20);
+}
+
+
+[T] inline Mul133(a:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
+    var x,_t2 = Mul12((a),(bh));
+    var _t3,_t4 = Mul12((a),(bm));
+    var _t5 = (a) * (bl);
+    var _t9,_t7 = Add12Cond(_t2,_t3);
+    var _t8 = _t4 + _t5;
+    var _t10 = _t7 + _t8;
+    resh,resm,resl <-- x, ..Add12Cond(_t9,_t10);
+}
+
+[T] inline Mul123( a:T, bh:T, bl:T){
+    var x,_t1 = Mul12((a),(bh));
+    var _t2,_t3 = Mul12((a),(bl));
+    var _t5,_t4 = Add12Cond(_t1,_t2);
+    var _t6 = _t3 + _t4;
+    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t5,_t6);
+}
+
+
+[T] inline ReturnRoundToNearest3(xh:T,xm:T,xl:T) {
+    var _xp, _xn = db_number(),db_number() ;
+    _xp.2 = (xh);
+    _xn.0[1] = _xp.0[1];
+    _xn.0[0] = _xp.0[0];
+    dec(_xn.1);
+    var _t1 = _xn.2;
+    inc(_xp.1);
+    var _t4 = _xp.2;
+    var _t2 = (xh) - _t1;
+    var _t3 = _t2 * -0.5;
+    var _t5 = _t4 - (xh);
+    var _t6 = _t5 * 0.5;
+    if (xm != _t3 and xm != _t6)
+        return xh + xm;
+    if (xm * xl > 0.0) {
+        if (xh * xl > 0.0)
+            return _t4;
+        else
+            return _t1;
+    } else
+        return xh;
+}
+
+// [T] inline ReturnRoundToNearest3Other(xh,xm,xl)
+// {
+//     double _t3, _t4;
+//     db_number _t3db;
+//
+//     Add12(_t3,_t4,(xm),(xl));
+//     if (_t4 != 0.0) {
+//       _t3db.d = _t3;
+//       if (!(_t3db.i[LO] & 0x00000001)) {
+//         if ((_t4 > 0.0) ^ ((_t3db.i[HI] & 0x80000000) != 0))
+//            _t3db.l++;
+//         else
+//            _t3db.l--;
+//         _t3 = _t3db.d;
+//       }
+//     }
+//     return (xh) + _t3;
+// }
+
+
+// [T] inline ReturnRoundUpwards3(xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 > 0.0) {
+//       if (_t1 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l++;
+//          return _tdb.d;
+//       } else {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          return _tdb.d;
+//       }
+//     } else return _t1;
+// }
+
+
+// [T] inline ReturnRoundDownwards3(xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 < 0.0) {
+//       if (_t1 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          return _tdb.d;
+//       } else {
+//          _tdb.d = _t1;
+//          _tdb.l++;
+//          return _tdb.d;
+//       }
+//     } else return _t1;
+// }
+
+
+// [T] inline ReturnRoundTowardsZero3(xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t1 > 0.0) {
+//        if (_t3 < 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          return _tdb.d;
+//        } else return _t1;
+//     } else {
+//        if (_t3 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          return _tdb.d;
+//        } else return _t1;
+//     }
+// }
+
+// [T] inline ReturnRoundUpwards3Unfiltered(xh,xm,xl,wca)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb, _tdb2;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 > 0.0) {
+//       _tdb2.d = wca * _t3;
+//       _tdb.d = _t1;
+//       if ((_tdb2.i[HI] & 0x7ff00000) < (_tdb.i[HI] & 0x7ff00000))
+//          return _t1;
+//       if (_t1 > 0.0) {
+//          _tdb.l++;
+//          return _tdb.d;
+//       } else {
+//          _tdb.l--;
+//          return _tdb.d;
+//       }
+//     } else return _t1;
+// }
+
+
+// [T] inline ReturnRoundDownwards3Unfiltered(xh,xm,xl,wca)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb, _tdb2;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 < 0.0) {
+//       _tdb2.d = wca * _t3;
+//       _tdb.d = _t1;
+//       if ((_tdb2.i[HI] & 0x7ff00000) < (_tdb.i[HI] & 0x7ff00000))
+//          return _t1;
+//       if (_t1 > 0.0) {
+//          _tdb.l--;
+//          return _tdb.d;
+//       } else {
+//          _tdb.l++;
+//          return _tdb.d;
+//       }
+//     } else return _t1;
+// }
+
+// [T] inlineReturnRoundTowardsZero3Unfiltered(xh,xm,xl,wca)
+// {
+//     if ((xh) > 0)
+//       ReturnRoundDownwards3Unfiltered((xh),(xm),(xl),(wca))
+//     else
+//       ReturnRoundUpwards3Unfiltered((xh),(xm),(xl),(wca))
+// }
+
+[T] inline RoundToNearest3(xh:T,xm:T,xl:T) --> res:T {
+    var _xp, _xn = db_number(),db_number();
+    _xp.2 = xh;
+    _xn.0[1] = _xp.0[1];
+    _xn.0[0] = _xp.0[0];
+    dec(_xn.1);
+    var _t1 = _xn.2;
+    inc(_xp.1);
+    var _t4 = _xp.2;
+    var _t2 = xh - _t1;
+    var _t3 = _t2 * -0.5;
+    var _t5 = _t4 - (xh);
+    var _t6 = _t5 * 0.5;
+    if (xm != _t3 and xm != _t6)
+        res <-- xh + xm;
+    else {
+        if (xm * xl > 0.0) {
+            if (xh * xl > 0.0)
+                res <-- _t4;
+            else
+                res <-- _t1;
+        } else
+            res <-- xh;
+    }
+}
+
+// [T] inline RoundUpwards3(res,xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 > 0.0) {
+//       if (_t1 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l++;
+//          (*(res)) = _tdb.d;
+//       } else {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          (*(res)) = _tdb.d;
+//       }
+//     } else (*(res)) = _t1;
+// }
+
+// [T] inline RoundDownwards3(res,xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t3 < 0.0) {
+//       if (_t1 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          (*(res)) = _tdb.d;
+//       } else {
+//          _tdb.d = _t1;
+//          _tdb.l++;
+//          (*(res)) = _tdb.d;
+//       }
+//     } else (*(res)) = _t1;
+// }
+
+
+
+// [T] inlineRoundTowardsZero3(res,xh,xm,xl)
+// {
+//     double _t1, _t2, _t3;
+//     db_number _tdb;
+//
+//     Add12(_t1,_t2,(xh),(xm));
+//     _t3 = _t2 + (xl);
+//     if (_t1 > 0.0) {
+//        if (_t3 < 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          (*(res)) = _tdb.d;
+//        } else (*(res)) = _t1;
+//     } else {
+//        if (_t3 > 0.0) {
+//          _tdb.d = _t1;
+//          _tdb.l--;
+//          (*(res)) = _tdb.d;
+//        } else (*(res)) = _t1;
+//     }
+// }
+
+
+//
+//    Computes sqrt(x) with a result in double-double precision
+//    Should be provable to be exact to at least 100 bits.
+//
+//    Only handles the following special cases:
+//    - x == 0
+//    - subnormal x
+//    The following cases are not handled:
+//    - x < 0
+//    - x = +/-Infty, NaN
+
+alias SQRTPOLYC0 = 2.50385236695888790947606139525305479764938354492188e+00;
+alias SQRTPOLYC1 = -3.29763389114324168005509818613063544034957885742188e+00;
+alias SQRTPOLYC2 = 2.75726076139124520736345402838196605443954467773438e+00;
+alias SQRTPOLYC3 = -1.15233725777933848632983426796272397041320800781250e+00;
+alias SQRTPOLYC4 = 1.86900066679800969104974228685023263096809387207031e-01;
+alias SQRTTWO52  = 4.50359962737049600000000000000000000000000000000000e+15;
+
+inline sqrt12(x:Double) --> resh:Double, resl:Double {
+    alias ZERO = 0.;
+    alias ONE = 1.;
+    alias TWO = 2.;
+    alias THREE = 3.;
+    alias HALF = 0.5;
+    var xdb = db_number();
+
+    // Special case x = 0//
+    if (x == ZERO) {
+        resh <-- x;
+        resl <-- ZERO;
+    } else {
+
+    // Convert to integer format//
+        xdb.2 = x;
+        var _e = 0;
+        // Handle subnormal case//
+        if (xdb.0[1] < 0x00100000) {
+            _e = -52;
+            xdb.2 *= SQRTTWO52; 	  // make x a normal number//
+        }
+
+        // Extract exponent E and mantissa m//
+        _e += bitshr(xdb.0[1],20) - 1023;
+        xdb.0[1] = bitor(bitand(xdb.0[1] , 0x000fffff) , 0x3ff00000);
+        var m = xdb.2;
+
+        // Make exponent even//
+        if (Bool(bitand(_e , 0x00000001))) {
+            inc(_e);
+            m *= HALF;    // Suppose now 1/2 <= m <= 2//
+        }
+
+        // Construct sqrt(2^E) = 2^(E/2)//
+        xdb.0[1] = bitshl((_e/2 + 1023) , 20);
+        xdb.0[0] = 0;
+
+        // Compute initial approximation to r = 1/sqrt(m)//
+        var r0 = SQRTPOLYC0 + m * (SQRTPOLYC1 + m * (SQRTPOLYC2 + m * (SQRTPOLYC3 + m * SQRTPOLYC4)));
+
+        // Iterate two times on double precision//
+
+        var r1 = HALF * r0 * (THREE - m * (r0 * r0));
+        var r2 = HALF * r1 * (THREE - m * (r1 * r1));
+
+        var r2Sqh, r2Sql = Mul12(r2, r2);
+        var mMr2h, mMr2l = Mul12(m, r2);
+
+        var mMr2Ch, mMr2Cl = Mul22(mMr2h, mMr2l, r2Sqh, r2Sql);
+
+        var r2PHr2h, r2PHr2l = Add12( r2, HALF * r2);
+
+        var MHmMr2Ch, MHmMr2Cl = -HALF * mMr2Ch, -HALF * mMr2Cl;
+
+        var r3h, r3l = Add22(r2PHr2h, r2PHr2l, MHmMr2Ch, MHmMr2Cl);
+
+        var r3Sqh, r3Sql = Mul22(r3h, r3l, r3h, r3l);
+        var mMr3Sqh, mMr3Sql = Mul22(m, ZERO, r3Sqh, r3Sql);  // To prove: mMr3Sqh = 1.0 in each case//
+
+        var r4h, r4l = Mul22(r3h, r3l, ONE, -HALF * mMr3Sql);
+
+        // Multiply obtained reciprocal square root by m
+
+        var srtmh,srtml = Mul22(m,ZERO,r4h,r4l);
+
+        // Multiply componentwise by sqrt(2^E), which is an integer power of 2 that may not produce a subnormal//
+
+        resh <-- xdb.2 * srtmh;
+        resl <-- xdb.2 * srtml;
+    }
+}
+
+//  sqrt13
+//
+//    Computes a triple-double approximation of sqrt(x)
+//
+//    Should be provable to be exact to at least 140 bits.
+//
+//    Only handles the following special cases:
+//    - x == 0
+//    - subnormal x
+//    The following cases are not handled:
+//    - x < 0
+//    - x = +/-Infty, NaN
+//
+
+// [T] inline Sqrt13(resh, resm, resl , x)
+// {
+//   db_number _xdb;
+//   int _E;
+//   double _m, _r0, _r1, _r2, _r3h, _r3l, _r4h, _r4l;
+//   double _r5h, _r5m, _r5l, _srtmh, _srtml, _srtmm;
+//   double _r2PHr2h, _r2PHr2l, _r2Sqh, _r2Sql;
+//   double _mMr2h, _mMr2l, _mMr2Ch, _mMr2Cl;
+//   double _MHmMr2Ch, _MHmMr2Cl;
+//   double _r3Sqh, _r3Sql, _mMr3Sqh, _mMr3Sql;
+//   double _srtmhover,_srtmmover,_srtmlover;
+//   double _HmMr4Sqm,_HmMr4Sql, _mMr4Sqhover, _mMr4Sqmover, _mMr4Sqlover;
+//   double _mMr4Sqh, _mMr4Sqm, _mMr4Sql, _r4Sqh, _r4Sqm, _r4Sql;
+//
+//   /* Special case x = 0 */
+//   if ((x) == 0) {
+//     (*(resh)) = (x);
+//     (*(resm)) = 0;
+//     (*(resl)) = 0;
+//   } else {
+//
+//     _E = 0;
+//
+//     /* Convert to integer format */
+//     _xdb.d = (x);
+//
+//     /* Handle subnormal case */
+//     if (_xdb.i[HI] < 0x00100000) {
+//       _E = -52;
+//       _xdb.d *= ((db_number) ((double) SQRTTWO52)).d;
+//                         /* make x a normal number */
+//     }
+//
+//     /* Extract exponent E and mantissa m */
+//     _E += (_xdb.i[HI]>>20)-1023;
+//     _xdb.i[HI] = (_xdb.i[HI] & 0x000fffff) | 0x3ff00000;
+//     _m = _xdb.d;
+//
+//     /* Make exponent even */
+//     if (_E & 0x00000001) {
+//       _E++;
+//       _m *= 0.5;    /* Suppose now 1/2 <= m <= 2 */
+//     }
+//
+//     /* Construct sqrt(2^E) = 2^(E/2) */
+//     _xdb.i[HI] = (_E/2 + 1023) << 20;
+//     _xdb.i[LO] = 0;
+//
+//     /* Compute initial approximation to r = 1/sqrt(m) */
+//
+//     _r0 = SQRTPOLYC0 +
+//          _m * (SQRTPOLYC1 + _m * (SQRTPOLYC2 + _m * (SQRTPOLYC3 + _m * SQRTPOLYC4)));
+//
+//     /* Iterate two times on double precision */
+//
+//     _r1 = 0.5 * _r0 * (3 - _m * (_r0 * _r0));
+//     _r2 = 0.5 * _r1 * (3 - _m * (_r1 * _r1));
+//
+//     /* Iterate two times on double-double precision */
+//
+//     Mul12(&_r2Sqh, &_r2Sql, _r2, _r2);
+//     Add12(_r2PHr2h, _r2PHr2l, _r2, (0.5 * _r2));
+//     Mul12(&_mMr2h, &_mMr2l, _m, _r2);
+//     Mul22(&_mMr2Ch, &_mMr2Cl, _mMr2h, _mMr2l, _r2Sqh, _r2Sql);
+//
+//     _MHmMr2Ch = -0.5 * _mMr2Ch;
+//     _MHmMr2Cl = -0.5 * _mMr2Cl;
+//
+//     Add22(&_r3h, &_r3l, _r2PHr2h, _r2PHr2l, _MHmMr2Ch, _MHmMr2Cl);
+//
+//     Mul22(&_r3Sqh, &_r3Sql, _r3h, _r3l, _r3h, _r3l);
+//     Mul22(&_mMr3Sqh, &_mMr3Sql, _m, 0.0, _r3Sqh, _r3Sql);
+//              /* To prove: mMr3Sqh = 1.0 in each case */
+//
+//     Mul22(&_r4h, &_r4l, _r3h, _r3l, 1.0, (-0.5 * _mMr3Sql));
+//
+//     /* Iterate once on triple-double precision */
+//
+//     Mul23(&_r4Sqh, &_r4Sqm, &_r4Sql, _r4h, _r4l, _r4h, _r4l);
+//     Mul133(&_mMr4Sqhover, &_mMr4Sqmover, &_mMr4Sqlover, _m, _r4Sqh, _r4Sqm, _r4Sql);
+//     Renormalize3(&_mMr4Sqh, &_mMr4Sqm, &_mMr4Sql, _mMr4Sqhover, _mMr4Sqmover, _mMr4Sqlover);
+//     /* To prove: mMr4Sqh = 1.0 in each case */
+//
+//     _HmMr4Sqm = -0.5 * _mMr4Sqm;
+//     _HmMr4Sql = -0.5 * _mMr4Sql;
+//
+//     Mul233(&_r5h,&_r5m,&_r5l,_r4h,_r4l,1.0,_HmMr4Sqm,_HmMr4Sql);
+//
+//     /* Multiply obtained reciprocal square root by m */
+//
+//     Mul133(&_srtmhover, &_srtmmover, &_srtmlover,_m,_r5h,_r5m,_r5l);
+//
+//     Renormalize3(&_srtmh,&_srtmm,&_srtml,_srtmhover,_srtmmover,_srtmlover);
+//
+//     /* Multiply componentwise by sqrt(2^E) */
+//     /* which is an integer power of 2 that may not produce a subnormal */
+//
+//     (*(resh)) = _xdb.d * _srtmh;
+//     (*(resm)) = _xdb.d * _srtmm;
+//     (*(resl)) = _xdb.d * _srtml;
+//
+//   } /* End: special case 0 */
+// }
+
+
+// [T] inline Recpr33(resh, resm, resl, dh, dm, dl)
+// {
+//     double _rec_r1, _rec_t1, _rec_t2, _rec_t3, _rec_t4, _rec_t5, _rec_t6, _rec_t7, _rec_t8, _rec_t9, _rec_t10, _rec_t11, _rec_t12, _rec_t13, _rec_t14;
+//     double _rec_r2h, _rec_r2l, _rec_t15, _rec_t16, _rec_t17, _rec_t18, _rec_t19, _rec_t20, _rec_t21, _rec_t22, _rec_t23;
+//
+//     _rec_r1 = 1.0 / (dh);
+//     Mul12(&_rec_t1,&_rec_t2,_rec_r1,(dh));
+//     _rec_t3 = _rec_t1 - 1.0;
+//     Add12Cond(_rec_t4,_rec_t5,_rec_t3,_rec_t2);
+//     Mul12(&_rec_t6,&_rec_t7,_rec_r1,(dm));
+//     Add12(_rec_t8,_rec_t9,-1.0,_rec_t6);
+//     _rec_t10 = _rec_t9 + _rec_t7;
+//     Add12(_rec_t11,_rec_t12,_rec_t8,_rec_t10);
+//     _rec_r1 = -_rec_r1;
+//     Add22Cond(&_rec_t13,&_rec_t14,_rec_t4,_rec_t5,_rec_t11,_rec_t12);
+//     Mul122(&_rec_r2h,&_rec_r2l,_rec_r1,_rec_t13,_rec_t14);
+//     Mul233(&_rec_t15,&_rec_t16,&_rec_t17,_rec_r2h,_rec_r2l,(dh),(dm),(dl));
+//     Renormalize3(&_rec_t18,&_rec_t19,&_rec_t20,_rec_t15,_rec_t16,_rec_t17);
+//     _rec_t18 = -1.0;
+//     Mul233(&_rec_t21,&_rec_t22,&_rec_t23,_rec_r2h,_rec_r2l,_rec_t18,_rec_t19,_rec_t20);
+//     _rec_t21 = -_rec_t21; _rec_t22 = -_rec_t22; _rec_t23 = -_rec_t23;
+//     Renormalize3((resh),(resm),(resl),_rec_t21,_rec_t22,_rec_t23);
+// }
+
+/*
+ * i = d in rounding to nearest The constant added is 2^52 + 2^51
+ */
+DOUBLE2INT(_d:Double) --> _i:Int {
+    var _t = db_number();
+    _t.2 = _d+6755399441055744.0;
+    _i <-- _t.0[0];
+}
+
+/* Same idea but beware: works only for |_i| < 2^51 -1 */
+DOUBLE2LONGINT(_d) --> _i:Long {
+    var _t = db_number();
+    _t.2 = _d+6755399441055744.0;
+    if(_d >= 0) /* sign extend */
+        _i <-- bitand(_t.1 , 0x0007FFFFFFFFFFFF);
+    else
+      _i <-- Long(bitor(bitand(UInt64(_t.1) , 0x0007FFFFFFFFFFFFul) ,  0xFFF8000000000000ul));
+}
+

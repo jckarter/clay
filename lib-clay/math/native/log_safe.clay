@@ -1,5 +1,5 @@
 
-import math.native.aux.*;
+import math.native.exact.*;
 import numbers.floats.floats.(infinity,nan);
 alias dn = db_number;
 
