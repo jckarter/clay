@@ -310,7 +310,7 @@ alias DP3 = 1.14423774522196636802E-17;
 [T | Float?(T)]
 private inline redupi(x:T){
     var t = x/M_PI;
-    if(t >= T(0) )
+    if(t >= T() )
         t += T(0.5);
     else
         t -= T(0.5);
@@ -548,26 +548,26 @@ inline overload atan(z:T){
     alias C = ComplexBaseType(T);
     alias MAXNUM = GreatestPositiveFinite(C);
     alias x = real (z);
-    alias y = imag (z);
+    alias y = imagValue(z);
 
-    if ((x == 0.0) and (y > 1.j))
+    if (x == 0.0 and y > 1.0)
         return Complex(MAXNUM,MAXNUM);
 
     var x2 = x * x;
-    var a = 1.0 - x2 - (y * y);
+    var a = 1.0 - x2 - y * y;
     if (a == 0.0)
         return Complex(MAXNUM,MAXNUM);
 
     var t = 0.5 * atan2(2.0 * x, a);
-    var w = redupi(t);
+    var w = redupi(t); //XXX Fixme - problem with returned real part
 
-    t = imagValue(z) - 1.0;
+    t = y - 1.0;
     a = x2 + (t * t);
     if (a == 0.0)
         return Complex(MAXNUM,MAXNUM);
 
-    t = imagValue(z) + 1.0;
-    a = (x2 + (t * t))/a;
+    t = y + 1.0;
+    a = (x2 + t * t)/a;
     return Complex(w , 0.25 * log(a));
 }
 
