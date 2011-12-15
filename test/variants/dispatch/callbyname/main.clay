@@ -1,0 +1,8 @@
+variant Foo (Int, Double);
+
+alias f(x) { println(__LINE__, ": ", x); }
+
+main() {
+    f(*Foo(1));
+    f(*Foo(2.5));
+}

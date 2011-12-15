@@ -1779,10 +1779,21 @@ void evalCallValue(EValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->callByName)
-            error("call to call-by-name code not allowed in this context");
-        assert(entry->analyzed);
-        evalCallCode(entry, args, out);
+        if (entry->callByName) {
+            ExprListPtr objectExprs = new ExprList();
+            for (vector<EValuePtr>::const_iterator i = args->values.begin();
+                 i != args->values.end();
+                 ++i)
+            {
+                objectExprs->add(new ObjectExpr(i->ptr()));
+            }
+            ExprPtr callableObject = new ObjectExpr(callable.ptr());
+            callableObject->location = topLocation();
+            evalCallByName(entry, callableObject, objectExprs, new Env(), out);
+        } else {
+            assert(entry->analyzed);
+            evalCallCode(entry, args, out);
+        }
         break;
     }
 

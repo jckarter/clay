@@ -1676,11 +1676,21 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry =
             analyzeCallable(obj, argsKey, argsTempness);
-        if (entry->callByName)
-            error("call to call-by-name code not allowed in this context");
-        if (!entry->analyzed)
+        if (entry->callByName) {
+            ExprListPtr objectExprs = new ExprList();
+            for (vector<PValuePtr>::const_iterator i = args->values.begin();
+                 i != args->values.end();
+                 ++i)
+            {
+                objectExprs->add(new ObjectExpr(i->ptr()));
+            }
+            ExprPtr callableObject = new ObjectExpr(callable.ptr());
+            callableObject->location = topLocation();
+            return analyzeCallByName(entry, callableObject, objectExprs, new Env());
+        } else if (!entry->analyzed)
             return NULL;
-        return analyzeReturn(entry->returnIsRef, entry->returnTypes);
+        else
+            return analyzeReturn(entry->returnIsRef, entry->returnTypes);
     }
 
     default :
