@@ -1,4 +1,5 @@
 import libc.(abort);
+import errors.backtrace.(showBacktrace);
 
 
 
@@ -8,7 +9,9 @@ import libc.(abort);
 
 errorNoThrow(..e) {
     printlnTo(stderr, "error: ", ..e);
+    printlnTo(stderr, "backtrace:");
     flush(stderr);
+    showBacktrace();
     abort();
 }
 
