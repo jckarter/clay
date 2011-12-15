@@ -2208,10 +2208,21 @@ void codegenCallValue(CValuePtr callable,
         computeArgsKey(pvArgs, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
-        if (entry->callByName)
-            error("call to call-by-name code not allowed in this context");
-        assert(entry->analyzed);
-        codegenCallCode(entry, args, ctx, out);
+        if (entry->callByName) {
+            ExprListPtr objectExprs = new ExprList();
+            for (vector<CValuePtr>::const_iterator i = args->values.begin();
+                 i != args->values.end();
+                 ++i)
+            {
+                objectExprs->add(new ObjectExpr(i->ptr()));
+            }
+            ExprPtr callableObject = new ObjectExpr(callable.ptr());
+            callableObject->location = topLocation();
+            codegenCallByName(entry, callableObject, objectExprs, new Env(), ctx, out);
+        } else {
+            assert(entry->analyzed);
+            codegenCallCode(entry, args, ctx, out);
+        }
         break;
     }
 
