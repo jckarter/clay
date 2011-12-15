@@ -256,14 +256,13 @@ overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 [T,U | Float?(T,U)]
-copySign(a:T,b:U) : {
-    Pointer[UInt64](&a)^ = bitor(floatBitsUnsigned(a)
-        ,bitshl(signBit(b),mantissaSize(T)+exponentSize(T)-1));
-}
+copySign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+    bitshl(signBit(b),mantissaSize(T)+exponentSize(T)-1)));
 
 [T | Float?(T)]
-overload copySign(a:LongDouble,b:T) : {
-    (Pointer[UInt64](&a)+1)^ = bitor(floatBitsUnsigned(a).exponent,
-        bitshl(signBit(b),exponentSize(LongDouble)));
+overload copySign(a:LongDouble,b:T) {
+    var tmp = floatBitsUnsigned(a);
+    return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
+        bitshl(signBit(b),exponentSize(LongDouble))));
 }
 
