@@ -61,9 +61,9 @@ alias M_SIN_PI_8l   = 0.382683432365089771728459984030398866761344562485_l; /* s
 define acos;
 define asin;
 define atan;
-define cos;
-define sin;
-define tan;
+// define cos;
+// define sin;
+// define tan;
 define cot;
 define log10;
 define atan2;
@@ -148,17 +148,17 @@ overload atan2(x:LongDouble,y:Double) = libc.atan2l(x,LongDouble(y));
 overload atan2(x:Float,y:LongDouble) = libc.atan2l(LongDouble(x),y);
 overload atan2(x:LongDouble,y:Float) = libc.atan2l(x,LongDouble(y));
 
-overload cos(x:Double) = libc.cos(x);
-overload cos(x:Float) = libc.cosf(x);
-overload cos(x:LongDouble) = libc.cosl(x);
-
-overload sin(x:Double) = libc.sin(x);
-overload sin(x:Float) = libc.sinf(x);
-overload sin(x:LongDouble) = libc.sinl(x);
-
-overload tan(x:Double) = libc.tan(x);
-overload tan(x:Float) = libc.tanf(x);
-overload tan(x:LongDouble) = libc.tanl(x);
+// overload cos(x:Double) = libc.cos(x);
+// overload cos(x:Float) = libc.cosf(x);
+// overload cos(x:LongDouble) = libc.cosl(x);
+//
+// overload sin(x:Double) = libc.sin(x);
+// overload sin(x:Float) = libc.sinf(x);
+// overload sin(x:LongDouble) = libc.sinl(x);
+//
+// overload tan(x:Double) = libc.tan(x);
+// overload tan(x:Float) = libc.tanf(x);
+// overload tan(x:LongDouble) = libc.tanl(x);
 
 overload acosh(x:Double) = libc.acosh(x);
 overload acosh(x:Float) = libc.acoshf(x);
