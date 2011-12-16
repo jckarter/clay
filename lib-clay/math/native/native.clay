@@ -1,5 +1,5 @@
 
-
+import math.*;
 
 import math.native.exp_safe.(exp_safe);
 import math.native.exp_unsafe.(exp_unsafe);
@@ -9,6 +9,7 @@ import math.native.trig_safe.(sin_safe,cos_safe,tan_safe);
 // import math.native.trig_unsafe.(sin_unsafe,cos_unsafe,tan_unsafe);
 import math.native.pow_safe.(pow_safe);
 // import math.native.pow_unsafe.(pow_unsafe);
+
 
 define pow;
 define sin;
@@ -38,35 +39,33 @@ define exp;
 //  Use -DFAST_MATH flag
 //
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload log(x:T) = log_safe(x);
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload pow(x:T,y:T) = pow_safe(x,y);
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload tan(x:T) = tan_safe(x);
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload exp(x:T) = exp_unsafe(x);
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload sin(x:T) = sin_safe(x);
 
-[T | Float?(T) and Flag?(#"FAST_MATH")]
+[T | Float?(T) and MathMode?(FAST)]
 inline overload cos(x:T) = cos_safe(x);
 
 //
 //  Approx1 - low precision approximation tricks - fast
-//  Use -DAPPROX_MATH flag
+//
 //
 
 //
 //  Approx2 - very low precision approximation tricks - very fast
-//  Use -DAPPROX2_MATH flag
 //
-
-
+//
 
 [T | Float?(T)] inline overload sinh (p:T) = T(0.5) * (exp(p) - exp(-p));
 [T | Float?(T)] inline overload cosh (p:T) = T(0.5) * (exp(p) + exp(-p));

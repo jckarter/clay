@@ -18,13 +18,11 @@ alias ieee754r = Union[Float,UInt];
 // Underflow of exponential is common practice in numerical routines,
 // so handle it here.
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload pow2(p:T) = T(pow2(Float(p)));
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload pow2 (p:Float){
-    alias ZERO = T(0);
-    alias ONE = T(1);
-    var offset = if(p < 0.f) ONE else ZERO;
+    var offset = if(p < 0.f) 1.f else 0.f;
     var clipp = if(p < -126.f) -126.f else p;
     var w = clipp;
     var z = clipp - w + offset;
@@ -33,7 +31,7 @@ inline overload pow2 (p:Float){
     return v.1;
 }
 
-[| Flag?(#"APPROX2_MATH")]
+[| MathMode?(APX2)]
 inline overload  pow2 (p:Float){
     var clipp = if(p < -126.f) -126.f else p;
     var v = ieee754();
@@ -41,18 +39,20 @@ inline overload  pow2 (p:Float){
     return v.1;
 }
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  pow (x:T, p:T) = pow2 (p * log2 (x));
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
-inline overload  exp (p:T) = pow2 (T(M_LOG2E) * p);
-
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  exp (p:T) {
+    println("exp apx");
+    return pow2 (T(M_LOG2E) * p);
+}
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload log2(p:T) = T(log2(Float(p)));
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload  log2 (x:Float){
   var vx,mx = ieee754r(),ieee754();
   vx.0 = x;
@@ -65,7 +65,7 @@ inline overload  log2 (x:Float){
            - 1.72587999f / (0.3520887068f + mx.1);
 }
 
-[| Flag?(#"APPROX2_MATH")]
+[| MathMode?(APX2)]
 inline overload  log2 (x:Float){
   var vx = ieee754r();
   vx.0 = x;
@@ -74,7 +74,7 @@ inline overload  log2 (x:Float){
   return y - 126.94269504f;
 }
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  log (x:T) = T(M_LN2) * log2 (x);
 
 
@@ -83,9 +83,9 @@ inline overload  log (x:T) = T(M_LN2) * log2 (x);
 // ... although vectorized version is interesting
 //     and fferfc is very f
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload erfc(p:T) = T(erfc(Float(p)));
-[| Flag?(#"APPROX_MATH")] inline overload  erfc (x:Float){
+[| MathMode?(APX)] inline overload  erfc (x:Float){
     var k = 3.3509633149424609f;
     var a = 0.07219054755431126f;
     var b = 15.418191568719577f;
@@ -98,7 +98,7 @@ inline overload erfc(p:T) = T(erfc(Float(p)));
     return 2.0f / (1.0f + pow2 (k * x)) - a * x * (b * xquad - 1.0f) * pow2 (vc.0);
 }
 
-[T | Float?(T) and Flag?(#"APPROX2_MATH")]
+[T | Float?(T) and MathMode?(APX2)]
 inline overload  erfc (x:T)
     = T(2) / (T(1) + pow2(T(3.3509633149424609) * x));
 
@@ -107,14 +107,14 @@ inline overload  erfc (x:T)
 // ... although vectorized version is interesting
 //     and fferf is very f
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  erf (x:T) = T(1) - erfc (x);
 
 alias invk = 0.30004578719350504f;
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload ierf(p:T) = T(ierf(Float(p)));
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload  ierf (x:Float){
     var a = 0.020287853348211326f;
     var b = 0.07236892874789555f;
@@ -125,12 +125,12 @@ inline overload  ierf (x:Float){
         + x * (a - b * xsq) / (c - d * xsq);
 }
 
-[T | Float?(T) and Flag?(#"APPROX2_MATH")]
+[T | Float?(T) and MathMode?(APX2)]
 inline overload  ierf (x:T) = invk * log2 ((T(1) + x) / (T(1) - x));
 
 /* gamma/digamma functions only work for positive inputs */
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload  lgamma (x:T){
     var logterm = log (x * (T(1) + x) * (T(2) + x));
     var xp3 = T(3) + x;
@@ -141,12 +141,12 @@ inline overload  lgamma (x:T){
             + (2.5f + x) * log (xp3));
 }
 
-[T | Float?(T) and Flag?(#"APPROX2_MATH")]
+[T | Float?(T) and MathMode?(APX2)]
 inline overload  lgamma (x:T)
     = T(-0.0810614667) - x - log (x) + (T(0.5) + x) * log (T(1) + x);
 
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload  digamma (x:T){
     var twopx = T(2) + x;
     var logterm = log (twopx);
@@ -155,19 +155,19 @@ inline overload  digamma (x:T){
          + logterm);
 }
 
-[T | Float?(T) and Flag?(#"APPROX2_MATH")] inline overload digamma (x:T){
+[T | Float?(T) and MathMode?(APX2)] inline overload digamma (x:T){
     var onepx = T(1) + x;
     return T(-1.0) / x - T(1) / (T(2) * onepx) + log (onepx);
 }
 
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  sinh (p:T) = T(0.5) * (exp (p) - exp (-p));
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  cosh (p:T) = T(0.5) * (exp (p) + exp (-p));
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
 
 
@@ -182,9 +182,9 @@ inline overload  tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
 // WARNING: fsinfull, fcosfull, and ftanfull can be slower than
 // libc calls on older machines (!) and on newer machines are only
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload sin(p:T) = T(sin(Float(p)));
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload sin (x:Float){
     var fouroverpi = 1.2732395447351627f;
     var fouroverpisq = 0.40528473456935109f;
@@ -208,7 +208,7 @@ inline overload sin (x:Float){
     return q * qpprox + qpproxsq * (p.0 + qpproxsq * (r.0 + qpproxsq * s.0));
 }
 
-[| Flag?(#"APPROX2_MATH")] inline overload  sin (x:Float){
+[| MathMode?(APX2)] inline overload  sin (x:Float){
     var fouroverpi = 1.2732395447351627f;
     var fouroverpisq = 0.40528473456935109f;
     var q = 0.77633023248007499f;
@@ -222,13 +222,13 @@ inline overload sin (x:Float){
     return qpprox * (q + p.0 * qpprox);
 }
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload cos (x:T)
     = sin (x + (if(x > T(M_PI_2)) T(-4.7123889803846899) else T(M_PI_2)));
 
-[T | Float?(T) and Flag?(#"APPROX2_MATH")]
+[T | Float?(T) and MathMode?(APX2)]
 inline overload cos(p:T) = T(cos(Float(p)));
-[| Flag?(#"APPROX2_MATH")]
+[| MathMode?(APX2)]
 inline overload  cos (x:T){
     var p = 0.54641335845679634f;
     var vx = ieee754r();
@@ -238,23 +238,23 @@ inline overload  cos (x:T){
     return qpprox + p * qpprox * (1.0f - qpprox * qpprox);
 }
 
-[T | Float?(T) and Flag?(#"APPROX_MATH")]
+[T | Float?(T) and MathMode?(APX)]
 inline overload  tan (x:T) = sin (x) / sin (x + T(M_PI_2));
-[T | Float?(T) and Flag?(#"APPROX2_MATH")]
+[T | Float?(T) and MathMode?(APX2)]
 inline overload  tan (x:T) = sin (x) / cos (x);
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  sinfull (x:T){
     var k = x * T(M_1_TWOPI);
     var half = if(x < T(0)) T(-0.5) else T(0.5);
     return sin((half + k) * T(M_TWOPI) - x);
 }
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  cosfull (x:T) = sinfull (x + T(M_PI_2));
 
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload  tanfull (x:T){
     var k = x * T(M_1_TWOPI);
     var half = if(x < T(0)) T(-0.5) else T(0.5);
@@ -264,10 +264,10 @@ inline overload  tanfull (x:T){
 
 
 // these functions compute the upper branch aka W_0
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload lambertw(p:T) = T(lambertw(Float(p)));
 
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload  lambertw (x:Float){
     var threshold = 2.26445f;
     var c = if(x < threshold)  1.546865557f else 1.0f;
@@ -285,7 +285,7 @@ inline overload  lambertw (x:Float){
          (2.0f + pexpminusw * (2.0f - minusw));
 }
 
-[| Flag?(#"APPROX2_MATH")]
+[| MathMode?(APX2)]
 inline overload lambertw (x:Float){
     var threshold = 2.26445f;
     var c = if(x < threshold)  1.546865557f else 1.0f;
@@ -302,9 +302,9 @@ inline overload lambertw (x:Float){
 }
 
 
-[T | Float?(T) and (Flag?(#"APPROX_MATH") or Flag?(#"APPROX2_MATH"))]
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload lambertwexpx(p:T) = T(lambertwexpx(Float(p)));
-[| Flag?(#"APPROX_MATH")]
+[| MathMode?(APX)]
 inline overload  lambertwexpx (x:Float){
     var k = 1.1765631309f;
     var a = 0.94537622168f;
@@ -323,7 +323,7 @@ inline overload  lambertwexpx (x:Float){
          (2.0f - p + w * (5.0f + 2.0f * w));
 }
 
-[| Flag?(#"APPROX2_MATH")]
+[| MathMode?(APX2)]
 inline overload  lambertwexpx (x:Float){
     var k = 1.1765631309f;
     var a = 0.94537622168f;

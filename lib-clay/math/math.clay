@@ -20,3 +20,9 @@ public import math.native.approxmath.*;
 public import math.native.ccore.*;
 public import math.native.cnative.*;
 
+alias FAST = #"fast";
+alias LIBM = #"libm";
+alias APX = #"approx";
+alias APX2 = #"approx2";
+
+MathMode?(tag) = Flag(#"math.Mode")==tag;
