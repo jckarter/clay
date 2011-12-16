@@ -1,15 +1,9 @@
 
 default :
-	@echo "use 'make windows' or 'make windows64'."
-
-windows : windows32
+	@echo "use 'make windows32' or 'make windows64'."
 
 windows32 :
-	gcc -E generated_from.h > temp32.h
-	clay-bindgen temp32.h > generated.windows.32.clay
-	del /f temp32.h
+	clay-bindgen generated_from.h -o generated.windows.32.clay
 
 windows64 :
-	gcc -E generated_from.h > temp64.h
-	clay-bindgen temp64.h > generated.windows.64.clay
-	del /f temp64.h
+	clay-bindgen generated_from.h -o generated.windows.64.clay
