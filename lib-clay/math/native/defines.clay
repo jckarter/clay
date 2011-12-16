@@ -16,6 +16,7 @@ define logb;
 define exp2;
 define expm1;
 define log2;
+define pow2;
 define sqrt;
 define ceil;
 define floor;

@@ -11,7 +11,7 @@ public import math.native.bessel.*;
 public import numbers.floats.floats.(abs,copysign,signbit);
 
 //Import native approx
-// public import math.native.approxmath.*;
+public import math.native.approxmath.*;
 
 //Import native complex
 public import math.native.ccore.*;
