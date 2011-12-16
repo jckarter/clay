@@ -1,0 +1,4 @@
+main() {
+    println(Int8("128"));
+}
+

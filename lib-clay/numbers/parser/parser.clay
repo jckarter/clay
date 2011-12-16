@@ -1,5 +1,6 @@
 import libc;
 import numbers.parser.errno.*;
+import printer.formatter.(repr);
 
 
 //
@@ -15,9 +16,9 @@ overload parseInt8(s:S) {
     var end = null(CChar);
     var value = libc.strtol(p, &end, 0);
     if (end^ != 0)
-        error("invalid Int8: ", s);
+        error("invalid Int8: ", repr(s));
     if ((errno() == ERANGE) or value < Least(Int8) or value > Greatest(Int8))
-        error("Int8 out of range: ", s);
+        error("Int8 out of range: ", repr(s));
     return Int8(value);
 }
 
@@ -30,9 +31,9 @@ overload parseUInt8(s:S) {
     var end = null(CChar);
     var value = libc.strtoul(p, &end, 0);
     if (end^ != 0)
-        error("invalid UInt8: ", s);
+        error("invalid UInt8: ", repr(s));
     if ((errno() == ERANGE) or value > Greatest(UInt8))
-        error("UInt8 out of range: ", s);
+        error("UInt8 out of range: ", repr(s));
     return UInt8(value);
 }
 
@@ -51,9 +52,9 @@ overload parseInt16(s:S) {
     var end = null(CChar);
     var value = libc.strtol(p, &end, 0);
     if (end^ != 0)
-        error("invalid Int16: ", s);
+        error("invalid Int16: ", repr(s));
     if ((errno() == ERANGE) or value < Least(Int16) or value > Greatest(Int16))
-        error("Int16 out of range: ", s);
+        error("Int16 out of range: ", repr(s));
     return Int16(value);
 }
 
@@ -66,9 +67,9 @@ overload parseUInt16(s:S) {
     var end = null(CChar);
     var value = libc.strtoul(p, &end, 0);
     if (end^ != 0)
-        error("invalid UInt16: ", s);
+        error("invalid UInt16: ", repr(s));
     if ((errno() == ERANGE) or value > Greatest(UInt16))
-        error("UInt16 out of range: ", s);
+        error("UInt16 out of range: ", repr(s));
     return UInt16(value);
 }
 
@@ -87,9 +88,9 @@ overload parseInt32(s:S) {
     var end = null(CChar);
     var value = libc.strtoll(p, &end, 0);
     if (end^ != 0)
-        error("invalid Int32: ", s);
+        error("invalid Int32: ", repr(s));
     if ((errno() == ERANGE) or (value < Least(Int32)) or (value > Greatest(Int32)))
-        error("Int32 out of range: ", s);
+        error("Int32 out of range: ", repr(s));
     return Int32(value);
 }
 
@@ -102,9 +103,9 @@ overload parseUInt32(s:S) {
     var end = null(CChar);
     var value = libc.strtoull(p, &end, 0);
     if (end^ != 0)
-        error("invalid UInt32: ", s);
+        error("invalid UInt32: ", repr(s));
     if ((errno() == ERANGE) or (value > Greatest(UInt32)))
-        error("UInt32 out of range: ", s);
+        error("UInt32 out of range: ", repr(s));
     return UInt32(value);
 }
 
@@ -123,9 +124,9 @@ overload parseInt64(s:S) {
     var end = null(CChar);
     var value = libc.strtoll(p, &end, 0);
     if (end^ != 0)
-        error("invalid Int64: ", s);
+        error("invalid Int64: ", repr(s));
     if (errno() == ERANGE)
-        error("Int64 out of range: ", s);
+        error("Int64 out of range: ", repr(s));
     return Int64(value);
 }
 
@@ -138,9 +139,9 @@ overload parseUInt64(s:S) {
     var end = null(CChar);
     var value = libc.strtoull(p, &end, 0);
     if (end^ != 0)
-        error("invalid UInt64: ", s);
+        error("invalid UInt64: ", repr(s));
     if (errno() == ERANGE)
-        error("UInt64 out of range: ", s);
+        error("UInt64 out of range: ", repr(s));
     return UInt64(value);
 }
 
@@ -159,9 +160,9 @@ overload parseFloat32(s:S) {
     var end = null(CChar);
     var value = libc.strtof(p, &end);
     if (end^ != 0)
-        error("invalid Float32: ", s);
+        error("invalid Float32: ", repr(s));
     if (errno() == ERANGE)
-        error("Float32 out of range: ", s);
+        error("Float32 out of range: ", repr(s));
     return Float32(value);
 }
 
@@ -180,9 +181,9 @@ overload parseFloat64(s:S) {
     var end = null(CChar);
     var value = libc.strtod(p, &end);
     if (end^ != 0)
-        error("invalid Float64: ", s);
+        error("invalid Float64: ", repr(s));
     if (errno() == ERANGE)
-        error("Float64 out of range: ", s);
+        error("Float64 out of range: ", repr(s));
     return Float64(value);
 }
 
@@ -200,9 +201,9 @@ overload parseFloat80(s:S) {
     var end = null(CChar);
     var value = libc.strtold(p, &end);
     if (end^ != 0)
-        error("invalid Float80: ", s);
+        error("invalid Float80: ", repr(s));
     if (errno() == ERANGE)
-        error("Float80 out of range: ", s);
+        error("Float80 out of range: ", repr(s));
     return Float80(value);
 }
 
@@ -222,9 +223,9 @@ overload parseImag32(s:S) {
     var end = null(CChar);
     var value = libc.strtof(p, &end);
     if (end^ != 0)
-        error("invalid Imag32: ", s);
+        error("invalid Imag32: ", repr(s));
     if (errno() == ERANGE)
-        error("Imag32 out of range: ", s);
+        error("Imag32 out of range: ", repr(s));
     return numericConvert(Imag32,value);
 }
 
@@ -243,9 +244,9 @@ overload parseImag64(s:S) {
     var end = null(CChar);
     var value = libc.strtod(p, &end);
     if (end^ != 0)
-        error("invalid Complex64: ", s);
+        error("invalid Complex64: ", repr(s));
     if (errno() == ERANGE)
-        error("Complex64 out of range: ", s);
+        error("Complex64 out of range: ", repr(s));
     return numericConvert(Imag64,value);
 }
 
@@ -262,8 +263,8 @@ overload parseImag80(s:S) {
     var end = null(CChar);
     var value = libc.strtold(p, &end);
     if (end^ != 0)
-        error("invalid Complex80: ", s);
+        error("invalid Complex80: ", repr(s));
     if (errno() == ERANGE)
-        error("Complex80 out of range: ", s);
+        error("Complex80 out of range: ", repr(s));
     return numericConvert(Imag80,value);
 }
