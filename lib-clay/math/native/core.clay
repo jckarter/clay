@@ -1,7 +1,29 @@
 
 import math.(abs,sqrt);
+
+//Constants
+public alias M_E	    = 2.7182818284590452353602874713526625;  /* e */
+public alias M_LOG2E	= 1.4426950408889634073599246810018921;  /* log_2 e */
+public alias M_LOG10E	= 0.4342944819032518276511289189166051;  /* log_10 e */
+public alias M_LN2	    = 0.6931471805599453094172321214581766;  /* log_e 2 */
+public alias M_LN10     = 2.3025850929940456840179914546843642;  /* log_e 10 */
+public alias M_PI		= 3.1415926535897932384626433832795029;  /* pi */
+public alias M_TWOPI    = 6.2831853071795864769252867665590058;   /* 2*pi */
+public alias M_1_TWOPI  = 0.1591549430918953357688837633725143620344596457405; /* 1/(2*pi) */
+public alias M_PI_2	    = 1.570796326794896619231321691639751442098584699687;  /* pi/2 */
+public alias M_PI_4	    = 0.7853981633974483096156608458198757;  /* pi/4 */
+public alias M_1_PI	    = 0.3183098861837906715377675267450287;  /* 1/pi */
+public alias M_2_PI	    = 0.6366197723675813430755350534900574;  /* 2/pi */
+public alias M_2_SQRTPI = 1.1283791670955125738961589031215452;  /* 2/sqrt(pi) */
+public alias M_SQRT2	= 1.4142135623730950488016887242096981;  /* sqrt(2) */
+public alias M_SQRT1_2  = 0.7071067811865475244008443621048490;  /* 1/sqrt(2) */
+public alias M_COS_PI_4 = 0.707106781186547524400844362104849039284835937688; /* cos(M_PI_4) */
+public alias M_COS_PI_8 = 0.923879532511286756128183189396788286822416625863; /* cos(M_PI_4*0.5) */
+public alias M_SIN_PI_8 = 0.382683432365089771728459984030398866761344562485; /* sin(M_PI_4*0.5) */
+
 define hypot;
 define fma;
+define sign;
 
 [T] inline overload fma(a:T,b:T,c:T) = (a * b) + c;
 
@@ -31,3 +53,13 @@ inline overload hypot(m:T,n:U) {
     }
     return r;
 }
+
+
+[I | Integer?(I)]
+inline overload abs(x:I) = if(x >= 0) x else -x;
+
+
+inline overload sign(x:Long) = bitor(bitshr(x,63),Long(bitshr(ULong(-x),63)));
+inline overload sign(x:Int) = bitor(bitshr(x,31),Int(bitshr(UInt(-x),31)));
+inline overload sign(x:Short) = bitor(bitshr(x,15),Short(bitshr(UShort(-x),15)));
+inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));

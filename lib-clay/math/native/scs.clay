@@ -605,7 +605,7 @@ scs_sub(result, x, y) : {
  * Compute 1/x with a Newton scheme
  */
 scs_inv(result, x) : {
-    var tmp, res, res1, scstwo = scs(),scs(),scs();
+    var tmp, res, res1, scstwo = scs(),scs(),scs(),scs();
     var app_x = 0.;
     scs_set(tmp, x);
     tmp.index = 0;
