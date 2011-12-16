@@ -1,5 +1,6 @@
 
 import libc;
+import errors.backtrace.(showBacktrace);
 
 
 
@@ -86,8 +87,9 @@ exceptionAsAny(exp:RawPointer) --> ex:Exception {
 // exceptionInInitializer, exceptionInFinalizer
 //
 
-private errorMsg(msg) {
+private inline errorMsg(msg) {
     libc.fprintf(libc.stderr, cstring(msg));
+    showBacktrace();
 }
 
 unhandledExceptionInExternal() {
