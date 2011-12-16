@@ -18,6 +18,7 @@ define expm1;
 define log2;
 define pow2;
 define sqrt;
+define isqrt;
 define ceil;
 define floor;
 define significand;

@@ -1,5 +1,5 @@
 
-
+import numbers.floats.floats.(floatBits,floatFromBits);
 import math.*;
 
 define lambertwexpx;
@@ -208,7 +208,8 @@ inline overload sin (x:Float){
     return q * qpprox + qpproxsq * (p.0 + qpproxsq * (r.0 + qpproxsq * s.0));
 }
 
-[| MathMode?(APX2)] inline overload  sin (x:Float){
+[| MathMode?(APX2)]
+inline overload  sin (x:Float){
     var fouroverpi = 1.2732395447351627f;
     var fouroverpisq = 0.40528473456935109f;
     var q = 0.77633023248007499f;
@@ -340,4 +341,38 @@ inline overload  lambertwexpx (x:Float){
     return w * (1.0f + x - logw) / (1.0f + w);
 }
 
+
+private define sqrtCoeff;
+inline overload sqrtCoeff(static Float) = 0x5F375A86u;
+inline overload sqrtCoeff(static Double) = 0x5FE6EB50C7B537AAul;
+inline overload sqrtCoeff(static LongDouble) = 0x5FE6EB50C7B537AAul;//NEED COEFF
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload isqrt(x:T, n:I) --> y:T{
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    for(j in range(n))
+        y *= T(1.5) - (T(0.5)*x) * y * y; // Newton step, repeating increases accuracy
+}
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload sqrt(x:T, n:I) = T(1)/isqrt(x, n);
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload isqrt(x:T) --> y:T{
+    alias ONEHALF = T(1.5);
+    alias tmp = T(0.5)*x;
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+}
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload isqrt(x:T) --> y:T{
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    y *= T(1.5) - T(0.5)*x * y * y; // Newton step, repeating increases accuracy
+}
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload sqrt(x:T) = T(1)/isqrt(x);
 

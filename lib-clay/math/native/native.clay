@@ -1,5 +1,8 @@
 
 import math.*;
+import numbers.floats.floats.(floatBits,floatFromBits);
+import math.native.approxmath.(private sqrtCoeff);
+import libc;
 
 import math.native.exp_safe.(exp_safe);
 import math.native.exp_unsafe.(exp_unsafe);
@@ -27,6 +30,18 @@ define exp;
 //  Default
 //
 
+// Temporary libm sqrt as default
+[| not MathMode?(FAST) and not MathMode?(LIBM)
+    and not MathMode?(APX) and not MathMode?(APX2)]
+inline overload sqrt(x:Double) = libc.sqrt(x);
+[| not MathMode?(FAST) and not MathMode?(LIBM)
+    and not MathMode?(APX) and not MathMode?(APX2)]
+inline overload sqrt(x:Float) = libc.sqrtf(x);
+[| not MathMode?(FAST) and not MathMode?(LIBM)
+    and not MathMode?(APX) and not MathMode?(APX2)]
+inline overload sqrt(x:LongDouble) = libc.sqrtl(x);
+
+
 [T | Float?(T)] inline overload log(x:T) = log_safe(x);
 [T | Float?(T)] inline overload pow(x:T,y:T) = pow_safe(x,y);
 [T | Float?(T)] inline overload exp(x:T) = exp_safe(x);
@@ -35,9 +50,23 @@ define exp;
 [T | Float?(T)] inline overload tan(x:T) = tan_safe(x);
 
 //
-//  Unsafe - high precision approximations and incorrect rounding - but faster
-//  Use -DFAST_MATH flag
+//  Unsafe - high precision approximations - but faster
+//  Use -Dmath.Mode=fast
 //
+
+[T | Float?(T) and MathMode?(FAST)]
+inline overload isqrt(x:T) --> y:T{
+    alias ONEHALF = T(1.5);
+    alias tmp = T(0.5)*x;
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    y *= ONEHALF - tmp * y * y;
+    y *= ONEHALF - tmp * y * y;
+    y *= ONEHALF - tmp * y * y;
+    y *= ONEHALF - tmp * y * y;
+}
+
+[T | Float?(T) and MathMode?(FAST)]
+inline overload sqrt(x:T) = T(1)/isqrt(x);
 
 [T | Float?(T) and MathMode?(FAST)]
 inline overload log(x:T) = log_safe(x);
@@ -57,15 +86,7 @@ inline overload sin(x:T) = sin_safe(x);
 [T | Float?(T) and MathMode?(FAST)]
 inline overload cos(x:T) = cos_safe(x);
 
-//
-//  Approx1 - low precision approximation tricks - fast
-//
-//
 
-//
-//  Approx2 - very low precision approximation tricks - very fast
-//
-//
 
 [T | Float?(T)] inline overload sinh (p:T) = T(0.5) * (exp(p) - exp(-p));
 [T | Float?(T)] inline overload cosh (p:T) = T(0.5) * (exp(p) + exp(-p));
