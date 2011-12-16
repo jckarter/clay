@@ -1,0 +1,4 @@
+main() {
+    println(Float("abc1.2"));
+}
+
