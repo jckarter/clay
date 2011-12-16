@@ -44,3 +44,5 @@ vs2008/Release/
 test/cocoa/appkit/Example.app/
 
 mingw/
+
+testlog.txt
