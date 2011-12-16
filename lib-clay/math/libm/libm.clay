@@ -30,27 +30,27 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload log(x:Float) = libc.logf(x);
 [| Flag?(#"LIBC_MATH")] inline overload log(x:LongDouble) = libc.logl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload acos(x:Double) = libc.acos(x);
-[| Flag?(#"LIBC_MATH")] inline overload acos(x:Float) = libc.acosf(x);
-[| Flag?(#"LIBC_MATH")] inline overload acos(x:LongDouble) = libc.acosl(x);
+inline overload acos(x:Double) = libc.acos(x);
+inline overload acos(x:Float) = libc.acosf(x);
+inline overload acos(x:LongDouble) = libc.acosl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload asin(x:Double) = libc.asin(x);
-[| Flag?(#"LIBC_MATH")] inline overload asin(x:Float) = libc.asinf(x);
-[| Flag?(#"LIBC_MATH")] inline overload asin(x:LongDouble) = libc.asinl(x);
+inline overload asin(x:Double) = libc.asin(x);
+inline overload asin(x:Float) = libc.asinf(x);
+inline overload asin(x:LongDouble) = libc.asinl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload atan(x:Double) = libc.atan(x);
-[| Flag?(#"LIBC_MATH")] inline overload atan(x:Float) = libc.atanf(x);
-[| Flag?(#"LIBC_MATH")] inline overload atan(x:LongDouble) = libc.atanl(x);
+inline overload atan(x:Double) = libc.atan(x);
+inline overload atan(x:Float) = libc.atanf(x);
+inline overload atan(x:LongDouble) = libc.atanl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Double,y:Double) = libc.atan2(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Float,y:Float) = libc.atan2f(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:LongDouble,y:LongDouble) = libc.atan2l(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Double,y:Float) = libc.atan2(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Float,y:Double) = libc.atan2(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Double,y:LongDouble) = libc.atan2l(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:LongDouble,y:Double) = libc.atan2l(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:Float,y:LongDouble) = libc.atan2l(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload atan2(x:LongDouble,y:Float) = libc.atan2l(x,LongDouble(y));
+inline overload atan2(x:Double,y:Double) = libc.atan2(x,y);
+inline overload atan2(x:Float,y:Float) = libc.atan2f(x,y);
+inline overload atan2(x:LongDouble,y:LongDouble) = libc.atan2l(x,y);
+inline overload atan2(x:Double,y:Float) = libc.atan2(x,Double(y));
+inline overload atan2(x:Float,y:Double) = libc.atan2(Double(x),y);
+inline overload atan2(x:Double,y:LongDouble) = libc.atan2l(LongDouble(x),y);
+inline overload atan2(x:LongDouble,y:Double) = libc.atan2l(x,LongDouble(y));
+inline overload atan2(x:Float,y:LongDouble) = libc.atan2l(LongDouble(x),y);
+inline overload atan2(x:LongDouble,y:Float) = libc.atan2l(x,LongDouble(y));
 
 [| Flag?(#"LIBC_MATH")] inline overload cos(x:Double) = libc.cos(x);
 [| Flag?(#"LIBC_MATH")] inline overload cos(x:Float) = libc.cosf(x);
@@ -76,53 +76,53 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload tanh(x:Float) = libc.tanhf(x);
 [| Flag?(#"LIBC_MATH")] inline overload tanh(x:LongDouble) = libc.tanhl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload acosh(x:Double) = libc.acosh(x);
-[| Flag?(#"LIBC_MATH")] inline overload acosh(x:Float) = libc.acoshf(x);
-[| Flag?(#"LIBC_MATH")] inline overload acosh(x:LongDouble) = libc.acoshl(x);
+inline overload acosh(x:Double) = libc.acosh(x);
+inline overload acosh(x:Float) = libc.acoshf(x);
+inline overload acosh(x:LongDouble) = libc.acoshl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload asinh(x:Double) = libc.asinh(x);
-[| Flag?(#"LIBC_MATH")] inline overload asinh(x:Float) = libc.asinhf(x);
-[| Flag?(#"LIBC_MATH")] inline overload asinh(x:LongDouble) = libc.asinhl(x);
+inline overload asinh(x:Double) = libc.asinh(x);
+inline overload asinh(x:Float) = libc.asinhf(x);
+inline overload asinh(x:LongDouble) = libc.asinhl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload atanh(x:Double) = libc.atanh(x);
-[| Flag?(#"LIBC_MATH")] inline overload atanh(x:Float) = libc.atanhf(x);
-[| Flag?(#"LIBC_MATH")] inline overload atanh(x:LongDouble) = libc.atanhl(x);
+inline overload atanh(x:Double) = libc.atanh(x);
+inline overload atanh(x:Float) = libc.atanhf(x);
+inline overload atanh(x:LongDouble) = libc.atanhl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload log10(x:Double) = libc.log10(x);
-[| Flag?(#"LIBC_MATH")] inline overload log10(x:Float) = libc.log10f(x);
-[| Flag?(#"LIBC_MATH")] inline overload log10(x:LongDouble) = libc.log10l(x);
+inline overload log10(x:Double) = libc.log10(x);
+inline overload log10(x:Float) = libc.log10f(x);
+inline overload log10(x:LongDouble) = libc.log10l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload frexp(x:Double) {
+inline overload frexp(x:Double) {
     var ex = Pointer[Int]();
     var a = libc.frexp(x,ex);
     return a,ex[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload frexp(x:Float) {
+inline overload frexp(x:Float) {
     var ex = Pointer[Int]();
     var a = libc.frexpf(x,ex);
     return a,ex[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload frexp(x:LongDouble) {
+inline overload frexp(x:LongDouble) {
     var ex = Pointer[Int]();
     var a = libc.frexpl(x,ex);
     return a,ex[0];
 }
 
-[| Flag?(#"LIBC_MATH")] inline overload ldexp(x:Double,y:Int) = libc.ldexp(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload ldexp(x:Float,y:Int) = libc.ldexpf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload ldexp(x:LongDouble,y:Int) = libc.ldexpl(x,y);
+inline overload ldexp(x:Double,y:Int) = libc.ldexp(x,y);
+inline overload ldexp(x:Float,y:Int) = libc.ldexpf(x,y);
+inline overload ldexp(x:LongDouble,y:Int) = libc.ldexpl(x,y);
 
-[| Flag?(#"LIBC_MATH")] inline overload modf(x:Double) {
+inline overload modf(x:Double) {
     var iptr = Pointer[Double]();
     var a = libc.modf(x,iptr);
     return a,iptr[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload modf(x:Float) {
+inline overload modf(x:Float) {
     var iptr = Pointer[Double]();
     var a = libc.modff(x,iptr);
     return a,iptr[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload modf(x:LongDouble) {
+inline overload modf(x:LongDouble) {
     var iptr = Pointer[Double]();
     var a = libc.modfl(x,iptr);
     return a,iptr[0];
@@ -138,25 +138,25 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
 [| Flag?(#"LIBC_MATH")] inline overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload expm1(x:Double) = libc.expm1(x);
-[| Flag?(#"LIBC_MATH")] inline overload expm1(x:Float) = libc.expm1f(x);
-[| Flag?(#"LIBC_MATH")] inline overload expm1(x:LongDouble) = libc.expm1l(x);
+inline overload expm1(x:Double) = libc.expm1(x);
+inline overload expm1(x:Float) = libc.expm1f(x);
+inline overload expm1(x:LongDouble) = libc.expm1l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload log1p(x:Double) = libc.log1p(x);
-[| Flag?(#"LIBC_MATH")] inline overload log1p(x:Float) = libc.log1pf(x);
-[| Flag?(#"LIBC_MATH")] inline overload log1p(x:LongDouble) = libc.log1pl(x);
+inline overload log1p(x:Double) = libc.log1p(x);
+inline overload log1p(x:Float) = libc.log1pf(x);
+inline overload log1p(x:LongDouble) = libc.log1pl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload logb(x:Double) = libc.logb(x);
-[| Flag?(#"LIBC_MATH")] inline overload logb(x:Float) = libc.logbf(x);
-[| Flag?(#"LIBC_MATH")] inline overload logb(x:LongDouble) = libc.logbl(x);
+inline overload logb(x:Double) = libc.logb(x);
+inline overload logb(x:Float) = libc.logbf(x);
+inline overload logb(x:LongDouble) = libc.logbl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload exp2(x:Double) = libc.exp2(x);
-[| Flag?(#"LIBC_MATH")] inline overload exp2(x:Float) = libc.exp2f(x);
-[| Flag?(#"LIBC_MATH")] inline overload exp2(x:LongDouble) = libc.exp2l(x);
+inline overload exp2(x:Double) = libc.exp2(x);
+inline overload exp2(x:Float) = libc.exp2f(x);
+inline overload exp2(x:LongDouble) = libc.exp2l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload log2(x:Double) = libc.log2(x);
-[| Flag?(#"LIBC_MATH")] inline overload log2(x:Float) = libc.log2f(x);
-[| Flag?(#"LIBC_MATH")] inline overload log2(x:LongDouble) = libc.log2l(x);
+inline overload log2(x:Double) = libc.log2(x);
+inline overload log2(x:Float) = libc.log2f(x);
+inline overload log2(x:LongDouble) = libc.log2l(x);
 
 [| Flag?(#"LIBC_MATH")] inline overload sqrt(x:Double) = libc.sqrt(x);
 [| Flag?(#"LIBC_MATH")] inline overload sqrt(x:Float) = libc.sqrtf(x);
@@ -166,53 +166,53 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload cbrt(x:Float) = libc.cbrtf(x);
 [| Flag?(#"LIBC_MATH")] inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload floor(x:Double) = libc.floor(x);
-[| Flag?(#"LIBC_MATH")] inline overload floor(x:Float) = libc.floorf(x);
-[| Flag?(#"LIBC_MATH")] inline overload floor(x:LongDouble) = libc.floorl(x);
+inline overload floor(x:Double) = libc.floor(x);
+inline overload floor(x:Float) = libc.floorf(x);
+inline overload floor(x:LongDouble) = libc.floorl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload ceil(x:Double) = libc.ceil(x);
-[| Flag?(#"LIBC_MATH")] inline overload ceil(x:Float) = libc.ceilf(x);
-[| Flag?(#"LIBC_MATH")] inline overload ceil(x:LongDouble) = libc.ceill(x);
+inline overload ceil(x:Double) = libc.ceil(x);
+inline overload ceil(x:Float) = libc.ceilf(x);
+inline overload ceil(x:LongDouble) = libc.ceill(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload round(x:Double) = libc.round(x);
-[| Flag?(#"LIBC_MATH")] inline overload round(x:Float) = libc.roundf(x);
-[| Flag?(#"LIBC_MATH")] inline overload round(x:LongDouble) = libc.roundl(x);
+inline overload round(x:Double) = libc.round(x);
+inline overload round(x:Float) = libc.roundf(x);
+inline overload round(x:LongDouble) = libc.roundl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload significand(x:Double) = libc.significand(x);
-[| Flag?(#"LIBC_MATH")] inline overload significand(x:Float) = libc.significandf(x);
-[| Flag?(#"LIBC_MATH")] inline overload significand(x:LongDouble) = libc.significandl(x);
+inline overload significand(x:Double) = libc.significand(x);
+inline overload significand(x:Float) = libc.significandf(x);
+inline overload significand(x:LongDouble) = libc.significandl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Double,y:Double) = libc.fmod(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Float,y:Float) = libc.fmodf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Double,y:Float) = libc.fmod(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Float,y:Double) = libc.fmod(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Double,y:LongDouble) = libc.fmodl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
+inline overload mod(x:Double,y:Double) = libc.fmod(x,y);
+inline overload mod(x:Float,y:Float) = libc.fmodf(x,y);
+inline overload mod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
+inline overload mod(x:Double,y:Float) = libc.fmod(x,Double(y));
+inline overload mod(x:Float,y:Double) = libc.fmod(Double(x),y);
+inline overload mod(x:Double,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+inline overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
+inline overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+inline overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload inf?(x:Double) = libc.isinf(x);
-[| Flag?(#"LIBC_MATH")] inline overload inf?(x:Float) = libc.isinff(x);
-[| Flag?(#"LIBC_MATH")] inline overload inf?(x:LongDouble) = libc.isinfl(x);
+inline overload inf?(x:Double) = libc.isinf(x);
+inline overload inf?(x:Float) = libc.isinff(x);
+inline overload inf?(x:LongDouble) = libc.isinfl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload finite?(x:Double) = libc.finite(x);
-[| Flag?(#"LIBC_MATH")] inline overload finite?(x:Float) = libc.finitef(x);
-[| Flag?(#"LIBC_MATH")] inline overload finite?(x:LongDouble) = libc.finitel(x);
+inline overload finite?(x:Double) = libc.finite(x);
+inline overload finite?(x:Float) = libc.finitef(x);
+inline overload finite?(x:LongDouble) = libc.finitel(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Double,y:Double) = libc.drem(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Float,y:Float) = libc.dremf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:LongDouble,y:LongDouble) = libc.dreml(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Double,y:Float) = libc.drem(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Float,y:Double) = libc.drem(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Double,y:LongDouble) = libc.dreml(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
+inline overload drem(x:Double,y:Double) = libc.drem(x,y);
+inline overload drem(x:Float,y:Float) = libc.dremf(x,y);
+inline overload drem(x:LongDouble,y:LongDouble) = libc.dreml(x,y);
+inline overload drem(x:Double,y:Float) = libc.drem(x,Double(y));
+inline overload drem(x:Float,y:Double) = libc.drem(Double(x),y);
+inline overload drem(x:Double,y:LongDouble) = libc.dreml(LongDouble(x),y);
+inline overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
+inline overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
+inline overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload nan?(x:Double) = Bool(libc.isnan(x));
-[| Flag?(#"LIBC_MATH")] inline overload nan?(x:Float) = Bool(libc.isnanf(x));
-[| Flag?(#"LIBC_MATH")] inline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
+inline overload nan?(x:Double) = Bool(libc.isnan(x));
+inline overload nan?(x:Float) = Bool(libc.isnanf(x));
+inline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
 
 [| Flag?(#"LIBC_MATH")] inline overload jn(x:Int,y:Double) = libc.jn(x,y);
 [| Flag?(#"LIBC_MATH")] inline overload jn(x:Int,y:Float) = libc.jnf(x,y);
@@ -226,17 +226,17 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload j1(x:Float) = libc.j1f(x);
 [| Flag?(#"LIBC_MATH")] inline overload j1(x:LongDouble) = libc.j1l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload y0(x:Double) = libc.y0(x);
-[| Flag?(#"LIBC_MATH")] inline overload y0(x:Float) = libc.y0f(x);
-[| Flag?(#"LIBC_MATH")] inline overload y0(x:LongDouble) = libc.y0l(x);
+inline overload y0(x:Double) = libc.y0(x);
+inline overload y0(x:Float) = libc.y0f(x);
+inline overload y0(x:LongDouble) = libc.y0l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload y1(x:Double) = libc.y1(x);
-[| Flag?(#"LIBC_MATH")] inline overload y1(x:Float) = libc.y1f(x);
-[| Flag?(#"LIBC_MATH")] inline overload y1(x:LongDouble) = libc.y1l(x);
+inline overload y1(x:Double) = libc.y1(x);
+inline overload y1(x:Float) = libc.y1f(x);
+inline overload y1(x:LongDouble) = libc.y1l(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload yn(x:Int,y:Double) = libc.yn(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload yn(x:Int,y:Float) = libc.ynf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload yn(x:Int,y:LongDouble) = libc.ynl(x,y);
+inline overload yn(x:Int,y:Double) = libc.yn(x,y);
+inline overload yn(x:Int,y:Float) = libc.ynf(x,y);
+inline overload yn(x:Int,y:LongDouble) = libc.ynl(x,y);
 
 [| Flag?(#"LIBC_MATH")] inline overload copysign(x:Double,y:Double) = libc.copysign(x,y);
 [| Flag?(#"LIBC_MATH")] inline overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
@@ -268,115 +268,115 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload gamma(x:Float) = libc.gammaf(x);
 [| Flag?(#"LIBC_MATH")] inline overload gamma(x:LongDouble) = libc.gammal(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload lgamma_r(x:Double) {
+inline overload lgamma_r(x:Double) {
     var signgamp = Pointer[Int]();
     var res = libc.lgamma_r(x,signgamp);
     return res,signgamp[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload lgamma_r(x:Float) {
+inline overload lgamma_r(x:Float) {
     var signgamp = Pointer[Int]();
     var res = libc.lgammaf_r(x,signgamp);
     return res,signgamp[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload lgamma_r(x:LongDouble) {
+inline overload lgamma_r(x:LongDouble) {
     var signgamp = Pointer[Int]();
     var res = libc.lgammal_r(x,signgamp);
     return res,signgamp[0];
 }
 
-[| Flag?(#"LIBC_MATH")] inline overload rint(x:Double) = libc.rint(x);
-[| Flag?(#"LIBC_MATH")] inline overload rint(x:Float) = libc.rintf(x);
-[| Flag?(#"LIBC_MATH")] inline overload rint(x:LongDouble) = libc.rintl(x);
+inline overload rint(x:Double) = libc.rint(x);
+inline overload rint(x:Float) = libc.rintf(x);
+inline overload rint(x:LongDouble) = libc.rintl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
+inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
+inline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
+inline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
+inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
+inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
+inline overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
+inline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
+inline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
+inline overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload nexttoward(x:Double,y:LongDouble) = libc.nexttoward(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload nexttoward(x:Float,y:LongDouble) = libc.nexttowardf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload nexttoward(x:LongDouble,y:LongDouble) = libc.nexttowardl(x,y);
+inline overload nexttoward(x:Double,y:LongDouble) = libc.nexttoward(x,y);
+inline overload nexttoward(x:Float,y:LongDouble) = libc.nexttowardf(x,y);
+inline overload nexttoward(x:LongDouble,y:LongDouble) = libc.nexttowardl(x,y);
 
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Float,y:Double) = libc.remainder(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Double,y:LongDouble) = libc.remainderl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
+inline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
+inline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
+inline overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
+inline overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
+inline overload remainder(x:Float,y:Double) = libc.remainder(Double(x),y);
+inline overload remainder(x:Double,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+inline overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDouble(y));
+inline overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+inline overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload scalbn(x:Double,y:Int) = libc.scalbn(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalbn(x:Float,y:Int) = libc.scalbnf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalbn(x:LongDouble,y:Int) = libc.scalbnl(x,y);
+inline overload scalbn(x:Double,y:Int) = libc.scalbn(x,y);
+inline overload scalbn(x:Float,y:Int) = libc.scalbnf(x,y);
+inline overload scalbn(x:LongDouble,y:Int) = libc.scalbnl(x,y);
 
-[| Flag?(#"LIBC_MATH")] inline overload scalbln(x:Double,y:Long) = libc.scalbln(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalbln(x:Float,y:Long) = libc.scalblnf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalbln(x:LongDouble,y:Long) = libc.scalblnl(x,y);
+inline overload scalbln(x:Double,y:Long) = libc.scalbln(x,y);
+inline overload scalbln(x:Float,y:Long) = libc.scalblnf(x,y);
+inline overload scalbln(x:LongDouble,y:Long) = libc.scalblnl(x,y);
 
-[| Flag?(#"LIBC_MATH")] inline overload ilogb(x:Double) = libc.ilogb(x);
-[| Flag?(#"LIBC_MATH")] inline overload ilogb(x:Float) = libc.ilogbf(x);
-[| Flag?(#"LIBC_MATH")] inline overload ilogb(x:LongDouble) = libc.ilogbl(x);
+inline overload ilogb(x:Double) = libc.ilogb(x);
+inline overload ilogb(x:Float) = libc.ilogbf(x);
+inline overload ilogb(x:LongDouble) = libc.ilogbl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload nearbyint(x:Double) = libc.nearbyint(x);
-[| Flag?(#"LIBC_MATH")] inline overload nearbyint(x:Float) = libc.nearbyintf(x);
-[| Flag?(#"LIBC_MATH")] inline overload nearbyint(x:LongDouble) = libc.nearbyintl(x);
+inline overload nearbyint(x:Double) = libc.nearbyint(x);
+inline overload nearbyint(x:Float) = libc.nearbyintf(x);
+inline overload nearbyint(x:LongDouble) = libc.nearbyintl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload round(x:Double) = libc.round(x);
-[| Flag?(#"LIBC_MATH")] inline overload round(x:Float) = libc.roundf(x);
-[| Flag?(#"LIBC_MATH")] inline overload round(x:LongDouble) = libc.roundl(x);
+inline overload round(x:Double) = libc.round(x);
+inline overload round(x:Float) = libc.roundf(x);
+inline overload round(x:LongDouble) = libc.roundl(x);
 
 
-[| Flag?(#"LIBC_MATH")] inline overload trunc(x:Double) = libc.trunc(x);
-[| Flag?(#"LIBC_MATH")] inline overload trunc(x:Float) = libc.truncf(x);
-[| Flag?(#"LIBC_MATH")] inline overload trunc(x:LongDouble) = libc.truncl(x);
+inline overload trunc(x:Double) = libc.trunc(x);
+inline overload trunc(x:Float) = libc.truncf(x);
+inline overload trunc(x:LongDouble) = libc.truncl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload remquo(x:Double,y:Double) {
+inline overload remquo(x:Double,y:Double) {
     var quo = Pointer[Int]();
     var res = libc.remquo(x,y,quo);
     return res,quo[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload remquo(x:Float,y:Float) {
+inline overload remquo(x:Float,y:Float) {
     var quo = Pointer[Int]();
     var res = libc.remquof(x,y,quo);
     return res,quo[0];
 }
-[| Flag?(#"LIBC_MATH")] inline overload remquo(x:LongDouble,y:LongDouble) {
+inline overload remquo(x:LongDouble,y:LongDouble) {
     var quo = Pointer[Int]();
     var res = libc.remquol(x,y,quo);
     return res,quo[0];
 }
 
 
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Double,y:Double) = libc.fdim(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Float,y:Float) = libc.fdimf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:LongDouble,y:LongDouble) = libc.fdiml(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Double,y:Float) = libc.fdim(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Float,y:Double) = libc.fdim(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Double,y:LongDouble) = libc.fdiml(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
+inline overload fdim(x:Double,y:Double) = libc.fdim(x,y);
+inline overload fdim(x:Float,y:Float) = libc.fdimf(x,y);
+inline overload fdim(x:LongDouble,y:LongDouble) = libc.fdiml(x,y);
+inline overload fdim(x:Double,y:Float) = libc.fdim(x,Double(y));
+inline overload fdim(x:Float,y:Double) = libc.fdim(Double(x),y);
+inline overload fdim(x:Double,y:LongDouble) = libc.fdiml(LongDouble(x),y);
+inline overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
+inline overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
+inline overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
-[| Flag?(#"LIBC_MATH")] inline overload fpclassify(value:Double) = libc.fpclassify(value);
-[| Flag?(#"LIBC_MATH")] inline overload fpclassify(value:Float) = libc.fpclassifyf(value);
-[| Flag?(#"LIBC_MATH")] inline overload fpclassify(value:LongDouble) = libc.fpclassifyl(value);
+inline overload fpclassify(value:Double) = libc.fpclassify(value);
+inline overload fpclassify(value:Float) = libc.fpclassifyf(value);
+inline overload fpclassify(value:LongDouble) = libc.fpclassifyl(value);
 
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Double,y:Double) = libc.scalb(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:LongDouble,y:LongDouble) = libc.scalbl(x,y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Double,y:Float) = libc.scalb(x,Double(y));
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Float,y:Double) = libc.scalb(Double(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Double,y:LongDouble) = libc.scalbl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
-[| Flag?(#"LIBC_MATH")] inline overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
+inline overload scalb(x:Double,y:Double) = libc.scalb(x,y);
+inline overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
+inline overload scalb(x:LongDouble,y:LongDouble) = libc.scalbl(x,y);
+inline overload scalb(x:Double,y:Float) = libc.scalb(x,Double(y));
+inline overload scalb(x:Float,y:Double) = libc.scalb(Double(x),y);
+inline overload scalb(x:Double,y:LongDouble) = libc.scalbl(LongDouble(x),y);
+inline overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
+inline overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
+inline overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
 
 [| Flag?(#"LIBC_MATH")] inline overload signbit(value:Double) = libc.signbit(value);
 [| Flag?(#"LIBC_MATH")] inline overload signbit(value:Float) = libc.signbitf(value);
@@ -386,13 +386,13 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
 [| Flag?(#"LIBC_MATH")] inline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
 
-[| Flag?(#"LIBC_MATH")] inline overload llrint(x:Double) = libc.llrint(x);
-[| Flag?(#"LIBC_MATH")] inline overload llrint(x:Float) = libc.llrintf(x);
-[| Flag?(#"LIBC_MATH")] inline overload llrint(x:LongDouble) = libc.llrintl(x);
+inline overload llrint(x:Double) = libc.llrint(x);
+inline overload llrint(x:Float) = libc.llrintf(x);
+inline overload llrint(x:LongDouble) = libc.llrintl(x);
 
-[| Flag?(#"LIBC_MATH")] inline overload llround(x:Double) = libc.llround(x);
-[| Flag?(#"LIBC_MATH")] inline overload llround(x:Float) = libc.llroundf(x);
-[| Flag?(#"LIBC_MATH")] inline overload llround(x:LongDouble) = libc.llroundl(x);
+inline overload llround(x:Double) = libc.llround(x);
+inline overload llround(x:Float) = libc.llroundf(x);
+inline overload llround(x:LongDouble) = libc.llroundl(x);
 
 [| Flag?(#"LIBC_MATH")] inline overload abs(z:Complex64) = libc.cabs(z);
 [| Flag?(#"LIBC_MATH")] inline overload abs(z:Complex32) = libc.cabsf(z);
@@ -473,7 +473,7 @@ import math.*;
 [| Flag?(#"LIBC_MATH")] inline overload sqrt(z:Complex32) = libc.csqrtf(z);
 [| Flag?(#"LIBC_MATH")] inline overload sqrt(z:Complex80) = libc.csqrtl(z);
 
-[| Flag?(#"LIBC_MATH")] inline overload proj(z:Complex64) = libc.cproj(z);
-[| Flag?(#"LIBC_MATH")] inline overload proj(z:Complex32) = libc.cprojf(z);
-[| Flag?(#"LIBC_MATH")] inline overload proj(z:Complex80) = libc.cprojl(z);
+inline overload proj(z:Complex64) = libc.cproj(z);
+inline overload proj(z:Complex32) = libc.cprojf(z);
+inline overload proj(z:Complex80) = libc.cprojl(z);
 
