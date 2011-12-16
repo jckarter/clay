@@ -10,13 +10,13 @@ public import math.native.cbrt.*;
 public import math.native.bessel.*;
 public import numbers.floats.floats.(abs,copysign,signbit);
 
+//Import libm wrappers
+public import math.libm.libm.*;
+
 //Import native approx
 public import math.native.approxmath.*;
 
 //Import native complex
 public import math.native.ccore.*;
 public import math.native.cnative.*;
-
-//Import libm wrappers
-public import math.libm.libm.*;
 
