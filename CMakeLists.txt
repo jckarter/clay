@@ -123,8 +123,24 @@ add_subdirectory(misc)
 add_subdirectory(tools)
 
 if(PYTHONINTERP_FOUND)
-    add_custom_target(test ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/test/runtests.py")
-    add_dependencies(test clay)
-else()
-    message("-- Python not found. You will not be able to run tests")
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} --version
+        ERROR_VARIABLE PYTHON_VERSION
+        ERROR_STRIP_TRAILING_WHITESPACE)
+
+    if(NOT ${PYTHON_VERSION} MATCHES "Python 2")
+        unset(PYTHON_EXECUTABLE)
+        find_program(PYTHON2_EXE python2)
+        if(PYTHON2_EXE)
+            set(PYTHON_EXECUTABLE ${PYTHON2_EXE})
+        endif()
+    endif()
+
+    if(DEFINED PYTHON_EXECUTABLE)
+        add_custom_target(test ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/test/runtests.py")
+        add_dependencies(test clay)
+    else()
+        message("-- Python 2.x not found. You will not be able to run tests")
+        message("-- Try setting PYTHON_EXECUTABLE to the Python 2.x interpreter")
+    endif()
 endif()
