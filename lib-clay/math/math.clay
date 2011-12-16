@@ -8,7 +8,7 @@ public import math.native.beta.*;
 public import math.native.erf.*;
 public import math.native.cbrt.*;
 public import math.native.bessel.*;
-public import numbers.floats.floats.(abs,copySign,signBit);
+public import numbers.floats.floats.(abs,copysign,signbit);
 
 //Import native approx
 // public import math.native.approxmath.*;
