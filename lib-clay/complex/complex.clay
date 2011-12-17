@@ -158,6 +158,8 @@ inline overload conj(z:T) = -z;
 [C | Complex?(C)]
 inline rect(c:C) = real(c), imag(c);
 
+[C | Complex?(C)]
+inline rectValues(c:C) = real(c), imagValue(c);
 
 //
 // binary ops
