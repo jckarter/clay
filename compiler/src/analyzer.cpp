@@ -1089,10 +1089,22 @@ void verifyAttributes(ExternalProcedurePtr x)
                 callingConv = CC_FASTCALL;
                 break;
             }
+            case PRIM_AttributeThisCall : {
+                if (callingConv != -1)
+                    error(expr, "cannot specify more than one calling convention");
+                callingConv = CC_THISCALL;
+                break;
+            }
             case PRIM_AttributeCCall : {
                 if (callingConv != -1)
                     error(expr, "cannot specify more than one calling convention");
                 callingConv = CC_DEFAULT;
+                break;
+            }
+            case PRIM_AttributeLLVMCall : {
+                if (callingConv != -1)
+                    error(expr, "cannot specify more than one calling convention");
+                callingConv = CC_LLVM;
                 break;
             }
             case PRIM_AttributeDLLImport : {
@@ -1194,6 +1206,8 @@ static bool isTypeConstructor(ObjectPtr x) {
         case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
+        case PRIM_ThisCallCodePointer :
+        case PRIM_LLVMCodePointer :
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :
@@ -1305,7 +1319,9 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         case PRIM_CCodePointer :
         case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
-        case PRIM_FastCallCodePointer : {
+        case PRIM_FastCallCodePointer :
+        case PRIM_ThisCallCodePointer :
+        case PRIM_LLVMCodePointer : {
             ensureArity(args, 2);
             vector<TypePtr> argTypes;
             staticToTypeTuple(args, 0, argTypes);
@@ -1327,6 +1343,12 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
                 break;
             case PRIM_FastCallCodePointer :
                 cc = CC_FASTCALL;
+                break;
+            case PRIM_ThisCallCodePointer :
+                cc = CC_FASTCALL;
+                break;
+            case PRIM_LLVMCodePointer :
+                cc = CC_LLVM;
                 break;
             default :
                 assert(false);
@@ -2384,6 +2406,12 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_FastCallCodePointer :
         error("FastCallCodePointer type constructor cannot be called");
+
+    case PRIM_ThisCallCodePointer :
+        error("FastCallCodePointer type constructor cannot be called");
+
+    case PRIM_LLVMCodePointer :
+        error("LLVMCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
         if (args->size() < 1)

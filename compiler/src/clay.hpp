@@ -2297,15 +2297,19 @@ enum PrimOpCode {
 
     PRIM_AttributeStdCall,
     PRIM_AttributeFastCall,
+    PRIM_AttributeThisCall,
     PRIM_AttributeCCall,
+    PRIM_AttributeLLVMCall,
     PRIM_AttributeDLLImport,
     PRIM_AttributeDLLExport,
 
     PRIM_CCodePointerP,
     PRIM_CCodePointer,
+    PRIM_LLVMCodePointer,
     PRIM_VarArgsCCodePointer,
     PRIM_StdCallCodePointer,
     PRIM_FastCallCodePointer,
+    PRIM_ThisCallCodePointer,
     PRIM_makeCCodePointer,
     PRIM_callCCodePointer,
 

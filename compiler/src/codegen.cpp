@@ -5070,6 +5070,12 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_FastCallCodePointer :
         error("FastCallCodePointer type constructor cannot be called");
 
+    case PRIM_ThisCallCodePointer :
+        error("ThisCallCodePointer type constructor cannot be called");
+
+    case PRIM_LLVMCodePointer :
+        error("LLVMCodePointer type constructor cannot be called");
+
     case PRIM_makeCCodePointer : {
         if (args->size() < 1)
             arityError2(1, args->size());

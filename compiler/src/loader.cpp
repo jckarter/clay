@@ -742,6 +742,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(AttributeStdCall);
     PRIMITIVE(AttributeFastCall);
     PRIMITIVE(AttributeCCall);
+    PRIMITIVE(AttributeThisCall);
+    PRIMITIVE(AttributeLLVMCall);
     PRIMITIVE(AttributeDLLImport);
     PRIMITIVE(AttributeDLLExport);
 
@@ -750,6 +752,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VarArgsCCodePointer);
     PRIMITIVE(StdCallCodePointer);
     PRIMITIVE(FastCallCodePointer);
+    PRIMITIVE(ThisCallCodePointer);
+    PRIMITIVE(LLVMCodePointer);
     PRIMITIVE(makeCCodePointer);
     PRIMITIVE(callCCodePointer);
 
@@ -908,6 +912,8 @@ DEFINE_PRIMITIVE_ACCESSOR(CCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(VarArgsCCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(StdCallCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(FastCallCodePointer)
+DEFINE_PRIMITIVE_ACCESSOR(ThisCallCodePointer)
+DEFINE_PRIMITIVE_ACCESSOR(LLVMCodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(Array)
 DEFINE_PRIMITIVE_ACCESSOR(Vec)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)

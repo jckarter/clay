@@ -1254,6 +1254,12 @@ void typePrint(ostream &out, TypePtr t) {
         case CC_FASTCALL :
             out << "FastCallCodePointer";
             break;
+        case CC_THISCALL :
+            out << "ThisCallCodePointer";
+            break;
+        case CC_LLVM :
+            out << "LLVMCodePointer";
+            break;
         default :
             assert(false);
         }
