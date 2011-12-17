@@ -12,9 +12,12 @@ import math.*;
 [| MathMode?(LIBM)] inline overload pow(x:Float,y:LongDouble) = libc.powl(LongDouble(x),y);
 [| MathMode?(LIBM)] inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 
-[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:Double,y:T) = pow(x,Double(y));
-[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:Float,y:T) = powf(x,Float(y));
-[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:LongDouble,y:T) = powl(x,LongDouble(y));
+[T | Integer?(T) and MathMode?(LIBM)]
+inline overload pow(x:Double,y:T) = pow(x,Double(y));
+[T | Integer?(T) and MathMode?(LIBM)]
+inline overload pow(x:Float,y:T) = powf(x,Float(y));
+[T | Integer?(T) and MathMode?(LIBM)]
+inline overload pow(x:LongDouble,y:T) = powl(x,LongDouble(y));
 
 [| MathMode?(LIBM)] inline overload abs(x:Int) = libc.libc.abs(x);
 [| MathMode?(LIBM)] inline overload abs(x:Long) = libc.llabs(x);
@@ -88,9 +91,9 @@ inline overload atanh(x:Double) = libc.atanh(x);
 inline overload atanh(x:Float) = libc.atanhf(x);
 inline overload atanh(x:LongDouble) = libc.atanhl(x);
 
-inline overload log10(x:Double) = libc.log10(x);
-inline overload log10(x:Float) = libc.log10f(x);
-inline overload log10(x:LongDouble) = libc.log10l(x);
+[| MathMode?(LIBM)] inline overload log10(x:Double) = libc.log10(x);
+[| MathMode?(LIBM)] inline overload log10(x:Float) = libc.log10f(x);
+[| MathMode?(LIBM)] inline overload log10(x:LongDouble) = libc.log10l(x);
 
 inline overload frexp(x:Double) {
     var ex = Pointer[Int]();
@@ -154,9 +157,9 @@ inline overload exp2(x:Double) = libc.exp2(x);
 inline overload exp2(x:Float) = libc.exp2f(x);
 inline overload exp2(x:LongDouble) = libc.exp2l(x);
 
-inline overload log2(x:Double) = libc.log2(x);
-inline overload log2(x:Float) = libc.log2f(x);
-inline overload log2(x:LongDouble) = libc.log2l(x);
+[| MathMode?(LIBM)] inline overload log2(x:Double) = libc.log2(x);
+[| MathMode?(LIBM)] inline overload log2(x:Float) = libc.log2f(x);
+[| MathMode?(LIBM)] inline overload log2(x:LongDouble) = libc.log2l(x);
 
 [| MathMode?(LIBM)] inline overload sqrt(x:Double) = libc.sqrt(x);
 [| MathMode?(LIBM)] inline overload sqrt(x:Float) = libc.sqrtf(x);
@@ -378,14 +381,6 @@ inline overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
 inline overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
 inline overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
 
-[| MathMode?(LIBM)] inline overload signbit(value:Double) = libc.signbit(value);
-[| MathMode?(LIBM)] inline overload signbit(value:Float) = libc.signbitf(value);
-[| MathMode?(LIBM)] inline overload signbit(value:LongDouble) = libc.signbitl(value);
-
-[| MathMode?(LIBM)] inline overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
-[| MathMode?(LIBM)] inline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
-[| MathMode?(LIBM)] inline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
-
 inline overload llrint(x:Double) = libc.llrint(x);
 inline overload llrint(x:Float) = libc.llrintf(x);
 inline overload llrint(x:LongDouble) = libc.llrintl(x);
@@ -393,6 +388,14 @@ inline overload llrint(x:LongDouble) = libc.llrintl(x);
 inline overload llround(x:Double) = libc.llround(x);
 inline overload llround(x:Float) = libc.llroundf(x);
 inline overload llround(x:LongDouble) = libc.llroundl(x);
+
+[| MathMode?(LIBM)] inline overload signbit(value:Double) = libc.signbit(value);
+[| MathMode?(LIBM)] inline overload signbit(value:Float) = libc.signbitf(value);
+[| MathMode?(LIBM)] inline overload signbit(value:LongDouble) = libc.signbitl(value);
+
+[| MathMode?(LIBM)] inline overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
+[| MathMode?(LIBM)] inline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
+[| MathMode?(LIBM)] inline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
 
 [| MathMode?(LIBM)] inline overload abs(z:Complex64) = libc.cabs(z);
 [| MathMode?(LIBM)] inline overload abs(z:Complex32) = libc.cabsf(z);

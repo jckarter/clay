@@ -1,0 +1,100 @@
+
+import math.native.exact.*;
+import numbers.floats.floats.(nan,infinity,negativeInfinity);
+
+//  sqrt13
+//
+//    Computes a triple-double approximation of sqrt(x)
+//
+//    Should be provable to be exact to at least 140 bits.
+//
+//    Only handles the following special cases:
+//    - x == 0
+//    - subnormal x
+//    - x < 0
+//    - x = +/-Infty, NaN
+//
+
+private inline sqrt_td(x:Double) --> res:Double {
+    var xdb = db_number();
+    /* Special case x = 0 */
+    if (x == 0) {
+        return x;
+    } else {
+        var E = 0;
+        /* Convert to integer format */
+        xdb.2 = x;
+        if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
+            if (bitor(bitand(xdb.0[1], 0x7fffffff),xdb.0[0])==0)
+                return negativeInfinity(Double);
+            if (xdb.0[1] < 0)
+                return nan(Double);                      /* log(-x) = Nan    */
+            /* Subnormal number */
+            E = -52;
+            xdb.2 *= SQRTTWO52;/* make x a normal number */
+        }
+
+        if (xdb.0[1] >= 0x7ff00000)
+            return infinity(Double);
+
+        /* Extract exponent E and mantissa m */
+        E += bitshr(xdb.0[1],20)-1023;
+        xdb.0[1] = bitor(bitand(xdb.0[1] , 0x000fffff) , 0x3ff00000);
+        var m = xdb.2;
+
+        /* Make exponent even */
+        if (bitand(E , 0x00000001)!=0) {
+            inc(E);
+            m *= 0.5;    /* Suppose now 1/2 <= m <= 2 */
+        }
+
+        /* Construct sqrt(2^E) = 2^(E/2) */
+        xdb.0[1] = bitshl(E/2 + 1023,20);
+        xdb.0[0] = 0;
+
+        /* Compute initial approximation to r = 1/sqrt(m) */
+        var r0 = SQRTPOLYC0 +
+        m * (SQRTPOLYC1 + m * (SQRTPOLYC2 + m * (SQRTPOLYC3 + m * SQRTPOLYC4)));
+
+        /* Iterate two times on double precision */
+        var r1 = 0.5 * r0 * (3 - m * (r0 * r0));
+        var r2 = 0.5 * r1 * (3 - m * (r1 * r1));
+
+        /* Iterate two times on double-double precision */
+        var r2Sqh, r2Sql = Mul12( r2, r2);
+        var r2PHr2h, r2PHr2l = Add12( r2, (0.5 * r2));
+        var mMr2h, mMr2l = Mul12( m, r2);
+        var mMr2Ch, mMr2Cl = Mul22( mMr2h, mMr2l, r2Sqh, r2Sql);
+
+        var MHmMr2Ch = -0.5 * mMr2Ch;
+        var MHmMr2Cl = -0.5 * mMr2Cl;
+
+        var r3h,r3l = Add22(r2PHr2h, r2PHr2l, MHmMr2Ch, MHmMr2Cl);
+
+        var r3Sqh, r3Sql = Mul22( r3h, r3l, r3h, r3l);
+        var mMr3Sqh, mMr3Sql = Mul22( m, 0.0, r3Sqh, r3Sql);
+         /* To prove: mMr3Sqh = 1.0 in each case */
+        var r4h,r4l = Mul22( r3h, r3l, 1.0, (-0.5 * mMr3Sql));
+
+        /* Iterate once on triple-double precision */
+        var r4Sqh, r4Sqm, r4Sql = Mul23( r4h, r4l, r4h, r4l);
+        var mMr4Sqhover, mMr4Sqmover, mMr4Sqlover = Mul133( m, r4Sqh, r4Sqm, r4Sql);
+        var mMr4Sqh, mMr4Sqm, mMr4Sql = Renormalize3( mMr4Sqhover, mMr4Sqmover, mMr4Sqlover);
+        /* To prove: mMr4Sqh = 1.0 in each case */
+        var HmMr4Sqm = -0.5 * mMr4Sqm;
+        var HmMr4Sql = -0.5 * mMr4Sql;
+        var r5h,r5m,r5l = Mul233(r4h,r4l,1.0,HmMr4Sqm,HmMr4Sql);
+
+        /* Multiply obtained reciprocal square root by m */
+        var srtmhover, srtmmover ,srtmlover = Mul133(m,r5h,r5m,r5l);
+        var srtmh,srtmm,srtml = Renormalize3(srtmhover,srtmmover,srtmlover);
+
+        /* Multiply componentwise by sqrt(2^E) */
+        /* which is an integer power of 2 that may not produce a subnormal */
+        return xdb.2 * srtmh + xdb.2 * srtmm + xdb.2 * srtml;
+    }
+}
+
+[T | Float?(T)]
+inline sqrt_safe(x:T) = T(sqrt_td(Double(x)));
+
