@@ -1,100 +1,89 @@
 
 import math.native.exact.*;
-import numbers.floats.floats.(nan,infinity,negativeInfinity);
+import numbers.floats.floats.(snan,infinity,negativeInfinity);
 
-//  sqrt13
-//
-//    Computes a triple-double approximation of sqrt(x)
-//
-//    Should be provable to be exact to at least 140 bits.
-//
-//    Only handles the following special cases:
-//    - x == 0
-//    - subnormal x
-//    - x < 0
-//    - x = +/-Infty, NaN
-//
 
-private inline sqrt_td(x:Double) --> res:Double {
-    var xdb = db_number();
-    /* Special case x = 0 */
-    if (x == 0) {
-        return x;
-    } else {
-        var E = 0;
-        /* Convert to integer format */
-        xdb.2 = x;
-        if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
-            if (bitor(bitand(xdb.0[1], 0x7fffffff),xdb.0[0])==0)
-                return negativeInfinity(Double);
-            if (xdb.0[1] < 0)
-                return nan(Double);                      /* log(-x) = Nan    */
-            /* Subnormal number */
-            E = -52;
-            xdb.2 *= SQRTTWO52;/* make x a normal number */
+private var inroot = array(
+  1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,
+  1.36697225234682,  1.35710228748795,  1.34744307370643,  1.33798721601135,
+  1.32872767765984,  1.31965775814772,  1.31077107283046,  1.30206153403386,
+  1.29352333352711,  1.28515092624400,  1.27693901514820,  1.26888253714903,
+  1.26097664998256,  1.25321671998073,  1.24559831065844,  1.23811717205462,
+  1.23076923076923,  1.22355058064300,  1.21645747403153,  1.20948631362953,
+  1.20263364480453,  1.19589614840310,  1.18927063399547,  1.18275403352732,
+  1.17634339535009,  1.17003587860341,  1.16382874792529,  1.15771936846787,
+  1.15170520119791,  1.14578379846309,  1.13995279980655,  1.13420992801334,
+  1.12855298537376,  1.12297985014975,  1.11748847323133,  1.11207687497107,
+  1.10674314218572,  1.10148542531442,  1.09630193572405,  1.09119094315276,
+  1.08615077328341,  1.08117980543918,  1.07627647039410,  1.07143924829188,
+  1.06666666666667,  1.06195729855996,  1.05730976072814,  1.05272271193563,
+  1.04819485132867,  1.04372491688551,  1.03931168393861,  1.03495396376504,
+  1.03065060224133,  1.02640047855933,  1.02220250399990,  1.01805562076124,
+  1.01395880083916,  1.00991104495649,  1.00591138153909,  1.00195886573624,
+  0.99611649018350,  0.98848330114434,  0.98102294317595,  0.97372899112030,
+  0.96659534932828,  0.95961623024651,  0.95278613468066,  0.94609983358253,
+  0.93955235122353,  0.93313894963169,  0.92685511418159,  0.92069654023750,
+  0.91465912076005,  0.90873893479530,  0.90293223677296,  0.89723544654727,
+  0.89164514012056,  0.88615804099474,  0.88077101210109,  0.87548104826333,
+  0.87028526915267,  0.86518091269740,  0.86016532891275,  0.85523597411976,
+  0.85039040552437,  0.84562627613070,  0.84094132996422,  0.83633339758291,
+  0.83180039185606,  0.82734030399203,  0.82295119979782,  0.81863121615464,
+  0.81437855769486,  0.81019149366693,  0.80606835497581,  0.80200753138734,
+  0.79800746888611,  0.79406666717674,  0.79018367731967,  0.78635709949278,
+  0.78258558087123,  0.77886781361798,  0.77520253297841,  0.77158851547266,
+  0.76802457717971,  0.76450957210799,  0.76104239064719,  0.75762195809661,
+  0.75424723326565,  0.75091720714229,  0.74763090162560,  0.74438736831878,
+  0.74118568737933,  0.73802496642311,  0.73490433947940,  0.73182296599416,
+  0.72878002987884,  0.72577473860242,  0.72280632232420,  0.71987403306536,
+  0.71697714391715,  0.71411494828392,  0.71128675915902,  0.70849190843208 );
+
+
+private var rt0 = 9.99999999859990725855365213134618E-01;
+private var rt1 = 4.99999999495955425917856814202739E-01;
+private var rt2 = 3.75017500867345182581453026130850E-01;
+private var rt3 = 3.12523626554518656309172508769531E-01;
+private var big = 134217728.0;
+private var t512 = 0x1.p512;
+private var tm256 = 0x1.p-256;
+
+private sqrt754(x:Double) {
+    var a = db_number();
+    a.2 = x;
+    var k = a.0[1];
+    a.0[1] = bitor(bitand(k,0x001fffff),0x3fe00000);
+    var t = inroot[bitshr(bitand(k,0x001fffff),14)];
+    var s = a.2;
+
+    /*----------------- 2^-1022  <= | x |< 2^1024  -----------------*/
+    if (k>0x000fffff and k<0x7ff00000) {
+        var y = 1.0-t*(t*s);
+        t = t*(rt0+y*(rt1+y*(rt2+y*rt3)));
+        a.0[1] = 0x20000000+(bitshr(bitand(k,0x7fe00000),1));
+        a.0[0] = 0;
+        y = t*s;
+        var hy = (y+big)-big;
+        var del = 0.5 * t * ((s-hy*hy)-(y-hy)*(y+hy));
+        var res = y + del;
+        if (res == res+1.002*((y-res)+del))
+            return res*a.2;
+        else {
+            var res1 = res+1.5*((y-res)+del);
+            var z,zz = Mul12(res,res1);
+            return (if(((z-s)+zz) < 0) max(res,res1) else min(res,res1))*a.2;
         }
-
-        if (xdb.0[1] >= 0x7ff00000)
-            return infinity(Double);
-
-        /* Extract exponent E and mantissa m */
-        E += bitshr(xdb.0[1],20)-1023;
-        xdb.0[1] = bitor(bitand(xdb.0[1] , 0x000fffff) , 0x3ff00000);
-        var m = xdb.2;
-
-        /* Make exponent even */
-        if (bitand(E , 0x00000001)!=0) {
-            inc(E);
-            m *= 0.5;    /* Suppose now 1/2 <= m <= 2 */
-        }
-
-        /* Construct sqrt(2^E) = 2^(E/2) */
-        xdb.0[1] = bitshl(E/2 + 1023,20);
-        xdb.0[0] = 0;
-
-        /* Compute initial approximation to r = 1/sqrt(m) */
-        var r0 = SQRTPOLYC0 +
-        m * (SQRTPOLYC1 + m * (SQRTPOLYC2 + m * (SQRTPOLYC3 + m * SQRTPOLYC4)));
-
-        /* Iterate two times on double precision */
-        var r1 = 0.5 * r0 * (3 - m * (r0 * r0));
-        var r2 = 0.5 * r1 * (3 - m * (r1 * r1));
-
-        /* Iterate two times on double-double precision */
-        var r2Sqh, r2Sql = Mul12( r2, r2);
-        var r2PHr2h, r2PHr2l = Add12( r2, (0.5 * r2));
-        var mMr2h, mMr2l = Mul12( m, r2);
-        var mMr2Ch, mMr2Cl = Mul22( mMr2h, mMr2l, r2Sqh, r2Sql);
-
-        var MHmMr2Ch = -0.5 * mMr2Ch;
-        var MHmMr2Cl = -0.5 * mMr2Cl;
-
-        var r3h,r3l = Add22(r2PHr2h, r2PHr2l, MHmMr2Ch, MHmMr2Cl);
-
-        var r3Sqh, r3Sql = Mul22( r3h, r3l, r3h, r3l);
-        var mMr3Sqh, mMr3Sql = Mul22( m, 0.0, r3Sqh, r3Sql);
-         /* To prove: mMr3Sqh = 1.0 in each case */
-        var r4h,r4l = Mul22( r3h, r3l, 1.0, (-0.5 * mMr3Sql));
-
-        /* Iterate once on triple-double precision */
-        var r4Sqh, r4Sqm, r4Sql = Mul23( r4h, r4l, r4h, r4l);
-        var mMr4Sqhover, mMr4Sqmover, mMr4Sqlover = Mul133( m, r4Sqh, r4Sqm, r4Sql);
-        var mMr4Sqh, mMr4Sqm, mMr4Sql = Renormalize3( mMr4Sqhover, mMr4Sqmover, mMr4Sqlover);
-        /* To prove: mMr4Sqh = 1.0 in each case */
-        var HmMr4Sqm = -0.5 * mMr4Sqm;
-        var HmMr4Sql = -0.5 * mMr4Sql;
-        var r5h,r5m,r5l = Mul233(r4h,r4l,1.0,HmMr4Sqm,HmMr4Sql);
-
-        /* Multiply obtained reciprocal square root by m */
-        var srtmhover, srtmmover ,srtmlover = Mul133(m,r5h,r5m,r5l);
-        var srtmh,srtmm,srtml = Renormalize3(srtmhover,srtmmover,srtmlover);
-
-        /* Multiply componentwise by sqrt(2^E) */
-        /* which is an integer power of 2 that may not produce a subnormal */
-        return xdb.2 * srtmh + xdb.2 * srtmm + xdb.2 * srtml;
+    }
+    else {
+        if (bitand(k , 0x7ff00000) == 0x7ff00000)
+            return x*x+x;	/* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */
+        if (x == 0)
+            return x;	/* sqrt(+0)=+0, sqrt(-0)=-0 */
+        if (k < 0)
+            return snan(Double); /* sqrt(-ve)=sNaN */
+        return tm256*sqrt754(x*t512);
     }
 }
 
+
 [T | Float?(T)]
-inline sqrt_safe(x:T) = T(sqrt_td(Double(x)));
+inline sqrt_safe(x:T) = T(sqrt754(Double(x)));
 
