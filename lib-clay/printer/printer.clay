@@ -84,15 +84,15 @@ overload printTo(stream, x:UInt128) {
 
 
 overload printTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.20Lg%+.20Lgj", ..rect(x));
+    printWithSprintf(stream, "%.20Lg%+.20Lgj", ..rectValues(x));
 }
 
 overload printTo(stream, x:Complex64) {
-    printWithSprintf(stream, "%.16g%+.16gj", ..rect(x));
+    printWithSprintf(stream, "%.16g%+.16gj", ..rectValues(x));
 }
 
 overload printTo(stream, x:Complex32) {
-    printWithSprintf(stream, "%.16g%+.16gj", ..mapValues(Double, ..rect(x)));
+    printWithSprintf(stream, "%.16g%+.16gj", ..mapValues(Double, ..rectValues(x)));
 }
 
 overload printTo(stream, x:Imag80) {
@@ -354,15 +354,15 @@ overload printReprTo(stream, x:Imag80) {
 }
 
 overload printReprTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.16Lafl%+.16Laflj", ..rect(x));
+    printWithSprintf(stream, "%.16Lafl%+.16Laflj", ..rectValues(x));
 }
 
 overload printReprTo(stream, x:Complex64) {
-    printWithSprintf(stream, "%.13a%+.13aj", ..rect(x));
+    printWithSprintf(stream, "%.13a%+.13aj", ..rectValues(x));
 }
 
 overload printReprTo(stream, x:Complex32) {
-    printWithSprintf(stream, "%.6af%+.6afj", ..mapValues(Double, ..rect(x)));
+    printWithSprintf(stream, "%.6af%+.6afj", ..mapValues(Double, ..rectValues(x)));
 }
 
 [T]
