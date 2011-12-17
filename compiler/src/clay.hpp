@@ -1844,6 +1844,7 @@ enum CallingConv {
     CC_DEFAULT,
     CC_STDCALL,
     CC_FASTCALL,
+    CC_THISCALL,
     CC_LLVM
 };
 
@@ -3438,50 +3439,65 @@ struct ExternalTarget : public Object {
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) = 0;
 
+    virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) = 0;
+    virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) = 0;
+    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) = 0;
+    virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) = 0;
+
     // for generating C function declarations
-    virtual llvm::Type *pushReturnType(TypePtr type,
-                                       vector<llvm::Type *> &llArgTypes,
-                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
-    virtual void pushArgumentType(TypePtr type,
-                                  vector<llvm::Type *> &llArgTypes,
-                                  vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
+    llvm::Type *pushReturnType(CallingConv conv,
+                               TypePtr type,
+                               vector<llvm::Type *> &llArgTypes,
+                               vector< pair<unsigned, llvm::Attributes> > &llAttributes);
+    void pushArgumentType(CallingConv conv,
+                          TypePtr type,
+                          vector<llvm::Type *> &llArgTypes,
+                          vector< pair<unsigned, llvm::Attributes> > &llAttributes);
 
     // for generating C function definitions
-    virtual void allocReturnValue(TypePtr type,
-                                  llvm::Function::arg_iterator &ai,
-                                  vector<CReturn> &returns,
-                                  CodegenContextPtr ctx) = 0;
-    virtual CValuePtr allocArgumentValue(TypePtr type,
-                                         string const &name,
-                                         llvm::Function::arg_iterator &ai,
-                                         CodegenContextPtr ctx) = 0;
-    virtual void returnStatement(TypePtr type,
-                                 vector<CReturn> &returns,
-                                 CodegenContextPtr ctx) = 0;
+    void allocReturnValue(CallingConv conv,
+                          TypePtr type,
+                          llvm::Function::arg_iterator &ai,
+                          vector<CReturn> &returns,
+                          CodegenContextPtr ctx);
+    CValuePtr allocArgumentValue(CallingConv conv,
+                                 TypePtr type,
+                                 string const &name,
+                                 llvm::Function::arg_iterator &ai,
+                                 CodegenContextPtr ctx);
+    void returnStatement(CallingConv conv,
+                         TypePtr type,
+                         vector<CReturn> &returns,
+                         CodegenContextPtr ctx);
 
     // for calling C functions
-    virtual void loadStructRetArgument(TypePtr type,
-                                       vector<llvm::Value *> &llArgs,
-                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                       CodegenContextPtr ctx,
-                                       MultiCValuePtr out) = 0;
-    virtual void loadArgument(CValuePtr cv,
-                              vector<llvm::Value *> &llArgs,
-                              vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                              CodegenContextPtr ctx) = 0;
-    virtual void loadVarArgument(CValuePtr cv,
-                                 vector<llvm::Value *> &llArgs,
-                                 vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                 CodegenContextPtr ctx) = 0;
-    virtual void storeReturnValue(llvm::Value *callReturnValue,
-                                  TypePtr returnType,
-                                  CodegenContextPtr ctx,
-                                  MultiCValuePtr out) = 0;
+    void loadStructRetArgument(CallingConv conv,
+                               TypePtr type,
+                               vector<llvm::Value *> &llArgs,
+                               vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                               CodegenContextPtr ctx,
+                               MultiCValuePtr out);
+    void loadArgument(CallingConv conv,
+                      CValuePtr cv,
+                      vector<llvm::Value *> &llArgs,
+                      vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                      CodegenContextPtr ctx);
+    void loadVarArgument(CallingConv conv,
+                         CValuePtr cv,
+                         vector<llvm::Value *> &llArgs,
+                         vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                         CodegenContextPtr ctx);
+    void storeReturnValue(CallingConv conv,
+                          llvm::Value *callReturnValue,
+                          TypePtr returnType,
+                          CodegenContextPtr ctx,
+                          MultiCValuePtr out);
 };
 
 typedef Pointer<ExternalTarget> ExternalTargetPtr;
 
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
+
 
 #endif

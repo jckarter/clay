@@ -1020,9 +1020,9 @@ static void declareLLVMType(TypePtr t) {
         vector<llvm::Type *> llArgTypes;
         vector< pair<unsigned, llvm::Attributes> > llAttributes;
         llvm::Type *llRetType =
-            target->pushReturnType(x->returnType, llArgTypes, llAttributes);
+            target->pushReturnType(x->callingConv, x->returnType, llArgTypes, llAttributes);
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            target->pushArgumentType(x->argTypes[i], llArgTypes, llAttributes);
+            target->pushArgumentType(x->callingConv, x->argTypes[i], llArgTypes, llAttributes);
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
         t->llType = llvm::PointerType::getUnqual(llFuncType);
