@@ -301,9 +301,12 @@ enum WordClass {
     NO_CLASS,
     INTEGER,
     // Vector and scalar SSE values are treated equivalently by the classification
-    // algorithm, but LLVM's optimizer likes it better if we emit the proper type
-    SSE_VECTOR,
-    SSE_SCALAR,
+    // algorithm, but LLVM breaks stuff if we don't emit the right vec type
+    SSE_FLOAT_SCALAR,
+    SSE_DOUBLE_SCALAR,
+    SSE_FLOAT_VECTOR,
+    SSE_DOUBLE_VECTOR,
+    SSE_INT_VECTOR,
     SSEUP,
     X87,
     X87UP,
@@ -347,11 +350,19 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
         }
     }
 
+    static bool isSSEClass(WordClass c) {
+        return c == SSE_FLOAT_SCALAR
+            || c == SSE_DOUBLE_SCALAR
+            || c == SSE_FLOAT_VECTOR
+            || c == SSE_DOUBLE_VECTOR
+            || c == SSE_INT_VECTOR;
+    }
+
     static bool areYmmWordClasses(vector<WordClass> const &wordClasses) {
         return (wordClasses.size() > 2
-            && wordClasses[0] == SSE_VECTOR && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
+            && isSSEClass(wordClasses[0]) && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
         || (wordClasses.size() > 3
-            && wordClasses[1] == SSE_VECTOR && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP);
+            && isSSEClass(wordClasses[1]) && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP);
     }
 
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type)
@@ -415,7 +426,7 @@ static void unifyWordClass(vector<WordClass>::iterator wordi, WordClass newClass
              || newClass == X87 || newClass == X87UP || newClass == COMPLEX_X87)
         *wordi = MEMORY;
     else {
-        assert(newClass == SSE_SCALAR || newClass == SSE_VECTOR);
+        assert(X86_64_ExternalTarget::isSSEClass(newClass));
         *wordi = newClass;
     }
 }
@@ -449,10 +460,13 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         FloatType *x = (FloatType *)type.ptr();
         switch (x->bits) {
         case 32:
-            unifyWordClass(begin + offset/8, SSE_VECTOR);
+            if (offset % 8 == 4)
+                unifyWordClass(begin + offset/8, SSE_FLOAT_VECTOR);
+            else
+                unifyWordClass(begin + offset/8, SSE_FLOAT_SCALAR);
             break;
         case 64:
-            unifyWordClass(begin + offset/8, SSE_SCALAR);
+            unifyWordClass(begin + offset/8, SSE_DOUBLE_SCALAR);
             break;
         case 80:
             unifyWordClass(begin + offset/8, X87);
@@ -492,7 +506,26 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         break;
     }
     case VEC_TYPE: {
-        unifyWordClass(begin + offset/8, SSE_VECTOR);
+        VecType *vecType = (VecType *)type.ptr();
+        switch (vecType->elementType->typeKind) {
+        case FLOAT_TYPE: {
+            FloatType *floatElementType = (FloatType*)vecType->elementType.ptr();
+            switch (floatElementType->bits) {
+            case 32:
+                unifyWordClass(begin + offset/8, SSE_FLOAT_VECTOR);
+                break;
+            case 64:
+                unifyWordClass(begin + offset/8, SSE_DOUBLE_VECTOR);
+                break;
+            case 80:
+                error("Float80 vec types not supported");
+                break;
+            }
+        }
+        default:
+            unifyWordClass(begin + offset/8, SSE_INT_VECTOR);
+            break;
+        }
         for (size_t i = 1; i < (typeSize(type)+7)/8; ++i)
             unifyWordClass(begin + offset/8 + i, SSEUP);
         break;
@@ -557,7 +590,7 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
     vector<WordClass>::iterator i = wordClasses.begin(),
                                 end = wordClasses.end();
     if (wordClasses.size() > 2) {
-        if (*i == SSE_VECTOR || *i == SSE_SCALAR) {
+        if (X86_64_ExternalTarget::isSSEClass(*i)) {
             ++i;
             for (; i != end; ++i) {
                 if (*i != SSEUP) {
@@ -589,8 +622,8 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
             return;
         }
         if (*i == SSEUP) {
-            *i = SSE_VECTOR;
-        } else if (*i == SSE_VECTOR || *i == SSE_SCALAR) {
+            *i = SSE_INT_VECTOR;
+        } else if (X86_64_ExternalTarget::isSSEClass(*i)) {
             do { ++i; } while (*i == SSEUP);
         } else if (*i == X87) {
             do { ++i; } while (*i == X87UP);
@@ -643,13 +676,29 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             llWordTypes.push_back(llvmIntType(64));
             ++i;
             break;
-        case SSE_VECTOR: {
+        case SSE_INT_VECTOR: {
+            int vectorRun = 0;
+            do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
+            llWordTypes.push_back(llvm::VectorType::get(llvmIntType(8), vectorRun*8));
+            break;
+        }
+        case SSE_FLOAT_VECTOR: {
+            int vectorRun = 0;
+            do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
+            llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(32), vectorRun*2));
+            break;
+        }
+        case SSE_DOUBLE_VECTOR: {
             int vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
             llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
             break;
         }
-        case SSE_SCALAR:
+        case SSE_FLOAT_SCALAR:
+            llWordTypes.push_back(llvmFloatType(32));
+            ++i;
+            break;
+        case SSE_DOUBLE_SCALAR:
             llWordTypes.push_back(llvmFloatType(64));
             ++i;
             break;
