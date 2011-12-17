@@ -3,7 +3,7 @@
 //    Modified for generic Clay math lib from Naoaki Okazaki (2010)
 //
 
-import math.(M_LOG2El);
+import math.(M_LOG2E);
 import numbers.floats.floats.(floatFromParts,infinity,exponentBias,exponentMask,floatMantissaZero);
 
 
@@ -40,7 +40,7 @@ exp_unsafe(x:T) --> r:T {
     else{
         r <-- x;
         /* n = floor(x / log 2) */
-        var a = T(M_LOG2El) * r;
+        var a = T(M_LOG2E) * r;
         a -= if(a < T(0)) T(1) else T(0);
         var n = toUInt(a);
         /* x -= n * log2 */
