@@ -13,7 +13,7 @@ inline overload hash(x:Bool) = SizeT(x);
 inline overload hash(x:T) = SizeT(x);
 
 [T | Float?(T)]
-inline overload hash(x:T) = SizeT(PtrInt(x*10000));
+inline overload hash(x:T) = SizeT(wrapMultiply(PtrInt(x), 10000));
 
 [T]
 inline overload hash(x:Pointer[T]) = SizeT(x);
@@ -38,7 +38,7 @@ inline overload hash(a:Array[T,n]) = hashSequence(a);
 inline hashValues(..values) {
     var h = SizeT(0);
     ..for (x in values)
-        h = 7*h + 13*hash(x);
+        h = wrapAdd(wrapMultiply(UInt64(7), h), wrapMultiply(UInt64(13), hash(x)));
     return h;
 }
 inline overload hashValues(value) = hash(value);
@@ -100,8 +100,8 @@ hashSequence(a) {
     var h = SizeT(0);
     var f = SizeT(11);
     for (x in a) {
-        h += f * hashValues(x);
-        f = 2*f - 1;
+        h = wrapAdd(h, wrapMultiply(f, hashValues(x)));
+        f = wrapSubtract(wrapMultiply(UInt64(2), f), UInt64(1));
     }
     return h;
 }
@@ -113,7 +113,7 @@ hashSequence(a) {
 //
 
 [T | Variant?(T)]
-overload hash(x:T) = 23*variantTag(x) + hash(*x);
+overload hash(x:T) = wrapAdd(wrapMultiply(23, variantTag(x)), hash(*x));
 
 
 
