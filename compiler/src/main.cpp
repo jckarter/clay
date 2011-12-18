@@ -813,9 +813,13 @@ int main(int argc, char **argv) {
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
 
+    bool internalize = true;
+    if (sharedLib || run || !codegenExternals)
+        internalize = false;
+
     optTimer.start();
     if (optLevel > 0)
-        optimizeLLVM(llvmModule, optLevel, !(sharedLib || run));
+        optimizeLLVM(llvmModule, optLevel, internalize);
     optTimer.stop();
 
     if (run)
