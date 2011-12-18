@@ -38,7 +38,7 @@ inline overload hash(a:Array[T,n]) = hashSequence(a);
 inline hashValues(..values) {
     var h = SizeT(0);
     ..for (x in values)
-        h = wrapAdd(wrapMultiply(UInt64(7), h), wrapMultiply(UInt64(13), hash(x)));
+        h = wrapAdd(wrapMultiply(SizeT(7), h), wrapMultiply(SizeT(13), hash(x)));
     return h;
 }
 inline overload hashValues(value) = hash(value);
@@ -101,7 +101,7 @@ hashSequence(a) {
     var f = SizeT(11);
     for (x in a) {
         h = wrapAdd(h, wrapMultiply(f, hashValues(x)));
-        f = wrapSubtract(wrapMultiply(UInt64(2), f), UInt64(1));
+        f = wrapSubtract(wrapMultiply(SizeT(2), f), SizeT(1));
     }
     return h;
 }
