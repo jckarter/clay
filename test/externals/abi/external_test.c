@@ -499,6 +499,8 @@ void clay_24(union Union24 x, int tag);
 
 void clay_25(union Union25 x, int tag);
 
+void clay_flush(void);
+
 //
 // return
 //
@@ -567,6 +569,7 @@ union Union25 clay_return_25(int tag);
 
 void c_to_clay(void) {
     printf("\nPassing C arguments to Clay:\n");
+    fflush(stdout);
 
     clay_scalar(c_return_int(), c_return_bool(), c_return_float(), c_return_double());
     clay_complex_float(c_return_complex_float());
@@ -604,6 +607,7 @@ void c_to_clay(void) {
 
     clay_25(c_return_25(0), 0);
     clay_25(c_return_25(1), 1);
+    clay_flush();
 
     printf("\nPassing Clay return values to C:\n");
 
@@ -666,5 +670,6 @@ void c_to_clay(void) {
 
     c_25(clay_return_25(0), 0);
     c_25(clay_return_25(1), 1);
+    fflush(stdout);
 }
 
