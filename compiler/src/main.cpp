@@ -198,7 +198,7 @@ static bool generateBinary(llvm::Module *module,
                            bool genPIC,
                            const vector<string> &arguments)
 {
-    llvm::sys::Path tempObj("clayobj");
+    llvm::sys::Path tempObj("clayobj.obj");
     string errMsg;
     if (tempObj.createTemporaryFileOnDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
