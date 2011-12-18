@@ -70,7 +70,7 @@ def fileForPlatform(folder, name, ext):
 def getCompilerPath() :
     buildPath = ["..", "build", "compiler", "src"]
     if sys.platform == "win32" :
-        compiler = os.path.join(testRoot, *(buildPath + ["Release", "clay.exe"]))
+        compiler = os.path.join(testRoot, *(buildPath + ["clay.exe"]))
         compiler2 = os.path.join(testRoot, "..", "clay.exe") # for binary distributions
     else :
         compiler = os.path.join(testRoot, *(buildPath + ["clay"]))
