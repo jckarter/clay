@@ -65,8 +65,15 @@ static void addOptimizationPasses(llvm::PassManager &passes,
 
     builder.populateFunctionPassManager(fpasses);
     builder.populateModulePassManager(passes);
-    if (optLevel > 2)
-        builder.populateLTOPassManager(passes, internalize, true);
+    if (optLevel > 2) {
+        vector<const char*> do_not_internalize;
+        do_not_internalize.push_back("main");
+        do_not_internalize.push_back("clayglobals_init");
+        do_not_internalize.push_back("clayglobals_destroy");
+
+        passes.add(llvm::createInternalizePass(do_not_internalize));
+        builder.populateLTOPassManager(passes, false, true);
+    }
 }
 
 static void runModule(llvm::Module *module)
@@ -819,9 +826,6 @@ int main(int argc, char **argv) {
 
     bool internalize = true;
     if (sharedLib || run || !codegenExternals)
-        internalize = false;
-    // libcmt.lib won't run global initializers if they are internalized 
-    if (llvmTriple.getOS() == llvm::Triple::Win32)
         internalize = false;
 
     optTimer.start();
