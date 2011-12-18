@@ -332,6 +332,14 @@ static string sharedExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
+static string objExtensionForTarget(llvm::Triple const &triple) {
+    if (triple.getOS() == llvm::Triple::Win32) {
+        return ".obj";
+    } else {
+        return ".o";
+    }
+}
+
 static string exeExtensionForTarget(llvm::Triple const &triple) {
     if (triple.getOS() == llvm::Triple::Win32
         || triple.getOS() == llvm::Triple::MinGW32
@@ -786,7 +794,7 @@ int main(int argc, char **argv) {
         else if (emitAsm)
             outputFile = clayFileBasename + ".s";
         else if (emitObject || emitLLVM)
-            outputFile = clayFileBasename + ".o";
+            outputFile = clayFileBasename + objExtensionForTarget(llvmTriple);
         else if (sharedLib)
             outputFile = clayFileBasename + sharedExtensionForTarget(llvmTriple);
         else
