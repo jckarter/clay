@@ -2974,6 +2974,11 @@ public :
     virtual void perform(T &a, void *out) = 0;
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4146)
+#endif
+
 template <typename T>
 class Op_numericNegate : public UnaryOpHelper<T> {
 public :
@@ -2982,6 +2987,9 @@ public :
     }
 };
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 //
@@ -3150,7 +3158,7 @@ public :
         // XXX this won't work for 128-bit types or 64-bit types without
         // compiler int128 support
         BigT bigout = BigT(a) * BigT(b);
-        if (b < std::numeric_limits<T>::min() or std::numeric_limits<T>::max() < b)
+        if (b < std::numeric_limits<T>::min() || std::numeric_limits<T>::max() < b)
             overflowError("*", a, b);
         *((T *)out) = a * b;
     }
@@ -3211,6 +3219,11 @@ public :
     }
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4146)
+#endif
+
 template <typename T>
 class Op_integerNegateChecked : public UnaryOpHelper<T> {
 public :
@@ -3222,6 +3235,9 @@ public :
     }
 };
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
 //
@@ -3231,6 +3247,10 @@ public :
 template <typename DEST, typename SRC, bool CHECK>
 struct op_numericConvert3;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#endif
 template <typename DEST, typename SRC>
 struct op_numericConvert3<DEST, SRC, false> {
     static void perform(EValuePtr dest, EValuePtr src)
@@ -3249,6 +3269,9 @@ struct op_numericConvert3<DEST, SRC, true> {
         *((DEST *)dest->addr) = DEST(value);
     }
 };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 template <typename D, bool CHECK>
 static void op_numericConvert2(EValuePtr dest, EValuePtr src)

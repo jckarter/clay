@@ -1037,13 +1037,13 @@ void printValue(ostream &out, EValuePtr ev)
         ComplexType *t = (ComplexType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            out << *((_Complex float *)ev->addr);
+            out << *((clay_cfloat *)ev->addr);
             break;
         case 64 :
-            out << *((_Complex double *)ev->addr);
+            out << *((clay_cdouble *)ev->addr);
             break;
         case 80 :
-            out << *((_Complex long double *)ev->addr);
+            out << *((clay_cldouble *)ev->addr);
             break;
         default :
             assert(false);

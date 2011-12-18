@@ -109,9 +109,9 @@ static F parseHexFloat(char *number, char **end) {
             mantissaExponent = 2047;
             mantissa = 0;
         } else {
-            unsigned long long roundBit  = mantissa & (1 << mantissaShift-1);
-            unsigned long long roundMask = mantissa & ((1 << mantissaShift-1) - 1);
-            unsigned long long evenBit   = mantissa & (1 << mantissaShift);
+            unsigned long long roundBit  = mantissa & (1ULL << (mantissaShift-1));
+            unsigned long long roundMask = mantissa & ((1ULL << (mantissaShift-1)) - 1);
+            unsigned long long evenBit   = mantissa & (1ULL << mantissaShift);
 
             mantissa = mantissa >> mantissaShift;
 

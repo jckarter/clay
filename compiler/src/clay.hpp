@@ -1,6 +1,10 @@
 #ifndef __CLAY_HPP
 #define __CLAY_HPP
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <string>
 #include <vector>
 #include <map>
@@ -10,6 +14,12 @@
 #include <cstdlib>
 #include <climits>
 #include <cerrno>
+
+#ifdef _MSC_VER
+// LLVM headers spew warnings on MSVC
+#pragma warning(push)
+#pragma warning(disable: 4146 4355 4146 4800 4996)
+#endif
 
 #include <llvm/ADT/Triple.h>
 #include <llvm/Type.h>
@@ -28,6 +38,10 @@
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Intrinsics.h>
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 using std::string;
 using std::vector;
 using std::pair;
@@ -38,11 +52,26 @@ using std::ostream;
 using std::ostringstream;
 
 #ifdef _MSC_VER
+
 #define strtoll _strtoi64
 #define strtoull _strtoui64
+#define strtold strtod
 #define CLAY_ALIGN(n) __declspec(align(n))
+
+#include <complex>
+
+typedef std::complex<float> clay_cfloat;
+typedef std::complex<double> clay_cdouble;
+typedef std::complex<long double> clay_cldouble;
+
 #else
+
 #define CLAY_ALIGN(n) __attribute__((aligned(n)))
+
+typedef _Complex float clay_cfloat;
+typedef _Complex double clay_cdouble;
+typedef _Complex long double clay_cldouble;
+
 #endif
 
 #define CLAY_LANGUAGE_VERSION "0.1-WIP"
@@ -122,7 +151,7 @@ struct uint128_holder {
         return *this;
     }
 
-    uint128_holder operator-() const { return uint128_holder(-lowValue); }
+    uint128_holder operator-() const { return uint128_holder((size64_t)(-(ptrdiff64_t)lowValue)); }
     uint128_holder operator~() const { return uint128_holder(~lowValue); }
 
     bool operator==(uint128_holder y) const { return lowValue == y.lowValue; }

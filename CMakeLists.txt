@@ -85,7 +85,7 @@ elseif(WIN32)
         llvm_map_components_to_libraries(LLVM_LIBS jit interpreter native asmparser bitreader bitwriter ipo)
         find_file(CLANG clang.exe HINTS ${LLVM_DIR}/bin)
     else()
-        message(FATAL_ERROR "Could not find LLVM")
+        message(FATAL_ERROR "Could not find LLVM. Try setting LLVM_DIR")
     endif()
 
     if(CLANG)

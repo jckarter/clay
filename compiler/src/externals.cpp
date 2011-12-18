@@ -500,7 +500,8 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     }
     case ARRAY_TYPE: {
         ArrayType *arrayType = (ArrayType *)type.ptr();
-        for (size_t i = 0; i < arrayType->size; ++i)
+        assert(arrayType->size >= 0);
+        for (size_t i = 0; i < (size_t)arrayType->size; ++i)
             _classifyType(arrayType->elementType, begin,
                           offset + i * typeSize(arrayType->elementType));
         break;

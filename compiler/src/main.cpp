@@ -2,6 +2,11 @@
 #include "clay.hpp"
 #include "hirestimer.hpp"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#endif
+
 #include "llvm/PassManager.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Assembly/PrintModulePass.h"
@@ -17,6 +22,10 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/IPO.h"
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include <iostream>
 #include <cstring>

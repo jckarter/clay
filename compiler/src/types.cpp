@@ -1116,8 +1116,8 @@ static void defineLLVMType(TypePtr t) {
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
             llvm::Type *llt =
                 llvmType(x->memberTypes[i]);
-            size_t align = llvmTargetData->getABITypeAlignment(llt);
-            size_t size = llvmTargetData->getTypeAllocSize(llt);
+            size_t align = (size_t)llvmTargetData->getABITypeAlignment(llt);
+            size_t size = (size_t)llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
                 maxAlign = align;
                 maxAlignType = llt;
@@ -1173,8 +1173,8 @@ static void initTypeInfo(Type *t) {
     if (!t->typeInfoInitialized) {
         t->typeInfoInitialized = true;
         llvm::Type *llt = llvmType(t);
-        t->typeSize = llvmTargetData->getTypeAllocSize(llt);
-        t->typeAlignment = llvmTargetData->getABITypeAlignment(llt);
+        t->typeSize = (size_t)llvmTargetData->getTypeAllocSize(llt);
+        t->typeAlignment = (size_t)llvmTargetData->getABITypeAlignment(llt);
     }
 }
 
