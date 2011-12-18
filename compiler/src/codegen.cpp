@@ -5919,7 +5919,7 @@ static void generateMSVCCtorsAndDtors() {
     llvm::GlobalVariable *ctor = new llvm::GlobalVariable(
         *llvmModule, constructorType, true,
         llvm::GlobalVariable::ExternalLinkage,
-        constructorsCtx->llvmFunc, "global_ctor");
+        constructorsCtx->llvmFunc, "clayglobals_msvc_ctor");
 
     ctor->setSection(".CRT$XCU");
 }

@@ -68,8 +68,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     if (optLevel > 2) {
         vector<const char*> do_not_internalize;
         do_not_internalize.push_back("main");
-        do_not_internalize.push_back("clayglobals_init");
-        do_not_internalize.push_back("clayglobals_destroy");
+        do_not_internalize.push_back("clayglobals_msvc_ctor");
 
         passes.add(llvm::createInternalizePass(do_not_internalize));
         builder.populateLTOPassManager(passes, false, true);
