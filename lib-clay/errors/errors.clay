@@ -1,5 +1,6 @@
 import libc.(abort);
 import errors.backtrace.(showBacktrace);
+import io.files.raw.(stderrRawFile);
 
 
 
@@ -8,9 +9,9 @@ import errors.backtrace.(showBacktrace);
 //
 
 errorNoThrow(..e) {
-    printlnTo(stderr, "error: ", ..e);
-    printlnTo(stderr, "backtrace:");
-    flush(stderr);
+    var err = stderrRawFile();
+    printlnTo(err, "error: ", ..e);
+    printlnTo(err, "backtrace:");
     showBacktrace();
     abort();
 }
