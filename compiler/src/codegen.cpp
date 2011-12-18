@@ -15,6 +15,11 @@ static vector<CValuePtr> initializedGlobals;
 static CodegenContextPtr constructorsCtx;
 static CodegenContextPtr destructorsCtx;
 
+static bool isMsvcTarget() {
+    llvm::Triple target(llvmModule->getTargetTriple());
+    return (target.getOS() == llvm::Triple::Win32);
+}
+
 llvm::PointerType *exceptionReturnType() {
     return llvmPointerType(int8Type);
 }
@@ -5806,7 +5811,7 @@ static CodegenContextPtr makeSimpleContext(const char *name)
                                 false);
     llvm::Function *initGlobals =
         llvm::Function::Create(llFuncType,
-                               llvm::Function::InternalLinkage,
+                               llvm::Function::ExternalLinkage,
                                name,
                                llvmModule);
 
@@ -5858,6 +5863,11 @@ static void initializeCtorsDtors()
     constructorsCtx = makeSimpleContext("clayglobals_init");
     destructorsCtx = makeSimpleContext("clayglobals_destroy");
 
+    if (isMsvcTarget()) {
+        constructorsCtx->llvmFunc->setSection(".text$yc");
+        destructorsCtx->llvmFunc->setSection(".text$yd");
+    }
+
     if (exceptionsEnabled()) {
         codegenCallable(prelude_exceptionInInitializer(),
                         vector<TypePtr>(),
@@ -5868,8 +5878,30 @@ static void initializeCtorsDtors()
     }
 }
 
+static void codegenAtexitDestructors()
+{
+    llvm::Function *atexitFunc = llvmModule->getFunction("atexit");
+    if (!atexitFunc) {
+        vector<llvm::Type*> atexitArgTypes;
+        atexitArgTypes.push_back(destructorsCtx->llvmFunc->getType());
+
+        llvm::FunctionType *atexitType =
+            llvm::FunctionType::get(llvmIntType(32), atexitArgTypes, false);
+
+        atexitFunc = llvm::Function::Create(atexitType,
+            llvm::Function::ExternalLinkage,
+            "atexit",
+            llvmModule);
+    }
+
+    constructorsCtx->builder->CreateCall(atexitFunc, destructorsCtx->llvmFunc);
+}
+
 static void finalizeCtorsDtors()
 {
+    if (isMsvcTarget())
+        codegenAtexitDestructors();
+
     finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
 
     for (unsigned i = initializedGlobals.size(); i > 0; --i) {
@@ -5877,6 +5909,19 @@ static void finalizeCtorsDtors()
         codegenValueDestroy(cv, destructorsCtx);
     }
     finalizeSimpleContext(destructorsCtx, prelude_exceptionInFinalizer());
+}
+
+// LLVM 3.0 does not link global ctors and dtors correctly
+// See http://llvm.org/bugs/show_bug.cgi?id=9213
+static void generateMSVCCtorsAndDtors() {
+    llvm::Type *constructorType = constructorsCtx->llvmFunc->getType();
+
+    llvm::GlobalVariable *ctor = new llvm::GlobalVariable(
+        *llvmModule, constructorType, true,
+        llvm::GlobalVariable::ExternalLinkage,
+        constructorsCtx->llvmFunc, "global_ctor");
+
+    ctor->setSection(".CRT$XCU");
 }
 
 static void generateLLVMCtorsAndDtors() {
@@ -5928,6 +5973,13 @@ static void generateLLVMCtorsAndDtors() {
     new llvm::GlobalVariable(*llvmModule, arrayType, true,
                              llvm::GlobalVariable::AppendingLinkage,
                              arrayVal2, "llvm.global_dtors");
+}
+
+static void generateCtorsAndDtors() {
+    if (isMsvcTarget())
+        generateMSVCCtorsAndDtors();
+    else
+        generateLLVMCtorsAndDtors();
 }
 
 void codegenMain(ModulePtr module)
@@ -5997,7 +6049,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 {
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
-    generateLLVMCtorsAndDtors();
+    generateCtorsAndDtors();
 
     codegenModuleEntryPoints(module, importedExternals);
 

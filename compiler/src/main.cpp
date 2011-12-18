@@ -826,6 +826,9 @@ int main(int argc, char **argv) {
     bool internalize = true;
     if (sharedLib || run || !codegenExternals)
         internalize = false;
+    // libcmt.lib won't run global initializers if they are internalized 
+    if (llvmTriple.getOS() == llvm::Triple::Win32)
+        internalize = false;
 
     optTimer.start();
     if (optLevel > 0)

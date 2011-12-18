@@ -1,15 +1,14 @@
-import libc.(printf);
+import libc.(printf, fprintf, stdout);
 
-record Foo ();
+record Foo (value:Int);
 overload RegularRecord?(static Foo) = false;
 
-overload Foo() --> x:Foo { printf(cstring("ran ctor\n")); }
+overload Foo() --> x:Foo { printf(cstring("ran ctor\n")); x.value = 123; }
 overload destroy(x:Foo) { printf(cstring("ran dtor\n")); }
 
 var foo = Foo();
 
 main()
 {
-    foo;
-    printf(cstring("hello world\n"));
+    fprintf(stdout, cstring("%d\n"), foo.value);
 }
