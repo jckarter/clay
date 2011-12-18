@@ -29,7 +29,7 @@ record Struct__iobuf (
 
 alias FILE = Struct__iobuf;
 
-external (dllimport) _iob : Array[FILE,0];
+external __iob_func() : Pointer[FILE];
 
 external fopen(
     argument0 : Pointer[CChar],
@@ -668,7 +668,7 @@ external _wtoi(
 external _wtol(
     argument0 : Pointer[UShort]) : CLong;
 
-external __strtod(
+external strtod(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]]) : Double;
 
