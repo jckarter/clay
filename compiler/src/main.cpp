@@ -198,16 +198,16 @@ static bool generateBinary(llvm::Module *module,
                            bool genPIC,
                            const vector<string> &arguments)
 {
-    llvm::sys::Path tempAsm("clayasm");
+    llvm::sys::Path tempObj("clayobj");
     string errMsg;
-    if (tempAsm.createTemporaryFileOnDisk(false, &errMsg)) {
+    if (tempObj.createTemporaryFileOnDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
     }
-    llvm::sys::RemoveFileOnSignal(tempAsm);
+    llvm::sys::RemoveFileOnSignal(tempObj);
 
     errMsg.clear();
-    llvm::raw_fd_ostream asmOut(tempAsm.c_str(),
+    llvm::raw_fd_ostream objOut(tempObj.c_str(),
                                 errMsg,
                                 llvm::raw_fd_ostream::F_Binary);
     if (!errMsg.empty()) {
@@ -215,8 +215,8 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, false, optLevel, sharedLib, genPIC);
-    asmOut.close();
+    generateAssembly(module, &objOut, true, optLevel, sharedLib, genPIC);
+    objOut.close();
 
     vector<const char *> clangArgs;
     clangArgs.push_back(clangPath.c_str());
@@ -252,16 +252,14 @@ static bool generateBinary(llvm::Module *module,
     }
     clangArgs.push_back("-o");
     clangArgs.push_back(outputFilePath.c_str());
-    clangArgs.push_back("-x");
-    clangArgs.push_back("assembler");
-    clangArgs.push_back(tempAsm.c_str());
+    clangArgs.push_back(tempObj.c_str());
     for (unsigned i = 0; i < arguments.size(); ++i)
         clangArgs.push_back(arguments[i].c_str());
     clangArgs.push_back(NULL);
 
     int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
-    if (tempAsm.eraseFromDisk(false, &errMsg)) {
+    if (tempObj.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
     }
