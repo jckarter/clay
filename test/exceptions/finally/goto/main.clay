@@ -1,0 +1,13 @@
+main() {
+    println("a");
+    {
+        finally println("c");
+        println("b");
+        if (true)
+            goto d;
+        println("x");
+    }
+    println("y");
+d:
+    println("d");
+}
