@@ -1,8 +1,8 @@
 import win32.*;
 
-alias STD_INPUT_HANDLE  = -10;
-alias STD_OUTPUT_HANDLE = -11;
-alias STD_ERROR_HANDLE  = -12;
+alias STD_INPUT_HANDLE  = wrapCast(DWORD, -10);
+alias STD_OUTPUT_HANDLE = wrapCast(DWORD, -11);
+alias STD_ERROR_HANDLE  = wrapCast(DWORD, -12);
 
 alias INVALID_HANDLE_VALUE = HANDLE(-1);
 
