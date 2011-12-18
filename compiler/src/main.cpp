@@ -721,12 +721,7 @@ int main(int argc, char **argv) {
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 
-    // On Windows, instead of "*-*-win32", use the target triple:
-    // "*-*-mingw32"
     llvm::Triple llvmTriple(targetTriple);
-    if (llvmTriple.getOS() == llvm::Triple::Win32) {
-        llvmTriple.setOS(llvm::Triple::MinGW32);
-    }
     targetTriple = llvmTriple.str();
 
     if (!initLLVM(targetTriple)) {
