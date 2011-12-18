@@ -9,5 +9,7 @@ Szabó Antal (github @Sh4rK)
 Philipp Brüschweiler <blei42@gmail.com>
 Jeremy Clifford (github @agemogolk)
 Scott Olson <scott@scott-olson.org>
+Shalabh Chatuvedi (http://vocalbit.com/)
+(freenode Elrood)
 
 If your name is missing from this list, let me know at joe@duriansoftware.com.
