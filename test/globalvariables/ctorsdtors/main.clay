@@ -1,0 +1,15 @@
+import libc.(printf);
+
+record Foo ();
+overload RegularRecord?(static Foo) = false;
+
+overload Foo() --> x:Foo { printf(cstring("ran ctor\n")); }
+overload destroy(x:Foo) { printf(cstring("ran dtor\n")); }
+
+var foo = Foo();
+
+main()
+{
+    foo;
+    printf(cstring("hello world\n"));
+}
