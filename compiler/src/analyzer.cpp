@@ -2408,7 +2408,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("FastCallCodePointer type constructor cannot be called");
 
     case PRIM_ThisCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
+        error("ThisCallCodePointer type constructor cannot be called");
 
     case PRIM_LLVMCodePointer :
         error("LLVMCodePointer type constructor cannot be called");
