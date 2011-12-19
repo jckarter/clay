@@ -251,7 +251,7 @@ class TestCase(object):
         if self.runscript is None:
             commandline = [outfilename]
         else:
-            commandline = [sys.executable, self.runscript, outfilename]
+            commandline = [sys.executable, self.runscript, outfilename] + testBuildFlags
 
         process = Popen(commandline, stdout=PIPE, stderr=PIPE)
         resultout, resulterr = process.communicate()
