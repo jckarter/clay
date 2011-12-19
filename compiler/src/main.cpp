@@ -142,14 +142,15 @@ static void generateAssembly(llvm::Module *module,
                              bool emitObject,
                              unsigned optLevel,
                              bool sharedLib,
-                             bool genPIC)
+                             bool genPIC,
+                             bool debug)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
-    if (optLevel < 2)
+    if (optLevel < 2 || debug)
         llvm::NoFramePointerElim = true;
 
     llvm::Reloc::Model reloc = (sharedLib || genPIC)
@@ -204,6 +205,7 @@ static bool generateBinary(llvm::Module *module,
                            bool /*exceptions*/,
                            bool sharedLib,
                            bool genPIC,
+                           bool debug,
                            const vector<string> &arguments)
 {
     llvm::sys::Path tempObj("clayobj.obj");
@@ -223,7 +225,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &objOut, true, optLevel, sharedLib, genPIC);
+    generateAssembly(module, &objOut, true, optLevel, sharedLib, genPIC, debug);
     objOut.close();
 
     vector<const char *> clangArgs;
@@ -240,13 +242,12 @@ static bool generateBinary(llvm::Module *module,
         assert(false);
     }
 
+    llvm::Triple triple(llvmModule->getTargetTriple());
     string linkerFlags;
     if (sharedLib) {
         clangArgs.push_back("-shared");
-        llvm::Triple triple(llvmModule->getTargetTriple());
 
-        if (triple.getOS() == llvm::Triple::Win32
-            || triple.getOS() == llvm::Triple::MinGW32
+        if (triple.getOS() == llvm::Triple::MinGW32
             || triple.getOS() == llvm::Triple::Cygwin) {
 
             llvm::sys::Path defPath(outputFilePath);
@@ -257,6 +258,10 @@ static bool generateBinary(llvm::Module *module,
 
             clangArgs.push_back(linkerFlags.c_str());
         }
+    }
+    if (debug) {
+        if (triple.getOS() == llvm::Triple::Win32)
+            clangArgs.push_back("-Wl,/debug");
     }
     clangArgs.push_back("-o");
     clangArgs.push_back(outputFilePath.c_str());
@@ -289,6 +294,7 @@ static void usage(char *argv0)
     cerr << "  -DFLAG[=value]        set flag value\n"
          << "                        (queryable with Flag?() and Flag())\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
+    cerr << "  -g                    keep debug symbol information\n";
     cerr << "  -exceptions           enable exception handling\n";
     cerr << "  -no-exceptions        disable exception handling\n";
     cerr << "  -inline               inline procedures marked 'inline'\n";
@@ -379,6 +385,7 @@ int main(int argc, char **argv) {
     bool codegenExternalsSet = false;
 
     unsigned optLevel = 3;
+    bool optLevelSet = false;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -401,6 +408,8 @@ int main(int argc, char **argv) {
     vector<string> frameworks;
 #endif
 
+    bool debug = false;
+
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0))
         {
@@ -415,17 +424,26 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-c") == 0) {
             emitObject = true;
         }
+        else if (strcmp(argv[i], "-g") == 0) {
+            debug = true;
+            if (!optLevelSet)
+                optLevel = 0;
+        }
         else if (strcmp(argv[i], "-O0") == 0) {
             optLevel = 0;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O1") == 0) {
             optLevel = 1;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O2") == 0) {
             optLevel = 2;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O3") == 0) {
             optLevel = 3;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-inline") == 0) {
             inlineEnabled = true;
@@ -826,7 +844,7 @@ int main(int argc, char **argv) {
     compileTimer.stop();
 
     bool internalize = true;
-    if (sharedLib || run || !codegenExternals)
+    if (debug || sharedLib || run || !codegenExternals)
         internalize = false;
 
     optTimer.start();
@@ -849,7 +867,7 @@ int main(int argc, char **argv) {
         if (emitLLVM)
             generateLLVM(llvmModule, emitAsm, &out);
         else if (emitAsm || emitObject)
-            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC);
+            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC, debug);
         outputTimer.stop();
     }
     else {
@@ -900,7 +918,7 @@ int main(int argc, char **argv) {
 
         outputTimer.start();
         result = generateBinary(llvmModule, outputFilePath, clangPath,
-                                optLevel, exceptions, sharedLib, genPIC,
+                                optLevel, exceptions, sharedLib, genPIC, debug,
                                 arguments);
         outputTimer.stop();
         if (!result)
