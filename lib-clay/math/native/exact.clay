@@ -194,7 +194,7 @@ alias Mul22cond = Mul22;
     var x,_t1 = Add12Cond((a),(bh));
     var _t2,_t3 = Add12Cond(_t1,(bm));
     var _t4 = _t3 + (bl);
-    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t2,_t4);
+    resh, resm, resl = x,..Add12Cond(_t2,_t4);
 }
 
 [T] inline Add233Cond(ah:T, al:T, bh:T, bm:T, bl:T) --> resh:T, resm:T, resl:T {
@@ -242,7 +242,7 @@ alias Mul22cond = Mul22;
     var _t2,_t3 = Mul12((a),(bl));
     var _t5,_t4 = Add12Cond(_t1,_t2);
     var _t6 = _t3 + _t4;
-    resh, resm, resl = x,..Add12Cond((*(resm)),(*(resl)),_t5,_t6);
+    resh, resm, resl = x,..Add12Cond(_t5,_t6);
 }
 
 

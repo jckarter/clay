@@ -257,12 +257,12 @@ abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 [T,U | Float?(T,U)]
 copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
-    bitshl(signBit(b),mantissaSize(T)+exponentSize(T)-1)));
+    wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
 
 [T | Float?(T)]
 overload copysign(a:LongDouble,b:T) {
     var tmp = floatBitsUnsigned(a);
     return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
-        bitshl(signBit(b),exponentSize(LongDouble))));
+        wrapBitshl(signbit(b),exponentSize(LongDouble))));
 }
 

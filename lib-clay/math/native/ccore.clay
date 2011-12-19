@@ -1,6 +1,5 @@
 
-import math.(abs,sqrt,sin,cos,hypot);
-
+import math.*;
 
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imagValue(x));
@@ -17,29 +16,57 @@ inline overload min(x:T,y:C) = min(x,abs(y));
 [T,C | Numeric?(T) and Complex?(C)]
 inline overload min(x:C,y:T) = min(abs(x),y);
 
-[U | Complex?(U)]
-inline overload sqrt(z:U) --> c:U {
-    alias T = ComplexBaseType(U);
+[C | Complex?(C)]
+overload sqrt(x:C) --> res:C {
+    alias T = ComplexBaseType(C);
     alias ZERO = T(0);
     alias HALF = T(0.5);
-    alias ONE = T(1);
-    if (zero?(z))
-         c <-- z;
-    else {
-        var x,y,w = abs(real(z)),abs(imagValue(z)),ZERO;
-        if (x >= y) {
-            var r = y / x;
-            w = sqrt(x) * sqrt(HALF * (ONE + sqrt(ONE + r * r)));
+    alias HUGE_VAL = GreatestPositiveFinite(T);
+    alias xr = real(x);
+    alias xi = imagValue(x);
+    var rcls,icls = fpclassify(xr), fpclassify (xi);
+    if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
+        if (icls == FP_INFINITE){
+            res <-- Complex(HUGE_VAL,xi);
         }
-        else{
-            var r = x / y;
-            w = sqrt(y) * sqrt(HALF * (r + sqrt(ONE + r * r)));
+        else if (rcls == FP_INFINITE){
+            if (xr < ZERO){
+                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (HUGE_VAL, xi));
+            }
+            else{
+                res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));
+            }
         }
-        if (real(z) >= ZERO)
-            c <-- Complex(w, imag(z) / (w + w));
         else {
-            c <-- Complex(imagValue(z) / (w + w),
-                (if(imagValue(z) >= ZERO) w else -w));
+                res <-- Complex(nan(T),nan(T));
+        }
+    }
+    else{
+        if (icls == FP_ZERO){
+            if (xr < ZERO){
+                res <-- Complex(ZERO, copysign(sqrt(-xr),xi));
+            }
+            else{
+                res <-- Complex(abs(sqrt(xr)), copysign (ZERO, xi));
+            }
+        }
+        else if (rcls == FP_ZERO){
+            var r = sqrt(HALF * abs (xi));
+            res <-- Complex(r, copysign(r, xi));
+        }
+        else {
+            var d,r,s = hypot(xr, xi),ZERO,ZERO;
+            /* Use the identity   2  Re res  Im res = Im x
+            to avoid cancellation error in  d +/- Re x.  */
+            if (xr > ZERO){
+                r = sqrt(HALF * d + HALF * xr);
+                s = (HALF * xi) / r;
+            }
+            else{
+                s = sqrt(HALF * d - HALF * xr);
+                r = abs((HALF * xi) / s);
+            }
+            res <-- Complex(r,copysign(s, xi));
         }
     }
 }
@@ -51,3 +78,6 @@ inline overload sqrt(z:I) = sqrt(Complex(z));
 
 [T | Float?(T)]
 inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
+
+
+

@@ -8,7 +8,7 @@ public import math.native.beta.*;
 public import math.native.erf.*;
 public import math.native.cbrt.*;
 public import math.native.bessel.*;
-public import numbers.floats.floats.(abs,copysign,signbit);
+public import numbers.floats.floats.(infinity,negativeInfinity,nan,abs,copysign,signbit);
 
 //Import libm wrappers
 public import math.libm.libm.*;
@@ -25,4 +25,4 @@ alias LIBM = #"libm";
 alias APX = #"approx";
 alias APX2 = #"approx2";
 
-MathMode?(tag) = Flag(#"math.Mode")==tag;
+MathMode?(m) = Flag(#"math.Mode")==m;

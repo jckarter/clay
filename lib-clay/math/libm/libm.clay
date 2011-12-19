@@ -195,13 +195,20 @@ inline overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
 inline overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
 inline overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
 
-inline overload inf?(x:Double) = libc.isinf(x);
-inline overload inf?(x:Float) = libc.isinff(x);
-inline overload inf?(x:LongDouble) = libc.isinfl(x);
+private define _isinf;
 
-inline overload finite?(x:Double) = libc.finite(x);
-inline overload finite?(x:Float) = libc.finitef(x);
-inline overload finite?(x:LongDouble) = libc.finitel(x);
+inline overload _isinf(x:Double) = libc.isinf(x);
+inline overload _isinf(x:Float) = libc.isinff(x);
+inline overload _isinf(x:LongDouble) = libc.isinfl(x);
+
+[T | Float?(T) and MathMode?(LIBM)]
+inline overload infinity?(x:T) = if(_isinf(x)==1) true else false;
+[T | Float?(T) and MathMode?(LIBM)]
+inline overload negativeInfinity?(x:T) = if(_isinf(x)==-1) true else false;
+
+[| MathMode?(LIBM)] inline overload finite?(x:Double) = Bool(libc.finite(x));
+[| MathMode?(LIBM)] inline overload finite?(x:Float) = Bool(libc.finitef(x));
+inline overload finite?(x:LongDouble) = Bool(libc.finitel(x));
 
 inline overload drem(x:Double,y:Double) = libc.drem(x,y);
 inline overload drem(x:Float,y:Float) = libc.dremf(x,y);
@@ -213,8 +220,8 @@ inline overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
 inline overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
 inline overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
-inline overload nan?(x:Double) = Bool(libc.isnan(x));
-inline overload nan?(x:Float) = Bool(libc.isnanf(x));
+[| MathMode?(LIBM)] inline overload nan?(x:Double) = Bool(libc.isnan(x));
+[| MathMode?(LIBM)] inline overload nan?(x:Float) = Bool(libc.isnanf(x));
 inline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
 
 [| MathMode?(LIBM)] inline overload jn(x:Int,y:Double) = libc.jn(x,y);
@@ -367,9 +374,9 @@ inline overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
 inline overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
 inline overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
-inline overload fpclassify(value:Double) = libc.fpclassify(value);
-inline overload fpclassify(value:Float) = libc.fpclassifyf(value);
-inline overload fpclassify(value:LongDouble) = libc.fpclassifyl(value);
+[| MathMode?(LIBM)] inline overload fpclassify(value:Double) = libc.__fpclassify(value);
+[| MathMode?(LIBM)] inline overload fpclassify(value:Float) = libc.__fpclassifyf(value);
+inline overload fpclassify(value:LongDouble) = libc.__fpclassifyl(value);
 
 inline overload scalb(x:Double,y:Double) = libc.scalb(x,y);
 inline overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
@@ -385,8 +392,8 @@ inline overload llrint(x:Double) = libc.llrint(x);
 inline overload llrint(x:Float) = libc.llrintf(x);
 inline overload llrint(x:LongDouble) = libc.llrintl(x);
 
-inline overload llround(x:Double) = libc.llround(x);
-inline overload llround(x:Float) = libc.llroundf(x);
+[| MathMode?(LIBM)] inline overload llround(x:Double) = libc.llround(x);
+[| MathMode?(LIBM)] inline overload llround(x:Float) = libc.llroundf(x);
 inline overload llround(x:LongDouble) = libc.llroundl(x);
 
 [| MathMode?(LIBM)] inline overload signbit(value:Double) = libc.signbit(value);
