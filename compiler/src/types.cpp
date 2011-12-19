@@ -1020,9 +1020,9 @@ static void declareLLVMType(TypePtr t) {
         vector<llvm::Type *> llArgTypes;
         vector< pair<unsigned, llvm::Attributes> > llAttributes;
         llvm::Type *llRetType =
-            target->pushReturnType(x->returnType, llArgTypes, llAttributes);
+            target->pushReturnType(x->callingConv, x->returnType, llArgTypes, llAttributes);
         for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            target->pushArgumentType(x->argTypes[i], llArgTypes, llAttributes);
+            target->pushArgumentType(x->callingConv, x->argTypes[i], llArgTypes, llAttributes);
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
         t->llType = llvm::PointerType::getUnqual(llFuncType);
@@ -1116,8 +1116,8 @@ static void defineLLVMType(TypePtr t) {
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
             llvm::Type *llt =
                 llvmType(x->memberTypes[i]);
-            size_t align = llvmTargetData->getABITypeAlignment(llt);
-            size_t size = llvmTargetData->getTypeAllocSize(llt);
+            size_t align = (size_t)llvmTargetData->getABITypeAlignment(llt);
+            size_t size = (size_t)llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
                 maxAlign = align;
                 maxAlignType = llt;
@@ -1173,8 +1173,8 @@ static void initTypeInfo(Type *t) {
     if (!t->typeInfoInitialized) {
         t->typeInfoInitialized = true;
         llvm::Type *llt = llvmType(t);
-        t->typeSize = llvmTargetData->getTypeAllocSize(llt);
-        t->typeAlignment = llvmTargetData->getABITypeAlignment(llt);
+        t->typeSize = (size_t)llvmTargetData->getTypeAllocSize(llt);
+        t->typeAlignment = (size_t)llvmTargetData->getABITypeAlignment(llt);
     }
 }
 
@@ -1253,6 +1253,12 @@ void typePrint(ostream &out, TypePtr t) {
             break;
         case CC_FASTCALL :
             out << "FastCallCodePointer";
+            break;
+        case CC_THISCALL :
+            out << "ThisCallCodePointer";
+            break;
+        case CC_LLVM :
+            out << "LLVMCodePointer";
             break;
         default :
             assert(false);

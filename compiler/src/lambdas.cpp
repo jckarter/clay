@@ -97,9 +97,9 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
 static string lambdaName(LambdaPtr x)
 {
-    string fullName = x->asString();
+    string fullName = shortString(x->asString());
 
-    if (fullName.size() <= 40 && fullName.find('\n') == string::npos)
+    if (fullName.size() <= 80)
         return "(" + fullName + ")";
     else {
         ostringstream shortName;

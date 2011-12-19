@@ -240,9 +240,9 @@ floatMantissaZero(static LongDouble) = 0x8000_0000_0000_0000_ul;
 overload floatMantissaZero(static Double) = 0x0000_0000_0000_0000_ul;
 overload floatMantissaZero(static Float) = 0x0000_0000_u;
 
-signBit(x:LongDouble) = bitshr(floatBits(x).exponent,15);
-overload signBit(x:Double) = bitshr(floatBits(x),63);
-overload signBit(x:Float) = bitand(floatBits(x),31);
+signbit(x:LongDouble) = Int(bitshr(floatBits(x).exponent,15));
+overload signbit(x:Double) = Int(bitshr(floatBits(x),63));
+overload signbit(x:Float) = Int(bitand(floatBits(x),31));
 
 floatBitsUnsigned(x:LongDouble) {
     var tmp = floatBits(x);
@@ -256,11 +256,11 @@ overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 [T,U | Float?(T,U)]
-copySign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
     bitshl(signBit(b),mantissaSize(T)+exponentSize(T)-1)));
 
 [T | Float?(T)]
-overload copySign(a:LongDouble,b:T) {
+overload copysign(a:LongDouble,b:T) {
     var tmp = floatBitsUnsigned(a);
     return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
         bitshl(signBit(b),exponentSize(LongDouble))));

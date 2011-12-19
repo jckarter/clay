@@ -2,6 +2,11 @@
 #include "clay.hpp"
 #include "hirestimer.hpp"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#endif
+
 #include "llvm/PassManager.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Assembly/PrintModulePass.h"
@@ -17,6 +22,10 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/IPO.h"
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include <iostream>
 #include <cstring>
@@ -56,8 +65,16 @@ static void addOptimizationPasses(llvm::PassManager &passes,
 
     builder.populateFunctionPassManager(fpasses);
     builder.populateModulePassManager(passes);
-    if (optLevel > 2)
-        builder.populateLTOPassManager(passes, internalize, true);
+    if (optLevel > 2) {
+        if (internalize) {
+            vector<const char*> do_not_internalize;
+            do_not_internalize.push_back("main");
+            do_not_internalize.push_back("clayglobals_msvc_ctor");
+
+            passes.add(llvm::createInternalizePass(do_not_internalize));
+        }
+        builder.populateLTOPassManager(passes, false, true);
+    }
 }
 
 static void runModule(llvm::Module *module)
@@ -125,14 +142,15 @@ static void generateAssembly(llvm::Module *module,
                              bool emitObject,
                              unsigned optLevel,
                              bool sharedLib,
-                             bool genPIC)
+                             bool genPIC,
+                             bool debug)
 {
     llvm::Triple theTriple(module->getTargetTriple());
     string err;
     const llvm::Target *theTarget =
         llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
     assert(theTarget != NULL);
-    if (optLevel < 2)
+    if (optLevel < 2 || debug)
         llvm::NoFramePointerElim = true;
 
     llvm::Reloc::Model reloc = (sharedLib || genPIC)
@@ -187,18 +205,19 @@ static bool generateBinary(llvm::Module *module,
                            bool /*exceptions*/,
                            bool sharedLib,
                            bool genPIC,
+                           bool debug,
                            const vector<string> &arguments)
 {
-    llvm::sys::Path tempAsm("clayasm");
+    llvm::sys::Path tempObj("clayobj.obj");
     string errMsg;
-    if (tempAsm.createTemporaryFileOnDisk(false, &errMsg)) {
+    if (tempObj.createTemporaryFileOnDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
     }
-    llvm::sys::RemoveFileOnSignal(tempAsm);
+    llvm::sys::RemoveFileOnSignal(tempObj);
 
     errMsg.clear();
-    llvm::raw_fd_ostream asmOut(tempAsm.c_str(),
+    llvm::raw_fd_ostream objOut(tempObj.c_str(),
                                 errMsg,
                                 llvm::raw_fd_ostream::F_Binary);
     if (!errMsg.empty()) {
@@ -206,8 +225,8 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &asmOut, false, optLevel, sharedLib, genPIC);
-    asmOut.close();
+    generateAssembly(module, &objOut, true, optLevel, sharedLib, genPIC, debug);
+    objOut.close();
 
     vector<const char *> clangArgs;
     clangArgs.push_back(clangPath.c_str());
@@ -223,13 +242,12 @@ static bool generateBinary(llvm::Module *module,
         assert(false);
     }
 
+    llvm::Triple triple(llvmModule->getTargetTriple());
     string linkerFlags;
     if (sharedLib) {
         clangArgs.push_back("-shared");
-        llvm::Triple triple(llvmModule->getTargetTriple());
 
-        if (triple.getOS() == llvm::Triple::Win32
-            || triple.getOS() == llvm::Triple::MinGW32
+        if (triple.getOS() == llvm::Triple::MinGW32
             || triple.getOS() == llvm::Triple::Cygwin) {
 
             llvm::sys::Path defPath(outputFilePath);
@@ -241,18 +259,20 @@ static bool generateBinary(llvm::Module *module,
             clangArgs.push_back(linkerFlags.c_str());
         }
     }
+    if (debug) {
+        if (triple.getOS() == llvm::Triple::Win32)
+            clangArgs.push_back("-Wl,/debug");
+    }
     clangArgs.push_back("-o");
     clangArgs.push_back(outputFilePath.c_str());
-    clangArgs.push_back("-x");
-    clangArgs.push_back("assembler");
-    clangArgs.push_back(tempAsm.c_str());
+    clangArgs.push_back(tempObj.c_str());
     for (unsigned i = 0; i < arguments.size(); ++i)
         clangArgs.push_back(arguments[i].c_str());
     clangArgs.push_back(NULL);
 
     int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
-    if (tempAsm.eraseFromDisk(false, &errMsg)) {
+    if (tempObj.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
     }
@@ -274,6 +294,7 @@ static void usage(char *argv0)
     cerr << "  -DFLAG[=value]        set flag value\n"
          << "                        (queryable with Flag?() and Flag())\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
+    cerr << "  -g                    keep debug symbol information\n";
     cerr << "  -exceptions           enable exception handling\n";
     cerr << "  -no-exceptions        disable exception handling\n";
     cerr << "  -inline               inline procedures marked 'inline'\n";
@@ -325,6 +346,14 @@ static string sharedExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
+static string objExtensionForTarget(llvm::Triple const &triple) {
+    if (triple.getOS() == llvm::Triple::Win32) {
+        return ".obj";
+    } else {
+        return ".o";
+    }
+}
+
 static string exeExtensionForTarget(llvm::Triple const &triple) {
     if (triple.getOS() == llvm::Triple::Win32
         || triple.getOS() == llvm::Triple::MinGW32
@@ -356,6 +385,7 @@ int main(int argc, char **argv) {
     bool codegenExternalsSet = false;
 
     unsigned optLevel = 3;
+    bool optLevelSet = false;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -378,6 +408,8 @@ int main(int argc, char **argv) {
     vector<string> frameworks;
 #endif
 
+    bool debug = false;
+
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0))
         {
@@ -392,17 +424,26 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-c") == 0) {
             emitObject = true;
         }
+        else if (strcmp(argv[i], "-g") == 0) {
+            debug = true;
+            if (!optLevelSet)
+                optLevel = 0;
+        }
         else if (strcmp(argv[i], "-O0") == 0) {
             optLevel = 0;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O1") == 0) {
             optLevel = 1;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O2") == 0) {
             optLevel = 2;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-O3") == 0) {
             optLevel = 3;
+            optLevelSet = true;
         }
         else if (strcmp(argv[i], "-inline") == 0) {
             inlineEnabled = true;
@@ -714,12 +755,7 @@ int main(int argc, char **argv) {
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 
-    // On Windows, instead of "*-*-win32", use the target triple:
-    // "*-*-mingw32"
     llvm::Triple llvmTriple(targetTriple);
-    if (llvmTriple.getOS() == llvm::Triple::Win32) {
-        llvmTriple.setOS(llvm::Triple::MinGW32);
-    }
     targetTriple = llvmTriple.str();
 
     if (!initLLVM(targetTriple)) {
@@ -759,16 +795,10 @@ int main(int argc, char **argv) {
     llvm::sys::Path libDirProduction1(clayDir);
     llvm::sys::Path libDirProduction2(clayDir);
     bool result;
-#ifdef WIN32
-    result = libDirDevelopment.appendComponent("../../../../lib-clay");
-#else
     result = libDirDevelopment.appendComponent("../../../lib-clay");
-#endif
     assert(result);
-#ifndef WIN32
+
     result = libDirProduction1.appendComponent("../lib/lib-clay");
-    assert(result);
-#endif
     result = libDirProduction2.appendComponent("lib-clay");
     assert(result);
     addSearchPath(libDirDevelopment.str());
@@ -784,7 +814,7 @@ int main(int argc, char **argv) {
         else if (emitAsm)
             outputFile = clayFileBasename + ".s";
         else if (emitObject || emitLLVM)
-            outputFile = clayFileBasename + ".o";
+            outputFile = clayFileBasename + objExtensionForTarget(llvmTriple);
         else if (sharedLib)
             outputFile = clayFileBasename + sharedExtensionForTarget(llvmTriple);
         else
@@ -813,9 +843,13 @@ int main(int argc, char **argv) {
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
 
+    bool internalize = true;
+    if (debug || sharedLib || run || !codegenExternals)
+        internalize = false;
+
     optTimer.start();
     if (optLevel > 0)
-        optimizeLLVM(llvmModule, optLevel, !(sharedLib || run));
+        optimizeLLVM(llvmModule, optLevel, internalize);
     optTimer.stop();
 
     if (run)
@@ -833,7 +867,7 @@ int main(int argc, char **argv) {
         if (emitLLVM)
             generateLLVM(llvmModule, emitAsm, &out);
         else if (emitAsm || emitObject)
-            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC);
+            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC, debug);
         outputTimer.stop();
     }
     else {
@@ -884,7 +918,7 @@ int main(int argc, char **argv) {
 
         outputTimer.start();
         result = generateBinary(llvmModule, outputFilePath, clangPath,
-                                optLevel, exceptions, sharedLib, genPIC,
+                                optLevel, exceptions, sharedLib, genPIC, debug,
                                 arguments);
         outputTimer.stop();
         if (!result)

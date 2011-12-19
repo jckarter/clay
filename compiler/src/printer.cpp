@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include <cctype>
 #include <sstream>
 
 using namespace std;
@@ -1037,13 +1038,13 @@ void printValue(ostream &out, EValuePtr ev)
         ComplexType *t = (ComplexType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            out << *((_Complex float *)ev->addr);
+            out << *((clay_cfloat *)ev->addr);
             break;
         case 64 :
-            out << *((_Complex double *)ev->addr);
+            out << *((clay_cdouble *)ev->addr);
             break;
         case 80 :
-            out << *((_Complex long double *)ev->addr);
+            out << *((clay_cldouble *)ev->addr);
             break;
         default :
             assert(false);
@@ -1053,4 +1054,22 @@ void printValue(ostream &out, EValuePtr ev)
     default :
         break;
     }
+}
+
+string shortString(string const &in) {
+    string out;
+    bool wasSpace = false;
+
+    for (string::const_iterator i = in.begin(); i != in.end(); ++i) {
+        if (isspace(*i)) {
+            if (!wasSpace) {
+                out.push_back(' ');
+                wasSpace = true;
+            }
+        } else {
+            out.push_back(*i);
+            wasSpace = false;
+        }
+    }
+    return out;
 }

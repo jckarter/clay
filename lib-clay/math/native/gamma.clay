@@ -1,6 +1,6 @@
 // Gamma functions adapted from Ooura and D/Phobos
 
-import math.(abs,exp,log,sqrt,atan2,cos,sin,M_PIl);
+import math.(abs,exp,log,sqrt,atan2,cos,sin,M_PI);
 import numbers.floats.floats.(nan);
 
 define tgamma;
@@ -173,8 +173,8 @@ overload tgamma(x:U) --> r:U{
     yr = ur * vr - ui * vi;
     yi = ui * vr + ur * vi;
     if (xr < T(0)) {
-        wr = xr * T(M_PIl);
-        wi = exp(xi * T(M_PIl));
+        wr = xr * T(M_PI);
+        wi = exp(xi * T(M_PI));
         vi = 1 / wi;
         ur = (vi + wi) * sin(wr);
         ui = (vi - wi) * cos(wr);
@@ -343,7 +343,7 @@ overload lgamma(x:T) --> y:T {
         y += (w - HALF) * log(w) - w;
     }
     if (x < ZERO)
-        y = log(T(M_PIl) / sin(x * T(M_PIl))) - y;
+        y = log(T(M_PI) / sin(x * T(M_PI))) - y;
 }
 
 [U | Complex?(U)]

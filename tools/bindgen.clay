@@ -214,7 +214,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     else {}
 
-    return (CXChildVisit_Continue);
+    return CXChildVisit_Continue;
 }
 
 visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
@@ -228,7 +228,7 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     else {}
 
-    return (CXChildVisit_Continue);
+    return CXChildVisit_Continue;
 }
 
 record FunctionDeclAttributes (asmLabel:Maybe[String]);
@@ -239,7 +239,7 @@ visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (cursor.kind)
     case (CXCursor_AsmLabelAttr)
         attributes.asmLabel = Maybe(str(clang_getCursorSpelling(cursor)));
-    return (CXChildVisit_Continue);
+    return CXChildVisit_Continue;
 }
 
 visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
@@ -251,20 +251,33 @@ visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     else {
     }
-    return (CXChildVisit_Continue);
+    return CXChildVisit_Continue;
+}
+
+noDefinition?(definition:CXCursor)
+    = inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile);
+
+opaqueDeclaration(decl:CXCursor) {
+    var name = nameForDeclaration(decl);
+    if (not symbolVisited(name))
+        printlnTo(g_bindingsOut, "alias ", name, " = Opaque;\n");
+}
+
+opaqueType(type:CXType) {
+    if (inValues?(type.kind, CXType_Record, CXType_Enum)) {
+        var decl = clang_getTypeDeclaration(type);
+        var definition = clang_getCursorDefinition(decl);
+        if (noDefinition?(definition))
+            opaqueDeclaration(decl);
+    }
 }
 
 withForwardDecl(cursor:CXCursor, f) {
     var definition = clang_getCursorDefinition(cursor);
     if (cursor == definition)
         f();
-    else {
-        if (inValues?(definition.kind, CXCursor_NoDeclFound, CXCursor_InvalidFile)) {
-            var name = nameForDeclaration(cursor);
-            if (not symbolVisited(name))
-                printlnTo(g_bindingsOut, "alias ", name, " = Opaque;\n");
-        }
-    }
+    else if (noDefinition?(definition))
+        opaqueDeclaration(cursor);
 }
 
 cursorMatchesPatterns(cursor:CXCursor, options:BindgenOptions) : Bool {
@@ -302,7 +315,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     ref options = Pointer[BindgenOptions](data)^;
 
     if (not cursorMatchesPatterns(cursor, options))
-        return (CXChildVisit_Continue);
+        return CXChildVisit_Continue;
 
     var kind = clang_getCursorKind(cursor);
     switch (kind)
@@ -314,7 +327,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
                 CXClientData(&unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         }
-        return (CXChildVisit_Continue);
+        return CXChildVisit_Recurse;
     }
     case (CXCursor_UnionDecl) {
         withForwardDecl(cursor): () -> {
@@ -322,7 +335,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
             printlnTo(g_bindingsOut, "];\n");
         }
-        return (CXChildVisit_Continue);
+        return CXChildVisit_Recurse;
     }
     case (CXCursor_EnumDecl) {
         withForwardDecl(cursor): () -> {
@@ -331,12 +344,12 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
         }
         printlnTo(g_bindingsOut);
-        return (CXChildVisit_Continue);
+        return CXChildVisit_Continue;
     }
     case (CXCursor_FunctionDecl) {
         var name = str(clang_getCursorSpelling(cursor));
         if (symbolVisited(name))
-            return (CXChildVisit_Continue);
+            return CXChildVisit_Continue;
 
         // XXX dllimport/dllexport
         var attributes = FunctionDeclAttributes();
@@ -381,12 +394,12 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         if (returnType.kind != CXType_Void)
             printTo(g_bindingsOut, convertType(returnType, cursor));
         printlnTo(g_bindingsOut, ";\n");
-        return (CXChildVisit_Continue);
+        return CXChildVisit_Continue;
     }
     case (CXCursor_VarDecl) {
         var name = str(clang_getCursorSpelling(cursor));
         if (symbolVisited(name))
-            return (CXChildVisit_Continue);
+            return CXChildVisit_Continue;
 
         if (clayKeyword?(name))
             printlnTo(g_bindingsOut, "external (", repr(name), ")",
@@ -398,11 +411,17 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     case (CXCursor_TypedefDecl) {
         var name = str(clang_getCursorSpelling(cursor));
+        var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
         printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
-        return (CXChildVisit_Continue);
+        opaqueType(underlyingType);
+
+        return CXChildVisit_Continue;
     }
-    return (CXChildVisit_Recurse);
+    case (CXCursor_FieldDecl) {
+        return CXChildVisit_Continue;
+    }
+    return CXChildVisit_Recurse;
 }
 
 record Usage ();

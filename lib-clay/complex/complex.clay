@@ -1,5 +1,5 @@
 
-import math.(fma,abs);
+import math.(fma,abs,nan?);
 
 enum ComplexPart (REAL, IMAG);
 
@@ -158,6 +158,8 @@ inline overload conj(z:T) = -z;
 [C | Complex?(C)]
 inline rect(c:C) = real(c), imag(c);
 
+[C | Complex?(C)]
+inline rectValues(c:C) = real(c), imagValue(c);
 
 //
 // binary ops
@@ -266,3 +268,12 @@ inline overload multiply(y:T,z:C) = multiply(z,y);
 [T,C | Imaginary?(T) and Complex?(C)]
 inline overload divide(z:C, y:T) = Complex(imag(z)/y, -real(z)/y);
 
+//XXX THESE NEED ATTENTION
+[T | Complex?(T)]
+inline overload max(x:T,y:T) = max(abs(x),abs(y));
+
+[C | Complex?(C)]
+inline overload min(x:C,y:C) = min(abs(x),abs(y));
+
+[T | Complex?(T)]
+inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));

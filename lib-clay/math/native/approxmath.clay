@@ -1,0 +1,378 @@
+
+import numbers.floats.floats.(floatBits,floatFromBits);
+import math.*;
+
+define lambertwexpx;
+define lambertw;
+define sinfull;
+define cosfull;
+define tanfull;
+
+define digamma;
+define ierf;
+
+
+alias ieee754 = Union[UInt,Float];
+alias ieee754r = Union[Float,UInt];
+
+// Underflow of exponential is common practice in numerical routines,
+// so handle it here.
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload pow2(p:T) = T(pow2(Float(p)));
+[| MathMode?(APX)]
+inline overload pow2 (p:Float){
+    var offset = if(p < 0.f) 1.f else 0.f;
+    var clipp = if(p < -126.f) -126.f else p;
+    var w = clipp;
+    var z = clipp - w + offset;
+    var v = ieee754();
+    v.0 = UInt(bitshl(1,23) * (clipp + 121.2740575f + 27.7280233f / (4.84252568f - z) - 1.49012907f * z));
+    return v.1;
+}
+
+[| MathMode?(APX2)]
+inline overload  pow2 (p:Float){
+    var clipp = if(p < -126.f) -126.f else p;
+    var v = ieee754();
+    v.0 = UInt(bitshl(1,23) * (clipp + 126.94269504f));
+    return v.1;
+}
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  pow (x:T, p:T) = pow2 (p * log2 (x));
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  sigmoid (x:T) = T(1) / (T(1) + exp (-x));
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  exp (p:T) {
+    println("exp apx");
+    return pow2 (T(M_LOG2E) * p);
+}
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload log2(p:T) = T(log2(Float(p)));
+[| MathMode?(APX)]
+inline overload  log2 (x:Float){
+  var vx,mx = ieee754r(),ieee754();
+  vx.0 = x;
+  mx.0 = bitor(bitand(vx.1 , 0x007FFFFF), 0x3f000000);
+  var y = vx.1;
+  y *= 1.1920928955078125e-7f;
+
+  return y - 124.22551499f
+           - 1.498030302f * mx.1
+           - 1.72587999f / (0.3520887068f + mx.1);
+}
+
+[| MathMode?(APX2)]
+inline overload  log2 (x:Float){
+  var vx = ieee754r();
+  vx.0 = x;
+  var y = vx.1;
+  y *= 1.1920928955078125e-7f;
+  return y - 126.94269504f;
+}
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  log (x:T) = T(M_LN2) * log2 (x);
+
+
+
+// fffc: not actually ff than erfcf(3) on newer machines!
+// ... although vectorized version is interesting
+//     and fferfc is very f
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload erfc(p:T) = T(erfc(Float(p)));
+[| MathMode?(APX)] inline overload  erfc (x:Float){
+    var k = 3.3509633149424609f;
+    var a = 0.07219054755431126f;
+    var b = 15.418191568719577f;
+    var c = 5.609846028328545f;
+    var vc = ieee754r();
+    vc.0 = c * x;
+    var xsq = x * x;
+    var xquad = xsq * xsq;
+    vc.1 = bitor(vc.1,0x80000000);
+    return 2.0f / (1.0f + pow2 (k * x)) - a * x * (b * xquad - 1.0f) * pow2 (vc.0);
+}
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload  erfc (x:T)
+    = T(2) / (T(1) + pow2(T(3.3509633149424609) * x));
+
+
+// fff: not actually ff than erff(3) on newer machines!
+// ... although vectorized version is interesting
+//     and fferf is very f
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  erf (x:T) = T(1) - erfc (x);
+
+alias invk = 0.30004578719350504f;
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload ierf(p:T) = T(ierf(Float(p)));
+[| MathMode?(APX)]
+inline overload  ierf (x:Float){
+    var a = 0.020287853348211326f;
+    var b = 0.07236892874789555f;
+    var c = 0.9913030456864257f;
+    var d = 0.8059775923760193f;
+    var xsq = x * x;
+    return invk * log2 ((1.0f + x) / (1.0f - x))
+        + x * (a - b * xsq) / (c - d * xsq);
+}
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload  ierf (x:T) = invk * log2 ((T(1) + x) / (T(1) - x));
+
+/* gamma/digamma functions only work for positive inputs */
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload  lgamma (x:T){
+    var logterm = log (x * (T(1) + x) * (T(2) + x));
+    var xp3 = T(3) + x;
+    return T(- 2.081061466f
+            - x
+            + 0.0833333f / xp3
+            - logterm
+            + (2.5f + x) * log (xp3));
+}
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload  lgamma (x:T)
+    = T(-0.0810614667) - x - log (x) + (T(0.5) + x) * log (T(1) + x);
+
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload  digamma (x:T){
+    var twopx = T(2) + x;
+    var logterm = log (twopx);
+    return T((-48.0f + x * (-157.0f + x * (-127.0f - 30.0f * x))) /
+         (12.0f * x * (T(1) + x) * twopx * twopx)
+         + logterm);
+}
+
+[T | Float?(T) and MathMode?(APX2)] inline overload digamma (x:T){
+    var onepx = T(1) + x;
+    return T(-1.0) / x - T(1) / (T(2) * onepx) + log (onepx);
+}
+
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  sinh (p:T) = T(0.5) * (exp (p) - exp (-p));
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  cosh (p:T) = T(0.5) * (exp (p) + exp (-p));
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
+
+
+
+// f sine variants are for x \in [ -\pi, pi ]
+// f cosine variants are for x \in [ -\pi, pi ]
+// f tangent variants are for x \in [ -\pi / 2, pi / 2 ]
+// "full" versions of functions handle the entire range of inputs
+// although the range reduction technique used here will be hopelessly
+// inaccurate for |x| >> 1000
+//
+// WARNING: fsinfull, fcosfull, and ftanfull can be slower than
+// libc calls on older machines (!) and on newer machines are only
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload sin(p:T) = T(sin(Float(p)));
+[| MathMode?(APX)]
+inline overload sin (x:Float){
+    var fouroverpi = 1.2732395447351627f;
+    var fouroverpisq = 0.40528473456935109f;
+    var q = 0.78444488374548933f;
+    var p,r,s,vx = ieee754r(),ieee754r(),ieee754r(),ieee754r();
+    p.0 = 0.20363937680730309f;
+    r.0 = 0.015124940802184233f;
+    s.0 = -0.0032225901625579573f;
+
+    vx.0 = x;
+    var sign = bitand(vx.1 , 0x80000000);
+    vx.1 = bitand(vx.1 , 0x7FFFFFFF);
+
+    var qpprox = fouroverpi * x - fouroverpisq * x * vx.0;
+    var qpproxsq = qpprox * qpprox;
+
+    p.1 = bitor(p.1,sign);
+    r.1 = bitor(r.1,sign);
+    s.1 = bitxor(s.1,sign);
+
+    return q * qpprox + qpproxsq * (p.0 + qpproxsq * (r.0 + qpproxsq * s.0));
+}
+
+[| MathMode?(APX2)]
+inline overload  sin (x:Float){
+    var fouroverpi = 1.2732395447351627f;
+    var fouroverpisq = 0.40528473456935109f;
+    var q = 0.77633023248007499f;
+    var p,vx = ieee754r(),ieee754r();
+    p.0 = 0.22308510060189463f;
+    vx.0 = x;
+    var sign = bitand(vx.1 , 0x80000000);
+    vx.1 = bitand(vx.1,0x7FFFFFFF);
+    var qpprox = fouroverpi * x - fouroverpisq * x * vx.0;
+    p.1 = bitor(p.1,sign);
+    return qpprox * (q + p.0 * qpprox);
+}
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload cos (x:T)
+    = sin (x + (if(x > T(M_PI_2)) T(-4.7123889803846899) else T(M_PI_2)));
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload cos(p:T) = T(cos(Float(p)));
+[| MathMode?(APX2)]
+inline overload  cos (x:T){
+    var p = 0.54641335845679634f;
+    var vx = ieee754r();
+    vx.0 = x;
+    vx.1 = bitand(vx.1,0x7FFFFFFF);
+    var qpprox = 1.0f - T(M_2_PI) * vx.0;
+    return qpprox + p * qpprox * (1.0f - qpprox * qpprox);
+}
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload  tan (x:T) = sin (x) / sin (x + T(M_PI_2));
+[T | Float?(T) and MathMode?(APX2)]
+inline overload  tan (x:T) = sin (x) / cos (x);
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  sinfull (x:T){
+    var k = x * T(M_1_TWOPI);
+    var half = if(x < T(0)) T(-0.5) else T(0.5);
+    return sin((half + k) * T(M_TWOPI) - x);
+}
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  cosfull (x:T) = sinfull (x + T(M_PI_2));
+
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload  tanfull (x:T){
+    var k = x * T(M_1_TWOPI);
+    var half = if(x < T(0)) T(-0.5) else T(0.5);
+    var xnew = x - (half + k) * T(M_TWOPI);
+    return sin(xnew) / cos(xnew);
+}
+
+
+// these functions compute the upper branch aka W_0
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload lambertw(p:T) = T(lambertw(Float(p)));
+
+[| MathMode?(APX)]
+inline overload  lambertw (x:Float){
+    var threshold = 2.26445f;
+    var c = if(x < threshold)  1.546865557f else 1.0f;
+    var d = if(x < threshold)  2.250366841f else 0.0f;
+    var a = if(x < threshold)  -0.737769969f else 0.0f;
+
+    var logterm = log (c * x + d);
+    var loglogterm = log (logterm);
+
+    var minusw = -a - logterm + loglogterm - loglogterm / logterm;
+    var expminusw = exp (minusw);
+    xexpminusw = x * expminusw;
+    pexpminusw = xexpminusw - minusw;
+    return (2.0f * xexpminusw - minusw * (4.0f * xexpminusw - minusw * pexpminusw)) /
+         (2.0f + pexpminusw * (2.0f - minusw));
+}
+
+[| MathMode?(APX2)]
+inline overload lambertw (x:Float){
+    var threshold = 2.26445f;
+    var c = if(x < threshold)  1.546865557f else 1.0f;
+    var d = if(x < threshold)  2.250366841f else 0.0f;
+    var a = if(x < threshold)  -0.737769969f else 0.0f;
+
+    var logterm = flog (c * x + d);
+    var loglogterm = flog (logterm);
+
+    var w = a + logterm - loglogterm + loglogterm / logterm;
+    var expw = exp (-w);
+
+    return (w * w + expw * x) / (1.0f + w);
+}
+
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload lambertwexpx(p:T) = T(lambertwexpx(Float(p)));
+[| MathMode?(APX)]
+inline overload  lambertwexpx (x:Float){
+    var k = 1.1765631309f;
+    var a = 0.94537622168f;
+
+    var logarg = max(x, k);
+    var powarg = if(x < k) a * (x - k) else 0;
+
+    var logterm = log (logarg);
+    var powterm = pow2 (powarg);  // don't need accuracy here
+
+    var w = powterm * (logarg - logterm + logterm / logarg);
+    var logw = log (w);
+    var p = x - logw;
+
+    return w * (2.0f + p + w * (3.0f + 2.0f * p)) /
+         (2.0f - p + w * (5.0f + 2.0f * w));
+}
+
+[| MathMode?(APX2)]
+inline overload  lambertwexpx (x:Float){
+    var k = 1.1765631309f;
+    var a = 0.94537622168f;
+
+    var logarg = max(x, k);
+    var powarg = if(x < k) a * (x - k) else 0;
+
+    var logterm = log (logarg);
+    var powterm = pow2 (powarg);
+
+    var w = powterm * (logarg - logterm + logterm / logarg);
+    var logw = log (w);
+
+    return w * (1.0f + x - logw) / (1.0f + w);
+}
+
+
+private define sqrtCoeff;
+inline overload sqrtCoeff(static Float) = 0x5F375A86u;
+inline overload sqrtCoeff(static Double) = 0x5FE6EB50C7B537AAul;
+inline overload sqrtCoeff(static LongDouble) = 0x5FE6EB50C7B537AAul;//NEED COEFF
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload isqrt(x:T, n:I) --> y:T{
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    for(j in range(n))
+        y *= T(1.5) - (T(0.5)*x) * y * y; // Newton step, repeating increases accuracy
+}
+
+[T,I | Float?(T) and Integer?(I)]
+inline overload sqrt(x:T, n:I) = T(1)/isqrt(x, n);
+
+[T | Float?(T) and MathMode?(APX)]
+inline overload isqrt(x:T) --> y:T{
+    alias ONEHALF = T(1.5);
+    alias tmp = T(0.5)*x;
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+    y *= ONEHALF - tmp * y * y; // Newton step, repeating increases accuracy
+}
+
+[T | Float?(T) and MathMode?(APX2)]
+inline overload isqrt(x:T) --> y:T{
+    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
+    y *= T(1.5) - T(0.5)*x * y * y; // Newton step, repeating increases accuracy
+}
+
+[T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
+inline overload sqrt(x:T) = T(1)/isqrt(x);
+

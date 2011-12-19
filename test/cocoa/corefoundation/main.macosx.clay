@@ -10,7 +10,7 @@ main() {
     var _n = Int(451);
     var n = CFNumberCreate(
         kCFAllocatorDefault,
-        Int64(kCFNumberIntType),
+        CFIndex(kCFNumberIntType),
         RawPointer(&_n)
     );
 
@@ -24,7 +24,7 @@ main() {
     var succeeded = CFStringGetCString(
         string,
         begin(buffer),
-        Int64(size(buffer)),
+        CFIndex(size(buffer)),
         UInt32(kCFStringEncodingASCII)
     );
 

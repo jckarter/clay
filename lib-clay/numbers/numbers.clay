@@ -498,7 +498,7 @@ inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 [A, ..AA | equalValues?(A, ..AA) and countValues(..AA) != 1]
 inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
 
-[..AA | equalValues?(..AA) and countValues(..AA) != 1]
+[A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
 inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
 
 [A, B | Integer?(A, B)]

@@ -1,6 +1,10 @@
 #ifndef __CLAY_HPP
 #define __CLAY_HPP
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <string>
 #include <vector>
 #include <map>
@@ -10,6 +14,12 @@
 #include <cstdlib>
 #include <climits>
 #include <cerrno>
+
+#ifdef _MSC_VER
+// LLVM headers spew warnings on MSVC
+#pragma warning(push)
+#pragma warning(disable: 4146 4355 4146 4800 4996)
+#endif
 
 #include <llvm/ADT/Triple.h>
 #include <llvm/Type.h>
@@ -28,6 +38,10 @@
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Intrinsics.h>
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 using std::string;
 using std::vector;
 using std::pair;
@@ -38,11 +52,26 @@ using std::ostream;
 using std::ostringstream;
 
 #ifdef _MSC_VER
+
 #define strtoll _strtoi64
 #define strtoull _strtoui64
+#define strtold strtod
 #define CLAY_ALIGN(n) __declspec(align(n))
+
+#include <complex>
+
+typedef std::complex<float> clay_cfloat;
+typedef std::complex<double> clay_cdouble;
+typedef std::complex<long double> clay_cldouble;
+
 #else
+
 #define CLAY_ALIGN(n) __attribute__((aligned(n)))
+
+typedef _Complex float clay_cfloat;
+typedef _Complex double clay_cdouble;
+typedef _Complex long double clay_cldouble;
+
 #endif
 
 #define CLAY_LANGUAGE_VERSION "0.1-WIP"
@@ -122,7 +151,7 @@ struct uint128_holder {
         return *this;
     }
 
-    uint128_holder operator-() const { return uint128_holder(-lowValue); }
+    uint128_holder operator-() const { return uint128_holder((size64_t)(-(ptrdiff64_t)lowValue)); }
     uint128_holder operator~() const { return uint128_holder(~lowValue); }
 
     bool operator==(uint128_holder y) const { return lowValue == y.lowValue; }
@@ -946,6 +975,8 @@ struct Expr : public ANode {
         : ANode(EXPRESSION), exprKind(exprKind) {}
 
     string asString() {
+        if (startLocation == NULL || endLocation == NULL)
+            return "<generated expression>";
         assert(startLocation->source == endLocation->source);
         char *data = startLocation->source->data;
         return string(data + startLocation->offset, data + endLocation->offset);
@@ -1844,6 +1875,7 @@ enum CallingConv {
     CC_DEFAULT,
     CC_STDCALL,
     CC_FASTCALL,
+    CC_THISCALL,
     CC_LLVM
 };
 
@@ -2147,6 +2179,7 @@ void printName(ostream &out, ObjectPtr x);
 void printTypeAndValue(ostream &out, EValuePtr ev);
 void printValue(ostream &out, EValuePtr ev);
 
+string shortString(string const &in);
 
 
 //
@@ -2296,15 +2329,19 @@ enum PrimOpCode {
 
     PRIM_AttributeStdCall,
     PRIM_AttributeFastCall,
+    PRIM_AttributeThisCall,
     PRIM_AttributeCCall,
+    PRIM_AttributeLLVMCall,
     PRIM_AttributeDLLImport,
     PRIM_AttributeDLLExport,
 
     PRIM_CCodePointerP,
     PRIM_CCodePointer,
+    PRIM_LLVMCodePointer,
     PRIM_VarArgsCCodePointer,
     PRIM_StdCallCodePointer,
     PRIM_FastCallCodePointer,
+    PRIM_ThisCallCodePointer,
     PRIM_makeCCodePointer,
     PRIM_callCCodePointer,
 
@@ -2875,6 +2912,7 @@ enum MatchCode {
     MATCH_CALLABLE_ERROR,
     MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
+    MATCH_MULTI_ARGUMENT_ERROR,
     MATCH_PREDICATE_ERROR
 };
 
@@ -2907,25 +2945,45 @@ struct MatchSuccess : public MatchResult {
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
 struct MatchCallableError : public MatchResult {
-    MatchCallableError()
-        : MatchResult(MATCH_CALLABLE_ERROR) {}
+    ExprPtr patternExpr;
+    ObjectPtr callable;
+    MatchCallableError(ExprPtr patternExpr, ObjectPtr callable)
+        : MatchResult(MATCH_CALLABLE_ERROR), patternExpr(patternExpr), callable(callable) {}
 };
 
 struct MatchArityError : public MatchResult {
-    MatchArityError()
-        : MatchResult(MATCH_ARITY_ERROR) {}
+    unsigned expectedArgs;
+    unsigned gotArgs;
+    bool variadic;
+    MatchArityError(unsigned expectedArgs, unsigned gotArgs, bool variadic)
+        : MatchResult(MATCH_ARITY_ERROR),
+          expectedArgs(expectedArgs),
+          gotArgs(gotArgs),
+          variadic(variadic) {}
 };
 
 struct MatchArgumentError : public MatchResult {
     unsigned argIndex;
-    FormalArgPtr argument;
-    MatchArgumentError(unsigned argIndex, FormalArgPtr argument)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex), argument(argument) {}
+    TypePtr type;
+    FormalArgPtr arg;
+    MatchArgumentError(unsigned argIndex, TypePtr type, FormalArgPtr arg)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex),
+            type(type), arg(arg) {}
+};
+
+struct MatchMultiArgumentError : public MatchResult {
+    unsigned argIndex;
+    MultiStaticPtr types;
+    FormalArgPtr varArg;
+    MatchMultiArgumentError(unsigned argIndex, MultiStaticPtr types, FormalArgPtr varArg)
+        : MatchResult(MATCH_MULTI_ARGUMENT_ERROR),
+            argIndex(argIndex), types(types), varArg(varArg) {}
 };
 
 struct MatchPredicateError : public MatchResult {
-    MatchPredicateError()
-        : MatchResult(MATCH_PREDICATE_ERROR) {}
+    ExprPtr predicateExpr;
+    MatchPredicateError(ExprPtr predicateExpr)
+        : MatchResult(MATCH_PREDICATE_ERROR), predicateExpr(predicateExpr) {}
 };
 
 MatchResultPtr matchInvoke(OverloadPtr overload,
@@ -3438,50 +3496,65 @@ struct ExternalTarget : public Object {
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) = 0;
 
+    virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) = 0;
+    virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) = 0;
+    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) = 0;
+    virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) = 0;
+
     // for generating C function declarations
-    virtual llvm::Type *pushReturnType(TypePtr type,
-                                       vector<llvm::Type *> &llArgTypes,
-                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
-    virtual void pushArgumentType(TypePtr type,
-                                  vector<llvm::Type *> &llArgTypes,
-                                  vector< pair<unsigned, llvm::Attributes> > &llAttributes) = 0;
+    llvm::Type *pushReturnType(CallingConv conv,
+                               TypePtr type,
+                               vector<llvm::Type *> &llArgTypes,
+                               vector< pair<unsigned, llvm::Attributes> > &llAttributes);
+    void pushArgumentType(CallingConv conv,
+                          TypePtr type,
+                          vector<llvm::Type *> &llArgTypes,
+                          vector< pair<unsigned, llvm::Attributes> > &llAttributes);
 
     // for generating C function definitions
-    virtual void allocReturnValue(TypePtr type,
-                                  llvm::Function::arg_iterator &ai,
-                                  vector<CReturn> &returns,
-                                  CodegenContextPtr ctx) = 0;
-    virtual CValuePtr allocArgumentValue(TypePtr type,
-                                         string const &name,
-                                         llvm::Function::arg_iterator &ai,
-                                         CodegenContextPtr ctx) = 0;
-    virtual void returnStatement(TypePtr type,
-                                 vector<CReturn> &returns,
-                                 CodegenContextPtr ctx) = 0;
+    void allocReturnValue(CallingConv conv,
+                          TypePtr type,
+                          llvm::Function::arg_iterator &ai,
+                          vector<CReturn> &returns,
+                          CodegenContextPtr ctx);
+    CValuePtr allocArgumentValue(CallingConv conv,
+                                 TypePtr type,
+                                 string const &name,
+                                 llvm::Function::arg_iterator &ai,
+                                 CodegenContextPtr ctx);
+    void returnStatement(CallingConv conv,
+                         TypePtr type,
+                         vector<CReturn> &returns,
+                         CodegenContextPtr ctx);
 
     // for calling C functions
-    virtual void loadStructRetArgument(TypePtr type,
-                                       vector<llvm::Value *> &llArgs,
-                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                       CodegenContextPtr ctx,
-                                       MultiCValuePtr out) = 0;
-    virtual void loadArgument(CValuePtr cv,
-                              vector<llvm::Value *> &llArgs,
-                              vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                              CodegenContextPtr ctx) = 0;
-    virtual void loadVarArgument(CValuePtr cv,
-                                 vector<llvm::Value *> &llArgs,
-                                 vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                 CodegenContextPtr ctx) = 0;
-    virtual void storeReturnValue(llvm::Value *callReturnValue,
-                                  TypePtr returnType,
-                                  CodegenContextPtr ctx,
-                                  MultiCValuePtr out) = 0;
+    void loadStructRetArgument(CallingConv conv,
+                               TypePtr type,
+                               vector<llvm::Value *> &llArgs,
+                               vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                               CodegenContextPtr ctx,
+                               MultiCValuePtr out);
+    void loadArgument(CallingConv conv,
+                      CValuePtr cv,
+                      vector<llvm::Value *> &llArgs,
+                      vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                      CodegenContextPtr ctx);
+    void loadVarArgument(CallingConv conv,
+                         CValuePtr cv,
+                         vector<llvm::Value *> &llArgs,
+                         vector< pair<unsigned, llvm::Attributes> > &llAttributes,
+                         CodegenContextPtr ctx);
+    void storeReturnValue(CallingConv conv,
+                          llvm::Value *callReturnValue,
+                          TypePtr returnType,
+                          CodegenContextPtr ctx,
+                          MultiCValuePtr out);
 };
 
 typedef Pointer<ExternalTarget> ExternalTargetPtr;
 
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
+
 
 #endif

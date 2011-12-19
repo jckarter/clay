@@ -1,5 +1,21 @@
 
-import math.(abs,sqrt);
+import math.(abs,sqrt,sin,cos,hypot);
+
+
+[U | Complex?(U)]
+inline overload abs(x:U) = hypot(real(x),imagValue(x));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload max(x:T,y:C) = max(x,abs(y));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload max(x:C,y:T) = max(abs(x),y);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload min(x:T,y:C) = min(x,abs(y));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload min(x:C,y:T) = min(abs(x),y);
 
 [U | Complex?(U)]
 inline overload sqrt(z:U) --> c:U {
@@ -27,3 +43,11 @@ inline overload sqrt(z:U) --> c:U {
         }
     }
 }
+
+
+[I | Imaginary?(I)]
+inline overload sqrt(z:I) = sqrt(Complex(z));
+
+
+[T | Float?(T)]
+inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));

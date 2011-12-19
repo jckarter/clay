@@ -161,6 +161,12 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             case CC_FASTCALL :
                 head = primitive_FastCallCodePointer();
                 break;
+            case CC_THISCALL :
+                head = primitive_ThisCallCodePointer();
+                break;
+            case CC_LLVM :
+                head = primitive_LLVMCodePointer();
+                break;
             }
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
@@ -506,6 +512,8 @@ static bool isPatternHead(ObjectPtr x)
         case PRIM_VarArgsCCodePointer :
         case PRIM_StdCallCodePointer :
         case PRIM_FastCallCodePointer :
+        case PRIM_ThisCallCodePointer :
+        case PRIM_LLVMCodePointer :
 
         case PRIM_Array :
         case PRIM_Vec :
