@@ -1093,15 +1093,20 @@ static bool patternSuffix(IndexingPtr &x) {
 }
 
 static bool pattern(ExprPtr &x) {
+    LocationPtr start = currentLocation();
     if (!atomicPattern(x)) return false;
     int p = save();
     IndexingPtr y;
     if (!patternSuffix(y)) {
         restore(p);
+        x->startLocation = start;
+        x->endLocation = currentLocation();
         return true;
     }
     y->expr = x;
     x = y.ptr();
+    x->startLocation = start;
+    x->endLocation = currentLocation();
     return true;
 }
 
@@ -1739,7 +1744,10 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
 
 static bool varArgTypeSpec(ExprPtr &vargType) {
     if (!symbol(":")) return false;
+    LocationPtr start = currentLocation();
     if (!nameRef(vargType)) return false;
+    vargType->startLocation = start;
+    vargType->endLocation = currentLocation();
     return true;
 }
 
@@ -2292,7 +2300,9 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     bool isInline;
     if (!optInline(isInline)) return false;
     IdentifierPtr z;
+    LocationPtr targetStartLocation = currentLocation();
     if (!identifier(z)) return false;
+    LocationPtr targetEndLocation = currentLocation();
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!llvmCode(y->llvmBody)) return false;
@@ -2304,6 +2314,8 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(z);
     target->location = location;
+    target->startLocation = targetStartLocation;
+    target->endLocation = targetEndLocation;
     OverloadPtr v = new Overload(target, y, false, isInline);
     v->location = location;
     x.push_back(v.ptr());
@@ -2319,7 +2331,9 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
     IdentifierPtr name;
+    LocationPtr targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
+    LocationPtr targetEndLocation = currentLocation();
     if (!arguments(interfaceCode->formalArgs, interfaceCode->formalVarArg)) return false;
     interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
     if (!symbol(";")) return false;
@@ -2327,6 +2341,8 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(name);
     target->location = location;
+    target->startLocation = targetStartLocation;
+    target->endLocation = targetEndLocation;
     OverloadPtr interface = new Overload(target, interfaceCode, false, false);
     interface->location = location;
 
@@ -2348,7 +2364,9 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     bool callByName;
     if (!optCallByName(callByName)) return false;
     IdentifierPtr name;
+    LocationPtr targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
+    LocationPtr targetEndLocation = currentLocation();
     if (!arguments(code->formalArgs, code->formalVarArg)) return false;
     code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
     if (!body(code->body)) return false;
@@ -2360,6 +2378,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 
     ExprPtr target = new NameRef(name);
     target->location = location;
+    target->startLocation = targetStartLocation;
+    target->endLocation = targetEndLocation;
     OverloadPtr oload = new Overload(target, code, callByName, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
@@ -2372,35 +2392,40 @@ static bool procedure(TopLevelItemPtr &x) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
-    IdentifierPtr y;
-    if (!identifier(y)) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
     if (!symbol(";")) return false;
-    x = new Procedure(y, vis);
+    x = new Procedure(name, vis);
     x->location = location;
     return true;
 }
 
 static bool overload(TopLevelItemPtr &x) {
     LocationPtr location = currentLocation();
-    CodePtr y = new Code();
-    if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
+    CodePtr code = new Code();
+    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     bool isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
-    ExprPtr z;
-    if (!pattern(z)) return false;
-    if (!arguments(y->formalArgs, y->formalVarArg)) return false;
-    y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
+    ExprPtr target;
+    LocationPtr targetStartLocation = currentLocation();
+    if (!pattern(target)) return false;
+    LocationPtr targetEndLocation = currentLocation();
+    if (!arguments(code->formalArgs, code->formalVarArg)) return false;
+    code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
     int p = save();
-    if (!optBody(y->body)) {
+    if (!optBody(code->body)) {
         restore(p);
         if (callByName) return false;
-        if (!llvmCode(y->llvmBody)) return false;
+        if (!llvmCode(code->llvmBody)) return false;
     }
-    y->location = location;
-    x = new Overload(z, y, callByName, isInline);
+    target->location = location;
+    target->startLocation = targetStartLocation;
+    target->endLocation = targetEndLocation;
+    code->location = location;
+    x = new Overload(target, code, callByName, isInline);
     x->location = location;
     return true;
 }

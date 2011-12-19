@@ -975,6 +975,8 @@ struct Expr : public ANode {
         : ANode(EXPRESSION), exprKind(exprKind) {}
 
     string asString() {
+        if (startLocation == NULL || endLocation == NULL)
+            return "<generated expression>";
         assert(startLocation->source == endLocation->source);
         char *data = startLocation->source->data;
         return string(data + startLocation->offset, data + endLocation->offset);
@@ -2910,6 +2912,7 @@ enum MatchCode {
     MATCH_CALLABLE_ERROR,
     MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
+    MATCH_MULTI_ARGUMENT_ERROR,
     MATCH_PREDICATE_ERROR
 };
 
@@ -2942,25 +2945,45 @@ struct MatchSuccess : public MatchResult {
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
 struct MatchCallableError : public MatchResult {
-    MatchCallableError()
-        : MatchResult(MATCH_CALLABLE_ERROR) {}
+    ExprPtr patternExpr;
+    ObjectPtr callable;
+    MatchCallableError(ExprPtr patternExpr, ObjectPtr callable)
+        : MatchResult(MATCH_CALLABLE_ERROR), patternExpr(patternExpr), callable(callable) {}
 };
 
 struct MatchArityError : public MatchResult {
-    MatchArityError()
-        : MatchResult(MATCH_ARITY_ERROR) {}
+    unsigned expectedArgs;
+    unsigned gotArgs;
+    bool variadic;
+    MatchArityError(unsigned expectedArgs, unsigned gotArgs, bool variadic)
+        : MatchResult(MATCH_ARITY_ERROR),
+          expectedArgs(expectedArgs),
+          gotArgs(gotArgs),
+          variadic(variadic) {}
 };
 
 struct MatchArgumentError : public MatchResult {
     unsigned argIndex;
-    FormalArgPtr argument;
-    MatchArgumentError(unsigned argIndex, FormalArgPtr argument)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex), argument(argument) {}
+    TypePtr type;
+    FormalArgPtr arg;
+    MatchArgumentError(unsigned argIndex, TypePtr type, FormalArgPtr arg)
+        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex),
+            type(type), arg(arg) {}
+};
+
+struct MatchMultiArgumentError : public MatchResult {
+    unsigned argIndex;
+    MultiStaticPtr types;
+    FormalArgPtr varArg;
+    MatchMultiArgumentError(unsigned argIndex, MultiStaticPtr types, FormalArgPtr varArg)
+        : MatchResult(MATCH_MULTI_ARGUMENT_ERROR),
+            argIndex(argIndex), types(types), varArg(varArg) {}
 };
 
 struct MatchPredicateError : public MatchResult {
-    MatchPredicateError()
-        : MatchResult(MATCH_PREDICATE_ERROR) {}
+    ExprPtr predicateExpr;
+    MatchPredicateError(ExprPtr predicateExpr)
+        : MatchResult(MATCH_PREDICATE_ERROR), predicateExpr(predicateExpr) {}
 };
 
 MatchResultPtr matchInvoke(OverloadPtr overload,

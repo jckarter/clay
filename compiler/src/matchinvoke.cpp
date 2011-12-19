@@ -88,16 +88,16 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     PatternReseter reseter(overload);
 
     if (!unifyPatternObj(overload->callablePattern, callable))
-        return new MatchCallableError();
+        return new MatchCallableError(overload->target, callable);
 
     CodePtr code = overload->code;
     if (code->formalVarArg.ptr()) {
         if (argsKey.size() < code->formalArgs.size())
-            return new MatchArityError();
+            return new MatchArityError(argsKey.size(), code->formalArgs.size(), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
-            return new MatchArityError();
+            return new MatchArityError(argsKey.size(), code->formalArgs.size(), false);
     }
 
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
@@ -106,7 +106,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (x->type.ptr()) {
             PatternPtr pattern = overload->argPatterns[i];
             if (!unifyPatternObj(pattern, argsKey[i].ptr()))
-                return new MatchArgumentError(i, x);
+                return new MatchArgumentError(i, argsKey[i], x);
         }
     }
     if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
@@ -114,7 +114,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i)
             types->add(argsKey[i].ptr());
         if (!unifyMulti(overload->varArgPattern, types))
-            return new MatchArgumentError(formalArgs.size(), NULL);
+            return new MatchMultiArgumentError(formalArgs.size(), types, code->formalVarArg);
     }
 
     EnvPtr staticEnv = new Env(overload->env);
@@ -138,7 +138,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     
     if (code->predicate.ptr()) {
         if (!evaluateBool(code->predicate, staticEnv))
-            return new MatchPredicateError();
+            return new MatchPredicateError(code->predicate);
     }
 
     MatchSuccessPtr result = new MatchSuccess(
@@ -166,21 +166,40 @@ void printMatchError(ostream &os, MatchResultPtr result)
         assert(false);
         break;
     case MATCH_CALLABLE_ERROR : {
-        os << "callable pattern did not match";
+        MatchCallableError *e = (MatchCallableError*)result.ptr();
+        os << "callable pattern \"" << shortString(e->patternExpr->asString());
+        os << "\" did not match \"";
+        printStaticName(os, e->callable);
+        os << "\"";
         break;
     }
     case MATCH_ARITY_ERROR : {
-        os << "incorrect number of arguments";
+        MatchArityError *e = (MatchArityError*)result.ptr();
+        os << "incorrect number of arguments: expected ";
+        if (e->variadic)
+            os << "at least ";
+        os << e->expectedArgs << " arguments, got " << e->gotArgs << " arguments";
         break;
     }
     case MATCH_ARGUMENT_ERROR : {
         MatchArgumentError *e = (MatchArgumentError *)result.ptr();
-        os << "argument pattern did not match at argument " << e->argIndex + 1;
+        os << "pattern \"" << shortString(e->arg->type->asString());
+        os << "\" did not match type \"";
+        printStaticName(os, e->type.ptr());
+        os << "\" of argument " << e->argIndex + 1;
         break;
     }
-    case MATCH_PREDICATE_ERROR :
-        os << "predicate failed";
+    case MATCH_MULTI_ARGUMENT_ERROR : {
+        MatchMultiArgumentError *e = (MatchMultiArgumentError *)result.ptr();
+        os << "variadic argument type pattern did not match types of arguments ";
+        os << "starting at " << e->argIndex + 1;
         break;
+    }
+    case MATCH_PREDICATE_ERROR : {
+        MatchPredicateError *e = (MatchPredicateError *)result.ptr();
+        os << "predicate \"" << shortString(e->predicateExpr->asString()) << "\" failed";
+        break;
+    }
     default :
         assert(false);
         break;
