@@ -7,6 +7,7 @@ import pickle
 import platform
 import signal
 import sys
+from StringIO import StringIO
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
 import time
@@ -142,34 +143,34 @@ class TestCase(object):
             errpattern = errpattern.replace('\r', '').strip()
 
             if returncode != "compiler error":
-                print >>testLogFile, "compiler did not fail"
-                print >>testLogFile, "expected error pattern"
-                print >>testLogFile, "----------------------"
-                print >>testLogFile, errpattern
+                print >>self.testLogBuffer, "compiler did not fail"
+                print >>self.testLogBuffer, "expected error pattern"
+                print >>self.testLogBuffer, "----------------------"
+                print >>self.testLogBuffer, errpattern
                 return "compiler did not fail"
             if re.search(errpattern, resulterr):
                 return "ok"
             else:
-                print >>testLogFile, "unexpected compiler error"
-                print >>testLogFile, "expected error pattern"
-                print >>testLogFile, "----------------------"
-                print >>testLogFile, errpattern
-                print >>testLogFile, "---------------------"
-                print >>testLogFile, "actual compiler error"
-                print >>testLogFile, "---------------------"
-                print >>testLogFile, resulterr
+                print >>self.testLogBuffer, "unexpected compiler error"
+                print >>self.testLogBuffer, "expected error pattern"
+                print >>self.testLogBuffer, "----------------------"
+                print >>self.testLogBuffer, errpattern
+                print >>self.testLogBuffer, "---------------------"
+                print >>self.testLogBuffer, "actual compiler error"
+                print >>self.testLogBuffer, "---------------------"
+                print >>self.testLogBuffer, resulterr
                 return "unexpected compiler error"
 
         else:
             if returncode == "compiler error":
-                print >>testLogFile, "compiler error"
-                print >>testLogFile, "--------------"
-                print >>testLogFile, resulterr
+                print >>self.testLogBuffer, "compiler error"
+                print >>self.testLogBuffer, "--------------"
+                print >>self.testLogBuffer, resulterr
                 return "compiler error"
             outfile = fileForPlatform(".", "out", "txt")
             errfile = fileForPlatform(".", "err", "txt")
             if not os.path.isfile(outfile) :
-                print >>testLogFile, "out.txt missing"
+                print >>self.testLogBuffer, "out.txt missing"
                 return "out.txt missing"
             refout = open(outfile).read()
             referr = ""
@@ -182,57 +183,60 @@ class TestCase(object):
             if resultout == refout and resulterr == referr:
                 return "ok"
             elif resultout != refout and resulterr != referr:
-                print >>testLogFile, "out.txt and err.txt mismatch"
-                print >>testLogFile, "expected out.txt"
-                print >>testLogFile, "----------------"
-                print >>testLogFile, refout
-                print >>testLogFile, "-------------"
-                print >>testLogFile, "actual output"
-                print >>testLogFile, "-------------"
-                print >>testLogFile, resultout
-                print >>testLogFile, "----------------"
-                print >>testLogFile, "expected err.txt"
-                print >>testLogFile, "----------------"
-                print >>testLogFile, referr
-                print >>testLogFile, "-------------"
-                print >>testLogFile, "actual stderr"
-                print >>testLogFile, "-------------"
-                print >>testLogFile, resulterr
+                print >>self.testLogBuffer, "out.txt and err.txt mismatch"
+                print >>self.testLogBuffer, "expected out.txt"
+                print >>self.testLogBuffer, "----------------"
+                print >>self.testLogBuffer, refout
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, "actual output"
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, resultout
+                print >>self.testLogBuffer, "----------------"
+                print >>self.testLogBuffer, "expected err.txt"
+                print >>self.testLogBuffer, "----------------"
+                print >>self.testLogBuffer, referr
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, "actual stderr"
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, resulterr
                 return "out.txt and err.txt mismatch"
             elif resultout != refout:
-                print >>testLogFile, "out.txt mismatch"
-                print >>testLogFile, "expected out.txt"
-                print >>testLogFile, "----------------"
-                print >>testLogFile, refout
-                print >>testLogFile, "-------------"
-                print >>testLogFile, "actual output"
-                print >>testLogFile, "-------------"
-                print >>testLogFile, resultout
+                print >>self.testLogBuffer, "out.txt mismatch"
+                print >>self.testLogBuffer, "expected out.txt"
+                print >>self.testLogBuffer, "----------------"
+                print >>self.testLogBuffer, refout
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, "actual output"
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, resultout
                 return "out.txt mismatch"
             elif resulterr != referr:
-                print >>testLogFile, "err.txt mismatch"
-                print >>testLogFile, "expected err.txt"
-                print >>testLogFile, "----------------"
-                print >>testLogFile, referr
-                print >>testLogFile, "-------------"
-                print >>testLogFile, "actual stderr"
-                print >>testLogFile, "-------------"
-                print >>testLogFile, resulterr
+                print >>self.testLogBuffer, "err.txt mismatch"
+                print >>self.testLogBuffer, "expected err.txt"
+                print >>self.testLogBuffer, "----------------"
+                print >>self.testLogBuffer, referr
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, "actual stderr"
+                print >>self.testLogBuffer, "-------------"
+                print >>self.testLogBuffer, resulterr
                 return "err.txt mismatch"
 
     def run(self):
-        print >>testLogFile
-        print >>testLogFile, "====================="
-        print >>testLogFile, self.name()
-        print >>testLogFile, "====================="
+        self.testLogBuffer = StringIO()
+        print >>self.testLogBuffer
+        print >>self.testLogBuffer, "====================="
+        print >>self.testLogBuffer, self.name()
+        print >>self.testLogBuffer, "====================="
         os.chdir(self.path)
         self.pre_build()
         self.post_build()
         resultout, resulterr, returncode = self.runtest()
         self.post_run()
         r = self.match(resultout, resulterr, returncode)
-        testLogFile.flush()
-        return r
+        log = self.testLogBuffer.getvalue()
+        self.testLogBuffer.close()
+
+        return (r, log)
 
     def name(self):
         return os.path.relpath(self.path, testRoot)
@@ -272,14 +276,14 @@ class TestModuleCase(TestCase):
         if returncode == 0:
             return "ok"
         elif returncode == "compiler error":
-            print >>testLogFile, "compiler error"
-            print >>testLogFile, "--------------"
-            print >>testLogFile, resulterr
+            print >>self.testLogBuffer, "compiler error"
+            print >>self.testLogBuffer, "--------------"
+            print >>self.testLogBuffer, resulterr
             return "compiler error"
         else:
-            print >>testLogFile, "fail"
-            print >>testLogFile, "----"
-            print >>testLogFile, resultout
+            print >>self.testLogBuffer, "fail"
+            print >>self.testLogBuffer, "----"
+            print >>self.testLogBuffer, resultout
             return "fail"
 
 class TestDisabledCase(TestCase):
@@ -326,7 +330,10 @@ def runTests() :
     disabled = []
     try:
         for test in testcases:
-            res = results.next()
+            res, log = results.next()
+            if res != "ok" and res != "disabled":
+                print >>testLogFile, log,
+            testLogFile.flush()
             print "TEST %s: %s" % (test.name(), res)
             if res == "disabled":
                 disabled.append(test.name())
