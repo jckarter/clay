@@ -84,7 +84,7 @@ overload printTo(stream, x:UInt128) {
 
 
 overload printTo(stream, x:Complex80) {
-    printWithSprintf(stream, "%.20Lg%+.20Lgj", ..rectValues(x));
+    printWithSprintf(stream, "%.19Lg%+.19Lgj", ..rectValues(x));
 }
 
 overload printTo(stream, x:Complex64) {
@@ -96,7 +96,7 @@ overload printTo(stream, x:Complex32) {
 }
 
 overload printTo(stream, x:Imag80) {
-    printWithSprintf(stream, "%.20Lgj", x);
+    printWithSprintf(stream, "%.19Lgj", x);
 }
 
 overload printTo(stream, x:Imag64) {
@@ -108,11 +108,11 @@ overload printTo(stream, x:Imag32) {
 }
 
 overload printTo(stream, x:LongDouble) {
-    printWithSprintf(stream, "%.20Lg", LongDouble(x));
+    printWithSprintf(stream, "%.19Lg", x);
 }
 
 overload printTo(stream, x:Double) {
-    printWithSprintf(stream, "%.16g", Double(x));
+    printWithSprintf(stream, "%.16g", x);
 }
 overload printTo(stream, x:Float) {
     printWithSprintf(stream, "%.8g", Double(x));

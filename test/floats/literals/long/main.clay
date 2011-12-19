@@ -2,6 +2,6 @@ import printer.formatter.(repr);
 
 main() {
     println(repr(0x1.0000_0000_0000_0002p0l));
-    println(repr(0x1.0000_0000_0000_0001p0l));
+    println(repr(0x1.0000_0000_0000_0000p0l));
     println(repr(0x1.0000_0000_0000_0003p0l));
 }
