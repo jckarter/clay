@@ -247,7 +247,8 @@ visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
         printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
-            clang_getEnumConstantDeclValue(cursor), ";");
+            convertType(clang_getEnumDeclIntegerType(parent), parent), "(",
+            clang_getEnumConstantDeclValue(cursor), ");");
     }
     else {
     }
@@ -412,8 +413,15 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     case (CXCursor_TypedefDecl) {
         var name = str(clang_getCursorSpelling(cursor));
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
-        printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
-            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
+        var underlyingCursor = clang_getTypeDeclaration(underlyingType);
+        if (underlyingCursor.kind == CXCursor_EnumDecl) {
+            printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
+                convertType(clang_getEnumDeclIntegerType(underlyingCursor), underlyingCursor),
+                ";\n");
+        } else {
+            printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
+                convertType(underlyingType, cursor), ";\n");
+        }
         opaqueType(underlyingType);
 
         return CXChildVisit_Continue;
