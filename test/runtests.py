@@ -124,7 +124,7 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        return [clay, "-I" + self.path, "-o", "test.exe"] + self.buildflags + [self.testfile]
+        return [clay, "-I" + self.path, "-o", "test.exe"] + testBuildFlags + self.buildflags + [self.testfile]
 
     def pre_build(self) :
         pass
@@ -356,20 +356,29 @@ def runTests() :
     print "Test log written to testlog.txt"
 
 def usage(argv0):
-    print "Usage: %s [root] [root...]" % argv0
+    print "Usage: %s [buildflags... --] [root] [root...]" % argv0
     print "  Runs the Clay test suite. If any root paths are given, only tests"
     print "  in those subdirectories (paths relative to the test/ directory) will"
-    print "  be run."
+    print "  be run. Build flags can be passed to the compiler followed by '--'."
 
 def main() :
+    global testBuildFlags
     global testRoot
     global runTestRoot
     if len(sys.argv) > 1 :
         if sys.argv[1] == "--help" or sys.argv[1] == "/?":
             usage(sys.argv[0])
             return
-        runTestRoot = os.path.join(testRoot, *sys.argv[1:])
+
+        try:
+            buildFlagSeparator = sys.argv.index("--")
+            testBuildFlags = sys.argv[1:buildFlagSeparator]
+            runTestRoot = os.path.join(testRoot, *sys.argv[buildFlagSeparator+1:])
+        except ValueError:
+            testBuildFlags = []
+            runTestRoot = os.path.join(testRoot, *sys.argv[1:])
     else:
+        testBuildFlags = []
         runTestRoot = testRoot
     startTime = time.time()
     runTests()
