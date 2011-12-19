@@ -12,19 +12,15 @@ Pre-requisites
 
 Clay requires LLVM 3.0 and CMake version 2.6 or later.
 
-NOTE: LLVM builds in debug mode by default. This makes the
-Clay compiler crawl. If you're building LLVM from source, configure it
-with "./configure --enable-optimized" for good performance.
+NOTE: The version of libclang included in clang 3.0 is missing
+some features necessary to build the bindgen tool. To build bindgen,
+a patch against the clang 3.0 source is provided in tools/libclang.diff.
 
-NOTE 2: The stock version of libclang included in LLVM 3.0 is missing
-some features necessary to build the bindgen tool. To build bindgen, a patch
-against the clang source is provided in tools/libclang.diff.
-
-Build Clay
-----------
+Build Clay on Unix-like Systems
+-------------------------------
 
 To build Clay, first run cmake to generate the Makefiles and then run make.
-CMake can also build project files for IDE's such as Xcode. Look at CMake 
+CMake can also build project files for IDEs such as Xcode. Look at CMake 
 documentation for how to build those. It is recommended that Clay be built 
 in a separate build directory.
 
@@ -33,11 +29,11 @@ in a separate build directory.
     cmake -G "Unix Makefiles" ../
     make
 
-The default installation directory for Clay will is /usr/local. To change 
+The default installation directory for Clay is /usr/local. To change 
 the installation path, pass -DCMAKE_INSTALL_PREFIX=/my/path to cmake.
 
-To install Clay run 
-    
+To install Clay run
+
     make install
 
 To run the test suite
@@ -51,3 +47,21 @@ To compile a clay source file run
 The generated binary
 
     ./hello
+
+Build Clay on Windows with Visual C++
+-------------------------------------
+
+I use Visual C++ Express 2010 to build LLVM and Clay for Windows.
+From a Visual Studio command prompt, build LLVM and Clang using cmake
+and the MSVC compiler. Then to build Clay, run CMake and generate
+nmake makefiles:
+
+    mkdir build
+    cd build
+    cmake -G "NMake Makefiles" -DLLVM_DIR=<path to LLVM> ..
+    nmake
+
+Building to target Cygwin or Mingw, or with Visual C++ using cmake's
+Visual Studio Solution generator, may also work, but I haven't tried
+it.
+
