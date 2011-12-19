@@ -2,4 +2,11 @@ main() {
     println(Int8("111"));
     println(Int16("222"));
     println(Int32("333"));
+    println(Int64("444"));
+    println(Float32("1.2"));
+    println(Float64("3.4"));
+    println(Float80("4.5"));
+    println(Imag32("5.5"));
+    println(Imag64("6.7"));
+    println(Imag80("7.75"));
 }
