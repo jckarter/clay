@@ -3,6 +3,49 @@ import numbers.parser.errno.*;
 import printer.formatter.(repr);
 
 
+
+//
+// Generic parsers
+//
+[S | CCompatibleString?(S)]
+parseIntWith(s:S, intType, convFunc) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = convFunc(p, &end, 0);
+    var typeName = StaticName(intType);
+    if (end^ != 0)
+        error("invalid " + typeName + ": ", repr(s));
+    if ((errno() == ERANGE) or value < Least(intType) or value > Greatest(intType))
+        error(typeName + " out of range: ", repr(s));
+    return intType(value);
+}
+
+[S | CCompatibleString?(S)]
+parseFloatWith(s:S, floatType, convFunc) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = convFunc(p, &end);
+    var typeName = StaticName(floatType);
+    if (end^ != 0)
+        error("invalid " + typeName + ": ", repr(s));
+    if (errno() == ERANGE)
+        error(typeName + " out of range: ", repr(s));
+    return floatType(value);
+}
+
+[S | CCompatibleString?(S)]
+parseImagWith(s:S, imagType, convFunc) {
+    var p = cstring(s);
+    var end = null(CChar);
+    var value = convFunc(p, &end);
+    var typeName = StaticName(imagType);
+    if (end^ != 0)
+        error("invalid " + typeName + ": ", repr(s));
+    if (errno() == ERANGE)
+        error(typeName + " out of range: ", repr(s));
+    return numericConvert(imagType,value);
+}
+
 //
 // parseInt8, parseUInt8
 //
@@ -11,32 +54,13 @@ import printer.formatter.(repr);
 parseInt8(s:S) = parseInt8(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseInt8(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtol(p, &end, 0);
-    if (end^ != 0)
-        error("invalid Int8: ", repr(s));
-    if ((errno() == ERANGE) or value < Least(Int8) or value > Greatest(Int8))
-        error("Int8 out of range: ", repr(s));
-    return Int8(value);
-}
+overload parseInt8(s:S) = parseIntWith(s, Int8, libc.strtol);
 
 [S | String?(S)]
 parseUInt8(s:S) = parseUInt8(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseUInt8(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoul(p, &end, 0);
-    if (end^ != 0)
-        error("invalid UInt8: ", repr(s));
-    if ((errno() == ERANGE) or value > Greatest(UInt8))
-        error("UInt8 out of range: ", repr(s));
-    return UInt8(value);
-}
-
+overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
 
 
 //
@@ -47,32 +71,13 @@ overload parseUInt8(s:S) {
 parseInt16(s:S) = parseInt16(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseInt16(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtol(p, &end, 0);
-    if (end^ != 0)
-        error("invalid Int16: ", repr(s));
-    if ((errno() == ERANGE) or value < Least(Int16) or value > Greatest(Int16))
-        error("Int16 out of range: ", repr(s));
-    return Int16(value);
-}
+overload parseInt16(s:S) = parseIntWith(s, Int16, libc.strtol);
 
 [S | String?(S)]
 parseUInt16(s:S) = parseUInt16(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseUInt16(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoul(p, &end, 0);
-    if (end^ != 0)
-        error("invalid UInt16: ", repr(s));
-    if ((errno() == ERANGE) or value > Greatest(UInt16))
-        error("UInt16 out of range: ", repr(s));
-    return UInt16(value);
-}
-
+overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
 
 
 //
@@ -83,32 +88,13 @@ overload parseUInt16(s:S) {
 parseInt32(s:S) = parseInt32(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseInt32(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoll(p, &end, 0);
-    if (end^ != 0)
-        error("invalid Int32: ", repr(s));
-    if ((errno() == ERANGE) or (value < Least(Int32)) or (value > Greatest(Int32)))
-        error("Int32 out of range: ", repr(s));
-    return Int32(value);
-}
+overload parseInt32(s:S) = parseIntWith(s, Int32, libc.strtoll);
 
 [S | String?(S)]
 parseUInt32(s:S) = parseUInt32(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseUInt32(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoull(p, &end, 0);
-    if (end^ != 0)
-        error("invalid UInt32: ", repr(s));
-    if ((errno() == ERANGE) or (value > Greatest(UInt32)))
-        error("UInt32 out of range: ", repr(s));
-    return UInt32(value);
-}
-
+overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoull);
 
 
 //
@@ -119,32 +105,13 @@ overload parseUInt32(s:S) {
 parseInt64(s:S) = parseInt64(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseInt64(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoll(p, &end, 0);
-    if (end^ != 0)
-        error("invalid Int64: ", repr(s));
-    if (errno() == ERANGE)
-        error("Int64 out of range: ", repr(s));
-    return Int64(value);
-}
+overload parseInt64(s:S) = parseIntWith(s, Int64, libc.strtoll);
 
 [S | String?(S)]
 parseUInt64(s:S) = parseUInt64(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseUInt64(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtoull(p, &end, 0);
-    if (end^ != 0)
-        error("invalid UInt64: ", repr(s));
-    if (errno() == ERANGE)
-        error("UInt64 out of range: ", repr(s));
-    return UInt64(value);
-}
-
+overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
 
 
 //
@@ -155,17 +122,7 @@ overload parseUInt64(s:S) {
 parseFloat32(s:S) = parseFloat32(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseFloat32(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtof(p, &end);
-    if (end^ != 0)
-        error("invalid Float32: ", repr(s));
-    if (errno() == ERANGE)
-        error("Float32 out of range: ", repr(s));
-    return Float32(value);
-}
-
+overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtof);
 
 
 //
@@ -176,17 +133,7 @@ overload parseFloat32(s:S) {
 parseFloat64(s:S) = parseFloat64(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseFloat64(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtod(p, &end);
-    if (end^ != 0)
-        error("invalid Float64: ", repr(s));
-    if (errno() == ERANGE)
-        error("Float64 out of range: ", repr(s));
-    return Float64(value);
-}
-
+overload parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
 
 //
 // parseFloat80
@@ -196,18 +143,7 @@ overload parseFloat64(s:S) {
 parseFloat80(s:S) = parseFloat80(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseFloat80(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtold(p, &end);
-    if (end^ != 0)
-        error("invalid Float80: ", repr(s));
-    if (errno() == ERANGE)
-        error("Float80 out of range: ", repr(s));
-    return Float80(value);
-}
-
-
+overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
 
 
 //
@@ -218,17 +154,7 @@ overload parseFloat80(s:S) {
 parseImag32(s:S) = parseImag32(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseImag32(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtof(p, &end);
-    if (end^ != 0)
-        error("invalid Imag32: ", repr(s));
-    if (errno() == ERANGE)
-        error("Imag32 out of range: ", repr(s));
-    return numericConvert(Imag32,value);
-}
-
+overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtof);
 
 
 //
@@ -239,16 +165,7 @@ overload parseImag32(s:S) {
 parseImag64(s:S) = parseImag64(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseImag64(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtod(p, &end);
-    if (end^ != 0)
-        error("invalid Complex64: ", repr(s));
-    if (errno() == ERANGE)
-        error("Complex64 out of range: ", repr(s));
-    return numericConvert(Imag64,value);
-}
+overload parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
 
 //
 // parseComplex80
@@ -258,13 +175,4 @@ overload parseImag64(s:S) {
 parseImag80(s:S) = parseImag80(String(s));
 
 [S | CCompatibleString?(S)]
-overload parseImag80(s:S) {
-    var p = cstring(s);
-    var end = null(CChar);
-    var value = libc.strtold(p, &end);
-    if (end^ != 0)
-        error("invalid Complex80: ", repr(s));
-    if (errno() == ERANGE)
-        error("Complex80 out of range: ", repr(s));
-    return numericConvert(Imag80,value);
-}
+overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
