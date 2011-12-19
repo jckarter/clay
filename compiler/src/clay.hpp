@@ -2177,6 +2177,7 @@ void printName(ostream &out, ObjectPtr x);
 void printTypeAndValue(ostream &out, EValuePtr ev);
 void printValue(ostream &out, EValuePtr ev);
 
+string shortString(string const &in);
 
 
 //

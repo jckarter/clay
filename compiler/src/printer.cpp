@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include <cctype>
 #include <sstream>
 
 using namespace std;
@@ -1053,4 +1054,22 @@ void printValue(ostream &out, EValuePtr ev)
     default :
         break;
     }
+}
+
+string shortString(string const &in) {
+    string out;
+    bool wasSpace = false;
+
+    for (string::const_iterator i = in.begin(); i != in.end(); ++i) {
+        if (isspace(*i)) {
+            if (!wasSpace) {
+                out.push_back(' ');
+                wasSpace = true;
+            }
+        } else {
+            out.push_back(*i);
+            wasSpace = false;
+        }
+    }
+    return out;
 }
