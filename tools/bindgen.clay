@@ -327,7 +327,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
                 CXClientData(&unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         }
-        return CXChildVisit_Continue;
+        return CXChildVisit_Recurse;
     }
     case (CXCursor_UnionDecl) {
         withForwardDecl(cursor): () -> {
@@ -335,7 +335,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
             printlnTo(g_bindingsOut, "];\n");
         }
-        return CXChildVisit_Continue;
+        return CXChildVisit_Recurse;
     }
     case (CXCursor_EnumDecl) {
         withForwardDecl(cursor): () -> {
@@ -416,6 +416,9 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
         opaqueType(underlyingType);
 
+        return CXChildVisit_Continue;
+    }
+    case (CXCursor_FieldDecl) {
         return CXChildVisit_Continue;
     }
     return CXChildVisit_Recurse;
