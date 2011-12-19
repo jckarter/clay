@@ -44,5 +44,10 @@ inline overload sqrt(z:U) --> c:U {
     }
 }
 
+
+[I | Imaginary?(I)]
+inline overload sqrt(z:I) = sqrt(Complex(z));
+
+
 [T | Float?(T)]
 inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
