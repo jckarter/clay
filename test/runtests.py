@@ -24,6 +24,7 @@ testLogFile = open("testlog.txt", "w")
 # testRoot
 #
 
+testBuildFlags = []
 testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
 
@@ -362,7 +363,6 @@ def usage(argv0):
     print "  be run. Build flags can be passed to the compiler followed by '--'."
 
 def main() :
-    global testBuildFlags
     global testRoot
     global runTestRoot
     if len(sys.argv) > 1 :
