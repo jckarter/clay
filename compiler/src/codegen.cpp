@@ -5811,7 +5811,7 @@ static CodegenContextPtr makeSimpleContext(const char *name)
                                 false);
     llvm::Function *initGlobals =
         llvm::Function::Create(llFuncType,
-                               llvm::Function::ExternalLinkage,
+                               llvm::Function::InternalLinkage,
                                name,
                                llvmModule);
 
