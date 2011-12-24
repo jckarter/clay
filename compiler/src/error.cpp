@@ -179,7 +179,7 @@ static void displayCompileContext() {
         ObjectPtr obj = contextStack[i-1].callable;
         const vector<ObjectPtr> &params = contextStack[i-1].params;
 
-        if (i >= 1 && contextStack[i-1].location != NULL) {
+        if (i < contextStack.size() && contextStack[i-1].location != NULL) {
             ostringstream locout;
             printFileLineCol(locout, contextStack[i-1].location);
             fprintf(stderr, "  %s:\n", locout.str().c_str());
