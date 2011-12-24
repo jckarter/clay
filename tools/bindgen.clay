@@ -111,7 +111,7 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
 
 convertTypeFromDeclaration(declaration:CXCursor) : String {
     switch (declaration.kind)
-    case (CXCursor_StructDecl, CXCursor_UnionDecl)
+    case (CXCursor_StructDecl, CXCursor_UnionDecl, CXCursor_EnumDecl)
         return nameForDeclaration(declaration);
     case (CXCursor_TypedefDecl)
         return clayIdentifier(str(clang_getCursorSpelling(declaration)));
