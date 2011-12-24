@@ -4,9 +4,9 @@
 
 Tool changes:
 -------------
-* A "clayfix" program is provided to update code written for Clay 0.0 to
+* A "clay-fix" program is provided to update code written for Clay 0.0 to
   compile in 0.1. It is fairly simple at this point, but most converted code
-  should just work. Changes that can't be clayfix-ed are noted in this
+  should just work. Changes that can't be fixed are noted in this
   changelog.
 * "clay-bindgen" has been rewritten in Clay, using the libclang C library.
 
@@ -95,7 +95,7 @@ Language changes:
 * Universal pattern overloads have been unrestricted. '[F|Foo?(F)] F() {}'
   will now overload all symbols matching 'Foo?(F)' instead of only type
   symbols. Universe overloads also now have lower precedence than specific
-  overloads. This change may break code even after it has been clayfix-ed.
+  overloads. This change may break code even after it has been fixed.
 
 * Function arguments are now passed by noalias nocapture reference. Mutated
   arguments should not alias, and taking pointers to arguments that outlive
@@ -213,7 +213,7 @@ Language changes:
     CodePointer[[Int, Float], [String]]
     CodePointer[[Int], [String, Char]]
 
-  clayfix's logic for fixing CodePointer types is pretty rudimentary and may
+  clay-fix's logic for fixing CodePointer types is pretty rudimentary and may
   break code that tries to be fancy. It will add a tuple around any single
   expression in the input or output field that isn't already in parentheses.
 
@@ -264,7 +264,7 @@ Language changes:
 
 * "ref x = y;" will now only bind references to lvalues. The old behavior of
   implicitly capturing rvalues or referencing lvalues is provided by
-  'forward x = y;" now. clayfix will convert all "ref" bindings to "forward"
+  'forward x = y;" now. clay-fix will convert all "ref" bindings to "forward"
   bindings. Statement forms that implicitly created "ref" bindings, such as
   "for" and "..for" loops, now create "forward" bindings.
     // 0.0
@@ -436,7 +436,7 @@ Library changes:
         ...
     }
 
-  clayfix conservatively converts calls to "match" to "matchByType", which
+  clay-fix conservatively converts calls to "match" to "matchByType", which
   retains the previous interface.
 
 Compiler frontend changes:

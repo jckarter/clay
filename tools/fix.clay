@@ -4,7 +4,7 @@ import clay.common.(
     ClayError,
     displayError
 );
-import clayfix.v0_0.(
+import fix.v0_0.(
     fix as fix_0_0
 );
 import io.filesystem.(
@@ -14,7 +14,7 @@ import io.filesystem.(
 record InvalidFixerVersion (version:String);
 instance Exception (InvalidFixerVersion);
 overload printTo(s, ex:InvalidFixerVersion) {
-    printTo(s, "Invalid clayfix version: ", ex.version);
+    printTo(s, "Invalid clay-fix version: ", ex.version);
 }
 
 usage(argv0) : {
@@ -27,7 +27,7 @@ usage(argv0) : {
     println();
     println("*** IMPORTANT ***");
     println("Source files are updated in-place; make sure you've checked in before");
-    println("running clayfix so you can review or revert its changes!");
+    println("running clay-fix so you can review or revert its changes!");
 }
 
 alias Fixer = CodePointer[[SourceFile, File], []];
