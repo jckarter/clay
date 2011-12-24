@@ -1713,6 +1713,8 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
                         new NameRef(new Identifier("Static")));
 
     IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
+    indexing->startLocation = location;
+    indexing->endLocation = currentLocation();
 
     x = new FormalArg(argName, indexing.ptr());
     x->location = location;
