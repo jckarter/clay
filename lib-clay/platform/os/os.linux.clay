@@ -1,0 +1,4 @@
+import platform.symbols.(Linux, Unix);
+
+alias OS = Linux;
+alias OSFamily = Unix;

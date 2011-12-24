@@ -1,0 +1,4 @@
+import platform.symbols.(MacOSX, Unix);
+
+alias OS = MacOSX;
+alias OSFamily = Unix;

@@ -1,0 +1,4 @@
+import platform.symbols.(X86_32, X86);
+
+alias CPU = X86_32;
+alias CPUFamily = X86;

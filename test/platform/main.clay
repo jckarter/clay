@@ -1,0 +1,5 @@
+import platform.(OS, OSFamily, CPU, CPUFamily);
+
+main() {
+    println("ok");
+}
