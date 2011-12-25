@@ -687,25 +687,19 @@ static void _allMemory(vector<WordClass> &wordClasses)
     fill(wordClasses.begin(), wordClasses.end(), MEMORY);
 }
 
-static void _fixupClassification(vector<WordClass> &wordClasses)
+static void _fixupClassification(TypePtr type, vector<WordClass> &wordClasses)
 {
     vector<WordClass>::iterator i = wordClasses.begin(),
                                 end = wordClasses.end();
-    if (wordClasses.size() > 2) {
+    if (wordClasses.size() > 2 &&
+        (type->typeKind == ARRAY_TYPE || type->typeKind == RECORD_TYPE
+            || type->typeKind == VARIANT_TYPE || type->typeKind == UNION_TYPE
+            || type->typeKind == TUPLE_TYPE || type->typeKind == RECORD_TYPE))
+    {
         if (X86_64_ExternalTarget::isSSEClass(*i)) {
             ++i;
             for (; i != end; ++i) {
                 if (*i != SSEUP) {
-                    _allMemory(wordClasses);
-                    return;
-                }
-            }
-        // this goes against the documentation but it seems like it has to
-        // be this way for complex long double returns to work as advertised
-        } else if (*i == COMPLEX_X87) {
-            ++i;
-            for (; i != end; ++i) {
-                if (*i != COMPLEX_X87) {
                     _allMemory(wordClasses);
                     return;
                 }
@@ -721,7 +715,7 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
         }
         if (*i == X87UP) {
             // On MacOSX at least, X87UP words not preceded by X87 appear to get demoted
-            // to SSE rather than memory as specified in the documentation
+            // to SSE rather than to MEMORY as specified in the documentation
             //_allMemory(wordClasses);
             *i = SSE_DOUBLE_SCALAR;
             return;
@@ -748,7 +742,7 @@ vector<WordClass> X86_64_ExternalTarget::classifyType(TypePtr type)
         return wordClasses;
     }
     _classifyType(type, wordClasses.begin(), 0);
-    _fixupClassification(wordClasses);
+    _fixupClassification(type, wordClasses);
 
     return wordClasses;
 }
