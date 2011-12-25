@@ -438,6 +438,12 @@ overload fixAst(ast:Code, state:FixState) : {
     fixAst(ast.predicate, state);
     fixAst(ast.args, state);
 
+    fixCodeReturns(ast, state);
+
+    fixAst(ast.body, state);
+}
+
+private fixCodeReturns(ast:Code, state:FixState) : {
     if (not empty?(ast.returns)) {
         // We should ensure that named and unnamed returns aren't mixed here.
         if (nothing?(ast.returns[0].name))
@@ -446,7 +452,6 @@ overload fixAst(ast:Code, state:FixState) : {
             writeTokenPrefixed(astTokens(ast.returns[0]).begin, "--> ", state);
         fixAst(ast.returns, state);
     }
-    fixAst(ast.body, state);
 }
 
 // Convert external return type syntax.
@@ -875,7 +880,7 @@ overload fixAst(ast:Procedure, state:FixState) : {
 
         fixAst(ast.name, state);
         fixAst(code.args, state);
-        fixAst(code.returns, state);
+        fixCodeReturns(code, state);
         fixAst(code.body, state);
     }
 }
