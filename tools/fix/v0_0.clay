@@ -796,32 +796,39 @@ overload fixAst(ast:CaseBlock, state:FixState) : {
 // We need to check if there are breaks within a case body and transform those
 // into gotos.
 overload fixAst(ast:CaseBody, state:FixState) : {
-    var statementCount = size(ast.statements);
-    if (statementCount > 1 and variantIs?(back(ast.statements), Break))
+    fixCaseBodyStatements(ast.statements, state);
+    replaceToken(astTokens(ast).end - 1, state);
+}
+
+private fixCaseBodyStatements(statements:Vector[Statement], state:FixState) : {
+    var statementCount = size(statements);
+    if (statementCount >= 1 and variantIs?(back(statements), Break))
         dec(statementCount);
     if (statementCount == 1) {
-        var wasBlock = match(ast.statements[0]): (block:Block) -> {
-            // Since the switch fixing adds a set of braces for us, if
-            // the only statement is a block, we can eliminate the braces.
-            var blockStatementCount = size(block.statements);
-            if (blockStatementCount > 1 and variantIs?(back(ast.statements), Break))
-                dec(blockStatementCount);
-            replaceToken(astTokens(block).begin, state);
-            for (stmt in slicedUpto(block.statements, blockStatementCount))
-                fixAst(stmt, state);
-            writeUptoToken(astTokens(block).end - 1, state);
-            replaceToken(astTokens(block).end - 1, state);
-            return true;
-        } :: _ -> false;
-
-        if (wasBlock) return;
+        if (fixSingleCaseBodyStatement(statements[0], state))
+            return;
     }
 
-    for (stmt in slicedUpto(ast.statements, statementCount)) {
+    for (stmt in slicedUpto(statements, statementCount)) {
         fixAst(stmt, state);
         writeToken(astTokens(stmt).end - 1, state);
     }
-    replaceToken(astTokens(ast).end - 1, state);
+}
+
+fixSingleCaseBodyStatement(stmt:Statement, state:FixState) : Bool {
+    return match(stmt): (block:Block) -> {
+        // Since the switch fixing adds a set of braces for us, if
+        // the only statement is a block, we can eliminate the braces.
+        var blockStatementCount = size(block.statements);
+        if (blockStatementCount > 1 and variantIs?(back(block.statements), Break))
+            dec(blockStatementCount);
+        replaceToken(astTokens(block).begin, state);
+        for (stmt in slicedUpto(block.statements, blockStatementCount))
+            fixAst(stmt, state);
+        writeUptoToken(astTokens(block).end - 1, state);
+        replaceToken(astTokens(block).end - 1, state);
+        return true;
+    } :: _ -> false;
 }
 
 
