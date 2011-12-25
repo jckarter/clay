@@ -720,7 +720,10 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
             return;
         }
         if (*i == X87UP) {
-            _allMemory(wordClasses);
+            // On MacOSX at least, X87UP words not preceded by X87 appear to get demoted
+            // to SSE rather than memory as specified in the documentation
+            //_allMemory(wordClasses);
+            *i = SSE_DOUBLE_SCALAR;
             return;
         }
         if (*i == SSEUP) {
