@@ -21,7 +21,7 @@ alias O_ASYNC    = octal(#"020000");
 
 
 //
-// flags for 'chmod'
+// flags for 'chmod'/'stat'
 //
 
 alias S_IRWXU = octal(#"0700");
@@ -42,6 +42,16 @@ alias S_IXOTH = octal(#"01");
 alias S_ISUID = octal(#"04000");
 alias S_ISGID = octal(#"02000");
 alias S_ISVTX = octal(#"01000");
+
+alias S_IFMT   = octal(#"0170000");
+alias S_IFIFO  = octal(#"0010000");
+alias S_IFCHR  = octal(#"0020000");
+alias S_IFDIR  = octal(#"0040000");
+alias S_IFBLK  = octal(#"0060000");
+alias S_IFREG  = octal(#"0100000");
+alias S_IFLNK  = octal(#"0120000");
+alias S_IFSOCK = octal(#"0140000");
+alias S_IFWHT  = octal(#"0160000");
 
 
 
