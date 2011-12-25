@@ -154,6 +154,12 @@ record Struct29 (
     b : UInt16,
 );
 
+record Struct30 (
+    a : UInt8,
+    b : UInt8,
+    c : UInt8,
+);
+
 external (cdecl) c_scalar(arg0:UInt32, arg1:Bool, arg2:Float, arg3:Double) : ;
 
 external (cdecl) c_complex_float(arg0:Complex32) : ;
@@ -217,6 +223,8 @@ external (cdecl) c_27(arg0:Struct27) : ;
 external (cdecl) c_28(arg0:Struct28) : ;
 
 external (cdecl) c_29(arg0:Struct29) : ;
+
+external (cdecl) c_30(arg0:Struct30) : ;
 
 external (cdecl) c_return_int() : UInt32;
 
@@ -287,6 +295,8 @@ external (cdecl) c_return_27() : Struct27;
 external (cdecl) c_return_28() : Struct28;
 
 external (cdecl) c_return_29() : Struct29;
+
+external (cdecl) c_return_30() : Struct30;
 
 external (cdecl) c_to_clay() : ;
 
@@ -392,6 +402,8 @@ external (cdecl) clay_27(arg0:Struct27) : { println(repr(arg0)); }
 external (cdecl) clay_28(arg0:Struct28) : { println(repr(arg0)); }
 
 external (cdecl) clay_29(arg0:Struct29) : { println(repr(arg0)); }
+
+external (cdecl) clay_30(arg0:Struct30) : { println(repr(arg0)); }
 
 external (cdecl) clay_return_int() : UInt32 = 0xC1A4C1A4u;
 
@@ -530,6 +542,9 @@ external (cdecl) clay_return_28() : Struct28
 external (cdecl) clay_return_29() : Struct29
     = Struct29(0xC1A4us, 0xABCDus);
 
+external (cdecl) clay_return_30() : Struct30
+    = Struct30(0xC1uss, 0xA4uss, 0xABuss);
+
 external (cdecl) clay_flush() : {
     flush(stdout);
 }
@@ -579,6 +594,7 @@ clay_to_c() {
     c_27(clay_return_27());
     c_28(clay_return_28());
     c_29(clay_return_29());
+    c_30(clay_return_30());
 
     libc.fflush(libc.stdout);
 
@@ -648,6 +664,7 @@ clay_to_c() {
     clay_27(c_return_27());
     clay_28(c_return_28());
     clay_29(c_return_29());
+    clay_30(c_return_30());
 
     flush(stdout);
 }

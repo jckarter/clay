@@ -157,6 +157,12 @@ struct Struct29 {
     uint16_t b;
 };
 
+struct Struct30 {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+};
+
 //
 // arguments
 //
@@ -315,6 +321,10 @@ void c_28(struct Struct28 x) {
 
 void c_29(struct Struct29 x) {
     printf("%x %x\n", x.a, x.b);
+}
+
+void c_30(struct Struct30 x) {
+    printf("%x %x %x\n", x.a, x.b, x.c);
 }
 
 //
@@ -489,6 +499,10 @@ struct Struct29 c_return_29(void) {
     return (struct Struct29){ 0xC1A4, 0xABCD };
 }
 
+struct Struct30 c_return_30(void) {
+    return (struct Struct30){ 0xC1, 0xA4, 0xAB };
+}
+
 //
 // clay entry points
 //
@@ -556,6 +570,8 @@ void clay_27(struct Struct27 x);
 void clay_28(struct Struct28 x);
 
 void clay_29(struct Struct29 x);
+
+void clay_30(struct Struct30 x);
 
 void clay_flush(void);
 
@@ -633,6 +649,8 @@ struct Struct28 clay_return_28(void);
 
 struct Struct29 clay_return_29(void);
 
+struct Struct30 clay_return_30(void);
+
 void c_to_clay(void) {
     printf("\nPassing C arguments to Clay:\n");
     fflush(stdout);
@@ -678,6 +696,7 @@ void c_to_clay(void) {
     clay_27(c_return_27());
     clay_28(c_return_28());
     clay_29(c_return_29());
+    clay_30(c_return_30());
 
     clay_flush();
 
@@ -747,6 +766,7 @@ void c_to_clay(void) {
     c_27(clay_return_27());
     c_28(clay_return_28());
     c_29(clay_return_29());
+    c_30(clay_return_30());
 
     fflush(stdout);
 }
