@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
+#include <inttypes.h>
 
 struct Struct1 {
     uint64_t a;
@@ -180,7 +181,7 @@ void c_complex_double(complex double x) {
 }
 
 void c_1(struct Struct1 x) {
-    printf("%llx\n", x.a);
+    printf("%" PRIx64 "\n", x.a);
 }
 
 void c_2(struct Struct2 x) {
@@ -196,19 +197,19 @@ void c_4(struct Struct4 x) {
 }
 
 void c_5(struct Struct5 x) {
-    printf("%x %x %llx\n", x.a, x.b, x.c);
+    printf("%x %x %" PRIx64 "\n", x.a, x.b, x.c);
 }
 
 void c_6(struct Struct6 x) {
-    printf("%x %llx\n", x.a, x.b);
+    printf("%x %" PRIx64 "\n", x.a, x.b);
 }
 
 void c_7(struct Struct7 x) {
-    printf("%x %llx %x\n", x.a, x.b, x.c);
+    printf("%x %" PRIx64 " %x\n", x.a, x.b, x.c);
 }
 
 void c_8(struct Struct8 x) {
-    printf("%llx %llx %llx\n", x.a, x.b, x.c);
+    printf("%" PRIx64 " %" PRIx64 " %" PRIx64 "\n", x.a, x.b, x.c);
 }
 
 void c_9(struct Struct9 x) {
