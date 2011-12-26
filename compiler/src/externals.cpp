@@ -412,8 +412,14 @@ enum WordClass {
 };
 
 struct X86_64_ExternalTarget : public LLVMExternalTarget {
+    // Mac OS X does its own thing with X87UP chunks not preceded by X87
+    bool passesOrphanX87UPAsSSE;
+
     explicit X86_64_ExternalTarget(llvm::Triple target)
-        : LLVMExternalTarget(target) {}
+        : LLVMExternalTarget(target)
+    {
+        passesOrphanX87UPAsSSE = target.getOS() == llvm::Triple::Darwin;
+    }
 
     map<TypePtr, vector<WordClass> > typeClassifications;
     map<TypePtr, llvm::Type*> llvmWordTypes;
@@ -461,6 +467,8 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         || (wordClasses.size() > 3
             && isSSEClass(wordClasses[1]) && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP);
     }
+
+    void fixupClassification(TypePtr type, vector<WordClass> &wordClasses);
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
         return llvm::CallingConv::C;
@@ -687,7 +695,7 @@ static void _allMemory(vector<WordClass> &wordClasses)
     fill(wordClasses.begin(), wordClasses.end(), MEMORY);
 }
 
-static void _fixupClassification(TypePtr type, vector<WordClass> &wordClasses)
+void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> &wordClasses)
 {
     vector<WordClass>::iterator i = wordClasses.begin(),
                                 end = wordClasses.end();
@@ -714,10 +722,10 @@ static void _fixupClassification(TypePtr type, vector<WordClass> &wordClasses)
             return;
         }
         if (*i == X87UP) {
-            // On MacOSX at least, X87UP words not preceded by X87 appear to get demoted
-            // to SSE rather than to MEMORY as specified in the documentation
-            //_allMemory(wordClasses);
-            *i = SSE_DOUBLE_SCALAR;
+            if (passesOrphanX87UPAsSSE)
+                *i = SSE_DOUBLE_SCALAR;
+            else
+                _allMemory(wordClasses);
             return;
         }
         if (*i == SSEUP) {
@@ -742,7 +750,7 @@ vector<WordClass> X86_64_ExternalTarget::classifyType(TypePtr type)
         return wordClasses;
     }
     _classifyType(type, wordClasses.begin(), 0);
-    _fixupClassification(type, wordClasses);
+    fixupClassification(type, wordClasses);
 
     return wordClasses;
 }
