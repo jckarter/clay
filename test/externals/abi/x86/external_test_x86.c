@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <complex.h>
 #include <emmintrin.h>
+#include <inttypes.h>
 
 struct Struct_x86_1 {
     long double a;
@@ -66,7 +67,7 @@ union Union_x86_13 {
 
 static void print_int_vector(__m128i v) {
     union { __m128i v; uint64_t fields[2]; } u = { v };
-    printf("<%llx %llx>\n", u.fields[0], u.fields[1]);
+    printf("<%" PRIx64 " %" PRIx64 ">\n", u.fields[0], u.fields[1]);
 }
 
 static void print_float_vector(__m128 v) {
@@ -150,7 +151,7 @@ void c_x86_10(union Union_x86_10 x, int tag) {
 void c_x86_11(union Union_x86_11 x, int tag) {
     switch (tag) {
     case 0:
-        printf("%llx\n", (uint64_t)x.a);
+        printf("%" PRIx64 "\n", (uint64_t)x.a);
         break;
     case 1:
         print_double_vector(x.b);
