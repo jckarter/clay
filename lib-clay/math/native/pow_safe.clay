@@ -4297,6 +4297,6 @@ private inline pow_rn(x:Double, y:Double) {
 }
 
 
-[T | Float?(T)]
-inline pow_safe(x:T,y:T) = T(pow_rn(Double(x),Double(y)));
+[T,U | Numeric?(T,U)]
+inline pow_safe(x:T,y:U) = T(pow_rn(Double(x),Double(y)));
 

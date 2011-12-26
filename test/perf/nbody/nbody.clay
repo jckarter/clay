@@ -1,5 +1,5 @@
-import libc;
 import simd;
+import math.*;
 
 record Body (
     xy   : Vec[Float64, 2],
@@ -9,8 +9,7 @@ record Body (
     mass : Vec[Float64, 2],
 );
 
-var pi    = 3.141592653589793;
-var smass = 4 * pi * pi;
+var smass = Double(4 * M_PI * M_PI);
 var days  = 365.24;
 
 var bodies = Array[Body, 5]();
@@ -20,21 +19,21 @@ energy() {
     var dxdy = Vec(0.0, 0.0);
     var dz00 = Vec(0.0, 0.0);
     var distance = Vec(0.0, 0.0);
-    var e = 0.0;  
-  
+    var e = 0.0;
+
     for (i in range(size(bodies))) {
         var b = bodies[i];
         sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
         e += 0.5 * (sq[0] + sq[1]);
- 
+
         for (j in range(i+1, size(bodies))) {
-  
+
             var b2 = bodies[j];
             dxdy = b.xy - b2.xy;
             dz00 = b.z0 - b2.z0;
-        
+
             distance = (dxdy * dxdy) + (dz00 * dz00);
-            var d = libc.sqrt(distance[0] + distance[1]);
+            var d = sqrt(distance[0] + distance[1]);
 
             e -= (b.mass[0] * b2.mass[0]) / d;
         }
@@ -42,12 +41,9 @@ energy() {
     return e;
 }
 
-private external ("llvm.x86.sse3.hadd.pd") x86_haddpd(a:Vec[Float64,2], b:Vec[Float64,2]) Vec[Float64,2];
-private external ("llvm.x86.sse2.sqrt.pd") x86_sqrtpd(a:Vec[Float64,2]) Vec[Float64,2];
-
 advance(q) {
     var dtdt = Vec(0.01, 0.01);
- 
+
     for (k in range(q)) {
         for (i in range(size(bodies))) {
             var b = &bodies[i];
@@ -56,9 +52,9 @@ advance(q) {
 
                 var dxdy = b^.xy - b2^.xy;
                 var dz00 = b^.z0 - b2^.z0;
-                var tsquare = x86_haddpd(dxdy*dxdy, dz00*dz00);
-                var distance2 = x86_haddpd(tsquare, tsquare);
-                var distance = x86_sqrtpd(distance2) * distance2;
+                var tsquare = hadd(dxdy*dxdy, dz00*dz00);
+                var distance2 = hadd(tsquare, tsquare);
+                var distance = sqrt(distance2) * distance2;
                 var magmag = dtdt / distance;
 
                 dxdy *= magmag;
@@ -77,7 +73,7 @@ advance(q) {
     }
 }
 
- 
+
 init(){
     bodies[0] = Body(
         Vec(0.0, 0.0),
@@ -113,8 +109,8 @@ init(){
         Vec( 0.00268067772490389322*days,    0.00162824170038242295*days),
         Vec(-0.0000951592254519715870*days,  0.0),
         Vec( 0.0000515138902046611451*smass, 0.0000515138902046611451*smass)
-    ); 
-   
+    );
+
     //offset momentum calculation
 
     var pxpy = Vec(0.0, 0.0);
@@ -130,14 +126,6 @@ init(){
     bodies[0].vz00 =  Vec(-1.0, -1.0) * pz00 * solar_mass_inv;
 }
 
-printFloat(stream, fmt, value){
-    var buf = Array[CChar, 100]();
-    libc.sprintf(&buf[0], cstring(fmt), Double(value));
-    var n   = libc.strlen(&buf[0]);
-    var ptr = Pointer[Byte](&buf[0]);
-    write(stream, ptr, SizeT(n));
-}
-
 main(args){
     if (size(args) != 2) {
         println("usage: ", args[0], " <n>");
@@ -147,14 +135,10 @@ main(args){
     var n = Int(np);
 
     init();
-    var e = energy();    
-    printFloat( stdout, "%.9f", e);   
-    println();
-    
+    println(energy());
+
     advance(n);
-    e = energy();  
-    printFloat( stdout, "%.9f", e);   
-    println();
+    println(energy());
 
     return 0;
 }

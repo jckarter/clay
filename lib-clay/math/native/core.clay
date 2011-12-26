@@ -107,20 +107,6 @@ public alias FP_ZERO = 2;
 public alias FP_SUBNORMAL = 3;
 public alias FP_NORMAL = 4;
 
-//  u_int32_t hx, lx;
-//   int retval = FP_NORMAL;
-//
-//   EXTRACT_WORDS (hx, lx, x);
-//   lx |= hx & 0xfffff;
-//   hx &= 0x7ff00000;
-//   if ((hx | lx) == 0)
-//     retval = FP_ZERO;
-//   else if (hx == 0)
-//     retval = FP_SUBNORMAL;
-//   else if (hx == 0x7ff00000)
-//     retval = lx != 0 ? FP_NAN : FP_INFINITE;
-//
-//   return retval;
 
 inline overload fpclassify(x:Double) --> res:Int {
     var xdb = db_number();
@@ -207,8 +193,7 @@ overload llround(x:Float) {
         }
     }
     else {
-        /* The number is too large.  It is left implementation defined
-        what happens.  */
+        // The number is too large.  Return implementation default.
         result = Long(x);
     }
     return sign * result;
@@ -243,8 +228,7 @@ overload llround (x:Double ) {
         }
     }
     else{
-        /* The number is too large.  It is left implementation defined
-        what happens.  */
+        // The number is too large.  Return implementation default.
         return Long(x);
     }
     return sign * result;
