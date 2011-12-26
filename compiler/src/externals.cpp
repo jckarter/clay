@@ -253,29 +253,14 @@ void ExternalTarget::storeReturnValue(CallingConv conv,
 // Use the LLVM calling convention as-is with no argument mangling.
 //
 
-struct VanillaExternalTarget : public ExternalTarget {
+struct LLVMExternalTarget : public ExternalTarget {
     llvm::Triple target;
 
-    explicit VanillaExternalTarget(llvm::Triple target)
+    explicit LLVMExternalTarget(llvm::Triple target)
         : ExternalTarget(), target(target) {}
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
-        if (target.getArch() != llvm::Triple::x86)
-            return llvm::CallingConv::C;
-        else switch (conv) {
-        case CC_DEFAULT :
-        case CC_LLVM :
-            return llvm::CallingConv::C;
-        case CC_STDCALL :
-            return llvm::CallingConv::X86_StdCall;
-        case CC_FASTCALL :
-            return llvm::CallingConv::X86_FastCall;
-        case CC_THISCALL :
-            return llvm::CallingConv::X86_ThisCall;
-        default :
-            assert(false);
-            return llvm::CallingConv::C;
-        }
+        return llvm::CallingConv::C;
     }
 
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) {
@@ -294,7 +279,119 @@ struct VanillaExternalTarget : public ExternalTarget {
 
 
 //
-// Break down unboxable argument types per the x86-64 ABI
+// x86-32 (and Windows x64)
+//
+
+struct X86_32_ExternalTarget : public ExternalTarget {
+    // Linux, Solaris, and NetBSD pass all aggregates on the stack
+    // (except long long and complex float32)
+    bool alwaysPassStructsOnStack;
+
+    // Windows x64 has only one calling convention
+    bool alwaysUseCCallingConv;
+
+    // MacOS X passes XMM vectors in registers; other platforms treat them
+    // as aggregates
+    bool passVecAsNonaggregate;
+
+    explicit X86_32_ExternalTarget(llvm::Triple target) {
+        alwaysUseCCallingConv = target.getArch() == llvm::Triple::x86_64;
+        alwaysPassStructsOnStack = target.getOS() == llvm::Triple::NetBSD
+            || target.getOS() == llvm::Triple::Linux
+            || target.getOS() == llvm::Triple::Solaris;
+        passVecAsNonaggregate = target.getOS() == llvm::Triple::Darwin;
+    }
+
+    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
+        if (alwaysUseCCallingConv)
+            return llvm::CallingConv::C;
+
+        switch (conv) {
+        case CC_DEFAULT :
+        case CC_LLVM :
+            return llvm::CallingConv::C;
+        case CC_STDCALL :
+            return llvm::CallingConv::X86_StdCall;
+        case CC_FASTCALL :
+            return llvm::CallingConv::X86_FastCall;
+        case CC_THISCALL :
+            return llvm::CallingConv::X86_ThisCall;
+        default :
+            assert(false);
+            return llvm::CallingConv::C;
+        }
+    }
+
+    static const int PASS_ON_STACK = -1;
+    static const int PASS_THROUGH = -2;
+
+    int aggregateTypeSize(TypePtr type) {
+        switch (type->typeKind) {
+        case BOOL_TYPE:
+        case INTEGER_TYPE:
+        case FLOAT_TYPE:
+        case POINTER_TYPE:
+        case CODE_POINTER_TYPE:
+        case CCODE_POINTER_TYPE:
+        case STATIC_TYPE:
+        case ENUM_TYPE:
+            return PASS_THROUGH;
+
+        case VEC_TYPE:
+            if (passVecAsNonaggregate)
+                return PASS_THROUGH;
+            else
+                return typeSize(type);
+
+        case COMPLEX_TYPE:
+            return typeSize(type);
+
+        case VARIANT_TYPE:
+        case UNION_TYPE:
+        case RECORD_TYPE:
+        case TUPLE_TYPE:
+            if (alwaysPassStructsOnStack)
+                return PASS_ON_STACK;
+            else
+                return typeSize(type);
+
+        default:
+            assert(false);
+            return 0;
+        }
+    }
+
+    llvm::Type *intTypeForAggregateSize(int size) {
+        switch (size) {
+        case 1:
+        case 2:
+        case 4:
+        case 8:
+            return llvmIntType(8*size);
+        default:
+            return NULL;
+        }
+    }
+
+    virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) {
+        return intTypeForAggregateSize(aggregateTypeSize(type));
+    }
+    virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) {
+        return intTypeForAggregateSize(aggregateTypeSize(type));
+    }
+    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
+        int size = aggregateTypeSize(type);
+        return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
+    }
+    virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) {
+        int size = aggregateTypeSize(type);
+        return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
+    }
+};
+
+
+//
+// Unix x86-64
 //
 
 enum WordClass {
@@ -314,9 +411,15 @@ enum WordClass {
     MEMORY
 };
 
-struct X86_64_ExternalTarget : public VanillaExternalTarget {
+struct X86_64_ExternalTarget : public LLVMExternalTarget {
+    // Mac OS X does its own thing with X87UP chunks not preceded by X87
+    bool passesOrphanX87UPAsSSE;
+
     explicit X86_64_ExternalTarget(llvm::Triple target)
-        : VanillaExternalTarget(target) {}
+        : LLVMExternalTarget(target)
+    {
+        passesOrphanX87UPAsSSE = target.getOS() == llvm::Triple::Darwin;
+    }
 
     map<TypePtr, vector<WordClass> > typeClassifications;
     map<TypePtr, llvm::Type*> llvmWordTypes;
@@ -363,6 +466,12 @@ struct X86_64_ExternalTarget : public VanillaExternalTarget {
             && isSSEClass(wordClasses[0]) && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
         || (wordClasses.size() > 3
             && isSSEClass(wordClasses[1]) && wordClasses[2] == SSEUP && wordClasses[3] == SSEUP);
+    }
+
+    void fixupClassification(TypePtr type, vector<WordClass> &wordClasses);
+
+    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
+        return llvm::CallingConv::C;
     }
 
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type)
@@ -586,25 +695,19 @@ static void _allMemory(vector<WordClass> &wordClasses)
     fill(wordClasses.begin(), wordClasses.end(), MEMORY);
 }
 
-static void _fixupClassification(vector<WordClass> &wordClasses)
+void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> &wordClasses)
 {
     vector<WordClass>::iterator i = wordClasses.begin(),
                                 end = wordClasses.end();
-    if (wordClasses.size() > 2) {
+    if (wordClasses.size() > 2 &&
+        (type->typeKind == ARRAY_TYPE || type->typeKind == RECORD_TYPE
+            || type->typeKind == VARIANT_TYPE || type->typeKind == UNION_TYPE
+            || type->typeKind == TUPLE_TYPE || type->typeKind == RECORD_TYPE))
+    {
         if (X86_64_ExternalTarget::isSSEClass(*i)) {
             ++i;
             for (; i != end; ++i) {
                 if (*i != SSEUP) {
-                    _allMemory(wordClasses);
-                    return;
-                }
-            }
-        // this goes against the documentation but it seems like it has to
-        // be this way for complex long double returns to work as advertised
-        } else if (*i == COMPLEX_X87) {
-            ++i;
-            for (; i != end; ++i) {
-                if (*i != COMPLEX_X87) {
                     _allMemory(wordClasses);
                     return;
                 }
@@ -619,7 +722,10 @@ static void _fixupClassification(vector<WordClass> &wordClasses)
             return;
         }
         if (*i == X87UP) {
-            _allMemory(wordClasses);
+            if (passesOrphanX87UPAsSSE)
+                *i = SSE_DOUBLE_SCALAR;
+            else
+                _allMemory(wordClasses);
             return;
         }
         if (*i == SSEUP) {
@@ -644,7 +750,7 @@ vector<WordClass> X86_64_ExternalTarget::classifyType(TypePtr type)
         return wordClasses;
     }
     _classifyType(type, wordClasses.begin(), 0);
-    _fixupClassification(wordClasses);
+    fixupClassification(type, wordClasses);
 
     return wordClasses;
 }
@@ -759,10 +865,15 @@ void initExternalTarget(string targetString)
     if (target.getArch() == llvm::Triple::x86_64
         && target.getOS() != llvm::Triple::Win32
         && target.getOS() != llvm::Triple::MinGW32
-        && target.getOS() != llvm::Triple::Cygwin) {
+        && target.getOS() != llvm::Triple::Cygwin)
+    {
         externalTarget = new X86_64_ExternalTarget(target);
+    } else if (target.getArch() == llvm::Triple::x86
+        || target.getArch() == llvm::Triple::x86_64)
+    {
+        externalTarget = new X86_32_ExternalTarget(target);
     } else
-        externalTarget = new VanillaExternalTarget(target);
+        externalTarget = new LLVMExternalTarget(target);
 }
 
 ExternalTargetPtr getExternalTarget()

@@ -139,6 +139,30 @@ union Union25 {
     complex double b;
 };
 
+struct Struct26 {
+    uint8_t a;
+};
+
+struct Struct27 {
+    uint16_t a;
+};
+
+struct Struct28 {
+    uint8_t a;
+    uint8_t b;
+};
+
+struct Struct29 {
+    uint16_t a;
+    uint16_t b;
+};
+
+struct Struct30 {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+};
+
 //
 // arguments
 //
@@ -281,6 +305,26 @@ void c_25(union Union25 x, int tag) {
         printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
         break;
     }
+}
+
+void c_26(struct Struct26 x) {
+    printf("%x\n", x.a);
+}
+
+void c_27(struct Struct27 x) {
+    printf("%x\n", x.a);
+}
+
+void c_28(struct Struct28 x) {
+    printf("%x %x\n", x.a, x.b);
+}
+
+void c_29(struct Struct29 x) {
+    printf("%x %x\n", x.a, x.b);
+}
+
+void c_30(struct Struct30 x) {
+    printf("%x %x %x\n", x.a, x.b, x.c);
 }
 
 //
@@ -439,6 +483,26 @@ union Union25 c_return_25(int tag) {
     }
 }
 
+struct Struct26 c_return_26(void) {
+    return (struct Struct26){ 0xC1 };
+}
+
+struct Struct27 c_return_27(void) {
+    return (struct Struct27){ 0xC1A4 };
+}
+
+struct Struct28 c_return_28(void) {
+    return (struct Struct28){ 0xC1, 0xA4 };
+}
+
+struct Struct29 c_return_29(void) {
+    return (struct Struct29){ 0xC1A4, 0xABCD };
+}
+
+struct Struct30 c_return_30(void) {
+    return (struct Struct30){ 0xC1, 0xA4, 0xAB };
+}
+
 //
 // clay entry points
 //
@@ -498,6 +562,16 @@ void clay_23(union Union23 x, int tag);
 void clay_24(union Union24 x, int tag);
 
 void clay_25(union Union25 x, int tag);
+
+void clay_26(struct Struct26 x);
+
+void clay_27(struct Struct27 x);
+
+void clay_28(struct Struct28 x);
+
+void clay_29(struct Struct29 x);
+
+void clay_30(struct Struct30 x);
 
 void clay_flush(void);
 
@@ -567,6 +641,16 @@ union Union24 clay_return_24(int tag);
 
 union Union25 clay_return_25(int tag);
 
+struct Struct26 clay_return_26(void);
+
+struct Struct27 clay_return_27(void);
+
+struct Struct28 clay_return_28(void);
+
+struct Struct29 clay_return_29(void);
+
+struct Struct30 clay_return_30(void);
+
 void c_to_clay(void) {
     printf("\nPassing C arguments to Clay:\n");
     fflush(stdout);
@@ -607,6 +691,13 @@ void c_to_clay(void) {
 
     clay_25(c_return_25(0), 0);
     clay_25(c_return_25(1), 1);
+
+    clay_26(c_return_26());
+    clay_27(c_return_27());
+    clay_28(c_return_28());
+    clay_29(c_return_29());
+    clay_30(c_return_30());
+
     clay_flush();
 
     printf("\nPassing Clay return values to C:\n");
@@ -670,6 +761,13 @@ void c_to_clay(void) {
 
     c_25(clay_return_25(0), 0);
     c_25(clay_return_25(1), 1);
+
+    c_26(clay_return_26());
+    c_27(clay_return_27());
+    c_28(clay_return_28());
+    c_29(clay_return_29());
+    c_30(clay_return_30());
+
     fflush(stdout);
 }
 

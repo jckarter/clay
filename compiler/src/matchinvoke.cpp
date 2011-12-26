@@ -93,11 +93,11 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     CodePtr code = overload->code;
     if (code->formalVarArg.ptr()) {
         if (argsKey.size() < code->formalArgs.size())
-            return new MatchArityError(argsKey.size(), code->formalArgs.size(), true);
+            return new MatchArityError(code->formalArgs.size(), argsKey.size(), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
-            return new MatchArityError(argsKey.size(), code->formalArgs.size(), false);
+            return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
     }
 
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;

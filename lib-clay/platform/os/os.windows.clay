@@ -1,0 +1,4 @@
+import platform.symbols.(Windows);
+
+alias OS = Windows;
+alias OSFamily = Windows;
