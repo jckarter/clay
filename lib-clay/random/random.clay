@@ -70,8 +70,12 @@ define uniform;
 
 overload uniform(rnd, from : Float32, to : Float32)
     = from + (to - from) * smallFloat(rnd);
+
 overload uniform(rnd, from : Float64, to : Float64)
     = from + (to - from) * smallDouble(rnd);
+
+overload uniform(rnd, static Float32) = uniform(rnd, 0. ,1.);
+overload uniform(rnd, static Float64) = uniform(rnd, 0. ,1.);
 
 define normal;
 

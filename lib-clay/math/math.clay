@@ -10,6 +10,9 @@ public import math.native.cbrt.*;
 public import math.native.bessel.*;
 public import numbers.floats.floats.(infinity,negativeInfinity,nan,abs,copysign,signbit);
 
+//Import simd
+public import math.simd.core_x86.*;
+
 //Import libm wrappers
 public import math.libm.libm.*;
 
@@ -24,5 +27,6 @@ alias FAST = #"fast";
 alias LIBM = #"libm";
 alias APX = #"approx";
 alias APX2 = #"approx2";
+alias SIMD = #"simd";
 
 MathMode?(m) = Flag(#"math.Mode")==m;

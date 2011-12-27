@@ -1,13 +1,7 @@
 
 import simd;
+import math.*;
 
-alias Double2 = Vec[Double, 2];
-
-private external ("llvm.x86.sse2.cmp.pd")
-x86_cmppd(a:Double2, b:Double2, c:Int8) Double2;
-
-private external ("llvm.x86.sse2.movmsk.pd")
-x86_movmskpd(a:Double2) Int32;
 
 render(w:Int, h:Int) {
     var wholeData = Vector[UInt8]();
@@ -38,8 +32,8 @@ render(w:Int, h:Int) {
                 Trv = Zrv * Zrv;
                 Tiv = Ziv * Ziv;
 
-                var delta = x86_cmppd(Trv+Tiv, four, Int8(2));
-                mask = x86_movmskpd(delta);
+                var delta = compare(Trv+Tiv, four, Int8(2));
+                mask = movemask(delta);
                 if (mask == 0)
                     break;
             }

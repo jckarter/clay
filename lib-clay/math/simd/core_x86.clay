@@ -1,0 +1,84 @@
+
+import simd.*;
+import math.*;
+import numbers.(toBiggerNumericType);
+
+define hadd;
+define hsub;
+define movemask;
+define compare;
+
+alias VD2 = Vec[Double, 2];
+alias V2[T] = Vec[T, 2];
+
+private external ("llvm.x86.sse2.sqrt.pd")
+    x86_sqrtpd(a:VD2) : VD2;
+
+private external ("llvm.x86.sse2.sqrt.sd")
+    x86_sqrtsd(a:VD2) : VD2;
+
+private external ("llvm.x86.sse3.hadd.pd")
+    x86_haddpd(a:VD2, b:VD2) : VD2;
+
+private external ("llvm.x86.sse3.hsub.pd")
+    x86_hsubpd(a:VD2, b:VD2) : VD2;
+
+private external ("llvm.x86.sse2.cmp.pd")
+    x86_cmppd(a:VD2, b:VD2, c:Int8) : VD2;
+
+private external ("llvm.x86.sse2.cmp.sd")
+    x86_cmpsd(a:VD2, b:VD2, c:Int8) : VD2;
+
+private external ("llvm.x86.sse2.movmsk.pd")
+    x86_movmskpd(a:VD2) : Int32;
+
+
+
+[T,U | Numeric?(T,U) and MathMode?(SIMD)]
+inline overload sqrt(x:T,y:U) = ..unpackVec(x86_sqrtpd(Vec(Double(x),Double(y))));
+
+[T | Numeric?(T) and MathMode?(SIMD)]
+inline overload sqrt(x:T) = T(x86_sqrtsd(Vec(Double(x),0.))[0]);
+
+[T | Numeric?(T)]
+inline overload sqrt(x:V2[T]) = V2[T](x86_sqrtpd(VD2(x)));
+
+
+[T | Numeric?(T) and MathMode?(SIMD)]
+inline overload hadd(x1:T,x2:T,y1:T,y2:T) = ..unpackVec(x86_haddpd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2))));
+
+[T,U | Numeric?(T,U) and MathMode?(SIMD)]
+inline overload hadd(x1:T,x2:U) = toBiggerNumericType(T,U,x86_haddpd(Vec(Double(x1),Double(x2)),VD2())[0]);
+
+[T | Numeric?(T)]
+inline overload hadd(x:V2[T], y:V2[T]) = V2[T](x86_haddpd(VD2(x),VD2(y)));
+
+[T | Numeric?(T)]
+inline overload hadd(x:V2[T]) = V2[T](x86_haddpd(VD2(x),VD2(x)));
+
+
+[T | Numeric?(T) and MathMode?(SIMD)]
+inline overload hsub(x1:T,x2:T,y1:T,y2:T) = ..unpackVec(x86_hsubpd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2))));
+
+[T,U | Numeric?(T,U) and MathMode?(SIMD)]
+inline overload hsub(x1:T,x2:U) = toBiggerNumericType(T,U,x86_hsubpd(Vec(Double(x1),Double(x2)),VD2())[0]);
+
+[T | Numeric?(T)]
+inline overload hsub(x:V2[T], y:V2[T]) = V2[T](x86_hsubpd(VD2(x),VD2(y)));
+
+
+[T | Numeric?(T)]
+inline overload compare(x1:T,x2:T,y1:T,y2:T,op:Int8) = ..unpackVec(x86_cmppd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2)),op));
+
+[T,U | Numeric?(T,U)]
+inline overload compare(x1:T, x2:U, op:Int8) = toBiggerNumericType(T,U,x86_cmpsd(Vec(Double(x1),0.),Vec(Double(x2),0.),op)[0]);
+
+[T | Numeric?(T)]
+inline overload compare(x:V2[T], y:V2[T], op:Int8) = V2[T](x86_cmppd(VD2(x),VD2(y),op));
+
+
+[T,U | Numeric?(T,U)]
+inline overload movemask(x:T,y:U) = x86_movmskpd(Vec(Double(x),Double(y)));
+
+[T | Numeric?(T)]
+inline overload movemask(x:V2[T]) = x86_movmskpd(VD2(x));
