@@ -757,15 +757,15 @@ inline exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
 
     /* Special cases tests */
     /* Test if argument is a denormal or zero */
-    if (bitand(xdb.0[1], 0x7ff00000) == 0)
+    if (xdb.0[1] & 0x7ff00000 == 0)
         /* We are in the RN case, return 1.0 in all cases */
         exph, expm, expl, exponent <-- 1., 0., 0., 0;
     else {
 
         alias k = shiftedXMultdb.0[0];
-        exponent <-- bitshr(k , L);
-        alias index1 = bitand(k , INDEXMASK1);
-        alias index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+        exponent <-- k >> L;
+        alias index1 = k & INDEXMASK1;
+        alias index2 = (k & INDEXMASK2) >> LHALF;
 
         /* Table reads */
         ref tbl1h = twoPowerIndex1[index1].hi;
@@ -776,13 +776,15 @@ inline exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
         ref tbl2l = twoPowerIndex2[index2].lo;
 
         /* Argument reduction */
-        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
+        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl
+            = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
         var t1 = x + msLog2Div2LMultKh;
         var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
         var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
 
         /* Polynomial approximation and reconstruction: factorized code */
-        exph, expm, expl <-- exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
+        exph, expm, expl <-- exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l,
+                                tbl2h, tbl2m, tbl2l);
     }
 }
 
@@ -813,26 +815,26 @@ private inline exp_rn(x:Double) --> ans:Double {
     var xIntHi = xdb.0[1];
     var mightBeDenorm = false;
     /* Test if argument is a denormal or zero */
-    if (bitand(xIntHi,0x7ff00000) == 0)
+    if (xIntHi & 0x7ff00000 == 0)
     /* We are in the RN case, return 1.0 in all cases */
         return 1.;
 
     /* Test if argument is greater than approx. 709 in magnitude */
-    if (bitand(xIntHi , 0x7fffffff) >= OVRUDRFLWSMPLBOUND) {
+    if (xIntHi & 0x7fffffff >= OVRUDRFLWSMPLBOUND) {
         /* If we are here, the result might be overflowed, underflowed, inf, or NaN */
 
         /* Test if +/- Inf or NaN */
-        if (bitand(xIntHi , 0x7fffffff) >= 0x7ff00000) {
+        if (xIntHi & 0x7fffffff >= 0x7ff00000) {
             /* Either NaN or Inf in this case since exponent is maximal */
 
             /* Test if NaN: mantissa is not 0 */
-            if (bitor(bitand(xIntHi , 0x000fffff) , xdb.0[0]) != 0)
+            if ((xIntHi & 0x000fffff) | xdb.0[0] != 0)
             /* x = NaN, return NaN */
                 return x + x;
             /* +/- Inf */
 
             /* Test sign */
-            if (bitand(xIntHi , 0x80000000)==0)
+            if (xIntHi & 0x80000000 == 0)
                 /* x = +Inf, return +Inf */
                 return x;
             else
@@ -876,9 +878,9 @@ private inline exp_rn(x:Double) --> ans:Double {
     var rh,rm = Add12Cond(s5,s4);
 
     alias k = shiftedXMultdb.0[0];
-    var M = bitshr(k , L);
-    var index1 = bitand(k , INDEXMASK1);
-    var index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+    var M = k >> L;
+    var index1 = k & INDEXMASK1;
+    var index2 = (k & INDEXMASK2) >> LHALF;
 
     /* Table reads */
     ref tbl1h = twoPowerIndex1[index1].hi;
@@ -934,7 +936,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         /* Remultiply by 2@(-M) for manipulating the rounding error and the lower significant parts */
         M *= -1;
         twoPowerMdb.0[0] = 0;
-        twoPowerMdb.0[1] = bitshl((M + 23) , 20);
+        twoPowerMdb.0[1] = M + 23 << 20;
         var t5 = t4 * twoPowerMdb.2;
         var t6 = t5 * twoPower1000;
         var t7 = polyTblh - t6;
@@ -946,7 +948,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         */
 
         twoPowerMdb.0[0] = 0;
-        twoPowerMdb.0[1] = bitshl((M - 52) , 20);
+        twoPowerMdb.0[1] = M - 52 << 20;
 
         if (abs(t7) != twoPowerMdb.2)
             return t4;
@@ -1018,7 +1020,7 @@ private inline exp_rn(x:Double) --> ans:Double {
 
     if(polyTblh == (polyTblh + (polyTblm * ROUNDCST))) {
         polyTblhdb.2 = polyTblh;
-        polyTblhdb.0[1] += bitshl(M, 20);
+        polyTblhdb.0[1] += M << 20;
         return polyTblhdb.2;
     } else{
         /* Rest of argument reduction for accurate phase */
@@ -1033,7 +1035,8 @@ private inline exp_rn(x:Double) --> ans:Double {
         ref tbl2l = twoPowerIndex2[index2].lo;
 
         /* Call accurate phase */
-        var polyTblh, polyTblm, polyTbll = exp_td_accurate(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
+        var polyTblh, polyTblm, polyTbll =
+            exp_td_accurate(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
 
         /* Since the final multiplication is exact, we can do the final rounding before multiplying
         We overcome this way also the cases where the final result is not underflowed whereas the
@@ -1048,7 +1051,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         */
 
         resdb.2 = res;
-        resdb.0[1] += bitshl(M , 20);
+        resdb.0[1] += M << 20;
         return resdb.2;
     } /* Accurate phase launched after rounding test*/
 
