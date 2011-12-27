@@ -20,7 +20,7 @@ server(args) {
 
     alias T = SizeT;
     var data = readN(conn, TypeSize(T));
-    var n = Pointer[T](begin(data))@;
+    var n = Pointer[T](begin(data))^;
     for (i in range(n)) {
         write(conn, i);
         time.sleep(0.01);

@@ -1,6 +1,6 @@
 import win32;
 
-errno() = win32._errno()@;
+errno() = win32._errno()^;
 
 alias EPERM           = 1;       /* Operation not permitted */
 alias ENOFILE         = 2;       /* No such file or directory */

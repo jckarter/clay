@@ -35,7 +35,7 @@ cons(l: SharedPointer[List[T]], forward value: T) = new(List[T](Cons[T](value, l
 
 [T]
 overload printTo(s, c: Cons[T]) {
-    printTo(s, c.car, "::", c.cdr@);
+    printTo(s, c.car, "::", c.cdr^);
 }
 
 even?(x) = x % 2 == 0;
@@ -58,7 +58,7 @@ main() {
     {
         // test fully general reduce
         var l = reduce(cons, new(List[Int](Nil())), range(5));
-        println(l@);
+        println(l^);
     }
 
     {

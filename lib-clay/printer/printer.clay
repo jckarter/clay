@@ -242,7 +242,7 @@ overload printTo(stream, x:S) {
 overload printTo(stream, x:SharedPointer[T]) {
     printTo(stream, SharedPointer[T], "(");
     if (not null?(x))
-        printTo(stream, x@);
+        printTo(stream, x^);
     printTo(stream, ")");
 }
 
@@ -534,7 +534,7 @@ overload printReprTo(stream, x:SharedPointer[T]) {
     // FIXME: handle cycles
     printTo(stream, SharedPointer[T], "(");
     if (not null?(x))
-        printReprTo(stream, x@);
+        printReprTo(stream, x^);
     printTo(stream, ")");
 }
 
@@ -586,7 +586,7 @@ overload printReprTo(stream, v:UniqueValue[T]) {
         printTo(stream, UniqueValue[T], "()");
     else {
         printTo(stream, UniqueValue[T], "(");
-        printReprTo(stream, v@);
+        printReprTo(stream, v^);
         printTo(stream, ")");
     }
 }
@@ -597,7 +597,7 @@ overload printTo(stream, v:UniqueValue[T]) {
         printTo(stream, UniqueValue[T], "()");
     else {
         printTo(stream, UniqueValue[T], "(");
-        printTo(stream, v@);
+        printTo(stream, v^);
         printTo(stream, ")");
     }
 }

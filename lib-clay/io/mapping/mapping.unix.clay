@@ -86,8 +86,8 @@ overload destroy(x:InnerFileMapping) {
 // mappingAddress, mappingLength
 //
 
-mappingAddress(fm:FileMapping) = fm.inner@.address;
-mappingLength(fm:FileMapping) = fm.inner@.length;
+mappingAddress(fm:FileMapping) = fm.inner^.address;
+mappingLength(fm:FileMapping) = fm.inner^.length;
 
 
 
@@ -96,7 +96,7 @@ mappingLength(fm:FileMapping) = fm.inner@.length;
 //
 
 flushMapping(fm:FileMapping) {
-    var result = unix.msync(fm.inner@.address, fm.inner@.length, unix.MS_SYNC);
+    var result = unix.msync(fm.inner^.address, fm.inner^.length, unix.MS_SYNC);
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno());
 }

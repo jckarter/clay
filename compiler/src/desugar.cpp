@@ -41,9 +41,6 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     case NOT :
         callable = primitive_expr_boolNot();
         break;
-    case BITNOT :
-        callable = prelude_expr_bitnot();
-        break;
     default :
         assert(false);
     }
@@ -88,21 +85,6 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     case GREATER_EQUALS :
         callable = prelude_expr_greaterEqualsP();
         break;
-    case BITAND :
-        callable = prelude_expr_bitand();
-        break;
-    case BITOR :
-        callable = prelude_expr_bitor();
-        break;
-    case BITXOR :
-        callable = prelude_expr_bitxor();
-        break;
-    case BITSHL :
-        callable = prelude_expr_bitshl();
-        break;
-    case BITSHR :
-        callable = prelude_expr_bitshr();
-        break;
     default :
         assert(false);
     }
@@ -135,12 +117,6 @@ ExprPtr updateOperatorExpr(int op) {
     case UPDATE_MULTIPLY : return prelude_expr_multiply();
     case UPDATE_DIVIDE : return prelude_expr_divide();
     case UPDATE_REMAINDER : return prelude_expr_remainder();
-    case UPDATE_BITAND : return prelude_expr_bitand();
-    case UPDATE_BITOR : return prelude_expr_bitor();
-    case UPDATE_BITNOT : return prelude_expr_bitnot();
-    case UPDATE_BITXOR : return prelude_expr_bitxor();
-    case UPDATE_BITSHL : return prelude_expr_bitshl();
-    case UPDATE_BITSHR : return prelude_expr_bitshr();
     default :
         assert(false);
         return NULL;

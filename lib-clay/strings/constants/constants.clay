@@ -53,7 +53,7 @@ inline overload size(a:StringConstant) = SizeT(a.last - a.first);
 [I | Integer?(I)]
 inline overload index(a:StringConstant, i:I) {
     assert[#boundsChecks](i >= 0 and i < size(a), "StringConstant index out of bounds");
-    return ref (a.first + i)@;
+    return ref (a.first + i)^;
 }
 
 

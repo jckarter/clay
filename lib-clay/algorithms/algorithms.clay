@@ -46,7 +46,7 @@ reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
         if (null?(resultPtr))
             put(results, key, f(initial, x));
         else
-            resultPtr@ = f(resultPtr@, x);
+            resultPtr^ = f(resultPtr^, x);
     }
     return results;
 }
@@ -102,10 +102,10 @@ overload select(a:A, f) {
     var result = &next(iter);
     while (hasNext?(iter)) {
         forward v = next(iter);
-        if (f(v, result@))
+        if (f(v, result^))
             result = &v;
     }
-    return ref result@;
+    return ref result^;
 }
 
 
@@ -132,7 +132,7 @@ findIf(seq, pred) {
 
 overload findIf(_first, _last, pred) {
     var cur, last = _first, _last;
-    while ((cur != last) and not pred(cur@))
+    while ((cur != last) and not pred(cur^))
         inc(cur);
     return cur;
 }
@@ -146,7 +146,7 @@ overload reverseFindIf(_first, _last, pred) {
     while (cur != first) {
         var prev = cur;
         dec(prev);
-        if (pred(prev@))
+        if (pred(prev^))
             break;
         cur = prev;
     }
@@ -172,7 +172,7 @@ overload find(a:A, x:T) {
 overload find(begin:C, end:C, x:T) {
     var i = begin;
     while (i != end) {
-        if (i@ == x)
+        if (i^ == x)
             break;
         inc(i);
     }
@@ -222,7 +222,7 @@ overload reverseFind(begin:C, end:C, x:T) {
     while (i != begin) {
         var j = i;
         dec(j);
-        if (j@ == x)
+        if (j^ == x)
             break;
         i = j;
     }
@@ -361,7 +361,7 @@ overload binarySearchLowerBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin)/2;
-        if (mid@ < x)
+        if (mid^ < x)
             begin = mid + 1;
         else
             end = mid;
@@ -373,7 +373,7 @@ overload binarySearchUpperBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin)/2;
-        if (mid@ <= x)
+        if (mid^ <= x)
             begin = mid + 1;
         else
             end = mid;

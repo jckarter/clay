@@ -50,8 +50,8 @@ advance(q) {
             for (j in range(i+1, size(bodies))) {
                 var b2 = &bodies[j];
 
-                var dxdy = b@.xy - b2@.xy;
-                var dz00 = b@.z0 - b2@.z0;
+                var dxdy = b^.xy - b2^.xy;
+                var dz00 = b^.z0 - b2^.z0;
                 var tsquare = hadd(dxdy*dxdy, dz00*dz00);
                 var distance2 = hadd(tsquare, tsquare);
                 var distance = sqrt(distance2) * distance2;
@@ -60,10 +60,10 @@ advance(q) {
                 dxdy *= magmag;
                 dz00 *= magmag;
 
-                b@.vxvy -= dxdy * b2@.mass;
-                b@.vz00 -= dz00 * b2@.mass;
-                b2@.vxvy += dxdy * b@.mass;
-                b2@.vz00 += dz00 * b@.mass;
+                b^.vxvy -= dxdy * b2^.mass;
+                b^.vz00 -= dz00 * b2^.mass;
+                b2^.vxvy += dxdy * b^.mass;
+                b2^.vz00 += dz00 * b^.mass;
             }
         }
         for (i in range(size(bodies))) {

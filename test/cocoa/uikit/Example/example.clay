@@ -11,8 +11,8 @@ record ExampleAppDelegate = newClass(#"ExampleAppDelegate", NSObject,
     ClassMethods(),
     InstanceMethods(
         [#"application:didFinishLaunchingWithOptions:", (self, app, options) => {
-            self@.window.addSubview(self@.viewController.view());
-            self@.window.makeKeyAndVisible();
+            self^.window.addSubview(self^.viewController.view());
+            self^.window.makeKeyAndVisible();
         }],
         DeallocInstanceMethod(),
     ),
@@ -50,9 +50,9 @@ record ExampleController = newClass(#"ExampleController", NSObject,
 );
 
 _performMath(self, fn) {
-    var left = self@.leftField.text().intValue();
-    var right = self@.rightField.text().intValue();
-    self@.resultLabel.setText(NSString.stringWithFormat(NSString(#"%d"), fn(left, right)));
+    var left = self^.leftField.text().intValue();
+    var right = self^.rightField.text().intValue();
+    self^.resultLabel.setText(NSString.stringWithFormat(NSString(#"%d"), fn(left, right)));
 }
 
 main() = uiKitMain(ExampleAppDelegate, ExampleViewController, ExampleController);

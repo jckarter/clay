@@ -25,13 +25,13 @@ mul1(n, v, Av) {
         var ptr = &v[0];
         var ptr2 = Pointer[Vec[Float64,2]](ptr);
         for (j in range(n/2)) {
-            sum += A_v2(i, 2*j) * ptr2@;
+            sum += A_v2(i, 2*j) * ptr2^;
             ptr2 += 1;
         }
         var final = sum[0] + sum[1];
         ptr += (n/2)*2;
         if (n % 2 == 1)
-            final += A(i, n-1) * ptr@;
+            final += A(i, n-1) * ptr^;
         Av[i] = final;
     }
 }
@@ -42,13 +42,13 @@ mul2(n, v, Atv) {
         var ptr = &v[0];
         var ptr2 = Pointer[Vec[Float64,2]](ptr);
         for (j in range(n/2)) {
-            sum += A_v1(2*j, i) * ptr2@;
+            sum += A_v1(2*j, i) * ptr2^;
             ptr2 += 1;
         }
         var final = sum[0] + sum[1];
         ptr += (n/2)*2;
         if (n % 2 == 1)
-            final += A(n-1, i) * ptr@;
+            final += A(n-1, i) * ptr^;
         Atv[i] = final;
     }
 }

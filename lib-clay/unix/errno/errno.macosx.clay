@@ -1,6 +1,6 @@
 import unix.*;
 
-errno() = __error()@;
+errno() = __error()^;
 
 alias EPERM           = 1;               /* Operation not permitted */
 alias ENOENT          = 2;               /* No such file or directory */

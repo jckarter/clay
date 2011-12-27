@@ -135,7 +135,7 @@ sha256(message: S) --> returned: SHA256 {
         begin(tailChunkBytes) + messageTailSize,
         end(tailChunkBytes) - 8,
     );
-    Pointer[UInt64](end(tailChunkBytes) - 8)@ = hostToNetwork(UInt64(messageSize) * 8);
+    Pointer[UInt64](end(tailChunkBytes) - 8)^ = hostToNetwork(UInt64(messageSize) * 8);
     sha256chunk(state, tempState, chunkSpace, tailChunk);
 
     ref returnedWords = bitcast(returned.digest, Array[UInt32, 8]);

@@ -59,10 +59,10 @@ BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 [I, T | InterfaceType?(I)]
 alias allocateBox(static I, this: T) : Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
-    ptr@.vtbl = &interfaceVtbl[I, T];
+    ptr^.vtbl = &interfaceVtbl[I, T];
 
     try {
-        Pointer[T](&ptr@.this)@ <-- this;
+        Pointer[T](&ptr^.this)^ <-- this;
     }
     catch (ex) {
         free(RawPointer(ptr));
@@ -80,4 +80,4 @@ private vtblSlot(vtbl: InterfaceVtbl[..memberFunctions], static fn)
 
 [I, fn | InterfaceMember?(I, fn)]
 invoke(static fn, i: Pointer[I], forward ..args)
-    = ..vtblSlot(i@.vtbl@, fn)(i@.this, ..args);
+    = ..vtblSlot(i^.vtbl^, fn)(i^.this, ..args);

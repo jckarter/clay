@@ -1109,8 +1109,7 @@ enum UnaryOpKind {
     ADDRESS_OF,
     PLUS,
     MINUS,
-    NOT,
-    BITNOT
+    NOT
 };
 
 struct UnaryOp : public Expr {
@@ -1133,12 +1132,7 @@ enum BinaryOpKind {
     LESSER,
     LESSER_EQUALS,
     GREATER,
-    GREATER_EQUALS,
-    BITAND,
-    BITOR,
-    BITXOR,
-    BITSHL,
-    BITSHR
+    GREATER_EQUALS
 };
 
 struct BinaryOp : public Expr {
@@ -1381,13 +1375,7 @@ enum UpdateOpKind {
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
     UPDATE_DIVIDE,
-    UPDATE_REMAINDER,
-    UPDATE_BITAND,
-    UPDATE_BITOR,
-    UPDATE_BITNOT,
-    UPDATE_BITXOR,
-    UPDATE_BITSHL,
-    UPDATE_BITSHR
+    UPDATE_REMAINDER
 };
 
 struct UpdateAssignment : public Statement {

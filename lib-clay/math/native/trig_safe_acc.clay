@@ -341,7 +341,7 @@ db_one(),   0,   1 )
 
 
 /* Polynomial evaluation of sin(x) over [-Pi/4, +Pi/4]
-   Approximation error lower than  2@(-133) */
+   Approximation error lower than  2^(-133) */
 
 inline scs_sin(x) : {
     var x2,res_scs = scs(),scs();
@@ -357,7 +357,7 @@ inline scs_sin(x) : {
 
 
 /* Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
-   Approximation error lower than  2@(-128) */
+   Approximation error lower than  2^(-128) */
 
 inline scs_cos(x) : {
     var x2,res_scs = scs(),scs();

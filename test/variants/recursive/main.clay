@@ -3,5 +3,5 @@ variant Bar (Int, Foo);
 
 main() {
     var z = Foo(new(Bar(0)), new(Bar(0)));
-    println(variantAs(z.x@, Int), ", ", variantAs(z.y@, Int));
+    println(variantAs(z.x^, Int), ", ", variantAs(z.y^, Int));
 }

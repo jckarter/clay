@@ -83,7 +83,7 @@ inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
 
 inline overload finite?(x:Double)
-	= Bool(bitshr(bitand((Pointer[Int32](&x)+1)@,0x7fffffff)-0x7ff00000,31));
+	= Bool(bitshr(bitand((Pointer[Int32](&x)+1)^,0x7fffffff)-0x7ff00000,31));
 
 inline overload finite?(x:Float){
 	var ix = Int(floatBits(x));

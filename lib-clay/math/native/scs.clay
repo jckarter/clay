@@ -26,7 +26,7 @@ record scs (
     h_word:Array[UInt32,SCS_NB_WORDS],
     /** Used to store Nan,+/-0, Inf, etc and then let the hardware handle them */
     excp:db_number,
-    /** This corresponds to the exponent in an FP format, but here we are in base 2@32  */
+    /** This corresponds to the exponent in an FP format, but here we are in base 2^32  */
     index:Int,
     /** The sign equals 1 or -1*/
     sign:Int,
@@ -79,7 +79,7 @@ scs_set_d(result, x) : {
 
         if (exponent == 0){
             /* x is a denormal number : bring it back to the normal range */
-            nb.2 = nb.2 * radix_two_double;      /* 2@(2.SCS_NB_BITS) */
+            nb.2 = nb.2 * radix_two_double;      /* 2^(2.SCS_NB_BITS) */
             exponent = bitand(nb.0[1] , 0x7ff00000);
             result.index = -2;
         }else {
@@ -162,12 +162,12 @@ scs_get_d(result, x){
                     if (bitand(lowpart , 0x0000000000000002ul)!=0){
                         /* mantissa odd, need to add an half-ulp */
                         rndcorr.0[0] = 0;
-                        rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2@(exp-52) */
+                        rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2^(exp-52) */
                     }else
                         rndcorr.2 = 0.0;
                 }else { /* there are round bits need to add an half-ulp */
                     rndcorr.0[0] = 0;
-                    rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2@(exp-52) */
+                    rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2^(exp-52) */
                 }
             }else{
                 /* need to add nothing*/
@@ -179,17 +179,17 @@ scs_get_d(result, x){
             res  = nb.2 + rndcorr.2;  /* rounded to nearest   */
 
             /* now compute the exponent from the index :
-               we need to multiply res by 2@(X_IND*SCS_NB_BITS)
+               we need to multiply res by 2^(X_IND*SCS_NB_BITS)
                First check this number won't be a denormal itself */
             if(x.index*SCS_NB_BITS +1023 > 0) {
-                /* build the double 2@(X_IND*SCS_NB_BITS)   */
+                /* build the double 2^(X_IND*SCS_NB_BITS)   */
                 nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023,20);
                 nb.0[0] = 0;
                 res *= nb.2;     /* exact multiplication */
             }
             else {
-                /*offset the previous computation by 2@(2*SCS_NB_BITS) */
-                /* build the double 2@(X_IND*SCS_NB_BITS)   */
+                /*offset the previous computation by 2^(2*SCS_NB_BITS) */
+                /* build the double 2^(X_IND*SCS_NB_BITS)   */
                 nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023 + 2*SCS_NB_BITS,20);
                 nb.0[0] = 0;
                 res *= radix_mtwo_double;  /* exact multiplication */

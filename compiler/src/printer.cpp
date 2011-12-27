@@ -173,9 +173,6 @@ static void printExpr(ostream &out, const Expr *x) {
         case NOT :
             out << "NOT";
             break;
-        case BITNOT :
-            out << "BITNOT";
-            break;
         default :
             assert(false);
         }
@@ -218,21 +215,6 @@ static void printExpr(ostream &out, const Expr *x) {
             break;
         case GREATER_EQUALS :
             out << "GREATER_EQUALS";
-            break;
-        case BITAND :
-            out << "BITAND";
-            break;
-        case BITOR :
-            out << "BITOR";
-            break;
-        case BITXOR :
-            out << "BITXOR";
-            break;
-        case BITSHL :
-            out << "BITSHL";
-            break;
-        case BITSHR :
-            out << "BITSHR";
             break;
         default :
             assert(false);

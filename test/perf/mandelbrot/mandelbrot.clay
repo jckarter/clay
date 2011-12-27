@@ -43,7 +43,7 @@ render(w:Int, h:Int) {
             bitNum += 2;
 
             if (bitNum % 8 == 0) {
-                (data + (bitNum/8) - 1)@ = byteAcc;
+                (data + (bitNum/8) - 1)^ = byteAcc;
                 byteAcc = UInt8(0);
             }
 
@@ -53,7 +53,7 @@ render(w:Int, h:Int) {
         if (bitNum % 8 != 0) {
             byteAcc = bitshl(byteAcc, 8 - w%8);
             bitNum += 8;
-            (data + bitNum/8)@ = byteAcc;
+            (data + bitNum/8)^ = byteAcc;
         }
     }
 

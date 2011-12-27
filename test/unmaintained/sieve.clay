@@ -37,10 +37,10 @@ generator(chan, val) {
 }
 
 filter(channels:Pointer[Channels], prime) {
-    //printf(cstring("Created with prime %d %p %p\n"), prime, channels@.chanin,
-    //    channels@.chanout);
-    var chanin = channels@.chanin;
-    var chanout = channels@.chanout;
+    //printf(cstring("Created with prime %d %p %p\n"), prime, channels^.chanin,
+    //    channels^.chanout);
+    var chanin = channels^.chanin;
+    var chanout = channels^.chanout;
     while(true) {
         //printf(cstring("Prime %d reading from %p\n"), prime, chanin);
         var i = 0;

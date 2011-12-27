@@ -5,8 +5,8 @@ external (callingConv) qsort(base:RawPointer, n:SizeT, width:SizeT,
                              compare:CCodePointer[[RawPointer, RawPointer], [Int]]);
 
 compare(pa, pb) {
-    if (pa@ < pb@) return -1;
-    if (pa@ > pb@) return 1;
+    if (pa^ < pb^) return -1;
+    if (pa^ > pb^) return 1;
     return 0;
 }
 

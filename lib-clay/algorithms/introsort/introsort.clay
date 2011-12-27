@@ -42,39 +42,39 @@ unguardedPartitionPivot(first_, last_, compareLess?) {
     var first, last = first_, last_;
     var mid = first + (last - first)/2;
     moveMedianFirst(first, mid, last-1, compareLess?);
-    var cut = unguardedPartition(first + 1, last, first@, compareLess?);
+    var cut = unguardedPartition(first + 1, last, first^, compareLess?);
     cut -= 1;
-    swap(first@, cut@);
+    swap(first^, cut^);
     return cut;
 }
 
 moveMedianFirst(a_, b_, c_, compareLess?) {
     var a, b, c = a_, b_, c_;
-    if (compareLess?(a@,  b@)) {
-        if (compareLess?(b@, c@))
-            swap(a@, b@);
-        else if (compareLess?(a@, c@))
-            swap(a@, c@);
+    if (compareLess?(a^,  b^)) {
+        if (compareLess?(b^, c^))
+            swap(a^, b^);
+        else if (compareLess?(a^, c^))
+            swap(a^, c^);
     }
-    else if (compareLess?(a@,  c@))
+    else if (compareLess?(a^,  c^))
         return;
-    else if (compareLess?(b@, c@))
-        swap(a@, c@);
+    else if (compareLess?(b^, c^))
+        swap(a^, c^);
     else
-        swap(a@, b@);
+        swap(a^, b^);
 }
 
 unguardedPartition(first_, last_, pivot, compareLess?) {
     var first, last = first_, last_;
     while (true) {
-        while (compareLess?(first@, pivot))
+        while (compareLess?(first^, pivot))
             first += 1;
         last -= 1;
-        while (compareLess?(pivot, last@))
+        while (compareLess?(pivot, last^))
             last -= 1;
         if (not (first < last))
             break;
-        swap(first@, last@);
+        swap(first^, last^);
         first += 1;
     }
     return first;
@@ -101,10 +101,10 @@ overload insertionSort(first_, last_, compareLess?) {
         return;
     var i = first + 1;
     while (i != last) {
-        if (compareLess?(i@, first@)) {
-            var value = move(i@);
+        if (compareLess?(i^, first^)) {
+            var value = move(i^);
             moveBackward(first, i, i+1);
-            first@ = move(value);
+            first^ = move(value);
         }
         else {
             unguardedLinearInsert(i, compareLess?);
@@ -124,15 +124,15 @@ unguardedInsertionSort(first_, last_, compareLess?) {
 
 unguardedLinearInsert(last_, compareLess?) {
     var last = last_;
-    var value = move(last@);
+    var value = move(last^);
     var next = last;
     next -= 1;
-    while (compareLess?(value, next@)) {
-        last@ = move(next@);
+    while (compareLess?(value, next^)) {
+        last^ = move(next^);
         last = next;
         next -= 1;
     }
-    last@ = move(value);
+    last^ = move(value);
 }
 
 moveBackward(first_, last_, newLast_) {
@@ -141,7 +141,7 @@ moveBackward(first_, last_, newLast_) {
     while (last != first) {
         last -= 1;
         newLast -= 1;
-        newLast@ = move(last@);
+        newLast^ = move(last^);
     }
 }
 

@@ -3112,7 +3112,7 @@ var  twoPowerIndex2 = Array[tPi2_t,256](
    Decomposes a positive double precision
    variable x (normal or subnormal) such that
 
-   2@(resE) * resm = x
+   2^(resE) * resm = x
 
    where resm = 2 * k + 1 for integer k
 
@@ -3154,7 +3154,7 @@ private inline isInteger(x) = ((abs(x) >= 0.4503599627370496e16) or (((abs(x) + 
 
    resh + resm + resl = (ed + log2(1 + (xh + xm)) + log2(r[index])) * (1 + eps)
 
-   where ||eps|| <= 2@(-130)
+   where ||eps|| <= 2^(-130)
 
 
 */
@@ -3204,9 +3204,9 @@ private inline log2_130(index, ed:T, xh:T, xm:T) --> resh:T, resm:T, resl:T {
 
    Approximates
 
-   2@H * (resh + resm + resl) = 2@(xh + xm + xl) * (1 + eps)
+   2^H * (resh + resm + resl) = 2^(xh + xm + xl) * (1 + eps)
 
-   where ||eps|| <= 2@(-119.5)
+   where ||eps|| <= 2^(-119.5)
 
 */
 [T]
@@ -3215,7 +3215,7 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
 
     //      Argument reduction
     //      Produce exactly
-    //      2@H * 2@(i1/2@8) * 2@(i2/2@13) * 2@(rh + rm + rl)
+    //      2^H * 2^(i1/2^8) * 2^(i2/2^13) * 2^(rh + rm + rl)
 
     var xhMult2L = xh * two13;
     shiftedxhMult2Ldb.2 = shiftConst + xhMult2L;
@@ -3230,7 +3230,7 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
     var rh, t3 = Add12( t1h, t1m);
     var rm, rl = Add12( t3, t1l);
 
-    /* Polynomial approximation of 2@(rh + rm + rl) */
+    /* Polynomial approximation of 2^(rh + rm + rl) */
 
     var p_t_2_0h = exp2_120_p_coeff_6h * rh;
     var p_t_3_0h = exp2_120_p_coeff_5h + p_t_2_0h;
@@ -3267,17 +3267,17 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
 
    Approximates
 
-   2@H * (resh + resm + resl) = 2@(y * (ed + log2(1 + (zh + zm)) + log2(r[index]))) * (1 + eps)
+   2^H * (resh + resm + resl) = 2^(y * (ed + log2(1 + (zh + zm)) + log2(r[index]))) * (1 + eps)
 
-   where ||eps|| <= 2@(-118.5) if -1075 <= y * (ed + log2(1 + (zh + zm)) + log2(r[index])) <= 1024
+   where ||eps|| <= 2^(-118.5) if -1075 <= y * (ed + log2(1 + (zh + zm)) + log2(r[index])) <= 1024
 
    Approximates further (ed + log2(1 + (zh + zm)) + log2(r[index))) by log2xh
    where
 
    log2xh = (ed + log2(1 + (zh + zm)) + log2(r[index))) * (1 + eps2)
 
-   where |eps2| <= 2@(-52)
-   and log2xh is exact if 2@ed * ((1 + (zh + zm)) * r[index]) is an integer power of 2.
+   where |eps2| <= 2^(-52)
+   and log2xh is exact if 2^ed * ((1 + (zh + zm)) * r[index]) is an integer power of 2.
 
 */
 private inline pow_120(y,index,ed,zh,zm) {
@@ -3285,7 +3285,7 @@ private inline pow_120(y,index,ed,zh,zm) {
     var log2xh,log2xm,log2xl = log2_130(index,ed,zh,zm);
     /* Compute y * log2(x) */
     var ylog2xh,ylog2xm,ylog2xl = Mul133(y,log2xh,log2xm,log2xl);
-    /* Compute 2@(y * log2(x)) */
+    /* Compute 2^(y * log2(x)) */
     return log2xh,..exp2_120(ylog2xh,ylog2xm,ylog2xl);
 }
 
@@ -3294,9 +3294,9 @@ private inline pow_120(y,index,ed,zh,zm) {
 
    Checks whether
 
-   2@H * (powh + powm + powl)
+   2^H * (powh + powm + powl)
 
-   which is an approximate to x@y with a relative error or less than 2@(-118.5),
+   which is an approximate to x^y with a relative error or less than 2^(-118.5),
    can be rounded correctly to double precision in round-to-nearest-ties-to-even
    mode or whether the Table Maker's Dilemma occurs or the case is exact.
 
@@ -3309,13 +3309,13 @@ private inline pow_120(y,index,ed,zh,zm) {
 
    such that
 
-   2@G * (kh + kl)
+   2^G * (kh + kl)
 
-   is an approximate to x@y with an relative error of 2@(-117)
+   is an approximate to x^y with an relative error of 2^(-117)
 
    and such that rounding
 
-   2@G * kh
+   2^G * kh
 
    to double precision is an exact operation.
 
@@ -3348,13 +3348,13 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
 
      In both cases, we bring H, powh + powm + powl to a form
 
-     2@K * (th + tm + tl) = 2@H * (powh + powm + powm) * (1 + eps)
+     2^K * (th + tm + tl) = 2^H * (powh + powm + powm) * (1 + eps)
 
      where
 
-     (i)   |eps| <= 2@(-118 - 53) = 2@(-171)
-     (ii)  2@(-K) * ulp(2@K * th) = 1
-     (iii) the rounding of 2@K * th to double precision is exact
+     (i)   |eps| <= 2^(-118 - 53) = 2^(-171)
+     (ii)  2^(-K) * ulp(2^K * th) = 1
+     (iii) the rounding of 2^K * th to double precision is exact
            (or produces +inf)
 
            */
@@ -3385,7 +3385,7 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
 
         In this case, we have exactly:
 
-        2@K * (th + tm + tl) = 2@H * (powh + powm + powm)
+        2^K * (th + tm + tl) = 2^H * (powh + powm + powm)
 
         */
         var th = powh * two52;
@@ -3403,7 +3403,7 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
 
     delta = ABS(0.5 - ABS(tm + tl)) * (1 + eps)
 
-    where |eps| <= 2@(-53)
+    where |eps| <= 2^(-53)
 
      The addition 0.5 + (-ABS(tm)) is exact by Sterbenz' lemma
      */
@@ -3413,11 +3413,11 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
     var delta = abs((0.5 + t1m) - t1l);
     /* We cannot decide the rounding or have an exact case
      iff
-     delta <= 2@(-118) * th
+     delta <= 2^(-118) * th
      We can see this in the following drawing:
      result = round(
             +-----------------+------+----------...----+------------
-     2@K *  | th              | +/-1 | 0               | delta        )
+     2^K *  | th              | +/-1 | 0               | delta        )
             +-----------------+------+----------...----+------------
             | <------------- 118 bits -------------> |
     */
@@ -3433,7 +3433,7 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
                 |                 |
        ...------|--------|--------|------...
                 |------->-->      |
-                @   tm    tl      @
+                ^   tm    tl      ^
                 th                round(th + tm + tl)
        If tm is negative, we must correct th by decreasing it
        otherwise we must correct th by increasing it.
@@ -3461,7 +3461,7 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
             }
         }
 
-        /* Perform now the multiplication 2@K * th
+        /* Perform now the multiplication 2^K * th
 
         Note that we must be able to produce
 
@@ -3489,26 +3489,26 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
 
 
 /* pow_exact_case
-   Checks whether x@y is an exact or half-ulp case for rounding
+   Checks whether x^y is an exact or half-ulp case for rounding
    into double precision.
-   This means the procedure checks whether x@y can be written on
+   This means the procedure checks whether x^y can be written on
    not more than 54 bits.
-   The procedure uses 2@G * (kh + kl) supposing the following properties:
+   The procedure uses 2^G * (kh + kl) supposing the following properties:
    * kh + kl holds on at most 54 bits
-   * 2@G * kh is representable in double precision (even in the subnormal range)
-   * 2@G * (kh + kl) approximates x@y with an error eps less than 2@(-117), i.e.
-     2@G * (kh + kl) = x@y * (1 + eps) where |eps| <= 2@(-117)
+   * 2^G * kh is representable in double precision (even in the subnormal range)
+   * 2^G * (kh + kl) approximates x^y with an error eps less than 2^(-117), i.e.
+     2^G * (kh + kl) = x^y * (1 + eps) where |eps| <= 2^(-117)
    * log2xh approximates log2(x) with an accuracy equivalent to at least 52 bits
      In particular log2xh is exact if x is an integer power of 2
    Returns 1 if the case is exact or half-ulp
    Returns 0 otherwise
-   If returning 1, affects pow with 2@G * (kh + kl) rounded to double precision
+   If returning 1, affects pow with 2^G * (kh + kl) rounded to double precision
 */
 
 private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
     var xdb, ydb, tempdb, shiftedEydb, temp2db = dn(),dn(),dn(),dn(),dn();
 
-    /* For testing whether x@y is an exact or half-ulp case,
+    /* For testing whether x^y is an exact or half-ulp case,
      we have two main cases:
 
      (i)  x is an integer power of 2
@@ -3520,21 +3520,21 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
 
     xdb.2 = x;
     if (bitand(xdb.0[1] , 0xfff00000) == 0)
-        /* x is subnormal, scale by 2@52 */
+        /* x is subnormal, scale by 2^52 */
         xdb.2 *= 0.4503599627370496e16;
     if (bitor(bitand(xdb.0[1] , 0x000fffff) , xdb.0[0]) == 0) {
         /* x is an integer power of 2
 
-       x@y is exact or midpoint iff log2(x) * y is integer
+       x^y is exact or midpoint iff log2(x) * y is integer
 
        Since we know that x is an integer power of 2,
        log2xh is equal to this integer. Since the exponent
        of the double precision number is bounded by the
        exponent range, we know that log2xh is integer and
-       bounded by 2@11. It is therefore possible to
+       bounded by 2^11. It is therefore possible to
        split y into two parts of 21 and 32 bits, to perform
        the multiplication componentwise. Since the result
-       is bounded by 2@11, it suffices to compute the
+       is bounded by 2^11, it suffices to compute the
        nearest integer to the higher word product, and to
        compare the rounding difference to the low word product.
        This splitting is faster than the usual Dekker splitting.
@@ -3565,13 +3565,13 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
 
     /* Decompose now y into
 
-       y = 2@F * n
+       y = 2^F * n
 
        Checking F and n, we can then already decide
        some cases using the fact that the worst-case
-       accuracy for x@n, n in [|0;35|], is less (in bits)
-       than the accuracy of the approximation of x@y we have
-       already in 2@G * (kh + kl).
+       accuracy for x^n, n in [|0;35|], is less (in bits)
+       than the accuracy of the approximation of x^y we have
+       already in 2^G * (kh + kl).
 
     */
         var n,F = decompose(y);
@@ -3582,25 +3582,25 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
         if (F < 0) {
       /* Here, -5 <= F <= -1, 3 <= n <= 35, n an odd integer
 
-         We decompose x into 2@E * m where m is an odd integer
+         We decompose x into 2^E * m where m is an odd integer
 
-	 Let H, sh and sl such that 2@H * (sh + sl) = 2@G * (kh + kl) and
+	 Let H, sh and sl such that 2^H * (sh + sl) = 2^G * (kh + kl) and
 	 sh + sl is an odd integer.
 
-	 If we have E * 2@F * n = H, we can apply the worst case argument
+	 If we have E * 2^F * n = H, we can apply the worst case argument
 	 because we know the worst case for
 
-	 m@(2@F * n) with m odd integer, -5 <= F <= -1, 3 <= n <= 35
+	 m^(2^F * n) with m odd integer, -5 <= F <= -1, 3 <= n <= 35
 
 	 when rounding to 53 bits in both rounding modes.
 
-	 E is bounded in magnitude by 2@11. 2@F * n is equal to y by
+	 E is bounded in magnitude by 2^11. 2^F * n is equal to y by
 	 construction. Since n <= 35, y contains at most 6 significant bits.
 	 The arithmetical multiplication E * y is therefore exact and less
-	 than or equal to 2@17.
+	 than or equal to 2^17.
 
 	 We check first whether E * y is an integer. If this is the case,
-	 we compute sh + sl = 2@(G - E * y) * (kh + kl). Finally,
+	 we compute sh + sl = 2^(G - E * y) * (kh + kl). Finally,
 	 we check whether sh + sl is an odd integer.
 
       */
@@ -3621,7 +3621,7 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
                 return 0,0.;
 
       /* Here E * y is integer.
-	 Produce now 2@(G - E * y).
+	 Produce now 2^(G - E * y).
       */
             tempdb.0[1] = bitshl(((G - shiftedEydb.0[0]) + 1023) , 20);
             tempdb.0[0] = 0;
@@ -3649,27 +3649,27 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
     /* Here, we have either F >= 0 or an exact case
 
        If F >= 0, we also have an exact case because
-       2@F * n = y <= 35, y therefore integer and because
+       2^F * n = y <= 35, y therefore integer and because
        we can apply the worst case argument.
 
     */
     }
 
   /*
-       Here, the case is exact, affect pow with 2@G * (kh + kl) rounded to
+       Here, the case is exact, affect pow with 2^G * (kh + kl) rounded to
        nearest in double precision
 
-       Since kh + kl holds on at most 54 bits, 2@G * kh produces
+       Since kh + kl holds on at most 54 bits, 2^G * kh produces
        never any rounding error and kh and kl are not overlapping,
-       2@G * kh is equal to the rounding if
+       2^G * kh is equal to the rounding if
        (i)  kl is equal to 0
-       (ii) kl is not equal to 0 and the mantissa of 2@G * kh is even
+       (ii) kl is not equal to 0 and the mantissa of 2^G * kh is even
 
        If in condition (ii), kl is not equal to 0 and the mantissa of
-       2@G * kh is not even, we correct it depending on the sign of kl.
+       2^G * kh is not even, we correct it depending on the sign of kl.
 
-       Remark that G can be such that 2@G is no longer a normal.
-       Produce therefore 2@(floor(G/2)) and 2@(G - floor(G/2)) and
+       Remark that G can be such that 2^G is no longer a normal.
+       Produce therefore 2^(floor(G/2)) and 2^(G - floor(G/2)) and
        multiply in two steps.
 
   */
@@ -3842,7 +3842,7 @@ private inline pow_rn(x:Double, y:Double) {
 
     /* Test now whether we have the case
 
-    (-x)@y = (-1)@y * x@y
+    (-x)^y = (-1)^y * x^y
 
     where x is positive
 
@@ -3851,7 +3851,7 @@ private inline pow_rn(x:Double, y:Double) {
     var sign = 1.0;
     if (x < 0.0) {
         /* x is negative
-        x@y is defined only if y is integer
+        x^y is defined only if y is integer
         */
         if (not isInteger(y))
         /* y is not integer
@@ -3861,7 +3861,7 @@ private inline pow_rn(x:Double, y:Double) {
             return nan(Double);
         /* Here y is integer
 
-        Remove the sign of x and put (-1)@y in sign
+        Remove the sign of x and put (-1)^y in sign
 
         */
         x = -x;
@@ -3872,15 +3872,15 @@ private inline pow_rn(x:Double, y:Double) {
 
     /* Here x is strictly positive and finite */
 
-    /* Test now if abs(y) is in a range giving finite, non-trivial results x@y
+    /* Test now if abs(y) is in a range giving finite, non-trivial results x^y
 
     We have
 
-    x@y = 2@(y * log2(x)) = 2@(y * log2(2@E * m)) = 2@(y * (E + log2(1 + f)))
+    x^y = 2^(y * log2(x)) = 2^(y * log2(2^E * m)) = 2^(y * (E + log2(1 + f)))
 
-    We have overflow iff x@y >= 2@(1024), i.e. y * (E + log2(1 + f)) >= 1024
-    We have underflow (flush to zero) iff x@y <= 2@(-1076), i.e. y * (E + log2(1 + f)) <= - 1076
-    We round to 1.0 iff abs(y * (E + log2(1 + f))) <= 2@(-54)
+    We have overflow iff x^y >= 2^(1024), i.e. y * (E + log2(1 + f)) >= 1024
+    We have underflow (flush to zero) iff x^y <= 2^(-1076), i.e. y * (E + log2(1 + f)) <= - 1076
+    We round to 1.0 iff abs(y * (E + log2(1 + f))) <= 2^(-54)
 
     We approximate log2(1 + f) as
 
@@ -3890,7 +3890,7 @@ private inline pow_rn(x:Double, y:Double) {
 
     So we have surely
     (i)  overflow or underflow if abs(y * (E + c * f)) >= ceil(1076/0.853) = 1261
-    (ii) trivial rounding to 1.0 if abs(y * (E + c * f)) <= 2@(-55) <= 2@(-54)/1.21
+    (ii) trivial rounding to 1.0 if abs(y * (E + c * f)) <= 2^(-55) <= 2^(-54)/1.21
 
     */
 
@@ -3962,7 +3962,7 @@ private inline pow_rn(x:Double, y:Double) {
             return (sign * SMALLEST) * SMALLEST;
 
     if (abs(ylog2xFast) <= twoM55)
-        /* abs(y * log2(x)) <= 2@(-55),
+        /* abs(y * log2(x)) <= 2^(-55),
         we return 1.0 and set the inexact flag
         */
         return sign * (1.0 + SMALLEST);
@@ -4037,16 +4037,16 @@ private inline pow_rn(x:Double, y:Double) {
     var ylog2xh,temp1 = Mul12(y,log2xh);
     var ylog2xm = temp1 + y * log2xm;
 
-    /* Approximate now 2@(y * log2(x))
+    /* Approximate now 2^(y * log2(x))
 
     We have
 
-    2@(ylog2xh + ylog2xm)
-    = 2@ylog2xh * 2@ylog2xm
-    = 2@H * 2@(ylog2xh - H) * 2@ylog2xm
-    = 2@H * 2@(i2/2@8) * 2@(i1/2@13) * 2@(ylog2xh - H - i2/2@8 - i1/2@13) * 2@ylog2xm
-    = 2@H * tbl2[i2] * (1 + tbl1[i1]) * (1 + p(rh)) + delta
-    where rh \approx ylog2xh - H - i1/2@7 - i2/2@13 + ylog2xm
+    2^(ylog2xh + ylog2xm)
+    = 2^ylog2xh * 2^ylog2xm
+    = 2^H * 2^(ylog2xh - H) * 2^ylog2xm
+    = 2^H * 2^(i2/2^8) * 2^(i1/2^13) * 2^(ylog2xh - H - i2/2^8 - i1/2^13) * 2^ylog2xm
+    = 2^H * tbl2[i2] * (1 + tbl1[i1]) * (1 + p(rh)) + delta
+    where rh \approx ylog2xh - H - i1/2^7 - i2/2^13 + ylog2xm
     */
 
     shiftedylog2xhMult2Ldb.2 = shiftConstTwoM13 + ylog2xh;
@@ -4060,9 +4060,9 @@ private inline pow_rn(x:Double, y:Double) {
 
     This operation produces an error
 
-    2@(z * (1 + eps)) = 2@z * (1 + eps')
+    2^(z * (1 + eps)) = 2^z * (1 + eps')
 
-    where |eps| <= 2@(-53) and |eps'| <= 2@(-65)
+    where |eps| <= 2^(-53) and |eps'| <= 2^(-65)
 
     */
     var rh = r + ylog2xm;
@@ -4088,9 +4088,9 @@ private inline pow_rn(x:Double, y:Double) {
 
     /* Here we have
 
-    2@H * (powh + powm) = x@y * (1 + eps)
+    2^H * (powh + powm) = x^y * (1 + eps)
 
-    with ||eps|| <= 2@(-60)
+    with ||eps|| <= 2^(-60)
 
     Check first if we overflow or underflow.
 
@@ -4125,7 +4125,7 @@ private inline pow_rn(x:Double, y:Double) {
                 powdb.0[1] += bitshl(H , 20);
                 return sign * powdb.2;
             } else {
-                /* May overflow: multiply by 2@H in two steps */
+                /* May overflow: multiply by 2^H in two steps */
                 powdb.0[1] += bitshl((H - 3) , 20);
                 return sign * powdb.2 * 8.0;
             }
@@ -4153,7 +4153,7 @@ private inline pow_rn(x:Double, y:Double) {
 
         /* Here we know that 1 <= powh + powm < 2
 
-        2@H * (powh + powm) is subnormal or equal to the least normal
+        2^H * (powh + powm) is subnormal or equal to the least normal
         iff H <= -1023
 
         */
@@ -4170,26 +4170,26 @@ private inline pow_rn(x:Double, y:Double) {
 
             This means
 
-            round(2@H * (powh + powm)) = 2@(-1074) * nearestint(2@(+1074) * 2@H * (powh + powm))
+            round(2^H * (powh + powm)) = 2^(-1074) * nearestint(2^(+1074) * 2^H * (powh + powm))
 
             We compute the rounding (and test its TMD) of
 
-            nearestint(2@(H + 1074) * (powh + powm))
+            nearestint(2^(H + 1074) * (powh + powm))
 
             by computing first
 
-            nearestint(2@(H + 1074) * powh)
+            nearestint(2^(H + 1074) * powh)
 
             and then the absolute error
 
-            delta = 2@(H + 1074) * powh - nearestint(2@(H + 1074) * powh) + 2@(H + 1074) * powl
+            delta = 2^(H + 1074) * powh - nearestint(2^(H + 1074) * powh) + 2^(H + 1074) * powl
 
             We can then refute or correct the rounding by tests on delta.
 
-            We know that 2@(H + 1074) <= 2@(51) and powh <= 2.0. Thus 2@(H + 1074) * powh <= 2@(52)
+            We know that 2^(H + 1074) <= 2^(51) and powh <= 2.0. Thus 2^(H + 1074) * powh <= 2^(52)
             We can hence compute nearestint using the shift trick.
 
-            We start by constructing 2@(H + 1074)
+            We start by constructing 2^(H + 1074)
             */
 
             twodb.0[1] = bitshl((H + (1074 + 1023)) , 20);
@@ -4233,19 +4233,19 @@ private inline pow_rn(x:Double, y:Double) {
 
             rest = abs(0.5 - abs(delta)) * (1 + eps)
 
-            where abs(eps) <= 2@(-53)
+            where abs(eps) <= 2^(-53)
 
             We cannot decide the rounding if
 
-            rest <= 2@(H + 1074) * epsmax * 2
+            rest <= 2^(H + 1074) * epsmax * 2
 
             where epsmax is the bound for the approximating polynomials,
 
-            here epsmax = 2@(-60)
+            here epsmax = 2^(-60)
 
             as follows by the following drawing
 
-            2@52                2@(H + 1074)     2@0            2@(H + 1074) * epsmax
+            2^52                2^(H + 1074)     2^0            2^(H + 1074) * epsmax
             +-------------------+----------------+---+------... |
             | 0 ...           0 | nearestintpowh | 1 |          rest
             +-------------------+----------------+---+------... |
@@ -4253,7 +4253,7 @@ private inline pow_rn(x:Double, y:Double) {
 
             This means that we cannot decide the rounding if
 
-            rest * 1/epsmax * 0.5 <= 2@(H + 1074)
+            rest * 1/epsmax * 0.5 <= 2^(H + 1074)
 
             We store 1/epsmax * 0.5 on SUBNORMROUNDCST
             */
@@ -4265,7 +4265,7 @@ private inline pow_rn(x:Double, y:Double) {
 
                 The result to return is
 
-                sign * 2@(-1074) * nearestintpowh
+                sign * 2^(-1074) * nearestintpowh
 
                 which is either subnormal or equal to the
                 least normal.
