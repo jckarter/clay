@@ -215,16 +215,16 @@ luaL_opt(l:Pointer[lua_State], f, n:Int, d) {
 */
 
 luaL_addchar(b:Pointer[luaL_Buffer], c) {
-    if (not (b^.p < end(b^.buffer)))
+    if (not (b@.p < end(b@.buffer)))
         luaL_prepbuffer(b);
-    b^.p = CChar(c);
-    b^.p += 1;
+    b@.p = CChar(c);
+    b@.p += 1;
 }
 
 luaL_putchar(b:Pointer[luaL_Buffer], c) { luaL_addchar(b, c); }
 
 luaL_addsize(b:Pointer[luaL_Buffer], n) {
-    b^.p += n;
+    b@.p += n;
 }
 
 

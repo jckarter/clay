@@ -1628,7 +1628,7 @@ private inline log_rn(x:Double) {
     xdb.2 = x;
 
     // Filter cases
-    if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
+    if (xdb.0[1] < 0x00100000){        /* x < 2@(-1022)    */
         if (bitor(bitand(xdb.0[1] , 0x7fffffff),xdb.0[0])==0)
             return negativeInfinity(Double); /* log(+/-0) = -Inf */
         if (xdb.0[1] < 0.f)
@@ -1778,7 +1778,7 @@ private inline log2_rn(x:Double) {
     xdb.2 = x;
 
     /* Filter cases */
-    if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
+    if (xdb.0[1] < 0x00100000){        /* x < 2@(-1022)    */
         if (bitor(bitand(xdb.0[1],0x7fffffff),xdb.0[0])==0)
             return negativeInfinity(Double);
                          		   /* log(+/-0) = -Inf */
@@ -1908,7 +1908,7 @@ private inline log10_rn(x:Double){
     xdb.2 = x;
 
     /* Filter cases */
-    if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
+    if (xdb.0[1] < 0x00100000){        /* x < 2@(-1022)    */
         if (bitor(bitand(xdb.0[1], 0x7fffffff),xdb.0[0])==0)
             return negativeInfinity(Double);
         if (xdb.0[1] < 0)

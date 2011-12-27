@@ -473,7 +473,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("^")) return false;
+    if (!symbol("@")) return false;
     x = new UnaryOp(DEREFERENCE, NULL);
     x->location = location;
     return true;
@@ -543,6 +543,16 @@ static bool suffixExpr(ExprPtr &x) {
 // prefix expr
 //
 
+static bool bitnotExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("~")) return false;
+    ExprPtr a;
+    if (!suffixExpr(a)) return false;
+    x = new UnaryOp(BITNOT, a);
+    x->location = location;
+    return true;
+}
+
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("&")) return false;
@@ -599,11 +609,14 @@ static bool dispatchExpr(ExprPtr &x) {
 static bool prefixExpr(ExprPtr &x) {
     int p = save();
     if (signExpr(x)) return true;
+    if (restore(p), bitnotExpr(x)) return true;
     if (restore(p), addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
     return false;
 }
+
+
 
 
 
@@ -690,6 +703,55 @@ static bool addSubExpr(ExprPtr &x) {
 
 
 //
+// bitwise shift expr
+//
+\
+
+static bool bitshiftOp(int &op) {
+    int p = save();
+    if (symbol("<<")) {
+        op = BITSHL;
+        return true;
+    }
+    restore(p);
+    if (symbol(">>")) {
+        op = BITSHR;
+        return true;
+    }
+    return false;
+}
+
+static bool bitshiftTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitshiftOp(op)) return false;
+    ExprPtr y;
+    if (!addSubExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitshiftExpr(ExprPtr &x) {
+    if (!addSubExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitshiftTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+
+
+
+//
 // compare expr
 //
 
@@ -714,14 +776,14 @@ static bool compareTail(BinaryOpPtr &x) {
     int op;
     if (!compareOp(op)) return false;
     ExprPtr y;
-    if (!addSubExpr(y)) return false;
+    if (!bitshiftExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
 }
 
 static bool compareExpr(ExprPtr &x) {
-    if (!addSubExpr(x)) return false;
+    if (!bitshiftExpr(x)) return false;
     while (true) {
         int p = save();
         BinaryOpPtr y;
@@ -782,6 +844,119 @@ static bool equalExpr(ExprPtr &x) {
     return true;
 }
 
+
+//
+// bitwise and, xor, or
+//
+
+
+static bool bitandOp(int &op) {
+    int p = save();
+    if (symbol("&"))
+        op = BITAND;
+    else
+        return false;
+    return true;
+}
+
+static bool bitandTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitandOp(op)) return false;
+    ExprPtr y;
+    if (!equalExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitandExpr(ExprPtr &x) {
+    if (!equalExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitandTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+static bool bitxorOp(int &op) {
+    int p = save();
+    if (symbol("^"))
+        op = BITXOR;
+    else
+        return false;
+    return true;
+}
+
+static bool bitxorTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitxorOp(op)) return false;
+    ExprPtr y;
+    if (!bitandExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitxorExpr(ExprPtr &x) {
+    if (!bitandExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitxorTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+static bool bitorOp(int &op) {
+    int p = save();
+    if (symbol("|"))
+        op = BITOR;
+    else
+        return false;
+    return true;
+}
+
+static bool bitorTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitorOp(op)) return false;
+    ExprPtr y;
+    if (!bitxorExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitorExpr(ExprPtr &x) {
+    if (!bitxorExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitorTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
 
 
 //
@@ -793,10 +968,10 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return equalExpr(x);
+        return bitorExpr(x);
     }
     ExprPtr y;
-    if (!equalExpr(y)) return false;
+    if (!bitorExpr(y)) return false;
     x = new UnaryOp(NOT, y);
     x->location = location;
     return true;
@@ -1250,9 +1425,12 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=", "%=", NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=", "%=",
+                        "&=","|=","~=","^=","<<=",">>=",NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_REMAINDER};
+                       UPDATE_DIVIDE, UPDATE_REMAINDER,
+                       UPDATE_BITAND, UPDATE_BITOR, UPDATE_BITNOT,
+                       UPDATE_BITXOR, UPDATE_BITSHL, UPDATE_BITSHR};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {

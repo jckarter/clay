@@ -24,7 +24,7 @@ alias poolAlloc(p:Pool[T], x:T) {
     assert(p.next < size(p.data));
     var ptr = &p.data[p.next];
     p.next += 1;
-    ptr^ = x;
+    ptr@ = x;
     return ptr;
 }
 
@@ -53,17 +53,17 @@ makeTree(_item, _depth, pool){
     var item, depth = _item, _depth;
     var node = newNode(pool, item);
     if (depth > 0) {
-        node^.left  = makeTree(2*item-1, depth-1, pool);
-        node^.right = makeTree(2*item,   depth-1, pool);       
+        node@.left  = makeTree(2*item-1, depth-1, pool);
+        node@.right = makeTree(2*item,   depth-1, pool);       
     } 
     return node;
 }
 
 checksumTree(_node) {
     var node = _node;
-    var result = node^.item;
-    if (not null?(node^.left))
-        result += checksumTree(node^.left) - checksumTree(node^.right);
+    var result = node@.item;
+    if (not null?(node@.left))
+        result += checksumTree(node@.left) - checksumTree(node@.right);
     return result;
 }
 

@@ -39,7 +39,7 @@ overload NamedScalar[T](fileName:S, initial:T) {
         resizeFile(f, TypeSize(T));
         var mapping = FileMapping(f, MAP_READ_WRITE);
         var ptr = Pointer[T](mappingAddress(mapping));
-        ptr^ <-- initial;
+        ptr@ <-- initial;
         return NamedScalar[T](strings.String(fileName), f, mapping);
     }
 }
@@ -65,4 +65,4 @@ overload destroy(x:NamedScalar[T]) {
 
 [T]
 overload dereference(x:NamedScalar[T]) =
-    ref Pointer[T](mappingAddress(x.mapping))^;
+    ref Pointer[T](mappingAddress(x.mapping))@;

@@ -70,14 +70,14 @@ inline nestedVariantIs?(x:V, static T) {
 inline nestedVariantAs(ref x:V, static T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
-    return ref ptr^;
+    return ref ptr@;
 }
 
 [V, T | Variant?(V)]
 inline overload nestedVariantAs(rvalue x:V, static T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
-    return move(ptr^);
+    return move(ptr@);
 }
 
 
@@ -104,7 +104,7 @@ private inline unboxAlong(x, Target, first, ..rest) {
     var ptr = variantAsPtr(x, first);
     if (null?(ptr))
         return null(Target);
-    return unboxAlong(ptr^, Target, ..rest);
+    return unboxAlong(ptr@, Target, ..rest);
 }
 
 [Target]

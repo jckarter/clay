@@ -158,7 +158,7 @@ operatorsTest() {
     not x;
     +x;
     -x;
-    x^;
+    x@;
     &x;
     *x;
     x.0;

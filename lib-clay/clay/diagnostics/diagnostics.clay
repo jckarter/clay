@@ -60,7 +60,7 @@ errorWithLocation(file:SourceFile, offset, ..message) {
         if (i == line) {
             for (j in range(column))
                 print('-');
-            println('^');
+            println('@');
         }
     }
     println("#######################################");

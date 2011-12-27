@@ -7,12 +7,12 @@ sortRange(start, end) {
     if (start < end-1) {
         var m = start;
         for (p in range(start+1, end)) {
-            if (p^ < start^) {
+            if (p@ < start@) {
                 m += 1;
-                swap(p^, m^);
+                swap(p@, m@);
             }
         }
-        swap(start^, m^);
+        swap(start@, m@);
         sortRange(start, m);
         sortRange(m+1, end);
     }

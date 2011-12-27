@@ -22,29 +22,29 @@ Foo_new(s:lua.State) {
     var x = lua.optInt(s, 1, 0);
     var y = lua.optInt(s, 2, 0);
     var p = pushFoo(s);
-    p^.x = x;
-    p^.y = y;
+    p@.x = x;
+    p@.y = y;
     return 1;
 }
 
 Foo_yourCfunction(s:lua.State) {
     var p = checkFoo(s, 1);
     println("this is yourCfunction\t");
-    lua.pushNumber(s, p^.x);
-    lua.pushNumber(s, p^.y);
+    lua.pushNumber(s, p@.x);
+    lua.pushNumber(s, p@.y);
     return 2;
 }
 
 Foo_setx(s:lua.State) {
     var p = checkFoo(s, 1);
-    p^.x = lua.checkInt(s, 2);
+    p@.x = lua.checkInt(s, 2);
     lua.setTop(s, 1);
     return 1;
 }
 
 Foo_sety(s:lua.State) {
     var p = checkFoo(s, 1);
-    p^.y = lua.checkInt(s, 2);
+    p@.y = lua.checkInt(s, 2);
     lua.setTop(s, 1);
     return 1;
 }
@@ -53,15 +53,15 @@ Foo_add(s:lua.State) : Int {
     var p1 = checkFoo(s, 1);
     var p2 = checkFoo(s, 2);
     var sum = pushFoo(s);
-    sum^.x = p1^.x + p2^.x;
-    sum^.y = p1^.y + p2^.y;
+    sum@.x = p1@.x + p2@.x;
+    sum@.y = p1@.y + p2@.y;
     return 1;
 }
 
 Foo_dot(s:lua.State) {
     var p1 = checkFoo(s, 1);
     var p2 = checkFoo(s, 2);
-    lua.pushNumber(s, p1^.x * p2^.x + p1^.y * p2^.y);
+    lua.pushNumber(s, p1@.x * p2@.x + p1@.y * p2@.y);
     return 1;
 }
 
