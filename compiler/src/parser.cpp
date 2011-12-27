@@ -472,7 +472,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("^")) return false;
+    if (!symbol("@")) return false;
     x = new UnaryOp(DEREFERENCE, NULL);
     x->location = location;
     return true;
@@ -689,6 +689,168 @@ static bool addSubExpr(ExprPtr &x) {
 
 
 //
+// bitwise shift expr
+//
+
+static bool bitshiftOp(int &op) {
+    int p = save();
+    if (symbol("<<")) {
+        op = BITSHL;
+        return true;
+    }
+    restore(p);
+    if (symbol(">>")) {
+        op = BITSHR;
+        return true;
+    }
+    return false;
+}
+
+static bool bitshiftTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitshiftOp(op)) return false;
+    ExprPtr y;
+    if (!addSubExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitshiftExpr(ExprPtr &x) {
+    if (!addSubExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitshiftTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+
+
+//
+// bitwise and, xor, or
+//
+
+
+static bool bitandOp(int &op) {
+    int p = save();
+    if (symbol("&"))
+        op = BITAND;
+    else
+        return false;
+    return true;
+}
+
+static bool bitandTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitandOp(op)) return false;
+    ExprPtr y;
+    if (!addSubExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitandExpr(ExprPtr &x) {
+    if (!bitshiftExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitandTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+static bool bitxorOp(int &op) {
+    int p = save();
+    if (symbol("^"))
+        op = BITXOR;
+    else
+        return false;
+    return true;
+}
+
+static bool bitxorTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitxorOp(op)) return false;
+    ExprPtr y;
+    if (!bitandExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitxorExpr(ExprPtr &x) {
+    if (!bitandExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitxorTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+static bool bitorOp(int &op) {
+    int p = save();
+    if (symbol("|"))
+        op = BITOR;
+    else
+        return false;
+    return true;
+}
+
+static bool bitorTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!bitorOp(op)) return false;
+    ExprPtr y;
+    if (!bitxorExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool bitorExpr(ExprPtr &x) {
+    if (!bitxorExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!bitorTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+
+
+//
 // compare expr
 //
 
@@ -713,14 +875,14 @@ static bool compareTail(BinaryOpPtr &x) {
     int op;
     if (!compareOp(op)) return false;
     ExprPtr y;
-    if (!addSubExpr(y)) return false;
+    if (!bitorExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
 }
 
 static bool compareExpr(ExprPtr &x) {
-    if (!addSubExpr(x)) return false;
+    if (!bitorExpr(x)) return false;
     while (true) {
         int p = save();
         BinaryOpPtr y;
@@ -780,7 +942,6 @@ static bool equalExpr(ExprPtr &x) {
     }
     return true;
 }
-
 
 
 //
