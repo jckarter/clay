@@ -8,7 +8,7 @@ commandLine() {
     if (not commandLineInitialized?) {
         clear(commandLineArgs);
         for (i in range(argc)) {
-            var cstr = (argv + i)^;
+            var cstr = (argv + i)@;
             push(commandLineArgs, String(cstr));
         }
         commandLineInitialized? = true;

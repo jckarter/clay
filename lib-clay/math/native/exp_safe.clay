@@ -728,7 +728,7 @@ private inline exp_td_accurate(rh:Double, rm:Double, rl:Double,
 
    Computes exp(x) with an accuracy of 113 bits as
 
-   2^exponent * (exph + expm + expl) \approx exp(x)
+   2@exponent * (exph + expm + expl) \approx exp(x)
 
    Unless the subnormal case for x, no special cases are
    handled.
@@ -736,8 +736,8 @@ private inline exp_td_accurate(rh:Double, rm:Double, rl:Double,
    The triple-double exph + expm + expl is non-overlapping.
    The domain for exph + expm + expl is 1/2..2
    The integer exponent is in the range -1024..1024. The
-   value 2^(exponent) may therefore be non-representable
-   whereas 2^exponent * (exph + expm + expl) is.
+   value 2@(exponent) may therefore be non-representable
+   whereas 2@exponent * (exph + expm + expl) is.
 
 */
 
@@ -906,13 +906,13 @@ private inline exp_rn(x:Double) --> ans:Double {
         /* Call accurate phase */
         var polyTblh, polyTblm, polyTbll = exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
 
-        /* Final rounding and multiplication with 2^M
+        /* Final rounding and multiplication with 2@M
 
-        We first multiply the highest significant byte by 2^M in two steps
+        We first multiply the highest significant byte by 2@M in two steps
         and adjust it then depending on the lower significant parts.
 
-        We cannot multiply directly by 2^M since M is less than -1022.
-        We first multiply by 2^(-1000) and then by 2^(M+1000).
+        We cannot multiply directly by 2@M since M is less than -1022.
+        We first multiply by 2@(-1000) and then by 2@(M+1000).
 
         */
 
@@ -933,7 +933,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         t4db2.0[0] = t4db.0[0];
         t4 = t4db2.2;
 
-        /* Remultiply by 2^(-M) for manipulating the rounding error and the lower significant parts */
+        /* Remultiply by 2@(-M) for manipulating the rounding error and the lower significant parts */
         M *= -1;
         twoPowerMdb.0[0] = 0;
         twoPowerMdb.0[1] = M + 23 << 20;
@@ -941,7 +941,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         var t6 = t5 * twoPower1000;
         var t7 = polyTblh - t6;
 
-        /* The rounding decision is made at 1/2 ulp of a denormal, i.e. at 2^(-1075)
+        /* The rounding decision is made at 1/2 ulp of a denormal, i.e. at 2@(-1075)
         We construct this number and by comparing with it we get to know
         whether we are in a difficult rounding case or not. If not we just return
         the known result. Otherwise we continue with further tests.
@@ -956,7 +956,7 @@ private inline exp_rn(x:Double) --> ans:Double {
         /* If we are here, we are in a difficult rounding case */
 
         /* We have to adjust the result iff the sign of the error on
-        rounding 2^M * polyTblh (which must be an ulp of a denormal)
+        rounding 2@M * polyTblh (which must be an ulp of a denormal)
         and polyTblm +arith polyTbll is the same which means that
         the error made was greater than an ulp of an denormal.
         */
@@ -979,7 +979,7 @@ private inline exp_rn(x:Double) --> ans:Double {
     } /* End accurate phase launched as there might be a denormalized result */
 
     /* No more underflow nor denormal is possible. There may be the case where
-    M is 1024 and the value 2^M is to be multiplied may be less than 1
+    M is 1024 and the value 2@M is to be multiplied may be less than 1
     So the final result will be normalized and representable by the multiplication must be
     made in 2 steps
     */
@@ -1011,11 +1011,11 @@ private inline exp_rn(x:Double) --> ans:Double {
     var polyTblh,polyTblm = Add12(t11,t13);
 
     /* Rounding test
-    Since we know that the result of the final multiplication with 2^M
+    Since we know that the result of the final multiplication with 2@M
     will always be representable, we can do the rounding test on the
     factors and multiply only the final result.
     We implement the multiplication in integer computations to overcome
-    the problem of the non-representability of 2^1024 if M = 1024
+    the problem of the non-representability of 2@1024 if M = 1024
     */
 
     if(polyTblh == (polyTblh + (polyTblm * ROUNDCST))) {
@@ -1045,9 +1045,9 @@ private inline exp_rn(x:Double) --> ans:Double {
 
         var res = RoundToNearest3(polyTblh,polyTblm,polyTbll);
 
-        /* Final multiplication with 2^M
+        /* Final multiplication with 2@M
         We implement the multiplication in integer computations to overcome
-        the problem of the non-representability of 2^1024 if M = 1024
+        the problem of the non-representability of 2@1024 if M = 1024
         */
 
         resdb.2 = res;

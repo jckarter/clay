@@ -93,7 +93,7 @@ inline overload reverseIterator(a:Sliced[A]) =
 inline overload size(a:Sliced[A]) = SizeT(a.last - a.first);
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
-inline overload index(a:Sliced[A], i:I) = forward ..(a.first + i)^;
+inline overload index(a:Sliced[A], i:I) = forward ..(a.first + i)@;
 
 [A]
 inline overload begin(a:Sliced[A]) = a.first;
@@ -102,7 +102,7 @@ inline overload begin(a:Sliced[A]) = a.first;
 inline overload end(a:Sliced[A]) = a.last;
 
 [A]
-inline overload front(a:Sliced[A]) = forward ..a.first^;
+inline overload front(a:Sliced[A]) = forward ..a.first@;
 
 [A | RandomAccessSequence?(A)]
-inline overload back(a:Sliced[A]) = forward ..a[size(a)-1]^;
+inline overload back(a:Sliced[A]) = forward ..a[size(a)-1]@;

@@ -108,7 +108,7 @@ inline overload null?(x:Pointer[T]) = (x == null(T));
 inline overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
 [T, I | Integer?(I)]
-inline overload index(p:Pointer[T], i:I) = ref (p + i)^;
+inline overload index(p:Pointer[T], i:I) = ref (p + i)@;
 
 
 

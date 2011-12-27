@@ -58,9 +58,9 @@ overload RegularRecord?(static Displayable) = false;
 [T]
 overload Displayable(x:T) {
     var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
-    obj^ <-- x;
+    obj@ <-- x;
     var vtable = allocateRawMemory(DisplayableVTable, 1);
-    vtable^ <-- makeDisplayableVTable(T);
+    vtable@ <-- makeDisplayableVTable(T);
     return Displayable(Pointer[Opaque](obj), vtable);
 }
 
@@ -72,11 +72,11 @@ overload Displayable(x:Displayable) {
     if (null?(x.obj))
         return Displayable();
     var vt = x.vtable;
-    var p = allocateRawMemoryAligned(Int8, vt^.size, vt^.alignment);
+    var p = allocateRawMemoryAligned(Int8, vt@.size, vt@.alignment);
     var obj = Pointer[Opaque](p);
-    obj^ <-- vt^.copyConstructor(x.obj^);
+    obj@ <-- vt@.copyConstructor(x.obj@);
     var vtable = allocateRawMemory(DisplayableVTable, 1);
-    vtable^ <-- vt^;
+    vtable@ <-- vt@;
     return Displayable(obj, vtable);
 }
 
@@ -93,7 +93,7 @@ overload resetUnsafe(x:Displayable) {
 // destructor
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
-        x.vtable^.destructor(x.obj^);
+        x.vtable@.destructor(x.obj@);
         freeRawMemoryAligned(x.obj);
         freeRawMemory(x.vtable);
     }
@@ -101,7 +101,7 @@ overload destroy(x:Displayable) {
 
 
 overload display(x:Displayable) {
-    x.vtable^.display(x.obj^);
+    x.vtable@.display(x.obj@);
 }
 
 main() {

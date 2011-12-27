@@ -12,7 +12,7 @@ import memory.platform.(SystemMallocAlignment);
 alias allocateObject(x:T) {
     var ptr = allocateRawMemory(T, 1);
     try {
-        ptr^ <-- x;
+        ptr@ <-- x;
     }
     catch (e) {
         freeRawMemory(ptr);
@@ -23,7 +23,7 @@ alias allocateObject(x:T) {
 
 [T]
 freeObject(ptr:Pointer[T]) {
-    destroy(ptr^);
+    destroy(ptr@);
     freeRawMemory(ptr);
 }
 
@@ -59,14 +59,14 @@ alignedMalloc(numBytes:SizeT, alignment:SizeT) {
     var mask = bitnot(SizeT(alignment) - 1);
     var roundedDown = bitand(SizeT(ptr), mask);
     var alignedPtr = Pointer[UInt8](alignment + roundedDown);
-    (alignedPtr - 1)^ = Byte(alignedPtr - ptr);
+    (alignedPtr - 1)@ = Byte(alignedPtr - ptr);
     return alignedPtr;
 }
 
 alignedFree(ptr:Pointer[UInt8]) {
     if (null?(ptr))
         return;
-    var offset = SizeT((ptr-1)^);
+    var offset = SizeT((ptr-1)@);
     var originalPtr = ptr - offset;
     free(originalPtr);
 }
@@ -152,7 +152,7 @@ destroyMemory(begin:Pointer[T], end:Pointer[T]) {
 copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocationWithCleanup(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x <-- srcPtr^;
+        x <-- srcPtr@;
         srcPtr += 1;
     });
 }
@@ -187,7 +187,7 @@ moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
 private moveMemoryForwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x <-- moveUnsafe(srcPtr^);
+        x <-- moveUnsafe(srcPtr@);
         srcPtr += 1;
     });
 }
@@ -197,7 +197,7 @@ private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], src
     var srcPtr = srcEnd;
     eachLocationBackwards(destBegin, destBegin+(srcEnd-srcBegin), x => {
         srcPtr -= 1;
-        x <-- moveUnsafe(srcPtr^);
+        x <-- moveUnsafe(srcPtr@);
     });
 }
 
@@ -205,7 +205,7 @@ private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], src
 moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x <-- move(srcPtr^);
+        x <-- move(srcPtr@);
         srcPtr += 1;
     });
 }
@@ -235,7 +235,7 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
 [T]
 fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
     var ptr = &value;
-    eachLocationWithCleanup(begin, end, x => { x <-- ptr^; });
+    eachLocationWithCleanup(begin, end, x => { x <-- ptr@; });
 }
 
 [T]
@@ -254,7 +254,7 @@ zeroObject(o) { zeroMemory(Pointer[UInt8](&o), Pointer[UInt8](&o + 1)); }
 assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x = srcPtr^;
+        x = srcPtr@;
         srcPtr += 1;
     });
 }
@@ -263,7 +263,7 @@ assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Poi
 moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        x = move(srcPtr^);
+        x = move(srcPtr@);
         srcPtr += 1;
     });
 }
@@ -272,7 +272,7 @@ moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd
 overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
-        swap(x, srcPtr^);
+        swap(x, srcPtr@);
         srcPtr += 1;
     });
 }
@@ -288,7 +288,7 @@ private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {
     var begin, end = _begin, _end;
     var ptr = begin;
     while (ptr != end) {
-        f(ptr^);
+        f(ptr@);
         ptr += 1;
     }
 }
@@ -299,7 +299,7 @@ private eachLocationBackwards(_begin:Pointer[T], _end:Pointer[T], f) {
     var ptr = end;
     while (ptr != begin) {
         ptr -= 1;
-        f(ptr^);
+        f(ptr@);
     }
 }
 
@@ -309,7 +309,7 @@ private eachLocationWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) {
     var ptr = begin;
     try {
         while (ptr != end) {
-            f(ptr^);
+            f(ptr@);
             ptr += 1;
         }
     }
@@ -326,7 +326,7 @@ private eachLocationBackwardsWithCleanup(_begin:Pointer[T], _end:Pointer[T], f) 
     try {
         while (ptr != begin) {
             ptr -= 1;
-            f(ptr^);
+            f(ptr@);
         }
     }
     catch (e) {

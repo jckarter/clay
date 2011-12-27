@@ -424,7 +424,7 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
 //
 
 [T, U | TypeSize(T) >= TypeSize(U)]
-inline bitcast(x: T, static U) = ref Pointer[U](&x)^;
+inline bitcast(x: T, static U) = ref Pointer[U](&x)@;
 
 inline bitandc(a, b) = bitand(a, bitnot(b));
 inline bitblend(mask, ones, zeros)
