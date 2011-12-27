@@ -705,7 +705,6 @@ static bool addSubExpr(ExprPtr &x) {
 //
 // bitwise shift expr
 //
-\
 
 static bool bitshiftOp(int &op) {
     int p = save();
@@ -749,101 +748,6 @@ static bool bitshiftExpr(ExprPtr &x) {
 
 
 
-
-
-//
-// compare expr
-//
-
-static bool compareOp(int &op) {
-    int p = save();
-    const char *s[] = {"<", "<=", ">", ">=", NULL};
-    const int ops[] = {LESSER, LESSER_EQUALS,
-                       GREATER, GREATER_EQUALS};
-    for (const char **a = s; *a; ++a) {
-        restore(p);
-        if (symbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool compareTail(BinaryOpPtr &x) {
-    LocationPtr location = currentLocation();
-    int op;
-    if (!compareOp(op)) return false;
-    ExprPtr y;
-    if (!bitshiftExpr(y)) return false;
-    x = new BinaryOp(op, NULL, y);
-    x->location = location;
-    return true;
-}
-
-static bool compareExpr(ExprPtr &x) {
-    if (!bitshiftExpr(x)) return false;
-    while (true) {
-        int p = save();
-        BinaryOpPtr y;
-        if (!compareTail(y)) {
-            restore(p);
-            break;
-        }
-        y->expr1 = x;
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-
-//
-// equal expr
-//
-
-static bool equalOp(int &op) {
-    int p = save();
-    if (symbol("==")) {
-        op = EQUALS;
-        return true;
-    }
-    restore(p);
-    if (symbol("!=")) {
-        op = NOT_EQUALS;
-        return true;
-    }
-    return false;
-}
-
-
-static bool equalTail(BinaryOpPtr &x) {
-    LocationPtr location = currentLocation();
-    int op;
-    if (!equalOp(op)) return false;
-    ExprPtr y;
-    if (!compareExpr(y)) return false;
-    x = new BinaryOp(op, NULL, y);
-    x->location = location;
-    return true;
-}
-
-static bool equalExpr(ExprPtr &x) {
-    if (!compareExpr(x)) return false;
-    while (true) {
-        int p = save();
-        BinaryOpPtr y;
-        if (!equalTail(y)) {
-            restore(p);
-            break;
-        }
-        y->expr1 = x;
-        x = y.ptr();
-    }
-    return true;
-}
-
 
 //
 // bitwise and, xor, or
@@ -864,14 +768,14 @@ static bool bitandTail(BinaryOpPtr &x) {
     int op;
     if (!bitandOp(op)) return false;
     ExprPtr y;
-    if (!equalExpr(y)) return false;
+    if (!bitshiftExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
 }
 
 static bool bitandExpr(ExprPtr &x) {
-    if (!equalExpr(x)) return false;
+    if (!bitshiftExpr(x)) return false;
     while (true) {
         int p = save();
         BinaryOpPtr y;
@@ -958,6 +862,101 @@ static bool bitorExpr(ExprPtr &x) {
 }
 
 
+
+
+//
+// compare expr
+//
+
+static bool compareOp(int &op) {
+    int p = save();
+    const char *s[] = {"<", "<=", ">", ">=", NULL};
+    const int ops[] = {LESSER, LESSER_EQUALS,
+                       GREATER, GREATER_EQUALS};
+    for (const char **a = s; *a; ++a) {
+        restore(p);
+        if (symbol(*a)) {
+            int i = a - s;
+            op = ops[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool compareTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!compareOp(op)) return false;
+    ExprPtr y;
+    if (!bitorExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool compareExpr(ExprPtr &x) {
+    if (!bitorExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!compareTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+
+//
+// equal expr
+//
+
+static bool equalOp(int &op) {
+    int p = save();
+    if (symbol("==")) {
+        op = EQUALS;
+        return true;
+    }
+    restore(p);
+    if (symbol("!=")) {
+        op = NOT_EQUALS;
+        return true;
+    }
+    return false;
+}
+
+
+static bool equalTail(BinaryOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!equalOp(op)) return false;
+    ExprPtr y;
+    if (!compareExpr(y)) return false;
+    x = new BinaryOp(op, NULL, y);
+    x->location = location;
+    return true;
+}
+
+static bool equalExpr(ExprPtr &x) {
+    if (!compareExpr(x)) return false;
+    while (true) {
+        int p = save();
+        BinaryOpPtr y;
+        if (!equalTail(y)) {
+            restore(p);
+            break;
+        }
+        y->expr1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
 
 //
 // not, and, or
@@ -968,10 +967,10 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return bitorExpr(x);
+        return equalExpr(x);
     }
     ExprPtr y;
-    if (!bitorExpr(y)) return false;
+    if (!equalExpr(y)) return false;
     x = new UnaryOp(NOT, y);
     x->location = location;
     return true;
