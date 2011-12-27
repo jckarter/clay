@@ -6,7 +6,7 @@ reverse(_first, _last) {
         return;
     last -= 1;
     while (first < last) {
-        swap(first^, last^);
+        swap(first@, last@);
         first += 1;
         last -= 1;
     }
@@ -21,11 +21,11 @@ nextPermutation(_first, _last) {
     var ptr = last-1;
     while (ptr > first) {
         var prev = ptr-1;
-        if (prev^ < ptr^) {
+        if (prev@ < ptr@) {
             reverse(ptr, last);
-            while (prev^ >= ptr^)
+            while (prev@ >= ptr@)
                 ptr += 1;
-            swap(prev^, ptr^);
+            swap(prev@, ptr@);
             return true;
         }
         ptr -= 1;

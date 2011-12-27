@@ -82,7 +82,7 @@ overload findField(static pos, field) = -1;
 
 [T, i | ReferenceType?(T) and (i >= 0) and (i < ReferenceTypeFieldCount(T))]
 overload staticIndex(x:T, static i) =
-    ref staticIndex(referencePtr(x)^, static i);
+    ref staticIndex(referencePtr(x)@, static i);
 
 [T, Field | ReferenceType?(T) and (fieldNameIndex(T, Field) >= 0)]
 overload fieldRef(x:T, static Field) =
@@ -95,7 +95,7 @@ overload fieldRef(x:T, static Field) =
 //
 
 [T | ReferenceType?(T)]
-referenceTypeFields(x:T) = ref ..tupleElements(referencePtr(x)^);
+referenceTypeFields(x:T) = ref ..tupleElements(referencePtr(x)@);
 
 
 
@@ -134,7 +134,7 @@ allocateRef(static T) --> returned:T {
 allocateUninitializedRefUnsafe(static T) --> returned:T {
     alias InnerType = Tuple[..ReferenceTypeFieldTypes(T)];
     referencePtr(returned) <-- SharedPointer[InnerType](allocateRawMemory(RefCounted[InnerType], 1));
-    referencePtr(returned).ptr^.refCount = 1;
+    referencePtr(returned).ptr@.refCount = 1;
 }
 
 

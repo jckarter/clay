@@ -47,7 +47,7 @@ exp_fast(x:T) --> r:T {
         r -= px * T(C1);
         r -= px * T(C2);
 
-        /* Compute e^x using a polynomial approximation. */
+        /* Compute e@x using a polynomial approximation. */
         a = T(2.2762932529150460619497906285755631573256951680928e-10);
         a *= r;
         a += T(1.93367224471636363463651078554697568501742984768854e-9);
@@ -76,7 +76,7 @@ exp_fast(x:T) --> r:T {
         a *= r;
         a += T(0.99999999999999999999928421898456045238677548461656);
 
-        /* Build 2^n in double. */
+        /* Build 2@n in double. */
         n += exponentBias(T);
         r <-- a * floatFromParts(T,false,
             bitand(n,exponentMask(T)),floatMantissaZero(T));

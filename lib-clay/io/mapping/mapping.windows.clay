@@ -106,8 +106,8 @@ overload destroy(x:InnerFileMapping) {
 // mappingAddress, mappingLength
 //
 
-mappingAddress(fm:FileMapping) = fm.inner^.address;
-mappingLength(fm:FileMapping) = fm.inner^.length;
+mappingAddress(fm:FileMapping) = fm.inner@.address;
+mappingLength(fm:FileMapping) = fm.inner@.length;
 
 
 
@@ -116,10 +116,10 @@ mappingLength(fm:FileMapping) = fm.inner^.length;
 //
 
 flushMapping(fm:FileMapping) {
-    var result = win32.FlushViewOfFile(fm.inner^.address, fm.inner^.length);
+    var result = win32.FlushViewOfFile(fm.inner@.address, fm.inner@.length);
     if (result == 0)
         throw GenericIOError(win32.GetLastError());
-    result = win32.FlushFileBuffers(fm.inner^.fileHandle);
+    result = win32.FlushFileBuffers(fm.inner@.fileHandle);
     if (result == 0)
         throw GenericIOError(win32.GetLastError());
 }

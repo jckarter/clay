@@ -2,6 +2,7 @@
 
 namespace clay {
 
+
 static void initLexer(SourcePtr s, int offset, int length);
 static void cleanupLexer();
 static bool nextToken(TokenPtr &x);
@@ -159,7 +160,7 @@ static const char *symbols[] = {
     "::", "+=", "-=", "*=", "/=", "%=",
     "+", "-", "*", "/", "%", "=", "&", "^", "|",
     "(", ")", "[", "]", "{", "}",
-    ":", ";", ",", ".", "#",
+    ":", ";", ",", ".", "#","@","~",
     NULL
 };
 

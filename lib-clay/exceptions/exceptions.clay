@@ -22,7 +22,7 @@ record NoException ();
 
 overload Exception() = Exception(NoException());
 
-private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
+private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)@;
 
 
 //

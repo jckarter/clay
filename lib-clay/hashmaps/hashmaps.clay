@@ -78,7 +78,7 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
     var i = bucketId(a, key);
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr)) {
-        ptr^ = value;
+        ptr@ = value;
         return;
     }
     ref bucket = a.buckets[i];
@@ -100,7 +100,7 @@ overload index(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr))
-        return ref ptr^;
+        return ref ptr@;
     if (a.size >= (size(a.buckets) * 3 / 4)) {
         grow(a);
         i = bucketId(a, key); // recalculate index
@@ -108,7 +108,7 @@ overload index(a:HashMap[K,V], key:K) {
     ref bucket = a.buckets[i];
     bucket = UniqueValue(Node(key, V(), move(bucket)));
     a.size += 1;
-    return ref bucket^.value;
+    return ref bucket@.value;
 }
 
 
@@ -121,19 +121,19 @@ overload index(a:HashMap[K,V], key:K) {
 overload remove(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var prevNode = null(Node[K,V]);
-    var node = &a.buckets[i]^;
+    var node = &a.buckets[i]@;
     while (not null?(node)) {
-        if (node^.key == key)
+        if (node@.key == key)
             break;
         prevNode = node;
-        node = &node^.next^;
+        node = &node@.next@;
     }
     if (null?(node))
         return false;
     if (null?(prevNode))
-        a.buckets[i] = node^.next;
+        a.buckets[i] = node@.next;
     else
-        prevNode^.next = node^.next;
+        prevNode@.next = node@.next;
     a.size -= 1;
     return true;
 }
@@ -148,7 +148,7 @@ overload remove(a:HashMap[K,V], key:K) {
 overload items(forward a:HashMap[K,V]) {
     var x = HashMapItems(captureValue(a), K, V);
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = &next(x.bucketsIter)^;
+        x.node = &next(x.bucketsIter)@;
     return move(x);
 }
 
@@ -180,10 +180,10 @@ overload hasNext?(x:HashMapItems[C,K,V]) = not null?(x.node);
 [C,K,V]
 overload next(x:HashMapItems[C,K,V]) {
     assert(not null?(x.node));
-    ref key, value = x.node^.key, x.node^.value;
-    x.node = &x.node^.next^;
+    ref key, value = x.node@.key, x.node@.value;
+    x.node = &x.node@.next@;
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = &next(x.bucketsIter)^;
+        x.node = &next(x.bucketsIter)@;
     return ref key, value;
 }
 
@@ -212,11 +212,11 @@ private bucketId(a:HashMap[K,V], key:K) =
 
 [K,V]
 private findInBucket(_node:NodePtr[K,V], key:K) {
-    var node = &_node^;
+    var node = &_node@;
     while (not null?(node)) {
-        if (node^.key == key)
-            return &node^.value;
-        node = &node^.next^;
+        if (node@.key == key)
+            return &node@.value;
+        node = &node@.next@;
     }
     return null(V);
 }

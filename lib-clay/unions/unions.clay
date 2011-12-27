@@ -39,5 +39,5 @@ inline overload Union[..T](x:U) --> returned:Union[..T] {
 [..T, i]
 inline overload staticIndex(x:Union[..T], static i) {
     alias T = nthValue(static SizeT(i), ..UnionMembers(Union[..T]));
-    return ref Pointer[T](&x)^;
+    return ref Pointer[T](&x)@;
 }

@@ -358,7 +358,7 @@ sqrt12(x:Double) --> resh:Double, resl:Double {
             m *= HALF;    // Suppose now 1/2 <= m <= 2//
         }
 
-        // Construct sqrt(2^E) = 2^(E/2)//
+        // Construct sqrt(2@E) = 2@(E/2)//
         xdb.0[1] = bitshl((_e/2 + 1023) , 20);
         xdb.0[0] = 0;
 
@@ -390,7 +390,7 @@ sqrt12(x:Double) --> resh:Double, resl:Double {
 
         var srtmh,srtml = Mul22(m,ZERO,r4h,r4l);
 
-        // Multiply componentwise by sqrt(2^E), which is an integer power of 2 that may not produce a subnormal//
+        // Multiply componentwise by sqrt(2@E), which is an integer power of 2 that may not produce a subnormal//
 
         resh <-- xdb.2 * srtmh;
         resl <-- xdb.2 * srtml;
@@ -436,7 +436,7 @@ sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
             _m *= 0.5;    /* Suppose now 1/2 <= m <= 2 */
         }
 
-        /* Construct sqrt(2^E) = 2^(E/2) */
+        /* Construct sqrt(2@E) = 2@(E/2) */
         _xdb.0[1] = bitshl(_E/2 + 1023,20);
         _xdb.0[0] = 0;
 
@@ -477,7 +477,7 @@ sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
         var _srtmhover, _srtmmover ,_srtmlover = Mul133(_m,_r5h,_r5m,_r5l);
         var _srtmh,_srtmm,_srtml = Renormalize3(_srtmhover,_srtmmover,_srtmlover);
 
-        /* Multiply componentwise by sqrt(2^E) */
+        /* Multiply componentwise by sqrt(2@E) */
         /* which is an integer power of 2 that may not produce a subnormal */
         return _xdb.2 * _srtmh, _xdb.2 * _srtmm, _xdb.2 * _srtml;
     }
@@ -505,7 +505,6 @@ recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, resl:Dou
     _rec_t23 = -_rec_t23;
     return Renormalize3(_rec_t21,_rec_t22,_rec_t23);
 }
-
 
 // i = d in rounding to nearest The constant added is 2^52 + 2^51
 DOUBLE2INT(_d:Double) :Int = db_number(_d+6755399441055744.0).0[0];

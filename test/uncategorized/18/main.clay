@@ -5,8 +5,8 @@ external qsort(base:RawPointer, n:SizeT, width:SizeT,
 external compare(pa:RawPointer, pb:RawPointer) : Int {
     var x = Pointer[Int](pa);
     var y = Pointer[Int](pb);
-    if (x^ < y^) return -1;
-    if (x^ > y^) return 1;
+    if (x@ < y@) return -1;
+    if (x@ > y@) return 1;
     return 0;
 }
 

@@ -110,11 +110,11 @@ inline overload captureValue(ref x) = CapturedLValue(&x);
 
 define forwardValue;
 inline overload forwardValue(x) = move(x);
-[T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+[T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr@;
 
 define capturedRef;
 inline overload capturedRef(x) = ref x;
-[T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+[T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr@;
 
 // captureValues, forwardValues, capturedRefs
 

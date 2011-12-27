@@ -16,7 +16,7 @@ overload RegularRecord?(static UniquePointer[T]) = false;
 alias newUnique(x:T) {
     var ptr = allocateRawMemory(T, SizeT(1));
     try {
-        ptr^ <-- x;
+        ptr@ <-- x;
     } catch (ex) {
         freeRawMemory(ptr);
         throw ex;
@@ -51,7 +51,7 @@ inline overload assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
 [T]
 inline overload destroy(p: UniquePointer[T]) {
     if (not null?(p.ptr)) {
-        destroy(p.ptr^);
+        destroy(p.ptr@);
         freeRawMemory(p.ptr);
     }
 }
@@ -62,7 +62,7 @@ inline overload destroy(p: UniquePointer[T]) {
 // dereference, null?, nullUnique
 //
 [T]
-inline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
+inline overload dereference(p: UniquePointer[T]) = ref p.ptr@;
 
 [T]
 inline overload null?(p: UniquePointer[T]) = null?(p.ptr);
@@ -94,7 +94,7 @@ inline overload UniqueValue[T](x:UniqueValue[T]) =
     if (null?(x))
         nullUniqueValue(T)
     else
-        UniqueValue(x^);
+        UniqueValue(x@);
 
 [T]
 overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
@@ -102,14 +102,14 @@ overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
         destroy(to.ptr);
         resetUnsafe(to.ptr);
     } else if (null?(to)) {
-        to <-- UniqueValue(from^);
+        to <-- UniqueValue(from@);
     } else {
-        to^ = from^;
+        to@ = from@;
     }
 }
 
 [T]
-inline overload dereference(p: UniqueValue[T]) = ref p.ptr^;
+inline overload dereference(p: UniqueValue[T]) = ref p.ptr@;
 
 [T]
 inline overload null?(p: UniqueValue[T]) = null?(p.ptr);

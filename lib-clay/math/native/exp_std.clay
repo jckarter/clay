@@ -929,7 +929,6 @@ private exp_rn(x:Double) --> ans:Double {
         // rounding 2^M * polyTblh (which must be an ulp of a denormal)
         // and polyTblm +arith polyTbll is the same which means that
         // the error made was greater than an ulp of an denormal.
-
         polyTblm += polyTbll;
 
         if (t7 > 0.0) {
