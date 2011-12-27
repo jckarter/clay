@@ -755,9 +755,9 @@ exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
         exph, expm, expl, exponent <-- 1., 0., 0., 0;
     else {
         alias k = shiftedXMultdb.0[0];
-        exponent <-- bitshr(k , L);
-        alias index1 = bitand(k , INDEXMASK1);
-        alias index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+        exponent <-- k >> L;
+        alias index1 = k & INDEXMASK1;
+        alias index2 = (k & INDEXMASK2) >> LHALF;
 
         // Table reads
         ref tbl1h = twoPowerIndex1[index1].hi;
@@ -768,13 +768,15 @@ exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
         ref tbl2l = twoPowerIndex2[index2].lo;
 
         // Argument reduction
-        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
+        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl
+            = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
         var t1 = x + msLog2Div2LMultKh;
         var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
         var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
 
         // Polynomial approximation and reconstruction: factorized code
-        exph, expm, expl <-- exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
+        exph, expm, expl <-- exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l,
+                                tbl2h, tbl2m, tbl2l);
     }
 }
 
@@ -857,9 +859,9 @@ private exp_rn(x:Double) --> ans:Double {
     var rh,rm = Add12Cond(s5,s4);
 
     alias k = shiftedXMultdb.0[0];
-    var M = bitshr(k , L);
-    var index1 = bitand(k , INDEXMASK1);
-    var index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+    var M = k >> L;
+    var index1 = k & INDEXMASK1;
+    var index2 = (k & INDEXMASK2) >> LHALF;
 
     // Table reads
     ref tbl1h = twoPowerIndex1[index1].hi;
@@ -990,7 +992,8 @@ private exp_rn(x:Double) --> ans:Double {
         ref tbl2l = twoPowerIndex2[index2].lo;
 
         // Call accurate phase
-        var polyTblh, polyTblm, polyTbll = exp_td_accurate(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
+        var polyTblh, polyTblm, polyTbll =
+            exp_td_accurate(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
 
         // Since the final multiplication is exact, we can do the final rounding before multiplying
         // We overcome this way also the cases where the final result is not underflowed whereas the
