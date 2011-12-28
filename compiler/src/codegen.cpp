@@ -1014,7 +1014,7 @@ void codegenExpr(ExprPtr expr,
     case LINE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1023,7 +1023,7 @@ void codegenExpr(ExprPtr expr,
     case COLUMN_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1467,7 +1467,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     if (llvmDIBuilder) {
         assert(x->gvar->location->source->debugInfo != NULL);
         int line, column, tabColumn;
-        computeLineCol(x->gvar->location, line, column, tabColumn);
+        getLineCol(x->gvar->location, line, column, tabColumn);
         x->debugInfo = llvmDIBuilder->createGlobalVariable(
             x->gvar->name->str,
             x->gvar->location->source->debugInfo,
@@ -1530,7 +1530,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
     if (llvmDIBuilder) {
         assert(x->location->source->debugInfo != NULL);
         int line, column, tabColumn;
-        computeLineCol(x->location, line, column, tabColumn);
+        getLineCol(x->location, line, column, tabColumn);
         x->debugInfo = llvmDIBuilder->createGlobalVariable(
             x->name->str,
             x->location->source->debugInfo,
@@ -1612,7 +1612,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
             int line = 0, column = 0, tabColumn = 0;
             if (x->location != NULL) {
                 file = x->location->source->debugInfo;
-                computeLineCol(x->location, line, column, tabColumn);
+                getLineCol(x->location, line, column, tabColumn);
             }
 
             vector<llvm::Value*> debugParamTypes;
@@ -2847,7 +2847,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     if (llvmDIBuilder != NULL) {
         int line, column, tabColumn;
-        computeLineCol(entry->origCode->location, line, column, tabColumn);
+        getLineCol(entry->origCode->location, line, column, tabColumn);
 
         vector<llvm::Value*> debugParamTypes;
         debugParamTypes.push_back(llvmVoidTypeDebugInfo());

@@ -977,7 +977,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case LINE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
         evalStaticObject(vh.ptr(), out);
@@ -986,7 +986,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case COLUMN_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
         evalStaticObject(vh.ptr(), out);

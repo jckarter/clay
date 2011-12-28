@@ -1405,7 +1405,7 @@ static void defineLLVMType(TypePtr t) {
                 if (fieldLocation == NULL)
                     fieldLocation = x->record->location;
                 int line, column, tabColumn;
-                computeLineCol(fieldLocation, line, column, tabColumn);
+                getLineCol(fieldLocation, line, column, tabColumn);
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
                     fieldNames[i]->str,
@@ -1424,7 +1424,7 @@ static void defineLLVMType(TypePtr t) {
                 llvm::makeArrayRef(members));
 
             int line, column, tabColumn;
-            computeLineCol(x->record->location, line, column, tabColumn);
+            getLineCol(x->record->location, line, column, tabColumn);
 
             t->debugInfo = llvmDIBuilder->createStructType(
                 safeLookupModule(x->record->env)->debugInfo, // scope

@@ -112,25 +112,32 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-void computeLineCol(LocationPtr location,
-                    int &line,
-                    int &column,
-                    int &tabColumn) {
+static void computeLineCol(LocationPtr location) {
     char *p = location->source->data;
     char *end = p + location->offset;
-    line = column = tabColumn = 0;
+    location->line = location->column = location->tabColumn = 0;
     for (; p != end; ++p) {
-        ++column;
-        ++tabColumn;
+        ++location->column;
+        ++location->tabColumn;
         if (*p == '\n') {
-            ++line;
-            column = 0;
-            tabColumn = 0;
+            ++location->line;
+            location->column = 0;
+            location->tabColumn = 0;
         }
         else if (*p == '\t') {
-            tabColumn += 7;
+            location->tabColumn += 7;
         }
     }
+}
+
+void getLineCol(LocationPtr location, int &line, int &column, int &tabColumn) {
+    if (!location->lineColumnInitialized) {
+        location->lineColumnInitialized = true;
+        computeLineCol(location);
+    }
+    line = location->line;
+    column = location->column;
+    tabColumn = location->tabColumn;
 }
 
 static void splitLines(SourcePtr source, vector<string> &lines) {
@@ -151,7 +158,7 @@ static bool endsWithNewline(const string& s) {
 
 static void displayLocation(LocationPtr location, int &line, int &column) {
     int tabColumn;
-    computeLineCol(location, line, column, tabColumn);
+    getLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location->source, lines);
     fprintf(stderr, "###############################\n");
@@ -410,7 +417,7 @@ void matchFailureError(MatchFailureError const &err)
         sout << "\n    ";
         LocationPtr location = overload->location;
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
         sout << location->source->fileName.c_str()
             << "(" << line+1 << "," << column << ")"
             << "\n        ";
@@ -424,6 +431,6 @@ void matchFailureError(MatchFailureError const &err)
 void printFileLineCol(ostream &out, LocationPtr location)
 {
     int line, column, tabColumn;
-    computeLineCol(location, line, column, tabColumn);
+    getLineCol(location, line, column, tabColumn);
     out << location->source->fileName << "(" << line+1 << "," << column << ")";
 }

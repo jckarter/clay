@@ -678,8 +678,12 @@ struct Source : public Object {
 struct Location : public Object {
     SourcePtr source;
     int offset;
+    bool lineColumnInitialized;
+    int line, column, tabColumn;
+
     Location(const SourcePtr &source, int offset)
-        : Object(LOCATION), source(source), offset(offset) {}
+        : Object(LOCATION), source(source), offset(offset),
+          lineColumnInitialized(false), line(-1), column(-1), tabColumn(-1) {}
 };
 
 
@@ -840,10 +844,10 @@ void argumentIndexRangeError(unsigned int index,
                              size_t value,
                              size_t maxValue);
 
-void computeLineCol(LocationPtr location,
-                    int &line,
-                    int &column,
-                    int &tabColumn);
+void getLineCol(LocationPtr location,
+                int &line,
+                int &column,
+                int &tabColumn);
 
 void printFileLineCol(ostream &out, LocationPtr location);
 
