@@ -204,7 +204,7 @@ static SourcePtr loadFile(const string &fileName) {
 
     SourcePtr src = new Source(fileName, buf, size);
     if (llvmDIBuilder != NULL) {
-        src->debugInfo = llvmDIBuilder->createFile(
+        src->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
             basename(fileName, false),
             dirname(fileName)
         );
@@ -519,8 +519,8 @@ static void initModule(ModulePtr m) {
     if (llvmDIBuilder != NULL) {
         llvm::DIFile file = m->location == NULL
             ? llvm::DIFile(NULL)
-            : m->location->source->debugInfo;
-        m->debugInfo = llvmDIBuilder->createNameSpace(
+            : m->location->source->getDebugInfo();
+        m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
             file, // scope
             m->moduleName, // name
             file, // file

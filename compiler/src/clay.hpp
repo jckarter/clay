@@ -667,12 +667,14 @@ struct Source : public Object {
     string fileName;
     char *data;
     int size;
-    llvm::DIFile debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
     Source(const string &fileName, char *data, int size)
         : Object(SOURCE), fileName(fileName), data(data), size(size), debugInfo(NULL) {}
     ~Source() {
         delete [] data;
     }
+
+    llvm::DIFile getDebugInfo() { return llvm::DIFile(debugInfo); }
 };
 
 struct Location : public Object {
@@ -848,6 +850,8 @@ void getLineCol(LocationPtr location,
                 int &line,
                 int &column,
                 int &tabColumn);
+
+llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column);
 
 void printFileLineCol(ostream &out, LocationPtr location);
 
@@ -1873,12 +1877,14 @@ struct GVarInstance : public Object {
     MultiPValuePtr analysis;
     TypePtr type;
     llvm::GlobalVariable *llGlobal;
-    llvm::DIGlobalVariable debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     GVarInstance(GlobalVariablePtr gvar,
                  const vector<ObjectPtr> &params)
         : Object(DONT_CARE), gvar(gvar), params(params),
           analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
+
+    llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
 enum CallingConv {
@@ -1908,7 +1914,7 @@ struct ExternalProcedure : public TopLevelItem {
     TypePtr ptrType;
 
     llvm::Function *llvmFunc;
-    llvm::DISubprogram debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
@@ -1925,6 +1931,8 @@ struct ExternalProcedure : public TopLevelItem {
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
+
+    llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
 
 struct ExternalArg : public ANode {
@@ -1945,7 +1953,7 @@ struct ExternalVariable : public TopLevelItem {
 
     TypePtr type2;
     llvm::GlobalVariable *llGlobal;
-    llvm::DIGlobalVariable debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     ExternalVariable(Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, visibility),
@@ -1958,6 +1966,8 @@ struct ExternalVariable : public TopLevelItem {
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL), debugInfo(NULL) {}
+
+    llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
 struct EvalTopLevel : public TopLevelItem {
@@ -2102,7 +2112,7 @@ struct Module : public ANode {
     bool topLevelLLVMGenerated;
     bool externalsGenerated;
 
-    llvm::DINameSpace debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
@@ -2128,6 +2138,8 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           debugInfo(NULL) {}
+
+    llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
 };
 
 
@@ -2523,6 +2535,8 @@ struct Type : public Object {
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL), defined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
+
+    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
 enum TypeKind {
@@ -3063,7 +3077,7 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmFunc;
     llvm::Function *llvmCWrapper;
 
-    llvm::DISubprogram debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
@@ -3073,6 +3087,8 @@ struct InvokeEntry : public Object {
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(false), llvmFunc(NULL), llvmCWrapper(NULL), debugInfo(NULL) {}
+
+    llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
@@ -3475,7 +3491,7 @@ struct ValueStackEntry {
 
 struct CodegenContext : public Object {
     llvm::Function *llvmFunc;
-    vector<llvm::MDNode*> debugScope;
+    vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
 
@@ -3505,33 +3521,54 @@ struct CodegenContext : public Object {
     {
     }
 
-    CodegenContext(llvm::Function *llvmFunc, llvm::DISubprogram debugInfo)
-        : Object(DONT_CARE),
-          llvmFunc(llvmFunc),
-          initBuilder(NULL),
-          builder(NULL),
-          valueForStatics(NULL),
-          checkExceptions(true),
-          exceptionValue(NULL)
-    {
-        if (debugInfo != NULL)
-            debugScope.push_back(debugInfo);
-    }
-
     ~CodegenContext() {
         delete builder;
         delete initBuilder;
     }
 
-    llvm::DIScope getDebugScope() {
+    llvm::DILexicalBlock getDebugScope() {
         if (debugScope.empty())
-            return llvm::DIScope(NULL);
+            return llvm::DILexicalBlock(NULL);
         else
-            return llvm::DIScope(debugScope.back());
+            return llvm::DILexicalBlock(debugScope.back());
+    }
+
+    void pushDebugScope(llvm::DILexicalBlock scope) {
+        debugScope.push_back((llvm::MDNode*)scope);
+    }
+    void popDebugScope() {
+        debugScope.pop_back();
     }
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
+
+struct DebugLocationContext {
+    LocationPtr loc;
+    CodegenContextPtr ctx;
+    llvm::DebugLoc oldDebugLoc;
+    DebugLocationContext(LocationPtr loc, CodegenContextPtr ctx)
+        : loc(loc), ctx(ctx)
+    {
+        if (loc.ptr()) pushLocation(loc);
+        if (llvmDIBuilder != NULL) {
+            oldDebugLoc = ctx->builder->getCurrentDebugLocation();
+            int line, column;
+            getDebugLineCol(loc, line, column);
+            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
+            ctx->builder->SetCurrentDebugLocation(debugLoc);
+        }
+    }
+    ~DebugLocationContext() {
+        if (loc.ptr())
+            popLocation();
+        if (llvmDIBuilder != NULL)
+            ctx->builder->SetCurrentDebugLocation(oldDebugLoc);
+    }
+private :
+    DebugLocationContext(const DebugLocationContext &) {}
+    void operator=(const DebugLocationContext &) {}
+};
 
 void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);

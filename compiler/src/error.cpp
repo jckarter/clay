@@ -130,7 +130,30 @@ static void computeLineCol(LocationPtr location) {
     }
 }
 
+llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column) {
+    if (location == NULL) {
+        line = 0;
+        column = 0;
+        return llvm::DIFile(NULL);
+    }
+
+    if (!location->lineColumnInitialized) {
+        location->lineColumnInitialized = true;
+        computeLineCol(location);
+    }
+    line = location->line + 1;
+    column = location->line + 1;
+    return location->source->getDebugInfo();
+}
+
 void getLineCol(LocationPtr location, int &line, int &column, int &tabColumn) {
+    if (location == NULL) {
+        line = 0;
+        column = 0;
+        tabColumn = 0;
+        return;
+    }
+
     if (!location->lineColumnInitialized) {
         location->lineColumnInitialized = true;
         computeLineCol(location);
