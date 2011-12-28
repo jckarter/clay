@@ -477,7 +477,7 @@ inline overload llround(x:LongDouble) = libc.llroundl(x);
 [| MathMode?(LIBM)] inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(Complex80(z),y);
 [| MathMode?(LIBM)] inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
 [| MathMode?(LIBM)] inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
-//Add complex@float & float@complex [| MathMode?(LIBM)] inline overloads
+//Add complex^float & float^complex [| MathMode?(LIBM)] inline overloads
 
 [| MathMode?(LIBM)] inline overload sqrt(z:Complex64) = libc.csqrt(z);
 [| MathMode?(LIBM)] inline overload sqrt(z:Complex32) = libc.csqrtf(z);

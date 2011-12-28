@@ -106,8 +106,8 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
         or szsockaddr < TypeSize(Sockaddr_in))
         throw InvalidInetAddress(sockaddr, szsockaddr);
     var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
-    addr.host <-- psockaddr_in@.sin_addr;
-    addr.port <-- networkToHost(psockaddr_in@.sin_port);
+    addr.host <-- psockaddr_in^.sin_addr;
+    addr.port <-- networkToHost(psockaddr_in^.sin_port);
 }
 
 overload makeSockaddr(inet: Inet) --> sin: Sockaddr_in {
@@ -137,12 +137,12 @@ overload lookupInetHostname(hostname: S) {
     var hostent = platform.gethostbyname(cstring(hostname));
     if (null?(hostent))
         throw HostnameLookupError(hostname);
-    if (hostent@.h_addrtype != AF_INET
-        or hostent@.h_length < TypeSize(In_addr)
-        or null?(hostent@.h_addr_list[0]))
+    if (hostent^.h_addrtype != AF_INET
+        or hostent^.h_length < TypeSize(In_addr)
+        or null?(hostent^.h_addr_list[0]))
         throw HostnameLookupError(hostname);
 
-    return Pointer[In_addr](hostent@.h_addr_list[0])@;
+    return Pointer[In_addr](hostent^.h_addr_list[0])^;
 }
 
 

@@ -7,7 +7,7 @@ IntArray_new(x:lua.State) {
     if (n < 0)
         throw lua.Error("IntArray.new: invalid array size: ", n);
     var data = lua.newUserData(x, TypeSize(IntArray));
-    ref v = Pointer[IntArray](data)@;
+    ref v = Pointer[IntArray](data)^;
     v <-- IntArray();
     resize(v, n);
     return 1;
@@ -15,7 +15,7 @@ IntArray_new(x:lua.State) {
 
 toIntArray(x:lua.State, index:Int) {
     var data = lua.toUserData(x, index);
-    return ref Pointer[IntArray](data)@;
+    return ref Pointer[IntArray](data)^;
 }
 
 IntArray_destroy(x:lua.State) {

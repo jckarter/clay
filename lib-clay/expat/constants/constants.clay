@@ -8,7 +8,7 @@ alias XML_SetExternalEntityRefHandlerArg = XML_SetExternalEntRefHandlerArg;
 alias XML_TRUE = XML_Bool(1);
 alias XML_FALSE = XML_Bool(0);
 
-XML_GetUserData(parser) = Pointer[RawPointer](parser)@;
+XML_GetUserData(parser) = Pointer[RawPointer](parser)^;
 
 alias XML_GetErrorLineNumber = XML_GetCurrentLineNumber;
 alias XML_GetErrorColumnNumber = XML_GetCurrentColumnNumber;

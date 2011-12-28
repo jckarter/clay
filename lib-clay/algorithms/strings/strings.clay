@@ -29,14 +29,14 @@ trimmed(seq, pred) = beginTrimmed(endTrimmed(seq, pred), pred);
 
 beginTrimmed(seq, pred) {
     var b, e = begin(seq), end(seq);
-    while ((b != e) and pred(b@))
+    while ((b != e) and pred(b^))
         inc(b);
     return coordinateRange(b, e);
 }
 
 endTrimmed(seq, pred) {
     var b, e = begin(seq), end(seq);
-    while ((b != e) and pred((e-1)@))
+    while ((b != e) and pred((e-1)^))
         dec(e);
     return coordinateRange(b, e);
 }

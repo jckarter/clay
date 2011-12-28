@@ -172,7 +172,7 @@ record StaticIndexing = ast(
 );
 
 enum UnaryOpKind (
-    DEREFERENCE, ADDRESS_OF, PLUS, MINUS, NOT, BITNOT,
+    DEREFERENCE, ADDRESS_OF, PLUS, MINUS, NOT,
 );
 
 record UnaryOp = ast(
@@ -183,7 +183,6 @@ record UnaryOp = ast(
 enum BinaryOpKind (
     ADD, SUBTRACT, MULTIPLY, DIVIDE, REMAINDER,
     EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS, GREATER, GREATER_EQUALS,
-    BITAND, BITOR, BITXOR, BITSHL, BITSHR,
 );
 
 record BinaryOp = ast(
@@ -288,8 +287,7 @@ record InitAssignment = ast(
 
 enum UpdateOpKind (
     UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY, UPDATE_DIVIDE,
-    UPDATE_REMAINDER, UPDATE_BITAND, UPDATE_BITOR, UPDATE_BITNOT,
-    UPDATE_BITXOR, UPDATE_BITSHL, UPDATE_BITSHR,
+    UPDATE_REMAINDER,
 );
 
 record UpdateAssignment = ast(

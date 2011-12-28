@@ -374,7 +374,7 @@ private var staticIndexingSuffix = exprParser(
 
 private var dereferenceSuffix = exprParser(
     x => UnaryOp(DEREFERENCE, Expr()),
-    punc(#"@"),
+    punc(#"^"),
 );
 
 private var suffix = choice(
@@ -392,11 +392,6 @@ private var suffixExpr = modify(
 //
 // prefix expr
 //
-
-private var bitnotExpr = exprParser(
-    x => UnaryOp(BITNOT, x.1),
-    sequence(punc(#"~"), suffixExpr),
-);
 
 private var addressOfExpr = exprParser(
     x => UnaryOp(ADDRESS_OF, x.1),
@@ -419,7 +414,7 @@ private var dispatchExpr = exprParser(
 );
 
 private var prefixExpr = choice(
-    bitnotExpr, signExpr, addressOfExpr, dispatchExpr, suffixExpr
+    signExpr, addressOfExpr, dispatchExpr, suffixExpr
 );
 
 
@@ -449,19 +444,13 @@ private var addSubOp = choice(
 );
 private var addSubExpr = binaryOp(addSubOp, mulDivExpr);
 
-private var bitshiftOp = choice(
-    modify(x => BITSHL, punc(#"<<")),
-    modify(x => BITSHR, punc(#">>")),
-);
-private var bitshiftExpr = binaryOp(bitshiftOp, addSubExpr);
-
 private var compareOp = choice(
     modify(x => LESSER,         punc(#"<")),
     modify(x => LESSER_EQUALS,  punc(#"<=")),
     modify(x => GREATER,        punc(#">")),
     modify(x => GREATER_EQUALS, punc(#">=")),
 );
-private var compareExpr = binaryOp(compareOp, bitshiftExpr);
+private var compareExpr = binaryOp(compareOp, addSubExpr);
 
 private var equalOp = choice(
     modify(x => EQUALS,     punc(#"==")),
@@ -472,37 +461,15 @@ private var equalExpr = binaryOp(equalOp, compareExpr);
 
 
 //
-// bitwise and, xor, or
-//
-
-
-private var bitandOp = choice(
-    modify(x => BITAND,  punc(#"&")),
-);
-private var bitandExpr = binaryOp(bitandOp, equalExpr);
-
-private var bitxorOp = choice(
-    modify(x => BITXOR,      punc(#"^")),
-);
-private var bitxorExpr = binaryOp(bitxorOp, bitandExpr);
-
-private var bitorOp = choice(
-    modify(x => BITOR, punc(#"|")),
-);
-private var bitorExpr = binaryOp(bitorOp, bitxorExpr);
-
-
-
-//
 // not, and, or
 //
 
 private var notExpr = choice(
     exprParser(
         x => UnaryOp(NOT, x.1),
-        sequence(kw_not, bitorExpr),
+        sequence(kw_not, equalExpr),
     ),
-    bitorExpr,
+    equalExpr,
 );
 
 private andOrOp(node, op, term) = modify(
@@ -695,12 +662,6 @@ private var updateOp = choice(
     modify(x => UPDATE_MULTIPLY,  punc(#"*=")),
     modify(x => UPDATE_DIVIDE,    punc(#"/=")),
     modify(x => UPDATE_REMAINDER, punc(#"%=")),
-    modify(x => UPDATE_BITAND,    punc(#"&=")),
-    modify(x => UPDATE_BITOR,     punc(#"|=")),
-    modify(x => UPDATE_BITNOT,    punc(#"~=")),
-    modify(x => UPDATE_BITXOR,    punc(#"^=")),
-    modify(x => UPDATE_BITSHL,    punc(#"<<=")),
-    modify(x => UPDATE_BITSHR,    punc(#">>=")),
 );
 
 private var updateAssignment = statementParser(

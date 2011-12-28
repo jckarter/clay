@@ -1,8 +1,2 @@
 23456781
 81234567
-true
-true
-true
-true
-true
-true

@@ -201,7 +201,15 @@ static SourcePtr loadFile(const string &fileName) {
     fclose(f);
     assert(n == size);
     buf[size] = 0;
-    return new Source(fileName, buf, size);
+
+    SourcePtr src = new Source(fileName, buf, size);
+    if (llvmDIBuilder != NULL) {
+        src->debugInfo = llvmDIBuilder->createFile(
+            basename(fileName, false),
+            dirname(fileName)
+        );
+    }
+    return src;
 }
 
 
@@ -506,6 +514,18 @@ static void initModule(ModulePtr m) {
             initVariantInstance((Instance *)obj);
             break;
         }
+    }
+
+    if (llvmDIBuilder != NULL) {
+        llvm::DIFile file = m->location == NULL
+            ? llvm::DIFile(NULL)
+            : m->location->source->debugInfo;
+        m->debugInfo = llvmDIBuilder->createNameSpace(
+            file, // scope
+            m->moduleName, // name
+            file, // file
+            0 // line
+            );
     }
 }
 
@@ -953,12 +973,6 @@ DEFINE_PRELUDE_ACCESSOR(lesserP)
 DEFINE_PRELUDE_ACCESSOR(lesserEqualsP)
 DEFINE_PRELUDE_ACCESSOR(greaterP)
 DEFINE_PRELUDE_ACCESSOR(greaterEqualsP)
-DEFINE_PRELUDE_ACCESSOR(bitand)
-DEFINE_PRELUDE_ACCESSOR(bitor)
-DEFINE_PRELUDE_ACCESSOR(bitnot)
-DEFINE_PRELUDE_ACCESSOR(bitxor)
-DEFINE_PRELUDE_ACCESSOR(bitshl)
-DEFINE_PRELUDE_ACCESSOR(bitshr)
 DEFINE_PRELUDE_ACCESSOR(tupleLiteral)
 DEFINE_PRELUDE_ACCESSOR(staticIndex)
 DEFINE_PRELUDE_ACCESSOR(index)

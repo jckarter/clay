@@ -16,7 +16,7 @@ errnoName(code:Int) {
     var begin, end = ..binarySearch(nameCodes, code);
     if (begin == end)
         return "";
-    return mappedInnerCoordinate(begin)@.1;
+    return mappedInnerCoordinate(begin)^.1;
 }
 
 

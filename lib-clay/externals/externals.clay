@@ -13,9 +13,9 @@ inline wrapAsExternal(impl_fn, static inCount, exp:ExternalException, ..inoutp) 
     try {
         ..mapValues(dereference, ..dropValues(static inCount, ..inoutp))
             <-- ..impl_fn(..mapValues(dereference, ..takeValues(static inCount, ..inoutp)));
-        exp@ <-- nothing(Exception);
+        exp^ <-- nothing(Exception);
     } catch (ex) {
-        exp@ <-- Maybe(ex);
+        exp^ <-- Maybe(ex);
     }
 }
 

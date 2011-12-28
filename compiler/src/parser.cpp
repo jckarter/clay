@@ -473,7 +473,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("@")) return false;
+    if (!symbol("^")) return false;
     x = new UnaryOp(DEREFERENCE, NULL);
     x->location = location;
     return true;
@@ -543,16 +543,6 @@ static bool suffixExpr(ExprPtr &x) {
 // prefix expr
 //
 
-static bool bitnotExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!symbol("~")) return false;
-    ExprPtr a;
-    if (!suffixExpr(a)) return false;
-    x = new UnaryOp(BITNOT, a);
-    x->location = location;
-    return true;
-}
-
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("&")) return false;
@@ -609,14 +599,11 @@ static bool dispatchExpr(ExprPtr &x) {
 static bool prefixExpr(ExprPtr &x) {
     int p = save();
     if (signExpr(x)) return true;
-    if (restore(p), bitnotExpr(x)) return true;
     if (restore(p), addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
     return false;
 }
-
-
 
 
 
@@ -768,11 +755,12 @@ static bool bitandTail(BinaryOpPtr &x) {
     int op;
     if (!bitandOp(op)) return false;
     ExprPtr y;
-    if (!bitshiftExpr(y)) return false;
+    if (!addSubExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
 }
+
 
 static bool bitandExpr(ExprPtr &x) {
     if (!bitshiftExpr(x)) return false;
@@ -1424,12 +1412,9 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=", "%=",
-                        "&=","|=","~=","^=","<<=",">>=",NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=", "%=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_REMAINDER,
-                       UPDATE_BITAND, UPDATE_BITOR, UPDATE_BITNOT,
-                       UPDATE_BITXOR, UPDATE_BITSHL, UPDATE_BITSHR};
+                       UPDATE_DIVIDE, UPDATE_REMAINDER};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {

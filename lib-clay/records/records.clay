@@ -21,10 +21,10 @@ inline overload staticIndex(x:T, static i) =
 //
 
 [T,i | Record?(T)]
-RecordFieldType(static T, static i) = Type(staticIndex(null(T)@, static i));
+RecordFieldType(static T, static i) = Type(staticIndex(null(T)^, static i));
 
 [T | Record?(T)]
-RecordFieldTypes(static T) = ..Type(..recordFields(null(T)@));
+RecordFieldTypes(static T) = ..Type(..recordFields(null(T)^));
 
 
 

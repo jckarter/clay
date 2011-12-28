@@ -33,29 +33,29 @@ Foo_new(l:Pointer[lua_State]) : Int {
     var x = luaL_optint(l, 1, 0);
     var y = luaL_optint(l, 2, 0);
     var bar = pushFoo(l);
-    bar@.x = x;
-    bar@.y = y;
+    bar^.x = x;
+    bar^.y = y;
     return 1;
 }
 
 Foo_yourCfunction(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
     println("this is yourCfunction\t");
-    lua_pushnumber(x, Double(bar@.x));
-    lua_pushnumber(x, Double(bar@.y));
+    lua_pushnumber(x, Double(bar^.x));
+    lua_pushnumber(x, Double(bar^.y));
     return 2;
 }
 
 Foo_setx(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
-    bar@.x = luaL_checkint(x, 2);
+    bar^.x = luaL_checkint(x, 2);
     lua_settop(x, 1);
     return 1;
 }
 
 Foo_sety(x:Pointer[lua_State]) : Int {
     var bar = checkFoo(x, 1);
-    bar@.y = luaL_checkint(x, 2);
+    bar^.y = luaL_checkint(x, 2);
     lua_settop(x, 1);
     return 1;
 }
@@ -64,15 +64,15 @@ Foo_add(x:Pointer[lua_State]) : Int {
     var bar1 = checkFoo(x, 1);
     var bar2 = checkFoo(x, 2);
     var sum = pushFoo(x);
-    sum@.x = bar1@.x + bar2@.x;
-    sum@.y = bar1@.y + bar2@.y;
+    sum^.x = bar1^.x + bar2^.x;
+    sum^.y = bar1^.y + bar2^.y;
     return 1;
 }
 
 Foo_dot(x:Pointer[lua_State]) : Int {
     var bar1 = checkFoo(x, 1);
     var bar2 = checkFoo(x, 2);
-    lua_pushnumber(x, Double(bar1@.x * bar2@.x + bar1@.y * bar2@.y));
+    lua_pushnumber(x, Double(bar1^.x * bar2^.x + bar1^.y * bar2^.y));
     return 1;
 }
 

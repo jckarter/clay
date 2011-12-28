@@ -54,7 +54,7 @@ private sqrt754(x:Double) {
     var t = inroot[bitshr(bitand(k,0x001fffff),14)];
     var s = a.2;
 
-    /*----------------- 2@-1022  <= | x |< 2@1024  -----------------*/
+    /*----------------- 2^-1022  <= | x |< 2^1024  -----------------*/
     if (k>0x000fffff and k<0x7ff00000) {
         var y = 1.0-t*(t*s);
         t = t*(rt0+y*(rt1+y*(rt2+y*rt3)));

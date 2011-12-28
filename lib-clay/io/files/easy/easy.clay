@@ -84,7 +84,7 @@ stderrFile() = File(new(FileData(stderrRawFile())));
 // fileHandle
 //
 
-overload fileHandle(f:File) = fileHandle(f.ptr@.file);
+overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 
 
@@ -93,7 +93,7 @@ overload fileHandle(f:File) = fileHandle(f.ptr@.file);
 //
 
 overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
-    ref fd = f.ptr@;
+    ref fd = f.ptr^;
     var requested = _requested;
     var pending = requested;
     var dest = buffer;
@@ -121,7 +121,7 @@ overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
 }
 
 overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
-    ref fd = f.ptr@;
+    ref fd = f.ptr^;
 
     var src = buffer;
     var srcEnd = src + n;
@@ -138,9 +138,9 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
             pendingNewlines = 0;
         }
 
-        pendingNewlines += SizeT(src@ == Byte('\n'));
+        pendingNewlines += SizeT(src^ == Byte('\n'));
 
-        dest@ = src@;
+        dest^ = src^;
         inc(dest);
         inc(src);
     }
@@ -152,8 +152,8 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
 }
 
 overload flush(f:File) {
-    flushData(f.ptr@);
-    flush(f.ptr@.file);
+    flushData(f.ptr^);
+    flush(f.ptr^.file);
 }
 
 private flushData(fd:FileData) {
@@ -170,12 +170,12 @@ private flushData(fd:FileData) {
 //
 
 overload fileSize(f:File) {
-    flushData(f.ptr@);
-    return fileSize(f.ptr@.file);
+    flushData(f.ptr^);
+    return fileSize(f.ptr^.file);
 }
 
 overload seek(f:File, offset, whence) {
-    ref fd = f.ptr@;
+    ref fd = f.ptr^;
     fd.readBegin = begin(fd.readBuffer);
     fd.readEnd = fd.readBegin;
     flushData(fd);
@@ -188,4 +188,4 @@ overload seek(f:File, offset, whence) {
 // terminal?
 //
 
-overload terminal?(f:File) = terminal?(f.ptr@.file);
+overload terminal?(f:File) = terminal?(f.ptr^.file);

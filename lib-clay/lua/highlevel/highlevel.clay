@@ -68,7 +68,7 @@ private var panicMsg = String();
 
 private panicHandler(handle:Pointer[lua_State]) : Int {
     panicMsg = String(CStringRef(lua_tostring(handle, -1)));
-    libc.longjmp(&panicJmpBuf@[0], 1);
+    libc.longjmp(&panicJmpBuf^[0], 1);
     return 0;
 }
 
@@ -244,7 +244,7 @@ toString(x:State, index:Int) {
     if (null?(ptr))
         typeError(x, index, "string");
     var ptr2 = Pointer[Char](ptr);
-    // HACK: assumes that (ptr2 + size)@ is byte value 0.
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
     return StringConstant(ptr2, ptr2 + size);
 }
 
@@ -471,7 +471,7 @@ checkString(x:State, index:Int) {
         x -> luaL_checklstring(x.handle, index, &size)
     );
     var ptr2 = Pointer[Char](ptr);
-    // HACK: assumes that (ptr2 + size)@ is byte value 0.
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
     return StringConstant(ptr2, ptr2 + size);
 }
 
@@ -529,7 +529,7 @@ overload optString(x:State, index:Int, ref _default:S) {
         x -> luaL_optlstring(x.handle, index, cstring(_default), &size)
     );
     var ptr2 = Pointer[Char](ptr);
-    // HACK: assumes that (ptr2 + size)@ is byte value 0.
+    // HACK: assumes that (ptr2 + size)^ is byte value 0.
     return StringConstant(ptr2, ptr2 + size);
 }
 
@@ -601,11 +601,11 @@ registerTable(x:State, ..entries:E) {
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
     ..for (entry in entries) {
-        ptr@.name, ptr@.func = ..unpackNameAndFunction(entry);
+        ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }
-    ptr@.name = Type(ptr@.name)(0);
-    ptr@.func = Type(ptr@.func)(0);
+    ptr^.name = Type(ptr^.name)(0);
+    ptr^.func = Type(ptr^.func)(0);
     luaL_register(x.handle, null(CChar), begin(moduleEntries));
 }
 
@@ -615,10 +615,10 @@ registerModule(x:State, name:S, ..entries:E) {
     var moduleEntries = Array[luaL_Reg, N]();
     var ptr = begin(moduleEntries);
     ..for (entry in entries) {
-        ptr@.name, ptr@.func = ..unpackNameAndFunction(entry);
+        ptr^.name, ptr^.func = ..unpackNameAndFunction(entry);
         ptr += 1;
     }
-    ptr@.name = Type(ptr@.name)(0);
-    ptr@.func = Type(ptr@.func)(0);
+    ptr^.name = Type(ptr^.name)(0);
+    ptr^.func = Type(ptr^.func)(0);
     luaL_register(x.handle, cstring(name), begin(moduleEntries));
 }

@@ -25,20 +25,20 @@ record NumberConvertingString = newClass(NSString,
         [#"initWithInt:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
-                self@.value = value;
+                self^.value = value;
             }
             return self;
         }],
         [#"initWithNumber:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
-                self@.value = value.intValue();
+                self^.value = value.intValue();
             }
             return self;
         }],
         [#"length", (self) => {
             var length = NSUInteger(0);
-            var value = self@.value;
+            var value = self^.value;
 
             if (value < 0) {
                 length = 1;
@@ -51,7 +51,7 @@ record NumberConvertingString = newClass(NSString,
             return length;
         }],
         [#"characterAtIndex:", (self, index) => {
-            var value = self@.value;
+            var value = self^.value;
             var length = self.length();
 
             if (value < 0) {

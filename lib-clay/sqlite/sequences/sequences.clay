@@ -85,7 +85,7 @@ private fillBuffer(seq: SqliteStatementSequence[T,n], buffer: SqliteStatementBuf
     var intoBuffer = begin(buffer.buffer);
     try {
         for (row in seq.statement) {
-            intoBuffer@ = rowRecord(row, T);
+            intoBuffer^ = rowRecord(row, T);
             inc(intoBuffer);
         }
         buffer.offset = offset;
@@ -137,9 +137,9 @@ private record SqliteStatementCoordinate[T,n] (
 [T,n] overload end(seq: SqliteStatementSequence[T,n])
     = SqliteStatementCoordinate[T,n](&seq, size(seq));
 
-[T,n] overload dereference(i: SqliteStatementCoordinate[T,n]) = i.seq@[i.index];
+[T,n] overload dereference(i: SqliteStatementCoordinate[T,n]) = i.seq^[i.index];
 [T,n, I | Integer?(I)] overload index(i: SqliteStatementCoordinate[T,n], j: I)
-    = i.seq@[i.index + j];
+    = i.seq^[i.index + j];
 
 [T,n] overload inc(i: SqliteStatementCoordinate[T,n]) { inc(i.index); }
 [T,n] overload dec(i: SqliteStatementCoordinate[T,n]) { dec(i.index); }

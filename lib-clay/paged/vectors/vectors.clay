@@ -111,7 +111,7 @@ overload destroy(a:Vector[T]) {
 overload Vector?(static Vector[T]) = true;
 
 [T]
-overload vectorData(a:Vector[T]) = &(a.data@);
+overload vectorData(a:Vector[T]) = &(a.data^);
 
 [T]
 overload vectorSize(a:Vector[T]) = a.size;
@@ -139,7 +139,7 @@ private reallocVector(a:Vector[T], capacity:SizeT) {
     var data = allocatePaged(T, capacity);
     var ptr = data;
     for (x in a) {
-        ptr@ <-- moveUnsafe(x);
+        ptr^ <-- moveUnsafe(x);
         inc(ptr);
     }
     freePaged(a.data);

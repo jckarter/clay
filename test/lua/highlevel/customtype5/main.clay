@@ -14,7 +14,7 @@ pointFieldRef(p:Point, i) {
     }
     else {
         assert(false, "invalid field index", i);
-        return ref null(Double)@;
+        return ref null(Double)^;
     }
 }
 
@@ -22,7 +22,7 @@ Point_new(s:lua.State) {
     var x = lua.checkNumber(s, 1);
     var y = lua.checkNumber(s, 2);
     var data = lua.newUserData(s, TypeSize(Point));
-    Pointer[Point](data)@ = Point(x, y);
+    Pointer[Point](data)^ = Point(x, y);
     lua.lookupMetaTable(s, "Point");
     lua.setMetaTable(s, -2);
     return 1;
@@ -30,7 +30,7 @@ Point_new(s:lua.State) {
 
 checkPoint(s:lua.State, index:Int) {
     var data = lua.checkUserData(s, index, "Point");
-    return ref Pointer[Point](data)@;
+    return ref Pointer[Point](data)^;
 }
 
 Point_index(s:lua.State) {

@@ -13,7 +13,7 @@ parseIntWith(s:S, intType, convFunc) {
     var end = null(CChar);
     var value = convFunc(p, &end, 0);
     var typeName = StaticName(intType);
-    if (end@ != 0)
+    if (end^ != 0)
         error("invalid " + typeName + ": ", repr(s));
     if ((errno() == ERANGE) or value < Least(intType) or value > Greatest(intType))
         error(typeName + " out of range: ", repr(s));
@@ -26,7 +26,7 @@ parseFloatWith(s:S, floatType, convFunc) {
     var end = null(CChar);
     var value = convFunc(p, &end);
     var typeName = StaticName(floatType);
-    if (end@ != 0)
+    if (end^ != 0)
         error("invalid " + typeName + ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName + " out of range: ", repr(s));
@@ -39,7 +39,7 @@ parseImagWith(s:S, imagType, convFunc) {
     var end = null(CChar);
     var value = convFunc(p, &end);
     var typeName = StaticName(imagType);
-    if (end@ != 0)
+    if (end^ != 0)
         error("invalid " + typeName + ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName + " out of range: ", repr(s));
