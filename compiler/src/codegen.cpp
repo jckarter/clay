@@ -7,7 +7,8 @@
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
 
-llvm::Module *llvmModule;
+llvm::Module *llvmModule = NULL;
+llvm::DIBuilder *llvmDIBuilder = NULL;
 llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
 
@@ -1457,12 +1458,25 @@ void codegenGVarInstance(GVarInstancePtr x)
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
     ostringstream ostr;
-    ostr << "clay_" << x->gvar->name->str << "_" << y->type;
+    ostr << "clay global " << x->gvar->name->str << " " << y->type;
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
             initializer, ostr.str());
+    if (llvmDIBuilder) {
+        assert(x->gvar->location->source->debugInfo != NULL);
+        int line, column, tabColumn;
+        computeLineCol(x->gvar->location, line, column, tabColumn);
+        x->debugInfo = llvmDIBuilder->createGlobalVariable(
+            x->gvar->name->str,
+            x->gvar->location->source->debugInfo,
+            line,
+            llvmTypeDebugInfo(y->type),
+            true, // isLocalToUnit
+            x->llGlobal
+        );
+    }
 
     // generate initializer
     ExprPtr lhs;
@@ -1513,6 +1527,20 @@ void codegenExternalVariable(ExternalVariablePtr x)
         new llvm::GlobalVariable(
             *llvmModule, llvmType(pv->type), false,
             linkage, NULL, x->name->str);
+    if (llvmDIBuilder) {
+        assert(x->location->source->debugInfo != NULL);
+        int line, column, tabColumn;
+        computeLineCol(x->location, line, column, tabColumn);
+        x->debugInfo = llvmDIBuilder->createGlobalVariable(
+            x->name->str,
+            x->location->source->debugInfo,
+            line,
+            llvmTypeDebugInfo(x->type2),
+            false, // isLocalToUnit
+            x->llGlobal
+        );
+    }
+
 }
 
 
@@ -1578,6 +1606,44 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
              attr != llAttributes.end();
              ++attr)
             func->addAttribute(attr->first, attr->second);
+
+        if (llvmDIBuilder != NULL) {
+            llvm::DIFile file(NULL);
+            int line = 0, column = 0, tabColumn = 0;
+            if (x->location != NULL) {
+                file = x->location->source->debugInfo;
+                computeLineCol(x->location, line, column, tabColumn);
+            }
+
+            vector<llvm::Value*> debugParamTypes;
+            if (x->returnType2 == NULL)
+                debugParamTypes.push_back(llvmVoidTypeDebugInfo());
+            else
+                debugParamTypes.push_back(llvmTypeDebugInfo(x->returnType2));
+            for (unsigned i = 0; i < x->args.size(); ++i)
+                debugParamTypes.push_back(llvmTypeDebugInfo(x->args[i]->type2));
+
+            llvm::DIArray debugParamArray = llvmDIBuilder->getOrCreateArray(
+                llvm::makeArrayRef(debugParamTypes));
+
+            llvm::DIType typeDebugInfo = llvmDIBuilder->createSubroutineType(
+                file, // file
+                debugParamArray);
+
+            x->debugInfo = llvmDIBuilder->createFunction(
+                safeLookupModule(x->env)->debugInfo, // scope
+                x->name->str, // name
+                llvmFuncName, // linkage name
+                file, // file
+                line, // line
+                typeDebugInfo, // type
+                false, // isLocalToUnit
+                !!x->body, // isDefinition XXX
+                0, // flags
+                false, // isOptimized
+                x->llvmFunc // function
+            );
+        }
     }
 
     if (!codegenBody)
@@ -1587,7 +1653,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->body)
         return;
 
-    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc);
+    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc, x->debugInfo);
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -2629,7 +2695,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     static int id = 1;
     ostringstream functionName;
 
-    functionName << "clay_" << callableName << id;
+    functionName << "clay " << callableName << id;
     id++;
 
     out << string("define internal i8* @\"")
@@ -2765,10 +2831,12 @@ void codegenCodeBody(InvokeEntryPtr entry)
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
 
+    string llvmFuncName = "clay " + callableName;
+
     llvm::Function *llFunc =
         llvm::Function::Create(llFuncType,
                                llvm::Function::InternalLinkage,
-                               "clay_" + callableName,
+                               llvmFuncName,
                                llvmModule);
 
     for (unsigned i = 1; i <= llArgTypes.size(); ++i) {
@@ -2777,7 +2845,51 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     entry->llvmFunc = llFunc;
 
-    CodegenContextPtr ctx = new CodegenContext(llFunc);
+    if (llvmDIBuilder != NULL) {
+        int line, column, tabColumn;
+        computeLineCol(entry->origCode->location, line, column, tabColumn);
+
+        vector<llvm::Value*> debugParamTypes;
+        debugParamTypes.push_back(llvmVoidTypeDebugInfo());
+        for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
+            llvm::DIType argType = llvmTypeDebugInfo(entry->argsKey[i]);
+            llvm::DIType argRefType
+                = llvmDIBuilder->createReferenceType(argType);
+            debugParamTypes.push_back(argRefType);
+        }
+        for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+            llvm::DIType returnType = llvmTypeDebugInfo(entry->returnTypes[i]);
+            llvm::DIType returnRefType = entry->returnIsRef[i]
+                ? llvmDIBuilder->createReferenceType(
+                    llvmDIBuilder->createReferenceType(returnType))
+                : llvmDIBuilder->createReferenceType(returnType);
+
+            debugParamTypes.push_back(returnRefType);
+        }
+
+        llvm::DIArray debugParamArray = llvmDIBuilder->getOrCreateArray(
+            llvm::makeArrayRef(debugParamTypes));
+
+        llvm::DIType typeDebugInfo = llvmDIBuilder->createSubroutineType(
+            entry->origCode->location->source->debugInfo,
+            debugParamArray);
+
+        entry->debugInfo = llvmDIBuilder->createFunction(
+            safeLookupModule(entry->env)->debugInfo,
+            callableName,
+            llvmFuncName,
+            entry->origCode->location->source->debugInfo,
+            line,
+            typeDebugInfo,
+            true, // isLocalToUnit
+            true, // isDefinition
+            0,
+            false, // isOptimized
+            entry->llvmFunc
+        );
+    }
+
+    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc, entry->debugInfo);
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -2917,7 +3029,7 @@ void codegenCWrapper(InvokeEntryPtr entry)
     llvm::Function *llCWrapper =
         llvm::Function::Create(llFuncType,
                                llvm::Function::InternalLinkage,
-                               "clay_cwrapper_" + callableName,
+                               "clay external wrapper " + callableName,
                                llvmModule);
     for (vector< pair<unsigned, llvm::Attributes> >::const_iterator attr = llAttributes.begin();
          attr != llAttributes.end();
@@ -6058,6 +6170,9 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
         codegenMain(module);
 
     finalizeCtorsDtors();
+
+    if (llvmDIBuilder != NULL)
+        llvmDIBuilder->finalize();
 }
 
 
@@ -6066,14 +6181,31 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 // initLLVM
 //
 
-bool initLLVM(std::string const &targetTriple)
+bool initLLVM(std::string const &targetTriple,
+    std::string const &name,
+    std::string const &flags,
+    bool debug,
+    bool optimized)
 {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
     llvm::InitializeAllAsmParsers();
-    llvmModule = new llvm::Module("clay", llvm::getGlobalContext());
+    llvmModule = new llvm::Module(name, llvm::getGlobalContext());
     llvmModule->setTargetTriple(targetTriple);
+    if (debug) {
+        llvmDIBuilder = new llvm::DIBuilder(*llvmModule);
+        llvmDIBuilder->createCompileUnit(
+            DW_LANG_user_CLAY,
+            basename(name, false),
+            dirname(name),
+            "clay compiler " CLAY_COMPILER_VERSION,
+            optimized,
+            flags,
+            0
+        );
+    } else
+        llvmDIBuilder = NULL;
     llvm::EngineBuilder eb(llvmModule);
     llvmEngine = eb.create();
     if (llvmEngine) {

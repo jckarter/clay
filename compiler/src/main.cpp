@@ -324,12 +324,19 @@ static void usage(char *argv0)
     cerr << "  -v                    display version info\n";
 }
 
-static string basename(const string &fullname)
+string dirname(const string &fullname)
+{
+    string::size_type slash = fullname.find_last_of(PATH_SEPARATORS);
+    return fullname.substr(0, slash == string::npos ? 0 : slash);
+}
+
+string basename(const string &fullname, bool chopSuffix)
 {
     string::size_type to = fullname.rfind('.');
     string::size_type slash = fullname.find_last_of(PATH_SEPARATORS);
     string::size_type from = slash == string::npos ? 0 : slash+1;
-    string::size_type length = to == string::npos ? string::npos : to - from;
+    string::size_type length =
+        (!chopSuffix || to == string::npos) ? string::npos : to - from;
 
     return fullname.substr(from, length);
 }
@@ -759,7 +766,9 @@ int main(int argc, char **argv) {
     llvm::Triple llvmTriple(targetTriple);
     targetTriple = llvmTriple.str();
 
-    if (!initLLVM(targetTriple)) {
+    std::string moduleName = clayScript.empty() ? clayFile : "-e";
+
+    if (!initLLVM(targetTriple, moduleName, "", debug, optLevel > 0)) {
         cerr << "error: unable to initialize LLVM for target " << targetTriple << "\n";
         return -1;
     };
@@ -808,7 +817,7 @@ int main(int argc, char **argv) {
     addSearchPath(".");
 
     if (outputFile.empty()) {
-        string clayFileBasename = basename(clayFile);
+        string clayFileBasename = basename(clayFile, true);
 
         if (emitLLVM && emitAsm)
             outputFile = clayFileBasename + ".ll";

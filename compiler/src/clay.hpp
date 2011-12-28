@@ -22,20 +22,23 @@
 #endif
 
 #include <llvm/ADT/Triple.h>
+#include <llvm/Analysis/DebugInfo.h>
+#include <llvm/Analysis/DIBuilder.h>
 #include <llvm/Type.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Function.h>
 #include <llvm/BasicBlock.h>
+#include <llvm/Support/Dwarf.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Host.h>
-#include <llvm/Target/TargetData.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/Target/TargetData.h>
 #include <llvm/Intrinsics.h>
 
 #ifdef _MSC_VER
@@ -664,8 +667,9 @@ struct Source : public Object {
     string fileName;
     char *data;
     int size;
+    llvm::DIFile debugInfo;
     Source(const string &fileName, char *data, int size)
-        : Object(SOURCE), fileName(fileName), data(data), size(size) {}
+        : Object(SOURCE), fileName(fileName), data(data), size(size), debugInfo(NULL) {}
     ~Source() {
         delete [] data;
     }
@@ -1865,11 +1869,12 @@ struct GVarInstance : public Object {
     MultiPValuePtr analysis;
     TypePtr type;
     llvm::GlobalVariable *llGlobal;
+    llvm::DIGlobalVariable debugInfo;
 
     GVarInstance(GlobalVariablePtr gvar,
                  const vector<ObjectPtr> &params)
         : Object(DONT_CARE), gvar(gvar), params(params),
-          analyzing(false), llGlobal(NULL) {}
+          analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
 };
 
 enum CallingConv {
@@ -1899,11 +1904,12 @@ struct ExternalProcedure : public TopLevelItem {
     TypePtr ptrType;
 
     llvm::Function *llvmFunc;
+    llvm::DISubprogram debugInfo;
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
           attributes(new ExprList()), attributesVerified(false),
-          analyzed(false), llvmFunc(NULL) {}
+          analyzed(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
@@ -1914,7 +1920,7 @@ struct ExternalProcedure : public TopLevelItem {
         : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
-          analyzed(false), bodyCodegenned(false), llvmFunc(NULL) {}
+          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
 };
 
 struct ExternalArg : public ANode {
@@ -1935,18 +1941,19 @@ struct ExternalVariable : public TopLevelItem {
 
     TypePtr type2;
     llvm::GlobalVariable *llGlobal;
+    llvm::DIGlobalVariable debugInfo;
 
     ExternalVariable(Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, visibility),
           attributes(new ExprList()), attributesVerified(false),
-          llGlobal(NULL) {}
+          llGlobal(NULL), debugInfo(NULL) {}
     ExternalVariable(IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
                      ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
-          attributesVerified(false), llGlobal(NULL) {}
+          attributesVerified(false), llGlobal(NULL), debugInfo(NULL) {}
 };
 
 struct EvalTopLevel : public TopLevelItem {
@@ -2091,6 +2098,8 @@ struct Module : public ANode {
     bool topLevelLLVMGenerated;
     bool externalsGenerated;
 
+    llvm::DINameSpace debugInfo;
+
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initialized(false),
@@ -2098,7 +2107,8 @@ struct Module : public ANode {
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false),
-          externalsGenerated(false) {}
+          externalsGenerated(false),
+          debugInfo(NULL) {}
     Module(const string &moduleName,
            const vector<ImportPtr> &imports,
            ModuleDeclarationPtr declaration,
@@ -2112,7 +2122,8 @@ struct Module : public ANode {
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false),
-          externalsGenerated(false) {}
+          externalsGenerated(false),
+          debugInfo(NULL) {}
 };
 
 
@@ -2494,6 +2505,7 @@ private :
 struct Type : public Object {
     int typeKind;
     llvm::Type *llType;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
     bool defined;
 
     bool typeInfoInitialized;
@@ -2505,7 +2517,7 @@ struct Type : public Object {
 
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind),
-          llType(NULL), defined(false),
+          llType(NULL), debugInfo(NULL), defined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
 };
 
@@ -2749,12 +2761,21 @@ llvm::Type *llvmArrayType(TypePtr type, int size);
 llvm::Type *llvmVoidType();
 
 llvm::Type *llvmType(TypePtr t);
+llvm::DIType llvmTypeDebugInfo(TypePtr t);
+llvm::DIType llvmVoidTypeDebugInfo();
 
 size_t typeSize(TypePtr t);
 size_t typeAlignment(TypePtr t);
 void typePrint(ostream &out, TypePtr t);
 string typeName(TypePtr t);
 
+inline size_t alignedUpTo(size_t offset, size_t align) {
+    return (offset+align-1)/align*align;
+}
+
+inline size_t alignedUpTo(size_t offset, TypePtr type) {
+    return alignedUpTo(offset, typeAlignment(type));
+}
 
 
 //
@@ -2902,6 +2923,13 @@ void patternPrint(ostream &out, MultiPatternPtr x);
 
 void initializeLambda(LambdaPtr x, EnvPtr env);
 
+
+//
+// main
+//
+
+string dirname(const string &fullname);
+string basename(const string &fullname, bool chopSuffix);
 
 
 //
@@ -3031,6 +3059,8 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmFunc;
     llvm::Function *llvmCWrapper;
 
+    llvm::DISubprogram debugInfo;
+
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
@@ -3038,7 +3068,7 @@ struct InvokeEntry : public Object {
           parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
-          isInline(false), llvmFunc(NULL), llvmCWrapper(NULL) {}
+          isInline(false), llvmFunc(NULL), llvmCWrapper(NULL), debugInfo(NULL) {}
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
@@ -3342,14 +3372,21 @@ EValuePtr evalAllocValue(TypePtr t);
 // codegen
 //
 
+static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
+
 extern llvm::Module *llvmModule;
+extern llvm::DIBuilder *llvmDIBuilder;
 extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
 llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
 
-bool initLLVM(std::string const &targetTriple);
+bool initLLVM(std::string const &targetTriple,
+    std::string const &name,
+    std::string const &flags,
+    bool debug,
+    bool optimized);
 
 bool inlineEnabled();
 void setInlineEnabled(bool enabled);
@@ -3434,6 +3471,7 @@ struct ValueStackEntry {
 
 struct CodegenContext : public Object {
     llvm::Function *llvmFunc;
+    vector<llvm::MDNode*> debugScope;
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
 
@@ -3459,11 +3497,33 @@ struct CodegenContext : public Object {
           builder(NULL),
           valueForStatics(NULL),
           checkExceptions(true),
-          exceptionValue(NULL) {}
+          exceptionValue(NULL)
+    {
+    }
+
+    CodegenContext(llvm::Function *llvmFunc, llvm::DISubprogram debugInfo)
+        : Object(DONT_CARE),
+          llvmFunc(llvmFunc),
+          initBuilder(NULL),
+          builder(NULL),
+          valueForStatics(NULL),
+          checkExceptions(true),
+          exceptionValue(NULL)
+    {
+        if (debugInfo != NULL)
+            debugScope.push_back(debugInfo);
+    }
 
     ~CodegenContext() {
         delete builder;
         delete initBuilder;
+    }
+
+    llvm::DIScope getDebugScope() {
+        if (debugScope.empty())
+            return llvm::DIScope(NULL);
+        else
+            return llvm::DIScope(debugScope.back());
     }
 };
 

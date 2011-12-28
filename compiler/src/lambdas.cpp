@@ -119,6 +119,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
     r->name = new Identifier(lambdaName(x));
+    r->env = env;
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
 
