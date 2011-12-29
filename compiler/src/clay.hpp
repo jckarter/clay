@@ -3510,6 +3510,7 @@ struct CodegenContext : public Object {
     vector<JumpTarget> exceptionTargets;
     bool checkExceptions;
     llvm::Value *exceptionValue;
+    int inlineDepth;
 
     CodegenContext(llvm::Function *llvmFunc)
         : Object(DONT_CARE),
@@ -3547,24 +3548,29 @@ typedef Pointer<CodegenContext> CodegenContextPtr;
 struct DebugLocationContext {
     LocationPtr loc;
     CodegenContextPtr ctx;
+    bool didSetDebugLoc;
     llvm::DebugLoc oldDebugLoc;
     DebugLocationContext(LocationPtr loc, CodegenContextPtr ctx)
-        : loc(loc), ctx(ctx)
+        : loc(loc), ctx(ctx), didSetDebugLoc(false)
     {
-        if (loc.ptr()) pushLocation(loc);
-        if (llvmDIBuilder != NULL) {
-            oldDebugLoc = ctx->builder->getCurrentDebugLocation();
-            int line, column;
-            getDebugLineCol(loc, line, column);
-            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
-            ctx->builder->SetCurrentDebugLocation(debugLoc);
+        if (loc.ptr()) {
+            pushLocation(loc);
+            if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
+                didSetDebugLoc = true;
+                oldDebugLoc = ctx->builder->getCurrentDebugLocation();
+                int line, column;
+                getDebugLineCol(loc, line, column);
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
+                ctx->builder->SetCurrentDebugLocation(debugLoc);
+            }
         }
     }
     ~DebugLocationContext() {
-        if (loc.ptr())
+        if (loc.ptr()) {
             popLocation();
-        if (llvmDIBuilder != NULL)
-            ctx->builder->SetCurrentDebugLocation(oldDebugLoc);
+            if (didSetDebugLoc)
+                ctx->builder->SetCurrentDebugLocation(oldDebugLoc);
+        }
     }
 private :
     DebugLocationContext(const DebugLocationContext &) {}

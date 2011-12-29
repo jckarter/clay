@@ -3152,8 +3152,11 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
+    assert(ctx->inlineDepth >= 0);
     if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");
+
+    ++ctx->inlineDepth;
 
     ensureArity(args, entry->argsKey.size());
 
@@ -3234,6 +3237,9 @@ void codegenCallInline(InvokeEntryPtr entry,
     ctx->returnTargets.pop_back();
 
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
