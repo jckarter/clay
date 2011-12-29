@@ -1420,7 +1420,7 @@ static void defineLLVMType(TypePtr t) {
             llvm::DIFile file = getDebugLineCol(x->record->location, line, column);
 
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(
-                safeLookupModule(x->record->env)->getDebugInfo(), // scope
+                lookupModuleDebugInfo(x->record->env), // scope
                 typeName(t),
                 file, // file
                 line, // lineNo

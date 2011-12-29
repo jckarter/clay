@@ -315,6 +315,24 @@ ModulePtr safeLookupModule(EnvPtr env) {
     }
 }
 
+llvm::DINameSpace lookupModuleDebugInfo(EnvPtr env) {
+    if (env == NULL || env->parent == NULL)
+        return llvm::DINameSpace(NULL);
+
+    switch (env->parent->objKind) {
+    case ENV : {
+        Env *parent = (Env *)env->parent.ptr();
+        return lookupModuleDebugInfo(parent);
+    }
+    case MODULE : {
+        Module *module = (Module *)env->parent.ptr();
+        return module->getDebugInfo();
+    }
+    default :
+        return llvm::DINameSpace(NULL);
+    }
+}
+
 
 //
 // lookupEnvEx

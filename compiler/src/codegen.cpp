@@ -1626,7 +1626,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 debugParamArray);
 
             x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
-                safeLookupModule(x->env)->getDebugInfo(), // scope
+                lookupModuleDebugInfo(x->env), // scope
                 x->name->str, // name
                 llvmFuncName, // linkage name
                 file, // file
@@ -2883,7 +2883,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
             debugParamArray);
 
         entry->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
-            safeLookupModule(entry->env)->getDebugInfo(),
+            lookupModuleDebugInfo(entry->env),
             callableName,
             llvmFuncName,
             file,
@@ -6347,8 +6347,7 @@ bool initLLVM(std::string const &targetTriple,
             "clay compiler " CLAY_COMPILER_VERSION,
             optimized,
             flags,
-            0
-        );
+            0);
     } else
         llvmDIBuilder = NULL;
     llvm::EngineBuilder eb(llvmModule);
