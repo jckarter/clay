@@ -1458,7 +1458,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
     ostringstream ostr;
-    ostr << "clay global " << x->gvar->name->str << " " << y->type;
+    ostr << "clay global " << x->gvar->name->str << ":" << y->type;
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
@@ -3914,22 +3914,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
             mcv->add(cv);
-        }
-        int tempMarker = markTemps(ctx);
-        int marker = cgMarkStack(ctx);
-        codegenMultiInto(x->values, env, ctx, mcv, x->names.size());
-        cgDestroyAndPopStack(marker, ctx, false);
-        clearTemps(tempMarker, ctx);
-        EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv = mcv->values[i];
-            cgPushStackValue(cv, ctx);
-            addLocal(env2, x->names[i], cv.ptr());
-
-            ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
-            cv->llValue->setName(ostr.str());
-
             if (llvmDIBuilder != NULL) {
                 llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -3949,6 +3933,22 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     ctx->builder->GetInsertBlock());
             }
         }
+        int tempMarker = markTemps(ctx);
+        int marker = cgMarkStack(ctx);
+        codegenMultiInto(x->values, env, ctx, mcv, x->names.size());
+        cgDestroyAndPopStack(marker, ctx, false);
+        clearTemps(tempMarker, ctx);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            CValuePtr cv = mcv->values[i];
+            cgPushStackValue(cv, ctx);
+            addLocal(env2, x->names[i], cv.ptr());
+
+            ostringstream ostr;
+            ostr << x->names[i]->str << ":" << cv->type;
+            cv->llValue->setName(ostr.str());
+
+        }
         return env2;
     }
 
@@ -3964,23 +3964,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             TypePtr ptrType = pointerType(pv->type);
             CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
             mcv->add(cvRef);
-        }
-        int tempMarker = markTemps(ctx);
-        int marker = cgMarkStack(ctx);
-        codegenMulti(x->values, env, ctx, mcv, x->names.size());
-        cgDestroyAndPopStack(marker, ctx, false);
-        clearTemps(tempMarker, ctx);
-        EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr rcv, cv;
-            rcv = mcv->values[i];
-            cv = derefValue(rcv, ctx);
-            addLocal(env2, x->names[i], cv.ptr());
-
-            ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
-            cv->llValue->setName(ostr.str());
-
             if (llvmDIBuilder != NULL) {
                 llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -3990,16 +3973,30 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
-                        llvmTypeDebugInfo(cv->type)), // type
+                        llvmTypeDebugInfo(cvRef->type)), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
                     );
                 llvmDIBuilder->insertDeclare(
-                    rcv->llValue,
+                    cvRef->llValue,
                     debugVar,
                     ctx->builder->GetInsertBlock());
             }
+        }
+        int tempMarker = markTemps(ctx);
+        int marker = cgMarkStack(ctx);
+        codegenMulti(x->values, env, ctx, mcv, x->names.size());
+        cgDestroyAndPopStack(marker, ctx, false);
+        clearTemps(tempMarker, ctx);
+        EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->names.size(); ++i) {
+            CValuePtr cv = derefValue(mcv->values[i], ctx);
+            addLocal(env2, x->names[i], cv.ptr());
+
+            ostringstream ostr;
+            ostr << x->names[i]->str << ":" << cv->type;
+            cv->llValue->setName(ostr.str());
         }
         return env2;
     }
@@ -4011,14 +4008,36 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
+            CValuePtr cv;
             if (pv->isTemp) {
-                CValuePtr cv = codegenAllocNewValue(pv->type, ctx);
-                mcv->add(cv);
+                cv = codegenAllocNewValue(pv->type, ctx);
             }
             else {
                 TypePtr ptrType = pointerType(pv->type);
-                CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
-                mcv->add(cvRef);
+                cv = codegenAllocNewValue(ptrType, ctx);
+            }
+            mcv->add(cv);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIType debugType = llvmTypeDebugInfo(cv->type);
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    pv->isTemp
+                        ? llvmTypeDebugInfo(pv->type)
+                        : llvmDIBuilder->createReferenceType(
+                            llvmTypeDebugInfo(pv->type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cv->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -4040,31 +4059,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
-            if (llvmDIBuilder != NULL) {
-                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
-                llvm::DIType debugType = llvmTypeDebugInfo(cv->type);
-                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
-                    llvm::dwarf::DW_TAG_auto_variable, // tag
-                    debugBlock, // scope
-                    x->names[i]->str, // name
-                    file, // file
-                    line, // line
-                    mpv->values[i]->isTemp
-                        ? llvmTypeDebugInfo(cv->type)
-                        : llvmDIBuilder->createReferenceType(
-                            llvmTypeDebugInfo(cv->type)), // type
-                    true, // alwaysPreserve
-                    0, // flags
-                    0 // argNo
-                    );
-                llvmDIBuilder->insertDeclare(
-                    cv->llValue,
-                    debugVar,
-                    ctx->builder->GetInsertBlock());
-            }
         }
         return env2;
     }
