@@ -1464,7 +1464,7 @@ void codegenGVarInstance(GVarInstancePtr x)
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
             initializer, ostr.str());
-    if (llvmDIBuilder) {
+    if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);
         x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
@@ -1526,7 +1526,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
         new llvm::GlobalVariable(
             *llvmModule, llvmType(pv->type), false,
             linkage, NULL, x->name->str);
-    if (llvmDIBuilder) {
+    if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->location, line, column);
         x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
