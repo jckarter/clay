@@ -577,7 +577,7 @@ CValuePtr codegenForwardOneAsRef(ExprPtr expr,
                                  CodegenContextPtr ctx)
 {
     MultiCValuePtr mcv = codegenForwardExprAsRef(expr, env, ctx);
-    LocationContext loc(expr->location);
+    DebugLocationContext loc(expr->location, ctx);
     ensureArity(mcv, 1);
     return mcv->values[0];
 }
@@ -632,7 +632,7 @@ CValuePtr codegenOneAsRef(ExprPtr expr,
                           CodegenContextPtr ctx)
 {
     MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
-    LocationContext loc(expr->location);
+    DebugLocationContext loc(expr->location, ctx);
     ensureArity(mcv, 1);
     return mcv->values[0];
 }
@@ -725,7 +725,7 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
                                 EnvPtr env,
                                 CodegenContextPtr ctx)
 {
-    LocationContext loc(expr->location);
+    DebugLocationContext loc(expr->location, ctx);
 
     switch (expr->exprKind) {
     case NAME_REF : {
@@ -941,7 +941,7 @@ void codegenExpr(ExprPtr expr,
                  CodegenContextPtr ctx,
                  MultiCValuePtr out)
 {
-    LocationContext loc(expr->location);
+    DebugLocationContext loc(expr->location, ctx);
 
     switch (expr->exprKind) {
 
@@ -1014,7 +1014,7 @@ void codegenExpr(ExprPtr expr,
     case LINE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1023,7 +1023,7 @@ void codegenExpr(ExprPtr expr,
     case COLUMN_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1458,19 +1458,18 @@ void codegenGVarInstance(GVarInstancePtr x)
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
     ostringstream ostr;
-    ostr << "clay global " << x->gvar->name->str << " " << y->type;
+    ostr << "clay global " << x->gvar->name->str << ":" << y->type;
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
             initializer, ostr.str());
     if (llvmDIBuilder) {
-        assert(x->gvar->location->source->debugInfo != NULL);
-        int line, column, tabColumn;
-        computeLineCol(x->gvar->location, line, column, tabColumn);
-        x->debugInfo = llvmDIBuilder->createGlobalVariable(
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);
+        x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
             x->gvar->name->str,
-            x->gvar->location->source->debugInfo,
+            file,
             line,
             llvmTypeDebugInfo(y->type),
             true, // isLocalToUnit
@@ -1528,12 +1527,11 @@ void codegenExternalVariable(ExternalVariablePtr x)
             *llvmModule, llvmType(pv->type), false,
             linkage, NULL, x->name->str);
     if (llvmDIBuilder) {
-        assert(x->location->source->debugInfo != NULL);
-        int line, column, tabColumn;
-        computeLineCol(x->location, line, column, tabColumn);
-        x->debugInfo = llvmDIBuilder->createGlobalVariable(
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(x->location, line, column);
+        x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
             x->name->str,
-            x->location->source->debugInfo,
+            file,
             line,
             llvmTypeDebugInfo(x->type2),
             false, // isLocalToUnit
@@ -1591,6 +1589,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         llvmFuncName = x->name->str;
     }
 
+    llvm::DIFile file(NULL);
+    int line = 0, column = 0;
     if (x->llvmFunc == NULL) {
         llvm::Function *func = llvmModule->getFunction(llvmFuncName);
         if (!func) {
@@ -1608,12 +1608,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
             func->addAttribute(attr->first, attr->second);
 
         if (llvmDIBuilder != NULL) {
-            llvm::DIFile file(NULL);
-            int line = 0, column = 0, tabColumn = 0;
-            if (x->location != NULL) {
-                file = x->location->source->debugInfo;
-                computeLineCol(x->location, line, column, tabColumn);
-            }
+            file = getDebugLineCol(x->location, line, column);
 
             vector<llvm::Value*> debugParamTypes;
             if (x->returnType2 == NULL)
@@ -1630,8 +1625,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 file, // file
                 debugParamArray);
 
-            x->debugInfo = llvmDIBuilder->createFunction(
-                safeLookupModule(x->env)->debugInfo, // scope
+            x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
+                safeLookupModule(x->env)->getDebugInfo(), // scope
                 x->name->str, // name
                 llvmFuncName, // linkage name
                 file, // file
@@ -1653,7 +1648,18 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->body)
         return;
 
-    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc, x->debugInfo);
+    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc);
+
+    if (llvmDIBuilder != NULL) {
+        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+            x->getDebugInfo(),
+            file,
+            line,
+            column
+            ));
+    }
+
+    // XXX debug info for arguments
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -2845,9 +2851,11 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     entry->llvmFunc = llFunc;
 
+    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc);
+
     if (llvmDIBuilder != NULL) {
-        int line, column, tabColumn;
-        computeLineCol(entry->origCode->location, line, column, tabColumn);
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(entry->origCode->location, line, column);
 
         vector<llvm::Value*> debugParamTypes;
         debugParamTypes.push_back(llvmVoidTypeDebugInfo());
@@ -2871,14 +2879,14 @@ void codegenCodeBody(InvokeEntryPtr entry)
             llvm::makeArrayRef(debugParamTypes));
 
         llvm::DIType typeDebugInfo = llvmDIBuilder->createSubroutineType(
-            entry->origCode->location->source->debugInfo,
+            file,
             debugParamArray);
 
-        entry->debugInfo = llvmDIBuilder->createFunction(
-            safeLookupModule(entry->env)->debugInfo,
+        entry->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
+            safeLookupModule(entry->env)->getDebugInfo(),
             callableName,
             llvmFuncName,
-            entry->origCode->location->source->debugInfo,
+            file,
             line,
             typeDebugInfo,
             true, // isLocalToUnit
@@ -2887,9 +2895,14 @@ void codegenCodeBody(InvokeEntryPtr entry)
             false, // isOptimized
             entry->llvmFunc
         );
-    }
 
-    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc, entry->debugInfo);
+        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+            entry->getDebugInfo(),
+            file,
+            line,
+            column
+            ));
+    }
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -2904,28 +2917,78 @@ void codegenCodeBody(InvokeEntryPtr entry)
     EnvPtr env = new Env(entry->env);
 
     llvm::Function::arg_iterator ai = llFunc->arg_begin();
-    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai) {
+    unsigned argNo = 1;
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai, ++argNo) {
         llvm::Argument *llArgValue = &(*ai);
         llArgValue->setName(entry->fixedArgNames[i]->str);
         CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
         cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
+        if (llvmDIBuilder != NULL) {
+            llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+            int line, column;
+            LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
+            llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                llvm::dwarf::DW_TAG_arg_variable, // tag
+                debugBlock, // scope
+                entry->fixedArgNames[i]->str, // name
+                file, // file
+                line, // line
+                llvmDIBuilder->createReferenceType(
+                    llvmTypeDebugInfo(entry->fixedArgTypes[i])), // type
+                true, // alwaysPreserve
+                0, // flags
+                argNo
+                );
+            llvmDIBuilder->insertDeclare(
+                llArgValue,
+                debugVar,
+                initBlock);
+        }
     }
 
     if (entry->varArgName.ptr()) {
         unsigned nFixed = entry->fixedArgTypes.size();
         MultiCValuePtr varArgs = new MultiCValue();
-        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
+
+        int line, column;
+        LocationPtr argLocation = entry->origCode->formalVarArg->location;
+        llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
             ostringstream sout;
-            sout << "varg" << i;
+            sout << entry->varArgName << ".." << i;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
             cvalue->forwardedRValue = entry->forwardedRValueFlags[i+nFixed];
             varArgs->add(cvalue);
+
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_arg_variable, // tag
+                    debugBlock, // scope
+                    sout.str(), // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(entry->varArgTypes[i])), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    llArgValue,
+                    debugVar,
+                    initBlock);
+            }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
+
+    // XXX debug info for returns
 
     vector<CReturn> returns;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i, ++ai) {
@@ -2945,11 +3008,14 @@ void codegenCodeBody(InvokeEntryPtr entry)
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i) {
             ReturnSpecPtr rspec = returnSpecs[i];
+            ostringstream sout;
             if (rspec->name.ptr()) {
                 hasNamedReturn = true;
                 addLocal(env, rspec->name, returns[i].value.ptr());
-                returns[i].value->llValue->setName(rspec->name->str);
-            }
+                sout << rspec->name->str;
+            } else
+                sout << "return.." << i;
+            returns[i].value->llValue->setName(sout.str());
         }
         ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
         if (!varReturnSpec)
@@ -3317,12 +3383,23 @@ bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx)
 {
-    LocationContext loc(stmt->location);
+    DebugLocationContext loc(stmt->location, ctx);
 
     switch (stmt->stmtKind) {
 
     case BLOCK : {
         Block *block = (Block *)stmt.ptr();
+        if (llvmDIBuilder != NULL) {
+            llvm::DILexicalBlock outerScope = ctx->getDebugScope();
+            int line, column;
+            llvm::DIFile file = getDebugLineCol(stmt->location, line, column);
+            ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+                outerScope,
+                file,
+                line,
+                column
+                ));
+        }
         int blockMarker = cgMarkStack(ctx);
         codegenCollectLabels(block->statements, 0, ctx);
         bool terminated = false;
@@ -3332,6 +3409,8 @@ bool codegenStatement(StatementPtr stmt,
         if (!terminated)
             cgDestroyStack(blockMarker, ctx, false);
         cgPopStack(blockMarker, ctx);
+        if (llvmDIBuilder != NULL)
+            ctx->popDebugScope();
         return terminated;
     }
 
@@ -3820,7 +3899,10 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 {
-    LocationContext loc(x->location);
+    DebugLocationContext loc(x->location, ctx);
+
+    int line, column;
+    llvm::DIFile file = getDebugLineCol(x->location, line, column);
 
     switch (x->bindingKind) {
 
@@ -3832,6 +3914,24 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
             mcv->add(cv);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    llvmTypeDebugInfo(cv->type), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cv->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock());
+            }
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3845,8 +3945,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
+
         }
         return env2;
     }
@@ -3863,6 +3964,25 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             TypePtr ptrType = pointerType(pv->type);
             CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
             mcv->add(cvRef);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(cvRef->type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cvRef->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock());
+            }
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3871,12 +3991,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv;
-            cv = derefValue(mcv->values[i], ctx);
+            CValuePtr cv = derefValue(mcv->values[i], ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
         return env2;
@@ -3889,14 +4008,36 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
+            CValuePtr cv;
             if (pv->isTemp) {
-                CValuePtr cv = codegenAllocNewValue(pv->type, ctx);
-                mcv->add(cv);
+                cv = codegenAllocNewValue(pv->type, ctx);
             }
             else {
                 TypePtr ptrType = pointerType(pv->type);
-                CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
-                mcv->add(cvRef);
+                cv = codegenAllocNewValue(ptrType, ctx);
+            }
+            mcv->add(cv);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIType debugType = llvmTypeDebugInfo(cv->type);
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    pv->isTemp
+                        ? llvmTypeDebugInfo(pv->type)
+                        : llvmDIBuilder->createReferenceType(
+                            llvmTypeDebugInfo(pv->type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cv->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -3906,19 +4047,21 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv;
+            CValuePtr rcv, cv;
+            rcv = mcv->values[i];
             if (mpv->values[i]->isTemp) {
-                cv = mcv->values[i];
+                cv = rcv;
                 cgPushStackValue(cv, ctx);
             }
             else {
-                cv = derefValue(mcv->values[i], ctx);
+                cv = derefValue(rcv, ctx);
             }
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
+
         }
         return env2;
     }
@@ -5874,6 +6017,8 @@ static string stripEnclosingBraces(const string &s) {
 
 static void codegenTopLevelLLVMRecursive(ModulePtr m)
 {
+    // XXX debug info for inline LLVM
+
     if (m->topLevelLLVMGenerated) return;
     m->topLevelLLVMGenerated = true;
     vector<ImportPtr>::iterator ii, iend;

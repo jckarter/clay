@@ -37,6 +37,26 @@ static vector<vector<RecordTypePtr> > recordTypes;
 static vector<vector<VariantTypePtr> > variantTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
 
+//
+// type size and alignment for debug generation
+//
+
+static size_t llTypeSize(llvm::Type *llt) {
+    return (size_t)llvmTargetData->getTypeAllocSize(llt);
+}
+
+static size_t llTypeAlignment(llvm::Type *llt) {
+    return (size_t)llvmTargetData->getABITypeAlignment(llt);
+}
+
+static size_t debugTypeSize(llvm::Type *llt) {
+    return llTypeSize(llt)*8;
+}
+
+static size_t debugTypeAlignment(llvm::Type *llt) {
+    return llTypeAlignment(llt)*8;
+}
+
 void initTypes() {
     boolType = new BoolType();
     int8Type = new IntegerType(8, true);
@@ -971,7 +991,7 @@ llvm::Type *llvmType(TypePtr t) {
 llvm::DIType llvmTypeDebugInfo(TypePtr t) {
     makeLLVMType(t);
 
-    return llvm::DIType(t->debugInfo);
+    return t->getDebugInfo();
 }
 
 llvm::DIType llvmVoidTypeDebugInfo() {
@@ -985,10 +1005,10 @@ static void declareLLVMType(TypePtr t) {
     case BOOL_TYPE : {
         t->llType = llvmIntType(8);
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createBasicType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 llvm::dwarf::DW_ATE_boolean);
         break;
     }
@@ -996,10 +1016,10 @@ static void declareLLVMType(TypePtr t) {
         IntegerType *x = (IntegerType *)t.ptr();
         t->llType = llvmIntType(x->bits);
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createBasicType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 x->isSigned ? llvm::dwarf::DW_ATE_signed : llvm::dwarf::DW_ATE_unsigned);
         break;
     }
@@ -1007,62 +1027,26 @@ static void declareLLVMType(TypePtr t) {
         FloatType *x = (FloatType *)t.ptr();
         t->llType = llvmFloatType(x->bits);
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createBasicType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
-                typeSize(t)*8,
-                typeAlignment(t)*8,
-                llvm::dwarf::DW_ATE_float);
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
+                x->isImaginary ? llvm::dwarf::DW_ATE_imaginary_float : llvm::dwarf::DW_ATE_float);
         break;
     }
     case COMPLEX_TYPE : {
         ComplexType *x = (ComplexType *)t.ptr();
         vector<llvm::Type *> llTypes;
-        llTypes.push_back(llvmType(floatType(x->bits)));
-        llTypes.push_back(llvmType(imagType(x->bits)));
+        TypePtr realT = floatType(x->bits), imagT = imagType(x->bits);
+        llTypes.push_back(llvmType(realT));
+        llTypes.push_back(llvmType(imagT));
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
         if (llvmDIBuilder != NULL) {
-            llvm::TrackingVH<llvm::MDNode> tempNode = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
-            llvm::DIType temp(tempNode);
-
-            vector<llvm::Value*> members;
-            members.push_back(llvmDIBuilder->createMemberType(
-                temp,
-                "real",
-                llvm::DIFile(NULL), // file
-                0, // lineNo
-                x->bits, // size
-                x->bits, // align
-                0, // offset
-                0, // flags
-                temp // parent
-                ));
-
-            members.push_back(llvmDIBuilder->createMemberType(
-                temp,
-                "imag",
-                llvm::DIFile(NULL), // file
-                0, // lineNo
-                x->bits, // size
-                x->bits, // align
-                x->bits, // offset
-                0, // flags
-                temp // parent
-                ));
-
-            llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(
-                llvm::makeArrayRef(members));
-
-            t->debugInfo = llvmDIBuilder->createStructType(
-                primitivesModule()->debugInfo, // scope
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
-                llvm::DIFile(NULL), // file
-                0, // lineNo
-                typeSize(t)*8,
-                typeAlignment(t)*8,
-                0, // flags
-                memberArray);
-
-            llvm::DIType(tempNode).replaceAllUsesWith(t->debugInfo);
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
+                llvm::dwarf::DW_ATE_complex_float);
         }
         break;
     }
@@ -1070,10 +1054,10 @@ static void declareLLVMType(TypePtr t) {
         PointerType *x = (PointerType *)t.ptr();
         t->llType = llvmPointerType(x->pointeeType);
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createPointerType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createPointerType(
                 llvmTypeDebugInfo(x->pointeeType),
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 typeName(t));
         break;
     }
@@ -1118,10 +1102,10 @@ static void declareLLVMType(TypePtr t) {
                 llvm::DIFile(NULL),
                 debugParamArray);
 
-            t->debugInfo = llvmDIBuilder->createPointerType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createPointerType(
                 pointeeType,
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 typeName(t));
         }
         break;
@@ -1151,9 +1135,9 @@ static void declareLLVMType(TypePtr t) {
                 x->size - 1);
             llvm::DIArray elementRangeArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(&elementRange, &elementRange + 1));
-            t->debugInfo = llvmDIBuilder->createArrayType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createArrayType(
                 x->size,
-                typeAlignment(t)*8,
+                debugTypeAlignment(llvmType(x->elementType)),
                 llvmTypeDebugInfo(x->elementType),
                 elementRangeArray);
         }
@@ -1168,9 +1152,9 @@ static void declareLLVMType(TypePtr t) {
                 x->size - 1);
             llvm::DIArray elementRangeArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(&elementRange, &elementRange + 1));
-            t->debugInfo = llvmDIBuilder->createVectorType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createVectorType(
                 x->size,
-                typeAlignment(t)*8,
+                debugTypeAlignment(llvmType(x->elementType)),
                 llvmTypeDebugInfo(x->elementType),
                 elementRangeArray);
         }
@@ -1179,26 +1163,26 @@ static void declareLLVMType(TypePtr t) {
     case TUPLE_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createTemporaryType();
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
         break;
     }
     case UNION_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createTemporaryType();
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
         break;
     }
     case RECORD_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createTemporaryType();
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
         break;
     }
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
         TypePtr reprType = variantReprType(x);
         t->llType = llvmType(reprType);
-        t->debugInfo = llvmTypeDebugInfo(reprType);
+        t->debugInfo = (llvm::MDNode*)llvmTypeDebugInfo(reprType);
         break;
     }
     case STATIC_TYPE : {
@@ -1206,10 +1190,10 @@ static void declareLLVMType(TypePtr t) {
         llTypes.push_back(llvmIntType(8));
         t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
         if (llvmDIBuilder != NULL)
-            t->debugInfo = llvmDIBuilder->createBasicType(
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 llvm::dwarf::DW_ATE_signed);
         break;
     }
@@ -1257,17 +1241,20 @@ static void defineLLVMType(TypePtr t) {
         theType->setBody(llTypes);
 
         if (llvmDIBuilder != NULL) {
-            llvm::TrackingVH<llvm::MDNode> placeholderNode = x->debugInfo;
+            llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
             llvm::DIType placeholder(placeholderNode);
 
             vector<llvm::Value*> members;
-            size_t fieldOffset = 0;
+            size_t debugOffset = 0;
             vector<TypePtr>::iterator i, end;
             for (i = x->elementTypes.begin(), end = x->elementTypes.end();
                  i != end;
                  ++i)
             {
-                fieldOffset = alignedUpTo(fieldOffset, *i);
+                llvm::Type *memberLLT = llvmType(*i);
+                size_t debugAlign = debugTypeAlignment(memberLLT);
+                size_t debugSize = debugTypeSize(memberLLT);
+                debugOffset = alignedUpTo(debugOffset, debugAlign);
                 ostringstream name;
                 name << "element" << i - x->elementTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
@@ -1275,28 +1262,28 @@ static void defineLLVMType(TypePtr t) {
                     name.str(),
                     llvm::DIFile(NULL), // file
                     0, // lineNo
-                    typeSize(*i)*8, // size
-                    typeAlignment(*i)*8, // align
-                    fieldOffset*8, // offset
+                    debugSize, // size
+                    debugAlign, // align
+                    debugOffset, // offset
                     0, // flags
-                    placeholder // parent
+                    llvmTypeDebugInfo(*i) // type
                     ));
-                fieldOffset += typeSize(*i);
+                debugOffset += debugSize;
             }
 
             llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(members));
 
-            t->debugInfo = llvmDIBuilder->createStructType(
-                primitivesModule()->debugInfo, // scope
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(
+                primitivesModule()->getDebugInfo(), // scope
                 typeName(t),
                 llvm::DIFile(NULL), // file
                 0, // lineNo
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 0, // flags
                 memberArray);
-            llvm::DIType(placeholderNode).replaceAllUsesWith(t->debugInfo);
+            llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
         }
         break;
     }
@@ -1310,8 +1297,7 @@ static void defineLLVMType(TypePtr t) {
         size_t maxAlignSize = 0;
         size_t maxSize = 0;
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
-            llvm::Type *llt =
-                llvmType(x->memberTypes[i]);
+            llvm::Type *llt = llvmType(x->memberTypes[i]);
             size_t align = (size_t)llvmTargetData->getABITypeAlignment(llt);
             size_t size = (size_t)llvmTargetData->getTypeAllocSize(llt);
             if (align > maxAlign) {
@@ -1337,7 +1323,7 @@ static void defineLLVMType(TypePtr t) {
         theType->setBody(llTypes);
 
         if (llvmDIBuilder != NULL) {
-            llvm::TrackingVH<llvm::MDNode> placeholderNode = x->debugInfo;
+            llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
             llvm::DIType placeholder(placeholderNode);
 
             vector<llvm::Value*> members;
@@ -1346,6 +1332,9 @@ static void defineLLVMType(TypePtr t) {
                  i != end;
                  ++i)
             {
+                llvm::Type *memberLLT = llvmType(*i);
+                size_t debugAlign = debugTypeAlignment(memberLLT);
+                size_t debugSize = debugTypeSize(memberLLT);
                 ostringstream name;
                 name << "element" << i - x->memberTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
@@ -1353,27 +1342,27 @@ static void defineLLVMType(TypePtr t) {
                     name.str(),
                     llvm::DIFile(NULL), // file
                     0, // lineNo
-                    typeSize(*i)*8, // size
-                    typeAlignment(*i)*8, // align
+                    debugSize, // size
+                    debugAlign, // align
                     0, // offset
                     0, // flags
-                    placeholder // parent
+                    llvmTypeDebugInfo(*i) // type
                     ));
             }
 
             llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(members));
 
-            t->debugInfo = llvmDIBuilder->createUnionType(
-                primitivesModule()->debugInfo, // scope
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createUnionType(
+                primitivesModule()->getDebugInfo(), // scope
                 typeName(t),
                 llvm::DIFile(NULL), // file
                 0, // lineNo
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 0, // flags
                 memberArray);
-            llvm::DIType(placeholderNode).replaceAllUsesWith(t->debugInfo);
+            llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
         }
         break;
     }
@@ -1394,48 +1383,52 @@ static void defineLLVMType(TypePtr t) {
         theType->setBody(llTypes);
 
         if (llvmDIBuilder != NULL) {
-            llvm::TrackingVH<llvm::MDNode> placeholderNode = x->debugInfo;
+            llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
             llvm::DIType placeholder(placeholderNode);
 
             vector<llvm::Value*> members;
-            size_t fieldOffset = 0;
+            size_t debugOffset = 0;
             for (size_t i = 0; i < fieldNames.size(); ++i) {
-                fieldOffset = alignedUpTo(fieldOffset, fieldTypes[i]);
+                llvm::Type *memberLLT = llvmType(fieldTypes[i]);
+                size_t debugAlign = debugTypeAlignment(memberLLT);
+                size_t debugSize = debugTypeSize(memberLLT);
+                debugOffset = alignedUpTo(debugOffset, debugAlign);
+
                 LocationPtr fieldLocation = fieldNames[i]->location;
                 if (fieldLocation == NULL)
                     fieldLocation = x->record->location;
-                int line, column, tabColumn;
-                computeLineCol(fieldLocation, line, column, tabColumn);
+                int fieldLine, fieldColumn;
+                llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
                     fieldNames[i]->str,
-                    fieldLocation->source->debugInfo, // file
-                    0, // lineNo
-                    typeSize(fieldTypes[i])*8, // size
-                    typeAlignment(fieldTypes[i])*8, // align
-                    fieldOffset*8, // offset
+                    fieldFile, // file
+                    fieldLine, // lineNo
+                    debugSize, // size
+                    debugAlign, // align
+                    debugOffset, // offset
                     0, // flags
-                    placeholder // parent
+                    llvmTypeDebugInfo(fieldTypes[i]) // type
                     ));
-                fieldOffset += typeSize(fieldTypes[i]);
+                debugOffset += debugSize;
             }
 
             llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(members));
 
-            int line, column, tabColumn;
-            computeLineCol(x->record->location, line, column, tabColumn);
+            int line, column;
+            llvm::DIFile file = getDebugLineCol(x->record->location, line, column);
 
-            t->debugInfo = llvmDIBuilder->createStructType(
-                safeLookupModule(x->record->env)->debugInfo, // scope
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(
+                safeLookupModule(x->record->env)->getDebugInfo(), // scope
                 typeName(t),
-                x->record->location->source->debugInfo, // file
+                file, // file
                 line, // lineNo
-                typeSize(t)*8,
-                typeAlignment(t)*8,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 0, // flags
                 memberArray);
-            llvm::DIType(placeholderNode).replaceAllUsesWith(t->debugInfo);
+            llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
         }
         break;
     }
@@ -1451,12 +1444,12 @@ static void defineLLVMType(TypePtr t) {
 // typeSize, typePrint
 //
 
-static void initTypeInfo(Type *t) {
+static void initTypeInfo(TypePtr t) {
     if (!t->typeInfoInitialized) {
         t->typeInfoInitialized = true;
         llvm::Type *llt = llvmType(t);
-        t->typeSize = (size_t)llvmTargetData->getTypeAllocSize(llt);
-        t->typeAlignment = (size_t)llvmTargetData->getABITypeAlignment(llt);
+        t->typeSize = llTypeSize(llt);
+        t->typeAlignment = llTypeAlignment(llt);
     }
 }
 
