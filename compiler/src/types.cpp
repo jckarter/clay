@@ -947,6 +947,7 @@ llvm::PointerType *llvmPointerType(llvm::Type *llType) {
 
 static void declareLLVMType(TypePtr t);
 static void defineLLVMType(TypePtr t);
+static void makeLLVMType(TypePtr t);
 
 llvm::PointerType *llvmPointerType(TypePtr t) {
     if (!t->llType)
@@ -966,6 +967,23 @@ llvm::Type *llvmVoidType() {
     return llvm::Type::getVoidTy(llvm::getGlobalContext());
 }
 
+llvm::Type *CCodePointerType::getCallType() {
+    if (this->callType == NULL) {
+        ExternalTargetPtr target = getExternalTarget();
+
+        vector<llvm::Type *> llArgTypes;
+        vector< pair<unsigned, llvm::Attributes> > llAttributes;
+        llvm::Type *llRetType =
+            target->pushReturnType(this->callingConv, this->returnType, llArgTypes, llAttributes);
+        for (unsigned i = 0; i < this->argTypes.size(); ++i)
+            target->pushArgumentType(this->callingConv, this->argTypes[i], llArgTypes, llAttributes);
+        llvm::FunctionType *llFuncType =
+            llvm::FunctionType::get(llRetType, llArgTypes, this->hasVarArgs);
+        this->callType = llvm::PointerType::getUnqual(llFuncType);
+        // XXX debug info
+    }
+    return this->callType;
+}
 
 
 //
@@ -1112,19 +1130,10 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case CCODE_POINTER_TYPE : {
-        CCodePointerType *x = (CCodePointerType *)t.ptr();
-        ExternalTargetPtr target = getExternalTarget();
+        llvm::FunctionType *llOpaqueFuncType =
+            llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), true);
+        t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
 
-        vector<llvm::Type *> llArgTypes;
-        vector< pair<unsigned, llvm::Attributes> > llAttributes;
-        llvm::Type *llRetType =
-            target->pushReturnType(x->callingConv, x->returnType, llArgTypes, llAttributes);
-        for (unsigned i = 0; i < x->argTypes.size(); ++i)
-            target->pushArgumentType(x->callingConv, x->argTypes[i], llArgTypes, llAttributes);
-        llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
-        t->llType = llvm::PointerType::getUnqual(llFuncType);
-        // XXX debug info
         break;
     }
     case ARRAY_TYPE : {

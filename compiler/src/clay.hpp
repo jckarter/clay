@@ -2608,13 +2608,18 @@ struct CCodePointerType : public Type {
     vector<TypePtr> argTypes;
     bool hasVarArgs;
     TypePtr returnType; // NULL if void return
+
+    llvm::Type *callType;
+
+    llvm::Type *getCallType();
+
     CCodePointerType(CallingConv callingConv,
                      const vector<TypePtr> &argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
         : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
           argTypes(argTypes), hasVarArgs(hasVarArgs),
-          returnType(returnType) {}
+          returnType(returnType), callType(NULL) {}
 };
 
 struct ArrayType : public Type {

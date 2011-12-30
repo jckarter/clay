@@ -1301,7 +1301,9 @@ void codegenStaticObject(ObjectPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == y->ptrType);
-        ctx->builder->CreateStore(y->llvmFunc, out0->llValue);
+        llvm::Value *opaqueValue = ctx->builder->CreateBitCast(
+            y->llvmFunc, llvmType(out0->type));
+        ctx->builder->CreateStore(opaqueValue, out0->llValue);
         break;
     }
 
@@ -2432,8 +2434,10 @@ void codegenCallCCode(CCodePointerTypePtr t,
             target->loadVarArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
         }
     }
+    llvm::Value *llCastCallable =
+        ctx->builder->CreateBitCast(llCallable, t->getCallType());
     llvm::CallInst *callInst =
-        ctx->builder->CreateCall(llCallable, llvm::makeArrayRef(llArgs));
+        ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
     llvm::CallingConv::ID callingConv = target->callingConvention(t->callingConv);
     callInst->setCallingConv(callingConv);
     for (vector< pair<unsigned, llvm::Attributes> >::iterator attr = llAttributes.begin();
@@ -5401,7 +5405,10 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == ccpType);
-        ctx->builder->CreateStore(entry->llvmCWrapper, out0->llValue);
+
+        llvm::Value *opaqueValue = ctx->builder->CreateBitCast(
+            entry->llvmCWrapper, llvmType(out0->type));
+        ctx->builder->CreateStore(opaqueValue, out0->llValue);
         break;
     }
 
