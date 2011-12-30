@@ -1464,7 +1464,7 @@ void codegenGVarInstance(GVarInstancePtr x)
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
             initializer, ostr.str());
-    if (llvmDIBuilder) {
+    if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);
         x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
@@ -1526,7 +1526,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
         new llvm::GlobalVariable(
             *llvmModule, llvmType(pv->type), false,
             linkage, NULL, x->name->str);
-    if (llvmDIBuilder) {
+    if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->location, line, column);
         x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
@@ -1626,7 +1626,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 debugParamArray);
 
             x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
-                safeLookupModule(x->env)->getDebugInfo(), // scope
+                lookupModuleDebugInfo(x->env), // scope
                 x->name->str, // name
                 llvmFuncName, // linkage name
                 file, // file
@@ -2883,7 +2883,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
             debugParamArray);
 
         entry->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
-            safeLookupModule(entry->env)->getDebugInfo(),
+            lookupModuleDebugInfo(entry->env),
             callableName,
             llvmFuncName,
             file,
@@ -3152,8 +3152,11 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
+    assert(ctx->inlineDepth >= 0);
     if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");
+
+    ++ctx->inlineDepth;
 
     ensureArity(args, entry->argsKey.size());
 
@@ -3234,6 +3237,9 @@ void codegenCallInline(InvokeEntryPtr entry,
     ctx->returnTargets.pop_back();
 
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
@@ -6347,8 +6353,7 @@ bool initLLVM(std::string const &targetTriple,
             "clay compiler " CLAY_COMPILER_VERSION,
             optimized,
             flags,
-            0
-        );
+            0);
     } else
         llvmDIBuilder = NULL;
     llvm::EngineBuilder eb(llvmModule);

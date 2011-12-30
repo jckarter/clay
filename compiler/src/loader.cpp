@@ -521,10 +521,10 @@ static void initModule(ModulePtr m) {
             ? llvm::DIFile(NULL)
             : m->location->source->getDebugInfo();
         m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
-            file, // scope
+            llvm::DICompileUnit(llvmDIBuilder->getCU()), // scope
             m->moduleName, // name
             file, // file
-            0 // line
+            1 // line
             );
     }
 }

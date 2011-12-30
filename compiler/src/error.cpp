@@ -142,7 +142,7 @@ llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column) {
         computeLineCol(location);
     }
     line = location->line + 1;
-    column = location->line + 1;
+    column = location->column + 1;
     return location->source->getDebugInfo();
 }
 

@@ -989,7 +989,8 @@ llvm::Type *llvmType(TypePtr t) {
 }
 
 llvm::DIType llvmTypeDebugInfo(TypePtr t) {
-    makeLLVMType(t);
+    if (t->llType == NULL)
+        declareLLVMType(t);
 
     return t->getDebugInfo();
 }
@@ -1182,7 +1183,8 @@ static void declareLLVMType(TypePtr t) {
         VariantType *x = (VariantType *)t.ptr();
         TypePtr reprType = variantReprType(x);
         t->llType = llvmType(reprType);
-        t->debugInfo = (llvm::MDNode*)llvmTypeDebugInfo(reprType);
+        if (llvmDIBuilder != NULL)
+            t->debugInfo = (llvm::MDNode*)llvmTypeDebugInfo(reprType);
         break;
     }
     case STATIC_TYPE : {
@@ -1420,7 +1422,7 @@ static void defineLLVMType(TypePtr t) {
             llvm::DIFile file = getDebugLineCol(x->record->location, line, column);
 
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(
-                safeLookupModule(x->record->env)->getDebugInfo(), // scope
+                lookupModuleDebugInfo(x->record->env), // scope
                 typeName(t),
                 file, // file
                 line, // lineNo
