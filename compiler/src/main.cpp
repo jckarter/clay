@@ -272,6 +272,28 @@ static bool generateBinary(llvm::Module *module,
 
     int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
+    if (debug && triple.getOS() == llvm::Triple::Darwin) {
+        llvm::sys::Path dsymutilPath = llvm::sys::Program::FindProgramByName("dsymutil");
+        if (dsymutilPath.isValid()) {
+            llvm::sys::Path outputDSYMPath = outputFilePath;
+            outputDSYMPath.appendSuffix("dSYM");
+
+            vector<const char *> dsymutilArgs;
+            dsymutilArgs.push_back(dsymutilPath.c_str());
+            dsymutilArgs.push_back("-o");
+            dsymutilArgs.push_back(outputDSYMPath.c_str());
+            dsymutilArgs.push_back(outputFilePath.c_str());
+            dsymutilArgs.push_back(NULL);
+
+            int dsymResult = llvm::sys::Program::ExecuteAndWait(dsymutilPath,
+                &dsymutilArgs[0]);
+
+            if (dsymResult != 0)
+                cerr << "warning: dsymutil exited with error code " << dsymResult << "\n";
+        } else
+            cerr << "warning: unable to find dsymutil on the path; debug info for executable will not be generated\n";
+    }
+
     if (tempObj.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;

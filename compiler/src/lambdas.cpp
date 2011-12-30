@@ -30,14 +30,6 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
 // initializeLambda
 //
 
-static int _lambdaObjectIndex = 0;
-
-static int nextLambdaObjectIndex() {
-    int x = _lambdaObjectIndex;
-    ++ _lambdaObjectIndex;
-    return x;
-}
-
 static TypePtr typeOfValue(ObjectPtr obj) {
     switch (obj->objKind) {
     case PVALUE : return ((PValue *)obj.ptr())->type;
@@ -67,33 +59,10 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
     return types;
 }
 
-static void initializeLambdaWithFreeVars(LambdaPtr x,
-                                         EnvPtr env,
-                                         const string &closureDataName,
-                                         int lambdaObjectIndex);
-static void initializeLambdaWithoutFreeVars(LambdaPtr x,
-                                            EnvPtr env);
-
-void initializeLambda(LambdaPtr x, EnvPtr env)
-{
-    assert(!x->initialized);
-    x->initialized = true;
-
-    int lambdaObjectIndex = nextLambdaObjectIndex();
-
-    ostringstream ostr;
-    ostr << "%closureData" << lambdaObjectIndex;
-    string closureDataName = ostr.str();
-
-    convertFreeVars(x, env, closureDataName, x->freeVars);
-    if (x->freeVars.empty()) {
-        initializeLambdaWithoutFreeVars(x, env);
-    }
-    else {
-        initializeLambdaWithFreeVars(
-            x, env, closureDataName, lambdaObjectIndex);
-    }
-}
+static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname);
+static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname);
 
 static string lambdaName(LambdaPtr x)
 {
@@ -111,14 +80,32 @@ static string lambdaName(LambdaPtr x)
     }
 }
 
-static void initializeLambdaWithFreeVars(LambdaPtr x,
-                                         EnvPtr env,
-                                         const string &closureDataName,
-                                         int lambdaObjectIndex)
+void initializeLambda(LambdaPtr x, EnvPtr env)
+{
+    assert(!x->initialized);
+    x->initialized = true;
+
+    string lname = lambdaName(x);
+
+    ostringstream ostr;
+    ostr << "%closureData:" << lname;
+    string closureDataName = ostr.str();
+
+    convertFreeVars(x, env, closureDataName, x->freeVars);
+    if (x->freeVars.empty()) {
+        initializeLambdaWithoutFreeVars(x, env, closureDataName, lname);
+    }
+    else {
+        initializeLambdaWithFreeVars(x, env, closureDataName, lname);
+    }
+}
+
+static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname)
 {
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier(lambdaName(x));
+    r->name = new Identifier(lname);
     r->env = env;
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
@@ -210,9 +197,10 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     callObj->overloads.insert(callObj->overloads.begin(), overload);
 }
 
-static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
+static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname)
 {
-    IdentifierPtr name = new Identifier(lambdaName(x));
+    IdentifierPtr name = new Identifier(lname);
     name->location = x->location;
     x->lambdaProc = new Procedure(name, PRIVATE);
 
