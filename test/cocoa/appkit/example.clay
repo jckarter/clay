@@ -20,15 +20,15 @@ overload selector(static #"performClear:") = Void, Id;
 record ExampleController = newClass(#"ExampleController", NSObject,
     InstanceVars(
         [#leftField,   IBOutlet(NSTextField)],
-        [#rightField,  IBOutlet(NSTextField)),
-        [#resultField, IBOutlet(NSTextField)),
+        [#rightField,  IBOutlet(NSTextField)],
+        [#resultField, IBOutlet(NSTextField)],
     ),
     ClassMethods(),
     InstanceMethods(
-        [#"performAdd:", IBAction((self, sender) => { _performMath(self, add); })),
-        [#"performSubtract:", IBAction((self, sender) => { _performMath(self, subtract); })),
-        [#"performMultiply:", IBAction((self, sender) => { _performMath(self, multiply); })),
-        [#"performDivide:", IBAction((self, sender) => { _performMath(self, divide); })),
+        [#"performAdd:", IBAction((self, sender) => { _performMath(self, add); })],
+        [#"performSubtract:", IBAction((self, sender) => { _performMath(self, subtract); })],
+        [#"performMultiply:", IBAction((self, sender) => { _performMath(self, multiply); })],
+        [#"performDivide:", IBAction((self, sender) => { _performMath(self, divide); })],
         [#"performClear:", IBAction((self, sender) => {
             self^.leftField.setStringValue(NSSTR(#""));
             self^.rightField.setStringValue(NSSTR(#""));
