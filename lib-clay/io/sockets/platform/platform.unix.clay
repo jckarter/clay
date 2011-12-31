@@ -14,6 +14,10 @@ public import unix.(
     SO_REUSEADDR
 );
 
+// winsock uses 'char*' and 'int' for buffer pointers and sizes, posix uses 'void*' and 'size_t'
+alias DataPointer = RawPointer;
+alias DataSize = SizeT;
+
 alias RawSocket = Int;
 alias SOCKET_ERROR = RawSocket(-1);
 
@@ -28,3 +32,5 @@ alias Sockaddr_storage = unix.Struct_sockaddr_storage;
 alias In_addr = unix.Struct_in_addr;
 
 alias SocklenT = unix.socklen_t;
+
+s_addr(inaddr:In_addr) = ref inaddr.s_addr;
