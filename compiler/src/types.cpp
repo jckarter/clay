@@ -1131,7 +1131,7 @@ static void declareLLVMType(TypePtr t) {
     }
     case CCODE_POINTER_TYPE : {
         llvm::FunctionType *llOpaqueFuncType =
-            llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), true);
+            llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
         t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
 
         break;

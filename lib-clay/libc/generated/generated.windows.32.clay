@@ -672,14 +672,6 @@ external strtod(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]]) : Double;
 
-external strtof(
-    argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) : Float;
-
-external strtold(
-    argument0 : Pointer[CChar],
-    argument1 : Pointer[Pointer[CChar]]) : UnsupportedCBuiltinType22;
-
 external strtol(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
@@ -1031,12 +1023,12 @@ external lldiv(
 external llabs(
     argument0 : Int64) : Int64;
 
-external strtoll(
+external _strtoi64(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : Int64;
 
-external strtoull(
+external _strtoui64(
     argument0 : Pointer[CChar],
     argument1 : Pointer[Pointer[CChar]],
     argument2 : Int) : UInt64;
