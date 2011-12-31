@@ -830,13 +830,13 @@ static void printStaticOrTupleOfStatics(ostream &out, TypePtr t) {
     }
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
-        out << "(";
+        out << "[";
         for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
             if (i != 0)
                 out << ", ";
             printStaticOrTupleOfStatics(out, tt->elementTypes[i]);
         }
-        out << ")";
+        out << "]";
         break;
     }
     default :
