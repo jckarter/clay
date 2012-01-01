@@ -1,10 +1,10 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstdint>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #ifdef _MSC_VER
 # define PRIx64 "I64x"
 #else
-# include <cinttypes>
+# include <inttypes.h>
 #endif
 
 struct Struct1 {
@@ -333,8 +333,8 @@ void c_30(struct Struct30 x) {
     union { __int64 bits; double value; } name##_bits = { (unsigned __int64)0x##mantissa | ((unsigned __int64)(exp+1023)<<52) }; \
     double name = name##_bits.value;
 #else
-# define HEX_FLOAT_VARIABLE(name, mantissa, exp) float name = 0x1.mantissa##p##exp##f
-# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) double name = 0x1.mantissa##p##exp
+# define HEX_FLOAT_VARIABLE(name, mantissa, exp) float name = 0x1.##mantissa##p##exp##f
+# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) double name = 0x1.##mantissa##p##exp
 #endif
 
 uint32_t c_return_int(void) {
