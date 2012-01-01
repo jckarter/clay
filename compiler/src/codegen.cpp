@@ -6352,11 +6352,13 @@ bool initLLVM(std::string const &targetTriple,
     llvmModule = new llvm::Module(name, llvm::getGlobalContext());
     llvmModule->setTargetTriple(targetTriple);
     if (debug) {
+        llvm::SmallString<260> absFileName(name);
+        llvm::sys::fs::make_absolute(absFileName);
         llvmDIBuilder = new llvm::DIBuilder(*llvmModule);
         llvmDIBuilder->createCompileUnit(
             DW_LANG_user_CLAY,
-            basename(name, false),
-            dirname(name),
+            llvm::sys::path::filename(absFileName),
+            llvm::sys::path::parent_path(absFileName),
             "clay compiler " CLAY_COMPILER_VERSION,
             optimized,
             flags,

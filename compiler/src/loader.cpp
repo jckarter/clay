@@ -1,8 +1,5 @@
 #include "clay.hpp"
 #include "libclaynames.hpp"
-#include "llvm/ADT/Triple.h"
-#include <cstdio>
-#include <cassert>
 
 using namespace std;
 
@@ -204,10 +201,11 @@ static SourcePtr loadFile(const string &fileName) {
 
     SourcePtr src = new Source(fileName, buf, size);
     if (llvmDIBuilder != NULL) {
+        llvm::SmallString<260> absFileName(fileName);
+        llvm::sys::fs::make_absolute(absFileName);
         src->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
-            basename(fileName, false),
-            dirname(fileName)
-        );
+            llvm::sys::path::filename(absFileName),
+            llvm::sys::path::parent_path(absFileName));
     }
     return src;
 }
