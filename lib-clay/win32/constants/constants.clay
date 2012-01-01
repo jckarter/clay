@@ -164,4 +164,4 @@ alias SO_REUSEADDR = 4;
 //
 // socket error
 //
-alias SOCKET_ERROR = -1;
+alias SOCKET_ERROR = Greatest(SOCKET);

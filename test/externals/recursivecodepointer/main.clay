@@ -1,0 +1,11 @@
+alias FooFn = CodePointer[[Foo],[]];
+
+record Foo (x:FooFn);
+
+foo(f:Foo) { println("foo!"); }
+
+main() {
+    var f = Foo(FooFn(foo));
+
+    f.x(f);
+}
