@@ -1,0 +1,11 @@
+applier(f, x) { f(x); }
+
+alias adder(y) {
+    applier(x -> { y += x; }, 2);
+}
+
+main() {
+    var y = 1;
+    adder(y);
+    println(y);
+}
