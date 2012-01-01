@@ -1,14 +1,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <complex.h>
 #include <emmintrin.h>
 #include <inttypes.h>
-
-struct Struct_x86_1 {
-    long double a;
-    long double b;
-};
 
 struct Struct_x86_2 {
     __m128i a;
@@ -37,14 +31,6 @@ struct Struct_x86_7 {
     __m128d b;
 };
 
-struct Struct_x86_8 {
-    long double a;
-};
-
-struct Struct_x86_9 {
-    complex long double a;
-};
-
 union Union_x86_10 {
     int32_t a;
     __m128d b;
@@ -53,16 +39,6 @@ union Union_x86_10 {
 union Union_x86_11 {
     int64_t a;
     __m128d b;
-};
-
-union Union_x86_12 {
-    int32_t a;
-    long double b;
-};
-
-union Union_x86_13 {
-    int32_t a;
-    complex long double b;
 };
 
 static void print_int_vector(__m128i v) {
@@ -88,18 +64,6 @@ void c_x86_vector(__m128i x, __m128 y, __m128d z) {
     print_int_vector(x);
     print_float_vector(y);
     print_double_vector(z);
-}
-
-void c_x86_long_double(long double x) {
-    printf("%La\n", x);
-}
-
-void c_x86_complex_long_double(complex long double x) {
-    printf("%La,%La\n", creall(x), cimagl(x));
-}
-
-void c_x86_1(struct Struct_x86_1 x) {
-    printf("%La %La\n", x.a, x.b);
 }
 
 void c_x86_2(struct Struct_x86_2 x) {
@@ -129,14 +93,6 @@ void c_x86_7(struct Struct_x86_7 x) {
     print_double_vector(x.b);
 }
 
-void c_x86_8(struct Struct_x86_8 x) {
-    printf("%La\n", x.a);
-}
-
-void c_x86_9(struct Struct_x86_9 x) {
-    printf("%La,%La\n", creall(x.a), cimagl(x.a));
-}
-
 void c_x86_10(union Union_x86_10 x, int tag) {
     switch (tag) {
     case 0:
@@ -159,28 +115,6 @@ void c_x86_11(union Union_x86_11 x, int tag) {
     }
 }
 
-void c_x86_12(union Union_x86_12 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("%x\n", x.a);
-        break;
-    case 1:
-        printf("%La\n", x.b);
-        break;
-    }
-}
-
-void c_x86_13(union Union_x86_13 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("%x\n", x.a);
-        break;
-    case 1:
-        printf("%La,%La\n", creall(x.b), cimagl(x.b));
-        break;
-    }
-}
-
 //
 // returns
 //
@@ -195,18 +129,6 @@ __m128 c_x86_return_float_vector(void) {
 
 __m128d c_x86_return_double_vector(void) {
     return (__m128d){ 0x1.1122334455667p99, 0x1.2233445566778p88 };
-}
-
-long double c_x86_return_long_double(void) {
-    return 0x8.001122334455667p999L;
-}
-
-complex long double c_x86_return_complex_long_double(void) {
-    return 0x8.001122334455667p999L+0x8.112233445566778p888L*I;
-}
-
-struct Struct_x86_1 c_x86_return_1(void) {
-    return (struct Struct_x86_1){ 0x8.001122334455667p999L, 0x8.112233445566778p888L };
 }
 
 struct Struct_x86_2 c_x86_return_2(void) {
@@ -246,14 +168,6 @@ struct Struct_x86_7 c_x86_return_7(void) {
     };
 }
 
-struct Struct_x86_8 c_x86_return_8(void) {
-    return (struct Struct_x86_8){ 0x8.001122334455667p999L };
-}
-
-struct Struct_x86_9 c_x86_return_9(void) {
-    return (struct Struct_x86_9){ 0x8.001122334455667p999L+0x8.112233445566778p888L*I };
-}
-
 union Union_x86_10 c_x86_return_10(int tag) {
     switch (tag) {
     case 0:
@@ -276,50 +190,19 @@ union Union_x86_11 c_x86_return_11(int tag) {
     }
 }
 
-union Union_x86_12 c_x86_return_12(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union_x86_12){ .a = 0x11223344 };
-    case 1:
-        return (union Union_x86_12){ .b = 0x8.001122334455667p999L };
-    default:
-        abort();
-    }
-}
-
-union Union_x86_13 c_x86_return_13(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union_x86_13){ .a = 0x11223344 };
-    case 1:
-        return (union Union_x86_13){
-            .b = 0x8.001122334455667p999L+0x8.112233445566778p888L*I
-        };
-    default:
-        abort();
-    };
-}
-
 //
 // clay entry points
 //
 
 void clay_x86_vector(__m128i x, __m128 y, __m128d z);
-void clay_x86_long_double(long double x);
-void clay_x86_complex_long_double(complex long double x);
-void clay_x86_1(struct Struct_x86_1 x);
 void clay_x86_2(struct Struct_x86_2 x);
 void clay_x86_3(struct Struct_x86_3 x);
 void clay_x86_4(struct Struct_x86_4 x);
 void clay_x86_5(struct Struct_x86_5 x);
 void clay_x86_6(struct Struct_x86_6 x);
 void clay_x86_7(struct Struct_x86_7 x);
-void clay_x86_8(struct Struct_x86_8 x);
-void clay_x86_9(struct Struct_x86_9 x);
 void clay_x86_10(union Union_x86_10 x, int tag);
 void clay_x86_11(union Union_x86_11 x, int tag);
-void clay_x86_12(union Union_x86_12 x, int tag);
-void clay_x86_13(union Union_x86_13 x, int tag);
 
 void clay_flush(void);
 
@@ -330,21 +213,14 @@ void clay_flush(void);
 __m128i clay_x86_return_int_vector(void);
 __m128 clay_x86_return_float_vector(void);
 __m128d clay_x86_return_double_vector(void);
-long double clay_x86_return_long_double(void);
-complex long double clay_x86_return_complex_long_double(void);
-struct Struct_x86_1 clay_x86_return_1(void);
 struct Struct_x86_2 clay_x86_return_2(void);
 struct Struct_x86_3 clay_x86_return_3(void);
 struct Struct_x86_4 clay_x86_return_4(void);
 struct Struct_x86_5 clay_x86_return_5(void);
 struct Struct_x86_6 clay_x86_return_6(void);
 struct Struct_x86_7 clay_x86_return_7(void);
-struct Struct_x86_8 clay_x86_return_8(void);
-struct Struct_x86_9 clay_x86_return_9(void);
 union Union_x86_10 clay_x86_return_10(int tag);
 union Union_x86_11 clay_x86_return_11(int tag);
-union Union_x86_12 clay_x86_return_12(int tag);
-union Union_x86_13 clay_x86_return_13(int tag);
 
 void c_to_clay_x86(void) {
     printf("\nPassing C arguments to Clay:\n");
@@ -352,18 +228,13 @@ void c_to_clay_x86(void) {
 
     clay_x86_vector(c_x86_return_int_vector(),
         c_x86_return_float_vector(), c_x86_return_double_vector());
-    clay_x86_long_double(c_x86_return_long_double());
-    clay_x86_complex_long_double(c_x86_return_complex_long_double());
 
-    clay_x86_1(c_x86_return_1());
     clay_x86_2(c_x86_return_2());
     clay_x86_3(c_x86_return_3());
     clay_x86_4(c_x86_return_4());
     clay_x86_5(c_x86_return_5());
     clay_x86_6(c_x86_return_6());
     clay_x86_7(c_x86_return_7());
-    clay_x86_8(c_x86_return_8());
-    clay_x86_9(c_x86_return_9());
 
     clay_x86_10(c_x86_return_10(0), 0);
     clay_x86_10(c_x86_return_10(1), 1);
@@ -371,40 +242,24 @@ void c_to_clay_x86(void) {
     clay_x86_11(c_x86_return_11(0), 0);
     clay_x86_11(c_x86_return_11(1), 1);
 
-    clay_x86_12(c_x86_return_12(0), 0);
-    clay_x86_12(c_x86_return_12(1), 1);
-
-    clay_x86_13(c_x86_return_13(0), 0);
-    clay_x86_13(c_x86_return_13(1), 1);
-
     clay_flush();
 
     printf("\nPassing Clay return values to C:\n");
 
     c_x86_vector(clay_x86_return_int_vector(),
         clay_x86_return_float_vector(), clay_x86_return_double_vector());
-    c_x86_long_double(clay_x86_return_long_double());
-    c_x86_complex_long_double(clay_x86_return_complex_long_double());
 
-    c_x86_1(clay_x86_return_1());
     c_x86_2(clay_x86_return_2());
     c_x86_3(clay_x86_return_3());
     c_x86_4(clay_x86_return_4());
     c_x86_5(clay_x86_return_5());
     c_x86_6(clay_x86_return_6());
     c_x86_7(clay_x86_return_7());
-    c_x86_8(clay_x86_return_8());
-    c_x86_9(clay_x86_return_9());
 
     c_x86_10(clay_x86_return_10(0), 0);
     c_x86_10(clay_x86_return_10(1), 1);
 
     c_x86_11(clay_x86_return_11(0), 0);
     c_x86_11(clay_x86_return_11(1), 1);
-
-    c_x86_12(clay_x86_return_12(0), 0);
-    c_x86_12(clay_x86_return_12(1), 1);
-
-    c_x86_13(clay_x86_return_13(0), 0);
-    c_x86_13(clay_x86_return_13(1), 1);
+    fflush(stdout);
 }
