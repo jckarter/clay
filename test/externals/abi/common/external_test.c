@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <complex.h>
 #include <inttypes.h>
 
 struct Struct1 {
@@ -130,16 +129,6 @@ union Union23 {
     double b;
 };
 
-union Union24 {
-    uint32_t a;
-    complex float b;
-};
-
-union Union25 {
-    uint32_t a;
-    complex double b;
-};
-
 struct Struct26 {
     uint8_t a;
 };
@@ -170,14 +159,6 @@ struct Struct30 {
 
 void c_scalar(uint32_t x, bool y, float z, double w) {
     printf("%x %x %a %a\n", x, y, z, w);
-}
-
-void c_complex_float(complex float x) {
-    printf("%a,%a\n", crealf(x), cimagf(x));
-}
-
-void c_complex_double(complex double x) {
-    printf("%a,%a\n", creal(x), cimag(x));
 }
 
 void c_1(struct Struct1 x) {
@@ -286,28 +267,6 @@ void c_23(union Union23 x, int tag) {
     }
 }
 
-void c_24(union Union24 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("0: %x\n", x.a);
-        break;
-    case 1:
-        printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
-        break;
-    }
-}
-
-void c_25(union Union25 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("0: %x\n", x.a);
-        break;
-    case 1:
-        printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
-        break;
-    }
-}
-
 void c_26(struct Struct26 x) {
     printf("%x\n", x.a);
 }
@@ -346,14 +305,6 @@ float c_return_float(void) {
 
 double c_return_double(void) {
     return 0x1.C1A4C1A4C1A4Cp123;
-}
-
-complex float c_return_complex_float(void) {
-    return 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I;
-}
-
-complex double c_return_complex_double(void) {
-    return 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I;
 }
 
 struct Struct1 c_return_1(void) {
@@ -462,28 +413,6 @@ union Union23 c_return_23(int tag) {
     }
 }
 
-union Union24 c_return_24(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union24){ .a = 0xC1A4C1A4 };
-    case 1:
-        return (union Union24){ .b = 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I };
-    default:
-        abort();
-    }
-}
-
-union Union25 c_return_25(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union25){ .a = 0xC1A4C1A4 };
-    case 1:
-        return (union Union25){ .b = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I };
-    default:
-        abort();
-    }
-}
-
 struct Struct26 c_return_26(void) {
     return (struct Struct26){ 0xC1 };
 }
@@ -509,10 +438,6 @@ struct Struct30 c_return_30(void) {
 //
 
 void clay_scalar(uint32_t x, bool y, float z, double w);
-
-void clay_complex_float(complex float x);
-
-void clay_complex_double(complex double x);
 
 void clay_1(struct Struct1 x);
 
@@ -560,10 +485,6 @@ void clay_22(union Union22 x, int tag);
 
 void clay_23(union Union23 x, int tag);
 
-void clay_24(union Union24 x, int tag);
-
-void clay_25(union Union25 x, int tag);
-
 void clay_26(struct Struct26 x);
 
 void clay_27(struct Struct27 x);
@@ -587,10 +508,6 @@ bool clay_return_bool(void);
 float clay_return_float(void);
 
 double clay_return_double(void);
-
-complex float clay_return_complex_float(void);
-
-complex double clay_return_complex_double(void);
 
 struct Struct1 clay_return_1(void);
 
@@ -638,10 +555,6 @@ union Union22 clay_return_22(int tag);
 
 union Union23 clay_return_23(int tag);
 
-union Union24 clay_return_24(int tag);
-
-union Union25 clay_return_25(int tag);
-
 struct Struct26 clay_return_26(void);
 
 struct Struct27 clay_return_27(void);
@@ -657,8 +570,6 @@ void c_to_clay(void) {
     fflush(stdout);
 
     clay_scalar(c_return_int(), c_return_bool(), c_return_float(), c_return_double());
-    clay_complex_float(c_return_complex_float());
-    clay_complex_double(c_return_complex_double());
     clay_1(c_return_1());
     clay_2(c_return_2());
     clay_3(c_return_3());
@@ -687,12 +598,6 @@ void c_to_clay(void) {
     clay_23(c_return_23(0), 0);
     clay_23(c_return_23(1), 1);
 
-    clay_24(c_return_24(0), 0);
-    clay_24(c_return_24(1), 1);
-
-    clay_25(c_return_25(0), 0);
-    clay_25(c_return_25(1), 1);
-
     clay_26(c_return_26());
     clay_27(c_return_27());
     clay_28(c_return_28());
@@ -704,10 +609,6 @@ void c_to_clay(void) {
     printf("\nPassing Clay return values to C:\n");
 
     c_scalar(clay_return_int(), clay_return_bool(), clay_return_float(), clay_return_double());
-
-    c_complex_float(clay_return_complex_float());
-
-    c_complex_double(clay_return_complex_double());
 
     c_1(clay_return_1());
 
@@ -756,12 +657,6 @@ void c_to_clay(void) {
 
     c_23(clay_return_23(0), 0);
     c_23(clay_return_23(1), 1);
-
-    c_24(clay_return_24(0), 0);
-    c_24(clay_return_24(1), 1);
-
-    c_25(clay_return_25(0), 0);
-    c_25(clay_return_25(1), 1);
 
     c_26(clay_return_26());
     c_27(clay_return_27());
