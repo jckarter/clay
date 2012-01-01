@@ -31,6 +31,8 @@
 #include <llvm/Function.h>
 #include <llvm/BasicBlock.h>
 #include <llvm/Support/Dwarf.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/PathV2.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Host.h>
