@@ -11,6 +11,8 @@
 #include <set>
 #include <iostream>
 #include <sstream>
+#include <cassert>
+#include <cstdio>
 #include <cstdlib>
 #include <climits>
 #include <cerrno>
