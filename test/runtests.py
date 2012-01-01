@@ -34,7 +34,7 @@ runTestRoot = testRoot
 #
 
 def getClayPlatform():
-    if sys.platform == "win32" or sys.platform == "cygwin":
+    if sys.platform in ["win32", "cygwin"]:
         return "windows"
     if sys.platform == "darwin":
         return "macosx"
@@ -44,11 +44,18 @@ def getClayPlatform():
         return "linux"
 
 def getClayPlatformFamily():
-    if sys.platform == "win32" or sys.platform == "cygwin":
+    if sys.platform in ["win32", "cygwin"]:
         return "windows"
     else:
         return "unix"
 
+def getClayArchitecture():
+    if platform.machine() in ["i386", "x86_64", "x86-64", "amd64", "AMD64", "x64"]:
+        return "x86"
+    else:
+        return "unknown"
+
+# XXX this needs to determine the bitness of clay executables, not of python
 def getClayBits():
     if platform.architecture()[0] == "64bit":
         return "64"
@@ -57,15 +64,22 @@ def getClayBits():
 
 clayPlatform = getClayPlatform()
 clayPlatformFamily = getClayPlatformFamily()
+clayArchitecture = getClayArchitecture()
 clayBits = getClayBits()
 
 def fileForPlatform(folder, name, ext):
     platformNames = [
+        "%s.%s.%s.%s.%s" % (name, clayPlatform, clayArchitecture, clayBits, ext),
+        "%s.%s.%s.%s.%s" % (name, clayPlatformFamily, clayArchitecture, clayBits, ext),
+        "%s.%s.%s.%s" % (name, clayPlatform, clayArchitecture, ext),
         "%s.%s.%s.%s" % (name, clayPlatform, clayBits, ext),
+        "%s.%s.%s.%s" % (name, clayPlatformFamily, clayArchitecture, ext),
         "%s.%s.%s.%s" % (name, clayPlatformFamily, clayBits, ext),
-        "%s.%s.%s"    % (name, clayPlatform, ext),
-        "%s.%s.%s"    % (name, clayPlatformFamily, ext),
-        "%s.%s.%s"    % (name, clayBits, ext),
+        "%s.%s.%s.%s" % (name, clayArchitecture, clayBits, ext),
+        "%s.%s.%s" % (name, clayPlatform, ext),
+        "%s.%s.%s" % (name, clayPlatformFamily, ext),
+        "%s.%s.%s" % (name, clayArchitecture, ext),
+        "%s.%s.%s" % (name, clayBits, ext),
     ]
     for platformName in platformNames:
         fullName = os.path.join(folder, platformName)
