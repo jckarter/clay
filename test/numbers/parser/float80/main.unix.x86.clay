@@ -1,0 +1,4 @@
+main() {
+    println(Float80("4.5"));
+    println(Imag80("7.75"));
+}
