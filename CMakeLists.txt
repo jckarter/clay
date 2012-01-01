@@ -10,7 +10,7 @@ set(Python_ADDITIONAL_VERSIONS "2.7")
 include(FindPythonInterp)
 
 if(UNIX)
-    find_program(LLVM_CONFIG llvm-config ${LLVM_INSTDIR}/bin 
+    find_program(LLVM_CONFIG llvm-config ${LLVM_DIR}/bin 
         DOC "path to llvm-config")
 
     execute_process(
