@@ -1,5 +1,6 @@
 import remote.messages.*;
 import commandline.dispatch.*;
+import libc;
 
 main() = dispatchMain(client, server);
 
@@ -15,6 +16,7 @@ client(args) {
         for (arg in args)
             printlnTo(stderr, bullet, " ", arg);
     }, "*");
+    remoteMessage(stdout, () => { libc.exit(0); });
 }
 
 server(args) {
