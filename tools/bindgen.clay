@@ -411,6 +411,9 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     case (CXCursor_TypedefDecl) {
         var name = str(clang_getCursorSpelling(cursor));
+        if (symbolVisited(name))
+            return CXChildVisit_Continue;
+
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
         printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
             convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
