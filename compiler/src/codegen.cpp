@@ -3984,7 +3984,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
-                        llvmTypeDebugInfo(cvRef->type)), // type
+                        llvmTypeDebugInfo(pv->type)), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
