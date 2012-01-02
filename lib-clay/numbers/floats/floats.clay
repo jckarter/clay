@@ -4,8 +4,7 @@ floatOrderedAndEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp oeq $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -14,8 +13,7 @@ floatOrderedAndGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ogt $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -24,8 +22,7 @@ floatOrderedAndGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp oge $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -34,8 +31,7 @@ floatOrderedAndLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp olt $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -44,8 +40,7 @@ floatOrderedAndLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ole $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -54,8 +49,7 @@ floatOrderedAndNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp one $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -64,8 +58,7 @@ floatOrdered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ord $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -75,8 +68,7 @@ floatUnorderedOrEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ueq $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -85,8 +77,7 @@ floatUnorderedOrGreater?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ugt $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -95,8 +86,7 @@ floatUnorderedOrGreaterEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp uge $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -105,8 +95,7 @@ floatUnorderedOrLesser?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ult $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -115,8 +104,7 @@ floatUnorderedOrLesserEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp ule $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -125,8 +113,7 @@ floatUnorderedOrNotEquals?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp une $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
@@ -135,8 +122,7 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
     %aval = load $T * %a
     %bval = load $T * %b
     %flag = fcmp uno $T %aval, %bval
-    %result = zext i1 %flag to $Bool
-    store $Bool %result, $Bool * %returned
+    store $Bool %flag, $Bool * %returned
     ret i8* null
 }
 
