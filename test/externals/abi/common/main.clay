@@ -126,16 +126,6 @@ alias Union23 = Union[
     /* b */ Double,
 ];
 
-alias Union24 = Union[
-    /* a */ UInt32,
-    /* b */ Complex32,
-];
-
-alias Union25 = Union[
-    /* a */ UInt32,
-    /* b */ Complex64,
-];
-
 record Struct26 (
     a : UInt8,
 );
@@ -161,10 +151,6 @@ record Struct30 (
 );
 
 external (cdecl) c_scalar(arg0:UInt32, arg1:Bool, arg2:Float, arg3:Double) : ;
-
-external (cdecl) c_complex_float(arg0:Complex32) : ;
-
-external (cdecl) c_complex_double(arg0:Complex64) : ;
 
 external (cdecl) c_1(arg0:Struct1) : ;
 
@@ -212,10 +198,6 @@ external (cdecl) c_22(arg0:Union22, arg1:Int) : ;
 
 external (cdecl) c_23(arg0:Union23, arg1:Int) : ;
 
-external (cdecl) c_24(arg0:Union24, arg1:Int) : ;
-
-external (cdecl) c_25(arg0:Union25, arg1:Int) : ;
-
 external (cdecl) c_26(arg0:Struct26) : ;
 
 external (cdecl) c_27(arg0:Struct27) : ;
@@ -233,10 +215,6 @@ external (cdecl) c_return_bool() : Bool;
 external (cdecl) c_return_float() : Float;
 
 external (cdecl) c_return_double() : Double;
-
-external (cdecl) c_return_complex_float() : Complex32;
-
-external (cdecl) c_return_complex_double() : Complex64;
 
 external (cdecl) c_return_1() : Struct1;
 
@@ -284,10 +262,6 @@ external (cdecl) c_return_22(arg0:Int) : Union22;
 
 external (cdecl) c_return_23(arg0:Int) : Union23;
 
-external (cdecl) c_return_24(arg0:Int) : Union24;
-
-external (cdecl) c_return_25(arg0:Int) : Union25;
-
 external (cdecl) c_return_26() : Struct26;
 
 external (cdecl) c_return_27() : Struct27;
@@ -308,51 +282,47 @@ external (cdecl) clay_scalar(arg0:UInt32, arg1:Bool, arg2:Float, arg3:Double) : 
     println(repr(arg0, arg1, arg2, arg3));
 }
 
-external (cdecl) clay_complex_float(arg0:Complex32) : { println(repr(arg0)); }
+external (cdecl) clay_1(arg0:Struct1) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_complex_double(arg0:Complex64) : { println(repr(arg0)); }
+external (cdecl) clay_2(arg0:Struct2) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_1(arg0:Struct1) : { println(repr(arg0)); }
+external (cdecl) clay_3(arg0:Struct3) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_2(arg0:Struct2) : { println(repr(arg0)); }
+external (cdecl) clay_4(arg0:Struct4) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_3(arg0:Struct3) : { println(repr(arg0)); }
+external (cdecl) clay_5(arg0:Struct5) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_4(arg0:Struct4) : { println(repr(arg0)); }
+external (cdecl) clay_6(arg0:Struct6) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_5(arg0:Struct5) : { println(repr(arg0)); }
+external (cdecl) clay_7(arg0:Struct7) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_6(arg0:Struct6) : { println(repr(arg0)); }
+external (cdecl) clay_8(arg0:Struct8) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_7(arg0:Struct7) : { println(repr(arg0)); }
+external (cdecl) clay_9(arg0:Struct9) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_8(arg0:Struct8) : { println(repr(arg0)); }
+external (cdecl) clay_10(arg0:Struct10) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_9(arg0:Struct9) : { println(repr(arg0)); }
+external (cdecl) clay_11(arg0:Struct11) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_10(arg0:Struct10) : { println(repr(arg0)); }
+external (cdecl) clay_12(arg0:Struct12) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_11(arg0:Struct11) : { println(repr(arg0)); }
+external (cdecl) clay_13(arg0:Struct13) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_12(arg0:Struct12) : { println(repr(arg0)); }
+external (cdecl) clay_14(arg0:Struct14) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_13(arg0:Struct13) : { println(repr(arg0)); }
+external (cdecl) clay_15(arg0:Struct15) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_14(arg0:Struct14) : { println(repr(arg0)); }
+external (cdecl) clay_16(arg0:Struct16) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_15(arg0:Struct15) : { println(repr(arg0)); }
+external (cdecl) clay_17(arg0:Struct17) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_16(arg0:Struct16) : { println(repr(arg0)); }
+external (cdecl) clay_18(arg0:Struct18) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_17(arg0:Struct17) : { println(repr(arg0)); }
+external (cdecl) clay_19(arg0:Struct19) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_18(arg0:Struct18) : { println(repr(arg0)); }
+external (cdecl) clay_20(arg0:Struct20) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_19(arg0:Struct19) : { println(repr(arg0)); }
-
-external (cdecl) clay_20(arg0:Struct20) : { println(repr(arg0)); }
-
-external (cdecl) clay_21(arg0:Struct21) : { println(repr(arg0)); }
+external (cdecl) clay_21(arg0:Struct21) : { println(repr(arg0)); flush(stdout); }
 
 external (cdecl) clay_22(arg0:Union22, arg1:Int) : {
     switch (arg1)
@@ -362,6 +332,7 @@ external (cdecl) clay_22(arg0:Union22, arg1:Int) : {
         println(repr(arg0.1));
     else
         libc.abort();
+    flush(stdout);
 }
 
 external (cdecl) clay_23(arg0:Union23, arg1:Int) : {
@@ -372,38 +343,18 @@ external (cdecl) clay_23(arg0:Union23, arg1:Int) : {
         println(repr(arg0.1));
     else
         libc.abort();
+    flush(stdout);
 }
 
-external (cdecl) clay_24(arg0:Union24, arg1:Int) : {
-    switch (arg1)
-    case (0)
-        println(repr(arg0.0));
-    case (1)
-        println(repr(arg0.1));
-    else
-        libc.abort();
-}
+external (cdecl) clay_26(arg0:Struct26) : { println(repr(arg0)); flush(stdout); }
 
+external (cdecl) clay_27(arg0:Struct27) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_25(arg0:Union25, arg1:Int) : {
-    switch (arg1)
-    case (0)
-        println(repr(arg0.0));
-    case (1)
-        println(repr(arg0.1));
-    else
-        libc.abort();
-}
+external (cdecl) clay_28(arg0:Struct28) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_26(arg0:Struct26) : { println(repr(arg0)); }
+external (cdecl) clay_29(arg0:Struct29) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_27(arg0:Struct27) : { println(repr(arg0)); }
-
-external (cdecl) clay_28(arg0:Struct28) : { println(repr(arg0)); }
-
-external (cdecl) clay_29(arg0:Struct29) : { println(repr(arg0)); }
-
-external (cdecl) clay_30(arg0:Struct30) : { println(repr(arg0)); }
+external (cdecl) clay_30(arg0:Struct30) : { println(repr(arg0)); flush(stdout); }
 
 external (cdecl) clay_return_int() : UInt32 = 0xC1A4C1A4u;
 
@@ -412,12 +363,6 @@ external (cdecl) clay_return_bool() : Bool = true;
 external (cdecl) clay_return_float() : Float = 0x1.C1A4C0p123f;
 
 external (cdecl) clay_return_double() : Double = 0x1.C1A4C1A4C1A4Cp123;
-
-external (cdecl) clay_return_complex_float() : Complex32
-    = 0x1.C1A4C0p123f+0x1.ABCDEEp99fj;
-
-external (cdecl) clay_return_complex_double() : Complex64
-    = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j;
 
 external (cdecl) clay_return_1() : Struct1
     = Struct1(0xC1A4C1A4C1A4C1A4ul);
@@ -506,30 +451,6 @@ external (cdecl) clay_return_23(arg0:Int) : Union23 {
     return returned;
 }
 
-external (cdecl) clay_return_24(arg0:Int) : Union24 {
-    var returned = Union24();
-    switch (arg0)
-    case (0)
-        returned.0 <-- 0xC1A4C1A4u;
-    case (1)
-        returned.1 <-- 0x1.C1A4C0p123f+0x1.ABCDEEp99fj;
-    else
-        libc.abort();
-    return returned;
-}
-
-external (cdecl) clay_return_25(arg0:Int) : Union25 {
-    var returned = Union25();
-    switch (arg0)
-    case (0)
-        returned.0 <-- 0xC1A4C1A4u;
-    case (1)
-        returned.1 <-- 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j;
-    else
-        libc.abort();
-    return returned;
-}
-
 external (cdecl) clay_return_26() : Struct26
     = Struct26(0xC1uss);
 
@@ -545,17 +466,11 @@ external (cdecl) clay_return_29() : Struct29
 external (cdecl) clay_return_30() : Struct30
     = Struct30(0xC1uss, 0xA4uss, 0xABuss);
 
-external (cdecl) clay_flush() : {
-    flush(stdout);
-}
-
 clay_to_c() {
     println("\nPassing Clay arguments to C:");
     flush(stdout);
 
     c_scalar(clay_return_int(), clay_return_bool(), clay_return_float(), clay_return_double());
-    c_complex_float(clay_return_complex_float());
-    c_complex_double(clay_return_complex_double());
     c_1(clay_return_1());
     c_2(clay_return_2());
     c_3(clay_return_3());
@@ -584,27 +499,15 @@ clay_to_c() {
     c_23(clay_return_23(0), 0);
     c_23(clay_return_23(1), 1);
 
-    c_24(clay_return_24(0), 0);
-    c_24(clay_return_24(1), 1);
-
-    c_25(clay_return_25(0), 0);
-    c_25(clay_return_25(1), 1);
-
     c_26(clay_return_26());
     c_27(clay_return_27());
     c_28(clay_return_28());
     c_29(clay_return_29());
     c_30(clay_return_30());
 
-    libc.fflush(libc.stdout);
-
     println("\nPassing C return values to Clay:");
 
     clay_scalar(c_return_int(), c_return_bool(), c_return_float(), c_return_double());
-
-    clay_complex_float(c_return_complex_float());
-
-    clay_complex_double(c_return_complex_double());
 
     clay_1(c_return_1());
 
@@ -647,26 +550,17 @@ clay_to_c() {
     clay_20(c_return_20());
 
     clay_21(c_return_21());
-
     clay_22(c_return_22(0), 0);
     clay_22(c_return_22(1), 1);
 
     clay_23(c_return_23(0), 0);
     clay_23(c_return_23(1), 1);
 
-    clay_24(c_return_24(0), 0);
-    clay_24(c_return_24(1), 1);
-
-    clay_25(c_return_25(0), 0);
-    clay_25(c_return_25(1), 1);
-
     clay_26(c_return_26());
     clay_27(c_return_27());
     clay_28(c_return_28());
     clay_29(c_return_29());
     clay_30(c_return_30());
-
-    flush(stdout);
 }
 
 main() {

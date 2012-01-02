@@ -1,0 +1,159 @@
+import libc;
+import simd.*;
+import printer.formatter.(repr);
+
+record Struct_x86_1 (
+    a : Float80,
+    b : Float80,
+);
+
+record Struct_x86_8 (
+    a : Float80,
+);
+
+record Struct_x86_9 (
+    a : Complex80,
+);
+
+alias Union_x86_12 = Union[
+    /* a */ Int32,
+    /* b */ Float80,
+];
+
+alias Union_x86_13 = Union[
+    /* a */ Int32,
+    /* b */ Complex80,
+];
+
+external (cdecl) c_x86_long_double(x:Float80);
+external (cdecl) c_x86_complex_long_double(x:Complex80);
+external (cdecl) c_x86_1(x:Struct_x86_1);
+external (cdecl) c_x86_8(x:Struct_x86_8);
+external (cdecl) c_x86_9(x:Struct_x86_9);
+external (cdecl) c_x86_12(x:Union_x86_12, tag:Int);
+external (cdecl) c_x86_13(x:Union_x86_13, tag:Int);
+
+external (cdecl) c_x86_return_long_double() : Float80;
+external (cdecl) c_x86_return_complex_long_double() : Complex80;
+external (cdecl) c_x86_return_1() : Struct_x86_1;
+external (cdecl) c_x86_return_8() : Struct_x86_8;
+external (cdecl) c_x86_return_9() : Struct_x86_9;
+external (cdecl) c_x86_return_12(tag:Int) : Union_x86_12;
+external (cdecl) c_x86_return_13(tag:Int) : Union_x86_13;
+external (cdecl) c_to_clay_x86();
+
+//
+// clay implementations
+//
+
+external (cdecl) clay_x86_long_double(x:Float80) : {
+    println(repr(x));
+}
+external (cdecl) clay_x86_complex_long_double(x:Complex80) : {
+    println(repr(x));
+}
+external (cdecl) clay_x86_1(x:Struct_x86_1) : {
+    println(repr(x));
+}
+external (cdecl) clay_x86_8(x:Struct_x86_8) : {
+    println(repr(x));
+}
+external (cdecl) clay_x86_9(x:Struct_x86_9) : {
+    println(repr(x));
+}
+external (cdecl) clay_x86_12(x:Union_x86_12, tag:Int) : {
+    switch (tag)
+    case (0)
+        println(repr(x.0));
+    case (1)
+        println(repr(x.1));
+    else
+        assert(false);
+}
+external (cdecl) clay_x86_13(x:Union_x86_13, tag:Int) : {
+    switch (tag)
+    case (0)
+        println(repr(x.0));
+    case (1)
+        println(repr(x.1));
+    else
+        assert(false);
+}
+
+external (cdecl) clay_x86_return_long_double() : Float80
+    = 0x8.001122334455667p999l;
+external (cdecl) clay_x86_return_complex_long_double() : Complex80
+    = 0x8.001122334455667p999l+0x8.112233445566778p888lj;
+external (cdecl) clay_x86_return_1() : Struct_x86_1
+    = Struct_x86_1(0x8.001122334455667p999l, 0x8.112233445566778p888l);
+external (cdecl) clay_x86_return_8() : Struct_x86_8
+    = Struct_x86_8(0x8.001122334455667p999l);
+external (cdecl) clay_x86_return_9() : Struct_x86_9
+    = Struct_x86_9(0x8.001122334455667p999l+0x8.112233445566778p888lj);
+external (cdecl) clay_x86_return_12(tag:Int) : Union_x86_12 {
+    var ret = Union_x86_12();
+    switch (tag)
+    case (0)
+        ret.0 <-- 0x11223344;
+    case (1)
+        ret.1 <-- 0x8.001122334455667p999l;
+    else
+        assert(false);
+    return ret;
+}
+external (cdecl) clay_x86_return_13(tag:Int) : Union_x86_13 {
+    var ret = Union_x86_13();
+    switch (tag)
+    case (0)
+        ret.0 <-- 0x11223344;
+    case (1)
+        ret.1 <-- 0x8.001122334455667p999l+0x8.112233445566778p888lj;
+    else
+        assert(false);
+    return ret;
+}
+
+external (cdecl) clay_flush() : {
+    flush(stdout);
+}
+
+clay_to_c_x86() {
+    println("\nPassing Clay arguments to C:");
+    flush(stdout);
+
+    c_x86_long_double(clay_x86_return_long_double());
+    c_x86_complex_long_double(clay_x86_return_complex_long_double());
+
+    c_x86_1(clay_x86_return_1());
+    c_x86_8(clay_x86_return_8());
+    c_x86_9(clay_x86_return_9());
+
+    c_x86_12(clay_x86_return_12(0), 0);
+    c_x86_12(clay_x86_return_12(1), 1);
+
+    c_x86_13(clay_x86_return_13(0), 0);
+    c_x86_13(clay_x86_return_13(1), 1);
+
+    libc.fflush(libc.stdout);
+
+    println("\nPassing C return values to Clay:");
+
+    clay_x86_long_double(c_x86_return_long_double());
+    clay_x86_complex_long_double(c_x86_return_complex_long_double());
+
+    clay_x86_1(c_x86_return_1());
+    clay_x86_8(c_x86_return_8());
+    clay_x86_9(c_x86_return_9());
+
+    clay_x86_12(c_x86_return_12(0), 0);
+    clay_x86_12(c_x86_return_12(1), 1);
+
+    clay_x86_13(c_x86_return_13(0), 0);
+    clay_x86_13(c_x86_return_13(1), 1);
+    flush(stdout);
+}
+
+main() {
+    c_to_clay_x86();
+    clay_to_c_x86();
+}

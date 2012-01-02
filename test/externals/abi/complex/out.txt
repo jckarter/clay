@@ -1,0 +1,32 @@
+
+Passing C arguments to Clay:
+0x1.c1a4c0p+123f+0x1.abcdeep+99fj
+0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
+3248800164u
+0x1.c1a4c0p+123f+0x1.abcdeep+99fj
+3248800164u
+0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
+
+Passing Clay return values to C:
+0x1.c1a4cp+123,0x1.abcdeep+99
+0x1.c1a4c1a4c1a4cp+123,0x1.abcdefabcdefap+99
+0: c1a4c1a4
+1: 0x1.c1a4cp+123,0x1.abcdeep+99
+0: c1a4c1a4
+1: 0x1.c1a4c2p+123,0x1.abcdfp+99
+
+Passing Clay arguments to C:
+0x1.c1a4cp+123,0x1.abcdeep+99
+0x1.c1a4c1a4c1a4cp+123,0x1.abcdefabcdefap+99
+0: c1a4c1a4
+1: 0x1.c1a4cp+123,0x1.abcdeep+99
+0: c1a4c1a4
+1: 0x1.c1a4c2p+123,0x1.abcdfp+99
+
+Passing C return values to Clay:
+0x1.c1a4c0p+123f+0x1.abcdeep+99fj
+0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
+3248800164u
+0x1.c1a4c0p+123f+0x1.abcdeep+99fj
+3248800164u
+0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
