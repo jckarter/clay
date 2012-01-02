@@ -711,7 +711,6 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case BINARY_OP : {
         BinaryOp *x = (BinaryOp *)expr.ptr();
-        printf("analyzeExpr2 binop = %i\n",x->op);
         if (!x->desugared)
             x->desugared = desugarBinaryOp(x);
         return analyzeExpr(x->desugared, env);
