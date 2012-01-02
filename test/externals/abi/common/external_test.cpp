@@ -1,9 +1,11 @@
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <complex.h>
-#include <inttypes.h>
+#include <stdint.h>
+#ifdef _MSC_VER
+# define PRIx64 "I64x"
+#else
+# include <inttypes.h>
+#endif
 
 struct Struct1 {
     uint64_t a;
@@ -130,16 +132,6 @@ union Union23 {
     double b;
 };
 
-union Union24 {
-    uint32_t a;
-    complex float b;
-};
-
-union Union25 {
-    uint32_t a;
-    complex double b;
-};
-
 struct Struct26 {
     uint8_t a;
 };
@@ -168,100 +160,116 @@ struct Struct30 {
 // arguments
 //
 
+extern "C" {
+
 void c_scalar(uint32_t x, bool y, float z, double w) {
     printf("%x %x %a %a\n", x, y, z, w);
-}
-
-void c_complex_float(complex float x) {
-    printf("%a,%a\n", crealf(x), cimagf(x));
-}
-
-void c_complex_double(complex double x) {
-    printf("%a,%a\n", creal(x), cimag(x));
+    fflush(stdout);
 }
 
 void c_1(struct Struct1 x) {
     printf("%" PRIx64 "\n", x.a);
+    fflush(stdout);
 }
 
 void c_2(struct Struct2 x) {
     printf("%x\n", x.a);
+    fflush(stdout);
 }
 
 void c_3(struct Struct3 x) {
     printf("%x %x\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_4(struct Struct4 x) {
     printf("%x %x %x\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_5(struct Struct5 x) {
     printf("%x %x %" PRIx64 "\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_6(struct Struct6 x) {
     printf("%x %" PRIx64 "\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_7(struct Struct7 x) {
     printf("%x %" PRIx64 " %x\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_8(struct Struct8 x) {
     printf("%" PRIx64 " %" PRIx64 " %" PRIx64 "\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_9(struct Struct9 x) {
     printf("%x %a\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_10(struct Struct10 x) {
     printf("%x %a\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_11(struct Struct11 x) {
     printf("%a %x\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_12(struct Struct12 x) {
     printf("%a %x\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_13(struct Struct13 x) {
     printf("%a\n", x.a);
+    fflush(stdout);
 }
 
 void c_14(struct Struct14 x) {
     printf("%a %a\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_15(struct Struct15 x) {
     printf("%a %a %a\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_16(struct Struct16 x) {
     printf("%a %a %a %a %a\n", x.a, x.b, x.c, x.d, x.e);
+    fflush(stdout);
 }
 
 void c_17(struct Struct17 x) {
     printf("%a\n", x.a);
+    fflush(stdout);
 }
 
 void c_18(struct Struct18 x) {
     printf("%a %a\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_19(struct Struct19 x) {
     printf("%a %a %a\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 void c_20(struct Struct20 x) {
     printf("%a %a %a %a\n", x.a, x.b, x.c, x.d);
+    fflush(stdout);
 }
 
 void c_21(struct Struct21 x) {
     printf("%a %a %a %a %a\n", x.a, x.b, x.c, x.d, x.e);
+    fflush(stdout);
 }
 
 void c_22(union Union22 x, int tag) {
@@ -273,6 +281,7 @@ void c_22(union Union22 x, int tag) {
         printf("1: %a\n", x.b);
         break;
     }
+    fflush(stdout);
 }
 
 void c_23(union Union23 x, int tag) {
@@ -284,53 +293,49 @@ void c_23(union Union23 x, int tag) {
         printf("1: %a\n", x.b);
         break;
     }
-}
-
-void c_24(union Union24 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("0: %x\n", x.a);
-        break;
-    case 1:
-        printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
-        break;
-    }
-}
-
-void c_25(union Union25 x, int tag) {
-    switch (tag) {
-    case 0:
-        printf("0: %x\n", x.a);
-        break;
-    case 1:
-        printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
-        break;
-    }
+    fflush(stdout);
 }
 
 void c_26(struct Struct26 x) {
     printf("%x\n", x.a);
+    fflush(stdout);
 }
 
 void c_27(struct Struct27 x) {
     printf("%x\n", x.a);
+    fflush(stdout);
 }
 
 void c_28(struct Struct28 x) {
     printf("%x %x\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_29(struct Struct29 x) {
     printf("%x %x\n", x.a, x.b);
+    fflush(stdout);
 }
 
 void c_30(struct Struct30 x) {
     printf("%x %x %x\n", x.a, x.b, x.c);
+    fflush(stdout);
 }
 
 //
 // return
 //
+
+#ifdef _MSC_VER
+# define HEX_FLOAT_VARIABLE(name, mantissa, exp) \
+    union { int bits; float value; } name##_bits = { (0x##mantissa >> 1) | ((exp+127)<<23) }; \
+    float name = name##_bits.value;
+# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) \
+    union { __int64 bits; double value; } name##_bits = { (unsigned __int64)0x##mantissa | ((unsigned __int64)(exp+1023)<<52) }; \
+    double name = name##_bits.value;
+#else
+# define HEX_FLOAT_VARIABLE(name, mantissa, exp) float name = 0x1.##mantissa##p##exp##f
+# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) double name = 0x1.##mantissa##p##exp
+#endif
 
 uint32_t c_return_int(void) {
     return 0xC1A4C1A4U;
@@ -341,167 +346,205 @@ bool c_return_bool(void) {
 }
 
 float c_return_float(void) {
-    return 0x1.C1A4C0p123f;
+    HEX_FLOAT_VARIABLE(r, C1A4C0, 123);
+    return r;
 }
 
 double c_return_double(void) {
-    return 0x1.C1A4C1A4C1A4Cp123;
-}
-
-complex float c_return_complex_float(void) {
-    return 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I;
-}
-
-complex double c_return_complex_double(void) {
-    return 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I;
+    HEX_DOUBLE_VARIABLE(r, C1A4C1A4C1A4C, 123);
+    return r;
 }
 
 struct Struct1 c_return_1(void) {
-    return (struct Struct1){ 0xC1A4C1A4C1A4C1A4ULL };
+    struct Struct1 r = { 0xC1A4C1A4C1A4C1A4ULL };
+    return r;
 }
 
 struct Struct2 c_return_2(void) {
-    return (struct Struct2){ 0xC1A4C1A4 };
+    struct Struct2 r = { 0xC1A4C1A4 };
+    return r;
 }
 
 struct Struct3 c_return_3(void) {
-    return (struct Struct3){ 0xC1A4C1A4, 0x12345678 };
+    struct Struct3 r = { 0xC1A4C1A4, 0x12345678 };
+    return r;
 }
 
 struct Struct4 c_return_4(void) {
-    return (struct Struct4){ 0xC1A4C1A4, 0x12345678, 0xABCDABCD };
+    struct Struct4 r = { 0xC1A4C1A4, 0x12345678, 0xABCDABCD };
+    return r;
 }
 
 struct Struct5 c_return_5(void) {
-    return (struct Struct5){ 0xC1A4C1A4, 0x12345678, 0xABCDABCDABCDABCDULL };
+    struct Struct5 r = { 0xC1A4C1A4, 0x12345678, 0xABCDABCDABCDABCDULL };
+    return r;
 }
 
 struct Struct6 c_return_6(void) {
-    return (struct Struct6){ 0xC1A4C1A4, 0xABCDABCDABCDABCDULL };
+    struct Struct6 r = { 0xC1A4C1A4, 0xABCDABCDABCDABCDULL };
+    return r;
 }
 
 struct Struct7 c_return_7(void) {
-    return (struct Struct7){ 0xC1A4C1A4, 0xABCDABCDABCDABCDULL, 0x12345678 };
+    struct Struct7 r = { 0xC1A4C1A4, 0xABCDABCDABCDABCDULL, 0x12345678 };
+    return r;
 }
 
 struct Struct8 c_return_8(void) {
-    return (struct Struct8){ 0xC1A4C1A4C1A4C1A4ULL, 0xABCDABCDABCDABCDULL, 0x1234567812345678ULL };
+    struct Struct8 r = { 0xC1A4C1A4C1A4C1A4ULL, 0xABCDABCDABCDABCDULL, 0x1234567812345678ULL };
+    return r;
 }
 
 struct Struct9 c_return_9(void) {
-    return (struct Struct9){ 0xC1A4C1A4, 0x1.C1A4C1A4C1A4Cp123 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    struct Struct9 r = { 0xC1A4C1A4, f };
+    return r;
 }
 
 struct Struct10 c_return_10(void) {
-    return (struct Struct10){ 0xC1A4C1A4, 0x1.C1A4C0p123f };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    struct Struct10 r = { 0xC1A4C1A4, f };
+    return r;
 }
 
 struct Struct11 c_return_11(void) {
-    return (struct Struct11){ 0x1.C1A4C1A4C1A4Cp123, 0xC1A4C1A4 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    struct Struct11 r = { f, 0xC1A4C1A4 };
+    return r;
 }
 
 struct Struct12 c_return_12(void) {
-    return (struct Struct12){ 0x1.C1A4C0p123f, 0xC1A4C1A4 };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    struct Struct12 r = { f, 0xC1A4C1A4 };
+    return r;
 }
 
 struct Struct13 c_return_13(void) {
-    return (struct Struct13){ 0x1.C1A4C0p123f };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    struct Struct13 r = { f };
+    return r;
 }
 
 struct Struct14 c_return_14(void) {
-    return (struct Struct14){ 0x1.C1A4C0p123f, 0x1.ABCDEEp99f };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    HEX_FLOAT_VARIABLE(g, ABCDEE, 99);
+    struct Struct14 r = { f, g };
+    return r;
 }
 
 struct Struct15 c_return_15(void) {
-    return (struct Struct15){ 0x1.C1A4C0p123f, 0x1.ABCDEEp99f, 0x1.010102p10f };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    HEX_FLOAT_VARIABLE(g, ABCDEE, 99);
+    HEX_FLOAT_VARIABLE(h, 010102, 10);
+    struct Struct15 r = { f, g, h };
+    return r;
 }
 
 struct Struct16 c_return_16(void) {
-    return (struct Struct16){ 0x1.C1A4C0p123f, 0x1.ABCDEEp99f, 0x1.010102p10f, 0x1.020202p20f, 0x1.030302p30f };
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
+    HEX_FLOAT_VARIABLE(g, ABCDEE, 99);
+    HEX_FLOAT_VARIABLE(h, 010102, 10);
+    HEX_FLOAT_VARIABLE(i, 020202, 20);
+    HEX_FLOAT_VARIABLE(j, 030302, 30);
+    struct Struct16 r = { f, g, h, i, j };
+    return r;
 }
 
 struct Struct17 c_return_17(void) {
-    return (struct Struct17){ 0x1.C1A4C1A4C1A4Cp123 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    struct Struct17 r = { f };
+    return r;
 }
 
 struct Struct18 c_return_18(void) {
-    return (struct Struct18){ 0x1.C1A4C1A4C1A4Cp123, 0x1.ABCDEFABCDEFAp99 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    HEX_DOUBLE_VARIABLE(g, ABCDEFABCDEFA, 99);
+    struct Struct18 r = { f, g };
+    return r;
 }
 
 struct Struct19 c_return_19(void) {
-    return (struct Struct19){ 0x1.C1A4C1A4C1A4Cp123, 0x1.ABCDEFABCDEFAp99, 0x1.0101010101010p10 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    HEX_DOUBLE_VARIABLE(g, ABCDEFABCDEFA, 99);
+    HEX_DOUBLE_VARIABLE(h, 0101010101010, 10);
+    struct Struct19 r = { f, g, h };
+    return r;
 }
 
 struct Struct20 c_return_20(void) {
-    return (struct Struct20){ 0x1.C1A4C1A4C1A4Cp123, 0x1.ABCDEFABCDEFAp99, 0x1.0101010101010p10, 0x1.0202020202020p20 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    HEX_DOUBLE_VARIABLE(g, ABCDEFABCDEFA, 99);
+    HEX_DOUBLE_VARIABLE(h, 0101010101010, 10);
+    HEX_DOUBLE_VARIABLE(i, 0202020202020, 20);
+    struct Struct20 r = { f, g, h, i };
+    return r;
 }
 
 struct Struct21 c_return_21(void) {
-    return (struct Struct21){ 0x1.C1A4C1A4C1A4Cp123, 0x1.ABCDEFABCDEFAp99, 0x1.0101010101010p10, 0x1.0202020202020p20, 0x1.0303030303030p30 };
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
+    HEX_DOUBLE_VARIABLE(g, ABCDEFABCDEFA, 99);
+    HEX_DOUBLE_VARIABLE(h, 0101010101010, 10);
+    HEX_DOUBLE_VARIABLE(i, 0202020202020, 20);
+    HEX_DOUBLE_VARIABLE(j, 0303030303030, 30);
+    struct Struct21 r = { f, g, h, i, j };
+    return r;
 }
 
 union Union22 c_return_22(int tag) {
+    union Union22 r;
+    HEX_FLOAT_VARIABLE(f, C1A4C0, 123);
     switch (tag) {
     case 0:
-        return (union Union22){ .a = 0xC1A4C1A4 };
+        r.a = 0xC1A4C1A4;
+        break;
     case 1:
-        return (union Union22){ .b = 0x1.C1A4C0p123f };
+        r.b = f;
+        break;
     default:
         abort();
     }
+    return r;
 }
 
 union Union23 c_return_23(int tag) {
+    union Union23 r;
+    HEX_DOUBLE_VARIABLE(f, C1A4C1A4C1A4C, 123);
     switch (tag) {
     case 0:
-        return (union Union23){ .a = 0xC1A4C1A4 };
+        r.a = 0xC1A4C1A4;
+        break;
     case 1:
-        return (union Union23){ .b = 0x1.C1A4C1A4C1A4Cp123 };
+        r.b = f;
+        break;
     default:
         abort();
     }
-}
-
-union Union24 c_return_24(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union24){ .a = 0xC1A4C1A4 };
-    case 1:
-        return (union Union24){ .b = 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I };
-    default:
-        abort();
-    }
-}
-
-union Union25 c_return_25(int tag) {
-    switch (tag) {
-    case 0:
-        return (union Union25){ .a = 0xC1A4C1A4 };
-    case 1:
-        return (union Union25){ .b = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I };
-    default:
-        abort();
-    }
+    return r;
 }
 
 struct Struct26 c_return_26(void) {
-    return (struct Struct26){ 0xC1 };
+    struct Struct26 r = { 0xC1 };
+    return r;
 }
 
 struct Struct27 c_return_27(void) {
-    return (struct Struct27){ 0xC1A4 };
+    struct Struct27 r = { 0xC1A4 };
+    return r;
 }
 
 struct Struct28 c_return_28(void) {
-    return (struct Struct28){ 0xC1, 0xA4 };
+    struct Struct28 r = { 0xC1, 0xA4 };
+    return r;
 }
 
 struct Struct29 c_return_29(void) {
-    return (struct Struct29){ 0xC1A4, 0xABCD };
+    struct Struct29 r = { 0xC1A4, 0xABCD };
+    return r;
 }
 
 struct Struct30 c_return_30(void) {
-    return (struct Struct30){ 0xC1, 0xA4, 0xAB };
+    struct Struct30 r = { 0xC1, 0xA4, 0xAB };
+    return r;
 }
 
 //
@@ -509,10 +552,6 @@ struct Struct30 c_return_30(void) {
 //
 
 void clay_scalar(uint32_t x, bool y, float z, double w);
-
-void clay_complex_float(complex float x);
-
-void clay_complex_double(complex double x);
 
 void clay_1(struct Struct1 x);
 
@@ -560,10 +599,6 @@ void clay_22(union Union22 x, int tag);
 
 void clay_23(union Union23 x, int tag);
 
-void clay_24(union Union24 x, int tag);
-
-void clay_25(union Union25 x, int tag);
-
 void clay_26(struct Struct26 x);
 
 void clay_27(struct Struct27 x);
@@ -587,10 +622,6 @@ bool clay_return_bool(void);
 float clay_return_float(void);
 
 double clay_return_double(void);
-
-complex float clay_return_complex_float(void);
-
-complex double clay_return_complex_double(void);
 
 struct Struct1 clay_return_1(void);
 
@@ -638,10 +669,6 @@ union Union22 clay_return_22(int tag);
 
 union Union23 clay_return_23(int tag);
 
-union Union24 clay_return_24(int tag);
-
-union Union25 clay_return_25(int tag);
-
 struct Struct26 clay_return_26(void);
 
 struct Struct27 clay_return_27(void);
@@ -657,8 +684,6 @@ void c_to_clay(void) {
     fflush(stdout);
 
     clay_scalar(c_return_int(), c_return_bool(), c_return_float(), c_return_double());
-    clay_complex_float(c_return_complex_float());
-    clay_complex_double(c_return_complex_double());
     clay_1(c_return_1());
     clay_2(c_return_2());
     clay_3(c_return_3());
@@ -687,27 +712,16 @@ void c_to_clay(void) {
     clay_23(c_return_23(0), 0);
     clay_23(c_return_23(1), 1);
 
-    clay_24(c_return_24(0), 0);
-    clay_24(c_return_24(1), 1);
-
-    clay_25(c_return_25(0), 0);
-    clay_25(c_return_25(1), 1);
-
     clay_26(c_return_26());
     clay_27(c_return_27());
     clay_28(c_return_28());
     clay_29(c_return_29());
     clay_30(c_return_30());
 
-    clay_flush();
-
     printf("\nPassing Clay return values to C:\n");
+    fflush(stdout);
 
     c_scalar(clay_return_int(), clay_return_bool(), clay_return_float(), clay_return_double());
-
-    c_complex_float(clay_return_complex_float());
-
-    c_complex_double(clay_return_complex_double());
 
     c_1(clay_return_1());
 
@@ -757,18 +771,11 @@ void c_to_clay(void) {
     c_23(clay_return_23(0), 0);
     c_23(clay_return_23(1), 1);
 
-    c_24(clay_return_24(0), 0);
-    c_24(clay_return_24(1), 1);
-
-    c_25(clay_return_25(0), 0);
-    c_25(clay_return_25(1), 1);
-
     c_26(clay_return_26());
     c_27(clay_return_27());
     c_28(clay_return_28());
     c_29(clay_return_29());
     c_30(clay_return_30());
-
-    fflush(stdout);
 }
 
+}

@@ -1,8 +1,6 @@
 
 Passing C arguments to Clay:
 3248800164u, true, 0x1.c1a4c0p+123f, 0x1.c1a4c1a4c1a4cp+123
-0x1.c1a4c0p+123f+0x1.abcdeep+99fj
-0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
 Struct1(13953490458868236708ul)
 Struct2(3248800164u)
 Struct3(3248800164u, 305419896u)
@@ -28,10 +26,6 @@ Struct21(0x1.c1a4c1a4c1a4cp+123, 0x1.abcdefabcdefap+99, 0x1.0101010101010p+10, 0
 0x1.c1a4c0p+123f
 3248800164u
 0x1.c1a4c1a4c1a4cp+123
-3248800164u
-0x1.c1a4c0p+123f+0x1.abcdeep+99fj
-3248800164u
-0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
 Struct26(193uss)
 Struct27(49572us)
 Struct28(193uss, 164uss)
@@ -40,8 +34,6 @@ Struct30(193uss, 164uss, 171uss)
 
 Passing Clay return values to C:
 c1a4c1a4 1 0x1.c1a4cp+123 0x1.c1a4c1a4c1a4cp+123
-0x1.c1a4cp+123,0x1.abcdeep+99
-0x1.c1a4c1a4c1a4cp+123,0x1.abcdefabcdefap+99
 c1a4c1a4c1a4c1a4
 c1a4c1a4
 c1a4c1a4 12345678
@@ -67,10 +59,6 @@ c1a4c1a4 0x1.c1a4cp+123
 1: 0x1.c1a4cp+123
 0: c1a4c1a4
 1: 0x1.c1a4c1a4c1a4cp+123
-0: c1a4c1a4
-1: 0x1.c1a4cp+123,0x1.abcdeep+99
-0: c1a4c1a4
-1: 0x1.c1a4c2p+123,0x1.abcdfp+99
 c1
 c1a4
 c1 a4
@@ -79,8 +67,6 @@ c1 a4 ab
 
 Passing Clay arguments to C:
 c1a4c1a4 1 0x1.c1a4cp+123 0x1.c1a4c1a4c1a4cp+123
-0x1.c1a4cp+123,0x1.abcdeep+99
-0x1.c1a4c1a4c1a4cp+123,0x1.abcdefabcdefap+99
 c1a4c1a4c1a4c1a4
 c1a4c1a4
 c1a4c1a4 12345678
@@ -106,10 +92,6 @@ c1a4c1a4 0x1.c1a4cp+123
 1: 0x1.c1a4cp+123
 0: c1a4c1a4
 1: 0x1.c1a4c1a4c1a4cp+123
-0: c1a4c1a4
-1: 0x1.c1a4cp+123,0x1.abcdeep+99
-0: c1a4c1a4
-1: 0x1.c1a4c2p+123,0x1.abcdfp+99
 c1
 c1a4
 c1 a4
@@ -118,8 +100,6 @@ c1 a4 ab
 
 Passing C return values to Clay:
 3248800164u, true, 0x1.c1a4c0p+123f, 0x1.c1a4c1a4c1a4cp+123
-0x1.c1a4c0p+123f+0x1.abcdeep+99fj
-0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
 Struct1(13953490458868236708ul)
 Struct2(3248800164u)
 Struct3(3248800164u, 305419896u)
@@ -145,10 +125,6 @@ Struct21(0x1.c1a4c1a4c1a4cp+123, 0x1.abcdefabcdefap+99, 0x1.0101010101010p+10, 0
 0x1.c1a4c0p+123f
 3248800164u
 0x1.c1a4c1a4c1a4cp+123
-3248800164u
-0x1.c1a4c0p+123f+0x1.abcdeep+99fj
-3248800164u
-0x1.c1a4c1a4c1a4cp+123+0x1.abcdefabcdefap+99j
 Struct26(193uss)
 Struct27(49572us)
 Struct28(193uss, 164uss)
