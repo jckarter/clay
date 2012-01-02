@@ -2950,6 +2950,9 @@ void codegenCodeBody(InvokeEntryPtr entry)
                 debugVar,
                 initBlock)
                 ->setDebugLoc(debugLoc);
+            llvm::Value *debugAlloca =
+                ctx->initBuilder->CreateAlloca(llArgValue->getType());
+            ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
         }
     }
 
@@ -2989,6 +2992,9 @@ void codegenCodeBody(InvokeEntryPtr entry)
                     debugVar,
                     initBlock)
                     ->setDebugLoc(debugLoc);
+                llvm::Value *debugAlloca =
+                    ctx->initBuilder->CreateAlloca(llArgValue->getType());
+                ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
             }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
