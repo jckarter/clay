@@ -2929,13 +2929,13 @@ void codegenCodeBody(InvokeEntryPtr entry)
         cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
         if (llvmDIBuilder != NULL) {
-            llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
             int line, column;
             LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                 llvm::dwarf::DW_TAG_arg_variable, // tag
-                debugBlock, // scope
+                entry->getDebugInfo(), // scope
                 entry->fixedArgNames[i]->str, // name
                 file, // file
                 line, // line
@@ -2948,7 +2948,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
             llvmDIBuilder->insertDeclare(
                 llArgValue,
                 debugVar,
-                initBlock);
+                initBlock)
+                ->setDebugLoc(debugLoc);
         }
     }
 
@@ -2970,10 +2971,10 @@ void codegenCodeBody(InvokeEntryPtr entry)
             varArgs->add(cvalue);
 
             if (llvmDIBuilder != NULL) {
-                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_arg_variable, // tag
-                    debugBlock, // scope
+                    entry->getDebugInfo(), // scope
                     sout.str(), // name
                     file, // file
                     line, // line
@@ -2986,7 +2987,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
                 llvmDIBuilder->insertDeclare(
                     llArgValue,
                     debugVar,
-                    initBlock);
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
             }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
