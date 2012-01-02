@@ -3940,7 +3940,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cv->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -3991,7 +3992,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cvRef->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -4047,7 +4049,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cv->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
