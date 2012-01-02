@@ -5057,7 +5057,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerAddChecked(), ctx),
                          args,
                          ctx,
@@ -5072,7 +5072,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerSubtractChecked(), ctx),
                          args,
                          ctx,
@@ -5087,7 +5087,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerMultiplyChecked(), ctx),
                          args,
                          ctx,
@@ -5102,7 +5102,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerDivideChecked(), ctx),
                          args,
                          ctx,
@@ -5117,7 +5117,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerRemainderChecked(), ctx),
                          args,
                          ctx,
@@ -5132,7 +5132,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerShiftLeftChecked(), ctx),
                          args,
                          ctx,
@@ -5146,7 +5146,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 0, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerNegateChecked(), ctx),
                          args,
                          ctx,

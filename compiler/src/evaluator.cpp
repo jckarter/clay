@@ -3627,7 +3627,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out0);
         break;
     }
@@ -3639,7 +3639,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerAddChecked>(ev0, ev1, out0);
         break;
     }
@@ -3651,7 +3651,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerSubtractChecked>(ev0, ev1, out0);
         break;
     }
@@ -3663,7 +3663,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerMultiplyChecked>(ev0, ev1, out0);
         break;
     }
@@ -3675,7 +3675,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerDivideChecked>(ev0, ev1, out0);
         break;
     }
@@ -3687,7 +3687,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerRemainderChecked>(ev0, ev1, out0);
         break;
     }

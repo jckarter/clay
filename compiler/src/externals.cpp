@@ -167,7 +167,7 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
     if (type != NULL && typeReturnsBySretPointer(conv, type)) {
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == returnType);
+        assert(out0->type == type);
         llArgs.push_back(out0->llValue);
         llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::StructRet));
     }
@@ -228,7 +228,7 @@ void ExternalTarget::storeReturnValue(CallingConv conv,
                                       MultiCValuePtr out)
 {
     if (returnType == NULL || typeReturnsBySretPointer(conv, returnType)) {
-        assert(structReturnValue == NULL);
+        assert(callReturnValue == NULL);
         assert(out->size() == 0);
         return;
     } else {
