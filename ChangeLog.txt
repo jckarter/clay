@@ -446,24 +446,24 @@ Compiler frontend changes:
 * '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency
   with Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by
   default; use '-emit-llvm -S' to emit LLVM IR.
-* The compiler now supports "-Wl,..." syntax for sending options to the linker.
-* The redundant -dll option has been removed; use -shared.
+* The compiler now supports '-Wl,...' syntax for sending options to the linker.
+* The redundant '-dll' option has been removed; use '-shared'.
 * Externals are now only built by default for the main module (the source file
-  provided on the commandline) when building with the -c or -S flags. Externals
+  provided on the commandline) when building with the '-c' or '-S' flags. Externals
   imported from other modules will still be compiled in the current compilation
   unit by default for executable and shared library output types, but not for
   object or assembly output. '-import-externals' and '-no-import-externals'
   flags are provided to control this behavior independent of the output
   type.
 * External entry points for the main module are also now always compiled;
-  "-shared" now only affects the type of file output by the compiler.
+  '-shared' now only affects the type of file output by the compiler.
 * The default output filename for executables and dynamic libraries is now the
-  basename of the input file instead of "a.out". For instance, "clay hello.clay"
-  will output an executable named "hello" (or "hello.exe" if compiling for a
+  basename of the input file instead of 'a.out'. For instance, 'clay hello.clay'
+  will output an executable named 'hello' (or 'hello.exe' if compiling for a
   Windows target).
 * FreeBSD is now supported. Thanks to Daniel Kolesa.
-* A new -D flag sets compiler flags, which may be queried by the "Flag?" or
-  "Flag" primitives.
+* A new '-D' flag sets compiler flags, which may be queried by the 'Flag?' or
+  'Flag' primitives.
     $ cat foo.clay
     main() { println(Flag?(#"FOO")); println(Flag(#"BAR")); }
     $ clay -DFOO -DBAR=bar -run foo.clay
@@ -473,3 +473,5 @@ Compiler frontend changes:
     false
 
     $
+* Clay will now generate debug information on platforms for which LLVM supports
+  debug information when given the '-g' flag.
