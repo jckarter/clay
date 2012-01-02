@@ -3528,7 +3528,8 @@ struct CodegenContext : public Object {
           builder(NULL),
           valueForStatics(NULL),
           checkExceptions(true),
-          exceptionValue(NULL)
+          exceptionValue(NULL),
+          inlineDepth(0)
     {
     }
 
