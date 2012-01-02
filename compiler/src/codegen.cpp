@@ -3268,10 +3268,13 @@ void codegenCallByName(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->callByName);
+    assert(ctx->inlineDepth >= 0);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
         assert(args->size() == entry->fixedArgNames.size());
+
+    ++ctx->inlineDepth;
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
@@ -3348,6 +3351,9 @@ void codegenCallByName(InvokeEntryPtr entry,
     ctx->returnTargets.pop_back();
 
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
