@@ -266,7 +266,8 @@ Language changes:
   implicitly capturing rvalues or referencing lvalues is provided by
   'forward x = y;" now. clay-fix will convert all "ref" bindings to "forward"
   bindings. Statement forms that implicitly created "ref" bindings, such as
-  "for" and "..for" loops, now create "forward" bindings.
+  "for" and "..for" loops, now create "forward" bindings and continue to work
+  as before.
     // 0.0
     var x = 1;
     ref rx = x;
