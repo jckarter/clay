@@ -1022,7 +1022,7 @@ static void declareLLVMType(TypePtr t) {
 
     switch (t->typeKind) {
     case BOOL_TYPE : {
-        t->llType = llvmIntType(8);
+        t->llType = llvmIntType(1);
         if (llvmDIBuilder != NULL)
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),

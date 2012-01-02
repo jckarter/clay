@@ -35,10 +35,9 @@ __llvm__{
     %result = call {$T, i1} @llvm.$op.with.overflow.$T ($T %av, $T %bv);
     %outv = extractvalue {$T, i1} %result, 0
     %overflowbit = extractvalue {$T, i1} %result, 1
-    %overflowv = zext i1 %overflowbit to $Bool
 
     store $T %outv, $T* %out
-    store $Bool %overflowv, $Bool* %overflow
+    store $Bool %overflowbit, $Bool* %overflow
     ret i8* null
 }
 

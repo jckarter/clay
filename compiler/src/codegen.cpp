@@ -2929,13 +2929,13 @@ void codegenCodeBody(InvokeEntryPtr entry)
         cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
         if (llvmDIBuilder != NULL) {
-            llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
             int line, column;
             LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                 llvm::dwarf::DW_TAG_arg_variable, // tag
-                debugBlock, // scope
+                entry->getDebugInfo(), // scope
                 entry->fixedArgNames[i]->str, // name
                 file, // file
                 line, // line
@@ -2948,7 +2948,11 @@ void codegenCodeBody(InvokeEntryPtr entry)
             llvmDIBuilder->insertDeclare(
                 llArgValue,
                 debugVar,
-                initBlock);
+                initBlock)
+                ->setDebugLoc(debugLoc);
+            llvm::Value *debugAlloca =
+                ctx->initBuilder->CreateAlloca(llArgValue->getType());
+            ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
         }
     }
 
@@ -2970,10 +2974,10 @@ void codegenCodeBody(InvokeEntryPtr entry)
             varArgs->add(cvalue);
 
             if (llvmDIBuilder != NULL) {
-                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_arg_variable, // tag
-                    debugBlock, // scope
+                    entry->getDebugInfo(), // scope
                     sout.str(), // name
                     file, // file
                     line, // line
@@ -2986,7 +2990,11 @@ void codegenCodeBody(InvokeEntryPtr entry)
                 llvmDIBuilder->insertDeclare(
                     llArgValue,
                     debugVar,
-                    initBlock);
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
+                llvm::Value *debugAlloca =
+                    ctx->initBuilder->CreateAlloca(llArgValue->getType());
+                ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
             }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
@@ -3260,10 +3268,13 @@ void codegenCallByName(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->callByName);
+    assert(ctx->inlineDepth >= 0);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
         assert(args->size() == entry->fixedArgNames.size());
+
+    ++ctx->inlineDepth;
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
@@ -3340,6 +3351,9 @@ void codegenCallByName(InvokeEntryPtr entry,
     ctx->returnTargets.pop_back();
 
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
@@ -3940,7 +3954,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cv->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -3983,7 +3998,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
-                        llvmTypeDebugInfo(cvRef->type)), // type
+                        llvmTypeDebugInfo(pv->type)), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
@@ -3991,7 +4006,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cvRef->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -4047,7 +4063,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                 llvmDIBuilder->insertDeclare(
                     cv->llValue,
                     debugVar,
-                    ctx->builder->GetInsertBlock());
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -5057,7 +5074,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerAddChecked(), ctx),
                          args,
                          ctx,
@@ -5072,7 +5089,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerSubtractChecked(), ctx),
                          args,
                          ctx,
@@ -5087,7 +5104,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerMultiplyChecked(), ctx),
                          args,
                          ctx,
@@ -5102,7 +5119,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerDivideChecked(), ctx),
                          args,
                          ctx,
@@ -5117,7 +5134,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerRemainderChecked(), ctx),
                          args,
                          ctx,
@@ -5132,7 +5149,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerShiftLeftChecked(), ctx),
                          args,
                          ctx,
@@ -5146,7 +5163,7 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 0, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         codegenCallValue(staticCValue(prelude_doIntegerNegateChecked(), ctx),
                          args,
                          ctx,

@@ -163,7 +163,7 @@ struct Struct30 {
 extern "C" {
 
 void c_scalar(uint32_t x, bool y, float z, double w) {
-    printf("%x %x %a %a\n", x, y, z, w);
+    printf("%x %x %.6a %.13a\n", x, y, z, w);
     fflush(stdout);
 }
 
@@ -208,67 +208,67 @@ void c_8(struct Struct8 x) {
 }
 
 void c_9(struct Struct9 x) {
-    printf("%x %a\n", x.a, x.b);
+    printf("%x %.13a\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_10(struct Struct10 x) {
-    printf("%x %a\n", x.a, x.b);
+    printf("%x %.6a\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_11(struct Struct11 x) {
-    printf("%a %x\n", x.a, x.b);
+    printf("%.13a %x\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_12(struct Struct12 x) {
-    printf("%a %x\n", x.a, x.b);
+    printf("%.6a %x\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_13(struct Struct13 x) {
-    printf("%a\n", x.a);
+    printf("%.6a\n", x.a);
     fflush(stdout);
 }
 
 void c_14(struct Struct14 x) {
-    printf("%a %a\n", x.a, x.b);
+    printf("%.6a %.6a\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_15(struct Struct15 x) {
-    printf("%a %a %a\n", x.a, x.b, x.c);
+    printf("%.6a %.6a %.6a\n", x.a, x.b, x.c);
     fflush(stdout);
 }
 
 void c_16(struct Struct16 x) {
-    printf("%a %a %a %a %a\n", x.a, x.b, x.c, x.d, x.e);
+    printf("%.6a %.6a %.6a %.6a %.6a\n", x.a, x.b, x.c, x.d, x.e);
     fflush(stdout);
 }
 
 void c_17(struct Struct17 x) {
-    printf("%a\n", x.a);
+    printf("%.13a\n", x.a);
     fflush(stdout);
 }
 
 void c_18(struct Struct18 x) {
-    printf("%a %a\n", x.a, x.b);
+    printf("%.13a %.13a\n", x.a, x.b);
     fflush(stdout);
 }
 
 void c_19(struct Struct19 x) {
-    printf("%a %a %a\n", x.a, x.b, x.c);
+    printf("%.13a %.13a %.13a\n", x.a, x.b, x.c);
     fflush(stdout);
 }
 
 void c_20(struct Struct20 x) {
-    printf("%a %a %a %a\n", x.a, x.b, x.c, x.d);
+    printf("%.13a %.13a %.13a %.13a\n", x.a, x.b, x.c, x.d);
     fflush(stdout);
 }
 
 void c_21(struct Struct21 x) {
-    printf("%a %a %a %a %a\n", x.a, x.b, x.c, x.d, x.e);
+    printf("%.13a %.13a %.13a %.13a %.13a\n", x.a, x.b, x.c, x.d, x.e);
     fflush(stdout);
 }
 
@@ -278,7 +278,7 @@ void c_22(union Union22 x, int tag) {
         printf("0: %x\n", x.a);
         break;
     case 1:
-        printf("1: %a\n", x.b);
+        printf("1: %.6a\n", x.b);
         break;
     }
     fflush(stdout);
@@ -290,7 +290,7 @@ void c_23(union Union23 x, int tag) {
         printf("0: %x\n", x.a);
         break;
     case 1:
-        printf("1: %a\n", x.b);
+        printf("1: %.13a\n", x.b);
         break;
     }
     fflush(stdout);

@@ -3,6 +3,7 @@
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#define _SCL_SECURE_NO_WARNINGS
 #endif
 
 #include <string>
@@ -3528,7 +3529,8 @@ struct CodegenContext : public Object {
           builder(NULL),
           valueForStatics(NULL),
           checkExceptions(true),
-          exceptionValue(NULL)
+          exceptionValue(NULL),
+          inlineDepth(0)
     {
     }
 

@@ -7,6 +7,7 @@ import pickle
 import platform
 import signal
 import sys
+import difflib
 from StringIO import StringIO
 from subprocess import Popen, PIPE
 from multiprocessing import Pool, cpu_count
@@ -209,41 +210,41 @@ class TestCase(object):
                 return "ok"
             elif resultout != refout and resulterr != referr:
                 print >>self.testLogBuffer, "out.txt and err.txt mismatch"
-                print >>self.testLogBuffer, "expected out.txt"
+                print >>self.testLogBuffer, "diff from out.txt"
+                print >>self.testLogBuffer, "-----------------"
+                for line in difflib.unified_diff(
+                    refout.splitlines(True), resultout.splitlines(True),
+                    fromfile="out.txt", tofile="stdout"
+                ):
+                    print >>self.testLogBuffer, line,
                 print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, refout
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, "actual output"
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, resultout
-                print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, "expected err.txt"
-                print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, referr
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, "actual stderr"
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, resulterr
+                print >>self.testLogBuffer, "diff from err.txt"
+                print >>self.testLogBuffer, "-----------------"
+                for line in difflib.unified_diff(
+                    referr.splitlines(True), resulterr.splitlines(True),
+                    fromfile="err.txt", tofile="stderr"
+                ):
+                    print >>self.testLogBuffer, line,
                 return "out.txt and err.txt mismatch"
             elif resultout != refout:
                 print >>self.testLogBuffer, "out.txt mismatch"
-                print >>self.testLogBuffer, "expected out.txt"
-                print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, refout
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, "actual output"
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, resultout
+                print >>self.testLogBuffer, "diff from out.txt"
+                print >>self.testLogBuffer, "-----------------"
+                for line in difflib.unified_diff(
+                    refout.splitlines(True), resultout.splitlines(True),
+                    fromfile="out.txt", tofile="stdout"
+                ):
+                    print >>self.testLogBuffer, line,
                 return "out.txt mismatch"
             elif resulterr != referr:
                 print >>self.testLogBuffer, "err.txt mismatch"
-                print >>self.testLogBuffer, "expected err.txt"
-                print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, referr
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, "actual stderr"
-                print >>self.testLogBuffer, "-------------"
-                print >>self.testLogBuffer, resulterr
+                print >>self.testLogBuffer, "diff from err.txt"
+                print >>self.testLogBuffer, "-----------------"
+                for line in difflib.unified_diff(
+                    referr.splitlines(True), resulterr.splitlines(True),
+                    fromfile="err.txt", tofile="stderr"
+                ):
+                    print >>self.testLogBuffer, line,
                 return "err.txt mismatch"
 
     def run(self):
