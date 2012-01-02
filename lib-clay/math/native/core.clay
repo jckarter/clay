@@ -2,7 +2,6 @@
 import math.*;
 import math.native.exact.(db_number);
 import numbers.floats.floats.(floatBits,floatFromBits,exponentBias);
-import printer.formatter.*;
 
 //Constants
 public alias M_E	    = 2.7182818284590452353602874713526625;  /* e */
