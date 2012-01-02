@@ -2,11 +2,22 @@
 import math.native.exact.(db_number);
 import numbers.floats.floats.(floatFromBits);
 
-public alias SCS_NB_BITS = 30;
-public alias SCS_NB_WORDS = 8;
-public alias SCS_MAX_RANGE = 32;
-public alias SCS_RADIX = UInt(bitshl(1,SCS_NB_BITS));
-public alias SCS_MASK_RADIX = UInt(SCS_RADIX-1);
+alias SCS_NB_BITS = 30;
+alias SCS_NB_WORDS = 8;
+alias SCS_MAX_RANGE = 32;
+alias SCS_RADIX = UInt(bitshl(1,SCS_NB_BITS));
+alias SCS_MASK_RADIX = UInt(SCS_RADIX-1);
+
+record BigFloat (
+    /** the digits, as 32 bits words */
+    h_word:Array[UInt32,SCS_NB_WORDS],
+    /** Used to store Nan,+/-0, Inf, etc and then let the hardware handle them */
+    excp:db_number,
+    /** This corresponds to the exponent in an FP format, but here we are in base 2^32  */
+    index:Int,
+    /** The sign equals 1 or -1*/
+    sign:Int,
+);
 
 var db_one = () -> {var tmp = db_number();tmp.1 = 1l;return tmp;};
 var db_zero = () -> {var tmp = db_number();tmp.1 = 0l;return tmp;};
@@ -21,39 +32,56 @@ var max_double        = floatFromBits(0x7FEFFFFFFFFFFFFFul);
 var min_double        = floatFromBits(0x0000000000000001ul);
 
 
-record scs (
-    /** the digits, as 32 bits words */
-    h_word:Array[UInt32,SCS_NB_WORDS],
-    /** Used to store Nan,+/-0, Inf, etc and then let the hardware handle them */
-    excp:db_number,
-    /** This corresponds to the exponent in an FP format, but here we are in base 2^32  */
-    index:Int,
-    /** The sign equals 1 or -1*/
-    sign:Int,
-);
+
+//
+// constructors
+//
 
-var scs_zer = scs(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+[T]
+overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),db_zero(), 0, 1);
+
+
+
+[T] overload BitwiseMovedType?(static BigFloat) = true;
+
+[T]
+inline overload resetUnsafe(a:BigFloat) {
+    a <-- BigFloat();
+}
+
+
+
+//
+// generic vector requirements
+//
+
+[T]
+BigFloat?(static BigFloat) = true;
+
+
+var scs_zer = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
              db_zero(),  0,   1 );
 /* 1/2 */
-var    scs_half=scs(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+var    scs_half = BigFloat(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
              db_one(), -1,   1 );
 /*  1  */
-var    scs_one =scs(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+var    scs_one = BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
              db_one(),  0,   1 );
 /*  2  */
-var    scs_two =scs(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
+var    scs_two = BigFloat(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
              db_one(),  0,   1 );
 /* 0.166666*/
-var    scs_sixinv =scs(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+var    scs_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
 	     0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau),
 	     db_one(),  -1,   1 );
 
 
-scs_set_d(result, x) : {
+overload BigFloat(x:Double) --> result:BigFloat {
     var nb, mantissa = db_number(),db_number();
 
     if(x>=0){result.sign = 1;    nb.2 = x;}
@@ -75,7 +103,7 @@ scs_set_d(result, x) : {
     else {    /* Normals,  denormals, +/- 0.  */
 
         /* This number is not an exception */
-        result.excp.1 = 1;
+        result.excp.2 = 1.;
 
         if (exponent == 0){
             /* x is a denormal number : bring it back to the normal range */
@@ -114,15 +142,14 @@ scs_set_d(result, x) : {
     } /* end if test NaN etc */
 }
 
-scs_get_d(result, x){
+overload Double(x:BigFloat) --> result:Double {
     var nb, rndcorr = db_number(), db_number();
     var res = 0.;
     /* convert the MSB digit into a double, and store it in nb.d */
     nb.2 = Double(x.h_word[0]);
-
     /* place the two next digits in lowpart */
-    var t1 = x.h_word[1];
-    var lowpart  = bitshl(t1,SCS_NB_BITS) + x.h_word[2];
+    var t1 = UInt64(x.h_word[1]);
+    var lowpart = bitshl(t1,SCS_NB_BITS) + x.h_word[2];
     /* there is at least one significant bit in nb,
        and at least 2*SCS_NB_BITS in lowpart,
        so provided SCS_NB_BITS >= 27
@@ -130,108 +157,105 @@ scs_get_d(result, x){
     */
 
     /* test for  s/qNan, +/- Inf, +/- 0, placed here for obscure performance reasons */
-    if (x.excp.1 != 1)
+    if (x.excp.2 != 1.)
         result <-- x.excp.2;
-
     /* take the exponent of nb.d (will be in [0:SCS_NB_BITS])*/
     var expo = bitshr(bitand(nb.0[1] , 0x7ff00000),20) - 1023;
-
     /* compute the exponent of the result */
     var expofinal = expo + SCS_NB_BITS*x.index;
-
     /* Is the SCS number not too large for the IEEE exponent range ? */
     if (expofinal >  1023)
         /* return an infinity */
         res = radix_rng_double*radix_rng_double;
-
-        /* Is our SCS number a denormal  ? */
+    /* Is our SCS number a denormal  ? */
     else if (expofinal >= -1022){
         /* x is in the normal range */
         var shift = expo+2*SCS_NB_BITS-53;
         var roundbits = bitshl(lowpart,64-shift);
         /* align the rest of the mantissa to nb : shift by (2*SCS_NB_BITS)-53+expo */
-        var lowpart = bitshr(lowpart,shift);
+        lowpart = bitshr(lowpart,shift);
         /* Look at the last bit to decide rounding */
         if (bitand(lowpart , 0x0000000000000001ul)!=0){
             /* Test for the round to even case */
-            if(roundbits==0){
+            if(roundbits==0)
                 for (i in range(3,SCS_NB_WORDS))
                     roundbits = bitor(roundbits , x.h_word[i]);
-                if(roundbits == 0) {
-                    /* round to even mantissa */
-                    if (bitand(lowpart , 0x0000000000000002ul)!=0){
-                        /* mantissa odd, need to add an half-ulp */
-                        rndcorr.0[0] = 0;
-                        rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2^(exp-52) */
-                    }else
-                        rndcorr.2 = 0.0;
-                }else { /* there are round bits need to add an half-ulp */
+            if(roundbits == 0) {
+                /* round to even mantissa */
+                if (bitand(lowpart , 0x0000000000000002ul)!=0){
+                    /* mantissa odd, need to add an half-ulp */
                     rndcorr.0[0] = 0;
                     rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2^(exp-52) */
                 }
+                else
+                    rndcorr.2 = 0.0;
+            }
+            else { /* there are round bits need to add an half-ulp */
+                rndcorr.0[0] = 0;
+                rndcorr.0[1] = bitshl(expo-52+1023,20);    /* 2^(exp-52) */
+            }
+        }
+        else{
+            /* need to add nothing*/
+            rndcorr.2 = 0.0;
+        }
+        lowpart = bitshr(lowpart,1);
+        nb.1 = bitor(nb.1,lowpart);    /* Finish to fill the mantissa */
+        res  = nb.2 + rndcorr.2;  /* rounded to nearest   */
+        /* now compute the exponent from the index :
+           we need to multiply res by 2^(X_IND*SCS_NB_BITS)
+           First check this number won't be a denormal itself */
+        if(x.index*SCS_NB_BITS +1023 > 0) {
+            /* build the double 2^(X_IND*SCS_NB_BITS)   */
+            nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023,20);
+            nb.0[0] = 0;
+            res *= nb.2;     /* exact multiplication */
+        }
+        else {
+            /*offset the previous computation by 2^(2*SCS_NB_BITS) */
+            /* build the double 2^(X_IND*SCS_NB_BITS)   */
+            nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023 + 2*SCS_NB_BITS,20);
+            nb.0[0] = 0;
+            res *= radix_mtwo_double;  /* exact multiplication */
+            res *= nb.2;                  /* exact multiplication */
+        }
+
+    }
+    else {
+        /* the final number is a denormal with 52-(expfinal+1022)
+         significant bits. */
+        if (expofinal < -1022 - 53 )
+            res = 0.;
+        else {
+            /* align the rest of the mantissa to nb */
+            lowpart = bitshr(lowpart , expo+(2*SCS_NB_BITS)-52);
+            /* Finish to fill the mantissa */
+            nb.1 = bitor(nb.1,lowpart);
+            /* this is still a normal number.
+            Now remove its exponent and add back the implicit one */
+            nb.1 = bitor(bitand(nb.1,0x000FFFFFFFFFFFFFul), 0x0010000000000000ul);
+            /* keep only the significant bits */
+            nb.1 = bitshr(nb.1,-1023 - expofinal);
+            /* Look at the last bit to decide rounding */
+            if (bitand(nb.0[0] , 0x00000001)==1){
+                /* need to add an half-ulp */
+                rndcorr.1 = 1;    /* this is a full ulp but we multiply by 0.5 in the end */
             }else{
                 /* need to add nothing*/
                 rndcorr.2 = 0.0;
             }
+            res  = 0.5*(nb.2 + rndcorr.2);  /* rounded to nearest   */
 
-            lowpart = bitshr(lowpart,1);
-            nb.1 = bitor(nb.1,lowpart);    /* Finish to fill the mantissa */
-            res  = nb.2 + rndcorr.2;  /* rounded to nearest   */
-
-            /* now compute the exponent from the index :
-               we need to multiply res by 2^(X_IND*SCS_NB_BITS)
-               First check this number won't be a denormal itself */
-            if(x.index*SCS_NB_BITS +1023 > 0) {
-                /* build the double 2^(X_IND*SCS_NB_BITS)   */
-                nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023,20);
-                nb.0[0] = 0;
-                res *= nb.2;     /* exact multiplication */
-            }
-            else {
-                /*offset the previous computation by 2^(2*SCS_NB_BITS) */
-                /* build the double 2^(X_IND*SCS_NB_BITS)   */
-                nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023 + 2*SCS_NB_BITS,20);
-                nb.0[0] = 0;
-                res *= radix_mtwo_double;  /* exact multiplication */
-                res *= nb.2;                  /* exact multiplication */
-            }
+            /* the exponent field is already set to zero so that's all */
         }
-        else {
-            /* the final number is a denormal with 52-(expfinal+1022)
-             significant bits. */
-            if (expofinal < -1022 - 53 )
-                res = 0.;
-            else {
-                /* align the rest of the mantissa to nb */
-                lowpart = bitshl(lowpart , expo+(2*SCS_NB_BITS)-52);
-                /* Finish to fill the mantissa */
-                nb.1 = bitor(nb.1,lowpart);
-
-                /* this is still a normal number.
-                Now remove its exponent and add back the implicit one */
-                nb.1 = bitor(bitand(nb.1,0x000FFFFFFFFFFFFFul) , 0x0010000000000000ul);
-
-                /* keep only the significant bits */
-                nb.1 = bitshr(nb.1,-1023 - expofinal);
-                /* Look at the last bit to decide rounding */
-                if (bitand(nb.0[0] , 0x00000001)==1){
-                /* need to add an half-ulp */
-                    rndcorr.1 = 1;    /* this is a full ulp but we multiply by 0.5 in the end */
-                }else{
-                    /* need to add nothing*/
-                    rndcorr.2 = 0.0;
-                }
-                res  = 0.5*(nb.2 + rndcorr.2);  /* rounded to nearest   */
-                /* the exponent field is already set to zero so that's all */
-            }
-        }
-        /* sign management */
-        if (x.sign < 0)
-            result <-- -res;
-        else
-            result <-- res;
     }
+    /* sign management */
+    if (x.sign < 0)
+        result <-- -res;
+    else
+        result <-- res;
 }
+
 
 inline SCS_CARRY_PROPAGATE(r1,r0,tmp) {
     tmp = bitshr(UInt64(r1),SCS_NB_BITS);
@@ -242,7 +266,7 @@ inline SCS_CARRY_PROPAGATE(r1,r0,tmp) {
 
 // This function copies a result into another. There is an unrolled
 // version for the case SCS_NB_WORDS==8.
-inline scs_set(result, x) : {
+inline overload assign(result:BigFloat, x:BigFloat) : {
     result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
     result.h_word[2] = x.h_word[2]; result.h_word[3] = x.h_word[3];
     result.h_word[4] = x.h_word[4]; result.h_word[5] = x.h_word[5];
@@ -253,7 +277,7 @@ inline scs_set(result, x) : {
 }
 
 
-inline scs_mul(result, x, y) : {
+inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
     result.excp.2 = x.excp.2 * y.excp.2;
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
@@ -300,8 +324,9 @@ inline scs_mul(result, x, y) : {
 }
 
 
-
-scs_square(result, x) : {
+//Square BigFloat
+square(x:BigFloat) :BigFloat {
+    var result = BigFloat();
     result.excp.1 = x.excp.1 * x.excp.1;
     result.index = x.index + x.index;
     result.sign = 1;
@@ -344,7 +369,7 @@ scs_square(result, x) : {
         result.h_word[0] = UInt(r0); result.h_word[1] = UInt(r1); result.h_word[2] = UInt(r2); result.h_word[3] = UInt(r3);
         result.h_word[4] = UInt(r4); result.h_word[5] = UInt(r5); result.h_word[6] = UInt(r6); result.h_word[7] = UInt(r7);
     }
-
+    return result;
 }
 
 
@@ -465,7 +490,7 @@ private inline do_sub(result, x, y){
 
     /* The easy case */
     if(Diff >= SCS_NB_WORDS)
-        scs_set(result, x);
+        result = x;
     else {
         /* 0 <= Diff <= (SCS_NB_WORDS-1) */
         var carry = 0;
@@ -553,18 +578,18 @@ private inline do_sub(result, x, y){
 /** SCS addition (result is a normalised SCS number).
 
  */
-scs_add(result, x, y) : {
-    if (x.excp.0[1]==0)
-        scs_set(result, y);
-    else if (y.excp.0[1]==0)
-        scs_set(result, x);
+inline overload add(x:BigFloat, y:BigFloat) --> result:BigFloat {
+    if (x.excp.0[1] == 0)
+        result <-- y;
+    else if (y.excp.0[1] == 0)
+        result <-- x;
     else if (x.sign == y.sign)
         if(x.index >= y.index)
             do_add(result,x,y);
         else
             do_add(result,y,x);
     else
-        if(x.index>=y.index)
+        if(x.index >= y.index)
             do_sub(result,x,y);
         else
             do_sub(result,y,x);
@@ -576,23 +601,23 @@ scs_add(result, x, y) : {
  The arguments x, y and result may point to the same memory
  location.
  */
-scs_sub(result, x, y) : {
-    if (x.excp.0[1]==0){
-        scs_set(result, y);
+inline overload subtract(x:BigFloat, y:BigFloat) --> result:BigFloat {
+    if (x.excp.0[1] == 0){
+        result <-- y;
         result.sign = -result.sign;
     }
-    else if (y.excp.0[1]==0)
-        scs_set(result, x);
+    else if (y.excp.0[1] == 0)
+        result <-- x;
     else if (x.sign == y.sign)
         /* Same sign, so it's a sub   */
-        if(x.index>=y.index)
+        if(x.index >= y.index)
             do_sub(result,x,y);
         else{
             do_sub(result,y,x);
             result.sign = -result.sign;
         }
     else
-        if(x.index>=y.index)
+        if(x.index >= y.index)
             do_add(result,x,y);
         else{
             do_add(result,y,x);
@@ -604,45 +629,42 @@ scs_sub(result, x, y) : {
 /*
  * Compute 1/x with a Newton scheme
  */
-scs_inv(result, x) : {
-    var tmp, res, res1, scstwo = scs(),scs(),scs(),scs();
-    var app_x = 0.;
-    scs_set(tmp, x);
+[n | n==1]
+inline overload divide(static n, x:BigFloat) --> result:BigFloat {
+    var tmp = x;
     tmp.index = 0;
-    scs_get_d(app_x, tmp);
-    scs_set_si(scstwo, 2);
+    var app_x = Double(tmp);
     /* inv is a 53-bit approximation of 1/x */
     var inv = 1./app_x;
-    scs_set_d(res, inv);
+    var res = BigFloat(inv);
     res.index -= x.index;
 
     /* First Newton Iteration */
-    scs_mul(res1, x, res);
-    scs_sub(res1, scstwo, res1);
-    scs_mul(res, res, res1);
+    var res1 = x * res;
+    res1 = scs_two - res1;
+    res = res * res1;
 
     /* Second Newton Iteration */
-    scs_mul(res1, x, res);
-    scs_sub(res1, scstwo, res1);
-    scs_mul(result, res, res1);
+    res1 = x * res;
+    res1 = scs_two - res1;
+    result <-- res * res1;
 }
 
 
 /*
  * Compute result = x/y;
  */
-scs_div(result, x, y) : {
-    var res = scs();
+inline overload divide(x:BigFloat, y:BigFloat) --> result:BigFloat {
     if (x.excp.1 != 1)
         result.excp.1 = x.excp.1 / y.excp.1;
     else{
-        scs_inv(res, y);
-        scs_mul(result, res, x);
+        var res = 1./y;
+        result <-- res * x;
     }
 }
 
-
-inline scs_zero(result) {
+[n | n==0]
+inline overload assign(result:BigFloat, static n) {
     for(i in range(SCS_NB_WORDS))
         result.h_word[i] = 0;
     result.excp.1 = 0;
@@ -655,9 +677,11 @@ inline scs_zero(result) {
   Convert an integer number in it scs multiprecision
   representation
  */
-scs_set_si(result, x) : {
+[I | Integer?(I)]
+overload BigFloat(x:I) :BigFloat {
+    var result = BigFloat();
     var ux = 0u;
-    if(x>=0){
+    if(x >= 0){
         result.sign = 1;
         ux = UInt(x);
     }
@@ -683,5 +707,6 @@ scs_set_si(result, x) : {
         result.excp.1 = 1;
     else
         result.excp.1 = 0;
+    return result;
 }
 

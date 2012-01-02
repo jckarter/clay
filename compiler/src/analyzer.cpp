@@ -1,7 +1,7 @@
 
 #include "clay.hpp"
 #include "libclaynames.hpp"
-
+#include <cstdio>
 static int analysisCachingDisabled = 0;
 void disableAnalysisCaching() { analysisCachingDisabled += 1; }
 void enableAnalysisCaching() { analysisCachingDisabled -= 1; }

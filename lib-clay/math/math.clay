@@ -2,6 +2,7 @@
 //Import native
 public import math.native.defines.*;
 public import math.native.core.*;
+public import math.native.bigfloat.*;
 public import math.native.native.*;
 public import math.native.gamma.*;
 public import math.native.beta.*;
