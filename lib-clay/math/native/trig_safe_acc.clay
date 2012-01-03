@@ -1,7 +1,7 @@
 
 import math.native.bigfloat.*;
 import math.native.rem_pi_2.*;
-
+import math.(sin,cos,tan);
 
 alias DEGREE_SIN_BF = 25;
 alias DEGREE_COS_BF = 26;
