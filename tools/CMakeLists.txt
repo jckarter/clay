@@ -12,7 +12,7 @@ if (WIN32)
     set(LIBCLANG_LDFLAGS -Wl,${LLVM_DIR}/lib/libclang.lib)
 else (WIN32)
     set(EXE )
-    set(LIBCLANG_LDFLAGS -L${LLVM_DIR}/lib -Wl,-rpath,${LLVM_DIR}/lib -lclang)
+    set(LIBCLANG_LDFLAGS -L${LLVM_LIBDIR} -Wl,-rpath,${LLVM_LIBDIR} -lclang)
 endif (WIN32)
 
 if(UNIX)
