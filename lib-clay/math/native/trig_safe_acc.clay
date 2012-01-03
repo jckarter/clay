@@ -424,8 +424,8 @@ inline overload tan(x) --> result:BigFloat {
         result = result * x2;
     }
 
-    result = result * ybf);
-    result = ybf + result);
+    result = result * ybf;
+    result = ybf + result;
 
     if(N == 1) {
         result = recip(result);
