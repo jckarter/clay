@@ -51,7 +51,8 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(CMAKE_REQUIRED_INCLUDES ${LLVM_DIR}/include)
-    set(CMAKE_REQUIRED_LIBRARIES -L${LLVM_DIR}/lib -lclang)
+    set(CMAKE_REQUIRED_LIBRARIES clang)
+    set(CMAKE_REQUIRED_FLAGS "-L${LLVM_LIBDIR}")
 elseif(WIN32)
     set(LLVM_DIR "$ENV{ProgramFiles}/LLVM" CACHE PATH "llvm install path")
 
