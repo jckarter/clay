@@ -1,6 +1,8 @@
 
 import math.native.exact.(db_number);
+import math.native.defines.(recip);
 import numbers.floats.floats.(floatFromBits);
+import printer.formatter.(hex);
 
 alias SCS_NB_BITS = 30;
 alias SCS_NB_WORDS = 8;
@@ -37,15 +39,15 @@ var min_double        = floatFromBits(0x0000000000000001ul);
 // constructors
 //
 
-[T]
+
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),db_zero(), 0, 1);
 
 
 
-[T] overload BitwiseMovedType?(static BigFloat) = true;
+overload BitwiseMovedType?(static BigFloat) = true;
 
-[T]
+
 inline overload resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
@@ -56,11 +58,10 @@ inline overload resetUnsafe(a:BigFloat) {
 // generic vector requirements
 //
 
-[T]
 BigFloat?(static BigFloat) = true;
 
 
-var scs_zer = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+var scs_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
              db_zero(),  0,   1 );
 /* 1/2 */
@@ -276,6 +277,19 @@ inline overload assign(result:BigFloat, x:BigFloat) : {
     result.sign = x.sign;
 }
 
+[T | Numeric?(T)]
+inline overload assign(result:BigFloat, x:T) {
+    if(x == 0){
+        for(i in range(SCS_NB_WORDS))
+            result.h_word[i] = 0;
+        result.excp.1 = 0;
+        result.index = 0;
+        result.sign = 1;
+    }
+    else{
+        result = BigFloat(x);
+    }
+}
 
 inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
     result.excp.2 = x.excp.2 * y.excp.2;
@@ -508,7 +522,7 @@ private inline do_sub(result, x, y){
 
             if (cp == 0) {
                 /* Yet another easy case: result = 0 */
-                scs_zero(result);
+                result = 0;
                 return;
             }
             else { /* cp <> 0 */
@@ -629,8 +643,7 @@ inline overload subtract(x:BigFloat, y:BigFloat) --> result:BigFloat {
 /*
  * Compute 1/x with a Newton scheme
  */
-[n | n==1]
-inline overload divide(static n, x:BigFloat) --> result:BigFloat {
+inline overload recip(x:BigFloat) --> result:BigFloat {
     var tmp = x;
     tmp.index = 0;
     var app_x = Double(tmp);
@@ -658,19 +671,13 @@ inline overload divide(x:BigFloat, y:BigFloat) --> result:BigFloat {
     if (x.excp.1 != 1)
         result.excp.1 = x.excp.1 / y.excp.1;
     else{
-        var res = 1./y;
+        var res = recip(y);
         result <-- res * x;
     }
 }
 
-[n | n==0]
-inline overload assign(result:BigFloat, static n) {
-    for(i in range(SCS_NB_WORDS))
-        result.h_word[i] = 0;
-    result.excp.1 = 0;
-    result.index = 0;
-    result.sign = 1;
-}
+
+
 
 
 /**
@@ -710,3 +717,47 @@ overload BigFloat(x:I) :BigFloat {
     return result;
 }
 
+
+//
+//used by the next function to write
+//bit of the integer in the right order ....
+//
+private print_order(x:UInt, nb:Int, b:Int){
+  if (nb <= 0)
+    return;
+  print_order(x/b, nb-1, b);
+  print(x%b);
+  return;
+}
+
+//
+//print nb digits of the chain x in base "b"
+//b must be between 1 and 10
+//
+print_integer(x:UInt, b:Int, nb:Int){
+
+  if (b < 2 or b>16) {
+    printlnTo(stderr," ERROR: You musn't print number with a base larger than 10 or less than 2");
+    return;
+  }
+  print_order(x, nb, b);
+  return;
+}
+
+
+
+/*
+ * Convert a double precision number in it scs multiprecision
+ * representation
+ *
+ * Rem. : We haven't tested all special cases yet.
+ */
+
+overload printTo(stream, x:BigFloat){
+  var d = db_number();
+  d.2 = Double(x);
+  println("Exception : ", x.excp.1);
+  println("Index= ",x.index ,"   \n Sign=  ", x.sign ," \n Double value= ",d.2,"   \n Hex mantissa= ", d.0[1]," ", d.0[0]);
+  for(i in range(SCS_NB_WORDS))
+    println("  D ", i," : ", hex(x.h_word[i])," ", x.h_word[i]);
+}
