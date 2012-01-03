@@ -9,24 +9,24 @@ set(BINDGEN_SOURCES
 
 if (WIN32)
     set(EXE .exe)
-    set(LIBCLANG_LDFLAGS -Wl,${LLVM_DIR}/lib/libclang.lib)
+    set(DEST .)
+    if(MSVC)
+        set(LIBCLANG_LDFLAGS -Wl,${LLVM_DIR}/lib/libclang.lib)
+    else()
+        set(LIBCLANG_LDFLAGS -L${LLVM_DIR}/lib -Wl,-rpath,${LLVM_DIR}/lib -llibclang.dll)
+    endif()
 else (WIN32)
     set(EXE )
+    set(DEST bin)
     set(LIBCLANG_LDFLAGS -L${LLVM_LIBDIR} -Wl,-rpath,${LLVM_LIBDIR} -lclang)
 endif (WIN32)
-
-if(UNIX)
-    set(DEST bin)
-else()
-    set(DEST .)
-endif()
 
 if(BUILD_FIX)
     add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-fix${EXE}
         DEPENDS
-            ${clay_BINARY_DIR}/compiler/src/clay
+            clay
             ${FIX_SOURCES}
-        COMMAND ${clay_BINARY_DIR}/compiler/src/clay
+        COMMAND clay
             -I${clay_SOURCE_DIR}/lib-clay
             -I${clay_SOURCE_DIR}/tools
             -O1
@@ -40,9 +40,9 @@ endif(BUILD_FIX)
 if(BUILD_BINDGEN)
     add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
         DEPENDS
-            ${clay_BINARY_DIR}/compiler/src/clay
+            clay
             ${BINDGEN_SOURCES}
-        COMMAND ${clay_BINARY_DIR}/compiler/src/clay
+        COMMAND clay
             -I${clay_SOURCE_DIR}/lib-clay
             -I${clay_SOURCE_DIR}/tools
             -o ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
