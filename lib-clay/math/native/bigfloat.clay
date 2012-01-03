@@ -1,146 +1,116 @@
+// Lightweight BigFloat library based on SCSlib/crlibm
+// NOT intended as a replacement for mpfr/gmp for which a Clay wrapper
+// will eventually be available as part of the core math lib.
 
 import math.native.exact.(db_number);
 import math.native.defines.(recip);
 import numbers.floats.floats.(floatFromBits);
 import printer.formatter.(hex);
 
-alias SCS_NB_BITS = 30;
-alias SCS_NB_WORDS = 8;
-alias SCS_MAX_RANGE = 32;
-alias SCS_RADIX = UInt(bitshl(1,SCS_NB_BITS));
-alias SCS_MASK_RADIX = UInt(SCS_RADIX-1);
+alias BF_BITS = 30;
+alias BF_WORDS = 8;
+alias BF_MAX_RANGE = 32;
+alias BF_RADIX = UInt(bitshl(1,BF_BITS));
+alias BF_MASK_RADIX = UInt(BF_RADIX-1);
 
 record BigFloat (
-    /** the digits, as 32 bits words */
-    h_word:Array[UInt32,SCS_NB_WORDS],
-    /** Used to store Nan,+/-0, Inf, etc and then let the hardware handle them */
-    excp:db_number,
-    /** This corresponds to the exponent in an FP format, but here we are in base 2^32  */
-    index:Int,
-    /** The sign equals 1 or -1*/
-    sign:Int,
+    h_word:Array[UInt32,BF_WORDS],// the digits, as 32 bits words
+    excp:Double, // Used to store Nan,+/-0, Inf, etc
+    index:Int,// Exponent in an FP format in base 2^32
+    sign:Int, // The sign equals 1 or -1
 );
 
-var db_one = () -> {var tmp = db_number();tmp.1 = 1l;return tmp;};
-var db_zero = () -> {var tmp = db_number();tmp.1 = 0l;return tmp;};
-
-var radix_one_double  = floatFromBits(bitshl(1023ul + SCS_NB_BITS,52));
-var radix_two_double  = floatFromBits(bitshl(1023ul + 2*SCS_NB_BITS,52));
-var radix_mone_double = floatFromBits(bitshl(1023ul - SCS_NB_BITS,52));
-var radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*SCS_NB_BITS,52));
-var radix_rng_double  = floatFromBits(bitshl(1023ul + SCS_NB_BITS*SCS_MAX_RANGE,52));
-var radix_mrng_double = floatFromBits(bitshl(1023ul - SCS_NB_BITS*SCS_MAX_RANGE,52));
+var radix_one_double  = floatFromBits(bitshl(1023ul + BF_BITS,52));
+var radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_BITS,52));
+var radix_mone_double = floatFromBits(bitshl(1023ul - BF_BITS,52));
+var radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_BITS,52));
+var radix_rng_double  = floatFromBits(bitshl(1023ul + BF_BITS*BF_MAX_RANGE,52));
+var radix_mrng_double = floatFromBits(bitshl(1023ul - BF_BITS*BF_MAX_RANGE,52));
 var max_double        = floatFromBits(0x7FEFFFFFFFFFFFFFul);
 var min_double        = floatFromBits(0x0000000000000001ul);
 
-
-
-//
-// constructors
-//
-
-
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
-             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),db_zero(), 0, 1);
-
-
+             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
 
 overload BitwiseMovedType?(static BigFloat) = true;
-
 
 inline overload resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
 
-
-
-//
-// generic vector requirements
-//
-
 BigFloat?(static BigFloat) = true;
 
 
-var scs_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
-             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-             db_zero(),  0,   1 );
-/* 1/2 */
-var    scs_half = BigFloat(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
-             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-             db_one(), -1,   1 );
-/*  1  */
-var    scs_one = BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
-             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-             db_one(),  0,   1 );
-/*  2  */
-var    scs_two = BigFloat(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
-             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-             db_one(),  0,   1 );
-/* 0.166666*/
-var    scs_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
-	     0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau),
-	     db_one(),  -1,   1 );
+var bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 0.,  0,   1 );
+
+var bf_half = BigFloat(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 0., -1,   1 );
+
+var bf_one = BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 1.,  0,   1 );
+
+var bf_two = BigFloat(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
+    0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 1.,  0,   1 );
+
+var bf_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+    0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau), 1.,  -1,   1 );
 
 
-overload BigFloat(x:Double) --> result:BigFloat {
+overload BigFloat(x:Double) :BigFloat {
     var nb, mantissa = db_number(),db_number();
-
+    var result = BigFloat();
     if(x>=0){result.sign = 1;    nb.2 = x;}
     else    {result.sign = -1;   nb.2 = -x;}
 
     var exponent = bitand(nb.0[1] , 0x7ff00000);
 
     if (exponent == 0x7ff00000)  {
-        /*
-        * x = +/- Inf, s/qNAN
-        */
-        result.excp.2 = x;
-        for(i in range(SCS_NB_WORDS))
+        // x = +/- Inf, s/qNAN
+        result.excp = x;
+        for(i in range(BF_WORDS))
             result.h_word[i] = 0;
         result.index = 0;
         result.sign = 1;
     }
-
     else {    /* Normals,  denormals, +/- 0.  */
-
-        /* This number is not an exception */
-        result.excp.2 = 1.;
-
+        // This number is not an exception
+        result.excp = 1.;
         if (exponent == 0){
-            /* x is a denormal number : bring it back to the normal range */
-            nb.2 = nb.2 * radix_two_double;      /* 2^(2.SCS_NB_BITS) */
+            // x is a denormal number : bring it back to the normal range
+            nb.2 = nb.2 * radix_two_double;      // 2^(2.BF_BITS)
             exponent = bitand(nb.0[1] , 0x7ff00000);
             result.index = -2;
         }else {
             result.index = 0;
         }
 
-        exponent = bitshr(exponent,20);  /* get the actual value */
+        exponent = bitshr(exponent,20);  // get the actual value
 
-        var ind = ((exponent +(100*SCS_NB_BITS - 1023))/SCS_NB_BITS) - 100;
-        /* means : = (exponent -1023 + 100*SCS_NB_BITS)/SCS_NB_BITS -100
-         The business with 100*SCS_NB_BITS is to stay within the positive
-         range for exponent_remainder between 1 and SCS_NB_BITS */
+        var ind = ((exponent +(100*BF_BITS - 1023))/BF_BITS) - 100;
+        // means : = (exponent -1023 + 100*BF_BITS)/BF_BITS -100
+        // The business with 100*BF_BITS is to stay within the positive
+        // range for exponent_remainder between 1 and BF_BITS
 
-        var exponent_remainder = exponent - 1022 - (SCS_NB_BITS*ind);
-
+        var exponent_remainder = exponent - 1022 - (BF_BITS*ind);
         result.index += ind;
 
-        /* now get the mantissa and add the implicit 1 in fp. format*/
+        // now get the mantissa and add the implicit 1 in fp. format
         mantissa.1 = bitor(bitand(nb.1 , 0x000ffffffffffffful) , 0x0010000000000000ul);
 
-        /* and spread it over the structure
-           Everything here is 64-bit arithmetic */
+        // and spread it over the structure
+        // Everything here is 64-bit arithmetic
         result.h_word[0] =  UInt32(bitshr(mantissa.1 , 53 - exponent_remainder ));
 
-        /* 11 = 64-53 */
+        // 11 = 64-53
         mantissa.1 =  bitshl(mantissa.1 , exponent_remainder+11);
-        result.h_word[1] = bitand(bitshr(mantissa.0[1] , 32 - SCS_NB_BITS) , SCS_MASK_RADIX );
-        mantissa.1 =  bitshl(mantissa.1 , SCS_NB_BITS);
-        result.h_word[2] = bitand(bitshr(mantissa.0[1] , (32 - SCS_NB_BITS)), SCS_MASK_RADIX);
+        result.h_word[1] = bitand(bitshr(mantissa.0[1] , 32 - BF_BITS) , BF_MASK_RADIX );
+        mantissa.1 =  bitshl(mantissa.1 , BF_BITS);
+        result.h_word[2] = bitand(bitshr(mantissa.0[1] , (32 - BF_BITS)), BF_MASK_RADIX);
         result.h_word[3] = 0 ;
         result.h_word[4] = 0; result.h_word[5] = 0; result.h_word[6] = 0; result.h_word[7] = 0;
-    } /* end if test NaN etc */
+    } // end if test NaN etc
+    return result;
 }
 
 overload Double(x:BigFloat) --> result:Double {
@@ -150,20 +120,20 @@ overload Double(x:BigFloat) --> result:Double {
     nb.2 = Double(x.h_word[0]);
     /* place the two next digits in lowpart */
     var t1 = UInt64(x.h_word[1]);
-    var lowpart = bitshl(t1,SCS_NB_BITS) + x.h_word[2];
+    var lowpart = bitshl(t1,BF_BITS) + x.h_word[2];
     /* there is at least one significant bit in nb,
-       and at least 2*SCS_NB_BITS in lowpart,
-       so provided SCS_NB_BITS >= 27
+       and at least 2*BF_BITS in lowpart,
+       so provided BF_BITS >= 27
        together they include the 53+ guard bits to decide rounding
     */
 
     /* test for  s/qNan, +/- Inf, +/- 0, placed here for obscure performance reasons */
-    if (x.excp.2 != 1.)
-        result <-- x.excp.2;
-    /* take the exponent of nb.d (will be in [0:SCS_NB_BITS])*/
+    if (x.excp != 1.)
+        result <-- x.excp;
+    /* take the exponent of nb.d (will be in [0:BF_BITS])*/
     var expo = bitshr(bitand(nb.0[1] , 0x7ff00000),20) - 1023;
     /* compute the exponent of the result */
-    var expofinal = expo + SCS_NB_BITS*x.index;
+    var expofinal = expo + BF_BITS*x.index;
     /* Is the SCS number not too large for the IEEE exponent range ? */
     if (expofinal >  1023)
         /* return an infinity */
@@ -171,15 +141,15 @@ overload Double(x:BigFloat) --> result:Double {
     /* Is our SCS number a denormal  ? */
     else if (expofinal >= -1022){
         /* x is in the normal range */
-        var shift = expo+2*SCS_NB_BITS-53;
+        var shift = expo+2*BF_BITS-53;
         var roundbits = bitshl(lowpart,64-shift);
-        /* align the rest of the mantissa to nb : shift by (2*SCS_NB_BITS)-53+expo */
+        /* align the rest of the mantissa to nb : shift by (2*BF_BITS)-53+expo */
         lowpart = bitshr(lowpart,shift);
         /* Look at the last bit to decide rounding */
         if (bitand(lowpart , 0x0000000000000001ul)!=0){
             /* Test for the round to even case */
             if(roundbits==0)
-                for (i in range(3,SCS_NB_WORDS))
+                for (i in range(3,BF_WORDS))
                     roundbits = bitor(roundbits , x.h_word[i]);
             if(roundbits == 0) {
                 /* round to even mantissa */
@@ -204,18 +174,18 @@ overload Double(x:BigFloat) --> result:Double {
         nb.1 = bitor(nb.1,lowpart);    /* Finish to fill the mantissa */
         res  = nb.2 + rndcorr.2;  /* rounded to nearest   */
         /* now compute the exponent from the index :
-           we need to multiply res by 2^(X_IND*SCS_NB_BITS)
+           we need to multiply res by 2^(X_IND*BF_BITS)
            First check this number won't be a denormal itself */
-        if(x.index*SCS_NB_BITS +1023 > 0) {
-            /* build the double 2^(X_IND*SCS_NB_BITS)   */
-            nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023,20);
+        if(x.index*BF_BITS +1023 > 0) {
+            /* build the double 2^(X_IND*BF_BITS)   */
+            nb.0[1] = bitshl(x.index*BF_BITS +1023,20);
             nb.0[0] = 0;
             res *= nb.2;     /* exact multiplication */
         }
         else {
-            /*offset the previous computation by 2^(2*SCS_NB_BITS) */
-            /* build the double 2^(X_IND*SCS_NB_BITS)   */
-            nb.0[1] = bitshl(x.index*SCS_NB_BITS +1023 + 2*SCS_NB_BITS,20);
+            /*offset the previous computation by 2^(2*BF_BITS) */
+            /* build the double 2^(X_IND*BF_BITS)   */
+            nb.0[1] = bitshl(x.index*BF_BITS +1023 + 2*BF_BITS,20);
             nb.0[0] = 0;
             res *= radix_mtwo_double;  /* exact multiplication */
             res *= nb.2;                  /* exact multiplication */
@@ -229,7 +199,7 @@ overload Double(x:BigFloat) --> result:Double {
             res = 0.;
         else {
             /* align the rest of the mantissa to nb */
-            lowpart = bitshr(lowpart , expo+(2*SCS_NB_BITS)-52);
+            lowpart = bitshr(lowpart , expo+(2*BF_BITS)-52);
             /* Finish to fill the mantissa */
             nb.1 = bitor(nb.1,lowpart);
             /* this is still a normal number.
@@ -250,7 +220,7 @@ overload Double(x:BigFloat) --> result:Double {
             /* the exponent field is already set to zero so that's all */
         }
     }
-    /* sign management */
+    // sign management
     if (x.sign < 0)
         result <-- -res;
     else
@@ -259,20 +229,20 @@ overload Double(x:BigFloat) --> result:Double {
 
 
 inline SCS_CARRY_PROPAGATE(r1,r0,tmp) {
-    tmp = bitshr(UInt64(r1),SCS_NB_BITS);
+    tmp = bitshr(UInt64(r1),BF_BITS);
     r0 += tmp;
-    r1 -= bitshl(tmp,SCS_NB_BITS);
+    r1 -= bitshl(tmp,BF_BITS);
 }
 
 
 // This function copies a result into another. There is an unrolled
-// version for the case SCS_NB_WORDS==8.
+// version for the case BF_WORDS==8.
 inline overload assign(result:BigFloat, x:BigFloat) : {
     result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
     result.h_word[2] = x.h_word[2]; result.h_word[3] = x.h_word[3];
     result.h_word[4] = x.h_word[4]; result.h_word[5] = x.h_word[5];
     result.h_word[6] = x.h_word[6]; result.h_word[7] = x.h_word[7];
-    result.excp.2 <-- x.excp.2;
+    result.excp = x.excp;
     result.index = x.index;
     result.sign = x.sign;
 }
@@ -280,9 +250,9 @@ inline overload assign(result:BigFloat, x:BigFloat) : {
 [T | Numeric?(T)]
 inline overload assign(result:BigFloat, x:T) {
     if(x == 0){
-        for(i in range(SCS_NB_WORDS))
+        for(i in range(BF_WORDS))
             result.h_word[i] = 0;
-        result.excp.1 = 0;
+        result.excp = 0.;
         result.index = 0;
         result.sign = 1;
     }
@@ -292,7 +262,7 @@ inline overload assign(result:BigFloat, x:T) {
 }
 
 inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
-    result.excp.2 = x.excp.2 * y.excp.2;
+    result.excp = x.excp * y.excp;
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
 
@@ -334,14 +304,13 @@ inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
         result.h_word[0] = UInt(r0); result.h_word[1] = UInt(r1); result.h_word[2] = UInt(r2); result.h_word[3] = UInt(r3);
         result.h_word[4] = UInt(r4); result.h_word[5] = UInt(r5); result.h_word[6] = UInt(r6); result.h_word[7] = UInt(r7);
     }
-
 }
 
 
 //Square BigFloat
 square(x:BigFloat) :BigFloat {
     var result = BigFloat();
-    result.excp.1 = x.excp.1 * x.excp.1;
+    result.excp = x.excp * x.excp;
     result.index = x.index + x.index;
     result.sign = 1;
 
@@ -388,17 +357,16 @@ square(x:BigFloat) :BigFloat {
 
 
 
-/* The function that does the work in case of an addition
-
- do_add is the function that does the addition of two SCS numbers,
-   assuming that x.sign == y.sign, X_IND > Y_IND, x and y both
-   non-zero.
- */
-
+//  The function that does the work in case of an addition
+//
+//  do_add is the function that does the addition of two SCS numbers,
+//    assuming that x.sign == y.sign, X_IND > Y_IND, x and y both
+//    non-zero.
+//
 private inline do_add(result, x, y) : {
     var r0,r1,r2,r3,r4,r5,r6,r7 = 0,0,0,0,0,0,0,0;
     var Diff  = x.index - y.index;
-    result.excp.1 = x.excp.1 + y.excp.1 - 1;
+    result.excp = x.excp + y.excp - 1.;
     result.index = x.index;
     result.sign = x.sign;
 
@@ -459,20 +427,20 @@ private inline do_add(result, x, y) : {
             result.h_word[6] = x.h_word[6]; result.h_word[7] = x.h_word[7];
         }
 
-    /* Carry propagation */
+    // Carry propagation
 
-    var carry = bitshr(r7 , SCS_NB_BITS); r6 += carry;  r7 = bitand(r7 , SCS_MASK_RADIX);
-    carry = bitshr(r6 , SCS_NB_BITS); r5 += carry;  r6 = bitand(r6 , SCS_MASK_RADIX);
-    carry = bitshr(r5 , SCS_NB_BITS); r4 += carry;  r5 = bitand(r5 , SCS_MASK_RADIX);
-    carry = bitshr(r4 , SCS_NB_BITS); r3 += carry;  r4 = bitand(r4 , SCS_MASK_RADIX);
-    carry = bitshr(r3 , SCS_NB_BITS); r2 += carry;  r3 = bitand(r3 , SCS_MASK_RADIX);
-    carry = bitshr(r2 , SCS_NB_BITS); r1 += carry;  r2 = bitand(r2 , SCS_MASK_RADIX);
-    carry = bitshr(r1 , SCS_NB_BITS); r0 += carry;  r1 = bitand(r1 , SCS_MASK_RADIX);
-    carry = bitshr(r0 , SCS_NB_BITS);
+    var carry = bitshr(r7 , BF_BITS); r6 += carry;  r7 = bitand(r7 , BF_MASK_RADIX);
+    carry = bitshr(r6 , BF_BITS); r5 += carry;  r6 = bitand(r6 , BF_MASK_RADIX);
+    carry = bitshr(r5 , BF_BITS); r4 += carry;  r5 = bitand(r5 , BF_MASK_RADIX);
+    carry = bitshr(r4 , BF_BITS); r3 += carry;  r4 = bitand(r4 , BF_MASK_RADIX);
+    carry = bitshr(r3 , BF_BITS); r2 += carry;  r3 = bitand(r3 , BF_MASK_RADIX);
+    carry = bitshr(r2 , BF_BITS); r1 += carry;  r2 = bitand(r2 , BF_MASK_RADIX);
+    carry = bitshr(r1 , BF_BITS); r0 += carry;  r1 = bitand(r1 , BF_MASK_RADIX);
+    carry = bitshr(r0 , BF_BITS);
 
     if (carry!=0){
         result.h_word[7] = r6; result.h_word[6] = r5;  result.h_word[5] = r4; result.h_word[4] = r3;
-        result.h_word[3] = r2; result.h_word[2] = r1;  result.h_word[1] = bitand(r0 , SCS_MASK_RADIX);
+        result.h_word[3] = r2; result.h_word[2] = r1;  result.h_word[1] = bitand(r0 , BF_MASK_RADIX);
         result.h_word[0] = 1 ;
         inc(result.index);
     }
@@ -484,34 +452,30 @@ private inline do_add(result, x, y) : {
 
 
 
-/*/////////////////////////////////////////////////////////////////
-/////////////////////// SUBTRACTION //////////////////////////////
-//////////////////////////////////////////////////////////////////
+// SUBTRACTION
+//
 // This procedure assumes :
 // -    X_IND >= Y_IND
 // -   X_SIGN != Y_SIGN
 //    neither x or y is zero
 //  and result = x - y
-*/
-
 
 private inline do_sub(result, x, y){
-    var res = Array[Int,SCS_NB_WORDS]();
+    var res = Array[Int,BF_WORDS]();
 
-    result.excp.1 = x.excp.1 + y.excp.1 - 1;
-    var Diff  = x.index - y.index;
+    result.excp = x.excp + y.excp - 1.;
+    var dif  = x.index - y.index;
     result.index = x.index;
 
     /* The easy case */
-    if(Diff >= SCS_NB_WORDS)
+    if(dif >= BF_WORDS)
         result = x;
     else {
-        /* 0 <= Diff <= (SCS_NB_WORDS-1) */
+        /* 0 <= Diff <= (BF_WORDS-1) */
         var carry = 0;
-        if(Diff==0) {
-
+        if(dif==0) {
             var i,cp = 0,0;
-            while((x.h_word[i] == y.h_word[i]) and (i<SCS_NB_WORDS))
+            while((x.h_word[i] == y.h_word[i]) and (i<BF_WORDS))
                 inc(i);
             if (x.h_word[i] > y.h_word[i])
                 cp = 1;
@@ -529,58 +493,58 @@ private inline do_sub(result, x, y){
                 if (cp > 0){
                     /* x > y */
                     result.sign = x.sign;
-                    for(i in reverseRange(SCS_NB_WORDS-1,0)){
+                    for(i in reverseRange(BF_WORDS-1,0)){
                         var s = (Int(x.h_word[i]) - y.h_word[i] - carry);
-                        carry = bitshr(bitand(s,SCS_RADIX),SCS_NB_BITS);
-                        res[i] = (bitand(s,SCS_RADIX) + s);
+                        carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                        res[i] = (bitand(s,BF_RADIX) + s);
                     }
                 }
                 else { /* cp < 0  */
                     /* x < y (change of sign) */
                     result.sign = - x.sign;
-                    for(i in reverseRange((SCS_NB_WORDS-1),0)){
+                    for(i in reverseRange((BF_WORDS-1),0)){
                         var s = (- Int(x.h_word[i]) + y.h_word[i] - carry);
-                        carry = bitshr(bitand(s,SCS_RADIX),SCS_NB_BITS);
-                        res[i] = (bitand(s,SCS_RADIX) + s);
+                        carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                        res[i] = (bitand(s,BF_RADIX) + s);
                     }
                 }
             }
         }
         else {
-            /* 1<=Diff<(SCS_NB_WORDS-1) Digits of x and y overlap but the
+            /* 1<=Diff<(BF_WORDS-1) Digits of x and y overlap but the
             * sign will be that of x */
             result.sign = x.sign;
-            var s,i,j = 0,(SCS_NB_WORDS-1),(SCS_NB_WORDS-1)-Diff;
+            var s,i,j = 0,(BF_WORDS-1),(BF_WORDS-1)-dif;
             while(i >= 0){
                 if(j >= 0)
                     s = (x.h_word[i] - y.h_word[j] - carry);
                 else
                     s = (x.h_word[i] - carry);
-                carry = bitshr(bitand(s,SCS_RADIX),SCS_NB_BITS);
-                res[i] = (bitand(s,SCS_RADIX) + s);
+                carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                res[i] = (bitand(s,BF_RADIX) + s);
                 dec(i);
                 dec(j);
             }
         }
         /* check for cancellations */
         var i=0;
-        while ((res[i]==0) and (i < SCS_NB_WORDS))
+        while ((res[i]==0) and (i < BF_WORDS))
             inc(i);
         if(i>0) { /* cancellation, shift result*/
             result.index -= i;
             var j = 0;
-            while(i<SCS_NB_WORDS){
+            while(i<BF_WORDS){
                 result.h_word[j] = (res[i]);
                 inc(i);
                 inc(j);
             }
-            while(j<SCS_NB_WORDS){
+            while(j<BF_WORDS){
                 result.h_word[j] = 0;
                 inc(j);
             }
         }
         else {
-            for(i in range(SCS_NB_WORDS))
+            for(i in range(BF_WORDS))
                 result.h_word[i] =  (res[i]);
         }
     }
@@ -588,15 +552,13 @@ private inline do_sub(result, x, y){
 }
 
 
-
-/** SCS addition (result is a normalised SCS number).
-
- */
-inline overload add(x:BigFloat, y:BigFloat) --> result:BigFloat {
-    if (x.excp.0[1] == 0)
-        result <-- y;
-    else if (y.excp.0[1] == 0)
-        result <-- x;
+// addition (result is a normalised number).
+inline overload add(x:BigFloat, y:BigFloat) :BigFloat {
+    var result = BigFloat();
+    if (x.excp == 0)
+        result = y;
+    else if (y.excp == 0)
+        result = x;
     else if (x.sign == y.sign)
         if(x.index >= y.index)
             do_add(result,x,y);
@@ -607,83 +569,72 @@ inline overload add(x:BigFloat, y:BigFloat) --> result:BigFloat {
             do_sub(result,x,y);
         else
             do_sub(result,y,x);
+    return result;
 }
 
 
-/** SCS subtraction (result is a normalised SCS number).
-
- The arguments x, y and result may point to the same memory
- location.
- */
-inline overload subtract(x:BigFloat, y:BigFloat) --> result:BigFloat {
-    if (x.excp.0[1] == 0){
-        result <-- y;
+// subtraction (result is a normalised number).
+//  The arguments x, y and result may point to the same memory location.
+inline overload subtract(x:BigFloat, y:BigFloat) :BigFloat {
+    var result = BigFloat();
+    if (x.excp == 0){
+        result = y;
         result.sign = -result.sign;
     }
-    else if (y.excp.0[1] == 0)
-        result <-- x;
-    else if (x.sign == y.sign)
-        /* Same sign, so it's a sub   */
+    else if (y.excp == 0)
+        result = x;
+    else if (x.sign == y.sign){
+        // Same sign, so it's a sub
         if(x.index >= y.index)
             do_sub(result,x,y);
         else{
             do_sub(result,y,x);
             result.sign = -result.sign;
         }
-    else
+    }
+    else{
         if(x.index >= y.index)
             do_add(result,x,y);
         else{
             do_add(result,y,x);
             result.sign = -result.sign;
         }
+    }
+    return result;
 }
 
-
-/*
- * Compute 1/x with a Newton scheme
- */
+// Compute 1/x with a Newton scheme
 inline overload recip(x:BigFloat) --> result:BigFloat {
     var tmp = x;
     tmp.index = 0;
     var app_x = Double(tmp);
-    /* inv is a 53-bit approximation of 1/x */
+    // inv is a 53-bit approximation of 1/x
     var inv = 1./app_x;
     var res = BigFloat(inv);
     res.index -= x.index;
 
-    /* First Newton Iteration */
+    // First Newton Iteration
     var res1 = x * res;
-    res1 = scs_two - res1;
+    res1 = bf_two - res1;
     res = res * res1;
 
-    /* Second Newton Iteration */
+    // Second Newton Iteration
     res1 = x * res;
-    res1 = scs_two - res1;
+    res1 = bf_two - res1;
     result <-- res * res1;
 }
 
-
-/*
- * Compute result = x/y;
- */
+// Compute result = x/y;
 inline overload divide(x:BigFloat, y:BigFloat) --> result:BigFloat {
-    if (x.excp.1 != 1)
-        result.excp.1 = x.excp.1 / y.excp.1;
+    if (x.excp != 1.)
+        result.excp = x.excp / y.excp;
     else{
         var res = recip(y);
         result <-- res * x;
     }
 }
 
-
-
-
-
-/**
-  Convert an integer number in it scs multiprecision
-  representation
- */
+// Convert an integer number in multiprecision representation
 [I | Integer?(I)]
 overload BigFloat(x:I) :BigFloat {
     var result = BigFloat();
@@ -697,67 +648,33 @@ overload BigFloat(x:I) :BigFloat {
         ux = UInt(-x);
     }
 
-    if (ux > SCS_RADIX){
+    if (ux > BF_RADIX){
         result.index = 1;
-        result.h_word[0] = bitshr(ux - SCS_RADIX, SCS_NB_BITS);
-        result.h_word[1] =  ux -  bitshl(result.h_word[0] , SCS_NB_BITS);
+        result.h_word[0] = bitshr(ux - BF_RADIX, BF_BITS);
+        result.h_word[1] =  ux -  bitshl(result.h_word[0] , BF_BITS);
     }else {
         result.index = 0;
         result.h_word[0] = ux;
         result.h_word[1] = 0;
     }
 
-    for(i in range(2,SCS_NB_WORDS))
+    for(i in range(2,BF_WORDS))
         result.h_word[i] = 0;
 
     if (x != 0)
-        result.excp.1 = 1;
+        result.excp = 1;
     else
-        result.excp.1 = 0;
+        result.excp = 0;
     return result;
 }
 
-
-//
-//used by the next function to write
-//bit of the integer in the right order ....
-//
-private print_order(x:UInt, nb:Int, b:Int){
-  if (nb <= 0)
-    return;
-  print_order(x/b, nb-1, b);
-  print(x%b);
-  return;
-}
-
-//
-//print nb digits of the chain x in base "b"
-//b must be between 1 and 10
-//
-print_integer(x:UInt, b:Int, nb:Int){
-
-  if (b < 2 or b>16) {
-    printlnTo(stderr," ERROR: You musn't print number with a base larger than 10 or less than 2");
-    return;
-  }
-  print_order(x, nb, b);
-  return;
-}
-
-
-
-/*
- * Convert a double precision number in it scs multiprecision
- * representation
- *
- * Rem. : We haven't tested all special cases yet.
- */
-
+// Convert a double precision number in multiprecision representation
+// Rem. : We haven't tested all special cases yet.
 overload printTo(stream, x:BigFloat){
   var d = db_number();
   d.2 = Double(x);
-  println("Exception : ", x.excp.1);
-  println("Index= ",x.index ,"   \n Sign=  ", x.sign ," \n Double value= ",d.2,"   \n Hex mantissa= ", d.0[1]," ", d.0[0]);
-  for(i in range(SCS_NB_WORDS))
-    println("  D ", i," : ", hex(x.h_word[i])," ", x.h_word[i]);
+  println("Exception : ", x.excp);
+  println("Index= ",x.index ,"   \n Sign=  ", x.sign ," \n Double value= ",d.2,"   \n Hex mantissa= ", d.0[1],"  ", d.0[0]);
+  for(i in range(BF_WORDS))
+    println("  D ", i," : ", hex(x.h_word[i]),"  ", x.h_word[i]);
 }
