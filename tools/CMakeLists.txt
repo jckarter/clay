@@ -9,11 +9,10 @@ set(BINDGEN_SOURCES
 
 if (WIN32)
     set(EXE .exe)
-    set(LIBCLANG libclang.dll)
-    set(LLVM_PREFIX ${LLVM_DIR})
+    set(LIBCLANG_LDFLAGS -Wl,${LLVM_DIR}/lib/libclang.lib)
 else (WIN32)
     set(EXE )
-    set(LIBCLANG clang)
+    set(LIBCLANG_LDFLAGS -L${LLVM_DIR}/lib -Wl,-rpath,${LLVM_DIR}/lib -lclang)
 endif (WIN32)
 
 if(UNIX)
@@ -44,10 +43,7 @@ if(BUILD_BINDGEN)
             -I${clay_SOURCE_DIR}/lib-clay
             -I${clay_SOURCE_DIR}/tools
             -o ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
-            -L${LLVM_PREFIX}/lib
-            -L${LLVM_LIBDIR}
-            -Wl,-rpath,${LLVM_PREFIX}/lib
-            -l${LIBCLANG}
+            ${LIBCLANG_LDFLAGS}
             ${clay_SOURCE_DIR}/tools/bindgen.clay)
 
     add_custom_target(clay-bindgen ALL DEPENDS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE})
