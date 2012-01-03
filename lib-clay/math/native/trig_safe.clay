@@ -4,7 +4,7 @@
 
 import math.native.exact.*;
 import numbers.floats.floats.(nan,floatFromBits);
-import math.native.scs.*;
+import math.native.bigfloat.*;
 import math.native.trig_safe_acc.*;
 
 alias SIN = 0;

@@ -2,6 +2,9 @@ import math.(fma);
 
 alias db_number = Union[Array[Int32,2], Int64, Float64];
 
+var db_one = () -> {var tmp = db_number();tmp.2 = 1.;return tmp;};
+var db_zero = () -> {var tmp = db_number();tmp.2 = 0.;return tmp;};
+
 [T] inline Add12Cond(a:T, b:T) --> s:T, r:T {
     s <-- a + b;
     var _u1 = s - a;

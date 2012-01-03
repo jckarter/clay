@@ -44,3 +44,4 @@ define scalb;
 define llrint;
 define proj;
 define arg;
+define recip;

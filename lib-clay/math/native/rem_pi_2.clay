@@ -1,5 +1,5 @@
 
-import math.native.scs.*;
+import math.native.bigfloat.*;
 
 /**
  * This file include functions to compute y=x-N*pi/2 and return the last two bits of N
