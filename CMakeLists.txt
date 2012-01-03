@@ -46,13 +46,8 @@ if(UNIX)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     execute_process(
-        COMMAND ${LLVM_CONFIG} --src-root
-        OUTPUT_VARIABLE LLVM_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    execute_process(
         COMMAND ${LLVM_CONFIG} --prefix
-        OUTPUT_VARIABLE LLVM_PREFIX
+        OUTPUT_VARIABLE LLVM_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(CMAKE_REQUIRED_INCLUDES ${LLVM_DIR}/include)
