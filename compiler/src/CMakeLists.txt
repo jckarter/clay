@@ -1,3 +1,5 @@
+include(PCHsupport)
+
 set(SOURCES
     analyzer.cpp
     clone.cpp
@@ -20,6 +22,11 @@ set(SOURCES
     patterns.cpp
     printer.cpp
     types.cpp
+)
+
+precompile_header(clay.hpp SOURCES pch.cpp "${LLVM_CXXFLAGS}")
+
+list(APPEND SOURCES
     hirestimer.cpp
     profiler.cpp
 )

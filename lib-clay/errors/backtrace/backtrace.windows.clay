@@ -1,4 +1,0 @@
-inline showBacktrace() {
-    printlnTo(stderr, "(backtraces not yet implemented on windows)");
-    flush(stderr);
-}
