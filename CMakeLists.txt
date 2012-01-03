@@ -11,7 +11,9 @@ include(FindPythonInterp)
 include(CheckSymbolExists)
 
 if(UNIX)
-    find_program(LLVM_CONFIG llvm-config ${LLVM_DIR}/bin 
+    set(LLVM_DIR "/usr/local" CACHE PATH "llvm install path")
+
+    find_program(LLVM_CONFIG llvm-config ${LLVM_DIR}/bin
         DOC "path to llvm-config")
 
     execute_process(
@@ -72,25 +74,21 @@ elseif(WIN32)
     set(CMAKE_REQUIRED_LIBRARIES ${LLVM_DIR}/lib/libclang.lib)
 endif()
 
-if(DEFINED BUILD_TOOLS AND NOT BUILD_TOOLS)
-    set(BUILD_BINDGEN False)
-    set(BUILD_FIX False)
-endif()
+set(BUILD_FIX True CACHE BOOL
+    "Build the clay-fix tool for updating code written in older versions of Clay.")
+set(BUILD_BINDGEN True CACHE BOOL
+    "Build the clay-bindgen tool for generating Clay bindings from C header files.")
 
-if(NOT DEFINED BUILD_BINDGEN OR BUILD_BINDGEN)
+if(BUILD_BINDGEN)
     check_symbol_exists(clang_getTypedefDeclUnderlyingType "clang-c/Index.h" HAS_PATCHED_CLANG)
     if(HAS_PATCHED_CLANG)
         set(BUILD_BINDGEN True)
     else()
-        message("   libclang is either missing or needs to be patched to support")
-        message("   bindgen. bindgen will not be built. Try applying the patch in")
-        message("   tools/libclang.diff to the Clang source.")
+        message("-- libclang is either missing or needs to be patched to support")
+        message("-- bindgen. bindgen will not be built. Try applying the patch in")
+        message("-- tools/libclang.diff to the Clang source.")
         set(BUILD_BINDGEN False)
     endif()
-endif()
-
-if(NOT DEFINED BUILD_FIX)
-    set(BUILD_FIX True)
 endif()
 
 if(UNIX)
