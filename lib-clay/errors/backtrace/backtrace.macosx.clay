@@ -1,0 +1,8 @@
+private external backtrace(array:Pointer[RawPointer], size:Int) : Int;
+private external backtrace_symbols_fd(array:Pointer[RawPointer], size:Int, fd:Int) : ;
+
+inline showBacktrace() {
+    var callstack = Array[RawPointer,128]();
+    var size = backtrace(begin(callstack), 128);
+    backtrace_symbols_fd(begin(callstack), size, 2);
+}
