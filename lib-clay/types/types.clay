@@ -51,7 +51,7 @@ alias Type(..x:T) = ..T;
 // typeToLValue, typeToRValue, typesToLValues, typesToRValues
 //
 
-inline typeToLValue(a) = ref null(a)^;
+inline typeToLValue(a) = ref null(a)@;
 [T] inline typeToRValue(static T) --> returned:T {}
 
 inline typesToLValues(..a) = forward ..mapValues(typeToLValue, ..a);

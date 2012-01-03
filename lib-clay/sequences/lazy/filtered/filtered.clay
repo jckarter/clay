@@ -32,7 +32,7 @@ overload UnderlyingContainerConstructor(static Filtered[F,A]) =
 
 [F, A]
 inline overload iterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(..next(iterator(null(A)^))));
+    alias T = Type(captureValues(..next(iterator(null(A)@))));
     return FilteredIterator(a.predicate,
                             iterator(a.seq),
                             false,
@@ -41,7 +41,7 @@ inline overload iterator(a:Filtered[F, A]) {
 
 [F, A | CallDefined?(reverseIterator, A)]
 inline overload reverseIterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(..next(reverseIterator(null(A)^))));
+    alias T = Type(captureValues(..next(reverseIterator(null(A)@))));
     return FilteredIterator(a.predicate,
                             reverseIterator(a.seq),
                             false,

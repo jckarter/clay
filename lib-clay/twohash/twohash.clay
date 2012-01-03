@@ -153,7 +153,7 @@ overload lookup(a: HashMap[K, V], key: K)
     var pEntry = pEntryAt(a.data, key);
     if (null?(pEntry))
         return null(V);
-    return &pEntry^.value;
+    return &pEntry@.value;
 }
 
 //
@@ -178,7 +178,7 @@ overload put(a: HashMap[K, V], key: K, forward value: V)
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry)) 
     {
-        pEntry^.value = value;
+        pEntry@.value = value;
         return;
     }
     var pEntry = allocateEntryAt(a.data, key, MapEntry[K, V](key, value));
@@ -203,9 +203,9 @@ overload index(a: HashMap[K, V], key: K)
 {
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry))
-        return ref pEntry^.value;
+        return ref pEntry@.value;
     var pEntry = allocateEntryAt(a.data, key, MapEntry[K, V](key, V()));
-    return ref pEntry^.value;
+    return ref pEntry@.value;
 }
 
 //
@@ -256,9 +256,9 @@ overload SetVector[K]() set: SetVector[K]
 {
     set.data <-- TwoHash[SetVectorEntry[K]]();
     set.sentinel = allocateRawMemory(SetVectorEntry[K], 1);
-    resetUnsafe(set.sentinel^.key);
-    set.sentinel^.next = set.sentinel;
-    set.sentinel^.prev = set.sentinel;
+    resetUnsafe(set.sentinel@.key);
+    set.sentinel@.next = set.sentinel;
+    set.sentinel@.prev = set.sentinel;
 }
 
 [K]
@@ -274,17 +274,17 @@ overload SetVectorEntry[K](a: SetVector[K], key: K) entry: SetVectorEntry[K]
     ref sentinel = a.sentinel;
     entry.key <-- move(key);
     entry.next = sentinel;
-    entry.prev = sentinel^.prev;
-    entry.next^.prev = &entry;
-    entry.prev^.next = &entry;
+    entry.prev = sentinel@.prev;
+    entry.next@.prev = &entry;
+    entry.prev@.next = &entry;
 }
 
 [K]
 overload destroy(entry: SetVectorEntry[K])
 {
     destroy(entry.key);
-    entry.prev^.next = entry.next;
-    entry.next^.prev = entry.prev;
+    entry.prev@.next = entry.next;
+    entry.next@.prev = entry.prev;
 }
 
 [K]
@@ -298,8 +298,8 @@ overload resetUnsafe(a: SetVectorEntry[K])
 overload moveEntry(src: SetVectorEntry[K], th) entry: SetVectorEntry[K]
 {
     entry <-- move(src);
-    entry.prev^.next = &entry;
-    entry.next^.prev = &entry;
+    entry.prev@.next = &entry;
+    entry.next@.prev = &entry;
 }
 
 
@@ -316,13 +316,13 @@ private record SetVectorItems[K]
 overload iterator(i: SetVectorItems[K]) = i;
 
 [K]
-overload hasNext?(i: SetVectorItems[K]) = (i.current^.next != i.sentinel);
+overload hasNext?(i: SetVectorItems[K]) = (i.current@.next != i.sentinel);
 
 [K]
 overload next(i: SetVectorItems[K])
 {
-    i.current = i.current^.next;
-    return ref i.current^.key;
+    i.current = i.current@.next;
+    return ref i.current@.key;
 }
 
 //

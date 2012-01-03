@@ -321,7 +321,7 @@ overload initObject(self, superSelector, forward ..args)
 
 [O | Class?(O)]
 private objectMembers(self: O)
-    = ref ..mapValues(ivar => ref fieldRef(self^, ivar.0), ..ClassInstanceVars(O));
+    = ref ..mapValues(ivar => ref fieldRef(self@, ivar.0), ..ClassInstanceVars(O));
 
 [O | Class?(O)]
 initObjectMembers(self: O) {
@@ -409,7 +409,7 @@ overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
 
 [ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
 ReaderInstanceMethod(static ivarName, static readerSelector, T)
-    = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
+    = [readerSelector, self => T(fieldRef(self@, ivarName)), T];
 
 [ivarName | Identifier?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(static ivarName, T)
@@ -417,7 +417,7 @@ overload ReaderInstanceMethod(static ivarName, T)
 
 [ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
 overload ReaderInstanceMethod(static ivarName, static readerSelector)
-    = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName))];
+    = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self@, ivarName))];
 
 [ivarName | Identifier?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(static ivarName)
@@ -429,7 +429,7 @@ defaultWriterSelector(ivarName)
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(static ivarName, static writerSelector, T)
-    = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
+    = [writerSelector, (self, value) => { fieldRef(self@, ivarName) = value; }, Void, T];
 
 [ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(static ivarName, T)
@@ -437,7 +437,7 @@ overload WriterInstanceMethod(static ivarName, T)
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
 overload WriterInstanceMethod(static ivarName, static writerSelector)
-    = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }];
+    = [writerSelector, (self, value) => { fieldRef(self@, ivarName) = value; }];
 
 [ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(static ivarName)

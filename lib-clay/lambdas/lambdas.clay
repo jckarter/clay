@@ -53,7 +53,7 @@ makeLambda(forward x:T, ..In) {
 
 [..I, ..O]
 overload call(x:Lambda[[..I], [..O]], forward ..args:I) : ..O {
-    return forward ..x.body^.code(x.body^.obj^, ..args);
+    return forward ..x.body@.code(x.body@.obj@, ..args);
 }
 
 
@@ -77,7 +77,7 @@ alias overload LambdaBody[[..I],[..O]](x:T) --> returned:LambdaBody[[..I],[..O]]
 
     var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     try {
-        ptr^ <-- x;
+        ptr@ <-- x;
     }
     catch (e) {
         freeRawMemoryAligned(ptr);
@@ -88,7 +88,7 @@ alias overload LambdaBody[[..I],[..O]](x:T) --> returned:LambdaBody[[..I],[..O]]
 
 [In, Out]
 overload destroy(x:LambdaBody[In, Out]) {
-    x.destructor(x.obj^);
+    x.destructor(x.obj@);
     freeRawMemoryAligned(x.obj);
 }
 

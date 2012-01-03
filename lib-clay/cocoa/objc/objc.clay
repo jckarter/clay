@@ -59,18 +59,18 @@ overload encodeIdentifier() = #"";
 
 [X] overload encodeIdentifier(static X) = #"?";
 [T] overload encodeIdentifier(static Pointer[T])
-    = IdentifierConcat(#"^", encodeIdentifier(T));
+    = IdentifierConcat(#"@", encodeIdentifier(T));
 
 // XXX distinguish raw pointer from Pointer[UInt8]
-overload encodeIdentifier(static RawPointer) = #"^v";
+overload encodeIdentifier(static RawPointer) = #"@v";
 
 [T | Record?(T)]
 overload encodeIdentifier(static Pointer[Pointer[T]])
-    = IdentifierConcat(#"^^{", IdentifierStaticName(T), #"}");
+    = IdentifierConcat(#"@@{", IdentifierStaticName(T), #"}");
 [T | Tuple?(T)]
-overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^{Tuple}";
+overload encodeIdentifier(static Pointer[Pointer[T]]) = #"@@{Tuple}";
 [T | Union?(T)]
-overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^(Union)";
+overload encodeIdentifier(static Pointer[Pointer[T]]) = #"@@(Union)";
 
 [T | RegularRecord?(T)] overload encodeIdentifier(static T)
     = IdentifierConcat(
@@ -1148,7 +1148,7 @@ overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 overload fieldRef(ivars: IvarsRef[T], static ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
-    )^;
+    )@;
 
 
 

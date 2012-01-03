@@ -43,37 +43,37 @@ record Header (
 
 private hptr(b:SizeT) = Pointer[Header](dataBegin() + b);
 
-blockSize(b) = bitand(hptr(b)^.sizeAndFlag, bitnot(1));
+blockSize(b) = bitand(hptr(b)@.sizeAndFlag, bitnot(1));
 
-blockFree?(b) = (bitand(hptr(b)^.sizeAndFlag, 1) != 0);
+blockFree?(b) = (bitand(hptr(b)@.sizeAndFlag, 1) != 0);
 
 blockNext(b) = b + blockSize(b);
 
-blockPrevious(b) = hptr(b)^.previous;
+blockPrevious(b) = hptr(b)@.previous;
 
-blockNextInBucket(b) = hptr(b)^.nextInBucket;
+blockNextInBucket(b) = hptr(b)@.nextInBucket;
 
-blockPreviousInBucket(b) = hptr(b)^.previousInBucket;
+blockPreviousInBucket(b) = hptr(b)@.previousInBucket;
 
 blockSetSize(b, size) {
-    hptr(b)^.sizeAndFlag = bitor(SizeT(size), SizeT(blockFree?(b)));
+    hptr(b)@.sizeAndFlag = bitor(SizeT(size), SizeT(blockFree?(b)));
 }
 
 blockSetFree(b, free?) {
-    hptr(b)^.sizeAndFlag = bitor(blockSize(b), SizeT(free?));
+    hptr(b)@.sizeAndFlag = bitor(blockSize(b), SizeT(free?));
 }
 
 blockSetPrevious(b, previous) {
     assert(nullBlock?(previous) or (previous <= b), "blockSetPrevious");
-    hptr(b)^.previous = previous;
+    hptr(b)@.previous = previous;
 }
 
 blockSetNextInBucket(b, next) {
-    hptr(b)^.nextInBucket = next;
+    hptr(b)@.nextInBucket = next;
 }
 
 blockSetPreviousInBucket(b, previous) {
-    hptr(b)^.previousInBucket = previous;
+    hptr(b)@.previousInBucket = previous;
 }
 
 blockInit(b, size, previous, nextInBucket, previousInBucket) {
@@ -94,7 +94,7 @@ bucketId(size) = floorLog2(size);
 
 bucketHead(blockSize) {
     var i = bucketId(blockSize);
-    return ref state.freeListBuckets^[i];
+    return ref state.freeListBuckets@[i];
 }
 
 pushBucket(head, b) {
@@ -125,8 +125,8 @@ popBucket(head) {
 
 popFreeList(minSize) {
     var i = bucketId(higherPower2(minSize));
-    while (i < size(state.freeListBuckets^)) {
-        ref head = state.freeListBuckets^[i];
+    while (i < size(state.freeListBuckets@)) {
+        ref head = state.freeListBuckets@[i];
         if (not nullBlock?(head))
             return popBucket(head);
         i += 1;
@@ -161,7 +161,7 @@ resetState() {
 
 initNewFile() {
     ref x = state;
-    for (head in x.freeListBuckets^)
+    for (head in x.freeListBuckets@)
         head = nullBlock;
 
     var b = SizeT(0);
@@ -230,7 +230,7 @@ overload dec(p:PagedPointer[T]) {
 
 [T]
 overload dereference(p : PagedPointer[T]) {
-    return ref Pointer[T](p.offset + dataBegin())^;
+    return ref Pointer[T](p.offset + dataBegin())@;
 }
 
 [T]
@@ -326,7 +326,7 @@ freePaged(p:PagedPointer[T]) {
 printPagingState() {
     ref x = state;
     println("fileName = ", x.fileName);
-    for (i in range(size(x.freeListBuckets^)))
+    for (i in range(size(x.freeListBuckets@)))
         printBucket(bitshl(SizeT(1), i));
 }
 
