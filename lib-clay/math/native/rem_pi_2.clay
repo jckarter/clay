@@ -84,7 +84,7 @@ rem_pio2_bf(result, x){
     var r,tmp,N,sign = Array[UInt64,BF_NB_WORDS+3](), 0ul, 0u,0;
     /* result r[0],...,r[10] could store till 300 bits of precision */
     /* that is really enough for computing the reduced argument */
-    if ((x.excp.1 != 1)or(x.index < -1)){
+    if ((x.excp != 1)or(x.index < -1)){
         result = x;
         return 0;
     }
@@ -218,7 +218,7 @@ rem_pio2_bf(result, x){
     for(j in range(BF_NB_WORDS))
         result.h_word[j] = UInt(r[i+j]);
 
-    result.excp.1   = 1;
+    result.excp   = 1.;
     result.index   = -i;
     result.sign = sign*x.sign;
 

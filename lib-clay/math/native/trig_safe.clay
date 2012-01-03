@@ -465,7 +465,7 @@ private inline rem_pio256_bf(result,x){
     /* result r[0],...,r[10] could store till 300 bits of precision */
     /* that is really enough for computing the reduced argument */
 
-    if (x.excp.1 != 1 or x.index < -2){
+    if (x.excp != 1 or x.index < -2){
         result = x;
         return 0;
     }

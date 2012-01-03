@@ -10,25 +10,25 @@ import math.native.defines.(recip);
 import numbers.floats.floats.(floatFromBits);
 import printer.formatter.(hex);
 
-alias BF_BITS = 30;
-alias BF_WORDS = 8;
+alias BF_NB_BITS = 30;
+alias BF_NB_WORDS = 8;
 alias BF_MAX_RANGE = 32;
-alias BF_RADIX = UInt(bitshl(1,BF_BITS));
+alias BF_RADIX = UInt(bitshl(1,BF_NB_BITS));
 alias BF_MASK_RADIX = UInt(BF_RADIX-1);
 
 record BigFloat (
-    h_word:Array[UInt32,BF_WORDS],// the digits, as 32 bits words
+    h_word:Array[UInt32,BF_NB_WORDS],// the digits, as 32 bits words
     excp:Double, // Used to store Nan,+/-0, Inf, etc
     index:Int,// Exponent in an FP format in base 2^32
     sign:Int, // The sign equals 1 or -1
 );
 
-var radix_one_double  = floatFromBits(bitshl(1023ul + BF_BITS,52));
-var radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_BITS,52));
-var radix_mone_double = floatFromBits(bitshl(1023ul - BF_BITS,52));
-var radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_BITS,52));
-var radix_rng_double  = floatFromBits(bitshl(1023ul + BF_BITS*BF_MAX_RANGE,52));
-var radix_mrng_double = floatFromBits(bitshl(1023ul - BF_BITS*BF_MAX_RANGE,52));
+var radix_one_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS,52));
+var radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_NB_BITS,52));
+var radix_mone_double = floatFromBits(bitshl(1023ul - BF_NB_BITS,52));
+var radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_NB_BITS,52));
+var radix_rng_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
+var radix_mrng_double = floatFromBits(bitshl(1023ul - BF_NB_BITS*BF_MAX_RANGE,52));
 
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
@@ -70,7 +70,7 @@ overload BigFloat(x:Double) : BigFloat {
     if (exponent == 0x7ff00000)  {
         // x = +/- Inf, s/qNAN
         result.excp = x;
-        for(i in range(BF_WORDS))
+        for(i in range(BF_NB_WORDS))
             result.h_word[i] = 0;
         result.index = 0;
         result.sign = 1;
@@ -80,7 +80,7 @@ overload BigFloat(x:Double) : BigFloat {
         result.excp = 1.;
         if (exponent == 0){
             // x is a denormal number : bring it back to the normal range
-            nb.2 = nb.2 * radix_two_double;      // 2^(2.BF_BITS)
+            nb.2 = nb.2 * radix_two_double;      // 2^(2.BF_NB_BITS)
             exponent = bitand(nb.0[1] , 0x7ff00000);
             result.index = -2;
         }else {
@@ -89,12 +89,12 @@ overload BigFloat(x:Double) : BigFloat {
 
         exponent = bitshr(exponent,20);  // get the actual value
 
-        var ind = ((exponent +(100*BF_BITS - 1023))/BF_BITS) - 100;
-        // means : = (exponent -1023 + 100*BF_BITS)/BF_BITS -100
-        // The business with 100*BF_BITS is to stay within the positive
-        // range for exponent_remainder between 1 and BF_BITS
+        var ind = ((exponent +(100*BF_NB_BITS - 1023))/BF_NB_BITS) - 100;
+        // means : = (exponent -1023 + 100*BF_NB_BITS)/BF_NB_BITS -100
+        // The business with 100*BF_NB_BITS is to stay within the positive
+        // range for exponent_remainder between 1 and BF_NB_BITS
 
-        var exponent_remainder = exponent - 1022 - (BF_BITS*ind);
+        var exponent_remainder = exponent - 1022 - (BF_NB_BITS*ind);
         result.index += ind;
 
         // now get the mantissa and add the implicit 1 in fp. format
@@ -106,9 +106,9 @@ overload BigFloat(x:Double) : BigFloat {
 
         // 11 = 64-53
         mantissa.1 =  bitshl(mantissa.1 , exponent_remainder+11);
-        result.h_word[1] = bitand(bitshr(mantissa.0[1] , 32 - BF_BITS) , BF_MASK_RADIX );
-        mantissa.1 =  bitshl(mantissa.1 , BF_BITS);
-        result.h_word[2] = bitand(bitshr(mantissa.0[1] , (32 - BF_BITS)), BF_MASK_RADIX);
+        result.h_word[1] = bitand(bitshr(mantissa.0[1] , 32 - BF_NB_BITS) , BF_MASK_RADIX );
+        mantissa.1 =  bitshl(mantissa.1 , BF_NB_BITS);
+        result.h_word[2] = bitand(bitshr(mantissa.0[1] , (32 - BF_NB_BITS)), BF_MASK_RADIX);
         result.h_word[3] = 0 ;
         result.h_word[4] = 0; result.h_word[5] = 0; result.h_word[6] = 0; result.h_word[7] = 0;
     } // end if test NaN etc
@@ -123,19 +123,19 @@ overload Double(x:T) --> result:Double {
     nb.2 = Double(x.h_word[0]);
     // place the two next digits in lowpart
     var t1 = UInt64(x.h_word[1]);
-    var lowpart = bitshl(t1,BF_BITS) + x.h_word[2];
+    var lowpart = bitshl(t1,BF_NB_BITS) + x.h_word[2];
     // there is at least one significant bit in nb,
-    //   and at least 2*BF_BITS in lowpart,
-    //   so provided BF_BITS >= 27
+    //   and at least 2*BF_NB_BITS in lowpart,
+    //   so provided BF_NB_BITS >= 27
     //   together they include the 53+ guard bits to decide rounding
 
     // test for  s/qNan, +/- Inf, +/- 0, placed here for obscure performance reasons
     if (x.excp != 1.)
         result <-- x.excp;
-    // take the exponent of nb.d (will be in [0:BF_BITS])
+    // take the exponent of nb.d (will be in [0:BF_NB_BITS])
     var expo = bitshr(bitand(nb.0[1] , 0x7ff00000),20) - 1023;
     // compute the exponent of the result
-    var expofinal = expo + BF_BITS*x.index;
+    var expofinal = expo + BF_NB_BITS*x.index;
     // Is the number not too large for the IEEE exponent range ?
     if (expofinal >  1023)
         // return an infinity
@@ -143,15 +143,15 @@ overload Double(x:T) --> result:Double {
     // Is number a denormal  ?
     else if (expofinal >= -1022){
         // x is in the normal range
-        var shift = expo+2*BF_BITS-53;
+        var shift = expo+2*BF_NB_BITS-53;
         var roundbits = bitshl(lowpart,64-shift);
-        // align the rest of the mantissa to nb : shift by (2*BF_BITS)-53+expo
+        // align the rest of the mantissa to nb : shift by (2*BF_NB_BITS)-53+expo
         lowpart = bitshr(lowpart,shift);
         // Look at the last bit to decide rounding
         if (bitand(lowpart , 0x0000000000000001ul)!=0){
             // Test for the round to even case
             if(roundbits==0)
-                for (i in range(3,BF_WORDS))
+                for (i in range(3,BF_NB_WORDS))
                     roundbits = bitor(roundbits , x.h_word[i]);
             if(roundbits == 0) {
                 // round to even mantissa
@@ -176,18 +176,18 @@ overload Double(x:T) --> result:Double {
         nb.1 = bitor(nb.1,lowpart); // Finish to fill the mantissa
         res  = nb.2 + rndcorr.2;  // rounded to nearest
         // now compute the exponent from the index :
-        // we need to multiply res by 2^(X_IND*BF_BITS)
+        // we need to multiply res by 2^(X_IND*BF_NB_BITS)
         // First check this number won't be a denormal itself
-        if(x.index*BF_BITS +1023 > 0) {
-            // build the double 2^(X_IND*BF_BITS)
-            nb.0[1] = bitshl(x.index*BF_BITS +1023,20);
+        if(x.index*BF_NB_BITS +1023 > 0) {
+            // build the double 2^(X_IND*BF_NB_BITS)
+            nb.0[1] = bitshl(x.index*BF_NB_BITS +1023,20);
             nb.0[0] = 0;
             res *= nb.2;     // exact multiplication
         }
         else {
-            // offset the previous computation by 2^(2*BF_BITS)
-            // build the double 2^(X_IND*BF_BITS)
-            nb.0[1] = bitshl(x.index*BF_BITS +1023 + 2*BF_BITS,20);
+            // offset the previous computation by 2^(2*BF_NB_BITS)
+            // build the double 2^(X_IND*BF_NB_BITS)
+            nb.0[1] = bitshl(x.index*BF_NB_BITS +1023 + 2*BF_NB_BITS,20);
             nb.0[0] = 0;
             res *= radix_mtwo_double;  // exact multiplication
             res *= nb.2;                  // exact multiplication
@@ -201,7 +201,7 @@ overload Double(x:T) --> result:Double {
             res = 0.;
         else {
             // align the rest of the mantissa to nb
-            lowpart = bitshr(lowpart , expo+(2*BF_BITS)-52);
+            lowpart = bitshr(lowpart , expo+(2*BF_NB_BITS)-52);
             // Finish to fill the mantissa
             nb.1 = bitor(nb.1,lowpart);
             // this is still a normal number.
@@ -229,14 +229,14 @@ overload Double(x:T) --> result:Double {
 
 
 private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
-    tmp = bitshr(UInt64(r1),BF_BITS);
+    tmp = bitshr(UInt64(r1),BF_NB_BITS);
     r0 += tmp;
-    r1 -= bitshl(tmp,BF_BITS);
+    r1 -= bitshl(tmp,BF_NB_BITS);
 }
 
 
 // This function copies a result into another. There is an unrolled
-// version for the case BF_WORDS==8.
+// version for the case BF_NB_WORDS==8.
 [T | BigFloat?(T)]
 inline overload assign(result:T, x:T) : {
     result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
@@ -251,7 +251,7 @@ inline overload assign(result:T, x:T) : {
 [T | Numeric?(T)]
 inline overload assign(result:T, x:T) {
     if(x == 0){
-        for(i in range(BF_WORDS))
+        for(i in range(BF_NB_WORDS))
             result.h_word[i] = 0;
         result.excp = 0.;
         result.index = 0;
@@ -429,14 +429,14 @@ private inline do_add(result, x, y) : {
         }
 
     // Carry propagation
-    var carry = bitshr(r7 , BF_BITS); r6 += carry;  r7 = bitand(r7 , BF_MASK_RADIX);
-    carry = bitshr(r6 , BF_BITS); r5 += carry;  r6 = bitand(r6 , BF_MASK_RADIX);
-    carry = bitshr(r5 , BF_BITS); r4 += carry;  r5 = bitand(r5 , BF_MASK_RADIX);
-    carry = bitshr(r4 , BF_BITS); r3 += carry;  r4 = bitand(r4 , BF_MASK_RADIX);
-    carry = bitshr(r3 , BF_BITS); r2 += carry;  r3 = bitand(r3 , BF_MASK_RADIX);
-    carry = bitshr(r2 , BF_BITS); r1 += carry;  r2 = bitand(r2 , BF_MASK_RADIX);
-    carry = bitshr(r1 , BF_BITS); r0 += carry;  r1 = bitand(r1 , BF_MASK_RADIX);
-    carry = bitshr(r0 , BF_BITS);
+    var carry = bitshr(r7 , BF_NB_BITS); r6 += carry;  r7 = bitand(r7 , BF_MASK_RADIX);
+    carry = bitshr(r6 , BF_NB_BITS); r5 += carry;  r6 = bitand(r6 , BF_MASK_RADIX);
+    carry = bitshr(r5 , BF_NB_BITS); r4 += carry;  r5 = bitand(r5 , BF_MASK_RADIX);
+    carry = bitshr(r4 , BF_NB_BITS); r3 += carry;  r4 = bitand(r4 , BF_MASK_RADIX);
+    carry = bitshr(r3 , BF_NB_BITS); r2 += carry;  r3 = bitand(r3 , BF_MASK_RADIX);
+    carry = bitshr(r2 , BF_NB_BITS); r1 += carry;  r2 = bitand(r2 , BF_MASK_RADIX);
+    carry = bitshr(r1 , BF_NB_BITS); r0 += carry;  r1 = bitand(r1 , BF_MASK_RADIX);
+    carry = bitshr(r0 , BF_NB_BITS);
 
     if (carry!=0){
         result.h_word[7] = r6; result.h_word[6] = r5;  result.h_word[5] = r4; result.h_word[4] = r3;
@@ -461,19 +461,19 @@ private inline do_add(result, x, y) : {
 //  and result = x - y
 
 private inline do_sub(result, x, y){
-    var res = Array[Int,BF_WORDS]();
+    var res = Array[Int,BF_NB_WORDS]();
     result.excp = x.excp + y.excp - 1.;
     var dif  = x.index - y.index;
     result.index = x.index;
 
     // The easy case
-    if(dif >= BF_WORDS)
+    if(dif >= BF_NB_WORDS)
         result = x;
-    else { // 0 <= dif <= (BF_WORDS-1)
+    else { // 0 <= dif <= (BF_NB_WORDS-1)
         var carry = 0;
         if(dif==0) {
             var i,cp = 0,0;
-            while((x.h_word[i] == y.h_word[i]) and (i<BF_WORDS))
+            while((x.h_word[i] == y.h_word[i]) and (i<BF_NB_WORDS))
                 inc(i);
             if (x.h_word[i] > y.h_word[i])
                 cp = 1;
@@ -482,40 +482,40 @@ private inline do_sub(result, x, y){
             else
                 cp = 0;
             if (cp == 0) {
-                result = 0;
+                result = bf_zero;
                 return;
             }
             else { // cp <> 0
                 if (cp > 0){
                     // x > y
                     result.sign = x.sign;
-                    for(i in reverseRange(BF_WORDS-1,0)){
+                    for(i in reverseRange(BF_NB_WORDS-1,0)){
                         var s = (Int(x.h_word[i]) - y.h_word[i] - carry);
-                        carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                        carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
                         res[i] = (bitand(s,BF_RADIX) + s);
                     }
                 }
                 else {
                     result.sign = - x.sign;
-                    for(i in reverseRange((BF_WORDS-1),0)){
+                    for(i in reverseRange((BF_NB_WORDS-1),0)){
                         var s = (- Int(x.h_word[i]) + y.h_word[i] - carry);
-                        carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                        carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
                         res[i] = (bitand(s,BF_RADIX) + s);
                     }
                 }
             }
         }
         else {
-            // 1<=dif<(BF_WORDS-1) Digits of x and y overlap but the
+            // 1<=dif<(BF_NB_WORDS-1) Digits of x and y overlap but the
             // sign will be that of x
             result.sign = x.sign;
-            var s,i,j = 0,(BF_WORDS-1),(BF_WORDS-1)-dif;
+            var s,i,j = 0,(BF_NB_WORDS-1),(BF_NB_WORDS-1)-dif;
             while(i >= 0){
                 if(j >= 0)
                     s = (x.h_word[i] - y.h_word[j] - carry);
                 else
                     s = (x.h_word[i] - carry);
-                carry = bitshr(bitand(s,BF_RADIX),BF_BITS);
+                carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
                 res[i] = (bitand(s,BF_RADIX) + s);
                 dec(i);
                 dec(j);
@@ -523,23 +523,23 @@ private inline do_sub(result, x, y){
         }
         // check for cancellations
         var i=0;
-        while ((res[i]==0) and (i < BF_WORDS))
+        while ((res[i]==0) and (i < BF_NB_WORDS))
             inc(i);
         if(i>0) { // cancellation, shift result
             result.index -= i;
             var j = 0;
-            while(i<BF_WORDS){
+            while(i<BF_NB_WORDS){
                 result.h_word[j] = (res[i]);
                 inc(i);
                 inc(j);
             }
-            while(j<BF_WORDS){
+            while(j<BF_NB_WORDS){
                 result.h_word[j] = 0;
                 inc(j);
             }
         }
         else {
-            for(i in range(BF_WORDS))
+            for(i in range(BF_NB_WORDS))
                 result.h_word[i] =  (res[i]);
         }
     }
@@ -650,14 +650,14 @@ overload BigFloat(x:I) :BigFloat {
     }
     if (ux > BF_RADIX){
         result.index = 1;
-        result.h_word[0] = bitshr(ux - BF_RADIX, BF_BITS);
-        result.h_word[1] =  ux -  bitshl(result.h_word[0] , BF_BITS);
+        result.h_word[0] = bitshr(ux - BF_RADIX, BF_NB_BITS);
+        result.h_word[1] =  ux -  bitshl(result.h_word[0] , BF_NB_BITS);
     }else {
         result.index = 0;
         result.h_word[0] = ux;
         result.h_word[1] = 0;
     }
-    for(i in range(2,BF_WORDS))
+    for(i in range(2,BF_NB_WORDS))
         result.h_word[i] = 0;
 
     if (x != 0)
@@ -672,6 +672,6 @@ overload printTo(stream, x:BigFloat){
     d.2 = Double(x);
     println("Exception : ", x.excp);
     println("Index= ",x.index ,"   \n Sign=  ", x.sign ," \n Double value= ",d.2,"   \n Hex mantissa= ", d.0[1],"  ", d.0[0]);
-    for(i in range(BF_WORDS))
+    for(i in range(BF_NB_WORDS))
         println("  D ", i," : ", hex(x.h_word[i]),"  ", x.h_word[i]);
 }
