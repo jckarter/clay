@@ -8,6 +8,7 @@ find_package(Git)
 
 set(Python_ADDITIONAL_VERSIONS "2.7")
 include(FindPythonInterp)
+include(CheckSymbolExists)
 
 if(UNIX)
     find_program(LLVM_CONFIG llvm-config ${LLVM_DIR}/bin 
@@ -54,24 +55,8 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    message("-- Testing whether bindgen can be built")
-    execute_process(
-        COMMAND ${clay_SOURCE_DIR}/tools/can-build-bindgen.sh
-            ${LLVM_PREFIX}
-            ${LLVM_LDFLAGS}
-            ${LLVM_LIBS}
-            ${LLVM_CXXFLAGS}
-        RESULT_VARIABLE BUILD_BINDGEN_RESULT
-    )
-    if(${BUILD_BINDGEN_RESULT} EQUAL 0)
-        set(BUILD_BINDGEN True)
-        message("   Yes")
-    else()
-        set(BUILD_BINDGEN False)
-        message("   libclang is either missing or needs to be patched to support")
-        message("   bindgen. bindgen will not be built. Try applying the patch in")
-        message("   tools/libclang.diff to the Clang source.")
-    endif()
+    set(CMAKE_REQUIRED_INCLUDES ${LLVM_DIR}/include)
+    set(CMAKE_REQUIRED_LIBRARIES -L${LLVM_DIR}/lib -lclang)
 elseif(WIN32)
     set(LLVM_DIR "$ENV{ProgramFiles}/LLVM" CACHE PATH "llvm install path")
 
@@ -87,30 +72,22 @@ elseif(WIN32)
     else()
         message(FATAL_ERROR "Could not find LLVM. Try setting LLVM_DIR")
     endif()
+    set(CMAKE_REQUIRED_INCLUDES ${LLVM_DIR}/include)
+    set(CMAKE_REQUIRED_LIBRARIES ${LLVM_DIR}/lib/libclang.lib)
+endif()
 
-    if(CLANG)
-        find_path(GCC_DIR gcc.exe)
-        if(EXISTS ${GCC_DIR}/../include)
-            file(WRITE ${PROJECT_BINARY_DIR}/test-libclang.c
-                "#include <clang-c/Index.h>\nint main() {CXCursor c;CXType t = clang_getTypedefDeclUnderlyingType(c);}"
-            )
-            execute_process(
-                COMMAND ${CLANG} ${PROJECT_BINARY_DIR}/test-libclang.c -I${GCC_DIR}/../include ${LLVM_DIR}/lib/liblibclang.dll.a
-                OUTPUT_QUIET
-                RESULT_VARIABLE BUILD_BINDGEN_RESULT
-            )
-        else()
-            message("mingw headers not found, cannot test for patched libclang")
-        endif()
-        if(BUILD_BINDGEN_RESULT EQUAL 0)
-            set(BUILD_BINDGEN True)
-        else()
-            message("no compatibly patched libclang found, bindgen will not be built")
-        endif()
+if(NOT DEFINED BUILD_BINDGEN OR BUILD_BINDGEN)
+    check_symbol_exists(clang_getTypedefDeclUnderlyingType "clang-c/Index.h" HAS_PATCHED_CLANG)
+    if(HAS_PATCHED_CLANG)
+        set(BUILD_BINDGEN True)
     else()
-        message("-- Clang not found. clay-bindgen will not be built")
+        message("   libclang is either missing or needs to be patched to support")
+        message("   bindgen. bindgen will not be built. Try applying the patch in")
+        message("   tools/libclang.diff to the Clang source.")
+        set(BUILD_BINDGEN False)
     endif()
-endif(UNIX)
+endif()
+
 
 if(UNIX)
     install(DIRECTORY lib-clay DESTINATION lib)
