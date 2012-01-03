@@ -1,6 +1,9 @@
 // Lightweight BigFloat library based on SCSlib/crlibm
 // NOT intended as a replacement for mpfr/gmp for which a Clay wrapper
 // will eventually be available as part of the core math lib.
+// This is primarily intended for use in math libs to provide high accuracy
+// functions and as a high performance larger than Float80/128 float type.
+// Limited basic functions will be implementde for this purpose.
 
 import math.native.exact.(db_number);
 import math.native.defines.(recip);
@@ -36,7 +39,8 @@ inline overload resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
 
-BigFloat?(static BigFloat) = true;
+[T] BigFloat?(static T) = false;
+inline overload BigFloat?(static BigFloat) = true;
 
 
 var bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
@@ -55,7 +59,7 @@ var bf_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaa
     0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau), 1.,  -1,   1 );
 
 
-overload BigFloat(x:Double) :BigFloat {
+overload BigFloat(x:Double) : BigFloat {
     var nb, mantissa = db_number(),db_number();
     var result = BigFloat();
     if(x>=0){result.sign = 1;    nb.2 = x;}
@@ -111,7 +115,8 @@ overload BigFloat(x:Double) :BigFloat {
     return result;
 }
 
-overload Double(x:BigFloat) --> result:Double {
+[T | BigFloat?(T)]
+overload Double(x:T) --> result:Double {
     var nb, rndcorr = db_number(), db_number();
     var res = 0.;
     // convert the MSB digit into a double, and store it in nb.d
@@ -223,7 +228,7 @@ overload Double(x:BigFloat) --> result:Double {
 }
 
 
-inline SCS_CARRY_PROPAGATE(r1,r0,tmp) {
+private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
     tmp = bitshr(UInt64(r1),BF_BITS);
     r0 += tmp;
     r1 -= bitshl(tmp,BF_BITS);
@@ -232,7 +237,8 @@ inline SCS_CARRY_PROPAGATE(r1,r0,tmp) {
 
 // This function copies a result into another. There is an unrolled
 // version for the case BF_WORDS==8.
-inline overload assign(result:BigFloat, x:BigFloat) : {
+[T | BigFloat?(T)]
+inline overload assign(result:T, x:T) : {
     result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
     result.h_word[2] = x.h_word[2]; result.h_word[3] = x.h_word[3];
     result.h_word[4] = x.h_word[4]; result.h_word[5] = x.h_word[5];
@@ -243,7 +249,7 @@ inline overload assign(result:BigFloat, x:BigFloat) : {
 }
 
 [T | Numeric?(T)]
-inline overload assign(result:BigFloat, x:T) {
+inline overload assign(result:T, x:T) {
     if(x == 0){
         for(i in range(BF_WORDS))
             result.h_word[i] = 0;
@@ -256,7 +262,8 @@ inline overload assign(result:BigFloat, x:T) {
     }
 }
 
-inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
+[T | BigFloat?(T)]
+inline overload multiply(x:T, y:T) --> result:T {
     result.excp = x.excp * y.excp;
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
@@ -279,15 +286,15 @@ inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
 
     var val,tmp = 0ul,0ul;
     /* Carry Propagate */
-    SCS_CARRY_PROPAGATE(r8,r7,tmp);
-    SCS_CARRY_PROPAGATE(r7,r6,tmp);
-    SCS_CARRY_PROPAGATE(r6,r5,tmp);
-    SCS_CARRY_PROPAGATE(r5,r4,tmp);
-    SCS_CARRY_PROPAGATE(r4,r3,tmp);
-    SCS_CARRY_PROPAGATE(r3,r2,tmp);
-    SCS_CARRY_PROPAGATE(r2,r1,tmp);
-    SCS_CARRY_PROPAGATE(r1,r0,tmp);
-    SCS_CARRY_PROPAGATE(r0,val,tmp);
+    BF_CARRY_PROPAGATE(r8,r7,tmp);
+    BF_CARRY_PROPAGATE(r7,r6,tmp);
+    BF_CARRY_PROPAGATE(r6,r5,tmp);
+    BF_CARRY_PROPAGATE(r5,r4,tmp);
+    BF_CARRY_PROPAGATE(r4,r3,tmp);
+    BF_CARRY_PROPAGATE(r3,r2,tmp);
+    BF_CARRY_PROPAGATE(r2,r1,tmp);
+    BF_CARRY_PROPAGATE(r1,r0,tmp);
+    BF_CARRY_PROPAGATE(r0,val,tmp);
 
     if(val != 0){
         /* shift all the digits ! */
@@ -303,7 +310,8 @@ inline overload multiply(x:BigFloat, y:BigFloat) --> result:BigFloat {
 
 
 //Square BigFloat
-square(x:BigFloat) :BigFloat {
+[T | BigFloat?(T)]
+square(x:T) : T {
     var result = BigFloat();
     result.excp = x.excp * x.excp;
     result.index = x.index + x.index;
@@ -325,15 +333,15 @@ square(x:BigFloat) :BigFloat {
 
     var val,tmp = 0ul,0ul;
     // Carry propagation
-    SCS_CARRY_PROPAGATE(r8,r7,tmp);
-    SCS_CARRY_PROPAGATE(r7,r6,tmp);
-    SCS_CARRY_PROPAGATE(r6,r5,tmp);
-    SCS_CARRY_PROPAGATE(r5,r4,tmp);
-    SCS_CARRY_PROPAGATE(r4,r3,tmp);
-    SCS_CARRY_PROPAGATE(r3,r2,tmp);
-    SCS_CARRY_PROPAGATE(r2,r1,tmp);
-    SCS_CARRY_PROPAGATE(r1,r0,tmp);
-    SCS_CARRY_PROPAGATE(r0,val,tmp);
+    BF_CARRY_PROPAGATE(r8,r7,tmp);
+    BF_CARRY_PROPAGATE(r7,r6,tmp);
+    BF_CARRY_PROPAGATE(r6,r5,tmp);
+    BF_CARRY_PROPAGATE(r5,r4,tmp);
+    BF_CARRY_PROPAGATE(r4,r3,tmp);
+    BF_CARRY_PROPAGATE(r3,r2,tmp);
+    BF_CARRY_PROPAGATE(r2,r1,tmp);
+    BF_CARRY_PROPAGATE(r1,r0,tmp);
+    BF_CARRY_PROPAGATE(r0,val,tmp);
 
     if(val != 0){
         // shift all the digits !
@@ -540,7 +548,8 @@ private inline do_sub(result, x, y){
 
 
 // Addition (result is a normalised number).
-inline overload add(x:BigFloat, y:BigFloat) :BigFloat {
+[T | BigFloat?(T)]
+inline overload add(x:T, y:T) : T {
     var result = BigFloat();
     if (x.excp == 0)
         result = y;
@@ -562,7 +571,8 @@ inline overload add(x:BigFloat, y:BigFloat) :BigFloat {
 
 // Subtraction (result is a normalised number).
 // The arguments x, y and result may point to the same memory location.
-inline overload subtract(x:BigFloat, y:BigFloat) :BigFloat {
+[T | BigFloat?(T)]
+inline overload subtract(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp == 0){
         result = y;
@@ -591,7 +601,8 @@ inline overload subtract(x:BigFloat, y:BigFloat) :BigFloat {
 }
 
 // Compute 1/x with a Newton scheme
-inline overload recip(x:BigFloat) --> result:BigFloat {
+[T | BigFloat?(T)]
+inline overload recip(x:T) --> result:T {
     var tmp = x;
     tmp.index = 0;
     var app_x = Double(tmp);
@@ -612,13 +623,16 @@ inline overload recip(x:BigFloat) --> result:BigFloat {
 }
 
 // Compute result = x/y;
-inline overload divide(x:BigFloat, y:BigFloat) --> result:BigFloat {
+[T | BigFloat?(T)]
+inline overload divide(x:T, y:T) :T {
+    var result = BigFloat();
     if (x.excp != 1.)
         result.excp = x.excp / y.excp;
     else{
         var res = recip(y);
         result <-- res * x;
     }
+    return result;
 }
 
 // Convert an integer number in multiprecision representation
