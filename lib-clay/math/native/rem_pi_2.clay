@@ -35,9 +35,9 @@ var two_over_pi = Array[Int,48](
 //     0x1701b839, 0x28948127, 0x01114cf9, 0x23a0105d),
 //     db_one(),  0,   1 );};
 
-var Pio2 = scs(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x26263314u,
+var Pio2 = BigFloat(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x26263314u,
     0x1701b839u, 0x28948127u, 0x01114cf9u, 0x23a0105du),
-    db_one(),  0,   1 );
+    1.,  0,   1 );
 
 /**
  * Case X_IND = -1:
@@ -80,12 +80,12 @@ var Pio2 = scs(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x26263314u,
 /* TODO OPTIM
    better 64-bit multiplication, see in scs_mult */
 
-rem_pio2_scs(result, x){
-    var r,tmp,N,sign = Array[UInt64,SCS_NB_WORDS+3](), 0ul, 0u,0;
+rem_pio2_bf(result, x){
+    var r,tmp,N,sign = Array[UInt64,BF_NB_WORDS+3](), 0ul, 0u,0;
     /* result r[0],...,r[10] could store till 300 bits of precision */
     /* that is really enough for computing the reduced argument */
     if ((x.excp.1 != 1)or(x.index < -1)){
-        scs_set(result, x);
+        result = x;
         return 0;
     }
 
@@ -98,12 +98,12 @@ rem_pio2_scs(result, x){
         r[2] = (two_over_pi[0]) * x.h_word[0];
         r[3] = ((two_over_pi[0]) * x.h_word[1]+(two_over_pi[1]) * x.h_word[0]);
         if(x.h_word[2] == 0){
-            for(i in range(4,(SCS_NB_WORDS+3))){
+            for(i in range(4,(BF_NB_WORDS+3))){
                 r[i] = ((two_over_pi[i-3]) * x.h_word[1]
                 +(two_over_pi[i-2]) * x.h_word[0]);
             }
         }else {
-            for(i in range(4,SCS_NB_WORDS+3)){
+            for(i in range(4,BF_NB_WORDS+3)){
                 r[i] = ((two_over_pi[i-4]) * x.h_word[2]
                 +(two_over_pi[i-3]) * x.h_word[1]
                 +(two_over_pi[i-2]) * x.h_word[0]);
@@ -116,12 +116,12 @@ rem_pio2_scs(result, x){
             r[2] = ((two_over_pi[0]) * x.h_word[1]
             +(two_over_pi[1]) * x.h_word[0]);
             if(x.h_word[2] == 0){
-                for(i in range(3,SCS_NB_WORDS+3)){
+                for(i in range(3,BF_NB_WORDS+3)){
                     r[i] = ((two_over_pi[i-2]) * x.h_word[1]
                     +(two_over_pi[i-1]) * x.h_word[0]);
                 }
             }else {
-                for(i in range(3,SCS_NB_WORDS+3)){
+                for(i in range(3,BF_NB_WORDS+3)){
                     r[i] = ((two_over_pi[i-3]) * x.h_word[2]
                        +(two_over_pi[i-2]) * x.h_word[1]
                        +(two_over_pi[i-1]) * x.h_word[0]);
@@ -133,12 +133,12 @@ rem_pio2_scs(result, x){
                 r[1] = ((two_over_pi[0]) * x.h_word[1]
                        +(two_over_pi[1]) * x.h_word[0]);
                 if(x.h_word[2] == 0){
-                    for(i in range(2,SCS_NB_WORDS+3)){
+                    for(i in range(2,BF_NB_WORDS+3)){
                         r[i] = ((two_over_pi[i-1]) * x.h_word[1]
                            +(two_over_pi[ i ]) * x.h_word[0]);
                     }
                 }else {
-                    for(i in range(2,SCS_NB_WORDS+3)){
+                    for(i in range(2,BF_NB_WORDS+3)){
                       r[i] = ((two_over_pi[i-2]) * x.h_word[2]
                          +(two_over_pi[i-1]) * x.h_word[1]
                          +(two_over_pi[ i ]) * x.h_word[0]);
@@ -149,12 +149,12 @@ rem_pio2_scs(result, x){
                     r[0] = ((two_over_pi[0]) * x.h_word[1]
                      +(two_over_pi[1]) * x.h_word[0]);
                     if(x.h_word[2] == 0){
-                        for(i in range(1,SCS_NB_WORDS+3)){
+                        for(i in range(1,BF_NB_WORDS+3)){
                           r[i] = ((two_over_pi[ i ]) * x.h_word[1]
                              +(two_over_pi[i+1]) * x.h_word[0]);
                         }
                     }else {
-                        for(i in range(1,SCS_NB_WORDS+3)){
+                        for(i in range(1,BF_NB_WORDS+3)){
                             r[i] = ((two_over_pi[i-1]) * x.h_word[2]
                                +(two_over_pi[ i ]) * x.h_word[1]
                                +(two_over_pi[i+1]) * x.h_word[0]);
@@ -164,12 +164,12 @@ rem_pio2_scs(result, x){
                     var ind = (x.index - 3);
                     var two_over_pi_pt = Pointer[Int](&two_over_pi[ind]);
                     if(x.h_word[2] == 0){
-                        for(i in range(SCS_NB_WORDS+3)){
+                        for(i in range(BF_NB_WORDS+3)){
                           r[i] = ((two_over_pi_pt[i+1]) * x.h_word[1]
                              +(two_over_pi_pt[i+2]) * x.h_word[0]);
                         }
                     }else {
-                        for(i in range(SCS_NB_WORDS+3)){
+                        for(i in range(BF_NB_WORDS+3)){
                             r[i] = ((two_over_pi_pt[ i ]) * x.h_word[2]
                             +(two_over_pi_pt[i+1]) * x.h_word[1]
                             +(two_over_pi_pt[i+2]) * x.h_word[0]);
@@ -181,8 +181,8 @@ rem_pio2_scs(result, x){
     }
 
     /* Carry propagate */
-    r[SCS_NB_WORDS+1] += bitshr(r[SCS_NB_WORDS+2],30);
-    for(i in reverseRange((SCS_NB_WORDS+1),1)) {
+    r[BF_NB_WORDS+1] += bitshr(r[BF_NB_WORDS+2],30);
+    for(i in reverseRange((BF_NB_WORDS+1),1)) {
         tmp = bitshr(r[i],30);
         r[i-1] += tmp;
         r[i] -= bitshl(tmp,30);
@@ -192,10 +192,10 @@ rem_pio2_scs(result, x){
     N = UInt(r[0]);
 
     /* test if the reduced part is bigger than Pi/4 */
-    if (r[1] > (SCS_RADIX)/2){
+    if (r[1] > (BF_RADIX)/2){
         N += 1;
         sign = -1;
-        for(i in range(1,(SCS_NB_WORDS+3)))
+        for(i in range(1,(BF_NB_WORDS+3)))
             r[i] = bitand(bitnot(UInt(r[i])) , 0x3fffffff);
     }
     else
@@ -215,7 +215,7 @@ rem_pio2_scs(result, x){
     else
         i = 1;
 
-    for(j in range(SCS_NB_WORDS))
+    for(j in range(BF_NB_WORDS))
         result.h_word[j] = UInt(r[i+j]);
 
     result.excp.1   = 1;
@@ -225,7 +225,7 @@ rem_pio2_scs(result, x){
     /* Last step :
     *   Multiplication by pi/2
     */
-    scs_mul(result, Pio2, result);
+    result = Pio2 * result;
     return Int(x.sign*N);
 }
 

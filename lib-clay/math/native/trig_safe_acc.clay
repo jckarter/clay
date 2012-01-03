@@ -3,465 +3,436 @@ import math.native.bigfloat.*;
 import math.native.rem_pi_2.*;
 
 
-alias DEGREE_SIN_SCS = 25;
-alias DEGREE_COS_SCS = 26;
-alias DEGREE_TAN_SCS = 69;
+alias DEGREE_SIN_BF = 25;
+alias DEGREE_COS_BF = 26;
+alias DEGREE_TAN_BF = 69;
 
 
-private var sin_scs_poly = Array[scs,13](
+private var sin_bf_poly = Array[BigFloat,13](
 /* ~6.41304778336249081566343888442398912691656493764128e-26 */
-scs(array(0x0000004fu, 0x18f09e97u, 0x212a5b47u, 0x39f049a7u,
+BigFloat(array(0x0000004fu, 0x18f09e97u, 0x212a5b47u, 0x39f049a7u,
 0x3bd24b7bu, 0x23af8e4au, 0x34d618d1u, 0x013262b6u),
-db_one(),  -3,   1 )
+1.,  -3,   1 )
 ,
 /* ~-3.86811532168049337542273735719002682824970072395874e-23 */
-scs(array(0x0000bb0cu, 0x3cb17c1eu, 0x37e81e1au, 0x37195774u,
+BigFloat(array(0x0000bb0cu, 0x3cb17c1eu, 0x37e81e1au, 0x37195774u,
 0x129a10eeu, 0x1f4e5bd3u, 0x14c6fde7u, 0x15d2d8fdu),
-db_one(),  -3,  -1 )
+1.,  -3,  -1 )
 ,
 /* ~1.95729405534209807707389556511391204655008788789058e-20 */
-scs(array(0x0171b8eeu, 0x330c68b0u, 0x185bd7cdu, 0x085a8b04u,
+BigFloat(array(0x0171b8eeu, 0x330c68b0u, 0x185bd7cdu, 0x085a8b04u,
 0x00c4a269u, 0x38b64e54u, 0x18d2c602u, 0x292ac5c1u),
-db_one(),  -3,   1 )
+1.,  -3,   1 )
 ,
 /* ~-8.22063524632359448147958406923548651998620031502275e-18 */
-scs(array(0x00000009u, 0x1e9368cfu, 0x32371688u, 0x0021bd52u,
+BigFloat(array(0x00000009u, 0x1e9368cfu, 0x32371688u, 0x0021bd52u,
 0x19613de4u, 0x2e9e92f1u, 0x27c78771u, 0x3f5cc281u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~2.81145725434540361996328805963492166242366185016172e-15 */
-scs(array(0x00000ca9u, 0x18ee0615u, 0x210b66bbu, 0x339e7ef6u,
+BigFloat(array(0x00000ca9u, 0x18ee0615u, 0x210b66bbu, 0x339e7ef6u,
 0x2c29a154u, 0x1f2d1a6eu, 0x0dbea028u, 0x1214063fu),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-7.64716373181981617151041618487160223947055132654927e-13 */
-scs(array(0x000d73f9u, 0x3ce67703u, 0x36256279u, 0x0f1440e6u,
+BigFloat(array(0x000d73f9u, 0x3ce67703u, 0x36256279u, 0x0f1440e6u,
 0x24128080u, 0x2e0c47a6u, 0x27b32155u, 0x2f115571u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~1.60590438368216145988717363310806625253064912470338e-10 */
-scs(array(0x0b092309u, 0x350da12fu, 0x24b28056u, 0x31def2f9u,
+BigFloat(array(0x0b092309u, 0x350da12fu, 0x24b28056u, 0x31def2f9u,
 0x24044621u, 0x074f188cu, 0x3829c278u, 0x09324bddu),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-2.50521083854417187750515438912201232789985352336291e-08 */
-scs(array(0x0000001au, 0x399159fdu, 0x144e38feu, 0x1d141fdbu,
+BigFloat(array(0x0000001au, 0x399159fdu, 0x144e38feu, 0x1d141fdbu,
 0x1666d4dfu, 0x1bf80c34u, 0x17ad2747u, 0x0566e4f9u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~2.75573192239858906525573188629015139728734265040299e-06 */
-scs(array(0x00000b8eu, 0x3c74aad8u, 0x399c7d56u, 0x03906123u,
+BigFloat(array(0x00000b8eu, 0x3c74aad8u, 0x399c7d56u, 0x03906123u,
 0x2a904384u, 0x14010dddu, 0x155495d5u, 0x0daca530u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-1.98412698412698412698412698411505245319877050168798e-04 */
-scs(array(0x00034034u, 0x00d00d00u, 0x34034034u, 0x00d006ceu,
+BigFloat(array(0x00034034u, 0x00d00d00u, 0x34034034u, 0x00d006ceu,
 0x348eca38u, 0x3f5dd48fu, 0x205a5108u, 0x07e84299u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~8.33333333333333333333333333333331789325780263439286e-03 */
-scs(array(0x00888888u, 0x22222222u, 0x08888888u, 0x2222220du,
+BigFloat(array(0x00888888u, 0x22222222u, 0x08888888u, 0x2222220du,
 0x270976f8u, 0x08cd270cu, 0x22fa3253u, 0x22fd1924u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-1.66666666666666666666666666666666666633597567091248e-01 */
-scs(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
 0x27da7c46u, 0x26422150u, 0x2f255a8cu, 0x055ff185u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~1.00000000000000000000000000000000000000000000000000e+00 */
-scs(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-db_one(),   0,   1 )
+1.,   0,   1 )
 );
 
 
-private var cos_scs_poly = Array[scs,14](
+private var cos_bf_poly = Array[BigFloat,14](
 /* ~-2.46647929292600518676295332824511712550323986955787e-27 */
-scs(array(0x00000003u, 0x036a24afu, 0x0b960021u, 0x36ab92b4u,
+BigFloat(array(0x00000003u, 0x036a24afu, 0x0b960021u, 0x36ab92b4u,
 0x251cbcb3u, 0x24a97fbbu, 0x175c8edbu, 0x26ff1299u),
-db_one(),  -3,  -1 )
+1.,  -3,  -1 )
 ,
 /* ~1.61171432886064441126907703621370209480774221167915e-24 */
-scs(array(0x000007cbu, 0x0d2a2e99u, 0x10f8748eu, 0x389f34e6u,
+BigFloat(array(0x000007cbu, 0x0d2a2e99u, 0x10f8748eu, 0x389f34e6u,
 0x2313bd8fu, 0x20be0984u, 0x333a6d8eu, 0x1b807806u),
-db_one(),  -3,   1 )
+1.,  -3,   1 )
 ,
 /* ~-8.89679115256512652448661798519024218223622120108391e-22 */
-scs(array(0x0010ce39u, 0x1987726fu, 0x1eea7e37u, 0x1ddf4cfau,
+BigFloat(array(0x0010ce39u, 0x1987726fu, 0x1eea7e37u, 0x1ddf4cfau,
 0x1ec5b5c4u, 0x120cb52eu, 0x37c988dcu, 0x0a3377bau),
-db_one(),  -3,  -1 )
+1.,  -3,  -1 )
 ,
 /* ~4.11031762315246203111669239627818651812500805916919e-19 */
-scs(array(0x1e542ba3u, 0x3f3c9ecfu, 0x00267a43u, 0x134ef26eu,
+BigFloat(array(0x1e542ba3u, 0x3f3c9ecfu, 0x00267a43u, 0x134ef26eu,
 0x1ff9a381u, 0x26109691u, 0x3d30a560u, 0x223f772eu),
-db_one(),  -3,   1 )
+1.,  -3,   1 )
 ,
 /* ~-1.56192069685855088499658490258665358909888204805953e-16 */
-scs(array(0x000000b4u, 0x04f0c772u, 0x3e3a3149u, 0x04b97d58u,
+BigFloat(array(0x000000b4u, 0x04f0c772u, 0x3e3a3149u, 0x04b97d58u,
 0x13ea02e8u, 0x370088b3u, 0x212bb00bu, 0x06497545u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~4.77947733238738507613572564831414572436923450558343e-14 */
-scs(array(0x0000d73fu, 0x27ce6770u, 0x0f5c0984u, 0x0a909e14u,
+BigFloat(array(0x0000d73fu, 0x27ce6770u, 0x0f5c0984u, 0x0a909e14u,
 0x043eaabbu, 0x3925da80u, 0x0d2bb88bu, 0x1b8d9c50u),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-1.14707455977297247133847313888206952874744927320517e-11 */
-scs(array(0x00c9cba5u, 0x1180f93au, 0x1053f6e9u, 0x07a12245u,
+BigFloat(array(0x00c9cba5u, 0x1180f93au, 0x1053f6e9u, 0x07a12245u,
 0x25d6d8feu, 0x0183a89fu, 0x11fe0eccu, 0x116ceaf8u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~2.08767569878680989792094302574029159968587056449638e-09 */
-scs(array(0x00000002u, 0x0f76c77fu, 0x31b12f6au, 0x226bf583u,
+BigFloat(array(0x00000002u, 0x0f76c77fu, 0x31b12f6au, 0x226bf583u,
 0x38324c53u, 0x0bebff35u, 0x1d8aa929u, 0x0902e04au),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-2.75573192239858906525573186252547032413218294797050e-07 */
-scs(array(0x00000127u, 0x393edde2u, 0x1f5c72efu, 0x005b3093u,
+BigFloat(array(0x00000127u, 0x393edde2u, 0x1f5c72efu, 0x005b3093u,
 0x064ee888u, 0x10be8aa5u, 0x3b5ca412u, 0x36d45cbeu),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~2.48015873015873015873015873012641551756418143632119e-05 */
-scs(array(0x00006806u, 0x201a01a0u, 0x06806806u, 0x2019fff2u,
+BigFloat(array(0x00006806u, 0x201a01a0u, 0x06806806u, 0x2019fff2u,
 0x243ec0f6u, 0x3857f8fcu, 0x1e36a7c0u, 0x0c2c43d2u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-1.38888888888888888888888888888887982865405653380695e-03 */
-scs(array(0x0016c16cu, 0x05b05b05u, 0x2c16c16cu, 0x05b05af9u,
+BigFloat(array(0x0016c16cu, 0x05b05b05u, 0x2c16c16cu, 0x05b05af9u,
 0x29545050u, 0x0f1975d1u, 0x0cc59466u, 0x3fbcae72u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~4.16666666666666666666666666666666665668698162855937e-02 */
-scs(array(0x02aaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+BigFloat(array(0x02aaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
 0x222d48a2u, 0x0e242eacu, 0x1247b316u, 0x3b9fbfe1u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-4.99999999999999999999999999999999999999817875826704e-01 */
-scs(array(0x1fffffffu, 0x3fffffffu, 0x3fffffffu, 0x3fffffffu,
+BigFloat(array(0x1fffffffu, 0x3fffffffu, 0x3fffffffu, 0x3fffffffu,
 0x3ffc089fu, 0x2c68799bu, 0x0b48bbdeu, 0x2ea8aa51u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~1.00000000000000000000000000000000000000000000000000e+00 */
-scs(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-db_one(),   0,   1 )
+1.,   0,   1 )
 );
 
 
-private var tan_scs_poly = Array[scs,35](
+private var tan_bf_poly = Array[BigFloat,35](
 /* ~4.19304248008015673367346745301068970533039252359331e-12 */
-scs(array(0x0049c3c8u, 0x3614b771u, 0x24336d30u, 0x18260f52u,
+BigFloat(array(0x0049c3c8u, 0x3614b771u, 0x24336d30u, 0x18260f52u,
 0x1c63a612u, 0x3c9708b1u, 0x2c030207u, 0x3b60a762u),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-3.36706575103240667705547059415226434034305176587654e-11 */
-scs(array(0x02505729u, 0x078bbff7u, 0x277b7292u, 0x2ae76500u,
+BigFloat(array(0x02505729u, 0x078bbff7u, 0x277b7292u, 0x2ae76500u,
 0x3326025du, 0x0785010au, 0x2e88ed52u, 0x23a7933au),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~1.37767867318476248799250258961217380776040310955523e-10 */
-scs(array(0x0977a350u, 0x3804d188u, 0x2d3b121cu, 0x3b0228d8u,
+BigFloat(array(0x0977a350u, 0x3804d188u, 0x2d3b121cu, 0x3b0228d8u,
 0x002a8c44u, 0x2d5dfc73u, 0x2507d88eu, 0x3cfff02bu),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-3.65061594065798937565902299436877921270308616808248e-10 */
-scs(array(0x19163b42u, 0x137d2c1bu, 0x19fd92a2u, 0x1d367da1u,
+BigFloat(array(0x19163b42u, 0x137d2c1bu, 0x19fd92a2u, 0x1d367da1u,
 0x28a08aa6u, 0x19489cc8u, 0x2fbf37c1u, 0x2a39fb53u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~7.07244120811389943078195053689224634883725238108269e-10 */
-scs(array(0x3099f85bu, 0x38f9459bu, 0x195e2a8du, 0x3797159cu,
+BigFloat(array(0x3099f85bu, 0x38f9459bu, 0x195e2a8du, 0x3797159cu,
 0x34148387u, 0x3b401948u, 0x1983fd31u, 0x184ad9fdu),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~-1.04501041542939812062419752159269710100683051724611e-09 */
-scs(array(0x00000001u, 0x07d00484u, 0x1f25e4feu, 0x34768b93u,
+BigFloat(array(0x00000001u, 0x07d00484u, 0x1f25e4feu, 0x34768b93u,
 0x3b55eb65u, 0x12227622u, 0x04fedebcu, 0x2e961f5cu),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~1.25002445075359892223710684907004440385587934042993e-09 */
-scs(array(0x00000001u, 0x15e6a9a6u, 0x23b954f6u, 0x248f5fbau,
+BigFloat(array(0x00000001u, 0x15e6a9a6u, 0x23b954f6u, 0x248f5fbau,
 0x38fabeafu, 0x059e710au, 0x3e68659eu, 0x08f9d054u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-1.17970967862051201631515521131934092286748635204441e-09 */
-scs(array(0x00000001u, 0x1111ac11u, 0x2b29b510u, 0x0408b38cu,
+BigFloat(array(0x00000001u, 0x1111ac11u, 0x2b29b510u, 0x0408b38cu,
 0x29617027u, 0x289298c6u, 0x2fe4c001u, 0x34903af7u),
-db_one(),  -1,  -1 )
+1.,  -1,  -1 )
 ,
 /* ~1.01504782471787319555323236139271916057005781543881e-09 */
-scs(array(0x00000001u, 0x05c0e901u, 0x1495b536u, 0x3d0dceffu,
+BigFloat(array(0x00000001u, 0x05c0e901u, 0x1495b536u, 0x3d0dceffu,
 0x11d27769u, 0x314f4319u, 0x2adb4907u, 0x04581607u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~-5.23224716917514023729869567637974110005720667650098e-10 */
-scs(array(0x23f4aaa3u, 0x3810e7e3u, 0x377f317cu, 0x118eb173u,
+BigFloat(array(0x23f4aaa3u, 0x3810e7e3u, 0x377f317cu, 0x118eb173u,
 0x271248c9u, 0x0dc34f76u, 0x38c69c1au, 0x1715bf81u),
-db_one(),  -2,  -1 )
+1.,  -2,  -1 )
 ,
 /* ~6.84075783927905363651245539376244733085133140080869e-10 */
-scs(array(0x2f026372u, 0x048fabdau, 0x157f9376u, 0x1ee01201u,
+BigFloat(array(0x2f026372u, 0x048fabdau, 0x157f9376u, 0x1ee01201u,
 0x1d337305u, 0x3277dac2u, 0x0388ddbbu, 0x1e444286u),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~5.90392308289226882244924529214622620104906585387600e-10 */
-scs(array(0x28924a94u, 0x186459bdu, 0x07f03e85u, 0x3c711128u,
+BigFloat(array(0x28924a94u, 0x186459bdu, 0x07f03e85u, 0x3c711128u,
 0x3ae6e0c9u, 0x1e84f311u, 0x3d3d9fe2u, 0x186b0f23u),
-db_one(),  -2,   1 )
+1.,  -2,   1 )
 ,
 /* ~1.97885803554882259263714586727843568959917519849302e-09 */
-scs(array(0x00000002u, 0x07fc704fu, 0x2fe41d64u, 0x39e487cfu,
+BigFloat(array(0x00000002u, 0x07fc704fu, 0x2fe41d64u, 0x39e487cfu,
 0x184c49c2u, 0x0bee9906u, 0x1478fbedu, 0x3b189f6au),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~4.66924357822849164083933883654466829463908058807791e-09 */
-scs(array(0x00000005u, 0x00de33a3u, 0x25923c9cu, 0x2ca62cbau,
+BigFloat(array(0x00000005u, 0x00de33a3u, 0x25923c9cu, 0x2ca62cbau,
 0x20bdef99u, 0x128b5ff5u, 0x3fc900eau, 0x04ca7a66u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.15959738194320052411880314174946234008645186820135e-08 */
-scs(array(0x0000000cu, 0x1cde875fu, 0x11fe6b7au, 0x1bf8f0eeu,
+BigFloat(array(0x0000000cu, 0x1cde875fu, 0x11fe6b7au, 0x1bf8f0eeu,
 0x1fdaf92du, 0x3db0bd62u, 0x15f329f2u, 0x1aaaa7deu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~2.85891620102917727867302985486597414498702504078098e-08 */
-scs(array(0x0000001eu, 0x2ca1db60u, 0x16b02396u, 0x27782b2du,
+BigFloat(array(0x0000001eu, 0x2ca1db60u, 0x16b02396u, 0x27782b2du,
 0x13c68ddeu, 0x28c97a48u, 0x1971af0du, 0x190791d2u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~7.05468704925032913074778071743586293193594984535199e-08 */
-scs(array(0x0000004bu, 0x2ff1aba9u, 0x215c7e5fu, 0x0ec7c100u,
+BigFloat(array(0x0000004bu, 0x2ff1aba9u, 0x215c7e5fu, 0x0ec7c100u,
 0x29f9ff6eu, 0x0f5a5e50u, 0x1b028fafu, 0x24fd23e7u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.74066092089222113091708523795806369314584635744294e-07 */
-scs(array(0x000000bau, 0x39bb1378u, 0x228e6aabu, 0x1cd5a3f6u,
+BigFloat(array(0x000000bau, 0x39bb1378u, 0x228e6aabu, 0x1cd5a3f6u,
 0x0df50eb5u, 0x2fe1339fu, 0x3bf44406u, 0x0623c42cu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~4.29491124040745236871063166723486418908614935914252e-07 */
-scs(array(0x000001cdu, 0x0a67c230u, 0x15e26fdeu, 0x2d6f2ed2u,
+BigFloat(array(0x000001cdu, 0x0a67c230u, 0x15e26fdeu, 0x2d6f2ed2u,
 0x1e5d5eedu, 0x13306d09u, 0x2bc7fd07u, 0x3e19f2dbu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.05972682972071952486859820141805093442802320377425e-06 */
-scs(array(0x00000471u, 0x37df8b71u, 0x36c6ae8bu, 0x247f572bu,
+BigFloat(array(0x00000471u, 0x37df8b71u, 0x36c6ae8bu, 0x247f572bu,
 0x11ae0684u, 0x2c9d50b0u, 0x3b8c1296u, 0x142cbe10u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~2.61477115156382799612950555257222875670856895150216e-06 */
-scs(array(0x00000af7u, 0x25b48fd7u, 0x22f9b7b5u, 0x1bf47d23u,
+BigFloat(array(0x00000af7u, 0x25b48fd7u, 0x22f9b7b5u, 0x1bf47d23u,
 0x2d5e7cb4u, 0x29eec735u, 0x12e994fcu, 0x38f234bdu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~6.45168921562814305334220557964389527562662181436031e-06 */
-scs(array(0x00001b0fu, 0x1cb4fb69u, 0x3117e917u, 0x2d08cb65u,
+BigFloat(array(0x00001b0fu, 0x1cb4fb69u, 0x3117e917u, 0x2d08cb65u,
 0x3ed33963u, 0x11bb69f4u, 0x0b13ad8fu, 0x2ed16814u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.59189050693312274383546286106716190276142802345865e-05 */
-scs(array(0x000042c4u, 0x32d39a62u, 0x3b08d8b5u, 0x1a0a769du,
+BigFloat(array(0x000042c4u, 0x32d39a62u, 0x3b08d8b5u, 0x1a0a769du,
 0x102ec25du, 0x27c1ccb1u, 0x2d7c3ac9u, 0x1484f03bu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~3.92783238833166802364700496685053984935780264819631e-05 */
-scs(array(0x0000a4beu, 0x31dd44a4u, 0x21406decu, 0x00d8ae9bu,
+BigFloat(array(0x0000a4beu, 0x31dd44a4u, 0x21406decu, 0x00d8ae9bu,
 0x263ef3acu, 0x26d69803u, 0x1d7f349du, 0x2a7a1ff7u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~9.69153795692945116999068122084400485954578423200626e-05 */
-scs(array(0x0001967eu, 0x062bf2beu, 0x2d29a81au, 0x3528530au,
+BigFloat(array(0x0001967eu, 0x062bf2beu, 0x2d29a81au, 0x3528530au,
 0x2be09523u, 0x150ffb17u, 0x1543b0eeu, 0x2e51e70cu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~2.39129114243552481118447657590127606492827347439830e-04 */
-scs(array(0x0003eafau, 0x3b9a68b3u, 0x083c6556u, 0x3c8a24a1u,
+BigFloat(array(0x0003eafau, 0x3b9a68b3u, 0x083c6556u, 0x3c8a24a1u,
 0x2485ea61u, 0x0e5b9b2cu, 0x2d16e9bau, 0x0700d411u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~5.90027440945585981390430768333505444797856150283712e-04 */
-scs(array(0x0009aac1u, 0x09006ce8u, 0x229156e9u, 0x1010a671u,
+BigFloat(array(0x0009aac1u, 0x09006ce8u, 0x229156e9u, 0x1010a671u,
 0x167b367eu, 0x02d471c6u, 0x33700cd8u, 0x180a5404u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.45583438705131826824917380276818501608784487595954e-03 */
-scs(array(0x0017da36u, 0x114add78u, 0x2b6a1c11u, 0x39bc050bu,
+BigFloat(array(0x0017da36u, 0x114add78u, 0x2b6a1c11u, 0x39bc050bu,
 0x1fa62cdeu, 0x202525f2u, 0x06797d2eu, 0x188697d8u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~3.59212803657248101692546700427010326668047642683335e-03 */
-scs(array(0x003ada7au, 0x070abeefu, 0x36bf9822u, 0x114b4de5u,
+BigFloat(array(0x003ada7au, 0x070abeefu, 0x36bf9822u, 0x114b4de5u,
 0x29c19548u, 0x21cff3b2u, 0x1b67ac39u, 0x3afe7677u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~8.86323552990219656886323546095947145451052636633979e-03 */
-scs(array(0x0091371au, 0x2bcd8479u, 0x07ada8e1u, 0x2d73a327u,
+BigFloat(array(0x0091371au, 0x2bcd8479u, 0x07ada8e1u, 0x2d73a327u,
 0x39d10b36u, 0x2a1371abu, 0x10b30f6eu, 0x139bddaau),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~2.18694885361552028218694885366767472933069912253187e-02 */
-scs(array(0x01664f48u, 0x20b043e7u, 0x332d6bbau, 0x1281f45du,
+BigFloat(array(0x01664f48u, 0x20b043e7u, 0x332d6bbau, 0x1281f45du,
 0x05c107b1u, 0x0b2e1a96u, 0x378ae51eu, 0x2c9d2be3u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~5.39682539682539682539682539682518643701644736548166e-02 */
-scs(array(0x03743743u, 0x1d0dd0ddu, 0x03743743u, 0x1d0dc5f0u,
+BigFloat(array(0x03743743u, 0x1d0dd0ddu, 0x03743743u, 0x1d0dc5f0u,
 0x20d05868u, 0x240b23beu, 0x38da29dfu, 0x3866f03cu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.33333333333333333333333333333333336718465844517559e-01 */
-scs(array(0x08888888u, 0x22222222u, 0x08888888u, 0x22222226u,
+BigFloat(array(0x08888888u, 0x22222222u, 0x08888888u, 0x22222226u,
 0x288230eeu, 0x27ff32dfu, 0x1b2f8f82u, 0x12608ad5u),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~3.33333333333333333333333333333333333332426548650668e-01 */
-scs(array(0x15555555u, 0x15555555u, 0x15555555u, 0x15555555u,
+BigFloat(array(0x15555555u, 0x15555555u, 0x15555555u, 0x15555555u,
 0x154195d6u, 0x3f2e970au, 0x24a36u, 0x3f8caf8eu),
-db_one(),  -1,   1 )
+1.,  -1,   1 )
 ,
 /* ~1.00000000000000000000000000000000000000000000000000e+00 */
-scs(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
-db_one(),   0,   1 )
+1.,   0,   1 )
 );
 
 
+// 1) Range reduction if needed ... x in [-Pi/4, +Pi/4]
+// 2) call cosine, sine or tan polynomial
+// Polynomials are vastly too accurate.
 
+// Polynomial evaluation of sin(x) over [-Pi/4, +Pi/4]
+// Approximation error lower than  2^(-133)
 
-/*
- *
- * 1) Range reduction if needed ... x in [-Pi/4, +Pi/4]
- *
- * 2) call cosine, sine or tan polynomial
- *
- * Polynomials are vastly too accurate.
- */
-
-
-
-/* Polynomial evaluation of sin(x) over [-Pi/4, +Pi/4]
-   Approximation error lower than  2^(-133) */
-
-inline scs_sin(x) : {
-    var x2,res_scs = scs(),scs();
-    scs_square(x2, x);
-    scs_mul(res_scs, sin_scs_poly[0], x2);
-    for(i in range(1,(DEGREE_SIN_SCS-1)/2)){ /* Last coeff is one, not read from the file*/
-        scs_add(res_scs, sin_scs_poly[i], res_scs);
-        scs_mul(res_scs, res_scs, x2);
+[T | BigFloat?(T)]
+inline overload sin(x:T) --> result:T {
+    var x2 = square(x);
+    var res = sin_bf_poly[0] * x2;
+    for(i in range(1,(DEGREE_SIN_BF-1)/2)){ /* Last coeff is one, not read from the file*/
+        res = sin_bf_poly[i] + res;
+        res = res * x2;
     }
-    scs_mul(res_scs, res_scs, x);
-    scs_add(x, x, res_scs);
+    res = res * x;
+    result <-- x + res;
 }
 
 
 /* Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
    Approximation error lower than  2^(-128) */
-
-inline scs_cos(x) : {
-    var x2,res_scs = scs(),scs();
-    scs_square(x2, x);
-    scs_mul(res_scs, cos_scs_poly[0], x2);
-    for(i in range(1,DEGREE_COS_SCS/2)){
-        scs_add(res_scs, cos_scs_poly[i], res_scs);
-        scs_mul(res_scs, res_scs, x2);
+[T | BigFloat?(T)]
+inline overload cos(x:T) --> result:T {
+    var x2 = square(x);
+    var res = cos_bf_poly[0] * x2;
+    for(i in range(1,DEGREE_COS_BF/2)){
+        res = cos_bf_poly[i] + res;
+        res = res * x2;
     }
     /* The last coefficient is exactly one and is not read from the file */
-    scs_add(x, res_scs, scs_one);
+    result <-- res + bf_one;
 }
 
 
-scs_sin_rn(x:Double) --> resd:Double {
-    var sc1, sc2 = scs(),scs();
-    scs_set_d(sc1, x);
-    var N = rem_pio2_scs(sc2, sc1);
+bf_sin_rn(x:Double) --> resd:Double {
+    var sc2 = BigFloat();
+    var sc1 = BigFloat(x);
+    var N = rem_pio2_bf(sc2, sc1);
     N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
     switch (N)
         case (0){
-            scs_sin(sc2);
-            scs_get_d(resd, sc2);
+            resd <-- Double(sin(sc2));
         }
         case (1){
-            scs_cos(sc2);
-            scs_get_d(resd, sc2);
+            resd <-- Double(cos(sc2));
         }
         case (2){
-            scs_sin(sc2);
-            scs_get_d(resd, sc2);
-            resd <-- -resd;
+            resd <-- -Double(sin(sc2));
         }
         case (3){
-            scs_cos(sc2);
-            scs_get_d(resd, sc2);
-            resd <-- -resd;
+            resd <-- -Double(cos(sc2));
         }
         else {
-            printWithSprintf(stderr,"ERREUR: %d is not a valid value in s_scs_sin \n", N);
+            printWithSprintf(stderr,"ERROR: %d is not a valid value in s_scs_sin \n", N);
             resd <-- 0.0;
         }
 }
 
-
-
-scs_cos_rn(x:Double) --> resd:Double {
-    var sc1, sc2 = scs(),scs();
-    scs_set_d(sc1, x);
-    var N = rem_pio2_scs(sc2, sc1);
+bf_cos_rn(x:Double) --> resd:Double {
+    var sc2 = BigFloat();
+    var sc1 = BigFloat(x);
+    var N = rem_pio2_bf(sc2, sc1);
     N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
     switch (N)
         case (0){
-            scs_cos(sc2);
-            scs_get_d(resd, sc2);
+            resd <-- Double(cos(sc2));
         }
         case (1){
-            scs_sin(sc2);
-            scs_get_d(resd, sc2);
-            resd <-- -resd;
+            resd <-- -Double(sin(sc2));
         }
         case (2){
-            scs_cos(sc2);
-            scs_get_d(resd, sc2);
-            resd <-- -resd;
+            resd <-- -Double(cos(sc2));
         }
         case (3){
-            scs_sin(sc2);
-            scs_get_d(resd, sc2);
+            resd <-- Double(sin(sc2));
         }
         else{
-            printWithSprintf(stderr,"ERREUR: %d is not a valid value in s_cos \n", N);
+            printWithSprintf(stderr,"ERROR: %d is not a valid value in s_cos \n", N);
             resd <-- 0.0;
         }
 }
 
 
-private inline scs_tan(x, res_scs){
-    var x2,x_scs,y_scs = scs(),scs(),scs();
-    scs_set_d(x_scs, x);
-    var N = rem_pio2_scs(y_scs, x_scs); 	/* x (=sc2) is in [-Pi/4,Pi/4] */
+inline overload tan(x) --> result:BigFloat {
+    var ybf = BigFloat();
+    var xbf = BigFloat(x);
+    var N = rem_pio2_bf(ybf, xbf); 	/* x (=sc2) is in [-Pi/4,Pi/4] */
     N = bitand(N,1);		/* extract the last bit of  N */
-    scs_square(x2, y_scs);
-    scs_mul(res_scs, tan_scs_poly[0], x2);
+    var x2 = square(ybf);
+    result <-- tan_bf_poly[0] * x2;
 
-    for(i in range(1,(DEGREE_TAN_SCS-1)/2)){ /* The last coeff is not read from the file. */
-        scs_add(res_scs, tan_scs_poly[i], res_scs);
-        scs_mul(res_scs, res_scs, x2);
+    for(i in range(1,(DEGREE_TAN_BF-1)/2)){ /* The last coeff is not read from the file. */
+        result = tan_bf_poly[i] + result;
+        result = result * x2;
     }
 
-    scs_mul(res_scs, res_scs, y_scs);
-    scs_add(res_scs, y_scs, res_scs);
+    result = result * ybf);
+    result = ybf + result);
 
     if(N == 1) {
-        scs_inv(res_scs, res_scs);
-        res_scs.sign = -res_scs.sign;
+        result = recip(result);
+        result.sign = -result.sign;
     }
 }
 
-scs_tan_rn(x:Double) --> r:Double{
-    var res_scs, resd = scs(),0.;
-    scs_tan(x,res_scs);
-    scs_get_d(resd, res_scs);
-    return resd;
-}
+bf_tan_rn(x:Double) : Double = Double(tan(x));
 
 

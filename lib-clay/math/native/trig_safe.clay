@@ -70,10 +70,8 @@ var digits_256_over_pi = Array[UInt64,48](
 );
 
 
-var Pio256 = scs(array(0x00c90fdau, 0x28885a30u, 0x234c4c66u, 0x0a2e0370u,
-                       0x1cd12902u, 0x13822299u, 0x3cc74020u, 0x2efa98ecu),
-                db_one(),  -1,   1 );
-
+var Pio256 = BigFloat(array(0x00c90fdau, 0x28885a30u, 0x234c4c66u, 0x0a2e0370u,
+    0x1cd12902u, 0x13822299u, 0x3cc74020u, 0x2efa98ecu), 1.,  -1,   1 );
 
 var s3  = floatFromBits(0xBFC5555555555555ul) /* -1.6666666667e-01 */;
 var s5  = floatFromBits(0x3F81111111111111ul) /* +8.3333333333e-03 */;
@@ -400,7 +398,7 @@ Now for the advantages:
 2/ We have much more accuracy in the table, which simplifies the proof.
 3/ We will be able to reuse the same table values to speed up the
 second step (just tabulating a third double such that the three-double
-approx of sin/cos(kPi/256) will be summed exactly into an SCS number)
+approx of sin/cos(kPi/256) will be summed exactly into an BF number)
 
 
 
@@ -411,7 +409,7 @@ We have 4 possible range reductions:
 Cody and Waite with 2 constants (the fastest)
 Cody and Waite with 3 constants (almost as fast)
 Cody and Waite with 3 constants in double-double and k a long-long int
-Payne and Hanek, implemented in SCS (the slowest).
+Payne and Hanek, implemented in BF (the slowest).
 
 Each of these range reductions except Payne and Hanek is valid for x
 smaller than some bound.
@@ -461,14 +459,14 @@ but different polynomials (which compute sin(2Pi*y) and cos(2Pi*y).
    other functions
 */
 
-private inline rem_pio256_scs(result,x){
-    var r,tmp = Array[UInt64,SCS_NB_WORDS+3](), 0ul;
+private inline rem_pio256_bf(result,x){
+    var r,tmp = Array[UInt64,BF_NB_WORDS+3](), 0ul;
 
     /* result r[0],...,r[10] could store till 300 bits of precision */
     /* that is really enough for computing the reduced argument */
 
     if (x.excp.1 != 1 or x.index < -2){
-        scs_set(result,x);
+        result = x;
         return 0;
     }
     /* Compute the product |x| * 256/Pi */
@@ -478,12 +476,12 @@ private inline rem_pio256_scs(result,x){
         r[2] =  digits_256_over_pi[0] * x.h_word[0];
         r[3] =  digits_256_over_pi[0] * x.h_word[1]+digits_256_over_pi[1] * x.h_word[0];
         if(x.h_word[2] == 0){
-            for(i in range(4,SCS_NB_WORDS+3)){
+            for(i in range(4,BF_NB_WORDS+3)){
                 r[i] = digits_256_over_pi[i-3] * x.h_word[1]
                 +digits_256_over_pi[i-2] * x.h_word[0];
             }
         } else {
-            for(i in range(4,SCS_NB_WORDS+3)){
+            for(i in range(4,BF_NB_WORDS+3)){
                 r[i] = digits_256_over_pi[i-4] * x.h_word[2]
                 +digits_256_over_pi[i-3] * x.h_word[1]
                 +digits_256_over_pi[i-2] * x.h_word[0];
@@ -496,12 +494,12 @@ private inline rem_pio256_scs(result,x){
             r[2] = digits_256_over_pi[0] * x.h_word[1]
             +digits_256_over_pi[1] * x.h_word[0];
             if(x.h_word[2] == 0){
-                for(i in range(3,SCS_NB_WORDS+3)){
+                for(i in range(3,BF_NB_WORDS+3)){
                     r[i] = digits_256_over_pi[i-2] * x.h_word[1]
                     +digits_256_over_pi[i-1] * x.h_word[0];
                 }
             }else {
-                for(i in range(3,SCS_NB_WORDS+3)){
+                for(i in range(3,BF_NB_WORDS+3)){
                     r[i] = digits_256_over_pi[i-3] * x.h_word[2]
                     +digits_256_over_pi[i-2] * x.h_word[1]
                     +digits_256_over_pi[i-1] * x.h_word[0];
@@ -513,12 +511,12 @@ private inline rem_pio256_scs(result,x){
                 r[1] = digits_256_over_pi[0] * x.h_word[1]
                 +digits_256_over_pi[1] * x.h_word[0];
                 if(x.h_word[2] == 0){
-                    for(i in range(2,SCS_NB_WORDS+3)){
+                    for(i in range(2,BF_NB_WORDS+3)){
                         r[i] = digits_256_over_pi[i-1] * x.h_word[1]
                         +digits_256_over_pi[ i ] * x.h_word[0];
                     }
                 } else {
-                    for(i in range(2,SCS_NB_WORDS+3)){
+                    for(i in range(2,BF_NB_WORDS+3)){
                         r[i] = digits_256_over_pi[i-2] * x.h_word[2]
                         +digits_256_over_pi[i-1] * x.h_word[1]
                         +digits_256_over_pi[ i ] * x.h_word[0];
@@ -529,12 +527,12 @@ private inline rem_pio256_scs(result,x){
                     r[0] = digits_256_over_pi[0] * x.h_word[1]
                     +digits_256_over_pi[1] * x.h_word[0];
                     if(x.h_word[2] == 0){
-                        for(i in range(1,SCS_NB_WORDS+3)){
+                        for(i in range(1,BF_NB_WORDS+3)){
                             r[i] = digits_256_over_pi[i] * x.h_word[1]
                             +digits_256_over_pi[i+1] * x.h_word[0];
                         }
                     }else {
-                        for(i in range(1,SCS_NB_WORDS+3)){
+                        for(i in range(1,BF_NB_WORDS+3)){
                             r[i] = digits_256_over_pi[i-1] * x.h_word[2]
                             +digits_256_over_pi[ i ] * x.h_word[1]
                             +digits_256_over_pi[i+1] * x.h_word[0];
@@ -544,12 +542,12 @@ private inline rem_pio256_scs(result,x){
                     var ind = (x.index - 2);
                     var digits_256_over_pi_pt = Pointer[Int](&digits_256_over_pi[ind]);
                     if(x.h_word[2] == 0){
-                        for(i in range(SCS_NB_WORDS+3)){
+                        for(i in range(BF_NB_WORDS+3)){
                             r[i] = digits_256_over_pi_pt[i+1] * x.h_word[1]
                             +digits_256_over_pi_pt[i+2] * x.h_word[0];
                         }
                     }else {
-                        for(i in range(SCS_NB_WORDS+3)){
+                        for(i in range(BF_NB_WORDS+3)){
                             r[i] = digits_256_over_pi_pt[i] * x.h_word[2]
                             +digits_256_over_pi_pt[i+1] * x.h_word[1]
                             +digits_256_over_pi_pt[i+2] * x.h_word[0];
@@ -561,8 +559,8 @@ private inline rem_pio256_scs(result,x){
     }
 
     /* Carry propagate */
-    r[SCS_NB_WORDS+1] += bitshr(r[SCS_NB_WORDS+2],30);
-    for(i in reverseRange(SCS_NB_WORDS+1,1)) {
+    r[BF_NB_WORDS+1] += bitshr(r[BF_NB_WORDS+2],30);
+    for(i in reverseRange(BF_NB_WORDS+1,1)) {
         tmp=bitshr(r[i],30);
         r[i-1] += tmp;
         r[i] -= bitshl(tmp,30);
@@ -570,10 +568,10 @@ private inline rem_pio256_scs(result,x){
     /* The integer part is in r[0] */
     var N,sign = r[0],0;
 
-    if(r[1] > SCS_RADIX/2){	/* test if the reduced part is bigger than Pi/4 */
+    if(r[1] > BF_RADIX/2){	/* test if the reduced part is bigger than Pi/4 */
         N += 1;
         sign = -1;
-        for(i in range(1,SCS_NB_WORDS+3))
+        for(i in range(1,BF_NB_WORDS+3))
             r[i] = bitand(bitnot(r[i]),0x3fffffff);
     }
     else
@@ -592,17 +590,17 @@ private inline rem_pio256_scs(result,x){
     else
         i = 1;
 
-    for(j in range(SCS_NB_WORDS))
+    for(j in range(BF_NB_WORDS))
         result.h_word[j] = UInt32(r[i+j]);
 
-    result.excp.1 = 1;
+    result.excp = 1.;
     result.index = -i;
     result.sign = sign*x.sign;
 
     /* Last step :
     *   Multiplication by pi/2
     */
-    scs_mul(result, Pio256, result);
+    result =  Pio256 * result;
     return Int(N*x.sign);
 }
 
@@ -614,22 +612,22 @@ private inline rem_pio256_scs(result,x){
 /*                                                                      */
 /************************************************************************/
 
-var SHIFT1 = 1. / Double(bitshl(1,SCS_NB_BITS));
+var SHIFT1 = 1. / Double(bitshl(1,BF_NB_BITS));
 var SHIFT2 = SHIFT1*SHIFT1;
 var SHIFT3 = SHIFT2*SHIFT1;
 
-private inline RangeReductionSCS(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Double {
+private inline RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Double {
     var nb = db_number();
-    var X, Y = scs(),scs();
-    scs_set_d(X,rri.x);
-    k <-- rem_pio256_scs(Y, X);
+    var Y = BigFloat();
+    var X = BigFloat(rri.x);
+    k <-- rem_pio256_bf(Y, X);
     index <-- bitshl(bitand(k,127),2);
     quadrant <-- bitand(bitshr(k,7),3);
     var x0 = Double(Y.h_word[0]);
     var x1 = Double(Y.h_word[1]) * SHIFT1;
     var x2 = Double(Y.h_word[2]) * SHIFT2;
     var x3 = Double(Y.h_word[3]) * SHIFT3;
-    nb.0[1] = bitshl(Y.index*SCS_NB_BITS + 1023 , 20);
+    nb.0[1] = bitshl(Y.index*BF_NB_BITS + 1023 , 20);
     nb.0[0] = 0;
     nb.2 *= Y.sign;
     yh <-- ((x2+x1)+x0) * nb.2;
@@ -798,7 +796,7 @@ private inline ComputeTrigWithArgred(rri):{
         if(index == 0) {
             /* Here again a large cancellation on yh+yl would be a problem,
             so we do the accurate range reduction */
-            k,index,quadrant,yh,yl = RangeReductionSCS(rri);   /*recomputes k, index, quadrant, and yh and yl*/
+            k,index,quadrant,yh,yl = RangeReductionBF(rri);   /*recomputes k, index, quadrant, and yh and yl*/
             /* Now it may happen that the new k differs by 1 of kl, so check that */
             if(index == 0)   /* no surprise */
                 computeZero(rri,quadrant,yh,yl);
@@ -819,7 +817,7 @@ private inline ComputeTrigWithArgred(rri):{
     else {
         /* Worst case : x very large, sin(x) probably meaningless, we return
         correct rounding but do't mind taking time for it */
-        k,index,quadrant,yh,yl = RangeReductionSCS(rri);
+        k,index,quadrant,yh,yl = RangeReductionBF(rri);
         quadrant = bitand(bitshr(k,7),3);
         if(index == 0)
             computeZero(rri,quadrant,yh,yl);
@@ -855,7 +853,7 @@ private inline sin_rn(x:Double) --> r:Double {
                 r <-- rri.rh;
             else{
 //                 println("Worst case correct rounding not yet implemented.");
-                r <-- scs_sin_rn(x);
+                r <-- bf_sin_rn(x);
             }
         }
     }
@@ -874,7 +872,7 @@ private inline sin_rn(x:Double) --> r:Double {
         var rncst = RN_CST_SINCOS_CASE3;
         if(rri.rh != (rri.rh + (rri.rl * rncst))){
 //             println("Worst case correct rounding not yet implemented.");
-            r <-- scs_sin_rn(x);
+            r <-- bf_sin_rn(x);
         }
     }
 }
@@ -900,7 +898,7 @@ private inline cos_rn(x:Double) --> r:Double {
             if(rri.rh == (rri.rh + (rri.rl * RN_CST_COS_CASE2)))
                 r <-- rri.rh;
             else
-                r <-- scs_cos_rn(x);
+                r <-- bf_cos_rn(x);
         }
     }
     else {
@@ -914,7 +912,7 @@ private inline cos_rn(x:Double) --> r:Double {
             else
                 r <-- rri.rh;
         else
-            r <-- scs_cos_rn(x);
+            r <-- bf_cos_rn(x);
     }
 }
 
@@ -944,7 +942,7 @@ private inline tan_rn(x:Double) --> r:Double {
             if(rri.rh == (rri.rh + (rri.rl * rndcst.2)))
               r <-- rri.rh;
             else
-              r <-- scs_tan_rn(x);
+              r <-- bf_tan_rn(x);
         }
     }
     else {
@@ -959,7 +957,7 @@ private inline tan_rn(x:Double) --> r:Double {
             else
                 r <-- rri.rh;
         else
-            r <-- scs_tan_rn(x);
+            r <-- bf_tan_rn(x);
     }
 }
 
