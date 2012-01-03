@@ -4,6 +4,7 @@
 #ifdef _MSC_VER
 # define PRIx64 "I64x"
 #else
+# define __STDC_FORMAT_MACROS
 # include <inttypes.h>
 #endif
 
