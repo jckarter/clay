@@ -76,6 +76,11 @@ elseif(WIN32)
     set(CMAKE_REQUIRED_LIBRARIES ${LLVM_DIR}/lib/libclang.lib)
 endif()
 
+if(DEFINED BUILD_TOOLS AND NOT BUILD_TOOLS)
+    set(BUILD_BINDGEN False)
+    set(BUILD_FIX False)
+endif()
+
 if(NOT DEFINED BUILD_BINDGEN OR BUILD_BINDGEN)
     check_symbol_exists(clang_getTypedefDeclUnderlyingType "clang-c/Index.h" HAS_PATCHED_CLANG)
     if(HAS_PATCHED_CLANG)
@@ -88,6 +93,9 @@ if(NOT DEFINED BUILD_BINDGEN OR BUILD_BINDGEN)
     endif()
 endif()
 
+if(NOT DEFINED BUILD_FIX)
+    set(BUILD_FIX True)
+endif()
 
 if(UNIX)
     install(DIRECTORY lib-clay DESTINATION lib)

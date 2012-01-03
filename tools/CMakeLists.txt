@@ -21,18 +21,21 @@ else()
     set(DEST .)
 endif()
 
-add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-fix${EXE}
-    DEPENDS
-        ${clay_BINARY_DIR}/compiler/src/clay
-        ${FIX_SOURCES}
-    COMMAND ${clay_BINARY_DIR}/compiler/src/clay
-        -I${clay_SOURCE_DIR}/lib-clay
-        -I${clay_SOURCE_DIR}/tools
-        -O1
-        -o ${clay_BINARY_DIR}/tools/clay-fix${EXE}
-        ${clay_SOURCE_DIR}/tools/fix.clay)
+if(BUILD_FIX)
+    add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-fix${EXE}
+        DEPENDS
+            ${clay_BINARY_DIR}/compiler/src/clay
+            ${FIX_SOURCES}
+        COMMAND ${clay_BINARY_DIR}/compiler/src/clay
+            -I${clay_SOURCE_DIR}/lib-clay
+            -I${clay_SOURCE_DIR}/tools
+            -O1
+            -o ${clay_BINARY_DIR}/tools/clay-fix${EXE}
+            ${clay_SOURCE_DIR}/tools/fix.clay)
 
-add_custom_target(clay-fix ALL DEPENDS ${clay_BINARY_DIR}/tools/clay-fix${EXE})
+    add_custom_target(clay-fix ALL DEPENDS ${clay_BINARY_DIR}/tools/clay-fix${EXE})
+    install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-fix${EXE} DESTINATION ${DEST})
+endif(BUILD_FIX)
 
 if(BUILD_BINDGEN)
     add_custom_command(OUTPUT ${clay_BINARY_DIR}/tools/clay-bindgen${EXE}
@@ -50,5 +53,4 @@ if(BUILD_BINDGEN)
     install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE} DESTINATION ${DEST})
 endif(BUILD_BINDGEN)
 
-install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-fix${EXE} DESTINATION ${DEST})
 
