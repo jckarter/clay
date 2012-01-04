@@ -150,7 +150,8 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        return [clay, "-I" + self.path, "-o", "test.exe"] + testBuildFlags + self.buildflags + [self.testfile]
+        r = [clay, "-I" + self.path, "-o", "test.exe"] + testBuildFlags + self.buildflags + [self.testfile]
+        return r
 
     def pre_build(self) :
         pass
@@ -388,8 +389,11 @@ def usage(argv0):
     print "  be run. Build flags can be passed to the compiler followed by '--'."
 
 def main() :
+    global testLogFile
+    global testBuildFlags
     global testRoot
     global runTestRoot
+
     if len(sys.argv) > 1 :
         if sys.argv[1] == "--help" or sys.argv[1] == "/?":
             usage(sys.argv[0])
