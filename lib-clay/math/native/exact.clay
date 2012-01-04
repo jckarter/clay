@@ -240,7 +240,7 @@ alias Mul22cond = Mul22;
     resh,resm,resl <-- x, ..Add12Cond(_t9,_t10);
 }
 
-[T] inline Mul123( a:T, bh:T, bl:T){
+[T] inline Mul123( a:T, bh:T, bl:T) --> resh:T, resm:T, resl:T {
     var x,_t1 = Mul12((a),(bh));
     var _t2,_t3 = Mul12((a),(bl));
     var _t5,_t4 = Add12Cond(_t1,_t2);

@@ -518,10 +518,8 @@ array(
 
 [T | BigFloat?(T)]
 overload atan(x:T) --> result:T {
-    var db = db_number();
+    var db = db_number(Double(T(x)));
     var i = 31;
-
-    db.2 = Double(T(x));
 
     /* test if x as to be reduced */
     if (db.2 > MIN_REDUCTION_NEEDED) {
@@ -543,7 +541,7 @@ overload atan(x:T) --> result:T {
         var denom1 = bsc * x;
         var denom2 = denom1 + bf_one;
         var X_bf = x - bsc;
-        X_bf = X_bf / denom2;
+        X_bf /= denom2;
 
         var test = Double(X_bf);
 
@@ -552,8 +550,8 @@ overload atan(x:T) --> result:T {
         result <-- constant_poly[0];
         for(k in range(1,10)) {
             /* we use Horner expression */
-            result = result * X2;
-            result = constant_poly[k] + result;
+            result *= X2;
+            result += constant_poly[k];
         }
         var poly = result * X_bf;
 
@@ -573,10 +571,10 @@ overload atan(x:T) --> result:T {
         result <-- constant_poly[0];
         for(k in range(1,10)) {
             /* we use Horner expression */
-            result = result * X2;
-            result = constant_poly[k] + result;
+            result *= X2;
+            result += constant_poly[k];
         }
-        result = result * x;
+        result *= x;
     }
 }
 
@@ -588,11 +586,8 @@ bf_atan_rn(x:Double){
     /* This function does NOT compute atan(x) correctly if it isn't
     * called in atan_rn()
     */
-    var res = db_number();
+    var res = db_number(x);
     var xx, sign = x,1;
-
-    res.2 = x;
-
     if (xx < 0){
         sign = -1;
         xx *= -1;
@@ -607,10 +602,8 @@ bf_atanpi_rn(x:Double){
     /* This function does NOT compute atanpi(x) correctly if it isn't
     * called in atanpi_rn()
     */
-    var res = db_number();
+    var res = db_number(x);
     var xx,sign = x,1;
-
-    res.2 = x;
     if (xx < 0){
         sign = -1;
         xx *= -1;

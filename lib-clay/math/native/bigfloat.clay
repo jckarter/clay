@@ -2,8 +2,7 @@
 // NOT intended as a replacement for mpfr/gmp for which a Clay wrapper
 // will eventually be available as part of the core math lib.
 // This is primarily intended for use in math libs to provide high accuracy
-// functions and as a high performance larger than Float80/128 float type.
-// Limited basic functions will be implementde for this purpose.
+// functions and as a high performance 'larger than Float80/128 float type'.
 
 import math.native.exact.(db_number);
 import math.native.defines.(recip);
@@ -235,8 +234,7 @@ private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 }
 
 
-// This function copies a result into another. There is an unrolled
-// version for the case BF_NB_WORDS==8.
+// This function copies a result into another.
 [T | BigFloat?(T)]
 inline overload assign(result:T, x:T) : {
     result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
@@ -249,7 +247,7 @@ inline overload assign(result:T, x:T) : {
 }
 
 [T | Numeric?(T)]
-inline overload assign(result:T, x:T) {
+inline overload assign(result:BigFloat, x:T) {
     if(x == 0){
         for(i in range(BF_NB_WORDS))
             result.h_word[i] = 0;
@@ -614,7 +612,7 @@ inline overload recip(x:T) --> result:T {
     // First Newton Iteration
     var res1 = x * res;
     res1 = bf_two - res1;
-    res = res * res1;
+    res *= res1;
 
     // Second Newton Iteration
     res1 = x * res;
