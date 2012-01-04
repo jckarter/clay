@@ -570,7 +570,7 @@ CValuePtr codegenForwardOneAsRef(ExprPtr expr,
                                  CodegenContextPtr ctx)
 {
     MultiCValuePtr mcv = codegenForwardExprAsRef(expr, env, ctx);
-    DebugLocationContext loc(expr->location, ctx);
+    LocationContext loc(expr->location);
     ensureArity(mcv, 1);
     return mcv->values[0];
 }
@@ -625,7 +625,7 @@ CValuePtr codegenOneAsRef(ExprPtr expr,
                           CodegenContextPtr ctx)
 {
     MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
-    DebugLocationContext loc(expr->location, ctx);
+    LocationContext loc(expr->location);
     ensureArity(mcv, 1);
     return mcv->values[0];
 }
@@ -718,7 +718,7 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
                                 EnvPtr env,
                                 CodegenContextPtr ctx)
 {
-    DebugLocationContext loc(expr->location, ctx);
+    LocationContext loc(expr->location);
 
     switch (expr->exprKind) {
     case NAME_REF : {
@@ -934,7 +934,7 @@ void codegenExpr(ExprPtr expr,
                  CodegenContextPtr ctx,
                  MultiCValuePtr out)
 {
-    DebugLocationContext loc(expr->location, ctx);
+    LocationContext loc(expr->location);
 
     switch (expr->exprKind) {
 
@@ -974,10 +974,13 @@ void codegenExpr(ExprPtr expr,
                                      x->value,
                                      true);
         TypePtr type = arrayType(int8Type, x->value.size() + 1);
+        ostringstream symbolName;
+        symbolName << "StringConstant " << x->value << " clay";
+
         llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
             *llvmModule, llvmType(type), true,
             llvm::GlobalVariable::PrivateLinkage,
-            initializer, "clayliteral_str");
+            initializer, symbolName.str());
         llvm::Value *str =
             ctx->builder->CreateConstGEP2_32(gvar, 0, 0);
         llvm::Value *strEnd =
@@ -1469,7 +1472,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     }
 
     ostringstream symbolStr;
-    symbolStr << nameStr.str() << ":" << y->type << " clay";
+    symbolStr << nameStr.str() << " " << y->type << " clay";
 
     x->llGlobal =
         new llvm::GlobalVariable(
@@ -1680,6 +1683,12 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    if (llvmDIBuilder != NULL) {
+        llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, x->getDebugInfo());
+        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx->builder->SetCurrentDebugLocation(debugLoc);
+    }
 
     ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
@@ -2820,7 +2829,7 @@ static string getCodeName(InvokeEntryPtr entry)
     }
     sout << ')';
     if (!entry->returnTypes.empty()) {
-        sout << ':';
+        sout << ' ';
         for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
             if (i != 0)
                 sout << ", ";
@@ -2881,9 +2890,10 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc);
 
+    int line, column;
+    llvm::DIFile file;
     if (llvmDIBuilder != NULL) {
-        int line, column;
-        llvm::DIFile file = getDebugLineCol(entry->origCode->location, line, column);
+        file = getDebugLineCol(entry->origCode->location, line, column);
 
         vector<llvm::Value*> debugParamTypes;
         debugParamTypes.push_back(llvmVoidTypeDebugInfo());
@@ -2939,6 +2949,12 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    if (llvmDIBuilder != NULL) {
+        llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx->builder->SetCurrentDebugLocation(debugLoc);
+    }
 
     ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 

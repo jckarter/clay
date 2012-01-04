@@ -3578,16 +3578,12 @@ typedef Pointer<CodegenContext> CodegenContextPtr;
 struct DebugLocationContext {
     LocationPtr loc;
     CodegenContextPtr ctx;
-    bool didSetDebugLoc;
-    llvm::DebugLoc oldDebugLoc;
     DebugLocationContext(LocationPtr loc, CodegenContextPtr ctx)
-        : loc(loc), ctx(ctx), didSetDebugLoc(false)
+        : loc(loc), ctx(ctx)
     {
         if (loc.ptr()) {
             pushLocation(loc);
             if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
-                didSetDebugLoc = true;
-                oldDebugLoc = ctx->builder->getCurrentDebugLocation();
                 int line, column;
                 getDebugLineCol(loc, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
@@ -3598,8 +3594,6 @@ struct DebugLocationContext {
     ~DebugLocationContext() {
         if (loc.ptr()) {
             popLocation();
-            if (didSetDebugLoc)
-                ctx->builder->SetCurrentDebugLocation(oldDebugLoc);
         }
     }
 private :
