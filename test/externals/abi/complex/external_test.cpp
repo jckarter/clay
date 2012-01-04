@@ -1,9 +1,5 @@
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "../external_test.hpp"
 #include <complex.h>
-#include <inttypes.h>
 
 union Union24 {
     uint32_t a;
@@ -14,6 +10,8 @@ union Union25 {
     uint32_t a;
     complex double b;
 };
+
+extern "C" {
 
 //
 // arguments
@@ -139,3 +137,4 @@ void c_to_clay(void) {
     fflush(stdout);
 }
 
+}

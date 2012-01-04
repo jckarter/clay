@@ -35,11 +35,12 @@ external (cdecl) c_to_clay() : ;
 
 external (cdecl) clay_scalar(arg0:UInt32, arg1:Bool, arg2:Float, arg3:Double) : {
     println(repr(arg0, arg1, arg2, arg3));
+    flush(stdout);
 }
 
-external (cdecl) clay_complex_float(arg0:Complex32) : { println(repr(arg0)); }
+external (cdecl) clay_complex_float(arg0:Complex32) : { println(repr(arg0)); flush(stdout); }
 
-external (cdecl) clay_complex_double(arg0:Complex64) : { println(repr(arg0)); }
+external (cdecl) clay_complex_double(arg0:Complex64) : { println(repr(arg0)); flush(stdout); }
 
 external (cdecl) clay_24(arg0:Union24, arg1:Int) : {
     switch (arg1)
@@ -49,6 +50,7 @@ external (cdecl) clay_24(arg0:Union24, arg1:Int) : {
         println(repr(arg0.1));
     else
         libc.abort();
+    flush(stdout);
 }
 
 
@@ -60,6 +62,7 @@ external (cdecl) clay_25(arg0:Union25, arg1:Int) : {
         println(repr(arg0.1));
     else
         libc.abort();
+    flush(stdout);
 }
 
 external (cdecl) clay_return_complex_float() : Complex32
@@ -92,13 +95,8 @@ external (cdecl) clay_return_25(arg0:Int) : Union25 {
     return returned;
 }
 
-external (cdecl) clay_flush() : {
-    flush(stdout);
-}
-
 clay_to_c() {
     println("\nPassing Clay arguments to C:");
-    flush(stdout);
 
     c_complex_float(clay_return_complex_float());
     c_complex_double(clay_return_complex_double());
@@ -108,8 +106,6 @@ clay_to_c() {
 
     c_25(clay_return_25(0), 0);
     c_25(clay_return_25(1), 1);
-
-    libc.fflush(libc.stdout);
 
     println("\nPassing C return values to Clay:");
 
@@ -122,8 +118,6 @@ clay_to_c() {
 
     clay_25(c_return_25(0), 0);
     clay_25(c_return_25(1), 1);
-
-    flush(stdout);
 }
 
 main() {

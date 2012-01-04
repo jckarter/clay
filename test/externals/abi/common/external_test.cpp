@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#ifdef _MSC_VER
-# define PRIx64 "I64x"
-#else
-# define __STDC_FORMAT_MACROS
-# include <inttypes.h>
-#endif
+#include "../external_test.hpp"
 
 struct Struct1 {
     uint64_t a;
@@ -325,18 +317,6 @@ void c_30(struct Struct30 x) {
 //
 // return
 //
-
-#ifdef _MSC_VER
-# define HEX_FLOAT_VARIABLE(name, mantissa, exp) \
-    union { int bits; float value; } name##_bits = { (0x##mantissa >> 1) | ((exp+127)<<23) }; \
-    float name = name##_bits.value;
-# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) \
-    union { __int64 bits; double value; } name##_bits = { (unsigned __int64)0x##mantissa | ((unsigned __int64)(exp+1023)<<52) }; \
-    double name = name##_bits.value;
-#else
-# define HEX_FLOAT_VARIABLE(name, mantissa, exp) float name = 0x1.##mantissa##p##exp##f
-# define HEX_DOUBLE_VARIABLE(name, mantissa, exp) double name = 0x1.##mantissa##p##exp
-#endif
 
 uint32_t c_return_int(void) {
     return 0xC1A4C1A4U;
