@@ -1721,6 +1721,9 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     }
     cgPopStack(returnTarget.stackMarker, ctx);
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    exceptionBlock->moveAfter(returnBlock);
+
     ctx->builder->SetInsertPoint(returnBlock);
     target->returnStatement(x->callingConv, x->returnType2, returns, ctx);
 
@@ -3100,6 +3103,9 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     ctx->initBuilder->CreateBr(codeBlock);
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    exceptionBlock->moveAfter(returnBlock);
+
     ctx->builder->SetInsertPoint(returnBlock);
     llvm::Value *llRet = noExceptionReturnValue();
     ctx->builder->CreateRet(llRet);
@@ -3288,6 +3294,8 @@ void codegenCallInline(InvokeEntryPtr entry,
     ctx->returnLists.pop_back();
     ctx->returnTargets.pop_back();
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+
     ctx->builder->SetInsertPoint(returnBlock);
 
     --ctx->inlineDepth;
@@ -3389,6 +3397,8 @@ void codegenCallByName(InvokeEntryPtr entry,
 
     ctx->returnLists.pop_back();
     ctx->returnTargets.pop_back();
+
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
 
     ctx->builder->SetInsertPoint(returnBlock);
 
