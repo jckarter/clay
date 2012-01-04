@@ -1,0 +1,184 @@
+// Correctly rounded arctangent
+
+import math.native.exact.*;
+import math.native.atan_safe_acc.*;
+import math.native.atan_safe_acc.(coef_poly,rncst,epsilon);
+
+
+private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
+
+    var i = 0;
+    if (x > MIN_REDUCTION_NEEDED) {// test if reduction is necessary :
+        /*
+        * 1) Argument reduction :
+        *
+        *  tan(x) = tan( b(i) ) + tan ( (x-b(i)) / (1+x*b(i)))
+        *
+        *                                                     6.3
+        * we choose 62 b(i) so that (x-b(i)) / (1+x*b(i)) < 2@
+        */
+
+        var xmBihi , xmBilo = 0.,0.;
+
+        if (x > arctan_table[61][B].d) {
+            i = 61;
+            xmBihi , xmBilo = Add12(x , -arctan_table[61][B].d);
+        }
+        else{
+            /* compute i so that a[i] < x < a[i+1] */
+            i = 31;
+            if (x < arctan_table[i][A].d) i-= 16;
+            else i+=16;
+            if (x < arctan_table[i][A].d) i-= 8;
+            else i+= 8;
+            if (x < arctan_table[i][A].d) i-= 4;
+            else i+= 4;
+            if (x < arctan_table[i][A].d) i-= 2;
+            else i+= 2;
+            if (x < arctan_table[i][A].d) i-= 1;
+            else i+= 1;
+            if (x < arctan_table[i][A].d) i-= 1;
+            xmBihi = x-arctan_table[i][B].d;
+            xmBilo = 0.0;
+        }
+
+        /* we now compute Xred = ( x-b[i] ) / ( 1 + x*b[i] )
+        *
+        * def : x0 := 1+x*b[i]
+        *
+        * 1st we compute an approximation of y = 1/x0
+        * then we compute a better approx x' = y*(2-x0*y)
+        * we can proove that :
+        * if y = 1/x0*(1+e)
+        *     then x' = 1/x0 * (1-e@2)
+        *
+        */
+
+        var tmphi,tmplo = Mul12(x, arctan_table[i][B].d);
+        var x0hi, x0lo = 0.,0.;
+        if (x > 1)
+            x0hi, x0lo = Add22(tmphi,tmplo, 1.0,0.0);
+        else {
+            x0hi, x0lo = Add22(1.0,0.0,tmphi,tmplo);
+        }
+
+        var Xredhi, Xredlo = Div22( xmBihi , xmBilo , x0hi,x0lo);
+
+        /* Polynomial evaluation :
+        *
+        *  1rt compute Q(x@2) = (1 - x@2/3 + ...)
+        *      then P(x) = x * Q(x@2)
+        *
+        */
+
+        var Xred2 = Xredhi*Xredhi;
+        var q = Xred2*(coef_poly[3]+Xred2*
+                 (coef_poly[2]+Xred2*
+                  (coef_poly[1]+Xred2*
+                   coef_poly[0]))) ;
+
+        /* reconstruction : atan(x) = atan(b[i]) + atan(x) */
+        var atanlolo = (Xredlo + arctan_table[i][ATAN_BLO].d);
+        atanlolo += Xredhi*q;
+        var tmphi2, tmplo2 = Add12( arctan_table[i][ATAN_BHI].d, Xredhi);
+        atanhi, atanlo <-- Add12( tmphi2, (tmplo2+atanlolo));
+
+        if (i < 10)
+            index_of_e <-- 0;
+        else
+            index_of_e <-- 1;
+        }
+    else{
+        // no reduction needed
+        /* Polynomial evaluation :
+        *
+        *  1rt compute Q(x@2) = (1 - x@2/3 + ...)
+        *      then P(x) = x * Q(x@2)
+        *
+        */
+
+        var x2 = x*x;
+        var q = x2*(coef_poly[3]+x2*
+              (coef_poly[2]+x2*
+               (coef_poly[1]+x2*
+                coef_poly[0]))) ;
+        atanhi,atanlo <-- Add12(x , x*q);
+        index_of_e <-- 2;
+    }
+}
+
+
+atan_rn(x:Double ) {
+
+    var xdb = db_number();
+    xdb.2 = x;
+    var absxhi = bitand(xdb.0[1] , 0x7fffffff);
+
+    if(bitand(xdb.0[1] , 0x80000000)!=0){
+        xdb.0[1] = absxhi;
+        sign = -1;
+    }
+    else
+        sign = 1;
+
+    /* Filter cases */
+    if ( absxhi >= 0x43500000) {          /* x >= 2@54 */
+        if ((absxhi > 0x7ff00000) or ((absxhi == 0x7ff00000) and (xdb.0[0] != 0)))
+            return x+x;                /* NaN */
+        else
+            return sign*HALFPI.2;           /* atan(+/-infty) = +/- Pi/2 */
+    }
+    if ( absxhi < 0x3E400000 )
+        return x;                   /* x<2@-27 then atan(x) =~ x */
+
+    var atanhi,atanlo,index_of_e = atan_quick(xdb.2);
+
+    if (atanhi == (atanhi + (atanlo*rncst[index_of_e])))
+        return sign*atanhi;
+    else{
+        /* more accuracy is needed , lauch accurate phase */
+        return sign*bf_atan_rn(xdb.2);
+    }
+}
+
+atanpi_rn(x:Double) {
+    var xdb = db_number();
+    xdb.2 = x;
+    var absxhi = bitand(xdb.0[1] , 0x7fffffff);
+
+    if(bitand(xdb.0[1] , 0x80000000)){
+        x_db.0[1] = absxhi;
+        sign =-1;
+    }
+    else
+        sign = 1;
+
+    /* Filter cases */
+    if ( absxhi >= 0x43500000){           /* x >= 2@54 */
+        if ((absxhi > 0x7ff00000) or ((absxhi == 0x7ff00000) and (xdb.0[0] != 0)))
+            return x+x;                /* NaN */
+        else
+            return sign*0.5;           /* atan(+/-infty) = +/- Pi/2 */
+    }
+    if ( absxhi < 0x3E400000 )
+        return sign*bf_atanpi_rn(xdb.2); /* TODO optim here */
+
+    var atanhi, atanlo,index_of_e = atan_quick(xdb.2);
+    var atanpihi,atanpilo = Mul22( INVPIH, INVPIL, atanhi,atanlo);
+
+    if (atanpihi == (atanpihi + (atanpilo*rncst[index_of_e])))
+        return sign*atanpihi;
+    else
+        /* more accuracy is needed , lauch accurate phase */
+        return sign*bf_atanpi_rn(xdb.2);
+}
+
+
+[T | Float?(T)]
+inline atan_safe(x:T) = T(atan_rn(Double(x)));
+
+[T | Float?(T)]
+inline atanpi_safe(x:T) = T(atanpi_rn(Double(x)));
+
+
+
