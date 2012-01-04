@@ -305,7 +305,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             || target.getOS() == llvm::Triple::Solaris;
         passVecAsNonaggregate = target.getOS() == llvm::Triple::Darwin;
         returnSingleFloatAggregateAsNonaggregate
-            = target.getOS() == llvm::Triple::Darwin;
+            = target.getOS() != llvm::Triple::Win32;
     }
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
