@@ -533,7 +533,7 @@ static void initModule(ModulePtr m) {
 //
 
 static ModulePtr envModule(EnvPtr env) {
-    if (!env->parent)
+    if (env == NULL || env->parent == NULL)
         return NULL;
     switch (env->parent->objKind) {
     case ENV :

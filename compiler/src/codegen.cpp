@@ -1444,6 +1444,12 @@ void codegenStaticObject(ObjectPtr x,
 // codegenGVarInstance
 //
 
+static void printModuleQualification(ostream &os, ModulePtr mod)
+{
+    if (mod != NULL)
+        os << mod->moduleName << '.';
+}
+
 void codegenGVarInstance(GVarInstancePtr x)
 {
     assert(!x->llGlobal);
@@ -1452,18 +1458,29 @@ void codegenGVarInstance(GVarInstancePtr x)
     PValuePtr y = mpv->values[0];
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
-    ostringstream ostr;
-    ostr << "clay global " << x->gvar->name->str << ":" << y->type;
+
+    ostringstream nameStr;
+    printModuleQualification(nameStr, safeLookupModule(x->env));
+    nameStr << x->gvar->name->str;
+    if (!x->params.empty()) {
+        nameStr << '[';
+        printNameList(nameStr, x->params);
+        nameStr << ']';
+    }
+
+    ostringstream symbolStr;
+    symbolStr << nameStr.str() << ":" << y->type << " clay";
+
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(y->type), false,
             llvm::GlobalVariable::InternalLinkage,
-            initializer, ostr.str());
+            initializer, symbolStr.str());
     if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);
         x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
-            x->gvar->name->str,
+            nameStr.str(),
             file,
             line,
             llvmTypeDebugInfo(y->type),
@@ -2698,7 +2715,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     static int id = 1;
     ostringstream functionName;
 
-    functionName << "clay " << callableName << id;
+    functionName << callableName << id;
     id++;
 
     out << string("define internal i8* @\"")
@@ -2764,6 +2781,9 @@ static string getCodeName(InvokeEntryPtr entry)
     SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
     ostringstream sout;
+
+    printModuleQualification(sout, staticModule(x));
+
     switch (x->objKind) {
     case TYPE : {
         sout << x;
@@ -2799,6 +2819,17 @@ static string getCodeName(InvokeEntryPtr entry)
         sout << entry->argsKey[i];
     }
     sout << ')';
+    if (!entry->returnTypes.empty()) {
+        sout << ':';
+        for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+            if (i != 0)
+                sout << ", ";
+            sout << entry->returnTypes[i];
+        }
+    }
+
+    sout << " clay";
+
     return sout.str();
 }
 
@@ -2834,7 +2865,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
 
-    string llvmFuncName = "clay " + callableName;
+    string llvmFuncName = callableName;
 
     llvm::Function *llFunc =
         llvm::Function::Create(llFuncType,
@@ -3100,7 +3131,7 @@ void codegenCWrapper(InvokeEntryPtr entry)
     llvm::Function *llCWrapper =
         llvm::Function::Create(llFuncType,
                                llvm::Function::InternalLinkage,
-                               "clay external wrapper " + callableName,
+                               "cdecl " + callableName,
                                llvmModule);
     for (vector< pair<unsigned, llvm::Attributes> >::const_iterator attr = llAttributes.begin();
          attr != llAttributes.end();
