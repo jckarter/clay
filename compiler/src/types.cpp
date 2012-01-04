@@ -1287,7 +1287,7 @@ static void defineLLVMType(TypePtr t) {
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(
                 primitivesModule()->getDebugInfo(), // scope
                 typeName(t),
-                llvm::DIFile(NULL), // file
+                globalMainModule->source->getDebugInfo(), // file
                 0, // lineNo
                 debugTypeSize(t->llType),
                 debugTypeAlignment(t->llType),
@@ -1366,7 +1366,7 @@ static void defineLLVMType(TypePtr t) {
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createUnionType(
                 primitivesModule()->getDebugInfo(), // scope
                 typeName(t),
-                llvm::DIFile(NULL), // file
+                globalMainModule->source->getDebugInfo(), // file
                 0, // lineNo
                 debugTypeSize(t->llType),
                 debugTypeAlignment(t->llType),

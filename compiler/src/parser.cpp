@@ -2959,6 +2959,7 @@ ModulePtr parse(const string &moduleName, SourcePtr source) {
     ModulePtr m;
     ModuleParser p = { moduleName };
     applyParser(source, 0, source->size, p, m);
+    m->source = source;
     return m;
 }
 
