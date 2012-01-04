@@ -1,7 +1,4 @@
 #include "clay.hpp"
-#include <cstdio>
-#include <cstdlib>
-#include <cstdarg>
 
 bool shouldPrintFullMatchErrors;
 

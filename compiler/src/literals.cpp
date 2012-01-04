@@ -1,6 +1,5 @@
 #include "clay.hpp"
 
-
 static bool ishex(char *ptr) {
     return
         ((ptr[0] == '+' || ptr[0] == '-')

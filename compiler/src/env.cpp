@@ -1,5 +1,4 @@
 #include "clay.hpp"
-#include <cassert>
 
 using namespace std;
 

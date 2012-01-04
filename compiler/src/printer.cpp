@@ -1,6 +1,4 @@
 #include "clay.hpp"
-#include <cctype>
-#include <sstream>
 
 using namespace std;
 

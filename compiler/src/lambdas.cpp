@@ -1,5 +1,4 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
 
 
 struct LambdaContext {

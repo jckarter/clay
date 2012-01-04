@@ -1,5 +1,4 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
 
 TypePtr boolType;
 TypePtr int8Type;

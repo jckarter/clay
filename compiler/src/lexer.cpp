@@ -1,7 +1,4 @@
 #include "clay.hpp"
-#include <set>
-#include <cstdio>
-#include <cassert>
 
 static void initLexer(SourcePtr s, int offset, int length);
 static void cleanupLexer();

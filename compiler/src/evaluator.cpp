@@ -1,5 +1,4 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
 
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);

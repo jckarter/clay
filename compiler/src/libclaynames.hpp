@@ -1,9 +1,6 @@
 #ifndef __CLAYNAMES_HPP
 #define __CLAYNAMES_HPP
 
-#include "clay.hpp"
-
-
 ObjectPtr primitive_addressOf();
 ObjectPtr primitive_boolNot();
 ObjectPtr primitive_Pointer();

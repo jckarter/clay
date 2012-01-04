@@ -1,6 +1,4 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
-#include <cstdio>
 
 using namespace std;
 

@@ -1,11 +1,4 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Assembly/Writer.h>
-#include <llvm/Assembly/Parser.h>
 
 llvm::Module *llvmModule = NULL;
 llvm::DIBuilder *llvmDIBuilder = NULL;

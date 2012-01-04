@@ -1,7 +1,4 @@
 #include "clay.hpp"
-#include <cstdlib>
-#include <climits>
-#include <cassert>
 
 static vector<TokenPtr> *tokens;
 static int position;
