@@ -294,12 +294,18 @@ struct X86_32_ExternalTarget : public ExternalTarget {
     // as aggregates
     bool passVecAsNonaggregate;
 
+    // MacOS X returns aggregates containing a single float or double
+    // on the x87 stack
+    bool returnSingleFloatAggregateAsNonaggregate;
+
     explicit X86_32_ExternalTarget(llvm::Triple target) {
         alwaysUseCCallingConv = target.getArch() == llvm::Triple::x86_64;
         alwaysPassStructsOnStack = target.getOS() == llvm::Triple::NetBSD
             || target.getOS() == llvm::Triple::Linux
             || target.getOS() == llvm::Triple::Solaris;
         passVecAsNonaggregate = target.getOS() == llvm::Triple::Darwin;
+        returnSingleFloatAggregateAsNonaggregate
+            = target.getOS() == llvm::Triple::Darwin;
     }
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
@@ -373,13 +379,67 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         }
     }
 
+    llvm::Type *singleFloatAggregateType(TypePtr type) {
+        switch (type->typeKind) {
+        case BOOL_TYPE:
+        case INTEGER_TYPE:
+        case FLOAT_TYPE:
+        case POINTER_TYPE:
+        case CODE_POINTER_TYPE:
+        case CCODE_POINTER_TYPE:
+        case STATIC_TYPE:
+        case ENUM_TYPE:
+        case VEC_TYPE:
+        case COMPLEX_TYPE:
+        case VARIANT_TYPE:
+            return NULL;
+
+        case UNION_TYPE: {
+            UnionType *u = (UnionType*)type.ptr();
+            if (u->memberTypes.size() == 1)
+                return llvmType(u->memberTypes[0]);
+            return NULL;
+        }
+
+        case RECORD_TYPE: {
+            RecordType *r = (RecordType*)type.ptr();
+            const vector<TypePtr> &fieldTypes = recordFieldTypes(r);
+            if (fieldTypes.size() == 1)
+                return llvmType(fieldTypes[0]);
+            return NULL;
+        }
+
+        case TUPLE_TYPE: {
+            TupleType *t = (TupleType*)type.ptr();
+            if (t->elementTypes.size() == 1)
+                return llvmType(t->elementTypes[0]);
+            return NULL;
+        }
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) {
+        if (returnSingleFloatAggregateAsNonaggregate) {
+            llvm::Type *singleType = singleFloatAggregateType(type);
+            if (singleType != NULL)
+                return singleType;
+        }
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) {
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
+        if (returnSingleFloatAggregateAsNonaggregate) {
+            llvm::Type *singleType = singleFloatAggregateType(type);
+            if (singleType != NULL)
+                return false;
+        }
+
         int size = aggregateTypeSize(type);
         return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
     }
