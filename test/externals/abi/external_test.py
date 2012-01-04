@@ -23,7 +23,7 @@ def runExternalTest():
             check_call(["clang++", "-stdlib=libc++", "-c", "-o", "temp-external_test.o",
                 "external_test.cpp"] + buildFlags)
             check_call(["clang++", "-stdlib=libc++", "-o", "temp.exe", "temp-external_test.o",
-                "temp-main.o"] + linkFlags)
+                "temp-main.o"] + linkFlags + buildFlags)
         check_call(["./temp.exe"])
     except CalledProcessError as ex:
         print "!! error code", ex.returncode
