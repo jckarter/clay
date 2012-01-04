@@ -52,5 +52,3 @@ if(BUILD_BINDGEN)
     add_custom_target(clay-bindgen ALL DEPENDS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE})
     install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-bindgen${EXE} DESTINATION ${DEST})
 endif(BUILD_BINDGEN)
-
-
