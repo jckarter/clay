@@ -1,14 +1,20 @@
 #include "../external_test.hpp"
-#include <complex.h>
+
+extern "C" {
+extern float crealf(_Complex float z);
+extern float cimagf(_Complex float z);
+extern double creal(_Complex double z);
+extern double cimag(_Complex double z);
+}
 
 union Union24 {
     uint32_t a;
-    complex float b;
+    _Complex float b;
 };
 
 union Union25 {
     uint32_t a;
-    complex double b;
+    _Complex double b;
 };
 
 extern "C" {
@@ -17,12 +23,14 @@ extern "C" {
 // arguments
 //
 
-void c_complex_float(complex float x) {
+void c_complex_float(_Complex float x) {
     printf("%a,%a\n", crealf(x), cimagf(x));
+    fflush(stdout);
 }
 
-void c_complex_double(complex double x) {
+void c_complex_double(_Complex double x) {
     printf("%a,%a\n", creal(x), cimag(x));
+    fflush(stdout);
 }
 
 void c_24(union Union24 x, int tag) {
@@ -34,6 +42,7 @@ void c_24(union Union24 x, int tag) {
         printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
         break;
     }
+    fflush(stdout);
 }
 
 void c_25(union Union25 x, int tag) {
@@ -45,18 +54,19 @@ void c_25(union Union25 x, int tag) {
         printf("1: %a,%a\n", crealf(x.b), cimagf(x.b));
         break;
     }
+    fflush(stdout);
 }
 
 //
 // return
 //
 
-complex float c_return_complex_float(void) {
-    return 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I;
+_Complex float c_return_complex_float(void) {
+    return 0x1.C1A4C0p123f+0x1.ABCDEEp99fj;
 }
 
-complex double c_return_complex_double(void) {
-    return 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I;
+_Complex double c_return_complex_double(void) {
+    return 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j;
 }
 
 union Union24 c_return_24(int tag) {
@@ -64,7 +74,7 @@ union Union24 c_return_24(int tag) {
     case 0:
         return (union Union24){ .a = 0xC1A4C1A4 };
     case 1:
-        return (union Union24){ .b = 0x1.C1A4C0p123f+0x1.ABCDEEp99f*I };
+        return (union Union24){ .b = 0x1.C1A4C0p123f+0x1.ABCDEEp99fj };
     default:
         abort();
     }
@@ -75,7 +85,7 @@ union Union25 c_return_25(int tag) {
     case 0:
         return (union Union25){ .a = 0xC1A4C1A4 };
     case 1:
-        return (union Union25){ .b = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99*I };
+        return (union Union25){ .b = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j };
     default:
         abort();
     }
@@ -85,23 +95,21 @@ union Union25 c_return_25(int tag) {
 // clay entry points
 //
 
-void clay_complex_float(complex float x);
+void clay_complex_float(_Complex float x);
 
-void clay_complex_double(complex double x);
+void clay_complex_double(_Complex double x);
 
 void clay_24(union Union24 x, int tag);
 
 void clay_25(union Union25 x, int tag);
 
-void clay_flush(void);
-
 //
 // return
 //
 
-complex float clay_return_complex_float(void);
+_Complex float clay_return_complex_float(void);
 
-complex double clay_return_complex_double(void);
+_Complex double clay_return_complex_double(void);
 
 union Union24 clay_return_24(int tag);
 
@@ -120,9 +128,8 @@ void c_to_clay(void) {
     clay_25(c_return_25(0), 0);
     clay_25(c_return_25(1), 1);
 
-    clay_flush();
-
     printf("\nPassing Clay return values to C:\n");
+    fflush(stdout);
 
     c_complex_float(clay_return_complex_float());
 

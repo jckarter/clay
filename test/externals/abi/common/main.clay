@@ -469,6 +469,7 @@ external (cdecl) clay_return_30() : Struct30
 
 clay_to_c() {
     println("\nPassing Clay arguments to C:");
+    flush(stdout);
 
     c_scalar(clay_return_int(), clay_return_bool(), clay_return_float(), clay_return_double());
     c_1(clay_return_1());
@@ -506,6 +507,7 @@ clay_to_c() {
     c_30(clay_return_30());
 
     println("\nPassing C return values to Clay:");
+    flush(stdout);
 
     clay_scalar(c_return_int(), c_return_bool(), c_return_float(), c_return_double());
 

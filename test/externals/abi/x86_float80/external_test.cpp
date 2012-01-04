@@ -1,6 +1,10 @@
 #include "../external_test.hpp"
-#include <complex.h>
-#include <emmintrin.h>
+#include "../external_test_x86.hpp"
+
+extern "C" {
+long double creall(_Complex long double z);
+long double cimagl(_Complex long double z);
+}
 
 struct Struct_x86_1 {
     long double a;
@@ -12,7 +16,7 @@ struct Struct_x86_8 {
 };
 
 struct Struct_x86_9 {
-    complex long double a;
+    _Complex long double a;
 };
 
 union Union_x86_12 {
@@ -22,25 +26,10 @@ union Union_x86_12 {
 
 union Union_x86_13 {
     int32_t a;
-    complex long double b;
+    _Complex long double b;
 };
 
 extern "C" {
-
-static void print_int_vector(__m128i v) {
-    union { __m128i v; uint64_t fields[2]; } u = { v };
-    printf("<%" PRIx64 " %" PRIx64 ">\n", u.fields[0], u.fields[1]);
-}
-
-static void print_float_vector(__m128 v) {
-    union { __m128 v; float fields[4]; } u = { v };
-    printf("<%.6a %.6a %.6a %.6a>\n", u.fields[0], u.fields[1], u.fields[2], u.fields[3]);
-}
-
-static void print_double_vector(__m128d v) {
-    union { __m128d v; double fields[2]; } u = { v };
-    printf("<%.13a %.13a>\n", u.fields[0], u.fields[1]);
-}
 
 //
 // arguments
@@ -51,7 +40,7 @@ void c_x86_long_double(long double x) {
     fflush(stdout);
 }
 
-void c_x86_complex_long_double(complex long double x) {
+void c_x86_complex_long_double(_Complex long double x) {
     printf("%.15La,%.15La\n", creall(x), cimagl(x));
     fflush(stdout);
 }
@@ -103,8 +92,8 @@ long double c_x86_return_long_double(void) {
     return 0x8.001122334455667p999L;
 }
 
-complex long double c_x86_return_complex_long_double(void) {
-    return 0x8.001122334455667p999L+0x8.112233445566778p888L*I;
+_Complex long double c_x86_return_complex_long_double(void) {
+    return 0x8.001122334455667p999L+0x8.112233445566778p888Lj;
 }
 
 struct Struct_x86_1 c_x86_return_1(void) {
@@ -118,7 +107,7 @@ struct Struct_x86_8 c_x86_return_8(void) {
 }
 
 struct Struct_x86_9 c_x86_return_9(void) {
-    struct Struct_x86_9 r = { 0x8.001122334455667p999L+0x8.112233445566778p888L*I };
+    struct Struct_x86_9 r = { 0x8.001122334455667p999L+0x8.112233445566778p888Lj };
     return r;
 }
 
@@ -144,7 +133,7 @@ union Union_x86_13 c_x86_return_13(int tag) {
         r.a = 0x11223344;
         break;
     case 1:
-        r.b = 0x8.001122334455667p999L+0x8.112233445566778p888L*I
+        r.b = 0x8.001122334455667p999L+0x8.112233445566778p888Lj;
         break;
     default:
         abort();
@@ -157,7 +146,7 @@ union Union_x86_13 c_x86_return_13(int tag) {
 //
 
 void clay_x86_long_double(long double x);
-void clay_x86_complex_long_double(complex long double x);
+void clay_x86_complex_long_double(_Complex long double x);
 void clay_x86_1(struct Struct_x86_1 x);
 void clay_x86_8(struct Struct_x86_8 x);
 void clay_x86_9(struct Struct_x86_9 x);
@@ -169,7 +158,7 @@ void clay_x86_13(union Union_x86_13 x, int tag);
 //
 
 long double clay_x86_return_long_double(void);
-complex long double clay_x86_return_complex_long_double(void);
+_Complex long double clay_x86_return_complex_long_double(void);
 struct Struct_x86_1 clay_x86_return_1(void);
 struct Struct_x86_8 clay_x86_return_8(void);
 struct Struct_x86_9 clay_x86_return_9(void);
@@ -193,9 +182,8 @@ void c_to_clay_x86(void) {
     clay_x86_13(c_x86_return_13(0), 0);
     clay_x86_13(c_x86_return_13(1), 1);
 
-    clay_flush();
-
     printf("\nPassing Clay return values to C:\n");
+    fflush(stdout);
 
     c_x86_long_double(clay_x86_return_long_double());
     c_x86_complex_long_double(clay_x86_return_complex_long_double());
@@ -209,8 +197,6 @@ void c_to_clay_x86(void) {
 
     c_x86_13(clay_x86_return_13(0), 0);
     c_x86_13(clay_x86_return_13(1), 1);
-
-    fflush(stdout);
 }
 
 }

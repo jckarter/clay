@@ -590,8 +590,6 @@ void clay_29(struct Struct29 x);
 
 void clay_30(struct Struct30 x);
 
-void clay_flush(void);
-
 //
 // return
 //

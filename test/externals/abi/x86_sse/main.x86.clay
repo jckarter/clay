@@ -68,30 +68,39 @@ external (cdecl) c_to_clay_x86();
 
 external (cdecl) clay_x86_vector(x:Vec[Int64,2], y:Vec[Float32,4], z:Vec[Float64,2]) : {
     println(repr(x, y, z));
+    flush(stdout);
 }
 external (cdecl) clay_x86_long_double(x:Float80) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_complex_long_double(x:Complex80) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_2(x:Struct_x86_2) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_3(x:Struct_x86_3) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_4(x:Struct_x86_4) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_5(x:Struct_x86_5) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_6(x:Struct_x86_6) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_7(x:Struct_x86_7) : {
     println(repr(x));
+    flush(stdout);
 }
 external (cdecl) clay_x86_10(x:Union_x86_10, tag:Int) : {
     switch (tag)
@@ -101,6 +110,7 @@ external (cdecl) clay_x86_10(x:Union_x86_10, tag:Int) : {
         println(repr(x.1));
     else
         assert(false);
+    flush(stdout);
 }
 external (cdecl) clay_x86_11(x:Union_x86_11, tag:Int) : {
     switch (tag)
@@ -110,6 +120,7 @@ external (cdecl) clay_x86_11(x:Union_x86_11, tag:Int) : {
         println(repr(x.1));
     else
         assert(false);
+    flush(stdout);
 }
 
 external (cdecl) clay_x86_return_int_vector() : Vec[Int64,2]
@@ -166,10 +177,6 @@ external (cdecl) clay_x86_return_11(tag:Int) : Union_x86_11 {
     return ret;
 }
 
-external (cdecl) clay_flush() : {
-    flush(stdout);
-}
-
 clay_to_c_x86() {
     println("\nPassing Clay arguments to C:");
     flush(stdout);
@@ -193,6 +200,7 @@ clay_to_c_x86() {
     libc.fflush(libc.stdout);
 
     println("\nPassing C return values to Clay:");
+    flush(stdout);
 
     clay_x86_vector(c_x86_return_int_vector(),
         c_x86_return_float_vector(), c_x86_return_double_vector());

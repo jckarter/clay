@@ -122,6 +122,7 @@ external (cdecl) clay_x86_return_13(tag:Int) : Union_x86_13 {
 
 clay_to_c_x86() {
     println("\nPassing Clay arguments to C:");
+    flush(stdout);
 
     c_x86_long_double(clay_x86_return_long_double());
     c_x86_complex_long_double(clay_x86_return_complex_long_double());
@@ -137,6 +138,7 @@ clay_to_c_x86() {
     c_x86_13(clay_x86_return_13(1), 1);
 
     println("\nPassing C return values to Clay:");
+    flush(stdout);
 
     clay_x86_long_double(c_x86_return_long_double());
     clay_x86_complex_long_double(c_x86_return_complex_long_double());

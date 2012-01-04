@@ -257,6 +257,7 @@ union Union_x86_11 clay_x86_return_11(int tag);
 
 void c_to_clay_x86(void) {
     printf("\nPassing C arguments to Clay:\n");
+    fflush(stdout);
 
     clay_x86_vector(c_x86_return_int_vector(),
         c_x86_return_float_vector(), c_x86_return_double_vector());
@@ -275,6 +276,7 @@ void c_to_clay_x86(void) {
     clay_x86_11(c_x86_return_11(1), 1);
 
     printf("\nPassing Clay return values to C:\n");
+    fflush(stdout);
 
     c_x86_vector(clay_x86_return_int_vector(),
         clay_x86_return_float_vector(), clay_x86_return_double_vector());
