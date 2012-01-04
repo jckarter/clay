@@ -48,27 +48,21 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static void runModule(llvm::Module *module)
+static void runModule(llvm::Module *module, vector<string> &argv, char const* const* envp)
 {
     llvm::EngineBuilder eb(llvmModule);
     llvm::ExecutionEngine *engine = eb.create();
     llvm::Function *mainFunc = module->getFunction("main");
-    assert(mainFunc);
-    llvm::Function *globalCtors =
-        module->getFunction("clayglobals_init");
-    llvm::Function *globalDtors =
-        module->getFunction("clayglobals_destroy");
 
-    engine->runFunction(globalCtors, vector<llvm::GenericValue>());
+    if (!mainFunc) {
+        std::cerr << "no main function to -run\n";
+        delete engine;
+        return;
+    }
 
-    vector<llvm::GenericValue> gvArgs;
-    llvm::GenericValue gv;
-    gv.IntVal = llvm::APInt(32, 0, true);
-    gvArgs.push_back(gv);
-    gvArgs.push_back(llvm::GenericValue((char *)NULL));
-    engine->runFunction(mainFunc, gvArgs);
-
-    engine->runFunction(globalDtors, vector<llvm::GenericValue>());
+    engine->runStaticConstructorsDestructors(false);
+    engine->runFunctionAsMain(mainFunc, argv, envp);
+    engine->runStaticConstructorsDestructors(true);
 
     delete engine;
 }
@@ -364,7 +358,7 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv, char const* const* envp) {
     if (argc == 1) {
         usage(argv[0]);
         return -1;
@@ -855,8 +849,11 @@ int main(int argc, char **argv) {
         optimizeLLVM(llvmModule, optLevel, internalize);
     optTimer.stop();
 
-    if (run)
-        runModule(llvmModule);
+    if (run) {
+        vector<string> argv;
+        argv.push_back(clayFile);
+        runModule(llvmModule, argv, envp);
+    }
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
         llvm::raw_fd_ostream out(outputFilePath.c_str(),

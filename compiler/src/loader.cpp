@@ -15,6 +15,8 @@ static map<string, ModulePtr> modules;
 
 map<string, string> globalFlags;
 
+ModulePtr globalMainModule;
+
 
 //
 // initModuleSuffixes
@@ -355,26 +357,26 @@ static ModulePtr loadPrelude() {
 }
 
 ModulePtr loadProgram(const string &fileName) {
-    ModulePtr m = parse("", loadFile(fileName));
+    globalMainModule = parse("", loadFile(fileName));
     ModulePtr prelude = loadPrelude();
-    loadDependents(m);
-    installGlobals(m);
+    loadDependents(globalMainModule);
+    installGlobals(globalMainModule);
     initModule(prelude);
-    initModule(m);
-    return m;
+    initModule(globalMainModule);
+    return globalMainModule;
 }
 
 ModulePtr loadProgramSource(const string &name, const string &source) {
-    ModulePtr m = parse("", new Source(name,
+    globalMainModule = parse("", new Source(name,
         const_cast<char*>(source.c_str()),
         source.size())
     );
     ModulePtr prelude = loadPrelude();
-    loadDependents(m);
-    installGlobals(m);
+    loadDependents(globalMainModule);
+    installGlobals(globalMainModule);
     initModule(prelude);
-    initModule(m);
-    return m;
+    initModule(globalMainModule);
+    return globalMainModule;
 }
 
 ModulePtr loadedModule(const string &module) {

@@ -2105,6 +2105,7 @@ struct ModuleDeclaration : public ANode {
 };
 
 struct Module : public ANode {
+    SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
     ModuleDeclarationPtr declaration;
@@ -2314,6 +2315,7 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 //
 
 extern map<string, string> globalFlags;
+extern ModulePtr globalMainModule;
 
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName);
