@@ -32,6 +32,29 @@ void addGlobal(ModulePtr module,
 // lookupModuleHolder, safeLookupModuleHolder
 //
 
+typedef set<ObjectPtr> ObjectSet;
+
+static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates) {
+    ostringstream err;
+    err << "ambiguous imported symbol: " << name->str;
+    err << "\n  could refer to:";
+    set<string> moduleNames;
+    for (ObjectSet::const_iterator i = candidates.begin(), end = candidates.end();
+         i != end;
+         ++i)
+    {
+        moduleNames.insert(staticModule(*i)->moduleName);
+    }
+
+    for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
+         i != end;
+         ++i)
+    {
+        err << "\n    " << *i << "." << name->str;
+    }
+    error(name, err.str());
+}
+
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ObjectPtr result1, result2;
     map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
@@ -40,8 +63,12 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     if (mh->import.ptr())
         result2 = lookupPublic(mh->import->module, name);
     if (result1.ptr()) {
-        if (result2.ptr() && (result1 != result2))
-            error(name, "ambiguous imported symbol: " + name->str);
+        if (result2.ptr() && (result1 != result2)) {
+            ObjectSet candidates;
+            candidates.insert(result1);
+            candidates.insert(result2);
+            ambiguousImportError(name, candidates);
+        }
         return result1;
     }
     else {
@@ -63,7 +90,6 @@ ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 //
 
 
-typedef set<ObjectPtr> ObjectSet;
 static const map<string, ObjectSet> &getPublicSymbols(ModulePtr module);
 static const map<string, ObjectSet> &getAllSymbols(ModulePtr module);
 
@@ -222,7 +248,7 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
         return NULL;
     const ObjectSet &objs = i->second;
     if (objs.size() > 1)
-        error(name, "ambiguous imported symbol: " + name->str);
+        ambiguousImportError(name, objs);
     return *objs.begin();
 }
 
@@ -243,7 +269,7 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
         return NULL;
     const ObjectSet &objs = i->second;
     if (objs.size() > 1)
-        error(name, "ambiguous imported symbol: " + name->str);
+        ambiguousImportError(name, objs);
     return *objs.begin();
 }
 

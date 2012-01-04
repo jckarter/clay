@@ -589,23 +589,19 @@ ModulePtr staticModule(ObjectPtr x) {
     case PRIM_OP : {
         return primitivesModule();
     }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        return envModule(y->env);
-    }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
-        return envModule(y->env);
-    }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
-        return envModule(y->env);
-    }
     case MODULE_HOLDER : {
-        ModuleHolder *y = (ModuleHolder *)x.ptr();
-        if (y->import.ptr())
-            return y->import->module;
+        ModuleHolder *mh = (ModuleHolder *)x.ptr();
+        if (mh->import.ptr())
+            return mh->import->module;
         return NULL;
+    }
+    case EXTERNAL_PROCEDURE :
+    case EXTERNAL_VARIABLE :
+    case PROCEDURE :
+    case RECORD :
+    case VARIANT : {
+        TopLevelItem *t = (TopLevelItem *)x.ptr();
+        return envModule(t->env);
     }
     default :
         return NULL;
