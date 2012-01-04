@@ -34,10 +34,18 @@ void addGlobal(ModulePtr module,
 
 typedef set<ObjectPtr> ObjectSet;
 
+static void suggestModules(ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
+    for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
+         i != end;
+         ++i)
+    {
+        err << "\n    import " << *i << ".(" << name->str << ");";
+    }
+}
+
 static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates) {
     ostringstream err;
     err << "ambiguous imported symbol: " << name->str;
-    err << "\n  could refer to:";
     set<string> moduleNames;
     for (ObjectSet::const_iterator i = candidates.begin(), end = candidates.end();
          i != end;
@@ -46,13 +54,31 @@ static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates
         moduleNames.insert(staticModule(*i)->moduleName);
     }
 
-    for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
+    err << "\n  disambiguate with one of:";
+    suggestModules(err, moduleNames, name);
+    error(name, err.str());
+}
+
+static void undefinedNameError(IdentifierPtr name) {
+    ostringstream err;
+    err << "undefined name: " << name->str;
+    set<string> suggestModuleNames;
+
+    for (map<string, ModulePtr>::const_iterator i = globalModules.begin(), end = globalModules.end();
          i != end;
          ++i)
     {
-        err << "\n    " << *i << "." << name->str;
+        if (lookupPublic(i->second, name) != NULL)
+            suggestModuleNames.insert(i->second->moduleName);
     }
+
+    if (!suggestModuleNames.empty()) {
+        err << "\n  maybe you need one of:";
+        suggestModules(err, suggestModuleNames, name);
+    }
+
     error(name, err.str());
+
 }
 
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
@@ -79,7 +105,7 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ObjectPtr x = lookupModuleHolder(mh, name);
     if (!x)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return x;
 }
 
@@ -276,7 +302,7 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
 ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name) {
     ObjectPtr x = lookupPublic(module, name);
     if (!x)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return x;
 }
 
@@ -320,7 +346,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
     ObjectPtr obj = lookupEnv(env, name);
     if (obj == NULL)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return obj;
 }
 
@@ -381,7 +407,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
     }
 
     if (!env->parent) {
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     }
 
     switch (env->parent->objKind) {
@@ -393,7 +419,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
         Module *y = (Module *)env->parent.ptr();
         ObjectPtr z = lookupPrivate(y, name);
         if (!z)
-            error(name, "undefined name: " + name->str);
+            undefinedNameError(name);
         isNonLocal = true;
         isGlobal = true;
         return z;

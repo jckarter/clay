@@ -11,10 +11,9 @@ using namespace std;
 
 static vector<string> searchPath;
 static vector<string> moduleSuffixes;
-static map<string, ModulePtr> modules;
 
+map<string, ModulePtr> globalModules;
 map<string, string> globalFlags;
-
 ModulePtr globalMainModule;
 
 
@@ -257,8 +256,8 @@ static void installGlobals(ModulePtr m) {
 static ModulePtr loadModuleByName(DottedNamePtr name) {
     string key = toKey(name);
 
-    map<string, ModulePtr>::iterator i = modules.find(key);
-    if (i != modules.end())
+    map<string, ModulePtr>::iterator i = globalModules.find(key);
+    if (i != globalModules.end())
         return i->second;
 
     ModulePtr module;
@@ -271,7 +270,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
         module = parse(key, loadFile(path));
     }
 
-    modules[key] = module;
+    globalModules[key] = module;
     loadDependents(module);
     installGlobals(module);
 
@@ -380,9 +379,9 @@ ModulePtr loadProgramSource(const string &name, const string &source) {
 }
 
 ModulePtr loadedModule(const string &module) {
-    if (!modules.count(module))
+    if (!globalModules.count(module))
         error("module not loaded: " + module);
-    return modules[module];
+    return globalModules[module];
 }
 
 
