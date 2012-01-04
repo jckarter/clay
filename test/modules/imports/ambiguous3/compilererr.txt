@@ -1,0 +1,4 @@
+ambiguous imported symbol: foo
+  disambiguate with one of:
+    import a.\(foo\);
+    import b.\(foo\);

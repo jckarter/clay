@@ -1,0 +1,4 @@
+undefined name: puts
+  maybe you need one of:
+    import libc.\(puts\);
+    import libc.generated.\(puts\);
