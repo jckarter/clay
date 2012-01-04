@@ -1145,8 +1145,8 @@ static void declareLLVMType(TypePtr t) {
             llvm::DIArray elementRangeArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(&elementRange, &elementRange + 1));
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createArrayType(
-                x->size,
-                debugTypeAlignment(llvmType(x->elementType)),
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
                 llvmTypeDebugInfo(x->elementType),
                 elementRangeArray);
         }
