@@ -41,9 +41,9 @@ inline overload asin(x:Double) = libc.asin(x);
 inline overload asin(x:Float) = libc.asinf(x);
 inline overload asin(x:LongDouble) = libc.asinl(x);
 
-inline overload atan(x:Double) = libc.atan(x);
-inline overload atan(x:Float) = libc.atanf(x);
-inline overload atan(x:LongDouble) = libc.atanl(x);
+[| MathMode?(LIBM)] inline overload atan(x:Double) = libc.atan(x);
+[| MathMode?(LIBM)] inline overload atan(x:Float) = libc.atanf(x);
+[| MathMode?(LIBM)] inline overload atan(x:LongDouble) = libc.atanl(x);
 
 inline overload atan2(x:Double,y:Double) = libc.atan2(x,y);
 inline overload atan2(x:Float,y:Float) = libc.atan2f(x,y);

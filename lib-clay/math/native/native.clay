@@ -10,6 +10,8 @@ import math.native.log_safe.(log_safe,log2_safe,log10_safe);
 // import math.native.log_unsafe.(log_unsafe);
 import math.native.trig_safe.(sin_safe,cos_safe,tan_safe);
 // import math.native.trig_unsafe.(sin_unsafe,cos_unsafe,tan_unsafe);
+import math.native.atan_safe.(atan_safe, atanpi_safe);
+// import math.native.trig_unsafe.(sin_unsafe,cos_unsafe,tan_unsafe);
 import math.native.pow_safe.(pow_safe);
 // import math.native.pow_unsafe.(pow_unsafe);
 
@@ -26,6 +28,8 @@ define log;
 define log2;
 define log10;
 define exp;
+define atan;
+define atanpi;
 
 //
 //  Safe  - max precision
@@ -41,6 +45,8 @@ define exp;
 [T | Numeric?(T)] inline overload cos(x:T) = cos_safe(x);
 [T | Numeric?(T)] inline overload tan(x:T) = tan_safe(x);
 [T,U | Numeric?(T,U)] inline overload pow(x:T,y:U) = pow_safe(x,y);
+[T | Numeric?(T)] inline overload atan(x:T) = atan_safe(x);
+[T | Numeric?(T)] inline overload atanpi(x:T) = atanpi_safe(x);
 
 
 //

@@ -54,7 +54,7 @@ alias RR_DD_CL              = -1.1698319569212264319871158e-35;
 
 
 
-var digits_256_over_pi = Array[UInt64,48](
+var digits_256_over_pi = array(
     0x51ul,  	         0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
     0x3A9A6EE0ul,  	 0x1B6C52B3ul,  	 0x9E21C82ul,  	 0x3FCA2C7ul,
     0x15EF5DE2ul,  	 0x2C36E48Dul,  	 0x31D2126Eul,  	 0x25C00C92ul,
