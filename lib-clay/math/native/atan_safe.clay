@@ -2,8 +2,7 @@
 
 import math.native.exact.*;
 import math.native.atan_safe_acc.*;
-import math.native.atan_safe_acc.(coef_poly,rncst,epsilon);
-
+import math.(M_PI_2);
 
 private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
 
@@ -20,25 +19,25 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
 
         var xmBihi , xmBilo = 0.,0.;
 
-        if (x > arctan_table[61][B].d) {
+        if (x > arctan_table[61][B].2) {
             i = 61;
-            xmBihi , xmBilo = Add12(x , -arctan_table[61][B].d);
+            xmBihi , xmBilo = Add12(x , -arctan_table[61][B].2);
         }
         else{
             /* compute i so that a[i] < x < a[i+1] */
             i = 31;
-            if (x < arctan_table[i][A].d) i-= 16;
+            if (x < arctan_table[i][A].2) i-= 16;
             else i+=16;
-            if (x < arctan_table[i][A].d) i-= 8;
+            if (x < arctan_table[i][A].2) i-= 8;
             else i+= 8;
-            if (x < arctan_table[i][A].d) i-= 4;
+            if (x < arctan_table[i][A].2) i-= 4;
             else i+= 4;
-            if (x < arctan_table[i][A].d) i-= 2;
+            if (x < arctan_table[i][A].2) i-= 2;
             else i+= 2;
-            if (x < arctan_table[i][A].d) i-= 1;
+            if (x < arctan_table[i][A].2) i-= 1;
             else i+= 1;
-            if (x < arctan_table[i][A].d) i-= 1;
-            xmBihi = x-arctan_table[i][B].d;
+            if (x < arctan_table[i][A].2) i-= 1;
+            xmBihi = x-arctan_table[i][B].2;
             xmBilo = 0.0;
         }
 
@@ -54,7 +53,7 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
         *
         */
 
-        var tmphi,tmplo = Mul12(x, arctan_table[i][B].d);
+        var tmphi,tmplo = Mul12(x, arctan_table[i][B].2);
         var x0hi, x0lo = 0.,0.;
         if (x > 1)
             x0hi, x0lo = Add22(tmphi,tmplo, 1.0,0.0);
@@ -78,9 +77,9 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
                    coef_poly[0]))) ;
 
         /* reconstruction : atan(x) = atan(b[i]) + atan(x) */
-        var atanlolo = (Xredlo + arctan_table[i][ATAN_BLO].d);
+        var atanlolo = (Xredlo + arctan_table[i][ATAN_BLO].2);
         atanlolo += Xredhi*q;
-        var tmphi2, tmplo2 = Add12( arctan_table[i][ATAN_BHI].d, Xredhi);
+        var tmphi2, tmplo2 = Add12( arctan_table[i][ATAN_BHI].2, Xredhi);
         atanhi, atanlo <-- Add12( tmphi2, (tmplo2+atanlolo));
 
         if (i < 10)
@@ -113,20 +112,18 @@ atan_rn(x:Double ) {
     var xdb = db_number();
     xdb.2 = x;
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
-
+    var sign = 1;
     if(bitand(xdb.0[1] , 0x80000000)!=0){
         xdb.0[1] = absxhi;
         sign = -1;
     }
-    else
-        sign = 1;
 
     /* Filter cases */
     if ( absxhi >= 0x43500000) {          /* x >= 2@54 */
         if ((absxhi > 0x7ff00000) or ((absxhi == 0x7ff00000) and (xdb.0[0] != 0)))
             return x+x;                /* NaN */
         else
-            return sign*HALFPI.2;           /* atan(+/-infty) = +/- Pi/2 */
+            return sign*M_PI_2;           /* atan(+/-infty) = +/- Pi/2 */
     }
     if ( absxhi < 0x3E400000 )
         return x;                   /* x<2@-27 then atan(x) =~ x */
@@ -145,13 +142,11 @@ atanpi_rn(x:Double) {
     var xdb = db_number();
     xdb.2 = x;
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
-
+    var sign = 1;
     if(bitand(xdb.0[1] , 0x80000000)){
         x_db.0[1] = absxhi;
         sign =-1;
     }
-    else
-        sign = 1;
 
     /* Filter cases */
     if ( absxhi >= 0x43500000){           /* x >= 2@54 */

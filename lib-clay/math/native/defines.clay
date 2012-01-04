@@ -1,7 +1,6 @@
 
 define acos;
 define asin;
-define atan;
 define cot;
 define atan2;
 define acosh;

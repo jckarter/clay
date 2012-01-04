@@ -1,143 +1,144 @@
 // Correctly rounded arctangent
 import math.native.bigfloat.*;
+import math.native.exact.*;
+import math.(atan);
 
-private var constant_poly [10] =
+private var constant_poly = array(
 /* ~-5.26315789473684210526315789473684210526315789473684e-02 */
-{{{0x035e50d7, 0x250d7943, 0x179435e5, 0x035e50d7,
-0x250d7943, 0x179435e5, 0x035e50d7, 0x250d7943},
-1.,  -1,  -1 }
+BigFloat(array(0x035e50d7u, 0x250d7943u, 0x179435e5u, 0x035e50d7u,
+0x250d7943u, 0x179435e5u, 0x035e50d7u, 0x250d7943u),
+1.,  -1,  -1 )
 ,
 /* ~5.88235294117647058823529411764705882352941176470588e-02 */
-{{0x03c3c3c3, 0x30f0f0f0, 0x3c3c3c3c, 0x0f0f0f0f,
-0x03c3c3c3, 0x30f0f0f0, 0x3c3c3c3c, 0x0f0f0f0f},
-1.,  -1,   1 }
+BigFloat(array(0x03c3c3c3u, 0x30f0f0f0u, 0x3c3c3c3cu, 0x0f0f0f0fu,
+0x03c3c3c3u, 0x30f0f0f0u, 0x3c3c3c3cu, 0x0f0f0f0fu),
+1.,  -1,   1 )
 ,
 /* ~-6.66666666666666666666666666666666666666666666666667e-02 */
-{{0x04444444, 0x11111111, 0x04444444, 0x11111111,
-0x04444444, 0x11111111, 0x04444444, 0x11111111},
-1.,  -1,  -1 }
+BigFloat(array(0x04444444u, 0x11111111u, 0x04444444u, 0x11111111u,
+0x04444444u, 0x11111111u, 0x04444444u, 0x11111111u),
+1.,  -1,  -1 )
 ,
 /* ~7.69230769230769230769230769230769230769230769230769e-02 */
-{{0x04ec4ec4, 0x3b13b13b, 0x04ec4ec4, 0x3b13b13b,
-0x04ec4ec4, 0x3b13b13b, 0x04ec4ec4, 0x3b13b13b},
-1.,  -1,   1 }
+BigFloat(array(0x04ec4ec4u, 0x3b13b13bu, 0x04ec4ec4u, 0x3b13b13bu,
+0x04ec4ec4u, 0x3b13b13bu, 0x04ec4ec4u, 0x3b13b13bu),
+1.,  -1,   1 )
 ,
 /* ~-9.09090909090909090909090909090909090909090909090909e-02 */
-{{0x05d1745d, 0x05d1745d, 0x05d1745d, 0x05d1745d,
-0x05d1745d, 0x05d1745d, 0x05d1745d, 0x05d1745d},
-1.,  -1,  -1 }
+BigFloat(array(0x05d1745du, 0x05d1745du, 0x05d1745du, 0x05d1745du,
+0x05d1745du, 0x05d1745du, 0x05d1745du, 0x05d1745du),
+1.,  -1,  -1 )
 ,
 /* ~1.11111111111111111111111111111111111111111111111111e-01 */
-{{0x071c71c7, 0x071c71c7, 0x071c71c7, 0x071c71c7,
-0x071c71c7, 0x071c71c7, 0x071c71c7, 0x071c71c7},
-1.,  -1,   1 }
+BigFloat(array(0x071c71c7u, 0x071c71c7u, 0x071c71c7u, 0x071c71c7u,
+0x071c71c7u, 0x071c71c7u, 0x071c71c7u, 0x071c71c7u),
+1.,  -1,   1 )
 ,
 /* ~-1.42857142857142857142857142857142857142857142857143e-01 */
-{{0x09249249, 0x09249249, 0x09249249, 0x09249249,
-0x09249249, 0x09249249, 0x09249249, 0x09249249},
-1.,  -1,  -1 }
+BigFloat(array(0x09249249u, 0x09249249u, 0x09249249u, 0x09249249u,
+0x09249249u, 0x09249249u, 0x09249249u, 0x09249249u),
+1.,  -1,  -1 )
 ,
 /* ~2.00000000000000000000000000000000000000000000000000e-01 */
-{{0x0ccccccc, 0x33333333, 0x0ccccccc, 0x33333333,
-0x0ccccccc, 0x33333333, 0x0ccccccc, 0x33333333},
-1.,  -1,   1 }
+BigFloat(array(0x0cccccccu, 0x33333333u, 0x0cccccccu, 0x33333333u,
+0x0cccccccu, 0x33333333u, 0x0cccccccu, 0x33333333u),
+1.,  -1,   1 )
 ,
 /* ~-3.33333333333333333333333333333333333333333333333333e-01 */
-{{0x15555555, 0x15555555, 0x15555555, 0x15555555,
-0x15555555, 0x15555555, 0x15555555, 0x15555555},
-1.,  -1,  -1 }
+BigFloat(array(0x15555555u, 0x15555555u, 0x15555555u, 0x15555555u,
+0x15555555u, 0x15555555u, 0x15555555u, 0x15555555u),
+1.,  -1,  -1 )
 ,
 /* ~1.00000000000000000000000000000000000000000000000000e+00 */
-{{0x00000001, 0x00000000, 0x00000000, 0x00000000,
-0x00000000, 0x00000000, 0x00000000, 0x00000000},
-1.,   0,   1 }
-};
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
+1.,   0,   1 )
+);
 
 private var InvPiBF = BigFloat(array(0x145f306du, 0x327220a9u, 0x13f84eafu, 0x28fa9a6eu,
     0x381b6c52u, 0x2cc9e21cu, 0x2083fca2u, 0x31d5ef5du), 1.,  -1,   1 );
 
-static const db_number atan_blolo[62] = {
-/* 0 */  {{0xA947CCE9,0xB8D1C5F3}} /* -5.3484426395e-35 */,
-/* 1 */  {{0x3C749846,0xB8B05943}} /* -1.2299381479e-35 */,
-/* 2 */  {{0x267751FB,0x38FC2F2A}} /* +3.3925541143e-34 */,
-/* 3 */  {{0xDDA4249D,0x38D44E61}} /* +6.1106690132e-35 */,
-/* 4 */  {{0xA5B245C8,0xB906FBFA}} /* -5.5332673453e-34 */,
-/* 5 */  {{0x67CABE65,0xB8DE1E98}} /* -9.0637612563e-35 */,
-/* 6 */  {{0x45D13048,0x38BD7B8F}} /* +2.2180284354e-35 */,
-/* 7 */  {{0x23AD369B,0xB9049436}} /* -4.9542022687e-34 */,
-/* 8 */  {{0xF6BB1DB7,0xB8F98586}} /* -3.0720497269e-34 */,
-/* 9 */  {{0xCB4D6219,0xB89BC985}} /* -5.2261910438e-36 */,
-/* 10 */  {{0x9C3884F4,0xB8C4002C}} /* -3.0093679582e-35 */,
-/* 11 */  {{0x893058D9,0x3910CBC4}} /* +8.0869642604e-34 */,
-/* 12 */  {{0xFF010BB5,0xB8F5408B}} /* -2.5581328396e-34 */,
-/* 13 */  {{0xB5813578,0xB908570F}} /* -5.8596619457e-34 */,
-/* 14 */  {{0x7E967248,0x39155B89}} /* +1.0283294335e-33 */,
-/* 15 */  {{0x2031F115,0xB8CD159A}} /* -4.3761315763e-35 */,
-/* 16 */  {{0x0FC3C81C,0xB8E8D9C6}} /* -1.4956458040e-34 */,
-/* 17 */  {{0x8219F20D,0x38C0AC30}} /* +2.5086163140e-35 */,
-/* 18 */  {{0x32EDCB95,0x38B36506}} /* +1.4590894790e-35 */,
-/* 19 */  {{0x5932E7C2,0xB8FD57B0}} /* -3.5319791285e-34 */,
-/* 20 */  {{0x91A2D916,0x38C73827}} /* +3.4936600564e-35 */,
-/* 21 */  {{0x9EC5116C,0xB92FE60D}} /* -3.0717278111e-33 */,
-/* 22 */  {{0x6A3B8AE2,0x3903AADF}} /* +4.7347715466e-34 */,
-/* 23 */  {{0x71B87C3C,0xB88D6A01}} /* -2.7660872166e-36 */,
-/* 24 */  {{0xEA5AC8E8,0xB8E17427}} /* -1.0504584084e-34 */,
-/* 25 */  {{0xF776B005,0x38F4ED52}} /* +2.5190016806e-34 */,
-/* 26 */  {{0x75D2B05C,0xB9265B23}} /* -2.1528054385e-33 */,
-/* 27 */  {{0xAFEAB282,0xB8DA45DA}} /* -7.9062036715e-35 */,
-/* 28 */  {{0xBD16D3D4,0x3912EF75}} /* +9.1170587963e-34 */,
-/* 29 */  {{0xE904B022,0x390AB3D7}} /* +6.4283962392e-34 */,
-/* 30 */  {{0x3F9F468B,0xB8EE688B}} /* -1.8301374849e-34 */,
-/* 31 */  {{0x71A98823,0xB9225DF6}} /* -1.7686817787e-33 */,
-/* 32 */  {{0x522BE0F8,0xB8CC82B0}} /* -4.2897836993e-35 */,
-/* 33 */  {{0x88BB6A0B,0xB912AFE0}} /* -8.9974727841e-34 */,
-/* 34 */  {{0x8640FAE5,0x38D4DC99}} /* +6.2778447830e-35 */,
-/* 35 */  {{0x406A343B,0xB9016FC6}} /* -4.1977132916e-34 */,
-/* 36 */  {{0x126FC74C,0x3909804C}} /* +6.1391811422e-34 */,
-/* 37 */  {{0xE5B0956F,0x39051033}} /* +5.0708030720e-34 */,
-/* 38 */  {{0x203B114C,0xB910CADC}} /* -8.0852567814e-34 */,
-/* 39 */  {{0xF97ED36B,0x38EFCAC7}} /* +1.9134182531e-34 */,
-/* 40 */  {{0xB51D77B4,0xB92464C0}} /* -1.9638289218e-33 */,
-/* 41 */  {{0x2D4A03DE,0x391157F3}} /* +8.3506176591e-34 */,
-/* 42 */  {{0x136A8DDE,0xB92BD929}} /* -2.6816921082e-33 */,
-/* 43 */  {{0x035DF6B3,0x390F1514}} /* +7.4828003563e-34 */,
-/* 44 */  {{0x19DB7E3B,0xB92606EC}} /* -2.1211268072e-33 */,
-/* 45 */  {{0xCDA1B51D,0x393B104B}} /* +5.2122706777e-33 */,
-/* 46 */  {{0xF88A520C,0x3935FB01}} /* +4.2332900876e-33 */,
-/* 47 */  {{0x1940944D,0xB9189ED1}} /* -1.1854280852e-33 */,
-/* 48 */  {{0x38D4794B,0xB914E8F2}} /* -1.0067772791e-33 */,
-/* 49 */  {{0x73581CF5,0xB93DF07A}} /* -5.7661126209e-33 */,
-/* 50 */  {{0x727CE10C,0xB939C22F}} /* -4.9609136744e-33 */,
-/* 51 */  {{0x26E1A810,0xB8EF37D2}} /* -1.8788680655e-34 */,
-/* 52 */  {{0x45155DAA,0x391A4251}} /* +1.2643273919e-33 */,
-/* 53 */  {{0xA42D0A9A,0xB9126D2F}} /* -8.8720409776e-34 */,
-/* 54 */  {{0x3DFAFFA5,0xB93CAF8B}} /* -5.5246684074e-33 */,
-/* 55 */  {{0xA9A35831,0x3919C170}} /* +1.2400882522e-33 */,
-/* 56 */  {{0xAE51E4B3,0xB924C2B3}} /* -1.9991686511e-33 */,
-/* 57 */  {{0x0DE98917,0xB8DEFB7D}} /* -9.3234199178e-35 */,
-/* 58 */  {{0x1ABE373B,0xB916EC39}} /* -1.1036900898e-33 */,
-/* 59 */  {{0x4135ADBE,0x391C5BA4}} /* +1.3653868341e-33 */,
-/* 60 */  {{0xD7179E60,0xB9112692}} /* -8.2577511316e-34 */,
-/* 61 */  {{0xBCC93753,0x392F96B5}} /* +3.0418821818e-33 */,
-};
+private var atan_blolo = array(
+/* 0 */  db_number(array(0xA947CCE9,0xB8D1C5F3)) /* -5.3484426395e-35 */,
+/* 1 */  db_number(array(0x3C749846,0xB8B05943)) /* -1.2299381479e-35 */,
+/* 2 */  db_number(array(0x267751FB,0x38FC2F2A)) /* +3.3925541143e-34 */,
+/* 3 */  db_number(array(0xDDA4249D,0x38D44E61)) /* +6.1106690132e-35 */,
+/* 4 */  db_number(array(0xA5B245C8,0xB906FBFA)) /* -5.5332673453e-34 */,
+/* 5 */  db_number(array(0x67CABE65,0xB8DE1E98)) /* -9.0637612563e-35 */,
+/* 6 */  db_number(array(0x45D13048,0x38BD7B8F)) /* +2.2180284354e-35 */,
+/* 7 */  db_number(array(0x23AD369B,0xB9049436)) /* -4.9542022687e-34 */,
+/* 8 */  db_number(array(0xF6BB1DB7,0xB8F98586)) /* -3.0720497269e-34 */,
+/* 9 */  db_number(array(0xCB4D6219,0xB89BC985)) /* -5.2261910438e-36 */,
+/* 10 */  db_number(array(0x9C3884F4,0xB8C4002C)) /* -3.0093679582e-35 */,
+/* 11 */  db_number(array(0x893058D9,0x3910CBC4)) /* +8.0869642604e-34 */,
+/* 12 */  db_number(array(0xFF010BB5,0xB8F5408B)) /* -2.5581328396e-34 */,
+/* 13 */  db_number(array(0xB5813578,0xB908570F)) /* -5.8596619457e-34 */,
+/* 14 */  db_number(array(0x7E967248,0x39155B89)) /* +1.0283294335e-33 */,
+/* 15 */  db_number(array(0x2031F115,0xB8CD159A)) /* -4.3761315763e-35 */,
+/* 16 */  db_number(array(0x0FC3C81C,0xB8E8D9C6)) /* -1.4956458040e-34 */,
+/* 17 */  db_number(array(0x8219F20D,0x38C0AC30)) /* +2.5086163140e-35 */,
+/* 18 */  db_number(array(0x32EDCB95,0x38B36506)) /* +1.4590894790e-35 */,
+/* 19 */  db_number(array(0x5932E7C2,0xB8FD57B0)) /* -3.5319791285e-34 */,
+/* 20 */  db_number(array(0x91A2D916,0x38C73827)) /* +3.4936600564e-35 */,
+/* 21 */  db_number(array(0x9EC5116C,0xB92FE60D)) /* -3.0717278111e-33 */,
+/* 22 */  db_number(array(0x6A3B8AE2,0x3903AADF)) /* +4.7347715466e-34 */,
+/* 23 */  db_number(array(0x71B87C3C,0xB88D6A01)) /* -2.7660872166e-36 */,
+/* 24 */  db_number(array(0xEA5AC8E8,0xB8E17427)) /* -1.0504584084e-34 */,
+/* 25 */  db_number(array(0xF776B005,0x38F4ED52)) /* +2.5190016806e-34 */,
+/* 26 */  db_number(array(0x75D2B05C,0xB9265B23)) /* -2.1528054385e-33 */,
+/* 27 */  db_number(array(0xAFEAB282,0xB8DA45DA)) /* -7.9062036715e-35 */,
+/* 28 */  db_number(array(0xBD16D3D4,0x3912EF75)) /* +9.1170587963e-34 */,
+/* 29 */  db_number(array(0xE904B022,0x390AB3D7)) /* +6.4283962392e-34 */,
+/* 30 */  db_number(array(0x3F9F468B,0xB8EE688B)) /* -1.8301374849e-34 */,
+/* 31 */  db_number(array(0x71A98823,0xB9225DF6)) /* -1.7686817787e-33 */,
+/* 32 */  db_number(array(0x522BE0F8,0xB8CC82B0)) /* -4.2897836993e-35 */,
+/* 33 */  db_number(array(0x88BB6A0B,0xB912AFE0)) /* -8.9974727841e-34 */,
+/* 34 */  db_number(array(0x8640FAE5,0x38D4DC99)) /* +6.2778447830e-35 */,
+/* 35 */  db_number(array(0x406A343B,0xB9016FC6)) /* -4.1977132916e-34 */,
+/* 36 */  db_number(array(0x126FC74C,0x3909804C)) /* +6.1391811422e-34 */,
+/* 37 */  db_number(array(0xE5B0956F,0x39051033)) /* +5.0708030720e-34 */,
+/* 38 */  db_number(array(0x203B114C,0xB910CADC)) /* -8.0852567814e-34 */,
+/* 39 */  db_number(array(0xF97ED36B,0x38EFCAC7)) /* +1.9134182531e-34 */,
+/* 40 */  db_number(array(0xB51D77B4,0xB92464C0)) /* -1.9638289218e-33 */,
+/* 41 */  db_number(array(0x2D4A03DE,0x391157F3)) /* +8.3506176591e-34 */,
+/* 42 */  db_number(array(0x136A8DDE,0xB92BD929)) /* -2.6816921082e-33 */,
+/* 43 */  db_number(array(0x035DF6B3,0x390F1514)) /* +7.4828003563e-34 */,
+/* 44 */  db_number(array(0x19DB7E3B,0xB92606EC)) /* -2.1211268072e-33 */,
+/* 45 */  db_number(array(0xCDA1B51D,0x393B104B)) /* +5.2122706777e-33 */,
+/* 46 */  db_number(array(0xF88A520C,0x3935FB01)) /* +4.2332900876e-33 */,
+/* 47 */  db_number(array(0x1940944D,0xB9189ED1)) /* -1.1854280852e-33 */,
+/* 48 */  db_number(array(0x38D4794B,0xB914E8F2)) /* -1.0067772791e-33 */,
+/* 49 */  db_number(array(0x73581CF5,0xB93DF07A)) /* -5.7661126209e-33 */,
+/* 50 */  db_number(array(0x727CE10C,0xB939C22F)) /* -4.9609136744e-33 */,
+/* 51 */  db_number(array(0x26E1A810,0xB8EF37D2)) /* -1.8788680655e-34 */,
+/* 52 */  db_number(array(0x45155DAA,0x391A4251)) /* +1.2643273919e-33 */,
+/* 53 */  db_number(array(0xA42D0A9A,0xB9126D2F)) /* -8.8720409776e-34 */,
+/* 54 */  db_number(array(0x3DFAFFA5,0xB93CAF8B)) /* -5.5246684074e-33 */,
+/* 55 */  db_number(array(0xA9A35831,0x3919C170)) /* +1.2400882522e-33 */,
+/* 56 */  db_number(array(0xAE51E4B3,0xB924C2B3)) /* -1.9991686511e-33 */,
+/* 57 */  db_number(array(0x0DE98917,0xB8DEFB7D)) /* -9.3234199178e-35 */,
+/* 58 */  db_number(array(0x1ABE373B,0xB916EC39)) /* -1.1036900898e-33 */,
+/* 59 */  db_number(array(0x4135ADBE,0x391C5BA4)) /* +1.3653868341e-33 */,
+/* 60 */  db_number(array(0xD7179E60,0xB9112692)) /* -8.2577511316e-34 */,
+/* 61 */  db_number(array(0xBCC93753,0x392F96B5)) /* +3.0418821818e-33 */,
+);
 
-private var HALFPI = db_number(0x54442D18u,0x3FF921FBu);
-private var HALFPI_TO_PLUS_INFINITY = db_number(0x54442D19u,0x3FF921FBu);
+private var HALFPI_TO_PLUS_INFINITY = db_number(array(0x54442D19,0x3FF921FB));
 
-alias MIN_REDUCTION_NEEDED 0.01269144369306618004077670910586377580133132772550
-alias INVPIH 0.31830988618379069121644420192751567810773849487305
-alias INVPIL -0.00000000000000001967867667518248588189519091409181
-alias nb_of_ai 62
-alias nb_of_bi 62
+alias MIN_REDUCTION_NEEDED = 0.01269144369306618004077670910586377580133132772550;
+alias INVPIH = 0.31830988618379069121644420192751567810773849487305;
+alias INVPIL = -0.00000000000000001967867667518248588189519091409181;
+alias nb_of_ai = 62;
+alias nb_of_bi = 62;
 
-private var rncst = array(
+var rncst = array(
     1.00108178765940960655050071055243374002677613873338 , /* i<10 */
     1.00005232457100223306383112145248847898875939835839 , /* i>10 */
     1.00177430465884899885886845639867196876576265849646 , /* e > 2@-10 */
     1.00001038174963923723172604569348623337721036178939 , /* e < 2@-10 */
 );
 
-private var epsilon = array(
+var epsilon = array(
     5.98811545469121308132334292226294391299405661608483e-20 ,
     2.85148356343799927177205125935801754271662806490715e-21 ,
     9.82484875894815915914535124879847312836985338769278e-20 ,
@@ -146,7 +147,7 @@ private var epsilon = array(
 
 alias DEGREE = 4;
 
-private var coef_poly = array(
+var coef_poly = array(
     /* coef for degree 9 */ 0.11111111111111110494320541874913033097982406616211,
     /* coef for degree 7 */ -0.14285714285714284921269268124888185411691665649414,
     /* coef for degree 5 */ 0.20000000000000001110223024625156540423631668090820,
@@ -159,317 +160,317 @@ alias ATAN_BHI = 2;
 alias ATAN_BLO = 3;
 
 /* limits of the intervals [a[i],b[i]] */
-private var arctan_table = array(
+var arctan_table = array(
 
 array(
-/*a[0]     */ db_number(0xBCCE533D,0x3F89FDF8) /* +1.2691443693e-02 */ ,
-/*b[0] :   */ db_number(0x27760007,0x3F99FF0B) /* +2.5386976512e-02 */ ,
-/*atan_b[0]*/ db_number(0x4969F96C,0x3F99FD9D) /* +2.5381524664e-02 */,db_number(0x750685EA,0xBC301997) /* -8.7278097631e-19 */ ,
+/*a[0]     */ db_number(array(0xBCCE533D,0x3F89FDF8)) /* +1.2691443693e-02 */ ,
+/*b[0] :   */ db_number(array(0x27760007,0x3F99FF0B)) /* +2.5386976512e-02 */ ,
+/*atan_b[0]*/ db_number(array(0x4969F96C,0x3F99FD9D)) /* +2.5381524664e-02 */,db_number(array(0x750685EA,0xBC301997)) /* -8.7278097631e-19 */ ,
 )
 ,array(
-/*a[1]     */ db_number(0x90CEBC31,0x3FA3809F) /* +3.8090692927e-02 */ ,
-/*b[1] :   */ db_number(0xE3547CC2,0x3FAA0355) /* +5.0806697846e-02 */ ,
-/*atan_b[1]*/ db_number(0x4936262D,0x3FA9FD9D) /* +5.0763049304e-02 */,db_number(0x3A2D0F59,0xBC4C1F96) /* -3.0491436238e-18 */ ,
+/*a[1]     */ db_number(array(0x90CEBC31,0x3FA3809F)) /* +3.8090692927e-02 */ ,
+/*b[1] :   */ db_number(array(0xE3547CC2,0x3FAA0355)) /* +5.0806697846e-02 */ ,
+/*atan_b[1]*/ db_number(array(0x4936262D,0x3FA9FD9D)) /* +5.0763049304e-02 */,db_number(array(0x3A2D0F59,0xBC4C1F96)) /* -3.0491436238e-18 */ ,
 )
 ,array(
-/*a[2]     */ db_number(0x68FBA526,0x3FB04419) /* +6.3539112216e-02 */ ,
-/*b[2] :   */ db_number(0xABF7BFB9,0x3FB387E0) /* +7.6292078003e-02 */ ,
-/*atan_b[2]*/ db_number(0xF6C1E06C,0x3FB37E35) /* +7.6144573921e-02 */,db_number(0x8378E024,0xBC556710) /* -4.6409481568e-18 */ ,
+/*a[2]     */ db_number(array(0x68FBA526,0x3FB04419)) /* +6.3539112216e-02 */ ,
+/*b[2] :   */ db_number(array(0xABF7BFB9,0x3FB387E0)) /* +7.6292078003e-02 */ ,
+/*atan_b[2]*/ db_number(array(0xF6C1E06C,0x3FB37E35)) /* +7.6144573921e-02 */,db_number(array(0x8378E024,0xBC556710)) /* -4.6409481568e-18 */ ,
 )
 ,array(
-/*a[3]     */ db_number(0xABCDFA25,0x3FB6CD46) /* +8.9069764084e-02 */ ,
-/*b[3] :   */ db_number(0xE265B8AB,0x3FBA1491) /* +1.0187637117e-01 */ ,
-/*atan_b[3]*/ db_number(0x48CF1996,0x3FB9FD9D) /* +1.0152609851e-01 */,db_number(0xB73BED3C,0xBC4360DC) /* -2.1010068528e-18 */ ,
+/*a[3]     */ db_number(array(0xABCDFA25,0x3FB6CD46)) /* +8.9069764084e-02 */ ,
+/*b[3] :   */ db_number(array(0xE265B8AB,0x3FBA1491)) /* +1.0187637117e-01 */ ,
+/*atan_b[3]*/ db_number(array(0x48CF1996,0x3FB9FD9D)) /* +1.0152609851e-01 */,db_number(array(0xB73BED3C,0xBC4360DC)) /* -2.1010068528e-18 */ ,
 )
 ,array(
-/*a[4]     */ db_number(0x6D2EA546,0x3FBD5E09) /* +1.1471613803e-01 */ ,
-/*b[4] :   */ db_number(0x9124D46B,0x3FC054FA) /* +1.2759334647e-01 */ ,
-/*atan_b[4]*/ db_number(0x4D618156,0x3FC03E82) /* +1.2690762308e-01 */,db_number(0x49A86344,0x3C62604E) /* +7.9694040325e-18 */ ,
+/*a[4]     */ db_number(array(0x6D2EA546,0x3FBD5E09)) /* +1.1471613803e-01 */ ,
+/*b[4] :   */ db_number(array(0x9124D46B,0x3FC054FA)) /* +1.2759334647e-01 */ ,
+/*atan_b[4]*/ db_number(array(0x4D618156,0x3FC03E82)) /* +1.2690762308e-01 */,db_number(array(0x49A86344,0x3C62604E)) /* +7.9694040325e-18 */ ,
 )
 ,array(
-/*a[5]     */ db_number(0xD691E891,0x3FC1FC4E) /* +1.4051232793e-01 */ ,
-/*b[5] :   */ db_number(0x51F57043,0x3FC3A526) /* +1.5347746851e-01 */ ,
-/*atan_b[5]*/ db_number(0xF64EF83E,0x3FC37E35) /* +1.5228914763e-01 */,db_number(0xB4A55EA6,0x3C5F2B13) /* +6.7585410867e-18 */ ,
+/*a[5]     */ db_number(array(0xD691E891,0x3FC1FC4E)) /* +1.4051232793e-01 */ ,
+/*b[5] :   */ db_number(array(0x51F57043,0x3FC3A526)) /* +1.5347746851e-01 */ ,
+/*atan_b[5]*/ db_number(array(0xF64EF83E,0x3FC37E35)) /* +1.5228914763e-01 */,db_number(array(0xB4A55EA6,0x3C5F2B13)) /* +6.7585410867e-18 */ ,
 )
 ,array(
-/*a[6]     */ db_number(0x531F610B,0x3FC54FA6) /* +1.6649321612e-01 */ ,
-/*b[6] :   */ db_number(0xB99F2601,0x3FC6FBF4) /* +1.7956408561e-01 */ ,
-/*atan_b[6]*/ db_number(0x9F302425,0x3FC6BDE9) /* +1.7767067216e-01 */,db_number(0xC4D330CE,0xBC23B62A) /* -5.3428372026e-19 */ ,
+/*a[6]     */ db_number(array(0x531F610B,0x3FC54FA6)) /* +1.6649321612e-01 */ ,
+/*b[6] :   */ db_number(array(0xB99F2601,0x3FC6FBF4)) /* +1.7956408561e-01 */ ,
+/*atan_b[6]*/ db_number(array(0x9F302425,0x3FC6BDE9)) /* +1.7767067216e-01 */,db_number(array(0xC4D330CE,0xBC23B62A)) /* -5.3428372026e-19 */ ,
 )
 ,array(
-/*a[7]     */ db_number(0x0550EAF1,0x3FC8AA38) /* +1.9269466648e-01 */ ,
-/*b[7] :   */ db_number(0x61D9D63D,0x3FCA5A97) /* +2.0588962820e-01 */ ,
-/*atan_b[7]*/ db_number(0x48053FC8,0x3FC9FD9D) /* +2.0305219666e-01 */,db_number(0x98474AF1,0xBC67A12C) /* -1.0247699700e-17 */ ,
+/*a[7]     */ db_number(array(0x0550EAF1,0x3FC8AA38)) /* +1.9269466648e-01 */ ,
+/*b[7] :   */ db_number(array(0x61D9D63D,0x3FCA5A97)) /* +2.0588962820e-01 */ ,
+/*atan_b[7]*/ db_number(array(0x48053FC8,0x3FC9FD9D)) /* +2.0305219666e-01 */,db_number(array(0x98474AF1,0xBC67A12C)) /* -1.0247699700e-17 */ ,
 )
 ,array(
-/*a[8]     */ db_number(0xB8975BD9,0x3FCC0D3A) /* +2.1915372861e-01 */ ,
-/*b[8] :   */ db_number(0xBCBF6ABC,0x3FCDC24A) /* +2.3249181954e-01 */ ,
-/*atan_b[8]*/ db_number(0xF0CE8DD9,0x3FCD3D50) /* +2.2843372114e-01 */,db_number(0x3A31D353,0x3C6EF257) /* +1.3420967238e-17 */ ,
+/*a[8]     */ db_number(array(0xB8975BD9,0x3FCC0D3A)) /* +2.1915372861e-01 */ ,
+/*b[8] :   */ db_number(array(0xBCBF6ABC,0x3FCDC24A)) /* +2.3249181954e-01 */ ,
+/*atan_b[8]*/ db_number(array(0xF0CE8DD9,0x3FCD3D50)) /* +2.2843372114e-01 */,db_number(array(0x3A31D353,0x3C6EF257)) /* +1.3420967238e-17 */ ,
 )
 ,array(
-/*a[9]     */ db_number(0xFEE46885,0x3FCF79F0) /* +2.4590885588e-01 */ ,
-/*b[9] :   */ db_number(0xFCF66B85,0x3FD09A2B) /* +2.5940990165e-01 */ ,
-/*atan_b[9]*/ db_number(0x4CC62C6B,0x3FD03E82) /* +2.5381524560e-01 */,db_number(0x95C6E482,0x3C5DA594) /* +6.4286246635e-18 */ ,
+/*a[9]     */ db_number(array(0xFEE46885,0x3FCF79F0)) /* +2.4590885588e-01 */ ,
+/*b[9] :   */ db_number(array(0xFCF66B85,0x3FD09A2B)) /* +2.5940990165e-01 */ ,
+/*atan_b[9]*/ db_number(array(0x4CC62C6B,0x3FD03E82)) /* +2.5381524560e-01 */,db_number(array(0x95C6E482,0x3C5DA594)) /* +6.4286246635e-18 */ ,
 )
 ,array(
-/*a[10]     */ db_number(0x943274CA,0x3FD178D5) /* +2.7300013993e-01 */ ,
-/*b[10] :   */ db_number(0x8943E603,0x3FD2590B) /* +2.8668487935e-01 */ ,
-/*atan_b[10]*/ db_number(0x211F7969,0x3FD1DE5C) /* +2.7919677004e-01 */,db_number(0x0B01EF44,0x3C3C4E87) /* +1.5345118889e-18 */ ,
+/*a[10]     */ db_number(array(0x943274CA,0x3FD178D5)) /* +2.7300013993e-01 */ ,
+/*b[10] :   */ db_number(array(0x8943E603,0x3FD2590B)) /* +2.8668487935e-01 */ ,
+/*atan_b[10]*/ db_number(array(0x211F7969,0x3FD1DE5C)) /* +2.7919677004e-01 */,db_number(array(0x0B01EF44,0x3C3C4E87)) /* +1.5345118889e-18 */ ,
 )
 ,array(
-/*a[11]     */ db_number(0xB2CFB5F7,0x3FD33AE4) /* +3.0046956503e-01 */ ,
-/*b[11] :   */ db_number(0x81B0D1DF,0x3FD41E78) /* +3.1435978570e-01 */ ,
-/*atan_b[11]*/ db_number(0xF5735AA1,0x3FD37E35) /* +3.0457829447e-01 */,db_number(0x8D437AE9,0xBC772D05) /* -2.0101859382e-17 */ ,
+/*a[11]     */ db_number(array(0xB2CFB5F7,0x3FD33AE4)) /* +3.0046956503e-01 */ ,
+/*b[11] :   */ db_number(array(0x81B0D1DF,0x3FD41E78)) /* +3.1435978570e-01 */ ,
+/*atan_b[11]*/ db_number(array(0xF5735AA1,0x3FD37E35)) /* +3.0457829447e-01 */,db_number(array(0x8D437AE9,0xBC772D05)) /* -2.0101859382e-17 */ ,
 )
 ,array(
-/*a[12]     */ db_number(0x0DD40A5B,0x3FD503DF) /* +3.2836128569e-01 */ ,
-/*b[12] :   */ db_number(0x1EB6A659,0x3FD5EB31) /* +3.4247997283e-01 */ ,
-/*atan_b[12]*/ db_number(0xC9C20060,0x3FD51E0F) /* +3.2995981887e-01 */,db_number(0x20BA7A7B,0xBC6C0F53) /* -1.2169025414e-17 */ ,
+/*a[12]     */ db_number(array(0x0DD40A5B,0x3FD503DF)) /* +3.2836128569e-01 */ ,
+/*b[12] :   */ db_number(array(0x1EB6A659,0x3FD5EB31)) /* +3.4247997283e-01 */ ,
+/*atan_b[12]*/ db_number(array(0xC9C20060,0x3FD51E0F)) /* +3.2995981887e-01 */,db_number(array(0x20BA7A7B,0xBC6C0F53)) /* -1.2169025414e-17 */ ,
 )
 ,array(
-/*a[13]     */ db_number(0x3998DD14,0x3FD6D488) /* +3.5672193169e-01 */ ,
-/*b[13] :   */ db_number(0xAAF865B1,0x3FD7BFFE) /* +3.7109343239e-01 */ ,
-/*atan_b[13]*/ db_number(0x9E0B9E67,0x3FD6BDE9) /* +3.5534134325e-01 */,db_number(0x870D5E8E,0x3C797792) /* +2.2089170409e-17 */ ,
+/*a[13]     */ db_number(array(0x3998DD14,0x3FD6D488)) /* +3.5672193169e-01 */ ,
+/*b[13] :   */ db_number(array(0xAAF865B1,0x3FD7BFFE)) /* +3.7109343239e-01 */ ,
+/*atan_b[13]*/ db_number(array(0x9E0B9E67,0x3FD6BDE9)) /* +3.5534134325e-01 */,db_number(array(0x870D5E8E,0x3C797792)) /* +2.2089170409e-17 */ ,
 )
 ,array(
-/*a[14]     */ db_number(0x964ABFA5,0x3FD8ADAF) /* +3.8560094525e-01 */ ,
-/*b[14] :   */ db_number(0x00A6F44E,0x3FD99DB7) /* +4.0025115074e-01 */ ,
-/*atan_b[14]*/ db_number(0x72506BCA,0x3FD85DC3) /* +3.8072286762e-01 */,db_number(0x43A1CBA3,0x3C720BD1) /* +1.5652550322e-17 */ ,
+/*a[14]     */ db_number(array(0x964ABFA5,0x3FD8ADAF)) /* +3.8560094525e-01 */ ,
+/*b[14] :   */ db_number(array(0x00A6F44E,0x3FD99DB7)) /* +4.0025115074e-01 */ ,
+/*atan_b[14]*/ db_number(array(0x72506BCA,0x3FD85DC3)) /* +3.8072286762e-01 */,db_number(array(0x43A1CBA3,0x3C720BD1)) /* +1.5652550322e-17 */ ,
 )
 ,array(
-/*a[15]     */ db_number(0xE241114E,0x3FDA9031) /* +4.1505095573e-01 */ ,
-/*b[15] :   */ db_number(0x327F0E90,0x3FDB853E) /* +4.3000750476e-01 */ ,
-/*atan_b[15]*/ db_number(0x4690A2C8,0x3FD9FD9D) /* +4.0610439197e-01 */,db_number(0xEFB73034,0xBC6A048E) /* -1.1283424731e-17 */ ,
+/*a[15]     */ db_number(array(0xE241114E,0x3FDA9031)) /* +4.1505095573e-01 */ ,
+/*b[15] :   */ db_number(array(0x327F0E90,0x3FDB853E)) /* +4.3000750476e-01 */ ,
+/*atan_b[15]*/ db_number(array(0x4690A2C8,0x3FD9FD9D)) /* +4.0610439197e-01 */,db_number(array(0xEFB73034,0xBC6A048E)) /* -1.1283424731e-17 */ ,
 )
 ,array(
-/*a[16]     */ db_number(0xFB78B41D,0x3FDC7CFA) /* +4.4512819822e-01 */ ,
-/*b[16] :   */ db_number(0x67BE333A,0x3FDD7788) /* +4.6042070514e-01 */ ,
-/*atan_b[16]*/ db_number(0x1ACC80A6,0x3FDB9D77) /* +4.3148591630e-01 */,db_number(0xE8FB154D,0x3C6A9BD7) /* +1.1539711581e-17 */ ,
+/*a[16]     */ db_number(array(0xFB78B41D,0x3FDC7CFA)) /* +4.4512819822e-01 */ ,
+/*b[16] :   */ db_number(array(0x67BE333A,0x3FDD7788)) /* +4.6042070514e-01 */ ,
+/*atan_b[16]*/ db_number(array(0x1ACC80A6,0x3FDB9D77)) /* +4.3148591630e-01 */,db_number(array(0xE8FB154D,0x3C6A9BD7)) /* +1.1539711581e-17 */ ,
 )
 ,array(
-/*a[17]     */ db_number(0xD82B9DC6,0x3FDE7507) /* +4.7589298354e-01 */ ,
-/*b[17] :   */ db_number(0xF3B4AACC,0x3FDF759B) /* +4.9155329513e-01 */ ,
-/*atan_b[17]*/ db_number(0xEF044589,0x3FDD3D50) /* +4.5686744062e-01 */,db_number(0x09E8652E,0x3C575857) /* +5.0621568797e-18 */ ,
+/*a[17]     */ db_number(array(0xD82B9DC6,0x3FDE7507)) /* +4.7589298354e-01 */ ,
+/*b[17] :   */ db_number(array(0xF3B4AACC,0x3FDF759B)) /* +4.9155329513e-01 */ ,
+/*atan_b[17]*/ db_number(array(0xEF044589,0x3FDD3D50)) /* +4.5686744062e-01 */,db_number(array(0x09E8652E,0x3C575857)) /* +5.0621568797e-18 */ ,
 )
 ,array(
-/*a[18]     */ db_number(0x5FF4B2AB,0x3FE03CB4) /* +5.0741022817e-01 */ ,
-/*b[18] :   */ db_number(0xD9952BEF,0x3FE0C049) /* +5.2347271439e-01 */ ,
-/*atan_b[18]*/ db_number(0xC338344A,0x3FDEDD2A) /* +4.8224896492e-01 */,db_number(0x81513292,0x3C23C787) /* +5.3612202011e-19 */ ,
+/*a[18]     */ db_number(array(0x5FF4B2AB,0x3FE03CB4)) /* +5.0741022817e-01 */ ,
+/*b[18] :   */ db_number(array(0xD9952BEF,0x3FE0C049)) /* +5.2347271439e-01 */ ,
+/*atan_b[18]*/ db_number(array(0xC338344A,0x3FDEDD2A)) /* +4.8224896492e-01 */,db_number(array(0x81513292,0x3C23C787)) /* +5.3612202011e-19 */ ,
 )
 ,array(
-/*a[19]     */ db_number(0xE826E4EA,0x3FE145A1) /* +5.3975005476e-01 */ ,
-/*b[19] :   */ db_number(0xDDD96DE0,0x3FE1CCD0) /* +5.5625193911e-01 */ ,
-/*atan_b[19]*/ db_number(0x4BB44923,0x3FE03E82) /* +5.0763048922e-01 */,db_number(0x49DF0A58,0x3C8CAF01) /* +4.9758137561e-17 */ ,
+/*a[19]     */ db_number(array(0xE826E4EA,0x3FE145A1)) /* +5.3975005476e-01 */ ,
+/*b[19] :   */ db_number(array(0xDDD96DE0,0x3FE1CCD0)) /* +5.5625193911e-01 */ ,
+/*atan_b[19]*/ db_number(array(0x4BB44923,0x3FE03E82)) /* +5.0763048922e-01 */,db_number(array(0x49DF0A58,0x3C8CAF01)) /* +4.9758137561e-17 */ ,
 )
 ,array(
-/*a[20]     */ db_number(0xED462BAC,0x3FE255EB) /* +5.7298847525e-01 */ ,
-/*b[20] :   */ db_number(0x35B0819C,0x3FE2E109) /* +5.8997021185e-01 */ ,
-/*atan_b[20]*/ db_number(0x35CAD39D,0x3FE10E6F) /* +5.3301201350e-01 */,db_number(0x0D1EB36B,0x3C45DB33) /* +2.3696591272e-18 */ ,
+/*a[20]     */ db_number(array(0xED462BAC,0x3FE255EB)) /* +5.7298847525e-01 */ ,
+/*b[20] :   */ db_number(array(0x35B0819C,0x3FE2E109)) /* +5.8997021185e-01 */ ,
+/*atan_b[20]*/ db_number(array(0x35CAD39D,0x3FE10E6F)) /* +5.3301201350e-01 */,db_number(array(0x0D1EB36B,0x3C45DB33)) /* +2.3696591272e-18 */ ,
 )
 ,array(
-/*a[21]     */ db_number(0xD4CDD9AC,0x3FE36E3F) /* +6.0720817149e-01 */ ,
-/*b[21] :   */ db_number(0xF51235D9,0x3FE3FDA7) /* +6.2471387735e-01 */ ,
-/*atan_b[21]*/ db_number(0x1FDFDE84,0x3FE1DE5C) /* +5.5839353776e-01 */,db_number(0xD3921CA6,0x3C86FBEF) /* +3.9871106783e-17 */ ,
+/*a[21]     */ db_number(array(0xD4CDD9AC,0x3FE36E3F)) /* +6.0720817149e-01 */ ,
+/*b[21] :   */ db_number(array(0xF51235D9,0x3FE3FDA7)) /* +6.2471387735e-01 */ ,
+/*atan_b[21]*/ db_number(array(0x1FDFDE84,0x3FE1DE5C)) /* +5.5839353776e-01 */,db_number(array(0xD3921CA6,0x3C86FBEF)) /* +3.9871106783e-17 */ ,
 )
 ,array(
-/*a[22]     */ db_number(0xE1FB2991,0x3FE48F5A) /* +6.4249939095e-01 */ ,
-/*b[22] :   */ db_number(0x18D0CCB0,0x3FE52373) /* +6.6057734343e-01 */ ,
-/*atan_b[22]*/ db_number(0x09F38FC9,0x3FE2AE49) /* +5.8377506202e-01 */,db_number(0x058084C6,0xBC84BBB5) /* -3.5966422408e-17 */ ,
+/*a[22]     */ db_number(array(0xE1FB2991,0x3FE48F5A)) /* +6.4249939095e-01 */ ,
+/*b[22] :   */ db_number(array(0x18D0CCB0,0x3FE52373)) /* +6.6057734343e-01 */ ,
+/*atan_b[22]*/ db_number(array(0x09F38FC9,0x3FE2AE49)) /* +5.8377506202e-01 */,db_number(array(0x058084C6,0xBC84BBB5)) /* -3.5966422408e-17 */ ,
 )
 ,array(
-/*a[23]     */ db_number(0x5FE86E27,0x3FE5BA0C) /* +6.7896097881e-01 */ ,
-/*b[23] :   */ db_number(0xDA588D41,0x3FE65343) /* +6.9766419073e-01 */ ,
-/*atan_b[23]*/ db_number(0xF4060E3D,0x3FE37E35) /* +6.0915658627e-01 */,db_number(0xAE25B9B7,0x3BF6235C) /* +7.5006911959e-20 */ ,
+/*a[23]     */ db_number(array(0x5FE86E27,0x3FE5BA0C)) /* +6.7896097881e-01 */ ,
+/*b[23] :   */ db_number(array(0xDA588D41,0x3FE65343)) /* +6.9766419073e-01 */ ,
+/*atan_b[23]*/ db_number(array(0xF4060E3D,0x3FE37E35)) /* +6.0915658627e-01 */,db_number(array(0xAE25B9B7,0x3BF6235C)) /* +7.5006911959e-20 */ ,
 )
 ,array(
-/*a[24]     */ db_number(0x22C19A5D,0x3FE6EF38) /* +7.1670157231e-01 */ ,
-/*b[24] :   */ db_number(0x629002BC,0x3FE78E09) /* +7.3608845950e-01 */ ,
-/*atan_b[24]*/ db_number(0xDE17817F,0x3FE44E22) /* +6.3453811052e-01 */,db_number(0x1A6D25E3,0xBC85F46E) /* -3.8085515717e-17 */ ,
+/*a[24]     */ db_number(array(0x22C19A5D,0x3FE6EF38)) /* +7.1670157231e-01 */ ,
+/*b[24] :   */ db_number(array(0x629002BC,0x3FE78E09)) /* +7.3608845950e-01 */ ,
+/*atan_b[24]*/ db_number(array(0xDE17817F,0x3FE44E22)) /* +6.3453811052e-01 */,db_number(array(0x1A6D25E3,0xBC85F46E)) /* -3.8085515717e-17 */ ,
 )
 ,array(
-/*a[25]     */ db_number(0x70F967BD,0x3FE82FD9) /* +7.5584098878e-01 */ ,
-/*b[25] :   */ db_number(0xEE8B9555,0x3FE8D4CB) /* +7.7597614852e-01 */ ,
-/*atan_b[25]*/ db_number(0xC82811DC,0x3FE51E0F) /* +6.5991963475e-01 */,db_number(0xFCB9720C,0xBC81CCF7) /* -3.0879221028e-17 */ ,
+/*a[25]     */ db_number(array(0x70F967BD,0x3FE82FD9)) /* +7.5584098878e-01 */ ,
+/*b[25] :   */ db_number(array(0xEE8B9555,0x3FE8D4CB)) /* +7.7597614852e-01 */ ,
+/*atan_b[25]*/ db_number(array(0xC82811DC,0x3FE51E0F)) /* +6.5991963475e-01 */,db_number(array(0xFCB9720C,0xBC81CCF7)) /* -3.0879221028e-17 */ ,
 )
 ,array(
-/*a[26]     */ db_number(0x69351A0D,0x3FE97D06) /* +7.9651184605e-01 */ ,
-/*b[26] :   */ db_number(0x7D0D616A,0x3FEA28B0) /* +8.1746696877e-01 */ ,
-/*atan_b[26]*/ db_number(0xB237E838,0x3FE5EDFC) /* +6.8530115898e-01 */,db_number(0xF8F29048,0xBC833EA8) /* -3.3384347049e-17 */ ,
+/*a[26]     */ db_number(array(0x69351A0D,0x3FE97D06)) /* +7.9651184605e-01 */ ,
+/*b[26] :   */ db_number(array(0x7D0D616A,0x3FEA28B0)) /* +8.1746696877e-01 */ ,
+/*atan_b[26]*/ db_number(array(0xB237E838,0x3FE5EDFC)) /* +6.8530115898e-01 */,db_number(array(0xF8F29048,0xBC833EA8)) /* -3.3384347049e-17 */ ,
 )
 ,array(
-/*a[27]     */ db_number(0xFE730FCD,0x3FEAD7F3) /* +8.3886146257e-01 */ ,
-/*b[27] :   */ db_number(0x21335E3D,0x3FEB8AFD) /* +8.6071640477e-01 */ ,
-/*atan_b[27]*/ db_number(0x9C472DF1,0x3FE6BDE9) /* +7.1068268321e-01 */,db_number(0x80DED249,0x3C5E8127) /* +6.6146109909e-18 */ ,
+/*a[27]     */ db_number(array(0xFE730FCD,0x3FEAD7F3)) /* +8.3886146257e-01 */ ,
+/*b[27] :   */ db_number(array(0x21335E3D,0x3FEB8AFD)) /* +8.6071640477e-01 */ ,
+/*atan_b[27]*/ db_number(array(0x9C472DF1,0x3FE6BDE9)) /* +7.1068268321e-01 */,db_number(array(0x80DED249,0x3C5E8127)) /* +6.6146109909e-18 */ ,
 )
 ,array(
-/*a[28]     */ db_number(0xAA0A733E,0x3FEC41FA) /* +8.8305409633e-01 */ ,
-/*b[28] :   */ db_number(0x1D9A7669,0x3FECFD1E) /* +9.0589814932e-01 */ ,
-/*atan_b[28]*/ db_number(0x86560CC5,0x3FE78DD6) /* +7.3606420743e-01 */,db_number(0x9396D511,0xBC7E962F) /* -2.6529701578e-17 */ ,
+/*a[28]     */ db_number(array(0xAA0A733E,0x3FEC41FA)) /* +8.8305409633e-01 */ ,
+/*b[28] :   */ db_number(array(0x1D9A7669,0x3FECFD1E)) /* +9.0589814932e-01 */ ,
+/*atan_b[28]*/ db_number(array(0x86560CC5,0x3FE78DD6)) /* +7.3606420743e-01 */,db_number(array(0x9396D511,0xBC7E962F)) /* -2.6529701578e-17 */ ,
 )
 ,array(
-/*a[29]     */ db_number(0xFAEEEADF,0x3FEDBC9B) /* +9.2927359591e-01 */ ,
-/*b[29] :   */ db_number(0xF41419E7,0x3FEE80AB) /* +9.5320699379e-01 */ ,
-/*atan_b[29]*/ db_number(0x7064AEB4,0x3FE85DC3) /* +7.6144573166e-01 */,db_number(0x5225ACD1,0x3C77C0FC) /* +2.0603180716e-17 */ ,
+/*a[29]     */ db_number(array(0xFAEEEADF,0x3FEDBC9B)) /* +9.2927359591e-01 */ ,
+/*b[29] :   */ db_number(array(0xF41419E7,0x3FEE80AB)) /* +9.5320699379e-01 */ ,
+/*atan_b[29]*/ db_number(array(0x7064AEB4,0x3FE85DC3)) /* +7.6144573166e-01 */,db_number(array(0x5225ACD1,0x3C77C0FC)) /* +2.0603180716e-17 */ ,
 )
 ,array(
-/*a[30]     */ db_number(0x33AC790A,0x3FEF4989) /* +9.7772655575e-01 */ ,
-/*b[30] :   */ db_number(0x50BB2D02,0x3FF00BB9) /* +1.0028622774e+00 */ ,
-/*atan_b[30]*/ db_number(0x5A733DE9,0x3FE92DB0) /* +7.8682725588e-01 */,db_number(0xA318D041,0xBC6598C9) /* -9.3661305872e-18 */ ,
+/*a[30]     */ db_number(array(0x33AC790A,0x3FEF4989)) /* +9.7772655575e-01 */ ,
+/*b[30] :   */ db_number(array(0x50BB2D02,0x3FF00BB9)) /* +1.0028622774e+00 */ ,
+/*atan_b[30]*/ db_number(array(0x5A733DE9,0x3FE92DB0)) /* +7.8682725588e-01 */,db_number(array(0xA318D041,0xBC6598C9)) /* -9.3661305872e-18 */ ,
 )
 ,array(
-/*a[31]     */ db_number(0x9AC922B4,0x3FF07555) /* +1.0286460921e+00 */ ,
-/*b[31] :   */ db_number(0x25F4BC57,0x3FF0E1BD) /* +1.0551120265e+00 */ ,
-/*atan_b[31]*/ db_number(0x4481E499,0x3FE9FD9D) /* +8.1220878010e-01 */,db_number(0x9464A40D,0xBC82E89F) /* -3.2801339756e-17 */ ,
+/*a[31]     */ db_number(array(0x9AC922B4,0x3FF07555)) /* +1.0286460921e+00 */ ,
+/*b[31] :   */ db_number(array(0x25F4BC57,0x3FF0E1BD)) /* +1.0551120265e+00 */ ,
+/*atan_b[31]*/ db_number(array(0x4481E499,0x3FE9FD9D)) /* +8.1220878010e-01 */,db_number(array(0x9464A40D,0xBC82E89F)) /* -3.2801339756e-17 */ ,
 )
 ,array(
-/*a[32]     */ db_number(0x0440E8D3,0x3FF15116) /* +1.0822963873e+00 */ ,
-/*b[32] :   */ db_number(0xDEC8DA1A,0x3FF1C388) /* +1.1102379515e+00 */ ,
-/*atan_b[32]*/ db_number(0x2E90CCEA,0x3FEACD8A) /* +8.3759030433e-01 */,db_number(0xFE4AC33B,0x3C60B8DB) /* +7.2520578222e-18 */ ,
+/*a[32]     */ db_number(array(0x0440E8D3,0x3FF15116)) /* +1.0822963873e+00 */ ,
+/*b[32] :   */ db_number(array(0xDEC8DA1A,0x3FF1C388)) /* +1.1102379515e+00 */ ,
+/*atan_b[32]*/ db_number(array(0x2E90CCEA,0x3FEACD8A)) /* +8.3759030433e-01 */,db_number(array(0xFE4AC33B,0x3C60B8DB)) /* +7.2520578222e-18 */ ,
 )
 ,array(
-/*a[33]     */ db_number(0x329D3DD8,0x3FF23941) /* +1.1389781930e+00 */ ,
-/*b[33] :   */ db_number(0x8F9CF3AD,0x3FF2B26D) /* +1.1685615168e+00 */ ,
-/*atan_b[33]*/ db_number(0x18A020D8,0x3FEB9D77) /* +8.6297182855e-01 */,db_number(0x43DDC7EE,0x3C714EA3) /* +1.5011584621e-17 */ ,
+/*a[33]     */ db_number(array(0x329D3DD8,0x3FF23941)) /* +1.1389781930e+00 */ ,
+/*b[33] :   */ db_number(array(0x8F9CF3AD,0x3FF2B26D)) /* +1.1685615168e+00 */ ,
+/*atan_b[33]*/ db_number(array(0x18A020D8,0x3FEB9D77)) /* +8.6297182855e-01 */,db_number(array(0x43DDC7EE,0x3C714EA3)) /* +1.5011584621e-17 */ ,
 )
 ,array(
-/*a[34]     */ db_number(0xE2DB7094,0x3FF32F3F) /* +1.1990355360e+00 */ ,
-/*b[34] :   */ db_number(0xC485093A,0x3FF3AFED) /* +1.2304513623e+00 */ ,
-/*atan_b[34]*/ db_number(0x02B00A17,0x3FEC6D64) /* +8.8835335278e-01 */,db_number(0xC1E56981,0x3C5CF722) /* +6.2808643065e-18 */ ,
+/*a[34]     */ db_number(array(0xE2DB7094,0x3FF32F3F)) /* +1.1990355360e+00 */ ,
+/*b[34] :   */ db_number(array(0xC485093A,0x3FF3AFED)) /* +1.2304513623e+00 */ ,
+/*atan_b[34]*/ db_number(array(0x02B00A17,0x3FEC6D64)) /* +8.8835335278e-01 */,db_number(array(0xC1E56981,0x3C5CF722)) /* +6.2808643065e-18 */ ,
 )
 ,array(
-/*a[35]     */ db_number(0xD38A35D7,0x3FF434B0) /* +1.2628639472e+00 */ ,
-/*b[35] :   */ db_number(0x16D89BC7,0x3FF4BDC7) /* +1.2963324444e+00 */ ,
-/*atan_b[35]*/ db_number(0xECC0B1F8,0x3FED3D50) /* +9.1373487702e-01 */,db_number(0xC689AE1B,0x3C8FFD9A) /* +5.5494919315e-17 */ ,
+/*a[35]     */ db_number(array(0xD38A35D7,0x3FF434B0)) /* +1.2628639472e+00 */ ,
+/*b[35] :   */ db_number(array(0x16D89BC7,0x3FF4BDC7)) /* +1.2963324444e+00 */ ,
+/*atan_b[35]*/ db_number(array(0xECC0B1F8,0x3FED3D50)) /* +9.1373487702e-01 */,db_number(array(0xC689AE1B,0x3C8FFD9A)) /* +5.5494919315e-17 */ ,
 )
 ,array(
-/*a[36]     */ db_number(0x6F41F96D,0x3FF54B73) /* +1.3309206339e+00 */ ,
-/*b[36] :   */ db_number(0x11C53212,0x3FF5DDFE) /* +1.3666973776e+00 */ ,
-/*atan_b[36]*/ db_number(0xD6D24151,0x3FEE0D3D) /* +9.3911640126e-01 */,db_number(0xC830B564,0xBC654F0F) /* -9.2412338910e-18 */ ,
+/*a[36]     */ db_number(array(0x6F41F96D,0x3FF54B73)) /* +1.3309206339e+00 */ ,
+/*b[36] :   */ db_number(array(0x11C53212,0x3FF5DDFE)) /* +1.3666973776e+00 */ ,
+/*atan_b[36]*/ db_number(array(0xD6D24151,0x3FEE0D3D)) /* +9.3911640126e-01 */,db_number(array(0xC830B564,0xBC654F0F)) /* -9.2412338910e-18 */ ,
 )
 ,array(
-/*a[37]     */ db_number(0x165CA5E1,0x3FF675B5) /* +1.4037371515e+00 */ ,
-/*b[37] :   */ db_number(0x13170C5B,0x3FF712ED) /* +1.4421206232e+00 */ ,
-/*atan_b[37]*/ db_number(0xC0E4E05B,0x3FEEDD2A) /* +9.6449792552e-01 */,db_number(0xBF676FFE,0xBC8FEAC3) /* -5.5367254830e-17 */ ,
+/*a[37]     */ db_number(array(0x165CA5E1,0x3FF675B5)) /* +1.4037371515e+00 */ ,
+/*b[37] :   */ db_number(array(0x13170C5B,0x3FF712ED)) /* +1.4421206232e+00 */ ,
+/*atan_b[37]*/ db_number(array(0xC0E4E05B,0x3FEEDD2A)) /* +9.6449792552e-01 */,db_number(array(0xBF676FFE,0xBC8FEAC3)) /* -5.5367254830e-17 */ ,
 )
 ,array(
-/*a[38]     */ db_number(0xD0DEA3C6,0x3FF7B601) /* +1.4819353255e+00 */ ,
-/*b[38] :   */ db_number(0x11FBEA40,0x3FF85F57) /* +1.5232763960e+00 */ ,
-/*atan_b[38]*/ db_number(0xAAF8B69E,0x3FEFAD17) /* +9.8987944978e-01 */,db_number(0xE69F3AF7,0x3C8B8DA3) /* +4.7797325436e-17 */ ,
+/*a[38]     */ db_number(array(0xD0DEA3C6,0x3FF7B601)) /* +1.4819353255e+00 */ ,
+/*b[38] :   */ db_number(array(0x11FBEA40,0x3FF85F57)) /* +1.5232763960e+00 */ ,
+/*atan_b[38]*/ db_number(array(0xAAF8B69E,0x3FEFAD17)) /* +9.8987944978e-01 */,db_number(array(0xE69F3AF7,0x3C8B8DA3)) /* +4.7797325436e-17 */ ,
 )
 ,array(
-/*a[39]     */ db_number(0x79506F51,0x3FF90F59) /* +1.5662474383e+00 */ ,
-/*b[39] :   */ db_number(0x8AF460DF,0x3FF9C67F) /* +1.6109614780e+00 */ ,
-/*atan_b[39]*/ db_number(0x4A86F56B,0x3FF03E82) /* +1.0152609740e+00 */,db_number(0xDE1DF40B,0x3C8C4641) /* +4.9048339280e-17 */ ,
+/*a[39]     */ db_number(array(0x79506F51,0x3FF90F59)) /* +1.5662474383e+00 */ ,
+/*b[39] :   */ db_number(array(0x8AF460DF,0x3FF9C67F)) /* +1.6109614780e+00 */ ,
+/*atan_b[39]*/ db_number(array(0x4A86F56B,0x3FF03E82)) /* +1.0152609740e+00 */,db_number(array(0xDE1DF40B,0x3C8C4641)) /* +4.9048339280e-17 */ ,
 )
 ,array(
-/*a[40]     */ db_number(0xD74CF791,0x3FFA854A) /* +1.6575420771e+00 */ ,
-/*b[40] :   */ db_number(0x4A696F14,0x3FFB4C49) /* +1.7061245829e+00 */ ,
-/*atan_b[40]*/ db_number(0xBF92516C,0x3FF0A678) /* +1.0406424983e+00 */,db_number(0x6A0966AF,0xBC9194FF) /* -6.0999893718e-17 */ ,
+/*a[40]     */ db_number(array(0xD74CF791,0x3FFA854A)) /* +1.6575420771e+00 */ ,
+/*b[40] :   */ db_number(array(0x4A696F14,0x3FFB4C49)) /* +1.7061245829e+00 */ ,
+/*atan_b[40]*/ db_number(array(0xBF92516C,0x3FF0A678)) /* +1.0406424983e+00 */,db_number(array(0x6A0966AF,0xBC9194FF)) /* -6.0999893718e-17 */ ,
 )
 ,array(
-/*a[41]     */ db_number(0xB3972246,0x3FFC1C16) /* +1.7568575874e+00 */ ,
-/*b[41] :   */ db_number(0x80F0B83E,0x3FFCF55E) /* +1.8099045788e+00 */ ,
-/*atan_b[41]*/ db_number(0x349E81BA,0x3FF10E6F) /* +1.0660240226e+00 */,db_number(0x3CD05C13,0x3C9C7D12) /* +9.8839546037e-17 */ ,
+/*a[41]     */ db_number(array(0xB3972246,0x3FFC1C16)) /* +1.7568575874e+00 */ ,
+/*b[41] :   */ db_number(array(0x80F0B83E,0x3FFCF55E)) /* +1.8099045788e+00 */ ,
+/*atan_b[41]*/ db_number(array(0x349E81BA,0x3FF10E6F)) /* +1.0660240226e+00 */,db_number(array(0x3CD05C13,0x3C9C7D12)) /* +9.8839546037e-17 */ ,
 )
 ,array(
-/*a[42]     */ db_number(0xC6DB1831,0x3FFDD8DD) /* +1.8654458778e+00 */ ,
-/*b[42] :   */ db_number(0x927D039C,0x3FFEC765) /* +1.9236808512e+00 */ ,
-/*atan_b[42]*/ db_number(0xA9AB9836,0x3FF17665) /* +1.0914055469e+00 */,db_number(0x7B9C115B,0xBC924DFA) /* -6.3506850178e-17 */ ,
+/*a[42]     */ db_number(array(0xC6DB1831,0x3FFDD8DD)) /* +1.8654458778e+00 */ ,
+/*b[42] :   */ db_number(array(0x927D039C,0x3FFEC765)) /* +1.9236808512e+00 */ ,
+/*atan_b[42]*/ db_number(array(0xA9AB9836,0x3FF17665)) /* +1.0914055469e+00 */,db_number(array(0x7B9C115B,0xBC924DFA)) /* -6.3506850178e-17 */ ,
 )
 ,array(
-/*a[43]     */ db_number(0xA4F6D032,0x3FFFC1DD) /* +1.9848305172e+00 */ ,
-/*b[43] :   */ db_number(0xCDEC630C,0x400064A3) /* +2.0491405571e+00 */ ,
-/*atan_b[43]*/ db_number(0x1EB9A624,0x3FF1DE5C) /* +1.1167870712e+00 */,db_number(0x595EC15D,0xBC7002F6) /* -1.3887824475e-17 */ ,
+/*a[43]     */ db_number(array(0xA4F6D032,0x3FFFC1DD)) /* +1.9848305172e+00 */ ,
+/*b[43] :   */ db_number(array(0xCDEC630C,0x400064A3)) /* +2.0491405571e+00 */ ,
+/*atan_b[43]*/ db_number(array(0x1EB9A624,0x3FF1DE5C)) /* +1.1167870712e+00 */,db_number(array(0x595EC15D,0xBC7002F6)) /* -1.3887824475e-17 */ ,
 )
 ,array(
-/*a[44]     */ db_number(0x56AEFAF2,0x4000EF61) /* +2.1168848774e+00 */ ,
-/*b[44] :   */ db_number(0x02FA3F97,0x400181C8) /* +2.1883697732e+00 */ ,
-/*atan_b[44]*/ db_number(0x93C8BC28,0x3FF24652) /* +1.1421685956e+00 */,db_number(0xC61E8575,0xBC8FE336) /* -5.5316089441e-17 */ ,
+/*a[44]     */ db_number(array(0x56AEFAF2,0x4000EF61)) /* +2.1168848774e+00 */ ,
+/*b[44] :   */ db_number(array(0x02FA3F97,0x400181C8)) /* +2.1883697732e+00 */ ,
+/*atan_b[44]*/ db_number(array(0x93C8BC28,0x3FF24652)) /* +1.1421685956e+00 */,db_number(array(0xC61E8575,0xBC8FE336)) /* -5.5316089441e-17 */ ,
 )
 ,array(
-/*a[45]     */ db_number(0xFD9A80C1,0x40021C8B) /* +2.2639388860e+00 */ ,
-/*b[45] :   */ db_number(0x188015C0,0x4002C078) /* +2.3439790644e+00 */ ,
-/*atan_b[45]*/ db_number(0x08D8EA37,0x3FF2AE49) /* +1.1675501199e+00 */,db_number(0x56281657,0xBC99C943) /* -8.9463796524e-17 */ ,
+/*a[45]     */ db_number(array(0xFD9A80C1,0x40021C8B)) /* +2.2639388860e+00 */ ,
+/*b[45] :   */ db_number(array(0x188015C0,0x4002C078)) /* +2.3439790644e+00 */ ,
+/*atan_b[45]*/ db_number(array(0x08D8EA37,0x3FF2AE49)) /* +1.1675501199e+00 */,db_number(array(0x56281657,0xBC99C943)) /* -8.9463796524e-17 */ ,
 )
 ,array(
-/*a[46]     */ db_number(0x7D67269C,0x40036E71) /* +2.4289274022e+00 */ ,
-/*b[46] :   */ db_number(0x17EDBBF3,0x4004277C) /* +2.5192796583e+00 */ ,
-/*atan_b[46]*/ db_number(0x7DEA3F8C,0x3FF3163F) /* +1.1929316443e+00 */,db_number(0x90EB721B,0x3C9AD329) /* +9.3067404471e-17 */ ,
+/*a[46]     */ db_number(array(0x7D67269C,0x40036E71)) /* +2.4289274022e+00 */ ,
+/*b[46] :   */ db_number(array(0x17EDBBF3,0x4004277C)) /* +2.5192796583e+00 */ ,
+/*atan_b[46]*/ db_number(array(0x7DEA3F8C,0x3FF3163F)) /* +1.1929316443e+00 */,db_number(array(0x90EB721B,0x3C9AD329)) /* +9.3067404471e-17 */ ,
 )
 ,array(
-/*a[47]     */ db_number(0xF069F1E4,0x4004ECBF) /* +2.6156004698e+00 */ ,
-/*b[47] :   */ db_number(0xA99113B9,0x4005BF8F) /* +2.7185357330e+00 */ ,
-/*atan_b[47]*/ db_number(0xF2FCCAA3,0x3FF37E35) /* +1.2183131687e+00 */,db_number(0x8B3674F4,0xBC96C4D7) /* -7.8995539059e-17 */ ,
+/*a[47]     */ db_number(array(0xF069F1E4,0x4004ECBF)) /* +2.6156004698e+00 */ ,
+/*b[47] :   */ db_number(array(0xA99113B9,0x4005BF8F)) /* +2.7185357330e+00 */ ,
+/*atan_b[47]*/ db_number(array(0xF2FCCAA3,0x3FF37E35)) /* +1.2183131687e+00 */,db_number(array(0x8B3674F4,0xBC96C4D7)) /* -7.8995539059e-17 */ ,
 )
 ,array(
-/*a[48]     */ db_number(0x780169B7,0x4006A170) /* +2.8288277984e+00 */ ,
-/*b[48] :   */ db_number(0xEECFDE39,0x40079423) /* +2.9473341615e+00 */ ,
-/*atan_b[48]*/ db_number(0x68109926,0x3FF3E62C) /* +1.2436946931e+00 */,db_number(0x46562D7D,0x3C9D395E) /* +1.0139144652e-16 */ ,
+/*a[48]     */ db_number(array(0x780169B7,0x4006A170)) /* +2.8288277984e+00 */ ,
+/*b[48] :   */ db_number(array(0xEECFDE39,0x40079423)) /* +2.9473341615e+00 */ ,
+/*atan_b[48]*/ db_number(array(0x68109926,0x3FF3E62C)) /* +1.2436946931e+00 */,db_number(array(0x46562D7D,0x3C9D395E)) /* +1.0139144652e-16 */ ,
 )
 ,array(
-/*a[49]     */ db_number(0x319C3F02,0x400899B4) /* +3.0750507236e+00 */ ,
-/*b[49] :   */ db_number(0x34491C9A,0x4009B483) /* +3.2131408772e+00 */ ,
-/*atan_b[49]*/ db_number(0xDD25B7F0,0x3FF44E22) /* +1.2690762175e+00 */,db_number(0x96299AC9,0xBC9AC408) /* -9.2862370643e-17 */ ,
+/*a[49]     */ db_number(array(0x319C3F02,0x400899B4)) /* +3.0750507236e+00 */ ,
+/*b[49] :   */ db_number(array(0x34491C9A,0x4009B483)) /* +3.2131408772e+00 */ ,
+/*atan_b[49]*/ db_number(array(0xDD25B7F0,0x3FF44E22)) /* +1.2690762175e+00 */,db_number(array(0x96299AC9,0xBC9AC408)) /* -9.2862370643e-17 */ ,
 )
 ,array(
-/*a[50]     */ db_number(0x05B0834A,0x400AE75E) /* +3.3629723019e+00 */ ,
-/*b[50] :   */ db_number(0x6451B6E9,0x400C3595) /* +3.5261638486e+00 */ ,
-/*atan_b[50]*/ db_number(0x523C32F8,0x3FF4B619) /* +1.2944577420e+00 */,db_number(0x9A6CF82B,0x3C98372D) /* +8.4014530055e-17 */ ,
+/*a[50]     */ db_number(array(0x05B0834A,0x400AE75E)) /* +3.3629723019e+00 */ ,
+/*b[50] :   */ db_number(array(0x6451B6E9,0x400C3595)) /* +3.5261638486e+00 */ ,
+/*atan_b[50]*/ db_number(array(0x523C32F8,0x3FF4B619)) /* +1.2944577420e+00 */,db_number(array(0x9A6CF82B,0x3C98372D)) /* +8.4014530055e-17 */ ,
 )
 ,array(
-/*a[51]     */ db_number(0x739BD0E3,0x400DA31D) /* +3.7046460182e+00 */ ,
-/*b[51] :   */ db_number(0x088B2A13,0x400F34B7) /* +3.9007397335e+00 */ ,
-/*atan_b[51]*/ db_number(0xC7541555,0x3FF51E0F) /* +1.3198392664e+00 */,db_number(0xD97CC177,0xBC4DA0E1) /* -3.2123225727e-18 */ ,
+/*a[51]     */ db_number(array(0x739BD0E3,0x400DA31D)) /* +3.7046460182e+00 */ ,
+/*b[51] :   */ db_number(array(0x088B2A13,0x400F34B7)) /* +3.9007397335e+00 */ ,
+/*atan_b[51]*/ db_number(array(0xC7541555,0x3FF51E0F)) /* +1.3198392664e+00 */,db_number(array(0xD97CC177,0xBC4DA0E1)) /* -3.2123225727e-18 */ ,
 )
 ,array(
-/*a[52]     */ db_number(0x1886BC57,0x40107813) /* +4.1172603447e+00 */ ,
-/*b[52] :   */ db_number(0x8D819944,0x40116E3D) /* +4.3576566801e+00 */ ,
-/*atan_b[52]*/ db_number(0x3C6D692D,0x3FF58606) /* +1.3452207909e+00 */,db_number(0xD9D13C46,0xBC7DAB9D) /* -2.5734950076e-17 */ ,
+/*a[52]     */ db_number(array(0x1886BC57,0x40107813)) /* +4.1172603447e+00 */ ,
+/*b[52] :   */ db_number(array(0x8D819944,0x40116E3D)) /* +4.3576566801e+00 */ ,
+/*atan_b[52]*/ db_number(array(0x3C6D692D,0x3FF58606)) /* +1.3452207909e+00 */,db_number(array(0xD9D13C46,0xBC7DAB9D)) /* -2.5734950076e-17 */ ,
 )
 ,array(
-/*a[53]     */ db_number(0x8BCE2241,0x4012813A) /* +4.6261998982e+00 */ ,
-/*b[53] :   */ db_number(0x9F0E4EBF,0x4013B685) /* +4.9282440999e+00 */ ,
-/*atan_b[53]*/ db_number(0xB18837B4,0x3FF5EDFC) /* +1.3706023154e+00 */,db_number(0xBC854F71,0xBC858200) /* -3.7310126753e-17 */ ,
+/*a[53]     */ db_number(array(0x8BCE2241,0x4012813A)) /* +4.6261998982e+00 */ ,
+/*b[53] :   */ db_number(array(0x9F0E4EBF,0x4013B685)) /* +4.9282440999e+00 */ ,
+/*atan_b[53]*/ db_number(array(0xB18837B4,0x3FF5EDFC)) /* +1.3706023154e+00 */,db_number(array(0xBC854F71,0xBC858200)) /* -3.7310126753e-17 */ ,
 )
 ,array(
-/*a[54]     */ db_number(0x4ACECE78,0x40151516) /* +5.2705928506e+00 */ ,
-/*b[54] :   */ db_number(0xF3CD0189,0x4016A5E9) /* +5.6620252699e+00 */ ,
-/*atan_b[54]*/ db_number(0x26A48924,0x3FF655F3) /* +1.3959838399e+00 */,db_number(0x0EF07703,0xBC95DCD4) /* -7.5851168241e-17 */ ,
+/*a[54]     */ db_number(array(0x4ACECE78,0x40151516)) /* +5.2705928506e+00 */ ,
+/*b[54] :   */ db_number(array(0xF3CD0189,0x4016A5E9)) /* +5.6620252699e+00 */ ,
+/*atan_b[54]*/ db_number(array(0x26A48924,0x3FF655F3)) /* +1.3959838399e+00 */,db_number(array(0x0EF07703,0xBC95DCD4)) /* -7.5851168241e-17 */ ,
 )
 ,array(
-/*a[55]     */ db_number(0x9526FAB9,0x401874CE) /* +6.1140693002e+00 */ ,
-/*b[55] :   */ db_number(0xBA057809,0x401A9194) /* +6.6421689096e+00 */ ,
-/*atan_b[55]*/ db_number(0x9BC264B7,0x3FF6BDE9) /* +1.4213653645e+00 */,db_number(0x555821B5,0x3C839FB7) /* +3.4042024747e-17 */ ,
+/*a[55]     */ db_number(array(0x9526FAB9,0x401874CE)) /* +6.1140693002e+00 */ ,
+/*b[55] :   */ db_number(array(0xBA057809,0x401A9194)) /* +6.6421689096e+00 */ ,
+/*atan_b[55]*/ db_number(array(0x9BC264B7,0x3FF6BDE9)) /* +1.4213653645e+00 */,db_number(array(0x555821B5,0x3C839FB7)) /* +3.4042024747e-17 */ ,
 )
 ,array(
-/*a[56]     */ db_number(0xE094C913,0x401D11EB) /* +7.2675013629e+00 */ ,
-/*b[56] :   */ db_number(0xA01EFACA,0x40200A31) /* +8.0199098623e+00 */ ,
-/*atan_b[56]*/ db_number(0x10E1D0A5,0x3FF725E0) /* +1.4467468891e+00 */,db_number(0x56DADB03,0x3C86B63B) /* +3.9398767140e-17 */ ,
+/*a[56]     */ db_number(array(0xE094C913,0x401D11EB)) /* +7.2675013629e+00 */ ,
+/*b[56] :   */ db_number(array(0xA01EFACA,0x40200A31)) /* +8.0199098623e+00 */ ,
+/*atan_b[56]*/ db_number(array(0x10E1D0A5,0x3FF725E0)) /* +1.4467468891e+00 */,db_number(array(0x56DADB03,0x3C86B63B)) /* +3.9398767140e-17 */ ,
 )
 ,array(
-/*a[57]     */ db_number(0x220DFA19,0x4021E2BC) /* +8.9428415911e+00 */ ,
-/*b[57] :   */ db_number(0xFBA72898,0x40243445) /* +1.0102096428e+01 */ ,
-/*atan_b[57]*/ db_number(0x8602D21D,0x3FF78DD6) /* +1.4721284137e+00 */,db_number(0x4D2EA6E0,0xBC9FD7D6) /* -1.1047799388e-16 */ ,
+/*a[57]     */ db_number(array(0x220DFA19,0x4021E2BC)) /* +8.9428415911e+00 */ ,
+/*b[57] :   */ db_number(array(0xFBA72898,0x40243445)) /* +1.0102096428e+01 */ ,
+/*atan_b[57]*/ db_number(array(0x8602D21D,0x3FF78DD6)) /* +1.4721284137e+00 */,db_number(array(0x4D2EA6E0,0xBC9FD7D6)) /* -1.1047799388e-16 */ ,
 )
 ,array(
-/*a[58]     */ db_number(0xD0337C49,0x40273463) /* +1.1602324015e+01 */ ,
-/*b[58] :   */ db_number(0x4A4A5A1D,0x402B3DC7) /* +1.3620661089e+01 */ ,
-/*atan_b[58]*/ db_number(0xFB256D40,0x3FF7F5CC) /* +1.4975099383e+00 */,db_number(0xA28CF77C,0x3C954E9E) /* +7.3923881174e-17 */ ,
+/*a[58]     */ db_number(array(0xD0337C49,0x40273463)) /* +1.1602324015e+01 */ ,
+/*b[58] :   */ db_number(array(0x4A4A5A1D,0x402B3DC7)) /* +1.3620661089e+01 */ ,
+/*atan_b[58]*/ db_number(array(0xFB256D40,0x3FF7F5CC)) /* +1.4975099383e+00 */,db_number(array(0xA28CF77C,0x3C954E9E)) /* +7.3923881174e-17 */ ,
 )
 ,array(
-/*a[59]     */ db_number(0x26350916,0x40307B8E) /* +1.6482637775e+01 */ ,
-/*b[59] :   */ db_number(0x24D415BF,0x4034DBD6) /* +2.0858736326e+01 */ ,
-/*atan_b[59]*/ db_number(0x7049A526,0x3FF85DC3) /* +1.5228914629e+00 */,db_number(0xE9374500,0xBC8424E5) /* -3.4944500702e-17 */ ,
+/*a[59]     */ db_number(array(0x26350916,0x40307B8E)) /* +1.6482637775e+01 */ ,
+/*b[59] :   */ db_number(array(0x24D415BF,0x4034DBD6)) /* +2.0858736326e+01 */ ,
+/*atan_b[59]*/ db_number(array(0x7049A526,0x3FF85DC3)) /* +1.5228914629e+00 */,db_number(array(0xE9374500,0xBC8424E5)) /* -3.4944500702e-17 */ ,
 )
 ,array(
-/*a[60]     */ db_number(0x497BF2F2,0x403C62CF) /* +2.8385975449e+01 */ ,
-/*b[60] :   */ db_number(0x6C3EC43C,0x40463208) /* +4.4390882044e+01 */ ,
-/*atan_b[60]*/ db_number(0xE56F7BD2,0x3FF8C5B9) /* +1.5482729876e+00 */,db_number(0x2F7EC153,0xBC81D57A) /* -3.0936877458e-17 */ ,
+/*a[60]     */ db_number(array(0x497BF2F2,0x403C62CF)) /* +2.8385975449e+01 */ ,
+/*b[60] :   */ db_number(array(0x6C3EC43C,0x40463208)) /* +4.4390882044e+01 */ ,
+/*atan_b[60]*/ db_number(array(0xE56F7BD2,0x3FF8C5B9)) /* +1.5482729876e+00 */,db_number(array(0x2F7EC153,0xBC81D57A)) /* -3.0936877458e-17 */ ,
 )
 ,array(
-/*a[61]     */ db_number(0xFA9E0EF4,0x40596CC3) /* +1.0169946161e+02 */ ,
-/*b[61] :   */ db_number(0x7BFF8329,0x4054B2C4) /* +8.2793242454e+01 */ ,
-/*atan_b[61]*/ db_number(0xF333CBBA,0x3FF8F082) /* +1.5587186337e+00 */,db_number(0x3909BC3A,0x3C952577) /* +7.3366141099e-17 */ ,
+/*a[61]     */ db_number(array(0xFA9E0EF4,0x40596CC3)) /* +1.0169946161e+02 */ ,
+/*b[61] :   */ db_number(array(0x7BFF8329,0x4054B2C4)) /* +8.2793242454e+01 */ ,
+/*atan_b[61]*/ db_number(array(0xF333CBBA,0x3FF8F082)) /* +1.5587186337e+00 */,db_number(array(0x3909BC3A,0x3C952577)) /* +7.3366141099e-17 */ ,
 )
 ,
 );
@@ -515,17 +516,12 @@ array(
  *    in order not to have an atan > Pi/2.
  */
 
-
-
-
-overload atan(x:BigFloat) --> result:BigFloat {
-    scs_t X_scs, denom1_scs, denom2_scs, poly_scs, X2;
-    scs_t atanbhihi,atanbhilo, atanblo, atanbhi, atanb;
-    scs_t bsc_ptr;
+[T | BigFloat?(T)]
+overload atan(x:T) --> result:T {
     var db = db_number();
     var i = 31;
 
-    db.2 = Double(BigFloat(x));
+    db.2 = Double(T(x));
 
     /* test if x as to be reduced */
     if (db.2 > MIN_REDUCTION_NEEDED) {
@@ -543,7 +539,7 @@ overload atan(x:BigFloat) --> result:BigFloat {
         if (db.2 < arctan_table[i][A].2) i-= 1;
 
         /* evaluate X = (x - b(i)) / (1 + x*b(i)) */
-        var bsc = BigFloat(arctan_table[i][B].2);
+        var bsc = T(arctan_table[i][B].2);
         var denom1 = bsc * x;
         var denom2 = denom1 + bf_one;
         var X_bf = x - bsc;
@@ -553,36 +549,34 @@ overload atan(x:BigFloat) --> result:BigFloat {
 
         /* Polynomial evaluation of atan(X) , X = (x-b(i)) / (1+ x*b(i)) */
         var X2 = square(X_bf);
-        result <-- constant_poly_ptr[0];
+        result <-- constant_poly[0];
         for(k in range(1,10)) {
             /* we use Horner expression */
             result = result * X2;
-            result = constant_poly_ptr[k] + result;
+            result = constant_poly[k] + result;
         }
         var poly = result * X_bf;
 
         /* reconstruction : */
 
         /* 1st we load atan ( b[i] ) in a scs*/
-        scs_set_d( atanbhihi , arctan_table[i][ATAN_BHI].d);
-        scs_set_d( atanbhilo , arctan_table[i][ATAN_BLO].d);
-        scs_set_d( atanblo , atan_blolo[i].d);
-        scs_add(atanbhi,atanbhihi,atanbhilo);
-        scs_add(atanb,atanbhi,atanblo);
-        scs_add(res_scs,atanb, poly);
-        return;
+        var atanbhihi = T( arctan_table[i][ATAN_BHI].2);
+        var atanbhilo = T( arctan_table[i][ATAN_BLO].2);
+        var atanblo = T( atan_blolo[i].2);
+        var atanbhi = atanbhihi + atanbhilo;
+        var atanb = atanbhi + atanblo;
+        result = atanb + poly;
     }
     else{ /* no reduction needed */
         /* Polynomial evaluation of atan(x) */
-        scs_square(X2, x);
-        scs_set(res_scs, constant_poly_ptr[0]);
+        var X2 = square(x);
+        result <-- constant_poly[0];
         for(k in range(1,10)) {
             /* we use Horner expression */
-            scs_mul(res_scs, res_scs, X2);
-            scs_add(res_scs, constant_poly_ptr[k], res_scs);
+            result = result * X2;
+            result = constant_poly[k] + result;
         }
-        scs_mul(res_scs, res_scs, x);
-        return;
+        result = result * x;
     }
 }
 
@@ -594,8 +588,6 @@ bf_atan_rn(x:Double){
     /* This function does NOT compute atan(x) correctly if it isn't
     * called in atan_rn()
     */
-    scs_t sc1;
-    scs_t res_scs;
     var res = db_number();
     var xx, sign = x,1;
 
