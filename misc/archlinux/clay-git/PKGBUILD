@@ -21,14 +21,13 @@ build() {
     msg "getting clay"
     if [ -d clay ]; then
         cd clay
-        git pull origin
+        git pull origin master
         msg "The local files are updated."
     else
         git clone $_gitroot/clay.git clay
     fi
 
     msg 'GIT checkout done or server timeout'
-
     msg 'Start building Clay'
 
     cd $srcdir
@@ -40,4 +39,11 @@ build() {
     make
 
     make DESTDIR=${pkgdir} install
+
+    install -dm755 ${pkgdir}/usr/bin
+    cd ${pkgdir}/usr/bin
+    ln -s /opt/clay/bin/clay .
+    ln -s /opt/clay/bin/clay-fix .
+    ln -s /opt/clay/bin/clay-bindgen .
 }
+
