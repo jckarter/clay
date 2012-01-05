@@ -1,2 +1,0 @@
-// separate generation of lua bindings required for windows 64
-// as SizeT is not CLong on windows 64
