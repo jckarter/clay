@@ -47,6 +47,7 @@ endif()
 
 if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_WC_ID
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     set_property(SOURCE main.cpp APPEND PROPERTY
@@ -56,7 +57,7 @@ endif()
 add_executable(clay ${SOURCES})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS}")
+    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -UNDEBUG")
 else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
