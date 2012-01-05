@@ -1133,6 +1133,30 @@ static void declareLLVMType(TypePtr t) {
             llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
         t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
 
+        if (llvmDIBuilder != NULL) {
+            CCodePointerType *x = (CCodePointerType *)t.ptr();
+            llvm::SmallVector<llvm::Value*,16> debugParamTypes;
+            debugParamTypes.push_back(x->returnType == NULL
+                ? llvmVoidTypeDebugInfo()
+                : llvmTypeDebugInfo(x->returnType));
+
+            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+                debugParamTypes.push_back(llvmTypeDebugInfo(x->argTypes[i]));
+            }
+
+            llvm::DIArray debugParamArray = llvmDIBuilder->getOrCreateArray(debugParamTypes);
+
+            llvm::DIType pointeeType = llvmDIBuilder->createSubroutineType(
+                llvm::DIFile(NULL),
+                debugParamArray);
+
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createPointerType(
+                pointeeType,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
+                typeName(t));
+        }
+
         break;
     }
     case ARRAY_TYPE : {
