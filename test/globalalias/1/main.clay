@@ -1,0 +1,10 @@
+alias two[T] = T(2);
+alias three[T] = T(3);
+
+main() {
+    println(two[Int]);
+    println(two[Float]);
+    println(three[Int]);
+    println(three[Float]);
+}
+
