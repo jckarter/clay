@@ -171,6 +171,7 @@ class TestCase(object):
         if os.path.isfile(compilererrfile):
             errpattern = open(compilererrfile).read()
             errpattern = errpattern.replace('\r', '').strip()
+            resulterr = resulterr.replace('\r', '')
 
             if returncode != "compiler error":
                 self.testLogBuffer.write("Failure: compiler did not fail\n")
