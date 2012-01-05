@@ -2314,6 +2314,7 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 // loader module
 //
 
+extern map<string, ModulePtr> globalModules;
 extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 

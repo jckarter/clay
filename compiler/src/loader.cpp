@@ -11,10 +11,9 @@ using namespace std;
 
 static vector<string> searchPath;
 static vector<string> moduleSuffixes;
-static map<string, ModulePtr> modules;
 
+map<string, ModulePtr> globalModules;
 map<string, string> globalFlags;
-
 ModulePtr globalMainModule;
 
 
@@ -257,8 +256,8 @@ static void installGlobals(ModulePtr m) {
 static ModulePtr loadModuleByName(DottedNamePtr name) {
     string key = toKey(name);
 
-    map<string, ModulePtr>::iterator i = modules.find(key);
-    if (i != modules.end())
+    map<string, ModulePtr>::iterator i = globalModules.find(key);
+    if (i != globalModules.end())
         return i->second;
 
     ModulePtr module;
@@ -271,7 +270,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
         module = parse(key, loadFile(path));
     }
 
-    modules[key] = module;
+    globalModules[key] = module;
     loadDependents(module);
     installGlobals(module);
 
@@ -380,9 +379,9 @@ ModulePtr loadProgramSource(const string &name, const string &source) {
 }
 
 ModulePtr loadedModule(const string &module) {
-    if (!modules.count(module))
+    if (!globalModules.count(module))
         error("module not loaded: " + module);
-    return modules[module];
+    return globalModules[module];
 }
 
 
@@ -589,23 +588,19 @@ ModulePtr staticModule(ObjectPtr x) {
     case PRIM_OP : {
         return primitivesModule();
     }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        return envModule(y->env);
-    }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
-        return envModule(y->env);
-    }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
-        return envModule(y->env);
-    }
     case MODULE_HOLDER : {
-        ModuleHolder *y = (ModuleHolder *)x.ptr();
-        if (y->import.ptr())
-            return y->import->module;
+        ModuleHolder *mh = (ModuleHolder *)x.ptr();
+        if (mh->import.ptr())
+            return mh->import->module;
         return NULL;
+    }
+    case EXTERNAL_PROCEDURE :
+    case EXTERNAL_VARIABLE :
+    case PROCEDURE :
+    case RECORD :
+    case VARIANT : {
+        TopLevelItem *t = (TopLevelItem *)x.ptr();
+        return envModule(t->env);
     }
     default :
         return NULL;
