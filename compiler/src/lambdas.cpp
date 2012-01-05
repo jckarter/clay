@@ -1,5 +1,6 @@
 #include "clay.hpp"
 
+namespace clay {
 
 struct LambdaContext {
     bool captureByRef;
@@ -645,4 +646,6 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx)
 {
     for (unsigned i = 0; i < x->size(); ++i)
         convertFreeVars(x->exprs[i], env, ctx);
+}
+
 }

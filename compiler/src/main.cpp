@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 #ifdef WIN32
 #define PATH_SEPARATORS "/\\"
 #else
@@ -358,7 +360,11 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
+}
+
 int main(int argc, char **argv, char const* const* envp) {
+    using namespace clay;
+
     if (argc == 1) {
         usage(argv[0]);
         return -1;

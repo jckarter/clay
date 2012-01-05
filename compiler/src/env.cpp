@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 using namespace std;
 
 typedef map<string, ObjectPtr>::iterator MapIter;
@@ -513,4 +515,4 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env)
     return head->location;
 }
 
-
+}

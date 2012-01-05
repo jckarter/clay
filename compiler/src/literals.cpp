@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 static bool ishex(char *ptr) {
     return
         ((ptr[0] == '+' || ptr[0] == '-')
@@ -386,4 +388,6 @@ ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x)
         error("invalid float literal suffix: " + x->suffix);
     }
     return vh;
+}
+
 }

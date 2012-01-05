@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 llvm::Module *llvmModule = NULL;
 llvm::DIBuilder *llvmDIBuilder = NULL;
 llvm::ExecutionEngine *llvmEngine;
@@ -6490,4 +6492,6 @@ bool initLLVM(std::string const &targetTriple,
     } else {
         return false;
     }
+}
+
 }

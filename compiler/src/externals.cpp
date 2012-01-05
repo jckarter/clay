@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 static llvm::Value *promoteCVarArg(CallingConv conv,
                                    TypePtr t,
                                    llvm::Value *llv,
@@ -935,4 +937,6 @@ void initExternalTarget(string targetString)
 ExternalTargetPtr getExternalTarget()
 {
     return externalTarget;
+}
+
 }

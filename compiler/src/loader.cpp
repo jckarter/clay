@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 using namespace std;
 
 #ifdef _WIN32
@@ -1019,3 +1021,5 @@ DEFINE_PRELUDE_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerNegateChecked);
 DEFINE_PRELUDE_ACCESSOR(doIntegerConvertChecked);
+
+}

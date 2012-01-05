@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 TypePtr boolType;
 TypePtr int8Type;
 TypePtr int16Type;
@@ -1670,4 +1672,6 @@ string typeName(TypePtr type)
     ostringstream os;
     typePrint(os, type);
     return os.str();
+}
+
 }

@@ -1,5 +1,6 @@
 #include "clay.hpp"
 
+namespace clay {
 
 
 //
@@ -145,4 +146,6 @@ void ObjectTable::rehash()
     }
 
     this->buckets = newBuckets;
+}
+
 }

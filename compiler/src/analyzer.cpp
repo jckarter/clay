@@ -1,6 +1,8 @@
 
 #include "clay.hpp"
 
+namespace clay {
+
 static int analysisCachingDisabled = 0;
 void disableAnalysisCaching() { analysisCachingDisabled += 1; }
 void enableAnalysisCaching() { analysisCachingDisabled -= 1; }
@@ -2850,4 +2852,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return NULL;
 
     }
+}
+
 }

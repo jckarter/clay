@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 static vector<TokenPtr> *tokens;
 static int position;
 static int maxPosition;
@@ -3005,4 +3007,6 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels)
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
+}
+
 }

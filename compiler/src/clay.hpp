@@ -69,6 +69,8 @@
 #pragma warning(pop)
 #endif
 
+namespace clay {
+
 using std::string;
 using std::vector;
 using std::pair;
@@ -77,6 +79,8 @@ using std::map;
 using std::set;
 using std::ostream;
 using std::ostringstream;
+
+}
 
 #ifdef _MSC_VER
 
@@ -87,22 +91,32 @@ using std::ostringstream;
 
 #include <complex>
 
+namespace clay {
+
 typedef std::complex<float> clay_cfloat;
 typedef std::complex<double> clay_cdouble;
 typedef std::complex<long double> clay_cldouble;
+
+}
 
 #else
 
 #define CLAY_ALIGN(n) __attribute__((aligned(n)))
 
+namespace clay {
+
 typedef _Complex float clay_cfloat;
 typedef _Complex double clay_cdouble;
 typedef _Complex long double clay_cldouble;
+
+}
 
 #endif
 
 #define CLAY_LANGUAGE_VERSION "0.1"
 #define CLAY_COMPILER_VERSION "0.1git"
+
+namespace clay {
 
 
 //
@@ -199,32 +213,34 @@ struct uint128_holder {
     operator size64_t() const { return lowValue; }
 } CLAY_ALIGN(16);
 
-namespace std {
+}
+
 template<>
-class numeric_limits<int128_holder> {
+class ::std::numeric_limits<clay::int128_holder> {
 public:
-    static int128_holder min() throw() {
-        return int128_holder(0, std::numeric_limits<ptrdiff64_t>::min());
+    static clay::int128_holder min() throw() {
+        return clay::int128_holder(0, std::numeric_limits<clay::ptrdiff64_t>::min());
     }
-    static int128_holder max() throw() {
-        return int128_holder(-1, std::numeric_limits<ptrdiff64_t>::max());
+    static clay::int128_holder max() throw() {
+        return clay::int128_holder(-1, std::numeric_limits<clay::ptrdiff64_t>::max());
     }
 };
 
 template<>
-class numeric_limits<uint128_holder> {
+class ::std::numeric_limits<clay::uint128_holder> {
 public:
-    static uint128_holder min() throw() {
-        return uint128_holder(0, 0);
+    static clay::uint128_holder min() throw() {
+        return clay::uint128_holder(0, 0);
     }
-    static uint128_holder max() throw() {
-        return uint128_holder(
-            std::numeric_limits<size64_t>::max(),
-            std::numeric_limits<size64_t>::max()
+    static clay::uint128_holder max() throw() {
+        return clay::uint128_holder(
+            std::numeric_limits<clay::size64_t>::max(),
+            std::numeric_limits<clay::size64_t>::max()
         );
     }
 };
-}
+
+namespace clay {
 
 inline int128_holder::int128_holder(uint128_holder y)
     : lowValue(y.lowValue), highPad(y.highPad) {}
@@ -3693,8 +3709,9 @@ typedef Pointer<ExternalTarget> ExternalTargetPtr;
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
 
+}
+
 #include "libclaynames.hpp"
 #include "hirestimer.hpp"
-
 
 #endif

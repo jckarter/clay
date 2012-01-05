@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 using namespace std;
 
 
@@ -1070,4 +1072,6 @@ string shortString(string const &in) {
         }
     }
     return out;
+}
+
 }

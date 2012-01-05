@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 bool shouldPrintFullMatchErrors;
 
 
@@ -453,4 +455,6 @@ void printFileLineCol(ostream &out, LocationPtr location)
     int line, column, tabColumn;
     getLineCol(location, line, column, tabColumn);
     out << location->source->fileName << "(" << line+1 << "," << column << ")";
+}
+
 }
