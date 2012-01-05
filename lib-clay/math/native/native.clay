@@ -4,6 +4,7 @@ import numbers.floats.floats.(floatBits,floatFromBits);
 import math.native.approxmath.(private sqrtCoeff);
 
 import math.native.sqrt_safe.(sqrt_safe);
+import math.native.cbrt_safe.(cbrt_safe);
 import math.native.exp_safe.(exp_safe);
 import math.native.exp_unsafe.(exp_unsafe);
 import math.native.expm1_safe.(expm1_safe);
@@ -17,6 +18,7 @@ import math.native.pow_safe.(pow_safe);
 // import math.native.pow_unsafe.(pow_unsafe);
 
 define sqrt;
+define cbrt;
 define pow;
 define sin;
 define cos;
@@ -39,6 +41,7 @@ define atanpi;
 //
 
 [T | Numeric?(T)] inline overload sqrt(x:T) = sqrt_safe(x);
+[T | Numeric?(T)] inline overload cbrt(x:T) = cbrt_safe(x);
 [T | Numeric?(T)] inline overload log(x:T) = log_safe(x);
 [T | Numeric?(T)] inline overload log2(x:T) = log2_safe(x);
 [T | Numeric?(T)] inline overload log10(x:T) = log10_safe(x);

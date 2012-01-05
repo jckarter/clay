@@ -7,7 +7,6 @@ public import math.native.native.*;
 public import math.native.gamma.*;
 public import math.native.beta.*;
 public import math.native.erf.*;
-public import math.native.cbrt.*;
 public import math.native.bessel.*;
 public import numbers.floats.floats.(infinity,negativeInfinity,nan,abs,copysign,signbit);
 
