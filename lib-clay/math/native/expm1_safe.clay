@@ -1,0 +1,494 @@
+// Correctly rounded expm1 = e^x - 1
+import math.native.exp_safe.*;
+import math.native.exp_safe.(private twoPowerIndex1, private twoPowerIndex2, private tPi_t);
+import math.native.exact.*;
+import math.(fma);
+
+alias RETURNXBOUND =0x3c900000;
+alias MINUSONEBOUND =-3.74299477502370478987359092570841312408447265625000e+01;
+alias SIMPLEOVERFLOWBOUND =0x40862e42;
+alias DIRECTINTERVALBOUND =0x3fd00000;
+alias SPECIALINTERVALBOUND =0x3f300000;
+alias ROUNDCSTDIRECTRN =1.00392156862745109185069459291432461909707184007331e+00;
+alias ROUNDCSTDIRECTRD =2.16840434497100886801490560173988342285156250000000e-19;
+alias ROUNDCSTCOMMONRN =1.00392156862745109185069459291432461909707184007331e+00;
+alias ROUNDCSTCOMMONRD =2.16840434497100886801490560173988342285156250000000e-19;
+alias MINUSONEPLUSONEULP =-9.99999999999999888977697537484345957636833190917969e-01;
+
+alias quickDirectpolyC3h =1.66666666666666657414808128123695496469736099243164e-01;
+alias quickDirectpolyC4h =4.16666666666666921092776476598373847082257270812988e-02;
+alias quickDirectpolyC5h =8.33333333340913022524443221072942833416163921356201e-03;
+alias quickDirectpolyC6h =1.38888888866754321368968128069809608859941363334656e-03;
+alias quickDirectpolyC7h =1.98412543160940484055984600608724122139392420649528e-04;
+alias quickDirectpolyC8h =2.48020519562457199031109411624385074901510961353779e-05;
+alias quickDirectpolyC9h =2.84660857362219107811367527216539485834800871089101e-06;
+
+alias accuDirectpolyC3h =1.66666666666666657414808128123695496469736099243164e-01;
+alias accuDirectpolyC3m =9.25185853854297065661561206416060845590588197735272e-18;
+alias accuDirectpolyC3l =5.13581650457284662711479178584444638962917803311780e-34;
+alias accuDirectpolyC4h =4.16666666666666643537020320309238741174340248107910e-02;
+alias accuDirectpolyC4m =2.31296463463574227896791413859298150278088197735272e-18;
+alias accuDirectpolyC5h =8.33333333333333321768510160154619370587170124053955e-03;
+alias accuDirectpolyC5m =1.15648231731787113948395706929649075139044098867636e-19;
+alias accuDirectpolyC6h =1.38888888888888894189432843262466121814213693141937e-03;
+alias accuDirectpolyC6m =-5.30054395357292524960423423338339636695154423835845e-20;
+alias accuDirectpolyC7h =1.98412698412698412526317115478491359681356698274612e-04;
+alias accuDirectpolyC7m =1.72095583354814495137206233661964154177299630853468e-22;
+alias accuDirectpolyC8h =2.48015873015873015657896394348114199601695872843266e-05;
+alias accuDirectpolyC8m =2.14651941309384838916703253244235321323283349969089e-23;
+alias accuDirectpolyC9h =2.75573192239858925109505932704578867742384318262339e-06;
+alias accuDirectpolyC9m =-1.85841997665354272936683956225603122653869677259213e-22;
+alias accuDirectpolyC10h =2.75573192239859041576536180170875489636728161713108e-07;
+alias accuDirectpolyC11h =2.50521083854417268413110797455750633488946732541081e-08;
+alias accuDirectpolyC12h =2.08767569858109971289062132052388037761758710075810e-09;
+alias accuDirectpolyC13h =1.60590438355780403477083534013894559194790545575415e-10;
+alias accuDirectpolyC14h =1.14709032708663011999233928519882120839606942652722e-11;
+alias accuDirectpolyC15h =7.64725827750169879636792489069881340263759583741887e-13;
+
+alias quickCommonpolyC3h =1.66666666696497350885763921723992098122835159301758e-01;
+alias quickCommonpolyC4h =4.16666666766102242180913606262038229033350944519043e-02;
+
+alias accuCommonpolyC3h =1.66666666666666657414808128123695496469736099243164e-01;
+alias accuCommonpolyC3m =9.25185853866467248091737476239823936927135463652392e-18;
+alias accuCommonpolyC4h =4.16666666666666643537020320309238741174340248107910e-02;
+alias accuCommonpolyC4m =2.31256737150511109641969514308685693497248293481702e-18;
+alias accuCommonpolyC5h =8.33333333333333321768510160154619370587170124053955e-03;
+alias accuCommonpolyC6h =1.38888888911084334119860894674047813168726861476898e-03;
+alias accuCommonpolyC7h =1.98412713635391310413452758965036082372535020112991e-04;
+
+
+//  Function expm1_13
+//    Computes exp(x)-1 with an accuracy of 120 bits (128 for |x| <= 2^(-5)) as
+//    (expm1h + expm1m + expm1l) \approx exp(x) - 1
+//    There is no special case handling.
+//    |x| is supposed to be greater than 2^(-53)
+//    x is supposed to be in the range -37...709
+//    The triple-double exph + expm + expl is non-overlapping.
+
+[T | T==Double]
+inline expm1_13(x:T) --> expm1h:T,expm1m:T,expm1l:T {
+    var xx = x;
+    var xdb = db_number(x);
+    var xIntHi = bitand(xdb.0[1] , 0x7fffffff);
+
+    // Test if we have |x| <= 1/4-1/2ulp(1/4) for knowing if we use exp(x) or approximate directly
+    if (xIntHi < DIRECTINTERVALBOUND) {
+        // We approximate expm1 directly after a range reduction as follows
+        // expm1(x) = (expm1(x/2) + 2) * expm1(x/2)
+        // We perform the range reduction in such a way that finally |x| < 1/32
+
+        // Extract the exponent of |x| and add 5 (2^5 = 32)
+        var expoX = bitshr(bitand(xIntHi , 0x7ff00000) , 20) - (1023 - 5);
+
+        // If this particularily biased exponent expoX is negative, we are already less than 1/32
+        if (expoX >= 0) {
+            // If we are here, we must perform range reduction
+            // We multiply x by 2^(-expoX-1) by bit manipulation
+            // x cannot be denormalized so there is no danger
+            xdb.0[1] += bitshl(-expoX-1, 20);
+
+            // We reassign the new x and maintain xIntHi
+            xIntHi = bitand(xdb.0[1] , 0x7fffffff);
+            xx = xdb.2;
+        }
+
+        // Here, we have always |x| < 1/32
+        // Double precision evaluation steps and one double-double step
+        var xSqh,xSql = Mul12(xx,xx);
+        var xSqHalfh,xSqHalfl = 0.5 * xSqh, 0.5 * xSql;
+        expm1h, expm1m, expm1l <-- expm1_direct_td(x, xSqHalfh, xSqHalfl, xSqh, xSql, expoX);
+    }
+    else {
+        // If we are here, we can use expm1(x) = exp(x) - 1
+        // Range reduction - exact part: compute k as double and as int
+        var xMultLog2InvMult2L = x * log2InvMult2L;
+        var shiftedXMult = xMultLog2InvMult2L + shiftConst;
+        var kd = shiftedXMult - shiftConst;
+        var shiftedXMultdb = db_number(shiftedXMult);
+        var k = shiftedXMultdb.0[0];
+        var M = bitshr(k, 12);
+        var index1 = bitand(k, INDEXMASK1);
+        var index2 = bitshr(bitand(k, INDEXMASK2), 6);
+
+        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl
+            = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
+        var t1 = x + msLog2Div2LMultKh;
+        var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
+        var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
+
+        ref tbl1h = twoPowerIndex1[index1].hi;
+        ref tbl1m = twoPowerIndex1[index1].mi;
+        ref tbl2h = twoPowerIndex2[index2].hi;
+        ref tbl2m = twoPowerIndex2[index2].mi;
+        ref tbl1l = twoPowerIndex1[index1].lo;
+        ref tbl2l = twoPowerIndex2[index2].lo;
+
+        expm1h, expm1m, expm1l <-- expm1_common_td(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l, M);
+    }
+}
+
+[T | T==Double]
+private expm1_direct_td(x:T, xSqHalfh:T, xSqHalfl:T, xSqh:T, xSql:T,
+    expoX:Int) --> expm1h:T, expm1m:T, expm1l:T {
+
+    // Double precision evaluation steps
+    var highPoly = fma(fma(fma(fma(accuDirectpolyC15h ,x,accuDirectpolyC14h),
+        x,accuDirectpolyC13h),x,accuDirectpolyC12h),x,accuDirectpolyC11h);
+    var tt1h = x * highPoly;
+
+    // Triple-double steps for x + x^2/2 and x^3
+    var lowPolyh,lowPolym,lowPolyl = Add123(x,xSqHalfh,xSqHalfl);                     /* infty - 52/53 */
+    var xCubeh,xCubem,xCubel = Mul123(x,xSqh,xSql);                                   /* 154 - 47/53 */
+
+    // Double-double evaluation steps
+    var t1h,t1l = Add12(accuDirectpolyC10h,tt1h);
+    var t2h,t2l = MulAdd212(accuDirectpolyC9h,accuDirectpolyC9m,x,t1h,t1l);
+    var t3h,t3l = MulAdd212(accuDirectpolyC8h,accuDirectpolyC8m,x,t2h,t2l);
+    var t4h,t4l = MulAdd212(accuDirectpolyC7h,accuDirectpolyC7m,x,t3h,t3l);
+    var t5h,t5l = MulAdd212(accuDirectpolyC6h,accuDirectpolyC6m,x,t4h,t4l);
+    var t6h,t6l = MulAdd212(accuDirectpolyC5h,accuDirectpolyC5m,x,t5h,t5l);
+
+    // Triple-double evaluation steps
+    var tt6h,tt6m,tt6l = Mul123(x,t6h,t6l);                                          /* 154 - 47/53 */
+    var t7h,t7m,t7l = Add233(accuDirectpolyC4h,accuDirectpolyC4m,tt6h,tt6m,tt6l);    /* 150 - 43/53 */
+
+    var tt7h,tt7m,tt7l = Mul133(x,t7h,t7m,t7l);                                      /* 143 - 38/53 */
+    var t8h,t8m,t8l = Add33(accuDirectpolyC3h,accuDirectpolyC3m,
+                        accuDirectpolyC3l,tt7h,tt7m,tt7l); /* 135 - 33/53 */
+
+    var fullHighPolyhover,fullHighPolymover,fullHighPolylover =
+        Mul33(xCubeh,xCubem,xCubel,t8h,t8m,t8l); /* 130 - 29/53 */
+
+    var fullHighPolyh,fullHighPolym,fullHighPolyl =
+        Renormalize3(fullHighPolyhover,fullHighPolymover,fullHighPolylover);                     /* infty - 52/53 */
+    var polyh,polym,polyl = Add33(lowPolyh,lowPolym,lowPolyl,
+                                fullHighPolyh,fullHighPolym,fullHighPolyl);
+                                                                                             /* 149 - 47/53 */
+    // Reconstruction steps
+    // If we have not performed any range reduction, we have no reconstruction to do
+    if (expoX >= 0) {
+        // If we are here, we must perform reconstruction
+        // First reconstruction step
+        var r1h,r1m,r1l = Add133(2.,polyh,polym,polyl);
+        var rr1h,rr1m,rr1l = Mul33(r1h,r1m,r1l,polyh,polym,polyl);
+        if (expoX >= 1) {
+            // Second reconstruction step */
+            var r2h,r2m,r2l = Add133(2.,rr1h,rr1m,rr1l);
+            var rr2h,rr2m,rr2l = Mul33(r2h,r2m,r2l,rr1h,rr1m,rr1l);
+
+            if (expoX >= 2) {
+                // Third reconstruction step */
+                var r3h,r3m,r3l = Add133(2.,rr2h,rr2m,rr2l);
+                var rr3h,rr3m,rr3l = Mul33(r3h,r3m,r3l,rr2h,rr2m,rr2l);
+                // expoX may be maximally 2 */
+                expm1h <-- rr3h;
+                expm1m <-- rr3m;
+                expm1l <-- rr3l;
+            } else {
+                expm1h <-- rr2h;
+                expm1m <-- rr2m;
+                expm1l <-- rr2l;
+            }
+        } else {
+            expm1h <-- rr1h;
+            expm1m <-- rr1m;
+            expm1l <-- rr1l;
+        }
+    } else {
+        expm1h <-- polyh;
+        expm1m <-- polym;
+        expm1l <-- polyl;
+    }
+    // Renormalize before returning
+    expm1h,expm1m,expm1l = Renormalize3(expm1h,expm1m,expm1l);
+}
+
+[T | T==Double]
+private expm1_common_td(rh:T,rm:T,rl:T,tbl1h:T,tbl1m:T,tbl1l:T,tbl2h:T,
+    tbl2m:T,tbl2l:T,M:Int)  --> expm1h:T, expm1m:T, expm1l:T {
+
+    // Polynomial approximation - double precision steps
+    var highPoly = fma(fma(accuCommonpolyC7h,rh,accuCommonpolyC6h),rh,accuCommonpolyC5h);
+
+    // Polynomial approximation - double-double precision steps
+    var t1h,t1l = Mul12(rh,highPoly);
+    var t2h,t2l = Add22(accuCommonpolyC4h,accuCommonpolyC4m,t1h,t1l);
+    var t3h,t3l = Mul122(rh,t2h,t2l);
+    var t4h,t4l  =Add22(accuCommonpolyC3h,accuCommonpolyC3m,t3h,t3l);
+
+    var rhSquareh,rhSquarel = Mul12(rh,rh);
+    var rhCubeh,rhCubem,rhCubel = Mul123(rh,rhSquareh,rhSquarel);
+    var rhSquareHalfh,rhSquareHalfl = 0.5 * rhSquareh,0.5 * rhSquarel;
+
+    // Polynomial approximation - triple-double precision steps
+    var lowPolyh,lowPolym,lowPolyl = Renormalize3(rh,rhSquareHalfh,rhSquareHalfl);
+    var highPolyMulth,highPolyMultm,highPolyMultl =Mul233(t4h,t4l,rhCubeh,rhCubem,rhCubel);
+    var ph,pm,pl = Add33(lowPolyh,lowPolym,lowPolyl,highPolyMulth,highPolyMultm,highPolyMultl);
+
+    // Reconstruction
+    var phnorm,pmnorm = Add12(ph,pm);
+    var rmlMultPh,rmlMultPl = Mul22(rm,rl,phnorm,pmnorm);
+    var qh,ql = Add22(rm,rl,rmlMultPh,rmlMultPl);
+
+    var fullPolyh,fullPolym,fullPolyl = Add233Cond(qh,ql,ph,pm,pl);
+    var polyAddOneh,t5 = Add12(1.,fullPolyh);
+    var polyAddOnem,t6 = Add12Cond(t5,fullPolym);
+    var polyAddOnel = t6 + fullPolyl;
+    var polyWithTbl1h,polyWithTbl1m,polyWithTbl1l =
+        Mul33(tbl1h,tbl1m,tbl1l,polyAddOneh,polyAddOnem,polyAddOnel);
+    var polyWithTablesh,polyWithTablesm,polyWithTablesl =
+        Mul33(tbl2h,tbl2m,tbl2l,polyWithTbl1h,polyWithTbl1m,polyWithTbl1l);
+    // Multiplication by 2^(M)
+    // We perform it in integer to overcome the non-representability of 2^(1024)
+    // This case is possible for M = 1024 and polyWithTablesh < 1
+    // The overlap in the triple-double polyWithTables[hml] stays unchanged.
+    var polyWithTableshdb = db_number(polyWithTablesh);
+    var polyWithTablesmdb = db_number(polyWithTablesm);
+    var polyWithTablesldb = db_number(polyWithTablesl);
+    // TODO FIXME probably at least the first of these tests is useless,
+    //   but I leave this to Christoph to check it. Let us be
+    //   conservative. Florent  */
+    if(polyWithTableshdb.2!=0) polyWithTableshdb.0[1] += bitshl(M,20);
+    if(polyWithTablesmdb.2!=0) polyWithTablesmdb.0[1] += bitshl(M,20);
+    if(polyWithTablesldb.2!=0) polyWithTablesldb.0[1] += bitshl(M,20);
+    // Substraction of -1. We use a conditional Add133
+    expm1h,expm1m,expm1l <-- Add133Cond(-1.,polyWithTableshdb.2,
+                                    polyWithTablesmdb.2,polyWithTablesldb.2);
+    // Renormalization
+    expm1h,expm1m,expm1l = Renormalize3(expm1h,expm1m,expm1l);
+}
+
+
+expm1_rn(x:Double) {
+    var xdb = db_number(x);
+    // Strip off the sign of x for the following tests
+    var xIntHi = bitand(xdb.0[1], 0x7fffffff);
+    // Test if we are so small that we can return (a corrected) x as correct rounding
+    if (xIntHi < RETURNXBOUND)
+        return x;
+
+    // Filter out special cases like overflow, -1 in result, infinities and NaNs
+    //   The filters are not sharp, we have positive arguments that flow through
+    if (xIntHi >= SIMPLEOVERFLOWBOUND) {
+        // Test if we are +/-inf or NaN */
+        if (xIntHi >= 0x7ff00000) { // Test if NaN */
+            if (bitor(bitand(xIntHi, 0x000fffff) , xdb.0[0]) != 0) //NaN
+                return x+x;  // return NaN
+            // Test if +inf or -inf
+            if (xdb.0[1] > 0) // +inf
+                return x+x;  // return +inf
+
+            // If we are here, we are -inf
+            return -1.0;
+        }
+
+        // If we are here, we are overflowed or a common case that flows through */
+
+        // Test if we are actually overflowed */
+        if (x > OVERFLOWBOUND)
+            return LARGEST * LARGEST;  /* return +inf and set flag */
+    }
+
+    // Test if we know already that we are -1.0
+    // (+ correction depending on rounding mode) in result
+    if (x < MINUSONEBOUND)
+        return -1.0;
+
+    // Test if we have |x| <= 1/4-1/2ulp(1/4) for knowing
+    // if we use exp(x) or approximate directly */
+    if (xIntHi < DIRECTINTERVALBOUND) {
+        // We approximate expm1 directly after a range reduction as follows
+        //   expm1(x) = (expm1(x/2) + 2) * expm1(x/2)
+        //   We perform the range reduction in such a way that finally |x| < 1/32
+
+        // Extract the exponent of |x| and add 5 (2^5 = 32) */
+        var expoX = bitshr(bitand(xIntHi,0x7ff00000),20) - (1023 - 5);
+
+        // If this particularily biased exponent expoX is negative,
+        // we are already less than 1/32 */
+        if (expoX >= 0) {
+            // If we are here, we must perform range reduction
+
+            // We multiply x by 2^(-expoX-1) by bit manipulation
+            // x cannot be denormalized so there is no danger
+            xdb.0[1] += bitshl(-expoX-1, 20);
+
+            // We reassign the new x and maintain xIntHi
+            xIntHi = bitand(xdb.0[1],0x7fffffff);
+        }
+
+        // Here, we have always |x| < 1/32
+        // Double precision evaluation steps and one double-double step
+        var xSqh,xSql = Mul12(xdb.2,xdb.2);
+        var middlePoly = fma(quickDirectpolyC5h,xdb.2,quickDirectpolyC4h);
+        var doublePoly = middlePoly;
+
+        // Special path: for small |x| we can truncate the polynomial
+        if (xIntHi > SPECIALINTERVALBOUND) {
+            var highPoly = fma(fma(fma(quickDirectpolyC9h ,xdb.2,quickDirectpolyC8h),xdb.2,
+                                 quickDirectpolyC7h),xdb.2,quickDirectpolyC6h);
+
+            var highPolyWithSquare = xSqh * highPoly;
+            doublePoly = middlePoly + highPolyWithSquare;
+        }
+
+        // Double-double evaluation steps
+        var tt1h = xdb.2 * doublePoly;
+        var xSqHalfh = 0.5 * xSqh;
+        var xSqHalfl = 0.5 * xSql;
+        var t2h,templ = Add12(xdb.2,xSqHalfh);
+        var t2l = templ + xSqHalfl;
+        var t1h,t1l = Add12(quickDirectpolyC3h,tt1h);
+        var xCubeh,xCubel = Mul122(xdb.2,xSqh,xSql);
+        var tt3h,tt3l = Mul22(xCubeh,xCubel,t1h,t1l);
+        var polyh,polyl = Add22(t2h,t2l,tt3h,tt3l);
+
+        // Reconstruction
+        var expm1h,expm1m,expm1l = 0.,0.,0.;
+        // If we have not performed any range reduction,
+        // we have no reconstruction to do
+        if (expoX >= 0) {
+            // If we are here, we must perform reconstruction
+
+            // First reconstruction step
+            var r1h,r1t = Add12(2.,polyh);
+            var r1l = r1t + polyl;
+            var rr1h,rr1l = Mul22(r1h,r1l,polyh,polyl);
+
+            if (expoX >= 1) {
+
+                // Second reconstruction step
+                var r2h,r2t = Add12(2.,rr1h);
+                var r2l = r2t + rr1l;
+                var rr2h,rr2l = Mul22(r2h,r2l,rr1h,rr1l);
+
+                if (expoX >= 2) {
+                    // Third reconstruction step
+                    var r3h,r3t = Add12(2.,rr2h);
+                    var r3l = r3t + rr2l;
+                    var rr3h,rr3l = Mul22(r3h,r3l,rr2h,rr2l);
+
+                    // expoX may be maximally 2
+                    expm1h = rr3h;
+                    expm1m = rr3l;
+                } else {
+                    expm1h = rr2h;
+                    expm1m = rr2l;
+                }
+            } else {
+                expm1h = rr1h;
+                expm1m = rr1l;
+            }
+        } else {
+            expm1h = polyh;
+            expm1m = polyl;
+        }
+
+        // Rounding test
+        if(expm1h == (expm1h + (expm1m * ROUNDCSTDIRECTRN)))
+            return expm1h;
+        else{
+            expm1h,expm1m,expm1l = expm1_direct_td(xdb.2, xSqHalfh, xSqHalfl, xSqh, xSql, expoX);
+            return ReturnRoundToNearest3(expm1h, expm1m, expm1l);
+        } // Accurate phase launched
+        // We cannot be here, since we return in all cases before */
+    }
+
+    // If we are here, we can use expm1(x) = exp(x) - 1
+    // Range reduction - exact part: compute k as double and as int
+    var xMultLog2InvMult2L = xdb.2 * log2InvMult2L;
+    var shiftedXMult = xMultLog2InvMult2L + shiftConst;
+    var kd = shiftedXMult - shiftConst;
+    var shiftedXMultdb = db_number(shiftedXMult);
+    var k = shiftedXMultdb.0[0];
+    var M = bitshr(k,12);
+    var index1 = bitand(k,INDEXMASK1);
+    var index2 = bitshr(bitand(k,INDEXMASK2),6);
+
+    // Range reduction - part affected by error - must be redone in accurate phase
+    var s1,s2 = Mul12(msLog2Div2Lh,kd);
+    var s3 = kd * msLog2Div2Lm;
+    var s4 = s2 + s3;
+    var s5 = xdb.2 + s1;
+    var rh,rm = Add12Cond(s5,s4);
+
+    // Table reads - read only two double-doubles by now
+    ref tbl1h = twoPowerIndex1[index1].hi;
+    ref tbl1m = twoPowerIndex1[index1].mi;
+    ref tbl2h = twoPowerIndex2[index2].hi;
+    ref tbl2m = twoPowerIndex2[index2].mi;
+
+    // Quick phase starts here
+    var rhSquare = rh * rh;
+    var rhC3 = quickCommonpolyC3h * rh;
+
+    var rhSquareHalf = 0.5 * rhSquare;
+    var monomialCube = rhC3 * rhSquare;
+    var rhFour = rhSquare * rhSquare;
+
+    var monomialFour = quickCommonpolyC4h * rhFour;
+    var highPoly = monomialCube + monomialFour;
+    var highPolyWithSquare = rhSquareHalf + highPoly;
+
+    // Reconstruction: integration of table values
+    var tablesh,tablesl = Mul22(tbl1h,tbl1m,tbl2h,tbl2m);
+    var t8 = rm + highPolyWithSquare;
+    var t9 = rh + t8;
+    var t10 = tablesh * t9;
+    var t11,t12 = Add12(tablesh,t10);
+    var t13 = t12 + tablesl;
+    var polyTblhdb,polyTblmdb = db_number(),db_number();
+    polyTblhdb.2,polyTblmdb.2 = Add12(t11,t13);
+
+    // Reconstruction: multiplication by 2^M
+    // Implement the multiplication by multiplication to overcome the
+    // problem of the non-representability of 2^1024 (M = 1024)
+    // This case is possible if polyTblhdb.d < 1
+    polyTblhdb.0[1] += bitshl(M,20);
+    polyTblmdb.0[1] += bitshl(M,20);
+
+    // Substraction of 1
+
+    // Testing if the operation is necessary is more expensive than
+    // performing it in any case.
+
+    // We may cancellate at most 2 bits in the subtraction for
+    // arguments 1/4 <= x <= ln(2) (0.25 <= x <= 0.69)
+    // We must therefore use conditional Add12s
+
+    // Since we perform a substraction, we may not have addition overflow towards +inf
+
+    var t1,t2 = Add12Cond(-1.,polyTblhdb.2);
+    var t3 = t2 + polyTblmdb.2;
+    var expm1h,expm1m = Add12Cond(t1,t3);
+    var expm1l = 0.;
+
+    // Rounding test
+    if(expm1h == (expm1h + (expm1m * ROUNDCSTCOMMONRN))) {
+        return expm1h;
+    } else {
+        /* Rest of argument reduction for accurate phase */
+
+        var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl =
+            Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
+        var t1 = xdb.2 + msLog2Div2LMultKh;
+        var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
+        var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
+
+        // Table reads for accurate phase
+        ref tbl1l = twoPowerIndex1[index1].lo;
+        ref tbl2l = twoPowerIndex2[index2].lo;
+
+        // Call accurate phase
+        expm1h,expm1m,expm1l = expm1_common_td(rh, rm, rl, tbl1h, tbl1m,
+                                            tbl1l, tbl2h, tbl2m, tbl2l, M);
+
+        // Final rounding
+        return ReturnRoundToNearest3(expm1h, expm1m, expm1l);
+    } // Accurate phase launched
+    // We cannot be here since we return before in any case
+}
+
+
+[T | Float?(T)]
+inline expm1_safe(x:T) = T(expm1_rn(Double(x)));

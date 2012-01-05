@@ -141,9 +141,9 @@ inline overload modf(x:LongDouble) {
 [| MathMode?(LIBM)] inline overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
 [| MathMode?(LIBM)] inline overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
-inline overload expm1(x:Double) = libc.expm1(x);
-inline overload expm1(x:Float) = libc.expm1f(x);
-inline overload expm1(x:LongDouble) = libc.expm1l(x);
+[| MathMode?(LIBM)] inline overload expm1(x:Double) = libc.expm1(x);
+[| MathMode?(LIBM)] inline overload expm1(x:Float) = libc.expm1f(x);
+[| MathMode?(LIBM)] inline overload expm1(x:LongDouble) = libc.expm1l(x);
 
 inline overload log1p(x:Double) = libc.log1p(x);
 inline overload log1p(x:Float) = libc.log1pf(x);

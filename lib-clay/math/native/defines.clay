@@ -12,7 +12,6 @@ define modf;
 define log1p;
 define logb;
 define exp2;
-define expm1;
 define pow2;
 define isqrt;
 define ceil;

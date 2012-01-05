@@ -12,7 +12,7 @@ alias shiftConst = 6.75539944105574400000000000000000000000000000000000e+15;
 alias INDEXMASK1 = 0x0000003f;
 alias INDEXMASK2 = 0x00000fc0;
 alias OVRUDRFLWSMPLBOUND =0x4086232b;
-alias OVRFLWBOUND =7.09782712893383973096206318587064743041992187500000e+02;
+alias OVERFLOWBOUND =7.09782712893383973096206318587064743041992187500000e+02;
 alias LARGEST = GreatestPositiveFinite(Double);
 alias SMALLEST = LeastPositive(Double);//4.94065645841246544176568792868221372365059802614325e-324;
 alias DENORMBOUND =-7.08396418532264078748994506895542144775390625000000e+02;
@@ -844,7 +844,7 @@ private inline exp_rn(x:Double) --> ans:Double {
     but there is no special case (NaN, Inf) left */
 
     /* Test if actually overflowed */
-    if (x > OVRFLWBOUND)
+    if (x > OVERFLOWBOUND)
         /* We are actually overflowed in the result */
         return LARGEST * LARGEST;
 

@@ -72,9 +72,7 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
 
         var Xred2 = Xredhi*Xredhi;
         var q = Xred2*(coef_poly[3]+Xred2*
-                 (coef_poly[2]+Xred2*
-                  (coef_poly[1]+Xred2*
-                   coef_poly[0]))) ;
+                (coef_poly[2]+Xred2*(coef_poly[1]+Xred2*coef_poly[0])));
 
         /* reconstruction : atan(x) = atan(b[i]) + atan(x) */
         var atanlolo = (Xredlo + arctan_table[i][ATAN_BLO].2);
@@ -98,19 +96,15 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
 
         var x2 = x*x;
         var q = x2*(coef_poly[3]+x2*
-              (coef_poly[2]+x2*
-               (coef_poly[1]+x2*
-                coef_poly[0]))) ;
-        atanhi,atanlo <-- Add12(x , x*q);
+                (coef_poly[2]+x2*(coef_poly[1]+x2*coef_poly[0])));
+        atanhi,atanlo <-- Add12(x, x*q);
         index_of_e <-- 2;
     }
 }
 
 
 atan_rn(x:Double ) {
-
-    var xdb = db_number();
-    xdb.2 = x;
+    var xdb = db_number(x);
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
     var sign = 1;
     if(bitand(xdb.0[1] , 0x80000000)!=0){
@@ -139,12 +133,11 @@ atan_rn(x:Double ) {
 }
 
 atanpi_rn(x:Double) {
-    var xdb = db_number();
-    xdb.2 = x;
+    var xdb = db_number(x);
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
     var sign = 1;
-    if(bitand(xdb.0[1] , 0x80000000)){
-        x_db.0[1] = absxhi;
+    if(bitand(xdb.0[1] , 0x80000000)!=0){
+        xdb.0[1] = absxhi;
         sign =-1;
     }
 
@@ -159,7 +152,7 @@ atanpi_rn(x:Double) {
         return sign*bf_atanpi_rn(xdb.2); /* TODO optim here */
 
     var atanhi, atanlo,index_of_e = atan_quick(xdb.2);
-    var atanpihi,atanpilo = Mul22( INVPIH, INVPIL, atanhi,atanlo);
+    var atanpihi,atanpilo = Mul22( INVPIH, INVPIL, atanhi, atanlo);
 
     if (atanpihi == (atanpihi + (atanpilo*rncst[index_of_e])))
         return sign*atanpihi;
