@@ -215,8 +215,10 @@ struct uint128_holder {
 
 }
 
+namespace std {
+
 template<>
-class ::std::numeric_limits<clay::int128_holder> {
+class numeric_limits<clay::int128_holder> {
 public:
     static clay::int128_holder min() throw() {
         return clay::int128_holder(0, std::numeric_limits<clay::ptrdiff64_t>::min());
@@ -227,7 +229,7 @@ public:
 };
 
 template<>
-class ::std::numeric_limits<clay::uint128_holder> {
+class numeric_limits<clay::uint128_holder> {
 public:
     static clay::uint128_holder min() throw() {
         return clay::uint128_holder(0, 0);
@@ -239,6 +241,8 @@ public:
         );
     }
 };
+
+}
 
 namespace clay {
 
