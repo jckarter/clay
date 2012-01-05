@@ -1209,7 +1209,31 @@ static void declareLLVMType(TypePtr t) {
     }
     case ENUM_TYPE : {
         t->llType = llvmType(cIntType);
-        // XXX debug info
+        if (llvmDIBuilder != NULL) {
+            EnumType *en = (EnumType*)t.ptr();
+            llvm::SmallVector<llvm::Value*,16> enumerators;
+            for (vector<EnumMemberPtr>::const_iterator i = en->enumeration->members.begin(),
+                    end = en->enumeration->members.end();
+                 i != end;
+                 ++i)
+            {
+                enumerators.push_back(
+                    llvmDIBuilder->createEnumerator((*i)->name->str, (*i)->index));
+            }
+            llvm::DIArray enumArray = llvmDIBuilder->getOrCreateArray(enumerators);
+
+            int line, column;
+            llvm::DIFile file = getDebugLineCol(en->enumeration->location, line, column);
+
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createEnumerationType(
+                lookupModuleDebugInfo(en->enumeration->env), // scope
+                typeName(t),
+                file,
+                line,
+                debugTypeSize(t->llType),
+                debugTypeAlignment(t->llType),
+                enumArray);
+        }
         break;
     }
     default :
