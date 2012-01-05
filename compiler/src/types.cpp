@@ -979,7 +979,6 @@ llvm::Type *CCodePointerType::getCallType() {
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llRetType, llArgTypes, this->hasVarArgs);
         this->callType = llvm::PointerType::getUnqual(llFuncType);
-        // XXX debug info
     }
     return this->callType;
 }
