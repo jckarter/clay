@@ -24,7 +24,12 @@ set(SOURCES
     types.cpp
 )
 
+set(ENABLE_PCH False CACHE BOOL
+    "Enable precompiled headers when building the compiler. (experimental)")
+
+if(ENABLE_PCH)
 precompile_header(clay.hpp SOURCES pch.cpp "${LLVM_CXXFLAGS}")
+endif()
 
 list(APPEND SOURCES
     hirestimer.cpp
