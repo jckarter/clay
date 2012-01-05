@@ -1674,8 +1674,6 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
             ));
     }
 
-    // XXX debug info for arguments
-
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
     llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
@@ -1701,8 +1699,34 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     for (unsigned i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr arg = x->args[i];
-        CValuePtr cvalue = target->allocArgumentValue(x->callingConv, arg->type2, arg->name->str, ai, ctx);
+        CValuePtr cvalue = target->allocArgumentValue(
+            x->callingConv, arg->type2, arg->name->str, ai, ctx);
         addLocal(env, arg->name, cvalue.ptr());
+        if (llvmDIBuilder != NULL) {
+            int line, column;
+            LocationPtr argLocation = arg->location;
+            llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                llvm::dwarf::DW_TAG_arg_variable, // tag
+                x->getDebugInfo(), // scope
+                arg->name->str, // name
+                file, // file
+                line, // line
+                llvmTypeDebugInfo(arg->type2), // type
+                true, // alwaysPreserve
+                0, // flags
+                i+1 // argNo
+                );
+            llvm::Value *argValue = cvalue->llValue;
+            llvmDIBuilder->insertDeclare(
+                argValue,
+                debugVar,
+                initBlock)
+                ->setDebugLoc(ctx->initBuilder->getCurrentDebugLocation());
+            //llvm::Value *debugAlloca =
+            //    ctx->initBuilder->CreateAlloca(argValue->getType());
+            //ctx->initBuilder->CreateStore(argValue, debugAlloca);
+        }
     }
 
     ctx->returnLists.push_back(returns);
