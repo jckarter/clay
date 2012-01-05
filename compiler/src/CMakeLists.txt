@@ -27,10 +27,6 @@ set(SOURCES
 set(ENABLE_PCH False CACHE BOOL
     "Enable precompiled headers when building the compiler. (experimental)")
 
-if(ENABLE_PCH)
-precompile_header(clay.hpp SOURCES pch.cpp "${LLVM_CXXFLAGS}")
-endif()
-
 list(APPEND SOURCES
     hirestimer.cpp
     profiler.cpp
@@ -60,9 +56,15 @@ endif()
 add_executable(clay ${SOURCES})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS}")
+    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS}")
 else()
-    set_target_properties(clay PROPERTIES COMPILE_FLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
+    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
+endif()
+
+set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
+
+if(ENABLE_PCH)
+    precompile_header(clay.hpp SOURCES pch.cpp "${CLAY_CXXFLAGS}")
 endif()
 
 if (UNIX)
