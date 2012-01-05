@@ -29,6 +29,9 @@ testBuildFlags = []
 testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
 
+def indented(txt):
+    return ' ' + txt.replace('\n', '\n ')
+
 
 #
 # getClayPlatform, fileForPlatform
@@ -170,34 +173,30 @@ class TestCase(object):
             errpattern = errpattern.replace('\r', '').strip()
 
             if returncode != "compiler error":
-                print >>self.testLogBuffer, "compiler did not fail"
-                print >>self.testLogBuffer, "expected error pattern"
-                print >>self.testLogBuffer, "----------------------"
-                print >>self.testLogBuffer, errpattern
+                self.testLogBuffer.write("Failure: compiler did not fail\n")
+                self.testLogBuffer.write("Expected:\n")
+                self.testLogBuffer.write(indented(errpattern.replace))
                 return "compiler did not fail"
             if re.search(errpattern, resulterr):
                 return "ok"
             else:
-                print >>self.testLogBuffer, "unexpected compiler error"
-                print >>self.testLogBuffer, "expected error pattern"
-                print >>self.testLogBuffer, "----------------------"
-                print >>self.testLogBuffer, errpattern
-                print >>self.testLogBuffer, "---------------------"
-                print >>self.testLogBuffer, "actual compiler error"
-                print >>self.testLogBuffer, "---------------------"
-                print >>self.testLogBuffer, resulterr
+                self.testLogBuffer.write("Failure: unexpected compiler error\n")
+                self.testLogBuffer.write("Expected:\n")
+                self.testLogBuffer.write(indented(errpattern))
+                self.testLogBuffer.write("Actual:\n")
+                self.testLogBuffer.write(indented(resulterr))
                 return "unexpected compiler error"
 
         else:
             if returncode == "compiler error":
-                print >>self.testLogBuffer, "compiler error"
-                print >>self.testLogBuffer, "--------------"
-                print >>self.testLogBuffer, resulterr
+                self.testLogBuffer.write("Failure: compiler error\n")
+                self.testLogBuffer.write("Error:\n")
+                self.testLogBuffer.write(indented(resulterr))
                 return "compiler error"
             outfile = fileForPlatform(".", "out", "txt")
             errfile = fileForPlatform(".", "err", "txt")
             if not os.path.isfile(outfile) :
-                print >>self.testLogBuffer, "out.txt missing"
+                self.testLogBuffer.write("Failure: out.txt missing")
                 return "out.txt missing"
             refout = open(outfile).read()
             referr = ""
@@ -210,50 +209,42 @@ class TestCase(object):
             if resultout == refout and resulterr == referr:
                 return "ok"
             elif resultout != refout and resulterr != referr:
-                print >>self.testLogBuffer, "out.txt and err.txt mismatch"
-                print >>self.testLogBuffer, "diff from out.txt"
-                print >>self.testLogBuffer, "-----------------"
+                self.testLogBuffer.write("Failure: out.txt and err.txt mismatch\n")
+                self.testLogBuffer.write("Diff-Stdout:\n")
                 for line in difflib.unified_diff(
                     refout.splitlines(True), resultout.splitlines(True),
                     fromfile="out.txt", tofile="stdout"
                 ):
-                    print >>self.testLogBuffer, line,
-                print >>self.testLogBuffer, "----------------"
-                print >>self.testLogBuffer, "diff from err.txt"
-                print >>self.testLogBuffer, "-----------------"
+                    self.testLogBuffer.write(indented(line))
+                self.testLogBuffer.write("Diff-Stderr:\n")
                 for line in difflib.unified_diff(
                     referr.splitlines(True), resulterr.splitlines(True),
                     fromfile="err.txt", tofile="stderr"
                 ):
-                    print >>self.testLogBuffer, line,
+                    self.testLogBuffer.write(indented(line))
                 return "out.txt and err.txt mismatch"
             elif resultout != refout:
-                print >>self.testLogBuffer, "out.txt mismatch"
-                print >>self.testLogBuffer, "diff from out.txt"
-                print >>self.testLogBuffer, "-----------------"
+                self.testLogBuffer.write("Failure: out.txt mismatch\n")
+                self.testLogBuffer.write("Diff-Stdout:\n")
                 for line in difflib.unified_diff(
                     refout.splitlines(True), resultout.splitlines(True),
                     fromfile="out.txt", tofile="stdout"
                 ):
-                    print >>self.testLogBuffer, line,
+                    self.testLogBuffer.write(indented(line))
                 return "out.txt mismatch"
             elif resulterr != referr:
-                print >>self.testLogBuffer, "err.txt mismatch"
-                print >>self.testLogBuffer, "diff from err.txt"
-                print >>self.testLogBuffer, "-----------------"
+                self.testLogBuffer.write("Diff-Stderr:\n")
                 for line in difflib.unified_diff(
                     referr.splitlines(True), resulterr.splitlines(True),
                     fromfile="err.txt", tofile="stderr"
                 ):
-                    print >>self.testLogBuffer, line,
+                    self.testLogBuffer.write(indented(line))
                 return "err.txt mismatch"
 
     def run(self):
         self.testLogBuffer = StringIO()
         print >>self.testLogBuffer
-        print >>self.testLogBuffer, "====================="
-        print >>self.testLogBuffer, self.name()
-        print >>self.testLogBuffer, "====================="
+        self.testLogBuffer.write("[%s]\n" % self.name())
         os.chdir(self.path)
         self.pre_build()
         self.post_build()
@@ -303,14 +294,14 @@ class TestModuleCase(TestCase):
         if returncode == 0:
             return "ok"
         elif returncode == "compiler error":
-            print >>self.testLogBuffer, "compiler error"
-            print >>self.testLogBuffer, "--------------"
-            print >>self.testLogBuffer, resulterr
+            self.testLogBuffer.write("compiler error")
+            self.testLogBuffer.write("--------------")
+            self.testLogBuffer.write(resulterr)
             return "compiler error"
         else:
-            print >>self.testLogBuffer, "fail"
-            print >>self.testLogBuffer, "----"
-            print >>self.testLogBuffer, resultout
+            self.testLogBuffer.write("fail")
+            self.testLogBuffer.write("----")
+            self.testLogBuffer.write(resultout)
             return "fail"
 
 class TestDisabledCase(TestCase):
@@ -356,31 +347,37 @@ def runTests() :
     failed = []
     disabled = []
     try:
+        print "[Tests]"
         for test in testcases:
             res, log = results.next()
             if res != "ok" and res != "disabled":
                 print >>testLogFile, log,
             testLogFile.flush()
-            print "TEST %s: %s" % (test.name(), res)
+            print "%s: %s" % (test.name(), res)
             if res == "disabled":
                 disabled.append(test.name())
             elif res != "ok":
-                failed.append(test.name())
+                failed.append('%s: %s' % (test.name(), res))
             else:
                 succeeded.append(test.name())
     except KeyboardInterrupt:
         print "\nInterrupted!"
         pool.terminate()
 
-    print "\nPASSED %d TESTS" % len(succeeded)
-    if len(disabled) != 0:
-        print "(%d tests disabled)" % len(disabled)
-    if len(failed) != 0:
-        print "\nFAILED %d TESTS" % len(failed)
-        print "Failed tests:\n ",
-        print "\n  ".join(failed)
+    if failed:
+        print
+        print "[Failed]\n",
+        print "\n".join(failed)
+
+    print
+    print "[Summary]"
+    print "Passed: %d" % len(succeeded)
+    if disabled:
+        print "Disabled: %d" % len(disabled)
+    if failed:
+        print "Failed: %d" % len(failed)
     testLogFile.flush()
-    print "Test log written to testlog.txt"
+    print "\n# Test log written to testlog.txt"
 
 def usage(argv0):
     print "Usage: %s [buildflags... --] [root] [root...]" % argv0
@@ -412,8 +409,8 @@ def main() :
     startTime = time.time()
     runTests()
     endTime = time.time()
-    print ""
-    print "time taken = %f seconds" % (endTime - startTime)
+    print
+    print "time-taken-seconds: %f" % (endTime - startTime)
 
 
 if __name__ == "__main__":
