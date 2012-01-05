@@ -1,0 +1,5 @@
+import a.*;
+import b.*;
+import foo;
+
+main() { foo.foo(); }

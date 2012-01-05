@@ -169,13 +169,26 @@ static const map<string, ObjectSet> &getAllSymbols(ModulePtr module)
     return module->allSymbols;
 }
 
-static void insertImported(const string &name,
+static void insertImported(IdentifierPtr name,
                            ObjectPtr value,
                            const map<string, ObjectPtr> &globals,
-                           map<string, ObjectSet> &result)
+                           map<string, ObjectSet> &result,
+                           set<string> &specificImported,
+                           bool isSpecificImport)
 {
-    if (!globals.count(name))
-        result[name].insert(value);
+    if (specificImported.count(name->str)) {
+        if (isSpecificImport)
+            error(name, "name imported already: " + name->str);
+        return;
+    }
+
+    if (!globals.count(name->str)) {
+        if (isSpecificImport) {
+            result[name->str].clear();
+            specificImported.insert(name->str);
+        }
+        result[name->str].insert(value);
+    }
 }
 
 static void addImportedSymbols(ModulePtr module,
@@ -183,6 +196,8 @@ static void addImportedSymbols(ModulePtr module,
 {
     map<string, ObjectSet> &result =
         publicOnly ? module->publicSymbols : module->allSymbols;
+    set<string> specificImported;
+
     const map<string, ObjectPtr> &globals = module->globals;
 
     vector<ImportPtr>::iterator
@@ -195,20 +210,20 @@ static void addImportedSymbols(ModulePtr module,
         if (x->importKind == IMPORT_MODULE) {
             ImportModule *y = (ImportModule *)x;
             if (y->alias.ptr()) {
-                const string &name = y->alias->str;
+                IdentifierPtr name = y->alias;
                 ModuleHolderPtr holder =
                     publicOnly ?
-                    module->publicRootHolder->children[name] :
-                    module->rootHolder->children[name];
-                insertImported(name, holder.ptr(), globals, result);
+                    module->publicRootHolder->children[name->str] :
+                    module->rootHolder->children[name->str];
+                insertImported(name, holder.ptr(), globals, result, specificImported, true);
             }
             else {
-                const string &name = y->dottedName->parts[0]->str;
+                IdentifierPtr name = y->dottedName->parts[0];
                 ModuleHolderPtr holder =
                     publicOnly ?
-                    module->publicRootHolder->children[name] :
-                    module->rootHolder->children[name];
-                insertImported(name, holder.ptr(), globals, result);
+                    module->publicRootHolder->children[name->str] :
+                    module->rootHolder->children[name->str];
+                insertImported(name, holder.ptr(), globals, result, specificImported, true);
             }
         }
         else if (x->importKind == IMPORT_STAR) {
@@ -222,8 +237,11 @@ static void addImportedSymbols(ModulePtr module,
                 ObjectSet::const_iterator
                     oi = mmi->second.begin(),
                     oend = mmi->second.end();
-                for (; oi != oend; ++oi)
-                    insertImported(mmi->first, *oi, globals, result);
+                for (; oi != oend; ++oi) {
+                    IdentifierPtr fakeIdent = new Identifier(mmi->first);
+                    fakeIdent->location = y->location;
+                    insertImported(fakeIdent, *oi, globals, result, specificImported, false);
+                }
             }
         }
         else if (x->importKind == IMPORT_MEMBERS) {
@@ -248,7 +266,7 @@ static void addImportedSymbols(ModulePtr module,
                     oi = objs.begin(),
                     oend = objs.end();
                 for (; oi != oend; ++oi)
-                    insertImported(name->str, *oi, globals, result);
+                    insertImported(name, *oi, globals, result, specificImported, true);
             }
         }
         else {
