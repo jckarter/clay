@@ -228,7 +228,6 @@ void ExternalTarget::storeReturnValue(CallingConv conv,
                                       MultiCValuePtr out)
 {
     if (returnType == NULL || typeReturnsBySretPointer(conv, returnType)) {
-        assert(out->size() == 0);
         return;
     } else {
         llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, returnType);
