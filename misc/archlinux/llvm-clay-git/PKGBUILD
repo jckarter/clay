@@ -9,8 +9,8 @@ url='http://llvm.org/'
 license=('custom:University of Illinois/NCSA Open Source License')
 depends=('libffi') #'python' 'ocaml' really needed?
 makedepends=('git')
-provides=('llvm' 'clang')
-conflicts=('llvm' 'llvm-svn' 'clang')
+provides=('llvm=3.0' 'clang=3.0')
+conflicts=('llvm=3.0' 'llvm-svn' 'clang=3.0')
 
 _gitroot='git://github.com/jckarter'
 
