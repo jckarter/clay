@@ -1723,9 +1723,6 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 debugVar,
                 initBlock)
                 ->setDebugLoc(ctx->initBuilder->getCurrentDebugLocation());
-            //llvm::Value *debugAlloca =
-            //    ctx->initBuilder->CreateAlloca(argValue->getType());
-            //ctx->initBuilder->CreateStore(argValue, debugAlloca);
         }
     }
 
@@ -3085,16 +3082,43 @@ void codegenCodeBody(InvokeEntryPtr entry)
     if (entry->code->hasReturnSpecs()) {
         const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
-        for (; i < returnSpecs.size(); ++i) {
+        for (; i < returnSpecs.size(); ++i, ++argNo) {
             ReturnSpecPtr rspec = returnSpecs[i];
             ostringstream sout;
-            if (rspec->name.ptr()) {
+            if (rspec->name != NULL) {
                 hasNamedReturn = true;
                 addLocal(env, rspec->name, returns[i].value.ptr());
                 sout << rspec->name->str;
             } else
                 sout << "return.." << i;
             returns[i].value->llValue->setName(sout.str());
+
+            if (rspec->name != NULL && llvmDIBuilder != NULL) {
+                int line, column;
+                LocationPtr argLocation = rspec->location;
+                llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_return_variable, // tag
+                    entry->getDebugInfo(), // scope
+                    rspec->name->str, // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(returns[i].type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    returns[i].value->llValue,
+                    debugVar,
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
+                //llvm::Value *debugAlloca =
+                //    ctx->initBuilder->CreateAlloca(llArgValue->getType());
+                //ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+            }
         }
         ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
         if (!varReturnSpec)
