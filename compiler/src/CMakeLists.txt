@@ -24,9 +24,6 @@ set(SOURCES
     types.cpp
 )
 
-set(ENABLE_PCH False CACHE BOOL
-    "Enable precompiled headers when building the compiler. (experimental)")
-
 list(APPEND SOURCES
     hirestimer.cpp
     profiler.cpp
@@ -54,19 +51,16 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
         COMPILE_DEFINITIONS "GIT_ID=\"${GIT_WC_ID}\"")
 endif()
 
-add_executable(clay ${SOURCES})
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -UNDEBUG")
 else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
 
-set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
+precompile_header(clay.hpp SOURCES pch.cpp "${CLAY_CXXFLAGS}")
 
-if(ENABLE_PCH)
-    precompile_header(clay.hpp SOURCES pch.cpp "${CLAY_CXXFLAGS}")
-endif()
+add_executable(clay ${SOURCES})
+set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 
 if (UNIX)
     set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
