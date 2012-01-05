@@ -197,7 +197,7 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     fprintf(stderr, "###############################\n");
 }
 
-static void displayCompileContext() {
+extern "C" void displayCompileContext() {
     if (contextStack.empty())
         return;
     fprintf(stderr, "\n");

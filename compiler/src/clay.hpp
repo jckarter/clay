@@ -889,6 +889,7 @@ struct DebugPrinter {
     ~DebugPrinter();
 };
 
+extern "C" void displayCompileContext();
 
 
 //
