@@ -1,0 +1,74 @@
+# Contributer: agemogolk (agemogolk@github)
+
+pkgname=llvm-clay-git
+pkgver=3.0
+pkgrel=1
+pkgdesc='LLVM/Clang compiler infrastructure, patched for Clay programming language.'
+arch=('i686' 'x86_64')
+url='http://llvm.org/'
+license=('custom:University of Illinois/NCSA Open Source License')
+depends=('libffi') #'python' 'ocaml' really needed?
+makedepends=('git')
+provides=('llvm' 'clang')
+conflicts=('llvm' 'llvm-svn' 'clang')
+
+_gitroot='git://github.com/jckarter'
+
+build() {
+msg "setting build environment"
+cd $srcdir
+export CC=gcc
+export CXX=g++
+export CFLAGS="-O2 -march=native -mtune=native"
+export CXXFLAGS="$CFLAGS"
+
+msg "getting llvm"
+  if [ -d llvm ]; then
+    cd llvm
+    git pull origin
+    msg "The local files are updated."
+  else
+    git clone $_gitroot/llvm-3.0.git llvm
+  fi
+
+msg "getting clang"
+cd $srcdir/llvm/tools
+  if [ -d clang ]; then
+    cd clang
+    git pull origin
+    msg "The local files are updated."
+  else
+    git clone $_gitroot/clang-3.0.git clang
+  fi
+
+# ...to here...
+
+  msg 'GIT checkout done or server timeout'
+
+  msg 'Start building LLVM and Clang with Clay patches'
+
+  cd $srcdir
+
+  rm -rf build # start fresh
+  mkdir build
+  cd build
+
+  ../llvm/configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --enable-optimized \
+    --enable-assertions \
+    --enable-targets=host-only \
+    --enable-libffi \
+    --disable-bindings
+
+
+  make
+
+  make DESTDIR=${pkgdir} install
+
+  # no docs please
+#  rm -rf ${pkgdir}/usr/docs
+
+  install -D -m644 $srcdir/llvm/LICENSE.TXT ${pkgdir}/usr/share/licenses/llvm/LICENSE.TXT
+}

@@ -1,0 +1,43 @@
+# Contributer: agemogolk (agemogolk@github)
+
+pkgname=clay-git
+pkgver=0.1
+pkgrel=1
+pkgdesc='Clay is a programming language designed for Generic Programming.'
+arch=('i686' 'x86_64')
+url='http://claylabs.com/clay/'
+license=('BSD')
+depends=('llvm' 'clang') #'python' 'ocaml' really needed?
+optdepends=('llvm-clay-git: llvm+clang with Clay patches')
+makedepends=('git' 'cmake')
+provides=('clay')
+conflicts=('clay-hg')
+
+_gitroot='git://github.com/jckarter'
+
+build() {
+    cd $srcdir
+
+    msg "getting clay"
+    if [ -d clay ]; then
+        cd clay
+        git pull origin
+        msg "The local files are updated."
+    else
+        git clone $_gitroot/clay.git clay
+    fi
+
+    msg 'GIT checkout done or server timeout'
+
+    msg 'Start building Clay'
+
+    cd $srcdir
+
+    rm -Rf build
+    mkdir build
+    cd build
+    cmake -G "Unix Makefiles" ../clay/ -DCMAKE_INSTALL_PREFIX=/opt/clay
+    make
+
+    make DESTDIR=${pkgdir} install
+}
