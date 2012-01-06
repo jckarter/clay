@@ -22,9 +22,6 @@ set(SOURCES
     patterns.cpp
     printer.cpp
     types.cpp
-)
-
-list(APPEND SOURCES
     hirestimer.cpp
     profiler.cpp
 )
