@@ -379,6 +379,14 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         }
     }
 
+    bool isSingleFloatMemberType(TypePtr type) {
+        if (type->typeKind == FLOAT_TYPE) {
+            FloatType *ft = (FloatType *)type.ptr();
+            return ft->bits <= 64;
+        } else
+            return false;
+    }
+
     llvm::Type *singleFloatAggregateType(TypePtr type) {
         switch (type->typeKind) {
         case BOOL_TYPE:
@@ -396,7 +404,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
 
         case UNION_TYPE: {
             UnionType *u = (UnionType*)type.ptr();
-            if (u->memberTypes.size() == 1)
+            if (u->memberTypes.size() == 1 && isSingleFloatMemberType(u->memberTypes[0]))
                 return llvmType(u->memberTypes[0]);
             return NULL;
         }
@@ -404,14 +412,14 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case RECORD_TYPE: {
             RecordType *r = (RecordType*)type.ptr();
             const vector<TypePtr> &fieldTypes = recordFieldTypes(r);
-            if (fieldTypes.size() == 1)
+            if (fieldTypes.size() == 1 && isSingleFloatMemberType(fieldTypes[0]))
                 return llvmType(fieldTypes[0]);
             return NULL;
         }
 
         case TUPLE_TYPE: {
             TupleType *t = (TupleType*)type.ptr();
-            if (t->elementTypes.size() == 1)
+            if (t->elementTypes.size() == 1 && isSingleFloatMemberType(t->elementTypes[0]))
                 return llvmType(t->elementTypes[0]);
             return NULL;
         }
