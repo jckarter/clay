@@ -7,14 +7,12 @@
 //
 // Build instructions:
 //
-//   clay -no-exceptions -shared -asm tinyhello.clay
-//   as -o tinyhello.o tinyhello.s
+//   clay -no-exceptions -c tinyhello.clay
 //   ld -o tinyhello tinyhello.o
 //   strip tinyhello
 //
 // This program only works on linux x86-32.
 //
-
 
 external ("_start") _start() {
     print("Hello world!\n");

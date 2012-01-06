@@ -1,3 +1,0 @@
-external foo(x:Int, y:Int, z:Int) : Int = x + bar(y, z);
-
-external bar(y:Int, z:Int) : Int = y - z;

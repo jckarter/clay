@@ -1,4 +1,3 @@
-
 import parsing.combinators.strings.*;
 import maybe.*;
 
@@ -12,7 +11,7 @@ import maybe.*;
 // expr -> term (('+' | '-') term)*
 //
 
-expr(input) Maybe[Int] = expr2(input);
+expr(input) : Maybe[Int] = expr2(input);
 
 var bracketed = modify(x => x.1, ['(', expr, ')']);
 var digit = condition(c => ((c >= '0') and (c <= '9')));
