@@ -85,7 +85,7 @@ unsigned long long HiResTimer::elapsedNanos()
 
 }
 
-#else // Unices
+#else // Unixes
 
 #if defined(CLOCK_PROCESS_CPUTIME_ID) && defined(__linux__)
 #    define CLOCK CLOCK_PROCESS_CPUTIME_ID
