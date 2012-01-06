@@ -1216,26 +1216,12 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     }
 
     case EXTERNAL_VARIABLE : {
-        ExternalVariable *y = (ExternalVariable *)x.ptr();
-        if (!y->llGlobal)
-            codegenExternalVariable(y);
-        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(y->type2));
-        *((void **)out0->addr) = ptr;
+        error("compile-time access to C global variables not supported");
         break;
     }
 
     case EXTERNAL_PROCEDURE : {
-        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
-        if (!y->llvmFunc)
-            codegenExternalProcedure(y, false);
-        void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == y->ptrType);
-        *((void **)out0->addr) = funcPtr;
+        error("compile-time access to C functions not supported");
         break;
     }
 
@@ -1942,7 +1928,6 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
         }
     }
     error("calling compiled code is not supported in the evaluator");
-    llvmEngine->runFunction(entry->llvmFunc, gvArgs);
 }
 
 
@@ -3908,48 +3893,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("CodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = valueToStatic(args, 0);
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
-            argumentError(0, "cannot create pointer to call-by-name code");
-        assert(entry->analyzed);
-        if (!entry->llvmFunc)
-            codegenCodeBody(entry);
-        assert(entry->llvmFunc);
-        void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmFunc);
-        TypePtr cpType = codePointerType(argsKey,
-                                         entry->returnIsRef,
-                                         entry->returnTypes);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == cpType);
-        *((void **)out0->addr) = funcPtr;
+        error("code pointers cannot be taken at compile time");
         break;
     }
 
@@ -3988,66 +3932,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("LLVMCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = valueToStatic(args, 0);
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
-            argumentError(0, "cannot create pointer to call-by-name code");
-        assert(entry->analyzed);
-        if (!entry->llvmFunc)
-            codegenCodeBody(entry);
-        assert(entry->llvmFunc);
-        if (!entry->llvmCWrapper)
-            codegenCWrapper(entry);
-        assert(entry->llvmCWrapper);
-        TypePtr returnType;
-        if (entry->returnTypes.size() == 0) {
-            returnType = NULL;
-        }
-        else if (entry->returnTypes.size() == 1) {
-            if (entry->returnIsRef[0])
-                argumentError(0, "cannot create C compatible pointer "
-                              " to return-by-reference code");
-            returnType = entry->returnTypes[0];
-        }
-        else {
-            argumentError(0, "cannot create C compatible pointer "
-                          "to multi-return code");
-        }
-        void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmCWrapper);
-        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argsKey,
-                                           false,
-                                           returnType);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == ccpType);
-        *((void **)out0->addr) = funcPtr;
+        error("code pointers cannot be created at compile time");
         break;
     }
 
