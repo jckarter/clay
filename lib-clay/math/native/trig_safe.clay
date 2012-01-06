@@ -8,55 +8,45 @@ import math.native.exact.*;
 import math.native.bigfloat.*;
 import math.native.rem_pi_2.*;
 
-alias SIN = 0;
-alias COS = 1;
-alias TAN = 2;
+private alias SIN = 0;
+private alias COS = 1;
+private alias TAN = 2;
 
-alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFE;        /* .14901147e-7 */
-alias XMAX_SIN_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
-alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09C;        /* .10536702e-7 */
-alias XMAX_RETURN_1_FOR_COS_RDIR    = 0x3E4FFFFE;        /* .14901147e-7 */
-alias XMAX_COS_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
-alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFE ;       /* .74505735e-8 */
-alias XMAX_TAN_CASE2                = 0x3FAFFFFE;        /* .62499940e-1 */
+private alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFE;        /* .14901147e-7 */
+private alias XMAX_SIN_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
+private alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09C;        /* .10536702e-7 */
+private alias XMAX_RETURN_1_FOR_COS_RDIR    = 0x3E4FFFFE;        /* .14901147e-7 */
+private alias XMAX_COS_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
+private alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFE ;       /* .74505735e-8 */
+private alias XMAX_TAN_CASE2                = 0x3FAFFFFE;        /* .62499940e-1 */
 
-alias ONE_ROUNDED_DOWN      = 9.9999999999999988897769754e-01;
+private alias ONE_ROUNDED_DOWN      = 9.9999999999999988897769754e-01;
 
-alias EPS_SIN_CASE2         = 1.1843448950468158814341336e-20;
-alias RN_CST_SIN_CASE2      = 1.0002134047098797985844841;
+private alias RN_CST_SIN_CASE2      = 1.0002134047098797985844841;
+private alias RN_CST_COS_CASE2      = 1.0006823406990255799706351;
+private alias RN_CST_SINCOS_CASE3   = 1.0007331378299121345641375;
+private alias RN_CST_TAN_CASE3      = 1.0015410958904110700976399;
 
-alias EPS_COS_CASE2         = 3.7840527971432048221275834e-20;
-alias RN_CST_COS_CASE2      = 1.0006823406990255799706351;
+private alias INV_PIO256            = 81.4873308630504119136684868;
 
-alias EPS_SINCOS_CASE3      = 4.0657581468206416275279480e-20;
-alias RN_CST_SINCOS_CASE3   = 1.0007331378299121345641375;
+private alias XMAX_CODY_WAITE_2     = 0x40B921F9;        /* 6433.9756 */
+private alias XMAX_CODY_WAITE_3     = 0x416921F9;        /* 13176782. */
+private alias XMAX_DDRR             = 0x426921F9;        /* .86355359e12 */
 
-alias EPS_TAN_CASE2         = 4.5960200000000000000000000e-19;
-alias EPS_TAN_CASE3         = 8.5380921083233474178086908e-20;
-alias RN_CST_TAN_CASE3      = 1.0015410958904110700976399;
+private alias RR_CW2_CH             = 1.2271846303519851062446833e-02;
+private alias RR_CW2_MCL            = 4.3472122470213191794988193e-13;
+private alias RR_CW3_CH             = 1.2271845713257789611816406e-02;
+private alias RR_CW3_CM             = 5.8982729811418721510563046e-10;
+private alias RR_CW3_MCL            = -4.2111741079360304438362959e-17;
+private alias RR_DD_MCH             = -1.2271846303085129359367045e-02;
+private alias RR_DD_MCM             = -4.7837765591693484655225157e-19;
+private alias RR_DD_CL              = -1.1698319569212264319871158e-35;
 
-alias INV_PIO256            = 81.4873308630504119136684868;
+private alias DEGREE_SIN_BF = 25;
+private alias DEGREE_COS_BF = 26;
+private alias DEGREE_TAN_BF = 69;
 
-alias XMAX_CODY_WAITE_2     = 0x40B921F9;        /* 6433.9756 */
-alias XMAX_CODY_WAITE_3     = 0x416921F9;        /* 13176782. */
-alias XMAX_DDRR             = 0x426921F9;        /* .86355359e12 */
-
-alias RR_CW2_CH             = 1.2271846303519851062446833e-02;
-alias RR_CW2_MCL            = 4.3472122470213191794988193e-13;
-
-alias RR_CW3_CH             = 1.2271845713257789611816406e-02;
-alias RR_CW3_CM             = 5.8982729811418721510563046e-10;
-alias RR_CW3_MCL            = -4.2111741079360304438362959e-17;
-
-alias RR_DD_MCH             = -1.2271846303085129359367045e-02;
-alias RR_DD_MCM             = -4.7837765591693484655225157e-19;
-alias RR_DD_CL              = -1.1698319569212264319871158e-35;
-
-alias DEGREE_SIN_BF = 25;
-alias DEGREE_COS_BF = 26;
-alias DEGREE_TAN_BF = 69;
-
-var digits_256_over_pi = array(
+private var digits_256_over_pi = array(
     0x51ul,  	         0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
     0x3A9A6EE0ul,  	 0x1B6C52B3ul,  	 0x9E21C82ul,  	 0x3FCA2C7ul,
     0x15EF5DE2ul,  	 0x2C36E48Dul,  	 0x31D2126Eul,  	 0x25C00C92ul,
@@ -72,27 +62,27 @@ var digits_256_over_pi = array(
 );
 
 
-var Pio256 = BigFloat(array(0x00c90fdau, 0x28885a30u, 0x234c4c66u, 0x0a2e0370u,
+private alias Pio256 = BigFloat(array(0x00c90fdau, 0x28885a30u, 0x234c4c66u, 0x0a2e0370u,
     0x1cd12902u, 0x13822299u, 0x3cc74020u, 0x2efa98ecu), 1.,  -1,   1 );
 
-var s3  = floatFromBits(0xBFC5555555555555ul) /* -1.6666666667e-01 */;
-var s5  = floatFromBits(0x3F81111111111111ul) /* +8.3333333333e-03 */;
-var s7  = floatFromBits(0xBF2A01A01A01A01Aul) /* -1.9841269841e-04 */;
+private alias s3  = floatFromBits(0xBFC5555555555555ul) /* -1.6666666667e-01 */;
+private alias s5  = floatFromBits(0x3F81111111111111ul) /* +8.3333333333e-03 */;
+private alias s7  = floatFromBits(0xBF2A01A01A01A01Aul) /* -1.9841269841e-04 */;
 
-var c2  = floatFromBits(0xBFE0000000000000ul) /* -5.0000000000e-01 */;
-var c4  = floatFromBits(0x3FA5555555555555ul) /* +4.1666666667e-02 */;
-var c6  = floatFromBits(0xBF56C16C16C16C17ul) /* -1.3888888889e-03 */;
+private alias c2  = floatFromBits(0xBFE0000000000000ul) /* -5.0000000000e-01 */;
+private alias c4  = floatFromBits(0x3FA5555555555555ul) /* +4.1666666667e-02 */;
+private alias c6  = floatFromBits(0xBF56C16C16C16C17ul) /* -1.3888888889e-03 */;
 
-var t3h = floatFromBits(0x3FD5555555555555ul) /* +3.3333333333e-01 */;
-var t3l = floatFromBits(0x3C7CB8E2B4EE83F1ul) /* +2.4912545352e-17 */;
-var t5  = floatFromBits(0x3FC1111111110586ul) /* +1.3333333333e-01 */;
-var t7  = floatFromBits(0x3FABA1BA1D1301A5ul) /* +5.3968254136e-02 */;
-var t9  = floatFromBits(0x3F9664EC751BE4A4ul) /* +2.1869368217e-02 */;
-var t11 = floatFromBits(0x3F823953EFC04F73ul) /* +8.8984067479e-03 */;
+private alias t3h = floatFromBits(0x3FD5555555555555ul) /* +3.3333333333e-01 */;
+private alias t3l = floatFromBits(0x3C7CB8E2B4EE83F1ul) /* +2.4912545352e-17 */;
+private alias t5  = floatFromBits(0x3FC1111111110586ul) /* +1.3333333333e-01 */;
+private alias t7  = floatFromBits(0x3FABA1BA1D1301A5ul) /* +5.3968254136e-02 */;
+private alias t9  = floatFromBits(0x3F9664EC751BE4A4ul) /* +2.1869368217e-02 */;
+private alias t11 = floatFromBits(0x3F823953EFC04F73ul) /* +8.8984067479e-03 */;
 
 
-/*  sine and cos of kPi/256 in double-double */
-var sincosTable = Array[Double,260](
+//  sine and cos of kPi/256 in double-double
+private var sincosTable = Array[Double,260](
     floatFromBits(0x0000000000000000ul) /* +0.0000000000e+00 */ ,
     floatFromBits(0x0000000000000000ul) /* +0.0000000000e+00 */ ,
     floatFromBits(0x3FF0000000000000ul) /* +1.0000000000e+00 */ ,
@@ -1340,28 +1330,26 @@ private cos_rn(x:Double) --> r:Double {
 }
 
 private tan_rn(x:Double) --> r:Double {
-    var rri = rrinfo();
-    var x_split, rndcst = db_number(), db_number();
-    x_split.2 = x;
+    var rri,x_split,rndcst = rrinfo(),db_number(x),db_number();
     rri.absxhi = bitand(x_split.0[1] , 0x7fffffff);
 
-    /* SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan */
+    // SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan
     if (rri.absxhi>=0x7ff00000)
         r <-- nan(Double);
     else if (rri.absxhi < XMAX_TAN_CASE2){
         if (rri.absxhi < XMAX_RETURN_X_FOR_TAN)
             r <-- x;
         else {
-            /* Dynamic computation of the rounding constant */
+            // Dynamic computation of the rounding constant
             rndcst.0[1] = 0x3ff00000 + bitshr((bitand(rri.absxhi,0x000fffff)+0x00100000),
                                                     (0x3ff+2 - bitshr(rri.absxhi,20))) ;
             rndcst.0[0] = 0xffffffff;
-            /* Fast Taylor series */
+            // Fast Taylor series
             var x2 = x*x;
             var p5 = t5 + x2*(t7 + x2*(t9 + x2*t11));
             var tt = x2*(t3h + (t3l + x2*p5));
             rri.rh, rri.rl = Add12( x, x*tt);
-            /* Test if round to nearest achieved */
+            // Test if round to nearest achieved
             if(rri.rh == (rri.rh + (rri.rl * rndcst.2)))
               r <-- rri.rh;
             else
@@ -1369,11 +1357,11 @@ private tan_rn(x:Double) --> r:Double {
         }
     }
     else {
-        /* Otherwise : Range reduction then standard evaluation */
+        // Otherwise : Range reduction then standard evaluation
         rri.x = x;
         rri.function = TAN;
         ComputeTrigWithArgred(rri);
-        /* Test if round to nearest achieved */
+        // Test if round to nearest achieved
         if(rri.rh == (rri.rh + (rri.rl * RN_CST_TAN_CASE3)))
             if(rri.function !=0 )
                 r <-- -rri.rh;

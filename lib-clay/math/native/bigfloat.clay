@@ -22,12 +22,9 @@ record BigFloat (
     sign:Int, // The sign equals 1 or -1
 );
 
-alias radix_one_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS,52));
-alias radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_NB_BITS,52));
-alias radix_mone_double = floatFromBits(bitshl(1023ul - BF_NB_BITS,52));
-alias radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_NB_BITS,52));
-alias radix_rng_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
-alias radix_mrng_double = floatFromBits(bitshl(1023ul - BF_NB_BITS*BF_MAX_RANGE,52));
+private alias radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_NB_BITS,52));
+private alias radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_NB_BITS,52));
+private alias radix_rng_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
 
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
@@ -237,10 +234,7 @@ private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 // This function copies a result into another.
 [T | BigFloat?(T)]
 inline overload assign(result:T, x:T) : {
-    result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
-    result.h_word[2] = x.h_word[2]; result.h_word[3] = x.h_word[3];
-    result.h_word[4] = x.h_word[4]; result.h_word[5] = x.h_word[5];
-    result.h_word[6] = x.h_word[6]; result.h_word[7] = x.h_word[7];
+    result.hword = x.hword;
     result.excp = x.excp;
     result.index = x.index;
     result.sign = x.sign;
@@ -249,8 +243,7 @@ inline overload assign(result:T, x:T) : {
 [T | Numeric?(T)]
 inline overload assign(result:BigFloat, x:T) {
     if(x == 0){
-        for(i in range(BF_NB_WORDS))
-            result.h_word[i] = 0;
+        resetUnsafe(result.h_word);
         result.excp = 0.;
         result.index = 0;
         result.sign = 1;
@@ -364,7 +357,7 @@ square(x:T) : T {
 //
 private do_add(result, x, y) : {
     var r0,r1,r2,r3,r4,r5,r6,r7 = 0,0,0,0,0,0,0,0;
-    var dif  = x.index - y.index;
+    var dif = x.index - y.index;
     result.excp = x.excp + y.excp - 1.;
     result.index = x.index;
     result.sign = x.sign;
@@ -418,12 +411,8 @@ private do_add(result, x, y) : {
             r4 = x.h_word[4];           r5 = x.h_word[5];
             r6 = x.h_word[6];           r7 = x.h_word[7] + y.h_word[0];
         }
-        else{
-            // dif >= 8
-            result.h_word[0] = x.h_word[0]; result.h_word[1] = x.h_word[1];
-            result.h_word[2] = x.h_word[2]; result.h_word[3] = x.h_word[3];
-            result.h_word[4] = x.h_word[4]; result.h_word[5] = x.h_word[5];
-            result.h_word[6] = x.h_word[6]; result.h_word[7] = x.h_word[7];
+        else{// dif >= 8
+            result.h_word = x.h_word;
         }
 
     // Carry propagation
@@ -449,7 +438,6 @@ private do_add(result, x, y) : {
 }
 
 
-
 // SUBTRACTION
 //
 // This procedure assumes :
@@ -469,9 +457,9 @@ private do_sub(result, x, y){
         result = x;
     else { // 0 <= dif <= (BF_NB_WORDS-1)
         var carry = 0;
-        if(dif==0) {
+        if(dif == 0) {
             var i,cp = 0,0;
-            while((x.h_word[i] == y.h_word[i]) and (i<BF_NB_WORDS))
+            while(x.h_word[i] == y.h_word[i] and i<BF_NB_WORDS)
                 inc(i);
             if (x.h_word[i] > y.h_word[i])
                 cp = 1;
@@ -488,9 +476,9 @@ private do_sub(result, x, y){
                     // x > y
                     result.sign = x.sign;
                     for(i in reverseRange(BF_NB_WORDS-1,0)){
-                        var s = (Int(x.h_word[i]) - y.h_word[i] - carry);
+                        var s = Int(x.h_word[i]) - y.h_word[i] - carry;
                         carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                        res[i] = (bitand(s,BF_RADIX) + s);
+                        res[i] = bitand(s,BF_RADIX) + s;
                     }
                 }
                 else {
@@ -520,25 +508,24 @@ private do_sub(result, x, y){
             }
         }
         // check for cancellations
-        var i=0;
-        while ((res[i]==0) and (i < BF_NB_WORDS))
+        var i = 0;
+        while (res[i] == 0 and i < BF_NB_WORDS)
             inc(i);
-        if(i>0) { // cancellation, shift result
+        if(i > 0) { // cancellation, shift result
             result.index -= i;
             var j = 0;
-            while(i<BF_NB_WORDS){
-                result.h_word[j] = (res[i]);
+            while(i < BF_NB_WORDS){
+                result.h_word[j] = res[i];
                 inc(i);
                 inc(j);
             }
-            while(j<BF_NB_WORDS){
+            while(j < BF_NB_WORDS){
                 result.h_word[j] = 0;
                 inc(j);
             }
         }
         else {
-            for(i in range(BF_NB_WORDS))
-                result.h_word[i] =  (res[i]);
+            result.h_word = res;
         }
     }
 
@@ -622,7 +609,7 @@ overload recip(x:T) --> result:T {
 
 // Compute result = x/y;
 [T | BigFloat?(T)]
-inline overload divide(x:T, y:T) :T {
+overload divide(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp != 1.)
         result.excp = x.excp / y.excp;
