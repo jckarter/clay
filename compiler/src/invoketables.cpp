@@ -1,5 +1,6 @@
 #include "clay.hpp"
 
+namespace clay {
 
 
 //
@@ -332,4 +333,6 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
     invokeSet->tempnessMap[argsTempness] = entry;
 
     return entry;
+}
+
 }

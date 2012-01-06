@@ -1,9 +1,11 @@
-#include "hirestimer.hpp"
+#include "clay.hpp"
 
 #ifdef __APPLE__
 
 #include <mach/mach.h>
 #include <mach/mach_time.h>
+
+namespace clay {
 
 HiResTimer::HiResTimer()
     : elapsedTicks(0), running(0), startTicks(0)
@@ -33,10 +35,14 @@ unsigned long long HiResTimer::elapsedNanos()
     return elapsedTicks * timeBaseInfo.numer / timeBaseInfo.denom;
 }
 
+}
+
 #elif defined(_WIN32) || defined(_WIN64)
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <assert.h>
+
+namespace clay {
 
 HiResTimer::HiResTimer()
     : elapsedTicks(0), running(0), startTicks(0)
@@ -77,6 +83,7 @@ unsigned long long HiResTimer::elapsedNanos()
     return (unsigned long long)((double)elapsedTicks * performanceCounterRate);
 }
 
+}
 
 #else // Unices
 
@@ -89,6 +96,8 @@ unsigned long long HiResTimer::elapsedNanos()
 #endif
 
 #include <time.h>
+
+namespace clay {
 
 HiResTimer::HiResTimer()
     : elapsedTicks(0), running(0), startTicks(0)
@@ -116,6 +125,8 @@ void HiResTimer::stop()
 unsigned long long HiResTimer::elapsedNanos()
 {
     return elapsedTicks;
+}
+
 }
 
 #endif // __APPLE__

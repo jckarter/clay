@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 ExprPtr desugarCharLiteral(char c) {
     ExprPtr nameRef = prelude_expr_Char();
     CallPtr call = new Call(nameRef, new ExprList());
@@ -387,4 +389,6 @@ vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr 
         eval->evaled = true;
         return eval->value;
     }
+}
+
 }

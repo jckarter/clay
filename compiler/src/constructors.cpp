@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 vector<OverloadPtr> pointerOverloads;
 vector<OverloadPtr> codePointerOverloads;
 vector<OverloadPtr> cCodePointerOverloads;
@@ -164,4 +166,6 @@ void initBuiltinConstructor(RecordPtr x)
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);
+}
+
 }

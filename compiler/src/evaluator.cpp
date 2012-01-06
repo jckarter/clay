@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);
 
@@ -4560,4 +4562,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(false);
 
     }
+}
+
 }

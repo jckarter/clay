@@ -1,4 +1,0 @@
-Hello from Clay!
-error: atleast one argument expected in 'sumAndAverage'
-sum = 21
-average = 3.5

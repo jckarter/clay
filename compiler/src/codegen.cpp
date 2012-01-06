@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 llvm::Module *llvmModule = NULL;
 llvm::DIBuilder *llvmDIBuilder = NULL;
 llvm::ExecutionEngine *llvmEngine;
@@ -2044,6 +2046,7 @@ void codegenAliasIndexing(GlobalAliasPtr x,
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
+    AnalysisCachingDisabler disabler;
     codegenExpr(x->expr, bodyEnv, ctx, out);
 }
 
@@ -6489,4 +6492,6 @@ bool initLLVM(std::string const &targetTriple,
     } else {
         return false;
     }
+}
+
 }

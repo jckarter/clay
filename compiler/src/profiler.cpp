@@ -1,4 +1,7 @@
+#include "clay.hpp"
 #include "profiler.hpp"
+
+namespace clay {
 
 static map<string, int> countsMap;
 
@@ -26,4 +29,6 @@ void displayCounts() {
     for (unsigned i = 0; i < counts.size(); ++i) {
         std::cout << counts[i].second << " - " << counts[i].first << '\n';
     }
+}
+
 }

@@ -1,6 +1,8 @@
 #ifndef __CLAYNAMES_HPP
 #define __CLAYNAMES_HPP
 
+namespace clay {
+
 ObjectPtr primitive_addressOf();
 ObjectPtr primitive_boolNot();
 ObjectPtr primitive_Pointer();
@@ -170,5 +172,7 @@ ExprPtr prelude_expr_doIntegerRemainderChecked();
 ExprPtr prelude_expr_doIntegerShiftLeftChecked();
 ExprPtr prelude_expr_doIntegerNegateChecked();
 ExprPtr prelude_expr_doIntegerConvertChecked();
+
+}
 
 #endif

@@ -1,3 +1,0 @@
-Hello from Clay!
-sum = 21
-average = 3.5

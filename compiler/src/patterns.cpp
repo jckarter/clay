@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 
 //
 // derefDeep
@@ -789,4 +791,6 @@ void patternPrint(ostream &out, MultiPatternPtr x)
     default :
         assert(false);
     }
+}
+
 }

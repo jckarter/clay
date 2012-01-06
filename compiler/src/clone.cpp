@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 CodePtr clone(CodePtr x)
 {
     CodePtr y = new Code();
@@ -475,4 +477,6 @@ void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
+}
+
 }
