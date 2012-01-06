@@ -1476,11 +1476,11 @@ void codegenGVarInstance(GVarInstancePtr x)
     ostringstream symbolStr;
     symbolStr << nameStr.str() << " " << y->type << " clay";
 
-    x->llGlobal =
-        new llvm::GlobalVariable(
-            *llvmModule, llvmType(y->type), false,
-            llvm::GlobalVariable::InternalLinkage,
-            initializer, symbolStr.str());
+    x->staticGlobal = new ValueHolder(y->type);
+    x->llGlobal = new llvm::GlobalVariable(
+        *llvmModule, llvmType(y->type), false,
+        llvm::GlobalVariable::InternalLinkage,
+        initializer, symbolStr.str());
     if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);

@@ -1204,13 +1204,13 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         }
         else {
             GVarInstancePtr z = defaultGVarInstance(y);
-            if (!z->llGlobal)
+            if (z->staticGlobal == NULL)
                 codegenGVarInstance(z);
-            void *ptr = llvmEngine->getPointerToGlobal(z->llGlobal);
+            assert(z->staticGlobal != NULL);
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(z->type));
-            *((void **)out0->addr) = ptr;
+            *((void **)out0->addr) = (void*)z->staticGlobal->buf;
         }
         break;
     }
@@ -1461,13 +1461,13 @@ void evalIndexingExpr(ExprPtr indexable,
         if (obj->objKind == GLOBAL_VARIABLE) {
             GlobalVariable *x = (GlobalVariable *)obj.ptr();
             GVarInstancePtr y = analyzeGVarIndexing(x, args, env);
-            if (!y->llGlobal)
+            if (y->staticGlobal == NULL)
                 codegenGVarInstance(y);
-            void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+            assert(y->staticGlobal != NULL);
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(y->type));
-            *((void **)out0->addr) = ptr;
+            *((void **)out0->addr) = (void*)y->staticGlobal->buf;
             return;
         }
     }

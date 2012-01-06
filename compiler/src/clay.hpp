@@ -1921,6 +1921,7 @@ struct GVarInstance : public Object {
     EnvPtr env;
     MultiPValuePtr analysis;
     TypePtr type;
+    ValueHolderPtr staticGlobal;
     llvm::GlobalVariable *llGlobal;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
