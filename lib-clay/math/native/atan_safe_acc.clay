@@ -55,7 +55,7 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 1.,   0,   1 )
 );
 
-private var InvPiBF = BigFloat(array(0x145f306du, 0x327220a9u, 0x13f84eafu, 0x28fa9a6eu,
+private alias InvPiBF = BigFloat(array(0x145f306du, 0x327220a9u, 0x13f84eafu, 0x28fa9a6eu,
     0x381b6c52u, 0x2cc9e21cu, 0x2083fca2u, 0x31d5ef5du), 1.,  -1,   1 );
 
 private var atan_blolo = array(

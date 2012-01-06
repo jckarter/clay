@@ -3,8 +3,6 @@ import math.native.exact.*;
 import math.(abs);
 import numbers.floats.floats.(nan,infinity);
 
-alias dn = db_number;
-
 alias L =8;
 alias MAXINDEX =106;
 alias INDEXMASK =255;
@@ -3121,11 +3119,9 @@ var  twoPowerIndex2 = Array[tPi2_t,256](
    x is a double precision variable.
 
 */
-//
 
-private inline decompose(x) {
-    var __decompose_xdb, __decompose_tempdb = dn(), dn();
-    __decompose_xdb.2 = x;
+private decompose(x) {
+    var __decompose_xdb = db_number(x);
     var __decompose_ex = 0;
     if (bitand(__decompose_xdb.0[1] , 0xfff00000)==0) {
         __decompose_xdb.2 = x * 0.18014398509481984e17;
@@ -3135,7 +3131,7 @@ private inline decompose(x) {
     __decompose_xdb.0[1] = bitand(__decompose_xdb.0[1],0x000fffff);
     var __decompose_temp = bitor(__decompose_xdb.1 , 0x0010000000000000ul);
     __decompose_temp = bitand(bitnot(__decompose_temp) , (__decompose_temp - 1)) + 1;
-    __decompose_tempdb.2 = Double( __decompose_temp);
+    var __decompose_tempdb = db_number(Double( __decompose_temp));
     var __decompose_d = bitshr(__decompose_tempdb.0[1] , 20) - 1023;
     __decompose_xdb.0[1] = bitor(__decompose_xdb.0[1] ,bitshl(1075 - __decompose_d , 20));
     return __decompose_xdb.2, __decompose_d - 52 + __decompose_ex;
@@ -3148,19 +3144,12 @@ private inline isOddInteger(x) = (abs(((abs(x) + 0.9007199254740992e16) - 0.9007
 private inline isInteger(x) = ((abs(x) >= 0.4503599627370496e16) or (((abs(x) + 0.4503599627370496e16) - 0.4503599627370496e16) == abs(x)));
 
 
-/* log2_130
-
-   Approximates
-
-   resh + resm + resl = (ed + log2(1 + (xh + xm)) + log2(r[index])) * (1 + eps)
-
-   where ||eps|| <= 2^(-130)
-
-
-*/
+// log2_130
+//    Approximates
+//    resh + resm + resl = (ed + log2(1 + (xh + xm)) + log2(r[index])) * (1 + eps)
+//    where ||eps|| <= 2^(-130)
 [T]
-private inline log2_130(index, ed:T, xh:T, xm:T) --> resh:T, resm:T, resl:T {
-
+private log2_130(index, ed:T, xh:T, xm:T) --> resh:T, resm:T, resl:T {
     var p_t_1_0h = log2_130_p_coeff_13h;
     var p_t_2_0h = p_t_1_0h * xh;
     var p_t_3_0h = log2_130_p_coeff_12h + p_t_2_0h;
@@ -3197,28 +3186,20 @@ private inline log2_130(index, ed:T, xh:T, xm:T) --> resh:T, resm:T, resl:T {
     var log2xh,log2xm,log2xl = Add133(ed,log2yh,log2ym,log2yl);
 
     resh,resm,resl <-- Renormalize3(log2xh,log2xm,log2xl);
-
 }
 
-/* exp2_120
+// exp2_120
+//  Approximates
+//  2^H * (resh + resm + resl) = 2^(xh + xm + xl) * (1 + eps)
+//  where ||eps|| <= 2^(-119.5)
 
-   Approximates
-
-   2^H * (resh + resm + resl) = 2^(xh + xm + xl) * (1 + eps)
-
-   where ||eps|| <= 2^(-119.5)
-
-*/
 [T]
-inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
-    var shiftedxhMult2Ldb = db_number();
-
+exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
     //      Argument reduction
     //      Produce exactly
     //      2^H * 2^(i1/2^8) * 2^(i2/2^13) * 2^(rh + rm + rl)
-
     var xhMult2L = xh * two13;
-    shiftedxhMult2Ldb.2 = shiftConst + xhMult2L;
+    var shiftedxhMult2Ldb = db_number(shiftConst + xhMult2L);
     var rhMult2L = xhMult2L - (shiftedxhMult2Ldb.2 - shiftConst);
     var r = rhMult2L * twoM13;
     ref k = shiftedxhMult2Ldb.0[0];
@@ -3230,8 +3211,7 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
     var rh, t3 = Add12( t1h, t1m);
     var rm, rl = Add12( t3, t1l);
 
-    /* Polynomial approximation of 2^(rh + rm + rl) */
-
+    // Polynomial approximation of 2^(rh + rm + rl)
     var p_t_2_0h = exp2_120_p_coeff_6h * rh;
     var p_t_3_0h = exp2_120_p_coeff_5h + p_t_2_0h;
     var p_t_4_0h = p_t_3_0h * rh;
@@ -3244,8 +3224,7 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
     var p_t_11_0h,p_t_11_0m,p_t_11_0l = Add133(exp2_120_p_coeff_0h,p_t_10_0h,p_t_10_0m,p_t_10_0l);
     var p_resh,p_resm,p_resl = Renormalize3(p_t_11_0h,p_t_11_0m,p_t_11_0l);
 
-    /* Table access */
-
+    // Table access
     ref tbl1h = twoPowerIndex1[index1].hi;
     ref tbl1m = twoPowerIndex1[index1].mi;
     ref tbl1l = twoPowerIndex1[index1].lo;
@@ -3253,34 +3232,24 @@ inline exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
     ref tbl2m = twoPowerIndex2[index2].mi;
     ref tbl2l = twoPowerIndex2[index2].lo;
 
-    /* Reconstruction */
-
+    // Reconstruction
     var tablesh,tablesm,tablesl = Mul33(tbl1h,tbl1m,tbl1l,tbl2h,tbl2m,tbl2l);
     var exp2h,exp2m,exp2l = Mul33(tablesh,tablesm,tablesl,p_resh,p_resm,p_resl);
 
     resh,resm,resl <-- Renormalize3(exp2h,exp2m,exp2l);
 }
 
+// pow_120
+//    Approximates
+//    2^H * (resh + resm + resl) = 2^(y * (ed + log2(1 + (zh + zm)) + log2(r[index]))) * (1 + eps)
+//    where ||eps|| <= 2^(-118.5) if -1075 <= y * (ed + log2(1 + (zh + zm)) + log2(r[index])) <= 1024
+//    Approximates further (ed + log2(1 + (zh + zm)) + log2(r[index))) by log2xh
+//    where
+//    log2xh = (ed + log2(1 + (zh + zm)) + log2(r[index))) * (1 + eps2)
+//    where |eps2| <= 2^(-52)
+//    and log2xh is exact if 2^ed * ((1 + (zh + zm)) * r[index]) is an integer power of 2.
 
-
-/* pow_120
-
-   Approximates
-
-   2^H * (resh + resm + resl) = 2^(y * (ed + log2(1 + (zh + zm)) + log2(r[index]))) * (1 + eps)
-
-   where ||eps|| <= 2^(-118.5) if -1075 <= y * (ed + log2(1 + (zh + zm)) + log2(r[index])) <= 1024
-
-   Approximates further (ed + log2(1 + (zh + zm)) + log2(r[index))) by log2xh
-   where
-
-   log2xh = (ed + log2(1 + (zh + zm)) + log2(r[index))) * (1 + eps2)
-
-   where |eps2| <= 2^(-52)
-   and log2xh is exact if 2^ed * ((1 + (zh + zm)) * r[index]) is an integer power of 2.
-
-*/
-private inline pow_120(y,index,ed,zh,zm) {
+private pow_120(y,index,ed,zh,zm) {
     /* Compute log2(x) */
     var log2xh,log2xm,log2xl = log2_130(index,ed,zh,zm);
     /* Compute y * log2(x) */
@@ -3321,8 +3290,8 @@ private inline pow_120(y,index,ed,zh,zm) {
 
 */
 [T]
-private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
-    var twodb, two2db = dn(),dn();
+private pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
+    var twodb, two2db = db_number(),db_number();
 
     /* We start by bringing H and powh + powm + powl
         to a form such that
@@ -3505,8 +3474,8 @@ private inline pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
    If returning 1, affects pow with 2^G * (kh + kl) rounded to double precision
 */
 
-private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
-    var xdb, ydb, tempdb, shiftedEydb, temp2db = dn(),dn(),dn(),dn(),dn();
+private pow_exact_case(x, y, G, kh, kl, log2xh) {
+    var  tempdb, temp2db = db_number(),db_number();
 
     /* For testing whether x^y is an exact or half-ulp case,
      we have two main cases:
@@ -3518,7 +3487,7 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
 
     */
 
-    xdb.2 = x;
+    var xdb = db_number(x);
     if (bitand(xdb.0[1] , 0xfff00000) == 0)
         /* x is subnormal, scale by 2^52 */
         xdb.2 *= 0.4503599627370496e16;
@@ -3540,7 +3509,7 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
        This splitting is faster than the usual Dekker splitting.
 
     */
-        ydb.2 = y;
+        var ydb = db_number(y);
         ydb.0[0] = 0;
         var yh = ydb.2;
         var yl = y - yh;
@@ -3614,7 +3583,7 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
 	 If Ey is an integer, the low order word of shiftedEydb is equal to this
 	 integer.
       */
-            shiftedEydb.2 = 0.6755399441055744e16 + Ey;
+            var shiftedEydb = db_number(0.6755399441055744e16 + Ey);
             var nearestEy = shiftedEydb.2 - 0.6755399441055744e16;
 
             if (nearestEy != Ey)
@@ -3694,7 +3663,7 @@ private inline pow_exact_case(x, y, G, kh, kl, log2xh) {
     return 1,tempdb.2;
 }
 
-private inline pow_exact_rn(x, y, sign, index, ed, zh, zm) {
+private pow_exact_rn(x, y, sign, index, ed, zh, zm) {
     var log2xh, H, powh, powm, powl = pow_120(y, index, ed, zh, zm);
     var u,pow,G,kh,kl = pow_round_and_check_rn(H,powh,powm,powl);
     if (u == 1)
@@ -3707,12 +3676,11 @@ private inline pow_exact_rn(x, y, sign, index, ed, zh, zm) {
 }
 
 
-private inline pow_rn(x:Double, y:Double) {
-    var xdb, ydb, yhdb, shiftedylog2xhMult2Ldb, powdb, twodb = dn(),dn(),dn(),dn(),dn(),dn();
+private pow_rn(x:Double, y:Double) {
+    var twodb = db_number();
 
     /* Fast rejection of special cases */
-    xdb.2 = x;
-    ydb.2 = y;
+    var xdb, ydb = db_number(x), db_number(y);
 
     if ((bitand((bitshr(xdb.0[1] , 20) + 1) , 0x3ff) <= 1) or
         (bitand((bitshr(ydb.0[1] , 20) + 1) , 0x3ff) <= 1)) {
@@ -3918,7 +3886,7 @@ private inline pow_rn(x:Double, y:Double) {
 
     /* Continue with the exact range reduction of the logarithm of x */
 
-    yhdb.0[1] = xdb.0[1];
+    var yhdb = xdb;
     yhdb.0[0] = 0;
     var yh = yhdb.2;
     var yl = xdb.2 - yh;
@@ -4049,7 +4017,7 @@ private inline pow_rn(x:Double, y:Double) {
     where rh \approx ylog2xh - H - i1/2^7 - i2/2^13 + ylog2xm
     */
 
-    shiftedylog2xhMult2Ldb.2 = shiftConstTwoM13 + ylog2xh;
+    var shiftedylog2xhMult2Ldb = db_number(shiftConstTwoM13 + ylog2xh);
     var r = ylog2xh - (shiftedylog2xhMult2Ldb.2 - shiftConstTwoM13);
     ref k = shiftedylog2xhMult2Ldb.0[0];
     var H = bitshr(k , 13);
@@ -4160,7 +4128,7 @@ private inline pow_rn(x:Double, y:Double) {
         if (H > -1023) {
             /* We have nevertheless normal rounding */
             if(powh == (powh + (powm * RNROUNDCST))) {
-                powdb.2 = powh;
+                var powdb = db_number(powh);
                 powdb.0[1] += bitshl(H , 20);
                 return sign * powdb.2;
             }

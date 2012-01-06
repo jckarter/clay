@@ -44,7 +44,7 @@ inline overload min(x:T,y:T) = if(y<x) y else x;
 
 
 [T,U | Float?(T,U)]
-inline overload hypot(m:T,n:U) {
+overload hypot(m:T,n:U) {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);
     alias T = Type(a);

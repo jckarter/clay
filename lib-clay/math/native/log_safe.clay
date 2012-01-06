@@ -1,7 +1,6 @@
 
 import math.native.exact.*;
 import numbers.floats.floats.(negativeInfinity,infinity,nan);
-alias dn = db_number;
 
 alias L = 8;
 alias MAXINDEX = 106;
@@ -1623,9 +1622,8 @@ private inline p_accu( xh:T, xm:T) --> p_resh:T,p_resm:T,p_resl:T {
 
 
 private inline log_rn(x:Double) {
-    var xdb, yhdb = dn(),dn();
     var _e = 0;
-    xdb.2 = x;
+    var xdb = db_number(x);
 
     // Filter cases
     if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
@@ -1657,7 +1655,7 @@ private inline log_rn(x:Double) {
         inc(_e);
     }
 
-    yhdb.0[1] = xdb.0[1];
+    var yhdb = xdb;
     yhdb.0[0] = 0;
     var yh = yhdb.2;
     var yl = xdb.2 - yh;
@@ -1772,10 +1770,9 @@ private inline log_rn(x:Double) {
 }
 
 
-private inline log2_rn(x:Double) {
-    var xdb, yhdb = dn(),dn();
+private log2_rn(x:Double) {
     var E = 0;
-    xdb.2 = x;
+    var xdb = db_number(x);
 
     /* Filter cases */
     if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
@@ -1808,7 +1805,7 @@ private inline log2_rn(x:Double) {
         inc(E);
     }
 
-    yhdb.0[1] = xdb.0[1];
+    var yhdb = xdb;
     yhdb.0[0] = 0;
     var yh = yhdb.2;
     var yl = xdb.2 - yh;
@@ -1902,10 +1899,9 @@ private inline log2_rn(x:Double) {
 }
 
 
-private inline log10_rn(x:Double){
-    var xdb, yhdb = dn(),dn();
+private log10_rn(x:Double){
     var E = 0;
-    xdb.2 = x;
+    var xdb = db_number(x);
 
     /* Filter cases */
     if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
@@ -1937,7 +1933,7 @@ private inline log10_rn(x:Double){
         inc(E);
     }
 
-    yhdb.0[1] = xdb.0[1];
+    var yhdb = xdb;
     yhdb.0[0] = 0;
     var yh = yhdb.2;
     var yl = xdb.2 - yh;

@@ -66,7 +66,7 @@ alias accuCommonpolyC7h =1.98412713635391310413452758965036082372535020112991e-0
 //    The triple-double exph + expm + expl is non-overlapping.
 
 [T | T==Double]
-inline expm1_13(x:T) --> expm1h:T,expm1m:T,expm1l:T {
+expm1_13(x:T) --> expm1h:T,expm1m:T,expm1l:T {
     var xx = x;
     var xdb = db_number(x);
     var xIntHi = bitand(xdb.0[1] , 0x7fffffff);

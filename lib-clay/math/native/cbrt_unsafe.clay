@@ -16,7 +16,7 @@ private var c = array(
 );
 
 [T | Numeric?(T)]
-cbrt_safe(x:T) {
+cbrt_unsafe(x:T) {
     alias ZERO = T(0);
     alias HALF = T(0.5);
     alias ONE = T(1);

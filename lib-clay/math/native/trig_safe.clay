@@ -459,7 +459,7 @@ but different polynomials (which compute sin(2Pi*y) and cos(2Pi*y).
    other functions
 */
 
-private inline rem_pio256_bf(result,x){
+private rem_pio256_bf(result,x){
     var r,tmp = Array[UInt64,BF_NB_WORDS+3](), 0ul;
 
     /* result r[0],...,r[10] could store till 300 bits of precision */
@@ -605,12 +605,9 @@ private inline rem_pio256_bf(result,x){
 }
 
 
-
-/************************************************************************/
-/*                                                                      */
-/*                       Argument Reduction                             */
-/*                                                                      */
-/************************************************************************/
+//
+// Argument Reduction
+//
 
 var SHIFT1 = 1. / Double(bitshl(1,BF_NB_BITS));
 var SHIFT2 = SHIFT1*SHIFT1;
@@ -640,7 +637,7 @@ private inline RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,
 
 record rrinfo (rh:Double,rl:Double,x:Double,absxhi:Int,function:Int);
 
-private inline computeZero(rri,quadrant,yh,yl):{
+private computeZero(rri,quadrant,yh,yl):{
     alias ZERO = 0.;
     var DoSinZero = () -> {
         var yh2 = yh*yh ;
@@ -686,7 +683,7 @@ private inline computeZero(rri,quadrant,yh,yl):{
         }
 }
 
-private inline computeNotZero(rri,index,quadrant,yh,yl):{
+private computeNotZero(rri,index,quadrant,yh,yl):{
     alias ZERO = 0.;
     var sah,sal,cah,cal = ZERO,ZERO,ZERO,ZERO;
     if(index <= bitshl(64,2)) {
@@ -751,7 +748,7 @@ private inline computeNotZero(rri,index,quadrant,yh,yl):{
         }
 }
 
-private inline ComputeTrigWithArgred(rri):{
+private ComputeTrigWithArgred(rri):{
     alias ZERO = 0.;
     var yh,yl,th,tl = ZERO,ZERO,ZERO,ZERO;
     var kl,k,kd,quadrant,index = 0l,0,ZERO,0l,0l;
@@ -828,7 +825,7 @@ private inline ComputeTrigWithArgred(rri):{
 }
 
 
-private inline sin_rn(x:Double) --> r:Double {
+private sin_rn(x:Double) --> r:Double {
     var rri = rrinfo(0.,0.,0.,0,0);
     var x_split = db_number();
 
@@ -877,7 +874,7 @@ private inline sin_rn(x:Double) --> r:Double {
     }
 }
 
-private inline cos_rn(x:Double) --> r:Double {
+private cos_rn(x:Double) --> r:Double {
     var rri = rrinfo ();
     var x_split = db_number();
     x_split.2 = x;
@@ -916,7 +913,7 @@ private inline cos_rn(x:Double) --> r:Double {
     }
 }
 
-private inline tan_rn(x:Double) --> r:Double {
+private tan_rn(x:Double) --> r:Double {
     var rri = rrinfo();
     var x_split, rndcst = db_number(), db_number();
     x_split.2 = x;

@@ -335,7 +335,7 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 // Approximation error lower than  2^(-133)
 
 [T | BigFloat?(T)]
-inline overload sin(x:T) --> result:T {
+overload sin(x:T) --> result:T {
     var x2 = square(x);
     var res = sin_bf_poly[0] * x2;
     for(i in range(1,(DEGREE_SIN_BF-1)/2)){ /* Last coeff is one, not read from the file*/
@@ -350,7 +350,7 @@ inline overload sin(x:T) --> result:T {
 /* Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
    Approximation error lower than  2^(-128) */
 [T | BigFloat?(T)]
-inline overload cos(x:T) --> result:T {
+overload cos(x:T) --> result:T {
     var x2 = square(x);
     var res = cos_bf_poly[0] * x2;
     for(i in range(1,DEGREE_COS_BF/2)){
@@ -411,7 +411,7 @@ bf_cos_rn(x:Double) --> resd:Double {
 }
 
 
-inline overload tan(x) --> result:BigFloat {
+overload tan(x) --> result:BigFloat {
     var ybf = BigFloat();
     var xbf = BigFloat(x);
     var N = rem_pio2_bf(ybf, xbf); 	/* x (=sc2) is in [-Pi/4,Pi/4] */

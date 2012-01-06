@@ -22,12 +22,12 @@ record BigFloat (
     sign:Int, // The sign equals 1 or -1
 );
 
-var radix_one_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS,52));
-var radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_NB_BITS,52));
-var radix_mone_double = floatFromBits(bitshl(1023ul - BF_NB_BITS,52));
-var radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_NB_BITS,52));
-var radix_rng_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
-var radix_mrng_double = floatFromBits(bitshl(1023ul - BF_NB_BITS*BF_MAX_RANGE,52));
+alias radix_one_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS,52));
+alias radix_two_double  = floatFromBits(bitshl(1023ul + 2*BF_NB_BITS,52));
+alias radix_mone_double = floatFromBits(bitshl(1023ul - BF_NB_BITS,52));
+alias radix_mtwo_double = floatFromBits(bitshl(1023ul - 2*BF_NB_BITS,52));
+alias radix_rng_double  = floatFromBits(bitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
+alias radix_mrng_double = floatFromBits(bitshl(1023ul - BF_NB_BITS*BF_MAX_RANGE,52));
 
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
@@ -42,19 +42,19 @@ inline overload resetUnsafe(a:BigFloat) {
 inline overload BigFloat?(static BigFloat) = true;
 
 
-var bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+alias bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
     0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 0.,  0,   1 );
 
-var bf_half = BigFloat(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+alias bf_half = BigFloat(array(0x20000000u, 0x00000000u, 0x00000000u, 0x00000000u,
     0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 0., -1,   1 );
 
-var bf_one = BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+alias bf_one = BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
     0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 1.,  0,   1 );
 
-var bf_two = BigFloat(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
+alias bf_two = BigFloat(array(0x00000002u, 0x00000000u, 0x00000000u, 0x00000000u,
     0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u), 1.,  0,   1 );
 
-var bf_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+alias bf_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
     0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau), 1.,  -1,   1 );
 
 
@@ -261,7 +261,7 @@ inline overload assign(result:BigFloat, x:T) {
 }
 
 [T | BigFloat?(T)]
-inline overload multiply(x:T, y:T) --> result:T {
+overload multiply(x:T, y:T) --> result:T {
     result.excp = x.excp * y.excp;
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
@@ -362,7 +362,7 @@ square(x:T) : T {
 //    assuming that x.sign == y.sign, X_IND > Y_IND, x and y both
 //    non-zero.
 //
-private inline do_add(result, x, y) : {
+private do_add(result, x, y) : {
     var r0,r1,r2,r3,r4,r5,r6,r7 = 0,0,0,0,0,0,0,0;
     var dif  = x.index - y.index;
     result.excp = x.excp + y.excp - 1.;
@@ -458,7 +458,7 @@ private inline do_add(result, x, y) : {
 //    neither x or y is zero
 //  and result = x - y
 
-private inline do_sub(result, x, y){
+private do_sub(result, x, y){
     var res = Array[Int,BF_NB_WORDS]();
     result.excp = x.excp + y.excp - 1.;
     var dif  = x.index - y.index;
@@ -547,7 +547,7 @@ private inline do_sub(result, x, y){
 
 // Addition (result is a normalised number).
 [T | BigFloat?(T)]
-inline overload add(x:T, y:T) : T {
+overload add(x:T, y:T) : T {
     var result = BigFloat();
     if (x.excp == 0)
         result = y;
@@ -570,7 +570,7 @@ inline overload add(x:T, y:T) : T {
 // Subtraction (result is a normalised number).
 // The arguments x, y and result may point to the same memory location.
 [T | BigFloat?(T)]
-inline overload subtract(x:T, y:T) :T {
+overload subtract(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp == 0){
         result = y;
@@ -600,7 +600,7 @@ inline overload subtract(x:T, y:T) :T {
 
 // Compute 1/x with a Newton scheme
 [T | BigFloat?(T)]
-inline overload recip(x:T) --> result:T {
+overload recip(x:T) --> result:T {
     var tmp = x;
     tmp.index = 0;
     var app_x = Double(tmp);

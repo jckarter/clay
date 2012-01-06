@@ -84,7 +84,7 @@ inline overload  log (x:T) = T(M_LN2) * log2 (x);
 //     and fferfc is very f
 
 [T | Float?(T) and MathMode?(APX)]
-inline overload erfc(p:T) = T(erfc(Float(p)));
+overload erfc(p:T) = T(erfc(Float(p)));
 [| MathMode?(APX)] inline overload  erfc (x:Float){
     var k = 3.3509633149424609f;
     var a = 0.07219054755431126f;
@@ -142,12 +142,12 @@ inline overload  lgamma (x:T){
 }
 
 [T | Float?(T) and MathMode?(APX2)]
-inline overload  lgamma (x:T)
+inline overload lgamma (x:T)
     = T(-0.0810614667) - x - log (x) + (T(0.5) + x) * log (T(1) + x);
 
 
 [T | Float?(T) and MathMode?(APX)]
-inline overload  digamma (x:T){
+inline overload digamma (x:T){
     var twopx = T(2) + x;
     var logterm = log (twopx);
     return T((-48.0f + x * (-157.0f + x * (-127.0f - 30.0f * x))) /
@@ -155,20 +155,21 @@ inline overload  digamma (x:T){
          + logterm);
 }
 
-[T | Float?(T) and MathMode?(APX2)] inline overload digamma (x:T){
+[T | Float?(T) and MathMode?(APX2)]
+inline overload digamma (x:T){
     var onepx = T(1) + x;
     return T(-1.0) / x - T(1) / (T(2) * onepx) + log (onepx);
 }
 
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  sinh (p:T) = T(0.5) * (exp (p) - exp (-p));
+inline overload sinh (p:T) = T(0.5) * (exp (p) - exp (-p));
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  cosh (p:T) = T(0.5) * (exp (p) + exp (-p));
+inline overload cosh (p:T) = T(0.5) * (exp (p) + exp (-p));
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
+inline overload tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
 
 
 
@@ -185,7 +186,7 @@ inline overload  tanh (p:T) = T(-1) + T(2) / (T(1) + exp (T(-2) * p));
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload sin(p:T) = T(sin(Float(p)));
 [| MathMode?(APX)]
-inline overload sin (x:Float){
+overload sin (x:Float){
     var fouroverpi = 1.2732395447351627f;
     var fouroverpisq = 0.40528473456935109f;
     var q = 0.78444488374548933f;
@@ -209,7 +210,7 @@ inline overload sin (x:Float){
 }
 
 [| MathMode?(APX2)]
-inline overload  sin (x:Float){
+overload sin (x:Float){
     var fouroverpi = 1.2732395447351627f;
     var fouroverpisq = 0.40528473456935109f;
     var q = 0.77633023248007499f;
@@ -230,7 +231,7 @@ inline overload cos (x:T)
 [T | Float?(T) and MathMode?(APX2)]
 inline overload cos(p:T) = T(cos(Float(p)));
 [| MathMode?(APX2)]
-inline overload  cos (x:T){
+overload  cos (x:T){
     var p = 0.54641335845679634f;
     var vx = ieee754r();
     vx.0 = x;
@@ -240,23 +241,23 @@ inline overload  cos (x:T){
 }
 
 [T | Float?(T) and MathMode?(APX)]
-inline overload  tan (x:T) = sin (x) / sin (x + T(M_PI_2));
+inline overload tan (x:T) = sin (x) / sin (x + T(M_PI_2));
 [T | Float?(T) and MathMode?(APX2)]
-inline overload  tan (x:T) = sin (x) / cos (x);
+inline overload tan (x:T) = sin (x) / cos (x);
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  sinfull (x:T){
+inline overload sinfull (x:T){
     var k = x * T(M_1_TWOPI);
     var half = if(x < T(0)) T(-0.5) else T(0.5);
     return sin((half + k) * T(M_TWOPI) - x);
 }
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  cosfull (x:T) = sinfull (x + T(M_PI_2));
+inline overload cosfull (x:T) = sinfull (x + T(M_PI_2));
 
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload  tanfull (x:T){
+inline overload tanfull (x:T){
     var k = x * T(M_1_TWOPI);
     var half = if(x < T(0)) T(-0.5) else T(0.5);
     var xnew = x - (half + k) * T(M_TWOPI);
@@ -269,7 +270,7 @@ inline overload  tanfull (x:T){
 inline overload lambertw(p:T) = T(lambertw(Float(p)));
 
 [| MathMode?(APX)]
-inline overload  lambertw (x:Float){
+overload  lambertw (x:Float){
     var threshold = 2.26445f;
     var c = if(x < threshold)  1.546865557f else 1.0f;
     var d = if(x < threshold)  2.250366841f else 0.0f;
@@ -287,7 +288,7 @@ inline overload  lambertw (x:Float){
 }
 
 [| MathMode?(APX2)]
-inline overload lambertw (x:Float){
+overload lambertw (x:Float){
     var threshold = 2.26445f;
     var c = if(x < threshold)  1.546865557f else 1.0f;
     var d = if(x < threshold)  2.250366841f else 0.0f;
@@ -306,7 +307,7 @@ inline overload lambertw (x:Float){
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
 inline overload lambertwexpx(p:T) = T(lambertwexpx(Float(p)));
 [| MathMode?(APX)]
-inline overload  lambertwexpx (x:Float){
+overload  lambertwexpx (x:Float){
     var k = 1.1765631309f;
     var a = 0.94537622168f;
 
@@ -325,7 +326,7 @@ inline overload  lambertwexpx (x:Float){
 }
 
 [| MathMode?(APX2)]
-inline overload  lambertwexpx (x:Float){
+overload  lambertwexpx (x:Float){
     var k = 1.1765631309f;
     var a = 0.94537622168f;
 

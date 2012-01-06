@@ -45,7 +45,7 @@ overload MACHEPS(static Float64) = 2.22045e-16;
 
 
 [T | Complex?(T)]
-inline overload log(z:T){
+overload log(z:T){
     var rr = abs(z);
     var p = log(rr);
     rr = atan2(imagValue(z), real(z));
@@ -91,7 +91,7 @@ inline overload log(z:T){
  */
 
 [T | Complex?(T)]
-inline overload exp(z:T){
+overload exp(z:T){
   var r = exp(real(z));
   return Complex(r * cos(imagValue(z)) , r * sin(imagValue(z))) ;
 }
@@ -133,14 +133,14 @@ inline overload exp(z:T){
  */
 
 [T | Complex?(T)]
-inline overload sin(z:T){
+overload sin(z:T){
     var ch,sh = chsh(imagValue(z));
     return Complex(sin(real(z)) * ch , cos (real(z)) * sh);
 }
 
 /* calculate cosh and sinh */
 [T | Float?(T)]
-inline chsh(x:T){
+chsh(x:T){
     if (abs(x) <= 0.5){
         return cosh(x),sinh(x);
     } else {
@@ -186,7 +186,7 @@ inline chsh(x:T){
  */
 
 [T | Complex?(T)]
-inline overload cos(z:T){
+overload cos(z:T){
     var ch,sh = chsh(imagValue(z));
     return Complex(cos(real(z)) * ch , - sin(real(z)) * sh);
 }
@@ -234,7 +234,7 @@ inline overload cos(z:T){
  */
 
 [T | Complex?(T)]
-inline overload tan(z:T){
+overload tan(z:T){
     alias C = ComplexBaseType(T);
     alias MAXNUM = GreatestPositiveFinite(C);
     var d = cos (2.0 * real (z)) + cosh (2.0 * imagValue(z));
@@ -287,7 +287,7 @@ inline overload tan(z:T){
  */
 
 [T | Complex?(T)]
-inline overload cot(z:T) {
+overload cot(z:T) {
     alias C = ComplexBaseType(T);
     alias MAXNUM = GreatestPositiveFinite(C);
     var d = cosh(2.0 * imagValue(z)) - cos(2.0 * real(z));
@@ -322,7 +322,7 @@ private inline redupi(x:T){
 
 /*  Taylor series expansion for cosh(2y) - cos(2x)	*/
 [C | Complex?(C)]
-private inline tans(z:C){
+private tans(z:C){
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
     alias ONE = T(1);
@@ -390,7 +390,7 @@ loop1:
  */
 
 [T | Complex?(T)]
-inline overload asin(z:T){
+overload asin(z:T){
     alias x = real(z);
     alias y = imag(z);
     if (imagValue(z) == 0.0){
@@ -491,7 +491,7 @@ return;
  */
 
 [T | Complex?(T)]
-inline overload acos(z:T) {
+overload acos(z:T) {
     var w = asin(z);
     return (M_PI_2  -  real(w)) - imag(w);
 }
@@ -544,7 +544,7 @@ inline overload acos(z:T) {
  */
 
 [T | Complex?(T)]
-inline overload atan(z:T){
+overload atan(z:T){
     alias C = ComplexBaseType(T);
     alias MAXNUM = GreatestPositiveFinite(C);
     alias x = real (z);
@@ -598,7 +598,7 @@ inline overload atan(z:T){
  *
  */
 [T | Complex?(T)]
-inline overload sinh(z:T)
+overload sinh(z:T)
     = Complex(sinh(real(z)) * cos(imagValue(z)) , cosh(real(z)) * sin(imagValue(z)));
 
 
@@ -629,7 +629,7 @@ inline overload sinh(z:T)
  *
  */
 [T | Complex?(T)]
-inline overload asinh(z:T) = -1.j *  asin (z * 1.j);
+overload asinh(z:T) = -1.j *  asin (z * 1.j);
 
 
 /*							ccosh
@@ -659,7 +659,7 @@ inline overload asinh(z:T) = -1.j *  asin (z * 1.j);
  *
  */
 [T | Complex?(T)]
-inline overload cosh(z:T)
+overload cosh(z:T)
     = Complex(cosh(real(z)) * cos(imagValue(z)) , sinh(real(z)) * sin(imagValue(z)));
 
 
@@ -690,7 +690,7 @@ inline overload cosh(z:T)
  *
  */
 [T | Complex?(T)]
-inline overload acosh(z:T) = 1.j * acos(z);
+overload acosh(z:T) = 1.j * acos(z);
 
 
 /*							ctanh
@@ -720,7 +720,7 @@ inline overload acosh(z:T) = 1.j * acos(z);
  *
  */
 [T | Complex?(T)]
-inline overload tanh(z:T){
+overload tanh(z:T){
     var d = 1./(cosh(2.0 * real(z)) + cos(2.0 * imagValue(z)));
     return Complex(sinh(2.0 * real(z)) * d  , sin (2.0 * imagValue(z)) * d) ;
 }
@@ -753,7 +753,7 @@ inline overload tanh(z:T){
  *
  */
 [T | Complex?(T)]
-inline overload atanh(z:T) = -1.j * atan(z * 1.j);
+overload atanh(z:T) = -1.j * atan(z * 1.j);
 
 /*							cpow
  *
@@ -784,7 +784,7 @@ inline overload atanh(z:T) = -1.j * atan(z * 1.j);
  *
  */
 [T,U | Complex?(T,U)]
-inline overload pow(a:T, z:U){
+overload pow(a:T, z:U){
     var absa = cabs(a);
     if (absa == 0.0)
         return T();
@@ -799,4 +799,4 @@ inline overload pow(a:T, z:U){
 
 
 [T | Complex?(T)]
-inline overload log10(x:T) = log(x)/log(10.0);
+overload log10(x:T) = log(x)/log(10.0);

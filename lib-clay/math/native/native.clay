@@ -4,18 +4,19 @@ import numbers.floats.floats.(floatBits,floatFromBits);
 import math.native.approxmath.(private sqrtCoeff);
 
 import math.native.sqrt_safe.(sqrt_safe);
-import math.native.cbrt_safe.(cbrt_safe);
 import math.native.exp_safe.(exp_safe);
-import math.native.exp_unsafe.(exp_unsafe);
 import math.native.expm1_safe.(expm1_safe);
 import math.native.log_safe.(log_safe,log2_safe,log10_safe);
-// import math.native.log_unsafe.(log_unsafe);
 import math.native.trig_safe.(sin_safe,cos_safe,tan_safe);
-// import math.native.trig_unsafe.(sin_unsafe,cos_unsafe,tan_unsafe);
 import math.native.atan_safe.(atan_safe, atanpi_safe);
-// import math.native.trig_unsafe.(sin_unsafe,cos_unsafe,tan_unsafe);
 import math.native.pow_safe.(pow_safe);
-// import math.native.pow_unsafe.(pow_unsafe);
+
+import math.native.cbrt_unsafe.(cbrt_unsafe);
+import math.native.exp_unsafe.(exp_unsafe);
+public import math.native.gamma_unsafe.*;
+public import math.native.beta_unsafe.*;
+public import math.native.erf_unsafe.*;
+public import math.native.bessel_unsafe.*;
 
 define sqrt;
 define cbrt;
@@ -36,12 +37,11 @@ define atan;
 define atanpi;
 
 //
-//  Safe  - max precision
-//  Default
+//  Safe  - best precision, correct rounding, default
 //
 
 [T | Numeric?(T)] inline overload sqrt(x:T) = sqrt_safe(x);
-[T | Numeric?(T)] inline overload cbrt(x:T) = cbrt_safe(x);
+[T | Numeric?(T)] inline overload cbrt(x:T) = cbrt_unsafe(x);
 [T | Numeric?(T)] inline overload log(x:T) = log_safe(x);
 [T | Numeric?(T)] inline overload log2(x:T) = log2_safe(x);
 [T | Numeric?(T)] inline overload log10(x:T) = log10_safe(x);
@@ -56,7 +56,7 @@ define atanpi;
 
 
 //
-//  Unsafe - high precision approximations - but faster
+//  Unsafe - high precision approximations
 //  Use -Dmath.Mode=fast
 //
 
