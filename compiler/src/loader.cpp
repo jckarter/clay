@@ -596,6 +596,8 @@ ModulePtr staticModule(ObjectPtr x) {
             return mh->import->module;
         return NULL;
     }
+    case GLOBAL_VARIABLE :
+    case GLOBAL_ALIAS :
     case EXTERNAL_PROCEDURE :
     case EXTERNAL_VARIABLE :
     case PROCEDURE :
