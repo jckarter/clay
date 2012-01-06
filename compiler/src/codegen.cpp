@@ -6457,9 +6457,10 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 // initLLVM
 //
 
-bool initLLVM(std::string const &targetTriple,
+llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     std::string const &name,
     std::string const &flags,
+    bool relocPic,
     bool debug,
     bool optimized)
 {
@@ -6467,6 +6468,7 @@ bool initLLVM(std::string const &targetTriple,
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
     llvm::InitializeAllAsmParsers();
+
     llvmModule = new llvm::Module(name, llvm::getGlobalContext());
     llvmModule->setTargetTriple(targetTriple);
     if (debug) {
@@ -6483,15 +6485,27 @@ bool initLLVM(std::string const &targetTriple,
             0);
     } else
         llvmDIBuilder = NULL;
-    llvm::EngineBuilder eb(llvmModule);
-    llvmEngine = eb.create();
-    if (llvmEngine) {
-        llvmTargetData = llvmEngine->getTargetData();
-        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
-        return true;
-    } else {
-        return false;
+
+    string err;
+    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
+    if (target == NULL) {
+        std::cerr << "error: unable to find target: " << err << '\n';
+        return NULL;
     }
+    llvm::Reloc::Model reloc = relocPic
+        ? llvm::Reloc::PIC_
+        : llvm::Reloc::Default;
+    llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
+
+    llvm::TargetMachine *targetMachine = target->createTargetMachine(
+        targetTriple, "", "", reloc, codeModel);
+
+    if (targetMachine != NULL) {
+        llvmTargetData = targetMachine->getTargetData();
+        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
+    }
+
+    return targetMachine;
 }
 
 }

@@ -3451,15 +3451,15 @@ static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
 extern llvm::Module *llvmModule;
 extern llvm::DIBuilder *llvmDIBuilder;
-extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
 llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
 
-bool initLLVM(std::string const &targetTriple,
+llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     std::string const &name,
     std::string const &flags,
+    bool relocPic,
     bool debug,
     bool optimized);
 
