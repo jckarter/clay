@@ -1,6 +1,6 @@
 
 import math.*;
-import numbers.floats.floats.(floatBits,floatFromBits);
+import numbers.floats.(floatBits,floatFromBits);
 import math.native.approxmath.(private sqrtCoeff);
 
 import math.native.sqrt_safe.(sqrt_safe);

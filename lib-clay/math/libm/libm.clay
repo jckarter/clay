@@ -298,11 +298,11 @@ inline overload rint(x:Double) = libc.rint(x);
 inline overload rint(x:Float) = libc.rintf(x);
 inline overload rint(x:LongDouble) = libc.rintl(x);
 
-inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
+[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
 inline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
 inline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
-inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
-inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
+[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
+[| MathMode?(LIBM)] inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
 inline overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 inline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
 inline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);

@@ -1,7 +1,7 @@
 
 import math.*;
 import math.native.exact.(db_number);
-import numbers.floats.floats.(floatBits,floatFromBits,exponentBias);
+import numbers.floats.(nan,signbit,infinity,floatBits,floatFromBits,exponentBias);
 
 //Constants
 public alias M_E	    = 2.7182818284590452353602874713526625;  /* e */
@@ -32,6 +32,7 @@ define negativeInfinity?;
 define finite?;
 define nan?;
 define llround;
+define nextafter;
 
 
 [T | Numeric?(T)]
@@ -232,3 +233,53 @@ overload llround (x:Double ) {
     }
     return sign * result;
 }
+
+// IEEE functions
+// nextafter(x,y)
+// return the next machine floating-point number of x in the
+// direction toward y.
+
+private alias SGN_MASK = 0x7fffffff;
+private alias EXP_MASK = 0x7ff00000;
+private alias MIN_SUB = LeastPositive(Double);
+
+overload nextafter(x:Double, y:Double){
+	var xdb,ydb = db_number(x),db_number(y);
+	alias hx = xdb.0[1];
+    alias lx = xdb.0[0];
+    alias hy = ydb.0[1];
+    alias ly = ydb.0[0];
+
+	if(x == y) return x;
+    if(nan?(x) or nan?(y)) return nan(Double);
+	if(x == 0.) // x == 0 so return +-minsubnormal
+	    return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
+	if(hx >= 0)
+	    if(hx > hy or (hx == hy and lx > ly)) {	// x > y, x -= ulp
+            if(lx == 0) dec(hx);
+            dec(lx);
+	    } else {	// x < y, x += ulp
+            inc(lx);
+            if(lx == 0) inc(hx);
+	    }
+	else
+	    if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -= ulp
+            if(lx == 0) dec(hx);
+            dec(lx);
+	    } else {		// x > y, x += ulp
+            inc(lx);
+            if(lx == 0) inc(hx);
+	    }
+
+	hy = bitand(hx,EXP_MASK);
+	if(hy >= EXP_MASK)
+        return infinity(Double);	// overflow
+	if(hy < 0x00100000)		// underflow
+	    if(x*x != x)		// raise underflow flag
+            return xdb.2;
+	return xdb.2;
+}
+
+inline overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
+inline overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
+
