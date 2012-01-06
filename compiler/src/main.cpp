@@ -351,7 +351,7 @@ int main(int argc, char **argv, char const* const* envp) {
 
     if (argc == 1) {
         usage(argv[0]);
-        return -1;
+        return 2;
     }
 
     bool emitLLVM = false;
@@ -459,7 +459,7 @@ int main(int argc, char **argv, char const* const* envp) {
         else if (strcmp(argv[i], "-e") == 0) {
             if (i+1 == argc) {
                 cerr << "error: source string missing after -e\n";
-                return -1;
+                return 1;
             }
             ++i;
             run = true;
@@ -470,20 +470,20 @@ int main(int argc, char **argv, char const* const* envp) {
             string modulespec = argv[i]+2;
             if (modulespec.empty()) {
                 cerr << "error: module missing after -M\n";
-                return -1;
+                return 1;
             }
             clayScriptImports += "import " + modulespec + ".*; ";
         }
         else if (strcmp(argv[i], "-o") == 0) {
             if (i+1 == argc) {
                 cerr << "error: filename missing after -o\n";
-                return -1;
+                return 1;
             }
             if (!outputFile.empty()) {
                 cerr << "error: output file already specified: "
                      << outputFile
                      << ", specified again as " << argv[i] << '\n';
-                return -1;
+                return 1;
             }
             ++i;
             outputFile = argv[i];
@@ -494,13 +494,13 @@ int main(int argc, char **argv, char const* const* envp) {
             if (frameworkDir.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: directory missing after -F\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 frameworkDir = argv[i];
                 if (frameworkDir.empty() || (frameworkDir[0] == '-')) {
                     cerr << "error: directory missing after -F\n";
-                    return -1;
+                    return 1;
                 }
             }
             frameworkSearchPath.push_back("-F" + frameworkDir);
@@ -508,13 +508,13 @@ int main(int argc, char **argv, char const* const* envp) {
         else if (strcmp(argv[i], "-framework") == 0) {
             if (i+1 == argc) {
                 cerr << "error: framework name missing after -framework\n";
-                return -1;
+                return 1;
             }
             ++i;
             string framework = argv[i];
             if (framework.empty() || (framework[0] == '-')) {
                 cerr << "error: framework name missing after -framework\n";
-                return -1;
+                return 1;
             }
             frameworks.push_back("-framework");
             frameworks.push_back(framework);
@@ -522,17 +522,17 @@ int main(int argc, char **argv, char const* const* envp) {
         else if (strcmp(argv[i], "-arch") == 0) {
             if (i+1 == argc) {
                 cerr << "error: architecture name missing after -arch\n";
-                return -1;
+                return 1;
             }
             ++i;
             if (!arch.empty()) {
                 cerr << "error: multiple -arch flags currently unsupported\n";
-                return -1;
+                return 1;
             }
             arch = argv[i];
             if (arch.empty() || (arch[0] == '-')) {
                 cerr << "error: architecture name missing after -arch\n";
-                return -1;
+                return 1;
             }
 
             if (arch == "i386") {
@@ -549,20 +549,20 @@ int main(int argc, char **argv, char const* const* envp) {
                 targetTriple = "thumbv7-apple-darwin4.1-iphoneos";
             } else {
                 cerr << "error: unrecognized -arch value " << arch << "\n";
-                return -1;
+                return 1;
             }
         }
 #endif
         else if (strcmp(argv[i], "-target") == 0) {
             if (i+1 == argc) {
                 cerr << "error: target name missing after -target\n";
-                return -1;
+                return 1;
             }
             ++i;
             targetTriple = argv[i];
             if (targetTriple.empty() || (targetTriple[0] == '-')) {
                 cerr << "error: target name missing after -target\n";
-                return -1;
+                return 1;
             }
             crossCompiling = targetTriple != llvm::sys::getHostTriple();
         }
@@ -574,13 +574,13 @@ int main(int argc, char **argv, char const* const* envp) {
             if (libDir.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: directory missing after -L\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 libDir = argv[i];
                 if (libDir.empty() || (libDir[0] == '-')) {
                     cerr << "error: directory missing after -L\n";
-                    return -1;
+                    return 1;
                 }
             }
             libSearchPath.push_back("-L" + libDir);
@@ -590,13 +590,13 @@ int main(int argc, char **argv, char const* const* envp) {
             if (lib.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: library missing after -l\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 lib = argv[i];
                 if (lib.empty() || (lib[0] == '-')) {
                     cerr << "error: library missing after -l\n";
-                    return -1;
+                    return 1;
                 }
             }
             libraries.push_back("-l" + lib);
@@ -606,13 +606,13 @@ int main(int argc, char **argv, char const* const* envp) {
             if (namep[0] == '\0') {
                 if (i+1 == argc) {
                     cerr << "error: definition missing after -D\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 namep = argv[i];
                 if (namep[0] == '\0' || namep[0] == '-') {
                     cerr << "error: definition missing after -D\n";
-                    return -1;
+                    return 1;
                 }
             }
             char *equalSignp = strchr(namep, '=');
@@ -630,13 +630,13 @@ int main(int argc, char **argv, char const* const* envp) {
             if (path.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: path missing after -I\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 path = argv[i];
                 if (path.empty() || (path[0] == '-')) {
                     cerr << "error: path missing after -I\n";
-                    return -1;
+                    return 1;
                 }
             }
             addSearchPath(path);
@@ -671,14 +671,14 @@ int main(int argc, char **argv, char const* const* envp) {
                 if (i != argc - 1) {
                     cerr << "error: clay file already specified: " << argv[i]
                          << ", unrecognized parameter: " << argv[i+1] << '\n';
-                    return -1;
+                    return 1;
                 }
                 clayFile = argv[i];
             } else {
                 if (i != argc) {
                     cerr << "error: clay file already specified: " << clayFile
                          << ", unrecognized parameter: " << argv[i] << '\n';
-                    return -1;
+                    return 1;
                 }
             }
         }
@@ -686,29 +686,29 @@ int main(int argc, char **argv, char const* const* envp) {
                  || strcmp(argv[i], "--help") == 0
                  || strcmp(argv[i], "/?") == 0) {
             usage(argv[0]);
-            return -1;
+            return 2;
         }
         else if (strstr(argv[i], "-") != argv[i]) {
             if (!clayFile.empty()) {
                 cerr << "error: clay file already specified: " << clayFile
                      << ", unrecognized parameter: " << argv[i] << '\n';
-                return -1;
+                return 1;
             }
             clayFile = argv[i];
         }
         else {
             cerr << "error: unrecognized option " << argv[i] << '\n';
-            return -1;
+            return 1;
         }
     }
 
     if (clayScript.empty() && clayFile.empty()) {
         cerr << "error: clay file not specified\n";
-        return -1;
+        return 1;
     }
     if (!clayScript.empty() && !clayFile.empty()) {
         cerr << "error: -e cannot be specified with input file\n";
-        return -1;
+        return 1;
     }
 
     if (!clayScriptImports.empty() && clayScript.empty()) {
@@ -717,12 +717,12 @@ int main(int argc, char **argv, char const* const* envp) {
 
     if (emitAsm && emitObject) {
         cerr << "error: -S or -c cannot be used together\n";
-        return -1;
+        return 1;
     }
 
     if (crossCompiling && run) {
         cerr << "error: cannot use -run when cross compiling\n";
-        return -1;
+        return 1;
     }
 
     if (crossCompiling && !(emitLLVM || emitAsm || emitObject)
@@ -731,7 +731,7 @@ int main(int argc, char **argv, char const* const* envp) {
 #endif
     ) {
         cerr << "error: must use -emit-llvm, -S, or -c when cross compiling\n";
-        return -1;
+        return 1;
     }
 
     if (!codegenExternalsSet)
@@ -750,7 +750,7 @@ int main(int argc, char **argv, char const* const* envp) {
     if (targetMachine == NULL)
     {
         cerr << "error: unable to initialize LLVM for target " << targetTriple << "\n";
-        return -1;
+        return 1;
     }
 
     initTypes();
@@ -814,7 +814,7 @@ int main(int argc, char **argv, char const* const* envp) {
     const llvm::sys::FileStatus *outputFileStatus = outputFilePath.getFileStatus();
     if (outputFileStatus != NULL && outputFileStatus->isDir) {
         cerr << "error: output file '" << outputFile << "' is a directory\n";
-        return -1;
+        return 1;
     }
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
@@ -854,7 +854,7 @@ int main(int argc, char **argv, char const* const* envp) {
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
             cerr << "error: " << errorInfo << '\n';
-            return -1;
+            return 1;
         }
         outputTimer.start();
         if (emitLLVM)
@@ -882,7 +882,7 @@ int main(int argc, char **argv, char const* const* envp) {
         }
         if (!clangPath.isValid()) {
             cerr << "error: unable to find clang on the path\n";
-            return false;
+            return 1;
         }
 
         vector<string> arguments;
@@ -915,7 +915,7 @@ int main(int argc, char **argv, char const* const* envp) {
                                 arguments);
         outputTimer.stop();
         if (!result)
-            return -1;
+            return 1;
     }
 
     if (showTiming) {
