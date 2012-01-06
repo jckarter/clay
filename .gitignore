@@ -41,7 +41,7 @@ vs2008/*.user
 vs2008/Debug/
 vs2008/Release/
 
-test/cocoa/appkit/Example.app/
+examples/cocoa/appkit/Example.app/
 
 mingw/
 
