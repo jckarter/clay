@@ -1,18 +1,16 @@
 
 import math.native.bigfloat.*;
 
-/**
- * This file include functions to compute y=x-N*pi/2 and return the last two bits of N
- * in order to know which quadrant we are considering.
- *
- * We use an scs representation to compute it by Payne and Hanek methods. For more information
- * you can read K. C. Ng research report from Sun Microsystems:
- * "Argument reduction for huge argument: Good to the last bit" (July 13, 1992)
- *
- */
+//
+// This file include functions to compute y=x-N*pi/2 and return the last two bits of N
+// in order to know which quadrant we are considering.
+//
+// Computed by Payne and Hanek methods. For more information
+// you can read K. C. Ng research report from Sun Microsystems:
+// "Argument reduction for huge argument: Good to the last bit" (July 13, 1992)
+//
 
-
-var two_over_pi = Array[Int,48](
+private alias two_over_pi = Array[Int,48](
    0x28be60db, 0x24e44152, 0x27f09d5f, 0x11f534dd,
    0x3036d8a5, 0x1993c439, 0x0107f945, 0x23abdebb,
    0x31586dc9, 0x06e3a424, 0x374b8019, 0x092eea09,
@@ -27,15 +25,10 @@ var two_over_pi = Array[Int,48](
    0x3986c219, 0x199855f1, 0x1281a102, 0x0dffd880);
 
 
-/*
- * This scs number store 211 bits of pi/2
- */
-// var Pio2 = ()->{
-//     return scs(array(0x00000001, 0x2487ed51, 0x042d1846, 0x26263314,
-//     0x1701b839, 0x28948127, 0x01114cf9, 0x23a0105d),
-//     db_one(),  0,   1 );};
 
-var Pio2 = BigFloat(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x26263314u,
+// This number stores 211 bits of pi/2
+
+private alias Pio2 = BigFloat(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x26263314u,
     0x1701b839u, 0x28948127u, 0x01114cf9u, 0x23a0105du),
     1.,  0,   1 );
 

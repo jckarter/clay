@@ -298,19 +298,25 @@ inline overload rint(x:Double) = libc.rint(x);
 inline overload rint(x:Float) = libc.rintf(x);
 inline overload rint(x:LongDouble) = libc.rintl(x);
 
-inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
+[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
 inline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
 inline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
-inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
-inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
+[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
+[| MathMode?(LIBM)] inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
 inline overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 inline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
 inline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 inline overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
 
-inline overload nexttoward(x:Double,y:LongDouble) = libc.nexttoward(x,y);
-inline overload nexttoward(x:Float,y:LongDouble) = libc.nexttowardf(x,y);
+[| MathMode?(LIBM)] inline overload nexttoward(x:Double,y:Double) = libc.nexttoward(x,y);
+inline overload nexttoward(x:Float,y:Float) = libc.nexttowardf(x,y);
 inline overload nexttoward(x:LongDouble,y:LongDouble) = libc.nexttowardl(x,y);
+[| MathMode?(LIBM)] inline overload nexttoward(x:Double,y:Float) = libc.nexttoward(x,Double(y));
+[| MathMode?(LIBM)] inline overload nexttoward(x:Float,y:Double) = libc.nexttoward(Double(x),y);
+inline overload nexttoward(x:Double,y:LongDouble) = libc.nexttowardl(LongDouble(x),y);
+inline overload nexttoward(x:LongDouble,y:Double) = libc.nexttowardl(x,LongDouble(y));
+inline overload nexttoward(x:Float,y:LongDouble) = libc.nexttowardl(LongDouble(x),y);
+inline overload nexttoward(x:LongDouble,y:Float) = libc.nexttowardl(x,LongDouble(y));
 
 inline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
 inline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);

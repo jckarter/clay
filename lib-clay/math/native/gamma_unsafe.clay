@@ -130,7 +130,7 @@ overload tgamma(x:T) --> w:T {
     w /= y;
 }
 
-/* complex Gamma function in double precision */
+// complex Gamma function in double precision
 [U | Complex?(U)]
 overload tgamma(x:U) --> r:U{
     alias T = ComplexElementType(x);

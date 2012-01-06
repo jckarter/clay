@@ -35,7 +35,6 @@ alias accPolyC6 =1.38888888911084160647513296993338371976278722286224e-03;
 alias accPolyC7 =1.98412698447204637443655461659375305316643789410591e-04;
 
 
-alias dn = db_number;
 private record tPi_t(hi:Double, mi:Double, lo:Double);
 
 private var twoPowerIndex1 = Array[tPi_t,64](
@@ -683,7 +682,7 @@ private var twoPowerIndex2 = Array[tPi_t,64](
   ) );
 
 
-private inline exp_td_accurate(rh:Double, rm:Double, rl:Double,
+private exp_td_accurate(rh:Double, rm:Double, rl:Double,
                 tbl1h:Double, tbl1m:Double, tbl1l:Double,
                 tbl2h:Double, tbl2m:Double, tbl2l:Double)
                 --> polyTblh:Double,polyTblm:Double,polyTbll:Double {
@@ -720,54 +719,46 @@ private inline exp_td_accurate(rh:Double, rm:Double, rl:Double,
     var polyWithTablesh,polyWithTablesm,polyWithTablesl = Mul33(tbl2h,tbl2m,tbl2l,polyWithTbl1h,polyWithTbl1m,polyWithTbl1l);
 
     polyTblh,polyTblm,polyTbll <-- Renormalize3(polyWithTablesh,polyWithTablesm,polyWithTablesl);
-
 }
 
 
-/* Function exp13
+// Function exp13
+//
+//    Computes exp(x) with an accuracy of 113 bits as
+//
+//    2^exponent * (exph + expm + expl) \approx exp(x)
+//
+//    Unless the subnormal case for x, no special cases are
+//    handled.
+//
+//    The triple-double exph + expm + expl is non-overlapping.
+//    The domain for exph + expm + expl is 1/2..2
+//    The integer exponent is in the range -1024..1024. The
+//    value 2^(exponent) may therefore be non-representable
+//    whereas 2^exponent * (exph + expm + expl) is.
 
-   Computes exp(x) with an accuracy of 113 bits as
+exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
+    // Argument reduction and filtering for special cases
 
-   2^exponent * (exph + expm + expl) \approx exp(x)
-
-   Unless the subnormal case for x, no special cases are
-   handled.
-
-   The triple-double exph + expm + expl is non-overlapping.
-   The domain for exph + expm + expl is 1/2..2
-   The integer exponent is in the range -1024..1024. The
-   value 2^(exponent) may therefore be non-representable
-   whereas 2^exponent * (exph + expm + expl) is.
-
-*/
-
-
-inline exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
-
-    var shiftedXMultdb, xdb = dn(),dn();
-
-    /* Argument reduction and filtering for special cases */
-
-    /* Compute k as a double and as an int */
-    xdb.2 = x;
+    // Compute k as a double and as an int
+    var xdb = db_number(x);
     var xMultLog2InvMult2L = x * log2InvMult2L;
     var shiftedXMult = xMultLog2InvMult2L + shiftConst;
     var kd = shiftedXMult - shiftConst;
-    shiftedXMultdb.2 = shiftedXMult;
+    var shiftedXMultdb = db_number(shiftedXMult);
 
-    /* Special cases tests */
-    /* Test if argument is a denormal or zero */
+    // Special cases tests
+    // Test if argument is a denormal or zero
     if (bitand(xdb.0[1], 0x7ff00000) == 0)
-        /* We are in the RN case, return 1.0 in all cases */
+        // We are in the RN case, return 1.0 in all cases
         exph, expm, expl, exponent <-- 1., 0., 0., 0;
     else {
-
         alias k = shiftedXMultdb.0[0];
         exponent <-- bitshr(k , L);
         alias index1 = bitand(k , INDEXMASK1);
         alias index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
 
-        /* Table reads */
+        // Table reads
         ref tbl1h = twoPowerIndex1[index1].hi;
         ref tbl1m = twoPowerIndex1[index1].mi;
         ref tbl2h = twoPowerIndex2[index2].hi;
@@ -775,99 +766,88 @@ inline exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
         ref tbl1l = twoPowerIndex1[index1].lo;
         ref tbl2l = twoPowerIndex2[index2].lo;
 
-        /* Argument reduction */
+        // Argument reduction
         var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
         var t1 = x + msLog2Div2LMultKh;
         var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
         var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
 
-        /* Polynomial approximation and reconstruction: factorized code */
+        // Polynomial approximation and reconstruction: factorized code
         exph, expm, expl <-- exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
     }
 }
-
-
-
 
 //
 // Exponential function - rounded to nearest
 //      - adapted from crlibm project
 //
-private inline exp_rn(x:Double) --> ans:Double {
-
-    var shiftedXMultdb,
-        twoPowerMdb,
-        xdb, t4db, t4db2,
-        polyTblhdb, resdb = dn(),dn(),dn(),dn(),dn(),dn(),dn();
-
-
-    /* Argument reduction and filtering for special cases */
-    /* Compute k as a double and as an int */
-    xdb.2 = x;
+private exp_rn(x:Double) --> ans:Double {
+    // Argument reduction and filtering for special cases
+    // Compute k as a double and as an int
+    var xdb = db_number(x);
     var xMultLog2InvMult2L = x * log2InvMult2L;
     var shiftedXMult = xMultLog2InvMult2L + shiftConst;
     var kd = shiftedXMult - shiftConst;
-    shiftedXMultdb.2 = shiftedXMult;
+    var shiftedXMultdb = db_number(shiftedXMult);
 
-    /* Special cases tests */
+    // Special cases tests
     var xIntHi = xdb.0[1];
     var mightBeDenorm = false;
-    /* Test if argument is a denormal or zero */
+    // Test if argument is a denormal or zero
     if (bitand(xIntHi,0x7ff00000) == 0)
-    /* We are in the RN case, return 1.0 in all cases */
+    // We are in the RN case, return 1.0 in all cases
         return 1.;
 
-    /* Test if argument is greater than approx. 709 in magnitude */
+    // Test if argument is greater than approx. 709 in magnitude
     if (bitand(xIntHi , 0x7fffffff) >= OVRUDRFLWSMPLBOUND) {
-        /* If we are here, the result might be overflowed, underflowed, inf, or NaN */
+        // If we are here, the result might be overflowed, underflowed, inf, or NaN
 
-        /* Test if +/- Inf or NaN */
+        // Test if +/- Inf or NaN
         if (bitand(xIntHi , 0x7fffffff) >= 0x7ff00000) {
-            /* Either NaN or Inf in this case since exponent is maximal */
+            // Either NaN or Inf in this case since exponent is maximal
 
-            /* Test if NaN: mantissa is not 0 */
+            // Test if NaN: mantissa is not 0
             if (bitor(bitand(xIntHi , 0x000fffff) , xdb.0[0]) != 0)
-            /* x = NaN, return NaN */
+            // x = NaN, return NaN
                 return x + x;
-            /* +/- Inf */
+            // +/- Inf
 
-            /* Test sign */
+            // Test sign
             if (bitand(xIntHi , 0x80000000)==0)
-                /* x = +Inf, return +Inf */
+                // x = +Inf, return +Inf
                 return x;
             else
-                /* x = -Inf, return 0 */
+                // x = -Inf, return 0
                 return 0.;
-        } /* End which in NaN, Inf */
-    } /* End NaN or Inf ? */
-    /* If we are here, we might be overflowed, denormalized or underflowed in the result
-    but there is no special case (NaN, Inf) left */
+        } // End which in NaN, Inf
+    } // End NaN or Inf ?
+    // If we are here, we might be overflowed, denormalized or underflowed in the result
+    // but there is no special case (NaN, Inf) left
 
-    /* Test if actually overflowed */
+    // Test if actually overflowed
     if (x > OVERFLOWBOUND)
-        /* We are actually overflowed in the result */
+        // We are actually overflowed in the result
         return LARGEST * LARGEST;
 
-    /* Test if surely underflowed */
+    // Test if surely underflowed
     if (x <= UNDERFLWBOUND)
-    /* We are actually sure to be underflowed and not denormalized any more
-    So we return 0 and raise the inexact flag */
+    // We are actually sure to be underflowed and not denormalized any more
+    // So we return 0 and raise the inexact flag
         return SMALLEST * SMALLEST;
 
-    /* Test if possibly denormalized */
+    // Test if possibly denormalized
     if (x <= DENORMBOUND)
-    /* We know now that we are not sure to be normalized in the result
-    We just set an internal flag for a further test
-    */
+    // We know now that we are not sure to be normalized in the result
+    // We just set an internal flag for a further test
+
         mightBeDenorm = true;
 
-    /* End might be a special case */
+    // End might be a special case
 
-    /* If we are here, we are sure to be neither +/- Inf nor NaN nor overflowed nor denormalized in the argument
-    but we might be denormalized in the result
+    // If we are here, we are sure to be neither +/- Inf nor NaN nor overflowed nor denormalized in the argument
+    // but we might be denormalized in the result
 
-    We continue the argument reduction for the quick phase and table reads for both phases
-    */
+    // We continue the argument reduction for the quick phase and table reads for both phases
 
     var s1,s2 = Mul12(msLog2Div2Lh,kd);
     var s3 = kd * msLog2Div2Lm;
@@ -880,58 +860,49 @@ private inline exp_rn(x:Double) --> ans:Double {
     var index1 = bitand(k , INDEXMASK1);
     var index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
 
-    /* Table reads */
+    // Table reads
     ref tbl1h = twoPowerIndex1[index1].hi;
     ref tbl1m = twoPowerIndex1[index1].mi;
     ref tbl2h = twoPowerIndex2[index2].hi;
     ref tbl2m = twoPowerIndex2[index2].mi;
 
-    /* Test now if it is sure to launch the quick phase because no denormalized result is possible */
+    // Test now if it is sure to launch the quick phase because no denormalized result is possible
     if (mightBeDenorm) {
-        /* The result might be denormalized, we launch the accurate phase in all cases */
+        // The result might be denormalized, we launch the accurate phase in all cases
 
-        /* Rest of argument reduction for accurate phase */
-
+        // Rest of argument reduction for accurate phase
         var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
         var t1 = x + msLog2Div2LMultKh;
         var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
         var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
 
-        /* Table reads for accurate phase */
+        // Table reads for accurate phase
         ref tbl1l = twoPowerIndex1[index1].lo;
         ref tbl2l = twoPowerIndex2[index2].lo;
 
-        /* Call accurate phase */
+        // Call accurate phase
         var polyTblh, polyTblm, polyTbll = exp_td_accurate( rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
 
-        /* Final rounding and multiplication with 2^M
-
-        We first multiply the highest significant byte by 2^M in two steps
-        and adjust it then depending on the lower significant parts.
-
-        We cannot multiply directly by 2^M since M is less than -1022.
-        We first multiply by 2^(-1000) and then by 2^(M+1000).
-
-        */
-
+        // Final rounding and multiplication with 2^M
+        // We first multiply the highest significant byte by 2^M in two steps
+        // and adjust it then depending on the lower significant parts.
+        // We cannot multiply directly by 2^M since M is less than -1022.
+        // We first multiply by 2^(-1000) and then by 2^(M+1000).
         var t3 = polyTblh * twoPowerM1000;
 
-        /* Form now twoPowerM with adjusted M */
-        twoPowerMdb.0[0] = 0;
+        // Form now twoPowerM with adjusted M
+        var twoPowerMdb = db_number(0l);
         twoPowerMdb.0[1] = bitshl((M + 2023) , 20);
 
-
-        /* Multiply with the rest of M, the result will be denormalized */
+        // Multiply with the rest of M, the result will be denormalized
         var t4 = t3 * twoPowerMdb.2;
 
-        /* For x86, force the compiler to pass through memory for having the right rounding */
-
-        t4db.2 = t4;   /* Do not #if-ify this line, we need the copy */
-        t4db2.0[1] = t4db.0[1];
-        t4db2.0[0] = t4db.0[0];
+        // For x86, force the compiler to pass through memory for having the right rounding
+        var t4db = db_number(t4);   // Do not #if-ify this line, we need the copy
+        var t4db2 = t4db;
         t4 = t4db2.2;
 
-        /* Remultiply by 2^(-M) for manipulating the rounding error and the lower significant parts */
+        // Remultiply by 2^(-M) for manipulating the rounding error and the lower significant parts
         M *= -1;
         twoPowerMdb.0[0] = 0;
         twoPowerMdb.0[1] = bitshl((M + 23) , 20);
@@ -939,25 +910,22 @@ private inline exp_rn(x:Double) --> ans:Double {
         var t6 = t5 * twoPower1000;
         var t7 = polyTblh - t6;
 
-        /* The rounding decision is made at 1/2 ulp of a denormal, i.e. at 2^(-1075)
-        We construct this number and by comparing with it we get to know
-        whether we are in a difficult rounding case or not. If not we just return
-        the known result. Otherwise we continue with further tests.
-        */
-
+        // The rounding decision is made at 1/2 ulp of a denormal, i.e. at 2^(-1075)
+        // We construct this number and by comparing with it we get to know
+        // whether we are in a difficult rounding case or not. If not we just return
+        // the known result. Otherwise we continue with further tests.
         twoPowerMdb.0[0] = 0;
         twoPowerMdb.0[1] = bitshl((M - 52) , 20);
 
         if (abs(t7) != twoPowerMdb.2)
             return t4;
 
-        /* If we are here, we are in a difficult rounding case */
+        // If we are here, we are in a difficult rounding case
 
-        /* We have to adjust the result iff the sign of the error on
-        rounding 2^M * polyTblh (which must be an ulp of a denormal)
-        and polyTblm +arith polyTbll is the same which means that
-        the error made was greater than an ulp of an denormal.
-        */
+        // We have to adjust the result iff the sign of the error on
+        // rounding 2^M * polyTblh (which must be an ulp of a denormal)
+        // and polyTblm +arith polyTbll is the same which means that
+        // the error made was greater than an ulp of an denormal.
 
         polyTblm += polyTbll;
 
@@ -974,83 +942,67 @@ private inline exp_rn(x:Double) --> ans:Double {
             } else
                 return t4;
         }
-    } /* End accurate phase launched as there might be a denormalized result */
+    } // End accurate phase launched as there might be a denormalized result
 
-    /* No more underflow nor denormal is possible. There may be the case where
-    M is 1024 and the value 2^M is to be multiplied may be less than 1
-    So the final result will be normalized and representable by the multiplication must be
-    made in 2 steps
-    */
+    // No more underflow nor denormal is possible. There may be the case where
+    // M is 1024 and the value 2^M is to be multiplied may be less than 1
+    // So the final result will be normalized and representable by the multiplication must be
+    // made in 2 steps
 
-    /* Quick phase starts here */
-
+    // Quick phase starts here
     var rhSquare = rh * rh;
     var rhC3 = c3 * rh;
-
     var rhSquareHalf = 0.5 * rhSquare;
     var monomialCube = rhC3 * rhSquare;
     var rhFour = rhSquare * rhSquare;
-
     var monomialFour = c4 * rhFour;
-
     var highPoly = monomialCube + monomialFour;
-
     var highPolyWithSquare = rhSquareHalf + highPoly;
-
     var tablesh,tablesl = Mul22(tbl1h,tbl1m,tbl2h,tbl2m);
-
     var t8 = rm + highPolyWithSquare;
     var t9 = rh + t8;
-
     var t10 = tablesh * t9;
-
     var t11,t12 = Add12(tablesh,t10);
     var t13 = t12 + tablesl;
     var polyTblh,polyTblm = Add12(t11,t13);
 
-    /* Rounding test
-    Since we know that the result of the final multiplication with 2^M
-    will always be representable, we can do the rounding test on the
-    factors and multiply only the final result.
-    We implement the multiplication in integer computations to overcome
-    the problem of the non-representability of 2^1024 if M = 1024
-    */
+    // Rounding test
+    // Since we know that the result of the final multiplication with 2^M
+    // will always be representable, we can do the rounding test on the
+    // factors and multiply only the final result.
+    // We implement the multiplication in integer computations to overcome
+    // the problem of the non-representability of 2^1024 if M = 1024
 
     if(polyTblh == (polyTblh + (polyTblm * ROUNDCST))) {
-        polyTblhdb.2 = polyTblh;
+        var polyTblhdb = db_number(polyTblh);
         polyTblhdb.0[1] += bitshl(M, 20);
         return polyTblhdb.2;
     } else{
-        /* Rest of argument reduction for accurate phase */
-
+        // Rest of argument reduction for accurate phase
         var msLog2Div2LMultKh,msLog2Div2LMultKm,msLog2Div2LMultKl = Mul133(kd,msLog2Div2Lh,msLog2Div2Lm,msLog2Div2Ll);
         var t1 = x + msLog2Div2LMultKh;
         var rh,t2 = Add12Cond(t1,msLog2Div2LMultKm);
         var rm,rl = Add12Cond(t2,msLog2Div2LMultKl);
 
-        /* Table reads for accurate phase */
+        // Table reads for accurate phase
         ref tbl1l = twoPowerIndex1[index1].lo;
         ref tbl2l = twoPowerIndex2[index2].lo;
 
-        /* Call accurate phase */
+        // Call accurate phase
         var polyTblh, polyTblm, polyTbll = exp_td_accurate(rh, rm, rl, tbl1h, tbl1m, tbl1l, tbl2h, tbl2m, tbl2l);
 
-        /* Since the final multiplication is exact, we can do the final rounding before multiplying
-        We overcome this way also the cases where the final result is not underflowed whereas the
-        lower parts of the intermediate final result are.
-        */
-
+        // Since the final multiplication is exact, we can do the final rounding before multiplying
+        // We overcome this way also the cases where the final result is not underflowed whereas the
+        // lower parts of the intermediate final result are.
         var res = RoundToNearest3(polyTblh,polyTblm,polyTbll);
 
-        /* Final multiplication with 2^M
-        We implement the multiplication in integer computations to overcome
-        the problem of the non-representability of 2^1024 if M = 1024
-        */
-
-        resdb.2 = res;
+        // Final multiplication with 2^M
+        // We implement the multiplication in integer computations to overcome
+        // the problem of the non-representability of 2^1024 if M = 1024
+        var resdb = db_number(res);
         resdb.0[1] += bitshl(M , 20);
         return resdb.2;
-    } /* Accurate phase launched after rounding test*/
+    } // Accurate phase launched after rounding test
 
 }
 
