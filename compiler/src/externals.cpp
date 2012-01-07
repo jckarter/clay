@@ -431,6 +431,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
     }
 
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) {
+        if (conv == CC_LLVM) return NULL;
         if (returnSingleFloatAggregateAsNonaggregate) {
             llvm::Type *singleType = singleFloatAggregateType(type);
             if (singleType != NULL)
@@ -439,9 +440,11 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) {
+        if (conv == CC_LLVM) return NULL;
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
+        if (conv == CC_LLVM) return false;
         if (returnSingleFloatAggregateAsNonaggregate) {
             llvm::Type *singleType = singleFloatAggregateType(type);
             if (singleType != NULL)
@@ -452,6 +455,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
     }
     virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) {
+        if (conv == CC_LLVM) return false;
         int size = aggregateTypeSize(type);
         return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
     }
