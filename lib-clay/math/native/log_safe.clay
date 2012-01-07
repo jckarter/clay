@@ -1,6 +1,7 @@
 
 import math.native.exact.*;
-import numbers.floats.floats.(negativeInfinity,infinity,nan);
+import numbers.floats.(signbit,negativeInfinity,infinity,nan);
+import math.(nan?);
 
 alias L = 8;
 alias MAXINDEX = 106;
@@ -1630,14 +1631,14 @@ private inline log_rn(x:Double) {
         if (bitor(bitand(xdb.0[1] , 0x7fffffff),xdb.0[0])==0)
             return negativeInfinity(Double); /* log(+/-0) = -Inf */
         if (xdb.0[1] < 0.f)
-            return nan(Double);                      /* log(-x) = Nan    */
+            return -nan(Double);                      /* log(-x) = Nan    */
         /* Subnormal number */
         _e = -52;
         xdb.2 *= two52; 	  /* make x a normal number    */
     }
 
     if (xdb.0[1] >= 0x7ff00000)
-        return infinity(Double);				 /* Inf or Nan       */
+        return if(nan?(x)) nan(Double) else infinity(Double);
 
     /* Extract exponent and mantissa
       Do range reduction,
@@ -1780,14 +1781,14 @@ private log2_rn(x:Double) {
             return negativeInfinity(Double);
                          		   /* log(+/-0) = -Inf */
         if (xdb.0[1] < 0)
-            return nan(Double);                      /* log(-x) = Nan    */
+            return -nan(Double);                      /* log(-x) = Nan    */
         /* Subnormal number */
         E = -52;
         xdb.2 *= two52; 	  /* make x a normal number    */
     }
 
     if (xdb.0[1] >= 0x7ff00000)
-        return infinity(Double);				 /* Inf or Nan       */
+        return if(nan?(x)) nan(Double) else infinity(Double);
 
     /* Extract exponent and mantissa
     Do range reduction,
@@ -1903,25 +1904,24 @@ private log10_rn(x:Double){
     var E = 0;
     var xdb = db_number(x);
 
-    /* Filter cases */
-    if (xdb.0[1] < 0x00100000){        /* x < 2^(-1022)    */
+    // Filter cases
+    if (xdb.0[1] < 0x00100000){  // x < 2^(-1022)
         if (bitor(bitand(xdb.0[1], 0x7fffffff),xdb.0[0])==0)
             return negativeInfinity(Double);
         if (xdb.0[1] < 0)
-            return nan(Double);                      /* log(-x) = Nan    */
-     /* Subnormal number */
+            return -nan(Double); // log(-x) = Nan
+        // Subnormal number
         E = -52;
-        xdb.2 *= two52; 	  /* make x a normal number    */
+        xdb.2 *= two52; 	  // make x a normal number
     }
 
     if (xdb.0[1] >= 0x7ff00000)
-        return infinity(Double);				 /* Inf or Nan       */
+        return if(nan?(x)) nan(Double) else infinity(Double);
 
-    /* Extract exponent and mantissa
-    Do range reduction,
-    yielding to E holding the exponent and
-    y the mantissa between sqrt(2)/2 and sqrt(2)
-    */
+    // Extract exponent and mantissa
+    // Do range reduction,
+    // yielding to E holding the exponent and
+    // the mantissa between sqrt(2)/2 and sqrt(2)
     E += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
     var index = bitand(xdb.0[1] , 0x000fffff);
     xdb.0[1] = bitor(index, 0x3ff00000);	/* do exponent = 0 */

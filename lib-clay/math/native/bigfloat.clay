@@ -101,7 +101,7 @@ overload BigFloat(x:Double) : BigFloat {
         result.h_word[0] =  UInt32(bitshr(mantissa.1 , 53 - exponent_remainder ));
 
         // 11 = 64-53
-        mantissa.1 =  wrapBitshl(mantissa.1 , exponent_remainder+11);
+        mantissa.1 = wrapBitshl(mantissa.1 , wrapAdd(exponent_remainder,11));
         result.h_word[1] = bitand(bitshr(mantissa.0[1] , 32 - BF_NB_BITS) , BF_MASK_RADIX );
         mantissa.1 =  wrapBitshl(mantissa.1 , BF_NB_BITS);
         result.h_word[2] = bitand(bitshr(mantissa.0[1] , (32 - BF_NB_BITS)), BF_MASK_RADIX);

@@ -15,7 +15,7 @@ private var c = array(
     0.41738741349777, 0.6774094811598
 );
 
-[T | Numeric?(T)]
+[T | Float?(T)]
 cbrt_unsafe(x:T) {
     alias ZERO = T(0);
     alias HALF = T(0.5);

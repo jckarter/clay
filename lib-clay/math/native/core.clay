@@ -139,8 +139,7 @@ inline overload fpclassify(x:Float) --> res:Int {
 private define _infinity;
 
 inline overload _infinity(x:Double){
-	var xdb = db_number();
-    xdb.2 = x;
+	var xdb = db_number(x);
     xdb.0[0] = bitor(xdb.0[0] , bitxor(bitand(xdb.0[1] , 0x7fffffff) , 0x7ff00000));
 	xdb.0[0] = bitor(xdb.0[0],-xdb.0[0]);
 	return bitand(bitnot(bitshr(xdb.0[0],31)),bitshr(xdb.0[1],30));
@@ -161,8 +160,7 @@ inline overload negativeInfinity?(x:T) = if(_infinity(x)==-1) true else false;
 
 
 inline overload nan?(x:Double){
-	var xdb = db_number();
-    xdb.2 = x;
+	var xdb = db_number(x);
     xdb.0[1] = bitand(xdb.0[1], 0x7fffffff);
     xdb.0[1] = bitor(xdb.0[1] , bitshr(wrapCast(UInt,bitor(xdb.0[0],-xdb.0[0])),31));
 	xdb.0[1] = 0x7ff00000 - xdb.0[1];
@@ -282,4 +280,5 @@ overload nextafter(x:Double, y:Double){
 
 inline overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
 inline overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
+
 

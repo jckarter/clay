@@ -40,3 +40,4 @@ define llrint;
 define proj;
 define arg;
 define recip;
+define cbrt;
