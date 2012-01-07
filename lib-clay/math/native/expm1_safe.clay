@@ -490,5 +490,4 @@ expm1_rn(x:Double) {
 }
 
 
-[T | Float?(T)]
-inline expm1_safe(x:T) = T(expm1_rn(Double(x)));
+inline expm1_safe(x:Double) = expm1_rn(x);

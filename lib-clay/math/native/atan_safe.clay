@@ -740,11 +740,9 @@ atanpi_rn(x:Double) {
 }
 
 
-[T | Float?(T)]
-inline atan_safe(x:T) = T(atan_rn(Double(x)));
+inline atan_safe(x:Double) = atan_rn(x);
 
-[T | Float?(T)]
-inline atanpi_safe(x:T) = T(atanpi_rn(Double(x)));
+inline atanpi_safe(x:Double) = atanpi_rn(x);
 
 
 

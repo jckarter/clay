@@ -1006,5 +1006,5 @@ private exp_rn(x:Double) --> ans:Double {
 
 }
 
-[T | Float?(T)]
-inline exp_safe(x:T) = T(exp_rn(Double(x)));
+
+inline exp_safe(x:Double) = exp_rn(x);

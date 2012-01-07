@@ -33,6 +33,7 @@ define finite?;
 define nan?;
 define llround;
 define nextafter;
+alias nexttoward = nextafter;
 
 [T | Numeric?(T)]
 inline overload max(x:T,y:T) = if(x<y) y else x;

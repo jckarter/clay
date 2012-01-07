@@ -1374,12 +1374,9 @@ private tan_rn(x:Double) --> r:Double {
 
 
 
-[T | Float?(T)]
-inline sin_safe(x:T) = T(sin_rn(Double(x)));
+inline sin_safe(x:Double) = sin_rn(x);
 
-[T | Float?(T)]
-inline cos_safe(x:T) = T(cos_rn(Double(x)));
+inline cos_safe(x:Double) = cos_rn(x);
 
-[T | Float?(T)]
-inline tan_safe(x:T) = T(tan_rn(Double(x)));
+inline tan_safe(x:Double) = tan_rn(x);
 

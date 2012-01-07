@@ -84,6 +84,5 @@ private sqrt754(x:Double) {
 }
 
 
-[T | Float?(T)]
-inline sqrt_safe(x:T) = T(sqrt754(Double(x)));
+inline sqrt_safe(x:Double) = sqrt754(x);
 

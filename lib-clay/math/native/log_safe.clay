@@ -2046,12 +2046,9 @@ private log10_rn(x:Double){
 }
 
 
-[T | Float?(T)]
-inline log_safe(x:T) = T(log_rn(Double(x)));
+inline log_safe(x:Double) = log_rn(x);
 
-[T | Float?(T)]
-inline log2_safe(x:T) = T(log2_rn(Double(x)));
+inline log2_safe(x:Double) = log2_rn(x);
 
-[T | Float?(T)]
-inline log10_safe(x:T) = T(log10_rn(Double(x)));
+inline log10_safe(x:Double) = log10_rn(x);
 
