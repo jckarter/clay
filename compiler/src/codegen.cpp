@@ -6476,7 +6476,7 @@ llvm::TargetMachine *initLLVM(std::string const &targetTriple,
         llvm::sys::fs::make_absolute(absFileName);
         llvmDIBuilder = new llvm::DIBuilder(*llvmModule);
         llvmDIBuilder->createCompileUnit(
-            DW_LANG_user_CLAY,
+            llvm::dwarf::DW_LANG_C_plus_plus, //DW_LANG_user_CLAY,
             llvm::sys::path::filename(absFileName),
             llvm::sys::path::parent_path(absFileName),
             "clay compiler " CLAY_COMPILER_VERSION,
