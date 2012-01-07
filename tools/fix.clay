@@ -43,7 +43,7 @@ fixerForVersion(version:String) : Fixer {
 main(args) : Int {
     if (size(args) < 4 or args[1] != "-v") {
         usage(args[0]);
-        return 1;
+        return 2;
     }
 
     try {
