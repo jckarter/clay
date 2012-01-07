@@ -3,6 +3,7 @@ import fnmatch
 import sys
 import os
 import shutil
+import stat
 
 def call_or_false(argv, expectedcode=0):
     try:
@@ -50,7 +51,10 @@ if call_or_false(["clay-fix"], 2):
     print "--- Does it respond to `/?`?"
     call_or_die(["clay-fix", "--help"], 2)
     print "--- Creating a temporary v0.0 clone..."
-    call_or_die(["git", "clone", ".", "tempv0.0", "-b", "v0.0"])
+    git = "git"
+    if sys.platform == "win32":
+        git = "git.cmd"
+    call_or_die([git, "clone", ".", "tempv0.0", "-b", "v0.0"])
     try:
         print "--- How much clay can clay-fix fix?"
         libfiles = []
@@ -60,7 +64,14 @@ if call_or_false(["clay-fix"], 2):
         call_or_die(["clay-fix", "-v", "0.0"] + libfiles)
     finally:
         print "--- Cleaning up temporary v0.0 clone..."
-        shutil.rmtree("tempv0.0", ignore_errors=True)
+
+        def onerror(f, p, x):
+            if not os.access(p, os.W_OK):
+                os.chmod(p, stat.S_IWUSR)
+                f(p)
+            else:
+                raise
+        shutil.rmtree("tempv0.0", onerror=onerror)
 else:
     print "--- clay-fix not found; I'll assume it wasn't installed"
 
@@ -75,7 +86,6 @@ if call_or_false(["clay-bindgen"], 2):
     try:
         temph.write("#include <stdio.h>\n")
         temph.close()
-        call_or_die(["cat", "temp-stdio.h"])
         print "--- Can clay-bindgen generate bindings for `stdio.h`?"
         call_or_die(["clay-bindgen", "temp-stdio.h"])
     finally:
