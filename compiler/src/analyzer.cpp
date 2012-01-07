@@ -2192,7 +2192,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         if (!right)
             return NULL;
         if (right->size() != x->names.size())
-            arityError(x->names.size(), right->size());
+            arityMismatchError(x->names.size(), right->size());
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < right->size(); ++i) {
             PValuePtr pv = right->values[i];
