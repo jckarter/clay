@@ -544,6 +544,9 @@ main(argc, argv)
         maybe(options.outputFileName): outputFileName -> {
             g_bindingsOut = File(outputFileName, CREATE);
         }
+    } catch (ex:Usage) {
+        print(ex);
+        return 2;
     } catch (ex) {
         print(ex);
         return 1;
@@ -561,7 +564,7 @@ main(argc, argv)
     if (null?(unit)) {
         printlnTo(stderr, "no input files given");
         print(Usage());
-        return 1;
+        return 2;
     }
     finally clang_disposeTranslationUnit(unit);
 
