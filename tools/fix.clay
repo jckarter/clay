@@ -59,6 +59,7 @@ main(args) : Int {
                     fixer(source, outputFile);
                 }
                 // XXX get fixed filename too! (e.g. define_.clay)
+                deleteFile(filename);
                 moveFile(tempOutputFilename, filename);
             } catch (ex) {
                 println("Failed to fix ", filename, ":");
