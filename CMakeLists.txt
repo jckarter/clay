@@ -10,6 +10,8 @@ set(Python_ADDITIONAL_VERSIONS "2.7")
 include(FindPythonInterp)
 include(CheckSymbolExists)
 
+include(CPack)
+
 if(UNIX)
     set(LLVM_DIR "/usr/local" CACHE PATH "llvm install path")
 
