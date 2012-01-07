@@ -1,0 +1,50 @@
+// Test math functions
+
+
+import libc;
+import math.*;
+import printer.formatter.*;
+import numbers.floats.*;
+
+
+ftypes() = Float32,Float64,Float80;
+
+[T | Float?(T)] fdata(static T) = array(
+    T(0),T(1),T(-1),T(355),
+    GreatestPositiveFinite(T),nan(T),-nan(T),infinity(T),negativeInfinity(T));//LeastPositive(T),LeastPositiveNormalized(T),
+
+[T | Numeric?(T)] fdata2(static T) = array(T(0.05),T(0.5),T(5),T(50),T(500));
+
+oneArgFuncs() =
+                sin,cos,tan,
+                asin,acos,atan,
+                sinh,cosh,tanh,
+                exp,expm1,
+                log,log10,log2,
+                sqrt,cbrt;
+
+twoArgFuncs() = pow,atan2;
+
+evalLibcFunc(f, static Float32) = eval(#"libc.",f,#"f");
+overload evalLibcFunc(f, static Float64) = eval(#"libc.",f);
+overload evalLibcFunc(f, static Float80) = eval(#"libc.",f,#"l");
+
+evalFuncs(funcs,data,types) {
+    ..for(f in funcs()){
+        ..for(t in types()){
+            var a = str(StaticName(f),"\t",..weaveValues(",",..map(f,data(t))));
+            var b = str(StaticName(f),"\t",..weaveValues(",",..map(evalLibcFunc(f,t),data(t))));
+            println("clay:",a,"\n","libm:",b,"\n",StaticName(f)," ",StaticName(t)," test passed = ",a==b);
+        }
+    }
+}
+
+
+main() {
+
+    evalFuncs(oneArgFuncs,fdata,ftypes);
+
+}
+
+
+
