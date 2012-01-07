@@ -40,19 +40,19 @@ define atanpi;
 //  Safe  - best precision, correct rounding, default
 //
 
-[T | Numeric?(T)] inline overload sqrt(x:T) = sqrt_safe(x);
-[T | Numeric?(T)] inline overload cbrt(x:T) = cbrt_unsafe(x);
-[T | Numeric?(T)] inline overload log(x:T) = log_safe(x);
-[T | Numeric?(T)] inline overload log2(x:T) = log2_safe(x);
-[T | Numeric?(T)] inline overload log10(x:T) = log10_safe(x);
-[T | Numeric?(T)] inline overload exp(x:T) = exp_safe(x);
-[T | Numeric?(T)] inline overload expm1(x:T) = expm1_safe(x);
-[T | Numeric?(T)] inline overload sin(x:T) = sin_safe(x);
-[T | Numeric?(T)] inline overload cos(x:T) = cos_safe(x);
-[T | Numeric?(T)] inline overload tan(x:T) = tan_safe(x);
-[T,U | Numeric?(T,U)] inline overload pow(x:T,y:U) = pow_safe(x,y);
-[T | Numeric?(T)] inline overload atan(x:T) = atan_safe(x);
-[T | Numeric?(T)] inline overload atanpi(x:T) = atanpi_safe(x);
+[T | Float?(T)] inline overload sqrt(x:T) = sqrt_safe(x);
+[T | Float?(T)] inline overload cbrt(x:T) = cbrt_unsafe(x);
+[T | Float?(T)] inline overload log(x:T) = log_safe(x);
+[T | Float?(T)] inline overload log2(x:T) = log2_safe(x);
+[T | Float?(T)] inline overload log10(x:T) = log10_safe(x);
+[T | Float?(T)] inline overload exp(x:T) = exp_safe(x);
+[T | Float?(T)] inline overload expm1(x:T) = expm1_safe(x);
+[T | Float?(T)] inline overload sin(x:T) = sin_safe(x);
+[T | Float?(T)] inline overload cos(x:T) = cos_safe(x);
+[T | Float?(T)] inline overload tan(x:T) = tan_safe(x);
+[T,U | Float?(T,U)] inline overload pow(x:T,y:U) = pow_safe(x,y);
+[T | Float?(T)] inline overload atan(x:T) = atan_safe(x);
+[T | Float?(T)] inline overload atanpi(x:T) = atanpi_safe(x);
 
 
 //

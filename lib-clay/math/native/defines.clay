@@ -25,8 +25,6 @@ define y1;
 define yn;
 define lgamma_r;
 define rint;
-define nexttoward;
-define remainder;
 define scalbln;
 define scalbn;
 define ilogb;

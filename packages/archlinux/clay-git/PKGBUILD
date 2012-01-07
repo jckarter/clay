@@ -30,14 +30,13 @@ build() {
     msg 'GIT checkout done or server timeout'
     msg 'Start building Clay'
 
-    cd $srcdir
+    cd $srcdir/clay
 
     rm -Rf build
     mkdir build
     cd build
-    cmake -G "Unix Makefiles" ../clay/ -DCMAKE_INSTALL_PREFIX=/opt/clay
-    cmake ENABLE_PCH .
-    make
+    cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=/opt/clay
+    make VERBOSE=1
 
     make DESTDIR=${pkgdir} install
 

@@ -159,14 +159,11 @@ inline overload GreatestPositiveFinite(static Float64) : Float64
     = 0x1.FFFF_FFFF_FFFF_Fp1023;
 
 inline overload LeastPositive(static Float80) : Float80
-    = 0x0.0000_0000_0000_0002p-32766l;
+    = 0x0.0000_0000_0000_0001p-16318l;
 inline overload LeastPositiveNormalized(static Float80) : Float80
-    = 0x1.0000_0000_0000_0000p-32766l;
-// inline overload GreatestPositiveFinite(static Float80) : Float80
-//     = 0x1.FFFF_FFFF_FFFF_FFFFp32767l;
-// XXX temporary until long double hex float parser implemented
+    = 0x1.0000_0000_0000_0000p-16382l;
 inline overload GreatestPositiveFinite(static Float80) : Float80
-    = floatFromBits(0xFFFF_FFFF_FFFF_FFFFul,0x0000_0000_0000_7FFEul);
+    = 0x1.FFFF_FFFF_FFFF_FFFEp16383l;
 
 inline overload LeastPositive(static Imag32) : Imag32
     = numericConvert(Imag32,LeastPositive(Float32));
