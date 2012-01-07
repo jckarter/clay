@@ -892,7 +892,7 @@ private exp_rn(x:Double) --> ans:Double {
 
         // Form now twoPowerM with adjusted M
         var twoPowerMdb = db_number(0l);
-        twoPowerMdb.0[1] = bitshl((M + 2023) , 20);
+        twoPowerMdb.0[1] = wrapBitshl((M + 2023) , 20);
 
         // Multiply with the rest of M, the result will be denormalized
         var t4 = t3 * twoPowerMdb.2;
@@ -905,7 +905,7 @@ private exp_rn(x:Double) --> ans:Double {
         // Remultiply by 2^(-M) for manipulating the rounding error and the lower significant parts
         M *= -1;
         twoPowerMdb.0[0] = 0;
-        twoPowerMdb.0[1] = bitshl((M + 23) , 20);
+        twoPowerMdb.0[1] = wrapBitshl((M + 23) , 20);
         var t5 = t4 * twoPowerMdb.2;
         var t6 = t5 * twoPower1000;
         var t7 = polyTblh - t6;
@@ -915,7 +915,7 @@ private exp_rn(x:Double) --> ans:Double {
         // whether we are in a difficult rounding case or not. If not we just return
         // the known result. Otherwise we continue with further tests.
         twoPowerMdb.0[0] = 0;
-        twoPowerMdb.0[1] = bitshl((M - 52) , 20);
+        twoPowerMdb.0[1] = wrapBitshl((M - 52) , 20);
 
         if (abs(t7) != twoPowerMdb.2)
             return t4;
@@ -975,7 +975,7 @@ private exp_rn(x:Double) --> ans:Double {
 
     if(polyTblh == (polyTblh + (polyTblm * ROUNDCST))) {
         var polyTblhdb = db_number(polyTblh);
-        polyTblhdb.0[1] += bitshl(M, 20);
+        polyTblhdb.0[1] += wrapBitshl(M, 20);
         return polyTblhdb.2;
     } else{
         // Rest of argument reduction for accurate phase
@@ -1000,7 +1000,7 @@ private exp_rn(x:Double) --> ans:Double {
         // We implement the multiplication in integer computations to overcome
         // the problem of the non-representability of 2^1024 if M = 1024
         var resdb = db_number(res);
-        resdb.0[1] += bitshl(M , 20);
+        resdb.0[1] += wrapBitshl(M , 20);
         return resdb.2;
     } // Accurate phase launched after rounding test
 

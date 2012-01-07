@@ -3133,7 +3133,7 @@ private decompose(x) {
     __decompose_temp = bitand(bitnot(__decompose_temp) , (__decompose_temp - 1)) + 1;
     var __decompose_tempdb = db_number(Double( __decompose_temp));
     var __decompose_d = bitshr(__decompose_tempdb.0[1] , 20) - 1023;
-    __decompose_xdb.0[1] = bitor(__decompose_xdb.0[1] ,bitshl(1075 - __decompose_d , 20));
+    __decompose_xdb.0[1] = bitor(__decompose_xdb.0[1] ,wrapBitshl(1075 - __decompose_d , 20));
     return __decompose_xdb.2, __decompose_d - 52 + __decompose_ex;
 }
 
@@ -3336,7 +3336,7 @@ private pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
        is in powh
 
        */
-        twodb.0[1] = bitshl((H + (1074 + 1023)) , 20);
+        twodb.0[1] = wrapBitshl((H + (1074 + 1023)) , 20);
         twodb.0[0] = 0;
 
         var twoH1074powh = twodb.2 * powh;
@@ -3445,9 +3445,9 @@ private pow_round_and_check_rn(H, powh:T, powm:T, powl:T) {
         var K1 = bitshr(K,1);
         var K2 = K - K1;
 
-        twodb.0[1] = bitshl(K1 + 1023 , 20);
+        twodb.0[1] = wrapBitshl(K1 + 1023 , 20);
         twodb.0[0] = 0;
-        two2db.0[1] = bitshl(K2 + 1023 , 20);
+        two2db.0[1] = wrapBitshl(K2 + 1023 , 20);
         two2db.0[0] = 0;
 
         return 1, two2db.2 * (twodb.2 * th),G,kh,kl;
@@ -3592,7 +3592,7 @@ private pow_exact_case(x, y, G, kh, kl, log2xh) {
       /* Here E * y is integer.
 	 Produce now 2^(G - E * y).
       */
-            tempdb.0[1] = bitshl(((G - shiftedEydb.0[0]) + 1023) , 20);
+            tempdb.0[1] = wrapBitshl(((G - shiftedEydb.0[0]) + 1023) , 20);
             tempdb.0[0] = 0;
 
       /* Check now if sh + sl = tempdb.2 * (kh + kl) is an odd
@@ -3646,9 +3646,9 @@ private pow_exact_case(x, y, G, kh, kl, log2xh) {
     var G1 = bitshr(G , 1);
     var G2 = G - G1;
 
-    tempdb.0[1] = bitshl((G1 + 1023) , 20);
+    tempdb.0[1] = wrapBitshl((G1 + 1023) , 20);
     tempdb.0[0] = 0;
-    temp2db.0[1] = bitshl((G2 + 1023) , 20);
+    temp2db.0[1] = wrapBitshl((G2 + 1023) , 20);
     temp2db.0[0] = 0;
 
     tempdb.2 *= (kh * temp2db.2);
@@ -3874,7 +3874,7 @@ private pow_rn(x:Double, y:Double) {
     E += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
     var index = bitand(xdb.0[1] , 0x000fffff);
     xdb.0[1] =  bitor(index , 0x3ff00000);	/* do exponent = 0 */
-    index = bitshr((index + bitshl(1,(20-L-1))) , 20-L);
+    index = bitshr((index + wrapBitshl(1,(20-L-1))) , 20-L);
 
     /* reduce  such that sqrt(2)/2 < xdb.2 < sqrt(2) */
     if (index >= MAXINDEX) { /* corresponds to xdb>sqrt(2)*/
@@ -4090,11 +4090,11 @@ private pow_rn(x:Double, y:Double) {
         if(powh == (powh + (powm * RNROUNDCST))) {
             powdb.2 = powh;
             if (H < 1023) {
-                powdb.0[1] += bitshl(H , 20);
+                powdb.0[1] += wrapBitshl(H , 20);
                 return sign * powdb.2;
             } else {
                 /* May overflow: multiply by 2^H in two steps */
-                powdb.0[1] += bitshl((H - 3) , 20);
+                powdb.0[1] += wrapBitshl((H - 3) , 20);
                 return sign * powdb.2 * 8.0;
             }
         }
@@ -4129,7 +4129,7 @@ private pow_rn(x:Double, y:Double) {
             /* We have nevertheless normal rounding */
             if(powh == (powh + (powm * RNROUNDCST))) {
                 var powdb = db_number(powh);
-                powdb.0[1] += bitshl(H , 20);
+                powdb.0[1] += wrapBitshl(H , 20);
                 return sign * powdb.2;
             }
             /* Here we have normal rounding but could not decide the rounding */
@@ -4160,7 +4160,7 @@ private pow_rn(x:Double, y:Double) {
             We start by constructing 2^(H + 1074)
             */
 
-            twodb.0[1] = bitshl((H + (1074 + 1023)) , 20);
+            twodb.0[1] = wrapBitshl((H + (1074 + 1023)) , 20);
             twodb.0[0] = 0;
 
             var twoH1074powh = twodb.2 * powh;
@@ -4247,7 +4247,7 @@ private pow_rn(x:Double, y:Double) {
                 */
 
                 twodb.2 = nearestintpowh + two52;
-                twodb.0[1] = bitand( (twodb.0[1] + bitshl(1 , 20)) , 0x001fffff);
+                twodb.0[1] = bitand( (twodb.0[1] + wrapBitshl(1 , 20)) , 0x001fffff);
 
                 return sign * twodb.2;
             }

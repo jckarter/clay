@@ -85,7 +85,7 @@ expm1_13(x:T) --> expm1h:T,expm1m:T,expm1l:T {
             // If we are here, we must perform range reduction
             // We multiply x by 2^(-expoX-1) by bit manipulation
             // x cannot be denormalized so there is no danger
-            xdb.0[1] += bitshl(-expoX-1, 20);
+            xdb.0[1] += wrapBitshl(-expoX-1, 20);
 
             // We reassign the new x and maintain xIntHi
             xIntHi = bitand(xdb.0[1] , 0x7fffffff);
@@ -248,9 +248,9 @@ private expm1_common_td(rh:T,rm:T,rl:T,tbl1h:T,tbl1m:T,tbl1l:T,tbl2h:T,
     // TODO FIXME probably at least the first of these tests is useless,
     //   but I leave this to Christoph to check it. Let us be
     //   conservative. Florent  */
-    if(polyWithTableshdb.2!=0) polyWithTableshdb.0[1] += bitshl(M,20);
-    if(polyWithTablesmdb.2!=0) polyWithTablesmdb.0[1] += bitshl(M,20);
-    if(polyWithTablesldb.2!=0) polyWithTablesldb.0[1] += bitshl(M,20);
+    if(polyWithTableshdb.2!=0) polyWithTableshdb.0[1] += wrapBitshl(M,20);
+    if(polyWithTablesmdb.2!=0) polyWithTablesmdb.0[1] += wrapBitshl(M,20);
+    if(polyWithTablesldb.2!=0) polyWithTablesldb.0[1] += wrapBitshl(M,20);
     // Substraction of -1. We use a conditional Add133
     expm1h,expm1m,expm1l <-- Add133Cond(-1.,polyWithTableshdb.2,
                                     polyWithTablesmdb.2,polyWithTablesldb.2);
@@ -311,7 +311,7 @@ expm1_rn(x:Double) {
 
             // We multiply x by 2^(-expoX-1) by bit manipulation
             // x cannot be denormalized so there is no danger
-            xdb.0[1] += bitshl(-expoX-1, 20);
+            xdb.0[1] += wrapBitshl(-expoX-1, 20);
 
             // We reassign the new x and maintain xIntHi
             xIntHi = bitand(xdb.0[1],0x7fffffff);
@@ -444,8 +444,8 @@ expm1_rn(x:Double) {
     // Implement the multiplication by multiplication to overcome the
     // problem of the non-representability of 2^1024 (M = 1024)
     // This case is possible if polyTblhdb.d < 1
-    polyTblhdb.0[1] += bitshl(M,20);
-    polyTblmdb.0[1] += bitshl(M,20);
+    polyTblhdb.0[1] += wrapBitshl(M,20);
+    polyTblmdb.0[1] += wrapBitshl(M,20);
 
     // Substraction of 1
 

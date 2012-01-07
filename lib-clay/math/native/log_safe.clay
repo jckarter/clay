@@ -1647,7 +1647,7 @@ private inline log_rn(x:Double) {
     _e += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
     var index = bitand(xdb.0[1] , 0x000fffff);
     xdb.0[1] = bitor(index , 0x3ff00000);	/* do exponent = 0 */
-    index = bitshr(index + bitshl(1,(20-L-1)) , 20-L);
+    index = bitshr(index + wrapBitshl(1,(20-L-1)) , 20-L);
 
     /* reduce  such that sqrt(2)/2 < xdb.d < sqrt(2) */
     if (index >= MAXINDEX){ /* corresponds to xdb>sqrt(2)*/
@@ -1797,7 +1797,7 @@ private log2_rn(x:Double) {
     E += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
     var index = bitand(xdb.0[1] , 0x000fffff);
     xdb.0[1] =  bitor(index , 0x3ff00000);	/* do exponent = 0 */
-    index = bitshr(index + bitshl(1,(20-L-1)) , 20-L);
+    index = bitshr(index + wrapBitshl(1,(20-L-1)) , 20-L);
 
     /* reduce  such that sqrt(2)/2 < xdb.d < sqrt(2) */
     if (index >= MAXINDEX){ /* corresponds to xdb>sqrt(2)*/
@@ -1925,7 +1925,7 @@ private log10_rn(x:Double){
     E += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
     var index = bitand(xdb.0[1] , 0x000fffff);
     xdb.0[1] = bitor(index, 0x3ff00000);	/* do exponent = 0 */
-    index = bitshr(index + bitshl(1,(20-L-1)) ,20-L);
+    index = bitshr(index + wrapBitshl(1,(20-L-1)) ,20-L);
 
     /* reduce  such that sqrt(2)/2 < xdb.d < sqrt(2) */
     if (index >= MAXINDEX){ /* corresponds to xdb>sqrt(2)*/

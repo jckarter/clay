@@ -979,17 +979,17 @@ private rem_pio256_bf(result,x){
         }
     }
 
-    /* Carry propagate */
+    // Carry propagate
     r[BF_NB_WORDS+1] += bitshr(r[BF_NB_WORDS+2],30);
     for(i in reverseRange(BF_NB_WORDS+1,1)) {
         tmp=bitshr(r[i],30);
         r[i-1] += tmp;
-        r[i] -= bitshl(tmp,30);
+        r[i] -= wrapBitshl(tmp,30);
     }
-    /* The integer part is in r[0] */
+    // The integer part is in r[0]
     var N,sign = r[0],0;
 
-    if(r[1] > BF_RADIX/2){	/* test if the reduced part is bigger than Pi/4 */
+    if(r[1] > BF_RADIX/2){	// test if the reduced part is bigger than Pi/4
         N += 1;
         sign = -1;
         for(i in range(1,BF_NB_WORDS+3))
@@ -998,10 +998,9 @@ private rem_pio256_bf(result,x){
     else
         sign = 1;
 
-    /* Now we get the reduced argument and check for possible
-    * cancellation. By Kahan algorithm we will have at most 2 digits
-    * of cancellations, r[1] and r[2] in the worst case.
-    */
+    // Now we get the reduced argument and check for possible
+    // cancellation. By Kahan algorithm we will have at most 2 digits
+    // of cancellations, r[1] and r[2] in the worst case.
     var i = 0;
     if(r[1] == 0)
         if(r[2] == 0)
@@ -1030,7 +1029,7 @@ private rem_pio256_bf(result,x){
 // Argument Reduction
 //
 
-private alias SHIFT1 = 1. / Double(bitshl(1,BF_NB_BITS));
+private alias SHIFT1 = 1. / Double(wrapBitshl(1,BF_NB_BITS));
 private alias SHIFT2 = SHIFT1*SHIFT1;
 private alias SHIFT3 = SHIFT2*SHIFT1;
 
@@ -1039,13 +1038,13 @@ private RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Doub
     var Y = BigFloat();
     var X = BigFloat(rri.x);
     k <-- rem_pio256_bf(Y, X);
-    index <-- bitshl(bitand(k,127),2);
+    index <-- wrapBitshl(bitand(k,127),2);
     quadrant <-- bitand(bitshr(k,7),3);
     var x0 = Double(Y.h_word[0]);
     var x1 = Double(Y.h_word[1]) * SHIFT1;
     var x2 = Double(Y.h_word[2]) * SHIFT2;
     var x3 = Double(Y.h_word[3]) * SHIFT3;
-    nb.0[1] = bitshl(Y.index*BF_NB_BITS + 1023 , 20);
+    nb.0[1] = wrapBitshl(Y.index*BF_NB_BITS + 1023 , 20);
     nb.0[0] = 0;
     nb.2 *= Y.sign;
     yh <-- ((x2+x1)+x0) * nb.2;
@@ -1104,13 +1103,13 @@ private computeZero(rri,quadrant,yh,yl):{
 private computeNotZero(rri,index,quadrant,yh,yl):{
     alias ZERO = 0.;
     var sah,sal,cah,cal = ZERO,ZERO,ZERO,ZERO;
-    if(index <= bitshl(64,2)) {
+    if(index <= wrapBitshl(64,2)) {
         sah = sincosTable[index+0]; /* sin(a), high part */
         sal = sincosTable[index+1]; /* sin(a), low part  */
         cah = sincosTable[index+2]; /* cos(a), high part */
         cal = sincosTable[index+3]; /* cos(a), low part  */
     }else { /* cah <= sah */
-        index = bitshl(128,2) - index;
+        index = wrapBitshl(128,2) - index;
         cah = sincosTable[index+0]; /* cos(a), high part */
         cal = sincosTable[index+1]; /* cos(a), low part  */
         sah = sincosTable[index+2]; /* sin(a), high part */
@@ -1176,7 +1175,7 @@ private ComputeTrigWithArgred(rri):{
         k = DOUBLE2INT( rri.x * INV_PIO256);
         kd = Double(k);
         quadrant = bitand(bitshr(k,7),3);
-        index = bitshl(bitand(k,127),2);
+        index = wrapBitshl(bitand(k,127),2);
         if(index == 0) {
             /* Here a large cancellation on yh+yl would be a problem, so use double-double RR */
             /* all this is exact */
@@ -1207,7 +1206,7 @@ private ComputeTrigWithArgred(rri):{
         kl = DOUBLE2LONGINT( rri.x*INV_PIO256);
         kd = Double(kl);
         quadrant = bitand(bitshr(kl,7),3);
-        index = bitshl(bitand(kl,127),2);
+        index = wrapBitshl(bitand(kl,127),2);
         if(index == 0) {
             /* Here again a large cancellation on yh+yl would be a problem,
             so we do the accurate range reduction */
