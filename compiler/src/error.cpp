@@ -313,7 +313,7 @@ void arityError(int expected, int received) {
 
 void arityError2(int minExpected, int received) {
     ostringstream sout;
-    sout << "expected atleast " << minExpected
+    sout << "expected at least " << minExpected
          << " " << valuesStr(minExpected);
     sout << ", but received " << received << " " << valuesStr(received);
     error(sout.str());
@@ -341,10 +341,10 @@ void ensureArity(MultiCValuePtr args, unsigned int size) {
 
 void arityMismatchError(int leftArity, int rightArity) {
     ostringstream sout;
-    sout << "arity mismatch. ";
-    sout << "left-side has " << leftArity << " " << valuesStr(leftArity);
-    sout << ", whereas right-side has " << rightArity
+    sout << "left side has " << leftArity << " " << valuesStr(leftArity);
+    sout << ", but right side has " << rightArity
          << " " << valuesStr(rightArity);
+    error(sout.str());
 }
 
 static string typeErrorMessage(const string &expected,

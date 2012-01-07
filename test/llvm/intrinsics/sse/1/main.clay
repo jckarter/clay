@@ -1,0 +1,5 @@
+external (llvm, "llvm.x86.sse2.sqrt.sd") x86_sqrtsd(a: Vec[Double, 2]) : Vec[Double, 2];
+
+main() {
+    println(x86_sqrtsd(Vec[Double, 2](4.0)));
+}

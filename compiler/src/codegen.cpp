@@ -3551,6 +3551,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
+
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
 
@@ -4034,7 +4035,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     case VAR : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
@@ -4081,7 +4082,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -4131,7 +4132,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     case FORWARD : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];

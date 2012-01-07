@@ -2364,7 +2364,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case VAR : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i]->type);
@@ -2382,7 +2382,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -2405,7 +2405,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case FORWARD : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
