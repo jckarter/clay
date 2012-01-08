@@ -2046,9 +2046,9 @@ private log10_rn(x:Double){
 }
 
 
-inline log_safe(x:Double) = log_rn(x);
+inline log_std(x:Double) = log_rn(x);
 
-inline log2_safe(x:Double) = log2_rn(x);
+inline log2_std(x:Double) = log2_rn(x);
 
-inline log10_safe(x:Double) = log10_rn(x);
+inline log10_std(x:Double) = log10_rn(x);
 

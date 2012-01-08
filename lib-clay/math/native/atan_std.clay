@@ -740,9 +740,9 @@ atanpi_rn(x:Double) {
 }
 
 
-inline atan_safe(x:Double) = atan_rn(x);
+inline atan_std(x:Double) = atan_rn(x);
 
-inline atanpi_safe(x:Double) = atanpi_rn(x);
+inline atanpi_std(x:Double) = atanpi_rn(x);
 
 
 

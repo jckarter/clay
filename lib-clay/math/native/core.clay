@@ -23,17 +23,6 @@ public alias M_COS_PI_4 = 0.707106781186547524400844362104849039284835937688; /*
 public alias M_COS_PI_8 = 0.923879532511286756128183189396788286822416625863; /* cos(M_PI_4*0.5) */
 public alias M_SIN_PI_8 = 0.382683432365089771728459984030398866761344562485; /* sin(M_PI_4*0.5) */
 
-define hypot;
-define fma;
-define sign;
-define fpclassify;
-define infinity?;
-define negativeInfinity?;
-define finite?;
-define nan?;
-define llround;
-define nextafter;
-alias nexttoward = nextafter;
 
 [T | Numeric?(T)]
 inline overload max(x:T,y:T) = if(x<y) y else x;
@@ -43,6 +32,9 @@ inline overload min(x:T,y:T) = if(y<x) y else x;
 
 [T] inline overload fma(a:T,b:T,c:T) = (a * b) + c;
 
+
+[T | Float?(T)]
+overload recip(x:T) = T(1)/x;
 
 [T,U | Float?(T,U)]
 overload hypot(m:T,n:U) {
@@ -109,8 +101,7 @@ public alias FP_NORMAL = 4;
 
 
 inline overload fpclassify(x:Double) --> res:Int {
-    var xdb = db_number();
-    xdb.2 = x;
+    var xdb = db_number(x);
     xdb.0[0] = bitor(xdb.0[0],bitand(xdb.0[1] , 0xfffff));
     xdb.0[1] = bitand(xdb.0[1],0x7ff00000);
     if (bitor(xdb.0[1],xdb.0[0]) == 0)
@@ -199,8 +190,7 @@ overload llround(x:Float) {
 
 overload llround (x:Double ) {
     var result = 0l;
-    var xdb = db_number();
-    xdb.2 = x;
+    var xdb = db_number(x);
     var j0 = bitand(bitshr(xdb.0[1] , 20) , 0x7ff) - 0x3ff;
     var sign = if(bitand(xdb.0[1] , 0x80000000) != 0) -1l else 1l;
     xdb.0[1] = bitor(bitand(xdb.0[1],0xfffff) ,0x100000);

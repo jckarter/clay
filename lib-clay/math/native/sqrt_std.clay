@@ -84,5 +84,5 @@ private sqrt754(x:Double) {
 }
 
 
-inline sqrt_safe(x:Double) = sqrt754(x);
+inline sqrt_std(x:Double) = sqrt754(x);
 

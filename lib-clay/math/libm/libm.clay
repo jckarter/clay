@@ -145,9 +145,9 @@ inline overload modf(x:LongDouble) {
 inline overload expm1(x:Float) = libc.expm1f(x);
 inline overload expm1(x:LongDouble) = libc.expm1l(x);
 
-inline overload log1p(x:Double) = libc.log1p(x);
-inline overload log1p(x:Float) = libc.log1pf(x);
-inline overload log1p(x:LongDouble) = libc.log1pl(x);
+inline overload logp1(x:Double) = libc.log1p(x);
+inline overload logp1(x:Float) = libc.log1pf(x);
+inline overload logp1(x:LongDouble) = libc.log1pl(x);
 
 inline overload logb(x:Double) = libc.logb(x);
 inline overload logb(x:Float) = libc.logbf(x);

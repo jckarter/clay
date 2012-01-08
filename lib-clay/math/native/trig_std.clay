@@ -1373,9 +1373,9 @@ private tan_rn(x:Double) --> r:Double {
 
 
 
-inline sin_safe(x:Double) = sin_rn(x);
+inline sin_std(x:Double) = sin_rn(x);
 
-inline cos_safe(x:Double) = cos_rn(x);
+inline cos_std(x:Double) = cos_rn(x);
 
-inline tan_safe(x:Double) = tan_rn(x);
+inline tan_std(x:Double) = tan_rn(x);
 

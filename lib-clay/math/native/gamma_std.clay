@@ -1,14 +1,8 @@
 // Gamma functions adapted from Ooura and D/Phobos
 
-import math.(abs,exp,log,sqrt,atan2,cos,sin,M_PI);
-import numbers.floats.floats.(nan);
+import math.*;
+import numbers.floats.(nan);
 
-define tgamma;
-define lgamma;
-define igamma;
-define igammac;
-
-public alias gamma = tgamma;
 
 maxGamma(static Float) = 35.04f;
 overload maxGamma(static Double) = 171.6025;
