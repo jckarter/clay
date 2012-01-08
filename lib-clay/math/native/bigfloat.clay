@@ -478,7 +478,7 @@ private do_sub(result, x, y){
                     for(i in reverseRange(BF_NB_WORDS-1,0)){
                         var s = Int(x.h_word[i]) - y.h_word[i] - carry;
                         carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                        res[i] = bitand(s,BF_RADIX) + s;
+                        res[i] = wrapAdd((bitand(s,BF_RADIX)), s);
                     }
                 }
                 else {
@@ -486,7 +486,7 @@ private do_sub(result, x, y){
                     for(i in reverseRange((BF_NB_WORDS-1),0)){
                         var s = (- Int(x.h_word[i]) + y.h_word[i] - carry);
                         carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                        res[i] = (bitand(s,BF_RADIX) + s);
+                        res[i] = wrapAdd((bitand(s,BF_RADIX)), s);
                     }
                 }
             }
@@ -498,11 +498,11 @@ private do_sub(result, x, y){
             var s,i,j = 0,(BF_NB_WORDS-1),(BF_NB_WORDS-1)-dif;
             while(i >= 0){
                 if(j >= 0)
-                    s = (x.h_word[i] - y.h_word[j] - carry);
+                    s = wrapSubtract(wrapSubtract(Int(x.h_word[i]) , Int(y.h_word[j])) , carry);
                 else
                     s = (x.h_word[i] - carry);
                 carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                res[i] = (bitand(s,BF_RADIX) + s);
+                res[i] = wrapAdd(Int(bitand(s,BF_RADIX)), s);
                 dec(i);
                 dec(j);
             }

@@ -672,14 +672,14 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 // Approximation error lower than  2^(-133)
 
 [T | BigFloat?(T)]
-overload sin(x:T) --> result:T {
+private sin_bf(x:T) --> result:T {
     var x2 = square(x);
     var res = sin_bf_poly[0] * x2;
     for(i in range(1,(DEGREE_SIN_BF-1)/2)){ /* Last coeff is one, not read from the file*/
-        res = sin_bf_poly[i] + res;
-        res = res * x2;
+        res += sin_bf_poly[i];
+        res *= x2;
     }
-    res = res * x;
+    res *= x;
     result <-- x + res;
 }
 
@@ -687,35 +687,35 @@ overload sin(x:T) --> result:T {
 /* Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
    Approximation error lower than  2^(-128) */
 [T | BigFloat?(T)]
-overload cos(x:T) --> result:T {
+private cos_bf(x:T) --> result:T {
     var x2 = square(x);
     var res = cos_bf_poly[0] * x2;
     for(i in range(1,DEGREE_COS_BF/2)){
-        res = cos_bf_poly[i] + res;
-        res = res * x2;
+        res += cos_bf_poly[i];
+        res *= x2;
     }
     /* The last coefficient is exactly one and is not read from the file */
     result <-- res + bf_one;
 }
 
 
-bf_sin_rn(x:Double) --> resd:Double {
+private bf_sin_rn(x:Double) --> resd:Double {
     var sc2 = BigFloat();
     var sc1 = BigFloat(x);
     var N = rem_pio2_bf(sc2, sc1);
     N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
     switch (N)
         case (0){
-            resd <-- Double(sin(sc2));
+            resd <-- Double(sin_bf(sc2));
         }
         case (1){
-            resd <-- Double(cos(sc2));
+            resd <-- Double(cos_bf(sc2));
         }
         case (2){
-            resd <-- -Double(sin(sc2));
+            resd <-- -Double(sin_bf(sc2));
         }
         case (3){
-            resd <-- -Double(cos(sc2));
+            resd <-- -Double(cos_bf(sc2));
         }
         else {
             printWithSprintf(stderr,"ERROR: %d is not a valid value in s_scs_sin \n", N);
@@ -723,23 +723,23 @@ bf_sin_rn(x:Double) --> resd:Double {
         }
 }
 
-bf_cos_rn(x:Double) --> resd:Double {
+private bf_cos_rn(x:Double) --> resd:Double {
     var sc2 = BigFloat();
     var sc1 = BigFloat(x);
     var N = rem_pio2_bf(sc2, sc1);
     N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
     switch (N)
         case (0){
-            resd <-- Double(cos(sc2));
+            resd <-- Double(cos_bf(sc2));
         }
         case (1){
-            resd <-- -Double(sin(sc2));
+            resd <-- -Double(sin_bf(sc2));
         }
         case (2){
-            resd <-- -Double(cos(sc2));
+            resd <-- -Double(cos_bf(sc2));
         }
         case (3){
-            resd <-- Double(sin(sc2));
+            resd <-- Double(sin_bf(sc2));
         }
         else{
             printWithSprintf(stderr,"ERROR: %d is not a valid value in s_cos \n", N);
@@ -748,7 +748,7 @@ bf_cos_rn(x:Double) --> resd:Double {
 }
 
 
-overload tan(x) --> result:BigFloat {
+private tan_bf(x) --> result:BigFloat {
     var ybf = BigFloat();
     var xbf = BigFloat(x);
     var N = rem_pio2_bf(ybf, xbf); 	/* x (=sc2) is in [-Pi/4,Pi/4] */
@@ -770,7 +770,7 @@ overload tan(x) --> result:BigFloat {
     }
 }
 
-bf_tan_rn(x:Double) : Double = Double(tan(x));
+private bf_tan_rn(x:Double) : Double = Double(tan_bf(x));
 
 
 
