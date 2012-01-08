@@ -54,7 +54,12 @@ else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
 
+set(ENABLE_PCH False CACHE BOOL
+    "Use precompiled headers when building the compiler. (experimental)")
+
+if(ENABLE_PCH)
 precompile_header(clay.hpp SOURCES pch.cpp "${CLAY_CXXFLAGS}")
+endif(ENABLE_PCH)
 
 add_executable(clay ${SOURCES})
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
