@@ -1,0 +1,67 @@
+[..T] record IOMonad[..T]
+(
+    force: Lambda[[],[..T]]
+);
+
+define force;
+[..T] overload force (a:IOMonad[..T]) 
+{
+    return ..a.force();
+}
+[..T] overload force (a:IOMonad[IOMonad[..T]])
+{
+    return ..force(..a.force());
+}
+
+define Monad;
+[A,B] overload Monad(a:A, b:B) = b(a);
+
+[..T, C] overload Monad(a:IOMonad[..T], c:C)
+{
+    var r = IOMonad[..Type(..c(..force(a)))]();
+
+    r.force = Lambda[[],[..Type(..c(..force(a)))]](() => {
+        return ..c(..force(a));
+    });
+    return r;
+}
+[C] overload Monad(a:IOMonad[], c:C)
+{
+    var r = IOMonad[..Type(..c())]();
+
+    r.force = Lambda[[],[..Type(..c())]](() => {
+        force(a);
+        return ..c();
+    });
+    return r;
+}
+
+printlnA(str:String)
+{
+    return IOMonad[](Lambda[[],[]](() => {
+        println(str);
+    }));
+}
+readLineA()
+{
+    return IOMonad[String](Lambda[[],[String]](() -> {
+        return String("o");
+    }));
+}
+
+readMyName()
+{
+    with l = readLineA();
+    return l + "k";
+}
+
+whatsMyNameHuh()
+{
+    with foobar = readMyName();
+    with printlnA(foobar);
+}
+
+main()
+{
+    force(whatsMyNameHuh());
+}
