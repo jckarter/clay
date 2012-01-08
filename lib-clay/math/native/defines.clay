@@ -55,8 +55,8 @@ define sin;
 define cos;
 define tan;
 define cot;
-define sinpi;
-define cospi;
+// define sinpi;
+// define cospi;
 
 define asin;
 define acos;

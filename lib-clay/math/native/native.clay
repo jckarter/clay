@@ -31,8 +31,6 @@ public import math.native.bessel_std.*;
 [T | Float?(T)] inline overload expm1(x:T) = expm1_std(x);
 [T | Float?(T)] inline overload sin(x:T) = sin_std(x);
 [T | Float?(T)] inline overload cos(x:T) = cos_std(x);
-[T | Float?(T)] inline overload sinpi(x:T) = sin_std(x*M_PI);
-[T | Float?(T)] inline overload cospi(x:T) = cos_std(x*M_PI);
 [T | Float?(T)] inline overload tan(x:T) = tan_std(x);
 [T,U | Float?(T,U)] inline overload pow(x:T,y:U) = pow_std(x,y);
 [T | Float?(T)] inline overload atan(x:T) = atan_std(x);
