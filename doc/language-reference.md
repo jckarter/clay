@@ -18,7 +18,7 @@ BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`.
 
 ### Source encoding
 
-Clay source code is stored as a stream of ASCII text. (However, anything other ASCII is currently treated as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
+Clay source code is stored as a stream of ASCII text. (Anything other than ASCII is currently passed through as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
 
 ### Whitespace
 
@@ -90,9 +90,7 @@ Clay identifiers begin with an ASCII letter character, underscore (`_`), or ques
     // Examples of valid identifiers
     a a1 a_1 abc123 a? ?a ?
 
-### Literal tokens
-
-#### Integers
+### Integer literals
 
     # Grammar
     IntToken -> "0x" HexDigits
@@ -101,12 +99,12 @@ Clay identifiers begin with an ASCII letter character, underscore (`_`), or ques
     HexDigits -> /([0-9A-Fa-f]_*)+/
     DecimalDigits -> /([0-9]_*)+/
 
-Integer literals may be expressed in decimal, or in hexadecimal prefixed by `0x`. Either form may include any number of underscores after any digit for human readability purposes. Underscores have no effect on the value of the literal.
+Integer literals may be expressed in decimal, or in hexadecimal prefixed by `0x`. Either form may include any number of underscores after any digit for human readability purposes (excluding the leading `0` in the `0x` prefix). Underscores have no effect on the value of the literal.
 
     // Examples of integer literals
     0 1 23 0x45abc 1_000_000 1_000_000_ 0xFFFF_FFFF
 
-#### Floating-point numbers
+### Floating-point literals
 
     # Grammar
     FloatToken -> "0x" HexDigits ("." HexDigits?)? /[pP] [+-]?/ DecimalDigits
@@ -119,7 +117,7 @@ Like integers, floating-point literals also come in decimal and hexadecimal form
     // Examples of hexadecimal floating-point literals
     0x1p0 0x1.0p0 0x1.0000_0000_0000_1p1_023
 
-#### Characters
+### Character literals
 
     # Grammar
     CharToken -> "'" CharChar "'"
@@ -146,7 +144,7 @@ Character literals represent a single ASCII character. Syntactically, they consi
     // Examples of character literals
     'x'  ' '  '\n'  '\''  '\x7F'
 
-#### Strings
+### String literals
 
     # Grammar
     StringToken -> "\"" StringChar* "\""
@@ -188,12 +186,10 @@ A clay module corresponds to a single source file. Source files are laid out in 
 
     # Grammar
     Import -> Visibility? "import" DottedName ImportSpec? ";"
-    
+
     ImportSpec -> "as" Identifier
                 | "." "(" comma_list(ImportedItem) ")"
                 | "." "*"
-
-    Visibility -> "public" | "private"
 
     DottedName -> Identifier ("." Identifier)*
 
@@ -325,13 +321,49 @@ Such ambiguities may of course also be avoided by using `as` to alias the confli
     # Grammar
     ModuleDeclaration -> "in" DottedName ("(" ExprList ")") ";"
 
+A module may optionally declare its name using the `in` keyword.
+
+    // Example
+    import foo.bar;
+
+    in foo.bas;
+
+Such a declaration must appear after any [import declarations] and before any [top-level LLVM] or other [top-level definitions]. The module declaration may optionally include a parenthesized list of module attributes. If no attribute list is provided, it is equivalent to the empty list.
+
+    // Example
+    in foo.bas ();
+    in foo.bas (Float32);
+
+The module attribute list can be an arbitrary multi-value expression, which can reference any imported symbols but not symbols defined within the module itself.
+
+    // Example
+    // foo.clay
+    GraphicsModuleAttributes() = Float32, FastMath;
+
+    // bar.clay
+    import foo;
+
+    in bar (..foo.GraphicsModuleAttributes());
+
 ### Top-level LLVM
 
     # Grammar
     TopLevelLLVM -> LLVMBlock
     LLVMBlock -> "__llvm__" "{" /.*/ "}"
 
-A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the resulting LLVM bitcode, and may contain function declarations or other global declarations needed by `__llvm__` blocks in individual functions. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
+A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations or other global declarations needed by `__llvm__` blocks in individual functions containing [inline LLVM]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
+
+    // Example
+    in traps;
+    // Declare the llvm.trap intrinsic for use by the trap() function.
+    __llvm__ {
+    declare void @llvm.trap()
+    }
+
+    trap() __llvm__ {
+        call void @llvm.trap()
+        ret i8* null
+    }
 
 ### Top-level definitions
 
@@ -354,28 +386,85 @@ Top-level definitions make up the meat of Clay source code and come in three gen
 * [Function definitions]
 * [Global value definitions]
 
-Clay uses a two-pass loading mechanism. Modules are imported and their namespaces populated in one pass before any definitions are visited. Forward and circular references are thus possible without requiring forward declarations.
+Clay uses a two-pass loading mechanism. Modules are imported and their namespaces populated in one pass before any definitions are evaluated. Forward and circular references are thus possible without requiring forward declarations.
 
     // Example
-    a() { b(); }
-    b() { a(); }
+    // Mutually recursive functions
+    hurd() { hird(); }
+    hird() { hurd(); }
 
-    record A (b:Pointer[B]);
-    record B (a:Pointer[A]);
+    // Mutually recursive record types
+    record Ping (pong:Pointer[Pong]);
+    record Pong (ping:Pointer[Ping]);
+
+Most top-level definitions in Clay share common syntactic features.
+
+#### Pattern guards
+
+    # Grammar
+    PatternGuard -> "[" comma_list(PatternVar) ("|" Expression)? "]"
+    PatternVar -> Identifier | ".." Identifier
+
+Most definition forms in Clay can be genericized. Pattern guards provide the means for declaring and controlling generic behavior. A simple pattern guard declares zero or more pattern variable names enclosed in brackets, which can be used as generic types or as type parameters in the subsequent definition.
+
+    // Example
+    // Define printTwice for all types T
+    [T]
+    printTwice(file:File, x:T) {
+        printTo(file, x);
+        printTo(file, x);
+    }
+
+    // Define the record type Point[T] for all types T
+    [T]
+    record Point[T] (x:T, y:T);
+
+    // Define printPoint for all Stream types, and Point[T] for all T
+    [Stream, T]
+    printPoint(s:Stream, p:Point[T]) {
+        printTo(s, "(", p.x, ", ", p.y, ")");
+    }
+
+The list of declared pattern variables may optionally be followed by a `|` character and predicate expression to constrain the domain of possible values for the variables in the following definition. The definition will only apply for values of the given pattern variables if the given predicate evaluates to true.
+
+    // Example
+    // Define the record type Point[T] for all types T where `Numeric?(T)` is true
+    [T | Numeric?(T)]
+    record Point[T] (x:T, y:T);
+
+A predicate may also appear in a pattern guard without any pattern variables, in order to conditionalize the following definition on compiler flags or platform attributes.
+
+    // Example
+    platformCheck() {}
+
+    [| TypeSize(Pointer[T]) < 4]
+    overload platformCheck() { error("Time for a new computer"); }
+
+#### Visibility modifiers
+
+    # Grammar
+    Visibility -> "public" | "private"
+
+Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations]). Definitions without an explicit visibility default to `public`.
+
+Visibility modifiers are not allowed on definitions that modify existing symbols instead of creating new ones. In forms that do admit a visibility modifier, it must appear after the pattern guard (if any) but before the subsequent definition.
 
 ## Type definitions
 
-Clay provides three different kinds of user-defined types:
+Clay provides four different kinds of user-defined types:
 
 * [Records]
 * [Variants]
 * [Enumerations]
-
-XXX everything below this needs documentation
+* [Lambda types]
 
 ### Records
 
-    Record -> PatternGuard? Visibility? "record" TypeName RecordBody
+    # Grammar
+    Record -> PatternGuard? Visibility? "record" TypeDefinitionName RecordBody
+
+    TypeDefinitionName -> Identifier PatternVars?
+    PatternVars -> "[" comma_list(PatternVar) "]"
 
     RecordBody -> NormalRecordBody
                 | ComputedRecordBody
@@ -383,21 +472,129 @@ XXX everything below this needs documentation
     NormalRecordBody -> "(" comma_list(RecordField) ")" ";"
     ComputedRecordBody -> "=" comma_list(Expression) ";"
 
-    TypeName -> Identifier PatternVars?
-    PatternVars -> "[" comma_list(Identifier) "]"
-
     RecordField -> Identifier TypeSpec
     TypeSpec -> ":" Pattern
 
+Record types are general-purpose aggregates. In memory, records are laid out in a manner compatible with the equivalent `struct` definition in C. In the simplest form, a record definition consists of the keyword `record` followed by the record's name, and a list of `fieldName: Type` pairs, separated by commas and enclosed in parens.
+
+    // Example
+    record Point (x:Int, y:Int);
+
+A record type may also be parameterized with one or more pattern variables:
+
+    // Example
+    [T]
+    record Point[T] (x:T, y:T);
+
+    [T | Float?(T)]
+    record FloatPoint[T] (x:T, y:T);
+
+If no predicate expression is needed, the pattern guard is optional; the named parameters are assumed to be unbounded variables rather than existing identifiers.
+
+    // Example
+    record Point[T] (x:T, y:T); // [T] guard is assumed
+
+More complex record types can be derived using a computed body. If the type name is followed by an `=` token, the following expression is evaluated to determine the layout of the record. The expression must evaluate to a tuple of pairs, each pair containing a static string field name and a field type.
+
+    // Example
+    // Equivalent to the non-computed Point[T] definition:
+    record Point[T] = [[#"x", T], [#"y", T]];
+
+    // Point with our own coordinate names
+    // e.g. p:Point[Complex, #"zw"] would have Complex-typed fields p.z and p.w
+    record PointWithCoordinates[T, xy] = [[xy.0, T], [xy.1, T]];
+
 ### Variants
 
-    Variant -> PatternGuard? Visibility? "variant" TypeName ("(" ExprList ")")? ";"
+    # Grammar
+    Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
 
+Variant types provide a "discriminated union" type. A variant value can contain a value of any of the type's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions]. The variant's instance types are defined after the variant name in a parenthesized list:
+
+    // Example
+    variant Fruit (Apple, Orange, Banana);
+
+Like record types, variant types may be parameterized.
+
+    // Example
+    [C | Color?(C)]
+    variant Fruit[C] (Apple[C], Orange[C], Banana[C]);
+
+Also like record types, the pattern guard is optional if no predicate is needed; the specified parameters are taken as unbounded pattern variables rather than existing identifiers.
+
+    // Example
+    variant Maybe[T] (Nothing, T); // [T] pattern guard implied
+    variant Either[T, U] (T, U); // [T, U] pattern guard implied
+
+The variant instance list may be an arbitrary multiple-value expression. It is evaluated to derive the set of instances.
+
+    // Example
+    private RainbowTypes(Base) =
+        Base[Red], Base[Orange], Base[Yellow], Base[Green],
+        Base[Blue], Base[Indigo], Base[Violet];
+
+    // Fruit will admit as instances Apple[Red], Banana[Violet], etc.
+    variant Fruit (..RainbowTypes(Apple), ..RainbowTypes(Banana));
+
+#### Extending variants
+
+    # Grammar
     Instance -> PatternGuard? "instance" Pattern "(" ExprList ")" ";"
+
+Variant types are open and can be extended using the `instance` keyword.
+
+    // Example
+    variant Exception (); // type Exception starts with no members
+
+    // introduce RangeError and TypeError as instances of Exception
+    record RangeError (lowerBound:Int, upperBound:Int, attemptedValue:Int);
+    record TypeError (expectedTypeName:String, attemptedTypeName:String);
+    instance Exception (RangeError, TypeError);
+
+Parameterized variant types may be extended given particular parameter values or over
+all or some parameter values with the use of pattern guards:
+
+    // Example
+    [C | Color?(C)]
+    variant Fruit[C] ();
+
+    // Extend Fruit[Yellow] to contain Banana
+    instance Fruit[Yellow] (Banana);
+
+    // Extend Fruit[Red] and Fruit[Green] to contain Apple
+    [C | inValues?(C, Red, Green)]
+    instance Fruit[C] (Apple);
+
+    // Extend all Fruit[C] to contain Berry[C]
+    [C]
+    instance Fruit[C] (Berry[C]);
+
+`instance` definitions bind to variant types by [pattern matching] the name in the instance definition to each variant type name. Unlike `variant` forms, the pattern guard is not optional when extending a variant generically; without a pattern guard, `instance Variant[T]` will attempt to extend only the type `Variant[T]` for the concrete parameter value `T` (which would need to be defined for the form to be valid) rather than for all values `T`.
 
 ### Enumerations
 
+    # Grammar
     Enumeration -> Visibility? "enum" Identifier "(" comma_list(Identifier) ")" ";"
+
+Enumerations define a new type, values of which may contain one of a given set of symbolic values. In addition to the type name, the symbol names are also defined in the current module as constants of the newly-created type. The symbol names share visibility with the parent type.
+
+    // Example
+    enum ThreatLevel (Green, Blue, Yellow, Orange, Red, Midnight);
+
+    // SecurityLevel and all of its values are private
+    private enum SecurityLevel (
+        Angel_0A, Archangel_1B,
+        Principal_2C, Power_3D,
+        Virtue_4E, Domination_5F,
+        Throne_6G, Cherubic_7H,
+        Seraphic_8X,
+    );
+
+Unlike record or variant types, enumeration types cannot currently be parameterized and do not allow pattern guards.
+
+### Lambda types
+
+Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions] are used.
 
 ## Function definitions
 
@@ -612,12 +809,9 @@ XXX everything below this is out of date
 
     PairExpr -> identifier ":" Expression
 
-## Patterns and guards
+## Pattern matching
 
     Pattern -> AtomicPattern PatternSuffix?
     AtomicPattern -> IntLiteral
                    | NameRef
     PatternSuffix -> "[" comma_list(Pattern) "]"
-
-    PatternGuard -> "[" comma_list(PatternVariable) ("|" Expression)? "]"
-
