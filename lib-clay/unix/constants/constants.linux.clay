@@ -205,3 +205,12 @@ WCOREDUMP(x) = bitand(Int(x), WCOREFLAG) != 0;
 W_EXITCODE(ret, sig) = bitor(bitshl(Int(ret), 8), Int(sig));
 W_STOPCODE(sig) = bitor(bitshl(Int(sig), 8), _WSTOPPED);
 
+//
+// clock ids for clock_gettime() etc.
+//
+
+alias CLOCK_REALTIME            = 0;
+alias CLOCK_MONOTONIC           = 1;
+alias CLOCK_PROCESS_CPUTIME_ID  = 2;
+alias CLOCK_THREAD_CPUTIME_ID   = 3;
+alias CLOCK_MONOTONIC_RAW       = 4;
