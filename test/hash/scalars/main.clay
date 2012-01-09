@@ -1,0 +1,76 @@
+import numbers.floats.(infinity);
+
+main() {
+    // just make sure hash() works without crashing or raising spurious overflows
+    hash(true);
+    hash(false);
+
+    hash(0);
+    hash(-1);
+    hash(1);
+    hash(Least(Int));
+    hash(Greatest(Int));
+
+    hash(0u);
+    hash(1u);
+    hash(Least(UInt));
+    hash(Greatest(UInt));
+
+    hash(0);
+    hash(-1l);
+    hash(1l);
+    hash(Least(Int64));
+    hash(Greatest(Int64));
+
+    hash(0ul);
+    hash(1ul);
+    hash(Least(UInt64));
+    hash(Greatest(UInt64));
+
+    hash(0.0f);
+    hash(LeastPositive(Float32));
+    hash(LeastPositiveNormalized(Float32));
+    hash(GreatestPositiveFinite(Float32));
+    hash(infinity(Float32));
+    hash(-0.0f);
+    hash(-LeastPositive(Float32));
+    hash(-LeastPositiveNormalized(Float32));
+    hash(-GreatestPositiveFinite(Float32));
+    hash(-infinity(Float32));
+
+    hash(0.0fj);
+    hash(LeastPositive(Imag32));
+    hash(LeastPositiveNormalized(Imag32));
+    hash(GreatestPositiveFinite(Imag32));
+    hash(infinity(Imag32));
+    hash(-0.0fj);
+    hash(-LeastPositive(Imag32));
+    hash(-LeastPositiveNormalized(Imag32));
+    hash(-GreatestPositiveFinite(Imag32));
+    hash(-infinity(Imag32));
+
+    hash(0.0);
+    hash(293930.0);
+    hash(LeastPositive(Float64));
+    hash(LeastPositiveNormalized(Float64));
+    hash(GreatestPositiveFinite(Float64));
+    hash(infinity(Float64));
+    hash(-0.0);
+    hash(-LeastPositive(Float64));
+    hash(-LeastPositiveNormalized(Float64));
+    hash(-GreatestPositiveFinite(Float64));
+    hash(-infinity(Float64));
+
+    hash(0.0j);
+    hash(LeastPositive(Imag64));
+    hash(LeastPositiveNormalized(Imag64));
+    hash(GreatestPositiveFinite(Imag64));
+    hash(infinity(Imag64));
+    hash(-0.0j);
+    hash(-LeastPositive(Imag64));
+    hash(-LeastPositiveNormalized(Imag64));
+    hash(-GreatestPositiveFinite(Imag64));
+    hash(-infinity(Imag64));
+
+    println("ok");
+}

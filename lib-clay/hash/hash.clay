@@ -1,5 +1,6 @@
 
 import vectors.generic.*;
+import numbers.floats.(floatBits);
 
 
 
@@ -7,18 +8,40 @@ import vectors.generic.*;
 // booleans, integers, floats, pointers, characters
 //
 
-inline overload hash(x:Bool) = SizeT(x);
+[| TypeSize(SizeT) == 4]
+inline overload hash(x:Bool) = if (x) SizeT(1235232835u) else SizeT(3786054923u);
+[| TypeSize(SizeT) == 8]
+inline overload hash(x:Bool) =
+    if (x) SizeT(2068536678500253190ul)
+    else SizeT(12193288086786919936ul);
 
 [T | Integer?(T)]
-inline overload hash(x:T) = SizeT(x);
+inline overload hash(x:T) = wrapCast(SizeT, x);
 
-[T | Float?(T)]
-inline overload hash(x:T) = SizeT(wrapMultiply(PtrInt(x), 10000));
+inline overload hash(x:Float32) =
+    if (x == 0.0f) SizeT(0)
+    else wrapCast(SizeT, floatBits(x));
+[| TypeSize(SizeT) == 8]
+inline overload hash(x:Float64) =
+    if (x == 0.0f) SizeT(0)
+    else wrapCast(SizeT, floatBits(x));
+[| TypeSize(SizeT) == 4]
+inline overload hash(x:Float64) = wrapCast(SizeT, bitshr(floatBits(x), 32));
+
+inline overload hash(x:Float80) =
+    wrapCast(SizeT, wrapAdd(floatBits(x).mantissa, floatBits(x).exponent));
+
+[T | Imaginary?(T)]
+inline overload hash(z:T) = hash(imagValue(z));
+
+[T | Complex?(T)]
+inline overload hash(z:T) = wrapAdd(
+    hash(real(z)), wrapMultiply(hash(imagValue(z)), SizeT(31321)));
 
 [T]
-inline overload hash(x:Pointer[T]) = SizeT(x);
+inline overload hash(x:Pointer[T]) = bitcast(x, SizeT);
 
-inline overload hash(x:Char) = SizeT(x);
+inline overload hash(x:Char) = wrapCast(SizeT, x);
 
 
 
