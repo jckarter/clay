@@ -45,6 +45,9 @@ record Node (
     item : Int,
 );
 
+// Nodes get initialized by newNode
+inline overload Node() = uninitializedUnsafe(Node);
+
 newNode(pool, item) {
     return poolAlloc(pool, Node(null(Node), null(Node), item));
 }
@@ -54,8 +57,8 @@ makeTree(_item, _depth, pool){
     var node = newNode(pool, item);
     if (depth > 0) {
         node^.left  = makeTree(2*item-1, depth-1, pool);
-        node^.right = makeTree(2*item,   depth-1, pool);       
-    } 
+        node^.right = makeTree(2*item,   depth-1, pool);
+    }
     return node;
 }
 
@@ -70,14 +73,18 @@ checksumTree(_node) {
 main(args) {
     var minDepth = 4;
 
-    var poolSize = 1000000;
+    if (size(args) != 2) {
+        println("usage: ", args[0], " <n>");
+        return 2;
+    }
+
+    var maxDepth = Int(args[1]);
+    maxDepth = max(maxDepth, minDepth+2);
+
+    var poolSize = max(SizeT(1000000), bitshl(SizeT(1), maxDepth + 2));
 
     var longLivedPool = Pool[Node](poolSize);
     var shortTermPool = Pool[Node](poolSize);
-
-    assert(size(args) == 2);
-    var maxDepth = Int(args[1]);
-    maxDepth = max(maxDepth, minDepth+2);
 
     var stretchDepth = maxDepth + 1;
     println("depth = ", stretchDepth);
@@ -88,7 +95,7 @@ main(args) {
 
     var longLivedTree = makeTree(0, maxDepth, longLivedPool);
 
-    var depth = minDepth; 
+    var depth = minDepth;
     while (depth <= maxDepth) {
         var iterations = bitshl(1, (maxDepth - depth + minDepth));
         var total = 0;
@@ -103,4 +110,5 @@ main(args) {
     }
 
     println("long lived tree of depth ", maxDepth, "\t check: ", checksumTree(longLivedTree));
+    return 0;
 }
