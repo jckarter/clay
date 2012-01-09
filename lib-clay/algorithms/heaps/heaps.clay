@@ -43,11 +43,13 @@ popHeap(first_, last_, result_, compareLess?) {
 pushHeap(first_, holeIndex_, topIndex_, rvalue value_, compareLess?) {
     var first, holeIndex, topIndex, value =
         first_, holeIndex_, topIndex_, move(value_);
-    var parent = (holeIndex - 1) / 2;
-    while ((holeIndex > topIndex) and compareLess?((first + parent)^, value)) {
+    while (holeIndex > topIndex) {
+        var parent = (holeIndex - 1) / 2;
+        if (not compareLess?((first + parent)^, value)) {
+            break;
+        }
         (first + holeIndex)^ = move((first + parent)^);
         holeIndex = parent;
-        parent = (holeIndex - 1) / 2;
     }
     (first + holeIndex)^ = move(value);
 }

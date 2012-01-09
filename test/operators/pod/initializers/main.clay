@@ -1,0 +1,24 @@
+import printer.formatter.(repr);
+
+enum SomeEnum (ZERO, A1, B2, C3, D4);
+
+main() {
+    println(Bool());
+    println(repr(Char()));
+    println(Int8());
+    println(Int16());
+    println(Int32());
+    println(Int64());
+    println(UInt8());
+    println(UInt16());
+    println(UInt32());
+    println(UInt64());
+    println(Float32());
+    println(Float64());
+    println(Imag32());
+    println(Imag64());
+    println(Complex32());
+    println(Complex64());
+    println(SomeEnum());
+    println(Tuple[Bool,Int16,Float64]());
+}

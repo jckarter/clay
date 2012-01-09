@@ -110,7 +110,7 @@ Integer literals may be expressed in decimal, or in hexadecimal prefixed by `0x`
     FloatToken -> "0x" HexDigits ("." HexDigits?)? /[pP] [+-]?/ DecimalDigits
                 | DecimalDigits ("." DecimalDigits?)? (/[eE] [+-]?/ DecimalDigits)?
 
-Like integers, floating-point literals also come in decimal and hexadecimal forms. A floating-point decimal literal is differentiated from an integer literal by including either a decimal point `.` followed by zero or more decimal digits, an exponential marker `e` or `E` followed by an optional sign and a required decimal value indicating the decimal exponent, or both. Floating-point heaxadecimal literals likewise contain an optional hexadecimal point (also `.`) followed by zero or more hex digits, but require an exponential marker `p` or `P` followed by an optional sign and required decimal value indicating the binary exponent. Like integer literals, floating-point literals may also include underscores after any digit in the integer, mantissa, or exponent for human readability.
+Like integers, floating-point literals also come in decimal and hexadecimal forms. A floating-point decimal literal is differentiated from an integer literal by including either a decimal point `.` followed by zero or more decimal digits, an exponential marker `e` or `E` followed by an optional sign and a required decimal value indicating the decimal exponent, or both. Floating-point hexadecimal literals likewise contain an optional hexadecimal point (also `.`) followed by zero or more hex digits, but require an exponential marker `p` or `P` followed by an optional sign and required decimal value indicating the binary exponent. Like integer literals, floating-point literals may also include underscores after any digit in the integer, mantissa, or exponent for human readability.
 
     // Examples of decimal floating-point literals
     1. 1.0 1e0 1e-2 0.000_001 1e1_000
@@ -397,7 +397,7 @@ Clay uses a two-pass loading mechanism. Modules are imported and their namespace
     record Ping (pong:Pointer[Pong]);
     record Pong (ping:Pointer[Ping]);
 
-Most top-level definitions in Clay share common syntactic features.
+Most top-level definitions in Clay share common syntactic features:
 
 #### Pattern guards
 
@@ -437,8 +437,10 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     // Example
     platformCheck() {}
 
-    [| TypeSize(Pointer[T]) < 4]
+    [| TypeSize(Pointer[Int]) < 4]
     overload platformCheck() { error("Time for a new computer"); }
+
+XXX variadic pattern guards
 
 #### Visibility modifiers
 
@@ -504,12 +506,24 @@ More complex record types can be derived using a computed body. If the type name
     // e.g. p:Point[Complex, #"zw"] would have Complex-typed fields p.z and p.w
     record PointWithCoordinates[T, xy] = [[xy.0, T], [xy.1, T]];
 
+Record definitions currently do not directly allow for template specialization. This can be worked around using an overloaded function as a computed record body.
+
+    // Example
+    record Point[T] = PointBody(T);
+
+    private define PointBody;
+    [T | T != Double]
+    overload PointBody(static T) = [[#"coords", Array[T, 2]]];
+    overload PointBody(static Double) = [[#"coords", Vec[Double, 2]]];
+
 ### Variants
 
     # Grammar
     Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
 
-Variant types provide a "discriminated union" type. A variant value can contain a value of any of the type's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions]. The variant's instance types are defined after the variant name in a parenthesized list:
+Variant types provide a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions].
+
+Syntactically, the variant's instance types are defined after the variant name in a parenthesized list.
 
     // Example
     variant Fruit (Apple, Orange, Banana);
@@ -590,13 +604,15 @@ Enumerations define a new type, values of which may contain one of a given set o
         Seraphic_8X,
     );
 
-Unlike record or variant types, enumeration types cannot currently be parameterized and do not allow pattern guards.
+Unlike record or variant types, enumeration types cannot currently be parameterized, and their definitions do not allow pattern guards.
 
 ### Lambda types
 
 Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions] are used.
 
 ## Function definitions
+
+XXX everything after this needs docs
 
     Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
 

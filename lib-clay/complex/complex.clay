@@ -33,6 +33,11 @@ inline imag(z:C) = im(z)^;
 [C | Complex?(C)]
 inline imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
 
+[I | Imaginary?(I)]
+inline overload imag(z:I) = z;
+inline overload imagValue(z:Imag32) = numericConvert(Float32, z);
+inline overload imagValue(z:Imag64) = numericConvert(Float64, z);
+inline overload imagValue(z:Imag80) = numericConvert(Float80, z);
 
 inline Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
 inline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}

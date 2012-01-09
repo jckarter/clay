@@ -244,8 +244,8 @@ inline zero?(x:T) = x == T(0);
 
 [A,B | Numeric?(A,B)]
 inline overload add(a:A, b:B) =
-    numericAdd(toBiggerNumericType(A, B, a),
-               toBiggerNumericType(A, B, b));
+    add(toBiggerNumericType(A, B, a),
+        toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
 inline overload add(a:A, b:A) = numericAdd(a, b);
@@ -253,8 +253,8 @@ inline overload add(a:A, b:A) = numericAdd(a, b);
 
 [A,B | Numeric?(A,B)]
 inline overload subtract(a:A, b:B) =
-    numericSubtract(toBiggerNumericType(A, B, a),
-                    toBiggerNumericType(A, B, b));
+    subtract(toBiggerNumericType(A, B, a),
+             toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
 inline overload subtract(a:A, b:A) = numericSubtract(a, b);
@@ -262,8 +262,8 @@ inline overload subtract(a:A, b:A) = numericSubtract(a, b);
 
 [A,B | Numeric?(A,B)]
 inline overload multiply(a:A, b:B) =
-    numericMultiply(toBiggerNumericType(A, B, a),
-                    toBiggerNumericType(A, B, b));
+    multiply(toBiggerNumericType(A, B, a),
+             toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
 inline overload multiply(a:A, b:A) = numericMultiply(a, b);
@@ -271,8 +271,8 @@ inline overload multiply(a:A, b:A) = numericMultiply(a, b);
 
 [A,B | Numeric?(A,B)]
 inline overload divide(a:A, b:B) =
-    numericDivide(toBiggerNumericType(A, B, a),
-                  toBiggerNumericType(A, B, b));
+    divide(toBiggerNumericType(A, B, a),
+           toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
 inline overload divide(a:A, b:A) = numericDivide(a, b);
@@ -280,8 +280,8 @@ inline overload divide(a:A, b:A) = numericDivide(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload remainder(a:A, b:B) =
-    integerRemainder(toBiggerNumericType(A, B, a),
-                     toBiggerNumericType(A, B, b));
+    remainder(toBiggerNumericType(A, B, a),
+              toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
 inline overload remainder(a:A, b:A) = integerRemainder(a, b);
@@ -512,4 +512,3 @@ inline wrapMinus(a:A) : A = numericNegate(a, b);
 
 [A, B | Integer?(A) and Numeric?(B)]
 inline wrapCast(static A, b:B) : A = numericConvert(A, b);
-
