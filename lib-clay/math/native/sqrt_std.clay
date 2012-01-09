@@ -1,7 +1,6 @@
 
 import math.native.exact.*;
-import numbers.floats.(nan,snan,infinity,negativeInfinity);
-import math.(nan?);
+import math.*;
 
 private var inroot = array(
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,

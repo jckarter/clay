@@ -236,11 +236,11 @@ inline notEquals?(a, b) = not equals?(a, b);
 
 inline ordered?(a, b) = (a <= b) or (b <= a);
 
-inline overload lesserEquals?(a, b) = not lesser?(b, a);
+inline overload lesserEquals?(a, b) = lesser?(b, a) or equals?(a, b);
 
 inline overload greater?(a, b) = lesser?(b, a);
 
-inline overload greaterEquals?(a, b) = not lesser?(a, b);
+inline overload greaterEquals?(a, b) = lesser?(a, b) or equals?(a, b);
 
 inline overload bitand(a, b, c, ..rest) =
     bitand(bitand(a,b), c, ..rest);

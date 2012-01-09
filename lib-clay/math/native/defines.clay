@@ -1,19 +1,6 @@
 
-// define negative?;
-// define normal?;
-// define subnormal?;
-// define zero?;
-define infinity?;
-define negativeInfinity?;
-define finite?;
-define nan?;
-// define qnan?;
-// define snan?;
-// define canonical?;
-
 
 define sign;
-define fpclassify;
 
 define ceil;
 define floor;

@@ -5,8 +5,7 @@
 // functions and as a high performance 'larger than Float80/128 float type'.
 
 import math.native.exact.(db_number);
-import math.native.defines.(recip);
-import numbers.floats.floats.(floatFromBits);
+import math.*;
 import printer.formatter.(hex);
 
 alias BF_NB_BITS = 30;

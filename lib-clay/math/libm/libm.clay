@@ -1,6 +1,7 @@
 
 import libc;
 import math.*;
+import numbers.floats.*;
 
 [| MathMode?(LIBM)] inline overload pow(x:Double,y:Double) = libc.pow(x,y);
 inline overload pow(x:Float,y:Float) = libc.powf(x,y);

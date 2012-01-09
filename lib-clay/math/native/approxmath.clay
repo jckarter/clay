@@ -1,5 +1,4 @@
 
-import numbers.floats.(floatBits,floatFromBits);
 import math.*;
 
 define lambertwexpx;

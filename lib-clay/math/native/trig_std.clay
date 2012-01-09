@@ -2,8 +2,7 @@
 // Correctly rounded trigonometric functions
 //
 
-import numbers.floats.(signbit,nan,floatFromBits);
-import math.(sin,cos,tan,nan?,infinity?,negativeInfinity?);
+import math.*;
 import math.native.exact.*;
 import math.native.bigfloat.*;
 import math.native.rem_pi_2.*;
@@ -47,7 +46,7 @@ private alias DEGREE_COS_BF = 26;
 private alias DEGREE_TAN_BF = 69;
 
 private var digits_256_over_pi = array(
-    0x51ul,  	         0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
+    0x51ul,  	     0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
     0x3A9A6EE0ul,  	 0x1B6C52B3ul,  	 0x9E21C82ul,  	 0x3FCA2C7ul,
     0x15EF5DE2ul,  	 0x2C36E48Dul,  	 0x31D2126Eul,  	 0x25C00C92ul,
     0x177504E8ul,  	 0x32439FC3ul,  	 0x2F58E589ul,  	 0x134E7DD1ul,
@@ -666,7 +665,7 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 
 // 1) Range reduction if needed ... x in [-Pi/4, +Pi/4]
 // 2) call cosine, sine or tan polynomial
-// Polynomials are vastly too accurate.
+//  Polynomials are vastly too accurate.
 
 // Polynomial evaluation of sin(x) over [-Pi/4, +Pi/4]
 // Approximation error lower than  2^(-133)
@@ -675,7 +674,7 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 private sin_bf(x:T) --> result:T {
     var x2 = square(x);
     var res = sin_bf_poly[0] * x2;
-    for(i in range(1,(DEGREE_SIN_BF-1)/2)){ /* Last coeff is one, not read from the file*/
+    for(i in range(1,(DEGREE_SIN_BF-1)/2)){ // Last coeff is one, not read from the file
         res += sin_bf_poly[i];
         res *= x2;
     }
@@ -684,8 +683,8 @@ private sin_bf(x:T) --> result:T {
 }
 
 
-/* Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
-   Approximation error lower than  2^(-128) */
+// Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
+// Approximation error lower than  2^(-128)
 [T | BigFloat?(T)]
 private cos_bf(x:T) --> result:T {
     var x2 = square(x);
@@ -694,7 +693,7 @@ private cos_bf(x:T) --> result:T {
         res += cos_bf_poly[i];
         res *= x2;
     }
-    /* The last coefficient is exactly one and is not read from the file */
+    // The last coefficient is exactly one and is not read from the file
     result <-- res + bf_one;
 }
 
@@ -703,7 +702,7 @@ private bf_sin_rn(x:Double) --> resd:Double {
     var sc2 = BigFloat();
     var sc1 = BigFloat(x);
     var N = rem_pio2_bf(sc2, sc1);
-    N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
+    N = bitand(N , 0x0000003);		// extract the 2 last bits of  N
     switch (N)
         case (0){
             resd <-- Double(sin_bf(sc2));
@@ -1035,9 +1034,7 @@ private alias SHIFT2 = SHIFT1*SHIFT1;
 private alias SHIFT3 = SHIFT2*SHIFT1;
 
 private RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Double {
-    var nb = db_number();
-    var Y = BigFloat();
-    var X = BigFloat(rri.x);
+    var X,Y = BigFloat(rri.x),BigFloat();
     k <-- rem_pio256_bf(Y, X);
     index <-- wrapBitshl(bitand(k,127),2);
     quadrant <-- bitand(bitshr(k,7),3);
@@ -1045,8 +1042,7 @@ private RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Doub
     var x1 = Double(Y.h_word[1]) * SHIFT1;
     var x2 = Double(Y.h_word[2]) * SHIFT2;
     var x3 = Double(Y.h_word[3]) * SHIFT3;
-    nb.0[1] = wrapBitshl(Y.index*BF_NB_BITS + 1023 , 20);
-    nb.0[0] = 0;
+    var nb = db_number(array(0,wrapBitshl(Y.index*BF_NB_BITS + 1023 , 20)));
     nb.2 *= Y.sign;
     yh <-- ((x2+x1)+x0) * nb.2;
     yl <-- ((((x0-yh)+x1)+x2) + x3) * nb.2;
@@ -1291,8 +1287,7 @@ private sin_rn(x:Double) --> r:Double {
 
 private cos_rn(x:Double) --> r:Double {
     var rri = rrinfo ();
-    var x_split = db_number();
-    x_split.2 = x;
+    var x_split = db_number(x);
     rri.absxhi = bitand(x_split.0[1] , 0x7fffffff);
 
     /* SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan */

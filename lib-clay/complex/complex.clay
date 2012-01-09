@@ -1,5 +1,6 @@
 
-import math.(fma,abs,nan?);
+import math.(fma,abs);
+import numbers.floats.(nan?);
 
 enum ComplexPart (REAL, IMAG);
 
