@@ -397,7 +397,7 @@ Clay uses a two-pass loading mechanism. Modules are imported and their namespace
     record Ping (pong:Pointer[Pong]);
     record Pong (ping:Pointer[Ping]);
 
-Most top-level definitions in Clay share common syntactic features.
+Most top-level definitions in Clay share common syntactic features:
 
 #### Pattern guards
 
@@ -439,6 +439,8 @@ A predicate may also appear in a pattern guard without any pattern variables, in
 
     [| TypeSize(Pointer[Int]) < 4]
     overload platformCheck() { error("Time for a new computer"); }
+
+XXX variadic pattern guards
 
 #### Visibility modifiers
 
@@ -504,12 +506,24 @@ More complex record types can be derived using a computed body. If the type name
     // e.g. p:Point[Complex, #"zw"] would have Complex-typed fields p.z and p.w
     record PointWithCoordinates[T, xy] = [[xy.0, T], [xy.1, T]];
 
+Record definitions currently do not directly allow for template specialization. This can be worked around using an overloaded function as a computed record body.
+
+    // Example
+    record Point[T] = PointBody(T);
+
+    private define PointBody;
+    [T | T != Double]
+    overload PointBody(static T) = [[#"coords", Array[T, 2]]];
+    overload PointBody(static Double) = [[#"coords", Vec[Double, 2]]];
+
 ### Variants
 
     # Grammar
     Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
 
-Variant types provide a "discriminated union" type. A variant value can contain a value of any of the type's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions]. The variant's instance types are defined after the variant name in a parenthesized list:
+Variant types provide a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions].
+
+Syntactically, the variant's instance types are defined after the variant name in a parenthesized list.
 
     // Example
     variant Fruit (Apple, Orange, Banana);
@@ -590,13 +604,15 @@ Enumerations define a new type, values of which may contain one of a given set o
         Seraphic_8X,
     );
 
-Unlike record or variant types, enumeration types cannot currently be parameterized and do not allow pattern guards.
+Unlike record or variant types, enumeration types cannot currently be parameterized, and their definitions do not allow pattern guards.
 
 ### Lambda types
 
 Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions] are used.
 
 ## Function definitions
+
+XXX everything after this needs docs
 
     Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
 
