@@ -30,6 +30,8 @@ main() {
     for (i in sliced(v,0,0))
         println(i);
     println("---");
+    println("sliced(v,1,0) size: ", size(sliced(v,1,0)));
+    println("---");
     for (i in sliced(v,1,0))
         println(i);
     println("---");
