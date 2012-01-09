@@ -21,7 +21,7 @@ linux64 :
 	clay-bindgen generated_from_linux.h -o generated.linux.64.clay
 
 freebsd32 :
-	clay-bindgen generated_from_freebsd.h -o generated.linux.32.clay
+	clay-bindgen generated_from_freebsd.h -o generated.freebsd.32.clay
 
 freebsd64 :
 	clay-bindgen generated_from_freebsd.h -o generated.freebsd.64.clay
