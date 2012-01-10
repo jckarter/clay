@@ -2,3 +2,6 @@ import platform.symbols.(ARM);
 
 alias CPU = ARM;
 alias CPUFamily = ARM;
+
+alias CPUString = "arm";
+alias CPUBits = 32;

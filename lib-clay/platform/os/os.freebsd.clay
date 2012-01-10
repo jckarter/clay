@@ -2,3 +2,6 @@ import platform.symbols.(FreeBSD, Unix);
 
 alias OS = FreeBSD;
 alias OSFamily = Unix;
+
+alias OSString = "freebsd";
+alias OSFamilyString = "unix";

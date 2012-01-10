@@ -2,3 +2,6 @@ import platform.symbols.(PPC64, PPC);
 
 alias CPU = PPC64;
 alias CPUFamily = PPC;
+
+alias CPUString = "ppc";
+alias CPUBits = 64;
