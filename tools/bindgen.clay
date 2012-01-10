@@ -408,6 +408,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         else
             printlnTo(g_bindingsOut, "external ", name, " : ",
                 convertType(clang_getCursorType(cursor), cursor), ";\n");
+        return CXChildVisit_Continue;
     }
     case (CXCursor_TypedefDecl) {
         var name = str(clang_getCursorSpelling(cursor));

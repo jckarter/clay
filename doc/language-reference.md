@@ -1,4 +1,4 @@
-# Clay Language Reference 0.1
+# Clay Programming Language Reference 0.1
 
 * [Conventions]
 * [Tokenization]
@@ -8,7 +8,7 @@
 * [Global value definitions]
 * [Statements]
 * [Expressions]
-* [Patterns and guards]
+* [Pattern matching]
 
 ## Conventions
 
@@ -44,6 +44,7 @@ Comments in Clay come in two forms: block comments, delimited by non-nesting `/*
              | "__COLUMN__"
              | "__FILE__"
              | "__LINE__"
+             | "__llvm__"
              | "alias"
              | "and"
              | "as"
@@ -139,7 +140,7 @@ Character literals represent a single ASCII character. Syntactically, they consi
 * `\\` encodes the character `\`.
 * `\x` followed by two hexadecimal digits encodes an arbitrary ASCII code point. For example `'\x20'` is the space character (code `0x20`).
 
-.
+ 
 
     // Examples of character literals
     'x'  ' '  '\n'  '\''  '\x7F'
@@ -181,6 +182,36 @@ A clay module corresponds to a single source file. Source files are laid out in 
 * An optional [module declaration]
 * An optional [top-level LLVM] block
 * The body of the module file, consisting of zero or more [top-level definitions]
+
+#### List syntactic forms
+
+    # Grammar
+    comma_list(Rule) -> (Rule ("," Rule)* ","?)?
+
+Comma-delimited lists are a common feature in Clay's grammar. In most contexts, Clay allows a comma-delimited list to optionally end with a trailing comma.
+
+    // Examples
+    record US_Address (
+        name:String,
+        street:String,
+        city:String,
+        state:String,
+        zip:String,
+    );
+
+    foo(a,b,c) { return a+b, b+c; }
+
+In [pattern matching] contexts, a variation of the comma-delimited list is used that allows an optional tail syntax form, representing a variadic item that greedily matches the rest of the values being matched:
+
+    # Grammar
+    variadic_list(Rule, LastRule) -> Rule ("," Rule)* ("," (LastRule)?)?
+                                   | LastRule
+                                   | nil
+
+    // Examples
+    define sum(..xs);
+    overload sum() = 0;
+    sum(a, ..b) = a + sum(..b);
 
 ### Import declarations
 
@@ -374,8 +405,8 @@ A module may optionally contain a top-level block of LLVM assembly language. The
                   | Enumeration
                   | Define              # Functions
                   | Overload
-                  | Procedure
-                  | ExternalProcedure
+                  | Function
+                  | ExternalFunction
                   | GlobalVariable      # Global values
                   | GlobalAlias
                   | ExternalVariable
@@ -555,7 +586,7 @@ The variant instance list may be an arbitrary multiple-value expression. It is e
     # Grammar
     Instance -> PatternGuard? "instance" Pattern "(" ExprList ")" ";"
 
-Variant types are open and can be extended using the `instance` keyword.
+Variant types are open. Instance types can be added using the `instance` keyword.
 
     // Example
     variant Exception (); // type Exception starts with no members
@@ -565,8 +596,7 @@ Variant types are open and can be extended using the `instance` keyword.
     record TypeError (expectedTypeName:String, attemptedTypeName:String);
     instance Exception (RangeError, TypeError);
 
-Parameterized variant types may be extended given particular parameter values or over
-all or some parameter values with the use of pattern guards:
+`instance` definitions bind to variant types by [pattern matching] the name in the instance definition to each variant type name. Parameterized variant types may be extended for concrete parameter values, over all parameter values, or over some parameter variables with the use of pattern guards:
 
     // Example
     [C | Color?(C)]
@@ -576,14 +606,14 @@ all or some parameter values with the use of pattern guards:
     instance Fruit[Yellow] (Banana);
 
     // Extend Fruit[Red] and Fruit[Green] to contain Apple
-    [C | inValues?(C, Red, Green)]
+    [C | C == Red or C == Green]
     instance Fruit[C] (Apple);
 
     // Extend all Fruit[C] to contain Berry[C]
     [C]
     instance Fruit[C] (Berry[C]);
 
-`instance` definitions bind to variant types by [pattern matching] the name in the instance definition to each variant type name. Unlike `variant` forms, the pattern guard is not optional when extending a variant generically; without a pattern guard, `instance Variant[T]` will attempt to extend only the type `Variant[T]` for the concrete parameter value `T` (which would need to be defined for the form to be valid) rather than for all values `T`.
+Unlike `variant` forms, the pattern guard is not optional when extending a variant generically; without a pattern guard, `instance Variant[T]` will attempt to extend only the type `Variant[T]` for the concrete parameter value `T` (which would need to be defined for the form to be valid) rather than for all values `T`.
 
 ### Enumerations
 
@@ -612,33 +642,75 @@ Lambda types are record-like types that capture values from their enclosing scop
 
 ## Function definitions
 
-XXX everything after this needs docs
+Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime function calls are resolved at compile time for every set of input types with which they are invoked.
 
-    Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
+### Simple function definitions
 
-    Overload -> PatternGuard? CodegenAttribute? "overload"
-                Pattern Arguments ReturnSpec? Body
+    # Grammar
+    Function -> PatternGuard? Visibility? CodegenAttribute?
+                Identifier Arguments ReturnSpec? FunctionBody
 
-    Procedure -> PatternGuard? Visibility? CodegenAttribute?
-                 Identifier Arguments ReturnSpec? Body
+The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments], an optional list of [return values], and the [function body]. Function definitions may also use [visibility modifiers] and/or [pattern guards].
 
-    CodegenAttribute -> "inline" | "alias"
+    // Examples
+    private helloString() = "Hello World";
+    hello() { println(helloString()); }
+
+    squareInt(x:Int) : Int = x*x;
+
+    [T]
+    square(x:T) : T = x*x;
+
+    [T | Float?(T)]
+    quadraticRoots(a:T, b:T, c:T) : T, T {
+        var q = -0.5*(b+signum(b)*sqrt(b*b - 4.*a*c));
+        return q/a, c/q;
+    }
+
+A function definition defines a new symbol name; it is an error if a symbol with the same name already exists.
+
+    // Example
+    abs(x:Int) = if (x < 0) -x else x;
+    // ERROR: abs is already defined
+    abs(x:Float) = if (x < 0.) -x else if (x == 0.) 0. else x;
+
+[Overloaded function definitions] are necessary to extend a function with multiple overloads.
 
 ### Arguments
 
+XXX need docs after this
+
+    # Grammar
     Arguments -> "(" ArgumentList ")"
 
-    ArgumentList -> comma_list(Argument), ("," ".." Identifier)?
-                  | (".." Identifier)?
+    ArgumentList -> variadic_list(Argument, VarArgument)
 
-    Argument -> ValueArgument
+    Argument -> NamedArgument
               | StaticArgument
 
-    ValueArgument -> ("ref" | "rvalue" | "forward")? Identifier TypeSpec?
-    StaticArgument -> "static" Expression
+#### Named arguments
 
-### Returns
+    # Grammar
+    NamedArgument -> ReferenceKind? Identifier TypeSpec?
 
+#### Static arguments
+
+    # Grammar
+    StaticArgument -> "static" Pattern
+
+#### Variadic arguments
+
+    # Grammar
+    VarArgument -> ".." ValueArgument
+
+#### Reference kinds
+
+    # Grammar
+    ReferenceKind -> "ref" | "rvalue" | "forward"
+
+### Return values
+
+    # Grammar
     ReturnSpec -> ReturnTypeSpec
                 | NamedReturnSpec
 
@@ -648,20 +720,65 @@ XXX everything after this needs docs
 
     NamedReturn -> ".."? Identifier ":" Type
 
-    Body -> "=" ReturnExpression ";"
-          | Block
-
     Type -> Expression
+
+### Function body
+
+    # Grammar
+    FunctionBody -> Block
+                  | LLVMBlock
+                  | "=" ReturnExpression ";"
+
+### Overloaded function definitions
+
+    # Grammar
+    Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
+
+    Overload -> PatternGuard? CodegenAttribute? "overload"
+                Pattern Arguments ReturnSpec? FunctionBody
 
 ### External functions
 
-    ExternalProcedure -> Visibility? "external" Identifier "(" ExternalArgs ")"
-                         Type? (Body | ";")
+    # Grammar
+    ExternalFunction -> Visibility? "external" Identifier "(" ExternalArgs ")"
+                        Type? (FunctionBody | ";")
 
     ExternalArgs -> comma_list(ExternalArg) ("," "..")?
                   | ("..")?
 
     ExternalArg -> Identifier TypeSpec
+
+XXX doc me
+
+### Inline and alias overloads
+
+    # Grammar
+    CodegenAttribute -> "inline" | "alias"
+
+Any function or overload definition may be modified by an optional `inline` or `alias` attribute:
+
+* `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the general code generation/linkage hint provided by C or C++'s `inline` modifier and is not generally necessary.
+* `alias` functions evaluate their arguments using call-by-name semantics; the caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. The arguments will then be evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues.
+
+ 
+
+    // Example
+    // An "assert()" function that only evaluates its argument if Debug?() is true
+
+    Debug?() = false;
+
+    define assert(x:Bool);
+
+    [| not Debug?()]
+    alias overload assert(x:Bool) { }
+
+    [| Debug?()]
+    alias overload assert(x:Bool) {
+        if (not x) {
+            printlnTo(stderr, __FILE__, ":", __LINE__, ": assertion failed!");
+            abort();
+        }
+    }
 
 ## Global value definitions
 
