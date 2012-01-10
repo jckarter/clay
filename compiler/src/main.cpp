@@ -344,11 +344,7 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
-}
-
-int main(int argc, char **argv, char const* const* envp) {
-    using namespace clay;
-
+int main2(int argc, char **argv, char const* const* envp) {
     if (argc == 1) {
         usage(argv[0]);
         return 2;
@@ -926,4 +922,10 @@ int main(int argc, char **argv, char const* const* envp) {
     }
 
     return 0;
+}
+
+}
+
+int main(int argc, char **argv, char const* const* envp) {
+    return clay::parachute(clay::main2, argc, argv, envp);
 }
