@@ -1,67 +1,49 @@
 
 import math.*;
-import numbers.floats.(floatBits,floatFromBits);
+import numbers.floats.*;
 import math.native.approxmath.(private sqrtCoeff);
 
-import math.native.sqrt_safe.(sqrt_safe);
-import math.native.exp_safe.(exp_safe);
-import math.native.expm1_safe.(expm1_safe);
-import math.native.log_safe.(log_safe,log2_safe,log10_safe);
-import math.native.trig_safe.(sin_safe,cos_safe,tan_safe);
-import math.native.atan_safe.(atan_safe, atanpi_safe);
-import math.native.pow_safe.(pow_safe);
+import math.native.sqrt_std.(sqrt_std);
+import math.native.exp_std.(exp_std);
+import math.native.expm1_std.(expm1_std);
+import math.native.log_std.(log_std,log2_std,log10_std);
+import math.native.trig_std.(sin_std,cos_std,tan_std);
+import math.native.atan_std.(atan_std, atanpi_std);
+import math.native.pow_std.(pow_std);
 
-import math.native.cbrt_unsafe.(cbrt_unsafe);
-import math.native.exp_unsafe.(exp_unsafe);
-public import math.native.gamma_unsafe.*;
-public import math.native.beta_unsafe.*;
-public import math.native.erf_unsafe.*;
-public import math.native.bessel_unsafe.*;
-
-define sqrt;
-define cbrt;
-define pow;
-define sin;
-define cos;
-define tan;
-define sinh;
-define cosh;
-define tanh;
-define sigmoid;
-define log;
-define log2;
-define log10;
-define exp;
-define expm1;
-define atan;
-define atanpi;
-
-//
-//  Safe  - best precision, correct rounding, default
-//
-
-[T | Float?(T)] inline overload sqrt(x:T) = sqrt_safe(x);
-[T | Float?(T)] inline overload cbrt(x:T) = cbrt_unsafe(x);
-[T | Float?(T)] inline overload log(x:T) = log_safe(x);
-[T | Float?(T)] inline overload log2(x:T) = log2_safe(x);
-[T | Float?(T)] inline overload log10(x:T) = log10_safe(x);
-[T | Float?(T)] inline overload exp(x:T) = exp_safe(x);
-[T | Float?(T)] inline overload expm1(x:T) = expm1_safe(x);
-[T | Float?(T)] inline overload sin(x:T) = sin_safe(x);
-[T | Float?(T)] inline overload cos(x:T) = cos_safe(x);
-[T | Float?(T)] inline overload tan(x:T) = tan_safe(x);
-[T,U | Float?(T,U)] inline overload pow(x:T,y:U) = pow_safe(x,y);
-[T | Float?(T)] inline overload atan(x:T) = atan_safe(x);
-[T | Float?(T)] inline overload atanpi(x:T) = atanpi_safe(x);
+import math.native.exp_fast.(exp_fast);
+public import math.native.gamma_std.*;
+public import math.native.beta_std.*;
+public import math.native.erf_std.*;
+public import math.native.bessel_std.*;
 
 
 //
-//  Unsafe - high precision approximations
+//  STANDARD  - best precision, correct rounding, default
+//
+
+[T | Float?(T)] inline overload sqrt(x:T) = sqrt_std(x);
+[T | Float?(T)] inline overload rsqrt(x:T) = recip(sqrt_std(x));
+[T | Float?(T)] inline overload log(x:T) = log_std(x);
+[T | Float?(T)] inline overload log2(x:T) = log2_std(x);
+[T | Float?(T)] inline overload log10(x:T) = log10_std(x);
+[T | Float?(T)] inline overload exp(x:T) = exp_std(x);
+[T | Float?(T)] inline overload expm1(x:T) = expm1_std(x);
+[T | Float?(T)] inline overload sin(x:T) = sin_std(x);
+[T | Float?(T)] inline overload cos(x:T) = cos_std(x);
+[T | Float?(T)] inline overload tan(x:T) = tan_std(x);
+[T,U | Float?(T,U)] inline overload pow(x:T,y:U) = pow_std(x,y);
+[T | Float?(T)] inline overload atan(x:T) = atan_std(x);
+[T | Float?(T)] inline overload atanpi(x:T) = atanpi_std(x);
+
+
+//
+//  FAST - high precision approximations
 //  Use -Dmath.Mode=fast
 //
 
 [T | Float?(T) and MathMode?(FAST)]
-inline overload isqrt(x:T) --> y:T{
+inline overload rsqrt(x:T) --> y:T{
     alias ONEHALF = T(1.5);
     alias tmp = T(0.5)*x;
     y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
@@ -72,30 +54,14 @@ inline overload isqrt(x:T) --> y:T{
 }
 
 [T | Float?(T) and MathMode?(FAST)]
-inline overload sqrt(x:T) = T(1)/isqrt(x);
+inline overload sqrt(x:T) = T(1)/rsqrt(x);
 
 [T | Float?(T) and MathMode?(FAST)]
-inline overload log(x:T) = log_safe(x);
-
-[T | Float?(T) and MathMode?(FAST)]
-inline overload pow(x:T,y:T) = pow_safe(x,y);
-
-[T | Float?(T) and MathMode?(FAST)]
-inline overload tan(x:T) = tan_safe(x);
-
-[T | Float?(T) and MathMode?(FAST)]
-inline overload exp(x:T) = exp_unsafe(x);
-
-[T | Float?(T) and MathMode?(FAST)]
-inline overload sin(x:T) = sin_safe(x);
-
-[T | Float?(T) and MathMode?(FAST)]
-inline overload cos(x:T) = cos_safe(x);
-
+inline overload exp(x:T) = exp_fast(x);
 
 
 [T | Float?(T)] inline overload sinh (p:T) = T(0.5) * (exp(p) - exp(-p));
 [T | Float?(T)] inline overload cosh (p:T) = T(0.5) * (exp(p) + exp(-p));
-[T | Float?(T)] inline overload tanh (p:T) = T(-1)+T(2)/(T(1)+exp(T(-2)*p));
+[T | Float?(T)] inline overload tanh (p:T) = T(-1)+T(2)/(T(1) + exp(T(-2)*p));
 [T | Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 

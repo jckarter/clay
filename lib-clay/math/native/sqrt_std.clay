@@ -1,7 +1,6 @@
 
 import math.native.exact.*;
-import numbers.floats.floats.(snan,infinity,negativeInfinity);
-
+import math.*;
 
 private var inroot = array(
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,
@@ -47,14 +46,13 @@ private var t512 = 0x1.p512;
 private var tm256 = 0x1.p-256;
 
 private sqrt754(x:Double) {
-    var a = db_number();
-    a.2 = x;
+    var a = db_number(x);
     var k = a.0[1];
     a.0[1] = bitor(bitand(k,0x001fffff),0x3fe00000);
     var t = inroot[bitshr(bitand(k,0x001fffff),14)];
     var s = a.2;
 
-    /*----------------- 2^-1022  <= | x |< 2^1024  -----------------*/
+    //  2^-1022  <= | x |< 2^1024
     if (k>0x000fffff and k<0x7ff00000) {
         var y = 1.0-t*(t*s);
         t = t*(rt0+y*(rt1+y*(rt2+y*rt3)));
@@ -72,17 +70,18 @@ private sqrt754(x:Double) {
             return (if(((z-s)+zz) < 0) max(res,res1) else min(res,res1))*a.2;
         }
     }
-    else {
-        if (bitand(k , 0x7ff00000) == 0x7ff00000)
-            return x*x+x;	/* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */
+    else { // sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN
         if (x == 0)
-            return x;	/* sqrt(+0)=+0, sqrt(-0)=-0 */
+            return x;	// sqrt(+0)=+0, sqrt(-0)=-0
         if (k < 0)
-            return snan(Double); /* sqrt(-ve)=sNaN */
+            return -nan(Double); // sqrt(-ve)=sNaN
+        if (bitand(k , 0x7ff00000) >= 0x7ff00000)
+            return if(nan?(x)) nan(Double) else infinity(Double);
+
         return tm256*sqrt754(x*t512);
     }
 }
 
 
-inline sqrt_safe(x:Double) = sqrt754(x);
+inline sqrt_std(x:Double) = sqrt754(x);
 

@@ -1,6 +1,7 @@
 
 import libc;
 import math.*;
+import numbers.floats.*;
 
 [| MathMode?(LIBM)] inline overload pow(x:Double,y:Double) = libc.pow(x,y);
 inline overload pow(x:Float,y:Float) = libc.powf(x,y);
@@ -145,9 +146,9 @@ inline overload modf(x:LongDouble) {
 inline overload expm1(x:Float) = libc.expm1f(x);
 inline overload expm1(x:LongDouble) = libc.expm1l(x);
 
-inline overload log1p(x:Double) = libc.log1p(x);
-inline overload log1p(x:Float) = libc.log1pf(x);
-inline overload log1p(x:LongDouble) = libc.log1pl(x);
+inline overload logp1(x:Double) = libc.log1p(x);
+inline overload logp1(x:Float) = libc.log1pf(x);
+inline overload logp1(x:LongDouble) = libc.log1pl(x);
 
 inline overload logb(x:Double) = libc.logb(x);
 inline overload logb(x:Float) = libc.logbf(x);
@@ -165,9 +166,9 @@ inline overload log2(x:LongDouble) = libc.log2l(x);
 inline overload sqrt(x:Float) = libc.sqrtf(x);
 inline overload sqrt(x:LongDouble) = libc.sqrtl(x);
 
-[| MathMode?(LIBM)] inline overload cbrt(x:Double) = libc.cbrt(x);
-[| MathMode?(LIBM)] inline overload cbrt(x:Float) = libc.cbrtf(x);
-[| MathMode?(LIBM)] inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
+inline overload cbrt(x:Double) = libc.cbrt(x);
+inline overload cbrt(x:Float) = libc.cbrtf(x);
+inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
 inline overload floor(x:Double) = libc.floor(x);
 inline overload floor(x:Float) = libc.floorf(x);

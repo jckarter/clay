@@ -1,42 +1,107 @@
 
-define acos;
-define asin;
-define cot;
-define atan2;
-define acosh;
-define asinh;
-define atanh;
-define frexp;
-define ldexp;
-define modf;
-define log1p;
-define logb;
-define exp2;
-define pow2;
-define isqrt;
+
+define sign;
+
 define ceil;
 define floor;
-define significand;
-define mod;
-define drem;
-define jn;
-define y0;
-define y1;
-define yn;
-define lgamma_r;
-define rint;
-define scalbln;
-define scalbn;
-define ilogb;
-define nearbyint;
 define round;
 define trunc;
+define llround;
+define rint;
+define llrint;
+define nearbyint;
+define nextafter;
+alias nexttoward = nextafter;
+
+define frexp;
+define ldexp;
+
+define scalb;
+define scalbln;
+define scalbn;
+define mod;
+define modf;
+define significand;
+define drem;
 define remquo;
 define fdim;
 define min;
 define max;
-define scalb;
-define llrint;
+
+define fma;
+define recip;
+define sqrt;
+define rsqrt;
+define hypot;
+define pow;
+define pow2;
+// define pown;
+// define powr;
+
+define sin;
+define cos;
+define tan;
+define cot;
+// define sinpi;
+// define cospi;
+
+define asin;
+define acos;
+define atan;
+define atanpi;
+define atan2;
+// define atan2pi;
+
+define sinh;
+define cosh;
+define tanh;
+
+define acosh;
+define asinh;
+define atanh;
+
+define log;
+define log2;
+define log10;
+define logp1;
+define logb;
+define ilogb;
+// define log2p1;
+// define log10p1;
+
+define exp;
+define exp2;
+define expm1;
+// define exp2m1;
+// define exp10;
+// define exp10m1;
+
+// define compound;
+// define rootn;
+
 define proj;
 define arg;
-define recip;
+define sigmoid;
+define cbrt;
+
+define erf;
+define erfc;
+define ierf;
+define ierfc;
+
+define digamma;
+define tgamma;
+define lgamma;
+define lgamma_r;
+define igamma;
+define igammac;
+alias gamma = tgamma;
+define beta;
+
+define j0;
+define j1;
+define i1;
+define jn;
+define y0;
+define y1;
+define yn;

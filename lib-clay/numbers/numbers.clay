@@ -233,6 +233,9 @@ inline inRange?(x,l,u) =  x<u and l<=x;
 
 inline inRangeEquals?(x,l,u) =  x<=u and l<=x;
 
+[T | Numeric?(T)]
+inline zero?(x:T) = x == T(0);
+
 
 
 //

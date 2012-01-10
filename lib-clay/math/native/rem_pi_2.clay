@@ -32,60 +32,60 @@ private alias Pio2 = BigFloat(array(0x00000001u, 0x2487ed51u, 0x042d1846u, 0x262
     0x1701b839u, 0x28948127u, 0x01114cf9u, 0x23a0105du),
     1.,  0,   1 );
 
-/**
- * Case X_IND = -1:
- *               0
- *           2 ^
- *  X    :   <> |--| |--| |--|   0   0 0 0 0
- *  2/Pi :   <> |--| |--| |--| |--| .....
- *
- *  Case X_IND = 0:
- *                   0
- *                2 ^
- *  X    :   |--| <> |--| |--|   0   0 0 0 0
- *  2/Pi :        <> |--| |--| |--| |--| .....
- *
- *  Case X_IND = 1:
- *                       0
- *                    2 ^
- *  X    :   |--| |--| <> |--| |--|   0   0 0 0 0
- *  2/Pi :             <> |--| |--| |--| |--| .....
- *
- *  Case ...
- *
- *  Step 1:
- *
- *   Compute r = X . 2/Pi where:
- *    - r[0] hold the integer part. (if x>0 or the once complement integer part if x<0 )
- *    - r[1] to r[SCS_NB_WORDS+2] hold the reduced part
- *      the 3 extra 30 bits are here to prevent possible
- *      cancellation due to a number x too close to a
- *      multiple of Pi/2.
- *
- *  Step 2:
- *   Compute result = (r[1] ... r[SCS_NB_WORDS]) . Pi/2.
- *
- * description of local variables :
- * - ind : where to start multiplying into 2opi table
- *
- */
+//
+// Case X_IND = -1:
+//               0
+//           2 ^
+//  X    :   <> |--| |--| |--|   0   0 0 0 0
+//  2/Pi :   <> |--| |--| |--| |--| .....
+//
+//  Case X_IND = 0:
+//                   0
+//                2 ^
+//  X    :   |--| <> |--| |--|   0   0 0 0 0
+//  2/Pi :        <> |--| |--| |--| |--| .....
+//
+//  Case X_IND = 1:
+//                       0
+//                    2 ^
+//  X    :   |--| |--| <> |--| |--|   0   0 0 0 0
+//  2/Pi :             <> |--| |--| |--| |--| .....
+//
+//  Case ...
+//
+//  Step 1:
+//
+//   Compute r = X . 2/Pi where:
+//    - r[0] hold the integer part. (if x>0 or the once complement integer part if x<0 )
+//    - r[1] to r[SCS_NB_WORDS+2] hold the reduced part
+//      the 3 extra 30 bits are here to prevent possible
+//      cancellation due to a number x too close to a
+//      multiple of Pi/2.
+//
+//  Step 2:
+//   Compute result = (r[1] ... r[SCS_NB_WORDS]) . Pi/2.
+//
+// description of local variables :
+// - ind : where to start multiplying into 2opi table
+//
+//
 
-/* TODO OPTIM
-   better 64-bit multiplication, see in scs_mult */
+// TODO OPTIM
+//   better 64-bit multiplication, see in scs_mult
 
 rem_pio2_bf(result, x){
     var r,tmp,N,sign = Array[UInt64,BF_NB_WORDS+3](), 0ul, 0u,0;
-    /* result r[0],...,r[10] could store till 300 bits of precision */
-    /* that is really enough for computing the reduced argument */
+    // result r[0],...,r[10] could store till 300 bits of precision
+    // that is really enough for computing the reduced argument
     if ((x.excp != 1)or(x.index < -1)){
         result = x;
         return 0;
     }
 
-    /* Compute the product |x| * 2/Pi */
+    // Compute the product |x| * 2/Pi
     if ((x.index == -1)){
-        /* In this case we consider number between ]-1,+1[    */
-        /* we may use simpler algorithm such as Cody And Waite */
+        // In this case we consider number between ]-1,+1[
+        // we may use simpler algorithm such as Cody And Waite
         r[0] =  0;
         r[1] =  0;
         r[2] = (two_over_pi[0]) * x.h_word[0];
@@ -173,7 +173,7 @@ rem_pio2_bf(result, x){
         }
     }
 
-    /* Carry propagate */
+    // Carry propagate
     r[BF_NB_WORDS+1] += bitshr(r[BF_NB_WORDS+2],30);
     for(i in reverseRange((BF_NB_WORDS+1),1)) {
         tmp = bitshr(r[i],30);
@@ -181,10 +181,10 @@ rem_pio2_bf(result, x){
         r[i] -= bitshl(tmp,30);
     }
 
-    /* The integer part is in r[0] */
+    // The integer part is in r[0]
     N = UInt(r[0]);
 
-    /* test if the reduced part is bigger than Pi/4 */
+    // test if the reduced part is bigger than Pi/4
     if (r[1] > (BF_RADIX)/2){
         N += 1;
         sign = -1;
@@ -194,11 +194,9 @@ rem_pio2_bf(result, x){
     else
         sign = 1;
 
-
-    /* Now we get the reduce argument and check for possible
-    * cancellation By Kahan algorithm we will have at most 2 digits
-    * of cancellations r[1] and r[2] in the worst case.
-    */
+    // Now we get the reduce argument and check for possible
+    // cancellation By Kahan algorithm we will have at most 2 digits
+    // of cancellations r[1] and r[2] in the worst case.
     var i = 0;
     if (r[1] == 0)
         if (r[2] == 0)
@@ -215,9 +213,8 @@ rem_pio2_bf(result, x){
     result.index   = -i;
     result.sign = sign*x.sign;
 
-    /* Last step :
-    *   Multiplication by pi/2
-    */
+    // Last step :
+    //   Multiplication by pi/2
     result = Pio2 * result;
     return Int(x.sign*N);
 }

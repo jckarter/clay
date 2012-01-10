@@ -1,10 +1,5 @@
 // error function routines
-
-import math.(abs,exp,sqrt,log);
-
-define erf;
-define erfc;
-define ierfc;
+import math.(abs,exp,sqrt,log,erf,erfc,ierfc);
 
 private var a = array(
         5.958930743e-11, -1.13739022964e-9,

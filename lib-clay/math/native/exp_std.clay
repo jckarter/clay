@@ -1007,4 +1007,4 @@ private exp_rn(x:Double) --> ans:Double {
 }
 
 
-inline exp_safe(x:Double) = exp_rn(x);
+inline exp_std(x:Double) = exp_rn(x);

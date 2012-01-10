@@ -1,7 +1,5 @@
 
-import math.(gamma,lgamma,maxGamma);
-
-define beta;
+import math.(gamma,lgamma,maxGamma,beta);
 
 [T | Numeric?(T)]
 overload beta(x:T, y:T) --> r:T {

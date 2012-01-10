@@ -1,5 +1,4 @@
 
-import numbers.floats.floats.(floatBits,floatFromBits);
 import math.*;
 
 define lambertwexpx;
@@ -8,8 +7,6 @@ define sinfull;
 define cosfull;
 define tanfull;
 
-define digamma;
-define ierf;
 
 
 alias ieee754 = Union[UInt,Float];
@@ -349,17 +346,17 @@ inline overload sqrtCoeff(static Double) = 0x5FE6EB50C7B537AAul;
 inline overload sqrtCoeff(static LongDouble) = 0x5FE6EB50C7B537AAul;//NEED COEFF
 
 [T,I | Float?(T) and Integer?(I)]
-inline overload isqrt(x:T, n:I) --> y:T{
+inline overload rsqrt(x:T, n:I) --> y:T{
     y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
     for(j in range(n))
         y *= T(1.5) - (T(0.5)*x) * y * y; // Newton step, repeating increases accuracy
 }
 
 [T,I | Float?(T) and Integer?(I)]
-inline overload sqrt(x:T, n:I) = T(1)/isqrt(x, n);
+inline overload sqrt(x:T, n:I) = T(1)/rsqrt(x, n);
 
 [T | Float?(T) and MathMode?(APX)]
-inline overload isqrt(x:T) --> y:T{
+inline overload rsqrt(x:T) --> y:T{
     alias ONEHALF = T(1.5);
     alias tmp = T(0.5)*x;
     y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
@@ -369,11 +366,11 @@ inline overload isqrt(x:T) --> y:T{
 }
 
 [T | Float?(T) and MathMode?(APX2)]
-inline overload isqrt(x:T) --> y:T{
+inline overload rsqrt(x:T) --> y:T{
     y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
     y *= T(1.5) - T(0.5)*x * y * y; // Newton step, repeating increases accuracy
 }
 
 [T | Float?(T) and (MathMode?(APX) or MathMode?(APX2))]
-inline overload sqrt(x:T) = T(1)/isqrt(x);
+inline overload sqrt(x:T) = T(1)/rsqrt(x);
 
