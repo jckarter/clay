@@ -1,4 +1,3 @@
-import numbers.(zero?);
 
 [T | Float?(T) or Imaginary?(T)]
 floatOrderedAndEquals?(a:T, b:T) --> returned:Bool __llvm__ {
@@ -256,9 +255,17 @@ overload copysign(a:LongDouble,b:T) {
 [T | Float?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
 [T | Float?(T)] infinity?(x:T) = x == infinity(T);
 [T | Float?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
-[T | Float?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and not zero?(floatMantissa(x));
-[T | Float?(T)] subnormal?(x:T) = zero?(floatExponent(x)) and not zero?(x);
-[T | Float?(T)] normalized?(x:T) = not subnormal?(x) and not nan?(x);
+[T | Float?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
+[T | Float?(T)] qnan?(x:T) {
+    var m = floatMantissa(x);
+    return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==1;
+}
+[T | Float?(T)] snan?(x:T) {
+    var m = floatMantissa(x);
+    return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==0;
+}
+[T | Float?(T)] subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
+[T | Float?(T)] normalized?(x:T) = not subnormal?(x) and finite?(x);
 
 [T | Float?(T)] epsilon(static T) = nextafter(T(1),T(2))-T(1);
 
@@ -267,19 +274,22 @@ alias FP_INFINITE = 1;
 alias FP_ZERO = 2;
 alias FP_SUBNORMAL = 3;
 alias FP_NORMAL = 4;
-alias FP_NAN_NEG = 5;
-alias FP_INFINITE_NEG = 6;
-alias FP_ZERO_NEG = 7;
-alias FP_SUBNORMAL_NEG = 8;
-alias FP_NORMAL_NEG = 9;
+alias FP_SNAN = 5;
+alias FP_NAN_NEG = 6;
+alias FP_INFINITE_NEG = 7;
+alias FP_ZERO_NEG = 8;
+alias FP_SUBNORMAL_NEG = 9;
+alias FP_NORMAL_NEG = 10;
+alias FP_SNAN_NEG = 11;
 
 [T | Float?(T)]
 fpclassify(x:T) --> res:Int {
-    if(zero?(x)) res <-- FP_ZERO;
+    if(x==T(0)) res <-- FP_ZERO;
     else if(subnormal?(x)) res <-- FP_SUBNORMAL;
-    else if(nan?(x)) res <-- FP_NAN;
+    else if(nan?(x))
+        res <-- if(snan?(x)) FP_SNAN else FP_NAN;
     else if(infinity?(x)) res <-- FP_INFINITE;
     else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res += 5;
+    if(floatNegative?(x)) res += 6;
 }
 
