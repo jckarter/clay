@@ -30,7 +30,7 @@ testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
 
 def indented(txt):
-    return ' ' + txt.replace('\n', '\n ')
+    return ' ' + txt.rstrip('\n').replace('\n', '\n ') + '\n'
 
 
 #
@@ -198,6 +198,10 @@ class TestCase(object):
             errfile = fileForPlatform(".", "err", "txt")
             if not os.path.isfile(outfile) :
                 self.testLogBuffer.write("Failure: out.txt missing")
+                self.testLogBuffer.write("Stdout:\n")
+                self.testLogBuffer.write(indented(resultout))
+                self.testLogBuffer.write("Stderr:\n")
+                self.testLogBuffer.write(indented(resulterr))
                 return "out.txt missing"
             refout = open(outfile).read()
             referr = ""
@@ -295,15 +299,17 @@ class TestModuleCase(TestCase):
         if returncode == 0:
             return "ok"
         elif returncode == "compiler error":
-            self.testLogBuffer.write("compiler error")
-            self.testLogBuffer.write("--------------")
-            self.testLogBuffer.write(resulterr)
+            self.testLogBuffer.write("Failure: compiler error\n")
+            self.testLogBuffer.write("Error:\n")
+            self.testLogBuffer.write(indented(resulterr))
             return "compiler error"
         else:
-            self.testLogBuffer.write("fail")
-            self.testLogBuffer.write("----")
-            self.testLogBuffer.write(resultout)
-            return "fail"
+            self.testLogBuffer.write("Failure: exit code %d\n" % returncode)
+            self.testLogBuffer.write("Stdout:\n")
+            self.testLogBuffer.write(indented(resultout))
+            self.testLogBuffer.write("Stderr:\n")
+            self.testLogBuffer.write(indented(resulterr))
+            return "exit code %d" % returncode
 
 class TestDisabledCase(TestCase):
     def runtest(self):
