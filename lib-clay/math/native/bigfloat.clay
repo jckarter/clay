@@ -7,15 +7,16 @@
 import math.native.exact.(db_number);
 import math.*;
 import printer.formatter.(hex);
+import numbers.floats.*;
 
 alias BF_NB_BITS = 30;
 alias BF_NB_WORDS = 8;
 alias BF_MAX_RANGE = 32;
-alias BF_RADIX = UInt(wrapBitshl(1,BF_NB_BITS));
-alias BF_MASK_RADIX = UInt(BF_RADIX-1);
+alias BF_RADIX = wrapBitshl(1u,BF_NB_BITS);
+alias BF_MASK_RADIX = BF_RADIX-1;
 
 record BigFloat (
-    h_word:Array[UInt32,BF_NB_WORDS],// the digits, as 32 bits words
+    h_word:Array[UInt,BF_NB_WORDS],// the digits, as 32 bits words
     excp:Double, // Used to store Nan,+/-0, Inf, etc
     index:Int,// Exponent in an FP format in base 2^32
     sign:Int, // The sign equals 1 or -1
@@ -475,17 +476,17 @@ private do_sub(result, x, y){
                     // x > y
                     result.sign = x.sign;
                     for(i in reverseRange(BF_NB_WORDS-1,0)){
-                        var s = Int(x.h_word[i]) - y.h_word[i] - carry;
-                        carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                        res[i] = wrapAdd((bitand(s,BF_RADIX)), s);
+                        var s = wrapSubtract(wrapSubtract(Int(x.h_word[i]) , Int(y.h_word[i])) , carry);
+                        carry = Int(bitshr(bitand(s,Int(BF_RADIX)),BF_NB_BITS));
+                        res[i] = wrapAdd(bitand(s,Int(BF_RADIX)), s);
                     }
                 }
                 else {
                     result.sign = - x.sign;
-                    for(i in reverseRange((BF_NB_WORDS-1),0)){
-                        var s = (- Int(x.h_word[i]) + y.h_word[i] - carry);
-                        carry = bitshr(bitand(s,BF_RADIX),BF_NB_BITS);
-                        res[i] = wrapAdd((bitand(s,BF_RADIX)), s);
+                    for(i in reverseRange(BF_NB_WORDS-1,0)){
+                        var s = Int(wrapAdd(-Int(x.h_word[i]), Int(y.h_word[i])) - carry);
+                        carry = bitshr(bitand(s,Int(BF_RADIX)),BF_NB_BITS);
+                        res[i] = wrapAdd(bitand(s,Int(BF_RADIX)), s);
                     }
                 }
             }
@@ -524,7 +525,8 @@ private do_sub(result, x, y){
             }
         }
         else {
-            result.h_word = res;
+            for(i in range(BF_NB_WORDS))
+                result.h_word[i] = UInt(res[i]);
         }
     }
 

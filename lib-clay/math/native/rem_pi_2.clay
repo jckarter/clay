@@ -10,19 +10,19 @@ import math.native.bigfloat.*;
 // "Argument reduction for huge argument: Good to the last bit" (July 13, 1992)
 //
 
-private alias two_over_pi = Array[Int,48](
-   0x28be60db, 0x24e44152, 0x27f09d5f, 0x11f534dd,
-   0x3036d8a5, 0x1993c439, 0x0107f945, 0x23abdebb,
-   0x31586dc9, 0x06e3a424, 0x374b8019, 0x092eea09,
-   0x3464873f, 0x21deb1cb, 0x04a69cfb, 0x288235f5,
-   0x0baed121, 0x0e99c702, 0x1ad17df9, 0x013991d6,
-   0x0e60d4ce, 0x1f49c845, 0x3e2ef7e4, 0x283b1ff8,
-   0x25fff781, 0x1980fef2, 0x3c462d68, 0x0a6d1f6d,
-   0x0d9fb3c9, 0x3cb09b74, 0x3d18fd9a, 0x1e5fea2d,
-   0x1d49eeb1, 0x3ebe5f17, 0x2cf41ce7, 0x378a5292,
-   0x3a9afed7, 0x3b11f8d5, 0x3421580c, 0x3046fc7b,
-   0x1aeafc33, 0x3bc209af, 0x10d876a7, 0x2391615e,
-   0x3986c219, 0x199855f1, 0x1281a102, 0x0dffd880);
+private alias two_over_pi = array(
+   0x28be60dbu, 0x24e44152u, 0x27f09d5fu, 0x11f534ddu,
+   0x3036d8a5u, 0x1993c439u, 0x0107f945u, 0x23abdebbu,
+   0x31586dc9u, 0x06e3a424u, 0x374b8019u, 0x092eea09u,
+   0x3464873fu, 0x21deb1cbu, 0x04a69cfbu, 0x288235f5u,
+   0x0baed121u, 0x0e99c702u, 0x1ad17df9u, 0x013991d6u,
+   0x0e60d4ceu, 0x1f49c845u, 0x3e2ef7e4u, 0x283b1ff8u,
+   0x25fff781u, 0x1980fef2u, 0x3c462d68u, 0x0a6d1f6du,
+   0x0d9fb3c9u, 0x3cb09b74u, 0x3d18fd9au, 0x1e5fea2du,
+   0x1d49eeb1u, 0x3ebe5f17u, 0x2cf41ce7u, 0x378a5292u,
+   0x3a9afed7u, 0x3b11f8d5u, 0x3421580cu, 0x3046fc7bu,
+   0x1aeafc33u, 0x3bc209afu, 0x10d876a7u, 0x2391615eu,
+   0x3986c219u, 0x199855f1u, 0x1281a102u, 0x0dffd880u);
 
 
 
@@ -155,7 +155,7 @@ rem_pio2_bf(result, x){
                     }
                 }else {
                     var ind = (x.index - 3);
-                    var two_over_pi_pt = Pointer[Int](&two_over_pi[ind]);
+                    var two_over_pi_pt = Pointer[UInt](&two_over_pi[ind]);
                     if(x.h_word[2] == 0){
                         for(i in range(BF_NB_WORDS+3)){
                           r[i] = ((two_over_pi_pt[i+1]) * x.h_word[1]
@@ -163,9 +163,9 @@ rem_pio2_bf(result, x){
                         }
                     }else {
                         for(i in range(BF_NB_WORDS+3)){
-                            r[i] = ((two_over_pi_pt[ i ]) * x.h_word[2]
-                            +(two_over_pi_pt[i+1]) * x.h_word[1]
-                            +(two_over_pi_pt[i+2]) * x.h_word[0]);
+                            r[i] = wrapAdd(wrapMultiply(two_over_pi_pt[ i ] , x.h_word[2])
+                            , wrapMultiply(two_over_pi_pt[i+1] , x.h_word[1])
+                            , wrapMultiply(two_over_pi_pt[i+2] , x.h_word[0]));
                         }
                     }
                 }

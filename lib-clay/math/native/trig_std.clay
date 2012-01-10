@@ -15,12 +15,9 @@ private alias TAN = 2;
 private alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFE;        /* .14901147e-7 */
 private alias XMAX_SIN_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
 private alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09C;        /* .10536702e-7 */
-private alias XMAX_RETURN_1_FOR_COS_RDIR    = 0x3E4FFFFE;        /* .14901147e-7 */
 private alias XMAX_COS_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
 private alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFE ;       /* .74505735e-8 */
 private alias XMAX_TAN_CASE2                = 0x3FAFFFFE;        /* .62499940e-1 */
-
-private alias ONE_ROUNDED_DOWN      = 9.9999999999999988897769754e-01;
 
 private alias RN_CST_SIN_CASE2      = 1.0002134047098797985844841;
 private alias RN_CST_COS_CASE2      = 1.0006823406990255799706351;
@@ -41,10 +38,6 @@ private alias RR_CW3_MCL            = -4.2111741079360304438362959e-17;
 private alias RR_DD_MCH             = -1.2271846303085129359367045e-02;
 private alias RR_DD_MCM             = -4.7837765591693484655225157e-19;
 private alias RR_DD_CL              = -1.1698319569212264319871158e-35;
-
-private alias DEGREE_SIN_BF = 25;
-private alias DEGREE_COS_BF = 26;
-private alias DEGREE_TAN_BF = 69;
 
 private var digits_256_over_pi = array(
     0x51ul,  	     0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
@@ -675,7 +668,7 @@ BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
 private sin_bf(x:T) --> result:T {
     var x2 = square(x);
     var res = sin_bf_poly[0] * x2;
-    for(i in range(1,(DEGREE_SIN_BF-1)/2)){ // Last coeff is one, not read from the file
+    for(i in range(1,12)){ // Last coeff is one, not read from the file
         res += sin_bf_poly[i];
         res *= x2;
     }
@@ -690,7 +683,7 @@ private sin_bf(x:T) --> result:T {
 private cos_bf(x:T) --> result:T {
     var x2 = square(x);
     var res = cos_bf_poly[0] * x2;
-    for(i in range(1,DEGREE_COS_BF/2)){
+    for(i in range(1,13)){
         res += cos_bf_poly[i];
         res *= x2;
     }
@@ -756,7 +749,7 @@ private tan_bf(x) --> result:BigFloat {
     var x2 = square(ybf);
     result <-- tan_bf_poly[0] * x2;
 
-    for(i in range(1,(DEGREE_TAN_BF-1)/2)){ /* The last coeff is not read from the file. */
+    for(i in range(1,34)){ /* The last coeff is not read from the file. */
         result = tan_bf_poly[i] + result;
         result = result * x2;
     }
@@ -962,7 +955,7 @@ private rem_pio256_bf(result,x){
                     }
                 } else {
                     var ind = (x.index - 2);
-                    var digits_256_over_pi_pt = Pointer[Int](&digits_256_over_pi[ind]);
+                    var digits_256_over_pi_pt = Pointer[UInt64](&digits_256_over_pi[ind]);
                     if(x.h_word[2] == 0){
                         for(i in range(BF_NB_WORDS+3)){
                             r[i] = wrapAdd(digits_256_over_pi_pt[i+1] * x.h_word[1]
@@ -1022,7 +1015,7 @@ private rem_pio256_bf(result,x){
     *   Multiplication by pi/2
     */
     result =  Pio256 * result;
-    return Int(N*x.sign);
+    return wrapCast(Int,N*x.sign);
 }
 
 
@@ -1248,12 +1241,11 @@ private sin_rn(x:Double) --> r:Double {
     // SPECIAL CASES: x=(Nan, Inf) sin(x)=Nan
     // x=NaN or y=NaN
     if (rri.absxhi >= 0x7ff00000)
-        r <-- if(signbit(x)==0) nan(Double) else -nan(Double);
+        r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_SIN_CASE2){
         // CASE 1 : x small enough sin(x)=x
-        if (rri.absxhi < XMAX_RETURN_X_FOR_SIN){
+        if (rri.absxhi < XMAX_RETURN_X_FOR_SIN)
             r <-- x;
-        }
         else {
             // CASE 2 :XMAX_RETURN_X_FOR_SIN x < XMAX_SIN_CASE2
             // Fast polynomial evaluation as in DoSinZero
@@ -1293,7 +1285,7 @@ private cos_rn(x:Double) --> r:Double {
 
     /* SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan */
     if (rri.absxhi>=0x7ff00000)
-        r <-- if(signbit(x)==0) nan(Double) else -nan(Double);
+        r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_COS_CASE2){
         /* CASE 1 : x small enough cos(x)=1. */
         if (rri.absxhi <XMAX_RETURN_1_FOR_COS_RN)
@@ -1330,7 +1322,7 @@ private tan_rn(x:Double) --> r:Double {
 
     // SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan
     if (rri.absxhi>=0x7ff00000)
-        r <-- if(signbit(x)==0) nan(Double) else -nan(Double);
+        r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_TAN_CASE2){
         if (rri.absxhi < XMAX_RETURN_X_FOR_TAN)
             r <-- x;

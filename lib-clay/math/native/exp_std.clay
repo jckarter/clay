@@ -1,6 +1,7 @@
 
 import math.native.exact.*;
 import math.(abs);
+import numbers.floats.*;
 
 alias L = 12;
 alias LHALF = 6;
@@ -807,9 +808,9 @@ private exp_rn(x:Double) --> ans:Double {
             // Either NaN or Inf in this case since exponent is maximal
 
             // Test if NaN: mantissa is not 0
-            if (bitor(bitand(xIntHi , 0x000fffff) , xdb.0[0]) != 0)
+            if (nan?(x))
             // x = NaN, return NaN
-                return x + x;
+                return x;
             // +/- Inf
 
             // Test sign

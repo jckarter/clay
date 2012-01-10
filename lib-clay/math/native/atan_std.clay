@@ -693,8 +693,8 @@ atan_rn(x:Double ) {
 
     // Filter cases
     if ( absxhi >= 0x43500000) { // x >= 2^54
-        if ((absxhi > 0x7ff00000) or ((absxhi == 0x7ff00000) and (xdb.0[0] != 0)))
-            return x+x;                // NaN
+        if (nan?(x))
+            return x;                // NaN
         else
             return sign*M_PI_2;        // atan(+/-infty) = +/- Pi/2
     }
@@ -722,8 +722,8 @@ atanpi_rn(x:Double) {
 
     // Filter cases
     if ( absxhi >= 0x43500000){           // x >= 2^54
-        if ((absxhi > 0x7ff00000) or ((absxhi == 0x7ff00000) and (xdb.0[0] != 0)))
-            return x+x;                // NaN
+        if (nan?(x))
+            return x;                // NaN
         else
             return sign*0.5;           // atan(+/-infty) = +/- Pi/2
     }

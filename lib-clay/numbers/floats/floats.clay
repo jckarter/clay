@@ -198,9 +198,23 @@ overload snan(static LongDouble) = floatFromBits(0x8000_0000_0000_0001_ul,0x0000
 overload snan(static Double) = floatFromBits(0x7FF0_0000_0000_0001_ul);
 overload snan(static Float) = floatFromBits(0x7F80_0001u);
 
-overload nan(static LongDouble, sign?:Bool, payload:UInt64) = floatFromParts(sign?, exponentMask(LongDouble), payload);
-overload nan(static Double, sign?:Bool, payload:UInt64) = floatFromParts(sign?, exponentMask(Double), payload);
-overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(sign?, exponentMask(Float), payload);
+overload nan(static LongDouble, sign?:Bool, payload:UInt64) = floatFromParts(LongDouble,sign?, exponentMask(LongDouble), payload);
+overload nan(static Double, sign?:Bool, payload:UInt64) = floatFromParts(Double,sign?, exponentMask(Double), payload);
+overload nan(static Float, sign?:Bool, payload:UInt32) = floatFromParts(Float,sign?, exponentMask(Float), payload);
+
+qnanMask(static LongDouble) = wrapBitshl(0x1ul,mantissaSize(LongDouble)-1);
+overload qnanMask(static Double) = wrapBitshl(0x1ul,mantissaSize(Double)-1);
+overload qnanMask(static Float) = wrapBitshl(0x1u,mantissaSize(Float)-1);
+
+snanMask(static LongDouble) = bitshr(mantissaMask(LongDouble),1);
+overload snanMask(static Double) = bitshr(mantissaMask(Double),1);
+overload snanMask(static Float) = bitshr(mantissaMask(Float),1);
+
+[T | Float?(T)]
+overload nan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitor(floatMantissa(payload),qnanMask(T)));
+
+[T | Float?(T)]
+overload snan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitand(floatMantissa(payload),snanMask(T)));
 
 exponentBias(static LongDouble) = 16383;
 overload exponentBias(static Double) = 1023;

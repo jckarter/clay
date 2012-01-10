@@ -143,7 +143,7 @@ inline overload greater?(a:A, b:B) = lesser?(b, a);
 inline overload greaterEquals?(a:A, b:B) = not lesser?(a, b);
 
 [T | Complex?(T)]
-zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
+overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
 
 //
 // unary ops
