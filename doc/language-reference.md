@@ -471,7 +471,7 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     [| TypeSize(Pointer[Int]) < 4]
     overload platformCheck() { error("Time for a new computer"); }
 
-XXX variadic pattern guards
+XXX variadic pattern variables
 
 #### Visibility modifiers
 
@@ -481,6 +481,10 @@ XXX variadic pattern guards
 Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations]). Definitions without an explicit visibility default to `public`.
 
 Visibility modifiers are not allowed on definitions that modify existing symbols instead of creating new ones. In forms that do admit a visibility modifier, it must appear after the pattern guard (if any) but before the subsequent definition.
+
+## Symbols
+
+XXX talk about what symbols are, how type and function definitions create them, etc.
 
 ## Type definitions
 
@@ -650,11 +654,11 @@ Function definitions control most of Clay's compile-time and run-time behavior. 
     Function -> PatternGuard? Visibility? CodegenAttribute?
                 Identifier Arguments ReturnSpec? FunctionBody
 
-The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments], an optional list of [return values], and the [function body]. Function definitions may also use [visibility modifiers] and/or [pattern guards].
+The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments], an optional list of [return types], and the [function body]. If the return types are omitted, they are inferred from the function body. Function definitions may also use [visibility modifiers] and/or [pattern guards].
 
     // Examples
-    private helloString() = "Hello World";
     hello() { println(helloString()); }
+    private helloString() = "Hello World";
 
     squareInt(x:Int) : Int = x*x;
 
@@ -667,18 +671,96 @@ The simplest form of function definition creates a new function symbol with a si
         return q/a, c/q;
     }
 
-A function definition defines a new symbol name; it is an error if a symbol with the same name already exists.
+A function definition always defines a new symbol name; it is an error if a symbol with the same name already exists.
 
     // Example
     abs(x:Int) = if (x < 0) -x else x;
     // ERROR: abs is already defined
     abs(x:Float) = if (x < 0.) -x else if (x == 0.) 0. else x;
 
-[Overloaded function definitions] are necessary to extend a function with multiple overloads.
+Overloads are necessary to extend a function with multiple implementations.
+
+### Overloaded function definitions
+
+    # Grammar
+    Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
+
+    Overload -> PatternGuard? CodegenAttribute? "overload"
+                Pattern Arguments ReturnSpec? FunctionBody
+
+Simple function definitions define a symbol and a function implementation in lockstep, but the two steps can also be performed independently. The `define` keyword defines a symbol without any initial overloads. The `overload` keyword extends an already-defined symbol with new implementations.
+
+    // Example
+    define abs;
+    overload abs(x:Int) = if (x < 0) -x else x;
+    overload abs(x:Float) = if (x < 0.) -x else if (x == 0.) 0. else x;
+
+A `define` may also define an interface constraint for the symbol by following the symbol name with a list of [arguments] and optional [return types]. All overloads attached to the symbol must conform to a subset of the specified interface. If the `define` form does not specify arguments or return types, then the argument types and/or return types of the created symbol's overloads are unconstrained.
+
+    // Example
+    [T | Numeric?(T)] define abs(x:T) : T;
+
+    [T | Integer?(T)]
+    overload abs(x:T) = if (x < 0) -x else x;
+    [T | Float?(T)]
+    overload abs(x:T) = if (x < 0.) -x else if (x == 0.) 0. else x;
+
+    // Not valid because Numeric?(String) is false
+    overload abs(x:String) {
+        if (x[0] == "-")
+            return sliceFrom(x, 1);
+        else
+            return x;
+    }
+
+Overloads can extend not only symbols created by `define`, but type name symbols as well. Overloading type names is used idiomatically to implement constructor functions for types.
+
+    // Example
+    record LatLong (latitude:Float64, longitude:Float64);
+    record Address (street:String, city:String, state:String, zip:String);
+
+    overload Address(coords:LatLong) = geocode(coords);
+
+Overloads bind to symbols by [pattern matching]. Overloads may thus attach to parameterized type names for all or some of their possible parameters.
+
+    // Example
+    record Point[T] (x:T, y:T);
+
+    // default-initialize points to a known-bad value
+    [T | Float?(T)]
+    overload Point[T]() = Point[T](nan(T), nan(T));
+
+    overload Point[Int]() = Point[Int](-0x8000_0000, 0x7FFF_FFFF);
+
+The unparameterized base name of a type also may be overloaded independently of its parameterized instances.
+
+    // Example
+    // if no T given, give them a Point[Float]
+    overload Point() = Point[Float]();
+
+Within a module, overloads are matched to a call site in reverse definition order. The first overload that matches wins. (If you think this is stupid, you are correct.)
+
+    // Example
+    // XXX
+
+Match order between overloads from different modules is undefined; however, it is an error if overloads from more than one module match the same call site.
+
+    // Example
+    // XXX
+
+Symbols created by [simple function definitions] may also be overloaded; in fact, a simple function definition is simply shorthand for an unconstrained `define` followed by an `overload`.
+
+    // Example
+    double(x) = x+x;
+    // is equivalent to:
+    define double;
+    overload double(x) = x+x;
+
+XXX universal overloads
 
 ### Arguments
 
-XXX need docs after this
+XXX ...
 
     # Grammar
     Arguments -> "(" ArgumentList ")"
@@ -688,10 +770,14 @@ XXX need docs after this
     Argument -> NamedArgument
               | StaticArgument
 
+
+
 #### Named arguments
 
     # Grammar
-    NamedArgument -> ReferenceKind? Identifier TypeSpec?
+    NamedArgument -> ReferenceQualifier? Identifier TypeSpec?
+
+
 
 #### Static arguments
 
@@ -703,12 +789,72 @@ XXX need docs after this
     # Grammar
     VarArgument -> ".." ValueArgument
 
-#### Reference kinds
+#### Reference qualifiers
 
     # Grammar
-    ReferenceKind -> "ref" | "rvalue" | "forward"
+    ReferenceQualifier -> "ref" | "rvalue" | "forward"
 
-### Return values
+Clay distinguishes "lvalues", which are values bound to a variable, referenced through a pointer, or otherwise with externally-referenceable identities, from "rvalues", which are unnamed temporary values that will exist only for the extent of a single function call. (The terms come from an lvalue being a valid expression on the **L**eft side of an assignment statement, whereas an rvalue is only valid on the **R**ight side.)
+
+    // Example
+    // The result of `2+2` in this example is bound to `x` and is thus an lvalue
+    var x = 2 + 2;
+    f(x);
+
+    // The result of `2+2` in this example is temporary and is thus an rvalue
+    f(2 + 2);
+
+Since rvalues only exist for the duration of a single function call, functions can take advantage of this fact to perform move optimization by reclaiming resources from rvalue arguments instead of allocating new resources. In an argument list, an argument name may be annotated with the `rvalue` keyword, in which case it will only match rvalues.
+
+    // Example
+    foo(rvalue x:String) {
+        // Use move() to steal x's buffer, then append " world" to the end
+        return move(x) + " world";
+    }
+
+Conversely, an argument name may be annotated with the `ref` keyword, in which case it will only match lvalues.
+
+    // Example
+    bar(ref x:String) {
+        // Return a slice referencing the first five characters of x;
+        // a bad idea if x is an rvalue and will be deallocated soon after
+        // we return
+        return sliced(x, 0, 5);
+    }
+
+Without a `ref` or `rvalue` qualifier, the argument will match either lvalues or rvalues of a matching type. Within the function body, the argument's name will be bound as an lvalue.
+
+    // Example
+    foo(rvalue x:Int) {}
+
+    bar(x:Int) {
+        // ERROR: our name 'x' is an lvalue, even if bound to an rvalue
+        foo(x);
+    }
+
+    main() {
+        bar(2+2);
+    }
+
+If a function needs to carry the `rvalue`-ness of an argument through to other functions, it may qualify that argument with the `forward` keyword.
+
+    // Example
+    foo(rvalue x:Int) {}
+
+    bar(forward x:Int) {
+        foo(x); // ok: we forward the rvalue-ness of our input from main()
+    }
+
+    main() {
+        bar(2+2);
+    }
+
+The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argument name, in which case the qualifier applies to all of the values the name matches.
+
+    // Example
+    // XXX
+
+### Return types
 
     # Grammar
     ReturnSpec -> ReturnTypeSpec
@@ -729,14 +875,6 @@ XXX need docs after this
                   | LLVMBlock
                   | "=" ReturnExpression ";"
 
-### Overloaded function definitions
-
-    # Grammar
-    Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
-
-    Overload -> PatternGuard? CodegenAttribute? "overload"
-                Pattern Arguments ReturnSpec? FunctionBody
-
 ### External functions
 
     # Grammar
@@ -748,8 +886,6 @@ XXX need docs after this
 
     ExternalArg -> Identifier TypeSpec
 
-XXX doc me
-
 ### Inline and alias overloads
 
     # Grammar
@@ -758,7 +894,7 @@ XXX doc me
 Any function or overload definition may be modified by an optional `inline` or `alias` attribute:
 
 * `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the general code generation/linkage hint provided by C or C++'s `inline` modifier and is not generally necessary.
-* `alias` functions evaluate their arguments using call-by-name semantics; the caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. The arguments will then be evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues.
+* `alias` functions evaluate their arguments using call-by-name semantics. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues. In detail: The caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. Unlike actual [lambda expressions], references into the caller's scope from alias arguments are statically resolved. Argument expressions are evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information.
 
  
 
