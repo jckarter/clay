@@ -1,5 +1,6 @@
 
 import math.*;
+import numbers.floats.*;
 
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imagValue(x));

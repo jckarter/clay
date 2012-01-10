@@ -1,6 +1,6 @@
 
 import math.*;
-
+import numbers.floats.*;
 
 /*
  *	Complex natural logarithm
@@ -39,9 +39,6 @@ import math.*;
  * In IEEE arithmetic the peak absolute error is 5.2e-16, rms
  * absolute error 1.0e-16.
  */
-
-MACHEPS(static Float32) = 1.19209e-07f;
-overload MACHEPS(static Float64) = 2.22045e-16;
 
 
 [T | Complex?(T)]
@@ -297,7 +294,7 @@ overload cot(z:T) {
 //       mtherr ("ccot", OVERFLOW);
         return Complex(MAXNUM,MAXNUM);
     }
-    return sin (2.0 * creal(z)) / d - (sinh (2.0 * cimag(z)) / d) * I;
+    return sin (2.0 * real(z)) / d - (sinh (2.0 * imag(z)) / d) * I;
 }
 
 
@@ -351,7 +348,7 @@ loop1:
         t = y2 - x2;
         t /= f;
         d += t;
-    if(abs(t/d) > MACHEPS(T)) goto loop1;
+    if(abs(t/d) > epsilon(T)) goto loop1;
     return d;
 }
 
@@ -785,13 +782,13 @@ overload atanh(z:T) = -1.j * atan(z * 1.j);
  */
 [T,U | Complex?(T,U)]
 overload pow(a:T, z:U){
-    var absa = cabs(a);
+    var absa = abs(a);
     if (absa == 0.0)
         return T();
     var r = pow(absa, real(z));
-    var theta = real(z) * carg(a);
+    var theta = real(z) * arg(a);
     if (imag(z) != 0.){
-        r = r * exp (-imagValue(z) * carg(a));
+        r = r * exp (-imagValue(z) * arg(a));
         theta = theta + imagValue(z) * log(absa);
     }
     return Complex(r * cos(theta) , r * sin(theta));

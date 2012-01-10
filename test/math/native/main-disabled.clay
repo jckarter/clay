@@ -8,26 +8,31 @@ import numbers.floats.*;
 
 
 ftypes() = Float32,Float64,Float80;
+ctypes() = Imag32,Imag64,Imag80,Complex32,Complex64,Complex80;
 
-[T | Float?(T)] fdata(static T) = array(
-    T(0),T(1),T(-1),T(355),
-    GreatestPositiveFinite(T),nan(T),-nan(T),infinity(T),negativeInfinity(T));//LeastPositive(T),LeastPositiveNormalized(T),
-
+[T | Float?(T) or Complex?(T)] fdata(static T) = array(
+    T(0),T(1),T(-1),T(355));
+//     nan(T),-nan(T),infinity(T),negativeInfinity(T));
+//LeastPositive(T),LeastPositiveNormalized(T),GreatestPositiveFinite(T),
 [T | Numeric?(T)] fdata2(static T) = array(T(0.05),T(0.5),T(5),T(50),T(500));
 
-oneArgFuncs() =
-                sin,cos,tan,
+oneArgFuncs() = sin,cos,tan,
                 asin,acos,atan,
                 sinh,cosh,tanh,
-                exp,expm1,
-                log,log10,log2,
-                sqrt,cbrt;
+                exp,
+//                 expm1,
+                log,
+//                 log10,log2,
+                sqrt,
+//                 cbrt
+                ;
 
 twoArgFuncs() = pow,atan2;
 
 evalLibcFunc(f, static Float32) = eval(#"libc.",f,#"f");
 overload evalLibcFunc(f, static Float64) = eval(#"libc.",f);
 overload evalLibcFunc(f, static Float80) = eval(#"libc.",f,#"l");
+overload evalLibcFunc(f, static Complex64) = eval(#"libc.c",f);
 
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()){
