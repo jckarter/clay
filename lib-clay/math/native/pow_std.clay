@@ -1,7 +1,7 @@
 
 import math.native.exact.*;
 import math.(abs);
-import numbers.floats.floats.(nan,infinity);
+import numbers.floats.*;
 
 alias L =8;
 alias MAXINDEX =106;

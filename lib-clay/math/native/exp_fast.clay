@@ -4,8 +4,7 @@
 //
 
 import math.(M_LOG2E);
-import numbers.floats.floats.(floatFromParts,infinity,
-    exponentBias,exponentMask,floatMantissaZero);
+import numbers.floats.*;
 
 private alias C1 = 6.93145751953125E-1;
 private alias C2 = 1.42860682030941723212E-6;

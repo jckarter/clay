@@ -1,6 +1,6 @@
 
 import math.*;
-import numbers.floats.(floatBits,floatFromBits);
+import numbers.floats.*;
 import math.native.approxmath.(private sqrtCoeff);
 
 import math.native.sqrt_std.(sqrt_std);

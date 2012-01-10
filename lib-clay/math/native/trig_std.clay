@@ -2,6 +2,7 @@
 // Correctly rounded trigonometric functions
 //
 
+import numbers.floats.*;
 import math.*;
 import math.native.exact.*;
 import math.native.bigfloat.*;
