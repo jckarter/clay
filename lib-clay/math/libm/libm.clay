@@ -68,15 +68,15 @@ inline overload sin(x:LongDouble) = libc.sinl(x);
 inline overload tan(x:Float) = libc.tanf(x);
 inline overload tan(x:LongDouble) = libc.tanl(x);
 
-[| MathMode?(LIBM)] inline overload cosh(x:Double) = libc.cosh(x);
+inline overload cosh(x:Double) = libc.cosh(x);
 inline overload cosh(x:Float) = libc.coshf(x);
 inline overload cosh(x:LongDouble) = libc.coshl(x);
 
-[| MathMode?(LIBM)] inline overload sinh(x:Double) = libc.sinh(x);
+inline overload sinh(x:Double) = libc.sinh(x);
 inline overload sinh(x:Float) = libc.sinhf(x);
 inline overload sinh(x:LongDouble) = libc.sinhl(x);
 
-[| MathMode?(LIBM)] inline overload tanh(x:Double) = libc.tanh(x);
+inline overload tanh(x:Double) = libc.tanh(x);
 inline overload tanh(x:Float) = libc.tanhf(x);
 inline overload tanh(x:LongDouble) = libc.tanhl(x);
 

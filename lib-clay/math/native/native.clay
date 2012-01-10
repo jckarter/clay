@@ -59,9 +59,5 @@ inline overload sqrt(x:T) = T(1)/rsqrt(x);
 [T | Float?(T) and MathMode?(FAST)]
 inline overload exp(x:T) = exp_fast(x);
 
-
-[T | Float?(T)] inline overload sinh (p:T) = T(0.5) * (exp(p) - exp(-p));
-[T | Float?(T)] inline overload cosh (p:T) = T(0.5) * (exp(p) + exp(-p));
-[T | Float?(T)] inline overload tanh (p:T) = T(-1)+T(2)/(T(1) + exp(T(-2)*p));
 [T | Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
