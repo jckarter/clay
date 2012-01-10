@@ -342,8 +342,12 @@ def runTest(t):
 
 def runTests() :
     testcases = findTestCases()
-    pool = Pool(processes = cpu_count(), initializer=initWorker)
-    results = pool.imap(runTest, testcases)
+    try:
+        pool = Pool(processes = cpu_count(), initializer=initWorker)
+        results = pool.imap(runTest, testcases)
+    except ImportError:
+        pool = None
+        results = (runTest(t) for t in testcases)
     succeeded = []
     failed = []
     disabled = []
@@ -363,7 +367,8 @@ def runTests() :
                 succeeded.append(test.name())
     except KeyboardInterrupt:
         print "\nInterrupted!"
-        pool.terminate()
+        if pool:
+            pool.terminate()
 
     if failed:
         print
