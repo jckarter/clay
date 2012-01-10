@@ -12,12 +12,12 @@ namespace clay {
 
 static int emergencyCompileContext(LPEXCEPTION_POINTERS exceptionInfo)
 {
-    fprintf(stderr, "exception code %u!\n", exceptionInfo->ExceptionRecord->ExceptionCode);
+    fprintf(stderr, "exception code 0x%08X!\n", exceptionInfo->ExceptionRecord->ExceptionCode);
     __try {
         displayCompileContext();
     }
     __except (EXCEPTION_EXECUTE_HANDLER) {
-        fprintf(stderr, "exception code %u displaying compile context!\n", GetExceptionCode());
+        fprintf(stderr, "exception code 0x%08X displaying compile context!\n", GetExceptionCode());
     }
     fflush(stderr);
     std::cerr.flush();
@@ -31,6 +31,8 @@ int parachute(int (*mainfn)(int, char **, char const* const*),
         return mainfn(argc, argv, envp);
     }
     __except (emergencyCompileContext(GetExceptionInformation())) {}
+    assert(false);
+    return 86;
 }
 
 }
