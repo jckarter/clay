@@ -810,22 +810,12 @@ alias Union___infinity_un = Union[
 
 external __infinity : Union___infinity_un;
 
-alias Union___infinity_un = Union[
-    /* __uc */ Array[CUChar, 8],
-    /* __ud */ Double,
-];
-
 alias Union___nan_un = Union[
     /* __uc */ Array[CUChar, 4],
     /* __uf */ Float,
 ];
 
 external __nan : Union___nan_un;
-
-alias Union___nan_un = Union[
-    /* __uc */ Array[CUChar, 4],
-    /* __uf */ Float,
-];
 
 alias double_t = __double_t;
 
