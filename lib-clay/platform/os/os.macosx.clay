@@ -2,3 +2,6 @@ import platform.symbols.(MacOSX, Unix);
 
 alias OS = MacOSX;
 alias OSFamily = Unix;
+
+alias OSString = "macosx";
+alias OSFamilyString = "unix";

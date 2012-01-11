@@ -8,29 +8,59 @@ import platform
 import signal
 import sys
 import difflib
+import argparse
 from StringIO import StringIO
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 from multiprocessing import Pool, cpu_count
 import time
+import tempfile
+import ConfigParser
 
 
 #
-# testLogFile
-# 
-
-testLogFile = open("testlog.txt", "w")
-
-
-#
-# testRoot
+# test properties
 #
 
 testBuildFlags = []
 testRoot = os.path.dirname(os.path.abspath(__file__))
 runTestRoot = testRoot
+testLogFile = "testlog.txt"
 
 def indented(txt):
-    return ' ' + txt.replace('\n', '\n ')
+    return ' ' + txt.rstrip('\n').replace('\n', '\n ') + '\n'
+
+
+#
+# getCompilerPath
+#
+
+# stolen from http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+def which(program):
+    for path in os.environ["PATH"].split(os.pathsep):
+        exe_file = os.path.join(path, program)
+        if os.path.exists(fpath) and os.access(fpath, os.X_OK):
+            return exe_file
+
+    return None
+
+def getCompilerPath() :
+    buildPath = ["..", "build", "compiler", "src"]
+    clayexe = None
+    if sys.platform == "win32" :
+        clayexe = "clay.exe"
+    else :
+        clayexe = "clay"
+
+    compiler = os.path.join(testRoot, *(buildPath + [clayexe]))
+    if not os.path.exists(compiler) :
+        compiler = which(clayexe)
+        if compiler is None:
+            print "could not find the clay compiler"
+            sys.exit(1)
+    return compiler
+
+compiler = getCompilerPath()
+
 
 
 #
@@ -38,52 +68,54 @@ def indented(txt):
 #
 
 def getClayPlatform():
-    if sys.platform in ["win32", "cygwin"]:
-        return "windows"
-    if sys.platform == "darwin":
-        return "macosx"
-    if sys.platform.startswith("freebsd"):
-        return "freebsd"
-    if sys.platform.startswith("linux"):
-        return "linux"
+    with tempfile.NamedTemporaryFile(suffix='.clay', delete=False) as platformclay:
+        print >>platformclay, 'import platform.(OSString, OSFamilyString, CPUString, CPUBits);'
+        print >>platformclay, 'main() {'
+        print >>platformclay, '    println("[Target]");'
+        print >>platformclay, '    println("platform: ", OSString);'
+        print >>platformclay, '    println("platform-family: ", OSFamilyString);'
+        print >>platformclay, '    println("architecture: ", CPUString);'
+        print >>platformclay, '    println("bits: ", CPUBits);'
+        print >>platformclay, '    return 0;'
+        print >>platformclay, '}'
+        platformclay.close()
 
-def getClayPlatformFamily():
-    if sys.platform in ["win32", "cygwin"]:
-        return "windows"
-    else:
-        return "unix"
+        returncode = call([compiler] + testBuildFlags + ['-o', 'test.exe', platformclay.name])
+        if returncode != 0:
+            print "could not build an executable with", compiler, testBuildFlags
+            sys.exit(1)
 
-def getClayArchitecture():
-    if platform.machine() in ["i386", "x86_64", "x86-64", "amd64", "AMD64", "x64"]:
-        return "x86"
-    else:
-        return "unknown"
+        process = Popen(["./test.exe"], stdout=PIPE)
+        config = ConfigParser.ConfigParser()
+        config.readfp(process.stdout)
 
-# XXX this needs to determine the bitness of clay executables, not of python
-def getClayBits():
-    if platform.architecture()[0] == "64bit":
-        return "64"
-    if platform.architecture()[0] == "32bit":
-        return "32"
+        process.communicate()
+        if process.returncode != 0:
+            print "executable failed with exit code", process.returncode, "built with", compiler, testBuildFlags
 
-clayPlatform = getClayPlatform()
-clayPlatformFamily = getClayPlatformFamily()
-clayArchitecture = getClayArchitecture()
-clayBits = getClayBits()
+        return (
+            config.get('Target', 'platform'),
+            config.get('Target', 'platform-family'),
+            config.get('Target', 'architecture'),
+            config.get('Target', 'bits')
+        )
+
+clayPlatform = None
 
 def fileForPlatform(folder, name, ext):
+    platform, family, arch, bits = clayPlatform
     platformNames = [
-        "%s.%s.%s.%s.%s" % (name, clayPlatform, clayArchitecture, clayBits, ext),
-        "%s.%s.%s.%s.%s" % (name, clayPlatformFamily, clayArchitecture, clayBits, ext),
-        "%s.%s.%s.%s" % (name, clayPlatform, clayArchitecture, ext),
-        "%s.%s.%s.%s" % (name, clayPlatform, clayBits, ext),
-        "%s.%s.%s.%s" % (name, clayPlatformFamily, clayArchitecture, ext),
-        "%s.%s.%s.%s" % (name, clayPlatformFamily, clayBits, ext),
-        "%s.%s.%s.%s" % (name, clayArchitecture, clayBits, ext),
-        "%s.%s.%s" % (name, clayPlatform, ext),
-        "%s.%s.%s" % (name, clayPlatformFamily, ext),
-        "%s.%s.%s" % (name, clayArchitecture, ext),
-        "%s.%s.%s" % (name, clayBits, ext),
+        "%s.%s.%s.%s.%s" % (name, platform, arch, bits, ext),
+        "%s.%s.%s.%s.%s" % (name, family, arch, bits, ext),
+        "%s.%s.%s.%s" % (name, platform, arch, ext),
+        "%s.%s.%s.%s" % (name, platform, bits, ext),
+        "%s.%s.%s.%s" % (name, family, arch, ext),
+        "%s.%s.%s.%s" % (name, family, bits, ext),
+        "%s.%s.%s.%s" % (name, arch, bits, ext),
+        "%s.%s.%s" % (name, platform, ext),
+        "%s.%s.%s" % (name, family, ext),
+        "%s.%s.%s" % (name, arch, ext),
+        "%s.%s.%s" % (name, bits, ext),
     ]
     for platformName in platformNames:
         fullName = os.path.join(folder, platformName)
@@ -91,30 +123,6 @@ def fileForPlatform(folder, name, ext):
             return fullName
 
     return os.path.join(folder, "%s.%s" % (name, ext))
-
-
-#
-# getCompilerPath
-#
-
-def getCompilerPath() :
-    buildPath = ["..", "build", "compiler", "src"]
-    if sys.platform == "win32" :
-        compiler = os.path.join(testRoot, *(buildPath + ["clay.exe"]))
-        compiler2 = os.path.join(testRoot, "..", "clay.exe") # for binary distributions
-    else :
-        compiler = os.path.join(testRoot, *(buildPath + ["clay"]))
-        compiler2 = os.path.join(testRoot, "..", "clay") # for binary distributions
-
-    if not os.path.exists(compiler) :
-        compiler = compiler2
-        if not os.path.exists(compiler) :
-            print "could not find the clay compiler"
-            sys.exit(-1)
-    return compiler
-
-compiler = getCompilerPath()
-
 
 
 #
@@ -198,6 +206,10 @@ class TestCase(object):
             errfile = fileForPlatform(".", "err", "txt")
             if not os.path.isfile(outfile) :
                 self.testLogBuffer.write("Failure: out.txt missing")
+                self.testLogBuffer.write("Stdout:\n")
+                self.testLogBuffer.write(indented(resultout))
+                self.testLogBuffer.write("Stderr:\n")
+                self.testLogBuffer.write(indented(resulterr))
                 return "out.txt missing"
             refout = open(outfile).read()
             referr = ""
@@ -295,15 +307,17 @@ class TestModuleCase(TestCase):
         if returncode == 0:
             return "ok"
         elif returncode == "compiler error":
-            self.testLogBuffer.write("compiler error")
-            self.testLogBuffer.write("--------------")
-            self.testLogBuffer.write(resulterr)
+            self.testLogBuffer.write("Failure: compiler error\n")
+            self.testLogBuffer.write("Error:\n")
+            self.testLogBuffer.write(indented(resulterr))
             return "compiler error"
         else:
-            self.testLogBuffer.write("fail")
-            self.testLogBuffer.write("----")
-            self.testLogBuffer.write(resultout)
-            return "fail"
+            self.testLogBuffer.write("Failure: exit code %d\n" % returncode)
+            self.testLogBuffer.write("Stdout:\n")
+            self.testLogBuffer.write(indented(resultout))
+            self.testLogBuffer.write("Stderr:\n")
+            self.testLogBuffer.write(indented(resulterr))
+            return "exit code %d" % returncode
 
 class TestDisabledCase(TestCase):
     def runtest(self):
@@ -342,18 +356,29 @@ def runTest(t):
 
 def runTests() :
     testcases = findTestCases()
-    pool = Pool(processes = cpu_count(), initializer=initWorker)
-    results = pool.imap(runTest, testcases)
+    try:
+        pool = Pool(processes = cpu_count(), initializer=initWorker)
+        results = pool.imap(runTest, testcases)
+    except ImportError:
+        pool = None
+        results = (runTest(t) for t in testcases)
     succeeded = []
     failed = []
     disabled = []
+    logfile = open(testLogFile, 'w')
     try:
+        print "[TargetPlatform]"
+        platform, family, arch, bits = clayPlatform
+        print "platform:", platform
+        print "cpu:", arch
+        print "bits:", bits
+        print
         print "[Tests]"
         for test in testcases:
             res, log = results.next()
             if res != "ok" and res != "disabled":
-                print >>testLogFile, log,
-            testLogFile.flush()
+                logfile.write(log)
+            logfile.flush()
             print "%s: %s" % (test.name(), res)
             if res == "disabled":
                 disabled.append(test.name())
@@ -363,7 +388,8 @@ def runTests() :
                 succeeded.append(test.name())
     except KeyboardInterrupt:
         print "\nInterrupted!"
-        pool.terminate()
+        if pool:
+            pool.terminate()
 
     if failed:
         print
@@ -377,37 +403,67 @@ def runTests() :
         print "Disabled: %d" % len(disabled)
     if failed:
         print "Failed: %d" % len(failed)
-    testLogFile.flush()
-    print "\n# Test log written to testlog.txt"
-
-def usage(argv0):
-    print "Usage: %s [buildflags... --] [root] [root...]" % argv0
-    print "  Runs the Clay test suite. If any root paths are given, only tests"
-    print "  in those subdirectories (paths relative to the test/ directory) will"
-    print "  be run. Build flags can be passed to the compiler followed by '--'."
+    logfile.flush()
+    print "\n# Test log written to " + testLogFile
 
 def main() :
     global testLogFile
     global testBuildFlags
     global testRoot
     global runTestRoot
+    global clayPlatform
 
-    if len(sys.argv) > 1 :
-        if sys.argv[1] == "--help" or sys.argv[1] == "/?":
-            usage(sys.argv[0])
-            return
+    argp = argparse.ArgumentParser(description="Run the Clay test suite.")
+    argp.add_argument("-I",
+        metavar="path",
+        dest='libClayPaths',
+        action='append',
+        help="Specifies the Clay module path(s) to use.")
+    argp.add_argument("--arch",
+        metavar="arch",
+        dest='arch',
+        help="Specifies a Darwin target architecture to build for. (Apple only)")
+    argp.add_argument("--target",
+        metavar="cpu-vendor-os",
+        dest='target',
+        help="Specifies the target triple to build for.")
+    argp.add_argument("--buildflags",
+        nargs='+',
+        metavar="flags",
+        dest='buildFlags',
+        help="Additional build flags to pass through to the Clay compiler.")
+    argp.add_argument("--root",
+        metavar="path",
+        dest='testRoot',
+        help="Specifies the root directory out of which to run tests.")
+    argp.add_argument("--log",
+        metavar="path",
+        dest='logfile',
+        help="Log detailed test failures to the given path (default testlog.txt).")
+    argp.add_argument("testname",
+        nargs='?',
+        help="Only run tests under the specified subdirectory in the test root.")
 
-        try:
-            buildFlagSeparator = sys.argv.index("--")
-            testBuildFlags = sys.argv[1:buildFlagSeparator]
-            runTestRoot = os.path.join(testRoot, *sys.argv[buildFlagSeparator+1:])
-        except ValueError:
-            testBuildFlags = []
-            runTestRoot = os.path.join(testRoot, *sys.argv[1:])
+    args = argp.parse_args()
+
+    if args.arch is not None:
+        testBuildFlags += ['-arch', args.arch]
+    if args.libClayPaths is not None:
+        testBuildFlags += ['-I' + os.path.abspath(path) for path in args.libClayPaths]
+    if args.target is not None:
+        testBuildFlags += ['-target', args.target]
+    if args.testRoot is not None:
+        testRoot = os.path.abspath(args.testRoot)
+    if args.logfile is not None:
+        testLogFile = args.logfile
+
+    if args.testname is not None:
+        runTestRoot = os.path.join(testRoot, args.testname)
     else:
-        testBuildFlags = []
         runTestRoot = testRoot
+
     startTime = time.time()
+    clayPlatform = getClayPlatform()
     runTests()
     endTime = time.time()
     print

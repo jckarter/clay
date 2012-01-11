@@ -3714,6 +3714,13 @@ typedef Pointer<ExternalTarget> ExternalTargetPtr;
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
 
+//
+// parachute
+//
+
+int parachute(int (*mainfn)(int, char **, char const* const*),
+    int argc, char **argv, char const* const* envp);
+
 }
 
 #include "libclaynames.hpp"

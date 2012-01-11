@@ -10,6 +10,7 @@ set(SOURCES
     error.cpp
     evaluator.cpp
     externals.cpp
+    hirestimer.cpp
     invoketables.cpp
     lambdas.cpp
     lexer.cpp
@@ -18,12 +19,12 @@ set(SOURCES
     main.cpp
     matchinvoke.cpp
     objects.cpp
+    parachute.cpp
     parser.cpp
     patterns.cpp
     printer.cpp
-    types.cpp
-    hirestimer.cpp
     profiler.cpp
+    types.cpp
 )
 
 # version info is only updated when cmake is run
