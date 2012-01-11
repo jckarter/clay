@@ -12,7 +12,7 @@
 
 ## Conventions
 
-BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`. Concrete examples of syntax are provided in monospace blocks beginning with `// Example`. Regular expressions in grammar rules are delimited by `/` and use Perl `/x` syntax; that is, whitespace between the delimiting slashes is insignificant and used for readability. Literal strings in grammar rules are delimited by `"`.
+BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`. Examples of Clay code are provided in monospace blocks beginning with `// Example`. Regular expressions in grammar rules are delimited by `/slashes/` and use Perl `/x` syntax; that is, whitespace between the delimiting slashes is insignificant and used for readability. Literal strings in grammar rules are delimited by `"quotation marks"`.
 
 ## Tokenization
 
@@ -554,13 +554,13 @@ A record type's layout can also be evaluated from an expression. If the type nam
 Record definitions currently do not directly allow for template specialization. This can be worked around using an overloaded function as a computed record body.
 
     // Example
-    record Point[T] = PointBody(T);
+    record Vec3D[T] = Vec3DBody(T);
 
-    private define PointBody;
+    private define Vec3DBody;
     [T | T != Double]
-    overload PointBody(static T) = [[#"coords", Array[T, 3]]];
-    // Use a SIMD vector for Float points
-    overload PointBody(static Float) = [[#"coords", Vec[Float, 4]]];
+    overload Vec3DBody(static T) = [[#"coords", Array[T, 3]]];
+    // Use a SIMD vector for Float
+    overload Vec3DBody(static Float) = [[#"coords", Vec[Float, 4]]];
 
 ### Variants
 
@@ -762,7 +762,7 @@ Within a module, overloads are matched to a call site's symbol name and argument
         println("Pay no attention to that overload behind the curtain.");
     }
 
-Match order between overloads from different modules is done walking the import graph depth-first. (If you think is this _really_ stupid, you are correct.) Resolution order among circularly-dependent modules is undefined.
+Match order among overloads from different modules is done walking the import graph depth-first. (If you think is this _really_ stupid, you are correct.) Resolution order among circularly-dependent modules is undefined.
 
     // Example
     // a.clay
@@ -947,10 +947,53 @@ The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argum
 
 #### Static arguments
 
-XXX ...
-
     # Grammar
     StaticArgument -> "static" Pattern
+
+Functions may match against values computed at compile-time using `static` arguments. A `static` argument matches against the result of a corresponding [static expression] at the call site using [pattern matching].
+
+    // Example
+    define beetlejuice;
+
+    [n]
+    overload beetlejuice(static n) {
+        for (i in range(n))
+            println("Beetlejuice!");
+    }
+
+    // Unroll the common case
+    overload beetlejuice(static 3) {
+        println("Beetlejuice!");
+        println("Beetlejuice!");
+        println("Beetlejuice!");
+    }
+
+    main() {
+        beetlejuice(static 3);
+    }
+
+As expressions, [symbols] and [static strings] are implicitly static and will also match `static` arguments.
+
+    // Example
+    define defaultValue;
+
+    [T]
+    defaultValue(static T) = T(0);
+
+    [T | Float?(T)]
+    defaultValue(static T) = nan(T);
+
+    main() {
+        println(defaultValue(Int)); // 0
+        println(defaultValue(Float64)); // nan
+    }
+
+`static` arguments are implemented as syntactic sugar for an unnamed argument of type `Static[T]`.
+
+    // Example
+    [n] foo(static n) { }
+    // is equivalent to (aside from binding the name 'x'):
+    [n] foo(x:Static[n]) { }
 
 ### Return types
 
@@ -958,13 +1001,50 @@ XXX ...
     ReturnSpec -> ReturnTypeSpec
                 | NamedReturnSpec
 
-    ReturnTypeSpec -> ":" comma_list(Type)
+    ReturnTypeSpec -> ":" ExprList
+
+A function definition may declare its return types by following the argument list with a `:` and a [multiple value expression] that evaluates to the return types. The expression may refer to any pattern variables bound by the argument list. If a [return statement] in the function body returns values of types that do not match the declared types, it is an error.
+
+    // Example
+    double(x:Int) : Int = x + x;
+
+    [T]
+    diagonal(x:T) : Point[T] = Point[T](x, x);
+
+    [T | Integer?(T)]
+    safeDouble(x:T) : NextLargerInt(T) {
+        alias NextT = NextLargerInt(T);
+        return T(x) + T(x);
+    }
+
+If the function does not declare its return types, they will be inferred from the function body. To declare that a function returns no values, an empty return declaration (or a declaration that evaluates to no values) may be used.
+
+    // Example
+    foo() { } // infers no return values from the body
+
+    foo() : { } // explicitly declares no return values
+
+    foo() : () { } // explicitly also declares no return values
+
+#### Named return values
 
     NamedReturnSpec -> "-->" comma_list(NamedReturn)
 
-    NamedReturn -> ".."? Identifier ":" Type
+    NamedReturn -> ".."? Identifier ":" Expression
 
-    Type -> Expression
+In special cases where constructing a value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression].
+
+Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will cause undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
+
+    // Example
+    record SOAPoint (xs:Vector[Float], ys:Vector[Float]);
+
+    overload SOAPoint(size:SizeT) --> returned:SOAPoint
+    {
+        returned.xs <-- Vector[Float](size);
+        onerror destroy(returned.xs);
+        returned.ys <-- Vector[Float](size);
+    }
 
 ### Function body
 
@@ -973,23 +1053,12 @@ XXX ...
                   | LLVMBlock
                   | "=" ReturnExpression ";"
 
-### External functions
-
-    # Grammar
-    ExternalFunction -> Visibility? "external" Identifier "(" ExternalArgs ")"
-                        Type? (FunctionBody | ";")
-
-    ExternalArgs -> comma_list(ExternalArg) ("," "..")?
-                  | ("..")?
-
-    ExternalArg -> Identifier TypeSpec
-
 ### Inline and alias overloads
 
     # Grammar
     CodegenAttribute -> "inline" | "alias"
 
-Any function or overload definition may be modified by an optional `inline` or `alias` attribute:
+Any simple function or overload definition may be modified by an optional `inline` or `alias` attribute:
 
 * `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the general code generation/linkage hint provided by C or C++'s `inline` modifier and is not generally necessary.
 * `alias` functions evaluate their arguments using call-by-name semantics. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues. In detail: The caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. Unlike actual [lambda expressions], references into the caller's scope from alias arguments are statically resolved. Argument expressions are evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information.
@@ -1013,6 +1082,17 @@ Any function or overload definition may be modified by an optional `inline` or `
             abort();
         }
     }
+
+### External functions
+
+    # Grammar
+    ExternalFunction -> Visibility? "external" Identifier "(" ExternalArgs ")"
+                        Type? (FunctionBody | ";")
+
+    ExternalArgs -> comma_list(ExternalArg) ("," "..")?
+                  | ("..")?
+
+    ExternalArg -> Identifier TypeSpec
 
 ## Global value definitions
 
