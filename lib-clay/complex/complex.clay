@@ -1,6 +1,6 @@
 
-import math.(fma,abs);
-import numbers.floats.(nan?);
+import math.(fma);
+import numbers.floats.*;
 
 enum ComplexPart (REAL, IMAG);
 
@@ -68,6 +68,7 @@ ComplexBaseType(static Complex32) = Float;
 overload ComplexBaseType(static Complex64) = Double;
 overload ComplexBaseType(static Complex80) = LongDouble;
 
+[T | Complex?(T)]
 ComplexRealType(static T) = ComplexBaseType(T);
 
 ComplexImagType(static Complex32) = IFloat;

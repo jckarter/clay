@@ -7,9 +7,9 @@ import printer.formatter.*;
 import numbers.floats.*;
 
 
-ftypes() = Float32,Float64;
+ftypes() = Float80;
 
-[T | Float?(T)] fdata(static T) = array(
+[T | Float?(T) or Complex?(T)] fdata(static T) = array(
     T(0),T(1),T(-1),T(355));
 //     nan(T),-nan(T),infinity(T),negativeInfinity(T));
 //LeastPositive(T),LeastPositiveNormalized(T),GreatestPositiveFinite(T),
@@ -28,8 +28,7 @@ oneArgFuncs() = sin,cos,tan,
 
 twoArgFuncs() = pow,atan2;
 
-evalLibcFunc(f, static Float32) = eval(#"libc.",f,#"f");
-overload evalLibcFunc(f, static Float64) = eval(#"libc.",f);
+evalLibcFunc(f, static Float80) = eval(#"libc.",f,#"l");
 
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()){

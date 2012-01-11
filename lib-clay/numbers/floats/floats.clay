@@ -313,7 +313,7 @@ floatBitsUnsigned(x:ILongDouble) {
 }
 overload floatBitsUnsigned(x:IDouble) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
 overload floatBitsUnsigned(x:IFloat) = bitand(floatBits(x),0x7FFF_FFFFu);
-floatBitsUnsigned(x:LongDouble) {
+overload floatBitsUnsigned(x:LongDouble) {
     var tmp = floatBits(x);
     tmp.exponent = bitand(tmp.exponent,0x0000_0000_0000_7FFFul);
     return tmp;

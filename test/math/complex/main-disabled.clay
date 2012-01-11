@@ -6,8 +6,8 @@ import math.*;
 import printer.formatter.*;
 import numbers.floats.*;
 
-itypes() = Imag32,Imag64,Imag80;
-ctypes() = Complex32,Complex64,Complex80;
+itypes() = Imag32,Imag64;
+ctypes() = Complex32,Complex64;
 
 [T | Complex?(T)] fdata(static T) = array(
     T(0+0j),T(-0-0j),T(1+0j),T(-1+0j),T(0+1j),T(0-1j),
@@ -27,7 +27,6 @@ twoArgFuncs() = pow;
 
 evalLibcFunc(f, static Complex32) = eval(#"libc.c",f,#"f");
 overload evalLibcFunc(f, static Complex64) = eval(#"libc.c",f);
-overload evalLibcFunc(f, static Complex80) = eval(#"libc.c",f,#"l");
 
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()){
