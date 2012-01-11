@@ -21,29 +21,37 @@ import ConfigParser
 # test properties
 #
 
-testBuildFlags = []
-testRoot = os.path.dirname(os.path.abspath(__file__))
-runTestRoot = testRoot
-testLogFile = "testlog.txt"
+class TestOptions:
+    testBuildFlags = []
+    testRoot = os.path.dirname(os.path.abspath(__file__))
+    runTestRoot = os.path.dirname(os.path.abspath(__file__))
+    testLogFile = "testlog.txt"
+    clayCompiler = None
+    clayPlatform = None
+
+
+#
+# utils
+#
 
 def indented(txt):
     return ' ' + txt.rstrip('\n').replace('\n', '\n ') + '\n'
 
 
 #
-# getCompilerPath
+# getClayCompiler
 #
 
 # stolen from http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
 def which(program):
     for path in os.environ["PATH"].split(os.pathsep):
         exe_file = os.path.join(path, program)
-        if os.path.exists(fpath) and os.access(fpath, os.X_OK):
+        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
             return exe_file
 
     return None
 
-def getCompilerPath() :
+def getClayCompiler(opt) :
     buildPath = ["..", "build", "compiler", "src"]
     clayexe = None
     if sys.platform == "win32" :
@@ -51,7 +59,7 @@ def getCompilerPath() :
     else :
         clayexe = "clay"
 
-    compiler = os.path.join(testRoot, *(buildPath + [clayexe]))
+    compiler = os.path.join(opt.testRoot, *(buildPath + [clayexe]))
     if not os.path.exists(compiler) :
         compiler = which(clayexe)
         if compiler is None:
@@ -59,15 +67,13 @@ def getCompilerPath() :
             sys.exit(1)
     return compiler
 
-compiler = getCompilerPath()
-
 
 
 #
 # getClayPlatform, fileForPlatform
 #
 
-def getClayPlatform():
+def getClayPlatform(opt):
     with tempfile.NamedTemporaryFile(suffix='.clay', delete=False) as platformclay:
         print >>platformclay, 'import platform.(OSString, OSFamilyString, CPUString, CPUBits);'
         print >>platformclay, 'main() {'
@@ -80,9 +86,9 @@ def getClayPlatform():
         print >>platformclay, '}'
         platformclay.close()
 
-        returncode = call([compiler] + testBuildFlags + ['-o', 'test.exe', platformclay.name])
+        returncode = call([opt.clayCompiler] + opt.testBuildFlags + ['-o', 'test.exe', platformclay.name])
         if returncode != 0:
-            print "could not build an executable with", compiler, testBuildFlags
+            print "could not build an executable with", opt.clayCompiler, opt.testBuildFlags
             sys.exit(1)
 
         process = Popen(["./test.exe"], stdout=PIPE)
@@ -91,7 +97,7 @@ def getClayPlatform():
 
         process.communicate()
         if process.returncode != 0:
-            print "executable failed with exit code", process.returncode, "built with", compiler, testBuildFlags
+            print "executable failed with exit code", process.returncode, "built with", opt.clayCompiler, opt.testBuildFlags
 
         return (
             config.get('Target', 'platform'),
@@ -100,10 +106,8 @@ def getClayPlatform():
             config.get('Target', 'bits')
         )
 
-clayPlatform = None
-
-def fileForPlatform(folder, name, ext):
-    platform, family, arch, bits = clayPlatform
+def fileForPlatform(opt, folder, name, ext):
+    platform, family, arch, bits = opt.clayPlatform
     platformNames = [
         "%s.%s.%s.%s.%s" % (name, platform, arch, bits, ext),
         "%s.%s.%s.%s.%s" % (name, family, arch, bits, ext),
@@ -131,20 +135,22 @@ def fileForPlatform(folder, name, ext):
 
 class TestCase(object):
     allCases = []
-    def __init__(self, folder, testfile, base = None):
+    opt = None
+    def __init__(self, opt, folder, testfile, base = None):
+        self.opt = opt
         entries = os.listdir(folder)
         self.testfile = os.path.basename(testfile)
         self.path = folder
         if os.path.isfile(testfile):
             self.loadTest(testfile)
 
-        runscript = fileForPlatform(folder, "run", "py")
+        runscript = fileForPlatform(self.opt, folder, "run", "py")
         if os.path.isfile(runscript):
             self.runscript = runscript
         else:
             self.runscript = None
 
-        buildflags = fileForPlatform(folder, "buildflags", "txt")
+        buildflags = fileForPlatform(self.opt, folder, "buildflags", "txt")
         if os.path.isfile(buildflags):
             self.buildflags = open(buildflags).read().split()
         else:
@@ -154,14 +160,14 @@ class TestCase(object):
             fullpath = os.path.join(folder, entry)
             if not os.path.isdir(fullpath):
                 continue
-            findTestCase(fullpath, self)
+            findTestCase(self.opt, fullpath, self)
     
     def loadTest(self, testfile):
         TestCase.allCases.append(self)
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        r = [clay, "-I" + self.path, "-o", "test.exe"] + testBuildFlags + self.buildflags + [self.testfile]
+        r = [clay, "-I" + self.path, "-o", "test.exe"] + self.opt.testBuildFlags + self.buildflags + [self.testfile]
         return r
 
     def pre_build(self) :
@@ -175,7 +181,7 @@ class TestCase(object):
         [os.unlink(f) for f in glob.glob("*.data")]
 
     def match(self, resultout, resulterr, returncode) :
-        compilererrfile = fileForPlatform(".", "compilererr", "txt")
+        compilererrfile = fileForPlatform(self.opt, ".", "compilererr", "txt")
         if os.path.isfile(compilererrfile):
             errpattern = open(compilererrfile).read()
             errpattern = errpattern.replace('\r', '').strip()
@@ -202,8 +208,8 @@ class TestCase(object):
                 self.testLogBuffer.write("Error:\n")
                 self.testLogBuffer.write(indented(resulterr))
                 return "compiler error"
-            outfile = fileForPlatform(".", "out", "txt")
-            errfile = fileForPlatform(".", "err", "txt")
+            outfile = fileForPlatform(self.opt, ".", "out", "txt")
+            errfile = fileForPlatform(self.opt, ".", "err", "txt")
             if not os.path.isfile(outfile) :
                 self.testLogBuffer.write("Failure: out.txt missing")
                 self.testLogBuffer.write("Stdout:\n")
@@ -270,19 +276,19 @@ class TestCase(object):
         return (r, log)
 
     def name(self):
-        return os.path.relpath(self.path, testRoot)
+        return os.path.relpath(self.path, self.opt.testRoot)
 
     def runtest(self):
         outfilename = "test.exe"
         outfilename = os.path.join(".", outfilename)
-        process = Popen(self.cmdline(compiler), stdout=PIPE, stderr=PIPE)
+        process = Popen(self.cmdline(self.opt.clayCompiler), stdout=PIPE, stderr=PIPE)
         compilerout, compilererr = process.communicate()
         if process.returncode != 0 :
             return "", "%s\n%s" % (compilerout, compilererr), "compiler error"
         if self.runscript is None:
             commandline = [outfilename]
         else:
-            commandline = [sys.executable, self.runscript, outfilename] + testBuildFlags
+            commandline = [sys.executable, self.runscript, outfilename] + self.opt.testBuildFlags
 
         process = Popen(commandline, stdout=PIPE, stderr=PIPE)
         resultout, resulterr = process.communicate()
@@ -330,22 +336,22 @@ class TestDisabledCase(TestCase):
 # runtests
 #
 
-def findTestCase(folder, base = None):
-    testPath = fileForPlatform(folder, "test", "clay")
-    mainPath = fileForPlatform(folder, "main", "clay")
-    testDisabledPath = fileForPlatform(folder, "test-disabled", "clay")
-    mainDisabledPath = fileForPlatform(folder, "main-disabled", "clay")
+def findTestCase(opt, folder, base = None):
+    testPath = fileForPlatform(opt, folder, "test", "clay")
+    mainPath = fileForPlatform(opt, folder, "main", "clay")
+    testDisabledPath = fileForPlatform(opt, folder, "test-disabled", "clay")
+    mainDisabledPath = fileForPlatform(opt, folder, "main-disabled", "clay")
     if os.path.isfile(testPath):
-        TestModuleCase(folder, testPath, base)
+        TestModuleCase(opt, folder, testPath, base)
     elif os.path.isfile(testDisabledPath):
-        TestDisabledCase(folder, testDisabledPath, base)
+        TestDisabledCase(opt, folder, testDisabledPath, base)
     elif os.path.isfile(mainDisabledPath):
-        TestDisabledCase(folder, mainDisabledPath, base)
+        TestDisabledCase(opt, folder, mainDisabledPath, base)
     else:
-        TestCase(folder, mainPath, base)
+        TestCase(opt, folder, mainPath, base)
 
-def findTestCases():
-    findTestCase(runTestRoot)
+def findTestCases(opt):
+    findTestCase(opt, opt.runTestRoot)
     return TestCase.allCases
 
 def initWorker():
@@ -354,8 +360,8 @@ def initWorker():
 def runTest(t):
     return t.run()
 
-def runTests() :
-    testcases = findTestCases()
+def runTests(opt):
+    testcases = findTestCases(opt)
     try:
         pool = Pool(processes = cpu_count(), initializer=initWorker)
         results = pool.imap(runTest, testcases)
@@ -365,10 +371,10 @@ def runTests() :
     succeeded = []
     failed = []
     disabled = []
-    logfile = open(testLogFile, 'w')
+    logfile = open(opt.testLogFile, 'w')
     try:
         print "[TargetPlatform]"
-        platform, family, arch, bits = clayPlatform
+        platform, family, arch, bits = opt.clayPlatform
         print "platform:", platform
         print "cpu:", arch
         print "bits:", bits
@@ -404,14 +410,10 @@ def runTests() :
     if failed:
         print "Failed: %d" % len(failed)
     logfile.flush()
-    print "\n# Test log written to " + testLogFile
+    print "\n# Test log written to " + opt.testLogFile
 
 def main() :
-    global testLogFile
-    global testBuildFlags
-    global testRoot
-    global runTestRoot
-    global clayPlatform
+    opt = TestOptions()
 
     argp = argparse.ArgumentParser(description="Run the Clay test suite.")
     argp.add_argument("-I",
@@ -447,24 +449,25 @@ def main() :
     args = argp.parse_args()
 
     if args.arch is not None:
-        testBuildFlags += ['-arch', args.arch]
+        opt.testBuildFlags += ['-arch', args.arch]
     if args.libClayPaths is not None:
-        testBuildFlags += ['-I' + os.path.abspath(path) for path in args.libClayPaths]
+        opt.testBuildFlags += ['-I' + os.path.abspath(path) for path in args.libClayPaths]
     if args.target is not None:
-        testBuildFlags += ['-target', args.target]
+        opt.testBuildFlags += ['-target', args.target]
     if args.testRoot is not None:
-        testRoot = os.path.abspath(args.testRoot)
+        opt.testRoot = os.path.abspath(args.testRoot)
     if args.logfile is not None:
-        testLogFile = args.logfile
+        opt.testLogFile = args.logfile
 
     if args.testname is not None:
-        runTestRoot = os.path.join(testRoot, args.testname)
+        opt.runTestRoot = os.path.join(opt.testRoot, args.testname)
     else:
-        runTestRoot = testRoot
+        opt.runTestRoot = opt.testRoot
 
     startTime = time.time()
-    clayPlatform = getClayPlatform()
-    runTests()
+    opt.clayCompiler = getClayCompiler(opt)
+    opt.clayPlatform = getClayPlatform(opt)
+    runTests(opt)
     endTime = time.time()
     print
     print "time-taken-seconds: %f" % (endTime - startTime)
