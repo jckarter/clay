@@ -1572,7 +1572,6 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->analyzed)
         analyzeExternalProcedure(x);
     assert(x->analyzed);
-    assert(!x->llvmFunc);
     vector<llvm::Type *> llArgTypes;
     vector< pair<unsigned, llvm::Attributes> > llAttributes;
     llvm::Type *llRetType =
