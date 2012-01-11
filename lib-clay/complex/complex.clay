@@ -283,3 +283,19 @@ inline overload min(x:C,y:C) = min(abs(x),abs(y));
 
 [T | Complex?(T)]
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
+
+[T | Complex?(T)]
+inline overload finite?(x:T) = floatExponent(abs(x)) < exponentMask(T);
+
+[T | Complex?(T)]
+inline overload infinity?(x:T) = abs(x) == infinity(T);
+
+[T | Complex?(T)]
+inline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));
+
+[T | Complex?(T)]
+inline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
+
+[T | Complex?(T)]
+inline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
+
