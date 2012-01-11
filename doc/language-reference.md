@@ -456,7 +456,7 @@ Most definition forms in Clay can be genericized. Pattern guards provide the mea
         printTo(s, "(", p.x, ", ", p.y, ")");
     }
 
-Variadic pattern values can be declared in the pattern guard as a name prefixed with `..`.
+Variadic pattern variables can be declared in the pattern guard as a name prefixed with `..`.
 
     // Example
     // Define printlnTwice for any bag of types ..TT
@@ -466,7 +466,7 @@ Variadic pattern values can be declared in the pattern guard as a name prefixed 
         printlnTo(file, ..x);
     }
 
-The list of declared pattern variables may optionally be followed by a `|` character and predicate expression to constrain the domain of possible values for the variables in the following definition. The definition will only apply for values of the given pattern variables if the given predicate evaluates to true.
+The list of declared pattern variables may optionally be followed by a `|` character and predicate expression. The predicate expression constrains the domain of valid values for the declared variables to those for which the given predicate evaluates to true.
 
     // Example
     // Define the record type Point[T] for all types T where `Numeric?(T)` is true
@@ -488,7 +488,7 @@ A predicate may also appear in a pattern guard without any pattern variables, in
 
 Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations]). Definitions without an explicit visibility default to `public`.
 
-Visibility modifiers are not allowed on definitions that modify existing symbols instead of creating new ones. In forms that do admit a visibility modifier, it must appear after the pattern guard (if any) but before the subsequent definition.
+Visibility modifiers are not valid for definitions that modify existing symbols instead of creating new ones, such as variant `instance`s or function `overload`s. In forms that do admit a visibility modifier, the modifier must appear after the pattern guard, if any, but before the subsequent definition.
 
 ### Symbols
 
