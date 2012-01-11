@@ -170,15 +170,15 @@ overload floatFromParts(static ILongDouble, neg?:Bool, exp:I, mant:UInt64)
 
 [I | Integer?(I)]
 overload floatFromParts(static IDouble, neg?:Bool, exp:I, mant:UInt64)
-    = imagFromBits(bitor(bitand(mant, mantissaMask(Double)),
-        bitshl(bitand(UInt64(exp), exponentMask(Double)), mantissaSize(Double)),
+    = imagFromBits(bitor(bitand(mant, mantissaMask(IDouble)),
+        bitshl(bitand(UInt64(exp), exponentMask(IDouble)), mantissaSize(IDouble)),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
 [I | Integer?(I)]
 overload floatFromParts(static IFloat ,neg?:Bool, exp:I, mant:UInt32)
     = imagFromBits(bitor(
-        bitand(mant, mantissaMask(Float)),
-        bitshl(bitand(UInt32(exp), exponentMask(Float)), mantissaSize(Float)),
+        bitand(mant, mantissaMask(IFloat)),
+        bitshl(bitand(UInt32(exp), exponentMask(IFloat)), mantissaSize(IFloat)),
         if (neg?) 0x8000_0000u else 0u ));
 
 floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x0000_0000_0000_8000_ul) != 0;
@@ -354,6 +354,12 @@ overload copysign(a:LongDouble,b:T) {
 
 [T | Float?(T)] epsilon(static T) = nextafter(T(1),T(2))-T(1);
 
+
+// ieee754 number - utility representation
+alias db_number = Union[Array[Int32,2], Int64, Float64];
+alias db_one = db_number(1.0);
+alias db_zero = db_number(0.0);
+
 alias FP_NAN = 0;
 alias FP_INFINITE = 1;
 alias FP_ZERO = 2;
@@ -378,3 +384,50 @@ fpclassify(x:T) --> res:Int {
     if(floatNegative?(x)) res += 6;
 }
 
+// IEEE functions
+// nextafter(x,y)
+// return the next machine floating-point number of x in the
+// direction toward y.
+
+nextafter(x:Double, y:Double){
+    alias MIN_SUB = LeastPositive(Double);
+    alias EXP_MASK = 0x7ff00000;
+    var xdb,ydb = db_number(x),db_number(y);
+	alias hx = xdb.0[1];
+    alias lx = xdb.0[0];
+    alias hy = ydb.0[1];
+    alias ly = ydb.0[0];
+
+	if(x == y) return x;
+    if(nan?(x) or nan?(y)) return nan(Double);
+	if(x == 0.) // x == 0 so return +-minsubnormal
+	    return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
+	if(hx >= 0)
+	    if(hx > hy or (hx == hy and lx > ly)) {	// x > y, x -= ulp
+            if(lx == 0) dec(hx);
+            dec(lx);
+	    } else {	// x < y, x += ulp
+            inc(lx);
+            if(lx == 0) inc(hx);
+	    }
+	else
+	    if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -= ulp
+            if(lx == 0) dec(hx);
+            dec(lx);
+	    } else {		// x > y, x += ulp
+            inc(lx);
+            if(lx == 0) inc(hx);
+	    }
+    hy = bitand(hx,EXP_MASK);
+	if(hy >= EXP_MASK)
+        return infinity(Double);	// overflow
+	if(hy < 0x00100000)		// underflow
+	    if(x*x != x)		// raise underflow flag
+            return xdb.2;
+	return xdb.2;
+}
+
+overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
+overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
+
+alias nexttoward = nextafter;

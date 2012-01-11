@@ -294,7 +294,7 @@ overload cot(z:T) {
 //       mtherr ("ccot", OVERFLOW);
         return Complex(MAXNUM,MAXNUM);
     }
-    return sin (2.0 * real(z)) / d - (sinh (2.0 * imag(z)) / d) * I;
+    return Complex(sin (2.0 * real(z)) / d, - (sinh (2.0 * imagValue(z)) / d) );
 }
 
 

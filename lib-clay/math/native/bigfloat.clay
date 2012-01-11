@@ -4,7 +4,6 @@
 // This is primarily intended for use in math libs to provide high accuracy
 // functions and as a high performance 'larger than Float80/128 float type'.
 
-import math.native.exact.(db_number);
 import math.*;
 import printer.formatter.(hex);
 import numbers.floats.*;

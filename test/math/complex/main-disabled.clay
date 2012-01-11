@@ -7,22 +7,22 @@ import printer.formatter.*;
 import numbers.floats.*;
 
 itypes() = Imag32,Imag64;
-ctypes() = Complex32,Complex64;
+ctypes() = Complex64;
 
-[T | Complex?(T)] fdata(static T) = array(
+[T | Complex?(T)] cdata(static T) = array(
     T(0+0j),T(-0-0j),T(1+0j),T(-1+0j),T(0+1j),T(0-1j),
-    T(1+1j),T(1-1j),T(355),T(355j),T(355.+355.j),
+    T(1+1j),T(1-1j),T(355.),T(355.j),T(355.+355.j),
     nan(T),-nan(T),infinity(T),negativeInfinity(T));
 
-[T | Numeric?(T)] fdata2(static T) = array(T(0.05),T(0.5),T(5),T(50),T(500));
+[T | Numeric?(T)] cdata2(static T) = array(T(0.05),T(0.5),T(5),T(50),T(500));
 
 oneArgFuncs() = sin,cos,tan,
                 asin,acos,atan,
                 sinh,cosh,tanh,
                 asinh,acosh,atanh,
-                exp,cot,arg,abs,
-                log,log10,sqrt;
-
+                exp,arg,abs,
+                log,sqrt;
+//                 cot,log10;
 twoArgFuncs() = pow;
 
 evalLibcFunc(f, static Complex32) = eval(#"libc.c",f,#"f");
@@ -41,7 +41,7 @@ evalFuncs(funcs,data,types) {
 
 main() {
 
-    evalFuncs(oneArgFuncs,fdata,ftypes);
+    evalFuncs(oneArgFuncs,cdata,ctypes);
 
 }
 
