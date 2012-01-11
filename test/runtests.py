@@ -46,7 +46,7 @@ def indented(txt):
 def which(program):
     for path in os.environ["PATH"].split(os.pathsep):
         exe_file = os.path.join(path, program)
-        if os.path.exists(fpath) and os.access(fpath, os.X_OK):
+        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
             return exe_file
 
     return None
