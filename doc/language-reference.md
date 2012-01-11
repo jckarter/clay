@@ -365,7 +365,7 @@ Such a declaration must appear after any [import declarations] and before any [t
     in foo.bas ();
     in foo.bas (Float32);
 
-The module attribute list can be an arbitrary multi-value expression, which can reference any imported symbols but not symbols defined within the module itself.
+The module attribute list can be an arbitrary [multiple value expression], which can reference any imported symbols but not symbols defined within the module itself.
 
     // Example
     // foo.clay
@@ -456,6 +456,16 @@ Most definition forms in Clay can be genericized. Pattern guards provide the mea
         printTo(s, "(", p.x, ", ", p.y, ")");
     }
 
+Variadic pattern values can be declared in the pattern guard as a name prefixed with `..`.
+
+    // Example
+    // Define printlnTwice for any bag of types ..TT
+    [..TT]
+    printlnTwice(file:File, ..x:TT) {
+        printlnTo(file, ..x);
+        printlnTo(file, ..x);
+    }
+
 The list of declared pattern variables may optionally be followed by a `|` character and predicate expression to constrain the domain of possible values for the variables in the following definition. The definition will only apply for values of the given pattern variables if the given predicate evaluates to true.
 
     // Example
@@ -471,8 +481,6 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     [| TypeSize(Pointer[Int]) < 4]
     overload platformCheck() { error("Time for a new computer"); }
 
-XXX variadic pattern variables
-
 #### Visibility modifiers
 
     # Grammar
@@ -482,9 +490,11 @@ Every form that creates a new symbol name may be prefixed with a `public` or `pr
 
 Visibility modifiers are not allowed on definitions that modify existing symbols instead of creating new ones. In forms that do admit a visibility modifier, it must appear after the pattern guard (if any) but before the subsequent definition.
 
-## Symbols
+### Symbols
 
-XXX talk about what symbols are, how type and function definitions create them, etc.
+Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads] and [pattern matching]. Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the type `Static[symbol]`.
+
+XXX
 
 ## Type definitions
 
@@ -531,7 +541,7 @@ If no predicate expression is needed, the pattern guard is optional; the named p
     // Example
     record Point[T] (x:T, y:T); // [T] guard is assumed
 
-More complex record types can be derived using a computed body. If the type name is followed by an `=` token, the following expression is evaluated to determine the layout of the record. The expression must evaluate to a tuple of pairs, each pair containing a static string field name and a field type.
+A record type's layout can also be evaluated from an expression. If the type name is followed by an `=` token, the following expression is evaluated to determine the layout of the record. The expression must evaluate to a tuple of pairs, each pair containing a static string field name and a field type.
 
     // Example
     // Equivalent to the non-computed Point[T] definition:
@@ -548,8 +558,9 @@ Record definitions currently do not directly allow for template specialization. 
 
     private define PointBody;
     [T | T != Double]
-    overload PointBody(static T) = [[#"coords", Array[T, 2]]];
-    overload PointBody(static Double) = [[#"coords", Vec[Double, 2]]];
+    overload PointBody(static T) = [[#"coords", Array[T, 3]]];
+    // Use a SIMD vector for Float points
+    overload PointBody(static Float) = [[#"coords", Vec[Float, 4]]];
 
 ### Variants
 
@@ -575,7 +586,7 @@ Also like record types, the pattern guard is optional if no predicate is needed;
     variant Maybe[T] (Nothing, T); // [T] pattern guard implied
     variant Either[T, U] (T, U); // [T, U] pattern guard implied
 
-The variant instance list may be an arbitrary multiple-value expression. It is evaluated to derive the set of instances.
+The variant instance list may be an arbitrary [multiple value expression]. It is evaluated to derive the set of instances.
 
     // Example
     private RainbowTypes(Base) =
@@ -688,7 +699,7 @@ Overloads are necessary to extend a function with multiple implementations.
     Overload -> PatternGuard? CodegenAttribute? "overload"
                 Pattern Arguments ReturnSpec? FunctionBody
 
-Simple function definitions define a symbol and a function implementation in lockstep, but the two steps can also be performed independently. The `define` keyword defines a symbol without any initial overloads. The `overload` keyword extends an already-defined symbol with new implementations.
+Simple function definitions define a symbol and attach a function implementation to the symbol in lockstep, but the two steps can also be performed independently. The `define` keyword defines a symbol without any initial overloads. The `overload` keyword extends an already-defined symbol with new implementations.
 
     // Example
     define abs;
@@ -698,7 +709,8 @@ Simple function definitions define a symbol and a function implementation in loc
 A `define` may also define an interface constraint for the symbol by following the symbol name with a list of [arguments] and optional [return types]. All overloads attached to the symbol must conform to a subset of the specified interface. If the `define` form does not specify arguments or return types, then the argument types and/or return types of the created symbol's overloads are unconstrained.
 
     // Example
-    [T | Numeric?(T)] define abs(x:T) : T;
+    [T | Numeric?(T)]
+    define abs(x:T) : T;
 
     [T | Integer?(T)]
     overload abs(x:T) = if (x < 0) -x else x;
@@ -738,15 +750,36 @@ The unparameterized base name of a type also may be overloaded independently of 
     // if no T given, give them a Point[Float]
     overload Point() = Point[Float]();
 
-Within a module, overloads are matched to a call site in reverse definition order. The first overload that matches wins. (If you think this is stupid, you are correct.)
+Within a module, overloads are matched to a call site's symbol name and argument types in reverse definition order. (If you think this is stupid, you are correct.) The first overload that matches gets instantiated for the call site.
 
     // Example
-    // XXX
+    define foo(x);
 
-Match order between overloads from different modules is undefined; however, it is an error if overloads from more than one module match the same call site.
+    // oops, the second overload gets visited first and always wins
+    overload foo(x:Int) { println("Hey, over here!"); }
+
+    overload foo(x) {
+        println("Pay no attention to that overload behind the curtain.");
+    }
+
+Match order between overloads from different modules is done walking the import graph depth-first. (If you think is this _really_ stupid, you are correct.) Resolution order among circularly-dependent modules is undefined.
 
     // Example
-    // XXX
+    // a.clay
+    define foo(x);
+    // visited last
+    overload foo(x:Int) {}
+
+    // b.clay
+    import a;
+    // visited second
+    overload a.foo(x:Int) {}
+
+    // c.clay
+    import b;
+    import a;
+    // visited first
+    overload a.foo(x:Int) {}
 
 Symbols created by [simple function definitions] may also be overloaded; in fact, a simple function definition is simply shorthand for an unconstrained `define` followed by an `overload`.
 
@@ -756,11 +789,34 @@ Symbols created by [simple function definitions] may also be overloaded; in fact
     define double;
     overload double(x) = x+x;
 
-XXX universal overloads
+Universal overloads are supported as a special case, in which the overloaded symbol name is itself a free pattern variable.
+
+    // Example
+    record MyInt (value:Int);
+
+    // delegate any function called with a MyInt to be called on its Int value
+    [F]
+    overload F(x:MyInt) = ..F(x.value);
+
+    // Implement a default constructor for any Numeric? type
+    [T | Numeric?(T)]
+    overload T() = T(0);
+
+Such overloads are matched against all call sites that aren't matched first by a more specific overload. In other words, universal overloads are ordered after all specific overloads.
+
+Note that if a call site does not use a [symbol](#symbols) in the function position, it is desugared into a call to the `call` [operator].
+
+    // Example
+    record MyCallable ();
+
+    overload call(f:MyCallable, x:Int, y:Int) : Int = x + y;
+
+    main() {
+        var f = MyCallable();
+        println(f(1, 2)); // really call(f, 1, 2)
+    }
 
 ### Arguments
-
-XXX ...
 
     # Grammar
     Arguments -> "(" ArgumentList ")"
@@ -770,31 +826,61 @@ XXX ...
     Argument -> NamedArgument
               | StaticArgument
 
-
-
-#### Named arguments
-
-    # Grammar
     NamedArgument -> ReferenceQualifier? Identifier TypeSpec?
 
+Arguments are declared in a parenthesized list of names, each name optionally followed by a type specifier. The type specifiers are matched to the types of a call site's input values using [pattern matching]. If an argument is declared without a type specifier, it has an implicit unbounded pattern variable as its type specifier.
 
+    // Example
+    // Define double(x) for any type of x
+    [T]
+    double(x:T) = x+x;
 
-#### Static arguments
+    // Define double(x) for any type of x, with less typing
+    double(x) = x+x;
 
-    # Grammar
-    StaticArgument -> "static" Pattern
+    // Define double(x) for any type of x, with an explicit pattern var
+    [T] double(x:T) = x+x;
 
 #### Variadic arguments
 
     # Grammar
-    VarArgument -> ".." ValueArgument
+    VarArgument -> ReferenceQualifier? ".." Identifier TypeSpec?
+
+The final argument may be declared as variadic by being prefixed with a `..` token, in which case it will match all remaining arguments after the previously-matched arguments. The argument name will be bound as a [multiple value variable].
+
+    // Example
+    // Print ..stuff n times
+    printlnTimes(n:Int, ..stuff) {
+        for (i in range(n))
+            println(..stuff);
+    }
+
+    main(args) {
+        printlnTimes(3, "She loves you ", "yeah yeah yeah");
+    }
+
+The types of the variadic argument's values may be bound to a variadic pattern variable. The pattern variable's name does not require a second `..` token.
+
+    // Example
+    // Print ..stuff n times, for only String? ..stuff
+    [..TT | allValues?(String?, ..TT)]
+    printlnTimes(n:Int, ..stuff:TT) {
+        for (i in range(n))
+            println(..stuff);
+    }
+
+    // Call a CodePointer object with input values matching its input types
+    [..In, ..Out]
+    invoke(f:CodePointer[[..In], [..Out]], ..in:In) : ..Out {
+        return ..f(..in);
+    }
 
 #### Reference qualifiers
 
     # Grammar
     ReferenceQualifier -> "ref" | "rvalue" | "forward"
 
-Clay distinguishes "lvalues", which are values bound to a variable, referenced through a pointer, or otherwise with externally-referenceable identities, from "rvalues", which are unnamed temporary values that will exist only for the extent of a single function call. (The terms come from an lvalue being a valid expression on the **L**eft side of an assignment statement, whereas an rvalue is only valid on the **R**ight side.)
+Argument declarations may be prefixed with an optional reference qualifier. Clay distinguishes "lvalues", which are values bound to a variable, referenced through a pointer, or otherwise with externally-referenceable identities, from "rvalues", which are unnamed temporary values that will exist only for the extent of a single function call. (The terms come from an lvalue being a valid expression on the **L**eft side of an assignment statement, whereas an rvalue is only valid on the **R**ight side.)
 
     // Example
     // The result of `2+2` in this example is bound to `x` and is thus an lvalue
@@ -828,7 +914,7 @@ Without a `ref` or `rvalue` qualifier, the argument will match either lvalues or
     foo(rvalue x:Int) {}
 
     bar(x:Int) {
-        // ERROR: our name 'x' is an lvalue, even if bound to an rvalue
+        // ERROR: our name 'x' is an lvalue, even if bound to an rvalue from the caller
         foo(x);
     }
 
@@ -849,10 +935,22 @@ If a function needs to carry the `rvalue`-ness of an argument through to other f
         bar(2+2);
     }
 
-The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argument name, in which case the qualifier applies to all of the values the name matches.
+The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argument name, in which case the qualifier applies to all of the values the name matches. `forward` variadic arguments are especially useful for providing "perfect forwarding" through wrapper functions that should not alter the behavior of the functions they wrap.
 
     // Example
-    // XXX
+    trace(f, forward ..args) {
+        println("enter ", f);
+        finally println("exit  ", f);
+
+        return forward ..f(..args);
+    }
+
+#### Static arguments
+
+XXX ...
+
+    # Grammar
+    StaticArgument -> "static" Pattern
 
 ### Return types
 
