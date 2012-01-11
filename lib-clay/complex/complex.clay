@@ -299,3 +299,14 @@ inline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
 [T | Complex?(T)]
 inline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
 
+[T | Complex?(T)]
+overload infinity(static T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload negativeInfinity(static T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload nan(static T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload snan(static T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
