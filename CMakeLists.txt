@@ -93,11 +93,8 @@ if(BUILD_BINDGEN)
     endif()
 endif()
 
-if(UNIX)
-    install(DIRECTORY lib-clay DESTINATION lib)
-else(UNIX)
-    install(DIRECTORY lib-clay DESTINATION .)
-endif(UNIX)
+install(DIRECTORY doc/ DESTINATION share/doc/clay)
+install(DIRECTORY lib-clay DESTINATION lib)
 
 add_subdirectory(compiler)
 add_subdirectory(misc)

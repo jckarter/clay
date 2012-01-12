@@ -67,10 +67,9 @@ set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 
 if (UNIX)
     set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
-    install(TARGETS clay RUNTIME DESTINATION bin)
-else(UNIX)
-    install(TARGETS clay RUNTIME DESTINATION .)
 endif(UNIX)
+
+install(TARGETS clay RUNTIME DESTINATION bin)
 
 target_link_libraries(clay ${LLVM_LIBS})
 
