@@ -88,7 +88,7 @@ overload resetUnsafe(a:Vector[T]) {
 
 
 [T]
-overload assign(dest:Vector[T], ref src:Vector[T]) {
+overload assign(ref dest:Vector[T], ref src:Vector[T]) {
     resize(dest, size(src));
     for (x, y in zipped(dest, src))
         assign(x, y);

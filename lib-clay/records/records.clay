@@ -137,7 +137,7 @@ overload destroy(a:T) {
 //
 
 [T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
-overload assign(dest:T, ref src:T) {
+overload assign(ref dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));

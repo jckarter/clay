@@ -223,12 +223,12 @@ inline move(src:T) --> returned:T {
 }
 
 [T]
-inline overload assign(dest:T, rvalue src:T) {
+inline overload assign(ref dest:T, rvalue src:T) {
     swap(dest, src);
 }
 
 [F]
-inline overload updateAssign(static F, dest, forward src) {
+inline overload updateAssign(static F, ref dest, forward src) {
     dest = F(dest, src);
 }
 

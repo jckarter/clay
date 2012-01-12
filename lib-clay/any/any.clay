@@ -76,7 +76,7 @@ overload destroy(x:Any) {
     }
 }
 
-overload assign(dest:Any, ref src:Any) {
+overload assign(ref dest:Any, ref src:Any) {
     if (&dest == &src)
         return;
     dest = Any(src);

@@ -138,7 +138,7 @@ inline overload destroy(a:Tuple[..T]) {
 //
 
 [..T | not allValues?(BitwiseAssignedType?, ..T)]
-inline overload assign(dest:Tuple[..T], ref src:Tuple[..T]) {
+inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));

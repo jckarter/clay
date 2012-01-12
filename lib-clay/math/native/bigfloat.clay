@@ -233,7 +233,7 @@ private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 
 // This function copies a result into another.
 [T | BigFloat?(T)]
-inline overload assign(result:T, x:T) : {
+inline overload assign(ref result:T, x:T) : {
     result.hword = x.hword;
     result.excp = x.excp;
     result.index = x.index;
@@ -241,7 +241,7 @@ inline overload assign(result:T, x:T) : {
 }
 
 [T | Numeric?(T)]
-inline overload assign(result:BigFloat, x:T) {
+inline overload assign(ref result:BigFloat, x:T) {
     if(x == 0){
         resetUnsafe(result.h_word);
         result.excp = 0.;

@@ -75,7 +75,7 @@ inline overload moveUnsafe(src:Vec[T,n]) --> returned:Vec[T,n] {
 }
 
 [T,n]
-inline overload assign(dest:Vec[T,n], src:Vec[T,n]) {
+inline overload assign(ref dest:Vec[T,n], src:Vec[T,n]) {
     dest <-- src;
 }
 

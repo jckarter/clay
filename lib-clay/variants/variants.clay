@@ -113,7 +113,7 @@ inline overload resetUnsafe(x:V) {
 //
 
 [V | Variant?(V) and not BitwiseAssignedType?(V)]
-overload assign(dest:V, ref src:V) {
+overload assign(ref dest:V, ref src:V) {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
     var tag = destRepr.tag;

@@ -143,12 +143,12 @@ inline overload I(a:T) = I(0.j);
 //
 
 [A, B | Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload assign(dest:A, src:B) {
+inline overload assign(ref dest:A, src:B) {
     primitiveCopy(dest, numericConvert(A,src));
 }
 
 [A, B | Integer?(A,B) and (TypeSize(A) == TypeSize(B))]
-inline overload assign(dest:A, src:B) {
+inline overload assign(ref dest:A, src:B) {
     primitiveCopy(dest, A(src));
 }
 

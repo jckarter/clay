@@ -37,7 +37,7 @@ overload Canary(src:Canary) --> returned:Canary {
     beginLifeMaybeThrow(returned);
 }
 
-overload assign(dest:Canary, src:Canary) {
+overload assign(ref dest:Canary, src:Canary) {
     assertAlive(dest);
     assertAlive(src);
 }

@@ -108,7 +108,7 @@ overload resetUnsafe(x: Canary) {
         canaryTracker[x.id] = RESET;
     }
 }
-overload assign(x: Canary, y: Canary) { }
+overload assign(ref x: Canary, y: Canary) { }
 
 overload equals?(x: Canary, y: Canary) { return true; }
 

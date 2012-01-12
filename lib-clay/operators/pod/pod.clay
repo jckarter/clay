@@ -152,5 +152,5 @@ inline overload resetUnsafe(x: P) { }
 [P | BitwiseCopiedType?(P)]
 inline overload P(x: P) --> returned: P = copyPOD(x);
 [P | BitwiseAssignedType?(P)]
-inline overload assign(x: P, y: P) { x <-- copyPOD(y); }
+inline overload assign(ref x: P, y: P) { x <-- copyPOD(y); }
 

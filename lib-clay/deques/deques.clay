@@ -44,11 +44,11 @@ record DequeCoordinate[T] (
     dec(i.current);
 }
 
-[T, I | Integer?(I)] overload updateAssign(static add, i: DequeCoordinate[T], n: I) {
+[T, I | Integer?(I)] overload updateAssign(static add, ref i: DequeCoordinate[T], n: I) {
     i += PtrInt(n);
 }
 
-[T] overload updateAssign(static add, i: DequeCoordinate[T], n: PtrInt) {
+[T] overload updateAssign(static add, ref i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
     if (offset >= 0 and offset < DequeBufferSSize(T))
         i.current += n;
@@ -69,7 +69,7 @@ record DequeCoordinate[T] (
     j += n;
 }
 
-[T, I | Integer?(I)] overload updateAssign(static subtract, i: DequeCoordinate[T], n: I) {
+[T, I | Integer?(I)] overload updateAssign(static subtract, ref i: DequeCoordinate[T], n: I) {
     i += -PtrInt(n);
 }
 
@@ -174,7 +174,7 @@ overload Deque(forward from:A) {
 [A | MultiValuedSequence?(A)]
 overload Deque(forward from:A) = Deque(mapped(Tuple, from));
 
-[T] overload assign(to: Deque[T], from: Deque[T]) {
+[T] overload assign(ref to: Deque[T], from: Deque[T]) {
     resize(to, size(from));
     var toI = to.begin;
     var fromI = from.begin;
