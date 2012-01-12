@@ -481,7 +481,8 @@ int main2(int argc, char **argv, char const* const* envp) {
             clayScriptImports += "import " + modulespec + ".*; ";
         }
         else if (strcmp(argv[i], "-o") == 0) {
-            if (i+1 == argc) {
+            ++i;
+            if (i == argc) {
                 cerr << "error: filename missing after -o\n";
                 return 1;
             }
@@ -491,7 +492,6 @@ int main2(int argc, char **argv, char const* const* envp) {
                      << ", specified again as " << argv[i] << '\n';
                 return 1;
             }
-            ++i;
             outputFile = argv[i];
         }
 #ifdef __APPLE__
@@ -678,7 +678,8 @@ int main2(int argc, char **argv, char const* const* envp) {
             generateDeps = false;
         }
         else if (strcmp(argv[i], "-o-deps") == 0) {
-            if (i+1 == argc) {
+            ++i;
+            if (i == argc) {
                 cerr << "error: filename missing after -o-deps\n";
                 return 1;
             }
@@ -688,7 +689,6 @@ int main2(int argc, char **argv, char const* const* envp) {
                      << ", specified again as " << argv[i] << '\n';
                 return 1;
             }
-            ++i;
             dependenciesOutputFile = argv[i];
         }
         else if (strcmp(argv[i], "--") == 0) {
