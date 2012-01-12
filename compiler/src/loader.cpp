@@ -187,7 +187,9 @@ static string locateModule(DottedNamePtr name) {
 // loadFile
 //
 
-static SourcePtr loadFile(const string &fileName) {
+static SourcePtr loadFile(const string &fileName, vector<string> *sourceFiles) {
+    if (sourceFiles != NULL)
+        sourceFiles->push_back(fileName);
     FILE *f = fopen(fileName.c_str(), "rb");
     if (!f)
         error("unable to open file: " + fileName);
@@ -218,7 +220,7 @@ static SourcePtr loadFile(const string &fileName) {
 // loadModuleByName, loadDependents, loadProgram
 //
 
-static void loadDependents(ModulePtr m);
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
 static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 
@@ -255,7 +257,7 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
-static ModulePtr loadModuleByName(DottedNamePtr name) {
+static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles) {
     string key = toKey(name);
 
     map<string, ModulePtr>::iterator i = globalModules.find(key);
@@ -269,11 +271,11 @@ static ModulePtr loadModuleByName(DottedNamePtr name) {
     }
     else {
         string path = locateModule(name);
-        module = parse(key, loadFile(path));
+        module = parse(key, loadFile(path, sourceFiles));
     }
 
     globalModules[key] = module;
-    loadDependents(module);
+    loadDependents(module, sourceFiles);
     installGlobals(module);
 
     return module;
@@ -289,13 +291,13 @@ static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     return holder;
 }
 
-static void loadDependents(ModulePtr m) {
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
     m->rootHolder = new ModuleHolder();
     m->publicRootHolder = new ModuleHolder();
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
-        x->module = loadModuleByName(x->dottedName);
+        x->module = loadModuleByName(x->dottedName, sourceFiles);
         switch (x->importKind) {
         case IMPORT_MODULE : {
             ImportModule *y = (ImportModule *)x.ptr();
@@ -351,16 +353,16 @@ static void loadDependents(ModulePtr m) {
     }
 }
 
-static ModulePtr loadPrelude() {
+static ModulePtr loadPrelude(vector<string> *sourceFiles) {
     DottedNamePtr dottedName = new DottedName();
     dottedName->parts.push_back(new Identifier("prelude"));
-    return loadModuleByName(dottedName);
+    return loadModuleByName(dottedName, sourceFiles);
 }
 
-ModulePtr loadProgram(const string &fileName) {
-    globalMainModule = parse("", loadFile(fileName));
-    ModulePtr prelude = loadPrelude();
-    loadDependents(globalMainModule);
+ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles) {
+    globalMainModule = parse("", loadFile(fileName, sourceFiles));
+    ModulePtr prelude = loadPrelude(sourceFiles);
+    loadDependents(globalMainModule, sourceFiles);
     installGlobals(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
@@ -372,8 +374,9 @@ ModulePtr loadProgramSource(const string &name, const string &source) {
         const_cast<char*>(source.c_str()),
         source.size())
     );
-    ModulePtr prelude = loadPrelude();
-    loadDependents(globalMainModule);
+    // Don't keep track of source files for -e script
+    ModulePtr prelude = loadPrelude(NULL);
+    loadDependents(globalMainModule, NULL);
     installGlobals(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
