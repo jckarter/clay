@@ -856,15 +856,12 @@ Note that if a call site does not use a [symbol](#symbols) in the function posit
 Arguments are declared in a parenthesized list of names, each name optionally followed by a type specifier. The type specifiers are matched to the types of a call site's input values using [pattern matching]. If an argument is declared without a type specifier, it has an implicit unbounded pattern variable as its type specifier.
 
     // Example
-    // Define double(x) for any type of x
+    // Define double(x) for any type of x, with an explicit pattern var
     [T]
     double(x:T) = x+x;
 
     // Define double(x) for any type of x, with less typing
     double(x) = x+x;
-
-    // Define double(x) for any type of x, with an explicit pattern var
-    [T] double(x:T) = x+x;
 
 Arguments are passed by reference.
 
@@ -1080,9 +1077,11 @@ Note that named return values are inherently unsafe (hence the intentionally awk
 
     overload SOAPoint(size:SizeT) --> returned:SOAPoint
     {
-        returned.xs <-- Vector[Float](size);
+        returned.xs <-- Vector[Float]();
+        resize(returned.xs, size);
         onerror destroy(returned.xs);
-        returned.ys <-- Vector[Float](size);
+        returned.ys <-- Vector[Float]();
+        resize(returned.ys, size);
     }
 
 ### Function body
