@@ -626,7 +626,7 @@ The variant instance list may be an arbitrary [multiple value expression]. It is
     # Grammar
     Instance -> PatternGuard? "instance" Pattern "(" ExprList ")" ";"
 
-Variant types are open. Instance types can be added using the `instance` keyword.
+Variant types are open. Instance types can be added to an already-defined variant using the `instance` keyword.
 
     // Example
     variant Exception (); // type Exception starts with no members
@@ -683,6 +683,14 @@ Lambda types are record-like types that capture values from their enclosing scop
 ## Function definitions
 
 Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime function calls are resolved at compile time for every set of input types with which they are invoked.
+
+* [Simple function definitions]
+* [Overloaded function definitions]
+* [Arguments]
+* [Return types]
+* [Function body]
+* [Inline and alias qualifiers]
+* [External functions]
 
 ### Simple function definitions
 
@@ -1132,7 +1140,7 @@ A function may also be implemented directly in LLVM assembly language by specify
 LLVM blocks currently leak an unfortunate amount of implementation detail. To return values into Clay, named returns must be used. Arguments and named return values are bound as LLVM pointers of the corresponding LLVM type; for instance, an argument `x:Int32` will be available as the `i32*`-typed value `%x` in the LLVM code. Clay functions internally return a value of type `i8*` which should normally be null; thus, all LLVM basic blocks that exit the function must end with `ret i8* null`.
 
     // Example
-    // Who needs __primitives__.numericAdd?
+    // Who needs `__primitives__.numericAdd`?
     overload add(x:Int32, y:Int32) --> sum:Int32 __llvm__ {
         %xv = load i32* %x
         %yv = load i32* %y
@@ -1161,7 +1169,7 @@ If an inline LLVM block references intrinsics or other global symbols, those sym
 
 Inline LLVM functions currently cannot be evaluated at compile time.
 
-### Inline and alias overloads
+### Inline and alias qualifiers
 
     # Grammar
     CodegenAttribute -> "inline" | "alias"
@@ -1236,7 +1244,7 @@ An external definition with a body defines a Clay function with external linkage
 
 Compared to internal Clay functions, external functions have several limitations:
 
-* External functions cannot be generic. Their argument and return types must be fully specified. Return types cannot be inferred, and named return bindings cannot be used. The definition cannot include a pattern guard.
+* External functions cannot be generic. Their argument and return types must be fully specified. Return types cannot be inferred, and named return bindings cannot be used. The definition cannot include a pattern guard. External functions cannot be overloaded.
 * External functions may return only zero or one values.
 * `<stdarg.h>`-compatible variadic C functions may be declared and called from Clay, but implementing C variadic functions is currently unsupported.
 * Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator] function.
@@ -1244,7 +1252,7 @@ Compared to internal Clay functions, external functions have several limitations
 
 Although they define a top-level name, external function names are not true [symbols]. An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes], [..OutTypes]]` type representing the external's function pointer.
 
-### External attributes
+#### External attributes
 
 A parenthesized [multiple value expression] list may be provided after the `external` keyword in order to set attributes on the external function. A string value in the attribute list controls the function's external linkage name.
 
@@ -1267,13 +1275,125 @@ In the `__primitives__` module, symbols are provided that, when used as external
 
 ## Global value definitions
 
-XXX doc me
+* [Global aliases]
+* [Global variables]
+* [External variables]
 
-    GlobalVariable -> PatternGuard? Visibility? "var" Identifier PatternVars? "=" Expression ";"
+Like many old-fashioned languages, Clay supports global state.
 
-    GlobalAlias -> PatternGuard? Visibility? "alias" Identifier PatternVars? "=" Expression ";"
+### Global aliases
 
-    ExternalVariable -> Visibility? "external" Identifier TypeSpec ";"
+    # Grammar
+    GlobalAlias -> PatternGuard? Visibility?
+                   "alias" Identifier PatternVars? "=" Expression ";"
+
+Analogous to [alias functions](#inlineandaliasqualifiers), global aliases define a global expression that is evaluated on a call-by-name basis. This is useful for defining symbolic constants without allocating a true global variable.
+
+    // Example
+    alias PI = 3.14159265358979323846264338327950288;
+
+    degreesToRadians(deg:Double) : Double = (PI/180.)*deg;
+
+Global aliases may be parameterized with a pattern guard. If no predicate is necessary, the pattern guard is optional; the given parameters will be taken as unbounded pattern variables.
+
+    // Example
+    [T | Float?(T)]
+    alias PI[T] = T(3.14159265358979323846264338327950288);
+
+    alias ZERO[T] = T(0); // [T] pattern guard implied
+
+Global alias definitions do not define true [symbols]. The alias name expands directly into the bound expression.
+
+### Global variables
+
+    # Grammar
+    GlobalVariable -> PatternGuard? Visibility?
+                      "var" Identifier PatternVars? "=" Expression ";"
+
+Global variable definitions instantiate a globally-visible mutable variable. The bound expression is evaluated at runtime, before the `main()` entry point is called, to initialize the global variable. The variable's type is inferred from the type of the expression.
+
+    // Example
+    var msg = noisyString();
+
+    // This happens before main()
+    noisyString() {
+        println("The following message is not endorsed by this global variable.");
+        return String();
+    }
+
+    a() { push(msg, "Hello "); }
+    b() { push(msg, "world!"); }
+
+    main() {
+        a();
+        b();
+        println(msg);
+    }
+
+Global variables may be parameterized with a pattern guard. If no predicate is necessary, the pattern guard is optional; the given parameters will be taken as unbounded pattern variables.
+
+    // Example
+    // XXX
+
+Global variables are instantiated on an as-needed basis. If a global variable is never referenced by runtime-executed code, it will not be instantiated. Global initializers should not be counted on for effects other than initializing the variable.
+
+    // Example
+    var rodney = f();
+
+    // rodney will not be instantiated, and this will not be executed
+    f() {
+        println("I get no respect, I tell ya");
+        return 0;
+    }
+
+    main() { }
+
+Global variable initializer expressions are evaluated in dependency order, and it is an error if there is a circular dependency. The order of initialization among independently-initialized global variables is undefined.
+
+    // Example
+    var a = c + 1; // runs second
+    var b = a + c; // runs third
+    var c = 0;     // runs first
+
+    abc() = a + b + c;
+    var d = abc(); // runs fourth
+
+    // ERROR: circularity
+    var x = y;
+    var y = x;
+
+    // ERROR: circularity
+    getY() = y;
+    var x = getY();
+    var y = x;
+
+Since global variable initializers are executed at runtime, global variables are currently poorly supported by compile-time evaluation. The pointer value and type of global variables may be safely derived at compile time; however, the initial value of a global variable at compile time is currently undefined, and though a global variable may be initialized and mutated during compile time, the compile-time value of the global is not propagated in any form to runtime.
+
+Global variable names are not true [symbols]. A global variable name evaluates to a reference to the global variable's value.
+
+Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.html) for details.
+
+### External variables
+
+    ExternalVariable -> Visibility? "external" AttributeList? Identifier TypeSpec ";"
+
+C `extern` variables can be linked to with `external` variable definitions. An external variable definition consists of the variable name followed by its type. Like external functions, external variables cannot be parameterized.
+
+    // Example
+    // The year is 1979. Errno is still a global variable...
+    external errno : Int;
+
+    main() {
+        if (null?(fopen(cstring("hello.txt"), cstring("r"))))
+            println("error code ", errno);
+    }
+
+Like [external functions], external variable definitions may include an optional attribute list after the `external` keyword. Currently, the only kind of attribute supported is a string, which if provided, specifies the linkage name for the variable.
+
+    // Example
+    external ("____errno$OBSCURECOMPATIBILITYTAG") errno : Int;
+
+Externally-linkable global variables defined in Clay are currently unsupported.
 
 ## Statements
 
