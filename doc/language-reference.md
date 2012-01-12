@@ -2,6 +2,7 @@
 
 * [Conventions]
 * [Tokenization]
+* [Modules]
 * [Source file organization]
 * [Type definitions]
 * [Function definitions]
@@ -171,6 +172,20 @@ String literals represent a sequence of ASCII text. Syntactically, they consist 
     "I'm not sure."
     """
 
+## Modules
+
+Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
+
+Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations], and its own defined [symbols], created by [top-level definitions] in the module source code.
+
+### Special modules
+
+A few modules have special significance:
+
+* The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.html) documentation describes its contents in detail.
+* The `prelude` module is loaded automatically and implicitly imported into every other module.
+* If the entry point module does not declare its name in a [module declaration], it is given the name `__main__`.
+
 ## Source file organization
 
     # Grammar
@@ -181,7 +196,7 @@ A clay module corresponds to a single source file. Source files are laid out in 
 * Zero or more [import declarations]
 * An optional [module declaration]
 * An optional [top-level LLVM] block
-* The body of the module file, consisting of zero or more [top-level definitions]
+* The body of the module file, consisting of zero or more [top-level definitions] that define the module's [symbols]
 
 #### List syntactic forms
 
@@ -382,7 +397,7 @@ The module attribute list can be an arbitrary [multiple value expression], which
     TopLevelLLVM -> LLVMBlock
     LLVMBlock -> "__llvm__" "{" /.*/ "}"
 
-A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations or other global declarations needed by `__llvm__` blocks in individual functions containing [inline LLVM]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
+A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations or other global declarations needed by `__llvm__` blocks in individual [inline LLVM functions]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
 
     // Example
     in traps;
@@ -395,6 +410,8 @@ A module may optionally contain a top-level block of LLVM assembly language. The
         call void @llvm.trap()
         ret i8* null
     }
+
+Clay static values can be interpolated into LLVM code using LLVM interpolation as described for [inline LLVM functions].
 
 ### Top-level definitions
 
@@ -492,7 +509,7 @@ Visibility modifiers are not valid for definitions that modify existing symbols 
 
 ### Symbols
 
-Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads] and [pattern matching]. Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the type `Static[symbol]`.
+Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads] and [pattern matching]. Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
 
 XXX
 
@@ -972,7 +989,7 @@ Functions may match against values computed at compile-time using `static` argum
         beetlejuice(static 3);
     }
 
-As expressions, [symbols] and [static strings] are implicitly static and will also match `static` arguments.
+In expressions, [symbols] and [static strings] are implicitly static and will also match `static` arguments.
 
     // Example
     define defaultValue;
@@ -988,7 +1005,7 @@ As expressions, [symbols] and [static strings] are implicitly static and will al
         println(defaultValue(Float64)); // nan
     }
 
-`static` arguments are implemented as syntactic sugar for an unnamed argument of type `Static[T]`.
+`static` arguments are implemented as syntactic sugar for an unnamed argument of primitive type `Static[T]`.
 
     // Example
     [n] foo(static n) { }
@@ -1050,8 +1067,76 @@ Note that named return values are inherently unsafe (hence the intentionally awk
 
     # Grammar
     FunctionBody -> Block
-                  | LLVMBlock
                   | "=" ReturnExpression ";"
+                  | LLVMBlock
+
+The implementation of a function is contained in its body. The most common body form is a [block](#blocks) containing a series of [statements].
+
+    // Example
+    demBones(a, b) {
+        println(a, " bone's connected to the ", b, " bone");
+    }
+
+    main() {
+        var bones = array("arm", "shoulder", "thigh", "hip", "leg");
+        for (a in bones)
+            for (b in bones)
+                demBones(a, b);
+    }
+
+If the function body consists of a single `return` statement, a shorthand form is provided; in lieu of the block and `return` keyword, `=` can be used after the argument and return type declarations. The `=` form is equivalent to the block-and-`return` form.
+
+    // Example
+    square(x) = x*x;
+    // is exactly the same as
+    square(x) {
+        return x*x;
+    }
+
+    overload index(a:PitchedArray[T], i) = ref a.arr[i*a.pitch];
+    // is exactly the same as
+    overload index(a:PitchedArray[T], i) {
+        return ref a.arr[i*a.pitch];
+    }
+
+#### Inline LLVM functions
+
+    # Grammar
+    LLVMBlock -> "__llvm__" "{" /.*/ "}"
+
+A function may also be implemented directly in LLVM assembly language by specifying the body as an `__llvm__` block. The contents of the block will be emitted literally into the function's body.
+
+LLVM blocks currently leak an unfortunate amount of implementation detail. To return values into Clay, named returns must be used. Arguments and named return values are bound as LLVM pointers of the corresponding LLVM type; for instance, an argument `x:Int32` will be available as the `i32*`-typed value `%x` in the LLVM code. Clay functions internally return a value of type `i8*` which should normally be null; thus, all LLVM basic blocks that exit the function must end with `ret i8* null`.
+
+    // Example
+    // Who needs __primitives__.numericAdd?
+    overload add(x:Int32, y:Int32) --> sum:Int32 __llvm__ {
+        %xv = load i32* %x
+        %yv = load i32* %y
+        %sumv = add i32 %xv, %yv
+        store i32 %sumv, i32* %sum
+        ret i8* null
+    }
+
+Static values can be interpolated into the LLVM code using the forms `$Identifier` or `${Expression}`. [Symbols] are interpolated as their underlying LLVM type; [static strings] are interpolated literally; and static integer, floating-point, and boolean values are interpolated as the equivalent LLVM numeric literals.
+
+    // Example
+    // A generic form of the above that works for all integer types
+
+    alias NORMAL_RETURN = #"ret i8* null";
+
+    [T | Integer?(T)]
+    overload add(x:T, y:T) --> sum:T __llvm__ {
+        %xv = load $T* %x
+        %yv = load $T* %y
+        %sumv = add $T %xv, %yv
+        store $T %sumv, $T* %sum
+        $NORMAL_RETURN
+    }
+
+If an inline LLVM block references intrinsics or other global symbols, those symbols must be declared in a [top-level LLVM] block.
+
+Inline LLVM functions currently cannot be evaluated at compile time.
 
 ### Inline and alias overloads
 
