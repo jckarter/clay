@@ -368,7 +368,12 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
                      new MultiCValue(dest));
 }
 
-void codegenValueAssign(PValuePtr pdest, CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+static void codegenValueAssign(
+    PValuePtr pdest,
+    CValuePtr dest,
+    PValuePtr psrc,
+    CValuePtr src,
+    CodegenContextPtr ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
         && !pdest->isTemp
@@ -384,33 +389,7 @@ void codegenValueAssign(PValuePtr pdest, CValuePtr dest, CValuePtr src, CodegenC
     MultiCValuePtr args = new MultiCValue(dest);
     args->add(src);
     MultiPValuePtr pvArgs = new MultiPValue(pdest);
-    pvArgs->add(new PValue(src->type, true));
-    codegenCallValue(staticCValue(prelude_assign(), ctx),
-                     args,
-                     ctx,
-                     new MultiCValue());
-}
-
-void codegenValueMoveAssign(PValuePtr pdest,
-                            CValuePtr dest,
-                            CValuePtr src,
-                            CodegenContextPtr ctx)
-{
-    if (isPrimitiveAggregateType(dest->type)
-        && !pdest->isTemp
-        && (dest->type == src->type)
-        && (!isPrimitiveAggregateTooLarge(dest->type)))
-    {
-        if (dest->type->typeKind != STATIC_TYPE) {
-            llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
-            ctx->builder->CreateStore(v, dest->llValue);
-        }
-        return;
-    }
-    MultiCValuePtr args = new MultiCValue(dest);
-    args->add(src);
-    MultiPValuePtr pvArgs = new MultiPValue(pdest);
-    pvArgs->add(new PValue(src->type, true));
+    pvArgs->add(psrc);
     codegenCallValue(staticCValue(prelude_assign(), ctx),
                      args,
                      pvArgs,
@@ -4283,10 +4262,7 @@ void codegenExprAssign(ExprPtr left,
     }
     PValuePtr pvLeft = safeAnalyzeOne(left, env);
     CValuePtr cvLeft = codegenOneAsRef(left, env, ctx);
-    if (pvRight->isTemp)
-        codegenValueMoveAssign(pvLeft, cvLeft, cvRight, ctx);
-    else
-        codegenValueAssign(pvLeft, cvLeft, cvRight, ctx);
+    codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
 }
 
 void codegenMultiExprAssign(ExprListPtr left,
@@ -4301,11 +4277,9 @@ void codegenMultiExprAssign(ExprListPtr left,
     for (unsigned i = 0; i < mcvLeft->size(); ++i) {
         PValuePtr pvLeft = mpvLeft->values[i];
         CValuePtr cvLeft = mcvLeft->values[i];
+        PValuePtr pvRight = mpvRight->values[i];
         CValuePtr cvRight = mcvRight->values[i];
-        if (mpvRight->values[i]->isTemp)
-            codegenValueMoveAssign(pvLeft, cvLeft, cvRight, ctx);
-        else
-            codegenValueAssign(pvLeft, cvLeft, cvRight, ctx);
+        codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
     }
 }
 
