@@ -176,15 +176,19 @@ String literals represent a sequence of ASCII text. Syntactically, they consist 
 
 Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
 
-Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations], and its own defined [symbols], created by [top-level definitions] in the module source code.
+Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations], and its own defined [symbols], created by [top-level definitions] in the module source code. Modules can control access to their namespace from other importing modules by marking symbols as public or private.
 
 ### Special modules
 
 A few modules have special significance:
 
 * The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.html) documentation describes its contents in detail.
-* The `prelude` module is loaded automatically and implicitly imported into every other module.
-* If the entry point module does not declare its name in a [module declaration], it is given the name `__main__`.
+* The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators].
+* If the entry point module does not declare its name in a [module declaration], it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
+
+## Compilation strategy
+
+XXX
 
 ## Source file organization
 
@@ -216,7 +220,7 @@ Comma-delimited lists are a common feature in Clay's grammar. In most contexts, 
 
     foo(a,b,c) { return a+b, b+c; }
 
-In [pattern matching] contexts, a variation of the comma-delimited list is used that allows an optional tail syntax form, representing a variadic item that greedily matches the rest of the values being matched:
+In [pattern matching] contexts, a variation of the comma-delimited list is used that allows an optional tail syntax form, representing a variadic item that greedily matches the rest of the values being matched.
 
     # Grammar
     variadic_list(Rule, LastRule) -> Rule ("," Rule)* ("," (LastRule)?)?
@@ -226,7 +230,7 @@ In [pattern matching] contexts, a variation of the comma-delimited list is used 
     // Examples
     define sum(..xs);
     overload sum() = 0;
-    sum(a, ..b) = a + sum(..b);
+    overload sum(a, ..b) = a + sum(..b);
 
 ### Import declarations
 
@@ -365,7 +369,9 @@ Such ambiguities may of course also be avoided by using `as` to alias the confli
 ### Module declaration
 
     # Grammar
-    ModuleDeclaration -> "in" DottedName ("(" ExprList ")") ";"
+    ModuleDeclaration -> "in" DottedName AttributeList? ";"
+
+    AttributeList -> "(" ExprList ")"
 
 A module may optionally declare its name using the `in` keyword.
 
@@ -384,12 +390,14 @@ The module attribute list can be an arbitrary [multiple value expression], which
 
     // Example
     // foo.clay
-    GraphicsModuleAttributes() = Float32, FastMath;
+    GraphicsModuleAttributes() = Float32, Int32;
 
     // bar.clay
     import foo;
 
     in bar (..foo.GraphicsModuleAttributes());
+
+XXX supported attributes?
 
 ### Top-level LLVM
 
@@ -858,6 +866,20 @@ Arguments are declared in a parenthesized list of names, each name optionally fo
     // Define double(x) for any type of x, with an explicit pattern var
     [T] double(x:T) = x+x;
 
+Arguments are passed by reference.
+
+    // Example
+    inc(x:Int) {
+        x += 1;
+    }
+
+    main() {
+        var x = 2;
+        println(x); // prints 2
+        inc(x);
+        println(x); // prints 3
+    }
+
 #### Variadic arguments
 
     # Grammar
@@ -1041,7 +1063,7 @@ If the function does not declare its return types, they will be inferred from th
 
     foo() : { } // explicitly declares no return values
 
-    foo() : () { } // explicitly also declares no return values
+    foo() : () { } // also explicitly declares no return values
 
 #### Named return values
 
@@ -1171,15 +1193,80 @@ Any simple function or overload definition may be modified by an optional `inlin
 ### External functions
 
     # Grammar
-    ExternalFunction -> Visibility? "external" Identifier "(" ExternalArgs ")"
-                        Type? (FunctionBody | ";")
+    ExternalFunction -> Visibility? "external" AttributeList?
+                        Identifier "(" ExternalArgs ")"
+                        ":" Type? (FunctionBody | ";")
 
-    ExternalArgs -> comma_list(ExternalArg) ("," "..")?
-                  | ("..")?
+    ExternalArgs -> variadic_list(ExternalArg, "..")
 
     ExternalArg -> Identifier TypeSpec
 
+Normal Clay functions are generated with internal linkage, and are compiled and linked together into an executable or object file as a single compilation unit. External function definitions must be used to define the interface with code from outside the unit, whether it be Clay code calling out to existing C or C++ libraries, or C, C++, or Clay code wanting to call into a precompiled Clay library.
+
+An external definition without a function body declares an external entry point for access by Clay code. Variadic C functions may also be declared by including a trailing `..` token in the declared argument list.
+
+    // Example
+    // Call out to `puts` and `printf` from libc
+    external puts(s:Pointer[Int8]) : Int;
+    external printf(fmt:Pointer[Int8], ..) : Int;
+
+    main() {
+        puts(cstring("Hello world!"));
+        printf(cstring("1 + 1 = %d"), 1 + 1);
+    }
+
+An external definition with a body defines a Clay function with external linkage. The function will use C's symbol naming and calling convention (including passed-by-value arguments), in order to be linkable from C or other C-compatible language code.
+
+    // Example
+    // square.clay:
+    // Implement an function in Clay and make it available to C.
+    external square(x:Float64) : Float64 = x*x;
+
+    /*
+     * square.c:
+     */
+    #include <stdio.h>
+
+    double square(double x);
+
+    int main() {
+        printf("%g\n", square(2.0));
+    }
+
+Compared to internal Clay functions, external functions have several limitations:
+
+* External functions cannot be generic. Their argument and return types must be fully specified. Return types cannot be inferred, and named return bindings cannot be used. The definition cannot include a pattern guard.
+* External functions may return only zero or one values.
+* `<stdarg.h>`-compatible variadic C functions may be declared and called from Clay, but implementing C variadic functions is currently unsupported.
+* Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator] function.
+* Clay types with nontrivial [value semantics] may not be passed by value to external functions. They must be passed by pointer instead.
+
+Although they define a top-level name, external function names are not true [symbols]. An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes], [..OutTypes]]` type representing the external's function pointer.
+
+### External attributes
+
+A parenthesized [multiple value expression] list may be provided after the `external` keyword in order to set attributes on the external function. A string value in the attribute list controls the function's external linkage name.
+
+    // Example
+    // Bypass crt1 and provide our own entry point
+    external write(fildes:Int, buf:Pointer[Int8], nbyte:SizeT) : SSizeT;
+
+    alias STDOUT_FILENO = 1;
+
+    external ("_start") start() {
+        var greeting = "hello world";
+        write(STDOUT_FILENO, cstring(greeting), size(greeting));
+    }
+
+In the `__primitives__` module, symbols are provided that, when used as external attributes, set the calling convention used by the function:
+
+* `AttributeCCall` corresponds to the default C calling convention.
+* `AttributeLLVMCall` uses the native LLVM calling convention. This can be used to bind to LLVM intrinsics.
+* `AttributeStdCall`, `AttributeFastCall`, and `AttributeThisCall` correspond to legacy x86 calling conventions on Windows.
+
 ## Global value definitions
+
+XXX doc me
 
     GlobalVariable -> PatternGuard? Visibility? "var" Identifier PatternVars? "=" Expression ";"
 
