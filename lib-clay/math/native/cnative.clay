@@ -137,7 +137,7 @@ overload sin(z:T){
 
 /* calculate cosh and sinh */
 [T | Float?(T)]
-chsh(x:T){
+private chsh(x:T){
     if (abs(x) <= 0.5){
         return cosh(x),sinh(x);
     } else {
@@ -294,7 +294,7 @@ overload cot(z:T) {
 //       mtherr ("ccot", OVERFLOW);
         return Complex(MAXNUM,MAXNUM);
     }
-    return sin (2.0 * real(z)) / d - (sinh (2.0 * imag(z)) / d) * I;
+    return Complex(sin (2.0 * real(z)) / d, - (sinh (2.0 * imagValue(z)) / d) );
 }
 
 

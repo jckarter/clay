@@ -1,6 +1,6 @@
 
-import math.(fma,abs);
-import numbers.floats.(nan?);
+import math.(fma);
+import numbers.floats.*;
 
 enum ComplexPart (REAL, IMAG);
 
@@ -68,6 +68,7 @@ ComplexBaseType(static Complex32) = Float;
 overload ComplexBaseType(static Complex64) = Double;
 overload ComplexBaseType(static Complex80) = LongDouble;
 
+[T | Complex?(T)]
 ComplexRealType(static T) = ComplexBaseType(T);
 
 ComplexImagType(static Complex32) = IFloat;
@@ -283,3 +284,30 @@ inline overload min(x:C,y:C) = min(abs(x),abs(y));
 
 [T | Complex?(T)]
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
+
+[T | Complex?(T)]
+inline overload finite?(x:T) = floatExponent(abs(x)) < exponentMask(T);
+
+[T | Complex?(T)]
+inline overload infinity?(x:T) = abs(x) == infinity(T);
+
+[T | Complex?(T)]
+inline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));
+
+[T | Complex?(T)]
+inline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
+
+[T | Complex?(T)]
+inline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
+
+[T | Complex?(T)]
+overload infinity(static T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload negativeInfinity(static T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload nan(static T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
+
+[T | Complex?(T)]
+overload snan(static T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));

@@ -10,8 +10,6 @@ define llround;
 define rint;
 define llrint;
 define nearbyint;
-define nextafter;
-alias nexttoward = nextafter;
 
 define frexp;
 define ldexp;
