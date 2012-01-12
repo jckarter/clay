@@ -190,7 +190,7 @@ class TestCase(object):
             if returncode != "compiler error":
                 self.testLogBuffer.write("Failure: compiler did not fail\n")
                 self.testLogBuffer.write("Expected:\n")
-                self.testLogBuffer.write(indented(errpattern.replace))
+                self.testLogBuffer.write(indented(errpattern))
                 return "compiler did not fail"
             if re.search(errpattern, resulterr):
                 return "ok"
