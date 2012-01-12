@@ -47,7 +47,7 @@ private var t512 = 0x1.p512;
 private var tm256 = 0x1.p-256;
 
 private sqrt754(x:Double) {
-    println("native sqrt called");
+
     var a = db_number(x);
     var k = a.0[1];
     a.0[1] = bitor(bitand(k,0x001fffff),0x3fe00000);
