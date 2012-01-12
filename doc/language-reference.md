@@ -1070,7 +1070,7 @@ If the function does not declare its return types, they will be inferred from th
 
 In special cases where constructing a value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression].
 
-Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will cause undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
+Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will cause undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
 
     // Example
     record SOAPoint (xs:Vector[Float], ys:Vector[Float]);
@@ -1078,9 +1078,11 @@ Note that named return values are inherently unsafe (hence the intentionally awk
     overload SOAPoint(size:SizeT) --> returned:SOAPoint
     {
         returned.xs <-- Vector[Float]();
-        resize(returned.xs, size);
         onerror destroy(returned.xs);
+        resize(returned.xs, size);
+
         returned.ys <-- Vector[Float]();
+        onerror destroy(returned.ys);
         resize(returned.ys, size);
     }
 
