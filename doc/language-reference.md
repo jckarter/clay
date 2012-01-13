@@ -19,7 +19,7 @@ BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`.
 
 ### Source encoding
 
-Clay source code is stored as a stream of ASCII text. (Anything other than ASCII is currently passed through as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
+Clay source code is evaluated as a stream of ASCII text. (Anything other than ASCII in string and character literals is currently passed through as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
 
 ### Whitespace
 
@@ -183,7 +183,7 @@ Modules form the basis of encapsulation and namespacing in Clay. Every module ha
 A few modules have special significance:
 
 * The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.html) documentation describes its contents in detail.
-* The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators].
+* The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration], it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
 ## Compilation strategy
@@ -837,7 +837,7 @@ Universal overloads are supported as a special case, in which the overloaded sym
 
 Such overloads are matched against all call sites that aren't matched first by a more specific overload. In other words, universal overloads are ordered after all specific overloads.
 
-Note that if a call site does not use a [symbol](#symbols) in the function position, it is desugared into a call to the `call` [operator].
+Note that if a call site does not use a [symbol](#symbols) in the function position, it is desugared into a call to the `call` [operator function](#operatorfunctions).
 
     // Example
     record MyCallable ();
@@ -1078,7 +1078,7 @@ If the function does not declare its return types, they will be inferred from th
 
 In special cases where constructing a value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression].
 
-Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
+Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [simple assignment statements] \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
 
     // Example
     record SOAPoint (xs:Vector[Float], ys:Vector[Float]);
@@ -1398,8 +1398,6 @@ Externally-linkable global variables defined in Clay are currently unsupported.
 
 ## Statements
 
-XXX doc me
-
     Statement -> Block
                | Assignment
                | IfStatement
@@ -1407,8 +1405,8 @@ XXX doc me
                | WhileStatement
                | ForStatement
                | MultiValueForStatement
-               | GotoStatement
                | ReturnStatement
+               | GotoStatement
                | BreakStatement
                | ContinueStatement
                | ThrowStatement
@@ -1417,17 +1415,358 @@ XXX doc me
                | EvalStatement
                | ExprStatement
 
+Statements form the basic unit of control flow within function definitions.
+
+* [Blocks]
+* [Expression statements]
+* [Return statements]
+* [Local variable bindings]
+* [Assignment statements]
+* [Conditional statements]
+* [Loop statements]
+* [Branch statements]
+* [Exception handling statements]
+* [Eval statements]
+
+### Blocks
+
+    # Grammar
     Block -> "{" (Statement | Binding | LabelDef)* "}"
+
+Blocks group sequences of statements and provide scopes for [local variable bindings]. Within a block, statements are executed sequentially except as modified by control flow statements.
+
+    // Example
+    main() {
+        println("VENI");
+        println("VIDI");
+        println("VICI");
+    }
+
+#### Labels
+
+    # Grammar
     LabelDef -> Identifier ":"
+
+In addition to normal statements, blocks may also contain [labels], which provide targets for [goto statements]. A label is declared as an identifier followed by a `:` token. Label names are lexically scoped to their parent block.
+
+    // Example
+    main() {
+    second_verse:
+        println("I'm Henry VIII I am");
+        println("I'm Henry VIII I am I am");
+        goto second_verse;
+    }
+
+### Expression statements
+
+    # Grammar
+    ExprStatement -> CallWithTrailingBlock
+                   | Expression ";"
+    CallWithTrailingBlock -> AtomicExpr CallSuffix ":" (Lambda "::")*
+                             ArgumentList LambdaArrow Block
+
+The simplest form of statement is a single expression followed by a `;` token. The expression is evaluated, and its return values, if any, are discarded.
+
+    // Example
+    main() {
+        1 + 2;
+        println("Hi");
+    }
+
+As a special case, if a [call expression] with a block [lambda expression] as its final argument is used as a statement, the semicolon after the final lambda block may be omitted.
+
+    // Example
+    enableMode(maybeMode:Maybe[Mode]) {
+        maybe(maybeMode): mode -> {
+            println(mode.name, " mode selected");
+        } :: () -> {
+            println("Please select a mode");
+        }
+        // no semicolon
+    }
+
+### Return statements
+
+    ReturnStatement -> "return" ReturnExpression? ";"
+    ReturnExpression -> ReturnKind ExprList ";"
+    ReturnKind -> "ref" | "forward"
+
+Return statements end execution of the current function and provide the return value or values to which the function evaluates.
+
+XXX
+
+### Local variable bindings
 
     Binding -> BindingKind comma_list(Identifier) "=" ExprList ";"
     BindingKind -> "var" | "ref" | "forward" | "alias"
 
-    Assignment -> ExprList AssignmentOperator ExprList ";"
-    AssignmentOperator -> "="
-                        | "+=" | "-=" | "*=" | "/=" | "%="
-                        | "<--"
+Local variables are introduced by binding statements. Local variables come in a few different flavors:
 
+* `var` bindings create new, independent local values. The right-hand expression is evaluated to initialize the value as if by an [initialization statement](#initializationstatements).
+
+        // Example
+        main() {
+            var x = 1;
+            var y = 2;
+            println("x = ", x, "; y = ", y); // x = 1; y = 2
+            y = 3;
+            println("x = ", x, "; y = ", y); // x = 1; y = 3
+        }
+
+    `var`s have scoped extent, and will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block.
+
+        // Example
+        record Noisy (x:Int);
+
+        overload Noisy() { println("created"); return Noisy(0); }
+        overload destroy(x:Noisy) { println("destroyed"); }
+
+        main() {
+            var x = Noisy(); // prints "created"
+            println("hello world"); // prints "hello world"
+        } // prints "destroyed"
+
+* `ref` bindings create named references to existing lvalues. (See [Reference qualifiers] for a discussion of lvalues and rvalues.)
+
+        // Example
+        main() {
+            var x = 1;
+            ref y = x;
+            println("x = ", x, "; y = ", y); // x = 1; y = 1
+            y = 3;
+            println("x = ", x, "; y = ", y); // x = 3; y = 3
+        }
+
+    A `ref` binding only binds a new name to an existing value and does not affect the lifetime of the value. If the `ref` references a value in dynamically-allocated memory, care must be taken that the `ref` is not referenced after the underlying value is freed.
+
+        // Example
+        external malloc(size:SizeT) : Pointer[Int8];
+        external free(p:Pointer[Int8]) :;
+
+        main() {
+            var p = Pointer[Int](malloc(TypeSize(Int)));
+            ref x = p^;
+            free(Pointer[Int8](p));
+            // oops, the ref x is still in scope, but its underlying value was freed
+            x = 0;
+        }
+
+* `forward` bindings can be used if a binding needs to be generic over lvalues or rvalues. If the bound value is an lvalue, the bound variable behaves like a `ref` and references the existing value; otherwise, it behaves like `var` and moves the temporary value into a new local value.
+
+        // Example
+
+        main() {
+            var xs = range(4); // 0 to 3 as a lazy sequence
+            var ys = array(0, 1, 2, 3); // 0 to 3 as an in-memory sequence
+
+            // xs[2] is an rvalue, so x2 will store it in a new `var`
+            // ys[2] is an lvalue, so y2 will be a `ref` to ys[2]
+            forward x2, y2 = xs[2], ys[2];
+        }
+
+* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases]. The alias's name expands to the bound expression at every call site.
+
+Multiple variable bindings can be assigned to the values of a [multiple value expression]. Each value from the right-hand side is bound to the corresponding variable name on the left-hand side. It is an error if the number of values does not correspond to the number of variables.
+
+    // Example
+    twoAndThree() = 2, 3;
+
+    main() {
+        // x = 1, y = 2
+        var x, y = 1, 2;
+
+        // a = 1, b = 2, c = 3, d = 4
+        var a, b, c, d = 1, ..twoAndThree(), 4;
+    }
+
+If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context]; that is, a single expression that evaluates to multiple values may omit the `..` prefix.
+
+    // Example
+    oneAndTwo() = 1, 2;
+
+    main() {
+        // x = 1, y = 2
+        var x, y = oneAndTwo();
+    }
+
+Variable names are scoped from after the binding statement to the end of their enclosing block. New binding names may shadow module-global names, variable names from outer scopes, or previous bindings from the same block. Variable names are bound after the right hand expression is evaluated, so the right-hand expression may refer to outer bindings before they are shadowed.
+
+    // Example
+    var x = 1;
+
+    main() {
+        println(x); // prints 1
+        var x = x + 1;
+        println(x); // prints 2
+        {
+            var x = x + 1;
+            println(x); // prints 3
+            var x = x + 1;
+            println(x); // prints 4
+        }
+        println(x); // prints 2
+    }
+
+Binding statements must appear in a block. A standalone binding cannot be used as a single-statement body of an `if`, `while` or other compound statement.
+
+    // Example
+    foo() {
+        if (true)
+            var x = 1; // ERROR
+    }
+
+### Assignment statements
+
+    # Grammar
+    Assignment -> ExprList AssignmentOp ExprList ";"
+    AssignmentOp -> "="
+                  | "+=" | "-=" | "*=" | "/=" | "%="
+                  | "<--"
+
+Assignment statements update variables with new values.
+
+#### Simple assignment statements
+
+The most common form of assignment uses the `=` token. The [multiple value expression] on the right side of the `=` is evaluated, followed by the left side. It is an error if the number of values on the left and right sides do not match. If both sides evaluate to a single value, the `assign` [operator function](#operatorfunctions) is called with the left and right values.
+
+    // Example
+    main() {
+        var x = 1;
+        x = 2;
+        // is equivalent to
+        assign(x, 2);
+    }
+
+If both sides evaluate to multiple values, the right-hand values are evaluated into temporary values, and each temporary value is then `move`d and assigned to the corresponding left-hand value using `assign`. This allows multiple-value assignment to safely shuffle values.
+
+    // Example
+    main() {
+        var x = 1;
+        var y = 2;
+        x, y = y, x;
+
+        // is like
+
+        var tmp1 = y;
+        var tmp2 = x;
+        assign(x, move(tmp1));
+        assign(y, move(tmp2));
+    }
+
+    shellGame(shellA, shellB, shellC) {
+        shellB, shellC, shellA = shellA, shellB, shellC;
+        shellC, shellB, shellA = shellA, shellB, shellC;
+        shellA, shellC, shellB = shellA, shellB, shellC;
+        shellB, shellA, shellC = shellA, shellB, shellC;
+        shellC, shellA, shellB = shellA, shellB, shellC;
+    }
+
+The left-hand expression should generally evaluate to an lvalue or lvalues; however, this is not strictly enforced. `assign` may be overloaded for non-lvalues in order to support temporary proxy-assignment objects.
+
+If the left-hand expression is a single [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression, special property assignment operator functions are used instead of `assign`.
+
+* `a[..b] = c;` desugars into `indexAssign(a, ..b, c);`
+* `a.0 = c;` desugars into `staticIndexAssign(a, static 0, c);`
+* `a.field = c;` desugars into `fieldRefAssign(a, #"field", c);`
+
+Property assignment is currently only supported for single assignment. Multiple-value assignment will always be evaluated, `move`d, and `assign`ed as described above.
+
+Assignment is a statement in Clay. Attempting to use assignment in an expression is a syntax error.
+
+    // Example
+    foo(x) {
+        // ERROR
+        if (x = 0)
+            zero();
+    }
+
+#### Update assignment statements
+
+Like other C-like languages, Clay provides special assignment syntax for updating a value using one of the [additive operators] or [multiplicative operators].
+
+    // Example
+    main() {
+        var x = 1;
+        println(x);
+        x += 1;
+        println(x);
+    }
+
+The assignment tokens `+=`, `-=`, `*=`, and `/=` desugar into calls to the `updateAssign` [operator function](#operatorfunctions), which is passed three arguments: the `add`, `subtract`, `multiply`, or `divide` operator symbol corresponding to the update operation; the left-hand value; and the right-hand value. Update assignment is currently only supported for single values.
+
+    // Example
+    main() {
+        var x = 1;
+
+        x += 1;
+        x -= 2;
+        x *= 4;
+        x /= 8;
+
+        // equivalent to
+
+        updateAssign(add, x, 1);
+        updateAssign(subtract, x, 2);
+        updateAssign(multiply, x, 4);
+        updateAssign(divide, x, 8);
+    }
+
+Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression.
+
+* `a[..b] += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
+* `a.0 += c;` desugars into `staticIndexUpdateAssign(add, a, static 0, c);`
+* `a.field += c;` desugars into `fieldRefUpdateAssign(add, a, #"field", c);`
+
+#### Initialization statements
+
+The above assignment operators assume that the values being assigned have already been initialized. If the current value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely. In these cases, initialization must be done instead of assignment.
+
+    // Example
+    main() {
+        var p = Pointer[Foo](malloc(TypeSize(Foo)));
+        finally free(Pointer[Int8](p));
+        p^ <-- Foo();
+    }
+
+Unlike the other assignment forms, initialization is handled as a primitive. The left-hand expression must evaluate to an lvalue or lvalues. If the right-hand expression returns by value, then a reference to the left-hand side is implicitly passed to the outermost function invocation on the right-hand side. Return statements in the called function will write their return values directly into the left-hand value to initialize it.
+
+    // Example
+    foo(p:Pointer[Int]) {
+        p^ <-- bar();
+    }
+
+    bar() {
+        return 2; // The value 2 is directly written into p^
+    }
+
+If the right-hand side is an lvalue, the `copy` [operator function](#operatorfunctions), which must return by value, is called to copy the value into the left-hand side.
+
+    // Example
+    foo(p:Pointer[Int]) {
+        var x = 1;
+        p^ <-- x; // really p^ <-- copy(x);
+    }
+
+As a special case, if the right-hand side is a `forward` argument bound to an rvalue, the `move` operator function is applied instead of `copy`.
+
+    // Example
+    foo(p:Pointer[Int], forward x:Int) {
+        p^ <-- x;
+    }
+
+    bar(p:Pointer[Int]) {
+        var x = 2;
+        foo(p, 2); // p^ <-- move(2);
+        foo(p, x); // p^ <-- copy(x);
+    }
+
+`var` [binding statements] behave identically to initialization statements when initializing their newly-bound variables.
+
+Note that, just as assigning uninitialized values with `=` is undefined, so is initializing already-initialized values with `<--`. The `<--` operator should not generally be used except in primitive initialization contexts.
+
+### Conditional statements
+
+    # Grammar
     IfStatement -> "if" "(" Expression ")" Statement
                    ("else" Statement)?
 
@@ -1435,20 +1774,69 @@ XXX doc me
                        ("case" "(" ExprList ")" Statement)*
                        ("else" Statement)?
 
+Conditional statements alter control flow based on the execution state. `if` statements conditionally execute a statement if an expression, which must evaluate to a value of the primitive `Bool` type, is `true`. An `else` clause may immediately follow the `if` statement, in which case the `else` statement will be executed only if the condition is `false`. Without an `else` clause, execution for a `false` condition resumes after the `if` statement.
+
+    // Example
+    explainJoke(asFoghornLeghorn?:Bool) {
+        print("That");
+
+        if (asFoghornLeghorn?)
+            print(", I say, that");
+
+        print(" was a joke");
+
+        if (asFoghornLeghorn?)
+            println(" son");
+        else
+            println();
+    }
+
+Switch statements dispatch to one of several branches based on the value of an expression. The `switch` expression is evaluated, and its value is compared against each subsequent `case` clause until one is found for which the `case?` [operator function](#operatorfunctions) returns true. If no case clause matches, the `else` clause is executed if present; if there is no `else` clause, then execution resumes after the switch statement. After the chosen `case` or `else` clause is executed, execution continues after the switch statement.
+
+    // Example
+    enum Suit (Spades, Hearts, Clubs, Diamonds);
+    record Card (rank:Int, suit:Suit);
+
+    overload printTo(stream, card:Card) {
+        switch (card.rank)
+        case (1) // evaluates case?(card.rank, 1)
+            printTo(stream, "Ace");
+        case (2) // evaluates case?(card.rank, 2)
+            printTo(stream, "Deuce");
+        case (3, 4, 5, 6, 7, 8, 9, 10) // evaluates case?(card.rank, 3, 4, ...)
+            printTo(stream, card.rank);
+        case (11)
+            printTo(stream, "Jack");
+        case (12)
+            printTo(stream, "Queen");
+        case (13)
+            printTo(stream, "King");
+        else
+            assert(false);
+
+        printTo(stream, " of ", card.suit);
+    }
+
+Unlike other languages with `switch` forms, Clay does not allow "fall-through" between cases.
+
+### Loop statements
+
     WhileStatement -> "while" "(" Expression ")" Statement
 
     ForStatement -> "for" "(" comma_list(Identifier) "in" Expression ")" Statement
 
     MultiValueForStatement -> ".." "for" "(" Identifier "in" ExprList ")" Statement
 
-    GotoStatement -> "goto" Identifier ";"
+XXX
 
-    ReturnStatement -> "return" ReturnExpression ";"
-    ReturnExpression -> ReturnKind ExprList ";"
-    ReturnKind -> "ref" | "forward"
+### Branch statements
+
+    GotoStatement -> "goto" Identifier ";"
 
     BreakStatement -> "break" ";"
     ContinueStatement -> "continue" ";"
+
+### Exception handling statements
 
     ThrowStatement -> "throw" Expression ";"
 
@@ -1458,11 +1846,9 @@ XXX doc me
     ScopeGuardStatement -> ScopeGuardKind Statement
     ScopeGuardKind -> "finally" | "onerror"
 
-    EvalStatement -> "eval" ExprList ";"
+### Eval statements
 
-    ExprStatement -> CallWithTrailingBlock
-                   | Expression ";"
-    CallWithTrailingBlock -> SimpleCall ":" (Lambda "::")* BlockLambda
+    EvalStatement -> "eval" ExprList ";"
 
 ## Expressions
 
@@ -1535,11 +1921,13 @@ XXX doc me
     NameRef -> Identifier
     EvalExpr -> "eval" Expression
 
-    Literal -> IntLiteral
+    Literal -> BoolLiteral
+             | IntLiteral
              | FloatLiteral
              | CharLiteral
              | StringLiteral
              | StaticStringLiteral
+    BoolLiteral -> "true" | "false"
     IntLiteral -> Sign? IntToken NumericTypeSuffix?
     FloatLiteral -> Sign? FloatToken NumericTypeSuffix?
     CharLiteral -> CharToken
@@ -1565,3 +1953,11 @@ XXX doc me
     PatternNameRef -> DottedName
 
     PatternSuffix -> "[" comma_list(Pattern) "]"
+
+## XXX
+
+### Operator functions
+
+### Compile-time evaluation
+
+### Value semantics
