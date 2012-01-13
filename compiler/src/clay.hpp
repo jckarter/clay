@@ -1965,7 +1965,7 @@ struct ExternalProcedure : public TopLevelItem {
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
           attributes(new ExprList()), attributesVerified(false),
-          analyzed(false), llvmFunc(NULL), debugInfo(NULL) {}
+          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
