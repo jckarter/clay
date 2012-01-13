@@ -2341,7 +2341,7 @@ extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 
 void addSearchPath(const string &path);
-ModulePtr loadProgram(const string &fileName);
+ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
 ModulePtr loadProgramSource(const string &name, const string &source);
 ModulePtr loadedModule(const string &module);
 const string &primOpName(PrimOpPtr x);

@@ -292,6 +292,12 @@ static void usage(char *argv0)
     cerr << "  -Wl,<opts>            pass flags to linker\n";
     cerr << "  -l<lib>               link with library <lib>\n";
     cerr << "  -I<path>              add <path> to clay module search path\n";
+    cerr << "  -deps                 keep track of the dependencies of the currently\n";
+    cerr << "                        compiling file and write them to the file\n";
+    cerr << "                        specified by -o-deps\n";
+    cerr << "  -no-deps              don't generate dependencies file\n";
+    cerr << "  -o-deps <file>        write the dependencies to this file\n";
+    cerr << "                        (defaults to <compilation output file>.d)\n";
     cerr << "  -e <source>           compile and run <source> (implies -run)\n";
     cerr << "  -M<module>            \"import <module>.*;\" for -e\n";
     cerr << "  -v                    display version info\n";
@@ -364,6 +370,8 @@ int main2(int argc, char **argv, char const* const* envp) {
     bool codegenExternals = false;
     bool codegenExternalsSet = false;
 
+    bool generateDeps = false;
+
     unsigned optLevel = 3;
     bool optLevelSet = false;
 
@@ -383,6 +391,8 @@ int main2(int argc, char **argv, char const* const* envp) {
     vector<string> libSearchPath;
     string linkerFlags;
     vector<string> libraries;
+
+    string dependenciesOutputFile;
 #ifdef __APPLE__
     vector<string> frameworkSearchPath;
     vector<string> frameworks;
@@ -471,7 +481,8 @@ int main2(int argc, char **argv, char const* const* envp) {
             clayScriptImports += "import " + modulespec + ".*; ";
         }
         else if (strcmp(argv[i], "-o") == 0) {
-            if (i+1 == argc) {
+            ++i;
+            if (i == argc) {
                 cerr << "error: filename missing after -o\n";
                 return 1;
             }
@@ -481,7 +492,6 @@ int main2(int argc, char **argv, char const* const* envp) {
                      << ", specified again as " << argv[i] << '\n';
                 return 1;
             }
-            ++i;
             outputFile = argv[i];
         }
 #ifdef __APPLE__
@@ -661,6 +671,26 @@ int main2(int argc, char **argv, char const* const* envp) {
             codegenExternals = false;
             codegenExternalsSet = true;
         }
+        else if (strcmp(argv[i], "-deps") == 0) {
+            generateDeps = true;
+        }
+        else if (strcmp(argv[i], "-no-deps") == 0) {
+            generateDeps = false;
+        }
+        else if (strcmp(argv[i], "-o-deps") == 0) {
+            ++i;
+            if (i == argc) {
+                cerr << "error: filename missing after -o-deps\n";
+                return 1;
+            }
+            if (!dependenciesOutputFile.empty()) {
+                cerr << "error: dependencies output file already specified: "
+                     << dependenciesOutputFile
+                     << ", specified again as " << argv[i] << '\n';
+                return 1;
+            }
+            dependenciesOutputFile = argv[i];
+        }
         else if (strcmp(argv[i], "--") == 0) {
             ++i;
             if (clayFile.empty()) {
@@ -814,20 +844,61 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
     llvm::sys::RemoveFileOnSignal(outputFilePath);
 
+    if (generateDeps) {
+        if (run) {
+            cerr << "error: '-deps' can not be used together with '-e' or '-run'\n";
+            return 1;
+        }
+        if (dependenciesOutputFile.empty()) {
+            dependenciesOutputFile = outputFile;
+            dependenciesOutputFile += ".d";
+        }
+    }
+
+    llvm::sys::PathWithStatus dependenciesOutputFilePath(dependenciesOutputFile);
+    if (generateDeps) {
+        const llvm::sys::FileStatus *dependenciesOutputFileStatus = dependenciesOutputFilePath.getFileStatus();
+        if (dependenciesOutputFileStatus != NULL && dependenciesOutputFileStatus->isDir) {
+            cerr << "error: dependencies output file '" << dependenciesOutputFile << "' is a directory\n";
+            return 1;
+        }
+        llvm::sys::RemoveFileOnSignal(dependenciesOutputFilePath);
+    }
+
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
     loadTimer.start();
     ModulePtr m;
     string clayScriptSource;
+    vector<string> sourceFiles;
     if (!clayScript.empty()) {
         clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
         m = loadProgramSource("-e", clayScriptSource);
-    } else
-        m = loadProgram(clayFile);
+    } else if (generateDeps)
+        m = loadProgram(clayFile, &sourceFiles);
+    else
+        m = loadProgram(clayFile, NULL);
     loadTimer.stop();
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
+
+    if (generateDeps) {
+        string errorInfo;
+        llvm::raw_fd_ostream dependenciesOut(dependenciesOutputFilePath.c_str(),
+                                             errorInfo,
+                                             llvm::raw_fd_ostream::F_Binary);
+        if (!errorInfo.empty()) {
+            cerr << "error: " << errorInfo << '\n';
+            return 1;
+        }
+        dependenciesOut << outputFile << ": \\\n";
+        for (size_t i = 0; i < sourceFiles.size(); ++i) {
+            dependenciesOut << "  " << sourceFiles[i];
+            if (i < sourceFiles.size() - 1)
+                dependenciesOut << " \\\n";
+        }
+    }
 
     bool internalize = true;
     if (debug || sharedLib || run || !codegenExternals)
