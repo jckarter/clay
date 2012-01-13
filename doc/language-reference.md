@@ -1375,6 +1375,7 @@ Runtime global variable access is subject to the memory model standardized in C1
 
 ### External variables
 
+    # Grammar
     ExternalVariable -> Visibility? "external" AttributeList? Identifier TypeSpec ";"
 
 C `extern` variables can be linked to with `external` variable definitions. An external variable definition consists of the variable name followed by its type. Like external functions, external variables cannot be parameterized.
@@ -1397,76 +1398,75 @@ Externally-linkable global variables defined in Clay are currently unsupported.
 
 ## Statements
 
-XXX everything below this is out of date
-
-    Block -> "{" Statement+ "}"
+XXX doc me
 
     Statement -> Block
-               | LabelDef
-               | VarBinding
-               | RefBinding
-               | AliasBinding
                | Assignment
-               | InitAssignment
-               | UpdateAssignment
                | IfStatement
-               | GotoStatement
                | SwitchStatement
-               | ReturnStatement
-               | ExpressionStatement
                | WhileStatement
+               | ForStatement
+               | MultiValueForStatement
+               | GotoStatement
+               | ReturnStatement
                | BreakStatement
                | ContinueStatement
-               | ForStatement
-               | TryStatement
                | ThrowStatement
-               | StaticForStatement
-               | UnreachableStatement
+               | TryStatement
+               | ScopeGuardStatement
+               | EvalStatement
+               | ExprStatement
 
+    Block -> "{" (Statement | Binding | LabelDef)* "}"
     LabelDef -> Identifier ":"
 
-    VarBinding -> "var" comma_list(Identifier) "=" Expression ";"
-    RefBinding -> "ref" comma_list(Identifier) "=" Expression ";"
-    AliasBinding -> "alias" Identifier "=" Expression ";"
+    Binding -> BindingKind comma_list(Identifier) "=" ExprList ";"
+    BindingKind -> "var" | "ref" | "forward" | "alias"
 
-    Assignment -> Expression "=" Expression ";"
-
-    InitAssignment -> Expression "<--" Expression ";"
-
-    UpdateAssignment -> Expression UpdateOp Expression ";"
-    UpdateOp -> "+=" | "-=" | "*=" | "/=" | "%="
+    Assignment -> ExprList AssignmentOperator ExprList ";"
+    AssignmentOperator -> "="
+                        | "+=" | "-=" | "*=" | "/=" | "%="
+                        | "<--"
 
     IfStatement -> "if" "(" Expression ")" Statement
                    ("else" Statement)?
 
-    GotoStatement -> "goto" Identifier ";"
-
-    SwitchStatement -> "switch" "(" Expression ")" "{" CaseBlock* DefaultBlock? "}"
-    CaseBlock -> CaseLabel+ CaseBody
-    CaseLabel -> "case" Expression ":"
-    DefaultBlock -> "default" ":" CaseBody
-    CaseBody -> Statement+
-
-    ReturnStatement -> "return" ReturnExpression? ";"
-    ReturnExpression -> comma_list("ref"? Expression)
-
-    ExpressionStatement -> Expression ";"
+    SwitchStatement -> "switch" "(" Expression ")"
+                       ("case" "(" ExprList ")" Statement)*
+                       ("else" Statement)?
 
     WhileStatement -> "while" "(" Expression ")" Statement
+
+    ForStatement -> "for" "(" comma_list(Identifier) "in" Expression ")" Statement
+
+    MultiValueForStatement -> ".." "for" "(" Identifier "in" ExprList ")" Statement
+
+    GotoStatement -> "goto" Identifier ";"
+
+    ReturnStatement -> "return" ReturnExpression ";"
+    ReturnExpression -> ReturnKind ExprList ";"
+    ReturnKind -> "ref" | "forward"
+
     BreakStatement -> "break" ";"
     ContinueStatement -> "continue" ";"
 
-    ForStatement -> "for" "(" Identifier "in" Expression ")" Statement
+    ThrowStatement -> "throw" Expression ";"
 
-    TryStatement -> "try" Block "catch" Block
-    ThrowStatement -> "throw" Expression? ";"
+    TryStatement -> "try" Block
+                    ("catch" "(" (Identifier (":" Type)?) ")" Block)+
 
-    StaticForStatement -> "static" "for" "(" Identifier "in" Expression ")"
-                          Statement
+    ScopeGuardStatement -> ScopeGuardKind Statement
+    ScopeGuardKind -> "finally" | "onerror"
 
-    UnreachableStatement -> "unreachable" ";"
+    EvalStatement -> "eval" ExprList ";"
+
+    ExprStatement -> CallWithTrailingBlock
+                   | Expression ";"
+    CallWithTrailingBlock -> SimpleCall ":" (Lambda "::")* BlockLambda
 
 ## Expressions
+
+XXX everything below this is out of date
 
     Expression -> OrExpr
                 | IfExpr
