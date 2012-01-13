@@ -158,7 +158,7 @@ Character literals represent a single ASCII character. Syntactically, they consi
     TripleStringChar -> /(?!=""" ([^"]|$)) [^\\]/
                       | EscapeCode
 
-String literals represent a sequence of ASCII text. Syntactically, they consist of zero or more characters or escape codes as described under [Characters], delimited by either matching `"` characters or by matching `"""` sequences. Within `"`-delimited strings, the characters `"` and `\` must be escaped, whereas in `"""`-delimited strings, only `\` need be escaped. (The sequence `"""` may be escaped by escaping one or more of the `"` characters.) Whitespace within string literals is significant, including newlines.
+String literals represent a sequence of ASCII text. Syntactically, they consist of zero or more characters or escape codes as described for [character literals], delimited by either matching `"` characters or by matching `"""` sequences. Within `"`-delimited strings, the characters `"` and `\` must be escaped, whereas in `"""`-delimited strings, only `\` need be escaped. (The sequence `"""` may be escaped by escaping one or more of the `"` characters.) Whitespace within string literals is significant, including newlines.
 
     // Examples of string literals
     "hello world"  "\"hello world\""
@@ -566,7 +566,7 @@ If no predicate expression is needed, the pattern guard is optional; the named p
     // Example
     record Point[T] (x:T, y:T); // [T] guard is assumed
 
-A record type's layout can also be evaluated from an expression. If the type name is followed by an `=` token, the following expression is evaluated to determine the layout of the record. The expression must evaluate to a tuple of pairs, each pair containing a static string field name and a field type.
+A record type's layout can also be evaluated from an expression. If the type name is followed by an `=` token, the following expression is evaluated to determine the layout of the record. The expression must evaluate to a tuple of pairs, each pair containing a [static string](#staticstrings) field name and a field type [symbol](#symbols).
 
     // Example
     // Equivalent to the non-computed Point[T] definition:
@@ -903,7 +903,7 @@ The final argument may be declared as variadic by being prefixed with a `..` tok
         printlnTimes(3, "She loves you ", "yeah yeah yeah");
     }
 
-The types of the variadic argument's values may be bound to a variadic pattern variable. The pattern variable's name does not require a second `..` token.
+The types of the variadic argument's values may be bound to a variadic pattern variable. In the argument specification, the pattern variable's name does not require a second `..` token.
 
     // Example
     // Print ..stuff n times, for only String? ..stuff
@@ -958,7 +958,7 @@ Without a `ref` or `rvalue` qualifier, the argument will match either lvalues or
     foo(rvalue x:Int) {}
 
     bar(x:Int) {
-        // ERROR: our name 'x' is an lvalue, even if bound to an rvalue from the caller
+        // ERROR: our name `x` is an lvalue, even if bound to an rvalue from the caller
         foo(x);
     }
 
@@ -1078,7 +1078,7 @@ If the function does not declare its return types, they will be inferred from th
 
 In special cases where constructing a value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression].
 
-Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will cause undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
+Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [assignment statements] \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
 
     // Example
     record SOAPoint (xs:Vector[Float], ys:Vector[Float]);
@@ -1115,7 +1115,7 @@ The implementation of a function is contained in its body. The most common body 
                 demBones(a, b);
     }
 
-If the function body consists of a single `return` statement, a shorthand form is provided; in lieu of the block and `return` keyword, `=` can be used after the argument and return type declarations. The `=` form is equivalent to the block-and-`return` form.
+If the function body consists of a single `return` statement, a shorthand form is provided. In lieu of the block and `return` keyword, `=` can be used after the argument and return type declarations. The `=` form is equivalent to the block-and-`return` form.
 
     // Example
     square(x) = x*x;
@@ -1466,92 +1466,102 @@ XXX doc me
 
 ## Expressions
 
-XXX everything below this is out of date
+    # Grammar
+    ExprList -> comma_list(Expression)
 
-    Expression -> OrExpr
+    Expression -> PairExpr
                 | IfExpr
-                | Lambda
                 | Unpack
-                | New
                 | StaticExpr
-                | PairExpr
+                | Lambda
+                | OrExpr
 
-    OrExpr -> AndExpr ("or" AndExpr)*
-    AndExpr -> NotExpr ("and" NotExpr)*
-    NotExpr -> "not"? CompareExpr
+    PairExpr -> Identifier ":" Expression
+    IfExpr -> "if" "(" Expression ")" Expression "else" Expression
+    Unpack -> ".." Expression
+    StaticExpr -> "static" Expression
 
-    EqualExpr -> CompareExpr (EqualOp CompareExpr)?
+    Lambda -> Arguments LambdaArrow LambdaBody
+    LambdaArrow -> "=>" | "->"
+    LambdaBody -> Block
+                | ReturnExpression
+
+    OrExpr -> AndExpr ("or" OrExpr)?
+
+    AndExpr -> NotExpr ("and" AndExpr)?
+
+    NotExpr -> "not" EqualExpr
+             | EqualExpr
+
+    EqualExpr -> (EqualExpr EqualOp)? CompareExpr
     EqualOp -> "==" | "!="
 
-    CompareExpr -> AddSubExpr (CompareOp AddSubExpr)
-    CompareOp -> "<" | "<=" | ">" | ">="
+    CompareExpr -> (CompareExpr CompareOp)? AddExpr
+    CompareOp -> "<=" | "<" | ">" | ">="
 
-    AddSubExpr -> MulDivExpr (("+" | "-") MulDivExpr)*
-    MulDivExpr -> PrefixExpr (("*" | "/" | "%") PrefixExpr)*
+    AddExpr -> (AddExpr AddOp)? MulExpr
+    AddOp -> "+" | "-"
 
-    PrefixExpr -> SignExpr
-                | AddressOfExpr
-                | DispatchExpr
+    MulExpr -> (MulExpr MulOp)? PrefixExpr
+    MulOp -> "*" | "/" | "%"
+
+    PrefixExpr -> PrefixOp SuffixExpr
                 | SuffixExpr
+    PrefixOp -> "+" | "-" | "&" | "*"
 
-    SignExpr -> ("+" | "-") SuffixExpr
-    AddressOfExpr -> "&" SuffixExpr
-    DispatchExpr -> "*" SuffixExpr
-    SuffixExpr -> AtomicExpr Suffix*
-    Suffix -> IndexSuffix
-            | CallSuffix
-            | FieldRefSuffix
-            | TupleRefSuffix
-            | DereferenceSuffix
+    SuffixExpr -> AtomicExpr SuffixOp*
+    SuffixOp -> CallSuffix
+              | IndexSuffix
+              | FieldRefSuffix
+              | StaticIndexSuffix
+              | DereferenceSuffix
 
-    IndexSuffix -> "[" comma_list(Expression)? "]"
-    CallSuffix -> "(" comma_list(Expression)? ")"
+    CallSuffix -> "(" ExprList ")" CallLambdaList?
+    CallLambdaList -> ":" Lambda ("::" Lambda)*
+
+    IndexSuffix -> "[" ExprList "]"
     FieldRefSuffix -> "." Identifier
-    TupleRefSuffix -> "." IntLiteral
+    StaticIndexSuffix -> "." IntToken
     DereferenceSuffix -> "^"
 
-    AtomicExpr -> ArrayExpr
+    AtomicExpr -> ParenExpr
                 | TupleExpr
                 | NameRef
                 | Literal
+                | EvalExpr
+                | ContextOp
+    ParenExpr -> "(" ExprList ")"
+    TupleExpr -> "[" ExprList "]"
+    NameRef -> Identifier
+    EvalExpr -> "eval" Expression
 
-    ArrayExpr -> "[" comma_list(Expression) "]"
-    TupleExpr -> "(" comma_list(Expression)? ")"
-
-    NameRef -> DottedName
-
-    Literal -> BoolLiteral
-             | IntLiteral
+    Literal -> IntLiteral
+             | FloatLiteral
              | CharLiteral
              | StringLiteral
-             | IdentifierLiteral
+             | StaticStringLiteral
+    IntLiteral -> Sign? IntToken NumericTypeSuffix?
+    FloatLiteral -> Sign? FloatToken NumericTypeSuffix?
+    CharLiteral -> CharToken
+    StringLiteral -> StringToken
+    StaticStringLiteral -> "#" StringToken
 
-    BoolLiteral -> "true" | "false"
+    Sign -> "+" | "-"
+    NumericTypeSuffix -> Identifier
 
-    IdentifierLiteral -> "#" Identifier
-
-    IfExpr -> "if" "(" Expression ")" Expression
-              "else" Expression
-
-    Lambda -> LambdaArgs "ref"? "=>" (Expression | Block)
-    LambdaArgs -> Identifier
-                | "(" LambdaArgs2 ")"
-                | "(" ")"
-
-    LambdaArgs2 -> "..." Identifier
-                 | comma_list(Identifier) ("," "..." Identifier)?
-
-    Unpack -> "..." Expression
-
-    New -> "new" Expression
-
-    StaticExpr -> "static" Expression
-
-    PairExpr -> identifier ":" Expression
+    ContextOp -> "__FILE__"
+               | "__LINE__"
+               | "__COLUMN__"
+               | "__ARG__" Identifier
 
 ## Pattern matching
 
+    # Grammar
     Pattern -> AtomicPattern PatternSuffix?
-    AtomicPattern -> IntLiteral
-                   | NameRef
+
+    AtomicPattern -> Literal
+                   | PatternNameRef
+
+    PatternNameRef -> DottedName
+
     PatternSuffix -> "[" comma_list(Pattern) "]"
