@@ -1491,7 +1491,7 @@ In addition to statements, blocks may also contain [labels], which provide targe
     CallWithTrailingBlock -> AtomicExpr CallSuffix ":" (Lambda "::")*
                              ArgumentList LambdaArrow Block
 
-The simplest form of statement is a single expression followed by a `;` token. The expression is evaluated, and its return values, if any, are immediately deleted using the `destroy` [operator function](#operatorfunctions).
+The simplest form of statement is a single expression followed by a `;` token. The expression is evaluated, and its return values, if any, are immediately deleted using the `destroy` [operator function](#operatorfunctions). If the expression returns by reference, the references are simply discarded without the referenced values being deleted.
 
     // Example
     main() {
@@ -1759,13 +1759,13 @@ If both sides evaluate to multiple values, the right-hand values are evaluated i
 
 The left-hand expression should generally evaluate to an lvalue or lvalues; however, this is not strictly enforced. `assign` may also be overloaded for non-lvalues in order to support temporary proxy-assignment objects. Typical `assign` overloads should qualify their left-hand argument as `ref`.
 
-If the left-hand expression is a single [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression, special property assignment operator functions are used instead of `assign`.
+If the left-hand expression is a single [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression, special property assignment operator functions are used instead of `assign`.
 
 * `a[..b] = c;` desugars into `indexAssign(a, ..b, c);`
 * `a.0 = c;` desugars into `staticIndexAssign(a, static 0, c);`
 * `a.field = c;` desugars into `fieldRefAssign(a, #"field", c);`
 
-Property assignment is currently only supported for single assignment. Multiple-value assignment will always be evaluated, `move`d, and `assign`ed as described above.
+Property assignment operators are currently only supported for single assignment. Multiple-value assignment will always be evaluated, `move`d, and `assign`ed as described above.
 
 Assignment is a statement in Clay. Attempting to use assignment in an expression is a syntax error.
 
@@ -1809,7 +1809,7 @@ The assignment tokens `+=`, `-=`, `*=`, `/=`, and `%=` desugar into calls to the
         updateAssign(remainder, x, 16);
     }
 
-Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression.
+Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression.
 
 * `a[..b] += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
 * `a.0 += c;` desugars into `staticIndexUpdateAssign(add, a, static 0, c);`
@@ -2140,15 +2140,7 @@ The result of `eval` must be parsable as a complete statement or statements; it 
 
 ## Expressions
 
-    # Grammar
-    Expression -> PairExpr
-                | IfExpr
-                | Unpack
-                | StaticExpr
-                | Lambda
-                | OrExpr
-
-Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized as follows, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
+Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized below, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
 
 * Atomic expressions
     * [Name references]
@@ -2158,14 +2150,14 @@ Expressions describe how values flow among functions in a computation. Clay prov
     * [Compilation context operators] — `__FILE__` etc.
     * [Eval expressions] — `eval a`
 * Suffix operators
-    * [Call expressions] — `a(b,c)` — `call`
-    * [Index expressions] — `a[b,c]` — `index`
-    * [Static index expressions] — `a.0` — `staticIndex`
-    * [Field reference expressions] — `a.field` — `fieldRef`
-    * [Dereference expressions] — `a^` — `dereference`
+    * [Call operator] — `a(b,c)` — `call`
+    * [Index operator] — `a[b,c]` — `index`
+    * [Static index operator] — `a.0` — `staticIndex`
+    * [Field reference operator] — `a.field` — `fieldRef`
+    * [Dereference operator] — `a^` — `dereference`
 * Prefix operators
-    * [Unary plus] — `+a` — `plus`
-    * [Unary minus] — `-a` — `minus`
+    * [Unary plus operator] — `+a` — `plus`
+    * [Unary minus operator] — `-a` — `minus`
     * [Address operator] — `&a`
     * [Dispatch operator] — `*a`
 * [Multiplicative operators]
@@ -2214,6 +2206,24 @@ Atomic expressions form the basic units of expressions.
 
 A name reference consists simply of an identifier. It evaluates to the named local or global entity within the current scope. An error is raised if no matching entity is found for the given name.
 
+    // Example
+    import a;
+    import a.(b);
+
+    var c = 0;
+
+    foo(d) {
+        var e = 0;
+        println(a, b, c, d, e);
+    }
+
+If a name is bound to [multiple values](#multiplevalueexpressions), such as a variadic pattern variable or argument, then the name must be referenced in a multiple value context, typically by applying the `..` [unpack operator].
+
+    [..TT]
+    foo(..xs:TT) {
+        println(..xs, " have the types ", ..TT);
+    }
+
 #### Literal expressions
 
     # Grammar
@@ -2257,8 +2267,8 @@ Literals evaluate to primitive constant values.
         // XXX
 
 * Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and like an integer can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes]. To create a literal of another type, the following suffixes are allowed:
-    * `f` — `Float32` ("single")
-    * `ff` — `Float64` ("double")
+    * `f` — `Float32` ("single" **F**loat)
+    * `ff` — `Float64` ("double" **F**loat)
     * `fl` — `Float80`
     * `fj` — `Imag32`
     * `j` or `ffj` — `Imag64`
@@ -2331,6 +2341,280 @@ Like [eval statements], eval expressions provide access to the Clay parser at co
 
 The generated static string must parse as a complete expression; open brackets or other partial expressions cannot be generated.
 
+The eval expression may be a parenthesized [multiple value expression](#multiplevalueexpressions), in which case the values are concatenated to form the parsed string.
+
+### Suffix operators
+
+    # Grammar
+    SuffixExpr -> AtomicExpr SuffixOp*
+    SuffixOp -> CallSuffix
+              | IndexSuffix
+              | FieldRefSuffix
+              | StaticIndexSuffix
+              | DereferenceSuffix
+
+#### Call operator
+
+    # Grammar
+    CallSuffix -> "(" ExprList ")" CallLambdaList?
+    CallLambdaList -> ":" Lambda ("::" Lambda)*
+
+Functions are called by suffixing a [multiple value expression](#multiplevalueexpression) in parentheses, which is evaluated to derive the function's arguments, to the function value, which is then evaluated. If the function value is a [symbol](#symbols), the argument types are matched to the symbol's [overloads](#overloadedfunctiondefinitions), and a call to the matching overload is generated.
+
+    // Example
+    // XXX
+
+If the function value is not a symbol, the call is transformed into an invocation of the `call` [operator function](#operatorfunctions), with the function value prepended to the argument list.
+
+    // Example
+    // XXX
+
+Extra syntactic sugar is provided for higher-order functions that take [lambda expressions] as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, separated by `::` tokens. The lambdas are appended in order to the end of the argument list.
+
+    // Example
+    // XXX
+
+One or more of a call's arguments may be modified by a [dispatch operator], in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
+
+#### Index operator
+
+    # Grammar
+    IndexSuffix -> "[" ExprList "]"
+
+The index operator desugars into a call to the `index` [operator function]. It is typically used to index into containers. The indexed object is used as the first argument, followed by the values from the bracketed [multiple value expression](#multiplevalueexpressions).
+
+    // Example
+    // XXX
+
+#### Static index operator
+
+    # Grammar
+    StaticIndexSuffix -> "." IntToken
+
+The static index operator consists of a `.` token followed by an [integer literal](#integerliterals) token. It is desugared into a call to the `staticIndex` [operator function](#operatorfunctions), with the indexed object and the integer literal as a `static` object. It is intended for accessing fields of tuples or other heterogeneous aggregate values.
+
+    // Example
+    // XXX
+
+#### Field reference operator
+
+    # Grammar
+    FieldRefSuffix -> "." Identifier
+
+The field reference operator consists of a `.` token followed by an identifier. It is desugared into a call to the `fieldRef` [operator function](#operatorfunctions), with the indexed object and the field name identifier as a [static string](#staticstrings). It is intended for accessing named fields of [record types](#records) or similar types.
+
+    // Example
+    // XXX
+
+#### Dereference operator
+
+    # Grammar
+    DereferenceSuffix -> "^"
+
+The dereference operator consists of a "^" token. It is desugared into a call to the `dereference` [operator function](#operatorfunctions) with the dereferenced object. It is intended for obtaining a reference to the value referenced by a pointer or pointer-like object.
+
+    // Example
+    // XXX
+
+### Prefix operators
+
+    # Grammar
+    PrefixExpr -> PrefixOp PrefixExpr
+                | SuffixExpr
+    PrefixOp -> "+" | "-" | "&" | "*"
+
+#### Unary plus operator
+
+The prefix `+` operator desugars to the `plus` [operator function](#operatorfunctions).
+
+    // Example
+    // XXX
+
+#### Unary minus operator
+
+The prefix `-` operator desugars to the `minus` [operator function](#operatorfunctions). It is intended for negating numeric values.
+
+    // Example
+    // XXX
+
+#### Address operator
+
+The prefix `&` operator returns the address of its operand as a value of the primitive `Pointer[T]` type, for operand type `T`. The operand must be an lvalue.
+
+    // Example
+    // XXX
+
+The `&` operator may not be overloaded. The `__primitives__` module contains an `addressOf` function that is equivalent.
+
+#### Dispatch operator
+
+The prefix `*` operator transforms a [call operator] expression into a dynamic dispatch on a variant. It may only be applied to an argument of a call expression, and the operand must evaluate to a single value of a [variant type](#variants). Multiple arguments may be dispatched on. For each instance type of each dispatched argument, an overload is looked up for those instance types, and a dispatch table is constructed. The return values and `ref`-ness of each overload must exactly match, or else the dispatch expression raises a compile-time error.
+
+    // Example
+    // XXX
+
+The dispatch implementation is not currently overloadable.
+
+### Multiplicative operators
+
+    # Grammar
+    # (impossible left recursion used for simplicity's sake)
+    MulExpr -> (MulExpr MulOp)? PrefixExpr
+    MulOp -> "*" | "/" | "%"
+
+* The infix `*` operator desugars to the `multiply` [operator function](#operatorfunctions).
+* The infix `/` operator desugars to the `divide` operator function.
+* The infix `%` operator desugars to the `remainder` operator function.
+
+These operators are all left-associative among each other.
+
+### Additive operators
+
+    # Grammar
+    AddExpr -> (AddExpr AddOp)? MulExpr
+    AddOp -> "+" | "-"
+
+* The infix `+` operator desugars to the `add` [operator function](#operatorfunctions).
+* The infix `-` operator desugars to the `subtract` operator function.
+
+These operators are left-associative among each other.
+
+### Ordered comparison operators
+
+    # Grammar
+    CompareExpr -> (CompareExpr CompareOp)? AddExpr
+    CompareOp -> "<=" | "<" | ">" | ">="
+
+* The infix `<=` operator desugars to the `lesserEquals?` [operator function](#operatorfunctions).
+* The infix `<` operator desugars to the `lesser?` operator function.
+* The infix `>` operator desugars to the `greater?` operator function.
+* The infix `>=` operator desugars to the `greaterEquals?` operator function.
+
+These operators are left-associative among each other.
+
+### Equality comparison operators
+
+    # Grammar
+    EqualExpr -> (EqualExpr EqualOp)? CompareExpr
+    EqualOp -> "==" | "!="
+
+* The infix `==` operator desugars to the `equals?` [operator function](#operatorfunctions).
+* The infix `!=` operator desugars to the `notEquals?` operator function.
+
+These operators are left-associative among each other.
+
+### Boolean not
+
+    # Grammar
+    NotExpr -> "not" EqualExpr
+             | EqualExpr
+
+The prefix `not` operator negates its operand, which must evaluate to a value of the primitive type `Bool`. `not true` evaluates to `false`, and `not false` evaluates to `true`. The `not` operator may not be overloaded. The `__primitives__` module contains a `boolNot` function that is equivalent.
+
+### Boolean and
+
+    # Grammar
+    AndExpr -> NotExpr ("and" AndExpr)?
+
+The infix `and` operator performs short-circuit boolean conjunction. Both operands must evaluate to a value of the primitive type `Bool`. The left-hand expression is evaluated, and if true, the right-hand expression is evaluated and its result becomes the value of the `and` expression. If the left-hand expression evaluates to false, the `and` expression immediately evaluates to `false` without evaluating the right-hand expression.
+
+The `and` operator may not be overloaded. `and` is right-associative.
+
+### Boolean or
+
+    # Grammar
+    OrExpr -> AndExpr ("or" OrExpr)?
+
+The infix `or` operator performs short-circuit boolean disjunction. Both operands must evaluate to a value of the primitive type `Bool`. The left-hand expression is evaluated, and if false, the right-hand expression is evaluated and its result becomes the value of the `or` expression. If the left-hand expression evaluates to true, the `or` expression immediately evaluates to `true` without evaluating the right-hand expression.
+
+The `or` operator may not be overloaded. `or` is right-associative.
+
+### Low-precedence prefix operators
+
+    # Grammar
+    Expression -> PairExpr
+                | IfExpr
+                | Unpack
+                | StaticExpr
+                | Lambda
+                | OrExpr
+
+#### If expressions
+
+    # Grammar
+    IfExpr -> "if" "(" Expression ")" Expression "else" Expression
+
+Similar [if statements](#conditionalstatements), if expressions conditionally evaluate subexpressions based on a boolean condition. The first operand is evaluated, and if true, the second operand is evaluated; otherwise, the third operand is evaluated. The first operand must evaluate to a value of the primitive type `Bool`, and the types of the second and third arguments must be the same. Unlike an if statement, an if expression may not omit its `else` clause.
+
+#### Keyword pair expressions
+
+    # Grammar
+    PairExpr -> Identifier ":" Expression
+
+A sugar syntax is provided for name-value pairs. The syntax `name: expr` is sugar for the [tuple literal](#tupleexpressions) `[#"name", expr]` (which in turn is sugar for a `tupleLiteral` [operator function](#operatorfunctions) call).
+
+#### Static expressions
+
+    # Grammar
+    StaticExpr -> "static" Expression
+
+The `static` operator evaluates its operand at compile time. The result of the evaluation is then used as the type parameter of the stateless primitive `Static[n]` type. `static` expressions can be used to pass values to [static arguments] of functions.
+
+    // Example
+    // XXX
+
+If the `static` operator is applied to a value that is inherently static, such as a [symbol](#symbols) or [static string](#staticstrings), then it is a no-op.
+
+#### Unpack operator
+
+    # Grammar
+    Unpack -> ".." Expression
+
+The unpack operator evaluates its operand in [multiple value context](#multiplevalueexpressions), allowing a multiple-value expression to be interpolated into a context that normally expects a single expression.
+
+    // Example
+    // XXX
+
+#### Lambda expressions
+
+    # Grammar
+    Lambda -> LambdaArguments LambdaArrow LambdaBody
+    LambdaArguments -> ".."? Identifier
+                     | Arguments
+    LambdaArrow -> "=>" | "->"
+    LambdaBody -> Block
+                | ReturnExpression
+
+Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition]. The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
+
+    // Example
+    // XXX
+
+If the lambda declares a single untyped argument, the parentheses may be omitted.
+
+    // Example
+    // XXX
+
+Note that a shorthand lambda body expression has higher precedence than the [multiple value](#multiplevalueexpressions) comma. To return multiple values from a lambda, parens or a block body must be used.
+
+    // Example
+    // XXX
+
+The lambda body may reference local bindings from its enclosing scope, in which case the referenced bindings are implicitly captured by the lambda value. The arrow token controls how this is done:
+
+* A lambda using the `->` token captures its enclosing scope by reference. The lambda may mutate values from its enclosing scope, and those changes will be externally visible to the lambda; however, the lambda may not be used after the function that created it returns and its originating scope is destroyed.
+* A lambda using the `=>` token captures referenced values by copying them into the lambda object. If the lambda mutates its captured values, the changes will remain local to the lambda; however, the lambda may be safely used independent of the lifetime of its originating scope.
+
+ 
+
+    // Example
+    // XXX
+
+In either case, an anonymous [record type](#record) is synthesized to store the captured reference or values. The lambda expression evaluates into a constructor call for this anonymous record type. The lambda implicitly defines a `call` [operator function](#operatorfunctions) overload for the anonymous record type, in which references to the enclosing scope are transformed into references to the lambda record's internal state.
+
+    // Example
+    // XXX
+
 ### Multiple value expressions
 
     # Grammar
@@ -2339,14 +2623,17 @@ The generated static string must parse as a complete expression; open brackets o
 Clay functions, and thereby most expression forms, can return multiple values. The comma operator concatenates values into a multiple value list.
 
     // Example
+    // XXX
 
 However, for sanity's sake, expressions are normally constrained to single values, and it is an error to use a multiple-value expression in a single value context. (Zero values is considered "multiple values" by this rule.)
 
     // Example
+    // XXX
 
-Where multiple value expressions are allowed, a multiple value context may be introduced using the [unpack operator] `..`. The multiple values of the `..` expression are unpacked directly into the surrounding multiple value list.
+A multiple value context may be introduced using the [unpack operator] `..`. The multiple values of the `..` expression are interpolated directly into the surrounding multiple value list.
 
     // Example
+    // XXX
 
 Certain syntactic forms provide implicit multiple value context:
 
@@ -2355,58 +2642,7 @@ Certain syntactic forms provide implicit multiple value context:
 * [Assignment statements] with multiple left-hand values evaluate their right-hand expression in multiple value context.
 * [Multiple-value for loops] evaluate their value list in multiple value context.
 
-In these contexts, a lone multiple value expression may be used without an explicit unpack. However, within a multiple value expression that concatenates multiple expressions, multiple-value subexpressions still require an explicit unpack. (In other words, the `..` operator has higher precedence than the `,` operator, and implicit multiple value context only applies to the outermost precedence level.)
+In these contexts, a lone multiple value expression may be used without an explicit unpack. However, within a multiple value expression that concatenates multiple expressions, multiple-value subexpressions still require an explicit unpack. In other words, the `..` operator has higher precedence than the `,` operator, and implicit multiple value context only applies to the outermost precedence level.
 
     // Example
     // XXX
-
-    # Grammar
-    PairExpr -> Identifier ":" Expression
-    IfExpr -> "if" "(" Expression ")" Expression "else" Expression
-    Unpack -> ".." Expression
-    StaticExpr -> "static" Expression
-
-    OrExpr -> AndExpr ("or" OrExpr)?
-
-    AndExpr -> NotExpr ("and" AndExpr)?
-
-    NotExpr -> "not" EqualExpr
-             | EqualExpr
-
-    EqualExpr -> (EqualExpr EqualOp)? CompareExpr
-    EqualOp -> "==" | "!="
-
-    CompareExpr -> (CompareExpr CompareOp)? AddExpr
-    CompareOp -> "<=" | "<" | ">" | ">="
-
-    AddExpr -> (AddExpr AddOp)? MulExpr
-    AddOp -> "+" | "-"
-
-    MulExpr -> (MulExpr MulOp)? PrefixExpr
-    MulOp -> "*" | "/" | "%"
-
-    PrefixExpr -> PrefixOp SuffixExpr
-                | SuffixExpr
-    PrefixOp -> "+" | "-" | "&" | "*"
-
-    SuffixExpr -> AtomicExpr SuffixOp*
-    SuffixOp -> CallSuffix
-              | IndexSuffix
-              | FieldRefSuffix
-              | StaticIndexSuffix
-              | DereferenceSuffix
-
-    CallSuffix -> "(" ExprList ")" CallLambdaList?
-    CallLambdaList -> ":" Lambda ("::" Lambda)*
-
-    IndexSuffix -> "[" ExprList "]"
-    FieldRefSuffix -> "." Identifier
-    StaticIndexSuffix -> "." IntToken
-    DereferenceSuffix -> "^"
-
-    Lambda -> Arguments LambdaArrow LambdaBody
-    LambdaArrow -> "=>" | "->"
-    LambdaBody -> Block
-                | ReturnExpression
-
-
