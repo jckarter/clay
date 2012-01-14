@@ -11,5 +11,6 @@ Jeremy Clifford (github @agemogolk)
 Scott Olson <scott@scott-olson.org>
 Shalabh Chaturvedi <shalabh@shalabh.com>
 (freenode Elrood)
+Alfred Rossi <alfredr@gmail.com>
 
 If your name is missing from this list, let me know at joe@duriansoftware.com.
