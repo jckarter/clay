@@ -629,7 +629,7 @@ Also like record types, the pattern guard is optional if no predicate is needed;
     variant Maybe[T] (Nothing, T); // [T] pattern guard implied
     variant Either[T, U] (T, U); // [T, U] pattern guard implied
 
-The variant instance list may be an arbitrary [multiple value expression]. It is evaluatedat compile time to derive the set of instances.
+The variant instance list may be an arbitrary [multiple value expression]. It is evaluated at compile time to derive the set of instances.
 
     // Example
     private RainbowTypes(Base) =
@@ -1515,7 +1515,7 @@ As a special case, if a [call expression](#callexpressions) with a block [lambda
 
     # Grammar
     ReturnStatement -> "return" ReturnExpression? ";"
-    ReturnExpression -> ReturnKind ExprList ";"
+    ReturnExpression -> ReturnKind? ExprList ";"
     ReturnKind -> "ref" | "forward"
 
 Return statements end execution of the current function and provide the return value or values to which the function evaluates.
@@ -1817,7 +1817,7 @@ Like single-value simple assignment, update assignment also supports special pro
 
 #### Initialization statements
 
-The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely, and indeed, there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
+The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely, as indeed, there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
 
     // Example
     main() {
