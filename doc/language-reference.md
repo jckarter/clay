@@ -2249,7 +2249,7 @@ If a name is bound to [multiple values](#multiplevalueexpressions), such as a va
 Literals evaluate to primitive constant values.
 
 * The boolean literals `true` and `false` evaluate to the two possible values of the primitive `Bool` type.
-* Integer literals evaluate to constant integer values. They consist of an [integer literal token](#integerliterals), optionally prefixed by a sign `+` or `-` and/or suffixed by a type specifier. Without a type specifier suffix, the literal is of the primitive `Int32` type, unless the module declares a different default integer type in its [module attributes](#moduleattributes). To create a literal of another type, the following suffixes are allowed, with the corresponding primitive types:
+* Integer literals evaluate to constant integer values. They consist of an [integer literal token](#integerliterals), optionally prefixed by a sign `+` or `-` and/or suffixed by a type specifier. Without a type specifier suffix, the literal is of the primitive `Int32` type, unless the module declares a different default integer type in its [module attributes](#moduledeclaration). To create a literal of another type, the following suffixes are allowed, with the corresponding primitive types:
     * `ss` — `Int8` ("short short")
     * `s` — `Int16` ("short")
     * `i` — `Int32` ("int")
@@ -2266,7 +2266,7 @@ Literals evaluate to primitive constant values.
         // Example
         // XXX
 
-* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes](#moduleattributes). To create a literal of another type, the following suffixes are allowed:
+* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes](#moduledeclaration). To create a literal of another type, the following suffixes are allowed:
     * `f` — `Float32` ("single" **F**loat)
     * `ff` — `Float64` ("double" **F**loat)
     * `fl` — `Float80`
@@ -2585,7 +2585,7 @@ The unpack operator evaluates its operand in [multiple value context](#multiplev
     LambdaBody -> Block
                 | ReturnExpression
 
-Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition](#simplefunctiondefinition). The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
+Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition](#simplefunctiondefinitions). The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
 
     // Example
     // XXX
