@@ -278,7 +278,7 @@ The module name is followed by an import spec, and the import declaration is end
     import foo.bar; // Import module `foo.bar` as `foo.bar`
 
     main() {
-        println(foo.bar.apple()); // Call member `apple` of module `foo.bar`
+        foo.bar.apple(); // Call member `apple` of module `foo.bar`
     }
 
 Alternately, a local alias for the module may be provided with `as`, in which case module members are instead accessed through the given alias name:
@@ -287,7 +287,7 @@ Alternately, a local alias for the module may be provided with `as`, in which ca
     import foo.bar as bar; // Import module `foo.bar` as `bar`
 
     main() {
-        println(bar.apple()); // Call member `apple` of module `foo.bar` (alias `bar`)
+        bar.apple(); // Call member `apple` of module `foo.bar` (alias `bar`)
     }
 
 Individual members of a module may be imported directly into the current module's namespace, with or without aliases:
@@ -299,8 +299,8 @@ Individual members of a module may be imported directly into the current module'
     );
 
     main() {
-        println(apple());      // Call member `apple` of module `foo.bar`
-        println(clementine()); // Call member `mandarin` of module `foo.bar` (alias `clementine`)
+        apple();      // Call member `apple` of module `foo.bar`
+        clementine(); // Call member `mandarin` of module `foo.bar` (alias `clementine`)
     }
 
 Private members of a module can also be imported by explicitly prefixing the member name with `private`. (You should only do this if you know what you're doing.)
@@ -309,7 +309,7 @@ Private members of a module can also be imported by explicitly prefixing the mem
     import foo.bar.(private banana);
 
     main() {
-        println(banana());
+        banana();
     }
 
 Finally, all of the public members of a module may be imported directly into the current module's namespace using `.*`. (You should also only do this if you know what you're doing.)
@@ -318,8 +318,8 @@ Finally, all of the public members of a module may be imported directly into the
     import foo.bar.*; // Import all public members of `foo.bar`
 
     main() {
-        println(apple());
-        println(mandarin());
+        apple();
+        mandarin();
     }
 
 #### Conflict resolution
@@ -327,10 +327,10 @@ Finally, all of the public members of a module may be imported directly into the
 It is an error to import two modules or module members using the same name.
 
     // Example
-    import foo;
-    import bar as foo; // ERROR
-    import bar.(foo); // ERROR
-    import bar.(bar as foo); // ERROR
+    import malkevich;
+    import bar as malkevich; // ERROR
+    import bar.(malkevich); // ERROR
+    import bar.(bar as malkevich); // ERROR
 
 However, it is allowed to import multiple modules with `.*` even if they contain members with conflicting names, so long as no ambiguous names are actually referenced.
 
@@ -423,7 +423,7 @@ XXX supported attributes?
     TopLevelLLVM -> LLVMBlock
     LLVMBlock -> "__llvm__" "{" /.*/ "}"
 
-A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations or other global declarations needed by `__llvm__` blocks in individual [inline LLVM functions]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
+A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations, metadata nodes, or other global definitions needed by `__llvm__` blocks in individual [inline LLVM functions]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
 
     // Example
     in traps;
@@ -610,7 +610,7 @@ Record definitions currently do not directly allow for template specialization. 
     # Grammar
     Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
 
-Variant types provide a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be given to an appropriately-typed function using [dispatch expressions].
+Variant type definitions create a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be dispatched to an appropriately-typed function using the [dispatch operator].
 
 Syntactically, the variant's instance types are defined after the variant name in a parenthesized list.
 
@@ -629,7 +629,7 @@ Also like record types, the pattern guard is optional if no predicate is needed;
     variant Maybe[T] (Nothing, T); // [T] pattern guard implied
     variant Either[T, U] (T, U); // [T, U] pattern guard implied
 
-The variant instance list may be an arbitrary [multiple value expression]. It is evaluated to derive the set of instances.
+The variant instance list may be an arbitrary [multiple value expression]. It is evaluatedat compile time to derive the set of instances.
 
     // Example
     private RainbowTypes(Base) =
@@ -733,7 +733,7 @@ The simplest form of function definition creates a new function symbol with a si
         return q/a, c/q;
     }
 
-A function definition always defines a new symbol name; it is an error if a symbol with the same name already exists.
+A simple function definition always defines a new symbol name; it is an error if a symbol with the same name already exists.
 
     // Example
     abs(x:Int) = if (x < 0) -x else x;
@@ -840,7 +840,7 @@ Symbols created by [simple function definitions] may also be overloaded; in fact
     define double;
     overload double(x) = x+x;
 
-Universal overloads are supported as a special case, in which the overloaded symbol name is itself a free pattern variable.
+Universal overloads are supported as a special case, in which the overloaded symbol name is itself a pattern variable.
 
     // Example
     record MyInt (value:Int);
@@ -908,7 +908,7 @@ Arguments are passed by reference.
     # Grammar
     VarArgument -> ReferenceQualifier? ".." Identifier TypeSpec?
 
-The final argument may be declared as variadic by being prefixed with a `..` token, in which case it will match all remaining arguments after the previously-matched arguments. The argument name will be bound as a [multiple value variable].
+The final argument of a function may be declared as variadic by being prefixed with a `..` token, in which case it will match all remaining arguments after the previously-matched arguments. The argument name will be bound as a [multiple value variable](#multiplevalueexpressions).
 
     // Example
     // Print ..stuff n times
@@ -921,7 +921,7 @@ The final argument may be declared as variadic by being prefixed with a `..` tok
         printlnTimes(3, "She loves you ", "yeah yeah yeah");
     }
 
-The types of the variadic argument's values may be bound to a variadic pattern variable. In the argument specification, the pattern variable's name does not require a second `..` token.
+The types of the variadic argument's values may be bound to a variadic pattern variable. In the argument specification, the multi-type variable's name does not require a second `..` token.
 
     // Example
     // Print ..stuff n times, for only String? ..stuff
@@ -933,7 +933,7 @@ The types of the variadic argument's values may be bound to a variadic pattern v
 
     // Call a CodePointer object with input values matching its input types
     [..In, ..Out]
-    invoke(f:CodePointer[[..In], [..Out]], ..in:In) : ..Out {
+    overload call(f:CodePointer[[..In], [..Out]], ..in:In) : ..Out {
         return ..f(..in);
     }
 
@@ -942,21 +942,25 @@ The types of the variadic argument's values may be bound to a variadic pattern v
     # Grammar
     ReferenceQualifier -> "ref" | "rvalue" | "forward"
 
-Argument declarations may be prefixed with an optional reference qualifier. Clay distinguishes "lvalues", which are values bound to a variable, referenced through a pointer, or otherwise with externally-referenceable identities, from "rvalues", which are unnamed temporary values that will exist only for the extent of a single function call. (The terms come from an lvalue being a valid expression on the **L**eft side of an assignment statement, whereas an rvalue is only valid on the **R**ight side.)
+Argument declarations may be prefixed with an optional reference qualifier. Clay distinguishes "lvalues", which are values bound to a variable, referenced through a pointer, or otherwise with externally-referenceable identities, from "rvalues", which are unnamed temporary values that will exist only for the extent of a single function call. (The terms come from an lvalue being a valid expression on the **L**eft side of an assignment statement, whereas an rvalue is only valid on the **R**ight side.) Local and global variables are lvalues, as are any expressions that [return by reference](#returnstatements); the results of return-by-value expressions are rvalues.
 
     // Example
     // The result of `2+2` in this example is bound to `x` and is thus an lvalue
-    var x = 2 + 2;
-    f(x);
+    lv() {
+        var x = 2 + 2;
+        f(x);
+    }
 
     // The result of `2+2` in this example is temporary and is thus an rvalue
-    f(2 + 2);
+    rv() {
+        f(2 + 2);
+    }
 
-Since rvalues only exist for the duration of a single function call, functions can take advantage of this fact to perform move optimization by reclaiming resources from rvalue arguments instead of allocating new resources. In an argument list, an argument name may be annotated with the `rvalue` keyword, in which case it will only match rvalues.
+Since rvalues are only referenceable for the duration of a single function call, functions can take advantage of this fact to perform move optimization. They can reclaim resources from their rvalue arguments instead of allocating new resources. In an argument list, an argument name may be annotated with the `rvalue` keyword, in which case it will only match rvalues. Rvalues will be deleted using the `destroy` [operator function](#operatorfunctions) at the end of the statement for which they were allocated.
 
     // Example
     foo(rvalue x:String) {
-        // Use move() to steal x's buffer, then append " world" to the end
+        // Use `move` to steal x's buffer, then append " world" to the end
         return move(x) + " world";
     }
 
@@ -984,7 +988,7 @@ Without a `ref` or `rvalue` qualifier, the argument will match either lvalues or
         bar(2+2);
     }
 
-If a function needs to carry the `rvalue`-ness of an argument through to other functions, it may qualify that argument with the `forward` keyword.
+If a function needs to carry the `ref`- or `rvalue`-ness of an arbitrary argument through to other functions, it may qualify that argument with the `forward` keyword.
 
     // Example
     foo(rvalue x:Int) {}
@@ -1012,7 +1016,7 @@ The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argum
     # Grammar
     StaticArgument -> "static" Pattern
 
-Functions may match against values computed at compile-time using `static` arguments. A `static` argument matches against the result of a corresponding [static expression] at the call site using [pattern matching].
+Functions may match against values computed at compile-time using `static` arguments. A `static` argument matches against the result of a corresponding [static expression](#staticexpressions) at the call site using [pattern matching].
 
     // Example
     define beetlejuice;
@@ -1076,7 +1080,7 @@ A function definition may declare its return types by following the argument lis
     [T | Integer?(T)]
     safeDouble(x:T) : NextLargerInt(T) {
         alias NextT = NextLargerInt(T);
-        return T(x) + T(x);
+        return NextT(x) + NextT(x);
     }
 
 If the function does not declare its return types, they will be inferred from the function body. To declare that a function returns no values, an empty return declaration (or a declaration that evaluates to no values) may be used.
@@ -1094,7 +1098,7 @@ If the function does not declare its return types, they will be inferred from th
 
     NamedReturn -> ".."? Identifier ":" Expression
 
-In special cases where constructing a value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression].
+In special cases where constructing a return value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression](#multiplevalueexpressions).
 
 Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [simple assignment statements] \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
 
@@ -1183,9 +1187,9 @@ Static values can be interpolated into the LLVM code using the forms `$Identifie
         $NORMAL_RETURN
     }
 
-If an inline LLVM block references intrinsics or other global symbols, those symbols must be declared in a [top-level LLVM] block.
+If an inline LLVM block references intrinsics, metadata nodes, or other global LLVM symbols, those symbols must be declared in a [top-level LLVM] block.
 
-Inline LLVM functions currently cannot be evaluated at compile time.
+Inline LLVM function bodies currently cannot be evaluated at compile time.
 
 ### Inline and alias qualifiers
 
@@ -1194,7 +1198,7 @@ Inline LLVM functions currently cannot be evaluated at compile time.
 
 Any simple function or overload definition may be modified by an optional `inline` or `alias` attribute:
 
-* `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the general code generation/linkage hint provided by C or C++'s `inline` modifier and is not generally necessary.
+* `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the weaker code generation/linkage hint provided by C99 or C++'s `inline` modifiers.
 * `alias` functions evaluate their arguments using call-by-name semantics. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues. In detail: The caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. Unlike actual [lambda expressions], references into the caller's scope from alias arguments are statically resolved. Argument expressions are evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information.
 
  
@@ -1269,6 +1273,8 @@ Compared to internal Clay functions, external functions have several limitations
 * Clay types with nontrivial [value semantics] may not be passed by value to external functions. They must be passed by pointer instead.
 
 Although they define a top-level name, external function names are not true [symbols]. An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes], [..OutTypes]]` type representing the external's function pointer.
+
+External functions cannot currently be called by the compile-time evaluator.
 
 #### External attributes
 
@@ -1412,7 +1418,7 @@ Like [external functions], external variable definitions may include an optional
     // Example
     external ("____errno$OBSCURECOMPATIBILITYTAG") errno : Int;
 
-Externally-linkable global variables defined in Clay are currently unsupported.
+Externally-linkable global variables defined in Clay are currently unsupported. External variables cannot currently be evaluated by the compile-time evaluator.
 
 ## Statements
 
@@ -1465,7 +1471,7 @@ Blocks group sequences of statements and provide scopes for [local variable bind
     # Grammar
     LabelDef -> Identifier ":"
 
-In addition to normal statements, blocks may also contain [labels], which provide targets for [goto statements]. A label is declared as an identifier followed by a `:` token. Label names are lexically scoped to their parent block.
+In addition to statements, blocks may also contain [labels], which provide targets for [goto statements]. A label is declared as an identifier followed by a `:` token. Label names are lexically scoped to their parent block.
 
     // Example
     main() {
@@ -1483,7 +1489,7 @@ In addition to normal statements, blocks may also contain [labels], which provid
     CallWithTrailingBlock -> AtomicExpr CallSuffix ":" (Lambda "::")*
                              ArgumentList LambdaArrow Block
 
-The simplest form of statement is a single expression followed by a `;` token. The expression is evaluated, and its return values, if any, are discarded.
+The simplest form of statement is a single expression followed by a `;` token. The expression is evaluated, and its return values, if any, are immediately deleted using the `destroy` [operator function](#operatorfunctions).
 
     // Example
     main() {
@@ -1491,7 +1497,7 @@ The simplest form of statement is a single expression followed by a `;` token. T
         println("Hi");
     }
 
-As a special case, if a [call expression] with a block [lambda expression] as its final argument is used as a statement, the semicolon after the final lambda block may be omitted.
+As a special case, if a [call expression](#callexpressions) with a block [lambda expression](#lambdaexpressions) as its final argument is used as a statement, the semicolon after the final lambda block may be omitted.
 
     // Example
     enableMode(maybeMode:Maybe[Mode]) {
@@ -1599,7 +1605,7 @@ Local variables are introduced by binding statements. Local variables come in a 
             println("x = ", x, "; y = ", y); // x = 1; y = 3
         }
 
-    `var`s have deterministic lifetimes. They will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block. Destruction of `var`s happens when their scope is exited for any reason, either by normal control flow or by `return`, `break`, `continue`, or `goto` statements, or by unwinding caused by exceptions.
+    `var`s have deterministic lifetimes. They will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block.
 
         // Example
         record Noisy (x:Int);
@@ -1611,6 +1617,8 @@ Local variables are introduced by binding statements. Local variables come in a 
             var x = Noisy(); // prints "created"
             println("hello world"); // prints "hello world"
         } // prints "destroyed"
+
+    Deletion of `var`s happens when their scope is exited for any reason, whether by normal control flow, by `return`, `break`, `continue`, or `goto` statements, or by unwinding caused by exceptions.
 
 * `ref` bindings create named references to existing lvalues. (See [Reference qualifiers] for a discussion of lvalues and rvalues.)
 
@@ -1650,7 +1658,7 @@ Local variables are introduced by binding statements. Local variables come in a 
             forward x2, y2 = xs[2], ys[2];
         }
 
-* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases]. The alias's name expands to the bound expression at every call site.
+* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases]. The alias's name expands to the bound expression (evaluated in its original lexical context) at every call site.
 
 Multiple variable bindings can be assigned to the values of a [multiple value expression]. Each value from the right-hand side is bound to the corresponding variable name on the left-hand side. It is an error if the number of values does not correspond to the number of variables.
 
@@ -1665,7 +1673,7 @@ Multiple variable bindings can be assigned to the values of a [multiple value ex
         var a, b, c, d = 1, ..twoAndThree(), 4;
     }
 
-If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context]; that is, a single expression that evaluates to multiple values may omit the `..` prefix.
+If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context]; in other words, a single expression that evaluates to multiple values may omit the `..` prefix.
 
     // Example
     oneAndTwo() = 1, 2;
@@ -1675,7 +1683,7 @@ If multiple variables are being bound, the right-hand side is implicitly evaluat
         var x, y = oneAndTwo();
     }
 
-Variable names are scoped from after the binding statement to the end of their enclosing block. New binding names may shadow module-global names, variable names from outer scopes, or previous bindings from the same block. Variable names are bound after the right hand expression is evaluated, so the right-hand expression may refer to outer bindings before they are shadowed.
+Variable names are scoped from after the binding statement to the end of their enclosing block. New binding names may shadow module-global names, variable names from outer scopes, or previous bindings from the same block. Variable names are bound after the right-hand expression is evaluated, so the right-hand expression may refer to outer bindings before they are shadowed.
 
     // Example
     var x = 1;
@@ -1713,7 +1721,7 @@ Assignment statements update variables with new values.
 
 #### Simple assignment statements
 
-The most common form of assignment uses the `=` token. The [multiple value expression] on the right side of the `=` is evaluated, followed by the left side. It is an error if the number of values on the left and right sides do not match. If both sides evaluate to a single value, the `assign` [operator function](#operatorfunctions) is called with the left and right values.
+The most common form of assignment uses the `=` token. The [multiple value expression](#multiplevalueexpressions) on the right side of the `=` is evaluated, followed by the left side. It is an error if the number of values on the left and right sides do not match. If both sides evaluate to a single value, the `assign` [operator function](#operatorfunctions) is called with the left and right values.
 
     // Example
     main() {
@@ -1747,7 +1755,7 @@ If both sides evaluate to multiple values, the right-hand values are evaluated i
         shellC, shellA, shellB = shellA, shellB, shellC;
     }
 
-The left-hand expression should generally evaluate to an lvalue or lvalues; however, this is not strictly enforced. `assign` may be overloaded for non-lvalues in order to support temporary proxy-assignment objects.
+The left-hand expression should generally evaluate to an lvalue or lvalues; however, this is not strictly enforced. `assign` may also be overloaded for non-lvalues in order to support temporary proxy-assignment objects. Typical `assign` overloads should qualify their left-hand argument as `ref`.
 
 If the left-hand expression is a single [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression, special property assignment operator functions are used instead of `assign`.
 
@@ -1807,12 +1815,13 @@ Like single-value simple assignment, update assignment also supports special pro
 
 #### Initialization statements
 
-The above assignment operators assume that the values being assigned have already been initialized. If the current value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely. In these cases, initialization must be done instead of assignment.
+The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely, and indeed, there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
 
     // Example
     main() {
-        var p = Pointer[Foo](malloc(TypeSize(Foo)));
-        finally free(Pointer[Int8](p));
+        var p = allocateRawMemory(Foo);
+        finally freeRawMemory(p);
+
         p^ <-- Foo();
     }
 
@@ -1850,7 +1859,7 @@ As a special case, if the right-hand side is a `forward` argument bound to an rv
 
 `var` [binding statements] behave identically to initialization statements when initializing their newly-bound variables.
 
-Note that, just as assigning uninitialized values with `=` is undefined, so is initializing already-initialized values with `<--`. The `<--` operator should not generally be used except in primitive initialization contexts.
+Note that, just as assigning uninitialized values with `=` is undefined, so is initializing already-initialized values with `<--`. The `<--` operator should not generally be used except when necessary.
 
 ### Conditional statements
 
@@ -1933,7 +1942,7 @@ A `while` loop evaluates an expression, which must evaluate to a value of the `B
     # Grammar
     ForStatement -> "for" "(" comma_list(Identifier) "in" Expression ")" Statement
 
-A `for` loop provides a higher-level looping mechanism than `while` to loop over sequences. It binds values yielded from a iterator object within the scope of its body statement, repeatedly executing the body for each value.
+A `for` loop provides a higher-level looping mechanism than `while` to loop over sequences. It binds values yielded from a iterator object to variables in the scope of its body statement, repeatedly executing the body for each value until the iterator is exhausted.
 
     // Example
     main() {
@@ -1972,7 +1981,7 @@ A special syntactic form is provided to apply an operation over each individual 
             printTo(stream, x);
     }
 
-Unlike `while` or `for`, `..for` is not a proper loop. It is unrolled; that is, the body is instantiated repeatedly for each value. The bound variable is locally rebound for each instantiation; thus, unlike a normal `for` loop's bindings, the binding's type may change for each instantiation.
+Unlike `while` or `for`, `..for` is not a proper loop. It is unrolled; that is, the body is instantiated repeatedly for each value. The bound variable is locally rebound for each instantiation; thus, unlike a normal `for` loop's bindings, the `..for` binding's type may change for each instantiation.
 
     // Example
     foo() {
@@ -2006,15 +2015,22 @@ Branch statements provide nonlocal control flow within a function.
 
 `break` and `continue` prematurely halt execution of a `while`, `for`, or `..for` loop. `continue` resumes execution at the next iteration of the loop, and `break` resumes execution after the loop. `break` and `continue` apply to the innermost loop in which they lexically appear; they are invalid outside of a loop.
 
+    // Example
+    // XXX
+
 #### Goto statements
 
+    # Grammar
     GotoStatement -> "goto" Identifier ";"
 
 `goto` statements jump to (almost) arbitrary [labels] within the function. There are some restrictions: goto statements may not jump into a `var` binding's scope from outside (and thereby skip the variable's initialization). Jumping from an outer block into a label defined in an inner block is also currently unsupported.
 
+    // Example
+    // XXX
+
 ### Exception handling statements
 
-Clay optionally supports exception handling. The `ExceptionsEnabled?` function from the `__primitives__` module will return true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled for runtime, the compile-time evaluator does not currently support exception handling.
+Clay optionally supports exception handling. The `ExceptionsEnabled?` function from the `__primitives__` module will return true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled for runtime, the compile-time evaluator does not currently support exception handling; the compile-time evaluator always behaves as if exceptions are disabled.
 
 #### Throw statements
 
@@ -2032,7 +2048,7 @@ The exception is thrown by calling the `throwValue` [operator function](#operato
     TryStatement -> "try" Block
                     ("catch" "(" (Identifier (":" Type)?) ")" Block)+
 
-Try statements execute their associated block normally. If an exception occurs during the dynamic extent of the try statement, it is tested against the associated catch clauses, and if a matching catch clause is found, the exception is caught and execution resumes inside the matching clause. Catch clauses are matched by declared type, and the thrown exception value is bound as the specified type. A catch-all clause can also be declared without a type; the clause will match any exception not caught by a previous catch clause.
+Try statements execute their associated block normally. If an exception occurs during the dynamic extent of the try statement, the exception is caught and tested against the try block's associated catch clauses, and if a matching catch clause is found, execution resumes inside the matching clause. Catch clauses are matched by declared type, and the thrown exception value is bound as the specified type. A catch-all clause can also be declared without a type; the clause will match any exception not caught by a previous catch clause. If no catch clause matches the exception, it is rethrown to be caught by an outer scope.
 
     // Example
     // XXX
@@ -2086,7 +2102,7 @@ If exceptions are disabled, a try statement's body is compiled as a normal block
     ScopeGuardStatement -> ScopeGuardKind Statement
     ScopeGuardKind -> "finally" | "onerror"
 
-Scope guard statements provide a convenient shorthand for deterministically and safely releasing resources or performing other required cleanup in the face of arbitrary nonlocal control flow. A `finally` statement causes the associated statement when the enclosing block is exited for any reason, much like a `var`'s destructor but without the associated `var`.
+Scope guard statements provide a convenient shorthand for deterministically and safely performing required cleanup in the face of arbitrary nonlocal control flow. A `finally` statement causes the associated statement to be executed when the enclosing block is exited for any reason, much like a `var`'s destructor but without the associated `var`.
 
     // Example
     // XXX
@@ -2102,7 +2118,7 @@ If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope 
 
     EvalStatement -> "eval" ExprList ";"
 
-Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression] is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Eval statements may synthesize any statement, including new variable bindings.
+Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression] is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Those statements then take the eval statement's place in execution. Eval statements may synthesize any statement, including new variable bindings.
 
     // Example
     // XXX
@@ -2129,7 +2145,7 @@ The result of `eval` must be parsable as a complete statement or statements; it 
                 | StaticExpr
                 | OrExpr
 
-Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized as follows, from highest to lowest, along with sample syntax and associated operator functions where appropriate.
+Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized as follows, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
 
 * Atomic expressions
     * [Literal expressions]
