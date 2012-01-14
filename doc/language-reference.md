@@ -1,15 +1,15 @@
 # <a name="clayprogramminglanguagereference">Clay Programming Language Reference 0.1</a>
 
-* [Conventions]
-* [Tokenization]
-* [Modules]
-* [Source file organization]
-* [Type definitions]
-* [Function definitions]
-* [Global value definitions]
-* [Statements]
-* [Expressions]
-* [Pattern matching]
+* [Conventions](#conventions)
+* [Tokenization](#tokenization)
+* [Modules](#modules)
+* [Source file organization](#sourcefileorganization)
+* [Type definitions](#typedefinitions)
+* [Function definitions](#functiondefinitions)
+* [Global value definitions](#globalvaluedefinitions)
+* [Statements](#statements)
+* [Expressions](#expressions)
+* [Pattern matching](#patternmatching)
 
 ## <a name="conventions">Conventions</a>
 
@@ -158,7 +158,7 @@ Character literals represent a single ASCII character. Syntactically, they consi
     TripleStringChar -> /(?!=""" ([^"]|$)) [^\\]/
                       | EscapeCode
 
-String literals represent a sequence of ASCII text. Syntactically, they consist of zero or more characters or escape codes as described for [character literals], delimited by either matching `"` characters or by matching `"""` sequences. Within `"`-delimited strings, the characters `"` and `\` must be escaped, whereas in `"""`-delimited strings, only `\` need be escaped. (The sequence `"""` may be escaped by escaping one or more of the `"` characters.) Whitespace within string literals is significant, including newlines.
+String literals represent a sequence of ASCII text. Syntactically, they consist of zero or more characters or escape codes as described for [character literals](#characterliterals), delimited by either matching `"` characters or by matching `"""` sequences. Within `"`-delimited strings, the characters `"` and `\` must be escaped, whereas in `"""`-delimited strings, only `\` need be escaped. (The sequence `"""` may be escaped by escaping one or more of the `"` characters.) Whitespace within string literals is significant, including newlines.
 
     // Examples of string literals
     "hello world"  "\"hello world\""
@@ -176,7 +176,7 @@ String literals represent a sequence of ASCII text. Syntactically, they consist 
 
 Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
 
-Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations], and its own defined [symbols], created by [top-level definitions] in the module source code. Modules can control access to their namespace from other importing modules by marking symbols as public or private.
+Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations](#importdeclarations), and its own defined [symbols](#symbols), created by [top-level definitions](#topleveldefinitions) in the module source code. Modules can control access to their namespace from other importing modules by marking symbols as public or private.
 
 ### <a name="specialmodules">Special modules</a>
 
@@ -184,7 +184,7 @@ A few modules have special significance:
 
 * The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.md) documentation describes its contents in detail.
 * The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
-* If the entry point module does not declare its name in a [module declaration], it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
+* If the entry point module does not declare its name in a [module declaration](#moduledeclaration), it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
 ### <a name="operatorfunctions">Operator functions</a>
 
@@ -215,10 +215,10 @@ XXX
 
 A clay module corresponds to a single source file. Source files are laid out in the following order:
 
-* Zero or more [import declarations]
-* An optional [module declaration]
-* An optional [top-level LLVM] block
-* The body of the module file, consisting of zero or more [top-level definitions] that define the module's [symbols]
+* Zero or more [import declarations](#importdeclarations)
+* An optional [module declaration](#moduledeclaration)
+* An optional [top-level LLVM](#toplevelllvm) block
+* The body of the module file, consisting of zero or more [top-level definitions](#topleveldefinitions) that define the module's [symbols](#symbols)
 
 #### <a name="listsyntacticforms">List syntactic forms</a>
 
@@ -238,7 +238,7 @@ Comma-delimited lists are a common feature in Clay's grammar. In most contexts, 
 
     foo(a,b,c) { return a+b, b+c; }
 
-In [pattern matching] contexts, a variation of the comma-delimited list is used that allows an optional tail syntax form, representing a variadic item that greedily matches the rest of the values being matched.
+In [pattern matching](#patternmatching) contexts, a variation of the comma-delimited list is used that allows an optional tail syntax form, representing a variadic item that greedily matches the rest of the values being matched.
 
     # Grammar
     variadic_list(Rule, LastRule) -> Rule ("," Rule)* ("," (LastRule)?)?
@@ -398,13 +398,13 @@ A module may optionally declare its name using the `in` keyword.
 
     in foo.bas;
 
-Such a declaration must appear after any [import declarations] and before any [top-level LLVM] or other [top-level definitions]. The module declaration may optionally include a parenthesized list of module attributes. If no attribute list is provided, it is equivalent to the empty list.
+Such a declaration must appear after any [import declarations](#importdeclarations) and before any [top-level LLVM](#toplevelllvm) or other [top-level definitions](#topleveldefinitions). The module declaration may optionally include a parenthesized list of module attributes. If no attribute list is provided, it is equivalent to the empty list.
 
     // Example
     in foo.bas ();
     in foo.bas (Float32);
 
-The module attribute list can be an arbitrary [multiple value expression], which can reference any imported symbols but not symbols defined within the module itself.
+The module attribute list can be an arbitrary [multiple value expression](#multiplevalueexpression), which can reference any imported symbols but not symbols defined within the module itself.
 
     // Example
     // foo.clay
@@ -423,7 +423,7 @@ XXX supported attributes?
     TopLevelLLVM -> LLVMBlock
     LLVMBlock -> "__llvm__" "{" /.*/ "}"
 
-A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations, metadata nodes, or other global definitions needed by `__llvm__` blocks in individual [inline LLVM functions]. The top-level LLVM block must appear after any [import declarations] or [module declaration] and before any [top-level definitions].
+A module may optionally contain a top-level block of LLVM assembly language. The given code will be emitted directly into the top level of the generated LLVM module, and may contain function declarations, metadata nodes, or other global definitions needed by `__llvm__` blocks in individual [inline LLVM functions](#inlinellvmfunctions). The top-level LLVM block must appear after any [import declarations](#importdeclarations) or [module declaration](#moduledeclaration) and before any [top-level definitions](#topleveldefinitions).
 
     // Example
     in traps;
@@ -437,7 +437,7 @@ A module may optionally contain a top-level block of LLVM assembly language. The
         ret i8* null
     }
 
-Clay static values can be interpolated into LLVM code using LLVM interpolation as described for [inline LLVM functions].
+Clay static values can be interpolated into LLVM code using LLVM interpolation as described for [inline LLVM functions](#inlinellvmfunctions).
 
 ### <a name="topleveldefinitions">Top-level definitions</a>
 
@@ -456,9 +456,9 @@ Clay static values can be interpolated into LLVM code using LLVM interpolation a
 
 Top-level definitions make up the meat of Clay source code and come in three general flavors:
 
-* [Type definitions]
-* [Function definitions]
-* [Global value definitions]
+* [Type definitions](#typedefinitions)
+* [Function definitions](#functiondefinitions)
+* [Global value definitions](#globalvaluedefinitions)
 
 Clay uses a two-pass loading mechanism. Modules are imported and their namespaces populated in one pass before any definitions are evaluated. Forward and circular references are thus possible without requiring forward declarations.
 
@@ -529,13 +529,13 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     # Grammar
     Visibility -> "public" | "private"
 
-Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations]). Definitions without an explicit visibility default to `public`.
+Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations](#importdeclarations)). Definitions without an explicit visibility default to `public`.
 
 Visibility modifiers are not valid for definitions that modify existing symbols instead of creating new ones, such as variant `instance`s or function `overload`s. In forms that do admit a visibility modifier, the modifier must appear after the pattern guard, if any, but before the subsequent definition.
 
 ### <a name="symbols">Symbols</a>
 
-Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads] and [pattern matching]. Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
+Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads](#overloads) and [pattern matching](#patternmatching). Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
 
 XXX
 
@@ -543,10 +543,10 @@ XXX
 
 Clay provides four different kinds of user-defined types:
 
-* [Records]
-* [Variants]
-* [Enumerations]
-* [Lambda types]
+* [Records](#records)
+* [Variants](#variants)
+* [Enumerations](#enumerations)
+* [Lambda types](#lambdatypes)
 
 ### <a name="records">Records</a>
 
@@ -610,7 +610,7 @@ Record definitions currently do not directly allow for template specialization. 
     # Grammar
     Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
 
-Variant type definitions create a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be dispatched to an appropriately-typed function using the [dispatch operator].
+Variant type definitions create a discriminated union type. A variant value can contain a value of any of the variant's instance types. The variant value knows what type it contains, and the contained value can be dispatched to an appropriately-typed function using the [dispatch operator](#dispatchoperator).
 
 Syntactically, the variant's instance types are defined after the variant name in a parenthesized list.
 
@@ -629,7 +629,7 @@ Also like record types, the pattern guard is optional if no predicate is needed;
     variant Maybe[T] (Nothing, T); // [T] pattern guard implied
     variant Either[T, U] (T, U); // [T, U] pattern guard implied
 
-The variant instance list may be an arbitrary [multiple value expression]. It is evaluated at compile time to derive the set of instances.
+The variant instance list may be an arbitrary [multiple value expression](#multiplevalueexpression). It is evaluated at compile time to derive the set of instances.
 
     // Example
     private RainbowTypes(Base) =
@@ -654,7 +654,7 @@ Variant types are open. Instance types can be added to an already-defined varian
     record TypeError (expectedTypeName:String, attemptedTypeName:String);
     instance Exception (RangeError, TypeError);
 
-`instance` definitions bind to variant types by [pattern matching] the name in the instance definition to each variant type name. Parameterized variant types may be extended for concrete parameter values, over all parameter values, or over some parameter variables with the use of pattern guards:
+`instance` definitions bind to variant types by [pattern matching](#patternmatching) the name in the instance definition to each variant type name. Parameterized variant types may be extended for concrete parameter values, over all parameter values, or over some parameter variables with the use of pattern guards:
 
     // Example
     [C | Color?(C)]
@@ -696,19 +696,19 @@ Unlike record or variant types, enumeration types cannot currently be parameteri
 
 ### <a name="lambdatypes">Lambda types</a>
 
-Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions] are used.
+Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions](#lambdaexpressions) are used.
 
 ## <a name="functiondefinitions">Function definitions</a>
 
 Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime function calls are resolved at compile time for every set of input types with which they are invoked.
 
-* [Simple function definitions]
-* [Overloaded function definitions]
-* [Arguments]
-* [Return types]
-* [Function body]
-* [Inline and alias qualifiers]
-* [External functions]
+* [Simple function definitions](#simplefunctiondefinitions)
+* [Overloaded function definitions](#overloadedfunctiondefinitions)
+* [Arguments](#arguments)
+* [Return types](#returntypes)
+* [Function body](#functionbody)
+* [Inline and alias qualifiers](#inlineandaliasqualifiers)
+* [External functions](#externalfunctions)
 
 ### <a name="simplefunctiondefinitions">Simple function definitions</a>
 
@@ -716,7 +716,7 @@ Function definitions control most of Clay's compile-time and run-time behavior. 
     Function -> PatternGuard? Visibility? CodegenAttribute?
                 Identifier Arguments ReturnSpec? FunctionBody
 
-The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments], an optional list of [return types], and the [function body]. If the return types are omitted, they are inferred from the function body. Function definitions may also use [visibility modifiers] and/or [pattern guards].
+The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments](#arguments), an optional list of [return types](#returntypes), and the [function body](#functionbody). If the return types are omitted, they are inferred from the function body. Function definitions may also use [visibility modifiers](#visibilitymodifiers) and/or [pattern guards](#patternguards).
 
     // Examples
     hello() { println(helloString()); }
@@ -757,7 +757,7 @@ Simple function definitions define a symbol and attach a function implementation
     overload abs(x:Int) = if (x < 0) -x else x;
     overload abs(x:Float) = if (x < 0.) -x else if (x == 0.) 0. else x;
 
-A `define` may also define an interface constraint for the symbol by following the symbol name with a list of [arguments] and optional [return types]. All overloads attached to the symbol must conform to a subset of the specified interface. If the `define` form does not specify arguments or return types, then the argument types and/or return types of the created symbol's overloads are unconstrained.
+A `define` may also define an interface constraint for the symbol by following the symbol name with a list of [arguments](#arguments) and optional [return types](#returntypes). All overloads attached to the symbol must conform to a subset of the specified interface. If the `define` form does not specify arguments or return types, then the argument types and/or return types of the created symbol's overloads are unconstrained.
 
     // Example
     [T | Numeric?(T)]
@@ -784,7 +784,7 @@ Overloads can extend not only symbols created by `define`, but type name symbols
 
     overload Address(coords:LatLong) = geocode(coords);
 
-Overloads bind to symbols by [pattern matching]. Overloads may thus attach to parameterized type names for all or some of their possible parameters.
+Overloads bind to symbols by [pattern matching](#patternmatching). Overloads may thus attach to parameterized type names for all or some of their possible parameters.
 
     // Example
     record Point[T] (x:T, y:T);
@@ -832,7 +832,7 @@ Match order among overloads from different modules is done walking the import gr
     // visited first
     overload a.foo(x:Int) {}
 
-Symbols created by [simple function definitions] may also be overloaded; in fact, a simple function definition is simply shorthand for an unconstrained `define` followed by an `overload`.
+Symbols created by [simple function definitions](#simplefunctiondefinitions) may also be overloaded; in fact, a simple function definition is simply shorthand for an unconstrained `define` followed by an `overload`.
 
     // Example
     double(x) = x+x;
@@ -879,7 +879,7 @@ Note that if a call site does not use a [symbol](#symbols) in the function posit
 
     NamedArgument -> ReferenceQualifier? Identifier TypeSpec?
 
-Arguments are declared in a parenthesized list of names, each name optionally followed by a type specifier. The type specifiers are matched to the types of a call site's input values using [pattern matching]. If an argument is declared without a type specifier, it has an implicit unbounded pattern variable as its type specifier.
+Arguments are declared in a parenthesized list of names, each name optionally followed by a type specifier. The type specifiers are matched to the types of a call site's input values using [pattern matching](#patternmatching). If an argument is declared without a type specifier, it has an implicit unbounded pattern variable as its type specifier.
 
     // Example
     // Define double(x) for any type of x, with an explicit pattern var
@@ -1016,7 +1016,7 @@ The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argum
     # Grammar
     StaticArgument -> "static" Pattern
 
-Functions may match against values computed at compile-time using `static` arguments. A `static` argument matches against the result of a corresponding [static expression](#staticexpressions) at the call site using [pattern matching].
+Functions may match against values computed at compile-time using `static` arguments. A `static` argument matches against the result of a corresponding [static expression](#staticexpressions) at the call site using [pattern matching](#patternmatching).
 
     // Example
     define beetlejuice;
@@ -1038,7 +1038,7 @@ Functions may match against values computed at compile-time using `static` argum
         beetlejuice(static 3);
     }
 
-In expressions, [symbols] and [static strings] are implicitly static and will also match `static` arguments.
+In expressions, [symbols](#symbols) and [static strings](#staticstrings) are implicitly static and will also match `static` arguments.
 
     // Example
     define defaultValue;
@@ -1069,7 +1069,7 @@ In expressions, [symbols] and [static strings] are implicitly static and will al
 
     ReturnTypeSpec -> ":" ExprList
 
-A function definition may declare its return types by following the argument list with a `:` and a [multiple value expression] that evaluates to the return types. The expression may refer to any pattern variables bound by the argument list. If a [return statement] in the function body returns values of types that do not match the declared types, it is an error.
+A function definition may declare its return types by following the argument list with a `:` and a [multiple value expression](#multiplevalueexpression) that evaluates to the return types. The expression may refer to any pattern variables bound by the argument list. If a [return statement](#returnstatement) in the function body returns values of types that do not match the declared types, it is an error.
 
     // Example
     double(x:Int) : Int = x + x;
@@ -1098,9 +1098,9 @@ If the function does not declare its return types, they will be inferred from th
 
     NamedReturn -> ".."? Identifier ":" Expression
 
-In special cases where constructing a return value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements]. Named returns are declared by following the argument list with a `-->` token. Similar to [arguments], each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression](#multiplevalueexpressions).
+In special cases where constructing a return value as a whole is inadequate or inefficient, a function may bind names directly referencing its uninitialized return values. The return values may then be constructed piecemeal using [initialization statements](#initializationstatements). Named returns are declared by following the argument list with a `-->` token. Similar to [arguments](#arguments), each subsequent named return value is declared with a name followed by a type specifier. Unlike arguments, the type specifier is required and is evaluated as an expression rather than matched as a pattern. A variadic named return may also be declared prefixed with a `..` token, in which case the type expression is evaluated as a [multiple value expression](#multiplevalueexpressions).
 
-Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements] \(`<--`) rather than [simple assignment statements] \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks] or `onerror` [scope guard statements] must be used to release resources in case an exception terminates the function.
+Note that named return values are inherently unsafe (hence the intentionally awkward syntax). They start out uninitialized and thus must be initialized with [initialization statements](#initializationstatements) \(`<--`) rather than [simple assignment statements](#simpleassignmentstatements) \(`=`); any operation other than initialization will have undefined behavior before the value is initialized. Special care must be taken with named returns and exception safety; since named return values are not implicitly destroyed during unwinding, even if partially or fully initialized, explicit [catch blocks](#catchblocks) or `onerror` [scope guard statements](#scopeguardstatements) must be used to release resources in case an exception terminates the function.
 
     // Example
     record SOAPoint (xs:Vector[Float], ys:Vector[Float]);
@@ -1123,7 +1123,7 @@ Note that named return values are inherently unsafe (hence the intentionally awk
                   | "=" ReturnExpression ";"
                   | LLVMBlock
 
-The implementation of a function is contained in its body. The most common body form is a [block](#blocks) containing a series of [statements].
+The implementation of a function is contained in its body. The most common body form is a [block](#blocks) containing a series of [statements](#statements).
 
     // Example
     demBones(a, b) {
@@ -1171,7 +1171,7 @@ LLVM blocks currently leak an unfortunate amount of implementation detail. To re
         ret i8* null
     }
 
-Static values can be interpolated into the LLVM code using the forms `$Identifier` or `${Expression}`. [Symbols] are interpolated as their underlying LLVM type; [static strings] are interpolated literally; and static integer, floating-point, and boolean values are interpolated as the equivalent LLVM numeric literals.
+Static values can be interpolated into the LLVM code using the forms `$Identifier` or `${Expression}`. [Symbols](#symbols) are interpolated as their underlying LLVM type; [static strings](#staticstrings) are interpolated literally; and static integer, floating-point, and boolean values are interpolated as the equivalent LLVM numeric literals.
 
     // Example
     // A generic form of the above that works for all integer types
@@ -1187,7 +1187,7 @@ Static values can be interpolated into the LLVM code using the forms `$Identifie
         $NORMAL_RETURN
     }
 
-If an inline LLVM block references intrinsics, metadata nodes, or other global LLVM symbols, those symbols must be declared in a [top-level LLVM] block.
+If an inline LLVM block references intrinsics, metadata nodes, or other global LLVM symbols, those symbols must be declared in a [top-level LLVM](#toplevelllvm) block.
 
 Inline LLVM function bodies currently cannot be evaluated at compile time.
 
@@ -1199,7 +1199,7 @@ Inline LLVM function bodies currently cannot be evaluated at compile time.
 Any simple function or overload definition may be modified by an optional `inline` or `alias` attribute:
 
 * `inline` functions are compiled directly into their caller after their arguments are evaluated. If inlining is impossible (for instance, if the function is recursive), a compile-time error is raised. `inline` function code is also rendered invisible to debuggers or other source analysis tools. Clay's `inline` is intended primarily for trivial operator definitions rather than as the weaker code generation/linkage hint provided by C99 or C++'s `inline` modifiers.
-* `alias` functions evaluate their arguments using call-by-name semantics. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues. In detail: The caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. Unlike actual [lambda expressions], references into the caller's scope from alias arguments are statically resolved. Argument expressions are evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators] to query their source location and other compilation context information.
+* `alias` functions evaluate their arguments using call-by-name semantics. In short, alias functions behave like C preprocessor macros without the hygiene or precedence issues. In detail: The caller, instead of evaluating the alias function's arguments and passing the values to the function, will pass the argument expressions themselves into the function as closure-like entities. Unlike actual [lambda expressions](#lambdaexpressions), references into the caller's scope from alias arguments are statically resolved. Argument expressions are evaluated inside the alias function every time they are referenced. Alias functions are implicitly specialized on their source location and thus can use [compilation context operators](#compilationcontextoperators) to query their source location and other compilation context information.
 
  
 
@@ -1269,16 +1269,16 @@ Compared to internal Clay functions, external functions have several limitations
 * External functions cannot be generic. Their argument and return types must be fully specified. Return types cannot be inferred, and named return bindings cannot be used. The definition cannot include a pattern guard. External functions cannot be overloaded.
 * External functions may return only zero or one values.
 * `<stdarg.h>`-compatible variadic C functions may be declared and called from Clay, but implementing C variadic functions is currently unsupported.
-* Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator] function.
-* Clay types with nontrivial [value semantics] may not be passed by value to external functions. They must be passed by pointer instead.
+* Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator](#operator) function.
+* Clay types with nontrivial [value semantics](#valuesemantics) may not be passed by value to external functions. They must be passed by pointer instead.
 
-Although they define a top-level name, external function names are not true [symbols]. An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes], [..OutTypes]]` type representing the external's function pointer.
+Although they define a top-level name, external function names are not true [symbols](#symbols). An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes](#[intypes), [..OutTypes](#outtypes)]` type representing the external's function pointer.
 
 External functions cannot currently be called by the compile-time evaluator.
 
 #### <a name="externalattributes">External attributes</a>
 
-A parenthesized [multiple value expression] list may be provided after the `external` keyword in order to set attributes on the external function. A string value in the attribute list controls the function's external linkage name.
+A parenthesized [multiple value expression](#multiplevalueexpression) list may be provided after the `external` keyword in order to set attributes on the external function. A string value in the attribute list controls the function's external linkage name.
 
     // Example
     // Bypass crt1 and provide our own entry point
@@ -1299,9 +1299,9 @@ In the `__primitives__` module, symbols are provided that, when used as external
 
 ## <a name="globalvaluedefinitions">Global value definitions</a>
 
-* [Global aliases]
-* [Global variables]
-* [External variables]
+* [Global aliases](#globalaliases)
+* [Global variables](#globalvariables)
+* [External variables](#externalvariables)
 
 Like many old-fashioned languages, Clay supports global state.
 
@@ -1326,7 +1326,7 @@ Global aliases may be parameterized with a pattern guard. If no predicate is nec
 
     alias ZERO[T] = T(0); // [T] pattern guard implied
 
-Global alias definitions do not define true [symbols]. The alias name expands directly into the bound expression.
+Global alias definitions do not define true [symbols](#symbols). The alias name expands directly into the bound expression.
 
 ### <a name="globalvariables">Global variables</a>
 
@@ -1391,11 +1391,11 @@ Global variable initializer expressions are evaluated in dependency order, and i
     var x = getY();
     var y = x;
 
-Global variables are deleted in reverse initialization order using the `destroy` [operator function] after the program's `main` entry point has finished executing.
+Global variables are deleted in reverse initialization order using the `destroy` [operator function](#operatorfunction) after the program's `main` entry point has finished executing.
 
 Since global variable initializers are executed at runtime, global variables are currently poorly supported by compile-time evaluation. The pointer value and type of global variables may be safely derived at compile time; however, the initial value of a global variable at compile time is currently undefined, and though a global variable may be initialized and mutated during compile time, the compile-time value of the global is not propagated in any form to runtime.
 
-Global variable names are not true [symbols]. A global variable name evaluates to a reference to the global variable's value.
+Global variable names are not true [symbols](#symbols). A global variable name evaluates to a reference to the global variable's value.
 
 Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.md) for details.
 
@@ -1415,7 +1415,7 @@ C `extern` variables can be linked to with `external` variable definitions. An e
             println("error code ", errno);
     }
 
-Like [external functions], external variable definitions may include an optional attribute list after the `external` keyword. Currently, the only kind of attribute supported is a string, which if provided, specifies the linkage name for the variable.
+Like [external functions](#externalfunctions), external variable definitions may include an optional attribute list after the `external` keyword. Currently, the only kind of attribute supported is a string, which if provided, specifies the linkage name for the variable.
 
     // Example
     external ("____errno$OBSCURECOMPATIBILITYTAG") errno : Int;
@@ -1443,23 +1443,23 @@ Externally-linkable global variables defined in Clay are currently unsupported. 
 
 Statements form the basic unit of control flow within function definitions.
 
-* [Blocks]
-* [Expression statements]
-* [Return statements]
-* [Local variable bindings]
-* [Assignment statements]
-* [Conditional statements]
-* [Loop statements]
-* [Branch statements]
-* [Exception handling statements]
-* [Eval statements]
+* [Blocks](#blocks)
+* [Expression statements](#expressionstatements)
+* [Return statements](#returnstatements)
+* [Local variable bindings](#localvariablebindings)
+* [Assignment statements](#assignmentstatements)
+* [Conditional statements](#conditionalstatements)
+* [Loop statements](#loopstatements)
+* [Branch statements](#branchstatements)
+* [Exception handling statements](#exceptionhandlingstatements)
+* [Eval statements](#evalstatements)
 
 ### <a name="blocks">Blocks</a>
 
     # Grammar
     Block -> "{" (Statement | Binding | LabelDef)* "}"
 
-Blocks group sequences of statements and provide scopes for [local variable bindings]. Within a block, statements are executed sequentially except as modified by control flow statements.
+Blocks group sequences of statements and provide scopes for [local variable bindings](#localvariablebindings). Within a block, statements are executed sequentially except as modified by control flow statements.
 
     // Example
     main() {
@@ -1473,7 +1473,7 @@ Blocks group sequences of statements and provide scopes for [local variable bind
     # Grammar
     LabelDef -> Identifier ":"
 
-In addition to statements, blocks may also contain [labels], which provide targets for [goto statements]. A label is declared as an identifier followed by a `:` token. Label names are lexically scoped to their parent block.
+In addition to statements, blocks may also contain [labels](#labels), which provide targets for [goto statements](#gotostatements). A label is declared as an identifier followed by a `:` token. Label names are lexically scoped to their parent block.
 
     // Example
     main() {
@@ -1529,7 +1529,7 @@ Return statements end execution of the current function and provide the return v
         println(foo(1, 2)); // prints 3
     }
 
-The [function body] `=` shorthand syntax is sugar for a [block](#blocks) containing a single return statement.
+The [function body](#functionbody) `=` shorthand syntax is sugar for a [block](#blocks) containing a single return statement.
 
     // Example
     // shorthand for the above
@@ -1622,7 +1622,7 @@ Local variables are introduced by binding statements. Local variables come in a 
 
     Deletion of `var`s happens when their scope is exited for any reason, whether by normal control flow, by `return`, `break`, `continue`, or `goto` statements, or by unwinding caused by exceptions.
 
-* `ref` bindings create named references to existing lvalues. (See [Reference qualifiers] for a discussion of lvalues and rvalues.)
+* `ref` bindings create named references to existing lvalues. (See [Reference qualifiers](#referencequalifiers) for a discussion of lvalues and rvalues.)
 
         // Example
         main() {
@@ -1660,9 +1660,9 @@ Local variables are introduced by binding statements. Local variables come in a 
             forward x2, y2 = xs[2], ys[2];
         }
 
-* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases]. The alias's name expands to the bound expression (evaluated in its original lexical context) at every call site.
+* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases](#globalaliases). The alias's name expands to the bound expression (evaluated in its original lexical context) at every call site.
 
-Multiple variable bindings can be assigned to the values of a [multiple value expression]. Each value from the right-hand side is bound to the corresponding variable name on the left-hand side. It is an error if the number of values does not correspond to the number of variables.
+Multiple variable bindings can be assigned to the values of a [multiple value expression](#multiplevalueexpression). Each value from the right-hand side is bound to the corresponding variable name on the left-hand side. It is an error if the number of values does not correspond to the number of variables.
 
     // Example
     twoAndThree() = 2, 3;
@@ -1675,7 +1675,7 @@ Multiple variable bindings can be assigned to the values of a [multiple value ex
         var a, b, c, d = 1, ..twoAndThree(), 4;
     }
 
-If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context]; in other words, a single expression that evaluates to multiple values may omit the `..` prefix.
+If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context](#multiplevaluecontext); in other words, a single expression that evaluates to multiple values may omit the `..` prefix.
 
     // Example
     oneAndTwo() = 1, 2;
@@ -1761,7 +1761,7 @@ The left-hand expression should generally evaluate to an lvalue or lvalues; howe
 
 If the left-hand expression is a single [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression, special property assignment operator functions are used instead of `assign`.
 
-* `a[..b] = c;` desugars into `indexAssign(a, ..b, c);`
+* `a[..b](#b) = c;` desugars into `indexAssign(a, ..b, c);`
 * `a.0 = c;` desugars into `staticIndexAssign(a, static 0, c);`
 * `a.field = c;` desugars into `fieldRefAssign(a, #"field", c);`
 
@@ -1778,7 +1778,7 @@ Assignment is a statement in Clay. Attempting to use assignment in an expression
 
 #### <a name="updateassignmentstatements">Update assignment statements</a>
 
-Like other C-like languages, Clay provides special assignment syntax for updating a value using one of the [additive operators] or [multiplicative operators].
+Like other C-like languages, Clay provides special assignment syntax for updating a value using one of the [additive operators](#additiveoperators) or [multiplicative operators](#multiplicativeoperators).
 
     // Example
     main() {
@@ -1811,7 +1811,7 @@ The assignment tokens `+=`, `-=`, `*=`, `/=`, and `%=` desugar into calls to the
 
 Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression.
 
-* `a[..b] += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
+* `a[..b](#b) += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
 * `a.0 += c;` desugars into `staticIndexUpdateAssign(add, a, static 0, c);`
 * `a.field += c;` desugars into `fieldRefUpdateAssign(add, a, #"field", c);`
 
@@ -1859,7 +1859,7 @@ As a special case, if the right-hand side is a `forward` argument bound to an rv
         foo(p, x); // p^ <-- copy(x);
     }
 
-`var` [binding statements] behave identically to initialization statements when initializing their newly-bound variables.
+`var` [binding statements](#bindingstatements) behave identically to initialization statements when initializing their newly-bound variables.
 
 Note that, just as assigning uninitialized values with `=` is undefined, so is initializing already-initialized values with `<--`. The `<--` operator should not generally be used except when necessary.
 
@@ -1953,7 +1953,7 @@ A `for` loop provides a higher-level looping mechanism than `while` to loop over
             println(x);
     }
 
-`for` loops are implemented in terms of `while` loops using the `iterator`, `hasNext?`, and `next` [operator functions]. Before the loop is entered, `iterator(expr)` is called to derive an iterator object for the sequence. Within the loop, on each iteration, `hasNext?(iter)` is called to test whether the iterator has more values, and if true, `next(iter)` is called to fetch the next result from the iterator. The return values from `next` are bound to the loop variables, and the loop body is then executed.
+`for` loops are implemented in terms of `while` loops using the `iterator`, `hasNext?`, and `next` [operator functions](#operatorfunctions). Before the loop is entered, `iterator(expr)` is called to derive an iterator object for the sequence. Within the loop, on each iteration, `hasNext?(iter)` is called to test whether the iterator has more values, and if true, `next(iter)` is called to fetch the next result from the iterator. The return values from `next` are bound to the loop variables, and the loop body is then executed.
 
     // Example
     main() {
@@ -1972,7 +1972,7 @@ A `for` loop provides a higher-level looping mechanism than `while` to loop over
     # Grammar
     MultiValueForStatement -> ".." "for" "(" Identifier "in" ExprList ")" Statement
 
-A special syntactic form is provided to apply an operation over each individual value of a [multiple value expression]. The iterated expression is evaluated in an implicit [multiple value context].
+A special syntactic form is provided to apply an operation over each individual value of a [multiple value expression](#multiplevalueexpression). The iterated expression is evaluated in an implicit [multiple value context](#multiplevaluecontext).
 
     // Example
     // implement printTo(stream, ..xs) in terms of individual printTo(stream, x)
@@ -2025,7 +2025,7 @@ Branch statements provide nonlocal control flow within a function.
     # Grammar
     GotoStatement -> "goto" Identifier ";"
 
-`goto` statements jump to (almost) arbitrary [labels] within the function. There are some restrictions: goto statements may not jump into a `var` binding's scope from outside (and thereby skip the variable's initialization). Jumping from an outer block into a label defined in an inner block is also currently unsupported.
+`goto` statements jump to (almost) arbitrary [labels](#labels) within the function. There are some restrictions: goto statements may not jump into a `var` binding's scope from outside (and thereby skip the variable's initialization). Jumping from an outer block into a label defined in an inner block is also currently unsupported.
 
     // Example
     // XXX
@@ -2055,7 +2055,7 @@ Try statements execute their associated block normally. If an exception occurs d
     // Example
     // XXX
 
-A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions], as well as the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
+A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions](#operatorfunctions), as well as the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
 
     // Example
     foo(x) {
@@ -2120,7 +2120,7 @@ If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope 
 
     EvalStatement -> "eval" ExprList ";"
 
-Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression] is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Those statements then take the eval statement's place in execution. Eval statements may synthesize any statement, including new variable bindings.
+Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression](#multiplevalueexpression) is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Those statements then take the eval statement's place in execution. Eval statements may synthesize any statement, including new variable bindings.
 
     // Example
     // XXX
@@ -2136,55 +2136,55 @@ The result of `eval` must be parsable as a complete statement or statements; it 
         eval #"var x ="; 1;
     }
 
-[Eval expressions] are also supported for generating expressions.
+[Eval expressions](#evalexpressions) are also supported for generating expressions.
 
 ## <a name="expressions">Expressions</a>
 
-Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized below, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
+Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions](#operatorfunctions). The precedence hierarchy for Clay is summarized below, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
 
 * Atomic expressions
-    * [Name references]
-    * [Literal expressions]
-    * [Parentheses] — `(a, b, c)`
-    * [Tuple expressions] — `[a, b, c]` — `tupleLiteral`
-    * [Compilation context operators] — `__FILE__` etc.
-    * [Eval expressions] — `eval a`
+    * [Name references](#namereferences)
+    * [Literal expressions](#literalexpressions)
+    * [Parentheses](#parentheses) — `(a, b, c)`
+    * [Tuple expressions](#tupleexpressions) — `[a, b, c]` — `tupleLiteral`
+    * [Compilation context operators](#compilationcontextoperators) — `__FILE__` etc.
+    * [Eval expressions](#evalexpressions) — `eval a`
 * Suffix operators
-    * [Call operator] — `a(b,c)` — `call`
-    * [Index operator] — `a[b,c]` — `index`
-    * [Static index operator] — `a.0` — `staticIndex`
-    * [Field reference operator] — `a.field` — `fieldRef`
-    * [Dereference operator] — `a^` — `dereference`
+    * [Call operator](#calloperator) — `a(b,c)` — `call`
+    * [Index operator](#indexoperator) — `a[b,c]` — `index`
+    * [Static index operator](#staticindexoperator) — `a.0` — `staticIndex`
+    * [Field reference operator](#fieldreferenceoperator) — `a.field` — `fieldRef`
+    * [Dereference operator](#dereferenceoperator) — `a^` — `dereference`
 * Prefix operators
-    * [Unary plus operator] — `+a` — `plus`
-    * [Unary minus operator] — `-a` — `minus`
-    * [Address operator] — `&a`
-    * [Dispatch operator] — `*a`
-* [Multiplicative operators]
+    * [Unary plus operator](#unaryplusoperator) — `+a` — `plus`
+    * [Unary minus operator](#unaryminusoperator) — `-a` — `minus`
+    * [Address operator](#addressoperator) — `&a`
+    * [Dispatch operator](#dispatchoperator) — `*a`
+* [Multiplicative operators](#multiplicativeoperators)
     * `a * b` — `multiply`
     * `a / b` — `divide`
     * `a % b` — `remainder`
-* [Additive operators]
+* [Additive operators](#additiveoperators)
     * `a + b` — `add`
     * `a - b` — `subtract`
-* [Ordered comparison operators]
+* [Ordered comparison operators](#orderedcomparisonoperators)
     * `a <= b` — `lesserEquals?`
     * `a < b` — `lesser?`
     * `a > b` — `greater?`
     * `a >= b` — `greaterEquals?`
-* [Equality comparison operators]
+* [Equality comparison operators](#equalitycomparisonoperators)
     * `a == b` — `equals?`
     * `a != b` — `notEquals?`
-* [Boolean not] — `not a`
-* [Boolean and] — `a and b`
-* [Boolean or] — `a or b`
+* [Boolean not](#booleannot) — `not a`
+* [Boolean and](#booleanand) — `a and b`
+* [Boolean or](#booleanor) — `a or b`
 * Low-precedence prefix operators
-    * [If expressions] — `if (a) b else c`
-    * [Keyword pair expressions] — `name: a`
-    * [Static expressions] — `static a`
-    * [Unpack operator] — `..a`
-    * [Lambda expressions] — `(a, b) -> c`
-* [Multiple value expressions] — `a, b, c`
+    * [If expressions](#ifexpressions) — `if (a) b else c`
+    * [Keyword pair expressions](#keywordpairexpressions) — `name: a`
+    * [Static expressions](#staticexpressions) — `static a`
+    * [Unpack operator](#unpackoperator) — `..a`
+    * [Lambda expressions](#lambdaexpressions) — `(a, b) -> c`
+* [Multiple value expressions](#multiplevalueexpressions) — `a, b, c`
 
 ### <a name="atomicexpressions">Atomic expressions</a>
 
@@ -2217,7 +2217,7 @@ A name reference consists simply of an identifier. It evaluates to the named loc
         println(a, b, c, d, e);
     }
 
-If a name is bound to [multiple values](#multiplevalueexpressions), such as a variadic pattern variable or argument, then the name must be referenced in a multiple value context, typically by applying the `..` [unpack operator].
+If a name is bound to [multiple values](#multiplevalueexpressions), such as a variadic pattern variable or argument, then the name must be referenced in a multiple value context, typically by applying the `..` [unpack operator](#unpackoperator).
 
     [..TT]
     foo(..xs:TT) {
@@ -2249,7 +2249,7 @@ If a name is bound to [multiple values](#multiplevalueexpressions), such as a va
 Literals evaluate to primitive constant values.
 
 * The boolean literals `true` and `false` evaluate to the two possible values of the primitive `Bool` type.
-* Integer literals evaluate to constant integer values. They consist of an [integer literal token](#integerliterals), optionally prefixed by a sign `+` or `-` and/or suffixed by a type specifier. Without a type specifier suffix, the literal is of the primitive `Int32` type, unless the module declares a different default integer type in its [module attributes]. To create a literal of another type, the following suffixes are allowed, with the corresponding primitive types:
+* Integer literals evaluate to constant integer values. They consist of an [integer literal token](#integerliterals), optionally prefixed by a sign `+` or `-` and/or suffixed by a type specifier. Without a type specifier suffix, the literal is of the primitive `Int32` type, unless the module declares a different default integer type in its [module attributes](#moduleattributes). To create a literal of another type, the following suffixes are allowed, with the corresponding primitive types:
     * `ss` — `Int8` ("short short")
     * `s` — `Int16` ("short")
     * `i` — `Int32` ("int")
@@ -2266,7 +2266,7 @@ Literals evaluate to primitive constant values.
         // Example
         // XXX
 
-* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes]. To create a literal of another type, the following suffixes are allowed:
+* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes](#moduleattributes). To create a literal of another type, the following suffixes are allowed:
     * `f` — `Float32` ("single" **F**loat)
     * `ff` — `Float64` ("double" **F**loat)
     * `fl` — `Float80`
@@ -2334,7 +2334,7 @@ Tuple expressions are used to construct tuple objects. They are evaluated by pas
     # Grammar
     EvalExpr -> "eval" Expression
 
-Like [eval statements], eval expressions provide access to the Clay parser at compile time, but in expression context. The given expression is evaluated at compile time into a [static string](#staticstrings), and the result is parsed as an expression and evaluated in place of the `eval` form.
+Like [eval statements](#evalstatements), eval expressions provide access to the Clay parser at compile time, but in expression context. The given expression is evaluated at compile time into a [static string](#staticstrings), and the result is parsed as an expression and evaluated in place of the `eval` form.
 
     // Example
     // XXX
@@ -2369,19 +2369,19 @@ If the function value is not a symbol, the call is transformed into an invocatio
     // Example
     // XXX
 
-Extra syntactic sugar is provided for higher-order functions that take [lambda expressions] as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, separated by `::` tokens. The lambdas are appended in order to the end of the argument list.
+Extra syntactic sugar is provided for higher-order functions that take [lambda expressions](#lambdaexpressions) as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, separated by `::` tokens. The lambdas are appended in order to the end of the argument list.
 
     // Example
     // XXX
 
-One or more of a call's arguments may be modified by a [dispatch operator], in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
+One or more of a call's arguments may be modified by a [dispatch operator](#dispatchoperator), in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
 
 #### <a name="indexoperator">Index operator</a>
 
     # Grammar
     IndexSuffix -> "[" ExprList "]"
 
-The index operator desugars into a call to the `index` [operator function]. It is typically used to index into containers. The indexed object is used as the first argument, followed by the values from the bracketed [multiple value expression](#multiplevalueexpressions).
+The index operator desugars into a call to the `index` [operator function](#operatorfunction). It is typically used to index into containers. The indexed object is used as the first argument, followed by the values from the bracketed [multiple value expression](#multiplevalueexpressions).
 
     // Example
     // XXX
@@ -2448,7 +2448,7 @@ The `&` operator may not be overloaded. The `__primitives__` module contains an 
 
 #### <a name="dispatchoperator">Dispatch operator</a>
 
-The prefix `*` operator transforms a [call operator] expression into a dynamic dispatch on a variant. It may only be applied to an argument of a call expression, and the operand must evaluate to a single value of a [variant type](#variants). Multiple arguments may be dispatched on. For each instance type of each dispatched argument, an overload is looked up for those instance types, and a dispatch table is constructed. The return values and `ref`-ness of each overload must exactly match, or else the dispatch expression raises a compile-time error.
+The prefix `*` operator transforms a [call operator](#calloperator) expression into a dynamic dispatch on a variant. It may only be applied to an argument of a call expression, and the operand must evaluate to a single value of a [variant type](#variants). Multiple arguments may be dispatched on. For each instance type of each dispatched argument, an overload is looked up for those instance types, and a dispatch table is constructed. The return values and `ref`-ness of each overload must exactly match, or else the dispatch expression raises a compile-time error.
 
     // Example
     // XXX
@@ -2558,7 +2558,7 @@ A sugar syntax is provided for name-value pairs. The syntax `name: expr` is suga
     # Grammar
     StaticExpr -> "static" Expression
 
-The `static` operator evaluates its operand at compile time. The result of the evaluation is then used as the type parameter of the stateless primitive `Static[n]` type. `static` expressions can be used to pass values to [static arguments] of functions.
+The `static` operator evaluates its operand at compile time. The result of the evaluation is then used as the type parameter of the stateless primitive `Static[n]` type. `static` expressions can be used to pass values to [static arguments](#staticarguments) of functions.
 
     // Example
     // XXX
@@ -2585,7 +2585,7 @@ The unpack operator evaluates its operand in [multiple value context](#multiplev
     LambdaBody -> Block
                 | ReturnExpression
 
-Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition]. The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
+Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition](#simplefunctiondefinition). The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
 
     // Example
     // XXX
@@ -2630,17 +2630,17 @@ However, for sanity's sake, expressions are normally constrained to single value
     // Example
     // XXX
 
-A multiple value context may be introduced using the [unpack operator] `..`. The multiple values of the `..` expression are interpolated directly into the surrounding multiple value list.
+A multiple value context may be introduced using the [unpack operator](#unpackoperator) `..`. The multiple values of the `..` expression are interpolated directly into the surrounding multiple value list.
 
     // Example
     // XXX
 
 Certain syntactic forms provide implicit multiple value context:
 
-* [Expression statements] are evaluated in multiple value context; the expression's values, if any, are discarded.
-* [Local variable bindings] with multiple variables evaluate their right-hand expression in multiple value context.
-* [Assignment statements] with multiple left-hand values evaluate their right-hand expression in multiple value context.
-* [Multiple-value for loops] evaluate their value list in multiple value context.
+* [Expression statements](#expressionstatements) are evaluated in multiple value context; the expression's values, if any, are discarded.
+* [Local variable bindings](#localvariablebindings) with multiple variables evaluate their right-hand expression in multiple value context.
+* [Assignment statements](#assignmentstatements) with multiple left-hand values evaluate their right-hand expression in multiple value context.
+* [Multiple-value for loops](#multiplevalueforloops) evaluate their value list in multiple value context.
 
 In these contexts, a lone multiple value expression may be used without an explicit unpack. However, within a multiple value expression that concatenates multiple expressions, multiple-value subexpressions still require an explicit unpack. In other words, the `..` operator has higher precedence than the `,` operator, and implicit multiple value context only applies to the outermost precedence level.
 
