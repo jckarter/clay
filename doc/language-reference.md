@@ -186,9 +186,27 @@ A few modules have special significance:
 * The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration], it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
+### Operator functions
+
+#### Value semantics
+
 ## Compilation strategy
 
 XXX
+
+### Compile-time evaluation
+
+### Pattern matching
+
+    # Grammar
+    Pattern -> AtomicPattern PatternSuffix?
+
+    AtomicPattern -> Literal
+                   | PatternNameRef
+
+    PatternNameRef -> DottedName
+
+    PatternSuffix -> "[" comma_list(Pattern) "]"
 
 ## Source file organization
 
@@ -1581,7 +1599,7 @@ Local variables are introduced by binding statements. Local variables come in a 
             println("x = ", x, "; y = ", y); // x = 1; y = 3
         }
 
-    `var`s have deterministic lifetimes. They will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block.
+    `var`s have deterministic lifetimes. They will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block. Destruction of `var`s happens when their scope is exited for any reason, either by normal control flow or by `return`, `break`, `continue`, or `goto` statements, or by unwinding caused by exceptions.
 
         // Example
         record Noisy (x:Int);
@@ -1994,19 +2012,115 @@ Branch statements provide nonlocal control flow within a function.
 
 ### Exception handling statements
 
+Clay optionally supports exception handling. The `ExceptionsEnabled?` function from the `__primitives__` module will return true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled for runtime, the compile-time evaluator does not currently support exception handling.
+
+#### Throw statements
+
     ThrowStatement -> "throw" Expression ";"
+
+The `throw` statement throws an exception, to be caught by a [try block](#tryblocks) from an enclosing scope. Execution jumps from the throw to the innermost matching catch clause in the current dynamic scope, unwinding any intervening stack frames and destroying their local variables along the way.
+
+    // Example
+    // XXX
+
+The exception is thrown by calling the `throwValue` [operator function](#operatorfunctions) with the value of the given expression as an input. The call is assumed not to locally return; even if exceptions are disabled, `throwValue` must otherwise arrange for execution to terminate (such as by calling `abort` from libc).
+
+#### Try blocks
 
     TryStatement -> "try" Block
                     ("catch" "(" (Identifier (":" Type)?) ")" Block)+
 
+Try statements execute their associated block normally. If an exception occurs during the dynamic extent of the try statement, it is tested against the associated catch clauses, and if a matching catch clause is found, the exception is caught and execution resumes inside the matching clause. Catch clauses are matched by declared type, and the thrown exception value is bound as the specified type. A catch-all clause can also be declared without a type; the clause will match any exception not caught by a previous catch clause.
+
+    // Example
+    // XXX
+
+A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions], as well as the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
+
+    // Example
+    foo(x) {
+        try {
+            throw x;
+        }
+        catch (a:A) {
+            handleA(a);
+        }
+        catch (b:B) {
+            handleB(b);
+        }
+        catch (any) {
+            handleAny(any);
+        }
+    }
+
+    // foo's handler will look like this:
+    fooHandler() {
+        var exp = activeException();
+        if (exceptionIs?(A, exp)) {
+            forward a = exceptionAs(A, exp);
+            handleA(a);
+        }
+        else if (exceptionIs?(B, exp)) {
+            forward b = exceptionAs(B, exp);
+            handleB(b);
+        }
+        else {
+            forward any = exceptionAsAny(exp);
+            handleAny(any);
+        }
+        // Without a catch-all, the final branch would continue unwinding:
+        /*
+        else
+            continueException();
+        */
+    }
+
+Catch clauses may rethrow the current exception by reusing the given exception object in a [throw statement](#throwstatements) inside the catch clause.
+
+If exceptions are disabled, a try statement's body is compiled as a normal block, and its catch clauses are ignored.
+
+#### Scope guard statements
+
     ScopeGuardStatement -> ScopeGuardKind Statement
     ScopeGuardKind -> "finally" | "onerror"
+
+Scope guard statements provide a convenient shorthand for deterministically and safely releasing resources or performing other required cleanup in the face of arbitrary nonlocal control flow. A `finally` statement causes the associated statement when the enclosing block is exited for any reason, much like a `var`'s destructor but without the associated `var`.
+
+    // Example
+    // XXX
+
+An `onerror` statement causes the associated statement to be executed only when the enclosing block is unwound by an exception. If the block is exited by normal control flow, or by `break`, `continue`, `goto`, or `return`, the associated statement will not be executed.
+
+    // Example
+    // XXX
+
+If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope guards behave normally and will still execute when their associated scope is exited by non-exceptional means.
 
 ### Eval statements
 
     EvalStatement -> "eval" ExprList ";"
 
+Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression] is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Eval statements may synthesize any statement, including new variable bindings.
+
+    // Example
+    // XXX
+
+The result of `eval` must be parsable as a complete statement or statements; it cannot synthesize half-open blocks, partial statements, or other incomplete constructs. Labels currently cannot be generated by `eval`.
+
+    // Example
+    foo() {
+        // ERROR: can't create a half-block
+        eval #"{"; }
+
+        // ERROR: can't create a half-statement
+        eval #"var x ="; 1;
+    }
+
+[Eval expressions] are also supported for generating expressions.
+
 ## Expressions
+
+XXX
 
     # Grammar
     ExprList -> comma_list(Expression)
@@ -2098,22 +2212,3 @@ Branch statements provide nonlocal control flow within a function.
                | "__COLUMN__"
                | "__ARG__" Identifier
 
-## Pattern matching
-
-    # Grammar
-    Pattern -> AtomicPattern PatternSuffix?
-
-    AtomicPattern -> Literal
-                   | PatternNameRef
-
-    PatternNameRef -> DottedName
-
-    PatternSuffix -> "[" comma_list(Pattern) "]"
-
-## XXX
-
-### Operator functions
-
-### Compile-time evaluation
-
-### Value semantics
