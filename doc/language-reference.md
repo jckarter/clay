@@ -1,4 +1,5 @@
-# <a name="clayprogramminglanguagereference"></a>Clay Programming Language Reference 0.1
+# <a name="clayprogramminglanguagereference"></a>The Clay Programming Language
+## Language Reference, version 0.1
 
 * [Conventions](#conventions)
 * [Tokenization](#tokenization)
@@ -10,24 +11,24 @@
 * [Statements](#statements)
 * [Expressions](#expressions)
 
-## <a name="conventions"></a>Conventions
+### <a name="conventions"></a>Conventions
 
 BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`. Examples of Clay code are provided in monospace blocks beginning with `// Example`. Regular expressions in grammar rules are delimited by `/slashes/` and use Perl `/x` syntax; that is, whitespace between the delimiting slashes is insignificant and used for readability. Literal strings in grammar rules are delimited by `"quotation marks"`.
 
-## <a name="tokenization"></a>Tokenization
+### <a name="tokenization"></a>Tokenization
 
-### <a name="sourceencoding"></a>Source encoding
+#### <a name="sourceencoding"></a>Source encoding
 
 Clay source code is evaluated as a stream of ASCII text. (Anything other than ASCII in string and character literals is currently passed through as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
 
-### <a name="whitespace"></a>Whitespace
+#### <a name="whitespace"></a>Whitespace
 
     # Grammar
     ws -> /[ \t\r\n\f]+/
 
 ASCII space, tab, carriage return, newline, and form feed are treated as whitespace. Whitespace is used by the lexer to delimit tokens and is otherwise insignificant and eliminated during tokenization.
 
-### <a name="comments"></a>Comments
+#### <a name="comments"></a>Comments
 
     # Grammar
     Comment -> "/*" /.*?/ "*/"
@@ -35,7 +36,7 @@ ASCII space, tab, carriage return, newline, and form feed are treated as whitesp
 
 Comments in Clay come in two forms: block comments, delimited by non-nesting `/*` and `*/`, and line comments, begun with `//` and extending to the end of the current source line. Comments are treated grammatically as equivalent to a whitespace character.
 
-### <a name="identifiersandkeywords"></a>Identifiers and keywords
+#### <a name="identifiersandkeywords"></a>Identifiers and keywords
 
     # Grammar
     Identifier -> !Keyword, /[A-Za-z_?][A-Za-z_0-9?]*/
@@ -91,7 +92,7 @@ Clay identifiers begin with an ASCII letter character, underscore (`_`), or ques
     // Examples of valid identifiers
     a a1 a_1 abc123 a? ?a ?
 
-### <a name="integerliterals"></a>Integer literals
+#### <a name="integerliterals"></a>Integer literals
 
     # Grammar
     IntToken -> "0x" HexDigits
@@ -105,7 +106,7 @@ Integer literals may be expressed in decimal, or in hexadecimal prefixed by `0x`
     // Examples of integer literals
     0 1 23 0x45abc 1_000_000 1_000_000_ 0xFFFF_FFFF
 
-### <a name="floatingpointliterals"></a>Floating-point literals
+#### <a name="floatingpointliterals"></a>Floating-point literals
 
     # Grammar
     FloatToken -> "0x" HexDigits ("." HexDigits?)? /[pP] [+-]?/ DecimalDigits
@@ -118,7 +119,7 @@ Like integers, floating-point literals also come in decimal and hexadecimal form
     // Examples of hexadecimal floating-point literals
     0x1p0 0x1.0p0 0x1.0000_0000_0000_1p1_023
 
-### <a name="characterliterals"></a>Character literals
+#### <a name="characterliterals"></a>Character literals
 
     # Grammar
     CharToken -> "'" CharChar "'"
@@ -145,7 +146,7 @@ Character literals represent a single ASCII character. Syntactically, they consi
     // Examples of character literals
     'x'  ' '  '\n'  '\''  '\x7F'
 
-### <a name="stringliterals"></a>String literals
+#### <a name="stringliterals"></a>String literals
 
     # Grammar
     StringToken -> "\"" StringChar* "\""
@@ -171,13 +172,13 @@ String literals represent a sequence of ASCII text. Syntactically, they consist 
     "I'm not sure."
     """
 
-## <a name="modules"></a>Modules
+### <a name="modules"></a>Modules
 
 Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
 
 Modules form the basis of encapsulation and namespacing in Clay. Every module has an independent namespace comprising its imported modules and symbols, selected via [import declarations](#importdeclarations), and its own defined [symbols](#symbols), created by [top-level definitions](#topleveldefinitions) in the module source code. Modules can control access to their namespace from other importing modules by marking symbols as public or private.
 
-### <a name="specialmodules"></a>Special modules
+#### <a name="specialmodules"></a>Special modules
 
 A few modules have special significance:
 
@@ -185,17 +186,17 @@ A few modules have special significance:
 * The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration](#moduledeclaration), it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
-### <a name="operatorfunctions"></a>Operator functions
+#### <a name="operatorfunctions"></a>Operator functions
 
-#### <a name="valuesemantics"></a>Value semantics
+##### <a name="valuesemantics"></a>Value semantics
 
-## <a name="compilationstrategy"></a>Compilation strategy
+### <a name="compilationstrategy"></a>Compilation strategy
 
 XXX
 
-### <a name="compiletimeevaluation"></a>Compile-time evaluation
+#### <a name="compiletimeevaluation"></a>Compile-time evaluation
 
-### <a name="patternmatching"></a>Pattern matching
+#### <a name="patternmatching"></a>Pattern matching
 
     # Grammar
     Pattern -> AtomicPattern PatternSuffix?
@@ -207,7 +208,7 @@ XXX
 
     PatternSuffix -> "[" comma_list(Pattern) "]"
 
-## <a name="sourcefileorganization"></a>Source file organization
+### <a name="sourcefileorganization"></a>Source file organization
 
     # Grammar
     Module -> Import* ModuleDeclaration? TopLevelLLVM? TopLevelItem*
@@ -219,7 +220,7 @@ A clay module corresponds to a single source file. Source files are laid out in 
 * An optional [top-level LLVM](#toplevelllvm) block
 * The body of the module file, consisting of zero or more [top-level definitions](#topleveldefinitions) that define the module's [symbols](#symbols)
 
-#### <a name="listsyntacticforms"></a>List syntactic forms
+##### <a name="listsyntacticforms"></a>List syntactic forms
 
     # Grammar
     comma_list(Rule) -> (Rule ("," Rule)* ","?)?
@@ -249,7 +250,7 @@ In [pattern matching](#patternmatching) contexts, a variation of the comma-delim
     overload sum() = 0;
     overload sum(a, ..b) = a + sum(..b);
 
-### <a name="importdeclarations"></a>Import declarations
+#### <a name="importdeclarations"></a>Import declarations
 
     # Grammar
     Import -> Visibility? "import" DottedName ImportSpec? ";"
@@ -321,7 +322,7 @@ Finally, all of the public members of a module may be imported directly into the
         mandarin();
     }
 
-#### <a name="conflictresolution"></a>Conflict resolution
+##### <a name="conflictresolution"></a>Conflict resolution
 
 It is an error to import two modules or module members using the same name.
 
@@ -383,7 +384,7 @@ A name defined in the current module may also shadow a name imported by `.*`, in
 
 Such ambiguities may of course also be avoided by using `as` to alias the conflicting names.
 
-### <a name="moduledeclaration"></a>Module declaration
+#### <a name="moduledeclaration"></a>Module declaration
 
     # Grammar
     ModuleDeclaration -> "in" DottedName AttributeList? ";"
@@ -416,7 +417,7 @@ The module attribute list can be an arbitrary [multiple value expression](#multi
 
 XXX supported attributes?
 
-### <a name="toplevelllvm"></a>Top-level LLVM
+#### <a name="toplevelllvm"></a>Top-level LLVM
 
     # Grammar
     TopLevelLLVM -> LLVMBlock
@@ -438,7 +439,7 @@ A module may optionally contain a top-level block of LLVM assembly language. The
 
 Clay static values can be interpolated into LLVM code using LLVM interpolation as described for [inline LLVM functions](#inlinellvmfunctions).
 
-### <a name="topleveldefinitions"></a>Top-level definitions
+#### <a name="topleveldefinitions"></a>Top-level definitions
 
     # Grammar
     TopLevelItem -> Record              # Types
@@ -472,7 +473,7 @@ Clay uses a two-pass loading mechanism. Modules are imported and their namespace
 
 Most top-level definitions in Clay share common syntactic features:
 
-#### <a name="patternguards"></a>Pattern guards
+##### <a name="patternguards"></a>Pattern guards
 
     # Grammar
     PatternGuard -> "[" comma_list(PatternVar) ("|" Expression)? "]"
@@ -523,7 +524,7 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     [| TypeSize(Pointer[Int]) < 4]
     overload platformCheck() { error("Time for a new computer"); }
 
-#### <a name="visibilitymodifiers"></a>Visibility modifiers
+##### <a name="visibilitymodifiers"></a>Visibility modifiers
 
     # Grammar
     Visibility -> "public" | "private"
@@ -532,13 +533,13 @@ Every form that creates a new symbol name may be prefixed with a `public` or `pr
 
 Visibility modifiers are not valid for definitions that modify existing symbols instead of creating new ones, such as variant `instance`s or function `overload`s. In forms that do admit a visibility modifier, the modifier must appear after the pattern guard, if any, but before the subsequent definition.
 
-### <a name="symbols"></a>Symbols
+#### <a name="symbols"></a>Symbols
 
 Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads](#overloads) and [pattern matching](#patternmatching). Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
 
 XXX
 
-## <a name="typedefinitions"></a>Type definitions
+### <a name="typedefinitions"></a>Type definitions
 
 Clay provides four different kinds of user-defined types:
 
@@ -547,7 +548,7 @@ Clay provides four different kinds of user-defined types:
 * [Enumerations](#enumerations)
 * [Lambda types](#lambdatypes)
 
-### <a name="records"></a>Records
+#### <a name="records"></a>Records
 
     # Grammar
     Record -> PatternGuard? Visibility? "record" TypeDefinitionName RecordBody
@@ -604,7 +605,7 @@ Record definitions currently do not directly allow for template specialization. 
     // Use a SIMD vector for Float
     overload Vec3DBody(static Float) = [[#"coords", Vec[Float, 4]]];
 
-### <a name="variants"></a>Variants
+#### <a name="variants"></a>Variants
 
     # Grammar
     Variant -> PatternGuard? Visibility? "variant" TypeDefinitionName ("(" ExprList ")")? ";"
@@ -638,7 +639,7 @@ The variant instance list may be an arbitrary [multiple value expression](#multi
     // Fruit will admit as instances Apple[Red], Banana[Violet], etc.
     variant Fruit (..RainbowTypes(Apple), ..RainbowTypes(Banana));
 
-#### <a name="extendingvariants"></a>Extending variants
+##### <a name="extendingvariants"></a>Extending variants
 
     # Grammar
     Instance -> PatternGuard? "instance" Pattern "(" ExprList ")" ";"
@@ -672,7 +673,7 @@ Variant types are open. Instance types can be added to an already-defined varian
 
 Unlike `variant` forms, the pattern guard is not optional when extending a variant generically; without a pattern guard, `instance Variant[T]` will attempt to extend only the type `Variant[T]` for the concrete parameter value `T` (which would need to be defined for the form to be valid) rather than for all values `T`.
 
-### <a name="enumerations"></a>Enumerations
+#### <a name="enumerations"></a>Enumerations
 
     # Grammar
     Enumeration -> Visibility? "enum" Identifier "(" comma_list(Identifier) ")" ";"
@@ -693,11 +694,11 @@ Enumerations define a new type, values of which may contain one of a given set o
 
 Unlike record or variant types, enumeration types cannot currently be parameterized, and their definitions do not allow pattern guards.
 
-### <a name="lambdatypes"></a>Lambda types
+#### <a name="lambdatypes"></a>Lambda types
 
 Lambda types are record-like types that capture values from their enclosing scope. Unlike records, variants, or enumerations, they are not explicitly defined in top-level forms, but are implicitly created as needed when [lambda expressions](#lambdaexpressions) are used.
 
-## <a name="functiondefinitions"></a>Function definitions
+### <a name="functiondefinitions"></a>Function definitions
 
 Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime function calls are resolved at compile time for every set of input types with which they are invoked.
 
@@ -709,7 +710,7 @@ Function definitions control most of Clay's compile-time and run-time behavior. 
 * [Inline and alias qualifiers](#inlineandaliasqualifiers)
 * [External functions](#externalfunctions)
 
-### <a name="simplefunctiondefinitions"></a>Simple function definitions
+#### <a name="simplefunctiondefinitions"></a>Simple function definitions
 
     # Grammar
     Function -> PatternGuard? Visibility? CodegenAttribute?
@@ -741,7 +742,7 @@ A simple function definition always defines a new symbol name; it is an error if
 
 Overloads are necessary to extend a function with multiple implementations.
 
-### <a name="overloadedfunctiondefinitions"></a>Overloaded function definitions
+#### <a name="overloadedfunctiondefinitions"></a>Overloaded function definitions
 
     # Grammar
     Define -> PatternGuard? "define" Identifier (Arguments ReturnSpec?)? ";"
@@ -866,7 +867,7 @@ Note that if a call site does not use a [symbol](#symbols) in the function posit
         println(f(1, 2)); // really call(f, 1, 2)
     }
 
-### <a name="arguments"></a>Arguments
+#### <a name="arguments"></a>Arguments
 
     # Grammar
     Arguments -> "(" ArgumentList ")"
@@ -902,7 +903,7 @@ Arguments are passed by reference.
         println(x); // prints 3
     }
 
-#### <a name="variadicarguments"></a>Variadic arguments
+##### <a name="variadicarguments"></a>Variadic arguments
 
     # Grammar
     VarArgument -> ReferenceQualifier? ".." Identifier TypeSpec?
@@ -936,7 +937,7 @@ The types of the variadic argument's values may be bound to a variadic pattern v
         return ..f(..in);
     }
 
-#### <a name="referencequalifiers"></a>Reference qualifiers
+##### <a name="referencequalifiers"></a>Reference qualifiers
 
     # Grammar
     ReferenceQualifier -> "ref" | "rvalue" | "forward"
@@ -1010,7 +1011,7 @@ The `ref`, `rvalue`, and `forward` qualifiers may be applied to a variadic argum
         return forward ..f(..args);
     }
 
-#### <a name="staticarguments"></a>Static arguments
+##### <a name="staticarguments"></a>Static arguments
 
     # Grammar
     StaticArgument -> "static" Pattern
@@ -1060,7 +1061,7 @@ In expressions, [symbols](#symbols) and [static strings](#staticstrings) are imp
     // is equivalent to (aside from binding the name 'x'):
     [n] foo(x:Static[n]) { }
 
-### <a name="returntypes"></a>Return types
+#### <a name="returntypes"></a>Return types
 
     # Grammar
     ReturnSpec -> ReturnTypeSpec
@@ -1091,7 +1092,7 @@ If the function does not declare its return types, they will be inferred from th
 
     foo() : () { } // also explicitly declares no return values
 
-#### <a name="namedreturnvalues"></a>Named return values
+##### <a name="namedreturnvalues"></a>Named return values
 
     NamedReturnSpec -> "-->" comma_list(NamedReturn)
 
@@ -1115,7 +1116,7 @@ Note that named return values are inherently unsafe (hence the intentionally awk
         resize(returned.ys, size);
     }
 
-### <a name="functionbody"></a>Function body
+#### <a name="functionbody"></a>Function body
 
     # Grammar
     FunctionBody -> Block
@@ -1151,7 +1152,7 @@ If the function body consists of a single `return` statement, a shorthand form i
         return ref a.arr[i*a.pitch];
     }
 
-#### <a name="inlinellvmfunctions"></a>Inline LLVM functions
+##### <a name="inlinellvmfunctions"></a>Inline LLVM functions
 
     # Grammar
     LLVMBlock -> "__llvm__" "{" /.*/ "}"
@@ -1190,7 +1191,7 @@ If an inline LLVM block references intrinsics, metadata nodes, or other global L
 
 Inline LLVM function bodies currently cannot be evaluated at compile time.
 
-### <a name="inlineandaliasqualifiers"></a>Inline and alias qualifiers
+#### <a name="inlineandaliasqualifiers"></a>Inline and alias qualifiers
 
     # Grammar
     CodegenAttribute -> "inline" | "alias"
@@ -1220,7 +1221,7 @@ Any simple function or overload definition may be modified by an optional `inlin
         }
     }
 
-### <a name="externalfunctions"></a>External functions
+#### <a name="externalfunctions"></a>External functions
 
     # Grammar
     ExternalFunction -> Visibility? "external" AttributeList?
@@ -1275,7 +1276,7 @@ Although they define a top-level name, external function names are not true [sym
 
 External functions cannot currently be called by the compile-time evaluator.
 
-#### <a name="externalattributes"></a>External attributes
+##### <a name="externalattributes"></a>External attributes
 
 A parenthesized [multiple value expression](#multiplevalueexpressions) list may be provided after the `external` keyword in order to set attributes on the external function. A string value in the attribute list controls the function's external linkage name.
 
@@ -1296,7 +1297,7 @@ In the `__primitives__` module, symbols are provided that, when used as external
 * `AttributeLLVMCall` uses the native LLVM calling convention. This can be used to bind to LLVM intrinsics.
 * `AttributeStdCall`, `AttributeFastCall`, and `AttributeThisCall` correspond to legacy x86 calling conventions on Windows.
 
-## <a name="globalvaluedefinitions"></a>Global value definitions
+### <a name="globalvaluedefinitions"></a>Global value definitions
 
 * [Global aliases](#globalaliases)
 * [Global variables](#globalvariables)
@@ -1304,7 +1305,7 @@ In the `__primitives__` module, symbols are provided that, when used as external
 
 Like many old-fashioned languages, Clay supports global state.
 
-### <a name="globalaliases"></a>Global aliases
+#### <a name="globalaliases"></a>Global aliases
 
     # Grammar
     GlobalAlias -> PatternGuard? Visibility?
@@ -1327,7 +1328,7 @@ Global aliases may be parameterized with a pattern guard. If no predicate is nec
 
 Global alias definitions do not define true [symbols](#symbols). The alias name expands directly into the bound expression.
 
-### <a name="globalvariables"></a>Global variables
+#### <a name="globalvariables"></a>Global variables
 
     # Grammar
     GlobalVariable -> PatternGuard? Visibility?
@@ -1398,7 +1399,7 @@ Global variable names are not true [symbols](#symbols). A global variable name e
 
 Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.md) for details.
 
-### <a name="externalvariables"></a>External variables
+#### <a name="externalvariables"></a>External variables
 
     # Grammar
     ExternalVariable -> Visibility? "external" AttributeList? Identifier TypeSpec ";"
@@ -1421,7 +1422,7 @@ Like [external functions](#externalfunctions), external variable definitions may
 
 Externally-linkable global variables defined in Clay are currently unsupported. External variables cannot currently be evaluated by the compile-time evaluator.
 
-## <a name="statements"></a>Statements
+### <a name="statements"></a>Statements
 
     Statement -> Block
                | Assignment
@@ -1453,7 +1454,7 @@ Statements form the basic unit of control flow within function definitions.
 * [Exception handling statements](#exceptionhandlingstatements)
 * [Eval statements](#evalstatements)
 
-### <a name="blocks"></a>Blocks
+#### <a name="blocks"></a>Blocks
 
     # Grammar
     Block -> "{" (Statement | Binding | LabelDef)* "}"
@@ -1467,7 +1468,7 @@ Blocks group sequences of statements and provide scopes for [local variable bind
         println("VICI");
     }
 
-#### <a name="labels"></a>Labels
+##### <a name="labels"></a>Labels
 
     # Grammar
     LabelDef -> Identifier ":"
@@ -1482,7 +1483,7 @@ In addition to statements, blocks may also contain [labels](#labels), which prov
         goto second_verse;
     }
 
-### <a name="expressionstatements"></a>Expression statements
+#### <a name="expressionstatements"></a>Expression statements
 
     # Grammar
     ExprStatement -> CallWithTrailingBlock
@@ -1510,7 +1511,7 @@ As a special case, if a [call expression](#callexpressions) with a block [lambda
         // no semicolon
     }
 
-### <a name="returnstatements"></a>Return statements
+#### <a name="returnstatements"></a>Return statements
 
     # Grammar
     ReturnStatement -> "return" ReturnExpression? ";"
@@ -1588,7 +1589,7 @@ A return statement may also generically forward the `ref`-ness of its values wit
         return forward ab.a[n], ab.b[n];
     }
 
-### <a name="localvariablebindings"></a>Local variable bindings
+#### <a name="localvariablebindings"></a>Local variable bindings
 
     Binding -> BindingKind comma_list(Identifier) "=" ExprList ";"
     BindingKind -> "var" | "ref" | "forward" | "alias"
@@ -1710,7 +1711,7 @@ Binding statements must appear in a block. A binding statement cannot be used as
             var x = 1; // ERROR
     }
 
-### <a name="assignmentstatements"></a>Assignment statements
+#### <a name="assignmentstatements"></a>Assignment statements
 
     # Grammar
     Assignment -> ExprList AssignmentOp ExprList ";"
@@ -1720,7 +1721,7 @@ Binding statements must appear in a block. A binding statement cannot be used as
 
 Assignment statements update variables with new values.
 
-#### <a name="simpleassignmentstatements"></a>Simple assignment statements
+##### <a name="simpleassignmentstatements"></a>Simple assignment statements
 
 The most common form of assignment uses the `=` token. The [multiple value expression](#multiplevalueexpressions) on the right side of the `=` is evaluated, followed by the left side. It is an error if the number of values on the left and right sides do not match. If both sides evaluate to a single value, the `assign` [operator function](#operatorfunctions) is called with the left and right values.
 
@@ -1775,7 +1776,7 @@ Assignment is a statement in Clay. Attempting to use assignment in an expression
             zero();
     }
 
-#### <a name="updateassignmentstatements"></a>Update assignment statements
+##### <a name="updateassignmentstatements"></a>Update assignment statements
 
 Like other C-like languages, Clay provides special assignment syntax for updating a value using one of the [additive operators](#additiveoperators) or [multiplicative operators](#multiplicativeoperators).
 
@@ -1814,7 +1815,7 @@ Like single-value simple assignment, update assignment also supports special pro
 * `a.0 += c;` desugars into `staticIndexUpdateAssign(add, a, static 0, c);`
 * `a.field += c;` desugars into `fieldRefUpdateAssign(add, a, #"field", c);`
 
-#### <a name="initializationstatements"></a>Initialization statements
+##### <a name="initializationstatements"></a>Initialization statements
 
 The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), the value has no defined state, and there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
 
@@ -1862,7 +1863,7 @@ As a special case, if the right-hand side is a `forward` argument bound to an rv
 
 Note that, just as assigning uninitialized values with `=` is undefined, so is initializing already-initialized values with `<--`. The `<--` operator should not generally be used except when necessary.
 
-### <a name="conditionalstatements"></a>Conditional statements
+#### <a name="conditionalstatements"></a>Conditional statements
 
     # Grammar
     IfStatement -> "if" "(" Expression ")" Statement
@@ -1917,11 +1918,11 @@ Switch statements dispatch to one of several branches based on the value of an e
 
 Unlike other languages with `switch` forms, Clay does not allow "fall-through" between cases.
 
-### <a name="loopstatements"></a>Loop statements
+#### <a name="loopstatements"></a>Loop statements
 
 Loop statements repeatedly execute a statement while a condition holds.
 
-#### <a name="whileloops"></a>While loops
+##### <a name="whileloops"></a>While loops
 
     # Grammar
     WhileStatement -> "while" "(" Expression ")" Statement
@@ -1938,7 +1939,7 @@ A `while` loop evaluates an expression, which must evaluate to a value of the `B
         }
     }
 
-#### <a name="forloops"></a>For loops
+##### <a name="forloops"></a>For loops
 
     # Grammar
     ForStatement -> "for" "(" comma_list(Identifier) "in" Expression ")" Statement
@@ -1966,7 +1967,7 @@ A `for` loop provides a higher-level looping mechanism than `while` to loop over
         }
     }
 
-#### <a name="multiplevalueforloops"></a>Multiple-value for loops
+##### <a name="multiplevalueforloops"></a>Multiple-value for loops
 
     # Grammar
     MultiValueForStatement -> ".." "for" "(" Identifier "in" ExprList ")" Statement
@@ -2005,11 +2006,11 @@ Unlike `while` or `for`, `..for` is not a proper loop. It is unrolled; that is, 
         }
     }
 
-### <a name="branchstatements"></a>Branch statements
+#### <a name="branchstatements"></a>Branch statements
 
 Branch statements provide nonlocal control flow within a function.
 
-#### <a name="breakandcontinuestatements"></a>Break and continue statements
+##### <a name="breakandcontinuestatements"></a>Break and continue statements
 
     BreakStatement -> "break" ";"
     ContinueStatement -> "continue" ";"
@@ -2019,7 +2020,7 @@ Branch statements provide nonlocal control flow within a function.
     // Example
     // XXX
 
-#### <a name="gotostatements"></a>Goto statements
+##### <a name="gotostatements"></a>Goto statements
 
     # Grammar
     GotoStatement -> "goto" Identifier ";"
@@ -2029,11 +2030,11 @@ Branch statements provide nonlocal control flow within a function.
     // Example
     // XXX
 
-### <a name="exceptionhandlingstatements"></a>Exception handling statements
+#### <a name="exceptionhandlingstatements"></a>Exception handling statements
 
 Clay optionally supports exception handling. The `ExceptionsEnabled?` function from the `__primitives__` module will return true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled for runtime, the compile-time evaluator does not currently support exception handling; the compile-time evaluator always behaves as if exceptions are disabled.
 
-#### <a name="throwstatements"></a>Throw statements
+##### <a name="throwstatements"></a>Throw statements
 
     ThrowStatement -> "throw" Expression ";"
 
@@ -2044,7 +2045,7 @@ The `throw` statement throws an exception, to be caught by a [try block](#tryblo
 
 The exception is thrown by calling the `throwValue` [operator function](#operatorfunctions) with the value of the given expression as an input. The call is assumed not to locally return; even if exceptions are disabled, `throwValue` must otherwise arrange for execution to terminate (such as by calling `abort` from libc).
 
-#### <a name="tryblocks"></a>Try blocks
+##### <a name="tryblocks"></a>Try blocks
 
     TryStatement -> "try" Block
                     ("catch" "(" (Identifier (":" Type)?) ")" Block)+
@@ -2098,7 +2099,7 @@ Catch clauses may rethrow the current exception by reusing the given exception o
 
 If exceptions are disabled, a try statement's body is compiled as a normal block, and its catch clauses are ignored.
 
-#### <a name="scopeguardstatements"></a>Scope guard statements
+##### <a name="scopeguardstatements"></a>Scope guard statements
 
     ScopeGuardStatement -> ScopeGuardKind Statement
     ScopeGuardKind -> "finally" | "onerror"
@@ -2115,7 +2116,7 @@ An `onerror` statement causes the associated statement to be executed only when 
 
 If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope guards behave normally and will still execute when their associated scope is exited by non-exceptional means.
 
-### <a name="evalstatements"></a>Eval statements
+#### <a name="evalstatements"></a>Eval statements
 
     EvalStatement -> "eval" ExprList ";"
 
@@ -2137,7 +2138,7 @@ The result of `eval` must be parsable as a complete statement or statements; it 
 
 [Eval expressions](#evalexpressions) are also supported for generating expressions.
 
-## <a name="expressions"></a>Expressions
+### <a name="expressions"></a>Expressions
 
 Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions](#operatorfunctions). The precedence hierarchy for Clay is summarized below, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
 
@@ -2185,7 +2186,7 @@ Expressions describe how values flow among functions in a computation. Clay prov
     * [Lambda expressions](#lambdaexpressions) — `(a, b) -> c`
 * [Multiple value expressions](#multiplevalueexpressions) — `a, b, c`
 
-### <a name="atomicexpressions"></a>Atomic expressions
+#### <a name="atomicexpressions"></a>Atomic expressions
 
     # Grammar
     AtomicExpr -> NameRef
@@ -2198,7 +2199,7 @@ Expressions describe how values flow among functions in a computation. Clay prov
 
 Atomic expressions form the basic units of expressions.
 
-#### <a name="namereferences"></a>Name references
+##### <a name="namereferences"></a>Name references
 
     # Grammar
     NameRef -> Identifier
@@ -2223,7 +2224,7 @@ If a name is bound to [multiple values](#multiplevalueexpressions), such as a va
         println(..xs, " have the types ", ..TT);
     }
 
-#### <a name="literalexpressions"></a>Literal expressions
+##### <a name="literalexpressions"></a>Literal expressions
 
     # Grammar
     Literal -> BoolLiteral
@@ -2293,21 +2294,21 @@ Literals evaluate to primitive constant values.
         // Example
         // XXX
 
-#### <a name="parentheses"></a>Parentheses
+##### <a name="parentheses"></a>Parentheses
 
     # Grammar
     ParenExpr -> "(" ExprList ")"
 
 Parentheses override precedence order and have no effect on evaluation themselves.
 
-#### <a name="tupleexpressions"></a>Tuple expressions
+##### <a name="tupleexpressions"></a>Tuple expressions
 
     # Grammar
     TupleExpr -> "[" ExprList "]"
 
 Tuple expressions are used to construct tuple objects. They are evaluated by passing the bracketed expression list to the `tupleLiteral` [operator function](#operatorfunctions).
 
-#### <a name="compilationcontextoperators"></a>Compilation context operators
+##### <a name="compilationcontextoperators"></a>Compilation context operators
 
     # Grammar
     ContextOp -> "__FILE__"
@@ -2328,7 +2329,7 @@ Tuple expressions are used to construct tuple objects. They are evaluated by pas
         }
     }
 
-#### <a name="evalexpressions"></a>Eval expressions
+##### <a name="evalexpressions"></a>Eval expressions
 
     # Grammar
     EvalExpr -> "eval" Expression
@@ -2342,7 +2343,7 @@ The generated static string must parse as a complete expression; open brackets o
 
 The eval expression may be a parenthesized [multiple value expression](#multiplevalueexpressions), in which case the values are concatenated to form the parsed string.
 
-### <a name="suffixoperators"></a>Suffix operators
+#### <a name="suffixoperators"></a>Suffix operators
 
     # Grammar
     SuffixExpr -> AtomicExpr SuffixOp*
@@ -2352,7 +2353,7 @@ The eval expression may be a parenthesized [multiple value expression](#multiple
               | StaticIndexSuffix
               | DereferenceSuffix
 
-#### <a name="calloperator"></a>Call operator
+##### <a name="calloperator"></a>Call operator
 
     # Grammar
     CallSuffix -> "(" ExprList ")" CallLambdaList?
@@ -2375,7 +2376,7 @@ Extra syntactic sugar is provided for higher-order functions that take [lambda e
 
 One or more of a call's arguments may be modified by a [dispatch operator](#dispatchoperator), in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
 
-#### <a name="indexoperator"></a>Index operator
+##### <a name="indexoperator"></a>Index operator
 
     # Grammar
     IndexSuffix -> "[" ExprList "]"
@@ -2385,7 +2386,7 @@ The index operator desugars into a call to the `index` [operator function](#oper
     // Example
     // XXX
 
-#### <a name="staticindexoperator"></a>Static index operator
+##### <a name="staticindexoperator"></a>Static index operator
 
     # Grammar
     StaticIndexSuffix -> "." IntToken
@@ -2395,7 +2396,7 @@ The static index operator consists of a `.` token followed by an [integer litera
     // Example
     // XXX
 
-#### <a name="fieldreferenceoperator"></a>Field reference operator
+##### <a name="fieldreferenceoperator"></a>Field reference operator
 
     # Grammar
     FieldRefSuffix -> "." Identifier
@@ -2405,7 +2406,7 @@ The field reference operator consists of a `.` token followed by an identifier. 
     // Example
     // XXX
 
-#### <a name="dereferenceoperator"></a>Dereference operator
+##### <a name="dereferenceoperator"></a>Dereference operator
 
     # Grammar
     DereferenceSuffix -> "^"
@@ -2415,28 +2416,28 @@ The dereference operator consists of a "^" token. It is desugared into a call to
     // Example
     // XXX
 
-### <a name="prefixoperators"></a>Prefix operators
+#### <a name="prefixoperators"></a>Prefix operators
 
     # Grammar
     PrefixExpr -> PrefixOp PrefixExpr
                 | SuffixExpr
     PrefixOp -> "+" | "-" | "&" | "*"
 
-#### <a name="unaryplusoperator"></a>Unary plus operator
+##### <a name="unaryplusoperator"></a>Unary plus operator
 
 The prefix `+` operator desugars to the `plus` [operator function](#operatorfunctions).
 
     // Example
     // XXX
 
-#### <a name="unaryminusoperator"></a>Unary minus operator
+##### <a name="unaryminusoperator"></a>Unary minus operator
 
 The prefix `-` operator desugars to the `minus` [operator function](#operatorfunctions). It is intended for negating numeric values.
 
     // Example
     // XXX
 
-#### <a name="addressoperator"></a>Address operator
+##### <a name="addressoperator"></a>Address operator
 
 The prefix `&` operator returns the address of its operand as a value of the primitive `Pointer[T]` type, for operand type `T`. The operand must be an lvalue.
 
@@ -2445,7 +2446,7 @@ The prefix `&` operator returns the address of its operand as a value of the pri
 
 The `&` operator may not be overloaded. The `__primitives__` module contains an `addressOf` function that is equivalent.
 
-#### <a name="dispatchoperator"></a>Dispatch operator
+##### <a name="dispatchoperator"></a>Dispatch operator
 
 The prefix `*` operator transforms a [call operator](#calloperator) expression into a dynamic dispatch on a variant. It may only be applied to an argument of a call expression, and the operand must evaluate to a single value of a [variant type](#variants). Multiple arguments may be dispatched on. For each instance type of each dispatched argument, an overload is looked up for those instance types, and a dispatch table is constructed. The return values and `ref`-ness of each overload must exactly match, or else the dispatch expression raises a compile-time error.
 
@@ -2454,7 +2455,7 @@ The prefix `*` operator transforms a [call operator](#calloperator) expression i
 
 The dispatch implementation is not currently overloadable.
 
-### <a name="multiplicativeoperators"></a>Multiplicative operators
+#### <a name="multiplicativeoperators"></a>Multiplicative operators
 
     # Grammar
     # (impossible left recursion used for simplicity's sake)
@@ -2467,7 +2468,7 @@ The dispatch implementation is not currently overloadable.
 
 These operators are all left-associative among each other.
 
-### <a name="additiveoperators"></a>Additive operators
+#### <a name="additiveoperators"></a>Additive operators
 
     # Grammar
     AddExpr -> (AddExpr AddOp)? MulExpr
@@ -2478,7 +2479,7 @@ These operators are all left-associative among each other.
 
 These operators are left-associative among each other.
 
-### <a name="orderedcomparisonoperators"></a>Ordered comparison operators
+#### <a name="orderedcomparisonoperators"></a>Ordered comparison operators
 
     # Grammar
     CompareExpr -> (CompareExpr CompareOp)? AddExpr
@@ -2491,7 +2492,7 @@ These operators are left-associative among each other.
 
 These operators are left-associative among each other.
 
-### <a name="equalitycomparisonoperators"></a>Equality comparison operators
+#### <a name="equalitycomparisonoperators"></a>Equality comparison operators
 
     # Grammar
     EqualExpr -> (EqualExpr EqualOp)? CompareExpr
@@ -2502,7 +2503,7 @@ These operators are left-associative among each other.
 
 These operators are left-associative among each other.
 
-### <a name="booleannot"></a>Boolean not
+#### <a name="booleannot"></a>Boolean not
 
     # Grammar
     NotExpr -> "not" EqualExpr
@@ -2510,7 +2511,7 @@ These operators are left-associative among each other.
 
 The prefix `not` operator negates its operand, which must evaluate to a value of the primitive type `Bool`. `not true` evaluates to `false`, and `not false` evaluates to `true`. The `not` operator may not be overloaded. The `__primitives__` module contains a `boolNot` function that is equivalent.
 
-### <a name="booleanand"></a>Boolean and
+#### <a name="booleanand"></a>Boolean and
 
     # Grammar
     AndExpr -> NotExpr ("and" AndExpr)?
@@ -2519,7 +2520,7 @@ The infix `and` operator performs short-circuit boolean conjunction. Both operan
 
 The `and` operator may not be overloaded. `and` is right-associative.
 
-### <a name="booleanor"></a>Boolean or
+#### <a name="booleanor"></a>Boolean or
 
     # Grammar
     OrExpr -> AndExpr ("or" OrExpr)?
@@ -2528,7 +2529,7 @@ The infix `or` operator performs short-circuit boolean disjunction. Both operand
 
 The `or` operator may not be overloaded. `or` is right-associative.
 
-### <a name="lowprecedenceprefixoperators"></a>Low-precedence prefix operators
+#### <a name="lowprecedenceprefixoperators"></a>Low-precedence prefix operators
 
     # Grammar
     Expression -> PairExpr
@@ -2538,21 +2539,21 @@ The `or` operator may not be overloaded. `or` is right-associative.
                 | Lambda
                 | OrExpr
 
-#### <a name="ifexpressions"></a>If expressions
+##### <a name="ifexpressions"></a>If expressions
 
     # Grammar
     IfExpr -> "if" "(" Expression ")" Expression "else" Expression
 
 Similar [if statements](#conditionalstatements), if expressions conditionally evaluate subexpressions based on a boolean condition. The first operand is evaluated, and if true, the second operand is evaluated; otherwise, the third operand is evaluated. The first operand must evaluate to a value of the primitive type `Bool`, and the types of the second and third arguments must be the same. Unlike an if statement, an if expression may not omit its `else` clause.
 
-#### <a name="keywordpairexpressions"></a>Keyword pair expressions
+##### <a name="keywordpairexpressions"></a>Keyword pair expressions
 
     # Grammar
     PairExpr -> Identifier ":" Expression
 
 A sugar syntax is provided for name-value pairs. The syntax `name: expr` is sugar for the [tuple literal](#tupleexpressions) `[#"name", expr]` (which in turn is sugar for a `tupleLiteral` [operator function](#operatorfunctions) call).
 
-#### <a name="staticexpressions"></a>Static expressions
+##### <a name="staticexpressions"></a>Static expressions
 
     # Grammar
     StaticExpr -> "static" Expression
@@ -2564,7 +2565,7 @@ The `static` operator evaluates its operand at compile time. The result of the e
 
 If the `static` operator is applied to a value that is inherently static, such as a [symbol](#symbols) or [static string](#staticstrings), then it is a no-op.
 
-#### <a name="unpackoperator"></a>Unpack operator
+##### <a name="unpackoperator"></a>Unpack operator
 
     # Grammar
     Unpack -> ".." Expression
@@ -2574,7 +2575,7 @@ The unpack operator evaluates its operand in [multiple value context](#multiplev
     // Example
     // XXX
 
-#### <a name="lambdaexpressions"></a>Lambda expressions
+##### <a name="lambdaexpressions"></a>Lambda expressions
 
     # Grammar
     Lambda -> LambdaArguments LambdaArrow LambdaBody
@@ -2614,7 +2615,7 @@ In either case, an anonymous [record type](#record) is synthesized to store the 
     // Example
     // XXX
 
-### <a name="multiplevalueexpressions"></a>Multiple value expressions
+#### <a name="multiplevalueexpressions"></a>Multiple value expressions
 
     # Grammar
     ExprList -> comma_list(Expression)
