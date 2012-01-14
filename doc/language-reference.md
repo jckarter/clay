@@ -1487,13 +1487,81 @@ As a special case, if a [call expression] with a block [lambda expression] as it
 
 ### Return statements
 
+    # Grammar
     ReturnStatement -> "return" ReturnExpression? ";"
     ReturnExpression -> ReturnKind ExprList ";"
     ReturnKind -> "ref" | "forward"
 
 Return statements end execution of the current function and provide the return value or values to which the function evaluates.
 
-XXX
+    // Example
+    foo(x, y) {
+        return x + y;
+    }
+
+    main() {
+        println(foo(1, 2)); // prints 3
+    }
+
+The [function body] `=` shorthand syntax is sugar for a [block](#blocks) containing a single return statement.
+
+    // Example
+    // shorthand for the above
+    foo(x, y) = x + y;
+
+Functions with branching control flow may have multiple return statements. The return types of each return statement within a function must match. If the function declares its return types, return statement values must also match the types declared.
+
+    // Example
+    [T | Float?(T)]
+    quadraticRoots(a:T, b:T, c:T) : T, T {
+        if (b == 0.) {
+            var r = sqrt(-c/a);
+            return r, -r;
+        }
+
+        var q = -0.5*(b+signum(b)*sqrt(b*b - 4.*a*c));
+        return q/a, c/q;
+    }
+
+If control flow leaves code unreachable after all return statements, the compiler will raise an error.
+
+    // Example
+    populateArk() {
+        rescueAmphibians();
+        rescueReptiles();
+        rescueBirds();
+        rescueMammals();
+        return;
+
+        // ERROR: unreachable code
+        rescueDinosaurs();
+    }
+
+Functions may return by reference with `return ref`. The return values must all be lvalues, and the function will itself evaluate to an lvalue or lvalues. If there are multiple return statements, their `ref`-ness in addition to their return types must match.
+
+    // Example
+    record PitchedVector[T] (vec:Vector[T], pitch:SizeT);
+
+    [T]
+    overload index(pv:PitchedVector[T], n) {
+        return ref pv.vec[n*pv.pitch];
+    }
+
+    record ZippedSequence[A,B] (a:A, b:B)
+
+    [A,B]
+    overload index(ab:ZippedSequence[A,B], n) {
+        return ref ab.a[n], ab.b[n];
+    }
+
+A return statement may also generically forward the `ref`-ness of its values with `return forward`. For each returned value, if the value is an lvalue, it is returned by reference; otherwise, it is returned by value.
+
+    // Example
+    // A more generic version of above that works for lvalue or rvalue sequences
+    [A,B]
+    overload index(ab:ZippedSequence[A,B], n) {
+        return forward ab.a[n], ab.b[n];
+    }
 
 ### Local variable bindings
 
@@ -1513,7 +1581,7 @@ Local variables are introduced by binding statements. Local variables come in a 
             println("x = ", x, "; y = ", y); // x = 1; y = 3
         }
 
-    `var`s have scoped extent, and will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block.
+    `var`s have deterministic lifetimes. They will be deleted by being passed to the `destroy` [operator function](#operatorfunctions) at the end of their containing block.
 
         // Example
         record Noisy (x:Int);
@@ -1572,10 +1640,10 @@ Multiple variable bindings can be assigned to the values of a [multiple value ex
     twoAndThree() = 2, 3;
 
     main() {
-        // x = 1, y = 2
+        // x = 1; y = 2
         var x, y = 1, 2;
 
-        // a = 1, b = 2, c = 3, d = 4
+        // a = 1; b = 2; c = 3; d = 4
         var a, b, c, d = 1, ..twoAndThree(), 4;
     }
 
@@ -1585,7 +1653,7 @@ If multiple variables are being bound, the right-hand side is implicitly evaluat
     oneAndTwo() = 1, 2;
 
     main() {
-        // x = 1, y = 2
+        // x = 1; y = 2
         var x, y = oneAndTwo();
     }
 
@@ -1607,7 +1675,7 @@ Variable names are scoped from after the binding statement to the end of their e
         println(x); // prints 2
     }
 
-Binding statements must appear in a block. A standalone binding cannot be used as a single-statement body of an `if`, `while` or other compound statement.
+Binding statements must appear in a block. A binding statement cannot be used as a single-statement body of an `if`, `while` or other compound statement.
 
     // Example
     foo() {
@@ -1821,20 +1889,108 @@ Unlike other languages with `switch` forms, Clay does not allow "fall-through" b
 
 ### Loop statements
 
+Loop statements repeatedly execute a statement while a condition holds.
+
+#### While loops
+
+    # Grammar
     WhileStatement -> "while" "(" Expression ")" Statement
 
+A `while` loop evaluates an expression, which must evaluate to a value of the `Bool` primitive type, and if the expression is `true`, it executes the associated body statement. The expression is then reevaluated and the body executed in a loop until the expression evaluates to `false`. When the expression evaluates to `false`, execution resumes after the `while` statement.
+
+    // Example
+    main() {
+        // Print 0 through 9, the hard way
+        var x = 0;
+        while (x < 10) {
+            println(x);
+            x += 1;
+        }
+    }
+
+#### For loops
+
+    # Grammar
     ForStatement -> "for" "(" comma_list(Identifier) "in" Expression ")" Statement
 
+A `for` loop provides a higher-level looping mechanism than `while` to loop over sequences. It binds values yielded from a iterator object within the scope of its body statement, repeatedly executing the body for each value.
+
+    // Example
+    main() {
+        // Print 0 through 9, the easier way
+        for (x in range(10))
+            println(x);
+    }
+
+`for` loops are implemented in terms of `while` loops using the `iterator`, `hasNext?`, and `next` [operator functions]. Before the loop is entered, `iterator(expr)` is called to derive an iterator object for the sequence. Within the loop, on each iteration, `hasNext?(iter)` is called to test whether the iterator has more values, and if true, `next(iter)` is called to fetch the next result from the iterator. The return values from `next` are bound to the loop variables, and the loop body is then executed.
+
+    // Example
+    main() {
+        // The above example, desugared
+        {
+            forward _iter = iterator(range(10));
+            while (hasNext?(_iter)) {
+                forward x = next(_iter);
+                println(x);
+            }
+        }
+    }
+
+#### Multiple-value for loops
+
+    # Grammar
     MultiValueForStatement -> ".." "for" "(" Identifier "in" ExprList ")" Statement
 
-XXX
+A special syntactic form is provided to apply an operation over each individual value of a [multiple value expression]. The iterated expression is evaluated in an implicit [multiple value context].
+
+    // Example
+    // implement printTo(stream, ..xs) in terms of individual printTo(stream, x)
+    // overloads
+    [..TT | countValues(..TT) != 1]
+    overload printTo(stream, ..xs:TT) {
+        ..for (x in xs)
+            printTo(stream, x);
+    }
+
+Unlike `while` or `for`, `..for` is not a proper loop. It is unrolled; that is, the body is instantiated repeatedly for each value. The bound variable is locally rebound for each instantiation; thus, unlike a normal `for` loop's bindings, the binding's type may change for each instantiation.
+
+    // Example
+    foo() {
+        ..for (x in 1, '2', "three")
+            bar(x);
+
+        // desugars to
+
+        {
+            forward x = 1;
+            bar(x);
+        }
+        {
+            forward x = '2';
+            bar(x);
+        }
+        {
+            forward x = "three";
+            bar(x);
+        }
+    }
 
 ### Branch statements
 
-    GotoStatement -> "goto" Identifier ";"
+Branch statements provide nonlocal control flow within a function.
+
+#### Break and continue statements
 
     BreakStatement -> "break" ";"
     ContinueStatement -> "continue" ";"
+
+`break` and `continue` prematurely halt execution of a `while`, `for`, or `..for` loop. `continue` resumes execution at the next iteration of the loop, and `break` resumes execution after the loop. `break` and `continue` apply to the innermost loop in which they lexically appear; they are invalid outside of a loop.
+
+#### Goto statements
+
+    GotoStatement -> "goto" Identifier ";"
+
+`goto` statements jump to (almost) arbitrary [labels] within the function. There are some restrictions: goto statements may not jump into a `var` binding's scope from outside (and thereby skip the variable's initialization). Jumping from an outer block into a label defined in an inner block is also currently unsupported.
 
 ### Exception handling statements
 
