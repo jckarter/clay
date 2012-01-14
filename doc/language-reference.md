@@ -1817,7 +1817,7 @@ Like single-value simple assignment, update assignment also supports special pro
 
 #### Initialization statements
 
-The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), this cannot be done safely, as indeed, there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
+The above assignment operators assume that the values being assigned have already been initialized. If the prior value owns resources, the `assign` implementation needs to adjust or release those resources to accommodate the new value. However, if the value being updated is uninitialized, such as when it comes from a primitive memory allocator like `malloc` or is a [named return value](#namedreturnvalues), the value has no defined state, and there are no already-existing resources to manage. In these cases, initialization must be performed instead of assignment.
 
     // Example
     main() {
@@ -2266,7 +2266,7 @@ Literals evaluate to primitive constant values.
         // Example
         // XXX
 
-* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and like an integer can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes]. To create a literal of another type, the following suffixes are allowed:
+* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes]. To create a literal of another type, the following suffixes are allowed:
     * `f` — `Float32` ("single" **F**loat)
     * `ff` — `Float64` ("double" **F**loat)
     * `fl` — `Float80`
