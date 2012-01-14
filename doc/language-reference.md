@@ -182,7 +182,7 @@ Modules form the basis of encapsulation and namespacing in Clay. Every module ha
 
 A few modules have special significance:
 
-* The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.html) documentation describes its contents in detail.
+* The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.md) documentation describes its contents in detail.
 * The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration], it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
@@ -1391,11 +1391,13 @@ Global variable initializer expressions are evaluated in dependency order, and i
     var x = getY();
     var y = x;
 
+Global variables are deleted in reverse initialization order using the `destroy` [operator function] after the program's `main` entry point has finished executing.
+
 Since global variable initializers are executed at runtime, global variables are currently poorly supported by compile-time evaluation. The pointer value and type of global variables may be safely derived at compile time; however, the initial value of a global variable at compile time is currently undefined, and though a global variable may be initialized and mutated during compile time, the compile-time value of the global is not propagated in any form to runtime.
 
 Global variable names are not true [symbols]. A global variable name evaluates to a reference to the global variable's value.
 
-Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.html) for details.
+Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.md) for details.
 
 ### External variables
 
@@ -2143,14 +2145,14 @@ The result of `eval` must be parsable as a complete statement or statements; it 
                 | IfExpr
                 | Unpack
                 | StaticExpr
+                | Lambda
                 | OrExpr
 
 Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized as follows, from highest to lowest precedence, along with sample syntax and associated operator functions where appropriate.
 
 * Atomic expressions
-    * [Literal expressions]
     * [Name references]
-    * [Lambda expressions] — `(a, b) -> c`
+    * [Literal expressions]
     * [Parentheses] — `(a, b, c)`
     * [Tuple expressions] — `[a, b, c]` — `tupleLiteral`
     * [Compilation context operators] — `__FILE__` etc.
@@ -2189,9 +2191,145 @@ Expressions describe how values flow among functions in a computation. Clay prov
     * [Keyword pair expressions] — `name: a`
     * [Static expressions] — `static a`
     * [Unpack operator] — `..a`
+    * [Lambda expressions] — `(a, b) -> c`
 * [Multiple value expressions] — `a, b, c`
 
-### Literal expressions
+### Atomic expressions
+
+    # Grammar
+    AtomicExpr -> NameRef
+                | Literal
+                | ParenExpr
+                | TupleExpr
+                | Literal
+                | EvalExpr
+                | ContextOp
+
+Atomic expressions form the basic units of expressions.
+
+#### Name references
+
+    # Grammar
+    NameRef -> Identifier
+
+A name reference consists simply of an identifier. It evaluates to the named local or global entity within the current scope. An error is raised if no matching entity is found for the given name.
+
+#### Literal expressions
+
+    # Grammar
+    Literal -> BoolLiteral
+             | IntLiteral
+             | FloatLiteral
+             | CharLiteral
+             | StringLiteral
+             | StaticStringLiteral
+    BoolLiteral -> "true" | "false"
+
+    IntLiteral -> Sign? IntToken NumericTypeSuffix?
+    FloatLiteral -> Sign? FloatToken NumericTypeSuffix?
+
+    Sign -> "+" | "-"
+    NumericTypeSuffix -> Identifier
+
+    CharLiteral -> CharToken
+    StringLiteral -> StringToken
+    StaticStringLiteral -> "#" StringToken
+                         | "#" Identifier
+
+Literals evaluate to primitive constant values.
+
+* The boolean literals `true` and `false` evaluate to the two possible values of the primitive `Bool` type.
+* Integer literals evaluate to constant integer values. They consist of an [integer literal token](#integerliterals), optionally prefixed by a sign `+` or `-` and/or suffixed by a type specifier. Without a type specifier suffix, the literal is of the primitive `Int32` type, unless the module declares a different default integer type in its [module attributes]. To create a literal of another type, the following suffixes are allowed, with the corresponding primitive types:
+    * `ss` — `Int8` ("short short")
+    * `s` — `Int16` ("short")
+    * `i` — `Int32` ("int")
+    * `l` — `Int64` ("long")
+    * `ll` — `Int128` ("long long")
+    * `uss` — `UInt8`
+    * `us` — `UInt16`
+    * `u` — `UInt32`
+    * `ul` — `UInt64`
+    * `ull` — `Int128`
+
+    One of the floating-point type suffixes described below may also be applied to an integer literal to create a floating-point literal with an integer value. If the integer literal represents a value that is not within the valid range of the literal's type, it is an error.
+
+        // Example
+        // XXX
+
+* Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and like an integer can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes]. To create a literal of another type, the following suffixes are allowed:
+    * `f` — `Float32` ("single")
+    * `ff` — `Float64` ("double")
+    * `fl` — `Float80`
+    * `fj` — `Imag32`
+    * `j` or `ffj` — `Imag64`
+    * `flj` — `Imag80`
+
+    Floating-point literals may not use integer suffixes.
+
+        // Example
+        // XXX
+
+* Character literals consist of a [character literal token](#characterliterals). They are evaluated by passing the ASCII code of the represented character to the `Char` [operator function](#operatorfunctions).
+
+        // Example
+        // XXX
+
+* String literals consist of a [string literal token](#stringliterals). The constant string is emitted into the string table, and pointers of the primitive `Pointer[Int8]` type to the first character and after the last character are passed as arguments to the `StringConstant` [operator function](#operatorfunctions).
+
+        // Example
+        // XXX
+
+* Static string literals consist of a string literal token prefixed with a `#` token. They exist entirely as compile-time entities, and thus evaluate to values of the stateless primitive `Static[#"identifier"]` type. If the contents of the static string are a valid identifier, it may also be specified as a bare, unquoted identifier prefixed with a `#` token.
+
+        // Example
+        // XXX
+
+#### Parentheses
+
+    # Grammar
+    ParenExpr -> "(" ExprList ")"
+
+Parentheses override precedence order and have no effect on evaluation themselves.
+
+#### Tuple expressions
+
+    # Grammar
+    TupleExpr -> "[" ExprList "]"
+
+Tuple expressions are used to construct tuple objects. They are evaluated by passing the bracketed expression list to the `tupleLiteral` [operator function](#operatorfunctions).
+
+#### Compilation context operators
+
+    # Grammar
+    ContextOp -> "__FILE__"
+               | "__LINE__"
+               | "__COLUMN__"
+               | "__ARG__" Identifier
+
+[Alias functions](#inlineandaliasqualifiers) have magic powers to access the source location of their invocation and string representations of their arguments. The `__FILE__` operator evaluates to a [static string](#staticstring) containing the file from which the function was called. `__LINE__` and `__COLUMN__` evaluate to `Int32` values representing the source line and column. `__ARG__` returns a static string representation of the argument named after the `__ARG__` token. `__ARG__` does not evaluate the named argument. These four operators are only valid inside alias functions, and `__ARG__` is only valid applied to an alias function argument.
+
+    // Example
+    // An assert function that reports the condition and source location with the failure
+    alias assert(cond:Bool) {
+        if (cond) {
+            println(stderr, "Assertion \"", __ARG__ cond, "\" failed at ",
+                __FILE__, ":", __LINE__, ":", __COLUMN__);
+            flush(stderr);
+            abort();
+        }
+    }
+
+#### Eval expressions
+
+    # Grammar
+    EvalExpr -> "eval" Expression
+
+Like [eval statements], eval expressions provide access to the Clay parser at compile time, but in expression context. The given expression is evaluated at compile time into a [static string](#staticstrings), and the result is parsed as an expression and evaluated in place of the `eval` form.
+
+    // Example
+    // XXX
+
+The generated static string must parse as a complete expression; open brackets or other partial expressions cannot be generated.
 
 ### Multiple value expressions
 
@@ -2212,6 +2350,7 @@ Where multiple value expressions are allowed, a multiple value context may be in
 
 Certain syntactic forms provide implicit multiple value context:
 
+* [Expression statements] are evaluated in multiple value context; the expression's values, if any, are discarded.
 * [Local variable bindings] with multiple variables evaluate their right-hand expression in multiple value context.
 * [Assignment statements] with multiple left-hand values evaluate their right-hand expression in multiple value context.
 * [Multiple-value for loops] evaluate their value list in multiple value context.
@@ -2265,42 +2404,9 @@ In these contexts, a lone multiple value expression may be used without an expli
     StaticIndexSuffix -> "." IntToken
     DereferenceSuffix -> "^"
 
-    AtomicExpr -> Lambda
-                | ParenExpr
-                | TupleExpr
-                | NameRef
-                | Literal
-                | EvalExpr
-                | ContextOp
-
     Lambda -> Arguments LambdaArrow LambdaBody
     LambdaArrow -> "=>" | "->"
     LambdaBody -> Block
                 | ReturnExpression
 
-    ParenExpr -> "(" ExprList ")"
-    TupleExpr -> "[" ExprList "]"
-    NameRef -> Identifier
-    EvalExpr -> "eval" Expression
-
-    Literal -> BoolLiteral
-             | IntLiteral
-             | FloatLiteral
-             | CharLiteral
-             | StringLiteral
-             | StaticStringLiteral
-    BoolLiteral -> "true" | "false"
-    IntLiteral -> Sign? IntToken NumericTypeSuffix?
-    FloatLiteral -> Sign? FloatToken NumericTypeSuffix?
-    CharLiteral -> CharToken
-    StringLiteral -> StringToken
-    StaticStringLiteral -> "#" StringToken
-
-    Sign -> "+" | "-"
-    NumericTypeSuffix -> Identifier
-
-    ContextOp -> "__FILE__"
-               | "__LINE__"
-               | "__COLUMN__"
-               | "__ARG__" Identifier
 
