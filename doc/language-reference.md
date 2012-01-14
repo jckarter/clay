@@ -1778,7 +1778,7 @@ Like other C-like languages, Clay provides special assignment syntax for updatin
         println(x);
     }
 
-The assignment tokens `+=`, `-=`, `*=`, and `/=` desugar into calls to the `updateAssign` [operator function](#operatorfunctions), which is passed three arguments: the `add`, `subtract`, `multiply`, or `divide` operator symbol corresponding to the update operation; the left-hand value; and the right-hand value. Update assignment is currently only supported for single values.
+The assignment tokens `+=`, `-=`, `*=`, `/=`, and `%=` desugar into calls to the `updateAssign` [operator function](#operatorfunctions), which is passed three arguments: the `add`, `subtract`, `multiply`, `divide`, or `remainder` operator symbol corresponding to the update operation; the left-hand value; and the right-hand value. Update assignment is currently only supported for single values.
 
     // Example
     main() {
@@ -1788,6 +1788,7 @@ The assignment tokens `+=`, `-=`, `*=`, and `/=` desugar into calls to the `upda
         x -= 2;
         x *= 4;
         x /= 8;
+        x %= 16;
 
         // equivalent to
 
@@ -1795,6 +1796,7 @@ The assignment tokens `+=`, `-=`, `*=`, and `/=` desugar into calls to the `upda
         updateAssign(subtract, x, 2);
         updateAssign(multiply, x, 4);
         updateAssign(divide, x, 8);
+        updateAssign(remainder, x, 16);
     }
 
 Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexexpressions), [static index](#staticindexexpressions), or [field reference](#fieldreferenceexpressions) expression.
@@ -2120,27 +2122,94 @@ The result of `eval` must be parsable as a complete statement or statements; it 
 
 ## Expressions
 
-XXX
-
     # Grammar
-    ExprList -> comma_list(Expression)
-
     Expression -> PairExpr
                 | IfExpr
                 | Unpack
                 | StaticExpr
-                | Lambda
                 | OrExpr
 
+Expressions describe how values flow among functions in a computation. Clay provides a hierarchy of operators with which to construct expressions. Many operators are syntactic sugar for overloadable [operator functions]. The precedence hierarchy for Clay is summarized as follows, from highest to lowest, along with sample syntax and associated operator functions where appropriate.
+
+* Atomic expressions
+    * [Literal expressions]
+    * [Name references]
+    * [Lambda expressions] — `(a, b) -> c`
+    * [Parentheses] — `(a, b, c)`
+    * [Tuple expressions] — `[a, b, c]` — `tupleLiteral`
+    * [Compilation context operators] — `__FILE__` etc.
+    * [Eval expressions] — `eval a`
+* Suffix operators
+    * [Call expressions] — `a(b,c)` — `call`
+    * [Index expressions] — `a[b,c]` — `index`
+    * [Static index expressions] — `a.0` — `staticIndex`
+    * [Field reference expressions] — `a.field` — `fieldRef`
+    * [Dereference expressions] — `a^` — `dereference`
+* Prefix operators
+    * [Unary plus] — `+a` — `plus`
+    * [Unary minus] — `-a` — `minus`
+    * [Address operator] — `&a`
+    * [Dispatch operator] — `*a`
+* [Multiplicative operators]
+    * `a * b` — `multiply`
+    * `a / b` — `divide`
+    * `a % b` — `remainder`
+* [Additive operators]
+    * `a + b` — `add`
+    * `a - b` — `subtract`
+* [Ordered comparison operators]
+    * `a <= b` — `lesserEquals?`
+    * `a < b` — `lesser?`
+    * `a > b` — `greater?`
+    * `a >= b` — `greaterEquals?`
+* [Equality comparison operators]
+    * `a == b` — `equals?`
+    * `a != b` — `notEquals?`
+* [Boolean not] — `not a`
+* [Boolean and] — `a and b`
+* [Boolean or] — `a or b`
+* Low-precedence prefix operators
+    * [If expressions] — `if (a) b else c`
+    * [Keyword pair expressions] — `name: a`
+    * [Static expressions] — `static a`
+    * [Unpack operator] — `..a`
+* [Multiple value expressions] — `a, b, c`
+
+### Literal expressions
+
+### Multiple value expressions
+
+    # Grammar
+    ExprList -> comma_list(Expression)
+
+Clay functions, and thereby most expression forms, can return multiple values. The comma operator concatenates values into a multiple value list.
+
+    // Example
+
+However, for sanity's sake, expressions are normally constrained to single values, and it is an error to use a multiple-value expression in a single value context. (Zero values is considered "multiple values" by this rule.)
+
+    // Example
+
+Where multiple value expressions are allowed, a multiple value context may be introduced using the [unpack operator] `..`. The multiple values of the `..` expression are unpacked directly into the surrounding multiple value list.
+
+    // Example
+
+Certain syntactic forms provide implicit multiple value context:
+
+* [Local variable bindings] with multiple variables evaluate their right-hand expression in multiple value context.
+* [Assignment statements] with multiple left-hand values evaluate their right-hand expression in multiple value context.
+* [Multiple-value for loops] evaluate their value list in multiple value context.
+
+In these contexts, a lone multiple value expression may be used without an explicit unpack. However, within a multiple value expression that concatenates multiple expressions, multiple-value subexpressions still require an explicit unpack. (In other words, the `..` operator has higher precedence than the `,` operator, and implicit multiple value context only applies to the outermost precedence level.)
+
+    // Example
+    // XXX
+
+    # Grammar
     PairExpr -> Identifier ":" Expression
     IfExpr -> "if" "(" Expression ")" Expression "else" Expression
     Unpack -> ".." Expression
     StaticExpr -> "static" Expression
-
-    Lambda -> Arguments LambdaArrow LambdaBody
-    LambdaArrow -> "=>" | "->"
-    LambdaBody -> Block
-                | ReturnExpression
 
     OrExpr -> AndExpr ("or" OrExpr)?
 
@@ -2180,12 +2249,19 @@ XXX
     StaticIndexSuffix -> "." IntToken
     DereferenceSuffix -> "^"
 
-    AtomicExpr -> ParenExpr
+    AtomicExpr -> Lambda
+                | ParenExpr
                 | TupleExpr
                 | NameRef
                 | Literal
                 | EvalExpr
                 | ContextOp
+
+    Lambda -> Arguments LambdaArrow LambdaBody
+    LambdaArrow -> "=>" | "->"
+    LambdaBody -> Block
+                | ReturnExpression
+
     ParenExpr -> "(" ExprList ")"
     TupleExpr -> "[" ExprList "]"
     NameRef -> Identifier
