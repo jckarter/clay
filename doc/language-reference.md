@@ -3,6 +3,7 @@
 
 * [Conventions](#conventions)
 * [Tokenization](#tokenization)
+* [Compilation strategy](#compilationstrategy)
 * [Modules](#modules)
 * [Source file organization](#sourcefileorganization)
 * [Type definitions](#typedefinitions)
@@ -172,6 +173,52 @@ String literals represent a sequence of ASCII text. Syntactically, they consist 
     "I'm not sure."
     """
 
+### <a name="compilationstrategy"></a>Compilation strategy
+
+Clay uses a whole-program compilation strategy, with some support for interfacing compilation units through [external functions](#externalfunctions). A compilation unit originates from an entry point [module](#modules), the source file for which is specified in the compiler's command line. From that module, compilation proceeds as follows:
+
+* Additional module source files are looked up and loaded based on the entry point module's [import declarations](#importdeclarations). Those modules' imports are then loaded recursively until all necessary modules have been loaded.
+* Each module's namespace is populated by visiting its import declarations and [top-level definitions](#topleveldefinitions). Namespace initialization does not rely on any evaluation so that forward and circular references among global names may be made freely.
+* Program entry points are established:
+    * If the entry point module contains a public symbol named `main`, it is passed to the `callMain` [operator function](#operatorfunctions), which is responsible for calling `main` with its command-line arguments. `callMain(static main)` thus becomes an entry point, ultimately corresponding to the C ABI `main` entry point.
+    * If the entry point module defines any [external functions](#externalfunctions), they are compiled as entry points.
+* Compilation proceeds from the established entry points. [Types](#typedefinitions), [functions](#functiondefinitions), and [global variable](#globalvariables) definitions are instantiated and compiled on-demand; if a definition is not used from any entry point, it is not visited after being parsed. (In a way, Clay can be thought of as a dynamic language in which operations normally emit LLVM as a side effect instead of performing computation directly.)
+
+#### <a name="compiletimeevaluation"></a>Compile-time evaluation
+
+Clay's compiler provides a compile-time evaluator, which is used to evaluate the following things at compile time:
+
+* predicates used in [pattern guards](#patternguards)
+* the parameters of parameterized [symbols](#symbols)
+* the operands of [static expressions](#staticexpressions), [eval statements](#evalstatements), and [eval expressions](#evalexpressions)
+* declared return types in [function definitions](#functiondefinitions)
+* declared instance types in [variant type definitions](#variants)
+* computed [record type](#records) layouts
+
+The compile-time evaluator follows the behavior of the runtime language for the target platform, with some restrictions.
+
+* The evaluator cannot call [external functions](#externalfunctions) or reference [external variables](#externalvariables).
+* The evaluator cannot call [inline LLVM functions](#inlinellvmfunctions).
+* The evaluator does not currently support exception handling; it always behaves as if exception handling is disabled.
+* The evaluator does not currently ever call the `destroy` [operator function](#operatorfunctions) to delete values.
+* [Global variables](#globalvariables) are currently not initialized for use by the evaluator.
+
+#### <a name="patternmatching"></a>Pattern matching
+
+    # Grammar
+    Pattern -> AtomicPattern PatternSuffix?
+
+    AtomicPattern -> Literal
+                   | PatternNameRef
+
+    PatternNameRef -> DottedName
+
+    PatternSuffix -> "[" comma_list(Pattern) "]"
+
+In addition to freeform evaluation, Clay also uses a simple unification-based pattern matching mechanism when matching [overloads](#overloadedfunctiondefinitions) to [call sites](#callexpressions) and when matching instance extensions to open [variant types](#variants).
+
+XXX
+
 ### <a name="modules"></a>Modules
 
 Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
@@ -188,25 +235,11 @@ A few modules have special significance:
 
 #### <a name="operatorfunctions"></a>Operator functions
 
-##### <a name="valuesemantics"></a>Value semantics
-
-### <a name="compilationstrategy"></a>Compilation strategy
-
 XXX
 
-#### <a name="compiletimeevaluation"></a>Compile-time evaluation
+##### <a name="valuesemantics"></a>Value semantics
 
-#### <a name="patternmatching"></a>Pattern matching
-
-    # Grammar
-    Pattern -> AtomicPattern PatternSuffix?
-
-    AtomicPattern -> Literal
-                   | PatternNameRef
-
-    PatternNameRef -> DottedName
-
-    PatternSuffix -> "[" comma_list(Pattern) "]"
+XXX
 
 ### <a name="sourcefileorganization"></a>Source file organization
 
@@ -227,7 +260,7 @@ A clay module corresponds to a single source file. Source files are laid out in 
 
 Comma-delimited lists are a common feature in Clay's grammar. In most contexts, Clay allows a comma-delimited list to optionally end with a trailing comma.
 
-    // Examples
+    // Example
     record US_Address (
         name:String,
         street:String,
@@ -245,7 +278,7 @@ In [pattern matching](#patternmatching) contexts, a variation of the comma-delim
                                    | LastRule
                                    | nil
 
-    // Examples
+    // Example
     define sum(..xs);
     overload sum() = 0;
     overload sum(a, ..b) = a + sum(..b);
@@ -267,7 +300,7 @@ Import declarations connect the module to other modules by making those other mo
 
 All import declaration forms start with an optional `public` or `private` visibility modifier, followed by the `import` keyword and the name of the module. Module names consist of one or more identifiers separated by the `.` character. With the `private` modifier, the effects of the import are private to the module—the name or names imported by the declaration are not available to be imported by modules that in turn import the current module. By contrast, `public import`s become visible through the current module to other modules. Without an explicit visibility, the import defaults to `private`.
 
-    // Examples
+    // Example
     public import foo.bar;
     private import foo.bar;
     import foo.bar; // equivalent to `private import`
@@ -747,7 +780,7 @@ Function definitions control most of Clay's compile-time and run-time behavior. 
 
 The simplest form of function definition creates a new function symbol with a single overload. These definitions consist of the new function's name, followed by a list of [arguments](#arguments), an optional list of [return types](#returntypes), and the [function body](#functionbody). If the return types are omitted, they are inferred from the function body. Function definitions may also use [visibility modifiers](#visibilitymodifiers) and/or [pattern guards](#patternguards).
 
-    // Examples
+    // Example
     hello() { println(helloString()); }
     private helloString() = "Hello World";
 
