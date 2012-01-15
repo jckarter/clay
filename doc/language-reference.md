@@ -415,7 +415,20 @@ The module attribute list can be an arbitrary [multiple value expression](#multi
 
     in bar (..foo.GraphicsModuleAttributes());
 
-XXX supported attributes?
+The following kinds of module attribute are currently supported:
+
+* A primitive floating-point type may be specified, which will be used as the default type of floating-point [literal expressions](#literalexpressions) without a type suffix in the current module.
+* A primitive integer type may be specified, which will be used as the default type of integer literal expressions without a type suffix in the current module.
+
+ 
+
+    // Example
+    in foo (Float32, Int64);
+
+    main() {
+        println(Type(1.0)); // Float32
+        println(Type(3)); // Int64
+    }
 
 #### <a name="toplevelllvm"></a>Top-level LLVM
 
@@ -537,7 +550,23 @@ Visibility modifiers are not valid for definitions that modify existing symbols 
 
 Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads](#overloads) and [pattern matching](#patternmatching). Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
 
-XXX
+    // Example
+    define foo;
+
+    main() {
+        println(Type(foo)); // Static[foo]
+    }
+
+[Record](#records) and [variant](#variant) type symbols may also be parameterized. The unparameterized base symbol name is defined as a symbol in its own right, and applying the [index operator](#indexoperator) to the base name instantiates parameterized instances of the symbol.
+
+    // Example
+    record Foo[T] ();
+
+    main() {
+        println(Foo);
+        println(Foo[Int32]);
+        println(Foo[Float64]);
+    }
 
 ### <a name="typedefinitions"></a>Type definitions
 
@@ -1357,7 +1386,23 @@ Global variable definitions instantiate a globally-visible mutable variable. The
 Global variables may be parameterized with a pattern guard. If no predicate is necessary, the pattern guard is optional; the given parameters will be taken as unbounded pattern variables.
 
     // Example
-    // XXX
+    // Generate tags for an "any" type as needed
+    private var TAG_COUNTER = 0;
+
+    private nextTagCounter() {
+        inc(TAG_COUNTER);
+        return TAG_COUNTER;
+    }
+
+    [T]
+    private var ANY_TAG[T] = nextTagCounter();
+
+    record Any (tag:Int, handle:RawPointer);
+
+    [T]
+    overload Any(forward value:T) {
+        return Any(ANY_TAG[T], RawPointer(allocateObject(value)));
+    }
 
 Global variables are instantiated on an as-needed basis. If a global variable is never referenced by runtime-executed code, it will not be instantiated. Global initializers should not be counted on for effects other than initializing the variable.
 
@@ -2017,18 +2062,12 @@ Branch statements provide nonlocal control flow within a function.
 
 `break` and `continue` prematurely halt execution of a `while`, `for`, or `..for` loop. `continue` resumes execution at the next iteration of the loop, and `break` resumes execution after the loop. `break` and `continue` apply to the innermost loop in which they lexically appear; they are invalid outside of a loop.
 
-    // Example
-    // XXX
-
 ##### <a name="gotostatements"></a>Goto statements
 
     # Grammar
     GotoStatement -> "goto" Identifier ";"
 
 `goto` statements jump to (almost) arbitrary [labels](#labels) within the function. There are some restrictions: goto statements may not jump into a `var` binding's scope from outside (and thereby skip the variable's initialization). Jumping from an outer block into a label defined in an inner block is also currently unsupported.
-
-    // Example
-    // XXX
 
 #### <a name="exceptionhandlingstatements"></a>Exception handling statements
 
@@ -2041,7 +2080,11 @@ Clay optionally supports exception handling. The `ExceptionsEnabled?` function f
 The `throw` statement throws an exception, to be caught by a [try block](#tryblocks) from an enclosing scope. Execution jumps from the throw to the innermost matching catch clause in the current dynamic scope, unwinding any intervening stack frames and destroying their local variables along the way.
 
     // Example
-    // XXX
+    safeDivide(x:Int, y:Int) {
+        if (y == 0)
+            throw DivisionByZero();
+        return x/y;
+    }
 
 The exception is thrown by calling the `throwValue` [operator function](#operatorfunctions) with the value of the given expression as an input. The call is assumed not to locally return; even if exceptions are disabled, `throwValue` must otherwise arrange for execution to terminate (such as by calling `abort` from libc).
 
@@ -2053,7 +2096,21 @@ The exception is thrown by calling the `throwValue` [operator function](#operato
 Try statements execute their associated block normally. If an exception occurs during the dynamic extent of the try statement, the exception is caught and tested against the try block's associated catch clauses, and if a matching catch clause is found, execution resumes inside the matching clause. Catch clauses are matched by declared type, and the thrown exception value is bound as the specified type. A catch-all clause can also be declared without a type; the clause will match any exception not caught by a previous catch clause. If no catch clause matches the exception, it is rethrown to be caught by an outer scope.
 
     // Example
-    // XXX
+    main() {
+        try {
+            var file = File("hello.txt", CREATE);
+            printlnTo(file, "hello world");
+            return 0;
+        }
+        catch (ex:IOError) {
+            printlnTo(stderr, "Unable to initialize hello.txt: ", ex);
+            return 1;
+        }
+        catch (ex) {
+            printlnTo(stderr, "Unexpected exception?!");
+            abort();
+        }
+    }
 
 A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions](#operatorfunctions), as well as the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
 
@@ -2088,7 +2145,7 @@ A series of catch clauses desugars into the try block's exception handler as a s
             forward any = exceptionAsAny(exp);
             handleAny(any);
         }
-        // Without a catch-all, the final branch would continue unwinding:
+        // Without a catch-all, the final else branch would continue unwinding:
         /*
         else
             continueException();
@@ -2107,12 +2164,34 @@ If exceptions are disabled, a try statement's body is compiled as a normal block
 Scope guard statements provide a convenient shorthand for deterministically and safely performing required cleanup in the face of arbitrary nonlocal control flow. A `finally` statement causes the associated statement to be executed when the enclosing block is exited for any reason, much like a `var`'s destructor but without the associated `var`.
 
     // Example
-    // XXX
+    main() {
+        while (true) {
+            var p = malloc(SizeT(128));
+            finally free(p);
+
+            switch (rand() % 3)
+            case (0)
+                throw Exception();
+            case (1)
+                return;
+            case (2)
+                break;
+        }
+    }
 
 An `onerror` statement causes the associated statement to be executed only when the enclosing block is unwound by an exception. If the block is exited by normal control flow, or by `break`, `continue`, `goto`, or `return`, the associated statement will not be executed.
 
     // Example
-    // XXX
+    record SomeType (p:RawPointer);
+
+    overload SomeType(size:SizeT) {
+        var p = malloc(size);
+        onerror free(p); // release memory if we don't make it to the end
+
+        potentiallyFail();
+
+        return SomeType(p);
+    }
 
 If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope guards behave normally and will still execute when their associated scope is exited by non-exceptional means.
 
@@ -2123,9 +2202,12 @@ If exceptions are disabled, `onerror` scope guards are ignored. `finally` scope 
 Eval statements provide compile-time access to the Clay parser. The associated [multiple value expression](#multiplevalueexpressions) is evaluated at compile time and concatenated into a [static string](#staticstrings), which is then parsed and expanded into one or more statements. Those statements then take the eval statement's place in execution. Eval statements may synthesize any statement, including new variable bindings.
 
     // Example
-    // XXX
+    main() {
+        eval #"""var x = "hello world";""";
+        eval #"""println(x);""";
+    }
 
-The result of `eval` must be parsable as a complete statement or statements; it cannot synthesize half-open blocks, partial statements, or other incomplete constructs. Labels currently cannot be generated by `eval`.
+`eval`'s operand must be parsable as a complete statement or statements; it cannot synthesize half-open blocks, partial statements, or other incomplete constructs. Labels currently cannot be generated by `eval`.
 
     // Example
     foo() {
@@ -2264,7 +2346,13 @@ Literals evaluate to primitive constant values.
     One of the floating-point type suffixes described below may also be applied to an integer literal to create a floating-point literal with an integer value. If the integer literal represents a value that is not within the valid range of the literal's type, it is an error.
 
         // Example
-        // XXX
+        main() {
+            println(Type(1)); // Int32
+            println(Type(-1)); // Int32
+            println(Type(1ul)); // UInt64
+            println(Type(-1ss)); // Int8
+            println(Type(-1f)); // Float32
+        }
 
 * Floating-point literals evaluate to constant floating-point real or imaginary values. They consist of a [floating-point literal token](#floatingpointliterals), and, like integer literals, can be modified by an optional sign prefix and/or type specifier suffix. Without a suffix, the literal is of the primitive `Float64` type, unless the module declares a different default floating-point type in its [module attributes](#moduledeclaration). To create a literal of another type, the following suffixes are allowed:
     * `f` — `Float32` ("single" **F**loat)
@@ -2277,22 +2365,17 @@ Literals evaluate to primitive constant values.
     Floating-point literals may not use integer suffixes.
 
         // Example
-        // XXX
+        main() {
+            println(Type(1.0f)); // Float32
+            println(Type(-1.0)); // Float64
+            println(Type(1.j)); // Imag64
+        }
 
 * Character literals consist of a [character literal token](#characterliterals). They are evaluated by passing the ASCII code of the represented character to the `Char` [operator function](#operatorfunctions).
 
-        // Example
-        // XXX
-
 * String literals consist of a [string literal token](#stringliterals). The constant string is emitted into the string table, and pointers of the primitive `Pointer[Int8]` type to the first character and after the last character are passed as arguments to the `StringConstant` [operator function](#operatorfunctions).
 
-        // Example
-        // XXX
-
 * Static string literals consist of a string literal token prefixed with a `#` token. They exist entirely as compile-time entities, and thus evaluate to values of the stateless primitive `Static[#"identifier"]` type. If the contents of the static string are a valid identifier, it may also be specified as a bare, unquoted identifier prefixed with a `#` token.
-
-        // Example
-        // XXX
 
 ##### <a name="parentheses"></a>Parentheses
 
@@ -2337,7 +2420,9 @@ Tuple expressions are used to construct tuple objects. They are evaluated by pas
 Like [eval statements](#evalstatements), eval expressions provide access to the Clay parser at compile time, but in expression context. The given expression is evaluated at compile time into a [static string](#staticstrings), and the result is parsed as an expression and evaluated in place of the `eval` form.
 
     // Example
-    // XXX
+    main() {
+        println(eval #""" "hello world" """);
+    }
 
 The generated static string must parse as a complete expression; open brackets or other partial expressions cannot be generated.
 
@@ -2362,17 +2447,40 @@ The eval expression may be a parenthesized [multiple value expression](#multiple
 Functions are called by suffixing a [multiple value expression](#multiplevalueexpressions) in parentheses, which is evaluated to derive the function's arguments, to the function value, which is then evaluated. If the function value is a [symbol](#symbols), the argument types are matched to the symbol's [overloads](#overloadedfunctiondefinitions), and a call to the matching overload is generated.
 
     // Example
-    // XXX
+    greet(subject) { println("hello, ", subject); }
+
+    main() { greet("world"); }
 
 If the function value is not a symbol, the call is transformed into an invocation of the `call` [operator function](#operatorfunctions), with the function value prepended to the argument list.
 
     // Example
-    // XXX
+    record MyCallable ();
+
+    overload call(f:MyCallable, x:Int, y:Int) : Int = x + y;
+
+    main() {
+        var f = MyCallable();
+        println(f(1, 2)); // really call(f, 1, 2)
+    }
 
 Extra syntactic sugar is provided for higher-order functions that take [lambda expressions](#lambdaexpressions) as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, separated by `::` tokens. The lambdas are appended in order to the end of the argument list.
 
     // Example
-    // XXX
+    ifZero(x, andThen, orElse) {
+        if (x == 0)
+            return ..andThen();
+        else
+            return ..orElse(x);
+    }
+
+    main() {
+        ifZero(rand()): () -> {
+            println("Reply hazy; try again")
+        } :: x -> {
+            println("You will inherit a large sum of money");
+            println("Lucky number: ", x);
+        }
+    }
 
 One or more of a call's arguments may be modified by a [dispatch operator](#dispatchoperator), in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
 
@@ -2383,8 +2491,20 @@ One or more of a call's arguments may be modified by a [dispatch operator](#disp
 
 The index operator desugars into a call to the `index` [operator function](#operatorfunction). It is typically used to index into containers. The indexed object is used as the first argument, followed by the values from the bracketed [multiple value expression](#multiplevalueexpressions).
 
+If the indexed object is a parameterized [symbol](#symbols), then the operation is primitive. The symbol is instantiated for the given parameters, which are evaluated at compile time.
+
+
     // Example
-    // XXX
+    [T,n]
+    overload index(array:Array[T,n], i) = ref (begin(array) + i)^;
+
+    main() {
+        // Symbol index instantiates Array[Int, 3]
+        var xs = Array[Int, 3](0, 111, 222);
+
+        // Normal index desugars to index(xs, 2)
+        println(xs[2]);
+    }
 
 ##### <a name="staticindexoperator"></a>Static index operator
 
@@ -2394,17 +2514,42 @@ The index operator desugars into a call to the `index` [operator function](#oper
 The static index operator consists of a `.` token followed by an [integer literal](#integerliterals) token. It is desugared into a call to the `staticIndex` [operator function](#operatorfunctions), with the indexed object and the integer literal as a `static` object. It is intended for accessing fields of tuples or other heterogeneous aggregate values.
 
     // Example
-    // XXX
+    main() {
+        var x = ["hello", "cruel", "world"];
+        println(x.0, ' ', x.2);
+    }
 
 ##### <a name="fieldreferenceoperator"></a>Field reference operator
 
     # Grammar
     FieldRefSuffix -> "." Identifier
 
-The field reference operator consists of a `.` token followed by an identifier. It is desugared into a call to the `fieldRef` [operator function](#operatorfunctions), with the indexed object and the field name identifier as a [static string](#staticstrings). It is intended for accessing named fields of [record types](#records) or similar types.
+The field reference operator consists of a `.` token followed by an identifier. It is desugared into a call to the `fieldRef` [operator function](#operatorfunctions), with the indexed object and a [static string](#staticstrings) representing the field name identifier as parameters. It is intended for accessing named fields of [record types](#records) or similar types.
+
+If the indexed object is an imported module name [symbol](#symbols), the operation is primitive, and the identifier is used to look up the named top-level definition within that module.
 
     // Example
-    // XXX
+    import foo;
+
+    record Point (coords:Array[Float64,2]);
+
+    // Define .x, .y, .xy, .yx accessors
+    overload fieldRef(p:Point, static #"x") = ref p[0];
+    overload fieldRef(p:Point, static #"y") = ref p[1];
+    overload fieldRef(p:Point, static #"xy") = ref p[0], p[1];
+    overload fieldRef(p:Point, static #"yx") = ref p[1], p[0];
+
+    main() {
+        // Module field reference is resolved statically
+        foo.bar();
+
+        // Normal field reference uses `fieldRef`
+        var p = Point(array(1.0, 2.0));
+        println("<", p.x, ",", p.y, ">");
+
+        ref x, y = p.xy;
+        println("<", x, ",", y, ">");
+    }
 
 ##### <a name="dereferenceoperator"></a>Dereference operator
 
@@ -2414,7 +2559,12 @@ The field reference operator consists of a `.` token followed by an identifier. 
 The dereference operator consists of a "^" token. It is desugared into a call to the `dereference` [operator function](#operatorfunctions) with the dereferenced object. It is intended for obtaining a reference to the value referenced by a pointer or pointer-like object.
 
     // Example
-    // XXX
+    record SafeVectorPointer[T] (parent:Pointer[Vector[T]], ptr:Pointer[T]);
+
+    overload dereference(p:VectorPointer[T]) {
+        assert(p.ptr >= begin(parent^) and p.ptr < end(parent^));
+        return ref p.ptr^;
+    }
 
 #### <a name="prefixoperators"></a>Prefix operators
 
@@ -2427,22 +2577,13 @@ The dereference operator consists of a "^" token. It is desugared into a call to
 
 The prefix `+` operator desugars to the `plus` [operator function](#operatorfunctions).
 
-    // Example
-    // XXX
-
 ##### <a name="unaryminusoperator"></a>Unary minus operator
 
 The prefix `-` operator desugars to the `minus` [operator function](#operatorfunctions). It is intended for negating numeric values.
 
-    // Example
-    // XXX
-
 ##### <a name="addressoperator"></a>Address operator
 
 The prefix `&` operator returns the address of its operand as a value of the primitive `Pointer[T]` type, for operand type `T`. The operand must be an lvalue.
-
-    // Example
-    // XXX
 
 The `&` operator may not be overloaded. The `__primitives__` module contains an `addressOf` function that is equivalent.
 
@@ -2451,7 +2592,17 @@ The `&` operator may not be overloaded. The `__primitives__` module contains an 
 The prefix `*` operator transforms a [call operator](#calloperator) expression into a dynamic dispatch on a variant. It may only be applied to an argument of a call expression, and the operand must evaluate to a single value of a [variant type](#variants). Multiple arguments may be dispatched on. For each instance type of each dispatched argument, an overload is looked up for those instance types, and a dispatch table is constructed. The return values and `ref`-ness of each overload must exactly match, or else the dispatch expression raises a compile-time error.
 
     // Example
-    // XXX
+    variant Shape (Circle, Square);
+
+    [S | VariantMember?(S)]
+    define draw(s:S) :;
+    overload draw(s:Circle) { println("()"); }
+    overload draw(s:Square) { println("[]"); }
+
+    drawShapes(ss:Vector[Shape]) {
+        for (s in ss)
+            draw(*s);
+    }
 
 The dispatch implementation is not currently overloadable.
 
@@ -2466,7 +2617,7 @@ The dispatch implementation is not currently overloadable.
 * The infix `/` operator desugars to the `divide` operator function.
 * The infix `%` operator desugars to the `remainder` operator function.
 
-These operators are all left-associative among each other.
+These operators are left-associative among each other.
 
 #### <a name="additiveoperators"></a>Additive operators
 
@@ -2544,7 +2695,7 @@ The `or` operator may not be overloaded. `or` is right-associative.
     # Grammar
     IfExpr -> "if" "(" Expression ")" Expression "else" Expression
 
-Similar [if statements](#conditionalstatements), if expressions conditionally evaluate subexpressions based on a boolean condition. The first operand is evaluated, and if true, the second operand is evaluated; otherwise, the third operand is evaluated. The first operand must evaluate to a value of the primitive type `Bool`, and the types of the second and third arguments must be the same. Unlike an if statement, an if expression may not omit its `else` clause.
+Similar to [if statements](#conditionalstatements), if expressions conditionally evaluate subexpressions based on a boolean condition. The first operand is evaluated, and if true, the second operand is evaluated; otherwise, the third operand is evaluated. The first operand must evaluate to a value of the primitive type `Bool`, and the types of the second and third arguments must be the same. Unlike an if statement, an if expression may not omit its `else` clause.
 
 ##### <a name="keywordpairexpressions"></a>Keyword pair expressions
 
@@ -2561,7 +2712,27 @@ A sugar syntax is provided for name-value pairs. The syntax `name: expr` is suga
 The `static` operator evaluates its operand at compile time. The result of the evaluation is then used as the type parameter of the stateless primitive `Static[n]` type. `static` expressions can be used to pass values to [static arguments](#staticarguments) of functions.
 
     // Example
-    // XXX
+    enum LogLevel (LOG, INFO, WARN, ERROR);
+
+    // adjust to make program noisier
+    alias MinLogLevel = INFO;
+
+    define log;
+
+    [LEVEL | LEVEL < MinLogLevel]
+    overload log(static LEVEL, ..x) {}
+
+    [LEVEL | LEVEL >= MinLogLevel]
+    overload log(static LEVEL, ..x) {
+        printlnTo(stderr, LEVEL, ": ", ..x);
+    }
+
+    main() {
+        log(static LOG, "starting program");
+        finally log(static LOG, "ending program");
+
+        log(static INFO, "computer status: on");
+    }
 
 If the `static` operator is applied to a value that is inherently static, such as a [symbol](#symbols) or [static string](#staticstrings), then it is a no-op.
 
@@ -2573,7 +2744,8 @@ If the `static` operator is applied to a value that is inherently static, such a
 The unpack operator evaluates its operand in [multiple value context](#multiplevalueexpressions), allowing a multiple-value expression to be interpolated into a context that normally expects a single expression.
 
     // Example
-    // XXX
+    twoThroughFour() = 2, 3, 4;
+    oneThroughFive() = 1, ..twoThroughFour(), 5;
 
 ##### <a name="lambdaexpressions"></a>Lambda expressions
 
@@ -2585,35 +2757,104 @@ The unpack operator evaluates its operand in [multiple value context](#multiplev
     LambdaBody -> Block
                 | ReturnExpression
 
-Lambda expressions define anonymous simple functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body, which may be either a `block` or a shorthand [return statement](#returnstatements) expression, similar to the `=` shorthand supported by named function definitions. If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which aside from having no name is equivalent to a [simple function definition](#simplefunctiondefinitions). The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
+Lambda expressions define anonymous functions in-line. They consist of an argument list, an arrow token `->` or `=>`, and a function body. The lambda function's return types are inferred from its body; declaring lambda return types is currently unsupported.
 
     // Example
-    // XXX
+    main() {
+        var squares = mapped((x) -> { return x*x; }, range(10));
+        for (sq in squares)
+            println(sq);
+    }
 
-If the lambda declares a single untyped argument, the parentheses may be omitted.
-
-    // Example
-    // XXX
-
-Note that a shorthand lambda body expression has higher precedence than the [multiple value](#multiplevalueexpressions) comma. To return multiple values from a lambda, parens or a block body must be used.
-
-    // Example
-    // XXX
-
-The lambda body may reference local bindings from its enclosing scope, in which case the referenced bindings are implicitly captured by the lambda value. The arrow token controls how this is done:
-
-* A lambda using the `->` token captures its enclosing scope by reference. The lambda may mutate values from its enclosing scope, and those changes will be externally visible to the lambda; however, the lambda may not be used after the function that created it returns and its originating scope is destroyed.
-* A lambda using the `=>` token captures referenced values by copying them into the lambda object. If the lambda mutates its captured values, the changes will remain local to the lambda; however, the lambda may be safely used independent of the lifetime of its originating scope.
-
- 
+Similar to named function definitions, the body may be either a [block](#blocks), or if the body consists of a single [return statement](#returnstatements), the return expression may be specified without the surrounding block.
 
     // Example
-    // XXX
+    main() {
+        // Equivalent to the above
+        var squares = mapped((x) -> x*x, range(10));
+        for (sq in squares)
+            println(sq);
+    }
+
+If the lambda declares a single untyped argument, the parentheses around the argument name may be omitted.
+
+    // Example
+    main() {
+        // Equivalent to the above
+        var squares = mapped(x -> x*x, range(10));
+        for (sq in squares)
+            println(sq);
+    }
+
+If a lambda does not reference its enclosing scope, it evaluates to a newly-created anonymous symbol, which is equivalent to a [simple function definition](#simplefunctiondefinitions) aside from having no name.
+
+    // Example
+    // Equivalent to the above
+    square(x) = x*x;
+
+    main() {
+        var squares = mapped(square, range(10));
+        for (sq in squares)
+            println(sq);
+    }
+
+Note that lambda expressions have higher precedence than the [multiple value](#multiplevalueexpressions) comma separator. `a -> b, c` parses as `(a -> b), c` rather than `a -> (b, c)`. To return multiple values from a lambda, parens or a block body must be used.
+
+    // Example
+    main() {
+        var squaresAndCubes = mapped(x -> { return x*x, x*x*x; }, range(10));
+        // - or -
+        // var squaresAndCubes = mapped(x -> (x*x, x*x*x), range(10));
+        for (sq, cb in squaresAndCubes)
+            println(sq, ' ', cb);
+    }
+
+A lambda's body may reference local bindings from its enclosing scope, in which case the referenced bindings are implicitly captured by the lambda value. The arrow token controls how capture is done:
+
+* A lambda using the `->` token captures its enclosing scope by reference. The lambda may mutate values from its enclosing scope, and those changes will be externally visible from outside the lambda; however, the lambda may not be used after the function that created it returns and its originating scope is deleted.
+
+        // Example
+        main() {
+            var sum = 0;
+            var squares = mapped(
+                x -> {
+                    var sq = x*x;
+                    sum += sq;
+                    return sq;
+                },
+                range(10));
+            for (sq in squares)
+                println(sq);
+            println(sum);
+        }
+
+* A lambda using the `=>` token captures referenced values by copying them into the lambda object. If the lambda mutates its captured values, the changes will remain local to the lambda; however, the lambda may safely be used independently of the lifetime of its originating scope.
+
+        // Example
+        curriedAdd(x) = y => x + y;
+
+        main() {
+            var plus3 = curriedAdd(3);
+            var plus5 = curriedAdd(5);
+
+            println(plus3(1));
+            println(plus5(1));
+        }
 
 In either case, an anonymous [record type](#record) is synthesized to store the captured reference or values. The lambda expression evaluates into a constructor call for this anonymous record type. The lambda implicitly defines a `call` [operator function](#operatorfunctions) overload for the anonymous record type, in which references to the enclosing scope are transformed into references to the lambda record's internal state.
 
     // Example
-    // XXX
+    curriedAdd(x) = y => x + y;
+
+    // desugars into something resembling:
+
+    record CurriedAddLambda[T] (x:T);
+
+    [T]
+    overload call(lambda:CurriedAddLambda[T], y) = lambda.x + y;
+
+    [T]
+    curriedAdd2(x:T) = CurriedAddLambda[T](x);
 
 #### <a name="multiplevalueexpressions"></a>Multiple value expressions
 
@@ -2623,17 +2864,20 @@ In either case, an anonymous [record type](#record) is synthesized to store the 
 Clay functions, and thereby most expression forms, can return multiple values. The comma operator concatenates values into a multiple value list.
 
     // Example
-    // XXX
+    twoThroughFour() = 2, 3, 4;
 
 However, for sanity's sake, expressions are normally constrained to single values, and it is an error to use a multiple-value expression in a single value context. (Zero values is considered "multiple values" by this rule.)
 
     // Example
-    // XXX
+    twoThroughFour() = 2, 3, 4;
+    // ERROR: multiple-value expression used in single-value context
+    oneThroughFive() = 1, twoThroughFour(), 5;
 
 A multiple value context may be introduced using the [unpack operator](#unpackoperator) `..`. The multiple values of the `..` expression are interpolated directly into the surrounding multiple value list.
 
     // Example
-    // XXX
+    twoThroughFour() = 2, 3, 4;
+    oneThroughFive() = 1, ..twoThroughFour(), 5;
 
 Certain syntactic forms provide implicit multiple value context:
 
@@ -2645,4 +2889,28 @@ Certain syntactic forms provide implicit multiple value context:
 In these contexts, a lone multiple value expression may be used without an explicit unpack. However, within a multiple value expression that concatenates multiple expressions, multiple-value subexpressions still require an explicit unpack. In other words, the `..` operator has higher precedence than the `,` operator, and implicit multiple value context only applies to the outermost precedence level.
 
     // Example
-    // XXX
+    oneTwoThree() = 1, 2, 3;
+    fourFiveSix() = 4, 5, 6;
+
+    foo() {
+        // no `..` needed
+        oneTwoThree();
+
+        var x, y, z = oneTwoThree();
+
+        x, y, z = fourFiveSix();
+
+        ..for (i in oneTwoThree())
+            println(i);
+
+        // `..` still needed
+
+        ..oneTwoThree(), ..fourFiveSix(); // pointless, but possible
+
+        var a, b, c, d = 0, ..oneTwoThree();
+
+        a, b, c, d = ..fourFiveSix(), 7;
+
+        ..for (i in ..oneTwoThree(), ..fourFiveSix())
+            println(i);
+    }
