@@ -2593,14 +2593,19 @@ The eval expression may be a parenthesized [multiple value expression](#multiple
     CallSuffix -> "(" ExprList ")" CallLambdaList?
     CallLambdaList -> ":" Lambda ("::" Lambda)*
 
-Functions are called by suffixing a [multiple value expression](#multiplevalueexpressions) in parentheses, which is evaluated to derive the function's arguments, to the function value, which is then evaluated. If the function value is a [symbol](#symbols), the argument types are matched to the symbol's [overloads](#overloadedfunctiondefinitions), and a call to the matching overload is generated.
+Functions are called by suffixing a [multiple value expression](#multiplevalueexpressions) in parentheses, which is evaluated to derive the function's arguments, to the function value, which is then evaluated. If the function value is a [symbol](#symbols), the argument types are matched to the symbol's [overloads](#overloadedfunctiondefinitions), and a call to the matching overload is generated. If the function value is a value of the primitive `CodePointer` type, the pointed-to function instance is invoked.
 
     // Example
     greet(subject) { println("hello, ", subject); }
 
-    main() { greet("world"); }
+    main() {
+        greet("world");
 
-If the function value is not a symbol, the call is transformed into an invocation of the `call` [operator function](#operatorfunctions), with the function value prepended to the argument list.
+        var greetp = CodePointer[[StringConstant], []](greet);
+        greetp("nurse!");
+    }
+
+If the function value is not a symbol or `CodePointer`, the call is transformed into an invocation of the `call` [operator function](#operatorfunctions), with the function value prepended to the argument list.
 
     // Example
     record MyCallable ();
