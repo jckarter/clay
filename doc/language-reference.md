@@ -20,7 +20,7 @@ BNF grammar rules are provided in `monospace` blocks beginning with `# Grammar`.
 
 #### <a name="sourceencoding"></a>Source encoding
 
-Clay source code is evaluated as a stream of ASCII text. (Anything other than ASCII in string and character literals is currently passed through as an opaque stream of bytes by the compiler. This will change to proper UTF-8 encoding in the future.)
+Clay source code is evaluated as a stream of ASCII text. (Anything other than ASCII in string and character literals is currently passed through as an opaque stream of bytes by the compiler.)
 
 #### <a name="whitespace"></a>Whitespace
 
@@ -181,6 +181,7 @@ Clay uses a whole-program compilation strategy, with some support for interfacin
 * Each module's namespace is populated by visiting its import declarations and [top-level definitions](#topleveldefinitions). Namespace initialization does not rely on any evaluation so that forward and circular references among global names may be made freely.
 * Program entry points are established:
     * If the entry point module contains a public symbol named `main`, it is passed to the `callMain` [operator function](#operatorfunctions), which is responsible for calling `main` with its command-line arguments. `callMain(static main)` thus becomes an entry point, ultimately corresponding to the C ABI `main` entry point.
+    * For a `main` entry point, the `setArgcArgv(argc:Int32, argv:Pointer[Pointer[Int8]])` operator function is also instantiated ; it is called with the `argc` and `argv` parameters from the C `main` function prior to `callMain`.
     * If the entry point module defines any [external functions](#externalfunctions), they are compiled as entry points.
 * Compilation proceeds from the established entry points. [Types](#typedefinitions), [functions](#functiondefinitions), and [global variable](#globalvariables) definitions are instantiated and compiled on-demand; if a definition is not used from any entry point, it is not visited after being parsed. (In a way, Clay can be thought of as a dynamic language in which operations normally emit LLVM as a side effect instead of performing computation directly.)
 
@@ -215,9 +216,47 @@ The compile-time evaluator follows the behavior of the runtime language for the 
 
     PatternSuffix -> "[" comma_list(Pattern) "]"
 
-In addition to freeform evaluation, Clay also uses a simple unification-based pattern matching mechanism when matching [overloads](#overloadedfunctiondefinitions) to [call sites](#callexpressions) and when matching instance extensions to open [variant types](#variants).
+In addition to evaluation, Clay also uses a simple unification-based pattern matching mechanism when matching [overloads](#overloadedfunctiondefinitions) to [call sites](#callexpressions) and when matching instance extensions to open [variant types](#variants). A pattern may consist of a [literal](#literalexpressions), a named [symbol](#symbols), or a free pattern variable, declared in a [pattern guard](#patternguards). Symbols may further be suffixed with a parameter pattern, which will be matched against an input symbol's parameters. The pattern is then matched structurally to its input value. The pattern match fails if the structure of the pattern does not match the structure of the input, or if a pattern variable is matched against multiple unequal values.
 
-XXX
+    // Example
+    define foo;
+    define bar;
+
+    define pattern;
+    [T]
+    overload pattern(static T) { println("a"); }
+    overload pattern(static bar) { println("b"); }
+
+    testPattern() {
+        pattern(foo); // prints a
+        pattern(bar); // prints b
+    }
+
+    define multiPattern;
+    [T, U]
+    overload multiPattern(static T, static U) { println("c"); }
+    [T, T]
+    overload multiPattern(static T, static T) { println("d"); }
+
+    testMultiPattern() {
+        multiPattern(foo, bar); // prints c
+        multiPattern(foo, foo); // prints d
+    }
+
+    record Baz[T] ();
+
+    define paramPattern;
+    [T]
+    overload paramPattern(static T) { println("x"); }
+    [T]
+    overload paramPattern(static Baz[T]) { println("y"); }
+    overload paramPattern(static Baz[bar]) { println("z"); }
+
+    testParamPattern() {
+        paramPattern(foo); // prints x
+        paramPattern(Baz[foo]); // prints y
+        paramPattern(Baz[bar]); // prints z
+    }
 
 ### <a name="modules"></a>Modules
 
@@ -229,17 +268,70 @@ Modules form the basis of encapsulation and namespacing in Clay. Every module ha
 
 A few modules have special significance:
 
-* The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [primitives reference](primitives-reference.md) documentation describes its contents in detail.
+* The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [Primitives Reference](primitives-reference.md) documentation describes its contents in detail.
 * The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration](#moduledeclaration), it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
 #### <a name="operatorfunctions"></a>Operator functions
 
-XXX
+Operator functions are symbols defined by library code that are used by the language to implement many syntactic forms. Operator functions must currently be publicly available for lookup through the `prelude` module; if the compiler cannot find an operator function after loading modules and populating namespaces, it will fail. The following operator functions are currently used:
 
-##### <a name="valuesemantics"></a>Value semantics
+* Functions used to desugar overloadable operators in [expressions](#expressions):
+    * `add`
+    * `call`
+    * `case?`
+    * `dereference`
+    * `divide`
+    * `equals?`
+    * `fieldRef`
+    * `greater?`
+    * `greaterEquals?`
+    * `index`
+    * `lesser?`
+    * `lesserEquals?`
+    * `minus`
+    * `multiply`
+    * `notEquals?`
+    * `plus`
+    * `remainder`
+    * `staticIndex`
+    * `subtract`
+    * `tupleLiteral`
+* Functions used to construct values from [character](#characterliterals) and [string literals](#stringliterals):
+    * `Char`
+    * `StringConstant`
+* Functions used to implicitly copy, destroy, and move values:
+    * `copy`
+    * `destroy`
+    * `move`
+* Functions used to implement [assignment statements](#assignmentstatements):
+    * `assign`
+    * `fieldRefAssign`
+    * `fieldRefUpdateAssign`
+    * `indexAssign`
+    * `indexUpdateAssign`
+    * `staticIndexAssign`
+    * `staticIndexUpdateAssign`
+    * `updateAssign`
+* Functions used to implement [for loops](#forloops):
+    * `hasNext?`
+    * `iterator`
+    * `next`
+* Functions used to construct the [main entry point](#compilationstrategy) for standalone programs:
+    * `callMain`
+    * `setArgcArgv`
+* Functions used to implement exception handling for [throw statements](#throwstatements) and [try blocks](#tryblocks):
+    * `continueException`
+    * `exceptionIs?`
+    * `exceptionAs`
+    * `exceptionAsAny`
+    * `throwValue`
+* Functions used as last-resort exception handlers for [global variable](#globalvariables) initialization and deletion, and for [external functions](#externalfunctions):
+    * `exceptionInFinalizer`
+    * `exceptionInInitializer`
+    * `unhandledExceptionInExternal`
 
-XXX
+(Some additional, wartier operator function interfaces are currently required by the compiler as well. See `compiler/src/libclaynames.hpp` in the compiler source if you're morbidly interested.)
 
 ### <a name="sourcefileorganization"></a>Source file organization
 
@@ -581,7 +673,7 @@ Visibility modifiers are not valid for definitions that modify existing symbols 
 
 #### <a name="symbols"></a>Symbols
 
-Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads](#overloads) and [pattern matching](#patternmatching). Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`.
+Top-level forms work by creating or modifying symbols, which are module-level global names representing types or functions. Symbol names are used in [overloads](#overloads) and [pattern matching](#patternmatching). Symbols may also be used as singleton types; in an expression, a `symbol` is the only value of the primitive type `Static[symbol]`, which has no runtime state.
 
     // Example
     define foo;
@@ -600,6 +692,30 @@ Top-level forms work by creating or modifying symbols, which are module-level gl
         println(Foo[Int32]);
         println(Foo[Float64]);
     }
+
+#### <a name="staticstrings"></a>Static strings
+
+Static strings (also referred to as identifiers in some places, though that causes confusion with [identifier tokens](#identifiersandkeywords)), are similar to symbols in that they have no runtime state and implicitly evaluate to singleton `Static[identifier]` types. Unlike symbols, static strings are not associated with any module. A static string is referenced by a [string literal](#stringliterals) prefixed with a `#` token; the same static string is identical everywhere. A static string that is a valid [identifier token](#identifiersandkeywords) may also be referenced as a bare identifier prefixed with a `#`.
+
+    // Example
+    // a.clay
+    foo() = #"foo";
+
+    // b.clay
+    foo() = #foo;
+
+    // main.clay
+    import a;
+    import b;
+
+    main() {
+        println(Type(#"foo")); // Static[#foo]
+        println(Type(#foo)); // Static[#foo]
+
+        println(a.foo() == b.foo() && a.foo == #foo && b.foo == #"foo"); // true
+    }
+
+Static strings are used as operands to the `fieldRef` [operator function](#operatorfunctions) in order to implement the `.` [field reference operator](#fieldreferenceoperator). The `__primitives__` module provides primitive operations for indexing, composing, and extracting substrings from static strings; see the [Primitives Reference](primitives-reference.md) for details.
 
 ### <a name="typedefinitions"></a>Type definitions
 
@@ -1332,7 +1448,7 @@ Compared to internal Clay functions, external functions have several limitations
 * External functions may return only zero or one values.
 * `<stdarg.h>`-compatible variadic C functions may be declared and called from Clay, but implementing C variadic functions is currently unsupported.
 * Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator](#operator) function.
-* Clay types with nontrivial [value semantics](#valuesemantics) may not be passed by value to external functions. They must be passed by pointer instead.
+* Clay types with nontrivial `copy` or `destroy` [operator function] overloads may not be passed by value to external functions. They must be passed by pointer instead.
 
 Although they define a top-level name, external function names are not true [symbols](#symbols). An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes](#[intypes), [..OutTypes](#outtypes)]` type representing the external's function pointer.
 
@@ -1450,7 +1566,7 @@ Global variables are instantiated on an as-needed basis. If a global variable is
 
     main() { }
 
-Global variable initializer expressions are evaluated in dependency order, and it is an error if there is a circular dependency. The order of initialization among independently-initialized global variables is undefined.
+Global variable initializer expressions are evaluated in dependency order, and it is an error if there is a circular dependency. The order of initialization among independently-initialized global variables is undefined. If an exception is thrown during global variable initialization, the `exceptionInInitializer` [operator function](#operatorfunctions) is called.
 
     // Example
     var a = c + 1; // runs second
@@ -1469,7 +1585,7 @@ Global variable initializer expressions are evaluated in dependency order, and i
     var x = getY();
     var y = x;
 
-Global variables are deleted in reverse initialization order using the `destroy` [operator function](#operatorfunction) after the program's `main` entry point has finished executing.
+Global variables are deleted in reverse initialization order using the `destroy` [operator function](#operatorfunction) after the program's `main` entry point has finished executing. If an exception is thrown during deletion, the `exceptionInFinalizer` operator function is called.
 
 Since global variable initializers are executed at runtime, global variables are currently poorly supported by compile-time evaluation. The pointer value and type of global variables may be safely derived at compile time; however, the initial value of a global variable at compile time is currently undefined, and though a global variable may be initialized and mutated during compile time, the compile-time value of the global is not propagated in any form to runtime.
 
