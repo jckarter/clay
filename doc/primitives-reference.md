@@ -345,7 +345,7 @@ These functions provide fundamental arithmetic operations for the primitive [`Bo
 
 `integerShiftLeft` returns the result of bitshifting `a` left by `b` bits. The result is undefined is `b` is either negative or greater than or equal to the bit size of `T`. Overflowed bits are discarded; the value is still defined. The function corresponds to the LLVM `shl` instruction.
 
-#### `integerShiftLeft`
+#### `integerShiftRight`
 
     [T | Integer?(T)]
     integerShiftRight(a:T, b:T) : T;
@@ -405,7 +405,7 @@ Conversion from floating-point to integer types is done corresponding to the LLV
 
 ### Checked integer operations
 
-These operations provide integer arithmetic operations checked for overflow. Unlike the previously-described numeric primitives, the results of these operations are always undefined if they overflow; however, an additional boolean value is also returned that will be true if the operation overflowed. For non-overflowing cases, these functions behave like their non-checked counterparts and return false as their second value.
+These operations provide integer arithmetic operations checked for overflow. Unlike the previously-described numeric primitives, the results of these operations are always undefined if they overflow; however, an additional boolean value is also returned that will be true if the operation overflowed. For non-overflowing cases, these functions behave like their non-checked counterparts and return false as their second value. Unlike normal symbols, they may not be overloaded.
 
     [T | Integer?(T)]
     integerAddChecked(a:T, b:T) : T, Bool;
@@ -425,5 +425,198 @@ These operations provide integer arithmetic operations checked for overflow. Unl
     integerConvertChecked(static T, a:U) : T, Bool;
 
 ### Pointer operations
+
+These operations create, dereference, compare, and convert pointers. Unlike normal symbols, they may not be overloaded.
+
+#### `addressOf`
+
+    [T]
+    addressOf(x:T) : Pointer[T];
+
+`addressOf` returns the address of `x`. It is equivalent to the prefix `&` operator.
+
+#### `pointerDereference`
+
+    [T]
+    pointerDereference(p:Pointer[T]) : ref T;
+
+`pointerDereference` returns a reference to the object pointed to by `p`. (It is effectively a no-op at the LLVM level, because references are themselves represented as pointers.)
+
+#### `pointerEquals?`
+
+    [T, U]
+    pointerEquals?(p:Pointer[T], q:Pointer[U]) : Bool;
+
+`pointerEquals?` returns true if `p` and `q` have the same address value. It corresponds to the LLVM `icmp eq` instruction.
+
+#### `pointerLesser?`
+
+    [T, U]
+    pointerLesser?(p:Pointer[T], q:Pointer[U]) : Bool;
+
+`pointerLesser?` returns true if the address of `p` is numerically less than that of `q`. It corresponds to the LLVM `icmp lt` instruction.
+
+#### `pointerOffset`
+
+    [T, I | Integer?(I)]
+    pointerOffset(p:Pointer[T], i:I) : Pointer[T];
+
+`pointerOffset` returns a new pointer value, offset from the address of `p` by `i * TypeSize(T)` bytes. It corresponds to the LLVM `getelementptr` instruction.
+
+#### `pointerToInt`
+
+    [T, I | Integer?(I)]
+    pointerToInt(static I, p:Pointer[T]) : I;
+
+`pointerToInt` converts the address value of `p` to an integer type `I`. If `I` is larger than a pointer, the address is zero-extended; if smaller, the address is truncated. The function corresponds to the LLVM `ptrtoint` instruction.
+
+#### `intToPointer`
+
+    [T, I | Integer?(I)]
+    intToPointer(static T, address:I) : Pointer[T];
+
+`pointerToInt` converts the integer value `address` into a pointer of type `T`. If `I` is larger than a pointer, its value is truncated; if smaller, the value is zero-extended. The function corresponds to the LLVM `inttoptr` instruction.
+
+#### `pointerCast`
+
+    [P1, P2 | Pointer?(P1) and Pointer?(P2)]
+    pointerCast(static P1, p:P2) : P1;
+
+`pointerCast` converts a pointer `p` to a value of another pointer type with the same address value. It corresponds to an LLVM `bitcast` instruction. In addition to casting data pointers (such as `Pointer[T]` to `Pointer[U]`), it may also cast among `CodePointer`, `CCodePointer`, etc. types, and cast data to code pointers and back.
+
+### Function pointer operations
+
+These operations create and invoke pointers to instances of Clay functions. Unlike normal symbols, they may not be overloaded.
+
+#### `makeCodePointer`
+
+    [F, ..T]
+    makeCodePointer(static F, static ..T) : CodePointer[[..T], [..CallType(F, ..T)]];
+
+`makeCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found, the overload is instantiated for the given input types, and a pointer to the function instance is returned as a [`CodePointer`]. The output types parameter of the `CodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, or no matching overload for `F` is found.
+
+`makeCodePointer` matches overloads as if all input types are lvalues. Taking `CodePointer`s to rvalue functions is currently unsupported.
+
+#### `makeCCodePointer`
+
+    [F, ..T]
+    makeCCodePointer(static F, static ..T) : CCodePointer[[..T], [..CallType(F, ..T)]];
+
+`makeCCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found and is determined to be C-compatible, the overload is instantiated for the given input types, along with a thunk function adapting the overload to the C calling convention. A pointer to the thunk is returned as a [`CCodePointer`]. The output types parameter of the `CCodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, no matching overload for `F` is found, or the matching overload is not C-compatible.
+
+The matched overload must meet the following criteria to be deemed C-compatible:
+
+* It must return zero or one values.
+* It must not have any arguments of types with nontrivial `copy`, `move`, or `destroy` operations.
+
+Like an external function, if a Clay exception escapes from the pointed-to overload, the `unhandledExceptionInExternal` operator function is called.
+
+#### `callCCodePointer`
+
+    define callCCodePointer;
+    [..In, ..Out]
+    overload callCCodePointer(f:CCodePointer[[..In], [..Out]], ..args:In) : ..Out;
+    [..In, ..Out]
+    overload callCCodePointer(f:VarArgsCCodePointer[[..In], [..Out]], ..args:In, ..varArgs) : ..Out;
+    [..In, ..Out]
+    overload callCCodePointer(f:LLVMCodePointer[[..In], [..Out]], ..args:In) : ..Out;
+    // and so on for StdCallCodePointer, etc.
+
+`callCCodePointer` invokes an external function, `CCodePointer`, or other external function pointer type.
+
+### Atomic memory operations
+
+The following functions provide uninterruptible, lock-free memory access and synchronization. Unlike normal symbols, they may not be overloaded. Atomic operations are currently not supported by the compile-time evaluator; an error will be raised if an atomic operation is evaluated at compile time.
+
+#### Memory order symbols
+
+    define OrderUnordered;
+    define OrderMonotonic;
+    define OrderAcquire;
+    define OrderRelease;
+    define OrderAcqRel;
+    define OrderSeqCst;
+
+A set of symbols are defined and used as parameters by every atomic operation to specify the memory ordering constraints for that operation. These correspond to LLVM's memory ordering constraints, which in turn are a superset of those specified by the C11 and C++11 memory models. See the [LLVM Atomic Instructions and Concurrency Guide](http://llvm.org/docs/Atomics.html) for details.
+
+* `OrderUnordered` corresponds to the LLVM `unordered` memory ordering.
+* `OrderMonotonic` corresponds to the LLVM `monotonic` and C++11 `memory_order_relaxed` orderings.
+* `OrderAcquire` corresponds to the LLVM `acquire` and C++11 `memory_order_acquire` orderings.
+* `OrderRelease` corresponds to the LLVM `release` and C++11 `memory_order_release` orderings.
+* `OrderAcqRel` corresponds to the LLVM `acq_rel` and C++11 `memory_order_acq_rel` orderings.
+* `OrderSeqCst` corresponds to the LLVM `seq_cst` and C++11 `memory_order_seq_cst` orderings.
+
+#### `atomicLoad`
+
+    [Order, T | Order?(Order)]
+    atomicLoad(static Order, p:Pointer[T]) : T;
+
+`atomicLoad` performs an atomic load of the value pointed to by `p`. If atomic loads of type `T` are not supported by the target platform, an error is raised. The value is bitwise-copied. The load is subject to the memory ordering constraints specified by `Order`. The function corresponds to the LLVM `load atomic` instruction.
+
+#### `atomicStore`
+
+    [Order, T | Order?(Order)]
+    atomicStore(static Order, p:Pointer[T], value:T) :;
+
+`atomicStore` performs an atomic store of `T` to the address of `p`. If atomic stores of type `T` are not supported by the target platform, an error is raised. `value` is bitwise-copied. The store is subject to the memory ordering constraints specified by `Order`. The function corresponds to the LLVM `store atomic` instruction.
+
+#### `atomicRMW`
+
+    define RMWXchg;
+    define RMWAdd;
+    define RMWSubtract;
+    define RMWAnd;
+    define RMWNAnd;
+    define RMWOr;
+    define RMWXor;
+    define RMWMin;
+    define RMWMax;
+    define RMWUMin;
+    define RMWUMax;
+
+    [Order, Op, T | Order?(Order) and RMWOp?(Op)]
+    atomicRMW(static Order, static Op, p:Pointer[T], operand:T) : T;
+
+`atomicRMW` performs an atomic read-modify-write update operation to the value pointed to by `p`. The value pointed to by `p` prior to the operation is returned. The `Op` parameter determines the operation used to update the value pointed to by `p`:
+
+* `RMWXchg` causes `operand` to be written to `p^`. The value is bitwise copied.
+* `RMWAdd` causes `operand` to be added to `p^`. `T` must be an integer type.
+* `RMWSubtract` causes `operand` to be subtracted from `p^`. `T` must be an integer type.
+* `RMWAnd` causes `operand` to be bitwise-anded with `p^`.
+* `RMWNAnd` causes `operand` to be bitwise-anded with `p^`, and the bitwise-not of the result is written to `p`.
+* `RMWOr` causes `operand` to be bitwise-ored with `p^`.
+* `RMWXor` causes `operand` to be bitwise-xored with `p^`.
+* `RMWMin` causes the signed minimum of `operand` and `p^` to be written to `p`.
+* `RMWMax` causes the signed maximum of `operand` and `p^` to be written to `p`.
+* `RMWUMin` causes the unsigned minimum of `operand` and `p^` to be written to `p`.
+* `RMWUMax` causes the unsigned maximum of `operand` and `p^` to be written to `p`.
+
+The update is subject to the memory ordering constraints specified by `Order`. The function corresponds to the LLVM `atomicrmw` instruction. An error is raised if the target platform does not atomically support the specified operation for `T`.
+
+#### `atomicCompareExchange`
+
+    [Order, T | Order?(Order)]
+    atomicCompareExchange(static Order, p:Pointer[T], old:T, new:T) : T;
+
+`atomicCompareExchange` performs an atomic compare-and-swap update of the value pointed to by `p`. If `p^` is bitwise equal to `old`, `new` is bitwise-written to `p`, and `old` is returned; otherwise, `p^` is unchanged, and its current value is returned. An error is raised if the target platform does not support atomic compare-and-swap for type `T`. The operation is subject to the memory ordering constraints specified by `Order`. The function corresponds to the LLVM `cmpxchg` instruction.
+
+#### `atomicFence`
+
+    [Order | Order?(Order)]
+    atomicFence(static Order);
+
+`atomicFence` introduces a happens-before edge with `OrderAcquire`, `OrderRelease`, `OrderAcqRel`, or `OrderSeqCst` semantics without an associated memory operation. It corresponds to an LLVM `fence` instruction.
+
+### Exception handling
+
+The following functions support the exception handling implementation. Unlike normal symbols, they may not be overloaded.
+
+#### `activeException`
+
+    activeException() : Pointer[Int8];
+
+`activeException()` returns a pointer to the exception that is currently instigating unwinding. It is only valid during unwinding itself, specifically not during catch clauses. This primitive is an implementation detail and should not normally be used.
+
+### Symbol and function introspection
 
 
