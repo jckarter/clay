@@ -2220,7 +2220,7 @@ Branch statements provide nonlocal control flow within a function.
 
 #### <a name="exceptionhandlingstatements"></a>Exception handling statements
 
-Clay optionally supports exception handling. The `ExceptionsEnabled?` function from the `__primitives__` module will return true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled for runtime, the compile-time evaluator does not currently support exception handling; the compile-time evaluator always behaves as if exceptions are disabled.
+Clay optionally supports exception handling. The `ExceptionsEnabled?` global alias from the `__primitives__` module will evaluate to true when exceptions are enabled for the current compilation unit. Regardless of whether exception handling is enabled at runtime, the compile-time evaluator does not currently support exception handling; the compile-time evaluator always behaves as if exceptions are disabled.
 
 ##### <a name="throwstatements"></a>Throw statements
 
