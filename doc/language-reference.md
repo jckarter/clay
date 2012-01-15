@@ -2612,7 +2612,7 @@ If the function value is not a symbol, the call is transformed into an invocatio
         println(f(1, 2)); // really call(f, 1, 2)
     }
 
-Extra syntactic sugar is provided for higher-order functions that take [lambda expressions](#lambdaexpressions) as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, separated by `::` tokens. The lambdas are appended in order to the end of the argument list.
+Extra syntactic sugar is provided for higher-order functions that take [lambda expressions](#lambdaexpressions) as arguments. One or more lambda literals may be expressed after the main argument list and a `:` token, multiple lambdas delimited by `::` tokens. The lambdas are appended in order to the end of the argument list.
 
     // Example
     ifZero(x, andThen, orElse) {
