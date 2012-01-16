@@ -114,7 +114,7 @@ typedef _Complex long double clay_cldouble;
 #endif
 
 #define CLAY_LANGUAGE_VERSION "0.1"
-#define CLAY_COMPILER_VERSION "0.1git"
+#define CLAY_COMPILER_VERSION "0.1.0"
 
 namespace clay {
 
