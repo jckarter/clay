@@ -86,7 +86,9 @@ This document describes the contents of the `__primitives__` module synthesized 
     * [`Type?`]
     * [`CallDefined?`]
     * [`ModuleName`]
+    * [`IdentifierModuleName`]
     * [`StaticName`]
+    * [`IdentifierStaticName`]
     * [`staticFieldRef`]
 
 * [Static string manipulation]
@@ -94,8 +96,6 @@ This document describes the contents of the `__primitives__` module synthesized 
     * [`IdentifierSize`]
     * [`IdentifierConcat`]
     * [`IdentifierSlice`]
-    * [`IdentifierModuleName`]
-    * [`IdentifierStaticName`]
 
 * [Type introspection]
     * [`TypeSize`]
@@ -108,8 +108,8 @@ This document describes the contents of the `__primitives__` module synthesized 
     * [`RecordFieldName`]
     * [`RecordWithField?`]
     * [`Variant?`]
-    * [`VariantMemberIndex`]
     * [`VariantMemberCount`]
+    * [`VariantMemberIndex`]
     * [`Enum?`]
     * [`EnumMemberCount`]
     * [`EnumMemberName`]
@@ -139,6 +139,8 @@ The `Bool` type represents boolean values. Values of the type may only have the 
 #### Integer types
 
 Signed and unsigned integer types are provided for sizes of 8, 16, 32, 64, and 128 bits. The signed types are named `Int8`, `Int16`, etc. and the unsigned types are named `UInt8` etc. Both sets of types correspond to the LLVM `i8`, `i16`, etc. types. (LLVM does not differentiate signed from unsigned types.) They also correspond to the C99 `<stdint.h>` `int8_t` etc. and `uint8_t` etc. typedefs.
+
+The compiler internally earmarks the unsigned integer type whose size corresponds to the size of pointer types, and uses that type as the return type for primitives that deal with indexing data structures. This document refers to that type as `SizeT`, although this alias name is not actually available from the `__primitives__` module.
 
 #### Floating-point types
 
@@ -619,4 +621,259 @@ The following functions support the exception handling implementation. Unlike no
 
 ### Symbol and function introspection
 
+The following functions query properties of symbols. Unlike normal symbols, they may not be overloaded.
 
+#### `Type?`
+
+    [T]
+    Type?(static T) : Bool;
+
+`Type?` returns true if the compile-time value `T` is a symbol, and that symbol names a type. If `T` is not a symbol or is a non-type symbol, false is returned.
+
+    // Example
+    define foo;
+    record bar ();
+
+    main() {
+        println(Type?(Type?)); // false
+        println(Type?(Int32)); // true
+
+        println(Type?(foo)); // false
+        println(Type?(bar)); // true
+
+        println(Type?(static 3)); // false
+    }
+
+#### `CallDefined?`
+
+    [F, ..T]
+    CallDefined?(static F, static ..T) : Bool;
+
+`CallDefined?` attempts to find an overload of the symbol `F` matching the input types `..T`. If successful, it returns true, otherwise, it returns false.
+
+#### `ModuleName`
+
+    [S]
+    ModuleName(static S) : StringConstant;
+
+`ModuleName` generates a string literal corresponding to the fully-qualified module name of the module containing the symbol `S`. Like a true string literal, it is evaluated into a value using the `StringConstant` operator function. If `S` is itself a module symbol, the module's own name is returned. If `S` is not a symbol, an error is raised.
+
+    // Example
+    import foo;
+    import foo.bar as bar;
+
+    in baz;
+
+    main() {
+        println(ModuleName(main)); // would print "baz"
+        println(ModuleName(foo.a)); // would print "foo"
+        println(ModuleName(bar.a)); // would print "foo.bar"
+        println(ModuleName(bar)); // would print "foo.bar"
+    }
+
+#### `IdentifierModuleName`
+
+    [S]
+    IdentifierModuleName(static S);
+
+`IdentifierModuleName` is like `ModuleName`, but the module's name is returned as a static string rather than as a string literal.
+
+#### `StaticName`
+
+    [x]
+    StaticName(static x) : StringConstant;
+
+`StaticName` generates a string literal corresponding to the name of the static value `x`. The name string is generated as follows:
+
+* If `x` is a symbol, the symbol's name (not including any module qualification, but including its parameters) is used.
+* If `x` is a static string, its string value is used.
+* If `x` is a numeric value, it is converted into a string in decimal notation.
+* If `x` is a tuple, it is converted into a comma-delimited string surrounded in square brackets (`[]`).
+
+Like a true string literal, the generated string is evaluated into a value using the `StringConstant` operator function.
+
+#### `IdentifierStaticName`
+
+    [x]
+    IdentifierStaticName(static x);
+
+`IdentifierStaticName` is like `StaticName`, except that the static object's name is returned as a static string rather than as a string literal.
+
+#### `staticFieldRef`
+
+    [M, name | Identifier?(name)]
+    staticFieldRef(static M, static name);
+
+`staticFieldRef` looks up a public global value in the module `M`. If `name` is found in `M`, it is evaluated as if referenced directly by name. If `name` is not a public member of `M`, an error is raised.
+
+### Static string manipulation
+
+The following functions provide operations on static strings. Unlike normal symbols, they may not be overloaded.
+
+#### `Identifier?`
+
+    [S]
+    Identifier?(static S) : Bool;
+
+`Identifier?` returns true if `S` is a static string, false otherwise.
+
+#### `IdentifierSize`
+
+    [S | Identifier?(S)]
+    IdentifierSize(static S) : SizeT;
+
+`IdentifierSize` returns the number of characters in the static string `S`.
+
+#### `IdentifierConcat`
+
+    [..SS | allValues?(Identifier?, ..SS)]
+    IdentifierConcat(static ..SS);
+
+`IdentifierConcat` returns the static string consisting of the concatenation of all of its parameters.
+
+#### `IdentifierSlice`
+
+    [S, n, m |
+        Identifier?(S)
+        and n >= 0 and n < IdentifierSize(n)
+        and m >= 0 and m < IdentifierSize(m)
+    ]
+    IdentifierSlice(static S, static n, static m);
+
+`IdentifierSlice` returns the static string consisting of the substring of `S` from character `n` up to but not including character `m`.
+
+### Type introspection
+
+The following functions provide information about types. Unlike normal symbols, they may not be overloaded.
+
+#### `TypeSize`
+
+    [T | Type?(T)]
+    TypeSize(static T) : SizeT;
+
+`TypeSize` returns the size in bytes of a value of type `T`.
+
+#### `TypeAlignment`
+
+    [T | Type?(T)]
+    TypeAlignment(static T) : SizeT;
+
+`TypeAlignment` returns the natural alignment in bytes of a value of type `T`.
+
+#### `CCodePointer?`
+
+    [T]
+    CCodePointer?(static T) : Bool;
+
+`CCodePointer?` returns true if `T` is a symbol and an instance of one of the [external code pointer types], such as `CCodePointer`, `LLVMCodePointer`, etc.
+
+#### `TupleElementCount`
+
+    [..T]
+    TupleElementCount(static Tuple[..T]) : SizeT;
+
+`TupleElementCount` returns the number of elements inside values of the tuple type `Tuple[..T]`.
+
+#### `UnionMemberCount`
+
+    [..T]
+    UnionMemberCount(static Union[..T]) : SizeT;
+
+`UnionMemberCount` returns the number of member types of the union type `Union[..T]`.
+
+#### `Record?`
+
+    [R]
+    Record?(static R) : Bool;
+
+`Record?` returns true if `R` is a symbol that names a record type, false if `R` is not a symbol or is a non-record-type symbol.
+
+#### `RecordFieldCount`
+
+    [R | Record?(R)]
+    RecordFieldCount(static R) : SizeT;
+
+`RecordFieldCount` returns the number of fields inside values of the record type `R`.
+
+#### `RecordFieldName`
+
+    [R, n | Record?(R) and n >= 0 and n < RecordFieldCount(R)]
+    RecordFieldName(static R, static n);
+
+`RecordFieldName` returns the name of the `n`th field of the record type `R` as a static string. `n` is zero-based, and an error is raised if `R` is not a record type or if `n` is less than zero or greater than or equal to the number of fields in `R`.
+
+#### `RecordWithField?`
+
+    [R, name | Record?(R) and Identifier?(name)]
+    RecordWithField?(static R, static name) : Bool;
+
+`RecordWithField?` returns true if `R` is a record type with a field named by the static string `name`, false otherwise.
+
+#### `Variant?`
+
+    [V]
+    Variant?(static V) : Bool;
+
+`Variant?` returns true if `V` is a symbol that names a variant type, false if `V` is not a symbol or is a non-variant-type symbol.
+
+#### `VariantMemberCount`
+
+    [V | Variant?(V)]
+    VariantMemberCount(static V) : SizeT;
+
+`VariantMemberCount` returns the number of instance types of the variant type `T`. An error is raised if `V` is not a variant type.
+
+#### `VariantMemberIndex`
+
+    [V | Variant?(V) and n >= 0 and n < VariantMemberCount(V)]
+    VariantMemberIndex(static V, static n);
+
+`VariantMemberIndex` returns the `n`th instance type of the variant type `V`. The correspondence of instance types to indices is unspecified, but calling `VariantMemberIndex` for every integer value from zero up to but not including `VariantMemberCount(V)` will return each instance type once. `n` is zero-based, and an error is raised if `V` is not a variant type, or if `n` is negative or greater than or equal to the number of instance types of `V`.
+
+#### `Enum?`
+
+    [E]
+    Enum?(static E) : Bool;
+
+`Enum?` returns true if `E` is a symbol that names an enum type, false if `E` is not a symbol or is a non-enum-type symbol.
+
+#### `EnumMemberCount`
+
+    [E | Enum?(E)]
+    EnumMemberCount(static E) : SizeT;
+
+`EnumMemberCount` returns the number of symbolic values defined for the enum type `E`. An error is raised if `E` is not an enum type.
+
+#### `EnumMemberName`
+
+    [E | Enum?(E) and n >= 0 and n < EnumMemberCount(E)]
+    EnumMemberName(static E, static n) : StringConstant;
+
+`EnumMemberName` generates a string literal corresponding to the symbolic name of the `n`th ordinal value of the `E` enum type. Like a true string literal, the generated string is evaluated into a value using the `StringConstant` operator function. `n` is zero-based, and an error is raised if `E` is not an enum type or if `n` is negative or greater than or equal to the number of values of `E`.
+
+### Compiler flags
+
+The following functions query settings for the current compilation unit. Unlike normal symbols, they may not be overloaded.
+
+#### `ExceptionsEnabled?`
+
+    // If exceptions are enabled
+    alias ExceptionsEnabled? = true;
+    // If exceptions are disabled
+    alias ExceptionsEnabled? = false;
+
+`ExceptionsEnabled?` is a global alias that is set to true if exceptions are enabled.
+
+#### `Flag?`
+
+    [name | Identifier?(name)]
+    Flag?(static name) : Bool;
+
+`Flag?` returns true if the compiler was invoked with a `-D` flag variable matching the static string `name`.
+
+#### `Flag`
+
+    [name | Identifier?(name)]
+    Flag(static name);
+
+`Flag` returns the value associated with the compiler `-Dname=value` flag for the static string `name` as a static string. If no `-D` flag was provided corresponding to `name`, or a `-Dname` flag was provided without an associated value, the empty static string `#""` is returned.
