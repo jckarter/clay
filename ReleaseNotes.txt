@@ -1,0 +1,34 @@
+Clay 0.1.0
+==========
+
+Platform support
+----------------
+Linux and MacOS X hosts and targets should work out of the box. FreeBSD mostly
+works, but some tests fail due to minor platform differences Clay doesn't
+account for. Win32 targeting the MSVC toolchain mostly works, but has some
+problems due to LLVM 3.0 bugs on the platform. Win64, Mingw, and Cygwin targets
+are untested.
+
+Known issues
+------------
+#17 - emacs clay-mode does not properly indent braces.
+#36 - A single static value can still match a tuple pattern.
+#60 - Assertions and unhandled exception errors do not support backtrace display
+    on Windows or FreeBSD.
+#117 - The compiler does not prevent unsupported types, such as Int128 on 32-bit
+    platforms or Float80 on non-x86 platforms, from being instantiated, leaving
+    LLVM to fail hard when these types are used.
+#123 - Parse time is excessively slow on Windows XP due to bad memory allocation
+    behavior.
+#144 - LLVM does not 16-byte-align the stack for FreeBSD targets, causing
+    external functions that pass vector arguments by value to crash.
+#145 - FreeBSD's printf does not format "%La" arguments in the manner expected
+    by some Clay code.
+#146 - The `io.sockets` library fails to compile on FreeBSD due to a system
+    type mismatch.
+#153, #178 - The `math` module is still a work in progress and largely
+    untested.
+#156 - The compile-time evaluator is not endian-agnostic when cross building.
+#165, #166 - LLVM bugs cause overflow-checking multiplication and unsigned-to-
+    floating-point conversion to fail on Windows.
+
