@@ -2819,7 +2819,7 @@ These operators are left-associative among each other.
     NotExpr -> "not" EqualExpr
              | EqualExpr
 
-The prefix `not` operator negates its operand, which must evaluate to a value of the primitive type `Bool`. `not true` evaluates to `false`, and `not false` evaluates to `true`. The `not` operator may not be overloaded. The `__primitives__` module contains a `boolNot` function that is equivalent.
+The prefix `not` operator complements its operand, which must evaluate to a value of the primitive type `Bool`. `not true` evaluates to `false`, and `not false` evaluates to `true`. The `not` operator may not be overloaded. The `__primitives__` module contains a `boolNot` function that is equivalent.
 
 #### <a name="booleanand"></a>Boolean and
 
