@@ -138,7 +138,7 @@ The `Bool` type represents boolean values. Values of the type may only have the 
 
 #### <a name="integertypes"></a>Integer types
 
-Signed and unsigned integer types are provided for sizes of 8, 16, 32, 64, and 128 bits. The signed types are named `Int8`, `Int16`, etc. and the unsigned types are named `UInt8` etc. Both sets of types correspond to the LLVM `i8`, `i16`, etc. types. (LLVM does not differentiate signed from unsigned types.) They also correspond to the C99 `<stdint.h>` `int8_t` etc. and `uint8_t` etc. typedefs.
+Signed and unsigned integer types are provided for sizes of 8, 16, 32, 64, and 128 bits. The signed types are named `Int8`, `Int16`, etc. and the unsigned types are named `UInt8` etc. Both sets of types correspond to the LLVM `i8`, `i16`, etc. types. (LLVM does not differentiate signed from unsigned types.) They also correspond to the C99 `<stdint.h>` typedefs `int8_t` etc. and `uint8_t` etc.
 
 The compiler internally earmarks the unsigned integer type whose size corresponds to the size of pointer types, and uses that type as the return type for primitives that deal with indexing data structures. This document refers to that type as `SizeT`, although this alias name is not actually available from the `__primitives__` module.
 
@@ -175,11 +175,11 @@ Imaginary and complex types are provided for each floating-point type. `Imag32` 
 
 #### <a name="array"></a>Array
 
-`Array[T,n]` is the type of a fixed-size, locally-allocated array, containing `n` elements of size `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `[n x %T]` type, or the C `T [n]` type; however, unlike C arrays, Clay arrays never implicitly devolve to pointers. The [`arrayRef`](#arrayref) and [`arrayElements`](#arrayelements) primitive functions provide access to array elements.
+`Array[T,n]` is the type of a fixed-size, locally-allocated array, containing `n` elements of type `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `[n x %T]` type, or the C `T [n]` type; however, unlike C arrays, Clay arrays never implicitly devolve to pointers. The [`arrayRef`](#arrayref) and [`arrayElements`](#arrayelements) primitive functions provide access to array elements.
 
 #### <a name="vec"></a>Vec
 
-`Vec[T,n]` is the type of a SIMD vector value, containing `n` elements of size `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `<n x %T>` type, or the GCC extension `T __attribute__((vector_size(n*sizeof(T))))` type.
+`Vec[T,n]` is the type of a SIMD vector value, containing `n` elements of type `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `<n x %T>` type, or the GCC extension `T __attribute__((vector_size(n*sizeof(T))))` type.
 
 No primitives are currently provided for manipulating `Vec` types; they are primarily intended to be used directly with LLVM's vector intrinsics.
 
@@ -286,14 +286,14 @@ These functions provide fundamental arithmetic operations for the primitive [`Bo
     [T | Numeric?(T)]
     numericEquals?(a:T, b:T) : Bool;
 
-`numericEquals?` returns `true` if `a` and `b` are numerically equal, `false` otherwise. For integer types, the function corresponds to an LLVM `icmp eq` instruction, and for floating-point types, the function corresponds to an LLVM `fcmp ueq` instruction. Floating-point comparison follows IEEE 754 unordered comparison rules; `+0.0` is equal to `-0.0` and comparisons involving NaN are always false and non-signaling.
+`numericEquals?` returns `true` if `a` and `b` are numerically equal, and `false` otherwise. For integer types, the function corresponds to an LLVM `icmp eq` instruction, and for floating-point types, the function corresponds to an LLVM `fcmp ueq` instruction. Floating-point comparison follows IEEE 754 unordered comparison rules; `+0.0` is equal to `-0.0` and comparisons involving NaN are always false and non-signaling.
 
 #### <a name="numericlesser"></a>numericLesser?
 
     [T | Numeric?(T)]
     numericLesser?(a:T, b:T) : Bool;
 
-`numericLesser?` returns `true` if `a` is numerically less than `b` are numerically equal, `false` otherwise. For signed integer types, the function corresponds to an LLVM `icmp slt` instruction; for unsigned types, `icmp ult`; and for floating-point types, `fcmp ult`. Floating point comparison follows IEEE 754 unordered comparison rules; `-0.0` is not less than `+0.0` and comparisons involving NaN are always false and non-signaling.
+`numericLesser?` returns `true` if `a` is numerically less than `b`, and `false` otherwise. For signed integer types, the function corresponds to an LLVM `icmp slt` instruction; for unsigned types, `icmp ult`; and for floating-point types, `fcmp ult`. Floating point comparison follows IEEE 754 unordered comparison rules; `-0.0` is not less than `+0.0` and comparisons involving NaN are always false and non-signaling.
 
 (`__primitives__` does not currently provide the full set of floating-point comparison operators. The Clay library currently implements floating-point ordered and unordered comparison using inline LLVM functions. For floating-point, these primitives are used only for compile-time evaluation, which does not support inline LLVM.)
 
@@ -387,7 +387,7 @@ These functions provide fundamental arithmetic operations for the primitive [`Bo
     [T, U | Numeric?(T) and Numeric?(U)]
     numericConvert(static T, a:U) : T;
 
-`numericConvert` returns `a` converted to type `T` while preserving its numeric value. If `T` and `U` are the same type, the value is simply copied.
+`numericConvert` returns `a` converted to type `T` while preserving its numeric value. If `T` and `U` are the same type, the value is simply copied. How it works depends on the output and input types:
 
 ##### <a name="integertointegerconversion"></a>Integer to integer conversion
 
@@ -433,9 +433,9 @@ These operations create, dereference, compare, and convert pointers. Unlike norm
 #### <a name="addressof"></a>addressOf
 
     [T]
-    addressOf(x:T) : Pointer[T];
+    addressOf(ref x:T) : Pointer[T];
 
-`addressOf` returns the address of `x`. It is equivalent to the prefix `&` operator.
+`addressOf` returns the address of `x`, which must be an lvalue. It is equivalent to the prefix `&` operator.
 
 #### <a name="pointerdereference"></a>pointerDereference
 
@@ -477,7 +477,7 @@ These operations create, dereference, compare, and convert pointers. Unlike norm
     [T, I | Integer?(I)]
     intToPointer(static T, address:I) : Pointer[T];
 
-`pointerToInt` converts the integer value `address` into a pointer of type `T`. If `I` is larger than a pointer, its value is truncated; if smaller, the value is zero-extended. The function corresponds to the LLVM `inttoptr` instruction.
+`intToPointer` converts the integer value `address` into a pointer of type `T`. If `I` is larger than a pointer, its value is truncated; if smaller, the value is zero-extended. The function corresponds to the LLVM `inttoptr` instruction.
 
 #### <a name="pointercast"></a>pointerCast
 
@@ -539,7 +539,7 @@ The following functions provide uninterruptible, lock-free memory access and syn
     define OrderAcqRel;
     define OrderSeqCst;
 
-A set of symbols are defined and used as parameters by every atomic operation to specify the memory ordering constraints for that operation. These correspond to LLVM's memory ordering constraints, which in turn are a superset of those specified by the C11 and C++11 memory models. See the [LLVM Atomic Instructions and Concurrency Guide](http://llvm.org/docs/Atomics.html) for details.
+These symbols are used as parameters by every atomic operation to specify the memory ordering constraints for that operation. These correspond to LLVM's memory ordering constraints, which in turn are a superset of those specified by the C11 and C++11 memory model. See the [LLVM Atomic Instructions and Concurrency Guide](http://llvm.org/docs/Atomics.html) for details.
 
 * `OrderUnordered` corresponds to the LLVM `unordered` memory ordering.
 * `OrderMonotonic` corresponds to the LLVM `monotonic` and C++11 `memory_order_relaxed` orderings.
@@ -579,19 +579,19 @@ A set of symbols are defined and used as parameters by every atomic operation to
     [Order, Op, T | Order?(Order) and RMWOp?(Op)]
     atomicRMW(static Order, static Op, p:Pointer[T], operand:T) : T;
 
-`atomicRMW` performs an atomic read-modify-write update operation to the value pointed to by `p`. The value pointed to by `p` prior to the operation is returned. The `Op` parameter determines the operation used to update the value pointed to by `p`:
+`atomicRMW` applies an atomic read-modify-write update operation to the value pointed to by `p`. The value pointed to by `p` prior to the operation is returned. The `Op` parameter determines the operation used to update `p^`:
 
 * `RMWXchg` causes `operand` to be written to `p^`. The value is bitwise copied.
 * `RMWAdd` causes `operand` to be added to `p^`. `T` must be an integer type.
 * `RMWSubtract` causes `operand` to be subtracted from `p^`. `T` must be an integer type.
+* `RMWMin` causes the signed minimum of `operand` and `p^` to be written to `p`. `T` must be an integer type.
+* `RMWMax` causes the signed maximum of `operand` and `p^` to be written to `p`. `T` must be an integer type.
+* `RMWUMin` causes the unsigned minimum of `operand` and `p^` to be written to `p`. `T` must be an integer type.
+* `RMWUMax` causes the unsigned maximum of `operand` and `p^` to be written to `p`. `T` must be an integer type.
 * `RMWAnd` causes `operand` to be bitwise-anded with `p^`.
 * `RMWNAnd` causes `operand` to be bitwise-anded with `p^`, and the bitwise-not of the result is written to `p`.
 * `RMWOr` causes `operand` to be bitwise-ored with `p^`.
 * `RMWXor` causes `operand` to be bitwise-xored with `p^`.
-* `RMWMin` causes the signed minimum of `operand` and `p^` to be written to `p`.
-* `RMWMax` causes the signed maximum of `operand` and `p^` to be written to `p`.
-* `RMWUMin` causes the unsigned minimum of `operand` and `p^` to be written to `p`.
-* `RMWUMax` causes the unsigned maximum of `operand` and `p^` to be written to `p`.
 
 The update is subject to the memory ordering constraints specified by `Order`. The function corresponds to the LLVM `atomicrmw` instruction. An error is raised if the target platform does not atomically support the specified operation for `T`.
 
@@ -649,7 +649,7 @@ The following functions query properties of symbols. Unlike normal symbols, they
     [F, ..T]
     CallDefined?(static F, static ..T) : Bool;
 
-`CallDefined?` attempts to find an overload of the symbol `F` matching the input types `..T`. If successful, it returns true, otherwise, it returns false.
+`CallDefined?` attempts to find an overload of the symbol `F` matching the input types `..T`. If successful, it returns true; otherwise, it returns false. To find an overload for calling a non-symbol type, `CallDefined?(call, FunctionType, ..T)` can be used.
 
 #### <a name="modulename"></a>ModuleName
 
@@ -676,7 +676,7 @@ The following functions query properties of symbols. Unlike normal symbols, they
     [S]
     IdentifierModuleName(static S);
 
-`IdentifierModuleName` is like `ModuleName`, but the module's name is returned as a static string rather than as a string literal.
+`IdentifierModuleName` is like `ModuleName`, except that the module's name is returned as a static string rather than as a string literal.
 
 #### <a name="staticname"></a>StaticName
 
@@ -685,7 +685,7 @@ The following functions query properties of symbols. Unlike normal symbols, they
 
 `StaticName` generates a string literal corresponding to the name of the static value `x`. The name string is generated as follows:
 
-* If `x` is a symbol, the symbol's name (not including any module qualification, but including its parameters) is used.
+* If `x` is a symbol, the symbol's name (not including its module name, but including its parameters if any) is used.
 * If `x` is a static string, its string value is used.
 * If `x` is a numeric value, it is converted into a string in decimal notation.
 * If `x` is a tuple, it is converted into a comma-delimited string surrounded in square brackets (`[]`).
@@ -715,7 +715,7 @@ The following functions provide operations on static strings. Unlike normal symb
     [S]
     Identifier?(static S) : Bool;
 
-`Identifier?` returns true if `S` is a static string, false otherwise.
+`Identifier?` returns true if `S` is a static string, or false otherwise.
 
 #### <a name="identifiersize"></a>IdentifierSize
 
@@ -765,7 +765,7 @@ The following functions provide information about types. Unlike normal symbols, 
     [T]
     CCodePointer?(static T) : Bool;
 
-`CCodePointer?` returns true if `T` is a symbol and an instance of one of the [external code pointer types](#externalcodepointertypes), such as `CCodePointer`, `LLVMCodePointer`, etc.
+`CCodePointer?` returns true if `T` is a symbol and is an instance of one of the [external code pointer types](#externalcodepointertypes), such as `CCodePointer`, `LLVMCodePointer`, etc.
 
 #### <a name="tupleelementcount"></a>TupleElementCount
 
@@ -786,7 +786,7 @@ The following functions provide information about types. Unlike normal symbols, 
     [R]
     Record?(static R) : Bool;
 
-`Record?` returns true if `R` is a symbol that names a record type, false if `R` is not a symbol or is a non-record-type symbol.
+`Record?` returns true if `R` is a symbol that names a record type, or false if `R` is not a symbol or is a non-record-type symbol.
 
 #### <a name="recordfieldcount"></a>RecordFieldCount
 
@@ -807,14 +807,14 @@ The following functions provide information about types. Unlike normal symbols, 
     [R, name | Record?(R) and Identifier?(name)]
     RecordWithField?(static R, static name) : Bool;
 
-`RecordWithField?` returns true if `R` is a record type with a field named by the static string `name`, false otherwise.
+`RecordWithField?` returns true if `R` is a record type with a field named by the static string `name`, or false otherwise.
 
 #### <a name="variant"></a>Variant?
 
     [V]
     Variant?(static V) : Bool;
 
-`Variant?` returns true if `V` is a symbol that names a variant type, false if `V` is not a symbol or is a non-variant-type symbol.
+`Variant?` returns true if `V` is a symbol that names a variant type, or false if `V` is not a symbol or is a non-variant-type symbol.
 
 #### <a name="variantmembercount"></a>VariantMemberCount
 
@@ -835,7 +835,7 @@ The following functions provide information about types. Unlike normal symbols, 
     [E]
     Enum?(static E) : Bool;
 
-`Enum?` returns true if `E` is a symbol that names an enum type, false if `E` is not a symbol or is a non-enum-type symbol.
+`Enum?` returns true if `E` is a symbol that names an enum type, or false if `E` is not a symbol or is a non-enum-type symbol.
 
 #### <a name="enummembercount"></a>EnumMemberCount
 
@@ -869,7 +869,7 @@ The following functions query settings for the current compilation unit. Unlike 
     [name | Identifier?(name)]
     Flag?(static name) : Bool;
 
-`Flag?` returns true if the compiler was invoked with a `-D` flag variable matching the static string `name`.
+`Flag?` returns true if the compiler was invoked with a `-D<name>` or `-D<name>=value` flag matching the static string `name`.
 
 #### <a name="flag"></a>Flag
 
