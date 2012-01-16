@@ -3,130 +3,130 @@
 
 This document describes the contents of the `__primitives__` module synthesized by the Clay compiler and implicitly available to all Clay programs. This module provides primitive types, fundamental operations, and functions for compile-time introspection of programs. For information about the Clay language itself, consult the [Language Reference](language-reference.md).
 
-* [Primitive types]
-    * [`Bool`]
-    * [Integer types]
+* [Primitive types](#primitivetypes)
+    * [`Bool`](#bool)
+    * [Integer types](#integertypes)
         * `Int8`, `Int16`, `Int32`, `Int64`, `Int128`, `UInt8`, `UInt16`, `UInt32`, `UInt64`, `UInt128`
-    * [Floating-point types]
+    * [Floating-point types](#floatingpointtypes)
         * `Float32`, `Float64`, `Float80`
-    * [Imaginary and complex types]
+    * [Imaginary and complex types](#imaginaryandcomplextypes)
         * `Imag32`, `Imag64`, `Imag80`, `Complex32`, `Complex64`, `Complex80`
-    * [`Pointer`]
-    * [`CodePointer`]
-    * [External code pointer types]
+    * [`Pointer`](#pointer)
+    * [`CodePointer`](#codepointer)
+    * [External code pointer types](#externalcodepointertypes)
         * `CCodePointer`, `VarArgsCCodePointer`, `LLVMCodePointer`, `StdCallCodePointer`, `FastCallCodePointer`, `ThisCallCodePointer`
-    * [`Array`]
-    * [`Vec`]
-    * [`Tuple`]
-    * [`Union`]
-    * [`Static`]
+    * [`Array`](#array)
+    * [`Vec`](#vec)
+    * [`Tuple`](#tuple)
+    * [`Union`](#union)
+    * [`Static`](#static)
 
-* [Data access operations]
-    * [`primitiveCopy`]
-    * [`arrayRef`]
-    * [`arrayElements`]
-    * [`tupleRef`]
-    * [`tupleElements`]
-    * [`recordFieldRef`]
-    * [`recordFieldRefByName`]
-    * [`recordFields`]
-    * [`enumToInt`]
-    * [`intToEnum`]
+* [Data access operations](#dataaccessoperations)
+    * [`primitiveCopy`](#primitivecopy)
+    * [`arrayRef`](#arrayref)
+    * [`arrayElements`](#arrayelements)
+    * [`tupleRef`](#tupleref)
+    * [`tupleElements`](#tupleelements)
+    * [`recordFieldRef`](#recordfieldref)
+    * [`recordFieldRefByName`](#recordfieldrefbyname)
+    * [`recordFields`](#recordfields)
+    * [`enumToInt`](#enumtoint)
+    * [`intToEnum`](#inttoenum)
 
-* [Numeric operations]
-    * [`boolNot`]
-    * [`numericEquals?`]
-    * [`numericLesser?`]
-    * [`numericAdd`]
-    * [`numericSubtract`]
-    * [`numericMultiply`]
-    * [`numericDivide`]
-    * [`numericNegate`]
-    * [`integerRemainder`]
-    * [`integerShiftLeft`]
-    * [`integerShiftRight`]
-    * [`integerBitwiseAnd`]
-    * [`integerBitwiseOr`]
-    * [`integerBitwiseXor`]
-    * [`integerBitwiseNot`]
-    * [`numericConvert`]
+* [Numeric operations](#numericoperations)
+    * [`boolNot`](#boolnot)
+    * [`numericEquals?`](#numericequals)
+    * [`numericLesser?`](#numericlesser)
+    * [`numericAdd`](#numericadd)
+    * [`numericSubtract`](#numericsubtract)
+    * [`numericMultiply`](#numericmultiply)
+    * [`numericDivide`](#numericdivide)
+    * [`numericNegate`](#numericnegate)
+    * [`integerRemainder`](#integerremainder)
+    * [`integerShiftLeft`](#integershiftleft)
+    * [`integerShiftRight`](#integershiftright)
+    * [`integerBitwiseAnd`](#integerbitwiseand)
+    * [`integerBitwiseOr`](#integerbitwiseor)
+    * [`integerBitwiseXor`](#integerbitwisexor)
+    * [`integerBitwiseNot`](#integerbitwisenot)
+    * [`numericConvert`](#numericconvert)
 
-* [Checked integer operations]
+* [Checked integer operations](#checkedintegeroperations)
     * `integerAddChecked`, `integerSubtractChecked`, `integerMultiplyChecked`, `integerDivideChecked`, `integerRemainderChecked`, `integerNegateChecked`, `integerShiftLeftChecked`, `integerConvertChecked`
 
-* [Pointer operations]
-    * [`addressOf`]
-    * [`pointerDereference`]
-    * [`pointerEquals?`]
-    * [`pointerLesser?`]
-    * [`pointerOffset`]
-    * [`pointerToInt`]
-    * [`intToPointer`]
-    * [`pointerCast`]
+* [Pointer operations](#pointeroperations)
+    * [`addressOf`](#addressof)
+    * [`pointerDereference`](#pointerdereference)
+    * [`pointerEquals?`](#pointerequals)
+    * [`pointerLesser?`](#pointerlesser)
+    * [`pointerOffset`](#pointeroffset)
+    * [`pointerToInt`](#pointertoint)
+    * [`intToPointer`](#inttopointer)
+    * [`pointerCast`](#pointercast)
 
-* [Function pointer operations]
-    * [`makeCodePointer`]
-    * [`makeCCodePointer`]
-    * [`callCCodePointer`]
+* [Function pointer operations](#functionpointeroperations)
+    * [`makeCodePointer`](#makecodepointer)
+    * [`makeCCodePointer`](#makeccodepointer)
+    * [`callCCodePointer`](#callccodepointer)
 
-* [Atomic memory operations]
-    * [Memory order symbols]
+* [Atomic memory operations](#atomicmemoryoperations)
+    * [Memory order symbols](#memoryordersymbols)
         * `OrderUnordered`, `OrderMonotonic`, `OrderAcquire`, `OrderRelease`, `OrderAcqRel`, `OrderSeqCst`
-    * [`atomicLoad`]
-    * [`atomicStore`]
-    * [`atomicRMW`]
+    * [`atomicLoad`](#atomicload)
+    * [`atomicStore`](#atomicstore)
+    * [`atomicRMW`](#atomicrmw)
         * `RMWXchg`, `RMWAdd`, `RMWSubtract`, `RMWAnd`, `RMWNAnd`, `RMWOr`, `RMWXor`, `RMWMin`, `RMWMax`, `RMWUMin`, `RMWUMax`
-    * [`atomicCompareExchange`]
-    * [`atomicFence`]
+    * [`atomicCompareExchange`](#atomiccompareexchange)
+    * [`atomicFence`](#atomicfence)
 
-* [Exception handling]
-    * [`activeException`]
+* [Exception handling](#exceptionhandling)
+    * [`activeException`](#activeexception)
 
-* [Symbol and function introspection]
-    * [`Type?`]
-    * [`CallDefined?`]
-    * [`ModuleName`]
-    * [`IdentifierModuleName`]
-    * [`StaticName`]
-    * [`IdentifierStaticName`]
-    * [`staticFieldRef`]
+* [Symbol and function introspection](#symbolandfunctionintrospection)
+    * [`Type?`](#type)
+    * [`CallDefined?`](#calldefined)
+    * [`ModuleName`](#modulename)
+    * [`IdentifierModuleName`](#identifiermodulename)
+    * [`StaticName`](#staticname)
+    * [`IdentifierStaticName`](#identifierstaticname)
+    * [`staticFieldRef`](#staticfieldref)
 
-* [Static string manipulation]
-    * [`Identifier?`]
-    * [`IdentifierSize`]
-    * [`IdentifierConcat`]
-    * [`IdentifierSlice`]
+* [Static string manipulation](#staticstringmanipulation)
+    * [`Identifier?`](#identifier)
+    * [`IdentifierSize`](#identifiersize)
+    * [`IdentifierConcat`](#identifierconcat)
+    * [`IdentifierSlice`](#identifierslice)
 
-* [Type introspection]
-    * [`TypeSize`]
-    * [`TypeAlignment`]
-    * [`CCodePointer?`]
-    * [`TupleElementCount`]
-    * [`UnionMemberCount`]
-    * [`Record?`]
-    * [`RecordFieldCount`]
-    * [`RecordFieldName`]
-    * [`RecordWithField?`]
-    * [`Variant?`]
-    * [`VariantMemberCount`]
-    * [`VariantMemberIndex`]
-    * [`Enum?`]
-    * [`EnumMemberCount`]
-    * [`EnumMemberName`]
+* [Type introspection](#typeintrospection)
+    * [`TypeSize`](#typesize)
+    * [`TypeAlignment`](#typealignment)
+    * [`CCodePointer?`](#ccodepointer)
+    * [`TupleElementCount`](#tupleelementcount)
+    * [`UnionMemberCount`](#unionmembercount)
+    * [`Record?`](#record)
+    * [`RecordFieldCount`](#recordfieldcount)
+    * [`RecordFieldName`](#recordfieldname)
+    * [`RecordWithField?`](#recordwithfield)
+    * [`Variant?`](#variant)
+    * [`VariantMemberCount`](#variantmembercount)
+    * [`VariantMemberIndex`](#variantmemberindex)
+    * [`Enum?`](#enum)
+    * [`EnumMemberCount`](#enummembercount)
+    * [`EnumMemberName`](#enummembername)
 
-* [Compiler flags]
-    * [`ExceptionsEnabled?`]
-    * [`Flag?`]
-    * [`Flag`]
+* [Compiler flags](#compilerflags)
+    * [`ExceptionsEnabled?`](#exceptionsenabled)
+    * [`Flag?`](#flag)
+    * [`Flag`](#flag)
 
-* [External function attributes]
-    * [Calling convention attributes]
+* [External function attributes](#externalfunctionattributes)
+    * [Calling convention attributes](#callingconventionattributes)
         * `AttributeCCall`, `AttributeStdCall`, `AttributeFastCall`, `AttributeThisCall`, `AttributeLLVMCall`
-    * [Linkage attributes]
+    * [Linkage attributes](#linkageattributes)
         * `AttributeDLLImport`, `AttributeDLLExport`
 
-* [Miscellaneous functions]
-    * [`staticIntegers`]
+* [Miscellaneous functions](#miscellaneousfunctions)
+    * [`staticIntegers`](#staticintegers)
 
 ### <a name="primitivetypes"></a>Primitive types
 
@@ -152,30 +152,30 @@ Imaginary and complex types are provided for each floating-point type. `Imag32` 
 
 #### <a name="pointer"></a>`Pointer`
 
-`Pointer[T]` is the type of a pointer to a value of type `T`, for any type `T`. It corresponds to the `%T*` type in LLVM (where `%T` is the LLVM type of `T`), or to the `T*` type in C. Pointers are created by the prefix `&` operator, or by the equivalent [`addressOf`] primitive function.
+`Pointer[T]` is the type of a pointer to a value of type `T`, for any type `T`. It corresponds to the `%T*` type in LLVM (where `%T` is the LLVM type of `T`), or to the `T*` type in C. Pointers are created by the prefix `&` operator, or by the equivalent [`addressOf`](#addressof) primitive function.
 
 #### <a name="codepointer"></a>`CodePointer`
 
-`CodePointer[[..In], [..Out]]` is the type of a pointer to a Clay function, instantiated for the argument types `..In` and return types `..Out`. These pointers can be created using the [`makeCodePointer`] primitive function. The Clay calling convention is unspecified, so `CodePointer`s have no specific corresponding LLVM or C type beyond being a function pointer of some kind.
+`CodePointer[[..In], [..Out]]` is the type of a pointer to a Clay function, instantiated for the argument types `..In` and return types `..Out`. These pointers can be created using the [`makeCodePointer`](#makecodepointer) primitive function. The Clay calling convention is unspecified, so `CodePointer`s have no specific corresponding LLVM or C type beyond being a function pointer of some kind.
 
 #### <a name="externalcodepointertypes"></a>External code pointer types
 
 `CCodePointer[[..In], [..Out]]` is the type of a pointer to a C function with argument types `..In` and return types `..Out`. `CCodePointer[[A,B,C],[]]` corresponds to the C `void (*)(A,B,C)` type, and `CCodePointer[[A,B,C],[D]]` to the `D (*)(A,B,C)` type. The LLVM type depends on the target platform's C calling convention.
 
-`CCodePointer`s are called using the C calling convention when passed to the [`callCCodePointer`] primitive function. Different symbols are provided for function pointers with different calling conventions.
+`CCodePointer`s are called using the C calling convention when passed to the [`callCCodePointer`](#callccodepointer) primitive function. Different symbols are provided for function pointers with different calling conventions.
 
 * `LLVMCodePointer[[A,B,C],[D]]` corresponds directly to an LLVM `D (A,B,C) *` function pointer type.
 * `VarArgsCCodePointer[[A,B,C], [D]]` points to a variadic C function; it corresponds to the `D (*)(A,B,C,...)` type in C.
 * `StdCallCodePointer`, `FastCallCodePointer`, and `ThisCallCodePointer` point to functions using legacy x86 calling conventions on Windows. They correspond to C function pointer types decorated with `__stdcall`, `__fastcall`, or `__thiscall` in Microsoft dialect, or with `__attribute__((stdcall))` etc. in GCC dialect.
 
-`CCodePointer`s, along with the other external code pointer types, may be obtained by evaluating external function names, or as return values from C functions. They may also be derived directly automatically from some Clay functions using the [`makeCCodePointer`] primitive function.
+`CCodePointer`s, along with the other external code pointer types, may be obtained by evaluating external function names, or as return values from C functions. They may also be derived directly automatically from some Clay functions using the [`makeCCodePointer`](#makeccodepointer) primitive function.
 
     // Example
     // XXX
 
 #### <a name="array"></a>`Array`
 
-`Array[T,n]` is the type of a fixed-size, locally-allocated array, containing `n` elements of size `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `[n x %T]` type, or the C `T [n]` type; however, unlike C arrays, Clay arrays never implicitly devolve to pointers. The [`arrayRef`] and [`arrayElements`] primitive functions provide access to array elements.
+`Array[T,n]` is the type of a fixed-size, locally-allocated array, containing `n` elements of size `T`. The `n` parameter must currently be an `Int32` (regardless of the target word size). It corresponds to the LLVM `[n x %T]` type, or the C `T [n]` type; however, unlike C arrays, Clay arrays never implicitly devolve to pointers. The [`arrayRef`](#arrayref) and [`arrayElements`](#arrayelements) primitive functions provide access to array elements.
 
 #### <a name="vec"></a>`Vec`
 
@@ -273,7 +273,7 @@ These functions provide fundamental data manipulation operations. Unlike normal 
 
 ### <a name="numericoperations"></a>Numeric operations
 
-These functions provide fundamental arithmetic operations for the primitive [`Bool`], [integer](#integertypes), [floating-point](#floatingpointtypes), and [imaginary](#imaginaryandcomplextypes) types. Unlike normal symbols, they may not be overloaded. Binary numeric primitives generally require inputs of matching types. Conversion rules for heterogeneous types are left to be implemented by the library. These functions also do not operate on complex types; complex math is also left to the library.
+These functions provide fundamental arithmetic operations for the primitive [`Bool`](#bool), [integer](#integertypes), [floating-point](#floatingpointtypes), and [imaginary](#imaginaryandcomplextypes) types. Unlike normal symbols, they may not be overloaded. Binary numeric primitives generally require inputs of matching types. Conversion rules for heterogeneous types are left to be implemented by the library. These functions also do not operate on complex types; complex math is also left to the library.
 
 #### <a name="boolnot"></a>`boolNot`
 
@@ -495,7 +495,7 @@ These operations create and invoke pointers to instances of Clay functions. Unli
     [F, ..T]
     makeCodePointer(static F, static ..T) : CodePointer[[..T], [..CallType(F, ..T)]];
 
-`makeCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found, the overload is instantiated for the given input types, and a pointer to the function instance is returned as a [`CodePointer`]. The output types parameter of the `CodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, or no matching overload for `F` is found.
+`makeCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found, the overload is instantiated for the given input types, and a pointer to the function instance is returned as a [`CodePointer`](#codepointer). The output types parameter of the `CodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, or no matching overload for `F` is found.
 
 `makeCodePointer` matches overloads as if all input types are lvalues. Taking `CodePointer`s to rvalue functions is currently unsupported.
 
@@ -504,7 +504,7 @@ These operations create and invoke pointers to instances of Clay functions. Unli
     [F, ..T]
     makeCCodePointer(static F, static ..T) : CCodePointer[[..T], [..CallType(F, ..T)]];
 
-`makeCCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found and is determined to be C-compatible, the overload is instantiated for the given input types, along with a thunk function adapting the overload to the C calling convention. A pointer to the thunk is returned as a [`CCodePointer`]. The output types parameter of the `CCodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, no matching overload for `F` is found, or the matching overload is not C-compatible.
+`makeCCodePointer` looks up an overload for `F` matching the input types `..T`. If a matching overload is found and is determined to be C-compatible, the overload is instantiated for the given input types, along with a thunk function adapting the overload to the C calling convention. A pointer to the thunk is returned as a [`CCodePointer`](#ccodepointer). The output types parameter of the `CCodePointer` is deduced from the matched overload's return types. `F` must be a symbol or a lambda that does not capture its scope (which is equivalent to a symbol). An error is raised if `F` is not a symbol, no matching overload for `F` is found, or the matching overload is not C-compatible.
 
 The matched overload must meet the following criteria to be deemed C-compatible:
 
@@ -765,7 +765,7 @@ The following functions provide information about types. Unlike normal symbols, 
     [T]
     CCodePointer?(static T) : Bool;
 
-`CCodePointer?` returns true if `T` is a symbol and an instance of one of the [external code pointer types], such as `CCodePointer`, `LLVMCodePointer`, etc.
+`CCodePointer?` returns true if `T` is a symbol and an instance of one of the [external code pointer types](#externalcodepointertypes), such as `CCodePointer`, `LLVMCodePointer`, etc.
 
 #### <a name="tupleelementcount"></a>`TupleElementCount`
 
