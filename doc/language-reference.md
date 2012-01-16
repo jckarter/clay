@@ -5,7 +5,7 @@
 * [Tokenization](#tokenization)
 * [Compilation strategy](#compilationstrategy)
 * [Modules](#modules)
-* [Source file organization](#sourcefileorganization)
+* [Source file layout](#sourcefilelayout)
 * [Type definitions](#typedefinitions)
 * [Function definitions](#functiondefinitions)
 * [Global value definitions](#globalvaluedefinitions)
@@ -113,7 +113,7 @@ Integer literals may be expressed in decimal, or in hexadecimal prefixed by `0x`
     FloatToken -> "0x" HexDigits ("." HexDigits?)? /[pP] [+-]?/ DecimalDigits
                 | DecimalDigits ("." DecimalDigits?)? (/[eE] [+-]?/ DecimalDigits)?
 
-Like integers, floating-point literals also come in decimal and hexadecimal forms. A floating-point decimal literal is differentiated from an integer literal by including either a decimal point `.` followed by zero or more decimal digits, an exponential marker `e` or `E` followed by an optional sign and a required decimal value indicating the decimal exponent, or both. Floating-point hexadecimal literals likewise contain an optional hexadecimal point (also `.`) followed by zero or more hex digits, but require an exponential marker `p` or `P` followed by an optional sign and required decimal value indicating the binary exponent. Like integer literals, floating-point literals may also include underscores after any digit in the integer, mantissa, or exponent for human readability.
+Like integers, floating-point literals also come in decimal and hexadecimal forms. A floating-point decimal literal is differentiated from an integer literal by including either a decimal point `.` followed by zero or more decimal digits, an exponential marker `e` or `E` followed by a decimal value indicating the decimal exponent, or both. Floating-point hexadecimal literals likewise contain an optional hexadecimal point (also `.`) followed by zero or more hex digits, but require their exponential marker `p` or `P` followed by a decimal value indicating the binary exponent. Like integer literals, floating-point literals may also include underscores after any digit in the integer, mantissa, or exponent for human readability.
 
     // Examples of decimal floating-point literals
     1. 1.0 1e0 1e-2 0.000_001 1e1_000
@@ -181,7 +181,7 @@ Clay uses a whole-program compilation strategy, with some support for interfacin
 * Each module's namespace is populated by visiting its import declarations and [top-level definitions](#topleveldefinitions). Namespace initialization does not rely on any evaluation so that forward and circular references among global names may be made freely.
 * Program entry points are established:
     * If the entry point module contains a public symbol named `main`, it is passed to the `callMain` [operator function](#operatorfunctions), which is responsible for calling `main` with its command-line arguments. `callMain(static main)` thus becomes an entry point, ultimately corresponding to the C ABI `main` entry point.
-    * For a `main` entry point, the `setArgcArgv(argc:Int32, argv:Pointer[Pointer[Int8]])` operator function is also instantiated ; it is called with the `argc` and `argv` parameters from the C `main` function prior to `callMain`.
+    * For a `main` entry point, the `setArgcArgv(argc:Int32, argv:Pointer[Pointer[Int8]])` operator function is also instantiated. It is called with the `argc` and `argv` parameters from the C `main` function prior to `callMain`.
     * If the entry point module defines any [external functions](#externalfunctions), they are compiled as entry points.
 * Compilation proceeds from the established entry points. [Types](#typedefinitions), [functions](#functiondefinitions), and [global variable](#globalvariables) definitions are instantiated and compiled on-demand; if a definition is not used from any entry point, it is not visited after being parsed. (In a way, Clay can be thought of as a dynamic language in which operations normally emit LLVM as a side effect instead of performing computation directly.)
 
@@ -258,6 +258,8 @@ In addition to evaluation, Clay also uses a simple unification-based pattern mat
         paramPattern(Baz[bar]); // prints z
     }
 
+Multiple-value patterns (including symbol parameters) may end with a trailing variadic pattern variable prefixed with `..`. The variadic variable with greedily match zero or more remaining input values after the prior input values have been matched to previous patterns.
+
 ### <a name="modules"></a>Modules
 
 Clay programs are organized into modules. Modules correspond one-to-one with Clay source files. Modules are named in Clay hierarchially using dotted names; these correspond to paths in the filesystem. The name `foo.bar` corresponds to (in search order) `foo/bar.clay` or `foo/bar/bar.clay` under one of the compiler's search paths. Hierarchical names are only used for source organization, and no semantic relationship is implied among modules with hierarchically related names.
@@ -269,7 +271,7 @@ Modules form the basis of encapsulation and namespacing in Clay. Every module ha
 A few modules have special significance:
 
 * The `__primitives__` module is synthesized by the compiler; it is always present and does not correspond to a source file. It contains fundamental types such as `Int`, `Pointer[T]`, and `Bool`; functions providing basic operations on those types; and compile-time introspection functions. The [Primitives Reference](primitives-reference.md) documentation describes its contents in detail.
-* The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for the special functions used to desugar [operators](#operatorfunctions).
+* The `prelude` module is loaded automatically and implicitly imported into every other module. This module is also the one searched for [operator functions](#operatorfunctions).
 * If the entry point module does not declare its name in a [module declaration](#moduledeclaration), it is given the default name `__main__`. Regardless of its name, this module is searched for a `main` function, which if found will be used as the entry point for a standalone executable generated from the given module.
 
 #### <a name="operatorfunctions"></a>Operator functions
@@ -279,7 +281,6 @@ Operator functions are symbols defined by library code that are used by the lang
 * Functions used to desugar overloadable operators in [expressions](#expressions):
     * `add`
     * `call`
-    * `case?`
     * `dereference`
     * `divide`
     * `equals?`
@@ -304,6 +305,8 @@ Operator functions are symbols defined by library code that are used by the lang
     * `copy`
     * `destroy`
     * `move`
+* Functions used to implement [switch statements](#conditionalstatements):
+    * `case?`
 * Functions used to implement [assignment statements](#assignmentstatements):
     * `assign`
     * `fieldRefAssign`
@@ -333,7 +336,7 @@ Operator functions are symbols defined by library code that are used by the lang
 
 (Some additional, wartier operator function interfaces are currently required by the compiler as well. See `compiler/src/libclaynames.hpp` in the compiler source if you're morbidly interested.)
 
-### <a name="sourcefileorganization"></a>Source file organization
+### <a name="sourcefilelayout"></a>Source file layout
 
     # Grammar
     Module -> Import* ModuleDeclaration? TopLevelLLVM? TopLevelItem*
@@ -667,7 +670,7 @@ A predicate may also appear in a pattern guard without any pattern variables, in
     # Grammar
     Visibility -> "public" | "private"
 
-Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` modules normally are not (though they can be force-imported using special [import declarations](#importdeclarations)). Definitions without an explicit visibility default to `public`.
+Every form that creates a new symbol name may be prefixed with a `public` or `private` visibility modifier. `public` symbols are available to be imported by other modules, whereas `private` symbols normally are not (though they can be force-imported using special [import declarations](#importdeclarations)). Definitions without an explicit visibility default to `public`.
 
 Visibility modifiers are not valid for definitions that modify existing symbols instead of creating new ones, such as variant `instance`s or function `overload`s. In forms that do admit a visibility modifier, the modifier must appear after the pattern guard, if any, but before the subsequent definition.
 
@@ -878,7 +881,7 @@ Lambda types are record-like types that capture values from their enclosing scop
 
 ### <a name="functiondefinitions"></a>Function definitions
 
-Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime function calls are resolved at compile time for every set of input types with which they are invoked.
+Function definitions control most of Clay's compile-time and run-time behavior. Clay functions are inherently generic. They can be parameterized to provide equivalent behavior over a variety of types or compile-time values, and they can be overloaded to provide divergent implementations of a common interface. Runtime functions are instantiated for every valid set of input types with which they are invoked.
 
 * [Simple function definitions](#simplefunctiondefinitions)
 * [Overloaded function definitions](#overloadedfunctiondefinitions)
@@ -1448,9 +1451,9 @@ Compared to internal Clay functions, external functions have several limitations
 * External functions may return only zero or one values.
 * `<stdarg.h>`-compatible variadic C functions may be declared and called from Clay, but implementing C variadic functions is currently unsupported.
 * Clay exceptions cannot currently be propagated across an external boundary. A Clay exception that is unhandled in an external function will be passed to the `unhandledExceptionInExternal` [operator](#operator) function.
-* Clay types with nontrivial `copy` or `destroy` [operator function] overloads may not be passed by value to external functions. They must be passed by pointer instead.
+* Clay types with nontrivial `copy` or `destroy` [operator function](#operatorfunctions) overloads may not be passed by value to external functions. They must be passed by pointer instead.
 
-Although they define a top-level name, external function names are not true [symbols](#symbols). An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes](#[intypes), [..OutTypes](#outtypes)]` type representing the external's function pointer.
+Although they define a top-level name, external function names are not true [symbols](#symbols). An external function's name instead evaluates directly to a value of the primitive `CCodePointer[[..InTypes], [..OutTypes]]` type representing the external's function pointer.
 
 External functions cannot currently be called by the compile-time evaluator.
 
@@ -1472,7 +1475,7 @@ A parenthesized [multiple value expression](#multiplevalueexpressions) list may 
 In the `__primitives__` module, symbols are provided that, when used as external attributes, set the calling convention used by the function:
 
 * `AttributeCCall` corresponds to the default C calling convention.
-* `AttributeLLVMCall` uses the native LLVM calling convention. This can be used to bind to LLVM intrinsics.
+* `AttributeLLVMCall` uses the native LLVM calling convention. This can be used to bind to LLVM intrinsics or functions written in other LLVM-based languages.
 * `AttributeStdCall`, `AttributeFastCall`, and `AttributeThisCall` correspond to legacy x86 calling conventions on Windows.
 
 ### <a name="globalvaluedefinitions"></a>Global value definitions
@@ -1504,7 +1507,7 @@ Global aliases may be parameterized with a pattern guard. If no predicate is nec
 
     alias ZERO[T] = T(0); // [T] pattern guard implied
 
-Global alias definitions do not define true [symbols](#symbols). The alias name expands directly into the bound expression.
+Global alias definitions do not define true [symbols](#symbols). The alias name evaluates directly into the bound expression.
 
 #### <a name="globalvariables"></a>Global variables
 
@@ -1591,7 +1594,7 @@ Since global variable initializers are executed at runtime, global variables are
 
 Global variable names are not true [symbols](#symbols). A global variable name evaluates to a reference to the global variable's value.
 
-Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for synchronized, uninterruptible value access; see the [primitive modules reference](primitives-reference.md) for details.
+Runtime global variable access is subject to the memory model standardized in C11 and C++11. The `__primitives__` module includes primitive atomic operations for atomic value access; see the [primitive modules reference](primitives-reference.md) for details.
 
 #### <a name="externalvariables"></a>External variables
 
@@ -1790,7 +1793,7 @@ A return statement may also generically forward the `ref`-ness of its values wit
 
 Local variables are introduced by binding statements. Local variables come in a few different flavors:
 
-* `var` bindings create new, independent local values. The right-hand expression is evaluated to initialize the value as if by an [initialization statement](#initializationstatements).
+* `var` bindings create new, independent local values. The right-hand expression is evaluated to initialize the values as if by an [initialization statement](#initializationstatements).
 
         // Example
         main() {
@@ -1854,7 +1857,7 @@ Local variables are introduced by binding statements. Local variables come in a 
             forward x2, y2 = xs[2], ys[2];
         }
 
-* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases](#globalaliases). The alias's name expands to the bound expression (evaluated in its original lexical context) at every call site.
+* `alias` bindings have call-by-name semantics, like [alias functions](#inlineandaliasqualifiers) or [global aliases](#globalaliases). The alias's name expands to the bound expression (evaluated in its original lexical context) every time it is referenced.
 
 Multiple variable bindings can be assigned to the values of a [multiple value expression](#multiplevalueexpressions). Each value from the right-hand side is bound to the corresponding variable name on the left-hand side. It is an error if the number of values does not correspond to the number of variables.
 
@@ -1869,7 +1872,7 @@ Multiple variable bindings can be assigned to the values of a [multiple value ex
         var a, b, c, d = 1, ..twoAndThree(), 4;
     }
 
-If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context](#multiplevalueexpressions); in other words, a single expression that evaluates to multiple values may omit the `..` prefix.
+If multiple variables are being bound, the right-hand side is implicitly evaluated in [multiple value context](#multiplevalueexpressions).
 
     // Example
     oneAndTwo() = 1, 2;
@@ -1955,7 +1958,7 @@ The left-hand expression should generally evaluate to an lvalue or lvalues; howe
 
 If the left-hand expression is a single [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression, special property assignment operator functions are used instead of `assign`.
 
-* `a[..b](#b) = c;` desugars into `indexAssign(a, ..b, c);`
+* `a[..b] = c;` desugars into `indexAssign(a, ..b, c);`
 * `a.0 = c;` desugars into `staticIndexAssign(a, static 0, c);`
 * `a.field = c;` desugars into `fieldRefAssign(a, #"field", c);`
 
@@ -2005,7 +2008,7 @@ The assignment tokens `+=`, `-=`, `*=`, `/=`, and `%=` desugar into calls to the
 
 Like single-value simple assignment, update assignment also supports special property update operators for when the left-hand expression is an [index](#indexoperator), [static index](#staticindexoperator), or [field reference](#fieldreferenceoperator) expression.
 
-* `a[..b](#b) += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
+* `a[..b] += c;` desugars into `indexUpdateAssign(add, a, ..b, c);`
 * `a.0 += c;` desugars into `staticIndexUpdateAssign(add, a, static 0, c);`
 * `a.field += c;` desugars into `fieldRefUpdateAssign(add, a, #"field", c);`
 
@@ -2040,7 +2043,7 @@ If the right-hand side is an lvalue, the `copy` [operator function](#operatorfun
         p^ <-- x; // really p^ <-- copy(x);
     }
 
-As a special case, if the right-hand side is a `forward` argument bound to an rvalue, the `move` operator function is applied instead of `copy`.
+As a special case, if the right-hand side is a `forward` argument bound to an rvalue, the `move` operator function (which must also return by value) is applied instead of `copy`.
 
     // Example
     foo(p:Pointer[Int], forward x:Int) {
@@ -2261,7 +2264,7 @@ Try statements execute their associated block normally. If an exception occurs d
         }
     }
 
-A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions](#operatorfunctions), as well as the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
+A series of catch clauses desugars into the try block's exception handler as a series of `if` statements constructed from the `exceptionIs?`, `exceptionAs`, `exceptionAsAny`, and `continueException` [operator functions](#operatorfunctions), with some additional help from the `activeException` primitive function from the `__primitives__` module, which returns a pointer to the exception that instigated the current unwinding. Clay does not yet provide a facility for fully manually coding a handler.
 
     // Example
     foo(x) {
@@ -2303,7 +2306,7 @@ A series of catch clauses desugars into the try block's exception handler as a s
 
 Catch clauses may rethrow the current exception by reusing the given exception object in a [throw statement](#throwstatements) inside the catch clause.
 
-If exceptions are disabled, a try statement's body is compiled as a normal block, and its catch clauses are ignored.
+If exceptions are disabled, a try statement's body is treated as a normal block, and its catch clauses are ignored.
 
 ##### <a name="scopeguardstatements"></a>Scope guard statements
 
@@ -2492,13 +2495,13 @@ Literals evaluate to primitive constant values.
     * `ul` — `UInt64`
     * `ull` — `Int128`
 
-    One of the floating-point type suffixes described below may also be applied to an integer literal to create a floating-point literal with an integer value. If the integer literal represents a value that is not within the valid range of the literal's type, it is an error.
+    One of the floating-point type suffixes described below may also be applied to an integer literal to create a floating-point literal with an integral value. If the integer literal represents a value that is not within the valid range of the specified type, it is an error.
 
         // Example
         main() {
             println(Type(1)); // Int32
             println(Type(-1)); // Int32
-            println(Type(1ul)); // UInt64
+            println(Type(+1ul)); // UInt64
             println(Type(-1ss)); // Int8
             println(Type(-1f)); // Float32
         }
@@ -2517,12 +2520,12 @@ Literals evaluate to primitive constant values.
         main() {
             println(Type(1.0f)); // Float32
             println(Type(-1.0)); // Float64
-            println(Type(1.j)); // Imag64
+            println(Type(+1.j)); // Imag64
         }
 
 * Character literals consist of a [character literal token](#characterliterals). They are evaluated by passing the ASCII code of the represented character to the `Char` [operator function](#operatorfunctions).
 
-* String literals consist of a [string literal token](#stringliterals). The constant string is emitted into the string table, and pointers of the primitive `Pointer[Int8]` type to the first character and after the last character are passed as arguments to the `StringConstant` [operator function](#operatorfunctions).
+* String literals consist of a [string literal token](#stringliterals). The constant string is emitted into the string table, and pointers to the first character and after the last character are passed as arguments of the primitive `Pointer[Int8]` type to the `StringConstant` [operator function](#operatorfunctions).
 
 * Static string literals consist of a string literal token prefixed with a `#` token. They exist entirely as compile-time entities, and thus evaluate to values of the stateless primitive `Static[#"identifier"]` type. If the contents of the static string are a valid identifier, it may also be specified as a bare, unquoted identifier prefixed with a `#` token.
 
@@ -2551,9 +2554,9 @@ Tuple expressions are used to construct tuple objects. They are evaluated by pas
 [Alias functions](#inlineandaliasqualifiers) have magic powers to access the source location of their invocation and string representations of their arguments. The `__FILE__` operator evaluates to a [static string](#staticstring) containing the file from which the function was called. `__LINE__` and `__COLUMN__` evaluate to `Int32` values representing the source line and column. `__ARG__` returns a static string representation of the argument named after the `__ARG__` token. `__ARG__` does not evaluate the named argument. These four operators are only valid inside alias functions, and `__ARG__` is only valid applied to an alias function argument.
 
     // Example
-    // An assert function that reports the condition and source location with the failure
+    // An assert function that reports the condition and source location of the failure
     alias assert(cond:Bool) {
-        if (cond) {
+        if (not cond) {
             println(stderr, "Assertion \"", __ARG__ cond, "\" failed at ",
                 __FILE__, ":", __LINE__, ":", __COLUMN__);
             flush(stderr);
@@ -2636,7 +2639,7 @@ Extra syntactic sugar is provided for higher-order functions that take [lambda e
         }
     }
 
-One or more of a call's arguments may be modified by a [dispatch operator](#dispatchoperator), in which case the call is transformed into a dynamically-dispatched invocation on a variant type.
+One or more of a call's arguments may be modified by a [dispatch operator](#dispatchoperator), in which case the call is transformed into a dynamically-dispatched invocation on a variant type. See the dispatch operator section for details.
 
 ##### <a name="indexoperator"></a>Index operator
 
@@ -2665,12 +2668,14 @@ If the indexed object is a parameterized [symbol](#symbols), then the operation 
     # Grammar
     StaticIndexSuffix -> "." IntToken
 
-The static index operator consists of a `.` token followed by an [integer literal](#integerliterals) token. It is desugared into a call to the `staticIndex` [operator function](#operatorfunctions), with the indexed object and the integer literal as a `static` object. It is intended for accessing fields of tuples or other heterogeneous aggregate values.
+The static index operator consists of a `.` token followed by an [integer literal](#integerliterals) token. It is desugared into a call to the `staticIndex` [operator function](#operatorfunctions), with the indexed object and the `static` integer value as arguments. It is intended for accessing fields of tuples or other heterogeneous aggregate values.
 
     // Example
     main() {
         var x = ["hello", "cruel", "world"];
         println(x.0, ' ', x.2);
+
+        println(staticIndex(x, static 0), ' ', staticIndex(x, static 2));
     }
 
 ##### <a name="fieldreferenceoperator"></a>Field reference operator
@@ -2688,10 +2693,10 @@ If the indexed object is an imported module name [symbol](#symbols), the operati
     record Point (coords:Array[Float64,2]);
 
     // Define .x, .y, .xy, .yx accessors
-    overload fieldRef(p:Point, static #"x") = ref p[0];
-    overload fieldRef(p:Point, static #"y") = ref p[1];
-    overload fieldRef(p:Point, static #"xy") = ref p[0], p[1];
-    overload fieldRef(p:Point, static #"yx") = ref p[1], p[0];
+    overload fieldRef(p:Point, static #"x") = ref p.coords[0];
+    overload fieldRef(p:Point, static #"y") = ref p.coords[1];
+    overload fieldRef(p:Point, static #"xy") = ref p.coords[0], p.coords[1];
+    overload fieldRef(p:Point, static #"yx") = ref p.coords[1], p.coords[0];
 
     main() {
         // Module field reference is resolved statically
@@ -2895,7 +2900,7 @@ If the `static` operator is applied to a value that is inherently static, such a
     # Grammar
     Unpack -> ".." Expression
 
-The unpack operator evaluates its operand in [multiple value context](#multiplevalueexpressions), allowing a multiple-value expression to be interpolated into a context that normally expects a single expression.
+The unpack operator evaluates its operand in [multiple value context](#multiplevalueexpressions), allowing a multiple-value expression to be interpolated.
 
     // Example
     twoThroughFour() = 2, 3, 4;
@@ -2920,7 +2925,7 @@ Lambda expressions define anonymous functions in-line. They consist of an argume
             println(sq);
     }
 
-Similar to named function definitions, the body may be either a [block](#blocks), or if the body consists of a single [return statement](#returnstatements), the return expression may be specified without the surrounding block.
+Similar to named function definitions, the body may be either a [block](#blocks) or an expression; the expression form is shorthand for a block body consisting of a single [return statement](#returnstatements).
 
     // Example
     main() {
@@ -2930,7 +2935,7 @@ Similar to named function definitions, the body may be either a [block](#blocks)
             println(sq);
     }
 
-If the lambda declares a single untyped argument, the parentheses around the argument name may be omitted.
+If the lambda declares a single untyped argument, the parentheses around the argument name may additionally be omitted.
 
     // Example
     main() {
@@ -2995,7 +3000,7 @@ A lambda's body may reference local bindings from its enclosing scope, in which 
             println(plus5(1));
         }
 
-In either case, an anonymous [record type](#record) is synthesized to store the captured reference or values. The lambda expression evaluates into a constructor call for this anonymous record type. The lambda implicitly defines a `call` [operator function](#operatorfunctions) overload for the anonymous record type, in which references to the enclosing scope are transformed into references to the lambda record's internal state.
+In either case, an anonymous [record type](#record) is synthesized to store the captured reference or values. The lambda expression evaluates into a constructor call for this anonymous record type. The lambda implicitly defines a `call` [operator function](#operatorfunctions) overload for the anonymous record type, in which references to the enclosing scope are transformed into references to the lambda record's own state.
 
     // Example
     curriedAdd(x) = y => x + y;
