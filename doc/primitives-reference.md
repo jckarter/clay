@@ -125,7 +125,7 @@ This document describes the contents of the `__primitives__` module synthesized 
     * [Linkage attributes]
         * `AttributeDLLImport`, `AttributeDLLExport`
 
-* [Miscellaneous]
+* [Miscellaneous functions]
     * [`staticIntegers`]
 
 ### Primitive types
@@ -876,4 +876,36 @@ The following functions query settings for the current compilation unit. Unlike 
     [name | Identifier?(name)]
     Flag(static name);
 
-`Flag` returns the value associated with the compiler `-Dname=value` flag for the static string `name` as a static string. If no `-D` flag was provided corresponding to `name`, or a `-Dname` flag was provided without an associated value, the empty static string `#""` is returned.
+`Flag` returns the value associated with the compiler flag `-D<name>=value` flag as a static string. If no `-D` flag was provided corresponding to `name`, or a `-D<name>` flag was provided without an associated value, the empty static string `#""` is returned.
+
+### External function attributes
+
+The following symbols are defined for use as attributes of external functions.
+
+#### Calling convention attributes
+
+When used as external attributes, the following symbols control the calling convention used by the external function:
+
+* `AttributeCCall` causes the function to use the C calling convention.
+* `AttributeStdCall` causes the function to use the `__stdcall` calling convention on Windows x86 systems.
+* `AttributeFastCall` causes the function to use the `__fastcall` calling convention on Windows x86 systems.
+* `AttributeThisCall` causes the function to use the `__thiscall` calling convention on Windows x86 systems.
+* `AttributeLLVMCall` causes the function to use the LLVM `ccc` calling convention.
+
+#### Linkage attributes
+
+When used as external attributes, the following symbols affect the linkage of the external function:
+
+* `AttributeDLLImport` gives the function `__dllimport` linkage on Windows targets.
+* `AttributeDLLExport` gives the function `__dllexport` linkage on Windows targets.
+
+### Miscellaneous functions
+
+Some additional utility functions are provided as primitives. Unlike normal symbols, these functions may not be overloaded.
+
+#### `staticIntegers`
+
+    [n | n >= 0]
+    staticIntegers(static n);
+
+The `staticIntegers` returns a multiple value list of `static` integer values from `static 0` up to `static n - 1`. `staticIntegers(static 0)` returns no values.
