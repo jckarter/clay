@@ -429,6 +429,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case WITH : {
+        WithStatement *with= (WithStatement*)x.ptr();
+        out = new WithStatement(with->identifier, with->expressions, with->withLocation);
+        break;
+    }
+
     default :
         assert(false);
 
