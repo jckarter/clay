@@ -2,7 +2,9 @@
 0.1 -> 0.2 WIP
 ==========
 
-
+Compiler frontend changes:
+--------------------------
+* -O2 is now the default optimization level.
 
 ==========
 0.0 -> 0.1
