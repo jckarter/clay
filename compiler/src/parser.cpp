@@ -1193,62 +1193,27 @@ static bool localBinding(StatementPtr &x) {
 
 
 static bool blockItems(vector<StatementPtr> &stmts);
-static bool monad(StatementPtr &x) {
+static bool withStatement(StatementPtr &x) {
     LocationPtr startLocation = currentLocation();
 
     if (!keyword("with")) return false;
+    vector<IdentifierPtr> identifier;
 
     int p = save();
-    bool hasBoundValues = false;
-
-    vector<IdentifierPtr> identifier;
-    if (identifierList(identifier) && symbol("=")) {
-        hasBoundValues = true;
-    } else {
+    if (!identifierList(identifier) || !symbol("=")) {
+        identifier.clear();
         restore(p);
     }
+
     LocationPtr location = currentLocation();
 
     ExprListPtr inExpressions = NULL;
     if (!expressionList(inExpressions)) return false;
     if (!symbol(";")) return false;
 
-    //consume the rest of the block into a lambda
-    BlockPtr b = new Block();
-    if (!blockItems(b->statements)) return false;
+    WithStatementPtr w = new WithStatement(identifier, inExpressions, location);
 
-
-    vector<FormalArgPtr> formalArgs;
-    if (hasBoundValues) {
-        for(int i = 0; i < identifier.size(); i++) {
-            formalArgs.push_back(new FormalArg(identifier.at(i), NULL, TEMPNESS_DONTCARE));
-        }
-    }
-
-    FormalArgPtr formalVarArg = NULL;
-    bool captureByRef = false;
-
-    ExprPtr la = new Lambda(captureByRef, formalArgs, formalVarArg, b.ptr());
-    la->location = location;
-
-    //append the lambda to the arguments for yield
-    inExpressions->add(la);
-
-
-    //form the return yield expression
-
-    ExprListPtr rexprs = new ExprList();
-
-    ExprPtr yieldCall = new Call(NULL, inExpressions, new ExprList());
-    ExprPtr yieldName = new NameRef(new Identifier("Monad"));
-
-    setSuffixBase(yieldCall.ptr(), yieldName);
-
-    rexprs->add(yieldCall);
-
-    ReturnPtr r = new Return(RETURN_VALUE, rexprs);
-
-    x = r.ptr();
+    x = w.ptr();
     x->location = location;
     return true;
 }
@@ -1256,6 +1221,7 @@ static bool monad(StatementPtr &x) {
 static bool blockItem(StatementPtr &x) {
     int p = save();
     if (labelDef(x)) return true;
+    if (restore(p), withStatement(x)) return true;
     if (restore(p), localBinding(x)) return true;
     if (restore(p), statement(x)) return true;
     return false;
@@ -1265,11 +1231,6 @@ static bool blockItems(vector<StatementPtr> &stmts) {
     while (true) {
         int p = save();
         StatementPtr z;
-        if (monad(z)) {
-            stmts.push_back(z);
-            break;
-        }
-        restore(p);
         if (!blockItem(z)) {
             restore(p);
             break;
