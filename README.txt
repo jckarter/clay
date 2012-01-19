@@ -1,11 +1,16 @@
 
-Clay
-----
+Clay 0.2-WIP
+------------
 
 Clay is a programming language designed for Generic Programming.
 
 Visit http://claylabs.com/clay for more information.
 
+This is a work-in-progress branch. Documentation may be out of date, and
+source code compatibility may break at any time. The latest release branch
+is `v0.1`; for normal use you will want to switch to that branch:
+
+    git checkout v0.1
 
 Pre-requisites
 --------------
