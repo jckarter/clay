@@ -26,6 +26,12 @@ Language changes:
     }
   Thanks to Arvid Picciani.
 
+Library changes:
+----------------
+* Record types are no longer provided with a static index (x.0) operator
+  by default. fieldRefByIndex(x, static 0) may be used if by-index field
+  access is needed. Thanks to Jeremy Clifford.
+
 Compiler frontend changes:
 --------------------------
 * -O2 is now the default optimization level.
