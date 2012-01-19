@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 // LLVM headers spew warnings on MSVC
 #pragma warning(push)
-#pragma warning(disable: 4146 4244 4355 4146 4800 4996)
+#pragma warning(disable: 4146 4244 4267 4355 4146 4800 4996)
 #endif
 
 #include <llvm/ADT/Triple.h>
