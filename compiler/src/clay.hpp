@@ -113,8 +113,8 @@ typedef _Complex long double clay_cldouble;
 
 #endif
 
-#define CLAY_LANGUAGE_VERSION "0.1"
-#define CLAY_COMPILER_VERSION "0.1git"
+#define CLAY_LANGUAGE_VERSION "0.2-WIP"
+#define CLAY_COMPILER_VERSION "0.2git"
 
 namespace clay {
 
@@ -475,6 +475,7 @@ struct Finally;
 struct OnError;
 struct Unreachable;
 struct EvalStatement;
+struct WithStatement;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -626,6 +627,7 @@ typedef Pointer<Finally> FinallyPtr;
 typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 typedef Pointer<EvalStatement> EvalStatementPtr;
+typedef Pointer<WithStatement> WithStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -1368,7 +1370,8 @@ enum StatementKind {
     FINALLY,
     ONERROR,
     UNREACHABLE,
-    EVAL_STATEMENT
+    EVAL_STATEMENT,
+    WITH
 };
 
 struct Statement : public ANode {
@@ -1378,6 +1381,7 @@ struct Statement : public ANode {
 };
 
 struct Block : public Statement {
+    BlockPtr desugared;
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
@@ -1615,6 +1619,14 @@ struct EvalStatement : public Statement {
         : Statement(EVAL_STATEMENT), args(args), evaled(false) {}
 };
 
+
+struct WithStatement : public Statement {
+    vector<IdentifierPtr> identifier;
+    ExprListPtr expressions;
+    LocationPtr withLocation;
+    WithStatement( vector<IdentifierPtr> i, ExprListPtr e, LocationPtr l)
+        : Statement(WITH), identifier(i), expressions(e), withLocation(l) {}
+};
 
 
 //
@@ -1965,7 +1977,7 @@ struct ExternalProcedure : public TopLevelItem {
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
           attributes(new ExprList()), attributesVerified(false),
-          analyzed(false), llvmFunc(NULL), debugInfo(NULL) {}
+          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
@@ -2953,6 +2965,7 @@ ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);
+BlockPtr desugarBlock(BlockPtr x);
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
 vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);

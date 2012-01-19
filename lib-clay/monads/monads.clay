@@ -1,0 +1,4 @@
+public define Monad;
+
+[T] public Monad? (static T) = false;
+

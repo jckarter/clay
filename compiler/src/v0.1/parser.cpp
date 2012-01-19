@@ -1,6 +1,7 @@
 #include "clay.hpp"
 
 namespace clay {
+namespace v0_1 {
 
 static vector<TokenPtr> *tokens;
 static int position;
@@ -1191,37 +1192,9 @@ static bool localBinding(StatementPtr &x) {
     return true;
 }
 
-
-static bool blockItems(vector<StatementPtr> &stmts);
-static bool withStatement(StatementPtr &x) {
-    LocationPtr startLocation = currentLocation();
-
-    if (!keyword("with")) return false;
-    vector<IdentifierPtr> identifier;
-
-    int p = save();
-    if (!identifierList(identifier) || !symbol("=")) {
-        identifier.clear();
-        restore(p);
-    }
-
-    LocationPtr location = currentLocation();
-
-    ExprListPtr inExpressions = NULL;
-    if (!expressionList(inExpressions)) return false;
-    if (!symbol(";")) return false;
-
-    WithStatementPtr w = new WithStatement(identifier, inExpressions, location);
-
-    x = w.ptr();
-    x->location = location;
-    return true;
-}
-
 static bool blockItem(StatementPtr &x) {
     int p = save();
     if (labelDef(x)) return true;
-    if (restore(p), withStatement(x)) return true;
     if (restore(p), localBinding(x)) return true;
     if (restore(p), statement(x)) return true;
     return false;
@@ -3037,4 +3010,5 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
     applyParser(source, offset, length, topLevelItems, topLevels);
 }
 
+}
 }

@@ -2312,6 +2312,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         error("unreachable statement");
         return NULL;
     }
+    case WITH :
+        error("unexpected with statement");
+        return NULL;
 
     default :
         assert(false);
@@ -3055,9 +3058,13 @@ class Op_integerBitwiseXor : public BinaryOpHelper<T> {
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wtautological-compare"
-#elif defined(__GCC__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wtype-limits"
+#elif defined(__GNUC__)
+#  if __GNUC__ < 4 || __GNUC__ == 4 && __GNUC_MINOR__ < 6
+#    warning "--- The following warnings are expected ---"
+#  else
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wtype-limits"
+#  endif
 #endif
 
 template <typename T>
@@ -3111,8 +3118,10 @@ class Op_integerShiftLeftChecked : public BinaryOpHelper<T> {
 
 #if defined(__clang__)
 #  pragma clang diagnostic pop
-#elif defined(__GCC__)
-#  pragma GCC diagnostic pop
+#elif defined(__GNUC__)
+#  if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 6
+#    pragma GCC diagnostic pop
+#  endif
 #endif
 
 template <typename T>

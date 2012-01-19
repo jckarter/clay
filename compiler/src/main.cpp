@@ -267,6 +267,7 @@ static void usage(char *argv0)
     cerr << "  -DFLAG[=value]        set flag value\n"
          << "                        (queryable with Flag?() and Flag())\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
+    cerr << "                        (default -O2, or -O0 with -g)\n";
     cerr << "  -g                    keep debug symbol information\n";
     cerr << "  -exceptions           enable exception handling\n";
     cerr << "  -no-exceptions        disable exception handling\n";
@@ -372,7 +373,7 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     bool generateDeps = false;
 
-    unsigned optLevel = 3;
+    unsigned optLevel = 2;
     bool optLevelSet = false;
 
 #ifdef __APPLE__

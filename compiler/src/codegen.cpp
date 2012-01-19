@@ -3477,6 +3477,8 @@ static void codegenBlockStatement(BlockPtr block,
         vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
         for (unsigned i = 0; i < evaled.size(); ++i)
             codegenBlockStatement(block, i, evaled[i], env, ctx, terminated);
+    } else if (stmt->stmtKind == WITH) {
+        error("unexpected with statement");
     } else {
         terminated = codegenStatement(stmt, env, ctx);
     }

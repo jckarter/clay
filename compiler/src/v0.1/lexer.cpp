@@ -1,6 +1,7 @@
 #include "clay.hpp"
 
 namespace clay {
+namespace v0_1 {
 
 static void initLexer(SourcePtr s, int offset, int length);
 static void cleanupLexer();
@@ -128,7 +129,7 @@ static void initKeywords() {
          "switch", "case", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
          "finally", "onerror",
-         "eval", "with",
+         "eval",
          "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)
@@ -700,4 +701,5 @@ success :
     return true;
 }
 
+}
 }
