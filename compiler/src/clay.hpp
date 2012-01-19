@@ -133,8 +133,7 @@ typedef unsigned long long size64_t;
 // int128 type
 //
 
-#if (defined(_MSC_VER) && defined(_M_X64)) \
-    || (defined(__GNUC__) && defined(_INT128_DEFINED))
+#if defined(__GNUC__) && defined(_INT128_DEFINED)
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
 #elif (defined(__clang__))
@@ -253,10 +252,10 @@ typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
 #endif
 
-inline std::ostream &operator<<(std::ostream &os, clay_int128 x) {
+inline std::ostream &operator<<(std::ostream &os, const clay_int128 &x) {
     return os << ptrdiff64_t(x);
 }
-inline std::ostream &operator<<(std::ostream &os, clay_uint128 x) {
+inline std::ostream &operator<<(std::ostream &os, const clay_uint128 &x) {
     return os << size64_t(x);
 }
 
