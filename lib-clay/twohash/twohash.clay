@@ -77,14 +77,14 @@ overload Entry?(static MapEntry[K, V]) = true;
 [K]
 overload Entry?(static SetVectorEntry[K]) = true;
 
-[T]
-private HashSetLike?(static T) = false;
+[T, K]
+private HashSetLike?(static T, static K) = false;
 
 [K]
-overload HashSetLike?(static HashSet[K]) = true;
+overload HashSetLike?(static HashSet[K], static K) = true;
 
 [K]
-overload HashSetLike?(static SetVector[K]) = true;
+overload HashSetLike?(static SetVector[K], static K) = true;
 
 //
 // Type predicates
@@ -104,30 +104,28 @@ overload EntryType(static T) = EntryType(Type(typeToLValue(T).data));
 //
 // (copied from records.clay)
 
-/*
 [T | Entry?(T)]
 overload RegularRecord?(static T) = false;
 
 [T | Entry?(T)]
 overload destroy(a:T)
-{
-    ..for (x in recordFields(a))
-    destroy(x);
+{ 
+    ..for (x in ..recordFields(a))
+        destroy(x);
 }
 
 [T | Entry?(T)]
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
-    ..for (i in staticIntegers(static n))
+    ..for (i in ..staticIntegers(static n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [T | Entry?(T)]
 overload resetUnsafe(a:T) {
-    ..for (x in recordFields(a))
+    ..for (x in ..recordFields(a))
         resetUnsafe(x);
 }
-*/
 
 //
 // size
@@ -140,8 +138,8 @@ overload size(a: Hash) = a.data.size;
 // lookup
 //
 
-[K, Hash | HashSetLike?(Hash)]
-overload lookup(a: HashSet[K], key: K)
+[K, Set | HashSetLike?(Set, K)]
+overload lookup(a: Set, key: K)
 {
     var pEntry = pEntryAt(a.data, key);
     return not null(pEntry);
@@ -160,8 +158,8 @@ overload lookup(a: HashMap[K, V], key: K)
 // put
 //
 
-[K, Hash | HashSetLike?(Hash)]
-overload put(a: Hash, key: K, b: Bool) 
+[K, Set | HashSetLike?(Set, K)]
+overload put(a: Set, key: K, b: Bool) 
 {
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry) or not b)
@@ -169,7 +167,7 @@ overload put(a: Hash, key: K, b: Bool)
         if (not b) freeEntry(a.data, pEntry);
         return;
     }
-    var pEntry = allocateEntryAt(a.data, key, EntryType(Hash)(a, key));
+    var pEntry = allocateEntryAt(a.data, key, EntryType(Set)(a, key));
 }
 
 [K, V]
@@ -189,14 +187,17 @@ overload put(a: HashMap[K, V], key: K, forward value: V)
 //
 
 // !! has different semantics (non-ref return)
-[K, Hash | HashSetLike?(Hash)]
-overload index(a: HashSet[K], key: K)
+[K, Set | HashSetLike?(Set, K)]
+overload index(a: Set, key: K)
 {
     var pEntry = pEntryAt(a.data, key);
     if (not null?(pEntry))
         return true;
     return false;
 }
+
+[K, Set | HashSetLike?(Set, K)]
+overload indexAssign(a: Set, key: K, b: Bool) { put(a,key,b); }
 
 [K, V]
 overload index(a: HashMap[K, V], key: K)
@@ -252,7 +253,7 @@ overload entryHash(entry: E) = largeHash(entry.key);
 //
 
 [K]
-overload SetVector[K]() set: SetVector[K]
+overload SetVector[K]() --> set: SetVector[K]
 {
     set.data <-- TwoHash[SetVectorEntry[K]]();
     set.sentinel = allocateRawMemory(SetVectorEntry[K], 1);
@@ -269,7 +270,7 @@ overload destroy(set: SetVector[K])
 }
 
 [K]
-overload SetVectorEntry[K](a: SetVector[K], key: K) entry: SetVectorEntry[K]
+overload SetVectorEntry[K](a: SetVector[K], key: K) --> entry: SetVectorEntry[K]
 {
     ref sentinel = a.sentinel;
     entry.key <-- move(key);
@@ -295,7 +296,7 @@ overload resetUnsafe(a: SetVectorEntry[K])
 }
 
 [K]
-overload moveEntry(src: SetVectorEntry[K], th) entry: SetVectorEntry[K]
+overload moveEntry(src: SetVectorEntry[K], th) --> entry: SetVectorEntry[K]
 {
     entry <-- move(src);
     entry.prev^.next = &entry;
@@ -331,8 +332,3 @@ overload next(i: SetVectorItems[K])
 
 [K]
 overload SetEntry[K](a: HashSet[K], key: K) = SetEntry[K](key);
-
-[K,V]
-inline overload hash(m:HashMap[K,V]) = hashSequence(mapped((a,b) => [a,b], items(m)));
-[K]
-inline overload hash(s:HashSet[K]) = hashSequence(mapped((a,b) => [a,b], items(s)));

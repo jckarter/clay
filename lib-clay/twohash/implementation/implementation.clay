@@ -76,46 +76,18 @@ overload RegularRecord?(static Bucket[E]) = false;
 [E]
 overload TwoHash[E]() 
 {
-    alias TABLE = Table[Bucket[E]](0);
-    return TwoHash[E](array(TABLE, TABLE), SizeT(0));
-}
-
-[E]
-overload TwoHash[E](x:TwoHash[E]) = TwoHash[E](x.tables, x.size);
-
-[E]
-overload assign(ref to:TwoHash[E], ref from:TwoHash[E]) {
-    var tmp = from;
-    destroy(to);
-    to <-- move(tmp);
+    var tableA = Table[Bucket[E]](0);
+    var tableB = Table[Bucket[E]](0);
+    return TwoHash[E](array(move(tableA), move(tableB)), SizeT(0));
 }
 
 [B]
-overload Table[B](ln2_size: Int) returned:Table[B]
+overload Table[B](ln2_size: Int) 
 {
     var size = bitshl(1, ln2_size);
-    returned.ln2_size <-- ln2_size;
-    returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
-    try {
-        initializeMemory(returned.ptr, returned.ptr+size);
-    } catch (ex) {
-        freeRawMemoryAligned(returned.ptr);
-        throw ex;
-    }
-}
-
-[B]
-overload Table[B](x: Table[B]) returned:Table[B]
-{
-    var size = bitshl(1, x.ln2_size);
-    returned.ln2_size <-- x.ln2_size;
-    returned.ptr <-- allocateRawMemoryAligned(B, size, 16);
-    try {
-        copyNonoverlappingMemory(returned.ptr, x.ptr, x.ptr+size);
-    } catch (ex) {
-        freeRawMemoryAligned(returned.ptr);
-        throw ex;
-    }
+    var ptr = allocateRawMemoryAligned(B, size, 16);
+    initializeMemory(ptr, ptr+size);
+    return Table[B](ptr, ln2_size);
 }
 
 [E]
@@ -124,36 +96,20 @@ overload initialize(b: Bucket[E])
     for (x in b.hashBytes) x = 255uss;
 }
 
-[E]
-overload Bucket[E](b: Bucket[E]) returned:Bucket[E]
-{
-    returned.hashBytes <-- b.hashBytes;
-    for (i in range(16))
-    {
-        if (b.hashBytes[i] != 255)
-            returned.entries[i] <-- b.entries[i];
-    }
-}
-
 //
 // move semantics
 //
 
-[E]
-overload BitwiseMovedType?(static TwoHash[E]) = true;
-
 [B]
-overload BitwiseMovedType?(static Table[B]) = true;
+inline overload moveUnsafe(src: Table[B]) --> returned: Table[B] {
+    returned.ptr = src.ptr;
+    returned.ln2_size = src.ln2_size;
+}
 
 [B]
 inline overload resetUnsafe(t: Table[B]) {
     t.ptr = null(B);
     t.ln2_size = 0; // actually -infinity
-}
-
-[E]
-inline overload resetUnsafe(t: TwoHash[E]) {
-    t <-- TwoHash[E]();
 }
 
 //
@@ -243,6 +199,7 @@ retry:
     if (entryCount[1] < entryCount[0])
         bi = 1;
         
+    th.size += 1;
     return allocateInBucket(th, th.tables[bi][hash[bi]], entry, hash[2]);
 }
 
@@ -270,6 +227,7 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
 
     th.tables[i][j].hashBytes[k] = 255uss;
     destroy(th.tables[i][j].entries[k]);
+    th.size -= 1;
 }
 
 //
@@ -351,7 +309,7 @@ overload size(t: Table[B]) = bitshl(1, t.ln2_size);
 overload index(t: Table[B], idx) = ref t.ptr[idx];
 
 [B]
-overload begin(t: Table[B]) = t.ptr;
+overload begin(t: Table[B]) = &t.ptr[0];
 
 [B]
 overload end(t: Table[B]) = begin(t) + size(t);
@@ -363,15 +321,15 @@ overload end(t: Table[B]) = begin(t) + size(t);
 largeHash(x) 
 {
     var h = UInt64(hash(x));
-    var e = bitshr(h * 0x70010101, 8);
-    return e + bitshl(e, 32);
+    var e = bitshr(wrapMultiply(h, 0x70010101ul), 8);
+    return wrapAdd(e, wrapBitshl(e, 32));
 }
 
 baseSplitHash(hash: UInt64)
 {
-    var lowHash = SizeT(bitand(hash, 127));
-    var hash1 = SizeT(bitshr(hash, 8));
-    var hash2 = SizeT(bitshr(hash, 32));
+    var lowHash = wrapCast(SizeT, bitand(hash, 127));
+    var hash1 = wrapCast(SizeT, bitshr(hash, 8));
+    var hash2 = wrapCast(SizeT, bitshr(hash, 32));
     return array(hash1, hash2, lowHash);
 }
 
@@ -392,7 +350,6 @@ overload splitHash(th: TwoHash[E], key: K) = baseSplitHash(th, largeHash(key));
 
 [E]
 overload splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry));
-
 
 //
 // helpers
@@ -484,7 +441,6 @@ debugPrint(th: TwoHash[E])
     var usage = Int( Double(total_uses)/( 16 * (size(th.tables[0]) + size(th.tables[1])) ) * 100 );
     println("hashtable has ", usage, "% occupation");
 }
-
 
 //
 // misc
