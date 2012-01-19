@@ -2312,6 +2312,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         error("unreachable statement");
         return NULL;
     }
+    case WITH :
+        error("unexpected with statement");
+        return NULL;
 
     default :
         assert(false);

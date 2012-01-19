@@ -391,4 +391,63 @@ vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr 
     }
 }
 
+static StatementPtr desugarWithBlock(WithStatementPtr with,
+        const vector<StatementPtr> & statements, unsigned int i)
+{
+    ++i;
+    BlockPtr b = new Block();
+    for (; i < statements.size(); ++i) {
+        StatementPtr stmt = statements[i];
+        if (stmt->stmtKind == WITH) {
+            b->statements.push_back(desugarWithBlock((WithStatement *)stmt.ptr(), statements, i));
+            break;
+        }
+        b->statements.push_back(statements[i]);
+    }
+
+    vector<FormalArgPtr> formalArgs;
+    for(int i = 0; i < with->identifier.size(); i++) {
+        formalArgs.push_back(new FormalArg(with->identifier.at(i), NULL, TEMPNESS_DONTCARE));
+    }
+
+    FormalArgPtr formalVarArg = NULL;
+    bool captureByRef = false;
+
+    ExprPtr la = new Lambda(captureByRef, formalArgs, formalVarArg, b.ptr());
+    la->location = with->withLocation;
+
+    //append the lambda to the arguments for yield
+    with->expressions->add(la);
+
+    //form the return yield expression
+
+    ExprListPtr rexprs = new ExprList();
+
+    ExprPtr yieldCall = new Call(NULL, with->expressions, new ExprList());
+    ExprPtr yieldName = new NameRef(new Identifier("Monad"));
+
+    ((Call*)yieldCall.ptr())->expr = yieldName;
+
+    rexprs->add(yieldCall.ptr());
+
+    StatementPtr r = new Return(RETURN_VALUE, rexprs);
+    r->location = with->location;
+
+    return r.ptr();
+}
+
+BlockPtr desugarBlock(BlockPtr block)
+{
+    for (unsigned i = 0; i < block->statements.size(); ++i) {
+        StatementPtr stmt = block->statements[i];
+        if (stmt->stmtKind == WITH) {
+            StatementPtr stn = desugarWithBlock((WithStatement *)stmt.ptr(), block->statements, i);
+            block->statements[i] = stn;
+            block->statements.resize( i + 1);
+            break;
+        }
+    }
+    return block;
+}
+
 }
