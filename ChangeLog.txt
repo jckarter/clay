@@ -2,6 +2,30 @@
 0.1 -> 0.2 WIP
 ==========
 
+Language changes:
+-----------------
+* A new 'with' statement provides monadic statement composition. Within a
+  block, the subsequent statements after a 'with' statement are passed as
+  a capture-by-value lambda to the function specified as the 'with'
+  statement's operand.
+    // 0.2
+    foo(x) {
+        with y in bar(x);
+        with z in bas(y);
+        qux(z);
+    }
+
+    // desugars to
+
+    foo(x) {
+        bar(x): y => {
+            bas(y): z => {
+                qux(z);
+            }
+        }
+    }
+  Thanks to Arvid Picciani.
+
 Compiler frontend changes:
 --------------------------
 * -O2 is now the default optimization level.
