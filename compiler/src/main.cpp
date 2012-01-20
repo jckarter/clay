@@ -40,9 +40,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     if (optLevel > 2) {
         if (internalize) {
             vector<const char*> do_not_internalize;
-            std::string msvc_ctor_name = "clayglobals_msvc_ctor_" + llvmModule->getModuleIdentifier();
             do_not_internalize.push_back("main");
-            do_not_internalize.push_back(msvc_ctor_name.c_str());
 
             passes.add(llvm::createInternalizePass(do_not_internalize));
         }
