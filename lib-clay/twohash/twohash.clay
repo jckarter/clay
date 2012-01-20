@@ -118,7 +118,7 @@ overload destroy(a:T)
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in ..staticIntegers(static n))
-        staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
+        fieldRefByIndex(returned, i) <-- fieldRefByIndex(src, i);
 }
 
 [T | Entry?(T)]
