@@ -105,8 +105,14 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
                 " */");
         }
     }
-    else
-        return str("Pointer[", convertType(type, refCursor), "]");
+    case (CXType_Typedef) {
+        var decl = clang_getTypeDeclaration(type);
+        var typedefType = clang_getTypedefDeclUnderlyingType(decl);
+        if (inValues?(typedefType.kind, CXType_FunctionProto, CXType_FunctionNoProto))
+            return convertPointerType(typedefType, refCursor);
+    }
+
+    return str("Pointer[", convertType(type, refCursor), "]");
 }
 
 convertTypeFromDeclaration(declaration:CXCursor) : String {
