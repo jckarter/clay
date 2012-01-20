@@ -469,7 +469,7 @@ def main() :
         opt.runTestRoot = opt.testRoot
 
     if args.clayCompiler is not None:
-        opt.clayCompiler = args.clayCompiler
+        opt.clayCompiler = os.path.abspath(args.clayCompiler)
     else:
         opt.clayCompiler = getClayCompiler(opt)
 
