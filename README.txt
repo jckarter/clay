@@ -76,6 +76,14 @@ Build Clay on Windows with Visual C++
 -------------------------------------
 
 I use Visual C++ Express 2010 to build LLVM and Clay for Windows.
+Vanilla LLVM 3.0 unfortunately has a number of bugs when targeting
+Visual Studio; I have fixes for many of these bugs in Github
+mirrors of LLVM and Clang 3.0. If you're interested in using Clay
+on Windows, you should use these patched versions:
+
+    https://github.com/jckarter/llvm-3.0
+    https://github.com/jckarter/clang-3.0
+
 From a Visual Studio command prompt, build LLVM and Clang using cmake
 and the MSVC compiler. Then to build Clay, run CMake and generate
 nmake makefiles:
