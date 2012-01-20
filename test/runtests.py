@@ -429,6 +429,10 @@ def main() :
         metavar="cpu-vendor-os",
         dest='target',
         help="Specifies the target triple to build for.")
+    argp.add_argument("--clay",
+        metavar="path",
+        dest='clayCompiler',
+        help="Use the specified clay compiler (defaults to clay on path, or in build dir).")
     argp.add_argument("--buildflags",
         nargs='+',
         metavar="flags",
@@ -464,8 +468,12 @@ def main() :
     else:
         opt.runTestRoot = opt.testRoot
 
+    if args.clayCompiler is not None:
+        opt.clayCompiler = args.clayCompiler
+    else:
+        opt.clayCompiler = getClayCompiler(opt)
+
     startTime = time.time()
-    opt.clayCompiler = getClayCompiler(opt)
     opt.clayPlatform = getClayPlatform(opt)
     runTests(opt)
     endTime = time.time()
