@@ -16,11 +16,6 @@ import time
 import tempfile
 import ConfigParser
 
-try:
-    UnlinkError = WindowsError
-except NameError:
-    UnlinkError = OSError
-
 
 #
 # test properties
@@ -186,7 +181,7 @@ class TestCase(object):
         for f in glob.glob("temp*") + glob.glob("*.data"):
             try:
                 os.unlink(f)
-            except UnlinkError:
+            except OSError:
                 self.opt.cleanUpLater.append(f)
 
     def match(self, resultout, resulterr, returncode) :
@@ -488,7 +483,7 @@ def main() :
     for f in opt.cleanUpLater:
         try:
             os.unlink(f)
-        except UnlinkError:
+        except OSError:
             print "warning: unable to clean up temporary file", f
     endTime = time.time()
     print
