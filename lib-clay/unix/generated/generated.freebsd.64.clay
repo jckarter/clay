@@ -1518,7 +1518,7 @@ alias Union_Unnamed10 = Union[
     /* __sa_sigaction */ CCodePointer[[Int, Pointer[Struct___siginfo], OpaquePointer],[]],
 ];
 
-alias sig_t = Pointer[__sighandler_t];
+alias sig_t = CCodePointer[[Int],[]];
 
 alias __siginfohandler_t = /* unknown kind FunctionProto */ Opaque;
 
@@ -1531,7 +1531,7 @@ record Struct_sigaltstack (
 alias stack_t = Struct_sigaltstack;
 
 record Struct_sigvec (
-    sv_handler : Pointer[__sighandler_t],
+    sv_handler : CCodePointer[[Int],[]],
     sv_mask : Int,
     sv_flags : Int,
 );
@@ -1541,7 +1541,7 @@ record Struct_sigstack (
     ss_onstack : Int,
 );
 
-external (cdecl) signal(arg0:Int, arg1:Pointer[__sighandler_t]) : Pointer[__sighandler_t];
+external (cdecl) signal(arg0:Int, arg1:CCodePointer[[Int],[]]) : CCodePointer[[Int],[]];
 
 external (cdecl) wait(arg0:Pointer[Int]) : pid_t;
 
