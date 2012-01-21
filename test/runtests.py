@@ -28,6 +28,7 @@ class TestOptions:
     testLogFile = "testlog.txt"
     clayCompiler = None
     clayPlatform = None
+    cleanUpLater = []
 
 
 #
@@ -177,8 +178,11 @@ class TestCase(object):
         pass
 
     def post_run(self) :
-        [os.unlink(f) for f in glob.glob("temp*")]
-        [os.unlink(f) for f in glob.glob("*.data")]
+        for f in glob.glob("temp*") + glob.glob("*.data"):
+            try:
+                os.unlink(f)
+            except WindowsError:
+                self.opt.cleanUpLater.append(f)
 
     def match(self, resultout, resulterr, returncode) :
         compilererrfile = fileForPlatform(self.opt, ".", "compilererr", "txt")
@@ -476,6 +480,11 @@ def main() :
     startTime = time.time()
     opt.clayPlatform = getClayPlatform(opt)
     runTests(opt)
+    for f in opt.cleanUpLater:
+        try:
+            os.unlink(f)
+        except WindowsError:
+            print "warning: unable to clean up temporary file", f
     endTime = time.time()
     print
     print "time-taken-seconds: %f" % (endTime - startTime)
