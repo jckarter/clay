@@ -424,7 +424,7 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     ExprListPtr rexprs = new ExprList();
 
     ExprPtr yieldCall = new Call(NULL, with->expressions, new ExprList());
-    ExprPtr yieldName = new NameRef(new Identifier("Monad"));
+    ExprPtr yieldName = new NameRef(new Identifier("monad"));
 
     ((Call*)yieldCall.ptr())->expr = yieldName;
 
