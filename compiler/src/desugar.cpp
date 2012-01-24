@@ -428,7 +428,7 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
 
     ((Call*)yieldCall.ptr())->expr = yieldName;
 
-    rexprs->add(yieldCall.ptr());
+    rexprs->add(new Unpack(yieldCall.ptr()));
 
     StatementPtr r = new Return(RETURN_VALUE, rexprs);
     r->location = with->location;
