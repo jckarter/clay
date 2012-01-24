@@ -416,8 +416,8 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     ExprPtr la = new Lambda(captureByRef, formalArgs, formalVarArg, b.ptr());
     la->location = with->withLocation;
 
-    //append the lambda to the arguments for yield
-    with->expressions->add(la);
+    //prepend the lambda to the arguments for monad
+    with->expressions->exprs.insert(with->expressions->exprs.begin(),la);
 
     //form the return yield expression
 
