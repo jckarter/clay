@@ -104,10 +104,10 @@ alias RTLD_SELF = RawPointer(-3);
 //
 // socket protocol families
 //
-alias AF_UNSPEC = 0;
-alias AF_LOCAL = 1;
-alias AF_INET = 2;
-alias AF_INET6 = 28;
+alias AF_UNSPEC = UInt8(0);
+alias AF_LOCAL = UInt8(1);
+alias AF_INET = UInt8(2);
+alias AF_INET6 = UInt8(28);
 
 
 
