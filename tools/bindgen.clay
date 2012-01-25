@@ -422,8 +422,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             return CXChildVisit_Continue;
 
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
+        if (underlyingType.kind == CXType_Unexposed)
+            underlyingType = clang_getCanonicalType(underlyingType);
         printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
-            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
+            convertType(underlyingType, cursor), ";\n");
         opaqueType(underlyingType);
 
         return CXChildVisit_Continue;
