@@ -4088,7 +4088,7 @@ private pow_rn(x:Double, y:Double) {
         result may overflow
         */
         if(powh == (powh + (powm * RNROUNDCST))) {
-            powdb.2 = powh;
+            var powdb = db_number(powh);
             if (H < 1023) {
                 powdb.0[1] += wrapBitshl(H , 20);
                 return sign * powdb.2;
