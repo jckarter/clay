@@ -406,8 +406,8 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     }
 
     vector<FormalArgPtr> formalArgs;
-    for(int i = 0; i < with->identifier.size(); i++) {
-        formalArgs.push_back(new FormalArg(with->identifier.at(i), NULL, TEMPNESS_DONTCARE));
+    for(int i = 0; i < with->lhs.size(); i++) {
+        formalArgs.push_back(new FormalArg(with->lhs.at(i), NULL, TEMPNESS_DONTCARE));
     }
 
     FormalArgPtr formalVarArg = NULL;
@@ -417,14 +417,14 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     la->location = with->withLocation;
 
     //prepend the lambda to the arguments for monad
-    with->expressions->exprs.insert(with->expressions->exprs.begin(),la);
+    with->rhs->exprs.insert(with->rhs->exprs.begin(),la);
 
     //form the return yield expression
 
     ExprListPtr rexprs = new ExprList();
 
-    ExprPtr yieldCall = new Call(NULL, with->expressions, new ExprList());
-    ExprPtr yieldName = new NameRef(new Identifier("monad"));
+    ExprPtr yieldCall = new Call(NULL, with->rhs, new ExprList());
+    ExprPtr yieldName = new NameRef(with->monad);
 
     ((Call*)yieldCall.ptr())->expr = yieldName;
 

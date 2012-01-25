@@ -1,15 +1,22 @@
 variant V(Int, StringConstant);
 
 
+[C] ignore (c:C, ..T)
+{
+    c();
+}
+
+
 [C,V | Variant?(V) ]
-monad(c:C, v:V)
+dispatch(c:C, v:V)
 {
     return ..c(*v);
 }
 
 test(m : V)
 {
-    with s = m;
+    with ignore(3);
+    with s = dispatch(m);
     println(s);
 }
 
