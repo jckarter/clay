@@ -39,6 +39,7 @@ inline overload sqrt(x:T,y:U) = ..unpackVec(x86_sqrtpd(Vec(Double(x),Double(y)))
 
 [T | Numeric?(T) and MathMode?(SIMD)]
 inline overload sqrt(x:T) = T(x86_sqrtsd(Vec(Double(x),0.))[0]);
+inline overload sqrt(x:Double) = x86_sqrtsd(Vec(x,0.))[0];
 
 [T | Numeric?(T)]
 inline overload sqrt(x:V2[T]) = V2[T](x86_sqrtpd(VD2(x)));
