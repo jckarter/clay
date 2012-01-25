@@ -28,6 +28,7 @@ class TestOptions:
     testLogFile = "testlog.txt"
     clayCompiler = None
     clayPlatform = None
+    cleanUpLater = []
 
 
 #
@@ -177,8 +178,11 @@ class TestCase(object):
         pass
 
     def post_run(self) :
-        [os.unlink(f) for f in glob.glob("temp*")]
-        [os.unlink(f) for f in glob.glob("*.data")]
+        for f in glob.glob("temp*") + glob.glob("*.data"):
+            try:
+                os.unlink(f)
+            except OSError:
+                self.opt.cleanUpLater.append(f)
 
     def match(self, resultout, resulterr, returncode) :
         compilererrfile = fileForPlatform(self.opt, ".", "compilererr", "txt")
@@ -429,6 +433,10 @@ def main() :
         metavar="cpu-vendor-os",
         dest='target',
         help="Specifies the target triple to build for.")
+    argp.add_argument("--clay",
+        metavar="path",
+        dest='clayCompiler',
+        help="Use the specified clay compiler (defaults to clay on path, or in build dir).")
     argp.add_argument("--buildflags",
         nargs='+',
         metavar="flags",
@@ -464,10 +472,19 @@ def main() :
     else:
         opt.runTestRoot = opt.testRoot
 
+    if args.clayCompiler is not None:
+        opt.clayCompiler = os.path.abspath(args.clayCompiler)
+    else:
+        opt.clayCompiler = getClayCompiler(opt)
+
     startTime = time.time()
-    opt.clayCompiler = getClayCompiler(opt)
     opt.clayPlatform = getClayPlatform(opt)
     runTests(opt)
+    for f in opt.cleanUpLater:
+        try:
+            os.unlink(f)
+        except OSError:
+            print "warning: unable to clean up temporary file", f
     endTime = time.time()
     print
     print "time-taken-seconds: %f" % (endTime - startTime)

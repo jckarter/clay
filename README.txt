@@ -1,11 +1,16 @@
 
-Clay
-----
+Clay 0.2-WIP
+------------
 
 Clay is a programming language designed for Generic Programming.
 
 Visit http://claylabs.com/clay for more information.
 
+This is a work-in-progress branch. Documentation may be out of date, and
+source code compatibility may break at any time. The latest release branch
+is `v0.1`; for normal use you will want to switch to that branch:
+
+    git checkout v0.1
 
 Pre-requisites
 --------------
@@ -71,6 +76,14 @@ Build Clay on Windows with Visual C++
 -------------------------------------
 
 I use Visual C++ Express 2010 to build LLVM and Clay for Windows.
+Vanilla LLVM 3.0 unfortunately has a number of bugs when targeting
+Visual Studio; I have fixes for many of these bugs in Github
+mirrors of LLVM and Clang 3.0. If you're interested in using Clay
+on Windows, you should use these patched versions:
+
+    https://github.com/jckarter/llvm-3.0
+    https://github.com/jckarter/clang-3.0
+
 From a Visual Studio command prompt, build LLVM and Clang using cmake
 and the MSVC compiler. Then to build Clay, run CMake and generate
 nmake makefiles:

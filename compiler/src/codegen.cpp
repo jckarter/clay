@@ -6278,19 +6278,6 @@ static void finalizeCtorsDtors()
     finalizeSimpleContext(destructorsCtx, prelude_exceptionInFinalizer());
 }
 
-// LLVM 3.0 does not link global ctors and dtors correctly
-// See http://llvm.org/bugs/show_bug.cgi?id=9213
-static void generateMSVCCtorsAndDtors() {
-    llvm::Type *constructorType = constructorsCtx->llvmFunc->getType();
-
-    llvm::GlobalVariable *ctor = new llvm::GlobalVariable(
-        *llvmModule, constructorType, true,
-        llvm::GlobalVariable::ExternalLinkage,
-        constructorsCtx->llvmFunc, "clayglobals_msvc_ctor_" + llvmModule->getModuleIdentifier());
-
-    ctor->setSection(".CRT$XCU");
-}
-
 static void generateLLVMCtorsAndDtors() {
 
     // make types for llvm.global_ctors, llvm.global_dtors
@@ -6317,36 +6304,33 @@ static void generateLLVMCtorsAndDtors() {
     llvm::Constant *arrayVal1 = llvm::ConstantArray::get(arrayType,
                                                          arrayElems1);
 
-    // make constants for llvm.global_dtors
-    vector<llvm::Constant*> structElems2;
-    llvm::ConstantInt *prio2 =
-        llvm::ConstantInt::get(llvm::getGlobalContext(),
-                               llvm::APInt(32, llvm::StringRef("65535"), 10));
-    structElems2.push_back(prio2);
-    structElems2.push_back(destructorsCtx->llvmFunc);
-    llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
-                                                           structElems2);
-    vector<llvm::Constant*> arrayElems2;
-    arrayElems2.push_back(structVal2);
-    llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
-                                                         arrayElems2);
-
     // define llvm.global_ctors
     new llvm::GlobalVariable(*llvmModule, arrayType, true,
                              llvm::GlobalVariable::AppendingLinkage,
                              arrayVal1, "llvm.global_ctors");
 
-    // define llvm.global_dtors
-    new llvm::GlobalVariable(*llvmModule, arrayType, true,
-                             llvm::GlobalVariable::AppendingLinkage,
-                             arrayVal2, "llvm.global_dtors");
-}
+    // MSVC does not support a dtors mechanism. dtors are registered atexit
+    // by the ctor
+    if (!isMsvcTarget()) {
+        // make constants for llvm.global_dtors
+        vector<llvm::Constant*> structElems2;
+        llvm::ConstantInt *prio2 =
+            llvm::ConstantInt::get(llvm::getGlobalContext(),
+                                   llvm::APInt(32, llvm::StringRef("65535"), 10));
+        structElems2.push_back(prio2);
+        structElems2.push_back(destructorsCtx->llvmFunc);
+        llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
+                                                               structElems2);
+        vector<llvm::Constant*> arrayElems2;
+        arrayElems2.push_back(structVal2);
+        llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
+                                                             arrayElems2);
 
-static void generateCtorsAndDtors() {
-    if (isMsvcTarget())
-        generateMSVCCtorsAndDtors();
-    else
-        generateLLVMCtorsAndDtors();
+        // define llvm.global_dtors
+        new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                                 llvm::GlobalVariable::AppendingLinkage,
+                                 arrayVal2, "llvm.global_dtors");
+    }
 }
 
 void codegenMain(ModulePtr module)
@@ -6416,7 +6400,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 {
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
-    generateCtorsAndDtors();
+    generateLLVMCtorsAndDtors();
 
     codegenModuleEntryPoints(module, importedExternals);
 

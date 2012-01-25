@@ -105,8 +105,14 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
                 " */");
         }
     }
-    else
-        return str("Pointer[", convertType(type, refCursor), "]");
+    case (CXType_Typedef) {
+        var decl = clang_getTypeDeclaration(type);
+        var typedefType = clang_getTypedefDeclUnderlyingType(decl);
+        if (inValues?(typedefType.kind, CXType_FunctionProto, CXType_FunctionNoProto))
+            return convertPointerType(typedefType, refCursor);
+    }
+
+    return str("Pointer[", convertType(type, refCursor), "]");
 }
 
 convertTypeFromDeclaration(declaration:CXCursor) : String {
@@ -416,8 +422,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             return CXChildVisit_Continue;
 
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
+        if (underlyingType.kind == CXType_Unexposed)
+            underlyingType = clang_getCanonicalType(underlyingType);
         printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
-            convertType(clang_getTypedefDeclUnderlyingType(cursor), cursor), ";\n");
+            convertType(underlyingType, cursor), ";\n");
         opaqueType(underlyingType);
 
         return CXChildVisit_Continue;

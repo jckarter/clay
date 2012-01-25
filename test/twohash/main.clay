@@ -1,0 +1,24 @@
+import twohash;
+
+record Color (
+    r: UInt64,
+    g: UInt64,
+    b: UInt64,
+);
+
+main() {
+    var h = twohash.HashMap[UInt64,Color]();
+
+    for(i in range(100000ul))
+        h[i] = Color(i,i,i);
+    println(size(h));
+    println(h[4ul].r);
+    println(h[999ul].b);
+
+    remove(h, 999ul);
+    println(size(h));
+
+    for(i in range(100000ul))
+        remove(h, i);
+    println(size(h));
+}
