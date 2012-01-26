@@ -1620,14 +1620,14 @@ struct EvalStatement : public Statement {
 
 
 struct WithStatement : public Statement {
-    vector<IdentifierPtr> identifier;
-    ExprListPtr expressions;
+    vector<IdentifierPtr> lhs;
+    IdentifierPtr monad;
+    ExprListPtr rhs;
     LocationPtr withLocation;
-    WithStatement( vector<IdentifierPtr> i, ExprListPtr e, LocationPtr l)
-        : Statement(WITH), identifier(i), expressions(e), withLocation(l) {}
+    WithStatement( vector<IdentifierPtr> i, IdentifierPtr m, ExprListPtr r, LocationPtr l)
+        : Statement(WITH), lhs(i), monad(m), rhs(r), withLocation(l) {}
 };
 
-
 //
 // Code
 //

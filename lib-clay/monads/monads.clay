@@ -1,4 +1,4 @@
-public define Monad;
+public define monad;
 
 [T] public Monad? (static T) = false;
 
