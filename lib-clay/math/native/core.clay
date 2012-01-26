@@ -77,7 +77,7 @@ overload llround(x:Float) {
     var result = 0l;
     var i = floatBits(x);
     var j0 = bitand(bitshr(i,23),0xff) - 0x7f;
-    var sign = if(bitand(i,0x80000000) != 0) -1l else 1l;
+    var sign = if(bitand(i,0x80000000u) != 0) -1l else 1l;
     i = bitor(bitand(i,0x7fffff),0x800000);
     if (j0 < Int(8 * TypeSize(Long)) - 1){
         if (j0 < 0)
@@ -100,7 +100,7 @@ overload llround (x:Double ) {
     var result = 0l;
     var xdb = db_number(x);
     var j0 = bitand(bitshr(xdb.0[1] , 20) , 0x7ff) - 0x3ff;
-    var sign = if(bitand(xdb.0[1] , 0x80000000) != 0) -1l else 1l;
+    var sign = if(bitand(xdb.0[1] , 0x80000000u) != 0) -1l else 1l;
     xdb.0[1] = bitor(bitand(xdb.0[1],0xfffff) ,0x100000);
     if (j0 < 20){
         if (j0 < 0)
@@ -114,7 +114,7 @@ overload llround (x:Double ) {
         if (j0 >= 52)
             result = bitshl(bitor(bitshl( Long(xdb.0[1]) , 32) , xdb.0[0]) , j0 - 52);
         else{
-            var j = xdb.0[0] + bitshr(0x80000000 ,j0 - 20);
+            var j = xdb.0[0] + bitshr(0x80000000u ,j0 - 20);
             if (j < xdb.0[0])
                 inc(xdb.0[1]);
             if (j0 == 20)

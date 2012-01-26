@@ -91,7 +91,7 @@ overload erfc(p:T) = T(erfc(Float(p)));
     vc.0 = c * x;
     var xsq = x * x;
     var xquad = xsq * xsq;
-    vc.1 = bitor(vc.1,0x80000000);
+    vc.1 = bitor(vc.1,0x80000000u);
     return 2.0f / (1.0f + pow2 (k * x)) - a * x * (b * xquad - 1.0f) * pow2 (vc.0);
 }
 
@@ -193,7 +193,7 @@ overload sin (x:Float){
     s.0 = -0.0032225901625579573f;
 
     vx.0 = x;
-    var sign = bitand(vx.1 , 0x80000000);
+    var sign = bitand(vx.1 , 0x80000000u);
     vx.1 = bitand(vx.1 , 0x7FFFFFFF);
 
     var qpprox = fouroverpi * x - fouroverpisq * x * vx.0;
@@ -214,7 +214,7 @@ overload sin (x:Float){
     var p,vx = ieee754r(),ieee754r();
     p.0 = 0.22308510060189463f;
     vx.0 = x;
-    var sign = bitand(vx.1 , 0x80000000);
+    var sign = bitand(vx.1 , 0x80000000u);
     vx.1 = bitand(vx.1,0x7FFFFFFF);
     var qpprox = fouroverpi * x - fouroverpisq * x * vx.0;
     p.1 = bitor(p.1,sign);
