@@ -3123,12 +3123,12 @@ var  twoPowerIndex2 = Array[tPi2_t,256](
 private decompose(x) {
     var __decompose_xdb = db_number(x);
     var __decompose_ex = 0;
-    if (bitand(__decompose_xdb.0[1] , 0xfff00000)==0) {
+    if (bitand(__decompose_xdb.0[1] , 0xfff00000u)==0) {
         __decompose_xdb.2 = x * 0.18014398509481984e17;
         __decompose_ex = -54;
     }
     __decompose_ex += bitshr(__decompose_xdb.0[1] , 20) - 1023;
-    __decompose_xdb.0[1] = bitand(__decompose_xdb.0[1],0x000fffff);
+    __decompose_xdb.0[1] = bitand(__decompose_xdb.0[1],0x000fffffu);
     var __decompose_temp = bitor(__decompose_xdb.1 , 0x0010000000000000ul);
     __decompose_temp = bitand(bitnot(__decompose_temp) , (__decompose_temp - 1)) + 1;
     var __decompose_tempdb = db_number(Double( __decompose_temp));
@@ -3488,10 +3488,10 @@ private pow_exact_case(x, y, G, kh, kl, log2xh) {
     */
 
     var xdb = db_number(x);
-    if (bitand(xdb.0[1] , 0xfff00000) == 0)
+    if (bitand(xdb.0[1] , 0xfff00000u) == 0)
         /* x is subnormal, scale by 2^52 */
         xdb.2 *= 0.4503599627370496e16;
-    if (bitor(bitand(xdb.0[1] , 0x000fffff) , xdb.0[0]) == 0) {
+    if (bitor(bitand(xdb.0[1] , 0x000fffffu) , xdb.0[0]) == 0) {
         /* x is an integer power of 2
 
        x^y is exact or midpoint iff log2(x) * y is integer
@@ -3692,7 +3692,7 @@ private pow_rn(x:Double, y:Double) {
         if (y == 2.0)  return x * x; /* Remark: may yield uncorrect rounding on x86 for subnormal results */
         if (y == -1.0) return 1. / x;
 
-        if ((x == 0.0) and (bitand(ydb.0[1] , 0x7ff00000) != 0x7ff00000)) {
+        if ((x == 0.0) and (bitand(ydb.0[1] , 0x7ff00000u) != 0x7ff00000u)) {
             /* x = +/-0 and y is neither NaN nor Infinity
 
             We have four cases
@@ -3722,9 +3722,9 @@ private pow_rn(x:Double, y:Double) {
         Note: the cases (x,y) = (1,NaN) and (x,y) = (NaN,0) have already been handled.
 
         */
-        if (bitand(ydb.0[1] , 0x7ff00000) == 0x7ff00000) {
+        if (bitand(ydb.0[1] , 0x7ff00000u) == 0x7ff00000u) {
             /* Here y is NaN or Inf */
-            if (bitor(bitand(ydb.0[1] , 0x000fffff) , ydb.0[0]) != 0)
+            if (bitor(bitand(ydb.0[1] , 0x000fffffu) , ydb.0[0]) != 0)
                 return y; /* Here y is NaN, we return NaN */
 
             /* Here y is +/- Inf
@@ -3755,9 +3755,9 @@ private pow_rn(x:Double, y:Double) {
 
         /* Here y is neither Inf nor NaN */
 
-        if (bitand(xdb.0[1] , 0x7ff00000) == 0x7ff00000) {
+        if (bitand(xdb.0[1] , 0x7ff00000u) == 0x7ff00000u) {
             /* Here x is NaN or Inf */
-            if (bitor(bitand(xdb.0[1] , 0x000fffff) , xdb.0[0]) != 0)
+            if (bitor(bitand(xdb.0[1] , 0x000fffffu) , xdb.0[0]) != 0)
                 return x;/* Here x is NaN, we return NaN */
 
             /* Here x is +/- Inf
@@ -3833,7 +3833,7 @@ private pow_rn(x:Double, y:Double) {
 
         */
         x = -x;
-        xdb.0[1] = bitand(xdb.0[1],0x7fffffff);
+        xdb.0[1] = bitand(xdb.0[1],0x7fffffffu);
         if (isOddInteger(y))
             sign = -sign;
     }
@@ -3865,20 +3865,20 @@ private pow_rn(x:Double, y:Double) {
     /* We start the computation of the logarithm of x */
 
     var E = 0;
-    if (bitand(xdb.0[1] , 0xfff00000) == 0) {
+    if (bitand(xdb.0[1] , 0xfff00000u) == 0) {
         /* x is subnormal, make it normal */
         xdb.2 *= two52;
         E = -52;
     }
 
     E += bitshr(xdb.0[1],20)-1023;             /* extract the exponent */
-    var index = bitand(xdb.0[1] , 0x000fffff);
-    xdb.0[1] =  bitor(index , 0x3ff00000);	/* do exponent = 0 */
+    var index = bitand(xdb.0[1] , 0x000fffffu);
+    xdb.0[1] =  bitor(index , 0x3ff00000u);	/* do exponent = 0 */
     index = bitshr((index + wrapBitshl(1,(20-L-1))) , 20-L);
 
     /* reduce  such that sqrt(2)/2 < xdb.2 < sqrt(2) */
     if (index >= MAXINDEX) { /* corresponds to xdb>sqrt(2)*/
-        xdb.0[1] -= 0x00100000;
+        xdb.0[1] -= 0x00100000u;
         inc(E);
     }
 
@@ -4247,7 +4247,7 @@ private pow_rn(x:Double, y:Double) {
                 */
 
                 twodb.2 = nearestintpowh + two52;
-                twodb.0[1] = bitand( (twodb.0[1] + wrapBitshl(1 , 20)) , 0x001fffff);
+                twodb.0[1] = bitand( (twodb.0[1] + wrapBitshl(1 , 20)) , 0x001fffffu);
 
                 return sign * twodb.2;
             }
