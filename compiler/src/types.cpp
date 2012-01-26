@@ -635,7 +635,7 @@ void initializeRecordFields(RecordTypePtr t) {
         if ((mpv->size() == 1) &&
             (mpv->values[0]->type->typeKind == RECORD_TYPE) &&
             (((RecordType *)mpv->values[0]->type.ptr())->record.ptr() ==
-             prelude_RecordWithProperties().ptr()))
+             primitive_RecordWithProperties().ptr()))
         {
             const vector<ObjectPtr> &params =
                 ((RecordType *)mpv->values[0]->type.ptr())->params;
@@ -706,15 +706,11 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
 // variantMemberTypes, variantReprType
 //
 
-static RecordPtr getVariantReprRecord() {
-    static RecordPtr rec;
-    if (!rec) {
-        ObjectPtr obj = prelude_VariantRepr();
-        if (obj->objKind != RECORD)
-            error("lib-clay error: VariantRepr is not a record");
-        rec = (Record *)obj.ptr();
-    }
-    return rec;
+static TypePtr getVariantReprType(VariantTypePtr t) {
+    ExprPtr variantReprType = operator_expr_variantReprType();
+    ExprPtr reprExpr = new Call(variantReprType, new ExprList(new ObjectExpr(t.ptr())));
+
+    return evaluateType(reprExpr, new Env());
 }
 
 static void initializeVariantType(VariantTypePtr t) {
@@ -795,11 +791,7 @@ static void initializeVariantType(VariantTypePtr t) {
     if (t->memberTypes.empty())
         error(t->variant, "variant type must have at least one instance");
 
-    RecordPtr reprRecord = getVariantReprRecord();
-    vector<ObjectPtr> params;
-    for (unsigned i = 0; i < t->memberTypes.size(); ++i)
-        params.push_back(t->memberTypes[i].ptr());
-    t->reprType = recordType(reprRecord, params);
+    t->reprType = getVariantReprType(t);
 
     t->initialized = true;
 }

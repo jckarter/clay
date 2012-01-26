@@ -3,7 +3,7 @@
 namespace clay {
 
 ExprPtr desugarCharLiteral(char c) {
-    ExprPtr nameRef = prelude_expr_Char();
+    ExprPtr nameRef = operator_expr_charLiteral();
     CallPtr call = new Call(nameRef, new ExprList());
     ostringstream out;
     out << (int)c;
@@ -14,7 +14,7 @@ ExprPtr desugarCharLiteral(char c) {
 ExprPtr desugarFieldRef(FieldRefPtr x) {
     ExprListPtr args = new ExprList(x->expr);
     args->add(new ObjectExpr(x->name.ptr()));
-    CallPtr call = new Call(prelude_expr_fieldRef(), args);
+    CallPtr call = new Call(operator_expr_fieldRef(), args);
     call->location = x->location;
     return call.ptr();
 }
@@ -23,7 +23,7 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
     ExprListPtr args = new ExprList(x->expr);
     ValueHolderPtr vh = sizeTToValueHolder(x->index);
     args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-    CallPtr call = new Call(prelude_expr_staticIndex(), args);
+    CallPtr call = new Call(operator_expr_staticIndex(), args);
     call->location = x->location;
     return call.ptr();
 }
@@ -32,16 +32,16 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case DEREFERENCE :
-        callable = prelude_expr_dereference();
+        callable = operator_expr_dereference();
         break;
     case ADDRESS_OF :
         callable = primitive_expr_addressOf();
         break;
     case PLUS :
-        callable = prelude_expr_plus();
+        callable = operator_expr_plus();
         break;
     case MINUS :
-        callable = prelude_expr_minus();
+        callable = operator_expr_minus();
         break;
     case NOT :
         callable = primitive_expr_boolNot();
@@ -59,37 +59,37 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case ADD :
-        callable = prelude_expr_add();
+        callable = operator_expr_add();
         break;
     case SUBTRACT :
-        callable = prelude_expr_subtract();
+        callable = operator_expr_subtract();
         break;
     case MULTIPLY :
-        callable = prelude_expr_multiply();
+        callable = operator_expr_multiply();
         break;
     case DIVIDE :
-        callable = prelude_expr_divide();
+        callable = operator_expr_divide();
         break;
     case REMAINDER :
-        callable = prelude_expr_remainder();
+        callable = operator_expr_remainder();
         break;
     case EQUALS :
-        callable = prelude_expr_equalsP();
+        callable = operator_expr_equalsP();
         break;
     case NOT_EQUALS :
-        callable = prelude_expr_notEqualsP();
+        callable = operator_expr_notEqualsP();
         break;
     case LESSER :
-        callable = prelude_expr_lesserP();
+        callable = operator_expr_lesserP();
         break;
     case LESSER_EQUALS :
-        callable = prelude_expr_lesserEqualsP();
+        callable = operator_expr_lesserEqualsP();
         break;
     case GREATER :
-        callable = prelude_expr_greaterP();
+        callable = operator_expr_greaterP();
         break;
     case GREATER_EQUALS :
-        callable = prelude_expr_greaterEqualsP();
+        callable = operator_expr_greaterEqualsP();
         break;
     default :
         assert(false);
@@ -102,7 +102,7 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
 }
 
 ExprPtr desugarIfExpr(IfExprPtr x) {
-    ExprPtr callable = prelude_expr_ifExpression();
+    ExprPtr callable = operator_expr_ifExpression();
     CallPtr call = new Call(callable, new ExprList());
     call->parenArgs->add(x->condition);
     call->parenArgs->add(x->thenPart);
@@ -110,21 +110,13 @@ ExprPtr desugarIfExpr(IfExprPtr x) {
     return call.ptr();
 }
 
-ExprPtr desugarStaticExpr(StaticExprPtr x) {
-    ExprPtr callable = prelude_expr_wrapStatic();
-    CallPtr call = new Call(callable, new ExprList());
-    call->location = x->location;
-    call->parenArgs->add(x->expr);
-    return call.ptr();
-}
-
 ExprPtr updateOperatorExpr(int op) {
     switch (op) {
-    case UPDATE_ADD : return prelude_expr_add();
-    case UPDATE_SUBTRACT : return prelude_expr_subtract();
-    case UPDATE_MULTIPLY : return prelude_expr_multiply();
-    case UPDATE_DIVIDE : return prelude_expr_divide();
-    case UPDATE_REMAINDER : return prelude_expr_remainder();
+    case UPDATE_ADD : return operator_expr_add();
+    case UPDATE_SUBTRACT : return operator_expr_subtract();
+    case UPDATE_MULTIPLY : return operator_expr_multiply();
+    case UPDATE_DIVIDE : return operator_expr_divide();
+    case UPDATE_REMAINDER : return operator_expr_remainder();
     default :
         assert(false);
         return NULL;
@@ -151,7 +143,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     exprBinding->location = x->body->location;
     bs.push_back(exprBinding.ptr());
 
-    CallPtr iteratorCall = new Call(prelude_expr_iterator(), new ExprList());
+    CallPtr iteratorCall = new Call(operator_expr_iterator(), new ExprList());
     iteratorCall->location = x->body->location;
     ExprPtr exprName = new NameRef(exprVar);
     exprName->location = x->location;
@@ -162,13 +154,13 @@ StatementPtr desugarForStatement(ForPtr x) {
     iteratorBinding->location = x->body->location;
     bs.push_back(iteratorBinding.ptr());
 
-    CallPtr hasNextCall = new Call(prelude_expr_hasNextP(), new ExprList());
+    CallPtr hasNextCall = new Call(operator_expr_hasNextP(), new ExprList());
     hasNextCall->location = x->body->location;
 
     ExprPtr iterName = new NameRef(iterVar);
     iterName->location = x->body->location;
     hasNextCall->parenArgs->add(iterName);
-    CallPtr nextCall = new Call(prelude_expr_next(), new ExprList());
+    CallPtr nextCall = new Call(operator_expr_next(), new ExprList());
     nextCall->location = x->body->location;
     nextCall->parenArgs->add(iterName);
     ExprPtr unpackNext = new Unpack(nextCall.ptr());
@@ -211,12 +203,12 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             ExprPtr expVarName = new NameRef(expVar);
             expVarName->location = x->exceptionVar->location;
             asTypeArgs->add(expVarName);
-            CallPtr cond = new Call(prelude_expr_exceptionIsP(), asTypeArgs);
+            CallPtr cond = new Call(operator_expr_exceptionIsP(), asTypeArgs);
             cond->location = x->exceptionType->location;
 
             BlockPtr block = new Block();
             block->location = x->location;
-            CallPtr getter = new Call(prelude_expr_exceptionAs(), asTypeArgs);
+            CallPtr getter = new Call(operator_expr_exceptionAs(), asTypeArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -239,7 +231,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             BlockPtr block = new Block();
             block->location = x->location;
             ExprListPtr asAnyArgs = new ExprList(new NameRef(expVar));
-            CallPtr getter = new Call(prelude_expr_exceptionAsAny(),
+            CallPtr getter = new Call(operator_expr_exceptionAsAny(),
                                       asAnyArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
@@ -267,7 +259,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         ExprPtr expVarName = new NameRef(expVar);
         expVarName->location = firstCatchLocation;
         ExprListPtr continueArgs = new ExprList(expVarName);
-        CallPtr continueException = new Call(prelude_expr_continueException(),
+        CallPtr continueException = new Call(operator_expr_continueException(),
                                              continueArgs);
         continueException->location = firstCatchLocation;
         StatementPtr stmt = new ExprStatement(continueException.ptr());
@@ -302,7 +294,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
         block->statements.push_back(b.ptr());
     }
 
-    ExprPtr caseCallable = prelude_expr_caseP();
+    ExprPtr caseCallable = operator_expr_caseP();
 
     StatementPtr root;
     StatementPtr *nextPtr = &root;

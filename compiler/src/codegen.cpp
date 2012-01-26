@@ -298,7 +298,7 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
         return;
     bool savedCheckExceptions = ctx->checkExceptions;
     ctx->checkExceptions = false;
-    codegenCallValue(staticCValue(prelude_destroy(), ctx),
+    codegenCallValue(staticCValue(operator_destroy(), ctx),
                      new MultiCValue(dest),
                      ctx,
                      new MultiCValue());
@@ -344,7 +344,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         }
         return;
     }
-    codegenCallValue(staticCValue(dest->type.ptr(), ctx),
+    codegenCallValue(staticCValue(operator_copy(), ctx),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
@@ -362,7 +362,7 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         }
         return;
     }
-    codegenCallValue(staticCValue(prelude_move(), ctx),
+    codegenCallValue(staticCValue(operator_move(), ctx),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
@@ -390,7 +390,7 @@ static void codegenValueAssign(
     args->add(src);
     MultiPValuePtr pvArgs = new MultiPValue(pdest);
     pvArgs->add(psrc);
-    codegenCallValue(staticCValue(prelude_assign(), ctx),
+    codegenCallValue(staticCValue(operator_assign(), ctx),
                      args,
                      pvArgs,
                      ctx,
@@ -401,10 +401,9 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 {
     if (a->type != boolType)
         typeError(boolType, a->type);
-    llvm::Value *b1 = ctx->builder->CreateLoad(a->llValue);
-    llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
-    llvm::Value *flag1 = ctx->builder->CreateICmpNE(b1, zero);
-    return flag1;
+    llvm::Value *flag = ctx->builder->CreateLoad(a->llValue);
+    assert(flag->getType() == llvmIntType(1));
+    return flag;
 }
 
 
@@ -979,7 +978,7 @@ void codegenExpr(ExprPtr expr,
         MultiCValuePtr args = new MultiCValue();
         args->add(cvFirst);
         args->add(cvLast);
-        codegenCallValue(staticCValue(prelude_StringConstant(), ctx),
+        codegenCallValue(staticCValue(operator_stringLiteral(), ctx),
                          args,
                          ctx,
                          out);
@@ -1032,7 +1031,7 @@ void codegenExpr(ExprPtr expr,
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
+        ExprPtr tupleLiteral = operator_expr_tupleLiteral();
         codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
         break;
     }
@@ -1126,8 +1125,7 @@ void codegenExpr(ExprPtr expr,
         int marker = cgMarkStack(ctx);
         CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag2, out0->llValue);
         cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
@@ -1156,8 +1154,7 @@ void codegenExpr(ExprPtr expr,
         int marker = cgMarkStack(ctx);
         CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag2, out0->llValue);
         cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
@@ -1192,10 +1189,6 @@ void codegenExpr(ExprPtr expr,
     }
 
     case STATIC_EXPR : {
-        StaticExpr *x = (StaticExpr *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStaticExpr(x);
-        codegenExpr(x->desugared, env, ctx, out);
         break;
     }
 
@@ -1497,7 +1490,7 @@ void codegenGVarInstance(GVarInstancePtr x)
 
     // generate destructor procedure body
     InvokeEntryPtr entry =
-        codegenCallable(prelude_destroy(),
+        codegenCallable(operator_destroy(),
                         vector<TypePtr>(1, y->type),
                         vector<ValueTempness>(1, TEMPNESS_LVALUE));
 
@@ -1735,7 +1728,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     ctx->builder->SetInsertPoint(exceptionBlock);
     if (exceptionsEnabled()) {
-        ObjectPtr callable = prelude_unhandledExceptionInExternal();
+        ObjectPtr callable = operator_unhandledExceptionInExternal();
         codegenCallValue(staticCValue(callable, ctx),
                          new MultiCValue(),
                          ctx,
@@ -1995,7 +1988,7 @@ void codegenIndexingExpr(ExprPtr indexable,
     }
     ExprListPtr args2 = new ExprList(indexable);
     args2->add(args);
-    codegenCallExpr(prelude_expr_index(), args2, env, ctx, out);
+    codegenCallExpr(operator_expr_index(), args2, env, ctx, out);
 }
 
 
@@ -2074,7 +2067,7 @@ void codegenCallExpr(ExprPtr callable,
     if (pv->type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
-        codegenCallExpr(prelude_expr_call(), args2, env, ctx, out);
+        codegenCallExpr(operator_expr_call(), args2, env, ctx, out);
         return;
     }
 
@@ -2135,7 +2128,7 @@ void codegenCallExpr(ExprPtr callable,
 llvm::Value *codegenVariantTag(CValuePtr cv, CodegenContextPtr ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType, ctx);
-    codegenCallValue(staticCValue(prelude_variantTag(), ctx),
+    codegenCallValue(staticCValue(operator_variantTag(), ctx),
                      new MultiCValue(cv),
                      ctx,
                      new MultiCValue(ctag));
@@ -2157,7 +2150,7 @@ CValuePtr codegenVariantIndex(CValuePtr cv, int tag, CodegenContextPtr ctx)
     CValuePtr cvPtr = codegenAllocValue(pointerType(memberTypes[tag]), ctx);
     MultiCValuePtr out = new MultiCValue(cvPtr);
 
-    codegenCallValue(staticCValue(prelude_unsafeVariantIndex(), ctx),
+    codegenCallValue(staticCValue(operator_unsafeVariantIndex(), ctx),
                      args,
                      ctx,
                      out);
@@ -2243,7 +2236,7 @@ void codegenDispatch(ObjectPtr obj,
         ctx->builder->SetInsertPoint(elseBlocks[i]);
     }
 
-    codegenCallValue(staticCValue(prelude_invalidVariant(), ctx),
+    codegenCallValue(staticCValue(operator_invalidVariant(), ctx),
                      new MultiCValue(cvDispatch),
                      ctx,
                      new MultiCValue());
@@ -2288,7 +2281,7 @@ void codegenCallValue(CValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        codegenCallValue(staticCValue(prelude_call(), ctx),
+        codegenCallValue(staticCValue(operator_call(), ctx),
                          args2,
                          pvArgs2,
                          ctx,
@@ -2377,7 +2370,7 @@ bool codegenShortcut(ObjectPtr callable,
         return false;
     }
     case PROCEDURE : {
-        if (callable == prelude_destroy()) {
+        if (callable == operator_destroy()) {
             if (pvArgs->size() != 1)
                 return false;
             if (!isPrimitiveAggregateType(pvArgs->values[0]->type))
@@ -3620,7 +3613,7 @@ bool codegenStatement(StatementPtr stmt,
             PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
             if (pvIndexable->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
-                    prelude_expr_indexUpdateAssign(), new ExprList()
+                    operator_expr_indexUpdateAssign(), new ExprList()
                 );
                 call->parenArgs->add(updateOperatorExpr(x->op));
                 call->parenArgs->add(y->expr);
@@ -3632,7 +3625,7 @@ bool codegenStatement(StatementPtr stmt,
         else if (x->left->exprKind == STATIC_INDEXING) {
             StaticIndexing *y = (StaticIndexing *)x->left.ptr();
             CallPtr call = new Call(
-                prelude_expr_staticIndexUpdateAssign(), new ExprList()
+                operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
             call->parenArgs->add(updateOperatorExpr(x->op));
             call->parenArgs->add(y->expr);
@@ -3646,7 +3639,7 @@ bool codegenStatement(StatementPtr stmt,
             PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
             if (pvBase->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
-                    prelude_expr_fieldRefUpdateAssign(), new ExprList()
+                    operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
                 call->parenArgs->add(updateOperatorExpr(x->op));
                 call->parenArgs->add(y->expr);
@@ -3655,7 +3648,7 @@ bool codegenStatement(StatementPtr stmt,
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
-        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
         call->parenArgs->add(updateOperatorExpr(x->op));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
@@ -3913,7 +3906,7 @@ bool codegenStatement(StatementPtr stmt,
         Throw *x = (Throw *)stmt.ptr();
         if (!x->expr)
             error("throw statements need an argument");
-        ExprPtr callable = prelude_expr_throwValue();
+        ExprPtr callable = operator_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -4218,7 +4211,7 @@ void codegenExprAssign(ExprPtr left,
             cvArgs->add(codegenMultiAsRef(args, env, ctx));
             cvArgs->add(cvRight);
             codegenCallValue(
-                staticCValue(prelude_indexAssign(), ctx),
+                staticCValue(operator_indexAssign(), ctx),
                 cvArgs, pvArgs, ctx,
                 new MultiCValue()
             );
@@ -4236,7 +4229,7 @@ void codegenExprAssign(ExprPtr left,
         cvArgs->add(cvIndex);
         cvArgs->add(cvRight);
         codegenCallValue(
-            staticCValue(prelude_staticIndexAssign(), ctx),
+            staticCValue(operator_staticIndexAssign(), ctx),
             cvArgs, pvArgs, ctx,
             new MultiCValue()
         );
@@ -4255,7 +4248,7 @@ void codegenExprAssign(ExprPtr left,
             cvArgs->add(cvName);
             cvArgs->add(cvRight);
             codegenCallValue(
-                staticCValue(prelude_fieldRefAssign(), ctx),
+                staticCValue(operator_fieldRefAssign(), ctx),
                 cvArgs, pvArgs, ctx,
                 new MultiCValue()
             );
@@ -4743,7 +4736,7 @@ void codegenPrimOp(PrimOpPtr x,
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            CValuePtr cvCall = staticCValue(prelude_call(), ctx);
+            CValuePtr cvCall = staticCValue(operator_call(), ctx);
             MultiCValuePtr args2 = new MultiCValue(cvCall);
             args2->add(staticCValue(args->values[0]->type.ptr(), ctx));
             for (unsigned i = 1; i < args->size(); ++i)
@@ -4774,7 +4767,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_primitiveCopy : {
+    case PRIM_bitcopy : {
         ensureArity(args, 2);
         CValuePtr cv0 = args->values[0];
         CValuePtr cv1 = args->values[1];
@@ -4797,10 +4790,9 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *v = ctx->builder->CreateLoad(cv->llValue);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
         llvm::Value *flag = ctx->builder->CreateICmpEQ(v, zero);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag, llvmType(boolType));
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag, out0->llValue);
         break;
     }
 
@@ -4820,12 +4812,10 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
-        llvm::Value *result =
-            ctx->builder->CreateZExt(flag, llvmType(boolType));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        ctx->builder->CreateStore(result, out0->llValue);
+        ctx->builder->CreateStore(flag, out0->llValue);
         break;
     }
 
@@ -5155,7 +5145,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerAddChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerAddChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5170,7 +5160,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerSubtractChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerSubtractChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5185,7 +5175,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerMultiplyChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerMultiplyChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5200,7 +5190,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerDivideChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerDivideChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5215,7 +5205,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerRemainderChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerRemainderChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5230,7 +5220,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerShiftLeftChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerShiftLeftChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5244,7 +5234,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerNegateChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerNegateChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5257,7 +5247,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == dest.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerConvertChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerConvertChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5265,7 +5255,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Pointer :
-        error("Pointer type constructor cannot be called");
+        error("Pointer primitive cannot be called");
 
     case PRIM_addressOf : {
         ensureArity(args, 1);
@@ -5363,8 +5353,14 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_ByRef :
+        error("ByRef primitive cannot be called");
+
+    case PRIM_RecordWithProperties :
+        error("RecordWithProperties primitive cannot be called");
+
     case PRIM_CodePointer :
-        error("CodePointer type constructor cannot be called");
+        error("CodePointer primitive cannot be called");
 
     case PRIM_makeCodePointer : {
         if (args->size() < 1)
@@ -5426,22 +5422,22 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_CCodePointer :
-        error("CCodePointer type constructor cannot be called");
+        error("CCodePointer primitive cannot be called");
 
     case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer type constructor cannot be called");
+        error("VarArgsCCodePointer primitive cannot be called");
 
     case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer type constructor cannot be called");
+        error("StdCallCodePointer primitive cannot be called");
 
     case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
+        error("FastCallCodePointer primitive cannot be called");
 
     case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer type constructor cannot be called");
+        error("ThisCallCodePointer primitive cannot be called");
 
     case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer type constructor cannot be called");
+        error("LLVMCodePointer primitive cannot be called");
 
     case PRIM_makeCCodePointer : {
         if (args->size() < 1)
@@ -5521,11 +5517,15 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_pointerCast : {
+    case PRIM_bitcast : {
         ensureArity(args, 2);
-        TypePtr dest = valueToPointerLikeType(args, 0);
-        TypePtr src;
-        llvm::Value *v = pointerLikeValue(args, 1, src, ctx);
+        TypePtr dest = valueToType(args, 0);
+        CValuePtr src = args->values[1];
+        if (typeSize(dest) > typeSize(src->type))
+            error("destination type for bitcast is larger than source type");
+        if (typeAlignment(dest) > typeAlignment(src->type))
+            error("destination type for bitcast has stricter alignment than source type");
+        llvm::Value *v = ctx->builder->CreateLoad(args->values[1]->llValue);
         llvm::Value *result = ctx->builder->CreateBitCast(v, llvmType(dest));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -5535,7 +5535,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Array :
-        error("Array type constructor cannot be called");
+        error("Array primitive cannot be called");
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
@@ -5570,10 +5570,10 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Vec :
-        error("Vec type constructor cannot be called");
+        error("Vec primitive cannot be called");
 
     case PRIM_Tuple :
-        error("Tuple type constructor cannot be called");
+        error("Tuple primitive cannot be called");
 
     case PRIM_TupleElementCount : {
         ensureArity(args, 1);
@@ -5614,7 +5614,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Union :
-        error("Union type constructor cannot be called");
+        error("Union primitive cannot be called");
 
     case PRIM_UnionMemberCount : {
         ensureArity(args, 1);
@@ -5788,7 +5788,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Static :
-        error("Static type constructor cannot be called");
+        error("Static primitive cannot be called");
 
     case PRIM_ModuleName : {
         ensureArity(args, 1);
@@ -6103,6 +6103,33 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_memcpy :
+    case PRIM_memmove : {
+        ensureArity(args, 3);
+        PointerTypePtr pt;
+        llvm::Value *toptr = pointerValue(args, 0, pt, ctx);
+        llvm::Value *fromptr = pointerValue(args, 1, pt, ctx);
+        IntegerTypePtr it;
+        llvm::Value *count = integerValue(args, 2, it, ctx);
+
+        size_t pointerSize = typeSize(pt.ptr());
+        llvm::Type *sizeType = llvmIntType(8*pointerSize);
+
+        if (typeSize(it.ptr()) > pointerSize)
+            argumentError(2, "integer type too large for memcpy");
+        if (typeSize(it.ptr()) < pointerSize)
+            count = ctx->builder->CreateZExt(count, sizeType);
+
+        if (x->primOpCode == PRIM_memcpy)
+            ctx->builder->CreateMemCpy(toptr, fromptr, count,
+                typeAlignment(pt->pointeeType));
+        else
+            ctx->builder->CreateMemMove(toptr, fromptr, count,
+                typeAlignment(pt->pointeeType));
+
+        break;
+    }
+
     default :
         assert(false);
         break;
@@ -6236,10 +6263,10 @@ static void initializeCtorsDtors()
     }
 
     if (exceptionsEnabled()) {
-        codegenCallable(prelude_exceptionInInitializer(),
+        codegenCallable(operator_exceptionInInitializer(),
                         vector<TypePtr>(),
                         vector<ValueTempness>());
-        codegenCallable(prelude_exceptionInFinalizer(),
+        codegenCallable(operator_exceptionInFinalizer(),
                         vector<TypePtr>(),
                         vector<ValueTempness>());
     }
@@ -6269,13 +6296,13 @@ static void finalizeCtorsDtors()
     if (isMsvcTarget())
         codegenAtexitDestructors();
 
-    finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
+    finalizeSimpleContext(constructorsCtx, operator_exceptionInInitializer());
 
     for (unsigned i = initializedGlobals.size(); i > 0; --i) {
         CValuePtr cv = initializedGlobals[i-1];
         codegenValueDestroy(cv, destructorsCtx);
     }
-    finalizeSimpleContext(destructorsCtx, prelude_exceptionInFinalizer());
+    finalizeSimpleContext(destructorsCtx, operator_exceptionInFinalizer());
 }
 
 static void generateLLVMCtorsAndDtors() {
@@ -6343,14 +6370,10 @@ void codegenMain(ModulePtr module)
 
     ExprListPtr args;
 
-    args = new ExprList();
+    args = new ExprList(new NameRef(main));
     args->add(new NameRef(argc));
     args->add(new NameRef(argv));
-    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv(), args);
-    mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
-
-    args = new ExprList(new NameRef(main));
-    CallPtr mainCall = new Call(prelude_expr_callMain(), args);
+    CallPtr mainCall = new Call(operator_expr_callMain(), args);
 
     ReturnPtr ret = new Return(RETURN_VALUE, new ExprList(mainCall.ptr()));
     mainBody->statements.push_back(ret.ptr());

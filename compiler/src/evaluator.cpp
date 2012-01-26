@@ -496,7 +496,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
-    evalCallValue(staticEValue(dest->type.ptr()),
+    evalCallValue(staticEValue(operator_copy()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
 }
@@ -508,7 +508,7 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
-    evalCallValue(staticEValue(prelude_move()),
+    evalCallValue(staticEValue(operator_move()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
 }
@@ -522,7 +522,7 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
     }
     MultiEValuePtr args = new MultiEValue(dest);
     args->add(src);
-    evalCallValue(staticEValue(prelude_assign()),
+    evalCallValue(staticEValue(operator_assign()),
                   args,
                   new MultiEValue());
 }
@@ -538,7 +538,7 @@ void evalValueMoveAssign(EValuePtr dest, EValuePtr src)
     args->add(src);
     MultiPValuePtr pvArgs = new MultiPValue(new PValue(dest->type, false));
     pvArgs->add(new PValue(src->type, true));
-    evalCallValue(staticEValue(prelude_assign()),
+    evalCallValue(staticEValue(operator_assign()),
                   args,
                   pvArgs,
                   new MultiEValue());
@@ -964,7 +964,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         MultiEValuePtr args = new MultiEValue();
         args->add(evFirst);
         args->add(evLast);
-        evalCallValue(staticEValue(prelude_StringConstant()), args, out);
+        evalCallValue(staticEValue(operator_stringLiteral()), args, out);
         break;
     }
 
@@ -1013,7 +1013,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        evalCallExpr(prelude_expr_tupleLiteral(),
+        evalCallExpr(operator_expr_tupleLiteral(),
                      x->args,
                      env,
                      out);
@@ -1145,10 +1145,6 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     }
 
     case STATIC_EXPR : {
-        StaticExpr *x = (StaticExpr *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStaticExpr(x);
-        evalExpr(x->desugared, env, out);
         break;
     }
 
@@ -1473,7 +1469,7 @@ void evalIndexingExpr(ExprPtr indexable,
     }
     ExprListPtr args2 = new ExprList(indexable);
     args2->add(args);
-    evalCallExpr(prelude_expr_index(), args2, env, out);
+    evalCallExpr(operator_expr_index(), args2, env, out);
 }
 
 
@@ -1542,7 +1538,7 @@ void evalCallExpr(ExprPtr callable,
     if (pv->type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
-        evalCallExpr(prelude_expr_call(), args2, env, out);
+        evalCallExpr(operator_expr_call(), args2, env, out);
         return;
     }
 
@@ -1624,7 +1620,7 @@ int evalVariantTag(EValuePtr ev)
 {
     int tag = -1;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
-    evalCallValue(staticEValue(prelude_variantTag()),
+    evalCallValue(staticEValue(operator_variantTag()),
                   new MultiEValue(ev),
                   new MultiEValue(etag));
     return tag;
@@ -1645,7 +1641,7 @@ EValuePtr evalVariantIndex(EValuePtr ev, int tag)
     EValuePtr evPtr = evalAllocValue(pointerType(memberTypes[tag]));
     MultiEValuePtr out = new MultiEValue(evPtr);
 
-    evalCallValue(staticEValue(prelude_unsafeVariantIndex()), args, out);
+    evalCallValue(staticEValue(operator_unsafeVariantIndex()), args, out);
     return new EValue(memberTypes[tag], *((char **)ev->addr));
 }
 
@@ -1742,7 +1738,7 @@ void evalCallValue(EValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        evalCallValue(staticEValue(prelude_call()), args2, pvArgs2, out);
+        evalCallValue(staticEValue(operator_call()), args2, pvArgs2, out);
         return;
     }
 
@@ -2093,7 +2089,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             ExprListPtr args = new ExprList();
             args->add(x->left);
             args->add(x->right);
-            ExprPtr assignCall = new Call(prelude_expr_assign(), args);
+            ExprPtr assignCall = new Call(operator_expr_assign(), args);
             evalExprAsRef(assignCall, env);
         }
         else {
@@ -2143,7 +2139,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
         call->parenArgs->add(updateOperatorExpr(x->op));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
@@ -3395,6 +3391,45 @@ static ptrdiff_t op_intToPtrInt(EValuePtr a)
     return 0;
 }
 
+
+//
+// op_intToSizeT
+//
+
+template <typename T>
+static ptrdiff_t op_intToSizeT2(EValuePtr a)
+{
+    return ptrdiff_t(*((T *)a->addr));
+}
+
+static ptrdiff_t op_intToSizeT(EValuePtr a)
+{
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 : return op_intToSizeT2<char>(a);
+        case 16 : return op_intToSizeT2<short>(a);
+        case 32 : return op_intToSizeT2<int>(a);
+        case 64 : return op_intToSizeT2<long long>(a);
+        case 128 : return op_intToSizeT2<clay_int128>(a);
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 : return op_intToSizeT2<unsigned char>(a);
+        case 16 : return op_intToSizeT2<unsigned short>(a);
+        case 32 : return op_intToSizeT2<unsigned int>(a);
+        case 64 : return op_intToSizeT2<unsigned long long>(a);
+        case 128 : return op_intToSizeT2<clay_uint128>(a);
+        default : assert(false);
+        }
+    }
+    return 0;
+}
+
+
 
 
 //
@@ -3475,7 +3510,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            EValuePtr evCall = staticEValue(prelude_call());
+            EValuePtr evCall = staticEValue(operator_call());
             MultiEValuePtr args2 = new MultiEValue(evCall);
             args2->add(staticEValue(args->values[0]->type.ptr()));
             for (unsigned i = 1; i < args->size(); ++i)
@@ -3506,7 +3541,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_primitiveCopy : {
+    case PRIM_bitcopy : {
         ensureArity(args, 2);
         EValuePtr ev0 = args->values[0];
         EValuePtr ev1 = args->values[1];
@@ -3950,11 +3985,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_pointerCast : {
+    case PRIM_bitcast : {
         ensureArity(args, 2);
-        TypePtr dest = valueToPointerLikeType(args, 0);
-        TypePtr src;
-        EValuePtr ev = pointerLikeValue(args, 1, src);
+        TypePtr dest = valueToType(args, 0);
+        EValuePtr ev = args->values[1];
+        if (typeSize(dest) > typeSize(ev->type))
+            error("destination type for bitcast is larger than source type");
+        if (typeAlignment(dest) > typeAlignment(ev->type))
+            error("destination type for bitcast has stricter alignment than source type");
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
@@ -4451,6 +4489,27 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_activeException:
         error("exceptions not supported in evaluator");
         break;
+
+    case PRIM_memcpy :
+    case PRIM_memmove : {
+        ensureArity(args, 3);
+        PointerTypePtr pt;
+        EValuePtr tov = pointerValue(args, 0, pt);
+        EValuePtr fromv = pointerValue(args, 1, pt);
+        IntegerTypePtr it;
+        EValuePtr countv = integerValue(args, 2, it);
+
+        void *to = *((void **)tov->addr);
+        void *from = *((void **)fromv->addr);
+        size_t size = op_intToSizeT(countv);
+
+        if (x->primOpCode == PRIM_memcpy)
+            memcpy(to, from, size);
+        else
+            memmove(to, from, size);
+
+        break;
+    }
 
     default :
         assert(false);

@@ -248,6 +248,7 @@ static void installGlobals(ModulePtr m) {
             Procedure *proc = (Procedure *)x;
             if (proc->interface != NULL)
                 proc->interface->env = m->env;
+            // fallthrough
         }
         default :
             if (x->name.ptr())
@@ -709,6 +710,30 @@ static ModulePtr makePrimitivesModule() {
                         new BoolLiteral(exceptionsEnabled()));
     addPrim(prims, "ExceptionsEnabled?", v.ptr());
 
+    vector<IdentifierPtr> recordParams;
+    RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
+    recordParams.push_back(new Identifier("T"));
+    RecordPtr byRefRecord = new Record(new Identifier("ByRef"),
+        PUBLIC,
+        vector<PatternVar>(),
+        NULL,
+        recordParams,
+        NULL,
+        recordBody);
+    addPrim(prims, "ByRef", byRefRecord.ptr());
+
+    recordParams.clear();
+    recordParams.push_back(new Identifier("Properties"));
+    recordParams.push_back(new Identifier("Fields"));
+    RecordPtr rwpRecord = new Record(new Identifier("RecordWithProperties"),
+        PUBLIC,
+        vector<PatternVar>(),
+        NULL,
+        recordParams,
+        NULL,
+        recordBody);
+    addPrim(prims, "RecordWithProperties", rwpRecord.ptr());
+
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
     PRIMITIVE(TypeP);
@@ -716,7 +741,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeAlignment);
     PRIMITIVE(CallDefinedP);
 
-    PRIMITIVE(primitiveCopy);
+    PRIMITIVE(bitcopy);
+    PRIMITIVE(bitcast);
 
     PRIMITIVE(boolNot);
 
@@ -778,8 +804,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(makeCCodePointer);
     PRIMITIVE(callCCodePointer);
 
-    PRIMITIVE(pointerCast);
-
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
     PRIMITIVE(arrayElements);
@@ -801,6 +825,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
     PRIMITIVE(recordFields);
+    PRIMITIVE(RecordWithProperties);
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
@@ -856,11 +881,94 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(activeException);
 
+    PRIMITIVE(memcpy);
+    PRIMITIVE(memmove);
+
 #undef PRIMITIVE
 
     return prims;
 }
 
+static void addOperator(ModulePtr module, const string &name) {
+    IdentifierPtr ident = new Identifier(name);
+    addGlobal(module, ident, PUBLIC, new Procedure(ident, PUBLIC));
+}
+
+static ModulePtr makeOperatorsModule() {
+    ModulePtr operators = new Module("__operators__");
+
+#define OPERATOR(x) addOperator(operators, toPrimStr(#x))
+
+    OPERATOR(dereference);
+    OPERATOR(plus);
+    OPERATOR(minus);
+    OPERATOR(add);
+    OPERATOR(subtract);
+    OPERATOR(multiply);
+    OPERATOR(divide);
+    OPERATOR(remainder);
+    OPERATOR(caseP);
+    OPERATOR(equalsP);
+    OPERATOR(notEqualsP);
+    OPERATOR(lesserP);
+    OPERATOR(lesserEqualsP);
+    OPERATOR(greaterP);
+    OPERATOR(greaterEqualsP);
+    OPERATOR(tupleLiteral);
+    OPERATOR(staticIndex);
+    OPERATOR(index);
+    OPERATOR(fieldRef);
+    OPERATOR(call);
+    OPERATOR(destroy);
+    OPERATOR(copy);
+    OPERATOR(move);
+    OPERATOR(assign);
+    OPERATOR(updateAssign);
+    OPERATOR(indexAssign);
+    OPERATOR(indexUpdateAssign);
+    OPERATOR(fieldRefAssign);
+    OPERATOR(fieldRefUpdateAssign);
+    OPERATOR(staticIndexAssign);
+    OPERATOR(staticIndexUpdateAssign);
+    OPERATOR(callMain);
+    OPERATOR(charLiteral);
+    OPERATOR(wrapStatic);
+    OPERATOR(iterator);
+    OPERATOR(hasNextP);
+    OPERATOR(next);
+    OPERATOR(throwValue);
+    OPERATOR(exceptionIsP);
+    OPERATOR(exceptionAs);
+    OPERATOR(exceptionAsAny);
+    OPERATOR(continueException);
+    OPERATOR(unhandledExceptionInExternal);
+    OPERATOR(exceptionInInitializer);
+    OPERATOR(exceptionInFinalizer);
+    OPERATOR(packMultiValuedFreeVarByRef);
+    OPERATOR(packMultiValuedFreeVar);
+    OPERATOR(unpackMultiValuedFreeVarAndDereference);
+    OPERATOR(unpackMultiValuedFreeVar);
+    OPERATOR(variantReprType);
+    OPERATOR(variantTag);
+    OPERATOR(unsafeVariantIndex);
+    OPERATOR(invalidVariant);
+    OPERATOR(stringLiteral);
+    OPERATOR(ifExpression);
+    OPERATOR(typeToRValue);
+    OPERATOR(typesToRValues);
+    OPERATOR(doIntegerAddChecked);
+    OPERATOR(doIntegerSubtractChecked);
+    OPERATOR(doIntegerMultiplyChecked);
+    OPERATOR(doIntegerDivideChecked);
+    OPERATOR(doIntegerRemainderChecked);
+    OPERATOR(doIntegerShiftLeftChecked);
+    OPERATOR(doIntegerNegateChecked);
+    OPERATOR(doIntegerConvertChecked);
+
+#undef OPERATOR
+
+    return operators;
+}
 
 
 //
@@ -874,13 +982,19 @@ ModulePtr primitivesModule() {
     return cached;
 }
 
+ModulePtr operatorsModule() {
+    static ModulePtr cached;
+    if (!cached)
+        cached = loadedModule("__operators__");
+    return cached;
+}
+
 ModulePtr preludeModule() {
     static ModulePtr cached;
     if (!cached)
         cached = loadedModule("prelude");
     return cached;
 }
-
 
 static IdentifierPtr fnameToIdent(const string &str) {
     string s = str;
@@ -941,90 +1055,89 @@ DEFINE_PRIMITIVE_ACCESSOR(Tuple)
 DEFINE_PRIMITIVE_ACCESSOR(Union)
 DEFINE_PRIMITIVE_ACCESSOR(Static)
 DEFINE_PRIMITIVE_ACCESSOR(activeException)
+DEFINE_PRIMITIVE_ACCESSOR(ByRef)
+DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 
-#define DEFINE_PRELUDE_ACCESSOR(name) \
-    ObjectPtr prelude_##name() { \
+#define DEFINE_OPERATOR_ACCESSOR(name) \
+    ObjectPtr operator_##name() { \
         static ObjectPtr cached; \
         if (!cached) { \
-            cached = safeLookupPublic(preludeModule(), fnameToIdent(#name)); \
+            cached = safeLookupPublic(operatorsModule(), fnameToIdent(#name)); \
             cached = convertObject(cached); \
         } \
         return cached; \
     } \
     \
-    ExprPtr prelude_expr_##name() { \
+    ExprPtr operator_expr_##name() { \
         static ExprPtr cached; \
         if (!cached) \
-            cached = new ObjectExpr(prelude_##name()); \
+            cached = new ObjectExpr(operator_##name()); \
         return cached; \
     }
 
-DEFINE_PRELUDE_ACCESSOR(dereference)
-DEFINE_PRELUDE_ACCESSOR(plus)
-DEFINE_PRELUDE_ACCESSOR(minus)
-DEFINE_PRELUDE_ACCESSOR(add)
-DEFINE_PRELUDE_ACCESSOR(subtract)
-DEFINE_PRELUDE_ACCESSOR(multiply)
-DEFINE_PRELUDE_ACCESSOR(divide)
-DEFINE_PRELUDE_ACCESSOR(remainder)
-DEFINE_PRELUDE_ACCESSOR(caseP)
-DEFINE_PRELUDE_ACCESSOR(equalsP)
-DEFINE_PRELUDE_ACCESSOR(notEqualsP)
-DEFINE_PRELUDE_ACCESSOR(lesserP)
-DEFINE_PRELUDE_ACCESSOR(lesserEqualsP)
-DEFINE_PRELUDE_ACCESSOR(greaterP)
-DEFINE_PRELUDE_ACCESSOR(greaterEqualsP)
-DEFINE_PRELUDE_ACCESSOR(tupleLiteral)
-DEFINE_PRELUDE_ACCESSOR(staticIndex)
-DEFINE_PRELUDE_ACCESSOR(index)
-DEFINE_PRELUDE_ACCESSOR(fieldRef)
-DEFINE_PRELUDE_ACCESSOR(call)
-DEFINE_PRELUDE_ACCESSOR(destroy)
-DEFINE_PRELUDE_ACCESSOR(move)
-DEFINE_PRELUDE_ACCESSOR(assign)
-DEFINE_PRELUDE_ACCESSOR(updateAssign)
-DEFINE_PRELUDE_ACCESSOR(indexAssign)
-DEFINE_PRELUDE_ACCESSOR(indexUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(fieldRefAssign)
-DEFINE_PRELUDE_ACCESSOR(fieldRefUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(staticIndexAssign)
-DEFINE_PRELUDE_ACCESSOR(staticIndexUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(ByRef)
-DEFINE_PRELUDE_ACCESSOR(setArgcArgv)
-DEFINE_PRELUDE_ACCESSOR(callMain)
-DEFINE_PRELUDE_ACCESSOR(Char)
-DEFINE_PRELUDE_ACCESSOR(wrapStatic)
-DEFINE_PRELUDE_ACCESSOR(iterator)
-DEFINE_PRELUDE_ACCESSOR(hasNextP)
-DEFINE_PRELUDE_ACCESSOR(next)
-DEFINE_PRELUDE_ACCESSOR(throwValue)
-DEFINE_PRELUDE_ACCESSOR(exceptionIsP)
-DEFINE_PRELUDE_ACCESSOR(exceptionAs)
-DEFINE_PRELUDE_ACCESSOR(exceptionAsAny)
-DEFINE_PRELUDE_ACCESSOR(continueException)
-DEFINE_PRELUDE_ACCESSOR(unhandledExceptionInExternal)
-DEFINE_PRELUDE_ACCESSOR(exceptionInInitializer)
-DEFINE_PRELUDE_ACCESSOR(exceptionInFinalizer)
-DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVarByRef)
-DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVar)
-DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
-DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVar)
-DEFINE_PRELUDE_ACCESSOR(VariantRepr)
-DEFINE_PRELUDE_ACCESSOR(variantTag)
-DEFINE_PRELUDE_ACCESSOR(unsafeVariantIndex)
-DEFINE_PRELUDE_ACCESSOR(invalidVariant)
-DEFINE_PRELUDE_ACCESSOR(StringConstant)
-DEFINE_PRELUDE_ACCESSOR(ifExpression)
-DEFINE_PRELUDE_ACCESSOR(RecordWithProperties)
-DEFINE_PRELUDE_ACCESSOR(typeToRValue)
-DEFINE_PRELUDE_ACCESSOR(typesToRValues)
-DEFINE_PRELUDE_ACCESSOR(doIntegerAddChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerSubtractChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerDivideChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerRemainderChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerShiftLeftChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerNegateChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerConvertChecked);
+DEFINE_OPERATOR_ACCESSOR(dereference)
+DEFINE_OPERATOR_ACCESSOR(plus)
+DEFINE_OPERATOR_ACCESSOR(minus)
+DEFINE_OPERATOR_ACCESSOR(add)
+DEFINE_OPERATOR_ACCESSOR(subtract)
+DEFINE_OPERATOR_ACCESSOR(multiply)
+DEFINE_OPERATOR_ACCESSOR(divide)
+DEFINE_OPERATOR_ACCESSOR(remainder)
+DEFINE_OPERATOR_ACCESSOR(caseP)
+DEFINE_OPERATOR_ACCESSOR(equalsP)
+DEFINE_OPERATOR_ACCESSOR(notEqualsP)
+DEFINE_OPERATOR_ACCESSOR(lesserP)
+DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
+DEFINE_OPERATOR_ACCESSOR(greaterP)
+DEFINE_OPERATOR_ACCESSOR(greaterEqualsP)
+DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
+DEFINE_OPERATOR_ACCESSOR(staticIndex)
+DEFINE_OPERATOR_ACCESSOR(index)
+DEFINE_OPERATOR_ACCESSOR(fieldRef)
+DEFINE_OPERATOR_ACCESSOR(call)
+DEFINE_OPERATOR_ACCESSOR(destroy)
+DEFINE_OPERATOR_ACCESSOR(copy)
+DEFINE_OPERATOR_ACCESSOR(move)
+DEFINE_OPERATOR_ACCESSOR(assign)
+DEFINE_OPERATOR_ACCESSOR(updateAssign)
+DEFINE_OPERATOR_ACCESSOR(indexAssign)
+DEFINE_OPERATOR_ACCESSOR(indexUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(fieldRefAssign)
+DEFINE_OPERATOR_ACCESSOR(fieldRefUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(staticIndexAssign)
+DEFINE_OPERATOR_ACCESSOR(staticIndexUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(callMain)
+DEFINE_OPERATOR_ACCESSOR(charLiteral)
+DEFINE_OPERATOR_ACCESSOR(iterator)
+DEFINE_OPERATOR_ACCESSOR(hasNextP)
+DEFINE_OPERATOR_ACCESSOR(next)
+DEFINE_OPERATOR_ACCESSOR(throwValue)
+DEFINE_OPERATOR_ACCESSOR(exceptionIsP)
+DEFINE_OPERATOR_ACCESSOR(exceptionAs)
+DEFINE_OPERATOR_ACCESSOR(exceptionAsAny)
+DEFINE_OPERATOR_ACCESSOR(continueException)
+DEFINE_OPERATOR_ACCESSOR(unhandledExceptionInExternal)
+DEFINE_OPERATOR_ACCESSOR(exceptionInInitializer)
+DEFINE_OPERATOR_ACCESSOR(exceptionInFinalizer)
+DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVarByRef)
+DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVar)
+DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
+DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVar)
+DEFINE_OPERATOR_ACCESSOR(variantReprType)
+DEFINE_OPERATOR_ACCESSOR(variantTag)
+DEFINE_OPERATOR_ACCESSOR(unsafeVariantIndex)
+DEFINE_OPERATOR_ACCESSOR(invalidVariant)
+DEFINE_OPERATOR_ACCESSOR(stringLiteral)
+DEFINE_OPERATOR_ACCESSOR(ifExpression)
+DEFINE_OPERATOR_ACCESSOR(typeToRValue)
+DEFINE_OPERATOR_ACCESSOR(typesToRValues)
+DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerDivideChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
 
 }
