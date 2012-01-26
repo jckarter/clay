@@ -3744,7 +3744,7 @@ private pow_rn(x:Double, y:Double) {
                 return 1.0;
 
             /* Here x != 1, x != -1 */
-            if (Bool(bitxor(UInt(abs(x) > 1.0) , UInt(bitand(ydb.0[1] , 0x80000000) == 0)))) {
+            if (Bool(bitxor(UInt(abs(x) > 1.0) , UInt(bitand(ydb.0[1] , 0x80000000u) == 0)))) {
             /* abs(x) > 1 and y = -Inf or abs(x) < 1 and y = +Inf */
                 return 0.0;
             } else {
@@ -3767,7 +3767,7 @@ private pow_rn(x:Double, y:Double) {
             (i)  x is +Inf
             (ii) x is -Inf
             */
-            if (bitand(xdb.0[1] , 0x80000000) == 0) {
+            if (bitand(xdb.0[1] , 0x80000000u) == 0) {
                 /* x is +Inf
 
                 (a) y > 0: return +Inf

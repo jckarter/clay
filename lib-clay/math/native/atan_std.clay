@@ -686,7 +686,7 @@ atan_rn(x:Double ) {
     var xdb = db_number(x);
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
     var sign = 1;
-    if(bitand(xdb.0[1] , 0x80000000)!=0){
+    if(bitand(xdb.0[1] , 0x80000000u)!=0){
         xdb.0[1] = absxhi;
         sign = -1;
     }
@@ -715,7 +715,7 @@ atanpi_rn(x:Double) {
     var xdb = db_number(x);
     var absxhi = bitand(xdb.0[1] , 0x7fffffff);
     var sign = 1;
-    if(bitand(xdb.0[1] , 0x80000000)!=0){
+    if(bitand(xdb.0[1] , 0x80000000u)!=0){
         xdb.0[1] = absxhi;
         sign =-1;
     }
