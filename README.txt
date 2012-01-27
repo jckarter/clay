@@ -1,6 +1,5 @@
-
-Clay
-----
+Clay 0.1
+--------
 
 Clay is a programming language designed for Generic Programming.
 
@@ -80,12 +79,14 @@ on Windows, you should use these patched versions:
     https://github.com/jckarter/clang-3.0
 
 From a Visual Studio command prompt, build LLVM and Clang using cmake
-and the MSVC compiler. Then to build Clay, run CMake and generate
+and the MSVC compiler. Debug mode raises some bogus Microsoft STL
+assertions, so I recommend building with the -DCMAKE_BUILD_TYPE=Release
+cmake option. Then to build Clay, run CMake and generate
 nmake makefiles:
 
     mkdir build
     cd build
-    cmake -G "NMake Makefiles" -DLLVM_DIR=<path to LLVM> ..
+    cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path to LLVM> ..
     nmake
 
 Building to target Cygwin or Mingw, or with Visual C++ using cmake's
