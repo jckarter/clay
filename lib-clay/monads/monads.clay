@@ -1,2 +1,2 @@
 public define Monad?;
-overload Monad?(static T) = false;
+overload Monad?(T) = false;
