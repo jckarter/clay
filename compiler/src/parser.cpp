@@ -1210,7 +1210,11 @@ static bool withStatement(StatementPtr &x) {
 
     if (!symbol("(")) return false;
     ExprListPtr rhs = NULL;
-    if (!expressionList(rhs)) return false;
+    p = save();
+    if (!expressionList(rhs)) {
+        rhs = new ExprList;
+        restore(p);
+    }
     if (!symbol(")")) return false;
 
     if (!symbol(";")) return false;
