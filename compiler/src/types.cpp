@@ -791,9 +791,8 @@ static void initializeVariantType(VariantTypePtr t) {
     if (t->memberTypes.empty())
         error(t->variant, "variant type must have at least one instance");
 
-    t->reprType = getVariantReprType(t);
-
     t->initialized = true;
+    t->reprType = getVariantReprType(t);
 }
 
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t) {
