@@ -1,5 +1,3 @@
-
-
 
 //
 // fieldRef, fieldRefByIndex
@@ -181,13 +179,11 @@ overload lesser?(a:T, b:T) {
 
 
 //
-// RecordWithProperties
+// recordWithProperties
 //
-// special type known to the compiler.
+// RecordWithProperties is a special primitive type known to the compiler.
 // can be used in computed records to set custom properties.
 //
-
-record RecordWithProperties[Properties, Fields]();
 
 recordWithProperties(properties, ..fields) {
     var fieldsTuple = Tuple(..fields);

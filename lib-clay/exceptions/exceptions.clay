@@ -1,7 +1,15 @@
-
 import libc;
 import errors.backtrace.(showBacktrace);
-
+import __operators__.(
+    throwValue,
+    continueException,
+    exceptionIs?,
+    exceptionAs,
+    exceptionAsAny,
+    unhandledExceptionInExternal,
+    exceptionInInitializer,
+    exceptionInFinalizer,
+);
 
 
 //
@@ -21,7 +29,7 @@ private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 // throwValue, continueException
 //
 
-throwValue(x) {
+overload throwValue(x) {
     errorNoThrow(x);
 }
 
@@ -31,7 +39,7 @@ overload throwValue(forward x) {
     signalException(RawPointer(exp));
 }
 
-continueException(exp:RawPointer) {
+overload continueException(exp:RawPointer) {
     signalException(exp);
 }
 
@@ -67,15 +75,15 @@ alias throwButPropagateLike(ex, ..expr) {
 //
 
 [T]
-exceptionIs?(static T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
+overload exceptionIs?(static T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
 
 [T]
-exceptionAs(static T, exp:RawPointer) --> ex:T {
+overload exceptionAs(static T, exp:RawPointer) --> ex:T {
     ex <-- moveUnsafe(nestedVariantAs(exceptionObject(exp), T));
     freeRawMemory(exp);
 }
 
-exceptionAsAny(exp:RawPointer) --> ex:Exception {
+overload exceptionAsAny(exp:RawPointer) --> ex:Exception {
     ex <-- moveUnsafe(exceptionObject(exp));
     freeRawMemory(exp);
 }
@@ -92,17 +100,17 @@ private inline errorMsg(msg) {
     showBacktrace();
 }
 
-unhandledExceptionInExternal() {
+overload unhandledExceptionInExternal() {
     errorMsg("unhandled exception in external procedure\n");
     libc.abort();
 }
 
-exceptionInInitializer() {
+overload exceptionInInitializer() {
     errorMsg("exception when initializing globals\n");
     libc.abort();
 }
 
-exceptionInFinalizer() {
+overload exceptionInFinalizer() {
     errorMsg("exception when destroying globals\n");
     libc.abort();
 }

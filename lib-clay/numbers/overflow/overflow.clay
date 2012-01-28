@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import __operators__;
 
 __llvm__{
 declare {i16, i1} @llvm.sadd.with.overflow.i16(i16 %a, i16 %b)
@@ -213,29 +214,29 @@ private inline checked(checkedFn, ..args) {
 }
 
 [A | Integer?(A)]
-inline doIntegerAddChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerAddChecked(a:A, b:A) : A
     = checked(integerAddWithOverflow, a, b);
 [A | Integer?(A)]
-inline doIntegerSubtractChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerSubtractChecked(a:A, b:A) : A
     = checked(integerSubtractWithOverflow, a, b);
 [A | Integer?(A)]
-inline doIntegerMultiplyChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
     = checked(integerMultiplyWithOverflow, a, b);
 [A | Integer?(A)]
-inline doIntegerDivideChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerDivideChecked(a:A, b:A) : A
     = checked(integerDivideWithOverflow, a, b);
 [A | Integer?(A)]
-inline doIntegerRemainderChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerRemainderChecked(a:A, b:A) : A
     = checked(integerRemainderWithOverflow, a, b);
 [A | Integer?(A)]
-inline doIntegerShiftLeftChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerShiftLeftChecked(a:A, b:A) : A
     = checked(integerShiftLeftWithOverflow, a, b);
 
 [A | SignedInteger?(A)]
-inline doIntegerNegateChecked(a:A) : A
+inline overload __operators__.doIntegerNegateChecked(a:A) : A
     = checked(integerNegateWithOverflow, a);
 
 [A, B | Integer?(A) and Numeric?(B)]
-inline doIntegerConvertChecked(static A, b:B) : A
+inline overload __operators__.doIntegerConvertChecked(static A, b:B) : A
     = checked(integerConvertWithOverflow, A, b);
 
