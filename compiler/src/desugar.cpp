@@ -416,19 +416,21 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     ExprPtr la = new Lambda(captureByRef, formalArgs, formalVarArg, b.ptr());
     la->location = with->withLocation;
 
+
+    if (with->rhs->exprKind != CALL) {
+        error("the right hand side of a with statement must be a call.");
+    }
+
+    CallPtr call = (Call*)with->rhs.ptr();
+
     //prepend the lambda to the arguments for monad
-    with->rhs->exprs.insert(with->rhs->exprs.begin(),la);
+    call->parenArgs->exprs.insert(call->parenArgs->exprs.begin(),la);
 
     //form the return yield expression
 
     ExprListPtr rexprs = new ExprList();
 
-    ExprPtr yieldCall = new Call(NULL, with->rhs, new ExprList());
-    ExprPtr yieldName = new NameRef(with->monad);
-
-    ((Call*)yieldCall.ptr())->expr = yieldName;
-
-    rexprs->add(new Unpack(yieldCall.ptr()));
+    rexprs->add(new Unpack(call.ptr()));
 
     StatementPtr r = new Return(RETURN_VALUE, rexprs);
     r->location = with->location;

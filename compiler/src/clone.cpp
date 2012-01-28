@@ -431,7 +431,7 @@ StatementPtr clone(StatementPtr x)
 
     case WITH : {
         WithStatement *with= (WithStatement*)x.ptr();
-        out = new WithStatement(with->lhs, with->monad, with->rhs, with->withLocation);
+        out = new WithStatement(with->lhs, with->rhs, with->withLocation);
         break;
     }
 

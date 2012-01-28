@@ -1205,17 +1205,11 @@ static bool withStatement(StatementPtr &x) {
     }
     LocationPtr location = currentLocation();
 
-    IdentifierPtr monad;
-    if (!identifier(monad)) return false;
-
-    if (!symbol("(")) return false;
-    ExprListPtr rhs = NULL;
-    if (!expressionList(rhs)) return false;
-    if (!symbol(")")) return false;
-
+    ExprPtr rhs = NULL;
+    if (!suffixExpr(rhs)) return false;
     if (!symbol(";")) return false;
 
-    WithStatementPtr w = new WithStatement(lhs, monad, rhs, location);
+    WithStatementPtr w = new WithStatement(lhs, rhs, location);
 
     x = w.ptr();
     x->location = location;
