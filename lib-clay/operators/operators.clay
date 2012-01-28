@@ -59,8 +59,8 @@ define bitor;
 define bitxor;
 define bitnot;
 
-define moveUnsafe,
-define resetUnsafe,
+define moveUnsafe;
+define resetUnsafe;
 
 
 //

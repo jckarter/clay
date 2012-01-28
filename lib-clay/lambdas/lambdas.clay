@@ -2,7 +2,7 @@ import __operators__.(
     packMultiValuedFreeVar,
     packMultiValuedFreeVarByRef,
     unpackMultiValuedFreeVar,
-    unpackMultiValuedFreeVarByRef,
+    unpackMultiValuedFreeVarAndDereference,
 );
 
 

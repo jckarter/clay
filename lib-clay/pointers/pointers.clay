@@ -38,7 +38,7 @@ inline overload Pointer[T](a:I) = intToPointer(T, a);
 
 [DEST, SRC]
 inline overload Pointer[DEST](a:Pointer[SRC]) =
-    pointerCast(Pointer[DEST], a);
+    bitcast(Pointer[DEST], a);
 
 
 
@@ -135,15 +135,15 @@ inline overload CodePointer[In,Out]() = CodePointer[In,Out](0);
 //
 
 [T, In, Out]
-inline overload Pointer[T](a:CodePointer[In,Out]) = pointerCast(Pointer[T], a);
+inline overload Pointer[T](a:CodePointer[In,Out]) = bitcast(Pointer[T], a);
 
 [T, In, Out]
 inline overload CodePointer[In,Out](a:Pointer[T]) =
-    pointerCast(CodePointer[In,Out], a);
+    bitcast(CodePointer[In,Out], a);
 
 [In1, Out1, In2, Out2]
 inline overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) =
-    pointerCast(CodePointer[In1,Out1], a);
+    bitcast(CodePointer[In1,Out1], a);
 
 [In, Out, I | Integer?(I)]
 inline overload CodePointer[In,Out](i:I) = CodePointer[In,Out](Pointer[Int8](i));
@@ -185,13 +185,13 @@ inline overload CP() = CP(0);
 //
 
 [T, CP | CCodePointer?(CP)]
-inline overload Pointer[T](a:CP) = pointerCast(Pointer[T], a);
+inline overload Pointer[T](a:CP) = bitcast(Pointer[T], a);
 
 [T, CP | CCodePointer?(CP)]
-inline overload CP(a:Pointer[T]) = pointerCast(CP, a);
+inline overload CP(a:Pointer[T]) = bitcast(CP, a);
 
 [CP1, CP2 | CCodePointer?(CP1) and CCodePointer?(CP2)]
-inline overload CP1(a:CP2) = pointerCast(CP1, a);
+inline overload CP1(a:CP2) = bitcast(CP1, a);
 
 [CP,I | CCodePointer?(CP) and Integer?(I)]
 inline overload CP(i:I) = CP(Pointer[Int8](i));

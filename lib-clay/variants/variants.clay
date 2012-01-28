@@ -249,7 +249,7 @@ inline overload __operators__.unsafeVariantIndex(x:V, static i) =
 
 [V | Variant?(V)]
 inline overload __operators__.invalidVariant(x:V) {
-    errorNoThrow("invalid variant, tag = ", variantTag(x));
+    errorNoThrow("invalid variant, tag = ", __operators__.variantTag(x));
 }
 
 

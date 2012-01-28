@@ -76,20 +76,20 @@ inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 // value semantics for POD
 //
 
-[P] inline copyPOD(x: P) --> returned: P { memcpy(&returned, &x, static TypeSize(P)); }
-inline overload copyPOD(x: Bool) --> returned: Bool { primitiveCopy(returned, x); }
+[P] inline copyPOD(x: P) --> returned: P { memcpy(&returned, &x, TypeSize(P)); }
+inline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
 [N | Numeric?(N)]
-inline overload copyPOD(x: N) --> returned: N { primitiveCopy(returned, x); }
+inline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }
 [E | Enum?(E)]
-inline overload copyPOD(x: E) --> returned: E { primitiveCopy(returned, x); }
+inline overload copyPOD(x: E) --> returned: E { bitcopy(returned, x); }
 [T]
-inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { primitiveCopy(returned, x); }
+inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { bitcopy(returned, x); }
 [In, Out]
 inline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
-    { primitiveCopy(returned, x); }
+    { bitcopy(returned, x); }
 [CP | CCodePointer?(CP)]
 inline overload copyPOD(x: CP) --> returned: CP
-    { primitiveCopy(returned, x); }
+    { bitcopy(returned, x); }
 
 [P | NotDestroyedType?(P)]
 inline overload destroy(x: P) {}
