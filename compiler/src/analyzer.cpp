@@ -2626,6 +2626,29 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_VariantMemberCount :
         return new MultiPValue(new PValue(cSizeTType, true));
 
+    case PRIM_VariantMembers : {
+        ensureArity(args, 1);
+        ObjectPtr typeObj = unwrapStaticType(args->values[0]->type);
+        if (!typeObj)
+            argumentError(0, "expecting a variant type");
+        TypePtr t;
+        if (!staticToType(typeObj, t))
+            argumentError(0, "expecting a variant type");
+        if (t->typeKind != VARIANT_TYPE)
+            argumentError(0, "expecting a variant type");
+        VariantType *vt = (VariantType *)t.ptr();
+        const vector<TypePtr> &members = variantMemberTypes(vt);
+
+        MultiPValuePtr mpv = new MultiPValue();
+        for (vector<TypePtr>::const_iterator i = members.begin(), end = members.end();
+             i != end;
+             ++i)
+        {
+            mpv->add(staticPValue(i->ptr()));
+        }
+        return mpv;
+    }
+
     case PRIM_variantRepr : {
         ensureArity(args, 1);
         VariantTypePtr t = variantTypeOfValue(args, 0);

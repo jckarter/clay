@@ -5775,6 +5775,9 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_VariantMembers :
+        break;
+
     case PRIM_variantRepr : {
         ensureArity(args, 1);
         VariantTypePtr vt;

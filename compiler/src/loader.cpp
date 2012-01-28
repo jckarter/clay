@@ -223,6 +223,7 @@ static SourcePtr loadFile(const string &fileName, vector<string> *sourceFiles) {
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
 static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
+static ModulePtr makeOperatorsModule();
 
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
@@ -269,6 +270,8 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 
     if (key == "__primitives__") {
         module = makePrimitivesModule();
+    } else if (key == "__operators__") {
+        module = makeOperatorsModule();
     }
     else {
         string path = locateModule(name);
@@ -830,6 +833,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
     PRIMITIVE(VariantMemberCount);
+    PRIMITIVE(VariantMembers);
     PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);
