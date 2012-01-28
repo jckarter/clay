@@ -2485,7 +2485,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_bitcast : {
         ensureArity(args, 2);
         TypePtr t = valueToType(args, 0);
-        return new MultiPValue(new PValue(t, true));
+        return new MultiPValue(new PValue(t, false));
     }
 
     case PRIM_Array :

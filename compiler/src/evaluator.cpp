@@ -3995,8 +3995,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             error("destination type for bitcast has stricter alignment than source type");
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == dest);
-        *((void **)out0->addr) = *((void **)ev->addr);
+        assert(out0->type == pointerType(dest));
+        *(void **)out0->addr = *(void **)ev->addr;
         break;
     }
 

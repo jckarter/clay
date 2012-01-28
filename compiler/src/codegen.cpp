@@ -5525,11 +5525,11 @@ void codegenPrimOp(PrimOpPtr x,
             error("destination type for bitcast is larger than source type");
         if (typeAlignment(dest) > typeAlignment(src->type))
             error("destination type for bitcast has stricter alignment than source type");
-        llvm::Value *v = ctx->builder->CreateLoad(args->values[1]->llValue);
-        llvm::Value *result = ctx->builder->CreateBitCast(v, llvmType(dest));
+        llvm::Value *arg1 = args->values[1]->llValue;
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == dest);
+        assert(out0->type == pointerType(dest));
+        llvm::Value *result = ctx->builder->CreateBitCast(arg1, llvmPointerType(dest));
         ctx->builder->CreateStore(result, out0->llValue);
         break;
     }
