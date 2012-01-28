@@ -12,6 +12,6 @@ overload networkToHost(n:I32) --> returned:I32 __llvm__ {
 
 [I64| inValues?(I64, Int64, UInt64)]
 overload networkToHost(n:I64) {
-    ref nh = bitcast(n, Array[UInt32, 2]);
-    return bitcast(array(networkToHost(nh[1]), networkToHost(nh[0])), I64);
+    ref nh = bitcast(Array[UInt32, 2], n);
+    return bitcast(I64, array(networkToHost(nh[1]), networkToHost(nh[0])));
 }

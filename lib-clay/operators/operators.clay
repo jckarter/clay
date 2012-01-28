@@ -349,9 +349,9 @@ inline swap(a, b) {
 [T | BitwiseMovedType?(T)]
 inline overload swap(a:T, b:T) {
     alias TBytes = Array[UInt8, Int(TypeSize(T))];
-    var temp = bitcast(a, TBytes);
-    bitcast(a, TBytes) <-- bitcast(b, TBytes);
-    bitcast(b, TBytes) <-- temp;
+    var temp = bitcast(TBytes, a);
+    bitcast(TBytes, a) <-- bitcast(TBytes, b);
+    bitcast(TBytes, b) <-- temp;
 }
 
 
@@ -421,11 +421,8 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
 
 
 //
-// bitcast, bitandc, bitblend
+// bitandc, bitblend
 //
-
-[T, U | TypeSize(T) >= TypeSize(U)]
-inline bitcast(x: T, static U) = ref Pointer[U](&x)^;
 
 inline bitandc(a, b) = bitand(a, bitnot(b));
 inline bitblend(mask, ones, zeros)

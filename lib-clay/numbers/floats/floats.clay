@@ -129,20 +129,20 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
 
 record UInt64x2 (mantissa:UInt64,exponent:UInt64);
 
-floatBits(f:ILongDouble) = bitcast(f, UInt64x2);
-overload floatBits(f:IDouble) = bitcast(f, UInt64);
-overload floatBits(f:IFloat) = bitcast(f, UInt32);
-overload floatBits(f:LongDouble) = bitcast(f, UInt64x2);
-overload floatBits(f:Double) = bitcast(f, UInt64);
-overload floatBits(f:Float) = bitcast(f, UInt32);
+floatBits(f:ILongDouble) = bitcast(UInt64x2, f);
+overload floatBits(f:IDouble) = bitcast(UInt64, f);
+overload floatBits(f:IFloat) = bitcast(UInt32, f);
+overload floatBits(f:LongDouble) = bitcast(UInt64x2, f);
+overload floatBits(f:Double) = bitcast(UInt64, f);
+overload floatBits(f:Float) = bitcast(UInt32, f);
 
-floatFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), LongDouble);
-overload floatFromBits(b:UInt64) = bitcast(b, Double);
-overload floatFromBits(b:UInt32) = bitcast(b, Float);
+floatFromBits(m:UInt64,e:UInt64) = bitcast(LongDouble, UInt64x2(m,e));
+overload floatFromBits(b:UInt64) = bitcast(Double, b);
+overload floatFromBits(b:UInt32) = bitcast(Float, b);
 
-imagFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), ILongDouble);
-overload imagFromBits(b:UInt64) = bitcast(b, IDouble);
-overload imagFromBits(b:UInt32) = bitcast(b, IFloat);
+imagFromBits(m:UInt64,e:UInt64) = bitcast(ILongDouble, UInt64x2(m,e));
+overload imagFromBits(b:UInt64) = bitcast(IDouble, b);
+overload imagFromBits(b:UInt32) = bitcast(IFloat, b);
 
 
 [I | Integer?(I)]
