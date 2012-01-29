@@ -29,7 +29,7 @@ Language changes:
 * The 'primitiveCopy' primitive has been renamed to 'bitcopy'.
 
 * The 'pointerCast' primitive has been renamed to 'bitcast', and has been
-  generalized to allow bitcasting among any two types.
+  generalized to allow bitcasting between any two types.
 
 * New 'memcpy' and 'memmove' primitives are provided. Unlike the libc
   functions, these primitives return void, accept pointers of any type,
