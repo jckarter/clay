@@ -4496,9 +4496,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_memcpy :
     case PRIM_memmove : {
         ensureArity(args, 3);
-        PointerTypePtr pt;
-        EValuePtr tov = pointerValue(args, 0, pt);
-        EValuePtr fromv = pointerValue(args, 1, pt);
+        PointerTypePtr topt;
+        PointerTypePtr frompt;
+        EValuePtr tov = pointerValue(args, 0, topt);
+        EValuePtr fromv = pointerValue(args, 1, frompt);
         IntegerTypePtr it;
         EValuePtr countv = integerValue(args, 2, it);
 

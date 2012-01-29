@@ -6109,26 +6109,28 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_memcpy :
     case PRIM_memmove : {
         ensureArity(args, 3);
-        PointerTypePtr pt;
-        llvm::Value *toptr = pointerValue(args, 0, pt, ctx);
-        llvm::Value *fromptr = pointerValue(args, 1, pt, ctx);
+        PointerTypePtr topt;
+        PointerTypePtr frompt;
+        llvm::Value *toptr = pointerValue(args, 0, topt, ctx);
+        llvm::Value *fromptr = pointerValue(args, 1, frompt, ctx);
         IntegerTypePtr it;
         llvm::Value *count = integerValue(args, 2, it, ctx);
 
-        size_t pointerSize = typeSize(pt.ptr());
+        size_t pointerSize = typeSize(topt.ptr());
         llvm::Type *sizeType = llvmIntType(8*pointerSize);
 
         if (typeSize(it.ptr()) > pointerSize)
-            argumentError(2, "integer type too large for memcpy");
+            argumentError(2, "integer type for memcpy must be pointer-sized or smaller");
         if (typeSize(it.ptr()) < pointerSize)
             count = ctx->builder->CreateZExt(count, sizeType);
 
+        size_t alignment = std::min(
+            typeAlignment(topt->pointeeType), typeAlignment(frompt->pointeeType));
+
         if (x->primOpCode == PRIM_memcpy)
-            ctx->builder->CreateMemCpy(toptr, fromptr, count,
-                typeAlignment(pt->pointeeType));
+            ctx->builder->CreateMemCpy(toptr, fromptr, count, alignment);
         else
-            ctx->builder->CreateMemMove(toptr, fromptr, count,
-                typeAlignment(pt->pointeeType));
+            ctx->builder->CreateMemMove(toptr, fromptr, count, alignment);
 
         break;
     }
