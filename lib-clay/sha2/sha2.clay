@@ -111,8 +111,9 @@ sha256(message: S) --> returned: SHA256 {
     for (chunk in coordinateRange(messageHeadBegin, messageHeadEnd))
         sha256chunk(state, tempState, chunkSpace, chunk);
 
-    var tailChunkBytes = ChunkBytes();
-    ref tailChunk = bitcast(ChunkWords, tailChunkBytes);
+    var tailChunkUnion = Union[ChunkBytes,ChunkWords]();
+    ref tailChunkBytes = tailChunkUnion.0;
+    ref tailChunk = tailChunkUnion.1;
     copyNonoverlappingMemory(
         begin(tailChunkBytes),
         messageTailBegin,
@@ -138,7 +139,10 @@ sha256(message: S) --> returned: SHA256 {
     Pointer[UInt64](end(tailChunkBytes) - 8)^ = hostToNetwork(UInt64(messageSize) * 8);
     sha256chunk(state, tempState, chunkSpace, tailChunk);
 
-    ref returnedWords = bitcast(Array[UInt32, 8], returned.digest);
+    // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
+    // we can safely use bitcast here. Need to add support for custom record
+    // alignment.
+    ref returnedWords = Pointer[Array[UInt32, 8]](&returned.digest)^;
     for (returnedWord, stateWord in zipped(returnedWords, state))
         returnedWord = hostToNetwork(stateWord);
 }
