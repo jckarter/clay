@@ -2,9 +2,9 @@ import byteorder.*;
 import printer.formatter.*;
 
 main() {
-    println("0x", hex(networkToHost(bitcast(UInt16, array(1_uss, 2_uss)))));
-    println("0x", hex(networkToHost(bitcast(UInt32, array(1_uss, 2_uss, 3_uss, 4_uss)))));
-    println("0x", hex(networkToHost(bitcast(UInt64, array(1_uss, 2_uss, 3_uss, 4_uss, 5_uss, 6_uss, 7_uss, 8_uss)))));
+    println("0x", hex(networkToHost(Union[UInt16, Array[UInt8,2]](array(1_uss, 2_uss)).0)));
+    println("0x", hex(networkToHost(Union[UInt32, Array[UInt8,4]](array(1_uss, 2_uss, 3_uss, 4_uss)).0)));
+    println("0x", hex(networkToHost(Union[UInt64, Array[UInt8,8]](array(1_uss, 2_uss, 3_uss, 4_uss, 5_uss, 6_uss, 7_uss, 8_uss)).0)));
 
     println(bitcast(Array[UInt8, 2], hostToNetwork(0x0102_us)));
     println(bitcast(Array[UInt8, 4], hostToNetwork(0x01020304_u)));
