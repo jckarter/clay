@@ -48,6 +48,6 @@ alias Sockaddr_in = win32.Struct_sockaddr_in;
 alias Sockaddr_storage = win32.Struct_sockaddr_storage;
 alias In_addr = win32.Struct_in_addr;
 
-s_addr(inaddr:In_addr) = ref bitcast(inaddr, UInt32);
+s_addr(inaddr:In_addr) = ref bitcast(UInt32, inaddr);
 
 alias SocklenT = Int;

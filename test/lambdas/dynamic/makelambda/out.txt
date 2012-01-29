@@ -1,0 +1,3 @@
+Lambda[[], [Int32, Bool]]
+Lambda[[Int32], [Int32, Int32, Bool]]
+Lambda[[Int8, Int16], [Int32, Int8, Int16, Bool]]

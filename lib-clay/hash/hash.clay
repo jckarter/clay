@@ -39,7 +39,7 @@ inline overload hash(z:T) = wrapAdd(
     hash(real(z)), wrapMultiply(hash(imagValue(z)), SizeT(31321)));
 
 [T]
-inline overload hash(x:Pointer[T]) = bitcast(x, SizeT);
+inline overload hash(x:Pointer[T]) = bitcast(SizeT, x);
 
 inline overload hash(x:Char) = wrapCast(SizeT, x);
 

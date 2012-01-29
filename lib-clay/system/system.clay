@@ -1,3 +1,4 @@
+import __operators__;
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
@@ -16,7 +17,7 @@ commandLine() {
     return ref commandLineArgs;
 }
 
-setArgcArgv(argc_, argv_) {
+private setArgcArgv(argc_, argv_) {
     argc = argc_;
     argv = argv_;
     commandLineInitialized? = false;
@@ -24,10 +25,9 @@ setArgcArgv(argc_, argv_) {
 
 getArgcArgv() = argc, argv;
 
-define callMain;
-
 [Main]
-overload callMain(static Main) {
+overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+    setArgcArgv(argc_, argv_);
     try {
         return getExitCode(..Main());
     }
@@ -38,7 +38,8 @@ overload callMain(static Main) {
 }
 
 [Main | CallDefined?(Main, Type(commandLine()))]
-overload callMain(static Main) {
+overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+    setArgcArgv(argc_, argv_);
     try {
         return getExitCode(..Main(commandLine()));
     }
@@ -49,9 +50,10 @@ overload callMain(static Main) {
 }
 
 [Main | CallDefined?(Main, ..Type(argc, argv))]
-overload callMain(static Main) {
+overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+    setArgcArgv(argc_, argv_);
     try {
-        return getExitCode(..Main(argc, argv));
+        return getExitCode(..Main(argc_, argv_));
     }
     catch (e) {
         printlnTo(stderr, "unhandled exception: ", e);

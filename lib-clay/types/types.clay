@@ -1,4 +1,5 @@
 public import types.platform.*;
+public import __operators__.(typeToRValue, typesToRValues);
 import numbers.floats.(floatFromBits);
 
 
@@ -52,18 +53,16 @@ alias Type(..x:T) = ..T;
 //
 
 inline typeToLValue(a) = ref null(a)^;
-[T] inline typeToRValue(static T) --> returned:T {}
+[T] inline overload typeToRValue(static T) --> returned:T {}
 
 inline typesToLValues(..a) = forward ..mapValues(typeToLValue, ..a);
-inline typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
+inline overload typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
 
 
 
 //
-// ByRef[T] - return-by-reference type helper
+// ByRef[T] - return-by-reference type helper from __primitives__
 //
-
-record ByRef[T] ();
 
 [T] overload RegularRecord?(static ByRef[T]) = false;
 

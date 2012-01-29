@@ -12,12 +12,12 @@ private alias SIN = 0;
 private alias COS = 1;
 private alias TAN = 2;
 
-private alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFE;        /* .14901147e-7 */
-private alias XMAX_SIN_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
-private alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09C;        /* .10536702e-7 */
-private alias XMAX_COS_CASE2                = 0x3F8921F9;        /* .12271835e-1 */
-private alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFE ;       /* .74505735e-8 */
-private alias XMAX_TAN_CASE2                = 0x3FAFFFFE;        /* .62499940e-1 */
+private alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFEu;        /* .14901147e-7 */
+private alias XMAX_SIN_CASE2                = 0x3F8921F9u;        /* .12271835e-1 */
+private alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09Cu;        /* .10536702e-7 */
+private alias XMAX_COS_CASE2                = 0x3F8921F9u;        /* .12271835e-1 */
+private alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFEu;        /* .74505735e-8 */
+private alias XMAX_TAN_CASE2                = 0x3FAFFFFEu;        /* .62499940e-1 */
 
 private alias RN_CST_SIN_CASE2      = 1.0002134047098797985844841;
 private alias RN_CST_COS_CASE2      = 1.0006823406990255799706351;
@@ -26,9 +26,9 @@ private alias RN_CST_TAN_CASE3      = 1.0015410958904110700976399;
 
 private alias INV_PIO256            = 81.4873308630504119136684868;
 
-private alias XMAX_CODY_WAITE_2     = 0x40B921F9;        /* 6433.9756 */
-private alias XMAX_CODY_WAITE_3     = 0x416921F9;        /* 13176782. */
-private alias XMAX_DDRR             = 0x426921F9;        /* .86355359e12 */
+private alias XMAX_CODY_WAITE_2     = 0x40B921F9u;        /* 6433.9756 */
+private alias XMAX_CODY_WAITE_3     = 0x416921F9u;        /* 13176782. */
+private alias XMAX_DDRR             = 0x426921F9u;        /* .86355359e12 */
 
 private alias RR_CW2_CH             = 1.2271846303519851062446833e-02;
 private alias RR_CW2_MCL            = 4.3472122470213191794988193e-13;
@@ -987,7 +987,7 @@ private rem_pio256_bf(result,x){
         N += 1;
         sign = -1;
         for(i in range(1,BF_NB_WORDS+3))
-            r[i] = bitand(bitnot(r[i]),0x3fffffff);
+            r[i] = bitand(bitnot(r[i]),0x3fffffffu);
     }
     else
         sign = 1;
@@ -1236,11 +1236,11 @@ private ComputeTrigWithArgred(rri):{
 private sin_rn(x:Double) --> r:Double {
     var rri = rrinfo(0.,0.,0.,0,0);
     var x_split = db_number(x);
-    rri.absxhi = bitand(x_split.0[1] , 0x7fffffff);
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
 
     // SPECIAL CASES: x=(Nan, Inf) sin(x)=Nan
     // x=NaN or y=NaN
-    if (rri.absxhi >= 0x7ff00000)
+    if (rri.absxhi >= 0x7ff00000u)
         r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_SIN_CASE2){
         // CASE 1 : x small enough sin(x)=x
@@ -1281,10 +1281,10 @@ private sin_rn(x:Double) --> r:Double {
 private cos_rn(x:Double) --> r:Double {
     var rri = rrinfo ();
     var x_split = db_number(x);
-    rri.absxhi = bitand(x_split.0[1] , 0x7fffffff);
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
 
     /* SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan */
-    if (rri.absxhi>=0x7ff00000)
+    if (rri.absxhi>=0x7ff00000u)
         r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_COS_CASE2){
         /* CASE 1 : x small enough cos(x)=1. */
@@ -1318,19 +1318,19 @@ private cos_rn(x:Double) --> r:Double {
 
 private tan_rn(x:Double) --> r:Double {
     var rri,x_split,rndcst = rrinfo(),db_number(x),db_number();
-    rri.absxhi = bitand(x_split.0[1] , 0x7fffffff);
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
 
     // SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan
-    if (rri.absxhi>=0x7ff00000)
+    if (rri.absxhi>=0x7ff00000u)
         r <-- nan(signbit(x)!=0,x);
     else if (rri.absxhi < XMAX_TAN_CASE2){
         if (rri.absxhi < XMAX_RETURN_X_FOR_TAN)
             r <-- x;
         else {
             // Dynamic computation of the rounding constant
-            rndcst.0[1] = 0x3ff00000 + bitshr((bitand(rri.absxhi,0x000fffff)+0x00100000),
+            rndcst.0[1] = 0x3ff00000u + bitshr((bitand(rri.absxhi,0x000fffffu)+0x00100000u),
                                                     (0x3ff+2 - bitshr(rri.absxhi,20))) ;
-            rndcst.0[0] = 0xffffffff;
+            rndcst.0[0] = 0xffffffffu;
             // Fast Taylor series
             var x2 = x*x;
             var p5 = t5 + x2*(t7 + x2*(t9 + x2*t11));

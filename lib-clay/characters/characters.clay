@@ -1,5 +1,8 @@
+import __operators__;
 
 record Char (code:Int8);
+
+inline overload __operators__.charLiteral(code) = Char(code);
 
 record UniChar (code:UInt32);
 

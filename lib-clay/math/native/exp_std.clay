@@ -814,7 +814,7 @@ private exp_rn(x:Double) --> ans:Double {
             // +/- Inf
 
             // Test sign
-            if (bitand(xIntHi , 0x80000000)==0)
+            if (bitand(xIntHi , 0x80000000u)==0)
                 // x = +Inf, return +Inf
                 return x;
             else

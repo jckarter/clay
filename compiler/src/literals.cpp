@@ -189,7 +189,7 @@ ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
         long y = strtol(ptr, &end, base);
         if (*end != 0)
             error("invalid int32 literal");
-        if (errno == ERANGE)
+        if (errno == ERANGE || (y < INT_MIN) || (y > INT_MAX))
             error("int32 literal out of range");
         vh = new ValueHolder(int32Type);
         *((int *)vh->buf) = (int)y;

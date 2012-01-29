@@ -1191,27 +1191,25 @@ static bool localBinding(StatementPtr &x) {
     return true;
 }
 
-
 static bool blockItems(vector<StatementPtr> &stmts);
 static bool withStatement(StatementPtr &x) {
     LocationPtr startLocation = currentLocation();
 
     if (!keyword("with")) return false;
-    vector<IdentifierPtr> identifier;
+    vector<IdentifierPtr> lhs;
 
     int p = save();
-    if (!identifierList(identifier) || !symbol("=")) {
-        identifier.clear();
+    if (!identifierList(lhs) || !symbol("=")) {
+        lhs.clear();
         restore(p);
     }
-
     LocationPtr location = currentLocation();
 
-    ExprListPtr inExpressions = NULL;
-    if (!expressionList(inExpressions)) return false;
+    ExprPtr rhs = NULL;
+    if (!suffixExpr(rhs)) return false;
     if (!symbol(";")) return false;
 
-    WithStatementPtr w = new WithStatement(identifier, inExpressions, location);
+    WithStatementPtr w = new WithStatement(lhs, rhs, location);
 
     x = w.ptr();
     x->location = location;

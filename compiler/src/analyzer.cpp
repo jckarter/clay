@@ -599,7 +599,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         MultiPValuePtr args = new MultiPValue();
         args->add(new PValue(ptrInt8Type, true));
         args->add(new PValue(ptrInt8Type, true));
-        return analyzeCallValue(staticPValue(prelude_StringConstant()), args);
+        return analyzeCallValue(staticPValue(operator_stringLiteral()), args);
     }
 
     case IDENTIFIER_LITERAL : {
@@ -651,7 +651,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        return analyzeCallExpr(prelude_expr_tupleLiteral(),
+        return analyzeCallExpr(operator_expr_tupleLiteral(),
                                x->args,
                                env);
     }
@@ -755,9 +755,10 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case STATIC_EXPR : {
         StaticExpr *x = (StaticExpr *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStaticExpr(x);
-        return analyzeExpr(x->desugared, env);
+        ObjectPtr obj = evaluateOneStatic(x->expr, env);
+        TypePtr t = staticType(obj);
+        PValuePtr pv = new PValue(t, true);
+        return new MultiPValue(pv);
     }
 
     case DISPATCH_EXPR : {
@@ -1258,7 +1259,7 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
     }
     ExprListPtr args2 = new ExprList(indexable);
     args2->add(args);
-    return analyzeCallExpr(prelude_expr_index(), args2, env);
+    return analyzeCallExpr(operator_expr_index(), args2, env);
 }
 
 
@@ -1271,7 +1272,7 @@ bool unwrapByRef(TypePtr &t)
 {
     if (t->typeKind == RECORD_TYPE) {
         RecordType *rt = (RecordType *)t.ptr();
-        if (rt->record.ptr() == prelude_ByRef().ptr()) {
+        if (rt->record.ptr() == primitive_ByRef().ptr()) {
             assert(rt->params.size() == 1);
             ObjectPtr obj = rt->params[0];
             if (obj->objKind != TYPE) {
@@ -1523,7 +1524,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     if (!obj) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
-        return analyzeCallExpr(prelude_expr_call(), args2, env);
+        return analyzeCallExpr(operator_expr_call(), args2, env);
     }
 
     switch (obj->objKind) {
@@ -1679,7 +1680,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
     if (!obj) {
         MultiPValuePtr args2 = new MultiPValue(callable);
         args2->add(args);
-        return analyzeCallValue(staticPValue(prelude_call()), args2);
+        return analyzeCallValue(staticPValue(operator_call()), args2);
     }
 
     switch (obj->objKind) {
@@ -2251,7 +2252,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_CallDefinedP :
         return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_primitiveCopy :
+    case PRIM_bitcopy :
         return new MultiPValue();
 
     case PRIM_boolNot :
@@ -2481,10 +2482,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(y->returnType, true));
     }
 
-    case PRIM_pointerCast : {
+    case PRIM_bitcast : {
         ensureArity(args, 2);
-        TypePtr t = valueToPointerLikeType(args, 0);
-        return new MultiPValue(new PValue(t, true));
+        TypePtr t = valueToType(args, 0);
+        return new MultiPValue(new PValue(t, false));
     }
 
     case PRIM_Array :
@@ -2625,6 +2626,29 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_VariantMemberCount :
         return new MultiPValue(new PValue(cSizeTType, true));
 
+    case PRIM_VariantMembers : {
+        ensureArity(args, 1);
+        ObjectPtr typeObj = unwrapStaticType(args->values[0]->type);
+        if (!typeObj)
+            argumentError(0, "expecting a variant type");
+        TypePtr t;
+        if (!staticToType(typeObj, t))
+            argumentError(0, "expecting a variant type");
+        if (t->typeKind != VARIANT_TYPE)
+            argumentError(0, "expecting a variant type");
+        VariantType *vt = (VariantType *)t.ptr();
+        const vector<TypePtr> &members = variantMemberTypes(vt);
+
+        MultiPValuePtr mpv = new MultiPValue();
+        for (vector<TypePtr>::const_iterator i = members.begin(), end = members.end();
+             i != end;
+             ++i)
+        {
+            mpv->add(staticPValue(i->ptr()));
+        }
+        return mpv;
+    }
+
     case PRIM_variantRepr : {
         ensureArity(args, 1);
         VariantTypePtr t = variantTypeOfValue(args, 0);
@@ -2713,7 +2737,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         MultiPValuePtr args = new MultiPValue();
         args->add(new PValue(ptrInt8Type, true));
         args->add(new PValue(ptrInt8Type, true));
-        return analyzeCallValue(staticPValue(prelude_StringConstant()), args);
+        return analyzeCallValue(staticPValue(operator_stringLiteral()), args);
     }
 
     case PRIM_enumToInt :
@@ -2847,6 +2871,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_activeException : {
         ensureArity(args, 0);
         return new MultiPValue(new PValue(pointerType(uint8Type), true));
+    }
+
+    case PRIM_memcpy :
+    case PRIM_memmove : {
+        ensureArity(args, 3);
+        PointerTypePtr toPt = pointerTypeOfValue(args, 0);
+        PointerTypePtr fromPt = pointerTypeOfValue(args, 1);
+        integerTypeOfValue(args, 2);
+        return new MultiPValue();
     }
 
     default :

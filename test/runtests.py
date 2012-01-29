@@ -215,7 +215,7 @@ class TestCase(object):
             outfile = fileForPlatform(self.opt, ".", "out", "txt")
             errfile = fileForPlatform(self.opt, ".", "err", "txt")
             if not os.path.isfile(outfile) :
-                self.testLogBuffer.write("Failure: out.txt missing")
+                self.testLogBuffer.write("Failure: out.txt missing\n")
                 self.testLogBuffer.write("Stdout:\n")
                 self.testLogBuffer.write(indented(resultout))
                 self.testLogBuffer.write("Stderr:\n")

@@ -3,58 +3,6 @@
 // bindings to llvm intrinsics
 //
 
-__llvm__{
-declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture, i8* nocapture, i64, i32, i1) nounwind
-declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture, i32, i32, i1) nounwind
-declare void @llvm.memmove.p0i8.p0i8.i64(i8* nocapture, i8* nocapture, i64, i32, i1) nounwind
-declare void @llvm.memmove.p0i8.p0i8.i32(i8* nocapture, i8* nocapture, i32, i32, i1) nounwind
-}
-
-[align, volatile?]
-llvm_memcpy(dest: RawPointer, src: RawPointer, len: SizeT, static align, static volatile?) 
-__llvm__ {
-    %destv = load i8** %dest
-    %srcv = load i8** %src
-    %lenv = load $SizeT* %len
-
-    call void @llvm.memcpy.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT %lenv, i32 $align, i1 $volatile?);
-    ret i8* null
-}
-
-[len, align, volatile?]
-overload llvm_memcpy(dest: RawPointer, src: RawPointer, static len, static align, static volatile?)
-__llvm__ {
-    %destv = load i8** %dest
-    %srcv = load i8** %src
-
-    call void @llvm.memcpy.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT $len, i32 $align, i1 $volatile?);
-    ret i8* null
-}
-
-[align, volatile?]
-llvm_memmove(dest: RawPointer, src: RawPointer, len: SizeT, static align, static volatile?)
-__llvm__ {
-    %destv = load i8** %dest
-    %srcv = load i8** %src
-    %lenv = load $SizeT* %len
-
-    call void @llvm.memmove.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT %lenv, i32 $align, i1 $volatile?);
-    ret i8* null
-}
-
-[len, align, volatile?]
-overload llvm_memmove(dest: RawPointer, src: RawPointer, static len, static align, static volatile?) 
-__llvm__ {
-    %destv = load i8** %dest
-    %srcv = load i8** %src
-
-    call void @llvm.memmove.p0i8.p0i8.$SizeT (i8* %destv, i8* %srcv, $SizeT $len, i32 $align, i1 $volatile?);
-    ret i8* null
-}
-
-[P] private inline _memcpy(dest: Pointer[P], src: Pointer[P], len) { llvm_memcpy(RawPointer(dest), RawPointer(src), len, static TypeAlignment(P), static 0); }
-[P] private inline _memmove(dest: Pointer[P], src: Pointer[P], len) { llvm_memmove(RawPointer(dest), RawPointer(src), len, static TypeAlignment(P), static 0); }
-
 
 //
 // copy*Memory*, move*Memory*, *assign*Memory* for POD types
@@ -62,11 +10,11 @@ __llvm__ {
 
 [P]
 private inline copyPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
-    _memmove(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
+    memmove(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 [P]
 private inline copyNonovPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
-    _memcpy(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
+    memcpy(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 
 [P | BitwiseCopiedType?(P)]
@@ -128,20 +76,20 @@ inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 // value semantics for POD
 //
 
-[P] inline copyPOD(x: P) --> returned: P { _memcpy(&returned, &x, static TypeSize(P)); }
-inline overload copyPOD(x: Bool) --> returned: Bool { primitiveCopy(returned, x); }
+[P] inline copyPOD(x: P) --> returned: P { memcpy(&returned, &x, TypeSize(P)); }
+inline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
 [N | Numeric?(N)]
-inline overload copyPOD(x: N) --> returned: N { primitiveCopy(returned, x); }
+inline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }
 [E | Enum?(E)]
-inline overload copyPOD(x: E) --> returned: E { primitiveCopy(returned, x); }
+inline overload copyPOD(x: E) --> returned: E { bitcopy(returned, x); }
 [T]
-inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { primitiveCopy(returned, x); }
+inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { bitcopy(returned, x); }
 [In, Out]
 inline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
-    { primitiveCopy(returned, x); }
+    { bitcopy(returned, x); }
 [CP | CCodePointer?(CP)]
 inline overload copyPOD(x: CP) --> returned: CP
-    { primitiveCopy(returned, x); }
+    { bitcopy(returned, x); }
 
 [P | NotDestroyedType?(P)]
 inline overload destroy(x: P) {}

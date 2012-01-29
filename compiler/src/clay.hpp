@@ -1260,7 +1260,6 @@ struct Unpack : public Expr {
 
 struct StaticExpr : public Expr {
     ExprPtr expr;
-    ExprPtr desugared;
     StaticExpr(ExprPtr expr) :
         Expr(STATIC_EXPR), expr(expr) {}
 };
@@ -1620,14 +1619,13 @@ struct EvalStatement : public Statement {
 
 
 struct WithStatement : public Statement {
-    vector<IdentifierPtr> identifier;
-    ExprListPtr expressions;
+    vector<IdentifierPtr> lhs;
+    ExprPtr rhs;
     LocationPtr withLocation;
-    WithStatement( vector<IdentifierPtr> i, ExprListPtr e, LocationPtr l)
-        : Statement(WITH), identifier(i), expressions(e), withLocation(l) {}
+    WithStatement( vector<IdentifierPtr> i, ExprPtr r, LocationPtr l)
+        : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
 };
 
-
 //
 // Code
 //
@@ -2358,6 +2356,7 @@ ModulePtr loadedModule(const string &module);
 const string &primOpName(PrimOpPtr x);
 ModulePtr preludeModule();
 ModulePtr primitivesModule();
+ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
 
@@ -2372,7 +2371,8 @@ enum PrimOpCode {
     PRIM_TypeAlignment,
     PRIM_CallDefinedP,
 
-    PRIM_primitiveCopy,
+    PRIM_bitcopy,
+    PRIM_bitcast,
 
     PRIM_boolNot,
 
@@ -2434,8 +2434,6 @@ enum PrimOpCode {
     PRIM_makeCCodePointer,
     PRIM_callCCodePointer,
 
-    PRIM_pointerCast,
-
     PRIM_Array,
     PRIM_arrayRef,
     PRIM_arrayElements,
@@ -2461,6 +2459,7 @@ enum PrimOpCode {
     PRIM_VariantP,
     PRIM_VariantMemberIndex,
     PRIM_VariantMemberCount,
+    PRIM_VariantMembers,
     PRIM_variantRepr,
 
     PRIM_Static,
@@ -2510,7 +2509,13 @@ enum PrimOpCode {
     PRIM_RMWUMin,
     PRIM_RMWUMax,
 
-    PRIM_activeException
+    PRIM_ByRef,
+    PRIM_RecordWithProperties,
+
+    PRIM_activeException,
+
+    PRIM_memcpy,
+    PRIM_memmove
 };
 
 struct PrimOp : public Object {
@@ -2959,7 +2964,6 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarIfExpr(IfExprPtr x);
-ExprPtr desugarStaticExpr(StaticExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
@@ -3735,7 +3739,7 @@ int parachute(int (*mainfn)(int, char **, char const* const*),
 
 }
 
-#include "libclaynames.hpp"
+#include "operators.hpp"
 #include "hirestimer.hpp"
 
 #endif

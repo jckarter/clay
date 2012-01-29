@@ -1,4 +1,4 @@
-
+import __operators__;
 
 
 //
@@ -186,7 +186,4 @@ inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
 // tupleLiteral
 //
 
-define tupleLiteral;
-
-// by default create a tuple
-alias overload tupleLiteral(..args) = Tuple(..args);
+alias overload __operators__.tupleLiteral(..args) = Tuple(..args);

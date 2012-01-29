@@ -180,8 +180,8 @@ inline overload bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
 private inline bitwiseOp(fn, a, b) {
     alias size = Int(TypeSize(Type(a)));
     return bitcast(
-        fn(bitcast(a, Vec[UInt8, size]), bitcast(b, Vec[UInt8, size])),
-        Type(a)
+        Type(a),
+        fn(bitcast(Vec[UInt8, size], a), bitcast(Vec[UInt8, size], b))
     );
 }
 
@@ -258,7 +258,7 @@ CompatibleVectorTypes?(X, Y) = false;
 overload CompatibleVectorTypes?(static Vec[T,n], static Vec[U,m]) = true;
 
 [T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-inline overload Vec[T,n](v: Vec[U,m]) = bitcast(v, Vec[T,n]);
+inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 
 
@@ -268,5 +268,5 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(v, Vec[T,n]);
 
 [T | Integer?(T)]
 inline componentMask(static T) = wrapCast(T, -1);
-inline overload componentMask(static Float32) = bitcast(-1_i, Float32);
-inline overload componentMask(static Float64) = bitcast(-1_l, Float64);
+inline overload componentMask(static Float32) = bitcast(Float32, -1_i);
+inline overload componentMask(static Float64) = bitcast(Float64, -1_l);

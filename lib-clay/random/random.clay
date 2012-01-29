@@ -93,7 +93,6 @@ private xsl(x, n) = xor(x, wrapBitshl(x, n));
 private xsr(x, n) = xor(x, bitshr(x, n));
 [I] private mask(x:I, n) = bitand(x, bitshl(I(1), n) - I(1));
 private pr() = UInt32(libc.random());
-private bitcast(T, x) = Pointer[T](&x)^;
 
 private define safeFromOverflow?;
 

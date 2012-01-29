@@ -46,6 +46,7 @@ static void suggestModules(ostream &err, set<string> const &moduleNames, Identif
 }
 
 static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates) {
+    std::cerr << name << "\n";
     ostringstream err;
     err << "ambiguous imported symbol: " << name->str;
     set<string> moduleNames;
@@ -92,6 +93,7 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
         result2 = lookupPublic(mh->import->module, name);
     if (result1.ptr()) {
         if (result2.ptr() && (result1 != result2)) {
+            std::cerr << "module holder ambiguity\n";
             ObjectSet candidates;
             candidates.insert(result1);
             candidates.insert(result2);
@@ -293,8 +295,10 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
     if ((i == module->allSymbols.end()) || (i->second.empty()))
         return NULL;
     const ObjectSet &objs = i->second;
-    if (objs.size() > 1)
+    if (objs.size() > 1) {
+        std::cerr << "lookupPrivate ambiguity " << module << "\n";
         ambiguousImportError(name, objs);
+    }
     return *objs.begin();
 }
 
@@ -314,8 +318,10 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
     if ((i == module->publicSymbols.end()) || (i->second.empty()))
         return NULL;
     const ObjectSet &objs = i->second;
-    if (objs.size() > 1)
+    if (objs.size() > 1) {
+        std::cerr << "lookupPublic ambiguity\n";
         ambiguousImportError(name, objs);
+    }
     return *objs.begin();
 }
 

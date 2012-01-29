@@ -1,4 +1,2 @@
-public define Monad;
-
-[T] public Monad? (static T) = false;
-
+public define Monad?;
+overload Monad?(T) = false;

@@ -1,67 +1,27 @@
-[..T] record IOMonad[..T]
-(
-    force: Lambda[[],[..T]]
-);
+variant V(Int, StringConstant);
 
-define force;
-[..T] overload force (a:IOMonad[..T]) 
+
+[C] ignore (c:C, ..T)
 {
-    return ..a.force();
-}
-[..T] overload force (a:IOMonad[IOMonad[..T]])
-{
-    return ..force(..a.force());
+    c();
 }
 
-define Monad;
-[A,B] overload Monad(a:A, b:B) = b(a);
 
-[..T, C] overload Monad(a:IOMonad[..T], c:C)
+[C,V | Variant?(V) ]
+dispatch(c:C, v:V)
 {
-    var r = IOMonad[..Type(..c(..force(a)))]();
-
-    r.force = Lambda[[],[..Type(..c(..force(a)))]](() => {
-        return ..c(..force(a));
-    });
-    return r;
-}
-[C] overload Monad(a:IOMonad[], c:C)
-{
-    var r = IOMonad[..Type(..c())]();
-
-    r.force = Lambda[[],[..Type(..c())]](() => {
-        force(a);
-        return ..c();
-    });
-    return r;
+    return ..c(*v);
 }
 
-printlnA(str:String)
+test(m : V)
 {
-    return IOMonad[](Lambda[[],[]](() => {
-        println(str);
-    }));
-}
-readLineA()
-{
-    return IOMonad[String](Lambda[[],[String]](() -> {
-        return String("o");
-    }));
-}
-
-readMyName()
-{
-    with l = readLineA();
-    return l + "k";
-}
-
-whatsMyNameHuh()
-{
-    with foobar = readMyName();
-    with printlnA(foobar);
+    with ignore(3);
+    with s = dispatch(m);
+    println(s);
 }
 
 main()
 {
-    force(whatsMyNameHuh());
+    test(V(5));
+    test(V(":)"));
 }

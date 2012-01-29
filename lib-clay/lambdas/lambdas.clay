@@ -1,4 +1,9 @@
-
+import __operators__.(
+    packMultiValuedFreeVar,
+    packMultiValuedFreeVarByRef,
+    unpackMultiValuedFreeVar,
+    unpackMultiValuedFreeVarAndDereference,
+);
 
 
 //
@@ -45,7 +50,7 @@ overload Lambda[In,Out](x : Lambda[In,Out]) --> returned:Lambda[In,Out] {
 makeLambda(forward x:T, ..In) {
     var CodePtr = Type(makeCodePointer(call, T, ..In));
     var Out = CodePointerReturnTypes(CodePtr);
-    return Lambda[In,Out](x);
+    return Lambda[[..In],Out](x);
 }
 
 
@@ -95,15 +100,15 @@ overload destroy(x:LambdaBody[In, Out]) {
 
 
 //
-// helper procs for closure conversion
+// operator functions for closure conversion
 //
 
-packMultiValuedFreeVar(..x) = [..x];
+overload packMultiValuedFreeVar(..x) = [..x];
 
-packMultiValuedFreeVarByRef(..x) =
+overload packMultiValuedFreeVarByRef(..x) =
     Tuple(..mapValues(addressOf, ..x));
 
-unpackMultiValuedFreeVar(x) = forward ..unpackRef(x);
+overload unpackMultiValuedFreeVar(x) = forward ..unpackRef(x);
 
-unpackMultiValuedFreeVarAndDereference(x) =
+overload unpackMultiValuedFreeVarAndDereference(x) =
     forward ..mapValues(dereference, ..unpack(x));

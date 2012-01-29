@@ -143,13 +143,13 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
             }
             type = tupleType(elementTypes);
             if (x->captureByRef) {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
+                ExprPtr e = operator_expr_packMultiValuedFreeVarByRef();
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
             }
             else {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVar();
+                ExprPtr e = operator_expr_packMultiValuedFreeVar();
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
@@ -186,11 +186,11 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     code->body = x->body;
 
     OverloadPtr overload = new Overload(
-        prelude_expr_call(), code, false, false
+        operator_expr_call(), code, false, false
     );
     overload->env = env;
     overload->location = x->location;
-    ObjectPtr obj = prelude_call();
+    ObjectPtr obj = operator_call();
     if (obj->objKind != PROCEDURE)
         error("'call' operator not found!");
     Procedure *callObj = (Procedure *)obj.ptr();
@@ -267,8 +267,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();
-        for (unsigned i = 0; i < y->statements.size(); ++i) {
-            StatementPtr z = y->statements[i];
+        if (!y->desugared)
+            y->desugared = desugarBlock(y);
+        for (unsigned i = 0; i < y->desugared->statements.size(); ++i) {
+            StatementPtr z = y->desugared->statements[i];
             if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
                 convertFreeVars(a->values, env, ctx);
@@ -457,7 +459,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 if (isStaticOrTupleOfStatics(t)) {
                     ExprListPtr args = new ExprList();
                     args->add(new ObjectExpr(t.ptr()));
-                    CallPtr call = new Call(prelude_expr_typeToRValue(), args);
+                    CallPtr call = new Call(operator_expr_typeToRValue(), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -492,7 +494,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     ExprListPtr args = new ExprList();
                     for (unsigned i = 0; i < types.size(); ++i)
                         args->add(new ObjectExpr(types[i].ptr()));
-                    CallPtr call = new Call(prelude_expr_typesToRValues(), args);
+                    CallPtr call = new Call(operator_expr_typesToRValues(), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -506,13 +508,13 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     c->location = y->location;
                     if (ctx.captureByRef) {
                         ExprPtr f =
-                            prelude_expr_unpackMultiValuedFreeVarAndDereference();
+                            operator_expr_unpackMultiValuedFreeVarAndDereference();
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();
                     }
                     else {
-                        ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
+                        ExprPtr f = operator_expr_unpackMultiValuedFreeVar();
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();
