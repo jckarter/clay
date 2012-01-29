@@ -1,4 +1,5 @@
 import __operators__;
+public import __operators__.(variantTag);
 
 
 //

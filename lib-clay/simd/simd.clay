@@ -180,8 +180,8 @@ inline overload bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
 private inline bitwiseOp(fn, a, b) {
     alias size = Int(TypeSize(Type(a)));
     return bitcast(
-        fn(bitcast(Vec[UInt8, size], a), bitcast(Vec[UInt8, size], b)),
-        Type(a)
+        Type(a),
+        fn(bitcast(Vec[UInt8, size], a), bitcast(Vec[UInt8, size], b))
     );
 }
 

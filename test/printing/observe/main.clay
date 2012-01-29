@@ -18,6 +18,6 @@ main() {
     println(tellRvalueString(observeCall(add, a[0], a[1])));
     println(tellRvalueString(observeCall(index, a, 1)));
     try {
-        println(..observeCall(throwValue, AnException()));
+        println(..observeCall(x -> { throw x; }, AnException()));
     } catch (ex) { }
 }
