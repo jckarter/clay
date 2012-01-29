@@ -723,6 +723,7 @@ static ModulePtr makePrimitivesModule() {
         recordParams,
         NULL,
         recordBody);
+    byRefRecord->env = new Env(prims);
     addPrim(prims, "ByRef", byRefRecord.ptr());
 
     recordParams.clear();
@@ -735,6 +736,7 @@ static ModulePtr makePrimitivesModule() {
         recordParams,
         NULL,
         recordBody);
+    rwpRecord->env = new Env(prims);
     addPrim(prims, "RecordWithProperties", rwpRecord.ptr());
 
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
@@ -828,7 +830,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
     PRIMITIVE(recordFields);
-    PRIMITIVE(RecordWithProperties);
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
@@ -895,7 +896,9 @@ static ModulePtr makePrimitivesModule() {
 
 static void addOperator(ModulePtr module, const string &name) {
     IdentifierPtr ident = new Identifier(name);
-    addGlobal(module, ident, PUBLIC, new Procedure(ident, PUBLIC));
+    ProcedurePtr opProc = new Procedure(ident, PUBLIC);
+    opProc->env = new Env(module);
+    addGlobal(module, ident, PUBLIC, opProc.ptr());
 }
 
 static ModulePtr makeOperatorsModule() {
