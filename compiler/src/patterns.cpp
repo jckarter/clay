@@ -1,6 +1,6 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
 
+namespace clay {
 
 
 //
@@ -130,7 +130,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             for (unsigned i = 0; i < cpt->returnTypes.size(); ++i) {
                 TypePtr t = cpt->returnTypes[i];
                 if (cpt->returnIsRef[i]) {
-                    ObjectPtr obj = prelude_ByRef();
+                    ObjectPtr obj = primitive_ByRef();
                     assert(obj->objKind == RECORD);
                     t = recordType((Record *)obj.ptr(),
                                    vector<ObjectPtr>(1, t.ptr()));
@@ -791,4 +791,6 @@ void patternPrint(ostream &out, MultiPatternPtr x)
     default :
         assert(false);
     }
+}
+
 }

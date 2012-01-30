@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 CodePtr clone(CodePtr x)
 {
     CodePtr y = new Code();
@@ -427,6 +429,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case WITH : {
+        WithStatement *with= (WithStatement*)x.ptr();
+        out = new WithStatement(with->lhs, with->rhs, with->withLocation);
+        break;
+    }
+
     default :
         assert(false);
 
@@ -475,4 +483,6 @@ void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
+}
+
 }

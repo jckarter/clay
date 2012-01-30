@@ -78,7 +78,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         win32.DWORD(modeAccess(mode)),
         win32.DWORD(offsetHigh),
         win32.DWORD(offsetLow),
-        win32.DWORD(length));
+        win32.SIZE_T(length));
     if (address == win32.LPVOID(0)) {
         win32.CloseHandle(mappingObject);
         throw GenericIOError(win32.GetLastError());

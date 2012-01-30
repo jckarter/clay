@@ -1,4 +1,4 @@
-
+import __operators__;
 
 
 //
@@ -12,6 +12,7 @@ record StringConstant (
     last : Pointer[Char],
 );
 
+inline overload __operators__.stringLiteral(first, last) = StringConstant(first, last);
 
 
 //

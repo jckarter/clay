@@ -1,0 +1,128 @@
+import libc;
+import printer.formatter.(repr);
+
+alias Union24 = Union[
+    /* a */ UInt32,
+    /* b */ Complex32,
+];
+
+alias Union25 = Union[
+    /* a */ UInt32,
+    /* b */ Complex64,
+];
+
+external (cdecl) c_complex_float(arg0:Complex32) : ;
+
+external (cdecl) c_complex_double(arg0:Complex64) : ;
+
+external (cdecl) c_24(arg0:Union24, arg1:Int) : ;
+
+external (cdecl) c_25(arg0:Union25, arg1:Int) : ;
+
+external (cdecl) c_return_complex_float() : Complex32;
+
+external (cdecl) c_return_complex_double() : Complex64;
+
+external (cdecl) c_return_24(arg0:Int) : Union24;
+
+external (cdecl) c_return_25(arg0:Int) : Union25;
+
+external (cdecl) c_to_clay() : ;
+
+//
+// clay implementations
+//
+
+external (cdecl) clay_scalar(arg0:UInt32, arg1:Bool, arg2:Float, arg3:Double) : {
+    println(repr(arg0, arg1, arg2, arg3));
+    flush(stdout);
+}
+
+external (cdecl) clay_complex_float(arg0:Complex32) : { println(repr(arg0)); flush(stdout); }
+
+external (cdecl) clay_complex_double(arg0:Complex64) : { println(repr(arg0)); flush(stdout); }
+
+external (cdecl) clay_24(arg0:Union24, arg1:Int) : {
+    switch (arg1)
+    case (0)
+        println(repr(arg0.0));
+    case (1)
+        println(repr(arg0.1));
+    else
+        libc.abort();
+    flush(stdout);
+}
+
+
+external (cdecl) clay_25(arg0:Union25, arg1:Int) : {
+    switch (arg1)
+    case (0)
+        println(repr(arg0.0));
+    case (1)
+        println(repr(arg0.1));
+    else
+        libc.abort();
+    flush(stdout);
+}
+
+external (cdecl) clay_return_complex_float() : Complex32
+    = 0x1.C1A4C0p123f+0x1.ABCDEEp99fj;
+
+external (cdecl) clay_return_complex_double() : Complex64
+    = 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j;
+
+external (cdecl) clay_return_24(arg0:Int) : Union24 {
+    var returned = Union24();
+    switch (arg0)
+    case (0)
+        returned.0 <-- 0xC1A4C1A4u;
+    case (1)
+        returned.1 <-- 0x1.C1A4C0p123f+0x1.ABCDEEp99fj;
+    else
+        libc.abort();
+    return returned;
+}
+
+external (cdecl) clay_return_25(arg0:Int) : Union25 {
+    var returned = Union25();
+    switch (arg0)
+    case (0)
+        returned.0 <-- 0xC1A4C1A4u;
+    case (1)
+        returned.1 <-- 0x1.C1A4C1A4C1A4Cp123+0x1.ABCDEFABCDEFAp99j;
+    else
+        libc.abort();
+    return returned;
+}
+
+clay_to_c() {
+    println("\nPassing Clay arguments to C:");
+    flush(stdout);
+
+    c_complex_float(clay_return_complex_float());
+    c_complex_double(clay_return_complex_double());
+
+    c_24(clay_return_24(0), 0);
+    c_24(clay_return_24(1), 1);
+
+    c_25(clay_return_25(0), 0);
+    c_25(clay_return_25(1), 1);
+
+    println("\nPassing C return values to Clay:");
+    flush(stdout);
+
+    clay_complex_float(c_return_complex_float());
+
+    clay_complex_double(c_return_complex_double());
+
+    clay_24(c_return_24(0), 0);
+    clay_24(c_return_24(1), 1);
+
+    clay_25(c_return_25(0), 0);
+    clay_25(c_return_25(1), 1);
+}
+
+main() {
+    c_to_clay();
+    clay_to_c();
+}

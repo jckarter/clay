@@ -1,6 +1,6 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
 
+namespace clay {
 
 struct LambdaContext {
     bool captureByRef;
@@ -29,14 +29,6 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
 //
 // initializeLambda
 //
-
-static int _lambdaObjectIndex = 0;
-
-static int nextLambdaObjectIndex() {
-    int x = _lambdaObjectIndex;
-    ++ _lambdaObjectIndex;
-    return x;
-}
 
 static TypePtr typeOfValue(ObjectPtr obj) {
     switch (obj->objKind) {
@@ -67,33 +59,10 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
     return types;
 }
 
-static void initializeLambdaWithFreeVars(LambdaPtr x,
-                                         EnvPtr env,
-                                         const string &closureDataName,
-                                         int lambdaObjectIndex);
-static void initializeLambdaWithoutFreeVars(LambdaPtr x,
-                                            EnvPtr env);
-
-void initializeLambda(LambdaPtr x, EnvPtr env)
-{
-    assert(!x->initialized);
-    x->initialized = true;
-
-    int lambdaObjectIndex = nextLambdaObjectIndex();
-
-    ostringstream ostr;
-    ostr << "%closureData" << lambdaObjectIndex;
-    string closureDataName = ostr.str();
-
-    convertFreeVars(x, env, closureDataName, x->freeVars);
-    if (x->freeVars.empty()) {
-        initializeLambdaWithoutFreeVars(x, env);
-    }
-    else {
-        initializeLambdaWithFreeVars(
-            x, env, closureDataName, lambdaObjectIndex);
-    }
-}
+static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname);
+static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname);
 
 static string lambdaName(LambdaPtr x)
 {
@@ -111,14 +80,32 @@ static string lambdaName(LambdaPtr x)
     }
 }
 
-static void initializeLambdaWithFreeVars(LambdaPtr x,
-                                         EnvPtr env,
-                                         const string &closureDataName,
-                                         int lambdaObjectIndex)
+void initializeLambda(LambdaPtr x, EnvPtr env)
+{
+    assert(!x->initialized);
+    x->initialized = true;
+
+    string lname = lambdaName(x);
+
+    ostringstream ostr;
+    ostr << "%closureData:" << lname;
+    string closureDataName = ostr.str();
+
+    convertFreeVars(x, env, closureDataName, x->freeVars);
+    if (x->freeVars.empty()) {
+        initializeLambdaWithoutFreeVars(x, env, closureDataName, lname);
+    }
+    else {
+        initializeLambdaWithFreeVars(x, env, closureDataName, lname);
+    }
+}
+
+static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname)
 {
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier(lambdaName(x));
+    r->name = new Identifier(lname);
     r->env = env;
     x->lambdaRecord = r;
     vector<RecordFieldPtr> fields;
@@ -156,13 +143,13 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
             }
             type = tupleType(elementTypes);
             if (x->captureByRef) {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVarByRef();
+                ExprPtr e = operator_expr_packMultiValuedFreeVarByRef();
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
             }
             else {
-                ExprPtr e = prelude_expr_packMultiValuedFreeVar();
+                ExprPtr e = operator_expr_packMultiValuedFreeVar();
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
@@ -199,20 +186,21 @@ static void initializeLambdaWithFreeVars(LambdaPtr x,
     code->body = x->body;
 
     OverloadPtr overload = new Overload(
-        prelude_expr_call(), code, false, false
+        operator_expr_call(), code, false, false
     );
     overload->env = env;
     overload->location = x->location;
-    ObjectPtr obj = prelude_call();
+    ObjectPtr obj = operator_call();
     if (obj->objKind != PROCEDURE)
         error("'call' operator not found!");
     Procedure *callObj = (Procedure *)obj.ptr();
     callObj->overloads.insert(callObj->overloads.begin(), overload);
 }
 
-static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env)
+static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
+    string const &closureDataName, string const &lname)
 {
-    IdentifierPtr name = new Identifier(lambdaName(x));
+    IdentifierPtr name = new Identifier(lname);
     name->location = x->location;
     x->lambdaProc = new Procedure(name, PRIVATE);
 
@@ -279,8 +267,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();
-        for (unsigned i = 0; i < y->statements.size(); ++i) {
-            StatementPtr z = y->statements[i];
+        if (!y->desugared)
+            y->desugared = desugarBlock(y);
+        for (unsigned i = 0; i < y->desugared->statements.size(); ++i) {
+            StatementPtr z = y->desugared->statements[i];
             if (z->stmtKind == BINDING) {
                 Binding *a = (Binding *)z.ptr();
                 convertFreeVars(a->values, env, ctx);
@@ -469,7 +459,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 if (isStaticOrTupleOfStatics(t)) {
                     ExprListPtr args = new ExprList();
                     args->add(new ObjectExpr(t.ptr()));
-                    CallPtr call = new Call(prelude_expr_typeToRValue(), args);
+                    CallPtr call = new Call(operator_expr_typeToRValue(), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -504,7 +494,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     ExprListPtr args = new ExprList();
                     for (unsigned i = 0; i < types.size(); ++i)
                         args->add(new ObjectExpr(types[i].ptr()));
-                    CallPtr call = new Call(prelude_expr_typesToRValues(), args);
+                    CallPtr call = new Call(operator_expr_typesToRValues(), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -518,13 +508,13 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     c->location = y->location;
                     if (ctx.captureByRef) {
                         ExprPtr f =
-                            prelude_expr_unpackMultiValuedFreeVarAndDereference();
+                            operator_expr_unpackMultiValuedFreeVarAndDereference();
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();
                     }
                     else {
-                        ExprPtr f = prelude_expr_unpackMultiValuedFreeVar();
+                        ExprPtr f = operator_expr_unpackMultiValuedFreeVar();
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();
@@ -658,4 +648,6 @@ void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx)
 {
     for (unsigned i = 0; i < x->size(); ++i)
         convertFreeVars(x->exprs[i], env, ctx);
+}
+
 }

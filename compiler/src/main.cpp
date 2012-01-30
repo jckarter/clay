@@ -1,34 +1,6 @@
-
 #include "clay.hpp"
-#include "hirestimer.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4244)
-#endif
-
-#include "llvm/PassManager.h"
-#include "llvm/ADT/Triple.h"
-#include "llvm/Assembly/PrintModulePass.h"
-#include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/CodeGen/LinkAllAsmWriterComponents.h"
-#include "llvm/CodeGen/LinkAllCodegenComponents.h"
-#include "llvm/LinkAllVMCore.h"
-#include "llvm/Target/TargetData.h"
-#include "llvm/Support/FormattedStream.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/Path.h"
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Target/TargetOptions.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/Transforms/IPO.h"
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-#include <iostream>
-#include <cstring>
+namespace clay {
 
 #ifdef WIN32
 #define PATH_SEPARATORS "/\\"
@@ -69,7 +41,6 @@ static void addOptimizationPasses(llvm::PassManager &passes,
         if (internalize) {
             vector<const char*> do_not_internalize;
             do_not_internalize.push_back("main");
-            do_not_internalize.push_back("clayglobals_msvc_ctor");
 
             passes.add(llvm::createInternalizePass(do_not_internalize));
         }
@@ -77,27 +48,21 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static void runModule(llvm::Module *module)
+static void runModule(llvm::Module *module, vector<string> &argv, char const* const* envp)
 {
     llvm::EngineBuilder eb(llvmModule);
     llvm::ExecutionEngine *engine = eb.create();
     llvm::Function *mainFunc = module->getFunction("main");
-    assert(mainFunc);
-    llvm::Function *globalCtors =
-        module->getFunction("clayglobals_init");
-    llvm::Function *globalDtors =
-        module->getFunction("clayglobals_destroy");
 
-    engine->runFunction(globalCtors, vector<llvm::GenericValue>());
+    if (!mainFunc) {
+        std::cerr << "no main function to -run\n";
+        delete engine;
+        return;
+    }
 
-    vector<llvm::GenericValue> gvArgs;
-    llvm::GenericValue gv;
-    gv.IntVal = llvm::APInt(32, 0, true);
-    gvArgs.push_back(gv);
-    gvArgs.push_back(llvm::GenericValue((char *)NULL));
-    engine->runFunction(mainFunc, gvArgs);
-
-    engine->runFunction(globalDtors, vector<llvm::GenericValue>());
+    engine->runStaticConstructorsDestructors(false);
+    engine->runFunctionAsMain(mainFunc, argv, envp);
+    engine->runStaticConstructorsDestructors(true);
 
     delete engine;
 }
@@ -138,6 +103,7 @@ static void generateLLVM(llvm::Module *module, bool emitAsm, llvm::raw_ostream *
 }
 
 static void generateAssembly(llvm::Module *module,
+                             llvm::TargetMachine *targetMachine,
                              llvm::raw_ostream *out,
                              bool emitObject,
                              unsigned optLevel,
@@ -145,30 +111,15 @@ static void generateAssembly(llvm::Module *module,
                              bool genPIC,
                              bool debug)
 {
-    llvm::Triple theTriple(module->getTargetTriple());
-    string err;
-    const llvm::Target *theTarget =
-        llvm::TargetRegistry::lookupTarget(theTriple.getTriple(), err);
-    assert(theTarget != NULL);
     if (optLevel < 2 || debug)
         llvm::NoFramePointerElim = true;
-
-    llvm::Reloc::Model reloc = (sharedLib || genPIC)
-        ? llvm::Reloc::PIC_
-        : llvm::Reloc::Default;
-    llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
-
-    llvm::TargetMachine *target =
-        theTarget->createTargetMachine(theTriple.getTriple(), "", "",
-            reloc, codeModel);
-    assert(target != NULL);
 
     llvm::FunctionPassManager fpasses(module);
 
     fpasses.add(new llvm::TargetData(module));
     fpasses.add(llvm::createVerifierPass());
 
-    target->setAsmVerbosityDefault(true);
+    targetMachine->setAsmVerbosityDefault(true);
 
     llvm::formatted_raw_ostream fout(*out);
     llvm::TargetMachine::CodeGenFileType fileType = emitObject
@@ -182,11 +133,8 @@ static void generateAssembly(llvm::Module *module,
     case 2 : level = llvm::CodeGenOpt::Default; break;
     default : level = llvm::CodeGenOpt::Aggressive; break;
     }
-    bool result =
-        target->addPassesToEmitFile(fpasses,
-                                    fout,
-                                    fileType,
-                                    level);
+    bool result = targetMachine->addPassesToEmitFile(
+        fpasses, fout, fileType, level);
     assert(!result);
 
     fpasses.doInitialization();
@@ -199,6 +147,7 @@ static void generateAssembly(llvm::Module *module,
 }
 
 static bool generateBinary(llvm::Module *module,
+                           llvm::TargetMachine *targetMachine,
                            const llvm::sys::Path &outputFilePath,
                            const llvm::sys::Path &clangPath,
                            unsigned optLevel,
@@ -225,7 +174,7 @@ static bool generateBinary(llvm::Module *module,
         return false;
     }
 
-    generateAssembly(module, &objOut, true, optLevel, sharedLib, genPIC, debug);
+    generateAssembly(module, targetMachine, &objOut, true, optLevel, sharedLib, genPIC, debug);
     objOut.close();
 
     vector<const char *> clangArgs;
@@ -272,6 +221,28 @@ static bool generateBinary(llvm::Module *module,
 
     int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
+    if (debug && triple.getOS() == llvm::Triple::Darwin) {
+        llvm::sys::Path dsymutilPath = llvm::sys::Program::FindProgramByName("dsymutil");
+        if (dsymutilPath.isValid()) {
+            llvm::sys::Path outputDSYMPath = outputFilePath;
+            outputDSYMPath.appendSuffix("dSYM");
+
+            vector<const char *> dsymutilArgs;
+            dsymutilArgs.push_back(dsymutilPath.c_str());
+            dsymutilArgs.push_back("-o");
+            dsymutilArgs.push_back(outputDSYMPath.c_str());
+            dsymutilArgs.push_back(outputFilePath.c_str());
+            dsymutilArgs.push_back(NULL);
+
+            int dsymResult = llvm::sys::Program::ExecuteAndWait(dsymutilPath,
+                &dsymutilArgs[0]);
+
+            if (dsymResult != 0)
+                cerr << "warning: dsymutil exited with error code " << dsymResult << "\n";
+        } else
+            cerr << "warning: unable to find dsymutil on the path; debug info for executable will not be generated\n";
+    }
+
     if (tempObj.eraseFromDisk(false, &errMsg)) {
         cerr << "error: " << errMsg << '\n';
         return false;
@@ -294,6 +265,7 @@ static void usage(char *argv0)
     cerr << "  -DFLAG[=value]        set flag value\n"
          << "                        (queryable with Flag?() and Flag())\n";
     cerr << "  -O0 -O1 -O2 -O3       set optimization level\n";
+    cerr << "                        (default -O2, or -O0 with -g)\n";
     cerr << "  -g                    keep debug symbol information\n";
     cerr << "  -exceptions           enable exception handling\n";
     cerr << "  -no-exceptions        disable exception handling\n";
@@ -319,6 +291,12 @@ static void usage(char *argv0)
     cerr << "  -Wl,<opts>            pass flags to linker\n";
     cerr << "  -l<lib>               link with library <lib>\n";
     cerr << "  -I<path>              add <path> to clay module search path\n";
+    cerr << "  -deps                 keep track of the dependencies of the currently\n";
+    cerr << "                        compiling file and write them to the file\n";
+    cerr << "                        specified by -o-deps\n";
+    cerr << "  -no-deps              don't generate dependencies file\n";
+    cerr << "  -o-deps <file>        write the dependencies to this file\n";
+    cerr << "                        (defaults to <compilation output file>.d)\n";
     cerr << "  -e <source>           compile and run <source> (implies -run)\n";
     cerr << "  -M<module>            \"import <module>.*;\" for -e\n";
     cerr << "  -v                    display version info\n";
@@ -371,10 +349,10 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
-int main(int argc, char **argv) {
+int main2(int argc, char **argv, char const* const* envp) {
     if (argc == 1) {
         usage(argv[0]);
-        return -1;
+        return 2;
     }
 
     bool emitLLVM = false;
@@ -391,7 +369,9 @@ int main(int argc, char **argv) {
     bool codegenExternals = false;
     bool codegenExternalsSet = false;
 
-    unsigned optLevel = 3;
+    bool generateDeps = false;
+
+    unsigned optLevel = 2;
     bool optLevelSet = false;
 
 #ifdef __APPLE__
@@ -410,6 +390,8 @@ int main(int argc, char **argv) {
     vector<string> libSearchPath;
     string linkerFlags;
     vector<string> libraries;
+
+    string dependenciesOutputFile;
 #ifdef __APPLE__
     vector<string> frameworkSearchPath;
     vector<string> frameworks;
@@ -482,7 +464,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-e") == 0) {
             if (i+1 == argc) {
                 cerr << "error: source string missing after -e\n";
-                return -1;
+                return 1;
             }
             ++i;
             run = true;
@@ -493,22 +475,22 @@ int main(int argc, char **argv) {
             string modulespec = argv[i]+2;
             if (modulespec.empty()) {
                 cerr << "error: module missing after -M\n";
-                return -1;
+                return 1;
             }
             clayScriptImports += "import " + modulespec + ".*; ";
         }
         else if (strcmp(argv[i], "-o") == 0) {
-            if (i+1 == argc) {
+            ++i;
+            if (i == argc) {
                 cerr << "error: filename missing after -o\n";
-                return -1;
+                return 1;
             }
             if (!outputFile.empty()) {
                 cerr << "error: output file already specified: "
                      << outputFile
                      << ", specified again as " << argv[i] << '\n';
-                return -1;
+                return 1;
             }
-            ++i;
             outputFile = argv[i];
         }
 #ifdef __APPLE__
@@ -517,13 +499,13 @@ int main(int argc, char **argv) {
             if (frameworkDir.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: directory missing after -F\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 frameworkDir = argv[i];
                 if (frameworkDir.empty() || (frameworkDir[0] == '-')) {
                     cerr << "error: directory missing after -F\n";
-                    return -1;
+                    return 1;
                 }
             }
             frameworkSearchPath.push_back("-F" + frameworkDir);
@@ -531,13 +513,13 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-framework") == 0) {
             if (i+1 == argc) {
                 cerr << "error: framework name missing after -framework\n";
-                return -1;
+                return 1;
             }
             ++i;
             string framework = argv[i];
             if (framework.empty() || (framework[0] == '-')) {
                 cerr << "error: framework name missing after -framework\n";
-                return -1;
+                return 1;
             }
             frameworks.push_back("-framework");
             frameworks.push_back(framework);
@@ -545,17 +527,17 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "-arch") == 0) {
             if (i+1 == argc) {
                 cerr << "error: architecture name missing after -arch\n";
-                return -1;
+                return 1;
             }
             ++i;
             if (!arch.empty()) {
                 cerr << "error: multiple -arch flags currently unsupported\n";
-                return -1;
+                return 1;
             }
             arch = argv[i];
             if (arch.empty() || (arch[0] == '-')) {
                 cerr << "error: architecture name missing after -arch\n";
-                return -1;
+                return 1;
             }
 
             if (arch == "i386") {
@@ -572,20 +554,20 @@ int main(int argc, char **argv) {
                 targetTriple = "thumbv7-apple-darwin4.1-iphoneos";
             } else {
                 cerr << "error: unrecognized -arch value " << arch << "\n";
-                return -1;
+                return 1;
             }
         }
 #endif
         else if (strcmp(argv[i], "-target") == 0) {
             if (i+1 == argc) {
                 cerr << "error: target name missing after -target\n";
-                return -1;
+                return 1;
             }
             ++i;
             targetTriple = argv[i];
             if (targetTriple.empty() || (targetTriple[0] == '-')) {
                 cerr << "error: target name missing after -target\n";
-                return -1;
+                return 1;
             }
             crossCompiling = targetTriple != llvm::sys::getHostTriple();
         }
@@ -597,13 +579,13 @@ int main(int argc, char **argv) {
             if (libDir.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: directory missing after -L\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 libDir = argv[i];
                 if (libDir.empty() || (libDir[0] == '-')) {
                     cerr << "error: directory missing after -L\n";
-                    return -1;
+                    return 1;
                 }
             }
             libSearchPath.push_back("-L" + libDir);
@@ -613,13 +595,13 @@ int main(int argc, char **argv) {
             if (lib.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: library missing after -l\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 lib = argv[i];
                 if (lib.empty() || (lib[0] == '-')) {
                     cerr << "error: library missing after -l\n";
-                    return -1;
+                    return 1;
                 }
             }
             libraries.push_back("-l" + lib);
@@ -629,13 +611,13 @@ int main(int argc, char **argv) {
             if (namep[0] == '\0') {
                 if (i+1 == argc) {
                     cerr << "error: definition missing after -D\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 namep = argv[i];
                 if (namep[0] == '\0' || namep[0] == '-') {
                     cerr << "error: definition missing after -D\n";
-                    return -1;
+                    return 1;
                 }
             }
             char *equalSignp = strchr(namep, '=');
@@ -653,13 +635,13 @@ int main(int argc, char **argv) {
             if (path.empty()) {
                 if (i+1 == argc) {
                     cerr << "error: path missing after -I\n";
-                    return -1;
+                    return 1;
                 }
                 ++i;
                 path = argv[i];
                 if (path.empty() || (path[0] == '-')) {
                     cerr << "error: path missing after -I\n";
-                    return -1;
+                    return 1;
                 }
             }
             addSearchPath(path);
@@ -688,20 +670,40 @@ int main(int argc, char **argv) {
             codegenExternals = false;
             codegenExternalsSet = true;
         }
+        else if (strcmp(argv[i], "-deps") == 0) {
+            generateDeps = true;
+        }
+        else if (strcmp(argv[i], "-no-deps") == 0) {
+            generateDeps = false;
+        }
+        else if (strcmp(argv[i], "-o-deps") == 0) {
+            ++i;
+            if (i == argc) {
+                cerr << "error: filename missing after -o-deps\n";
+                return 1;
+            }
+            if (!dependenciesOutputFile.empty()) {
+                cerr << "error: dependencies output file already specified: "
+                     << dependenciesOutputFile
+                     << ", specified again as " << argv[i] << '\n';
+                return 1;
+            }
+            dependenciesOutputFile = argv[i];
+        }
         else if (strcmp(argv[i], "--") == 0) {
             ++i;
             if (clayFile.empty()) {
                 if (i != argc - 1) {
                     cerr << "error: clay file already specified: " << argv[i]
                          << ", unrecognized parameter: " << argv[i+1] << '\n';
-                    return -1;
+                    return 1;
                 }
                 clayFile = argv[i];
             } else {
                 if (i != argc) {
                     cerr << "error: clay file already specified: " << clayFile
                          << ", unrecognized parameter: " << argv[i] << '\n';
-                    return -1;
+                    return 1;
                 }
             }
         }
@@ -709,29 +711,29 @@ int main(int argc, char **argv) {
                  || strcmp(argv[i], "--help") == 0
                  || strcmp(argv[i], "/?") == 0) {
             usage(argv[0]);
-            return -1;
+            return 2;
         }
         else if (strstr(argv[i], "-") != argv[i]) {
             if (!clayFile.empty()) {
                 cerr << "error: clay file already specified: " << clayFile
                      << ", unrecognized parameter: " << argv[i] << '\n';
-                return -1;
+                return 1;
             }
             clayFile = argv[i];
         }
         else {
             cerr << "error: unrecognized option " << argv[i] << '\n';
-            return -1;
+            return 1;
         }
     }
 
     if (clayScript.empty() && clayFile.empty()) {
         cerr << "error: clay file not specified\n";
-        return -1;
+        return 1;
     }
     if (!clayScript.empty() && !clayFile.empty()) {
         cerr << "error: -e cannot be specified with input file\n";
-        return -1;
+        return 1;
     }
 
     if (!clayScriptImports.empty() && clayScript.empty()) {
@@ -740,12 +742,12 @@ int main(int argc, char **argv) {
 
     if (emitAsm && emitObject) {
         cerr << "error: -S or -c cannot be used together\n";
-        return -1;
+        return 1;
     }
 
     if (crossCompiling && run) {
         cerr << "error: cannot use -run when cross compiling\n";
-        return -1;
+        return 1;
     }
 
     if (crossCompiling && !(emitLLVM || emitAsm || emitObject)
@@ -754,7 +756,7 @@ int main(int argc, char **argv) {
 #endif
     ) {
         cerr << "error: must use -emit-llvm, -S, or -c when cross compiling\n";
-        return -1;
+        return 1;
     }
 
     if (!codegenExternalsSet)
@@ -768,10 +770,13 @@ int main(int argc, char **argv) {
 
     std::string moduleName = clayScript.empty() ? clayFile : "-e";
 
-    if (!initLLVM(targetTriple, moduleName, "", debug, optLevel > 0)) {
+    llvm::TargetMachine *targetMachine = initLLVM(targetTriple, moduleName, "",
+        (sharedLib || genPIC), debug, optLevel > 0);
+    if (targetMachine == NULL)
+    {
         cerr << "error: unable to initialize LLVM for target " << targetTriple << "\n";
-        return -1;
-    };
+        return 1;
+    }
 
     initTypes();
     initExternalTarget(targetTriple);
@@ -834,24 +839,65 @@ int main(int argc, char **argv) {
     const llvm::sys::FileStatus *outputFileStatus = outputFilePath.getFileStatus();
     if (outputFileStatus != NULL && outputFileStatus->isDir) {
         cerr << "error: output file '" << outputFile << "' is a directory\n";
-        return -1;
+        return 1;
     }
     llvm::sys::RemoveFileOnSignal(outputFilePath);
+
+    if (generateDeps) {
+        if (run) {
+            cerr << "error: '-deps' can not be used together with '-e' or '-run'\n";
+            return 1;
+        }
+        if (dependenciesOutputFile.empty()) {
+            dependenciesOutputFile = outputFile;
+            dependenciesOutputFile += ".d";
+        }
+    }
+
+    llvm::sys::PathWithStatus dependenciesOutputFilePath(dependenciesOutputFile);
+    if (generateDeps) {
+        const llvm::sys::FileStatus *dependenciesOutputFileStatus = dependenciesOutputFilePath.getFileStatus();
+        if (dependenciesOutputFileStatus != NULL && dependenciesOutputFileStatus->isDir) {
+            cerr << "error: dependencies output file '" << dependenciesOutputFile << "' is a directory\n";
+            return 1;
+        }
+        llvm::sys::RemoveFileOnSignal(dependenciesOutputFilePath);
+    }
 
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
     loadTimer.start();
     ModulePtr m;
     string clayScriptSource;
+    vector<string> sourceFiles;
     if (!clayScript.empty()) {
         clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
         m = loadProgramSource("-e", clayScriptSource);
-    } else
-        m = loadProgram(clayFile);
+    } else if (generateDeps)
+        m = loadProgram(clayFile, &sourceFiles);
+    else
+        m = loadProgram(clayFile, NULL);
     loadTimer.stop();
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
+
+    if (generateDeps) {
+        string errorInfo;
+        llvm::raw_fd_ostream dependenciesOut(dependenciesOutputFilePath.c_str(),
+                                             errorInfo,
+                                             llvm::raw_fd_ostream::F_Binary);
+        if (!errorInfo.empty()) {
+            cerr << "error: " << errorInfo << '\n';
+            return 1;
+        }
+        dependenciesOut << outputFile << ": \\\n";
+        for (size_t i = 0; i < sourceFiles.size(); ++i) {
+            dependenciesOut << "  " << sourceFiles[i];
+            if (i < sourceFiles.size() - 1)
+                dependenciesOut << " \\\n";
+        }
+    }
 
     bool internalize = true;
     if (debug || sharedLib || run || !codegenExternals)
@@ -862,8 +908,11 @@ int main(int argc, char **argv) {
         optimizeLLVM(llvmModule, optLevel, internalize);
     optTimer.stop();
 
-    if (run)
-        runModule(llvmModule);
+    if (run) {
+        vector<string> argv;
+        argv.push_back(clayFile);
+        runModule(llvmModule, argv, envp);
+    }
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
         llvm::raw_fd_ostream out(outputFilePath.c_str(),
@@ -871,13 +920,13 @@ int main(int argc, char **argv) {
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
             cerr << "error: " << errorInfo << '\n';
-            return -1;
+            return 1;
         }
         outputTimer.start();
         if (emitLLVM)
             generateLLVM(llvmModule, emitAsm, &out);
         else if (emitAsm || emitObject)
-            generateAssembly(llvmModule, &out, emitObject, optLevel, sharedLib, genPIC, debug);
+            generateAssembly(llvmModule, targetMachine, &out, emitObject, optLevel, sharedLib, genPIC, debug);
         outputTimer.stop();
     }
     else {
@@ -899,7 +948,7 @@ int main(int argc, char **argv) {
         }
         if (!clangPath.isValid()) {
             cerr << "error: unable to find clang on the path\n";
-            return false;
+            return 1;
         }
 
         vector<string> arguments;
@@ -927,12 +976,12 @@ int main(int argc, char **argv) {
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
         outputTimer.start();
-        result = generateBinary(llvmModule, outputFilePath, clangPath,
+        result = generateBinary(llvmModule, targetMachine, outputFilePath, clangPath,
                                 optLevel, exceptions, sharedLib, genPIC, debug,
                                 arguments);
         outputTimer.stop();
         if (!result)
-            return -1;
+            return 1;
     }
 
     if (showTiming) {
@@ -943,4 +992,10 @@ int main(int argc, char **argv) {
     }
 
     return 0;
+}
+
+}
+
+int main(int argc, char **argv, char const* const* envp) {
+    return clay::parachute(clay::main2, argc, argv, envp);
 }

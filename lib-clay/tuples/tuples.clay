@@ -1,4 +1,4 @@
-
+import __operators__;
 
 
 //
@@ -138,7 +138,7 @@ inline overload destroy(a:Tuple[..T]) {
 //
 
 [..T | not allValues?(BitwiseAssignedType?, ..T)]
-inline overload assign(dest:Tuple[..T], ref src:Tuple[..T]) {
+inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(static n))
         assign(staticIndex(dest, i), staticIndex(src, i));
@@ -186,7 +186,4 @@ inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
 // tupleLiteral
 //
 
-define tupleLiteral;
-
-// by default create a tuple
-alias overload tupleLiteral(..args) = Tuple(..args);
+alias overload __operators__.tupleLiteral(..args) = Tuple(..args);

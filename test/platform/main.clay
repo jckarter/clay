@@ -1,4 +1,7 @@
-import platform.(OS, OSFamily, CPU, CPUFamily);
+import platform.(
+    OS, OSFamily, CPU, CPUFamily,
+    OSString, OSFamilyString, CPUString, CPUBits,
+);
 
 main() {
     println("ok");

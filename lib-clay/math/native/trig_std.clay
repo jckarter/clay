@@ -1,0 +1,1369 @@
+//
+// Correctly rounded trigonometric functions
+//
+
+import numbers.floats.*;
+import math.*;
+import math.native.exact.*;
+import math.native.bigfloat.*;
+import math.native.rem_pi_2.*;
+
+private alias SIN = 0;
+private alias COS = 1;
+private alias TAN = 2;
+
+private alias XMAX_RETURN_X_FOR_SIN         = 0x3E4FFFFEu;        /* .14901147e-7 */
+private alias XMAX_SIN_CASE2                = 0x3F8921F9u;        /* .12271835e-1 */
+private alias XMAX_RETURN_1_FOR_COS_RN      = 0x3E46A09Cu;        /* .10536702e-7 */
+private alias XMAX_COS_CASE2                = 0x3F8921F9u;        /* .12271835e-1 */
+private alias XMAX_RETURN_X_FOR_TAN         = 0x3E3FFFFEu;        /* .74505735e-8 */
+private alias XMAX_TAN_CASE2                = 0x3FAFFFFEu;        /* .62499940e-1 */
+
+private alias RN_CST_SIN_CASE2      = 1.0002134047098797985844841;
+private alias RN_CST_COS_CASE2      = 1.0006823406990255799706351;
+private alias RN_CST_SINCOS_CASE3   = 1.0007331378299121345641375;
+private alias RN_CST_TAN_CASE3      = 1.0015410958904110700976399;
+
+private alias INV_PIO256            = 81.4873308630504119136684868;
+
+private alias XMAX_CODY_WAITE_2     = 0x40B921F9u;        /* 6433.9756 */
+private alias XMAX_CODY_WAITE_3     = 0x416921F9u;        /* 13176782. */
+private alias XMAX_DDRR             = 0x426921F9u;        /* .86355359e12 */
+
+private alias RR_CW2_CH             = 1.2271846303519851062446833e-02;
+private alias RR_CW2_MCL            = 4.3472122470213191794988193e-13;
+private alias RR_CW3_CH             = 1.2271845713257789611816406e-02;
+private alias RR_CW3_CM             = 5.8982729811418721510563046e-10;
+private alias RR_CW3_MCL            = -4.2111741079360304438362959e-17;
+private alias RR_DD_MCH             = -1.2271846303085129359367045e-02;
+private alias RR_DD_MCM             = -4.7837765591693484655225157e-19;
+private alias RR_DD_CL              = -1.1698319569212264319871158e-35;
+
+private var digits_256_over_pi = array(
+    0x51ul,  	     0x1F306DC9ul,  	 0x3220A94Ful,  	 0x384EAFA3ul,
+    0x3A9A6EE0ul,  	 0x1B6C52B3ul,  	 0x9E21C82ul,  	 0x3FCA2C7ul,
+    0x15EF5DE2ul,  	 0x2C36E48Dul,  	 0x31D2126Eul,  	 0x25C00C92ul,
+    0x177504E8ul,  	 0x32439FC3ul,  	 0x2F58E589ul,  	 0x134E7DD1ul,
+    0x11AFA97ul,  	 0x1768909Dul,  	 0xCE38135ul,  	 0x28BEFC82ul,
+    0x1CC8EB1Cul,  	 0x306A673Eul,  	 0x24E422FCul,  	 0x177BF250ul,
+    0x1D8FFC4Bul,  	 0x3FFBC0B3ul,  	 0x7F7978ul,  	 0x2316B414ul,
+    0x368FB69Bul,  	 0xFD9E4F9ul,  	 0x184DBA7Aul,  	 0xC7ECD3Cul,
+    0x2FF516BAul,  	 0x24F758FDul,  	 0x1F2F8BD9ul,  	 0x3A0E73EFul,
+    0x5294975ul,  	 0xD7F6BF6ul,  	 0x8FC6AE8ul,  	 0x10AC0660ul,
+    0x237E3DB5ul,  	 0x357E19F7ul,  	 0x2104D7A1ul,  	 0x2C3B53C7ul,
+    0x8B0AF73ul,  	 0x3610CB3ul,  	 0xC2AF8A5ul,  	 0xD0811Cul,
+);
+
+
+private alias Pio256 = BigFloat(array(0x00c90fdau, 0x28885a30u, 0x234c4c66u, 0x0a2e0370u,
+    0x1cd12902u, 0x13822299u, 0x3cc74020u, 0x2efa98ecu), 1.,  -1,   1 );
+
+private alias s3  = floatFromBits(0xBFC5555555555555ul) /* -1.6666666667e-01 */;
+private alias s5  = floatFromBits(0x3F81111111111111ul) /* +8.3333333333e-03 */;
+private alias s7  = floatFromBits(0xBF2A01A01A01A01Aul) /* -1.9841269841e-04 */;
+
+private alias c2  = floatFromBits(0xBFE0000000000000ul) /* -5.0000000000e-01 */;
+private alias c4  = floatFromBits(0x3FA5555555555555ul) /* +4.1666666667e-02 */;
+private alias c6  = floatFromBits(0xBF56C16C16C16C17ul) /* -1.3888888889e-03 */;
+
+private alias t3h = floatFromBits(0x3FD5555555555555ul) /* +3.3333333333e-01 */;
+private alias t3l = floatFromBits(0x3C7CB8E2B4EE83F1ul) /* +2.4912545352e-17 */;
+private alias t5  = floatFromBits(0x3FC1111111110586ul) /* +1.3333333333e-01 */;
+private alias t7  = floatFromBits(0x3FABA1BA1D1301A5ul) /* +5.3968254136e-02 */;
+private alias t9  = floatFromBits(0x3F9664EC751BE4A4ul) /* +2.1869368217e-02 */;
+private alias t11 = floatFromBits(0x3F823953EFC04F73ul) /* +8.8984067479e-03 */;
+
+
+//  sine and cos of kPi/256 in double-double
+private var sincosTable = Array[Double,260](
+    floatFromBits(0x0000000000000000ul) /* +0.0000000000e+00 */ ,
+    floatFromBits(0x0000000000000000ul) /* +0.0000000000e+00 */ ,
+    floatFromBits(0x3FF0000000000000ul) /* +1.0000000000e+00 */ ,
+    floatFromBits(0x0000000000000000ul) /* +0.0000000000e+00 */ ,
+    floatFromBits(0x3F8921D1FCDEC784ul) /* +1.2271538286e-02 */ ,
+    floatFromBits(0x3C29878EBE836D9Dul) /* +6.9197907640e-19 */ ,
+    floatFromBits(0x3FEFFF62169B92DBul) /* +9.9992470184e-01 */ ,
+    floatFromBits(0x3C85DDA3C81FBD0Dul) /* +3.7931082513e-17 */ ,
+    floatFromBits(0x3F992155F7A3667Eul) /* +2.4541228523e-02 */ ,
+    floatFromBits(0xBBFB1D63091A0130ul) /* -9.1868490126e-20 */ ,
+    floatFromBits(0x3FEFFD886084CD0Dul) /* +9.9969881870e-01 */ ,
+    floatFromBits(0xBC81354D4556E4CBul) /* -2.9851486404e-17 */ ,
+    floatFromBits(0x3FA2D865759455CDul) /* +3.6807222941e-02 */ ,
+    floatFromBits(0x3C2686F65BA93AC0ul) /* +6.1060088804e-19 */ ,
+    floatFromBits(0x3FEFFA72EFFEF75Dul) /* +9.9932238459e-01 */ ,
+    floatFromBits(0xBC88B4CDCDB25956ul) /* -4.2858538441e-17 */ ,
+    floatFromBits(0x3FA91F65F10DD814ul) /* +4.9067674327e-02 */ ,
+    floatFromBits(0xBC2912BD0D569A90ul) /* -6.7961037205e-19 */ ,
+    floatFromBits(0x3FEFF621E3796D7Eul) /* +9.9879545621e-01 */ ,
+    floatFromBits(0xBC6C57BC2E24AA15ul) /* -1.2291693337e-17 */ ,
+    floatFromBits(0x3FAF656E79F820E0ul) /* +6.1320736302e-02 */ ,
+    floatFromBits(0xBC22E1EBE392BFFEul) /* -5.1181134065e-19 */ ,
+    floatFromBits(0x3FEFF095658E71ADul) /* +9.9811811290e-01 */ ,
+    floatFromBits(0x3C801A8CE18A4B9Eul) /* +2.7935487558e-17 */ ,
+    floatFromBits(0x3FB2D52092CE19F6ul) /* +7.3564563600e-02 */ ,
+    floatFromBits(0xBC49A088A8BF6B2Cul) /* -2.7784941506e-18 */ ,
+    floatFromBits(0x3FEFE9CDAD01883Aul) /* +9.9729045668e-01 */ ,
+    floatFromBits(0x3C6521ECD0C67E35ul) /* +9.1647695371e-18 */ ,
+    floatFromBits(0x3FB5F6D00A9AA419ul) /* +8.5797312344e-02 */ ,
+    floatFromBits(0xBC4F4022D03F6C9Aul) /* -3.3881893831e-18 */ ,
+    floatFromBits(0x3FEFE1CAFCBD5B09ul) /* +9.9631261218e-01 */ ,
+    floatFromBits(0x3C6A23E3202A884Eul) /* +1.1336497892e-17 */ ,
+    floatFromBits(0x3FB917A6BC29B42Cul) /* +9.8017140330e-02 */ ,
+    floatFromBits(0xBC3E2718D26ED688ul) /* -1.6345823622e-18 */ ,
+    floatFromBits(0x3FEFD88DA3D12526ul) /* +9.9518472667e-01 */ ,
+    floatFromBits(0xBC887DF6378811C7ul) /* -4.2486913678e-17 */ ,
+    floatFromBits(0x3FBC3785C79EC2D5ul) /* +1.1022220729e-01 */ ,
+    floatFromBits(0xBC24F39DF133FB21ul) /* -5.6789503538e-19 */ ,
+    floatFromBits(0x3FEFCE15FD6DA67Bul) /* +9.9390697000e-01 */ ,
+    floatFromBits(0xBC75DD6F830D4C09ul) /* -1.8964849471e-17 */ ,
+    floatFromBits(0x3FBF564E56A9730Eul) /* +1.2241067520e-01 */ ,
+    floatFromBits(0x3C4A2704729AE56Dul) /* +2.8354501490e-18 */ ,
+    floatFromBits(0x3FEFC26470E19FD3ul) /* +9.9247953460e-01 */ ,
+    floatFromBits(0x3C81EC8668ECACEEul) /* +3.1093055095e-17 */ ,
+    floatFromBits(0x3FC139F0CEDAF577ul) /* +1.3458070851e-01 */ ,
+    floatFromBits(0xBC6523434D1B3CFAul) /* -9.1670359171e-18 */ ,
+    floatFromBits(0x3FEFB5797195D741ul) /* +9.9090263543e-01 */ ,
+    floatFromBits(0x3C71BFAC7397CC08ul) /* +1.5394565095e-17 */ ,
+    floatFromBits(0x3FC2C8106E8E613Aul) /* +1.4673047446e-01 */ ,
+    floatFromBits(0x3C513000A89A11E0ul) /* +3.7269471470e-18 */ ,
+    floatFromBits(0x3FEFA7557F08A517ul) /* +9.8917650996e-01 */ ,
+    floatFromBits(0xBC87A0A8CA13571Ful) /* -4.0987309937e-17 */ ,
+    floatFromBits(0x3FC45576B1293E5Aul) /* +1.5885814333e-01 */ ,
+    floatFromBits(0xBC5285A24119F7B1ul) /* -4.0163200574e-18 */ ,
+    floatFromBits(0x3FEF97F924C9099Bul) /* +9.8730141816e-01 */ ,
+    floatFromBits(0xBC8E2AE0EEA5963Bul) /* -5.2332261256e-17 */ ,
+    floatFromBits(0x3FC5E214448B3FC6ul) /* +1.7096188876e-01 */ ,
+    floatFromBits(0x3C6531FF779DDAC6ul) /* +9.1919980182e-18 */ ,
+    floatFromBits(0x3FEF8764FA714BA9ul) /* +9.8527764239e-01 */ ,
+    floatFromBits(0x3C7AB256778FFCB6ul) /* +2.3155637028e-17 */ ,
+    floatFromBits(0x3FC76DD9DE50BF31ul) /* +1.8303988796e-01 */ ,
+    floatFromBits(0x3C61D5EEEC501B2Ful) /* +7.7349918689e-18 */ ,
+    floatFromBits(0x3FEF7599A3A12077ul) /* +9.8310548743e-01 */ ,
+    floatFromBits(0x3C884F31D743195Cul) /* +4.2170007523e-17 */ ,
+    floatFromBits(0x3FC8F8B83C69A60Bul) /* +1.9509032202e-01 */ ,
+    floatFromBits(0xBC626D19B9FF8D82ul) /* -7.9910790685e-18 */ ,
+    floatFromBits(0x3FEF6297CFF75CB0ul) /* +9.8078528040e-01 */ ,
+    floatFromBits(0x3C7562172A361FD3ul) /* +1.8546939998e-17 */ ,
+    floatFromBits(0x3FCA82A025B00451ul) /* +2.0711137619e-01 */ ,
+    floatFromBits(0xBC687905FFD084ADul) /* -1.0613362529e-17 */ ,
+    floatFromBits(0x3FEF4E603B0B2F2Dul) /* +9.7831737072e-01 */ ,
+    floatFromBits(0xBC78EE01E695AC05ul) /* -2.1623082233e-17 */ ,
+    floatFromBits(0x3FCC0B826A7E4F63ul) /* +2.1910124016e-01 */ ,
+    floatFromBits(0xBC1AF1439E521935ul) /* -3.6513812299e-19 */ ,
+    floatFromBits(0x3FEF38F3AC64E589ul) /* +9.7570213004e-01 */ ,
+    floatFromBits(0xBC7D7BAFB51F72E6ul) /* -2.5572556081e-17 */ ,
+    floatFromBits(0x3FCD934FE5454311ul) /* +2.3105810828e-01 */ ,
+    floatFromBits(0x3C675B92277107ADul) /* +1.0129787150e-17 */ ,
+    floatFromBits(0x3FEF2252F7763ADAul) /* +9.7293995221e-01 */ ,
+    floatFromBits(0xBC820CB81C8D94ABul) /* -3.1311211122e-17 */ ,
+    floatFromBits(0x3FCF19F97B215F1Bul) /* +2.4298017990e-01 */ ,
+    floatFromBits(0xBC642DEEF11DA2C4ul) /* -8.7514315297e-18 */ ,
+    floatFromBits(0x3FEF0A7EFB9230D7ul) /* +9.7003125319e-01 */ ,
+    floatFromBits(0x3C752C7ADC6B4989ul) /* +1.8365300348e-17 */ ,
+    floatFromBits(0x3FD04FB80E37FDAEul) /* +2.5486565960e-01 */ ,
+    floatFromBits(0xBC0412CDB72583CCul) /* -1.3602299807e-19 */ ,
+    floatFromBits(0x3FEEF178A3E473C2ul) /* +9.6697647104e-01 */ ,
+    floatFromBits(0x3C86310A67FE774Ful) /* +3.8496228837e-17 */ ,
+    floatFromBits(0x3FD111D262B1F677ul) /* +2.6671275747e-01 */ ,
+    floatFromBits(0x3C7824C20AB7AA9Aul) /* +2.0941222579e-17 */ ,
+    floatFromBits(0x3FEED740E7684963ul) /* +9.6377606580e-01 */ ,
+    floatFromBits(0x3C7E82C791F59CC2ul) /* +2.6463950561e-17 */ ,
+    floatFromBits(0x3FD1D3443F4CDB3Eul) /* +2.7851968938e-01 */ ,
+    floatFromBits(0xBC6720D41C13519Eul) /* -1.0030273720e-17 */ ,
+    floatFromBits(0x3FEEBBD8C8DF0B74ul) /* +9.6043051942e-01 */ ,
+    floatFromBits(0x3C7C6C8C615E7277ul) /* +2.4653904815e-17 */ ,
+    floatFromBits(0x3FD294062ED59F06ul) /* +2.9028467725e-01 */ ,
+    floatFromBits(0xBC75D28DA2C4612Dul) /* -1.8927978708e-17 */ ,
+    floatFromBits(0x3FEE9F4156C62DDAul) /* +9.5694033573e-01 */ ,
+    floatFromBits(0x3C8760B1E2E3F81Eul) /* +4.0553869862e-17 */ ,
+    floatFromBits(0x3FD35410C2E18152ul) /* +3.0200594932e-01 */ ,
+    floatFromBits(0xBC73CB002F96E062ul) /* -1.7167666235e-17 */ ,
+    floatFromBits(0x3FEE817BAB4CD10Dul) /* +9.5330604035e-01 */ ,
+    floatFromBits(0xBC7D0AFE686B5E0Aul) /* -2.5190738780e-17 */ ,
+    floatFromBits(0x3FD4135C94176601ul) /* +3.1368174040e-01 */ ,
+    floatFromBits(0x3C70C97C4AFA2518ul) /* +1.4560447300e-17 */ ,
+    floatFromBits(0x3FEE6288EC48E112ul) /* +9.4952818059e-01 */ ,
+    floatFromBits(0xBC616B56F2847754ul) /* -7.5544151928e-18 */ ,
+    floatFromBits(0x3FD4D1E24278E76Aul) /* +3.2531029216e-01 */ ,
+    floatFromBits(0x3C62417218792858ul) /* +7.9171249464e-18 */ ,
+    floatFromBits(0x3FEE426A4B2BC17Eul) /* +9.4560732538e-01 */ ,
+    floatFromBits(0x3C8A873889744882ul) /* +4.6019102479e-17 */ ,
+    floatFromBits(0x3FD58F9A75AB1FDDul) /* +3.3688985339e-01 */ ,
+    floatFromBits(0xBC1EFDC0D58CF620ul) /* -4.2000940033e-19 */ ,
+    floatFromBits(0x3FEE212104F686E5ul) /* +9.4154406518e-01 */ ,
+    floatFromBits(0xBC8014C76C126527ul) /* -2.7896379548e-17 */ ,
+    floatFromBits(0x3FD64C7DDD3F27C6ul) /* +3.4841868025e-01 */ ,
+    floatFromBits(0x3C510D2B4A664121ul) /* +3.6974420514e-18 */ ,
+    floatFromBits(0x3FEDFEAE622DBE2Bul) /* +9.3733901191e-01 */ ,
+    floatFromBits(0xBC8514EA88425567ul) /* -3.6570926284e-17 */ ,
+    floatFromBits(0x3FD7088530FA459Ful) /* +3.5989503653e-01 */ ,
+    floatFromBits(0xBC744B19E0864C5Dul) /* -1.7601687124e-17 */ ,
+    floatFromBits(0x3FEDDB13B6CCC23Cul) /* +9.3299279883e-01 */ ,
+    floatFromBits(0x3C883C37C6107DB3ul) /* +4.2041415555e-17 */ ,
+    floatFromBits(0x3FD7C3A9311DCCE7ul) /* +3.7131719395e-01 */ ,
+    floatFromBits(0x3C19A3F21EF3E8D9ul) /* +3.4749239648e-19 */ ,
+    floatFromBits(0x3FEDB6526238A09Bul) /* +9.2850608047e-01 */ ,
+    floatFromBits(0xBC7ADEE7EAE69460ul) /* -2.3306639848e-17 */ ,
+    floatFromBits(0x3FD87DE2A6AEA963ul) /* +3.8268343236e-01 */ ,
+    floatFromBits(0xBC672CEDD3D5A610ul) /* -1.0050772696e-17 */ ,
+    floatFromBits(0x3FED906BCF328D46ul) /* +9.2387953251e-01 */ ,
+    floatFromBits(0x3C7457E610231AC2ul) /* +1.7645047084e-17 */ ,
+    floatFromBits(0x3FD9372A63BC93D7ul) /* +3.9399204006e-01 */ ,
+    floatFromBits(0x3C6684319E5AD5B1ul) /* +9.7649241641e-18 */ ,
+    floatFromBits(0x3FED696173C9E68Bul) /* +9.1911385169e-01 */ ,
+    floatFromBits(0xBC7E8C61C6393D55ul) /* -2.6496484622e-17 */ ,
+    floatFromBits(0x3FD9EF7943A8ED8Aul) /* +4.0524131400e-01 */ ,
+    floatFromBits(0x3C66DA81290BDBABul) /* +9.9111401943e-18 */ ,
+    floatFromBits(0x3FED4134D14DC93Aul) /* +9.1420975570e-01 */ ,
+    floatFromBits(0xBC84EF5295D25AF2ul) /* -3.6316182528e-17 */ ,
+    floatFromBits(0x3FDAA6C82B6D3FCAul) /* +4.1642956010e-01 */ ,
+    floatFromBits(0xBC7D5F106EE5CCF7ul) /* -2.5475580413e-17 */ ,
+    floatFromBits(0x3FED17E7743E35DCul) /* +9.0916798309e-01 */ ,
+    floatFromBits(0xBC5101DA3540130Aul) /* -3.6878564091e-18 */ ,
+    floatFromBits(0x3FDB5D1009E15CC0ul) /* +4.2755509343e-01 */ ,
+    floatFromBits(0x3C65B362CB974183ul) /* +9.4111898163e-18 */ ,
+    floatFromBits(0x3FECED7AF43CC773ul) /* +9.0398929312e-01 */ ,
+    floatFromBits(0xBC5E7B6BB5AB58AEul) /* -6.6097544687e-18 */ ,
+    floatFromBits(0x3FDC1249D8011EE7ul) /* +4.3861623854e-01 */ ,
+    floatFromBits(0xBC7813AABB515206ul) /* -2.0883315831e-17 */ ,
+    floatFromBits(0x3FECC1F0F3FCFC5Cul) /* +8.9867446569e-01 */ ,
+    floatFromBits(0x3C7E57613B68F6ABul) /* +2.6316906461e-17 */ ,
+    floatFromBits(0x3FDCC66E9931C45Eul) /* +4.4961132965e-01 */ ,
+    floatFromBits(0x3C56850E59C37F8Ful) /* +4.8831924232e-18 */ ,
+    floatFromBits(0x3FEC954B213411F5ul) /* +8.9322430120e-01 */ ,
+    floatFromBits(0xBC52FB761E946603ul) /* -4.1161239152e-18 */ ,
+    floatFromBits(0x3FDD79775B86E389ul) /* +4.6053871096e-01 */ ,
+    floatFromBits(0x3C7550EC87BC0575ul) /* +1.8488777492e-17 */ ,
+    floatFromBits(0x3FEC678B3488739Bul) /* +8.8763962040e-01 */ ,
+    floatFromBits(0x3C6D86CAC7C5FF5Bul) /* +1.2805091919e-17 */ ,
+    floatFromBits(0x3FDE2B5D3806F63Bul) /* +4.7139673683e-01 */ ,
+    floatFromBits(0x3C5E0D891D3C6841ul) /* +6.5166781361e-18 */ ,
+    floatFromBits(0x3FEC38B2F180BDB1ul) /* +8.8192126435e-01 */ ,
+    floatFromBits(0xBC76E0B1757C8D07ul) /* -1.9843248406e-17 */ ,
+    floatFromBits(0x3FDEDC1952EF78D6ul) /* +4.8218377208e-01 */ ,
+    floatFromBits(0xBC7DD0F7C33EDEE6ul) /* -2.5861500926e-17 */ ,
+    floatFromBits(0x3FEC08C426725549ul) /* +8.7607009420e-01 */ ,
+    floatFromBits(0x3C5B157FD80E2946ul) /* +5.8729024235e-18 */ ,
+    floatFromBits(0x3FDF8BA4DBF89ABAul) /* +4.9289819223e-01 */ ,
+    floatFromBits(0xBC32EC1FC1B776B8ul) /* -1.0257831677e-18 */ ,
+    floatFromBits(0x3FEBD7C0AC6F952Aul) , /* +8.7008699111e-01 */
+    floatFromBits(0xBC8825A732AC700Aul) , /* -4.1888510869e-17 */
+    floatFromBits(0x3FE01CFC874C3EB7ul) , /* +5.0353838373e-01 */
+    floatFromBits(0xBC734A35E7C2368Cul) , /* -1.6731308205e-17 */
+    floatFromBits(0x3FEBA5AA673590D2ul) , /* +8.6397285612e-01 */
+    floatFromBits(0x3C87EA4E370753B6ul) , /* +4.1486355957e-17 */
+    floatFromBits(0x3FE073879922FFEEul) , /* +5.1410274419e-01 */
+    floatFromBits(0xBC8A5A014347406Cul) , /* -4.5712707524e-17 */
+    floatFromBits(0x3FEB728345196E3Eul) , /* +8.5772861000e-01 */
+    floatFromBits(0xBC8BC69F324E6D61ul) , /* -4.8183447936e-17 */
+    floatFromBits(0x3FE0C9704D5D898Ful) , /* +5.2458968268e-01 */
+    floatFromBits(0xBC88D3D7DE6EE9B2ul) , /* -4.3068869040e-17 */
+    floatFromBits(0x3FEB3E4D3EF55712ul) , /* +8.5135519311e-01 */
+    floatFromBits(0xBC8EB6B8BF11A493ul) , /* -5.3279874446e-17 */
+    floatFromBits(0x3FE11EB3541B4B23ul) , /* +5.3499761989e-01 */
+    floatFromBits(0xBC8EF23B69ABE4F1ul) , /* -5.3683132708e-17 */
+    floatFromBits(0x3FEB090A58150200ul) , /* +8.4485356525e-01 */
+    floatFromBits(0xBC8926DA300FFCCEul) , /* -4.3631360297e-17 */
+    floatFromBits(0x3FE1734D63DEDB49ul) , /* +5.4532498842e-01 */
+    floatFromBits(0xBC87EEF2CCC50575ul) , /* -4.1517817538e-17 */
+    floatFromBits(0x3FEAD2BC9E21D511ul) , /* +8.3822470555e-01 */
+    floatFromBits(0xBC847FBE07BEA548ul) , /* -3.5560085053e-17 */
+    floatFromBits(0x3FE1C73B39AE68C8ul) , /* +5.5557023302e-01 */
+    floatFromBits(0x3C8B25DD267F6600ul) , /* +4.7094109406e-17 */
+    floatFromBits(0x3FEA9B66290EA1A3ul) , /* +8.3146961230e-01 */
+    floatFromBits(0x3C39F630E8B6DAC8ul) , /* +1.4073856985e-18 */
+    floatFromBits(0x3FE21A799933EB59ul) , /* +5.6573181078e-01 */
+    floatFromBits(0xBC83A7B177C68FB2ul) , /* -3.4096079597e-17 */
+    floatFromBits(0x3FEA63091B02FAE2ul) , /* +8.2458930278e-01 */
+    floatFromBits(0xBC7E911152248D10ul) , /* -2.6512360489e-17 */
+    floatFromBits(0x3FE26D054CDD12DFul) , /* +5.7580819142e-01 */
+    floatFromBits(0xBC85DA743EF3770Cul) , /* -3.7909495459e-17 */
+    floatFromBits(0x3FEA29A7A0462782ul) , /* +8.1758481315e-01 */
+    floatFromBits(0xBC7128BB015DF175ul) , /* -1.4883149812e-17 */
+    floatFromBits(0x3FE2BEDB25FAF3EAul) , /* +5.8579785746e-01 */
+    floatFromBits(0xBC514981C796EE46ul) , /* -3.7485501964e-18 */
+    floatFromBits(0x3FE9EF43EF29AF94ul) , /* +8.1045719825e-01 */
+    floatFromBits(0x3C7B1DFCB60445C2ul) , /* +2.3520367350e-17 */
+    floatFromBits(0x3FE30FF7FCE17035ul) , /* +5.9569930449e-01 */
+    floatFromBits(0xBC6EFCC626F74A6Ful) , /* -1.3438641937e-17 */
+    floatFromBits(0x3FE9B3E047F38741ul) , /* +8.0320753148e-01 */
+    floatFromBits(0xBC830EE286712474ul) , /* -3.3060609805e-17 */
+    floatFromBits(0x3FE36058B10659F3ul) , /* +6.0551104140e-01 */
+    floatFromBits(0xBC81FCB3A35857E7ul) , /* -3.1202672493e-17 */
+    floatFromBits(0x3FE9777EF4C7D742ul) , /* +7.9583690461e-01 */
+    floatFromBits(0xBC815479A240665Eul) , /* -3.0062724852e-17 */
+    floatFromBits(0x3FE3AFFA292050B9ul) , /* +6.1523159058e-01 */
+    floatFromBits(0x3C7E3E25E3954964ul) , /* +2.6231417767e-17 */
+    floatFromBits(0x3FE93A22499263FBul) , /* +7.8834642763e-01 */
+    floatFromBits(0x3C83D419A920DF0Bul) , /* +3.4396993154e-17 */
+    floatFromBits(0x3FE3FED9534556D4ul) , /* +6.2485948814e-01 */
+    floatFromBits(0x3C836916608C5061ul) , /* +3.3671846037e-17 */
+    floatFromBits(0x3FE8FBCCA3EF940Dul) , /* +7.8073722857e-01 */
+    floatFromBits(0xBC66DFA99C86F2F1ul) , /* -9.9198782067e-18 */
+    floatFromBits(0x3FE44CF325091DD6ul) , /* +6.3439328416e-01 */
+    floatFromBits(0x3C68076A2CFDC6B3ul) , /* +1.0420901929e-17 */
+    floatFromBits(0x3FE8BC806B151741ul) , /* +7.7301045336e-01 */
+    floatFromBits(0xBC82C5E12ED1336Dul) , /* -3.2565907034e-17 */
+    floatFromBits(0x3FE49A449B9B0939ul) , /* +6.4383154289e-01 */
+    floatFromBits(0xBC827EE16D719B94ul) , /* -3.2084798795e-17 */
+    floatFromBits(0x3FE87C400FBA2EBFul) , /* +7.6516726562e-01 */
+    floatFromBits(0xBC82DABC0C3F64CDul) , /* -3.2707225613e-17 */
+    floatFromBits(0x3FE4E6CABBE3E5E9ul) , /* +6.5317284295e-01 */
+    floatFromBits(0x3C63C293EDCEB327ul) , /* +8.5695642060e-18 */
+    floatFromBits(0x3FE83B0E0BFF976Eul) , /* +7.5720884651e-01 */
+    floatFromBits(0xBC76F420F8EA3475ul) , /* -1.9909098777e-17 */
+    floatFromBits(0x3FE5328292A35596ul) , /* +6.6241577759e-01 */
+    floatFromBits(0xBC7A12EB89DA0257ul) , /* -2.2615508886e-17 */
+    floatFromBits(0x3FE7F8ECE3571771ul) , /* +7.4913639452e-01 */
+    floatFromBits(0xBC89C8D8CE93C917ul) , /* -4.4729078447e-17 */
+    floatFromBits(0x3FE57D69348CECA0ul) , /* +6.7155895485e-01 */
+    floatFromBits(0xBC875720992BFBB2ul) , /* -4.0489037749e-17 */
+    floatFromBits(0x3FE7B5DF226AAFAFul) , /* +7.4095112535e-01 */
+    floatFromBits(0xBC70F537ACDF0AD7ul) , /* -1.4708616952e-17 */
+    floatFromBits(0x3FE5C77BBE65018Cul) , /* +6.8060099780e-01 */
+    floatFromBits(0x3C8069EA9C0BC32Aul) , /* +2.8473293355e-17 */
+    floatFromBits(0x3FE771E75F037261ul) , /* +7.3265427167e-01 */
+    floatFromBits(0x3C75CFCE8D84068Ful) , /* +1.8918673482e-17 */
+    floatFromBits(0x3FE610B7551D2CDFul) , /* +6.8954054474e-01 */
+    floatFromBits(0xBC7251B352FF2A37ul) , /* -1.5889323295e-17 */
+    floatFromBits(0x3FE72D0837EFFF96ul) , /* +7.2424708295e-01 */
+    floatFromBits(0x3C80D4EF0F1D915Cul) , /* +2.9198471334e-17 */
+    floatFromBits(0x3FE6591925F0783Dul) , /* +6.9837624941e-01 */
+    floatFromBits(0x3C8C3D64FBF5DE23ul) , /* +4.8988282436e-17 */
+    floatFromBits(0x3FE6E74454EAA8AFul) , /* +7.1573082528e-01 */
+    floatFromBits(0xBC8DBC03C84E226Eul) , /* -5.1581018476e-17 */
+    floatFromBits(0x3FE6A09E667F3BCDul) , /* +7.0710678119e-01 */
+    floatFromBits(0xBC8BDD3413B26456ul) , /* -4.8336466567e-17 */
+    floatFromBits(0x3FE6A09E667F3BCDul) , /* +7.0710678119e-01 */
+    floatFromBits(0xBC8BDD3413B26456ul) , /* -4.8336466567e-17 */
+);
+
+private var sin_bf_poly = Array[BigFloat,13](
+/* ~6.41304778336249081566343888442398912691656493764128e-26 */
+BigFloat(array(0x0000004fu, 0x18f09e97u, 0x212a5b47u, 0x39f049a7u,
+0x3bd24b7bu, 0x23af8e4au, 0x34d618d1u, 0x013262b6u),
+1.,  -3,   1 )
+,
+/* ~-3.86811532168049337542273735719002682824970072395874e-23 */
+BigFloat(array(0x0000bb0cu, 0x3cb17c1eu, 0x37e81e1au, 0x37195774u,
+0x129a10eeu, 0x1f4e5bd3u, 0x14c6fde7u, 0x15d2d8fdu),
+1.,  -3,  -1 )
+,
+/* ~1.95729405534209807707389556511391204655008788789058e-20 */
+BigFloat(array(0x0171b8eeu, 0x330c68b0u, 0x185bd7cdu, 0x085a8b04u,
+0x00c4a269u, 0x38b64e54u, 0x18d2c602u, 0x292ac5c1u),
+1.,  -3,   1 )
+,
+/* ~-8.22063524632359448147958406923548651998620031502275e-18 */
+BigFloat(array(0x00000009u, 0x1e9368cfu, 0x32371688u, 0x0021bd52u,
+0x19613de4u, 0x2e9e92f1u, 0x27c78771u, 0x3f5cc281u),
+1.,  -2,  -1 )
+,
+/* ~2.81145725434540361996328805963492166242366185016172e-15 */
+BigFloat(array(0x00000ca9u, 0x18ee0615u, 0x210b66bbu, 0x339e7ef6u,
+0x2c29a154u, 0x1f2d1a6eu, 0x0dbea028u, 0x1214063fu),
+1.,  -2,   1 )
+,
+/* ~-7.64716373181981617151041618487160223947055132654927e-13 */
+BigFloat(array(0x000d73f9u, 0x3ce67703u, 0x36256279u, 0x0f1440e6u,
+0x24128080u, 0x2e0c47a6u, 0x27b32155u, 0x2f115571u),
+1.,  -2,  -1 )
+,
+/* ~1.60590438368216145988717363310806625253064912470338e-10 */
+BigFloat(array(0x0b092309u, 0x350da12fu, 0x24b28056u, 0x31def2f9u,
+0x24044621u, 0x074f188cu, 0x3829c278u, 0x09324bddu),
+1.,  -2,   1 )
+,
+/* ~-2.50521083854417187750515438912201232789985352336291e-08 */
+BigFloat(array(0x0000001au, 0x399159fdu, 0x144e38feu, 0x1d141fdbu,
+0x1666d4dfu, 0x1bf80c34u, 0x17ad2747u, 0x0566e4f9u),
+1.,  -1,  -1 )
+,
+/* ~2.75573192239858906525573188629015139728734265040299e-06 */
+BigFloat(array(0x00000b8eu, 0x3c74aad8u, 0x399c7d56u, 0x03906123u,
+0x2a904384u, 0x14010dddu, 0x155495d5u, 0x0daca530u),
+1.,  -1,   1 )
+,
+/* ~-1.98412698412698412698412698411505245319877050168798e-04 */
+BigFloat(array(0x00034034u, 0x00d00d00u, 0x34034034u, 0x00d006ceu,
+0x348eca38u, 0x3f5dd48fu, 0x205a5108u, 0x07e84299u),
+1.,  -1,  -1 )
+,
+/* ~8.33333333333333333333333333333331789325780263439286e-03 */
+BigFloat(array(0x00888888u, 0x22222222u, 0x08888888u, 0x2222220du,
+0x270976f8u, 0x08cd270cu, 0x22fa3253u, 0x22fd1924u),
+1.,  -1,   1 )
+,
+/* ~-1.66666666666666666666666666666666666633597567091248e-01 */
+BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+0x27da7c46u, 0x26422150u, 0x2f255a8cu, 0x055ff185u),
+1.,  -1,  -1 )
+,
+/* ~1.00000000000000000000000000000000000000000000000000e+00 */
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
+1.,   0,   1 )
+);
+
+
+private var cos_bf_poly = Array[BigFloat,14](
+/* ~-2.46647929292600518676295332824511712550323986955787e-27 */
+BigFloat(array(0x00000003u, 0x036a24afu, 0x0b960021u, 0x36ab92b4u,
+0x251cbcb3u, 0x24a97fbbu, 0x175c8edbu, 0x26ff1299u),
+1.,  -3,  -1 )
+,
+/* ~1.61171432886064441126907703621370209480774221167915e-24 */
+BigFloat(array(0x000007cbu, 0x0d2a2e99u, 0x10f8748eu, 0x389f34e6u,
+0x2313bd8fu, 0x20be0984u, 0x333a6d8eu, 0x1b807806u),
+1.,  -3,   1 )
+,
+/* ~-8.89679115256512652448661798519024218223622120108391e-22 */
+BigFloat(array(0x0010ce39u, 0x1987726fu, 0x1eea7e37u, 0x1ddf4cfau,
+0x1ec5b5c4u, 0x120cb52eu, 0x37c988dcu, 0x0a3377bau),
+1.,  -3,  -1 )
+,
+/* ~4.11031762315246203111669239627818651812500805916919e-19 */
+BigFloat(array(0x1e542ba3u, 0x3f3c9ecfu, 0x00267a43u, 0x134ef26eu,
+0x1ff9a381u, 0x26109691u, 0x3d30a560u, 0x223f772eu),
+1.,  -3,   1 )
+,
+/* ~-1.56192069685855088499658490258665358909888204805953e-16 */
+BigFloat(array(0x000000b4u, 0x04f0c772u, 0x3e3a3149u, 0x04b97d58u,
+0x13ea02e8u, 0x370088b3u, 0x212bb00bu, 0x06497545u),
+1.,  -2,  -1 )
+,
+/* ~4.77947733238738507613572564831414572436923450558343e-14 */
+BigFloat(array(0x0000d73fu, 0x27ce6770u, 0x0f5c0984u, 0x0a909e14u,
+0x043eaabbu, 0x3925da80u, 0x0d2bb88bu, 0x1b8d9c50u),
+1.,  -2,   1 )
+,
+/* ~-1.14707455977297247133847313888206952874744927320517e-11 */
+BigFloat(array(0x00c9cba5u, 0x1180f93au, 0x1053f6e9u, 0x07a12245u,
+0x25d6d8feu, 0x0183a89fu, 0x11fe0eccu, 0x116ceaf8u),
+1.,  -2,  -1 )
+,
+/* ~2.08767569878680989792094302574029159968587056449638e-09 */
+BigFloat(array(0x00000002u, 0x0f76c77fu, 0x31b12f6au, 0x226bf583u,
+0x38324c53u, 0x0bebff35u, 0x1d8aa929u, 0x0902e04au),
+1.,  -1,   1 )
+,
+/* ~-2.75573192239858906525573186252547032413218294797050e-07 */
+BigFloat(array(0x00000127u, 0x393edde2u, 0x1f5c72efu, 0x005b3093u,
+0x064ee888u, 0x10be8aa5u, 0x3b5ca412u, 0x36d45cbeu),
+1.,  -1,  -1 )
+,
+/* ~2.48015873015873015873015873012641551756418143632119e-05 */
+BigFloat(array(0x00006806u, 0x201a01a0u, 0x06806806u, 0x2019fff2u,
+0x243ec0f6u, 0x3857f8fcu, 0x1e36a7c0u, 0x0c2c43d2u),
+1.,  -1,   1 )
+,
+/* ~-1.38888888888888888888888888888887982865405653380695e-03 */
+BigFloat(array(0x0016c16cu, 0x05b05b05u, 0x2c16c16cu, 0x05b05af9u,
+0x29545050u, 0x0f1975d1u, 0x0cc59466u, 0x3fbcae72u),
+1.,  -1,  -1 )
+,
+/* ~4.16666666666666666666666666666666665668698162855937e-02 */
+BigFloat(array(0x02aaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau,
+0x222d48a2u, 0x0e242eacu, 0x1247b316u, 0x3b9fbfe1u),
+1.,  -1,   1 )
+,
+/* ~-4.99999999999999999999999999999999999999817875826704e-01 */
+BigFloat(array(0x1fffffffu, 0x3fffffffu, 0x3fffffffu, 0x3fffffffu,
+0x3ffc089fu, 0x2c68799bu, 0x0b48bbdeu, 0x2ea8aa51u),
+1.,  -1,  -1 )
+,
+/* ~1.00000000000000000000000000000000000000000000000000e+00 */
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
+1.,   0,   1 )
+);
+
+
+private var tan_bf_poly = Array[BigFloat,35](
+/* ~4.19304248008015673367346745301068970533039252359331e-12 */
+BigFloat(array(0x0049c3c8u, 0x3614b771u, 0x24336d30u, 0x18260f52u,
+0x1c63a612u, 0x3c9708b1u, 0x2c030207u, 0x3b60a762u),
+1.,  -2,   1 )
+,
+/* ~-3.36706575103240667705547059415226434034305176587654e-11 */
+BigFloat(array(0x02505729u, 0x078bbff7u, 0x277b7292u, 0x2ae76500u,
+0x3326025du, 0x0785010au, 0x2e88ed52u, 0x23a7933au),
+1.,  -2,  -1 )
+,
+/* ~1.37767867318476248799250258961217380776040310955523e-10 */
+BigFloat(array(0x0977a350u, 0x3804d188u, 0x2d3b121cu, 0x3b0228d8u,
+0x002a8c44u, 0x2d5dfc73u, 0x2507d88eu, 0x3cfff02bu),
+1.,  -2,   1 )
+,
+/* ~-3.65061594065798937565902299436877921270308616808248e-10 */
+BigFloat(array(0x19163b42u, 0x137d2c1bu, 0x19fd92a2u, 0x1d367da1u,
+0x28a08aa6u, 0x19489cc8u, 0x2fbf37c1u, 0x2a39fb53u),
+1.,  -2,  -1 )
+,
+/* ~7.07244120811389943078195053689224634883725238108269e-10 */
+BigFloat(array(0x3099f85bu, 0x38f9459bu, 0x195e2a8du, 0x3797159cu,
+0x34148387u, 0x3b401948u, 0x1983fd31u, 0x184ad9fdu),
+1.,  -2,   1 )
+,
+/* ~-1.04501041542939812062419752159269710100683051724611e-09 */
+BigFloat(array(0x00000001u, 0x07d00484u, 0x1f25e4feu, 0x34768b93u,
+0x3b55eb65u, 0x12227622u, 0x04fedebcu, 0x2e961f5cu),
+1.,  -1,  -1 )
+,
+/* ~1.25002445075359892223710684907004440385587934042993e-09 */
+BigFloat(array(0x00000001u, 0x15e6a9a6u, 0x23b954f6u, 0x248f5fbau,
+0x38fabeafu, 0x059e710au, 0x3e68659eu, 0x08f9d054u),
+1.,  -1,   1 )
+,
+/* ~-1.17970967862051201631515521131934092286748635204441e-09 */
+BigFloat(array(0x00000001u, 0x1111ac11u, 0x2b29b510u, 0x0408b38cu,
+0x29617027u, 0x289298c6u, 0x2fe4c001u, 0x34903af7u),
+1.,  -1,  -1 )
+,
+/* ~1.01504782471787319555323236139271916057005781543881e-09 */
+BigFloat(array(0x00000001u, 0x05c0e901u, 0x1495b536u, 0x3d0dceffu,
+0x11d27769u, 0x314f4319u, 0x2adb4907u, 0x04581607u),
+1.,  -1,   1 )
+,
+/* ~-5.23224716917514023729869567637974110005720667650098e-10 */
+BigFloat(array(0x23f4aaa3u, 0x3810e7e3u, 0x377f317cu, 0x118eb173u,
+0x271248c9u, 0x0dc34f76u, 0x38c69c1au, 0x1715bf81u),
+1.,  -2,  -1 )
+,
+/* ~6.84075783927905363651245539376244733085133140080869e-10 */
+BigFloat(array(0x2f026372u, 0x048fabdau, 0x157f9376u, 0x1ee01201u,
+0x1d337305u, 0x3277dac2u, 0x0388ddbbu, 0x1e444286u),
+1.,  -2,   1 )
+,
+/* ~5.90392308289226882244924529214622620104906585387600e-10 */
+BigFloat(array(0x28924a94u, 0x186459bdu, 0x07f03e85u, 0x3c711128u,
+0x3ae6e0c9u, 0x1e84f311u, 0x3d3d9fe2u, 0x186b0f23u),
+1.,  -2,   1 )
+,
+/* ~1.97885803554882259263714586727843568959917519849302e-09 */
+BigFloat(array(0x00000002u, 0x07fc704fu, 0x2fe41d64u, 0x39e487cfu,
+0x184c49c2u, 0x0bee9906u, 0x1478fbedu, 0x3b189f6au),
+1.,  -1,   1 )
+,
+/* ~4.66924357822849164083933883654466829463908058807791e-09 */
+BigFloat(array(0x00000005u, 0x00de33a3u, 0x25923c9cu, 0x2ca62cbau,
+0x20bdef99u, 0x128b5ff5u, 0x3fc900eau, 0x04ca7a66u),
+1.,  -1,   1 )
+,
+/* ~1.15959738194320052411880314174946234008645186820135e-08 */
+BigFloat(array(0x0000000cu, 0x1cde875fu, 0x11fe6b7au, 0x1bf8f0eeu,
+0x1fdaf92du, 0x3db0bd62u, 0x15f329f2u, 0x1aaaa7deu),
+1.,  -1,   1 )
+,
+/* ~2.85891620102917727867302985486597414498702504078098e-08 */
+BigFloat(array(0x0000001eu, 0x2ca1db60u, 0x16b02396u, 0x27782b2du,
+0x13c68ddeu, 0x28c97a48u, 0x1971af0du, 0x190791d2u),
+1.,  -1,   1 )
+,
+/* ~7.05468704925032913074778071743586293193594984535199e-08 */
+BigFloat(array(0x0000004bu, 0x2ff1aba9u, 0x215c7e5fu, 0x0ec7c100u,
+0x29f9ff6eu, 0x0f5a5e50u, 0x1b028fafu, 0x24fd23e7u),
+1.,  -1,   1 )
+,
+/* ~1.74066092089222113091708523795806369314584635744294e-07 */
+BigFloat(array(0x000000bau, 0x39bb1378u, 0x228e6aabu, 0x1cd5a3f6u,
+0x0df50eb5u, 0x2fe1339fu, 0x3bf44406u, 0x0623c42cu),
+1.,  -1,   1 )
+,
+/* ~4.29491124040745236871063166723486418908614935914252e-07 */
+BigFloat(array(0x000001cdu, 0x0a67c230u, 0x15e26fdeu, 0x2d6f2ed2u,
+0x1e5d5eedu, 0x13306d09u, 0x2bc7fd07u, 0x3e19f2dbu),
+1.,  -1,   1 )
+,
+/* ~1.05972682972071952486859820141805093442802320377425e-06 */
+BigFloat(array(0x00000471u, 0x37df8b71u, 0x36c6ae8bu, 0x247f572bu,
+0x11ae0684u, 0x2c9d50b0u, 0x3b8c1296u, 0x142cbe10u),
+1.,  -1,   1 )
+,
+/* ~2.61477115156382799612950555257222875670856895150216e-06 */
+BigFloat(array(0x00000af7u, 0x25b48fd7u, 0x22f9b7b5u, 0x1bf47d23u,
+0x2d5e7cb4u, 0x29eec735u, 0x12e994fcu, 0x38f234bdu),
+1.,  -1,   1 )
+,
+/* ~6.45168921562814305334220557964389527562662181436031e-06 */
+BigFloat(array(0x00001b0fu, 0x1cb4fb69u, 0x3117e917u, 0x2d08cb65u,
+0x3ed33963u, 0x11bb69f4u, 0x0b13ad8fu, 0x2ed16814u),
+1.,  -1,   1 )
+,
+/* ~1.59189050693312274383546286106716190276142802345865e-05 */
+BigFloat(array(0x000042c4u, 0x32d39a62u, 0x3b08d8b5u, 0x1a0a769du,
+0x102ec25du, 0x27c1ccb1u, 0x2d7c3ac9u, 0x1484f03bu),
+1.,  -1,   1 )
+,
+/* ~3.92783238833166802364700496685053984935780264819631e-05 */
+BigFloat(array(0x0000a4beu, 0x31dd44a4u, 0x21406decu, 0x00d8ae9bu,
+0x263ef3acu, 0x26d69803u, 0x1d7f349du, 0x2a7a1ff7u),
+1.,  -1,   1 )
+,
+/* ~9.69153795692945116999068122084400485954578423200626e-05 */
+BigFloat(array(0x0001967eu, 0x062bf2beu, 0x2d29a81au, 0x3528530au,
+0x2be09523u, 0x150ffb17u, 0x1543b0eeu, 0x2e51e70cu),
+1.,  -1,   1 )
+,
+/* ~2.39129114243552481118447657590127606492827347439830e-04 */
+BigFloat(array(0x0003eafau, 0x3b9a68b3u, 0x083c6556u, 0x3c8a24a1u,
+0x2485ea61u, 0x0e5b9b2cu, 0x2d16e9bau, 0x0700d411u),
+1.,  -1,   1 )
+,
+/* ~5.90027440945585981390430768333505444797856150283712e-04 */
+BigFloat(array(0x0009aac1u, 0x09006ce8u, 0x229156e9u, 0x1010a671u,
+0x167b367eu, 0x02d471c6u, 0x33700cd8u, 0x180a5404u),
+1.,  -1,   1 )
+,
+/* ~1.45583438705131826824917380276818501608784487595954e-03 */
+BigFloat(array(0x0017da36u, 0x114add78u, 0x2b6a1c11u, 0x39bc050bu,
+0x1fa62cdeu, 0x202525f2u, 0x06797d2eu, 0x188697d8u),
+1.,  -1,   1 )
+,
+/* ~3.59212803657248101692546700427010326668047642683335e-03 */
+BigFloat(array(0x003ada7au, 0x070abeefu, 0x36bf9822u, 0x114b4de5u,
+0x29c19548u, 0x21cff3b2u, 0x1b67ac39u, 0x3afe7677u),
+1.,  -1,   1 )
+,
+/* ~8.86323552990219656886323546095947145451052636633979e-03 */
+BigFloat(array(0x0091371au, 0x2bcd8479u, 0x07ada8e1u, 0x2d73a327u,
+0x39d10b36u, 0x2a1371abu, 0x10b30f6eu, 0x139bddaau),
+1.,  -1,   1 )
+,
+/* ~2.18694885361552028218694885366767472933069912253187e-02 */
+BigFloat(array(0x01664f48u, 0x20b043e7u, 0x332d6bbau, 0x1281f45du,
+0x05c107b1u, 0x0b2e1a96u, 0x378ae51eu, 0x2c9d2be3u),
+1.,  -1,   1 )
+,
+/* ~5.39682539682539682539682539682518643701644736548166e-02 */
+BigFloat(array(0x03743743u, 0x1d0dd0ddu, 0x03743743u, 0x1d0dc5f0u,
+0x20d05868u, 0x240b23beu, 0x38da29dfu, 0x3866f03cu),
+1.,  -1,   1 )
+,
+/* ~1.33333333333333333333333333333333336718465844517559e-01 */
+BigFloat(array(0x08888888u, 0x22222222u, 0x08888888u, 0x22222226u,
+0x288230eeu, 0x27ff32dfu, 0x1b2f8f82u, 0x12608ad5u),
+1.,  -1,   1 )
+,
+/* ~3.33333333333333333333333333333333333332426548650668e-01 */
+BigFloat(array(0x15555555u, 0x15555555u, 0x15555555u, 0x15555555u,
+0x154195d6u, 0x3f2e970au, 0x24a36u, 0x3f8caf8eu),
+1.,  -1,   1 )
+,
+/* ~1.00000000000000000000000000000000000000000000000000e+00 */
+BigFloat(array(0x00000001u, 0x00000000u, 0x00000000u, 0x00000000u,
+0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),
+1.,   0,   1 )
+);
+
+
+// 1) Range reduction if needed ... x in [-Pi/4, +Pi/4]
+// 2) call cosine, sine or tan polynomial
+//  Polynomials are vastly too accurate.
+
+// Polynomial evaluation of sin(x) over [-Pi/4, +Pi/4]
+// Approximation error lower than  2^(-133)
+
+[T | BigFloat?(T)]
+private sin_bf(x:T) --> result:T {
+    var x2 = square(x);
+    var res = sin_bf_poly[0] * x2;
+    for(i in range(1,12)){ // Last coeff is one, not read from the file
+        res += sin_bf_poly[i];
+        res *= x2;
+    }
+    res *= x;
+    result <-- x + res;
+}
+
+
+// Polynomial evaluation of cos(x) over [-Pi/4, +Pi/4]
+// Approximation error lower than  2^(-128)
+[T | BigFloat?(T)]
+private cos_bf(x:T) --> result:T {
+    var x2 = square(x);
+    var res = cos_bf_poly[0] * x2;
+    for(i in range(1,13)){
+        res += cos_bf_poly[i];
+        res *= x2;
+    }
+    // The last coefficient is exactly one and is not read from the file
+    result <-- res + bf_one;
+}
+
+
+private bf_sin_rn(x:Double) --> resd:Double {
+    var sc2 = BigFloat();
+    var sc1 = BigFloat(x);
+    var N = rem_pio2_bf(sc2, sc1);
+    N = bitand(N , 0x0000003);		// extract the 2 last bits of  N
+    switch (N)
+        case (0){
+            resd <-- Double(sin_bf(sc2));
+        }
+        case (1){
+            resd <-- Double(cos_bf(sc2));
+        }
+        case (2){
+            resd <-- -Double(sin_bf(sc2));
+        }
+        case (3){
+            resd <-- -Double(cos_bf(sc2));
+        }
+        else {
+            printWithSprintf(stderr,"ERROR: %d is not a valid value in s_scs_sin \n", N);
+            resd <-- 0.0;
+        }
+}
+
+private bf_cos_rn(x:Double) --> resd:Double {
+    var sc2 = BigFloat();
+    var sc1 = BigFloat(x);
+    var N = rem_pio2_bf(sc2, sc1);
+    N = bitand(N , 0x0000003);		/* extract the 2 last bits of  N */
+    switch (N)
+        case (0){
+            resd <-- Double(cos_bf(sc2));
+        }
+        case (1){
+            resd <-- -Double(sin_bf(sc2));
+        }
+        case (2){
+            resd <-- -Double(cos_bf(sc2));
+        }
+        case (3){
+            resd <-- Double(sin_bf(sc2));
+        }
+        else{
+            printWithSprintf(stderr,"ERROR: %d is not a valid value in s_cos \n", N);
+            resd <-- 0.0;
+        }
+}
+
+
+private tan_bf(x) --> result:BigFloat {
+    var ybf = BigFloat();
+    var xbf = BigFloat(x);
+    var N = rem_pio2_bf(ybf, xbf); 	/* x (=sc2) is in [-Pi/4,Pi/4] */
+    N = bitand(N,1);		/* extract the last bit of  N */
+    var x2 = square(ybf);
+    result <-- tan_bf_poly[0] * x2;
+
+    for(i in range(1,34)){ /* The last coeff is not read from the file. */
+        result = tan_bf_poly[i] + result;
+        result = result * x2;
+    }
+
+    result = result * ybf;
+    result = ybf + result;
+
+    if(N == 1) {
+        result = recip(result);
+        result.sign = -result.sign;
+    }
+}
+
+private bf_tan_rn(x:Double) : Double = Double(tan_bf(x));
+
+
+
+/*
+
+How these functions work:
+
+The trig range reduction in crlibm computes an integer k and a reduced
+argument y such that
+
+x = k.Pi/256 + y
+
+with the reduced argument y directly in -Pi/512, Pi/512.
+(Pi/512 < 4/512 = 2@-7)
+y is computed as a double-double yh+yl
+
+Then we read off a table
+
+  sah+sal ~ sin(kPi/256)
+  cah+cal ~ cos(kPi/256)
+
+and we use the reconstruction
+
+  sin(kPi/256 + y) = sin(kPi/256)cos(y) + cos(kPi/256)sin(y)
+  cos(kPi/256 + y) = cos(kPi/256)cos(y) - sin(kPi/256)sin(y)
+
+where cos(y) and sin(y) are computed as unevaluated 1+tc and (yh+yl)(1+ts)
+respectively, where tc and ts are doubles resulting from a small
+polynomial approximation.
+This gives 14 extra bits of accuracy, so this first step is very accurate.
+
+
+Why not use accurate tables as defined by Gal ?
+
+In short, because Gal's fast approach only gives as many additiona bits
+as you've got to address the table (so we are limited to 7 if we limit
+the table size to 4KB), and we need more to have a good average performance.
+From a performance point of view we probably lose a few cycles: There
+is 4 values to read in our scheme compared to 3 in Gal's method. The
+reconstruction costs a few floating-point operations more (not that
+many, if you look in details and want to ensure more than 7 extra
+bits).
+
+Now for the advantages:
+1/ The whole thing is simpler
+2/ We have much more accuracy in the table, which simplifies the proof.
+3/ We will be able to reuse the same table values to speed up the
+second step (just tabulating a third double such that the three-double
+approx of sin/cos(kPi/256) will be summed exactly into an BF number)
+
+
+
+Now a word on range reduction:
+
+We have 4 possible range reductions:
+
+Cody and Waite with 2 constants (the fastest)
+Cody and Waite with 3 constants (almost as fast)
+Cody and Waite with 3 constants in double-double and k a long-long int
+Payne and Hanek, implemented in BF (the slowest).
+
+Each of these range reductions except Payne and Hanek is valid for x
+smaller than some bound.
+
+This range reduction may cancel up to 62 bits according to a program
+by Kahan/Douglas available in Muller's book and implemented as
+function WorstCaseForAdditiveRangeReduction in common-procedures.mpl
+However this is not a concern unless x is close to a multiple of Pi/2
+(that is k&127==0): in the general case the reconstruction will add a
+tabulated non-zero value, so the error to consider in the range
+reduction is the absolute error. Only in the cases when k&127==0 do we
+need to have 62 extra bits to compute with. This is ensured by using a
+slower, more accurate range reduction. This test for k&127==0 actually
+speeds up even these cases, because in these cases there is no table
+to read and no reconstruction to do : a simple approximation to the
+function suffices.
+
+
+Why not use Payne and Hanek only as in Markstein's book ?  Because
+our scheme, in the absence of FMA, is much faster for small values
+which are the most used.
+
+Markstein takes as reduced argument the fractional part of x*256/Pi,
+(or maybe it's 512 in his case), so he's got the same tables as we have,
+but different polynomials (which compute sin(2Pi*y) and cos(2Pi*y).
+
+ */
+
+
+/* TODO:
+
+
+ - In some Cody and Waite there are Mul12 involving k, CH and CM. They
+	 can be improved by pre-splitting CH, CM (tabulated values)
+	 and k (as an int) Then you can improve the precision by
+	 taking kmax into account
+
+ - The first coefficient of the cosine polynomial is equal exactly
+   to 1/2 and this should be modified in order to increase to accuracy
+   of the approximation.
+
+ - The second step should get the reduced argument from the first step
+   (and use the same argument reduction). This should lead to 5x
+   improvement of the worst case.
+
+ - in the tangent there are three steps. This could be studied for the
+   other functions
+*/
+
+private rem_pio256_bf(result,x){
+    var r,tmp = Array[UInt64,BF_NB_WORDS+3](), 0ul;
+
+    /* result r[0],...,r[10] could store till 300 bits of precision */
+    /* that is really enough for computing the reduced argument */
+
+    if (x.excp != 1 or x.index < -2){
+        result = x;
+        return 0;
+    }
+    /* Compute the product |x| * 256/Pi */
+    if (x.index == -2){
+        r[0] =  0ul;
+        r[1] =  0ul;
+        r[2] =  digits_256_over_pi[0] * x.h_word[0];
+        r[3] =  wrapAdd(digits_256_over_pi[0] * x.h_word[1]
+            ,digits_256_over_pi[1] * x.h_word[0]);
+        if(x.h_word[2] == 0){
+            for(i in range(4,BF_NB_WORDS+3)){
+                r[i] = wrapAdd(digits_256_over_pi[i-3] * x.h_word[1]
+                    ,digits_256_over_pi[i-2] * x.h_word[0]);
+            }
+        } else {
+            for(i in range(4,BF_NB_WORDS+3)){
+                r[i] = wrapAdd(digits_256_over_pi[i-4] * x.h_word[2]
+                    ,digits_256_over_pi[i-3] * x.h_word[1]
+                    ,digits_256_over_pi[i-2] * x.h_word[0]);
+            }
+        }
+    } else {
+        if (x.index == -1){
+            r[0] =  0;
+            r[1] = digits_256_over_pi[0] * x.h_word[0];
+            r[2] = wrapAdd(digits_256_over_pi[0] * x.h_word[1]
+                ,digits_256_over_pi[1] * x.h_word[0]);
+            if(x.h_word[2] == 0){
+                for(i in range(3,BF_NB_WORDS+3)){
+                    r[i] = wrapAdd(digits_256_over_pi[i-2] * x.h_word[1]
+                        ,digits_256_over_pi[i-1] * x.h_word[0]);
+                }
+            }else {
+                for(i in range(3,BF_NB_WORDS+3)){
+                    r[i] = wrapAdd(digits_256_over_pi[i-3] * x.h_word[2]
+                        ,digits_256_over_pi[i-2] * x.h_word[1]
+                        ,digits_256_over_pi[i-1] * x.h_word[0]);
+                }
+            }
+        } else {
+            if (x.index == 0){
+                r[0] = digits_256_over_pi[0] * x.h_word[0];
+                r[1] = wrapAdd(digits_256_over_pi[0] * x.h_word[1]
+                    ,digits_256_over_pi[1] * x.h_word[0]);
+                if(x.h_word[2] == 0){
+                    for(i in range(2,BF_NB_WORDS+3)){
+                        r[i] = wrapAdd(digits_256_over_pi[i-1] * x.h_word[1]
+                            ,digits_256_over_pi[ i ] * x.h_word[0]);
+                    }
+                } else {
+                    for(i in range(2,BF_NB_WORDS+3)){
+                        r[i] = wrapAdd(digits_256_over_pi[i-2] * x.h_word[2]
+                            ,digits_256_over_pi[i-1] * x.h_word[1]
+                            ,digits_256_over_pi[ i ] * x.h_word[0]);
+                    }
+                }
+            }else {
+                if (x.index == 1){
+                    r[0] = wrapAdd(digits_256_over_pi[0] * x.h_word[1]
+                        ,digits_256_over_pi[1] * x.h_word[0]);
+                    if(x.h_word[2] == 0){
+                        for(i in range(1,BF_NB_WORDS+3)){
+                            r[i] = wrapAdd(digits_256_over_pi[i] * x.h_word[1]
+                                ,digits_256_over_pi[i+1] * x.h_word[0]);
+                        }
+                    }else {
+                        for(i in range(1,BF_NB_WORDS+3)){
+                            r[i] = wrapAdd(digits_256_over_pi[i-1] * x.h_word[2]
+                                ,digits_256_over_pi[ i ] * x.h_word[1]
+                                ,digits_256_over_pi[i+1] * x.h_word[0]);
+                        }
+                    }
+                } else {
+                    var ind = (x.index - 2);
+                    var digits_256_over_pi_pt = Pointer[UInt64](&digits_256_over_pi[ind]);
+                    if(x.h_word[2] == 0){
+                        for(i in range(BF_NB_WORDS+3)){
+                            r[i] = wrapAdd(digits_256_over_pi_pt[i+1] * x.h_word[1]
+                                ,digits_256_over_pi_pt[i+2] * x.h_word[0]);
+                        }
+                    }else {
+                        for(i in range(BF_NB_WORDS+3)){
+                            r[i] = wrapAdd(digits_256_over_pi_pt[i] * x.h_word[2]
+                                , digits_256_over_pi_pt[i+1] * x.h_word[1]
+                                , digits_256_over_pi_pt[i+2] * x.h_word[0]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Carry propagate
+    r[BF_NB_WORDS+1] += bitshr(r[BF_NB_WORDS+2],30);
+    for(i in reverseRange(BF_NB_WORDS+1,1)) {
+        tmp=bitshr(r[i],30);
+        r[i-1] += tmp;
+        r[i] -= wrapBitshl(tmp,30);
+    }
+    // The integer part is in r[0]
+    var N,sign = r[0],0;
+
+    if(r[1] > BF_RADIX/2){	// test if the reduced part is bigger than Pi/4
+        N += 1;
+        sign = -1;
+        for(i in range(1,BF_NB_WORDS+3))
+            r[i] = bitand(bitnot(r[i]),0x3fffffffu);
+    }
+    else
+        sign = 1;
+
+    // Now we get the reduced argument and check for possible
+    // cancellation. By Kahan algorithm we will have at most 2 digits
+    // of cancellations, r[1] and r[2] in the worst case.
+    var i = 0;
+    if(r[1] == 0)
+        if(r[2] == 0)
+            i = 3;
+        else
+            i = 2;
+    else
+        i = 1;
+
+    for(j in range(BF_NB_WORDS))
+        result.h_word[j] = UInt32(r[i+j]);
+
+    result.excp = 1.;
+    result.index = -i;
+    result.sign = sign*x.sign;
+
+    /* Last step :
+    *   Multiplication by pi/2
+    */
+    result =  Pio256 * result;
+    return wrapCast(Int,N*x.sign);
+}
+
+
+//
+// Argument Reduction
+//
+
+private alias SHIFT1 = 1. / Double(wrapBitshl(1,BF_NB_BITS));
+private alias SHIFT2 = SHIFT1*SHIFT1;
+private alias SHIFT3 = SHIFT2*SHIFT1;
+
+private RangeReductionBF(rri) --> k:Int,index:Int,quadrant:Int,yh:Double,yl:Double {
+    var X,Y = BigFloat(rri.x),BigFloat();
+    k <-- rem_pio256_bf(Y, X);
+    index <-- wrapBitshl(bitand(k,127),2);
+    quadrant <-- bitand(bitshr(k,7),3);
+    var x0 = Double(Y.h_word[0]);
+    var x1 = Double(Y.h_word[1]) * SHIFT1;
+    var x2 = Double(Y.h_word[2]) * SHIFT2;
+    var x3 = Double(Y.h_word[3]) * SHIFT3;
+    var nb = db_number(array(0,wrapBitshl(Y.index*BF_NB_BITS + 1023 , 20)));
+    nb.2 *= Y.sign;
+    yh <-- ((x2+x1)+x0) * nb.2;
+    yl <-- ((((x0-yh)+x1)+x2) + x3) * nb.2;
+}
+
+
+record rrinfo (rh:Double,rl:Double,x:Double,absxhi:Int,function:Int);
+
+private computeZero(rri,quadrant,yh,yl):{
+    alias ZERO = 0.;
+    var DoSinZero = () -> {
+        var yh2 = yh*yh ;
+        var ts = yh2 * (s3 + yh2*(s5 + yh2*s7));
+        return ..Add12( yh, yl+ts*yh);
+    };
+
+    var DoCosZero = () -> {
+        var yh2 = yh*yh ;
+        var tc = yh2 * (c2 + yh2*(c4 + yh2*c6 ));
+        return ..Add12( 1., tc);
+    };
+
+    switch(rri.function)
+        case (SIN){
+            if (bitand(quadrant,1)!=0)
+                rri.rh, rri.rl = DoCosZero();
+            else
+                rri.rh, rri.rl = DoSinZero();
+            rri.function = if(quadrant==2 or quadrant==3) 1 else 0;
+            return;
+        }
+        case (COS){
+            if (bitand(quadrant,1)!=0)
+                rri.rh, rri.rl = DoSinZero();
+            else
+                rri.rh, rri.rl = DoCosZero();
+            rri.function = if(quadrant==1 or quadrant==2) 1 else 0;
+            return;
+        }
+        case (TAN){
+            rri.function = Int(bitand(quadrant,1));
+            var ch,cl,sh,sl = ZERO,ZERO,ZERO,ZERO;
+            if (bitand(quadrant,1) != 0) {
+                ch, cl = DoSinZero();
+                sh, sl = DoCosZero();
+            } else {
+                sh, sl = DoSinZero();
+                ch, cl = DoCosZero();
+            }
+            rri.rh, rri.rl = Div22( sh, sl, ch, cl);
+            return;
+        }
+}
+
+private computeNotZero(rri,index,quadrant,yh,yl):{
+    alias ZERO = 0.;
+    var sah,sal,cah,cal = ZERO,ZERO,ZERO,ZERO;
+    if(index <= wrapBitshl(64,2)) {
+        sah = sincosTable[index+0]; /* sin(a), high part */
+        sal = sincosTable[index+1]; /* sin(a), low part  */
+        cah = sincosTable[index+2]; /* cos(a), high part */
+        cal = sincosTable[index+3]; /* cos(a), low part  */
+    }else { /* cah <= sah */
+        index = wrapBitshl(128,2) - index;
+        cah = sincosTable[index+0]; /* cos(a), high part */
+        cal = sincosTable[index+1]; /* cos(a), low part  */
+        sah = sincosTable[index+2]; /* sin(a), high part */
+        sal = sincosTable[index+3]; /* sin(a), low part  */
+    }
+    var yh2 = yh*yh ;
+    var ts = yh2 * (s3 + yh2*(s5 + yh2*s7));
+    var tc = yh2 * (c2 + yh2*(c4 + yh2*c6 ));
+
+    var DoSinNotZero = () -> {
+        var cahyh_h,cahyh_l = Mul12( cah, yh);
+        var thi, tlo = Add12( sah,cahyh_h);
+        tlo = tc*sah+(ts*cahyh_h+(sal+(tlo+(cahyh_l+(cal*yh + cah*yl))))) ;
+        return ..Add12( thi, tlo);
+    };
+
+    var DoCosNotZero = ()-> {
+        var sahyh_h,sahyh_l = Mul12( sah, yh);
+        var thi, tlo = Add12(  cah, -sahyh_h);
+        tlo = tc*cah-(ts*sahyh_h-(cal+(tlo-(sahyh_l+(sal*yh+sah*yl))))) ;
+        return ..Add12(   thi, tlo);
+    };
+    switch(rri.function)
+
+        case (SIN){
+            if (bitand(quadrant,1)==1)
+                rri.rh, rri.rl = DoCosNotZero();
+            else
+                rri.rh, rri.rl = DoSinNotZero();
+            rri.function = if(quadrant==2 or quadrant==3) 1 else 0;
+            return;
+        }
+        case (COS){
+            if (bitand(quadrant,1)==1)
+                rri.rh, rri.rl = DoSinNotZero();
+            else
+                rri.rh, rri.rl = DoCosNotZero();
+            rri.function = if(quadrant==1 or quadrant==2) 1 else 0;
+            return;
+        }
+        case (TAN){
+            rri.function = Int(bitand(quadrant,1));
+            var ch,cl,sh,sl = ZERO,ZERO,ZERO,ZERO;
+            if (bitand(quadrant,1)==1) {
+                ch, cl = DoSinNotZero();
+                sh, sl = DoCosNotZero();
+            } else {
+                sh, sl = DoSinNotZero();
+                ch, cl = DoCosNotZero();
+            }
+            rri.rh, rri.rl = Div22(sh, sl, ch, cl);
+            return;
+        }
+}
+
+private ComputeTrigWithArgred(rri):{
+    alias ZERO = 0.;
+    var yh,yl,th,tl = ZERO,ZERO,ZERO,ZERO;
+    var kl,k,kd,quadrant,index = 0l,0,ZERO,0l,0l;
+
+    if(rri.absxhi < XMAX_CODY_WAITE_3) {
+        /* Compute k, deduce the table index and the quadrant */
+        k = DOUBLE2INT( rri.x * INV_PIO256);
+        kd = Double(k);
+        quadrant = bitand(bitshr(k,7),3);
+        index = wrapBitshl(bitand(k,127),2);
+        if(index == 0) {
+            /* Here a large cancellation on yh+yl would be a problem, so use double-double RR */
+            /* all this is exact */
+            var kch_h, kch_l = Mul12( kd, RR_DD_MCH);
+            var kcm_h, kcm_l = Mul12(  kd, RR_DD_MCM);
+            th,tl = Add12 ( kch_l, kcm_h) ;
+            /* only rounding error in the last multiplication and addition */
+            yh, yl = Add22 (rri.x + kch_h , kcm_l - kd*RR_DD_CL, th, tl);
+            computeZero(rri,quadrant,yh,yl);
+        }
+        else {
+            /* index <> 0, don't worry about cancellations on yh+yl */
+            if (rri.absxhi < XMAX_CODY_WAITE_2) {
+                /* CW 2: all this is exact but the rightmost multiplication */
+                yh,yl = Add12(rri.x - kd*RR_CW2_CH, kd*RR_CW2_MCL);
+            }
+            else {
+                /* CW 3: all this is exact but the rightmost multiplication */
+                yh,yl = Add12Cond((rri.x - kd*RR_CW3_CH) -  kd*RR_CW3_CM,   kd*RR_CW3_MCL);
+            }
+            computeNotZero(rri,index,quadrant,yh,yl);
+        }
+
+    }
+
+    else if ( rri.absxhi < XMAX_DDRR ) {
+        /* x sufficiently small for a Cody and Waite in double-double */
+        kl = DOUBLE2LONGINT( rri.x*INV_PIO256);
+        kd = Double(kl);
+        quadrant = bitand(bitshr(kl,7),3);
+        index = wrapBitshl(bitand(kl,127),2);
+        if(index == 0) {
+            /* Here again a large cancellation on yh+yl would be a problem,
+            so we do the accurate range reduction */
+            k,index,quadrant,yh,yl = RangeReductionBF(rri);   /*recomputes k, index, quadrant, and yh and yl*/
+            /* Now it may happen that the new k differs by 1 of kl, so check that */
+            if(index == 0)   /* no surprise */
+                computeZero(rri,quadrant,yh,yl);
+            else
+                computeNotZero(rri,index,quadrant,yh,yl);
+        }
+        else {   /*  index<>0 : double-double argument reduction*/
+            /* all this is exact */
+            var kch_h, kch_l = Mul12(   kd, RR_DD_MCH);
+            var kcm_h, kcm_l = Mul12(  kd, RR_DD_MCM);
+            th,tl = Add12 ( kch_l, kcm_h) ;
+            /* only rounding error in the last multiplication and addition */
+            yh,yl = Add22(rri.x + kch_h, kcm_l - kd*RR_DD_CL, th, tl);
+            //      printf("%f\n", yh);
+            computeNotZero(rri,index,quadrant,yh,yl);
+        }
+    } /* closes if ( absxhi < XMAX_DDRR ) */
+    else {
+        /* Worst case : x very large, sin(x) probably meaningless, we return
+        correct rounding but do't mind taking time for it */
+        k,index,quadrant,yh,yl = RangeReductionBF(rri);
+        quadrant = bitand(bitshr(k,7),3);
+        if(index == 0)
+            computeZero(rri,quadrant,yh,yl);
+        else
+            computeNotZero(rri,index,quadrant,yh,yl);
+    }
+
+}
+
+
+private sin_rn(x:Double) --> r:Double {
+    var rri = rrinfo(0.,0.,0.,0,0);
+    var x_split = db_number(x);
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
+
+    // SPECIAL CASES: x=(Nan, Inf) sin(x)=Nan
+    // x=NaN or y=NaN
+    if (rri.absxhi >= 0x7ff00000u)
+        r <-- nan(signbit(x)!=0,x);
+    else if (rri.absxhi < XMAX_SIN_CASE2){
+        // CASE 1 : x small enough sin(x)=x
+        if (rri.absxhi < XMAX_RETURN_X_FOR_SIN)
+            r <-- x;
+        else {
+            // CASE 2 :XMAX_RETURN_X_FOR_SIN x < XMAX_SIN_CASE2
+            // Fast polynomial evaluation as in DoSinZero
+            var x2 = x*x ;
+            var ts = x2 * (s3 + x2*(s5 + x2*s7));
+            rri.rh,rri.rl = Add12(x, ts*x);
+            if(rri.rh == (rri.rh + (rri.rl * RN_CST_SIN_CASE2)))
+                r <-- rri.rh;
+            else{
+                r <-- bf_sin_rn(x);
+            }
+        }
+    }
+
+    // CASE 3 : Need argument reduction
+    else {
+        rri.x = x;
+        rri.function = SIN;
+        ComputeTrigWithArgred(rri);
+
+        // change sign in parallel to the test
+        if(rri.function != 0)
+            r <-- -rri.rh;
+        else
+            r <-- rri.rh;
+        var rncst = RN_CST_SINCOS_CASE3;
+        if(rri.rh != (rri.rh + (rri.rl * rncst))){
+            r <-- bf_sin_rn(x);
+        }
+    }
+}
+
+private cos_rn(x:Double) --> r:Double {
+    var rri = rrinfo ();
+    var x_split = db_number(x);
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
+
+    /* SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan */
+    if (rri.absxhi>=0x7ff00000u)
+        r <-- nan(signbit(x)!=0,x);
+    else if (rri.absxhi < XMAX_COS_CASE2){
+        /* CASE 1 : x small enough cos(x)=1. */
+        if (rri.absxhi <XMAX_RETURN_1_FOR_COS_RN)
+            r <-- 1.;
+        else {
+            /* CASE 2 : Fast polynomial evaluation */
+            var x2 = x*x;
+            var tc = x2 * (c2 + x2*(c4 + x2*c6 ));
+            rri.rh,rri.rl = Add12( 1.0, tc);
+            if(rri.rh == (rri.rh + (rri.rl * RN_CST_COS_CASE2)))
+                r <-- rri.rh;
+            else
+                r <-- bf_cos_rn(x);
+        }
+    }
+    else {
+        /* CASE 3 : Need argument reduction */
+        rri.x = x;
+        rri.function = COS;
+        ComputeTrigWithArgred(rri);
+        if(rri.rh == (rri.rh + (rri.rl * RN_CST_SINCOS_CASE3)))
+            if(rri.function != 0)
+                r <-- -rri.rh;
+            else
+                r <-- rri.rh;
+        else
+            r <-- bf_cos_rn(x);
+    }
+}
+
+private tan_rn(x:Double) --> r:Double {
+    var rri,x_split,rndcst = rrinfo(),db_number(x),db_number();
+    rri.absxhi = bitand(x_split.0[1] , 0x7fffffffu);
+
+    // SPECIAL CASES: x=(Nan, Inf) cos(x)=Nan
+    if (rri.absxhi>=0x7ff00000u)
+        r <-- nan(signbit(x)!=0,x);
+    else if (rri.absxhi < XMAX_TAN_CASE2){
+        if (rri.absxhi < XMAX_RETURN_X_FOR_TAN)
+            r <-- x;
+        else {
+            // Dynamic computation of the rounding constant
+            rndcst.0[1] = 0x3ff00000u + bitshr((bitand(rri.absxhi,0x000fffffu)+0x00100000u),
+                                                    (0x3ff+2 - bitshr(rri.absxhi,20))) ;
+            rndcst.0[0] = 0xffffffffu;
+            // Fast Taylor series
+            var x2 = x*x;
+            var p5 = t5 + x2*(t7 + x2*(t9 + x2*t11));
+            var tt = x2*(t3h + (t3l + x2*p5));
+            rri.rh, rri.rl = Add12( x, x*tt);
+            // Test if round to nearest achieved
+            if(rri.rh == (rri.rh + (rri.rl * rndcst.2)))
+              r <-- rri.rh;
+            else
+              r <-- bf_tan_rn(x);
+        }
+    }
+    else {
+        // Otherwise : Range reduction then standard evaluation
+        rri.x = x;
+        rri.function = TAN;
+        ComputeTrigWithArgred(rri);
+        // Test if round to nearest achieved
+        if(rri.rh == (rri.rh + (rri.rl * RN_CST_TAN_CASE3)))
+            if(rri.function !=0 )
+                r <-- -rri.rh;
+            else
+                r <-- rri.rh;
+        else
+            r <-- bf_tan_rn(x);
+    }
+}
+
+
+
+inline sin_std(x:Double) = sin_rn(x);
+
+inline cos_std(x:Double) = cos_rn(x);
+
+inline tan_std(x:Double) = tan_rn(x);
+

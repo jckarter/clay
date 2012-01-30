@@ -1,8 +1,6 @@
 
+import numbers.floats.*;
 import math.*;
-import math.native.exact.(db_number);
-import numbers.floats.floats.(floatBits,floatFromBits,exponentBias);
-import printer.formatter.*;
 
 //Constants
 public alias M_E	    = 2.7182818284590452353602874713526625;  /* e */
@@ -24,16 +22,6 @@ public alias M_COS_PI_4 = 0.707106781186547524400844362104849039284835937688; /*
 public alias M_COS_PI_8 = 0.923879532511286756128183189396788286822416625863; /* cos(M_PI_4*0.5) */
 public alias M_SIN_PI_8 = 0.382683432365089771728459984030398866761344562485; /* sin(M_PI_4*0.5) */
 
-define hypot;
-define fma;
-define sign;
-define fpclassify;
-define infinity?;
-define negativeInfinity?;
-define finite?;
-define nan?;
-define llround;
-
 
 [T | Numeric?(T)]
 inline overload max(x:T,y:T) = if(x<y) y else x;
@@ -44,8 +32,11 @@ inline overload min(x:T,y:T) = if(y<x) y else x;
 [T] inline overload fma(a:T,b:T,c:T) = (a * b) + c;
 
 
+[T | Float?(T)]
+overload recip(x:T) = T(1)/x;
+
 [T,U | Float?(T,U)]
-inline overload hypot(m:T,n:U) {
+overload hypot(m:T,n:U) {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);
     alias T = Type(a);
@@ -82,105 +73,12 @@ inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
 
 
-inline overload finite?(x:Double)
-	= Bool(bitshr(bitand((Pointer[Int32](&x)+1)@,0x7fffffff)-0x7ff00000,31));
-
-inline overload finite?(x:Float){
-	var ix = Int(floatBits(x));
-	return Bool(bitshr(wrapCast(UInt,bitand(ix,0x7fffffff)-0x7f800000),31));
-}
-
-
-// Return classification value corresponding to argument.
-// enum FPCLS(
-//     FP_NAN,
-//     FP_INFINITE,
-//     FP_ZERO,
-//     FP_SUBNORMAL,
-//     FP_NORMAL
-// );
-
-//For libm compatibility
-public alias FP_NAN = 0;
-public alias FP_INFINITE = 1;
-public alias FP_ZERO = 2;
-public alias FP_SUBNORMAL = 3;
-public alias FP_NORMAL = 4;
-
-
-inline overload fpclassify(x:Double) --> res:Int {
-    var xdb = db_number();
-    xdb.2 = x;
-    xdb.0[0] = bitor(xdb.0[0],bitand(xdb.0[1] , 0xfffff));
-    xdb.0[1] = bitand(xdb.0[1],0x7ff00000);
-    if (bitor(xdb.0[1],xdb.0[0]) == 0)
-        res <-- FP_ZERO;
-    else if (xdb.0[1] == 0)
-        res <-- FP_SUBNORMAL;
-    else if (xdb.0[1] == 0x7ff00000)
-        res <-- if(xdb.0[0] != 0) FP_NAN else FP_INFINITE;
-    else
-        res <-- FP_NORMAL;
-}
-
-inline overload fpclassify(x:Float) --> res:Int {
-    var wx = floatBits(x);
-    wx = bitand(wx,0x7fffffff);
-	if (wx == 0)
-        res <-- FP_ZERO;
-    else if (wx < 0x800000)
-        res <-- FP_SUBNORMAL;
-    else if (wx >= 0x7f800000)
-        res <-- if(wx > 0x7f800000) FP_NAN else FP_INFINITE;
-    else
-        res <-- FP_NORMAL;
-}
-
-private define _infinity;
-
-inline overload _infinity(x:Double){
-	var xdb = db_number();
-    xdb.2 = x;
-    xdb.0[0] = bitor(xdb.0[0] , bitxor(bitand(xdb.0[1] , 0x7fffffff) , 0x7ff00000));
-	xdb.0[0] = bitor(xdb.0[0],-xdb.0[0]);
-	return bitand(bitnot(bitshr(xdb.0[0],31)),bitshr(xdb.0[1],30));
-}
-
-inline overload _infinity(x:Float){
-	var t = Int(floatBits(x));
-	t = bitand(t,0x7fffffff);
-	t = bitxor(t,0x7f800000);
-	t = bitor(t,-t);
-	return bitand(bitnot(bitshr(t,31)) , bitshr(t,30));
-}
-
-[T | Float?(T)]
-inline overload infinity?(x:T) = if(_infinity(x)==1) true else false;
-[T | Float?(T)]
-inline overload negativeInfinity?(x:T) = if(_infinity(x)==-1) true else false;
-
-
-inline overload nan?(x:Double){
-	var xdb = db_number();
-    xdb.2 = x;
-    xdb.0[1] = bitand(xdb.0[1], 0x7fffffff);
-    xdb.0[1] = bitor(xdb.0[1] , bitshr(wrapCast(UInt,bitor(xdb.0[0],-xdb.0[0])),31));
-	xdb.0[1] = 0x7ff00000 - xdb.0[1];
-	return Bool(bitshr(wrapCast(UInt,xdb.0[1]),31));
-}
-
-inline overload nan?(x:Float){
-	var ix = Int(floatBits(x));
-	ix = bitand(ix,0x7fffffff);
-	ix = 0x7f800000 - ix;
-	return Bool(bitshr(wrapCast(UInt,ix),31));
-}
 
 overload llround(x:Float) {
     var result = 0l;
     var i = floatBits(x);
     var j0 = bitand(bitshr(i,23),0xff) - 0x7f;
-    var sign = if(bitand(i,0x80000000) != 0) -1l else 1l;
+    var sign = if(bitand(i,0x80000000u) != 0) -1l else 1l;
     i = bitor(bitand(i,0x7fffff),0x800000);
     if (j0 < Int(8 * TypeSize(Long)) - 1){
         if (j0 < 0)
@@ -201,10 +99,9 @@ overload llround(x:Float) {
 
 overload llround (x:Double ) {
     var result = 0l;
-    var xdb = db_number();
-    xdb.2 = x;
+    var xdb = db_number(x);
     var j0 = bitand(bitshr(xdb.0[1] , 20) , 0x7ff) - 0x3ff;
-    var sign = if(bitand(xdb.0[1] , 0x80000000) != 0) -1l else 1l;
+    var sign = if(bitand(xdb.0[1] , 0x80000000u) != 0) -1l else 1l;
     xdb.0[1] = bitor(bitand(xdb.0[1],0xfffff) ,0x100000);
     if (j0 < 20){
         if (j0 < 0)
@@ -218,7 +115,7 @@ overload llround (x:Double ) {
         if (j0 >= 52)
             result = bitshl(bitor(bitshl( Long(xdb.0[1]) , 32) , xdb.0[0]) , j0 - 52);
         else{
-            var j = xdb.0[0] + bitshr(0x80000000 ,j0 - 20);
+            var j = xdb.0[0] + bitshr(0x80000000u ,j0 - 20);
             if (j < xdb.0[0])
                 inc(xdb.0[1]);
             if (j0 == 20)
@@ -233,3 +130,6 @@ overload llround (x:Double ) {
     }
     return sign * result;
 }
+
+
+

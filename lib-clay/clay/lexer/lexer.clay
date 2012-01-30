@@ -110,7 +110,7 @@ overload next(x:LexerInput) {
     return c;
 }
 
-overload assign(dest:LexerInput, ref src:LexerInput) {
+overload assign(ref dest:LexerInput, ref src:LexerInput) {
     if (dest.file == src.file) {
         var destMax = max(dest.maxCurrent, dest.current);
         var srcMax = max(src.maxCurrent, src.current);

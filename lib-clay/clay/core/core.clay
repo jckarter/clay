@@ -148,7 +148,7 @@ enum PrimitiveKind (
     PRIM_TypeSize,
     PRIM_TypeAlignment,
 
-    PRIM_primitiveCopy,
+    PRIM_bitcopy,
 
     PRIM_boolNot,
 
@@ -180,7 +180,7 @@ enum PrimitiveKind (
 
     PRIM_makeCodePointer,
     PRIM_makeCCodePointer,
-    PRIM_pointerCast,
+    PRIM_bitcast,
 
     PRIM_arrayRef,
 

@@ -1,0 +1,27 @@
+variant V(Int, StringConstant);
+
+
+[C] ignore (c:C, ..T)
+{
+    c();
+}
+
+
+[C,V | Variant?(V) ]
+dispatch(c:C, v:V)
+{
+    return ..c(*v);
+}
+
+test(m : V)
+{
+    with ignore(3);
+    with s = dispatch(m);
+    println(s);
+}
+
+main()
+{
+    test(V(5));
+    test(V(":)"));
+}

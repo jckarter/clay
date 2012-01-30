@@ -3,6 +3,7 @@
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#define _SCL_SECURE_NO_WARNINGS
 #endif
 
 #include <string>
@@ -11,39 +12,64 @@
 #include <set>
 #include <iostream>
 #include <sstream>
+#include <cassert>
+#include <cctype>
+#include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <climits>
 #include <cerrno>
 
 #ifdef _MSC_VER
 // LLVM headers spew warnings on MSVC
 #pragma warning(push)
-#pragma warning(disable: 4146 4355 4146 4800 4996)
+#pragma warning(disable: 4146 4244 4267 4355 4146 4800 4996)
 #endif
 
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/DebugInfo.h>
 #include <llvm/Analysis/DIBuilder.h>
-#include <llvm/Type.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Module.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Function.h>
+#include <llvm/Assembly/Writer.h>
+#include <llvm/Assembly/Parser.h>
+#include <llvm/Assembly/PrintModulePass.h>
 #include <llvm/BasicBlock.h>
-#include <llvm/Support/Dwarf.h>
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/Host.h>
-#include <llvm/Support/TargetSelect.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/CodeGen/LinkAllAsmWriterComponents.h>
+#include <llvm/CodeGen/LinkAllCodegenComponents.h>
+#include <llvm/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/Target/TargetData.h>
+#include <llvm/Function.h>
 #include <llvm/Intrinsics.h>
+#include <llvm/LinkAllVMCore.h>
+#include <llvm/LLVMContext.h>
+#include <llvm/Module.h>
+#include <llvm/PassManager.h>
+#include <llvm/Support/Dwarf.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/FormattedStream.h>
+#include <llvm/Support/Host.h>
+#include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/Path.h>
+#include <llvm/Support/PathV2.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Target/TargetData.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/Transforms/IPO/PassManagerBuilder.h>
+#include <llvm/Transforms/IPO.h>
+#include <llvm/Type.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+namespace clay {
 
 using std::string;
 using std::vector;
@@ -54,6 +80,8 @@ using std::set;
 using std::ostream;
 using std::ostringstream;
 
+}
+
 #ifdef _MSC_VER
 
 #define strtoll _strtoi64
@@ -63,22 +91,32 @@ using std::ostringstream;
 
 #include <complex>
 
+namespace clay {
+
 typedef std::complex<float> clay_cfloat;
 typedef std::complex<double> clay_cdouble;
 typedef std::complex<long double> clay_cldouble;
+
+}
 
 #else
 
 #define CLAY_ALIGN(n) __attribute__((aligned(n)))
 
+namespace clay {
+
 typedef _Complex float clay_cfloat;
 typedef _Complex double clay_cdouble;
 typedef _Complex long double clay_cldouble;
 
+}
+
 #endif
 
-#define CLAY_LANGUAGE_VERSION "0.1"
-#define CLAY_COMPILER_VERSION "0.1git"
+#define CLAY_LANGUAGE_VERSION "0.2-WIP"
+#define CLAY_COMPILER_VERSION "0.2git"
+
+namespace clay {
 
 
 //
@@ -95,8 +133,7 @@ typedef unsigned long long size64_t;
 // int128 type
 //
 
-#if (defined(_MSC_VER) && defined(_M_X64)) \
-    || (defined(__GNUC__) && defined(_INT128_DEFINED))
+#if defined(__GNUC__) && defined(_INT128_DEFINED)
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
 #elif (defined(__clang__))
@@ -175,32 +212,38 @@ struct uint128_holder {
     operator size64_t() const { return lowValue; }
 } CLAY_ALIGN(16);
 
+}
+
 namespace std {
+
 template<>
-class numeric_limits<int128_holder> {
+class numeric_limits<clay::int128_holder> {
 public:
-    static int128_holder min() throw() {
-        return int128_holder(0, std::numeric_limits<ptrdiff64_t>::min());
+    static clay::int128_holder min() throw() {
+        return clay::int128_holder(0, std::numeric_limits<clay::ptrdiff64_t>::min());
     }
-    static int128_holder max() throw() {
-        return int128_holder(-1, std::numeric_limits<ptrdiff64_t>::max());
+    static clay::int128_holder max() throw() {
+        return clay::int128_holder(-1, std::numeric_limits<clay::ptrdiff64_t>::max());
     }
 };
 
 template<>
-class numeric_limits<uint128_holder> {
+class numeric_limits<clay::uint128_holder> {
 public:
-    static uint128_holder min() throw() {
-        return uint128_holder(0, 0);
+    static clay::uint128_holder min() throw() {
+        return clay::uint128_holder(0, 0);
     }
-    static uint128_holder max() throw() {
-        return uint128_holder(
-            std::numeric_limits<size64_t>::max(),
-            std::numeric_limits<size64_t>::max()
+    static clay::uint128_holder max() throw() {
+        return clay::uint128_holder(
+            std::numeric_limits<clay::size64_t>::max(),
+            std::numeric_limits<clay::size64_t>::max()
         );
     }
 };
+
 }
+
+namespace clay {
 
 inline int128_holder::int128_holder(uint128_holder y)
     : lowValue(y.lowValue), highPad(y.highPad) {}
@@ -209,10 +252,10 @@ typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
 #endif
 
-inline std::ostream &operator<<(std::ostream &os, clay_int128 x) {
+inline std::ostream &operator<<(std::ostream &os, const clay_int128 &x) {
     return os << ptrdiff64_t(x);
 }
-inline std::ostream &operator<<(std::ostream &os, clay_uint128 x) {
+inline std::ostream &operator<<(std::ostream &os, const clay_uint128 &x) {
     return os << size64_t(x);
 }
 
@@ -431,6 +474,7 @@ struct Finally;
 struct OnError;
 struct Unreachable;
 struct EvalStatement;
+struct WithStatement;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -582,6 +626,7 @@ typedef Pointer<Finally> FinallyPtr;
 typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 typedef Pointer<EvalStatement> EvalStatementPtr;
+typedef Pointer<WithStatement> WithStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -667,19 +712,25 @@ struct Source : public Object {
     string fileName;
     char *data;
     int size;
-    llvm::DIFile debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
     Source(const string &fileName, char *data, int size)
         : Object(SOURCE), fileName(fileName), data(data), size(size), debugInfo(NULL) {}
     ~Source() {
         delete [] data;
     }
+
+    llvm::DIFile getDebugInfo() { return llvm::DIFile(debugInfo); }
 };
 
 struct Location : public Object {
     SourcePtr source;
     int offset;
+    bool lineColumnInitialized;
+    int line, column, tabColumn;
+
     Location(const SourcePtr &source, int offset)
-        : Object(LOCATION), source(source), offset(offset) {}
+        : Object(LOCATION), source(source), offset(offset),
+          lineColumnInitialized(false), line(-1), column(-1), tabColumn(-1) {}
 };
 
 
@@ -840,10 +891,12 @@ void argumentIndexRangeError(unsigned int index,
                              size_t value,
                              size_t maxValue);
 
-void computeLineCol(LocationPtr location,
-                    int &line,
-                    int &column,
-                    int &tabColumn);
+void getLineCol(LocationPtr location,
+                int &line,
+                int &column,
+                int &tabColumn);
+
+llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column);
 
 void printFileLineCol(ostream &out, LocationPtr location);
 
@@ -857,6 +910,7 @@ struct DebugPrinter {
     ~DebugPrinter();
 };
 
+extern "C" void displayCompileContext();
 
 
 //
@@ -1212,7 +1266,6 @@ struct Unpack : public Expr {
 
 struct StaticExpr : public Expr {
     ExprPtr expr;
-    ExprPtr desugared;
     StaticExpr(ExprPtr expr) :
         Expr(STATIC_EXPR), expr(expr) {}
 };
@@ -1321,7 +1374,8 @@ enum StatementKind {
     FINALLY,
     ONERROR,
     UNREACHABLE,
-    EVAL_STATEMENT
+    EVAL_STATEMENT,
+    WITH
 };
 
 struct Statement : public ANode {
@@ -1331,6 +1385,7 @@ struct Statement : public ANode {
 };
 
 struct Block : public Statement {
+    BlockPtr desugared;
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
@@ -1575,7 +1630,14 @@ struct EvalStatement : public Statement {
 };
 
 
-
+struct WithStatement : public Statement {
+    vector<IdentifierPtr> lhs;
+    ExprPtr rhs;
+    LocationPtr withLocation;
+    WithStatement( vector<IdentifierPtr> i, ExprPtr r, LocationPtr l)
+        : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
+};
+
 //
 // Code
 //
@@ -1880,13 +1942,16 @@ struct GVarInstance : public Object {
     EnvPtr env;
     MultiPValuePtr analysis;
     TypePtr type;
+    ValueHolderPtr staticGlobal;
     llvm::GlobalVariable *llGlobal;
-    llvm::DIGlobalVariable debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     GVarInstance(GlobalVariablePtr gvar,
                  const vector<ObjectPtr> &params)
         : Object(DONT_CARE), gvar(gvar), params(params),
           analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
+
+    llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
 enum CallingConv {
@@ -1916,12 +1981,12 @@ struct ExternalProcedure : public TopLevelItem {
     TypePtr ptrType;
 
     llvm::Function *llvmFunc;
-    llvm::DISubprogram debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     ExternalProcedure(Visibility visibility)
         : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
           attributes(new ExprList()), attributesVerified(false),
-          analyzed(false), llvmFunc(NULL), debugInfo(NULL) {}
+          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
                       const vector<ExternalArgPtr> &args,
@@ -1933,6 +1998,8 @@ struct ExternalProcedure : public TopLevelItem {
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
+
+    llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
 
 struct ExternalArg : public ANode {
@@ -1953,7 +2020,7 @@ struct ExternalVariable : public TopLevelItem {
 
     TypePtr type2;
     llvm::GlobalVariable *llGlobal;
-    llvm::DIGlobalVariable debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     ExternalVariable(Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, visibility),
@@ -1966,6 +2033,8 @@ struct ExternalVariable : public TopLevelItem {
         : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL), debugInfo(NULL) {}
+
+    llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
 struct EvalTopLevel : public TopLevelItem {
@@ -2079,6 +2148,7 @@ struct ModuleDeclaration : public ANode {
 };
 
 struct Module : public ANode {
+    SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
     ModuleDeclarationPtr declaration;
@@ -2110,7 +2180,7 @@ struct Module : public ANode {
     bool topLevelLLVMGenerated;
     bool externalsGenerated;
 
-    llvm::DINameSpace debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     Module(const string &moduleName)
         : ANode(MODULE), moduleName(moduleName),
@@ -2136,6 +2206,8 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           debugInfo(NULL) {}
+
+    llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
 };
 
 
@@ -2268,6 +2340,7 @@ void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
 ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name);
 ModulePtr safeLookupModule(EnvPtr env);
+llvm::DINameSpace lookupModuleDebugInfo(EnvPtr env);
 
 ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,
@@ -2284,15 +2357,18 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 // loader module
 //
 
+extern map<string, ModulePtr> globalModules;
 extern map<string, string> globalFlags;
+extern ModulePtr globalMainModule;
 
 void addSearchPath(const string &path);
-ModulePtr loadProgram(const string &fileName);
+ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
 ModulePtr loadProgramSource(const string &name, const string &source);
 ModulePtr loadedModule(const string &module);
 const string &primOpName(PrimOpPtr x);
 ModulePtr preludeModule();
 ModulePtr primitivesModule();
+ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
 
@@ -2307,7 +2383,8 @@ enum PrimOpCode {
     PRIM_TypeAlignment,
     PRIM_CallDefinedP,
 
-    PRIM_primitiveCopy,
+    PRIM_bitcopy,
+    PRIM_bitcast,
 
     PRIM_boolNot,
 
@@ -2369,8 +2446,6 @@ enum PrimOpCode {
     PRIM_makeCCodePointer,
     PRIM_callCCodePointer,
 
-    PRIM_pointerCast,
-
     PRIM_Array,
     PRIM_arrayRef,
     PRIM_arrayElements,
@@ -2396,6 +2471,7 @@ enum PrimOpCode {
     PRIM_VariantP,
     PRIM_VariantMemberIndex,
     PRIM_VariantMemberCount,
+    PRIM_VariantMembers,
     PRIM_variantRepr,
 
     PRIM_Static,
@@ -2445,7 +2521,13 @@ enum PrimOpCode {
     PRIM_RMWUMin,
     PRIM_RMWUMax,
 
-    PRIM_activeException
+    PRIM_ByRef,
+    PRIM_RecordWithProperties,
+
+    PRIM_activeException,
+
+    PRIM_memcpy,
+    PRIM_memmove
 };
 
 struct PrimOp : public Object {
@@ -2531,6 +2613,8 @@ struct Type : public Object {
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL), defined(false),
           typeInfoInitialized(false), overloadsInitialized(false) {}
+
+    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
 enum TypeKind {
@@ -2601,13 +2685,18 @@ struct CCodePointerType : public Type {
     vector<TypePtr> argTypes;
     bool hasVarArgs;
     TypePtr returnType; // NULL if void return
+
+    llvm::Type *callType;
+
+    llvm::Type *getCallType();
+
     CCodePointerType(CallingConv callingConv,
                      const vector<TypePtr> &argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
         : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
           argTypes(argTypes), hasVarArgs(hasVarArgs),
-          returnType(returnType) {}
+          returnType(returnType), callType(NULL) {}
 };
 
 struct ArrayType : public Type {
@@ -2887,11 +2976,11 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarIfExpr(IfExprPtr x);
-ExprPtr desugarStaticExpr(StaticExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);
+BlockPtr desugarBlock(BlockPtr x);
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
 vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);
@@ -3071,7 +3160,7 @@ struct InvokeEntry : public Object {
     llvm::Function *llvmFunc;
     llvm::Function *llvmCWrapper;
 
-    llvm::DISubprogram debugInfo;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
@@ -3081,6 +3170,8 @@ struct InvokeEntry : public Object {
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(false), llvmFunc(NULL), llvmCWrapper(NULL), debugInfo(NULL) {}
+
+    llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
 typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
@@ -3388,15 +3479,15 @@ static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
 extern llvm::Module *llvmModule;
 extern llvm::DIBuilder *llvmDIBuilder;
-extern llvm::ExecutionEngine *llvmEngine;
 extern const llvm::TargetData *llvmTargetData;
 
 llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
 
-bool initLLVM(std::string const &targetTriple,
+llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     std::string const &name,
     std::string const &flags,
+    bool relocPic,
     bool debug,
     bool optimized);
 
@@ -3483,7 +3574,7 @@ struct ValueStackEntry {
 
 struct CodegenContext : public Object {
     llvm::Function *llvmFunc;
-    vector<llvm::MDNode*> debugScope;
+    vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
     llvm::IRBuilder<> *initBuilder;
     llvm::IRBuilder<> *builder;
 
@@ -3501,6 +3592,7 @@ struct CodegenContext : public Object {
     vector<JumpTarget> exceptionTargets;
     bool checkExceptions;
     llvm::Value *exceptionValue;
+    int inlineDepth;
 
     CodegenContext(llvm::Function *llvmFunc)
         : Object(DONT_CARE),
@@ -3509,21 +3601,9 @@ struct CodegenContext : public Object {
           builder(NULL),
           valueForStatics(NULL),
           checkExceptions(true),
-          exceptionValue(NULL)
+          exceptionValue(NULL),
+          inlineDepth(0)
     {
-    }
-
-    CodegenContext(llvm::Function *llvmFunc, llvm::DISubprogram debugInfo)
-        : Object(DONT_CARE),
-          llvmFunc(llvmFunc),
-          initBuilder(NULL),
-          builder(NULL),
-          valueForStatics(NULL),
-          checkExceptions(true),
-          exceptionValue(NULL)
-    {
-        if (debugInfo != NULL)
-            debugScope.push_back(debugInfo);
     }
 
     ~CodegenContext() {
@@ -3531,15 +3611,48 @@ struct CodegenContext : public Object {
         delete initBuilder;
     }
 
-    llvm::DIScope getDebugScope() {
+    llvm::DILexicalBlock getDebugScope() {
         if (debugScope.empty())
-            return llvm::DIScope(NULL);
+            return llvm::DILexicalBlock(NULL);
         else
-            return llvm::DIScope(debugScope.back());
+            return llvm::DILexicalBlock(debugScope.back());
+    }
+
+    void pushDebugScope(llvm::DILexicalBlock scope) {
+        debugScope.push_back((llvm::MDNode*)scope);
+    }
+    void popDebugScope() {
+        debugScope.pop_back();
     }
 };
 
 typedef Pointer<CodegenContext> CodegenContextPtr;
+
+struct DebugLocationContext {
+    LocationPtr loc;
+    CodegenContextPtr ctx;
+    DebugLocationContext(LocationPtr loc, CodegenContextPtr ctx)
+        : loc(loc), ctx(ctx)
+    {
+        if (loc.ptr()) {
+            pushLocation(loc);
+            if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
+                int line, column;
+                getDebugLineCol(loc, line, column);
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
+                ctx->builder->SetCurrentDebugLocation(debugLoc);
+            }
+        }
+    }
+    ~DebugLocationContext() {
+        if (loc.ptr()) {
+            popLocation();
+        }
+    }
+private :
+    DebugLocationContext(const DebugLocationContext &) {}
+    void operator=(const DebugLocationContext &) {}
+};
 
 void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
@@ -3629,5 +3742,16 @@ typedef Pointer<ExternalTarget> ExternalTargetPtr;
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
 
+//
+// parachute
+//
+
+int parachute(int (*mainfn)(int, char **, char const* const*),
+    int argc, char **argv, char const* const* envp);
+
+}
+
+#include "operators.hpp"
+#include "hirestimer.hpp"
 
 #endif

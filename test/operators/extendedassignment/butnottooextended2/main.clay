@@ -1,0 +1,3 @@
+main() {
+    Vector[Int]() = Vector[Int]();
+}

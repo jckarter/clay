@@ -1,5 +1,6 @@
 #include "clay.hpp"
-#include <cassert>
+
+namespace clay {
 
 using namespace std;
 
@@ -33,6 +34,56 @@ void addGlobal(ModulePtr module,
 // lookupModuleHolder, safeLookupModuleHolder
 //
 
+typedef set<ObjectPtr> ObjectSet;
+
+static void suggestModules(ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
+    for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
+         i != end;
+         ++i)
+    {
+        err << "\n    import " << *i << ".(" << name->str << ");";
+    }
+}
+
+static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates) {
+    std::cerr << name << "\n";
+    ostringstream err;
+    err << "ambiguous imported symbol: " << name->str;
+    set<string> moduleNames;
+    for (ObjectSet::const_iterator i = candidates.begin(), end = candidates.end();
+         i != end;
+         ++i)
+    {
+        moduleNames.insert(staticModule(*i)->moduleName);
+    }
+
+    err << "\n  disambiguate with one of:";
+    suggestModules(err, moduleNames, name);
+    error(name, err.str());
+}
+
+static void undefinedNameError(IdentifierPtr name) {
+    ostringstream err;
+    err << "undefined name: " << name->str;
+    set<string> suggestModuleNames;
+
+    for (map<string, ModulePtr>::const_iterator i = globalModules.begin(), end = globalModules.end();
+         i != end;
+         ++i)
+    {
+        if (lookupPublic(i->second, name) != NULL)
+            suggestModuleNames.insert(i->second->moduleName);
+    }
+
+    if (!suggestModuleNames.empty()) {
+        err << "\n  maybe you need one of:";
+        suggestModules(err, suggestModuleNames, name);
+    }
+
+    error(name, err.str());
+
+}
+
 ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ObjectPtr result1, result2;
     map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
@@ -41,8 +92,13 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     if (mh->import.ptr())
         result2 = lookupPublic(mh->import->module, name);
     if (result1.ptr()) {
-        if (result2.ptr() && (result1 != result2))
-            error(name, "ambiguous imported symbol: " + name->str);
+        if (result2.ptr() && (result1 != result2)) {
+            std::cerr << "module holder ambiguity\n";
+            ObjectSet candidates;
+            candidates.insert(result1);
+            candidates.insert(result2);
+            ambiguousImportError(name, candidates);
+        }
         return result1;
     }
     else {
@@ -53,7 +109,7 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ObjectPtr x = lookupModuleHolder(mh, name);
     if (!x)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return x;
 }
 
@@ -64,7 +120,6 @@ ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 //
 
 
-typedef set<ObjectPtr> ObjectSet;
 static const map<string, ObjectSet> &getPublicSymbols(ModulePtr module);
 static const map<string, ObjectSet> &getAllSymbols(ModulePtr module);
 
@@ -118,13 +173,26 @@ static const map<string, ObjectSet> &getAllSymbols(ModulePtr module)
     return module->allSymbols;
 }
 
-static void insertImported(const string &name,
+static void insertImported(IdentifierPtr name,
                            ObjectPtr value,
                            const map<string, ObjectPtr> &globals,
-                           map<string, ObjectSet> &result)
+                           map<string, ObjectSet> &result,
+                           set<string> &specificImported,
+                           bool isSpecificImport)
 {
-    if (!globals.count(name))
-        result[name].insert(value);
+    if (specificImported.count(name->str)) {
+        if (isSpecificImport)
+            error(name, "name imported already: " + name->str);
+        return;
+    }
+
+    if (!globals.count(name->str)) {
+        if (isSpecificImport) {
+            result[name->str].clear();
+            specificImported.insert(name->str);
+        }
+        result[name->str].insert(value);
+    }
 }
 
 static void addImportedSymbols(ModulePtr module,
@@ -132,6 +200,8 @@ static void addImportedSymbols(ModulePtr module,
 {
     map<string, ObjectSet> &result =
         publicOnly ? module->publicSymbols : module->allSymbols;
+    set<string> specificImported;
+
     const map<string, ObjectPtr> &globals = module->globals;
 
     vector<ImportPtr>::iterator
@@ -144,20 +214,20 @@ static void addImportedSymbols(ModulePtr module,
         if (x->importKind == IMPORT_MODULE) {
             ImportModule *y = (ImportModule *)x;
             if (y->alias.ptr()) {
-                const string &name = y->alias->str;
+                IdentifierPtr name = y->alias;
                 ModuleHolderPtr holder =
                     publicOnly ?
-                    module->publicRootHolder->children[name] :
-                    module->rootHolder->children[name];
-                insertImported(name, holder.ptr(), globals, result);
+                    module->publicRootHolder->children[name->str] :
+                    module->rootHolder->children[name->str];
+                insertImported(name, holder.ptr(), globals, result, specificImported, true);
             }
             else {
-                const string &name = y->dottedName->parts[0]->str;
+                IdentifierPtr name = y->dottedName->parts[0];
                 ModuleHolderPtr holder =
                     publicOnly ?
-                    module->publicRootHolder->children[name] :
-                    module->rootHolder->children[name];
-                insertImported(name, holder.ptr(), globals, result);
+                    module->publicRootHolder->children[name->str] :
+                    module->rootHolder->children[name->str];
+                insertImported(name, holder.ptr(), globals, result, specificImported, true);
             }
         }
         else if (x->importKind == IMPORT_STAR) {
@@ -171,8 +241,11 @@ static void addImportedSymbols(ModulePtr module,
                 ObjectSet::const_iterator
                     oi = mmi->second.begin(),
                     oend = mmi->second.end();
-                for (; oi != oend; ++oi)
-                    insertImported(mmi->first, *oi, globals, result);
+                for (; oi != oend; ++oi) {
+                    IdentifierPtr fakeIdent = new Identifier(mmi->first);
+                    fakeIdent->location = y->location;
+                    insertImported(fakeIdent, *oi, globals, result, specificImported, false);
+                }
             }
         }
         else if (x->importKind == IMPORT_MEMBERS) {
@@ -197,7 +270,7 @@ static void addImportedSymbols(ModulePtr module,
                     oi = objs.begin(),
                     oend = objs.end();
                 for (; oi != oend; ++oi)
-                    insertImported(name->str, *oi, globals, result);
+                    insertImported(name, *oi, globals, result, specificImported, true);
             }
         }
         else {
@@ -222,8 +295,10 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
     if ((i == module->allSymbols.end()) || (i->second.empty()))
         return NULL;
     const ObjectSet &objs = i->second;
-    if (objs.size() > 1)
-        error(name, "ambiguous imported symbol: " + name->str);
+    if (objs.size() > 1) {
+        std::cerr << "lookupPrivate ambiguity " << module << "\n";
+        ambiguousImportError(name, objs);
+    }
     return *objs.begin();
 }
 
@@ -243,15 +318,17 @@ ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
     if ((i == module->publicSymbols.end()) || (i->second.empty()))
         return NULL;
     const ObjectSet &objs = i->second;
-    if (objs.size() > 1)
-        error(name, "ambiguous imported symbol: " + name->str);
+    if (objs.size() > 1) {
+        std::cerr << "lookupPublic ambiguity\n";
+        ambiguousImportError(name, objs);
+    }
     return *objs.begin();
 }
 
 ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name) {
     ObjectPtr x = lookupPublic(module, name);
     if (!x)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return x;
 }
 
@@ -295,7 +372,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
     ObjectPtr obj = lookupEnv(env, name);
     if (obj == NULL)
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     return obj;
 }
 
@@ -312,6 +389,24 @@ ModulePtr safeLookupModule(EnvPtr env) {
     default :
         assert(false);
         return NULL;
+    }
+}
+
+llvm::DINameSpace lookupModuleDebugInfo(EnvPtr env) {
+    if (env == NULL || env->parent == NULL)
+        return llvm::DINameSpace(NULL);
+
+    switch (env->parent->objKind) {
+    case ENV : {
+        Env *parent = (Env *)env->parent.ptr();
+        return lookupModuleDebugInfo(parent);
+    }
+    case MODULE : {
+        Module *module = (Module *)env->parent.ptr();
+        return module->getDebugInfo();
+    }
+    default :
+        return llvm::DINameSpace(NULL);
     }
 }
 
@@ -338,7 +433,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
     }
 
     if (!env->parent) {
-        error(name, "undefined name: " + name->str);
+        undefinedNameError(name);
     }
 
     switch (env->parent->objKind) {
@@ -350,7 +445,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
         Module *y = (Module *)env->parent.ptr();
         ObjectPtr z = lookupPrivate(y, name);
         if (!z)
-            error(name, "undefined name: " + name->str);
+            undefinedNameError(name);
         isNonLocal = true;
         isGlobal = true;
         return z;
@@ -426,4 +521,4 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env)
     return head->location;
 }
 
-
+}

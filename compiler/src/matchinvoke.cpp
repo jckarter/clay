@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 static void initializePatterns(OverloadPtr x)
 {
     if (x->patternsInitializedState == 1)
@@ -204,4 +206,6 @@ void printMatchError(ostream &os, MatchResultPtr result)
         assert(false);
         break;
     }
+}
+
 }

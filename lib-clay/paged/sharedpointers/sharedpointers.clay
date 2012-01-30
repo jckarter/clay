@@ -56,7 +56,7 @@ overload resetUnsafe(p : SharedPointer[T]) {
 }
 
 [T]
-overload assign(dest:SharedPointer[T], ref src:SharedPointer[T]) {
+overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     destroy(dest);

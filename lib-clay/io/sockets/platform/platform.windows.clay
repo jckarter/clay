@@ -2,7 +2,7 @@ import win32;
 public import win32.(
     SOCKET_ERROR,
     socket, bind, listen, accept, connect, send, recv, sendto, recvfrom,
-    select, getsockopt, setsockopt, gethostbyname,
+    select, gethostbyname, getsockopt, setsockopt,
     gethostbyaddr,
     AF_UNSPEC, AF_INET, AF_INET6,
     PF_UNSPEC, PF_INET, PF_INET6,
@@ -14,6 +14,10 @@ public import win32.(
     SOL_SOCKET,
     SO_REUSEADDR
 );
+
+// winsock uses 'char*' and 'int' for buffer pointers and sizes, posix uses 'void*' and 'size_t'
+alias DataPointer = Pointer[CChar];
+alias DataSize = Int;
 
 alias RawSocket = win32.SOCKET;
 alias errno = win32.WSAGetLastError;
@@ -43,5 +47,7 @@ alias Sockaddr = win32.Struct_sockaddr;
 alias Sockaddr_in = win32.Struct_sockaddr_in;
 alias Sockaddr_storage = win32.Struct_sockaddr_storage;
 alias In_addr = win32.Struct_in_addr;
+
+s_addr(inaddr:In_addr) = ref bitcast(UInt32, inaddr);
 
 alias SocklenT = Int;

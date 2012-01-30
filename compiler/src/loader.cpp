@@ -1,8 +1,6 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
-#include "llvm/ADT/Triple.h"
-#include <cstdio>
-#include <cassert>
+
+namespace clay {
 
 using namespace std;
 
@@ -15,9 +13,10 @@ using namespace std;
 
 static vector<string> searchPath;
 static vector<string> moduleSuffixes;
-static map<string, ModulePtr> modules;
 
+map<string, ModulePtr> globalModules;
 map<string, string> globalFlags;
+ModulePtr globalMainModule;
 
 
 //
@@ -188,7 +187,9 @@ static string locateModule(DottedNamePtr name) {
 // loadFile
 //
 
-static SourcePtr loadFile(const string &fileName) {
+static SourcePtr loadFile(const string &fileName, vector<string> *sourceFiles) {
+    if (sourceFiles != NULL)
+        sourceFiles->push_back(fileName);
     FILE *f = fopen(fileName.c_str(), "rb");
     if (!f)
         error("unable to open file: " + fileName);
@@ -204,10 +205,11 @@ static SourcePtr loadFile(const string &fileName) {
 
     SourcePtr src = new Source(fileName, buf, size);
     if (llvmDIBuilder != NULL) {
-        src->debugInfo = llvmDIBuilder->createFile(
-            basename(fileName, false),
-            dirname(fileName)
-        );
+        llvm::SmallString<260> absFileName(fileName);
+        llvm::sys::fs::make_absolute(absFileName);
+        src->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
+            llvm::sys::path::filename(absFileName),
+            llvm::sys::path::parent_path(absFileName));
     }
     return src;
 }
@@ -218,9 +220,10 @@ static SourcePtr loadFile(const string &fileName) {
 // loadModuleByName, loadDependents, loadProgram
 //
 
-static void loadDependents(ModulePtr m);
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
 static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
+static ModulePtr makeOperatorsModule();
 
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
@@ -246,6 +249,7 @@ static void installGlobals(ModulePtr m) {
             Procedure *proc = (Procedure *)x;
             if (proc->interface != NULL)
                 proc->interface->env = m->env;
+            // fallthrough
         }
         default :
             if (x->name.ptr())
@@ -255,25 +259,27 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
-static ModulePtr loadModuleByName(DottedNamePtr name) {
+static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles) {
     string key = toKey(name);
 
-    map<string, ModulePtr>::iterator i = modules.find(key);
-    if (i != modules.end())
+    map<string, ModulePtr>::iterator i = globalModules.find(key);
+    if (i != globalModules.end())
         return i->second;
 
     ModulePtr module;
 
     if (key == "__primitives__") {
         module = makePrimitivesModule();
+    } else if (key == "__operators__") {
+        module = makeOperatorsModule();
     }
     else {
         string path = locateModule(name);
-        module = parse(key, loadFile(path));
+        module = parse(key, loadFile(path, sourceFiles));
     }
 
-    modules[key] = module;
-    loadDependents(module);
+    globalModules[key] = module;
+    loadDependents(module, sourceFiles);
     installGlobals(module);
 
     return module;
@@ -289,13 +295,13 @@ static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     return holder;
 }
 
-static void loadDependents(ModulePtr m) {
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
     m->rootHolder = new ModuleHolder();
     m->publicRootHolder = new ModuleHolder();
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
-        x->module = loadModuleByName(x->dottedName);
+        x->module = loadModuleByName(x->dottedName, sourceFiles);
         switch (x->importKind) {
         case IMPORT_MODULE : {
             ImportModule *y = (ImportModule *)x.ptr();
@@ -351,39 +357,40 @@ static void loadDependents(ModulePtr m) {
     }
 }
 
-static ModulePtr loadPrelude() {
+static ModulePtr loadPrelude(vector<string> *sourceFiles) {
     DottedNamePtr dottedName = new DottedName();
     dottedName->parts.push_back(new Identifier("prelude"));
-    return loadModuleByName(dottedName);
+    return loadModuleByName(dottedName, sourceFiles);
 }
 
-ModulePtr loadProgram(const string &fileName) {
-    ModulePtr m = parse("", loadFile(fileName));
-    ModulePtr prelude = loadPrelude();
-    loadDependents(m);
-    installGlobals(m);
+ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles) {
+    globalMainModule = parse("", loadFile(fileName, sourceFiles));
+    ModulePtr prelude = loadPrelude(sourceFiles);
+    loadDependents(globalMainModule, sourceFiles);
+    installGlobals(globalMainModule);
     initModule(prelude);
-    initModule(m);
-    return m;
+    initModule(globalMainModule);
+    return globalMainModule;
 }
 
 ModulePtr loadProgramSource(const string &name, const string &source) {
-    ModulePtr m = parse("", new Source(name,
+    globalMainModule = parse("", new Source(name,
         const_cast<char*>(source.c_str()),
         source.size())
     );
-    ModulePtr prelude = loadPrelude();
-    loadDependents(m);
-    installGlobals(m);
+    // Don't keep track of source files for -e script
+    ModulePtr prelude = loadPrelude(NULL);
+    loadDependents(globalMainModule, NULL);
+    installGlobals(globalMainModule);
     initModule(prelude);
-    initModule(m);
-    return m;
+    initModule(globalMainModule);
+    return globalMainModule;
 }
 
 ModulePtr loadedModule(const string &module) {
-    if (!modules.count(module))
+    if (!globalModules.count(module))
         error("module not loaded: " + module);
-    return modules[module];
+    return globalModules[module];
 }
 
 
@@ -519,12 +526,12 @@ static void initModule(ModulePtr m) {
     if (llvmDIBuilder != NULL) {
         llvm::DIFile file = m->location == NULL
             ? llvm::DIFile(NULL)
-            : m->location->source->debugInfo;
-        m->debugInfo = llvmDIBuilder->createNameSpace(
-            file, // scope
+            : m->location->source->getDebugInfo();
+        m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
+            llvm::DICompileUnit(llvmDIBuilder->getCU()), // scope
             m->moduleName, // name
             file, // file
-            0 // line
+            1 // line
             );
     }
 }
@@ -536,7 +543,7 @@ static void initModule(ModulePtr m) {
 //
 
 static ModulePtr envModule(EnvPtr env) {
-    if (!env->parent)
+    if (env == NULL || env->parent == NULL)
         return NULL;
     switch (env->parent->objKind) {
     case ENV :
@@ -590,23 +597,21 @@ ModulePtr staticModule(ObjectPtr x) {
     case PRIM_OP : {
         return primitivesModule();
     }
-    case PROCEDURE : {
-        Procedure *y = (Procedure *)x.ptr();
-        return envModule(y->env);
-    }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
-        return envModule(y->env);
-    }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
-        return envModule(y->env);
-    }
     case MODULE_HOLDER : {
-        ModuleHolder *y = (ModuleHolder *)x.ptr();
-        if (y->import.ptr())
-            return y->import->module;
+        ModuleHolder *mh = (ModuleHolder *)x.ptr();
+        if (mh->import.ptr())
+            return mh->import->module;
         return NULL;
+    }
+    case GLOBAL_VARIABLE :
+    case GLOBAL_ALIAS :
+    case EXTERNAL_PROCEDURE :
+    case EXTERNAL_VARIABLE :
+    case PROCEDURE :
+    case RECORD :
+    case VARIANT : {
+        TopLevelItem *t = (TopLevelItem *)x.ptr();
+        return envModule(t->env);
     }
     default :
         return NULL;
@@ -708,6 +713,32 @@ static ModulePtr makePrimitivesModule() {
                         new BoolLiteral(exceptionsEnabled()));
     addPrim(prims, "ExceptionsEnabled?", v.ptr());
 
+    vector<IdentifierPtr> recordParams;
+    RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
+    recordParams.push_back(new Identifier("T"));
+    RecordPtr byRefRecord = new Record(new Identifier("ByRef"),
+        PUBLIC,
+        vector<PatternVar>(),
+        NULL,
+        recordParams,
+        NULL,
+        recordBody);
+    byRefRecord->env = new Env(prims);
+    addPrim(prims, "ByRef", byRefRecord.ptr());
+
+    recordParams.clear();
+    recordParams.push_back(new Identifier("Properties"));
+    recordParams.push_back(new Identifier("Fields"));
+    RecordPtr rwpRecord = new Record(new Identifier("RecordWithProperties"),
+        PUBLIC,
+        vector<PatternVar>(),
+        NULL,
+        recordParams,
+        NULL,
+        recordBody);
+    rwpRecord->env = new Env(prims);
+    addPrim(prims, "RecordWithProperties", rwpRecord.ptr());
+
 #define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
 
     PRIMITIVE(TypeP);
@@ -715,7 +746,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeAlignment);
     PRIMITIVE(CallDefinedP);
 
-    PRIMITIVE(primitiveCopy);
+    PRIMITIVE(bitcopy);
+    PRIMITIVE(bitcast);
 
     PRIMITIVE(boolNot);
 
@@ -777,8 +809,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(makeCCodePointer);
     PRIMITIVE(callCCodePointer);
 
-    PRIMITIVE(pointerCast);
-
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
     PRIMITIVE(arrayElements);
@@ -804,6 +834,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);
     PRIMITIVE(VariantMemberCount);
+    PRIMITIVE(VariantMembers);
     PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);
@@ -855,11 +886,96 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(activeException);
 
+    PRIMITIVE(memcpy);
+    PRIMITIVE(memmove);
+
 #undef PRIMITIVE
 
     return prims;
 }
 
+static void addOperator(ModulePtr module, const string &name) {
+    IdentifierPtr ident = new Identifier(name);
+    ProcedurePtr opProc = new Procedure(ident, PUBLIC);
+    opProc->env = new Env(module);
+    addGlobal(module, ident, PUBLIC, opProc.ptr());
+}
+
+static ModulePtr makeOperatorsModule() {
+    ModulePtr operators = new Module("__operators__");
+
+#define OPERATOR(x) addOperator(operators, toPrimStr(#x))
+
+    OPERATOR(dereference);
+    OPERATOR(plus);
+    OPERATOR(minus);
+    OPERATOR(add);
+    OPERATOR(subtract);
+    OPERATOR(multiply);
+    OPERATOR(divide);
+    OPERATOR(remainder);
+    OPERATOR(caseP);
+    OPERATOR(equalsP);
+    OPERATOR(notEqualsP);
+    OPERATOR(lesserP);
+    OPERATOR(lesserEqualsP);
+    OPERATOR(greaterP);
+    OPERATOR(greaterEqualsP);
+    OPERATOR(tupleLiteral);
+    OPERATOR(staticIndex);
+    OPERATOR(index);
+    OPERATOR(fieldRef);
+    OPERATOR(call);
+    OPERATOR(destroy);
+    OPERATOR(copy);
+    OPERATOR(move);
+    OPERATOR(assign);
+    OPERATOR(updateAssign);
+    OPERATOR(indexAssign);
+    OPERATOR(indexUpdateAssign);
+    OPERATOR(fieldRefAssign);
+    OPERATOR(fieldRefUpdateAssign);
+    OPERATOR(staticIndexAssign);
+    OPERATOR(staticIndexUpdateAssign);
+    OPERATOR(callMain);
+    OPERATOR(charLiteral);
+    OPERATOR(wrapStatic);
+    OPERATOR(iterator);
+    OPERATOR(hasNextP);
+    OPERATOR(next);
+    OPERATOR(throwValue);
+    OPERATOR(exceptionIsP);
+    OPERATOR(exceptionAs);
+    OPERATOR(exceptionAsAny);
+    OPERATOR(continueException);
+    OPERATOR(unhandledExceptionInExternal);
+    OPERATOR(exceptionInInitializer);
+    OPERATOR(exceptionInFinalizer);
+    OPERATOR(packMultiValuedFreeVarByRef);
+    OPERATOR(packMultiValuedFreeVar);
+    OPERATOR(unpackMultiValuedFreeVarAndDereference);
+    OPERATOR(unpackMultiValuedFreeVar);
+    OPERATOR(variantReprType);
+    OPERATOR(variantTag);
+    OPERATOR(unsafeVariantIndex);
+    OPERATOR(invalidVariant);
+    OPERATOR(stringLiteral);
+    OPERATOR(ifExpression);
+    OPERATOR(typeToRValue);
+    OPERATOR(typesToRValues);
+    OPERATOR(doIntegerAddChecked);
+    OPERATOR(doIntegerSubtractChecked);
+    OPERATOR(doIntegerMultiplyChecked);
+    OPERATOR(doIntegerDivideChecked);
+    OPERATOR(doIntegerRemainderChecked);
+    OPERATOR(doIntegerShiftLeftChecked);
+    OPERATOR(doIntegerNegateChecked);
+    OPERATOR(doIntegerConvertChecked);
+
+#undef OPERATOR
+
+    return operators;
+}
 
 
 //
@@ -873,13 +989,19 @@ ModulePtr primitivesModule() {
     return cached;
 }
 
+ModulePtr operatorsModule() {
+    static ModulePtr cached;
+    if (!cached)
+        cached = loadedModule("__operators__");
+    return cached;
+}
+
 ModulePtr preludeModule() {
     static ModulePtr cached;
     if (!cached)
         cached = loadedModule("prelude");
     return cached;
 }
-
 
 static IdentifierPtr fnameToIdent(const string &str) {
     string s = str;
@@ -940,94 +1062,96 @@ DEFINE_PRIMITIVE_ACCESSOR(Tuple)
 DEFINE_PRIMITIVE_ACCESSOR(Union)
 DEFINE_PRIMITIVE_ACCESSOR(Static)
 DEFINE_PRIMITIVE_ACCESSOR(activeException)
+DEFINE_PRIMITIVE_ACCESSOR(ByRef)
+DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 
-#define DEFINE_PRELUDE_ACCESSOR(name) \
-    ObjectPtr prelude_##name() { \
+#define DEFINE_OPERATOR_ACCESSOR(name) \
+    ObjectPtr operator_##name() { \
         static ObjectPtr cached; \
         if (!cached) { \
-            cached = safeLookupPublic(preludeModule(), fnameToIdent(#name)); \
+            cached = safeLookupPublic(operatorsModule(), fnameToIdent(#name)); \
             cached = convertObject(cached); \
         } \
         return cached; \
     } \
     \
-    ExprPtr prelude_expr_##name() { \
+    ExprPtr operator_expr_##name() { \
         static ExprPtr cached; \
         if (!cached) \
-            cached = new ObjectExpr(prelude_##name()); \
+            cached = new ObjectExpr(operator_##name()); \
         return cached; \
     }
 
-DEFINE_PRELUDE_ACCESSOR(dereference)
-DEFINE_PRELUDE_ACCESSOR(plus)
-DEFINE_PRELUDE_ACCESSOR(minus)
-DEFINE_PRELUDE_ACCESSOR(add)
-DEFINE_PRELUDE_ACCESSOR(subtract)
-DEFINE_PRELUDE_ACCESSOR(multiply)
-DEFINE_PRELUDE_ACCESSOR(divide)
-DEFINE_PRELUDE_ACCESSOR(remainder)
-DEFINE_PRELUDE_ACCESSOR(caseP)
-DEFINE_PRELUDE_ACCESSOR(equalsP)
-DEFINE_PRELUDE_ACCESSOR(notEqualsP)
-DEFINE_PRELUDE_ACCESSOR(lesserP)
-DEFINE_PRELUDE_ACCESSOR(lesserEqualsP)
-DEFINE_PRELUDE_ACCESSOR(greaterP)
-DEFINE_PRELUDE_ACCESSOR(greaterEqualsP)
+
+DEFINE_OPERATOR_ACCESSOR(dereference)
+DEFINE_OPERATOR_ACCESSOR(plus)
+DEFINE_OPERATOR_ACCESSOR(minus)
+DEFINE_OPERATOR_ACCESSOR(add)
+DEFINE_OPERATOR_ACCESSOR(subtract)
+DEFINE_OPERATOR_ACCESSOR(multiply)
+DEFINE_OPERATOR_ACCESSOR(divide)
+DEFINE_OPERATOR_ACCESSOR(remainder)
+DEFINE_OPERATOR_ACCESSOR(caseP)
+DEFINE_OPERATOR_ACCESSOR(equalsP)
+DEFINE_OPERATOR_ACCESSOR(notEqualsP)
+DEFINE_OPERATOR_ACCESSOR(lesserP)
+DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
+DEFINE_OPERATOR_ACCESSOR(greaterP)
+DEFINE_OPERATOR_ACCESSOR(greaterEqualsP)
 DEFINE_PRELUDE_ACCESSOR(bitand)
 DEFINE_PRELUDE_ACCESSOR(bitor)
 DEFINE_PRELUDE_ACCESSOR(bitnot)
 DEFINE_PRELUDE_ACCESSOR(bitxor)
 DEFINE_PRELUDE_ACCESSOR(bitshl)
 DEFINE_PRELUDE_ACCESSOR(bitshr)
-DEFINE_PRELUDE_ACCESSOR(tupleLiteral)
-DEFINE_PRELUDE_ACCESSOR(staticIndex)
-DEFINE_PRELUDE_ACCESSOR(index)
-DEFINE_PRELUDE_ACCESSOR(fieldRef)
-DEFINE_PRELUDE_ACCESSOR(call)
-DEFINE_PRELUDE_ACCESSOR(destroy)
-DEFINE_PRELUDE_ACCESSOR(move)
-DEFINE_PRELUDE_ACCESSOR(assign)
-DEFINE_PRELUDE_ACCESSOR(updateAssign)
-DEFINE_PRELUDE_ACCESSOR(indexAssign)
-DEFINE_PRELUDE_ACCESSOR(indexUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(fieldRefAssign)
-DEFINE_PRELUDE_ACCESSOR(fieldRefUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(staticIndexAssign)
-DEFINE_PRELUDE_ACCESSOR(staticIndexUpdateAssign)
-DEFINE_PRELUDE_ACCESSOR(ByRef)
-DEFINE_PRELUDE_ACCESSOR(setArgcArgv)
-DEFINE_PRELUDE_ACCESSOR(callMain)
-DEFINE_PRELUDE_ACCESSOR(Char)
-DEFINE_PRELUDE_ACCESSOR(wrapStatic)
-DEFINE_PRELUDE_ACCESSOR(iterator)
-DEFINE_PRELUDE_ACCESSOR(hasNextP)
-DEFINE_PRELUDE_ACCESSOR(next)
-DEFINE_PRELUDE_ACCESSOR(throwValue)
-DEFINE_PRELUDE_ACCESSOR(exceptionIsP)
-DEFINE_PRELUDE_ACCESSOR(exceptionAs)
-DEFINE_PRELUDE_ACCESSOR(exceptionAsAny)
-DEFINE_PRELUDE_ACCESSOR(continueException)
-DEFINE_PRELUDE_ACCESSOR(unhandledExceptionInExternal)
-DEFINE_PRELUDE_ACCESSOR(exceptionInInitializer)
-DEFINE_PRELUDE_ACCESSOR(exceptionInFinalizer)
-DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVarByRef)
-DEFINE_PRELUDE_ACCESSOR(packMultiValuedFreeVar)
-DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
-DEFINE_PRELUDE_ACCESSOR(unpackMultiValuedFreeVar)
-DEFINE_PRELUDE_ACCESSOR(VariantRepr)
-DEFINE_PRELUDE_ACCESSOR(variantTag)
-DEFINE_PRELUDE_ACCESSOR(unsafeVariantIndex)
-DEFINE_PRELUDE_ACCESSOR(invalidVariant)
-DEFINE_PRELUDE_ACCESSOR(StringConstant)
-DEFINE_PRELUDE_ACCESSOR(ifExpression)
-DEFINE_PRELUDE_ACCESSOR(RecordWithProperties)
-DEFINE_PRELUDE_ACCESSOR(typeToRValue)
-DEFINE_PRELUDE_ACCESSOR(typesToRValues)
-DEFINE_PRELUDE_ACCESSOR(doIntegerAddChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerSubtractChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerDivideChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerRemainderChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerShiftLeftChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerNegateChecked);
-DEFINE_PRELUDE_ACCESSOR(doIntegerConvertChecked);
+DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
+DEFINE_OPERATOR_ACCESSOR(staticIndex)
+DEFINE_OPERATOR_ACCESSOR(index)
+DEFINE_OPERATOR_ACCESSOR(fieldRef)
+DEFINE_OPERATOR_ACCESSOR(call)
+DEFINE_OPERATOR_ACCESSOR(destroy)
+DEFINE_OPERATOR_ACCESSOR(copy)
+DEFINE_OPERATOR_ACCESSOR(move)
+DEFINE_OPERATOR_ACCESSOR(assign)
+DEFINE_OPERATOR_ACCESSOR(updateAssign)
+DEFINE_OPERATOR_ACCESSOR(indexAssign)
+DEFINE_OPERATOR_ACCESSOR(indexUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(fieldRefAssign)
+DEFINE_OPERATOR_ACCESSOR(fieldRefUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(staticIndexAssign)
+DEFINE_OPERATOR_ACCESSOR(staticIndexUpdateAssign)
+DEFINE_OPERATOR_ACCESSOR(callMain)
+DEFINE_OPERATOR_ACCESSOR(charLiteral)
+DEFINE_OPERATOR_ACCESSOR(iterator)
+DEFINE_OPERATOR_ACCESSOR(hasNextP)
+DEFINE_OPERATOR_ACCESSOR(next)
+DEFINE_OPERATOR_ACCESSOR(throwValue)
+DEFINE_OPERATOR_ACCESSOR(exceptionIsP)
+DEFINE_OPERATOR_ACCESSOR(exceptionAs)
+DEFINE_OPERATOR_ACCESSOR(exceptionAsAny)
+DEFINE_OPERATOR_ACCESSOR(continueException)
+DEFINE_OPERATOR_ACCESSOR(unhandledExceptionInExternal)
+DEFINE_OPERATOR_ACCESSOR(exceptionInInitializer)
+DEFINE_OPERATOR_ACCESSOR(exceptionInFinalizer)
+DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVarByRef)
+DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVar)
+DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
+DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVar)
+DEFINE_OPERATOR_ACCESSOR(variantReprType)
+DEFINE_OPERATOR_ACCESSOR(variantTag)
+DEFINE_OPERATOR_ACCESSOR(unsafeVariantIndex)
+DEFINE_OPERATOR_ACCESSOR(invalidVariant)
+DEFINE_OPERATOR_ACCESSOR(stringLiteral)
+DEFINE_OPERATOR_ACCESSOR(ifExpression)
+DEFINE_OPERATOR_ACCESSOR(typeToRValue)
+DEFINE_OPERATOR_ACCESSOR(typesToRValues)
+DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerDivideChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
+
+}

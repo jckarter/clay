@@ -1,5 +1,6 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
+
+namespace clay {
 
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env);
@@ -495,7 +496,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
-    evalCallValue(staticEValue(dest->type.ptr()),
+    evalCallValue(staticEValue(operator_copy()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
 }
@@ -507,7 +508,7 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
             memcpy(dest->addr, src->addr, typeSize(dest->type));
         return;
     }
-    evalCallValue(staticEValue(prelude_move()),
+    evalCallValue(staticEValue(operator_move()),
                   new MultiEValue(src),
                   new MultiEValue(dest));
 }
@@ -521,7 +522,7 @@ void evalValueAssign(EValuePtr dest, EValuePtr src)
     }
     MultiEValuePtr args = new MultiEValue(dest);
     args->add(src);
-    evalCallValue(staticEValue(prelude_assign()),
+    evalCallValue(staticEValue(operator_assign()),
                   args,
                   new MultiEValue());
 }
@@ -537,7 +538,7 @@ void evalValueMoveAssign(EValuePtr dest, EValuePtr src)
     args->add(src);
     MultiPValuePtr pvArgs = new MultiPValue(new PValue(dest->type, false));
     pvArgs->add(new PValue(src->type, true));
-    evalCallValue(staticEValue(prelude_assign()),
+    evalCallValue(staticEValue(operator_assign()),
                   args,
                   pvArgs,
                   new MultiEValue());
@@ -963,7 +964,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         MultiEValuePtr args = new MultiEValue();
         args->add(evFirst);
         args->add(evLast);
-        evalCallValue(staticEValue(prelude_StringConstant()), args, out);
+        evalCallValue(staticEValue(operator_stringLiteral()), args, out);
         break;
     }
 
@@ -977,7 +978,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case LINE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
         evalStaticObject(vh.ptr(), out);
@@ -986,7 +987,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     case COLUMN_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
         evalStaticObject(vh.ptr(), out);
@@ -1012,7 +1013,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        evalCallExpr(prelude_expr_tupleLiteral(),
+        evalCallExpr(operator_expr_tupleLiteral(),
                      x->args,
                      env,
                      out);
@@ -1144,10 +1145,6 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     }
 
     case STATIC_EXPR : {
-        StaticExpr *x = (StaticExpr *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStaticExpr(x);
-        evalExpr(x->desugared, env, out);
         break;
     }
 
@@ -1203,38 +1200,24 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         }
         else {
             GVarInstancePtr z = defaultGVarInstance(y);
-            if (!z->llGlobal)
+            if (z->staticGlobal == NULL)
                 codegenGVarInstance(z);
-            void *ptr = llvmEngine->getPointerToGlobal(z->llGlobal);
+            assert(z->staticGlobal != NULL);
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(z->type));
-            *((void **)out0->addr) = ptr;
+            *((void **)out0->addr) = (void*)z->staticGlobal->buf;
         }
         break;
     }
 
     case EXTERNAL_VARIABLE : {
-        ExternalVariable *y = (ExternalVariable *)x.ptr();
-        if (!y->llGlobal)
-            codegenExternalVariable(y);
-        void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(y->type2));
-        *((void **)out0->addr) = ptr;
+        error("compile-time access to C global variables not supported");
         break;
     }
 
     case EXTERNAL_PROCEDURE : {
-        ExternalProcedure *y = (ExternalProcedure *)x.ptr();
-        if (!y->llvmFunc)
-            codegenExternalProcedure(y, false);
-        void *funcPtr = llvmEngine->getPointerToGlobal(y->llvmFunc);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == y->ptrType);
-        *((void **)out0->addr) = funcPtr;
+        error("compile-time access to C functions not supported");
         break;
     }
 
@@ -1474,19 +1457,19 @@ void evalIndexingExpr(ExprPtr indexable,
         if (obj->objKind == GLOBAL_VARIABLE) {
             GlobalVariable *x = (GlobalVariable *)obj.ptr();
             GVarInstancePtr y = analyzeGVarIndexing(x, args, env);
-            if (!y->llGlobal)
+            if (y->staticGlobal == NULL)
                 codegenGVarInstance(y);
-            void *ptr = llvmEngine->getPointerToGlobal(y->llGlobal);
+            assert(y->staticGlobal != NULL);
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(y->type));
-            *((void **)out0->addr) = ptr;
+            *((void **)out0->addr) = (void*)y->staticGlobal->buf;
             return;
         }
     }
     ExprListPtr args2 = new ExprList(indexable);
     args2->add(args);
-    evalCallExpr(prelude_expr_index(), args2, env, out);
+    evalCallExpr(operator_expr_index(), args2, env, out);
 }
 
 
@@ -1555,7 +1538,7 @@ void evalCallExpr(ExprPtr callable,
     if (pv->type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
-        evalCallExpr(prelude_expr_call(), args2, env, out);
+        evalCallExpr(operator_expr_call(), args2, env, out);
         return;
     }
 
@@ -1637,7 +1620,7 @@ int evalVariantTag(EValuePtr ev)
 {
     int tag = -1;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
-    evalCallValue(staticEValue(prelude_variantTag()),
+    evalCallValue(staticEValue(operator_variantTag()),
                   new MultiEValue(ev),
                   new MultiEValue(etag));
     return tag;
@@ -1658,7 +1641,7 @@ EValuePtr evalVariantIndex(EValuePtr ev, int tag)
     EValuePtr evPtr = evalAllocValue(pointerType(memberTypes[tag]));
     MultiEValuePtr out = new MultiEValue(evPtr);
 
-    evalCallValue(staticEValue(prelude_unsafeVariantIndex()), args, out);
+    evalCallValue(staticEValue(operator_unsafeVariantIndex()), args, out);
     return new EValue(memberTypes[tag], *((char **)ev->addr));
 }
 
@@ -1755,7 +1738,7 @@ void evalCallValue(EValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        evalCallValue(staticEValue(prelude_call()), args2, pvArgs2, out);
+        evalCallValue(staticEValue(operator_call()), args2, pvArgs2, out);
         return;
     }
 
@@ -1941,7 +1924,6 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
         }
     }
     error("calling compiled code is not supported in the evaluator");
-    llvmEngine->runFunction(entry->llvmFunc, gvArgs);
 }
 
 
@@ -2107,7 +2089,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             ExprListPtr args = new ExprList();
             args->add(x->left);
             args->add(x->right);
-            ExprPtr assignCall = new Call(prelude_expr_assign(), args);
+            ExprPtr assignCall = new Call(operator_expr_assign(), args);
             evalExprAsRef(assignCall, env);
         }
         else {
@@ -2157,7 +2139,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
-        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
         call->parenArgs->add(updateOperatorExpr(x->op));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
@@ -2326,6 +2308,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
         error("unreachable statement");
         return NULL;
     }
+    case WITH :
+        error("unexpected with statement");
+        return NULL;
 
     default :
         assert(false);
@@ -2378,7 +2363,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case VAR : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i]->type);
@@ -2396,7 +2381,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -2419,7 +2404,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     case FORWARD : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -3069,9 +3054,13 @@ class Op_integerBitwiseXor : public BinaryOpHelper<T> {
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wtautological-compare"
-#elif defined(__GCC__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wtype-limits"
+#elif defined(__GNUC__)
+#  if __GNUC__ < 4 || __GNUC__ == 4 && __GNUC_MINOR__ < 6
+#    warning "--- The following warnings are expected ---"
+#  else
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wtype-limits"
+#  endif
 #endif
 
 template <typename T>
@@ -3125,8 +3114,10 @@ class Op_integerShiftLeftChecked : public BinaryOpHelper<T> {
 
 #if defined(__clang__)
 #  pragma clang diagnostic pop
-#elif defined(__GCC__)
-#  pragma GCC diagnostic pop
+#elif defined(__GNUC__)
+#  if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 6
+#    pragma GCC diagnostic pop
+#  endif
 #endif
 
 template <typename T>
@@ -3400,6 +3391,45 @@ static ptrdiff_t op_intToPtrInt(EValuePtr a)
     return 0;
 }
 
+
+//
+// op_intToSizeT
+//
+
+template <typename T>
+static ptrdiff_t op_intToSizeT2(EValuePtr a)
+{
+    return ptrdiff_t(*((T *)a->addr));
+}
+
+static ptrdiff_t op_intToSizeT(EValuePtr a)
+{
+    assert(a->type->typeKind == INTEGER_TYPE);
+    IntegerType *t = (IntegerType *)a->type.ptr();
+    if (t->isSigned) {
+        switch (t->bits) {
+        case 8 : return op_intToSizeT2<char>(a);
+        case 16 : return op_intToSizeT2<short>(a);
+        case 32 : return op_intToSizeT2<int>(a);
+        case 64 : return op_intToSizeT2<long long>(a);
+        case 128 : return op_intToSizeT2<clay_int128>(a);
+        default : assert(false);
+        }
+    }
+    else {
+        switch (t->bits) {
+        case 8 : return op_intToSizeT2<unsigned char>(a);
+        case 16 : return op_intToSizeT2<unsigned short>(a);
+        case 32 : return op_intToSizeT2<unsigned int>(a);
+        case 64 : return op_intToSizeT2<unsigned long long>(a);
+        case 128 : return op_intToSizeT2<clay_uint128>(a);
+        default : assert(false);
+        }
+    }
+    return 0;
+}
+
+
 
 
 //
@@ -3480,7 +3510,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            EValuePtr evCall = staticEValue(prelude_call());
+            EValuePtr evCall = staticEValue(operator_call());
             MultiEValuePtr args2 = new MultiEValue(evCall);
             args2->add(staticEValue(args->values[0]->type.ptr()));
             for (unsigned i = 1; i < args->size(); ++i)
@@ -3511,7 +3541,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_primitiveCopy : {
+    case PRIM_bitcopy : {
         ensureArity(args, 2);
         EValuePtr ev0 = args->values[0];
         EValuePtr ev1 = args->values[1];
@@ -3627,7 +3657,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerRemainder>(ev0, ev1, out0);
         break;
     }
@@ -3639,7 +3669,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerAddChecked>(ev0, ev1, out0);
         break;
     }
@@ -3651,7 +3681,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerSubtractChecked>(ev0, ev1, out0);
         break;
     }
@@ -3663,7 +3693,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerMultiplyChecked>(ev0, ev1, out0);
         break;
     }
@@ -3675,7 +3705,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerDivideChecked>(ev0, ev1, out0);
         break;
     }
@@ -3687,7 +3717,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = integerValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t.ptr());
+        assert(out0->type.ptr() == t.ptr());
         binaryIntegerOp<Op_integerRemainderChecked>(ev0, ev1, out0);
         break;
     }
@@ -3907,48 +3937,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("CodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = valueToStatic(args, 0);
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
-            argumentError(0, "cannot create pointer to call-by-name code");
-        assert(entry->analyzed);
-        if (!entry->llvmFunc)
-            codegenCodeBody(entry);
-        assert(entry->llvmFunc);
-        void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmFunc);
-        TypePtr cpType = codePointerType(argsKey,
-                                         entry->returnIsRef,
-                                         entry->returnTypes);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == cpType);
-        *((void **)out0->addr) = funcPtr;
+        error("code pointers cannot be taken at compile time");
         break;
     }
 
@@ -3987,66 +3976,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("LLVMCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = valueToStatic(args, 0);
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            safeAnalyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
-            argumentError(0, "cannot create pointer to call-by-name code");
-        assert(entry->analyzed);
-        if (!entry->llvmFunc)
-            codegenCodeBody(entry);
-        assert(entry->llvmFunc);
-        if (!entry->llvmCWrapper)
-            codegenCWrapper(entry);
-        assert(entry->llvmCWrapper);
-        TypePtr returnType;
-        if (entry->returnTypes.size() == 0) {
-            returnType = NULL;
-        }
-        else if (entry->returnTypes.size() == 1) {
-            if (entry->returnIsRef[0])
-                argumentError(0, "cannot create C compatible pointer "
-                              " to return-by-reference code");
-            returnType = entry->returnTypes[0];
-        }
-        else {
-            argumentError(0, "cannot create C compatible pointer "
-                          "to multi-return code");
-        }
-        void *funcPtr = llvmEngine->getPointerToGlobal(entry->llvmCWrapper);
-        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argsKey,
-                                           false,
-                                           returnType);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == ccpType);
-        *((void **)out0->addr) = funcPtr;
+        error("code pointers cannot be created at compile time");
         break;
     }
 
@@ -4055,15 +3985,18 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_pointerCast : {
+    case PRIM_bitcast : {
         ensureArity(args, 2);
-        TypePtr dest = valueToPointerLikeType(args, 0);
-        TypePtr src;
-        EValuePtr ev = pointerLikeValue(args, 1, src);
+        TypePtr dest = valueToType(args, 0);
+        EValuePtr ev = args->values[1];
+        if (typeSize(dest) > typeSize(ev->type))
+            error("destination type for bitcast is larger than source type");
+        if (typeAlignment(dest) > typeAlignment(ev->type))
+            error("destination type for bitcast has stricter alignment than source type");
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == dest);
-        *((void **)out0->addr) = *((void **)ev->addr);
+        assert(out0->type == pointerType(dest));
+        *(void **)out0->addr = *(void **)ev->addr;
         break;
     }
 
@@ -4318,6 +4251,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_VariantMembers :
+        break;
+
     case PRIM_variantRepr : {
         ensureArity(args, 1);
         VariantTypePtr vt;
@@ -4557,8 +4493,32 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         error("exceptions not supported in evaluator");
         break;
 
+    case PRIM_memcpy :
+    case PRIM_memmove : {
+        ensureArity(args, 3);
+        PointerTypePtr topt;
+        PointerTypePtr frompt;
+        EValuePtr tov = pointerValue(args, 0, topt);
+        EValuePtr fromv = pointerValue(args, 1, frompt);
+        IntegerTypePtr it;
+        EValuePtr countv = integerValue(args, 2, it);
+
+        void *to = *((void **)tov->addr);
+        void *from = *((void **)fromv->addr);
+        size_t size = op_intToSizeT(countv);
+
+        if (x->primOpCode == PRIM_memcpy)
+            memcpy(to, from, size);
+        else
+            memmove(to, from, size);
+
+        break;
+    }
+
     default :
         assert(false);
 
     }
+}
+
 }

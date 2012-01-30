@@ -1,0 +1,6 @@
+import a.*;
+import b.*;
+
+foo() { println("__main__.foo"); }
+
+main() { foo(); }

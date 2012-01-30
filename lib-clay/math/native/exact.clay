@@ -1,6 +1,5 @@
 import math.(fma);
-
-alias db_number = Union[Array[Int32,2], Int64, Float64];
+import numbers.floats.*;
 
 [T] inline Add12Cond(a:T, b:T) --> s:T, r:T {
     s <-- a + b;
@@ -237,7 +236,7 @@ alias Mul22cond = Mul22;
     resh,resm,resl <-- x, ..Add12Cond(_t9,_t10);
 }
 
-[T] inline Mul123( a:T, bh:T, bl:T){
+[T] inline Mul123( a:T, bh:T, bl:T) --> resh:T, resm:T, resl:T {
     var x,_t1 = Mul12((a),(bh));
     var _t2,_t3 = Mul12((a),(bl));
     var _t5,_t4 = Add12Cond(_t1,_t2);
@@ -247,10 +246,8 @@ alias Mul22cond = Mul22;
 
 
 [T] inline ReturnRoundToNearest3(xh:T,xm:T,xl:T) {
-    var _xp, _xn = db_number(),db_number() ;
-    _xp.2 = (xh);
-    _xn.0[1] = _xp.0[1];
-    _xn.0[0] = _xp.0[0];
+    var _xp = db_number(xh);
+    var _xn = _xp;
     dec(_xn.1);
     var _t1 = _xn.2;
     inc(_xp.1);
@@ -270,148 +267,26 @@ alias Mul22cond = Mul22;
         return xh;
 }
 
-// [T] inline ReturnRoundToNearest3Other(xh,xm,xl)
-// {
-//     double _t3, _t4;
-//     db_number _t3db;
-//
-//     Add12(_t3,_t4,(xm),(xl));
-//     if (_t4 != 0.0) {
-//       _t3db.d = _t3;
-//       if (!(_t3db.i[LO] & 0x00000001)) {
-//         if ((_t4 > 0.0) @ ((_t3db.i[HI] & 0x80000000) != 0))
-//            _t3db.l++;
-//         else
-//            _t3db.l--;
-//         _t3 = _t3db.d;
-//       }
-//     }
-//     return (xh) + _t3;
-// }
 
+[T] inline ReturnRoundToNearest3Other(xh,xm,xl){
+    var _t3, _t4 = Add12(xm, xl);
+    if (_t4 != 0.0) {
+        var _t3db = db_number(_t3);
+        if (not Bool(bitand(_t3db.0[0], 0x00000001))) {
+            if (bitxor(Int(_t4 > 0.0), (bitand(_t3db.0[1], 0x80000000u) != 0)))
+                inc(_t3db.1);
+            else
+                dec(_t3db.1);
+            _t3 = _t3db.2;
+        }
+    }
+    return xh + _t3;
+}
 
-// [T] inline ReturnRoundUpwards3(xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 > 0.0) {
-//       if (_t1 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l++;
-//          return _tdb.d;
-//       } else {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          return _tdb.d;
-//       }
-//     } else return _t1;
-// }
-
-
-// [T] inline ReturnRoundDownwards3(xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 < 0.0) {
-//       if (_t1 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          return _tdb.d;
-//       } else {
-//          _tdb.d = _t1;
-//          _tdb.l++;
-//          return _tdb.d;
-//       }
-//     } else return _t1;
-// }
-
-
-// [T] inline ReturnRoundTowardsZero3(xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t1 > 0.0) {
-//        if (_t3 < 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          return _tdb.d;
-//        } else return _t1;
-//     } else {
-//        if (_t3 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          return _tdb.d;
-//        } else return _t1;
-//     }
-// }
-
-// [T] inline ReturnRoundUpwards3Unfiltered(xh,xm,xl,wca)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb, _tdb2;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 > 0.0) {
-//       _tdb2.d = wca * _t3;
-//       _tdb.d = _t1;
-//       if ((_tdb2.i[HI] & 0x7ff00000) < (_tdb.i[HI] & 0x7ff00000))
-//          return _t1;
-//       if (_t1 > 0.0) {
-//          _tdb.l++;
-//          return _tdb.d;
-//       } else {
-//          _tdb.l--;
-//          return _tdb.d;
-//       }
-//     } else return _t1;
-// }
-
-
-// [T] inline ReturnRoundDownwards3Unfiltered(xh,xm,xl,wca)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb, _tdb2;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 < 0.0) {
-//       _tdb2.d = wca * _t3;
-//       _tdb.d = _t1;
-//       if ((_tdb2.i[HI] & 0x7ff00000) < (_tdb.i[HI] & 0x7ff00000))
-//          return _t1;
-//       if (_t1 > 0.0) {
-//          _tdb.l--;
-//          return _tdb.d;
-//       } else {
-//          _tdb.l++;
-//          return _tdb.d;
-//       }
-//     } else return _t1;
-// }
-
-// [T] inlineReturnRoundTowardsZero3Unfiltered(xh,xm,xl,wca)
-// {
-//     if ((xh) > 0)
-//       ReturnRoundDownwards3Unfiltered((xh),(xm),(xl),(wca))
-//     else
-//       ReturnRoundUpwards3Unfiltered((xh),(xm),(xl),(wca))
-// }
 
 [T] inline RoundToNearest3(xh:T,xm:T,xl:T) --> res:T {
-    var _xp, _xn = db_number(),db_number();
-    _xp.2 = xh;
-    _xn.0[1] = _xp.0[1];
-    _xn.0[0] = _xp.0[0];
+    var _xp = db_number(xh);
+    var _xn = _xp;
     dec(_xn.1);
     var _t1 = _xn.2;
     inc(_xp.1);
@@ -433,71 +308,6 @@ alias Mul22cond = Mul22;
     }
 }
 
-// [T] inline RoundUpwards3(res,xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 > 0.0) {
-//       if (_t1 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l++;
-//          (*(res)) = _tdb.d;
-//       } else {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          (*(res)) = _tdb.d;
-//       }
-//     } else (*(res)) = _t1;
-// }
-
-// [T] inline RoundDownwards3(res,xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t3 < 0.0) {
-//       if (_t1 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          (*(res)) = _tdb.d;
-//       } else {
-//          _tdb.d = _t1;
-//          _tdb.l++;
-//          (*(res)) = _tdb.d;
-//       }
-//     } else (*(res)) = _t1;
-// }
-
-
-
-// [T] inlineRoundTowardsZero3(res,xh,xm,xl)
-// {
-//     double _t1, _t2, _t3;
-//     db_number _tdb;
-//
-//     Add12(_t1,_t2,(xh),(xm));
-//     _t3 = _t2 + (xl);
-//     if (_t1 > 0.0) {
-//        if (_t3 < 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          (*(res)) = _tdb.d;
-//        } else (*(res)) = _t1;
-//     } else {
-//        if (_t3 > 0.0) {
-//          _tdb.d = _t1;
-//          _tdb.l--;
-//          (*(res)) = _tdb.d;
-//        } else (*(res)) = _t1;
-//     }
-// }
-
-
 //
 //    Computes sqrt(x) with a result in double-double precision
 //    Should be provable to be exact to at least 100 bits.
@@ -516,13 +326,12 @@ alias SQRTPOLYC3 = -1.15233725777933848632983426796272397041320800781250e+00;
 alias SQRTPOLYC4 = 1.86900066679800969104974228685023263096809387207031e-01;
 alias SQRTTWO52  = 4.50359962737049600000000000000000000000000000000000e+15;
 
-inline sqrt12(x:Double) --> resh:Double, resl:Double {
+sqrt12(x:Double) --> resh:Double, resl:Double {
     alias ZERO = 0.;
     alias ONE = 1.;
     alias TWO = 2.;
     alias THREE = 3.;
     alias HALF = 0.5;
-    var xdb = db_number();
 
     // Special case x = 0//
     if (x == ZERO) {
@@ -531,7 +340,7 @@ inline sqrt12(x:Double) --> resh:Double, resl:Double {
     } else {
 
     // Convert to integer format//
-        xdb.2 = x;
+        var xdb = db_number(x);
         var _e = 0;
         // Handle subnormal case//
         if (xdb.0[1] < 0x00100000) {
@@ -603,15 +412,14 @@ inline sqrt12(x:Double) --> resh:Double, resl:Double {
 //    - x = +/-Infty, NaN
 //
 
-inline sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
-    var _xdb = db_number();
+sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
     /* Special case x = 0 */
     if (x == 0) {
         return 0.,0.,0.;
     } else {
         var _E = 0;
         /* Convert to integer format */
-        _xdb.2 = x;
+        var _xdb = db_number(x);
         /* Handle subnormal case */
         if (_xdb.0[1] < 0x00100000) {
             _E = -52;
@@ -677,7 +485,7 @@ inline sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
 }
 
 
-inline recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, resl:Double {
+recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, resl:Double {
     var _rec_r1, _rec_t2 = 1.0 / dh, 0.;
     _rec_t1, _rec_t2 = Mul12(_rec_r1,(dh));
     var _rec_t3 = _rec_t1 - 1.0;
@@ -699,22 +507,16 @@ inline recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, r
     return Renormalize3(_rec_t21,_rec_t22,_rec_t23);
 }
 
-/*
- * i = d in rounding to nearest The constant added is 2@52 + 2@51
- */
-DOUBLE2INT(_d:Double) --> _i:Int {
-    var _t = db_number();
-    _t.2 = _d+6755399441055744.0;
-    _i <-- _t.0[0];
-}
 
-/* Same idea but beware: works only for |_i| < 2@51 -1 */
+// i = d in rounding to nearest The constant added is 2^52 + 2^51
+DOUBLE2INT(_d:Double) :Int = db_number(_d+6755399441055744.0).0[0];
+
+// Same idea but beware: works only for |_i| < 2^51 -1
 DOUBLE2LONGINT(_d) --> _i:Long {
-    var _t = db_number();
-    _t.2 = _d+6755399441055744.0;
+    var _t = db_number(_d+6755399441055744.0);
     if(_d >= 0) /* sign extend */
         _i <-- bitand(_t.1 , 0x0007FFFFFFFFFFFF);
     else
-      _i <-- Long(bitor(bitand(UInt64(_t.1) , 0x0007FFFFFFFFFFFFul) ,  0xFFF8000000000000ul));
+        _i <-- Long(bitor(bitand(UInt64(_t.1) , 0x0007FFFFFFFFFFFFul) ,  0xFFF8000000000000ul));
 }
 

@@ -1,7 +1,6 @@
 #include "clay.hpp"
-#include <cstdlib>
-#include <climits>
-#include <cassert>
+
+namespace clay {
 
 static vector<TokenPtr> *tokens;
 static int position;
@@ -1365,9 +1364,35 @@ static bool localBinding(StatementPtr &x) {
     return true;
 }
 
+static bool blockItems(vector<StatementPtr> &stmts);
+static bool withStatement(StatementPtr &x) {
+    LocationPtr startLocation = currentLocation();
+
+    if (!keyword("with")) return false;
+    vector<IdentifierPtr> lhs;
+
+    int p = save();
+    if (!identifierList(lhs) || !symbol("=")) {
+        lhs.clear();
+        restore(p);
+    }
+    LocationPtr location = currentLocation();
+
+    ExprPtr rhs = NULL;
+    if (!suffixExpr(rhs)) return false;
+    if (!symbol(";")) return false;
+
+    WithStatementPtr w = new WithStatement(lhs, rhs, location);
+
+    x = w.ptr();
+    x->location = location;
+    return true;
+}
+
 static bool blockItem(StatementPtr &x) {
     int p = save();
     if (labelDef(x)) return true;
+    if (restore(p), withStatement(x)) return true;
     if (restore(p), localBinding(x)) return true;
     if (restore(p), statement(x)) return true;
     return false;
@@ -3138,6 +3163,7 @@ ModulePtr parse(const string &moduleName, SourcePtr source) {
     ModulePtr m;
     ModuleParser p = { moduleName };
     applyParser(source, 0, source->size, p, m);
+    m->source = source;
     return m;
 }
 
@@ -3183,4 +3209,6 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels)
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
+}
+
 }

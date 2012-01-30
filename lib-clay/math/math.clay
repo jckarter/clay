@@ -1,20 +1,16 @@
 
 //Import native
+public import numbers.floats.*;
 public import math.native.defines.*;
+public import math.native.bigfloat.*;
 public import math.native.core.*;
 public import math.native.native.*;
-public import math.native.gamma.*;
-public import math.native.beta.*;
-public import math.native.erf.*;
-public import math.native.cbrt.*;
-public import math.native.bessel.*;
-public import numbers.floats.floats.(infinity,negativeInfinity,nan,abs,copysign,signbit);
 
 //Import simd
 public import math.simd.core_x86.*;
 
 //Import libm wrappers
-public import math.libm.libm.*;
+public import math.libm.*;
 
 //Import native approx
 public import math.native.approxmath.*;

@@ -1,8 +1,6 @@
-
-
 
 //
-// fieldRef, staticIndex
+// fieldRef, fieldRefByIndex
 //
 
 [T, FIELD | RecordWithField?(T, FIELD)]
@@ -11,9 +9,8 @@ inline overload fieldRef(x:T, static FIELD) {
 }
 
 [T, i | Record?(T)]
-inline overload staticIndex(x:T, static i) =
+inline fieldRefByIndex(x:T, static i) =
     ref recordFieldRef(x, static SizeT(i));
-
 
 
 //
@@ -109,7 +106,7 @@ overload T(src:T) --> returned:T {
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n))
-        staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
+        fieldRefByIndex(returned, i) <-- moveUnsafe(fieldRefByIndex(src, i));
 }
 
 [T | RegularRecord?(T) and not NotResetType?(T)]
@@ -137,10 +134,10 @@ overload destroy(a:T) {
 //
 
 [T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
-overload assign(dest:T, ref src:T) {
+overload assign(ref dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n))
-        assign(staticIndex(dest, i), staticIndex(src, i));
+        assign(fieldRefByIndex(dest, i), fieldRefByIndex(src, i));
 }
 
 
@@ -153,7 +150,7 @@ overload assign(dest:T, ref src:T) {
 overload equals?(a:T, b:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n)) {
-        if (not equals?(staticIndex(a, i), staticIndex(b, i)))
+        if (not equals?(fieldRefByIndex(a, i), fieldRefByIndex(b, i)))
             return false;
     }
     return true;
@@ -169,8 +166,8 @@ overload equals?(a:T, b:T) {
 overload lesser?(a:T, b:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n)) {
-        ref av = staticIndex(a, i);
-        ref bv = staticIndex(b, i);
+        ref av = fieldRefByIndex(a, i);
+        ref bv = fieldRefByIndex(b, i);
         if (lesser?(av, bv))
             return true;
         if (lesser?(bv, av))
@@ -182,13 +179,11 @@ overload lesser?(a:T, b:T) {
 
 
 //
-// RecordWithProperties
+// recordWithProperties
 //
-// special type known to the compiler.
+// RecordWithProperties is a special primitive type known to the compiler.
 // can be used in computed records to set custom properties.
 //
-
-record RecordWithProperties[Properties, Fields]();
 
 recordWithProperties(properties, ..fields) {
     var fieldsTuple = Tuple(..fields);

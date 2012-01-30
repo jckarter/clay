@@ -2,3 +2,6 @@ import platform.symbols.(Windows);
 
 alias OS = Windows;
 alias OSFamily = Windows;
+
+alias OSString = "windows";
+alias OSFamilyString = "windows";

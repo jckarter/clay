@@ -164,7 +164,7 @@ private AssignableObjectTypes?(O1, O2)
     = ObjectType?(O1) and ObjectType?(O2);
 
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: O1, right: O2) {
+overload assign(ref left: O1, right: O2) {
     left.__handle__ = right.__handle__;
 }
 
@@ -235,26 +235,26 @@ weak(obj: Retained[O]) = O(obj);
 
 // assigning managed <-> unmanaged
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: Retained[O1], right: O2) {
+overload assign(ref left: Retained[O1], right: O2) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: O1, right: Retained[O2]) {
+overload assign(ref left: O1, right: Retained[O2]) {
     left.__handle__ = right.__handle__;
 }
 
 // assigning managed to managed
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: Retained[O1], ref right: Retained[O2]) {
+overload assign(ref left: Retained[O1], ref right: Retained[O2]) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 // assigning managed to managed
 [O1, O2 | AssignableObjectTypes?(O1, O2)]
-overload assign(left: Retained[O1], rvalue right: Retained[O2]) {
+overload assign(ref left: Retained[O1], rvalue right: Retained[O2]) {
     var oldHandle = left.__handle__;
     left.__handle__ = right.__handle__;
     resetUnsafe(right);

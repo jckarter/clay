@@ -1,11 +1,6 @@
 #include "clay.hpp"
-#include "libclaynames.hpp"
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Assembly/Writer.h>
-#include <llvm/Assembly/Parser.h>
+
+namespace clay {
 
 llvm::Module *llvmModule = NULL;
 llvm::DIBuilder *llvmDIBuilder = NULL;
@@ -303,7 +298,7 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
         return;
     bool savedCheckExceptions = ctx->checkExceptions;
     ctx->checkExceptions = false;
-    codegenCallValue(staticCValue(prelude_destroy(), ctx),
+    codegenCallValue(staticCValue(operator_destroy(), ctx),
                      new MultiCValue(dest),
                      ctx,
                      new MultiCValue());
@@ -349,7 +344,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         }
         return;
     }
-    codegenCallValue(staticCValue(dest->type.ptr(), ctx),
+    codegenCallValue(staticCValue(operator_copy(), ctx),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
@@ -367,15 +362,21 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
         }
         return;
     }
-    codegenCallValue(staticCValue(prelude_move(), ctx),
+    codegenCallValue(staticCValue(operator_move(), ctx),
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
 }
 
-void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+static void codegenValueAssign(
+    PValuePtr pdest,
+    CValuePtr dest,
+    PValuePtr psrc,
+    CValuePtr src,
+    CodegenContextPtr ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
+        && !pdest->isTemp
         && (dest->type == src->type)
         && (!isPrimitiveAggregateTooLarge(dest->type)))
     {
@@ -387,31 +388,9 @@ void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
     }
     MultiCValuePtr args = new MultiCValue(dest);
     args->add(src);
-    codegenCallValue(staticCValue(prelude_assign(), ctx),
-                     args,
-                     ctx,
-                     new MultiCValue());
-}
-
-void codegenValueMoveAssign(CValuePtr dest,
-                            CValuePtr src,
-                            CodegenContextPtr ctx)
-{
-    if (isPrimitiveAggregateType(dest->type)
-        && (dest->type == src->type)
-        && (!isPrimitiveAggregateTooLarge(dest->type)))
-    {
-        if (dest->type->typeKind != STATIC_TYPE) {
-            llvm::Value *v = ctx->builder->CreateLoad(src->llValue);
-            ctx->builder->CreateStore(v, dest->llValue);
-        }
-        return;
-    }
-    MultiCValuePtr args = new MultiCValue(dest);
-    args->add(src);
-    MultiPValuePtr pvArgs = new MultiPValue(new PValue(dest->type, false));
-    pvArgs->add(new PValue(src->type, true));
-    codegenCallValue(staticCValue(prelude_assign(), ctx),
+    MultiPValuePtr pvArgs = new MultiPValue(pdest);
+    pvArgs->add(psrc);
+    codegenCallValue(staticCValue(operator_assign(), ctx),
                      args,
                      pvArgs,
                      ctx,
@@ -422,10 +401,9 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 {
     if (a->type != boolType)
         typeError(boolType, a->type);
-    llvm::Value *b1 = ctx->builder->CreateLoad(a->llValue);
-    llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
-    llvm::Value *flag1 = ctx->builder->CreateICmpNE(b1, zero);
-    return flag1;
+    llvm::Value *flag = ctx->builder->CreateLoad(a->llValue);
+    assert(flag->getType() == llvmIntType(1));
+    return flag;
 }
 
 
@@ -981,10 +959,13 @@ void codegenExpr(ExprPtr expr,
                                      x->value,
                                      true);
         TypePtr type = arrayType(int8Type, x->value.size() + 1);
+        ostringstream symbolName;
+        symbolName << "StringConstant " << x->value << " clay";
+
         llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
             *llvmModule, llvmType(type), true,
             llvm::GlobalVariable::PrivateLinkage,
-            initializer, "clayliteral_str");
+            initializer, symbolName.str());
         llvm::Value *str =
             ctx->builder->CreateConstGEP2_32(gvar, 0, 0);
         llvm::Value *strEnd =
@@ -997,7 +978,7 @@ void codegenExpr(ExprPtr expr,
         MultiCValuePtr args = new MultiCValue();
         args->add(cvFirst);
         args->add(cvLast);
-        codegenCallValue(staticCValue(prelude_StringConstant(), ctx),
+        codegenCallValue(staticCValue(operator_stringLiteral(), ctx),
                          args,
                          ctx,
                          out);
@@ -1014,7 +995,7 @@ void codegenExpr(ExprPtr expr,
     case LINE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1023,7 +1004,7 @@ void codegenExpr(ExprPtr expr,
     case COLUMN_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -1050,7 +1031,7 @@ void codegenExpr(ExprPtr expr,
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        ExprPtr tupleLiteral = prelude_expr_tupleLiteral();
+        ExprPtr tupleLiteral = operator_expr_tupleLiteral();
         codegenCallExpr(tupleLiteral, x->args, env, ctx, out);
         break;
     }
@@ -1144,8 +1125,7 @@ void codegenExpr(ExprPtr expr,
         int marker = cgMarkStack(ctx);
         CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag2, out0->llValue);
         cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
@@ -1174,8 +1154,7 @@ void codegenExpr(ExprPtr expr,
         int marker = cgMarkStack(ctx);
         CValuePtr cv2 = codegenOneAsRef(x->expr2, env, ctx);
         llvm::Value *flag2 = codegenToBoolFlag(cv2, ctx);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag2, llvmType(boolType));
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag2, out0->llValue);
         cgDestroyAndPopStack(marker, ctx, false);
         ctx->builder->CreateBr(mergeBlock);
 
@@ -1210,10 +1189,6 @@ void codegenExpr(ExprPtr expr,
     }
 
     case STATIC_EXPR : {
-        StaticExpr *x = (StaticExpr *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarStaticExpr(x);
-        codegenExpr(x->desugared, env, ctx, out);
         break;
     }
 
@@ -1301,7 +1276,9 @@ void codegenStaticObject(ObjectPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == y->ptrType);
-        ctx->builder->CreateStore(y->llvmFunc, out0->llValue);
+        llvm::Value *opaqueValue = ctx->builder->CreateBitCast(
+            y->llvmFunc, llvmType(out0->type));
+        ctx->builder->CreateStore(opaqueValue, out0->llValue);
         break;
     }
 
@@ -1449,6 +1426,12 @@ void codegenStaticObject(ObjectPtr x,
 // codegenGVarInstance
 //
 
+static void printModuleQualification(ostream &os, ModulePtr mod)
+{
+    if (mod != NULL)
+        os << mod->moduleName << '.';
+}
+
 void codegenGVarInstance(GVarInstancePtr x)
 {
     assert(!x->llGlobal);
@@ -1457,20 +1440,30 @@ void codegenGVarInstance(GVarInstancePtr x)
     PValuePtr y = mpv->values[0];
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
-    ostringstream ostr;
-    ostr << "clay global " << x->gvar->name->str << " " << y->type;
-    x->llGlobal =
-        new llvm::GlobalVariable(
-            *llvmModule, llvmType(y->type), false,
-            llvm::GlobalVariable::InternalLinkage,
-            initializer, ostr.str());
-    if (llvmDIBuilder) {
-        assert(x->gvar->location->source->debugInfo != NULL);
-        int line, column, tabColumn;
-        computeLineCol(x->gvar->location, line, column, tabColumn);
-        x->debugInfo = llvmDIBuilder->createGlobalVariable(
-            x->gvar->name->str,
-            x->gvar->location->source->debugInfo,
+
+    ostringstream nameStr;
+    printModuleQualification(nameStr, safeLookupModule(x->env));
+    nameStr << x->gvar->name->str;
+    if (!x->params.empty()) {
+        nameStr << '[';
+        printNameList(nameStr, x->params);
+        nameStr << ']';
+    }
+
+    ostringstream symbolStr;
+    symbolStr << nameStr.str() << " " << y->type << " clay";
+
+    x->staticGlobal = new ValueHolder(y->type);
+    x->llGlobal = new llvm::GlobalVariable(
+        *llvmModule, llvmType(y->type), false,
+        llvm::GlobalVariable::InternalLinkage,
+        initializer, symbolStr.str());
+    if (llvmDIBuilder != NULL) {
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(x->gvar->location, line, column);
+        x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
+            nameStr.str(),
+            file,
             line,
             llvmTypeDebugInfo(y->type),
             true, // isLocalToUnit
@@ -1497,7 +1490,7 @@ void codegenGVarInstance(GVarInstancePtr x)
 
     // generate destructor procedure body
     InvokeEntryPtr entry =
-        codegenCallable(prelude_destroy(),
+        codegenCallable(operator_destroy(),
                         vector<TypePtr>(1, y->type),
                         vector<ValueTempness>(1, TEMPNESS_LVALUE));
 
@@ -1527,13 +1520,12 @@ void codegenExternalVariable(ExternalVariablePtr x)
         new llvm::GlobalVariable(
             *llvmModule, llvmType(pv->type), false,
             linkage, NULL, x->name->str);
-    if (llvmDIBuilder) {
-        assert(x->location->source->debugInfo != NULL);
-        int line, column, tabColumn;
-        computeLineCol(x->location, line, column, tabColumn);
-        x->debugInfo = llvmDIBuilder->createGlobalVariable(
+    if (llvmDIBuilder != NULL) {
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(x->location, line, column);
+        x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createGlobalVariable(
             x->name->str,
-            x->location->source->debugInfo,
+            file,
             line,
             llvmTypeDebugInfo(x->type2),
             false, // isLocalToUnit
@@ -1557,7 +1549,6 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->analyzed)
         analyzeExternalProcedure(x);
     assert(x->analyzed);
-    assert(!x->llvmFunc);
     vector<llvm::Type *> llArgTypes;
     vector< pair<unsigned, llvm::Attributes> > llAttributes;
     llvm::Type *llRetType =
@@ -1591,6 +1582,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         llvmFuncName = x->name->str;
     }
 
+    llvm::DIFile file(NULL);
+    int line = 0, column = 0;
     if (x->llvmFunc == NULL) {
         llvm::Function *func = llvmModule->getFunction(llvmFuncName);
         if (!func) {
@@ -1608,12 +1601,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
             func->addAttribute(attr->first, attr->second);
 
         if (llvmDIBuilder != NULL) {
-            llvm::DIFile file(NULL);
-            int line = 0, column = 0, tabColumn = 0;
-            if (x->location != NULL) {
-                file = x->location->source->debugInfo;
-                computeLineCol(x->location, line, column, tabColumn);
-            }
+            file = getDebugLineCol(x->location, line, column);
 
             vector<llvm::Value*> debugParamTypes;
             if (x->returnType2 == NULL)
@@ -1630,8 +1618,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 file, // file
                 debugParamArray);
 
-            x->debugInfo = llvmDIBuilder->createFunction(
-                safeLookupModule(x->env)->debugInfo, // scope
+            x->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
+                lookupModuleDebugInfo(x->env), // scope
                 x->name->str, // name
                 llvmFuncName, // linkage name
                 file, // file
@@ -1653,7 +1641,16 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->body)
         return;
 
-    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc, x->debugInfo);
+    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc);
+
+    if (llvmDIBuilder != NULL) {
+        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+            x->getDebugInfo(),
+            file,
+            line,
+            column
+            ));
+    }
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -1662,6 +1659,12 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
+
+    if (llvmDIBuilder != NULL) {
+        llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, x->getDebugInfo());
+        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx->builder->SetCurrentDebugLocation(debugLoc);
+    }
 
     ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
@@ -1674,8 +1677,31 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     for (unsigned i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr arg = x->args[i];
-        CValuePtr cvalue = target->allocArgumentValue(x->callingConv, arg->type2, arg->name->str, ai, ctx);
+        CValuePtr cvalue = target->allocArgumentValue(
+            x->callingConv, arg->type2, arg->name->str, ai, ctx);
         addLocal(env, arg->name, cvalue.ptr());
+        if (llvmDIBuilder != NULL) {
+            int line, column;
+            LocationPtr argLocation = arg->location;
+            llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                llvm::dwarf::DW_TAG_arg_variable, // tag
+                x->getDebugInfo(), // scope
+                arg->name->str, // name
+                file, // file
+                line, // line
+                llvmTypeDebugInfo(arg->type2), // type
+                true, // alwaysPreserve
+                0, // flags
+                i+1 // argNo
+                );
+            llvm::Value *argValue = cvalue->llValue;
+            llvmDIBuilder->insertDeclare(
+                argValue,
+                debugVar,
+                initBlock)
+                ->setDebugLoc(ctx->initBuilder->getCurrentDebugLocation());
+        }
     }
 
     ctx->returnLists.push_back(returns);
@@ -1694,12 +1720,15 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     }
     cgPopStack(returnTarget.stackMarker, ctx);
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    exceptionBlock->moveAfter(returnBlock);
+
     ctx->builder->SetInsertPoint(returnBlock);
     target->returnStatement(x->callingConv, x->returnType2, returns, ctx);
 
     ctx->builder->SetInsertPoint(exceptionBlock);
     if (exceptionsEnabled()) {
-        ObjectPtr callable = prelude_unhandledExceptionInExternal();
+        ObjectPtr callable = operator_unhandledExceptionInExternal();
         codegenCallValue(staticCValue(callable, ctx),
                          new MultiCValue(),
                          ctx,
@@ -1959,7 +1988,7 @@ void codegenIndexingExpr(ExprPtr indexable,
     }
     ExprListPtr args2 = new ExprList(indexable);
     args2->add(args);
-    codegenCallExpr(prelude_expr_index(), args2, env, ctx, out);
+    codegenCallExpr(operator_expr_index(), args2, env, ctx, out);
 }
 
 
@@ -1993,6 +2022,7 @@ void codegenAliasIndexing(GlobalAliasPtr x,
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
+    AnalysisCachingDisabler disabler;
     codegenExpr(x->expr, bodyEnv, ctx, out);
 }
 
@@ -2037,7 +2067,7 @@ void codegenCallExpr(ExprPtr callable,
     if (pv->type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
-        codegenCallExpr(prelude_expr_call(), args2, env, ctx, out);
+        codegenCallExpr(operator_expr_call(), args2, env, ctx, out);
         return;
     }
 
@@ -2098,7 +2128,7 @@ void codegenCallExpr(ExprPtr callable,
 llvm::Value *codegenVariantTag(CValuePtr cv, CodegenContextPtr ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType, ctx);
-    codegenCallValue(staticCValue(prelude_variantTag(), ctx),
+    codegenCallValue(staticCValue(operator_variantTag(), ctx),
                      new MultiCValue(cv),
                      ctx,
                      new MultiCValue(ctag));
@@ -2120,7 +2150,7 @@ CValuePtr codegenVariantIndex(CValuePtr cv, int tag, CodegenContextPtr ctx)
     CValuePtr cvPtr = codegenAllocValue(pointerType(memberTypes[tag]), ctx);
     MultiCValuePtr out = new MultiCValue(cvPtr);
 
-    codegenCallValue(staticCValue(prelude_unsafeVariantIndex(), ctx),
+    codegenCallValue(staticCValue(operator_unsafeVariantIndex(), ctx),
                      args,
                      ctx,
                      out);
@@ -2206,7 +2236,7 @@ void codegenDispatch(ObjectPtr obj,
         ctx->builder->SetInsertPoint(elseBlocks[i]);
     }
 
-    codegenCallValue(staticCValue(prelude_invalidVariant(), ctx),
+    codegenCallValue(staticCValue(operator_invalidVariant(), ctx),
                      new MultiCValue(cvDispatch),
                      ctx,
                      new MultiCValue());
@@ -2251,7 +2281,7 @@ void codegenCallValue(CValuePtr callable,
         MultiPValuePtr pvArgs2 =
             new MultiPValue(new PValue(callable->type, false));
         pvArgs2->add(pvArgs);
-        codegenCallValue(staticCValue(prelude_call(), ctx),
+        codegenCallValue(staticCValue(operator_call(), ctx),
                          args2,
                          pvArgs2,
                          ctx,
@@ -2322,13 +2352,8 @@ bool codegenShortcut(ObjectPtr callable,
         TypePtr t = (Type *)callable.ptr();
         if (!isPrimitiveAggregateType(t))
             return false;
-        if (pvArgs->size() > 1)
+        if (pvArgs->size() != 1)
             return false;
-        if (pvArgs->size() == 0) {
-            MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
-            assert(cvArgs->size() == 0);
-            return true;
-        }
         PValuePtr pv = pvArgs->values[0];
         if ((pv->type == t) && (!isPrimitiveAggregateTooLarge(t))) {
             MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
@@ -2345,7 +2370,7 @@ bool codegenShortcut(ObjectPtr callable,
         return false;
     }
     case PROCEDURE : {
-        if (callable == prelude_destroy()) {
+        if (callable == operator_destroy()) {
             if (pvArgs->size() != 1)
                 return false;
             if (!isPrimitiveAggregateType(pvArgs->values[0]->type))
@@ -2426,8 +2451,10 @@ void codegenCallCCode(CCodePointerTypePtr t,
             target->loadVarArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
         }
     }
+    llvm::Value *llCastCallable =
+        ctx->builder->CreateBitCast(llCallable, t->getCallType());
     llvm::CallInst *callInst =
-        ctx->builder->CreateCall(llCallable, llvm::makeArrayRef(llArgs));
+        ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
     llvm::CallingConv::ID callingConv = target->callingConvention(t->callingConv);
     callInst->setCallingConv(callingConv);
     for (vector< pair<unsigned, llvm::Attributes> >::iterator attr = llAttributes.begin();
@@ -2695,7 +2722,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     static int id = 1;
     ostringstream functionName;
 
-    functionName << "clay " << callableName << id;
+    functionName << callableName << id;
     id++;
 
     out << string("define internal i8* ^\"")
@@ -2761,6 +2788,9 @@ static string getCodeName(InvokeEntryPtr entry)
     SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
     ostringstream sout;
+
+    printModuleQualification(sout, staticModule(x));
+
     switch (x->objKind) {
     case TYPE : {
         sout << x;
@@ -2796,6 +2826,17 @@ static string getCodeName(InvokeEntryPtr entry)
         sout << entry->argsKey[i];
     }
     sout << ')';
+    if (!entry->returnTypes.empty()) {
+        sout << ' ';
+        for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
+            if (i != 0)
+                sout << ", ";
+            sout << entry->returnTypes[i];
+        }
+    }
+
+    sout << " clay";
+
     return sout.str();
 }
 
@@ -2831,7 +2872,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(exceptionReturnType(), llArgTypes, false);
 
-    string llvmFuncName = "clay " + callableName;
+    string llvmFuncName = callableName;
 
     llvm::Function *llFunc =
         llvm::Function::Create(llFuncType,
@@ -2845,9 +2886,12 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     entry->llvmFunc = llFunc;
 
+    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc);
+
+    int line, column;
+    llvm::DIFile file;
     if (llvmDIBuilder != NULL) {
-        int line, column, tabColumn;
-        computeLineCol(entry->origCode->location, line, column, tabColumn);
+        file = getDebugLineCol(entry->origCode->location, line, column);
 
         vector<llvm::Value*> debugParamTypes;
         debugParamTypes.push_back(llvmVoidTypeDebugInfo());
@@ -2871,14 +2915,14 @@ void codegenCodeBody(InvokeEntryPtr entry)
             llvm::makeArrayRef(debugParamTypes));
 
         llvm::DIType typeDebugInfo = llvmDIBuilder->createSubroutineType(
-            entry->origCode->location->source->debugInfo,
+            file,
             debugParamArray);
 
-        entry->debugInfo = llvmDIBuilder->createFunction(
-            safeLookupModule(entry->env)->debugInfo,
+        entry->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFunction(
+            lookupModuleDebugInfo(entry->env),
             callableName,
             llvmFuncName,
-            entry->origCode->location->source->debugInfo,
+            file,
             line,
             typeDebugInfo,
             true, // isLocalToUnit
@@ -2887,9 +2931,14 @@ void codegenCodeBody(InvokeEntryPtr entry)
             false, // isOptimized
             entry->llvmFunc
         );
-    }
 
-    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc, entry->debugInfo);
+        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+            entry->getDebugInfo(),
+            file,
+            line,
+            column
+            ));
+    }
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -2899,33 +2948,97 @@ void codegenCodeBody(InvokeEntryPtr entry)
     ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
     ctx->builder = new llvm::IRBuilder<>(codeBlock);
 
+    if (llvmDIBuilder != NULL) {
+        llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx->builder->SetCurrentDebugLocation(debugLoc);
+    }
+
     ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     EnvPtr env = new Env(entry->env);
 
     llvm::Function::arg_iterator ai = llFunc->arg_begin();
-    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai) {
+    unsigned argNo = 1;
+    for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai, ++argNo) {
         llvm::Argument *llArgValue = &(*ai);
         llArgValue->setName(entry->fixedArgNames[i]->str);
         CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
         cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
+        if (llvmDIBuilder != NULL) {
+            int line, column;
+            LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
+            llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+            llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                llvm::dwarf::DW_TAG_arg_variable, // tag
+                entry->getDebugInfo(), // scope
+                entry->fixedArgNames[i]->str, // name
+                file, // file
+                line, // line
+                llvmDIBuilder->createReferenceType(
+                    llvmTypeDebugInfo(entry->fixedArgTypes[i])), // type
+                true, // alwaysPreserve
+                0, // flags
+                argNo
+                );
+            llvmDIBuilder->insertDeclare(
+                llArgValue,
+                debugVar,
+                initBlock)
+                ->setDebugLoc(debugLoc);
+            llvm::Value *debugAlloca =
+                ctx->initBuilder->CreateAlloca(llArgValue->getType());
+            ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+        }
     }
 
     if (entry->varArgName.ptr()) {
         unsigned nFixed = entry->fixedArgTypes.size();
         MultiCValuePtr varArgs = new MultiCValue();
-        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai) {
+
+        int line, column;
+        LocationPtr argLocation = entry->origCode->formalVarArg->location;
+        llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+
+        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
             ostringstream sout;
-            sout << "varg" << i;
+            sout << entry->varArgName << ".." << i;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
             cvalue->forwardedRValue = entry->forwardedRValueFlags[i+nFixed];
             varArgs->add(cvalue);
+
+            if (llvmDIBuilder != NULL) {
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_arg_variable, // tag
+                    entry->getDebugInfo(), // scope
+                    sout.str(), // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(entry->varArgTypes[i])), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    llArgValue,
+                    debugVar,
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
+                llvm::Value *debugAlloca =
+                    ctx->initBuilder->CreateAlloca(llArgValue->getType());
+                ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+            }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
     }
+
+    // XXX debug info for returns
 
     vector<CReturn> returns;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i, ++ai) {
@@ -2943,12 +3056,42 @@ void codegenCodeBody(InvokeEntryPtr entry)
     if (entry->code->hasReturnSpecs()) {
         const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
-        for (; i < returnSpecs.size(); ++i) {
+        for (; i < returnSpecs.size(); ++i, ++argNo) {
             ReturnSpecPtr rspec = returnSpecs[i];
-            if (rspec->name.ptr()) {
+            ostringstream sout;
+            if (rspec->name != NULL) {
                 hasNamedReturn = true;
                 addLocal(env, rspec->name, returns[i].value.ptr());
-                returns[i].value->llValue->setName(rspec->name->str);
+                sout << rspec->name->str;
+            } else
+                sout << "return.." << i;
+            returns[i].value->llValue->setName(sout.str());
+
+            if (rspec->name != NULL && llvmDIBuilder != NULL) {
+                int line, column;
+                LocationPtr argLocation = rspec->location;
+                llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_return_variable, // tag
+                    entry->getDebugInfo(), // scope
+                    rspec->name->str, // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(returns[i].type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    returns[i].value->llValue,
+                    debugVar,
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
+                //llvm::Value *debugAlloca =
+                //    ctx->initBuilder->CreateAlloca(llArgValue->getType());
+                //ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
             }
         }
         ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
@@ -2981,6 +3124,9 @@ void codegenCodeBody(InvokeEntryPtr entry)
     cgPopStack(returnTarget.stackMarker, ctx);
 
     ctx->initBuilder->CreateBr(codeBlock);
+
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    exceptionBlock->moveAfter(returnBlock);
 
     ctx->builder->SetInsertPoint(returnBlock);
     llvm::Value *llRet = noExceptionReturnValue();
@@ -3029,7 +3175,7 @@ void codegenCWrapper(InvokeEntryPtr entry)
     llvm::Function *llCWrapper =
         llvm::Function::Create(llFuncType,
                                llvm::Function::InternalLinkage,
-                               "clay external wrapper " + callableName,
+                               "cdecl " + callableName,
                                llvmModule);
     for (vector< pair<unsigned, llvm::Attributes> >::const_iterator attr = llAttributes.begin();
          attr != llAttributes.end();
@@ -3086,8 +3232,11 @@ void codegenCallInline(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
+    assert(ctx->inlineDepth >= 0);
     if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");
+
+    ++ctx->inlineDepth;
 
     ensureArity(args, entry->argsKey.size());
 
@@ -3167,7 +3316,12 @@ void codegenCallInline(InvokeEntryPtr entry,
     ctx->returnLists.pop_back();
     ctx->returnTargets.pop_back();
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
@@ -3184,10 +3338,13 @@ void codegenCallByName(InvokeEntryPtr entry,
                        MultiCValuePtr out)
 {
     assert(entry->callByName);
+    assert(ctx->inlineDepth >= 0);
     if (entry->varArgName.ptr())
         assert(args->size() >= entry->fixedArgNames.size());
     else
         assert(args->size() == entry->fixedArgNames.size());
+
+    ++ctx->inlineDepth;
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
@@ -3263,7 +3420,12 @@ void codegenCallByName(InvokeEntryPtr entry,
     ctx->returnLists.pop_back();
     ctx->returnTargets.pop_back();
 
+    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+
     ctx->builder->SetInsertPoint(returnBlock);
+
+    --ctx->inlineDepth;
+    assert(ctx->inlineDepth >= 0);
 }
 
 
@@ -3308,6 +3470,8 @@ static void codegenBlockStatement(BlockPtr block,
         vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
         for (unsigned i = 0; i < evaled.size(); ++i)
             codegenBlockStatement(block, i, evaled[i], env, ctx, terminated);
+    } else if (stmt->stmtKind == WITH) {
+        error("unexpected with statement");
     } else {
         terminated = codegenStatement(stmt, env, ctx);
     }
@@ -3317,12 +3481,23 @@ bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx)
 {
-    LocationContext loc(stmt->location);
+    DebugLocationContext loc(stmt->location, ctx);
 
     switch (stmt->stmtKind) {
 
     case BLOCK : {
         Block *block = (Block *)stmt.ptr();
+        if (llvmDIBuilder != NULL) {
+            llvm::DILexicalBlock outerScope = ctx->getDebugScope();
+            int line, column;
+            llvm::DIFile file = getDebugLineCol(stmt->location, line, column);
+            ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+                outerScope,
+                file,
+                line,
+                column
+                ));
+        }
         int blockMarker = cgMarkStack(ctx);
         codegenCollectLabels(block->statements, 0, ctx);
         bool terminated = false;
@@ -3332,6 +3507,8 @@ bool codegenStatement(StatementPtr stmt,
         if (!terminated)
             cgDestroyStack(blockMarker, ctx, false);
         cgPopStack(blockMarker, ctx);
+        if (llvmDIBuilder != NULL)
+            ctx->popDebugScope();
         return terminated;
     }
 
@@ -3347,6 +3524,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
+
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
 
@@ -3435,7 +3613,7 @@ bool codegenStatement(StatementPtr stmt,
             PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
             if (pvIndexable->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
-                    prelude_expr_indexUpdateAssign(), new ExprList()
+                    operator_expr_indexUpdateAssign(), new ExprList()
                 );
                 call->parenArgs->add(updateOperatorExpr(x->op));
                 call->parenArgs->add(y->expr);
@@ -3447,7 +3625,7 @@ bool codegenStatement(StatementPtr stmt,
         else if (x->left->exprKind == STATIC_INDEXING) {
             StaticIndexing *y = (StaticIndexing *)x->left.ptr();
             CallPtr call = new Call(
-                prelude_expr_staticIndexUpdateAssign(), new ExprList()
+                operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
             call->parenArgs->add(updateOperatorExpr(x->op));
             call->parenArgs->add(y->expr);
@@ -3461,7 +3639,7 @@ bool codegenStatement(StatementPtr stmt,
             PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
             if (pvBase->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
-                    prelude_expr_fieldRefUpdateAssign(), new ExprList()
+                    operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
                 call->parenArgs->add(updateOperatorExpr(x->op));
                 call->parenArgs->add(y->expr);
@@ -3470,7 +3648,7 @@ bool codegenStatement(StatementPtr stmt,
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
-        CallPtr call = new Call(prelude_expr_updateAssign(), new ExprList());
+        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
         call->parenArgs->add(updateOperatorExpr(x->op));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
@@ -3728,7 +3906,7 @@ bool codegenStatement(StatementPtr stmt,
         Throw *x = (Throw *)stmt.ptr();
         if (!x->expr)
             error("throw statements need an argument");
-        ExprPtr callable = prelude_expr_throwValue();
+        ExprPtr callable = operator_expr_throwValue();
         ExprListPtr args = new ExprList(x->expr);
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3820,18 +3998,40 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 {
-    LocationContext loc(x->location);
+    DebugLocationContext loc(x->location, ctx);
+
+    int line, column;
+    llvm::DIFile file = getDebugLineCol(x->location, line, column);
 
     switch (x->bindingKind) {
 
     case VAR : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
             mcv->add(cv);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    llvmTypeDebugInfo(cv->type), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cv->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
+            }
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3845,8 +4045,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
+
         }
         return env2;
     }
@@ -3854,7 +4055,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
@@ -3863,6 +4064,26 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             TypePtr ptrType = pointerType(pv->type);
             CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
             mcv->add(cvRef);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(pv->type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cvRef->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
+            }
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3871,12 +4092,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv;
-            cv = derefValue(mcv->values[i], ctx);
+            CValuePtr cv = derefValue(mcv->values[i], ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
         return env2;
@@ -3885,18 +4105,41 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
     case FORWARD : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
         if (mpv->size() != x->names.size())
-            arityError(x->names.size(), mpv->size());
+            arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
+            CValuePtr cv;
             if (pv->isTemp) {
-                CValuePtr cv = codegenAllocNewValue(pv->type, ctx);
-                mcv->add(cv);
+                cv = codegenAllocNewValue(pv->type, ctx);
             }
             else {
                 TypePtr ptrType = pointerType(pv->type);
-                CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
-                mcv->add(cvRef);
+                cv = codegenAllocNewValue(ptrType, ctx);
+            }
+            mcv->add(cv);
+            if (llvmDIBuilder != NULL) {
+                llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
+                llvm::DIType debugType = llvmTypeDebugInfo(cv->type);
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
+                    debugBlock, // scope
+                    x->names[i]->str, // name
+                    file, // file
+                    line, // line
+                    pv->isTemp
+                        ? llvmTypeDebugInfo(pv->type)
+                        : llvmDIBuilder->createReferenceType(
+                            llvmTypeDebugInfo(pv->type)), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    0 // argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    cv->llValue,
+                    debugVar,
+                    ctx->builder->GetInsertBlock())
+                    ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
         int tempMarker = markTemps(ctx);
@@ -3906,19 +4149,21 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv;
+            CValuePtr rcv, cv;
+            rcv = mcv->values[i];
             if (mpv->values[i]->isTemp) {
-                cv = mcv->values[i];
+                cv = rcv;
                 cgPushStackValue(cv, ctx);
             }
             else {
-                cv = derefValue(mcv->values[i], ctx);
+                cv = derefValue(rcv, ctx);
             }
             addLocal(env2, x->names[i], cv.ptr());
 
             ostringstream ostr;
-            ostr << x->names[i]->str << "_" << cv->type;
+            ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
+
         }
         return env2;
     }
@@ -3966,7 +4211,7 @@ void codegenExprAssign(ExprPtr left,
             cvArgs->add(codegenMultiAsRef(args, env, ctx));
             cvArgs->add(cvRight);
             codegenCallValue(
-                staticCValue(prelude_indexAssign(), ctx),
+                staticCValue(operator_indexAssign(), ctx),
                 cvArgs, pvArgs, ctx,
                 new MultiCValue()
             );
@@ -3984,7 +4229,7 @@ void codegenExprAssign(ExprPtr left,
         cvArgs->add(cvIndex);
         cvArgs->add(cvRight);
         codegenCallValue(
-            staticCValue(prelude_staticIndexAssign(), ctx),
+            staticCValue(operator_staticIndexAssign(), ctx),
             cvArgs, pvArgs, ctx,
             new MultiCValue()
         );
@@ -4003,18 +4248,16 @@ void codegenExprAssign(ExprPtr left,
             cvArgs->add(cvName);
             cvArgs->add(cvRight);
             codegenCallValue(
-                staticCValue(prelude_fieldRefAssign(), ctx),
+                staticCValue(operator_fieldRefAssign(), ctx),
                 cvArgs, pvArgs, ctx,
                 new MultiCValue()
             );
             return;
         }
     }
+    PValuePtr pvLeft = safeAnalyzeOne(left, env);
     CValuePtr cvLeft = codegenOneAsRef(left, env, ctx);
-    if (pvRight->isTemp)
-        codegenValueMoveAssign(cvLeft, cvRight, ctx);
-    else
-        codegenValueAssign(cvLeft, cvRight, ctx);
+    codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
 }
 
 void codegenMultiExprAssign(ExprListPtr left,
@@ -4023,15 +4266,15 @@ void codegenMultiExprAssign(ExprListPtr left,
                             EnvPtr env,
                             CodegenContextPtr ctx)
 {
+    MultiPValuePtr mpvLeft = safeAnalyzeMulti(left, env, 0);
     MultiCValuePtr mcvLeft = codegenMultiAsRef(left, env, ctx);
-    assert(mcvLeft->size() == mcvRight->size());
+    assert(mpvLeft->size() == mcvLeft->size() && mcvLeft->size() == mcvRight->size());
     for (unsigned i = 0; i < mcvLeft->size(); ++i) {
+        PValuePtr pvLeft = mpvLeft->values[i];
         CValuePtr cvLeft = mcvLeft->values[i];
+        PValuePtr pvRight = mpvRight->values[i];
         CValuePtr cvRight = mcvRight->values[i];
-        if (mpvRight->values[i]->isTemp)
-            codegenValueMoveAssign(cvLeft, cvRight, ctx);
-        else
-            codegenValueAssign(cvLeft, cvRight, ctx);
+        codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
     }
 }
 
@@ -4493,7 +4736,7 @@ void codegenPrimOp(PrimOpPtr x,
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            CValuePtr cvCall = staticCValue(prelude_call(), ctx);
+            CValuePtr cvCall = staticCValue(operator_call(), ctx);
             MultiCValuePtr args2 = new MultiCValue(cvCall);
             args2->add(staticCValue(args->values[0]->type.ptr(), ctx));
             for (unsigned i = 1; i < args->size(); ++i)
@@ -4524,7 +4767,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_primitiveCopy : {
+    case PRIM_bitcopy : {
         ensureArity(args, 2);
         CValuePtr cv0 = args->values[0];
         CValuePtr cv1 = args->values[1];
@@ -4547,10 +4790,9 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *v = ctx->builder->CreateLoad(cv->llValue);
         llvm::Value *zero = llvm::ConstantInt::get(llvmType(boolType), 0);
         llvm::Value *flag = ctx->builder->CreateICmpEQ(v, zero);
-        llvm::Value *v2 = ctx->builder->CreateZExt(flag, llvmType(boolType));
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        ctx->builder->CreateStore(v2, out0->llValue);
+        ctx->builder->CreateStore(flag, out0->llValue);
         break;
     }
 
@@ -4570,12 +4812,10 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
-        llvm::Value *result =
-            ctx->builder->CreateZExt(flag, llvmType(boolType));
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        ctx->builder->CreateStore(result, out0->llValue);
+        ctx->builder->CreateStore(flag, out0->llValue);
         break;
     }
 
@@ -4904,8 +5144,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerAddChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerAddChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4919,8 +5159,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerSubtractChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerSubtractChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4934,8 +5174,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerMultiplyChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerMultiplyChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4949,8 +5189,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerDivideChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerDivideChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4964,8 +5204,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerRemainderChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerRemainderChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4979,8 +5219,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 1, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerShiftLeftChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerShiftLeftChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -4993,8 +5233,8 @@ void codegenPrimOp(PrimOpPtr x,
         checkIntegerValue(args, 0, t, ctx);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
-        codegenCallValue(staticCValue(prelude_doIntegerNegateChecked(), ctx),
+        assert(out0->type.ptr() == t.ptr());
+        codegenCallValue(staticCValue(operator_doIntegerNegateChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5007,7 +5247,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == dest.ptr());
-        codegenCallValue(staticCValue(prelude_doIntegerConvertChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerConvertChecked(), ctx),
                          args,
                          ctx,
                          out);
@@ -5015,7 +5255,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Pointer :
-        error("Pointer type constructor cannot be called");
+        error("Pointer primitive cannot be called");
 
     case PRIM_addressOf : {
         ensureArity(args, 1);
@@ -5113,8 +5353,14 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_ByRef :
+        error("ByRef primitive cannot be called");
+
+    case PRIM_RecordWithProperties :
+        error("RecordWithProperties primitive cannot be called");
+
     case PRIM_CodePointer :
-        error("CodePointer type constructor cannot be called");
+        error("CodePointer primitive cannot be called");
 
     case PRIM_makeCodePointer : {
         if (args->size() < 1)
@@ -5176,22 +5422,22 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_CCodePointer :
-        error("CCodePointer type constructor cannot be called");
+        error("CCodePointer primitive cannot be called");
 
     case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer type constructor cannot be called");
+        error("VarArgsCCodePointer primitive cannot be called");
 
     case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer type constructor cannot be called");
+        error("StdCallCodePointer primitive cannot be called");
 
     case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
+        error("FastCallCodePointer primitive cannot be called");
 
     case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer type constructor cannot be called");
+        error("ThisCallCodePointer primitive cannot be called");
 
     case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer type constructor cannot be called");
+        error("LLVMCodePointer primitive cannot be called");
 
     case PRIM_makeCCodePointer : {
         if (args->size() < 1)
@@ -5252,7 +5498,10 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == ccpType);
-        ctx->builder->CreateStore(entry->llvmCWrapper, out0->llValue);
+
+        llvm::Value *opaqueValue = ctx->builder->CreateBitCast(
+            entry->llvmCWrapper, llvmType(out0->type));
+        ctx->builder->CreateStore(opaqueValue, out0->llValue);
         break;
     }
 
@@ -5268,21 +5517,25 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_pointerCast : {
+    case PRIM_bitcast : {
         ensureArity(args, 2);
-        TypePtr dest = valueToPointerLikeType(args, 0);
-        TypePtr src;
-        llvm::Value *v = pointerLikeValue(args, 1, src, ctx);
-        llvm::Value *result = ctx->builder->CreateBitCast(v, llvmType(dest));
+        TypePtr dest = valueToType(args, 0);
+        CValuePtr src = args->values[1];
+        if (typeSize(dest) > typeSize(src->type))
+            error("destination type for bitcast is larger than source type");
+        if (typeAlignment(dest) > typeAlignment(src->type))
+            error("destination type for bitcast has stricter alignment than source type");
+        llvm::Value *arg1 = args->values[1]->llValue;
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == dest);
+        assert(out0->type == pointerType(dest));
+        llvm::Value *result = ctx->builder->CreateBitCast(arg1, llvmPointerType(dest));
         ctx->builder->CreateStore(result, out0->llValue);
         break;
     }
 
     case PRIM_Array :
-        error("Array type constructor cannot be called");
+        error("Array primitive cannot be called");
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
@@ -5317,10 +5570,10 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Vec :
-        error("Vec type constructor cannot be called");
+        error("Vec primitive cannot be called");
 
     case PRIM_Tuple :
-        error("Tuple type constructor cannot be called");
+        error("Tuple primitive cannot be called");
 
     case PRIM_TupleElementCount : {
         ensureArity(args, 1);
@@ -5361,7 +5614,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Union :
-        error("Union type constructor cannot be called");
+        error("Union primitive cannot be called");
 
     case PRIM_UnionMemberCount : {
         ensureArity(args, 1);
@@ -5522,6 +5775,9 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_VariantMembers :
+        break;
+
     case PRIM_variantRepr : {
         ensureArity(args, 1);
         VariantTypePtr vt;
@@ -5535,7 +5791,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Static :
-        error("Static type constructor cannot be called");
+        error("Static primitive cannot be called");
 
     case PRIM_ModuleName : {
         ensureArity(args, 1);
@@ -5850,6 +6106,35 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_memcpy :
+    case PRIM_memmove : {
+        ensureArity(args, 3);
+        PointerTypePtr topt;
+        PointerTypePtr frompt;
+        llvm::Value *toptr = pointerValue(args, 0, topt, ctx);
+        llvm::Value *fromptr = pointerValue(args, 1, frompt, ctx);
+        IntegerTypePtr it;
+        llvm::Value *count = integerValue(args, 2, it, ctx);
+
+        size_t pointerSize = typeSize(topt.ptr());
+        llvm::Type *sizeType = llvmIntType(8*pointerSize);
+
+        if (typeSize(it.ptr()) > pointerSize)
+            argumentError(2, "integer type for memcpy must be pointer-sized or smaller");
+        if (typeSize(it.ptr()) < pointerSize)
+            count = ctx->builder->CreateZExt(count, sizeType);
+
+        size_t alignment = std::min(
+            typeAlignment(topt->pointeeType), typeAlignment(frompt->pointeeType));
+
+        if (x->primOpCode == PRIM_memcpy)
+            ctx->builder->CreateMemCpy(toptr, fromptr, count, alignment);
+        else
+            ctx->builder->CreateMemMove(toptr, fromptr, count, alignment);
+
+        break;
+    }
+
     default :
         assert(false);
         break;
@@ -5874,6 +6159,8 @@ static string stripEnclosingBraces(const string &s) {
 
 static void codegenTopLevelLLVMRecursive(ModulePtr m)
 {
+    // XXX debug info for inline LLVM
+
     if (m->topLevelLLVMGenerated) return;
     m->topLevelLLVMGenerated = true;
     vector<ImportPtr>::iterator ii, iend;
@@ -5981,10 +6268,10 @@ static void initializeCtorsDtors()
     }
 
     if (exceptionsEnabled()) {
-        codegenCallable(prelude_exceptionInInitializer(),
+        codegenCallable(operator_exceptionInInitializer(),
                         vector<TypePtr>(),
                         vector<ValueTempness>());
-        codegenCallable(prelude_exceptionInFinalizer(),
+        codegenCallable(operator_exceptionInFinalizer(),
                         vector<TypePtr>(),
                         vector<ValueTempness>());
     }
@@ -6014,26 +6301,13 @@ static void finalizeCtorsDtors()
     if (isMsvcTarget())
         codegenAtexitDestructors();
 
-    finalizeSimpleContext(constructorsCtx, prelude_exceptionInInitializer());
+    finalizeSimpleContext(constructorsCtx, operator_exceptionInInitializer());
 
     for (unsigned i = initializedGlobals.size(); i > 0; --i) {
         CValuePtr cv = initializedGlobals[i-1];
         codegenValueDestroy(cv, destructorsCtx);
     }
-    finalizeSimpleContext(destructorsCtx, prelude_exceptionInFinalizer());
-}
-
-// LLVM 3.0 does not link global ctors and dtors correctly
-// See http://llvm.org/bugs/show_bug.cgi?id=9213
-static void generateMSVCCtorsAndDtors() {
-    llvm::Type *constructorType = constructorsCtx->llvmFunc->getType();
-
-    llvm::GlobalVariable *ctor = new llvm::GlobalVariable(
-        *llvmModule, constructorType, true,
-        llvm::GlobalVariable::ExternalLinkage,
-        constructorsCtx->llvmFunc, "clayglobals_msvc_ctor");
-
-    ctor->setSection(".CRT$XCU");
+    finalizeSimpleContext(destructorsCtx, operator_exceptionInFinalizer());
 }
 
 static void generateLLVMCtorsAndDtors() {
@@ -6062,36 +6336,33 @@ static void generateLLVMCtorsAndDtors() {
     llvm::Constant *arrayVal1 = llvm::ConstantArray::get(arrayType,
                                                          arrayElems1);
 
-    // make constants for llvm.global_dtors
-    vector<llvm::Constant*> structElems2;
-    llvm::ConstantInt *prio2 =
-        llvm::ConstantInt::get(llvm::getGlobalContext(),
-                               llvm::APInt(32, llvm::StringRef("65535"), 10));
-    structElems2.push_back(prio2);
-    structElems2.push_back(destructorsCtx->llvmFunc);
-    llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
-                                                           structElems2);
-    vector<llvm::Constant*> arrayElems2;
-    arrayElems2.push_back(structVal2);
-    llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
-                                                         arrayElems2);
-
     // define llvm.global_ctors
     new llvm::GlobalVariable(*llvmModule, arrayType, true,
                              llvm::GlobalVariable::AppendingLinkage,
                              arrayVal1, "llvm.global_ctors");
 
-    // define llvm.global_dtors
-    new llvm::GlobalVariable(*llvmModule, arrayType, true,
-                             llvm::GlobalVariable::AppendingLinkage,
-                             arrayVal2, "llvm.global_dtors");
-}
+    // MSVC does not support a dtors mechanism. dtors are registered atexit
+    // by the ctor
+    if (!isMsvcTarget()) {
+        // make constants for llvm.global_dtors
+        vector<llvm::Constant*> structElems2;
+        llvm::ConstantInt *prio2 =
+            llvm::ConstantInt::get(llvm::getGlobalContext(),
+                                   llvm::APInt(32, llvm::StringRef("65535"), 10));
+        structElems2.push_back(prio2);
+        structElems2.push_back(destructorsCtx->llvmFunc);
+        llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
+                                                               structElems2);
+        vector<llvm::Constant*> arrayElems2;
+        arrayElems2.push_back(structVal2);
+        llvm::Constant *arrayVal2 = llvm::ConstantArray::get(arrayType,
+                                                             arrayElems2);
 
-static void generateCtorsAndDtors() {
-    if (isMsvcTarget())
-        generateMSVCCtorsAndDtors();
-    else
-        generateLLVMCtorsAndDtors();
+        // define llvm.global_dtors
+        new llvm::GlobalVariable(*llvmModule, arrayType, true,
+                                 llvm::GlobalVariable::AppendingLinkage,
+                                 arrayVal2, "llvm.global_dtors");
+    }
 }
 
 void codegenMain(ModulePtr module)
@@ -6104,14 +6375,10 @@ void codegenMain(ModulePtr module)
 
     ExprListPtr args;
 
-    args = new ExprList();
+    args = new ExprList(new NameRef(main));
     args->add(new NameRef(argc));
     args->add(new NameRef(argv));
-    CallPtr initCmdLine = new Call(prelude_expr_setArgcArgv(), args);
-    mainBody->statements.push_back(new ExprStatement(initCmdLine.ptr()));
-
-    args = new ExprList(new NameRef(main));
-    CallPtr mainCall = new Call(prelude_expr_callMain(), args);
+    CallPtr mainCall = new Call(operator_expr_callMain(), args);
 
     ReturnPtr ret = new Return(RETURN_VALUE, new ExprList(mainCall.ptr()));
     mainBody->statements.push_back(ret.ptr());
@@ -6161,7 +6428,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 {
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
-    generateCtorsAndDtors();
+    generateLLVMCtorsAndDtors();
 
     codegenModuleEntryPoints(module, importedExternals);
 
@@ -6181,9 +6448,10 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 // initLLVM
 //
 
-bool initLLVM(std::string const &targetTriple,
+llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     std::string const &name,
     std::string const &flags,
+    bool relocPic,
     bool debug,
     bool optimized)
 {
@@ -6191,28 +6459,44 @@ bool initLLVM(std::string const &targetTriple,
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
     llvm::InitializeAllAsmParsers();
+
     llvmModule = new llvm::Module(name, llvm::getGlobalContext());
     llvmModule->setTargetTriple(targetTriple);
     if (debug) {
+        llvm::SmallString<260> absFileName(name);
+        llvm::sys::fs::make_absolute(absFileName);
         llvmDIBuilder = new llvm::DIBuilder(*llvmModule);
         llvmDIBuilder->createCompileUnit(
-            DW_LANG_user_CLAY,
-            basename(name, false),
-            dirname(name),
+            llvm::dwarf::DW_LANG_C_plus_plus, //DW_LANG_user_CLAY,
+            llvm::sys::path::filename(absFileName),
+            llvm::sys::path::parent_path(absFileName),
             "clay compiler " CLAY_COMPILER_VERSION,
             optimized,
             flags,
-            0
-        );
+            0);
     } else
         llvmDIBuilder = NULL;
-    llvm::EngineBuilder eb(llvmModule);
-    llvmEngine = eb.create();
-    if (llvmEngine) {
-        llvmTargetData = llvmEngine->getTargetData();
-        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
-        return true;
-    } else {
-        return false;
+
+    string err;
+    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
+    if (target == NULL) {
+        std::cerr << "error: unable to find target: " << err << '\n';
+        return NULL;
     }
+    llvm::Reloc::Model reloc = relocPic
+        ? llvm::Reloc::PIC_
+        : llvm::Reloc::Default;
+    llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
+
+    llvm::TargetMachine *targetMachine = target->createTargetMachine(
+        targetTriple, "", "", reloc, codeModel);
+
+    if (targetMachine != NULL) {
+        llvmTargetData = targetMachine->getTargetData();
+        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
+    }
+
+    return targetMachine;
+}
+
 }

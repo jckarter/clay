@@ -45,7 +45,7 @@ overload printReprTo(stream, x:GenericSocketError) {
 
 socketCall(callable, forward ..args) {
     var ret = callable(..args);
-    if (ret == Type(ret)(platform.SOCKET_ERROR))
+    if (ret == wrapCast(Type(ret), platform.SOCKET_ERROR))
         throw GenericSocketError(platform.errno());
     return ret;
 }
@@ -122,7 +122,7 @@ overload sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
 overload sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
 
 overload lookupInetHostname(n: UInt32) --> s: In_addr {
-    s.s_addr <-- hostToNetwork(n);
+    platform.s_addr(s) <-- hostToNetwork(n);
 }
 
 overload lookupInetHostname(n: In_addr) = n;
@@ -173,7 +173,7 @@ overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
 overload S(x: S);
 
 [S | Socket?(S)]
-overload assign(x: S, ref y: S);
+overload assign(ref x: S, ref y: S);
 
 [S | Socket?(S)]
 overload fileHandle(s: S) { return s.raw; }
@@ -196,7 +196,7 @@ overload ListenSocket(addr: T, backlog: I)
         var sockaddr, psockaddr, szsockaddr = ..makeSockaddrParams(addr);
         var sockoptValue = 1;
         socketCall(platform.setsockopt, socket.raw,
-            SOL_SOCKET, SO_REUSEADDR, RawPointer(&sockoptValue), SocklenT(TypeSize(Int))
+            SOL_SOCKET, SO_REUSEADDR, platform.DataPointer(&sockoptValue), SocklenT(TypeSize(Int))
         );
         socketCall(platform.bind, socket.raw, psockaddr, szsockaddr);
         socketCall(platform.listen, socket.raw, Int(backlog));
@@ -259,10 +259,14 @@ overload StreamSocket(addr: T) --> socket: StreamSocket {
 // StreamSocket implementation of stream protocol
 //
 overload read(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
-    = SizeT(socketCall(platform.recv, s.raw, RawPointer(buffer), n, 0));
+    = SizeT(socketCall(platform.recv, s.raw,
+        platform.DataPointer(buffer), platform.DataSize(n),
+        0));
 
 overload write(s: StreamSocket, buffer: Pointer[Byte], n: SizeT) {
-    socketCall(platform.send, s.raw, RawPointer(buffer), n, 0);
+    socketCall(platform.send, s.raw,
+        platform.DataPointer(buffer), platform.DataSize(n),
+        0);
 }
 
 overload flush(s: StreamSocket) { }
@@ -273,11 +277,11 @@ overload flush(s: StreamSocket) { }
 // Print support for In_addr
 //
 overload printTo(stream, addr: In_addr) {
-    var host = networkToHost(addr.s_addr);
+    var host = networkToHost(platform.s_addr(addr));
     printTo(stream,
-                   bitshr(host, 24),         ".",
+               bitshr(host, 24),         ".",
         bitand(bitshr(host, 16), 0xFFu), ".",
         bitand(bitshr(host,  8), 0xFFu), ".",
-        bitand(           host,      0xFFu),
+        bitand(       host,      0xFFu),
     );
 }

@@ -53,6 +53,8 @@ inline overload sliced(rvalue a:Sliced[A], first:C, last:C) {
 [A, I, J | RandomAccessSequence?(A) and Integer?(I) and Integer?(J)]
 inline overload sliced(forward a:A, first:I, last:J) {
     var b = begin(a);
+    assert[#boundsCheck](first >= 0 and first <= size(a) and last >= 0 and last <= size(a),
+        A, " sliced indices out of bounds");
     return sliced(a, b+first, b+last);
 }
 
@@ -63,8 +65,11 @@ inline overload slicedFrom(forward a:A, first:C) =
     sliced(a, first, end(a));
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
-inline overload slicedFrom(forward a:A, first:I) =
-    slicedFrom(a, begin(a)+first);
+inline overload slicedFrom(forward a:A, first:I) {
+    assert[#boundsCheck](first >= 0 and first <= size(a),
+        A, " slicedFrom index out out of bounds");
+    return slicedFrom(a, begin(a)+first);
+}
 
 define slicedUpto;
 
@@ -73,8 +78,11 @@ inline overload slicedUpto(forward a:A, last:C) =
     sliced(a, begin(a), last);
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
-inline overload slicedUpto(forward a:A, last:I) =
-    slicedUpto(a, begin(a)+last);
+inline overload slicedUpto(forward a:A, last:I) {
+    assert[#boundsCheck](last >= 0 and last <= size(a),
+        A, " slicedUpto index out out of bounds");
+    return slicedUpto(a, begin(a)+last);
+}
 
 
 
@@ -90,7 +98,8 @@ inline overload reverseIterator(a:Sliced[A]) =
     reverseCoordinateRange(a.last, a.first);
 
 [A | RandomAccessSequence?(A)]
-inline overload size(a:Sliced[A]) = SizeT(a.last - a.first);
+inline overload size(a:Sliced[A]) =
+    if (a.last < a.first) SizeT(0) else SizeT(a.last - a.first);
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
 inline overload index(a:Sliced[A], i:I) = forward ..(a.first + i)@;

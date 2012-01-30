@@ -1,0 +1,1 @@
+-Wl,wsock32.lib

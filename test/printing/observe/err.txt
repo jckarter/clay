@@ -6,5 +6,5 @@
   ..returned 3]
 [observed call index({1, 2, 3}, 1)..
   ..returned 2]
-[observed call throwValue(AnException())..
+[observed call (x -> { throw x; })(AnException())..
   ..threw AnException()]

@@ -128,17 +128,6 @@ alias SOCK_RAW = 3;
 
 
 //
-// IP protocols
-//
-alias IPPROTO_ICMP   =  1;
-alias IPPROTO_IGMP   =  2;
-alias IPPROTO_TCP    =  6;
-alias IPPROTO_UDP    = 17;
-alias IPPROTO_ICMPV6 = 58;
-
-
-
-//
 // special IPv4 addresses
 //
 alias INADDR_ANY       = 0x00_00_00_00u;
@@ -164,4 +153,4 @@ alias SO_REUSEADDR = 4;
 //
 // socket error
 //
-alias SOCKET_ERROR = -1;
+alias SOCKET_ERROR = Greatest(SOCKET);

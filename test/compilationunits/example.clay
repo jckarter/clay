@@ -1,9 +1,0 @@
-import foo.(foo, bar);
-
-external bas(x:Int, y:Int, z:Int, w:Int) : Int = x + y*z - w;
-
-main() {
-    println(foo(3,2,1));
-    println(bar(3,1));
-    println(bas(1,2,3,4));
-}

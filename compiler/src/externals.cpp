@@ -1,5 +1,7 @@
 #include "clay.hpp"
 
+namespace clay {
+
 static llvm::Value *promoteCVarArg(CallingConv conv,
                                    TypePtr t,
                                    llvm::Value *llv,
@@ -167,7 +169,7 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
     if (type != NULL && typeReturnsBySretPointer(conv, type)) {
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == returnType);
+        assert(out0->type == type);
         llArgs.push_back(out0->llValue);
         llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::StructRet));
     }
@@ -228,8 +230,6 @@ void ExternalTarget::storeReturnValue(CallingConv conv,
                                       MultiCValuePtr out)
 {
     if (returnType == NULL || typeReturnsBySretPointer(conv, returnType)) {
-        assert(structReturnValue == NULL);
-        assert(out->size() == 0);
         return;
     } else {
         llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, returnType);
@@ -294,12 +294,18 @@ struct X86_32_ExternalTarget : public ExternalTarget {
     // as aggregates
     bool passVecAsNonaggregate;
 
+    // MacOS X returns aggregates containing a single float or double
+    // on the x87 stack
+    bool returnSingleFloatAggregateAsNonaggregate;
+
     explicit X86_32_ExternalTarget(llvm::Triple target) {
         alwaysUseCCallingConv = target.getArch() == llvm::Triple::x86_64;
         alwaysPassStructsOnStack = target.getOS() == llvm::Triple::NetBSD
             || target.getOS() == llvm::Triple::Linux
             || target.getOS() == llvm::Triple::Solaris;
         passVecAsNonaggregate = target.getOS() == llvm::Triple::Darwin;
+        returnSingleFloatAggregateAsNonaggregate
+            = target.getOS() != llvm::Triple::Win32;
     }
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
@@ -373,17 +379,83 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         }
     }
 
+    bool isSingleFloatMemberType(TypePtr type) {
+        if (type->typeKind == FLOAT_TYPE) {
+            FloatType *ft = (FloatType *)type.ptr();
+            return ft->bits <= 64;
+        } else
+            return false;
+    }
+
+    llvm::Type *singleFloatAggregateType(TypePtr type) {
+        switch (type->typeKind) {
+        case BOOL_TYPE:
+        case INTEGER_TYPE:
+        case FLOAT_TYPE:
+        case POINTER_TYPE:
+        case CODE_POINTER_TYPE:
+        case CCODE_POINTER_TYPE:
+        case STATIC_TYPE:
+        case ENUM_TYPE:
+        case VEC_TYPE:
+        case COMPLEX_TYPE:
+        case VARIANT_TYPE:
+            return NULL;
+
+        case UNION_TYPE: {
+            UnionType *u = (UnionType*)type.ptr();
+            if (u->memberTypes.size() == 1 && isSingleFloatMemberType(u->memberTypes[0]))
+                return llvmType(u->memberTypes[0]);
+            return NULL;
+        }
+
+        case RECORD_TYPE: {
+            RecordType *r = (RecordType*)type.ptr();
+            const vector<TypePtr> &fieldTypes = recordFieldTypes(r);
+            if (fieldTypes.size() == 1 && isSingleFloatMemberType(fieldTypes[0]))
+                return llvmType(fieldTypes[0]);
+            return NULL;
+        }
+
+        case TUPLE_TYPE: {
+            TupleType *t = (TupleType*)type.ptr();
+            if (t->elementTypes.size() == 1 && isSingleFloatMemberType(t->elementTypes[0]))
+                return llvmType(t->elementTypes[0]);
+            return NULL;
+        }
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+
     virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) {
+        if (conv == CC_LLVM) return NULL;
+        if (returnSingleFloatAggregateAsNonaggregate) {
+            llvm::Type *singleType = singleFloatAggregateType(type);
+            if (singleType != NULL)
+                return singleType;
+        }
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) {
+        if (conv == CC_LLVM) return NULL;
         return intTypeForAggregateSize(aggregateTypeSize(type));
     }
     virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
+        if (conv == CC_LLVM) return false;
+        if (returnSingleFloatAggregateAsNonaggregate) {
+            llvm::Type *singleType = singleFloatAggregateType(type);
+            if (singleType != NULL)
+                return false;
+        }
+
         int size = aggregateTypeSize(type);
         return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
     }
     virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) {
+        if (conv == CC_LLVM) return false;
         int size = aggregateTypeSize(type);
         return size != PASS_THROUGH && intTypeForAggregateSize(size) == NULL;
     }
@@ -877,4 +949,6 @@ void initExternalTarget(string targetString)
 ExternalTargetPtr getExternalTarget()
 {
     return externalTarget;
+}
+
 }

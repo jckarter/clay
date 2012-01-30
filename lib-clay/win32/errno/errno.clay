@@ -1,4 +1,4 @@
-import win32;
+import libc;
 
 errno() = win32._errno()@;
 

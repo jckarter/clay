@@ -1,7 +1,6 @@
 #include "clay.hpp"
-#include <cstdio>
-#include <cstdlib>
-#include <cstdarg>
+
+namespace clay {
 
 bool shouldPrintFullMatchErrors;
 
@@ -112,25 +111,55 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-void computeLineCol(LocationPtr location,
-                    int &line,
-                    int &column,
-                    int &tabColumn) {
+static void computeLineCol(LocationPtr location) {
     char *p = location->source->data;
     char *end = p + location->offset;
-    line = column = tabColumn = 0;
+    location->line = location->column = location->tabColumn = 0;
     for (; p != end; ++p) {
-        ++column;
-        ++tabColumn;
+        ++location->column;
+        ++location->tabColumn;
         if (*p == '\n') {
-            ++line;
-            column = 0;
-            tabColumn = 0;
+            ++location->line;
+            location->column = 0;
+            location->tabColumn = 0;
         }
         else if (*p == '\t') {
-            tabColumn += 7;
+            location->tabColumn += 7;
         }
     }
+}
+
+llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column) {
+    if (location == NULL) {
+        line = 0;
+        column = 0;
+        return llvm::DIFile(NULL);
+    }
+
+    if (!location->lineColumnInitialized) {
+        location->lineColumnInitialized = true;
+        computeLineCol(location);
+    }
+    line = location->line + 1;
+    column = location->column + 1;
+    return location->source->getDebugInfo();
+}
+
+void getLineCol(LocationPtr location, int &line, int &column, int &tabColumn) {
+    if (location == NULL) {
+        line = 0;
+        column = 0;
+        tabColumn = 0;
+        return;
+    }
+
+    if (!location->lineColumnInitialized) {
+        location->lineColumnInitialized = true;
+        computeLineCol(location);
+    }
+    line = location->line;
+    column = location->column;
+    tabColumn = location->tabColumn;
 }
 
 static void splitLines(SourcePtr source, vector<string> &lines) {
@@ -151,7 +180,7 @@ static bool endsWithNewline(const string& s) {
 
 static void displayLocation(LocationPtr location, int &line, int &column) {
     int tabColumn;
-    computeLineCol(location, line, column, tabColumn);
+    getLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location->source, lines);
     fprintf(stderr, "###############################\n");
@@ -170,7 +199,7 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     fprintf(stderr, "###############################\n");
 }
 
-static void displayCompileContext() {
+extern "C" void displayCompileContext() {
     if (contextStack.empty())
         return;
     fprintf(stderr, "\n");
@@ -284,7 +313,7 @@ void arityError(int expected, int received) {
 
 void arityError2(int minExpected, int received) {
     ostringstream sout;
-    sout << "expected atleast " << minExpected
+    sout << "expected at least " << minExpected
          << " " << valuesStr(minExpected);
     sout << ", but received " << received << " " << valuesStr(received);
     error(sout.str());
@@ -312,10 +341,10 @@ void ensureArity(MultiCValuePtr args, unsigned int size) {
 
 void arityMismatchError(int leftArity, int rightArity) {
     ostringstream sout;
-    sout << "arity mismatch. ";
-    sout << "left-side has " << leftArity << " " << valuesStr(leftArity);
-    sout << ", whereas right-side has " << rightArity
+    sout << "left side has " << leftArity << " " << valuesStr(leftArity);
+    sout << ", but right side has " << rightArity
          << " " << valuesStr(rightArity);
+    error(sout.str());
 }
 
 static string typeErrorMessage(const string &expected,
@@ -410,7 +439,7 @@ void matchFailureError(MatchFailureError const &err)
         sout << "\n    ";
         LocationPtr location = overload->location;
         int line, column, tabColumn;
-        computeLineCol(location, line, column, tabColumn);
+        getLineCol(location, line, column, tabColumn);
         sout << location->source->fileName.c_str()
             << "(" << line+1 << "," << column << ")"
             << "\n        ";
@@ -424,6 +453,8 @@ void matchFailureError(MatchFailureError const &err)
 void printFileLineCol(ostream &out, LocationPtr location)
 {
     int line, column, tabColumn;
-    computeLineCol(location, line, column, tabColumn);
+    getLineCol(location, line, column, tabColumn);
     out << location->source->fileName << "(" << line+1 << "," << column << ")";
+}
+
 }

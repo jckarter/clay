@@ -46,7 +46,7 @@ inline overload resetUnsafe(p: UniquePointer[T]) {
 
 // no assign from ref
 [T]
-inline overload assign(dest: UniquePointer[T], ref src: UniquePointer[T]);
+inline overload assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
 
 [T]
 inline overload destroy(p: UniquePointer[T]) {
@@ -97,7 +97,7 @@ inline overload UniqueValue[T](x:UniqueValue[T]) =
         UniqueValue(x@);
 
 [T]
-overload assign(to:UniqueValue[T], ref from:UniqueValue[T]) {
+overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
     if (null?(from)) {
         destroy(to.ptr);
         resetUnsafe(to.ptr);

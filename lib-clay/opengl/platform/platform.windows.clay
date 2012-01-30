@@ -3,6 +3,6 @@ import win32.(WINAPI, WinApiCodePointer);
 alias GLCodePointer[Args, Return] = WinApiCodePointer[Args, Return];
 alias GLAPI = WINAPI;
 
-external (WINAPI) wglGetProcAddress(name: LPCSTR) GLCodePointer[[], []];
+external (WINAPI) wglGetProcAddress(name: LPCSTR) : GLCodePointer[[], []];
 
 lookupGLFunction(name) = wglGetProcAddress(cstring(name));

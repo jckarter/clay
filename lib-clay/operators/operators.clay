@@ -4,26 +4,50 @@
 // core operations
 //
 
-define destroy;
-define moveUnsafe;
-define resetUnsafe;
-define assign;
-define updateAssign;
+public import __operators__.(
+    destroy,
+    copy,
+    move,
+    assign,
+    updateAssign,
 
-define equals?;
-define lesser?;
-define lesserEquals?;
-define greater?;
-define greaterEquals?;
+    equals?,
+    notEquals?,
+    case?,
+    lesser?,
+    lesserEquals?,
+    greater?,
+    greaterEquals?,
 
-define plus;
-define minus;
+    plus,
+    minus,
 
-define add;
-define subtract;
-define multiply;
-define divide;
-define remainder;
+    add,
+    subtract,
+    multiply,
+    divide,
+    remainder,
+
+    dereference,
+    call,
+    fieldRef,
+    staticIndex,
+    index,
+
+    fieldRefAssign,
+    fieldRefUpdateAssign,
+    staticIndexAssign,
+    staticIndexUpdateAssign,
+    indexAssign,
+    indexUpdateAssign,
+
+    iterator,
+
+    hasNext?,
+    next,
+
+    ifExpression,
+);
 
 define inc;
 define dec;
@@ -35,18 +59,8 @@ define bitor;
 define bitxor;
 define bitnot;
 
-define dereference;
-define call;
-define fieldRef;
-define staticIndex;
-
-define fieldRefAssign;
-define fieldRefUpdateAssign;
-define staticIndexAssign;
-define staticIndexUpdateAssign;
-define indexAssign;
-define indexUpdateAssign;
-
+define moveUnsafe;
+define resetUnsafe;
 
 
 //
@@ -86,16 +100,6 @@ Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
 IteratorTargetType(T) = ..Type(..next(typeToLValue(T)));
 
 
-
-//
-// iteration protocol
-//
-
-define iterator; // create iterator
-
-define hasNext?; // iterator operation
-define next;     // iterator operation
-
 
 
 //
@@ -111,7 +115,6 @@ define reverseIterator;
 //
 
 define size;
-define index;
 
 define begin;
 define end;
@@ -214,25 +217,25 @@ inline initialize(a) {
 }
 
 [T]
-inline copy(a:T) = T(a);
+inline overload copy(a:T) = T(a);
 
 [T]
-inline move(src:T) --> returned:T {
+inline overload move(src:T) --> returned:T {
     returned <-- moveUnsafe(src);
     resetUnsafe(src);
 }
 
 [T]
-inline overload assign(dest:T, rvalue src:T) {
+inline overload assign(ref dest:T, rvalue src:T) {
     swap(dest, src);
 }
 
 [F]
-inline overload updateAssign(static F, dest, forward src) {
+inline overload updateAssign(static F, ref dest, forward src) {
     dest = F(dest, src);
 }
 
-inline notEquals?(a, b) = not equals?(a, b);
+inline overload notEquals?(a, b) = not equals?(a, b);
 
 inline ordered?(a, b) = (a <= b) or (b <= a);
 
@@ -346,9 +349,9 @@ inline swap(a, b) {
 [T | BitwiseMovedType?(T)]
 inline overload swap(a:T, b:T) {
     alias TBytes = Array[UInt8, Int(TypeSize(T))];
-    var temp = bitcast(a, TBytes);
-    bitcast(a, TBytes) <-- bitcast(b, TBytes);
-    bitcast(b, TBytes) <-- temp;
+    var temp = bitcast(TBytes, a);
+    bitcast(TBytes, a) <-- bitcast(TBytes, b);
+    bitcast(TBytes, b) <-- temp;
 }
 
 
@@ -399,8 +402,6 @@ inline empty?(a:T) = (size(a) == 0);
 // ifExpression
 //
 
-define ifExpression;
-
 [T]
 alias overload ifExpression(condition, consequent:T, alternate:T) : T {
     if (condition)
@@ -420,11 +421,8 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
 
 
 //
-// bitcast, bitandc, bitblend
+// bitandc, bitblend
 //
-
-[T, U | TypeSize(T) >= TypeSize(U)]
-inline bitcast(x: T, static U) = ref Pointer[U](&x)@;
 
 inline bitandc(a, b) = bitand(a, bitnot(b));
 inline bitblend(mask, ones, zeros)
@@ -570,7 +568,7 @@ inline isNot?(x, y) = not is?(x, y);
 // case?
 //
 
-inline case?(x, forward ..ys) : Bool {
+inline overload case?(x, forward ..ys) : Bool {
     ..for (y in ..ys)
         if (equals?(x, y))
             return true;

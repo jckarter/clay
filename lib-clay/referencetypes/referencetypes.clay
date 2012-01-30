@@ -174,7 +174,7 @@ overload destroy(x:T) {
 }
 
 [T | ReferenceType?(T)]
-overload assign(dest:T, ref src:T) {
+overload assign(ref dest:T, ref src:T) {
     assign(referencePtr(dest), referencePtr(src));
 }
 

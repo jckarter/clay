@@ -1,5 +1,6 @@
 
 import math.*;
+import numbers.floats.*;
 
 [U | Complex?(U)]
 inline overload abs(x:U) = hypot(real(x),imagValue(x));
@@ -75,9 +76,9 @@ overload sqrt(x:C) --> res:C {
 [I | Imaginary?(I)]
 inline overload sqrt(z:I) = sqrt(Complex(z));
 
-
 [T | Float?(T)]
 inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
 
-
+[T | Complex?(T)]
+inline overload arg(x:T) = atan2(imagValue(x),real(x));
 
