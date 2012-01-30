@@ -19,6 +19,13 @@ public import __operators__.(
     greater?,
     greaterEquals?,
 
+    bitshl,
+    bitshr,
+    bitand,
+    bitor,
+    bitxor,
+    bitnot,
+
     plus,
     minus,
 
@@ -51,13 +58,6 @@ public import __operators__.(
 
 define inc;
 define dec;
-
-define bitshl;
-define bitshr;
-define bitand;
-define bitor;
-define bitxor;
-define bitnot;
 
 define moveUnsafe;
 define resetUnsafe;
