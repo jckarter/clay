@@ -6,6 +6,10 @@ public import math.native.bigfloat.*;
 public import math.native.core.*;
 public import math.native.native.*;
 
+//Import native complex
+public import math.native.ccore.*;
+public import math.native.cnative.*;
+
 //Import simd
 public import math.simd.core_x86.*;
 
@@ -14,10 +18,6 @@ public import math.libm.*;
 
 //Import native approx
 public import math.native.approxmath.*;
-
-//Import native complex
-public import math.native.ccore.*;
-public import math.native.cnative.*;
 
 alias FAST = #"fast";
 alias LIBM = #"libm";
