@@ -2725,7 +2725,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
     functionName << callableName << id;
     id++;
 
-    out << string("define internal i8* @\"")
+    out << string("define internal i8* ^\"")
         << functionName.str() << string("\"(");
 
     vector<llvm::Type *> llArgTypes;
