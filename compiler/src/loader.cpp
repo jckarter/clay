@@ -841,6 +841,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(ModuleName);
     PRIMITIVE(StaticName);
     PRIMITIVE(staticIntegers);
+    PRIMITIVE(integers);
     PRIMITIVE(staticFieldRef);
 
     PRIMITIVE(EnumP);
@@ -888,6 +889,12 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(memcpy);
     PRIMITIVE(memmove);
+
+    PRIMITIVE(countValues);
+    PRIMITIVE(nthValue);
+    PRIMITIVE(withoutNthValue);
+    PRIMITIVE(takeValues);
+    PRIMITIVE(dropValues);
 
 #undef PRIMITIVE
 

@@ -316,7 +316,7 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
     ValueHolderPtr vh = (ValueHolder *)v.ptr();
     if (vh->type != boolType)
         typeError(boolType, vh->type);
-    return (*(char *)vh->buf) != 0;
+    return vh->as<bool>();
 }
 
 void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
@@ -335,7 +335,7 @@ void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
 ValueHolderPtr intToValueHolder(int x)
 {
     ValueHolderPtr v = new ValueHolder(cIntType);
-    *(int *)v->buf = x;
+    v->as<int>() = x;
     return v;
 }
 
@@ -343,8 +343,8 @@ ValueHolderPtr sizeTToValueHolder(size_t x)
 {
     ValueHolderPtr v = new ValueHolder(cSizeTType);
     switch (typeSize(cSizeTType)) {
-    case 4 : *(size32_t *)v->buf = size32_t(x); break;
-    case 8 : *(size64_t *)v->buf = size64_t(x); break;
+    case 4 : v->as<size32_t>() = size32_t(x); break;
+    case 8 : v->as<size64_t>() = size64_t(x); break;
     default : assert(false);
     }
     return v;
@@ -354,8 +354,8 @@ ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
 {
     ValueHolderPtr v = new ValueHolder(cPtrDiffTType);
     switch (typeSize(cPtrDiffTType)) {
-    case 4 : *(ptrdiff32_t *)v->buf = ptrdiff32_t(x); break;
-    case 8 : *(ptrdiff64_t *)v->buf = ptrdiff64_t(x); break;
+    case 4 : v->as<ptrdiff32_t>() = ptrdiff32_t(x); break;
+    case 8 : v->as<ptrdiff64_t>() = ptrdiff64_t(x); break;
     default : assert(false);
     }
     return v;
@@ -364,7 +364,7 @@ ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x)
 ValueHolderPtr boolToValueHolder(bool x)
 {
     ValueHolderPtr v = new ValueHolder(boolType);
-    *(char *)v->buf = x ? 1 : 0;
+    v->as<bool>() = x;
     return v;
 }
 
@@ -471,7 +471,7 @@ static EValuePtr derefValue(EValuePtr evPtr)
 {
     assert(evPtr->type->typeKind == POINTER_TYPE);
     PointerType *pt = (PointerType *)evPtr->type.ptr();
-    char *addr = *((char **)evPtr->addr);
+    char *addr = evPtr->as<char *>();
     return new EValue(pt->pointeeType, addr);
 }
 
@@ -513,6 +513,17 @@ void evalValueMove(EValuePtr dest, EValuePtr src)
                   new MultiEValue(dest));
 }
 
+static void evalValueForward(EValuePtr dest, EValuePtr src)
+{
+    if (dest->type == src->type) {
+        evalValueMove(dest, src);
+    }
+    else {
+        assert(dest->type == pointerType(src->type));
+        dest->as<void *>() = (void *)src->addr;
+    }
+}
+
 void evalValueAssign(EValuePtr dest, EValuePtr src)
 {
     if (dest->type == src->type) {
@@ -548,7 +559,7 @@ bool evalToBoolFlag(EValuePtr a)
 {
     if (a->type != boolType)
         typeError(boolType, a->type);
-    return *((char *)a->addr) != 0;
+    return a->as<bool>();
 }
 
 
@@ -958,9 +969,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         char *strEnd = str + x->value.size();
         TypePtr ptrInt8Type = pointerType(int8Type);
         EValuePtr evFirst = evalAllocValue(ptrInt8Type);
-        *((char **)evFirst->addr) = str;
+        evFirst->as<char *>() = str;
         EValuePtr evLast = evalAllocValue(ptrInt8Type);
-        *((char **)evLast->addr) = strEnd;
+        evLast->as<char *>() = strEnd;
         MultiEValuePtr args = new MultiEValue();
         args->add(evFirst);
         args->add(evLast);
@@ -1104,7 +1115,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = result ? 1 : 0;
+        out0->as<bool>() = result;
         break;
     }
 
@@ -1119,7 +1130,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = result ? 1 : 0;
+        out0->as<bool>() = result;
         break;
     }
 
@@ -1188,7 +1199,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         assert(out0->type == y->type);
         assert(out0->type->typeKind == ENUM_TYPE);
         initializeEnumType((EnumType*)out0->type.ptr());
-        *((int *)out0->addr) = y->index;
+        out0->as<int>() = y->index;
         break;
     }
 
@@ -1206,7 +1217,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(z->type));
-            *((void **)out0->addr) = (void*)z->staticGlobal->buf;
+            out0->as<void *>() = (void*)z->staticGlobal->buf;
         }
         break;
     }
@@ -1285,14 +1296,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         EValue *y = (EValue *)x.ptr();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        if (y->forwardedRValue) {
-            assert(out0->type == y->type);
-            evalValueMove(out0, y);
-        }
-        else {
-            assert(out0->type == pointerType(y->type));
-            *((void **)out0->addr) = (void *)y->addr;
-        }
+        evalValueForward(out0, y);
         break;
     }
 
@@ -1302,14 +1306,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         for (unsigned i = 0; i < y->size(); ++i) {
             EValuePtr ev = y->values[i];
             EValuePtr outi = out->values[i];
-            if (ev->forwardedRValue) {
-                assert(outi->type == ev->type);
-                evalValueMove(outi, ev);
-            }
-            else {
-                assert(outi->type == pointerType(ev->type));
-                *((void **)outi->addr) = (void *)ev->addr;
-            }
+            evalValueForward(outi, ev);
         }
         break;
     }
@@ -1463,7 +1460,7 @@ void evalIndexingExpr(ExprPtr indexable,
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == pointerType(y->type));
-            *((void **)out0->addr) = (void*)y->staticGlobal->buf;
+            out0->as<void *>() = (void*)y->staticGlobal->buf;
             return;
         }
     }
@@ -1642,7 +1639,7 @@ EValuePtr evalVariantIndex(EValuePtr ev, int tag)
     MultiEValuePtr out = new MultiEValue(evPtr);
 
     evalCallValue(staticEValue(operator_unsafeVariantIndex()), args, out);
-    return new EValue(memberTypes[tag], *((char **)ev->addr));
+    return new EValue(memberTypes[tag], ev->as<char *>());
 }
 
 void evalDispatch(ObjectPtr obj,
@@ -2179,7 +2176,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             for (unsigned i = 0; i < mev->size(); ++i) {
                 EValuePtr evPtr = mev->values[i];
                 EValuePtr evRef = mevRef->values[i];
-                *((void **)evPtr->addr) = (void *)evRef->addr;
+                evPtr->as<void *>() = (void *)evRef->addr;
             }
             break;
         }
@@ -2477,6 +2474,15 @@ static ObjectPtr valueToStatic(MultiEValuePtr args, unsigned index)
     return obj;
 }
 
+static size_t valueHolderToSizeT(ValueHolderPtr vh)
+{
+    switch (typeSize(cSizeTType)) {
+    case 4 : return vh->as<size32_t>();
+    case 8 : return vh->as<size64_t>();
+    default : assert(false);
+    }
+}
+
 static size_t valueToStaticSizeTOrInt(MultiEValuePtr args, unsigned index)
 {
     ObjectPtr obj = valueToStatic(args->values[index]);
@@ -2484,11 +2490,10 @@ static size_t valueToStaticSizeTOrInt(MultiEValuePtr args, unsigned index)
         argumentError(index, "expecting a static SizeT or Int value");
     ValueHolder *vh = (ValueHolder *)obj.ptr();
     if (vh->type == cSizeTType) {
-        return *((size_t *)vh->buf);
+        return valueHolderToSizeT(vh);
     }
     else if (vh->type == cIntType) {
-        int i = *((int *)vh->buf);
-        return size_t(i);
+        return size_t(vh->as<int>());
     }
     else {
         argumentError(index, "expecting a static SizeT or Int value");
@@ -2846,7 +2851,7 @@ template <typename T>
 class BinaryOpHelper {
 public :
     void eval(EValuePtr a, EValuePtr b, EValuePtr out) {
-        perform(*((T *)a->addr), *((T *)b->addr), out->addr);
+        perform(a->as<T>(), b->as<T>(), out->addr);
     }
     virtual void perform(T &a, T &b, void *out) = 0;
 };
@@ -2954,7 +2959,7 @@ template <typename T>
 class UnaryOpHelper {
 public :
     void eval(EValuePtr a, EValuePtr out) {
-        perform(*((T *)a->addr), out->addr);
+        perform(a->as<T>(), out->addr);
     }
     virtual void perform(T &a, void *out) = 0;
 };
@@ -3246,8 +3251,8 @@ template <typename DEST, typename SRC>
 struct op_numericConvert3<DEST, SRC, false> {
     static void perform(EValuePtr dest, EValuePtr src)
     {
-        SRC value = *((SRC *)src->addr);
-        *((DEST *)dest->addr) = DEST(value);
+        SRC value = src->as<SRC>();
+        dest->as<DEST>() = DEST(value);
     }
 };
 
@@ -3255,9 +3260,9 @@ template <typename DEST, typename SRC>
 struct op_numericConvert3<DEST, SRC, true> {
     static void perform(EValuePtr dest, EValuePtr src)
     {
-        SRC value = *((SRC *)src->addr);
+        SRC value = src->as<SRC>();
         // ???
-        *((DEST *)dest->addr) = DEST(value);
+        dest->as<DEST>() = DEST(value);
     }
 };
 #ifdef _MSC_VER
@@ -3361,7 +3366,7 @@ static void op_numericConvert(EValuePtr dest, EValuePtr src)
 template <typename T>
 static ptrdiff_t op_intToPtrInt2(EValuePtr a)
 {
-    return ptrdiff_t(*((T *)a->addr));
+    return ptrdiff_t(a->as<T>());
 }
 
 static ptrdiff_t op_intToPtrInt(EValuePtr a)
@@ -3399,7 +3404,7 @@ static ptrdiff_t op_intToPtrInt(EValuePtr a)
 template <typename T>
 static ptrdiff_t op_intToSizeT2(EValuePtr a)
 {
-    return ptrdiff_t(*((T *)a->addr));
+    return ptrdiff_t(a->as<T>());
 }
 
 static ptrdiff_t op_intToSizeT(EValuePtr a)
@@ -3439,7 +3444,7 @@ static ptrdiff_t op_intToSizeT(EValuePtr a)
 template <typename T>
 static void op_pointerToInt2(EValuePtr dest, void *ptr)
 {
-    *((T *)dest->addr) = T(size_t(ptr));
+    dest->as<T>() = T(size_t(ptr));
 }
 
 static void op_pointerToInt(EValuePtr dest, void *ptr)
@@ -3485,7 +3490,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = isType ? 1 : 0;
+        out0->as<bool>() = isType;
         break;
     }
 
@@ -3562,8 +3567,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        char *p = (char *)ev->addr;
-        *((char *)out0->addr) = (*p == 0);
+        out0->as<bool>() = !ev->as<bool>();
         break;
     }
 
@@ -3849,7 +3853,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(ev->type));
-        *((void **)out0->addr) = (void *)ev->addr;
+        out0->as<void *>() = (void *)ev->addr;
         break;
     }
 
@@ -3860,7 +3864,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == t.ptr());
-        *((void **)out0->addr) = *((void **)ev->addr);
+        out0->as<void*>() = ev->as<void*>();
         break;
     }
 
@@ -3869,11 +3873,11 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         PointerTypePtr t;
         EValuePtr ev0 = pointerValue(args, 0, t);
         EValuePtr ev1 = pointerValue(args, 1, t);
-        bool flag = *((void **)ev0->addr) == *((void **)ev1->addr);
+        bool flag = ev0->as<void *>() == ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = flag ? 1 : 0;
+        out0->as<bool>() = flag;
         break;
     }
 
@@ -3882,11 +3886,10 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         PointerTypePtr t;
         EValuePtr ev0 = pointerValue(args, 0, t);
         EValuePtr ev1 = pointerValue(args, 1, t);
-        bool flag = *((void **)ev0->addr) < *((void **)ev1->addr);
+        bool flag = ev0->as<void *>() < ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        *((char *)out0->addr) = flag ? 1 : 0;
+        out0->as<bool>() = flag;
         break;
     }
 
@@ -3897,12 +3900,12 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         IntegerTypePtr offsetT;
         EValuePtr v1 = integerValue(args, 1, offsetT);
         ptrdiff_t offset = op_intToPtrInt(v1);
-        char *ptr = *((char **)v0->addr);
+        char *ptr = v0->as<char *>();
         ptr += offset*typeSize(t->pointeeType);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == t.ptr());
-        *((void **)out0->addr) = (void *)ptr;
+        out0->as<void*>() = (void*)ptr;
         break;
     }
 
@@ -3914,7 +3917,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest.ptr());
-        void *ptr = *((void **)ev->addr);
+        void *ptr = ev->as<void*>();
         op_pointerToInt(out0, ptr);
         break;
     }
@@ -3929,7 +3932,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest);
         ptrdiff_t ptrInt = op_intToPtrInt(ev);
-        *((void **)out0->addr) = (void *)ptrInt;
+        out0->as<void *>() = (void *)ptrInt;
         break;
     }
 
@@ -3953,7 +3956,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = isCCodePointerType ? 1 : 0;
+        out0->as<bool>() = isCCodePointerType;
         break;
     }
 
@@ -3996,7 +3999,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(dest));
-        *(void **)out0->addr = *(void **)ev->addr;
+        std::cerr << "bitcast " << out0->type << " from " << ev->type << "\n";
+        out0->as<void*>() = (void*)ev->addr;
         break;
     }
 
@@ -4017,7 +4021,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(at->elementType));
-        *((void **)out0->addr) = (void *)ptr;
+        out0->as<void*>() = (void *)ptr;
         break;
     }
 
@@ -4030,7 +4034,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(at->elementType));
             char *ptr = earray->addr + i*typeSize(at->elementType);
-            *((void **)outi->addr) = (void *)ptr;
+            outi->as<void*>() = (void *)ptr;
         }
         break;
     }
@@ -4059,7 +4063,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(tt->elementTypes[i]));
-        *((void **)out0->addr) = (void *)ptr;
+        out0->as<void*>() = (void *)ptr;
         break;
     }
 
@@ -4073,7 +4077,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(tt->elementTypes[i]));
             char *ptr = etuple->addr + layout->getElementOffset(i);
-            *((void **)outi->addr) = (void *)ptr;
+            outi->as<void*>() = (void *)ptr;
         }
         break;
     }
@@ -4101,7 +4105,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = isRecordType ? 1 : 0;
+        out0->as<bool>() = isRecordType;
         break;
     }
 
@@ -4160,7 +4164,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(fieldTypes[i]));
-        *((void **)out0->addr) = (void *)ptr;
+        out0->as<void *>() = (void *)ptr;
         break;
     }
 
@@ -4184,7 +4188,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(fieldTypes[index]));
-        *((void **)out0->addr) = (void *)ptr;
+        out0->as<void *>() = (void *)ptr;
         break;
     }
 
@@ -4199,7 +4203,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(fieldTypes[i]));
             char *ptr = erec->addr + layout->getElementOffset(i);
-            *((void **)outi->addr) = (void *)ptr;
+            outi->as<void *>() = (void *)ptr;
         }
         break;
     }
@@ -4216,7 +4220,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = isVariantType ? 1 : 0;
+        out0->as<bool>() = isVariantType;
         break;
     }
 
@@ -4297,7 +4301,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(0, "expecting a static SizeT or Int value");
         ValueHolder *vh = (ValueHolder *)obj.ptr();
         if (vh->type == cIntType) {
-            int count = *((int *)vh->buf);
+            int count = vh->as<int>();
             if (count < 0)
                 argumentError(0, "negative values are not allowed");
             assert(out->size() == (size_t)count);
@@ -4308,12 +4312,46 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             }
         }
         else if (vh->type == cSizeTType) {
-            size_t count = *((size_t *)vh->buf);
+            size_t count = valueHolderToSizeT(vh);
             assert(out->size() == count);
             for (size_t i = 0; i < count; ++i) {
                 ValueHolderPtr vhi = sizeTToValueHolder(i);
                 EValuePtr outi = out->values[i];
                 assert(outi->type == staticType(vhi.ptr()));
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        break;
+    }
+
+    case PRIM_integers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = vh->as<int>();
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                EValuePtr outi = out->values[i];
+                assert(outi->type == cIntType);
+                outi->as<int>() = i;
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = valueHolderToSizeT(vh);
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                EValuePtr outi = out->values[i];
+                assert(outi->type == cSizeTType);
+                outi->as<size_t>() = i;
             }
         }
         else {
@@ -4346,7 +4384,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        *((char *)out0->addr) = isEnumType ? 1 : 0;
+        out0->as<bool>() = isEnumType;
         break;
     }
 
@@ -4379,7 +4417,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == cIntType);
-        *((int *)out0->addr) = *((int *)ev->addr);
+        out0->as<int>() = ev->as<int>();
         break;
     }
 
@@ -4391,7 +4429,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == et.ptr());
-        *((int *)out0->addr) = *((int *)ev->addr);
+        out0->as<int>() = ev->as<int>();
         break;
     }
 
@@ -4472,7 +4510,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             assert(out->size() == 1);
             EValuePtr out0 = out->values[0];
             assert(out0->type == boolType);
-            *((char *)out0->addr) = flag != globalFlags.end();
+            out0->as<bool>() = flag != globalFlags.end();
         } else
             argumentTypeError(0, "identifier", args->values[0]->type);
         break;
@@ -4503,8 +4541,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         IntegerTypePtr it;
         EValuePtr countv = integerValue(args, 2, it);
 
-        void *to = *((void **)tov->addr);
-        void *from = *((void **)fromv->addr);
+        void *to = tov->as<void*>();
+        void *from = fromv->as<void*>();
         size_t size = op_intToSizeT(countv);
 
         if (x->primOpCode == PRIM_memcpy)
@@ -4512,6 +4550,79 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         else
             memmove(to, from, size);
 
+        break;
+    }
+
+    case PRIM_countValues : {
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        out0->as<int>() = args->size();
+        break;
+    }
+
+    case PRIM_nthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "nthValue argument out of bounds");
+
+        evalValueForward(out0, args->values[i+1]);
+        break;
+    }
+
+    case PRIM_withoutNthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == args->size() - 2);
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "withoutNthValue argument out of bounds");
+
+        for (unsigned argi = 1, outi = 0; argi < args->size(); ++argi) {
+            if (argi == i+1)
+                continue;
+            assert(outi < out->size());
+            evalValueForward(out->values[outi], args->values[argi]);
+            ++outi;
+        }
+        break;
+    }
+
+    case PRIM_takeValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == i);
+        for (unsigned argi = 1, outi = 0; argi < i+1; ++argi, ++outi) {
+            assert(outi < out->size());
+            evalValueForward(out->values[outi], args->values[argi]);
+        }
+        break;
+    }
+
+    case PRIM_dropValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == args->size() - i - 1);
+        for (unsigned argi = i+1, outi = 0; argi < args->size(); ++argi, ++outi) {
+            assert(outi < out->size());
+            evalValueForward(out->values[outi], args->values[argi]);
+        }
         break;
     }
 

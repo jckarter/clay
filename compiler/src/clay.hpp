@@ -2515,7 +2515,14 @@ enum PrimOpCode {
     PRIM_activeException,
 
     PRIM_memcpy,
-    PRIM_memmove
+    PRIM_memmove,
+
+    PRIM_countValues,
+    PRIM_nthValue,
+    PRIM_withoutNthValue,
+    PRIM_takeValues,
+    PRIM_dropValues,
+    PRIM_integers
 };
 
 struct PrimOp : public Object {
@@ -2535,6 +2542,12 @@ struct ValueHolder : public Object {
     char *buf;
     ValueHolder(TypePtr type);
     ~ValueHolder();
+
+    template<typename T>
+    T &as() { return *(T*)buf; }
+
+    template<typename T>
+    T const &as() const { return *(T const *)buf; }
 };
 
 
@@ -3424,6 +3437,12 @@ struct EValue : public Object {
     EValue(TypePtr type, char *addr)
         : Object(EVALUE), type(type), addr(addr),
           forwardedRValue(false) {}
+
+    template<typename T>
+    T &as() { return *(T*)addr; }
+
+    template<typename T>
+    T const &as() const { return *(T const *)addr; }
 };
 
 struct MultiEValue : public Object {

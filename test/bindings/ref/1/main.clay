@@ -1,4 +1,4 @@
-foo(..args) --> returned:Char {
+foo(forward ..args) --> returned:Char {
     ref value = nthValue(static 1, ..args);
 }
 

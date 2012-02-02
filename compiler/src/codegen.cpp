@@ -368,6 +368,17 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
                      new MultiCValue(dest));
 }
 
+static void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+{
+    if (src->type == dest->type) {
+        codegenValueMove(dest, src, ctx);
+    }
+    else {
+        assert(dest->type == pointerType(src->type));
+        ctx->builder->CreateStore(src->llValue, dest->llValue);
+    }
+}
+
 static void codegenValueAssign(
     PValuePtr pdest,
     CValuePtr dest,
@@ -1348,14 +1359,7 @@ void codegenStaticObject(ObjectPtr x,
         CValue *y = (CValue *)x.ptr();
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        if (y->forwardedRValue) {
-            assert(out0->type == y->type);
-            codegenValueMove(out0, y, ctx);
-        }
-        else {
-            assert(out0->type == pointerType(y->type));
-            ctx->builder->CreateStore(y->llValue, out0->llValue);
-        }
+        codegenValueForward(out0, y, ctx);
         break;
     }
 
@@ -1365,14 +1369,7 @@ void codegenStaticObject(ObjectPtr x,
         for (unsigned i = 0; i < y->size(); ++i) {
             CValuePtr vi = y->values[i];
             CValuePtr outi = out->values[i];
-            if (vi->forwardedRValue) {
-                assert(outi->type == vi->type);
-                codegenValueMove(outi, vi, ctx);
-            }
-            else {
-                assert(outi->type == pointerType(vi->type));
-                ctx->builder->CreateStore(vi->llValue, outi->llValue);
-            }
+            codegenValueForward(outi, vi, ctx);
         }
         break;
     }
@@ -5846,6 +5843,43 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_integers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = vh->as<int>();
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == cIntType);
+                llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), i);
+                ctx->builder->CreateStore(value, outi->llValue);
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = vh->as<size_t>();
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == cSizeTType);
+                llvm::Type *llSizeTType = llvmIntType(typeSize(cSizeTType)*8);
+                llvm::Constant *value = llvm::ConstantInt::get(llSizeTType, i);
+                ctx->builder->CreateStore(value, outi->llValue);
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        break;
+    }
+
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = valueToStatic(args, 0);
@@ -6132,6 +6166,80 @@ void codegenPrimOp(PrimOpPtr x,
         else
             ctx->builder->CreateMemMove(toptr, fromptr, count, alignment);
 
+        break;
+    }
+
+    case PRIM_countValues : {
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), args->size());
+        ctx->builder->CreateStore(value, out0->llValue);
+        break;
+    }
+
+    case PRIM_nthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "nthValue argument out of bounds");
+
+        codegenValueForward(out0, args->values[i+1], ctx);
+        break;
+    }
+
+    case PRIM_withoutNthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == args->size() - 2);
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "withoutNthValue argument out of bounds");
+
+        for (unsigned argi = 1, outi = 0; argi < args->size(); ++argi) {
+            if (argi == i+1)
+                continue;
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+            ++outi;
+        }
+        break;
+    }
+
+    case PRIM_takeValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == i);
+        for (unsigned argi = 1, outi = 0; argi < i+1; ++argi, ++outi) {
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+        }
+        break;
+    }
+
+    case PRIM_dropValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == args->size() - i - 1);
+        for (unsigned argi = i+1, outi = 0; argi < args->size(); ++argi, ++outi) {
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+        }
         break;
     }
 

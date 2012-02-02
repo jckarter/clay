@@ -2711,6 +2711,31 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return mpv;
     }
 
+    case PRIM_integers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj || (obj->objKind != VALUE_HOLDER))
+            argumentError(0, "expecting a static SizeT or Int value");
+        MultiPValuePtr mpv = new MultiPValue();
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            for (int i = 0; i < count; ++i)
+                mpv->add(new PValue(cIntType, true));
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            for (int i = 0; i < count; ++i)
+                mpv->add(new PValue(cSizeTType, true));
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        return mpv;
+    }
+
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = unwrapStaticType(args->values[0]->type);
@@ -2880,6 +2905,70 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         PointerTypePtr fromPt = pointerTypeOfValue(args, 1);
         integerTypeOfValue(args, 2);
         return new MultiPValue();
+    }
+
+    case PRIM_countValues : {
+        return new MultiPValue(new PValue(cIntType, true));
+    }
+
+    case PRIM_nthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            argumentError(0, "nthValue argument out of bounds");
+        return new MultiPValue(args->values[i+1]);
+    }
+
+    case PRIM_withoutNthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            argumentError(0, "withoutNthValue argument out of bounds");
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = 1; n < args->size(); ++n) {
+            if (n == i+1)
+                continue;
+            mpv->add(args->values[n]);
+        }
+        return mpv;
+    }
+
+    case PRIM_takeValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = 1; n < i+1; ++n)
+            mpv->add(args->values[n]);
+        return mpv;
+    }
+
+    case PRIM_dropValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = i+1; n < args->size(); ++n)
+            mpv->add(args->values[n]);
+        return mpv;
     }
 
     default :

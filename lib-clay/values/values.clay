@@ -3,7 +3,6 @@
 
 //
 // eachValue, mapValues, foldValues, weaveValues,
-// takeValues, dropValues
 //
 
 inline eachValue(fn, ..xs) {
@@ -42,30 +41,10 @@ inline overload weaveValues(between, forward x, forward y)
 inline overload weaveValues(between, forward x) = forward x;
 inline overload weaveValues(between) = ;
 
-define takeValues;
-[i] inline overload takeValues(static i, forward x, forward ..xs)
-    = forward x, ..takeValues(static i-1, ..xs);
-[i | i == 0] inline overload takeValues(static i, forward ..xs) = ;
-[i] inline overload takeValues(static i) = ;
-
-define dropValues;
-[i] inline overload dropValues(static i, forward x, forward ..xs)
-    = forward ..dropValues(static i-1, ..xs);
-[i | i == 0] inline overload dropValues(static i, forward ..xs) = forward ..xs;
-[i] inline overload dropValues(static i) = ;
-
-
 
 //
-// countValues, nthValue, firstValue
+// countOccurrences, firstValue
 //
-
-countValues(..args) {
-    var n = 0;
-    ..for (x in args)
-        n += 1;
-    return n;
-}
 
 define countOccurrences;
 inline overload countOccurrences(value) = 0;
@@ -75,11 +54,6 @@ inline overload countOccurrences(static value1, static value2, forward ..xs)
 [value]
 inline overload countOccurrences(static value, static value, forward ..xs)
     = 1 + countOccurrences(value, ..xs);
-
-define nthValue;
-[i] inline overload nthValue(static i, forward a, forward ..b)
-    = nthValue(static i-1, ..b);
-[i | i == 0] inline overload nthValue(static i, forward a, ..b) = a;
 
 inline firstValue(forward a, ..rest) = forward a;
 
@@ -173,11 +147,6 @@ overload iteratorValues(iter: I, static n)
 //
 // iterate over two sets of values in tandem
 //
-[n | n > 0] withoutNthValue(static n, forward value, forward ..values)
-    = forward value, ..withoutNthValue(static n-1, ..values);
-overload withoutNthValue(static 0, forward value, forward ..values)
-    = forward ..values;
-
 [n | n > 0] eachValue2(fn, static n, forward x, forward ..xs) {
     fn(x, nthValue(static n-1, ..xs));
     return ..eachValue2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
@@ -229,8 +198,3 @@ private _valueIndex(static n, static value, static other, ..etc)
 overload _valueIndex(static n, static value, static value, ..etc) = n;
 [value]
 valueIndex(static value, ..etc) = _valueIndex(static 0, static value, ..etc);
-
-
-//
-// generate a list of non-static integers
-[n] integers(static n) = ..mapValues(unwrapStatic, ..staticIntegers(static n));
