@@ -136,9 +136,9 @@ typedef unsigned long long size64_t;
 #if defined(__GNUC__) && defined(_INT128_DEFINED)
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
-#elif (defined(__clang__))
-typedef __int128_t clay_int128;
-typedef __uint128_t clay_uint128;
+//#elif (defined(__clang__))
+//typedef __int128_t clay_int128;
+//typedef __uint128_t clay_uint128;
 #else
 // fake it by doing 64-bit math in a 128-bit padded container
 struct uint128_holder;
