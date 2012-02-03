@@ -4764,6 +4764,9 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_CallOutputTypes :
+        break;
+
     case PRIM_bitcopy : {
         ensureArity(args, 2);
         CValuePtr cv0 = args->values[0];

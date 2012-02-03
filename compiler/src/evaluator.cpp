@@ -3546,6 +3546,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_CallOutputTypes :
+        break;
+
     case PRIM_bitcopy : {
         ensureArity(args, 2);
         EValuePtr ev0 = args->values[0];

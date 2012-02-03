@@ -2370,6 +2370,7 @@ enum PrimOpCode {
     PRIM_TypeSize,
     PRIM_TypeAlignment,
     PRIM_CallDefinedP,
+    PRIM_CallOutputTypes,
 
     PRIM_bitcopy,
     PRIM_bitcast,

@@ -745,6 +745,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeSize);
     PRIMITIVE(TypeAlignment);
     PRIMITIVE(CallDefinedP);
+    PRIMITIVE(CallOutputTypes);
 
     PRIMITIVE(bitcopy);
     PRIMITIVE(bitcast);

@@ -2236,6 +2236,42 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv)
 // analyzePrimOp
 //
 
+static std::pair<vector<TypePtr>, InvokeEntryPtr>
+invokeEntryForCallableArguments(MultiPValuePtr args)
+{
+    if (args->size() < 1)
+        arityError2(1, args->size());
+    ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+    if (!callable)
+        argumentError(0, "static callable expected");
+    switch (callable->objKind) {
+    case TYPE :
+    case RECORD :
+    case VARIANT :
+    case PROCEDURE :
+        break;
+    case PRIM_OP :
+        if (!isOverloadablePrimOp(callable))
+            argumentError(0, "invalid callable");
+        break;
+    default :
+        argumentError(0, "invalid callable");
+    }
+    vector<TypePtr> argsKey;
+    vector<ValueTempness> argsTempness;
+    for (unsigned i = 1; i < args->size(); ++i) {
+        TypePtr t = valueToType(args, i);
+        argsKey.push_back(t);
+        argsTempness.push_back(TEMPNESS_LVALUE);
+    }
+
+    CompileContextPusher pusher(callable, argsKey);
+
+    return std::make_pair(
+        argsKey,
+        analyzeCallable(callable, argsKey, argsTempness));
+}
+
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
     switch (x->primOpCode) {
@@ -2251,6 +2287,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_CallDefinedP :
         return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_CallOutputTypes : {
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        MultiPValuePtr values = new MultiPValue();
+        for (size_t i = 0; i < entry.second->returnTypes.size(); ++i)
+            values->add(staticPValue(entry.second->returnTypes[i].ptr()));
+        return values;
+    }
 
     case PRIM_bitcopy :
         return new MultiPValue();
@@ -2356,43 +2401,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("CodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
-        if (!callable)
-            argumentError(0, "static callable expected");
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
-        if (!entry->analyzed)
+        if (!entry.second->analyzed)
             return NULL;
-        TypePtr cpType = codePointerType(argsKey,
-                                         entry->returnIsRef,
-                                         entry->returnTypes);
+        TypePtr cpType = codePointerType(entry.first,
+                                         entry.second->returnIsRef,
+                                         entry.second->returnTypes);
         return new MultiPValue(new PValue(cpType, true));
     }
 
@@ -2418,56 +2435,29 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("LLVMCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
-        if (!callable)
-            argumentError(0, "static callable expected");
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
-        if (!entry->analyzed)
+        if (!entry.second->analyzed)
             return NULL;
         TypePtr returnType;
-        if (entry->returnTypes.empty()) {
+        if (entry.second->returnTypes.empty()) {
             returnType = NULL;
         }
-        else if (entry->returnTypes.size() == 1) {
-            if (entry->returnIsRef[0]) {
+        else if (entry.second->returnTypes.size() == 1) {
+            if (entry.second->returnIsRef[0]) {
                 argumentError(0, "cannot create c-code pointer to "
                               " return-by-reference code");
             }
-            returnType = entry->returnTypes[0];
+            returnType = entry.second->returnTypes[0];
         }
         else {
             argumentError(0, "cannot create c-code pointer to "
                           "multi-return code");
         }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argsKey,
+                                           entry.first,
                                            false,
                                            returnType);
         return new MultiPValue(new PValue(ccpType, true));
