@@ -224,8 +224,6 @@ private findInBucket(_node:NodePtr[K,V], key:K) {
 [K,V]
 private grow(a:HashMap[K,V]) {
     var oldbuckets = move(a.buckets);
-
-    a.buckets <-- Vector[NodePtr[K,V]]();
     a.size = 0;
 
     resize(a.buckets, size(oldbuckets) * 2);
