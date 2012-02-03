@@ -223,17 +223,12 @@ private findInBucket(_node:NodePtr[K,V], key:K) {
 
 [K,V]
 private grow(a:HashMap[K,V]) {
-    var oldbuckets = a.buckets;
+    var oldbuckets = move(a.buckets);
 
     a.buckets <-- Vector[NodePtr[K,V]]();
     a.size = 0;
 
-    try {
-        resize(a.buckets, size(oldbuckets) * 2);
-    } catch (ex) {
-        destroy(a.buckets);
-        throw ex;
-    }
+    resize(a.buckets, size(oldbuckets) * 2);
 
     for(i in range(0, size(oldbuckets))) {
         var node = &oldbuckets[i]^;
@@ -242,6 +237,4 @@ private grow(a:HashMap[K,V]) {
             node = &node^.next^;
         }
     }
-
-    destroy(&oldbuckets);
 }
