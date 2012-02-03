@@ -101,14 +101,14 @@ overload index(a:HashMap[K,V], key:K) {
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr))
         return ref ptr^;
-    ref bucket = a.buckets[i];
-    var value = V();
-    bucket = UniqueValue(Node(key, value, move(bucket)));
-    a.size += 1;
-    if (a.size > (size(a.buckets) * 3 / 4)) {
+    if (a.size >= (size(a.buckets) * 3 / 4)) {
         grow(a);
+        i = bucketId(a, key); // recalculate index
     }
-    return ref value;
+    ref bucket = a.buckets[i];
+    bucket = UniqueValue(Node(key, V(), move(bucket)));
+    a.size += 1;
+    return ref bucket^.value;
 }
 
 
