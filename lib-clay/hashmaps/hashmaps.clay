@@ -233,7 +233,7 @@ private grow(a:HashMap[K,V]) {
     for(i in range(0, size(oldbuckets))) {
         var node = &oldbuckets[i]^;
         while (not null?(node)) {
-            put(a, node^.key, node^.value);
+            put(a, move(node^.key), move(node^.value));
             node = &node^.next^;
         }
     }
