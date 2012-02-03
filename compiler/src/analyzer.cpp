@@ -2297,6 +2297,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return values;
     }
 
+    case PRIM_StaticMonoP : {
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
     case PRIM_bitcopy :
         return new MultiPValue();
 

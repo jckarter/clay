@@ -1857,16 +1857,26 @@ struct Overload : public TopLevelItem {
           patternsInitializedState(0), nameIsPattern(false) {}
 };
 
+enum ProcedureMonoState {
+    Procedure_NoOverloads,
+    Procedure_MonoOverload,
+    Procedure_PolyOverload,
+};
+
 struct Procedure : public TopLevelItem {
     OverloadPtr interface;
     vector<OverloadPtr> overloads;
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
+    int monoState;
+    vector<TypePtr> monoTypes;
 
     Procedure(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(PROCEDURE, name, visibility) {}
+        : TopLevelItem(PROCEDURE, name, visibility),
+          monoState(Procedure_NoOverloads) {}
 
     Procedure(IdentifierPtr name, Visibility visibility, OverloadPtr interface)
-        : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
+        : TopLevelItem(PROCEDURE, name, visibility), interface(interface),
+          monoState(Procedure_NoOverloads) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -2349,6 +2359,8 @@ extern map<string, ModulePtr> globalModules;
 extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 
+void addProcedureOverload(ProcedurePtr proc, OverloadPtr x);
+
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
 ModulePtr loadProgramSource(const string &name, const string &source);
@@ -2372,6 +2384,8 @@ enum PrimOpCode {
 
     PRIM_StaticCallDefinedP,
     PRIM_StaticCallOutputTypes,
+
+    PRIM_StaticMonoP,
 
     PRIM_bitcopy,
     PRIM_bitcast,

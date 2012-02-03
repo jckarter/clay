@@ -399,7 +399,7 @@ ModulePtr loadedModule(const string &module) {
 // initOverload, initVariantInstance, initModule
 //
 
-static void initOverload(OverloadPtr x) {
+static EnvPtr overloadPatternEnv(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
     const vector<PatternVar> &pvars = x->code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -412,37 +412,73 @@ static void initOverload(OverloadPtr x) {
             addLocal(env, pvars[i].name, cell.ptr());
         }
     }
+    return env;
+}
+
+void addProcedureOverload(ProcedurePtr proc, OverloadPtr x) {
+    proc->overloads.insert(proc->overloads.begin(), x);
+    EnvPtr env = overloadPatternEnv(x);
+    if (proc->monoState == Procedure_NoOverloads &&
+        x->code->formalVarArg == NULL)
+    {
+        assert(proc->monoTypes.empty());
+        proc->monoState = Procedure_MonoOverload;
+        for (size_t i = 0; i < x->code->formalArgs.size(); ++i) {
+            if (x->code->formalArgs[i]->type == NULL)
+                goto poly;
+            PatternPtr argPattern =
+                evaluateOnePattern(x->code->formalArgs[i]->type, env);
+            ObjectPtr argType = derefDeep(argPattern);
+            if (argType == NULL)
+                goto poly;
+            if (argType->objKind != TYPE)
+                error(x->code->formalArgs[i], "expecting a type");
+
+            proc->monoTypes.push_back((Type*)argType.ptr());
+        }
+    } else
+        goto poly;
+    return;
+
+poly:
+    proc->monoTypes.clear();
+    proc->monoState = Procedure_PolyOverload;
+    return;
+}
+
+static void initOverload(OverloadPtr x) {
+    EnvPtr env = overloadPatternEnv(x);
     PatternPtr pattern = evaluateOnePattern(x->target, env);
-    ObjectPtr y = derefDeep(pattern);
-    if (!y) {
+    ObjectPtr obj = derefDeep(pattern);
+    if (obj == NULL) {
         x->nameIsPattern = true;
         addPatternOverload(x);
     }
     else {
-        switch (y->objKind) {
+        switch (obj->objKind) {
         case PROCEDURE : {
-            Procedure *z = (Procedure *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Procedure *proc = (Procedure *)obj.ptr();
+            addProcedureOverload(proc, x);
             break;
         }
         case RECORD : {
-            Record *z = (Record *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Record *r = (Record *)obj.ptr();
+            r->overloads.insert(r->overloads.begin(), x);
             break;
         }
         case VARIANT : {
-            Variant *z = (Variant *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Variant *v = (Variant *)obj.ptr();
+            v->overloads.insert(v->overloads.begin(), x);
             break;
         }
         case TYPE : {
-            Type *z = (Type *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Type *t = (Type *)obj.ptr();
+            t->overloads.insert(t->overloads.begin(), x);
             break;
         }
         case PRIM_OP : {
-            if (isOverloadablePrimOp(y))
-                addPrimOpOverload((PrimOp *)y.ptr(), x);
+            if (isOverloadablePrimOp(obj))
+                addPrimOpOverload((PrimOp *)obj.ptr(), x);
             else
                 error(x->target, "invalid overload target");
             break;
@@ -744,8 +780,11 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
     PRIMITIVE(TypeAlignment);
+
     PRIMITIVE(StaticCallDefinedP);
     PRIMITIVE(StaticCallOutputTypes);
+
+    PRIMITIVE(StaticMonoP);
 
     PRIMITIVE(bitcopy);
     PRIMITIVE(bitcast);

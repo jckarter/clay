@@ -591,3 +591,12 @@ define CallOutputTypes;
 alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
 [f]
 alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In);
+
+
+//
+// Mono?
+//
+
+define Mono?;
+[f]
+alias overload Mono?(static f) = StaticMono?(f);
