@@ -2285,10 +2285,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_TypeAlignment :
         return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_CallDefinedP :
+    case PRIM_StaticCallDefinedP :
         return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_CallOutputTypes : {
+    case PRIM_StaticCallOutputTypes : {
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
             invokeEntryForCallableArguments(args);
         MultiPValuePtr values = new MultiPValue();

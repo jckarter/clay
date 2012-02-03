@@ -4728,18 +4728,12 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_CallDefinedP : {
+    case PRIM_StaticCallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            CValuePtr cvCall = staticCValue(operator_call(), ctx);
-            MultiCValuePtr args2 = new MultiCValue(cvCall);
-            args2->add(staticCValue(args->values[0]->type.ptr(), ctx));
-            for (unsigned i = 1; i < args->size(); ++i)
-                args2->add(args->values[i]);
-            codegenPrimOp(x, args2, ctx, out);
-            break;
+            argumentError(0, "static callable expected");
         }
         switch (callable->objKind) {
         case TYPE :
@@ -4764,7 +4758,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_CallOutputTypes :
+    case PRIM_StaticCallOutputTypes :
         break;
 
     case PRIM_bitcopy : {

@@ -3510,18 +3510,12 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_CallDefinedP : {
+    case PRIM_StaticCallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
-        if (!callable) {
-            EValuePtr evCall = staticEValue(operator_call());
-            MultiEValuePtr args2 = new MultiEValue(evCall);
-            args2->add(staticEValue(args->values[0]->type.ptr()));
-            for (unsigned i = 1; i < args->size(); ++i)
-                args2->add(args->values[i]);
-            evalPrimOp(x, args2, out);
-            break;
+        if (callable == NULL) {
+            argumentError(0, "static callable expected");
         }
         switch (callable->objKind) {
         case TYPE :
@@ -3546,7 +3540,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_CallOutputTypes :
+    case PRIM_StaticCallOutputTypes :
         break;
 
     case PRIM_bitcopy : {

@@ -574,3 +574,20 @@ inline overload case?(x, forward ..ys) : Bool {
             return true;
     return false;
 }
+
+
+//
+// CallDefined?, CallOutputTypes
+//
+
+define CallDefined?;
+[F]
+alias overload CallDefined?(f:F, ..In) = StaticCallDefined?(call, F, ..In);
+[f]
+alias overload CallDefined?(static f, ..In) = StaticCallDefined?(f, ..In);
+
+define CallOutputTypes;
+[F]
+alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
+[f]
+alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In);
