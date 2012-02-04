@@ -86,12 +86,22 @@ on Windows, you should use these patched versions:
 From a Visual Studio command prompt, build LLVM and Clang using cmake
 and the MSVC compiler. Debug mode raises some bogus Microsoft STL
 assertions, so I recommend building with the -DCMAKE_BUILD_TYPE=Release
-cmake option. Then to build Clay, run CMake and generate
-nmake makefiles:
+cmake option. Both LLVM and Clay will need to be built as Release. The
+default LLVM install directory needs Administrator permissions, so
+it's easiest to change it. Place the Clang repository in
+llvm-3.0/tools/clang so that LLVM builds it automatically and compile
+LLVM with the following commands:
 
     mkdir build
     cd build
-    cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path to LLVM> ..
+    cmake -DCMAKE_INSTALL_PREFIX=c:\llvm-install -DCMAKE_BUILD_TYPE=Release ..
+    nmake install
+
+Then to build Clay, run CMake and generate nmake makefiles:
+
+    mkdir build
+    cd build
+    cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=c:\llvm-install ..
     nmake
 
 Building to target Cygwin or Mingw, or with Visual C++ using cmake's
