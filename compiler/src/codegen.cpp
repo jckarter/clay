@@ -4764,27 +4764,15 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_StaticMonoP : {
         if (args->size() < 1)
             arityError2(1, args->size());
-        ObjectPtr callable = valueToStatic(args->values[0]);
-        if (callable == NULL) {
-            argumentError(0, "static callable expected");
-        }
 
         bool isMono;
 
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-            isMono = false;
-            break;
-        case PROCEDURE : {
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == PROCEDURE) {
             Procedure *p = (Procedure*)callable.ptr();
             isMono = p->monoState == Procedure_MonoOverload;
-            break;
-        }
-        default :
-            argumentError(0, "invalid callable");
-        }
+        } else
+            isMono = false;
 
         ValueHolderPtr vh = boolToValueHolder(isMono);
         codegenStaticObject(vh.ptr(), ctx, out);
