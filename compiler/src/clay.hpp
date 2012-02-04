@@ -2386,6 +2386,7 @@ enum PrimOpCode {
     PRIM_StaticCallOutputTypes,
 
     PRIM_StaticMonoP,
+    PRIM_StaticMonoInputTypes,
 
     PRIM_bitcopy,
     PRIM_bitcast,

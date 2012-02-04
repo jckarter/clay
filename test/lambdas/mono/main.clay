@@ -1,0 +1,37 @@
+mono1() {}
+mono2(x:Int) {}
+define mono3;
+overload mono3(x:Int, y:Float) {}
+
+define notMono1;
+overload notMono1() {}
+overload notMono1(x) {}
+
+notMono2(x) {}
+notMono3(..x) {}
+
+notMono4(x:Int, ..y) {}
+
+define notMono5;
+overload notMono5(x:Int) {}
+overload notMono5(x:Float) {}
+
+define notMono6;
+
+main() {
+    println("mono:");
+    println(Mono?(mono1));
+    println(Mono?(mono2));
+    println(Mono?(mono3));
+    println(Mono?(() -> {}));
+    println(Mono?((x:Int) -> {}));
+
+    println("not mono:");
+    println(Mono?(notMono1));
+    println(Mono?(notMono2));
+    println(Mono?(notMono3));
+    println(Mono?(notMono4));
+    println(Mono?(notMono5));
+    println(Mono?(notMono6));
+    println(Mono?(x -> {}));
+}

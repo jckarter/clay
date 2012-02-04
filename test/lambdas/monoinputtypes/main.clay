@@ -1,0 +1,19 @@
+import printer.formatter.(repr);
+
+mono1() {}
+mono2(x:Int) = x, x;
+define mono3;
+overload mono3(x:Int, y:Float) = y;
+
+showMono(f) {
+    println("(", repr(..MonoInputTypes(f)), ") -> (", repr(..MonoOutputTypes(f)), ")");
+}
+
+main() {
+    showMono(mono1);
+    showMono(mono2);
+    showMono(mono3);
+    showMono(() -> {});
+    showMono((x:Int) -> {});
+
+}

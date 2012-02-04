@@ -2301,6 +2301,31 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(boolType, true));
     }
 
+    case PRIM_StaticMonoInputTypes : {
+        ensureArity(args, 1);
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
+
+        switch (callable->objKind) {
+        case PROCEDURE : {
+            Procedure *proc = (Procedure*)callable.ptr();
+            if (proc->monoState != Procedure_MonoOverload) {
+                argumentError(0, "not a static monomorphic callable");
+            }
+
+            MultiPValuePtr values = new MultiPValue();
+            for (size_t i = 0; i < proc->monoTypes.size(); ++i)
+                values->add(staticPValue(proc->monoTypes[i].ptr()));
+
+            return values;
+        }
+
+        default :
+            argumentError(0, "not a static monomorphic callable");
+        }
+    }
+
     case PRIM_bitcopy :
         return new MultiPValue();
 
