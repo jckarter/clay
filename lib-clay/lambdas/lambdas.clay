@@ -22,6 +22,11 @@ alias overload Lambda[In, Out](x:T) {
     return Lambda[In,Out](new(LambdaBody[In,Out](x)));
 }
 
+[T | MonoType?(T)]
+alias overload Lambda(x:T) {
+    return Lambda[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
+}
+
 private CallableWithSignature?(T, In, Out) {
     var CodePtr = Type(makeCodePointer(call, T, ..unpack(In)));
     return Out == CodePointerReturnTypes(CodePtr);
