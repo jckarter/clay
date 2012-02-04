@@ -61,6 +61,8 @@ overload call(x:Lambda[[..I], [..O]], forward ..args:I) : ..O {
     return forward ..x.body^.code(x.body^.obj^, ..args);
 }
 
+[..I, ..O]
+alias overload MonoInputTypes(x:Lambda[[..I], [..O]]) = ..I;
 
 
 //

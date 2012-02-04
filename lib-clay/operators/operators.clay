@@ -597,14 +597,13 @@ alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In
 // Mono?, MonoInputTypes, MonoOutputTypes
 //
 
-define Mono?;
-[f]
-alias overload Mono?(static f) = StaticMono?(f);
-
 define MonoInputTypes;
-[f | Mono?(f)]
+[f | StaticMono?(f)]
 alias overload MonoInputTypes(static f) = ..StaticMonoInputTypes(f);
 
-define MonoOutputTypes;
-[f | Mono?(f)]
-alias overload MonoOutputTypes(static f) = ..StaticCallOutputTypes(f, ..StaticMonoInputTypes(f));
+[F]
+alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);
+inline MonoType?(F) = Mono?(typeToRValue(F));
+
+[F | MonoType?(F)]
+alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));
