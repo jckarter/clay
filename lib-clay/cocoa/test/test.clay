@@ -1,4 +1,5 @@
 import cocoa.util.*;
+import test.*;
 
 expectIs(test: TestStatus, name, expected, result) {
     expect(
