@@ -1,6 +1,6 @@
 main() {
     var f = (..xs) -> (1, ..xs, true);
-    println(Type(makeLambda(f)));
-    println(Type(makeLambda(f, Int)));
-    println(Type(makeLambda(f, Int8, Int16)));
+    println(Type(makeFunction(f)));
+    println(Type(makeFunction(f, Int)));
+    println(Type(makeFunction(f, Int8, Int16)));
 }

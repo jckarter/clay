@@ -21,7 +21,7 @@ define notMono6;
 main() {
     var cp = CodePointer(mono1);
     var ccp = CCodePointer(mono2);
-    var l = Lambda(mono3);
+    var l = Function(mono3);
 
     println("mono:");
     println(Mono?(mono1));
