@@ -258,16 +258,6 @@ inline overload __operators__.invalidVariant(x:V) {
 // variant matching
 //
 
-define MatchDefault; // dummy symbol used to implement default case
-
-private define matchValueByType;
-[T, U | T != U] inline overload matchValueByType(forward x:T, static U, fn, ..cases)
-    = forward ..matchValueByType(x, ..cases);
-[T] inline overload matchValueByType(forward x:T, static T, fn, ..cases) = forward ..fn(x);
-inline overload matchValueByType(forward x, static MatchDefault, fn, ..cases) = forward ..fn(x);
-
-inline matchByType(forward v, ..cases) = forward ..matchValueByType(*v, ..cases);
-
 private define matchValue;
 [T]
 inline overload matchValue(forward x:T, forward f, forward ..fs)
