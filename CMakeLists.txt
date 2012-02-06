@@ -76,8 +76,6 @@ elseif(WIN32)
     set(CMAKE_REQUIRED_LIBRARIES ${LLVM_DIR}/lib/libclang.lib)
 endif()
 
-set(BUILD_FIX True CACHE BOOL
-    "Build the clay-fix tool for updating code written in older versions of Clay.")
 set(BUILD_BINDGEN True CACHE BOOL
     "Build the clay-bindgen tool for generating Clay bindings from C header files.")
 
