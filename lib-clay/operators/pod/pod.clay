@@ -1,10 +1,5 @@
 
 //
-// bindings to llvm intrinsics
-//
-
-
-//
 // copy*Memory*, move*Memory*, *assign*Memory* for POD types
 //
 
