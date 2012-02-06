@@ -56,6 +56,33 @@ Library changes:
   // 0.2
   var x = bitcast(Int, y);
 
+* The polymorphic function container type Lambda[[..In],[..Out]] has been
+  renamed Function[[..In],[..Out]].
+
+* CodePointer, CCodePointer, and Function constructors can now deduce their
+  input and output types when given a monomorphic function or lambda (that is,
+  a function with a single overload will fully specified input types).
+
+  // 0.1
+  foo(x:Int) = Float(x);
+
+  bar() {
+      var cp = CodePointer[[Int],[Float]](foo);
+      var ccp = CCodePointer[[Int],[Float]](foo);
+      var l1 = Lambda[[Int],[Float]](foo);
+      var l2 = Lambda[[Int, Int], [Int]]((x:Int, y:Int) -> x + y);
+  }
+
+  // 0.2
+  foo(x:Int) = Float(x);
+
+  bar() {
+      var cp = CodePointer(foo);
+      var ccp = CCodePointer(foo);
+      var l1 = Function(foo);
+      var l2 = Function((x:Int, y:Int) -> x + y);
+  }
+
 Compiler frontend changes:
 --------------------------
 * -O2 is now the default optimization level.
