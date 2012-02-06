@@ -1222,6 +1222,19 @@ struct IfExpr : public Expr {
           elsePart(elsePart) {}
 };
 
+enum ProcedureMonoState {
+    Procedure_NoOverloads,
+    Procedure_MonoOverload,
+    Procedure_PolyOverload,
+};
+
+struct ProcedureMono {
+    ProcedureMonoState monoState;
+    vector<TypePtr> monoTypes;
+
+    ProcedureMono() : monoState(Procedure_NoOverloads) {}
+};
+
 struct Lambda : public Expr {
     bool captureByRef;
     vector<FormalArgPtr> formalArgs;
@@ -1232,6 +1245,8 @@ struct Lambda : public Expr {
 
     bool initialized;
     vector<string> freeVars;
+
+    ProcedureMono mono;
 
     // if freevars are present
     RecordPtr lambdaRecord;
@@ -1752,6 +1767,8 @@ struct Record : public TopLevelItem {
     vector<OverloadPtr> overloads;
     bool builtinOverloadInitialized;
 
+    LambdaPtr lambda;
+
     Record(Visibility visibility)
         : TopLevelItem(RECORD, visibility),
           builtinOverloadInitialized(false) {}
@@ -1857,26 +1874,18 @@ struct Overload : public TopLevelItem {
           patternsInitializedState(0), nameIsPattern(false) {}
 };
 
-enum ProcedureMonoState {
-    Procedure_NoOverloads,
-    Procedure_MonoOverload,
-    Procedure_PolyOverload,
-};
-
 struct Procedure : public TopLevelItem {
     OverloadPtr interface;
     vector<OverloadPtr> overloads;
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
-    int monoState;
-    vector<TypePtr> monoTypes;
+    ProcedureMono mono;
+    LambdaPtr lambda;
 
     Procedure(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(PROCEDURE, name, visibility),
-          monoState(Procedure_NoOverloads) {}
+        : TopLevelItem(PROCEDURE, name, visibility) {}
 
     Procedure(IdentifierPtr name, Visibility visibility, OverloadPtr interface)
-        : TopLevelItem(PROCEDURE, name, visibility), interface(interface),
-          monoState(Procedure_NoOverloads) {}
+        : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -2360,6 +2369,8 @@ extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, OverloadPtr x);
+void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
+    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
 
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
@@ -2483,6 +2494,7 @@ enum PrimOpCode {
     PRIM_ModuleName,
     PRIM_StaticName,
     PRIM_staticIntegers,
+    PRIM_integers,
     PRIM_staticFieldRef,
 
     PRIM_EnumP,
@@ -2539,7 +2551,11 @@ enum PrimOpCode {
     PRIM_withoutNthValue,
     PRIM_takeValues,
     PRIM_dropValues,
-    PRIM_integers
+
+    PRIM_LambdaRecordP,
+    PRIM_LambdaSymbolP,
+    PRIM_LambdaMonoP,
+    PRIM_LambdaMonoInputTypes,
 };
 
 struct PrimOp : public Object {

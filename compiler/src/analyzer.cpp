@@ -2310,13 +2310,13 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         switch (callable->objKind) {
         case PROCEDURE : {
             Procedure *proc = (Procedure*)callable.ptr();
-            if (proc->monoState != Procedure_MonoOverload) {
+            if (proc->mono.monoState != Procedure_MonoOverload) {
                 argumentError(0, "not a static monomorphic callable");
             }
 
             MultiPValuePtr values = new MultiPValue();
-            for (size_t i = 0; i < proc->monoTypes.size(); ++i)
-                values->add(staticPValue(proc->monoTypes[i].ptr()));
+            for (size_t i = 0; i < proc->mono.monoTypes.size(); ++i)
+                values->add(staticPValue(proc->mono.monoTypes[i].ptr()));
 
             return values;
         }
@@ -2988,6 +2988,46 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         for (size_t n = i+1; n < args->size(); ++n)
             mpv->add(args->values[n]);
         return mpv;
+    }
+
+    case PRIM_LambdaRecordP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaSymbolP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaMonoP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaMonoInputTypes : {
+        ensureArity(args, 1);
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "lambda record type expected");
+
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                if (r->record->lambda->mono.monoState != Procedure_MonoOverload)
+                    argumentError(0, "not a monomorphic lambda record type");
+                vector<TypePtr> const &monoTypes = r->record->lambda->mono.monoTypes;
+                MultiPValuePtr values = new MultiPValue();
+                for (size_t i = 0; i < monoTypes.size(); ++i)
+                    values->add(staticPValue(monoTypes[i].ptr()));
+
+                return values;
+            }
+        }
+
+        argumentError(0, "not a monomorphic lambda record type");
+        return new MultiPValue();
     }
 
     default :

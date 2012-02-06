@@ -600,6 +600,8 @@ alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In
 define MonoInputTypes;
 [f | StaticMono?(f)]
 alias overload MonoInputTypes(static f) = ..StaticMonoInputTypes(f);
+[F | LambdaRecord?(F) and LambdaMono?(F)]
+alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 
 [F]
 alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);

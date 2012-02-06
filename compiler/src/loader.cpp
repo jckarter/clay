@@ -415,35 +415,41 @@ static EnvPtr overloadPatternEnv(OverloadPtr x) {
     return env;
 }
 
-void addProcedureOverload(ProcedurePtr proc, OverloadPtr x) {
-    proc->overloads.insert(proc->overloads.begin(), x);
-    EnvPtr env = overloadPatternEnv(x);
-    if (proc->monoState == Procedure_NoOverloads &&
-        x->code->formalVarArg == NULL)
+void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
+    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg)
+{
+    if (mono.monoState == Procedure_NoOverloads && formalVarArg == NULL)
     {
-        assert(proc->monoTypes.empty());
-        proc->monoState = Procedure_MonoOverload;
-        for (size_t i = 0; i < x->code->formalArgs.size(); ++i) {
-            if (x->code->formalArgs[i]->type == NULL)
+        assert(mono.monoTypes.empty());
+        mono.monoState = Procedure_MonoOverload;
+        for (size_t i = 0; i < formalArgs.size(); ++i) {
+            if (formalArgs[i]->type == NULL)
                 goto poly;
             PatternPtr argPattern =
-                evaluateOnePattern(x->code->formalArgs[i]->type, env);
+                evaluateOnePattern(formalArgs[i]->type, env);
             ObjectPtr argType = derefDeep(argPattern);
             if (argType == NULL)
                 goto poly;
             if (argType->objKind != TYPE)
-                error(x->code->formalArgs[i], "expecting a type");
+                error(formalArgs[i], "expecting a type");
 
-            proc->monoTypes.push_back((Type*)argType.ptr());
+            mono.monoTypes.push_back((Type*)argType.ptr());
         }
     } else
         goto poly;
     return;
 
 poly:
-    proc->monoTypes.clear();
-    proc->monoState = Procedure_PolyOverload;
+    mono.monoTypes.clear();
+    mono.monoState = Procedure_PolyOverload;
     return;
+}
+
+void addProcedureOverload(ProcedurePtr proc, OverloadPtr x) {
+    proc->overloads.insert(proc->overloads.begin(), x);
+    getProcedureMonoTypes(proc->mono, overloadPatternEnv(x),
+        x->code->formalArgs,
+        x->code->formalVarArg);
 }
 
 static void initOverload(OverloadPtr x) {
@@ -936,6 +942,11 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(withoutNthValue);
     PRIMITIVE(takeValues);
     PRIMITIVE(dropValues);
+
+    PRIMITIVE(LambdaRecordP);
+    PRIMITIVE(LambdaSymbolP);
+    PRIMITIVE(LambdaMonoP);
+    PRIMITIVE(LambdaMonoInputTypes);
 
 #undef PRIMITIVE
 

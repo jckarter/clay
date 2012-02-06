@@ -4762,15 +4762,14 @@ void codegenPrimOp(PrimOpPtr x,
         break;
 
     case PRIM_StaticMonoP : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
+        ensureArity(args, 1);
 
         bool isMono;
 
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (callable != NULL && callable->objKind == PROCEDURE) {
             Procedure *p = (Procedure*)callable.ptr();
-            isMono = p->monoState == Procedure_MonoOverload;
+            isMono = p->mono.monoState == Procedure_MonoOverload;
         } else
             isMono = false;
 
@@ -6260,6 +6259,70 @@ void codegenPrimOp(PrimOpPtr x,
         }
         break;
     }
+
+    case PRIM_LambdaRecordP : {
+        ensureArity(args, 1);
+
+        bool isLambda;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                isLambda = r->record->lambda != NULL;
+            } else
+                isLambda = false;
+        } else {
+            isLambda = false;
+        }
+
+        ValueHolderPtr vh = boolToValueHolder(isLambda);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaSymbolP : {
+        ensureArity(args, 1);
+
+        bool isLambda;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == PROCEDURE) {
+            Procedure *p = (Procedure*)callable.ptr();
+            isLambda = p->lambda != NULL;
+        } else
+            isLambda = false;
+
+        ValueHolderPtr vh = boolToValueHolder(isLambda);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaMonoP : {
+        ensureArity(args, 1);
+
+        bool isMono;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                isMono = r->record->lambda->mono.monoState == Procedure_MonoOverload;
+            } else
+                isMono = false;
+        } else {
+            isMono = false;
+        }
+
+        ValueHolderPtr vh = boolToValueHolder(isMono);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaMonoInputTypes :
+        break;
 
     default :
         assert(false);

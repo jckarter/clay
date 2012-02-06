@@ -3,3 +3,4 @@
 (Int32, Float32) -> (Float32)
 () -> ()
 (Int32) -> ()
+(Int32) -> (Int32, Float64)

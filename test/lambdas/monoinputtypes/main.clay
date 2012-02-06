@@ -10,10 +10,12 @@ showMono(f) {
 }
 
 main() {
+    var a = 1.0;
+
     showMono(mono1);
     showMono(mono2);
     showMono(mono3);
     showMono(() -> {});
     showMono((x:Int) -> {});
-
+    showMono((x:Int) -> (x, a));
 }

@@ -19,9 +19,12 @@ overload notMono5(x:Float) {}
 define notMono6;
 
 main() {
+    var a = 1.0;
+
     var cp = CodePointer(mono1);
     var ccp = CCodePointer(mono2);
-    var l = Function(mono3);
+    var f1 = Function(mono3);
+    var f2 = Function((x:Int) -> (x, a));
 
     println("mono:");
     println(Mono?(mono1));
@@ -29,9 +32,12 @@ main() {
     println(Mono?(mono3));
     println(Mono?(() -> {}));
     println(Mono?((x:Int) -> {}));
+    println(Mono?((x:Int) -> {}));
+    println(Mono?((x:Int) -> (x, a)));
     println(Mono?(cp));
     println(Mono?(ccp));
-    println(Mono?(l));
+    println(Mono?(f1));
+    println(Mono?(f2));
 
     println("not mono:");
     println(Mono?(notMono1));
@@ -41,4 +47,5 @@ main() {
     println(Mono?(notMono5));
     println(Mono?(notMono6));
     println(Mono?(x -> {}));
+    println(Mono?(x -> (x, a)));
 }
