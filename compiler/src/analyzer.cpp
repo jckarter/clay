@@ -1574,6 +1574,19 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 // analyzeDispatch
 //
 
+PValuePtr analyzeDispatchIndex(PValuePtr pv, int tag)
+{
+    MultiPValuePtr args = new MultiPValue();
+    args->add(pv);
+    ValueHolderPtr vh = intToValueHolder(tag);
+    args->add(staticPValue(vh.ptr()));
+
+    MultiPValuePtr out =
+        analyzeCallValue(staticPValue(operator_dispatchIndex()), args);
+    ensureArity(out, 1);
+    return out->values[0];
+}
+
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                const vector<unsigned> &dispatchIndices)
@@ -1596,20 +1609,15 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     for (unsigned i = index+1; i < args->size(); ++i)
         suffix->add(args->values[i]);
     PValuePtr pvDispatch = args->values[index];
-    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentTypeError(index,
-                          "variant for dispatch operator",
-                          pvDispatch->type);
-    }
-    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
-    if (memberTypes.empty())
-        argumentError(index, "variant has no member types");
+    int memberCount = dispatchTagCount(pvDispatch->type);
     MultiPValuePtr result;
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
-        args2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
+        PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
+        if (pvDispatch->isTemp)
+            pvDispatch2->isTemp = true;
+        args2->add(pvDispatch2);
         args2->add(suffix);
         MultiPValuePtr result2 = analyzeDispatch(obj, args2, dispatchIndices2);
         if (!result2)
@@ -1638,23 +1646,19 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
             }
             if (!ok) {
                 ostringstream ostr;
-                ostr << "mismatching result types with variant dispatch";
+                ostr << "mismatching result types with dispatch";
                 ostr << "\n    expected ";
                 for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result->values[j]->type;
                 }
-                ostr << "\n        from dispatching on ";
-                for (unsigned j = 0; j < i; ++j) {
-                    if (j != 0) ostr << ", ";
-                    ostr << memberTypes[j];
-                }
+                ostr << "\n        from dispatching on tags up to " << i;
                 ostr << "\n     but got ";
                 for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result2->values[j]->type;
                 }
-                ostr << "\n        when dispatching on " << memberTypes[i];
+                ostr << "\n        when dispatching on tag " << i;
                 argumentError(index, ostr.str());
             }
         }

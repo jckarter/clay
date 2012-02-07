@@ -9,7 +9,6 @@ EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env);
 MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env);
 
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
 
@@ -475,6 +474,16 @@ static EValuePtr derefValue(EValuePtr evPtr)
     return new EValue(pt->pointeeType, addr);
 }
 
+static EValuePtr derefValueForPValue(EValuePtr ev, PValuePtr pv)
+{
+    if (pv->isTemp) {
+        return ev;
+    } else {
+        assert(ev->type == pointerType(pv->type));
+        return derefValue(ev);
+    }
+}
+
 
 
 //
@@ -610,6 +619,13 @@ EValuePtr evalAllocValue(TypePtr t)
     return ev;
 }
 
+EValuePtr evalAllocValueForPValue(PValuePtr pv)
+{
+    if (pv->isTemp)
+        return evalAllocValue(pv->type);
+    else
+        return evalAllocValue(pointerType(pv->type));
+}
 
 
 //
@@ -685,14 +701,7 @@ MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env)
     MultiEValuePtr mev = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            EValuePtr ev = evalAllocValue(pv->type);
-            mev->add(ev);
-        }
-        else {
-            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
-            mev->add(evPtr);
-        }
+        mev->add(evalAllocValueForPValue(pv));
     }
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
@@ -752,14 +761,7 @@ MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env)
     MultiEValuePtr mev = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            EValuePtr ev = evalAllocValue(pv->type);
-            mev->add(ev);
-        }
-        else {
-            EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
-            mev->add(evPtr);
-        }
+        mev->add(evalAllocValueForPValue(pv));
     }
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
@@ -1613,33 +1615,27 @@ void evalCallExpr(ExprPtr callable,
 // evalDispatch
 //
 
-int evalVariantTag(EValuePtr ev)
+int evalDispatchTag(EValuePtr ev)
 {
     int tag = -1;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
-    evalCallValue(staticEValue(operator_variantTag()),
+    evalCallValue(staticEValue(operator_dispatchTag()),
                   new MultiEValue(ev),
                   new MultiEValue(etag));
     return tag;
 }
 
-EValuePtr evalVariantIndex(EValuePtr ev, int tag)
+EValuePtr evalDispatchIndex(EValuePtr ev, PValuePtr pvOut, int tag)
 {
-    assert(ev->type->typeKind == VARIANT_TYPE);
-    VariantType *vt = (VariantType *)ev->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
-    assert((tag >= 0) && (unsigned(tag) < memberTypes.size()));
-
     MultiEValuePtr args = new MultiEValue();
     args->add(ev);
     ValueHolderPtr vh = intToValueHolder(tag);
     args->add(staticEValue(vh.ptr()));
 
-    EValuePtr evPtr = evalAllocValue(pointerType(memberTypes[tag]));
-    MultiEValuePtr out = new MultiEValue(evPtr);
-
-    evalCallValue(staticEValue(operator_unsafeVariantIndex()), args, out);
-    return new EValue(memberTypes[tag], ev->as<char *>());
+    EValuePtr evOut = evalAllocValueForPValue(pvOut);
+    MultiEValuePtr out = new MultiEValue(evOut);
+    evalCallValue(staticEValue(operator_dispatchIndex()), args, out);
+    return derefValueForPValue(evOut, pvOut);
 }
 
 void evalDispatch(ObjectPtr obj,
@@ -1676,28 +1672,25 @@ void evalDispatch(ObjectPtr obj,
     }
     EValuePtr evDispatch = args->values[index];
     PValuePtr pvDispatch = pvArgs->values[index];
-    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentTypeError(index,
-                          "variant for dispatch operator",
-                          pvDispatch->type);
-    }
-    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
-    if (memberTypes.empty())
-        argumentError(index, "variant has no member types");
 
-    int tag = evalVariantTag(evDispatch);
-    if ((tag < 0) || (tag >= (int)memberTypes.size()))
+    int tag = evalDispatchTag(evDispatch);
+    int tagCount = dispatchTagCount(evDispatch->type);
+    if ((tag < 0) || (tag >= tagCount))
         argumentError(index, "invalid variant value");
 
     MultiEValuePtr args2 = new MultiEValue();
-    args2->add(prefix);
-    args2->add(evalVariantIndex(evDispatch, tag));
-    args2->add(suffix);
     MultiPValuePtr pvArgs2 = new MultiPValue();
     pvArgs2->add(pvPrefix);
-    pvArgs2->add(new PValue(memberTypes[tag], pvDispatch->isTemp));
+    PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, tag);
+    pvArgs2->add(pvDispatch2);
     pvArgs2->add(pvSuffix);
+
+    args2->add(prefix);
+    args2->add(evalDispatchIndex(evDispatch, pvDispatch2, tag));
+    args2->add(suffix);
+
+    if (pvDispatch->isTemp)
+        pvDispatch2->isTemp = true;
 
     evalDispatch(obj, args2, pvArgs2, dispatchIndices2, out);
 }
@@ -2405,14 +2398,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
             PValuePtr pv = mpv->values[i];
-            if (pv->isTemp) {
-                EValuePtr ev = evalAllocValue(pv->type);
-                mev->add(ev);
-            }
-            else {
-                EValuePtr evPtr = evalAllocValue(pointerType(pv->type));
-                mev->add(evPtr);
-            }
+            mev->add(evalAllocValueForPValue(pv));
         }
         int marker = evalMarkStack();
         evalMulti(x->values, env, mev, x->names.size());
@@ -4017,7 +4003,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(dest));
-        std::cerr << "bitcast " << out0->type << " from " << ev->type << "\n";
         out0->as<void*>() = (void*)ev->addr;
         break;
     }

@@ -47,6 +47,7 @@ void cgPushStackStatement(ValueStackEntryType type,
     CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
+CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx);
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
@@ -274,6 +275,16 @@ static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
     PointerType *pt = (PointerType *)cvPtr->type.ptr();
     llvm::Value *ptrValue = ctx->builder->CreateLoad(cvPtr->llValue);
     return new CValue(pt->pointeeType, ptrValue);
+}
+
+static CValuePtr derefValueForPValue(CValuePtr cv, PValuePtr pv, CodegenContextPtr ctx)
+{
+    if (pv->isTemp) {
+        return cv;
+    } else {
+        assert(cv->type == pointerType(pv->type));
+        return derefValue(cv, ctx);
+    }
 }
 
 
@@ -507,6 +518,14 @@ CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
     return new CValue(t, llv);
 }
 
+CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx)
+{
+    if (pv->isTemp)
+        return codegenAllocValue(pv->type, ctx);
+    else
+        return codegenAllocValue(pointerType(pv->type), ctx);
+}
+
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
 {
     llvm::Type *llt = llvmType(t);
@@ -658,14 +677,7 @@ static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            CValuePtr cv = codegenAllocValue(pv->type, ctx);
-            mcv->add(cv);
-        }
-        else {
-            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type), ctx);
-            mcv->add(cvPtr);
-        }
+        mcv->add(codegenAllocValueForPValue(pv, ctx));
     }
     codegenExpr(expr, env, ctx, mcv);
     MultiCValuePtr out = new MultiCValue();
@@ -2122,37 +2134,31 @@ void codegenCallExpr(ExprPtr callable,
 // codegenDispatch
 //
 
-llvm::Value *codegenVariantTag(CValuePtr cv, CodegenContextPtr ctx)
+llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContextPtr ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType, ctx);
-    codegenCallValue(staticCValue(operator_variantTag(), ctx),
+    codegenCallValue(staticCValue(operator_dispatchTag(), ctx),
                      new MultiCValue(cv),
                      ctx,
                      new MultiCValue(ctag));
     return ctx->builder->CreateLoad(ctag->llValue);
 }
 
-CValuePtr codegenVariantIndex(CValuePtr cv, int tag, CodegenContextPtr ctx)
+CValuePtr codegenDispatchIndex(CValuePtr cv, PValuePtr pvOut, int tag, CodegenContextPtr ctx)
 {
-    assert(cv->type->typeKind == VARIANT_TYPE);
-    VariantType *vt = (VariantType *)cv->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
-    assert((tag >= 0) && (unsigned(tag) < memberTypes.size()));
-
     MultiCValuePtr args = new MultiCValue();
     args->add(cv);
     ValueHolderPtr vh = intToValueHolder(tag);
     args->add(staticCValue(vh.ptr(), ctx));
 
-    CValuePtr cvPtr = codegenAllocValue(pointerType(memberTypes[tag]), ctx);
-    MultiCValuePtr out = new MultiCValue(cvPtr);
+    CValuePtr cvOut = codegenAllocValueForPValue(pvOut, ctx);
+    MultiCValuePtr out = new MultiCValue(cvOut);
 
-    codegenCallValue(staticCValue(operator_unsafeVariantIndex(), ctx),
+    codegenCallValue(staticCValue(operator_dispatchIndex(), ctx),
                      args,
                      ctx,
                      out);
-    llvm::Value *llv = ctx->builder->CreateLoad(cvPtr->llValue);
-    return new CValue(memberTypes[tag], llv);
+    return derefValueForPValue(cvOut, pvOut, ctx);
 }
 
 void codegenDispatch(ObjectPtr obj,
@@ -2190,42 +2196,42 @@ void codegenDispatch(ObjectPtr obj,
     }
     CValuePtr cvDispatch = args->values[index];
     PValuePtr pvDispatch = pvArgs->values[index];
-    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentTypeError(index,
-                          "variant for dispatch operator",
-                          pvDispatch->type);
-    }
-    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
-    if (memberTypes.empty())
-        argumentError(index, "variant has no member types");
 
-    llvm::Value *llTag = codegenVariantTag(cvDispatch, ctx);
+    int memberCount = dispatchTagCount(pvDispatch->type);
+    if (memberCount <= 0)
+        argumentError(index, "DispatchMemberCount for type must be positive");
+
+    llvm::Value *llTag = codegenDispatchTag(cvDispatch, ctx);
 
     vector<llvm::BasicBlock *> callBlocks;
     vector<llvm::BasicBlock *> elseBlocks;
 
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         callBlocks.push_back(newBasicBlock("dispatchCase", ctx));
         elseBlocks.push_back(newBasicBlock("dispatchNext", ctx));
     }
     llvm::BasicBlock *finalBlock = newBasicBlock("finalBlock", ctx);
 
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         llvm::Value *tagCase = llvm::ConstantInt::get(llvmIntType(32), i);
         llvm::Value *cond = ctx->builder->CreateICmpEQ(llTag, tagCase);
         ctx->builder->CreateCondBr(cond, callBlocks[i], elseBlocks[i]);
 
         ctx->builder->SetInsertPoint(callBlocks[i]);
 
-        MultiCValuePtr args2 = new MultiCValue();
-        args2->add(prefix);
-        args2->add(codegenVariantIndex(cvDispatch, i, ctx));
-        args2->add(suffix);
         MultiPValuePtr pvArgs2 = new MultiPValue();
         pvArgs2->add(pvPrefix);
-        pvArgs2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
+        PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
+        pvArgs2->add(pvDispatch2);
         pvArgs2->add(pvSuffix);
+        MultiCValuePtr args2 = new MultiCValue();
+        args2->add(prefix);
+        args2->add(codegenDispatchIndex(cvDispatch, pvDispatch2, i, ctx));
+        args2->add(suffix);
+
+        if (pvDispatch->isTemp)
+            pvDispatch2->isTemp = true;
+
         codegenDispatch(obj, args2, pvArgs2, dispatchIndices2, ctx, out);
 
         ctx->builder->CreateBr(finalBlock);
@@ -2233,7 +2239,7 @@ void codegenDispatch(ObjectPtr obj,
         ctx->builder->SetInsertPoint(elseBlocks[i]);
     }
 
-    codegenCallValue(staticCValue(operator_invalidVariant(), ctx),
+    codegenCallValue(staticCValue(operator_invalidDispatch(), ctx),
                      new MultiCValue(cvDispatch),
                      ctx,
                      new MultiCValue());

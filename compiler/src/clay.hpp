@@ -2880,6 +2880,7 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
+int dispatchTagCount(TypePtr t);
 
 void initializeEnumType(EnumTypePtr t);
 
@@ -3380,6 +3381,7 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env);
+PValuePtr analyzeDispatchIndex(PValuePtr pv, int tag);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                const vector<unsigned> &dispatchIndices);
@@ -3509,6 +3511,7 @@ void evalPopStack(int marker);
 void evalDestroyAndPopStack(int marker);
 EValuePtr evalAllocValue(TypePtr t);
 
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 
 
 //

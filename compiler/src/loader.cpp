@@ -1015,9 +1015,10 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(unpackMultiValuedFreeVarAndDereference);
     OPERATOR(unpackMultiValuedFreeVar);
     OPERATOR(variantReprType);
-    OPERATOR(variantTag);
-    OPERATOR(unsafeVariantIndex);
-    OPERATOR(invalidVariant);
+    OPERATOR(DispatchTagCount);
+    OPERATOR(dispatchTag);
+    OPERATOR(dispatchIndex);
+    OPERATOR(invalidDispatch);
     OPERATOR(stringLiteral);
     OPERATOR(ifExpression);
     OPERATOR(typeToRValue);
@@ -1190,9 +1191,10 @@ DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(variantReprType)
-DEFINE_OPERATOR_ACCESSOR(variantTag)
-DEFINE_OPERATOR_ACCESSOR(unsafeVariantIndex)
-DEFINE_OPERATOR_ACCESSOR(invalidVariant)
+DEFINE_OPERATOR_ACCESSOR(DispatchTagCount);
+DEFINE_OPERATOR_ACCESSOR(dispatchTag)
+DEFINE_OPERATOR_ACCESSOR(dispatchIndex)
+DEFINE_OPERATOR_ACCESSOR(invalidDispatch)
 DEFINE_OPERATOR_ACCESSOR(stringLiteral)
 DEFINE_OPERATOR_ACCESSOR(ifExpression)
 DEFINE_OPERATOR_ACCESSOR(typeToRValue)

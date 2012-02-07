@@ -703,7 +703,7 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
 
 
 //
-// variantMemberTypes, variantReprType
+// variantMemberTypes, variantReprType, dispatchTagCount
 //
 
 static TypePtr getVariantReprType(VariantTypePtr t) {
@@ -807,6 +807,18 @@ TypePtr variantReprType(VariantTypePtr t) {
     return t->reprType;
 }
 
+int dispatchTagCount(TypePtr t) {
+    ExprPtr dtc = operator_expr_DispatchTagCount();
+    ExprPtr dtcExpr = new Call(dtc, new ExprList(new ObjectExpr(t.ptr())));
+
+    EValuePtr ev = evalOneAsRef(dtcExpr, new Env());
+    if (ev->type != cIntType)
+        error("DispatchTagCount must return an Int32");
+    int tag = ev->as<int>();
+    if (tag <= 0)
+        error("DispatchTagCount must return a value greater than zero");
+    return tag;
+}
 
 
 //
