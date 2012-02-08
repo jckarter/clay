@@ -259,9 +259,9 @@ inline overload __operators__.dispatchTag(x:V) = variantRepr(x).tag;
 inline overload __operators__.dispatchIndex(x:V, static i) =
     ref staticIndex(variantRepr(x).data, static i);
 
-[V | Variant?(V)]
+[V]
 inline overload __operators__.invalidDispatch(x:V) {
-    errorNoThrow("invalid ", V, ", tag = ", variantTag(x));
+    errorNoThrow("invalid ", V, ", tag = ", __operators__.dispatchTag(x));
 }
 
 
@@ -278,4 +278,40 @@ inline overload matchValue(forward x:T, forward f:F, forward ..fs)
     = forward ..f(x);
 
 inline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
+
+
+//
+// VariantRef tagged pointer
+//
+
+[V | Variant?(V)]
+record VariantRef[V] = tag:Int, data:Pointer[Union[..VariantMembers(V)]];
+
+[V]
+overload VariantRef[V]();
+
+[V]
+inline overload VariantRef[V](ref v:V) {
+    ref repr = variantRepr(v);
+    return VariantRef[V](repr.tag, &repr.data);
+}
+
+[V]
+inline overload VariantRef(ref v:V) = VariantRef[V](v);
+
+[V, T | VariantMember?(V, T)]
+inline overload VariantRef[V](ref v:T) {
+    alias DataPointer = Pointer[Union[..VariantMembers(V)]];
+    return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(&v));
+}
+
+[V]
+inline overload __operators__.DispatchTagCount(static VariantRef[V]) =
+    __operators__.DispatchTagCount(V);
+[V]
+inline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
+[V, i]
+inline overload __operators__.dispatchIndex(vr:VariantRef[V], static i) =
+    ref staticIndex(vr.data^, static i);
+
 
