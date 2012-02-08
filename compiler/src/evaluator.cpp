@@ -1689,9 +1689,6 @@ void evalDispatch(ObjectPtr obj,
     args2->add(evalDispatchIndex(evDispatch, pvDispatch2, tag));
     args2->add(suffix);
 
-    if (pvDispatch->isTemp)
-        pvDispatch2->isTemp = true;
-
     evalDispatch(obj, args2, pvArgs2, dispatchIndices2, out);
 }
 

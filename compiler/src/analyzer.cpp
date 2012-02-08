@@ -1616,8 +1616,6 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
         PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
-        if (pvDispatch->isTemp)
-            pvDispatch2->isTemp = true;
         args2->add(pvDispatch2);
         args2->add(suffix);
         MultiPValuePtr result2 = analyzeDispatch(obj, args2, dispatchIndices2);

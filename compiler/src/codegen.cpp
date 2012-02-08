@@ -2229,9 +2229,6 @@ void codegenDispatch(ObjectPtr obj,
         args2->add(codegenDispatchIndex(cvDispatch, pvDispatch2, i, ctx));
         args2->add(suffix);
 
-        if (pvDispatch->isTemp)
-            pvDispatch2->isTemp = true;
-
         codegenDispatch(obj, args2, pvArgs2, dispatchIndices2, ctx, out);
 
         ctx->builder->CreateBr(finalBlock);
