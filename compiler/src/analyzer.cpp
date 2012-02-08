@@ -1611,6 +1611,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     PValuePtr pvDispatch = args->values[index];
     int memberCount = dispatchTagCount(pvDispatch->type);
     MultiPValuePtr result;
+    vector<TypePtr> dispatchedTypes;
     for (unsigned i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
@@ -1652,16 +1653,21 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                     if (j != 0) ostr << ", ";
                     ostr << result->values[j]->type;
                 }
-                ostr << "\n        from dispatching on tags up to " << i;
+                ostr << "\n        from dispatching to ";
+                for (unsigned j = 0; j < dispatchedTypes.size(); ++j) {
+                    if (j != 0) ostr << ", ";
+                    ostr << dispatchedTypes[j];
+                }
                 ostr << "\n     but got ";
                 for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result2->values[j]->type;
                 }
-                ostr << "\n        when dispatching on tag " << i;
+                ostr << "\n        when dispatching to " << pvDispatch2->type;
                 argumentError(index, ostr.str());
             }
         }
+        dispatchedTypes.push_back(pvDispatch2->type);
     }
     assert(result.ptr());
     return result;
