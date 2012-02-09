@@ -574,3 +574,38 @@ inline overload case?(x, forward ..ys) : Bool {
             return true;
     return false;
 }
+
+
+//
+// CallDefined?, CallOutputTypes
+//
+
+define CallDefined?;
+[F]
+alias overload CallDefined?(f:F, ..In) = StaticCallDefined?(call, F, ..In);
+[f]
+alias overload CallDefined?(static f, ..In) = StaticCallDefined?(f, ..In);
+
+define CallOutputTypes;
+[F]
+alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
+[f]
+alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In);
+
+
+//
+// Mono?, MonoInputTypes, MonoOutputTypes
+//
+
+define MonoInputTypes;
+[f | StaticMono?(f)]
+alias overload MonoInputTypes(static f) = ..StaticMonoInputTypes(f);
+[F | LambdaRecord?(F) and LambdaMono?(F)]
+alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
+
+[F]
+alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);
+inline MonoType?(F) = Mono?(typeToRValue(F));
+
+[F | MonoType?(F)]
+alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));

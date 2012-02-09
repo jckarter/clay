@@ -136,9 +136,9 @@ typedef unsigned long long size64_t;
 #if defined(__GNUC__) && defined(_INT128_DEFINED)
 typedef __int128 clay_int128;
 typedef unsigned __int128 clay_uint128;
-#elif (defined(__clang__))
-typedef __int128_t clay_int128;
-typedef __uint128_t clay_uint128;
+//#elif (defined(__clang__))
+//typedef __int128_t clay_int128;
+//typedef __uint128_t clay_uint128;
 #else
 // fake it by doing 64-bit math in a 128-bit padded container
 struct uint128_holder;
@@ -1228,6 +1228,19 @@ struct IfExpr : public Expr {
           elsePart(elsePart) {}
 };
 
+enum ProcedureMonoState {
+    Procedure_NoOverloads,
+    Procedure_MonoOverload,
+    Procedure_PolyOverload,
+};
+
+struct ProcedureMono {
+    ProcedureMonoState monoState;
+    vector<TypePtr> monoTypes;
+
+    ProcedureMono() : monoState(Procedure_NoOverloads) {}
+};
+
 struct Lambda : public Expr {
     bool captureByRef;
     vector<FormalArgPtr> formalArgs;
@@ -1238,6 +1251,8 @@ struct Lambda : public Expr {
 
     bool initialized;
     vector<string> freeVars;
+
+    ProcedureMono mono;
 
     // if freevars are present
     RecordPtr lambdaRecord;
@@ -1764,6 +1779,8 @@ struct Record : public TopLevelItem {
     vector<OverloadPtr> overloads;
     bool builtinOverloadInitialized;
 
+    LambdaPtr lambda;
+
     Record(Visibility visibility)
         : TopLevelItem(RECORD, visibility),
           builtinOverloadInitialized(false) {}
@@ -1873,6 +1890,8 @@ struct Procedure : public TopLevelItem {
     OverloadPtr interface;
     vector<OverloadPtr> overloads;
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
+    ProcedureMono mono;
+    LambdaPtr lambda;
 
     Procedure(IdentifierPtr name, Visibility visibility)
         : TopLevelItem(PROCEDURE, name, visibility) {}
@@ -2361,6 +2380,10 @@ extern map<string, ModulePtr> globalModules;
 extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 
+void addProcedureOverload(ProcedurePtr proc, OverloadPtr x);
+void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
+    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
+
 void addSearchPath(const string &path);
 ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
 ModulePtr loadProgramSource(const string &name, const string &source);
@@ -2381,7 +2404,12 @@ enum PrimOpCode {
     PRIM_TypeP,
     PRIM_TypeSize,
     PRIM_TypeAlignment,
-    PRIM_CallDefinedP,
+
+    PRIM_StaticCallDefinedP,
+    PRIM_StaticCallOutputTypes,
+
+    PRIM_StaticMonoP,
+    PRIM_StaticMonoInputTypes,
 
     PRIM_bitcopy,
     PRIM_bitcast,
@@ -2478,6 +2506,7 @@ enum PrimOpCode {
     PRIM_ModuleName,
     PRIM_StaticName,
     PRIM_staticIntegers,
+    PRIM_integers,
     PRIM_staticFieldRef,
 
     PRIM_EnumP,
@@ -2527,7 +2556,18 @@ enum PrimOpCode {
     PRIM_activeException,
 
     PRIM_memcpy,
-    PRIM_memmove
+    PRIM_memmove,
+
+    PRIM_countValues,
+    PRIM_nthValue,
+    PRIM_withoutNthValue,
+    PRIM_takeValues,
+    PRIM_dropValues,
+
+    PRIM_LambdaRecordP,
+    PRIM_LambdaSymbolP,
+    PRIM_LambdaMonoP,
+    PRIM_LambdaMonoInputTypes,
 };
 
 struct PrimOp : public Object {
@@ -2547,6 +2587,12 @@ struct ValueHolder : public Object {
     char *buf;
     ValueHolder(TypePtr type);
     ~ValueHolder();
+
+    template<typename T>
+    T &as() { return *(T*)buf; }
+
+    template<typename T>
+    T const &as() const { return *(T const *)buf; }
 };
 
 
@@ -2846,6 +2892,7 @@ const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
 
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
+int dispatchTagCount(TypePtr t);
 
 void initializeEnumType(EnumTypePtr t);
 
@@ -3346,6 +3393,7 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env);
+PValuePtr analyzeDispatchIndex(PValuePtr pv, int tag);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                const vector<unsigned> &dispatchIndices);
@@ -3436,6 +3484,12 @@ struct EValue : public Object {
     EValue(TypePtr type, char *addr)
         : Object(EVALUE), type(type), addr(addr),
           forwardedRValue(false) {}
+
+    template<typename T>
+    T &as() { return *(T*)addr; }
+
+    template<typename T>
+    T const &as() const { return *(T const *)addr; }
 };
 
 struct MultiEValue : public Object {
@@ -3469,6 +3523,7 @@ void evalPopStack(int marker);
 void evalDestroyAndPopStack(int marker);
 EValuePtr evalAllocValue(TypePtr t);
 
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 
 
 //

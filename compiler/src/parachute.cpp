@@ -83,6 +83,7 @@ int parachute(int (*mainfn)(int, char **, char const* const*),
     signal(SIGSEGV, emergencyCompileContext);
     signal(SIGBUS, emergencyCompileContext);
     signal(SIGILL, emergencyCompileContext);
+    signal(SIGABRT, emergencyCompileContext);
     return mainfn(argc, argv, envp);
 }
 

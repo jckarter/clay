@@ -47,6 +47,7 @@ void cgPushStackStatement(ValueStackEntryType type,
     CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
+CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx);
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
@@ -276,6 +277,16 @@ static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
     return new CValue(pt->pointeeType, ptrValue);
 }
 
+static CValuePtr derefValueForPValue(CValuePtr cv, PValuePtr pv, CodegenContextPtr ctx)
+{
+    if (pv->isTemp) {
+        return cv;
+    } else {
+        assert(cv->type == pointerType(pv->type));
+        return derefValue(cv, ctx);
+    }
+}
+
 
 
 //
@@ -366,6 +377,17 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
                      new MultiCValue(src),
                      ctx,
                      new MultiCValue(dest));
+}
+
+static void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+{
+    if (src->type == dest->type) {
+        codegenValueMove(dest, src, ctx);
+    }
+    else {
+        assert(dest->type == pointerType(src->type));
+        ctx->builder->CreateStore(src->llValue, dest->llValue);
+    }
 }
 
 static void codegenValueAssign(
@@ -494,6 +516,14 @@ CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
 {
     llvm::Value *llv = allocTemp(llvmType(t), ctx);
     return new CValue(t, llv);
+}
+
+CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx)
+{
+    if (pv->isTemp)
+        return codegenAllocValue(pv->type, ctx);
+    else
+        return codegenAllocValue(pointerType(pv->type), ctx);
 }
 
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
@@ -647,14 +677,7 @@ static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
-            CValuePtr cv = codegenAllocValue(pv->type, ctx);
-            mcv->add(cv);
-        }
-        else {
-            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type), ctx);
-            mcv->add(cvPtr);
-        }
+        mcv->add(codegenAllocValueForPValue(pv, ctx));
     }
     codegenExpr(expr, env, ctx, mcv);
     MultiCValuePtr out = new MultiCValue();
@@ -1348,14 +1371,7 @@ void codegenStaticObject(ObjectPtr x,
         CValue *y = (CValue *)x.ptr();
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        if (y->forwardedRValue) {
-            assert(out0->type == y->type);
-            codegenValueMove(out0, y, ctx);
-        }
-        else {
-            assert(out0->type == pointerType(y->type));
-            ctx->builder->CreateStore(y->llValue, out0->llValue);
-        }
+        codegenValueForward(out0, y, ctx);
         break;
     }
 
@@ -1365,14 +1381,7 @@ void codegenStaticObject(ObjectPtr x,
         for (unsigned i = 0; i < y->size(); ++i) {
             CValuePtr vi = y->values[i];
             CValuePtr outi = out->values[i];
-            if (vi->forwardedRValue) {
-                assert(outi->type == vi->type);
-                codegenValueMove(outi, vi, ctx);
-            }
-            else {
-                assert(outi->type == pointerType(vi->type));
-                ctx->builder->CreateStore(vi->llValue, outi->llValue);
-            }
+            codegenValueForward(outi, vi, ctx);
         }
         break;
     }
@@ -2125,37 +2134,31 @@ void codegenCallExpr(ExprPtr callable,
 // codegenDispatch
 //
 
-llvm::Value *codegenVariantTag(CValuePtr cv, CodegenContextPtr ctx)
+llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContextPtr ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType, ctx);
-    codegenCallValue(staticCValue(operator_variantTag(), ctx),
+    codegenCallValue(staticCValue(operator_dispatchTag(), ctx),
                      new MultiCValue(cv),
                      ctx,
                      new MultiCValue(ctag));
     return ctx->builder->CreateLoad(ctag->llValue);
 }
 
-CValuePtr codegenVariantIndex(CValuePtr cv, int tag, CodegenContextPtr ctx)
+CValuePtr codegenDispatchIndex(CValuePtr cv, PValuePtr pvOut, int tag, CodegenContextPtr ctx)
 {
-    assert(cv->type->typeKind == VARIANT_TYPE);
-    VariantType *vt = (VariantType *)cv->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
-    assert((tag >= 0) && (unsigned(tag) < memberTypes.size()));
-
     MultiCValuePtr args = new MultiCValue();
     args->add(cv);
     ValueHolderPtr vh = intToValueHolder(tag);
     args->add(staticCValue(vh.ptr(), ctx));
 
-    CValuePtr cvPtr = codegenAllocValue(pointerType(memberTypes[tag]), ctx);
-    MultiCValuePtr out = new MultiCValue(cvPtr);
+    CValuePtr cvOut = codegenAllocValueForPValue(pvOut, ctx);
+    MultiCValuePtr out = new MultiCValue(cvOut);
 
-    codegenCallValue(staticCValue(operator_unsafeVariantIndex(), ctx),
+    codegenCallValue(staticCValue(operator_dispatchIndex(), ctx),
                      args,
                      ctx,
                      out);
-    llvm::Value *llv = ctx->builder->CreateLoad(cvPtr->llValue);
-    return new CValue(memberTypes[tag], llv);
+    return derefValueForPValue(cvOut, pvOut, ctx);
 }
 
 void codegenDispatch(ObjectPtr obj,
@@ -2193,42 +2196,39 @@ void codegenDispatch(ObjectPtr obj,
     }
     CValuePtr cvDispatch = args->values[index];
     PValuePtr pvDispatch = pvArgs->values[index];
-    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentTypeError(index,
-                          "variant for dispatch operator",
-                          pvDispatch->type);
-    }
-    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
-    if (memberTypes.empty())
-        argumentError(index, "variant has no member types");
 
-    llvm::Value *llTag = codegenVariantTag(cvDispatch, ctx);
+    int memberCount = dispatchTagCount(pvDispatch->type);
+    if (memberCount <= 0)
+        argumentError(index, "DispatchMemberCount for type must be positive");
+
+    llvm::Value *llTag = codegenDispatchTag(cvDispatch, ctx);
 
     vector<llvm::BasicBlock *> callBlocks;
     vector<llvm::BasicBlock *> elseBlocks;
 
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         callBlocks.push_back(newBasicBlock("dispatchCase", ctx));
         elseBlocks.push_back(newBasicBlock("dispatchNext", ctx));
     }
     llvm::BasicBlock *finalBlock = newBasicBlock("finalBlock", ctx);
 
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         llvm::Value *tagCase = llvm::ConstantInt::get(llvmIntType(32), i);
         llvm::Value *cond = ctx->builder->CreateICmpEQ(llTag, tagCase);
         ctx->builder->CreateCondBr(cond, callBlocks[i], elseBlocks[i]);
 
         ctx->builder->SetInsertPoint(callBlocks[i]);
 
-        MultiCValuePtr args2 = new MultiCValue();
-        args2->add(prefix);
-        args2->add(codegenVariantIndex(cvDispatch, i, ctx));
-        args2->add(suffix);
         MultiPValuePtr pvArgs2 = new MultiPValue();
         pvArgs2->add(pvPrefix);
-        pvArgs2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
+        PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
+        pvArgs2->add(pvDispatch2);
         pvArgs2->add(pvSuffix);
+        MultiCValuePtr args2 = new MultiCValue();
+        args2->add(prefix);
+        args2->add(codegenDispatchIndex(cvDispatch, pvDispatch2, i, ctx));
+        args2->add(suffix);
+
         codegenDispatch(obj, args2, pvArgs2, dispatchIndices2, ctx, out);
 
         ctx->builder->CreateBr(finalBlock);
@@ -2236,7 +2236,7 @@ void codegenDispatch(ObjectPtr obj,
         ctx->builder->SetInsertPoint(elseBlocks[i]);
     }
 
-    codegenCallValue(staticCValue(operator_invalidVariant(), ctx),
+    codegenCallValue(staticCValue(operator_invalidDispatch(), ctx),
                      new MultiCValue(cvDispatch),
                      ctx,
                      new MultiCValue());
@@ -4731,18 +4731,12 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_CallDefinedP : {
+    case PRIM_StaticCallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());
         ObjectPtr callable = valueToStatic(args->values[0]);
         if (!callable) {
-            CValuePtr cvCall = staticCValue(operator_call(), ctx);
-            MultiCValuePtr args2 = new MultiCValue(cvCall);
-            args2->add(staticCValue(args->values[0]->type.ptr(), ctx));
-            for (unsigned i = 1; i < args->size(); ++i)
-                args2->add(args->values[i]);
-            codegenPrimOp(x, args2, ctx, out);
-            break;
+            argumentError(0, "static callable expected");
         }
         switch (callable->objKind) {
         case TYPE :
@@ -4766,6 +4760,29 @@ void codegenPrimOp(PrimOpPtr x,
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
+
+    case PRIM_StaticCallOutputTypes :
+        break;
+
+    case PRIM_StaticMonoP : {
+        ensureArity(args, 1);
+
+        bool isMono;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == PROCEDURE) {
+            Procedure *p = (Procedure*)callable.ptr();
+            isMono = p->mono.monoState == Procedure_MonoOverload;
+        } else
+            isMono = false;
+
+        ValueHolderPtr vh = boolToValueHolder(isMono);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_StaticMonoInputTypes :
+        break;
 
     case PRIM_bitcopy : {
         ensureArity(args, 2);
@@ -5846,6 +5863,43 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_integers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args, 0);
+        if (obj->objKind != VALUE_HOLDER)
+            argumentError(0, "expecting a static SizeT or Int value");
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = vh->as<int>();
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            assert(out->size() == (size_t)count);
+            for (int i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = intToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == cIntType);
+                llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), i);
+                ctx->builder->CreateStore(value, outi->llValue);
+            }
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = vh->as<size_t>();
+            assert(out->size() == count);
+            for (size_t i = 0; i < count; ++i) {
+                ValueHolderPtr vhi = sizeTToValueHolder(i);
+                CValuePtr outi = out->values[i];
+                assert(outi->type == cSizeTType);
+                llvm::Type *llSizeTType = llvmIntType(typeSize(cSizeTType)*8);
+                llvm::Constant *value = llvm::ConstantInt::get(llSizeTType, i);
+                ctx->builder->CreateStore(value, outi->llValue);
+            }
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        break;
+    }
+
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = valueToStatic(args, 0);
@@ -6134,6 +6188,144 @@ void codegenPrimOp(PrimOpPtr x,
 
         break;
     }
+
+    case PRIM_countValues : {
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == cIntType);
+        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), args->size());
+        ctx->builder->CreateStore(value, out0->llValue);
+        break;
+    }
+
+    case PRIM_nthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "nthValue argument out of bounds");
+
+        codegenValueForward(out0, args->values[i+1], ctx);
+        break;
+    }
+
+    case PRIM_withoutNthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        assert(out->size() == args->size() - 2);
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            argumentError(0, "withoutNthValue argument out of bounds");
+
+        for (unsigned argi = 1, outi = 0; argi < args->size(); ++argi) {
+            if (argi == i+1)
+                continue;
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+            ++outi;
+        }
+        break;
+    }
+
+    case PRIM_takeValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == i);
+        for (unsigned argi = 1, outi = 0; argi < i+1; ++argi, ++outi) {
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+        }
+        break;
+    }
+
+    case PRIM_dropValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+
+        size_t i = valueToStaticSizeTOrInt(args, 0);
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+
+        assert(out->size() == args->size() - i - 1);
+        for (unsigned argi = i+1, outi = 0; argi < args->size(); ++argi, ++outi) {
+            assert(outi < out->size());
+            codegenValueForward(out->values[outi], args->values[argi], ctx);
+        }
+        break;
+    }
+
+    case PRIM_LambdaRecordP : {
+        ensureArity(args, 1);
+
+        bool isLambda;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                isLambda = r->record->lambda != NULL;
+            } else
+                isLambda = false;
+        } else {
+            isLambda = false;
+        }
+
+        ValueHolderPtr vh = boolToValueHolder(isLambda);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaSymbolP : {
+        ensureArity(args, 1);
+
+        bool isLambda;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == PROCEDURE) {
+            Procedure *p = (Procedure*)callable.ptr();
+            isLambda = p->lambda != NULL;
+        } else
+            isLambda = false;
+
+        ValueHolderPtr vh = boolToValueHolder(isLambda);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaMonoP : {
+        ensureArity(args, 1);
+
+        bool isMono;
+
+        ObjectPtr callable = valueToStatic(args->values[0]);
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                isMono = r->record->lambda->mono.monoState == Procedure_MonoOverload;
+            } else
+                isMono = false;
+        } else {
+            isMono = false;
+        }
+
+        ValueHolderPtr vh = boolToValueHolder(isMono);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
+    case PRIM_LambdaMonoInputTypes :
+        break;
 
     default :
         assert(false);

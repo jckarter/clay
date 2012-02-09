@@ -399,7 +399,7 @@ ModulePtr loadedModule(const string &module) {
 // initOverload, initVariantInstance, initModule
 //
 
-static void initOverload(OverloadPtr x) {
+static EnvPtr overloadPatternEnv(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
     const vector<PatternVar> &pvars = x->code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -412,37 +412,79 @@ static void initOverload(OverloadPtr x) {
             addLocal(env, pvars[i].name, cell.ptr());
         }
     }
+    return env;
+}
+
+void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
+    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg)
+{
+    if (mono.monoState == Procedure_NoOverloads && formalVarArg == NULL)
+    {
+        assert(mono.monoTypes.empty());
+        mono.monoState = Procedure_MonoOverload;
+        for (size_t i = 0; i < formalArgs.size(); ++i) {
+            if (formalArgs[i]->type == NULL)
+                goto poly;
+            PatternPtr argPattern =
+                evaluateOnePattern(formalArgs[i]->type, env);
+            ObjectPtr argType = derefDeep(argPattern);
+            if (argType == NULL)
+                goto poly;
+            if (argType->objKind != TYPE)
+                error(formalArgs[i], "expecting a type");
+
+            mono.monoTypes.push_back((Type*)argType.ptr());
+        }
+    } else
+        goto poly;
+    return;
+
+poly:
+    mono.monoTypes.clear();
+    mono.monoState = Procedure_PolyOverload;
+    return;
+}
+
+void addProcedureOverload(ProcedurePtr proc, OverloadPtr x) {
+    proc->overloads.insert(proc->overloads.begin(), x);
+    getProcedureMonoTypes(proc->mono, overloadPatternEnv(x),
+        x->code->formalArgs,
+        x->code->formalVarArg);
+}
+
+static void initOverload(OverloadPtr x) {
+    EnvPtr env = overloadPatternEnv(x);
     PatternPtr pattern = evaluateOnePattern(x->target, env);
-    ObjectPtr y = derefDeep(pattern);
-    if (!y) {
+    ObjectPtr obj = derefDeep(pattern);
+    if (obj == NULL) {
         x->nameIsPattern = true;
         addPatternOverload(x);
     }
     else {
-        switch (y->objKind) {
+        switch (obj->objKind) {
         case PROCEDURE : {
-            Procedure *z = (Procedure *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Procedure *proc = (Procedure *)obj.ptr();
+            addProcedureOverload(proc, x);
             break;
         }
         case RECORD : {
-            Record *z = (Record *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Record *r = (Record *)obj.ptr();
+            r->overloads.insert(r->overloads.begin(), x);
             break;
         }
         case VARIANT : {
-            Variant *z = (Variant *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Variant *v = (Variant *)obj.ptr();
+            v->overloads.insert(v->overloads.begin(), x);
             break;
         }
         case TYPE : {
-            Type *z = (Type *)y.ptr();
-            z->overloads.insert(z->overloads.begin(), x);
+            Type *t = (Type *)obj.ptr();
+            t->overloads.insert(t->overloads.begin(), x);
             break;
         }
         case PRIM_OP : {
-            if (isOverloadablePrimOp(y))
-                addPrimOpOverload((PrimOp *)y.ptr(), x);
+            if (isOverloadablePrimOp(obj))
+                addPrimOpOverload((PrimOp *)obj.ptr(), x);
             else
                 error(x->target, "invalid overload target");
             break;
@@ -744,7 +786,12 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
     PRIMITIVE(TypeAlignment);
-    PRIMITIVE(CallDefinedP);
+
+    PRIMITIVE(StaticCallDefinedP);
+    PRIMITIVE(StaticCallOutputTypes);
+
+    PRIMITIVE(StaticMonoP);
+    PRIMITIVE(StaticMonoInputTypes);
 
     PRIMITIVE(bitcopy);
     PRIMITIVE(bitcast);
@@ -841,6 +888,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(ModuleName);
     PRIMITIVE(StaticName);
     PRIMITIVE(staticIntegers);
+    PRIMITIVE(integers);
     PRIMITIVE(staticFieldRef);
 
     PRIMITIVE(EnumP);
@@ -888,6 +936,17 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(memcpy);
     PRIMITIVE(memmove);
+
+    PRIMITIVE(countValues);
+    PRIMITIVE(nthValue);
+    PRIMITIVE(withoutNthValue);
+    PRIMITIVE(takeValues);
+    PRIMITIVE(dropValues);
+
+    PRIMITIVE(LambdaRecordP);
+    PRIMITIVE(LambdaSymbolP);
+    PRIMITIVE(LambdaMonoP);
+    PRIMITIVE(LambdaMonoInputTypes);
 
 #undef PRIMITIVE
 
@@ -962,9 +1021,10 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(unpackMultiValuedFreeVarAndDereference);
     OPERATOR(unpackMultiValuedFreeVar);
     OPERATOR(variantReprType);
-    OPERATOR(variantTag);
-    OPERATOR(unsafeVariantIndex);
-    OPERATOR(invalidVariant);
+    OPERATOR(DispatchTagCount);
+    OPERATOR(dispatchTag);
+    OPERATOR(dispatchIndex);
+    OPERATOR(invalidDispatch);
     OPERATOR(stringLiteral);
     OPERATOR(ifExpression);
     OPERATOR(typeToRValue);
@@ -1144,9 +1204,10 @@ DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(variantReprType)
-DEFINE_OPERATOR_ACCESSOR(variantTag)
-DEFINE_OPERATOR_ACCESSOR(unsafeVariantIndex)
-DEFINE_OPERATOR_ACCESSOR(invalidVariant)
+DEFINE_OPERATOR_ACCESSOR(DispatchTagCount);
+DEFINE_OPERATOR_ACCESSOR(dispatchTag)
+DEFINE_OPERATOR_ACCESSOR(dispatchIndex)
+DEFINE_OPERATOR_ACCESSOR(invalidDispatch)
 DEFINE_OPERATOR_ACCESSOR(stringLiteral)
 DEFINE_OPERATOR_ACCESSOR(ifExpression)
 DEFINE_OPERATOR_ACCESSOR(typeToRValue)

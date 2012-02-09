@@ -1,0 +1,18 @@
+variant Number (Int, Double);
+alias NumberRef = VariantRef[Number];
+
+incNumber(x:NumberRef) {
+    inc(*x);
+}
+
+main() {
+    var a = 1;
+    var b = 1.5;
+    var c = Number(2);
+    var d = Number(2.5);
+
+    ..for (x in a, b, c, d)
+        incNumber(NumberRef(x));
+
+    println(..weaveValues(" ", a, b, c, d));
+}

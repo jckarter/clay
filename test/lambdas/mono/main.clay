@@ -1,0 +1,51 @@
+mono1() {}
+mono2(x:Int) {}
+define mono3;
+overload mono3(x:Int, y:Float) {}
+
+define notMono1;
+overload notMono1() {}
+overload notMono1(x) {}
+
+notMono2(x) {}
+notMono3(..x) {}
+
+notMono4(x:Int, ..y) {}
+
+define notMono5;
+overload notMono5(x:Int) {}
+overload notMono5(x:Float) {}
+
+define notMono6;
+
+main() {
+    var a = 1.0;
+
+    var cp = CodePointer(mono1);
+    var ccp = CCodePointer(mono2);
+    var f1 = Function(mono3);
+    var f2 = Function((x:Int) -> (x, a));
+
+    println("mono:");
+    println(Mono?(mono1));
+    println(Mono?(mono2));
+    println(Mono?(mono3));
+    println(Mono?(() -> {}));
+    println(Mono?((x:Int) -> {}));
+    println(Mono?((x:Int) -> {}));
+    println(Mono?((x:Int) -> (x, a)));
+    println(Mono?(cp));
+    println(Mono?(ccp));
+    println(Mono?(f1));
+    println(Mono?(f2));
+
+    println("not mono:");
+    println(Mono?(notMono1));
+    println(Mono?(notMono2));
+    println(Mono?(notMono3));
+    println(Mono?(notMono4));
+    println(Mono?(notMono5));
+    println(Mono?(notMono6));
+    println(Mono?(x -> {}));
+    println(Mono?(x -> (x, a)));
+}

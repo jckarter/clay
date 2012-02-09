@@ -7,19 +7,24 @@ import __operators__.(
 
 
 //
-// Lambda - dynamically dispatched lambdas
+// Function - polymorphic callable object container
 //
 
-record Lambda[In,Out] (
-    body : SharedPointer[LambdaBody[In,Out]]
+record Function[In,Out] (
+    body : SharedPointer[FunctionBody[In,Out]]
 );
 
 
 // main constructor
 
 [In, Out, T | CallableWithSignature?(T, In, Out)]
-alias overload Lambda[In, Out](x:T) {
-    return Lambda[In,Out](new(LambdaBody[In,Out](x)));
+alias overload Function[In, Out](x:T) {
+    return Function[In,Out](new(FunctionBody[In,Out](x)));
+}
+
+[T | MonoType?(T)]
+alias overload Function(x:T) {
+    return Function[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
 }
 
 private CallableWithSignature?(T, In, Out) {
@@ -34,47 +39,49 @@ private CodePointerReturnTypes(static CodePointer[In,[..Out]]) = [..Out];
 // redefine constructors shadowed by the primary constructor
 
 [In,Out]
-alias overload Lambda[In,Out](body : SharedPointer[LambdaBody[In,Out]]) --> returned:Lambda[In,Out] {
+alias overload Function[In,Out](body : SharedPointer[FunctionBody[In,Out]]) --> returned:Function[In,Out] {
     returned.body <-- body;
 }
 
 [In,Out]
-overload Lambda[In,Out](x : Lambda[In,Out]) --> returned:Lambda[In,Out] {
+overload Function[In,Out](x : Function[In,Out]) --> returned:Function[In,Out] {
     returned.body <-- x.body;
 }
 
 
-// makeLambda
+// makeFunction
 
 [T]
-makeLambda(forward x:T, ..In) {
+makeFunction(forward x:T, ..In) {
     var CodePtr = Type(makeCodePointer(call, T, ..In));
     var Out = CodePointerReturnTypes(CodePtr);
-    return Lambda[[..In],Out](x);
+    return Function[[..In],Out](x);
 }
 
 
 // call operator
 
 [..I, ..O]
-overload call(x:Lambda[[..I], [..O]], forward ..args:I) : ..O {
+overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
     return forward ..x.body@.code(x.body@.obj@, ..args);
 }
 
+[..I, ..O]
+alias overload MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
 
 
 //
-// LambdaBody
+// FunctionBody
 //
 
-private record LambdaBody[In, Out] (
+private record FunctionBody[In, Out] (
     obj : Pointer[Opaque],
     code : CodePointer[[Opaque, ..unpack(In)], Out],
     destructor : CodePointer[[Opaque],[]],
 );
 
 [..I, ..O, T]
-alias overload LambdaBody[[..I],[..O]](x:T) --> returned:LambdaBody[[..I],[..O]] {
+alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[..O]] {
     var codePtr = makeCodePointer(call, T, ..I);
     var destructor = makeCodePointer(destroy, T);
     returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);

@@ -92,6 +92,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     string closureDataName = ostr.str();
 
     convertFreeVars(x, env, closureDataName, x->freeVars);
+    getProcedureMonoTypes(x->mono, env, x->formalArgs, x->formalVarArg);
     if (x->freeVars.empty()) {
         initializeLambdaWithoutFreeVars(x, env, closureDataName, lname);
     }
@@ -108,6 +109,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     r->name = new Identifier(lname);
     r->env = env;
     x->lambdaRecord = r;
+    r->lambda = x;
     vector<RecordFieldPtr> fields;
 
     CallPtr converted = new Call(NULL, new ExprList());
@@ -203,6 +205,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     IdentifierPtr name = new Identifier(lname);
     name->location = x->location;
     x->lambdaProc = new Procedure(name, PRIVATE);
+    x->lambdaProc->lambda = x;
 
     CodePtr code = new Code();
     code->location = x->location;
@@ -219,7 +222,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     OverloadPtr overload = new Overload(procRef, code, false, false);
     overload->env = env;
     overload->location = x->location;
-    x->lambdaProc->overloads.push_back(overload);
+    addProcedureOverload(x->lambdaProc, overload);
 
     x->converted = procRef;
 }

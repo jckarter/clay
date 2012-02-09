@@ -257,3 +257,31 @@ inline overload CodePointer[[..In], [..Out]](static fn) : CodePointer[[..In], [.
 [..In, ..Out, fn | CallDefined?(fn, ..In)]
 inline overload CCodePointer[[..In], [..Out]](static fn) : CCodePointer[[..In], [..Out]]
     = makeCCodePointer(fn, ..In);
+
+
+//
+// code pointers are Mono?
+//
+
+[..In, ..Out]
+alias overload MonoInputTypes(f:CodePointer[[..In], [..Out]]) = ..In;
+[..In, ..Out]
+alias overload MonoInputTypes(f:CCodePointer[[..In], [..Out]]) = ..In;
+[..In, ..Out]
+alias overload MonoInputTypes(f:StdCallCodePointer[[..In], [..Out]]) = ..In;
+[..In, ..Out]
+alias overload MonoInputTypes(f:FastCallCodePointer[[..In], [..Out]]) = ..In;
+[..In, ..Out]
+alias overload MonoInputTypes(f:ThisCallCodePointer[[..In], [..Out]]) = ..In;
+[..In, ..Out]
+alias overload MonoInputTypes(f:LLVMCodePointer[[..In], [..Out]]) = ..In;
+
+
+//
+// construct code pointers from mono static callables
+//
+
+[fn | Mono?(fn)]
+inline overload CodePointer(static fn) = makeCodePointer(fn, ..MonoInputTypes(fn));
+[fn | Mono?(fn)]
+inline overload CCodePointer(static fn) = makeCCodePointer(fn, ..MonoInputTypes(fn));

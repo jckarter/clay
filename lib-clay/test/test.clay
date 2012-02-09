@@ -11,7 +11,7 @@ overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
 record TestCase (
     name: String,
-    _case: Lambda[[TestStatus], []],
+    _case: Function[[TestStatus], []],
     pending?: Bool,
 );
 
@@ -19,9 +19,9 @@ record TestCase (
 overload TestCase(name : T, _case, pending?) : TestCase
     = TestCase(String(name), _case, pending?);
 
-overload TestCase(name, fn) = TestCase(name, Lambda[[TestStatus], []](fn), false);
+overload TestCase(name, fn) = TestCase(name, Function[[TestStatus], []](fn), false);
 
-PendingTestCase(name, fn) = TestCase(name, Lambda[[TestStatus], []](fn), true);
+PendingTestCase(name, fn) = TestCase(name, Function[[TestStatus], []](fn), true);
 
 record TestSuite (
     name: String,

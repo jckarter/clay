@@ -1574,6 +1574,19 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 // analyzeDispatch
 //
 
+PValuePtr analyzeDispatchIndex(PValuePtr pv, int tag)
+{
+    MultiPValuePtr args = new MultiPValue();
+    args->add(pv);
+    ValueHolderPtr vh = intToValueHolder(tag);
+    args->add(staticPValue(vh.ptr()));
+
+    MultiPValuePtr out =
+        analyzeCallValue(staticPValue(operator_dispatchIndex()), args);
+    ensureArity(out, 1);
+    return out->values[0];
+}
+
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                const vector<unsigned> &dispatchIndices)
@@ -1596,20 +1609,14 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     for (unsigned i = index+1; i < args->size(); ++i)
         suffix->add(args->values[i]);
     PValuePtr pvDispatch = args->values[index];
-    if (pvDispatch->type->typeKind != VARIANT_TYPE) {
-        argumentTypeError(index,
-                          "variant for dispatch operator",
-                          pvDispatch->type);
-    }
-    VariantTypePtr t = (VariantType *)pvDispatch->type.ptr();
-    const vector<TypePtr> &memberTypes = variantMemberTypes(t);
-    if (memberTypes.empty())
-        argumentError(index, "variant has no member types");
+    int memberCount = dispatchTagCount(pvDispatch->type);
     MultiPValuePtr result;
-    for (unsigned i = 0; i < memberTypes.size(); ++i) {
+    vector<TypePtr> dispatchedTypes;
+    for (unsigned i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
-        args2->add(new PValue(memberTypes[i], pvDispatch->isTemp));
+        PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
+        args2->add(pvDispatch2);
         args2->add(suffix);
         MultiPValuePtr result2 = analyzeDispatch(obj, args2, dispatchIndices2);
         if (!result2)
@@ -1638,26 +1645,27 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
             }
             if (!ok) {
                 ostringstream ostr;
-                ostr << "mismatching result types with variant dispatch";
+                ostr << "mismatching result types with dispatch";
                 ostr << "\n    expected ";
                 for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result->values[j]->type;
                 }
-                ostr << "\n        from dispatching on ";
-                for (unsigned j = 0; j < i; ++j) {
+                ostr << "\n        from dispatching to ";
+                for (unsigned j = 0; j < dispatchedTypes.size(); ++j) {
                     if (j != 0) ostr << ", ";
-                    ostr << memberTypes[j];
+                    ostr << dispatchedTypes[j];
                 }
                 ostr << "\n     but got ";
                 for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result2->values[j]->type;
                 }
-                ostr << "\n        when dispatching on " << memberTypes[i];
+                ostr << "\n        when dispatching to " << pvDispatch2->type;
                 argumentError(index, ostr.str());
             }
         }
+        dispatchedTypes.push_back(pvDispatch2->type);
     }
     assert(result.ptr());
     return result;
@@ -2236,6 +2244,42 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv)
 // analyzePrimOp
 //
 
+static std::pair<vector<TypePtr>, InvokeEntryPtr>
+invokeEntryForCallableArguments(MultiPValuePtr args)
+{
+    if (args->size() < 1)
+        arityError2(1, args->size());
+    ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+    if (!callable)
+        argumentError(0, "static callable expected");
+    switch (callable->objKind) {
+    case TYPE :
+    case RECORD :
+    case VARIANT :
+    case PROCEDURE :
+        break;
+    case PRIM_OP :
+        if (!isOverloadablePrimOp(callable))
+            argumentError(0, "invalid callable");
+        break;
+    default :
+        argumentError(0, "invalid callable");
+    }
+    vector<TypePtr> argsKey;
+    vector<ValueTempness> argsTempness;
+    for (unsigned i = 1; i < args->size(); ++i) {
+        TypePtr t = valueToType(args, i);
+        argsKey.push_back(t);
+        argsTempness.push_back(TEMPNESS_LVALUE);
+    }
+
+    CompileContextPusher pusher(callable, argsKey);
+
+    return std::make_pair(
+        argsKey,
+        analyzeCallable(callable, argsKey, argsTempness));
+}
+
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
     switch (x->primOpCode) {
@@ -2249,8 +2293,46 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_TypeAlignment :
         return new MultiPValue(new PValue(cSizeTType, true));
 
-    case PRIM_CallDefinedP :
+    case PRIM_StaticCallDefinedP :
         return new MultiPValue(new PValue(boolType, true));
+
+    case PRIM_StaticCallOutputTypes : {
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        MultiPValuePtr values = new MultiPValue();
+        for (size_t i = 0; i < entry.second->returnTypes.size(); ++i)
+            values->add(staticPValue(entry.second->returnTypes[i].ptr()));
+        return values;
+    }
+
+    case PRIM_StaticMonoP : {
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_StaticMonoInputTypes : {
+        ensureArity(args, 1);
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "static callable expected");
+
+        switch (callable->objKind) {
+        case PROCEDURE : {
+            Procedure *proc = (Procedure*)callable.ptr();
+            if (proc->mono.monoState != Procedure_MonoOverload) {
+                argumentError(0, "not a static monomorphic callable");
+            }
+
+            MultiPValuePtr values = new MultiPValue();
+            for (size_t i = 0; i < proc->mono.monoTypes.size(); ++i)
+                values->add(staticPValue(proc->mono.monoTypes[i].ptr()));
+
+            return values;
+        }
+
+        default :
+            argumentError(0, "not a static monomorphic callable");
+        }
+    }
 
     case PRIM_bitcopy :
         return new MultiPValue();
@@ -2356,43 +2438,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("CodePointer type constructor cannot be called");
 
     case PRIM_makeCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
-        if (!callable)
-            argumentError(0, "static callable expected");
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry =
-            analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
-        if (!entry->analyzed)
+        if (!entry.second->analyzed)
             return NULL;
-        TypePtr cpType = codePointerType(argsKey,
-                                         entry->returnIsRef,
-                                         entry->returnTypes);
+        TypePtr cpType = codePointerType(entry.first,
+                                         entry.second->returnIsRef,
+                                         entry.second->returnTypes);
         return new MultiPValue(new PValue(cpType, true));
     }
 
@@ -2418,56 +2472,29 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("LLVMCodePointer type constructor cannot be called");
 
     case PRIM_makeCCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
-        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
-        if (!callable)
-            argumentError(0, "static callable expected");
-        switch (callable->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-            break;
-        case PRIM_OP :
-            if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
-            break;
-        default :
-            argumentError(0, "invalid callable");
-        }
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
-            TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
-        }
-
-        CompileContextPusher pusher(callable, argsKey);
-
-        InvokeEntryPtr entry = analyzeCallable(callable, argsKey, argsTempness);
-        if (entry->callByName)
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args);
+        if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
-        if (!entry->analyzed)
+        if (!entry.second->analyzed)
             return NULL;
         TypePtr returnType;
-        if (entry->returnTypes.empty()) {
+        if (entry.second->returnTypes.empty()) {
             returnType = NULL;
         }
-        else if (entry->returnTypes.size() == 1) {
-            if (entry->returnIsRef[0]) {
+        else if (entry.second->returnTypes.size() == 1) {
+            if (entry.second->returnIsRef[0]) {
                 argumentError(0, "cannot create c-code pointer to "
                               " return-by-reference code");
             }
-            returnType = entry->returnTypes[0];
+            returnType = entry.second->returnTypes[0];
         }
         else {
             argumentError(0, "cannot create c-code pointer to "
                           "multi-return code");
         }
         TypePtr ccpType = cCodePointerType(CC_DEFAULT,
-                                           argsKey,
+                                           entry.first,
                                            false,
                                            returnType);
         return new MultiPValue(new PValue(ccpType, true));
@@ -2711,6 +2738,31 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return mpv;
     }
 
+    case PRIM_integers : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj || (obj->objKind != VALUE_HOLDER))
+            argumentError(0, "expecting a static SizeT or Int value");
+        MultiPValuePtr mpv = new MultiPValue();
+        ValueHolder *vh = (ValueHolder *)obj.ptr();
+        if (vh->type == cIntType) {
+            int count = *((int *)vh->buf);
+            if (count < 0)
+                argumentError(0, "negative values are not allowed");
+            for (int i = 0; i < count; ++i)
+                mpv->add(new PValue(cIntType, true));
+        }
+        else if (vh->type == cSizeTType) {
+            size_t count = *((size_t *)vh->buf);
+            for (int i = 0; i < count; ++i)
+                mpv->add(new PValue(cSizeTType, true));
+        }
+        else {
+            argumentError(0, "expecting a static SizeT or Int value");
+        }
+        return mpv;
+    }
+
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = unwrapStaticType(args->values[0]->type);
@@ -2879,6 +2931,110 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         PointerTypePtr toPt = pointerTypeOfValue(args, 0);
         PointerTypePtr fromPt = pointerTypeOfValue(args, 1);
         integerTypeOfValue(args, 2);
+        return new MultiPValue();
+    }
+
+    case PRIM_countValues : {
+        return new MultiPValue(new PValue(cIntType, true));
+    }
+
+    case PRIM_nthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            argumentError(0, "nthValue argument out of bounds");
+        return new MultiPValue(args->values[i+1]);
+    }
+
+    case PRIM_withoutNthValue : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            argumentError(0, "withoutNthValue argument out of bounds");
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = 1; n < args->size(); ++n) {
+            if (n == i+1)
+                continue;
+            mpv->add(args->values[n]);
+        }
+        return mpv;
+    }
+
+    case PRIM_takeValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = 1; n < i+1; ++n)
+            mpv->add(args->values[n]);
+        return mpv;
+    }
+
+    case PRIM_dropValues : {
+        if (args->size() < 1)
+            arityError2(1, args->size());
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(0, "expecting static SizeT or Int value");
+        if (i+1 >= args->size())
+            i = args->size() - 1;
+        MultiPValuePtr mpv = new MultiPValue();
+        for (size_t n = i+1; n < args->size(); ++n)
+            mpv->add(args->values[n]);
+        return mpv;
+    }
+
+    case PRIM_LambdaRecordP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaSymbolP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaMonoP : {
+        ensureArity(args, 1);
+        return new MultiPValue(new PValue(boolType, true));
+    }
+
+    case PRIM_LambdaMonoInputTypes : {
+        ensureArity(args, 1);
+        ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+        if (!callable)
+            argumentError(0, "lambda record type expected");
+
+        if (callable != NULL && callable->objKind == TYPE) {
+            Type *t = (Type*)callable.ptr();
+            if (t->typeKind == RECORD_TYPE) {
+                RecordType *r = (RecordType*)t;
+                if (r->record->lambda->mono.monoState != Procedure_MonoOverload)
+                    argumentError(0, "not a monomorphic lambda record type");
+                vector<TypePtr> const &monoTypes = r->record->lambda->mono.monoTypes;
+                MultiPValuePtr values = new MultiPValue();
+                for (size_t i = 0; i < monoTypes.size(); ++i)
+                    values->add(staticPValue(monoTypes[i].ptr()));
+
+                return values;
+            }
+        }
+
+        argumentError(0, "not a monomorphic lambda record type");
         return new MultiPValue();
     }
 

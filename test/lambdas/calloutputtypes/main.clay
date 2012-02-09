@@ -1,0 +1,16 @@
+import printer.formatter.(repr);
+
+f(..x) = 1, ..x, true;
+
+main() {
+    println(repr(..CallOutputTypes(f)));
+    println(repr(..CallOutputTypes(f, Float)));
+    println(repr(..CallOutputTypes(f, Float, Char)));
+
+    var y = 1;
+    var g = (..x) => (y, ..x, true);
+
+    println(repr(..CallOutputTypes(f)));
+    println(repr(..CallOutputTypes(f, Float)));
+    println(repr(..CallOutputTypes(f, Float, Char)));
+}

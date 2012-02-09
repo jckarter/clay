@@ -1,5 +1,10 @@
+foo(p) { return x; }
 
 main() {
+    println(CallDefined?(foo));
+    println(CallDefined?(foo, Int));
+    println(CallDefined?(foo, Int, Bool));
+
     var x = 10;
     var bar = p => { return x; };
     println(CallDefined?(bar));
