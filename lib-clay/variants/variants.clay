@@ -28,11 +28,16 @@ VariantMember?(static V, static M) =
 //
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-alias overload V(x:T) --> returned:V {
+alias initializeVariant(static V, x:T) --> returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
     repr.tag <-- index;
     staticIndex(repr.data, static index) <-- x;
+}
+
+[V,T | Variant?(V) and VariantMember?(V, T)]
+alias overload V(x:T) --> returned:V {
+    returned <-- initializeVariant(V, x);
 }
 
 [V,T,..AA | Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]

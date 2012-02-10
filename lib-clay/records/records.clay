@@ -61,8 +61,13 @@ overload RegularRecord?(static T) = true;
 //
 
 [T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload T(..args:A) --> returned:T {
+alias initializeRecord(static T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
+}
+
+[T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
+alias overload T(..args:A) --> returned:T {
+    returned <-- initializeRecord(T, ..args);
 }
 
 
@@ -72,8 +77,13 @@ alias overload T(..args:A) --> returned:T {
 //
 
 [T | RegularRecord?(T)]
-overload T() --> returned:T {
+overload initializeRecord(static T) --> returned:T {
     initializeMulti(..recordFields(returned));
+}
+
+[T | RegularRecord?(T)]
+overload T() --> returned:T {
+    returned <-- initializeRecord(T);
 }
 
 [..A]
