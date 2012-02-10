@@ -251,19 +251,19 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEncoding(test, "@", NSObject);
         expectEncoding(test, "@", NSString);
         expectEncoding(test, "@", Retained[NSString]);
-        expectEncoding(test, "@v", RawPointer);
-        expectEncoding(test, "@i", Pointer[Int32]);
-        expectEncoding(test, "@@i", Pointer[Pointer[Int32]]);
-        expectEncoding(test, "@@@i", Pointer[Pointer[Pointer[Int32]]]);
+        expectEncoding(test, "^v", RawPointer);
+        expectEncoding(test, "^i", Pointer[Int32]);
+        expectEncoding(test, "^^i", Pointer[Pointer[Int32]]);
+        expectEncoding(test, "^^^i", Pointer[Pointer[Pointer[Int32]]]);
         expectEncoding(test, "{Foo=@*i}", Foo);
-        expectEncoding(test, "@{Foo=@*i}", Pointer[Foo]);
-        expectEncoding(test, "@@{Foo}", Pointer[Pointer[Foo]]);
-        expectEncoding(test, "@@@{Foo}", Pointer[Pointer[Pointer[Foo]]]);
+        expectEncoding(test, "^{Foo=@*i}", Pointer[Foo]);
+        expectEncoding(test, "^^{Foo}", Pointer[Pointer[Foo]]);
+        expectEncoding(test, "^^^{Foo}", Pointer[Pointer[Pointer[Foo]]]);
         expectEncoding(test, "{Bar=q{Foo=@*i}}", Bar);
         expectEncoding(test, "(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Foonion);
-        expectEncoding(test, "@(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Pointer[Foonion]);
-        expectEncoding(test, "@@(Union)", Pointer[Pointer[Foonion]]);
-        expectEncoding(test, "@@@(Union)", Pointer[Pointer[Pointer[Foonion]]]);
+        expectEncoding(test, "^(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Pointer[Foonion]);
+        expectEncoding(test, "^^(Union)", Pointer[Pointer[Foonion]]);
+        expectEncoding(test, "^^^(Union)", Pointer[Pointer[Pointer[Foonion]]]);
         expectEncoding(test, "?", CCodePointer[[],[]]);
         expectEncoding(test, "@@:", Id, Id, SelectorHandle);
         expectEncoding(test, "v@:", Void, Id, SelectorHandle);
@@ -373,9 +373,9 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectSelectorTypeEncoding(test, SubString1, #"version", "i@:");
         // typed selector via implementing class defaulting to generic selector
         expectSelectorTypeEncoding(test, SubString2, #"version", "@@:");
-        // typed selector via implementing superclass 
+        // typed selector via implementing superclass
         expectSelectorTypeEncoding(test, SubSubString, #"version", "i@:");
-        // typed selector via implementing class defaulting to superclass selector 
+        // typed selector via implementing class defaulting to superclass selector
         expectSelectorTypeEncoding(test, SubSubSubString, #"version", "i@:");
 
         // generic selector via Id
@@ -637,7 +637,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         var stringFields = Pointer[cocoa.objc.platform.CFConstantString](NSSTR(#"Hello"));
 
         expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields@.isa);
-        expectEqual(test, "constant string isa", 
+        expectEqual(test, "constant string isa",
             ClassHandle(&cocoa.objc.platform.__CFConstantStringClassReference),
             stringFields@.isa
         );
