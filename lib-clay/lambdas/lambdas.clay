@@ -63,7 +63,7 @@ makeFunction(forward x:T, ..In) {
 
 [..I, ..O]
 overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
-    return forward ..x.body^.code(x.body^.obj^, ..args);
+    return forward ..x.body@.code(x.body@.obj@, ..args);
 }
 
 [..I, ..O]
@@ -89,7 +89,7 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
 
     var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     try {
-        ptr^ <-- x;
+        ptr@ <-- x;
     }
     catch (e) {
         freeRawMemoryAligned(ptr);
@@ -100,7 +100,7 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
 
 [In, Out]
 overload destroy(x:FunctionBody[In, Out]) {
-    x.destructor(x.obj^);
+    x.destructor(x.obj@);
     freeRawMemoryAligned(x.obj);
 }
 

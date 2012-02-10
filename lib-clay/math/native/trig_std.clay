@@ -777,7 +777,7 @@ argument y such that
 x = k.Pi/256 + y
 
 with the reduced argument y directly in -Pi/512, Pi/512.
-(Pi/512 < 4/512 = 2^-7)
+(Pi/512 < 4/512 = 2@-7)
 y is computed as a double-double yh+yl
 
 Then we read off a table

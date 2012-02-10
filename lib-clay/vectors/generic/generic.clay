@@ -36,7 +36,7 @@ inline overload size(a:V) = vectorSize(a);
 inline overload index(a:V, i:I) {
     assert[#boundsChecks](i >= 0 and i < size(a),
         V, " index out of bounds");
-    return ref (vectorData(a) + SizeT(i))^;
+    return ref (vectorData(a) + SizeT(i))@;
 }
 
 
@@ -211,7 +211,7 @@ overload insert(a:V, i:I, seq:S) {
     try {
         var iter = iterator(seq);
         while (hasNext?(iter)) {
-            first^ <-- next(iter);
+            first@ <-- next(iter);
             inc(first);
         }
     }
@@ -244,7 +244,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     for (x in seq) {
-        first^ <-- move(x);
+        first@ <-- move(x);
         inc(first);
     }
 }
@@ -269,7 +269,7 @@ overload insert(a:V, i:I, ref x:T) {
 [V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:I, rvalue x:T) {
     var first, last = ..insertLocationsUnsafe(a, i, 1);
-    first^ <-- move(x);
+    first@ <-- move(x);
 }
 
 [V,T,S | Vector?(V) and (SequenceElementType(V) == T) and

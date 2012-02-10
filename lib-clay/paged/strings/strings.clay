@@ -35,5 +35,5 @@ overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 overload cstring(s:String) {
     reserve(s, size(s) + 1);
     s[size(s)] = Char(0);
-    return Pointer[Int8](&(begin(s)^));
+    return Pointer[Int8](&(begin(s)@));
 }

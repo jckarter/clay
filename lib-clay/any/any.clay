@@ -47,7 +47,7 @@ overload Any() {
 overload Any(x:Any) {
     var ptr = allocateRawMemoryAligned(Byte, x.size, x.alignment);
     try {
-        ptr^ <-- x.copyConstructor(x.ptr^);
+        ptr@ <-- x.copyConstructor(x.ptr@);
     }
     catch (e) {
         freeRawMemoryAligned(ptr);
@@ -71,7 +71,7 @@ overload resetUnsafe(x:Any) {
 
 overload destroy(x:Any) {
     if (not null?(x.ptr)) {
-        x.destructor(x.ptr^);
+        x.destructor(x.ptr@);
         freeRawMemoryAligned(x.ptr);
     }
 }
@@ -86,7 +86,7 @@ overload assign(ref dest:Any, ref src:Any) {
 alias box(x:T) {
     var ptr = allocateRawMemoryAligned(Byte, TypeSize(T), TypeAlignment(T));
     try {
-        Pointer[T](ptr)^ <-- x;
+        Pointer[T](ptr)@ <-- x;
     }
     catch (e) {
         freeRawMemoryAligned(ptr);
@@ -110,5 +110,5 @@ anyIs?(x:Any, static T) = (x.id == typeId[T]);
 [T]
 unbox(x:Any, static T) {
     assert(x.id == typeId[T]);
-    return ref Pointer[T](x.ptr)^;
+    return ref Pointer[T](x.ptr)@;
 }

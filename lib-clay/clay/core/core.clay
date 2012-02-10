@@ -37,7 +37,7 @@ overload lookupModule(name:String) Maybe[Module] {
     var ptr = lookup(modulesMap, name);
     if (null?(ptr))
         return nothing(Module);
-    return Maybe(ptr^);
+    return Maybe(ptr@);
 }
 
 installModule(name:String, module:Module) {

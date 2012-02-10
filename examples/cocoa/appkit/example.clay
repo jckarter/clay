@@ -30,20 +30,20 @@ record ExampleController = newClass(#"ExampleController", NSObject,
         [#"performMultiply:", IBAction((self, sender) => { _performMath(self, multiply); })],
         [#"performDivide:", IBAction((self, sender) => { _performMath(self, divide); })],
         [#"performClear:", IBAction((self, sender) => {
-            self^.leftField.setStringValue(NSSTR(#""));
-            self^.rightField.setStringValue(NSSTR(#""));
-            self^.resultField.setStringValue(NSSTR(#""));
-            self^.leftField.becomeFirstResponder();
+            self@.leftField.setStringValue(NSSTR(#""));
+            self@.rightField.setStringValue(NSSTR(#""));
+            self@.resultField.setStringValue(NSSTR(#""));
+            self@.leftField.becomeFirstResponder();
         })],
     ),
 );
 
 _performMath(self, fn) {
-    var left = self^.leftField.intValue();
-    var right = self^.rightField.intValue();
-    self^.resultField.setIntValue(fn(left, right));
-    self^.resultField.becomeFirstResponder();
-    self^.resultField.selectText(self);
+    var left = self@.leftField.intValue();
+    var right = self@.rightField.intValue();
+    self@.resultField.setIntValue(fn(left, right));
+    self@.resultField.becomeFirstResponder();
+    self@.resultField.selectText(self);
 }
 
 main() = appKitMain(ExampleController, ExampleAppDelegate);

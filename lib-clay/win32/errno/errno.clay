@@ -1,6 +1,6 @@
 import libc;
 
-errno() = libc._errno()^;
+errno() = win32._errno()@;
 
 alias EPERM           = 1;       /* Operation not permitted */
 alias ENOFILE         = 2;       /* No such file or directory */

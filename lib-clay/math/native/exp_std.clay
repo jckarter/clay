@@ -755,9 +755,9 @@ exp13(x:Double) --> exph:Double, expm:Double, expl:Double, exponent:Int {
         exph, expm, expl, exponent <-- 1., 0., 0., 0;
     else {
         alias k = shiftedXMultdb.0[0];
-        exponent <-- bitshr(k , L);
-        alias index1 = bitand(k , INDEXMASK1);
-        alias index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+        exponent <-- k >> L;
+        alias index1 = k & INDEXMASK1;
+        alias index2 = (k & INDEXMASK2) >> LHALF;
 
         // Table reads
         ref tbl1h = twoPowerIndex1[index1].hi;
@@ -857,9 +857,9 @@ private exp_rn(x:Double) --> ans:Double {
     var rh,rm = Add12Cond(s5,s4);
 
     alias k = shiftedXMultdb.0[0];
-    var M = bitshr(k , L);
-    var index1 = bitand(k , INDEXMASK1);
-    var index2 = bitshr(bitand(k , INDEXMASK2) , LHALF);
+    var M = k >> L;
+    var index1 = k & INDEXMASK1;
+    var index2 = (k & INDEXMASK2) >> LHALF;
 
     // Table reads
     ref tbl1h = twoPowerIndex1[index1].hi;

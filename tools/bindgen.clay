@@ -52,7 +52,7 @@ nameForDeclaration(cursor:CXCursor) : String
         g_declNames[cursor] = name;
         return move(name);
     } else
-        return namep^;
+        return namep@;
 }
 
 convertPointerType(type:CXType, refCursor:CXCursor) : String {
@@ -203,7 +203,7 @@ convertType(type:CXType, refCursor:CXCursor) : String {
 
 visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref unnamedFieldIndex = Pointer[Int](data)^;
+    ref unnamedFieldIndex = Pointer[Int](data)@;
 
     assert(clang_getCursorKind(parent) == CXCursor_StructDecl);
     var kind = clang_getCursorKind(cursor);
@@ -241,7 +241,7 @@ record FunctionDeclAttributes (asmLabel:Maybe[String]);
 
 visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref attributes = Pointer[FunctionDeclAttributes](data)^;
+    ref attributes = Pointer[FunctionDeclAttributes](data)@;
     switch (cursor.kind)
     case (CXCursor_AsmLabelAttr)
         attributes.asmLabel = Maybe(str(clang_getCursorSpelling(cursor)));
@@ -318,7 +318,7 @@ symbolVisited(name:String) : Bool
 
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
-    ref options = Pointer[BindgenOptions](data)^;
+    ref options = Pointer[BindgenOptions](data)@;
 
     if (not cursorMatchesPatterns(cursor, options))
         return CXChildVisit_Continue;

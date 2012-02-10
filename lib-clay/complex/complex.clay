@@ -26,12 +26,12 @@ inline overload im(z:Complex64) = (Pointer[IDouble](&z)+1);
 inline overload im(z:Complex80) = (Pointer[ILongDouble](&z)+1);
 
 [C | Complex?(C)]
-inline real(z:C) = re(z)^;
+inline real(z:C) = re(z)@;
 
 [C | Complex?(C)]
-inline imag(z:C) = im(z)^;
+inline imag(z:C) = im(z)@;
 [C | Complex?(C)]
-inline imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
+inline imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)@);
 
 [I | Imaginary?(I)]
 inline overload imag(z:I) = z;
@@ -39,15 +39,15 @@ inline overload imagValue(z:Imag32) = numericConvert(Float32, z);
 inline overload imagValue(z:Imag64) = numericConvert(Float64, z);
 inline overload imagValue(z:Imag80) = numericConvert(Float80, z);
 
-inline Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
-inline overload Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
-inline overload Complex(a:Float,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-inline overload Complex(a:Double,b:IFloat) --> r:Complex64 { re(r)^ = a; im(r)^ = numericConvert(IDouble,b);}
-inline overload Complex(a:Double,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-inline overload Complex(a:LongDouble,b:IFloat) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
-inline overload Complex(a:LongDouble,b:IDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
+inline Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)@ = a; im(r)@ = b;}
+inline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)@ = a; im(r)@ = b;}
+inline overload Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)@ = a; im(r)@ = b;}
+inline overload Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)@ = Double(a); im(r)@ = b;}
+inline overload Complex(a:Float,b:ILongDouble) --> r:Complex80 { re(r)@ = LongDouble(a); im(r)@ = b;}
+inline overload Complex(a:Double,b:IFloat) --> r:Complex64 { re(r)@ = a; im(r)@ = numericConvert(IDouble,b);}
+inline overload Complex(a:Double,b:ILongDouble) --> r:Complex80 { re(r)@ = LongDouble(a); im(r)@ = b;}
+inline overload Complex(a:LongDouble,b:IFloat) --> r:Complex80 { re(r)@ = a; im(r)@ = numericConvert(ILongDouble,b);}
+inline overload Complex(a:LongDouble,b:IDouble) --> r:Complex80 { re(r)@ = a; im(r)@ = numericConvert(ILongDouble,b);}
 inline overload Complex(a:Float,b:Float) = Complex(a, numericConvert(IFloat,b));
 inline overload Complex(a:Double,b:Double) = Complex(a, numericConvert(IDouble,b));
 inline overload Complex(a:LongDouble,b:LongDouble) = Complex(a, numericConvert(ILongDouble,b));
