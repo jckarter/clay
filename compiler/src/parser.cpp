@@ -766,7 +766,7 @@ static bool bitandTail(BinaryOpPtr &x) {
     int op;
     if (!bitandOp(op)) return false;
     ExprPtr y;
-    if (!addSubExpr(y)) return false;
+    if (!bitshiftExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
@@ -965,10 +965,10 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return bitorExpr(x);
+        return equalExpr(x);
     }
     ExprPtr y;
-    if (!bitorExpr(y)) return false;
+    if (!equalExpr(y)) return false;
     x = new UnaryOp(NOT, y);
     x->location = location;
     return true;

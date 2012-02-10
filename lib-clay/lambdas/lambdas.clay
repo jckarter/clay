@@ -99,7 +99,7 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
 }
 
 [In, Out]
-overload destroy(x:LambdaBody[In, Out]) {
+overload destroy(x:FunctionBody[In, Out]) {
     x.destructor(x.obj@);
     freeRawMemoryAligned(x.obj);
 }
