@@ -47,7 +47,7 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
         callable = primitive_expr_boolNot();
         break;
     case BITNOT :
-        callable = prelude_expr_bitnot();
+        callable = operator_expr_bitnot();
         break;
     default :
         assert(false);
