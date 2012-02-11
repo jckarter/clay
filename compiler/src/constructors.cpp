@@ -21,7 +21,7 @@ bool isOverloadablePrimOp(ObjectPtr x)
     switch (y->primOpCode) {
     case PRIM_Pointer :
     case PRIM_CodePointer :
-    case PRIM_CCodePointer :
+    case PRIM_ExternalCodePointer :
     case PRIM_Array :
     case PRIM_Vec :
     case PRIM_Tuple :
@@ -43,7 +43,7 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
     case PRIM_CodePointer :
         ptr = &codePointerOverloads;
         break;
-    case PRIM_CCodePointer :
+    case PRIM_ExternalCodePointer :
         ptr = &cCodePointerOverloads;
         break;
     case PRIM_Array :

@@ -113,12 +113,14 @@ inline overload index(p:Pointer[T], i:I) = ref (p + i)^;
 
 
 //
-// CodePointer?
+// CodePointer?, ExternalCodePointer?
 //
 
 CodePointer?(x) = false;
 [In,Out] overload CodePointer?(static CodePointer[In,Out]) = true;
 
+ExternalCodePointer?(x) = false;
+[CC,V?,In,Out] overload ExternalCodePointer?(static ExternalCodePointer[CC,V?,In,Out]) = true;
 
 
 //
@@ -172,51 +174,57 @@ inline overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
 
 
 //
-// CCodePointer - constructor
+// ExternalCodePointer - constructor
 //
 
-[CP | CCodePointer?(CP)]
-inline overload CP() = CP(0);
+[CC,V?,I,O]
+inline overload ExternalCodePointer[CC,V?,I,O]() = ExternalCodePointer[CC,V?,I,O](0);
 
 
 
 //
-// CCodePointer - convert to/from other pointers/integers
+// ExternalCodePointer - convert to/from other pointers/integers
 //
 
-[T, CP | CCodePointer?(CP)]
-inline overload Pointer[T](a:CP) = bitcast(Pointer[T], a);
+[T, CC,V?,I,O]
+inline overload Pointer[T](a:ExternalCodePointer[CC,V?,I,O]) = bitcast(Pointer[T], a);
 
-[T, CP | CCodePointer?(CP)]
-inline overload CP(a:Pointer[T]) = bitcast(CP, a);
+[T, CC,V?,I,O]
+inline overload ExternalCodePointer[CC,V?,I,O](a:Pointer[T]) =
+    bitcast(ExternalCodePointer[CC,V?,I,O], a);
 
-[CP1, CP2 | CCodePointer?(CP1) and CCodePointer?(CP2)]
-inline overload CP1(a:CP2) = bitcast(CP1, a);
+[CC1,V1?,I1,O1, CC2,V2?,I2,O2]
+inline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2])
+    = bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
 
-[CP,I | CCodePointer?(CP) and Integer?(I)]
-inline overload CP(i:I) = CP(Pointer[Int8](i));
+// FIXME pointerToInt and intToPointer should work with code pointers
 
-[CP,I | CCodePointer?(CP) and Integer?(I)]
-inline overload I(a:CP) = I(Pointer[Int8](a));
+[CC,V?,In,Out,I | Integer?(I)]
+inline overload ExternalCodePointer[CC,V?,In,Out](i:I) =
+    ExternalCodePointer[CC,V?,In,Out](Pointer[Int8](i));
+
+[CC,V?,In,Out,I | Integer?(I)]
+inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) = I(Pointer[Int8](a));
 
 
 
 //
-// CCodePointer - equals?, lesser?, null?
+// ExternalCodePointer - equals?, lesser?, null?
+// FIXME pointerEquals? and pointerLesser? should work with code pointers
 //
 
-[CP | CCodePointer?(CP)]
-inline overload equals?(a:CP, b:CP) {
+[C,V,I,O]
+inline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
     return equals?(RawPointer(a), RawPointer(b));
 }
 
-[CP | CCodePointer?(CP)]
-inline overload lesser?(a:CP, b:CP) {
+[C,V,I,O]
+inline overload lesser?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
     return lesser?(RawPointer(a), RawPointer(b));
 }
 
-[CP | CCodePointer?(CP)]
-inline overload null?(p:CP) = null?(RawPointer(p));
+[C,V,I,O]
+inline overload null?(p:ExternalCodePointer[C,V,I,O]) = null?(RawPointer(p));
 
 
 
@@ -224,26 +232,14 @@ inline overload null?(p:CP) = null?(RawPointer(p));
 // CCodePointer - call
 //
 
-[..In, ..Out]
-inline overload call(ptr:CCodePointer[[..In], [..Out]], ..args:In) =
-    ..callCCodePointer(ptr, ..args);
+[CC, ..In, ..Out]
+inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:In) =
+    ..callExternalCodePointer(ptr, ..args);
 
-[..In, ..Out, ..A | (countValues(..A) >= countValues(..In))
+[CC, ..In, ..Out, ..A | (countValues(..A) >= countValues(..In))
                        and (Tuple[..takeValues(static countValues(..In), ..A)] == Tuple[..In])]
-inline overload call(ptr:VarArgsCCodePointer[[..In], [..Out]], ..args:A) =
-    ..callCCodePointer(ptr, ..args);
-
-[..In, ..Out]
-inline overload call(ptr:FastCallCodePointer[[..In], [..Out]], ..args:In) =
-    ..callCCodePointer(ptr, ..args);
-
-[..In, ..Out]
-inline overload call(ptr:StdCallCodePointer[[..In], [..Out]], ..args:In) =
-    ..callCCodePointer(ptr, ..args);
-
-[..In, ..Out]
-inline overload call(ptr:LLVMCodePointer[[..In], [..Out]], ..args:In) =
-    ..callCCodePointer(ptr, ..args);
+inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) =
+    ..callExternalCodePointer(ptr, ..args);
 
 
 //
@@ -254,9 +250,10 @@ inline overload call(ptr:LLVMCodePointer[[..In], [..Out]], ..args:In) =
 inline overload CodePointer[[..In], [..Out]](static fn) : CodePointer[[..In], [..Out]]
     = makeCodePointer(fn, ..In);
 
-[..In, ..Out, fn | CallDefined?(fn, ..In)]
-inline overload CCodePointer[[..In], [..Out]](static fn) : CCodePointer[[..In], [..Out]]
-    = makeCCodePointer(fn, ..In);
+[CC, V?, ..In, ..Out, fn | CallDefined?(fn, ..In)]
+inline overload ExternalCodePointer[CC, V?, [..In], [..Out]](static fn)
+    : ExternalCodePointer[CC, V?, [..In], [..Out]]
+    = makeExternalCodePointer(fn, static CC, static V?, ..In);
 
 
 //
@@ -265,16 +262,23 @@ inline overload CCodePointer[[..In], [..Out]](static fn) : CCodePointer[[..In], 
 
 [..In, ..Out]
 alias overload MonoInputTypes(f:CodePointer[[..In], [..Out]]) = ..In;
-[..In, ..Out]
-alias overload MonoInputTypes(f:CCodePointer[[..In], [..Out]]) = ..In;
-[..In, ..Out]
-alias overload MonoInputTypes(f:StdCallCodePointer[[..In], [..Out]]) = ..In;
-[..In, ..Out]
-alias overload MonoInputTypes(f:FastCallCodePointer[[..In], [..Out]]) = ..In;
-[..In, ..Out]
-alias overload MonoInputTypes(f:ThisCallCodePointer[[..In], [..Out]]) = ..In;
-[..In, ..Out]
-alias overload MonoInputTypes(f:LLVMCodePointer[[..In], [..Out]]) = ..In;
+[CC, ..In, ..Out]
+alias overload MonoInputTypes(f:ExternalCodePointer[CC, false, [..In], [..Out]]) = ..In;
+
+
+//
+// aliases for external code pointer types
+//
+
+alias CCodePointer[I,O] = ExternalCodePointer[cdecl, false, I, O];
+alias VarArgsCCodePointer[I,O] = ExternalCodePointer[cdecl, true, I, O];
+alias StdCallCodePointer[I,O] = ExternalCodePointer[stdcall, false, I, O];
+alias FastCallCodePointer[I,O] = ExternalCodePointer[fastcall, false, I, O];
+alias ThisCallCodePointer[I,O] = ExternalCodePointer[thiscall, false, I, O];
+alias LLVMCodePointer[I,O] = ExternalCodePointer[llvm, false, I, O];
+
+alias makeCCodePointer(fn, ..In) =
+    makeExternalCodePointer(fn, cdecl, static false, ..In);
 
 
 //
@@ -284,4 +288,17 @@ alias overload MonoInputTypes(f:LLVMCodePointer[[..In], [..Out]]) = ..In;
 [fn | Mono?(fn)]
 inline overload CodePointer(static fn) = makeCodePointer(fn, ..MonoInputTypes(fn));
 [fn | Mono?(fn)]
-inline overload CCodePointer(static fn) = makeCCodePointer(fn, ..MonoInputTypes(fn));
+inline overload CCodePointer(static fn) =
+    makeExternalCodePointer(fn, cdecl, static false, ..MonoInputTypes(fn));
+[fn | Mono?(fn)]
+inline overload StdCallCodePointer(static fn) =
+    makeExternalCodePointer(fn, stdcall, static false, ..MonoInputTypes(fn));
+[fn | Mono?(fn)]
+inline overload FastCallCodePointer(static fn) =
+    makeExternalCodePointer(fn, fastcall, static false, ..MonoInputTypes(fn));
+[fn | Mono?(fn)]
+inline overload ThisCallCodePointer(static fn) =
+    makeExternalCodePointer(fn, thiscall, static false, ..MonoInputTypes(fn));
+[fn | Mono?(fn)]
+inline overload LLVMCodePointer(static fn) =
+    makeExternalCodePointer(fn, llvm, static false, ..MonoInputTypes(fn));

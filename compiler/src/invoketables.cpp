@@ -19,8 +19,8 @@ static void initCallable(ObjectPtr x)
         break;
     }
     case VARIANT :
-        break;
     case PROCEDURE :
+    case GLOBAL_ALIAS :
         break;
     case PRIM_OP : {
         assert(isOverloadablePrimOp(x));
@@ -68,6 +68,11 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
         assert(isOverloadablePrimOp(x));
         PrimOp *y = (PrimOp *)x.ptr();
         return primOpOverloads(y);
+    }
+    case GLOBAL_ALIAS : {
+        GlobalAlias *a = (GlobalAlias *)x.ptr();
+        assert(a->hasParams());
+        return a->overloads;
     }
     default : {
         assert(false);

@@ -381,6 +381,7 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
         case TYPE :
         case PRIM_OP :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
         case RECORD :
         case VARIANT :
         case MODULE_HOLDER :
@@ -1550,6 +1551,7 @@ void evalCallExpr(ExprPtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -1738,6 +1740,7 @@ void evalCallValue(EValuePtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -3505,6 +3508,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         case RECORD :
         case VARIANT :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
             break;
         default :
             argumentError(0, "invalid callable");
@@ -3945,46 +3949,15 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_CCodePointerP : {
-        ensureArity(args, 1);
-        bool isCCodePointerType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == CCODE_POINTER_TYPE)
-                isCCodePointerType = true;
-        }
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        out0->as<bool>() = isCCodePointerType;
-        break;
-    }
+    case PRIM_ExternalCodePointer :
+        error("ExternalCodePointer type constructor cannot be called");
 
-    case PRIM_CCodePointer :
-        error("CCodePointer type constructor cannot be called");
-
-    case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer type constructor cannot be called");
-
-    case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer type constructor cannot be called");
-
-    case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
-
-    case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer type constructor cannot be called");
-
-    case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer type constructor cannot be called");
-
-    case PRIM_makeCCodePointer : {
+    case PRIM_makeExternalCodePointer : {
         error("code pointers cannot be created at compile time");
         break;
     }
 
-    case PRIM_callCCodePointer : {
+    case PRIM_callExternalCodePointer : {
         error("invoking a code pointer not yet supported in evaluator");
         break;
     }

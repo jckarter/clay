@@ -489,6 +489,13 @@ static void initOverload(OverloadPtr x) {
                 error(x->target, "invalid overload target");
             break;
         }
+        case GLOBAL_ALIAS : {
+            GlobalAlias *a = (GlobalAlias*)obj.ptr();
+            if (!a->hasParams())
+                error(x->target, "invalid overload target");
+            a->overloads.insert(a->overloads.begin(), x);
+            break;
+        }
         default : {
             error(x->target, "invalid overload target");
         }
@@ -846,15 +853,9 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(AttributeDLLImport);
     PRIMITIVE(AttributeDLLExport);
 
-    PRIMITIVE(CCodePointerP);
-    PRIMITIVE(CCodePointer);
-    PRIMITIVE(VarArgsCCodePointer);
-    PRIMITIVE(StdCallCodePointer);
-    PRIMITIVE(FastCallCodePointer);
-    PRIMITIVE(ThisCallCodePointer);
-    PRIMITIVE(LLVMCodePointer);
-    PRIMITIVE(makeCCodePointer);
-    PRIMITIVE(callCCodePointer);
+    PRIMITIVE(ExternalCodePointer);
+    PRIMITIVE(makeExternalCodePointer);
+    PRIMITIVE(callExternalCodePointer);
 
     PRIMITIVE(Array);
     PRIMITIVE(arrayRef);
@@ -1110,12 +1111,12 @@ DEFINE_PRIMITIVE_ACCESSOR(addressOf)
 DEFINE_PRIMITIVE_ACCESSOR(boolNot)
 DEFINE_PRIMITIVE_ACCESSOR(Pointer)
 DEFINE_PRIMITIVE_ACCESSOR(CodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(CCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(VarArgsCCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(StdCallCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(FastCallCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(ThisCallCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(LLVMCodePointer)
+DEFINE_PRIMITIVE_ACCESSOR(ExternalCodePointer)
+DEFINE_PRIMITIVE_ACCESSOR(AttributeCCall);
+DEFINE_PRIMITIVE_ACCESSOR(AttributeStdCall);
+DEFINE_PRIMITIVE_ACCESSOR(AttributeFastCall);
+DEFINE_PRIMITIVE_ACCESSOR(AttributeThisCall);
+DEFINE_PRIMITIVE_ACCESSOR(AttributeLLVMCall);
 DEFINE_PRIMITIVE_ACCESSOR(Array)
 DEFINE_PRIMITIVE_ACCESSOR(Vec)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)

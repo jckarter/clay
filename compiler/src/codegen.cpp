@@ -190,7 +190,7 @@ void codegenCallByName(InvokeEntryPtr entry,
 
 void codegenCodeBody(InvokeEntryPtr entry);
 
-void codegenCWrapper(InvokeEntryPtr entry);
+void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc);
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
@@ -2089,6 +2089,7 @@ void codegenCallExpr(ExprPtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -2298,6 +2299,7 @@ void codegenCallValue(CValuePtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -2811,6 +2813,11 @@ static string getCodeName(InvokeEntryPtr entry)
         sout << y->name->str;
         break;
     }
+    case GLOBAL_ALIAS : {
+        GlobalAlias *y = (GlobalAlias *)x.ptr();
+        sout << y->name->str;
+        break;
+    }
     case PRIM_OP : {
         assert(isOverloadablePrimOp(x));
         sout << primOpName((PrimOp *)x.ptr());
@@ -3142,12 +3149,11 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
 //
 // codegenCWrapper
-// FIXME calling convention
 //
 
-void codegenCWrapper(InvokeEntryPtr entry)
+void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
 {
-    assert(!entry->llvmCWrapper);
+    assert(!entry->llvmCWrappers[cc]);
     ExternalTargetPtr target = getExternalTarget();
 
     string callableName = getCodeName(entry);
@@ -3164,25 +3170,45 @@ void codegenCWrapper(InvokeEntryPtr entry)
         returnType = entry->returnTypes[0];
     }
     llvm::Type *llReturnType =
-        target->pushReturnType(CC_DEFAULT, returnType, llArgTypes, llAttributes);
+        target->pushReturnType(cc, returnType, llArgTypes, llAttributes);
 
     for (unsigned i = 0; i < entry->argsKey.size(); ++i)
-        target->pushArgumentType(CC_DEFAULT, entry->argsKey[i], llArgTypes, llAttributes);
+        target->pushArgumentType(cc, entry->argsKey[i], llArgTypes, llAttributes);
 
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(llReturnType, llArgTypes, false);
 
+    std::string ccName;
+    switch (cc) {
+    case CC_DEFAULT:
+        ccName = "cdecl ";
+        break;
+    case CC_STDCALL:
+        ccName = "stdcall ";
+        break;
+    case CC_FASTCALL:
+        ccName = "fastcall ";
+        break;
+    case CC_THISCALL:
+        ccName = "thiscall ";
+        break;
+    default:
+        assert(false);
+    }
+
     llvm::Function *llCWrapper =
         llvm::Function::Create(llFuncType,
                                llvm::Function::InternalLinkage,
-                               "cdecl " + callableName,
+                               ccName + callableName,
                                llvmModule);
     for (vector< pair<unsigned, llvm::Attributes> >::const_iterator attr = llAttributes.begin();
          attr != llAttributes.end();
          ++attr)
         llCWrapper->addAttribute(attr->first, attr->second);
 
-    entry->llvmCWrapper = llCWrapper;
+    llCWrapper->setCallingConv(target->callingConvention(cc));
+
+    entry->llvmCWrappers[cc] = llCWrapper;
     CodegenContextPtr ctx = new CodegenContext(llCWrapper);
 
     llvm::BasicBlock *llInitBlock =
@@ -3201,9 +3227,9 @@ void codegenCWrapper(InvokeEntryPtr entry)
     vector<llvm::Value *> innerArgs;
     vector<CReturn> returns;
     llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
-    target->allocReturnValue(CC_DEFAULT, returnType, ai, returns, ctx);
+    target->allocReturnValue(cc, returnType, ai, returns, ctx);
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
-        CValuePtr cv = target->allocArgumentValue(CC_DEFAULT, entry->argsKey[i], "x", ai, ctx);
+        CValuePtr cv = target->allocArgumentValue(cc, entry->argsKey[i], "x", ai, ctx);
         innerArgs.push_back(cv->llValue);
     }
 
@@ -3215,7 +3241,7 @@ void codegenCWrapper(InvokeEntryPtr entry)
     // XXX check exception
     ctx->builder->CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
 
-    target->returnStatement(CC_DEFAULT, returnType, returns, ctx);
+    target->returnStatement(cc, returnType, returns, ctx);
 
     ctx->initBuilder->CreateBr(llBlock);
 }
@@ -4743,6 +4769,7 @@ void codegenPrimOp(PrimOpPtr x,
         case RECORD :
         case VARIANT :
         case PROCEDURE :
+        case GLOBAL_ALIAS:
             break;
         default :
             argumentError(0, "invalid callable");
@@ -5272,7 +5299,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Pointer :
-        error("Pointer primitive cannot be called");
+        error("no Pointer primitive overload found");
 
     case PRIM_addressOf : {
         ensureArity(args, 1);
@@ -5371,13 +5398,13 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_ByRef :
-        error("ByRef primitive cannot be called");
+        error("no ByRef primitive overload found");
 
     case PRIM_RecordWithProperties :
-        error("RecordWithProperties primitive cannot be called");
+        error("no RecordWithProperties primitive overload found");
 
     case PRIM_CodePointer :
-        error("CodePointer primitive cannot be called");
+        error("no CodePointer primitive overload found");
 
     case PRIM_makeCodePointer : {
         if (args->size() < 1)
@@ -5388,6 +5415,7 @@ void codegenPrimOp(PrimOpPtr x,
         case RECORD :
         case VARIANT :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
             break;
         case PRIM_OP :
             if (!isOverloadablePrimOp(callable))
@@ -5424,47 +5452,19 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_CCodePointerP : {
-        ensureArity(args, 1);
-        bool isCCodePointerType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == CCODE_POINTER_TYPE)
-                isCCodePointerType = true;
-        }
-        ValueHolderPtr vh = boolToValueHolder(isCCodePointerType);
-        codegenStaticObject(vh.ptr(), ctx, out);
-        break;
-    }
+    case PRIM_ExternalCodePointer :
+        error("no ExternalCodePointer primitive overload found");
 
-    case PRIM_CCodePointer :
-        error("CCodePointer primitive cannot be called");
-
-    case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer primitive cannot be called");
-
-    case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer primitive cannot be called");
-
-    case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer primitive cannot be called");
-
-    case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer primitive cannot be called");
-
-    case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer primitive cannot be called");
-
-    case PRIM_makeCCodePointer : {
-        if (args->size() < 1)
-            arityError2(1, args->size());
+    case PRIM_makeExternalCodePointer : {
+        if (args->size() < 3)
+            arityError2(3, args->size());
         ObjectPtr callable = valueToStatic(args, 0);
         switch (callable->objKind) {
         case TYPE :
         case RECORD :
         case VARIANT :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
             break;
         case PRIM_OP :
             if (!isOverloadablePrimOp(callable))
@@ -5473,9 +5473,22 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             argumentError(0, "invalid callable");
         }
+
+        ObjectPtr ccObj = valueToStatic(args, 1);
+        ObjectPtr isVarArgObj = valueToStatic(args, 2);
+        CallingConv cc;
+        bool isVarArg;
+        if (!staticToCallingConv(ccObj, cc))
+            argumentError(1, "expecting a calling convention attribute");
+        if (!staticToBool(isVarArgObj, isVarArg))
+            argumentError(2, "expecting a static boolean");
+
+        if (isVarArg)
+            argumentError(2, "implementing variadic external functions is not yet supported");
+
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        for (unsigned i = 1; i < args->size(); ++i) {
+        for (unsigned i = 3; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
             argsTempness.push_back(TEMPNESS_LVALUE);
@@ -5491,9 +5504,9 @@ void codegenPrimOp(PrimOpPtr x,
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
         assert(entry->llvmFunc);
-        if (!entry->llvmCWrapper)
-            codegenCWrapper(entry);
-        assert(entry->llvmCWrapper);
+        if (!entry->llvmCWrappers[cc])
+            codegenCWrapper(entry, cc);
+        assert(entry->llvmCWrappers[cc]);
         TypePtr returnType;
         if (entry->returnTypes.size() == 0) {
             returnType = NULL;
@@ -5508,21 +5521,21 @@ void codegenPrimOp(PrimOpPtr x,
             argumentError(0, "cannot create C compatible pointer "
                           "to multi-return code");
         }
-        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+        TypePtr ccpType = cCodePointerType(cc,
                                            argsKey,
-                                           false,
+                                           isVarArg,
                                            returnType);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == ccpType);
 
         llvm::Value *opaqueValue = ctx->builder->CreateBitCast(
-            entry->llvmCWrapper, llvmType(out0->type));
+            entry->llvmCWrappers[cc], llvmType(out0->type));
         ctx->builder->CreateStore(opaqueValue, out0->llValue);
         break;
     }
 
-    case PRIM_callCCodePointer : {
+    case PRIM_callExternalCodePointer : {
         if (args->size() < 1)
             arityError2(1, args->size());
         CCodePointerTypePtr cpt;
@@ -5552,7 +5565,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Array :
-        error("Array primitive cannot be called");
+        error("no Array primitive overload found");
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
@@ -5587,10 +5600,10 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Vec :
-        error("Vec primitive cannot be called");
+        error("no Vec primitive overload found");
 
     case PRIM_Tuple :
-        error("Tuple primitive cannot be called");
+        error("no Tuple primitive overload found");
 
     case PRIM_TupleElementCount : {
         ensureArity(args, 1);
@@ -5631,7 +5644,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Union :
-        error("Union primitive cannot be called");
+        error("no Union primitive overload found");
 
     case PRIM_UnionMemberCount : {
         ensureArity(args, 1);
@@ -5808,7 +5821,7 @@ void codegenPrimOp(PrimOpPtr x,
     }
 
     case PRIM_Static :
-        error("Static primitive cannot be called");
+        error("no Static primitive overload found");
 
     case PRIM_ModuleName : {
         ensureArity(args, 1);
