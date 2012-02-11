@@ -199,7 +199,7 @@ bool staticToBool(MultiStaticPtr x, unsigned index)
 bool staticToCallingConv(ObjectPtr x, CallingConv &out)
 {
     if (x->objKind != PRIM_OP)
-        return true;
+        return false;
     PrimOp *ccPrim = (PrimOp*)x.ptr();
     switch (ccPrim->primOpCode) {
     case PRIM_AttributeCCall:
