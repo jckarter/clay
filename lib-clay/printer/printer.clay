@@ -126,8 +126,8 @@ overload printTo(stream, x:Pointer[T]) {
 overload printTo(stream, x:CodePointer[I, O]) {
     printWithSprintf(stream, "%p", x);
 }
-[CP | CCodePointer?(CP)]
-overload printTo(stream, x:CP) {
+[C,V,I,O]
+overload printTo(stream, x:ExternalCodePointer[C,V,I,O]) {
     printWithSprintf(stream, "%p", x);
 }
 

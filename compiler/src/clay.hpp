@@ -1978,7 +1978,8 @@ enum CallingConv {
     CC_STDCALL,
     CC_FASTCALL,
     CC_THISCALL,
-    CC_LLVM
+    CC_LLVM,
+    CC_Count
 };
 
 struct ExternalProcedure : public TopLevelItem {
@@ -2078,6 +2079,8 @@ struct GlobalAlias : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     ExprPtr expr;
+
+    vector<OverloadPtr> overloads;
 
     GlobalAlias(IdentifierPtr name,
                 Visibility visibility,
@@ -2452,6 +2455,7 @@ enum PrimOpCode {
     PRIM_pointerOffset,
     PRIM_pointerToInt,
     PRIM_intToPointer,
+    PRIM_nullPointer,
 
     PRIM_CodePointer,
     PRIM_makeCodePointer,
@@ -2464,15 +2468,9 @@ enum PrimOpCode {
     PRIM_AttributeDLLImport,
     PRIM_AttributeDLLExport,
 
-    PRIM_CCodePointerP,
-    PRIM_CCodePointer,
-    PRIM_LLVMCodePointer,
-    PRIM_VarArgsCCodePointer,
-    PRIM_StdCallCodePointer,
-    PRIM_FastCallCodePointer,
-    PRIM_ThisCallCodePointer,
-    PRIM_makeCCodePointer,
-    PRIM_callCCodePointer,
+    PRIM_ExternalCodePointer,
+    PRIM_makeExternalCodePointer,
+    PRIM_callExternalCodePointer,
 
     PRIM_Array,
     PRIM_arrayRef,
@@ -3205,7 +3203,7 @@ struct InvokeEntry : public Object {
     vector<TypePtr> returnTypes;
 
     llvm::Function *llvmFunc;
-    llvm::Function *llvmCWrapper;
+    llvm::Function *llvmCWrappers[CC_Count];
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
@@ -3216,7 +3214,11 @@ struct InvokeEntry : public Object {
           parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
-          isInline(false), llvmFunc(NULL), llvmCWrapper(NULL), debugInfo(NULL) {}
+          isInline(false), llvmFunc(NULL), debugInfo(NULL)
+    {
+        for (size_t i = 0; i < CC_Count; ++i)
+            llvmCWrappers[i] = NULL;
+    }
 
     llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
@@ -3441,6 +3443,11 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 ObjectPtr unwrapStaticType(TypePtr t);
+
+bool staticToBool(ObjectPtr x, bool &out);
+bool staticToBool(MultiStaticPtr x, unsigned index);
+bool staticToCallingConv(ObjectPtr x, CallingConv &out);
+CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
 
 
 //

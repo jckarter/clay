@@ -1,0 +1,79 @@
+import win32.*;
+
+// FIXME populate win32.constants
+alias WS_OVERLAPPEDWINDOW = 0x00CF_0000u;
+alias CW_USEDEFAULT = Least(INT);
+alias WM_CLOSE = 0x0010u;
+alias WM_DESTROY = 0x0002u;
+alias WM_PAINT = 0x000Fu;
+alias WM_LBUTTONUP = 0x0202u;
+alias COLOR_HIGHLIGHT = 13;
+alias MB_OK = 0x0000_0000u;
+
+external (WINAPI) WinMain(hInstance:HINSTANCE,
+    hModule:HINSTANCE,
+    pCmdLine:PSTR,
+    nCmdShow:Int) : Int
+{
+    var classname = cstring("Clay Window Class");
+
+    var wc = WNDCLASSA();
+    wc.lpfnWndProc = WNDPROC(windowProc);
+    wc.hInstance = hInstance;
+    wc.lpszClassName = classname;
+
+    RegisterClassA(&wc);
+
+    var hwnd = CreateWindowExA(
+        0u,
+        classname,
+        cstring("Clay Window"),
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        HWND(),
+        HMENU(),
+        hInstance,
+        LPVOID());
+
+    if (null?(hwnd))
+        return 1;
+
+    ShowWindow(hwnd, nCmdShow);
+
+    var msg = MSG();
+    while (GetMessageA(&msg, HWND(), 0u, 0u) != 0) {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return 0;
+}
+
+windowProc(hwnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM) : LRESULT
+{
+    switch (uMsg)
+    case (WM_CLOSE) {
+        DestroyWindow(hwnd);
+    }
+    case (WM_DESTROY) {
+        PostQuitMessage(0);
+    }
+    case (WM_PAINT) {
+        var ps = PAINTSTRUCT();
+        var hdc = BeginPaint(hwnd, &ps);
+        FillRect(hdc, &ps.rcPaint, HBRUSH(COLOR_HIGHLIGHT+1));
+        EndPaint(hwnd, &ps);
+    }
+    case (WM_LBUTTONUP) {
+        MessageBoxA(hwnd,
+            cstring("You clicked the window. How dare you."),
+            cstring("Click"),
+            MB_OK);
+    }
+    else {
+        return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+    }
+
+    return LRESULT(0);
+}
+

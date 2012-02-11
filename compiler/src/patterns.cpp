@@ -147,27 +147,32 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case CCODE_POINTER_TYPE : {
             CCodePointerType *cpt = (CCodePointerType *)t;
-            ObjectPtr head;
+            ObjectPtr head = primitive_ExternalCodePointer();;
+            ObjectPtr ccParam;
+
             switch (cpt->callingConv) {
             case CC_DEFAULT :
-                if (cpt->hasVarArgs)
-                    head = primitive_VarArgsCCodePointer();
-                else
-                    head = primitive_CCodePointer();
+                ccParam = primitive_AttributeCCall();
                 break;
             case CC_STDCALL :
-                head = primitive_StdCallCodePointer();
+                ccParam = primitive_AttributeStdCall();
                 break;
             case CC_FASTCALL :
-                head = primitive_FastCallCodePointer();
+                ccParam = primitive_AttributeFastCall();
                 break;
             case CC_THISCALL :
-                head = primitive_ThisCallCodePointer();
+                ccParam = primitive_AttributeThisCall();
                 break;
             case CC_LLVM :
-                head = primitive_LLVMCodePointer();
+                ccParam = primitive_AttributeLLVMCall();
                 break;
+            default:
+                assert(false);
             }
+            assert(ccParam != NULL);
+
+            ValueHolderPtr varArgParam = boolToValueHolder(cpt->hasVarArgs);
+
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
@@ -179,10 +184,12 @@ static PatternPtr objectToPattern(ObjectPtr obj)
                 returnTypes->items.push_back(x);
             }
             MultiPatternListPtr params = new MultiPatternList();
-            PatternPtr a = new PatternStruct(NULL, argTypes.ptr());
-            PatternPtr b = new PatternStruct(NULL, returnTypes.ptr());
-            params->items.push_back(a);
-            params->items.push_back(b);
+            PatternPtr argTypesParam = new PatternStruct(NULL, argTypes.ptr());
+            PatternPtr retTypesParam = new PatternStruct(NULL, returnTypes.ptr());
+            params->items.push_back(objectToPattern(ccParam));
+            params->items.push_back(objectToPattern(varArgParam.ptr()));
+            params->items.push_back(argTypesParam);
+            params->items.push_back(retTypesParam);
             return new PatternStruct(head, params.ptr());
         }
         case ARRAY_TYPE : {
@@ -508,12 +515,7 @@ static bool isPatternHead(ObjectPtr x)
         case PRIM_Pointer :
 
         case PRIM_CodePointer :
-        case PRIM_CCodePointer :
-        case PRIM_VarArgsCCodePointer :
-        case PRIM_StdCallCodePointer :
-        case PRIM_FastCallCodePointer :
-        case PRIM_ThisCallCodePointer :
-        case PRIM_LLVMCodePointer :
+        case PRIM_ExternalCodePointer :
 
         case PRIM_Array :
         case PRIM_Vec :

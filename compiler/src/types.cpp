@@ -1578,29 +1578,31 @@ void typePrint(ostream &out, TypePtr t) {
     }
     case CCODE_POINTER_TYPE : {
         CCodePointerType *x = (CCodePointerType *)t.ptr();
+        out << "ExternalCodePointer[";
+
         switch (x->callingConv) {
         case CC_DEFAULT :
-            if (x->hasVarArgs)
-                out << "VarArgsCCodePointer";
-            else
-                out << "CCodePointer";
+            out << "AttributeCCall, ";
             break;
         case CC_STDCALL :
-            out << "StdCallCodePointer";
+            out << "AttributeStdCall, ";
             break;
         case CC_FASTCALL :
-            out << "FastCallCodePointer";
+            out << "AttributeFastCall, ";
             break;
         case CC_THISCALL :
-            out << "ThisCallCodePointer";
+            out << "AttributeThisCall, ";
             break;
         case CC_LLVM :
-            out << "LLVMCodePointer";
+            out << "AttributeLLVMCall, ";
             break;
         default :
             assert(false);
         }
-        out << "[";
+        if (x->hasVarArgs)
+            out << "true, ";
+        else
+            out << "false, ";
         out << "[";
         for (unsigned i = 0; i < x->argTypes.size(); ++i) {
             if (i != 0)
