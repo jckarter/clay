@@ -1,0 +1,18 @@
+import libc;
+
+main() {
+    // Do string objects get cstring()ed?
+    libc.puts("hello world");
+
+    // Do pointers get cast to RawPointer?
+    var a = array(1,2,3);
+    var b = array(0,0,0);
+
+    libc.memcpy(&b, &a, TypeSize(Array[Int,3]));
+
+    println(b);
+
+    // Do integer types get upcast?
+    libc.putchar(0x40uss);
+    libc.putchar(0x0Auss);
+}
