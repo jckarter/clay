@@ -2443,6 +2443,7 @@ enum PrimOpCode {
     PRIM_pointerOffset,
     PRIM_pointerToInt,
     PRIM_intToPointer,
+    PRIM_nullPointer,
 
     PRIM_CodePointer,
     PRIM_makeCodePointer,

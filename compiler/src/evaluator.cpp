@@ -3875,9 +3875,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_pointerEqualsP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        EValuePtr ev0 = pointerValue(args, 0, t);
-        EValuePtr ev1 = pointerValue(args, 1, t);
+        TypePtr t;
+        EValuePtr ev0 = pointerLikeValue(args, 0, t);
+        EValuePtr ev1 = pointerLikeValue(args, 1, t);
         bool flag = ev0->as<void *>() == ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -3888,9 +3888,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_pointerLesserP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        EValuePtr ev0 = pointerValue(args, 0, t);
-        EValuePtr ev1 = pointerValue(args, 1, t);
+        TypePtr t;
+        EValuePtr ev0 = pointerLikeValue(args, 0, t);
+        EValuePtr ev1 = pointerLikeValue(args, 1, t);
         bool flag = ev0->as<void *>() < ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -3917,8 +3917,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
         IntegerTypePtr dest = valueToIntegerType(args, 0);
-        PointerTypePtr pt;
-        EValuePtr ev = pointerValue(args, 1, pt);
+        TypePtr pt;
+        EValuePtr ev = pointerLikeValue(args, 1, pt);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest.ptr());
@@ -3929,8 +3929,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr pointeeType = valueToType(args, 0);
-        TypePtr dest = pointerType(pointeeType);
+        TypePtr dest = valueToPointerLikeType(args, 0);
         IntegerTypePtr t;
         EValuePtr ev = integerValue(args, 1, t);
         assert(out->size() == 1);
@@ -3938,6 +3937,16 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out0->type == dest);
         ptrdiff_t ptrInt = op_intToPtrInt(ev);
         out0->as<void *>() = (void *)ptrInt;
+        break;
+    }
+
+    case PRIM_nullPointer : {
+        ensureArity(args, 1);
+        TypePtr dest = valueToPointerLikeType(args, 0);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        out0->as<void *>() = 0;
         break;
     }
 

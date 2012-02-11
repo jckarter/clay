@@ -22,7 +22,7 @@ define null?;
 //
 
 [T]
-inline overload Pointer[T]() = null(T);
+inline overload Pointer[T]() = nullPointer(Pointer[T]);
 
 
 
@@ -34,7 +34,7 @@ inline overload Pointer[T]() = null(T);
 inline overload I(a:Pointer[T]) = pointerToInt(I, a);
 
 [I,T|Integer?(I)]
-inline overload Pointer[T](a:I) = intToPointer(T, a);
+inline overload Pointer[T](a:I) = intToPointer(Pointer[T], a);
 
 [DEST, SRC]
 inline overload Pointer[DEST](a:Pointer[SRC]) =
@@ -99,10 +99,10 @@ inline overload dec(a:Pointer[T]) {
 //
 
 [T]
-inline null(static T) = Pointer[T](0);
+inline null(static T) = nullPointer(Pointer[T]);
 
 [T]
-inline overload null?(x:Pointer[T]) = (x == null(T));
+inline overload null?(x:Pointer[T]) = x == null(T);
 
 [T]
 inline overload dereference(p:Pointer[T]) = ref pointerDereference(p);
@@ -128,7 +128,7 @@ ExternalCodePointer?(x) = false;
 //
 
 [In, Out]
-inline overload CodePointer[In,Out]() = CodePointer[In,Out](0);
+inline overload CodePointer[In,Out]() = nullPointer(CodePointer[In,Out]);
 
 
 
@@ -148,10 +148,11 @@ inline overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) =
     bitcast(CodePointer[In1,Out1], a);
 
 [In, Out, I | Integer?(I)]
-inline overload CodePointer[In,Out](i:I) = CodePointer[In,Out](Pointer[Int8](i));
+inline overload CodePointer[In,Out](i:I) =
+    intToPointer(CodePointer[In,Out], i);
 
 [In, Out, I | Integer?(I)]
-inline overload I(a:CodePointer[In,Out]) = I(Pointer[Int8](a));
+inline overload I(a:CodePointer[In,Out]) = pointerToInt(I, a);
 
 
 
@@ -160,16 +161,16 @@ inline overload I(a:CodePointer[In,Out]) = I(Pointer[Int8](a));
 
 [In, Out]
 inline overload equals?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return equals?(RawPointer(a), RawPointer(b));
+    return pointerEquals?(a, b);
 }
 
 [In, Out]
 inline overload lesser?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return lesser?(RawPointer(a), RawPointer(b));
+    return pointerLesser?(a, b);
 }
 
 [In, Out]
-inline overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
+inline overload null?(p:CodePointer[In,Out]) = p == nullPointer(CodePointer[In,Out]);
 
 
 
@@ -178,7 +179,8 @@ inline overload null?(p:CodePointer[In,Out]) = null?(RawPointer(p));
 //
 
 [CC,V?,I,O]
-inline overload ExternalCodePointer[CC,V?,I,O]() = ExternalCodePointer[CC,V?,I,O](0);
+inline overload ExternalCodePointer[CC,V?,I,O]() =
+    nullPointer(ExternalCodePointer[CC,V?,I,O]);
 
 
 
@@ -194,18 +196,16 @@ inline overload ExternalCodePointer[CC,V?,I,O](a:Pointer[T]) =
     bitcast(ExternalCodePointer[CC,V?,I,O], a);
 
 [CC1,V1?,I1,O1, CC2,V2?,I2,O2]
-inline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2])
-    = bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
-
-// FIXME pointerToInt and intToPointer should work with code pointers
+inline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2]) =
+    bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
 
 [CC,V?,In,Out,I | Integer?(I)]
 inline overload ExternalCodePointer[CC,V?,In,Out](i:I) =
-    ExternalCodePointer[CC,V?,In,Out](Pointer[Int8](i));
+    intToPointer(ExternalCodePointer[CC,V?,In,Out], i);
 
 [CC,V?,In,Out,I | Integer?(I)]
-inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) = I(Pointer[Int8](a));
-
+inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) =
+    pointerToInt(I, a);
 
 
 //
@@ -215,21 +215,22 @@ inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) = I(Pointer[Int8](a));
 
 [C,V,I,O]
 inline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return equals?(RawPointer(a), RawPointer(b));
+    return pointerEquals?(a, b);
 }
 
 [C,V,I,O]
 inline overload lesser?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return lesser?(RawPointer(a), RawPointer(b));
+    return pointerLesser?(a, b);
 }
 
 [C,V,I,O]
-inline overload null?(p:ExternalCodePointer[C,V,I,O]) = null?(RawPointer(p));
-
+inline overload null?(p:ExternalCodePointer[C,V,I,O]) {
+    return p == nullPointer(ExternalCodePointer[C,V,I,O]);
+}
 
 
 //
-// CCodePointer - call
+// ExternalCodePointer - call
 //
 
 [CC, ..In, ..Out]

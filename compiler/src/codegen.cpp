@@ -5324,9 +5324,9 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_pointerEqualsP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        llvm::Value *v0 = pointerValue(args, 0, t, ctx);
-        llvm::Value *v1 = pointerValue(args, 1, t, ctx);
+        TypePtr t;
+        llvm::Value *v0 = pointerLikeValue(args, 0, t, ctx);
+        llvm::Value *v1 = pointerLikeValue(args, 1, t, ctx);
         llvm::Value *flag = ctx->builder->CreateICmpEQ(v0, v1);
         llvm::Value *result = ctx->builder->CreateZExt(flag, llvmType(boolType));
         assert(out->size() == 1);
@@ -5338,9 +5338,9 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_pointerLesserP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        llvm::Value *v0 = pointerValue(args, 0, t, ctx);
-        llvm::Value *v1 = pointerValue(args, 1, t, ctx);
+        TypePtr t;
+        llvm::Value *v0 = pointerLikeValue(args, 0, t, ctx);
+        llvm::Value *v1 = pointerLikeValue(args, 1, t, ctx);
         llvm::Value *flag = ctx->builder->CreateICmpULT(v0, v1);
         llvm::Value *result = ctx->builder->CreateZExt(flag, llvmType(boolType));
         assert(out->size() == 1);
@@ -5371,8 +5371,8 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         IntegerTypePtr dest = valueToIntegerType(args, 0);
         llvm::Type *llDest = llvmType(dest.ptr());
-        PointerTypePtr pt;
-        llvm::Value *v = pointerValue(args, 1, pt, ctx);
+        TypePtr pt;
+        llvm::Value *v = pointerLikeValue(args, 1, pt, ctx);
         llvm::Value *result = ctx->builder->CreatePtrToInt(v, llDest);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -5383,8 +5383,7 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr pointeeType = valueToType(args, 0);
-        TypePtr dest = pointerType(pointeeType);
+        TypePtr dest = valueToPointerLikeType(args, 0);
         IntegerTypePtr t;
         llvm::Value *v = integerValue(args, 1, t, ctx);
         if (t->isSigned && (typeSize(t.ptr()) < typeSize(cPtrDiffTType)))
@@ -5393,6 +5392,19 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == dest);
+        ctx->builder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_nullPointer : {
+        ensureArity(args, 1);
+        TypePtr dest = valueToPointerLikeType(args, 0);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        llvm::PointerType *llType = llvm::dyn_cast<llvm::PointerType>(llvmType(dest));
+        assert(llType != NULL);
+        llvm::Value *result = llvm::ConstantPointerNull::get(llType);
         ctx->builder->CreateStore(result, out0->llValue);
         break;
     }

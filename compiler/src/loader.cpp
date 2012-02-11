@@ -841,6 +841,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(pointerOffset);
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);
+    PRIMITIVE(nullPointer);
 
     PRIMITIVE(CodePointer);
     PRIMITIVE(makeCodePointer);

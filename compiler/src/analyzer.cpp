@@ -2458,8 +2458,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr t = valueToType(args, 0);
-        return new MultiPValue(new PValue(pointerType(t), true));
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_nullPointer : {
+        ensureArity(args, 1);
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_CodePointer :
