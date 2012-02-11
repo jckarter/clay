@@ -4474,6 +4474,53 @@ static llvm::Value *numericValue(MultiCValuePtr args,
     return ctx->builder->CreateLoad(cv->llValue);
 }
 
+static llvm::Value *floatValue(MultiCValuePtr args,
+                               unsigned index,
+                               FloatTypePtr &type,
+                               CodegenContextPtr ctx)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type.ptr() != type.ptr())
+            argumentTypeError(index, type.ptr(), cv->type);
+    }
+    else {
+        switch (cv->type->typeKind) {
+        case FLOAT_TYPE :
+            break;
+        default :
+            argumentTypeError(index, "float type", cv->type);
+        }
+        type = (FloatType*)cv->type.ptr();
+    }
+    return ctx->builder->CreateLoad(cv->llValue);
+}
+
+static llvm::Value *integerOrPointerLikeValue(MultiCValuePtr args,
+                                              unsigned index,
+                                              TypePtr &type,
+                                              CodegenContextPtr ctx)
+{
+    CValuePtr cv = args->values[index];
+    if (type.ptr()) {
+        if (cv->type != type)
+            argumentTypeError(index, type, cv->type);
+    }
+    else {
+        switch (cv->type->typeKind) {
+        case INTEGER_TYPE :
+        case POINTER_TYPE :
+        case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
+            break;
+        default :
+            argumentTypeError(index, "integer, pointer, or code pointer type", cv->type);
+        }
+        type = cv->type;
+    }
+    return ctx->builder->CreateLoad(cv->llValue);
+}
+
 static llvm::Value *complexValue(MultiCValuePtr args,
                                unsigned index,
                                ComplexTypePtr &type)
@@ -4841,22 +4888,41 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_numericEqualsP : {
+    case PRIM_integerEqualsP :
+    case PRIM_integerLesserP : {
         ensureArity(args, 2);
         TypePtr t;
-        llvm::Value *v0 = numericValue(args, 0, t, ctx);
-        llvm::Value *v1 = numericValue(args, 1, t, ctx);
-        llvm::Value *flag;
-        switch (t->typeKind) {
-        case INTEGER_TYPE :
-            flag = ctx->builder->CreateICmpEQ(v0, v1);
+        llvm::Value *v0 = integerOrPointerLikeValue(args, 0, t, ctx);
+        llvm::Value *v1 = integerOrPointerLikeValue(args, 1, t, ctx);
+
+        llvm::CmpInst::Predicate pred;
+
+        switch (x->primOpCode) {
+        case PRIM_integerEqualsP:
+            pred = llvm::CmpInst::ICMP_EQ;
             break;
-        case FLOAT_TYPE :
-            flag = ctx->builder->CreateFCmpUEQ(v0, v1);
+        case PRIM_integerLesserP: {
+            bool isSigned;
+            switch (t->typeKind) {
+            case INTEGER_TYPE: {
+                IntegerType *it = (IntegerType*)t.ptr();
+                isSigned = it->isSigned;
+                break;
+            }
+            default:
+                isSigned = false;
+                break;
+            }
+            pred = isSigned
+                ? llvm::CmpInst::ICMP_SLT
+                : llvm::CmpInst::ICMP_ULT;
             break;
-        default :
+        }
+        default:
             assert(false);
         }
+
+        llvm::Value *flag = ctx->builder->CreateICmp(pred, v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
@@ -4864,33 +4930,79 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_numericLesserP : {
+    case PRIM_floatOrderedEqualsP :
+    case PRIM_floatOrderedLesserP :
+    case PRIM_floatOrderedLesserEqualsP :
+    case PRIM_floatOrderedGreaterP :
+    case PRIM_floatOrderedGreaterEqualsP :
+    case PRIM_floatOrderedNotEqualsP :
+    case PRIM_floatOrderedP :
+    case PRIM_floatUnorderedEqualsP :
+    case PRIM_floatUnorderedLesserP :
+    case PRIM_floatUnorderedLesserEqualsP :
+    case PRIM_floatUnorderedGreaterP :
+    case PRIM_floatUnorderedGreaterEqualsP :
+    case PRIM_floatUnorderedNotEqualsP :
+    case PRIM_floatUnorderedP : {
         ensureArity(args, 2);
-        TypePtr t;
-        llvm::Value *v0 = numericValue(args, 0, t, ctx);
-        llvm::Value *v1 = numericValue(args, 1, t, ctx);
-        llvm::Value *flag;
-        switch (t->typeKind) {
-        case INTEGER_TYPE : {
-            IntegerType *it = (IntegerType *)t.ptr();
-            if (it->isSigned)
-                flag = ctx->builder->CreateICmpSLT(v0, v1);
-            else
-                flag = ctx->builder->CreateICmpULT(v0, v1);
+        FloatTypePtr t;
+        llvm::Value *v0 = floatValue(args, 0, t, ctx);
+        llvm::Value *v1 = floatValue(args, 1, t, ctx);
+
+        llvm::CmpInst::Predicate pred;
+
+        switch (x->primOpCode) {
+        case PRIM_floatOrderedEqualsP :
+            pred = llvm::CmpInst::FCMP_OEQ;
             break;
-        }
-        case FLOAT_TYPE :
-            flag = ctx->builder->CreateFCmpULT(v0, v1);
+        case PRIM_floatOrderedLesserP :
+            pred = llvm::CmpInst::FCMP_OLT;
             break;
-        default :
+        case PRIM_floatOrderedLesserEqualsP :
+            pred = llvm::CmpInst::FCMP_OLE;
+            break;
+        case PRIM_floatOrderedGreaterP :
+            pred = llvm::CmpInst::FCMP_OGT;
+            break;
+        case PRIM_floatOrderedGreaterEqualsP :
+            pred = llvm::CmpInst::FCMP_OGE;
+            break;
+        case PRIM_floatOrderedNotEqualsP :
+            pred = llvm::CmpInst::FCMP_ONE;
+            break;
+        case PRIM_floatOrderedP :
+            pred = llvm::CmpInst::FCMP_ORD;
+            break;
+        case PRIM_floatUnorderedEqualsP :
+            pred = llvm::CmpInst::FCMP_UEQ;
+            break;
+        case PRIM_floatUnorderedLesserP :
+            pred = llvm::CmpInst::FCMP_ULT;
+            break;
+        case PRIM_floatUnorderedLesserEqualsP :
+            pred = llvm::CmpInst::FCMP_ULE;
+            break;
+        case PRIM_floatUnorderedGreaterP :
+            pred = llvm::CmpInst::FCMP_UGT;
+            break;
+        case PRIM_floatUnorderedGreaterEqualsP :
+            pred = llvm::CmpInst::FCMP_UGE;
+            break;
+        case PRIM_floatUnorderedNotEqualsP :
+            pred = llvm::CmpInst::FCMP_UNE;
+            break;
+        case PRIM_floatUnorderedP :
+            pred = llvm::CmpInst::FCMP_UNO;
+            break;
+        default:
             assert(false);
         }
-        llvm::Value *result =
-            ctx->builder->CreateZExt(flag, llvmType(boolType));
+
+        llvm::Value *flag = ctx->builder->CreateFCmp(pred, v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        ctx->builder->CreateStore(result, out0->llValue);
+        ctx->builder->CreateStore(flag, out0->llValue);
         break;
     }
 
@@ -5320,34 +5432,6 @@ void codegenPrimOp(PrimOpPtr x,
         CValuePtr out0 = out->values[0];
         assert(out0->type == t.ptr());
         ctx->builder->CreateStore(v, out0->llValue);
-        break;
-    }
-
-    case PRIM_pointerEqualsP : {
-        ensureArity(args, 2);
-        TypePtr t;
-        llvm::Value *v0 = pointerLikeValue(args, 0, t, ctx);
-        llvm::Value *v1 = pointerLikeValue(args, 1, t, ctx);
-        llvm::Value *flag = ctx->builder->CreateICmpEQ(v0, v1);
-        llvm::Value *result = ctx->builder->CreateZExt(flag, llvmType(boolType));
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        ctx->builder->CreateStore(result, out0->llValue);
-        break;
-    }
-
-    case PRIM_pointerLesserP : {
-        ensureArity(args, 2);
-        TypePtr t;
-        llvm::Value *v0 = pointerLikeValue(args, 0, t, ctx);
-        llvm::Value *v1 = pointerLikeValue(args, 1, t, ctx);
-        llvm::Value *flag = ctx->builder->CreateICmpULT(v0, v1);
-        llvm::Value *result = ctx->builder->CreateZExt(flag, llvmType(boolType));
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        ctx->builder->CreateStore(result, out0->llValue);
         break;
     }
 

@@ -164,10 +164,10 @@ inline overload equals?(a:A, b:B) =
             toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
-inline overload equals?(a:A, b:A) = numericEquals?(a, b);
+inline overload equals?(a:A, b:A) = integerEquals?(a, b);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload equals?(a:A, b:A) = floatOrderedAndEquals?(a, b);
+inline overload equals?(a:A, b:A) = floatOrderedEquals?(a, b);
 
 
 [A, B | Numeric?(A, B)]
@@ -179,7 +179,7 @@ inline overload notEquals?(a:A, b:B) =
 inline overload notEquals?(a:A, b:A) = not equals?(a, b);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload notEquals?(a:A, b:A) = floatUnorderedOrNotEquals?(a, b);
+inline overload notEquals?(a:A, b:A) = floatUnorderedNotEquals?(a, b);
 
 
 [A,B | Numeric?(A,B)]
@@ -188,10 +188,10 @@ inline overload lesser?(a:A, b:B) =
             toBiggerNumericType(A, B, b));
 
 [A | Numeric?(A)]
-inline overload lesser?(a:A, b:A) = numericLesser?(a, b);
+inline overload lesser?(a:A, b:A) = integerLesser?(a, b);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload lesser?(a:A, b:A) = floatOrderedAndLesser?(a, b);
+inline overload lesser?(a:A, b:A) = floatOrderedLesser?(a, b);
 
 
 [A, B | Numeric?(A, B)]
@@ -203,7 +203,7 @@ inline overload lesserEquals?(a:A, b:B) =
 inline overload lesserEquals?(a:A, b:A) = not lesser?(b, a);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload lesserEquals?(a:A, b:A) = floatOrderedAndLesserEquals?(a, b);
+inline overload lesserEquals?(a:A, b:A) = floatOrderedLesserEquals?(a, b);
 
 
 [A,B | Numeric?(A,B)]
@@ -215,7 +215,7 @@ inline overload greater?(a:A, b:B) =
 inline overload greater?(a:A, b:A) = lesser?(b, a);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload greater?(a:A, b:A) = floatOrderedAndGreater?(a, b);
+inline overload greater?(a:A, b:A) = floatOrderedGreater?(a, b);
 
 
 [A, B | Numeric?(A, B)]
@@ -227,7 +227,7 @@ inline overload greaterEquals?(a:A, b:B) =
 inline overload greaterEquals?(a:A, b:A) = not lesser?(a, b);
 
 [A | Float?(A) or Imaginary?(A)]
-inline overload greaterEquals?(a:A, b:A) = floatOrderedAndGreaterEquals?(a, b);
+inline overload greaterEquals?(a:A, b:A) = floatOrderedGreaterEquals?(a, b);
 
 inline inRange?(x,l,u) =  x<u and l<=x;
 

@@ -2368,10 +2368,23 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_boolNot :
         return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_numericEqualsP :
-        return new MultiPValue(new PValue(boolType, true));
-
-    case PRIM_numericLesserP :
+    case PRIM_integerEqualsP :
+    case PRIM_integerLesserP :
+    case PRIM_floatOrderedEqualsP :
+    case PRIM_floatOrderedLesserP :
+    case PRIM_floatOrderedLesserEqualsP :
+    case PRIM_floatOrderedGreaterP :
+    case PRIM_floatOrderedGreaterEqualsP :
+    case PRIM_floatOrderedNotEqualsP :
+    case PRIM_floatOrderedP :
+    case PRIM_floatUnorderedEqualsP :
+    case PRIM_floatUnorderedLesserP :
+    case PRIM_floatUnorderedLesserEqualsP :
+    case PRIM_floatUnorderedGreaterP :
+    case PRIM_floatUnorderedGreaterEqualsP :
+    case PRIM_floatUnorderedNotEqualsP :
+    case PRIM_floatUnorderedP :
+        ensureArity(args, 2);
         return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_numericAdd :
@@ -2439,10 +2452,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         PointerTypePtr pt = pointerTypeOfValue(args, 0);
         return new MultiPValue(new PValue(pt->pointeeType, false));
     }
-
-    case PRIM_pointerEqualsP :
-    case PRIM_pointerLesserP :
-        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_pointerOffset : {
         ensureArity(args, 2);

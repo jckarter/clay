@@ -2407,8 +2407,6 @@ enum PrimOpCode {
 
     PRIM_boolNot,
 
-    PRIM_numericEqualsP,
-    PRIM_numericLesserP,
     PRIM_numericAdd,
     PRIM_numericSubtract,
     PRIM_numericMultiply,
@@ -2422,6 +2420,8 @@ enum PrimOpCode {
     PRIM_integerBitwiseOr,
     PRIM_integerBitwiseXor,
     PRIM_integerBitwiseNot,
+    PRIM_integerEqualsP,
+    PRIM_integerLesserP,
 
     PRIM_numericConvert,
 
@@ -2434,12 +2434,25 @@ enum PrimOpCode {
     PRIM_integerShiftLeftChecked,
     PRIM_integerConvertChecked,
 
+    PRIM_floatOrderedEqualsP,
+    PRIM_floatOrderedLesserP,
+    PRIM_floatOrderedLesserEqualsP,
+    PRIM_floatOrderedGreaterP,
+    PRIM_floatOrderedGreaterEqualsP,
+    PRIM_floatOrderedNotEqualsP,
+    PRIM_floatOrderedP,
+    PRIM_floatUnorderedEqualsP,
+    PRIM_floatUnorderedLesserP,
+    PRIM_floatUnorderedLesserEqualsP,
+    PRIM_floatUnorderedGreaterP,
+    PRIM_floatUnorderedGreaterEqualsP,
+    PRIM_floatUnorderedNotEqualsP,
+    PRIM_floatUnorderedP,
+
     PRIM_Pointer,
 
     PRIM_addressOf,
     PRIM_pointerDereference,
-    PRIM_pointerEqualsP,
-    PRIM_pointerLesserP,
     PRIM_pointerOffset,
     PRIM_pointerToInt,
     PRIM_intToPointer,

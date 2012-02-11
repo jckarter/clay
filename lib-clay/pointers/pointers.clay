@@ -48,12 +48,12 @@ inline overload Pointer[DEST](a:Pointer[SRC]) =
 
 [T]
 inline overload equals?(a:Pointer[T], b:Pointer[T]) {
-    return pointerEquals?(a, b);
+    return integerEquals?(a, b);
 }
 
 [T]
 inline overload lesser?(a:Pointer[T], b:Pointer[T]) {
-    return pointerLesser?(a, b);
+    return integerLesser?(a, b);
 }
 
 
@@ -161,12 +161,12 @@ inline overload I(a:CodePointer[In,Out]) = pointerToInt(I, a);
 
 [In, Out]
 inline overload equals?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return pointerEquals?(a, b);
+    return integerEquals?(a, b);
 }
 
 [In, Out]
 inline overload lesser?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return pointerLesser?(a, b);
+    return integerLesser?(a, b);
 }
 
 [In, Out]
@@ -210,17 +210,16 @@ inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) =
 
 //
 // ExternalCodePointer - equals?, lesser?, null?
-// FIXME pointerEquals? and pointerLesser? should work with code pointers
 //
 
 [C,V,I,O]
 inline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return pointerEquals?(a, b);
+    return integerEquals?(a, b);
 }
 
 [C,V,I,O]
 inline overload lesser?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return pointerLesser?(a, b);
+    return integerLesser?(a, b);
 }
 
 [C,V,I,O]

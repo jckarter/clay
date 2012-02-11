@@ -805,8 +805,9 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(boolNot);
 
-    PRIMITIVE(numericEqualsP);
-    PRIMITIVE(numericLesserP);
+    PRIMITIVE(integerEqualsP);
+    PRIMITIVE(integerLesserP);
+
     PRIMITIVE(numericAdd);
     PRIMITIVE(numericSubtract);
     PRIMITIVE(numericMultiply);
@@ -832,12 +833,25 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(integerNegateChecked);
     PRIMITIVE(integerConvertChecked);
 
+    PRIMITIVE(floatOrderedEqualsP);
+    PRIMITIVE(floatOrderedLesserP);
+    PRIMITIVE(floatOrderedLesserEqualsP);
+    PRIMITIVE(floatOrderedGreaterP);
+    PRIMITIVE(floatOrderedGreaterEqualsP);
+    PRIMITIVE(floatOrderedNotEqualsP);
+    PRIMITIVE(floatOrderedP);
+    PRIMITIVE(floatUnorderedEqualsP);
+    PRIMITIVE(floatUnorderedLesserP);
+    PRIMITIVE(floatUnorderedLesserEqualsP);
+    PRIMITIVE(floatUnorderedGreaterP);
+    PRIMITIVE(floatUnorderedGreaterEqualsP);
+    PRIMITIVE(floatUnorderedNotEqualsP);
+    PRIMITIVE(floatUnorderedP);
+
     PRIMITIVE(Pointer);
 
     PRIMITIVE(addressOf);
     PRIMITIVE(pointerDereference);
-    PRIMITIVE(pointerEqualsP);
-    PRIMITIVE(pointerLesserP);
     PRIMITIVE(pointerOffset);
     PRIMITIVE(pointerToInt);
     PRIMITIVE(intToPointer);

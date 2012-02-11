@@ -2609,6 +2609,49 @@ static EValuePtr numericValue(MultiEValuePtr args, unsigned index,
     return ev;
 }
 
+static EValuePtr floatValue(MultiEValuePtr args, unsigned index,
+                            FloatTypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type.ptr() != type.ptr())
+            argumentTypeError(index, type.ptr(), ev->type);
+    }
+    else {
+        switch (ev->type->typeKind) {
+        case FLOAT_TYPE :
+            break;
+        default :
+            argumentTypeError(index, "float type", ev->type);
+        }
+        type = (FloatType*)ev->type.ptr();
+    }
+    return ev;
+}
+
+static EValuePtr integerOrPointerLikeValue(MultiEValuePtr args, unsigned index,
+                                           TypePtr &type)
+{
+    EValuePtr ev = args->values[index];
+    if (type.ptr()) {
+        if (ev->type != type)
+            argumentTypeError(index, type, ev->type);
+    }
+    else {
+        switch (ev->type->typeKind) {
+        case INTEGER_TYPE :
+        case POINTER_TYPE :
+        case CODE_POINTER_TYPE :
+        case CCODE_POINTER_TYPE :
+            break;
+        default :
+            argumentTypeError(index, "integer, pointer, or code pointer type", ev->type);
+        }
+        type = ev->type;
+    }
+    return ev;
+}
+
 static EValuePtr complexValue(MultiEValuePtr args, unsigned index,
                             ComplexTypePtr &type)
 {
@@ -2803,6 +2846,17 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         break;
     }
 
+    case POINTER_TYPE :
+    case CODE_POINTER_TYPE :
+    case CCODE_POINTER_TYPE : {
+        switch (typeSize(a->type)) {
+        case 2 : T<unsigned short>().eval(a, b, out); break;
+        case 4 : T<size32_t>().eval(a, b, out); break;
+        case 8 : T<size64_t>().eval(a, b, out); break;
+        default : error("unsupported pointer size");
+        }
+    }
+
     default :
         assert(false);
     }
@@ -2842,53 +2896,41 @@ public :
     virtual void perform(T &a, T &b, void *out) = 0;
 };
 
-template <typename T>
-class Op_numericEqualsP : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((char *)out) = (a == b) ? 1 : 0;
+#define BINARY_OP(name, type, expr) \
+    template <typename T>                               \
+    class name : public BinaryOpHelper<T> {             \
+    public :                                            \
+        virtual void perform(T &a, T &b, void *out) {   \
+            *((type *)out) = (expr);                    \
+        }                                               \
     }
-};
 
-template <typename T>
-class Op_numericLesserP : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((char *)out) = (a < b) ? 1 : 0;
-    }
-};
+BINARY_OP(Op_orderedEqualsP, bool, a == b);
+BINARY_OP(Op_orderedLesserP, bool, a < b);
+BINARY_OP(Op_orderedLesserEqualsP, bool, a <= b);
+BINARY_OP(Op_orderedGreaterP, bool, a > b);
+BINARY_OP(Op_orderedGreaterEqualsP, bool, a >= b);
+BINARY_OP(Op_orderedNotEqualsP, bool, a != b && a == a && b == b);
+BINARY_OP(Op_orderedP, bool, a == a && b == b);
+BINARY_OP(Op_unorderedEqualsP, bool, a == b || a != a || b != b);
+BINARY_OP(Op_unorderedLesserP, bool, !(a >= b));
+BINARY_OP(Op_unorderedLesserEqualsP, bool, !(a > b));
+BINARY_OP(Op_unorderedGreaterP, bool, !(a <= b));
+BINARY_OP(Op_unorderedGreaterEqualsP, bool, !(a < b));
+BINARY_OP(Op_unorderedNotEqualsP, bool, a != b);
+BINARY_OP(Op_unorderedP, bool, a != a || b != b);
+BINARY_OP(Op_numericAdd, T, a + b);
+BINARY_OP(Op_numericSubtract, T, a - b);
+BINARY_OP(Op_numericMultiply, T, a * b);
+BINARY_OP(Op_numericDivide, T, a / b);
+BINARY_OP(Op_integerRemainder, T, a % b);
+BINARY_OP(Op_integerShiftLeft, T, a << b);
+BINARY_OP(Op_integerShiftRight, T, a >> b);
+BINARY_OP(Op_integerBitwiseAnd, T, a & b);
+BINARY_OP(Op_integerBitwiseOr, T, a | b);
+BINARY_OP(Op_integerBitwiseXor, T, a ^ b);
 
-template <typename T>
-class Op_numericAdd : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a + b;
-    }
-};
-
-template <typename T>
-class Op_numericSubtract : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a - b;
-    }
-};
-
-template <typename T>
-class Op_numericMultiply : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a * b;
-    }
-};
-
-template <typename T>
-class Op_numericDivide : public BinaryOpHelper<T> {
-public :
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a / b;
-    }
-};
+#undef BINARY_OP
 
 
 //
@@ -2955,13 +2997,19 @@ public :
 #pragma warning(disable: 4146)
 #endif
 
-template <typename T>
-class Op_numericNegate : public UnaryOpHelper<T> {
-public :
-    virtual void perform(T &a, void *out) {
-        *((T *)out) = -a;
-    }
-};
+#define UNARY_OP(name, type, expr) \
+    template <typename T>                       \
+    class name : public UnaryOpHelper<T> {      \
+    public :                                    \
+        virtual void perform(T &a, void *out) { \
+            *((type *)out) = (expr);            \
+        }                                       \
+    };
+
+UNARY_OP(Op_numericNegate, T, -a);
+UNARY_OP(Op_integerBitwiseNot, T, ~a);
+
+#undef UNARY_OP
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -2999,48 +3047,6 @@ static void binaryIntegerOp(EValuePtr a, EValuePtr b, EValuePtr out)
         }
     }
 }
-
-template <typename T>
-class Op_integerRemainder : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a % b;
-    }
-};
-
-template <typename T>
-class Op_integerShiftLeft : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a << b;
-    }
-};
-
-template <typename T>
-class Op_integerShiftRight : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a >> b;
-    }
-};
-
-template <typename T>
-class Op_integerBitwiseAnd : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a & b;
-    }
-};
-
-template <typename T>
-class Op_integerBitwiseOr : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a | b;
-    }
-};
-
-template <typename T>
-class Op_integerBitwiseXor : public BinaryOpHelper<T> {
-    virtual void perform(T &a, T &b, void *out) {
-        *((T *)out) = a ^ b;
-    }
-};
 
 #if defined(__clang__)
 #  pragma clang diagnostic push
@@ -3192,14 +3198,6 @@ static void unaryIntegerOp(EValuePtr a, EValuePtr out)
     }
 }
 
-
-template <typename T>
-class Op_integerBitwiseNot : public UnaryOpHelper<T> {
-public :
-    virtual void perform(T &a, void *out) {
-        *((T *)out) = ~a;
-    }
-};
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -3576,27 +3574,95 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_numericEqualsP : {
+    case PRIM_integerEqualsP :
+    case PRIM_integerLesserP : {
         ensureArity(args, 2);
         TypePtr t;
-        EValuePtr ev0 = numericValue(args, 0, t);
-        EValuePtr ev1 = numericValue(args, 1, t);
+        EValuePtr ev0 = integerOrPointerLikeValue(args, 0, t);
+        EValuePtr ev1 = integerOrPointerLikeValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        binaryNumericOp<Op_numericEqualsP>(ev0, ev1, out0);
+        switch (x->primOpCode) {
+        case PRIM_integerEqualsP:
+            binaryNumericOp<Op_orderedEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_integerLesserP:
+            binaryNumericOp<Op_orderedLesserP>(ev0, ev1, out0);
+            break;
+        default:
+            assert(false);
+        }
         break;
     }
 
-    case PRIM_numericLesserP : {
+    case PRIM_floatOrderedEqualsP :
+    case PRIM_floatOrderedLesserP :
+    case PRIM_floatOrderedLesserEqualsP :
+    case PRIM_floatOrderedGreaterP :
+    case PRIM_floatOrderedGreaterEqualsP :
+    case PRIM_floatOrderedNotEqualsP :
+    case PRIM_floatOrderedP :
+    case PRIM_floatUnorderedEqualsP :
+    case PRIM_floatUnorderedLesserP :
+    case PRIM_floatUnorderedLesserEqualsP :
+    case PRIM_floatUnorderedGreaterP :
+    case PRIM_floatUnorderedGreaterEqualsP :
+    case PRIM_floatUnorderedNotEqualsP :
+    case PRIM_floatUnorderedP : {
         ensureArity(args, 2);
-        TypePtr t;
-        EValuePtr ev0 = numericValue(args, 0, t);
-        EValuePtr ev1 = numericValue(args, 1, t);
+        FloatTypePtr t;
+        EValuePtr ev0 = floatValue(args, 0, t);
+        EValuePtr ev1 = floatValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);
-        binaryNumericOp<Op_numericLesserP>(ev0, ev1, out0);
+        switch (x->primOpCode) {
+        case PRIM_floatOrderedEqualsP :
+            binaryNumericOp<Op_orderedEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedLesserP :
+            binaryNumericOp<Op_orderedLesserP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedLesserEqualsP :
+            binaryNumericOp<Op_orderedLesserEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedGreaterP :
+            binaryNumericOp<Op_orderedGreaterP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedGreaterEqualsP :
+            binaryNumericOp<Op_orderedGreaterEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedNotEqualsP :
+            binaryNumericOp<Op_orderedNotEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatOrderedP :
+            binaryNumericOp<Op_orderedP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedEqualsP :
+            binaryNumericOp<Op_unorderedEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedLesserP :
+            binaryNumericOp<Op_unorderedLesserP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedLesserEqualsP :
+            binaryNumericOp<Op_unorderedLesserEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedGreaterP :
+            binaryNumericOp<Op_unorderedGreaterP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedGreaterEqualsP :
+            binaryNumericOp<Op_unorderedGreaterEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedNotEqualsP :
+            binaryNumericOp<Op_unorderedNotEqualsP>(ev0, ev1, out0);
+            break;
+        case PRIM_floatUnorderedP :
+            binaryNumericOp<Op_unorderedP>(ev0, ev1, out0);
+            break;
+        default:
+            assert(false);
+        }
         break;
     }
 
@@ -3870,31 +3936,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == t.ptr());
         out0->as<void*>() = ev->as<void*>();
-        break;
-    }
-
-    case PRIM_pointerEqualsP : {
-        ensureArity(args, 2);
-        TypePtr t;
-        EValuePtr ev0 = pointerLikeValue(args, 0, t);
-        EValuePtr ev1 = pointerLikeValue(args, 1, t);
-        bool flag = ev0->as<void *>() == ev1->as<void *>();
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        out0->as<bool>() = flag;
-        break;
-    }
-
-    case PRIM_pointerLesserP : {
-        ensureArity(args, 2);
-        TypePtr t;
-        EValuePtr ev0 = pointerLikeValue(args, 0, t);
-        EValuePtr ev1 = pointerLikeValue(args, 1, t);
-        bool flag = ev0->as<void *>() < ev1->as<void *>();
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        out0->as<bool>() = flag;
         break;
     }
 
