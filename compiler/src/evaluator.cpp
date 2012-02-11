@@ -381,6 +381,7 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
         case TYPE :
         case PRIM_OP :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
         case RECORD :
         case VARIANT :
         case MODULE_HOLDER :
@@ -1550,6 +1551,7 @@ void evalCallExpr(ExprPtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -1738,6 +1740,7 @@ void evalCallValue(EValuePtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -3505,6 +3508,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         case RECORD :
         case VARIANT :
         case PROCEDURE :
+        case GLOBAL_ALIAS :
             break;
         default :
             argumentError(0, "invalid callable");
@@ -3871,9 +3875,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_pointerEqualsP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        EValuePtr ev0 = pointerValue(args, 0, t);
-        EValuePtr ev1 = pointerValue(args, 1, t);
+        TypePtr t;
+        EValuePtr ev0 = pointerLikeValue(args, 0, t);
+        EValuePtr ev1 = pointerLikeValue(args, 1, t);
         bool flag = ev0->as<void *>() == ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -3884,9 +3888,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_pointerLesserP : {
         ensureArity(args, 2);
-        PointerTypePtr t;
-        EValuePtr ev0 = pointerValue(args, 0, t);
-        EValuePtr ev1 = pointerValue(args, 1, t);
+        TypePtr t;
+        EValuePtr ev0 = pointerLikeValue(args, 0, t);
+        EValuePtr ev1 = pointerLikeValue(args, 1, t);
         bool flag = ev0->as<void *>() < ev1->as<void *>();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -3913,8 +3917,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_pointerToInt : {
         ensureArity(args, 2);
         IntegerTypePtr dest = valueToIntegerType(args, 0);
-        PointerTypePtr pt;
-        EValuePtr ev = pointerValue(args, 1, pt);
+        TypePtr pt;
+        EValuePtr ev = pointerLikeValue(args, 1, pt);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == dest.ptr());
@@ -3925,8 +3929,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr pointeeType = valueToType(args, 0);
-        TypePtr dest = pointerType(pointeeType);
+        TypePtr dest = valueToPointerLikeType(args, 0);
         IntegerTypePtr t;
         EValuePtr ev = integerValue(args, 1, t);
         assert(out->size() == 1);
@@ -3934,6 +3937,16 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out0->type == dest);
         ptrdiff_t ptrInt = op_intToPtrInt(ev);
         out0->as<void *>() = (void *)ptrInt;
+        break;
+    }
+
+    case PRIM_nullPointer : {
+        ensureArity(args, 1);
+        TypePtr dest = valueToPointerLikeType(args, 0);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == dest);
+        out0->as<void *>() = 0;
         break;
     }
 
@@ -3945,46 +3958,15 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_CCodePointerP : {
-        ensureArity(args, 1);
-        bool isCCodePointerType = false;
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        if (obj.ptr() && (obj->objKind == TYPE)) {
-            Type *t = (Type *)obj.ptr();
-            if (t->typeKind == CCODE_POINTER_TYPE)
-                isCCodePointerType = true;
-        }
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == boolType);
-        out0->as<bool>() = isCCodePointerType;
-        break;
-    }
+    case PRIM_ExternalCodePointer :
+        error("ExternalCodePointer type constructor cannot be called");
 
-    case PRIM_CCodePointer :
-        error("CCodePointer type constructor cannot be called");
-
-    case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer type constructor cannot be called");
-
-    case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer type constructor cannot be called");
-
-    case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
-
-    case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer type constructor cannot be called");
-
-    case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer type constructor cannot be called");
-
-    case PRIM_makeCCodePointer : {
+    case PRIM_makeExternalCodePointer : {
         error("code pointers cannot be created at compile time");
         break;
     }
 
-    case PRIM_callCCodePointer : {
+    case PRIM_callExternalCodePointer : {
         error("invoking a code pointer not yet supported in evaluator");
         break;
     }

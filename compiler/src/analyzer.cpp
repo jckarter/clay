@@ -51,6 +51,7 @@ static TypePtr objectType(ObjectPtr x)
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case RECORD :
     case VARIANT :
     case MODULE_HOLDER :
@@ -164,7 +165,7 @@ static bool staticToInt(ObjectPtr x, int &out)
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
     if (vh->type != cIntType)
         return false;
-    out = *((int *)vh->buf);
+    out = vh->as<int>();
     return true;
 }
 
@@ -173,6 +174,59 @@ static int staticToInt(MultiStaticPtr x, unsigned index)
     int out = -1;
     if (!staticToInt(x->values[index], out))
         argumentError(index, "expecting Int value");
+    return out;
+}
+
+bool staticToBool(ObjectPtr x, bool &out)
+{
+    if (x->objKind != VALUE_HOLDER)
+        return false;
+    ValueHolderPtr vh = (ValueHolder *)x.ptr();
+    if (vh->type != boolType)
+        return false;
+    out = vh->as<bool>();
+    return true;
+}
+
+bool staticToBool(MultiStaticPtr x, unsigned index)
+{
+    bool out = false;
+    if (!staticToBool(x->values[index], out))
+        argumentError(index, "expecting Bool value");
+    return out;
+}
+
+bool staticToCallingConv(ObjectPtr x, CallingConv &out)
+{
+    if (x->objKind != PRIM_OP)
+        return true;
+    PrimOp *ccPrim = (PrimOp*)x.ptr();
+    switch (ccPrim->primOpCode) {
+    case PRIM_AttributeCCall:
+        out = CC_DEFAULT;
+        return true;
+    case PRIM_AttributeStdCall:
+        out = CC_STDCALL;
+        return true;
+    case PRIM_AttributeFastCall:
+        out = CC_FASTCALL;
+        return true;
+    case PRIM_AttributeThisCall:
+        out = CC_THISCALL;
+        return true;
+    case PRIM_AttributeLLVMCall:
+        out = CC_LLVM;
+        return true;
+    default:
+        return false;
+    }
+}
+
+CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index)
+{
+    CallingConv out;
+    if (!staticToCallingConv(x->values[index], out))
+        argumentError(index, "expecting calling convention attribute");
     return out;
 }
 
@@ -237,7 +291,7 @@ static CCodePointerTypePtr cCodePointerTypeOfValue(MultiPValuePtr x,
 {
     TypePtr t = x->values[index]->type;
     if (t->typeKind != CCODE_POINTER_TYPE)
-        argumentTypeError(index, "c code pointer type", t);
+        argumentTypeError(index, "external code pointer type", t);
     return (CCodePointerType *)t.ptr();
 }
 
@@ -1204,12 +1258,7 @@ static bool isTypeConstructor(ObjectPtr x) {
         switch (y->primOpCode) {
         case PRIM_Pointer :
         case PRIM_CodePointer :
-        case PRIM_CCodePointer :
-        case PRIM_VarArgsCCodePointer :
-        case PRIM_StdCallCodePointer :
-        case PRIM_FastCallCodePointer :
-        case PRIM_ThisCallCodePointer :
-        case PRIM_LLVMCodePointer :
+        case PRIM_ExternalCodePointer :
         case PRIM_Array :
         case PRIM_Vec :
         case PRIM_Tuple :
@@ -1318,44 +1367,20 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return codePointerType(argTypes, returnIsRef, returnTypes);
         }
 
-        case PRIM_CCodePointer :
-        case PRIM_VarArgsCCodePointer :
-        case PRIM_StdCallCodePointer :
-        case PRIM_FastCallCodePointer :
-        case PRIM_ThisCallCodePointer :
-        case PRIM_LLVMCodePointer : {
-            ensureArity(args, 2);
+        case PRIM_ExternalCodePointer : {
+            ensureArity(args, 4);
+
+            CallingConv cc = staticToCallingConv(args, 0);
+            bool hasVarArgs = staticToBool(args, 1);
             vector<TypePtr> argTypes;
-            staticToTypeTuple(args, 0, argTypes);
+            staticToTypeTuple(args, 2, argTypes);
             vector<TypePtr> returnTypes;
-            staticToTypeTuple(args, 1, returnTypes);
+            staticToTypeTuple(args, 3, returnTypes);
             if (returnTypes.size() > 1)
                 argumentError(1, "C code cannot return more than one value");
             TypePtr returnType;
             if (returnTypes.size() == 1)
                 returnType = returnTypes[0];
-            CallingConv cc;
-            switch (x->primOpCode) {
-            case PRIM_CCodePointer :
-            case PRIM_VarArgsCCodePointer :
-                cc = CC_DEFAULT;
-                break;
-            case PRIM_StdCallCodePointer :
-                cc = CC_STDCALL;
-                break;
-            case PRIM_FastCallCodePointer :
-                cc = CC_FASTCALL;
-                break;
-            case PRIM_ThisCallCodePointer :
-                cc = CC_FASTCALL;
-                break;
-            case PRIM_LLVMCodePointer :
-                cc = CC_LLVM;
-                break;
-            default :
-                assert(false);
-            }
-            bool hasVarArgs = (x->primOpCode == PRIM_VarArgsCCodePointer);
             return cCodePointerType(cc, argTypes, hasVarArgs, returnType);
         }
 
@@ -1533,6 +1558,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -1697,6 +1723,7 @@ MultiPValuePtr analyzeCallValue(PValuePtr callable,
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
     case PRIM_OP : {
         if ((obj->objKind == PRIM_OP) && !isOverloadablePrimOp(obj)) {
             PrimOpPtr x = (PrimOp *)obj.ptr();
@@ -2245,29 +2272,30 @@ bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv)
 //
 
 static std::pair<vector<TypePtr>, InvokeEntryPtr>
-invokeEntryForCallableArguments(MultiPValuePtr args)
+invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_t firstArgTypeIndex)
 {
-    if (args->size() < 1)
-        arityError2(1, args->size());
-    ObjectPtr callable = unwrapStaticType(args->values[0]->type);
+    if (args->size() < firstArgTypeIndex)
+        arityError2(firstArgTypeIndex, args->size());
+    ObjectPtr callable = unwrapStaticType(args->values[callableIndex]->type);
     if (!callable)
-        argumentError(0, "static callable expected");
+        argumentError(callableIndex, "static callable expected");
     switch (callable->objKind) {
     case TYPE :
     case RECORD :
     case VARIANT :
     case PROCEDURE :
+    case GLOBAL_ALIAS :
         break;
     case PRIM_OP :
         if (!isOverloadablePrimOp(callable))
-            argumentError(0, "invalid callable");
+            argumentError(callableIndex, "invalid callable");
         break;
     default :
-        argumentError(0, "invalid callable");
+        argumentError(callableIndex, "invalid callable");
     }
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
-    for (unsigned i = 1; i < args->size(); ++i) {
+    for (unsigned i = firstArgTypeIndex; i < args->size(); ++i) {
         TypePtr t = valueToType(args, i);
         argsKey.push_back(t);
         argsTempness.push_back(TEMPNESS_LVALUE);
@@ -2298,7 +2326,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_StaticCallOutputTypes : {
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
-            invokeEntryForCallableArguments(args);
+            invokeEntryForCallableArguments(args, 0, 1);
         MultiPValuePtr values = new MultiPValue();
         for (size_t i = 0; i < entry.second->returnTypes.size(); ++i)
             values->add(staticPValue(entry.second->returnTypes[i].ptr()));
@@ -2398,7 +2426,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Pointer :
-        error("Pointer type constructor cannot be called");
+        error("no Pointer type constructor overload found");
 
     case PRIM_addressOf : {
         ensureArity(args, 1);
@@ -2430,16 +2458,22 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_intToPointer : {
         ensureArity(args, 2);
-        TypePtr t = valueToType(args, 0);
-        return new MultiPValue(new PValue(pointerType(t), true));
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
+    }
+
+    case PRIM_nullPointer : {
+        ensureArity(args, 1);
+        TypePtr t = valueToPointerLikeType(args, 0);
+        return new MultiPValue(new PValue(t, true));
     }
 
     case PRIM_CodePointer :
-        error("CodePointer type constructor cannot be called");
+        error("no CodePointer type constructor overload found");
 
     case PRIM_makeCodePointer : {
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
-            invokeEntryForCallableArguments(args);
+            invokeEntryForCallableArguments(args, 0, 1);
         if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
         if (!entry.second->analyzed)
@@ -2450,57 +2484,53 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(cpType, true));
     }
 
-    case PRIM_CCodePointerP :
-        return new MultiPValue(new PValue(boolType, true));
+    case PRIM_ExternalCodePointer :
+        error("no ExternalCodePointer type constructor overload found");
 
-    case PRIM_CCodePointer :
-        error("CCodePointer type constructor cannot be called");
-
-    case PRIM_VarArgsCCodePointer :
-        error("VarArgsCCodePointer type constructor cannot be called");
-
-    case PRIM_StdCallCodePointer :
-        error("StdCallCodePointer type constructor cannot be called");
-
-    case PRIM_FastCallCodePointer :
-        error("FastCallCodePointer type constructor cannot be called");
-
-    case PRIM_ThisCallCodePointer :
-        error("ThisCallCodePointer type constructor cannot be called");
-
-    case PRIM_LLVMCodePointer :
-        error("LLVMCodePointer type constructor cannot be called");
-
-    case PRIM_makeCCodePointer : {
+    case PRIM_makeExternalCodePointer : {
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
-            invokeEntryForCallableArguments(args);
+            invokeEntryForCallableArguments(args, 0, 3);
         if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
         if (!entry.second->analyzed)
             return NULL;
+
+        ObjectPtr ccObj = unwrapStaticType(args->values[1]->type);
+        CallingConv cc;
+        if (!staticToCallingConv(ccObj, cc))
+            argumentError(1, "expecting a calling convention attribute");
+
+        ObjectPtr isVarArgObj = unwrapStaticType(args->values[2]->type);
+        bool isVarArg;
+        if (!staticToBool(isVarArgObj, isVarArg))
+            argumentError(2, "expecting a static Bool");
+
+        if (isVarArg)
+            argumentError(2, "implementation of external variadic functions is not yet supported");
+
         TypePtr returnType;
         if (entry.second->returnTypes.empty()) {
             returnType = NULL;
         }
         else if (entry.second->returnTypes.size() == 1) {
             if (entry.second->returnIsRef[0]) {
-                argumentError(0, "cannot create c-code pointer to "
+                argumentError(0, "cannot create external code pointer to "
                               " return-by-reference code");
             }
             returnType = entry.second->returnTypes[0];
         }
         else {
-            argumentError(0, "cannot create c-code pointer to "
+            argumentError(0, "cannot create external code pointer to "
                           "multi-return code");
         }
-        TypePtr ccpType = cCodePointerType(CC_DEFAULT,
+        TypePtr ccpType = cCodePointerType(cc,
                                            entry.first,
-                                           false,
+                                           isVarArg,
                                            returnType);
         return new MultiPValue(new PValue(ccpType, true));
     }
 
-    case PRIM_callCCodePointer : {
+    case PRIM_callExternalCodePointer : {
         if (args->size() < 1)
             arityError2(1, args->size());
         CCodePointerTypePtr y = cCodePointerTypeOfValue(args, 0);
@@ -2516,7 +2546,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Array :
-        error("Array type constructor cannot be called");
+        error("no Array type constructor overload found");
 
     case PRIM_arrayRef : {
         ensureArity(args, 2);
@@ -2534,10 +2564,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Vec :
-        error("Vec type constructor cannot be called");
+        error("no Vec type constructor overload found");
 
     case PRIM_Tuple :
-        error("Tuple type constructor cannot be called");
+        error("no Tuple type constructor overload found");
 
     case PRIM_TupleElementCount :
         return new MultiPValue(new PValue(cSizeTType, true));
@@ -2565,7 +2595,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Union :
-        error("Union type constructor cannot be called");
+        error("no Union type constructor overload found");
 
     case PRIM_UnionMemberCount :
         return new MultiPValue(new PValue(cSizeTType, true));
@@ -2684,7 +2714,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_Static :
-        error("Static type constructor cannot be called");
+        error("no Static type constructor overload found");
 
     case PRIM_ModuleName : {
         ensureArity(args, 1);

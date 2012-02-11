@@ -82,8 +82,9 @@ inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { bitcopy(return
 [In, Out]
 inline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
     { bitcopy(returned, x); }
-[CP | CCodePointer?(CP)]
-inline overload copyPOD(x: CP) --> returned: CP
+[C,V,I,O]
+inline overload copyPOD(x: ExternalCodePointer[C,V,I,O])
+    --> returned: ExternalCodePointer[C,V,I,O]
     { bitcopy(returned, x); }
 
 [P | NotDestroyedType?(P)]
