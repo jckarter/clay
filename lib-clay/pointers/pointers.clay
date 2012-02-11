@@ -233,9 +233,43 @@ inline overload null?(p:ExternalCodePointer[C,V,I,O]) {
 // ExternalCodePointer - call
 //
 
+[F, T]
+private CCastable?(static F, static T) = false;
+
+[F, T | Integer?(F) and Integer?(T) and TypeSize(T) >= TypeSize(F)]
+overload CCastable?(static F, static T) = true;
+
+[F, T | Integer?(F) and Integer?(T) and TypeSize(T) == TypeSize(F)]
+overload CCastable?(static Pointer[F], static Pointer[T]) = true;
+
+[F]
+overload CCastable?(static Pointer[F], static RawPointer) = true;
+
+[F, T | CCastable?(F, T)]
+private cCast(from:F, static T) = T(from);
+
+[S | String?(S)]
+overload cCast(s:S, static Pointer[CChar]) = cstring(s);
+
+[F]
+overload cCast(forward from:F, static F) = forward from;
+
+[CC, ..In, ..Out, ..A | countValues(..In) == countValues(..A)]
+inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:A) =
+    ..callExternalCodePointer(ptr,
+        ..mapValues2((arg, T) => cCast(arg, T), static countValues(..A), ..args, ..In));
+
 [CC, ..In, ..Out]
 inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:In) =
     ..callExternalCodePointer(ptr, ..args);
+
+[CC, ..In, ..Out, ..A | (countValues(..A) >= countValues(..In))]
+inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) {
+    alias N = static countValues(..In);
+    return ..callExternalCodePointer(ptr,
+        ..mapValues2((arg, T) => cCast(arg, T), N, ..takeValues(N, ..args), ..In),
+        ..dropValues(N, ..args));
+}
 
 [CC, ..In, ..Out, ..A | (countValues(..A) >= countValues(..In))
                        and (Tuple[..takeValues(static countValues(..In), ..A)] == Tuple[..In])]

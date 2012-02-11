@@ -2067,8 +2067,9 @@ void codegenCallExpr(ExprPtr callable,
             ExternalProcedure *z = (ExternalProcedure *)y.ptr();
             if (!z->llvmFunc)
                 codegenExternalProcedure(z, false);
-            MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
-            codegenCallCCode(t, z->llvmFunc, mcv, ctx, out);
+            ExprListPtr args2 = new ExprList(callable);
+            args2->add(args);
+            codegenCallExpr(operator_expr_call(), args2, env, ctx, out);
             return;
         }
     }
