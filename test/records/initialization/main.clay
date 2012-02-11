@@ -1,0 +1,16 @@
+record Foo (
+    a: Int,
+    b: String
+);
+
+overload Foo() --> returned:Foo {
+    returned <-- initializeRecord(Foo);
+    returned.b = String("a should be 0");
+}
+
+overload Foo(a, b) = initializeRecord(Foo, 2*a, b + " times two");
+
+main() {
+    println(Foo());
+    println(Foo(5, String("a should be 5")));
+}
