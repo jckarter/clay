@@ -97,7 +97,7 @@ inline overload initializeTypes() = ;
 // copy constructor
 //
 
-[T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
+[T | Record?(T)]
 copyRecord(src:T) --> returned:T {
     ..recordFields(returned) <-- ..recordFields(src);
 }
@@ -111,7 +111,7 @@ overload T(src:T) = copyRecord(src);
 // moveUnsafe, resetUnsafe
 //
 
-[T | RegularRecord?(T) and not BitwiseMovedType?(T)]
+[T | Record?(T)]
 moveRecordUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n))
@@ -121,7 +121,7 @@ moveRecordUnsafe(src:T) --> returned:T {
 [T | RegularRecord?(T) and not BitwiseMovedType?(T)]
 overload moveUnsafe(src:T) = moveRecordUnsave(src);
 
-[T | RegularRecord?(T) and not NotResetType?(T)]
+[T | Record?(T)]
 resetRecordUnsafe(a:T) {
     ..for (x in recordFields(a))
         resetUnsafe(x);
@@ -138,7 +138,7 @@ overload resetUnsafe(a:T) {
 // destroy
 //
 
-[T | RegularRecord?(T) and not NotDestroyedType?(T)]
+[T | Record?(T)]
 destroyRecord(a:T) {
     ..for (x in recordFields(a))
         destroy(x);

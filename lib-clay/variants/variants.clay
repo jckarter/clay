@@ -36,9 +36,7 @@ alias initializeVariant(static V, x:T) --> returned:V {
 }
 
 [V,T | Variant?(V) and VariantMember?(V, T)]
-alias overload V(x:T) --> returned:V {
-    returned <-- initializeVariant(V, x);
-}
+alias overload V(x:T) = initializeVariant(V, x);
 
 [V,T,..AA | Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
 alias overload V(static T, ..args:AA) = V(T(..args));
