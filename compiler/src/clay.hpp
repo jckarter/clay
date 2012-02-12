@@ -1718,6 +1718,12 @@ struct Code : public ANode {
         return returnSpecsDeclared;
     }
 
+    bool hasNamedReturns() {
+        return hasReturnSpecs() && (
+            (!returnSpecs.empty() && returnSpecs[0]->name != NULL)
+            || (varReturnSpec != NULL && varReturnSpec->name != NULL));
+    }
+
     bool isLLVMBody() {
         return llvmBody.ptr() != NULL;
     }
@@ -2567,6 +2573,8 @@ enum PrimOpCode {
     PRIM_LambdaSymbolP,
     PRIM_LambdaMonoP,
     PRIM_LambdaMonoInputTypes,
+
+    PRIM_GetOverload
 };
 
 struct PrimOp : public Object {

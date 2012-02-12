@@ -1,0 +1,2 @@
+Float 123
+StringConstant 123

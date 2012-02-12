@@ -4713,6 +4713,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_LambdaMonoInputTypes :
         break;
 
+    case PRIM_GetOverload :
+        break;
+
     default :
         assert(false);
 

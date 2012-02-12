@@ -6437,6 +6437,9 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_LambdaMonoInputTypes :
         break;
 
+    case PRIM_GetOverload :
+        break;
+
     default :
         assert(false);
         break;

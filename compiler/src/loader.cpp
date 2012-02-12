@@ -964,6 +964,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(LambdaMonoP);
     PRIMITIVE(LambdaMonoInputTypes);
 
+    PRIMITIVE(GetOverload);
+
 #undef PRIMITIVE
 
     return prims;

@@ -3077,6 +3077,54 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue();
     }
 
+    case PRIM_GetOverload : {
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args, 0, 1);
+
+        ostringstream nameout;
+        nameout << "GetOverload(";
+        printStaticName(nameout, entry.second->callable);
+        nameout << ", ";
+        nameout << ")";
+
+        ProcedurePtr proc = new Procedure(
+            new Identifier(nameout.str()),
+            PRIVATE);
+
+        proc->env = entry.second->env;
+
+        CodePtr code = new Code(), origCode = entry.second->origCode;
+        for (vector<FormalArgPtr>::const_iterator arg = origCode->formalArgs.begin(),
+                end = origCode->formalArgs.end();
+             arg != end;
+             ++arg)
+        {
+            code->formalArgs.push_back(new FormalArg((*arg)->name, NULL));
+        }
+
+        if (origCode->formalVarArg != NULL)
+            code->formalVarArg = new FormalArg(origCode->formalVarArg->name, NULL);
+
+        if (origCode->hasNamedReturns()) {
+            code->returnSpecsDeclared = true;
+            code->returnSpecs = origCode->returnSpecs;
+            code->varReturnSpec = origCode->varReturnSpec;
+        }
+
+        code->body = origCode->body;
+        code->llvmBody = origCode->llvmBody;
+
+        OverloadPtr overload = new Overload(
+            new ObjectExpr(proc.ptr()),
+            code,
+            entry.second->callByName,
+            entry.second->isInline);
+        overload->env = entry.second->env;
+        addProcedureOverload(proc, overload);
+
+        return new MultiPValue(staticPValue(proc.ptr()));
+    }
+
     default :
         assert(false);
         return NULL;
