@@ -26,9 +26,9 @@ overload RegularRecord?(static SharedPointer[T]) = false;
 [T]
 alias new(x:T) {
     var ptr = allocateRawMemory(RefCounted[T], SizeT(1));
-    ptr^.refCount = 1;
+    ptr@.refCount = 1;
     try {
-        ptr^.value <-- x;
+        ptr@.value <-- x;
     }
     catch (e) {
         freeRawMemory(ptr);
@@ -52,7 +52,7 @@ inline overload SharedPointer[T]() {
 [T]
 inline overload SharedPointer[T](src:SharedPointer[T]) {
     if (not null?(src))
-        src.ptr^.refCount += 1;
+        src.ptr@.refCount += 1;
     return SharedPointer(src.ptr);
 }
 
@@ -74,9 +74,9 @@ inline overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
 [T]
 inline overload destroy(p : SharedPointer[T]) {
     if (not null?(p)) {
-        p.ptr^.refCount -= 1;
-        if (p.ptr^.refCount == 0) {
-            destroy(p.ptr^.value);
+        p.ptr@.refCount -= 1;
+        if (p.ptr@.refCount == 0) {
+            destroy(p.ptr@.value);
             freeRawMemory(p.ptr);
         }
     }
@@ -89,7 +89,7 @@ inline overload destroy(p : SharedPointer[T]) {
 //
 
 [T]
-inline overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+inline overload dereference(p : SharedPointer[T]) = ref p.ptr@.value;
 
 [T]
 inline overload null?(p : SharedPointer[T]) = null?(p.ptr);

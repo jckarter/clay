@@ -3,4 +3,11 @@ import printer.formatter.*;
 main() {
     println(hex(bitrol(0x12345678u, 4)));
     println(hex(bitror(0x12345678u, 4)));
+
+    println(bitand(0x1u, 4) == 0x1u & 4);
+    println(bitor(0x1u, 4) == 0x1u | 4);
+    println(bitxor(0x1u, 4) == 0x1u ^ 4);
+    println(bitnot(0x1u) == ~0x1u);
+    println(bitshl(0x1u, 4) == 0x1u << 4);
+    println(bitshr(0x10000u, 4) == 0x10000u >> 4);
 }

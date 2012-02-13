@@ -75,7 +75,7 @@ inline overload dec(c:ValueReverseCoordinate[T]) {
 record ReverseCoordinate[T] (coord : T);
 
 [T]
-inline overload dereference(c:ReverseCoordinate[T]) = forward ..(c.coord - 1)^;
+inline overload dereference(c:ReverseCoordinate[T]) = forward ..(c.coord - 1)@;
 
 [T,I | CallDefined?(subtract, T, I)]
 inline overload add(c:ReverseCoordinate[T], i:I) =
@@ -108,7 +108,7 @@ inline overload dec(c:ReverseCoordinate[T]) {
 record ByValueCoordinate[T] (coord : T);
 
 [T]
-inline overload dereference(c:ByValueCoordinate[T]) = ..c.coord^;
+inline overload dereference(c:ByValueCoordinate[T]) = ..c.coord@;
 
 [T,I | CallDefined?(add, T, I)]
 inline overload add(c:ByValueCoordinate[T], i:I) =

@@ -1,15 +1,15 @@
 import test.*;
 import random.*;
 
-// WARNING: This test suite may fail generately. Care is taken to assure that the probability of it doing so 
+// WARNING: This test suite may fail generately. Care is taken to assure that the probability of it doing so
 // is relatively low in the case that there is a genuine failure (<= 2^-64 is the general goal).
-// Failures in this test suite that do not occur again on rerunning are troubling but not necessarily a major problem. 
+// Failures in this test suite that do not occur again on rerunning are troubling but not necessarily a major problem.
 main() = testMain(
   TestSuite("Random number generation", array(
     TestCase("consecutive runs from the same RNG", test => {
       var rng = XORShiftRNG();
 
-      expectNotEqual(test, "two runs", generate(rng, UInt64), generate(rng, UInt64)); 
+      expectNotEqual(test, "two runs", generate(rng, UInt64), generate(rng, UInt64));
     }),
 
     TestCase("Independent runs from a copy", test => {
@@ -23,9 +23,9 @@ main() = testMain(
       var rng = XORShiftRNG();
       var rng2 = XORShiftRNG();
 
-      expectNotEqual(test, "two runs", generate(rng, UInt64), generate(rng2, UInt64)); 
+      expectNotEqual(test, "two runs", generate(rng, UInt64), generate(rng2, UInt64));
     }),
-   
+
     TestCase("uniform integers should be in range", test => {
       var rng = XORShiftRNG();
 
@@ -40,7 +40,7 @@ main() = testMain(
       var results = Array[Bool, 5]();
 
       for(i in range(200)){
-        results[uniform(rng, 0, 5)] = true; 
+        results[uniform(rng, 0, 5)] = true;
       }
 
       for(i in range(5)){

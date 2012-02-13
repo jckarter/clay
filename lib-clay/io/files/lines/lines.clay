@@ -34,7 +34,7 @@ overload hasNext?(x:LineIterator) {
     if (not x.queued?) {
         x.queued? = true;
         clear(x.string);
-        readLine(x.file^, x.string);
+        readLine(x.file@, x.string);
     }
     return size(x.string) > 0;
 }
@@ -42,7 +42,7 @@ overload hasNext?(x:LineIterator) {
 overload next(x:LineIterator) {
     if (not x.queued?) {
         clear(x.string);
-        readLine(x.file^, x.string);
+        readLine(x.file@, x.string);
     }
     else {
         x.queued? = false;

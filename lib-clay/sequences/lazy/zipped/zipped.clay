@@ -44,7 +44,7 @@ inline overload next(iter:ZippedIterator[ITERS]) =
 
 private AllReversible?(A) {
     var reversible? = (T => CallDefined?(reverseIterator, T));
-    return multiValueAll?(reversible?, ..Type(..unpackSequences(null(A)^)));
+    return multiValueAll?(reversible?, ..Type(..unpackSequences(null(A)@)));
 }
 
 [A | AllReversible?(A)]
@@ -59,7 +59,7 @@ inline overload reverseIterator(a:Zipped[A]) =
 
 private AllSized?(A) {
     var sizeDefined? = (T => CallDefined?(size, T));
-    return multiValueAll?(sizeDefined?, ..Type(..unpackSequences(null(A)^)));
+    return multiValueAll?(sizeDefined?, ..Type(..unpackSequences(null(A)@)));
 }
 
 [A | AllSized?(A)]
@@ -70,16 +70,16 @@ inline overload size(a:Zipped[A]) {
 
 private AllStaticSized?(A) {
     var staticSizeDefined? = (T => CallDefined?(StaticSize, Static[T]));
-    return allValues?(staticSizeDefined?, ..Type(..unpackSequences(null(A)^)));
+    return allValues?(staticSizeDefined?, ..Type(..unpackSequences(null(A)@)));
 }
 
 [A | AllStaticSized?(A)]
 overload StaticSize(static Zipped[A]) =
-    foldValues(min, ..mapValues(StaticSize, ..Type(..unpackSequences(null(A)^))));
+    foldValues(min, ..mapValues(StaticSize, ..Type(..unpackSequences(null(A)@))));
 
 private AllIndexable?(A, I) {
     var indexDefined? = (T => CallDefined?(index, T, I));
-    return multiValueAll?(indexDefined?, ..Type(unpackSequences(null(A)^)));
+    return multiValueAll?(indexDefined?, ..Type(unpackSequences(null(A)@)));
 }
 
 [A, I | AllIndexable?(A, I)]

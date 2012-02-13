@@ -315,6 +315,6 @@ inline overload __operators__.DispatchTagCount(static VariantRef[V]) =
 inline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
 [V, i]
 inline overload __operators__.dispatchIndex(vr:VariantRef[V], static i) =
-    ref staticIndex(vr.data^, static i);
+    ref staticIndex(vr.data@, static i);
 
 

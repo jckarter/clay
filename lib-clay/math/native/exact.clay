@@ -506,7 +506,6 @@ recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, resl:Dou
     return Renormalize3(_rec_t21,_rec_t22,_rec_t23);
 }
 
-
 // i = d in rounding to nearest The constant added is 2^52 + 2^51
 DOUBLE2INT(_d:Double) :Int = db_number(_d+6755399441055744.0).0[0];
 

@@ -48,7 +48,7 @@ overload RegularRecord?(static Displayable) = false;
 [T]
 overload Displayable(x:T) {
     var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
-    obj^ <-- x;
+    obj@ <-- x;
     var destructor = makeCodePointer(destroy, T);
     var copyConstructor = makeCodePointer(T, T);
     var displayPtr = makeCodePointer(display, T);
@@ -73,7 +73,7 @@ overload Displayable() {
 overload Displayable(x:Displayable) {
     var p = allocateRawMemoryAligned(Int8, x.size, x.alignment);
     var obj = Pointer[Opaque](p);
-    obj^ <-- x.copyConstructor(x.obj^);
+    obj@ <-- x.copyConstructor(x.obj@);
     return Displayable(obj, x.size, x.alignment,
                        x.destructor, x.copyConstructor, x.display);
 }
@@ -98,7 +98,7 @@ overload resetUnsafe(x:Displayable) {
 // destructor
 overload destroy(x:Displayable) {
     if (not null?(x.obj)) {
-        x.destructor(x.obj^);
+        x.destructor(x.obj@);
         freeRawMemoryAligned(x.obj);
     }
 }
@@ -108,7 +108,7 @@ overload assign(dest:Displayable, ref src:Displayable) {
 }
 
 overload display(x:Displayable) {
-    x.display(x.obj^);
+    x.display(x.obj@);
 }
 
 displayln(x) { display(x); println(); }

@@ -261,13 +261,13 @@ overload assign(ref left: Retained[O1], rvalue right: Retained[O2]) {
     release(oldHandle);
 }
 
-[O | ObjectType?(O)] 
+[O | ObjectType?(O)]
 overload destroy(obj: Retained[O]) { release(obj.__handle__); }
 
-[O | ObjectType?(O)] 
+[O | ObjectType?(O)]
 overload BitwiseMovedType?(static Retained[O]) = true;
 
-[O | ObjectType?(O)] 
+[O | ObjectType?(O)]
 overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
 
 
@@ -376,7 +376,7 @@ externalClass(static Super) = recordWithProperties(
     [
         [SuperclassType, Super],
         [ExternalClass?, static true],
-    ], 
+    ],
     [#__handle__, ObjectHandle]
 );
 
@@ -386,7 +386,7 @@ overload externalClass(static name, static Super) = recordWithProperties(
         [SuperclassType, Super],
         [ExternalClass?, static true],
         [ClassStaticName, name],
-    ], 
+    ],
     [#__handle__, ObjectHandle]
 );
 
@@ -434,7 +434,7 @@ newClass(static Super,
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ], 
+    ],
     [#__handle__, ObjectHandle]
 );
 
@@ -451,7 +451,7 @@ overload newClass(static name, static Super,
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ], 
+    ],
     [#__handle__, ObjectHandle]
 );
 
@@ -468,7 +468,7 @@ newExternalClass(static Super,
         Tuple(ClassInstanceVars, ..unpack(instancevars.value)),
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
-    ], 
+    ],
     [#__handle__, ObjectHandle]
 );
 
@@ -485,12 +485,12 @@ private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
     objc_msgSend(
         ObjectHandle(objc_getClass(cstring("NSException"))),
         objcSelector[#"raise:format:"],
-        reason, format, ..mapValues(varArgUnbox1, ..args) 
+        reason, format, ..mapValues(varArgUnbox1, ..args)
     );
 }
 
 [T, sel]
-private classMethodImp(static T, static sel, fn) 
+private classMethodImp(static T, static sel, fn)
     = makeCCodePointer(
         (self, _cmd, ..args) => {
             try {
@@ -759,7 +759,7 @@ overload TypedSelector?(static T, static sel)
 [T, sel | ExternalClass?(T) and VarargSelector?(sel)]
 overload TypedSelector?(static Static[T], static sel)
     = CallDefined?(externalVarargClassMethod, Static[Static[T]], Static[sel]);
- 
+
 
 
 //
@@ -967,7 +967,7 @@ private _SelectorCallableWith?(C, S, ..T) {
     alias Params = Tuple(..SelectorArgumentTypes(C, S));
     alias Values = Tuple(..T);
     ..for (n in staticIntegers(static countValues(..T))) {
-        if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Values, n))) 
+        if (not MsgSendCompatible?(staticIndex(Params, n), staticIndex(Values, n)))
             return false;
     }
     return true;
@@ -1097,7 +1097,7 @@ overload call(method: MethodRef[T, Captured, identifier], forward ..args: Args) 
         T,
         msgSender(T, selector),
         objectHandle(forwardValue(method.self)),
-        selector, 
+        selector,
         ..args
     );
 }
@@ -1114,7 +1114,7 @@ record MethodDelegate[T, selector] (self: ObjectHandle, imp: IMP);
 overload MethodDelegate(self: T, static selector) {
     var selfHandle = objectHandle(self);
     var imp = class_getMethodImplementation_for(T, selector)(
-        object_getClass(selfHandle), 
+        object_getClass(selfHandle),
         selectorHandle(selector)
     );
     return MethodDelegate[T, selector](selfHandle, imp);
@@ -1148,7 +1148,7 @@ overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 overload fieldRef(ivars: IvarsRef[T], static ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
-    )^;
+    )@;
 
 
 

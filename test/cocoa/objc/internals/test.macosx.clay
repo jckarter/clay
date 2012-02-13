@@ -119,18 +119,18 @@ record CocoaCanary = newClass(NSObject,
         [#"init", self => {
             self = super(self).init();
             if (not nil?(self)) {
-                self^.canary <-- Canary();
+                self@.canary <-- Canary();
             }
             return self;
         }],
         [#"copyWithZone:", (self, zone) => {
             var copy = CocoaCanary(self.class().allocWithZone(zone));
             copy = super(copy).init();
-            copy^.canary <-- self^.canary;
+            copy@.canary <-- self@.canary;
             return copy;
         }],
         [#"dealloc", self => {
-            destroy(self^.canary);
+            destroy(self@.canary);
             super(self).dealloc();
         }],
     )
@@ -373,9 +373,9 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectSelectorTypeEncoding(test, SubString1, #"version", "i@:");
         // typed selector via implementing class defaulting to generic selector
         expectSelectorTypeEncoding(test, SubString2, #"version", "@@:");
-        // typed selector via implementing superclass 
+        // typed selector via implementing superclass
         expectSelectorTypeEncoding(test, SubSubString, #"version", "i@:");
-        // typed selector via implementing class defaulting to superclass selector 
+        // typed selector via implementing class defaulting to superclass selector
         expectSelectorTypeEncoding(test, SubSubSubString, #"version", "i@:");
 
         // generic selector via Id
@@ -434,10 +434,10 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             ClassIvarType(SubSubString, #bar)
         );
 
-        expectType(test, "SubString1^.foo", Int, nil(SubString1)^.foo);
-        expectType(test, "SubString2^.foo", Double, nil(SubString2)^.foo);
-        expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
-        expectType(test, "SubSubString^.bar", StringConstant, nil(SubSubString)^.bar);
+        expectType(test, "SubString1@.foo", Int, nil(SubString1)@.foo);
+        expectType(test, "SubString2@.foo", Double, nil(SubString2)@.foo);
+        expectType(test, "SubSubString@.foo", Int, nil(SubSubString)@.foo);
+        expectType(test, "SubSubString@.bar", StringConstant, nil(SubSubString)@.bar);
     }),
     TestCase("special selectors", test => {
         expectTrue(test, "alloc", AllocatingSelector?(#"alloc"));
@@ -636,17 +636,17 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
 
         var stringFields = Pointer[cocoa.objc.platform.CFConstantString](NSSTR(#"Hello"));
 
-        expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields^.isa);
-        expectEqual(test, "constant string isa", 
+        expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields@.isa);
+        expectEqual(test, "constant string isa",
             ClassHandle(&cocoa.objc.platform.__CFConstantStringClassReference),
-            stringFields^.isa
+            stringFields@.isa
         );
         expectEqual(test, "constant string flags",
             cocoa.objc.platform.CFConstantStringID,
-            stringFields^.flags
+            stringFields@.flags
         );
-        expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
-        expectEqual(test, "length", 5, stringFields^.length);
+        expectEqual(test, "string", "Hello", CStringRef(stringFields@.string));
+        expectEqual(test, "length", 5, stringFields@.length);
     }),
     TestCase("Retained memory management", test => {
         var pool = NSAutoreleasePool.alloc().init();

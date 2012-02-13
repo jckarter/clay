@@ -998,6 +998,12 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(lesserEqualsP);
     OPERATOR(greaterP);
     OPERATOR(greaterEqualsP);
+    OPERATOR(bitnot);
+    OPERATOR(bitand);
+    OPERATOR(bitor);
+    OPERATOR(bitxor);
+    OPERATOR(bitshl);
+    OPERATOR(bitshr);
     OPERATOR(tupleLiteral);
     OPERATOR(staticIndex);
     OPERATOR(index);
@@ -1175,6 +1181,12 @@ DEFINE_OPERATOR_ACCESSOR(lesserP)
 DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
 DEFINE_OPERATOR_ACCESSOR(greaterP)
 DEFINE_OPERATOR_ACCESSOR(greaterEqualsP)
+DEFINE_OPERATOR_ACCESSOR(bitnot)
+DEFINE_OPERATOR_ACCESSOR(bitand)
+DEFINE_OPERATOR_ACCESSOR(bitor)
+DEFINE_OPERATOR_ACCESSOR(bitxor)
+DEFINE_OPERATOR_ACCESSOR(bitshl)
+DEFINE_OPERATOR_ACCESSOR(bitshr)
 DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
 DEFINE_OPERATOR_ACCESSOR(staticIndex)
 DEFINE_OPERATOR_ACCESSOR(index)

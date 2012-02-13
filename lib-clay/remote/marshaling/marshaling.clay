@@ -75,7 +75,7 @@ overload marshaledSize(context, x: T) = MarshalSize(TypeSize(T));
 
 [T | BitwiseMarshalable?(T)]
 overload marshalTo(context, buffer: Pointer[Byte], x: T) {
-    Pointer[T](buffer)^ <-- x;
+    Pointer[T](buffer)@ <-- x;
     return buffer + TypeSize(T);
 }
 
@@ -347,7 +347,7 @@ overload marshaledSize(context, p: UniquePointer[T]) {
     if (null?(p))
         return marshaledSize(context, false);
     else
-        return marshaledSize(context, true) + marshaledSize(context, p^);
+        return marshaledSize(context, true) + marshaledSize(context, p@);
 }
 
 [T]
@@ -356,7 +356,7 @@ overload marshalTo(context, buffer_: Pointer[Byte], p: UniquePointer[T]) {
         return marshalTo(context, buffer_, false);
     else {
         var buffer = marshalTo(context, buffer_, true);
-        return marshalTo(context, buffer, p^);
+        return marshalTo(context, buffer, p@);
     }
 }
 
@@ -372,7 +372,7 @@ overload unmarshalFrom(
     if (isNotNull?) {
         p <-- UniquePointer(allocateRawMemory(UnmarshaledType(T), MarshalSize(1)));
         try {
-            p^, begin <-- ..unmarshalFrom(context, begin, end, T);
+            p@, begin <-- ..unmarshalFrom(context, begin, end, T);
         } catch (ex) {
             freeRawMemory(p.ptr);
             throw ex;
@@ -407,15 +407,15 @@ overload marshaledSize(context: MarshalContext, p: SharedPointer[T]) {
             context.pointerCount += 1;
             return marshaledSize(context, SHARED_POINTER_DATA)
                 + marshaledSize(context, id)
-                + marshaledSize(context, p^);
-        } else if (not pointerState^.sized?) {
-            pointerState^.sized? = true;
+                + marshaledSize(context, p@);
+        } else if (not pointerState@.sized?) {
+            pointerState@.sized? = true;
             return marshaledSize(context, SHARED_POINTER_DATA)
-                + marshaledSize(context, pointerState^.id)
-                + marshaledSize(context, p^);
+                + marshaledSize(context, pointerState@.id)
+                + marshaledSize(context, p@);
         } else {
             return marshaledSize(context, SHARED_POINTER_REF)
-                + marshaledSize(context, pointerState^.id);
+                + marshaledSize(context, pointerState@.id);
         }
     }
 }
@@ -434,17 +434,17 @@ overload marshalTo(context: MarshalContext, buffer_: Pointer[Byte], p: SharedPoi
             context.pointerCount += 1;
             var buffer = marshalTo(context, buffer_, SHARED_POINTER_DATA);
             buffer = marshalTo(context, buffer, id);
-            buffer = marshalTo(context, buffer, p^);
+            buffer = marshalTo(context, buffer, p@);
             return buffer;
-        } else if (not pointerState^.marshaled?) {
-            pointerState^.marshaled? = true;
+        } else if (not pointerState@.marshaled?) {
+            pointerState@.marshaled? = true;
             var buffer = marshalTo(context, buffer_, SHARED_POINTER_DATA);
-            buffer = marshalTo(context, buffer, pointerState^.id);
-            buffer = marshalTo(context, buffer, p^);
+            buffer = marshalTo(context, buffer, pointerState@.id);
+            buffer = marshalTo(context, buffer, p@);
             return buffer;
         } else {
             var buffer = marshalTo(context, buffer_, SHARED_POINTER_REF);
-            buffer = marshalTo(context, buffer, pointerState^.id);
+            buffer = marshalTo(context, buffer, pointerState@.id);
             return buffer;
         }
     }
@@ -478,8 +478,8 @@ overload unmarshalFrom(context: UnmarshalContext,
         if (null?(pointerState))
             throw UnmarshalIncompleteObjectGraph();
 
-        var ptr = Pointer[RefCounted[UnmarshaledType(T)]](pointerState^);
-        ptr^.refCount += 1;
+        var ptr = Pointer[RefCounted[UnmarshaledType(T)]](pointerState@);
+        ptr@.refCount += 1;
         return SharedPointer[UnmarshaledType(T)](ptr), begin;
     }
     case (SHARED_POINTER_DATA) {
@@ -490,8 +490,8 @@ overload unmarshalFrom(context: UnmarshalContext,
 
         var ptr = allocateRawMemory(RefCounted[UnmarshaledType(T)], MarshalSize(1));
         try {
-            ptr^.refCount = 1;
-            ptr^.value, begin <-- ..unmarshalFrom(context, begin, end, T);
+            ptr@.refCount = 1;
+            ptr@.value, begin <-- ..unmarshalFrom(context, begin, end, T);
             context.pointers[id] = RawPointer(ptr);
             return SharedPointer[UnmarshaledType(T)](ptr), begin;
         } catch (ex) {

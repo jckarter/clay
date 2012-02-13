@@ -132,8 +132,8 @@ private alias INVPIL = -0.00000000000000001967867667518248588189519091409181;
 private var rncst = array(
     1.00108178765940960655050071055243374002677613873338 , /* i<10 */
     1.00005232457100223306383112145248847898875939835839 , /* i>10 */
-    1.00177430465884899885886845639867196876576265849646 , /* e > 2@-10 */
-    1.00001038174963923723172604569348623337721036178939 , /* e < 2@-10 */
+    1.00177430465884899885886845639867196876576265849646 , /* e > 2^-10 */
+    1.00001038174963923723172604569348623337721036178939 , /* e < 2^-10 */
 );
 
 private var epsilon = array(
@@ -483,16 +483,16 @@ array(
 // 	For every x :
 // we find the interval I(i) , as atan(x) = atan(b(i)) + atan( (x - b(i)) / (1 + x * b(i)) )
 //
-// 		so that X = (x - b(i)) / (1 + x * b(i))  be in interval [ -2@(-6) , 2@(-6) ]
+// 		so that X = (x - b(i)) / (1 + x * b(i))  be in interval [ -2^(-6) , 2^(-6) ]
 // 		There is no cancellation because :
-// 		for every x in [ -2@(-6) , 2@(-6) ],
+// 		for every x in [ -2^(-6) , 2^(-6) ],
 // 					     atan(x) <= 0.01562372862     in binary 0.000001111111111
 // 		AND for the smallest b(i)    atan(b(i)) = 0.04687118592   in binary 0.00001011111111
 //
 //
 //  2) Polynomial evaluation of atan(X), atan(b(i)) is tabulated.
 //                                   (-???)
-//    Approximation error: |err| < 2@
+//    Approximation error: |err| < 2^
 //
 //  3) Reconstruction:
 //     atan(x) = atan(b(i)) + atan(X)
@@ -604,7 +604,7 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
 
         // 1) Argument reduction :
         //  tan(x) = tan( b(i) ) + tan ( (x-b(i)) / (1+x*b(i)))
-        //  we choose 62 b(i) so that (x-b(i)) / (1+x*b(i)) < 2@
+        //  we choose 62 b(i) so that (x-b(i)) / (1+x*b(i)) < 2^
 
         var xmBihi , xmBilo = 0.,0.;
 
@@ -636,7 +636,7 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
         //  then we compute a better approx x' = y*(2-x0*y)
         //  we can proove that :
         //   if y = 1/x0*(1+e)
-        //     then x' = 1/x0 * (1-e@2)
+        //     then x' = 1/x0 * (1-e^2)
 
         var tmphi,tmplo = Mul12(x, arctan_table[i][B].2);
         var x0hi, x0lo = 0.,0.;
@@ -649,8 +649,8 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
         var Xredhi, Xredlo = Div22( xmBihi , xmBilo , x0hi,x0lo);
 
         // Polynomial evaluation :
-        //   1rt compute Q(x@2) = (1 - x@2/3 + ...)
-        //      then P(x) = x * Q(x@2)
+        //   1rt compute Q(x^2) = (1 - x^2/3 + ...)
+        //      then P(x) = x * Q(x^2)
 
         var Xred2 = Xredhi*Xredhi;
         var q = Xred2*(coef_poly[3]+Xred2*
@@ -670,8 +670,8 @@ private atan_quick(x:Double) --> atanhi:Double, atanlo:Double, index_of_e:Int  {
     else{
         // no reduction needed
         // Polynomial evaluation :
-        //  1rt compute Q(x@2) = (1 - x@2/3 + ...)
-        //      then P(x) = x * Q(x@2)
+        //  1rt compute Q(x^2) = (1 - x^2/3 + ...)
+        //      then P(x) = x * Q(x^2)
 
         var x2 = x*x;
         var q = x2*(coef_poly[3]+x2*
