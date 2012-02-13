@@ -176,7 +176,7 @@ convertType(type:CXType, refCursor:CXCursor) : String {
     }
     case (CXType_Pointer)
         return convertPointerType(clang_getPointeeType(type), refCursor);
-    case (CXType_Record, CXType_Typedef, CXType_Unexposed) {
+    case (CXType_Record, CXType_Typedef, CXType_Unexposed, CXType_Enum) {
         var typeCursor = clang_getTypeDeclaration(type);
         return convertTypeFromDeclaration(typeCursor);
     }

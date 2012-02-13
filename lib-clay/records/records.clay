@@ -61,9 +61,12 @@ overload RegularRecord?(static T) = true;
 //
 
 [T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload T(..args:A) --> returned:T {
+alias initializeRecord(static T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
+
+[T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
+alias overload T(..args:A) = initializeRecord(T, ..args);
 
 
 
@@ -71,10 +74,13 @@ alias overload T(..args:A) --> returned:T {
 // default constructor
 //
 
-[T | RegularRecord?(T)]
-overload T() --> returned:T {
+[T | Record?(T)]
+overload initializeRecord(static T) --> returned:T {
     initializeMulti(..recordFields(returned));
 }
+
+[T | RegularRecord?(T)]
+overload T() = initializeRecord(T);
 
 [..A]
 private initializeMulti(..args:A) {
@@ -91,10 +97,13 @@ inline overload initializeTypes() = ;
 // copy constructor
 //
 
-[T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
-overload T(src:T) --> returned:T {
+[T | Record?(T)]
+copyRecord(src:T) --> returned:T {
     ..recordFields(returned) <-- ..recordFields(src);
 }
+
+[T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
+overload T(src:T) = copyRecord(src);
 
 
 
@@ -102,17 +111,25 @@ overload T(src:T) --> returned:T {
 // moveUnsafe, resetUnsafe
 //
 
-[T | RegularRecord?(T) and not BitwiseMovedType?(T)]
-overload moveUnsafe(src:T) --> returned:T {
+[T | Record?(T)]
+moveRecordUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(static n))
         fieldRefByIndex(returned, i) <-- moveUnsafe(fieldRefByIndex(src, i));
 }
 
-[T | RegularRecord?(T) and not NotResetType?(T)]
-overload resetUnsafe(a:T) {
+[T | RegularRecord?(T) and not BitwiseMovedType?(T)]
+overload moveUnsafe(src:T) = moveRecordUnsave(src);
+
+[T | Record?(T)]
+resetRecordUnsafe(a:T) {
     ..for (x in recordFields(a))
         resetUnsafe(x);
+}
+
+[T | RegularRecord?(T) and not NotResetType?(T)]
+overload resetUnsafe(a:T) {
+    resetRecordUnsafe(a);
 }
 
 
@@ -121,10 +138,15 @@ overload resetUnsafe(a:T) {
 // destroy
 //
 
-[T | RegularRecord?(T) and not NotDestroyedType?(T)]
-overload destroy(a:T) {
+[T | Record?(T)]
+destroyRecord(a:T) {
     ..for (x in recordFields(a))
         destroy(x);
+}
+
+[T | RegularRecord?(T) and not NotDestroyedType?(T)]
+overload destroy(a:T) {
+    destroyRecord(a);
 }
 
 

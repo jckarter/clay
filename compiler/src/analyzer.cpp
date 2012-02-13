@@ -199,7 +199,7 @@ bool staticToBool(MultiStaticPtr x, unsigned index)
 bool staticToCallingConv(ObjectPtr x, CallingConv &out)
 {
     if (x->objKind != PRIM_OP)
-        return true;
+        return false;
     PrimOp *ccPrim = (PrimOp*)x.ptr();
     switch (ccPrim->primOpCode) {
     case PRIM_AttributeCCall:
@@ -2368,10 +2368,23 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_boolNot :
         return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_numericEqualsP :
-        return new MultiPValue(new PValue(boolType, true));
-
-    case PRIM_numericLesserP :
+    case PRIM_integerEqualsP :
+    case PRIM_integerLesserP :
+    case PRIM_floatOrderedEqualsP :
+    case PRIM_floatOrderedLesserP :
+    case PRIM_floatOrderedLesserEqualsP :
+    case PRIM_floatOrderedGreaterP :
+    case PRIM_floatOrderedGreaterEqualsP :
+    case PRIM_floatOrderedNotEqualsP :
+    case PRIM_floatOrderedP :
+    case PRIM_floatUnorderedEqualsP :
+    case PRIM_floatUnorderedLesserP :
+    case PRIM_floatUnorderedLesserEqualsP :
+    case PRIM_floatUnorderedGreaterP :
+    case PRIM_floatUnorderedGreaterEqualsP :
+    case PRIM_floatUnorderedNotEqualsP :
+    case PRIM_floatUnorderedP :
+        ensureArity(args, 2);
         return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_numericAdd :
@@ -2439,10 +2452,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         PointerTypePtr pt = pointerTypeOfValue(args, 0);
         return new MultiPValue(new PValue(pt->pointeeType, false));
     }
-
-    case PRIM_pointerEqualsP :
-    case PRIM_pointerLesserP :
-        return new MultiPValue(new PValue(boolType, true));
 
     case PRIM_pointerOffset : {
         ensureArity(args, 2);
@@ -3066,6 +3075,54 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         argumentError(0, "not a monomorphic lambda record type");
         return new MultiPValue();
+    }
+
+    case PRIM_GetOverload : {
+        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+            invokeEntryForCallableArguments(args, 0, 1);
+
+        ostringstream nameout;
+        nameout << "GetOverload(";
+        printStaticName(nameout, entry.second->callable);
+        nameout << ", ";
+        nameout << ")";
+
+        ProcedurePtr proc = new Procedure(
+            new Identifier(nameout.str()),
+            PRIVATE);
+
+        proc->env = entry.second->env;
+
+        CodePtr code = new Code(), origCode = entry.second->origCode;
+        for (vector<FormalArgPtr>::const_iterator arg = origCode->formalArgs.begin(),
+                end = origCode->formalArgs.end();
+             arg != end;
+             ++arg)
+        {
+            code->formalArgs.push_back(new FormalArg((*arg)->name, NULL));
+        }
+
+        if (origCode->formalVarArg != NULL)
+            code->formalVarArg = new FormalArg(origCode->formalVarArg->name, NULL);
+
+        if (origCode->hasNamedReturns()) {
+            code->returnSpecsDeclared = true;
+            code->returnSpecs = origCode->returnSpecs;
+            code->varReturnSpec = origCode->varReturnSpec;
+        }
+
+        code->body = origCode->body;
+        code->llvmBody = origCode->llvmBody;
+
+        OverloadPtr overload = new Overload(
+            new ObjectExpr(proc.ptr()),
+            code,
+            entry.second->callByName,
+            entry.second->isInline);
+        overload->env = entry.second->env;
+        addProcedureOverload(proc, overload);
+
+        return new MultiPValue(staticPValue(proc.ptr()));
     }
 
     default :

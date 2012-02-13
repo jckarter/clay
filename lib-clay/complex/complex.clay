@@ -104,7 +104,7 @@ inline overload C(a:I) = Complex(ComplexBaseType(C)(a));
 
 
 //
-// equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
+// equals?, notEquals?, less?, lessEquals?, greater?, greaterEquals?
 //
 
 [T,C | Numeric?(T) and Complex?(C)]
@@ -126,22 +126,40 @@ inline overload notEquals?(y:T,z:C) = not equals?(z, y);
 inline overload notEquals?(z:T, y:T) = not equals?(z,y);
 
 [T,C | Numeric?(T) and Complex?(C)]
-inline overload lesser?(a:C, b:T) = numericLesser?(real(a), b);
+inline overload lesser?(a:C, b:T) = lesser?(real(a), b);
 
 [T,C | Numeric?(T) and Complex?(C)]
-inline overload lesser?(a:T, b:C) = numericLesser?(a, real(b));
+inline overload lesser?(a:T, b:C) = lesser?(a, real(b));
 
 [C | Complex?(C)]
-inline overload lesser?(a:C, b:C) = numericLesser?(real(a), real(b));
+inline overload lesser?(a:C, b:C) = lesser?(real(a), real(b));
 
-[A,B | Complex?(A) or Complex?(B)]
-inline overload lesserEquals?(a:A, b:B) = not lesser?(b, a);
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload lesserEquals?(a:C, b:T) = lesserEquals?(real(a), b);
 
-[A,B | Complex?(A) or Complex?(B)]
-inline overload greater?(a:A, b:B) = lesser?(b, a);
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload lesserEquals?(a:T, b:C) = lesserEquals?(a, real(b));
 
-[A,B | Complex?(A) or Complex?(B)]
-inline overload greaterEquals?(a:A, b:B) = not lesser?(a, b);
+[C | Complex?(C)]
+inline overload lesserEquals?(a:C, b:C) = lesserEquals?(real(a), real(b));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload greater?(a:C, b:T) = greater?(real(a), b);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload greater?(a:T, b:C) = greater?(a, real(b));
+
+[C | Complex?(C)]
+inline overload greater?(a:C, b:C) = greater?(real(a), real(b));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload greaterEquals?(a:C, b:T) = greaterEquals?(real(a), b);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload greaterEquals?(a:T, b:C) = greaterEquals?(a, real(b));
+
+[C | Complex?(C)]
+inline overload greaterEquals?(a:C, b:C) = greaterEquals?(real(a), real(b));
 
 [T | Complex?(T)]
 overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;

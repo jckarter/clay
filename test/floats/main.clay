@@ -2,22 +2,22 @@ import numbers.floats.*;
 
 main() {
     var orderedComparisons = [
-        floatOrderedAndEquals?,
-        floatOrderedAndGreater?,
-        floatOrderedAndGreaterEquals?,
-        floatOrderedAndLesser?,
-        floatOrderedAndLesserEquals?,
-        floatOrderedAndNotEquals?,
+        floatOrderedEquals?,
+        floatOrderedGreater?,
+        floatOrderedGreaterEquals?,
+        floatOrderedLesser?,
+        floatOrderedLesserEquals?,
+        floatOrderedNotEquals?,
         floatOrdered?,
     ];
 
     var unorderedComparisons = [
-        floatUnorderedOrEquals?,
-        floatUnorderedOrGreater?,
-        floatUnorderedOrGreaterEquals?,
-        floatUnorderedOrLesser?,
-        floatUnorderedOrLesserEquals?,
-        floatUnorderedOrNotEquals?,
+        floatUnorderedEquals?,
+        floatUnorderedGreater?,
+        floatUnorderedGreaterEquals?,
+        floatUnorderedLesser?,
+        floatUnorderedLesserEquals?,
+        floatUnorderedNotEquals?,
         floatUnordered?,
     ];
 

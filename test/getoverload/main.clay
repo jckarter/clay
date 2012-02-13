@@ -1,0 +1,17 @@
+define foo;
+overload foo(x:Int) {
+    println("Int", x);
+}
+overload foo(x:Float) {
+    println("Float ", x);
+}
+
+[T]
+bar(x:T) {
+    println(T, " ", x);
+}
+
+main() {
+    GetOverload(foo, Float)(123);
+    GetOverload(bar, StringConstant)(123);
+}

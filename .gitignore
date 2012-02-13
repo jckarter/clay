@@ -24,14 +24,6 @@ compiler/src/*.dep
 *.pdb
 main
 
-/newclay/compiler/testanalysis
-/newclay/compiler/testcodegen_c
-/newclay/compiler/testevaluator
-/newclay/compiler/testlexer
-/newclay/compiler/testlifetime
-/newclay/compiler/testloader
-/newclay/compiler/testparser
-/newclay/compiler/testresolver
 claysource.*
 
 clay.exe
@@ -46,3 +38,4 @@ examples/cocoa/appkit/Example.app/
 mingw/
 
 testlog.txt
+test.exe
