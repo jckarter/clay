@@ -84,3 +84,27 @@ cstring(s:String) {
     end(s)^ = Char(0);
     return Pointer[Int8](s.data);
 }
+
+
+
+//
+// concatenation
+//
+
+[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+        and (SequenceElementType(A) == Char)]
+overload cat(forward a:A, forward ..b:B) {
+    var result = Vector(a);
+    push(result, ..b);
+    return move(result);
+}
+
+[A | Sequence?(A) and (SequenceElementType(A) == Char)]
+overload cat(forward a:A, forward ..x:Char) {
+    var result = Vector(a);
+    push(result, x);
+    return move(result);
+}
+
+[A | Sequence?(A) and (SequenceElementType(A) == Char)]
+overload cat(forward x:Char, forward a:A) = cat(Vector[Char](x) , a);

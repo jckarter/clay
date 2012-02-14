@@ -146,6 +146,12 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
+    case VARIADIC_OP : {
+        VariadicOp *y = (VariadicOp *)x.ptr();
+        out = new VariadicOp(y->op,clone(y->arg1),clone(y->args));
+        break;
+    }
+
     case AND : {
         And *y = (And *)x.ptr();
         out = new And(clone(y->expr1), clone(y->expr2));

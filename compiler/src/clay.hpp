@@ -435,6 +435,7 @@ struct FieldRef;
 struct StaticIndexing;
 struct UnaryOp;
 struct BinaryOp;
+struct VariadicOp;
 struct And;
 struct Or;
 struct IfExpr;
@@ -587,6 +588,7 @@ typedef Pointer<FieldRef> FieldRefPtr;
 typedef Pointer<StaticIndexing> StaticIndexingPtr;
 typedef Pointer<UnaryOp> UnaryOpPtr;
 typedef Pointer<BinaryOp> BinaryOpPtr;
+typedef Pointer<VariadicOp> VariadicOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<IfExpr> IfExprPtr;
@@ -1008,6 +1010,7 @@ enum ExprKind {
     STATIC_INDEXING,
     UNARY_OP,
     BINARY_OP,
+    VARIADIC_OP,
     AND,
     OR,
 
@@ -1201,6 +1204,19 @@ struct BinaryOp : public Expr {
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
 };
 
+enum VariadicOpKind {
+    CAT,
+};
+
+struct VariadicOp : public Expr {
+    int op;
+    ExprPtr arg1;
+    ExprListPtr args;
+    ExprPtr desugared;
+    VariadicOp(int op, ExprPtr arg1, ExprListPtr args)
+        : Expr(VARIADIC_OP), op(op), arg1(arg1), args(args) {}
+};
+
 struct And : public Expr {
     ExprPtr expr1, expr2;
     And(ExprPtr expr1, ExprPtr expr2)
@@ -1325,7 +1341,7 @@ struct EvalExpr : public Expr {
 
 struct ExprList : public Object {
     vector<ExprPtr> exprs;
-
+    string sym;
     MultiPValuePtr cachedAnalysis;
 
     ExprList()
@@ -3029,6 +3045,7 @@ ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
+ExprPtr desugarVariadicOp(VariadicOpPtr x);
 ExprPtr desugarIfExpr(IfExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);

@@ -334,6 +334,7 @@ overload setBase(x:FieldRef,       y) { setBase2(x, #expr, y); }
 overload setBase(x:StaticIndexing, y) { setBase2(x, #expr, y); }
 overload setBase(x:UnaryOp,        y) { setBase2(x, #expr, y); }
 overload setBase(x:BinaryOp,       y) { setBase2(x, #expr1, y); }
+overload setBase(x:VariadicOp,     y) { setBase2(x, #arg1, y); }
 overload setBase(x:And,            y) { setBase2(x, #expr1, y); }
 overload setBase(x:Or,             y) { setBase2(x, #expr1, y); }
 
@@ -444,13 +445,18 @@ private var addSubOp = choice(
 );
 private var addSubExpr = binaryOp(addSubOp, mulDivExpr);
 
+private var catOp = choice(
+    modify(x => CAT,     punc(#"++")),
+);
+private var catExpr = binaryOp(catOp, addSubExpr);
+
 private var compareOp = choice(
     modify(x => LESSER,         punc(#"<")),
     modify(x => LESSER_EQUALS,  punc(#"<=")),
     modify(x => GREATER,        punc(#">")),
     modify(x => GREATER_EQUALS, punc(#">=")),
 );
-private var compareExpr = binaryOp(compareOp, addSubExpr);
+private var compareExpr = binaryOp(compareOp, catExpr);
 
 private var equalOp = choice(
     modify(x => EQUALS,     punc(#"==")),

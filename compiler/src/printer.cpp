@@ -222,6 +222,19 @@ static void printExpr(ostream &out, const Expr *x) {
         out << ", " << y->expr1 << ", " << y->expr2 << ")";
         break;
     }
+    case VARIADIC_OP : {
+        const VariadicOp *y = (const VariadicOp *)x;
+        out << "VariadicOp(";
+        switch (y->op) {
+        case CAT :
+            out << "CAT";
+            break;
+        default :
+            assert(false);
+        }
+        out << ", " << y->arg1 << ", " << y->args << ")";
+        break;
+    }
     case AND : {
         const And *y = (const And *)x;
         out << "And(" << y->expr1 << ", " << y->expr2 << ")";

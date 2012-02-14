@@ -101,6 +101,22 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     return call.ptr();
 }
 
+ExprPtr desugarVariadicOp(VariadicOpPtr x) {
+    ExprPtr callable;
+    switch (x->op) {
+    case CAT :
+        callable = operator_expr_cat();
+        break;
+    default :
+        assert(false);
+    }
+    CallPtr call = new Call(callable, new ExprList());
+    call->location = x->location;
+    call->parenArgs->add(x->arg1);
+    call->parenArgs->add(x->args);
+    return call.ptr();
+}
+
 ExprPtr desugarIfExpr(IfExprPtr x) {
     ExprPtr callable = operator_expr_ifExpression();
     CallPtr call = new Call(callable, new ExprList());

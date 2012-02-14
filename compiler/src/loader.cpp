@@ -998,6 +998,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(lesserEqualsP);
     OPERATOR(greaterP);
     OPERATOR(greaterEqualsP);
+    OPERATOR(cat);
     OPERATOR(tupleLiteral);
     OPERATOR(staticIndex);
     OPERATOR(index);
@@ -1175,6 +1176,7 @@ DEFINE_OPERATOR_ACCESSOR(lesserP)
 DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
 DEFINE_OPERATOR_ACCESSOR(greaterP)
 DEFINE_OPERATOR_ACCESSOR(greaterEqualsP)
+DEFINE_OPERATOR_ACCESSOR(cat)
 DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
 DEFINE_OPERATOR_ACCESSOR(staticIndex)
 DEFINE_OPERATOR_ACCESSOR(index)

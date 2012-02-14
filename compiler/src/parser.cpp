@@ -267,9 +267,10 @@ static bool expressionList(ExprListPtr &x) {
     ExprPtr b;
     if (!expression(b)) return false;
     a = new ExprList(b);
+    if (x->sym.empty()) x->sym = ",";
     while (true) {
         int p = save();
-        if (!symbol(",")) {
+        if (!symbol(x->sym.c_str())) {
             restore(p);
             break;
         }
@@ -686,6 +687,47 @@ static bool addSubExpr(ExprPtr &x) {
     return true;
 }
 
+//
+// equal expr
+//
+
+static bool catOp(int &op) {
+    if (symbol("++")){
+        op = CAT;
+        return true;
+    }
+    return false;
+}
+
+static bool catTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    int op;
+    if (!catOp(op)) return false;
+    ExprListPtr args;
+    args->sym = "++";
+    if (!expressionList(args)) return false;
+    ExprPtr y;
+    if (!addSubExpr(y)) return false;
+    x = new VariadicOp(op, NULL, args);
+    x->location = location;
+    return true;
+}
+
+static bool catExpr(ExprPtr &x) {
+    if (!addSubExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!catTail(y)) {
+            restore(p);
+            break;
+        }
+        y->arg1 = x;
+        x = y.ptr();
+    }
+    return true;
+}
+
 
 
 //
@@ -713,14 +755,14 @@ static bool compareTail(BinaryOpPtr &x) {
     int op;
     if (!compareOp(op)) return false;
     ExprPtr y;
-    if (!addSubExpr(y)) return false;
+    if (!catExpr(y)) return false;
     x = new BinaryOp(op, NULL, y);
     x->location = location;
     return true;
 }
 
 static bool compareExpr(ExprPtr &x) {
-    if (!addSubExpr(x)) return false;
+    if (!catExpr(x)) return false;
     while (true) {
         int p = save();
         BinaryOpPtr y;
@@ -850,6 +892,8 @@ static bool orExpr(ExprPtr &x) {
     }
     return true;
 }
+
+
 
 
 
