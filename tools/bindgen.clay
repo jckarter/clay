@@ -46,9 +46,9 @@ nameForDeclaration(cursor:CXCursor) : String
 
         var name = String();
         if (empty?(spelling))
-            name = prefix + unnamedName();
+            name = prefix ++ unnamedName();
         else
-            name = prefix + spelling;
+            name = prefix ++ spelling;
         g_declNames[cursor] = name;
         return move(name);
     } else

@@ -1210,11 +1210,11 @@ enum VariadicOpKind {
 
 struct VariadicOp : public Expr {
     int op;
-    ExprPtr arg1;
-    ExprListPtr args;
+    ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(int op, ExprPtr arg1, ExprListPtr args)
-        : Expr(VARIADIC_OP), op(op), arg1(arg1), args(args) {}
+    VariadicOp(int op, ExprListPtr exprs )
+        : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
+
 };
 
 struct And : public Expr {
@@ -1341,7 +1341,7 @@ struct EvalExpr : public Expr {
 
 struct ExprList : public Object {
     vector<ExprPtr> exprs;
-    string sym;
+
     MultiPValuePtr cachedAnalysis;
 
     ExprList()
@@ -1356,6 +1356,9 @@ struct ExprList : public Object {
     void add(ExprPtr x) { exprs.push_back(x); }
     void add(ExprListPtr x) {
         exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
+    }
+    void insert(ExprPtr x) {
+        exprs.insert(exprs.begin(), x);
     }
 };
 

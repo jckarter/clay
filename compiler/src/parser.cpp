@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include <stdio.h>
 
 namespace clay {
 
@@ -267,10 +268,9 @@ static bool expressionList(ExprListPtr &x) {
     ExprPtr b;
     if (!expression(b)) return false;
     a = new ExprList(b);
-    if (x->sym.empty()) x->sym = ",";
     while (true) {
         int p = save();
-        if (!symbol(x->sym.c_str())) {
+        if (!symbol(",")) {
             restore(p);
             break;
         }
@@ -687,31 +687,32 @@ static bool addSubExpr(ExprPtr &x) {
     return true;
 }
 
-//
-// equal expr
-//
-
-static bool catOp(int &op) {
-    if (symbol("++")){
-        op = CAT;
-        return true;
-    }
-    return false;
-}
 
 static bool catTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
-    int op;
-    if (!catOp(op)) return false;
-    ExprListPtr args;
-    args->sym = "++";
-    if (!expressionList(args)) return false;
-    ExprPtr y;
-    if (!addSubExpr(y)) return false;
-    x = new VariadicOp(op, NULL, args);
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("++")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("++")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!addSubExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(CAT, exprs);
     x->location = location;
     return true;
 }
+
 
 static bool catExpr(ExprPtr &x) {
     if (!addSubExpr(x)) return false;
@@ -722,7 +723,7 @@ static bool catExpr(ExprPtr &x) {
             restore(p);
             break;
         }
-        y->arg1 = x;
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;

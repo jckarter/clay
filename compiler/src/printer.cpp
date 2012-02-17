@@ -232,7 +232,7 @@ static void printExpr(ostream &out, const Expr *x) {
         default :
             assert(false);
         }
-        out << ", " << y->arg1 << ", " << y->args << ")";
+        out << ", "  << y->exprs << ")";
         break;
     }
     case AND : {

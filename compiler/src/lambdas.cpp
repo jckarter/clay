@@ -582,8 +582,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case VARIADIC_OP : {
         VariadicOp *y = (VariadicOp *)x.ptr();
-        convertFreeVars(y->arg1, env, ctx);
-        convertFreeVars(y->args, env, ctx);
+        convertFreeVars(y->exprs, env, ctx);
         break;
     }
 

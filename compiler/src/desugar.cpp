@@ -112,8 +112,7 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     }
     CallPtr call = new Call(callable, new ExprList());
     call->location = x->location;
-    call->parenArgs->add(x->arg1);
-    call->parenArgs->add(x->args);
+    call->parenArgs->add(x->exprs);
     return call.ptr();
 }
 
