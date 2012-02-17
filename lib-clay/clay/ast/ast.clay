@@ -198,7 +198,7 @@ enum VariadicOpKind (
 
 record VariadicOp = ast(
     kind:  VariadicOpKind,
-    args: Vector[Expr],
+    exprs: Vector[Expr],
 );
 
 record And = ast(
