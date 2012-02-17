@@ -253,7 +253,8 @@ visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
         printlnTo(g_bindingsOut, "alias ", clang_getCursorSpelling(cursor), " = ",
-            clang_getEnumConstantDeclValue(cursor), ";");
+            convertType(clang_getEnumDeclIntegerType(parent), parent), "(",
+            clang_getEnumConstantDeclValue(cursor), ");");
     }
     else {
     }
