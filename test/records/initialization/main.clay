@@ -8,7 +8,7 @@ overload Foo() --> returned:Foo {
     returned.b = String("a should be 0");
 }
 
-overload Foo(a, b) = initializeRecord(Foo, 2*a, b + " times two");
+overload Foo(a, b) = initializeRecord(Foo, 2*a, b ++ " times two");
 
 main() {
     println(Foo());

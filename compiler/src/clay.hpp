@@ -435,6 +435,7 @@ struct FieldRef;
 struct StaticIndexing;
 struct UnaryOp;
 struct BinaryOp;
+struct VariadicOp;
 struct And;
 struct Or;
 struct IfExpr;
@@ -587,6 +588,7 @@ typedef Pointer<FieldRef> FieldRefPtr;
 typedef Pointer<StaticIndexing> StaticIndexingPtr;
 typedef Pointer<UnaryOp> UnaryOpPtr;
 typedef Pointer<BinaryOp> BinaryOpPtr;
+typedef Pointer<VariadicOp> VariadicOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
 typedef Pointer<IfExpr> IfExprPtr;
@@ -1008,6 +1010,7 @@ enum ExprKind {
     STATIC_INDEXING,
     UNARY_OP,
     BINARY_OP,
+    VARIADIC_OP,
     AND,
     OR,
 
@@ -1201,6 +1204,19 @@ struct BinaryOp : public Expr {
         : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
 };
 
+enum VariadicOpKind {
+    CAT,
+};
+
+struct VariadicOp : public Expr {
+    int op;
+    ExprListPtr exprs;
+    ExprPtr desugared;
+    VariadicOp(int op, ExprListPtr exprs )
+        : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
+
+};
+
 struct And : public Expr {
     ExprPtr expr1, expr2;
     And(ExprPtr expr1, ExprPtr expr2)
@@ -1340,6 +1356,9 @@ struct ExprList : public Object {
     void add(ExprPtr x) { exprs.push_back(x); }
     void add(ExprListPtr x) {
         exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
+    }
+    void insert(ExprPtr x) {
+        exprs.insert(exprs.begin(), x);
     }
 };
 
@@ -3029,6 +3048,7 @@ ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
+ExprPtr desugarVariadicOp(VariadicOpPtr x);
 ExprPtr desugarIfExpr(IfExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);

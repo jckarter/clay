@@ -4,12 +4,12 @@ main() {
 
     println(..weaveValues(
         ", ",
-        ..mapValues(x => x+x, 1, 2.0, "three")
+        ..mapValues(x => x++x, "three")
     ));
 
     println(..weaveValues(
         ", ",
-        ..mapValues(x => x+x)
+        ..mapValues(x => x++x)
     ));
 
     println(foldValues(add, 1, 2, 3));
