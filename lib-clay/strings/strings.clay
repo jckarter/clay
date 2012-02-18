@@ -84,4 +84,3 @@ cstring(s:String) {
     end(s)^ = Char(0);
     return Pointer[Int8](s.data);
 }
-

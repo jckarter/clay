@@ -1,5 +1,4 @@
 #include "clay.hpp"
-#include <stdio.h>
 
 namespace clay {
 
@@ -893,8 +892,6 @@ static bool orExpr(ExprPtr &x) {
     }
     return true;
 }
-
-
 
 
 
