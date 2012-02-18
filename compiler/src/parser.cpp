@@ -686,30 +686,6 @@ static bool addSubExpr(ExprPtr &x) {
     return true;
 }
 
-static bool catTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("++")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("++")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!addSubExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    x = new VariadicOp(CAT, exprs);
-    x->location = location;
-    return true;
-}
 
 static bool catTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
