@@ -1468,7 +1468,8 @@ enum UpdateOpKind {
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
     UPDATE_DIVIDE,
-    UPDATE_REMAINDER
+    UPDATE_REMAINDER,
+    UPDATE_CAT
 };
 
 struct UpdateAssignment : public Statement {
