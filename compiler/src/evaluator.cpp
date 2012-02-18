@@ -1099,6 +1099,14 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
+    case VARIADIC_OP : {
+        VariadicOp *x = (VariadicOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarVariadicOp(x);
+        evalExpr(x->desugared, env, out);
+        break;
+    }
+
     case EVAL_EXPR : {
         EvalExpr *eval = (EvalExpr *)expr.ptr();
         // XXX compilation context

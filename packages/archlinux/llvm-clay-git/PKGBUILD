@@ -2,7 +2,7 @@
 
 pkgname=llvm-clay-git
 pkgver=3.0
-pkgrel=1
+pkgrel=2
 pkgdesc='LLVM/Clang compiler infrastructure, patched for Clay programming language.'
 arch=('i686' 'x86_64')
 url='http://llvm.org/'
@@ -57,7 +57,6 @@ build() {
         --prefix=/usr \
         --sysconfdir=/etc \
         --enable-optimized \
-        --enable-assertions \
         --enable-targets=host-only \
         --enable-libffi \
         --disable-bindings

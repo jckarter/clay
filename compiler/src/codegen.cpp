@@ -1124,6 +1124,14 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
+    case VARIADIC_OP : {
+        VariadicOp *x = (VariadicOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarVariadicOp(x);
+        codegenExpr(x->desugared, env, ctx, out);
+        break;
+    }
+
     case EVAL_EXPR : {
         EvalExpr *eval = (EvalExpr *)expr.ptr();
         // XXX compilation context

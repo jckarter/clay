@@ -19,6 +19,8 @@ public import __operators__.(
     greater?,
     greaterEquals?,
 
+    cat,
+
     plus,
     minus,
 

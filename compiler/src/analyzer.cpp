@@ -771,6 +771,13 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return analyzeExpr(x->desugared, env);
     }
 
+    case VARIADIC_OP : {
+        VariadicOp *x = (VariadicOp *)expr.ptr();
+        if (!x->desugared)
+            x->desugared = desugarVariadicOp(x);
+        return analyzeExpr(x->desugared, env);
+    }
+
     case EVAL_EXPR : {
         EvalExpr *eval = (EvalExpr *)expr.ptr();
         // XXX compilation context
