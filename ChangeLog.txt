@@ -40,6 +40,22 @@ Language changes:
 * Operator functions are now implicitly defined in a special '__operators__'
   module instead of looked up in the 'prelude' module.
 
+* A new '++' operator is provided for sequence concatenation. It desugars to
+  the 'cat' operator function. A series of concatenations desugars into a single
+  variadic 'cat' invocation.
+
+    // 0.2
+    foo() {
+        println("hello" ++ " " ++ "world");
+    }
+
+    // desugars to
+    foo() {
+        println(cat("hello", " ", "world"));
+    }
+
+  Thanks to Jeremy Clifford.
+
 Library changes:
 ----------------
 * Record types are no longer provided with a static index (x.0) operator
@@ -50,11 +66,11 @@ Library changes:
   The order of arguments of 'bitcast' has been reversed to be more in line
   with other cast functions; the target type is now the first argument.
 
-  // 0.1
-  var x = bitcast(y, Int);
+    // 0.1
+    var x = bitcast(y, Int);
 
-  // 0.2
-  var x = bitcast(Int, y);
+    // 0.2
+    var x = bitcast(Int, y);
 
 * The polymorphic function container type Lambda[[..In],[..Out]] has been
   renamed Function[[..In],[..Out]].
@@ -63,25 +79,40 @@ Library changes:
   input and output types when given a monomorphic function or lambda (that is,
   a function with a single overload will fully specified input types).
 
-  // 0.1
-  foo(x:Int) = Float(x);
+    // 0.1
+    foo(x:Int) = Float(x);
 
-  bar() {
-      var cp = CodePointer[[Int],[Float]](foo);
-      var ccp = CCodePointer[[Int],[Float]](foo);
-      var l1 = Lambda[[Int],[Float]](foo);
-      var l2 = Lambda[[Int, Int], [Int]]((x:Int, y:Int) -> x + y);
-  }
+    bar() {
+        var cp = CodePointer[[Int],[Float]](foo);
+        var ccp = CCodePointer[[Int],[Float]](foo);
+        var l1 = Lambda[[Int],[Float]](foo);
+        var l2 = Lambda[[Int, Int], [Int]]((x:Int, y:Int) -> x + y);
+    }
 
-  // 0.2
-  foo(x:Int) = Float(x);
+    // 0.2
+    foo(x:Int) = Float(x);
 
-  bar() {
-      var cp = CodePointer(foo);
-      var ccp = CCodePointer(foo);
-      var l1 = Function(foo);
-      var l2 = Function((x:Int, y:Int) -> x + y);
-  }
+    bar() {
+        var cp = CodePointer(foo);
+        var ccp = CCodePointer(foo);
+        var l1 = Function(foo);
+        var l2 = Function((x:Int, y:Int) -> x + y);
+    }
+
+* Sequences no longer overload 'add' for sequence concatenation, but instead
+  overload 'cat'.
+
+    // 0.1
+    foo() {
+        println("hello " + "world");
+    }
+
+    // 0.2
+    foo() {
+        println("hello " ++ "world");
+    }
+
+  Thanks to Jeremy Clifford.
 
 Compiler frontend changes:
 --------------------------
