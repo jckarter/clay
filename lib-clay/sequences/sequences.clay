@@ -68,25 +68,26 @@ overload lesser?(a:A, b:B) {
 // concatenation
 //
 
-[A, B | Sequence?(A) and Sequence?(B)
-        and (SequenceElementType(A) == SequenceElementType(B))]
-overload add(forward a:A, forward b:B) {
+[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+        and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
+overload cat(forward a:A, forward ..b:B) {
     var result = Vector(a);
-    push(result, b);
+    push(result, ..b);
     return move(result);
 }
 
-[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
-overload add(forward a:A, forward x:T) {
+[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+overload cat(forward a:A, forward ..x:T) {
     var result = Vector(a);
     push(result, x);
     return move(result);
 }
 
 [A, T | Sequence?(A) and (SequenceElementType(A) == T)]
-overload add(forward x:T, forward a:A) = Vector[T](x) + a;
+overload cat(forward x:T, forward a:A) = Vector[T](x) + a;
 
-
+
+// 
 //
 // interleave
 //

@@ -28,11 +28,11 @@ record TestSuite (
     testCases: Vector[TestCase]
 );
 
-[S, T | S != String or T != Vector[TestCase]] 
+[S, T | S != String or T != Vector[TestCase]]
 overload TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
 
 alias TEST_CASE_INDENT = "  ";
-alias TEST_FAILURE_INDENT = TEST_CASE_INDENT + TEST_CASE_INDENT;
+alias TEST_FAILURE_INDENT = TEST_CASE_INDENT ++ TEST_CASE_INDENT;
 
 accumulateTestStatus(test: TestStatus, newTest: TestStatus) {
     test.passed  += newTest.passed;
@@ -69,14 +69,14 @@ pendingMessage(pending?) {
     }
 }
 
-printFailure(..xs) { 
-  printlnColored(Red, TEST_FAILURE_INDENT, ..xs); 
+printFailure(..xs) {
+  printlnColored(Red, TEST_FAILURE_INDENT, ..xs);
 }
 
 runTestCase(_case: TestCase) : TestStatus {
     print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
     flush(stdout);
-    
+
     var test = TestStatus();
     try {
         _case._case(test);
@@ -142,7 +142,7 @@ alias expectType(test: TestStatus, name, ExpectedType, result) {
 
 private expectType2(test:TestStatus, name, ExpectedType, ResultType) {
     expect(test, ResultType == ExpectedType, () => {
-        printFailure(name, " is expected to be of type ", ExpectedType, " but is of type ", ResultType); 
+        printFailure(name, " is expected to be of type ", ExpectedType, " but is of type ", ResultType);
     });
 }
 
@@ -313,9 +313,9 @@ private testOptions() {
 testMain(..suites) {
     var test = TestStatus();
     eachValue(
-        suite -> { 
+        suite -> {
           if(runSuite?(suite))
-            accumulateTestStatus(test, runTestSuite(suite)); 
+            accumulateTestStatus(test, runTestSuite(suite));
         },
         ..suites
     );

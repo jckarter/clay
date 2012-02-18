@@ -20,7 +20,7 @@ Testing test test suite:
     add isn't callable with the expected argument types:
       Int32, Vector[Char]
 
-    add shouldn't be callable with the expected argument types:
+    cat shouldn't be callable with the expected argument types:
       Vector[Char], Vector[Char]
 
     primes iterator is expected to contain:
@@ -101,6 +101,6 @@ Testing test test suite:
   ifPasses:
     truth 1 is expected to be true but isn't
     -- FAILED
--- test test suite: 13 expectations passed; 20 failed (1 pending)
-Overall: 13 expectations passed; 20 failed (1 pending)
+-- test test suite: 14 expectations passed; 20 failed (1 pending)
+Overall: 14 expectations passed; 20 failed (1 pending)
 TESTS FAILED

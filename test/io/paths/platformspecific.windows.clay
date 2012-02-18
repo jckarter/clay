@@ -4,7 +4,7 @@ import io.paths.*;
 
 expectSplitPath(test, path, expected) {
     expectEqual(test,
-        "array(..splitPath(\"" + path + "\"))",
+        "array(..splitPath(\"" ++ path ++ "\"))",
         expected,
         array(..splitPath(path)),
     );
@@ -12,7 +12,7 @@ expectSplitPath(test, path, expected) {
 
 expectPathComponents(test, path, expected) {
     expectEqual(test,
-        "pathComponents(\"" + path + "\")",
+        "pathComponents(\"" ++ path ++ "\")",
         expected,
         pathComponents(path),
     );
@@ -22,7 +22,7 @@ expectJoinPath(test, parts, expected) {
     var argumentsStr = String();
     printTo(argumentsStr, Vector(parts));
     expectEqual(test,
-        "joinPath(" + argumentsStr + ")",
+        "joinPath(" ++ argumentsStr ++ ")",
         expected,
         joinPath(parts),
     );

@@ -2,7 +2,7 @@
 import libc;
 
 sayHello(s) {
-    var msg = "Hello, " + s;
+    var msg = "Hello, " ++ s;
     println(msg);
 }
 
