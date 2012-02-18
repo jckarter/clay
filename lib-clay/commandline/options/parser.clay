@@ -25,7 +25,7 @@ variant ParseToken (OptionValue, Argument, Error, Separator);
 
 alias ParseResult = Vector[ParseToken];
 
-parseOptions(ops : OptionSpecs, args) : ParseResult { 
+parseOptions(ops : OptionSpecs, args) : ParseResult {
   var pr = ParseResult();
 
   var scanner = withPushback(iterator(mapped(x => String(x), args)));
@@ -69,7 +69,7 @@ parseOptions(ops : OptionSpecs, args) : ParseResult {
                   addOption(pr, String(c));
                 }
               }
-            } else { 
+            } else {
               unexpectedValue(pr, optionName, value);
             }
           } else {
@@ -80,7 +80,7 @@ parseOptions(ops : OptionSpecs, args) : ParseResult {
         } else {
           addOption(pr, optionName);
         }
-      } 
+      }
     }
   }
 
@@ -157,15 +157,15 @@ addSeparator(pr){
 }
 
 private unrecognisedOption(pr, op){
-  addError(pr, "Unrecognised option " + String(op));
+  addError(pr, "Unrecognised option " ++ String(op));
 }
 
 private unexpectedValue(pr, spec, value){
-  addError(pr, "The value " + value + " was provided for " + String(spec) + " but no value was expected");
+  addError(pr, "The value " ++ value ++ " was provided for " ++ String(spec) ++ " but no value was expected");
 }
 
 private missingValue(pr, op){
-  addError(pr, "Option " + String(op) + " expects a value but none was provided");
+  addError(pr, "Option " ++ String(op) ++ " expects a value but none was provided");
 }
 
 // tokens of size <= 1 can't be options. Note that it's important that we allow "-" as an argument.
