@@ -686,6 +686,30 @@ static bool addSubExpr(ExprPtr &x) {
     return true;
 }
 
+static bool catTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("++")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("++")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!addSubExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(CAT, exprs);
+    x->location = location;
+    return true;
+}
 
 static bool catTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
@@ -1317,9 +1341,9 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=", "%=", NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=", "%=", "++=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_REMAINDER};
+                       UPDATE_DIVIDE, UPDATE_REMAINDER, UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {

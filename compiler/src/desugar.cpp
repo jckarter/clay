@@ -132,6 +132,7 @@ ExprPtr updateOperatorExpr(int op) {
     case UPDATE_MULTIPLY : return operator_expr_multiply();
     case UPDATE_DIVIDE : return operator_expr_divide();
     case UPDATE_REMAINDER : return operator_expr_remainder();
+    case UPDATE_CAT : return operator_expr_cat();
     default :
         assert(false);
         return NULL;
