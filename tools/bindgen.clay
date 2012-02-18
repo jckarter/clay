@@ -1,7 +1,21 @@
-import clay.lexer.(keywords as clayKeywords);
 import llvm.libclang.*;
 import printer.formatter.(repr);
 import maybe.*;
+
+var clayKeywords = array(
+    "public", "private", "import", "as",
+    "record", "variant", "instance",
+    "define", "overload", "external", "alias",
+    "static", "rvalue",
+    "inline", "enum", "var", "ref", "forward",
+    "and", "or", "not",
+    "if", "else", "goto", "return", "while",
+    "switch", "case", "break", "continue", "for", "in",
+    "true", "false", "try", "catch", "throw",
+    "finally", "onerror",
+    "eval", "with",
+    "__FILE__", "__LINE__", "__COLUMN__", "__ARG__"
+);
 
 var g_declNames = HashMap[CXCursor, String]();
 var g_unnamedIndex = 0;
