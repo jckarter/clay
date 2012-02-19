@@ -410,7 +410,7 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
 }
 
 [T] overload resize(deque: Deque[T], newSize: SizeT) {
-    var oldSize = size(deque); 
+    var oldSize = size(deque);
     if (newSize < oldSize) {
         var newEnd = deque.begin + newSize;
         destroyDequeValues(newEnd, deque.end);
@@ -632,7 +632,7 @@ private printMap(deque) {
         dec(prev);
         moveDequeValues(deque.begin, prev, oldBegin);
         try {
-            prev^ <-- value; 
+            prev^ <-- value;
         } catch (ex) {
             resetUnsafe(prev^);
             throw ex;
