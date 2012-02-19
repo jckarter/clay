@@ -123,7 +123,7 @@ sha256(message: S) --> returned: SHA256 {
 
     if (messageTailSize >= 56) {
         zeroMemory(
-            begin(tailChunkBytes) + messageTailSize + 1,
+            (begin(tailChunkBytes) + messageTailSize) + 1,
             end(tailChunkBytes)
         );
         sha256chunk(state, tempState, chunkSpace, tailChunk);

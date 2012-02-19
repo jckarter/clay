@@ -58,21 +58,6 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
 ExprPtr desugarBinaryOp(BinaryOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
-    case ADD :
-        callable = operator_expr_add();
-        break;
-    case SUBTRACT :
-        callable = operator_expr_subtract();
-        break;
-    case MULTIPLY :
-        callable = operator_expr_multiply();
-        break;
-    case DIVIDE :
-        callable = operator_expr_divide();
-        break;
-    case REMAINDER :
-        callable = operator_expr_remainder();
-        break;
     case EQUALS :
         callable = operator_expr_equalsP();
         break;
@@ -104,6 +89,21 @@ ExprPtr desugarBinaryOp(BinaryOpPtr x) {
 ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
+    case ADD :
+        callable = operator_expr_add();
+        break;
+    case SUBTRACT :
+        callable = operator_expr_subtract();
+        break;
+    case MULTIPLY :
+        callable = operator_expr_multiply();
+        break;
+    case DIVIDE :
+        callable = operator_expr_divide();
+        break;
+    case REMAINDER :
+        callable = operator_expr_remainder();
+        break;
     case CAT :
         callable = operator_expr_cat();
         break;
