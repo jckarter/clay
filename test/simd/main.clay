@@ -20,11 +20,11 @@ main() {
     println();
     println("v1: ",  v1);
     println("v2: ",  v2);
-    println("add: ", (v1 + v2) + 3);
-    println("sub: ", (v1 - v2) - 3);
-    println("mul: ", (v1 * v2) * 3);
-    println("div: ", (v1 / v2) / 3);
-    println("rem: ", (v1 % v2) % 3);
+    println("add: ", v1 + v2 + 3);
+    println("sub: ", v1 - v2 - 3);
+    println("mul: ", v1 * v2 * 3);
+    println("div: ", v1 / v2 / 3);
+    println("rem: ", v1 % v2 % 3);
     println("shl: ", bitshl(bitshl(v1, v2), 3));
     println("shr: ", bitshr(bitshr(v1, v2), 3));
     println("and: ", bitand(bitand(v1, v2), 3));
