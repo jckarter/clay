@@ -92,6 +92,16 @@ overload updateAssign(static cat, ref a:A, forward ..b:B) {
     push(a, ..b);
 }
 
+[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+overload updateAssign(static cat, forward a:A, forward ..x:T) {
+    push(a, x);
+}
+
+[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+overload updateAssign(static cat, forward x:T, forward a:A) {
+    insert(a,0,x);
+}
+
 // 
 //
 // interleave
