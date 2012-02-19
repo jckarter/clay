@@ -79,7 +79,7 @@ record DequeCoordinate[T] (
 }
 
 [T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
-    var mapDistance = PtrInt((i.node - j.node) - 1);
+    var mapDistance = PtrInt(i.node - j.node - 1);
     var iNodeDistance = PtrInt(i.current - i.first);
     var jNodeDistance = PtrInt(j.last - j.current);
     return DequeBufferSSize(T) * mapDistance + iNodeDistance + jNodeDistance;
