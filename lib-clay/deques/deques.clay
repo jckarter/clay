@@ -528,7 +528,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     else
         frontOffset = SizeT(0);
     if (deque.mapSize > SizeT(2)*newNodeCount) {
-        newBeginNode = (deque.map + (deque.mapSize - newNodeCount)/SizeT(2)) + frontOffset;
+        newBeginNode = deque.map + (deque.mapSize - newNodeCount)/SizeT(2) + frontOffset;
         moveMemoryUnsafe(
             newBeginNode,
             deque.begin.node,
@@ -537,7 +537,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     } else {
         var newMapSize = deque.mapSize + max(deque.mapSize, addCount) + SizeT(2);
         var newMap = allocateRawMemory(Pointer[T], newMapSize);
-        newBeginNode = (newMap + (newMapSize - newNodeCount)/SizeT(2)) + frontOffset;
+        newBeginNode = newMap + (newMapSize - newNodeCount)/SizeT(2) + frontOffset;
         moveMemoryUnsafe(
             newBeginNode,
             deque.begin.node,
@@ -549,7 +549,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
         deque.mapSize <-- newMapSize;
     }
     deque.begin.node = newBeginNode;
-    deque.end.node = (newBeginNode + oldNodeCount) - SizeT(1);
+    deque.end.node = newBeginNode + oldNodeCount - SizeT(1);
 }
 
 [T] private createDequeNodes(begin: Pointer[Pointer[T]], end: Pointer[Pointer[T]]) {
@@ -618,7 +618,7 @@ private printMap(deque) {
 [T] private newDequeBackElements(deque: Deque[T], count: SizeT) {
     var newNodes = SizeT(count + DequeBufferSize(T) - 1)/DequeBufferSize(T);
     reserveMapBackNodes(deque, newNodes);
-    createDequeNodes(deque.end.node + 1, (deque.end.node + newNodes) + 1);
+    createDequeNodes(deque.end.node + 1, deque.end.node + newNodes + 1);
 }
 
 [T] private insertDequeValue(deque: Deque[T], i: DequeCoordinate[T], forward value) {

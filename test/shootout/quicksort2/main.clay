@@ -21,7 +21,7 @@ sortRange(start, end) {
 reverse(a) {
     var n = size(a);
     for (i in range(n / 2))
-        swap(a[i], a[(n-i)-1]);
+        swap(a[i], a[n-i-1]);
 }
 
 main() {
