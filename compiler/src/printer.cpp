@@ -183,21 +183,6 @@ static void printExpr(ostream &out, const Expr *x) {
         const BinaryOp *y = (const BinaryOp *)x;
         out << "BinaryOp(";
         switch (y->op) {
-        case ADD :
-            out << "ADD";
-            break;
-        case SUBTRACT :
-            out << "SUBTRACT";
-            break;
-        case MULTIPLY :
-            out << "MULTIPLY";
-            break;
-        case DIVIDE :
-            out << "DIVIDE";
-            break;
-        case REMAINDER :
-            out << "REMAINDER";
-            break;
         case EQUALS :
             out << "EQUALS";
             break;
@@ -226,6 +211,21 @@ static void printExpr(ostream &out, const Expr *x) {
         const VariadicOp *y = (const VariadicOp *)x;
         out << "VariadicOp(";
         switch (y->op) {
+        case ADD :
+            out << "ADD";
+            break;
+        case SUBTRACT :
+            out << "SUBTRACT";
+            break;
+        case MULTIPLY :
+            out << "MULTIPLY";
+            break;
+        case DIVIDE :
+            out << "DIVIDE";
+            break;
+        case REMAINDER :
+            out << "REMAINDER";
+            break;
         case CAT :
             out << "CAT";
             break;

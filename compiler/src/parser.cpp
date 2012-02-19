@@ -610,77 +610,203 @@ static bool prefixExpr(ExprPtr &x) {
 // arithmetic expr
 //
 
-static bool mulDivOp(int &op) {
-    int p = save();
-    if (symbol("*"))
-        op = MULTIPLY;
-    else if (restore(p), symbol("/"))
-        op = DIVIDE;
-    else if (restore(p), symbol("%"))
-        op = REMAINDER;
-    else
-        return false;
-    return true;
-}
-
-static bool mulDivTail(BinaryOpPtr &x) {
+static bool mulTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
-    int op;
-    if (!mulDivOp(op)) return false;
+    ExprListPtr exprs = new ExprList();
     ExprPtr b;
-    if (!prefixExpr(b)) return false;
-    x = new BinaryOp(op, NULL, b);
+    int p = save();
+    if (!symbol("*")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("*")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!prefixExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(MULTIPLY, exprs);
     x->location = location;
     return true;
 }
 
-static bool mulDivExpr(ExprPtr &x) {
+static bool mulExpr(ExprPtr &x) {
     if (!prefixExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
-        if (!mulDivTail(y)) {
+        VariadicOpPtr y;
+        if (!mulTail(y)) {
             restore(p);
             break;
         }
-        y->expr1 = x;
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
 }
 
-static bool addSubOp(int &op) {
-    int p = save();
-    if (symbol("+"))
-        op = ADD;
-    else if (restore(p), symbol("-"))
-        op = SUBTRACT;
-    else
-        return false;
-    return true;
-}
 
-static bool addSubTail(BinaryOpPtr &x) {
+static bool divTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
-    int op;
-    if (!addSubOp(op)) return false;
-    ExprPtr y;
-    if (!mulDivExpr(y)) return false;
-    x = new BinaryOp(op, NULL, y);
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("/")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("/")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!mulExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(DIVIDE, exprs);
     x->location = location;
     return true;
 }
 
-static bool addSubExpr(ExprPtr &x) {
-    if (!mulDivExpr(x)) return false;
+static bool divExpr(ExprPtr &x) {
+    if (!mulExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
-        if (!addSubTail(y)) {
+        VariadicOpPtr y;
+        if (!divTail(y)) {
             restore(p);
             break;
         }
-        y->expr1 = x;
+        y->exprs->insert(x);
+        x = y.ptr();
+    }
+    return true;
+}
+
+static bool remTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("%")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("%")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!divExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(REMAINDER, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool remExpr(ExprPtr &x) {
+    if (!divExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!remTail(y)) {
+            restore(p);
+            break;
+        }
+        y->exprs->insert(x);
+        x = y.ptr();
+    }
+    return true;
+}
+
+static bool subTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("-")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("-")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!remExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(SUBTRACT, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool subExpr(ExprPtr &x) {
+    if (!remExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!subTail(y)) {
+            restore(p);
+            break;
+        }
+        y->exprs->insert(x);
+        x = y.ptr();
+    }
+    return true;
+}
+
+
+static bool addTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("+")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("+")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!subExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(ADD, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool addExpr(ExprPtr &x) {
+    if (!subExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!addTail(y)) {
+            restore(p);
+            break;
+        }
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
@@ -701,7 +827,7 @@ static bool catTail(VariadicOpPtr &x) {
             break;
         }
         p = save();
-        if (!addSubExpr(b)) {
+        if (!addExpr(b)) {
             restore(p);
             break;
         }
@@ -714,7 +840,7 @@ static bool catTail(VariadicOpPtr &x) {
 
 
 static bool catExpr(ExprPtr &x) {
-    if (!addSubExpr(x)) return false;
+    if (!addExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
