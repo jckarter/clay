@@ -1183,11 +1183,6 @@ struct UnaryOp : public Expr {
 
 
 enum BinaryOpKind {
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    REMAINDER,
     EQUALS,
     NOT_EQUALS,
     LESSER,
@@ -1205,7 +1200,12 @@ struct BinaryOp : public Expr {
 };
 
 enum VariadicOpKind {
-    CAT,
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+    DIVIDE,
+    REMAINDER,
+    CAT
 };
 
 struct VariadicOp : public Expr {

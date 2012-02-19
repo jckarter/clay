@@ -19,8 +19,6 @@ public import __operators__.(
     greater?,
     greaterEquals?,
 
-    cat,
-
     plus,
     minus,
 
@@ -29,6 +27,7 @@ public import __operators__.(
     multiply,
     divide,
     remainder,
+    cat,
 
     dereference,
     call,
