@@ -518,19 +518,19 @@ inline wrapDivide(a:A, b:A) : A = numericDivide(a, b);
 inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 
 [A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
-inline overload wrapAdd(a:A, ..aa:AA) : A = foldlValues(wrapAdd, a, ..aa);
+inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
 
 [A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
-inline overload wrapSubtract(a:A, ..aa:AA) : A = foldlValues(wrapSubtract, a, ..aa);
+inline overload wrapSubtract(a:A, ..aa:AA) : A = foldValues(wrapSubtract, a, ..aa);
 
 [A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
-inline overload wrapMultiply(a:A, ..aa:AA) : A = foldlValues(wrapMultiply, a, ..aa);
+inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
 
 [A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
-inline overload wrapDivide(a:A, ..aa:AA) : A = foldlValues(wrapDivide, a, ..aa);
+inline overload wrapDivide(a:A, ..aa:AA) : A = foldValues(wrapDivide, a, ..aa);
 
 [A, ..AA | equalValues?(..AA) and countValues(..AA) != 1]
-inline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, ..aa);
+inline overload wrapRemainder(a:A, ..aa:AA) : A = foldValues(wrapRemainder, a, ..aa);
 
 [A, B | Integer?(A, B)]
 inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
