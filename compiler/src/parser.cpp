@@ -40,7 +40,6 @@ static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
         return false;
-    // std::cout<<t->str<<" , "<<s<<"\n";
     return t->str == s;
 }
 
