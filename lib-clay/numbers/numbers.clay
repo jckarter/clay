@@ -154,12 +154,12 @@ inline overload assign(ref dest:A, src:B) {
 
 
 //
-// UpdateAssign idiv
+// UpdateAssign \
 //
 
 [A | Integer?(A)]
 inline overload updateAssign(static divide, a:A, b:A) {
-    a = a idiv b;
+    a = a \ b;
 }
 
 
@@ -290,12 +290,12 @@ inline overload divide(a:A, b:A) = floatDivide(a, b);
 inline overload divide(a:A, b:B) = divide(Float(a), b);
 
 [A,B | Integer?(A,B)]
-inline overload divideInt(a:A, b:B) =
-    divideInt(toBiggerNumericType(A, B, a),
+inline overload quotient(a:A, b:B) =
+    quotient(toBiggerNumericType(A, B, a),
            toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-inline overload divideInt(a:A, b:A) = integerDivide(a, b);
+inline overload quotient(a:A, b:A) = integerDivide(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload remainder(a:A, b:B) =
@@ -322,7 +322,7 @@ inline overload multiply(a:A, ..aa:AA) = foldlValues(multiply, a, ..aa);
 inline overload divide(a:A, ..aa:AA) = foldlValues(divide, a, ..aa);
 
 [A, ..AA | countValues(..AA) != 1]
-inline overload divideInt(a:A, ..aa:AA) = foldlValues(divideInt, a, ..aa);
+inline overload quotient(a:A, ..aa:AA) = foldlValues(quotient, a, ..aa);
 
 [A, ..AA | countValues(..AA) != 1]
 inline overload remainder(a:A, ..aa:AA) = foldlValues(remainder, a, ..aa);
@@ -505,7 +505,7 @@ inline overload subtract(a:A, b:A) : A
 inline overload multiply(a:A, b:A) : A
     = integerMultiplyChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
-inline overload divideInt(a:A, b:A) : A
+inline overload quotient(a:A, b:A) : A
     = integerDivideChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload remainder(a:A, b:A) : A

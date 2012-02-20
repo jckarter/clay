@@ -19,7 +19,7 @@ higherPower2(x) {
 lowerPower2(x) {
     assert(x >= 1, "lowerPower2");
     var y = SizeT(1);
-    while (x idiv 2 >= y)
+    while (x \ 2 >= y)
         y *= 2;
     return y;
 }
@@ -29,7 +29,7 @@ floorLog2(n_) {
     assert(n > 0, "floorLog2");
     var x = 0;
     while (n > 1) {
-        n = n idiv 2;
+        n = n \ 2;
         x += 1;
     }
     return x;

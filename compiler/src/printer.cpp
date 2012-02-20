@@ -229,8 +229,8 @@ static void printExpr(ostream &out, const Expr *x) {
         case CAT :
             out << "CAT";
             break;
-        case DIV :
-            out << "DIV";
+        case QUOTIENT :
+            out << "QUOTIENT";
             break;
         default :
             assert(false);

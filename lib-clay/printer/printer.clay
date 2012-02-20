@@ -63,7 +63,7 @@ overload printTo(stream, x:Int128) {
     else {
         var lo = Int64(x % 1_000_000_000_000_000_000ll);
         var loabs = UInt64(if (lo < 0) -lo else lo);
-        var hi = x idiv 1_000_000_000_000_000_000ll;
+        var hi = x \ 1_000_000_000_000_000_000ll;
 
         printTo(stream, hi);
         printWithSprintf(stream, formatForPartialInt128, loabs);
@@ -75,7 +75,7 @@ overload printTo(stream, x:UInt128) {
         printTo(stream, UInt64(x));
     else {
         var lo = UInt64(x % 1_000_000_000_000_000_000ull);
-        var hi = x idiv 1_000_000_000_000_000_000ull;
+        var hi = x \ 1_000_000_000_000_000_000ull;
 
         printTo(stream, hi);
         printWithSprintf(stream, formatForPartialInt128, lo);

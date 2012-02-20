@@ -221,8 +221,8 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
     if (inside(th.tables[1], pEntry)) i = 1;
     assert(i>=0);
 
-    var j = (SizeT(pEntry)-SizeT(&th.tables[i][0].entries[0])) idiv TypeSize(Bucket[E]);
-    var k = (SizeT(pEntry)-SizeT(&th.tables[i][j].entries[0])) idiv TypeSize(E);
+    var j = (SizeT(pEntry)-SizeT(&th.tables[i][0].entries[0])) \ TypeSize(Bucket[E]);
+    var k = (SizeT(pEntry)-SizeT(&th.tables[i][j].entries[0])) \ TypeSize(E);
     assert(&th.tables[i][j].entries[k] == pEntry);
 
     th.tables[i][j].hashBytes[k] = 255uss;

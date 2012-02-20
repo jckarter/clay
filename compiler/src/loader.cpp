@@ -991,7 +991,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(subtract);
     OPERATOR(multiply);
     OPERATOR(divide);
-    OPERATOR(divideInt);
+    OPERATOR(quotient);
     OPERATOR(remainder);
     OPERATOR(caseP);
     OPERATOR(equalsP);
@@ -1170,7 +1170,7 @@ DEFINE_OPERATOR_ACCESSOR(add)
 DEFINE_OPERATOR_ACCESSOR(subtract)
 DEFINE_OPERATOR_ACCESSOR(multiply)
 DEFINE_OPERATOR_ACCESSOR(divide)
-DEFINE_OPERATOR_ACCESSOR(divideInt)
+DEFINE_OPERATOR_ACCESSOR(quotient)
 DEFINE_OPERATOR_ACCESSOR(remainder)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(equalsP)

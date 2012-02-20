@@ -40,7 +40,7 @@ introSortLoop(first_, last_, depthLimit_, compareLess?) {
 
 unguardedPartitionPivot(first_, last_, compareLess?) {
     var first, last = first_, last_;
-    var mid = first + (last - first) idiv 2;
+    var mid = first + (last - first) \ 2;
     moveMedianFirst(first, mid, last-1, compareLess?);
     var cut = unguardedPartition(first + 1, last, first^, compareLess?);
     cut -= 1;

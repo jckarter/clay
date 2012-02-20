@@ -1204,9 +1204,9 @@ enum VariadicOpKind {
     SUBTRACT,
     MULTIPLY,
     DIVIDE,
+    QUOTIENT,
     REMAINDER,
-    CAT,
-    DIV
+    CAT
 };
 
 struct VariadicOp : public Expr {
@@ -1469,6 +1469,7 @@ enum UpdateOpKind {
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
     UPDATE_DIVIDE,
+    UPDATE_QUOTIENT,
     UPDATE_REMAINDER,
     UPDATE_CAT
 };

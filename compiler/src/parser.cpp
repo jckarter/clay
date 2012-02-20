@@ -40,6 +40,7 @@ static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
         return false;
+    // std::cout<<t->str<<" , "<<s<<"\n";
     return t->str == s;
 }
 
@@ -650,18 +651,16 @@ static bool mulExpr(ExprPtr &x) {
     return true;
 }
 
-
-
-static bool idivTail(VariadicOpPtr &x) {
+static bool quotientTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
     int p = save();
-    if (!keyword("idiv")) return false;
+    if (!symbol("\x5c")) return false;
     restore(p);
     while (true) {
         int p = save();
-        if (!keyword("idiv")) {
+        if (!symbol("\x5c")) {
             restore(p);
             break;
         }
@@ -672,17 +671,17 @@ static bool idivTail(VariadicOpPtr &x) {
         }
         exprs->add(b);
     }
-    x = new VariadicOp(DIV, exprs);
+    x = new VariadicOp(QUOTIENT, exprs);
     x->location = location;
     return true;
 }
 
-static bool idivExpr(ExprPtr &x) {
+static bool quotientExpr(ExprPtr &x) {
     if (!mulExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
-        if (!idivTail(y)) {
+        if (!quotientTail(y)) {
             restore(p);
             break;
         }
@@ -706,7 +705,7 @@ static bool divTail(VariadicOpPtr &x) {
             break;
         }
         p = save();
-        if (!idivExpr(b)) {
+        if (!quotientExpr(b)) {
             restore(p);
             break;
         }
@@ -718,7 +717,7 @@ static bool divTail(VariadicOpPtr &x) {
 }
 
 static bool divExpr(ExprPtr &x) {
-    if (!idivExpr(x)) return false;
+    if (!quotientExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
@@ -1484,9 +1483,9 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=", "%=", "++=", NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=","\x5c\x3d", "%=", "++=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_REMAINDER, UPDATE_CAT};
+                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {
