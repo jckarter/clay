@@ -29,7 +29,7 @@ floorLog2(n_) {
     assert(n > 0, "floorLog2");
     var x = 0;
     while (n > 1) {
-        n = n \ 2;
+        n \= 2;
         x += 1;
     }
     return x;
