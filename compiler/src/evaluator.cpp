@@ -3713,9 +3713,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_floatDivide : {
         ensureArity(args, 2);
-        TypePtr t;
-        EValuePtr ev0 = numericValue(args, 0, t);
-        EValuePtr ev1 = numericValue(args, 1, t);
+        FloatTypePtr t;
+        EValuePtr ev0 = floatValue(args, 0, t);
+        EValuePtr ev1 = floatValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == t);
