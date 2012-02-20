@@ -18,7 +18,7 @@ var bracketed = modify(x => x.1, ['(', expr, ')']);
 var digit = condition(c => ((c >= '0') and (c <= '9')));
 var number = modify(Int, oneOrMore(digit));
 var factor = choice(number, bracketed);
-var term = modify(foldTail, [factor, zeroOrMore([choice('*', '/'), factor])]);
+var term = modify(foldTail, [factor, zeroOrMore([choice('*', '\\'), factor])]);
 var expr2 = modify(foldTail, [term, zeroOrMore([choice('+','-'), term])]);
 
 foldTail(x) {
@@ -28,7 +28,7 @@ foldTail(x) {
             case ('+') result += y.1;
             case ('-') result -= y.1;
             case ('*') result *= y.1;
-            case ('/') result /= y.1;
+            case ('\\') result \= y.1;
             else assert(false);
     }
     return result;
