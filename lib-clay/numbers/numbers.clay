@@ -153,15 +153,6 @@ inline overload assign(ref dest:A, src:B) {
 }
 
 
-//
-// UpdateAssign \
-//
-
-[A | Integer?(A)]
-inline overload updateAssign(static divide, a:A, b:A) {
-    a = a \ b;
-}
-
 
 //
 // equals?, notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
