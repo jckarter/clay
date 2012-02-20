@@ -655,11 +655,11 @@ static bool quotientTail(VariadicOpPtr &x) {
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
     int p = save();
-    if (!symbol("\x5c")) return false;
+    if (!symbol("\\")) return false;
     restore(p);
     while (true) {
         int p = save();
-        if (!symbol("\x5c")) {
+        if (!symbol("\\")) {
             restore(p);
             break;
         }
@@ -1482,7 +1482,7 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=","\x5c\x3d", "%=", "++=", NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
                        UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
