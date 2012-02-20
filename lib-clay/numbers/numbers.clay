@@ -269,7 +269,7 @@ inline overload multiply(a:A, b:B) =
 inline overload multiply(a:A, b:A) = numericMultiply(a, b);
 
 
-[A,B | Numeric?(A,B)]
+[A,B | Float?(A,B)]
 inline overload divide(a:A, b:B) =
     divide(toBiggerNumericType(A, B, a),
            toBiggerNumericType(A, B, b));
@@ -278,15 +278,12 @@ inline overload divide(a:A, b:B) =
 inline overload divide(a:A, b:A) = floatDivide(a, b);
 
 [A,B | Integer?(A,B)]
-inline overload divide(a:A, b:B) = divide(Float(a), b);
-
-[A,B | Integer?(A,B)]
 inline overload quotient(a:A, b:B) =
     quotient(toBiggerNumericType(A, B, a),
            toBiggerNumericType(A, B, b));
 
 [A | Integer?(A)]
-inline overload quotient(a:A, b:A) = integerDivide(a, b);
+inline overload quotient(a:A, b:A) = integerQuotient(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload remainder(a:A, b:B) =
@@ -497,7 +494,7 @@ inline overload multiply(a:A, b:A) : A
     = integerMultiplyChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload quotient(a:A, b:A) : A
-    = integerDivideChecked(a, b);
+    = integerQuotientChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload remainder(a:A, b:A) : A
     = integerRemainderChecked(a, b);
@@ -526,7 +523,7 @@ inline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
 [A | Integer?(A)]
 inline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
 [A | Integer?(A)]
-inline wrapDivide(a:A, b:A) : A =  integerDivide(a, b);
+inline wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
 [A | Integer?(A)]
 inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 
@@ -540,7 +537,7 @@ inline overload wrapSubtract(a:A, ..aa:AA) : A = foldlValues(wrapSubtract, a, ..
 inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapDivide(a:A, ..aa:AA) : A = foldlValues(wrapDivide, a, ..aa);
+inline overload wrapQuotient(a:A, ..aa:AA) : A = foldlValues(wrapQuotient, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
 inline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, ..aa);

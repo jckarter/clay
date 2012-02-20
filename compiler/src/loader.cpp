@@ -814,7 +814,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(floatDivide);
     PRIMITIVE(numericNegate);
 
-    PRIMITIVE(integerDivide);
+    PRIMITIVE(integerQuotient);
     PRIMITIVE(integerRemainder);
     PRIMITIVE(integerShiftLeft);
     PRIMITIVE(integerShiftRight);
@@ -828,7 +828,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(integerAddChecked);
     PRIMITIVE(integerSubtractChecked);
     PRIMITIVE(integerMultiplyChecked);
-    PRIMITIVE(integerDivideChecked);
+    PRIMITIVE(integerQuotientChecked);
     PRIMITIVE(integerRemainderChecked);
     PRIMITIVE(integerShiftLeftChecked);
     PRIMITIVE(integerNegateChecked);
@@ -1047,7 +1047,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(doIntegerAddChecked);
     OPERATOR(doIntegerSubtractChecked);
     OPERATOR(doIntegerMultiplyChecked);
-    OPERATOR(doIntegerDivideChecked);
+    OPERATOR(dointegerQuotientChecked);
     OPERATOR(doIntegerRemainderChecked);
     OPERATOR(doIntegerShiftLeftChecked);
     OPERATOR(doIntegerNegateChecked);
@@ -1225,7 +1225,7 @@ DEFINE_OPERATOR_ACCESSOR(typesToRValues)
 DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerDivideChecked);
+DEFINE_OPERATOR_ACCESSOR(dointegerQuotientChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);

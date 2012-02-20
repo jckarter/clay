@@ -45,7 +45,7 @@ __llvm__{
 [T | Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;
 [T | Integer?(T)] define integerSubtractWithOverflow(x:T, y:T) : T, Bool;
 [T | Integer?(T)] define integerMultiplyWithOverflow(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerDivideWithOverflow(x:T, y:T) : T, Bool;
+[T | Integer?(T)] define integerQuotientWithOverflow(x:T, y:T) : T, Bool;
 
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
@@ -121,12 +121,12 @@ inline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Boo
 // division, remainder, negation
 
 [T | SignedInteger?(T)]
-inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
-    = integerDivide(x, y), y == 0 or (x == Least(T) and y == -1);
+inline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
+    = integerQuotient(x, y), y == 0 or (x == Least(T) and y == -1);
 
 [T | UnsignedInteger?(T)]
-inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
-    = integerDivide(x, y), y == 0;
+inline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
+    = integerQuotient(x, y), y == 0;
 
 [T | Integer?(T)]
 inline integerRemainderWithOverflow(x:T, y:T) : T, Bool
@@ -223,8 +223,8 @@ inline overload __operators__.doIntegerSubtractChecked(a:A, b:A) : A
 inline overload __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
     = checked(integerMultiplyWithOverflow, a, b);
 [A | Integer?(A)]
-inline overload __operators__.doIntegerDivideChecked(a:A, b:A) : A
-    = checked(integerDivideWithOverflow, a, b);
+inline overload __operators__.dointegerQuotientChecked(a:A, b:A) : A
+    = checked(integerQuotientWithOverflow, a, b);
 [A | Integer?(A)]
 inline overload __operators__.doIntegerRemainderChecked(a:A, b:A) : A
     = checked(integerRemainderWithOverflow, a, b);

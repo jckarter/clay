@@ -2409,7 +2409,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t, true));
     }
 
-    case PRIM_integerDivide :
+    case PRIM_integerQuotient :
     case PRIM_integerRemainder :
     case PRIM_integerShiftLeft :
     case PRIM_integerShiftRight :
@@ -2419,7 +2419,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_integerAddChecked :
     case PRIM_integerSubtractChecked :
     case PRIM_integerMultiplyChecked :
-    case PRIM_integerDivideChecked :
+    case PRIM_integerQuotientChecked :
     case PRIM_integerRemainderChecked :
     case PRIM_integerShiftLeftChecked : {
         ensureArity(args, 2);

@@ -2441,7 +2441,7 @@ enum PrimOpCode {
     PRIM_floatDivide,
     PRIM_numericNegate,
 
-    PRIM_integerDivide,
+    PRIM_integerQuotient,
     PRIM_integerRemainder,
     PRIM_integerShiftLeft,
     PRIM_integerShiftRight,
@@ -2457,7 +2457,7 @@ enum PrimOpCode {
     PRIM_integerAddChecked,
     PRIM_integerSubtractChecked,
     PRIM_integerMultiplyChecked,
-    PRIM_integerDivideChecked,
+    PRIM_integerQuotientChecked,
     PRIM_integerRemainderChecked,
     PRIM_integerNegateChecked,
     PRIM_integerShiftLeftChecked,
