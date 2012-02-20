@@ -229,6 +229,9 @@ static void printExpr(ostream &out, const Expr *x) {
         case CAT :
             out << "CAT";
             break;
+        case DIV :
+            out << "DIV";
+            break;
         default :
             assert(false);
         }

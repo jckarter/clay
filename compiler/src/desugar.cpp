@@ -107,6 +107,9 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     case CAT :
         callable = operator_expr_cat();
         break;
+    case DIV :
+        callable = operator_expr_divideInt();
+        break;
     default :
         assert(false);
     }

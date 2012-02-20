@@ -651,6 +651,47 @@ static bool mulExpr(ExprPtr &x) {
 }
 
 
+
+static bool idivTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!keyword("idiv")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!keyword("idiv")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!mulExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(DIV, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool idivExpr(ExprPtr &x) {
+    if (!mulExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!idivTail(y)) {
+            restore(p);
+            break;
+        }
+        y->exprs->insert(x);
+        x = y.ptr();
+    }
+    return true;
+}
+
 static bool divTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
@@ -665,7 +706,7 @@ static bool divTail(VariadicOpPtr &x) {
             break;
         }
         p = save();
-        if (!mulExpr(b)) {
+        if (!idivExpr(b)) {
             restore(p);
             break;
         }
@@ -677,7 +718,7 @@ static bool divTail(VariadicOpPtr &x) {
 }
 
 static bool divExpr(ExprPtr &x) {
-    if (!mulExpr(x)) return false;
+    if (!idivExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;

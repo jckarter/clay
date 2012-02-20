@@ -20,7 +20,7 @@ overload UnderlyingContainerConstructor(static Group[S]) =
     UnderlyingContainerConstructor(S);
 
 [S | SizedSequence?(S)]
-overload size(group: Group[S]) = size(group.seq)/group.groupSize;
+overload size(group: Group[S]) = size(group.seq) idiv group.groupSize;
 
 private indexEndpoints(n, groupSize) {
     var b = n * groupSize;
@@ -175,7 +175,7 @@ overload updateAssign(static subtract, i: RAGroupCoordinate[C], n: I) {
 
 [C]
 overload subtract(i: RAGroupCoordinate[C], j: RAGroupCoordinate[C])
-    = PtrInt(i.coord - j.coord) / PtrInt(i.groupSize);
+    = PtrInt(i.coord - j.coord) idiv PtrInt(i.groupSize);
 
 [C]
 overload inc(i: RAGroupCoordinate[C]) {

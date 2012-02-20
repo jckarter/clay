@@ -2930,7 +2930,8 @@ BINARY_OP(Op_unorderedP, bool, a != a || b != b);
 BINARY_OP(Op_numericAdd, T, a + b);
 BINARY_OP(Op_numericSubtract, T, a - b);
 BINARY_OP(Op_numericMultiply, T, a * b);
-BINARY_OP(Op_numericDivide, T, a / b);
+BINARY_OP(Op_floatDivide, T, a / b);
+BINARY_OP(Op_integerDivide, T, a / b);
 BINARY_OP(Op_integerRemainder, T, a % b);
 BINARY_OP(Op_integerShiftLeft, T, a << b);
 BINARY_OP(Op_integerShiftRight, T, a >> b);
@@ -3710,7 +3711,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_numericDivide : {
+    case PRIM_floatDivide : {
         ensureArity(args, 2);
         TypePtr t;
         EValuePtr ev0 = numericValue(args, 0, t);
@@ -3718,7 +3719,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == t);
-        binaryNumericOp<Op_numericDivide>(ev0, ev1, out0);
+        binaryNumericOp<Op_floatDivide>(ev0, ev1, out0);
         break;
     }
 
@@ -3730,6 +3731,18 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == t);
         unaryNumericOp<Op_numericNegate>(ev, out0);
+        break;
+    }
+
+    case PRIM_integerDivide : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type.ptr() == t.ptr());
+        binaryIntegerOp<Op_integerDivide>(ev0, ev1, out0);
         break;
     }
 

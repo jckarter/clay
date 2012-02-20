@@ -129,12 +129,12 @@ widthInBase(n:N, base:B) {
         len += 1;
         while(nn <= -base) {
             len += 1;
-            nn = Type(nn)(nn/base);
+            nn = Type(nn)(nn idiv base);
         }
     } else {
         while(nn >= base) {
             len += 1;
-            nn = Type(nn)(nn/base);
+            nn = Type(nn)(nn idiv base);
         }
     }
     return ref len;

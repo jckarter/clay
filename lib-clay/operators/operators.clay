@@ -26,6 +26,7 @@ public import __operators__.(
     subtract,
     multiply,
     divide,
+    divideInt,
     remainder,
     cat,
 

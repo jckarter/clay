@@ -122,11 +122,11 @@ inline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Boo
 
 [T | SignedInteger?(T)]
 inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
-    = numericDivide(x, y), y == 0 or (x == Least(T) and y == -1);
+    = integerDivide(x, y), y == 0 or (x == Least(T) and y == -1);
 
 [T | UnsignedInteger?(T)]
 inline overload integerDivideWithOverflow(x:T, y:T) : T, Bool
-    = numericDivide(x, y), y == 0;
+    = integerDivide(x, y), y == 0;
 
 [T | Integer?(T)]
 inline integerRemainderWithOverflow(x:T, y:T) : T, Bool
@@ -239,4 +239,3 @@ inline overload __operators__.doIntegerNegateChecked(a:A) : A
 [A, B | Integer?(A) and Numeric?(B)]
 inline overload __operators__.doIntegerConvertChecked(static A, b:B) : A
     = checked(integerConvertWithOverflow, A, b);
-

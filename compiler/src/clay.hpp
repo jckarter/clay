@@ -1205,7 +1205,8 @@ enum VariadicOpKind {
     MULTIPLY,
     DIVIDE,
     REMAINDER,
-    CAT
+    CAT,
+    DIV
 };
 
 struct VariadicOp : public Expr {
@@ -2436,9 +2437,10 @@ enum PrimOpCode {
     PRIM_numericAdd,
     PRIM_numericSubtract,
     PRIM_numericMultiply,
-    PRIM_numericDivide,
+    PRIM_floatDivide,
     PRIM_numericNegate,
 
+    PRIM_integerDivide,
     PRIM_integerRemainder,
     PRIM_integerShiftLeft,
     PRIM_integerShiftRight,
