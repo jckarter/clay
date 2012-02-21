@@ -56,6 +56,22 @@ Language changes:
 
   Thanks to Jeremy Clifford.
 
+* A new '\' operator is provided for truncating division. It desugars
+  to the 'quotient' operator function.
+  
+    // 0.2
+    foo() {
+        println(3\2);
+    }
+
+    // desugars to
+
+    foo() {
+        println(quotient(3, 2));
+    }
+
+  Thanks to Jeremy Clifford.
+
 Library changes:
 ----------------
 * Record types are no longer provided with a static index (x.0) operator
@@ -77,7 +93,7 @@ Library changes:
 
 * CodePointer, CCodePointer, and Function constructors can now deduce their
   input and output types when given a monomorphic function or lambda (that is,
-  a function with a single overload will fully specified input types).
+  a function with a single overload and fully specified input types).
 
     // 0.1
     foo(x:Int) = Float(x);
@@ -99,8 +115,15 @@ Library changes:
         var l2 = Function((x:Int, y:Int) -> x + y);
     }
 
-* Sequences no longer overload 'add' for sequence concatenation, but instead
-  overload 'cat'.
+* External code pointers can now be constructed from Clay functions for all
+  supported calling conventions, not just CCodePointer.
+
+    // 0.2
+    foo(x:Int) = Float(x);
+    bar() = StdCallCodePointer(foo);
+
+* Sequences no longer overload 'add' (the '+' operator) for sequence
+  concatenation, but instead overload 'cat' (the '++' operator).
 
     // 0.1
     foo() {
@@ -110,6 +133,21 @@ Library changes:
     // 0.2
     foo() {
         println("hello " ++ "world");
+    }
+
+  Thanks to Jeremy Clifford.
+
+* Integers no longer overload 'divide' (the '/' operator) for integer division,
+  but instead overload 'quotient' (the '\' operator).
+
+    // 0.1
+    foo() {
+        return 3./2., 3/2; // 1.5, 1
+    }
+
+    // 0.2
+    foo() {
+        return 3./2., 3\2; // 1.5, 1
     }
 
   Thanks to Jeremy Clifford.
