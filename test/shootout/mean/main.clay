@@ -1,12 +1,12 @@
 
 test() {
-    var result = 0.0;
-    for (i in range(100000)) {
-        result = 0.0;
-        for (j in range(10000))
+    var result = 0.;
+    for (i in range(100000.)) {
+        result = 0.;
+        for (j in range(10000.))
             result += j;
     }
-    result /= 10000;
+    result /= 10000.;
     return result;
 }
 
