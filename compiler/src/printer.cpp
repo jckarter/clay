@@ -198,26 +198,8 @@ static void printExpr(ostream &out, const Expr *x) {
         case IF_EXPR :
             out << "IF_EXPR";
             break;
-        case EQUALS :
-            out << "EQUALS";
-            break;
-        case NOT_EQUALS :
-            out << "NOT_EQUALS";
-            break;
         case COMPARE :
             out << "COMPARE";
-            break;
-        case LESSER :
-            out << "LESSER";
-            break;
-        case LESSER_EQUALS :
-            out << "LESSER_EQUALS";
-            break;
-        case GREATER :
-            out << "GREATER";
-            break;
-        case GREATER_EQUALS :
-            out << "GREATER_EQUALS";
             break;
         default :
             assert(false);
