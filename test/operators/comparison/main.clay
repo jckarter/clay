@@ -1,0 +1,7 @@
+
+main() {
+	var x = 5;
+    println(4 < x <= 8);
+    println(7 == x > 2);
+ 	println(5 == x >= 2 != x < 9);   
+}
