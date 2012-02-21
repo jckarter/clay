@@ -5083,27 +5083,13 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_numericDivide : {
+    case PRIM_floatDivide : {
         ensureArity(args, 2);
-        TypePtr t;
-        llvm::Value *v0 = numericValue(args, 0, t, ctx);
-        llvm::Value *v1 = numericValue(args, 1, t, ctx);
+        FloatTypePtr t;
+        llvm::Value *v0 = floatValue(args, 0, t, ctx);
+        llvm::Value *v1 = floatValue(args, 1, t, ctx);
         llvm::Value *result;
-        switch (t->typeKind) {
-        case INTEGER_TYPE : {
-            IntegerType *it = (IntegerType *)t.ptr();
-            if (it->isSigned)
-                result = ctx->builder->CreateSDiv(v0, v1);
-            else
-                result = ctx->builder->CreateUDiv(v0, v1);
-            break;
-        }
-        case FLOAT_TYPE :
-            result = ctx->builder->CreateFDiv(v0, v1);
-            break;
-        default :
-            assert(false);
-        }
+        result = ctx->builder->CreateFDiv(v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == t);
@@ -5126,6 +5112,24 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             assert(false);
         }
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == t);
+        ctx->builder->CreateStore(result, out0->llValue);
+        break;
+    }
+
+    case PRIM_integerQuotient : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        llvm::Value *v0 = integerValue(args, 0, t, ctx);
+        llvm::Value *v1 = integerValue(args, 1, t, ctx);
+        llvm::Value *result;
+        IntegerType *it = (IntegerType *)t.ptr();
+        if (it->isSigned)
+            result = ctx->builder->CreateSDiv(v0, v1);
+        else
+            result = ctx->builder->CreateUDiv(v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type == t);
@@ -5347,7 +5351,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_integerDivideChecked : {
+    case PRIM_integerQuotientChecked : {
         ensureArity(args, 2);
         IntegerTypePtr t;
         checkIntegerValue(args, 0, t, ctx);
@@ -5355,7 +5359,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(operator_doIntegerDivideChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerQuotientChecked(), ctx),
                          args,
                          ctx,
                          out);

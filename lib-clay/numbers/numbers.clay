@@ -269,14 +269,21 @@ inline overload multiply(a:A, b:B) =
 inline overload multiply(a:A, b:A) = numericMultiply(a, b);
 
 
-[A,B | Numeric?(A,B)]
+[A,B | Float?(A,B)]
 inline overload divide(a:A, b:B) =
     divide(toBiggerNumericType(A, B, a),
            toBiggerNumericType(A, B, b));
 
-[A | Numeric?(A)]
-inline overload divide(a:A, b:A) = numericDivide(a, b);
+[A | Float?(A)]
+inline overload divide(a:A, b:A) = floatDivide(a, b);
 
+[A,B | Integer?(A,B)]
+inline overload quotient(a:A, b:B) =
+    quotient(toBiggerNumericType(A, B, a),
+           toBiggerNumericType(A, B, b));
+
+[A | Integer?(A)]
+inline overload quotient(a:A, b:A) = integerQuotient(a, b);
 
 [A,B | Integer?(A,B)]
 inline overload remainder(a:A, b:B) =
@@ -303,6 +310,9 @@ inline overload multiply(a:A, ..aa:AA) = foldlValues(multiply, a, ..aa);
 inline overload divide(a:A, ..aa:AA) = foldlValues(divide, a, ..aa);
 
 [A, ..AA | countValues(..AA) != 1]
+inline overload quotient(a:A, ..aa:AA) = foldlValues(quotient, a, ..aa);
+
+[A, ..AA | countValues(..AA) != 1]
 inline overload remainder(a:A, ..aa:AA) = foldlValues(remainder, a, ..aa);
 
 //
@@ -320,13 +330,13 @@ inline overload multiply(a:A, b:B) = numericMultiply(a, numericConvert(A,b));
 inline overload multiply(a:A, b:A) = numericConvert(ImagBaseType(A),-numericMultiply(a, b));
 
 [A,B | Numeric?(A) and Imaginary?(B)]
-inline overload divide(a:A, b:B) = numericDivide(numericConvert(B,-a), b);
+inline overload divide(a:A, b:B) = divide(numericConvert(B,-a), b);
 
 [A,B | Numeric?(B) and Imaginary?(A)]
-inline overload divide(a:A, b:B) = numericDivide(a, numericConvert(A,b));
+inline overload divide(a:A, b:B) = divide(a, numericConvert(A,b));
 
 [A | Imaginary?(A)]
-inline overload divide(a:A, b:A) = numericConvert(ImagBaseType(A),numericDivide(a, b));
+inline overload divide(a:A, b:A) = numericConvert(ImagBaseType(A),floatDivide(a, b));
 
 
 //
@@ -483,8 +493,8 @@ inline overload subtract(a:A, b:A) : A
 inline overload multiply(a:A, b:A) : A
     = integerMultiplyChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
-inline overload divide(a:A, b:A) : A
-    = integerDivideChecked(a, b);
+inline overload quotient(a:A, b:A) : A
+    = integerQuotientChecked(a, b);
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload remainder(a:A, b:A) : A
     = integerRemainderChecked(a, b);
@@ -513,7 +523,7 @@ inline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
 [A | Integer?(A)]
 inline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
 [A | Integer?(A)]
-inline wrapDivide(a:A, b:A) : A = numericDivide(a, b);
+inline wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
 [A | Integer?(A)]
 inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 
@@ -521,16 +531,16 @@ inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapSubtract(a:A, ..aa:AA) : A = foldValues(wrapSubtract, a, ..aa);
+inline overload wrapSubtract(a:A, ..aa:AA) : A = foldlValues(wrapSubtract, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
 inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapDivide(a:A, ..aa:AA) : A = foldValues(wrapDivide, a, ..aa);
+inline overload wrapQuotient(a:A, ..aa:AA) : A = foldlValues(wrapQuotient, a, ..aa);
 
 [A, ..AA | equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapRemainder(a:A, ..aa:AA) : A = foldValues(wrapRemainder, a, ..aa);
+inline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, ..aa);
 
 [A, B | Integer?(A, B)]
 inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));

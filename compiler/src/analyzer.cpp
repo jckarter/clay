@@ -2397,7 +2397,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_numericAdd :
     case PRIM_numericSubtract :
     case PRIM_numericMultiply :
-    case PRIM_numericDivide : {
+    case PRIM_floatDivide : {
         ensureArity(args, 2);
         TypePtr t = numericTypeOfValue(args, 0);
         return new MultiPValue(new PValue(t, true));
@@ -2409,6 +2409,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(t, true));
     }
 
+    case PRIM_integerQuotient :
     case PRIM_integerRemainder :
     case PRIM_integerShiftLeft :
     case PRIM_integerShiftRight :
@@ -2418,7 +2419,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_integerAddChecked :
     case PRIM_integerSubtractChecked :
     case PRIM_integerMultiplyChecked :
-    case PRIM_integerDivideChecked :
+    case PRIM_integerQuotientChecked :
     case PRIM_integerRemainderChecked :
     case PRIM_integerShiftLeftChecked : {
         ensureArity(args, 2);

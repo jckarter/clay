@@ -650,6 +650,45 @@ static bool mulExpr(ExprPtr &x) {
     return true;
 }
 
+static bool quotientTail(VariadicOpPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprListPtr exprs = new ExprList();
+    ExprPtr b;
+    int p = save();
+    if (!symbol("\\")) return false;
+    restore(p);
+    while (true) {
+        int p = save();
+        if (!symbol("\\")) {
+            restore(p);
+            break;
+        }
+        p = save();
+        if (!mulExpr(b)) {
+            restore(p);
+            break;
+        }
+        exprs->add(b);
+    }
+    x = new VariadicOp(QUOTIENT, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool quotientExpr(ExprPtr &x) {
+    if (!mulExpr(x)) return false;
+    while (true) {
+        int p = save();
+        VariadicOpPtr y;
+        if (!quotientTail(y)) {
+            restore(p);
+            break;
+        }
+        y->exprs->insert(x);
+        x = y.ptr();
+    }
+    return true;
+}
 
 static bool divTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
@@ -665,7 +704,7 @@ static bool divTail(VariadicOpPtr &x) {
             break;
         }
         p = save();
-        if (!mulExpr(b)) {
+        if (!quotientExpr(b)) {
             restore(p);
             break;
         }
@@ -677,7 +716,7 @@ static bool divTail(VariadicOpPtr &x) {
 }
 
 static bool divExpr(ExprPtr &x) {
-    if (!mulExpr(x)) return false;
+    if (!quotientExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
@@ -1443,9 +1482,9 @@ static bool initAssignment(StatementPtr &x) {
 
 static bool updateOp(int &op) {
     int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=", "%=", "++=", NULL};
+    const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_REMAINDER, UPDATE_CAT};
+                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {

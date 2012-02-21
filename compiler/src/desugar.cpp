@@ -107,6 +107,9 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     case CAT :
         callable = operator_expr_cat();
         break;
+    case QUOTIENT :
+        callable = operator_expr_quotient();
+        break;
     default :
         assert(false);
     }
@@ -131,6 +134,7 @@ ExprPtr updateOperatorExpr(int op) {
     case UPDATE_SUBTRACT : return operator_expr_subtract();
     case UPDATE_MULTIPLY : return operator_expr_multiply();
     case UPDATE_DIVIDE : return operator_expr_divide();
+    case UPDATE_QUOTIENT : return operator_expr_quotient();
     case UPDATE_REMAINDER : return operator_expr_remainder();
     case UPDATE_CAT : return operator_expr_cat();
     default :

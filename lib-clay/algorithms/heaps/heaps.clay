@@ -14,7 +14,7 @@ makeHeap(first_, last_, compareLess?) {
     if (last - first < 2)
         return;
     var len = last - first;
-    var parent = (len - 2) / 2;
+    var parent = (len - 2) \ 2;
     while (true) {
         var value = move((first + parent)^);
         adjustHeap(first, parent, len, move(value), compareLess?);
@@ -44,7 +44,7 @@ pushHeap(first_, holeIndex_, topIndex_, rvalue value_, compareLess?) {
     var first, holeIndex, topIndex, value =
         first_, holeIndex_, topIndex_, move(value_);
     while (holeIndex > topIndex) {
-        var parent = (holeIndex - 1) / 2;
+        var parent = (holeIndex - 1) \ 2;
         if (not compareLess?((first + parent)^, value)) {
             break;
         }
@@ -58,14 +58,14 @@ adjustHeap(first_, holeIndex_, len_, rvalue value_, compareLess?) {
     var first, holeIndex, len, value = first_, holeIndex_, len_, move(value_);
     var topIndex = holeIndex;
     var secondChild = holeIndex;
-    while (secondChild < (len - 1)/2) {
+    while (secondChild < (len - 1) \ 2) {
         secondChild = 2 * (secondChild + 1);
         if(compareLess?((first + secondChild)^, (first + secondChild - 1)^))
             secondChild -= 1;
         (first + holeIndex)^ = move((first + secondChild)^);
         holeIndex = secondChild;
     }
-    if ((bitand(len, 1) == 0) and (secondChild == (len - 2) / 2)) {
+    if ((bitand(len, 1) == 0) and (secondChild == (len - 2) \ 2)) {
         secondChild = 2*(secondChild + 1);
         (first + holeIndex)^ = move((first + (secondChild - 1))^);
         holeIndex = secondChild - 1;
