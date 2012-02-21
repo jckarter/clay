@@ -6,7 +6,7 @@ test() {
         for (j in range(10000))
             result += j;
     }
-    result /= 10000;
+    result /= 10000.0;
     return result;
 }
 

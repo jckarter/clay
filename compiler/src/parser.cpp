@@ -1066,16 +1066,19 @@ static bool orExpr(ExprPtr &x) {
 
 static bool ifExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr condition;
-    ExprPtr thenPart, elsePart;
+    ExprListPtr exprs = new ExprList();
+    ExprPtr expr;
     if (!keyword("if")) return false;
     if (!symbol("(")) return false;
-    if (!expression(condition)) return false;
+    if (!expression(expr)) return false;
+    exprs->add(expr);
     if (!symbol(")")) return false;
-    if (!expression(thenPart)) return false;
+    if (!expression(expr)) return false;
+    exprs->add(expr);
     if (!keyword("else")) return false;
-    if (!expression(elsePart)) return false;
-    x = new IfExpr(condition, thenPart, elsePart);
+    if (!expression(expr)) return false;
+    exprs->add(expr);
+    x = new VariadicOp(IF_EXPR,exprs);
     x->location = location;
     return true;
 }

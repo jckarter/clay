@@ -110,21 +110,15 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     case QUOTIENT :
         callable = operator_expr_quotient();
         break;
+    case IF_EXPR :
+        callable = operator_expr_ifExpression();
+        break;
     default :
         assert(false);
     }
     CallPtr call = new Call(callable, new ExprList());
     call->location = x->location;
     call->parenArgs->add(x->exprs);
-    return call.ptr();
-}
-
-ExprPtr desugarIfExpr(IfExprPtr x) {
-    ExprPtr callable = operator_expr_ifExpression();
-    CallPtr call = new Call(callable, new ExprList());
-    call->parenArgs->add(x->condition);
-    call->parenArgs->add(x->thenPart);
-    call->parenArgs->add(x->elsePart);
     return call.ptr();
 }
 
