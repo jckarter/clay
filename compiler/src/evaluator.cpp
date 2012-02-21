@@ -1078,29 +1078,13 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case UNARY_OP : {
-        UnaryOp *x = (UnaryOp *)expr.ptr();
+    case VARIADIC_OP : {
+        VariadicOp *x = (VariadicOp *)expr.ptr();
         if (x->op == ADDRESS_OF) {
-            PValuePtr pv = safeAnalyzeOne(x->expr, env);
+            PValuePtr pv = safeAnalyzeOne(x->exprs->exprs[0], env);
             if (pv->isTemp)
                 error("can't take address of a temporary");
         }
-        if (!x->desugared)
-            x->desugared = desugarUnaryOp(x);
-        evalExpr(x->desugared, env, out);
-        break;
-    }
-
-    case BINARY_OP : {
-        BinaryOp *x = (BinaryOp *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarBinaryOp(x);
-        evalExpr(x->desugared, env, out);
-        break;
-    }
-
-    case VARIADIC_OP : {
-        VariadicOp *x = (VariadicOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarVariadicOp(x);
         evalExpr(x->desugared, env, out);

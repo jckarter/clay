@@ -154,9 +154,10 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StaticIndexing(" << y->expr << ", " << y->index << ")";
         break;
     }
-    case UNARY_OP : {
-        const UnaryOp *y = (const UnaryOp *)x;
-        out << "UnaryOp(";
+    
+    case VARIADIC_OP : {
+        const VariadicOp *y = (const VariadicOp *)x;
+        out << "VariadicOp(";
         switch (y->op) {
         case DEREFERENCE :
             out << "DEREFERENCE";
@@ -173,44 +174,6 @@ static void printExpr(ostream &out, const Expr *x) {
         case NOT :
             out << "NOT";
             break;
-        default :
-            assert(false);
-        }
-        out << ", " << y->expr << ")";
-        break;
-    }
-    case BINARY_OP : {
-        const BinaryOp *y = (const BinaryOp *)x;
-        out << "BinaryOp(";
-        switch (y->op) {
-        case EQUALS :
-            out << "EQUALS";
-            break;
-        case NOT_EQUALS :
-            out << "NOT_EQUALS";
-            break;
-        case LESSER :
-            out << "LESSER";
-            break;
-        case LESSER_EQUALS :
-            out << "LESSER_EQUALS";
-            break;
-        case GREATER :
-            out << "GREATER";
-            break;
-        case GREATER_EQUALS :
-            out << "GREATER_EQUALS";
-            break;
-        default :
-            assert(false);
-        }
-        out << ", " << y->expr1 << ", " << y->expr2 << ")";
-        break;
-    }
-    case VARIADIC_OP : {
-        const VariadicOp *y = (const VariadicOp *)x;
-        out << "VariadicOp(";
-        switch (y->op) {
         case ADD :
             out << "ADD";
             break;
@@ -234,6 +197,24 @@ static void printExpr(ostream &out, const Expr *x) {
             break;
         case IF_EXPR :
             out << "IF_EXPR";
+            break;
+        case EQUALS :
+            out << "EQUALS";
+            break;
+        case NOT_EQUALS :
+            out << "NOT_EQUALS";
+            break;
+        case LESSER :
+            out << "LESSER";
+            break;
+        case LESSER_EQUALS :
+            out << "LESSER_EQUALS";
+            break;
+        case GREATER :
+            out << "GREATER";
+            break;
+        case GREATER_EQUALS :
+            out << "GREATER_EQUALS";
             break;
         default :
             assert(false);
