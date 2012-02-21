@@ -438,7 +438,6 @@ struct BinaryOp;
 struct VariadicOp;
 struct And;
 struct Or;
-struct IfExpr;
 struct Lambda;
 struct Unpack;
 struct StaticExpr;
@@ -591,7 +590,6 @@ typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<VariadicOp> VariadicOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
-typedef Pointer<IfExpr> IfExprPtr;
 typedef Pointer<Lambda> LambdaPtr;
 typedef Pointer<Unpack> UnpackPtr;
 typedef Pointer<StaticExpr> StaticExprPtr;
@@ -1014,7 +1012,6 @@ enum ExprKind {
     AND,
     OR,
 
-    IF_EXPR,
     LAMBDA,
     UNPACK,
     STATIC_EXPR,
@@ -1206,7 +1203,8 @@ enum VariadicOpKind {
     DIVIDE,
     QUOTIENT,
     REMAINDER,
-    CAT
+    CAT,
+    IF_EXPR   
 };
 
 struct VariadicOp : public Expr {
@@ -1228,15 +1226,6 @@ struct Or : public Expr {
     ExprPtr expr1, expr2;
     Or(ExprPtr expr1, ExprPtr expr2)
         : Expr(OR), expr1(expr1), expr2(expr2) {}
-};
-
-struct IfExpr : public Expr {
-    ExprPtr condition;
-    ExprPtr thenPart, elsePart;
-    ExprPtr desugared;
-    IfExpr(ExprPtr condition, ExprPtr thenPart, ExprPtr elsePart)
-        : Expr(IF_EXPR), condition(condition), thenPart(thenPart),
-          elsePart(elsePart) {}
 };
 
 enum ProcedureMonoState {
@@ -3053,7 +3042,6 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarUnaryOp(UnaryOpPtr x);
 ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarVariadicOp(VariadicOpPtr x);
-ExprPtr desugarIfExpr(IfExprPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
