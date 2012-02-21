@@ -514,7 +514,7 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
     }
     case VARIADIC_OP : {
         VariadicOp *b = (VariadicOp *)a;
-        assert(b->op[0] == DEREFERENCE);
+        assert(b->op.front() == DEREFERENCE);
         b->exprs->add(base);
         break;
     }
