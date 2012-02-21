@@ -750,29 +750,15 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
         return analyzeExpr(x->desugared, env);
     }
 
-    case UNARY_OP : {
-        UnaryOp *x = (UnaryOp *)expr.ptr();
+    case VARIADIC_OP : {
+        VariadicOp *x = (VariadicOp *)expr.ptr();
         if (x->op == ADDRESS_OF) {
-            PValuePtr pv = analyzeOne(x->expr, env);
+            PValuePtr pv = analyzeOne(x->exprs->exprs[0], env);
             if (!pv)
                 return NULL;
             if (pv->isTemp)
                 error("can't take address of a temporary");
         }
-        if (!x->desugared)
-            x->desugared = desugarUnaryOp(x);
-        return analyzeExpr(x->desugared, env);
-    }
-
-    case BINARY_OP : {
-        BinaryOp *x = (BinaryOp *)expr.ptr();
-        if (!x->desugared)
-            x->desugared = desugarBinaryOp(x);
-        return analyzeExpr(x->desugared, env);
-    }
-
-    case VARIADIC_OP : {
-        VariadicOp *x = (VariadicOp *)expr.ptr();
         if (!x->desugared)
             x->desugared = desugarVariadicOp(x);
         return analyzeExpr(x->desugared, env);

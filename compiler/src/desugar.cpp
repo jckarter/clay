@@ -28,7 +28,7 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
     return call.ptr();
 }
 
-ExprPtr desugarUnaryOp(UnaryOpPtr x) {
+ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     ExprPtr callable;
     switch (x->op) {
     case DEREFERENCE :
@@ -46,49 +46,6 @@ ExprPtr desugarUnaryOp(UnaryOpPtr x) {
     case NOT :
         callable = primitive_expr_boolNot();
         break;
-    default :
-        assert(false);
-    }
-    CallPtr call = new Call(callable, new ExprList());
-    call->location = x->location;
-    call->parenArgs->add(x->expr);
-    return call.ptr();
-}
-
-ExprPtr desugarBinaryOp(BinaryOpPtr x) {
-    ExprPtr callable;
-    switch (x->op) {
-    case EQUALS :
-        callable = operator_expr_equalsP();
-        break;
-    case NOT_EQUALS :
-        callable = operator_expr_notEqualsP();
-        break;
-    case LESSER :
-        callable = operator_expr_lesserP();
-        break;
-    case LESSER_EQUALS :
-        callable = operator_expr_lesserEqualsP();
-        break;
-    case GREATER :
-        callable = operator_expr_greaterP();
-        break;
-    case GREATER_EQUALS :
-        callable = operator_expr_greaterEqualsP();
-        break;
-    default :
-        assert(false);
-    }
-    CallPtr call = new Call(callable, new ExprList());
-    call->location = x->location;
-    call->parenArgs->add(x->expr1);
-    call->parenArgs->add(x->expr2);
-    return call.ptr();
-}
-
-ExprPtr desugarVariadicOp(VariadicOpPtr x) {
-    ExprPtr callable;
-    switch (x->op) {
     case ADD :
         callable = operator_expr_add();
         break;
@@ -112,6 +69,24 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
         break;
     case IF_EXPR :
         callable = operator_expr_ifExpression();
+        break;
+    case EQUALS :
+        callable = operator_expr_equalsP();
+        break;
+    case NOT_EQUALS :
+        callable = operator_expr_notEqualsP();
+        break;
+    case LESSER :
+        callable = operator_expr_lesserP();
+        break;
+    case LESSER_EQUALS :
+        callable = operator_expr_lesserEqualsP();
+        break;
+    case GREATER :
+        callable = operator_expr_greaterP();
+        break;
+    case GREATER_EQUALS :
+        callable = operator_expr_greaterEqualsP();
         break;
     default :
         assert(false);

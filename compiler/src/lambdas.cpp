@@ -125,7 +125,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
             type = typeOfValue(obj);
             if (x->captureByRef) {
                 type = pointerType(type);
-                ExprPtr addr = new UnaryOp(ADDRESS_OF, nameRef.ptr());
+                ExprPtr addr = new VariadicOp(ADDRESS_OF, new ExprList(nameRef.ptr()));
                 converted->parenArgs->add(addr);
             }
             else {
@@ -475,7 +475,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                     c->location = y->location;
                     if (ctx.captureByRef) {
-                        ExprPtr d = new UnaryOp(DEREFERENCE, c.ptr());
+                        ExprPtr d = new VariadicOp(DEREFERENCE, new ExprList(c.ptr()));
                         d->location = y->location;
                         x = d.ptr();
                     }
@@ -564,19 +564,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case STATIC_INDEXING : {
         StaticIndexing *y = (StaticIndexing *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        break;
-    }
-
-    case UNARY_OP : {
-        UnaryOp *y = (UnaryOp *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
-        break;
-    }
-
-    case BINARY_OP : {
-        BinaryOp *y = (BinaryOp *)x.ptr();
-        convertFreeVars(y->expr1, env, ctx);
-        convertFreeVars(y->expr2, env, ctx);
         break;
     }
 

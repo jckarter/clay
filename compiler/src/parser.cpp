@@ -473,7 +473,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("^")) return false;
-    x = new UnaryOp(DEREFERENCE, NULL);
+    x = new VariadicOp(DEREFERENCE, new ExprList());
     x->location = location;
     return true;
 }
@@ -510,10 +510,10 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
         b->expr = base;
         break;
     }
-    case UNARY_OP : {
-        UnaryOp *b = (UnaryOp *)a;
+    case VARIADIC_OP : {
+        VariadicOp *b = (VariadicOp *)a;
         assert(b->op == DEREFERENCE);
-        b->expr = base;
+        b->exprs->add(base);
         break;
     }
     default :
@@ -547,7 +547,7 @@ static bool addressOfExpr(ExprPtr &x) {
     if (!symbol("&")) return false;
     ExprPtr a;
     if (!suffixExpr(a)) return false;
-    x = new UnaryOp(ADDRESS_OF, a);
+    x = new VariadicOp(ADDRESS_OF, new ExprList(a));
     x->location = location;
     return true;
 }
@@ -580,7 +580,7 @@ static bool signExpr(ExprPtr &x) {
         return true;
     restore(p);
     if (!suffixExpr(b)) return false;
-    x = new UnaryOp(op, b);
+    x = new VariadicOp(op, new ExprList(b));
     x->location = location;
     return true;
 }
@@ -915,13 +915,13 @@ static bool compareOp(int &op) {
     return false;
 }
 
-static bool compareTail(BinaryOpPtr &x) {
+static bool compareTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     int op;
     if (!compareOp(op)) return false;
     ExprPtr y;
     if (!catExpr(y)) return false;
-    x = new BinaryOp(op, NULL, y);
+    x = new VariadicOp(op, new ExprList(y));
     x->location = location;
     return true;
 }
@@ -930,12 +930,12 @@ static bool compareExpr(ExprPtr &x) {
     if (!catExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
+        VariadicOpPtr y;
         if (!compareTail(y)) {
             restore(p);
             break;
         }
-        y->expr1 = x;
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
@@ -962,13 +962,13 @@ static bool equalOp(int &op) {
 }
 
 
-static bool equalTail(BinaryOpPtr &x) {
+static bool equalTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     int op;
     if (!equalOp(op)) return false;
     ExprPtr y;
     if (!compareExpr(y)) return false;
-    x = new BinaryOp(op, NULL, y);
+    x = new VariadicOp(op, new ExprList(y));
     x->location = location;
     return true;
 }
@@ -977,12 +977,12 @@ static bool equalExpr(ExprPtr &x) {
     if (!compareExpr(x)) return false;
     while (true) {
         int p = save();
-        BinaryOpPtr y;
+        VariadicOpPtr y;
         if (!equalTail(y)) {
             restore(p);
             break;
         }
-        y->expr1 = x;
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
@@ -1003,7 +1003,7 @@ static bool notExpr(ExprPtr &x) {
     }
     ExprPtr y;
     if (!equalExpr(y)) return false;
-    x = new UnaryOp(NOT, y);
+    x = new VariadicOp(NOT, new ExprList(y));
     x->location = location;
     return true;
 }
@@ -1066,12 +1066,11 @@ static bool orExpr(ExprPtr &x) {
 
 static bool ifExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
     ExprPtr expr;
     if (!keyword("if")) return false;
     if (!symbol("(")) return false;
     if (!expression(expr)) return false;
-    exprs->add(expr);
+    ExprListPtr exprs = new ExprList(expr);
     if (!symbol(")")) return false;
     if (!expression(expr)) return false;
     exprs->add(expr);

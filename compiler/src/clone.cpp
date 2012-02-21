@@ -134,18 +134,6 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case UNARY_OP : {
-        UnaryOp *y = (UnaryOp *)x.ptr();
-        out = new UnaryOp(y->op, clone(y->expr));
-        break;
-    }
-
-    case BINARY_OP : {
-        BinaryOp *y = (BinaryOp *)x.ptr();
-        out = new BinaryOp(y->op, clone(y->expr1), clone(y->expr2));
-        break;
-    }
-
     case VARIADIC_OP : {
         VariadicOp *y = (VariadicOp *)x.ptr();
         out = new VariadicOp(y->op,clone(y->exprs));
