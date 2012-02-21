@@ -433,8 +433,6 @@ struct Indexing;
 struct Call;
 struct FieldRef;
 struct StaticIndexing;
-struct UnaryOp;
-struct BinaryOp;
 struct VariadicOp;
 struct And;
 struct Or;
@@ -585,8 +583,6 @@ typedef Pointer<Indexing> IndexingPtr;
 typedef Pointer<Call> CallPtr;
 typedef Pointer<FieldRef> FieldRefPtr;
 typedef Pointer<StaticIndexing> StaticIndexingPtr;
-typedef Pointer<UnaryOp> UnaryOpPtr;
-typedef Pointer<BinaryOp> BinaryOpPtr;
 typedef Pointer<VariadicOp> VariadicOpPtr;
 typedef Pointer<And> AndPtr;
 typedef Pointer<Or> OrPtr;
@@ -1006,8 +1002,6 @@ enum ExprKind {
     CALL,
     FIELD_REF,
     STATIC_INDEXING,
-    UNARY_OP,
-    BINARY_OP,
     VARIADIC_OP,
     AND,
     OR,
@@ -1162,41 +1156,12 @@ struct StaticIndexing : public Expr {
         : Expr(STATIC_INDEXING), expr(expr), index(index) {}
 };
 
-enum UnaryOpKind {
+enum VariadicOpKind {
     DEREFERENCE,
     ADDRESS_OF,
     PLUS,
     MINUS,
-    NOT
-};
-
-struct UnaryOp : public Expr {
-    int op;
-    ExprPtr expr;
-    ExprPtr desugared;
-    UnaryOp(int op, ExprPtr expr)
-        : Expr(UNARY_OP), op(op), expr(expr) {}
-};
-
-
-enum BinaryOpKind {
-    EQUALS,
-    NOT_EQUALS,
-    LESSER,
-    LESSER_EQUALS,
-    GREATER,
-    GREATER_EQUALS
-};
-
-struct BinaryOp : public Expr {
-    int op;
-    ExprPtr expr1, expr2;
-    ExprPtr desugared;
-    BinaryOp(int op, ExprPtr expr1, ExprPtr expr2)
-        : Expr(BINARY_OP), op(op), expr1(expr1), expr2(expr2) {}
-};
-
-enum VariadicOpKind {
+    NOT,
     ADD,
     SUBTRACT,
     MULTIPLY,
@@ -1204,7 +1169,13 @@ enum VariadicOpKind {
     QUOTIENT,
     REMAINDER,
     CAT,
-    IF_EXPR   
+    IF_EXPR,
+    EQUALS,
+    NOT_EQUALS,
+    LESSER,
+    LESSER_EQUALS,
+    GREATER,
+    GREATER_EQUALS
 };
 
 struct VariadicOp : public Expr {
@@ -3039,8 +3010,6 @@ struct MultiStatic : public Object {
 ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
-ExprPtr desugarUnaryOp(UnaryOpPtr x);
-ExprPtr desugarBinaryOp(BinaryOpPtr x);
 ExprPtr desugarVariadicOp(VariadicOpPtr x);
 ExprPtr updateOperatorExpr(int op);
 StatementPtr desugarForStatement(ForPtr x);
