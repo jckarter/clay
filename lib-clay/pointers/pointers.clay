@@ -79,7 +79,7 @@ inline overload subtract(p:Pointer[T], i:I) {
 
 [T]
 inline overload subtract(a:Pointer[T], b:Pointer[T]) {
-    return (PtrInt(a) - PtrInt(b)) / PtrInt(TypeSize(T));
+    return (PtrInt(a) - PtrInt(b)) \ PtrInt(TypeSize(T));
 }
 
 [T]

@@ -84,7 +84,7 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
     ref bucket = a.buckets[i];
     bucket = UniqueValue(Node(key, value, move(bucket)));
     a.size += 1;
-    if (a.size > (size(a.buckets) * 3 / 4)) {
+    if (a.size > (size(a.buckets) * 3 \ 4)) {
         grow(a);
     }
 }
@@ -101,7 +101,7 @@ overload index(a:HashMap[K,V], key:K) {
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr))
         return ref ptr^;
-    if (a.size >= (size(a.buckets) * 3 / 4)) {
+    if (a.size >= (size(a.buckets) * 3 \ 4)) {
         grow(a);
         i = bucketId(a, key); // recalculate index
     }

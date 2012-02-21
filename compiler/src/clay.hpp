@@ -1204,6 +1204,7 @@ enum VariadicOpKind {
     SUBTRACT,
     MULTIPLY,
     DIVIDE,
+    QUOTIENT,
     REMAINDER,
     CAT
 };
@@ -1468,6 +1469,7 @@ enum UpdateOpKind {
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
     UPDATE_DIVIDE,
+    UPDATE_QUOTIENT,
     UPDATE_REMAINDER,
     UPDATE_CAT
 };
@@ -2436,9 +2438,10 @@ enum PrimOpCode {
     PRIM_numericAdd,
     PRIM_numericSubtract,
     PRIM_numericMultiply,
-    PRIM_numericDivide,
+    PRIM_floatDivide,
     PRIM_numericNegate,
 
+    PRIM_integerQuotient,
     PRIM_integerRemainder,
     PRIM_integerShiftLeft,
     PRIM_integerShiftRight,
@@ -2454,7 +2457,7 @@ enum PrimOpCode {
     PRIM_integerAddChecked,
     PRIM_integerSubtractChecked,
     PRIM_integerMultiplyChecked,
-    PRIM_integerDivideChecked,
+    PRIM_integerQuotientChecked,
     PRIM_integerRemainderChecked,
     PRIM_integerNegateChecked,
     PRIM_integerShiftLeftChecked,

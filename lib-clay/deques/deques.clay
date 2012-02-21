@@ -55,9 +55,9 @@ record DequeCoordinate[T] (
     else {
         var nodeOffset =
             if (offset > 0)
-                PtrInt(offset)/DequeBufferSSize(T)
+                PtrInt(offset) \ DequeBufferSSize(T)
             else
-                -PtrInt(-offset - 1)/DequeBufferSSize(T) - 1;
+                -PtrInt(-offset - 1) \ DequeBufferSSize(T) - 1;
 
         setNode(i, i.node + nodeOffset);
         i.current = i.first + (offset - nodeOffset * DequeBufferSSize(T));
@@ -359,7 +359,7 @@ overload remove(deque: Deque[T], from: DequeCoordinate[T], to: DequeCoordinate[T
 
         var count = SizeT(to - from);
         var elemsBefore = SizeT(from - deque.begin);
-        if (elemsBefore <= (size(deque) - count)/SizeT(2)) {
+        if (elemsBefore <= (size(deque) - count) \ SizeT(2)) {
             var newBegin = deque.begin + count;
             if (from != deque.begin)
                 moveDequeValuesBackwards(newBegin, to, deque.begin);
@@ -386,7 +386,7 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
     var next = i;
     inc(next);
     var index = SizeT(i - deque.begin);
-    if (index < size(deque)/SizeT(2)) {
+    if (index < size(deque) \ SizeT(2)) {
         var newBegin = deque.begin;
         inc(newBegin);
         if (i != deque.begin)
@@ -434,7 +434,7 @@ private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
 
 DequeBufferSize(T) {
     if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
-        return DEQUE_TARGET_BUFFER_SIZE/TypeSize(T);
+        return DEQUE_TARGET_BUFFER_SIZE \ TypeSize(T);
     else
         return SizeT(1);
 }
@@ -444,12 +444,12 @@ DequeBufferSSize(T) = PtrInt(DequeBufferSize(T));
 private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
 
 [T] private initializeDequeMap(deque: Deque[T], size: SizeT) {
-    var numNodes = size/DequeBufferSize(T) + SizeT(1);
+    var numNodes = size \ DequeBufferSize(T) + SizeT(1);
 
     deque.mapSize = max(numNodes + 2, DEQUE_INITIAL_MAP_SIZE);
     deque.map = allocateRawMemory(Pointer[T], deque.mapSize);
 
-    var nodeBegin = deque.map + (deque.mapSize - numNodes)/2;
+    var nodeBegin = deque.map + (deque.mapSize - numNodes) \ 2;
     var nodeEnd = nodeBegin + numNodes;
 
     try { createDequeNodes(nodeBegin, nodeEnd); }
@@ -528,7 +528,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     else
         frontOffset = SizeT(0);
     if (deque.mapSize > SizeT(2)*newNodeCount) {
-        newBeginNode = deque.map + (deque.mapSize - newNodeCount)/SizeT(2) + frontOffset;
+        newBeginNode = deque.map + (deque.mapSize - newNodeCount) \ SizeT(2) + frontOffset;
         moveMemoryUnsafe(
             newBeginNode,
             deque.begin.node,
@@ -537,7 +537,7 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
     } else {
         var newMapSize = deque.mapSize + max(deque.mapSize, addCount) + SizeT(2);
         var newMap = allocateRawMemory(Pointer[T], newMapSize);
-        newBeginNode = newMap + (newMapSize - newNodeCount)/SizeT(2) + frontOffset;
+        newBeginNode = newMap + (newMapSize - newNodeCount) \ SizeT(2) + frontOffset;
         moveMemoryUnsafe(
             newBeginNode,
             deque.begin.node,
@@ -610,20 +610,20 @@ private printMap(deque) {
 }
 
 [T] private newDequeFrontElements(deque: Deque[T], count: SizeT) {
-    var newNodes = SizeT(count + DequeBufferSize(T) - 1)/DequeBufferSize(T);
+    var newNodes = SizeT(count + DequeBufferSize(T) - 1) \ DequeBufferSize(T);
     reserveMapFrontNodes(deque, newNodes);
     createDequeNodes(deque.begin.node - newNodes, deque.begin.node);
 }
 
 [T] private newDequeBackElements(deque: Deque[T], count: SizeT) {
-    var newNodes = SizeT(count + DequeBufferSize(T) - 1)/DequeBufferSize(T);
+    var newNodes = SizeT(count + DequeBufferSize(T) - 1) \ DequeBufferSize(T);
     reserveMapBackNodes(deque, newNodes);
     createDequeNodes(deque.end.node + 1, deque.end.node + newNodes + 1);
 }
 
 [T] private insertDequeValue(deque: Deque[T], i: DequeCoordinate[T], forward value) {
     var index = SizeT(i - deque.begin);
-    if (index < size(deque)/SizeT(2)) {
+    if (index < size(deque) \ SizeT(2)) {
         deque.begin = reserveDequeFrontElements(deque, SizeT(1));
         var oldBegin = deque.begin;
         inc(oldBegin);
@@ -664,7 +664,7 @@ private insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq:
 overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     var index = SizeT(i - deque.begin);
     var seqSize = size(seq);
-    if (index < size(deque)/SizeT(2)) {
+    if (index < size(deque) \ SizeT(2)) {
         deque.begin = reserveDequeFrontElements(deque, seqSize);
         var oldBegin = deque.begin + seqSize;
         i = oldBegin + index;

@@ -2930,7 +2930,8 @@ BINARY_OP(Op_unorderedP, bool, a != a || b != b);
 BINARY_OP(Op_numericAdd, T, a + b);
 BINARY_OP(Op_numericSubtract, T, a - b);
 BINARY_OP(Op_numericMultiply, T, a * b);
-BINARY_OP(Op_numericDivide, T, a / b);
+BINARY_OP(Op_floatDivide, T, a / b);
+BINARY_OP(Op_integerQuotient, T, a / b);
 BINARY_OP(Op_integerRemainder, T, a % b);
 BINARY_OP(Op_integerShiftLeft, T, a << b);
 BINARY_OP(Op_integerShiftRight, T, a >> b);
@@ -3161,7 +3162,7 @@ public :
 };
 
 template <typename T>
-class Op_integerDivideChecked : public BinaryOpHelper<T> {
+class Op_integerQuotientChecked : public BinaryOpHelper<T> {
 public :
     virtual void perform(T &a, T &b, void *out) {
         if (std::numeric_limits<T>::min() != 0
@@ -3710,15 +3711,15 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_numericDivide : {
+    case PRIM_floatDivide : {
         ensureArity(args, 2);
-        TypePtr t;
-        EValuePtr ev0 = numericValue(args, 0, t);
-        EValuePtr ev1 = numericValue(args, 1, t);
+        FloatTypePtr t;
+        EValuePtr ev0 = floatValue(args, 0, t);
+        EValuePtr ev1 = floatValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == t);
-        binaryNumericOp<Op_numericDivide>(ev0, ev1, out0);
+        binaryNumericOp<Op_floatDivide>(ev0, ev1, out0);
         break;
     }
 
@@ -3730,6 +3731,18 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr out0 = out->values[0];
         assert(out0->type == t);
         unaryNumericOp<Op_numericNegate>(ev, out0);
+        break;
+    }
+
+    case PRIM_integerQuotient : {
+        ensureArity(args, 2);
+        IntegerTypePtr t;
+        EValuePtr ev0 = integerValue(args, 0, t);
+        EValuePtr ev1 = integerValue(args, 1, t);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type.ptr() == t.ptr());
+        binaryIntegerOp<Op_integerQuotient>(ev0, ev1, out0);
         break;
     }
 
@@ -3781,7 +3794,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_integerDivideChecked : {
+    case PRIM_integerQuotientChecked : {
         ensureArity(args, 2);
         IntegerTypePtr t;
         EValuePtr ev0 = integerValue(args, 0, t);
@@ -3789,7 +3802,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        binaryIntegerOp<Op_integerDivideChecked>(ev0, ev1, out0);
+        binaryIntegerOp<Op_integerQuotientChecked>(ev0, ev1, out0);
         break;
     }
 

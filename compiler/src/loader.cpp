@@ -811,9 +811,10 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(numericAdd);
     PRIMITIVE(numericSubtract);
     PRIMITIVE(numericMultiply);
-    PRIMITIVE(numericDivide);
+    PRIMITIVE(floatDivide);
     PRIMITIVE(numericNegate);
 
+    PRIMITIVE(integerQuotient);
     PRIMITIVE(integerRemainder);
     PRIMITIVE(integerShiftLeft);
     PRIMITIVE(integerShiftRight);
@@ -827,7 +828,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(integerAddChecked);
     PRIMITIVE(integerSubtractChecked);
     PRIMITIVE(integerMultiplyChecked);
-    PRIMITIVE(integerDivideChecked);
+    PRIMITIVE(integerQuotientChecked);
     PRIMITIVE(integerRemainderChecked);
     PRIMITIVE(integerShiftLeftChecked);
     PRIMITIVE(integerNegateChecked);
@@ -990,6 +991,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(subtract);
     OPERATOR(multiply);
     OPERATOR(divide);
+    OPERATOR(quotient);
     OPERATOR(remainder);
     OPERATOR(caseP);
     OPERATOR(equalsP);
@@ -1045,7 +1047,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(doIntegerAddChecked);
     OPERATOR(doIntegerSubtractChecked);
     OPERATOR(doIntegerMultiplyChecked);
-    OPERATOR(doIntegerDivideChecked);
+    OPERATOR(doIntegerQuotientChecked);
     OPERATOR(doIntegerRemainderChecked);
     OPERATOR(doIntegerShiftLeftChecked);
     OPERATOR(doIntegerNegateChecked);
@@ -1168,6 +1170,7 @@ DEFINE_OPERATOR_ACCESSOR(add)
 DEFINE_OPERATOR_ACCESSOR(subtract)
 DEFINE_OPERATOR_ACCESSOR(multiply)
 DEFINE_OPERATOR_ACCESSOR(divide)
+DEFINE_OPERATOR_ACCESSOR(quotient)
 DEFINE_OPERATOR_ACCESSOR(remainder)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(equalsP)
@@ -1222,7 +1225,7 @@ DEFINE_OPERATOR_ACCESSOR(typesToRValues)
 DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerDivideChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerQuotientChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
