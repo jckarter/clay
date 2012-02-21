@@ -72,6 +72,20 @@ Language changes:
 
   Thanks to Jeremy Clifford.
 
+* Comparison operators now chain as in Python.
+
+    // 0.1
+    foo() {
+        println(x >= 0 and x < 4);
+    }
+
+    // 0.2
+    foo() {
+        println(0 <= x < 4);
+    }
+
+  Thanks to Jeremy Clifford.
+
 Library changes:
 ----------------
 * Record types are no longer provided with a static index (x.0) operator
