@@ -223,7 +223,7 @@ inline overload __operators__.doIntegerSubtractChecked(a:A, b:A) : A
 inline overload __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
     = checked(integerMultiplyWithOverflow, a, b);
 [A | Integer?(A)]
-inline overload __operators__.dointegerQuotientChecked(a:A, b:A) : A
+inline overload __operators__.doIntegerQuotientChecked(a:A, b:A) : A
     = checked(integerQuotientWithOverflow, a, b);
 [A | Integer?(A)]
 inline overload __operators__.doIntegerRemainderChecked(a:A, b:A) : A

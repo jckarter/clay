@@ -5359,7 +5359,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
         assert(out0->type.ptr() == t.ptr());
-        codegenCallValue(staticCValue(operator_dointegerQuotientChecked(), ctx),
+        codegenCallValue(staticCValue(operator_doIntegerQuotientChecked(), ctx),
                          args,
                          ctx,
                          out);

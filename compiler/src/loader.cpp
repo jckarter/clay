@@ -1047,7 +1047,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(doIntegerAddChecked);
     OPERATOR(doIntegerSubtractChecked);
     OPERATOR(doIntegerMultiplyChecked);
-    OPERATOR(dointegerQuotientChecked);
+    OPERATOR(doIntegerQuotientChecked);
     OPERATOR(doIntegerRemainderChecked);
     OPERATOR(doIntegerShiftLeftChecked);
     OPERATOR(doIntegerNegateChecked);
@@ -1225,7 +1225,7 @@ DEFINE_OPERATOR_ACCESSOR(typesToRValues)
 DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_OPERATOR_ACCESSOR(dointegerQuotientChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerQuotientChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
