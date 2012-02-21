@@ -752,7 +752,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case VARIADIC_OP : {
         VariadicOp *x = (VariadicOp *)expr.ptr();
-        if (x->op == ADDRESS_OF) {
+        if (x->op[0] == ADDRESS_OF) {
             PValuePtr pv = analyzeOne(x->exprs->exprs[0], env);
             if (!pv)
                 return NULL;

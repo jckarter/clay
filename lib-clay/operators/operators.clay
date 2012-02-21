@@ -14,6 +14,7 @@ public import __operators__.(
     equals?,
     notEquals?,
     case?,
+    compare?,
     lesser?,
     lesserEquals?,
     greater?,
@@ -246,6 +247,10 @@ inline overload lesserEquals?(a, b) = not lesser?(b, a);
 inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
+
+inline overload compare?(expr1, fn, expr2, ..args) : Bool
+    = compare?(expr1, fn, expr2) and compare?(expr2, ..args);
+inline overload compare?(expr1, fn, expr2) : Bool = fn(expr1, expr2);
 
 inline overload bitand(a, b, c, ..rest) =
     bitand(bitand(a,b), c, ..rest);

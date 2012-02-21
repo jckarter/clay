@@ -996,6 +996,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(caseP);
     OPERATOR(equalsP);
     OPERATOR(notEqualsP);
+    OPERATOR(compareP);
     OPERATOR(lesserP);
     OPERATOR(lesserEqualsP);
     OPERATOR(greaterP);
@@ -1175,6 +1176,7 @@ DEFINE_OPERATOR_ACCESSOR(remainder)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(equalsP)
 DEFINE_OPERATOR_ACCESSOR(notEqualsP)
+DEFINE_OPERATOR_ACCESSOR(compareP)
 DEFINE_OPERATOR_ACCESSOR(lesserP)
 DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
 DEFINE_OPERATOR_ACCESSOR(greaterP)
