@@ -1105,8 +1105,8 @@ void codegenExpr(ExprPtr expr,
 
     case VARIADIC_OP : {
         VariadicOp *x = (VariadicOp *)expr.ptr();
-        if (x->op == ADDRESS_OF) {
-            PValuePtr pv = safeAnalyzeOne(x->exprs->exprs[0], env);
+        if (x->op.front() == ADDRESS_OF) {
+            PValuePtr pv = safeAnalyzeOne(x->exprs->exprs.front(), env);
             if (pv->isTemp)
                 error("can't take address of a temporary");
         }

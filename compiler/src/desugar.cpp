@@ -28,9 +28,9 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
     return call.ptr();
 }
 
-ExprPtr desugarVariadicOp(VariadicOpPtr x) {
+ExprPtr lookupCallable(int op) {
     ExprPtr callable;
-    switch (x->op) {
+    switch (op) {
     case DEREFERENCE :
         callable = operator_expr_dereference();
         break;
@@ -76,6 +76,9 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     case NOT_EQUALS :
         callable = operator_expr_notEqualsP();
         break;
+    case COMPARE :
+        callable = operator_expr_compareP();
+        break;
     case LESSER :
         callable = operator_expr_lesserP();
         break;
@@ -91,9 +94,24 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     default :
         assert(false);
     }
+    return callable;
+}
+
+ExprPtr desugarVariadicOp(VariadicOpPtr x) {
+    ExprPtr callable = lookupCallable(x->op.front());
     CallPtr call = new Call(callable, new ExprList());
+    if(x->op.size() > 1) {
+        call->parenArgs->add(x->exprs->exprs.front());
+        for (int i = 1; i < x->exprs->exprs.size(); ++i) {
+            if(i < x->op.size())
+                call->parenArgs->add(lookupCallable(x->op[i]));
+            call->parenArgs->add(x->exprs->exprs[i]);
+        }
+    } 
+    else {
+        call->parenArgs->add(x->exprs);  
+    }
     call->location = x->location;
-    call->parenArgs->add(x->exprs);
     return call.ptr();
 }
 

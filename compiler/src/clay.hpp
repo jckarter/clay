@@ -1172,6 +1172,7 @@ enum VariadicOpKind {
     IF_EXPR,
     EQUALS,
     NOT_EQUALS,
+    COMPARE,
     LESSER,
     LESSER_EQUALS,
     GREATER,
@@ -1179,10 +1180,10 @@ enum VariadicOpKind {
 };
 
 struct VariadicOp : public Expr {
-    int op;
+    vector<int> op;
     ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(int op, ExprListPtr exprs )
+    VariadicOp(const vector<int> &op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
 
 };

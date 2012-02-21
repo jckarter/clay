@@ -158,7 +158,7 @@ static void printExpr(ostream &out, const Expr *x) {
     case VARIADIC_OP : {
         const VariadicOp *y = (const VariadicOp *)x;
         out << "VariadicOp(";
-        switch (y->op) {
+        switch (y->op.front()) {
         case DEREFERENCE :
             out << "DEREFERENCE";
             break;
@@ -198,23 +198,8 @@ static void printExpr(ostream &out, const Expr *x) {
         case IF_EXPR :
             out << "IF_EXPR";
             break;
-        case EQUALS :
-            out << "EQUALS";
-            break;
-        case NOT_EQUALS :
-            out << "NOT_EQUALS";
-            break;
-        case LESSER :
-            out << "LESSER";
-            break;
-        case LESSER_EQUALS :
-            out << "LESSER_EQUALS";
-            break;
-        case GREATER :
-            out << "GREATER";
-            break;
-        case GREATER_EQUALS :
-            out << "GREATER_EQUALS";
+        case COMPARE :
+            out << "COMPARE";
             break;
         default :
             assert(false);
