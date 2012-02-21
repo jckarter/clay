@@ -232,6 +232,9 @@ static void printExpr(ostream &out, const Expr *x) {
         case QUOTIENT :
             out << "QUOTIENT";
             break;
+        case IF_EXPR :
+            out << "IF_EXPR";
+            break;
         default :
             assert(false);
         }
@@ -246,12 +249,6 @@ static void printExpr(ostream &out, const Expr *x) {
     case OR : {
         const Or *y = (const Or *)x;
         out << "Or(" << y->expr1 << ", " << y->expr2 << ")";
-        break;
-    }
-    case IF_EXPR : {
-        const IfExpr *y = (const IfExpr *)x;
-        out << "IfExpr(" << y->condition << ", " << y->thenPart
-            << ", " << y->elsePart << ")";
         break;
     }
     case LAMBDA : {
