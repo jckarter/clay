@@ -5068,7 +5068,7 @@ void codegenPrimOp(PrimOpPtr x,
         result = ctx->builder->CreateFDiv(v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         ctx->builder->CreateStore(result, out0->llValue);
         break;
     }
@@ -5108,7 +5108,7 @@ void codegenPrimOp(PrimOpPtr x,
             result = ctx->builder->CreateUDiv(v0, v1);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         ctx->builder->CreateStore(result, out0->llValue);
         break;
     }

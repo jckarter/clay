@@ -3694,7 +3694,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr ev1 = floatValue(args, 1, t);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        assert(out0->type == t);
+        assert(out0->type == t.ptr());
         binaryNumericOp<Op_floatDivide>(ev0, ev1, out0);
         break;
     }
