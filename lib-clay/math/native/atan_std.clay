@@ -1,6 +1,6 @@
 // Correctly rounded arctangent
 
-import math.native.bigfloat.*;
+import math.bigfloat.*;
 import math.native.exact.*;
 import math.(atan,M_PI_2);
 import numbers.floats.*;

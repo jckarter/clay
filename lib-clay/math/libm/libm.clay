@@ -1,6 +1,6 @@
 
 import libc;
-import math.*;
+import math.core.*;
 import numbers.floats.*;
 
 inline overload pow(x:Double,y:Double) = libc.pow(x,y);
@@ -20,11 +20,11 @@ inline overload pow(x:Float,y:T) = powf(x,Float(y));
 [T | Integer?(T)]
 inline overload pow(x:LongDouble,y:T) = powl(x,LongDouble(y));
 
-[| MathMode?(LIBM)] inline overload abs(x:Int) = libc.libc.abs(x);
-[| MathMode?(LIBM)] inline overload abs(x:Long) = libc.llabs(x);
-[| MathMode?(LIBM)] inline overload abs(x:Float) = libc.fabsf(x);
-[| MathMode?(LIBM)] inline overload abs(x:Double) = libc.fabs(x);
-[| MathMode?(LIBM)] inline overload abs(x:LongDouble) = libc.fabsl(x);
+inline overload abs(x:Int) = libc.libc.abs(x);
+inline overload abs(x:Long) = libc.llabs(x);
+inline overload abs(x:Float) = libc.fabsf(x);
+inline overload abs(x:Double) = libc.fabs(x);
+inline overload abs(x:LongDouble) = libc.fabsl(x);
 
 inline overload exp(x:Double) = libc.exp(x);
 inline overload exp(x:Float) = libc.expf(x);
@@ -132,15 +132,15 @@ inline overload modf(x:LongDouble) {
     return a,iptr[0];
 }
 
-[| MathMode?(LIBM)] inline overload hypot(x:Double,y:Double) = libc.hypot(x,y);
-[| MathMode?(LIBM)] inline overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
-[| MathMode?(LIBM)] inline overload hypot(x:LongDouble,y:LongDouble) = libc.hypotl(x,y);
-[| MathMode?(LIBM)] inline overload hypot(x:Double,y:Float) = libc.hypot(x,Double(y));
-[| MathMode?(LIBM)] inline overload hypot(x:Float,y:Double) = libc.hypot(Double(x),y);
-[| MathMode?(LIBM)] inline overload hypot(x:Double,y:LongDouble) = libc.hypotl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload hypot(x:LongDouble,y:Double) = libc.hypotl(x,LongDouble(y));
-[| MathMode?(LIBM)] inline overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
+inline overload hypot(x:Double,y:Double) = libc.hypot(x,y);
+inline overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
+inline overload hypot(x:LongDouble,y:LongDouble) = libc.hypotl(x,y);
+inline overload hypot(x:Double,y:Float) = libc.hypot(x,Double(y));
+inline overload hypot(x:Float,y:Double) = libc.hypot(Double(x),y);
+inline overload hypot(x:Double,y:LongDouble) = libc.hypotl(LongDouble(x),y);
+inline overload hypot(x:LongDouble,y:Double) = libc.hypotl(x,LongDouble(y));
+inline overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
+inline overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
 inline overload expm1(x:Double) = libc.expm1(x);
 inline overload expm1(x:Float) = libc.expm1f(x);
@@ -202,14 +202,14 @@ inline overload _isinf(x:Double) = libc.isinf(x);
 inline overload _isinf(x:Float) = libc.isinff(x);
 inline overload _isinf(x:LongDouble) = libc.isinfl(x);
 
-[T | Float?(T) and MathMode?(LIBM)]
+[T | Float?(T)]
 inline overload infinity?(x:T) = if(_isinf(x)==1) true else false;
-[T | Float?(T) and MathMode?(LIBM)]
+[T | Float?(T)]
 inline overload negativeInfinity?(x:T) = if(_isinf(x)==-1) true else false;
 
-[| MathMode?(LIBM)] inline overload finite?(x:Double) = Bool(libc.finite(x));
-[| MathMode?(LIBM)] inline overload finite?(x:Float) = Bool(libc.finitef(x));
-[| MathMode?(LIBM)] inline overload finite?(x:LongDouble) = Bool(libc.finitel(x));
+inline overload finite?(x:Double) = Bool(libc.finite(x));
+inline overload finite?(x:Float) = Bool(libc.finitef(x));
+inline overload finite?(x:LongDouble) = Bool(libc.finitel(x));
 
 inline overload drem(x:Double,y:Double) = libc.drem(x,y);
 inline overload drem(x:Float,y:Float) = libc.dremf(x,y);
@@ -221,9 +221,9 @@ inline overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
 inline overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
 inline overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
-[| MathMode?(LIBM)] inline overload nan?(x:Double) = Bool(libc.isnan(x));
-[| MathMode?(LIBM)] inline overload nan?(x:Float) = Bool(libc.isnanf(x));
-[| MathMode?(LIBM)] inline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
+inline overload nan?(x:Double) = Bool(libc.isnan(x));
+inline overload nan?(x:Float) = Bool(libc.isnanf(x));
+inline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
 
 inline overload jn(x:Int,y:Double) = libc.jn(x,y);
 inline overload jn(x:Int,y:Float) = libc.jnf(x,y);
@@ -249,15 +249,15 @@ inline overload yn(x:Int,y:Double) = libc.yn(x,y);
 inline overload yn(x:Int,y:Float) = libc.ynf(x,y);
 inline overload yn(x:Int,y:LongDouble) = libc.ynl(x,y);
 
-[| MathMode?(LIBM)] inline overload copysign(x:Double,y:Double) = libc.copysign(x,y);
-[| MathMode?(LIBM)] inline overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
-[| MathMode?(LIBM)] inline overload copysign(x:LongDouble,y:LongDouble) = libc.copysignl(x,y);
-[| MathMode?(LIBM)] inline overload copysign(x:Double,y:Float) = libc.copysign(x,Double(y));
-[| MathMode?(LIBM)] inline overload copysign(x:Float,y:Double) = libc.copysign(Double(x),y);
-[| MathMode?(LIBM)] inline overload copysign(x:Double,y:LongDouble) = libc.copysignl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
-[| MathMode?(LIBM)] inline overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
+inline overload copysign(x:Double,y:Double) = libc.copysign(x,y);
+inline overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
+inline overload copysign(x:LongDouble,y:LongDouble) = libc.copysignl(x,y);
+inline overload copysign(x:Double,y:Float) = libc.copysign(x,Double(y));
+inline overload copysign(x:Float,y:Double) = libc.copysign(Double(x),y);
+inline overload copysign(x:Double,y:LongDouble) = libc.copysignl(LongDouble(x),y);
+inline overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDouble(y));
+inline overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
+inline overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 
 inline overload erf(x:Double) = libc.erf(x);
 inline overload erf(x:Float) = libc.erff(x);
@@ -299,25 +299,25 @@ inline overload rint(x:Double) = libc.rint(x);
 inline overload rint(x:Float) = libc.rintf(x);
 inline overload rint(x:LongDouble) = libc.rintl(x);
 
-[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
+inline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
 inline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
 inline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
-[| MathMode?(LIBM)] inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
-[| MathMode?(LIBM)] inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
+inline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
+inline overload nextafter(x:Float,y:Double) = libc.nextafter(Double(x),y);
 inline overload nextafter(x:Double,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 inline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDouble(y));
 inline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 inline overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
 
-[| MathMode?(LIBM)] inline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
-[| MathMode?(LIBM)] inline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
-[| MathMode?(LIBM)] inline overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
-[| MathMode?(LIBM)] inline overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
-[| MathMode?(LIBM)] inline overload remainder(x:Float,y:Double) = libc.remainder(Double(x),y);
-[| MathMode?(LIBM)] inline overload remainder(x:Double,y:LongDouble) = libc.remainderl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDouble(y));
-[| MathMode?(LIBM)] inline overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
-[| MathMode?(LIBM)] inline overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
+inline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
+inline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
+inline overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
+inline overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
+inline overload remainder(x:Float,y:Double) = libc.remainder(Double(x),y);
+inline overload remainder(x:Double,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+inline overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDouble(y));
+inline overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
+inline overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
 
 inline overload scalbn(x:Double,y:Int) = libc.scalbn(x,y);
 inline overload scalbn(x:Float,y:Int) = libc.scalbnf(x,y);
@@ -371,9 +371,9 @@ inline overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
 inline overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
 inline overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
-[| MathMode?(LIBM)] inline overload fpclassify(value:Double) = libc.__fpclassify(value);
-[| MathMode?(LIBM)] inline overload fpclassify(value:Float) = libc.__fpclassifyf(value);
-[| MathMode?(LIBM)] inline overload fpclassify(value:LongDouble) = libc.__fpclassifyl(value);
+inline overload fpclassify(value:Double) = libc.__fpclassify(value);
+inline overload fpclassify(value:Float) = libc.__fpclassifyf(value);
+inline overload fpclassify(value:LongDouble) = libc.__fpclassifyl(value);
 
 inline overload scalb(x:Double,y:Double) = libc.scalb(x,y);
 inline overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
@@ -389,96 +389,96 @@ inline overload llrint(x:Double) = libc.llrint(x);
 inline overload llrint(x:Float) = libc.llrintf(x);
 inline overload llrint(x:LongDouble) = libc.llrintl(x);
 
-[| MathMode?(LIBM)] inline overload llround(x:Double) = libc.llround(x);
-[| MathMode?(LIBM)] inline overload llround(x:Float) = libc.llroundf(x);
-[| MathMode?(LIBM)] inline overload llround(x:LongDouble) = libc.llroundl(x);
+inline overload llround(x:Double) = libc.llround(x);
+inline overload llround(x:Float) = libc.llroundf(x);
+inline overload llround(x:LongDouble) = libc.llroundl(x);
 
-[| MathMode?(LIBM)] inline overload signbit(value:Double) = libc.signbit(value);
-[| MathMode?(LIBM)] inline overload signbit(value:Float) = libc.signbitf(value);
-[| MathMode?(LIBM)] inline overload signbit(value:LongDouble) = libc.signbitl(value);
+inline overload signbit(value:Double) = libc.signbit(value);
+inline overload signbit(value:Float) = libc.signbitf(value);
+inline overload signbit(value:LongDouble) = libc.signbitl(value);
 
-[| MathMode?(LIBM)] inline overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
-[| MathMode?(LIBM)] inline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
-[| MathMode?(LIBM)] inline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
+inline overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
+inline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
+inline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
 
-[| MathMode?(LIBM)] inline overload abs(z:Complex64) = libc.cabs(z);
-[| MathMode?(LIBM)] inline overload abs(z:Complex32) = libc.cabsf(z);
-[| MathMode?(LIBM)] inline overload abs(z:Complex80) = libc.cabsl(z);
+inline overload abs(z:Complex64) = libc.cabs(z);
+inline overload abs(z:Complex32) = libc.cabsf(z);
+inline overload abs(z:Complex80) = libc.cabsl(z);
 
-[| MathMode?(LIBM)] inline overload arg(z:Complex64) = libc.carg(z);
-[| MathMode?(LIBM)] inline overload arg(z:Complex32) = libc.cargf(z);
-[| MathMode?(LIBM)] inline overload arg(z:Complex80) = libc.cargl(z);
+inline overload arg(z:Complex64) = libc.carg(z);
+inline overload arg(z:Complex32) = libc.cargf(z);
+inline overload arg(z:Complex80) = libc.cargl(z);
 
-[| MathMode?(LIBM)] inline overload sin(z:Complex64) = libc.csin(z);
-[| MathMode?(LIBM)] inline overload sin(z:Complex32) = libc.csinf(z);
-[| MathMode?(LIBM)] inline overload sin(z:Complex80) = libc.csinl(z);
+inline overload sin(z:Complex64) = libc.csin(z);
+inline overload sin(z:Complex32) = libc.csinf(z);
+inline overload sin(z:Complex80) = libc.csinl(z);
 
-[| MathMode?(LIBM)] inline overload cos(z:Complex64) = libc.ccos(z);
-[| MathMode?(LIBM)] inline overload cos(z:Complex32) = libc.ccosf(z);
-[| MathMode?(LIBM)] inline overload cos(z:Complex80) = libc.ccosl(z);
+inline overload cos(z:Complex64) = libc.ccos(z);
+inline overload cos(z:Complex32) = libc.ccosf(z);
+inline overload cos(z:Complex80) = libc.ccosl(z);
 
-[| MathMode?(LIBM)] inline overload tan(z:Complex64) = libc.ctan(z);
-[| MathMode?(LIBM)] inline overload tan(z:Complex32) = libc.ctanf(z);
-[| MathMode?(LIBM)] inline overload tan(z:Complex80) = libc.ctanl(z);
+inline overload tan(z:Complex64) = libc.ctan(z);
+inline overload tan(z:Complex32) = libc.ctanf(z);
+inline overload tan(z:Complex80) = libc.ctanl(z);
 
-[| MathMode?(LIBM)] inline overload asin(z:Complex64) = libc.casin(z);
-[| MathMode?(LIBM)] inline overload asin(z:Complex32) = libc.casinf(z);
-[| MathMode?(LIBM)] inline overload asin(z:Complex80) = libc.casinl(z);
+inline overload asin(z:Complex64) = libc.casin(z);
+inline overload asin(z:Complex32) = libc.casinf(z);
+inline overload asin(z:Complex80) = libc.casinl(z);
 
-[| MathMode?(LIBM)] inline overload acos(z:Complex64) = libc.cacos(z);
-[| MathMode?(LIBM)] inline overload acos(z:Complex32) = libc.cacosf(z);
-[| MathMode?(LIBM)] inline overload acos(z:Complex80) = libc.cacosl(z);
+inline overload acos(z:Complex64) = libc.cacos(z);
+inline overload acos(z:Complex32) = libc.cacosf(z);
+inline overload acos(z:Complex80) = libc.cacosl(z);
 
-[| MathMode?(LIBM)] inline overload atan(z:Complex64) = libc.catan(z);
-[| MathMode?(LIBM)] inline overload atan(z:Complex32) = libc.catanf(z);
-[| MathMode?(LIBM)] inline overload atan(z:Complex80) = libc.catanl(z);
+inline overload atan(z:Complex64) = libc.catan(z);
+inline overload atan(z:Complex32) = libc.catanf(z);
+inline overload atan(z:Complex80) = libc.catanl(z);
 
-[| MathMode?(LIBM)] inline overload sinh(z:Complex64) = libc.csinh(z);
-[| MathMode?(LIBM)] inline overload sinh(z:Complex32) = libc.csinhf(z);
-[| MathMode?(LIBM)] inline overload sinh(z:Complex80) = libc.csinhl(z);
+inline overload sinh(z:Complex64) = libc.csinh(z);
+inline overload sinh(z:Complex32) = libc.csinhf(z);
+inline overload sinh(z:Complex80) = libc.csinhl(z);
 
-[| MathMode?(LIBM)] inline overload cosh(z:Complex64) = libc.ccosh(z);
-[| MathMode?(LIBM)] inline overload cosh(z:Complex32) = libc.ccoshf(z);
-[| MathMode?(LIBM)] inline overload cosh(z:Complex80) = libc.ccoshl(z);
+inline overload cosh(z:Complex64) = libc.ccosh(z);
+inline overload cosh(z:Complex32) = libc.ccoshf(z);
+inline overload cosh(z:Complex80) = libc.ccoshl(z);
 
-[| MathMode?(LIBM)] inline overload tanh(z:Complex64) = libc.ctanh(z);
-[| MathMode?(LIBM)] inline overload tanh(z:Complex32) = libc.ctanhf(z);
-[| MathMode?(LIBM)] inline overload tanh(z:Complex80) = libc.ctanhl(z);
+inline overload tanh(z:Complex64) = libc.ctanh(z);
+inline overload tanh(z:Complex32) = libc.ctanhf(z);
+inline overload tanh(z:Complex80) = libc.ctanhl(z);
 
-[| MathMode?(LIBM)] inline overload asinh(z:Complex64) = libc.casinh(z);
-[| MathMode?(LIBM)] inline overload asinh(z:Complex32) = libc.casinhf(z);
-[| MathMode?(LIBM)] inline overload asinh(z:Complex80) = libc.casinhl(z);
+inline overload asinh(z:Complex64) = libc.casinh(z);
+inline overload asinh(z:Complex32) = libc.casinhf(z);
+inline overload asinh(z:Complex80) = libc.casinhl(z);
 
-[| MathMode?(LIBM)] inline overload acosh(z:Complex64) = libc.cacosh(z);
-[| MathMode?(LIBM)] inline overload acosh(z:Complex32) = libc.cacoshf(z);
-[| MathMode?(LIBM)] inline overload acosh(z:Complex80) = libc.cacoshl(z);
+inline overload acosh(z:Complex64) = libc.cacosh(z);
+inline overload acosh(z:Complex32) = libc.cacoshf(z);
+inline overload acosh(z:Complex80) = libc.cacoshl(z);
 
-[| MathMode?(LIBM)] inline overload atanh(z:Complex64) = libc.catanh(z);
-[| MathMode?(LIBM)] inline overload atanh(z:Complex32) = libc.catanhf(z);
-[| MathMode?(LIBM)] inline overload atanh(z:Complex80) = libc.catanhl(z);
+inline overload atanh(z:Complex64) = libc.catanh(z);
+inline overload atanh(z:Complex32) = libc.catanhf(z);
+inline overload atanh(z:Complex80) = libc.catanhl(z);
 
-[| MathMode?(LIBM)] inline overload exp(z:Complex64) = libc.cexp(z);
-[| MathMode?(LIBM)] inline overload exp(z:Complex32) = libc.cexpf(z);
-[| MathMode?(LIBM)] inline overload exp(z:Complex80) = libc.cexpl(z);
+inline overload exp(z:Complex64) = libc.cexp(z);
+inline overload exp(z:Complex32) = libc.cexpf(z);
+inline overload exp(z:Complex80) = libc.cexpl(z);
 
-[| MathMode?(LIBM)] inline overload log(z:Complex64) = libc.clog(z);
-[| MathMode?(LIBM)] inline overload log(z:Complex32) = libc.clogf(z);
-[| MathMode?(LIBM)] inline overload log(z:Complex80) = libc.clogl(z);
+inline overload log(z:Complex64) = libc.clog(z);
+inline overload log(z:Complex32) = libc.clogf(z);
+inline overload log(z:Complex80) = libc.clogl(z);
 
-[| MathMode?(LIBM)] inline overload pow(z:Complex64,y:Complex64) = libc.cpow(z,y);
-[| MathMode?(LIBM)] inline overload pow(z:Complex32,y:Complex32) = libc.cpowf(z,y);
-[| MathMode?(LIBM)] inline overload pow(z:Complex80,y:Complex80) = libc.cpowl(z,y);
-[| MathMode?(LIBM)] inline overload pow(z:Complex64,y:Complex32) = libc.cpow(z,Complex64(y));
-[| MathMode?(LIBM)] inline overload pow(z:Complex80,y:Complex32) = libc.cpowl(z,Complex80(y));
-[| MathMode?(LIBM)] inline overload pow(z:Complex80,y:Complex64) = libc.cpowl(z,Complex80(y));
-[| MathMode?(LIBM)] inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(Complex80(z),y);
-[| MathMode?(LIBM)] inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
-[| MathMode?(LIBM)] inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
-//Add complex^float & float^complex [| MathMode?(LIBM)] inline overloads
+inline overload pow(z:Complex64,y:Complex64) = libc.cpow(z,y);
+inline overload pow(z:Complex32,y:Complex32) = libc.cpowf(z,y);
+inline overload pow(z:Complex80,y:Complex80) = libc.cpowl(z,y);
+inline overload pow(z:Complex64,y:Complex32) = libc.cpow(z,Complex64(y));
+inline overload pow(z:Complex80,y:Complex32) = libc.cpowl(z,Complex80(y));
+inline overload pow(z:Complex80,y:Complex64) = libc.cpowl(z,Complex80(y));
+inline overload pow(z:Complex64,y:Complex80) = libc.cpowl(Complex80(z),y);
+inline overload pow(z:Complex32,y:Complex64) = libc.cpowl(Complex64(z),y);
+inline overload pow(z:Complex32,y:Complex80) = libc.cpowl(Complex80(z),y);
+//Add complex^float & float^complex inline overloads
 
-[| MathMode?(LIBM)] inline overload sqrt(z:Complex64) = libc.csqrt(z);
-[| MathMode?(LIBM)] inline overload sqrt(z:Complex32) = libc.csqrtf(z);
-[| MathMode?(LIBM)] inline overload sqrt(z:Complex80) = libc.csqrtl(z);
+inline overload sqrt(z:Complex64) = libc.csqrt(z);
+inline overload sqrt(z:Complex32) = libc.csqrtf(z);
+inline overload sqrt(z:Complex80) = libc.csqrtl(z);
 
 inline overload proj(z:Complex64) = libc.cproj(z);
 inline overload proj(z:Complex32) = libc.cprojf(z);

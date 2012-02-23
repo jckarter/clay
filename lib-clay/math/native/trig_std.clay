@@ -5,7 +5,7 @@
 import numbers.floats.*;
 import math.*;
 import math.native.exact.*;
-import math.native.bigfloat.*;
+import math.bigfloat.*;
 import math.native.rem_pi_2.*;
 
 private alias SIN = 0;

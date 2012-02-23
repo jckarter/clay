@@ -1,28 +1,7 @@
 
 //Import native
 public import numbers.floats.*;
-public import math.native.defines.*;
-public import math.native.bigfloat.*;
-public import math.native.core.*;
-public import math.native.native.*;
+public import math.native.*;
 
 //Import native complex
-public import math.native.ccore.*;
-public import math.native.cnative.*;
-
-//Import simd
-public import math.simd.core_x86.*;
-
-//Import libm wrappers
-public import math.libm.*;
-
-//Import native approx
-public import math.native.approxmath.*;
-
-alias FAST = #"fast";
-alias LIBM = #"libm";
-alias APX = #"approx";
-alias APX2 = #"approx2";
-alias SIMD = #"simd";
-
-MathMode?(m) = Flag(#"math.Mode")==m;
+public import math.complex.*;

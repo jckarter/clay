@@ -2,8 +2,90 @@
 import math.*;
 import numbers.floats.*;
 
+[U | Complex?(U)]
+inline overload abs(x:U) = hypot(real(x),imagValue(x));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload max(x:T,y:C) = max(x,abs(y));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload max(x:C,y:T) = max(abs(x),y);
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload min(x:T,y:C) = min(x,abs(y));
+
+[T,C | Numeric?(T) and Complex?(C)]
+inline overload min(x:C,y:T) = min(abs(x),y);
+
+[C | Complex?(C)]
+overload sqrt(x:C) --> res:C {
+    alias T = ComplexBaseType(C);
+    alias ZERO = T(0);
+    alias HALF = T(0.5);
+    alias HUGE_VAL = GreatestPositiveFinite(T);
+    alias xr = real(x);
+    alias xi = imagValue(x);
+    var rcls,icls = fpclassify(xr), fpclassify (xi);
+    if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
+        if (icls == FP_INFINITE){
+            res <-- Complex(HUGE_VAL,xi);
+        }
+        else if (rcls == FP_INFINITE){
+            if (xr < ZERO){
+                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (HUGE_VAL, xi));
+            }
+            else{
+                res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));
+            }
+        }
+        else {
+                res <-- Complex(nan(T),nan(T));
+        }
+    }
+    else{
+        if (icls == FP_ZERO){
+            if (xr < ZERO){
+                res <-- Complex(ZERO, copysign(sqrt(-xr),xi));
+            }
+            else{
+                res <-- Complex(abs(sqrt(xr)), copysign (ZERO, xi));
+            }
+        }
+        else if (rcls == FP_ZERO){
+            var r = sqrt(HALF * abs (xi));
+            res <-- Complex(r, copysign(r, xi));
+        }
+        else {
+            var d,r,s = hypot(xr, xi),ZERO,ZERO;
+            /* Use the identity   2  Re res  Im res = Im x
+            to avoid cancellation error in  d +/- Re x.  */
+            if (xr > ZERO){
+                r = sqrt(HALF * d + HALF * xr);
+                s = (HALF * xi) / r;
+            }
+            else{
+                s = sqrt(HALF * d - HALF * xr);
+                r = abs((HALF * xi) / s);
+            }
+            res <-- Complex(r,copysign(s, xi));
+        }
+    }
+}
+
+
+[I | Imaginary?(I)]
+inline overload sqrt(z:I) = sqrt(Complex(z));
+
+[T | Float?(T)]
+inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
+
+[T | Complex?(T)]
+inline overload arg(x:T) = atan2(imagValue(x),real(x));
+
+
+
 /*
- *	Complex natural logarithm
+ *  Complex natural logarithm
  *
  *
  *
@@ -49,9 +131,9 @@ overload log(z:T){
     return Complex(p, rr);
 }
 
-/*							cexp()
+/*                         cexp()
  *
- *	Complex exponential function
+ *  Complex exponential function
  *
  *
  *
@@ -93,9 +175,9 @@ overload exp(z:T){
   return Complex(r * cos(imagValue(z)) , r * sin(imagValue(z))) ;
 }
 
-/*							csin()
+/*                         csin()
  *
- *	Complex circular sine
+ *  Complex circular sine
  *
  *
  *
@@ -148,9 +230,9 @@ private chsh(x:T){
     }
 }
 
-/*							ccos()
+/*                         ccos()
  *
- *	Complex circular cosine
+ *  Complex circular cosine
  *
  *
  *
@@ -189,9 +271,9 @@ overload cos(z:T){
 }
 
 
-/*							ctan()
+/*                         ctan()
  *
- *	Complex circular tangent
+ *  Complex circular tangent
  *
  *
  *
@@ -243,9 +325,9 @@ overload tan(z:T){
     return Complex(sin(2.0 * real(z)) / d, sinh (2.0 * imagValue(z)) / d);
 }
 
-/*							ccot()
+/*                         ccot()
  *
- *	Complex circular cotangent
+ *  Complex circular cotangent
  *
  *
  *
@@ -311,13 +393,13 @@ private inline redupi(x:T){
         t += T(0.5);
     else
         t -= T(0.5);
-    var i = Long(t);	/* the multiple */
+    var i = Long(t);    /* the multiple */
     t = T(i);
     return ((x - t * T(DP1)) - t * T(DP2)) - t * T(DP3);
 }
 
 
-/*  Taylor series expansion for cosh(2y) - cos(2x)	*/
+/*  Taylor series expansion for cosh(2y) - cos(2x)  */
 [C | Complex?(C)]
 private tans(z:C){
     alias T = ComplexBaseType(C);
@@ -352,9 +434,9 @@ loop1:
     return d;
 }
 
-/*							casin()
+/*                         casin()
  *
- *	Complex circular arc sine
+ *  Complex circular arc sine
  *
  *
  *
@@ -402,9 +484,9 @@ overload asin(z:T){
     return  log(zz) * -1.j;
 }
 
-/*							cacos()
+/*                         cacos()
  *
- *	Complex circular arc cosine
+ *  Complex circular arc cosine
  *
  *
  *
@@ -439,9 +521,9 @@ overload acos(z:T) {
     return (M_PI_2  -  real(w)) - imag(w);
 }
 
-/*							catan()
+/*                         catan()
  *
- *	Complex circular arc tangent
+ *  Complex circular arc tangent
  *
  *
  *
@@ -515,9 +597,9 @@ overload atan(z:T){
 }
 
 
-/*							csinh
+/*                          csinh
  *
- *	Complex hyperbolic sine
+ *  Complex hyperbolic sine
  *
  *
  *
@@ -545,9 +627,9 @@ overload sinh(z:T)
     = Complex(sinh(real(z)) * cos(imagValue(z)) , cosh(real(z)) * sin(imagValue(z)));
 
 
-/*							casinh
+/*                          casinh
  *
- *	Complex inverse hyperbolic sine
+ *  Complex inverse hyperbolic sine
  *
  *
  *
@@ -575,9 +657,9 @@ overload sinh(z:T)
 overload asinh(z:T) = -1.j *  asin (z * 1.j);
 
 
-/*							ccosh
+/*                          ccosh
  *
- *	Complex hyperbolic cosine
+ *  Complex hyperbolic cosine
  *
  *
  *
@@ -606,9 +688,9 @@ overload cosh(z:T)
     = Complex(cosh(real(z)) * cos(imagValue(z)) , sinh(real(z)) * sin(imagValue(z)));
 
 
-/*							cacosh
+/*                          cacosh
  *
- *	Complex inverse hyperbolic cosine
+ *  Complex inverse hyperbolic cosine
  *
  *
  *
@@ -636,9 +718,9 @@ overload cosh(z:T)
 overload acosh(z:T) = 1.j * acos(z);
 
 
-/*							ctanh
+/*                          ctanh
  *
- *	Complex hyperbolic tangent
+ *  Complex hyperbolic tangent
  *
  *
  *
@@ -669,9 +751,9 @@ overload tanh(z:T){
 }
 
 
-/*							catanh
+/*                          catanh
  *
- *	Complex inverse hyperbolic tangent
+ *  Complex inverse hyperbolic tangent
  *
  *
  *
@@ -698,9 +780,9 @@ overload tanh(z:T){
 [T | Complex?(T)]
 overload atanh(z:T) = -1.j * atan(z * 1.j);
 
-/*							cpow
+/*                          cpow
  *
- *	Complex power function
+ *  Complex power function
  *
  *
  *
