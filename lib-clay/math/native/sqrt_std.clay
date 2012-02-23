@@ -84,6 +84,6 @@ private sqrt754(x:Double) {
     }
 }
 
-
-inline sqrt_std(x:Double) = sqrt754(x);
+[T | Float?(T)]
+inline sqrt_std(x:T) = T(sqrt754(Double(x)));
 

@@ -248,12 +248,18 @@ overload llround (x:Double ) {
     return sign * result;
 }
 
-
-clamp(x:T, lo:T, hi:T) = if(x > hi) hi else (if(x < lo) lo else x));
+[T]
+clamp(x:T, lo:T, hi:T) {
+    if(x > hi)
+        return hi; 
+    if(x < lo)
+        return lo;
+    return x;
+}
 
 sec(z) = 1 / cos(z);
 csc(z) = 1 / sin(z);
-cot(z) = 1 / tan(z);
+//cot(z) = 1 / tan(z);
 asec(y) = acos(1 / y);
 acsc(y) = asin(1 / y);
 acot(y) = atan(1 / y);
@@ -264,8 +270,8 @@ asech(y) = acosh(1 / y);
 acsch(y) = asinh(1 / y);
 acoth(y) = atanh(1 / y);
 
-sinc(x) = x==0 ? one(x) : (pix=pi*x; oftype(x,sin(pix)/pix))
-cosc(x) = x==0 ? zero(x) : (pix=pi*x; oftype(x,cos(pix)/x-sin(pix)/(pix*x)))
+//sinc(x) = if(x==0) one(x) else (pix=pi*x; oftype(x,sin(pix)/pix))
+//cosc(x) = if(x==0) zero(x) else (pix=pi*x; oftype(x,cos(pix)/x-sin(pix)/(pix*x)))
 
 overload log(b,x) = log(x) / log(b);
 
