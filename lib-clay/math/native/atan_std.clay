@@ -2,7 +2,7 @@
 
 import math.bigfloat.*;
 import math.native.exact.*;
-import math.(atan,M_PI_2);
+public import math.*;
 import numbers.floats.*;
 
 private var constant_poly = array(
@@ -741,9 +741,9 @@ atanpi_rn(x:Double) {
 }
 
 
-inline atan_std(x:Double) = atan_rn(x);
+inline overload atan(x:Double) = atan_rn(x);
 
-inline atanpi_std(x:Double) = atanpi_rn(x);
+inline overload atanpi(x:Double) = atanpi_rn(x);
 
 
 

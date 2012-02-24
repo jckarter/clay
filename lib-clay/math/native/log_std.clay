@@ -1,6 +1,6 @@
 
 import math.native.exact.*;
-import math.*;
+public import math.*;
 import numbers.floats.*;
 
 alias L = 8;
@@ -2051,9 +2051,9 @@ private log10_rn(x:Double){
 }
 
 
-inline log_std(x:Double) = log_rn(x);
+inline overload log(x:Double) = log_rn(x);
 
-inline log2_std(x:Double) = log2_rn(x);
+inline overload log2(x:Double) = log2_rn(x);
 
-inline log10_std(x:Double) = log10_rn(x);
+inline overload log10(x:Double) = log10_rn(x);
 

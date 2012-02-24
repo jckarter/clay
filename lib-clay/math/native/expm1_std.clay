@@ -2,7 +2,7 @@
 import math.native.exp_std.*;
 import math.native.exp_std.(private twoPowerIndex1, private twoPowerIndex2, private tPi_t);
 import math.native.exact.*;
-import math.(fma);
+public import math.*;
 import numbers.floats.*;
 
 alias RETURNXBOUND =0x3c900000;
@@ -491,4 +491,4 @@ expm1_rn(x:Double) {
 }
 
 
-inline expm1_std(x:Double) = expm1_rn(x);
+inline overload expm1(x:Double) = expm1_rn(x);

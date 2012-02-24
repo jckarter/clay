@@ -9,7 +9,7 @@ inline cbrta_halley_iter(a:T,R:T) --> r:T{
 
 // cube root approximation using 1 iteration of Halley's method (double)
 [T | Float?(T)]
-inline cbrt_halley(d:T) --> r:T { 
+inline cbrt(d:T) --> r:T { 
 	r <-- cbrt_5(d);
 	r = cbrta_halley_iter(r, d);
 	r = cbrta_halley_iter(r, d);

@@ -1,6 +1,6 @@
 
 import math.native.exact.*;
-import math.(abs);
+public import math.*;
 import numbers.floats.*;
 
 alias L =8;
@@ -4261,10 +4261,10 @@ private pow_rn(x:Double, y:Double) {
 }
 
 
-inline pow_std(x:Double,y:Double) = pow_rn(x,y);
-inline overload pow_std(x:Float,y:Double) = pow_rn(Double(x),y);
-inline overload pow_std(x:Double,y:Float) = pow_rn(x,Double(y));
+inline overload pow(x:Double,y:Double) = pow_rn(x,y);
+inline overload pow(x:Float,y:Double) = pow_rn(Double(x),y);
+inline overload pow(x:Double,y:Float) = pow_rn(x,Double(y));
 [I | Integer?(I)]
-inline overload pow_std(x:Double,y:I) = pow_rn(x,Double(y));
+inline overload pow(x:Double,y:I) = pow_rn(x,Double(y));
 [U,I | Integer?(U,I)]
-inline overload pow_std(x:U,y:I) = U(pow_rn(Double(x),Double(y)));
+inline overload pow(x:U,y:I) = U(pow_rn(Double(x),Double(y)));

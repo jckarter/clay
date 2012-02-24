@@ -3,7 +3,7 @@
 //
 
 import numbers.floats.*;
-import math.*;
+public import math.*;
 import math.native.exact.*;
 import math.bigfloat.*;
 import math.native.rem_pi_2.*;
@@ -1361,9 +1361,9 @@ private tan_rn(x:Double) --> r:Double {
 
 
 
-inline sin_std(x:Double) = sin_rn(x);
+inline overload sin(x:Double) = sin_rn(x);
 
-inline cos_std(x:Double) = cos_rn(x);
+inline overload cos(x:Double) = cos_rn(x);
 
-inline tan_std(x:Double) = tan_rn(x);
+inline overload tan(x:Double) = tan_rn(x);
 

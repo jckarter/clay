@@ -1,6 +1,6 @@
 
 import math.native.exact.*;
-import math.*;
+public import math.*;
 import numbers.floats.*;
 
 private var inroot = array(
@@ -85,5 +85,5 @@ private sqrt754(x:Double) {
 }
 
 [T | Float?(T)]
-inline sqrt_std(x:T) = T(sqrt754(Double(x)));
+inline overload sqrt(x:T) = T(sqrt754(Double(x)));
 

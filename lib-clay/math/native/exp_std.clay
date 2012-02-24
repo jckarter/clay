@@ -1,6 +1,6 @@
 
 import math.native.exact.*;
-import math.(abs);
+public import math.*;
 import numbers.floats.*;
 
 alias L = 12;
@@ -1008,4 +1008,4 @@ private exp_rn(x:Double) --> ans:Double {
 }
 
 
-inline exp_std(x:Double) = exp_rn(x);
+inline overload exp(x:Double) = exp_rn(x);
