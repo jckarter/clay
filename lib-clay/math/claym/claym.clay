@@ -4,6 +4,8 @@ public import defines.*;
 public import ldexp.(ldexp);
 public import frexp.(frexp);
 public import scalbn.(scalbn,scalbln,scalb);
+public import trunc.(trunc);
+public import rounding.(round,ceil,floor,rint);
 
 public import sqrt.(sqrt);
 public import cbrt.(cbrt);
@@ -11,7 +13,7 @@ public import pow.(pow);
 public import exp.(exp);
 public import expm1.(expm1);
 public import cosh.(cosh);
-
+public import ilogb.(ilogb,logb);
 
 [T | Float?(T)]
 significand(x:T) = scalb(x,T(-ilogb(x)));
