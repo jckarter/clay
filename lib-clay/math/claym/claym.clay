@@ -1,0 +1,17 @@
+
+public import defines.*;
+
+public import ldexp.(ldexp);
+public import frexp.(frexp);
+public import scalbn.(scalbn,scalbln,scalb);
+
+public import sqrt.(sqrt);
+public import cbrt.(cbrt);
+public import pow.(pow);
+public import exp.(exp);
+public import expm1.(expm1);
+public import cosh.(cosh);
+
+
+[T | Float?(T)]
+significand(x:T) = scalb(x,T(-ilogb(x)));

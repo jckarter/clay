@@ -1,0 +1,168 @@
+
+
+[T | Float?(T)]
+overload round(x:T) --> t:T {
+	alias ZERO = T(0)
+	alias MHALF = T(-0.5)
+	alias ONE = T(1)
+	
+	if (not finite?(x))
+		return (x);
+
+	if (x >= ZERO) {
+		t <-- floor(x);
+		if (t - x <= MHALF)
+			t += ONE;
+	} else {
+		t <-- floor(-x);
+		if (t + x <= MHALF)
+			t += ONE;
+		t = -t;
+	}
+}
+
+
+
+alias TWO52 = array(
+  4.50359962737049600000e+15, /* 0x43300000, 0x00000000 */
+ -4.50359962737049600000e+15 /* 0xC3300000, 0x00000000 */
+);
+
+[T | Float?(T)]
+overload rint(a:T){
+	int32_t i0,j0,sx;
+	u_int32_t i,i1;
+	double w,t;
+	var x = a;
+	var i0,i1 = EXTRACT_WORDS(x);
+	var sx = bitand(bitshr(i0,31),0x1u);
+	var j0 = bitand(bitshr(i0,20),0x7ffu)-0x3ffu;
+	if(j0<20) {
+	    if(j0<0) {
+			if(bitor(bitand(i0,MM),i1)==0) return x;
+			i1 = bitor(i1,bitand(i0,0x0fffff));
+			i0 = bitand(i0,0xfffe0000u);
+			i0 = bitor(i0,bitand(bitshr(bitor(i1,-i1),12),0x80000u));
+			x = SET_HIGH_WORD(x,i0);
+		    var w = TWO52[sx]+x;
+		    var t = w-TWO52[sx];
+			i0 = GET_HIGH_WORD(t);
+			t = SET_HIGH_WORD(t,bitor(bitand(i0,MM),bitshl(sx,31)));
+		    return t;
+	    } 
+	    else {
+			i = bitshr(NEM,j0);
+			if(bitor(bitand(i0,i),i1)==0) return x; /* x is integral */
+			i = bitshr(i,1);
+			if(bitor(bitand(i0,i),i1)!=0) {
+			    /*
+			     * Some bit is set after the 0.5 bit.  To avoid the
+			     * possibility of errors from double rounding in
+			     * w = TWO52[sx]+x, adjust the 0.25 bit to a lower
+			     * guard bit.  We do this for all j0<=51.  The
+			     * adjustment is trickiest for j0==18 and j0==19
+			     * since then it spans the word boundary.
+			     */
+			    if(j0==19) i1 = CV2; else
+			    if(j0==18) i1 = SM; else
+			    i0 = bitor(bitand(i0,bitnot(i)),bitshr(0x20000u,j0));
+			}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400u) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	} else {
+	    i = bitshr(AM,j0-20);
+	    if(bitand(i1,i)==0) return x;	/* x is integral */
+	    i = bitshr(i,1);
+	    if(bitand(i1,i)!=0) i1 = bitor(bitand(i1,bitnot(i)),bitshr(CV2,j0-20));
+	}
+	x = INSERT_WORDS(x,i0,i1);
+	var w = TWO52[sx]+x;
+	return w-TWO52[sx];
+}
+
+[T | Float?(T)]
+overload floor(x:T) {
+	int32_t i0,i1,j0;
+	u_int32_t i,j;
+	EXTRACT_WORDS(i0,i1,x);
+	j0 = ((i0>>20)&0x7ffu)-0x3ffu;
+	if(j0<20) {
+	    if(j0<0) { 	/* raise inexact if x != 0 */
+		if(HUGE+x>0.0) {/* return 0*sign(x) if |x|<1 */
+		    if(i0>=0) {i0=i1=0;}
+		    else if(((i0&MM)|i1)!=0)
+			{ i0=CV21;i1=0;}
+		}
+	    } else {
+		i = (NEM)>>j0;
+		if(((i0&i)|i1)==0) return x; /* x is integral */
+		if(HUGE+x>0.0) {	/* raise inexact flag */
+		    if(i0<0) i0 += (CV8)>>j0;
+		    i0 &= (~i); i1=0;
+		}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400u) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	} else {
+	    i = ((u_int32_t)(AM))>>(j0-20);
+	    if((i1&i)==0) return x;	/* x is integral */
+	    if(HUGE+x>0.0) { 		/* raise inexact flag */
+		if(i0<0) {
+		    if(j0==20) i0+=1;
+		    else {
+			j = i1+(1<<(52-j0));
+			if(j<i1) i0 +=1 ; 	/* got a carry */
+			i1=j;
+		    }
+		}
+		i1 &= (~i);
+	    }
+	}
+	INSERT_WORDS(x,i0,i1);
+	return x;
+}
+
+[T | Float?(T)]
+overload ceil(x:T) {
+	int32_t i0,i1,j0;
+	u_int32_t i,j;
+	EXTRACT_WORDS(i0,i1,x);
+	j0 = ((i0>>20)&0x7ffu)-0x3ffu;
+	if(j0<20) {
+	    if(j0<0) { 	/* raise inexact if x != 0 */
+		if(HUGE+x>0.0) {/* return 0*sign(x) if |x|<1 */
+		    if(i0<0) {i0=SM;i1=0;}
+		    else if((i0|i1)!=0) { i0=RM;i1=0;}
+		}
+	    } else {
+		i = (NEW)>>j0;
+		if(((i0&i)|i1)==0) return x; /* x is integral */
+		if(HUGE+x>0.0) {	/* raise inexact flag */
+		    if(i0>0) i0 += (CV8)>>j0;
+		    i0 &= (~i); i1=0;
+		}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400u) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	} else {
+	    i = ((u_int32_t)(AM))>>(j0-20);
+	    if((i1&i)==0) return x;	/* x is integral */
+	    if(HUGE+x>0.0) { 		/* raise inexact flag */
+		if(i0>0) {
+		    if(j0==20) i0+=1;
+		    else {
+			j = i1 + (1<<(52-j0));
+			if(j<i1) i0+=1;	/* got a carry */
+			i1 = j;
+		    }
+		}
+		i1 &= (~i);
+	    }
+	}
+	INSERT_WORDS(x,i0,i1);
+	return x;
+}

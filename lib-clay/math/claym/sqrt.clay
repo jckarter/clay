@@ -1,0 +1,106 @@
+// sqrt function adapted from openlibm
+import ieee754.*;
+public import claym.*;
+import numbers.floats.*;
+
+[T | Float?(T)]
+overload sqrt(x:T) {
+	alias ONE = T(1);
+	alias TINY = LeastPositive(T);
+
+	var ix0,ix1 = EXTRACT_WORDS(x);
+
+    /* take care of Inf and NaN */
+	if(bitand(ix0,EM)==EM) {			
+	    return x*x+x;		/* sqrt(NaN)=NaN, sqrt(+inf)=+inf
+					   sqrt(-inf)=sNaN */
+	} 
+    /* take care of zero */
+	if(ix0<=0) {
+	    if(bitor(bitand(ix0,MM),ix1)==0) return x;/* sqrt(+-0) = +-0 */
+	    else if(ix0<0)
+		return (x-x)/(x-x);		/* sqrt(-ve) = sNaN */
+	}
+    /* normalize x */
+	var m = bitshr(ix0,20);
+	if(m==0) {				/* subnormal x */
+	    while(ix0==0) {
+			m -= 21;
+			ix0 = bitor(ix0,bitshr(ix1,11));
+			 ix1 = bitshl(ix1,21);
+	    }
+	    var i=0;
+	    while(bitand(ix0,CV8) != 0){ 
+	    	ix0 = bitshl(ix0,1);
+	    	inc(i);
+	    }
+	    m -= i-1;
+	    ix0 = bitor(ix0,bitshr(ix1,32-i));
+	    ix1 = bitshl(ix1,i);
+	}
+	m -= 1023;	/* unbias exponent */
+	ix0 = bitor(bitand(ix0,NEM),CV8);
+	if(bitand(m,1)!=0){	/* odd m, double x to make it even */
+	    ix0 += ix0 + bitshr(bitand(ix1,SM),31);
+	    ix1 += ix1;
+	}
+	m = bitshr(m,1);	/* m = [m/2] */
+
+    /* generate sqrt(x) bit by bit */
+	ix0 += ix0 + bitshr(bitand(ix1,SM),31);
+	ix1 += ix1;
+	var q,q1,s0,s1,t = 0,0,0,0,0;	/* [q,q1] = sqrt(x) */
+	var r = CV20;		/* r = moving bit from right to left */
+
+	while(r!=0) {
+	    t = s0+r; 
+	    if(t<=ix0) { 
+			s0   = t+r; 
+			ix0 -= t; 
+			q   += r; 
+	    } 
+	    ix0 += ix0 + bitshr(bitand(ix1,SM),31);
+	    ix1 += ix1;
+	    r = bitshr(r,1);
+	}
+
+	r = SM;
+	while(r!=0) {
+	    var t1 = s1+r; 
+	    t  = s0;
+	    if((t<ix0) or ((t==ix0) and (t1<=ix1))) { 
+			s1  = t1+r;
+			if((bitand(t1,SM)==SM) and bitand(s1,SM)==0) s0 += 1;
+			ix0 -= t;
+			if (ix1 < t1) ix0 -= 1;
+			ix1 -= t1;
+			q1  += r;
+	    }
+	    ix0 += ix0 + bitshr(bitand(ix1,SM),31);
+	    ix1 += ix1;
+	   	r = bitshr(r,1);
+	}
+
+    /* use floating add to find out rounding direction */
+	if(bitor(ix0,ix1)!=0) {
+	    var z = ONE-TINY; /* trigger inexact flag */
+	    if (z>=ONE) {
+	        if (q1==AM) { 
+	        	q1=0; 
+	        	q += 1;
+	        }
+		}
+		else 
+			if (z > ONE) {
+		    	if (q1==0xfffffffeu) q+=1;
+		    	q1 += 2; 
+			} else
+	            q1 += bitand(q1,1);
+		
+	}
+	ix0 = bitshr(q,1)+CV3;
+	ix1 =  bitshr(q1,1);
+	if (bitand(q,1)==1) ix1 = bitor(ix1,SM);
+	ix0 += bitshl(m,20);
+	return INSERT_WORDS(ix0,ix1);
+}

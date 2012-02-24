@@ -1,0 +1,77 @@
+// exp function adapted from openlibm
+
+
+import numbers.floats.*;
+import ieee754.*;
+public import claym.*;
+
+alias halF 			= array(0.5,-0.5);
+alias o_threshold	= 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
+alias u_threshold 	= -7.45133219101941108420e+02;  /* 0xc0874910, 0xD52D3051 */
+alias ln2HI			= array(6.93147180369123816490e-01,-6.93147180369123816490e-01);/* 0x3fe62e42, 0xfee00000 */
+alias ln2LO			= array(1.90821492927058770002e-10,-1.90821492927058770002e-10);/* 0x3dea39ef, 0x35793c76 */
+
+alias TWOM1000 = 9.33263618503218878990e-302;     /* 2**-1000=0x01700000,0*/
+
+[T]
+overload exp(a:T) { /* default IEEE double exp */
+	alias ONE = T(1);
+	alias HUGE = GreatestPositiveFinite(T);
+	alias TINY = LeastPositive(T);
+
+	var x = a;
+	var y,hi,lo,k = 0.,0.,0.,0;
+	var hx = GET_HIGH_WORD(x);
+	var xsb = bitand(bitshr(hx,31),1);		/* sign bit of x */
+	hx = bitand(hx,MM);		/* high word of |x| */
+
+    // filter out non-finite argument
+	if(hx >= CV14) {			/* if |x|>=709.78... */
+        if(hx >= EM) {
+	        var lx = GET_LOW_WORD(x);
+			if(bitor(bitand(hx,0xfffff),lx)!=0)
+		    	return x+x; 		/* NaN */
+			else 
+				return if(xsb==0) x else 0.;	/* exp(+-inf)={inf,0} */
+	    }
+	    if(x > o_threshold) return HUGE*HUGE; /* overflow */
+	    if(x < u_threshold) return TWOM1000*TWOM1000; /* underflow */
+	}
+
+    // argument reduction 
+	if(hx > CV15) {		/* if  |x| > 0.5 ln2 */ 
+	    if(hx < CV16) {	/* and |x| < 1.5 ln2 */
+			hi = x-ln2HI[xsb]; 
+			lo = ln2LO[xsb]; 
+			k = 1-xsb-xsb;
+	    } 
+	    else {
+			k  = Int(invln2*x+halF[xsb]);
+			var t  = Double(k);
+			hi = x - t*ln2HI[0];	/* t*ln2HI is exact here */
+			lo = t*ln2LO[0];
+	    }
+	    x <-- hi - lo;
+	} 
+	else if(hx < CV18)  {	/* when |x|<2**-28 */
+	    if(HUGE+x>ONE) return ONE+x;/* trigger inexact */
+	}
+	else 
+		k = 0;
+
+    /* x is now in primary range */
+	var t,twopk  = x*x, 0.;
+	if(k >= -1021)
+	    twopk = INSERT_WORDS(RM+bitshl(k,20), 0u);
+	else
+	    twopk = INSERT_WORDS(RM+bitshl(k+1000,20), 0u);
+	var c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
+	if(k==0) return ONE-((x*c)/(c-2.0)-x); 
+	else 		y = ONE-((lo-(x*c)/(2.0-c))-hi);
+	if(k >= -1021) {
+	    if (k==1024) return y*2.0*0x1p1023;
+	    return y*twopk;
+	} else {
+	    return y*twopk*TWOM1000;
+	}
+}

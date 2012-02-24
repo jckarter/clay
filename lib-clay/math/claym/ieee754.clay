@@ -1,0 +1,126 @@
+/*
+ * The original fdlibm code used statements like:
+ *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
+ *	ix0 = *(n0+(int*)&x);			* high word of x *
+ *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
+ * to dig two 32 bit words out of the 64 bit IEEE floating point
+ * value.  That is non-ANSI, and, moreover, the gcc instruction
+ * scheduler gets it wrong.  We instead use the following macros.
+ * Unlike the original code, we determine the endianness at compile
+ * time, not at run time; I don't see much benefit to selecting
+ * endianness at run time.
+ */
+
+/*
+ * A union which permits us to convert between a double and two 32 bit
+ * ints.
+ */
+
+// ieee754 number - utility representation
+alias ieee_db = Union[Array[UInt32,2], Int64, Float64];
+alias ieee_db_one = ieee_db(1.0);
+alias ieee_db_zero = ieee_db(0.0);
+
+
+/* Get two 32 bit ints from a double.  */
+
+alias EXTRACT_WORDS(d) --> hi:UInt32,lo:UInt32 {
+    lo,hi <-- ..sequenceValues(ieee_db(d).0,static 2);
+}
+
+/* Get a 64-bit int from a double. */
+alias EXTRACT_WORD64(d) :Int64 = bitcast(Int64,d);
+ 
+/* Get the more significant 32 bit int from a double.  */
+alias GET_HIGH_WORD(d) :UInt32 = ieee_db(d).0[1];
+
+/* Get the less significant 32 bit int from a double.  */
+alias GET_LOW_WORD(d) :UInt32 = ieee_db(d).0[0];
+
+/* Set a double from two 32 bit ints.  */
+alias INSERT_WORDS(ix0,ix1) :Double = ieee_db(array(ix1,ix0)).2;
+
+/* Set a double from a 64-bit int. */
+alias INSERT_WORD64(ix) :Double = bitcast(Double,ix);
+
+/* Set the more significant 32 bits of a double from an int.  */
+alias SET_HIGH_WORD(d,v) --> r:Double {
+    var a = ieee_db(d);
+    a.0[1] = v;
+    r <-- a.2;
+}
+
+/* Set the less significant 32 bits of a double from an int.  */
+alias SET_LOW_WORD(d,v) --> r:Double {
+    var a = ieee_db(d);
+    a.0[0] = v;
+    r <-- a.2;
+}
+
+// Get a 32 bit int from a float. 
+alias GET_FLOAT_WORD(d)	:UInt32 = bitcast(UInt32,d);
+
+// Set a float from a 32 bit int. 
+alias SET_FLOAT_WORD(i) :Float32 = bitcast(Float32,i);
+
+
+
+
+
+
+/* Get expsign as a 16 bit int from a long double.  */
+
+//alias	GET_LDBL_EXPSIGN(i,d)	
+//do {								\
+//  union IEEEl2bits ge_u;					\
+//  ge_u.e = (d);							\
+//  (i) = ge_u.xbits.expsign;					\
+//} while (0)
+
+//Set expsign of a long double from a 16 bit int.
+
+//#define	SET_LDBL_EXPSIGN(d,v)					\
+//do {								\
+//  union IEEEl2bits se_u;					\
+//  se_u.e = (d);							\
+//  se_u.xbits.expsign = (v);					\
+//  (d) = se_u.e;							\
+//} while (0)
+
+alias AM = 0xffffffffu;
+alias EM = 0x7ff00000u;
+alias NEM = 0x000fffffu;
+alias RM = 0x3ff00000u;
+alias MM = 0x7fffffffu;
+alias UM = 0x00080000u;
+alias SM = 0x80000000u;
+
+alias CV1 = 0x43400000u;
+alias CV2 = 0x40000000u;
+alias CV3 = 0x3fe00000u;
+alias CV4 = 0x41e00000u;
+alias CV5 = 0x43f00000u;
+alias CV6 = 0x3fefffffu;
+alias CV7 = 0x3fefffffu;
+alias CV8 = 0x00100000u;
+alias CV9 = 0x20000000u;
+alias CV10 = 0x40900000u;
+alias CV11 = 0x4090cc00u;
+alias CV12 = 0xc090cc00u;
+alias CV13 = 0x4043687Au;
+alias CV14 = 0x40862E42u;
+alias CV15 = 0x3fd62e42u;
+alias CV16 = 0x3FF0A2B2u;
+alias CV17 = 0x3c900000u;
+alias CV18 = 0x3e300000u;
+alias CV19 = 0x43500000u;
+alias CV20 = 0x00200000u;
+alias CV21 = 0xbff00000u;
+
+alias P1   =  1.66666666666666019037e-01; /* 0x3FC55555, 0x5555553E */
+alias P2   = -2.77777777770155933842e-03; /* 0xBF66C16C, 0x16BEBD93 */
+alias P3   =  6.61375632143793436117e-05; /* 0x3F11566A, 0xAF25DE2C */
+alias P4   = -1.65339022054652515390e-06; /* 0xBEBBBD41, 0xC5D26BF1 */
+alias P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
+alias invln2 = 1.44269504088896338700e+00;/* 0x3ff71547, 0x652b82fe */
+	

@@ -1,0 +1,6 @@
+public import claym.*;
+import numbers.floats.*;
+
+[T,I | Float?(T) and Integer?(I)]
+overload ldexp(value:T, i:I)
+    = if(not finite?(value) or value==0.) value else scalbn(value,i);
