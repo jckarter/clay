@@ -1,0 +1,35 @@
+
+// iterative cube root approximation using Halley's method (double)
+[T | Float?(T)]
+inline cbrta_halley_iter(a:T,R:T) --> r:T{
+	var a3 = a*a*a;
+    r <-- a * (a3 + R + R) * (T(1) / (a3 + a3 + R));
+}
+
+
+// cube root approximation using 1 iteration of Halley's method (double)
+[T | Float?(T)]
+inline cbrt_halley(d:T) --> r:T { 
+	r <-- cbrt_5(d);
+	r = cbrta_halley_iter(r, d);
+	r = cbrta_halley_iter(r, d);
+	r = cbrta_halley_iter(r, d);
+}
+
+
+
+// cube root approximation using bit hack for 64-bit float 
+// adapted from Kahan's cbrt
+inline cbrt_5(x:Double) --> r:Double {
+	alias B1 = 715094163u;
+	r <-- 0.;
+	var pt = Pointer[UInt](&r);
+	var px = Pointer[UInt](&x);
+	pt[1] = px[1] \ 3 + B1;
+}
+// cube root approximation using bit hack for 32-bit float
+inline overload cbrt_5(x:Float) --> r:Float {
+	r <-- x;
+	var p = Pointer[UInt](&r);
+	p^ = p^ \ 3 + 709921077u;
+}

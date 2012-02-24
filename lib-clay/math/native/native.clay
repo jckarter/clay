@@ -3,6 +3,7 @@ import math.*;
 import numbers.floats.*;
 
 import math.native.sqrt_std.(sqrt_std);
+import math.native.cbrt_halley.(cbrt_halley);
 import math.native.exp_std.(exp_std);
 import math.native.expm1_std.(expm1_std);
 import math.native.log_std.(log_std,log2_std,log10_std);
@@ -34,110 +35,6 @@ public alias M_SQRT1_2  = 0.7071067811865475244008443621048490;  /* 1/sqrt(2) */
 public alias M_COS_PI_4 = 0.707106781186547524400844362104849039284835937688; /* cos(M_PI_4) */
 public alias M_COS_PI_8 = 0.923879532511286756128183189396788286822416625863; /* cos(M_PI_4*0.5) */
 public alias M_SIN_PI_8 = 0.382683432365089771728459984030398866761344562485; /* sin(M_PI_4*0.5) */
-
-define sign;
-
-define ceil;
-define floor;
-define round;
-define trunc;
-define llround;
-define rint;
-define llrint;
-define nearbyint;
-
-define frexp;
-define ldexp;
-
-define scalb;
-define scalbln;
-define scalbn;
-define mod;
-define modf;
-define significand;
-define drem;
-define remquo;
-define fdim;
-define min;
-define max;
-
-define fma;
-define recip;
-define sqrt;
-define rsqrt;
-define hypot;
-define pow;
-define pow2;
-// define pown;
-// define powr;
-
-define sin;
-define cos;
-define tan;
-define cot;
-// define sinpi;
-// define cospi;
-
-define asin;
-define acos;
-define atan;
-define atanpi;
-define atan2;
-// define atan2pi;
-
-define sinh;
-define cosh;
-define tanh;
-
-define acosh;
-define asinh;
-define atanh;
-
-define log;
-define log2;
-define log10;
-define logp1;
-define logb;
-define ilogb;
-// define log2p1;
-// define log10p1;
-
-define exp;
-define exp2;
-define expm1;
-// define exp2m1;
-// define exp10;
-// define exp10m1;
-
-// define compound;
-// define rootn;
-
-define proj;
-define arg;
-define sigmoid;
-define cbrt;
-
-define erf;
-define erfc;
-define ierf;
-define ierfc;
-
-define digamma;
-define tgamma;
-define lgamma;
-define lgamma_r;
-define igamma;
-define igammac;
-alias gamma = tgamma;
-define beta;
-
-define j0;
-define j1;
-define i1;
-define jn;
-define y0;
-define y1;
-define yn;
 
 
 [T | Numeric?(T)]
@@ -248,6 +145,115 @@ overload llround (x:Double ) {
     return sign * result;
 }
 
+
+// scalbn (double x, int n)
+// scalbn(x,n) returns x* 2**n  computed by  exponent
+// manipulation rather than by actually performing an
+// exponentiation or a multiplication.
+
+[T,I | Float?(T) and Integer?(I)]
+overload scalbn (x:T, n:I){
+    alias HUGE = GreatestPositiveFinite(T);
+    alias TINY = LeastPositive(T);
+    var k = floatExponent(x);                       // extract exponent
+    if (k == 0) {                                   // 0 or subnormal x
+        if (x == T(0)) return x;                    // +-0 
+        k = floatBits(normalize(x));
+    }
+    if (k == exponentMask(T)) return x+x;           // NaN or Inf
+    k = k+n;
+    if (n > 50000 or k >  exponentMask(T)-1)
+        return HUGE*copysign(HUGE,x);               // overflow 
+    if (n < -50000) return TINY*copysign(TINY,x);   //underflow
+    if (k > 0) 
+        return floatFromBits(bitor(bitor(bitshl(k,mantissaSize(T)) , 
+            bitand(floatBits(x),bitnot(bitshl(exponentMask(T),
+                mantissaSize(T))))),bitand(floatBits(x),mantissaMask(T))));
+    
+    if (k <= -(mantissaSize(T) + 2))
+        return TINY*copysign(TINY,x);               //underflow
+    k += mantissaSize(T) + 2;                       //subnormal result
+    return floatFromBits(bitor(bitor(bitshl(k,mantissaSize(T)) , 
+        bitand(floatBits(x),bitnot(bitshl(exponentMask(T),mantissaSize(T))))),
+            bitand(floatBits(x),mantissaMask(T))))*normcoeff(T);
+}
+
+//[T,I | LongDouble==T and Integer?(I)]
+//overload scalbn (x:T, n:I){
+//    alias HUGE = GreatestPositiveFinite(T);
+//    alias TINY = LeastPositive(T);
+    
+//    var k = floatExponent(x);/* extract exponent */
+//    if (k == 0) {             /* 0 or subnormal x */
+//        if (x == T(0)) return x; /* +-0 */
+//        k = floatBits(normalize(x));
+//    }
+//    if (k == exponentMask(T)) return x+x;       /* NaN or Inf */
+    
+//    k = k+n;
+//    if (n > 50000 or k >  exponentMask(T)-1)
+//        return HUGE*copysign(HUGE,x); /* overflow  */
+//    if (n < -50000) return TINY*copysign(TINY,x); /*underflow*/
+//    if (k > 0) {             /* normal result */
+//        return floatFromBits(bitor(bitand(floatBits(x).exponent,
+//            bitnot(exponentMask(T))),bitshl(k,mantissaSize(T))));
+//    }
+//    if (k <= -(mantissaSize(T) + 2))
+//        return TINY*copysign(TINY,x);   /*underflow*/
+//    k += mantissaSize(T) + 2;                /* subnormal result */
+//    return floatFromBits(bitor(bitand(floatBits(x),bitnot(exponentMask(T))),
+//        bitshl(k,mantissaSize(T))))*normcoeff(T);
+//}
+
+
+[T,I | Float?(T) and Integer?(I)]
+overload ldexp(value:T, i:I)
+    = if(not finite?(value) or value==0.) value else scalbn(value,i);
+
+
+
+// for non-zero x
+//  x = frexp(arg,&exp);
+// return a double fp quantity x such that 0.5 <= |x| <1.0
+// and the corresponding binary exponent "exp". That is
+//  arg = x*2^exp.
+// If arg is inf, 0.0, or NaN, then frexp(arg,&exp) returns arg
+// with *exp=0.
+
+[T,I | Float?(T) and Integer?(I)]
+overload frexp(x:T, eptr:Pointer[I]){
+    var k = floatExponent(x);                      // extract exponent
+    eptr^ = 0;
+    if (not finite?(x)) return x+x;           // NaN or Inf
+    if (k == 0) {                                   // 0 or subnormal x
+        if (x == T(0)) return x;                    // +-0 
+        k = floatBits(normalize(x));
+        eptr^ = -(mantissaSize(T)+2);
+    }
+    eptr^ += I(k-(exponentBias(T)-1)); 
+    return floatFromBits(bitor(bitor(bitshl(bitshr(exponentMask(T),2),
+        mantissaSize(T)+1), bitand(floatBits(x),bitnot(bitshl(exponentMask(T),
+            mantissaSize(T))))),bitand(floatBits(x),mantissaMask(T))));
+    
+}
+
+
+
+//[T,I | T==LongDouble and Integer?(I)]
+//overload frexp(x:T, eptr:Pointer[I]){
+//    var k = floatExponent(x);                       // extract exponent
+//    eptr^ = 0;
+//    if (k == 0) {                                   // 0 or subnormal x
+//        if (x == T(0)) return x;                    // +-0 
+//        k = floatBits(normalize(x));
+//        eptr^ = -(mantissaSize(T)+2);
+//    }
+//    if (k == exponentMask(T)) return x+x;           // NaN or Inf
+//    eptr^ -= (exponentBias(T)-1);
+    
+//    return floatFromBits(bitor(bitand(floatBits(x), bitnot(exponentMask(T))),bitshl(bitshr(exponentMask(T),1),mantissaSize(T)+1)));
+//}
+
 [T]
 clamp(x:T, lo:T, hi:T) {
     if(x > hi)
@@ -279,11 +285,8 @@ square(x) = x*x;
 cube(x) = x*x*x;
 
 
-//
-//  STANDARD  - best precision, correct rounding, default
-//
-
 [T | Float?(T)] inline overload sqrt(x:T) = sqrt_std(x);
+[T | Float?(T)] inline overload cbrt(x:T) = cbrt_halley(x);
 [T | Float?(T)] inline overload rsqrt(x:T) = recip(sqrt_std(x));
 [T | Float?(T)] inline overload log(x:T) = log_std(x);
 [T | Float?(T)] inline overload log2(x:T) = log2_std(x);

@@ -3194,7 +3194,7 @@ private log2_130(index, ed:T, xh:T, xm:T) --> resh:T, resm:T, resl:T {
 //  where ||eps|| <= 2^(-119.5)
 
 [T]
-exp2_120(xh:T, xm:T, xl:T) --> H:Int, resh:T, resm:T, resl:T {
+exp2_120(xh:T, xm:T, xl:T) --> H:UInt, resh:T, resm:T, resl:T {
     //      Argument reduction
     //      Produce exactly
     //      2^H * 2^(i1/2^8) * 2^(i2/2^13) * 2^(rh + rm + rl)

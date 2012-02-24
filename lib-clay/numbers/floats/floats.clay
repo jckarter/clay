@@ -1,3 +1,4 @@
+import printer.formatter.*;
 
 record UInt64x2 (mantissa:UInt64,exponent:UInt64);
 
@@ -228,7 +229,7 @@ overload copysign(a:LongDouble,b:T) {
 
 
 // ieee754 number - utility representation
-alias db_number = Union[Array[Int32,2], Int64, Float64];
+alias db_number = Union[Array[UInt32,2], Int64, Float64];
 alias db_one = db_number(1.0);
 alias db_zero = db_number(0.0);
 
@@ -256,7 +257,6 @@ fpclassify(x:T) --> res:Int {
     if(floatNegative?(x)) res += 6;
 }
 
-// IEEE functions
 // nextafter(x,y)
 // return the next machine floating-point number of x in the
 // direction toward y.
@@ -303,3 +303,15 @@ overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
 overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
 
 alias nexttoward = nextafter;
+
+alias normcoeff(static LongDouble) = floatFromBits(UInt128(0x4035ul));
+alias overload normcoeff(static Double) = floatFromBits(0x435ul);
+alias overload normcoeff(static Float) = floatFromBits(0x4Cu);
+
+[T | Float?(T)]
+private normalize(x:T) 
+    = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
+        (mantissaSize(T) + 2));
+
+
+

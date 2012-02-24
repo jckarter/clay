@@ -1,7 +1,7 @@
 
 import libc;
-import math.core.*;
-import numbers.floats.*;
+public import math.native.defines.*;
+public import numbers.floats.*;
 
 inline overload pow(x:Double,y:Double) = libc.pow(x,y);
 inline overload pow(x:Float,y:Float) = libc.powf(x,y);
@@ -14,11 +14,11 @@ inline overload pow(x:Float,y:LongDouble) = libc.powl(LongDouble(x),y);
 inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 
 [T | Integer?(T)]
-inline overload pow(x:Double,y:T) = pow(x,Double(y));
+inline overload pow(x:Double,y:T) = libc.pow(x,Double(y));
 [T | Integer?(T)]
-inline overload pow(x:Float,y:T) = powf(x,Float(y));
+inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T | Integer?(T)]
-inline overload pow(x:LongDouble,y:T) = powl(x,LongDouble(y));
+inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
 inline overload abs(x:Int) = libc.libc.abs(x);
 inline overload abs(x:Long) = libc.llabs(x);
@@ -96,41 +96,17 @@ inline overload log10(x:Double) = libc.log10(x);
 inline overload log10(x:Float) = libc.log10f(x);
 inline overload log10(x:LongDouble) = libc.log10l(x);
 
-inline overload frexp(x:Double) {
-    var ex = Pointer[Int]();
-    var a = libc.frexp(x,ex);
-    return a,ex[0];
-}
-inline overload frexp(x:Float) {
-    var ex = Pointer[Int]();
-    var a = libc.frexpf(x,ex);
-    return a,ex[0];
-}
-inline overload frexp(x:LongDouble) {
-    var ex = Pointer[Int]();
-    var a = libc.frexpl(x,ex);
-    return a,ex[0];
-}
+inline overload frexp(x:Double, ex:Pointer[Int]) = libc.frexp(x,ex);
+inline overload frexp(x:Float, ex:Pointer[Int]) = libc.frexpf(x,ex);
+inline overload frexp(x:LongDouble, ex:Pointer[Int]) = libc.frexpl(x,ex);
 
 inline overload ldexp(x:Double,y:Int) = libc.ldexp(x,y);
 inline overload ldexp(x:Float,y:Int) = libc.ldexpf(x,y);
 inline overload ldexp(x:LongDouble,y:Int) = libc.ldexpl(x,y);
 
-inline overload modf(x:Double) {
-    var iptr = Pointer[Double]();
-    var a = libc.modf(x,iptr);
-    return a,iptr[0];
-}
-inline overload modf(x:Float) {
-    var iptr = Pointer[Double]();
-    var a = libc.modff(x,iptr);
-    return a,iptr[0];
-}
-inline overload modf(x:LongDouble) {
-    var iptr = Pointer[Double]();
-    var a = libc.modfl(x,iptr);
-    return a,iptr[0];
-}
+inline overload modf(x:Double,iptr:Pointer[Int]) = libc.modf(x,iptr);
+inline overload modf(x:Float,iptr:Pointer[Int]) = libc.modff(x,iptr);
+inline overload modf(x:LongDouble,iptr:Pointer[Int]) = libc.modfl(x,iptr);
 
 inline overload hypot(x:Double,y:Double) = libc.hypot(x,y);
 inline overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
@@ -279,21 +255,9 @@ inline overload gamma(x:Double) = libc.gamma(x);
 inline overload gamma(x:Float) = libc.gammaf(x);
 inline overload gamma(x:LongDouble) = libc.gammal(x);
 
-inline overload lgamma_r(x:Double) {
-    var signgamp = Pointer[Int]();
-    var res = libc.lgamma_r(x,signgamp);
-    return res,signgamp[0];
-}
-inline overload lgamma_r(x:Float) {
-    var signgamp = Pointer[Int]();
-    var res = libc.lgammaf_r(x,signgamp);
-    return res,signgamp[0];
-}
-inline overload lgamma_r(x:LongDouble) {
-    var signgamp = Pointer[Int]();
-    var res = libc.lgammal_r(x,signgamp);
-    return res,signgamp[0];
-}
+inline overload lgamma_r(x:Double,signgamp:Pointer[Int]) = libc.lgamma_r(x,signgamp);
+inline overload lgamma_r(x:Float,signgamp:Pointer[Int]) = libc.lgammaf_r(x,signgamp);
+inline overload lgamma_r(x:LongDouble,signgamp:Pointer[Int]) = libc.lgammal_r(x,signgamp);
 
 inline overload rint(x:Double) = libc.rint(x);
 inline overload rint(x:Float) = libc.rintf(x);
