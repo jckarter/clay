@@ -59,7 +59,7 @@ define atanh;
 define log;
 define log2;
 define log10;
-define logp1;
+define log1p;
 define logb;
 define ilogb;
 // define log2p1;
