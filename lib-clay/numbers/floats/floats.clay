@@ -309,7 +309,7 @@ alias overload normcoeff(static Double) = floatFromBits(0x435ul);
 alias overload normcoeff(static Float) = floatFromBits(0x4Cu);
 
 [T | Float?(T)]
-private normalize(x:T) 
+normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));
 

@@ -312,7 +312,7 @@ expm1_rn(x:Double) {
 
             // We multiply x by 2^(-expoX-1) by bit manipulation
             // x cannot be denormalized so there is no danger
-            xdb.0[1] += wrapBitshl(-expoX-1, 20);
+            xdb.0[1] += UInt32(wrapBitshl(-Int32(expoX)-1, 20));
 
             // We reassign the new x and maintain xIntHi
             xIntHi = bitand(xdb.0[1],0x7fffffff);
