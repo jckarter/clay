@@ -9,10 +9,10 @@ overload sin(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = GET_HIGH_WORD(x);
+	var ix = bitcast(Int32,GET_HIGH_WORD(x));
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,MM);
+	ix = bitand(ix,0x7fffffff);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e500000)			/* |x| < 2**-26 */
 	       	if(Int(x)==0) return x;
@@ -22,11 +22,10 @@ overload sin(x:Double) {
 
     /* sin(Inf or NaN) is NaN */
 	else if (ix>=EM) return x-x;
-
-    /* argument reduction needed */
+	/* argument reduction needed */
 	else {
 	    var n = rem_pio2(x,&y[0]);
-	    switch(bitand(n,3))
+    	switch(bitand(n,3))
 		case (0) return  kernel_sin(y[0],y[1],1);
 		case (1) return  kernel_cos(y[0],y[1]);
 		case (2) return -kernel_sin(y[0],y[1],1);
@@ -40,10 +39,10 @@ overload cos(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = GET_HIGH_WORD(x);
+	var ix = bitcast(Int32,GET_HIGH_WORD(x));
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,MM);
+	ix = bitand(ix,0x7fffffff);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e46a09e)			/* if x < 2**-27 * sqrt(2) */
 			if(Int(x)==0) 
@@ -69,10 +68,10 @@ overload tan(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = GET_HIGH_WORD(x);
+	var ix = bitcast(Int32,GET_HIGH_WORD(x));
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,MM);
+	ix = bitand(ix,0x7fffffff);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e400000)			/* x < 2**-27 */
 			if(Int(x)==0) return x;		/* generate inexact */

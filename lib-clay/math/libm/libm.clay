@@ -162,15 +162,15 @@ inline overload significand(x:Double) = libc.significand(x);
 inline overload significand(x:Float) = libc.significandf(x);
 inline overload significand(x:LongDouble) = libc.significandl(x);
 
-inline overload mod(x:Double,y:Double) = libc.fmod(x,y);
-inline overload mod(x:Float,y:Float) = libc.fmodf(x,y);
-inline overload mod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
-inline overload mod(x:Double,y:Float) = libc.fmod(x,Double(y));
-inline overload mod(x:Float,y:Double) = libc.fmod(Double(x),y);
-inline overload mod(x:Double,y:LongDouble) = libc.fmodl(LongDouble(x),y);
-inline overload mod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
-inline overload mod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
-inline overload mod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
+inline overload fmod(x:Double,y:Double) = libc.fmod(x,y);
+inline overload fmod(x:Float,y:Float) = libc.fmodf(x,y);
+inline overload fmod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
+inline overload fmod(x:Double,y:Float) = libc.fmod(x,Double(y));
+inline overload fmod(x:Float,y:Double) = libc.fmod(Double(x),y);
+inline overload fmod(x:Double,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+inline overload fmod(x:LongDouble,y:Double) = libc.fmodl(x,LongDouble(y));
+inline overload fmod(x:Float,y:LongDouble) = libc.fmodl(LongDouble(x),y);
+inline overload fmod(x:LongDouble,y:Float) = libc.fmodl(x,LongDouble(y));
 
 private define _isinf;
 

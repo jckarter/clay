@@ -9,6 +9,7 @@ public import scalbn.(scalbn,scalbln,scalb);
 public import trunc.(trunc);
 public import rounding.(round,ceil,floor,rint);
 public import llround.(llround);
+public import modf.(modf);
 
 public import hypot.(hypot);
 public import sqrt.(sqrt);
@@ -37,6 +38,10 @@ public import acos.(acos);
 public import atan.(atan);
 public import atan2.(atan2);
 
+public import math.claym.complex.*;
+public import cproj.*;
+public import cexp.*;
+public import csinh.*;
 
 [T | Float?(T)]
 overload recip(x:T) = T(1) / x;
@@ -53,6 +58,8 @@ inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
 [T | Float?(T)]
 significand(x:T) = scalb(x,T(-ilogb(x)));
+
+drem(x,y) = remainder(x,y);
 
 [T]
 clamp(x:T, lo:T, hi:T) {

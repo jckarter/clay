@@ -41,7 +41,7 @@ overload expm1(a:T)  {
 		return TINY-ONE;	/* return -1 */
 	    }
 	}
-
+	
     /* argument reduction */
 	if(hx > CV15) {		/* if  |x| > 0.5 ln2 */
 	    if(hx < CV16) {	/* and |x| < 1.5 ln2 */
@@ -80,9 +80,12 @@ overload expm1(a:T)  {
 	var e  = hxs*((r1-t)/(6.0 - x*t));
 	var y = 0.;
 
-	if(k==0) return x - (x*e-hxs);		/* c is 0 */
+	if(k==0) {
+		println("help1");
+		return x - (x*e-hxs);		/* c is 0 */
+	}
 	else {
-	    var twopk = INSERT_WORDS(RM+bitshl(k,20),0u);	/* 2^k */
+	    var twopk = INSERT_WORDS(UInt(Int(RM)+bitshl(k,20)),0u);	/* 2^k */
 	    e  = (x*(e-c)-c);
 	    e -= hxs;
 	    if(k == -1) return 0.5*(x-e)-0.5;
@@ -102,7 +105,7 @@ overload expm1(a:T)  {
 	       	y = t-(e-x);
 			y *= twopk;
 	   } else {
-			t = SET_HIGH_WORD(t,bitshl((0x3ffu-k),20));	/* 2^-k */
+			t = SET_HIGH_WORD(t,bitshl(0x3ffu-k,20));	/* 2^-k */
 	       	y = x-(e+t);
 	       	y += ONE;
 			y *= twopk;

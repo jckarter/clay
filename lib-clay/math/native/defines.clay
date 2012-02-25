@@ -15,7 +15,7 @@ define ldexp;
 define scalb;
 define scalbln;
 define scalbn;
-define mod;
+define fmod;
 define modf;
 define significand;
 define drem;

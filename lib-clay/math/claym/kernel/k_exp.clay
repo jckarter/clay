@@ -52,9 +52,9 @@ __ldexp_cexp(z:ComplexDouble, expt) {
 	 * compensate for scalbn being horrendously slow.
 	 */
 	var half_expt = et \ 2;
-	var scale1 = INSERT_WORDS(bitshl(0x3ff + half_expt, 20), 0u);
+	var scale1 = INSERT_WORDS(bitcast(UInt,bitshl(0x3ff + half_expt, 20)), 0u);
 	half_expt = et - half_expt;
-	var scale2 = INSERT_WORDS(bitshl(0x3ff + half_expt, 20), 0u);
+	var scale2 = INSERT_WORDS(bitcast(UInt,bitshl(0x3ff + half_expt, 20)), 0u);
 
 	return Complex(cos(y) * exp_x * scale1 * scale2,
 	    sin(y) * exp_x * scale1 * scale2);
