@@ -1,4 +1,5 @@
 
+public import numbers.floats.*;
 public import defines.*;
 public import constants.*;
 
@@ -16,6 +17,7 @@ public import pow.(pow);
 public import exp.(exp);
 public import exp2.(exp2);
 public import expm1.(expm1);
+public import sinh.(sinh);
 public import cosh.(cosh);
 public import ilogb.(ilogb,logb);
 public import log.(log);
@@ -27,6 +29,13 @@ public import gamma.(gamma,tgamma,lgamma,igamma,igammac);
 public import beta.(beta);
 public import bessel.(j0,j1,i1);
 public import trig.(sin,cos,tan);
+public import atanh.(atanh);
+public import acosh.(acosh);
+public import asinh.(asinh);
+public import asin.(asin);
+public import acos.(acos);
+public import atan.(atan);
+public import atan2.(atan2);
 
 
 [T | Float?(T)]

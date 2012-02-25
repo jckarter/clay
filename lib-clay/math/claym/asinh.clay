@@ -1,0 +1,26 @@
+// asinh
+import ieee754.*;
+public import claym.*;
+
+overload asinh(x:Double) {
+	alias ONE = 1.;
+	alias HUGE = GreatestPositiveFinite(Double);
+	var t,w = 0.,0.;
+	var hx = GET_HIGH_WORD(x);
+	var ix = bitand(hx,MM);
+	if(ix>=EM) return x+x;	/* x is inf or NaN */
+	if(ix< CV18) {	/* |x|<2**-28 */
+	    if(HUGE+x>ONE) return x;	/* return x inexact except 0 */
+	}
+	if(ix>0x41b00000) {	/* |x| > 2**28 */
+	    w = log(abs(x))+M_LN2;
+	} else if (ix>CV2) {	/* 2**28 > |x| > 2.0 */
+	    t = abs(x);
+	    w = log(2.0*t+ONE/(sqrt(x*x+ONE)+t));
+	} else {		/* 2.0 > |x| > 2**-28 */
+	    t = x*x;
+	    w =log1p(abs(x)+t/(ONE+sqrt(ONE+t)));
+	}
+	if(hx>0) return w; 
+	else return -w;
+}

@@ -1,0 +1,38 @@
+// sinh
+
+import ieee754.*;
+import kernel.k_exp.*;
+public import claym.*;
+
+overload sinh(x:Double) {
+	alias ONE = 1.;
+	alias HUGE = GreatestPositiveFinite(Double);
+
+    /* High word of |x|. */
+	var jx = GET_HIGH_WORD(x);
+	var ix = bitand(jx,MM);
+
+    /* x is INF or NaN */
+	if(ix>=EM) return x+x;	
+
+	var h = 0.5;
+	if (jx<0) h = -h;
+    /* |x| in [0,22], return sign(x)*0.5*(E+E/(E+1))) */
+	if (ix < 0x40360000u) {		/* |x|<22 */
+	    if (ix<CV18) 		/* |x|<2**-28 */
+		if(HUGE+x>ONE) return x;/* sinh(tiny) = tiny with inexact */
+	    var t = expm1(abs(x));
+	    if(ix<RM) return h*(2.0*t-t*t/(t+ONE));
+	    return h*(t+t/(t+ONE));
+	}
+
+    /* |x| in [22, log(maxdouble)] return 0.5*exp(|x|) */
+	if (ix < CV14)  return h*exp(abs(x));
+
+    /* |x| in [log(maxdouble), overflowthresold] */
+	if (ix<=0x408633CEu)
+	    return h*2.0*__ldexp_exp(abs(x), -1);
+
+    /* |x| > overflowthresold, sinh(x) overflow */
+	return x*HUGE;
+}

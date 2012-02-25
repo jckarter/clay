@@ -4,9 +4,7 @@ import ieee754.*;
 public import claym.*;
 import numbers.floats.*;
 
-alias o_threshold	= 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
-alias ln2_hi		= 6.93147180369123816490e-01;/* 0x3fe62e42, 0xfee00000 */
-alias ln2_lo		= 1.90821492927058770002e-10;/* 0x3dea39ef, 0x35793c76 */
+alias o_threshold = 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
 /* Scaled Q's: Qn_here = 2**n * Qn_above, for R(2*z) where z = hxs = x*x/2: */
 alias Q1  =  -3.33333333333331316428e-02; /* BFA11111 111110F4 */
 alias Q2  =   1.58730158725481460165e-03; /* 3F5A01A0 19FE5585 */
@@ -32,7 +30,7 @@ overload expm1(a:T)  {
 	    if(hx >= CV14) {		/* if |x|>=709.78... */
             if(hx>=EM) {
 			    var low = GET_LOW_WORD(x);
-			    if(bitor(bitand(hx,0xfffffu),low)!=0)
+			    if(bitor(bitand(hx,NEM),low)!=0)
 			         return x+x; 	 /* NaN */
 			    else return if(xsb==0) x else -1.0;/* exp(+-inf)={inf,-1} */
 	        }
@@ -48,21 +46,21 @@ overload expm1(a:T)  {
 	if(hx > CV15) {		/* if  |x| > 0.5 ln2 */
 	    if(hx < CV16) {	/* and |x| < 1.5 ln2 */
 			if(xsb==0) {
-				hi = x - ln2_hi; 
-				lo =  ln2_lo;  
+				hi = x - LN2HI; 
+				lo =  LN2LO;  
 				k =  1;
 			}
 			else {
-				hi = x + ln2_hi; 
-				lo = -ln2_lo;  
+				hi = x + LN2HI; 
+				lo = -LN2LO;  
 				k = -1;
 			}
 	    } 
 	    else {
-			k  = Int(invln2*x+(if(xsb==0) 0.5 else -0.5));
+			k  = Int(IVLN2*x+(if(xsb==0) 0.5 else -0.5));
 			var t  = Double(k);
-			hi = x - t*ln2_hi;	/* t*ln2_hi is exact here */
-			lo = t*ln2_lo;
+			hi = x - t*LN2HI;	/* t*ln2_hi is exact here */
+			lo = t*LN2LO;
 	    }
 	    x <-- hi - lo;
 	    c  = (hi-x)-lo;
@@ -100,7 +98,7 @@ overload expm1(a:T)  {
 	    }
 	    t = ONE;
 	    if(k<20) {
-	        t = SET_HIGH_WORD(t,RM - bitshr(0x200000u,k));  /* t=1-2^-k */
+	        t = SET_HIGH_WORD(t,RM - bitshr(CV20,k));  /* t=1-2^-k */
 	       	y = t-(e-x);
 			y *= twopk;
 	   } else {
