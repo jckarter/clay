@@ -22,7 +22,7 @@ overload asin(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var t=0.;
-	var hx = GET_HIGH_WORD(x);
+	var hx = GET_HIGH_SIGNED(x);
 	var ix = bitand(hx,MM);
 	if(ix>= RM) {		/* |x|>= 1 */
 	    var lx = GET_LOW_WORD(x);

@@ -16,8 +16,8 @@ overload sinh(z:ComplexDouble) {
 	alias HUGE = GreatestPositiveFinite(Double);
 	var x,y = real(z),imagValue(z);
 
-	var hx, lx = ..mapValues(x->bitcast(Int,x),..EXTRACT_WORDS( x));
-	var hy, ly = ..mapValues(x->bitcast(Int,x),..EXTRACT_WORDS( y));
+	var hx, lx = EXTRACT_SIGNED(x);
+	var hy, ly = EXTRACT_SIGNED(y);
 
 	var ix,iy = bitand(0x7fffffff,hx),bitand(0x7fffffff,hy);
 	

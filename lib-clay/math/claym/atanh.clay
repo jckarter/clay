@@ -9,7 +9,7 @@ alias ZERO = 0.0;
 
 overload atanh(a:Double) {
 	var x,t = a,0.;
-	var hx,lx = EXTRACT_WORDS(x);
+	var hx,lx = EXTRACT_SIGNED_HI(x);
 	var ix = bitand(hx,MM);
 	if (bitor(ix,bitshr(bitor(lx,-Int(lx)),31))>RM) /* |x|>1 */
 	    return (x-x)/(x-x);

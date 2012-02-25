@@ -4,7 +4,7 @@ public import claym.*;
 
 overload acosh(x:Double) {
 	alias ONE = 1.;
-	var t,hx,lx = 0., ..EXTRACT_WORDS(x);
+	var t,hx,lx = 0., ..EXTRACT_SIGNED_HI(x);
 	if(hx < RM) {		/* x < 1 */
 	    return (x-x)/(x-x);
 	} 

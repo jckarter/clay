@@ -8,7 +8,7 @@ overload sqrt(x:T) {
 	alias ONE = T(1);
 	alias TINY = LeastPositive(T);
 
-	var ix0,ix1 = EXTRACT_WORDS(x);
+	var ix0,ix1 = EXTRACT_SIGNED_HI(x);
 
     /* take care of Inf and NaN */
 	if(bitand(ix0,EM)==EM) {			

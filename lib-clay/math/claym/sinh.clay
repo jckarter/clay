@@ -9,7 +9,7 @@ overload sinh(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
 
     /* High word of |x|. */
-	var jx = bitcast(Int32,GET_HIGH_WORD(x));
+	var jx = GET_HIGH_SIGNED(x);
 	var ix = bitand(jx,MM);
 
     /* x is INF or NaN */
@@ -18,7 +18,7 @@ overload sinh(x:Double) {
 	var h = 0.5;
 	if (jx<0) h = -h;
     /* |x| in [0,22], return sign(x)*0.5*(E+E/(E+1))) */
-	if (ix < 0x40360000u) {		/* |x|<22 */
+	if (ix < 0x40360000) {		/* |x|<22 */
 	    if (ix<CV18) 		/* |x|<2**-28 */
 			if(HUGE+x>ONE) return x;/* sinh(tiny) = tiny with inexact */
 	    var t = expm1(abs(x));

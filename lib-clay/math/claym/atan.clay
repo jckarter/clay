@@ -35,7 +35,7 @@ overload atan(a:Double){
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var id,x = 0,a;
-	var hx = GET_HIGH_WORD(x);
+	var hx = GET_HIGH_SIGNED(x);
 	var ix = bitand(hx,MM);
 	if(ix>=0x44100000) {	/* if |x| >= 2^66 */
 	    var low = GET_LOW_WORD(x);

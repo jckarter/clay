@@ -16,7 +16,7 @@ overload logb(x) = ilogb(x);
 [T | Float?(T)]
 overload ilogb(x:T) {
 	
-	var hx,lx = EXTRACT_WORDS(x);
+	var hx,lx = EXTRACT_SIGNED(x);
 	hx = bitand(hx,MM);
 	if(hx < CV8) {
 	    if(bitor(hx,lx)==0)

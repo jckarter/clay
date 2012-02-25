@@ -9,10 +9,10 @@ overload sin(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = bitcast(Int32,GET_HIGH_WORD(x));
+	var ix = GET_HIGH_SIGNED(x);
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,0x7fffffff);
+	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e500000)			/* |x| < 2**-26 */
 	       	if(Int(x)==0) return x;
@@ -39,10 +39,10 @@ overload cos(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = bitcast(Int32,GET_HIGH_WORD(x));
+	var ix = GET_HIGH_SIGNED(x);
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,0x7fffffff);
+	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e46a09e)			/* if x < 2**-27 * sqrt(2) */
 			if(Int(x)==0) 
@@ -68,10 +68,10 @@ overload tan(x:Double) {
 	var y = Array[Double,2]();
 	
     /* High word of x. */
-	var ix = bitcast(Int32,GET_HIGH_WORD(x));
+	var ix = GET_HIGH_SIGNED(x);
 
     /* |x| ~< pi/4 */
-	ix = bitand(ix,0x7fffffff);
+	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e400000)			/* x < 2**-27 */
 			if(Int(x)==0) return x;		/* generate inexact */

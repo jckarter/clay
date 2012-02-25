@@ -16,8 +16,8 @@ import numbers.floats.*;
 overload trunc(x:T) {
 	alias HUGE = GreatestPositiveFinite(T);
 	alias ZERO = T(0);
-	var i0,i1 = EXTRACT_WORDS(x);
-	var j0 = bitand(bitshr(i0,20),0x7ffu)-0x3ffu;
+	var i0,i1 = EXTRACT_SIGNED(x);
+	var j0 = bitand(bitshr(i0,20),0x7ff)-0x3ff;
 	if(j0 < 20) {
 	    if(j0 < 0) { 	/* raise inexact if x != 0 */
 			if(HUGE+x>ZERO) {/* |x|<1, so return 0*sign(x) */

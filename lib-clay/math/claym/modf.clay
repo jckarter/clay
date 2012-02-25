@@ -5,8 +5,8 @@ import ieee754.*;
 
 overload modf(x:Double, iptr:Pointer[Double]) {
 	
-	var i0,i1 = EXTRACT_WORDS(x);
-	var j0 = bitand(bitshr(i0,20),0x7ffu)-0x3ffu;	/* exponent of x */
+	var i0,i1 = EXTRACT_SIGNED(x);
+	var j0 = bitand(bitshr(i0,20),0x7ff)-0x3ff;	/* exponent of x */
 	if(j0<20) {			/* integer part in high x */
 	    if(j0<0) {			/* |x|<1 */
 	        iptr^ = INSERT_WORDS(bitand(i0,SM),0u);	/* *iptr = +-0 */
@@ -25,7 +25,7 @@ overload modf(x:Double, iptr:Pointer[Double]) {
 			}
 	    }
 	} else if (j0>51) {		/* no fraction part */
-	    if (j0 == 0x400u) {		/* inf/NaN */
+	    if (j0 == 0x400) {		/* inf/NaN */
 			iptr^ = x;
 			return 0.0 / x;
 	    }

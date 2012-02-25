@@ -19,7 +19,7 @@ alias qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 
 overload acos(x:Double) {
 	alias ONE = 1.;
-	var hx = GET_HIGH_WORD(x);
+	var hx = GET_HIGH_SIGNED(x);
 	var ix = bitand(hx,MM);
 	if(ix>=RM) {	/* |x| >= 1 */
 	    var lx = GET_LOW_WORD(x);

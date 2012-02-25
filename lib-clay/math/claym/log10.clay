@@ -13,7 +13,7 @@ alias log10_2lo  =  3.69423907715893078616e-13; /* 0x3D59FEF3, 0x11F12B36 */
 overload log10(a:T) {
 	alias ZERO = T(0);
 	var x = a;
-	var hx,lx = EXTRACT_WORDS(x);
+	var hx,lx = EXTRACT_SIGNED_HI(x);
 
 	var k = 0;
 	if (hx < CV8) {			/* x < 2**-1022  */
@@ -22,14 +22,14 @@ overload log10(a:T) {
 	    if (hx<0) return (x-x)/ZERO;	/* log(-#) = NaN */
 	    k -= 54; 
 	    x *= TWO54; /* subnormal number, scale up x */
-	    hx = GET_HIGH_WORD(x);
+	    hx = GET_HIGH_SIGNED(x);
 	}
 	if (hx >= EM) return x+x;
 	if (hx == RM and lx == 0)
 	    return ZERO;			/* log(1) = +0 */
 	k += bitshr(hx,20)-1023;
 	hx = bitand(hx,NEM);
-	var i = bitand(hx+0x95f64u,CV8);
+	var i = bitand(hx+0x95f64,CV8);
 	x = SET_HIGH_WORD(x,bitor(hx,bitxor(i,RM)));	/* normalize x or x/2 */
 	k += bitshr(i,20);
 	var y = Double(k);

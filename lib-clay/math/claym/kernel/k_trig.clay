@@ -61,7 +61,7 @@ alias pio4lo = ta[15];
 
 kernel_tan(tx, ty, iy) {
 	var z,w,x,y = 0.,0.,tx,ty;
-	var hx = GET_HIGH_WORD(x);
+	var hx = GET_HIGH_SIGNED(x);
 	var ix = bitand(hx , MM);			/* high word of |x| */
 	if (ix >= 0x3FE59428) {	/* |x| >= 0.6744 */
 		if (hx < 0) {

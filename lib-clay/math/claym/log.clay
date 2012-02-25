@@ -9,7 +9,7 @@ overload log(a:T) {
 	alias HALF = (0.5);
 	alias ONE = T(1);
 	var x = a;
-	var hx,lx = EXTRACT_WORDS(x);
+	var hx,lx = EXTRACT_SIGNED_HI(x);
 
 	var k = 0;
 	if (hx < CV8) {			/* x < 2**-1022  */
@@ -18,12 +18,12 @@ overload log(a:T) {
 	    if (hx<0) return (x-x)/ZERO;	/* log(-#) = NaN */
 	    k -= 54; 
 	    x *= TWO54; /* subnormal number, scale up x */
-	    hx = GET_HIGH_WORD(x);
+	    hx = GET_HIGH_SIGNED(x);
 	} 
 	if (hx >= EM) return x+x;
 	k += bitshr(hx,20)-1023;
 	hx = bitand(hx,NEM);
-	var i = bitand(hx+0x95f64u,CV8);
+	var i = bitand(hx+0x95f64,CV8);
 	x = SET_HIGH_WORD(x,bitor(hx,bitxor(i,RM)));	/* normalize x or x/2 */
 	k += bitshr(i,20);
 	var f,dk,R = x-ONE,0.,0.;
@@ -46,9 +46,9 @@ overload log(a:T) {
  	var s = f/(2.0+f); 
 	dk = Double(k);
 	var z = s*s;
-	i = hx-0x6147au;
+	i = hx-0x6147a;
 	var w = z*z;
-	var j = 0x6b851u-hx;
+	var j = 0x6b851-hx;
 	var t1 = w*(Lp2+w*(Lp4+w*Lp6)); 
 	var t2 = z*(Lp1+w*(Lp3+w*(Lp5+w*Lp7))); 
 	i = bitor(i,j);

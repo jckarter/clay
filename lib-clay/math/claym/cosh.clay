@@ -17,7 +17,7 @@ overload cosh(x:T) {
 	alias HUGE = GreatestPositiveFinite(T);
 
 	// High word of |x|.
-	var ix = if(T==Double) GET_HIGH_WORD(x) else GET_FLOAT_WORD(x);
+	var ix = if(T==Double) GET_HIGH_SIGNED(x) else GET_FLOAT_SIGNED(x);
 	ix = bitand(ix,MM);
     // x is INF or NaN 
 	if(not finite?(x)) return x*x;	

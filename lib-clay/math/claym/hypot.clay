@@ -8,9 +8,9 @@ public import claym.*;
 overload hypot(x:T, y:T) {
 	alias ZERO = T(0);
 	alias ONE = T(1);
-	var ha = GET_HIGH_WORD(x);
+	var ha = GET_HIGH_SIGNED(x);
 	ha = bitand(ha,MM);
-	var hb = GET_HIGH_WORD(y);
+	var hb = GET_HIGH_SIGNED(y);
 	hb = bitand(hb,MM);
 	var a,b = x,y; 
 	if(hb > ha) {
@@ -22,7 +22,7 @@ overload hypot(x:T, y:T) {
 	} 
 	a = abs(a);
 	b = abs(b);
-	if((ha-hb)>0x3c00000u) return a+b; /* x/y > 2**60 */
+	if((ha-hb)>0x3c00000) return a+b; /* x/y > 2**60 */
 	var k,low = 0,0u;
 	if(ha > CV25) {	/* a>2**500 */
 	   if(ha >= EM) {	/* Inf or NaN */

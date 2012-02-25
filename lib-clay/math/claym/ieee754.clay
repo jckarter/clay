@@ -25,7 +25,15 @@ alias ieee_db_zero = ieee_db(0.0);
 /* Get two 32 bit ints from a double.  */
 
 alias EXTRACT_WORDS(d) --> hi:UInt32,lo:UInt32 {
-    lo,hi <-- ..sequenceValues(ieee_db(d).0,static 2);
+    lo,hi <-- ieee_db(d).0[0],ieee_db(d).0[1];
+}
+
+alias EXTRACT_SIGNED(d) --> hi:Int32,lo:Int32 {
+    lo,hi <-- bitcast(Int,ieee_db(d).0[0]),bitcast(Int,ieee_db(d).0[1]);
+}
+
+alias EXTRACT_SIGNED_HI(d) --> hi:Int32,lo:UInt32 {
+    lo,hi <-- ieee_db(d).0[0],bitcast(Int,ieee_db(d).0[1]);
 }
 
 /* Get a 64-bit int from a double. */
@@ -37,8 +45,14 @@ alias GET_HIGH_WORD(d) :UInt32 = ieee_db(d).0[1];
 /* Get the less significant 32 bit int from a double.  */
 alias GET_LOW_WORD(d) :UInt32 = ieee_db(d).0[0];
 
+alias GET_HIGH_SIGNED(d) :Int32 = bitcast(Int,ieee_db(d).0[1]);
+
+/* Get the less significant 32 bit int from a double.  */
+alias GET_LOW_SIGNED(d) :Int32 = bitcast(Int,ieee_db(d).0[0]);
+
 /* Set a double from two 32 bit ints.  */
-alias INSERT_WORDS(ix0,ix1) :Double = ieee_db(array(ix1,ix0)).2;
+alias INSERT_WORDS(ix0,ix1) :Double 
+	= ieee_db(array(bitcast(UInt32,ix1),bitcast(UInt32,ix0))).2;
 
 /* Set a double from a 64-bit int. */
 alias INSERT_WORD64(ix) :Double = bitcast(Double,ix);
@@ -46,19 +60,22 @@ alias INSERT_WORD64(ix) :Double = bitcast(Double,ix);
 /* Set the more significant 32 bits of a double from an int.  */
 alias SET_HIGH_WORD(d,v) --> r:Double {
     var a = ieee_db(d);
-    a.0[1] = v;
+    a.0[1] = bitcast(UInt32,v);
     r <-- a.2;
 }
 
 /* Set the less significant 32 bits of a double from an int.  */
 alias SET_LOW_WORD(d,v) --> r:Double {
     var a = ieee_db(d);
-    a.0[0] = v;
+    a.0[0] = bitcast(UInt32,v);
     r <-- a.2;
 }
 
 // Get a 32 bit int from a float. 
-alias GET_FLOAT_WORD(d)	:UInt32 = bitcast(UInt32,d);
+alias GET_FLOAT_WORD(d) :UInt32 = bitcast(UInt32,d);
+
+// Get a 32 bit int from a float. 
+alias GET_FLOAT_SIGNED(d) :Int32 = bitcast(Int32,d);
 
 // Set a float from a 32 bit int. 
 alias SET_FLOAT_WORD(i) :Float32 = bitcast(Float32,i);

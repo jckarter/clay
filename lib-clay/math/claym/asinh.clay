@@ -6,7 +6,7 @@ overload asinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var t,w = 0.,0.;
-	var hx = GET_HIGH_WORD(x);
+	var hx = GET_HIGH_SIGNED(x);
 	var ix = bitand(hx,MM);
 	if(ix>=EM) return x+x;	/* x is inf or NaN */
 	if(ix< CV18) {	/* |x|<2**-28 */

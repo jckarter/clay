@@ -10,6 +10,7 @@ public import trunc.(trunc);
 public import rounding.(round,ceil,floor,rint);
 public import llround.(llround);
 public import modf.(modf);
+public import fmod.(fmod);
 
 public import hypot.(hypot);
 public import sqrt.(sqrt);
@@ -42,6 +43,8 @@ public import math.claym.complex.*;
 public import cproj.*;
 public import cexp.*;
 public import csinh.*;
+public import ccosh.*;
+public import ctanh.*;
 
 [T | Float?(T)]
 overload recip(x:T) = T(1) / x;

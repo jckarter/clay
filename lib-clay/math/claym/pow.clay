@@ -37,8 +37,8 @@ overload pow(x:T, y:T) {
 	alias HUGE = GreatestPositiveFinite(T);
 	alias TINY = LeastPositive(T);
 
-	var hx,lx = EXTRACT_WORDS(x);
-	var hy,ly = EXTRACT_WORDS(y);
+	var hx,lx = EXTRACT_SIGNED_HI(x);
+	var hy,ly = EXTRACT_SIGNED_HI(y);
 	var ix,iy = bitand(hx,MM), bitand(hy,MM);
 
     // y==zero: x**0 = 1
@@ -62,7 +62,7 @@ overload pow(x:T, y:T) {
 	    if(iy >= CV1) 
 	    	yisint = 2; /* even integer y */
 	    else if(iy >= RM) {
-			var k = bitshr(iy,20)-0x3ffu;	   /* exponent */
+			var k = bitshr(iy,20)-0x3ff;	   /* exponent */
 			if(k > 20) {
 			    var j = bitshr(ly,52-k);
 			    if(bitshl(j,52-k) == ly) yisint = 2-bitand(j,0x1u);
@@ -116,7 +116,7 @@ overload pow(x:T, y:T) {
 	// n = (hx>>31)+1;
     //   but ANSI C says a right shift of a signed negative quantity is
     //   implementation defined.
-	var n = Int(bitshr(hx,31)-1);
+	var n = bitshr(hx,31)-1;
 
     // (x<0)**(non-int) is NaN
 	if(bitor(n,yisint)==0) return (x-x)/(x-x);
@@ -149,14 +149,14 @@ overload pow(x:T, y:T) {
 	    if(ix<CV8) {
 			ax *= two53; 
 			n -= 53; 
-			ix = GET_HIGH_WORD(ax); 
+			ix = GET_HIGH_SIGNED(ax); 
 		}
-	    n  += bitshr(ix,20)-0x3ffu;
+	    n  += bitshr(ix,20)-0x3ff;
 	    var j = bitand(ix,NEM);
 	/* determine interval */
 	    ix = bitor(j,RM);		/* normalize ix */
-	    if(j<=0x3988Eu) k =0 ;		/* |x|<sqrt(3/2) */
-	    else if(j<0xBB67Au) k = 1;	/* |x|<sqrt(3)   */
+	    if(j<=0x3988E) k =0 ;		/* |x|<sqrt(3/2) */
+	    else if(j<0xBB67A) k = 1;	/* |x|<sqrt(3)   */
 	    else {
 	    	k = 0;
 	    	n += 1;
@@ -200,7 +200,7 @@ overload pow(x:T, y:T) {
 	var p_l = (y-y1)*t1+y*t2;
 	var p_h = y1*t1;
 	var z = p_l+p_h;
-	var j,i = EXTRACT_WORDS(z);
+	var j,i = EXTRACT_SIGNED(z);
 	if (j>=CV10) {				/* z >= 1024 */
 	    if(bitor(j-CV10,i)!=0)			/* if z > 1024 */
 			return s*HUGE*HUGE;			/* overflow */
@@ -218,12 +218,12 @@ overload pow(x:T, y:T) {
      * compute 2**(p_h+p_l)
      */
 	i = bitand(j,MM);
-	k = bitshr(i,20)-0x3ffu;
+	k = bitshr(i,20)-0x3ff;
 	n = 0;
 	if(i>CV3) {		/* if |z| > 0.5, set n = [z+0.5] */
 	    n = j+bitshr(CV8,k+1);
-	    k = bitshr(bitand(n,MM),20)-0x3ffu;	/* new k for n */
-	    t = SET_HIGH_WORD(ZERO,bitand(n , bitnot(bitshr(UM,k))));
+	    k = bitshr(bitand(n,MM),20)-0x3ff;	/* new k for n */
+	    t = SET_HIGH_WORD(ZERO,bitandc(n , bitshr(UM,k)));
 	    n = bitshr(bitor(bitand(n,UM),CV8),20-k);
 	    if(j<0) n = -n;
 	    p_h -= t;
@@ -237,7 +237,7 @@ overload pow(x:T, y:T) {
 	t1  = z - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
 	var r  = (z*t1)/(t1-TWO)-(w+z*w);
 	z  = ONE-(r-z);
-	j = GET_HIGH_WORD(z);
+	j = GET_HIGH_SIGNED(z);
 	j += bitshl(n,20);
 	if(bitshr(j,20)<=0) z = scalbn(z,n);	/* subnormal output */
 	else 

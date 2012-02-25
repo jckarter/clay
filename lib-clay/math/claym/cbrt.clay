@@ -15,7 +15,7 @@ alias CP4 =  0.145996192886612446982;		/* 0x3fc2b000, 0xd4e4edd7 */
 [T | Float?(T)]
 overload cbrt(x:T) --> t:T {
 	
-	var hx, low = EXTRACT_WORDS(x);
+	var hx, low = EXTRACT_SIGNED_HI(x);
 	var sign = bitand(hx,SM); 		/* sign= sign(x) */
 	hx  = bitxor(hx,sign);
 	if(hx>=EM) return x+x; /* cbrt(NaN,INF) is itself */

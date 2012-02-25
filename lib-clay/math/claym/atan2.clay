@@ -12,9 +12,9 @@ overload atan2(y:Double, x:Double) {
 	alias ZERO = 0.;
 	alias TINY = LeastPositive(Double);
 
-	var hx,lx = EXTRACT_WORDS(x);
+	var hx,lx = EXTRACT_SIGNED_HI(x);
+	var hy,ly = EXTRACT_SIGNED_HI(y);
 	var ix = bitand(hx,0x7fffffff);
-	var hy,ly = EXTRACT_WORDS(y);
 	var iy = bitand(hy,0x7fffffff);
 	if(bitor(ix,bitshr(bitor(lx,-Int(lx)),31))>0x7ff00000 or
 	   	bitor(iy,bitshr(bitor(ly,-Int(ly)),31))>0x7ff00000)	/* x or y is NaN */
