@@ -15,7 +15,10 @@ public import fmod.(fmod);
 public import hypot.(hypot);
 public import sqrt.(sqrt);
 public import cbrt.(cbrt);
-public import pow.(pow);
+
+public import pow_std_back.(pow);
+
+public import pown.*;
 public import exp.(exp);
 public import exp2.(exp2);
 public import expm1.(expm1);
@@ -93,6 +96,8 @@ overload log(b,x) = log(x) / log(b);
 
 square(x) = x*x;
 cube(x) = x*x*x;
+
+inline overload fma(a, b, c) = (a * b) + c;
 
 
 [T | Float?(T)] inline overload rsqrt(x:T) = recip(sqrt(x));

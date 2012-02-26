@@ -3,6 +3,12 @@ import numbers.floats.*;
 import ieee754.*;
 public import claym.*;
 
+
+private alias DHUGE = GreatestPositiveFinite(Double);
+private alias FHUGE = GreatestPositiveFinite(Float);
+private alias DZERO = 0.ff;
+private alias FZERO = 0.f;
+
 [T | Float?(T)]
 overload round(x:T) --> t:T {
 	alias ZERO = T(0);
@@ -31,8 +37,7 @@ alias TWO52 = array(
  -4.50359962737049600000e+15 /* 0xC3300000, 0x00000000 */
 );
 
-[T | Float?(T)]
-overload rint(a:T){
+overload rint(a:Double){
 	var x = a;
 	var i0,i1 = EXTRACT_SIGNED_HI(x);
 	var sx = bitand(bitshr(i0,31),0x1);
@@ -82,14 +87,12 @@ overload rint(a:T){
 	return w-TWO52[sx];
 }
 
-[T | Float?(T)]
-overload floor(x:T) {
-	var HUGE = GreatestPositiveFinite(T);
+overload floor(x:Double) {
 	var i0,i1 = EXTRACT_SIGNED(x);
 	var j0 = bitand(bitshr(i0,20),0x7ff)-0x3ff;
 	if(j0<20) {
 	    if(j0<0) { 	/* raise inexact if x != 0 */
-		if(HUGE+x>0.0) {/* return 0*sign(x) if |x|<1 */
+		if(DHUGE+x>DZERO) {/* return 0*sign(x) if |x|<1 */
 		    if(i0>=0) {
 		    	i0=0;
 		    	i1=0;
@@ -104,7 +107,7 @@ overload floor(x:T) {
 	    else {
 			var i = bitshr(NEM,j0);
 			if(bitor(bitand(i0,i),i1)==0) return x; /* x is integral */
-			if(HUGE+x>0.0) {	/* raise inexact flag */
+			if(DHUGE+x>DZERO) {	/* raise inexact flag */
 			    if(i0<0) i0 += bitshr(CV8,j0);
 			    i0 = bitandc(i0,i);
 			    i1 = 0;
@@ -118,7 +121,7 @@ overload floor(x:T) {
 		else {
 	    	var i = bitshr(AM,j0-20);
 	    	if(bitand(i1,i)==0) return x;	/* x is integral */
-	    	if(HUGE+x>0.0) { 		/* raise inexact flag */
+	    	if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 				if(i0<0) {
 			    	if(j0==20) i0+=1;
 		    		else {
@@ -133,14 +136,39 @@ overload floor(x:T) {
 	return INSERT_WORDS(i0,i1);
 }
 
-[T | Float?(T)]
-overload ceil(x:T) {
-	var HUGE = GreatestPositiveFinite(T);
+overload floor(x:Float){
+	var i0 = GET_FLOAT_SIGNED(x);
+	var j0 = bitand(bitshr(i0,23),0xff)-0x7f;
+	if(j0<23) {
+	    if(j0<0) 	/* raise inexact if x != 0 */
+			if(FHUGE+x>FZERO) /* return 0*sign(x) if |x|<1 */
+			    if(i0>=0)
+			    	i0=0;
+			    else 
+			    	if(bitand(i0,0x7fffffff)!=0)
+			    		i0=bitcast(Int,0xbf800000u);
+	    else {
+			var i = bitshr(0x007fffff,j0);
+			if(bitand(i0,i)==0) return x; /* x is integral */
+			if(FHUGE+x>FZERO) {	/* raise inexact flag */
+			    if(i0<0) i0 += bitshr(0x00800000,j0);
+			    i0 = bitandc(i0,i);
+			}
+	    }
+	} 
+	else {
+	    if(j0==0x80) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	}
+	return SET_FLOAT_WORD(i0);
+}
+
+overload ceil(x:Double) {
 	var i0,i1 = EXTRACT_SIGNED(x);
 	var j0 = bitand(bitshr(i0,20),0x7ff)-0x3ff;
 	if(j0<20) {
 	    if(j0<0) { 	/* raise inexact if x != 0 */
-			if(HUGE+x>0.0) {/* return 0*sign(x) if |x|<1 */
+			if(DHUGE+x>DZERO) {/* return 0*sign(x) if |x|<1 */
 			    if(i0<0) {
 			    	i0=SM;
 			    	i1=0;
@@ -155,7 +183,7 @@ overload ceil(x:T) {
 	    else {
 			var i = bitshr(NEM,j0);
 			if(bitor(bitand(i0,i),i1)==0) return x; /* x is integral */
-			if(HUGE+x>0.0) {	/* raise inexact flag */
+			if(DHUGE+x>DZERO) {	/* raise inexact flag */
 			    if(i0>0) i0 += bitshr(CV8,j0);
 			    i0 = bitandc(i0,i); 
 			    i1 = 0;
@@ -167,7 +195,7 @@ overload ceil(x:T) {
 	} else {
 	    var i = bitshr(AM,j0-20);
 	    if(bitand(i1,i)==0) return x;	/* x is integral */
-	    if(HUGE+x>0.0) { 		/* raise inexact flag */
+	    if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 			if(i0>0) {
 			    if(j0==20) i0+=1;
 			    else {
@@ -180,4 +208,29 @@ overload ceil(x:T) {
 	    }
 	}
 	return INSERT_WORDS(i0,i1);
+}
+
+overload ceil(x:Float) {
+	var i0 = GET_FLOAT_SIGNED(x);
+	var j0 = bitand(bitshr(i0,23),0xff)-0x7f;
+	if(j0 < 23) {
+	    if(j0 < 0) { 	/* raise inexact if x != 0 */
+			if(FHUGE+x>FZERO) {/* return 0*sign(x) if |x|<1 */
+			    if(i0<0) i0=bitcast(Int,0x80000000u);
+			    else if(i0!=0) i0=0x3f800000;
+			}
+	    } 
+	    else {
+			var i = bitshr(0x007fffff,j0);
+			if(bitand(i0,i)==0) return x; /* x is integral */
+			if(FHUGE+x>FZERO) {	/* raise inexact flag */
+			    if(i0>0) i0 += bitshr(0x00800000,j0);
+			    i0 = bitandc(i0,i);
+			}
+	    }
+	} else {
+	    if(j0==0x80) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	}
+	return SET_FLOAT_WORD(i0);
 }

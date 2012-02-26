@@ -25,37 +25,43 @@ alias ieee_db_zero = ieee_db(0.0);
 /* Get two 32 bit ints from a double.  */
 
 alias EXTRACT_WORDS(d) --> hi:UInt32,lo:UInt32 {
-    lo,hi <-- ieee_db(d).0[0],ieee_db(d).0[1];
+    lo,hi <-- ..unpack(bitcast(Tuple[UInt32,UInt32],d));
 }
 
 alias EXTRACT_SIGNED(d) --> hi:Int32,lo:Int32 {
-    lo,hi <-- bitcast(Int,ieee_db(d).0[0]),bitcast(Int,ieee_db(d).0[1]);
+    lo,hi <-- ..unpack(bitcast(Tuple[Int32,Int32],d));
 }
 
 alias EXTRACT_SIGNED_HI(d) --> hi:Int32,lo:UInt32 {
-    lo,hi <-- ieee_db(d).0[0],bitcast(Int,ieee_db(d).0[1]);
+    lo,hi <-- ..unpack(bitcast(Tuple[UInt32,Int32],d));
 }
 
 /* Get a 64-bit int from a double. */
-alias EXTRACT_WORD64(d) :Int64 = bitcast(Int64,d);
+alias EXTRACT_WORD64(d)
+     = bitcast(Int64,d);
  
 /* Get the more significant 32 bit int from a double.  */
-alias GET_HIGH_WORD(d) :UInt32 = ieee_db(d).0[1];
+alias GET_HIGH_WORD(d) 
+    = bitcast(Array[UInt32,2],d)[1];
 
 /* Get the less significant 32 bit int from a double.  */
-alias GET_LOW_WORD(d) :UInt32 = ieee_db(d).0[0];
+alias GET_LOW_WORD(d)
+    = bitcast(Array[UInt32,2],d)[0];
 
-alias GET_HIGH_SIGNED(d) :Int32 = bitcast(Int,ieee_db(d).0[1]);
+alias GET_HIGH_SIGNED(d)
+    = bitcast(Array[Int32,2],d)[1];
 
 /* Get the less significant 32 bit int from a double.  */
-alias GET_LOW_SIGNED(d) :Int32 = bitcast(Int,ieee_db(d).0[0]);
+alias GET_LOW_SIGNED(d)
+    = bitcast(Array[Int32,2],d)[0];
 
 /* Set a double from two 32 bit ints.  */
-alias INSERT_WORDS(ix0,ix1) :Double 
-	= ieee_db(array(bitcast(UInt32,ix1),bitcast(UInt32,ix0))).2;
+alias INSERT_WORDS(ix1,ix0) 
+	= bitcast(Double,ieee_db(array(bitcast(UInt32,ix0),bitcast(UInt32,ix1))));
 
 /* Set a double from a 64-bit int. */
-alias INSERT_WORD64(ix) :Double = bitcast(Double,ix);
+alias INSERT_WORD64(ix) 
+    = bitcast(Double,ix);
 
 /* Set the more significant 32 bits of a double from an int.  */
 alias SET_HIGH_WORD(d,v) --> r:Double {
@@ -72,13 +78,16 @@ alias SET_LOW_WORD(d,v) --> r:Double {
 }
 
 // Get a 32 bit int from a float. 
-alias GET_FLOAT_WORD(d) :UInt32 = bitcast(UInt32,d);
+alias GET_FLOAT_WORD(d) 
+    = bitcast(UInt32,d);
 
 // Get a 32 bit int from a float. 
-alias GET_FLOAT_SIGNED(d) :Int32 = bitcast(Int32,d);
+alias GET_FLOAT_SIGNED(d) 
+    = bitcast(Int32,d);
 
 // Set a float from a 32 bit int. 
-alias SET_FLOAT_WORD(i) :Float32 = bitcast(Float32,i);
+alias SET_FLOAT_WORD(i) 
+    = bitcast(Float32,i);
 
 
 
