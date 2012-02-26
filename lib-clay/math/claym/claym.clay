@@ -15,9 +15,7 @@ public import fmod.(fmod);
 public import hypot.(hypot);
 public import sqrt.(sqrt);
 public import cbrt.(cbrt);
-
-public import pow_std_back.(pow);
-
+public import pow.(pow);
 public import pown.*;
 public import exp.(exp);
 public import exp2.(exp2);

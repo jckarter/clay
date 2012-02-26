@@ -1,13 +1,13 @@
 
 public import claym.*;
 import numbers.floats.*;
-import ieee754.*;
-import exact.*;
+import kernel.ieee754.*;
+import kernel.exact.*;
 
 
-alias L =8;
-alias MAXINDEX =106;
-alias INDEXMASK =255;
+alias L = 8;
+alias MAXINDEX = 106;
+alias INDEXMASK = 255;
 alias two52 =4.50359962737049600000000000000000000000000000000000e+15;
 alias twoM55 =0.277555756156289135105907917022705078125e-16;
 alias logFastCoeff =0.14142135623730951454746218587388284504413604736328125e1;
