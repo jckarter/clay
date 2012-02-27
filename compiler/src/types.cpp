@@ -1218,9 +1218,11 @@ static void declareLLVMType(TypePtr t) {
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
         TypePtr reprType = variantReprType(x);
-        t->llType = llvmType(reprType);
+        if (!reprType->llType)
+            declareLLVMType(reprType);
+        t->llType = reprType->llType;
         if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmTypeDebugInfo(reprType);
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
         break;
     }
     case STATIC_TYPE : {
@@ -1282,7 +1284,6 @@ static void defineLLVMType(TypePtr t) {
     case CCODE_POINTER_TYPE :
     case ARRAY_TYPE :
     case VEC_TYPE :
-    case VARIANT_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
         break;
@@ -1491,6 +1492,21 @@ static void defineLLVMType(TypePtr t) {
                 0, // flags
                 memberArray);
             llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
+        }
+        break;
+    }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        TypePtr reprType = variantReprType(x);
+        if (!reprType->llType)
+            declareLLVMType(reprType);
+        if (!reprType->defined)
+            defineLLVMType(reprType);
+
+        if (llvmDIBuilder != NULL) {
+            llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
+            
+            llvm::DIType(placeholderNode).replaceAllUsesWith(llvmTypeDebugInfo(reprType));
         }
         break;
     }
