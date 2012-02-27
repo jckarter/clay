@@ -1,0 +1,10 @@
+// #228
+// thanks to freenode:maw
+
+variant Node (Tree, Int);
+record Tree (nodes : Vector[Node]);
+
+main() {
+    var t = Tree(Vector[Node]());
+    println("ok");
+}

@@ -136,7 +136,7 @@ hashSequence(a) {
 //
 
 [T | Variant?(T)]
-overload hash(x:T) = wrapAdd(wrapMultiply(23, variantTag(x)), hash(*x));
+overload hash(x:T) = wrapAdd(SizeT(wrapMultiply(23, variantTag(x))), hash(*x));
 
 
 

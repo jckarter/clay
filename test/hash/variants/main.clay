@@ -1,0 +1,10 @@
+// Ensure hash() for variants works and doesn't trap on expected overflows
+
+variant A (Int32, Float64);
+
+main() {
+    hash(A(4));
+    hash(A(4.0));
+
+    println("ok");
+}
