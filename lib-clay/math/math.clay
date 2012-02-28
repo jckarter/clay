@@ -1,5 +1,8 @@
 
 //Import native
-public import numbers.floats.*;
 public import math.native.*;
-public import math.simd.*;
+
+
+alias LIBM = #"libm";
+
+MathMode?(m) = Flag(#"math.Mode")==m;
