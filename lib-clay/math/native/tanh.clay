@@ -1,0 +1,46 @@
+// tanh
+
+import math.native.kernel.ieee754.*;
+import math.native.kernel.k_exp.*;
+public import math.native.*;
+
+overload tanh(x:Double) {
+	alias ONE = 1.;
+	alias TWO = 2.;
+	alias HUGE = GreatestPositiveFinite(Double);
+	alias TINY = LeastPositive(Double);
+
+    /* High word of |x|. */
+	var jx = GET_IEEE_HIGH(x);
+	var ix = bitand(jx,MM);
+
+
+    /* x is INF or NaN */
+	if(ix>=EM) {
+	    if (jx>=0) return ONE/x+ONE;    /* tanh(+-inf)=+-1 */
+	    else       return ONE/x-ONE;    /* tanh(NaN) = NaN */
+	}
+
+	var z = 0.;
+
+    /* |x| < 22 */
+	if (ix < 0x40360000) {		/* |x|<22 */
+	    if (ix<CV18)	/* |x|<2**-28 */
+			if(HUGE+x>ONE) return x; /* tanh(TINY) = TINY with inexact */
+	    if (ix>=UM) {	/* |x|>=1  */
+			var t = expm1(TWO*abs(x));
+			z = ONE - TWO/(t+TWO);
+	    } 
+	    else {
+	        var t = expm1(-TWO*abs(x));
+	        z = -t/(t+TWO);
+	    }
+    /* |x| >= 22, return +-1 */
+	} 
+	else {
+	    z = ONE - TINY;		/* raise inexact flag */
+	}
+	return if(jx>=0) z else -z;
+}
+
+   

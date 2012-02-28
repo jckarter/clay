@@ -1,0 +1,19 @@
+
+public import math.native.*;
+import math.native.gamma.(maxGamma);
+
+[T | Numeric?(T)]
+overload beta(x:T, y:T) --> r:T {
+    if ( x + y > maxGamma(T))
+        r = exp(lgamma(x) + lgamma(y) - lgamma(x+y));
+    else
+        r = gamma(x) * gamma(y) / gamma(x+y);
+}
+
+[U | Complex?(U)]
+overload beta(x:U, y:U) --> r:U {
+    if ( real(x) + real(y) > maxGamma(ComplexElementType(x)))
+        r = exp(lgamma(x) + lgamma(y) - lgamma(x+y));
+    else
+        r = gamma(x) * gamma(y) / gamma(x+y);
+}

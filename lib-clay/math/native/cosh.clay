@@ -1,0 +1,41 @@
+
+
+public import math.native.*;
+import math.native.kernel.ieee754.*;
+
+
+overload cosh(x:Double) {
+	alias ONE = 1.;
+	alias HALF = 0.5;
+	alias HUGE = GreatestPositiveFinite(Double);
+
+	// High word of |x|.
+	var ix = bitand(GET_IEEE_HIGH(x),MM);
+    // x is INF or NaN 
+	if(ix >=  EM) return x*x;	
+
+    // |x| in [0,0.5*ln2], return 1+expm1(|x|)^2/(2*exp(|x|))
+	if(ix < 0x3fd62e43) {
+	    var t = expm1(abs(x));
+	    var w = ONE+t;
+	    if (ix < 0x3c800000) return w;	// cosh(tiny) = 1
+	    return ONE+(t*t)/(w+w);
+	}
+
+    // |x| in [0.5*ln2,22], return (exp(|x|)+1/exp(|x|)/2;
+	if (ix < 0x40360000) {
+		var t = exp(abs(x));
+		return HALF*t+HALF/t;
+	}
+
+    // |x| in [22, log(maxdouble)] return half*exp(|x|)
+	if (ix < 0x40862E42)  return HALF*exp(abs(x));
+
+    // |x| in [log(maxdouble), overflowthresold]
+	if (ix <= 0x408633CE)
+	    return ldexp(abs(x), -1);
+
+    // |x| > overflowthresold, cosh(x) overflow
+	return HUGE*HUGE;
+}
+

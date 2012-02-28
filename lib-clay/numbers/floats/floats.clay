@@ -197,7 +197,8 @@ overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 [T | Imaginary?(T)]
 abs(x:T) = imagFromBits(floatBitsUnsigned(x));
 [T | Float?(T)]
-overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
+overload abs(x:T) = floatFromBits(bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul));
+
 
 [T,U | Float?(T,U)]
 copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
@@ -229,9 +230,9 @@ overload copysign(a:LongDouble,b:T) {
 
 
 // ieee754 number - utility representation
-alias db_number = Union[Array[UInt32,2], Int64, Float64];
-alias db_one = db_number(1.0);
-alias db_zero = db_number(0.0);
+alias ieee_db = Union[Array[Int32,2], Int64, Float64];
+alias db_one = ieee_db(1.0);
+alias db_zero = ieee_db(0.0);
 
 alias FP_NAN = 0;
 alias FP_INFINITE = 1;
@@ -264,7 +265,7 @@ fpclassify(x:T) --> res:Int {
 nextafter(x:Double, y:Double){
     alias MIN_SUB = LeastPositive(Double);
     alias EXP_MASK = 0x7ff00000;
-    var xdb,ydb = db_number(x),db_number(y);
+    var xdb,ydb = ieee_db(x),ieee_db(y);
 	alias hx = xdb.0[1];
     alias lx = xdb.0[0];
     alias hy = ydb.0[1];
@@ -312,6 +313,3 @@ alias overload normcoeff(static Float) = floatFromBits(0x4Cu);
 normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));
-
-
-

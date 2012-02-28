@@ -1,0 +1,92 @@
+// log1p
+
+import math.native.kernel.ieee754.*;
+public import math.native.*;
+
+
+
+[T | Float?(T)]
+overload log1p(x:T) {
+	alias ZERO = T(0);
+	alias HALF = T(0.5);
+	alias ONE = T(1);
+	alias MONE = T(-1.);
+
+	var ix = MAKE_IEEE(x);
+	var ax = bitand(GET_IEEE_HIGH(ix),MM);
+	var hu,c,k,f,u = 0,ZERO,1,ZERO,ZERO;
+	if (GET_IEEE_HIGH(ix) < CV27) {			/* 1+x < sqrt(2)+ */
+	    if(ax>=RM) {		/* x <= -1.0 */
+			if(x==MONE) 
+				return -TWO54/ZERO; /* log1p(-1)=+inf */
+			else 
+				return (x-x)/(x-x);	/* log1p(x<-1)=NaN */
+	    }
+	    if(ax<CV28) {			/* |x| < 2**-29 */
+			if(TWO54+x>ZERO and ax<CV17)	/* raise inexact  |x| < 2**-54 */
+			    return x;
+			else
+			    return x - x*x*HALF;
+		}
+	    if(GET_IEEE_HIGH(ix)>0 or GET_IEEE_HIGH(ix)<=CV26) {
+			k=0;
+			f=x;
+			hu=1;
+		}		/* sqrt(2)/2- <= 1+x < sqrt(2)+ */
+	}
+	if (GET_IEEE_HIGH(ix) >= EM) return x+x;
+	if (k != 0) {
+	    if(GET_IEEE_HIGH(ix) < CV1) {
+			u = ONE+x;
+			hu = GET_IEEE_HIGH(u);
+		    k  = bitshr(hu,20)-1023;
+		    c  = if(k>0) ONE-(u-x) else x-(u-ONE);/* correction term */
+			c /= u;
+	    } 
+	    else {
+			hu = GET_IEEE_HIGH(x);
+		    k  = bitshr(hu,20)-1023;
+			c  = 0;
+	    }
+	    hu = bitand(hu,NEM);
+	    /*
+	     * The approximation to sqrt(2) used in thresholds is not
+	     * critical.  However, the ones used above must give less
+	     * strict bounds than the one here so that the k==0 case is
+	     * never reached from here, since here we have committed to
+	     * using the correction term but don't use it if k==0.
+	     */
+	    if(hu < 0x6a09e) {			/* u ~< sqrt(2) */
+	        u = SET_IEEE_HIGH(u,bitor(hu,RM));	/* normalize u */
+	    } else {
+	        k += 1;
+			u = SET_IEEE_HIGH(u,bitor(hu,CV3));	/* normalize u/2 */
+	        hu = bitshr(CV8-hu,2);
+	    }
+	    f = u-ONE;
+	}
+	var hfsq,R = HALF*f*f, 0.;
+	if(hu==0) {	/* |f| < 2**-20 */
+	    if(f==ZERO) {
+			if(k==0) {
+			    return ZERO;
+			} 
+			else {
+			    c += k*LN2LO;
+			    return k*LN2HI+c;
+			}
+	    }
+	    R = hfsq*(ONE-0.66666666666666666*f);
+	    if(k==0) 
+	    	return f-R; 
+	    else
+	  	    return k*LN2HI-((R-(k*LN2LO+c))-f);
+	}
+ 	var s = f/(2.0+f);
+	var z = s*s;
+	R = z*(Lp1+z*(Lp2+z*(Lp3+z*(Lp4+z*(Lp5+z*(Lp6+z*Lp7))))));
+	if(k==0) 
+		return f-(hfsq-s*(hfsq+R)); 
+	else
+		return k*LN2HI-((hfsq-(s*(hfsq+R)+(k*LN2LO+c)))-f);
+}

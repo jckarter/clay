@@ -1,0 +1,61 @@
+// llround
+import math.native.kernel.ieee754.*;
+public import math.native.*;
+import numbers.floats.*;
+
+overload llround(x:Float) {
+    var result = 0l;
+    var i = floatBits(x);
+    var j0 = bitand(bitshr(i,23),0xffu) - 0x7fu;
+    var sign = if(bitand(i,SM) != 0) -1l else 1l;
+    i = bitor(bitand(i,0x7fffffu),0x800000u);
+    if (j0 < Int(8 * TypeSize(Long)) - 1){
+        if (j0 < 0)
+            return if(j0 < -1) 0l else sign;
+        else if (j0 >= 23)
+            result = numericConvert(Long,bitshl(i, (j0 - 23)));
+        else {
+            i += bitshr(0x400000u,j0);
+            result = numericConvert(Long,bitshr(i,23 - j0));
+        }
+    }
+    else {
+        // The number is too large.  Return implementation default.
+        result = Long(x);
+    }
+    return sign * result;
+}
+
+overload llround (x:Double ) {
+    var result = 0l;
+    var xdb = ieee_db(x);
+    var j0 = bitand(bitshr(xdb.0[1] , 20) , 0x7ffu) - 0x3ffu;
+    var sign = if(bitand(xdb.0[1] , SM) != 0) -1l else 1l;
+    xdb.0[1] = bitor(bitand(xdb.0[1],NEM) ,CV8);
+    if (j0 < 20){
+        if (j0 < 0)
+            return if(j0 < -1) 0l else sign;
+        else{
+            xdb.0[1] += bitshr(UM , j0);
+            result = Long(bitshr(xdb.0[1] , 20 - j0));
+        }
+    }
+    else if (j0 <  Int(8 * TypeSize(Long)) - 1){
+        if (j0 >= 52)
+            result = bitshl(bitor(bitshl( Long(xdb.0[1]) , 32) , xdb.0[0]) , j0 - 52);
+        else{
+            var j = xdb.0[0] + bitshr(SM ,j0 - 20);
+            if (j < xdb.0[0])
+                inc(xdb.0[1]);
+            if (j0 == 20)
+                result = Long(xdb.0[1]);
+            else
+                result = bitor(bitshl(Long(xdb.0[1]) , j0 - 20) , bitshr(j , 52 - j0));
+        }
+    }
+    else{
+        // The number is too large.  Return implementation default.
+        return Long(x);
+    }
+    return sign * result;
+}

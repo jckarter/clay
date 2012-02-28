@@ -1,0 +1,135 @@
+
+import numbers.floats.*;
+
+/* Get two 32 bit ints from a double.  */
+
+alias MAKE_IEEE(d:Double) = ieee_db(d);
+alias overload MAKE_IEEE(l:Int64) = ieee_db(l);
+alias overload MAKE_IEEE(hi:Int32,lo:Int32) = ieee_db(array(lo,hi));
+alias overload MAKE_IEEE(lo:UInt32,hi:UInt32) 
+    = MAKE_IEEE(bitcast(Int32,hi),bitcast(Int32,lo));
+
+/* Get a 64-bit int from a double. */
+alias GET_IEEE_L(d:Double) = ieee_db(d).1;
+alias overload GET_IEEE_L(x:ieee_db) = ref x.1; 
+alias overload GET_IEEE_L(hi,lo) = ieee_db(array(lo,hi)).1;
+
+/* Get the more significant 32 bit int from a double.  */
+alias GET_IEEE_HIGH(d:Double) = ieee_db(d).0[1];
+alias overload GET_IEEE_HIGH(x:ieee_db) = ref x.0[1]; 
+alias overload GET_IEEE_HIGH(l:Int64) = ieee_db(l).0[1]; 
+
+/* Get the less significant 32 bit int from a double.  */
+alias GET_IEEE_LOW(d:Double) = ieee_db(d).0[0];
+alias overload GET_IEEE_LOW(x:ieee_db) = ref x.0[0]; 
+alias overload GET_IEEE_LOW(l:Int64) = ieee_db(l).0[0]; 
+
+alias GET_IEEE_DB(l:Int64) = ieee_db(l).2;
+alias overload GET_IEEE_DB(hi,lo) = ieee_db(array(lo,hi)).2;
+alias overload GET_IEEE_DB(x:ieee_db) = ref x.2;
+
+alias SET_IEEE(x:ieee_db,v:Double) { x.2 = v; }
+alias overload SET_IEEE(x:ieee_db,v:Int64) { x.1 = v; }
+alias overload SET_IEEE(x:ieee_db,hi:Int32,lo:Int32) {x.0[1],x.0[0] = hi,lo;}
+
+/* Set the more significant 32 bits of a double from an int.  */
+alias SET_IEEE_HIGH(x:ieee_db,v:Int32) { x.0[1] = v; }
+alias overload SET_IEEE_HIGH(d:Double,v:Int32) {
+    var x = ieee_db(d);
+    x.0[1] = v;
+    return x.2;
+}
+alias overload SET_IEEE_HIGH(l:Int64,v:Int32) {
+    var x = ieee_db(l);
+    x.0[1] = v;
+    return x.1;
+}
+
+alias SET_IEEE_LOW(x:ieee_db,v:Int32) { x.0[0] = v; }
+alias overload SET_IEEE_LOW(d:Double,v:Int32) {
+    var x = ieee_db(d);
+    x.0[0] = v;
+    return x.2;
+}
+alias overload SET_IEEE_LOW(l:Int64,v:Int32) {
+    var x = ieee_db(l);
+    x.0[0] = v;
+    return x.1;
+}
+
+
+// Get a 32 bit int from a float. 
+alias GET_FLOAT_WORD(d) 
+    = bitcast(UInt32,d);
+
+// Get a 32 bit int from a float. 
+alias GET_FLOAT_SIGNED(d) 
+    = bitcast(Int32,d);
+
+// Set a float from a 32 bit int. 
+alias SET_FLOAT_WORD(i) 
+    = bitcast(Float32,i);
+
+
+
+
+
+alias AM = bitcast(Int32,0xffffffffu);
+alias EM = 0x7ff00000;
+alias NEM = 0x000fffff;
+alias RM = 0x3ff00000;
+alias MM = 0x7fffffff;
+alias UM = 0x00080000;
+alias SM = bitcast(Int32,0x80000000u);
+
+alias CV1 = 0x43400000;
+alias CV2 = 0x40000000;
+alias CV3 = 0x3fe00000;
+alias CV4 = 0x41e00000;
+alias CV5 = 0x43f00000;
+alias CV6 = 0x3fefffff;
+alias CV7 = 0x3fefffff;
+alias CV8 = 0x00100000;
+alias CV9 = 0x20000000;
+alias CV10 = 0x40900000;
+alias CV11 = 0x4090cc00;
+alias CV12 = 0xc090cc00;
+alias CV13 = 0x4043687A;
+alias CV14 = 0x40862E42;
+alias CV15 = 0x3fd62e42;
+alias CV16 = 0x3FF0A2B2;
+alias CV17 = 0x3c900000;
+alias CV18 = 0x3e300000;
+alias CV19 = 0x43500000;
+alias CV20 = 0x00200000;
+alias CV21 = bitcast(Int32,0xbff00000u);
+alias CV22 = 0x25800000;
+alias CV23 = 0x7fd00000;
+alias CV24 = 0x20b00000;
+alias CV25 = 0x5f300000;
+alias CV26 = bitcast(Int32,0xbfd2bec4u);
+alias CV27 = 0x3FDA827A;
+alias CV28 = 0x3e200000;
+
+
+alias P1   =  1.66666666666666019037e-01; /* 0x3FC55555, 0x5555553E */
+alias P2   = -2.77777777770155933842e-03; /* 0xBF66C16C, 0x16BEBD93 */
+alias P3   =  6.61375632143793436117e-05; /* 0x3F11566A, 0xAF25DE2C */
+alias P4   = -1.65339022054652515390e-06; /* 0xBEBBBD41, 0xC5D26BF1 */
+alias P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
+alias IVLN2 = 1.44269504088896338700e+00;/* 0x3ff71547, 0x652b82fe */
+alias LN2HI  =  6.93147180369123816490e-01;	/* 3fe62e42 fee00000 */
+alias LN2LO  =  1.90821492927058770002e-10;	/* 3dea39ef 35793c76 */
+
+alias TWO54  =  1.80143985094819840000e+16;
+alias IVLN2HI =  1.44269504072144627571e+00; /* 0x3ff71547, 0x65200000 */
+alias IVLN2LO =  1.67517131648865118353e-10; /* 0x3de705fc, 0x2eefa200 */
+
+alias Lp1 = 6.666666666666735130e-01;  /* 3FE55555 55555593 */
+alias Lp2 = 3.999999999940941908e-01;  /* 3FD99999 9997FA04 */
+alias Lp3 = 2.857142874366239149e-01;  /* 3FD24924 94229359 */
+alias Lp4 = 2.222219843214978396e-01;  /* 3FCC71C5 1D8E78AF */
+alias Lp5 = 1.818357216161805012e-01;  /* 3FC74664 96CB03DE */
+alias Lp6 = 1.531383769920937332e-01;  /* 3FC39A09 D078C69F */
+alias Lp7 = 1.479819860511658591e-01;  /* 3FC2F112 DF3E5244 */
+

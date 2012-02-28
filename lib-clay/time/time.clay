@@ -6,3 +6,12 @@ time() = p.time();
 sleep(seconds:Double) {
     p.sleep(seconds);
 }
+
+timer() = p.timer();
+start(t) {p.start(t);}
+stop(t) {p.stop(t);}
+splitNanos(t) = p.splitNanos(t);
+splitMillis(t) = p.splitMillis(t);
+elapsedNanos(t) = p.elapsedNanos(t);
+elapsedMillis(t) = p.elapsedMillis(t);
+

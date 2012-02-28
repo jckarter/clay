@@ -1,0 +1,54 @@
+// Test math functions
+
+import math.*;
+import printer.formatter.*;
+
+
+ftypes() = Float64;
+
+[T | Float?(T)] 
+fdata(static T) = array(
+    T(0), T(1), T(-1), T(38), T(355), nan(T), -nan(T),
+    infinity(T), negativeInfinity(T), LeastPositive(T),
+    LeastPositiveNormalized(T), GreatestPositiveFinite(T));
+
+
+oneArgFuncs() = 
+                sin,cos,tan,
+                asin,acos,atan,
+                sinh,cosh,tanh,
+                exp,expm1,
+                log,log10,log2,
+                sqrt,cbrt,square,
+                cube,trunc,round,
+                ceil,floor,rint,
+                ilogb,log1p,erf,
+                erfc,gamma,tgamma,
+                lgamma,j0,j1,i1,
+                abs,recip,rsqrt,
+                sec,csc,cot,
+                asec,acsc,acot,
+                sech,csch,coth,
+                asech,acsch,acoth, 
+                sigmoid,significand,
+                ;
+
+
+evalFuncs(funcs,data,types) {
+    ..for(f in funcs()){
+        ..for(t in types()){
+                var a = str(StaticName(f),"\t",..weaveValues(",",..map(f,data(t))));
+                println("native:",a);
+        }
+    }
+}
+
+
+main() {
+
+    evalFuncs(oneArgFuncs,fdata,ftypes);
+
+}
+
+
+

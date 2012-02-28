@@ -1,0 +1,73 @@
+// atan2
+
+import math.native.kernel.ieee754.*;
+public import math.native.*;
+
+alias pi_o_4  = 7.8539816339744827900E-01; /* 0x3FE921FB, 0x54442D18 */
+alias pi_o_2  = 1.5707963267948965580E+00; /* 0x3FF921FB, 0x54442D18 */
+alias pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
+
+overload atan2(y:Double, x:Double) {
+	alias ONE = 1.;
+	alias ZERO = 0.;
+	alias TINY = LeastPositive(Double);
+
+	var xdb = MAKE_IEEE(x);
+	var ydb = MAKE_IEEE(y);
+	var ix = bitand(GET_IEEE_HIGH(xdb),0x7fffffff);
+	var iy = bitand(GET_IEEE_HIGH(ydb),0x7fffffff);
+	if(bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>0x7ff00000 or
+	   	bitor(iy,bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>0x7ff00000)	/* x or y is NaN */
+		return x+y;
+	if(bitor(Int(GET_IEEE_HIGH(xdb))-0x3ff00000,GET_IEEE_LOW(xdb))==0) return atan(y);   /* x=1.0 */
+	var m = bitor(bitand(bitshr(GET_IEEE_HIGH(ydb),31),1),bitand(bitshr(GET_IEEE_HIGH(xdb),30),2));	/* 2*sign(x)+sign(y) */
+	
+    /* when y = 0 */
+	if(bitor(iy,GET_IEEE_LOW(ydb))==0) {
+	    switch(m)
+		case (0) {}
+		case (1) return y; 	/* atan(+-0,+anything)=+-0 */
+		case (2) return  M_PI+TINY;/* atan(+0,-anything) = pi */
+		case (3) return -M_PI-TINY;/* atan(-0,-anything) =-pi */
+	    
+	}
+    /* when x = 0 */
+	if(bitor(ix,GET_IEEE_LOW(xdb))==0) return if(GET_IEEE_HIGH(ydb)<0) -pi_o_2-TINY else pi_o_2+TINY;
+	    
+    /* when x is INF */
+	if(ix==0x7ff00000) {
+	    if(iy==0x7ff00000) {
+			switch(m)
+		    case (0) return  pi_o_4+TINY;/* atan(+INF,+INF) */
+		    case (1) return -pi_o_4-TINY;/* atan(-INF,+INF) */
+		    case (2) return  3.0*pi_o_4+TINY;/*atan(+INF,-INF)*/
+		    case (3) return -3.0*pi_o_4-TINY;/*atan(-INF,-INF)*/
+	    } 
+	    else {
+			switch(m)
+		    case (0) return  ZERO  ;	/* atan(+...,+INF) */
+		    case (1) return -ZERO  ;	/* atan(-...,+INF) */
+		    case (2) return  M_PI+TINY  ;	/* atan(+...,-INF) */
+		    case (3) return -M_PI-TINY  ;	/* atan(-...,-INF) */
+		
+	    }
+	}
+    /* when y is INF */
+	if(iy==0x7ff00000) return if(GET_IEEE_HIGH(ydb)<0) -pi_o_2-TINY else pi_o_2+TINY;
+	
+    /* compute y/x */
+	var k = bitshr(iy-ix,20);
+	var z = 0.;
+	if(k > 60) {		 	/* |y/x| >  2**60 */
+	    z = pi_o_2+0.5*pi_lo;
+	    m = bitand(m,1);
+	}
+	else if(GET_IEEE_HIGH(xdb)<0 and k<-60) z=0.0; 	/* 0 > |y|/x > -2**-60 */
+	else z = atan(abs(y/x));		/* safe to do y/x */
+	switch (m)
+    case (0) return  z;	/* atan(+,+) */
+    case (1) return -z;	/* atan(-,+) */
+    case (2) return M_PI-(z-pi_lo);/* atan(+,-) */
+    else /* case 3 */return (z-pi_lo)-M_PI;/* atan(-,-) */
+
+}

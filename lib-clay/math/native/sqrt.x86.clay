@@ -1,0 +1,9 @@
+
+public import math.native.*;
+
+private external ("llvm.x86.sse2.sqrt.sd")
+    x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
+
+[T | Float?(T)]
+inline overload sqrt(x:T) = T(x86_sqrtsd(Vec(Double(x),0.))[0]);
+inline overload sqrt(x:Double) = x86_sqrtsd(Vec(x,0.))[0];
