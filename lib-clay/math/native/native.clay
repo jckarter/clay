@@ -62,7 +62,7 @@ inline overload sign(x:Short) = bitor(bitshr(x,15),Short(bitshr(UShort(-x),15)))
 inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
 [T | Float?(T)]
-significand(x:T) = scalb(x,T(-ilogb(x)));
+overload significand(x:T) = scalb(x,T(-ilogb(x)));
 
 drem(x,y) = remainder(x,y);
 
