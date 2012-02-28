@@ -1,5 +1,6 @@
 
 import libc;
+import platform;
 import printer.platform.(
     formatForInt64, formatForUInt64,
     formatForPartialInt128,
@@ -337,8 +338,15 @@ overload printReprTo(stream, x:Float64) {
     printWithSprintf(stream, "%.13a", x);
 }
 
+// Windows, Linux, and MacOS X printf format %La as `0x8.0000_0000_0000_000`
+// FreeBSD printf formats %La as `0x1.0000_0000_0000_0000`
 overload printReprTo(stream, x:Float80) {
     printWithSprintf(stream, "%.15Lafl", x);
+}
+
+[| platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Float80) {
+    printWithSprintf(stream, "%.16Lafl", x);
 }
 
 overload printReprTo(stream, x:Imag32) {
@@ -353,8 +361,18 @@ overload printReprTo(stream, x:Imag80) {
     printWithSprintf(stream, "%.15Laflj", x);
 }
 
+[| platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Imag80) {
+    printWithSprintf(stream, "%.16Lafl", x);
+}
+
 overload printReprTo(stream, x:Complex80) {
     printWithSprintf(stream, "%.15Lafl%+.15Laflj", ..rectValues(x));
+}
+
+[| platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Complex80) {
+    printWithSprintf(stream, "%.16Lafl%+.16Laflj", ..rectValues(x));
 }
 
 overload printReprTo(stream, x:Complex64) {
