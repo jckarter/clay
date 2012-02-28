@@ -23,8 +23,9 @@ oneArgFuncs() =
                 cube,trunc,round,
                 ceil,floor,rint,
                 ilogb,log1p,erf,
-                erfc,gamma,tgamma,
-                lgamma,j0,j1,i1,
+                erfc,
+                gamma,lgamma,
+                //j0,j1,i1,
                 abs,recip,rsqrt,
                 sec,csc,cot,
                 asec,acsc,acot,
@@ -37,8 +38,7 @@ oneArgFuncs() =
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()){
         ..for(t in types()){
-                var a = str(StaticName(f),"\t",..weaveValues(",",..map(f,data(t))));
-                println("native:",a);
+                println(str(StaticName(f),"\t",..weaveValues(",",..map(f,data(t)))));
         }
     }
 }

@@ -37,7 +37,7 @@ define pow2;
 define sin;//d
 define cos;//d
 define tan;//d
-// define sinpi;
+define sinpi;
 // define cospi;
 
 define asin;//d
@@ -87,9 +87,8 @@ define ierfc;
 define digamma;
 define tgamma;//d
 define lgamma;//d
-define lgamma_r;
-define igamma;//d
-define igammac;//d
+define lgamma_r;//d
+define gamma_r;//d
 alias gamma = tgamma;//d
 define beta;//d
 

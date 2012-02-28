@@ -89,3 +89,46 @@ overload tan(x:Double) {
 		}
 	}
 }
+
+
+overload sinpi(x:Double) {
+	alias ONE = 1.;
+	alias ZERO = 0.;
+	var ix = GET_IEEE_HIGH(x);
+	ix = bitand(ix,0x7fffffff);
+
+	if(ix<0x3fd00000) return kernel_sin(M_PI*x,0.,0);
+	var y = -x;		/* x is assume negative */
+
+    /*
+     * argument reduction, make sure inexact flag not raised if input
+     * is an integer
+     */
+	var z = floor(y);
+	var n = 0;
+	if(z != y) {				/* inexact anyway */
+	    y  *= 0.5;
+	    y   = 2.0*(y - z);		/* y = |x| mod 2.0 */
+	    n   = Int(y*4.0);
+	} 
+	else {
+        if(ix>=0x43400000) {
+            y = ZERO; 
+        } 
+        else {
+            if(ix<0x43300000) z = y+TWO52;	/* exact */
+			n = GET_IEEE_LOW(z);
+			n = bitand(n,1);
+            y = n;
+            n = bitshl(n,2);
+        }
+    }
+	switch (n)
+    case (0)   	y =  kernel_sin(M_PI*y,ZERO,0);
+    case (1,2)  y =  kernel_cos(M_PI*(0.5-y),ZERO);
+    case (3,4)  y =  kernel_sin(M_PI*(ONE-y),ZERO,0);
+    case (5,6)  y = -kernel_cos(M_PI*(y-1.5),ZERO);
+    else  		y =  kernel_sin(M_PI*(y-2.0),ZERO,0);
+	    
+	return -y;
+}

@@ -29,10 +29,10 @@ public import math.native.log2.(log2);
 public import math.native.log10.(log10);
 public import math.native.log1p.(log1p);
 public import math.native.erf.(erf,erfc);
-public import math.native.gamma.(gamma,tgamma,lgamma,igamma,igammac);
+public import math.native.gamma.(gamma,lgamma,lgamma_r,gamma_r);
 public import math.native.beta.(beta);
 public import math.native.bessel.(j0,j1,i1);
-public import math.native.trig.(sin,cos,tan);
+public import math.native.trig.(sin,cos,tan,sinpi);
 public import math.native.atanh.(atanh);
 public import math.native.acosh.(acosh);
 public import math.native.asinh.(asinh);
@@ -48,10 +48,10 @@ public import math.native.csinh.*;
 public import math.native.ccosh.*;
 public import math.native.ctanh.*;
 
+[T | Integer?(T)]
+overload recip(x:T) = T(0);
 [T | Float?(T)]
 overload recip(x:T) = T(1) / x;
-[T | Integer?(T)]
-overload recip(x:T) = 1 \ x;
 
 [I | Integer?(I)]
 inline overload abs(x:I) = if(x >= 0) x else -x;
@@ -75,21 +75,38 @@ clamp(x:T, lo:T, hi:T) {
     return x;
 }
 
-sec(z) = 1. / cos(z);
-csc(z) = 1. / sin(z);
-cot(z) = 1. / tan(z);
-asec(y) = acos(1. / y);
-acsc(y) = asin(1. / y);
-acot(y) = atan(1. / y);
-sech(z) = 1. / cosh(z);
-csch(z) = 1. / sinh(z);
-coth(z) = 1. / tanh(z);
-asech(y) = acosh(1. / y);
-acsch(y) = asinh(1. / y);
-acoth(y) = atanh(1. / y);
+sec(z) = recip(cos(z));
+csc(z) = recip(sin(z));
+cot(z) = recip(tan(z));
+asec(y) = acos(recip(y));
+acsc(y) = asin(recip(y));
+acot(y) = atan(recip(y));
+sech(z) = recip(cosh(z));
+csch(z) = recip(sinh(z));
+coth(z) = recip(tanh(z));
+asech(y) = acosh(recip(y));
+acsch(y) = asinh(recip(y));
+acoth(y) = atanh(recip(y));
 
-//sinc(x) = if(x==0) one(x) else (pix=pi*x; oftype(x,sin(pix)/pix))
-//cosc(x) = if(x==0) zero(x) else (pix=pi*x; oftype(x,cos(pix)/x-sin(pix)/(pix*x)))
+[T | CallDefined?(sin,T)]
+sinc(x:T) {
+    if(x==0) 
+        return T(1);
+    else {
+        var pix = T(M_PI)*x; 
+        return sin(pix)/pix;
+    }
+}
+
+[T | CallDefined?(sin,T)]
+cosc(x:T) { 
+    if(x==0) 
+        return T(0);
+    else {
+        var pix=T(M_PI)*x;
+        return cos(pix)/x-sin(pix)/(pix*x);
+    }
+}
 
 overload log(b,x) = log(x) / log(b);
 

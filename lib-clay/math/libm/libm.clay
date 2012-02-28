@@ -1,6 +1,9 @@
 
 import libc;
 public import math.native.defines.*;
+import numbers.floats.*;
+import math.(MathMode?,LIBM);
+
 
 [| MathMode?(LIBM)] inline overload pow(x:Double,y:Double) = libc.pow(x,y);
 [| MathMode?(LIBM)] inline overload pow(x:Float,y:Float) = libc.powf(x,y);
@@ -12,12 +15,9 @@ public import math.native.defines.*;
 [| MathMode?(LIBM)] inline overload pow(x:Float,y:LongDouble) = libc.powl(LongDouble(x),y);
 [| MathMode?(LIBM)] inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 
-[T | Integer?(T)]
-[| MathMode?(LIBM)] inline overload pow(x:Double,y:T) = libc.pow(x,Double(y));
-[T | Integer?(T)]
-[| MathMode?(LIBM)] inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
-[T | Integer?(T)]
-[| MathMode?(LIBM)] inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
+[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:Double,y:T) = libc.pow(x,Double(y));
+[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
+[T | Integer?(T) and MathMode?(LIBM)] inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
 [| MathMode?(LIBM)] inline overload abs(x:Int) = libc.libc.abs(x);
 [| MathMode?(LIBM)] inline overload abs(x:Long) = libc.llabs(x);
@@ -177,10 +177,8 @@ private define _isinf;
 [| MathMode?(LIBM)] inline overload _isinf(x:Float) = libc.isinff(x);
 [| MathMode?(LIBM)] inline overload _isinf(x:LongDouble) = libc.isinfl(x);
 
-[T | Float?(T)]
-[| MathMode?(LIBM)] inline overload infinity?(x:T) = if(_isinf(x)==1) true else false;
-[T | Float?(T)]
-[| MathMode?(LIBM)] inline overload negativeInfinity?(x:T) = if(_isinf(x)==-1) true else false;
+[T | Float?(T) and MathMode?(LIBM)] inline overload infinity?(x:T) = if(_isinf(x)==1) true else false;
+[T | Float?(T) and MathMode?(LIBM)] inline overload negativeInfinity?(x:T) = if(_isinf(x)==-1) true else false;
 
 [| MathMode?(LIBM)] inline overload finite?(x:Double) = Bool(libc.finite(x));
 [| MathMode?(LIBM)] inline overload finite?(x:Float) = Bool(libc.finitef(x));
@@ -250,9 +248,9 @@ private define _isinf;
 [| MathMode?(LIBM)] inline overload tgamma(x:Float) = libc.tgammaf(x);
 [| MathMode?(LIBM)] inline overload tgamma(x:LongDouble) = libc.tgammal(x);
 
-[| MathMode?(LIBM)] inline overload gamma(x:Double) = libc.gamma(x);
-[| MathMode?(LIBM)] inline overload gamma(x:Float) = libc.gammaf(x);
-[| MathMode?(LIBM)] inline overload gamma(x:LongDouble) = libc.gammal(x);
+[| MathMode?(LIBM)] inline overload gamma_r(x:Double,signgamp:Pointer[Int]) = libc.gamma_r(x,signgamp);
+[| MathMode?(LIBM)] inline overload gamma_r(x:Float,signgamp:Pointer[Int]) = libc.gammaf_r(x,signgamp);
+[| MathMode?(LIBM)] inline overload gamma_r(x:LongDouble,signgamp:Pointer[Int]) = libc.gammal_r(x,signgamp);
 
 [| MathMode?(LIBM)] inline overload lgamma_r(x:Double,signgamp:Pointer[Int]) = libc.lgamma_r(x,signgamp);
 [| MathMode?(LIBM)] inline overload lgamma_r(x:Float,signgamp:Pointer[Int]) = libc.lgammaf_r(x,signgamp);

@@ -1,8 +1,8 @@
 
 //Import native
 public import math.native.*;
+public import math.libm.*;
 
 
 alias LIBM = #"libm";
-
 MathMode?(m) = Flag(#"math.Mode")==m;
