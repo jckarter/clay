@@ -11,49 +11,49 @@ define compare;
 alias VD2 = Vec[Double, 2];
 alias V2[T] = Vec[T, 2];
 
-private external ("llvm.x86.sse2.div.sd")
+private external ("llvm.x86.sse2.div.sd", llvm)
     x86_divsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.max.sd")
+private external ("llvm.x86.sse2.max.sd", llvm)
     x86_maxsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.min.sd")
+private external ("llvm.x86.sse2.min.sd", llvm)
     x86_minsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.mul.sd")
+private external ("llvm.x86.sse2.mul.sd", llvm)
     x86_mulsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.sub.sd")
+private external ("llvm.x86.sse2.sub.sd", llvm)
     x86_subsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomieq.sd")
+private external ("llvm.x86.sse2.ucomieq.sd", llvm)
     x86_ucomieqsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomige.sd")
+private external ("llvm.x86.sse2.ucomige.sd", llvm)
     x86_ucomigesd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomigt.sd")
+private external ("llvm.x86.sse2.ucomigt.sd", llvm)
     x86_ucomigtsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomile.sd")
+private external ("llvm.x86.sse2.ucomile.sd", llvm)
     x86_ucomilesd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomilt.sd")
+private external ("llvm.x86.sse2.ucomilt.sd", llvm)
     x86_ucomiltsd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.ucomineq.sd")
+private external ("llvm.x86.sse2.ucomineq.sd", llvm)
     x86_ucomineqsd(a:VD2) : VD2;
   
-private external ("llvm.x86.sse2.add.sd")
+private external ("llvm.x86.sse2.add.sd", llvm)
     x86_addsd(a:VD2) : VD2;
  
-private external ("llvm.x86.sse2.sqrt.pd")
+private external ("llvm.x86.sse2.sqrt.pd", llvm)
     x86_sqrtpd(a:VD2) : VD2;
-private external ("llvm.x86.sse2.sqrt.sd")
+private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:VD2) : VD2;
-private external ("llvm.x86.sse3.hadd.ps")
+private external ("llvm.x86.sse3.hadd.ps", llvm)
     x86_haddps(a:VD2) : VD2;
-private external ("llvm.x86.sse3.hsub.ps")
+private external ("llvm.x86.sse3.hsub.ps", llvm)
     x86_hsubps(a:VD2) : VD2;
-private external ("llvm.x86.sse3.hadd.pd")
+private external ("llvm.x86.sse3.hadd.pd", llvm)
     x86_haddpd(a:VD2, b:VD2) : VD2;
-private external ("llvm.x86.sse3.hsub.pd")
+private external ("llvm.x86.sse3.hsub.pd", llvm)
     x86_hsubpd(a:VD2, b:VD2) : VD2;
-private external ("llvm.x86.sse2.cmp.pd")
+private external ("llvm.x86.sse2.cmp.pd", llvm)
     x86_cmppd(a:VD2, b:VD2, c:Int8) : VD2;
-private external ("llvm.x86.sse2.cmp.sd")
+private external ("llvm.x86.sse2.cmp.sd", llvm)
     x86_cmpsd(a:VD2, b:VD2, c:Int8) : VD2;
-private external ("llvm.x86.sse2.movmsk.pd")
+private external ("llvm.x86.sse2.movmsk.pd", llvm)
     x86_movmskpd(a:VD2) : Int32;
 
 //"llvm.x86.mmx.emms",

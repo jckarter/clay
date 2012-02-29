@@ -2,7 +2,7 @@
 public import math.native.*;
 import simd.*;
 
-private external ("llvm.x86.sse2.sqrt.sd")
+private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
 
 [T | Float?(T)]
