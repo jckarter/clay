@@ -1,6 +1,5 @@
 
 public import math.native.*;
-import numbers.floats.*;
 import math.native.kernel.exact.*;
 import math.native.kernel.ieee754.*;
 
@@ -88,3 +87,70 @@ overload sqrt(x:Double) {
     }
 }
 
+
+overload sqrt(x:Float) {
+    alias ONE = 1.f;
+    alias ZERO = 0.f;
+    alias TINY = LeastPositive(Float);
+
+    var ix = GET_FLOAT_SIGNED(x);
+
+      /* take care of Inf and NaN */
+    if(bitand(ix,0x7f800000)==0x7f800000) {
+        return x*x+x;   /* sqrt(NaN)=NaN, sqrt(+inf)=+inf
+               sqrt(-inf)=sNaN */
+    }
+      /* take care of zero */
+    if(ix<=0) {
+        if(bitandc(ix,SM)==0) return x;/* sqrt(+-0) = +-0 */
+        else if(ix<0)
+            return (x-x)/(x-x);   /* sqrt(-ve) = sNaN */
+    }
+      /* normalize x */
+    var m = bitshr(ix,23);
+    if(m==0) {        /* subnormal x */
+        var i = 0;
+        while(bitand(ix,0x00800000)==0){ 
+            ix = bitshl(ix,1);
+            inc(i);
+        }
+        m -= i-1;
+    }
+    m -= 127; /* unbias exponent */
+    ix = bitor(bitand(ix,0x007fffff),0x00800000);
+    if(bitand(m,1)) /* odd m, double x to make it even */
+        ix += ix;
+    m = bitshr(m,1);  /* m = [m/2] */
+
+      /* generate sqrt(x) bit by bit */
+    ix += ix;
+    var q,s = 0,0;    /* q = sqrt(x) */
+    var r = 0x01000000u;   /* r = moving bit from right to left */
+
+    while(r!=0) {
+        t = s+r;
+        if(t<=ix) {
+            s    = t+r;
+            ix  -= t;
+            q   += r;
+        }
+        ix += ix;
+        r = bitshr(r,1);
+    }
+
+    var z = 0.;
+      /* use floating add to find out rounding direction */
+    if(ix!=0) {
+        z = ONE-TINY; /* trigger inexact flag */
+        if (z>=ONE) {
+            z = ONE+TINY;
+      if (z>ONE)
+          q += 2;
+      else
+          q += bitand(q,1);
+        }
+    }
+    ix = bitshr(q,1)+0x3f000000;
+    ix += bitshl(m,23);
+    return SET_FLOAT_WORD(ix);
+}

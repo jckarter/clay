@@ -1,16 +1,13 @@
 // log1p
 
-import math.native.kernel.ieee754.*;
 public import math.native.*;
+import math.native.kernel.ieee754.*;
 
-
-
-[T | Float?(T)]
-overload log1p(x:T) {
-	alias ZERO = T(0);
-	alias HALF = T(0.5);
-	alias ONE = T(1);
-	alias MONE = T(-1.);
+overload log1p(x:Double) {
+	alias ZERO = 0.;
+	alias HALF = 0.5;
+	alias ONE = 1.;
+	alias MONE = -1.;
 
 	var ix = MAKE_IEEE(x);
 	var ax = bitand(GET_IEEE_HIGH(ix),MM);
@@ -44,7 +41,7 @@ overload log1p(x:T) {
 			c /= u;
 	    } 
 	    else {
-			hu = GET_IEEE_HIGH(x);
+			hu = GET_IEEE_HIGH(ix);
 		    k  = bitshr(hu,20)-1023;
 			c  = 0;
 	    }
@@ -65,6 +62,7 @@ overload log1p(x:T) {
 	    }
 	    f = u-ONE;
 	}
+	
 	var hfsq,R = HALF*f*f, 0.;
 	if(hu==0) {	/* |f| < 2**-20 */
 	    if(f==ZERO) {
@@ -72,8 +70,7 @@ overload log1p(x:T) {
 			    return ZERO;
 			} 
 			else {
-			    c += k*LN2LO;
-			    return k*LN2HI+c;
+			    return k*(LN2HI+LN2LO)+c;
 			}
 	    }
 	    R = hfsq*(ONE-0.66666666666666666*f);

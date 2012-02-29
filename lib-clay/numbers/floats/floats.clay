@@ -197,7 +197,7 @@ overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 [T | Imaginary?(T)]
 abs(x:T) = imagFromBits(floatBitsUnsigned(x));
 [T | Float?(T)]
-overload abs(x:T) = floatFromBits(bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul));
+overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 
 [T,U | Float?(T,U)]

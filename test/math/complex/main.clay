@@ -1,0 +1,65 @@
+
+import math.*;
+
+ftypes() = Complex64;
+
+fdata() =           0.+0j,
+                    -0.+0j,
+                    -1.-1j,
+                    2.+2j,
+                    0.+nan(Imag64),
+                    -0.+nan(Imag64),
+                    1.+infinity(Imag64),
+                    1.+nan(Imag64),
+                    -infinity(Double)+1j,
+                    infinity(Double)+1j,
+                    -infinity(Double)+infinity(Imag64),
+                    infinity(Complex64),
+                    infinity(Double)+nan(Imag64),
+                    -infinity(Double)+nan(Imag64),
+                    nan(Double)+1.j,
+                    nan(Double)+infinity(Imag64),
+                    nan(Complex64);
+
+
+oneArgFuncs() =     
+                    sin,cos,tan,
+                    asin,acos,atan,
+                    sinh,cosh,tanh,
+                    asinh,acosh,atanh,
+                    exp,
+                    arg,
+                    abs,
+                    log,
+                    sqrt,
+                    proj
+                    ;
+
+evalFuncs(funcs,data,types) {
+    ..for(f in funcs()) {
+        ..for(t in types())
+            ..for(d in data())
+                println(StaticName(f),"(",d,") = ",f(t(d)));
+        println();            
+    }
+}
+
+evalFuncs2(funcs,data,types) {
+    ..for(f in funcs()) {
+        ..for(t in types())
+            ..for(d1 in data())
+                ..for(d2 in data(t)) {
+                    println(StaticName(f),"(",T(d1),",",T(d2),") = ",f(T(d1),T(d2)));
+                }
+        println();            
+    }
+}
+
+
+main() {
+
+    evalFuncs(oneArgFuncs,fdata,ftypes);
+    //evalFuncs2(twoArgFuncs,fdata,ftypes);
+
+}
+

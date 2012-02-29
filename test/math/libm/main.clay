@@ -4,9 +4,10 @@ import math.*;
 
 ftypes() = Float64;
 
-fdata() = 0., 1., -1,3.,38, 355., M_PI,-M_PI, nan(Double), -nan(Double),
+fdata() = 0., 1., -1.,3.,38., 355., M_PI,-M_PI, nan(Double), -nan(Double),
     infinity(Double), negativeInfinity(Double), LeastPositive(Double),
     LeastPositiveNormalized(Double), GreatestPositiveFinite(Double);
+
 
 oneArgFuncs() = 
                 abs,recip,
@@ -41,13 +42,12 @@ evalFuncs(funcs,data,types) {
     }
 }
 
-evalFuncs2(funcs,data,types) {
+overload evalFuncs(funcs,data1,data2,types) {
     ..for(f in funcs()) {
         ..for(t in types())
-            ..for(d1 in data())
-                ..for(d2 in data()) {
+            ..for(d1 in data1())
+                ..for(d2 in data2())
                     println(StaticName(f),"(",t(d1),",",t(d2),") = ",f(t(d1),t(d2)));
-                }
         println();            
     }
 }
@@ -56,7 +56,7 @@ evalFuncs2(funcs,data,types) {
 main() {
 
     evalFuncs(oneArgFuncs,fdata,ftypes);
-    evalFuncs2(twoArgFuncs,fdata,ftypes);
+    evalFuncs(twoArgFuncs,fdata,fdata,ftypes);
 
 }
 
