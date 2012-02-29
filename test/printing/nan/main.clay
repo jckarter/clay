@@ -1,0 +1,12 @@
+import numbers.floats.(nan);
+
+main() {
+    println(nan(Float32));
+    println(nan(Float64));
+    println(nan(Imag32));
+    println(nan(Imag64));
+    println(0.0f + nan(Imag32));
+    println(0.0 + nan(Imag64));
+    println(nan(Float32) + 0.0fj);
+    println(nan(Float64) + 0.0j);
+}
