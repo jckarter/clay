@@ -1,12 +1,13 @@
-Clay 0.1.0
+Clay 0.1.1
 ==========
+
+This is a bugfix release. All Clay 0.1.0 source code should be source-compatible.
 
 Platform support
 ----------------
-Linux and MacOS X hosts and targets should work out of the box. FreeBSD mostly
-works, but some tests fail due to minor platform differences Clay doesn't
-account for. Win32 targeting the MSVC toolchain mostly works, but has some
-problems due to LLVM 3.0 bugs on the platform. Win64, Mingw, and Cygwin targets
+Linux, MacOS X, Win32, Win64, FreeBSD hosts and targets should work out of the box,
+with some expected test failures for Win64 and FreeBSD.
+Windows with the MSVC toolchain is known to work, but Mingw, and Cygwin targets
 are untested.
 
 Known issues
@@ -22,13 +23,9 @@ Known issues
     behavior.
 #144 - LLVM does not 16-byte-align the stack for FreeBSD targets, causing
     external functions that pass vector arguments by value to crash.
-#145 - FreeBSD's printf does not format "%La" arguments in the manner expected
-    by some Clay code.
-#146 - The `io.sockets` library fails to compile on FreeBSD due to a system
-    type mismatch.
 #153, #178 - The `math` module is still a work in progress and largely
     untested.
 #156 - The compile-time evaluator is not endian-agnostic when cross building.
-#165, #166 - LLVM bugs cause overflow-checking multiplication and unsigned-to-
-    floating-point conversion to fail on Windows.
+#164 - Lack of runtime support on Win32 causes overflow-checking multiplication
+    and Int128 operations to fail on Windows targets.
 
