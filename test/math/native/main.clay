@@ -4,9 +4,9 @@ import math.*;
 
 ftypes() = Float64;
 
-fdata() = 0., 1., -1,3.,38, 355., M_PI,-M_PI, nan(Double), -nan(Double),
+var fdata = array(0., 1., -1.,3., 38. , 355. , M_PI,-M_PI, nan(Double), -nan(Double),
     infinity(Double), negativeInfinity(Double), LeastPositive(Double),
-    LeastPositiveNormalized(Double), GreatestPositiveFinite(Double);
+    LeastPositiveNormalized(Double), GreatestPositiveFinite(Double));
 
 oneArgFuncs() = 
                 abs,recip,
@@ -35,18 +35,19 @@ twoArgFuncs() =
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()) {
         ..for(t in types())
-            ..for(d in data())
-                println(StaticName(f),"(",t(d),") = ",f(t(d)));
+            for(i in range(size(data)))
+                println(StaticName(f),"(",t(data[i]),") = ",f(t(data[i])));
         println();            
     }
 }
 
+
 evalFuncs2(funcs,data,types) {
     ..for(f in funcs()) {
         ..for(t in types())
-            ..for(d1 in data())
-                ..for(d2 in data()) {
-                    println(StaticName(f),"(",t(d1),",",t(d2),") = ",f(t(d1),t(d2)));
+            for(i in range(size(data)))
+                for(j in range(size(data))) {
+                    println(StaticName(f),"(",t(data[i]),",",t(data[j]),") = ",f(t(data[i]),t(data[j])));
                 }
         println();            
     }

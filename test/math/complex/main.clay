@@ -3,7 +3,7 @@ import math.*;
 
 ftypes() = Complex64;
 
-fdata() =           0.+0j,
+var fdata = array(  0.+0j,
                     -0.+0j,
                     -1.-1j,
                     2.+2j,
@@ -19,7 +19,7 @@ fdata() =           0.+0j,
                     -infinity(Double)+nan(Imag64),
                     nan(Double)+1.j,
                     nan(Double)+infinity(Imag64),
-                    nan(Complex64);
+                    nan(Complex64));
 
 
 oneArgFuncs() =     
@@ -38,18 +38,19 @@ oneArgFuncs() =
 evalFuncs(funcs,data,types) {
     ..for(f in funcs()) {
         ..for(t in types())
-            ..for(d in data())
-                println(StaticName(f),"(",d,") = ",f(t(d)));
+            for(i in range(size(data)))
+                println(StaticName(f),"(",t(data[i]),") = ",f(t(data[i])));
         println();            
     }
 }
 
+
 evalFuncs2(funcs,data,types) {
     ..for(f in funcs()) {
         ..for(t in types())
-            ..for(d1 in data())
-                ..for(d2 in data(t)) {
-                    println(StaticName(f),"(",T(d1),",",T(d2),") = ",f(T(d1),T(d2)));
+            for(i in range(size(data)))
+                for(j in range(size(data))) {
+                    println(StaticName(f),"(",t(data[i]),",",t(data[j]),") = ",f(t(data[i]),t(data[j])));
                 }
         println();            
     }
