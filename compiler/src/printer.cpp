@@ -113,11 +113,6 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StringLiteral(" << y->value << ")";
         break;
     }
-    case IDENTIFIER_LITERAL : {
-        const IdentifierLiteral *y = (const IdentifierLiteral *)x;
-        out << "IdentifierLiteral(" << y->value << ")";
-        break;
-    }
 
     case NAME_REF : {
         const NameRef *y = (const NameRef *)x;
@@ -275,6 +270,11 @@ static void printExpr(ostream &out, const Expr *x) {
 
 static void printStatement(ostream &out, const Statement *x) {
     switch (x->stmtKind) {
+    case WITH : {
+        const WithStatement *y = (const WithStatement *)y;
+        out << "WithStatement(" << y->lhs << ", " << y->rhs << ")";
+        break;
+    }
     case BLOCK : {
         const Block *y = (const Block *)x;
         out << "Block(" << bigVec(y->statements) << ")";

@@ -14,7 +14,7 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
-static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index);
+static EnumTypePtr valueToEnumType(MultiPValuePtr x, unsigned index);
 
 static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
 static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
@@ -120,12 +120,12 @@ static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index)
     return t;
 }
 
-static TypePtr valueToEnumerationType(MultiPValuePtr x, unsigned index)
+static EnumTypePtr valueToEnumType(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = valueToType(x, index);
     if (t->typeKind != ENUM_TYPE)
         argumentTypeError(index, "enum type", t);
-    return t;
+    return (EnumType*)t.ptr();
 }
 
 static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
@@ -648,16 +648,6 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
-        TypePtr ptrInt8Type = pointerType(int8Type);
-        PValuePtr pv = new PValue(arrayType(int8Type, x->value.size()), true);
-        MultiPValuePtr args = new MultiPValue();
-        args->add(new PValue(ptrInt8Type, true));
-        args->add(new PValue(ptrInt8Type, true));
-        return analyzeCallValue(staticPValue(operator_stringLiteral()), args);
-    }
-
-    case IDENTIFIER_LITERAL : {
-        IdentifierLiteral *x = (IdentifierLiteral *)expr.ptr();
         return new MultiPValue(staticPValue(x->value.ptr()));
     }
 
@@ -1107,63 +1097,78 @@ void verifyAttributes(ExternalProcedurePtr x)
     x->attrDLLExport = false;
     int callingConv = -1;
     x->attrAsmLabel = "";
-    for (unsigned i = 0; i < x->attributes->size(); ++i) {
-        ExprPtr expr = x->attributes->exprs[i];
-        if (expr->exprKind == STRING_LITERAL) {
-            StringLiteral *y = (StringLiteral *)expr.ptr();
-            x->attrAsmLabel = y->value;
-        }
-        else {
-            ObjectPtr obj = evaluateOneStatic(expr, x->env);
-            if (obj->objKind != PRIM_OP)
-                error(expr, "invalid external function attribute");
+
+    MultiStaticPtr attrs = evaluateMultiStatic(x->attributes, x->env);
+
+    for (unsigned i = 0; i < attrs->size(); ++i) {
+        ObjectPtr obj = attrs->values[i];
+
+        switch (obj->objKind) {
+        case PRIM_OP: {
             PrimOp *y = (PrimOp *)obj.ptr();
             switch (y->primOpCode) {
             case PRIM_AttributeStdCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling convention");
+                    error(x, "cannot specify more than one calling convention in external attributes");
                 callingConv = CC_STDCALL;
                 break;
             }
             case PRIM_AttributeFastCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling convention");
+                    error(x, "cannot specify more than one calling convention in external attributes");
                 callingConv = CC_FASTCALL;
                 break;
             }
             case PRIM_AttributeThisCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling convention");
+                    error(x, "cannot specify more than one calling convention in external attributes");
                 callingConv = CC_THISCALL;
                 break;
             }
             case PRIM_AttributeCCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling convention");
+                    error(x, "cannot specify more than one calling convention in external attributes");
                 callingConv = CC_DEFAULT;
                 break;
             }
             case PRIM_AttributeLLVMCall : {
                 if (callingConv != -1)
-                    error(expr, "cannot specify more than one calling convention");
+                    error(x, "cannot specify more than one calling convention in external attributes");
                 callingConv = CC_LLVM;
                 break;
             }
             case PRIM_AttributeDLLImport : {
                 if (x->attrDLLExport)
-                    error(expr, "dllimport specified after dllexport");
+                    error(x, "dllimport specified after dllexport in external attributes");
                 x->attrDLLImport = true;
                 break;
             }
             case PRIM_AttributeDLLExport : {
                 if (x->attrDLLImport)
-                    error(expr, "dllexport specified after dllimport");
+                    error(x, "dllexport specified after dllimport in external attributes");
                 x->attrDLLExport = true;
                 break;
             }
-            default :
-                error(expr, "invalid external function attribute");
+            default : {
+                ostringstream os;
+                os << "invalid external function attribute: ";
+                printStaticName(os, obj);
+                error(x, os.str());
             }
+            }
+            break;
+        }
+        case IDENTIFIER : {
+            Identifier *y = (Identifier *)obj.ptr();
+            x->attrAsmLabel = y->str;
+            break;
+        }
+        default: {
+            ostringstream os;
+            os << "invalid external function attribute: ";
+            printStaticName(os, obj);
+            error(x, os.str());
+        }
         }
     }
     if (callingConv == -1)
@@ -1177,27 +1182,39 @@ void verifyAttributes(ExternalVariablePtr var)
     var->attributesVerified = true;
     var->attrDLLImport = false;
     var->attrDLLExport = false;
-    for (unsigned i = 0; i < var->attributes->size(); ++i) {
-        ExprPtr expr = var->attributes->exprs[i];
-        ObjectPtr obj = evaluateOneStatic(expr, var->env);
-        if (obj->objKind != PRIM_OP)
-            error(expr, "invalid external variable attribute");
+
+    MultiStaticPtr attrs = evaluateMultiStatic(var->attributes, var->env);
+
+    for (unsigned i = 0; i < attrs->size(); ++i) {
+        ObjectPtr obj = attrs->values[i];
+
+        if (obj->objKind != PRIM_OP) {
+            ostringstream os;
+            os << "invalid external variable attribute: ";
+            printStaticName(os, obj);
+            error(var, os.str());
+        }
+
         PrimOp *y = (PrimOp *)obj.ptr();
         switch (y->primOpCode) {
         case PRIM_AttributeDLLImport : {
             if (var->attrDLLExport)
-                error(expr, "dllimport specified after dllexport");
+                error(var, "dllimport specified after dllexport in external attributes");
             var->attrDLLImport = true;
             break;
         }
         case PRIM_AttributeDLLExport : {
             if (var->attrDLLImport)
-                error(expr, "dllexport specified after dllimport");
+                error(var, "dllexport specified after dllimport in external attributes");
             var->attrDLLExport = true;
             break;
         }
-        default :
-            error(expr, "invalid external variable attribute");
+        default : {
+            ostringstream os;
+            os << "invalid external variable attribute: ";
+            printStaticName(os, obj);
+            error(var, os.str());
+        }
         }
     }
 }
@@ -1208,30 +1225,37 @@ void verifyAttributes(ModulePtr mod)
     mod->attributesVerified = true;
 
     if (mod->declaration != NULL && mod->declaration->attributes != NULL) {
-        for (unsigned i = 0; i < mod->declaration->attributes->size(); ++i) {
-            ExprPtr expr = mod->declaration->attributes->exprs[i];
-            if (expr->exprKind == STRING_LITERAL) {
-                StringLiteral *y = (StringLiteral *)expr.ptr();
-                mod->attrBuildFlags.push_back(y->value);
-            } else {
-                ObjectPtr obj = evaluateOneStatic(expr, mod->env);
+        MultiStaticPtr attrs = evaluateMultiStatic(mod->declaration->attributes, mod->env);
+
+        for (unsigned i = 0; i < attrs->size(); ++i) {
+            ObjectPtr obj = attrs->values[i];
+
+            switch (obj->objKind) {
+            case TYPE: {
                 if (obj->objKind == TYPE) {
                     Type *ty = (Type*)obj.ptr();
                     if (ty->typeKind == FLOAT_TYPE) {
                         mod->attrDefaultFloatType = (FloatType*)ty;
-                        continue;
                     } else if (ty->typeKind == INTEGER_TYPE) {
                         mod->attrDefaultIntegerType = (IntegerType*)ty;
-                        continue;
                     }
                 }
-
-                error(expr, "invalid module attribute");
+                break;
+            }
+            case IDENTIFIER: {
+                Identifier *y = (Identifier *)obj.ptr();
+                mod->attrBuildFlags.push_back(y->str);
+                break;
+            }
+            default:
+                ostringstream os;
+                os << "invalid module attribute: ";
+                printStaticName(os, obj);
+                error(mod->declaration, os.str());
             }
         }
     }
 }
-
 
 
 //
@@ -2712,29 +2736,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_Static :
         error("no Static type constructor overload found");
 
-    case PRIM_ModuleName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (!obj)
-            argumentError(0, "expecting static object");
-        ModulePtr m = staticModule(obj);
-        if (!m)
-            argumentError(0, "value has no associated module");
-        ExprPtr z = new StringLiteral(m->moduleName);
-        return analyzeExpr(z, new Env());
-    }
-
-    case PRIM_StaticName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (!obj)
-            argumentError(0, "expecting static object");
-        ostringstream sout;
-        printStaticName(sout, obj);
-        ExprPtr z = new StringLiteral(sout.str());
-        return analyzeExpr(z, new Env());
-    }
-
     case PRIM_staticIntegers : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
@@ -2796,7 +2797,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(0, "expecting a module");
         ObjectPtr identObj = unwrapStaticType(args->values[1]->type);
         if (!identObj || (identObj->objKind != IDENTIFIER))
-            argumentError(1, "expecting an identifier");
+            argumentError(1, "expecting a string literal value");
         ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
         Identifier *ident = (Identifier *)identObj.ptr();
         ObjectPtr obj = safeLookupModuleHolder(module, ident);
@@ -2810,12 +2811,19 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(new PValue(cSizeTType, true));
 
     case PRIM_EnumMemberName : {
-        TypePtr ptrInt8Type = pointerType(int8Type);
-        PValuePtr pv = new PValue(arrayType(int8Type, 1), true);
-        MultiPValuePtr args = new MultiPValue();
-        args->add(new PValue(ptrInt8Type, true));
-        args->add(new PValue(ptrInt8Type, true));
-        return analyzeCallValue(staticPValue(operator_stringLiteral()), args);
+        ensureArity(args, 2);
+        EnumTypePtr et = valueToEnumType(args, 0);
+        ObjectPtr obj = unwrapStaticType(args->values[1]->type);
+        size_t i = 0;
+        if (!obj || !staticToSizeTOrInt(obj, i))
+            argumentError(1, "expecting static SizeT or Int value");
+
+        EnumerationPtr e = et->enumeration;
+        if (i >= e->members.size())
+            argumentIndexRangeError(1, "enum member index",
+                                    i, e->members.size());
+
+        return analyzeStaticObject(e->members[i]->name.ptr());
     }
 
     case PRIM_enumToInt :
@@ -2823,34 +2831,36 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
     case PRIM_intToEnum : {
         ensureArity(args, 2);
-        TypePtr t = valueToEnumerationType(args, 0);
-        initializeEnumType((EnumType*)t.ptr());
-        return new MultiPValue(new PValue(t, true));
+        EnumTypePtr t = valueToEnumType(args, 0);
+        initializeEnumType(t);
+        return new MultiPValue(new PValue(t.ptr(), true));
     }
 
-    case PRIM_IdentifierP :
+    case PRIM_StringLiteralP :
         return new MultiPValue(new PValue(boolType, true));
 
-    case PRIM_IdentifierSize :
-        return new MultiPValue(new PValue(cSizeTType, true));
+    case PRIM_stringLiteralByteIndex :
+        return new MultiPValue(new PValue(cIntType, true));
 
-    case PRIM_IdentifierConcat : {
-        std::string result;
-        for (unsigned i = 0; i < args->size(); ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[i]->type);
-            if (!obj || (obj->objKind != IDENTIFIER))
-                argumentError(i, "expecting an identifier value");
-            Identifier *ident = (Identifier *)obj.ptr();
-            result.append(ident->str);
-        }
-        return analyzeStaticObject(new Identifier(result));
+    case PRIM_stringLiteralBytes : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj || (obj->objKind != IDENTIFIER))
+            argumentError(0, "expecting a string literal value");
+        Identifier *ident = (Identifier *)obj.ptr();
+        MultiPValuePtr result = new MultiPValue();
+        for (size_t i = 0, sz = ident->str.size(); i < sz; ++i)
+            result->add(new PValue(cIntType, true));
     }
 
-    case PRIM_IdentifierSlice : {
+    case PRIM_stringLiteralByteSize :
+        return new MultiPValue(new PValue(cSizeTType, true));
+
+    case PRIM_stringLiteralByteSlice : {
         ensureArity(args, 3);
         ObjectPtr identObj = unwrapStaticType(args->values[0]->type);
         if (!identObj || (identObj->objKind != IDENTIFIER))
-            argumentError(0, "expecting an identifier value");
+            argumentError(0, "expecting a string literal value");
         Identifier *ident = (Identifier *)identObj.ptr();
         ObjectPtr beginObj = unwrapStaticType(args->values[1]->type);
         ObjectPtr endObj = unwrapStaticType(args->values[2]->type);
@@ -2870,7 +2880,39 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeStaticObject(new Identifier(result));
     }
 
-    case PRIM_IdentifierModuleName : {
+    case PRIM_stringLiteralConcat : {
+        std::string result;
+        for (size_t i = 0, sz = args->size(); i < sz; ++i) {
+            ObjectPtr obj = unwrapStaticType(args->values[i]->type);
+            if (!obj || (obj->objKind != IDENTIFIER))
+                argumentError(i, "expecting a string literal value");
+            Identifier *ident = (Identifier *)obj.ptr();
+            result.append(ident->str);
+        }
+        return analyzeStaticObject(new Identifier(result));
+    }
+
+    case PRIM_stringLiteralFromBytes : {
+        std::string result;
+        for (size_t i = 0, sz = args->size(); i < sz; ++i) {
+            ObjectPtr obj = unwrapStaticType(args->values[i]->type);
+            size_t byte = 0;
+            if (!obj || !staticToSizeTOrInt(obj, byte))
+                argumentError(i, "expecting a static SizeT or Int value");
+            if (byte > 255) {
+                ostringstream os;
+                os << byte << " is too large for a string literal byte";
+                argumentError(i, os.str());
+            }
+            result.push_back((char)byte);
+        }
+        return analyzeStaticObject(new Identifier(result));
+    }
+
+    case PRIM_stringTableConstant :
+        return new MultiPValue(new PValue(pointerType(cSizeTType), true));;
+
+    case PRIM_ModuleName : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
         if (!obj)
@@ -2881,7 +2923,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeStaticObject(new Identifier(m->moduleName));
     }
 
-    case PRIM_IdentifierStaticName : {
+    case PRIM_StaticName : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
         if (!obj)

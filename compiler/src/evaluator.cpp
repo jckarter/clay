@@ -60,6 +60,8 @@ void evalCallByName(InvokeEntryPtr entry,
                     EnvPtr env,
                     MultiEValuePtr out);
 
+static map<string, void*> staticStringTableConstants;
+
 enum TerminationKind {
     TERMINATE_RETURN,
     TERMINATE_BREAK,
@@ -966,23 +968,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
 
-    case STRING_LITERAL : {
-        StringLiteral *x = (StringLiteral *)expr.ptr();
-        char *str = const_cast<char*>(x->value.c_str());
-        char *strEnd = str + x->value.size();
-        TypePtr ptrInt8Type = pointerType(int8Type);
-        EValuePtr evFirst = evalAllocValue(ptrInt8Type);
-        evFirst->as<char *>() = str;
-        EValuePtr evLast = evalAllocValue(ptrInt8Type);
-        evLast->as<char *>() = strEnd;
-        MultiEValuePtr args = new MultiEValue();
-        args->add(evFirst);
-        args->add(evLast);
-        evalCallValue(staticEValue(operator_stringLiteral()), args, out);
-        break;
-    }
-
-    case IDENTIFIER_LITERAL :
+    case STRING_LITERAL :
         break;
 
     case FILE_EXPR :
@@ -2444,7 +2430,7 @@ static ObjectPtr valueToStatic(MultiEValuePtr args, unsigned index)
     return obj;
 }
 
-static size_t valueHolderToSizeT(ValueHolderPtr vh)
+size_t valueHolderToSizeT(ValueHolderPtr vh)
 {
     switch (typeSize(cSizeTType)) {
     case 4 : return vh->as<size32_t>();
@@ -3447,6 +3433,28 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
 //
 // evalPrimOp
 //
+static void *evalStringTableConstant(const string &s)
+{
+    map<string, void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
+    if (oldConstant != staticStringTableConstants.end())
+        return oldConstant->second;
+    size_t bits = typeSize(cSizeTType);
+    size_t size = s.size();
+    void *buf = malloc(size + bits + 1);
+    switch (bits) {
+    case 4:
+        *(size32_t*)buf = size;
+        break;
+    case 8:
+        *(size64_t*)buf = size;
+        break;
+    default:
+        error("unsupported pointer width");
+    }
+    memcpy((void*)((char*)buf + bits), (void*)s.c_str(), s.size() + 1);
+    staticStringTableConstants.insert(make_pair(s, buf));
+    return buf;
+}
 
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 {
@@ -4293,58 +4301,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_Static :
         error("Static type constructor cannot be called");
 
-    case PRIM_ModuleName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ModulePtr m = staticModule(obj);
-        if (!m)
-            argumentError(0, "value has no associated module");
-        ExprPtr z = new StringLiteral(m->moduleName);
-        evalExpr(z, new Env(), out);
+    case PRIM_staticIntegers :
         break;
-    }
-
-    case PRIM_StaticName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ostringstream sout;
-        printStaticName(sout, obj);
-        ExprPtr z = new StringLiteral(sout.str());
-        evalExpr(z, new Env(), out);
-        break;
-    }
-
-    case PRIM_staticIntegers : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        if (obj->objKind != VALUE_HOLDER)
-            argumentError(0, "expecting a static SizeT or Int value");
-        ValueHolder *vh = (ValueHolder *)obj.ptr();
-        if (vh->type == cIntType) {
-            int count = vh->as<int>();
-            if (count < 0)
-                argumentError(0, "negative values are not allowed");
-            assert(out->size() == (size_t)count);
-            for (int i = 0; i < count; ++i) {
-                ValueHolderPtr vhi = intToValueHolder(i);
-                EValuePtr outi = out->values[i];
-                assert(outi->type == staticType(vhi.ptr()));
-            }
-        }
-        else if (vh->type == cSizeTType) {
-            size_t count = valueHolderToSizeT(vh);
-            assert(out->size() == count);
-            for (size_t i = 0; i < count; ++i) {
-                ValueHolderPtr vhi = sizeTToValueHolder(i);
-                EValuePtr outi = out->values[i];
-                assert(outi->type == staticType(vhi.ptr()));
-            }
-        }
-        else {
-            argumentError(0, "expecting a static SizeT or Int value");
-        }
-        break;
-    }
 
     case PRIM_integers : {
         ensureArity(args, 1);
@@ -4417,18 +4375,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_EnumMemberName : {
-        ensureArity(args, 2);
-        EnumTypePtr et = valueToEnumType(args, 0);
-        size_t i = valueToStaticSizeTOrInt(args, 1);
-        EnumerationPtr e = et->enumeration;
-        if (i >= e->members.size())
-            argumentIndexRangeError(1, "enum member index",
-                                    i, e->members.size());
-        ExprPtr str = new StringLiteral(e->members[i]->name->str);
-        evalExpr(str, new Env(), out);
+    case PRIM_EnumMemberName :
         break;
-    }
 
     case PRIM_enumToInt : {
         ensureArity(args, 1);
@@ -4453,7 +4401,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_IdentifierP : {
+    case PRIM_StringLiteralP : {
         ensureArity(args, 1);
         bool result = false;
         EValuePtr ev0 = args->values[0];
@@ -4466,7 +4414,33 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_IdentifierSize : {
+    case PRIM_stringLiteralByteIndex : {
+        ensureArity(args, 2);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        size_t n = valueToStaticSizeTOrInt(args, 1);
+        if (n >= ident->str.size())
+            argumentError(1, "string literal index out of bounds");
+
+        assert(out->size() == 1);
+        EValuePtr outi = out->values[0];
+        assert(outi->type == cIntType);
+        outi->as<int>() = ident->str[n];
+        break;
+    }
+
+    case PRIM_stringLiteralBytes : {
+        ensureArity(args, 1);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        assert(out->size() == ident->str.size());
+        for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
+            EValuePtr outi = out->values[0];
+            assert(outi->type == cIntType);
+            outi->as<int>() = ident->str[i];
+        }
+        break;
+    }
+
+    case PRIM_stringLiteralByteSize : {
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
         ValueHolderPtr vh = sizeTToValueHolder(ident->str.size());
@@ -4474,65 +4448,35 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_IdentifierConcat : {
-        string result;
-        for (unsigned i = 0; i < args->size(); ++i) {
-            IdentifierPtr ident = valueToIdentifier(args, i);
-            result.append(ident->str);
-        }
-        evalStaticObject(new Identifier(result), out);
+    case PRIM_stringLiteralByteSlice :
+    case PRIM_stringLiteralConcat :
+    case PRIM_stringLiteralFromBytes :
         break;
-    }
 
-    case PRIM_IdentifierSlice : {
-        ensureArity(args, 3);
+    case PRIM_stringTableConstant : {
+        ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
-        size_t begin = valueToStaticSizeTOrInt(args, 1);
-        size_t end = valueToStaticSizeTOrInt(args, 2);
-        if (end > ident->str.size()) {
-            argumentIndexRangeError(2, "ending index",
-                                    end, ident->str.size());
-        }
-        if (begin > end)
-            argumentIndexRangeError(1, "starting index",
-                                    begin, end);
-        string result = ident->str.substr(begin, end-begin);
-        evalStaticObject(new Identifier(result), out);
+        void *value = evalStringTableConstant(ident->str);
+
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(cSizeTType));
+        out0->as<void*>() = value;
         break;
     }
 
-    case PRIM_IdentifierModuleName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ModulePtr m = staticModule(obj);
-        if (!m)
-            argumentError(0, "value has no associated module");
-        evalStaticObject(new Identifier(m->moduleName), out);
+    case PRIM_ModuleName :
+    case PRIM_StaticName :
         break;
-    }
-
-    case PRIM_IdentifierStaticName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ostringstream sout;
-        printStaticName(sout, obj);
-        evalStaticObject(new Identifier(sout.str()), out);
-        break;
-    }
 
     case PRIM_FlagP : {
         ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (obj != NULL && obj->objKind == IDENTIFIER) {
-            Identifier *ident = (Identifier*)obj.ptr();
-
-            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
-            assert(out->size() == 1);
-            EValuePtr out0 = out->values[0];
-            assert(out0->type == boolType);
-            out0->as<bool>() = flag != globalFlags.end();
-        } else
-            argumentTypeError(0, "identifier", args->values[0]->type);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        out0->as<bool>() = flag != globalFlags.end();
         break;
     }
 

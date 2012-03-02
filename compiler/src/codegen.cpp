@@ -8,6 +8,7 @@ llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
 
 static vector<CValuePtr> initializedGlobals;
+static map<string, llvm::Constant*> stringTableConstants;
 static CodegenContextPtr constructorsCtx;
 static CodegenContextPtr destructorsCtx;
 
@@ -975,40 +976,7 @@ void codegenExpr(ExprPtr expr,
         break;
     }
 
-    case STRING_LITERAL : {
-        StringLiteral *x = (StringLiteral *)expr.ptr();
-        llvm::Constant *initializer =
-            llvm::ConstantArray::get(llvm::getGlobalContext(),
-                                     x->value,
-                                     true);
-        TypePtr type = arrayType(int8Type, x->value.size() + 1);
-        ostringstream symbolName;
-        symbolName << "StringConstant " << x->value << " clay";
-
-        llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
-            *llvmModule, llvmType(type), true,
-            llvm::GlobalVariable::PrivateLinkage,
-            initializer, symbolName.str());
-        llvm::Value *str =
-            ctx->builder->CreateConstGEP2_32(gvar, 0, 0);
-        llvm::Value *strEnd =
-            ctx->builder->CreateConstGEP2_32(gvar, 0, x->value.size());
-        TypePtr ptrInt8Type = pointerType(int8Type);
-        CValuePtr cvFirst = codegenAllocValue(ptrInt8Type, ctx);
-        CValuePtr cvLast = codegenAllocValue(ptrInt8Type, ctx);
-        ctx->builder->CreateStore(str, cvFirst->llValue);
-        ctx->builder->CreateStore(strEnd, cvLast->llValue);
-        MultiCValuePtr args = new MultiCValue();
-        args->add(cvFirst);
-        args->add(cvLast);
-        codegenCallValue(staticCValue(operator_stringLiteral(), ctx),
-                         args,
-                         ctx,
-                         out);
-        break;
-    }
-
-    case IDENTIFIER_LITERAL :
+    case STRING_LITERAL :
         break;
 
     case FILE_EXPR :
@@ -4321,11 +4289,10 @@ static size_t valueToStaticSizeTOrInt(MultiCValuePtr args, unsigned index)
         argumentError(index, "expecting a static SizeT or Int value");
     ValueHolder *vh = (ValueHolder *)obj.ptr();
     if (vh->type == cSizeTType) {
-        return *((size_t *)vh->buf);
+        return valueHolderToSizeT(vh);
     }
     else if (vh->type == cIntType) {
-        int i = *((int *)vh->buf);
-        return size_t(i);
+        return size_t(vh->as<int>());
     }
     else {
         argumentError(index, "expecting a static SizeT or Int value");
@@ -4756,6 +4723,39 @@ llvm::AtomicRMWInst::BinOp atomicRMWOpValue(MultiCValuePtr args, unsigned index)
 //
 // codegenPrimOp
 //
+
+static llvm::Constant *codegenStringTableConstant(std::string const &s)
+{
+    map<string, llvm::Constant*>::const_iterator oldConstant = stringTableConstants.find(s);
+    if (oldConstant != stringTableConstants.end())
+        return oldConstant->second;
+
+    llvm::Constant *sizeInitializer =
+        llvm::ConstantInt::get(llvmType(cSizeTType), s.size(), false);
+    llvm::Constant *stringInitializer =
+        llvm::ConstantArray::get(llvm::getGlobalContext(), s, true);
+    llvm::Constant *structEntries[] = {sizeInitializer, stringInitializer};
+    llvm::Constant *initializer =
+        llvm::ConstantStruct::getAnon(llvm::getGlobalContext(),
+                structEntries,
+                false);
+
+    ostringstream symbolName;
+    symbolName << "\"" << s << "\" clay";
+
+    llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
+        *llvmModule, initializer->getType(), true,
+        llvm::GlobalVariable::PrivateLinkage,
+        initializer, symbolName.str());
+    llvm::Constant *idxs[] = {
+        llvm::ConstantInt::get(llvmType(int32Type), 0),
+        llvm::ConstantInt::get(llvmType(int32Type), 0),
+    };
+
+    llvm::Constant *theConstant = llvm::ConstantExpr::getGetElementPtr(gvar, idxs);
+    stringTableConstants.insert(make_pair(s, theConstant));
+    return theConstant;
+}
 
 void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
@@ -5912,58 +5912,12 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_Static :
         error("no Static primitive overload found");
 
-    case PRIM_ModuleName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ModulePtr m = staticModule(obj);
-        if (!m)
-            argumentError(0, "value has no associated module");
-        ExprPtr z = new StringLiteral(m->moduleName);
-        codegenExpr(z, new Env(), ctx, out);
+    case PRIM_ModuleName :
+    case PRIM_StaticName :
         break;
-    }
 
-    case PRIM_StaticName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ostringstream sout;
-        printStaticName(sout, obj);
-        ExprPtr z = new StringLiteral(sout.str());
-        codegenExpr(z, new Env(), ctx, out);
+    case PRIM_staticIntegers :
         break;
-    }
-
-    case PRIM_staticIntegers : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        if (obj->objKind != VALUE_HOLDER)
-            argumentError(0, "expecting a static SizeT or Int value");
-        ValueHolder *vh = (ValueHolder *)obj.ptr();
-        if (vh->type == cIntType) {
-            int count = *((int *)vh->buf);
-            if (count < 0)
-                argumentError(0, "negative values are not allowed");
-            assert(out->size() == (size_t)count);
-            for (int i = 0; i < count; ++i) {
-                ValueHolderPtr vhi = intToValueHolder(i);
-                CValuePtr outi = out->values[i];
-                assert(outi->type == staticType(vhi.ptr()));
-            }
-        }
-        else if (vh->type == cSizeTType) {
-            size_t count = *((size_t *)vh->buf);
-            assert(out->size() == count);
-            for (size_t i = 0; i < count; ++i) {
-                ValueHolderPtr vhi = sizeTToValueHolder(i);
-                CValuePtr outi = out->values[i];
-                assert(outi->type == staticType(vhi.ptr()));
-            }
-        }
-        else {
-            argumentError(0, "expecting a static SizeT or Int value");
-        }
-        break;
-    }
 
     case PRIM_integers : {
         ensureArity(args, 1);
@@ -6037,18 +5991,8 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_EnumMemberName : {
-        ensureArity(args, 2);
-        EnumTypePtr et = valueToEnumType(args, 0);
-        size_t i = valueToStaticSizeTOrInt(args, 1);
-        EnumerationPtr e = et->enumeration;
-        if (i >= e->members.size())
-            argumentIndexRangeError(1, "enum member index",
-                                    i, e->members.size());
-        ExprPtr str = new StringLiteral(e->members[i]->name->str);
-        codegenExpr(str, new Env(), ctx, out);
+    case PRIM_EnumMemberName :
         break;
-    }
 
     case PRIM_enumToInt : {
         ensureArity(args, 1);
@@ -6073,7 +6017,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_IdentifierP : {
+    case PRIM_StringLiteralP : {
         ensureArity(args, 1);
         bool result = false;
         CValuePtr cv0 = args->values[0];
@@ -6086,7 +6030,35 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_IdentifierSize : {
+    case PRIM_stringLiteralByteIndex : {
+        ensureArity(args, 2);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        size_t n = valueToStaticSizeTOrInt(args, 1);
+        if (n >= ident->str.size())
+            argumentError(1, "string literal index out of bounds");
+
+        assert(out->size() == 1);
+        CValuePtr outi = out->values[0];
+        assert(outi->type == cIntType);
+        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), ident->str[n]);
+        ctx->builder->CreateStore(value, outi->llValue);
+        break;
+    }
+
+    case PRIM_stringLiteralBytes : {
+        ensureArity(args, 1);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        assert(out->size() == ident->str.size());
+        for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
+            CValuePtr outi = out->values[0];
+            assert(outi->type == cIntType);
+            llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), ident->str[i]);
+            ctx->builder->CreateStore(value, outi->llValue);
+        }
+        break;
+    }
+
+    case PRIM_stringLiteralByteSize : {
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
         ValueHolderPtr vh = sizeTToValueHolder(ident->str.size());
@@ -6094,63 +6066,29 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_IdentifierConcat : {
-        string result;
-        for (unsigned i = 0; i < args->size(); ++i) {
-            IdentifierPtr ident = valueToIdentifier(args, i);
-            result.append(ident->str);
-        }
-        codegenStaticObject(new Identifier(result), ctx, out);
+    case PRIM_stringLiteralByteSlice :
+    case PRIM_stringLiteralConcat :
+    case PRIM_stringLiteralFromBytes :
         break;
-    }
 
-    case PRIM_IdentifierSlice : {
-        ensureArity(args, 3);
+    case PRIM_stringTableConstant : {
+        ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
-        size_t begin = valueToStaticSizeTOrInt(args, 1);
-        size_t end = valueToStaticSizeTOrInt(args, 2);
-        if (end > ident->str.size()) {
-            argumentIndexRangeError(2, "ending index",
-                                    end, ident->str.size());
-        }
-        if (begin > end)
-            argumentIndexRangeError(1, "starting index",
-                                    begin, end);
-        string result = ident->str.substr(begin, end-begin);
-        codegenStaticObject(new Identifier(result), ctx, out);
-        break;
-    }
+        llvm::Value *value = codegenStringTableConstant(ident->str);
 
-    case PRIM_IdentifierModuleName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ModulePtr m = staticModule(obj);
-        if (!m)
-            argumentError(0, "value has no associated module");
-        codegenStaticObject(new Identifier(m->moduleName), ctx, out);
-        break;
-    }
-
-    case PRIM_IdentifierStaticName : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args, 0);
-        ostringstream sout;
-        printStaticName(sout, obj);
-        codegenStaticObject(new Identifier(sout.str()), ctx, out);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == pointerType(cSizeTType));
+        ctx->builder->CreateStore(value, out0->llValue);
         break;
     }
 
     case PRIM_FlagP : {
         ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (obj != NULL && obj->objKind == IDENTIFIER) {
-            Identifier *ident = (Identifier*)obj.ptr();
-
-            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
-            ValueHolderPtr vh = boolToValueHolder(flag != globalFlags.end());
-            codegenStaticObject(vh.ptr(), ctx, out);
-        } else
-            argumentTypeError(0, "identifier", args->values[0]->type);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+        ValueHolderPtr vh = boolToValueHolder(flag != globalFlags.end());
+        codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
 

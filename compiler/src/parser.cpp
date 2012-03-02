@@ -208,28 +208,8 @@ static bool stringLiteral(ExprPtr &x) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_STRING_LITERAL))
         return false;
-    x = new StringLiteral(t->str);
-    x->location = location;
-    return true;
-}
-
-static bool identifierLiteral(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!symbol("#")) return false;
-    int p = save();
-    IdentifierPtr y;
-    TokenPtr t;
-    if (identifier(y)) {
-        // ok
-    }
-    else if (restore(p), (next(t) && (t->tokenKind == T_STRING_LITERAL))) {
-        y = new Identifier(t->str);
-        y->location = t->location;
-    }
-    else {
-        return false;
-    }
-    x = new IdentifierLiteral(y);
+    IdentifierPtr id = new Identifier(t->str);
+    x = new StringLiteral(id);
     x->location = location;
     return true;
 }
@@ -241,7 +221,6 @@ static bool literal(ExprPtr &x) {
     if (restore(p), floatLiteral(PLUS, x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
-    if (restore(p), identifierLiteral(x)) return true;
     return false;
 }
 
@@ -1223,7 +1202,7 @@ static bool pairExpr(ExprPtr &x) {
     if (!symbol(":")) return false;
     ExprPtr z;
     if (!expression(z)) return false;
-    ExprPtr ident = new IdentifierLiteral(y);
+    ExprPtr ident = new StringLiteral(y);
     ident->location = location;
     ExprListPtr args = new ExprList();
     args->add(ident);

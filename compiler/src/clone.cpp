@@ -65,12 +65,6 @@ ExprPtr clone(ExprPtr x)
         break;
     }
 
-    case IDENTIFIER_LITERAL : {
-        IdentifierLiteral *y = (IdentifierLiteral *)x.ptr();
-        out = new IdentifierLiteral(y->value);
-        break;
-    }
-
     case FILE_EXPR : {
         out = new FILEExpr();
         break;

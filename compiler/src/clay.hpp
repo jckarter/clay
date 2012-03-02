@@ -421,7 +421,6 @@ struct IntLiteral;
 struct FloatLiteral;
 struct CharLiteral;
 struct StringLiteral;
-struct IdentifierLiteral;
 struct NameRef;
 struct FILEExpr;
 struct LINEExpr;
@@ -571,7 +570,6 @@ typedef Pointer<IntLiteral> IntLiteralPtr;
 typedef Pointer<FloatLiteral> FloatLiteralPtr;
 typedef Pointer<CharLiteral> CharLiteralPtr;
 typedef Pointer<StringLiteral> StringLiteralPtr;
-typedef Pointer<IdentifierLiteral> IdentifierLiteralPtr;
 typedef Pointer<NameRef> NameRefPtr;
 typedef Pointer<FILEExpr> FILEExprPtr;
 typedef Pointer<LINEExpr> LINEExprPtr;
@@ -988,7 +986,6 @@ enum ExprKind {
     FLOAT_LITERAL,
     CHAR_LITERAL,
     STRING_LITERAL,
-    IDENTIFIER_LITERAL,
 
     FILE_EXPR,
     LINE_EXPR,
@@ -1068,15 +1065,9 @@ struct CharLiteral : public Expr {
 };
 
 struct StringLiteral : public Expr {
-    string value;
-    StringLiteral(const string &value)
-        : Expr(STRING_LITERAL), value(value) {}
-};
-
-struct IdentifierLiteral : public Expr {
     IdentifierPtr value;
-    IdentifierLiteral(IdentifierPtr value)
-        : Expr(IDENTIFIER_LITERAL), value(value) {}
+    StringLiteral(IdentifierPtr value)
+        : Expr(STRING_LITERAL), value(value) {}
 };
 
 struct NameRef : public Expr {
@@ -2504,12 +2495,15 @@ enum PrimOpCode {
     PRIM_enumToInt,
     PRIM_intToEnum,
 
-    PRIM_IdentifierP,
-    PRIM_IdentifierSize,
-    PRIM_IdentifierConcat,
-    PRIM_IdentifierSlice,
-    PRIM_IdentifierModuleName,
-    PRIM_IdentifierStaticName,
+    PRIM_StringLiteralP,
+    PRIM_stringLiteralByteIndex,
+    PRIM_stringLiteralBytes,
+    PRIM_stringLiteralByteSize,
+    PRIM_stringLiteralByteSlice,
+    PRIM_stringLiteralConcat,
+    PRIM_stringLiteralFromBytes,
+
+    PRIM_stringTableConstant,
 
     PRIM_FlagP,
     PRIM_Flag,
@@ -3469,6 +3463,8 @@ ValueHolderPtr intToValueHolder(int x);
 ValueHolderPtr sizeTToValueHolder(size_t x);
 ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
 ValueHolderPtr boolToValueHolder(bool x);
+
+size_t valueHolderToSizeT(ValueHolderPtr vh);
 
 ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements);
 void extractTupleElements(EValuePtr ev,
