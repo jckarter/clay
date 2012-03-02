@@ -523,11 +523,13 @@ static bool suffixExpr(ExprPtr &x) {
 // prefix expr
 //
 
+static bool prefixExpr(ExprPtr &x);
+
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("&")) return false;
     ExprPtr a;
-    if (!suffixExpr(a)) return false;
+    if (!prefixExpr(a)) return false;
     vector<int> ops;
     ops.push_back(ADDRESS_OF);
     x = new VariadicOp(ops, new ExprList(a));
@@ -562,7 +564,7 @@ static bool signExpr(ExprPtr &x) {
     if (signedLiteral(op, x))
         return true;
     restore(p);
-    if (!suffixExpr(b)) return false;
+    if (!prefixExpr(b)) return false;
     vector<int> ops;
     ops.push_back(op);
     x = new VariadicOp(ops, new ExprList(b));
@@ -574,8 +576,18 @@ static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("*")) return false;
     ExprPtr a;
-    if (!suffixExpr(a)) return false;
+    if (!prefixExpr(a)) return false;
     x = new DispatchExpr(a);
+    x->location = location;
+    return true;
+}
+
+static bool staticExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("#")) return false;
+    ExprPtr y;
+    if (!prefixExpr(y)) return false;
+    x = new StaticExpr(y);
     x->location = location;
     return true;
 }
@@ -585,6 +597,7 @@ static bool prefixExpr(ExprPtr &x) {
     if (signExpr(x)) return true;
     if (restore(p), addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
+    if (restore(p), staticExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
     return false;
 }
@@ -1182,18 +1195,8 @@ static bool unpack(ExprPtr &x) {
 
 
 //
-// staticExpr, pairExpr
+// pairExpr
 //
-
-static bool staticExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("static")) return false;
-    ExprPtr y;
-    if (!expression(y)) return false;
-    x = new StaticExpr(y);
-    x->location = location;
-    return true;
-}
 
 static bool pairExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
@@ -1225,7 +1228,6 @@ static bool expression(ExprPtr &x) {
     if (restore(p), orExpr(x)) goto success;
     if (restore(p), ifExpr(x)) goto success;
     if (restore(p), unpack(x)) goto success;
-    if (restore(p), staticExpr(x)) goto success;
     return false;
 
 success:
@@ -1904,11 +1906,11 @@ static bool valueFormalArg(FormalArgPtr &x) {
 static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y;
-    if (!keyword("static")) return false;
+    if (!symbol("#")) return false;
     if (!expression(y)) return false;
 
     if (y->exprKind == UNPACK) {
-        error(y, "static keyword cannot be used with variadic arguments");
+        error(y, "#static variadic arguments are not yet supported");
     }
 
     // desugar static args

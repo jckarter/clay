@@ -121,8 +121,8 @@ static void initKeywords() {
         {"public", "private", "import", "as",
          "record", "variant", "instance",
          "define", "overload", "external", "alias",
-         "static", "rvalue",
-         "inline", "enum", "var", "ref", "forward",
+         "rvalue", "ref", "forward",
+         "inline", "enum", "var",
          "and", "or", "not",
          "if", "else", "goto", "return", "while",
          "switch", "case", "break", "continue", "for", "in",
@@ -153,9 +153,11 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "-->", "..", "=>", "->",
+    "<--", "-->", "++=",
+    "..", "=>", "->",
     "==", "!=", "<=", ">=",
-    "<", ">","++=","++",
+    "++",
+    "<", ">",
     "::", "+=", "-=", "*=", "/=", "\\=", "%=",
     "+", "-", "*", "/","\\","%", "=", "&", "^", "|",
     "(", ")", "[", "]", "{", "}",
