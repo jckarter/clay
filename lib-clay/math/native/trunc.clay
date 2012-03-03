@@ -9,8 +9,8 @@
  */
 
 import math.native.kernel.ieee754.*;
-public import math.native.*;
-import numbers.floats.*;
+import math.*;
+
 
 [T | Float?(T)]
 overload trunc(x:T) {

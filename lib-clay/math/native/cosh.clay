@@ -1,8 +1,9 @@
 
 
-public import math.native.*;
+//public import math.native.defines.(cosh);
 import math.native.kernel.ieee754.*;
-
+//import math.native.(exp,abs,expm1,ldexp);
+import math.*;
 
 overload cosh(x:Double) {
 	alias ONE = 1.;

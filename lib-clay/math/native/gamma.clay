@@ -1,6 +1,9 @@
 // l_gamma_r from openlibm
-public import math.native.*;
+//public import math.native.defines.(tgamma,lgamma,lgamma_r,gamma_r);
 import math.native.kernel.ieee754.*;
+
+//import math.native.(log,abs,exp,rint,sinpi,M_PI);
+import math.*;
 
 maxGamma(static Float) = 35.04f;
 overload maxGamma(static Double) = 171.6025;

@@ -5,7 +5,8 @@
  * ilogb(inf) = INT_MAX (no signal is raised)
  */
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(ilogb,logb);
+import math.*;
 
 alias INT_MAX = Greatest(Int);
 alias FP_ILOGB0	= -INT_MAX;

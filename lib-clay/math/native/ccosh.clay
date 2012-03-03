@@ -1,8 +1,11 @@
 // complex cos, cosh
 
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(cosh,cos);
 import math.native.kernel.k_exp.*;
+//import numbers.floats.(copysign,abs);
+//import math.native.(sin,sinh,exp);
+import math.*;
 
 overload cosh(z:ComplexDouble) {
 	

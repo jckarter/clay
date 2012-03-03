@@ -1,8 +1,8 @@
 
-import numbers.floats.*;
 import math.native.kernel.ieee754.*;
-public import math.native.*;
-
+//public import math.native.defines.(round,floor,ceil,rint);
+//import numbers.floats.(finite?);
+import math.*;
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);

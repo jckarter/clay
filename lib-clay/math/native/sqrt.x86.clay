@@ -1,6 +1,7 @@
 
-public import math.native.*;
+//public import math.native.defines.(sqrt);
 import simd.*;
+import math.*;
 
 private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];

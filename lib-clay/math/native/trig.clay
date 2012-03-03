@@ -1,9 +1,11 @@
 // sin, cos, tan
 
-public import math.native.*;
+//public import math.native.defines.(sin,cos,tan,sinpi);
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
+//import math.native.(floor,M_PI);
+import math.*;
 
 overload sin(x:Double) {
 	var y = Array[Double,2]();

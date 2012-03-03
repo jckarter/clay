@@ -1,7 +1,8 @@
 // log1p
 
-public import math.native.*;
+//public import math.native.defines.(log1p);
 import math.native.kernel.ieee754.*;
+import math.*;
 
 overload log1p(x:Double) {
 	alias ZERO = 0.;

@@ -1,7 +1,8 @@
 // modf
 
-public import math.native.*;
+//public import math.native.defines.(modf);
 import math.native.kernel.ieee754.*;
+import math.*;
 
 overload modf(x:Double, iptr:Pointer[Double]) {
 	

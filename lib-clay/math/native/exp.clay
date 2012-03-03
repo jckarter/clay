@@ -2,7 +2,8 @@
 
 
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(exp);
+import math.*;
 
 private var halF 			= array(0.5,-0.5);
 alias o_threshold	= 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */

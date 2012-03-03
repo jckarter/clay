@@ -1,7 +1,10 @@
 // acos function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(acos);
+//import math.native.(M_PI,sqrt);
+//import numbers.floats.(nan);
+import math.*;
 
 alias pio2_hi =  1.57079632679489655800e+00; /* 0x3FF921FB, 0x54442D18 */
 alias pio2_lo =  6.12323399573676603587e-17; /* 0x3C91A626, 0x33145C07 */

@@ -1,6 +1,6 @@
 // kernel rem_pio
 
-import math.native.*;
+import math.*;
 import math.native.kernel.ieee754.*;
 
 private var init_jk = array(3,4,4,6); /* initial value for jk */

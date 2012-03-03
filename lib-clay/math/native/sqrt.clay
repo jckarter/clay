@@ -1,7 +1,9 @@
 
-public import math.native.*;
+//public import math.native.defines.(sqrt);
 import math.native.kernel.exact.*;
 import math.native.kernel.ieee754.*;
+//import numbers.floats.(nan,infinity);
+import math.*;
 
 private var inroot = array(
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,

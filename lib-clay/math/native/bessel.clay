@@ -1,6 +1,7 @@
 // bessel functions
 
-public import math.native.*;
+//public import math.native.defines.(j0,j1,i1);
+import math.*;
 
 // Bessel J_0(x) function
 private var a = array(

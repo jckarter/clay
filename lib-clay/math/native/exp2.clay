@@ -1,7 +1,8 @@
 // exp2
 
-public import math.native.*;
+//public import math.native.defines.(exp2);
 import math.native.kernel.ieee754.*;
+import math.*;
 
 alias TBLBITS = 8;
 alias TBLSIZE = bitshl(1 , TBLBITS);

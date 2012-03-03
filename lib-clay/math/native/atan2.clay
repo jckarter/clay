@@ -1,7 +1,9 @@
 // atan2
 
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(atan2,atan);
+//import math.native.(M_PI,abs);
+import math.*;
 
 alias pi_o_4  = 7.8539816339744827900E-01; /* 0x3FE921FB, 0x54442D18 */
 alias pi_o_2  = 1.5707963267948965580E+00; /* 0x3FF921FB, 0x54442D18 */

@@ -1,8 +1,9 @@
 // pow function adapted from openlibm
 
-public import math.native.*;
+//public import math.native.defines.(pow);
 import math.native.kernel.ieee754.*;
-import math.libm.(scalbn as mscalbn);
+//import math.native.(scalbn,sqrt,abs);
+import math.*;
 
 private var bp = array(1.0, 1.5);
 private var dp_h = array( 0.0, 5.84962487220764160156e-01); /* 0x3FE2B803, 0x40000000 */

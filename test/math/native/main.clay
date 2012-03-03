@@ -60,6 +60,3 @@ main() {
     evalFuncs2(twoArgFuncs,fdata,ftypes);
 
 }
-
-
-

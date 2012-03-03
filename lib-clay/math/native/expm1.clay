@@ -1,7 +1,8 @@
 // expm1 function adapted from openlibm
 
-public import math.native.*;
+//public import math.native.defines.(expm1);
 import math.native.kernel.ieee754.*;
+import math.*;
 
 alias o_threshold = 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
 /* Scaled Q's: Qn_here = 2**n * Qn_above, for R(2*z) where z = hxs = x*x/2: */

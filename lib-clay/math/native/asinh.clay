@@ -1,6 +1,9 @@
 // asinh
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(asinh);
+//import numbers.floats.(abs);
+//import math.(M_LN2,log,sqrt,log1p);
+import math.*;
 
 overload asinh(x:Double) {
 	alias ONE = 1.;

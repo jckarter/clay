@@ -1,8 +1,11 @@
 // complex sin, sinh
-public import math.native.*;
+//public import math.native.defines.(sinh,sin);
 import math.native.kernel.ieee754.*;
-import numbers.floats.*;
+//import numbers.floats.*;
 import math.native.kernel.k_exp.*;
+//import math.native.(cos,cosh,exp);
+import math.*;
+
 /*
  * Hyperbolic sine of a complex argument z = x + i y.
  *

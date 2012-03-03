@@ -55,6 +55,8 @@ define acosh;//d
 define asinh;//d
 define atanh;//d
 
+define cot;
+
 define log;//d
 define log2;//d
 define log10;//d

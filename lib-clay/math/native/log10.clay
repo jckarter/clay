@@ -1,8 +1,10 @@
 // log10
 
-public import math.native.*;
+//public import math.native.defines.(log10);
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
+//import numbers.floats.*;
+import math.*;
 
 alias ivln10hi   =  4.34294481878168880939e-01; /* 0x3fdbcb7b, 0x15200000 */
 alias ivln10lo   =  2.50829467116452752298e-11; /* 0x3dbb9438, 0xca9aadd5 */
@@ -28,7 +30,6 @@ overload log10(x:Double) {
 	SET_IEEE_HIGH(xdb,bitand(GET_IEEE_HIGH(xdb),NEM));
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);
 	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	/* normalize x or x/2 */
-	println(GET_IEEE_DB(xdb));
 	k += bitshr(i,20);
 	var f = GET_IEEE_DB(xdb) - 1.0;
 	var hfsq = 0.5*f*f;

@@ -1,6 +1,8 @@
 // acosh
 import math.native.kernel.ieee754.*;
-public import math.native.*;
+//public import math.native.defines.(acosh);
+//import math.native.(M_LN2,log,log1p,sqrt);
+import math.*;
 
 overload acosh(x:Double) {
 	alias ONE = 1.;

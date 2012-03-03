@@ -2,7 +2,10 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
-public import math.native.*;
+//public import math.native.defines.(tanh);
+//import math.native.(expm1,abs);
+import math.*;
+
 
 overload tanh(x:Double) {
 	alias ONE = 1.;

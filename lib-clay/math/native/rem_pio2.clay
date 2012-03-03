@@ -1,7 +1,6 @@
 // rem_pio2
 import math.native.kernel.k_rem_pio2.*;
 import math.native.kernel.ieee754.*;
-public import math.native.*;
 
 alias two24 =  1.67772160000000000000e+07; /* 0x41700000, 0x00000000 */
 alias invpio2 =  6.36619772367581382433e-01; /* 0x3FE45F30, 0x6DC9C883 */
