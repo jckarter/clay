@@ -10,5 +10,3 @@ alias random = rand;
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
 
-// FIXME: this is lame
-strtold(str: Pointer[CChar], end:Pointer[Pointer[CChar]]) : Float80 = Float80(strtod(str,end));
