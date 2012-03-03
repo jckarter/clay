@@ -1,0 +1,134 @@
+// sin, cos, tan
+
+import math.native.kernel.ieee754.*;
+import math.native.rem_pio2.*;
+import math.native.kernel.k_trig.*;
+import math.*;
+
+overload sin(x:Double) {
+	var y = Array[Double,2]();
+	
+    /* High word of x. */
+	var ix = GET_IEEE_HIGH(x);
+
+    /* |x| ~< pi/4 */
+	ix = bitand(ix,MM);
+	if(ix <= 0x3fe921fb) {
+	    if(ix<0x3e500000)			/* |x| < 2**-26 */
+	       	if(Int(x)==0) return x;
+	    	/* generate inexact */
+	    return kernel_sin(x,0.,0);
+	}
+
+    /* sin(Inf or NaN) is NaN */
+	else if (ix>=EM) return x-x;
+	/* argument reduction needed */
+	else {
+	    var n = rem_pio2(x,&y[0]);
+    	switch(bitand(n,3))
+		case (0) return  kernel_sin(y[0],y[1],1);
+		case (1) return  kernel_cos(y[0],y[1]);
+		case (2) return -kernel_sin(y[0],y[1],1);
+		else return -kernel_cos(y[0],y[1]);
+	   
+	}
+}
+
+
+overload cos(x:Double) {
+	var y = Array[Double,2]();
+	
+    /* High word of x. */
+	var ix = GET_IEEE_HIGH(x);
+
+    /* |x| ~< pi/4 */
+	ix = bitand(ix,MM);
+	if(ix <= 0x3fe921fb) {
+	    if(ix<0x3e46a09e)			/* if x < 2**-27 * sqrt(2) */
+			if(Int(x)==0) 
+				return 1.0;	/* generate inexact */
+	    return kernel_cos(x,0.);
+	}
+
+    /* cos(Inf or NaN) is NaN */
+	else if (ix>=EM) return x-x;
+
+    /* argument reduction needed */
+	else {
+	    var n = rem_pio2(x,&y[0]);
+	    switch(bitand(n,3))
+		case (0) return  kernel_cos(y[0],y[1]);
+		case (1) return -kernel_sin(y[0],y[1],1);
+		case (2) return -kernel_cos(y[0],y[1]);
+		else return  kernel_sin(y[0],y[1],1);
+	}
+}
+
+overload tan(x:Double) {
+	var y = Array[Double,2]();
+	
+    /* High word of x. */
+	var ix = GET_IEEE_HIGH(x);
+	    
+    /* |x| ~< pi/4 */
+	ix = bitand(ix,MM);
+	if(ix <= 0x3fe921fb) {
+		if(ix<0x3e400000)			/* x < 2**-27 */
+			if(Int(x)==0) return x;		/* generate inexact */
+	    return kernel_tan(x,0.,1);
+	}
+    /* tan(Inf or NaN) is NaN */
+	else {
+		if (ix>=EM) return x-x;		/* NaN */
+
+	    /* argument reduction needed */
+		else {
+			var n = rem_pio2(x,&y[0]);
+		    return kernel_tan(y[0],y[1],1-bitshl(bitand(n,0x1),1)); /*   1 -- n even
+								-1 -- n odd */
+		}
+	}
+}
+
+
+overload sinpi(x:Double) {
+	alias ONE = 1.;
+	alias ZERO = 0.;
+	var ix = GET_IEEE_HIGH(x);
+	ix = bitand(ix,0x7fffffff);
+
+	if(ix<0x3fd00000) return kernel_sin(M_PI*x,0.,0);
+	var y = -x;		/* x is assume negative */
+
+    /*
+     * argument reduction, make sure inexact flag not raised if input
+     * is an integer
+     */
+	var z = floor(y);
+	var n = 0;
+	if(z != y) {				/* inexact anyway */
+	    y  *= 0.5;
+	    y   = 2.0*(y - z);		/* y = |x| mod 2.0 */
+	    n   = Int(y*4.0);
+	} 
+	else {
+        if(ix>=0x43400000) {
+            y = ZERO; 
+        } 
+        else {
+            if(ix<0x43300000) z = y+TWO52;	/* exact */
+			n = GET_IEEE_LOW(z);
+			n = bitand(n,1);
+            y = n;
+            n = bitshl(n,2);
+        }
+    }
+	switch (n)
+    case (0)   	y =  kernel_sin(M_PI*y,ZERO,0);
+    case (1,2)  y =  kernel_cos(M_PI*(0.5-y),ZERO);
+    case (3,4)  y =  kernel_sin(M_PI*(ONE-y),ZERO,0);
+    case (5,6)  y = -kernel_cos(M_PI*(y-1.5),ZERO);
+    else  		y =  kernel_sin(M_PI*(y-2.0),ZERO,0);
+	    
+	return -y;
+}

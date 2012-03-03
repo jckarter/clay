@@ -9,10 +9,63 @@ time() {
         throw GenericOSError(unix.errno());
     var secs = Double(tv.tv_sec);
     var usecs = Double(tv.tv_usec);
-    return secs + usecs/(1000*1000);
+    return secs + usecs/1e6;
 }
 
 sleep(seconds:Double) {
-    var useconds = UInt(seconds * 1000 * 1000);
+    var useconds = UInt(seconds * 1e6);
     unix.usleep(useconds);
 }
+
+alias CLOCK_REALTIME = 0;
+alias CLOCK_PROCESS_CPUTIME_ID = 2;
+
+alias CLOCK = CLOCK_PROCESS_CPUTIME_ID;
+
+record Timer (
+    elapsedTicks:Long,
+    running:Bool,
+    startTicks:Long,
+    clock:Int,
+);
+
+overload Timer() = Timer(0l,false,0l,CLOCK);
+timer() = Timer();
+
+start(t:Timer) {
+    if (not t.running) {
+    	var tv = unix.Struct_timespec();
+    	var r = unix.clock_gettime(t.clock, &tv);
+    	if (r == Type(r)(-1))
+        	throw GenericOSError(unix.errno());
+        t.startTicks = tv.tv_sec * 1000000000 + tv.tv_nsec;
+    	t.running = true;
+    }
+}
+
+stop(t:Timer) {
+    if (t.running) {
+    	var tv = unix.Struct_timespec();
+    	var r =unix.clock_gettime(t.clock, &tv);
+    	if (r == Type(r)(-1))
+        	throw GenericOSError(unix.errno());
+        t.elapsedTicks = tv.tv_sec * 1000000000 + tv.tv_nsec - t.startTicks;
+        t.running = false;
+    }
+}
+
+splitNanos(t:Timer) --> s:Long {
+    stop(t);
+    s <-- t.elapsedTicks;
+    start(t);
+}
+
+splitMillis(t:Timer) --> s:Double {
+    stop(t);
+    var l = t.elapsedTicks;
+    start(t);
+    s <-- Double(l) / 1e6;
+}
+
+elapsedNanos(t:Timer) = t.elapsedTicks;
+elapsedMillis(t:Timer) = Double(elapsedNanos(t)) / 1e6;

@@ -1,0 +1,75 @@
+// exp function adapted from openlibm
+
+
+import math.native.kernel.ieee754.*;
+import math.*;
+
+private var halF 			= array(0.5,-0.5);
+alias o_threshold	= 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
+alias u_threshold 	= -7.45133219101941108420e+02;  /* 0xc0874910, 0xD52D3051 */
+private var ln2HI			= array(6.93147180369123816490e-01,-6.93147180369123816490e-01);/* 0x3fe62e42, 0xfee00000 */
+private var ln2LO			= array(1.90821492927058770002e-10,-1.90821492927058770002e-10);/* 0x3dea39ef, 0x35793c76 */
+
+alias TWOM1000 = 9.33263618503218878990e-302;     /* 2**-1000=0x01700000,0*/
+
+
+overload exp(a:Double) { /* default IEEE double exp */
+	alias ONE = 1.;
+	alias HUGE = GreatestPositiveFinite(Double);
+	alias TINY = LeastPositive(Double);
+
+	var x = a;
+	var y,hi,lo,k = 0.,0.,0.,0;
+	var xdb = MAKE_IEEE(x);
+	var xsb = bitand(bitshr(GET_IEEE_HIGH(xdb),31),1);		/* sign bit of x */
+	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);		/* high word of |x| */
+
+    // filter out non-finite argument
+	if(GET_IEEE_HIGH(xdb) >= CV14) {			/* if |x|>=709.78... */
+        if(GET_IEEE_HIGH(xdb) >= EM) {
+	        if(bitor(bitand(GET_IEEE_HIGH(xdb),0xfffff),GET_IEEE_LOW(xdb))!=0)
+		    	return x+x; 		/* NaN */
+			else 
+				return if(xsb==0) x else 0.;	/* exp(+-inf)={inf,0} */
+	    }
+	    if(x > o_threshold) return HUGE*HUGE; /* overflow */
+	    if(x < u_threshold) return TWOM1000*TWOM1000; /* underflow */
+	}
+
+    // argument reduction 
+	if(GET_IEEE_HIGH(xdb) > CV15) {		/* if  |x| > 0.5 ln2 */ 
+	    if(GET_IEEE_HIGH(xdb) < CV16) {	/* and |x| < 1.5 ln2 */
+			hi = x-ln2HI[xsb]; 
+			lo = ln2LO[xsb]; 
+			k = 1-xsb-xsb;
+	    } 
+	    else {
+			k  = Int(IVLN2*x+halF[xsb]);
+			var t  = Double(k);
+			hi = x - t*ln2HI[0];	/* t*ln2HI is exact here */
+			lo = t*ln2LO[0];
+	    }
+	    x <-- hi - lo;
+	} 
+	else if(GET_IEEE_HIGH(xdb) < CV18)  {	/* when |x|<2**-28 */
+	    if(HUGE+x>ONE) return ONE+x;/* trigger inexact */
+	}
+	else 
+		k = 0;
+
+    /* x is now in primary range */
+	var t,twopk  = x*x, 0.;
+	if(k >= -1021)
+	    twopk = MAKE_IEEE(RM+bitshl(k,20), 0).2;
+	else
+	    twopk = MAKE_IEEE(RM+bitshl(k+1000,20), 0).2;
+	var c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
+	if(k==0) return ONE-((x*c)/(c-2.0)-x); 
+	else 		y = ONE-((lo-(x*c)/(2.0-c))-hi);
+	if(k >= -1021) {
+	    if (k==1024) return y*2.0*0x1p1023;
+	    return y*twopk;
+	} else {
+	    return y*twopk*TWOM1000;
+	}
+}

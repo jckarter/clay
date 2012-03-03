@@ -1,0 +1,62 @@
+// Test math functions
+
+import math.*;
+
+ftypes() = Float64;
+
+var fdata = array(0., 1., -1.,3., 38. , 355. , M_PI,-M_PI, nan(Double), -nan(Double),
+    infinity(Double), negativeInfinity(Double), LeastPositive(Double),
+    LeastPositiveNormalized(Double), GreatestPositiveFinite(Double));
+
+oneArgFuncs() = 
+                abs,recip,
+                sqrt,rsqrt,cbrt,square,cube,
+                trunc,round,ceil,floor,rint,
+                significand,
+                sin,cos,tan,
+                asin,acos,atan,
+                sinh,cosh,tanh,
+                exp,expm1,sigmoid,
+                log,log10,log2,ilogb,log1p,
+                erf,erfc,gamma,lgamma,
+                //j0,j1,i1,
+                sec,csc,cot,
+                asec,acsc,acot,
+                sech,csch,coth,
+                asech,acsch,acoth, 
+                ;
+
+
+twoArgFuncs() = 
+                pow,beta,atan2,
+                ;
+
+
+evalFuncs(funcs,data,types) {
+    ..for(f in funcs()) {
+        ..for(t in types())
+            for(i in range(size(data)))
+                println(StaticName(f),"(",t(data[i]),") = ",f(t(data[i])));
+        println();            
+    }
+}
+
+
+evalFuncs2(funcs,data,types) {
+    ..for(f in funcs()) {
+        ..for(t in types())
+            for(i in range(size(data)))
+                for(j in range(size(data))) {
+                    println(StaticName(f),"(",t(data[i]),",",t(data[j]),") = ",f(t(data[i]),t(data[j])));
+                }
+        println();            
+    }
+}
+
+
+main() {
+
+    evalFuncs(oneArgFuncs,fdata,ftypes);
+    evalFuncs2(twoArgFuncs,fdata,ftypes);
+
+}

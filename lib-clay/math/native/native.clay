@@ -1,64 +1,119 @@
-
 import math.*;
-import numbers.floats.*;
-import math.native.approxmath.(private sqrtCoeff);
+import math.native.defines.*;
+public import math.native.constants.*;
 
-import math.native.sqrt_std.(sqrt_std);
-import math.native.exp_std.(exp_std);
-import math.native.expm1_std.(expm1_std);
-import math.native.log_std.(log_std,log2_std,log10_std);
-import math.native.trig_std.(sin_std,cos_std,tan_std);
-import math.native.atan_std.(atan_std, atanpi_std);
-import math.native.pow_std.(pow_std);
+import math.native.ldexp.*;
+import math.native.frexp.*;
+import math.native.scalbn.*;
+import math.native.trunc.*;
+import math.native.rounding.*;
+import math.native.llround.*;
+import math.native.modf.*;
+import math.native.fmod.*;
 
-import math.native.exp_fast.(exp_fast);
-public import math.native.gamma_std.*;
-public import math.native.beta_std.*;
-public import math.native.erf_std.*;
-public import math.native.bessel_std.*;
+import math.native.hypot.*;
+import math.native.sqrt.*;
+import math.native.cbrt.*;
+import math.native.pow.*;
+import math.native.pown.*;
+import math.native.exp.*;
+import math.native.exp2.*;
+import math.native.expm1.*;
+import math.native.sinh.*;
+import math.native.cosh.*;
+import math.native.tanh.*;
+import math.native.ilogb.*;
+import math.native.log.*;
+import math.native.log2.*;
+import math.native.log10.*;
+import math.native.log1p.*;
+import math.native.erf.*;
+import math.native.gamma.*;
+import math.native.beta.*;
+import math.native.bessel.*;
+import math.native.trig.*;
+import math.native.atanh.*;
+import math.native.acosh.*;
+import math.native.asinh.*;
+import math.native.asin.*;
+import math.native.acos.*;
+import math.native.atan.*;
+import math.native.atan2.*;
 
+import math.native.complex.*;
+import math.native.cproj.*;
+import math.native.cexp.*;
+import math.native.csinh.*;
+import math.native.ccosh.*;
+import math.native.ctanh.*;
 
-//
-//  STANDARD  - best precision, correct rounding, default
-//
+[T | Integer?(T)]
+overload recip(x:T) = T(0);
+[T | Float?(T)]
+overload recip(x:T) = T(1) / x;
 
-[T | Float?(T)] inline overload sqrt(x:T) = sqrt_std(x);
-[T | Float?(T)] inline overload rsqrt(x:T) = recip(sqrt_std(x));
-[T | Float?(T)] inline overload log(x:T) = log_std(x);
-[T | Float?(T)] inline overload log2(x:T) = log2_std(x);
-[T | Float?(T)] inline overload log10(x:T) = log10_std(x);
-[T | Float?(T)] inline overload exp(x:T) = exp_std(x);
-[T | Float?(T)] inline overload expm1(x:T) = expm1_std(x);
-[T | Float?(T)] inline overload sin(x:T) = sin_std(x);
-[T | Float?(T)] inline overload cos(x:T) = cos_std(x);
-[T | Float?(T)] inline overload tan(x:T) = tan_std(x);
-[T,U | Float?(T,U)] inline overload pow(x:T,y:U) = pow_std(x,y);
-[T,U | Float?(T) and Integer?(U)] inline overload pow(x:T,y:U) = pow_std(x,T(y));
-[T | Float?(T)] inline overload atan(x:T) = atan_std(x);
-[T | Float?(T)] inline overload atanpi(x:T) = atanpi_std(x);
+[I | Integer?(I)]
+inline overload abs(x:I) = if(x >= 0) x else -x;
 
+inline overload sign(x:Long) = bitor(bitshr(x,63),Long(bitshr(ULong(-x),63)));
+inline overload sign(x:Int) = bitor(bitshr(x,31),Int(bitshr(UInt(-x),31)));
+inline overload sign(x:Short) = bitor(bitshr(x,15),Short(bitshr(UShort(-x),15)));
+inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
 
-//
-//  FAST - high precision approximations
-//  Use -Dmath.Mode=fast
-//
+[T | Float?(T)]
+overload significand(x:T) = scalb(x,T(-ilogb(x)));
 
-[T | Float?(T) and MathMode?(FAST)]
-inline overload rsqrt(x:T) --> y:T{
-    alias ONEHALF = T(1.5);
-    alias tmp = T(0.5)*x;
-    y <-- floatFromBits(sqrtCoeff(T) - bitshr(floatBits(x),1));
-    y *= ONEHALF - tmp * y * y;
-    y *= ONEHALF - tmp * y * y;
-    y *= ONEHALF - tmp * y * y;
-    y *= ONEHALF - tmp * y * y;
+drem(x,y) = remainder(x,y);
+
+[T]
+clamp(x:T, lo:T, hi:T) {
+    if(x > hi)
+        return hi; 
+    if(x < lo)
+        return lo;
+    return x;
 }
 
-[T | Float?(T) and MathMode?(FAST)]
-inline overload sqrt(x:T) = T(1)/rsqrt(x);
+sec(z) = recip(cos(z));
+csc(z) = recip(sin(z));
+[T | Float?(T)] overload cot(z:T) = recip(tan(z));
+asec(y) = acos(recip(y));
+acsc(y) = asin(recip(y));
+acot(y) = atan(recip(y));
+sech(z) = recip(cosh(z));
+csch(z) = recip(sinh(z));
+coth(z) = recip(tanh(z));
+asech(y) = acosh(recip(y));
+acsch(y) = asinh(recip(y));
+acoth(y) = atanh(recip(y));
 
-[T | Float?(T) and MathMode?(FAST)]
-inline overload exp(x:T) = exp_fast(x);
+[T | CallDefined?(sin,T)]
+sinc(x:T) {
+    if(x==0) 
+        return T(1);
+    else {
+        var pix = T(M_PI)*x; 
+        return sin(pix)/pix;
+    }
+}
 
+[T | CallDefined?(sin,T)]
+cosc(x:T) { 
+    if(x==0) 
+        return T(0);
+    else {
+        var pix=T(M_PI)*x;
+        return cos(pix)/x-sin(pix)/(pix*x);
+    }
+}
+
+overload log(b,x) = log(x) / log(b);
+
+square(x) = x*x;
+cube(x) = x*x*x;
+
+inline overload fma(a, b, c) = (a * b) + c;
+
+
+[T | Float?(T)] inline overload rsqrt(x:T) = recip(sqrt(x));
 [T | Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
-

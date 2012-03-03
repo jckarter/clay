@@ -1,0 +1,47 @@
+/* ilogb(double x)
+ * return the binary exponent of non-zero x
+ * ilogb(0) = FP_ILOGB0
+ * ilogb(NaN) = FP_ILOGBNAN (no signal is raised)
+ * ilogb(inf) = INT_MAX (no signal is raised)
+ */
+import math.native.kernel.ieee754.*;
+import math.*;
+
+alias INT_MAX = Greatest(Int);
+alias FP_ILOGB0	= -INT_MAX;
+alias FP_ILOGBNAN = INT_MAX;
+
+overload logb(x) = ilogb(x);
+
+overload ilogb(x:Double) {
+	
+	var xdb = MAKE_IEEE(x);
+	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);
+	if(GET_IEEE_HIGH(xdb) < CV8) {
+	    if(bitor(GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb))==0)
+			return FP_ILOGB0;
+	    else {			/* subnormal x */
+			var ix = 0;
+			if(GET_IEEE_HIGH(xdb)==0) {
+				ix = -1043;
+				while(GET_IEEE_LOW(xdb)>0){
+					ix -= 1;
+					GET_IEEE_LOW(xdb) = wrapBitshl(GET_IEEE_LOW(xdb),1);
+				}
+			} else {
+				ix = -1022;
+				while(GET_IEEE_HIGH(xdb)>0){
+					ix -= 1;
+					GET_IEEE_HIGH(xdb) = wrapBitshl(GET_IEEE_HIGH(xdb),1);
+				}
+			}
+	    	return ix;
+	    }
+	}
+	else 
+		if (GET_IEEE_HIGH(xdb)<EM) return bitshr(GET_IEEE_HIGH(xdb),20)-1023;
+	else 
+		if (GET_IEEE_HIGH(xdb)>EM or GET_IEEE_LOW(xdb)!=0) return FP_ILOGBNAN;
+	else
+		return INT_MAX;
+}

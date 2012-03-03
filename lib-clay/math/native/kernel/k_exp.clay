@@ -1,0 +1,63 @@
+
+import math.native.kernel.ieee754.*;
+import math.*;
+
+alias k = 1799u;		/* constant for reduction */
+alias kln2 = 1246.97177782734161156;	/* k * ln2 */
+
+/*
+ * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
+ * returned separately in 'expt'.
+ *
+ * Input:  ln(DBL_MAX) <= x < ln(2 * DBL_MAX / DBL_MIN_DENORM) ~= 1454.91
+ * Output: 2**1023 <= y < 2**1024
+ */
+__frexp_exp(x:Double, expt:Pointer[Int]) {
+	/* We use exp(x) = exp(x - kln2) * 2**k, carefully chosen to
+	 * minimize |exp(kln2) - 2**k|.  We also scale the exponent of
+	 * exp_x to MAX_EXP so that the result can be multiplied by
+	 * a tiny number without losing accuracy due to denormalization.
+	 */
+	var exp_x = exp(x - kln2);
+	var ix = MAKE_IEEE(exp_x);
+	expt^ = bitshr(GET_IEEE_HIGH(ix),20) - (0x3ff + 1023) + k;
+	SET_IEEE(ix,exp_x);
+	SET_IEEE_HIGH(ix, bitor(bitand(GET_IEEE_HIGH(ix),NEM),bitshl(0x3ff + 1023,20)));
+	return GET_IEEE_DB(ix);
+}
+
+/*
+ * __ldexp_exp(x, expt) and __ldexp_cexp(x, expt) compute exp(x) * 2**expt.
+ * They are intended for large arguments (real part >= ln(DBL_MAX))
+ * where care is needed to avoid overflow.
+ *
+ * The present implementation is narrowly tailored for our hyperbolic and
+ * exponential functions.  We assume expt is small (0 or -1), and the caller
+ * has filtered out very large x, for which overflow would be inevitable.
+ */
+
+__ldexp_exp(x:Double, expt) {
+	var ex_expt = 0;
+	var exp_x = __frexp_exp(x, &ex_expt);
+	return exp_x*MAKE_IEEE(bitshl(0x3ff + expt + ex_expt , 20), 0).2;
+}
+
+__ldexp_cexp(z:ComplexDouble, expt) {
+	var ex_expt = 0;
+	var x = real(z);
+	var y = imagValue(z);
+	var exp_x = __frexp_exp(x, &ex_expt);
+	var et = expt + ex_expt;
+
+	/*
+	 * Arrange so that scale1 * scale2 == 2**expt.  We use this to
+	 * compensate for scalbn being horrendously slow.
+	 */
+	var half_expt = et \ 2;
+	var scale1 = MAKE_IEEE(bitshl(0x3ff + half_expt, 20), 0).2;
+	half_expt = et - half_expt;
+	var scale2 = MAKE_IEEE(bitshl(0x3ff + half_expt, 20), 0).2;
+
+	return Complex(cos(y) * exp_x * scale1 * scale2,
+	    sin(y) * exp_x * scale1 * scale2);
+}

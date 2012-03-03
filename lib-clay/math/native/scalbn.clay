@@ -1,0 +1,67 @@
+
+import math.native.kernel.ieee754.*;
+import math.*;
+
+// scalbn (double x, int n)
+// scalbn(x,n) returns x* 2**n  computed by  exponent
+// manipulation rather than by actually performing an
+// exponentiation or a multiplication.
+
+alias two54   =  1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
+alias twom54  =  5.55111512312578270212e-17; /* 0x3C900000, 0x00000000 */
+
+[I | Integer?(I)]
+overload scalbn (x:Double, n:I) {
+    alias HUGE = GreatestPositiveFinite(Double);
+    alias TINY = LeastPositive(Double);
+
+    var xdb = MAKE_IEEE(x);
+    var k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20);        /* extract exponent */
+    if (k==0) {             /* 0 or subnormal x */
+        if (bitor(GET_IEEE_LOW(xdb),bitand(GET_IEEE_HIGH(xdb),0x7fffffff))==0) return x; /* +-0 */
+        GET_IEEE_DB(xdb) *= two54;
+        k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20) - 54;
+        if (n< -50000) return TINY*GET_IEEE_DB(xdb);   /*underflow*/
+    }
+    if (k==0x7ff) return x+x;       /* NaN or Inf */
+    k = k+n;
+    if (k >  0x7fe) return HUGE*copysign(HUGE,x); /* overflow  */
+    if (k > 0) {             /* normal result */
+        SET_IEEE_HIGH(xdb,bitor(bitand(GET_IEEE_HIGH(xdb),bitcast(Int,0x800fffffu)),bitshl(k,20))); 
+        return GET_IEEE_DB(xdb);
+    }
+    if (k <= -54)
+        if (n > 50000)  /* in case integer overflow in n+k */
+            return HUGE*copysign(HUGE,x);   /*overflow*/
+        else return TINY*copysign(TINY,x);  /*underflow*/
+    k += 54;                /* subnormal result */
+    SET_IEEE_HIGH(xdb,bitor(bitand(GET_IEEE_HIGH(xdb),bitcast(Int,0x800fffffu)),bitshl(k,20)));
+    return GET_IEEE_DB(xdb)*twom54;
+}
+
+
+
+[T | Float?(T)]
+overload scalbln (x:T, n:Long) {
+    var i = numericConvert(Int32,n);
+    if (i != n) {
+        if (n > 0)
+            i = GreatestPositiveFinite(Int);
+        else
+            i = LeastPositive(Int);
+    }
+    return scalbn(x, i);
+}
+
+[T | Float?(T)]
+overload scalb(x:T, fn:T){
+    if (nan?(x) or nan?(fn)) return x*fn;
+    if (not finite?(fn)) {
+        if(fn>0.0) return x*fn;
+        else       return x/(-fn);
+    }
+    if (rint(fn)!=fn) return (fn-fn)/(fn-fn);
+    if ( fn > 65000.0) return scalbn(x, 65000);
+    if (-fn > 65000.0) return scalbn(x,-65000);
+    return scalbn(x,Int(fn));
+}

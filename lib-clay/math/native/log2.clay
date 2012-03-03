@@ -1,0 +1,50 @@
+/*
+ * Return the base 2 logarithm of x.  See e_log.c and k_log.h for most
+ * comments.
+ *
+ * This reduces x to {k, 1+f} exactly as in e_log.c, then calls the kernel,
+ * then does the combining and scaling steps
+ *    log2(x) = (f - 0.5*f*f + k_log1p(f)) / ln2 + k
+ * in not-quite-routine extra precision.
+ */
+
+import math.native.kernel.k_log.*;
+import math.native.kernel.ieee754.*;
+import math.*;
+
+overload log2(x:Double) {
+	alias ZERO = 0.;
+	var xdb = MAKE_IEEE(x);
+	var k = 0;
+	if (GET_IEEE_HIGH(xdb) < 0x00100000) {			/* x < 2**-1022  */
+	    if (bitor(bitand(GET_IEEE_HIGH(xdb),MM),GET_IEEE_LOW(xdb))==0) return negativeInfinity(Double);/* log(+-0)=-inf */
+	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);/* log(-#) = NaN */
+	    k -= 54; 
+	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
+	}
+	if (GET_IEEE_HIGH(xdb) >= EM) return infinity(Double);
+	if (GET_IEEE_HIGH(xdb) == RM and GET_IEEE_LOW(xdb) == 0)
+	    return ZERO;			/* log(1) = +0 */
+	k += bitshr(GET_IEEE_HIGH(xdb),20)-1023;
+	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),NEM);
+	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,0x100000);
+	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb), bitxor(i,RM)));	/* normalize x or x/2 */
+	k += bitshr(i,20);
+	var y = Double(k);
+	var f = GET_IEEE_DB(xdb) - 1.0;
+	var hfsq = 0.5*f*f;
+	var r = k_log1p(f);
+
+	
+	SET_IEEE(xdb,f - hfsq);
+	SET_IEEE_LOW(xdb,0);
+	var lo = (f - GET_IEEE_DB(xdb)) - hfsq + r;
+	var val_hi = GET_IEEE_DB(xdb) *IVLN2HI;
+	var val_lo = (lo+GET_IEEE_DB(xdb))*IVLN2LO + lo*IVLN2HI;
+
+	/* spadd(val_hi, val_lo, y), except for not using double_t: */
+	var w = y + val_hi;
+	val_lo += (y - w) + val_hi;
+	val_hi = w;
+	return val_lo + val_hi;
+}

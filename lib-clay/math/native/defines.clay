@@ -1,11 +1,9 @@
-
-
 define sign;
 
-define ceil;
-define floor;
-define round;
-define trunc;
+define ceil;  
+define floor; 
+define round; 
+define trunc; 
 define llround;
 define rint;
 define llrint;
@@ -17,7 +15,7 @@ define ldexp;
 define scalb;
 define scalbln;
 define scalbn;
-define mod;
+define fmod;
 define modf;
 define significand;
 define drem;
@@ -33,14 +31,11 @@ define rsqrt;
 define hypot;
 define pow;
 define pow2;
-// define pown;
-// define powr;
 
 define sin;
 define cos;
 define tan;
-define cot;
-// define sinpi;
+define sinpi;
 // define cospi;
 
 define asin;
@@ -48,7 +43,7 @@ define acos;
 define atan;
 define atanpi;
 define atan2;
-// define atan2pi;
+//define atan2pi;
 
 define sinh;
 define cosh;
@@ -58,10 +53,12 @@ define acosh;
 define asinh;
 define atanh;
 
+define cot;
+
 define log;
 define log2;
 define log10;
-define logp1;
+define log1p;
 define logb;
 define ilogb;
 // define log2p1;
@@ -91,8 +88,7 @@ define digamma;
 define tgamma;
 define lgamma;
 define lgamma_r;
-define igamma;
-define igammac;
+define gamma_r;
 alias gamma = tgamma;
 define beta;
 

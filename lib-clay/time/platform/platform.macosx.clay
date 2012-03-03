@@ -9,10 +9,10 @@ time() {
         throw GenericOSError(unix.errno());
     var secs = Double(tv.tv_sec);
     var usecs = Double(tv.tv_usec);
-    return secs + usecs/(1000*1000);
+    return secs + usecs/1e6;
 }
 
 sleep(seconds:Double) {
-    var useconds = UInt(seconds * 1000 * 1000);
+    var useconds = UInt(seconds * 1e6);
     unix.usleep(useconds);
 }

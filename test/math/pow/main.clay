@@ -1,5 +1,0 @@
-import math.(pow);
-
-main() {
-    println(pow(3.0, 3.0));
-}
