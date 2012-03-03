@@ -5429,6 +5429,8 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *v0 = pointerValue(args, 0, t, ctx);
         IntegerTypePtr offsetT;
         llvm::Value *v1 = integerValue(args, 1, offsetT, ctx);
+        if (!offsetT->isSigned && offsetT->bits < typeSize(cSizeTType)*8)
+            v1 = ctx->builder->CreateZExt(v1, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(v1);
         llvm::Value *result = ctx->builder->CreateGEP(v0,
@@ -5658,6 +5660,8 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *av = arrayValue(args, 0, at);
         IntegerTypePtr indexType;
         llvm::Value *iv = integerValue(args, 1, indexType, ctx);
+        if (!indexType->isSigned && indexType->bits < typeSize(cSizeTType)*8)
+            iv = ctx->builder->CreateZExt(iv, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));
         indices.push_back(iv);
