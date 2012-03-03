@@ -1,6 +1,5 @@
 // exp2
 
-//public import math.native.defines.(exp2);
 import math.native.kernel.ieee754.*;
 import math.*;
 

@@ -2,7 +2,6 @@
 
 
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(exp);
 import math.*;
 
 private var halF 			= array(0.5,-0.5);

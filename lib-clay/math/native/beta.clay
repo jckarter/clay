@@ -1,7 +1,5 @@
 
-//public import math.native.defines.(beta,gamma,lgamma);
 import math.native.gamma.(maxGamma);
-//import math.native.(exp);
 import math.*;
 
 [T | Numeric?(T)]

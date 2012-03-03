@@ -1,74 +1,72 @@
-define sign;//d
+define sign;
 
-define ceil;  //d
-define floor; //d
-define round; //d
-define trunc; //d
-define llround;//d
-define rint;//d
+define ceil;  
+define floor; 
+define round; 
+define trunc; 
+define llround;
+define rint;
 define llrint;
 define nearbyint;
 
-define frexp;//d
-define ldexp;//d
+define frexp;
+define ldexp;
 
-define scalb;//d
-define scalbln;//d
-define scalbn;//d
+define scalb;
+define scalbln;
+define scalbn;
 define fmod;
-define modf;//d
-define significand;//d
-define drem;//d
+define modf;
+define significand;
+define drem;
 define remquo;
 define fdim;
 define min;
 define max;
 
 define fma;
-define recip;//d
-define sqrt;//d
+define recip;
+define sqrt;
 define rsqrt;
-define hypot;//d
-define pow;//d
+define hypot;
+define pow;
 define pow2;
-// define pown;
-// define powr;
 
-define sin;//d
-define cos;//d
-define tan;//d
+define sin;
+define cos;
+define tan;
 define sinpi;
 // define cospi;
 
-define asin;//d
-define acos;//d
-define atan;//d
+define asin;
+define acos;
+define atan;
 define atanpi;
-define atan2;//d
- //define atan2pi;
+define atan2;
+//define atan2pi;
 
-define sinh;//d
-define cosh;//d
-define tanh;//d
+define sinh;
+define cosh;
+define tanh;
 
-define acosh;//d
-define asinh;//d
-define atanh;//d
+define acosh;
+define asinh;
+define atanh;
 
 define cot;
 
-define log;//d
-define log2;//d
-define log10;//d
-define log1p;//d
-define logb;//d
-define ilogb;//d
+define log;
+define log2;
+define log10;
+define log1p;
+define logb;
+define ilogb;
 // define log2p1;
 // define log10p1;
 
-define exp;//d
-define exp2;//d
-define expm1;//d
+define exp;
+define exp2;
+define expm1;
 // define exp2m1;
 // define exp10;
 // define exp10m1;
@@ -78,25 +76,25 @@ define expm1;//d
 
 define proj;
 define arg;
-define sigmoid;//d
-define cbrt;//d
+define sigmoid;
+define cbrt;
 
-define erf;//d
-define erfc;//d
+define erf;
+define erfc;
 define ierf;
 define ierfc;
 
 define digamma;
-define tgamma;//d
-define lgamma;//d
-define lgamma_r;//d
-define gamma_r;//d
-alias gamma = tgamma;//d
-define beta;//d
+define tgamma;
+define lgamma;
+define lgamma_r;
+define gamma_r;
+alias gamma = tgamma;
+define beta;
 
-define j0;//d
-define j1;//d
-define i1;//d
+define j0;
+define j1;
+define i1;
 define jn;
 define y0;
 define y1;

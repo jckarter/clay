@@ -1,6 +1,6 @@
 // cbrt function adapted from openlibm
+
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(cbrt);
 import math.*;
 
 alias B1 = 715094163; /* B1 = (1023-1023/3-0.03306235651)*2**20 */

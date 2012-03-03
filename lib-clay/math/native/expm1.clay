@@ -1,6 +1,5 @@
 // expm1 function adapted from openlibm
 
-//public import math.native.defines.(expm1);
 import math.native.kernel.ieee754.*;
 import math.*;
 

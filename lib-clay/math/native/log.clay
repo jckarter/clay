@@ -1,8 +1,6 @@
 // log
 
-//public import math.native.defines.(log);
 import math.native.kernel.ieee754.*;
-//import numbers.floats.*;
 import math.*;
 
 overload log(x:Double) {

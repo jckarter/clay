@@ -1,7 +1,6 @@
 // fmod
 
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(fmod);
 import math.*;
 
 overload fmod(a:Double, b:Double) {

@@ -1,7 +1,4 @@
 
-//public import math.native.defines.*;
-//import numbers.floats.*;
-//import math.native.(M_PI,M_PI_2);
 import math.*;
 
 [U | Complex?(U)]

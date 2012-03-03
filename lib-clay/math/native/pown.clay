@@ -1,7 +1,6 @@
 // pow x^n | Type(n)==Integer
 // pow n^m | Type(n,m)==Integer
 
-//public import math.native.defines.(pow);
 import math.*;
 
 [T,I | Float?(T) and Integer?(I)]

@@ -1,6 +1,5 @@
 // complex exp function
 
-//public import math.native.defines.(exp,cos,sin);
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
 import math.*;

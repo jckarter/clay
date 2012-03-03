@@ -1,6 +1,4 @@
 
-//public import math.native.defines.(proj);
-//import numbers.floats.*;
 import math.*;
 
 [T | Complex?(T)]

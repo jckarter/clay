@@ -1,5 +1,4 @@
-//public import math.native.defines.(frexp);
-//import numbers.floats.*;
+
 import math.*;
 
 // for non-zero x

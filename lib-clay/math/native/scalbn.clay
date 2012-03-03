@@ -1,7 +1,5 @@
-//public import math.native.defines.(scalbn,scalb,scalbln);
+
 import math.native.kernel.ieee754.*;
-//import numbers.floats.*;
-//import math.(scalbn,scalb,scalbln,rint);
 import math.*;
 
 // scalbn (double x, int n)

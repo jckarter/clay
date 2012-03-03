@@ -8,10 +8,8 @@
  * in not-quite-routine extra precision.
  */
 
-//public import math.native.defines.(log2);
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
-//import numbers.floats.*;
 import math.*;
 
 overload log2(x:Double) {

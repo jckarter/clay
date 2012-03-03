@@ -1,5 +1,5 @@
-import math.native.(fma);
-import numbers.floats.*;
+
+import math.*;
 
 [T] inline Add12Cond(a:T, b:T) --> s:T, r:T {
     s <-- a + b;

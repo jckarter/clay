@@ -1,6 +1,4 @@
-//public import math.native.defines.(ldexp);
-//import numbers.floats.*;
-//import math.native.(scalbn);
+
 import math.*;
 
 [T,I | Float?(T) and Integer?(I)]

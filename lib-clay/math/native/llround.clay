@@ -1,7 +1,6 @@
 // llround
+
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(llround);
-//import numbers.floats.*;
 import math.*;
 
 overload llround(x:Float) {

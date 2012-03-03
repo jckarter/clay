@@ -1,9 +1,6 @@
 // complex tan,tanh
 
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(tanh,tan);
-//import numbers.floats.*;
-//import math.native.(sin,cosh,exp,abs,sqrt,cos,sinh);
 import math.*;
 
 overload tanh(z:ComplexDouble) {

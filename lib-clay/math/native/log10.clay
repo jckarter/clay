@@ -1,9 +1,7 @@
 // log10
 
-//public import math.native.defines.(log10);
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
-//import numbers.floats.*;
 import math.*;
 
 alias ivln10hi   =  4.34294481878168880939e-01; /* 0x3fdbcb7b, 0x15200000 */

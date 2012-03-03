@@ -1,6 +1,5 @@
 // modf
 
-//public import math.native.defines.(modf);
 import math.native.kernel.ieee754.*;
 import math.*;
 

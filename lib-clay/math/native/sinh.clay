@@ -1,9 +1,7 @@
 // sinh
 
-//public import math.native.defines.(sinh);
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
-//import math.native.(exp,abs,expm1);
 import math.*;
 
 overload sinh(x:Double) {

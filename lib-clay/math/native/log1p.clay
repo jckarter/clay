@@ -1,6 +1,5 @@
 // log1p
 
-//public import math.native.defines.(log1p);
 import math.native.kernel.ieee754.*;
 import math.*;
 

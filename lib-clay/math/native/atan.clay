@@ -1,8 +1,6 @@
 // atan
 
 import math.native.kernel.ieee754.*;
-//public import math.native.defines.(atan);
-//import numbers.floats.(nan,abs);
 import math.*;
 
 private var atanhi = array(
