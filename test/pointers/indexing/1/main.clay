@@ -1,0 +1,5 @@
+main() {
+    var v = Vector(range(256));
+    var p = begin(v);
+    println(p[224_uss]);
+}
