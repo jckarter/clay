@@ -1,6 +1,7 @@
 // Test math functions
 
 import math.*;
+import platform.(OS, FreeBSD, Windows);
 
 ftypes() = Float64;
 
@@ -26,11 +27,48 @@ oneArgFuncs() =
                 asech,acsch,acoth, 
                 ;
 
+// FreeBSD does not have log2
+[| OS == FreeBSD]
+overload oneArgFuncs() =
+                abs,recip,
+                sqrt,rsqrt,cbrt,square,cube,
+                trunc,round,ceil,floor,rint,
+                significand,
+                sin,cos,tan,
+                asin,acos,atan,
+                sinh,cosh,tanh,
+                exp,expm1,sigmoid,
+                log,log10,ilogb,log1p,
+                erf,erfc,gamma,lgamma,
+                //j0,j1,i1,
+                sec,csc,cot,
+                asec,acsc,acot,
+                sech,csch,coth,
+                asech,acsch,acoth, 
+                ;
+
+// Windows only has C89 libm
+[| OS == Windows]
+overload oneArgFuncs() =
+                abs,
+                sqrt,
+                floor,
+                sin,cos,tan,
+                asin,acos,atan,
+                sinh,cosh,tanh,
+                exp,
+                log,log10,
+                ;
+
 
 twoArgFuncs() = 
                 pow,beta,atan2,
                 ;
 
+[| OS == Windows]
+overload twoArgFuncs() = 
+                pow,atan2,
+                ;
 
 
 evalFuncs(funcs,data,types) {
