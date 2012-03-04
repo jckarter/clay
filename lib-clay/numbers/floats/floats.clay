@@ -127,23 +127,22 @@ floatUnordered?(a:T, b:T) --> returned:Bool __llvm__ {
 }
 
 
-record UInt64x2 (mantissa:UInt64,exponent:UInt64);
+record Float80Bits (mantissa:UInt64,exponent:UInt32);
 
-floatBits(f:ILongDouble) = bitcast(f, UInt64x2);
+floatBits(f:ILongDouble) = bitcast(f, Float80Bits);
 overload floatBits(f:IDouble) = bitcast(f, UInt64);
 overload floatBits(f:IFloat) = bitcast(f, UInt32);
-overload floatBits(f:LongDouble) = bitcast(f, UInt64x2);
+overload floatBits(f:LongDouble) = bitcast(f, Float80Bits);
 overload floatBits(f:Double) = bitcast(f, UInt64);
 overload floatBits(f:Float) = bitcast(f, UInt32);
 
-floatFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), LongDouble);
+floatFromBits(m:UInt64,e:UInt64) = bitcast(Float80Bits(m,e), LongDouble);
 overload floatFromBits(b:UInt64) = bitcast(b, Double);
 overload floatFromBits(b:UInt32) = bitcast(b, Float);
 
-imagFromBits(m:UInt64,e:UInt64) = bitcast(UInt64x2(m,e), ILongDouble);
+imagFromBits(m:UInt64,e:UInt64) = bitcast(Float80Bits(m,e), ILongDouble);
 overload imagFromBits(b:UInt64) = bitcast(b, IDouble);
 overload imagFromBits(b:UInt32) = bitcast(b, IFloat);
-
 
 [I | Integer?(I)]
 floatFromParts(static LongDouble, neg?:Bool, exp:I, mant:UInt64)
@@ -181,17 +180,17 @@ overload floatFromParts(static IFloat ,neg?:Bool, exp:I, mant:UInt32)
         bitshl(bitand(UInt32(exp), exponentMask(IFloat)), mantissaSize(IFloat)),
         if (neg?) 0x8000_0000u else 0u ));
 
-floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x0000_0000_0000_8000_ul) != 0;
+floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
 overload floatNegative?(f:IDouble) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
 overload floatNegative?(f:IFloat) = bitand(floatBits(f), 0x8000_0000u) != 0;
-overload floatNegative?(f:LongDouble) = bitand(floatBits(f).exponent, 0x0000_0000_0000_8000_ul) != 0;
+overload floatNegative?(f:LongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
 overload floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
 overload floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
 
 [T | Float?(T) or Imaginary?(T)]
 floatExponent(f:T) = bitand(bitshr(floatBits(f), mantissaSize(T)), exponentMask(T));
-overload floatExponent(f:ILongDouble) = floatBits(f).exponent;
-overload floatExponent(f:LongDouble) = floatBits(f).exponent;
+overload floatExponent(f:ILongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
+overload floatExponent(f:LongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
 
 floatMantissa(f:ILongDouble) = floatBits(f).mantissa;
 overload floatMantissa(f:IDouble) = bitand(floatBits(f), mantissaMask(IDouble));
@@ -308,14 +307,14 @@ overload signbit(x:Float) = Int(bitshr(floatBits(x),31));
 
 floatBitsUnsigned(x:ILongDouble) {
     var tmp = floatBits(x);
-    tmp.exponent = bitand(tmp.exponent,0x0000_0000_0000_7FFFul);
+    tmp.exponent = bitand(tmp.exponent,0x7FFFu);
     return tmp;
 }
 overload floatBitsUnsigned(x:IDouble) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
 overload floatBitsUnsigned(x:IFloat) = bitand(floatBits(x),0x7FFF_FFFFu);
 overload floatBitsUnsigned(x:LongDouble) {
     var tmp = floatBits(x);
-    tmp.exponent = bitand(tmp.exponent,0x0000_0000_0000_7FFFul);
+    tmp.exponent = bitand(tmp.exponent,0x7FFFu);
     return tmp;
 }
 overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
