@@ -23,6 +23,7 @@ public import __operators__.(
     plus,
     minus,
 
+    arith,
     add,
     subtract,
     multiply,
@@ -341,6 +342,59 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 }
 
 
+//
+//  default arithmetic - use left associativity with precedence *,/,\,%,-,+ 
+//
+
+overload arith(forward ..args) 
+    = arithAdd(..arithSub(..arithRem(..arithQuo(
+        ..arithDiv(..arithMul(..args))))));
+
+arithAdd(forward a,fn,forward ..args) = forward a,fn,..arithAdd(..args);
+overload arithAdd(forward a,fn, forward b) = forward fn(a,b);
+overload arithAdd(forward a,static add,forward b, forward ..args) 
+    = forward ..arithAdd(add(a,b), ..args);
+overload arithAdd(forward a,static add,forward b) 
+    = forward add(a,b);
+overload arithAdd(forward a) = forward a;
+
+arithSub(forward a,fn,forward ..args) = forward a,fn,..arithSub(..args);
+overload arithSub(forward a,fn,forward b) = forward a,fn,b;
+overload arithSub(forward a,static subtract,forward b,forward ..args) 
+    = forward ..arithSub(subtract(a,b), ..args);
+overload arithSub(forward a,static subtract,forward b) 
+    = forward subtract(a,b);
+overload arithSub(forward a) = forward a;
+
+arithRem(forward a,fn,forward ..args) = forward a,fn,..arithRem(..args);
+overload arithRem(forward a,fn,forward b) = forward a,fn,b;
+overload arithRem(forward a,static remainder,forward b,forward ..args) 
+    = forward ..arithRem(remainder(a,b), ..args);
+overload arithRem(forward a,static remainder,forward b) 
+    = forward remainder(a,b);
+overload arithRem(forward a) = forward a;
+
+arithQuo(forward a,fn,forward ..args) = forward a,fn,..arithQuo(..args);
+overload arithQuo(forward a,fn,forward b) = forward a,fn,b;
+overload arithQuo(forward a,static quotient,forward b,forward ..args) 
+    = forward ..arithQuo(quotient(a,b), ..args);
+overload arithQuo(forward a,static quotient,forward b) 
+    = forward quotient(a,b);
+overload arithQuo(forward a) = forward a;
+
+arithDiv(forward a,fn,forward ..args) = forward a,fn,..arithDiv(..args);
+overload arithDiv(forward a,fn,forward b) = forward a,fn,b;
+overload arithDiv(forward a,static divide,forward b,forward ..args) 
+    = forward ..arithDiv(divide(a,b), ..args);
+overload arithDiv(forward a,static divide,forward b) = forward divide(a,b);
+overload arithDiv(forward a) = forward a;
+
+arithMul(forward a,fn,forward ..args) = forward a,fn,..arithMul(..args);
+overload arithMul(forward a,fn,forward b) = forward a,fn,b;
+overload arithMul(forward a,static multiply,forward b,forward ..args) 
+    = forward ..arithMul(multiply(a,b), ..args);
+overload arithMul(forward a,static multiply,forward b) 
+    = forward multiply(a,b);
 
 
 //

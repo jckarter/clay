@@ -174,6 +174,9 @@ static void printExpr(ostream &out, const Expr *x) {
         case NOT :
             out << "NOT";
             break;
+        case ARITH :
+            out << "ARITH";
+            break;
         case ADD :
             out << "ADD";
             break;

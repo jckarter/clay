@@ -987,6 +987,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(dereference);
     OPERATOR(plus);
     OPERATOR(minus);
+    OPERATOR(arith);
     OPERATOR(add);
     OPERATOR(subtract);
     OPERATOR(multiply);
@@ -1167,6 +1168,7 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 DEFINE_OPERATOR_ACCESSOR(dereference)
 DEFINE_OPERATOR_ACCESSOR(plus)
 DEFINE_OPERATOR_ACCESSOR(minus)
+DEFINE_OPERATOR_ACCESSOR(arith)
 DEFINE_OPERATOR_ACCESSOR(add)
 DEFINE_OPERATOR_ACCESSOR(subtract)
 DEFINE_OPERATOR_ACCESSOR(multiply)

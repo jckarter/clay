@@ -120,7 +120,6 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
 
 ExprPtr updateOperatorExpr(int op) {
     switch (op) {
-    case UPDATE_ARITH : return operator_expr_arith();    
     case UPDATE_ADD : return operator_expr_add();
     case UPDATE_SUBTRACT : return operator_expr_subtract();
     case UPDATE_MULTIPLY : return operator_expr_multiply();
