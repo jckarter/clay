@@ -396,7 +396,7 @@ overload arithMul(forward a,static multiply,forward b,forward ..args)
 overload arithMul(forward a,static multiply,forward b) 
     = forward multiply(a,b);
 
-
+
 //
 // swap
 //
