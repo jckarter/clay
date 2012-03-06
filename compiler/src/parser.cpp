@@ -616,39 +616,57 @@ static bool prefixExpr(ExprPtr &x) {
 // arithmetic expr
 //
 
-static bool mulTail(VariadicOpPtr &x) {
+static bool arithOp(int &op) {
+    int p = save();
+    const char *s[] = {"*", "/", "\\", "%", "-", "+", NULL};
+    const int ops[] = {MULTIPLY, DIVIDE, QUOTIENT, REMAINDER, SUBTRACT, ADD};
+    for (const char **a = s; *a; ++a) {
+        restore(p);
+        if (symbol(*a)) {
+            int i = a - s;
+            op = ops[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool arithTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
+    vector<int> ops;
+    ops.push_back(ARITH);
     ExprPtr b;
+    int op;
     int p = save();
-    if (!symbol("*")) return false;
+    if (!arithOp(op)) return false;
     restore(p);
     while (true) {
         int p = save();
-        if (!symbol("*")) {
+        if (!arithOp(op)) {
             restore(p);
             break;
         }
+        ops.push_back(op);
         p = save();
         if (!prefixExpr(b)) {
             restore(p);
             break;
         }
         exprs->add(b);
+        
     }
-    vector<int> ops;
-    ops.push_back(MULTIPLY);
     x = new VariadicOp(ops, exprs);
     x->location = location;
     return true;
 }
 
-static bool mulExpr(ExprPtr &x) {
+static bool arithExpr(ExprPtr &x) {
     if (!prefixExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
-        if (!mulTail(y)) {
+        if (!arithTail(y)) {
             restore(p);
             break;
         }
@@ -658,216 +676,6 @@ static bool mulExpr(ExprPtr &x) {
     return true;
 }
 
-static bool quotientTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("\\")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("\\")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!mulExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(QUOTIENT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool quotientExpr(ExprPtr &x) {
-    if (!mulExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!quotientTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool divTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("/")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("/")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!quotientExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(DIVIDE);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool divExpr(ExprPtr &x) {
-    if (!quotientExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!divTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool remTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("%")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("%")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!divExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(REMAINDER);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool remExpr(ExprPtr &x) {
-    if (!divExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!remTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool subTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("-")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("-")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!remExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(SUBTRACT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool subExpr(ExprPtr &x) {
-    if (!remExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!subTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-static bool addTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("+")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("+")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!subExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(ADD);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool addExpr(ExprPtr &x) {
-    if (!subExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!addTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
 
 
 static bool catTail(VariadicOpPtr &x) {
@@ -884,7 +692,7 @@ static bool catTail(VariadicOpPtr &x) {
             break;
         }
         p = save();
-        if (!addExpr(b)) {
+        if (!arithExpr(b)) {
             restore(p);
             break;
         }
@@ -899,7 +707,7 @@ static bool catTail(VariadicOpPtr &x) {
 
 
 static bool catExpr(ExprPtr &x) {
-    if (!addExpr(x)) return false;
+    if (!arithExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
@@ -912,6 +720,7 @@ static bool catExpr(ExprPtr &x) {
     }
     return true;
 }
+
 
 
 

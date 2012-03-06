@@ -1162,6 +1162,7 @@ enum VariadicOpKind {
     PLUS,
     MINUS,
     NOT,
+    ARITH,
     ADD,
     SUBTRACT,
     MULTIPLY,
@@ -1426,6 +1427,7 @@ struct InitAssignment : public Statement {
 };
 
 enum UpdateOpKind {
+    UPDATE_ARITH,
     UPDATE_ADD,
     UPDATE_SUBTRACT,
     UPDATE_MULTIPLY,
