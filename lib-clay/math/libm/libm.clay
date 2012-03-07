@@ -26,11 +26,11 @@ inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [| MathMode?(LIBM)] inline overload abs(x:LongDouble) = libc.fabsl(x);
 
 [| MathMode?(LIBM)] inline overload exp(x:Double) = libc.exp(x);
-inline overload exp(x:Float) = libc.expf(x);
+[| MathMode?(LIBM)] inline overload exp(x:Float) = libc.expf(x);
 inline overload exp(x:LongDouble) = libc.expl(x);
 
 [| MathMode?(LIBM)] inline overload log(x:Double) = libc.log(x);
-inline overload log(x:Float) = libc.logf(x);
+[| MathMode?(LIBM)] inline overload log(x:Float) = libc.logf(x);
 inline overload log(x:LongDouble) = libc.logl(x);
 
 [| MathMode?(LIBM)] inline overload acos(x:Double) = libc.acos(x);
