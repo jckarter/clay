@@ -3,30 +3,28 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
-private var bp = array(1.0, 1.5);
-private var dp_h = array( 0.0, 5.84962487220764160156e-01); /* 0x3FE2B803, 0x40000000 */
-private var dp_l = array( 0.0, 1.35003920212974897128e-08); /* 0x3E4CFDEB, 0x43CFD006 */
-alias two53	=  9007199254740992.0;	/* 0x43400000, 0x00000000 */
-
-	/* poGET_IEEE_LOW(ydb) coefs for (3/2)*(log(x)-2s-2/3*s**3 */
-alias L1  =  5.99999999999994648725e-01; /* 0x3FE33333, 0x33333303 */
-alias L2  =  4.28571428578550184252e-01; /* 0x3FDB6DB6, 0xDB6FABFF */
-alias L3  =  3.33333329818377432918e-01; /* 0x3FD55555, 0x518F264D */
-alias L4  =  2.72728123808534006489e-01; /* 0x3FD17460, 0xA91D4101 */
-alias L5  =  2.30660745775561754067e-01; /* 0x3FCD864A, 0x93C9DB65 */
-alias L6  =  2.06975017800338417784e-01; /* 0x3FCA7E28, 0x4A454EEF */
-alias lg2  =  6.93147180559945286227e-01; /* 0x3FE62E42, 0xFEFA39EF */
-alias lg2_h  =  6.93147182464599609375e-01; /* 0x3FE62E43, 0x00000000 */
-alias lg2_l  = -1.90465429995776804525e-09; /* 0xBE205C61, 0x0CA86C39 */
-alias ovt =  8.0085662595372944372e-0017; /* -(1024-log2(ovfl+.5ulp)) */
-alias cp    =  9.61796693925975554329e-01; /* 0x3FEEC709, 0xDC3A03FD =2/(3ln2) */
-alias cp_h  =  9.61796700954437255859e-01; /* 0x3FEEC709, 0xE0000000 =(float)cp */
-alias cp_l  = -7.02846165095275826516e-09; /* 0xBE3E2FE0, 0x145B01F5 =tail of cp_h*/
-alias ivln2_h  =  1.44269502162933349609e+00; /* 0x3FF71547, 0x60000000 =24b 1/ln2*/
-alias ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
-
 overload pow(x:Double, y:Double) {
-	
+	alias bp = array(1.0, 1.5);
+	alias dp_h = array( 0.0, 5.84962487220764160156e-01); /* 0x3FE2B803, 0x40000000 */
+	alias dp_l = array( 0.0, 1.35003920212974897128e-08); /* 0x3E4CFDEB, 0x43CFD006 */
+	alias two53	=  9007199254740992.0;	/* 0x43400000, 0x00000000 */
+
+		/* poGET_IEEE_LOW(ydb) coefs for (3/2)*(log(x)-2s-2/3*s**3 */
+	alias L1  =  5.99999999999994648725e-01; /* 0x3FE33333, 0x33333303 */
+	alias L2  =  4.28571428578550184252e-01; /* 0x3FDB6DB6, 0xDB6FABFF */
+	alias L3  =  3.33333329818377432918e-01; /* 0x3FD55555, 0x518F264D */
+	alias L4  =  2.72728123808534006489e-01; /* 0x3FD17460, 0xA91D4101 */
+	alias L5  =  2.30660745775561754067e-01; /* 0x3FCD864A, 0x93C9DB65 */
+	alias L6  =  2.06975017800338417784e-01; /* 0x3FCA7E28, 0x4A454EEF */
+	alias lg2  =  6.93147180559945286227e-01; /* 0x3FE62E42, 0xFEFA39EF */
+	alias lg2_h  =  6.93147182464599609375e-01; /* 0x3FE62E43, 0x00000000 */
+	alias lg2_l  = -1.90465429995776804525e-09; /* 0xBE205C61, 0x0CA86C39 */
+	alias ovt =  8.0085662595372944372e-0017; /* -(1024-log2(ovfl+.5ulp)) */
+	alias cp    =  9.61796693925975554329e-01; /* 0x3FEEC709, 0xDC3A03FD =2/(3ln2) */
+	alias cp_h  =  9.61796700954437255859e-01; /* 0x3FEEC709, 0xE0000000 =(float)cp */
+	alias cp_l  = -7.02846165095275826516e-09; /* 0xBE3E2FE0, 0x145B01F5 =tail of cp_h*/
+	alias ivln2_h  =  1.44269502162933349609e+00; /* 0x3FF71547, 0x60000000 =24b 1/ln2*/
+	alias ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
 	alias ZERO = 0.;
 	alias ONE = 1.;
 	alias TWO = 2.;
