@@ -1,7 +1,7 @@
 
 public import sequences.force.*;
 public import sequences.lazy.*;
-
+import numbers.(private BiggerNumeric?);
 
 
 //
@@ -118,3 +118,48 @@ interleave(seq:S, betweenFn, fn) {
         }
     }
 }
+
+
+//
+// arithmetic
+//
+
+[..S | anyValues?(Sequence?,..S)]
+overload arith(..args:S) {
+    var ret = Vector[seqType(Int8,..args)]();
+    resize(ret,seqSize(SizeT(0),..args));
+    for (i,r in enumerated(ret))
+        r = arith(..reduceToScaler(i,..args));
+    return move(ret);
+}
+
+private define seqType;
+
+[T | Numeric?(T)] 
+overload seqType(static T,a,..args) = ..seqType(T,..args);
+[T,U | Numeric?(U) and BiggerNumeric?(T,U)]
+overload seqType(static T,a:U,..args) = ..seqType(T,..args);
+[T,U | Numeric?(U) and BiggerNumeric?(U,T)]
+overload seqType(static T,a:U,..args) = ..seqType(U,..args);
+[T,S | Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
+overload seqType(static T,a:S,..args) = ..seqType(T,..args);
+[T,S | Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
+overload seqType(static T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
+overload seqType(T) = T;
+
+private define seqSize;
+
+overload seqSize(s,a,..args) = ..seqSize(s,..args);
+[S | Sequence?(S)] 
+overload seqSize(s,a:S,..args) = ..seqSize(max(s,size(a)),..args);
+overload seqSize(s) = s;
+
+private define reduceToScaler;
+
+[F] 
+overload reduceToScaler(i, static F, ..args) = forward F, ..reduceToScaler(i,..args);
+[S | Sequence?(S)] 
+overload reduceToScaler(i, a:S, ..args) = forward a[i],..reduceToScaler(i,..args);
+[T | Numeric?(T)] 
+overload reduceToScaler(i, a:T, ..args) = forward a,..reduceToScaler(i,..args);
+overload reduceToScaler(i) = ;
