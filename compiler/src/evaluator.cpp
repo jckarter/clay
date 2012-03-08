@@ -2114,9 +2114,16 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (pvLeft->isTemp)
             error(x->left, "cannot assign to a temporary");
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(updateOperatorExpr(x->op));
-        call->parenArgs->add(x->left);
-        call->parenArgs->add(x->right);
+        if (x->op == UPDATE_CAT) {
+            call->parenArgs->add(operator_expr_cat());
+            call->parenArgs->add(x->left);
+            call->parenArgs->add(x->right);
+        } else {
+            call->parenArgs->add(operator_expr_arith());    
+            call->parenArgs->add(x->left);
+            call->parenArgs->add(updateOperatorExpr(x->op));
+            call->parenArgs->add(x->right);
+        }
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

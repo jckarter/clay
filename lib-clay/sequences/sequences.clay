@@ -124,6 +124,13 @@ interleave(seq:S, betweenFn, fn) {
 // arithmetic
 //
 
+[S | Sequence?(S)]
+overload updateAssign(static arith, ret:S, ..args) {
+    for (i,r in enumerated(ret))
+        r = arith(r,..reduceToScaler(i,..args));
+}
+
+
 [..S | anyValues?(Sequence?,..S)]
 overload arith(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();

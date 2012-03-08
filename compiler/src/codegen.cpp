@@ -3626,10 +3626,18 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_indexUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(updateOperatorExpr(x->op));
-                call->parenArgs->add(y->expr);
-                call->parenArgs->add(y->args);
-                call->parenArgs->add(x->right);
+                if (x->op == UPDATE_CAT) {
+                    call->parenArgs->add(operator_expr_cat());
+                    call->parenArgs->add(y->expr);
+                    call->parenArgs->add(y->args);
+                    call->parenArgs->add(x->right);
+                } else {
+                    call->parenArgs->add(operator_expr_arith());
+                    call->parenArgs->add(y->expr);
+                    call->parenArgs->add(y->args);
+                    call->parenArgs->add(updateOperatorExpr(x->op));
+                    call->parenArgs->add(x->right);
+                }
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
@@ -3638,11 +3646,20 @@ bool codegenStatement(StatementPtr stmt,
             CallPtr call = new Call(
                 operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
-            call->parenArgs->add(updateOperatorExpr(x->op));
-            call->parenArgs->add(y->expr);
-            ValueHolderPtr vh = sizeTToValueHolder(y->index);
-            call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-            call->parenArgs->add(x->right);
+            if (x->op == UPDATE_CAT) {
+                call->parenArgs->add(operator_expr_cat());
+                call->parenArgs->add(y->expr);
+                ValueHolderPtr vh = sizeTToValueHolder(y->index);
+                call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+                call->parenArgs->add(x->right);
+            } else {
+                call->parenArgs->add(operator_expr_arith());
+                call->parenArgs->add(y->expr);
+                ValueHolderPtr vh = sizeTToValueHolder(y->index);
+                call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
+                call->parenArgs->add(updateOperatorExpr(x->op));
+                call->parenArgs->add(x->right);
+            }
             return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
         }
         else if (x->left->exprKind == FIELD_REF) {
@@ -3652,17 +3669,32 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(updateOperatorExpr(x->op));
-                call->parenArgs->add(y->expr);
-                call->parenArgs->add(new ObjectExpr(y->name.ptr()));
-                call->parenArgs->add(x->right);
+                if (x->op == UPDATE_CAT) {
+                    call->parenArgs->add(operator_expr_cat());
+                    call->parenArgs->add(y->expr);
+                    call->parenArgs->add(new ObjectExpr(y->name.ptr()));
+                    call->parenArgs->add(x->right);
+                } else {
+                    call->parenArgs->add(operator_expr_arith());    
+                    call->parenArgs->add(y->expr);
+                    call->parenArgs->add(new ObjectExpr(y->name.ptr()));
+                    call->parenArgs->add(updateOperatorExpr(x->op));
+                    call->parenArgs->add(x->right);
+                }
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(updateOperatorExpr(x->op));
-        call->parenArgs->add(x->left);
-        call->parenArgs->add(x->right);
+        if (x->op == UPDATE_CAT) {
+            call->parenArgs->add(operator_expr_cat());
+            call->parenArgs->add(x->left);
+            call->parenArgs->add(x->right);
+        } else {
+            call->parenArgs->add(operator_expr_arith());    
+            call->parenArgs->add(x->left);
+            call->parenArgs->add(updateOperatorExpr(x->op));
+            call->parenArgs->add(x->right);
+        }
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

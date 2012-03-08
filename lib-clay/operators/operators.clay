@@ -235,8 +235,8 @@ inline overload assign(ref dest:T, rvalue src:T) {
 }
 
 [F]
-inline overload updateAssign(static F, ref dest, forward src) {
-    dest = F(dest, src);
+inline overload updateAssign(static F, ref dest, forward ..src) {
+    dest = F(dest, ..src);
 }
 
 inline overload notEquals?(a, b) = not equals?(a, b);
@@ -268,13 +268,13 @@ inline overload fieldRefAssign(dest, static FIELD, forward src) {
 }
 
 [F, FIELD]
-inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward src) {
-    updateAssign(static F, fieldRef(dest, static FIELD), src);
+inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward ..src) {
+    updateAssign(static F, fieldRef(dest, static FIELD), ..src);
 }
 
 [F, FIELD, T | RValue?(fieldRef(typeToLValue(T), static FIELD))]
-inline overload fieldRefUpdateAssign(static F, dest:T, static FIELD, forward src) {
-    fieldRefAssign(dest, static FIELD, F(fieldRef(dest, static FIELD), src));
+inline overload fieldRefUpdateAssign(static F, dest:T, static FIELD, forward ..src) {
+    fieldRefAssign(dest, static FIELD, F(fieldRef(dest, static FIELD), ..src));
 }
 
 [i]
@@ -283,12 +283,12 @@ inline overload staticIndexAssign(dest, static i, forward src) {
 }
 
 [F, i]
-inline overload staticIndexUpdateAssign(static F, dest, static i, forward src) {
-    updateAssign(static F, staticIndex(dest, static i), src);
+inline overload staticIndexUpdateAssign(static F, dest, static i, forward ..src) {
+    updateAssign(static F, staticIndex(dest, static i), ..src);
 }
 
 [F, i, T | RValue?(staticIndex(typeToLValue(T), static i))]
-inline overload staticIndexUpdateAssign(static F, dest:T, static i, forward src) {
+inline overload staticIndexUpdateAssign(static F, dest:T, static i, forward ..src) {
     staticIndexAssign(dest, static i, F(staticIndex(dest, static i), src));
 }
 
@@ -307,11 +307,11 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
 inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         static F,
-        index(dest, ..withoutNthValue(
-            static countValues(..A)-1,
+        index(dest, ..takeValues(
+            static countValues(..A)-2,
             ..indicesAndSrc
         )),
-        lastValue(..indicesAndSrc),
+        ..dropValues(static countValues(..A)-2,..indicesAndSrc),
     );
 }
 
@@ -322,7 +322,7 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..withoutNthValue(static countValues(..A)-1, ..A)
+                ..takeValues(static countValues(..A)-2, ..A)
             )
         )
     )
@@ -330,13 +330,13 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
 inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc),
+        ..takeValues(static countValues(..A)-2, ..indicesAndSrc),
         F(
             index(
                 dest,
-                ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc)
+                ..takeValues(static countValues(..A)-2, ..indicesAndSrc)
             ),
-            lastValue(..indicesAndSrc)
+            ..dropValues(static countValues(..A)-2,..indicesAndSrc)
         )
     );
 }
@@ -347,54 +347,22 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 //
 
 overload arith(forward ..args) 
-    = arithAdd(..arithSub(..arithRem(..arithQuo(
-        ..arithDiv(..arithMul(..args))))));
+    = arithp(add,..arithp(subtract,..arithp(remainder,..arithp(quotient,
+        ..arithp(divide,..arithp(multiply,..args))))));
 
-arithAdd(forward a,fn,forward ..args) = forward a,fn,..arithAdd(..args);
-overload arithAdd(forward a,fn, forward b) = forward fn(a,b);
-overload arithAdd(forward a,static add,forward b, forward ..args) 
-    = forward ..arithAdd(add(a,b), ..args);
-overload arithAdd(forward a,static add,forward b) 
-    = forward add(a,b);
-overload arithAdd(forward a) = forward a;
+private define arithp;
 
-arithSub(forward a,fn,forward ..args) = forward a,fn,..arithSub(..args);
-overload arithSub(forward a,fn,forward b) = forward a,fn,b;
-overload arithSub(forward a,static subtract,forward b,forward ..args) 
-    = forward ..arithSub(subtract(a,b), ..args);
-overload arithSub(forward a,static subtract,forward b) 
-    = forward subtract(a,b);
-overload arithSub(forward a) = forward a;
+overload arithp(p,forward a,fn,forward ..args) 
+    = forward a,fn,..arithp(p,..args);
+overload arithp(p,forward a,fn, forward b) = forward fn(a,b);
+overload arithp(p,forward a) = forward a;
 
-arithRem(forward a,fn,forward ..args) = forward a,fn,..arithRem(..args);
-overload arithRem(forward a,fn,forward b) = forward a,fn,b;
-overload arithRem(forward a,static remainder,forward b,forward ..args) 
-    = forward ..arithRem(remainder(a,b), ..args);
-overload arithRem(forward a,static remainder,forward b) 
-    = forward remainder(a,b);
-overload arithRem(forward a) = forward a;
-
-arithQuo(forward a,fn,forward ..args) = forward a,fn,..arithQuo(..args);
-overload arithQuo(forward a,fn,forward b) = forward a,fn,b;
-overload arithQuo(forward a,static quotient,forward b,forward ..args) 
-    = forward ..arithQuo(quotient(a,b), ..args);
-overload arithQuo(forward a,static quotient,forward b) 
-    = forward quotient(a,b);
-overload arithQuo(forward a) = forward a;
-
-arithDiv(forward a,fn,forward ..args) = forward a,fn,..arithDiv(..args);
-overload arithDiv(forward a,fn,forward b) = forward a,fn,b;
-overload arithDiv(forward a,static divide,forward b,forward ..args) 
-    = forward ..arithDiv(divide(a,b), ..args);
-overload arithDiv(forward a,static divide,forward b) = forward divide(a,b);
-overload arithDiv(forward a) = forward a;
-
-arithMul(forward a,fn,forward ..args) = forward a,fn,..arithMul(..args);
-overload arithMul(forward a,fn,forward b) = forward a,fn,b;
-overload arithMul(forward a,static multiply,forward b,forward ..args) 
-    = forward ..arithMul(multiply(a,b), ..args);
-overload arithMul(forward a,static multiply,forward b) 
-    = forward multiply(a,b);
+[p,fn | p==fn]
+overload arithp(static p,forward a,static fn,forward b, forward ..args) 
+    = forward ..arithp(p,fn(a,b), ..args);
+[p,fn | p==fn]
+overload arithp(static p,forward a,static fn,forward b) 
+    = forward fn(a,b);
 
 
 //

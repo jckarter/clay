@@ -1290,7 +1290,8 @@ static bool updateOp(int &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, UPDATE_CAT};
+                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, 
+                       UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {
