@@ -46,8 +46,8 @@ ExprPtr lookupCallable(int op) {
     case NOT :
         callable = primitive_expr_boolNot();
         break;
-    case ARITH :
-        callable = operator_expr_arith();
+    case OPERATOR :
+        callable = operator_expr_operator();
         break;
     case ADD :
         callable = operator_expr_add();
@@ -78,9 +78,6 @@ ExprPtr lookupCallable(int op) {
         break;
     case NOT_EQUALS :
         callable = operator_expr_notEqualsP();
-        break;
-    case COMPARE :
-        callable = operator_expr_compareP();
         break;
     case LESSER :
         callable = operator_expr_lesserP();
@@ -126,6 +123,7 @@ ExprPtr updateOperatorExpr(int op) {
     case UPDATE_DIVIDE      : return operator_expr_divide();
     case UPDATE_QUOTIENT    : return operator_expr_quotient();
     case UPDATE_REMAINDER   : return operator_expr_remainder();
+    case UPDATE_CAT         : return operator_expr_cat();
     default :
         assert(false);
         return NULL;

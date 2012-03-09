@@ -125,18 +125,25 @@ interleave(seq:S, betweenFn, fn) {
 //
 
 [S | Sequence?(S)]
-overload updateAssign(static arith, ret:S, ..args) {
+overload updateAssign(static operator, ret:S, ..args) {
     for (i,r in enumerated(ret))
-        r = arith(r,..reduceToScaler(i,..args));
+        r = operator(r,..reduceToScalar(i,..args));
 }
 
 
-[..S | anyValues?(Sequence?,..S)]
-overload arith(..args:S) {
+[..S | anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)
+    and not ( inValues?(Static[cat],..S)
+    or inValues?(Static[equals?],..S)
+    or inValues?(Static[lesser?],..S)
+    or inValues?(Static[greater?],..S)
+    or inValues?(Static[notEquals?],..S)
+    or inValues?(Static[lesserEquals?],..S)
+    or inValues?(Static[greaterEquals?],..S))]
+overload operator(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();
     resize(ret,seqSize(SizeT(0),..args));
     for (i,r in enumerated(ret))
-        r = arith(..reduceToScaler(i,..args));
+        r = operator(..reduceToScalar(i,..args));
     return move(ret);
 }
 
@@ -144,15 +151,15 @@ private define seqType;
 
 [T | Numeric?(T)] 
 overload seqType(static T,a,..args) = ..seqType(T,..args);
-[T,U | Numeric?(U) and BiggerNumeric?(T,U)]
+[T,U | Numeric?(T,U) and BiggerNumeric?(T,U)]
 overload seqType(static T,a:U,..args) = ..seqType(T,..args);
-[T,U | Numeric?(U) and BiggerNumeric?(U,T)]
+[T,U | Numeric?(T,U) and BiggerNumeric?(U,T)]
 overload seqType(static T,a:U,..args) = ..seqType(U,..args);
-[T,S | Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
+[T,S | Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
 overload seqType(static T,a:S,..args) = ..seqType(T,..args);
-[T,S | Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
+[T,S | Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
 overload seqType(static T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
-overload seqType(T) = T;
+[T | Numeric?(T)] overload seqType(static T) = T;
 
 private define seqSize;
 
@@ -161,12 +168,12 @@ overload seqSize(s,a,..args) = ..seqSize(s,..args);
 overload seqSize(s,a:S,..args) = ..seqSize(max(s,size(a)),..args);
 overload seqSize(s) = s;
 
-private define reduceToScaler;
+private define reduceToScalar;
 
 [F] 
-overload reduceToScaler(i, static F, ..args) = forward F, ..reduceToScaler(i,..args);
+overload reduceToScalar(i, static F, ..args) = forward F, ..reduceToScalar(i,..args);
 [S | Sequence?(S)] 
-overload reduceToScaler(i, a:S, ..args) = forward a[i],..reduceToScaler(i,..args);
+overload reduceToScalar(i, a:S, ..args) = forward a[i],..reduceToScalar(i,..args);
 [T | Numeric?(T)] 
-overload reduceToScaler(i, a:T, ..args) = forward a,..reduceToScaler(i,..args);
-overload reduceToScaler(i) = ;
+overload reduceToScalar(i, a:T, ..args) = forward a,..reduceToScalar(i,..args);
+overload reduceToScalar(i) = ;

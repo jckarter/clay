@@ -987,7 +987,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(dereference);
     OPERATOR(plus);
     OPERATOR(minus);
-    OPERATOR(arith);
+    OPERATOR(operator);
     OPERATOR(add);
     OPERATOR(subtract);
     OPERATOR(multiply);
@@ -997,7 +997,6 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(caseP);
     OPERATOR(equalsP);
     OPERATOR(notEqualsP);
-    OPERATOR(compareP);
     OPERATOR(lesserP);
     OPERATOR(lesserEqualsP);
     OPERATOR(greaterP);
@@ -1168,7 +1167,7 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 DEFINE_OPERATOR_ACCESSOR(dereference)
 DEFINE_OPERATOR_ACCESSOR(plus)
 DEFINE_OPERATOR_ACCESSOR(minus)
-DEFINE_OPERATOR_ACCESSOR(arith)
+DEFINE_OPERATOR_ACCESSOR(operator)
 DEFINE_OPERATOR_ACCESSOR(add)
 DEFINE_OPERATOR_ACCESSOR(subtract)
 DEFINE_OPERATOR_ACCESSOR(multiply)
@@ -1178,7 +1177,6 @@ DEFINE_OPERATOR_ACCESSOR(remainder)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(equalsP)
 DEFINE_OPERATOR_ACCESSOR(notEqualsP)
-DEFINE_OPERATOR_ACCESSOR(compareP)
 DEFINE_OPERATOR_ACCESSOR(lesserP)
 DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
 DEFINE_OPERATOR_ACCESSOR(greaterP)

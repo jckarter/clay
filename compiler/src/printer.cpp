@@ -174,8 +174,8 @@ static void printExpr(ostream &out, const Expr *x) {
         case NOT :
             out << "NOT";
             break;
-        case ARITH :
-            out << "ARITH";
+        case OPERATOR :
+            out << "OPERATOR";
             break;
         case ADD :
             out << "ADD";
@@ -200,9 +200,6 @@ static void printExpr(ostream &out, const Expr *x) {
             break;
         case IF_EXPR :
             out << "IF_EXPR";
-            break;
-        case COMPARE :
-            out << "COMPARE";
             break;
         default :
             assert(false);

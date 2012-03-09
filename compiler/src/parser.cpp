@@ -616,10 +616,13 @@ static bool prefixExpr(ExprPtr &x) {
 // arithmetic expr
 //
 
-static bool arithOp(int &op) {
+static bool operatorOp(int &op) {
     int p = save();
-    const char *s[] = {"*", "/", "\\", "%", "-", "+", NULL};
-    const int ops[] = {MULTIPLY, DIVIDE, QUOTIENT, REMAINDER, SUBTRACT, ADD};
+    const char *s[] = {"*", "/", "\\", "%", "-", "+", "++","==", "!=", 
+                        "<", "<=", ">", ">=", NULL};
+    const int ops[] = { MULTIPLY, DIVIDE, QUOTIENT, REMAINDER, SUBTRACT, ADD, 
+                        CAT, EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS,
+                        GREATER, GREATER_EQUALS};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (symbol(*a)) {
@@ -631,19 +634,19 @@ static bool arithOp(int &op) {
     return false;
 }
 
-static bool arithTail(VariadicOpPtr &x) {
+static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
     vector<int> ops;
-    ops.push_back(ARITH);
+    ops.push_back(OPERATOR);
     ExprPtr b;
     int op;
     int p = save();
-    if (!arithOp(op)) return false;
+    if (!operatorOp(op)) return false;
     restore(p);
     while (true) {
         int p = save();
-        if (!arithOp(op)) {
+        if (!operatorOp(op)) {
             restore(p);
             break;
         }
@@ -661,12 +664,12 @@ static bool arithTail(VariadicOpPtr &x) {
     return true;
 }
 
-static bool arithExpr(ExprPtr &x) {
+static bool operatorExpr(ExprPtr &x) {
     if (!prefixExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
-        if (!arithTail(y)) {
+        if (!operatorTail(y)) {
             restore(p);
             break;
         }
@@ -676,118 +679,6 @@ static bool arithExpr(ExprPtr &x) {
     return true;
 }
 
-
-
-static bool catTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("++")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("++")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!arithExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(CAT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-
-static bool catExpr(ExprPtr &x) {
-    if (!arithExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!catTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-
-
-//
-// compare expr
-//
-
-static bool compareOp(int &op) {
-    int p = save();
-    const char *s[] = {"==", "!=", "<", "<=", ">", ">=", NULL};
-    const int ops[] = {EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS,
-                       GREATER, GREATER_EQUALS};
-    for (const char **a = s; *a; ++a) {
-        restore(p);
-        if (symbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool compareTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    vector<int> ops;
-    ops.push_back(COMPARE);
-    ExprPtr b;
-    int op;
-    int p = save();
-    if (!compareOp(op)) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!compareOp(op)) {
-            restore(p);
-            break;
-        }
-        ops.push_back(op);
-        p = save();
-        if (!catExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-        
-    }
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool compareExpr(ExprPtr &x) {
-    if (!catExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!compareTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
 
 
 //
@@ -799,10 +690,10 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return compareExpr(x);
+        return operatorExpr(x);
     }
     ExprPtr y;
-    if (!compareExpr(y)) return false;
+    if (!operatorExpr(y)) return false;
     vector<int> ops;
     ops.push_back(NOT);
     x = new VariadicOp(ops, new ExprList(y));

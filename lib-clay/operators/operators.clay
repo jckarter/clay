@@ -14,7 +14,7 @@ public import __operators__.(
     equals?,
     notEquals?,
     case?,
-    compare?,
+    //compare?,
     lesser?,
     lesserEquals?,
     greater?,
@@ -23,7 +23,7 @@ public import __operators__.(
     plus,
     minus,
 
-    arith,
+    operator,
     add,
     subtract,
     multiply,
@@ -236,7 +236,7 @@ inline overload assign(ref dest:T, rvalue src:T) {
 
 [F]
 inline overload updateAssign(static F, ref dest, forward ..src) {
-    dest = F(dest, ..src);
+    dest = operator(dest, F, ..src);
 }
 
 inline overload notEquals?(a, b) = not equals?(a, b);
@@ -248,10 +248,6 @@ inline overload lesserEquals?(a, b) = not lesser?(b, a);
 inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
-
-inline overload compare?(a, fn, b, ..args) : Bool
-    = fn(a, b) and compare?(b, ..args);
-inline overload compare?(a, fn, b) : Bool = fn(a, b);
 
 inline overload bitand(a, b, c, ..rest) =
     bitand(bitand(a,b), c, ..rest);
@@ -307,11 +303,11 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
 inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         static F,
-        index(dest, ..takeValues(
-            static countValues(..A)-2,
+        index(dest, ..withoutNthValue(
+            static countValues(..A)-1,
             ..indicesAndSrc
         )),
-        ..dropValues(static countValues(..A)-2,..indicesAndSrc),
+        lastValue(..indicesAndSrc),
     );
 }
 
@@ -322,7 +318,7 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..takeValues(static countValues(..A)-2, ..A)
+                ..withoutNthValue(static countValues(..A)-1, ..A)
             )
         )
     )
@@ -330,39 +326,79 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
 inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..takeValues(static countValues(..A)-2, ..indicesAndSrc),
+        ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc),
         F(
             index(
                 dest,
-                ..takeValues(static countValues(..A)-2, ..indicesAndSrc)
+                ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc)
             ),
-            ..dropValues(static countValues(..A)-2,..indicesAndSrc)
+            lastValue(..indicesAndSrc)
         )
     );
 }
 
 
 //
-//  default arithmetic - use left associativity with precedence *,/,\,%,-,+ 
+//  default arithmetic/concat/compare - use left associativity with precedence *,/,\,%,-,+,++, 
 //
 
-overload arith(forward ..args) 
-    = arithp(add,..arithp(subtract,..arithp(remainder,..arithp(quotient,
-        ..arithp(divide,..arithp(multiply,..args))))));
+overload operator(forward ..args)
+    = operatorCompare(..operatorCat(..operatorAdd(..operatorSub(..operatorRem(
+        ..operatorQuo(..operatorDiv(..operatorMul(..args))))))));
 
-private define arithp;
+operatorCompare(forward a, fn, forward b, forward ..args)
+    = forward fn(a, b) and operatorCompare(b, ..args);
+overload operatorCompare(forward a, fn, forward b) = forward fn(a, b);
+overload operatorCompare(forward a) = forward a;
 
-overload arithp(p,forward a,fn,forward ..args) 
-    = forward a,fn,..arithp(p,..args);
-overload arithp(p,forward a,fn, forward b) = forward fn(a,b);
-overload arithp(p,forward a) = forward a;
+operatorCat(forward a,fn,forward ..args) = forward a,fn,..operatorCat(..args);
+overload operatorCat(forward a,fn, forward b) = forward a,fn,b;
+overload operatorCat(forward a,static cat,forward b, forward ..args)
+    = forward ..operatorCat(cat(a,b), ..args);
+overload operatorCat(forward a,static cat,forward b) = forward cat(a,b);
+overload operatorCat(forward a) = forward a;
 
-[p,fn | p==fn]
-overload arithp(static p,forward a,static fn,forward b, forward ..args) 
-    = forward ..arithp(p,fn(a,b), ..args);
-[p,fn | p==fn]
-overload arithp(static p,forward a,static fn,forward b) 
-    = forward fn(a,b);
+operatorAdd(forward a,fn,forward ..args) = forward a,fn,..operatorAdd(..args);
+overload operatorAdd(forward a,fn, forward b) = forward a,fn,b;
+overload operatorAdd(forward a,static add,forward b, forward ..args)
+    = forward ..operatorAdd(add(a,b), ..args);
+overload operatorAdd(forward a,static add,forward b) = forward add(a,b);
+overload operatorAdd(forward a) = forward a;
+
+operatorSub(forward a,fn,forward ..args) = forward a,fn,..operatorSub(..args);
+overload operatorSub(forward a,fn,forward b) = forward a,fn,b;
+overload operatorSub(forward a,static subtract,forward b,forward ..args)
+    = forward ..operatorSub(subtract(a,b), ..args);
+overload operatorSub(forward a,static subtract,forward b) = forward subtract(a,b);
+overload operatorSub(forward a) = forward a;
+
+operatorRem(forward a,fn,forward ..args) = forward a,fn,..operatorRem(..args);
+overload operatorRem(forward a,fn,forward b) = forward a,fn,b;
+overload operatorRem(forward a,static remainder,forward b,forward ..args)
+    = forward ..operatorRem(remainder(a,b), ..args);
+overload operatorRem(forward a,static remainder,forward b) = forward remainder(a,b);
+overload operatorRem(forward a) = forward a;
+
+operatorQuo(forward a,fn,forward ..args) = forward a,fn,..operatorQuo(..args);
+overload operatorQuo(forward a,fn,forward b) = forward a,fn,b;
+overload operatorQuo(forward a,static quotient,forward b,forward ..args)
+    = forward ..operatorQuo(quotient(a,b), ..args);
+overload operatorQuo(forward a,static quotient,forward b) = forward quotient(a,b);
+overload operatorQuo(forward a) = forward a;
+
+operatorDiv(forward a,fn,forward ..args) = forward a,fn,..operatorDiv(..args);
+overload operatorDiv(forward a,fn,forward b) = forward a,fn,b;
+overload operatorDiv(forward a,static divide,forward b,forward ..args)
+    = forward ..operatorDiv(divide(a,b), ..args);
+overload operatorDiv(forward a,static divide,forward b) = forward divide(a,b);
+overload operatorDiv(forward a) = forward a;
+
+operatorMul(forward a,fn,forward ..args) = forward a,fn,..operatorMul(..args);
+overload operatorMul(forward a,fn,forward b) = forward a,fn,b;
+overload operatorMul(forward a,static multiply,forward b,forward ..args)
+    = forward ..operatorMul(multiply(a,b), ..args);
+overload operatorMul(forward a,static multiply,forward b) = forward multiply(a,b);
+
 
 
 //
