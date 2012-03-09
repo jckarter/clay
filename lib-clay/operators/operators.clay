@@ -14,7 +14,6 @@ public import __operators__.(
     equals?,
     notEquals?,
     case?,
-    //compare?,
     lesser?,
     lesserEquals?,
     greater?,
