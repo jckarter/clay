@@ -65,6 +65,17 @@ alias overload Vector[T](..elements:A) {
     return move(v);
 }
 
+//
+// vector - type inferring constructor
+//
+
+[..A | countValues(..A) > 0 and equalValues?(..A)]
+overload Vector(..elements:A) {
+    var v = Vector[takeValues(static 1, ..A)]();
+    push(v, ..elements);
+    return move(v);
+}
+
 
 //
 // moveUnsafe, resetUnsafe, assign, destroy

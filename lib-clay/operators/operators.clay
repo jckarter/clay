@@ -284,7 +284,7 @@ inline overload staticIndexUpdateAssign(static F, dest, static i, forward ..src)
 
 [F, i, T | RValue?(staticIndex(typeToLValue(T), static i))]
 inline overload staticIndexUpdateAssign(static F, dest:T, static i, forward ..src) {
-    staticIndexAssign(dest, static i, F(staticIndex(dest, static i), src));
+    staticIndexAssign(dest, static i, F(staticIndex(dest, static i), ..src));
 }
 
 [..T | countValues(..T) >= 2]
@@ -338,12 +338,19 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 
 
 //
-//  default arithmetic/concat/compare - use left associativity with precedence *,/,\,%,-,+,++, 
+//  default arithmetic/concat/compare 
+//  use left associativity with precedence *,/,\,%,-,+,++, 
 //
 
 overload operator(forward ..args)
-    = operatorCompare(..operatorCat(..operatorAdd(..operatorSub(..operatorRem(
-        ..operatorQuo(..operatorDiv(..operatorMul(..args))))))));
+    = operatorCompare(
+        ..operatorCat(
+            ..operatorAdd(
+                ..operatorSub(
+                    ..operatorRem(
+                        ..operatorQuo(
+                            ..operatorDiv(
+                                ..operatorMul(..args))))))));
 
 operatorCompare(forward a, fn, forward b, forward ..args)
     = forward fn(a, b) and operatorCompare(b, ..args);
