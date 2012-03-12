@@ -98,9 +98,18 @@ ExprPtr lookupCallable(int op) {
 }
 
 ExprPtr desugarVariadicOp(VariadicOpPtr x) {
+    std::cout<<"desuger variadic\n";
     ExprPtr callable = lookupCallable(x->op.front());
     CallPtr call = new Call(callable, new ExprList());
-    if(x->op.size() > 1) {
+    if (x->op.front() == OPERATOR) {
+        call->parenArgs->add(x->exprs->exprs.front());
+        for (int i = 1; i < x->exprs->exprs.size(); ++i) {
+            if(i < x->ops.size())
+                call->parenArgs->add(new StaticExpr(new StringLiteral(x->ops[i])));
+            call->parenArgs->add(x->exprs->exprs[i]);
+        }
+    }
+    else if(x->op.size() > 1) {
         call->parenArgs->add(x->exprs->exprs.front());
         for (int i = 1; i < x->exprs->exprs.size(); ++i) {
             if(i < x->op.size())

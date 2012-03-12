@@ -24,6 +24,8 @@ void tokenize(SourcePtr source, int offset, int length,
             tokens.push_back(token);
         }
     }
+    std::cout<<tokens<<"\n";
+ 
     cleanupLexer();
 }
 
@@ -153,9 +155,8 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "-->", "..", "=>", "->","++=",
-    "::", "+=", "-=", "*=", "/=", "\\=", "%=",
-    "&", "^", "|",
+    "..", "::", 
+    "&", "^", "|", 
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#",
     NULL
@@ -188,13 +189,11 @@ static bool opstring(TokenPtr &x) {
     char *p = save();
     char *q = p;
     char y;
-    bool validopchar = true;
-    while (next(y) && validopchar) {
-        validopchar = false;
+    while (*s && next(y)) {
+        s = opchars;
         while (*s) {
             if (y == **s) {
-                validopchar = true;
-                q = save();
+                q = save();            
                 break;
             }
             ++s;

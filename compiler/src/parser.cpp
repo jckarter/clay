@@ -41,6 +41,7 @@ static bool opstring(string &op) {
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
     op = t->str;
+    std::cout<<"opstring: "<<op<<"\n";
     return true;
 }
 
@@ -48,6 +49,7 @@ static bool opsymbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
+    std::cout<<"opsymbol: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -55,6 +57,7 @@ static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
         return false;
+    std::cout<<"symbol: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -62,6 +65,7 @@ static bool keyword(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_KEYWORD))
         return false;
+    std::cout<<"keyword: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -631,6 +635,27 @@ static bool prefixExpr(ExprPtr &x) {
 // infix binary operator expr
 //
 
+static bool operatorOp(string &op) {
+    int p = save();
+    
+    const char *s[] = {
+        "<--", "-->", "..", "=>", "->",
+        "++=",
+        "::", "+=", "-=", "*=", "/=", "\\=", "%=",
+        "&", "^", "|",
+        "(", ")", "[", "]", "{", "}",
+        ":", ";", ",", ".", "#",
+        NULL
+    };
+    for (const char **a = s; *a; ++a) {
+        restore(p);
+        if (opsymbol(*a)) return false;
+    }
+    restore(p);
+    return opstring(op);
+}
+
+
 static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
@@ -638,11 +663,13 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprPtr b;
     string op;
     int p = save();
-    if (!opstring(op)) return false;
+    std::cout<<"loc: "<<location<<"\n";
+    if (!operatorOp(op)) return false;
+    std::cout<<"parsing operator\n";
     restore(p);
     while (true) {
         int p = save();
-        if (!opstring(op)) {
+        if (!operatorOp(op)) {
             restore(p);
             break;
         }
@@ -848,12 +875,12 @@ static bool lambdaExprBody(StatementPtr &x) {
 
 static bool lambdaArrow(bool &captureByRef) {
     int p = save();
-    if (symbol("->")) {
+    if (opsymbol("->")) {
         captureByRef = true;
         return true;
     } else {
         restore(p);
-        if (symbol("=>")) {
+        if (opsymbol("=>")) {
             captureByRef = false;
             return true;
         }
@@ -1167,7 +1194,7 @@ static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
-    if (!symbol("<--")) return false;
+    if (!opsymbol("<--")) return false;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new InitAssignment(y, z);
@@ -1183,7 +1210,7 @@ static bool updateOp(int &op) {
                        UPDATE_CAT};
     for (const char **a = s; *a; ++a) {
         restore(p);
-        if (symbol(*a)) {
+        if (opsymbol(*a)) {
             int i = a - s;
             op = ops[i];
             return true;
@@ -2173,7 +2200,7 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
         return true;
     } else {
         restore(p);
-        if (symbol("-->")) {
+        if (opsymbol("-->")) {
             if (!optNamedReturnList(returnSpecs)) return false;
             if (!optVarNamedReturn(varReturnSpec)) return false;
             return true;
