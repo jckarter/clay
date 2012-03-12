@@ -153,11 +153,9 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "-->", "..", "=>", "->",
-    "==", "!=", "<=", ">=",
-    "<", ">","++=","++",
+    "<--", "-->", "..", "=>", "->","++=",
     "::", "+=", "-=", "*=", "/=", "\\=", "%=",
-    "+", "-", "*", "/","\\","%", "=", "&", "^", "|",
+    "&", "^", "|",
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#",
     NULL
@@ -175,6 +173,39 @@ static bool symbol(TokenPtr &x) {
         ++s;
     }
     return false;
+}
+
+//
+// operator strings
+//
+
+static const char *opchars[] = {
+    "!", "<", ">","+", "-", "*", "/","\\","%", "=", NULL
+};
+
+static bool opstring(TokenPtr &x) {
+    const char **s = opchars;
+    char *p = save();
+    char *q = p;
+    char y;
+    bool validopchar = true;
+    while (next(y) && validopchar) {
+        validopchar = false;
+        while (*s) {
+            if (y == **s) {
+                validopchar = true;
+                q = save();
+                break;
+            }
+            ++s;
+        }
+    }
+    restore(q);
+    if (p == q) {
+        return false;        
+    }
+    x = new Token(T_OPSTRING, string(p,q));
+    return true;
 }
 
 
@@ -682,6 +713,7 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (blockComment(x)) goto success;
     restore(p); if (staticIndex(x)) goto success;
     restore(p); if (symbol(x)) goto success;
+    restore(p); if (opstring(x)) goto success;
     restore(p); if (llvmToken(x)) goto success;
     restore(p); if (keywordIdentifier(x)) goto success;
     restore(p); if (charToken(x)) goto success;

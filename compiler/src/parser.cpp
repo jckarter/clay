@@ -36,6 +36,21 @@ static LocationPtr currentLocation() {
 // symbol, keyword
 //
 
+static bool opstring(string &op) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_OPSTRING))
+        return false;
+    op = t->str;
+    return true;
+}
+
+static bool opsymbol(const char *s) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_OPSTRING))
+        return false;
+    return t->str == s;
+}
+
 static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
@@ -558,9 +573,9 @@ static bool addressOfExpr(ExprPtr &x) {
 
 static bool plusOrMinus(int &op) {
     int p = save();
-    if (symbol("+"))
+    if (opsymbol("+"))
         op = PLUS;
-    else if (restore(p), symbol("-"))
+    else if (restore(p), opsymbol("-"))
         op = MINUS;
     else
         return false;
@@ -593,7 +608,7 @@ static bool signExpr(ExprPtr &x) {
 
 static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("*")) return false;
+    if (!opsymbol("*")) return false;
     ExprPtr a;
     if (!suffixExpr(a)) return false;
     x = new DispatchExpr(a);
@@ -613,40 +628,21 @@ static bool prefixExpr(ExprPtr &x) {
 
 
 //
-// arithmetic expr
+// infix binary operator expr
 //
-
-static bool operatorOp(int &op) {
-    int p = save();
-    const char *s[] = {"*", "/", "\\", "%", "-", "+", "++","==", "!=", 
-                        "<", "<=", ">", ">=", NULL};
-    const int ops[] = { MULTIPLY, DIVIDE, QUOTIENT, REMAINDER, SUBTRACT, ADD, 
-                        CAT, EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS,
-                        GREATER, GREATER_EQUALS};
-    for (const char **a = s; *a; ++a) {
-        restore(p);
-        if (symbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
-    }
-    return false;
-}
 
 static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
-    vector<int> ops;
-    ops.push_back(OPERATOR);
+    vector<string> ops;
     ExprPtr b;
-    int op;
+    string op;
     int p = save();
-    if (!operatorOp(op)) return false;
+    if (!opstring(op)) return false;
     restore(p);
     while (true) {
         int p = save();
-        if (!operatorOp(op)) {
+        if (!opstring(op)) {
             restore(p);
             break;
         }
@@ -659,7 +655,9 @@ static bool operatorTail(VariadicOpPtr &x) {
         exprs->add(b);
         
     }
-    x = new VariadicOp(ops, exprs);
+    vector<int> opr;
+    opr.push_back(OPERATOR);
+    x = new VariadicOp(opr, ops ,exprs);
     x->location = location;
     return true;
 }
@@ -1086,7 +1084,7 @@ static bool localBinding(StatementPtr &x) {
     if (!bindingKind(bk)) return false;
     vector<IdentifierPtr> y;
     if (!identifierList(y)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
@@ -1103,7 +1101,7 @@ static bool withStatement(StatementPtr &x) {
     vector<IdentifierPtr> lhs;
 
     int p = save();
-    if (!identifierList(lhs) || !symbol("=")) {
+    if (!identifierList(lhs) || !opsymbol("=")) {
         lhs.clear();
         restore(p);
     }
@@ -1157,7 +1155,7 @@ static bool assignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Assignment(y, z);
@@ -1827,7 +1825,7 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
 }
 
 static bool exprBody(StatementPtr &x) {
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     LocationPtr location = currentLocation();
     ReturnKind rkind;
     ExprListPtr exprs;
@@ -1945,7 +1943,7 @@ static bool recordBodyFields(RecordBodyPtr &x) {
 
 static bool recordBodyComputed(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprListPtr y;
     if (!optExpressionList(y)) return false;
     if (!symbol(";")) return false;
@@ -2437,7 +2435,7 @@ static bool globalVariable(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
@@ -2615,7 +2613,7 @@ static bool globalAlias(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
@@ -2668,7 +2666,7 @@ static bool importStar(ImportPtr &x) {
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
-    if (!symbol("*")) return false;
+    if (!opsymbol("*")) return false;
     if (!symbol(";")) return false;
     x = new ImportStar(y, vis);
     x->location = location;

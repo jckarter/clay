@@ -914,6 +914,7 @@ extern "C" void displayCompileContext();
 //
 
 enum TokenKind {
+    T_OPSTRING,
     T_SYMBOL,
     T_KEYWORD,
     T_IDENTIFIER,
@@ -1181,10 +1182,13 @@ enum VariadicOpKind {
 
 struct VariadicOp : public Expr {
     vector<int> op;
+    vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
     VariadicOp(const vector<int> &op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
+    VariadicOp(const vector<int> &op, const vector<string> &ops, ExprListPtr exprs )
+        : Expr(VARIADIC_OP), op(op), ops(ops), exprs(exprs) {}
 
 };
 

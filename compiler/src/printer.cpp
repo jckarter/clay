@@ -433,6 +433,9 @@ static void print(ostream &out, const Object *x) {
         const Token *y = (const Token *)x;
         out << "Token(";
         switch (y->tokenKind) {
+        case T_OPSTRING :
+            out << "T_OPSTRING";
+            break;
         case T_SYMBOL :
             out << "T_SYMBOL";
             break;
