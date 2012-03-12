@@ -682,7 +682,7 @@ observeTo(stream, forward ..x) {
     return forward ..forwardValues(captured);
 }
 [tag | Identifier?(tag)]
-overload observeTo(stream, static tag, forward ..x) {
+overload observeTo(stream, #tag, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);

@@ -8,57 +8,57 @@ import zim.zang.(ZangClass);
 
 record NSZone ();
 
-overload selector(static "alloc") = Id;
-overload selector(static "allocWithZone:") = Id, NSZone;
-overload selector(static "new") = Id;
+overload selector(#"alloc") = Id;
+overload selector(#"allocWithZone:") = Id, NSZone;
+overload selector(#"new") = Id;
 
-overload selector(static "init") = Id;
-overload selector(static "class") = Id; // XXX Class
-overload selector(static "copy") = Id;
-overload selector(static "copyWithZone:") = Id, NSZone;
-overload selector(static "mutableCopy") = Id;
-overload selector(static "retain") = Id;
-overload selector(static "release") = Void;
-overload selector(static "autorelease") = Id;
-overload selector(static "dealloc") = Void;
+overload selector(#"init") = Id;
+overload selector(#"class") = Id; // XXX Class
+overload selector(#"copy") = Id;
+overload selector(#"copyWithZone:") = Id, NSZone;
+overload selector(#"mutableCopy") = Id;
+overload selector(#"retain") = Id;
+overload selector(#"release") = Void;
+overload selector(#"autorelease") = Id;
+overload selector(#"dealloc") = Void;
 
-overload selector(static "stringWithUTF8String:") = Id, Pointer[CChar];
-overload selector(static "initWithUTF8String:") = Id, Pointer[CChar];
-overload selector(static "UTF8String") = Pointer[CChar];
-overload selector(static "description") = NSString;
-overload varargSelector(static "stringWithFormat:") = Id, NSString;
-overload varargSelector(static "initWithFormat:") = Id, NSString;
+overload selector(#"stringWithUTF8String:") = Id, Pointer[CChar];
+overload selector(#"initWithUTF8String:") = Id, Pointer[CChar];
+overload selector(#"UTF8String") = Pointer[CChar];
+overload selector(#"description") = NSString;
+overload varargSelector(#"stringWithFormat:") = Id, NSString;
+overload varargSelector(#"initWithFormat:") = Id, NSString;
 
-overload selector(static "drain") = Void;
+overload selector(#"drain") = Void;
 
-overload selector(static "isEnabled") = Bool;
-overload selector(static "setEnabled:") = Void, Bool;
+overload selector(#"isEnabled") = Bool;
+overload selector(#"setEnabled:") = Void, Bool;
 
-overload selector(static "version") = Id;
-overload selector(static "classVersion") = Id;
+overload selector(#"version") = Id;
+overload selector(#"classVersion") = Id;
 
 record NSObject = externalClass(Void);
-overload externalClassMethod(static NSObject, static "alloc") = Id;
-overload externalClassMethod(static NSObject, static "allocWithZone:") = Id, NSZone;
-overload externalClassMethod(static NSObject, static "new") = Id;
-overload externalInstanceMethod(static NSObject, static "init") = Id;
-overload externalInstanceMethod(static NSObject, static "copy") = Id;
-overload externalInstanceMethod(static NSObject, static "copyWithZone:") = Id, NSZone;
-overload externalInstanceMethod(static NSObject, static "mutableCopy") = Id;
-overload externalInstanceMethod(static NSObject, static "retain") = Id;
+overload externalClassMethod(#NSObject, #"alloc") = Id;
+overload externalClassMethod(#NSObject, #"allocWithZone:") = Id, NSZone;
+overload externalClassMethod(#NSObject, #"new") = Id;
+overload externalInstanceMethod(#NSObject, #"init") = Id;
+overload externalInstanceMethod(#NSObject, #"copy") = Id;
+overload externalInstanceMethod(#NSObject, #"copyWithZone:") = Id, NSZone;
+overload externalInstanceMethod(#NSObject, #"mutableCopy") = Id;
+overload externalInstanceMethod(#NSObject, #"retain") = Id;
 
 record NSString = externalClass(NSObject);
-overload externalClassMethod(static NSString, static "stringWithUTF8String:")
+overload externalClassMethod(#NSString, #"stringWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargClassMethod(static NSString, static "stringWithFormat:")
+overload externalVarargClassMethod(#NSString, #"stringWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(static NSString, static "initWithUTF8String:")
+overload externalInstanceMethod(#NSString, #"initWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargInstanceMethod(static NSString, static "initWithFormat:")
+overload externalVarargInstanceMethod(#NSString, #"initWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(static NSString, static "UTF8String")
+overload externalInstanceMethod(#NSString, #"UTF8String")
     = Pointer[CChar];
-overload externalInstanceMethod(static NSString, static "description")
+overload externalInstanceMethod(#NSString, #"description")
     = NSString;
 
 record NSMutableString = externalClass(NSString);
@@ -178,17 +178,17 @@ _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
 }
 [ParamType | ObjectType?(ParamType)]
-overload _expectMsgSendCompatible(expectTF, test, static ParamType, ValueType) {
+overload _expectMsgSendCompatible(expectTF, test, #ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
 }
 [ValueType | ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, test, ParamType, static ValueType) {
+overload _expectMsgSendCompatible(expectTF, test, ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
 }
 [ParamType, ValueType | ObjectType?(ParamType) and ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, test, static ParamType, static ValueType) {
+overload _expectMsgSendCompatible(expectTF, test, #ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
     __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
@@ -398,7 +398,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
     TestCase("parameter type conversion", test => {
         expectMsgSendParamType(test, Id, ObjectHandle);
         expectMsgSendParamType(test, NSObject, ObjectHandle);
-        expectMsgSendParamType(test, Void, static []);
+        expectMsgSendParamType(test, Void, #[]);
         expectMsgSendParamType(test, Int, Int);
         expectMsgSendParamType(test, Bool, BOOL);
         expectMsgSendParamType(test, Foo, Foo);
@@ -580,51 +580,51 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectTrue(test, "Id", ObjectParameterType?(Id));
     }),
     TestCase("identifier-selector conversion", test => {
-        expectEqual(test, "foo()", "foo", identifierSelector("foo", static 0));
+        expectEqual(test, "foo()", "foo", identifierSelector("foo", #0));
 
-        expectEqual(test, "foo(x)", "foo:", identifierSelector("foo", static 1));
-        expectEqual(test, "foo_(x)", "foo:", identifierSelector("foo_", static 1));
-        expectEqual(test, "foo:(x)", "foo:", identifierSelector("foo:", static 1));
+        expectEqual(test, "foo(x)", "foo:", identifierSelector("foo", #1));
+        expectEqual(test, "foo_(x)", "foo:", identifierSelector("foo_", #1));
+        expectEqual(test, "foo:(x)", "foo:", identifierSelector("foo:", #1));
 
-        expectEqual(test, "foo(x, y)", "foo:", identifierSelector("foo", static 2));
-        expectEqual(test, "foo_(x, y)", "foo:", identifierSelector("foo_", static 2));
-        expectEqual(test, "foo__(x, y)", "foo::", identifierSelector("foo__", static 2));
-        expectEqual(test, "foo:(x, y)", "foo:", identifierSelector("foo:", static 2));
-        expectEqual(test, "foo::(x, y)", "foo::", identifierSelector("foo::", static 2));
+        expectEqual(test, "foo(x, y)", "foo:", identifierSelector("foo", #2));
+        expectEqual(test, "foo_(x, y)", "foo:", identifierSelector("foo_", #2));
+        expectEqual(test, "foo__(x, y)", "foo::", identifierSelector("foo__", #2));
+        expectEqual(test, "foo:(x, y)", "foo:", identifierSelector("foo:", #2));
+        expectEqual(test, "foo::(x, y)", "foo::", identifierSelector("foo::", #2));
 
         expectEqual(test, "foo_bar(x, y)", "foo:bar:",
-            identifierSelector("foo_bar", static 2)
+            identifierSelector("foo_bar", #2)
         );
         expectEqual(test, "foo_bar_(x, y)", "foo:bar:",
-            identifierSelector("foo_bar_", static 2)
+            identifierSelector("foo_bar_", #2)
         );
 
         expectEqual(test, "foo:bar:(x, y)", "foo:bar:",
-            identifierSelector("foo:bar:", static 2)
+            identifierSelector("foo:bar:", #2)
         );
 
         expectEqual(test, "foo_bar(x, y, z)", "foo:bar:",
-            identifierSelector("foo_bar", static 3)
+            identifierSelector("foo_bar", #3)
         );
         expectEqual(test, "foo_bar_(x, y, z)", "foo:bar:",
-            identifierSelector("foo_bar_", static 3)
+            identifierSelector("foo_bar_", #3)
         );
         expectEqual(test, "foo_bar__(x, y, z)", "foo:bar::",
-            identifierSelector("foo_bar__", static 3)
+            identifierSelector("foo_bar__", #3)
         );
 
         expectEqual(test, "foo:bar:(x, y, z)", "foo:bar:",
-            identifierSelector("foo:bar:", static 3)
+            identifierSelector("foo:bar:", #3)
         );
         expectEqual(test, "foo:bar::(x, y, z)", "foo:bar::",
-            identifierSelector("foo:bar::", static 3)
+            identifierSelector("foo:bar::", #3)
         );
 
         expectEqual(test, "foo_bar_bas(x, y, z)", "foo:bar:bas:",
-            identifierSelector("foo_bar_bas", static 3)
+            identifierSelector("foo_bar_bas", #3)
         );
         expectEqual(test, "foo_bar_bas_(x, y, z)", "foo:bar:bas:",
-            identifierSelector("foo_bar_bas_", static 3)
+            identifierSelector("foo_bar_bas_", #3)
         );
     }),
     TestCase("constant NSStrings", test => {

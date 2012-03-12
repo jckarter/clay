@@ -6,7 +6,7 @@ record Thingy[XX] ();
 
 foo(x) { println("not a tuple"); }
 
-[..X] overload foo(static Thingy[[..X]]) { println(repr(..X)); }
+[..X] overload foo(#Thingy[[..X]]) { println(repr(..X)); }
 
 main() {
     foo(Thingy[[]]);

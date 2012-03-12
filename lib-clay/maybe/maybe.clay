@@ -22,7 +22,7 @@ inline overload Maybe[T]() = Maybe[T](Nothing());
 inline nothing(T) = Maybe[T]();
 
 Maybe?(T) = false;
-[T] overload Maybe?(static Maybe[T]) = true;
+[T] overload Maybe?(#Maybe[T]) = true;
 
 
 //
@@ -49,12 +49,12 @@ inline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..el
 
 // if the thenFn returns Maybe[T]s, have the default else case return nothing(T)s
 [T, F | allValues?(Maybe?, ..CallOutputTypes(call, F, T))]
-inline overload maybeValue(static T, forward n: Nothing, thenFn:F)
+inline overload maybeValue(#T, forward n: Nothing, thenFn:F)
     = ..mapValues(call, ..CallOutputTypes(call, F, T));
 
 [T]
 inline maybe(forward m:Maybe[T], thenFn, ..elseFn)
-    = forward ..maybeValue(static T, *m, thenFn, ..elseFn);
+    = forward ..maybeValue(#T, *m, thenFn, ..elseFn);
 
 
 

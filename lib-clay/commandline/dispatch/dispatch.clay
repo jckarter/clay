@@ -33,7 +33,7 @@ private usage(..commandTuples) {
 
 
 [fn | CallDefined?(fn, Vector[String])]
-private commandName(static fn) = StaticName(fn);
+private commandName(#fn) = StaticName(fn);
 
 [fn, ..Description | CallDefined?(fn, Vector[String])]
 overload commandName(commandTuple: Tuple[Static[fn], ..Description])
@@ -48,7 +48,7 @@ overload commandName(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.0;
 
 [fn | CallDefined?(fn, Vector[String])]
-private commandFunction(static fn) = fn;
+private commandFunction(#fn) = fn;
 
 [fn, ..Description | CallDefined?(fn, Vector[String])]
 overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
@@ -63,12 +63,12 @@ overload commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.1;
 
 [fn | CallDefined?(fn, Vector[String])]
-private commandDescription(static fn)
+private commandDescription(#fn)
     = ;
 
 [fn, ..Description | CallDefined?(fn, Vector[String])]
 overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
-    = ..dropValues(static 1, ..unpack(commandTuple));
+    = ..dropValues(#1, ..unpack(commandTuple));
 
 [
     Name, Callable, ..Description
@@ -76,7 +76,7 @@ overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
       and CallDefined?(call, Callable, Vector[String])
 ]
 overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
-    = ..dropValues(static 2, ..unpack(commandTuple));
+    = ..dropValues(#2, ..unpack(commandTuple));
 
 private commandTypeReturnCount(T)
     = countValues(..Type(..commandFunction(typeToRValue(T))(Vector[String]())));

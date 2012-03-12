@@ -15,13 +15,13 @@ record Sliced[A](
 );
 
 [A | LightweightSequence?(A)]
-overload LightweightSequence?(static Sliced[A]) = true;
+overload LightweightSequence?(#Sliced[A]) = true;
 
 [A | ContiguousSequence?(A)]
-overload ContiguousSequence?(static Sliced[A]) = true;
+overload ContiguousSequence?(#Sliced[A]) = true;
 
 [A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
-overload UnderlyingContainerConstructor(static Sliced[A]) =
+overload UnderlyingContainerConstructor(#Sliced[A]) =
     UnderlyingContainerConstructor(A);
 
 

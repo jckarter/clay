@@ -4,10 +4,10 @@
 //
 
 [T,n]
-overload ContiguousSequence?(static Array[T,n]) = true;
+overload ContiguousSequence?(#Array[T,n]) = true;
 
 [T,n]
-overload SequenceContainer?(static Array[T,n]) = true;
+overload SequenceContainer?(#Array[T,n]) = true;
 
 
 
@@ -19,7 +19,7 @@ overload SequenceContainer?(static Array[T,n]) = true;
 inline overload size(a:Array[T,n]) = SizeT(n);
 
 [T,n]
-inline overload StaticSize(static Array[T,n]) = SizeT(n);
+inline overload StaticSize(#Array[T,n]) = SizeT(n);
 
 [T,n,I | Integer?(I)]
 inline overload index(a:Array[T,n], i:I) {
@@ -120,13 +120,13 @@ overload Array[T,n](elt: T) --> returned:Array[T,n] {
 }
 
 [n, S | Sequence?(S)]
-overload Array(static n, forward s:S) {
+overload Array(#n, forward s:S) {
     alias T = SequenceElementType(S);
     return Array[T,n](s);
 }
 
 [n, S | MultiValuedSequence?(S)]
-overload Array(static n, forward s:S) = Array(static n, mapped(Tuple, s));
+overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
 
 
 
@@ -175,7 +175,7 @@ overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
 [S | StaticSizedSequence?(S)]
 alias overload Array(s:S) {
     alias T = SequenceElementType(S);
-    alias n = static Int(StaticSize(S));
+    alias n = #Int(StaticSize(S));
     return Array[T,n](s);
 }
 
@@ -240,7 +240,7 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
 
 [..A | countValues(..A) > 0 and equalValues?(..A)]
 alias array(..args:A) {
-    return Array[takeValues(static 1, ..A), countValues(..A)](..args);
+    return Array[takeValues(#1, ..A), countValues(..A)](..args);
 }
 
 
@@ -250,7 +250,7 @@ alias array(..args:A) {
 //
 
 [n]
-integerArray(static n) = Array(static n, range(n));
+integerArray(#n) = Array(#n, range(n));
 
 
 

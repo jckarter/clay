@@ -9,13 +9,13 @@ record SequenceHandle[A] (
 );
 
 [A]
-overload LightweightSequence?(static SequenceHandle[A]) = true;
+overload LightweightSequence?(#SequenceHandle[A]) = true;
 
 [A]
-overload ContiguousSequence?(static SequenceHandle[A]) = true;
+overload ContiguousSequence?(#SequenceHandle[A]) = true;
 
 [A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
-overload UnderlyingContainerConstructor(static SequenceHandle[A]) =
+overload UnderlyingContainerConstructor(#SequenceHandle[A]) =
     UnderlyingContainerConstructor(A);
 
 
@@ -46,7 +46,7 @@ inline overload size(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..size(seq.inner^, ..args);
 
 [A | CallDefined?(StaticSize, Static[A])]
-inline overload StaticSize(static SequenceHandle[A]) = StaticSize(A);
+inline overload StaticSize(#SequenceHandle[A]) = StaticSize(A);
 
 [A, ..ARGS | CallDefined?(index, A, ..ARGS)]
 inline overload index(seq:SequenceHandle[A], forward ..args:ARGS)

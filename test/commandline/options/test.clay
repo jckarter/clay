@@ -14,7 +14,7 @@ valuableSpec() = OptionSpecs(array(
   OptionSpec('b', "bar", HAS_VALUE)
 ));
 
-[T] numberOf(it, static T){
+[T] numberOf(it, #T){
   var i = 0;
   for(x in it) if(variantIs?(x, T)) inc(i);
   return i;

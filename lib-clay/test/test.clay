@@ -303,9 +303,9 @@ private testOptions() {
 }
 
 [..T] ifPasses(expectFn, test: TestStatus, ..args:T) {
-    forward fn = dropValues(static countValues(..T) - 1, ..args);
+    forward fn = dropValues(#countValues(..T) - 1, ..args);
     var preFailed = test.failed;
-    expectFn(test, ..takeValues(static countValues(..T) - 1, ..args));
+    expectFn(test, ..takeValues(#countValues(..T) - 1, ..args));
     if (test.failed == preFailed)
         fn();
 }

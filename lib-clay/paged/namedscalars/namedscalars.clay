@@ -18,7 +18,7 @@ record NamedScalar[T] (
 );
 
 [T]
-overload RegularRecord?(static NamedScalar[T]) = false;
+overload RegularRecord?(#NamedScalar[T]) = false;
 
 
 

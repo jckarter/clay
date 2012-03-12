@@ -5,7 +5,7 @@ StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
 // XXX not tested!
-[T | Type?(T)] overload StRet?(static T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
+[T | Type?(T)] overload StRet?(#T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
 
 external __CFConstantStringClassReference : Opaque;
 

@@ -1,6 +1,6 @@
 
 main() {
-    var a = integerArray(static 5);
+    var a = integerArray(#5);
     println(a);
 
     var b = Array(reversed(mapped(x => 2*x, a)));

@@ -16,7 +16,7 @@ record CStringRef (
 // predicates
 //
 
-overload ContiguousSequence?(static CStringRef) = true;
+overload ContiguousSequence?(#CStringRef) = true;
 
 
 

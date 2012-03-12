@@ -7,12 +7,12 @@ record Foo (x: Int64, y: Double);
 [I | Integer?(I) and I != Int64]
 overload Foo(x: I, y: Double) = Foo(Int64(x), y);
 
-overload selector(static "lifecycleTest") = Id;
-overload selector(static "lifecycleTestWithCanary:") = Id, Canary;
-overload selector(static "lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(static "initWithCanary:") = Id, Canary;
-overload selector(static "initWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(static "initWithSubcanary:") = Id, Canary;
+overload selector(#"lifecycleTest") = Id;
+overload selector(#"lifecycleTestWithCanary:") = Id, Canary;
+overload selector(#"lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(#"initWithCanary:") = Id, Canary;
+overload selector(#"initWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(#"initWithSubcanary:") = Id, Canary;
 
 record LifecycleTest = newClass(NSObject,
     InstanceVars(
@@ -48,14 +48,14 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
 );
 
-overload selector(static "foo") = Int;
-overload selector(static "setFoo:") = Void, Int;
-overload selector(static "foo64") = Int;
-overload selector(static "setFoo64:") = Void, Int;
-overload selector(static "bar") = Float;
-overload selector(static "setBar:") = Void, Float;
-overload selector(static "isBas") = Bool;
-overload selector(static "setBas:") = Void, Bool;
+overload selector(#"foo") = Int;
+overload selector(#"setFoo:") = Void, Int;
+overload selector(#"foo64") = Int;
+overload selector(#"setFoo64:") = Void, Int;
+overload selector(#"bar") = Float;
+overload selector(#"setBar:") = Void, Float;
+overload selector(#"isBas") = Bool;
+overload selector(#"setBas:") = Void, Bool;
 
 record PropertyTest = newClass(NSObject,
     InstanceVars(
@@ -76,7 +76,7 @@ record PropertyTest = newClass(NSObject,
     )
 );
 
-overload selector(static "initWithFoo:bar:") = Id, Id, Id;
+overload selector(#"initWithFoo:bar:") = Id, Id, Id;
 
 record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);

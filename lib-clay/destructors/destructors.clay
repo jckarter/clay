@@ -1,5 +1,5 @@
 record DestroyedBy[Value, Destructor] (value: Value, destructor: Destructor);
-[V,D] overload RegularRecord?(static DestroyedBy[V,D]) = false;
+[V,D] overload RegularRecord?(#DestroyedBy[V,D]) = false;
 [V,D] overload DestroyedBy[V,D]();
 [V,D] overload destroy(d: DestroyedBy[V,D]) { d.destructor(d.value); }
 

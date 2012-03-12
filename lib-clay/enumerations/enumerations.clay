@@ -46,7 +46,7 @@ inline overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
 [E | Enum?(E)]
 enumName(x:E) {
     alias n = EnumMemberCount(E);
-    ..for (i in staticIntegers(static n)) {
+    ..for (i in staticIntegers(#n)) {
         if (x == E(unwrapStatic(i)))
             return EnumMemberName(E, i);
     }

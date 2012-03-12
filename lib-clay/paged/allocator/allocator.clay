@@ -202,7 +202,7 @@ record PagedPointer[T] (
 );
 
 [T]
-overload ContiguousCoordinate?(static PagedPointer[T]) = true;
+overload ContiguousCoordinate?(#PagedPointer[T]) = true;
 
 [T]
 overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
@@ -237,7 +237,7 @@ overload dereference(p : PagedPointer[T]) {
 overload null?(p : PagedPointer[T]) = (p.offset == 0);
 
 [T]
-nullPaged(static T) = PagedPointer[T]();
+nullPaged(#T) = PagedPointer[T]();
 
 
 
@@ -252,7 +252,7 @@ splitBlock?(b, n) {
 }
 
 [T,I | Integer?(I)]
-allocatePaged(static T, n_:I) {
+allocatePaged(#T, n_:I) {
     var n = SizeT(n_) * TypeSize(T);
 
     // include header in size and align up to 16

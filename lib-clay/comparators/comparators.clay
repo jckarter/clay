@@ -13,7 +13,7 @@ inline overload greaterEquals?(comparator, a, b) = not lesser?(a, b);
 // The natural comparison
 
 record Natural();
-overload Comparator?(static Natural) = true;
+overload Comparator?(#Natural) = true;
 
 natural() = Natural();
 
@@ -26,7 +26,7 @@ inline overload greaterEquals?(c : Natural, x, y) = greaterEquals?(x, y);
 // Comparing on a specific function
 
 record Comparing[F](comparing : F);
-[F] overload Comparator?(static Comparing[F]) = true;
+[F] overload Comparator?(#Comparing[F]) = true;
 
 comparing(f) = Comparing(f);
 
@@ -40,7 +40,7 @@ comparing(f) = Comparing(f);
 // Comparing in reversed of the normal order
 
 record Reversed[C](original : C);
-[C | Comparator?(C)] overload Comparator?(static Reversed[C]) = true;
+[C | Comparator?(C)] overload Comparator?(#Reversed[C]) = true;
 
 [C | Comparator?(C)] reversed(c : C) = Reversed(c);
 [C | Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;

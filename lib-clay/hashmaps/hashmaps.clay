@@ -158,7 +158,7 @@ private record HashMapItems[CapturedMap,K,V] =
     node : WeakNodePtr[K,V];
 
 [CapturedMap,K,V]
-overload HashMapItems(forward captured:CapturedMap, static K, static V)
+overload HashMapItems(forward captured:CapturedMap, #K, #V)
     --> returned:HashMapItems[CapturedMap,K,V]
 {
     returned.map <-- captured;

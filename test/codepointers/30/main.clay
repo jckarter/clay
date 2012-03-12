@@ -30,7 +30,7 @@ record Displayable (
     display : CodePointer[[Opaque],[]],
 );
 
-overload RegularRecord?(static Displayable) = false;
+overload RegularRecord?(#Displayable) = false;
 
 
 // primary constructor

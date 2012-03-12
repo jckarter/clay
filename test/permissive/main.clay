@@ -36,7 +36,7 @@ PermissiveRecordConstructor?(x) = false;
 T(..args:A) --> returned:T {
     returned <-- T();
     alias n = RecordFieldCount(T);
-    ..for (i in staticIntegers(static n)) {
+    ..for (i in staticIntegers(#n)) {
         ref field = fieldRefByIndex(returned, i);
         var value = nthValue(i, ..args);
         permissiveAssign(field, value);
@@ -56,7 +56,7 @@ record Foo (
     d : Pointer[Int8],
 );
 
-overload PermissiveRecordConstructor?(static Foo) = true;
+overload PermissiveRecordConstructor?(#Foo) = true;
 
 main() {
     var f = Foo(1, 2, 0, "hello");

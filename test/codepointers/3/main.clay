@@ -9,7 +9,7 @@ import libc;
  ..ReturnTypes,
  ..VarArgTypes
  | Tuple[..ArgTypes] ==
-   Tuple[..takeValues(static countValues(..ArgTypes), ..VarArgTypes)]]
+   Tuple[..takeValues(#countValues(..ArgTypes), ..VarArgTypes)]]
 doCall(f:VarArgsCCodePointer[[..ArgTypes], [..ReturnTypes]], ..args:VarArgTypes) {
     f(..args);
 }

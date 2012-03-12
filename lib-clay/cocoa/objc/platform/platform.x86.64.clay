@@ -4,10 +4,10 @@ FpRet?(type) = false;
 StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
-//overload FpRet?(static Float80) = true;
-//overload Fp2Ret?(static Complex[Float80]) = true;
+//overload FpRet?(#Float80) = true;
+//overload Fp2Ret?(#Complex[Float80]) = true;
 
-[T | Type?(T)] overload StRet?(static T) = TypeSize(T) > 16;
+[T | Type?(T)] overload StRet?(#T) = TypeSize(T) > 16;
 
 external __CFConstantStringClassReference : Opaque;
 

@@ -13,7 +13,7 @@ record RawFile (
 );
 
 
-overload RegularRecord?(static RawFile) = false;
+overload RegularRecord?(#RawFile) = false;
 
 
 
@@ -74,7 +74,7 @@ overload destroy(x:RawFile) {
 
 // moveUnsafe, resetUnsafe
 
-overload BitwiseMovedType?(static RawFile) = true;
+overload BitwiseMovedType?(#RawFile) = true;
 
 overload resetUnsafe(x:RawFile) {
     x <-- RawFile(-1, false);

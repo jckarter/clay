@@ -17,10 +17,10 @@ private record Mapped[F, A] (
 );
 
 [F,A | LightweightSequence?(A)]
-overload LightweightSequence?(static Mapped[F,A]) = true;
+overload LightweightSequence?(#Mapped[F,A]) = true;
 
 [F,A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
-overload UnderlyingContainerConstructor(static Mapped[F,A]) =
+overload UnderlyingContainerConstructor(#Mapped[F,A]) =
     UnderlyingContainerConstructor(A);
 
 
@@ -106,7 +106,7 @@ inline overload dec(x:MappedCoordinate[F, COORD]) {
 inline overload size(a:Mapped[F, A]) = size(a.seq);
 
 [F, A | CallDefined?(StaticSize, Static[A])]
-overload StaticSize(static Mapped[F,A]) = StaticSize(A);
+overload StaticSize(#Mapped[F,A]) = StaticSize(A);
 
 [F, A, I | CallDefined?(index, A, I)]
 inline overload index(a:Mapped[F, A], i:I) =

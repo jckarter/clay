@@ -21,9 +21,9 @@ define ReferenceTypeFieldTypes;
 [..F | (countValues(..F) > 0)]
 referenceTypeWithProperties(properties, ..fields:F) = recordWithProperties(
     [
-        [RegularRecord?, static false],
-        [ReferenceType?, static true],
-        [ReferenceTypeFieldCount, static countValues(..F)],
+        [RegularRecord?, #false],
+        [ReferenceType?, #true],
+        [ReferenceTypeFieldCount, #countValues(..F)],
         [ReferenceTypeFieldNames, ..mapValues(x => x.0, ..fields)],
         [ReferenceTypeFieldTypes, ..mapValues(x => x.1, ..fields)],
         ..unpack(properties),
@@ -37,7 +37,7 @@ referenceTypeWithProperty(property, ..fields:F) =
 
 [..F | (countValues(..F) > 0)]
 referenceTypeWithPredicate(predicate, ..fields:F) =
-    referenceTypeWithProperty([predicate, static true], ..fields);
+    referenceTypeWithProperty([predicate, #true], ..fields);
 
 [..F | (countValues(..F) > 0)]
 referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
@@ -50,7 +50,7 @@ referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
 
 [T | ReferenceType?(T)]
 inline referencePtr(x:T) =
-    ref recordFieldRef(x, static 0);
+    ref recordFieldRef(x, #0);
 
 
 
@@ -66,27 +66,27 @@ overload staticIndex(x:T, i);
 
 
 [T, Field | ReferenceType?(T)]
-private fieldNameIndex(static T, static Field) =
-    findField(static 0, static Field, ..ReferenceTypeFieldNames(T));
+private fieldNameIndex(#T, #Field) =
+    findField(#0, #Field, ..ReferenceTypeFieldNames(T));
 
 [pos]
-private findField(static pos, field, first, ..rest) =
-    findField(static pos+1, field, ..rest);
+private findField(#pos, field, first, ..rest) =
+    findField(#pos+1, field, ..rest);
 
 [pos, F]
-overload findField(static pos, static F, static F, ..rest) = pos;
+overload findField(#pos, #F, #F, ..rest) = pos;
 
 [pos]
-overload findField(static pos, field) = -1;
+overload findField(#pos, field) = -1;
 
 
 [T, i | ReferenceType?(T) and (i >= 0) and (i < ReferenceTypeFieldCount(T))]
-overload staticIndex(x:T, static i) =
-    ref staticIndex(referencePtr(x)^, static i);
+overload staticIndex(x:T, #i) =
+    ref staticIndex(referencePtr(x)^, #i);
 
 [T, Field | ReferenceType?(T) and (fieldNameIndex(T, Field) >= 0)]
-overload fieldRef(x:T, static Field) =
-    ref staticIndex(x, static fieldNameIndex(T, Field));
+overload fieldRef(x:T, #Field) =
+    ref staticIndex(x, #fieldNameIndex(T, Field));
 
 
 
@@ -126,12 +126,12 @@ alias overload T(..args:A) --> returned:T {
 //
 
 [T | ReferenceType?(T)]
-allocateRef(static T) --> returned:T {
+allocateRef(#T) --> returned:T {
     referencePtr(returned) <-- new(Tuple[..ReferenceTypeFieldTypes(T)]());
 }
 
 [T | ReferenceType?(T)]
-allocateUninitializedRefUnsafe(static T) --> returned:T {
+allocateUninitializedRefUnsafe(#T) --> returned:T {
     alias InnerType = Tuple[..ReferenceTypeFieldTypes(T)];
     referencePtr(returned) <-- SharedPointer[InnerType](allocateRawMemory(RefCounted[InnerType], 1));
     referencePtr(returned).ptr^.refCount = 1;
@@ -155,7 +155,7 @@ overload T(src:T) --> returned:T {
 //
 
 [T | ReferenceType?(T)]
-overload BitwiseMovedType?(static T) = true;
+overload BitwiseMovedType?(#T) = true;
 
 [T | ReferenceType?(T)]
 overload resetUnsafe(x:T) {

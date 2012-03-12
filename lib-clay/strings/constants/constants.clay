@@ -19,7 +19,7 @@ inline overload __operators__.stringLiteral(first, last) = StringConstant(first,
 // predicates
 //
 
-overload ContiguousSequence?(static StringConstant) = true;
+overload ContiguousSequence?(#StringConstant) = true;
 
 
 

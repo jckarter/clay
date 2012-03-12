@@ -2,9 +2,9 @@ import identifiers.*;
 
 test(a) {
     println(a);
-    var b = IdentifierSlice(a, static 0, static 3);
+    var b = IdentifierSlice(a, #0, #3);
     println(b);
-    var c = IdentifierSlice(a, static 3, static IdentifierSize(a));
+    var c = IdentifierSlice(a, #3, #IdentifierSize(a));
     println(c);
     var d = IdentifierConcat(b, c);
     println(d);
@@ -32,5 +32,5 @@ main() {
     println(IdentifierFind("foobarfoo", "bar"));
     println(IdentifierFind("foobarfoo", "bas"));
     println(IdentifierFind("foo", "foobarfoo"));
-    println(IdentifierFind("foobarfoo", "foo", static 1));
+    println(IdentifierFind("foobarfoo", "foo", #1));
 }

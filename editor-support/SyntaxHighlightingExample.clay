@@ -106,7 +106,7 @@ record TypesTest (
 variant VariantTest (TypesTest, Int);
 instance InstanceTest (VariantTest);
 
-keywordsTest(x, ref y, rvalue z, forward w, static v) {
+keywordsTest(x, ref y, rvalue z, forward w, #v) {
     if (x) {} else {}
 
     switch (x)
@@ -198,7 +198,7 @@ operatorsTest() {
 
     (..x);
 
-    static x;
+    #x;
     ref x;
     forward x;
 }

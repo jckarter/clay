@@ -11,7 +11,7 @@ record RawFile (
     owned : Bool,
 );
 
-overload RegularRecord?(static RawFile) = false;
+overload RegularRecord?(#RawFile) = false;
 
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 
@@ -105,7 +105,7 @@ overload destroy(x:RawFile) {
 
 // moveUnsafe, resetUnsafe
 
-overload BitwiseMovedType?(static RawFile) = true;
+overload BitwiseMovedType?(#RawFile) = true;
 
 overload resetUnsafe(x:RawFile) {
     x <-- RawFile(win32.HANDLE(0), false);

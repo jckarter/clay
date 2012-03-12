@@ -16,22 +16,22 @@ overload indexUpdateAssign(op, x:Foo, index, value) {
 }
 
 [i]
-overload staticIndexAssign(x:Foo, static i, value) {
+overload staticIndexAssign(x:Foo, #i, value) {
     println("staticIndexAssign(x, ", i, ", ", value, ")");
 }
 
 [i]
-overload staticIndexUpdateAssign(op, x:Foo, static i, value) {
+overload staticIndexUpdateAssign(op, x:Foo, #i, value) {
     println("staticIndexUpdateAssign(", op, ", x, ", i, ", ", value, ")");
 }
 
 [FIELD]
-overload fieldRefAssign(x:Foo, static FIELD, value) {
+overload fieldRefAssign(x:Foo, #FIELD, value) {
     println("fieldRefAssign(x, ", FIELD, ", ", value, ")");
 }
 
 [FIELD]
-overload fieldRefUpdateAssign(op, x:Foo, static FIELD, value) {
+overload fieldRefUpdateAssign(op, x:Foo, #FIELD, value) {
     println("fieldRefUpdateAssign(", op, ", x, ", FIELD, ", ", value, ")");
 }
 

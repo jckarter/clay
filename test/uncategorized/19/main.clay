@@ -1,11 +1,11 @@
 
 define IsInt64;
-[T] overload IsInt64(static T) = false;
-overload IsInt64(static Int64) = true;
+[T] overload IsInt64(#T) = false;
+overload IsInt64(#Int64) = true;
 
 define Foo;
-[T] overload Foo(static T) = false;
-overload Foo(static Int64) = true;
+[T] overload Foo(#T) = false;
+overload Foo(#Int64) = true;
 
 f(x) = x;
 

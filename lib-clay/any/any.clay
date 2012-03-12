@@ -31,7 +31,7 @@ record Any (
 );
 
 // disable default value semantics
-overload RegularRecord?(static Any) = false;
+overload RegularRecord?(#Any) = false;
 
 overload Any() {
     return Any(
@@ -63,7 +63,7 @@ overload Any(x:Any) {
     );
 }
 
-overload BitwiseMovedType?(static Any) = true;
+overload BitwiseMovedType?(#Any) = true;
 
 overload resetUnsafe(x:Any) {
     x <-- Any();
@@ -105,10 +105,10 @@ alias box(x:T) {
 }
 
 [T]
-anyIs?(x:Any, static T) = (x.id == typeId[T]);
+anyIs?(x:Any, #T) = (x.id == typeId[T]);
 
 [T]
-unbox(x:Any, static T) {
+unbox(x:Any, #T) {
     assert(x.id == typeId[T]);
     return ref Pointer[T](x.ptr)^;
 }

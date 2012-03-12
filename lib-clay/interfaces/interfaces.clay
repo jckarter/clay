@@ -12,7 +12,7 @@ private VtblSlotOutputTypes(memFun) = ..unpack(memFun.2);
 InterfaceMember?(I, fn) = false;
 
 [I, fn | InterfaceType?(I)]
-overload InterfaceMember?(static I, static fn)
+overload InterfaceMember?(#I, #fn)
     = inValues?(fn, ..mapValues(VtblSlotFunction, ..InterfaceMembers(I)));
 
 private VtblSlotType(memFun) = CodePointer[
@@ -25,7 +25,7 @@ private record InterfaceVtbl[..memberFunctions]
 
 interfaceType(..memberFunctions) = recordWithProperties(
     [
-        [InterfaceType?, static true],
+        [InterfaceType?, #true],
         [InterfaceMembers, 
             ..ImplicitInterfaceMembers(),
             ..memberFunctions
@@ -36,7 +36,7 @@ interfaceType(..memberFunctions) = recordWithProperties(
 );
 
 [I | InterfaceType?(I)]
-overload RegularRecord?(static I) = false;
+overload RegularRecord?(#I) = false;
 
 [I | InterfaceType?(I)]
 overload destroy(i: I) { invoke(destroy, &i); }
@@ -46,7 +46,7 @@ private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
 );
 
 [I, T | InterfaceType?(I)]
-private makeInterfaceVtbl(static I, static T) = InterfaceVtbl[..InterfaceMembers(I)](
+private makeInterfaceVtbl(#I, #T) = InterfaceVtbl[..InterfaceMembers(I)](
     Tuple(
         ..mapValues(slot => vtblSlotMember(T, slot), ..InterfaceMembers(I))
     )
@@ -57,7 +57,7 @@ private var interfaceVtbl[I, T] = makeInterfaceVtbl(I, T);
 BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 
 [I, T | InterfaceType?(I)]
-alias allocateBox(static I, this: T) : Pointer[I] {
+alias allocateBox(#I, this: T) : Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
     ptr^.vtbl = &interfaceVtbl[I, T];
 
@@ -72,12 +72,12 @@ alias allocateBox(static I, this: T) : Pointer[I] {
 }
 
 [..memberFunctions, fn]
-private vtblSlot(vtbl: InterfaceVtbl[..memberFunctions], static fn)
+private vtblSlot(vtbl: InterfaceVtbl[..memberFunctions], #fn)
     = staticIndex(
         vtbl.methods,
-        static valueIndex(fn, ..mapValues(VtblSlotFunction, ..memberFunctions))
+        #valueIndex(fn, ..mapValues(VtblSlotFunction, ..memberFunctions))
     );
 
 [I, fn | InterfaceMember?(I, fn)]
-invoke(static fn, i: Pointer[I], forward ..args)
+invoke(#fn, i: Pointer[I], forward ..args)
     = ..vtblSlot(i^.vtbl^, fn)(i^.this, ..args);

@@ -50,7 +50,7 @@ overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
 // NSString overloads
 //
 [ident | Identifier?(ident)]
-overload NSString(static ident) = NSString(NSSTR(ident));
+overload NSString(#ident) = NSString(NSSTR(ident));
 
 [S | CCompatibleString?(S)]
 overload NSString(s: S) = NSString(NSString.stringWithUTF8String(cstring(s)));
@@ -79,7 +79,7 @@ record NSValueTypeMismatch (object: Id);
 instance Exception (NSValueTypeMismatch);
 
 [T, O | ObjectRef?(O)]
-fromNSValue(static T, o: O) {
+fromNSValue(#T, o: O) {
     if (CStringRef(o.objCType()) != encode(T))
         throw NSValueTypeMismatch(Id(o));
     else
@@ -87,12 +87,12 @@ fromNSValue(static T, o: O) {
 }
 
 [T, O | ObjectRef?(O)]
-fromNSValueUnsafe(static T, o: O) --> returned: T {
+fromNSValueUnsafe(#T, o: O) --> returned: T {
     o.getValue(RawPointer(&returned));
 }
 
 [T, O | ObjectRef?(O)]
-overload fromNSValueUnsafe(static Pointer[T], o: O) = Pointer[T](o.pointerValue());
+overload fromNSValueUnsafe(#Pointer[T], o: O) = Pointer[T](o.pointerValue());
 
 
 
@@ -108,24 +108,24 @@ overload Maybe[T](o: O) = if (nil?(o)) nothing(T) else Maybe(T(o));
 //
 
 [N | Numeric?(N) or N == Bool]
-overload ObjectParameterType(static N) = NSNumber;
+overload ObjectParameterType(#N) = NSNumber;
 [N | Numeric?(N) or N == Bool]
 overload objectHandle(n: N) = objectHandle(NSNumber(n));
 
 [T | RegularRecord?(T) and not ObjectRef?(T)]
-overload ObjectParameterType(static T) = NSValue;
+overload ObjectParameterType(#T) = NSValue;
 [T | RegularRecord?(T) and not ObjectRef?(T)]
 overload objectHandle(r: T) = objectHandle(makeNSValue(r));
 
 [S | CCompatibleString?(S)]
-overload ObjectParameterType(static S) = NSString;
+overload ObjectParameterType(#S) = NSString;
 [S | CCompatibleString?(S)]
 overload objectHandle(s: S) = objectHandle(NSString(s));
 
 [i | Identifier?(i)]
-overload ObjectParameterType(static Static[i]) = NSString;
+overload ObjectParameterType(#Static[i]) = NSString;
 [i | Identifier?(i)]
-overload objectHandle(static i) = NSSTR(i);
+overload objectHandle(#i) = NSSTR(i);
 
 
 
@@ -219,7 +219,7 @@ overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
 // array and dictionary constructors
 //
 [T, ..E | Class?(T) and allValues?(ObjectParameterType?, ..E)]
-makeArrayOfClass(static T, forward ..elements: E)
+makeArrayOfClass(#T, forward ..elements: E)
     = T.arrayWithObjects(..mapValues(objectHandle, ..elements), nilHandle);
 
 [..E | allValues?(ObjectParameterType?, ..E)]
@@ -238,7 +238,7 @@ private ValidDictionaryKVs?(..E)
       and allValues?(ObjectParameterType?, ..E);
 
 [T, ..E | Class?(T) and ValidDictionaryKVs?(..E)]
-private makeDictionaryOfClass(static T, forward ..kvs: E)
+private makeDictionaryOfClass(#T, forward ..kvs: E)
     = T.dictionaryWithObjectsAndKeys(
         ..mapValues(objectHandle, ..swapValuePairs(..kvs)),
         nilHandle
@@ -292,15 +292,15 @@ withAutoreleasePool(fn) {
     Class?(O)
     and Selector?(superSelector)
     and CallDefined?(call, F,
-        O, ..dropValues(static SelectorArgumentCount(superSelector), ..A)
+        O, ..dropValues(#SelectorArgumentCount(superSelector), ..A)
     )
 ]
 initObjectWith(
-    self_: O, static superSelector, forward initFn_: F, forward ..args:A
+    self_: O, #superSelector, forward initFn_: F, forward ..args:A
 ) {
     var self = self_;
     forward initFn = initFn_;
-    var superArgCount = static SelectorArgumentCount(superSelector);
+    var superArgCount = #SelectorArgumentCount(superSelector);
 
     // self = super(self).init...(...);
     self = callMethod(super(self), superSelector,
@@ -366,17 +366,17 @@ deallocObject(self: O) {
 //
 
 [selector | Selector?(selector)]
-AutoreleasedClassMethod(static selector)
+AutoreleasedClassMethod(#selector)
     = [selector, class => class.alloc().init().autorelease()];
 
 [selector, instanceSelector | Selector?(selector) and Selector?(instanceSelector)]
-overload AutoreleasedClassMethod(static selector, static instanceSelector)
+overload AutoreleasedClassMethod(#selector, #instanceSelector)
     = [selector, (class, ..args) =>
         callMethod(class.alloc(), instanceSelector, ..args).autorelease()
     ];
 
 [selector, superSelector | Selector?(selector) and Selector?(superSelector)]
-InitInstanceMethod(static selector, static superSelector, ..Types)
+InitInstanceMethod(#selector, #superSelector, ..Types)
     = [selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types];
 
 overload InitInstanceMethod(selector) = InitInstanceMethod(selector, "init");
@@ -388,39 +388,39 @@ define CopyInheriting;
 define CopyImmutable;
 
 [selector | Selector?(selector)]
-CopyInstanceMethod(static selector, static CopyRoot)
+CopyInstanceMethod(#selector, #CopyRoot)
     = [selector, copyRootObject];
 [selector | Selector?(selector)]
-overload CopyInstanceMethod(static selector, static CopyInheriting)
+overload CopyInstanceMethod(#selector, #CopyInheriting)
     = [selector, copyInheritingObject];
 [selector | Selector?(selector)]
-overload CopyInstanceMethod(static selector, static CopyImmutable)
+overload CopyInstanceMethod(#selector, #CopyImmutable)
     = [selector, copyImmutableObject];
 
 [Flag | Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
-overload CopyInstanceMethod(static Flag)
+overload CopyInstanceMethod(#Flag)
     = CopyInstanceMethod("copyWithZone:", Flag);
 
 [selector | Selector?(selector)]
-DeallocInstanceMethod(static selector) = [selector, deallocObject];
+DeallocInstanceMethod(#selector) = [selector, deallocObject];
 
 overload DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
 
 
 [ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
-ReaderInstanceMethod(static ivarName, static readerSelector, T)
+ReaderInstanceMethod(#ivarName, #readerSelector, T)
     = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
 
 [ivarName | Identifier?(ivarName) and Selector?(ivarName)]
-overload ReaderInstanceMethod(static ivarName, T)
+overload ReaderInstanceMethod(#ivarName, T)
     = ReaderInstanceMethod(ivarName, ivarName, T);
 
 [ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
-overload ReaderInstanceMethod(static ivarName, static readerSelector)
+overload ReaderInstanceMethod(#ivarName, #readerSelector)
     = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName))];
 
 [ivarName | Identifier?(ivarName) and Selector?(ivarName)]
-overload ReaderInstanceMethod(static ivarName)
+overload ReaderInstanceMethod(#ivarName)
     = ReaderInstanceMethod(ivarName, ivarName);
 
 
@@ -428,19 +428,19 @@ defaultWriterSelector(ivarName)
     = IdentifierConcat("set", IdentifierCapitalize(ivarName), ":");
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
-WriterInstanceMethod(static ivarName, static writerSelector, T)
+WriterInstanceMethod(#ivarName, #writerSelector, T)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
 
 [ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
-overload WriterInstanceMethod(static ivarName, T)
+overload WriterInstanceMethod(#ivarName, T)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName), Void, T);
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
-overload WriterInstanceMethod(static ivarName, static writerSelector)
+overload WriterInstanceMethod(#ivarName, #writerSelector)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }];
 
 [ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
-overload WriterInstanceMethod(static ivarName)
+overload WriterInstanceMethod(#ivarName)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
 
 
@@ -449,7 +449,7 @@ overload WriterInstanceMethod(static ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
-PropertyInstanceMethods(static ivarName, static readerSelector, static writerSelector, T)
+PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
     = ReaderInstanceMethod(ivarName, readerSelector, T),
       WriterInstanceMethod(ivarName, writerSelector, T);
 
@@ -458,7 +458,7 @@ PropertyInstanceMethods(static ivarName, static readerSelector, static writerSel
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
-overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
+overload PropertyInstanceMethods(#ivarName, #readerSelector, T)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
 
 [ivarName |
@@ -466,7 +466,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]
-overload PropertyInstanceMethods(static ivarName, T)
+overload PropertyInstanceMethods(#ivarName, T)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
 
 [ivarName, readerSelector, writerSelector |
@@ -474,7 +474,7 @@ overload PropertyInstanceMethods(static ivarName, T)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
-overload PropertyInstanceMethods(static ivarName, static readerSelector, static writerSelector)
+overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector)
     = ReaderInstanceMethod(ivarName, readerSelector),
       WriterInstanceMethod(ivarName, writerSelector);
 
@@ -483,7 +483,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, static 
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
-overload PropertyInstanceMethods(static ivarName, static readerSelector)
+overload PropertyInstanceMethods(#ivarName, #readerSelector)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
 
 [ivarName |
@@ -491,7 +491,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]
-overload PropertyInstanceMethods(static ivarName)
+overload PropertyInstanceMethods(#ivarName)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName));
 
 
@@ -516,7 +516,7 @@ overload printTo(stream, o: O) {
 
 private toIBOutlet(ivar) = [ivar.0, IBOutlet(ivar.1)];
 private toIBAction(method) = [method.0, IBAction(method.1),
-    ..dropValues(static 2, ..unpack(method))
+    ..dropValues(#2, ..unpack(method))
 ];
 
 IBOutlets(..ivars) = ..mapValues(toIBOutlet, ..ivars);

@@ -19,9 +19,9 @@ record Vector[T] (
 // predicates
 //
 
-[T] overload RegularRecord?(static Vector[T]) = false;
+[T] overload RegularRecord?(#Vector[T]) = false;
 
-[T] overload ContiguousSequence?(static Vector[T]) = true; 
+[T] overload ContiguousSequence?(#Vector[T]) = true; 
 
 
 
@@ -79,7 +79,7 @@ overload pushAll(a) {}
 //
 
 [T]
-overload BitwiseMovedType?(static Vector[T]) = true;
+overload BitwiseMovedType?(#Vector[T]) = true;
 
 [T]
 overload resetUnsafe(a:Vector[T]) {
@@ -108,7 +108,7 @@ overload destroy(a:Vector[T]) {
 //
 
 [T]
-overload Vector?(static Vector[T]) = true;
+overload Vector?(#Vector[T]) = true;
 
 [T]
 overload vectorData(a:Vector[T]) = &(a.data^);
