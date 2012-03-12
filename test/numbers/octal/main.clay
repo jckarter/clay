@@ -1,5 +1,5 @@
 main() {
     println(0177);
     println(0199);
-    println(octal(#"0177"));
+    println(octal("0177"));
 }

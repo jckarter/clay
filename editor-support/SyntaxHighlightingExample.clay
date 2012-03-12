@@ -384,26 +384,26 @@ string
     """triple \""" quoted string""";
     """"triple quoted string"""";
 
-    #zim;
-    #zang_zung;
-    #_zippity;
-    #doo_;
+    "zim";
+    "zang_zung";
+    "_zippity";
+    "doo_";
 
-    #"dah";
-    #"deedle ";
-    #" dum";
-    #"diddly squat";
+    "dah";
+    "deedle ";
+    " dum";
+    "diddly squat";
 
-    #doodly?;
-    #?doodly;
+    "doodly?";
+    "?doodly";
 
-    #"\"symbol\"";
-    #"symbol\\";
-    #"symbol\\\"";
-    #"symbol\\\\";
-    #" \x00 \x7F \0 \t \r \n \f \" \\ \$";
-    #"//";
-    #"/*";
+    "\"symbol\"";
+    "symbol\\";
+    "symbol\\\"";
+    "symbol\\\\";
+    " \x00 \x7F \0 \t \r \n \f \" \\ \$";
+    "//";
+    "/*";
 
     123
     ;

@@ -55,52 +55,52 @@ define Void; // stand-in symbol for "no return value"
 
 define encodeIdentifier;
 
-overload encodeIdentifier() = #"";
+overload encodeIdentifier() = "";
 
-[X] overload encodeIdentifier(static X) = #"?";
+[X] overload encodeIdentifier(static X) = "?";
 [T] overload encodeIdentifier(static Pointer[T])
-    = IdentifierConcat(#"^", encodeIdentifier(T));
+    = IdentifierConcat("^", encodeIdentifier(T));
 
 // XXX distinguish raw pointer from Pointer[UInt8]
-overload encodeIdentifier(static RawPointer) = #"^v";
+overload encodeIdentifier(static RawPointer) = "^v";
 
 [T | Record?(T)]
 overload encodeIdentifier(static Pointer[Pointer[T]])
-    = IdentifierConcat(#"^^{", IdentifierStaticName(T), #"}");
+    = IdentifierConcat("^^{", IdentifierStaticName(T), "}");
 [T | Tuple?(T)]
-overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^{Tuple}";
+overload encodeIdentifier(static Pointer[Pointer[T]]) = "^^{Tuple}";
 [T | Union?(T)]
-overload encodeIdentifier(static Pointer[Pointer[T]]) = #"^^(Union)";
+overload encodeIdentifier(static Pointer[Pointer[T]]) = "^^(Union)";
 
 [T | RegularRecord?(T)] overload encodeIdentifier(static T)
     = IdentifierConcat(
-        #"{", IdentifierStaticName(T), #"=",
+        "{", IdentifierStaticName(T), "=",
         encodeIdentifier(..RecordFieldTypes(T)),
-        #"}"
+        "}"
     );
 [..Members] overload encodeIdentifier(static Tuple[..Members])
-    = IdentifierConcat(#"{Tuple=", encodeIdentifier(..RecordFieldTypes(T)), #"}");
+    = IdentifierConcat("{Tuple=", encodeIdentifier(..RecordFieldTypes(T)), "}");
 [..Members] overload encodeIdentifier(static Union[..Members])
-    = IdentifierConcat(#"(Union=", encodeIdentifier(..Members), #")");
+    = IdentifierConcat("(Union=", encodeIdentifier(..Members), ")");
 
-overload encodeIdentifier(static Pointer[CChar]) = #"*";
-overload encodeIdentifier(static ObjectHandle) = #"@";
-overload encodeIdentifier(static ClassHandle) = #"#";
-overload encodeIdentifier(static SEL) = #":";
+overload encodeIdentifier(static Pointer[CChar]) = "*";
+overload encodeIdentifier(static ObjectHandle) = "@";
+overload encodeIdentifier(static ClassHandle) = "#";
+overload encodeIdentifier(static SEL) = ":";
 
-overload encodeIdentifier(static Int8) = #"c";
-overload encodeIdentifier(static Int16) = #"s";
-overload encodeIdentifier(static Int32) = #"i";
-overload encodeIdentifier(static Int64) = #"q";
-overload encodeIdentifier(static UInt8) = #"C";
-overload encodeIdentifier(static UInt16) = #"S";
-overload encodeIdentifier(static UInt32) = #"I";
-overload encodeIdentifier(static UInt64) = #"Q";
-overload encodeIdentifier(static Float32) = #"f";
-overload encodeIdentifier(static Float64) = #"d";
-overload encodeIdentifier(static Bool) = #"c";
-overload encodeIdentifier(static Void) = #"v";
-overload encodeIdentifier(static []) = #"v";
+overload encodeIdentifier(static Int8) = "c";
+overload encodeIdentifier(static Int16) = "s";
+overload encodeIdentifier(static Int32) = "i";
+overload encodeIdentifier(static Int64) = "q";
+overload encodeIdentifier(static UInt8) = "C";
+overload encodeIdentifier(static UInt16) = "S";
+overload encodeIdentifier(static UInt32) = "I";
+overload encodeIdentifier(static UInt64) = "Q";
+overload encodeIdentifier(static Float32) = "f";
+overload encodeIdentifier(static Float64) = "d";
+overload encodeIdentifier(static Bool) = "c";
+overload encodeIdentifier(static Void) = "v";
+overload encodeIdentifier(static []) = "v";
 
 [..T | countValues(..T) > 1]
 overload encodeIdentifier(..types: T)
@@ -134,11 +134,11 @@ objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
 
 private release(x) {
     if (not null?(x)) {
-        objc_msgSend(objectHandle(x), objcSelector[#release]);
+        objc_msgSend(objectHandle(x), objcSelector["release"]);
     }
 }
 private retain(x) {
-    return objc_msgSend(objectHandle(x), objcSelector[#retain]);
+    return objc_msgSend(objectHandle(x), objcSelector["retain"]);
 }
 
 
@@ -321,7 +321,7 @@ define ClassClassMethods;
 define ClassInstanceMethods;
 
 MangledModuleChar(c) = c;
-overload MangledModuleChar(static #".") = #__;
+overload MangledModuleChar(static ".") = "__";
 
 MangledModuleName(T) = IdentifierConcat(..mapValues(
     MangledModuleChar,
@@ -331,7 +331,7 @@ MangledModuleName(T) = IdentifierConcat(..mapValues(
 [T | ClayClass?(T)]
 overload ClassName(static T) {
     return StaticName(IdentifierConcat(
-        #"clay__", MangledModuleName(T), #"__", IdentifierStaticName(T)
+        "clay__", MangledModuleName(T), "__", IdentifierStaticName(T)
     ));
 }
 
@@ -377,7 +377,7 @@ externalClass(static Super) = recordWithProperties(
         [SuperclassType, Super],
         [ExternalClass?, static true],
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [name, Super | Identifier?(name) and ValidSuperclass?(Super)]
@@ -387,7 +387,7 @@ overload externalClass(static name, static Super) = recordWithProperties(
         [ExternalClass?, static true],
         [ClassStaticName, name],
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 record ExternalClassNotFound (name: StringConstant);
@@ -435,7 +435,7 @@ newClass(static Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [name, Super, IV, CM, IM] // XXX ValidSuperclass?(Super)]
@@ -452,7 +452,7 @@ overload newClass(static name, static Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [Super, IV, CM, IM] // XXX | ValidSuperclass?(Super)]
@@ -469,7 +469,7 @@ newExternalClass(static Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
@@ -484,7 +484,7 @@ instance Exception (NewClassCouldNotAddMethod);
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
     objc_msgSend(
         ObjectHandle(objc_getClass(cstring("NSException"))),
-        objcSelector[#"raise:format:"],
+        objcSelector["raise:format:"],
         reason, format, ..mapValues(varArgUnbox1, ..args) 
     );
 }
@@ -499,7 +499,7 @@ private classMethodImp(static T, static sel, fn)
                     ..fn(objectParameter(T), ..msgSendBox(Static[T], sel, ..args))
                 );
             } catch (ex) {
-                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(str(ex)));
+                raiseNSException(NSSTR("Clay Exception"), NSSTR("%s"), cstring(str(ex)));
                 // not actually reached
                 throw ex;
             }
@@ -517,7 +517,7 @@ private instanceMethodImp(static T, static sel, fn)
                     ..fn(T(self), ..msgSendBox(T, sel, ..args))
                 );
             } catch (ex) {
-                raiseNSException(NSSTR(#"Clay Exception"), NSSTR(#"%s"), cstring(str(ex)));
+                raiseNSException(NSSTR("Clay Exception"), NSSTR("%s"), cstring(str(ex)));
                 // not actually reached
                 throw ex;
             }
@@ -685,7 +685,7 @@ overload objcInitIvarOffset(static T, ivarName) = PtrInt();
 [T | Class?(T)] overload objectHandle(static T) = ObjectHandle(classHandle(T));
 [T | Class?(T)] overload ObjectParameterType(static Static[T]) = Id; // XXX Class
 
-[T | ObjectRef?(T)] overload encodeIdentifier(static T) = #"@";
+[T | ObjectRef?(T)] overload encodeIdentifier(static T) = "@";
 
 // XXX class container
 
@@ -804,25 +804,25 @@ SelectorArgumentTypes(static T, static sel) = ..restValues(..Selector(T, sel));
 
 AllocatingSelector?(sel) = false;
 [sel |
-    IdentifierStartsWith?(sel, #"alloc")
-    or IdentifierStartsWith?(sel, #"new")
+    IdentifierStartsWith?(sel, "alloc")
+    or IdentifierStartsWith?(sel, "new")
 ]
 overload AllocatingSelector?(static sel) = true;
 
 RetainingSelector?(sel) = false;
 [sel |
-    IdentifierStartsWith?(sel, #"copy")
-    or IdentifierStartsWith?(sel, #"mutableCopy")
-    or sel == #"retain"
+    IdentifierStartsWith?(sel, "copy")
+    or IdentifierStartsWith?(sel, "mutableCopy")
+    or sel == "retain"
 ]
 overload RetainingSelector?(static sel) = true;
 
 ForwardingSelector?(sel) = false;
-[sel | IdentifierStartsWith?(sel, #"init")]
+[sel | IdentifierStartsWith?(sel, "init")]
 overload ForwardingSelector?(static sel) = true;
 
 AutoreleasingSelector?(sel) = false;
-overload AutoreleasingSelector?(static #"autorelease") = true;
+overload AutoreleasingSelector?(static "autorelease") = true;
 
 [T, sel | Class?(T) and AllocatingSelector?(sel)]
 overload SelectorReturnType(static Static[T], static sel) = T;
@@ -1018,23 +1018,23 @@ msgSend(static SelfT, imp, self, static S, forward ..args: T) {
 //
 
 private _identifierSelectorChar(c) = c;
-overload _identifierSelectorChar(static #_) = #":";
+overload _identifierSelectorChar(static "_") = ":";
 
 [argCount, underscoreCount, lastCharacter]
 private _extraColon(static argCount, static underscoreCount, static lastCharacter) = ;
 [argCount, underscoreCount, lastCharacter |
     argCount > underscoreCount
-    and lastCharacter != #_
-    and lastCharacter != #":"
+    and lastCharacter != "_"
+    and lastCharacter != ":"
 ]
 overload _extraColon(static argCount, static underscoreCount, static lastCharacter)
-    = #":";
+    = ":";
 
 [argCount] private _identifierSelector(static argCount, ..chars) {
     var lastCharacter = lastValue(..chars);
     return IdentifierConcat(
         ..mapValues(_identifierSelectorChar, ..chars),
-        .._extraColon(static argCount, static countOccurrences(#_, ..chars), lastCharacter)
+        .._extraColon(static argCount, static countOccurrences("_", ..chars), lastCharacter)
     );
 }
 
@@ -1053,7 +1053,7 @@ private _ValidMethodIdentifier?(static identifier, static minArity)
 ValidMethodIdentifier?(static identifier) = true;
     //= _ValidMethodIdentifier?(
     //    static identifier,
-    //    static countOccurrences(#_, ...IdentifierChars(identifier))
+    //    static countOccurrences("_", ...IdentifierChars(identifier))
     //);
 
 
@@ -1067,7 +1067,7 @@ private record MethodRef[T, Captured, identifier] (self: Captured);
 overload MethodRef(T, forward value, identifier)
     = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
-[T, cmd | ObjectRef?(T) and cmd != #__handle__ and ValidMethodIdentifier?(cmd)]
+[T, cmd | ObjectRef?(T) and cmd != "__handle__" and ValidMethodIdentifier?(cmd)]
 overload fieldRef(forward self: T, static cmd)
     = MethodRef(ObjectParameterType(T), self, cmd);
 [T, cmd | Class?(T) and ValidMethodIdentifier?(cmd)]
@@ -1144,7 +1144,7 @@ overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
 overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 
 
-[T, ivar | Class?(T) and ivar != #__handle__ and ClassInstanceVar?(T, ivar)]
+[T, ivar | Class?(T) and ivar != "__handle__" and ClassInstanceVar?(T, ivar)]
 overload fieldRef(ivars: IvarsRef[T], static ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
@@ -1170,7 +1170,7 @@ private record SuperMethodRef[T, Captured, identifier] (__self__: Captured);
 overload SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
     = SuperMethodRef[T, Captured, identifier](super.__self__);
 
-[T, Captured, cmd | Class?(T) and cmd != #__self__]
+[T, Captured, cmd | Class?(T) and cmd != "__self__"]
 overload fieldRef(sup: SuperRef[T, Captured], static cmd)
     = SuperMethodRef(sup, cmd);
 

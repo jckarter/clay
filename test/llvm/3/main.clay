@@ -13,5 +13,5 @@ bar(static x) --> returned:Int32 __llvm__ {
 
 main() {
     println(foo(static 3));
-    println(bar(#"i32 4"));
+    println(bar("i32 4"));
 }

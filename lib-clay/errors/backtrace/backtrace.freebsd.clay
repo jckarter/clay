@@ -5,7 +5,7 @@ define showBacktrace();
 
 inline overload showBacktrace() { }
 
-[| Flag?(#"clay.Use_libexecinfo")]
+[| Flag?("clay.Use_libexecinfo")]
 inline overload showBacktrace() {
     var callstack = Array[RawPointer,128]();
     var size = backtrace(begin(callstack), 128);

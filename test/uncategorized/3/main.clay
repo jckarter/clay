@@ -10,7 +10,7 @@ test1Tuple() = [true];
 
 testConst() = [testSignedInt(), testUnsignedInt(), testFloat(),
                test0Tuple(), test1Tuple(),
-               #foo, #bar];
+               "foo", "bar"];
 
 main() {
     println(testConst());

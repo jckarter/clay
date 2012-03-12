@@ -49,23 +49,23 @@ __llvm__{
 
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#sadd, x, y);
+    = ..overflowIntrinsic("sadd", x, y);
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#ssub, x, y);
+    = ..overflowIntrinsic("ssub", x, y);
 [T | SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#smul, x, y);
+    = ..overflowIntrinsic("smul", x, y);
 
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#uadd, x, y);
+    = ..overflowIntrinsic("uadd", x, y);
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#usub, x, y);
+    = ..overflowIntrinsic("usub", x, y);
 [T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
-    = ..overflowIntrinsic(#umul, x, y);
+    = ..overflowIntrinsic("umul", x, y);
 
 // LLVM doesn't provide intrinsics for 8- or 128-bit math with overflow
 

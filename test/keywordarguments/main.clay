@@ -9,7 +9,7 @@ foo(x: Int, zim: Int, zang: StringConstant, zung: Double) {
 }
 
 requiredKeywords(x, ..keywords) {
-    foo(x, ..keywordArguments([#zim, #zang, #zung], ..keywords));
+    foo(x, ..keywordArguments(["zim", "zang", "zung"], ..keywords));
 }
 
 optionalKeywords(x, ..keywords) {

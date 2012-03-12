@@ -1,7 +1,7 @@
 import cocoa.*;
 import cocoa.uikit.*;
 
-record ViewController = newClass(#"___PROJECTNAMEASIDENTIFIER___ViewController", UIViewController,
+record ViewController = newClass("___PROJECTNAMEASIDENTIFIER___ViewController", UIViewController,
     InstanceVars(),
     ClassMethods(),
     InstanceMethods(),

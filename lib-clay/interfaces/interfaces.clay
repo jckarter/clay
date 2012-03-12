@@ -21,7 +21,7 @@ private VtblSlotType(memFun) = CodePointer[
 ];
 
 private record InterfaceVtbl[..memberFunctions]
-    = [#methods, Tuple[..mapValues(VtblSlotType, ..memberFunctions)]];
+    = ["methods", Tuple[..mapValues(VtblSlotType, ..memberFunctions)]];
 
 interfaceType(..memberFunctions) = recordWithProperties(
     [
@@ -31,8 +31,8 @@ interfaceType(..memberFunctions) = recordWithProperties(
             ..memberFunctions
         ],
     ],
-    [#vtbl, Pointer[InterfaceVtbl[..ImplicitInterfaceMembers(), ..memberFunctions]]],
-    [#this, Opaque],
+    ["vtbl", Pointer[InterfaceVtbl[..ImplicitInterfaceMembers(), ..memberFunctions]]],
+    ["this", Opaque],
 );
 
 [I | InterfaceType?(I)]

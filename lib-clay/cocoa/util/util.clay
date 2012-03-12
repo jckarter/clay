@@ -169,7 +169,7 @@ overload hash(o: O) = o.hash();
 private alias FAST_ENUMERATION_BUFFER_SIZE = 16;
 
 record NSFastEnumerationIterator (
-    delegate: MethodDelegate[Id, #"countByEnumeratingWithState:objects:count:"],
+    delegate: MethodDelegate[Id, "countByEnumeratingWithState:objects:count:"],
     n: NSUInteger,
     state: NSFastEnumerationState,
     count: NSUInteger,
@@ -185,7 +185,7 @@ private refreshIterator(i: NSFastEnumerationIterator) {
 
 [O | ObjectRef?(O)]
 overload iterator(o: O) --> returned: NSFastEnumerationIterator {
-    returned.delegate = MethodDelegate(Id(o), #"countByEnumeratingWithState:objects:count:");
+    returned.delegate = MethodDelegate(Id(o), "countByEnumeratingWithState:objects:count:");
     returned.state.state = 0;
     refreshIterator(returned);
 }
@@ -314,7 +314,7 @@ initObjectWith(
     return self;
 }
 
-initObject(self) = initObjectWith(self, #"init", self => self);
+initObject(self) = initObjectWith(self, "init", self => self);
 
 overload initObject(self, superSelector, forward ..args)
     = initObjectWith(self, superSelector, initObjectMembers, ..args);
@@ -379,8 +379,8 @@ overload AutoreleasedClassMethod(static selector, static instanceSelector)
 InitInstanceMethod(static selector, static superSelector, ..Types)
     = [selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types];
 
-overload InitInstanceMethod(selector) = InitInstanceMethod(selector, #"init");
-overload InitInstanceMethod() = InitInstanceMethod(#"init", #"init");
+overload InitInstanceMethod(selector) = InitInstanceMethod(selector, "init");
+overload InitInstanceMethod() = InitInstanceMethod("init", "init");
 
 // symbols for CopyInstanceMethod
 define CopyRoot;
@@ -399,12 +399,12 @@ overload CopyInstanceMethod(static selector, static CopyImmutable)
 
 [Flag | Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
 overload CopyInstanceMethod(static Flag)
-    = CopyInstanceMethod(#"copyWithZone:", Flag);
+    = CopyInstanceMethod("copyWithZone:", Flag);
 
 [selector | Selector?(selector)]
 DeallocInstanceMethod(static selector) = [selector, deallocObject];
 
-overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
+overload DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
 
 
 [ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
@@ -425,7 +425,7 @@ overload ReaderInstanceMethod(static ivarName)
 
 
 defaultWriterSelector(ivarName)
-    = IdentifierConcat(#"set", IdentifierCapitalize(ivarName), #":");
+    = IdentifierConcat("set", IdentifierCapitalize(ivarName), ":");
 
 [ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(static ivarName, static writerSelector, T)
@@ -537,13 +537,13 @@ private regularClassInstanceMethods(..fields)
 
 private regularClassInitMethod() = ;
 overload regularClassInitMethod(..fields)
-    = InitInstanceMethod(regularClassInitMethodName(..fields), #"init",
+    = InitInstanceMethod(regularClassInitMethodName(..fields), "init",
         Id, ..mapValues(x => x.1, ..fields)
     );
 
 private regularClassInitMethodName(field1, ..fields)
-    = IdentifierConcat(#"initWith", IdentifierCapitalize(field1.0), #":",
-        ..mapValues(x => (x.0, #":"), ..fields)
+    = IdentifierConcat("initWith", IdentifierCapitalize(field1.0), ":",
+        ..mapValues(x => (x.0, ":"), ..fields)
     );
 
 private regularClassPropertyMethods(..fields)

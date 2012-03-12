@@ -11,7 +11,7 @@ main() {
 
     println(CStringRef(formattedString.UTF8String()));
 
-    var formattedString2 = NSString.stringWithFormat(format, NSSTR(#"Wii"));
+    var formattedString2 = NSString.stringWithFormat(format, NSSTR("Wii"));
 
     println(CStringRef(formattedString2.UTF8String()));
 

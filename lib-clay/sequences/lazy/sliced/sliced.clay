@@ -53,7 +53,7 @@ inline overload sliced(rvalue a:Sliced[A], first:C, last:C) {
 [A, I, J | RandomAccessSequence?(A) and Integer?(I) and Integer?(J)]
 inline overload sliced(forward a:A, first:I, last:J) {
     var b = begin(a);
-    assert[#boundsCheck](first >= 0 and first <= size(a) and last >= 0 and last <= size(a),
+    assert["boundsCheck"](first >= 0 and first <= size(a) and last >= 0 and last <= size(a),
         A, " sliced indices out of bounds");
     return sliced(a, b+first, b+last);
 }
@@ -66,7 +66,7 @@ inline overload slicedFrom(forward a:A, first:C) =
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
 inline overload slicedFrom(forward a:A, first:I) {
-    assert[#boundsCheck](first >= 0 and first <= size(a),
+    assert["boundsCheck"](first >= 0 and first <= size(a),
         A, " slicedFrom index out out of bounds");
     return slicedFrom(a, begin(a)+first);
 }
@@ -79,7 +79,7 @@ inline overload slicedUpto(forward a:A, last:C) =
 
 [A, I | RandomAccessSequence?(A) and Integer?(I)]
 inline overload slicedUpto(forward a:A, last:I) {
-    assert[#boundsCheck](last >= 0 and last <= size(a),
+    assert["boundsCheck"](last >= 0 and last <= size(a),
         A, " slicedUpto index out out of bounds");
     return slicedUpto(a, begin(a)+last);
 }

@@ -2,9 +2,9 @@ import identifiers.(ident);
 
 [T | Record?(T)]
 alias bind(this:T) {
-    return ident(#"ref ",
-        ..weaveValues(#", ", ..RecordFieldNames(T)),
-        #" = ..recordFields(", __ARG__ this, #");"
+    return ident("ref ",
+        ..weaveValues(", ", ..RecordFieldNames(T)),
+        " = ..recordFields(", __ARG__ this, ");"
     );
 }
 
@@ -30,7 +30,7 @@ main() {
     println(xaPlusXB(bar));
 
     if (true)
-        eval #"""println("bye"); return 0;""";
+        eval """println("bye"); return 0;""";
     else
         return 1;
 }

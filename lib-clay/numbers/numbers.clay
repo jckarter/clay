@@ -458,14 +458,14 @@ inline overload Imag80(s:S) = parseImag80(s);
 // octal()
 
 private define octalDigit;
-overload octalDigit(static #"0") = 0;
-overload octalDigit(static #"1") = 1;
-overload octalDigit(static #"2") = 2;
-overload octalDigit(static #"3") = 3;
-overload octalDigit(static #"4") = 4;
-overload octalDigit(static #"5") = 5;
-overload octalDigit(static #"6") = 6;
-overload octalDigit(static #"7") = 7;
+overload octalDigit(static "0") = 0;
+overload octalDigit(static "1") = 1;
+overload octalDigit(static "2") = 2;
+overload octalDigit(static "3") = 3;
+overload octalDigit(static "4") = 4;
+overload octalDigit(static "5") = 5;
+overload octalDigit(static "6") = 6;
+overload octalDigit(static "7") = 7;
 //
 [T,I |Integer?(T) and Identifier?(I)]
 private _octal(static T, static I)
@@ -481,7 +481,7 @@ overload octal(I) = octal(Int, I);
 //
 
 IntegerOverflowChecks?() = AllAssertionsEnabled?()
-    and AssertionEnabled?(#overflowChecks);
+    and AssertionEnabled?("overflowChecks");
 
 [A | Integer?(A) and IntegerOverflowChecks?()]
 inline overload add(a:A, b:A) : A
