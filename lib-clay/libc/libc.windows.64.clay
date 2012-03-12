@@ -10,3 +10,7 @@ alias random = rand;
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
 
+// these are macros
+
+inline isnan(x:Double) : Int = Int(x != x);
+inline isnanf(x:Float) : Int = Int(x != x);
