@@ -98,52 +98,36 @@ ExprPtr lookupCallable(int op) {
 }
 
 ExprPtr desugarVariadicOp(VariadicOpPtr x) {
-    std::cout<<"desuger variadic\n";
-    ExprPtr callable = lookupCallable(x->op.front());
-    std::cout<<x->op.front()<<"\n";
+    ExprPtr callable = lookupCallable(x->op);
     CallPtr call = new Call(callable, new ExprList());
-    
-    if (x->op.front() == OPERATOR) {
-        std::cout<<"OPERATOR\n";
+    if (x->op == OPERATOR) {
         call->parenArgs->add(x->exprs->exprs.front());
-        for (int i = 1; i < x->exprs->exprs.size(); ++i) {
-            if(i < x->ops.size()){
-                call->parenArgs->add(new IdentifierLiteral(new Identifier(x->ops[i])));
-            }
-            call->parenArgs->add(x->exprs->exprs[i]);
-        }
-    } 
-    else if(x->op.size() > 1) {
-        std::cout<<"op size > 1\n";
-        call->parenArgs->add(x->exprs->exprs.front());
-        for (int i = 1; i < x->exprs->exprs.size(); ++i) {
-            if(i < x->op.size())
-                call->parenArgs->add(lookupCallable(x->op[i]));
-            call->parenArgs->add(x->exprs->exprs[i]);
+        for (int i = 0; i < x->ops.size(); ++i) {
+            call->parenArgs->add(new IdentifierLiteral(new Identifier(x->ops[i])));
+            call->parenArgs->add(x->exprs->exprs[i+1]);
         }
     }
     else {
         call->parenArgs->add(x->exprs);  
     }
-    std::cout<<call->parenArgs->exprs<<"\n";
     call->location = x->location;
     return call.ptr();
 }
 
-ExprPtr updateOperatorExpr(int op) {
-    switch (op) {
-    case UPDATE_ADD         : return operator_expr_add();
-    case UPDATE_SUBTRACT    : return operator_expr_subtract();
-    case UPDATE_MULTIPLY    : return operator_expr_multiply();
-    case UPDATE_DIVIDE      : return operator_expr_divide();
-    case UPDATE_QUOTIENT    : return operator_expr_quotient();
-    case UPDATE_REMAINDER   : return operator_expr_remainder();
-    case UPDATE_CAT         : return operator_expr_cat();
-    default :
-        assert(false);
-        return NULL;
-    }
-}
+// ExprPtr updateOperatorExpr(int op) {
+//     switch (op) {
+//     case UPDATE_ADD         : return operator_expr_add();
+//     case UPDATE_SUBTRACT    : return operator_expr_subtract();
+//     case UPDATE_MULTIPLY    : return operator_expr_multiply();
+//     case UPDATE_DIVIDE      : return operator_expr_divide();
+//     case UPDATE_QUOTIENT    : return operator_expr_quotient();
+//     case UPDATE_REMAINDER   : return operator_expr_remainder();
+//     case UPDATE_CAT         : return operator_expr_cat();
+//     default :
+//         assert(false);
+//         return NULL;
+//     }
+// }
 
 
 static vector<IdentifierPtr> identV(IdentifierPtr x) {

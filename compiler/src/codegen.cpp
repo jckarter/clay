@@ -1105,7 +1105,7 @@ void codegenExpr(ExprPtr expr,
 
     case VARIADIC_OP : {
         VariadicOp *x = (VariadicOp *)expr.ptr();
-        if (x->op.front() == ADDRESS_OF) {
+        if (x->op == ADDRESS_OF) {
             PValuePtr pv = safeAnalyzeOne(x->exprs->exprs.front(), env);
             if (pv->isTemp)
                 error("can't take address of a temporary");
@@ -3626,7 +3626,7 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_indexUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(updateOperatorExpr(x->op));
+                call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(y->args);
                 call->parenArgs->add(x->right);
@@ -3638,7 +3638,7 @@ bool codegenStatement(StatementPtr stmt,
             CallPtr call = new Call(
                 operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
-            call->parenArgs->add(updateOperatorExpr(x->op));
+            call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
             call->parenArgs->add(y->expr);
             ValueHolderPtr vh = sizeTToValueHolder(y->index);
             call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
@@ -3652,7 +3652,7 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(updateOperatorExpr(x->op));
+                call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(new ObjectExpr(y->name.ptr()));
                 call->parenArgs->add(x->right);
@@ -3660,7 +3660,7 @@ bool codegenStatement(StatementPtr stmt,
             }
         }
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(updateOperatorExpr(x->op));
+        call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);

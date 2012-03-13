@@ -488,9 +488,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("^")) return false;
-    vector<int> ops;
-    ops.push_back(DEREFERENCE);
-    x = new VariadicOp(ops, new ExprList());
+    x = new VariadicOp(DEREFERENCE, new ExprList());
     x->location = location;
     return true;
 }
@@ -529,7 +527,7 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
     }
     case VARIADIC_OP : {
         VariadicOp *b = (VariadicOp *)a;
-        assert(b->op.front() == DEREFERENCE);
+        assert(b->op == DEREFERENCE);
         b->exprs->add(base);
         break;
     }
@@ -564,9 +562,7 @@ static bool addressOfExpr(ExprPtr &x) {
     if (!symbol("&")) return false;
     ExprPtr a;
     if (!suffixExpr(a)) return false;
-    vector<int> ops;
-    ops.push_back(ADDRESS_OF);
-    x = new VariadicOp(ops, new ExprList(a));
+    x = new VariadicOp(ADDRESS_OF, new ExprList(a));
     x->location = location;
     return true;
 }
@@ -599,9 +595,7 @@ static bool signExpr(ExprPtr &x) {
         return true;
     restore(p);
     if (!suffixExpr(b)) return false;
-    vector<int> ops;
-    ops.push_back(op);
-    x = new VariadicOp(ops, new ExprList(b));
+    x = new VariadicOp(op, new ExprList(b));
     x->location = location;
     return true;
 }
@@ -670,9 +664,7 @@ static bool operatorTail(VariadicOpPtr &x) {
         exprs->add(b);
         
     }
-    vector<int> opr;
-    opr.push_back(OPERATOR);
-    x = new VariadicOp(opr, ops ,exprs);
+    x = new VariadicOp(OPERATOR, ops ,exprs);
     x->location = location;
     return true;
 }
@@ -687,9 +679,6 @@ static bool operatorExpr(ExprPtr &x) {
             break;
         }
         y->exprs->insert(x);
-        std::cout<<y->op<<"\n";
-        std::cout<<y->ops<<"\n";
-        std::cout<<y->exprs<<"\n";
         x = y.ptr();
     }
     return true;
@@ -710,9 +699,7 @@ static bool notExpr(ExprPtr &x) {
     }
     ExprPtr y;
     if (!operatorExpr(y)) return false;
-    vector<int> ops;
-    ops.push_back(NOT);
-    x = new VariadicOp(ops, new ExprList(y));
+    x = new VariadicOp(NOT, new ExprList(y));
     x->location = location;
     return true;
 }
@@ -786,9 +773,7 @@ static bool ifExpr(ExprPtr &x) {
     if (!keyword("else")) return false;
     if (!expression(expr)) return false;
     exprs->add(expr);
-    vector<int> ops;
-    ops.push_back(IF_EXPR);
-    x = new VariadicOp(ops, exprs);
+    x = new VariadicOp(IF_EXPR, exprs);
     x->location = location;
     return true;
 }
@@ -1193,12 +1178,27 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
-static bool updateOp(int &op) {
+// static bool updateOp(int &op) {
+//     int p = save();
+//     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
+//     const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
+//                        UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, 
+//                        UPDATE_CAT};
+//     for (const char **a = s; *a; ++a) {
+//         restore(p);
+//         if (opsymbol(*a)) {
+//             int i = a - s;
+//             op = ops[i];
+//             return true;
+//         }
+//     }
+//     return false;
+// }
+
+static bool updateopstring(string &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, 
-                       UPDATE_CAT};
+    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (opsymbol(*a)) {
@@ -1214,14 +1214,27 @@ static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y, z;
     if (!expression(y)) return false;
-    int op;
-    if (!updateOp(op)) return false;
+    string op;
+    if (!updateopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
     x = new UpdateAssignment(op, y, z);
     x->location = location;
     return true;
 }
+
+// static bool updateAssignment(StatementPtr &x) {
+//     LocationPtr location = currentLocation();
+//     ExprPtr y, z;
+//     if (!expression(y)) return false;
+//     int op;
+//     if (!updateOp(op)) return false;
+//     if (!expression(z)) return false;
+//     if (!symbol(";")) return false;
+//     x = new UpdateAssignment(op, y, z);
+//     x->location = location;
+//     return true;
+// }
 
 static bool gotoStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();

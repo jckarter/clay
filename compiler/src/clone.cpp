@@ -136,7 +136,7 @@ ExprPtr clone(ExprPtr x)
 
     case VARIADIC_OP : {
         VariadicOp *y = (VariadicOp *)x.ptr();
-        out = new VariadicOp(y->op,clone(y->exprs));
+        out = new VariadicOp(y->op,y->ops,clone(y->exprs));
         break;
     }
 

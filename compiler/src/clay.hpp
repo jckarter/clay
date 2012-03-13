@@ -1181,13 +1181,13 @@ enum VariadicOpKind {
 };
 
 struct VariadicOp : public Expr {
-    vector<int> op;
+    int op;
     vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(const vector<int> &op, ExprListPtr exprs )
+    VariadicOp(int op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
-    VariadicOp(const vector<int> &op, const vector<string> &ops, ExprListPtr exprs )
+    VariadicOp(int op, const vector<string> &ops, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), ops(ops), exprs(exprs) {}
 
 };
@@ -1429,20 +1429,20 @@ struct InitAssignment : public Statement {
           right(new ExprList(rightExpr)) {}
 };
 
-enum UpdateOpKind {
-    UPDATE_ADD,
-    UPDATE_SUBTRACT,
-    UPDATE_MULTIPLY,
-    UPDATE_DIVIDE,
-    UPDATE_QUOTIENT,
-    UPDATE_REMAINDER,
-    UPDATE_CAT
-};
+// enum UpdateOpKind {
+//     UPDATE_ADD,
+//     UPDATE_SUBTRACT,
+//     UPDATE_MULTIPLY,
+//     UPDATE_DIVIDE,
+//     UPDATE_QUOTIENT,
+//     UPDATE_REMAINDER,
+//     UPDATE_CAT
+// };
 
 struct UpdateAssignment : public Statement {
-    int op;
+    string op;
     ExprPtr left, right;
-    UpdateAssignment(int op, ExprPtr left, ExprPtr right)
+    UpdateAssignment(string op, ExprPtr left, ExprPtr right)
         : Statement(UPDATE_ASSIGNMENT), op(op), left(left),
           right(right) {}
 };
