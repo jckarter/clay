@@ -651,7 +651,8 @@ static bool operatorOp(string &op) {
         restore(p);
     }
     restore(p);
-    return opstring(op);
+    bool r = opstring(op);
+    return r;
 }
 
 
@@ -680,6 +681,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     }
     vector<int> opr;
     opr.push_back(OPERATOR);
+    std::cout<<"ops: "<<ops<<"\n";
     x = new VariadicOp(opr, ops ,exprs);
     x->location = location;
     return true;
@@ -871,6 +873,7 @@ static bool lambdaExprBody(StatementPtr &x) {
 
 static bool lambdaArrow(bool &captureByRef) {
     int p = save();
+    std::cout<<"lambdaArrow\n";
     if (opsymbol("->")) {
         captureByRef = true;
         return true;
@@ -897,8 +900,11 @@ static bool lambda(ExprPtr &x) {
     FormalArgPtr formalVarArg;
     bool captureByRef;
     StatementPtr body;
+    std::cout<<"lambda\n";
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;
+    std::cout<<"lambda1\n";
     if (!lambdaArrow(captureByRef)) return false;
+    std::cout<<"lambda2\n";
     if (!lambdaBody(body)) return false;
     x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
     x->location = location;
@@ -913,6 +919,7 @@ static bool lambda(ExprPtr &x) {
 
 static bool unpack(ExprPtr &x) {
     LocationPtr location = currentLocation();
+    std::cout<<"unpack\n";
     if (!ellipsis()) return false;
     ExprPtr y;
     if (!expression(y)) return false;
@@ -962,15 +969,18 @@ static bool pairExpr(ExprPtr &x) {
 static bool expression(ExprPtr &x) {
     LocationPtr startLocation = currentLocation();
     int p = save();
+    std::cout<<"expression\n";
     if (restore(p), lambda(x)) goto success;
     if (restore(p), pairExpr(x)) goto success;
     if (restore(p), orExpr(x)) goto success;
     if (restore(p), ifExpr(x)) goto success;
     if (restore(p), unpack(x)) goto success;
     if (restore(p), staticExpr(x)) goto success;
+    std::cout<<"expression false\n";
     return false;
 
 success:
+    std::cout<<"expression success\n";
     x->startLocation = startLocation;
     x->endLocation = currentLocation();
     return true;
