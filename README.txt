@@ -60,7 +60,7 @@ To run the test suite
 
 To compile a clay source file run
 
-    clay ../test/hello.clay
+    clay ../examples/hello.clay
 
 The generated binary
 
