@@ -390,13 +390,13 @@ overload externalClass(#name, #Super) = recordWithProperties(
     ["__handle__", ObjectHandle]
 );
 
-record ExternalClassNotFound (name: StringConstant);
+record ExternalClassNotFound (name: StringLiteralRef);
 instance Exception (ExternalClassNotFound);
 
-_objcExternalClassMake(name: StringConstant) {
+private _objcExternalClassMake(name) {
     var handle = objc_getClass(cstring(name));
     if (null?(handle))
-        throw ExternalClassNotFound(name);
+        throw ExternalClassNotFound(StringLiteralRef(name));
     return handle;
 }
 
@@ -472,13 +472,13 @@ newExternalClass(#Super,
     ["__handle__", ObjectHandle]
 );
 
-record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
+record NewClassCouldNotBeCreated (module: StringLiteralRef, name: StringLiteralRef);
 instance Exception (NewClassCouldNotBeCreated);
 
-record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
+record NewClassCouldNotAddIvar (module: StringLiteralRef, name: StringLiteralRef, ivar: StringLiteralRef);
 instance Exception (NewClassCouldNotAddIvar);
 
-record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
+record NewClassCouldNotAddMethod (module: StringLiteralRef, name: StringLiteralRef, selector: CStringRef);
 instance Exception (NewClassCouldNotAddMethod);
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
@@ -526,10 +526,10 @@ private instanceMethodImp(#T, #sel, fn)
     );
 
 private record ObjcNewClassInstanceVar(
-    name: StringConstant,
+    name: StringLiteralRef,
     size: SizeT,
     alignment: UInt8,
-    typeEncoding: StringConstant,
+    typeEncoding: StringLiteralRef,
 );
 
 private objcNewClassInstanceVar(ivarPair) {
@@ -552,7 +552,7 @@ private var objcNewClassInstanceVarsTable[T]
 private record ObjcNewClassMethod (
     selector: SelectorHandle,
     imp: RawPointer,
-    typeEncoding: StringConstant,
+    typeEncoding: StringLiteralRef,
 );
 
 private objcNewClassClassMethod(T, classMethod) {
@@ -586,8 +586,8 @@ private var objcNewClassInstanceMethodsTable[T]
     );
 
 private _objcNewClassAddMethods(
-    moduleName: StringConstant,
-    symbolName: StringConstant,
+    moduleName: StringLiteralRef,
+    symbolName: StringLiteralRef,
     handle: ClassHandle,
     methodsBegin: Pointer[ObjcNewClassMethod],
     methodsEnd: Pointer[ObjcNewClassMethod]
@@ -604,9 +604,9 @@ private _objcNewClassAddMethods(
 
 private _objcNewClassMake(
     super: ClassHandle,
-    className: StringConstant,
-    symbolName: StringConstant,
-    moduleName: StringConstant,
+    className: StringLiteralRef,
+    symbolName: StringLiteralRef,
+    moduleName: StringLiteralRef,
     ivarsBegin: Pointer[ObjcNewClassInstanceVar],
     ivarsEnd: Pointer[ObjcNewClassInstanceVar],
     classMethodsBegin: Pointer[ObjcNewClassMethod],

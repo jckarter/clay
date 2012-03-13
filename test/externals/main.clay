@@ -8,9 +8,9 @@ external external_sq(ex:ExternalException, inX:Pointer[Double], outY:Pointer[Dou
 
 sq(x) = callExternal(external_sq, x);
 
-impl_thrower(x:StringConstant) { error(x); }
+impl_thrower(x:StringLiteralRef) { error(x); }
 
-external external_thrower(ex:ExternalException, inX:Pointer[StringConstant]) {
+external external_thrower(ex:ExternalException, inX:Pointer[StringLiteralRef]) {
     wrapAsExternal(impl_thrower, #1, ex, inX);
 }
 
@@ -19,7 +19,7 @@ thrower(x) { callExternal(external_thrower, x); }
 main() {
     println(sq(5.0));
     try {
-        thrower("buh");
+        thrower(StringLiteralRef("buh"));
     } catch (ex) {
         println("caught ", ex);
     }

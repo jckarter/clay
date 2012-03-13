@@ -92,7 +92,7 @@ record SubString2 = newClass("ClaySubString2", NSString,
 
 record SubSubString = newExternalClass(SubString1,
     InstanceVars(
-        ["bar", StringConstant],
+        ["bar", StringLiteralRef],
     ),
     ClassMethods(),
     InstanceMethods()
@@ -100,7 +100,7 @@ record SubSubString = newExternalClass(SubString1,
 
 record SubSubSubString = newClass(SubSubString,
     InstanceVars(
-        ["bar", StringConstant],
+        ["bar", StringLiteralRef],
     ),
     ClassMethods(
         ["classVersion", (class) => 8],
@@ -430,14 +430,14 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEqual(test, "SubString1 ivar "foo"", Int, ClassIvarType(SubString1, "foo"));
         expectEqual(test, "SubString2 ivar "foo"", Double, ClassIvarType(SubString2, "foo"));
         expectEqual(test, "SubSubString ivar "foo"", Int, ClassIvarType(SubSubString, "foo"));
-        expectEqual(test, "SubSubString ivar "bar"", StringConstant,
+        expectEqual(test, "SubSubString ivar "bar"", StringLiteralRef,
             ClassIvarType(SubSubString, "bar")
         );
 
         expectType(test, "SubString1^.foo", Int, nil(SubString1)^.foo);
         expectType(test, "SubString2^.foo", Double, nil(SubString2)^.foo);
         expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
-        expectType(test, "SubSubString^.bar", StringConstant, nil(SubSubString)^.bar);
+        expectType(test, "SubSubString^.bar", StringLiteralRef, nil(SubSubString)^.bar);
     }),
     TestCase("special selectors", test => {
         expectTrue(test, "alloc", AllocatingSelector?("alloc"));

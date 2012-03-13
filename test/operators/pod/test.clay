@@ -28,7 +28,7 @@ main() = testMain(TestSuite("PODType?", array(
         expectPOD(test, true,  Union[Int, Float]);
 
         expectPOD(test, true,  Char);
-        expectPOD(test, true,  StringConstant);
+        expectPOD(test, true,  StringLiteralRef);
         expectPOD(test, false, SharedPointer[Int]);
         expectPOD(test, false, UniquePointer[Int]);
         expectPOD(test, false, Vector[Int]);

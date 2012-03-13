@@ -1,9 +1,9 @@
-variant Foo (Int, Double, StringConstant);
+variant Foo (Int, Double, StringLiteralRef);
 
 foo(x) {
     match(x): (i:Int) => { println("I saw an Int ", i); }
         :: (f:Double) => { println("I saw a Double ", f); }
-        :: (s:StringConstant) => { println("I saw a String ", s); }
+        :: (s:StringLiteralRef) => { println("I saw a string ", s); }
 }
 
 bar(x) {

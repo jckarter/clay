@@ -1,4 +1,4 @@
-variant V(Int, StringConstant);
+variant V(Int, StringLiteralRef);
 
 
 [C] ignore (c:C, ..T)
@@ -23,5 +23,5 @@ test(m : V)
 main()
 {
     test(V(5));
-    test(V(":)"));
+    test(V(StringLiteralRef(":)")));
 }

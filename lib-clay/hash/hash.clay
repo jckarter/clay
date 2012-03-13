@@ -102,7 +102,7 @@ inline overload hash(x:SharedPointer[T]) = hash(x.ptr);
 //
 
 inline overload hash(a:String) = hashSequence(a);
-inline overload hash(a:StringConstant) = hashSequence(a);
+inline overload hash(a:StringLiteralRef) = hashSequence(a);
 
 
 
@@ -153,4 +153,7 @@ overload hash(x:T) = hash(referencePtr(x));
 //
 
 [x]
-overload hash(s:Static[x]) = SizeT(0);
+inline overload hash(s:Static[x]) = SizeT(0);
+
+[x | StringLiteral?(x)]
+inline overload hash(#x) = hashSequence(iterator(x));

@@ -258,7 +258,7 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], #V)
 private MarshalableSequence?(S)
     = SequenceContainer?(S) and Marshalable?(SequenceElementType(S));
 
-overload MarshalableSequence?(#StringConstant) = true;
+overload MarshalableSequence?(#StringLiteralRef) = true;
 
 private UnmarshalAsVectorSequence?(S)
     = MarshalableSequence?(S) and not CallDefined?(push, S, SequenceElementType(S));

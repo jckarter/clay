@@ -11,7 +11,7 @@ captured_catch_type(T, v) = () => {
     }
 };
 
-record OtherException ( what: StringConstant );
+record OtherException (what: StringLiteralRef);
 instance Exception (OtherException);
 overload printTo(stream, x:OtherException) {
     printTo(stream, "<OtherException ", x.what, ">");
@@ -19,6 +19,6 @@ overload printTo(stream, x:OtherException) {
 
 main() {
     captured_catch_type(Int, 0)();
-    captured_catch_type(Int, OtherException("blast core frogblasted"))();
-    captured_catch_type(OtherException, OtherException("splines reticulated"))();
+    captured_catch_type(Int, OtherException(StringLiteralRef("blast core frogblasted")))();
+    captured_catch_type(OtherException, OtherException(StringLiteralRef("splines reticulated")))();
 }
