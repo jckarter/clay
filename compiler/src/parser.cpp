@@ -687,6 +687,9 @@ static bool operatorExpr(ExprPtr &x) {
             break;
         }
         y->exprs->insert(x);
+        std::cout<<y->op<<"\n";
+        std::cout<<y->ops<<"\n";
+        std::cout<<y->exprs<<"\n";
         x = y.ptr();
     }
     return true;
