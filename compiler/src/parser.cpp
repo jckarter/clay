@@ -17,10 +17,12 @@ static bool next(TokenPtr &x) {
 }
 
 static int save() {
+    std::cout<<"save: "<<position<<"\n";
     return position;
 }
 
 static void restore(int p) {
+    std::cout<<"rest: "<<p<<"\n";
     position = p;
 }
 
@@ -85,6 +87,7 @@ static bool identifier(IdentifierPtr &x) {
     if (!next(t) || (t->tokenKind != T_IDENTIFIER))
         return false;
     x = new Identifier(t->str);
+    std::cout<<"id: "<<t->str<<"\n";
     x->location = location;
     return true;
 }
@@ -639,17 +642,13 @@ static bool operatorOp(string &op) {
     int p = save();
     
     const char *s[] = {
-        "<--", "-->", "..", "=>", "->",
-        "++=",
-        "::", "+=", "-=", "*=", "/=", "\\=", "%=",
-        "&", "^", "|",
-        "(", ")", "[", "]", "{", "}",
-        ":", ";", ",", ".", "#",
+        "<--", "-->", "=>", "->", "++=",
+        "+=", "-=", "*=", "/=", "\\=", "%=",
         NULL
     };
     for (const char **a = s; *a; ++a) {
-        restore(p);
         if (opsymbol(*a)) return false;
+        restore(p);
     }
     restore(p);
     return opstring(op);
@@ -663,18 +662,15 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprPtr b;
     string op;
     int p = save();
-    std::cout<<"loc: "<<location<<"\n";
     if (!operatorOp(op)) return false;
-    std::cout<<"parsing operator\n";
     restore(p);
     while (true) {
-        int p = save();
+        p = save();
         if (!operatorOp(op)) {
             restore(p);
             break;
         }
         ops.push_back(op);
-        p = save();
         if (!prefixExpr(b)) {
             restore(p);
             break;
