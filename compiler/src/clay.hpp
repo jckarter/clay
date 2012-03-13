@@ -1164,20 +1164,7 @@ enum VariadicOpKind {
     MINUS,
     NOT,
     OPERATOR,
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    QUOTIENT,
-    REMAINDER,
-    CAT,
     IF_EXPR,
-    EQUALS,
-    NOT_EQUALS,
-    LESSER,
-    LESSER_EQUALS,
-    GREATER,
-    GREATER_EQUALS
 };
 
 struct VariadicOp : public Expr {
@@ -1428,16 +1415,6 @@ struct InitAssignment : public Statement {
           left(new ExprList(leftExpr)),
           right(new ExprList(rightExpr)) {}
 };
-
-// enum UpdateOpKind {
-//     UPDATE_ADD,
-//     UPDATE_SUBTRACT,
-//     UPDATE_MULTIPLY,
-//     UPDATE_DIVIDE,
-//     UPDATE_QUOTIENT,
-//     UPDATE_REMAINDER,
-//     UPDATE_CAT
-// };
 
 struct UpdateAssignment : public Statement {
     string op;

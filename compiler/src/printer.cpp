@@ -177,27 +177,6 @@ static void printExpr(ostream &out, const Expr *x) {
         case OPERATOR :
             out << "OPERATOR";
             break;
-        case ADD :
-            out << "ADD";
-            break;
-        case SUBTRACT :
-            out << "SUBTRACT";
-            break;
-        case MULTIPLY :
-            out << "MULTIPLY";
-            break;
-        case DIVIDE :
-            out << "DIVIDE";
-            break;
-        case REMAINDER :
-            out << "REMAINDER";
-            break;
-        case CAT :
-            out << "CAT";
-            break;
-        case QUOTIENT :
-            out << "QUOTIENT";
-            break;
         case IF_EXPR :
             out << "IF_EXPR";
             break;

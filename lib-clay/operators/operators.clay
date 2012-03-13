@@ -11,25 +11,12 @@ public import __operators__.(
     assign,
     updateAssign,
 
-    equals?,
-    notEquals?,
     case?,
-    lesser?,
-    lesserEquals?,
-    greater?,
-    greaterEquals?,
 
     plus,
     minus,
 
     operator,
-    add,
-    subtract,
-    multiply,
-    divide,
-    quotient,
-    remainder,
-    cat,
 
     dereference,
     call,
@@ -51,6 +38,21 @@ public import __operators__.(
 
     ifExpression,
 );
+
+define equals?;
+define notEquals?;
+define lesser?;
+define lesserEquals?;
+define greater?;
+define greaterEquals?;
+
+define add;
+define subtract;
+define multiply;
+define divide;
+define quotient;
+define remainder;
+define cat;
 
 define inc;
 define dec;

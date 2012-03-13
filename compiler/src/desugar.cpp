@@ -49,47 +49,8 @@ ExprPtr lookupCallable(int op) {
     case OPERATOR :
         callable = operator_expr_operator();
         break;
-    case ADD :
-        callable = operator_expr_add();
-        break;
-    case SUBTRACT :
-        callable = operator_expr_subtract();
-        break;
-    case MULTIPLY :
-        callable = operator_expr_multiply();
-        break;
-    case DIVIDE :
-        callable = operator_expr_divide();
-        break;
-    case REMAINDER :
-        callable = operator_expr_remainder();
-        break;
-    case CAT :
-        callable = operator_expr_cat();
-        break;
-    case QUOTIENT :
-        callable = operator_expr_quotient();
-        break;
     case IF_EXPR :
         callable = operator_expr_ifExpression();
-        break;
-    case EQUALS :
-        callable = operator_expr_equalsP();
-        break;
-    case NOT_EQUALS :
-        callable = operator_expr_notEqualsP();
-        break;
-    case LESSER :
-        callable = operator_expr_lesserP();
-        break;
-    case LESSER_EQUALS :
-        callable = operator_expr_lesserEqualsP();
-        break;
-    case GREATER :
-        callable = operator_expr_greaterP();
-        break;
-    case GREATER_EQUALS :
-        callable = operator_expr_greaterEqualsP();
         break;
     default :
         assert(false);
@@ -113,21 +74,6 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     call->location = x->location;
     return call.ptr();
 }
-
-// ExprPtr updateOperatorExpr(int op) {
-//     switch (op) {
-//     case UPDATE_ADD         : return operator_expr_add();
-//     case UPDATE_SUBTRACT    : return operator_expr_subtract();
-//     case UPDATE_MULTIPLY    : return operator_expr_multiply();
-//     case UPDATE_DIVIDE      : return operator_expr_divide();
-//     case UPDATE_QUOTIENT    : return operator_expr_quotient();
-//     case UPDATE_REMAINDER   : return operator_expr_remainder();
-//     case UPDATE_CAT         : return operator_expr_cat();
-//     default :
-//         assert(false);
-//         return NULL;
-//     }
-// }
 
 
 static vector<IdentifierPtr> identV(IdentifierPtr x) {
