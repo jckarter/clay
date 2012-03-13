@@ -17,12 +17,10 @@ static bool next(TokenPtr &x) {
 }
 
 static int save() {
-    std::cout<<"save: "<<position<<"\n";
     return position;
 }
 
 static void restore(int p) {
-    std::cout<<"rest: "<<p<<"\n";
     position = p;
 }
 
@@ -43,7 +41,6 @@ static bool opstring(string &op) {
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
     op = t->str;
-    std::cout<<"opstring: "<<op<<"\n";
     return true;
 }
 
@@ -51,7 +48,6 @@ static bool opsymbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
-    std::cout<<"opsymbol: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -59,7 +55,6 @@ static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
         return false;
-    std::cout<<"symbol: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -67,7 +62,6 @@ static bool keyword(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_KEYWORD))
         return false;
-    std::cout<<"keyword: "<<t->str<<","<<s<<"\n";
     return t->str == s;
 }
 
@@ -87,7 +81,6 @@ static bool identifier(IdentifierPtr &x) {
     if (!next(t) || (t->tokenKind != T_IDENTIFIER))
         return false;
     x = new Identifier(t->str);
-    std::cout<<"id: "<<t->str<<"\n";
     x->location = location;
     return true;
 }
@@ -642,7 +635,7 @@ static bool operatorOp(string &op) {
     int p = save();
     
     const char *s[] = {
-        "<--", "-->", "=>", "->", "++=",
+        "<--", "-->", "=>", "->", "=","++=",
         "+=", "-=", "*=", "/=", "\\=", "%=",
         NULL
     };
@@ -650,9 +643,7 @@ static bool operatorOp(string &op) {
         if (opsymbol(*a)) return false;
         restore(p);
     }
-    restore(p);
-    bool r = opstring(op);
-    return r;
+    return opstring(op);
 }
 
 
@@ -681,7 +672,6 @@ static bool operatorTail(VariadicOpPtr &x) {
     }
     vector<int> opr;
     opr.push_back(OPERATOR);
-    std::cout<<"ops: "<<ops<<"\n";
     x = new VariadicOp(opr, ops ,exprs);
     x->location = location;
     return true;
@@ -873,7 +863,6 @@ static bool lambdaExprBody(StatementPtr &x) {
 
 static bool lambdaArrow(bool &captureByRef) {
     int p = save();
-    std::cout<<"lambdaArrow\n";
     if (opsymbol("->")) {
         captureByRef = true;
         return true;
@@ -900,11 +889,8 @@ static bool lambda(ExprPtr &x) {
     FormalArgPtr formalVarArg;
     bool captureByRef;
     StatementPtr body;
-    std::cout<<"lambda\n";
     if (!lambdaArgs(formalArgs, formalVarArg)) return false;
-    std::cout<<"lambda1\n";
     if (!lambdaArrow(captureByRef)) return false;
-    std::cout<<"lambda2\n";
     if (!lambdaBody(body)) return false;
     x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
     x->location = location;
@@ -919,7 +905,6 @@ static bool lambda(ExprPtr &x) {
 
 static bool unpack(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    std::cout<<"unpack\n";
     if (!ellipsis()) return false;
     ExprPtr y;
     if (!expression(y)) return false;
@@ -969,18 +954,15 @@ static bool pairExpr(ExprPtr &x) {
 static bool expression(ExprPtr &x) {
     LocationPtr startLocation = currentLocation();
     int p = save();
-    std::cout<<"expression\n";
     if (restore(p), lambda(x)) goto success;
     if (restore(p), pairExpr(x)) goto success;
     if (restore(p), orExpr(x)) goto success;
     if (restore(p), ifExpr(x)) goto success;
     if (restore(p), unpack(x)) goto success;
     if (restore(p), staticExpr(x)) goto success;
-    std::cout<<"expression false\n";
     return false;
 
 success:
-    std::cout<<"expression success\n";
     x->startLocation = startLocation;
     x->endLocation = currentLocation();
     return true;

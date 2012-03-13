@@ -120,6 +120,7 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     else {
         call->parenArgs->add(x->exprs);  
     }
+    std::cout<<call->parenArgs<<"\n";
     call->location = x->location;
     return call.ptr();
 }

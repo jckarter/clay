@@ -24,8 +24,6 @@ void tokenize(SourcePtr source, int offset, int length,
             tokens.push_back(token);
         }
     }
-    std::cout<<tokens<<"\n";
- 
     cleanupLexer();
 }
 
