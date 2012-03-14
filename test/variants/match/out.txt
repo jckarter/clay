@@ -1,6 +1,6 @@
 I saw an Int 2
 I saw a Double 3
-I saw a String four
+I saw a string four
 
 I saw an Int 2
 I saw a non-Int 3

@@ -12,5 +12,5 @@ main() {
         println("zero");
     }
 
-    println(1, ifNonzero(1): x -> " is not zero" :: () -> " is zero");
+    println(1, ifNonzero(1): x -> StringLiteralRef(" is not zero") :: () -> StringLiteralRef(" is zero"));
 }

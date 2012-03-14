@@ -235,7 +235,7 @@ overload unmarshalVariantMember(
                 begin, end, Type(staticIndex(repr.data, #n))
             );
     else
-        unmarshalVariantMember(context, begin, end, repr, #n+1);
+        unmarshalVariantMember(context, begin, end, repr, #(n+1));
 }
 
 

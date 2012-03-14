@@ -1,6 +1,6 @@
 IdentifierChars(identifier)
     = ..mapValues(
-        (#n) => stringLiteralByteSlice(identifier, n, #(n+1)),
+        n => stringLiteralByteSlice(identifier, n, #(unwrapStatic(n)+1)),
         ..staticIntegers(#size(identifier))
     );
 

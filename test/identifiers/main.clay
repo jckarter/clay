@@ -2,9 +2,9 @@ import identifiers.*;
 
 test(a) {
     println(a);
-    var b = IdentifierSlice(a, #0, #3);
+    var b = stringLiteralByteSlice(a, #0, #3);
     println(b);
-    var c = IdentifierSlice(a, #3, #size(a));
+    var c = stringLiteralByteSlice(a, #3, #size(a));
     println(c);
     var d = b ++ c;
     println(d);

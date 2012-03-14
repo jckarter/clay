@@ -193,7 +193,7 @@ overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValue
 
 [n, value, other]
 private _valueIndex(#n, #value, #other, ..etc)
-    = _valueIndex(#n+1, #value, ..etc);
+    = _valueIndex(#(n+1), #value, ..etc);
 [n, value]
 overload _valueIndex(#n, #value, #value, ..etc) = n;
 [value]

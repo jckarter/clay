@@ -62,15 +62,15 @@ test(f, a, b) {
 
 floatStr(x) {
     if (x == 0.0)
-        return "0.0";
+        return StringLiteralRef("0.0");
     if (x == 1.0)
-        return "1.0";
+        return StringLiteralRef("1.0");
     if (x == 1.0/0.0)
-        return "Inf";
+        return StringLiteralRef("Inf");
     if (x == -1.0/0.0)
-        return "-Inf";
+        return StringLiteralRef("-Inf");
     if (x != x)
-        return "NaN";
+        return StringLiteralRef("NaN");
     error("unknown value: ", x);
-    return "";
+    return StringLiteralRef();
 }

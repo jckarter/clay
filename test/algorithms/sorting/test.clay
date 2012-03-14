@@ -25,7 +25,7 @@ main() = testMain(
       sortBy(baseSequence, comparing(size));
      
       var isFirst = true;
-      var last = "ignore me";
+      var last = StringLiteralRef("ignore me");
 
       for(x in baseSequence){
         if(isFirst){

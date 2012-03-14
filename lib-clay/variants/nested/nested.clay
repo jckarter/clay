@@ -42,7 +42,7 @@ private VariantNestingPaths3(Vs, M, Prefix, #i) {
     alias V = staticIndex(Vs, #i);
     alias NewPrefix = Tuple(..unpack(Prefix), V);
     return ..VariantNestingPaths2(V, M, NewPrefix),
-           ..VariantNestingPaths3(Vs, M, Prefix, #i+1);
+           ..VariantNestingPaths3(Vs, M, Prefix, #(i+1));
 }
 
 [T,i | i == TupleElementCount(T)]

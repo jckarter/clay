@@ -50,7 +50,7 @@ define convertToTypes;
 [i]
 overload convertToTypes(types, #i, forward first, forward ..rest) {
     alias T = staticIndex(types, #i);
-    return forward convertToType(T, first), ..convertToTypes(types, #i+1, ..rest);
+    return forward convertToType(T, first), ..convertToTypes(types, #(i+1), ..rest);
 }
 
 [T, i | (i == TupleElementCount(T))]

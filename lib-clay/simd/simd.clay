@@ -92,7 +92,7 @@ private define unpackElements;
 
 [T,n,i]
 inline overload unpackElements(a:Vec[T,n], #i) =
-    a[i], ..unpackElements(a, #i+1);
+    a[i], ..unpackElements(a, #(i+1));
 
 [T,n,i | i == n]
 inline overload unpackElements(a:Vec[T,n], #i) = ;

@@ -218,6 +218,6 @@ overload hasNext?(giter: StaticGroupIterator[I, n]) = hasNext?(giter.iter);
 [I, n]
 overload next(giter: StaticGroupIterator[I, n]) = ..nextStaticGroup(giter.iter, #n);
 
-[n | n > 0] private nextStaticGroup(iter, #n) = forward next(iter), ..nextStaticGroup(iter, #n-1);
+[n | n > 0] private nextStaticGroup(iter, #n) = forward next(iter), ..nextStaticGroup(iter, #(n-1));
 overload nextStaticGroup(iter, #0) = ;
 
