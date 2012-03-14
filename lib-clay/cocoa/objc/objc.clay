@@ -33,7 +33,7 @@ private var objcConstantString[value]
         Class(&__CFConstantStringClassReference),
         CFConstantStringID,
         cstring(StaticName(value)),
-        IdentifierSize(value)
+        size(value)
     );
 
 

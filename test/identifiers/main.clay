@@ -4,7 +4,7 @@ test(a) {
     println(a);
     var b = IdentifierSlice(a, #0, #3);
     println(b);
-    var c = IdentifierSlice(a, #3, #IdentifierSize(a));
+    var c = IdentifierSlice(a, #3, #size(a));
     println(c);
     var d = IdentifierConcat(b, c);
     println(d);
