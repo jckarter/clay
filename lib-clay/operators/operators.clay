@@ -345,15 +345,30 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 //  use left associativity with precedence *,/,\,%,-,+,++, 
 //
 
+
 overload operator(forward ..args)
-    = operatorCompare(
-        ..operatorCat(
-            ..operatorAdd(
-                ..operatorSub(
-                    ..operatorRem(
-                        ..operatorQuo(
-                            ..operatorDiv(
-                                ..operatorMul(..args))))))));
+    = operatorCompare(..binaryOp(#"++",cat,..binaryOp(#"+",add,..binaryOp(#"-",subtract,..binaryOp(#"%",remainder,..binaryOp(#"\\",quotient,
+        ..binaryOp(#"/",divide,..binaryOp(#"*",multiply,..args))))))));
+
+
+[OP,F,T]
+binaryOp(static OP,static F,forward a,static T,forward ..args)
+    = forward a,T,..binaryOp(OP,F,..args);
+[OP,F]
+overload binaryOp(static OP,static F,forward a) = forward a;
+
+[OP,F]
+overload binaryOp(static OP,static F,forward a,static OP,forward b, forward ..args)
+    = forward ..binaryOp(OP,F,F(a,b), ..args);
+[OP,F]
+overload binaryOp(static OP,static F,forward a,static OP,forward b)
+    = forward F(a,b);
+[OP,F]
+overload binaryOp(static OP,static F,forward a,static F,forward b, forward ..args)
+    = forward ..binaryOp(OP,F,F(a,b), ..args);
+[OP,F]
+overload binaryOp(static OP, static F,forward a,static F,forward b)
+    = forward F(a,b);
 
 
 compare(static #"==", a, b) : Bool = equals?(a,b);
@@ -374,76 +389,6 @@ operatorCompare(forward a, fn, forward b, forward ..args)
     = forward compare(fn, a, b) and operatorCompare(b, ..args);
 overload operatorCompare(forward a, fn, forward b) = forward compare(fn, a, b);
 overload operatorCompare(forward a) = forward a;
-
-operatorCat(forward a,fn,forward ..args) = forward a,fn,..operatorCat(..args);
-overload operatorCat(forward a,fn, forward b) = forward a,fn,b;
-overload operatorCat(forward a,static #"++",forward b, forward ..args)
-    = forward ..operatorCat(cat(a,b), ..args);
-overload operatorCat(forward a,static #"++",forward b) = forward cat(a,b);
-overload operatorCat(forward a,static cat,forward b, forward ..args)
-    = forward ..operatorCat(cat(a,b), ..args);
-overload operatorCat(forward a,static cat,forward b) = forward cat(a,b);
-overload operatorCat(forward a) = forward a;
-
-operatorAdd(forward a,fn,forward ..args) = forward a,fn,..operatorAdd(..args);
-overload operatorAdd(forward a,fn, forward b) = forward a,fn,b;
-overload operatorAdd(forward a,static #"+",forward b, forward ..args)
-    = forward ..operatorAdd(add(a,b), ..args);
-overload operatorAdd(forward a,static #"+",forward b) = forward add(a,b);
-overload operatorAdd(forward a,static add,forward b, forward ..args)
-    = forward ..operatorAdd(add(a,b), ..args);
-overload operatorAdd(forward a,static add,forward b) = forward add(a,b);
-overload operatorAdd(forward a) = forward a;
-
-operatorSub(forward a,fn,forward ..args) = forward a,fn,..operatorSub(..args);
-overload operatorSub(forward a,fn,forward b) = forward a,fn,b;
-overload operatorSub(forward a,static #"-",forward b,forward ..args)
-    = forward ..operatorSub(subtract(a,b), ..args);
-overload operatorSub(forward a,static #"-",forward b) = forward subtract(a,b);
-overload operatorSub(forward a,static subtract,forward b,forward ..args)
-    = forward ..operatorSub(subtract(a,b), ..args);
-overload operatorSub(forward a,static subtract,forward b) = forward subtract(a,b);
-overload operatorSub(forward a) = forward a;
-
-operatorRem(forward a,fn,forward ..args) = forward a,fn,..operatorRem(..args);
-overload operatorRem(forward a,fn,forward b) = forward a,fn,b;
-overload operatorRem(forward a,static #"%",forward b,forward ..args)
-    = forward ..operatorRem(remainder(a,b), ..args);
-overload operatorRem(forward a,static #"%",forward b) = forward remainder(a,b);
-overload operatorRem(forward a,static remainder,forward b,forward ..args)
-    = forward ..operatorRem(remainder(a,b), ..args);
-overload operatorRem(forward a,static remainder,forward b) = forward remainder(a,b);
-overload operatorRem(forward a) = forward a;
-
-operatorQuo(forward a,fn,forward ..args) = forward a,fn,..operatorQuo(..args);
-overload operatorQuo(forward a,fn,forward b) = forward a,fn,b;
-overload operatorQuo(forward a,static #"\\",forward b,forward ..args)
-    = forward ..operatorQuo(quotient(a,b), ..args);
-overload operatorQuo(forward a,static #"\\",forward b) = forward quotient(a,b);
-overload operatorQuo(forward a,static quotient,forward b,forward ..args)
-    = forward ..operatorQuo(quotient(a,b), ..args);
-overload operatorQuo(forward a,static quotient,forward b) = forward quotient(a,b);
-overload operatorQuo(forward a) = forward a;
-
-operatorDiv(forward a,fn,forward ..args) = forward a,fn,..operatorDiv(..args);
-overload operatorDiv(forward a,fn,forward b) = forward a,fn,b;
-overload operatorDiv(forward a,static #"/",forward b,forward ..args)
-    = forward ..operatorDiv(divide(a,b), ..args);
-overload operatorDiv(forward a,static #"/",forward b) = forward divide(a,b);
-overload operatorDiv(forward a,static divide,forward b,forward ..args)
-    = forward ..operatorDiv(divide(a,b), ..args);
-overload operatorDiv(forward a,static divide,forward b) = forward divide(a,b);
-overload operatorDiv(forward a) = forward a;
-
-operatorMul(forward a,fn,forward ..args) = forward a,fn,..operatorMul(..args);
-overload operatorMul(forward a,fn,forward b) = forward a,fn,b;
-overload operatorMul(forward a, static #"*",forward b,forward ..args)
-    = forward ..operatorMul(multiply(a,b), ..args);
-overload operatorMul(forward a, static #"*",forward b) = forward multiply(a,b);
-overload operatorMul(forward a, static multiply,forward b,forward ..args)
-    = forward ..operatorMul(multiply(a,b), ..args);
-overload operatorMul(forward a, static multiply,forward b) = forward multiply(a,b);
-overload operatorMul(forward a) = forward a;
 
 
 
