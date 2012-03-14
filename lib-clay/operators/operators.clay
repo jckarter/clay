@@ -346,7 +346,7 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 //
 
 overload operator(forward ..args)
-    = operatorCompare(..binaryOp(#"++",cat,..binaryOp(#"+",add,
+    = forward operatorCompare(..binaryOp(#"++",cat,..binaryOp(#"+",add,
         ..binaryOp(#"-",subtract,..binaryOp(#"%",remainder,
             ..binaryOp(#"\\",quotient,..binaryOp(#"/",divide,
                 ..binaryOp(#"*",multiply,..args))))))));
@@ -385,10 +385,10 @@ overload compare(static greater?, a, b) : Bool = greater?(a,b);
 overload compare(static lesserEquals?, a, b) : Bool = lesserEquals?(a,b);
 overload compare(static greaterEquals?, a, b) : Bool = greaterEquals?(a,b);
 
-operatorCompare(forward a, fn, forward b, forward ..args)
-    = forward compare(fn, a, b) and operatorCompare(b, ..args);
-overload operatorCompare(forward a, fn, forward b) = forward compare(fn, a, b);
-overload operatorCompare(forward a) = forward a;
+compareOp(forward a, fn, forward b, forward ..args)
+    = forward compare(fn, a, b) and compareOp(b, ..args);
+overload compareOp(forward a, fn, forward b) = forward compare(fn, a, b);
+overload compareOp(forward a) = forward a;
 
 
 
