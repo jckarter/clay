@@ -59,29 +59,25 @@ overload encodeIdentifier() = "";
 
 [X] overload encodeIdentifier(#X) = "?";
 [T] overload encodeIdentifier(#Pointer[T])
-    = IdentifierConcat("^", encodeIdentifier(T));
+    = "^" ++ encodeIdentifier(T);
 
 // XXX distinguish raw pointer from Pointer[UInt8]
 overload encodeIdentifier(#RawPointer) = "^v";
 
 [T | Record?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]])
-    = IdentifierConcat("^^{", IdentifierStaticName(T), "}");
+    = "^^{" ++ StaticName(T) ++ "}";
 [T | Tuple?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^{Tuple}";
 [T | Union?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^(Union)";
 
-[T | RegularRecord?(T)] overload encodeIdentifier(#T)
-    = IdentifierConcat(
-        "{", IdentifierStaticName(T), "=",
-        encodeIdentifier(..RecordFieldTypes(T)),
-        "}"
-    );
+[T | RegularRecord?(T)] overload encodeIdentifier(#T) =
+    "{" ++ StaticName(T) ++ "=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
 [..Members] overload encodeIdentifier(#Tuple[..Members])
-    = IdentifierConcat("{Tuple=", encodeIdentifier(..RecordFieldTypes(T)), "}");
+    = "{Tuple=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
 [..Members] overload encodeIdentifier(#Union[..Members])
-    = IdentifierConcat("(Union=", encodeIdentifier(..Members), ")");
+    = "(Union=" ++ encodeIdentifier(..Members) ++ ")";
 
 overload encodeIdentifier(#Pointer[CChar]) = "*";
 overload encodeIdentifier(#ObjectHandle) = "@";
@@ -104,9 +100,10 @@ overload encodeIdentifier(#[]) = "v";
 
 [..T | countValues(..T) > 1]
 overload encodeIdentifier(..types: T)
-    = IdentifierConcat(..mapValues(encodeIdentifier, ..types));
+    = cat(..mapValues(encodeIdentifier, ..types));
 
-encode(..types) = StaticName(encodeIdentifier(..types));
+// fixme
+encode(..types) = encodeIdentifier(..types);
 
 
 //
@@ -323,17 +320,13 @@ define ClassInstanceMethods;
 MangledModuleChar(c) = c;
 overload MangledModuleChar(#".") = "__";
 
-MangledModuleName(T) = IdentifierConcat(..mapValues(
+MangledModuleName(T) = cat(..mapValues(
     MangledModuleChar,
-    ..IdentifierChars(IdentifierModuleName(T))
+    ..IdentifierChars(ModuleName(T))
 ));
 
 [T | ClayClass?(T)]
-overload ClassName(#T) {
-    return StaticName(IdentifierConcat(
-        "clay__", MangledModuleName(T), "__", IdentifierStaticName(T)
-    ));
-}
+overload ClassName(#T) = "clay__" ++ MangledModuleName(T) ++ "__" ++ StaticName(T);
 
 [T | ExternalClass?(T) or ExternalClayClass?(T)]
 ClassName(#T) = StaticName(T);
@@ -1032,7 +1025,7 @@ overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
 
 [argCount] private _identifierSelector(#argCount, ..chars) {
     var lastCharacter = lastValue(..chars);
-    return IdentifierConcat(
+    return cat(
         ..mapValues(_identifierSelectorChar, ..chars),
         .._extraColon(#argCount, #countOccurrences("_", ..chars), lastCharacter)
     );

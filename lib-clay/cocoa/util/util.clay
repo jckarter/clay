@@ -425,7 +425,7 @@ overload ReaderInstanceMethod(#ivarName)
 
 
 defaultWriterSelector(ivarName)
-    = IdentifierConcat("set", IdentifierCapitalize(ivarName), ":");
+    = "set" ++ IdentifierCapitalize(ivarName) ++ ":";
 
 [ivarName, writerSelector | StringLiteral?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(#ivarName, #writerSelector, T)
@@ -542,9 +542,8 @@ overload regularClassInitMethod(..fields)
     );
 
 private regularClassInitMethodName(field1, ..fields)
-    = IdentifierConcat("initWith", IdentifierCapitalize(field1.0), ":",
-        ..mapValues(x => (x.0, ":"), ..fields)
-    );
+    = cat("initWith", IdentifierCapitalize(field1.0), ":",
+        ..mapValues(x => (x.0, ":"), ..fields));
 
 private regularClassPropertyMethods(..fields)
     = ..mapValues(field => ..PropertyInstanceMethods(field.0, field.1), ..fields);

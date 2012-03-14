@@ -42,13 +42,13 @@ overload IdentifierFind(#identifier, #sub, #start) = start;
 overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, #0);
 
 IdentifierCapitalize(i)
-    = IdentifierConcat(
+    = cat(
         IdentifierUpperChar(IdentifierSlice(i, #0, #1)),
         IdentifierSlice(i, #1, #size(i))
     );
 
 IdentifierDecapitalize(i)
-    = IdentifierConcat(
+    = cat(
         IdentifierLowerChar(IdentifierSlice(i, #0, #1)),
         IdentifierSlice(i, #1, #size(i))
     );
@@ -115,10 +115,10 @@ overload IdentifierLowerChar(#"Z") = "z";
 
 define ident;
 
-overload ident(..xx) = IdentifierConcat(..mapValues(ident, ..xx));
+overload ident(..xx) = cat(..mapValues(ident, ..xx));
 
 [x]
-overload ident(#x) = IdentifierStaticName(#x);
+overload ident(#x) = StaticName(#x);
 [i | StringLiteral?(i)]
 overload ident(#i) = i;
 

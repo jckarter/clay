@@ -44,7 +44,7 @@ overload error(..e) {
 //
 
 AllAssertionsEnabled?() = not Flag?("clay.DisableAssertions");
-AssertionEnabled?(tag) = not Flag?(IdentifierConcat("clay.DisableAssertions.", tag));
+AssertionEnabled?(tag) = not Flag?("clay.DisableAssertions." ++ tag);
 
 [..tags | allValues?(StringLiteral?, ..tags)]
 record assert[..tags] ();
