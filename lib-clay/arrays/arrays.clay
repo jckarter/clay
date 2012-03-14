@@ -243,6 +243,10 @@ alias array(..args:A) {
     return Array[takeValues(#1, ..A), countValues(..A)](..args);
 }
 
+[..SS | countValues(..SS) > 0 and allValues?(S -> Static?(S) and StringLiteral?(S()), ..SS)]
+alias overload array(..strings:SS) {
+    return array(..mapValues(StringLiteralRef, ..strings));
+}
 
 
 //
@@ -250,7 +254,7 @@ alias array(..args:A) {
 //
 
 [n]
-integerArray(#n) = Array(#n, range(n));
+integerArray(#n) = array(..integers(#n));
 
 
 
