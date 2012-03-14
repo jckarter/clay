@@ -345,10 +345,11 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 //  use left associativity with precedence *,/,\,%,-,+,++, 
 //
 
-
 overload operator(forward ..args)
-    = operatorCompare(..binaryOp(#"++",cat,..binaryOp(#"+",add,..binaryOp(#"-",subtract,..binaryOp(#"%",remainder,..binaryOp(#"\\",quotient,
-        ..binaryOp(#"/",divide,..binaryOp(#"*",multiply,..args))))))));
+    = operatorCompare(..binaryOp(#"++",cat,..binaryOp(#"+",add,
+        ..binaryOp(#"-",subtract,..binaryOp(#"%",remainder,
+            ..binaryOp(#"\\",quotient,..binaryOp(#"/",divide,
+                ..binaryOp(#"*",multiply,..args))))))));
 
 
 [OP,F,T]
@@ -356,7 +357,6 @@ binaryOp(static OP,static F,forward a,static T,forward ..args)
     = forward a,T,..binaryOp(OP,F,..args);
 [OP,F]
 overload binaryOp(static OP,static F,forward a) = forward a;
-
 [OP,F]
 overload binaryOp(static OP,static F,forward a,static OP,forward b, forward ..args)
     = forward ..binaryOp(OP,F,F(a,b), ..args);
