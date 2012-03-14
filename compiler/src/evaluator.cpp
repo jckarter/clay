@@ -2825,6 +2825,7 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
         case 8 : T<size64_t>().eval(a, b, out); break;
         default : error("unsupported pointer size");
         }
+        break;
     }
 
     default :
