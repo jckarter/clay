@@ -1313,7 +1313,7 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
             GVarInstancePtr y = analyzeGVarIndexing(x, args, env);
             return analyzeGVarInstance(y);
         }
-        if (obj->objKind != VALUE_HOLDER)
+        if (obj->objKind != VALUE_HOLDER && obj->objKind != IDENTIFIER)
             error("invalid indexing operation");
     }
     ExprListPtr args2 = new ExprList(indexable);
