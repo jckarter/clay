@@ -42,7 +42,7 @@ private var objcConstantString[value]
 // constant NSStrings
 //
 
-[value | Identifier?(value)]
+[value | StringLiteral?(value)]
 NSSTR(#value) = ObjectHandle(&objcConstantString[value]);
 
 
@@ -343,18 +343,18 @@ define ClassStaticName;
 [T | CallDefined?(ClassStaticName, Static[T])]
 overload ClassName(#T) = StaticName(ClassStaticName(T));
 
-[T, name | Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
+[T, name | Class?(T) and SuperclassType(T) != Void and StringLiteral?(name)]
 ClassIvarType(#T, #name) = ClassIvarType(SuperclassType(T), name);
-[T, name | Class?(T) and Identifier?(name) and assocValue?(name, ..ClassInstanceVars(T))]
+[T, name | Class?(T) and StringLiteral?(name) and assocValue?(name, ..ClassInstanceVars(T))]
 overload ClassIvarType(#T, #name) = firstValue(..assocValue(name, ..ClassInstanceVars(T)));
 
 ClassIvarNames(T) = ..mapValues(ivar => ivar.0, ..ClassInstanceVars(T));
 ClassIvarTypes(T) = ..mapValues(ivar => ivar.1, ..ClassInstanceVars(T));
 
 ClassInstanceVar?(T, ivar) = false;
-[T, ivar | Class?(T) and Identifier?(ivar)]
+[T, ivar | Class?(T) and StringLiteral?(ivar)]
 overload ClassInstanceVar?(#T, #ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
-[T, ivar | Class?(T) and Identifier?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
+[T, ivar | Class?(T) and StringLiteral?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
 overload ClassInstanceVar?(#T, #ivar) = true;
 
 
@@ -380,7 +380,7 @@ externalClass(#Super) = recordWithProperties(
     ["__handle__", ObjectHandle]
 );
 
-[name, Super | Identifier?(name) and ValidSuperclass?(Super)]
+[name, Super | StringLiteral?(name) and ValidSuperclass?(Super)]
 overload externalClass(#name, #Super) = recordWithProperties(
     [
         [SuperclassType, Super],

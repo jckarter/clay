@@ -160,7 +160,7 @@ overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
-[X | Identifier?(X)]
+[X | StringLiteral?(X)]
 overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
@@ -414,7 +414,7 @@ overload printReprTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
-[X | Identifier?(X)]
+[X | StringLiteral?(X)]
 overload printReprTo(stream, x:Static[X]) {
     printTo(stream, '#');
     printReprTo(stream, StaticName(x));
@@ -681,7 +681,7 @@ observeTo(stream, forward ..x) {
     flush(stream);
     return forward ..forwardValues(captured);
 }
-[tag | Identifier?(tag)]
+[tag | StringLiteral?(tag)]
 overload observeTo(stream, #tag, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
