@@ -1,19 +1,19 @@
 IdentifierChars(identifier)
     = ..mapValues(
-        (#n) => IdentifierSlice(identifier, n, #(n+1)),
+        (#n) => stringLiteralByteSlice(identifier, n, #(n+1)),
         ..staticIntegers(#size(identifier))
     );
 
 IdentifierStartsWith?(identifier, startsWith) = false;
 [identifier, startsWith | size(identifier) >= size(startsWith)]
 overload IdentifierStartsWith?(#identifier, #startsWith)
-      = IdentifierSlice(identifier, #0, #size(startsWith))
+      = stringLiteralByteSlice(identifier, #0, #size(startsWith))
         == startsWith;
 
 IdentifierEndsWith?(identifier, endsWith) = false;
 [identifier, endsWith | size(identifier) >= size(endsWith)]
 overload IdentifierEndsWith?(#identifier, #endsWith)
-    = IdentifierSlice(identifier,
+    = stringLiteralByteSlice(identifier,
           #(size(identifier) - size(endsWith)),
           #size(identifier)
       ) == endsWith;
@@ -34,7 +34,7 @@ overload IdentifierFind(#identifier, #sub, #start) = -1;
 [identifier, sub, start |
     StringLiteral?(identifier) and StringLiteral?(sub)
     and size(identifier) >= size(sub) + start
-    and IdentifierSlice(identifier, #start, #(start + size(sub)))
+    and stringLiteralByteSlice(identifier, #start, #(start + size(sub)))
         == sub
 ]
 overload IdentifierFind(#identifier, #sub, #start) = start;
@@ -43,14 +43,14 @@ overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, #0);
 
 IdentifierCapitalize(i)
     = cat(
-        IdentifierUpperChar(IdentifierSlice(i, #0, #1)),
-        IdentifierSlice(i, #1, #size(i))
+        IdentifierUpperChar(stringLiteralByteSlice(i, #0, #1)),
+        stringLiteralByteSlice(i, #1, #size(i))
     );
 
 IdentifierDecapitalize(i)
     = cat(
-        IdentifierLowerChar(IdentifierSlice(i, #0, #1)),
-        IdentifierSlice(i, #1, #size(i))
+        IdentifierLowerChar(stringLiteralByteSlice(i, #0, #1)),
+        stringLiteralByteSlice(i, #1, #size(i))
     );
 
 [i | StringLiteral?(i) and size(i) == 1]
