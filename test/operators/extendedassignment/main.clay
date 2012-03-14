@@ -12,7 +12,7 @@ overload indexAssign(x:Foo, index, value) {
 }
 
 overload indexUpdateAssign(op, x:Foo, index, ..args) {
-    println("indexUpdateAssign(", ..weaveValues(",",op,"x",index,..args), ")");
+    println("indexUpdateAssign(", ..weaveValues(", ",op,"x",index,..args), ")");
 }
 
 [i]
@@ -22,7 +22,7 @@ overload staticIndexAssign(x:Foo, static i, value) {
 
 [i]
 overload staticIndexUpdateAssign(op, x:Foo, static i, ..args) {
-    println("staticIndexUpdateAssign(", ..weaveValues(",",op,"x",i,..args), ")");
+    println("staticIndexUpdateAssign(", ..weaveValues(", ",op,"x",i,..args), ")");
 }
 
 [FIELD]
@@ -32,7 +32,7 @@ overload fieldRefAssign(x:Foo, static FIELD, value) {
 
 [FIELD]
 overload fieldRefUpdateAssign(op, x:Foo, static FIELD, ..args) {
-    println("fieldRefUpdateAssign(", ..weaveValues(",",op,"x",FIELD, ..args), ")");
+    println("fieldRefUpdateAssign(", ..weaveValues(", ",op,"x",FIELD, ..args), ")");
 }
 
 main() {

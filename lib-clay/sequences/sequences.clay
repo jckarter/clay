@@ -132,13 +132,13 @@ overload updateAssign(static operator, ret:S, ..args) {
 
 
 [..S | anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)
-    and not ( inValues?(Static[cat],..S)
-    or inValues?(Static[equals?],..S)
-    or inValues?(Static[lesser?],..S)
-    or inValues?(Static[greater?],..S)
-    or inValues?(Static[notEquals?],..S)
-    or inValues?(Static[lesserEquals?],..S)
-    or inValues?(Static[greaterEquals?],..S))]
+    and not ( inValues?(Static[#"++"],..S)
+    or inValues?(Static[#"=="],..S)
+    or inValues?(Static[#"<"],..S)
+    or inValues?(Static[#">"],..S)
+    or inValues?(Static[#"!="],..S)
+    or inValues?(Static[#"<="],..S)
+    or inValues?(Static[#">="],..S))]
 overload operator(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();
     resize(ret,seqSize(SizeT(0),..args));
