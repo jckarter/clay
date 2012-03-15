@@ -987,7 +987,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(dereference);
     OPERATOR(plus);
     OPERATOR(minus);
-    OPERATOR(operator);
+    OPERATOR(operatorCall);
     OPERATOR(caseP);
     OPERATOR(tupleLiteral);
     OPERATOR(staticIndex);
@@ -1154,7 +1154,7 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 DEFINE_OPERATOR_ACCESSOR(dereference)
 DEFINE_OPERATOR_ACCESSOR(plus)
 DEFINE_OPERATOR_ACCESSOR(minus)
-DEFINE_OPERATOR_ACCESSOR(operator)
+DEFINE_OPERATOR_ACCESSOR(operatorCall)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
 DEFINE_OPERATOR_ACCESSOR(staticIndex)

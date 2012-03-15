@@ -47,7 +47,7 @@ ExprPtr lookupCallable(int op) {
         callable = primitive_expr_boolNot();
         break;
     case OPERATOR :
-        callable = operator_expr_operator();
+        callable = operator_expr_operatorCall();
         break;
     case IF_EXPR :
         callable = operator_expr_ifExpression();

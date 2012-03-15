@@ -1,0 +1,11 @@
+
+
+foo(a, b) = (a \ b) * a \ b;
+
+overload operator(static #"\\*\\", BIN) = foo;
+
+main() {
+    
+    println(8 \*\ 3);
+
+}

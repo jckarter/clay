@@ -125,9 +125,9 @@ interleave(seq:S, betweenFn, fn) {
 //
 
 [S | Sequence?(S)]
-overload updateAssign(static operator, ret:S, ..args) {
+overload updateAssign(static operatorCall, ret:S, ..args) {
     for (i,r in enumerated(ret))
-        r = operator(r,..reduceToScalar(i,..args));
+        r = operatorCall(r,..reduceToScalar(i,..args));
 }
 
 
@@ -139,7 +139,7 @@ overload updateAssign(static operator, ret:S, ..args) {
     or inValues?(Static[#"!="],..S)
     or inValues?(Static[#"<="],..S)
     or inValues?(Static[#">="],..S))]
-overload operator(..args:S) {
+overload operatorCall(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();
     resize(ret,seqSize(SizeT(0),..args));
     for (i,r in enumerated(ret))
