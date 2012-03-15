@@ -350,24 +350,30 @@ precedenceList() = ..defaultOps();
 alias BIN = #"binaryOp";
 alias CMP = #"compareOp";
 
-OpDefined?(OP, F) = not equals?(defineOp(OP,  F) , OP); 
+private define neqOp?;
+[A, B]
+overload neqOp?(a:Static[A], b:Static[B]) = true;
+[A]
+overload neqOp?(a:Static[A], b:Static[A]) = false;
 
-inline defineOp(T,F) = T;
-inline overload defineOp(static #">=", static CMP) = greaterEquals?;
-inline overload defineOp(static #"<=", static CMP) = lesserEquals?;
-inline overload defineOp(static #">", static CMP) = greater?;
-inline overload defineOp(static #"<", static CMP) = lesser?;
-inline overload defineOp(static #"!=", static CMP) = notEquals?;
-inline overload defineOp(static #"==", static CMP) = equals?;
-inline overload defineOp(static #"++",static BIN) = cat;
-inline overload defineOp(static #"+", static BIN) = add;
-inline overload defineOp(static #"-", static BIN) = subtract;
-inline overload defineOp(static #"%", static BIN) = remainder;
-inline overload defineOp(static #"\\", static BIN) = quotient;
-inline overload defineOp(static #"/", static BIN) = divide;
-inline overload defineOp(static #"*", static BIN) = multiply;
+OpDefined?(OP, F) = neqOp?(defineOp(OP,  F) , OP); 
 
-inline overload operator(forward ..args)
+defineOp(T,F) = T;
+overload defineOp(static #">=", static CMP) = greaterEquals?;
+overload defineOp(static #"<=", static CMP) = lesserEquals?;
+overload defineOp(static #">", static CMP) = greater?;
+overload defineOp(static #"<", static CMP) = lesser?;
+overload defineOp(static #"!=", static CMP) = notEquals?;
+overload defineOp(static #"==", static CMP) = equals?;
+overload defineOp(static #"++",static BIN) = cat;
+overload defineOp(static #"+", static BIN) = add;
+overload defineOp(static #"-", static BIN) = subtract;
+overload defineOp(static #"%", static BIN) = remainder;
+overload defineOp(static #"\\", static BIN) = quotient;
+overload defineOp(static #"/", static BIN) = divide;
+overload defineOp(static #"*", static BIN) = multiply;
+
+overload operator(forward ..args)
     = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, static countValues(
         ..restValues(..precedenceList())), ..args)));
 
