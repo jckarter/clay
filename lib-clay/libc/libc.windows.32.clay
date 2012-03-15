@@ -30,3 +30,8 @@ inline sinhf(x:Float) : Float = Float(sinh(Double(x)));
 inline sqrtf(x:Float) : Float = Float(sqrt(Double(x)));
 inline tanf(x:Float) : Float = Float(tan(Double(x)));
 inline tanhf(x:Float) : Float = Float(tanh(Double(x)));
+
+// these are macros
+
+inline isnan(x:Double) : Int = Int(x != x);
+inline isnanf(x:Float) : Int = Int(x != x);
