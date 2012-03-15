@@ -853,8 +853,8 @@ void printName(ostream &out, ObjectPtr x)
     switch (x->objKind) {
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
-        out << "#";
         if (_safeNames > 0) {
+            out << "#";
             for (unsigned i = 0; i < y->str.size(); ++i) {
                 char ch = y->str[i];
                 if (isSafe(ch))
@@ -864,7 +864,43 @@ void printName(ostream &out, ObjectPtr x)
             }
         }
         else {
-            out << y->str;
+            out << "\"";
+            for (unsigned i = 0; i < y->str.size(); ++i) {
+                char ch = y->str[i];
+                switch (ch) {
+                case '\0':
+                    out << "\\0";
+                    break;
+                case '\n':
+                    out << "\\n";
+                    break;
+                case '\r':
+                    out << "\\r";
+                    break;
+                case '\t':
+                    out << "\\t";
+                    break;
+                case '\f':
+                    out << "\\f";
+                    break;
+                case '\\':
+                    out << "\\\\";
+                    break;
+                case '\'':
+                    out << "\\'";
+                    break;
+                case '\"':
+                    out << "\\\"";
+                    break;
+                default:
+                    if (ch >= '\x20' and ch <= '\x7E')
+                        out << ch;
+                    else
+                        out << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (int)ch;
+                    break;
+                }
+            }
+            out << "\"";
         }
         break;
     }
