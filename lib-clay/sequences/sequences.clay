@@ -143,7 +143,7 @@ overload operatorCall(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();
     resize(ret,seqSize(SizeT(0),..args));
     for (i,r in enumerated(ret))
-        r = operator(..reduceToScalar(i,..args));
+        r = operatorCall(..reduceToScalar(i,..args));
     return move(ret);
 }
 
