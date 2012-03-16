@@ -84,7 +84,7 @@ overload cat(forward a:A, forward ..x:T) {
 }
 
 [A, T | Sequence?(A) and (SequenceElementType(A) == T)]
-overload cat(forward x:T, forward a:A) = Vector[T](x) + a;
+overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
 [A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
@@ -94,7 +94,7 @@ overload updateAssign(static cat, ref a:A, forward ..b:B) {
 
 [A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload updateAssign(static cat, forward a:A, forward ..x:T) {
-    push(a, x);
+    push(a, ..x);
 }
 
 [A, T | Sequence?(A) and (SequenceElementType(A) == T)]
