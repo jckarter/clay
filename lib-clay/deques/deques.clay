@@ -44,11 +44,11 @@ record DequeCoordinate[T] (
     dec(i.current);
 }
 
-[T, I | Integer?(I)] overload updateAssign(static #"+", ref i: DequeCoordinate[T], n: I) {
+[T, I | Integer?(I)] overload updateAssign((+), ref i: DequeCoordinate[T], n: I) {
     i += PtrInt(n);
 }
 
-[T] overload updateAssign(static #"+", ref i: DequeCoordinate[T], n: PtrInt) {
+[T] overload updateAssign((+), ref i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
     if (offset >= 0 and offset < DequeBufferSSize(T))
         i.current += n;
@@ -69,7 +69,7 @@ record DequeCoordinate[T] (
     j += n;
 }
 
-[T, I | Integer?(I)] overload updateAssign(static #"-", ref i: DequeCoordinate[T], n: I) {
+[T, I | Integer?(I)] overload updateAssign((-), ref i: DequeCoordinate[T], n: I) {
     i += -PtrInt(n);
 }
 

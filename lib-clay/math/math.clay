@@ -6,6 +6,3 @@ public import math.libm.*;
 
 alias LIBM = #"libm";
 MathMode?(m) = Flag(#"math.Mode")==m;
-
-overload operator(static #"**", BINARY) = pow;
-overload precedenceList() = ..defaultOps(),#"**";

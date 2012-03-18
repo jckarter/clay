@@ -344,34 +344,26 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 //  operators 
 //
 
-defaultOps() = #"++",#"+",#"-",#"%",#"\\",#"/",#"*";
+defaultOps() = (++),(+),(-),(%),(\),(/),(*);
 precedenceList() = ..defaultOps();
 
-define BINARY;
-define COMPARE;
+alias (==) = equals?;
+alias (!=) = notEquals?;
+alias (>=) = greaterEquals?;
+alias (<=) = lesserEquals?;
+alias (>) = greater?;
+alias (<) = lesser?;
+alias (++) = cat;
+alias (+) = add;
+alias (-) = subtract;
+alias (%) = remainder;
+alias (\) = quotient;
+alias (/) = divide;
+alias (*) = multiply;
 
-private define neqOp?;
-[A, B]
-overload neqOp?(a:Static[A], b:Static[B]) = true;
-[A]
-overload neqOp?(a:Static[A], b:Static[A]) = false;
 
-OpDefined?(OP, F) = neqOp?(operator(OP,  F) , OP); 
-
-operator(T,F) = T;
-overload operator(static #">=", static COMPARE) = greaterEquals?;
-overload operator(static #"<=", static COMPARE) = lesserEquals?;
-overload operator(static #">", static COMPARE) = greater?;
-overload operator(static #"<", static COMPARE) = lesser?;
-overload operator(static #"!=", static COMPARE) = notEquals?;
-overload operator(static #"==", static COMPARE) = equals?;
-overload operator(static #"++",static BINARY) = cat;
-overload operator(static #"+", static BINARY) = add;
-overload operator(static #"-", static BINARY) = subtract;
-overload operator(static #"%", static BINARY) = remainder;
-overload operator(static #"\\", static BINARY) = quotient;
-overload operator(static #"/", static BINARY) = divide;
-overload operator(static #"*", static BINARY) = multiply;
+BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and equals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and equals?(CallOutputTypes(OP,T,U),Bool); 
 
 overload operatorCall(forward ..args)
     = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, static countValues(
@@ -385,8 +377,8 @@ inline overload foldOp(fn, static n, forward ..xs)
 inline overload foldOp(fn, static 0, forward ..xs) 
     = forward ..fn(firstValue(..precedenceList()), ..xs);
 
-private define binaryOp;
 
+private define binaryOp;
 [OP,T]
 inline overload binaryOp(static OP,forward a,static T,forward ..args)
     = forward a,T,..binaryOp(OP,..args);
@@ -394,30 +386,30 @@ inline overload binaryOp(static OP,forward a,static T,forward ..args)
 inline overload binaryOp(static OP, forward a) = forward a;
 [OP]
 inline overload binaryOp(static OP,forward a,static OP,forward b, forward ..args)
-    = forward ..binaryOp(OP,operator(OP, BINARY)(a,b), ..args);
+    = forward ..binaryOp(OP,OP(a,b), ..args);
 [OP]
 inline overload binaryOp(static OP,forward a,static OP,forward b)
-    = forward operator(OP, BINARY)(a,b);
+    = forward OP(a,b);
 
 private define noPrecBinaryOp;
 
 [OP]
 inline overload noPrecBinaryOp(forward a, static OP,forward ..args)
     = forward a,OP,..noPrecBinaryOp(..args);
-[OP | OpDefined?(OP, BINARY)]
-inline overload noPrecBinaryOp(forward a, static OP,forward b, forward ..args)
-    = forward ..noPrecBinaryOp(operator(OP,BINARY)(a,b), ..args);
-[OP | OpDefined?(OP, BINARY)]
-inline overload noPrecBinaryOp(forward a,static OP,forward b)
-    = forward operator(OP, BINARY)(a,b);
+[OP,T,U | BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T, static OP,forward b:U, forward ..args)
+    = forward ..noPrecBinaryOp(OP(a,b), ..args);
+[OP,T,U | BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T,static OP,forward b:U)
+    = forward OP(a,b);
 inline overload noPrecBinaryOp(forward a) = forward a;
 
 private define compareOp;
 
 inline overload compareOp(forward a, OP, forward b, forward ..args)
-    = forward operator(OP, COMPARE)(a, b) and compareOp(b, ..args);
+    = forward OP(a, b) and compareOp(b, ..args);
 inline overload compareOp(forward a, OP, forward b) 
-    = forward operator(OP, COMPARE)(a, b);
+    = forward OP(a, b);
 inline overload compareOp(forward a) = forward a;
 
 

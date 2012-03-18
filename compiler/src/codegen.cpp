@@ -3619,6 +3619,10 @@ bool codegenStatement(StatementPtr stmt,
     case UPDATE_ASSIGNMENT : {
         UpdateAssignment *x = (UpdateAssignment *)stmt.ptr();
         PValuePtr pvLeft = safeAnalyzeOne(x->left, env);
+        string s;
+        s.push_back('(');
+        s.append(x->op);
+        s.push_back(')');
         if (x->left->exprKind == INDEXING) {
             Indexing *y = (Indexing *)x->left.ptr();
             PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
@@ -3626,7 +3630,7 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_indexUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
+                call->parenArgs->add(new NameRef(new Identifier(s)));
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(y->args);
                 call->parenArgs->add(x->right);
@@ -3638,7 +3642,7 @@ bool codegenStatement(StatementPtr stmt,
             CallPtr call = new Call(
                 operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
-            call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
+            call->parenArgs->add(new NameRef(new Identifier(s)));
             call->parenArgs->add(y->expr);
             ValueHolderPtr vh = sizeTToValueHolder(y->index);
             call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
@@ -3652,7 +3656,7 @@ bool codegenStatement(StatementPtr stmt,
                 CallPtr call = new Call(
                     operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
+                call->parenArgs->add(new NameRef(new Identifier(s)));
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(new ObjectExpr(y->name.ptr()));
                 call->parenArgs->add(x->right);
@@ -3660,7 +3664,7 @@ bool codegenStatement(StatementPtr stmt,
             }
         }
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(new IdentifierLiteral(new Identifier(x->op)));
+        call->parenArgs->add(new NameRef(new Identifier(s)));
         call->parenArgs->add(x->left);
         call->parenArgs->add(x->right);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
