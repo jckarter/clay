@@ -361,9 +361,14 @@ alias (\) = quotient;
 alias (/) = divide;
 alias (*) = multiply;
 
+private define staticEquals?;
+[A, B]
+overload staticEquals?(a:Static[A], b:Static[B]) = false;
+[A]
+overload staticEquals?(a:Static[A], b:Static[A]) = true;
 
-BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and equals?(CallOutputTypes(OP,T,U),T); 
-CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and equals?(CallOutputTypes(OP,T,U),Bool); 
+BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
 overload operatorCall(forward ..args)
     = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, static countValues(

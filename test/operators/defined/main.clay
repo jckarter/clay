@@ -2,7 +2,7 @@
 
 foo(a, b) = (a \ b) * a \ b;
 
-overload operator(static #"\\*\\", BINARY) = foo;
+alias (\*\) = foo;
 
 main() {
     
