@@ -637,7 +637,13 @@ static bool operatorOp(string &op) {
         if (opsymbol(*a)) return false;
         restore(p);
     }
-    return opstring(op);
+    string x;
+    if (!opstring(x)) return false;
+    op.clear();
+    op.push_back('(');
+    op.append(x);
+    op.push_back(')');
+    return true;
 }
 
 
@@ -664,7 +670,7 @@ static bool operatorTail(VariadicOpPtr &x) {
         exprs->add(b);
         
     }
-    x = new VariadicOp(OPERATOR, ops ,exprs);
+    x = new VariadicOp(OPERATOR, ops, exprs);
     x->location = location;
     return true;
 }
@@ -1182,7 +1188,7 @@ static bool initAssignment(StatementPtr &x) {
 static bool updateopstring(string &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
+    const string ops[] = {"(+)", "(-)", "(*)", "(/)", "(\\)", "(%)", "(++)"};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (opsymbol(*a)) {

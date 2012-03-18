@@ -62,14 +62,9 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     ExprPtr callable = lookupCallable(x->op);
     CallPtr call = new Call(callable, new ExprList());
     if (x->op == OPERATOR) {
-        string s;
         call->parenArgs->add(x->exprs->exprs.front());
         for (int i = 0; i < x->ops.size(); ++i) {
-            s.clear();
-            s.push_back('(');
-            s.append(x->ops[i]);
-            s.push_back(')');
-            call->parenArgs->add(new NameRef(new Identifier(s)));
+            call->parenArgs->add(new NameRef(new Identifier(x->ops[i])));
             call->parenArgs->add(x->exprs->exprs[i+1]);
         }
     }
