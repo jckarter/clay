@@ -1903,16 +1903,7 @@ static bool valueFormalArg(FormalArgPtr &x) {
     return true;
 }
 
-static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprPtr y;
-    if (!symbol("#")) return false;
-    if (!expression(y)) return false;
-
-    if (y->exprKind == UNPACK) {
-        error(y, "#static variadic arguments are not yet supported");
-    }
-
+static FormalArgPtr makeStaticFormalArg(ExprPtr expr, LocationPtr location) {
     // desugar static args
     ostringstream sout;
     sout << "%arg" << index;
@@ -1922,12 +1913,34 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
         new ForeignExpr("prelude",
                         new NameRef(new Identifier("Static")));
 
-    IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
+    IndexingPtr indexing = new Indexing(staticName, new ExprList(expr));
     indexing->startLocation = location;
     indexing->endLocation = currentLocation();
 
-    x = new FormalArg(argName, indexing.ptr());
-    x->location = location;
+    FormalArgPtr arg = new FormalArg(argName, indexing.ptr());
+    arg->location = location;
+    return arg;
+}
+
+static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr expr;
+    if (!symbol("#")) return false;
+    if (!expression(expr)) return false;
+
+    if (expr->exprKind == UNPACK) {
+        error(expr, "#static variadic arguments are not yet supported");
+    }
+
+    x = makeStaticFormalArg(expr, location);
+    return true;
+}
+
+static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr expr;
+    if (!stringLiteral(expr)) return false;
+    x = makeStaticFormalArg(expr, location);
     return true;
 }
 
@@ -1935,6 +1948,7 @@ static bool formalArg(unsigned index, FormalArgPtr &x) {
     int p = save();
     if (valueFormalArg(x)) return true;
     if (restore(p), staticFormalArg(index, x)) return true;
+    if (restore(p), stringFormalArg(index, x)) return true;
     return false;
 }
 
