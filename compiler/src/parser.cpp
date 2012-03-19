@@ -1202,13 +1202,25 @@ static bool updateopstring(string &op) {
 
 static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y, z;
+    ExprListPtr exprs = new ExprList();
+    ExprPtr y,z;
+    vector<string> ops;
     if (!expression(y)) return false;
     string op;
     if (!updateopstring(op)) return false;
+    exprs->add(y);
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    x = new UpdateAssignment(op, y, z);
+    ops.push_back(op);
+    if (z->exprKind == VARIADIC_OP) {
+        VariadicOp *y = (VariadicOp *)z.ptr();
+        exprs->add(y->exprs);
+        for (int i=0;i<y->ops.size();++i)
+            ops.push_back(y->ops[i]);
+    } else {
+        exprs->add(z);
+    }
+    x = new VariadicAssignment(OPERATOR, ops, exprs);
     x->location = location;
     return true;
 }

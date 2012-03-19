@@ -452,7 +452,7 @@ struct Label;
 struct Binding;
 struct Assignment;
 struct InitAssignment;
-struct UpdateAssignment;
+struct VariadicAssignment;
 struct Goto;
 struct Switch;
 struct CaseBlock;
@@ -602,7 +602,7 @@ typedef Pointer<Label> LabelPtr;
 typedef Pointer<Binding> BindingPtr;
 typedef Pointer<Assignment> AssignmentPtr;
 typedef Pointer<InitAssignment> InitAssignmentPtr;
-typedef Pointer<UpdateAssignment> UpdateAssignmentPtr;
+typedef Pointer<VariadicAssignment> VariadicAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
 typedef Pointer<Switch> SwitchPtr;
 typedef Pointer<CaseBlock> CaseBlockPtr;
@@ -1338,7 +1338,7 @@ enum StatementKind {
     BINDING,
     ASSIGNMENT,
     INIT_ASSIGNMENT,
-    UPDATE_ASSIGNMENT,
+    VARIADIC_ASSIGNMENT,
     GOTO,
     RETURN,
     IF,
@@ -1416,12 +1416,16 @@ struct InitAssignment : public Statement {
           right(new ExprList(rightExpr)) {}
 };
 
-struct UpdateAssignment : public Statement {
-    string op;
-    ExprPtr left, right;
-    UpdateAssignment(string op, ExprPtr left, ExprPtr right)
-        : Statement(UPDATE_ASSIGNMENT), op(op), left(left),
-          right(right) {}
+struct VariadicAssignment : public Statement {
+    int op;
+    vector<string> ops;
+    ExprListPtr exprs;
+    ExprPtr desugared;
+    VariadicAssignment(int op, ExprListPtr exprs )
+        : Statement(VARIADIC_ASSIGNMENT), op(op), exprs(exprs) {}
+    VariadicAssignment(int op, const vector<string> &ops, ExprListPtr exprs )
+        : Statement(VARIADIC_ASSIGNMENT), op(op), ops(ops), exprs(exprs) {}
+
 };
 
 struct Goto : public Statement {
@@ -2993,7 +2997,7 @@ ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarVariadicOp(VariadicOpPtr x);
-ExprPtr updateOperatorExpr(int op);
+ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);

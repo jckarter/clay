@@ -302,9 +302,9 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
-    case UPDATE_ASSIGNMENT : {
-        UpdateAssignment *y = (UpdateAssignment *)x.ptr();
-        out = new UpdateAssignment(y->op, clone(y->left), clone(y->right));
+    case VARIADIC_ASSIGNMENT : {
+        VariadicAssignment *y = (VariadicAssignment *)x.ptr();
+        out = new VariadicAssignment(y->op, y->ops, clone(y->exprs));
         break;
     }
 

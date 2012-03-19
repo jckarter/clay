@@ -75,6 +75,16 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     return call.ptr();
 }
 
+ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x) {
+    ExprListPtr v = new ExprList();
+    for (int i = 1; i < x->exprs->exprs.size(); ++i) {
+        v->add(x->exprs->exprs[i]);
+        if(i < x->exprs->exprs.size()-1)
+            v->add(new NameRef(new Identifier(x->ops[i])));
+        
+    }
+    return v;
+}
 
 static vector<IdentifierPtr> identV(IdentifierPtr x) {
     vector<IdentifierPtr> v;

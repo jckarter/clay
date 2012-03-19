@@ -2046,7 +2046,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
     case BINDING :
     case ASSIGNMENT :
     case INIT_ASSIGNMENT :
-    case UPDATE_ASSIGNMENT :
+    case VARIADIC_ASSIGNMENT :
         return SA_FALLTHROUGH;
 
     case GOTO :

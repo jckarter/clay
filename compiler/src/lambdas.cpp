@@ -308,10 +308,9 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case UPDATE_ASSIGNMENT : {
-        UpdateAssignment *y = (UpdateAssignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+    case VARIADIC_ASSIGNMENT : {
+        VariadicAssignment *y = (VariadicAssignment *)x.ptr();
+        convertFreeVars(y->exprs, env, ctx);
         break;
     }
 

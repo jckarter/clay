@@ -296,10 +296,10 @@ static void printStatement(ostream &out, const Statement *x) {
         out << "InitAssignment(" << y->left << ", " << y->right << ")";
         break;
     }
-    case UPDATE_ASSIGNMENT : {
-        const UpdateAssignment *y = (const UpdateAssignment *)x;
-        out << "UpdateAssignment(" << y->op << ", " << y->left;
-        out << ", " << y->right << ")";
+    case VARIADIC_ASSIGNMENT : {
+        const VariadicAssignment *y = (const VariadicAssignment *)x;
+        out << "VariadicAssignment(" << y->op << ", " << y->ops;
+        out << ", " << y->exprs->exprs << ")";
         break;
     }
     case GOTO : {
