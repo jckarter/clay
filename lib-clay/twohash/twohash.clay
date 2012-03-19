@@ -93,7 +93,7 @@ overload HashSetLike?(#SetVector[K], #K) = true;
 [T]
 private Hashtable?(#T) = false;
 
-[T | RecordWithField?(T, #"data") and TwoHash?(Type(typeToLValue(T).data))]
+[T | RecordWithField?(T, "data") and TwoHash?(Type(typeToLValue(T).data))]
 overload Hashtable?(#T) = true;
 
 [T | Hashtable?(T)]

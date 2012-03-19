@@ -8,57 +8,57 @@ import zim.zang.(ZangClass);
 
 record NSZone ();
 
-overload selector(#"alloc") = Id;
-overload selector(#"allocWithZone:") = Id, NSZone;
-overload selector(#"new") = Id;
+overload selector("alloc") = Id;
+overload selector("allocWithZone:") = Id, NSZone;
+overload selector("new") = Id;
 
-overload selector(#"init") = Id;
-overload selector(#"class") = Id; // XXX Class
-overload selector(#"copy") = Id;
-overload selector(#"copyWithZone:") = Id, NSZone;
-overload selector(#"mutableCopy") = Id;
-overload selector(#"retain") = Id;
-overload selector(#"release") = Void;
-overload selector(#"autorelease") = Id;
-overload selector(#"dealloc") = Void;
+overload selector("init") = Id;
+overload selector("class") = Id; // XXX Class
+overload selector("copy") = Id;
+overload selector("copyWithZone:") = Id, NSZone;
+overload selector("mutableCopy") = Id;
+overload selector("retain") = Id;
+overload selector("release") = Void;
+overload selector("autorelease") = Id;
+overload selector("dealloc") = Void;
 
-overload selector(#"stringWithUTF8String:") = Id, Pointer[CChar];
-overload selector(#"initWithUTF8String:") = Id, Pointer[CChar];
-overload selector(#"UTF8String") = Pointer[CChar];
-overload selector(#"description") = NSString;
-overload varargSelector(#"stringWithFormat:") = Id, NSString;
-overload varargSelector(#"initWithFormat:") = Id, NSString;
+overload selector("stringWithUTF8String:") = Id, Pointer[CChar];
+overload selector("initWithUTF8String:") = Id, Pointer[CChar];
+overload selector("UTF8String") = Pointer[CChar];
+overload selector("description") = NSString;
+overload varargSelector("stringWithFormat:") = Id, NSString;
+overload varargSelector("initWithFormat:") = Id, NSString;
 
-overload selector(#"drain") = Void;
+overload selector("drain") = Void;
 
-overload selector(#"isEnabled") = Bool;
-overload selector(#"setEnabled:") = Void, Bool;
+overload selector("isEnabled") = Bool;
+overload selector("setEnabled:") = Void, Bool;
 
-overload selector(#"version") = Id;
-overload selector(#"classVersion") = Id;
+overload selector("version") = Id;
+overload selector("classVersion") = Id;
 
 record NSObject = externalClass(Void);
-overload externalClassMethod(#NSObject, #"alloc") = Id;
-overload externalClassMethod(#NSObject, #"allocWithZone:") = Id, NSZone;
-overload externalClassMethod(#NSObject, #"new") = Id;
-overload externalInstanceMethod(#NSObject, #"init") = Id;
-overload externalInstanceMethod(#NSObject, #"copy") = Id;
-overload externalInstanceMethod(#NSObject, #"copyWithZone:") = Id, NSZone;
-overload externalInstanceMethod(#NSObject, #"mutableCopy") = Id;
-overload externalInstanceMethod(#NSObject, #"retain") = Id;
+overload externalClassMethod(#NSObject, "alloc") = Id;
+overload externalClassMethod(#NSObject, "allocWithZone:") = Id, NSZone;
+overload externalClassMethod(#NSObject, "new") = Id;
+overload externalInstanceMethod(#NSObject, "init") = Id;
+overload externalInstanceMethod(#NSObject, "copy") = Id;
+overload externalInstanceMethod(#NSObject, "copyWithZone:") = Id, NSZone;
+overload externalInstanceMethod(#NSObject, "mutableCopy") = Id;
+overload externalInstanceMethod(#NSObject, "retain") = Id;
 
 record NSString = externalClass(NSObject);
-overload externalClassMethod(#NSString, #"stringWithUTF8String:")
+overload externalClassMethod(#NSString, "stringWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargClassMethod(#NSString, #"stringWithFormat:")
+overload externalVarargClassMethod(#NSString, "stringWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(#NSString, #"initWithUTF8String:")
+overload externalInstanceMethod(#NSString, "initWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargInstanceMethod(#NSString, #"initWithFormat:")
+overload externalVarargInstanceMethod(#NSString, "initWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(#NSString, #"UTF8String")
+overload externalInstanceMethod(#NSString, "UTF8String")
     = Pointer[CChar];
-overload externalInstanceMethod(#NSString, #"description")
+overload externalInstanceMethod(#NSString, "description")
     = NSString;
 
 record NSMutableString = externalClass(NSString);

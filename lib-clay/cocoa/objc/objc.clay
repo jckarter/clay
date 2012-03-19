@@ -815,7 +815,7 @@ ForwardingSelector?(sel) = false;
 overload ForwardingSelector?(#sel) = true;
 
 AutoreleasingSelector?(sel) = false;
-overload AutoreleasingSelector?(#"autorelease") = true;
+overload AutoreleasingSelector?("autorelease") = true;
 
 [T, sel | Class?(T) and AllocatingSelector?(sel)]
 overload SelectorReturnType(#Static[T], #sel) = T;

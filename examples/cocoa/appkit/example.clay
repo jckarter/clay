@@ -11,11 +11,11 @@ record ExampleAppDelegate = newClass("ExampleAppDelegate", NSObject,
     ),
 );
 
-overload selector(#"performAdd:") = Void, Id;
-overload selector(#"performSubtract:") = Void, Id;
-overload selector(#"performMultiply:") = Void, Id;
-overload selector(#"performDivide:") = Void, Id;
-overload selector(#"performClear:") = Void, Id;
+overload selector("performAdd:") = Void, Id;
+overload selector("performSubtract:") = Void, Id;
+overload selector("performMultiply:") = Void, Id;
+overload selector("performDivide:") = Void, Id;
+overload selector("performClear:") = Void, Id;
 
 record ExampleController = newClass("ExampleController", NSObject,
     InstanceVars(
