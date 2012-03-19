@@ -427,10 +427,10 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Foo, Char);
     }),
     TestCase("instance variable types", test => {
-        expectEqual(test, "SubString1 ivar "foo"", Int, ClassIvarType(SubString1, "foo"));
-        expectEqual(test, "SubString2 ivar "foo"", Double, ClassIvarType(SubString2, "foo"));
-        expectEqual(test, "SubSubString ivar "foo"", Int, ClassIvarType(SubSubString, "foo"));
-        expectEqual(test, "SubSubString ivar "bar"", StringLiteralRef,
+        expectEqual(test, "SubString1 ivar \"foo\"", Int, ClassIvarType(SubString1, "foo"));
+        expectEqual(test, "SubString2 ivar \"foo\"", Double, ClassIvarType(SubString2, "foo"));
+        expectEqual(test, "SubSubString ivar \"foo\"", Int, ClassIvarType(SubSubString, "foo"));
+        expectEqual(test, "SubSubString ivar \"bar\"", StringLiteralRef,
             ClassIvarType(SubSubString, "bar")
         );
 

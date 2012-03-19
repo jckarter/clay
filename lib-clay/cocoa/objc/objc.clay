@@ -530,10 +530,10 @@ private objcNewClassInstanceVar(ivarPair) {
     var ivarType = ivarPair.1;
 
     return ObjcNewClassInstanceVar(
-        StaticName(ivarName),
+        StringLiteralRef(StaticName(ivarName)),
         TypeSize(ivarType),
         UInt8(log2(TypeAlignment(ivarType))),
-        encode(ivarType)
+        StringLiteralRef(encode(ivarType))
     );
 }
 
@@ -554,7 +554,7 @@ private objcNewClassClassMethod(T, classMethod) {
     return ObjcNewClassMethod(
         objcSelector[selector],
         RawPointer(classMethodImp(T, selector, imp)),
-        SelectorTypeEncoding(Static[T], selector)
+        StringLiteralRef(SelectorTypeEncoding(Static[T], selector))
     );
 }
 
@@ -569,7 +569,7 @@ private objcNewClassInstanceMethod(T, instanceMethod) {
     return ObjcNewClassMethod(
         objcSelector[selector],
         RawPointer(instanceMethodImp(T, selector, imp)),
-        SelectorTypeEncoding(T, selector)
+        StringLiteralRef(SelectorTypeEncoding(T, selector))
     );
 }
 
@@ -642,9 +642,9 @@ private _objcNewClassMake(
 inline overload objcClassMake(#T) : ClassHandle {
     var handle = _objcNewClassMake(
         objcClass[SuperclassType(T)],
-        ClassName(T),
-        StaticName(T),
-        ModuleName(T),
+        StringLiteralRef(ClassName(T)),
+        StringLiteralRef(StaticName(T)),
+        StringLiteralRef(ModuleName(T)),
         begin(objcNewClassInstanceVarsTable[T]),
         end  (objcNewClassInstanceVarsTable[T]),
         begin(objcNewClassClassMethodsTable[T]),
@@ -954,7 +954,7 @@ overload SelectorCallableWith?(#C, #S, ..T: TT)
 
 [C, S, ..TT | VarargSelector?(S) and countValues(..TT) >= SelectorArgumentCount(S)]
 overload SelectorCallableWith?(#C, #S, ..T: TT)
-    = _SelectorCallableWith?(C, S, ..takeValues(#countValues(..varargSelector(S)) - 1, ..T));
+    = _SelectorCallableWith?(C, S, ..takeValues(#(countValues(..varargSelector(S)) - 1), ..T));
 
 private _SelectorCallableWith?(C, S, ..T) {
     alias Params = Tuple(..SelectorArgumentTypes(C, S));
