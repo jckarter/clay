@@ -1903,7 +1903,7 @@ static bool valueFormalArg(FormalArgPtr &x) {
     return true;
 }
 
-static FormalArgPtr makeStaticFormalArg(ExprPtr expr, LocationPtr location) {
+static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPtr location) {
     // desugar static args
     ostringstream sout;
     sout << "%arg" << index;
@@ -1932,7 +1932,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
         error(expr, "#static variadic arguments are not yet supported");
     }
 
-    x = makeStaticFormalArg(expr, location);
+    x = makeStaticFormalArg(index, expr, location);
     return true;
 }
 
@@ -1940,7 +1940,7 @@ static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr expr;
     if (!stringLiteral(expr)) return false;
-    x = makeStaticFormalArg(expr, location);
+    x = makeStaticFormalArg(index, expr, location);
     return true;
 }
 
