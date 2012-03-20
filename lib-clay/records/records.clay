@@ -210,7 +210,6 @@ overload lesser?(a:T, b:T) {
 recordWithProperties(properties, ..fields) {
     var fieldsTuple = Tuple(..fields);
 
-    // ensure they're all static
     #properties;
     #fieldsTuple;
 

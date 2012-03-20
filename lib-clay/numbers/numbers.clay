@@ -294,6 +294,28 @@ inline overload remainder(a:A, b:B) =
 inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 //
+// Variadic ops
+//
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload add(a:A, ..aa:AA) = foldlValues(add, a, ..aa);
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload subtract(a:A, ..aa:AA) = foldlValues(subtract, a, ..aa);
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload multiply(a:A, ..aa:AA) = foldlValues(multiply, a, ..aa);
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload divide(a:A, ..aa:AA) = foldlValues(divide, a, ..aa);
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload quotient(a:A, ..aa:AA) = foldlValues(quotient, a, ..aa);
+
+[A, ..AA when countValues(..AA) != 1]
+inline overload remainder(a:A, ..aa:AA) = foldlValues(remainder, a, ..aa);
+
+//
 // Imaginary binary ops
 //
 
@@ -444,7 +466,7 @@ overload octalDigit("4") = 4;
 overload octalDigit("5") = 5;
 overload octalDigit("6") = 6;
 overload octalDigit("7") = 7;
-//
+
 [T,I when Integer?(T) and StringLiteral?(I)]
 private _octal(#T, #I)
     = #foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
@@ -459,7 +481,7 @@ overload octal(I) = octal(Int, I);
 //
 
 IntegerOverflowChecks?() = AllAssertionsEnabled?()
-    and AssertionEnabled?(#overflowChecks);
+    and AssertionEnabled?("overflowChecks");
 
 [A when Integer?(A) and IntegerOverflowChecks?()]
 inline overload add(a:A, b:A) : A

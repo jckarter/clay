@@ -1,8 +1,8 @@
 private Ok?() = true;
 
-[ when  Ok?()] alias touchable = 1;
+[when Ok?()] alias touchable = 1;
 
-[ when  false] alias untouchable = 1;
+[when false] alias untouchable = 1;
 
 main() {
     println(touchable);

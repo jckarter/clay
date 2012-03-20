@@ -446,7 +446,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case FLOAT_LITERAL :
     case CHAR_LITERAL :
     case STRING_LITERAL :
-    case IDENTIFIER_LITERAL :
         break;
 
     case NAME_REF : {

@@ -1,5 +1,5 @@
 
-[T  when  Sequence?(T)]
+[T when Sequence?(T)]
 sequenceInfo(x:T) {
     println("T = ", T);
     println("Sequence?(T) = ", Sequence?(T));

@@ -48,7 +48,7 @@ enumName(x:E) {
     alias n = EnumMemberCount(E);
     ..for (i in staticIntegers(#n)) {
         if (x == E(unwrapStatic(i)))
-            return EnumMemberName(E, i);
+            return StringLiteralRef(EnumMemberName(E, i));
     }
-    return "unknown enum value";
+    return StringLiteralRef("unknown enum value");
 }

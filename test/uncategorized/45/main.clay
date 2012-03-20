@@ -16,6 +16,6 @@ overload PtrTuple(..args:T) =
     PtrTuple[..T]( [..pointerValues(..args)] );
 
 main() {
-    var a = PtrTuple("foo", #bar, 10);
+    var a = PtrTuple("foo", "bar", 10);
     println(Type(a));
 }

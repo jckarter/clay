@@ -1,9 +1,9 @@
 import cocoa.*;
 import cocoa.appkit.*;
 
-record AppDelegate = newClass(#___PROJECTNAMEASIDENTIFIER___AppDelegate, NSObject,
+record AppDelegate = newClass("___PROJECTNAMEASIDENTIFIER___AppDelegate", NSObject,
     InstanceVars(
-        [#window, IBOutlet(NSWindow)],
+        ["window", IBOutlet(NSWindow)],
     ),
     ClassMethods(),
     InstanceMethods(),

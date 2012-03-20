@@ -1,1 +1,1 @@
-PtrTuple[StringConstant, Static[#bar], Int32]
+PtrTuple[Static["foo"], Static["bar"], Int32]

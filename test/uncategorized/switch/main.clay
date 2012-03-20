@@ -1,12 +1,12 @@
 
 f(n) {
     switch (n)
-    case (0) return "zero";
-    case (1) return "one";
+    case (0) return StringLiteralRef("zero");
+    case (1) return StringLiteralRef("one");
     case (2, 3)
-        return "two or three";
+        return StringLiteralRef("two or three");
     else
-        return "other";
+        return StringLiteralRef("other");
 }
 
 main() {

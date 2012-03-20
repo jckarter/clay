@@ -13,5 +13,5 @@ bar(x:T) {
 
 main() {
     GetOverload(foo, Float)(123);
-    GetOverload(bar, StringConstant)(123);
+    GetOverload(bar, String)(123);
 }

@@ -12,9 +12,9 @@ overload __operators__.invalidDispatch(x:LessThanThree) {
 }
 
 define foo;
-overload foo(#0) = "zero";
-overload foo(#1) = "one";
-overload foo(#2) = "two";
+overload foo(#0) = StringLiteralRef("zero");
+overload foo(#1) = StringLiteralRef("one");
+overload foo(#2) = StringLiteralRef("two");
 
 main() {
     var x, y, z = LessThanThree(0), LessThanThree(1), LessThanThree(2);

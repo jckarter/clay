@@ -1,6 +1,6 @@
 [T] variant Foo[T] (Int, T);
 
-[T  when  Integer?(T)]
+[T when Integer?(T)]
 variant Bar[T] (Int, T);
 
 main() {

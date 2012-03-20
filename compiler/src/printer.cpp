@@ -113,11 +113,6 @@ static void printExpr(ostream &out, const Expr *x) {
         out << "StringLiteral(" << y->value << ")";
         break;
     }
-    case IDENTIFIER_LITERAL : {
-        const IdentifierLiteral *y = (const IdentifierLiteral *)x;
-        out << "IdentifierLiteral(" << y->value << ")";
-        break;
-    }
 
     case NAME_REF : {
         const NameRef *y = (const NameRef *)x;
@@ -254,6 +249,11 @@ static void printExpr(ostream &out, const Expr *x) {
 
 static void printStatement(ostream &out, const Statement *x) {
     switch (x->stmtKind) {
+    case WITH : {
+        const WithStatement *y = (const WithStatement *)y;
+        out << "WithStatement(" << y->lhs << ", " << y->rhs << ")";
+        break;
+    }
     case BLOCK : {
         const Block *y = (const Block *)x;
         out << "Block(" << bigVec(y->statements) << ")";
@@ -835,8 +835,8 @@ void printName(ostream &out, ObjectPtr x)
     switch (x->objKind) {
     case IDENTIFIER : {
         Identifier *y = (Identifier *)x.ptr();
-        out << "#";
         if (_safeNames > 0) {
+            out << "#";
             for (unsigned i = 0; i < y->str.size(); ++i) {
                 char ch = y->str[i];
                 if (isSafe(ch))
@@ -846,7 +846,43 @@ void printName(ostream &out, ObjectPtr x)
             }
         }
         else {
-            out << y->str;
+            out << "\"";
+            for (unsigned i = 0; i < y->str.size(); ++i) {
+                char ch = y->str[i];
+                switch (ch) {
+                case '\0':
+                    out << "\\0";
+                    break;
+                case '\n':
+                    out << "\\n";
+                    break;
+                case '\r':
+                    out << "\\r";
+                    break;
+                case '\t':
+                    out << "\\t";
+                    break;
+                case '\f':
+                    out << "\\f";
+                    break;
+                case '\\':
+                    out << "\\\\";
+                    break;
+                case '\'':
+                    out << "\\'";
+                    break;
+                case '\"':
+                    out << "\\\"";
+                    break;
+                default:
+                    if (ch >= '\x20' and ch <= '\x7E')
+                        out << ch;
+                    else
+                        out << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (int)ch;
+                    break;
+                }
+            }
+            out << "\"";
         }
         break;
     }

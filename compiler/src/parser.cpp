@@ -223,28 +223,8 @@ static bool stringLiteral(ExprPtr &x) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_STRING_LITERAL))
         return false;
-    x = new StringLiteral(t->str);
-    x->location = location;
-    return true;
-}
-
-static bool identifierLiteral(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!symbol("#")) return false;
-    int p = save();
-    IdentifierPtr y;
-    TokenPtr t;
-    if (identifier(y)) {
-        // ok
-    }
-    else if (restore(p), (next(t) && (t->tokenKind == T_STRING_LITERAL))) {
-        y = new Identifier(t->str);
-        y->location = t->location;
-    }
-    else {
-        return false;
-    }
-    x = new IdentifierLiteral(y);
+    IdentifierPtr id = new Identifier(t->str);
+    x = new StringLiteral(id);
     x->location = location;
     return true;
 }
@@ -256,7 +236,6 @@ static bool literal(ExprPtr &x) {
     if (restore(p), floatLiteral(PLUS, x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
-    if (restore(p), identifierLiteral(x)) return true;
     return false;
 }
 
@@ -557,11 +536,13 @@ static bool suffixExpr(ExprPtr &x) {
 // prefix expr
 //
 
+static bool prefixExpr(ExprPtr &x);
+
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("&")) return false;
     ExprPtr a;
-    if (!suffixExpr(a)) return false;
+    if (!prefixExpr(a)) return false;
     x = new VariadicOp(ADDRESS_OF, new ExprList(a));
     x->location = location;
     return true;
@@ -594,7 +575,7 @@ static bool signExpr(ExprPtr &x) {
     if (signedLiteral(op, x))
         return true;
     restore(p);
-    if (!suffixExpr(b)) return false;
+    if (!prefixExpr(b)) return false;
     x = new VariadicOp(op, new ExprList(b));
     x->location = location;
     return true;
@@ -604,8 +585,18 @@ static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!opsymbol("*")) return false;
     ExprPtr a;
-    if (!suffixExpr(a)) return false;
+    if (!prefixExpr(a)) return false;
     x = new DispatchExpr(a);
+    x->location = location;
+    return true;
+}
+
+static bool staticExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    if (!symbol("#")) return false;
+    ExprPtr y;
+    if (!prefixExpr(y)) return false;
+    x = new StaticExpr(y);
     x->location = location;
     return true;
 }
@@ -615,6 +606,7 @@ static bool prefixExpr(ExprPtr &x) {
     if (signExpr(x)) return true;
     if (restore(p), addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
+    if (restore(p), staticExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
     return false;
 }
@@ -910,18 +902,8 @@ static bool unpack(ExprPtr &x) {
 
 
 //
-// staticExpr, pairExpr
+// pairExpr
 //
-
-static bool staticExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    if (!keyword("static")) return false;
-    ExprPtr y;
-    if (!expression(y)) return false;
-    x = new StaticExpr(y);
-    x->location = location;
-    return true;
-}
 
 static bool pairExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
@@ -930,7 +912,7 @@ static bool pairExpr(ExprPtr &x) {
     if (!symbol(":")) return false;
     ExprPtr z;
     if (!expression(z)) return false;
-    ExprPtr ident = new IdentifierLiteral(y);
+    ExprPtr ident = new StringLiteral(y);
     ident->location = location;
     ExprListPtr args = new ExprList();
     args->add(ident);
@@ -953,7 +935,6 @@ static bool expression(ExprPtr &x) {
     if (restore(p), orExpr(x)) goto success;
     if (restore(p), ifExpr(x)) goto success;
     if (restore(p), unpack(x)) goto success;
-    if (restore(p), staticExpr(x)) goto success;
     return false;
 
 success:
@@ -1642,16 +1623,7 @@ static bool valueFormalArg(FormalArgPtr &x) {
     return true;
 }
 
-static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprPtr y;
-    if (!keyword("static")) return false;
-    if (!expression(y)) return false;
-
-    if (y->exprKind == UNPACK) {
-        error(y, "static keyword cannot be used with variadic arguments");
-    }
-
+static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPtr location) {
     // desugar static args
     ostringstream sout;
     sout << "%arg" << index;
@@ -1661,12 +1633,34 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
         new ForeignExpr("prelude",
                         new NameRef(new Identifier("Static")));
 
-    IndexingPtr indexing = new Indexing(staticName, new ExprList(y));
+    IndexingPtr indexing = new Indexing(staticName, new ExprList(expr));
     indexing->startLocation = location;
     indexing->endLocation = currentLocation();
 
-    x = new FormalArg(argName, indexing.ptr());
-    x->location = location;
+    FormalArgPtr arg = new FormalArg(argName, indexing.ptr());
+    arg->location = location;
+    return arg;
+}
+
+static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr expr;
+    if (!symbol("#")) return false;
+    if (!expression(expr)) return false;
+
+    if (expr->exprKind == UNPACK) {
+        error(expr, "#static variadic arguments are not yet supported");
+    }
+
+    x = makeStaticFormalArg(index, expr, location);
+    return true;
+}
+
+static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr expr;
+    if (!stringLiteral(expr)) return false;
+    x = makeStaticFormalArg(index, expr, location);
     return true;
 }
 
@@ -1674,6 +1668,7 @@ static bool formalArg(unsigned index, FormalArgPtr &x) {
     int p = save();
     if (valueFormalArg(x)) return true;
     if (restore(p), staticFormalArg(index, x)) return true;
+    if (restore(p), stringFormalArg(index, x)) return true;
     return false;
 }
 

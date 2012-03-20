@@ -1,6 +1,6 @@
 import keywordarguments.*;
 
-foo(x: Int, zim: Int, zang: StringConstant, zung: Double) {
+foo(x: Int, zim: Int, zang: StringLiteralRef, zung: Double) {
     println();
     println("x = ", x);
     println("zim = ", zim);
@@ -9,17 +9,17 @@ foo(x: Int, zim: Int, zang: StringConstant, zung: Double) {
 }
 
 requiredKeywords(x, ..keywords) {
-    foo(x, ..keywordArguments([#zim, #zang, #zung], ..keywords));
+    foo(x, ..keywordArguments(["zim", "zang", "zung"], ..keywords));
 }
 
 optionalKeywords(x, ..keywords) {
-    foo(x, ..keywordArguments([zim: 5, zang: "six", zung: 7.0], ..keywords));
+    foo(x, ..keywordArguments([zim: 5, zang: StringLiteralRef("six"), zung: 7.0], ..keywords));
 }
 
 main() {
-    requiredKeywords(0, zim: 1, zang: "two", zung: 3.0);
+    requiredKeywords(0, zim: 1, zang: StringLiteralRef("two"), zung: 3.0);
     optionalKeywords(4);
     optionalKeywords(8, zim: 9);
-    optionalKeywords(10, zang: "eleven");
+    optionalKeywords(10, zang: StringLiteralRef("eleven"));
     optionalKeywords(12, zung: 13.0);
 }

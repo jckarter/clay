@@ -86,6 +86,40 @@ Language changes:
 
   Thanks to Jeremy Clifford.
 
+* Static string literals and string constant literals have been combined.
+  String literals now always behave like static strings and evaluate to
+  singleton Static["string"] values. These static strings can now be
+  iterated and indexed like StringConstants. lib-clay provides a
+  StringLiteralRef type in order to reference constant strings at runtime.
+
+    // 0.1
+    #foo        // value of type Static[#foo]
+    #"bar"      // value of type Static[#bar]
+    "bas"       // value of type String
+
+    // 0.2
+    "foo"
+    "bar"
+    StringLiteralRef("bas")
+
+* The 'static' keyword has been replaced with the '#' operator in argument
+  declarations and expressions. The '#' operator has the same precedence as
+  prefix '&', '+', and '-'. The '#' is now optional for static string literal
+  arguments.
+
+    // 0.1
+    foo(static Foo) {}
+    bar(static 3) {}
+    bas(static #string) {}
+    [n] zim(static n) = static n+1;
+
+    // 0.2
+    foo(#Foo) {}
+    bar(#3) {}
+    bas("string") {}
+    [n] zim(#n) = #(n+1);
+
+
 Library changes:
 ----------------
 * Record types are no longer provided with a static index (x.0) operator
@@ -165,6 +199,15 @@ Library changes:
     }
 
   Thanks to Jeremy Clifford.
+
+* The StringConstant type has been replaced a new StringLiteralRef type.
+  StringLiteralRef values can be constructed from string literals.
+
+    // 0.1
+    "foo"
+
+    // 0.2
+    StringLiteralRef("foo")
 
 Compiler frontend changes:
 --------------------------

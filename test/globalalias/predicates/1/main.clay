@@ -1,6 +1,6 @@
 [T] alias anyTwo[T] = T(2);
 
-[T  when  Integer?(T)]
+[T when Integer?(T)]
 alias intTwo[T] = T(2);
 
 main() {

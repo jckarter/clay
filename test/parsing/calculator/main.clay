@@ -4,11 +4,11 @@ import maybe.*;
 //
 // bracketed -> '(' expr ')'
 // number -> digit+
-// factor -> number  when  bracketed
+// factor -> number when bracketed
 //
-// term -> factor (('*'  when  '/') factor)*;
+// term -> factor (('*' when '/') factor)*;
 //
-// expr -> term (('+'  when  '-') term)*
+// expr -> term (('+' when '-') term)*
 //
 
 expr(input) : Maybe[Int] = expr2(input);

@@ -770,4 +770,4 @@ external (GLAPI) glWindowPos3sv(_p: Pointer[GLshort]);
 record GLFunctions ();
 
 overload fieldRef(gl:GLFunctions, ident) =
-    forward fieldRef(self, IdentifierConcat(#gl, ident));
+    forward fieldRef(self, "gl" ++ ident);

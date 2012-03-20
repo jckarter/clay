@@ -33,7 +33,7 @@ private var objcConstantString[value]
         Class(&__CFConstantStringClassReference),
         CFConstantStringID,
         cstring(StaticName(value)),
-        IdentifierSize(value)
+        size(value)
     );
 
 
@@ -59,29 +59,25 @@ overload encodeIdentifier() = "";
 
 [X] overload encodeIdentifier(#X) = "?";
 [T] overload encodeIdentifier(#Pointer[T])
-    = IdentifierConcat("^", encodeIdentifier(T));
+    = "^" ++ encodeIdentifier(T);
 
 // XXX distinguish raw pointer from Pointer[UInt8]
 overload encodeIdentifier(#RawPointer) = "^v";
 
 [T when Record?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]])
-    = IdentifierConcat("^^{", IdentifierStaticName(T), "}");
+    = "^^{" ++ StaticName(T) ++ "}";
 [T when Tuple?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^{Tuple}";
 [T when Union?(T)]
 overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^(Union)";
 
-[T when RegularRecord?(T)] overload encodeIdentifier(#T)
-    = IdentifierConcat(
-        "{", IdentifierStaticName(T), "=",
-        encodeIdentifier(..RecordFieldTypes(T)),
-        "}"
-    );
+[T when RegularRecord?(T)] overload encodeIdentifier(#T) =
+    "{" ++ StaticName(T) ++ "=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
 [..Members] overload encodeIdentifier(#Tuple[..Members])
-    = IdentifierConcat("{Tuple=", encodeIdentifier(..RecordFieldTypes(T)), "}");
+    = "{Tuple=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
 [..Members] overload encodeIdentifier(#Union[..Members])
-    = IdentifierConcat("(Union=", encodeIdentifier(..Members), ")");
+    = "(Union=" ++ encodeIdentifier(..Members) ++ ")";
 
 overload encodeIdentifier(#Pointer[CChar]) = "*";
 overload encodeIdentifier(#ObjectHandle) = "@";
@@ -104,9 +100,10 @@ overload encodeIdentifier(#[]) = "v";
 
 [..T when countValues(..T) > 1]
 overload encodeIdentifier(..types: T)
-    = IdentifierConcat(..mapValues(encodeIdentifier, ..types));
+    = cat(..mapValues(encodeIdentifier, ..types));
 
-encode(..types) = StaticName(encodeIdentifier(..types));
+// fixme
+encode(..types) = encodeIdentifier(..types);
 
 
 //
@@ -134,11 +131,11 @@ objectParameter(forward x: T) = forward ObjectParameterType(T)(objectHandle(x));
 
 private release(x) {
     if (not null?(x)) {
-        objc_msgSend(objectHandle(x), objcSelector[#release]);
+        objc_msgSend(objectHandle(x), objcSelector["release"]);
     }
 }
 private retain(x) {
-    return objc_msgSend(objectHandle(x), objcSelector[#retain]);
+    return objc_msgSend(objectHandle(x), objcSelector["retain"]);
 }
 
 
@@ -321,19 +318,15 @@ define ClassClassMethods;
 define ClassInstanceMethods;
 
 MangledModuleChar(c) = c;
-overload MangledModuleChar(".") = #__;
+overload MangledModuleChar(#".") = "__";
 
-MangledModuleName(T) = IdentifierConcat(..mapValues(
+MangledModuleName(T) = cat(..mapValues(
     MangledModuleChar,
-    ..IdentifierChars(IdentifierModuleName(T))
+    ..IdentifierChars(ModuleName(T))
 ));
 
 [T when ClayClass?(T)]
-overload ClassName(#T) {
-    return StaticName(IdentifierConcat(
-        "clay__", MangledModuleName(T), "__", IdentifierStaticName(T)
-    ));
-}
+overload ClassName(#T) = "clay__" ++ MangledModuleName(T) ++ "__" ++ StaticName(T);
 
 [T when ExternalClass?(T) or ExternalClayClass?(T)]
 ClassName(#T) = StaticName(T);
@@ -377,7 +370,7 @@ externalClass(#Super) = recordWithProperties(
         [SuperclassType, Super],
         [ExternalClass?, #true],
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [name, Super when StringLiteral?(name) and ValidSuperclass?(Super)]
@@ -387,16 +380,16 @@ overload externalClass(#name, #Super) = recordWithProperties(
         [ExternalClass?, #true],
         [ClassStaticName, name],
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
-record ExternalClassNotFound (name: StringConstant);
+record ExternalClassNotFound (name: StringLiteralRef);
 instance Exception (ExternalClassNotFound);
 
-_objcExternalClassMake(name: StringConstant) {
+private _objcExternalClassMake(name) {
     var handle = objc_getClass(cstring(name));
     if (null?(handle))
-        throw ExternalClassNotFound(name);
+        throw ExternalClassNotFound(StringLiteralRef(name));
     return handle;
 }
 
@@ -435,7 +428,7 @@ newClass(#Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [name, Super, IV, CM, IM] // XXX ValidSuperclass?(Super)]
@@ -452,7 +445,7 @@ overload newClass(#name, #Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
 [Super, IV, CM, IM] // XXX when ValidSuperclass?(Super)]
@@ -469,16 +462,16 @@ newExternalClass(#Super,
         Tuple(ClassClassMethods, ..unpack(classmethods.value)),
         Tuple(ClassInstanceMethods, ..unpack(instancemethods.value)),
     ], 
-    [#__handle__, ObjectHandle]
+    ["__handle__", ObjectHandle]
 );
 
-record NewClassCouldNotBeCreated (module: StringConstant, name: StringConstant);
+record NewClassCouldNotBeCreated (module: StringLiteralRef, name: StringLiteralRef);
 instance Exception (NewClassCouldNotBeCreated);
 
-record NewClassCouldNotAddIvar (module: StringConstant, name: StringConstant, ivar: StringConstant);
+record NewClassCouldNotAddIvar (module: StringLiteralRef, name: StringLiteralRef, ivar: StringLiteralRef);
 instance Exception (NewClassCouldNotAddIvar);
 
-record NewClassCouldNotAddMethod (module: StringConstant, name: StringConstant, selector: CStringRef);
+record NewClassCouldNotAddMethod (module: StringLiteralRef, name: StringLiteralRef, selector: CStringRef);
 instance Exception (NewClassCouldNotAddMethod);
 
 private raiseNSException(reason: ObjectHandle, format: ObjectHandle, ..args) {
@@ -526,10 +519,10 @@ private instanceMethodImp(#T, #sel, fn)
     );
 
 private record ObjcNewClassInstanceVar(
-    name: StringConstant,
+    name: StringLiteralRef,
     size: SizeT,
     alignment: UInt8,
-    typeEncoding: StringConstant,
+    typeEncoding: StringLiteralRef,
 );
 
 private objcNewClassInstanceVar(ivarPair) {
@@ -537,10 +530,10 @@ private objcNewClassInstanceVar(ivarPair) {
     var ivarType = ivarPair.1;
 
     return ObjcNewClassInstanceVar(
-        StaticName(ivarName),
+        StringLiteralRef(StaticName(ivarName)),
         TypeSize(ivarType),
         UInt8(log2(TypeAlignment(ivarType))),
-        encode(ivarType)
+        StringLiteralRef(encode(ivarType))
     );
 }
 
@@ -552,7 +545,7 @@ private var objcNewClassInstanceVarsTable[T]
 private record ObjcNewClassMethod (
     selector: SelectorHandle,
     imp: RawPointer,
-    typeEncoding: StringConstant,
+    typeEncoding: StringLiteralRef,
 );
 
 private objcNewClassClassMethod(T, classMethod) {
@@ -561,7 +554,7 @@ private objcNewClassClassMethod(T, classMethod) {
     return ObjcNewClassMethod(
         objcSelector[selector],
         RawPointer(classMethodImp(T, selector, imp)),
-        SelectorTypeEncoding(Static[T], selector)
+        StringLiteralRef(SelectorTypeEncoding(Static[T], selector))
     );
 }
 
@@ -576,7 +569,7 @@ private objcNewClassInstanceMethod(T, instanceMethod) {
     return ObjcNewClassMethod(
         objcSelector[selector],
         RawPointer(instanceMethodImp(T, selector, imp)),
-        SelectorTypeEncoding(T, selector)
+        StringLiteralRef(SelectorTypeEncoding(T, selector))
     );
 }
 
@@ -586,8 +579,8 @@ private var objcNewClassInstanceMethodsTable[T]
     );
 
 private _objcNewClassAddMethods(
-    moduleName: StringConstant,
-    symbolName: StringConstant,
+    moduleName: StringLiteralRef,
+    symbolName: StringLiteralRef,
     handle: ClassHandle,
     methodsBegin: Pointer[ObjcNewClassMethod],
     methodsEnd: Pointer[ObjcNewClassMethod]
@@ -604,9 +597,9 @@ private _objcNewClassAddMethods(
 
 private _objcNewClassMake(
     super: ClassHandle,
-    className: StringConstant,
-    symbolName: StringConstant,
-    moduleName: StringConstant,
+    className: StringLiteralRef,
+    symbolName: StringLiteralRef,
+    moduleName: StringLiteralRef,
     ivarsBegin: Pointer[ObjcNewClassInstanceVar],
     ivarsEnd: Pointer[ObjcNewClassInstanceVar],
     classMethodsBegin: Pointer[ObjcNewClassMethod],
@@ -649,9 +642,9 @@ private _objcNewClassMake(
 inline overload objcClassMake(#T) : ClassHandle {
     var handle = _objcNewClassMake(
         objcClass[SuperclassType(T)],
-        ClassName(T),
-        StaticName(T),
-        ModuleName(T),
+        StringLiteralRef(ClassName(T)),
+        StringLiteralRef(StaticName(T)),
+        StringLiteralRef(ModuleName(T)),
         begin(objcNewClassInstanceVarsTable[T]),
         end  (objcNewClassInstanceVarsTable[T]),
         begin(objcNewClassClassMethodsTable[T]),
@@ -961,7 +954,7 @@ overload SelectorCallableWith?(#C, #S, ..T: TT)
 
 [C, S, ..TT when VarargSelector?(S) and countValues(..TT) >= SelectorArgumentCount(S)]
 overload SelectorCallableWith?(#C, #S, ..T: TT)
-    = _SelectorCallableWith?(C, S, ..takeValues(#countValues(..varargSelector(S)) - 1, ..T));
+    = _SelectorCallableWith?(C, S, ..takeValues(#(countValues(..varargSelector(S)) - 1), ..T));
 
 private _SelectorCallableWith?(C, S, ..T) {
     alias Params = Tuple(..SelectorArgumentTypes(C, S));
@@ -1018,13 +1011,13 @@ msgSend(#SelfT, imp, self, #S, forward ..args: T) {
 //
 
 private _identifierSelectorChar(c) = c;
-overload _identifierSelectorChar(##_) = ":";
+overload _identifierSelectorChar(#"_") = ":";
 
 [argCount, underscoreCount, lastCharacter]
 private _extraColon(#argCount, #underscoreCount, #lastCharacter) = ;
-[argCount, underscoreCount, lastCharacter when
+[argCount, underscoreCount, lastCharacter |
     argCount > underscoreCount
-    and lastCharacter != #_
+    and lastCharacter != "_"
     and lastCharacter != ":"
 ]
 overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
@@ -1032,9 +1025,9 @@ overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
 
 [argCount] private _identifierSelector(#argCount, ..chars) {
     var lastCharacter = lastValue(..chars);
-    return IdentifierConcat(
+    return cat(
         ..mapValues(_identifierSelectorChar, ..chars),
-        .._extraColon(#argCount, #countOccurrences(#_, ..chars), lastCharacter)
+        .._extraColon(#argCount, #countOccurrences("_", ..chars), lastCharacter)
     );
 }
 
@@ -1045,15 +1038,15 @@ private var memoIdentifierSelector[identifier, argCount]
     = memoIdentifierSelector[identifier, argCount];
 
 [identifier, minArity]
-private _ValidMethodStringLiteral?(#identifier, #minArity)
+private _ValidMethodIdentifier?(#identifier, #minArity)
     = Selector?(identifierSelector(identifier, #minArity))
       or Selector?(identifierSelector(identifier, #minArity+1));
 
 [identifier]
-ValidMethodStringLiteral?(#identifier) = true;
-    //= _ValidMethodStringLiteral?(
+ValidMethodIdentifier?(#identifier) = true;
+    //= _ValidMethodIdentifier?(
     //    #identifier,
-    //    #countOccurrences(#_, ...IdentifierChars(identifier))
+    //    #countOccurrences("_", ...IdentifierChars(identifier))
     //);
 
 
@@ -1067,10 +1060,10 @@ private record MethodRef[T, Captured, identifier] (self: Captured);
 overload MethodRef(T, forward value, identifier)
     = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
-[T, cmd when ObjectRef?(T) and cmd != #__handle__ and ValidMethodStringLiteral?(cmd)]
+[T, cmd when ObjectRef?(T) and cmd != "__handle__" and ValidMethodIdentifier?(cmd)]
 overload fieldRef(forward self: T, #cmd)
     = MethodRef(ObjectParameterType(T), self, cmd);
-[T, cmd when Class?(T) and ValidMethodStringLiteral?(cmd)]
+[T, cmd when Class?(T) and ValidMethodIdentifier?(cmd)]
 overload fieldRef(#T, #cmd) = MethodRef(Static[T], T, cmd);
 
 [T, selector, ..Args when ObjectParameterType?(T) and Selector?(selector)]
@@ -1083,7 +1076,7 @@ callMethod(forward self: T, #selector, forward ..args: Args)
         ..args
     );
 
-[T, Captured, identifier, ..Args when
+[T, Captured, identifier, ..Args |
     Selector?(identifierSelector(identifier, #countValues(..Args)))
     and SelectorCallableWith?(
         T,
@@ -1144,7 +1137,7 @@ overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
 overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 
 
-[T, ivar when Class?(T) and ivar != #__handle__ and ClassInstanceVar?(T, ivar)]
+[T, ivar when Class?(T) and ivar != "__handle__" and ClassInstanceVar?(T, ivar)]
 overload fieldRef(ivars: IvarsRef[T], #ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
@@ -1170,7 +1163,7 @@ private record SuperMethodRef[T, Captured, identifier] (__self__: Captured);
 overload SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
     = SuperMethodRef[T, Captured, identifier](super.__self__);
 
-[T, Captured, cmd when Class?(T) and cmd != #__self__]
+[T, Captured, cmd when Class?(T) and cmd != "__self__"]
 overload fieldRef(sup: SuperRef[T, Captured], #cmd)
     = SuperMethodRef(sup, cmd);
 

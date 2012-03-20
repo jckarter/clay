@@ -4,19 +4,19 @@ import test.*;
 import test.memory.*;
 
 record Foo (x: Int64, y: Double);
-[I  when  Integer?(I) and I != Int64]
+[I when Integer?(I) and I != Int64]
 overload Foo(x: I, y: Double) = Foo(Int64(x), y);
 
-overload selector(#"lifecycleTest") = Id;
-overload selector(#"lifecycleTestWithCanary:") = Id, Canary;
-overload selector(#"lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(#"initWithCanary:") = Id, Canary;
-overload selector(#"initWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(#"initWithSubcanary:") = Id, Canary;
+overload selector("lifecycleTest") = Id;
+overload selector("lifecycleTestWithCanary:") = Id, Canary;
+overload selector("lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector("initWithCanary:") = Id, Canary;
+overload selector("initWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector("initWithSubcanary:") = Id, Canary;
 
 record LifecycleTest = newClass(NSObject,
     InstanceVars(
-        [#canary, Canary],
+        ["canary", Canary],
     ),
     ClassMethods(
         AutoreleasedClassMethod("lifecycleTestWithCanary:", "initWithCanary:"),
@@ -32,7 +32,7 @@ record LifecycleTest = newClass(NSObject,
 
 record LifecycleSubTest = newClass(LifecycleTest,
     InstanceVars(
-        [#subcanary, Canary],
+        ["subcanary", Canary],
     ),
     ClassMethods(
         AutoreleasedClassMethod(
@@ -48,38 +48,38 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
 );
 
-overload selector(#"foo") = Int;
-overload selector(#"setFoo:") = Void, Int;
-overload selector(#"foo64") = Int;
-overload selector(#"setFoo64:") = Void, Int;
-overload selector(#"bar") = Float;
-overload selector(#"setBar:") = Void, Float;
-overload selector(#"isBas") = Bool;
-overload selector(#"setBas:") = Void, Bool;
+overload selector("foo") = Int;
+overload selector("setFoo:") = Void, Int;
+overload selector("foo64") = Int;
+overload selector("setFoo64:") = Void, Int;
+overload selector("bar") = Float;
+overload selector("setBar:") = Void, Float;
+overload selector("isBas") = Bool;
+overload selector("setBas:") = Void, Bool;
 
 record PropertyTest = newClass(NSObject,
     InstanceVars(
-        [#fooVar, Int64],
-        [#bar, Retained[Id]],
-        [#bas, Bool],
+        ["fooVar", Int64],
+        ["bar", Retained[Id]],
+        ["bas", Bool],
     ),
     ClassMethods(),
     InstanceMethods(
         // reader/writer names related but different from variable name, default selector type
-        ..PropertyInstanceMethods(#fooVar, "foo"),
+        ..PropertyInstanceMethods("fooVar", "foo"),
         // reader/writer names related but different from variable name, specified selector type
-        ..PropertyInstanceMethods(#fooVar, "foo64", Int64),
+        ..PropertyInstanceMethods("fooVar", "foo64", Int64),
         // default reader/writer names, specified selector type
-        ..PropertyInstanceMethods(#bar, Id),
+        ..PropertyInstanceMethods("bar", Id),
         // reader/writer names both different, default selector type
-        ..PropertyInstanceMethods(#bas, "isBas", "setBas:"),
+        ..PropertyInstanceMethods("bas", "isBas", "setBas:"),
     )
 );
 
-overload selector(#"initWithFoo:bar:") = Id, Id, Id;
+overload selector("initWithFoo:bar:") = Id, Id, Id;
 
-record RegularTest = regularClass([#foo, String], [#bar, Char]);
-record RegularCanary = regularClass([#foo, Canary], [#bar, Canary]);
+record RegularTest = regularClass(["foo", String], ["bar", Char]);
+record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);
 
 main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
     TestCase("constructor overloads", test => {

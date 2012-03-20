@@ -914,12 +914,15 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(enumToInt);
     PRIMITIVE(intToEnum);
 
-    PRIMITIVE(IdentifierP);
-    PRIMITIVE(IdentifierSize);
-    PRIMITIVE(IdentifierConcat);
-    PRIMITIVE(IdentifierSlice);
-    PRIMITIVE(IdentifierModuleName);
-    PRIMITIVE(IdentifierStaticName);
+    PRIMITIVE(StringLiteralP);
+    PRIMITIVE(stringLiteralByteIndex);
+    PRIMITIVE(stringLiteralBytes);
+    PRIMITIVE(stringLiteralByteSize);
+    PRIMITIVE(stringLiteralByteSlice);
+    PRIMITIVE(stringLiteralConcat);
+    PRIMITIVE(stringLiteralFromBytes);
+
+    PRIMITIVE(stringTableConstant);
 
     PRIMITIVE(OrderUnordered);
     PRIMITIVE(OrderMonotonic);

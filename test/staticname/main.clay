@@ -16,5 +16,5 @@ main() {
 }
 
 disp(x) {
-    println(x, ": ", StaticName(x), ", ", IdentifierStaticName(x));
+    println(x, ": ", StaticName(x));
 }

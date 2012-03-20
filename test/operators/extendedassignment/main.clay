@@ -21,8 +21,8 @@ overload staticIndexAssign(x:Foo, #i, value) {
 }
 
 [i]
-overload staticIndexUpdateAssign(op, x:Foo, #i, ..args) {
-    println("staticIndexUpdateAssign(", ..weaveValues(", ",op,"x",i,..args), ")");
+overload staticIndexUpdateAssign(op, x:Foo, #i, value) {
+    println("staticIndexUpdateAssign(", op, ", x, ", i, ", ", value, ")");
 }
 
 [FIELD]
@@ -31,8 +31,8 @@ overload fieldRefAssign(x:Foo, #FIELD, value) {
 }
 
 [FIELD]
-overload fieldRefUpdateAssign(op, x:Foo, #FIELD, ..args) {
-    println("fieldRefUpdateAssign(", ..weaveValues(", ",op,"x",FIELD, ..args), ")");
+overload fieldRefUpdateAssign(op, x:Foo, #FIELD, value) {
+    println("fieldRefUpdateAssign(", op, ", x, ", FIELD, ", ", value, ")");
 }
 
 main() {

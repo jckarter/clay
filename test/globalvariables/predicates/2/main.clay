@@ -1,8 +1,8 @@
 private Ok?() = true;
 
-[ when  Ok?()] var touchable = 1;
+[when Ok?()] var touchable = 1;
 
-[ when  false] var untouchable = 1;
+[when false] var untouchable = 1;
 
 main() {
     println(touchable);

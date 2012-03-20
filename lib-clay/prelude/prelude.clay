@@ -31,8 +31,8 @@ public import vectors.*;
 public import vectors.buffer.*;
 public import characters.*;
 public import strings.*;
-public import strings.constants.*;
 public import strings.cstringrefs.*;
+public import strings.literals.*;
 
 public import algorithms.*;
 public import algorithms.strings.*;

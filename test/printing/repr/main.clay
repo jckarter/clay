@@ -1,9 +1,9 @@
 import printer.formatter.(repr);
 import numbers.floats.(nan, nan?);
 
-record Foo (x:Int, y:StringConstant);
+record Foo (x:Int, y:StringLiteralRef);
 
-variant Bar (Int, StringConstant);
+variant Bar (Int, StringLiteralRef);
 
 main() {
     println(repr(0ss));
@@ -61,8 +61,8 @@ main() {
     println(repr([1]));
     println(repr([1, "two"]));
 
-    println(repr(Foo(1, "two")));
+    println(repr(Foo(1, StringLiteralRef("two"))));
 
     println(repr(Bar(1)));
-    println(repr(Bar("two")));
+    println(repr(Bar(StringLiteralRef("two"))));
 }

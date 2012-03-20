@@ -2,40 +2,40 @@ import cocoa.*;
 
 procedure objcType;
 
-[T | Record?(T)] overload objcType(static T) = "struct " + StaticName(T);
-[T | Enum?(T)] overload objcType(static T) = "enum " + StaticName(T);
+[T | Record?(T)] overload objcType(#T) = "struct " + StaticName(T);
+[T | Enum?(T)] overload objcType(#T) = "enum " + StaticName(T);
 
 [T | Variant?(T)]
-overload objcType(static T) = "struct " + StaticName(T);
+overload objcType(#T) = "struct " + StaticName(T);
 
 [T | Class?(T)]
-overload objcType(static T) = ClassName(T) + " *";
+overload objcType(#T) = ClassName(T) + " *";
 
-[T] overload objcType(static Pointer[T]) = objcType(T) + " *";
+[T] overload objcType(#Pointer[T]) = objcType(T) + " *";
 [T | not CallDefined?(objcType, Static[T])]
-overload objcType(static Pointer[T]) = "void *";
+overload objcType(#Pointer[T]) = "void *";
 
-[T] overload objcType(static Retained[T]) = objcType(T);
+[T] overload objcType(#Retained[T]) = objcType(T);
 
-overload objcType(static RawPointer) = "void *";
-overload objcType(static Id) = "id";
-overload objcType(static ObjectHandle) = "id";
-overload objcType(static ClassHandle) = "Class";
-overload objcType(static SelectorHandle) = "SEL";
-overload objcType(static Bool) = "BOOL";
+overload objcType(#RawPointer) = "void *";
+overload objcType(#Id) = "id";
+overload objcType(#ObjectHandle) = "id";
+overload objcType(#ClassHandle) = "Class";
+overload objcType(#SelectorHandle) = "SEL";
+overload objcType(#Bool) = "BOOL";
 
-overload objcType(static Void) = "void";
-overload objcType(static ()) = "void";
-overload objcType(static Int8) = "signed char";
-overload objcType(static Int16) = "short";
-overload objcType(static Int32) = "int";
-overload objcType(static Int64) = "long long";
-overload objcType(static UInt8) = "unsigned char";
-overload objcType(static UInt16) = "unsigned short";
-overload objcType(static UInt32) = "unsigned";
-overload objcType(static UInt64) = "unsigned long long";
-overload objcType(static Float32) = "float";
-overload objcType(static Float64) = "double";
+overload objcType(#Void) = "void";
+overload objcType(#()) = "void";
+overload objcType(#Int8) = "signed char";
+overload objcType(#Int16) = "short";
+overload objcType(#Int32) = "int";
+overload objcType(#Int64) = "long long";
+overload objcType(#UInt8) = "unsigned char";
+overload objcType(#UInt16) = "unsigned short";
+overload objcType(#UInt32) = "unsigned";
+overload objcType(#UInt64) = "unsigned long long";
+overload objcType(#Float32) = "float";
+overload objcType(#Float64) = "double";
 
 printObjcInterfaceTo(stream, Class) {
     printTo(stream, "@interface ", ClassName(Class));
@@ -90,7 +90,7 @@ private printMethodTo(stream, T, selector) {
 }
 overload printMethodTo(stream, T, selector, imp) { printMethodTo(stream, T, selector); }
 
-overload printMethodTo(stream, T, selector, static IBActionWrapper) {
+overload printMethodTo(stream, T, selector, #IBActionWrapper) {
     _printMethodTo(stream, T, selector, "IBAction");
 }
 
@@ -99,7 +99,7 @@ private printIvarTo(stream, name, T) {
 }
 
 [T]
-overload printIvarTo(stream, name, static IBOutletWrapper[T]) {
+overload printIvarTo(stream, name, #IBOutletWrapper[T]) {
     printTo(stream, "IBOutlet ");
     printIvarTo(stream, name, T);
 }

@@ -5,17 +5,17 @@ enum Gender (
 );
 
 record Person (
-    name : StringConstant,
+    name : StringLiteralRef,
     age : Int,
     gender: Gender,
     address : Address,
 );
 
 record Address (
-    email : StringConstant,
+    email : StringLiteralRef,
 );
 
 main() {
-    var p = Person("Foo", 100, FEMALE, Address("foo@bar.com"));
+    var p = Person(StringLiteralRef("Foo"), 100, FEMALE, Address(StringLiteralRef("foo@bar.com")));
     println(p);
 }

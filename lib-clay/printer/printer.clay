@@ -414,12 +414,6 @@ overload printReprTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
-[X when StringLiteral?(X)]
-overload printReprTo(stream, x:Static[X]) {
-    printTo(stream, '#');
-    printReprTo(stream, StaticName(x));
-}
-
 
 //
 // printReprTo - tuples

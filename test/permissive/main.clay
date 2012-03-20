@@ -12,7 +12,7 @@ overload permissiveAssign(dest:DEST, src:SRC) {
     dest = DEST(src);         // convert to DEST type
 }
 
-[S  when  CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload permissiveAssign(dest:Pointer[Int8], src:S) {
     dest = cstring(src);      // convert String to Pointer[Int8]
 }
@@ -30,7 +30,7 @@ overload permissiveAssign(dest:T, src:T) {
 
 PermissiveRecordConstructor?(x) = false;
 
-[T, ..A  when  Record?(T)
+[T, ..A when Record?(T)
            and PermissiveRecordConstructor?(T)
            and (countValues(..A) == countValues(..RecordFieldTypes(T)))]
 T(..args:A) --> returned:T {

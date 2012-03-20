@@ -294,7 +294,7 @@ inline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) {
 inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     assign(
         index(dest, ..withoutNthValue(
-            #countValues(..T)-1,
+            #(countValues(..T)-1),
             ..indicesAndSrc
         )),
         lastValue(..indicesAndSrc),
@@ -306,7 +306,7 @@ inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         #F,
         index(dest, ..takeValues(
-            #countIndices(..A),
+            #(countIndices(..A)),
             ..indicesAndSrc
         )),
         ..dropValues(#countIndices(..A), ..indicesAndSrc),
@@ -320,7 +320,7 @@ inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..takeValues(#countIndices(..A), ..A)
+                ..takeValues(#(countIndices(..A)), ..A)
             )
         )
     )
@@ -328,11 +328,11 @@ inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
 inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..takeValues(#countIndices(..A), ..indicesAndSrc),
+        ..takeValues(#(countIndices(..A)), ..indicesAndSrc),
         operatorCall(
             index(
                 dest,
-                ..takeValues(#countIndices(..A), ..indicesAndSrc)
+                ..takeValues(#(countIndices(..A)), ..indicesAndSrc)
             ),
             F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
         )
@@ -510,6 +510,14 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
         return ref consequent;
     else
         return ref alternate;
+}
+
+[consequent, alternate when StringLiteral?(consequent) and StringLiteral?(alternate)]
+alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralRef {
+    if (condition)
+        return StringLiteralRef(consequent);
+    else
+        return StringLiteralRef(alternate);
 }
 
 

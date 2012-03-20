@@ -28,7 +28,7 @@ referenceTypeWithProperties(properties, ..fields:F) = recordWithProperties(
         [ReferenceTypeFieldTypes, ..mapValues(x => x.1, ..fields)],
         ..unpack(properties),
     ],
-    [#ptr, SharedPointer[Tuple[..mapValues(x => x.1, ..fields)]]],
+    ["ptr", SharedPointer[Tuple[..mapValues(x => x.1, ..fields)]]],
 );
 
 [..F when (countValues(..F) > 0)]

@@ -7,7 +7,7 @@ instance Exception (Int);
 //
 
 record Error1 (
-    msg : StringConstant
+    msg : StringLiteralRef,
 );
 
 // include Error1 as a member of the Exception variant
@@ -19,7 +19,7 @@ instance Exception (Error1);
 //
 
 record Error2 (
-    msg : StringConstant
+    msg : StringLiteralRef,
 );
 
 // include Error2 as a member of the Exception variant
@@ -32,9 +32,9 @@ instance Exception (Error2);
 
 doSomething(x) {
     if (x < 0)
-        throw Error1("negative");
+        throw Error1(StringLiteralRef("negative"));
     else if (x > 0)
-        throw Error2("positive");
+        throw Error2(StringLiteralRef("positive"));
     else
         throw 0;
 }
