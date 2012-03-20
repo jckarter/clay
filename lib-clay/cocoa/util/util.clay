@@ -49,7 +49,7 @@ overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
 //
 // NSString overloads
 //
-[ident when Identifier?(ident)]
+[ident when StringLiteral?(ident)]
 overload NSString(#ident) = NSString(NSSTR(ident));
 
 [S when CCompatibleString?(S)]
@@ -122,9 +122,9 @@ overload ObjectParameterType(#S) = NSString;
 [S when CCompatibleString?(S)]
 overload objectHandle(s: S) = objectHandle(NSString(s));
 
-[i when Identifier?(i)]
+[i when StringLiteral?(i)]
 overload ObjectParameterType(#Static[i]) = NSString;
-[i when Identifier?(i)]
+[i when StringLiteral?(i)]
 overload objectHandle(#i) = NSSTR(i);
 
 
@@ -407,19 +407,19 @@ DeallocInstanceMethod(#selector) = [selector, deallocObject];
 overload DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
 
 
-[ivarName, readerSelector when Identifier?(ivarName) and Selector?(readerSelector)]
+[ivarName, readerSelector when StringLiteral?(ivarName) and Selector?(readerSelector)]
 ReaderInstanceMethod(#ivarName, #readerSelector, T)
     = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
 
-[ivarName when Identifier?(ivarName) and Selector?(ivarName)]
+[ivarName when StringLiteral?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(#ivarName, T)
     = ReaderInstanceMethod(ivarName, ivarName, T);
 
-[ivarName, readerSelector when Identifier?(ivarName) and Selector?(readerSelector)]
+[ivarName, readerSelector when StringLiteral?(ivarName) and Selector?(readerSelector)]
 overload ReaderInstanceMethod(#ivarName, #readerSelector)
     = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName))];
 
-[ivarName when Identifier?(ivarName) and Selector?(ivarName)]
+[ivarName when StringLiteral?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(#ivarName)
     = ReaderInstanceMethod(ivarName, ivarName);
 
@@ -427,25 +427,25 @@ overload ReaderInstanceMethod(#ivarName)
 defaultWriterSelector(ivarName)
     = IdentifierConcat("set", IdentifierCapitalize(ivarName), ":");
 
-[ivarName, writerSelector when Identifier?(ivarName) and Selector?(writerSelector)]
+[ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(#ivarName, #writerSelector, T)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
 
-[ivarName when Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+[ivarName when StringLiteral?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(#ivarName, T)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName), Void, T);
 
-[ivarName, writerSelector when Identifier?(ivarName) and Selector?(writerSelector)]
+[ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
 overload WriterInstanceMethod(#ivarName, #writerSelector)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }];
 
-[ivarName when Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+[ivarName when StringLiteral?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(#ivarName)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
 
 
 [ivarName, readerSelector, writerSelector when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
@@ -454,7 +454,7 @@ PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
       WriterInstanceMethod(ivarName, writerSelector, T);
 
 [ivarName, readerSelector when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
@@ -462,7 +462,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector, T)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
 
 [ivarName when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]
@@ -470,7 +470,7 @@ overload PropertyInstanceMethods(#ivarName, T)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
 
 [ivarName, readerSelector, writerSelector when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
@@ -479,7 +479,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector)
       WriterInstanceMethod(ivarName, writerSelector);
 
 [ivarName, readerSelector when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
@@ -487,7 +487,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
 
 [ivarName when
-    Identifier?(ivarName)
+    StringLiteral?(ivarName)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]

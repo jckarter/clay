@@ -42,7 +42,7 @@ private var objcConstantString[value]
 // constant NSStrings
 //
 
-[value when Identifier?(value)]
+[value when StringLiteral?(value)]
 NSSTR(#value) = ObjectHandle(&objcConstantString[value]);
 
 
@@ -343,18 +343,18 @@ define ClassStaticName;
 [T when CallDefined?(ClassStaticName, Static[T])]
 overload ClassName(#T) = StaticName(ClassStaticName(T));
 
-[T, name when Class?(T) and SuperclassType(T) != Void and Identifier?(name)]
+[T, name when Class?(T) and SuperclassType(T) != Void and StringLiteral?(name)]
 ClassIvarType(#T, #name) = ClassIvarType(SuperclassType(T), name);
-[T, name when Class?(T) and Identifier?(name) and assocValue?(name, ..ClassInstanceVars(T))]
+[T, name when Class?(T) and StringLiteral?(name) and assocValue?(name, ..ClassInstanceVars(T))]
 overload ClassIvarType(#T, #name) = firstValue(..assocValue(name, ..ClassInstanceVars(T)));
 
 ClassIvarNames(T) = ..mapValues(ivar => ivar.0, ..ClassInstanceVars(T));
 ClassIvarTypes(T) = ..mapValues(ivar => ivar.1, ..ClassInstanceVars(T));
 
 ClassInstanceVar?(T, ivar) = false;
-[T, ivar when Class?(T) and Identifier?(ivar)]
+[T, ivar when Class?(T) and StringLiteral?(ivar)]
 overload ClassInstanceVar?(#T, #ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
-[T, ivar when Class?(T) and Identifier?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
+[T, ivar when Class?(T) and StringLiteral?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
 overload ClassInstanceVar?(#T, #ivar) = true;
 
 
@@ -380,7 +380,7 @@ externalClass(#Super) = recordWithProperties(
     [#__handle__, ObjectHandle]
 );
 
-[name, Super when Identifier?(name) and ValidSuperclass?(Super)]
+[name, Super when StringLiteral?(name) and ValidSuperclass?(Super)]
 overload externalClass(#name, #Super) = recordWithProperties(
     [
         [SuperclassType, Super],
@@ -1045,13 +1045,13 @@ private var memoIdentifierSelector[identifier, argCount]
     = memoIdentifierSelector[identifier, argCount];
 
 [identifier, minArity]
-private _ValidMethodIdentifier?(#identifier, #minArity)
+private _ValidMethodStringLiteral?(#identifier, #minArity)
     = Selector?(identifierSelector(identifier, #minArity))
       or Selector?(identifierSelector(identifier, #minArity+1));
 
 [identifier]
-ValidMethodIdentifier?(#identifier) = true;
-    //= _ValidMethodIdentifier?(
+ValidMethodStringLiteral?(#identifier) = true;
+    //= _ValidMethodStringLiteral?(
     //    #identifier,
     //    #countOccurrences(#_, ...IdentifierChars(identifier))
     //);
@@ -1067,10 +1067,10 @@ private record MethodRef[T, Captured, identifier] (self: Captured);
 overload MethodRef(T, forward value, identifier)
     = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
-[T, cmd when ObjectRef?(T) and cmd != #__handle__ and ValidMethodIdentifier?(cmd)]
+[T, cmd when ObjectRef?(T) and cmd != #__handle__ and ValidMethodStringLiteral?(cmd)]
 overload fieldRef(forward self: T, #cmd)
     = MethodRef(ObjectParameterType(T), self, cmd);
-[T, cmd when Class?(T) and ValidMethodIdentifier?(cmd)]
+[T, cmd when Class?(T) and ValidMethodStringLiteral?(cmd)]
 overload fieldRef(#T, #cmd) = MethodRef(Static[T], T, cmd);
 
 [T, selector, ..Args when ObjectParameterType?(T) and Selector?(selector)]
