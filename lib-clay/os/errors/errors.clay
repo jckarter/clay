@@ -2,7 +2,7 @@ import os.errors.platform as platform;
 
 record GenericOSError(code:Int);
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload GenericOSError(code:I) --> returned:GenericOSError {
     returned.code = Int(code);
 }
@@ -20,7 +20,7 @@ variant OSError (GenericOSError);
 
 instance Exception (OSError);
 
-[T | VariantMember?(OSError, T)]
+[T when VariantMember?(OSError, T)]
 overload Exception(forward x:T) = Exception(OSError(x));
 
 printErrorMessageTo(stream, code:Int) {

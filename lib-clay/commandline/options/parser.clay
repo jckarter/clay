@@ -7,12 +7,12 @@ record OptionValue(
   value  : Maybe[String]
 );
 
-[T | String?(T) ]
+[T when String?(T) ]
 overload OptionValue(x : T) = move(
   OptionValue(String(x), nothing(String))
 );
 
-[S, T | String?(S) and String?(T)]
+[S, T when String?(S) and String?(T)]
 overload OptionValue(x : S, y : T) = move(
   OptionValue(String(x), Maybe(String(y)))
 );

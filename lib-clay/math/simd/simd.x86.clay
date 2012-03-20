@@ -342,52 +342,52 @@ private external ("llvm.x86.sse2.movmsk.pd", llvm)
   //"llvm.x86.ssse3.psign.w",
   //"llvm.x86.ssse3.psign.w.128",
 
-[T,U | Numeric?(T,U)]
+[T,U when Numeric?(T,U)]
 inline overload sqrt(x:T,y:U) = ..unpackVec(x86_sqrtpd(Vec(Double(x),Double(y))));
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload sqrt(x:T) = T(x86_sqrtsd(Vec(Double(x),0.))[0]);
 inline overload sqrt(x:Double) = x86_sqrtsd(Vec(x,0.))[0];
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload sqrt(x:V2[T]) = V2[T](x86_sqrtpd(VD2(x)));
 
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload hadd(x1:T,x2:T,y1:T,y2:T) = ..unpackVec(x86_haddpd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2))));
 
-[T,U | Numeric?(T,U)]
+[T,U when Numeric?(T,U)]
 inline overload hadd(x1:T,x2:U) = toBiggerNumericType(T,U,x86_haddpd(Vec(Double(x1),Double(x2)),VD2())[0]);
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload hadd(x:V2[T], y:V2[T]) = V2[T](x86_haddpd(VD2(x),VD2(y)));
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload hadd(x:V2[T]) = V2[T](x86_haddpd(VD2(x),VD2(x)));
 
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload hsub(x1:T,x2:T,y1:T,y2:T) = ..unpackVec(x86_hsubpd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2))));
 
-[T,U | Numeric?(T,U)]
+[T,U when Numeric?(T,U)]
 inline overload hsub(x1:T,x2:U) = toBiggerNumericType(T,U,x86_hsubpd(Vec(Double(x1),Double(x2)),VD2())[0]);
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload hsub(x:V2[T], y:V2[T]) = V2[T](x86_hsubpd(VD2(x),VD2(y)));
 
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload compare(x1:T,x2:T,y1:T,y2:T,op:Int8) = ..unpackVec(x86_cmppd(Vec(Double(x1),Double(x2)),Vec(Double(y1),Double(y2)),op));
 
-[T,U | Numeric?(T,U)]
+[T,U when Numeric?(T,U)]
 inline overload compare(x1:T, x2:U, op:Int8) = toBiggerNumericType(T,U,x86_cmpsd(Vec(Double(x1),0.),Vec(Double(x2),0.),op)[0]);
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload compare(x:V2[T], y:V2[T], op:Int8) = V2[T](x86_cmppd(VD2(x),VD2(y),op));
 
 
-[T,U | Numeric?(T,U)]
+[T,U when Numeric?(T,U)]
 inline overload movemask(x:T,y:U) = x86_movmskpd(Vec(Double(x),Double(y)));
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload movemask(x:V2[T]) = x86_movmskpd(VD2(x));

@@ -5,13 +5,13 @@ IdentifierChars(identifier)
     );
 
 IdentifierStartsWith?(identifier, startsWith) = false;
-[identifier, startsWith | size(identifier) >= size(startsWith)]
+[identifier, startsWith when size(identifier) >= size(startsWith)]
 overload IdentifierStartsWith?(#identifier, #startsWith)
       = stringLiteralByteSlice(identifier, #0, #size(startsWith))
         == startsWith;
 
 IdentifierEndsWith?(identifier, endsWith) = false;
-[identifier, endsWith | size(identifier) >= size(endsWith)]
+[identifier, endsWith when size(identifier) >= size(endsWith)]
 overload IdentifierEndsWith?(#identifier, #endsWith)
     = stringLiteralByteSlice(identifier,
           #(size(identifier) - size(endsWith)),
@@ -53,7 +53,7 @@ IdentifierDecapitalize(i)
         stringLiteralByteSlice(i, #1, #size(i))
     );
 
-[i | StringLiteral?(i) and size(i) == 1]
+[i when StringLiteral?(i) and size(i) == 1]
 IdentifierUpperChar(#i) = i;
 
 overload IdentifierUpperChar("a") = "A";
@@ -83,7 +83,7 @@ overload IdentifierUpperChar("x") = "X";
 overload IdentifierUpperChar("y") = "Y";
 overload IdentifierUpperChar("z") = "Z";
 
-[i | StringLiteral?(i) and size(i) == 1]
+[i when StringLiteral?(i) and size(i) == 1]
 IdentifierLowerChar(#i) = i;
 
 overload IdentifierLowerChar("A") = "a";
@@ -119,7 +119,7 @@ overload ident(..xx) = cat(..mapValues(ident, ..xx));
 
 [x]
 overload ident(#x) = StaticName(#x);
-[i | StringLiteral?(i)]
+[i when StringLiteral?(i)]
 overload ident(#i) = i;
 
 overload ident() = "";

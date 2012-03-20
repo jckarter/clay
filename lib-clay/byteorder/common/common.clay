@@ -9,12 +9,12 @@ alias LittleEndian? = ByteOrder == LittleEndian;
 define networkToHost;
 define hostToNetwork;
 
-[I8 | inValues?(I8, Int8, UInt8)]
+[I8 when inValues?(I8, Int8, UInt8)]
 overload networkToHost(n:I8) = n;
-[I8 | inValues?(I8, Int8, UInt8)]
+[I8 when inValues?(I8, Int8, UInt8)]
 overload hostToNetwork(n:I8) = n;
 
-[I16 | inValues?(I16, Int16, UInt16)]
+[I16 when inValues?(I16, Int16, UInt16)]
 overload networkToHost(n:I16) {
     ref bytes = bitcast(Array[UInt8, 2], n);
     return bitor(
@@ -22,14 +22,14 @@ overload networkToHost(n:I16) {
             UInt16(bytes[1]),
     );
 }
-[I16 | inValues?(I16, Int16, UInt16)]
+[I16 when inValues?(I16, Int16, UInt16)]
 overload hostToNetwork(n:I16) --> returned:UInt16 {
     ref bytes = bitcast(Array[UInt8, 2], returned);
     bytes[0] = UInt16(shr(n,  8));
     bytes[1] = UInt16(    n     );
 }
 
-[I32 | inValues?(I32, Int32, UInt32)]
+[I32 when inValues?(I32, Int32, UInt32)]
 overload networkToHost(n:I32) {
     ref bytes = bitcast(Array[UInt8, 4], n);
     return bitor(
@@ -39,7 +39,7 @@ overload networkToHost(n:I32) {
             UInt32(bytes[3])
     );
 }
-[I32 | inValues?(I32, Int32, UInt32)]
+[I32 when inValues?(I32, Int32, UInt32)]
 overload hostToNetwork(n:I32) --> returned:UInt32 {
     ref bytes = bitcast(Array[UInt8, 4], returned);
     bytes[0] = UInt8(shr(n, 24));
@@ -48,7 +48,7 @@ overload hostToNetwork(n:I32) --> returned:UInt32 {
     bytes[3] = UInt8(    n     );
 }
 
-[I64 | inValues?(I64, Int64, UInt64)]
+[I64 when inValues?(I64, Int64, UInt64)]
 overload networkToHost(n:I64) {
     ref bytes = bitcast(Array[UInt8, 8], n);
     return bitor(
@@ -62,7 +62,7 @@ overload networkToHost(n:I64) {
             UInt64(bytes[7])
     );
 }
-[I64 | inValues?(I64, Int64, UInt64)]
+[I64 when inValues?(I64, Int64, UInt64)]
 overload hostToNetwork(n:I64) --> returned:UInt64 {
     ref bytes = bitcast(Array[UInt8, 8], returned);
     bytes[0] = UInt8(shr(n, 56));
@@ -75,9 +75,9 @@ overload hostToNetwork(n:I64) --> returned:UInt64 {
     bytes[7] = UInt8(    n     );
 }
 
-[| BigEndian?]
+[when BigEndian?]
 overload networkToHost(n) = n;
-[| BigEndian?]
+[when BigEndian?]
 overload hostToNetwork(n) = n;
 
 [I16| LittleEndian? and inValues?(I16, Int16, UInt16)]
@@ -89,5 +89,5 @@ overload networkToHost(n:I32) = bitxor(
         bitror(n, 8),
     );
 
-[| LittleEndian?]
+[when LittleEndian?]
 overload hostToNetwork(n) = networkToHost(n);

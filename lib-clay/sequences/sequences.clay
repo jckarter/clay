@@ -24,7 +24,7 @@ alias group(..args) = force(grouped(..args));
 // generic equals?, lesser?
 //
 
-[A,B | Sequence?(A) and Sequence?(B)]
+[A,B when Sequence?(A) and Sequence?(B)]
 overload equals?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
@@ -36,7 +36,7 @@ overload equals?(a:A, b:B) {
     return not hasNext?(j);
 }
 
-[A,B | SizedSequence?(A) and SizedSequence?(B)]
+[A,B when SizedSequence?(A) and SizedSequence?(B)]
 overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
@@ -49,7 +49,7 @@ overload equals?(a:A, b:B) {
 }
 
 
-[A,B | Sequence?(A) and Sequence?(B)]
+[A,B when Sequence?(A) and Sequence?(B)]
 overload lesser?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
@@ -68,7 +68,7 @@ overload lesser?(a:A, b:B) {
 // concatenation
 //
 
-[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
 overload cat(forward a:A, forward ..b:B) {
     var result = Vector(a);
@@ -76,28 +76,28 @@ overload cat(forward a:A, forward ..b:B) {
     return move(result);
 }
 
-[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload cat(forward a:A, forward ..x:T) {
     var result = Vector(a);
     push(result, x);
     return move(result);
 }
 
-[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload cat(forward x:T, forward a:A) = Vector[T](x) + a;
 
-[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
 overload updateAssign(#cat, ref a:A, forward ..b:B) {
     push(a, ..b);
 }
 
-[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload updateAssign(#cat, forward a:A, forward ..x:T) {
     push(a, x);
 }
 
-[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload updateAssign(#cat, forward x:T, forward a:A) {
     insert(a,0,x);
 }
@@ -107,7 +107,7 @@ overload updateAssign(#cat, forward x:T, forward a:A) {
 // interleave
 //
 
-[S | Sequence?(S)]
+[S when Sequence?(S)]
 interleave(seq:S, betweenFn, fn) {
     var i = iterator(seq);
     if (hasNext?(i)) {

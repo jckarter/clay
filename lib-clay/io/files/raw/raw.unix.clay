@@ -47,7 +47,7 @@ private openFlags(mode) {
     }
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload RawFile(path:S, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
@@ -60,7 +60,7 @@ overload RawFile(path:S, mode:OpenMode) {
     return RawFile(handle, true);
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload RawFile(path:S) = RawFile(path, READ);
 
 overload destroy(x:RawFile) {

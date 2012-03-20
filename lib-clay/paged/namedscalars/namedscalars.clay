@@ -26,7 +26,7 @@ overload RegularRecord?(#NamedScalar[T]) = false;
 // constructor
 //
 
-[S,T | String?(S)]
+[S,T when String?(S)]
 overload NamedScalar[T](fileName:S, initial:T) {
     if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);

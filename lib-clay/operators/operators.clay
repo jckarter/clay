@@ -271,7 +271,7 @@ inline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward src) {
     updateAssign(#F, fieldRef(dest, #FIELD), src);
 }
 
-[F, FIELD, T | RValue?(fieldRef(typeToLValue(T), #FIELD))]
+[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD))]
 inline overload fieldRefUpdateAssign(#F, dest:T, #FIELD, forward src) {
     fieldRefAssign(dest, #FIELD, F(fieldRef(dest, #FIELD), src));
 }
@@ -286,12 +286,12 @@ inline overload staticIndexUpdateAssign(#F, dest, #i, forward src) {
     updateAssign(#F, staticIndex(dest, #i), src);
 }
 
-[F, i, T | RValue?(staticIndex(typeToLValue(T), #i))]
+[F, i, T when RValue?(staticIndex(typeToLValue(T), #i))]
 inline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) {
     staticIndexAssign(dest, #i, F(staticIndex(dest, #i), src));
 }
 
-[..T | countValues(..T) >= 2]
+[..T when countValues(..T) >= 2]
 inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     assign(
         index(dest, ..withoutNthValue(
@@ -302,7 +302,7 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     );
 }
 
-[F, ..A | countValues(..A) >= 2]
+[F, ..A when countValues(..A) >= 2]
 inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         #F,
@@ -353,7 +353,7 @@ inline swap(a, b) {
     b <-- move(temp);
 }
 
-[T | BitwiseMovedType?(T)]
+[T when BitwiseMovedType?(T)]
 inline overload swap(a:T, b:T) {
     alias TBytes = Array[UInt8, Int(TypeSize(T))];
     var temp = bitcast(TBytes, a);
@@ -400,7 +400,7 @@ inline overload max(ref a, ref b) {
 // empty?
 //
 
-[T | SizedSequence?(T)]
+[T when SizedSequence?(T)]
 inline empty?(a:T) = (size(a) == 0);
 
 
@@ -425,7 +425,7 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
         return ref alternate;
 }
 
-[consequent, alternate | StringLiteral?(consequent) and StringLiteral?(alternate)]
+[consequent, alternate when StringLiteral?(consequent) and StringLiteral?(alternate)]
 alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralRef {
     if (condition)
         return StringLiteralRef(consequent);
@@ -449,10 +449,10 @@ inline bitblend(mask, ones, zeros)
 // bitrol, bitror
 //
 
-[I, J | Integer?(I) and Integer?(J)]
+[I, J when Integer?(I) and Integer?(J)]
 bitrol(x:I, n:J) = bitor(wrapBitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
 
-[I, J | Integer?(I) and Integer?(J)]
+[I, J when Integer?(I) and Integer?(J)]
 bitror(x:I, n:J) = bitor(bitshr(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 
@@ -490,7 +490,7 @@ overload PrimitiveType?(#Complex80) = true;
 [I, O] overload PrimitiveType?(#FastCallCodePointer[I, O]) = true;
 [T] overload PrimitiveType?(#Static[T]) = true;
 [T,n] overload PrimitiveType?(#Vec[T,n]) = true;
-[E | Enum?(E)] overload PrimitiveType?(#E) = true;
+[E when Enum?(E)] overload PrimitiveType?(#E) = true;
 [..T] overload PrimitiveType?(#Union[..T]) = true;
 [] overload PrimitiveType?(#Union[]) = true;
 overload PrimitiveType?(#Tuple[]) = true;
@@ -505,15 +505,15 @@ PrimitiveCompoundType?(X) = false;
 
 [T,n] overload PrimitiveCompoundType?(#Array[T,n]) = true;
 [..T] overload PrimitiveCompoundType?(#Tuple[..T]) = true;
-[R | RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
-[V | Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
+[R when RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
+[V when Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
 
 define PrimitiveCompoundMemberTypes;
 [T,n] overload PrimitiveCompoundMemberTypes(#Array[T,n]) = T;
 [..T] overload PrimitiveCompoundMemberTypes(#Tuple[..T]) = ..T;
-[R | RegularRecord?(R)]
+[R when RegularRecord?(R)]
 overload PrimitiveCompoundMemberTypes(#R) = ..RecordFieldTypes(R);
-[V | Variant?(V)]
+[V when Variant?(V)]
 overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 
@@ -523,10 +523,10 @@ overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 PODType?(X) = false;
 
-[T | PrimitiveType?(T)]
+[T when PrimitiveType?(T)]
 overload PODType?(#T) = true;
 
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload PODType?(#T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
 
 
@@ -544,28 +544,28 @@ AssignDoesNotThrowType?(T) = PODType?(T);
 BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
 BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
 
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(#T)
     = allValues?(BitwiseCopiedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseMovedType?(#T)
     = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload NotDestroyedType?(#T)
     = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload NotResetType?(#T)
     = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload CopyDoesNotThrowType?(#T)
     = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload AssignDoesNotThrowType?(#T)
     = allValues?(AssignDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseAssignedType?(#T)
     = allValues?(BitwiseAssignedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseMoveAssignedType?(#T)
     = allValues?(BitwiseMoveAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 
@@ -613,14 +613,14 @@ alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 //
 
 define MonoInputTypes;
-[f | StaticMono?(f)]
+[f when StaticMono?(f)]
 alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
-[F | LambdaRecord?(F) and LambdaMono?(F)]
+[F when LambdaRecord?(F) and LambdaMono?(F)]
 alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 
 [F]
 alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);
 inline MonoType?(F) = Mono?(typeToRValue(F));
 
-[F | MonoType?(F)]
+[F when MonoType?(F)]
 alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));

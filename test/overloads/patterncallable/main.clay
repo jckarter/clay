@@ -7,7 +7,7 @@ overload diverge(x:Float) : Float = x - 1;
 
 // Should only match square(Float) or cube(Float) since pattern overloads
 // linearize after symbol overloads
-[F | F == square or F == cube or F == diverge]
+[F when F == square or F == cube or F == diverge]
 overload F(x:Float) : Float = Float(F(Double(x)));
 
 main() {
