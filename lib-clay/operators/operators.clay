@@ -11,25 +11,12 @@ public import __operators__.(
     assign,
     updateAssign,
 
-    equals?,
-    notEquals?,
     case?,
-    compare?,
-    lesser?,
-    lesserEquals?,
-    greater?,
-    greaterEquals?,
 
     plus,
     minus,
 
-    add,
-    subtract,
-    multiply,
-    divide,
-    quotient,
-    remainder,
-    cat,
+    operatorCall,
 
     dereference,
     call,
@@ -52,6 +39,21 @@ public import __operators__.(
     ifExpression,
 );
 
+define equals?;
+define notEquals?;
+define lesser?;
+define lesserEquals?;
+define greater?;
+define greaterEquals?;
+
+define add;
+define subtract;
+define multiply;
+define divide;
+define quotient;
+define remainder;
+define cat;
+
 define inc;
 define dec;
 
@@ -64,6 +66,7 @@ define bitnot;
 
 define moveUnsafe;
 define resetUnsafe;
+
 
 
 //
@@ -234,8 +237,8 @@ inline overload assign(ref dest:T, rvalue src:T) {
 }
 
 [F]
-inline overload updateAssign(static F, ref dest, forward src) {
-    dest = F(dest, src);
+inline overload updateAssign(static F, ref dest, forward ..src) {
+    dest = operatorCall(dest,F, ..src);
 }
 
 inline overload notEquals?(a, b) = not equals?(a, b);
@@ -247,10 +250,6 @@ inline overload lesserEquals?(a, b) = not lesser?(b, a);
 inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
-
-inline overload compare?(a, fn, b, ..args) : Bool
-    = fn(a, b) and compare?(b, ..args);
-inline overload compare?(a, fn, b) : Bool = fn(a, b);
 
 inline overload bitand(a, b, c, ..rest) =
     bitand(bitand(a,b), c, ..rest);
@@ -267,8 +266,8 @@ inline overload fieldRefAssign(dest, static FIELD, forward src) {
 }
 
 [F, FIELD]
-inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward src) {
-    updateAssign(static F, fieldRef(dest, static FIELD), src);
+inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward ..src) {
+    updateAssign(static F, fieldRef(dest, static FIELD), ..src);
 }
 
 [F, FIELD, T | RValue?(fieldRef(typeToLValue(T), static FIELD))]
@@ -282,8 +281,8 @@ inline overload staticIndexAssign(dest, static i, forward src) {
 }
 
 [F, i]
-inline overload staticIndexUpdateAssign(static F, dest, static i, forward src) {
-    updateAssign(static F, staticIndex(dest, static i), src);
+inline overload staticIndexUpdateAssign(static F, dest, static i, forward ..src) {
+    updateAssign(static F, staticIndex(dest, static i), ..src);
 }
 
 [F, i, T | RValue?(staticIndex(typeToLValue(T), static i))]
@@ -306,11 +305,11 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
 inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         static F,
-        index(dest, ..withoutNthValue(
-            static countValues(..A)-1,
+        index(dest, ..takeValues(
+            static countIndices(..A),
             ..indicesAndSrc
         )),
-        lastValue(..indicesAndSrc),
+        ..dropValues(static countIndices(..A), ..indicesAndSrc),
     );
 }
 
@@ -321,7 +320,7 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..withoutNthValue(static countValues(..A)-1, ..A)
+                ..takeValues(static countIndices(..A), ..A)
             )
         )
     )
@@ -329,20 +328,108 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
 inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc),
-        F(
+        ..takeValues(static countIndices(..A), ..indicesAndSrc),
+        operatorCall(
             index(
                 dest,
-                ..withoutNthValue(static countValues(..A)-1, ..indicesAndSrc)
+                ..takeValues(static countIndices(..A), ..indicesAndSrc)
             ),
-            lastValue(..indicesAndSrc)
+            F, ..dropValues(static countIndices(..A), ..indicesAndSrc)
         )
     );
 }
 
 
+//
+// first occurence of non-numeric
+//
 
-
+private countIndices(..A) = _countIndices(static -1, ..A);
+private define _countIndices;
+[n] overload _countIndices(static n, a, ..A) 
+    = if(not Numeric?(a)) n else _countIndices(static (n+1), ..A);
+[n] overload _countIndices(static n) = n;
+
+
+//
+//  operators 
+//
+
+defaultOps() = (++),(+),(-),(%),(\),(/),(*);
+precedenceList() = ..defaultOps();
+
+alias (==) = equals?;
+alias (!=) = notEquals?;
+alias (>=) = greaterEquals?;
+alias (<=) = lesserEquals?;
+alias (>) = greater?;
+alias (<) = lesser?;
+alias (++) = cat;
+alias (+) = add;
+alias (-) = subtract;
+alias (%) = remainder;
+alias (\) = quotient;
+alias (/) = divide;
+alias (*) = multiply;
+
+private define staticEquals?;
+[A, B]
+overload staticEquals?(a:Static[A], b:Static[B]) = false;
+[A]
+overload staticEquals?(a:Static[A], b:Static[A]) = true;
+
+BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
+
+overload operatorCall(forward ..args)
+    = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, static countValues(
+        ..restValues(..precedenceList())), ..args)));
+
+private define foldOp;
+[n]
+inline overload foldOp(fn, static n, forward ..xs)
+    = ..foldOp(fn, static numericSubtract(n,1), 
+        ..fn(nthValue(static n,..precedenceList()), ..xs));
+inline overload foldOp(fn, static 0, forward ..xs) 
+    = forward ..fn(firstValue(..precedenceList()), ..xs);
+
+
+private define binaryOp;
+[OP,T]
+inline overload binaryOp(static OP,forward a,static T,forward ..args)
+    = forward a,T,..binaryOp(OP,..args);
+[OP]
+inline overload binaryOp(static OP, forward a) = forward a;
+[OP]
+inline overload binaryOp(static OP,forward a,static OP,forward b, forward ..args)
+    = forward ..binaryOp(OP,OP(a,b), ..args);
+[OP]
+inline overload binaryOp(static OP,forward a,static OP,forward b)
+    = forward OP(a,b);
+
+private define noPrecBinaryOp;
+
+[OP]
+inline overload noPrecBinaryOp(forward a, static OP,forward ..args)
+    = forward a,OP,..noPrecBinaryOp(..args);
+[OP,T,U | BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T, static OP,forward b:U, forward ..args)
+    = forward ..noPrecBinaryOp(OP(a,b), ..args);
+[OP,T,U | BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T,static OP,forward b:U)
+    = forward OP(a,b);
+inline overload noPrecBinaryOp(forward a) = forward a;
+
+private define compareOp;
+
+inline overload compareOp(forward a, OP, forward b, forward ..args)
+    = forward OP(a, b) and compareOp(b, ..args);
+inline overload compareOp(forward a, OP, forward b) 
+    = forward OP(a, b);
+inline overload compareOp(forward a) = forward a;
+
+
+
 //
 // swap
 //

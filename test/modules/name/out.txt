@@ -1,4 +1,4 @@
-add: __operators__, __operators__
+add: operators, operators
 Vector[Char]: vectors, vectors
 Vec: __primitives__, __primitives__
 hash: operators, operators

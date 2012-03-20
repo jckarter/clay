@@ -125,9 +125,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
             type = typeOfValue(obj);
             if (x->captureByRef) {
                 type = pointerType(type);
-                vector<int> ops;
-                ops.push_back(ADDRESS_OF);
-                ExprPtr addr = new VariadicOp(ops, new ExprList(nameRef.ptr()));
+                ExprPtr addr = new VariadicOp(ADDRESS_OF, new ExprList(nameRef.ptr()));
                 converted->parenArgs->add(addr);
             }
             else {
@@ -310,10 +308,9 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         break;
     }
 
-    case UPDATE_ASSIGNMENT : {
-        UpdateAssignment *y = (UpdateAssignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+    case VARIADIC_ASSIGNMENT : {
+        VariadicAssignment *y = (VariadicAssignment *)x.ptr();
+        convertFreeVars(y->exprs, env, ctx);
         break;
     }
 
@@ -477,9 +474,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                     c->location = y->location;
                     if (ctx.captureByRef) {
-                        vector<int> ops;
-                        ops.push_back(DEREFERENCE);
-                        ExprPtr d = new VariadicOp(ops, new ExprList(c.ptr()));
+                        ExprPtr d = new VariadicOp(DEREFERENCE, new ExprList(c.ptr()));
                         d->location = y->location;
                         x = d.ptr();
                     }

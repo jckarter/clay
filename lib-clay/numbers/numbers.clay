@@ -294,28 +294,6 @@ inline overload remainder(a:A, b:B) =
 inline overload remainder(a:A, b:A) = integerRemainder(a, b);
 
 //
-// Variadic ops
-//
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload add(a:A, ..aa:AA) = foldlValues(add, a, ..aa);
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload subtract(a:A, ..aa:AA) = foldlValues(subtract, a, ..aa);
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload multiply(a:A, ..aa:AA) = foldlValues(multiply, a, ..aa);
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload divide(a:A, ..aa:AA) = foldlValues(divide, a, ..aa);
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload quotient(a:A, ..aa:AA) = foldlValues(quotient, a, ..aa);
-
-[A, ..AA | countValues(..AA) != 1]
-inline overload remainder(a:A, ..aa:AA) = foldlValues(remainder, a, ..aa);
-
-//
 // Imaginary binary ops
 //
 

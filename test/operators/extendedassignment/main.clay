@@ -11,8 +11,8 @@ overload indexAssign(x:Foo, index, value) {
     println("indexAssign(x, ", index, ", ", value, ")");
 }
 
-overload indexUpdateAssign(op, x:Foo, index, value) {
-    println("indexUpdateAssign(", op, ", x, ", index, ", ", value, ")");
+overload indexUpdateAssign(op, x:Foo, index, ..args) {
+    println("indexUpdateAssign(", ..weaveValues(", ",op,"x",index,..args), ")");
 }
 
 [i]
@@ -21,8 +21,8 @@ overload staticIndexAssign(x:Foo, static i, value) {
 }
 
 [i]
-overload staticIndexUpdateAssign(op, x:Foo, static i, value) {
-    println("staticIndexUpdateAssign(", op, ", x, ", i, ", ", value, ")");
+overload staticIndexUpdateAssign(op, x:Foo, static i, ..args) {
+    println("staticIndexUpdateAssign(", ..weaveValues(", ",op,"x",i,..args), ")");
 }
 
 [FIELD]
@@ -31,8 +31,8 @@ overload fieldRefAssign(x:Foo, static FIELD, value) {
 }
 
 [FIELD]
-overload fieldRefUpdateAssign(op, x:Foo, static FIELD, value) {
-    println("fieldRefUpdateAssign(", op, ", x, ", FIELD, ", ", value, ")");
+overload fieldRefUpdateAssign(op, x:Foo, static FIELD, ..args) {
+    println("fieldRefUpdateAssign(", ..weaveValues(", ",op,"x",FIELD, ..args), ")");
 }
 
 main() {
@@ -42,5 +42,5 @@ main() {
     foo.bar = "hola";
     foo[30] += 100;
     foo.40 *= 200;
-    foo.baz /= 300;
+    foo.baz \= 300;
 }

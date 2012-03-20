@@ -452,7 +452,7 @@ struct Label;
 struct Binding;
 struct Assignment;
 struct InitAssignment;
-struct UpdateAssignment;
+struct VariadicAssignment;
 struct Goto;
 struct Switch;
 struct CaseBlock;
@@ -602,7 +602,7 @@ typedef Pointer<Label> LabelPtr;
 typedef Pointer<Binding> BindingPtr;
 typedef Pointer<Assignment> AssignmentPtr;
 typedef Pointer<InitAssignment> InitAssignmentPtr;
-typedef Pointer<UpdateAssignment> UpdateAssignmentPtr;
+typedef Pointer<VariadicAssignment> VariadicAssignmentPtr;
 typedef Pointer<Goto> GotoPtr;
 typedef Pointer<Switch> SwitchPtr;
 typedef Pointer<CaseBlock> CaseBlockPtr;
@@ -914,6 +914,7 @@ extern "C" void displayCompileContext();
 //
 
 enum TokenKind {
+    T_OPSTRING,
     T_SYMBOL,
     T_KEYWORD,
     T_IDENTIFIER,
@@ -1162,29 +1163,19 @@ enum VariadicOpKind {
     PLUS,
     MINUS,
     NOT,
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    QUOTIENT,
-    REMAINDER,
-    CAT,
+    OPERATOR,
     IF_EXPR,
-    EQUALS,
-    NOT_EQUALS,
-    COMPARE,
-    LESSER,
-    LESSER_EQUALS,
-    GREATER,
-    GREATER_EQUALS
 };
 
 struct VariadicOp : public Expr {
-    vector<int> op;
+    int op;
+    vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(const vector<int> &op, ExprListPtr exprs )
+    VariadicOp(int op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
+    VariadicOp(int op, const vector<string> &ops, ExprListPtr exprs )
+        : Expr(VARIADIC_OP), op(op), ops(ops), exprs(exprs) {}
 
 };
 
@@ -1347,7 +1338,7 @@ enum StatementKind {
     BINDING,
     ASSIGNMENT,
     INIT_ASSIGNMENT,
-    UPDATE_ASSIGNMENT,
+    VARIADIC_ASSIGNMENT,
     GOTO,
     RETURN,
     IF,
@@ -1425,22 +1416,16 @@ struct InitAssignment : public Statement {
           right(new ExprList(rightExpr)) {}
 };
 
-enum UpdateOpKind {
-    UPDATE_ADD,
-    UPDATE_SUBTRACT,
-    UPDATE_MULTIPLY,
-    UPDATE_DIVIDE,
-    UPDATE_QUOTIENT,
-    UPDATE_REMAINDER,
-    UPDATE_CAT
-};
-
-struct UpdateAssignment : public Statement {
+struct VariadicAssignment : public Statement {
     int op;
-    ExprPtr left, right;
-    UpdateAssignment(int op, ExprPtr left, ExprPtr right)
-        : Statement(UPDATE_ASSIGNMENT), op(op), left(left),
-          right(right) {}
+    vector<string> ops;
+    ExprListPtr exprs;
+    ExprPtr desugared;
+    VariadicAssignment(int op, ExprListPtr exprs )
+        : Statement(VARIADIC_ASSIGNMENT), op(op), exprs(exprs) {}
+    VariadicAssignment(int op, const vector<string> &ops, ExprListPtr exprs )
+        : Statement(VARIADIC_ASSIGNMENT), op(op), ops(ops), exprs(exprs) {}
+
 };
 
 struct Goto : public Statement {
@@ -3012,7 +2997,7 @@ ExprPtr desugarCharLiteral(char c);
 ExprPtr desugarFieldRef(FieldRefPtr x);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarVariadicOp(VariadicOpPtr x);
-ExprPtr updateOperatorExpr(int op);
+ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);

@@ -70,12 +70,12 @@ record DequeCoordinate[T] (
 }
 
 [T, I | Integer?(I)] overload updateAssign(static subtract, ref i: DequeCoordinate[T], n: I) {
-    i += -PtrInt(n);
+    i += (-PtrInt(n));
 }
 
 [T, I | Integer?(I)] overload subtract(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
     j <-- i;
-    j += -PtrInt(n);
+    j += (-PtrInt(n));
 }
 
 [T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
