@@ -36,20 +36,20 @@ overload SequenceContainer?(static Vector[T]) = true;
 [T]
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
-[T,A | Sequence?(A) and (T == SequenceElementType(A))]
+[T,A when Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
     var v = Vector[T]();
     push(v, a);
     return move(v);
 }
 
-[A | Sequence?(A)]
+[A when Sequence?(A)]
 overload Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
 
-[A | MultiValuedSequence?(A)]
+[A when MultiValuedSequence?(A)]
 overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 
 
@@ -58,7 +58,7 @@ overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 // varargs constructor
 //
 
-[T, ..A | (countValues(..A) > 0) and equalValues?(T, ..A)]
+[T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
 alias overload Vector[T](..elements:A) {
     var v = Vector[T]();
     push(v, ..elements);
@@ -131,7 +131,7 @@ private reallocVector(a:Vector[T], capacity:SizeT) {
     a.capacity = capacity;
 }
 
-[T | BitwiseMovedType?(T) and CallDefined?(reallocateRawMemory, Pointer[T], SizeT)]
+[T when BitwiseMovedType?(T) and CallDefined?(reallocateRawMemory, Pointer[T], SizeT)]
 overload reallocVector(a:Vector[T], capacity:SizeT) {
     a.data = reallocateRawMemory(a.data, capacity);
     a.capacity = capacity;

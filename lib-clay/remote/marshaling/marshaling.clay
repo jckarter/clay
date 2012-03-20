@@ -70,16 +70,16 @@ overload Marshalable?(static UnmarshalContext) = false;
 //
 BitwiseMarshalable?(T) = false;
 
-[T | BitwiseMarshalable?(T)]
+[T when BitwiseMarshalable?(T)]
 overload marshaledSize(context, x: T) = MarshalSize(TypeSize(T));
 
-[T | BitwiseMarshalable?(T)]
+[T when BitwiseMarshalable?(T)]
 overload marshalTo(context, buffer: Pointer[Byte], x: T) {
     Pointer[T](buffer)^ <-- x;
     return buffer + TypeSize(T);
 }
 
-[T | BitwiseMarshalable?(T)]
+[T when BitwiseMarshalable?(T)]
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static T)
     --> returned: T, newBegin: Pointer[Byte]
 {
@@ -91,18 +91,18 @@ overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static
 }
 
 overload BitwiseMarshalable?(static Bool) = true;
-[C | Character?(C)] overload BitwiseMarshalable?(static C) = true;
-[I | Integer?(I)] overload BitwiseMarshalable?(static I) = true;
-[F | Float?(F)] overload BitwiseMarshalable?(static F) = true;
-[E | Enum?(E)] overload BitwiseMarshalable?(static E) = true;
-[R | RegularRecord?(R) and allValues?(BitwiseMarshalable?, ..RecordFieldTypes(R))]
+[C when Character?(C)] overload BitwiseMarshalable?(static C) = true;
+[I when Integer?(I)] overload BitwiseMarshalable?(static I) = true;
+[F when Float?(F)] overload BitwiseMarshalable?(static F) = true;
+[E when Enum?(E)] overload BitwiseMarshalable?(static E) = true;
+[R when RegularRecord?(R) and allValues?(BitwiseMarshalable?, ..RecordFieldTypes(R))]
 overload BitwiseMarshalable?(static R) = true;
-[..TupleMembers | allValues?(BitwiseMarshalable?, ..TupleMembers)]
+[..TupleMembers when allValues?(BitwiseMarshalable?, ..TupleMembers)]
 overload BitwiseMarshalable?(static Tuple[..TupleMembers]) = true;
-[..UnionMembers | allValues?(BitwiseMarshalable?, ..UnionMembers)]
+[..UnionMembers when allValues?(BitwiseMarshalable?, ..UnionMembers)]
 overload BitwiseMarshalable?(static Union[..UnionMembers]) = true;
 
-[T, n | BitwiseMarshalable?(T)] overload BitwiseMarshalable?(static Array[T, n]) = true;
+[T, n when BitwiseMarshalable?(T)] overload BitwiseMarshalable?(static Array[T, n]) = true;
 
 
 
@@ -113,7 +113,7 @@ private RecordMarshalable?(R) = allValues?(Marshalable?, ..RecordFieldTypes(R));
 private RecordMemberwiseMarshalable?(R)
     = RecordMarshalable?(R) and not BitwiseMarshalable?(R);
 
-[R | Record?(R) and RecordMemberwiseMarshalable?(R)]
+[R when Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload marshaledSize(context, r: R)
     = ..foldValues(add,
         ..mapValues(f -> marshaledSize(context, f), ..recordFields(r))
@@ -124,7 +124,7 @@ marshalMemberwise(context, buffer:Pointer[Byte], forward ..fields) {
         buffer = marshalTo(context, buffer, x);
 }
 
-[R | Record?(R) and RecordMemberwiseMarshalable?(R)]
+[R when Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward r: R) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
     marshalMemberwise(context, buffer, ..recordFields(r));
@@ -149,7 +149,7 @@ unmarshalMemberwise(
 
 overload unmarshalMemberwise(context, begin: Pointer[Byte], end: Pointer[Byte]) {}
 
-[R | Record?(R) and RecordMemberwiseMarshalable?(R)]
+[R when Record?(R) and RecordMemberwiseMarshalable?(R)]
 overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], static R)
     --> returned: R, begin: Pointer[Byte]
 {
@@ -166,20 +166,20 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
 [T] private TupleMemberwiseMarshalable?(static T)
     = TupleMarshalable?(T) and not BitwiseMarshalable?(T);
 
-[T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
+[T when Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshaledSize(context, t: T)
     = ..foldValues(add,
         ..mapValues(f -> marshaledSize(context, f), ..unpack(t))
     );
 
-[T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
+[T when Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward t: T) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
     ..for (x in unpack(t))
         buffer = marshalTo(context, buffer, x);
 }
 
-[T | Tuple?(T) and TupleMemberwiseMarshalable?(T)]
+[T when Tuple?(T) and TupleMemberwiseMarshalable?(T)]
 overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], static T)
     --> returned: T, begin: Pointer[Byte]
 {
@@ -196,11 +196,11 @@ private VariantMarshalable?(V) = allValues?(Marshalable?, ..VariantMembers(V));
 private VariantMemberwiseMarshalable?(V)
     = VariantMarshalable?(V) and not BitwiseMarshalable?(V);
 
-[V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
+[V when Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload marshaledSize(context, v: V)
     = MarshalSize(TypeSize(Int)) + marshaledSize(context, *v);
 
-[V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
+[V when Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload marshalTo(context, buffer_: Pointer[Byte], v: V) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
     buffer = marshalTo(context, buffer, variantTag(v));
@@ -221,7 +221,7 @@ private unmarshalVariantMember(
     throw UnmarshalInvalidVariantTag(repr.tag);
 }
 
-[..T, n | n < countValues(..T)]
+[..T, n when n < countValues(..T)]
 overload unmarshalVariantMember(
     context,
     begin: Pointer[Byte],
@@ -239,7 +239,7 @@ overload unmarshalVariantMember(
 }
 
 
-[V | Variant?(V) and VariantMemberwiseMarshalable?(V)]
+[V when Variant?(V) and VariantMemberwiseMarshalable?(V)]
 overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], static V)
     --> returned: V, begin: Pointer[Byte]
 {
@@ -267,10 +267,10 @@ private sequenceMarshaledSize(context, seq)
     = MarshalSize(TypeSize(MarshalSize))
     + reduce(add, MarshalSize(0), mapped(f -> marshaledSize(context, f), seq));
 
-[S | MarshalableSequence?(S)]
+[S when MarshalableSequence?(S)]
 overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
 
-[S | MarshalableSequence?(S)]
+[S when MarshalableSequence?(S)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
     var sizeBuffer = buffer;
@@ -283,14 +283,14 @@ overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) --> buffer: 
     marshalTo(context, sizeBuffer, n);
 }
 
-[S | MarshalableSequence?(S) and SizedSequence?(S)]
+[S when MarshalableSequence?(S) and SizedSequence?(S)]
 overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) --> buffer: Pointer[Byte] {
     buffer <-- marshalTo(context, buffer_, MarshalSize(size(seq)));
     for (x in seq)
         buffer = marshalTo(context, buffer, x);
 }
 
-[S | MarshalableSequence?(S)]
+[S when MarshalableSequence?(S)]
 overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], static S) {
     var n, begin = ..unmarshalFrom(context, begin_, end, MarshalSize);
     var s = UnmarshaledType(S)();
@@ -303,7 +303,7 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], stati
     return move(s), begin;
 }
 
-[S | UnmarshalAsVectorSequence?(S)]
+[S when UnmarshalAsVectorSequence?(S)]
 overload UnmarshaledType(static S) = Vector[UnmarshaledType(SequenceElementType(S))];
 
 
@@ -321,19 +321,19 @@ overload UnmarshaledType(static S) = Vector[UnmarshaledType(SequenceElementType(
 //
 // null marshaling of empty records, tuples
 //
-[R | RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
+[R when RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
 overload marshaledSize(context, r: R) = MarshalSize(0);
-[R | RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
+[R when RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
 overload marshalTo(context, buffer: Pointer[Byte], r: R) = buffer;
-[R | RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
+[R when RegularRecord?(R) and countValues(..RecordFieldTypes(R)) == 0]
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static R)
     = R(), begin;
 
-[T | T == Type([])]
+[T when T == Type([])]
 overload marshaledSize(context, r: T) = MarshalSize(0);
-[T | T == Type([])]
+[T when T == Type([])]
 overload marshalTo(context, buffer: Pointer[Byte], r: T) = buffer;
-[T | T == Type([])]
+[T when T == Type([])]
 overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], static T)
     = [], begin;
 
@@ -512,7 +512,7 @@ overload UnmarshaledType(static SharedPointer[T]) = SharedPointer[UnmarshaledTyp
 //
 // high-level interface
 //
-[T | T != MarshalContext] marshal(forward value:T, forward ..values)
+[T when T != MarshalContext] marshal(forward value:T, forward ..values)
     = marshal(MarshalContext(), value, ..values);
 overload marshal() = Vector[Byte]();
 

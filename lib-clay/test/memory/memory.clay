@@ -125,7 +125,7 @@ checkCanariesDestroyed() --> r: Bool {
     }
 }
 
-[S | Sequence?(S) and SequenceElementType(S) == Canary]
+[S when Sequence?(S) and SequenceElementType(S) == Canary]
 checkCanariesLiveInSequence(seq: S) --> r: Bool {
     r <-- true;
     for (x in seq) {

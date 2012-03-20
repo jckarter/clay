@@ -14,7 +14,7 @@ alias kln2 = 1246.97177782734161156;	/* k * ln2 */
  */
 __frexp_exp(x:Double, expt:Pointer[Int]) {
 	/* We use exp(x) = exp(x - kln2) * 2**k, carefully chosen to
-	 * minimize |exp(kln2) - 2**k|.  We also scale the exponent of
+	 * minimize whenexp(kln2) - 2**k|.  We also scale the exponent of
 	 * exp_x to MAX_EXP so that the result can be multiplied by
 	 * a tiny number without losing accuracy due to denormalization.
 	 */

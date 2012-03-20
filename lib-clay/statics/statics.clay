@@ -58,7 +58,7 @@ inline unwrapStatic(static A) = A;
 // call
 //
 
-[F, ..AA | CallDefined?(F, ..AA)]
+[F, ..AA when CallDefined?(F, ..AA)]
 inline overload call(static F, forward ..args:AA) =
     forward ..F(..args);
 

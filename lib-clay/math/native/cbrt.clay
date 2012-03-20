@@ -6,7 +6,7 @@ import math.*;
 alias B1 = 715094163; /* B1 = (1023-1023/3-0.03306235651)*2**20 */
 alias B2 = 696219795; /* B2 = (1023-1023/3-54/3-0.03306235651)*2**20 */
 
-/* |1/cbrt(x) - p(x)| < 2**-23.5 (~[-7.93e-8, 7.929e-8]). */
+/* when1/cbrt(x) - p(x)when < 2**-23.5 (~[-7.93e-8, 7.929e-8]). */
 alias CP0 =  1.87595182427177009643;		/* 0x3ffe03e6, 0x0f61e692 */
 alias CP1 = -1.88497979543377169875;		/* 0xbffe28e0, 0x92f02420 */
 alias CP2 =  1.621429720105354466140;		/* 0x3ff9f160, 0x4a49d6c2 */
@@ -51,8 +51,8 @@ overload cbrt(x:Double) {
      * New cbrt to 23 bits:
      *    cbrt(x) = t*cbrt(x/t**3) ~= t*P(t**3/x)
      * where P(r) is a polynomial of degree 4 that approximates 1/cbrt(r)
-     * to within 2**-23.5 when |r - 1| < 1/10.  The rough approximation
-     * has produced t such than |t/cbrt(x) - 1| ~< 1/32, and cubing this
+     * to within 2**-23.5 when whenr - 1| < 1/10.  The rough approximation
+     * has produced t such than whent/cbrt(x) - 1| ~< 1/32, and cubing this
      * gives us bounds for r = t**3/x.
      *
      * Try to optimize for parallel evaluation as in k_tanf.c.
@@ -76,7 +76,7 @@ overload cbrt(x:Double) {
 
     /* one step Newton iteration to 53 bits with error < 0.667 ulps */
 	var s = GET_IEEE_DB(t) * GET_IEEE_DB(t);				/* t*t is exact */
-	r = x/s;				/* error <= 0.5 ulps; |r| < |t| */
+	r = x/s;				/* error <= 0.5 ulps; whenr| < whent| */
 	var w = GET_IEEE_DB(t)+GET_IEEE_DB(t);				/* t+t is exact */
 	r = (r-GET_IEEE_DB(t))/(w+r);			/* r-t is exact; w+r ~= 3*t */
 	return GET_IEEE_DB(t)+GET_IEEE_DB(t)*r;			/* error <= 0.5 + 0.5/3 + epsilon */

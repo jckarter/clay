@@ -48,7 +48,7 @@ inline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..el
 
 
 // if the thenFn returns Maybe[T]s, have the default else case return nothing(T)s
-[T, F | allValues?(Maybe?, ..CallOutputTypes(call, F, T))]
+[T, F when allValues?(Maybe?, ..CallOutputTypes(call, F, T))]
 inline overload maybeValue(static T, forward n: Nothing, thenFn:F)
     = ..mapValues(call, ..CallOutputTypes(call, F, T));
 

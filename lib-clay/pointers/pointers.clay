@@ -30,10 +30,10 @@ inline overload Pointer[T]() = nullPointer(Pointer[T]);
 // Pointer - convert to/from integers and other pointers
 //
 
-[I,T|Integer?(I)]
+[I,T when Integer?(I)]
 inline overload I(a:Pointer[T]) = pointerToInt(I, a);
 
-[I,T|Integer?(I)]
+[I,T when Integer?(I)]
 inline overload Pointer[T](a:I) = intToPointer(Pointer[T], a);
 
 [DEST, SRC]
@@ -62,17 +62,17 @@ inline overload lesser?(a:Pointer[T], b:Pointer[T]) {
 // Pointer - arithmetic
 //
 
-[T,I|Integer?(I)]
+[T,I when Integer?(I)]
 inline overload add(p:Pointer[T], i:I) {
     return pointerOffset(p, i);
 }
 
-[T,I|Integer?(I)]
+[T,I when Integer?(I)]
 inline overload add(i:I, p:Pointer[T]) {
     return pointerOffset(p, i);
 }
 
-[T,I|Integer?(I)]
+[T,I when Integer?(I)]
 inline overload subtract(p:Pointer[T], i:I) {
     return pointerOffset(p, -PtrInt(i));
 }
@@ -107,7 +107,7 @@ inline overload null?(x:Pointer[T]) = x == null(T);
 [T]
 inline overload dereference(p:Pointer[T]) = ref pointerDereference(p);
 
-[T, I | Integer?(I)]
+[T, I when Integer?(I)]
 inline overload index(p:Pointer[T], i:I) = ref (p + i)^;
 
 
@@ -147,11 +147,11 @@ inline overload CodePointer[In,Out](a:Pointer[T]) =
 inline overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) =
     bitcast(CodePointer[In1,Out1], a);
 
-[In, Out, I | Integer?(I)]
+[In, Out, I when Integer?(I)]
 inline overload CodePointer[In,Out](i:I) =
     intToPointer(CodePointer[In,Out], i);
 
-[In, Out, I | Integer?(I)]
+[In, Out, I when Integer?(I)]
 inline overload I(a:CodePointer[In,Out]) = pointerToInt(I, a);
 
 
@@ -199,11 +199,11 @@ inline overload ExternalCodePointer[CC,V?,I,O](a:Pointer[T]) =
 inline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2]) =
     bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
 
-[CC,V?,In,Out,I | Integer?(I)]
+[CC,V?,In,Out,I when Integer?(I)]
 inline overload ExternalCodePointer[CC,V?,In,Out](i:I) =
     intToPointer(ExternalCodePointer[CC,V?,In,Out], i);
 
-[CC,V?,In,Out,I | Integer?(I)]
+[CC,V?,In,Out,I when Integer?(I)]
 inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) =
     pointerToInt(I, a);
 
@@ -235,25 +235,25 @@ inline overload null?(p:ExternalCodePointer[C,V,I,O]) {
 [F, T]
 private CCastable?(static F, static T) = false;
 
-[F, T | Integer?(F) and Integer?(T) and TypeSize(T) >= TypeSize(F)]
+[F, T when Integer?(F) and Integer?(T) and TypeSize(T) >= TypeSize(F)]
 overload CCastable?(static F, static T) = true;
 
-[F, T | Integer?(F) and Integer?(T) and TypeSize(T) == TypeSize(F)]
+[F, T when Integer?(F) and Integer?(T) and TypeSize(T) == TypeSize(F)]
 overload CCastable?(static Pointer[F], static Pointer[T]) = true;
 
 [F]
 overload CCastable?(static Pointer[F], static RawPointer) = true;
 
-[F, T | CCastable?(F, T)]
+[F, T when CCastable?(F, T)]
 private cCast(from:F, static T) = T(from);
 
-[S | String?(S)]
+[S when String?(S)]
 overload cCast(s:S, static Pointer[CChar]) = cstring(s);
 
 [F]
 overload cCast(forward from:F, static F) = forward from;
 
-[CC, ..In, ..Out, ..A | countValues(..In) == countValues(..A)]
+[CC, ..In, ..Out, ..A when countValues(..In) == countValues(..A)]
 inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:A) =
     ..callExternalCodePointer(ptr,
         ..mapValues2((arg, T) => cCast(arg, T), static countValues(..A), ..args, ..In));
@@ -262,7 +262,7 @@ inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args
 inline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:In) =
     ..callExternalCodePointer(ptr, ..args);
 
-[CC, ..In, ..Out, ..A | (countValues(..A) >= countValues(..In))]
+[CC, ..In, ..Out, ..A when (countValues(..A) >= countValues(..In))]
 inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) {
     alias N = static countValues(..In);
     return ..callExternalCodePointer(ptr,
@@ -270,7 +270,7 @@ inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:
         ..dropValues(N, ..args));
 }
 
-[CC, ..In, ..Out, ..A | (countValues(..A) >= countValues(..In))
+[CC, ..In, ..Out, ..A when (countValues(..A) >= countValues(..In))
                        and (Tuple[..takeValues(static countValues(..In), ..A)] == Tuple[..In])]
 inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) =
     ..callExternalCodePointer(ptr, ..args);
@@ -280,11 +280,11 @@ inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:
 // construct code pointers from static callables
 //
 
-[..In, ..Out, fn | CallDefined?(fn, ..In)]
+[..In, ..Out, fn when CallDefined?(fn, ..In)]
 inline overload CodePointer[[..In], [..Out]](static fn) : CodePointer[[..In], [..Out]]
     = makeCodePointer(fn, ..In);
 
-[CC, V?, ..In, ..Out, fn | CallDefined?(fn, ..In)]
+[CC, V?, ..In, ..Out, fn when CallDefined?(fn, ..In)]
 inline overload ExternalCodePointer[CC, V?, [..In], [..Out]](static fn)
     : ExternalCodePointer[CC, V?, [..In], [..Out]]
     = makeExternalCodePointer(fn, static CC, static V?, ..In);
@@ -319,20 +319,20 @@ alias makeCCodePointer(fn, ..In) =
 // construct code pointers from mono static callables
 //
 
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload CodePointer(static fn) = makeCodePointer(fn, ..MonoInputTypes(fn));
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload CCodePointer(static fn) =
     makeExternalCodePointer(fn, cdecl, static false, ..MonoInputTypes(fn));
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload StdCallCodePointer(static fn) =
     makeExternalCodePointer(fn, stdcall, static false, ..MonoInputTypes(fn));
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload FastCallCodePointer(static fn) =
     makeExternalCodePointer(fn, fastcall, static false, ..MonoInputTypes(fn));
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload ThisCallCodePointer(static fn) =
     makeExternalCodePointer(fn, thiscall, static false, ..MonoInputTypes(fn));
-[fn | Mono?(fn)]
+[fn when Mono?(fn)]
 inline overload LLVMCodePointer(static fn) =
     makeExternalCodePointer(fn, llvm, static false, ..MonoInputTypes(fn));

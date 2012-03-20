@@ -5,13 +5,13 @@ IdentifierChars(identifier)
     );
 
 IdentifierStartsWith?(identifier, startsWith) = false;
-[identifier, startsWith | IdentifierSize(identifier) >= IdentifierSize(startsWith)]
+[identifier, startsWith when IdentifierSize(identifier) >= IdentifierSize(startsWith)]
 overload IdentifierStartsWith?(static identifier, static startsWith)
       = IdentifierSlice(identifier, static 0, static IdentifierSize(startsWith))
         == startsWith;
 
 IdentifierEndsWith?(identifier, endsWith) = false;
-[identifier, endsWith | IdentifierSize(identifier) >= IdentifierSize(endsWith)]
+[identifier, endsWith when IdentifierSize(identifier) >= IdentifierSize(endsWith)]
 overload IdentifierEndsWith?(static identifier, static endsWith)
     = IdentifierSlice(identifier,
           static IdentifierSize(identifier) - IdentifierSize(endsWith),
@@ -19,19 +19,19 @@ overload IdentifierEndsWith?(static identifier, static endsWith)
       ) == endsWith;
 
 
-[identifier, sub, start |
+[identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
 ]
 IdentifierFind(static identifier, static sub, static start)
     = IdentifierFind(identifier, sub, static start + 1);
 
-[identifier, sub, start |
+[identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
     and IdentifierSize(identifier) < IdentifierSize(sub) + start
 ]
 overload IdentifierFind(static identifier, static sub, static start) = -1;
 
-[identifier, sub, start |
+[identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
     and IdentifierSize(identifier) >= IdentifierSize(sub) + start
     and IdentifierSlice(identifier, static start, static start + IdentifierSize(sub))
@@ -53,7 +53,7 @@ IdentifierDecapitalize(i)
         IdentifierSlice(i, static 1, static IdentifierSize(i))
     );
 
-[i | Identifier?(i) and IdentifierSize(i) == 1]
+[i when Identifier?(i) and IdentifierSize(i) == 1]
 IdentifierUpperChar(static i) = i;
 
 overload IdentifierUpperChar(static #a) = #A;
@@ -83,7 +83,7 @@ overload IdentifierUpperChar(static #x) = #X;
 overload IdentifierUpperChar(static #y) = #Y;
 overload IdentifierUpperChar(static #z) = #Z;
 
-[i | Identifier?(i) and IdentifierSize(i) == 1]
+[i when Identifier?(i) and IdentifierSize(i) == 1]
 IdentifierLowerChar(static i) = i;
 
 overload IdentifierLowerChar(static #A) = #a;
@@ -119,7 +119,7 @@ overload ident(..xx) = IdentifierConcat(..mapValues(ident, ..xx));
 
 [x]
 overload ident(static x) = IdentifierStaticName(static x);
-[i | Identifier?(i)]
+[i when Identifier?(i)]
 overload ident(static i) = i;
 
 overload ident() = #"";

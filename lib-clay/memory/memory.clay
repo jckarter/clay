@@ -27,7 +27,7 @@ freeObject(ptr:Pointer[T]) {
     freeRawMemory(ptr);
 }
 
-[T, I | Integer?(I)]
+[T, I when Integer?(I)]
 allocateArray(static T, count:I) {
     var begin = allocateRawMemory(T, SizeT(count));
     var end = begin + SizeT(count);
@@ -76,7 +76,7 @@ alignedFree(ptr:Pointer[UInt8]) {
 // allocateRawMemoryAligned, freeRawMemoryAligned
 //
 
-[T, I, J | Integer?(I) and Integer?(J)]
+[T, I, J when Integer?(I) and Integer?(J)]
 allocateRawMemoryAligned(static T, count:I, alignment:J) {
     var ptr = alignedMalloc(TypeSize(T) * SizeT(count), SizeT(alignment));
     return Pointer[T](ptr);
@@ -93,13 +93,13 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 // allocateRawMemory, freeRawMemory
 //
 
-[T,I | Integer?(I)]
+[T,I when Integer?(I)]
 allocateRawMemory(static T, count:I) {
     var ptr = malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
 }
 
-[T,I | Integer?(I) and TypeAlignment(T) <= SystemMallocAlignment]
+[T,I when Integer?(I) and TypeAlignment(T) <= SystemMallocAlignment]
 reallocateRawMemory(ptr:Pointer[T], count:I) {
     var newptr = realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
     return Pointer[T](newptr);
@@ -110,12 +110,12 @@ freeRawMemory(ptr:Pointer[T]) {
     free(RawPointer(ptr));
 }
 
-[T,I | Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
+[T,I when Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
 overload allocateRawMemory(static T, count:I) {
     return allocateRawMemoryAligned(T, count, TypeAlignment(T));
 }
 
-[T | TypeAlignment(T) > SystemMallocAlignment]
+[T when TypeAlignment(T) > SystemMallocAlignment]
 overload freeRawMemory(ptr:Pointer[T]) {
     freeRawMemoryAligned(ptr);
 }
@@ -137,7 +137,7 @@ initializeMemory(begin:Pointer[T], end:Pointer[T]) {
 // destroyMemory
 //
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 destroyMemory(begin:Pointer[T], end:Pointer[T]) {
     eachLocation(begin, end, destroy);
 }
@@ -148,7 +148,7 @@ destroyMemory(begin:Pointer[T], end:Pointer[T]) {
 // copyNonoverlappingMemory
 //
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocationWithCleanup(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -162,7 +162,7 @@ copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
 // move*Memory*
 //
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     if (destBegin <= srcBegin) {
         moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
@@ -175,7 +175,7 @@ moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     }
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     if (destBegin <= srcBegin)
         moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
@@ -183,7 +183,7 @@ moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
         moveMemoryBackwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 private moveMemoryForwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -192,7 +192,7 @@ private moveMemoryForwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcE
     });
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcEnd;
     eachLocationBackwards(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -201,7 +201,7 @@ private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], src
     });
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -210,7 +210,7 @@ moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
     });
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
@@ -221,7 +221,7 @@ moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd
 // resetMemoryUnsafe
 //
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
     eachLocation(begin, end, resetUnsafe);
 }
@@ -250,7 +250,7 @@ zeroObject(o) { zeroMemory(Pointer[UInt8](&o), Pointer[UInt8](&o + 1)); }
 // assignNonoverlappingMemory, moveAssignNonoverlappingMemory
 //
 
-[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
+[T, U when not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -259,7 +259,7 @@ assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Poi
     });
 }
 
-[T, U | not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
+[T, U when not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
@@ -268,7 +268,7 @@ moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd
     });
 }
 
-[T | not PODType?(T)]
+[T when not PODType?(T)]
 overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {

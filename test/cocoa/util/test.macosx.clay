@@ -4,7 +4,7 @@ import test.*;
 import test.memory.*;
 
 record Foo (x: Int64, y: Double);
-[I | Integer?(I) and I != Int64]
+[I  when  Integer?(I) and I != Int64]
 overload Foo(x: I, y: Double) = Foo(Int64(x), y);
 
 overload selector(static #"lifecycleTest") = Id;

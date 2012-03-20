@@ -25,15 +25,15 @@ inline overload im(z:Complex32) = (Pointer[IFloat](&z)+1);
 inline overload im(z:Complex64) = (Pointer[IDouble](&z)+1);
 inline overload im(z:Complex80) = (Pointer[ILongDouble](&z)+1);
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline real(z:C) = re(z)^;
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline imag(z:C) = im(z)^;
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
 
-[I | Imaginary?(I)]
+[I when Imaginary?(I)]
 inline overload imag(z:I) = z;
 inline overload imagValue(z:Imag32) = numericConvert(Float32, z);
 inline overload imagValue(z:Imag64) = numericConvert(Float64, z);
@@ -58,48 +58,48 @@ inline overload Complex(a:Double,b:LongDouble) = Complex(LongDouble(a), numericC
 inline overload Complex(a:LongDouble,b:Float) = Complex(a, numericConvert(ILongDouble,b));
 inline overload Complex(a:LongDouble,b:Double) = Complex(a, numericConvert(ILongDouble,b));
 
-[T | Float?(T)]
+[T when Float?(T)]
 inline overload Complex(a:T) = Complex(a,0.f);
 
-[T | Imaginary?(T)]
+[T when Imaginary?(T)]
 inline overload Complex(a:T) = Complex(0.f,a);
 
 ComplexBaseType(static Complex32) = Float;
 overload ComplexBaseType(static Complex64) = Double;
 overload ComplexBaseType(static Complex80) = LongDouble;
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 ComplexRealType(static T) = ComplexBaseType(T);
 
 ComplexImagType(static Complex32) = IFloat;
 overload ComplexImagType(static Complex64) = IDouble;
 overload ComplexImagType(static Complex80) = ILongDouble;
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload ComplexRealType(z:T) = Type(real(z));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload ComplexImagType(z:T) = Type(imag(z));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 ComplexType(static T) = T;
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload ComplexType(static T) = Type(Complex(T()));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload T() = T(0.);
 
-[C,T | Complex?(C,T)]
+[C,T when Complex?(C,T)]
 inline overload C(a:T) = Complex(real(a), imag(a));
 
-[T,C | (Float?(T) or Imaginary?(T)) and Complex?(C)]
+[T,C when (Float?(T) or Imaginary?(T)) and Complex?(C)]
 inline overload C(a:T) = Complex(a);
 
-[U,T,C | Float?(U) and (Float?(T) or Imaginary?(T)) and Complex?(C)]
+[U,T,C when Float?(U) and (Float?(T) or Imaginary?(T)) and Complex?(C)]
 inline overload C(a:U, b:T) = Complex(a,b);
 
-[I,C | Integer?(I) and Complex?(C)]
+[I,C when Integer?(I) and Complex?(C)]
 inline overload C(a:I) = Complex(ComplexBaseType(C)(a));
 
 
@@ -107,83 +107,83 @@ inline overload C(a:I) = Complex(ComplexBaseType(C)(a));
 // equals?, notEquals?, less?, lessEquals?, greater?, greaterEquals?
 //
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload equals?(z:C, y:T) = imag(z) != T(0) and equals?(real(z),y);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload equals?(y:T, z:C) = equals?(z,y);
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload equals?(z:T, y:T) = equals?(real(z),real(y)) and equals?(imag(z),imag(y));
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload notEquals?(z:C, y:T) = not equals?(z, y);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload notEquals?(y:T,z:C) = not equals?(z, y);
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload notEquals?(z:T, y:T) = not equals?(z,y);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload lesser?(a:C, b:T) = lesser?(real(a), b);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload lesser?(a:T, b:C) = lesser?(a, real(b));
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline overload lesser?(a:C, b:C) = lesser?(real(a), real(b));
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload lesserEquals?(a:C, b:T) = lesserEquals?(real(a), b);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload lesserEquals?(a:T, b:C) = lesserEquals?(a, real(b));
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline overload lesserEquals?(a:C, b:C) = lesserEquals?(real(a), real(b));
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload greater?(a:C, b:T) = greater?(real(a), b);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload greater?(a:T, b:C) = greater?(a, real(b));
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline overload greater?(a:C, b:C) = greater?(real(a), real(b));
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload greaterEquals?(a:C, b:T) = greaterEquals?(real(a), b);
 
-[T,C | Numeric?(T) and Complex?(C)]
+[T,C when Numeric?(T) and Complex?(C)]
 inline overload greaterEquals?(a:T, b:C) = greaterEquals?(a, real(b));
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline overload greaterEquals?(a:C, b:C) = greaterEquals?(real(a), real(b));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
 
 //
 // unary ops
 //
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload minus(z:T) = Complex(-real(z),-imag(z));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload plus(z:T) = z;
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline conj(z:T) = Complex(real(z),-imag(z));
 
-[T | Imaginary?(T)]
+[T when Imaginary?(T)]
 inline overload conj(z:T) = -z;
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline rect(c:C) = real(c), imag(c);
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline rectValues(c:C) = real(c), imagValue(c);
 
 //
@@ -192,13 +192,13 @@ inline rectValues(c:C) = real(c), imagValue(c);
 
 // complex/complex
 
-[T,U | Complex?(T,U)]
+[T,U when Complex?(T,U)]
 inline overload add(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
 
-[T,U | Complex?(T,U)]
+[T,U when Complex?(T,U)]
 inline overload subtract(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
 
-[T,U | Complex?(T,U)]
+[T,U when Complex?(T,U)]
 inline overload multiply(z:T, y:U) {
     alias iy = imagValue(y);
     alias ry = real(y);
@@ -208,7 +208,7 @@ inline overload multiply(z:T, y:U) {
     return Complex(ac-bd, fma(rz+iz, ry+iy, -ac-bd));
 }
 
-[T,U | Complex?(T,U)]
+[T,U when Complex?(T,U)]
 inline overload divide(z:T, y:U) {
     alias iy = imagValue(y);
     alias ry = real(y);
@@ -228,104 +228,104 @@ inline overload divide(z:T, y:U) {
 
 // Float/imaginary -> complex
 
-[T,C | Imaginary?(T) and Float?(C)]
+[T,C when Imaginary?(T) and Float?(C)]
 inline overload add(a:C, z:T) = Complex(a,z);
 
-[T,C | Imaginary?(T) and Float?(C)]
+[T,C when Imaginary?(T) and Float?(C)]
 inline overload add(a:T, z:C) = Complex(z,a);
 
-[T,C | Imaginary?(T) and Float?(C)]
+[T,C when Imaginary?(T) and Float?(C)]
 inline overload subtract(a:T, z:C) = Complex(-z,a);
 
-[T,C | Imaginary?(T) and Float?(C)]
+[T,C when Imaginary?(T) and Float?(C)]
 inline overload subtract(a:C, z:T) = Complex(a,-z);
 
 
 // Float/complex -> complex
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload add(a:T, z:C) = Complex(a + real(z),imag(z));
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload add(z:C, a:T) = add(a,z);
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload subtract(z:C, y:T) = Complex(real(z)-y,imag(z));
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload subtract(y:T,z:C) = Complex(y + real(z), -imag(z));
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload multiply(z:C, y:T) = Complex(real(z)*y,imag(z)*y);
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload multiply(y:T,z:C) = multiply(z,y);
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload divide(z:C, y:T) {
     var d = T(1)/y;
     return Complex(real(z)*d,imag(z)*d);
 }
 
-[T,C | Float?(T) and Complex?(C)]
+[T,C when Float?(T) and Complex?(C)]
 inline overload divide(y:T,z:C) = divide(Complex(y,T(0)),z);
 
 // Imaginary/complex -> complex
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload add(a:T, z:C) = Complex(real(z), imag(z) + a);
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload add(z:C, a:T) = add(a,z);
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload subtract(z:C, y:T) = Complex(real(z), imag(z) - y);
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload subtract(y:T,z:C) = Complex(-real(z), y - imag(z));
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload multiply(z:C, y:T) = Complex(imag(z)*y, real(z)*y);
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload multiply(y:T,z:C) = multiply(z,y);
 
-[T,C | Imaginary?(T) and Complex?(C)]
+[T,C when Imaginary?(T) and Complex?(C)]
 inline overload divide(z:C, y:T) = Complex(imag(z)/y, -real(z)/y);
 
 //XXX THESE NEED ATTENTION
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload max(x:T,y:T) = max(abs(x),abs(y));
 
-[C | Complex?(C)]
+[C when Complex?(C)]
 inline overload min(x:C,y:C) = min(abs(x),abs(y));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload finite?(x:T) = floatExponent(abs(x)) < exponentMask(T);
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload infinity?(x:T) = abs(x) == infinity(T);
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 inline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload infinity(static T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload negativeInfinity(static T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload nan(static T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload snan(static T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));

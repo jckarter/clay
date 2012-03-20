@@ -18,36 +18,36 @@ overload imagFromBits(b:UInt64) = bitcast(IDouble, b);
 overload imagFromBits(b:UInt32) = bitcast(IFloat, b);
 
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 floatFromParts(static LongDouble, neg?:Bool, exp:I, mant:UInt64)
     = floatFromBits(mant, bitor( UInt64(exp),
         if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload floatFromParts(static Double, neg?:Bool, exp:I, mant:UInt64)
     = floatFromBits(bitor(bitand(mant, mantissaMask(Double)),
         bitshl(bitand(UInt64(exp), exponentMask(Double)), mantissaSize(Double)),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload floatFromParts(static Float ,neg?:Bool, exp:I, mant:UInt32)
     = floatFromBits(bitor(
         bitand(mant, mantissaMask(Float)),
         bitshl(bitand(UInt32(exp), exponentMask(Float)), mantissaSize(Float)),
         if (neg?) 0x8000_0000u else 0u ));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload floatFromParts(static ILongDouble, neg?:Bool, exp:I, mant:UInt64)
     = imagFromBits(mant, bitor( UInt64(exp),
         if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload floatFromParts(static IDouble, neg?:Bool, exp:I, mant:UInt64)
     = imagFromBits(bitor(bitand(mant, mantissaMask(IDouble)),
         bitshl(bitand(UInt64(exp), exponentMask(IDouble)), mantissaSize(IDouble)),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload floatFromParts(static IFloat ,neg?:Bool, exp:I, mant:UInt32)
     = imagFromBits(bitor(
         bitand(mant, mantissaMask(IFloat)),
@@ -61,7 +61,7 @@ overload floatNegative?(f:LongDouble) = bitand(floatBits(f).exponent, 0x8000u) !
 overload floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
 overload floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
 
-[T | Float?(T) or Imaginary?(T)]
+[T when Float?(T) or Imaginary?(T)]
 floatExponent(f:T) = bitand(bitshr(floatBits(f), mantissaSize(T)), exponentMask(T));
 overload floatExponent(f:ILongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
 overload floatExponent(f:LongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
@@ -124,10 +124,10 @@ overload snanMask(static LongDouble) = bitshr(mantissaMask(LongDouble),1);
 overload snanMask(static Double) = bitshr(mantissaMask(Double),1);
 overload snanMask(static Float) = bitshr(mantissaMask(Float),1);
 
-[T | Float?(T) or Imaginary?(T)]
+[T when Float?(T) or Imaginary?(T)]
 overload nan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitor(floatMantissa(payload),qnanMask(T)));
 
-[T | Float?(T) or Imaginary?(T)]
+[T when Float?(T) or Imaginary?(T)]
 overload snan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitand(floatMantissa(payload),snanMask(T)));
 
 exponentBias(static ILongDouble) = 16383;
@@ -194,39 +194,39 @@ overload floatBitsUnsigned(x:LongDouble) {
 overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
 overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 
-[T | Imaginary?(T)]
+[T when Imaginary?(T)]
 abs(x:T) = imagFromBits(floatBitsUnsigned(x));
-[T | Float?(T)]
+[T when Float?(T)]
 overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 
-[T,U | Float?(T,U)]
+[T,U when Float?(T,U)]
 copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
     wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload copysign(a:LongDouble,b:T) {
     var tmp = floatBitsUnsigned(a);
     return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
         wrapBitshl(signbit(b),exponentSize(LongDouble))));
 }
 
-[T | Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
-[T | Float?(T) or Imaginary?(T)] infinity?(x:T) = x == infinity(T);
-[T | Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
-[T | Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
-[T | Float?(T) or Imaginary?(T)] qnan?(x:T) {
+[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
+[T when Float?(T) or Imaginary?(T)] infinity?(x:T) = x == infinity(T);
+[T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
+[T when Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
+[T when Float?(T) or Imaginary?(T)] qnan?(x:T) {
     var m = floatMantissa(x);
     return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==1;
 }
-[T | Float?(T) or Imaginary?(T)] snan?(x:T) {
+[T when Float?(T) or Imaginary?(T)] snan?(x:T) {
     var m = floatMantissa(x);
     return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==0;
 }
-[T | Float?(T) or Imaginary?(T)] subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
-[T | Float?(T) or Imaginary?(T)] normalized?(x:T) = not subnormal?(x) and finite?(x);
+[T when Float?(T) or Imaginary?(T)] subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
+[T when Float?(T) or Imaginary?(T)] normalized?(x:T) = not subnormal?(x) and finite?(x);
 
-[T | Float?(T)] epsilon(static T) = nextafter(T(1),T(2))-T(1);
+[T when Float?(T)] epsilon(static T) = nextafter(T(1),T(2))-T(1);
 
 
 // ieee754 number - utility representation
@@ -247,7 +247,7 @@ alias FP_SUBNORMAL_NEG = 9;
 alias FP_NORMAL_NEG = 10;
 alias FP_SNAN_NEG = 11;
 
-[T | Float?(T) or Imaginary?(T)]
+[T when Float?(T) or Imaginary?(T)]
 fpclassify(x:T) --> res:Int {
     if(x==T(0)) res <-- FP_ZERO;
     else if(subnormal?(x)) res <-- FP_SUBNORMAL;
@@ -309,7 +309,7 @@ alias normcoeff(static LongDouble) = floatFromBits(UInt128(0x4035ul));
 alias overload normcoeff(static Double) = floatFromBits(0x435ul);
 alias overload normcoeff(static Float) = floatFromBits(0x4Cu);
 
-[T | Float?(T)]
+[T when Float?(T)]
 normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));

@@ -17,10 +17,10 @@ private record Filtered[F, A] (
     seq : A,
 );
 
-[F, A | LightweightSequence?(A)]
+[F, A when LightweightSequence?(A)]
 overload LightweightSequence?(static Filtered[F,A]) = true;
 
-[F,A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+[F,A when CallDefined?(UnderlyingContainerConstructor, Static[A])]
 overload UnderlyingContainerConstructor(static Filtered[F,A]) =
     UnderlyingContainerConstructor(A);
 
@@ -39,7 +39,7 @@ inline overload iterator(a:Filtered[F, A]) {
                             T());
 }
 
-[F, A | CallDefined?(reverseIterator, A)]
+[F, A when CallDefined?(reverseIterator, A)]
 inline overload reverseIterator(a:Filtered[F, A]) {
     alias T = Type(captureValues(..next(reverseIterator(null(A)^))));
     return FilteredIterator(a.predicate,

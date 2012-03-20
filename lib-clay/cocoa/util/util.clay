@@ -12,7 +12,7 @@ public import cocoa.util.platform.*;
 //
 // object identity
 //
-[T1, T2 | ObjectRef?(T1) and ObjectRef?(T2)]
+[T1, T2 when ObjectRef?(T1) and ObjectRef?(T2)]
 overload is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
 
 
@@ -32,36 +32,36 @@ overload NSNumber(x: Float32) = NSNumber.numberWithFloat(x);
 overload NSNumber(x: Float64) = NSNumber.numberWithDouble(x);
 overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
 
-[O | ObjectRef?(O)] overload Int8(o: O)  = o.intValue();
-[O | ObjectRef?(O)] overload Int16(o: O) = o.shortValue();
-[O | ObjectRef?(O)] overload Int32(o: O) = o.intValue();
-[O | ObjectRef?(O)] overload Int64(o: O) = o.longLongValue();
-[O | ObjectRef?(O)] overload UInt8(o: O)  = o.unsignedIntValue();
-[O | ObjectRef?(O)] overload UInt16(o: O) = o.unsignedShortValue();
-[O | ObjectRef?(O)] overload UInt32(o: O) = o.unsignedIntValue();
-[O | ObjectRef?(O)] overload UInt64(o: O) = o.unsignedLongLongValue();
-[O | ObjectRef?(O)] overload Float32(o: O) = o.floatValue();
-[O | ObjectRef?(O)] overload Float64(o: O) = o.doubleValue();
-[O | ObjectRef?(O)] overload Bool(o: O) = o.boolValue();
+[O when ObjectRef?(O)] overload Int8(o: O)  = o.intValue();
+[O when ObjectRef?(O)] overload Int16(o: O) = o.shortValue();
+[O when ObjectRef?(O)] overload Int32(o: O) = o.intValue();
+[O when ObjectRef?(O)] overload Int64(o: O) = o.longLongValue();
+[O when ObjectRef?(O)] overload UInt8(o: O)  = o.unsignedIntValue();
+[O when ObjectRef?(O)] overload UInt16(o: O) = o.unsignedShortValue();
+[O when ObjectRef?(O)] overload UInt32(o: O) = o.unsignedIntValue();
+[O when ObjectRef?(O)] overload UInt64(o: O) = o.unsignedLongLongValue();
+[O when ObjectRef?(O)] overload Float32(o: O) = o.floatValue();
+[O when ObjectRef?(O)] overload Float64(o: O) = o.doubleValue();
+[O when ObjectRef?(O)] overload Bool(o: O) = o.boolValue();
 
 
 
 //
 // NSString overloads
 //
-[ident | Identifier?(ident)]
+[ident when Identifier?(ident)]
 overload NSString(static ident) = NSString(NSSTR(ident));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload NSString(s: S) = NSString(NSString.stringWithUTF8String(cstring(s)));
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 overload String(o: O) = String(CStringRef(o.description().UTF8String()));
 
-[O | Class?(O) and Subclass?(NSString, O)]
+[O when Class?(O) and Subclass?(NSString, O)]
 overload String(o: O) = String(CStringRef(o.UTF8String()));
 
-[O | Class?(O) and Subclass?(NSString, O)]
+[O when Class?(O) and Subclass?(NSString, O)]
 overload cstring(o: O) = o.UTF8String();
 
 
@@ -72,13 +72,13 @@ overload cstring(o: O) = o.UTF8String();
 [T]
 makeNSValue(value: T)
     = NSValue.valueWithBytes_objCType(RawPointer(&value), cstring(encode(T)));
-[T | ObjectRef?(T)]
+[T when ObjectRef?(T)]
 overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
 
 record NSValueTypeMismatch (object: Id);
 instance Exception (NSValueTypeMismatch);
 
-[T, O | ObjectRef?(O)]
+[T, O when ObjectRef?(O)]
 fromNSValue(static T, o: O) {
     if (CStringRef(o.objCType()) != encode(T))
         throw NSValueTypeMismatch(Id(o));
@@ -86,19 +86,19 @@ fromNSValue(static T, o: O) {
         return fromNSValueUnsafe(T, o);
 }
 
-[T, O | ObjectRef?(O)]
+[T, O when ObjectRef?(O)]
 fromNSValueUnsafe(static T, o: O) --> returned: T {
     o.getValue(RawPointer(&returned));
 }
 
-[T, O | ObjectRef?(O)]
+[T, O when ObjectRef?(O)]
 overload fromNSValueUnsafe(static Pointer[T], o: O) = Pointer[T](o.pointerValue());
 
 
 
 //
 // Maybe[] conversion
-[T, O | ObjectRef?(O) and CallDefined?(T, O)]
+[T, O when ObjectRef?(O) and CallDefined?(T, O)]
 overload Maybe[T](o: O) = if (nil?(o)) nothing(T) else Maybe(T(o));
 
 
@@ -107,24 +107,24 @@ overload Maybe[T](o: O) = if (nil?(o)) nothing(T) else Maybe(T(o));
 // primitive-as-object boxing
 //
 
-[N | Numeric?(N) or N == Bool]
+[N when Numeric?(N) or N == Bool]
 overload ObjectParameterType(static N) = NSNumber;
-[N | Numeric?(N) or N == Bool]
+[N when Numeric?(N) or N == Bool]
 overload objectHandle(n: N) = objectHandle(NSNumber(n));
 
-[T | RegularRecord?(T) and not ObjectRef?(T)]
+[T when RegularRecord?(T) and not ObjectRef?(T)]
 overload ObjectParameterType(static T) = NSValue;
-[T | RegularRecord?(T) and not ObjectRef?(T)]
+[T when RegularRecord?(T) and not ObjectRef?(T)]
 overload objectHandle(r: T) = objectHandle(makeNSValue(r));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload ObjectParameterType(static S) = NSString;
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload objectHandle(s: S) = objectHandle(NSString(s));
 
-[i | Identifier?(i)]
+[i when Identifier?(i)]
 overload ObjectParameterType(static Static[i]) = NSString;
-[i | Identifier?(i)]
+[i when Identifier?(i)]
 overload objectHandle(static i) = NSSTR(i);
 
 
@@ -133,22 +133,22 @@ overload objectHandle(static i) = NSSTR(i);
 // object equality and comparison
 //
 
-[O1, O2 | ObjectRef?(O1) and ObjectRef?(O2)]
+[O1, O2 when ObjectRef?(O1) and ObjectRef?(O2)]
 overload equals?(o1: O1, o2: O2) = o1.isEqual(o2);
 
-[O1, O2 | ObjectRef?(O1) and ObjectRef?(O2)]
+[O1, O2 when ObjectRef?(O1) and ObjectRef?(O2)]
 overload lesser?(o1: O1, o2: O2) = o1.compare(o2) < 0;
 
-[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+[O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
 overload equals?(o: O, v: T) = o.isEqual(objectHandle(v));
 
-[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+[O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
 overload equals?(v: T, o: O) = o.isEqual(objectHandle(v));
 
-[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+[O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
 overload lesser?(o: O, v: T) = o.compare(objectHandle(v)) < 0;
 
-[O, T | ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
+[O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
 overload lesser?(v: T, o: O) = o.compare(objectHandle(v)) > 0;
 
 
@@ -157,7 +157,7 @@ overload lesser?(v: T, o: O) = o.compare(objectHandle(v)) > 0;
 // object hashing
 //
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 overload hash(o: O) = o.hash();
 
 
@@ -183,7 +183,7 @@ private refreshIterator(i: NSFastEnumerationIterator) {
     );
 }
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 overload iterator(o: O) --> returned: NSFastEnumerationIterator {
     returned.delegate = MethodDelegate(Id(o), #"countByEnumeratingWithState:objects:count:");
     returned.state.state = 0;
@@ -198,7 +198,7 @@ overload next(i: NSFastEnumerationIterator) --> returned: Id {
         refreshIterator(i);
 }
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 overload size(o: O) = SizeT(o.count());
 
 
@@ -207,10 +207,10 @@ overload size(o: O) = SizeT(o.count());
 // object indexing as array, dictionary
 //
 
-[OD, OK | ObjectRef?(OD) and ObjectParameterType?(OK)]
+[OD, OK when ObjectRef?(OD) and ObjectParameterType?(OK)]
 overload index(o: OD, k: OK) = o.objectForKey(objectHandle(k));
 
-[O, I | ObjectRef?(O) and Integer?(I)]
+[O, I when ObjectRef?(O) and Integer?(I)]
 overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
 
 
@@ -218,14 +218,14 @@ overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
 //
 // array and dictionary constructors
 //
-[T, ..E | Class?(T) and allValues?(ObjectParameterType?, ..E)]
+[T, ..E when Class?(T) and allValues?(ObjectParameterType?, ..E)]
 makeArrayOfClass(static T, forward ..elements: E)
     = T.arrayWithObjects(..mapValues(objectHandle, ..elements), nilHandle);
 
-[..E | allValues?(ObjectParameterType?, ..E)]
+[..E when allValues?(ObjectParameterType?, ..E)]
 makeNSArray(forward ..elements: E)
     = makeArrayOfClass(NSArray, ..elements);
-[..E | allValues?(ObjectParameterType?, ..E)]
+[..E when allValues?(ObjectParameterType?, ..E)]
 makeNSMutableArray(forward ..elements: E)
     = makeArrayOfClass(NSMutableArray, ..elements);
 
@@ -237,17 +237,17 @@ private ValidDictionaryKVs?(..E)
     = countValues(..E) % 2 == 0
       and allValues?(ObjectParameterType?, ..E);
 
-[T, ..E | Class?(T) and ValidDictionaryKVs?(..E)]
+[T, ..E when Class?(T) and ValidDictionaryKVs?(..E)]
 private makeDictionaryOfClass(static T, forward ..kvs: E)
     = T.dictionaryWithObjectsAndKeys(
         ..mapValues(objectHandle, ..swapValuePairs(..kvs)),
         nilHandle
     );
 
-[..E | ValidDictionaryKVs?(..E)]
+[..E when ValidDictionaryKVs?(..E)]
 makeNSDictionary(forward ..kvs: E)
     = makeDictionaryOfClass(NSDictionary, ..kvs);
-[..E | ValidDictionaryKVs?(..E)]
+[..E when ValidDictionaryKVs?(..E)]
 makeNSMutableDictionary(forward ..kvs: E)
     = makeDictionaryOfClass(NSMutableDictionary, ..kvs);
 
@@ -257,15 +257,15 @@ makeNSMutableDictionary(forward ..kvs: E)
 // push, insert, remove operations on objects as arrays
 //
 
-[O, OV | ObjectRef?(O) and ObjectParameterType?(OV)]
+[O, OV when ObjectRef?(O) and ObjectParameterType?(OV)]
 overload push(o: O, v: OV) { o.addObject(objectHandle(v)); }
 
-[O, I, OV | ObjectRef?(O) and Integer?(I) and ObjectParameterType?(OV)]
+[O, I, OV when ObjectRef?(O) and Integer?(I) and ObjectParameterType?(OV)]
 overload insert(o: O, n: I, v: OV) {
     o.insertObject_atIndex(objectHandle(v), NSUInteger(n));
 }
 
-[O, I | ObjectRef?(O) and Integer?(I)]
+[O, I when ObjectRef?(O) and Integer?(I)]
 overload remove(o: O, n: I) { o.removeObjectAtIndex(NSUInteger(n)); }
 
 
@@ -288,7 +288,7 @@ withAutoreleasePool(fn) {
 // standard implementations of lifecycle methods (init*, copyWithZone:, dealloc) 
 //
 
-[O, superSelector, F, ..A |
+[O, superSelector, F, ..A when
     Class?(O)
     and Selector?(superSelector)
     and CallDefined?(call, F,
@@ -319,40 +319,40 @@ initObject(self) = initObjectWith(self, #"init", self => self);
 overload initObject(self, superSelector, forward ..args)
     = initObjectWith(self, superSelector, initObjectMembers, ..args);
 
-[O | Class?(O)]
+[O when Class?(O)]
 private objectMembers(self: O)
     = ref ..mapValues(ivar => ref fieldRef(self^, ivar.0), ..ClassInstanceVars(O));
 
-[O | Class?(O)]
+[O when Class?(O)]
 initObjectMembers(self: O) {
     ..for (member in objectMembers(self))
         member <-- Type(member)();
     return self;
 }
 
-[O, ..A | Class?(O) and (Tuple[..ClassIvarTypes(O)] == Tuple[..A])]
+[O, ..A when Class?(O) and (Tuple[..ClassIvarTypes(O)] == Tuple[..A])]
 overload initObjectMembers(self: O, forward ..args: A) {
     ..objectMembers(self) <-- ..args;
     return self;
 }
 
-[O | Class?(O)]
+[O when Class?(O)]
 copyRootObject(self: O, zone: Pointer[NSZone]) --> returned: O {
     var copy = O(self.class().allocWithZone(zone));
     copy = super(copy).init();
     return initObjectMembers(copy, ..objectMembers(self));
 }
 
-[O | Class?(O)]
+[O when Class?(O)]
 copyInheritingObject(self: O, zone: Pointer[NSZone]) --> returned: O {
     var copy = O(super(self).copyWithZone(zone));
     return initObjectMembers(copy, ..objectMembers(self));
 }
 
-[O | Class?(O)]
+[O when Class?(O)]
 copyImmutableObject(self: O, zone: Pointer[NSZone]) = self.retain();
 
-[O | Class?(O)]
+[O when Class?(O)]
 deallocObject(self: O) {
     ..for (member in objectMembers(self))
         destroy(member);
@@ -365,17 +365,17 @@ deallocObject(self: O) {
 // templates to define lifecycle methods
 //
 
-[selector | Selector?(selector)]
+[selector when Selector?(selector)]
 AutoreleasedClassMethod(static selector)
     = [selector, class => class.alloc().init().autorelease()];
 
-[selector, instanceSelector | Selector?(selector) and Selector?(instanceSelector)]
+[selector, instanceSelector when Selector?(selector) and Selector?(instanceSelector)]
 overload AutoreleasedClassMethod(static selector, static instanceSelector)
     = [selector, (class, ..args) =>
         callMethod(class.alloc(), instanceSelector, ..args).autorelease()
     ];
 
-[selector, superSelector | Selector?(selector) and Selector?(superSelector)]
+[selector, superSelector when Selector?(selector) and Selector?(superSelector)]
 InitInstanceMethod(static selector, static superSelector, ..Types)
     = [selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types];
 
@@ -387,39 +387,39 @@ define CopyRoot;
 define CopyInheriting;
 define CopyImmutable;
 
-[selector | Selector?(selector)]
+[selector when Selector?(selector)]
 CopyInstanceMethod(static selector, static CopyRoot)
     = [selector, copyRootObject];
-[selector | Selector?(selector)]
+[selector when Selector?(selector)]
 overload CopyInstanceMethod(static selector, static CopyInheriting)
     = [selector, copyInheritingObject];
-[selector | Selector?(selector)]
+[selector when Selector?(selector)]
 overload CopyInstanceMethod(static selector, static CopyImmutable)
     = [selector, copyImmutableObject];
 
-[Flag | Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
+[Flag when Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
 overload CopyInstanceMethod(static Flag)
     = CopyInstanceMethod(#"copyWithZone:", Flag);
 
-[selector | Selector?(selector)]
+[selector when Selector?(selector)]
 DeallocInstanceMethod(static selector) = [selector, deallocObject];
 
 overload DeallocInstanceMethod() = DeallocInstanceMethod(#"dealloc");
 
 
-[ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
+[ivarName, readerSelector when Identifier?(ivarName) and Selector?(readerSelector)]
 ReaderInstanceMethod(static ivarName, static readerSelector, T)
     = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
 
-[ivarName | Identifier?(ivarName) and Selector?(ivarName)]
+[ivarName when Identifier?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(static ivarName, T)
     = ReaderInstanceMethod(ivarName, ivarName, T);
 
-[ivarName, readerSelector | Identifier?(ivarName) and Selector?(readerSelector)]
+[ivarName, readerSelector when Identifier?(ivarName) and Selector?(readerSelector)]
 overload ReaderInstanceMethod(static ivarName, static readerSelector)
     = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName))];
 
-[ivarName | Identifier?(ivarName) and Selector?(ivarName)]
+[ivarName when Identifier?(ivarName) and Selector?(ivarName)]
 overload ReaderInstanceMethod(static ivarName)
     = ReaderInstanceMethod(ivarName, ivarName);
 
@@ -427,24 +427,24 @@ overload ReaderInstanceMethod(static ivarName)
 defaultWriterSelector(ivarName)
     = IdentifierConcat(#"set", IdentifierCapitalize(ivarName), #":");
 
-[ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
+[ivarName, writerSelector when Identifier?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(static ivarName, static writerSelector, T)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
 
-[ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+[ivarName when Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(static ivarName, T)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName), Void, T);
 
-[ivarName, writerSelector | Identifier?(ivarName) and Selector?(writerSelector)]
+[ivarName, writerSelector when Identifier?(ivarName) and Selector?(writerSelector)]
 overload WriterInstanceMethod(static ivarName, static writerSelector)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }];
 
-[ivarName | Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
+[ivarName when Identifier?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
 overload WriterInstanceMethod(static ivarName)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
 
 
-[ivarName, readerSelector, writerSelector |
+[ivarName, readerSelector, writerSelector when
     Identifier?(ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
@@ -453,7 +453,7 @@ PropertyInstanceMethods(static ivarName, static readerSelector, static writerSel
     = ReaderInstanceMethod(ivarName, readerSelector, T),
       WriterInstanceMethod(ivarName, writerSelector, T);
 
-[ivarName, readerSelector |
+[ivarName, readerSelector when
     Identifier?(ivarName)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
@@ -461,7 +461,7 @@ PropertyInstanceMethods(static ivarName, static readerSelector, static writerSel
 overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
 
-[ivarName |
+[ivarName when
     Identifier?(ivarName)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
@@ -469,7 +469,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, T)
 overload PropertyInstanceMethods(static ivarName, T)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
 
-[ivarName, readerSelector, writerSelector |
+[ivarName, readerSelector, writerSelector when
     Identifier?(ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
@@ -478,7 +478,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, static 
     = ReaderInstanceMethod(ivarName, readerSelector),
       WriterInstanceMethod(ivarName, writerSelector);
 
-[ivarName, readerSelector |
+[ivarName, readerSelector when
     Identifier?(ivarName)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
@@ -486,7 +486,7 @@ overload PropertyInstanceMethods(static ivarName, static readerSelector, static 
 overload PropertyInstanceMethods(static ivarName, static readerSelector)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
 
-[ivarName |
+[ivarName when
     Identifier?(ivarName)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
@@ -500,7 +500,7 @@ overload PropertyInstanceMethods(static ivarName)
 // printing
 //
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 overload printTo(stream, o: O) {
     if (nil?(o))
         printTo(stream, "(nil)");
@@ -561,7 +561,7 @@ regularClass(..fields) = newClass(NSObject,
 // indexSetIndices
 //
 
-[O | ObjectRef?(O)]
+[O when ObjectRef?(O)]
 indexSetIndices(o: O) {
     var indices = Vector[NSUInteger]();
     var indexCount = o.count();

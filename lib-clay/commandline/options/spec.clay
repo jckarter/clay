@@ -17,7 +17,7 @@ overload printTo(out, it : OptionSpec){
 
 enum Flags( HAS_VALUE, REQUIRED, ALLOWS_REPEATS );
 
-[S | SpecPart?(S)]
+[S when SpecPart?(S)]
 overload OptionSpec(part : S, ..parts) : OptionSpec{
   var result = OptionSpec(Vector[String](), false, false, false);
  
@@ -37,7 +37,7 @@ private SpecPart?(static T) = String?(T) or (T == Char) or (T == Flags);
 
 private define addSpecPart;
 
-[T | String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
+[T when String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
   push(spec.names, String(t)); 
 }
 

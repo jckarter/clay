@@ -33,7 +33,7 @@ overload throwValue(x) {
     errorNoThrow(x);
 }
 
-[ | ExceptionsEnabled?]
+[ when ExceptionsEnabled?]
 overload throwValue(forward x) {
     var exp = allocateObject(Exception(x));
     signalException(RawPointer(exp));

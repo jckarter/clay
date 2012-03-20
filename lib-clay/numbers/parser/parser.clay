@@ -7,7 +7,7 @@ import printer.formatter.(repr);
 //
 // Generic parsers
 //
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 parseIntWith(s:S, intType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
@@ -20,7 +20,7 @@ parseIntWith(s:S, intType, convFunc) {
     return intType(value);
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 parseFloatWith(s:S, floatType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
@@ -33,7 +33,7 @@ parseFloatWith(s:S, floatType, convFunc) {
     return floatType(value);
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 parseImagWith(s:S, imagType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
@@ -50,16 +50,16 @@ parseImagWith(s:S, imagType, convFunc) {
 // parseInt8, parseUInt8
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseInt8(s:S) = parseInt8(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseInt8(s:S) = parseIntWith(s, Int8, libc.strtol);
 
-[S | String?(S)]
+[S when String?(S)]
 parseUInt8(s:S) = parseUInt8(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
 
 
@@ -67,16 +67,16 @@ overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
 // parseInt16, parseUInt16
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseInt16(s:S) = parseInt16(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseInt16(s:S) = parseIntWith(s, Int16, libc.strtol);
 
-[S | String?(S)]
+[S when String?(S)]
 parseUInt16(s:S) = parseUInt16(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
 
 
@@ -84,16 +84,16 @@ overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
 // parseInt32, parseUInt32
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseInt32(s:S) = parseInt32(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseInt32(s:S) = parseIntWith(s, Int32, libc.strtol);
 
-[S | String?(S)]
+[S when String?(S)]
 parseUInt32(s:S) = parseUInt32(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
 
 
@@ -101,16 +101,16 @@ overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
 // parseInt64, parseUInt64
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseInt64(s:S) = parseInt64(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseInt64(s:S) = parseIntWith(s, Int64, libc.strtoll);
 
-[S | String?(S)]
+[S when String?(S)]
 parseUInt64(s:S) = parseUInt64(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
 
 
@@ -118,10 +118,10 @@ overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
 // parseFloat32
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseFloat32(s:S) = parseFloat32(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
 
 
@@ -129,20 +129,20 @@ overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
 // parseFloat64
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseFloat64(s:S) = parseFloat64(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
 
 //
 // parseFloat80
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseFloat80(s:S) = parseFloat80(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
 
 
@@ -150,10 +150,10 @@ overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
 // parseImag32
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseImag32(s:S) = parseImag32(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
 
 
@@ -161,18 +161,18 @@ overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
 // parseImag64
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseImag64(s:S) = parseImag64(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
 
 //
 // parseComplex80
 //
 
-[S | String?(S)]
+[S when String?(S)]
 parseImag80(s:S) = parseImag80(String(s));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);

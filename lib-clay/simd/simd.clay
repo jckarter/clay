@@ -6,7 +6,7 @@ import simd.primitives as prims;
 // index
 //
 
-[T,n,I | Integer?(I)]
+[T,n,I when Integer?(I)]
 inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 
 
@@ -15,7 +15,7 @@ inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 // type inferring constructor
 //
 
-[..A | (countValues(..A) > 0) and equalValues?(..A)]
+[..A when (countValues(..A) > 0) and equalValues?(..A)]
 inline overload Vec(..args:A) {
     alias n = static countValues(..A);
     alias T = firstValue(..A);
@@ -28,7 +28,7 @@ inline overload Vec(..args:A) {
 // basic constructor
 //
 
-[T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
+[T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
 inline overload Vec[T,n](..args:A) {
     var a = uninitializedUnsafe(Vec[T,n]);
     var i = 0;
@@ -94,7 +94,7 @@ private define unpackElements;
 inline overload unpackElements(a:Vec[T,n], static i) =
     a[i], ..unpackElements(a, static i+1);
 
-[T,n,i | i == n]
+[T,n,i when i == n]
 inline overload unpackElements(a:Vec[T,n], static i) = ;
 
 
@@ -106,50 +106,50 @@ inline overload unpackElements(a:Vec[T,n], static i) = ;
 [T,n]
 inline overload add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload add(a:Vec[T,n], x:X) = a + Vec[T,n](T(x));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload add(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) + a;
 
 
 [T,n]
 inline overload subtract(a:Vec[T,n], b:Vec[T,n]) = prims.subtract(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload subtract(a:Vec[T,n], x:X) = a - Vec[T,n](T(x));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload subtract(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) - a;
 
 
 [T,n]
 inline overload multiply(a:Vec[T,n], b:Vec[T,n]) = prims.multiply(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload multiply(a:Vec[T,n], x:X) = a * Vec[T,n](T(x));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload multiply(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) * a;
 
 
 [T,n]
 inline overload divide(a:Vec[T,n], b:Vec[T,n]) = prims.divide(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload divide(a:Vec[T,n], x:X) = a / Vec[T,n](T(x));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload divide(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) / a;
 
 
 [T,n]
 inline overload remainder(a:Vec[T,n], b:Vec[T,n]) = prims.remainder(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload remainder(a:Vec[T,n], x:X) = a % Vec[T,n](T(x));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 
 
@@ -161,20 +161,20 @@ inline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 [T,n]
 inline overload bitshl(a:Vec[T,n], b:Vec[T,n]) = prims.bitshl(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitshl(a:Vec[T,n], x:X) = bitshl(a, Vec[T,n](T(x)));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitshl(x:X, a:Vec[T,n]) = bitshl(Vec[T,n](T(x)),  a);
 
 
 [T,n]
 inline overload bitshr(a:Vec[T,n], b:Vec[T,n]) = prims.bitshr(a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitshr(a:Vec[T,n], x:X) = bitshr(a, Vec[T,n](T(x)));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
 
 private inline bitwiseOp(fn, a, b) {
@@ -185,33 +185,33 @@ private inline bitwiseOp(fn, a, b) {
     );
 }
 
-[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+[T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
 inline overload bitand(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitand, a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitand(a:Vec[T,n], x:X) = bitand(a, Vec[T,n](T(x)));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitand(x:X, a:Vec[T,n]) = bitand(Vec[T,n](T(x)),  a);
 
 
-[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+[T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
 inline overload bitor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitor, a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitor(a:Vec[T,n], x:X) = bitor(a, Vec[T,n](T(x)));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitor(x:X, a:Vec[T,n]) = bitor(Vec[T,n](T(x)),  a);
 
 
-[T,n, U,m | CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+[T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
 inline overload bitxor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitxor, a, b);
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitxor(a:Vec[T,n], x:X) = bitxor(a, Vec[T,n](T(x)));
 
-[T,n,X | Numeric?(X)]
+[T,n,X when Numeric?(X)]
 inline overload bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
 
 
@@ -254,10 +254,10 @@ inline overload printReprTo(stream, a:Vec[T,n])
 //
 
 CompatibleVectorTypes?(X, Y) = false;
-[T,n, U,m | TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
+[T,n, U,m when TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
 overload CompatibleVectorTypes?(static Vec[T,n], static Vec[U,m]) = true;
 
-[T,n, U,m | T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
+[T,n, U,m when T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
 inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 
@@ -266,7 +266,7 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 // boolean masks
 //
 
-[T | Integer?(T)]
+[T when Integer?(T)]
 inline componentMask(static T) = wrapCast(T, -1);
 inline overload componentMask(static Float32) = bitcast(Float32, -1_i);
 inline overload componentMask(static Float64) = bitcast(Float64, -1_l);

@@ -59,7 +59,7 @@ private modeAccess(mode) {
     }
 }
 
-[A,B | Integer?(A,B)]
+[A,B when Integer?(A,B)]
 overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var mappingObject = win32.CreateFileMappingA(
         fileHandle(f),

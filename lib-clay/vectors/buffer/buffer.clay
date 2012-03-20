@@ -30,26 +30,26 @@ overload ContiguousSequence?(static BufferVector[T]) = true;
 [T] overload BufferVector[T](..args);
 [T] overload BufferVector(..args);
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) --> returned:BufferVector[T] {
     returned.begin = begin;
     returned.end = end;
     returned.current = current;
 }
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector[T](begin:Pointer[T], end:Pointer[T]) =
     BufferVector[T](begin, end, begin);
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector(begin:Pointer[T], end:Pointer[T], current:Pointer[T]) =
     BufferVector[T](begin, end, current);
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector(begin:Pointer[T], end:Pointer[T]) =
     BufferVector(begin, end, begin);
 
-[S | ContiguousSequence?(S) and PODType?(SequenceElementType(S))]
+[S when ContiguousSequence?(S) and PODType?(SequenceElementType(S))]
 overload BufferVector(seq:S) =
     BufferVector(begin(seq), end(seq));
 
@@ -58,10 +58,10 @@ overload BufferVector(seq:S) =
 // default constructor and copy constructor
 //
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector[T]() --> returned:BufferVector[T] {}
 
-[T | PODType?(T)]
+[T when PODType?(T)]
 overload BufferVector[T](src:BufferVector[T]) =
     BufferVector[T](src.begin, src.end, src.current);
 

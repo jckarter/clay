@@ -177,17 +177,17 @@ __expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
 _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
 }
-[ParamType | ObjectType?(ParamType)]
+[ParamType  when  ObjectType?(ParamType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
 }
-[ValueType | ObjectType?(ValueType)]
+[ValueType  when  ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
 }
-[ParamType, ValueType | ObjectType?(ParamType) and ObjectType?(ValueType)]
+[ParamType, ValueType  when  ObjectType?(ParamType) and ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, static ParamType, static ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);

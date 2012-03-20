@@ -707,7 +707,7 @@ DOUBLE2INT(_d:Double) --> _i:Int {
     _i <-- _t.0[0];
 }
 
-/* Same idea but beware: works only for |_i| < 2^51 -1 */
+/* Same idea but beware: works only for when_i| < 2^51 -1 */
 DOUBLE2LONGINT(_d) --> _i:Long {
     var _t = db_number();
     _t.2 = _d+6755399441055744.0;

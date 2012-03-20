@@ -40,10 +40,10 @@ comparing(f) = Comparing(f);
 // Comparing in reversed of the normal order
 
 record Reversed[C](original : C);
-[C | Comparator?(C)] overload Comparator?(static Reversed[C]) = true;
+[C when Comparator?(C)] overload Comparator?(static Reversed[C]) = true;
 
-[C | Comparator?(C)] reversed(c : C) = Reversed(c);
-[C | Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;
+[C when Comparator?(C)] reversed(c : C) = Reversed(c);
+[C when Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;
 overload reversed() = reversed(natural());
 
 [F] inline overload equals?(c : Reversed[F], x, y) = equals?(c.original, x, y);

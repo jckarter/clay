@@ -133,12 +133,12 @@ inline capturedRefs(x:Tuple[..T]) =
 //
 // expand values from sequence or iterator 
 //
-[S, n | Sequence?(S)]
+[S, n when Sequence?(S)]
 sequenceValues(seq: S, static n) = forward ..iteratorValues(iterator(seq), static n);
 
-[I | Iterator?(I)]
+[I when Iterator?(I)]
 iteratorValues(iter: I, static 0) = ;
-[I, n | Iterator?(I) and n > 0]
+[I, n when Iterator?(I) and n > 0]
 overload iteratorValues(iter: I, static n)
     = forward next(iter), ..iteratorValues(iter, static n-1);
 
@@ -147,13 +147,13 @@ overload iteratorValues(iter: I, static n)
 //
 // iterate over two sets of values in tandem
 //
-[n | n > 0] eachValue2(fn, static n, forward x, forward ..xs) {
+[n when n > 0] eachValue2(fn, static n, forward x, forward ..xs) {
     fn(x, nthValue(static n-1, ..xs));
     return ..eachValue2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
 }
 overload eachValue2(fn, static 0, forward ..xs) { }
 
-[n | n > 0] mapValues2(fn, static n, forward x, forward ..xs)
+[n when n > 0] mapValues2(fn, static n, forward x, forward ..xs)
     = forward fn(x, nthValue(static n-1, ..xs)),
       ..mapValues2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
 overload mapValues2(fn, static 0, forward ..xs) = ;

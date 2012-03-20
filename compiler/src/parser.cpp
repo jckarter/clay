@@ -1775,7 +1775,7 @@ static bool arguments(vector<FormalArgPtr> &args,
 }
 
 static bool predicate(ExprPtr &x) {
-    if (!symbol("|")) return false;
+    if (!keyword("when")) return false;
     return expression(x);
 }
 

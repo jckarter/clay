@@ -7,7 +7,7 @@ variant V(Int, StringConstant);
 }
 
 
-[C,V | Variant?(V) ]
+[C,V  when  Variant?(V) ]
 dispatch(c:C, v:V)
 {
     return ..c(*v);

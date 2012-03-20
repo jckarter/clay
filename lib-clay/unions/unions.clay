@@ -24,7 +24,7 @@ Union?(x) = false;
 inline overload Union[..T]() --> returned:Union[..T] {
 }
 
-[..T,U | inValues?(U,..T)]
+[..T,U when inValues?(U,..T)]
 inline overload Union[..T](x:U) --> returned:Union[..T] {
     alias i = static valueIndex(U, ..UnionMembers(Union[..T]));
     staticIndex(returned, i) <-- x;

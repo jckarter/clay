@@ -41,12 +41,12 @@ overload printTo(stream, x:Bool) {
 // printTo - integers, floats, pointers
 //
 
-[I | SignedInteger?(I)]
+[I when SignedInteger?(I)]
 overload printTo(stream, x:I) {
     printWithSprintf(stream, "%d", Int(x));
 }
 
-[I | UnsignedInteger?(I)]
+[I when UnsignedInteger?(I)]
 overload printTo(stream, x:I) {
     printWithSprintf(stream, "%u", UInt(x));
 }
@@ -160,7 +160,7 @@ overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
-[X | Identifier?(X)]
+[X when Identifier?(X)]
 overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
@@ -170,7 +170,7 @@ overload printTo(stream, x:Static[X]) {
 // printTo - enums
 //
 
-[E | Enum?(E)]
+[E when Enum?(E)]
 overload printTo(stream, x:E) {
     printTo(stream, enumName(x));
 }
@@ -186,7 +186,7 @@ overload printTo(stream, x:Tuple[..T]) {
     printTo(stream, "[", ..weaveValues(", ", ..unpackTuple(x)), "]");
 }
 
-[T | Record?(T)]
+[T when Record?(T)]
 overload printTo(stream, x:T) {
     printTo(stream, T, "(", ..weaveValues(", ", ..recordFields(x)), ")");
 }
@@ -216,7 +216,7 @@ overload printTo(stream, xs:Vector[T]) {
 // printTo - variants
 //
 
-[T | Variant?(T)]
+[T when Variant?(T)]
 overload printTo(stream, x:T) {
     printTo(stream, *x);
 }
@@ -231,13 +231,13 @@ overload printTo(stream, x:Char) {
     write(stream, Pointer[Byte](&x), SizeT(1));
 }
 
-[S | String?(S)]
+[S when String?(S)]
 overload printTo(stream, x:S) {
     for (c in x)
         write(stream, c);
 }
 
-[S | ContiguousString?(S)]
+[S when ContiguousString?(S)]
 overload printTo(stream, x:S) {
     write(stream, x);
 }
@@ -262,7 +262,7 @@ overload printTo(stream, x:SharedPointer[T]) {
 // printTo - reference types
 //
 
-[T | ReferenceType?(T)]
+[T when ReferenceType?(T)]
 overload printTo(stream, x:T) {
     if (null?(x)) {
         printTo(stream, "null");
@@ -353,7 +353,7 @@ overload printReprTo(stream, x:Float80) {
     printFloatWithSprintf(stream, "nan(Float80)", "%.15Lafl", x);
 }
 
-[| platform.OS == platform.FreeBSD]
+[when platform.OS == platform.FreeBSD]
 overload printReprTo(stream, x:Float80) {
     printFloatWithSprintf(stream, "nan(Float80)", "%.16Lafl", x);
 }
@@ -370,7 +370,7 @@ overload printReprTo(stream, x:Imag80) {
     printFloatWithSprintf(stream, "nan(Imag80)", "%.15Laflj", x);
 }
 
-[| platform.OS == platform.FreeBSD]
+[when platform.OS == platform.FreeBSD]
 overload printReprTo(stream, x:Imag80) {
     printFloatWithSprintf(stream, "nan(Imag80)", "%.16Lafl", x);
 }
@@ -379,7 +379,7 @@ overload printReprTo(stream, x:Complex80) {
     printFloatWithSprintf(stream, "nan(Complex80)", "%.15Lafl%+.15Laflj", ..rectValues(x));
 }
 
-[| platform.OS == platform.FreeBSD]
+[when platform.OS == platform.FreeBSD]
 overload printReprTo(stream, x:Complex80) {
     printFloatWithSprintf(stream, "nan(Complex80)", "%.16Lafl%+.16Laflj", ..rectValues(x));
 }
@@ -399,7 +399,7 @@ overload printReprTo(stream, x:Pointer[T]) {
     printTo(stream, ")");
 }
 
-[E | Enum?(E)]
+[E when Enum?(E)]
 overload printReprTo(stream, x:E) {
     printTo(stream, x);
 }
@@ -414,7 +414,7 @@ overload printReprTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
-[X | Identifier?(X)]
+[X when Identifier?(X)]
 overload printReprTo(stream, x:Static[X]) {
     printTo(stream, '#');
     printReprTo(stream, StaticName(x));
@@ -437,7 +437,7 @@ overload printReprTo(stream, x:Tuple[..T]) {
 // printReprTo - records
 //
 
-[T | Record?(T)]
+[T when Record?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
     printReprArgumentsTo(stream, ..recordFields(x));
@@ -497,7 +497,7 @@ overload printReprTo(stream, a:Vector[T]) {
 // printReprTo - variants
 //
 
-[T | Variant?(T)]
+[T when Variant?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T, "(");
     printReprTo(stream, *x);
@@ -542,7 +542,7 @@ overload printReprTo(stream, c:Char) {
     printTo(stream, '\'');
 }
 
-[S | String?(S)]
+[S when String?(S)]
 overload printReprTo(stream, s:S) {
     printTo(stream, '"');
     for (c in s)
@@ -571,7 +571,7 @@ overload printReprTo(stream, x:SharedPointer[T]) {
 // printReprTo - reference types
 //
 
-[T | ReferenceType?(T)]
+[T when ReferenceType?(T)]
 overload printReprTo(stream, x:T) {
     // FIXME: handle cycles
     if (null?(x)) {
@@ -662,7 +662,7 @@ str(forward ..x) {
 // printBuffer
 //
 
-[S | ByteBuffer?(S)]
+[S when ByteBuffer?(S)]
 printBuffer(buf:S, ..args) {
     var bv = BufferVector(begin(buf), end(buf));
     printTo(bv, ..args);
@@ -681,7 +681,7 @@ observeTo(stream, forward ..x) {
     flush(stream);
     return forward ..forwardValues(captured);
 }
-[tag | Identifier?(tag)]
+[tag when Identifier?(tag)]
 overload observeTo(stream, static tag, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");

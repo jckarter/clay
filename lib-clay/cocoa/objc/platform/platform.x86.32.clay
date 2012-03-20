@@ -9,7 +9,7 @@ overload FpRet?(static Float64) = true;
 //FpRet?(static Float80) = true;
 
 // note: structs never return in registers on linux, netbsd, solaris
-[T | Type?(T)] overload StRet?(static T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
+[T when Type?(T)] overload StRet?(static T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
 
 external __CFConstantStringClassReference : Opaque;
 

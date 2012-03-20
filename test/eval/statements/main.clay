@@ -1,6 +1,6 @@
 import identifiers.(ident);
 
-[T | Record?(T)]
+[T  when  Record?(T)]
 alias bind(this:T) {
     return ident(#"ref ",
         ..weaveValues(#", ", ..RecordFieldNames(T)),

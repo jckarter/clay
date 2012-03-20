@@ -31,7 +31,7 @@ variant SocketError (GenericSocketError);
 
 instance IOError (SocketError);
 
-[T | VariantMember?(SocketError, T)]
+[T when VariantMember?(SocketError, T)]
 overload Exception(forward x:T) = Exception(SocketError(x));
 
 overload printTo(stream, x:GenericSocketError) {
@@ -76,7 +76,7 @@ DgramSocketAddress?(T)
     = SocketAddress?(T)
       and CallDefined?(sockaddrDgramProtocol, T);
 
-[T | SocketAddress?(T)]
+[T when SocketAddress?(T)]
 makeSockaddrParams(addr: T)
     --> sockaddr: Type(makeSockaddr(typeToRValue(T))),
         psockaddr: Pointer[Sockaddr],
@@ -92,7 +92,7 @@ define lookupInetHostname;
 InetHostname?(T) = CallDefined?(lookupInetHostname, T);
 record Inet (host: In_addr, port: UInt16);
 
-[T, I | InetHostname?(T) and T != In_addr and Integer?(I)]
+[T, I when InetHostname?(T) and T != In_addr and Integer?(I)]
 overload Inet(host: T, port: I)
     = Inet(lookupInetHostname(host), UInt16(port));
 
@@ -129,10 +129,10 @@ overload lookupInetHostname(n: In_addr) = n;
 
 record HostnameLookupError(hostname: String);
 instance SocketError (HostnameLookupError);
-[S | String?(S) and S != String]
+[S when String?(S) and S != String]
 overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload lookupInetHostname(hostname: S) {
     var hostent = platform.gethostbyname(cstring(hostname));
     if (null?(hostent))
@@ -158,24 +158,24 @@ record StreamSocket (raw: platform.RawSocket);
 [Addr] overload Socket?(static ListenSocket[Addr]) = true;
 overload Socket?(static StreamSocket) = true;
 
-[S | Socket?(S)] overload RegularRecord?(static S) = false;
+[S when Socket?(S)] overload RegularRecord?(static S) = false;
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload BitwiseMovedType?(static S) = true;
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload S(x: S);
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload assign(ref x: S, ref y: S);
 
-[S | Socket?(S)]
+[S when Socket?(S)]
 overload fileHandle(s: S) { return s.raw; }
 
 
@@ -183,7 +183,7 @@ overload fileHandle(s: S) { return s.raw; }
 //
 // ListenSocket()
 //
-[T, I | StreamSocketAddress?(T) and Integer?(I)]
+[T, I when StreamSocketAddress?(T) and Integer?(I)]
 overload ListenSocket(addr: T, backlog: I)
     --> socket: ListenSocket[T]
 {
@@ -206,7 +206,7 @@ overload ListenSocket(addr: T, backlog: I)
     }
 }
 
-[T | StreamSocketAddress?(T)]
+[T when StreamSocketAddress?(T)]
 overload ListenSocket(addr: T) = ListenSocket(addr, 1);
 
 [T]
@@ -236,7 +236,7 @@ accept(listener: ListenSocket[T])
 overload StreamSocket(listener: ListenSocket[T])
     = takeValues(static 1, ..accept(listener));
 
-[T | StreamSocketAddress?(T)]
+[T when StreamSocketAddress?(T)]
 overload StreamSocket(addr: T) --> socket: StreamSocket {
     socket.raw <-- socketCall(platform.socket,
         Int(sockaddrDomain(addr)),

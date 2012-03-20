@@ -12,7 +12,7 @@ alias Lg7 = 1.479819860511658591e-01;  /* 3FC2F112 DF3E5244 */
  * We always inline k_log1p(), since doing so produces a
  * substantial performance improvement (~40% on amd64).
  */
-[T | Float?(T)]
+[T when Float?(T)]
 inline k_log1p(f:T) --> s:T {
 	s <-- f/(2.0+f);
 	var z = s*s;

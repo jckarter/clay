@@ -10,12 +10,12 @@ Character?(x) = false;
 overload Character?(static Char) = true;
 overload Character?(static UniChar) = true;
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 inline overload Char(c:I) --> returned:Char {
     returned.code = wrapCast(Int8, c);
 }
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 inline overload UniChar(c:I) --> returned:UniChar {
     returned.code = wrapCast(UInt32, c);
 }
@@ -23,16 +23,16 @@ inline overload UniChar(c:I) --> returned:UniChar {
 inline overload UniChar(c:Char) = UniChar(c.code);
 inline overload Char(c:UniChar) = Char(c.code);
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 inline overload I(c:Char) = wrapCast(I, c.code);
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 inline overload I(c:UniChar) = I(c.code);
 
-[C, D | Character?(C) and Character?(D)]
+[C, D when Character?(C) and Character?(D)]
 inline overload equals?(x:C, y:D) = equals?(x.code, y.code);
 
-[C, D | Character?(C) and Character?(D)]
+[C, D when Character?(C) and Character?(D)]
 inline overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
 
 

@@ -10,13 +10,13 @@ trimBegin(seq, pred) = Vector(beginTrimmed(seq, pred));
 trimEnd(seq, pred) = Vector(endTrimmed(seq, pred));
 
 
-[S | String?(S)]
+[S when String?(S)]
 overload trim(seq:S) = trim(seq, space?);
 
-[S | String?(S)]
+[S when String?(S)]
 overload trimBegin(seq:S) = trimBegin(seq, space?);
 
-[S | String?(S)]
+[S when String?(S)]
 overload trimEnd(seq:S) = trimEnd(seq, space?);
 
 
@@ -42,11 +42,11 @@ endTrimmed(seq, pred) {
 }
 
 
-[S | String?(S)]
+[S when String?(S)]
 overload trimmed(seq:S) = trimmed(seq, space?);
 
-[S | String?(S)]
+[S when String?(S)]
 overload beginTrimmed(seq:S) = beginTrimmed(seq, space?);
 
-[S | String?(S)]
+[S when String?(S)]
 overload endTrimmed(seq:S) = endTrimmed(seq, space?);

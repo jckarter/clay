@@ -54,7 +54,7 @@ private modeFlags(mode) {
     }
 }
 
-[A,B | Integer?(A,B)]
+[A,B when Integer?(A,B)]
 overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var protection = modeProtection(mode);
     var flags = modeFlags(mode);

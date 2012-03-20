@@ -119,16 +119,16 @@ overload pow(x:Double, y:Double) {
 
 	var k,u,w,t,v,t1,t2 = 0,0.,0.,0.,0.,0.,0.;
     
-    // |y| is huge 
-	if(iy>CV4) { // if |y| > 2**31 
-	    if(iy>CV5){	// if |y| > 2**64, must o/uflow
+    // wheny| is huge 
+	if(iy>CV4) { // if wheny| > 2**31 
+	    if(iy>CV5){	// if wheny| > 2**64, must o/uflow
 			if(ix<=CV6) return if(GET_IEEE_HIGH(ydb)<0) HUGE*HUGE else TINY*TINY;
 			if(ix>=RM) return if(GET_IEEE_HIGH(ydb)>0) HUGE*HUGE else TINY*TINY;
 	    }
     	// over/underflow if x is not close to one 
 	    if(ix<CV7) return if(GET_IEEE_HIGH(ydb)<0) s*HUGE*HUGE else s*TINY*TINY;
 	    if(ix>RM) return if(GET_IEEE_HIGH(ydb)>0) s*HUGE*HUGE else s*TINY*TINY;
-	// now |1-x| is tiny <= 2**-20, suffice to compute 
+	// now when1-x| is tiny <= 2**-20, suffice to compute 
 	//log(x) by x-x^2/2+x^3/3-x^4/4 
 	    t = ax-ONE;		// t has 20 trailing zeros 
 	    w = (t*t)*(0.5-t*(0.3333333333333333333333-t*0.25));
@@ -220,7 +220,7 @@ overload pow(x:Double, y:Double) {
 	i = bitand(j,MM);
 	k = bitshr(i,20)-0x3ff;
 	n = 0;
-	if(i>CV3) {		/* if |z| > 0.5, set n = [z+0.5] */
+	if(i>CV3) {		/* if whenz| > 0.5, set n = [z+0.5] */
 	    n = j+bitshr(CV8,k+1);
 	    k = bitshr(bitand(n,MM),20)-0x3ff;	/* new k for n */
 	    t = SET_IEEE_HIGH(ZERO,bitandc(n , bitshr(NEM,k)));

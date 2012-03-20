@@ -22,11 +22,11 @@ define ForcedContainerConstructor;
 
 overload ForcedContainerConstructor(T) = Vector;
 
-[T | CallDefined?(UnderlyingContainerConstructor, Static[T])]
+[T when CallDefined?(UnderlyingContainerConstructor, Static[T])]
 overload ForcedContainerConstructor(static T) = UnderlyingContainerConstructor(T);
 
 
-[T | CallDefined?(UnderlyingContainerConstructor, Static[T])
+[T when CallDefined?(UnderlyingContainerConstructor, Static[T])
      and (UnderlyingContainerConstructor(T) == Array)
      and not StaticSizedSequence?(T)]
 overload ForcedContainerConstructor(static T) = Vector;
@@ -37,5 +37,5 @@ overload ForcedContainerConstructor(static T) = Vector;
 // force
 //
 
-[A | Sequence?(A)]
+[A when Sequence?(A)]
 alias force(a:A) = ForcedContainerConstructor(A)(a);

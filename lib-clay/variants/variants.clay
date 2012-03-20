@@ -10,7 +10,7 @@ record VariantRepr[..T] (
     data : Union[..T],
 );
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 overload __operators__.variantReprType(static V) = VariantRepr[..VariantMembers(V)];
 
 
@@ -18,7 +18,7 @@ overload __operators__.variantReprType(static V) = VariantRepr[..VariantMembers(
 // VariantMember?, VariantMembers
 //
 
-[V,M | Variant?(V)]
+[V,M when Variant?(V)]
 VariantMember?(static V, static M) =
     VariantMemberIndex(V, M) < VariantMemberCount(V);
 
@@ -27,7 +27,7 @@ VariantMember?(static V, static M) =
 // construct from value of member type
 //
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
+[V,T when Variant?(V) and VariantMember?(V, T)]
 alias initializeVariant(static V, x:T) --> returned:V {
     ref repr = variantRepr(returned);
     alias index = Int(VariantMemberIndex(V, T));
@@ -35,10 +35,10 @@ alias initializeVariant(static V, x:T) --> returned:V {
     staticIndex(repr.data, static index) <-- x;
 }
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
+[V,T when Variant?(V) and VariantMember?(V, T)]
 alias overload V(x:T) = initializeVariant(V, x);
 
-[V,T,..AA | Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
+[V,T,..AA when Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
 alias overload V(static T, ..args:AA) = V(T(..args));
 
 
@@ -47,7 +47,7 @@ alias overload V(static T, ..args:AA) = V(T(..args));
 // copy constructor
 //
 
-[V | Variant?(V) and not BitwiseCopiedType?(V)]
+[V when Variant?(V) and not BitwiseCopiedType?(V)]
 overload V(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
@@ -68,7 +68,7 @@ overload V(src:V) --> returned:V {
     end :
 }
 
-[V | Variant?(V) and not (BitwiseMovedType?(V) and NotResetType?(V))]
+[V when Variant?(V) and not (BitwiseMovedType?(V) and NotResetType?(V))]
 inline overload V(rvalue src:V) = move(src);
 
 
@@ -77,7 +77,7 @@ inline overload V(rvalue src:V) = move(src);
 // moveUnsafe, resetUnsafe
 //
 
-[V | Variant?(V) and not BitwiseMovedType?(V)]
+[V when Variant?(V) and not BitwiseMovedType?(V)]
 overload moveUnsafe(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
@@ -98,7 +98,7 @@ overload moveUnsafe(src:V) --> returned:V {
     end :
 }
 
-[V | Variant?(V) and not NotResetType?(V)]
+[V when Variant?(V) and not NotResetType?(V)]
 inline overload resetUnsafe(x:V) {
     ref repr = variantRepr(x);
     repr.tag = 0;
@@ -111,7 +111,7 @@ inline overload resetUnsafe(x:V) {
 // assign
 //
 
-[V | Variant?(V) and not BitwiseAssignedType?(V)]
+[V when Variant?(V) and not BitwiseAssignedType?(V)]
 overload assign(ref dest:V, ref src:V) {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
@@ -149,7 +149,7 @@ overload assign(ref dest:V, ref src:V) {
 // destroy
 //
 
-[V | Variant?(V) and not NotDestroyedType?(V)]
+[V when Variant?(V) and not NotDestroyedType?(V)]
 overload destroy(x:V) {
     ref repr = variantRepr(x);
     var tag = repr.tag;
@@ -171,7 +171,7 @@ overload destroy(x:V) {
 // equals?
 //
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 overload equals?(a:V, b:V) {
     ref aRepr, bRepr = variantRepr(a), variantRepr(b);
     var tag = aRepr.tag;
@@ -193,7 +193,7 @@ overload equals?(a:V, b:V) {
 // variantIs?
 //
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
+[V,T when Variant?(V) and VariantMember?(V, T)]
 inline variantIs?(x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
@@ -208,7 +208,7 @@ inline variantIs?(x:V, static T) {
 
 define variantAs;
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
+[V,T when Variant?(V) and VariantMember?(V, T)]
 inline overload variantAs(ref x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
@@ -216,7 +216,7 @@ inline overload variantAs(ref x:V, static T) {
     return ref staticIndex(repr.data, static index);
 }
 
-[V,T | Variant?(V) and VariantMember?(V, T)]
+[V,T when Variant?(V) and VariantMember?(V, T)]
 inline overload variantAs(rvalue x:V, static T) {
     return move(variantAs(x, T));
 }
@@ -227,7 +227,7 @@ inline overload variantAs(rvalue x:V, static T) {
 // variantAsPtr - test and unbox in one operation
 //
 
-[V,T | Variant?(V) and VariantMember?(V,T)]
+[V,T when Variant?(V) and VariantMember?(V,T)]
 inline variantAsPtr(x:V, static T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
@@ -243,7 +243,7 @@ inline variantAsPtr(x:V, static T) {
 // variantTag
 //
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 inline variantTag(x:V) = variantRepr(x).tag;
 
 
@@ -251,14 +251,14 @@ inline variantTag(x:V) = variantRepr(x).tag;
 // dispatch operators
 //
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 inline overload __operators__.DispatchTagCount(static V) =
     countValues(..VariantMembers(V));
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 inline overload __operators__.dispatchTag(x:V) = variantRepr(x).tag;
 
-[V,i | Variant?(V)]
+[V,i when Variant?(V)]
 inline overload __operators__.dispatchIndex(x:V, static i) =
     ref staticIndex(variantRepr(x).data, static i);
 
@@ -276,7 +276,7 @@ private define matchValue;
 [T]
 inline overload matchValue(forward x:T, forward f, forward ..fs)
     = forward ..matchValue(x, ..fs);
-[T, F | CallDefined?(call, F, T)]
+[T, F when CallDefined?(call, F, T)]
 inline overload matchValue(forward x:T, forward f:F, forward ..fs)
     = forward ..f(x);
 
@@ -287,7 +287,7 @@ inline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
 // VariantRef tagged pointer
 //
 
-[V | Variant?(V)]
+[V when Variant?(V)]
 record VariantRef[V] = tag:Int, data:Pointer[Union[..VariantMembers(V)]];
 
 [V]
@@ -302,7 +302,7 @@ inline overload VariantRef[V](ref v:V) {
 [V]
 inline overload VariantRef(ref v:V) = VariantRef[V](v);
 
-[V, T | VariantMember?(V, T)]
+[V, T when VariantMember?(V, T)]
 inline overload VariantRef[V](ref v:T) {
     alias DataPointer = Pointer[Union[..VariantMembers(V)]];
     return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(&v));

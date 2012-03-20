@@ -78,7 +78,7 @@ private var b = array(
         0.09084526782065478489
 );
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 overload erf(x:T) {
     var w = if(x < T(0)) -x else x;
     var y = T(0);
@@ -112,7 +112,7 @@ overload erf(x:T) {
 }
 
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 overload erfc(x:T){
     var t = T(3.97886080735226) / (abs(x) + T(3.97886080735226));
     var u = t - T(0.5);
@@ -134,7 +134,7 @@ overload erfc(x:T){
 
 //TODO: Fix ierfc function
 //
-// [T | Numeric?(T)]
+// [T when Numeric?(T)]
 // overload ierfc(y:T) --> x:T {
 //     alias ONE = T(1);
 //     alias HALF = T(0.5);

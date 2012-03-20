@@ -15,7 +15,7 @@ formatter(F, forward x, forward ..params)
 // formatTo(stream, formatter, value)
 define formatTo;
 
-[F | Formatter?(F)]
+[F when Formatter?(F)]
 overload printTo(stream, forward formatter: F) {
     formatTo(stream, formatter, forwardValue(formatter.value));
 }
@@ -47,11 +47,11 @@ private record OctFormatter[T] (value: T);
 [T] overload Formatter?(static HEXFormatter[T]) = true;
 [T] overload Formatter?(static OctFormatter[T]) = true;
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 hex(forward x: I) = formatter(HexFormatter, x);
-[I | Integer?(I)]
+[I when Integer?(I)]
 HEX(forward x: I) = formatter(HEXFormatter, x);
-[I | Integer?(I)]
+[I when Integer?(I)]
 oct(forward x: I) = formatter(OctFormatter, x);
 
 private _formatBase(stream, value, fmt) {
@@ -63,7 +63,7 @@ private _formatBase(stream, value, fmt) {
     }
 }
 
-[U | UnsignedInteger?(U)]
+[U when UnsignedInteger?(U)]
 overload _formatBase(stream, value:U, fmt) {
     printWithSprintf(stream, fmt, value);
 }
@@ -101,7 +101,7 @@ record HexStringFormatter[T] (value: T);
 
 HexStringSequence?(S) = Sequence?(S) and TypeSize(SequenceElementType(S)) == 1;
 
-[S | HexStringSequence?(S)]
+[S when HexStringSequence?(S)]
 hexString(forward s:S) = formatter(HexStringFormatter, s);
 
 [T] overload formatTo(stream, f: HexStringFormatter[T], value) {
@@ -118,10 +118,10 @@ hexString(forward s:S) = formatter(HexStringFormatter, s);
 // printedWidth(object) SizeT
 define printedWidth;
 
-[S | String?(S)]
+[S when String?(S)]
 overload printedWidth(s: S) = size(s);
 
-[N, B | Integer?(N) and Integer?(B)]
+[N, B when Integer?(N) and Integer?(B)]
 widthInBase(n:N, base:B) {
     var nn = n;
     var len = SizeT(1);
@@ -140,7 +140,7 @@ widthInBase(n:N, base:B) {
     return ref len;
 }
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload printedWidth(n: I) = widthInBase(n, 10);
 
 [T]
@@ -175,9 +175,9 @@ private record RightAlignedFormatter[T] (
 private AlignedFormatter?(T) = false;
 [T] overload AlignedFormatter?(static LeftAlignedFormatter[T]) = true;
 [T] overload AlignedFormatter?(static RightAlignedFormatter[T]) = true;
-[T | AlignedFormatter?(T)] overload Formatter?(static T) = true;
+[T when AlignedFormatter?(T)] overload Formatter?(static T) = true;
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 private alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // If printedWidth isn't available for all objects, print them to a string
     // and use the width of that
@@ -189,7 +189,7 @@ private alignedFormatter(F, width: I, pad: Char, forward ..values) {
 private filledWidth(..values)
     = foldValues(add, SizeT(0), ..mapValues(printedWidth, ..values));
 
-[I, ..TT | Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ..TT)]
+[I, ..TT when Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ..TT)]
 overload alignedFormatter(F, width: I, pad: Char, forward ..values: TT) {
     var cvalues = captureValues(..values);
     return F(cvalues, SizeT(width), filledWidth(..capturedRefs(cvalues)), pad);

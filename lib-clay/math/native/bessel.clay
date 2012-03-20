@@ -114,7 +114,7 @@ private var d = array(
         -0.0052083333227940760113
 );
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload j0(x:T) --> y:T {
 
     var w = abs(x);
@@ -269,7 +269,7 @@ private var j1d = array(
     0.01562499998712198636
 );
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload j1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(1)) {
@@ -551,7 +551,7 @@ private var i1c = array(
     0.05150322986693207715
 );
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload i1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(8.5)) {

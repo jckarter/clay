@@ -12,7 +12,7 @@ import math.native.kernel.ieee754.*;
 import math.*;
 
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload trunc(x:T) {
 	alias HUGE = GreatestPositiveFinite(T);
 	alias ZERO = T(0);

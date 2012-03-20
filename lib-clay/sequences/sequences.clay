@@ -24,7 +24,7 @@ alias group(..args) = force(grouped(..args));
 // generic equals?, lesser?
 //
 
-[A,B | Sequence?(A) and Sequence?(B)]
+[A,B when Sequence?(A) and Sequence?(B)]
 overload equals?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
@@ -36,7 +36,7 @@ overload equals?(a:A, b:B) {
     return not hasNext?(j);
 }
 
-[A,B | SizedSequence?(A) and SizedSequence?(B)]
+[A,B when SizedSequence?(A) and SizedSequence?(B)]
 overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
@@ -49,7 +49,7 @@ overload equals?(a:A, b:B) {
 }
 
 
-[A,B | Sequence?(A) and Sequence?(B)]
+[A,B when Sequence?(A) and Sequence?(B)]
 overload lesser?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
     while (hasNext?(i)) {
@@ -68,7 +68,7 @@ overload lesser?(a:A, b:B) {
 // concatenation
 //
 
-[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
 overload cat(forward a:A, forward ..b:B) {
     var result = Vector(a);
@@ -76,28 +76,28 @@ overload cat(forward a:A, forward ..b:B) {
     return move(result);
 }
 
-[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload cat(forward a:A, forward ..x:T) {
     var result = Vector(a);
     push(result, x);
     return move(result);
 }
 
-[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
-[A, ..B | Sequence?(A) and allValues?(Sequence?,..B)
+[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
 overload updateAssign(static cat, ref a:A, forward ..b:B) {
     push(a, ..b);
 }
 
-[A, ..T | Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload updateAssign(static cat, forward a:A, forward ..x:T) {
     push(a, ..x);
 }
 
-[A, T | Sequence?(A) and (SequenceElementType(A) == T)]
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload updateAssign(static cat, forward x:T, forward a:A) {
     insert(a,0,x);
 }
@@ -107,7 +107,7 @@ overload updateAssign(static cat, forward x:T, forward a:A) {
 // interleave
 //
 
-[S | Sequence?(S)]
+[S when Sequence?(S)]
 interleave(seq:S, betweenFn, fn) {
     var i = iterator(seq);
     if (hasNext?(i)) {
@@ -124,15 +124,24 @@ interleave(seq:S, betweenFn, fn) {
 // arithmetic
 //
 
-[S,F | Sequence?(S)]
+[S,F when Sequence?(S)]
 overload updateAssign(static F, ret:S, ..args) {
     for (i,r in enumerated(ret))
         updateAssign(F, r, ..reduceToScalar(i,..args));
 }
 
 
-[..S | anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)
-    and not ( inValues?((++),..S)
+private define compareOp?;
+
+inline overload compareOp?(forward a, OP, forward b, forward ..args)
+    = forward OP(a, b) and compareOp?(b, ..args);
+inline overload compareOp?(forward a, OP, forward b) 
+    = forward OP(a, b);
+inline overload compareOp?(forward a) = forward a;
+
+
+[..S when anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)
+    and not (inValues?((++),..S)
     or inValues?((==),..S)
     or inValues?((<),..S)
     or inValues?((>),..S)
@@ -147,24 +156,26 @@ overload operatorCall(..args:S) {
     return move(ret);
 }
 
+
+
 private define seqType;
 
-[T | Numeric?(T)] 
+[T when Numeric?(T)] 
 overload seqType(static T,a,..args) = ..seqType(T,..args);
-[T,U | Numeric?(T,U) and BiggerNumeric?(T,U)]
+[T,U when Numeric?(T,U) and BiggerNumeric?(T,U)]
 overload seqType(static T,a:U,..args) = ..seqType(T,..args);
-[T,U | Numeric?(T,U) and BiggerNumeric?(U,T)]
+[T,U when Numeric?(T,U) and BiggerNumeric?(U,T)]
 overload seqType(static T,a:U,..args) = ..seqType(U,..args);
-[T,S | Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
 overload seqType(static T,a:S,..args) = ..seqType(T,..args);
-[T,S | Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
 overload seqType(static T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
-[T | Numeric?(T)] overload seqType(static T) = T;
+[T when Numeric?(T)] overload seqType(static T) = T;
 
 private define seqSize;
 
 overload seqSize(s,a,..args) = ..seqSize(s,..args);
-[S | Sequence?(S)] 
+[S when Sequence?(S)] 
 overload seqSize(s,a:S,..args) = ..seqSize(max(s,size(a)),..args);
 overload seqSize(s) = s;
 
@@ -172,8 +183,8 @@ private define reduceToScalar;
 
 [F] 
 overload reduceToScalar(i, static F, ..args) = forward F, ..reduceToScalar(i,..args);
-[S | Sequence?(S)] 
+[S when Sequence?(S)] 
 overload reduceToScalar(i, a:S, ..args) = forward a[i],..reduceToScalar(i,..args);
-[T | Numeric?(T)] 
+[T when Numeric?(T)] 
 overload reduceToScalar(i, a:T, ..args) = forward a,..reduceToScalar(i,..args);
 overload reduceToScalar(i) = ;
