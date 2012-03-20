@@ -305,9 +305,9 @@ overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
 
 alias nexttoward = nextafter;
 
-alias normcoeff(static LongDouble) = floatFromBits(UInt128(0x4035ul));
-alias overload normcoeff(static Double) = floatFromBits(0x435ul);
-alias overload normcoeff(static Float) = floatFromBits(0x4Cu);
+alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+alias overload normcoeff(#Double) = floatFromBits(0x435ul);
+alias overload normcoeff(#Float) = floatFromBits(0x4Cu);
 
 [T | Float?(T)]
 normalize(x:T) 

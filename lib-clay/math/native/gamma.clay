@@ -3,9 +3,9 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
-maxGamma(static Float) = 35.04f;
-overload maxGamma(static Double) = 171.6025;
-overload maxGamma(static LongDouble) = 1755.5323977l;
+maxGamma(#Float) = 35.04f;
+overload maxGamma(#Double) = 171.6025;
+overload maxGamma(#LongDouble) = 1755.5323977l;
 
 private var signgam = 0;
 
