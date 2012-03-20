@@ -26,7 +26,7 @@ private setArgcArgv(argc_, argv_) {
 getArgcArgv() = argc, argv;
 
 [Main]
-overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
     setArgcArgv(argc_, argv_);
     try {
         return getExitCode(..Main());
@@ -38,7 +38,7 @@ overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[In
 }
 
 [Main when CallDefined?(Main, Type(commandLine()))]
-overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
     setArgcArgv(argc_, argv_);
     try {
         return getExitCode(..Main(commandLine()));
@@ -50,7 +50,7 @@ overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[In
 }
 
 [Main when CallDefined?(Main, ..Type(argc, argv))]
-overload __operators__.callMain(static Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
     setArgcArgv(argc_, argv_);
     try {
         return getExitCode(..Main(argc_, argv_));

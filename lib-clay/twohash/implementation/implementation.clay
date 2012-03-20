@@ -40,16 +40,16 @@ record TwoHash[E]
 );
 
 [E]
-overload EntryType(static TwoHash[E]) = E;
+overload EntryType(#TwoHash[E]) = E;
 
 [T]
-TwoHash?(static T) = false;
+TwoHash?(#T) = false;
 
 [E]
-overload TwoHash?(static TwoHash[E]) = true;
+overload TwoHash?(#TwoHash[E]) = true;
 
 [E]
-overload RegularRecord?(static TwoHash[E]) = false;
+overload RegularRecord?(#TwoHash[E]) = false;
 
 record Table[B]
 (
@@ -58,7 +58,7 @@ record Table[B]
 );
 
 [B]
-overload RegularRecord?(static Table[B]) = false;
+overload RegularRecord?(#Table[B]) = false;
 
 record Bucket[E]
 (
@@ -67,7 +67,7 @@ record Bucket[E]
 );
 
 [E]
-overload RegularRecord?(static Bucket[E]) = false;
+overload RegularRecord?(#Bucket[E]) = false;
 
 //
 // ctors

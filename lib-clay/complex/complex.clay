@@ -8,11 +8,11 @@ alias ComplexFloat = Complex32;
 alias ComplexDouble = Complex64;
 alias ComplexLongDouble = Complex80;
 
-[T] Complex?(static T) = false;
-overload Complex?(static Complex32) = true;
-overload Complex?(static Complex64) = true;
-overload Complex?(static Complex80) = true;
-[A, B] overload Complex?(static A, static B) = Complex?(A) and Complex?(B);
+[T] Complex?(#T) = false;
+overload Complex?(#Complex32) = true;
+overload Complex?(#Complex64) = true;
+overload Complex?(#Complex80) = true;
+[A, B] overload Complex?(#A, #B) = Complex?(A) and Complex?(B);
 
 private define re;
 private define im;
@@ -64,16 +64,16 @@ inline overload Complex(a:T) = Complex(a,0.f);
 [T when Imaginary?(T)]
 inline overload Complex(a:T) = Complex(0.f,a);
 
-ComplexBaseType(static Complex32) = Float;
-overload ComplexBaseType(static Complex64) = Double;
-overload ComplexBaseType(static Complex80) = LongDouble;
+ComplexBaseType(#Complex32) = Float;
+overload ComplexBaseType(#Complex64) = Double;
+overload ComplexBaseType(#Complex80) = LongDouble;
 
 [T when Complex?(T)]
-ComplexRealType(static T) = ComplexBaseType(T);
+ComplexRealType(#T) = ComplexBaseType(T);
 
-ComplexImagType(static Complex32) = IFloat;
-overload ComplexImagType(static Complex64) = IDouble;
-overload ComplexImagType(static Complex80) = ILongDouble;
+ComplexImagType(#Complex32) = IFloat;
+overload ComplexImagType(#Complex64) = IDouble;
+overload ComplexImagType(#Complex80) = ILongDouble;
 
 [T when Complex?(T)]
 overload ComplexRealType(z:T) = Type(real(z));
@@ -82,10 +82,10 @@ overload ComplexRealType(z:T) = Type(real(z));
 overload ComplexImagType(z:T) = Type(imag(z));
 
 [T when Complex?(T)]
-ComplexType(static T) = T;
+ComplexType(#T) = T;
 
 [T when Float?(T)]
-overload ComplexType(static T) = Type(Complex(T()));
+overload ComplexType(#T) = Type(Complex(T()));
 
 [T when Complex?(T)]
 overload T() = T(0.);
@@ -319,13 +319,13 @@ inline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
 inline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
 
 [T when Complex?(T)]
-overload infinity(static T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
+overload infinity(#T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload negativeInfinity(static T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
+overload negativeInfinity(#T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload nan(static T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
+overload nan(#T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload snan(static T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
+overload snan(#T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));

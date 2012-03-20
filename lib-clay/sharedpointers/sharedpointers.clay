@@ -15,7 +15,7 @@ record SharedPointer[T] (
 );
 
 [T]
-overload RegularRecord?(static SharedPointer[T]) = false;
+overload RegularRecord?(#SharedPointer[T]) = false;
 
 
 
@@ -57,7 +57,7 @@ inline overload SharedPointer[T](src:SharedPointer[T]) {
 }
 
 [T]
-overload BitwiseMovedType?(static SharedPointer[T]) = true;
+overload BitwiseMovedType?(#SharedPointer[T]) = true;
 
 [T]
 inline overload resetUnsafe(p : SharedPointer[T]) {
@@ -95,7 +95,7 @@ inline overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
 inline overload null?(p : SharedPointer[T]) = null?(p.ptr);
 
 [T]
-inline nullShared(static T) = SharedPointer[T]();
+inline nullShared(#T) = SharedPointer[T]();
 
 
 

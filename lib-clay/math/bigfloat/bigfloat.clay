@@ -28,14 +28,14 @@ private alias radix_rng_double  = floatFromBits(wrapBitshl(1023ul + BF_NB_BITS*B
 overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
 
-overload BitwiseMovedType?(static BigFloat) = true;
+overload BitwiseMovedType?(#BigFloat) = true;
 
 inline overload resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
 
-[T] BigFloat?(static T) = false;
-inline overload BigFloat?(static BigFloat) = true;
+[T] BigFloat?(#T) = false;
+inline overload BigFloat?(#BigFloat) = true;
 
 
 alias bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,

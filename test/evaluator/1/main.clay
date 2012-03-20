@@ -1,18 +1,18 @@
-[x] _staticTest(static x, y) = x == y, x, y;
+[x] _staticTest(#x, y) = x == y, x, y;
 
 alias staticTest(n, expr) {
-    var passed?, staticResult, result = .._staticTest(static expr, expr);
+    var passed?, staticResult, result = .._staticTest(#expr, expr);
     if (not passed?) {
-        println(n, " FAILED! static ", staticResult, " != runtime ", result);
+        println(n, " FAILED! #", staticResult, " != runtime ", result);
     }
 }
 
 main() {
     staticTest( 2, SizeT(128) + SizeT(128));
     staticTest( 3, SizeT(128) * SizeT(128));
-    staticTest( 4, staticIndex([1, 2.0, 3u], static 0));
-    staticTest( 5, staticIndex([1, 2.0, 3u], static 1));
-    staticTest( 6, staticIndex([1, 2.0, 3u], static 2));
+    staticTest( 4, staticIndex([1, 2.0, 3u], #0));
+    staticTest( 5, staticIndex([1, 2.0, 3u], #1));
+    staticTest( 6, staticIndex([1, 2.0, 3u], #2));
     staticTest( 7, TypeSize(Int8));
     staticTest( 8, TypeSize(Int16));
     staticTest( 9, TypeSize(Int32));

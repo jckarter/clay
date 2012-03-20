@@ -3,7 +3,7 @@ record Canary (
     value: Int,
 );
 
-overload RegularRecord?(static Canary) = false;
+overload RegularRecord?(#Canary) = false;
 
 private alias WATERMARK = 0x12344321;
 private assertAlive(x:Canary) { assert(x.value == WATERMARK); }

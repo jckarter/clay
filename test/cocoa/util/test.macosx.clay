@@ -7,23 +7,23 @@ record Foo (x: Int64, y: Double);
 [I  when  Integer?(I) and I != Int64]
 overload Foo(x: I, y: Double) = Foo(Int64(x), y);
 
-overload selector(static #"lifecycleTest") = Id;
-overload selector(static #"lifecycleTestWithCanary:") = Id, Canary;
-overload selector(static #"lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(static #"initWithCanary:") = Id, Canary;
-overload selector(static #"initWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector(static #"initWithSubcanary:") = Id, Canary;
+overload selector(#"lifecycleTest") = Id;
+overload selector(#"lifecycleTestWithCanary:") = Id, Canary;
+overload selector(#"lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(#"initWithCanary:") = Id, Canary;
+overload selector(#"initWithCanary:subcanary:") = Id, Canary, Canary;
+overload selector(#"initWithSubcanary:") = Id, Canary;
 
 record LifecycleTest = newClass(NSObject,
     InstanceVars(
         [#canary, Canary],
     ),
     ClassMethods(
-        AutoreleasedClassMethod(#"lifecycleTestWithCanary:", #"initWithCanary:"),
-        AutoreleasedClassMethod(#"lifecycleTest"),
+        AutoreleasedClassMethod("lifecycleTestWithCanary:", "initWithCanary:"),
+        AutoreleasedClassMethod("lifecycleTest"),
     ),
     InstanceMethods(
-        InitInstanceMethod(#"initWithCanary:"),
+        InitInstanceMethod("initWithCanary:"),
         InitInstanceMethod(),
         CopyInstanceMethod(CopyRoot),
         DeallocInstanceMethod(),
@@ -36,26 +36,26 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
     ClassMethods(
         AutoreleasedClassMethod(
-            #"lifecycleTestWithCanary:subcanary:", #"initWithCanary:subcanary:"
+            "lifecycleTestWithCanary:subcanary:", "initWithCanary:subcanary:"
         ),
     ),
     InstanceMethods(
-        InitInstanceMethod(#"initWithCanary:subcanary:", #"initWithCanary:"),
-        InitInstanceMethod(#"initWithSubcanary:"),
+        InitInstanceMethod("initWithCanary:subcanary:", "initWithCanary:"),
+        InitInstanceMethod("initWithSubcanary:"),
         InitInstanceMethod(),
         CopyInstanceMethod(CopyInheriting),
         DeallocInstanceMethod(),
     ),
 );
 
-overload selector(static #"foo") = Int;
-overload selector(static #"setFoo:") = Void, Int;
-overload selector(static #"foo64") = Int;
-overload selector(static #"setFoo64:") = Void, Int;
-overload selector(static #"bar") = Float;
-overload selector(static #"setBar:") = Void, Float;
-overload selector(static #"isBas") = Bool;
-overload selector(static #"setBas:") = Void, Bool;
+overload selector(#"foo") = Int;
+overload selector(#"setFoo:") = Void, Int;
+overload selector(#"foo64") = Int;
+overload selector(#"setFoo64:") = Void, Int;
+overload selector(#"bar") = Float;
+overload selector(#"setBar:") = Void, Float;
+overload selector(#"isBas") = Bool;
+overload selector(#"setBas:") = Void, Bool;
 
 record PropertyTest = newClass(NSObject,
     InstanceVars(
@@ -66,17 +66,17 @@ record PropertyTest = newClass(NSObject,
     ClassMethods(),
     InstanceMethods(
         // reader/writer names related but different from variable name, default selector type
-        ..PropertyInstanceMethods(#fooVar, #"foo"),
+        ..PropertyInstanceMethods(#fooVar, "foo"),
         // reader/writer names related but different from variable name, specified selector type
-        ..PropertyInstanceMethods(#fooVar, #"foo64", Int64),
+        ..PropertyInstanceMethods(#fooVar, "foo64", Int64),
         // default reader/writer names, specified selector type
         ..PropertyInstanceMethods(#bar, Id),
         // reader/writer names both different, default selector type
-        ..PropertyInstanceMethods(#bas, #"isBas", #"setBas:"),
+        ..PropertyInstanceMethods(#bas, "isBas", "setBas:"),
     )
 );
 
-overload selector(static #"initWithFoo:bar:") = Id, Id, Id;
+overload selector(#"initWithFoo:bar:") = Id, Id, Id;
 
 record RegularTest = regularClass([#foo, String], [#bar, Char]);
 record RegularCanary = regularClass([#foo, Canary], [#bar, Canary]);
@@ -91,7 +91,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         );
 
         expectEqual(test, "NSString(identifier)", "bees",
-            CStringRef(NSString(#"bees").UTF8String())
+            CStringRef(NSString("bees").UTF8String())
         );
         expectEqual(test, "NSString(string constant)", "bees",
             CStringRef(NSString("bees").UTF8String())
@@ -101,7 +101,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         );
 
         expectEqual(test, "String(NSString)", "ants",
-            String(NSString(#"ants"))
+            String(NSString("ants"))
         );
 
         expectEqual(test, "NSValue(integer)", 5, fromNSValue(Int, makeNSValue(5)));
@@ -128,7 +128,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         );
 
         expectEqual(test, "identifier", "worms",
-            String(Id(#"worms"))
+            String(Id("worms"))
         );
 
         expectEqual(test, "string", "worms",
@@ -256,14 +256,14 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         });
     }),
     TestCase("printing objects", test => {
-        expectEqual(test, "print NSString", "whisky", str(NSString(#"whisky")));
+        expectEqual(test, "print NSString", "whisky", str(NSString("whisky")));
         expectEqual(test, "print NSNumber", "2020", str(NSNumber(2020)));
         expectEqual(test, "print nil", "(nil)", str(nil(NSString)));
     }),
     TestCase("property accessor methods", test => {
         var x = Retained(PropertyTest.alloc().init());
         {
-            var s = Retained(NSString.alloc().initWithFormat(NSSTR(#"catch-%d"), 22));
+            var s = Retained(NSString.alloc().initWithFormat(NSSTR("catch-%d"), 22));
             x.setFoo(27);
             x.setBar(s);
             x.setBas(true);
@@ -277,32 +277,32 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
     }),
     TestCase("regularClass method signatures", test => {
         expectEqual(test, "SelectorReturnType(RegularTest, #foo)", String,
-            SelectorReturnType(RegularTest, #"foo")
+            SelectorReturnType(RegularTest, "foo")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #foo)", [],
-            ..SelectorArgumentTypes(RegularTest, #"foo")
+            ..SelectorArgumentTypes(RegularTest, "foo")
         );
         expectEqual(test, "SelectorReturnType(RegularTest, #setFoo:)", Void,
-            SelectorReturnType(RegularTest, #"setFoo:")
+            SelectorReturnType(RegularTest, "setFoo:")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #setFoo:)", Tuple(String),
-            ..SelectorArgumentTypes(RegularTest, #"setFoo:")
+            ..SelectorArgumentTypes(RegularTest, "setFoo:")
         );
 
         expectEqual(test, "SelectorReturnType(RegularTest, #initWithFoo:bar:)", RegularTest,
-            SelectorReturnType(RegularTest, #"initWithFoo:bar:")
+            SelectorReturnType(RegularTest, "initWithFoo:bar:")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #initWithFoo:bar:)",
             [String, Char],
-            ..SelectorArgumentTypes(RegularTest, #"initWithFoo:bar:")
+            ..SelectorArgumentTypes(RegularTest, "initWithFoo:bar:")
         );
 
         expectEqual(test, "SelectorReturnType(RegularCanary, #initWithFoo:bar:)", RegularCanary,
-            SelectorReturnType(RegularCanary, #"initWithFoo:bar:")
+            SelectorReturnType(RegularCanary, "initWithFoo:bar:")
         );
         expectEqualValues(test, "SelectorArgumentTypes(RegularCanary, #initWithFoo:bar:)",
             [Canary, Canary],
-            ..SelectorArgumentTypes(RegularCanary, #"initWithFoo:bar:")
+            ..SelectorArgumentTypes(RegularCanary, "initWithFoo:bar:")
         );
     }),
     TestCase("regularClass usage", test => {

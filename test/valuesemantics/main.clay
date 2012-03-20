@@ -11,7 +11,7 @@ record Test (
     id : Int
 );
 
-overload RegularRecord?(static Test) = false;
+overload RegularRecord?(#Test) = false;
 
 overload Test() {
     var id = nextId();

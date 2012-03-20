@@ -1,2 +1,2 @@
-true, true, false, #"", #"bar", #""
+true, true, false, "", "bar", ""
 WackyType[true, true, false, #, #bar, #]

@@ -5,7 +5,7 @@
 record UniquePointer[T] (ptr: Pointer[T]);
 
 [T]
-overload RegularRecord?(static UniquePointer[T]) = false;
+overload RegularRecord?(#UniquePointer[T]) = false;
 
 
 
@@ -37,7 +37,7 @@ overload UniquePointer[T]() = UniquePointer(null(T));
 overload UniquePointer[T](src: UniquePointer[T]);
 
 [T]
-overload BitwiseMovedType?(static UniquePointer[T]) = true;
+overload BitwiseMovedType?(#UniquePointer[T]) = true;
 
 [T]
 inline overload resetUnsafe(p: UniquePointer[T]) {
@@ -68,7 +68,7 @@ inline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
 inline overload null?(p: UniquePointer[T]) = null?(p.ptr);
 
 [T]
-inline nullUnique(static T) = UniquePointer[T]();
+inline nullUnique(#T) = UniquePointer[T]();
 
 
 
@@ -115,5 +115,5 @@ inline overload dereference(p: UniqueValue[T]) = ref p.ptr^;
 inline overload null?(p: UniqueValue[T]) = null?(p.ptr);
 
 [T]
-inline nullUniqueValue(static T) = UniqueValue[T]();
+inline nullUniqueValue(#T) = UniqueValue[T]();
 

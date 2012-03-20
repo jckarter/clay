@@ -6,7 +6,7 @@ import __operators__;
 //
 
 Tuple?(x) = false;
-[..T] overload Tuple?(static Tuple[..T]) = true;
+[..T] overload Tuple?(#Tuple[..T]) = true;
 
 
 
@@ -14,7 +14,7 @@ Tuple?(x) = false;
 // TupleElements
 //
 
-[..T] TupleElements(static Tuple[..T]) = ..T;
+[..T] TupleElements(#Tuple[..T]) = ..T;
 
 
 
@@ -23,8 +23,8 @@ Tuple?(x) = false;
 //
 
 [..T, i]
-inline overload staticIndex(a:Tuple[..T], static i) =
-    ref tupleRef(a, static SizeT(i));
+inline overload staticIndex(a:Tuple[..T], #i) =
+    ref tupleRef(a, #SizeT(i));
 
 
 
@@ -109,7 +109,7 @@ inline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
 [..T when not allValues?(BitwiseMovedType?, ..T)]
 inline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
     alias n = TupleElementCount(Tuple[..T]);
-    ..for (i in staticIntegers(static n))
+    ..for (i in staticIntegers(#n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
@@ -140,7 +140,7 @@ inline overload destroy(a:Tuple[..T]) {
 [..T when not allValues?(BitwiseAssignedType?, ..T)]
 inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    ..for (i in staticIntegers(static n))
+    ..for (i in staticIntegers(#n))
         assign(staticIndex(dest, i), staticIndex(src, i));
 }
 
@@ -153,7 +153,7 @@ inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
 [..T]
 inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    ..for (i in staticIntegers(static n)) {
+    ..for (i in staticIntegers(#n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
             return false;
     }
@@ -169,7 +169,7 @@ inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
 [..T]
 inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
     alias n = TupleElementCount(Tuple[..T]);
-    ..for (i in staticIntegers(static n)) {
+    ..for (i in staticIntegers(#n)) {
         ref av = staticIndex(a, i);
         ref bv = staticIndex(b, i);
         if (lesser?(av, bv))

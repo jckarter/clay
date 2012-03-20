@@ -28,8 +28,8 @@ slicedPath(path) {
     return directoryTailTrimmed(parent), child;
 }
 
-pathDirname(path) = String(nthValue(static 0, ..slicedPath(path)));
-pathBasename(path) = String(nthValue(static 1, ..slicedPath(path)));
+pathDirname(path) = String(nthValue(#0, ..slicedPath(path)));
+pathBasename(path) = String(nthValue(#1, ..slicedPath(path)));
 
 splitPath(path) = ..mapValues(force, ..slicedPath(path));
 

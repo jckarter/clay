@@ -1,5 +1,5 @@
 
-[T] testMinMaxParser(static T) {
+[T] testMinMaxParser(#T) {
     println("testing ", T);
     var v = Vector[Char]();
     printTo(v, Least(T));

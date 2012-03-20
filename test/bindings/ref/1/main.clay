@@ -1,5 +1,5 @@
 foo(forward ..args) --> returned:Char {
-    ref value = nthValue(static 1, ..args);
+    ref value = nthValue(#1, ..args);
 }
 
 main() {

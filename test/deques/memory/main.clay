@@ -2,7 +2,7 @@ import deques.*;
 import test.memory.*;
 
 // artificially shrink the deque node size to stress-test overflow handling
-overload DequeBufferSize(static Canary) = SizeT(1);
+overload DequeBufferSize(#Canary) = SizeT(1);
 
 test() {
     println("making deque d1");

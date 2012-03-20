@@ -7,7 +7,7 @@ main() {
     libc.atexit(ptr);
 
     var fs = Vector[CodePointer[[],[]]]();
-    ..for (i in staticIntegers(static 5)) {
+    ..for (i in staticIntegers(#5)) {
         var f = () => { println(unwrapStatic(i)); };
         push(fs, makeCodePointer(f));
     }

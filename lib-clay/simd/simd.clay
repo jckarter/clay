@@ -17,7 +17,7 @@ inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 
 [..A when (countValues(..A) > 0) and equalValues?(..A)]
 inline overload Vec(..args:A) {
-    alias n = static countValues(..A);
+    alias n = #countValues(..A);
     alias T = firstValue(..A);
     return Vec[T, n](..args);
 }
@@ -86,16 +86,16 @@ inline overload assign(ref dest:Vec[T,n], src:Vec[T,n]) {
 //
 
 [T,n]
-inline unpackVec(a:Vec[T,n]) = ..unpackElements(a, static 0);
+inline unpackVec(a:Vec[T,n]) = ..unpackElements(a, #0);
 
 private define unpackElements;
 
 [T,n,i]
-inline overload unpackElements(a:Vec[T,n], static i) =
-    a[i], ..unpackElements(a, static i+1);
+inline overload unpackElements(a:Vec[T,n], #i) =
+    a[i], ..unpackElements(a, #i+1);
 
 [T,n,i when i == n]
-inline overload unpackElements(a:Vec[T,n], static i) = ;
+inline overload unpackElements(a:Vec[T,n], #i) = ;
 
 
 
@@ -255,7 +255,7 @@ inline overload printReprTo(stream, a:Vec[T,n])
 
 CompatibleVectorTypes?(X, Y) = false;
 [T,n, U,m when TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
-overload CompatibleVectorTypes?(static Vec[T,n], static Vec[U,m]) = true;
+overload CompatibleVectorTypes?(#Vec[T,n], #Vec[U,m]) = true;
 
 [T,n, U,m when T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
 inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
@@ -267,6 +267,6 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 //
 
 [T when Integer?(T)]
-inline componentMask(static T) = wrapCast(T, -1);
-inline overload componentMask(static Float32) = bitcast(Float32, -1_i);
-inline overload componentMask(static Float64) = bitcast(Float64, -1_l);
+inline componentMask(#T) = wrapCast(T, -1);
+inline overload componentMask(#Float32) = bitcast(Float32, -1_i);
+inline overload componentMask(#Float64) = bitcast(Float64, -1_l);

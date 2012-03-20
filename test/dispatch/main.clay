@@ -2,19 +2,19 @@ import __operators__;
 
 record LessThanThree (index:Int);
 
-overload __operators__.DispatchTagCount(static LessThanThree) = 3;
+overload __operators__.DispatchTagCount(#LessThanThree) = 3;
 overload __operators__.dispatchTag(x:LessThanThree) = x.index;
 [n]
-overload __operators__.dispatchIndex(x:LessThanThree, static n) = static n;
+overload __operators__.dispatchIndex(x:LessThanThree, #n) = #n;
 
 overload __operators__.invalidDispatch(x:LessThanThree) {
     errorNoThrow("invalid LessThanThree, tag = ", x.index);
 }
 
 define foo;
-overload foo(static 0) = "zero";
-overload foo(static 1) = "one";
-overload foo(static 2) = "two";
+overload foo(#0) = "zero";
+overload foo(#1) = "one";
+overload foo(#2) = "two";
 
 main() {
     var x, y, z = LessThanThree(0), LessThanThree(1), LessThanThree(2);

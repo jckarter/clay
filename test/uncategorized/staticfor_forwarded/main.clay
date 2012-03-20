@@ -1,7 +1,7 @@
 
 record Foo(value:Int);
 
-overload RegularRecord?(static Foo) = false;
+overload RegularRecord?(#Foo) = false;
 
 var _nextId = 1;
 

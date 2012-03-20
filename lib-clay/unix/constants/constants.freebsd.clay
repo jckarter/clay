@@ -24,24 +24,24 @@ alias O_ASYNC    = 0x0040;
 // flags for 'chmod'
 //
 
-alias S_IRWXU = octal(#"0000700");
-alias S_IRUSR = octal(#"0000400");
-alias S_IWUSR = octal(#"0000200");
-alias S_IXUSR = octal(#"0000100");
+alias S_IRWXU = octal("0000700");
+alias S_IRUSR = octal("0000400");
+alias S_IWUSR = octal("0000200");
+alias S_IXUSR = octal("0000100");
 
-alias S_IRWXG = octal(#"0000070");
-alias S_IRGRP = octal(#"0000040");
-alias S_IWGRP = octal(#"0000020");
-alias S_IXGRP = octal(#"0000010");
+alias S_IRWXG = octal("0000070");
+alias S_IRGRP = octal("0000040");
+alias S_IWGRP = octal("0000020");
+alias S_IXGRP = octal("0000010");
 
-alias S_IRWXO = octal(#"0000007");
-alias S_IROTH = octal(#"0000004");
-alias S_IWOTH = octal(#"0000002");
-alias S_IXOTH = octal(#"0000001");
+alias S_IRWXO = octal("0000007");
+alias S_IROTH = octal("0000004");
+alias S_IWOTH = octal("0000002");
+alias S_IXOTH = octal("0000001");
 
-alias S_ISUID = octal(#"0004000");
-alias S_ISGID = octal(#"0002000");
-alias S_ISVTX = octal(#"0001000");
+alias S_ISUID = octal("0004000");
+alias S_ISGID = octal("0002000");
+alias S_ISVTX = octal("0001000");
 
 
 
@@ -215,10 +215,10 @@ alias SIG_HOLD  = CCodePointer[[Int],[]](3);
 // status flags for wait() calls
 //
 
-private alias _WSTOPPED = octal(#"0177");
-private _WSTATUS(x) = bitand(Int(x), octal(#"0177"));
+private alias _WSTOPPED = octal("0177");
+private _WSTATUS(x) = bitand(Int(x), octal("0177"));
 
-alias WCOREFLAG = octal(#"0200");
+alias WCOREFLAG = octal("0200");
 
 WIFSTOPPED(x) = _WSTATUS(x) == _WSTOPPED;
 WSTOPSIG(x) = bitshr(Int(x), 8);

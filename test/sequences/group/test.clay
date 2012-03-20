@@ -75,10 +75,10 @@ main() = testMain(
             expectFalse(test, "begin(str) < begin(str)", begin(str) < begin(str));
             expectTrue(test, "begin(str) == begin(str)", begin(str) == begin(str));
         }),
-        TestCase("static grouping", test => {
+        TestCase("#grouping", test => {
             var str = String("abcABC123");
-            for (x, y, z in grouped(str, static 3))
-                expectTrue(test, "static grouped iteration",
+            for (x, y, z in grouped(str, #3))
+                expectTrue(test, "#grouped iteration",
                     Int(x) + 1 == Int(y)
                     and Int(y) + 1 == Int(z)
                 );

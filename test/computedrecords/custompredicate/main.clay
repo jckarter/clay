@@ -36,7 +36,7 @@ flexi(..fields) = recordWithPredicate(FlexiConstructor?, ..fields);
 [T, ..A  when  FlexiConstructor?(T) and (countValues(..A) == RecordFieldCount(T))]
 overload T(forward ..args:A) --> returned:T {
     alias TargetTypes = Tuple(..RecordFieldTypes(T));
-    ..recordFields(returned) <-- ..convertToTypes(TargetTypes, static 0, ..args);
+    ..recordFields(returned) <-- ..convertToTypes(TargetTypes, #0, ..args);
 }
 
 
@@ -48,13 +48,13 @@ overload T(forward ..args:A) --> returned:T {
 define convertToTypes;
 
 [i]
-overload convertToTypes(types, static i, forward first, forward ..rest) {
-    alias T = staticIndex(types, static i);
-    return forward convertToType(T, first), ..convertToTypes(types, static i+1, ..rest);
+overload convertToTypes(types, #i, forward first, forward ..rest) {
+    alias T = staticIndex(types, #i);
+    return forward convertToType(T, first), ..convertToTypes(types, #i+1, ..rest);
 }
 
 [T, i  when  (i == TupleElementCount(T))]
-overload convertToTypes(types:T, static i) = ;
+overload convertToTypes(types:T, #i) = ;
 
 
 
@@ -65,7 +65,7 @@ overload convertToTypes(types:T, static i) = ;
 define convertToType;
 
 [Dest, Src]
-overload convertToType(static Dest, forward src:Src) = forward Dest(src);
+overload convertToType(#Dest, forward src:Src) = forward Dest(src);
 
 [T] 
-overload convertToType(static T, forward src:T) = forward src;
+overload convertToType(#T, forward src:T) = forward src;

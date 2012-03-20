@@ -14,10 +14,10 @@ overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
 define generate;
 
-[I when Integer?(I) and TypeSize(I) <= 32] overload generate(r, static I)
+[I when Integer?(I) and TypeSize(I) <= 32] overload generate(r, #I)
     = wrapCast(I, generate(r, UInt32));
 
-overload generate(r : XORShiftRNG, static UInt32){
+overload generate(r : XORShiftRNG, #UInt32){
   var t = xsl(r.x, 15);
   r.x = r.y;
   r.y = r.z;
@@ -27,16 +27,16 @@ overload generate(r : XORShiftRNG, static UInt32){
   return r.w;
 }
 
-overload generate(r, static UInt64){
+overload generate(r, #UInt64){
   var x = UInt64(generate(r, UInt32));
   var y = UInt64(generate(r, UInt32));
 
   return bitor(wrapBitshl(x, 32), y);
 }
 
-overload generate(r, static Int64) = wrapCast(Int64, generate(r, UInt64));
+overload generate(r, #Int64) = wrapCast(Int64, generate(r, UInt64));
 
-[n, T] overload generate(r, static Array[T, n]){
+[n, T] overload generate(r, #Array[T, n]){
   var result = Array[T, n]();
 
   for(i in range(n)) result[i] <-- generate(r, i);
@@ -74,8 +74,8 @@ overload uniform(rnd, from : Float32, to : Float32)
 overload uniform(rnd, from : Float64, to : Float64)
     = from + (to - from) * smallDouble(rnd);
 
-overload uniform(rnd, static Float32) = uniform(rnd, 0.f ,1.f);
-overload uniform(rnd, static Float64) = uniform(rnd, 0. ,1.);
+overload uniform(rnd, #Float32) = uniform(rnd, 0.f ,1.f);
+overload uniform(rnd, #Float64) = uniform(rnd, 0. ,1.);
 
 define normal;
 

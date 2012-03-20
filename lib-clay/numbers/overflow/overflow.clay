@@ -28,7 +28,7 @@ declare {i64, i1} @llvm.umul.with.overflow.i64(i64 %a, i64 %b)
 }
 
 [op, T]
-private inline overflowIntrinsic(static op, a:T, b:T) --> out:T, overflow:Bool
+private inline overflowIntrinsic(#op, a:T, b:T) --> out:T, overflow:Bool
 __llvm__{
     %av = load $T* %a
     %bv = load $T* %b
@@ -166,42 +166,42 @@ inline integerShiftLeftWithOverflow(x:T, y:T) : T, Bool {
 // integer conversion
 
 [A, B when Integer?(A) and Numeric?(B)]
-define integerConvertWithOverflow(static A, b:B) : A, Bool;
+define integerConvertWithOverflow(#A, b:B) : A, Bool;
 
 [A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < Least(A) or b > Greatest(A);
 
 [A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) > TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) <= TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > B(Greatest(A));
 
 [A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0;
 
 [A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0 or b > Greatest(A);
 
 [A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > Greatest(A);
 
 [A, B when Integer?(A) and Float?(B)]
-inline overload integerConvertWithOverflow(static A, b:B) : A, Bool
+inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < B(Least(A)) or b > B(Greatest(A));
 
 // callbacks for integer*Checked primitives
@@ -237,5 +237,5 @@ inline overload __operators__.doIntegerNegateChecked(a:A) : A
     = checked(integerNegateWithOverflow, a);
 
 [A, B when Integer?(A) and Numeric?(B)]
-inline overload __operators__.doIntegerConvertChecked(static A, b:B) : A
+inline overload __operators__.doIntegerConvertChecked(#A, b:B) : A
     = checked(integerConvertWithOverflow, A, b);

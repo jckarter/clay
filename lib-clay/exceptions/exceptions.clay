@@ -75,10 +75,10 @@ alias throwButPropagateLike(ex, ..expr) {
 //
 
 [T]
-overload exceptionIs?(static T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
+overload exceptionIs?(#T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
 
 [T]
-overload exceptionAs(static T, exp:RawPointer) --> ex:T {
+overload exceptionAs(#T, exp:RawPointer) --> ex:T {
     ex <-- moveUnsafe(nestedVariantAs(exceptionObject(exp), T));
     freeRawMemory(exp);
 }

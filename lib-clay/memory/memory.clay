@@ -28,7 +28,7 @@ freeObject(ptr:Pointer[T]) {
 }
 
 [T, I when Integer?(I)]
-allocateArray(static T, count:I) {
+allocateArray(#T, count:I) {
     var begin = allocateRawMemory(T, SizeT(count));
     var end = begin + SizeT(count);
 
@@ -77,7 +77,7 @@ alignedFree(ptr:Pointer[UInt8]) {
 //
 
 [T, I, J when Integer?(I) and Integer?(J)]
-allocateRawMemoryAligned(static T, count:I, alignment:J) {
+allocateRawMemoryAligned(#T, count:I, alignment:J) {
     var ptr = alignedMalloc(TypeSize(T) * SizeT(count), SizeT(alignment));
     return Pointer[T](ptr);
 }
@@ -94,7 +94,7 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 //
 
 [T,I when Integer?(I)]
-allocateRawMemory(static T, count:I) {
+allocateRawMemory(#T, count:I) {
     var ptr = malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
 }
@@ -111,7 +111,7 @@ freeRawMemory(ptr:Pointer[T]) {
 }
 
 [T,I when Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
-overload allocateRawMemory(static T, count:I) {
+overload allocateRawMemory(#T, count:I) {
     return allocateRawMemoryAligned(T, count, TypeAlignment(T));
 }
 

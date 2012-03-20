@@ -73,7 +73,7 @@ define resetUnsafe;
 // uninitialized stack allocation
 //
 
-[T] uninitializedUnsafe(static T) --> x:T {}
+[T] uninitializedUnsafe(#T) --> x:T {}
 
 
 //
@@ -237,7 +237,7 @@ inline overload assign(ref dest:T, rvalue src:T) {
 }
 
 [F]
-inline overload updateAssign(static F, ref dest, forward ..src) {
+inline overload updateAssign(#F, ref dest, forward ..src) {
     dest = operatorCall(dest,F, ..src);
 }
 
@@ -261,40 +261,40 @@ inline overload bitxor(a, b, c, ..rest) =
     bitxor(bitxor(a,b), c, ..rest);
 
 [FIELD]
-inline overload fieldRefAssign(dest, static FIELD, forward src) {
-    assign(fieldRef(dest, static FIELD), src);
+inline overload fieldRefAssign(dest, #FIELD, forward src) {
+    assign(fieldRef(dest, #FIELD), src);
 }
 
 [F, FIELD]
-inline overload fieldRefUpdateAssign(static F, dest, static FIELD, forward ..src) {
-    updateAssign(static F, fieldRef(dest, static FIELD), ..src);
+inline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward ..src) {
+    updateAssign(#F, fieldRef(dest, #FIELD), ..src);
 }
 
-[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), static FIELD))]
-inline overload fieldRefUpdateAssign(static F, dest:T, static FIELD, forward src) {
-    fieldRefAssign(dest, static FIELD, F(fieldRef(dest, static FIELD), src));
+[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD))]
+inline overload fieldRefUpdateAssign(#F, dest:T, #FIELD, forward src) {
+    fieldRefAssign(dest, #FIELD, F(fieldRef(dest, #FIELD), src));
 }
 
 [i]
-inline overload staticIndexAssign(dest, static i, forward src) {
-    assign(staticIndex(dest, static i), src);
+inline overload staticIndexAssign(dest, #i, forward src) {
+    assign(staticIndex(dest, #i), src);
 }
 
 [F, i]
-inline overload staticIndexUpdateAssign(static F, dest, static i, forward ..src) {
-    updateAssign(static F, staticIndex(dest, static i), ..src);
+inline overload staticIndexUpdateAssign(#F, dest, #i, forward ..src) {
+    updateAssign(#F, staticIndex(dest, #i), ..src);
 }
 
-[F, i, T when RValue?(staticIndex(typeToLValue(T), static i))]
-inline overload staticIndexUpdateAssign(static F, dest:T, static i, forward src) {
-    staticIndexAssign(dest, static i, F(staticIndex(dest, static i), src));
+[F, i, T when RValue?(staticIndex(typeToLValue(T), #i))]
+inline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) {
+    staticIndexAssign(dest, #i, F(staticIndex(dest, #i), src));
 }
 
 [..T when countValues(..T) >= 2]
 inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     assign(
         index(dest, ..withoutNthValue(
-            static countValues(..T)-1,
+            #countValues(..T)-1,
             ..indicesAndSrc
         )),
         lastValue(..indicesAndSrc),
@@ -302,14 +302,14 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
 }
 
 [F, ..A when countValues(..A) >= 2]
-inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
+inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
-        static F,
+        #F,
         index(dest, ..takeValues(
-            static countIndices(..A),
+            #countIndices(..A),
             ..indicesAndSrc
         )),
-        ..dropValues(static countIndices(..A), ..indicesAndSrc),
+        ..dropValues(#countIndices(..A), ..indicesAndSrc),
     );
 }
 
@@ -320,21 +320,21 @@ inline overload indexUpdateAssign(static F, dest, forward ..indicesAndSrc:A) {
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..takeValues(static countIndices(..A), ..A)
+                ..takeValues(#countIndices(..A), ..A)
             )
         )
     )
 ]
-inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
+inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..takeValues(static countIndices(..A), ..indicesAndSrc),
+        ..takeValues(#countIndices(..A), ..indicesAndSrc),
         operatorCall(
             index(
                 dest,
-                ..takeValues(static countIndices(..A), ..indicesAndSrc)
+                ..takeValues(#countIndices(..A), ..indicesAndSrc)
             ),
-            F, ..dropValues(static countIndices(..A), ..indicesAndSrc)
+            F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
         )
     );
 }
@@ -344,11 +344,11 @@ inline overload indexUpdateAssign(static F, dest:T, forward ..indicesAndSrc:A) {
 // first occurence of non-numeric
 //
 
-private countIndices(..A) = _countIndices(static -1, ..A);
+private countIndices(..A) = _countIndices(#-1, ..A);
 private define _countIndices;
-[n] overload _countIndices(static n, a, ..A) 
-    = if(not Numeric?(a)) n else _countIndices(static (n+1), ..A);
-[n] overload _countIndices(static n) = n;
+[n] overload _countIndices(#n, a, ..A) 
+    = if(not Numeric?(a)) n else _countIndices(#(n+1), ..A);
+[n] overload _countIndices(#n) = n;
 
 
 //
@@ -382,41 +382,41 @@ BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputType
 CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
 overload operatorCall(forward ..args)
-    = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, static countValues(
+    = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, #countValues(
         ..restValues(..precedenceList())), ..args)));
 
 private define foldOp;
 [n]
-inline overload foldOp(fn, static n, forward ..xs)
-    = ..foldOp(fn, static numericSubtract(n,1), 
-        ..fn(nthValue(static n,..precedenceList()), ..xs));
-inline overload foldOp(fn, static 0, forward ..xs) 
+inline overload foldOp(fn, #n, forward ..xs)
+    = ..foldOp(fn, #numericSubtract(n,1), 
+        ..fn(nthValue(#n,..precedenceList()), ..xs));
+inline overload foldOp(fn, #0, forward ..xs) 
     = forward ..fn(firstValue(..precedenceList()), ..xs);
 
 
 private define binaryOp;
 [OP,T]
-inline overload binaryOp(static OP,forward a,static T,forward ..args)
+inline overload binaryOp(#OP,forward a,#T,forward ..args)
     = forward a,T,..binaryOp(OP,..args);
 [OP]
-inline overload binaryOp(static OP, forward a) = forward a;
+inline overload binaryOp(#OP, forward a) = forward a;
 [OP]
-inline overload binaryOp(static OP,forward a,static OP,forward b, forward ..args)
+inline overload binaryOp(#OP,forward a,#OP,forward b, forward ..args)
     = forward ..binaryOp(OP,OP(a,b), ..args);
 [OP]
-inline overload binaryOp(static OP,forward a,static OP,forward b)
+inline overload binaryOp(#OP,forward a,#OP,forward b)
     = forward OP(a,b);
 
 private define noPrecBinaryOp;
 
 [OP]
-inline overload noPrecBinaryOp(forward a, static OP,forward ..args)
+inline overload noPrecBinaryOp(forward a, #OP,forward ..args)
     = forward a,OP,..noPrecBinaryOp(..args);
 [OP,T,U when BinaryOpDefined?(OP,T,U)]
-inline overload noPrecBinaryOp(forward a:T, static OP,forward b:U, forward ..args)
+inline overload noPrecBinaryOp(forward a:T, #OP,forward b:U, forward ..args)
     = forward ..noPrecBinaryOp(OP(a,b), ..args);
 [OP,T,U when BinaryOpDefined?(OP,T,U)]
-inline overload noPrecBinaryOp(forward a:T,static OP,forward b:U)
+inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U)
     = forward OP(a,b);
 inline overload noPrecBinaryOp(forward a) = forward a;
 
@@ -541,38 +541,38 @@ bitror(x:I, n:J) = bitor(bitshr(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 //
 
 PrimitiveType?(X) = false;
-overload PrimitiveType?(static Bool) = true;
-overload PrimitiveType?(static Int8) = true;
-overload PrimitiveType?(static Int16) = true;
-overload PrimitiveType?(static Int32) = true;
-overload PrimitiveType?(static Int64) = true;
-overload PrimitiveType?(static Int128) = true;
-overload PrimitiveType?(static UInt8) = true;
-overload PrimitiveType?(static UInt16) = true;
-overload PrimitiveType?(static UInt32) = true;
-overload PrimitiveType?(static UInt64) = true;
-overload PrimitiveType?(static UInt128) = true;
-overload PrimitiveType?(static Float32) = true;
-overload PrimitiveType?(static Float64) = true;
-overload PrimitiveType?(static Float80) = true;
-overload PrimitiveType?(static Imag32) = true;
-overload PrimitiveType?(static Imag64) = true;
-overload PrimitiveType?(static Imag80) = true;
-overload PrimitiveType?(static Complex32) = true;
-overload PrimitiveType?(static Complex64) = true;
-overload PrimitiveType?(static Complex80) = true;
-[T] overload PrimitiveType?(static Pointer[T]) = true;
-[I, O] overload PrimitiveType?(static CodePointer[I, O]) = true;
-[I, O] overload PrimitiveType?(static CCodePointer[I, O]) = true;
-[I, O] overload PrimitiveType?(static VarArgsCCodePointer[I, O]) = true;
-[I, O] overload PrimitiveType?(static StdCallCodePointer[I, O]) = true;
-[I, O] overload PrimitiveType?(static FastCallCodePointer[I, O]) = true;
-[T] overload PrimitiveType?(static Static[T]) = true;
-[T,n] overload PrimitiveType?(static Vec[T,n]) = true;
-[E when Enum?(E)] overload PrimitiveType?(static E) = true;
-[..T] overload PrimitiveType?(static Union[..T]) = true;
-[] overload PrimitiveType?(static Union[]) = true;
-overload PrimitiveType?(static Tuple[]) = true;
+overload PrimitiveType?(#Bool) = true;
+overload PrimitiveType?(#Int8) = true;
+overload PrimitiveType?(#Int16) = true;
+overload PrimitiveType?(#Int32) = true;
+overload PrimitiveType?(#Int64) = true;
+overload PrimitiveType?(#Int128) = true;
+overload PrimitiveType?(#UInt8) = true;
+overload PrimitiveType?(#UInt16) = true;
+overload PrimitiveType?(#UInt32) = true;
+overload PrimitiveType?(#UInt64) = true;
+overload PrimitiveType?(#UInt128) = true;
+overload PrimitiveType?(#Float32) = true;
+overload PrimitiveType?(#Float64) = true;
+overload PrimitiveType?(#Float80) = true;
+overload PrimitiveType?(#Imag32) = true;
+overload PrimitiveType?(#Imag64) = true;
+overload PrimitiveType?(#Imag80) = true;
+overload PrimitiveType?(#Complex32) = true;
+overload PrimitiveType?(#Complex64) = true;
+overload PrimitiveType?(#Complex80) = true;
+[T] overload PrimitiveType?(#Pointer[T]) = true;
+[I, O] overload PrimitiveType?(#CodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#CCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#VarArgsCCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#StdCallCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#FastCallCodePointer[I, O]) = true;
+[T] overload PrimitiveType?(#Static[T]) = true;
+[T,n] overload PrimitiveType?(#Vec[T,n]) = true;
+[E when Enum?(E)] overload PrimitiveType?(#E) = true;
+[..T] overload PrimitiveType?(#Union[..T]) = true;
+[] overload PrimitiveType?(#Union[]) = true;
+overload PrimitiveType?(#Tuple[]) = true;
 
 
 
@@ -582,18 +582,18 @@ overload PrimitiveType?(static Tuple[]) = true;
 
 PrimitiveCompoundType?(X) = false;
 
-[T,n] overload PrimitiveCompoundType?(static Array[T,n]) = true;
-[..T] overload PrimitiveCompoundType?(static Tuple[..T]) = true;
-[R when RegularRecord?(R)] overload PrimitiveCompoundType?(static R) = true;
-[V when Variant?(V)] overload PrimitiveCompoundType?(static V) = true;
+[T,n] overload PrimitiveCompoundType?(#Array[T,n]) = true;
+[..T] overload PrimitiveCompoundType?(#Tuple[..T]) = true;
+[R when RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
+[V when Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
 
 define PrimitiveCompoundMemberTypes;
-[T,n] overload PrimitiveCompoundMemberTypes(static Array[T,n]) = T;
-[..T] overload PrimitiveCompoundMemberTypes(static Tuple[..T]) = ..T;
+[T,n] overload PrimitiveCompoundMemberTypes(#Array[T,n]) = T;
+[..T] overload PrimitiveCompoundMemberTypes(#Tuple[..T]) = ..T;
 [R when RegularRecord?(R)]
-overload PrimitiveCompoundMemberTypes(static R) = ..RecordFieldTypes(R);
+overload PrimitiveCompoundMemberTypes(#R) = ..RecordFieldTypes(R);
 [V when Variant?(V)]
-overload PrimitiveCompoundMemberTypes(static V) = ..VariantMembers(V);
+overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 
 //
@@ -603,10 +603,10 @@ overload PrimitiveCompoundMemberTypes(static V) = ..VariantMembers(V);
 PODType?(X) = false;
 
 [T when PrimitiveType?(T)]
-overload PODType?(static T) = true;
+overload PODType?(#T) = true;
 
 [T when PrimitiveCompoundType?(T)]
-overload PODType?(static T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
+overload PODType?(#T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
 
 
 
@@ -624,28 +624,28 @@ BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
 BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
 
 [T when PrimitiveCompoundType?(T)]
-overload BitwiseCopiedType?(static T)
+overload BitwiseCopiedType?(#T)
     = allValues?(BitwiseCopiedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload BitwiseMovedType?(static T)
+overload BitwiseMovedType?(#T)
     = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotDestroyedType?(static T)
+overload NotDestroyedType?(#T)
     = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotResetType?(static T)
+overload NotResetType?(#T)
     = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload CopyDoesNotThrowType?(static T)
+overload CopyDoesNotThrowType?(#T)
     = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload AssignDoesNotThrowType?(static T)
+overload AssignDoesNotThrowType?(#T)
     = allValues?(AssignDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload BitwiseAssignedType?(static T)
+overload BitwiseAssignedType?(#T)
     = allValues?(BitwiseAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload BitwiseMoveAssignedType?(static T)
+overload BitwiseMoveAssignedType?(#T)
     = allValues?(BitwiseMoveAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 
 
@@ -678,13 +678,13 @@ define CallDefined?;
 [F]
 alias overload CallDefined?(f:F, ..In) = StaticCallDefined?(call, F, ..In);
 [f]
-alias overload CallDefined?(static f, ..In) = StaticCallDefined?(f, ..In);
+alias overload CallDefined?(#f, ..In) = StaticCallDefined?(f, ..In);
 
 define CallOutputTypes;
 [F]
 alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
 [f]
-alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In);
+alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 
 
 //
@@ -693,7 +693,7 @@ alias overload CallOutputTypes(static f, ..In) = ..StaticCallOutputTypes(f, ..In
 
 define MonoInputTypes;
 [f when StaticMono?(f)]
-alias overload MonoInputTypes(static f) = ..StaticMonoInputTypes(f);
+alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
 [F when LambdaRecord?(F) and LambdaMono?(F)]
 alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 

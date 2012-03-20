@@ -30,7 +30,7 @@ record DisplayableVTable (
 );
 
 [T]
-makeDisplayableVTable(static T) {
+makeDisplayableVTable(#T) {
     var destructor = makeCodePointer(destroy, T);
     var copyConstructor = makeCodePointer(T, T);
     var display = makeCodePointer(display, T);
@@ -51,7 +51,7 @@ record Displayable (
     vtable : Pointer[DisplayableVTable],
 );
 
-overload RegularRecord?(static Displayable) = false;
+overload RegularRecord?(#Displayable) = false;
 
 
 // constructor

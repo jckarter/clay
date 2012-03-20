@@ -36,15 +36,15 @@ overload NodeFields(x) = false;
 //
 
 obj1(..fields) = recordWithProperty(
-    [Node?, static true],
+    [Node?, #true],
     ..fields,
 );
 
 [..F]
 obj2(..fields:F) = recordWithProperties(
     [
-        [Node?, static true],
-        [NodeFieldCount, static countValues(..F)],
+        [Node?, #true],
+        [NodeFieldCount, #countValues(..F)],
         [NodeFields, ..fields],
     ],
     extra: Double,

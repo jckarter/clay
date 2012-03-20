@@ -9,26 +9,26 @@ alias ExternalException = Pointer[Maybe[Exception]];
 //    = ..callExternal(external_fn, ..);
 
 [inCount]
-inline wrapAsExternal(impl_fn, static inCount, exp:ExternalException, ..inoutp) {
+inline wrapAsExternal(impl_fn, #inCount, exp:ExternalException, ..inoutp) {
     try {
-        ..mapValues(dereference, ..dropValues(static inCount, ..inoutp))
-            <-- ..impl_fn(..mapValues(dereference, ..takeValues(static inCount, ..inoutp)));
+        ..mapValues(dereference, ..dropValues(#inCount, ..inoutp))
+            <-- ..impl_fn(..mapValues(dereference, ..takeValues(#inCount, ..inoutp)));
         exp^ <-- nothing(Exception);
     } catch (ex) {
         exp^ <-- Maybe(ex);
     }
 }
 
-[T] private unpointer(static Pointer[T]) = T;
+[T] private unpointer(#Pointer[T]) = T;
 
 [..IO, ..T when
-    [..T] == [..mapValues(unpointer, ..takeValues(static countValues(..T), ..IO))]
+    [..T] == [..mapValues(unpointer, ..takeValues(#countValues(..T), ..IO))]
 ]
 inline callExternal(
     external_fn:CCodePointer[[ExternalException, ..IO], []],
     ..args:T
 )
-    --> ..out:mapValues(unpointer, ..dropValues(static countValues(..T), ..IO))
+    --> ..out:mapValues(unpointer, ..dropValues(#countValues(..T), ..IO))
 {
     var ex = uninitializedUnsafe(Maybe[Exception]);
     external_fn(..mapValues(addressOf, ex, ..args, ..out));

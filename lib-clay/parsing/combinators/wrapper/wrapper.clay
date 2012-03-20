@@ -10,7 +10,7 @@ import parsing.combinators.generic as generic;
 record Combinators[TokenInput] ();
 
 [TokenInput, Name]
-overload fieldRef(x:Combinators[TokenInput], static Name) {
+overload fieldRef(x:Combinators[TokenInput], #Name) {
     var f = fieldRef(generic, Name);
     return partialApply(f, TokenInput);
 }

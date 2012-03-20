@@ -6,10 +6,10 @@
 //
 
 [A]
-String?(static A) = false;
+String?(#A) = false;
 
 [A when Sequence?(A) and (Char == SequenceElementType(A))]
-overload String?(static A) = true;
+overload String?(#A) = true;
 
 
 
@@ -18,10 +18,10 @@ overload String?(static A) = true;
 //
 
 [A]
-SizedString?(static A) = false;
+SizedString?(#A) = false;
 
 [A when SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload SizedString?(static A) = true;
+overload SizedString?(#A) = true;
 
 
 
@@ -30,10 +30,10 @@ overload SizedString?(static A) = true;
 //
 
 [A]
-ContiguousString?(static A) = false;
+ContiguousString?(#A) = false;
 
 [A when ContiguousSequence?(A) and (Char == SequenceElementType(A))]
-overload ContiguousString?(static A) = true;
+overload ContiguousString?(#A) = true;
 
 
 
@@ -42,10 +42,10 @@ overload ContiguousString?(static A) = true;
 //
 
 [A]
-CCompatibleString?(static A) = false;
+CCompatibleString?(#A) = false;
 
 [A when String?(A) and CallDefined?(cstring, A)]
-overload CCompatibleString?(static A) = true;
+overload CCompatibleString?(#A) = true;
 
 
 

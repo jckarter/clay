@@ -162,7 +162,7 @@ main() = testMain(
             );
         }),
         TestCase("statics", test => {
-            expectNullMarshaling(test, "static 0", static 0);
+            expectNullMarshaling(test, "#0", #0);
             expectNullMarshaling(test, "add", add);
             expectNullMarshaling(test, "Int", Int);
         }),

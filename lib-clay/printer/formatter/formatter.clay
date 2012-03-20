@@ -43,9 +43,9 @@ private record HexFormatter[T] (value: T);
 private record HEXFormatter[T] (value: T);
 private record OctFormatter[T] (value: T);
 
-[T] overload Formatter?(static HexFormatter[T]) = true;
-[T] overload Formatter?(static HEXFormatter[T]) = true;
-[T] overload Formatter?(static OctFormatter[T]) = true;
+[T] overload Formatter?(#HexFormatter[T]) = true;
+[T] overload Formatter?(#HEXFormatter[T]) = true;
+[T] overload Formatter?(#OctFormatter[T]) = true;
 
 [I when Integer?(I)]
 hex(forward x: I) = formatter(HexFormatter, x);
@@ -97,7 +97,7 @@ overload formatBase(stream, value: UInt64, fmt, fmt64) {
 //
 
 record HexStringFormatter[T] (value: T);
-[T] overload Formatter?(static HexStringFormatter[T]) = true;
+[T] overload Formatter?(#HexStringFormatter[T]) = true;
 
 HexStringSequence?(S) = Sequence?(S) and TypeSize(SequenceElementType(S)) == 1;
 
@@ -173,9 +173,9 @@ private record RightAlignedFormatter[T] (
 );
 
 private AlignedFormatter?(T) = false;
-[T] overload AlignedFormatter?(static LeftAlignedFormatter[T]) = true;
-[T] overload AlignedFormatter?(static RightAlignedFormatter[T]) = true;
-[T when AlignedFormatter?(T)] overload Formatter?(static T) = true;
+[T] overload AlignedFormatter?(#LeftAlignedFormatter[T]) = true;
+[T] overload AlignedFormatter?(#RightAlignedFormatter[T]) = true;
+[T when AlignedFormatter?(T)] overload Formatter?(#T) = true;
 
 [I when Integer?(I)]
 private alignedFormatter(F, width: I, pad: Char, forward ..values) {

@@ -1,126 +1,126 @@
 IdentifierChars(identifier)
     = ..mapValues(
-        n => IdentifierSlice(identifier, n, static unwrapStatic(n)+1),
-        ..staticIntegers(static IdentifierSize(identifier))
+        n => IdentifierSlice(identifier, n, #unwrapStatic(n)+1),
+        ..staticIntegers(#IdentifierSize(identifier))
     );
 
 IdentifierStartsWith?(identifier, startsWith) = false;
 [identifier, startsWith when IdentifierSize(identifier) >= IdentifierSize(startsWith)]
-overload IdentifierStartsWith?(static identifier, static startsWith)
-      = IdentifierSlice(identifier, static 0, static IdentifierSize(startsWith))
+overload IdentifierStartsWith?(#identifier, #startsWith)
+      = IdentifierSlice(identifier, #0, #IdentifierSize(startsWith))
         == startsWith;
 
 IdentifierEndsWith?(identifier, endsWith) = false;
 [identifier, endsWith when IdentifierSize(identifier) >= IdentifierSize(endsWith)]
-overload IdentifierEndsWith?(static identifier, static endsWith)
+overload IdentifierEndsWith?(#identifier, #endsWith)
     = IdentifierSlice(identifier,
-          static IdentifierSize(identifier) - IdentifierSize(endsWith),
-          static IdentifierSize(identifier)
+          #IdentifierSize(identifier) - IdentifierSize(endsWith),
+          #IdentifierSize(identifier)
       ) == endsWith;
 
 
 [identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
 ]
-IdentifierFind(static identifier, static sub, static start)
-    = IdentifierFind(identifier, sub, static start + 1);
+IdentifierFind(#identifier, #sub, #start)
+    = IdentifierFind(identifier, sub, #start + 1);
 
 [identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
     and IdentifierSize(identifier) < IdentifierSize(sub) + start
 ]
-overload IdentifierFind(static identifier, static sub, static start) = -1;
+overload IdentifierFind(#identifier, #sub, #start) = -1;
 
 [identifier, sub, start when
     Identifier?(identifier) and Identifier?(sub)
     and IdentifierSize(identifier) >= IdentifierSize(sub) + start
-    and IdentifierSlice(identifier, static start, static start + IdentifierSize(sub))
+    and IdentifierSlice(identifier, #start, #start + IdentifierSize(sub))
         == sub
 ]
-overload IdentifierFind(static identifier, static sub, static start) = start;
+overload IdentifierFind(#identifier, #sub, #start) = start;
 
-overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, static 0);
+overload IdentifierFind(identifier, sub) = IdentifierFind(identifier, sub, #0);
 
 IdentifierCapitalize(i)
     = IdentifierConcat(
-        IdentifierUpperChar(IdentifierSlice(i, static 0, static 1)),
-        IdentifierSlice(i, static 1, static IdentifierSize(i))
+        IdentifierUpperChar(IdentifierSlice(i, #0, #1)),
+        IdentifierSlice(i, #1, #IdentifierSize(i))
     );
 
 IdentifierDecapitalize(i)
     = IdentifierConcat(
-        IdentifierLowerChar(IdentifierSlice(i, static 0, static 1)),
-        IdentifierSlice(i, static 1, static IdentifierSize(i))
+        IdentifierLowerChar(IdentifierSlice(i, #0, #1)),
+        IdentifierSlice(i, #1, #IdentifierSize(i))
     );
 
 [i when Identifier?(i) and IdentifierSize(i) == 1]
-IdentifierUpperChar(static i) = i;
+IdentifierUpperChar(#i) = i;
 
-overload IdentifierUpperChar(static #a) = #A;
-overload IdentifierUpperChar(static #b) = #B;
-overload IdentifierUpperChar(static #c) = #C;
-overload IdentifierUpperChar(static #d) = #D;
-overload IdentifierUpperChar(static #e) = #E;
-overload IdentifierUpperChar(static #f) = #F;
-overload IdentifierUpperChar(static #g) = #G;
-overload IdentifierUpperChar(static #h) = #H;
-overload IdentifierUpperChar(static #i) = #I;
-overload IdentifierUpperChar(static #j) = #J;
-overload IdentifierUpperChar(static #k) = #K;
-overload IdentifierUpperChar(static #l) = #L;
-overload IdentifierUpperChar(static #m) = #M;
-overload IdentifierUpperChar(static #n) = #N;
-overload IdentifierUpperChar(static #o) = #O;
-overload IdentifierUpperChar(static #p) = #P;
-overload IdentifierUpperChar(static #q) = #Q;
-overload IdentifierUpperChar(static #r) = #R;
-overload IdentifierUpperChar(static #s) = #S;
-overload IdentifierUpperChar(static #t) = #T;
-overload IdentifierUpperChar(static #u) = #U;
-overload IdentifierUpperChar(static #v) = #V;
-overload IdentifierUpperChar(static #w) = #W;
-overload IdentifierUpperChar(static #x) = #X;
-overload IdentifierUpperChar(static #y) = #Y;
-overload IdentifierUpperChar(static #z) = #Z;
+overload IdentifierUpperChar(##a) = #A;
+overload IdentifierUpperChar(##b) = #B;
+overload IdentifierUpperChar(##c) = #C;
+overload IdentifierUpperChar(##d) = #D;
+overload IdentifierUpperChar(##e) = #E;
+overload IdentifierUpperChar(##f) = #F;
+overload IdentifierUpperChar(##g) = #G;
+overload IdentifierUpperChar(##h) = #H;
+overload IdentifierUpperChar(##i) = #I;
+overload IdentifierUpperChar(##j) = #J;
+overload IdentifierUpperChar(##k) = #K;
+overload IdentifierUpperChar(##l) = #L;
+overload IdentifierUpperChar(##m) = #M;
+overload IdentifierUpperChar(##n) = #N;
+overload IdentifierUpperChar(##o) = #O;
+overload IdentifierUpperChar(##p) = #P;
+overload IdentifierUpperChar(##q) = #Q;
+overload IdentifierUpperChar(##r) = #R;
+overload IdentifierUpperChar(##s) = #S;
+overload IdentifierUpperChar(##t) = #T;
+overload IdentifierUpperChar(##u) = #U;
+overload IdentifierUpperChar(##v) = #V;
+overload IdentifierUpperChar(##w) = #W;
+overload IdentifierUpperChar(##x) = #X;
+overload IdentifierUpperChar(##y) = #Y;
+overload IdentifierUpperChar(##z) = #Z;
 
 [i when Identifier?(i) and IdentifierSize(i) == 1]
-IdentifierLowerChar(static i) = i;
+IdentifierLowerChar(#i) = i;
 
-overload IdentifierLowerChar(static #A) = #a;
-overload IdentifierLowerChar(static #B) = #b;
-overload IdentifierLowerChar(static #C) = #c;
-overload IdentifierLowerChar(static #D) = #d;
-overload IdentifierLowerChar(static #E) = #e;
-overload IdentifierLowerChar(static #F) = #f;
-overload IdentifierLowerChar(static #G) = #g;
-overload IdentifierLowerChar(static #H) = #h;
-overload IdentifierLowerChar(static #I) = #i;
-overload IdentifierLowerChar(static #J) = #j;
-overload IdentifierLowerChar(static #K) = #k;
-overload IdentifierLowerChar(static #L) = #l;
-overload IdentifierLowerChar(static #M) = #m;
-overload IdentifierLowerChar(static #N) = #n;
-overload IdentifierLowerChar(static #O) = #o;
-overload IdentifierLowerChar(static #P) = #p;
-overload IdentifierLowerChar(static #Q) = #q;
-overload IdentifierLowerChar(static #R) = #r;
-overload IdentifierLowerChar(static #S) = #s;
-overload IdentifierLowerChar(static #T) = #t;
-overload IdentifierLowerChar(static #U) = #u;
-overload IdentifierLowerChar(static #V) = #v;
-overload IdentifierLowerChar(static #W) = #w;
-overload IdentifierLowerChar(static #X) = #x;
-overload IdentifierLowerChar(static #Y) = #y;
-overload IdentifierLowerChar(static #Z) = #z;
+overload IdentifierLowerChar(##A) = #a;
+overload IdentifierLowerChar(##B) = #b;
+overload IdentifierLowerChar(##C) = #c;
+overload IdentifierLowerChar(##D) = #d;
+overload IdentifierLowerChar(##E) = #e;
+overload IdentifierLowerChar(##F) = #f;
+overload IdentifierLowerChar(##G) = #g;
+overload IdentifierLowerChar(##H) = #h;
+overload IdentifierLowerChar(##I) = #i;
+overload IdentifierLowerChar(##J) = #j;
+overload IdentifierLowerChar(##K) = #k;
+overload IdentifierLowerChar(##L) = #l;
+overload IdentifierLowerChar(##M) = #m;
+overload IdentifierLowerChar(##N) = #n;
+overload IdentifierLowerChar(##O) = #o;
+overload IdentifierLowerChar(##P) = #p;
+overload IdentifierLowerChar(##Q) = #q;
+overload IdentifierLowerChar(##R) = #r;
+overload IdentifierLowerChar(##S) = #s;
+overload IdentifierLowerChar(##T) = #t;
+overload IdentifierLowerChar(##U) = #u;
+overload IdentifierLowerChar(##V) = #v;
+overload IdentifierLowerChar(##W) = #w;
+overload IdentifierLowerChar(##X) = #x;
+overload IdentifierLowerChar(##Y) = #y;
+overload IdentifierLowerChar(##Z) = #z;
 
 define ident;
 
 overload ident(..xx) = IdentifierConcat(..mapValues(ident, ..xx));
 
 [x]
-overload ident(static x) = IdentifierStaticName(static x);
+overload ident(#x) = IdentifierStaticName(#x);
 [i when Identifier?(i)]
-overload ident(static i) = i;
+overload ident(#i) = i;
 
-overload ident() = #"";
+overload ident() = "";
 

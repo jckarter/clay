@@ -11,16 +11,16 @@ overload assign(_:Proxy, p:Point) : {
     global_y = p.y;
 }
 
-overload fieldRefAssign(_:Proxy, static #x, x:Int) : {
+overload fieldRefAssign(_:Proxy, ##x, x:Int) : {
     global_x = x;
 }
 
-overload fieldRefAssign(_:Proxy, static #y, y:Int) : {
+overload fieldRefAssign(_:Proxy, ##y, y:Int) : {
     global_y = y;
 }
 
-overload fieldRef(_:Proxy, static #x) : Int = global_x;
-overload fieldRef(_:Proxy, static #y) : Int = global_y;
+overload fieldRef(_:Proxy, ##x) : Int = global_x;
+overload fieldRef(_:Proxy, ##y) : Int = global_y;
 
 main() {
     Proxy() = Point(1, 2);

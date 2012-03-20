@@ -1,17 +1,17 @@
 
 [x]
-foo(static x) --> returned:Int32 __llvm__ {
+foo(#x) --> returned:Int32 __llvm__ {
     store i32 $x, i32* %returned
     ret i8* null
 }
 
 [x]
-bar(static x) --> returned:Int32 __llvm__ {
+bar(#x) --> returned:Int32 __llvm__ {
     store $x, i32* %returned
     ret i8* null
 }
 
 main() {
-    println(foo(static 3));
-    println(bar(#"i32 4"));
+    println(foo(#3));
+    println(bar("i32 4"));
 }

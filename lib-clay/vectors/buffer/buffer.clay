@@ -18,7 +18,7 @@ record BufferVector[T] (
 //
 
 [T]
-overload ContiguousSequence?(static BufferVector[T]) = true;
+overload ContiguousSequence?(#BufferVector[T]) = true;
 
 
 
@@ -72,7 +72,7 @@ overload BufferVector[T](src:BufferVector[T]) =
 //
 
 [T]
-overload Vector?(static BufferVector[T]) = true;
+overload Vector?(#BufferVector[T]) = true;
 
 [T]
 overload vectorData(a:BufferVector[T]) = a.begin;

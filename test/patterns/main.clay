@@ -1,6 +1,6 @@
 
 [..In, ..Out]
-showType(static CodePointer[[..In], [..Out]]) {
+showType(#CodePointer[[..In], [..Out]]) {
     println("In = ", ..In);
     println("Out = ", ..Out);
 }

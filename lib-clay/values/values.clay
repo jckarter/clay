@@ -17,11 +17,11 @@ inline overload mapValues(fn, forward x, forward ..xs)
 inline overload mapValues(fn) = ;
 
 private define _mapIndexedValues;
-[n] inline overload _mapIndexedValues(fn, static n, forward x, forward ..xs)
-    = forward ..fn(x, n), .._mapIndexedValues(fn, static n+1, ..xs);
-[n] inline overload _mapIndexedValues(fn, static n) = ;
+[n] inline overload _mapIndexedValues(fn, #n, forward x, forward ..xs)
+    = forward ..fn(x, n), .._mapIndexedValues(fn, #n+1, ..xs);
+[n] inline overload _mapIndexedValues(fn, #n) = ;
 
-mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, static 0, ..values);
+mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..values);
 
 define foldValues;
 inline overload foldValues(fn, forward x, forward ..xs)
@@ -49,10 +49,10 @@ inline overload weaveValues(between) = ;
 define countOccurrences;
 inline overload countOccurrences(value) = 0;
 [value1, value2]
-inline overload countOccurrences(static value1, static value2, forward ..xs)
+inline overload countOccurrences(#value1, #value2, forward ..xs)
     = countOccurrences(value1, ..xs);
 [value]
-inline overload countOccurrences(static value, static value, forward ..xs)
+inline overload countOccurrences(#value, #value, forward ..xs)
     = 1 + countOccurrences(value, ..xs);
 
 inline firstValue(forward a, ..rest) = forward a;
@@ -69,8 +69,8 @@ overload lastValue(forward a) = forward a;
 //
 
 [n]
-inline replicateValue(a, static n) = a, ..replicateValue(a, static n-1);
-inline overload replicateValue(a, static 0) = ;
+inline replicateValue(a, #n) = a, ..replicateValue(a, #n-1);
+inline overload replicateValue(a, #0) = ;
 
 inline allValues?(pred, ..rest) {
     ..for (x in rest) {
@@ -134,56 +134,56 @@ inline capturedRefs(x:Tuple[..T]) =
 // expand values from sequence or iterator 
 //
 [S, n when Sequence?(S)]
-sequenceValues(seq: S, static n) = forward ..iteratorValues(iterator(seq), static n);
+sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 
 [I when Iterator?(I)]
-iteratorValues(iter: I, static 0) = ;
+iteratorValues(iter: I, #0) = ;
 [I, n when Iterator?(I) and n > 0]
-overload iteratorValues(iter: I, static n)
-    = forward next(iter), ..iteratorValues(iter, static n-1);
+overload iteratorValues(iter: I, #n)
+    = forward next(iter), ..iteratorValues(iter, #n-1);
 
 
 
 //
 // iterate over two sets of values in tandem
 //
-[n when n > 0] eachValue2(fn, static n, forward x, forward ..xs) {
-    fn(x, nthValue(static n-1, ..xs));
-    return ..eachValue2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
+[n when n > 0] eachValue2(fn, #n, forward x, forward ..xs) {
+    fn(x, nthValue(#n-1, ..xs));
+    return ..eachValue2(fn, #n-1, ..withoutNthValue(#n-1, ..xs));
 }
-overload eachValue2(fn, static 0, forward ..xs) { }
+overload eachValue2(fn, #0, forward ..xs) { }
 
-[n when n > 0] mapValues2(fn, static n, forward x, forward ..xs)
-    = forward fn(x, nthValue(static n-1, ..xs)),
-      ..mapValues2(fn, static n-1, ..withoutNthValue(static n-1, ..xs));
-overload mapValues2(fn, static 0, forward ..xs) = ;
+[n when n > 0] mapValues2(fn, #n, forward x, forward ..xs)
+    = forward fn(x, nthValue(#n-1, ..xs)),
+      ..mapValues2(fn, #n-1, ..withoutNthValue(#n-1, ..xs));
+overload mapValues2(fn, #0, forward ..xs) = ;
 
 
 
 //
-// treat multiple static tuple values as key-values pairs
+// treat multiple #tuple values as key-values pairs
 //
 
 [key]
-assocValue(static key, kv, forward ..kvs) = forward ..assocValue(static key, ..kvs);
+assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
 
 [key, ..T]
-overload assocValue(static key, forward kv: Tuple[Static[key], ..T], ..kvs)
+overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
     = forward ..restValues(..unpack(kv));
 
 [key]
-assocValue?(static key) = false;
+assocValue?(#key) = false;
 [key]
-overload assocValue?(static key, kv, ..kvs) = assocValue?(key, ..kvs);
+overload assocValue?(#key, kv, ..kvs) = assocValue?(key, ..kvs);
 [key, ..T]
-overload assocValue?(static key, kv: Tuple[Static[key], ..T], ..kvs) = true;
+overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) = true;
 
 [key]
-assocCountValues(static key) = -1;
+assocCountValues(#key) = -1;
 [key]
-overload assocCountValues(static key, kv, ..kvs) = assocCountValues(key, ..kvs);
+overload assocCountValues(#key, kv, ..kvs) = assocCountValues(key, ..kvs);
 [key, ..T]
-overload assocCountValues(static key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
+overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
 
 
 
@@ -192,9 +192,9 @@ overload assocCountValues(static key, kv: Tuple[Static[key], ..T], ..kvs) = coun
 //
 
 [n, value, other]
-private _valueIndex(static n, static value, static other, ..etc)
-    = _valueIndex(static n+1, static value, ..etc);
+private _valueIndex(#n, #value, #other, ..etc)
+    = _valueIndex(#n+1, #value, ..etc);
 [n, value]
-overload _valueIndex(static n, static value, static value, ..etc) = n;
+overload _valueIndex(#n, #value, #value, ..etc) = n;
 [value]
-valueIndex(static value, ..etc) = _valueIndex(static 0, static value, ..etc);
+valueIndex(#value, ..etc) = _valueIndex(#0, #value, ..etc);

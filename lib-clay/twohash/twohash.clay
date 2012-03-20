@@ -66,38 +66,38 @@ private record SetVectorEntry[K]
 );
 
 [T]
-private Entry?(static T) = false;
+private Entry?(#T) = false;
 
 [K]
-overload Entry?(static SetEntry[K]) = true;
+overload Entry?(#SetEntry[K]) = true;
 
 [K, V]
-overload Entry?(static MapEntry[K, V]) = true;
+overload Entry?(#MapEntry[K, V]) = true;
 
 [K]
-overload Entry?(static SetVectorEntry[K]) = true;
+overload Entry?(#SetVectorEntry[K]) = true;
 
 [T, K]
-private HashSetLike?(static T, static K) = false;
+private HashSetLike?(#T, #K) = false;
 
 [K]
-overload HashSetLike?(static HashSet[K], static K) = true;
+overload HashSetLike?(#HashSet[K], #K) = true;
 
 [K]
-overload HashSetLike?(static SetVector[K], static K) = true;
+overload HashSetLike?(#SetVector[K], #K) = true;
 
 //
 // Type predicates
 //
 
 [T]
-private Hashtable?(static T) = false;
+private Hashtable?(#T) = false;
 
-[T when RecordWithField?(T, static #data) and TwoHash?(Type(typeToLValue(T).data))]
-overload Hashtable?(static T) = true;
+[T when RecordWithField?(T, ##data) and TwoHash?(Type(typeToLValue(T).data))]
+overload Hashtable?(#T) = true;
 
 [T when Hashtable?(T)]
-overload EntryType(static T) = EntryType(Type(typeToLValue(T).data));
+overload EntryType(#T) = EntryType(Type(typeToLValue(T).data));
 
 //
 // Entry semantics
@@ -105,7 +105,7 @@ overload EntryType(static T) = EntryType(Type(typeToLValue(T).data));
 // (copied from records.clay)
 
 [T when Entry?(T)]
-overload RegularRecord?(static T) = false;
+overload RegularRecord?(#T) = false;
 
 [T when Entry?(T)]
 overload destroy(a:T)
@@ -117,7 +117,7 @@ overload destroy(a:T)
 [T when Entry?(T)]
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
-    ..for (i in ..staticIntegers(static n))
+    ..for (i in ..staticIntegers(#n))
         fieldRefByIndex(returned, i) <-- fieldRefByIndex(src, i);
 }
 

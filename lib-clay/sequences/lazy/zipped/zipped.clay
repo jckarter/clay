@@ -14,7 +14,7 @@ private record Zipped[A] (
 );
 
 [..S when allValues?(LightweightSequence?, ..S)]
-overload LightweightSequence?(static Zipped[Tuple[..S]]) = true;
+overload LightweightSequence?(#Zipped[Tuple[..S]]) = true;
 
 
 
@@ -74,7 +74,7 @@ private AllStaticSized?(A) {
 }
 
 [A when AllStaticSized?(A)]
-overload StaticSize(static Zipped[A]) =
+overload StaticSize(#Zipped[A]) =
     foldValues(min, ..mapValues(StaticSize, ..Type(..unpackSequences(null(A)^))));
 
 private AllIndexable?(A, I) {

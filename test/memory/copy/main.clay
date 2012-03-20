@@ -1,5 +1,5 @@
 record NonPODInt (x: Int);
-overload RegularRecord?(static NonPODInt) = false;
+overload RegularRecord?(#NonPODInt) = false;
 overload NonPODInt(x: NonPODInt) = NonPODInt(x.x);
 overload moveUnsafe(x: NonPODInt) = NonPODInt(x.x);
 overload resetUnsafe(x: NonPODInt) {}

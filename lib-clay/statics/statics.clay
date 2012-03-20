@@ -8,7 +8,7 @@ public import __primitives__.(Static);
 //
 
 Static?(x) = false;
-[T] overload Static?(static T) = true;
+[T] overload Static?(#T) = true;
 
 
 
@@ -50,7 +50,7 @@ inline overload lesser?(a:Static[A], b:Static[A]) = false;
 //
 
 [A]
-inline unwrapStatic(static A) = A;
+inline unwrapStatic(#A) = A;
 
 
 
@@ -59,7 +59,7 @@ inline unwrapStatic(static A) = A;
 //
 
 [F, ..AA when CallDefined?(F, ..AA)]
-inline overload call(static F, forward ..args:AA) =
+inline overload call(#F, forward ..args:AA) =
     forward ..F(..args);
 
 
@@ -69,5 +69,5 @@ inline overload call(static F, forward ..args:AA) =
 //
 
 [Module, Ident]
-inline overload fieldRef(static Module, static Ident) =
+inline overload fieldRef(#Module, #Ident) =
     forward staticFieldRef(Module, Ident);

@@ -32,9 +32,9 @@ record Header (
 // predicates
 //
 
-[T] overload RegularRecord?(static NamedVector[T]) = false;
+[T] overload RegularRecord?(#NamedVector[T]) = false;
 
-[T] overload ContiguousSequence?(static NamedVector[T]) = true;
+[T] overload ContiguousSequence?(#NamedVector[T]) = true;
 
 
 
@@ -45,7 +45,7 @@ record Header (
 private headerSpace() = alignUp(TypeSize(Header), 16u);
 
 [T]
-private requiredFileSize(static T, capacity) =
+private requiredFileSize(#T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
 [S,T when String?(S)]
@@ -92,7 +92,7 @@ overload destroy(x:NamedVector[T]) {
 //
 
 [T]
-overload Vector?(static NamedVector[T]) = true;
+overload Vector?(#NamedVector[T]) = true;
 
 [T]
 overload vectorData(a:NamedVector[T]) = &(a.data^);

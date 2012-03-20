@@ -23,8 +23,8 @@ record DirentSequence (
     dir : Pointer[DIR],
 );
 
-overload RegularRecord?(static DirentSequence) = false;
-overload BitwiseMovedType?(static DirentSequence) = true;
+overload RegularRecord?(#DirentSequence) = false;
+overload BitwiseMovedType?(#DirentSequence) = true;
 
 [T when CCompatibleString?(T)]
 overload DirentSequence(dir:T) --> returned: DirentSequence {

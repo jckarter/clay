@@ -33,7 +33,7 @@ private CallableWithSignature?(T, In, Out) {
 }
 
 [In,..Out]
-private CodePointerReturnTypes(static CodePointer[In,[..Out]]) = [..Out];
+private CodePointerReturnTypes(#CodePointer[In,[..Out]]) = [..Out];
 
 
 // redefine constructors shadowed by the primary constructor

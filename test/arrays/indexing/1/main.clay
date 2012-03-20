@@ -1,4 +1,4 @@
 main() {
-    var a = array(..integers(static 256));
+    var a = array(..integers(#256));
     println(a[224_uss]);
 }

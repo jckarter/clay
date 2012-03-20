@@ -4,39 +4,39 @@ import cocoa.applicationservices.*;
 
 import cocoa.objc.runtime.(object_getClassName);
 
-overload selector(static #"ncStringWithInt:") = Id, Int;
-overload selector(static #"ncStringWithNumber:") = Id, NSNumber;
-overload selector(static #"initWithNumber:") = Id, NSNumber;
-overload selector(static #"someCGRect") = CGRect;
-overload selector(static #"someCGPoint") = CGPoint;
-overload selector(static #"someCGSize") = CGSize;
+overload selector(#"ncStringWithInt:") = Id, Int;
+overload selector(#"ncStringWithNumber:") = Id, NSNumber;
+overload selector(#"initWithNumber:") = Id, NSNumber;
+overload selector(#"someCGRect") = CGRect;
+overload selector(#"someCGPoint") = CGPoint;
+overload selector(#"someCGSize") = CGSize;
 
 record NumberConvertingString = newClass(NSString,
     InstanceVars([#value, Int]),
     ClassMethods(
-        [#"ncStringWithInt:",
+        ["ncStringWithInt:",
             (class, value) => class.alloc().initWithInt(value).autorelease()
         ],
-        [#"ncStringWithNumber:",
+        ["ncStringWithNumber:",
             (class, value) => class.alloc().initWithNumber(value).autorelease()
         ],
     ),
     InstanceMethods(
-        [#"initWithInt:", (self, value) => {
+        ["initWithInt:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
                 self^.value = value;
             }
             return self;
         }],
-        [#"initWithNumber:", (self, value) => {
+        ["initWithNumber:", (self, value) => {
             self = super(self).init();
             if (not nil?(self)) {
                 self^.value = value.intValue();
             }
             return self;
         }],
-        [#"length", (self) => {
+        ["length", (self) => {
             var length = NSUInteger(0);
             var value = self^.value;
 
@@ -50,7 +50,7 @@ record NumberConvertingString = newClass(NSString,
             }
             return length;
         }],
-        [#"characterAtIndex:", (self, index) => {
+        ["characterAtIndex:", (self, index) => {
             var value = self^.value;
             var length = self.length();
 
@@ -70,7 +70,7 @@ record NumberConvertingString = newClass(NSString,
         }],
 
         // XXX struct returns are currently broken because of a lack of LLVM support
-        // [#"someCGRect", self => CGRect(
+        // ["someCGRect", self => CGRect(
         //     CGPoint(
         //         CGFloat(10.0),
         //         CGFloat(20.0),
@@ -80,11 +80,11 @@ record NumberConvertingString = newClass(NSString,
         //         CGFloat(40.0),
         //     ),
         // )],
-        // [#"someCGPoint", self => CGPoint(
+        // ["someCGPoint", self => CGPoint(
         //     CGFloat(50.0),
         //     CGFloat(60.0),
         // )],
-        // [#"someCGSize", self => CGSize(
+        // ["someCGSize", self => CGSize(
         //     CGFloat(70.0),
         //     CGFloat(80.0),
         // )],
@@ -98,9 +98,9 @@ main() {
     var nStr2 = NumberConvertingString.ncStringWithNumber(NSNumber.numberWithInt(451));
     var str = NSString.stringWithString(nStr1);
 
-    var formattedNStr1 = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), nStr1);
-    var formattedNStr2 = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), nStr2);
-    var formattedStr = NSString.stringWithFormat(NSSTR(#"%@ didn't start the fire"), str);
+    var formattedNStr1 = NSString.stringWithFormat(NSSTR("%@ didn't start the fire"), nStr1);
+    var formattedNStr2 = NSString.stringWithFormat(NSSTR("%@ didn't start the fire"), nStr2);
+    var formattedStr = NSString.stringWithFormat(NSSTR("%@ didn't start the fire"), str);
 
     println(CStringRef(formattedNStr1.UTF8String()));
     println(CStringRef(formattedNStr2.UTF8String()));

@@ -44,11 +44,11 @@ record DequeCoordinate[T] (
     dec(i.current);
 }
 
-[T, I when Integer?(I)] overload updateAssign(static add, ref i: DequeCoordinate[T], n: I) {
+[T, I when Integer?(I)] overload updateAssign(#add, ref i: DequeCoordinate[T], n: I) {
     i += PtrInt(n);
 }
 
-[T] overload updateAssign(static add, ref i: DequeCoordinate[T], n: PtrInt) {
+[T] overload updateAssign(#add, ref i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
     if (offset >= 0 and offset < DequeBufferSSize(T))
         i.current += n;
@@ -69,7 +69,7 @@ record DequeCoordinate[T] (
     j += n;
 }
 
-[T, I when Integer?(I)] overload updateAssign(static subtract, ref i: DequeCoordinate[T], n: I) {
+[T, I when Integer?(I)] overload updateAssign(#subtract, ref i: DequeCoordinate[T], n: I) {
     i += (-PtrInt(n));
 }
 
@@ -107,11 +107,11 @@ record Deque[T] (
     = coord.node >= d.map and coord.node < d.map + d.mapSize
       and coord >= d.begin and coord <= d.end;
 
-[T] overload RegularRecord?(static Deque[T]) = false;
+[T] overload RegularRecord?(#Deque[T]) = false;
 
-[T] overload SequenceContainer?(static Deque[T]) = true;
+[T] overload SequenceContainer?(#Deque[T]) = true;
 
-[T] overload UnderlyingContainerConstructor(static Deque[T]) = Deque;
+[T] overload UnderlyingContainerConstructor(#Deque[T]) = Deque;
 
 [T] overload Deque[T]() --> deque: Deque[T] {
     initializeDequeMap(deque, SizeT(0));
@@ -192,7 +192,7 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
     }
 }
 
-[T] overload BitwiseMovedType?(static Deque[T]) = true;
+[T] overload BitwiseMovedType?(#Deque[T]) = true;
 
 [T] overload resetUnsafe(d: Deque[T]) {
     d.map <-- Pointer[Pointer[T]](0);

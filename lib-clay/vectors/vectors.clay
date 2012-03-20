@@ -19,13 +19,13 @@ record Vector[T] (
 //
 
 [T]
-overload RegularRecord?(static Vector[T]) = false;
+overload RegularRecord?(#Vector[T]) = false;
 
 [T]
-overload ContiguousSequence?(static Vector[T]) = true;
+overload ContiguousSequence?(#Vector[T]) = true;
 
 [T]
-overload SequenceContainer?(static Vector[T]) = true;
+overload SequenceContainer?(#Vector[T]) = true;
 
 
 
@@ -70,7 +70,7 @@ alias overload Vector[T](..elements:A) {
 // moveUnsafe, resetUnsafe, assign, destroy
 //
 
-[T] overload BitwiseMovedType?(static Vector[T]) = true;
+[T] overload BitwiseMovedType?(#Vector[T]) = true;
 
 [T]
 inline overload resetUnsafe(a:Vector[T]) {
@@ -96,7 +96,7 @@ overload destroy(a:Vector[T]) {
 //
 
 [T]
-overload Vector?(static Vector[T]) = true;
+overload Vector?(#Vector[T]) = true;
 
 [T]
 inline overload vectorData(a:Vector[T]) = a.data;

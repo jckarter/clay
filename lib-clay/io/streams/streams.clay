@@ -17,13 +17,13 @@ define flush;
 
 
 [T]
-ByteLike?(static T) = ByteSizedInteger?(T) or (T == Char);
+ByteLike?(#T) = ByteSizedInteger?(T) or (T == Char);
 
 [T]
-ByteVector?(static T) = Vector?(T) and ByteLike?(SequenceElementType(T));
+ByteVector?(#T) = Vector?(T) and ByteLike?(SequenceElementType(T));
 
 [T]
-ByteBuffer?(static T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
+ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
 
 
 //

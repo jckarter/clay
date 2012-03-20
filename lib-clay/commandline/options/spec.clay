@@ -33,7 +33,7 @@ overload OptionSpec(part : S, ..parts) : OptionSpec{
 alias OptionSpecs = Vector[OptionSpec];
 
 [T]
-private SpecPart?(static T) = String?(T) or (T == Char) or (T == Flags);
+private SpecPart?(#T) = String?(T) or (T == Char) or (T == Flags);
 
 private define addSpecPart;
 

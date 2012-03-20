@@ -1,7 +1,7 @@
 import test.*;
 
 record IrregularRecord ();
-overload RegularRecord?(static IrregularRecord) = false;
+overload RegularRecord?(#IrregularRecord) = false;
 
 record PODRecord (x: Int, y: Char);
 record NonPODRecord (x: Int, y: IrregularRecord);

@@ -21,7 +21,7 @@ define vectorRequestCapacity;
 //
 
 [V when Vector?(V)]
-overload ContiguousSequence?(static V) = true;
+overload ContiguousSequence?(#V) = true;
 
 
 

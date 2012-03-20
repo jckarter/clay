@@ -5,14 +5,14 @@
 //
 
 Union?(x) = false;
-[..T] overload Union?(static Union[..T]) = true;
+[..T] overload Union?(#Union[..T]) = true;
 
 
 //
 // UnionMembers
 //
 
-[..T] UnionMembers(static Union[..T]) = ..T;
+[..T] UnionMembers(#Union[..T]) = ..T;
 
 
 
@@ -26,7 +26,7 @@ inline overload Union[..T]() --> returned:Union[..T] {
 
 [..T,U when inValues?(U,..T)]
 inline overload Union[..T](x:U) --> returned:Union[..T] {
-    alias i = static valueIndex(U, ..UnionMembers(Union[..T]));
+    alias i = #valueIndex(U, ..UnionMembers(Union[..T]));
     staticIndex(returned, i) <-- x;
 }
 
@@ -37,7 +37,7 @@ inline overload Union[..T](x:U) --> returned:Union[..T] {
 //
 
 [..T, i]
-inline overload staticIndex(x:Union[..T], static i) {
-    alias T = nthValue(static SizeT(i), ..UnionMembers(Union[..T]));
+inline overload staticIndex(x:Union[..T], #i) {
+    alias T = nthValue(#SizeT(i), ..UnionMembers(Union[..T]));
     return ref Pointer[T](&x)^;
 }

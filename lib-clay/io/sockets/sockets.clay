@@ -155,16 +155,16 @@ Socket?(X) = false;
 record ListenSocket[Addr] (raw: platform.RawSocket);
 record StreamSocket (raw: platform.RawSocket);
 
-[Addr] overload Socket?(static ListenSocket[Addr]) = true;
-overload Socket?(static StreamSocket) = true;
+[Addr] overload Socket?(#ListenSocket[Addr]) = true;
+overload Socket?(#StreamSocket) = true;
 
-[S when Socket?(S)] overload RegularRecord?(static S) = false;
+[S when Socket?(S)] overload RegularRecord?(#S) = false;
 
 [S when Socket?(S)]
 overload destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
 
 [S when Socket?(S)]
-overload BitwiseMovedType?(static S) = true;
+overload BitwiseMovedType?(#S) = true;
 
 [S when Socket?(S)]
 overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
@@ -234,7 +234,7 @@ accept(listener: ListenSocket[T])
 //
 [T]
 overload StreamSocket(listener: ListenSocket[T])
-    = takeValues(static 1, ..accept(listener));
+    = takeValues(#1, ..accept(listener));
 
 [T when StreamSocketAddress?(T)]
 overload StreamSocket(addr: T) --> socket: StreamSocket {

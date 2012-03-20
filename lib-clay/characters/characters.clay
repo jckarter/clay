@@ -7,8 +7,8 @@ inline overload __operators__.charLiteral(code) = Char(code);
 record UniChar (code:UInt32);
 
 Character?(x) = false;
-overload Character?(static Char) = true;
-overload Character?(static UniChar) = true;
+overload Character?(#Char) = true;
+overload Character?(#UniChar) = true;
 
 [I when Integer?(I)]
 inline overload Char(c:I) --> returned:Char {

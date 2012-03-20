@@ -8,44 +8,44 @@ import identifiers.(IdentifierChars);
 // numeric type predicates
 //
 
-[T] SignedInteger?(static T) = false;
-overload SignedInteger?(static Int8) = true;
-overload SignedInteger?(static Int16) = true;
-overload SignedInteger?(static Int32) = true;
-overload SignedInteger?(static Int64) = true;
-overload SignedInteger?(static Int128) = true;
+[T] SignedInteger?(#T) = false;
+overload SignedInteger?(#Int8) = true;
+overload SignedInteger?(#Int16) = true;
+overload SignedInteger?(#Int32) = true;
+overload SignedInteger?(#Int64) = true;
+overload SignedInteger?(#Int128) = true;
 
 
-[T] UnsignedInteger?(static T) = false;
-overload UnsignedInteger?(static UInt8) = true;
-overload UnsignedInteger?(static UInt16) = true;
-overload UnsignedInteger?(static UInt32) = true;
-overload UnsignedInteger?(static UInt64) = true;
-overload UnsignedInteger?(static UInt128) = true;
+[T] UnsignedInteger?(#T) = false;
+overload UnsignedInteger?(#UInt8) = true;
+overload UnsignedInteger?(#UInt16) = true;
+overload UnsignedInteger?(#UInt32) = true;
+overload UnsignedInteger?(#UInt64) = true;
+overload UnsignedInteger?(#UInt128) = true;
 
 
-[T] Integer?(static T) = SignedInteger?(T) or UnsignedInteger?(T);
-[A, B] overload Integer?(static A, static B) = Integer?(A) and Integer?(B);
+[T] Integer?(#T) = SignedInteger?(T) or UnsignedInteger?(T);
+[A, B] overload Integer?(#A, #B) = Integer?(A) and Integer?(B);
 
 
-[T] ByteSizedInteger?(static T) = false;
-overload ByteSizedInteger?(static Int8) = true;
-overload ByteSizedInteger?(static UInt8) = true;
+[T] ByteSizedInteger?(#T) = false;
+overload ByteSizedInteger?(#Int8) = true;
+overload ByteSizedInteger?(#UInt8) = true;
 
-[T] Float?(static T) = false;
-overload Float?(static Float32) = true;
-overload Float?(static Float64) = true;
-overload Float?(static Float80) = true;
-[A, B] overload Float?(static A, static B) = Float?(A) and Float?(B);
+[T] Float?(#T) = false;
+overload Float?(#Float32) = true;
+overload Float?(#Float64) = true;
+overload Float?(#Float80) = true;
+[A, B] overload Float?(#A, #B) = Float?(A) and Float?(B);
 
-[T] Imaginary?(static T) = false;
-overload Imaginary?(static Imag32) = true;
-overload Imaginary?(static Imag64) = true;
-overload Imaginary?(static Imag80) = true;
-[A, B] overload Imaginary?(static A, static B) = Imaginary?(A) and Imaginary?(B);
+[T] Imaginary?(#T) = false;
+overload Imaginary?(#Imag32) = true;
+overload Imaginary?(#Imag64) = true;
+overload Imaginary?(#Imag80) = true;
+[A, B] overload Imaginary?(#A, #B) = Imaginary?(A) and Imaginary?(B);
 
-[T] Numeric?(static T) = Integer?(T) or Float?(T) or Imaginary?(T);
-[A, B] overload Numeric?(static A, static B) = Numeric?(A) and Numeric?(B);
+[T] Numeric?(#T) = Integer?(T) or Float?(T) or Imaginary?(T);
+[A, B] overload Numeric?(#A, #B) = Numeric?(A) and Numeric?(B);
 
 
 
@@ -54,7 +54,7 @@ overload Imaginary?(static Imag80) = true;
 //
 
 [A,B when Integer?(A,B)]
-private BiggerInteger?(static A, static B) =
+private BiggerInteger?(#A, #B) =
     (TypeSize(A) > TypeSize(B)) or ((TypeSize(A) == TypeSize(B)) and
                                     UnsignedInteger?(A) and
                                     SignedInteger?(B));
@@ -62,28 +62,28 @@ private BiggerInteger?(static A, static B) =
 private define BiggerFloat?;
 
 [A,B when Float?(A,B) or Imaginary?(A,B)]
-overload BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
+overload BiggerFloat?(#A, #B) = TypeSize(A) > TypeSize(B);
 
 [A,B when (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
-overload BiggerFloat?(static A, static B) = TypeSize(A) > TypeSize(B);
+overload BiggerFloat?(#A, #B) = TypeSize(A) > TypeSize(B);
 
 
 private define BiggerNumeric?;
 
 [A,B when (Float?(A) or Imaginary?(A)) and Integer?(B)]
-overload BiggerNumeric?(static A, static B) = true;
+overload BiggerNumeric?(#A, #B) = true;
 
 [A,B when Integer?(A) and (Float?(B) or Imaginary?(B))]
-overload BiggerNumeric?(static A, static B) = false;
+overload BiggerNumeric?(#A, #B) = false;
 
 [A,B when Integer?(A,B)]
-overload BiggerNumeric?(static A, static B) = BiggerInteger?(A,B);
+overload BiggerNumeric?(#A, #B) = BiggerInteger?(A,B);
 
 [A,B when Float?(A,B) or Imaginary?(A,B)]
-overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
+overload BiggerNumeric?(#A, #B) = BiggerFloat?(A,B);
 
 [A,B when (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
-overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
+overload BiggerNumeric?(#A, #B) = BiggerFloat?(A,B);
 
 
 
@@ -95,28 +95,28 @@ overload BiggerNumeric?(static A, static B) = BiggerFloat?(A,B);
 define toBiggerNumericType;
 
 [A when Numeric?(A)]
-inline overload toBiggerNumericType(static A, static A, v) = v;
+inline overload toBiggerNumericType(#A, #A, v) = v;
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload toBiggerNumericType(static A, static B, v) = numericConvert(A,v);
+inline overload toBiggerNumericType(#A, #B, v) = numericConvert(A,v);
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
-inline overload toBiggerNumericType(static A, static B, v) = numericConvert(B,v);
+inline overload toBiggerNumericType(#A, #B, v) = numericConvert(B,v);
 
 define wrapToBiggerNumericType;
 
 [A when Numeric?(A)]
-inline overload wrapToBiggerNumericType(static A, static A, v) = v;
+inline overload wrapToBiggerNumericType(#A, #A, v) = v;
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(A, v);
+inline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(A, v);
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
-inline overload wrapToBiggerNumericType(static A, static B, v) = wrapCast(B, v);
+inline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(B, v);
 
-ImagBaseType(static Imag32) = Float;
-overload ImagBaseType(static Imag64) = Double;
-overload ImagBaseType(static Imag80) = LongDouble;
+ImagBaseType(#Imag32) = Float;
+overload ImagBaseType(#Imag64) = Double;
+overload ImagBaseType(#Imag80) = LongDouble;
 
 
 
@@ -436,18 +436,18 @@ inline overload Imag80(s:S) = parseImag80(s);
 // octal()
 
 private define octalDigit;
-overload octalDigit(static #"0") = 0;
-overload octalDigit(static #"1") = 1;
-overload octalDigit(static #"2") = 2;
-overload octalDigit(static #"3") = 3;
-overload octalDigit(static #"4") = 4;
-overload octalDigit(static #"5") = 5;
-overload octalDigit(static #"6") = 6;
-overload octalDigit(static #"7") = 7;
+overload octalDigit("0") = 0;
+overload octalDigit("1") = 1;
+overload octalDigit("2") = 2;
+overload octalDigit("3") = 3;
+overload octalDigit("4") = 4;
+overload octalDigit("5") = 5;
+overload octalDigit("6") = 6;
+overload octalDigit("7") = 7;
 //
 [T,I when Integer?(T) and Identifier?(I)]
-private _octal(static T, static I)
-    = static foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
+private _octal(#T, #I)
+    = #foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
 
 define octal;
 overload octal(T, I) = unwrapStatic(_octal(T, I));
@@ -527,4 +527,4 @@ inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
 inline wrapMinus(a:A) : A = numericNegate(a, b);
 
 [A, B when Integer?(A) and Numeric?(B)]
-inline wrapCast(static A, b:B) : A = numericConvert(A, b);
+inline wrapCast(#A, b:B) : A = numericConvert(A, b);
