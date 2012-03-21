@@ -77,7 +77,7 @@ import math.*;
 //}
 
 
-[T,U | Float?(T,U)]
+[T,U when Float?(T,U)]
 overload hypot(m:T,n:U) --> r:T {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);

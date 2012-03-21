@@ -31,11 +31,11 @@ private record FileData (
 // constructors
 //
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload File(path:S, mode:OpenMode) =
     File(new(FileData(RawFile(path, mode))));
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload File(path:S) = File(new(FileData(RawFile(path))));
 
 overload File(rvalue f:RawFile) =

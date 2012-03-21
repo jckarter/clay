@@ -42,28 +42,28 @@ __llvm__{
     ret i8* null
 }
 
-[T | Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerSubtractWithOverflow(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerMultiplyWithOverflow(x:T, y:T) : T, Bool;
-[T | Integer?(T)] define integerQuotientWithOverflow(x:T, y:T) : T, Bool;
+[T when Integer?(T)] define integerAddWithOverflow(x:T, y:T) : T, Bool;
+[T when Integer?(T)] define integerSubtractWithOverflow(x:T, y:T) : T, Bool;
+[T when Integer?(T)] define integerMultiplyWithOverflow(x:T, y:T) : T, Bool;
+[T when Integer?(T)] define integerQuotientWithOverflow(x:T, y:T) : T, Bool;
 
-[T | SignedInteger?(T) and T != Int8 and T != Int128]
+[T when SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("sadd", x, y);
-[T | SignedInteger?(T) and T != Int8 and T != Int128]
+[T when SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("ssub", x, y);
-[T | SignedInteger?(T) and T != Int8 and T != Int128]
+[T when SignedInteger?(T) and T != Int8 and T != Int128]
 inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("smul", x, y);
 
-[T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
+[T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("uadd", x, y);
-[T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
+[T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("usub", x, y);
-[T | UnsignedInteger?(T) and T != UInt8 and T != UInt128]
+[T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
 inline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("umul", x, y);
 
@@ -120,26 +120,26 @@ inline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Boo
 
 // division, remainder, negation
 
-[T | SignedInteger?(T)]
+[T when SignedInteger?(T)]
 inline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
     = integerQuotient(x, y), y == 0 or (x == Least(T) and y == -1);
 
-[T | UnsignedInteger?(T)]
+[T when UnsignedInteger?(T)]
 inline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
     = integerQuotient(x, y), y == 0;
 
-[T | Integer?(T)]
+[T when Integer?(T)]
 inline integerRemainderWithOverflow(x:T, y:T) : T, Bool
     = integerRemainder(x, y), y == 0;
 
-[T | SignedInteger?(T)]
+[T when SignedInteger?(T)]
 inline integerNegateWithOverflow(x:T) : T, Bool
     = numericNegate(x), x == Least(T);
 
 // left shift
 
 private define shiftOverflow?;
-[T | SignedInteger?(T)]
+[T when SignedInteger?(T)]
 inline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
     var nonSignBits = bits; dec(nonSignBits);
     if (y > nonSignBits) return true;
@@ -147,14 +147,14 @@ inline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
     var head = integerShiftRight(testx, nonSignBits - y);
     return head != numericConvert(T, 0);
 }
-[T | UnsignedInteger?(T)]
+[T when UnsignedInteger?(T)]
 inline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
     if (y > bits) return true;
     var head = integerShiftRight(x, bits - y);
     return head != numericConvert(T, 0);
 }
 
-[T | Integer?(T)]
+[T when Integer?(T)]
 inline integerShiftLeftWithOverflow(x:T, y:T) : T, Bool {
     if (y < 0)
         return x, true;
@@ -165,42 +165,42 @@ inline integerShiftLeftWithOverflow(x:T, y:T) : T, Bool {
 
 // integer conversion
 
-[A, B | Integer?(A) and Numeric?(B)]
+[A, B when Integer?(A) and Numeric?(B)]
 define integerConvertWithOverflow(#A, b:B) : A, Bool;
 
-[A, B | SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+[A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
-[A, B | SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+[A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < Least(A) or b > Greatest(A);
 
-[A, B | SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) > TypeSize(B)]
+[A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) > TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
-[A, B | SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) <= TypeSize(B)]
+[A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) <= TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > B(Greatest(A));
 
-[A, B | UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+[A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0;
 
-[A, B | UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+[A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0 or b > Greatest(A);
 
-[A, B | UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
+[A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
-[A, B | UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) < TypeSize(B)]
+[A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) < TypeSize(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > Greatest(A);
 
-[A, B | Integer?(A) and Float?(B)]
+[A, B when Integer?(A) and Float?(B)]
 inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < B(Least(A)) or b > B(Greatest(A));
 
@@ -213,29 +213,29 @@ private inline checked(checkedFn, ..args) {
     return out;
 }
 
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerAddChecked(a:A, b:A) : A
     = checked(integerAddWithOverflow, a, b);
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerSubtractChecked(a:A, b:A) : A
     = checked(integerSubtractWithOverflow, a, b);
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
     = checked(integerMultiplyWithOverflow, a, b);
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerQuotientChecked(a:A, b:A) : A
     = checked(integerQuotientWithOverflow, a, b);
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerRemainderChecked(a:A, b:A) : A
     = checked(integerRemainderWithOverflow, a, b);
-[A | Integer?(A)]
+[A when Integer?(A)]
 inline overload __operators__.doIntegerShiftLeftChecked(a:A, b:A) : A
     = checked(integerShiftLeftWithOverflow, a, b);
 
-[A | SignedInteger?(A)]
+[A when SignedInteger?(A)]
 inline overload __operators__.doIntegerNegateChecked(a:A) : A
     = checked(integerNegateWithOverflow, a);
 
-[A, B | Integer?(A) and Numeric?(B)]
+[A, B when Integer?(A) and Numeric?(B)]
 inline overload __operators__.doIntegerConvertChecked(#A, b:B) : A
     = checked(integerConvertWithOverflow, A, b);

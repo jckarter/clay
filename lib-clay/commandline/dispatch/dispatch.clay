@@ -32,47 +32,47 @@ private usage(..commandTuples) {
 }
 
 
-[fn | CallDefined?(fn, Vector[String])]
+[fn when CallDefined?(fn, Vector[String])]
 private commandName(#fn) = StaticName(fn);
 
-[fn, ..Description | CallDefined?(fn, Vector[String])]
+[fn, ..Description when CallDefined?(fn, Vector[String])]
 overload commandName(commandTuple: Tuple[Static[fn], ..Description])
     = StaticName(commandTuple.0);
 
 [
     Name, Callable, ..Description
-    | String?(Name)
+    when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
 overload commandName(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.0;
 
-[fn | CallDefined?(fn, Vector[String])]
+[fn when CallDefined?(fn, Vector[String])]
 private commandFunction(#fn) = fn;
 
-[fn, ..Description | CallDefined?(fn, Vector[String])]
+[fn, ..Description when CallDefined?(fn, Vector[String])]
 overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
     = commandTuple.0;
 
 [
     Name, Callable, ..Description
-    | String?(Name)
+    when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
 overload commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.1;
 
-[fn | CallDefined?(fn, Vector[String])]
+[fn when CallDefined?(fn, Vector[String])]
 private commandDescription(#fn)
     = ;
 
-[fn, ..Description | CallDefined?(fn, Vector[String])]
+[fn, ..Description when CallDefined?(fn, Vector[String])]
 overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
     = ..dropValues(#1, ..unpack(commandTuple));
 
 [
     Name, Callable, ..Description
-    | String?(Name)
+    when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
 overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
@@ -81,11 +81,11 @@ overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
 private commandTypeReturnCount(T)
     = countValues(..Type(..commandFunction(typeToRValue(T))(Vector[String]())));
 
-[CommandTuple | commandTypeReturnCount(CommandTuple) == 1]
+[CommandTuple when commandTypeReturnCount(CommandTuple) == 1]
 private invokeCommand(commandTuple: CommandTuple, args)
     = commandFunction(commandTuple)(args);
 
-[CommandTuple | commandTypeReturnCount(CommandTuple) == 0]
+[CommandTuple when commandTypeReturnCount(CommandTuple) == 0]
 overload invokeCommand(commandTuple: CommandTuple, args) {
     commandFunction(commandTuple)(args);
     return 0;

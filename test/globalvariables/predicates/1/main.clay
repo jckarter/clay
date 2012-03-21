@@ -1,6 +1,6 @@
 [T] var anyTwo[T] = T(2);
 
-[T | Integer?(T)]
+[T when Integer?(T)]
 var intTwo[T] = T(2);
 
 main() {

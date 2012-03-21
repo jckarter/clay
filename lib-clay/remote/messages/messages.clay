@@ -58,7 +58,7 @@ private var remoteCode[Protocol, ..Args] = createRemoteCode(Protocol, ..Args);
 //
 // client interface
 //
-[Protocol, ..Args | CallDefined?(Protocol, ..Args)]
+[Protocol, ..Args when CallDefined?(Protocol, ..Args)]
 remoteMessage(#Protocol, outstream, forward ..args: Args) {
     var mArgs = marshal(..args);
     var mArgsSize = MarshalSize(size(mArgs));
@@ -68,7 +68,7 @@ remoteMessage(#Protocol, outstream, forward ..args: Args) {
     flush(outstream);
 }
 
-[..Args | CallDefined?(DefaultProtocol, ..Args)]
+[..Args when CallDefined?(DefaultProtocol, ..Args)]
 overload remoteMessage(outstream, forward ..args: Args) {
     remoteMessage(DefaultProtocol, outstream, ..args);
 }

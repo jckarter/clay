@@ -21,7 +21,7 @@ inline wrapAsExternal(impl_fn, #inCount, exp:ExternalException, ..inoutp) {
 
 [T] private unpointer(#Pointer[T]) = T;
 
-[..IO, ..T |
+[..IO, ..T when
     [..T] == [..mapValues(unpointer, ..takeValues(#countValues(..T), ..IO))]
 ]
 inline callExternal(

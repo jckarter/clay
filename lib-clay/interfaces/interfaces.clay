@@ -11,7 +11,7 @@ private VtblSlotOutputTypes(memFun) = ..unpack(memFun.2);
 
 InterfaceMember?(I, fn) = false;
 
-[I, fn | InterfaceType?(I)]
+[I, fn when InterfaceType?(I)]
 overload InterfaceMember?(#I, #fn)
     = inValues?(fn, ..mapValues(VtblSlotFunction, ..InterfaceMembers(I)));
 
@@ -35,17 +35,17 @@ interfaceType(..memberFunctions) = recordWithProperties(
     ["this", Opaque],
 );
 
-[I | InterfaceType?(I)]
+[I when InterfaceType?(I)]
 overload RegularRecord?(#I) = false;
 
-[I | InterfaceType?(I)]
+[I when InterfaceType?(I)]
 overload destroy(i: I) { invoke(destroy, &i); }
 
 private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
     makeCodePointer(VtblSlotFunction(memFun), T, ..VtblSlotInputTypes(memFun))
 );
 
-[I, T | InterfaceType?(I)]
+[I, T when InterfaceType?(I)]
 private makeInterfaceVtbl(#I, #T) = InterfaceVtbl[..InterfaceMembers(I)](
     Tuple(
         ..mapValues(slot => vtblSlotMember(T, slot), ..InterfaceMembers(I))
@@ -56,7 +56,7 @@ private var interfaceVtbl[I, T] = makeInterfaceVtbl(I, T);
 
 BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 
-[I, T | InterfaceType?(I)]
+[I, T when InterfaceType?(I)]
 alias allocateBox(#I, this: T) : Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
     ptr^.vtbl = &interfaceVtbl[I, T];
@@ -78,6 +78,6 @@ private vtblSlot(vtbl: InterfaceVtbl[..memberFunctions], #fn)
         #valueIndex(fn, ..mapValues(VtblSlotFunction, ..memberFunctions))
     );
 
-[I, fn | InterfaceMember?(I, fn)]
+[I, fn when InterfaceMember?(I, fn)]
 invoke(#fn, i: Pointer[I], forward ..args)
     = ..vtblSlot(i^.vtbl^, fn)(i^.this, ..args);

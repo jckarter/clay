@@ -21,7 +21,7 @@ inline overload size(a:Array[T,n]) = SizeT(n);
 [T,n]
 inline overload StaticSize(#Array[T,n]) = SizeT(n);
 
-[T,n,I | Integer?(I)]
+[T,n,I when Integer?(I)]
 inline overload index(a:Array[T,n], i:I) {
     assert["boundsChecks"](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
     return ref arrayRef(a, SizeT(i));
@@ -52,7 +52,7 @@ inline overload back(a:Array[T,n]) = ref a[n-1];
 // basic constructor
 //
 
-[T,n,..A | (countValues(..A) == n) and equalValues?(T, ..A)]
+[T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
 alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
     ..arrayElements(returned) <-- ..args;
 }
@@ -63,7 +63,7 @@ alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
 // constructor from sequences
 //
 
-[T, n, S | Sequence?(S)
+[T, n, S when Sequence?(S)
            and (SequenceElementType(S) == T)]
 overload Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
@@ -83,7 +83,7 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
     }
 }
 
-[T, n, S | SequenceContainer?(S)
+[T, n, S when SequenceContainer?(S)
            and (SequenceElementType(S) == T)]
 overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
@@ -119,13 +119,13 @@ overload Array[T,n](elt: T) --> returned:Array[T,n] {
     }
 }
 
-[n, S | Sequence?(S)]
+[n, S when Sequence?(S)]
 overload Array(#n, forward s:S) {
     alias T = SequenceElementType(S);
     return Array[T,n](s);
 }
 
-[n, S | MultiValuedSequence?(S)]
+[n, S when MultiValuedSequence?(S)]
 overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
 
 
@@ -134,7 +134,7 @@ overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
 // constructor from StaticSizedSequence
 //
 
-[T,n,S | StaticSizedSequence?(S)
+[T,n,S when StaticSizedSequence?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
 overload Array[T,n](s:S) --> returned:Array[T,n] {
@@ -153,7 +153,7 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
     }
 }
 
-[T,n,S | StaticSizedSequence?(S)
+[T,n,S when StaticSizedSequence?(S)
          and SequenceContainer?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
@@ -172,14 +172,14 @@ overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     }
 }
 
-[S | StaticSizedSequence?(S)]
+[S when StaticSizedSequence?(S)]
 alias overload Array(s:S) {
     alias T = SequenceElementType(S);
     alias n = #Int(StaticSize(S));
     return Array[T,n](s);
 }
 
-[S | StaticSizedSequence?(S) and MultiValuedSequence?(S)]
+[S when StaticSizedSequence?(S) and MultiValuedSequence?(S)]
 alias overload Array(s:S) = Array(mapped(Tuple, s));
 
 
@@ -194,22 +194,22 @@ overload Array[T,n]() --> returned:Array[T,n] {
     initializeMemory(begin(returned), end(returned));
 }
 
-[T,n | not BitwiseCopiedType?(T)]
+[T,n when not BitwiseCopiedType?(T)]
 overload Array[T,n](src:Array[T,n]) --> returned:Array[T,n] {
     copyNonoverlappingMemory(begin(returned), begin(src), end(src));
 }
 
-[T,n | not BitwiseMovedType?(T)]
+[T,n when not BitwiseMovedType?(T)]
 overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
     moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
 }
 
-[T,n | not NotResetType?(T)]
+[T,n when not NotResetType?(T)]
 overload resetUnsafe(a:Array[T,n]) {
     resetMemoryUnsafe(begin(a), end(a));
 }
 
-[T,n | not NotDestroyedType?(T)]
+[T,n when not NotDestroyedType?(T)]
 overload destroy(a:Array[T,n]) {
     destroyMemory(begin(a), end(a));
 }
@@ -238,12 +238,12 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
 // array - type inferring constructor
 //
 
-[..A | countValues(..A) > 0 and equalValues?(..A)]
+[..A when countValues(..A) > 0 and equalValues?(..A)]
 alias array(..args:A) {
     return Array[takeValues(#1, ..A), countValues(..A)](..args);
 }
 
-[..SS | countValues(..SS) > 0 and AllStringLiterals?(..SS)]
+[..SS when countValues(..SS) > 0 and AllStringLiterals?(..SS)]
 alias overload array(..strings:SS) {
     return array(..mapValues(StringLiteralRef, ..strings));
 }
@@ -262,12 +262,12 @@ integerArray(#n) = array(..integers(#n));
 // array assignment
 //
 
-[T,U,n | not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
+[T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
 overload assign(ref left: Array[T,n], right: Array[U, n]) {
     assignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
-[T,U,n | not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
+[T,U,n when not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
 overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) {
     moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
 }

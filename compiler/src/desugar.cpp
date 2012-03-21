@@ -46,50 +46,11 @@ ExprPtr lookupCallable(int op) {
     case NOT :
         callable = primitive_expr_boolNot();
         break;
-    case ADD :
-        callable = operator_expr_add();
-        break;
-    case SUBTRACT :
-        callable = operator_expr_subtract();
-        break;
-    case MULTIPLY :
-        callable = operator_expr_multiply();
-        break;
-    case DIVIDE :
-        callable = operator_expr_divide();
-        break;
-    case REMAINDER :
-        callable = operator_expr_remainder();
-        break;
-    case CAT :
-        callable = operator_expr_cat();
-        break;
-    case QUOTIENT :
-        callable = operator_expr_quotient();
+    case OPERATOR :
+        callable = operator_expr_operatorCall();
         break;
     case IF_EXPR :
         callable = operator_expr_ifExpression();
-        break;
-    case EQUALS :
-        callable = operator_expr_equalsP();
-        break;
-    case NOT_EQUALS :
-        callable = operator_expr_notEqualsP();
-        break;
-    case COMPARE :
-        callable = operator_expr_compareP();
-        break;
-    case LESSER :
-        callable = operator_expr_lesserP();
-        break;
-    case LESSER_EQUALS :
-        callable = operator_expr_lesserEqualsP();
-        break;
-    case GREATER :
-        callable = operator_expr_greaterP();
-        break;
-    case GREATER_EQUALS :
-        callable = operator_expr_greaterEqualsP();
         break;
     default :
         assert(false);
@@ -98,16 +59,15 @@ ExprPtr lookupCallable(int op) {
 }
 
 ExprPtr desugarVariadicOp(VariadicOpPtr x) {
-    ExprPtr callable = lookupCallable(x->op.front());
+    ExprPtr callable = lookupCallable(x->op);
     CallPtr call = new Call(callable, new ExprList());
-    if(x->op.size() > 1) {
+    if (x->op == OPERATOR) {
         call->parenArgs->add(x->exprs->exprs.front());
-        for (int i = 1; i < x->exprs->exprs.size(); ++i) {
-            if(i < x->op.size())
-                call->parenArgs->add(lookupCallable(x->op[i]));
-            call->parenArgs->add(x->exprs->exprs[i]);
+        for (int i = 0; i < x->ops.size(); ++i) {
+            call->parenArgs->add(new NameRef(new Identifier(x->ops[i])));
+            call->parenArgs->add(x->exprs->exprs[i+1]);
         }
-    } 
+    }
     else {
         call->parenArgs->add(x->exprs);  
     }
@@ -115,21 +75,16 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     return call.ptr();
 }
 
-ExprPtr updateOperatorExpr(int op) {
-    switch (op) {
-    case UPDATE_ADD : return operator_expr_add();
-    case UPDATE_SUBTRACT : return operator_expr_subtract();
-    case UPDATE_MULTIPLY : return operator_expr_multiply();
-    case UPDATE_DIVIDE : return operator_expr_divide();
-    case UPDATE_QUOTIENT : return operator_expr_quotient();
-    case UPDATE_REMAINDER : return operator_expr_remainder();
-    case UPDATE_CAT : return operator_expr_cat();
-    default :
-        assert(false);
-        return NULL;
+ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x) {
+    ExprListPtr v = new ExprList();
+    for (int i = 1; i < x->exprs->exprs.size(); ++i) {
+        v->add(x->exprs->exprs[i]);
+        if(i < x->exprs->exprs.size()-1)
+            v->add(new NameRef(new Identifier(x->ops[i])));
+        
     }
+    return v;
 }
-
 
 static vector<IdentifierPtr> identV(IdentifierPtr x) {
     vector<IdentifierPtr> v;

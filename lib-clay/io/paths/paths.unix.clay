@@ -61,7 +61,7 @@ pathComponents(path) {
 
 define joinPath;
 
-[..S | allValues?(String?, ..S)]
+[..S when allValues?(String?, ..S)]
 overload joinPath(..parts:S) {
     var result = String();
     ..for (part in parts)
@@ -70,7 +70,7 @@ overload joinPath(..parts:S) {
     return move(result);
 }
 
-[A | String?(SequenceElementType(A))]
+[A when String?(SequenceElementType(A))]
 overload joinPath(parts:A) {
     var result = String();
     for (part in parts)

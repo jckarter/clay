@@ -1,5 +1,5 @@
 
-[T | T == Int or T == Double]
+[T when T == Int or T == Double]
 define foo(x:T, y:T) : T;
 
 overload foo(x:Int, y:Int) = x + y;

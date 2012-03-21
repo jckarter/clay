@@ -24,7 +24,7 @@ overload ContiguousSequence?(#CStringRef) = true;
 // constructors
 //
 
-[T | ByteSizedInteger?(T)]
+[T when ByteSizedInteger?(T)]
 inline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
@@ -39,7 +39,7 @@ inline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr))
 
 inline overload size(a:CStringRef) = SizeT(libc.strlen(a.ptr));
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 inline overload index(a:CStringRef, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a), "CStringRef index out of bounds");
     return ref (begin(a) + i)^;

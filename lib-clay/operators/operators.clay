@@ -11,25 +11,12 @@ public import __operators__.(
     assign,
     updateAssign,
 
-    equals?,
-    notEquals?,
     case?,
-    compare?,
-    lesser?,
-    lesserEquals?,
-    greater?,
-    greaterEquals?,
 
     plus,
     minus,
 
-    add,
-    subtract,
-    multiply,
-    divide,
-    quotient,
-    remainder,
-    cat,
+    operatorCall,
 
     dereference,
     call,
@@ -52,6 +39,21 @@ public import __operators__.(
     ifExpression,
 );
 
+define equals?;
+define notEquals?;
+define lesser?;
+define lesserEquals?;
+define greater?;
+define greaterEquals?;
+
+define add;
+define subtract;
+define multiply;
+define divide;
+define quotient;
+define remainder;
+define cat;
+
 define inc;
 define dec;
 
@@ -64,6 +66,7 @@ define bitnot;
 
 define moveUnsafe;
 define resetUnsafe;
+
 
 
 //
@@ -234,8 +237,8 @@ inline overload assign(ref dest:T, rvalue src:T) {
 }
 
 [F]
-inline overload updateAssign(#F, ref dest, forward src) {
-    dest = F(dest, src);
+inline overload updateAssign(#F, ref dest, forward ..src) {
+    dest = operatorCall(dest,F, ..src);
 }
 
 inline overload notEquals?(a, b) = not equals?(a, b);
@@ -247,10 +250,6 @@ inline overload lesserEquals?(a, b) = not lesser?(b, a);
 inline overload greater?(a, b) = lesser?(b, a);
 
 inline overload greaterEquals?(a, b) = not lesser?(a, b);
-
-inline overload compare?(a, fn, b, ..args) : Bool
-    = fn(a, b) and compare?(b, ..args);
-inline overload compare?(a, fn, b) : Bool = fn(a, b);
 
 inline overload bitand(a, b, c, ..rest) =
     bitand(bitand(a,b), c, ..rest);
@@ -267,11 +266,11 @@ inline overload fieldRefAssign(dest, #FIELD, forward src) {
 }
 
 [F, FIELD]
-inline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward src) {
-    updateAssign(#F, fieldRef(dest, #FIELD), src);
+inline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward ..src) {
+    updateAssign(#F, fieldRef(dest, #FIELD), ..src);
 }
 
-[F, FIELD, T | RValue?(fieldRef(typeToLValue(T), #FIELD))]
+[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD))]
 inline overload fieldRefUpdateAssign(#F, dest:T, #FIELD, forward src) {
     fieldRefAssign(dest, #FIELD, F(fieldRef(dest, #FIELD), src));
 }
@@ -282,16 +281,16 @@ inline overload staticIndexAssign(dest, #i, forward src) {
 }
 
 [F, i]
-inline overload staticIndexUpdateAssign(#F, dest, #i, forward src) {
-    updateAssign(#F, staticIndex(dest, #i), src);
+inline overload staticIndexUpdateAssign(#F, dest, #i, forward ..src) {
+    updateAssign(#F, staticIndex(dest, #i), ..src);
 }
 
-[F, i, T | RValue?(staticIndex(typeToLValue(T), #i))]
+[F, i, T when RValue?(staticIndex(typeToLValue(T), #i))]
 inline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) {
     staticIndexAssign(dest, #i, F(staticIndex(dest, #i), src));
 }
 
-[..T | countValues(..T) >= 2]
+[..T when countValues(..T) >= 2]
 inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     assign(
         index(dest, ..withoutNthValue(
@@ -302,26 +301,26 @@ inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
     );
 }
 
-[F, ..A | countValues(..A) >= 2]
+[F, ..A when countValues(..A) >= 2]
 inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
     updateAssign(
         #F,
-        index(dest, ..withoutNthValue(
-            #(countValues(..A)-1),
+        index(dest, ..takeValues(
+            #(countIndices(..A)),
             ..indicesAndSrc
         )),
-        lastValue(..indicesAndSrc),
+        ..dropValues(#countIndices(..A), ..indicesAndSrc),
     );
 }
 
-[F, T, ..A |
+[F, T, ..A when
     (countValues(..A) >= 2) and
     RValue?(
         index(
             typeToLValue(T),
             ..mapValues(
                 typeToLValue,
-                ..withoutNthValue(#(countValues(..A)-1), ..A)
+                ..takeValues(#(countIndices(..A)), ..A)
             )
         )
     )
@@ -329,20 +328,113 @@ inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
 inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
     indexAssign(
         dest,
-        ..withoutNthValue(#(countValues(..A)-1), ..indicesAndSrc),
-        F(
+        ..takeValues(#(countIndices(..A)), ..indicesAndSrc),
+        operatorCall(
             index(
                 dest,
-                ..withoutNthValue(#(countValues(..A)-1), ..indicesAndSrc)
+                ..takeValues(#(countIndices(..A)), ..indicesAndSrc)
             ),
-            lastValue(..indicesAndSrc)
+            F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
         )
     );
 }
 
 
+//
+// first occurence of non-numeric
+//
 
-
+private countIndices(..A) = _countIndices(#-1, ..A);
+private define _countIndices;
+[n] overload _countIndices(#n, a, ..A) 
+    = if(not Numeric?(a)) n else _countIndices(#(n+1), ..A);
+[n] overload _countIndices(#n) = n;
+
+
+//
+//  operators 
+//
+
+defaultOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
+precedenceList() = ..defaultOps();
+
+alias (==) = equals?;
+alias (!=) = notEquals?;
+alias (>=) = greaterEquals?;
+alias (<=) = lesserEquals?;
+alias (>)  = greater?;
+alias (<)  = lesser?;
+alias (++) = cat;
+alias (&)  = bitand;
+alias (|)  = bitor;
+alias (~)  = bitxor;
+alias (<<) = bitshl;
+alias (>>) = bitshr;
+alias (+)  = add;
+alias (-)  = subtract;
+alias (%)  = remainder;
+alias (\)  = quotient;
+alias (/)  = divide;
+alias (*)  = multiply;
+
+private define staticEquals?;
+[A, B]
+overload staticEquals?(a:Static[A], b:Static[B]) = false;
+[A]
+overload staticEquals?(a:Static[A], b:Static[A]) = true;
+
+BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
+
+overload operatorCall(forward ..args)
+    = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, #countValues(
+        ..restValues(..precedenceList())), ..args)));
+
+private define foldOp;
+[n]
+inline overload foldOp(fn, #n, forward ..xs)
+    = ..foldOp(fn, #numericSubtract(n,1), 
+        ..fn(nthValue(#n,..precedenceList()), ..xs));
+inline overload foldOp(fn, #0, forward ..xs) 
+    = forward ..fn(firstValue(..precedenceList()), ..xs);
+
+
+private define binaryOp;
+[OP,T]
+inline overload binaryOp(#OP,forward a,#T,forward ..args)
+    = forward a,T,..binaryOp(OP,..args);
+[OP]
+inline overload binaryOp(#OP, forward a) = forward a;
+[OP]
+inline overload binaryOp(#OP,forward a,#OP,forward b, forward ..args)
+    = forward ..binaryOp(OP,OP(a,b), ..args);
+[OP]
+inline overload binaryOp(#OP,forward a,#OP,forward b)
+    = forward OP(a,b);
+
+private define noPrecBinaryOp;
+
+[OP]
+inline overload noPrecBinaryOp(forward a, #OP,forward ..args)
+    = forward a,OP,..noPrecBinaryOp(..args);
+[OP,T,U when BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T, #OP,forward b:U, forward ..args)
+    = forward ..noPrecBinaryOp(OP(a,b), ..args);
+[OP,T,U when BinaryOpDefined?(OP,T,U)]
+inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U)
+    = forward OP(a,b);
+inline overload noPrecBinaryOp(forward a) = forward a;
+
+private define compareOp;
+
+inline overload compareOp(forward a, OP, forward b, forward ..args)
+    = forward OP(a, b) and compareOp(b, ..args);
+inline overload compareOp(forward a, OP, forward b) 
+    = forward OP(a, b);
+inline overload compareOp(forward a) = forward a;
+
+
+
 //
 // swap
 //
@@ -353,7 +445,7 @@ inline swap(a, b) {
     b <-- move(temp);
 }
 
-[T | BitwiseMovedType?(T)]
+[T when BitwiseMovedType?(T)]
 inline overload swap(a:T, b:T) {
     alias TBytes = Array[UInt8, Int(TypeSize(T))];
     var temp = bitcast(TBytes, a);
@@ -400,7 +492,7 @@ inline overload max(ref a, ref b) {
 // empty?
 //
 
-[T | SizedSequence?(T)]
+[T when SizedSequence?(T)]
 inline empty?(a:T) = (size(a) == 0);
 
 
@@ -425,7 +517,7 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
         return ref alternate;
 }
 
-[consequent, alternate | StringLiteral?(consequent) and StringLiteral?(alternate)]
+[consequent, alternate when StringLiteral?(consequent) and StringLiteral?(alternate)]
 alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralRef {
     if (condition)
         return StringLiteralRef(consequent);
@@ -449,10 +541,10 @@ inline bitblend(mask, ones, zeros)
 // bitrol, bitror
 //
 
-[I, J | Integer?(I) and Integer?(J)]
+[I, J when Integer?(I) and Integer?(J)]
 bitrol(x:I, n:J) = bitor(wrapBitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
 
-[I, J | Integer?(I) and Integer?(J)]
+[I, J when Integer?(I) and Integer?(J)]
 bitror(x:I, n:J) = bitor(bitshr(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 
@@ -490,7 +582,7 @@ overload PrimitiveType?(#Complex80) = true;
 [I, O] overload PrimitiveType?(#FastCallCodePointer[I, O]) = true;
 [T] overload PrimitiveType?(#Static[T]) = true;
 [T,n] overload PrimitiveType?(#Vec[T,n]) = true;
-[E | Enum?(E)] overload PrimitiveType?(#E) = true;
+[E when Enum?(E)] overload PrimitiveType?(#E) = true;
 [..T] overload PrimitiveType?(#Union[..T]) = true;
 [] overload PrimitiveType?(#Union[]) = true;
 overload PrimitiveType?(#Tuple[]) = true;
@@ -505,15 +597,15 @@ PrimitiveCompoundType?(X) = false;
 
 [T,n] overload PrimitiveCompoundType?(#Array[T,n]) = true;
 [..T] overload PrimitiveCompoundType?(#Tuple[..T]) = true;
-[R | RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
-[V | Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
+[R when RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
+[V when Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
 
 define PrimitiveCompoundMemberTypes;
 [T,n] overload PrimitiveCompoundMemberTypes(#Array[T,n]) = T;
 [..T] overload PrimitiveCompoundMemberTypes(#Tuple[..T]) = ..T;
-[R | RegularRecord?(R)]
+[R when RegularRecord?(R)]
 overload PrimitiveCompoundMemberTypes(#R) = ..RecordFieldTypes(R);
-[V | Variant?(V)]
+[V when Variant?(V)]
 overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 
@@ -523,10 +615,10 @@ overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 PODType?(X) = false;
 
-[T | PrimitiveType?(T)]
+[T when PrimitiveType?(T)]
 overload PODType?(#T) = true;
 
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload PODType?(#T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
 
 
@@ -544,28 +636,28 @@ AssignDoesNotThrowType?(T) = PODType?(T);
 BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
 BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
 
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(#T)
     = allValues?(BitwiseCopiedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseMovedType?(#T)
     = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload NotDestroyedType?(#T)
     = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload NotResetType?(#T)
     = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload CopyDoesNotThrowType?(#T)
     = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload AssignDoesNotThrowType?(#T)
     = allValues?(AssignDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseAssignedType?(#T)
     = allValues?(BitwiseAssignedType?, ..PrimitiveCompoundMemberTypes(T));
-[T | PrimitiveCompoundType?(T)]
+[T when PrimitiveCompoundType?(T)]
 overload BitwiseMoveAssignedType?(#T)
     = allValues?(BitwiseMoveAssignedType?, ..PrimitiveCompoundMemberTypes(T));
 
@@ -613,14 +705,14 @@ alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 //
 
 define MonoInputTypes;
-[f | StaticMono?(f)]
+[f when StaticMono?(f)]
 alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
-[F | LambdaRecord?(F) and LambdaMono?(F)]
+[F when LambdaRecord?(F) and LambdaMono?(F)]
 alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 
 [F]
 alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);
 inline MonoType?(F) = Mono?(typeToRValue(F));
 
-[F | MonoType?(F)]
+[F when MonoType?(F)]
 alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));

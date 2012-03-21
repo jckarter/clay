@@ -32,7 +32,7 @@ record Vector[T] (
 [T]
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), nullPaged(T));
 
-[T,A | Sequence?(A) and (T == SequenceElementType(A))]
+[T,A when Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](a:A) {
     var v = Vector[T]();
     for (x in a)
@@ -40,7 +40,7 @@ overload Vector[T](a:A) {
     return move(v);
 }
 
-[T,A | SizedSequence?(A) and (T == SequenceElementType(A))]
+[T,A when SizedSequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](a:A) {
     var v = Vector[T]();
     reserve(v, size(a));
@@ -49,7 +49,7 @@ overload Vector[T](a:A) {
     return move(v);
 }
 
-[A | Sequence?(A)]
+[A when Sequence?(A)]
 overload Vector(a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
@@ -61,7 +61,7 @@ overload Vector(a:A) {
 // varargs constructor
 //
 
-[T, ..A | (countValues(..A) > 0) and equalValues?(T, ..A)]
+[T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
 alias overload Vector[T](..args:A) {
     var v = Vector[T]();
     reserve(v, countValues(..A));
