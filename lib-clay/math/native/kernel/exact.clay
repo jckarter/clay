@@ -510,7 +510,7 @@ recpr33( dh:Double, dm:Double, dl:Double) --> resh:Double, resm:Double, resl:Dou
 // i = d in rounding to nearest The constant added is 2^52 + 2^51
 DOUBLE2INT(_d:Double) :Int = ieee_db(_d+6755399441055744.0).0[0];
 
-// Same idea but beware: works only for when_i| < 2^51 -1
+// Same idea but beware: works only for |_i| < 2^51 -1
 DOUBLE2LONGINT(_d) --> _i:Long {
     var _t = ieee_db(_d+6755399441055744.0);
     if(_d >= 0) /* sign extend */

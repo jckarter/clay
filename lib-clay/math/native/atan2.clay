@@ -58,11 +58,11 @@ overload atan2(y:Double, x:Double) {
     /* compute y/x */
 	var k = bitshr(iy-ix,20);
 	var z = 0.;
-	if(k > 60) {		 	/* wheny/x| >  2**60 */
+	if(k > 60) {		 	/* |y/x| >  2**60 */
 	    z = pi_o_2+0.5*pi_lo;
 	    m = bitand(m,1);
 	}
-	else if(GET_IEEE_HIGH(xdb)< 0 and k< -60) z=0.0; 	/* 0 > wheny|/x > -2**-60 */
+	else if(GET_IEEE_HIGH(xdb)< 0 and k< -60) z=0.0; 	/* 0 > |y|/x > -2**-60 */
 	else z = atan(abs(y/x));		/* safe to do y/x */
 	switch (m)
     case (0) return  z;	/* atan(+,+) */
