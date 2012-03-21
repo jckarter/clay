@@ -1617,7 +1617,7 @@ external (cdecl, "_alphasort") alphasort(arg0:OpaquePointer, arg1:OpaquePointer)
 
 external (cdecl, "_closedir") closedir(arg0:Pointer[DIR]) : Int;
 
-external (cdecl, "_getdirentries_is_not_available_|_64_bit_inodes_are_in_effect") getdirentries(arg0:Int, arg1:Pointer[CChar], arg2:Int, arg3:Pointer[CLong]) : Int;
+external (cdecl, "_getdirentries_is_not_available_when_64_bit_inodes_are_in_effect") getdirentries(arg0:Int, arg1:Pointer[CChar], arg2:Int, arg3:Pointer[CLong]) : Int;
 
 external (cdecl, "_opendir") opendir(arg0:Pointer[CChar]) : Pointer[DIR];
 

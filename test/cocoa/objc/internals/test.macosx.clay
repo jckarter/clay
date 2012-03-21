@@ -245,7 +245,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEncoding(test, "c", Bool);
         expectEncoding(test, "*", Pointer[CChar]);
         expectEncoding(test, "@", ObjectHandle);
-        expectEncoding(test, "", ClassHandle);
+        expectEncoding(test, "#", ClassHandle);
         expectEncoding(test, ":", SelectorHandle);
         expectEncoding(test, "@", Id);
         expectEncoding(test, "@", NSObject);
