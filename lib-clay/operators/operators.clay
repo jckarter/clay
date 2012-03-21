@@ -355,7 +355,7 @@ private define _countIndices;
 //  operators 
 //
 
-defaultOps() = (++),(|),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
+defaultOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
 precedenceList() = ..defaultOps();
 
 alias (==) = equals?;
@@ -367,6 +367,7 @@ alias (<)  = lesser?;
 alias (++) = cat;
 alias (&)  = bitand;
 alias (|)  = bitor;
+alias (~)  = bitxor;
 alias (<<) = bitshl;
 alias (>>) = bitshr;
 alias (+)  = add;
