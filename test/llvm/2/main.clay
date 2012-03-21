@@ -1,6 +1,6 @@
 define myadd;
 
-[T | Integer?(T)]
+[T when Integer?(T)]
 overload myadd(x:T, y:T) --> returned:T __llvm__{
     %1 = load $T* %x
     %2 = load $T* %y
@@ -10,7 +10,7 @@ overload myadd(x:T, y:T) --> returned:T __llvm__{
 }
 
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload myadd(x:T, y:T) --> returned:T __llvm__{
     %1 = load $T* %x
     %2 = load $T* %y

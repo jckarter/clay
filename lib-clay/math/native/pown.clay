@@ -1,9 +1,9 @@
-// pow x^n | Type(n)==Integer
-// pow n^m | Type(n,m)==Integer
+// pow x^n when Type(n)==Integer
+// pow n^m when Type(n,m)==Integer
 
 import math.*;
 
-[T,I | Float?(T) and Integer?(I)]
+[T,I when Float?(T) and Integer?(I)]
 overload pow(x:T, n:I) {
     alias ZERO = T(0);
     alias ONE = T(1);
@@ -33,7 +33,7 @@ overload pow(x:T, n:I) {
     return p;
 }
 
-[I,J | Integer?(I,J)]
+[I,J when Integer?(I,J)]
 overload pow(x:I, n:J) {
     alias ZERO = I(0);
     alias ONE = I(1);

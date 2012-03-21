@@ -207,10 +207,10 @@ overload ContiguousCoordinate?(#PagedPointer[T]) = true;
 [T]
 overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
 
-[T,I | Integer?(I)]
+[T,I when Integer?(I)]
 overload add(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset + i*TypeSize(T));
 
-[T,I | Integer?(I)]
+[T,I when Integer?(I)]
 overload subtract(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset - i*TypeSize(T));
 
 [T]
@@ -251,7 +251,7 @@ splitBlock?(b, n) {
     return remaining > (TypeSize(Header) + 16);
 }
 
-[T,I | Integer?(I)]
+[T,I when Integer?(I)]
 allocatePaged(#T, n_:I) {
     var n = SizeT(n_) * TypeSize(T);
 

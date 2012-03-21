@@ -28,7 +28,7 @@ oneArgFuncs() =
                 ;
 
 // FreeBSD does not have log2
-[| OS == FreeBSD]
+[when OS == FreeBSD]
 overload oneArgFuncs() =
                 abs,recip,
                 sqrt,rsqrt,cbrt,square,cube,
@@ -48,7 +48,7 @@ overload oneArgFuncs() =
                 ;
 
 // Windows only has C89 libm
-[| OS == Windows]
+[when OS == Windows]
 overload oneArgFuncs() =
                 abs,
                 sqrt,
@@ -65,7 +65,7 @@ twoArgFuncs() =
                 pow,beta,atan2,
                 ;
 
-[| OS == Windows]
+[when OS == Windows]
 overload twoArgFuncs() = 
                 pow,atan2,
                 ;

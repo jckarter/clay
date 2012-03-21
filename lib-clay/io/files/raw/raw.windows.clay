@@ -73,7 +73,7 @@ private creationFlags(mode) {
     }
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload RawFile(path:S, mode:OpenMode) {
     var handle = win32.CreateFileA(
         cstring(path),
@@ -91,7 +91,7 @@ overload RawFile(path:S, mode:OpenMode) {
     return move(f);
 }
 
-[S | CCompatibleString?(S)]
+[S when CCompatibleString?(S)]
 overload RawFile(path:S) = RawFile(path, READ);
 
 overload destroy(x:RawFile) {

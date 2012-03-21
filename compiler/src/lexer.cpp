@@ -98,6 +98,7 @@ static bool identChar2(char &x) {
     return false;
 }
 
+
 static bool identStr(string &x) {
     char c;
     if (!identChar1(c)) return false;
@@ -128,7 +129,7 @@ static void initKeywords() {
          "switch", "case", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
          "finally", "onerror",
-         "eval", "with",
+         "eval", "with","when",
          "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
     keywords = new std::set<string>();
     for (const char **p = s; *p; ++p)
@@ -153,13 +154,7 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "<--", "-->", "++=",
-    "..", "=>", "->",
-    "==", "!=", "<=", ">=",
-    "++",
-    "<", ">",
-    "::", "+=", "-=", "*=", "/=", "\\=", "%=",
-    "+", "-", "*", "/","\\","%", "=", "&", "^", "|",
+    "..", "::", "^",  
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#",
     NULL
@@ -177,6 +172,59 @@ static bool symbol(TokenPtr &x) {
         ++s;
     }
     return false;
+}
+
+//
+// operator strings
+//
+
+
+static const char *opchars[] = {
+    "<", ">","+", "-", "*", "/","\\","%", "=", "~", "|", "!", "&", NULL
+};
+
+static bool opstring(string &x) {
+    const char **s = opchars;
+    char *p = save();
+    char *q = p;
+    char y;
+    while (*s && next(y)) {
+        s = opchars;
+        while (*s) {
+            if (y == **s) {
+                q = save();            
+                break;
+            }
+            ++s;
+        }
+    }
+    restore(q);
+    if (p == q) return false;        
+    x = string(p,q);
+    return true;
+}
+
+static bool op(TokenPtr &x) {
+    string s;
+    if(!opstring(s)) return false;
+    x = new Token(T_OPSTRING, s);
+    return true;
+}
+
+
+static bool opIdentifier(TokenPtr &x) {
+    char c;
+    if (!next(c)) return false;
+    if (c != '(') return false;
+    string s,op;
+    s.push_back(c);
+    if(!opstring(op)) return false;
+    s.append(op);
+    if (!next(c)) return false;
+    if (c != ')') return false;
+    s.push_back(c);
+    x = new Token(T_IDENTIFIER, s);
+    return true;
 }
 
 
@@ -683,7 +731,9 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (lineComment(x)) goto success;
     restore(p); if (blockComment(x)) goto success;
     restore(p); if (staticIndex(x)) goto success;
+    restore(p); if (opIdentifier(x)) goto success;
     restore(p); if (symbol(x)) goto success;
+    restore(p); if (op(x)) goto success;
     restore(p); if (llvmToken(x)) goto success;
     restore(p); if (keywordIdentifier(x)) goto success;
     restore(p); if (charToken(x)) goto success;

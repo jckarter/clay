@@ -990,21 +990,8 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(dereference);
     OPERATOR(plus);
     OPERATOR(minus);
-    OPERATOR(add);
-    OPERATOR(subtract);
-    OPERATOR(multiply);
-    OPERATOR(divide);
-    OPERATOR(quotient);
-    OPERATOR(remainder);
+    OPERATOR(operatorCall);
     OPERATOR(caseP);
-    OPERATOR(equalsP);
-    OPERATOR(notEqualsP);
-    OPERATOR(compareP);
-    OPERATOR(lesserP);
-    OPERATOR(lesserEqualsP);
-    OPERATOR(greaterP);
-    OPERATOR(greaterEqualsP);
-    OPERATOR(cat);
     OPERATOR(tupleLiteral);
     OPERATOR(staticIndex);
     OPERATOR(index);
@@ -1170,21 +1157,8 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 DEFINE_OPERATOR_ACCESSOR(dereference)
 DEFINE_OPERATOR_ACCESSOR(plus)
 DEFINE_OPERATOR_ACCESSOR(minus)
-DEFINE_OPERATOR_ACCESSOR(add)
-DEFINE_OPERATOR_ACCESSOR(subtract)
-DEFINE_OPERATOR_ACCESSOR(multiply)
-DEFINE_OPERATOR_ACCESSOR(divide)
-DEFINE_OPERATOR_ACCESSOR(quotient)
-DEFINE_OPERATOR_ACCESSOR(remainder)
+DEFINE_OPERATOR_ACCESSOR(operatorCall)
 DEFINE_OPERATOR_ACCESSOR(caseP)
-DEFINE_OPERATOR_ACCESSOR(equalsP)
-DEFINE_OPERATOR_ACCESSOR(notEqualsP)
-DEFINE_OPERATOR_ACCESSOR(compareP)
-DEFINE_OPERATOR_ACCESSOR(lesserP)
-DEFINE_OPERATOR_ACCESSOR(lesserEqualsP)
-DEFINE_OPERATOR_ACCESSOR(greaterP)
-DEFINE_OPERATOR_ACCESSOR(greaterEqualsP)
-DEFINE_OPERATOR_ACCESSOR(cat)
 DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
 DEFINE_OPERATOR_ACCESSOR(staticIndex)
 DEFINE_OPERATOR_ACCESSOR(index)

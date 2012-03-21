@@ -15,7 +15,7 @@ errorNoThrow(..e) {
     abort();
 }
 
-[ | not ExceptionsEnabled?]
+[ when not ExceptionsEnabled?]
 error(..e) {
     errorNoThrow(..e);
 }
@@ -30,7 +30,7 @@ record Error (msg : String);
 
 instance Exception (Error);
 
-[ | ExceptionsEnabled?]
+[ when ExceptionsEnabled?]
 overload error(..e) {
     var buf = String();
     printTo(buf, ..e);
@@ -46,7 +46,7 @@ overload error(..e) {
 AllAssertionsEnabled?() = not Flag?("clay.DisableAssertions");
 AssertionEnabled?(tag) = not Flag?("clay.DisableAssertions." ++ tag);
 
-[..tags | allValues?(StringLiteral?, ..tags)]
+[..tags when allValues?(StringLiteral?, ..tags)]
 record assert[..tags] ();
 
 [..tags]
@@ -54,25 +54,25 @@ alias overload assert[..tags](..whatever) {}
 
 alias overload assert(..whatever) {}
 
-[| AllAssertionsEnabled?()]
+[when AllAssertionsEnabled?()]
 alias overload assert(cond:Bool, ..message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
-[..tags | AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+[..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
 alias overload assert[..tags](cond:Bool, ..message) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
 }
 
-[| AllAssertionsEnabled?()]
+[when AllAssertionsEnabled?()]
 alias overload assert(cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
 }
 
-[..tags | AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+[..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
 alias overload assert[..tags](cond:Bool) {
     if (not cond)
         errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");

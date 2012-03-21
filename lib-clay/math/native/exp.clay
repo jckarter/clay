@@ -76,7 +76,7 @@ overload exp(a:Double) { /* default IEEE double exp */
 
 /*
  * Domain [-0.34568, 0.34568], range ~[-4.278e-9, 4.447e-9]:
- * |x*(exp(x)+1)/(exp(x)-1) - p(x)| < 2**-27.74
+ * |x*(exp(x)+1)/(exp(x)-1) - p(x)when < 2**-27.74
  */
 
 overload exp(a:Float) {

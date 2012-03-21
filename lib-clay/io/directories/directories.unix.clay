@@ -26,7 +26,7 @@ record DirentSequence (
 overload RegularRecord?(#DirentSequence) = false;
 overload BitwiseMovedType?(#DirentSequence) = true;
 
-[T | CCompatibleString?(T)]
+[T when CCompatibleString?(T)]
 overload DirentSequence(dir:T) --> returned: DirentSequence {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
@@ -44,7 +44,7 @@ overload resetUnsafe(s: DirentSequence) {
     s.dir = null(DIR);
 }
 
-[T | CCompatibleString?(T)]
+[T when CCompatibleString?(T)]
 direntSequence(dir:T) = DirentSequence(dir);
 
 overload iterator(s:DirentSequence) = DirentIterator(s.dir, Struct_dirent());

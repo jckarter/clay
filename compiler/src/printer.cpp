@@ -153,7 +153,7 @@ static void printExpr(ostream &out, const Expr *x) {
     case VARIADIC_OP : {
         const VariadicOp *y = (const VariadicOp *)x;
         out << "VariadicOp(";
-        switch (y->op.front()) {
+        switch (y->op) {
         case DEREFERENCE :
             out << "DEREFERENCE";
             break;
@@ -169,32 +169,11 @@ static void printExpr(ostream &out, const Expr *x) {
         case NOT :
             out << "NOT";
             break;
-        case ADD :
-            out << "ADD";
-            break;
-        case SUBTRACT :
-            out << "SUBTRACT";
-            break;
-        case MULTIPLY :
-            out << "MULTIPLY";
-            break;
-        case DIVIDE :
-            out << "DIVIDE";
-            break;
-        case REMAINDER :
-            out << "REMAINDER";
-            break;
-        case CAT :
-            out << "CAT";
-            break;
-        case QUOTIENT :
-            out << "QUOTIENT";
+        case OPERATOR :
+            out << "OPERATOR";
             break;
         case IF_EXPR :
             out << "IF_EXPR";
-            break;
-        case COMPARE :
-            out << "COMPARE";
             break;
         default :
             assert(false);
@@ -317,10 +296,10 @@ static void printStatement(ostream &out, const Statement *x) {
         out << "InitAssignment(" << y->left << ", " << y->right << ")";
         break;
     }
-    case UPDATE_ASSIGNMENT : {
-        const UpdateAssignment *y = (const UpdateAssignment *)x;
-        out << "UpdateAssignment(" << y->op << ", " << y->left;
-        out << ", " << y->right << ")";
+    case VARIADIC_ASSIGNMENT : {
+        const VariadicAssignment *y = (const VariadicAssignment *)x;
+        out << "VariadicAssignment(" << y->op << ", " << y->ops;
+        out << ", " << y->exprs->exprs << ")";
         break;
     }
     case GOTO : {
@@ -433,6 +412,9 @@ static void print(ostream &out, const Object *x) {
         const Token *y = (const Token *)x;
         out << "Token(";
         switch (y->tokenKind) {
+        case T_OPSTRING :
+            out << "T_OPSTRING";
+            break;
         case T_SYMBOL :
             out << "T_SYMBOL";
             break;

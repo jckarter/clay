@@ -177,17 +177,17 @@ __expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
 _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
 }
-[ParamType | ObjectType?(ParamType)]
+[ParamType when ObjectType?(ParamType)]
 overload _expectMsgSendCompatible(expectTF, test, #ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
 }
-[ValueType | ObjectType?(ValueType)]
+[ValueType when ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
 }
-[ParamType, ValueType | ObjectType?(ParamType) and ObjectType?(ValueType)]
+[ParamType, ValueType when ObjectType?(ParamType) and ObjectType?(ValueType)]
 overload _expectMsgSendCompatible(expectTF, test, #ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
@@ -245,7 +245,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEncoding(test, "c", Bool);
         expectEncoding(test, "*", Pointer[CChar]);
         expectEncoding(test, "@", ObjectHandle);
-        expectEncoding(test, "#", ClassHandle);
+        expectEncoding(test, "", ClassHandle);
         expectEncoding(test, ":", SelectorHandle);
         expectEncoding(test, "@", Id);
         expectEncoding(test, "@", NSObject);

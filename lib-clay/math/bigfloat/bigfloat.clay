@@ -110,7 +110,7 @@ overload BigFloat(x:Double) : BigFloat {
     return result;
 }
 
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload Double(x:T) --> result:Double {
     var nb, rndcorr = db_number(), db_number();
     var res = 0.;
@@ -231,7 +231,7 @@ private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 
 
 // This function copies a result into another.
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 inline overload assign(ref result:T, x:T) : {
     result.hword = x.hword;
     result.excp = x.excp;
@@ -239,7 +239,7 @@ inline overload assign(ref result:T, x:T) : {
     result.sign = x.sign;
 }
 
-[T | Numeric?(T)]
+[T when Numeric?(T)]
 inline overload assign(ref result:BigFloat, x:T) {
     if(x == 0){
         resetUnsafe(result.h_word);
@@ -252,7 +252,7 @@ inline overload assign(ref result:BigFloat, x:T) {
     }
 }
 
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload multiply(x:T, y:T) --> result:T {
     result.excp = x.excp * y.excp;
     result.sign = x.sign * y.sign;
@@ -300,7 +300,7 @@ overload multiply(x:T, y:T) --> result:T {
 
 
 //Square BigFloat
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 square(x:T) : T {
     var result = BigFloat();
     result.excp = x.excp * x.excp;
@@ -533,7 +533,7 @@ private do_sub(result, x, y){
 
 
 // Addition (result is a normalised number).
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload add(x:T, y:T) : T {
     var result = BigFloat();
     if (x.excp == 0)
@@ -556,7 +556,7 @@ overload add(x:T, y:T) : T {
 
 // Subtraction (result is a normalised number).
 // The arguments x, y and result may point to the same memory location.
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload subtract(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp == 0){
@@ -586,7 +586,7 @@ overload subtract(x:T, y:T) :T {
 }
 
 // Compute 1/x with a Newton scheme
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload recip(x:T) --> result:T {
     var tmp = x;
     tmp.index = 0;
@@ -608,7 +608,7 @@ overload recip(x:T) --> result:T {
 }
 
 // Compute result = x/y;
-[T | BigFloat?(T)]
+[T when BigFloat?(T)]
 overload divide(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp != 1.)
@@ -621,7 +621,7 @@ overload divide(x:T, y:T) :T {
 }
 
 // Convert an integer number in multiprecision representation
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload BigFloat(x:I) :BigFloat {
     var result = BigFloat();
     var ux = 0u;

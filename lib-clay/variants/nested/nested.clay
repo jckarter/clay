@@ -10,7 +10,7 @@ private SubVariants(V) =
 private define filterStatics;
 [F, T] inline overload filterStatics(#F, #T, ..rest) =
     ..filterStatics(F, ..rest);
-[F, T | F(T)] inline overload filterStatics(#F, #T, ..rest) =
+[F, T when F(T)] inline overload filterStatics(#F, #T, ..rest) =
     T, ..filterStatics(F, ..rest);
 [F] inline overload filterStatics(#F) = ;
 
@@ -20,7 +20,7 @@ private define filterStatics;
 // VariantNestingPaths
 //
 
-[V,M | Variant?(V)]
+[V,M when Variant?(V)]
 VariantNestingPaths(#V, #M) =
     ..VariantNestingPaths2(V, M, []);
 
@@ -30,7 +30,7 @@ private VariantNestingPaths2(#V, #M, Prefix) {
     return ..VariantNestingPaths3(SubV, M, Prefix, #0);
 }
 
-[V,M | VariantMember?(V,M)]
+[V,M when VariantMember?(V,M)]
 overload VariantNestingPaths2(#V, #M, Prefix) {
     alias SubV = Tuple(..SubVariants(V));
     return Tuple(..unpack(Prefix), M),
@@ -45,7 +45,7 @@ private VariantNestingPaths3(Vs, M, Prefix, #i) {
            ..VariantNestingPaths3(Vs, M, Prefix, #(i+1));
 }
 
-[T,i | i == TupleElementCount(T)]
+[T,i when i == TupleElementCount(T)]
 overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 
 
@@ -54,7 +54,7 @@ overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 // nestedVariantIs?
 //
 
-[V, T | Variant?(V)]
+[V, T when Variant?(V)]
 inline nestedVariantIs?(x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     return not null?(ptr);
@@ -66,14 +66,14 @@ inline nestedVariantIs?(x:V, #T) {
 // nestedVariantAs
 //
 
-[V, T | Variant?(V)]
+[V, T when Variant?(V)]
 inline nestedVariantAs(ref x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return ref ptr^;
 }
 
-[V, T | Variant?(V)]
+[V, T when Variant?(V)]
 inline overload nestedVariantAs(rvalue x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
@@ -86,7 +86,7 @@ inline overload nestedVariantAs(rvalue x:V, #T) {
 // nestedVariantAsPtr
 //
 
-[V, Target | Variant?(V)]
+[V, Target when Variant?(V)]
 nestedVariantAsPtr(x:V, #Target) {
     return unboxAlongPaths(x, Target, ..VariantNestingPaths(V, Target));
 }

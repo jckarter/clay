@@ -36,6 +36,21 @@ static LocationPtr currentLocation() {
 // symbol, keyword
 //
 
+static bool opstring(string &op) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_OPSTRING))
+        return false;
+    op = t->str;
+    return true;
+}
+
+static bool opsymbol(const char *s) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_OPSTRING))
+        return false;
+    return t->str == s;
+}
+
 static bool symbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
@@ -452,9 +467,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 static bool dereferenceSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("^")) return false;
-    vector<int> ops;
-    ops.push_back(DEREFERENCE);
-    x = new VariadicOp(ops, new ExprList());
+    x = new VariadicOp(DEREFERENCE, new ExprList());
     x->location = location;
     return true;
 }
@@ -493,7 +506,7 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
     }
     case VARIADIC_OP : {
         VariadicOp *b = (VariadicOp *)a;
-        assert(b->op.front() == DEREFERENCE);
+        assert(b->op == DEREFERENCE);
         b->exprs->add(base);
         break;
     }
@@ -527,21 +540,19 @@ static bool prefixExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("&")) return false;
+    if (!opsymbol("&")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
-    vector<int> ops;
-    ops.push_back(ADDRESS_OF);
-    x = new VariadicOp(ops, new ExprList(a));
+    x = new VariadicOp(ADDRESS_OF, new ExprList(a));
     x->location = location;
     return true;
 }
 
 static bool plusOrMinus(int &op) {
     int p = save();
-    if (symbol("+"))
+    if (opsymbol("+"))
         op = PLUS;
-    else if (restore(p), symbol("-"))
+    else if (restore(p), opsymbol("-"))
         op = MINUS;
     else
         return false;
@@ -565,16 +576,14 @@ static bool signExpr(ExprPtr &x) {
         return true;
     restore(p);
     if (!prefixExpr(b)) return false;
-    vector<int> ops;
-    ops.push_back(op);
-    x = new VariadicOp(ops, new ExprList(b));
+    x = new VariadicOp(op, new ExprList(b));
     x->location = location;
     return true;
 }
 
 static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("*")) return false;
+    if (!opsymbol("*")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
     x = new DispatchExpr(a);
@@ -605,364 +614,65 @@ static bool prefixExpr(ExprPtr &x) {
 
 
 //
-// arithmetic expr
+// infix binary operator expr
 //
 
-static bool mulTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
+static bool operatorOp(string &op) {
     int p = save();
-    if (!symbol("*")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("*")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!prefixExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(MULTIPLY);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool mulExpr(ExprPtr &x) {
-    if (!prefixExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!mulTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool quotientTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("\\")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("\\")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!mulExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(QUOTIENT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool quotientExpr(ExprPtr &x) {
-    if (!mulExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!quotientTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool divTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("/")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("/")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!quotientExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(DIVIDE);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool divExpr(ExprPtr &x) {
-    if (!quotientExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!divTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool remTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("%")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("%")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!divExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(REMAINDER);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool remExpr(ExprPtr &x) {
-    if (!divExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!remTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-static bool subTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("-")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("-")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!remExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(SUBTRACT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool subExpr(ExprPtr &x) {
-    if (!remExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!subTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-static bool addTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("+")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("+")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!subExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(ADD);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-static bool addExpr(ExprPtr &x) {
-    if (!subExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!addTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-static bool catTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
-    ExprPtr b;
-    int p = save();
-    if (!symbol("++")) return false;
-    restore(p);
-    while (true) {
-        int p = save();
-        if (!symbol("++")) {
-            restore(p);
-            break;
-        }
-        p = save();
-        if (!addExpr(b)) {
-            restore(p);
-            break;
-        }
-        exprs->add(b);
-    }
-    vector<int> ops;
-    ops.push_back(CAT);
-    x = new VariadicOp(ops, exprs);
-    x->location = location;
-    return true;
-}
-
-
-static bool catExpr(ExprPtr &x) {
-    if (!addExpr(x)) return false;
-    while (true) {
-        int p = save();
-        VariadicOpPtr y;
-        if (!catTail(y)) {
-            restore(p);
-            break;
-        }
-        y->exprs->insert(x);
-        x = y.ptr();
-    }
-    return true;
-}
-
-
-
-//
-// compare expr
-//
-
-static bool compareOp(int &op) {
-    int p = save();
-    const char *s[] = {"==", "!=", "<", "<=", ">", ">=", NULL};
-    const int ops[] = {EQUALS, NOT_EQUALS, LESSER, LESSER_EQUALS,
-                       GREATER, GREATER_EQUALS};
+    
+    const char *s[] = {
+        "<--", "-->", "=>", "->", "=","++=",
+        "+=", "-=", "*=", "/=", "\\=", "%=",
+        NULL
+    };
     for (const char **a = s; *a; ++a) {
+        if (opsymbol(*a)) return false;
         restore(p);
-        if (symbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
     }
-    return false;
+    string x;
+    if (!opstring(x)) return false;
+    op.clear();
+    op.push_back('(');
+    op.append(x);
+    op.push_back(')');
+    return true;
 }
 
-static bool compareTail(VariadicOpPtr &x) {
+
+static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
-    vector<int> ops;
-    ops.push_back(COMPARE);
+    vector<string> ops;
     ExprPtr b;
-    int op;
+    string op;
     int p = save();
-    if (!compareOp(op)) return false;
+    if (!operatorOp(op)) return false;
     restore(p);
     while (true) {
-        int p = save();
-        if (!compareOp(op)) {
+        p = save();
+        if (!operatorOp(op)) {
             restore(p);
             break;
         }
         ops.push_back(op);
-        p = save();
-        if (!catExpr(b)) {
+        if (!prefixExpr(b)) {
             restore(p);
             break;
         }
         exprs->add(b);
         
     }
-    x = new VariadicOp(ops, exprs);
+    x = new VariadicOp(OPERATOR, ops, exprs);
     x->location = location;
     return true;
 }
 
-static bool compareExpr(ExprPtr &x) {
-    if (!catExpr(x)) return false;
+static bool operatorExpr(ExprPtr &x) {
+    if (!prefixExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
-        if (!compareTail(y)) {
+        if (!operatorTail(y)) {
             restore(p);
             break;
         }
@@ -971,6 +681,7 @@ static bool compareExpr(ExprPtr &x) {
     }
     return true;
 }
+
 
 
 //
@@ -982,13 +693,11 @@ static bool notExpr(ExprPtr &x) {
     int p = save();
     if (!keyword("not")) {
         restore(p);
-        return compareExpr(x);
+        return operatorExpr(x);
     }
     ExprPtr y;
-    if (!compareExpr(y)) return false;
-    vector<int> ops;
-    ops.push_back(NOT);
-    x = new VariadicOp(ops, new ExprList(y));
+    if (!operatorExpr(y)) return false;
+    x = new VariadicOp(NOT, new ExprList(y));
     x->location = location;
     return true;
 }
@@ -1062,9 +771,7 @@ static bool ifExpr(ExprPtr &x) {
     if (!keyword("else")) return false;
     if (!expression(expr)) return false;
     exprs->add(expr);
-    vector<int> ops;
-    ops.push_back(IF_EXPR);
-    x = new VariadicOp(ops, exprs);
+    x = new VariadicOp(IF_EXPR, exprs);
     x->location = location;
     return true;
 }
@@ -1142,12 +849,12 @@ static bool lambdaExprBody(StatementPtr &x) {
 
 static bool lambdaArrow(bool &captureByRef) {
     int p = save();
-    if (symbol("->")) {
+    if (opsymbol("->")) {
         captureByRef = true;
         return true;
     } else {
         restore(p);
-        if (symbol("=>")) {
+        if (opsymbol("=>")) {
             captureByRef = false;
             return true;
         }
@@ -1367,7 +1074,7 @@ static bool localBinding(StatementPtr &x) {
     if (!bindingKind(bk)) return false;
     vector<IdentifierPtr> y;
     if (!identifierList(y)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
@@ -1384,7 +1091,7 @@ static bool withStatement(StatementPtr &x) {
     vector<IdentifierPtr> lhs;
 
     int p = save();
-    if (!identifierList(lhs) || !symbol("=")) {
+    if (!identifierList(lhs) || !opsymbol("=")) {
         lhs.clear();
         restore(p);
     }
@@ -1438,7 +1145,7 @@ static bool assignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new Assignment(y, z);
@@ -1450,7 +1157,7 @@ static bool initAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
-    if (!symbol("<--")) return false;
+    if (!opsymbol("<--")) return false;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     x = new InitAssignment(y, z);
@@ -1458,14 +1165,14 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
-static bool updateOp(int &op) {
+
+static bool updateopstring(string &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const int ops[] = {UPDATE_ADD, UPDATE_SUBTRACT, UPDATE_MULTIPLY,
-                       UPDATE_DIVIDE, UPDATE_QUOTIENT, UPDATE_REMAINDER, UPDATE_CAT};
+    const string ops[] = {"(+)", "(-)", "(*)", "(/)", "(\\)", "(%)", "(++)"};
     for (const char **a = s; *a; ++a) {
         restore(p);
-        if (symbol(*a)) {
+        if (opsymbol(*a)) {
             int i = a - s;
             op = ops[i];
             return true;
@@ -1476,16 +1183,29 @@ static bool updateOp(int &op) {
 
 static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y, z;
+    ExprListPtr exprs = new ExprList();
+    ExprPtr y,z;
+    vector<string> ops;
     if (!expression(y)) return false;
-    int op;
-    if (!updateOp(op)) return false;
+    string op;
+    if (!updateopstring(op)) return false;
+    exprs->add(y);
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    x = new UpdateAssignment(op, y, z);
+    ops.push_back(op);
+    if (z->exprKind == VARIADIC_OP) {
+        VariadicOp *y = (VariadicOp *)z.ptr();
+        exprs->add(y->exprs);
+        for (int i=0;i<y->ops.size();++i)
+            ops.push_back(y->ops[i]);
+    } else {
+        exprs->add(z);
+    }
+    x = new VariadicAssignment(OPERATOR, ops, exprs);
     x->location = location;
     return true;
 }
+
 
 static bool gotoStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
@@ -2050,7 +1770,7 @@ static bool arguments(vector<FormalArgPtr> &args,
 }
 
 static bool predicate(ExprPtr &x) {
-    if (!symbol("|")) return false;
+    if (!keyword("when")) return false;
     return expression(x);
 }
 
@@ -2121,7 +1841,7 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
 }
 
 static bool exprBody(StatementPtr &x) {
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     LocationPtr location = currentLocation();
     ReturnKind rkind;
     ExprListPtr exprs;
@@ -2239,7 +1959,7 @@ static bool recordBodyFields(RecordBodyPtr &x) {
 
 static bool recordBodyComputed(RecordBodyPtr &x) {
     LocationPtr location = currentLocation();
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprListPtr y;
     if (!optExpressionList(y)) return false;
     if (!symbol(";")) return false;
@@ -2469,7 +2189,7 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
         return true;
     } else {
         restore(p);
-        if (symbol("-->")) {
+        if (opsymbol("-->")) {
             if (!optNamedReturnList(returnSpecs)) return false;
             if (!optVarNamedReturn(varReturnSpec)) return false;
             return true;
@@ -2731,7 +2451,7 @@ static bool globalVariable(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
@@ -2909,7 +2629,7 @@ static bool globalAlias(TopLevelItemPtr &x) {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
-    if (!symbol("=")) return false;
+    if (!opsymbol("=")) return false;
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
@@ -2962,7 +2682,7 @@ static bool importStar(ImportPtr &x) {
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
-    if (!symbol("*")) return false;
+    if (!opsymbol("*")) return false;
     if (!symbol(";")) return false;
     x = new ImportStar(y, vis);
     x->location = location;

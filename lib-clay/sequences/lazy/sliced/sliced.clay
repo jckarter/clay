@@ -14,13 +14,13 @@ record Sliced[A](
     last : SequenceCoordinateType(A),
 );
 
-[A | LightweightSequence?(A)]
+[A when LightweightSequence?(A)]
 overload LightweightSequence?(#Sliced[A]) = true;
 
-[A | ContiguousSequence?(A)]
+[A when ContiguousSequence?(A)]
 overload ContiguousSequence?(#Sliced[A]) = true;
 
-[A | CallDefined?(UnderlyingContainerConstructor, Static[A])]
+[A when CallDefined?(UnderlyingContainerConstructor, Static[A])]
 overload UnderlyingContainerConstructor(#Sliced[A]) =
     UnderlyingContainerConstructor(A);
 
@@ -32,25 +32,25 @@ overload UnderlyingContainerConstructor(#Sliced[A]) =
 
 define sliced;
 
-[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+[A, C when CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload sliced(forward a:A, first:C, last:C) {
     alias T = Type(wrapSequence(a));
     return Sliced[T](wrapSequence(a), first, last);
 }
 
-[A, C | C == SequenceCoordinateType(A)]
+[A, C when C == SequenceCoordinateType(A)]
 inline overload sliced(ref a:Sliced[A], first:C, last:C) {
     alias T = Type(wrapSequence(a.seq));
     return Sliced[T](wrapSequence(a.seq), first, last);
 }
 
-[A, C | C == SequenceCoordinateType(A)]
+[A, C when C == SequenceCoordinateType(A)]
 inline overload sliced(rvalue a:Sliced[A], first:C, last:C) {
     alias T = Type(move(a.seq));
     Sliced[T](move(a.seq), first, last);
 }
 
-[A, I, J | RandomAccessSequence?(A) and Integer?(I) and Integer?(J)]
+[A, I, J when RandomAccessSequence?(A) and Integer?(I) and Integer?(J)]
 inline overload sliced(forward a:A, first:I, last:J) {
     var b = begin(a);
     assert["boundsCheck"](first >= 0 and first <= size(a) and last >= 0 and last <= size(a),
@@ -60,11 +60,11 @@ inline overload sliced(forward a:A, first:I, last:J) {
 
 define slicedFrom;
 
-[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+[A, C when CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload slicedFrom(forward a:A, first:C) =
     sliced(a, first, end(a));
 
-[A, I | RandomAccessSequence?(A) and Integer?(I)]
+[A, I when RandomAccessSequence?(A) and Integer?(I)]
 inline overload slicedFrom(forward a:A, first:I) {
     assert["boundsCheck"](first >= 0 and first <= size(a),
         A, " slicedFrom index out out of bounds");
@@ -73,11 +73,11 @@ inline overload slicedFrom(forward a:A, first:I) {
 
 define slicedUpto;
 
-[A, C | CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
+[A, C when CoordinateSequence?(A) and (C == SequenceCoordinateType(A))]
 inline overload slicedUpto(forward a:A, last:C) =
     sliced(a, begin(a), last);
 
-[A, I | RandomAccessSequence?(A) and Integer?(I)]
+[A, I when RandomAccessSequence?(A) and Integer?(I)]
 inline overload slicedUpto(forward a:A, last:I) {
     assert["boundsCheck"](last >= 0 and last <= size(a),
         A, " slicedUpto index out out of bounds");
@@ -93,15 +93,15 @@ inline overload slicedUpto(forward a:A, last:I) {
 [A]
 inline overload iterator(a:Sliced[A]) = coordinateRange(a.first, a.last);
 
-[A | RandomAccessSequence?(A)]
+[A when RandomAccessSequence?(A)]
 inline overload reverseIterator(a:Sliced[A]) =
     reverseCoordinateRange(a.last, a.first);
 
-[A | RandomAccessSequence?(A)]
+[A when RandomAccessSequence?(A)]
 inline overload size(a:Sliced[A]) =
     if (a.last < a.first) SizeT(0) else SizeT(a.last - a.first);
 
-[A, I | RandomAccessSequence?(A) and Integer?(I)]
+[A, I when RandomAccessSequence?(A) and Integer?(I)]
 inline overload index(a:Sliced[A], i:I) = forward ..(a.first + i)^;
 
 [A]
@@ -113,5 +113,5 @@ inline overload end(a:Sliced[A]) = a.last;
 [A]
 inline overload front(a:Sliced[A]) = forward ..a.first^;
 
-[A | RandomAccessSequence?(A)]
+[A when RandomAccessSequence?(A)]
 inline overload back(a:Sliced[A]) = forward ..a[size(a)-1]^;

@@ -15,7 +15,7 @@ record TestCase (
     pending?: Bool,
 );
 
-[T | String?(T) and T != String]
+[T when String?(T) and T != String]
 overload TestCase(name : T, _case, pending?) : TestCase
     = TestCase(String(name), _case, pending?);
 
@@ -28,7 +28,7 @@ record TestSuite (
     testCases: Vector[TestCase]
 );
 
-[S, T | S != String or T != Vector[TestCase]]
+[S, T when S != String or T != Vector[TestCase]]
 overload TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
 
 alias TEST_CASE_INDENT = "  ";
@@ -168,7 +168,7 @@ expectNotEqual(test: TestStatus, name, expected, result) {
 
 define expectedResults?;
 overload expectedResults?(expected, result) = false;
-[T | Tuple?(T)]
+[T when Tuple?(T)]
 overload expectedResults?(expected: T, result: T) = expected == result;
 
 expectEqualValues(test: TestStatus, name, expectedTuple, ..results) {

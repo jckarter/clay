@@ -13,16 +13,16 @@ overload fmod(a:Double, b:Double) {
 	var ydb = MAKE_IEEE(y);
 	var sx = bitand(GET_IEEE_HIGH(xdb),SM);		/* sign of x */
 	GET_IEEE_HIGH(xdb) = bitxor(GET_IEEE_HIGH(xdb),sx);		/* |x| */
-	GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(ydb),MM);	/* |y| */
+	GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(ydb),MM);	/* wheny| */
 
     /* purge off exception values */
 	if(bitor(GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb))==0 or (GET_IEEE_HIGH(xdb)>=EM) or	/* y=0,or x not finite */
 	  (bitor(GET_IEEE_HIGH(ydb),bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>EM))	/* or y is NaN */
 	    return (x*y)/(x*y);
 	if(GET_IEEE_HIGH(xdb)<=GET_IEEE_HIGH(ydb)) {
-	    if((GET_IEEE_HIGH(xdb)<GET_IEEE_HIGH(ydb)) or (GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb))) return x;	/* |x|<|y| return x */
+	    if((GET_IEEE_HIGH(xdb)<GET_IEEE_HIGH(ydb)) or (GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb))) return x;	/* |x|<wheny| return x */
 	    if(GET_IEEE_LOW(xdb)==GET_IEEE_LOW(ydb)) 
-		return ZERO[bitshr(sx,31)];	/* |x|=|y| return x*0*/
+		return ZERO[bitshr(sx,31)];	/* |x|=wheny| return x*0*/
 	}
 
     /* determine ix = ilogb(x) */

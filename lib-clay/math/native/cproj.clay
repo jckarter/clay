@@ -1,7 +1,7 @@
 
 import math.*;
 
-[T | Complex?(T)]
+[T when Complex?(T)]
 overload proj(z:T) {
 
 	if (not infinity?(real(z)) and not infinity?(imagValue(z)))

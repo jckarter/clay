@@ -44,7 +44,7 @@ define SimpleParser?;
 [TokenInput, Parser]
 overload SimpleParser?(#TokenInput, #Parser) = false;
 
-[TokenInput, Parser | CallDefined?(call, Parser, TokenInput)]
+[TokenInput, Parser when CallDefined?(call, Parser, TokenInput)]
 overload SimpleParser?(#TokenInput, #Parser) {
     alias parser = typeToLValue(Parser);
     alias input = typeToLValue(TokenInput);
@@ -65,13 +65,13 @@ define ConvertibleParser?;
 [TokenInput]
 overload ConvertibleParser?(#TokenInput, x) = false;
 
-[TokenInput, Token | TokenType(TokenInput) == Token]
+[TokenInput, Token when TokenType(TokenInput) == Token]
 overload ConvertibleParser?(#TokenInput, #Token) = true;
 
-[TokenInput, A | Sequence?(A) and (TokenType(TokenInput) == SequenceElementType(A))]
+[TokenInput, A when Sequence?(A) and (TokenType(TokenInput) == SequenceElementType(A))]
 overload ConvertibleParser?(#TokenInput, #A) = true;
 
-[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+[TokenInput, ..T when Parsers?(TokenInput, ..T)]
 overload ConvertibleParser?(#TokenInput, #Tuple[..T]) = true;
 
 
@@ -82,23 +82,23 @@ overload ConvertibleParser?(#TokenInput, #Tuple[..T]) = true;
 
 define convertParser;
 
-[TokenInput, Token | TokenType(TokenInput) == Token]
+[TokenInput, Token when TokenType(TokenInput) == Token]
 overload convertParser(#TokenInput, token:Token) =
     literal(TokenInput, token);
 
-[TokenInput, A | Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
+[TokenInput, A when Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
 overload convertParser(#TokenInput, forward a:A) =
     literalString(TokenInput, a);
 
-[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+[TokenInput, ..T when Parsers?(TokenInput, ..T)]
 overload convertParser(#TokenInput, parsers:Tuple[..T]) =
     sequence(TokenInput, ..convertParsers(TokenInput, ..unpackRef(parsers)));
 
-[TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
+[TokenInput, Parser when SimpleParser?(TokenInput, Parser)]
 overload convertParser(#TokenInput, ref parser:Parser) =
     parser;
 
-[TokenInput, Parser | SimpleParser?(TokenInput, Parser)]
+[TokenInput, Parser when SimpleParser?(TokenInput, Parser)]
 overload convertParser(#TokenInput, rvalue parser:Parser) =
     move(parser);
 
@@ -112,7 +112,7 @@ private record Converter[TokenInput]();
 [TokenInput] overload call(x:Converter[TokenInput], forward p) =
     forward convertParser(TokenInput, p);
 
-[TokenInput, ..T | Parsers?(TokenInput, ..T)]
+[TokenInput, ..T when Parsers?(TokenInput, ..T)]
 convertParsers(#TokenInput, forward ..parsers:T) =
     forward ..mapValues(Converter[TokenInput](), ..parsers);
 
@@ -122,7 +122,7 @@ convertParsers(#TokenInput, forward ..parsers:T) =
 // ParseResult
 //
 
-[TokenInput, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Parser when Parser?(TokenInput, Parser)]
 ParseResult(#TokenInput, #Parser) {
     alias parser = convertParser(TokenInput, typeToLValue(Parser));
     alias input = typeToLValue(TokenInput);
@@ -158,7 +158,7 @@ TokenPredicate?(#TokenInput, #Predicate) {
     return Tuple[Bool] == Tuple[..Type(..predicate(token))];
 }
 
-[TokenInput, Predicate | TokenPredicate?(TokenInput, Predicate)]
+[TokenInput, Predicate when TokenPredicate?(TokenInput, Predicate)]
 condition(#TokenInput, predicate:Predicate) =
     input => {
         var saved = input;
@@ -179,7 +179,7 @@ condition(#TokenInput, predicate:Predicate) =
 // literal
 //
 
-[TokenInput, Token | TokenType(TokenInput) == Token]
+[TokenInput, Token when TokenType(TokenInput) == Token]
 literal(#TokenInput, expected:Token) =
     condition(TokenInput, x => (x == expected));
 
@@ -189,7 +189,7 @@ literal(#TokenInput, expected:Token) =
 // literalString
 //
 
-[TokenInput, A | Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
+[TokenInput, A when Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
 literalString(#TokenInput, forward a:A) {
     return input => {
         var saved = input;
@@ -213,7 +213,7 @@ literalString(#TokenInput, forward a:A) {
 // optional
 //
 
-[TokenInput, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Parser when Parser?(TokenInput, Parser)]
 optional(#TokenInput, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => Maybe(parser(input));
@@ -229,7 +229,7 @@ UniformParsers?(TokenInput, ..Parsers) =
     Parsers?(TokenInput, ..Parsers) and
     equalValues?(..mapValues(P => ParseResult(TokenInput, P), ..Parsers));
 
-[TokenInput, First, ..Rest | UniformParsers?(TokenInput, First, ..Rest)]
+[TokenInput, First, ..Rest when UniformParsers?(TokenInput, First, ..Rest)]
 choice(#TokenInput, forward first:First, forward ..rest:Rest) {
     var parsers = Tuple(..convertParsers(TokenInput, first, ..rest));
     return input => {
@@ -248,7 +248,7 @@ choice(#TokenInput, forward first:First, forward ..rest:Rest) {
 // sequence, sequenceAs
 //
 
-[TokenInput, First, ..Rest | Parsers?(TokenInput, First, ..Rest)]
+[TokenInput, First, ..Rest when Parsers?(TokenInput, First, ..Rest)]
 sequence(#TokenInput, forward first:First, forward ..rest:Rest) {
     var parsers = Tuple(..convertParsers(TokenInput, first, ..rest));
     return input => {
@@ -265,7 +265,7 @@ sequence(#TokenInput, forward first:First, forward ..rest:Rest) {
     };
 }
 
-[TokenInput, Result, ..Parsers | Parsers?(TokenInput, ..Parsers)]
+[TokenInput, Result, ..Parsers when Parsers?(TokenInput, ..Parsers)]
 sequenceAs(#TokenInput, result:Result, forward .._parsers:Parsers) {
     var parsers = Tuple(..convertParsers(TokenInput, .._parsers));
     return input => {
@@ -293,7 +293,7 @@ Modifier?(TokenInput, Modifier, Parser) {
     return (Parser?(TokenInput, Parser) and CallDefined?(M, T));
 }
 
-[TokenInput, Modifier, Parser | Modifier?(TokenInput, Modifier, Parser)]
+[TokenInput, Modifier, Parser when Modifier?(TokenInput, Modifier, Parser)]
 modify(#TokenInput, modifier:Modifier, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
@@ -311,7 +311,7 @@ modify(#TokenInput, modifier:Modifier, forward _parser:Parser) {
 // repeated, repeatedAs
 //
 
-[TokenInput, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Parser when Parser?(TokenInput, Parser)]
 repeated(#TokenInput, min:Int, max:Int, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
@@ -334,7 +334,7 @@ repeated(#TokenInput, min:Int, max:Int, forward _parser:Parser) {
     };
 }
 
-[TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Result, Parser when Parser?(TokenInput, Parser)]
 repeatedAs(#TokenInput, result:Result, min:Int, max:Int, forward _parser:Parser) {
     var parser = convertParser(TokenInput, _parser);
     return input => {
@@ -361,19 +361,19 @@ repeatedAs(#TokenInput, result:Result, min:Int, max:Int, forward _parser:Parser)
 // zeroOrMoreAs, oneOrMoreAs
 //
 
-[TokenInput, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Parser when Parser?(TokenInput, Parser)]
 zeroOrMore(#TokenInput, forward parser:Parser) =
     repeated(TokenInput, 0, Greatest(Int), parser);
 
-[TokenInput, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Parser when Parser?(TokenInput, Parser)]
 oneOrMore(#TokenInput, forward parser:Parser) =
     repeated(TokenInput, 1, Greatest(Int), parser);
 
-[TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Result, Parser when Parser?(TokenInput, Parser)]
 zeroOrMoreAs(#TokenInput, result:Result, forward parser:Parser) =
     repeatedAs(TokenInput, result, 0, Greatest(Int), parser);
 
-[TokenInput, Result, Parser | Parser?(TokenInput, Parser)]
+[TokenInput, Result, Parser when Parser?(TokenInput, Parser)]
 oneOrMoreAs(#TokenInput, result:Result, forward parser:Parser) =
     repeatedAs(TokenInput, result, 1, Greatest(Int), parser);
 
@@ -384,7 +384,7 @@ oneOrMoreAs(#TokenInput, result:Result, forward parser:Parser) =
 // separatedListStrict, optSeparatedListStrict,
 //
 
-[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+[TokenInput, Separator, Element when Parsers?(TokenInput, Separator, Element)]
 separatedList(#TokenInput, forward _separator:Separator, forward _element:Element) {
     var separator = convertParser(TokenInput, _separator);
     var element = convertParser(TokenInput, _element);
@@ -408,7 +408,7 @@ separatedList(#TokenInput, forward _separator:Separator, forward _element:Elemen
     };
 }
 
-[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+[TokenInput, Separator, Element when Parsers?(TokenInput, Separator, Element)]
 optSeparatedList(#TokenInput, forward _separator:Separator, forward _element:Element) {
     alias T = ParseResult(TokenInput, Element);
     return modify(
@@ -418,7 +418,7 @@ optSeparatedList(#TokenInput, forward _separator:Separator, forward _element:Ele
     );
 }
 
-[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+[TokenInput, Separator, Element when Parsers?(TokenInput, Separator, Element)]
 separatedListStrict(#TokenInput, forward _separator:Separator, forward _element:Element) {
     var separator = convertParser(TokenInput, _separator);
     var element = convertParser(TokenInput, _element);
@@ -445,7 +445,7 @@ separatedListStrict(#TokenInput, forward _separator:Separator, forward _element:
     };
 }
 
-[TokenInput, Separator, Element | Parsers?(TokenInput, Separator, Element)]
+[TokenInput, Separator, Element when Parsers?(TokenInput, Separator, Element)]
 optSeparatedListStrict(#TokenInput, forward _separator:Separator, forward _element:Element) {
     alias T = ParseResult(TokenInput, Element);
     return modify(

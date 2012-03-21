@@ -3,12 +3,12 @@
 // fieldRef, fieldRefByIndex
 //
 
-[T, FIELD | RecordWithField?(T, FIELD)]
+[T, FIELD when RecordWithField?(T, FIELD)]
 inline overload fieldRef(x:T, #FIELD) {
     return ref recordFieldRefByName(x, #FIELD);
 }
 
-[T, i | Record?(T)]
+[T, i when Record?(T)]
 inline fieldRefByIndex(x:T, #i) =
     ref recordFieldRef(x, #SizeT(i));
 
@@ -17,10 +17,10 @@ inline fieldRefByIndex(x:T, #i) =
 // RecordFieldType, RecordFieldTypes
 //
 
-[T,i | Record?(T)]
+[T,i when Record?(T)]
 RecordFieldType(#T, #i) = Type(fieldRefByIndex(null(T)^, #i));
 
-[T | Record?(T)]
+[T when Record?(T)]
 RecordFieldTypes(#T) = ..Type(..recordFields(null(T)^));
 
 
@@ -51,7 +51,7 @@ RecordFieldNames(R) = ..mapValues(
 [T]
 RegularRecord?(#T) = false;
 
-[T | Record?(T)]
+[T when Record?(T)]
 overload RegularRecord?(#T) = true;
 
 
@@ -60,12 +60,12 @@ overload RegularRecord?(#T) = true;
 // basic constructor
 //
 
-[T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
+[T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
 alias initializeRecord(#T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
 
-[T, ..A | Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
+[T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
 alias overload T(..args:A) = initializeRecord(T, ..args);
 
 
@@ -74,12 +74,12 @@ alias overload T(..args:A) = initializeRecord(T, ..args);
 // default constructor
 //
 
-[T | Record?(T)]
+[T when Record?(T)]
 overload initializeRecord(#T) --> returned:T {
     initializeMulti(..recordFields(returned));
 }
 
-[T | RegularRecord?(T)]
+[T when RegularRecord?(T)]
 overload T() = initializeRecord(T);
 
 [..A]
@@ -97,12 +97,12 @@ inline overload initializeTypes() = ;
 // copy constructor
 //
 
-[T | Record?(T)]
+[T when Record?(T)]
 copyRecord(src:T) --> returned:T {
     ..recordFields(returned) <-- ..recordFields(src);
 }
 
-[T | RegularRecord?(T) and not BitwiseCopiedType?(T)]
+[T when RegularRecord?(T) and not BitwiseCopiedType?(T)]
 overload T(src:T) = copyRecord(src);
 
 
@@ -111,23 +111,23 @@ overload T(src:T) = copyRecord(src);
 // moveUnsafe, resetUnsafe
 //
 
-[T | Record?(T)]
+[T when Record?(T)]
 moveRecordUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n))
         fieldRefByIndex(returned, i) <-- moveUnsafe(fieldRefByIndex(src, i));
 }
 
-[T | RegularRecord?(T) and not BitwiseMovedType?(T)]
+[T when RegularRecord?(T) and not BitwiseMovedType?(T)]
 overload moveUnsafe(src:T) = moveRecordUnsave(src);
 
-[T | Record?(T)]
+[T when Record?(T)]
 resetRecordUnsafe(a:T) {
     ..for (x in recordFields(a))
         resetUnsafe(x);
 }
 
-[T | RegularRecord?(T) and not NotResetType?(T)]
+[T when RegularRecord?(T) and not NotResetType?(T)]
 overload resetUnsafe(a:T) {
     resetRecordUnsafe(a);
 }
@@ -138,13 +138,13 @@ overload resetUnsafe(a:T) {
 // destroy
 //
 
-[T | Record?(T)]
+[T when Record?(T)]
 destroyRecord(a:T) {
     ..for (x in recordFields(a))
         destroy(x);
 }
 
-[T | RegularRecord?(T) and not NotDestroyedType?(T)]
+[T when RegularRecord?(T) and not NotDestroyedType?(T)]
 overload destroy(a:T) {
     destroyRecord(a);
 }
@@ -155,7 +155,7 @@ overload destroy(a:T) {
 // assign
 //
 
-[T | RegularRecord?(T) and not BitwiseAssignedType?(T)]
+[T when RegularRecord?(T) and not BitwiseAssignedType?(T)]
 overload assign(ref dest:T, ref src:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n))
@@ -168,7 +168,7 @@ overload assign(ref dest:T, ref src:T) {
 // equals?
 //
 
-[T | RegularRecord?(T)]
+[T when RegularRecord?(T)]
 overload equals?(a:T, b:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {
@@ -184,7 +184,7 @@ overload equals?(a:T, b:T) {
 // lesser?
 //
 
-[T | RegularRecord?(T)]
+[T when RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {

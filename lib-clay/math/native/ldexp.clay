@@ -1,6 +1,6 @@
 
 import math.*;
 
-[T,I | Float?(T) and Integer?(I)]
+[T,I when Float?(T) and Integer?(I)]
 overload ldexp(value:T, i:I)
     = if(not finite?(value) or value==0.) value else scalbn(value,i);
