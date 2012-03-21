@@ -48,6 +48,7 @@ static bool opsymbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
+    std::cout<<"opsymbol: "<<t->str<<"\n";
     return t->str == s;
 }
 
@@ -160,9 +161,9 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(int op, const string &s) {
+static string cleanNumericSeparator(string op, const string &s) {
     string out;
-    if (op == MINUS)
+    if (op == "-")
         out.push_back('-');
     for (unsigned i = 0; i < s.size(); ++i) {
         if (s[i] != '_')
@@ -171,7 +172,7 @@ static string cleanNumericSeparator(int op, const string &s) {
     return out;
 }
 
-static bool intLiteral(int op, ExprPtr &x) {
+static bool intLiteral(string op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -189,7 +190,7 @@ static bool intLiteral(int op, ExprPtr &x) {
     return true;
 }
 
-static bool floatLiteral(int op, ExprPtr &x) {
+static bool floatLiteral(string op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -232,8 +233,8 @@ static bool stringLiteral(ExprPtr &x) {
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
-    if (restore(p), floatLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
+    if (restore(p), floatLiteral("+", x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     return false;
@@ -536,56 +537,63 @@ static bool suffixExpr(ExprPtr &x) {
 // prefix expr
 //
 
-static bool prefixExpr(ExprPtr &x);
+static bool operatorExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!opsymbol("&")) return false;
     ExprPtr a;
-    if (!prefixExpr(a)) return false;
+    if (!operatorExpr(a)) return false;
     x = new VariadicOp(ADDRESS_OF, new ExprList(a));
     x->location = location;
     return true;
 }
 
-static bool plusOrMinus(int &op) {
-    int p = save();
-    if (opsymbol("+"))
-        op = PLUS;
-    else if (restore(p), opsymbol("-"))
-        op = MINUS;
-    else
-        return false;
-    return true;
-}
+// static bool plusOrMinus(int &op) {
+//     int p = save();
+//     if (opsymbol("+"))
+//         op = PLUS;
+//     else if (restore(p), opsymbol("-"))
+//         op = MINUS;
+//     else
+//         return false;
+//     return true;
+// }
 
-static bool signedLiteral(int op, ExprPtr &x) {
+static bool signedLiteral(string op, ExprPtr &x) {
     int p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;
     return false;
 }
 
-static bool signExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    int op;
-    if (!plusOrMinus(op)) return false;
-    ExprPtr b;
-    int p = save();
-    if (signedLiteral(op, x))
-        return true;
-    restore(p);
-    if (!prefixExpr(b)) return false;
-    x = new VariadicOp(op, new ExprList(b));
-    x->location = location;
-    return true;
-}
+// static bool signedLiteral(int op, ExprPtr &x) {
+//     int p = save();
+//     if (restore(p), intLiteral(op, x)) return true;
+//     if (restore(p), floatLiteral(op, x)) return true;
+//     return false;
+// }
+
+// static bool signExpr(ExprPtr &x) {
+//     LocationPtr location = currentLocation();
+//     int op;
+//     if (!plusOrMinus(op)) return false;
+//     ExprPtr b;
+//     int p = save();
+//     if (signedLiteral(op, x))
+//         return true;
+//     restore(p);
+//     if (!operatorExpr(b)) return false;
+//     x = new VariadicOp(op, new ExprList(b));
+//     x->location = location;
+//     return true;
+// }
 
 static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!opsymbol("*")) return false;
     ExprPtr a;
-    if (!prefixExpr(a)) return false;
+    if (!operatorExpr(a)) return false;
     x = new DispatchExpr(a);
     x->location = location;
     return true;
@@ -595,7 +603,7 @@ static bool staticExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("#")) return false;
     ExprPtr y;
-    if (!prefixExpr(y)) return false;
+    if (!operatorExpr(y)) return false;
     x = new StaticExpr(y);
     x->location = location;
     return true;
@@ -603,8 +611,8 @@ static bool staticExpr(ExprPtr &x) {
 
 static bool prefixExpr(ExprPtr &x) {
     int p = save();
-    if (signExpr(x)) return true;
-    if (restore(p), addressOfExpr(x)) return true;
+    // if (signExpr(x)) return true;
+    if (addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
     if (restore(p), staticExpr(x)) return true;
     if (restore(p), suffixExpr(x)) return true;
@@ -646,22 +654,34 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprPtr b;
     string op;
     int p = save();
+    std::cout<<"opTail: "<<location<<"\n";
     if (!operatorOp(op)) return false;
     restore(p);
+    std::cout<<"first op: "<<op<<"\n";
     while (true) {
         p = save();
-        if (!operatorOp(op)) {
+        if(!operatorOp(op)){
             restore(p);
             break;
         }
+        std::cout<<"loop op: "<<op<<"\n";
+        std::cout<<"loop pos1: "<<p<<"\n";
+        
+        if (signedLiteral(op, b)) {
+            std::cout<<"signedLiteral op: "<<op<<"\n";
+            exprs->add(b);    
+            continue;
+        }
+        std::cout<<"loop pos2: "<<p<<"\n";
         ops.push_back(op);
         if (!prefixExpr(b)) {
             restore(p);
             break;
         }
         exprs->add(b);
-        
     }
+    std::cout<<ops<<"\n";
+    // restore(p);
     x = new VariadicOp(OPERATOR, ops, exprs);
     x->location = location;
     return true;
@@ -968,7 +988,7 @@ static bool dottedNameRef(ExprPtr &x) {
 static bool atomicPattern(ExprPtr &x) {
     int p = save();
     if (dottedNameRef(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
     return false;
 }
 
