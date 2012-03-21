@@ -9,7 +9,7 @@ import math.*;
 // If arg is inf, 0.0, or NaN, then frexp(arg,&exp) returns arg
 // with *exp=0.
 
-[T,I | Float?(T) and Integer?(I)]
+[T,I when Float?(T) and Integer?(I)]
 overload frexp(x:T, eptr:Pointer[I]){
     var k = floatExponent(x);                      // extract exponent
     eptr^ = 0;
@@ -28,7 +28,7 @@ overload frexp(x:T, eptr:Pointer[I]){
 
 
 
-//[T,I | T==LongDouble and Integer?(I)]
+//[T,I when T==LongDouble and Integer?(I)]
 //overload frexp(x:T, eptr:Pointer[I]){
 //    var k = floatExponent(x);                       // extract exponent
 //    eptr^ = 0;

@@ -11,8 +11,8 @@ overload indexAssign(x:Foo, index, value) {
     println("indexAssign(x, ", index, ", ", value, ")");
 }
 
-overload indexUpdateAssign(op, x:Foo, index, value) {
-    println("indexUpdateAssign(", op, ", x, ", index, ", ", value, ")");
+overload indexUpdateAssign(op, x:Foo, index, ..args) {
+    println("indexUpdateAssign(", ..weaveValues(", ",op,"x",index,..args), ")");
 }
 
 [i]
@@ -42,5 +42,5 @@ main() {
     foo.bar = "hola";
     foo[30] += 100;
     foo.40 *= 200;
-    foo.baz /= 300;
+    foo.baz \= 300;
 }

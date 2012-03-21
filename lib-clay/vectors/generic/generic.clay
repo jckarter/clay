@@ -20,7 +20,7 @@ define vectorRequestCapacity;
 // predicates
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 overload ContiguousSequence?(#V) = true;
 
 
@@ -29,10 +29,10 @@ overload ContiguousSequence?(#V) = true;
 // size, index
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload size(a:V) = vectorSize(a);
 
-[V,I | Vector?(V) and Integer?(I)]
+[V,I when Vector?(V) and Integer?(I)]
 inline overload index(a:V, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a),
         V, " index out of bounds");
@@ -47,10 +47,10 @@ inline overload index(a:V, i:I) {
 
 alias VectorCoordinate[T] = Pointer[T];
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload begin(a:V) = vectorData(a);
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload end(a:V) = vectorData(a) + size(a);
 
 
@@ -59,10 +59,10 @@ inline overload end(a:V) = vectorData(a) + size(a);
 // vector iteration
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload iterator(a:V) = coordinateRange(begin(a), end(a));
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload reverseIterator(a:V) =
     reverseCoordinateRange(end(a), begin(a));
 
@@ -72,7 +72,7 @@ inline overload reverseIterator(a:V) =
 // equals?, lesser?
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 overload equals?(a:V, b:V) {
     if (size(a) != size(b))
         return false;
@@ -83,7 +83,7 @@ overload equals?(a:V, b:V) {
     return true;
 }
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 overload lesser?(a:V, b:V) {
     for (x, y in zipped(a, b)) {
         if (x != y)
@@ -98,23 +98,23 @@ overload lesser?(a:V, b:V) {
 // front, back, push, pop
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload front(a:V) = ref a[0];
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload back(a:V) = ref a[size(a) - 1];
 
-[V, S | Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
+[V, S when Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
 overload push(a:V, forward seq:S) {
     insert(a, size(a), seq);
 }
 
-[V, T | Vector?(V) and (SequenceElementType(V) == T)]
+[V, T when Vector?(V) and (SequenceElementType(V) == T)]
 overload push(a:V, forward x:T) {
     insert(a, size(a), x);
 }
 
-[V, A1, A2, ..AA | Vector?(V)]
+[V, A1, A2, ..AA when Vector?(V)]
 inline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
     reserve(v, countValues(A1, A2, ..AA));
     ..for (x in e1, e2, ..ee) {
@@ -122,10 +122,10 @@ inline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
     }
 }
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload push(v:V) { }
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 overload pop(a:V) {
     assert(not empty?(a), "pop of empty ", V);
     var temp = moveUnsafe(back(a));
@@ -139,23 +139,23 @@ overload pop(a:V) {
 // reserve, resize, resizeUnsafe, ensureSpace
 //
 
-[V, I | Vector?(V) and Integer?(I)]
+[V, I when Vector?(V) and Integer?(I)]
 overload reserve(a:V, n:I) {
     if (vectorCapacity(a) < SizeT(n))
         vectorRequestCapacity(a, SizeT(n));
 }
 
-[V, I | Vector?(V) and Integer?(I)]
+[V, I when Vector?(V) and Integer?(I)]
 inline overload resize(a:V, n:I) {
     resizeInternal(a, SizeT(n), initializeMemory);
 }
 
-[V, I | Vector?(V) and Integer?(I)]
+[V, I when Vector?(V) and Integer?(I)]
 inline overload resizeUnsafe(a:V, n:I) {
     resizeInternal(a, SizeT(n), resetMemoryUnsafe);
 }
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 private resizeInternal(a:V, n:SizeT, initializer) {
     var currentSize = vectorSize(a);
     if (currentSize < n) {
@@ -178,7 +178,7 @@ private inline ensureSpace(a, space:SizeT) {
 // insert
 //
 
-[I, J | Integer?(I) and Integer?(J)]
+[I, J when Integer?(I) and Integer?(J)]
 private insertLocationsUnsafe(a, pos:I, n:J) {
     return ..insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
@@ -191,7 +191,7 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     return first, first+n;
 }
 
-[V,I,S | Vector?(V) and Integer?(I) and Sequence?(S) and
+[V,I,S when Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
@@ -203,7 +203,7 @@ overload insert(a:V, i:I, seq:S) {
     }
 }
 
-[V,I,S | Vector?(V) and Integer?(I) and SizedSequence?(S) and
+[V,I,S when Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
@@ -221,7 +221,7 @@ overload insert(a:V, i:I, seq:S) {
     }
 }
 
-[V,I,S | Vector?(V) and Integer?(I)
+[V,I,S when Vector?(V) and Integer?(I)
          and SizedSequence?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, seq:S) {
@@ -237,7 +237,7 @@ overload insert(a:V, i:I, seq:S) {
     }
 }
 
-[V,I,S | Vector?(V) and Integer?(I)
+[V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and SizedSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
@@ -249,7 +249,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
     }
 }
 
-[V,I,S | Vector?(V) and Integer?(I)
+[V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
 overload insert(a:V, i:I, rvalue seq:S) {
@@ -259,26 +259,26 @@ overload insert(a:V, i:I, rvalue seq:S) {
     moveNonoverlappingMemory(first, src, src+size(seq));
 }
 
-[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
+[V,I,T when Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:I, ref x:T) {
     // NOTE: when 'x' is an lvalue, it _may_ be pointing inside 'a'.
     // so make a copy and insert it as an rvalue.
     insert(a, i, copy(x));
 }
 
-[V,I,T | Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
+[V,I,T when Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:I, rvalue x:T) {
     var first, last = ..insertLocationsUnsafe(a, i, 1);
     first^ <-- move(x);
 }
 
-[V,T,S | Vector?(V) and (SequenceElementType(V) == T) and
+[V,T,S when Vector?(V) and (SequenceElementType(V) == T) and
          Sequence?(S) and (SequenceElementType(S) == T)]
 overload insert(a:V, i:VectorCoordinate[T], forward seq:S) {
     insert(a, i-begin(a), seq);
 }
 
-[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+[V,T when Vector?(V) and (SequenceElementType(V) == T)]
 overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
     insert(a, i-begin(a), x);
 }
@@ -289,16 +289,16 @@ overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
 // clear, remove
 //
 
-[V | Vector?(V)]
+[V when Vector?(V)]
 inline overload clear(a:V) {
     remove(a, begin(a), end(a));
 }
 
-[V,T | Vector?(V) and SequenceElementType(V) == T]
+[V,T when Vector?(V) and SequenceElementType(V) == T]
 private validVectorCoordinate?(v:V, i:VectorCoordinate[T])
     = i >= begin(v) and i <= end(v);
 
-[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+[V,T when Vector?(V) and (SequenceElementType(V) == T)]
 private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     assert["boundsChecks"](validVectorCoordinate?(a, i),
         "invalid first coordinate for remove from ", V);
@@ -309,7 +309,7 @@ private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     vectorSetSize(a, vectorSize(a) - (j-i));
 }
 
-[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+[V,T when Vector?(V) and (SequenceElementType(V) == T)]
 overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     assert["boundsChecks"](validVectorCoordinate?(a, i),
         "invalid first coordinate for remove from ", V);
@@ -319,17 +319,17 @@ overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     removeLocations(a, i, j);
 }
 
-[V,T | Vector?(V) and (SequenceElementType(V) == T)]
+[V,T when Vector?(V) and (SequenceElementType(V) == T)]
 overload remove(a:V, i:VectorCoordinate[T]) {
     remove(a, i, i+1);
 }
 
-[V,I | Vector?(V) and Integer?(I)]
+[V,I when Vector?(V) and Integer?(I)]
 overload remove(a:V, i:I) {
     remove(a, begin(a)+i);
 }
 
-[V,I,J | Vector?(V) and Integer?(I) and Integer?(J)]
+[V,I,J when Vector?(V) and Integer?(I) and Integer?(J)]
 overload remove(a:V, i:I, j:J) {
     remove(a, begin(a)+i, begin(a)+j);
 }

@@ -2,7 +2,7 @@ public import os.errors.*;
 
 record GenericIOError(code:Int);
 
-[I | Integer?(I)]
+[I when Integer?(I)]
 overload GenericIOError(code:I) --> returned:GenericIOError {
     returned.code = Int(code);
 }
@@ -20,5 +20,5 @@ variant IOError (GenericIOError);
 
 instance OSError (IOError);
 
-[T | VariantMember?(IOError, T)]
+[T when VariantMember?(IOError, T)]
 overload Exception(forward x:T) = Exception(IOError(x));

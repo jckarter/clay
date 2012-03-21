@@ -37,7 +37,7 @@ overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) 
     }
 }
 
-[Main | CallDefined?(Main, Type(commandLine()))]
+[Main when CallDefined?(Main, Type(commandLine()))]
 overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
     setArgcArgv(argc_, argv_);
     try {
@@ -49,7 +49,7 @@ overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) 
     }
 }
 
-[Main | CallDefined?(Main, ..Type(argc, argv))]
+[Main when CallDefined?(Main, ..Type(argc, argv))]
 overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
     setArgcArgv(argc_, argv_);
     try {

@@ -7,7 +7,7 @@ private alias FHUGE = GreatestPositiveFinite(Float);
 private alias DZERO = 0.ff;
 private alias FZERO = 0.f;
 
-[T | Float?(T)]
+[T when Float?(T)]
 overload round(x:T) --> t:T {
 	alias ZERO = T(0);
 	alias MHALF = T(-0.5);

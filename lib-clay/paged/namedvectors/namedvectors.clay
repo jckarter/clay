@@ -48,7 +48,7 @@ private headerSpace() = alignUp(TypeSize(Header), 16u);
 private requiredFileSize(#T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
-[S,T | String?(S)]
+[S,T when String?(S)]
 overload NamedVector[T](fileName:S) {
     if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);

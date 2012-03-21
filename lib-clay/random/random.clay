@@ -14,7 +14,7 @@ overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
 define generate;
 
-[I | Integer?(I) and TypeSize(I) <= 32] overload generate(r, #I)
+[I when Integer?(I) and TypeSize(I) <= 32] overload generate(r, #I)
     = wrapCast(I, generate(r, UInt32));
 
 overload generate(r : XORShiftRNG, #UInt32){
@@ -49,7 +49,7 @@ define uniform;
 // TODO: This is a bit of a rubbish default implementation
 // It works fine for integers (I think) but is almost certainly wrong for floats
 // Either way it could be a lot faster.
-[T | Integer?(T)] overload uniform(rnd, from : T, to : T){
+[T when Integer?(T)] overload uniform(rnd, from : T, to : T){
   if(safeFromOverflow?(from, to)){
     var ub = to - from;
     var mask = toMask(ub);
@@ -79,9 +79,9 @@ overload uniform(rnd, #Float64) = uniform(rnd, 0. ,1.);
 
 define normal;
 
-[T | Numeric?(T)] overload normal(rnd, mean:T, stdev:T)
+[T when Numeric?(T)] overload normal(rnd, mean:T, stdev:T)
     = mean + stdev * sqrt(-T(2) * log(uniform(rnd,T(0),T(1)))) * cos(T(2) * M_PI * uniform(rnd,T(0),T(1)));
-[T | Numeric?(T)] overload normal(rnd, mean:T) = normal(rnd, mean, T(1));
+[T when Numeric?(T)] overload normal(rnd, mean:T) = normal(rnd, mean, T(1));
 
 private smallDouble(r) =
   bitcast(Double, bitor(mask(generate(r, Int64), 52), bitcast(UInt64,1.0)))-1;
@@ -96,8 +96,8 @@ private pr() = UInt32(libc.random());
 
 private define safeFromOverflow?;
 
-[T | UnsignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = true;
-[T | SignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
+[T when UnsignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = true;
+[T when SignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
 
 private define toMask;
 

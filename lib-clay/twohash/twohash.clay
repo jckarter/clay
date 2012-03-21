@@ -93,10 +93,10 @@ overload HashSetLike?(#SetVector[K], #K) = true;
 [T]
 private Hashtable?(#T) = false;
 
-[T | RecordWithField?(T, "data") and TwoHash?(Type(typeToLValue(T).data))]
+[T when RecordWithField?(T, "data") and TwoHash?(Type(typeToLValue(T).data))]
 overload Hashtable?(#T) = true;
 
-[T | Hashtable?(T)]
+[T when Hashtable?(T)]
 overload EntryType(#T) = EntryType(Type(typeToLValue(T).data));
 
 //
@@ -104,24 +104,24 @@ overload EntryType(#T) = EntryType(Type(typeToLValue(T).data));
 //
 // (copied from records.clay)
 
-[T | Entry?(T)]
+[T when Entry?(T)]
 overload RegularRecord?(#T) = false;
 
-[T | Entry?(T)]
+[T when Entry?(T)]
 overload destroy(a:T)
 { 
     ..for (x in ..recordFields(a))
         destroy(x);
 }
 
-[T | Entry?(T)]
+[T when Entry?(T)]
 overload moveUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in ..staticIntegers(#n))
         fieldRefByIndex(returned, i) <-- fieldRefByIndex(src, i);
 }
 
-[T | Entry?(T)]
+[T when Entry?(T)]
 overload resetUnsafe(a:T) {
     ..for (x in ..recordFields(a))
         resetUnsafe(x);
@@ -131,14 +131,14 @@ overload resetUnsafe(a:T) {
 // size
 //
 
-[Hash | Hashtable?(Hash)]
+[Hash when Hashtable?(Hash)]
 overload size(a: Hash) = a.data.size;
 
 //
 // lookup
 //
 
-[K, Set | HashSetLike?(Set, K)]
+[K, Set when HashSetLike?(Set, K)]
 overload lookup(a: Set, key: K)
 {
     var pEntry = pEntryAt(a.data, key);
@@ -158,7 +158,7 @@ overload lookup(a: HashMap[K, V], key: K)
 // put
 //
 
-[K, Set | HashSetLike?(Set, K)]
+[K, Set when HashSetLike?(Set, K)]
 overload put(a: Set, key: K, b: Bool) 
 {
     var pEntry = pEntryAt(a.data, key);
@@ -187,7 +187,7 @@ overload put(a: HashMap[K, V], key: K, forward value: V)
 //
 
 // !! has different semantics (non-ref return)
-[K, Set | HashSetLike?(Set, K)]
+[K, Set when HashSetLike?(Set, K)]
 overload index(a: Set, key: K)
 {
     var pEntry = pEntryAt(a.data, key);
@@ -196,7 +196,7 @@ overload index(a: Set, key: K)
     return false;
 }
 
-[K, Set | HashSetLike?(Set, K)]
+[K, Set when HashSetLike?(Set, K)]
 overload indexAssign(a: Set, key: K, b: Bool) { put(a,key,b); }
 
 [K, V]
@@ -213,7 +213,7 @@ overload index(a: HashMap[K, V], key: K)
 // remove
 //
 
-[K, Hash | Hashtable?(Hash)]
+[K, Hash when Hashtable?(Hash)]
 overload remove(a: Hash, key: K)
 {
     var pEntry = pEntryAt(a.data, key);
@@ -229,7 +229,7 @@ overload remove(a: Hash, key: K)
 
 define itemFromEntry;
 
-[Hash | Hashtable?(Hash)]
+[Hash when Hashtable?(Hash)]
 overload items(a: Hash) = TwoHashEntries[EntryType(Hash), itemFromEntry](a.data);
 
 [K]

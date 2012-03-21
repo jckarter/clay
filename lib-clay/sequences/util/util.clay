@@ -12,7 +12,7 @@ define wrapSequence;
 inline overload wrapSequence(rvalue x) = move(x);
 inline overload wrapSequence(ref x) = sequenceHandle(x);
 
-[A | LightweightSequence?(A)]
+[A when LightweightSequence?(A)]
 inline overload wrapSequence(ref x:A) = x;
 
 

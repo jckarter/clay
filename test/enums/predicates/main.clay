@@ -1,9 +1,9 @@
 private Ok?() = true;
 
-[| Ok?()]
+[when Ok?()]
 enum Touchable (FOO);
 
-[| false]
+[when false]
 enum Untouchable (BAR);
 
 main() {

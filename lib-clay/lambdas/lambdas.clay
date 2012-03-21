@@ -17,12 +17,12 @@ record Function[In,Out] (
 
 // main constructor
 
-[In, Out, T | CallableWithSignature?(T, In, Out)]
+[In, Out, T when CallableWithSignature?(T, In, Out)]
 alias overload Function[In, Out](x:T) {
     return Function[In,Out](new(FunctionBody[In,Out](x)));
 }
 
-[T | MonoType?(T)]
+[T when MonoType?(T)]
 alias overload Function(x:T) {
     return Function[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
 }

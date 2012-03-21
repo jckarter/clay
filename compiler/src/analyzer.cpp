@@ -742,7 +742,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case VARIADIC_OP : {
         VariadicOp *x = (VariadicOp *)expr.ptr();
-        if (x->op.front() == ADDRESS_OF) {
+        if (x->op == ADDRESS_OF) {
             PValuePtr pv = analyzeOne(x->exprs->exprs.front(), env);
             if (!pv)
                 return NULL;
@@ -2070,7 +2070,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
     case BINDING :
     case ASSIGNMENT :
     case INIT_ASSIGNMENT :
-    case UPDATE_ASSIGNMENT :
+    case VARIADIC_ASSIGNMENT :
         return SA_FALLTHROUGH;
 
     case GOTO :

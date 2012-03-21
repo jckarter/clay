@@ -1,6 +1,6 @@
 [T] record Foo[T] (x:T);
 
-[T | Integer?(T)] record Bar[T] (x:T);
+[T when Integer?(T)] record Bar[T] (x:T);
 
 main() {
     println(Foo(1));
