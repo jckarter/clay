@@ -89,8 +89,8 @@ static bool identifierList(vector<IdentifierPtr> &x) {
     IdentifierPtr y;
     if (!identifier(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",")) {
             restore(p);
@@ -101,7 +101,6 @@ static bool identifierList(vector<IdentifierPtr> &x) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -110,14 +109,13 @@ static bool identifierListNoTail(vector<IdentifierPtr> &x) {
     IdentifierPtr y;
     if (!identifier(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !identifier(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -127,14 +125,13 @@ static bool dottedName(DottedNamePtr &x) {
     DottedNamePtr y = new DottedName();
     IdentifierPtr ident;
     if (!identifier(ident)) return false;
-    y->parts.push_back(ident);
     while (true) {
+        y->parts.push_back(ident);
         int p = save();
         if (!symbol(".") || !identifier(ident)) {
             restore(p);
             break;
         }
-        y->parts.push_back(ident);
     }
     x = y;
     x->location = location;
@@ -646,20 +643,18 @@ static bool operatorTail(VariadicOpPtr &x) {
     string op;
     int p = save();
     if (!operatorOp(op)) return false;
-    restore(p);
     while (true) {
-        p = save();
-        if (!operatorOp(op)) {
-            restore(p);
-            break;
-        }
         exprs->add(new NameRef(new Identifier(op)));
         if (!prefixExpr(b)) {
             restore(p);
             break;
         }
         exprs->add(b);
-        
+        p = save();
+        if (!operatorOp(op)) {
+            restore(p);
+            break;
+        }
     }
     x = new VariadicOp(OPERATOR, exprs);
     x->location = location;
@@ -1182,14 +1177,13 @@ static bool updateopstring(string &op) {
 
 static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprListPtr exprs = new ExprList();
     ExprPtr y,z;
     if (!expression(y)) return false;
     string op;
     if (!updateopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    exprs->add(new NameRef(new Identifier(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
     exprs->add(y);
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();
@@ -1273,14 +1267,13 @@ static bool caseBlockList(vector<CaseBlockPtr> &x) {
     CaseBlockPtr a;
     if (!caseBlock(a)) return false;
     x.clear();
-    x.push_back(a);
     while (true) {
+        x.push_back(a);
         int p = save();
         if (!caseBlock(a)) {
             restore(p);
             break;
         }
-        x.push_back(a);
     }
     return true;
 }
@@ -1393,14 +1386,13 @@ static bool catchBlockList(vector<CatchPtr> &x) {
     CatchPtr a;
     if (!catchBlock(a)) return false;
     x.clear();
-    x.push_back(a);
     while (true) {
+        x.push_back(a);
         int p = save();
         if (!catchBlock(a)) {
             restore(p);
             break;
         }
-        x.push_back(a);
     }
     return true;
 }
@@ -1672,14 +1664,13 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
     FormalArgPtr y;
     if (!formalArg(x.size(), y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !formalArg(x.size(), y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -1794,14 +1785,13 @@ static bool patternVarList(vector<PatternVar> &x) {
     PatternVar y;
     if (!patternVar(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !patternVar(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -1915,8 +1905,8 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
     RecordFieldPtr y;
     if (!recordField(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",")) {
             restore(p);
@@ -1927,7 +1917,6 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -2077,14 +2066,13 @@ static bool returnTypeList(vector<ReturnSpecPtr> &x) {
     ReturnSpecPtr y;
     if (!returnType(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !returnType(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -2113,14 +2101,13 @@ static bool namedReturnList(vector<ReturnSpecPtr> &x) {
     ReturnSpecPtr y;
     if (!namedReturn(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !namedReturn(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -2391,8 +2378,8 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     EnumMemberPtr y;
     if (!enumMember(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",")) {
             restore(p);
@@ -2403,7 +2390,6 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -2493,14 +2479,13 @@ static bool externalArgs(vector<ExternalArgPtr> &x) {
     ExternalArgPtr y;
     if (!externalArg(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",") || !externalArg(y)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -2696,8 +2681,8 @@ static bool importedMemberList(vector<ImportedMember> &x) {
     ImportedMember y;
     if (!importedMember(y)) return false;
     x.clear();
-    x.push_back(y);
     while (true) {
+        x.push_back(y);
         int p = save();
         if (!symbol(",")) {
             restore(p);
@@ -2708,7 +2693,6 @@ static bool importedMemberList(vector<ImportedMember> &x) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
