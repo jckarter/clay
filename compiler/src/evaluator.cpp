@@ -2096,13 +2096,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *x = (VariadicAssignment *)stmt.ptr();
-        PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs.front(), env);
+        PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
         if (pvLeft->isTemp)
-            error(x->exprs->exprs.front(), "cannot assign to a temporary");
+            error(x->exprs->exprs[1], "cannot assign to a temporary");
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(new NameRef(new Identifier(x->ops[0])));
-        call->parenArgs->add(x->exprs->exprs.front());
-        call->parenArgs->add(desugarVariadicAssignmentRight(x));
+        call->parenArgs->add(x->exprs);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
