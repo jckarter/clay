@@ -355,26 +355,27 @@ private define _countIndices;
 //  operators 
 //
 
-defaultOps() = (++),(|),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
+defaultOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
 precedenceList() = ..defaultOps();
 
 alias (==) = equals?;
 alias (!=) = notEquals?;
 alias (>=) = greaterEquals?;
 alias (<=) = lesserEquals?;
-alias (>) = greater?;
-alias (<) = lesser?;
+alias (>)  = greater?;
+alias (<)  = lesser?;
 alias (++) = cat;
-alias (&) = bitand;
-alias (|) = bitor;
+alias (&)  = bitand;
+alias (|)  = bitor;
+alias (~)  = bitxor;
 alias (<<) = bitshl;
 alias (>>) = bitshr;
-alias (+) = add;
-alias (-) = subtract;
-alias (%) = remainder;
-alias (\) = quotient;
-alias (/) = divide;
-alias (*) = multiply;
+alias (+)  = add;
+alias (-)  = subtract;
+alias (%)  = remainder;
+alias (\)  = quotient;
+alias (/)  = divide;
+alias (*)  = multiply;
 
 private define staticEquals?;
 [A, B]

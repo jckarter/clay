@@ -15580,7 +15580,7 @@ record Struct_AppParameters (
 record UnnamedRecord (
     what : UShort,
     message : CULong,
-    when : CULong,
+    when_ : CULong,
     where : Point,
     modifiers : UShort,
 );

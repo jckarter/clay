@@ -51,8 +51,8 @@ overload cbrt(x:Double) {
      * New cbrt to 23 bits:
      *    cbrt(x) = t*cbrt(x/t**3) ~= t*P(t**3/x)
      * where P(r) is a polynomial of degree 4 that approximates 1/cbrt(r)
-     * to within 2**-23.5 when whenr - 1| < 1/10.  The rough approximation
-     * has produced t such than whent/cbrt(x) - 1| ~< 1/32, and cubing this
+     * to within 2**-23.5 when |r - 1| < 1/10.  The rough approximation
+     * has produced t such than|t/cbrt(x) - 1| ~< 1/32, and cubing this
      * gives us bounds for r = t**3/x.
      *
      * Try to optimize for parallel evaluation as in k_tanf.c.

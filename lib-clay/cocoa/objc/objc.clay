@@ -1015,7 +1015,7 @@ overload _identifierSelectorChar(#"_") = ":";
 
 [argCount, underscoreCount, lastCharacter]
 private _extraColon(#argCount, #underscoreCount, #lastCharacter) = ;
-[argCount, underscoreCount, lastCharacter |
+[argCount, underscoreCount, lastCharacter when
     argCount > underscoreCount
     and lastCharacter != "_"
     and lastCharacter != ":"
@@ -1076,7 +1076,7 @@ callMethod(forward self: T, #selector, forward ..args: Args)
         ..args
     );
 
-[T, Captured, identifier, ..Args |
+[T, Captured, identifier, ..Args when
     Selector?(identifierSelector(identifier, #countValues(..Args)))
     and SelectorCallableWith?(
         T,
