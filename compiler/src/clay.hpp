@@ -1161,14 +1161,10 @@ enum VariadicOpKind {
 
 struct VariadicOp : public Expr {
     int op;
-    vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
     VariadicOp(int op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
-    VariadicOp(int op, const vector<string> &ops, ExprListPtr exprs )
-        : Expr(VARIADIC_OP), op(op), ops(ops), exprs(exprs) {}
-
 };
 
 struct And : public Expr {

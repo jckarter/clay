@@ -61,29 +61,9 @@ ExprPtr lookupCallable(int op) {
 ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     ExprPtr callable = lookupCallable(x->op);
     CallPtr call = new Call(callable, new ExprList());
-    if (x->op == OPERATOR) {
-        call->parenArgs->add(x->exprs->exprs.front());
-        for (int i = 0; i < x->ops.size(); ++i) {
-            call->parenArgs->add(new NameRef(new Identifier(x->ops[i])));
-            call->parenArgs->add(x->exprs->exprs[i+1]);
-        }
-    }
-    else {
-        call->parenArgs->add(x->exprs);  
-    }
+    call->parenArgs->add(x->exprs);  
     call->location = x->location;
     return call.ptr();
-}
-
-ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x) {
-    ExprListPtr v = new ExprList();
-    for (int i = 1; i < x->exprs->exprs.size(); ++i) {
-        v->add(x->exprs->exprs[i]);
-        if(i < x->exprs->exprs.size()-1)
-            v->add(new NameRef(new Identifier(x->ops[i])));
-        
-    }
-    return v;
 }
 
 static vector<IdentifierPtr> identV(IdentifierPtr x) {
