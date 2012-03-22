@@ -95,12 +95,12 @@ Language changes:
     // 0.1
     #foo        // value of type Static[#foo]
     #"bar"      // value of type Static[#bar]
-    "bas"       // value of type String
+    "bas"       // value of type StringConstant
 
     // 0.2
-    "foo"
-    "bar"
-    StringLiteralRef("bas")
+    "foo"       // value of type Static["foo"]
+    "bar"       // value of type Static["bar"]
+    StringLiteralRef("bas") // value of type StringLiteralRef
 
 * The 'static' keyword has been replaced with the '#' operator in argument
   declarations and expressions. The '#' operator has the same precedence as

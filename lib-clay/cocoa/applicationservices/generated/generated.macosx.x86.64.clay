@@ -11781,7 +11781,7 @@ record Struct_AppParameters (
 record UnnamedRecord (
     what : UShort,
     message : UInt,
-    when : UInt,
+    when_ : UInt,
     where : Point,
     modifiers : UShort,
 );
