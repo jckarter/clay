@@ -3586,51 +3586,49 @@ bool codegenStatement(StatementPtr stmt,
 
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *x = (VariadicAssignment *)stmt.ptr();
-        PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs.front(), env);
-        if (x->exprs->exprs.front()->exprKind == INDEXING) {
-            Indexing *y = (Indexing *)x->exprs->exprs.front().ptr();
+        PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
+        if (x->exprs->exprs[1]->exprKind == INDEXING) {
+            Indexing *y = (Indexing *)x->exprs->exprs[1].ptr();
             PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
             if (pvIndexable->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
                     operator_expr_indexUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(new NameRef(new Identifier(x->ops[0])));
+                call->parenArgs->add(x->exprs->exprs[0]);
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(y->args);
-                call->parenArgs->add(desugarVariadicAssignmentRight(x));
+                call->parenArgs->exprs.insert(call->parenArgs->exprs.end(), x->exprs->exprs.begin()+2, x->exprs->exprs.end());
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
-        else if (x->exprs->exprs.front()->exprKind == STATIC_INDEXING) {
-            StaticIndexing *y = (StaticIndexing *)x->exprs->exprs.front().ptr();
+        else if (x->exprs->exprs[1]->exprKind == STATIC_INDEXING) {
+            StaticIndexing *y = (StaticIndexing *)x->exprs->exprs[1].ptr();
             CallPtr call = new Call(
                 operator_expr_staticIndexUpdateAssign(), new ExprList()
             );
-            call->parenArgs->add(new NameRef(new Identifier(x->ops[0])));
+            call->parenArgs->add(x->exprs->exprs[0]);
             call->parenArgs->add(y->expr);
             ValueHolderPtr vh = sizeTToValueHolder(y->index);
             call->parenArgs->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-            call->parenArgs->add(desugarVariadicAssignmentRight(x));
+            call->parenArgs->exprs.insert(call->parenArgs->exprs.end(), x->exprs->exprs.begin()+2, x->exprs->exprs.end());
             return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
         }
-        else if (x->exprs->exprs.front()->exprKind == FIELD_REF) {
-            FieldRef *y = (FieldRef *)x->exprs->exprs.front().ptr();
+        else if (x->exprs->exprs[1]->exprKind == FIELD_REF) {
+            FieldRef *y = (FieldRef *)x->exprs->exprs[1].ptr();
             PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
             if (pvBase->type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
                     operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
-                call->parenArgs->add(new NameRef(new Identifier(x->ops[0])));
+                call->parenArgs->add(x->exprs->exprs[0]);
                 call->parenArgs->add(y->expr);
                 call->parenArgs->add(new ObjectExpr(y->name.ptr()));
-                call->parenArgs->add(desugarVariadicAssignmentRight(x));
+                call->parenArgs->exprs.insert(call->parenArgs->exprs.end(), x->exprs->exprs.begin()+2, x->exprs->exprs.end());
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
         CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
-        call->parenArgs->add(new NameRef(new Identifier(x->ops[0])));
-        call->parenArgs->add(x->exprs->exprs.front());
-        call->parenArgs->add(desugarVariadicAssignmentRight(x));
+        call->parenArgs->add(x->exprs);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 
