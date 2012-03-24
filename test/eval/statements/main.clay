@@ -1,8 +1,6 @@
-import identifiers.(ident);
-
 [T when Record?(T)]
 alias bind(this:T) {
-    return ident("ref ",
+    return strl("ref ",
         ..weaveValues(", ", ..RecordFieldNames(T)),
         " = ..recordFields(", __ARG__ this, ");"
     );

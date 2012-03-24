@@ -1,7 +1,6 @@
 import numbers.parser.*;
 import numbers.floats.*;
 import numbers.overflow.*;
-import identifiers.(IdentifierChars);
 
 
 //
@@ -457,19 +456,9 @@ inline overload Imag80(s:S) = parseImag80(s);
 //
 // octal()
 
-private define octalDigit;
-overload octalDigit("0") = 0;
-overload octalDigit("1") = 1;
-overload octalDigit("2") = 2;
-overload octalDigit("3") = 3;
-overload octalDigit("4") = 4;
-overload octalDigit("5") = 5;
-overload octalDigit("6") = 6;
-overload octalDigit("7") = 7;
-
 [T,I when Integer?(T) and StringLiteral?(I)]
 private _octal(#T, #I)
-    = #foldlValues((n,d) -> T(8)*T(n) + T(octalDigit(d)), T(0), ..IdentifierChars(I));
+    = #foldlValues((n,d) -> T(8)*T(n) + T(d - 0x30), T(0), ..stringLiteralBytes(I));
 
 define octal;
 overload octal(T, I) = unwrapStatic(_octal(T, I));
