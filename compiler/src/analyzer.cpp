@@ -2851,6 +2851,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         MultiPValuePtr result = new MultiPValue();
         for (size_t i = 0, sz = ident->str.size(); i < sz; ++i)
             result->add(new PValue(cIntType, true));
+        return result;
     }
 
     case PRIM_stringLiteralByteSize :
