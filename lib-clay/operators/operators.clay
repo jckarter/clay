@@ -355,8 +355,11 @@ private define _countIndices;
 //  operators 
 //
 
-defaultOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
-precedenceList() = ..defaultOps();
+prefixOps() = (~);
+infixOps() = (++),(|),(@),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
+
+prefixPrecedenceList() = ..prefixOps();
+infixPrecedenceList() = ..infixOps();
 
 alias (==) = equals?;
 alias (!=) = notEquals?;
@@ -365,9 +368,10 @@ alias (<=) = lesserEquals?;
 alias (>)  = greater?;
 alias (<)  = lesser?;
 alias (++) = cat;
+alias (~)  = bitnot;
 alias (&)  = bitand;
 alias (|)  = bitor;
-alias (~)  = bitxor;
+alias (@)  = bitxor;
 alias (<<) = bitshl;
 alias (>>) = bitshr;
 alias (+)  = add;
@@ -383,21 +387,118 @@ overload staticEquals?(a:Static[A], b:Static[B]) = false;
 [A]
 overload staticEquals?(a:Static[A], b:Static[A]) = true;
 
-BinaryOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
-CompareOpDefined?(OP,T,U) = CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
+UnaryOpDefined?(OP,T) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+    and CallDefined?(OP,T) and greater?(countValues(..CallOutputTypes(OP,T)),0); 
+BinaryOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+    and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+    and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
 overload operatorCall(forward ..args)
-    = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, #countValues(
-        ..restValues(..precedenceList())), ..args)));
+    = forward compareOp(..noPrecBinaryOp(
+        ..foldBinaryOp(binaryOp, #countValues(
+        ..restValues(..infixPrecedenceList())), 
+        //..noPrecUnaryOp(
+        ..foldUnaryOp(unaryOp, #countValues(
+        ..restValues(..prefixPrecedenceList())), ..args))));
 
-private define foldOp;
+[T,U,Fn when Procedure?(Fn) and not UnaryOpDefined?(T,Fn)]
+overload operatorCall(#T, #Fn, #U) = forward Fn(T,U);
+
+[T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
+overload operatorCall(a:T, #Fn, b:U) = forward Fn(a,b);
+
+[T,U,Fn when UnaryOpDefined?(Fn,Type(U)) and UnaryOpDefined?(T,CallOutputTypes(Fn,Type(U)))]
+overload operatorCall(#T, #Fn, #U) = forward T(Fn(U));
+
+[T,Fn when UnaryOpDefined?(Fn,T)]
+overload operatorCall(#Fn,a:T) = forward Fn(a);
+
+[T,Fn when UnaryOpDefined?(Fn,Type(T))]
+overload operatorCall(#Fn, #T) = forward Fn(T);
+
+private define foldBinaryOp;
 [n]
-inline overload foldOp(fn, #n, forward ..xs)
-    = ..foldOp(fn, #numericSubtract(n,1), 
-        ..fn(nthValue(#n,..precedenceList()), ..xs));
-inline overload foldOp(fn, #0, forward ..xs) 
-    = forward ..fn(firstValue(..precedenceList()), ..xs);
+inline overload foldBinaryOp(fn, #n, forward ..xs)
+    = ..foldBinaryOp(fn, #numericSubtract(n,1), 
+        ..fn(nthValue(#n,..infixPrecedenceList()), ..xs));
+inline overload foldBinaryOp(fn, #0, forward ..xs) 
+    = forward ..fn(firstValue(..infixPrecedenceList()), ..xs);
 
+private define foldUnaryOp;
+[n]
+inline overload foldUnaryOp(fn, #n, forward ..xs)
+    = ..foldUnaryOp(fn, #numericSubtract(n,1), 
+        ..fn(nthValue(#n,..prefixPrecedenceList()), ..xs));
+inline overload foldUnaryOp(fn, #0, forward ..xs) 
+    = forward ..fn(firstValue(..prefixPrecedenceList()), ..xs);
+
+
+private define unaryOp;
+
+[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+inline overload unaryOp(#OP, #T, #BOP, #U, forward ..args) = forward T, BOP, ..unaryOp(OP,U, ..args);
+
+[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+inline overload unaryOp(#OP, #T, #BOP, #U) = forward T, BOP, U;
+
+[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U, forward ..args) = forward a, BOP, ..unaryOp(OP,b, ..args);
+
+[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U) = forward a, BOP, b;
+
+[OP,BOP,UOP,UOPS,T when allValues?(Procedure?,OP,BOP,UOP,UOPS)]
+inline overload unaryOp(#OP, forward a:T, #BOP, #UOP, #UOPS, forward ..args) 
+    = ..unaryOp(OP, a, BOP, UOP, ..unaryOp(OP, UOPS, ..args));
+
+
+[OP,UOP,UOPS when allValues?(Procedure?,OP,UOP,UOPS) and allValues?(Procedure?,OP,UOP,UOPS)]
+inline overload unaryOp(#OP, #UOP, #UOPS, forward ..args) 
+    = forward ..unaryOp(#OP,UOP, ..unaryOp(OP, UOPS, ..args));
+
+[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
+    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,Type(U)))]
+inline overload unaryOp(#UOP, #T, #BOP, #UOP, #U, forward ..args) 
+    = forward T, BOP, ..unaryOp(UOP, UOP(U), ..args);
+
+[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
+    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,U))]
+inline overload unaryOp(#UOP, forward a:T, #BOP, #UOP, forward b:U, forward ..args) 
+    = forward a, BOP, ..unaryOp(UOP, UOP(b), ..args);
+
+[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
+inline overload unaryOp(#UOP, #UOP, forward a:T, forward ..args) 
+    = forward UOP(a), ..unaryOp(UOP, ..args);
+
+[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
+inline overload unaryOp(#UOP, #UOP, forward a:T) = forward UOP(a);
+
+[OP] inline overload unaryOp(#OP, forward a) = forward a;
+
+[OP] inline overload unaryOp(#OP) = ;
+
+
+
+//private define noPrecUnaryOp;
+//inline overload noPrecUnaryOp(forward a, ..args)    = forward a, ..noPrecUnaryOp( ..args);
+//inline overload noPrecUnaryOp(forward a)    = forward a;
+
+//[BOP]
+//inline overload noPrecUnaryOp(forward a, #BOP, forward ..args) = forward a, BOP, ..noPrecUnaryOp(..args);
+
+//[UOP1,UOP2]
+//inline overload noPrecUnaryOp(#UOP1, #UOP2, forward ..args) = ..noPrecUnaryOp(UOP1, ..noPrecUnaryOp(UOP2, ..args));
+
+//[BOP,UOP]
+//inline overload noPrecUnaryOp(forward a, #BOP, #UOP, forward ..args) = forward a, BOP, ..noPrecUnaryOp(UOP, ..args);
+
+//[UOP,T when UnaryOpDefined?(UOP,T)]
+//inline overload noPrecUnaryOp(#UOP,forward a:T, forward ..args) = forward ..noPrecUnaryOp(UOP(a), ..args);
+
+//[UOP,T when UnaryOpDefined?(UOP,T)]
+//inline overload noPrecUnaryOp(#UOP,forward a:T) = forward UOP(a);
+//inline overload noPrecUnaryOp() = ;
 
 private define binaryOp;
 [OP,T]
@@ -413,7 +514,6 @@ inline overload binaryOp(#OP,forward a,#OP,forward b)
     = forward OP(a,b);
 
 private define noPrecBinaryOp;
-
 [OP]
 inline overload noPrecBinaryOp(forward a, #OP,forward ..args)
     = forward a,OP,..noPrecBinaryOp(..args);
@@ -426,7 +526,6 @@ inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U)
 inline overload noPrecBinaryOp(forward a) = forward a;
 
 private define compareOp;
-
 inline overload compareOp(forward a, OP, forward b, forward ..args)
     = forward OP(a, b) and compareOp(b, ..args);
 inline overload compareOp(forward a, OP, forward b) 
@@ -691,7 +790,7 @@ define CallDefined?;
 [F]
 alias overload CallDefined?(f:F, ..In) = StaticCallDefined?(call, F, ..In);
 [f]
-alias overload CallDefined?(#f, ..In) = StaticCallDefined?(f, ..In);
+alias overload CallDefined?(#f, ..In) = Symbol?(f) and StaticCallDefined?(f, ..In);
 
 define CallOutputTypes;
 [F]

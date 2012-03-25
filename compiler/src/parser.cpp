@@ -157,9 +157,9 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(int op, const string &s) {
+static string cleanNumericSeparator(string op, const string &s) {
     string out;
-    if (op == MINUS)
+    if (op == "-")
         out.push_back('-');
     for (unsigned i = 0; i < s.size(); ++i) {
         if (s[i] != '_')
@@ -168,7 +168,7 @@ static string cleanNumericSeparator(int op, const string &s) {
     return out;
 }
 
-static bool intLiteral(int op, ExprPtr &x) {
+static bool intLiteral(string op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -186,7 +186,7 @@ static bool intLiteral(int op, ExprPtr &x) {
     return true;
 }
 
-static bool floatLiteral(int op, ExprPtr &x) {
+static bool floatLiteral(string op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -229,8 +229,8 @@ static bool stringLiteral(ExprPtr &x) {
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
-    if (restore(p), floatLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("(+)", x)) return true;
+    if (restore(p), floatLiteral("(+)", x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     return false;
@@ -545,18 +545,19 @@ static bool addressOfExpr(ExprPtr &x) {
     return true;
 }
 
-static bool plusOrMinus(int &op) {
+static bool plusOrMinus(string &op) {
     int p = save();
-    if (opsymbol("+"))
-        op = PLUS;
-    else if (restore(p), opsymbol("-"))
-        op = MINUS;
-    else
+    if (opsymbol("+")) {
+        restore(p);
+        return opstring(op);
+    } else if (restore(p), opsymbol("-")) {
+        restore(p);
+        return opstring(op);
+    } else
         return false;
-    return true;
 }
 
-static bool signedLiteral(int op, ExprPtr &x) {
+static bool signedLiteral(string op, ExprPtr &x) {
     int p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;
@@ -565,7 +566,7 @@ static bool signedLiteral(int op, ExprPtr &x) {
 
 static bool signExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    int op;
+    string op;
     if (!plusOrMinus(op)) return false;
     ExprPtr b;
     int p = save();
@@ -573,7 +574,10 @@ static bool signExpr(ExprPtr &x) {
         return true;
     restore(p);
     if (!prefixExpr(b)) return false;
-    x = new VariadicOp(op, new ExprList(b));
+    if (op == "+")
+        x = new VariadicOp(PLUS, new ExprList(b));
+    else 
+        x = new VariadicOp(MINUS, new ExprList(b));    
     x->location = location;
     return true;
 }
@@ -609,7 +613,6 @@ static bool prefixExpr(ExprPtr &x) {
 }
 
 
-
 //
 // infix binary operator expr
 //
@@ -645,11 +648,12 @@ static bool operatorTail(VariadicOpPtr &x) {
     if (!operatorOp(op)) return false;
     while (true) {
         exprs->add(new NameRef(new Identifier(op)));
-        if (!prefixExpr(b)) {
+        p = save();
+        if (prefixExpr(b))
+            exprs->add(b);
+        else
             restore(p);
-            break;
-        }
-        exprs->add(b);
+        
         p = save();
         if (!operatorOp(op)) {
             restore(p);
@@ -662,7 +666,13 @@ static bool operatorTail(VariadicOpPtr &x) {
 }
 
 static bool operatorExpr(ExprPtr &x) {
-    if (!prefixExpr(x)) return false;
+    string op;
+    int p = save();
+    if (!prefixExpr(x)) {
+        restore(p);
+        if (!operatorOp(op)) return false;
+        restore(p);
+    }
     while (true) {
         int p = save();
         VariadicOpPtr y;
@@ -670,7 +680,8 @@ static bool operatorExpr(ExprPtr &x) {
             restore(p);
             break;
         }
-        y->exprs->insert(x);
+        
+        if(op.empty()) y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
@@ -962,7 +973,7 @@ static bool dottedNameRef(ExprPtr &x) {
 static bool atomicPattern(ExprPtr &x) {
     int p = save();
     if (dottedNameRef(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
     return false;
 }
 
