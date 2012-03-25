@@ -402,8 +402,6 @@ overload operatorCall(forward ..args)
         ..foldUnaryOp(unaryOp, #countValues(
         ..restValues(..prefixPrecedenceList())), ..args))));
 
-[T,U,Fn when Procedure?(Fn) and not UnaryOpDefined?(T,Fn)]
-overload operatorCall(#T, #Fn, #U) = forward Fn(T,U);
 
 [T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
 overload operatorCall(a:T, #Fn, b:U) = forward Fn(a,b);
@@ -414,8 +412,6 @@ overload operatorCall(#T, #Fn, #U) = forward T(Fn(U));
 [T,Fn when UnaryOpDefined?(Fn,T)]
 overload operatorCall(#Fn,a:T) = forward Fn(a);
 
-[T,Fn when UnaryOpDefined?(Fn,Type(T))]
-overload operatorCall(#Fn, #T) = forward Fn(T);
 
 private define foldBinaryOp;
 [n]
@@ -436,47 +432,61 @@ inline overload foldUnaryOp(fn, #0, forward ..xs)
 
 private define unaryOp;
 
-[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
-inline overload unaryOp(#OP, #T, #BOP, #U, forward ..args) = forward T, BOP, ..unaryOp(OP,U, ..args);
-
-[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
-inline overload unaryOp(#OP, #T, #BOP, #U) = forward T, BOP, U;
-
-[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
-inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U, forward ..args) = forward a, BOP, ..unaryOp(OP,b, ..args);
-
-[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
-inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U) = forward a, BOP, b;
-
-[OP,BOP,UOP,UOPS,T when allValues?(Procedure?,OP,BOP,UOP,UOPS)]
-inline overload unaryOp(#OP, forward a:T, #BOP, #UOP, #UOPS, forward ..args) 
-    = ..unaryOp(OP, a, BOP, UOP, ..unaryOp(OP, UOPS, ..args));
+[OP,T]
+inline overload unaryOp(#OP,forward a,#T,forward ..args)
+    = forward a,T,..unaryOp(OP,..args);
+[OP]
+inline overload unaryOp(#OP, forward a) = forward a;
+[OP]
+inline overload unaryOp(#OP,forward a,#OP,forward b, forward ..args)
+    = forward ..unaryOp(OP,OP(a,b), ..args);
+[OP]
+inline overload unaryOp(#OP,forward a,#OP,forward b)
+    = forward OP(a,b);
 
 
-[OP,UOP,UOPS when allValues?(Procedure?,OP,UOP,UOPS) and allValues?(Procedure?,OP,UOP,UOPS)]
-inline overload unaryOp(#OP, #UOP, #UOPS, forward ..args) 
-    = forward ..unaryOp(#OP,UOP, ..unaryOp(OP, UOPS, ..args));
 
-[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
-    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,Type(U)))]
-inline overload unaryOp(#UOP, #T, #BOP, #UOP, #U, forward ..args) 
-    = forward T, BOP, ..unaryOp(UOP, UOP(U), ..args);
+//[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+//inline overload unaryOp(#OP, #T, #BOP, #U, forward ..args) = forward T, BOP, ..unaryOp(OP,U, ..args);
 
-[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
-    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,U))]
-inline overload unaryOp(#UOP, forward a:T, #BOP, #UOP, forward b:U, forward ..args) 
-    = forward a, BOP, ..unaryOp(UOP, UOP(b), ..args);
+//[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+//inline overload unaryOp(#OP, #T, #BOP, #U) = forward T, BOP, U;
 
-[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
-inline overload unaryOp(#UOP, #UOP, forward a:T, forward ..args) 
-    = forward UOP(a), ..unaryOp(UOP, ..args);
+//[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+//inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U, forward ..args) = forward a, BOP, ..unaryOp(OP,b, ..args);
 
-[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
-inline overload unaryOp(#UOP, #UOP, forward a:T) = forward UOP(a);
+//[OP,BOP,T,U when allValues?(Procedure?,OP,BOP)]
+//inline overload unaryOp(#OP, forward a:T, #BOP, forward b:U) = forward a, BOP, b;
 
-[OP] inline overload unaryOp(#OP, forward a) = forward a;
+//[OP,BOP,UOP,UOPS,T when allValues?(Procedure?,OP,BOP,UOP,UOPS)]
+//inline overload unaryOp(#OP, forward a:T, #BOP, #UOP, #UOPS, forward ..args) 
+//    = ..unaryOp(OP, a, BOP, UOP, ..unaryOp(OP, UOPS, ..args));
 
-[OP] inline overload unaryOp(#OP) = ;
+
+//[OP,UOP,UOPS when allValues?(Procedure?,OP,UOP,UOPS) and allValues?(Procedure?,OP,UOP,UOPS)]
+//inline overload unaryOp(#OP, #UOP, #UOPS, forward ..args) 
+//    = forward ..unaryOp(#OP,UOP, ..unaryOp(OP, UOPS, ..args));
+
+//[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
+//    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,Type(U)))]
+//inline overload unaryOp(#UOP, #T, #BOP, #UOP, #U, forward ..args) 
+//    = forward T, BOP, ..unaryOp(UOP, UOP(U), ..args);
+
+//[BOP,UOP,T,U when allValues?(Procedure?,BOP,UOP) 
+//    and UnaryOpDefined?(UOP,U) and BinaryOpDefined?(BOP,T,CallOutputTypes(UOP,U))]
+//inline overload unaryOp(#UOP, forward a:T, #BOP, #UOP, forward b:U, forward ..args) 
+//    = forward a, BOP, ..unaryOp(UOP, UOP(b), ..args);
+
+//[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
+//inline overload unaryOp(#UOP, #UOP, forward a:T, forward ..args) 
+//    = forward UOP(a), ..unaryOp(UOP, ..args);
+
+//[UOP,T when Procedure?(UOP) and UnaryOpDefined?(UOP,T)]
+//inline overload unaryOp(#UOP, #UOP, forward a:T) = forward UOP(a);
+
+//[OP] inline overload unaryOp(#OP, forward a) = forward a;
+
+//[OP] inline overload unaryOp(#OP) = ;
 
 
 
