@@ -17,7 +17,7 @@
     union { int bits; float value; } name##_bits = { (0x##mantissa >> 1) | ((exp+127)<<23) }; \
     float name = name##_bits.value;
 # define HEX_DOUBLE_VARIABLE(name, mantissa, exp) \
-    union { __int64 bits; double value; } name##_bits = { (unsigned __int64)0x##mantissa when ((unsigned __int64)(exp+1023)<<52) }; \
+    union { __int64 bits; double value; } name##_bits = { (unsigned __int64)0x##mantissa | ((unsigned __int64)(exp+1023)<<52) }; \
     double name = name##_bits.value;
 #else
 # define HEX_FLOAT_VARIABLE(name, mantissa, exp) float name = 0x1.##mantissa##p##exp##f
