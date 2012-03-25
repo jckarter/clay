@@ -390,6 +390,12 @@ overload operatorCall(forward ..args)
     = forward compareOp(..noPrecBinaryOp(..foldOp(binaryOp, #countValues(
         ..restValues(..precedenceList())), ..args)));
 
+[T,U,Fn when BinaryOpDefined?(Fn,Type(T),Type(U)) or CompareOpDefined?(Fn,Type(T),Type(U))]
+overload operatorCall(#T, #Fn, #U) = forward Fn(T,U);
+
+[T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
+overload operatorCall(a:T, #Fn, b:U) = forward Fn(a,b);
+
 private define foldOp;
 [n]
 inline overload foldOp(fn, #n, forward ..xs)
