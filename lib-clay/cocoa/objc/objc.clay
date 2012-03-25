@@ -1,6 +1,5 @@
 import cocoa.objc.platform.*;
 import cocoa.objc.runtime.*;
-import identifiers.*;
 public import cocoa.objc.runtime.(
     Id as ObjectHandle,
     Class as ClassHandle,
@@ -317,12 +316,12 @@ ClassInstanceVars(#T) = [];
 define ClassClassMethods;
 define ClassInstanceMethods;
 
-MangledModuleChar(c) = c;
-overload MangledModuleChar(#".") = "__";
+MangledModuleChar(c) = stringLiteralFromChars(c);
+overload MangledModuleChar(#'.') = "__";
 
 MangledModuleName(T) = cat(..mapValues(
     MangledModuleChar,
-    ..IdentifierChars(ModuleName(T))
+    ..stringLiteralStaticChars(ModuleName(T))
 ));
 
 [T when ClayClass?(T)]
@@ -797,21 +796,21 @@ SelectorArgumentTypes(#T, #sel) = ..restValues(..Selector(T, sel));
 
 AllocatingSelector?(sel) = false;
 [sel when
-    IdentifierStartsWith?(sel, "alloc")
-    or IdentifierStartsWith?(sel, "new")
+    stringLiteralStartsWith?(sel, "alloc")
+    or stringLiteralStartsWith?(sel, "new")
 ]
 overload AllocatingSelector?(#sel) = true;
 
 RetainingSelector?(sel) = false;
 [sel when
-    IdentifierStartsWith?(sel, "copy")
-    or IdentifierStartsWith?(sel, "mutableCopy")
+    stringLiteralStartsWith?(sel, "copy")
+    or stringLiteralStartsWith?(sel, "mutableCopy")
     or sel == "retain"
 ]
 overload RetainingSelector?(#sel) = true;
 
 ForwardingSelector?(sel) = false;
-[sel when IdentifierStartsWith?(sel, "init")]
+[sel when stringLiteralStartsWith?(sel, "init")]
 overload ForwardingSelector?(#sel) = true;
 
 AutoreleasingSelector?(sel) = false;
@@ -1010,15 +1009,15 @@ msgSend(#SelfT, imp, self, #S, forward ..args: T) {
 // identifier-selector conversion
 //
 
-private _identifierSelectorChar(c) = c;
-overload _identifierSelectorChar(#"_") = ":";
+private _identifierSelectorChar(c) = stringLiteralFromChars(c);
+overload _identifierSelectorChar(#'_') = ":";
 
 [argCount, underscoreCount, lastCharacter]
 private _extraColon(#argCount, #underscoreCount, #lastCharacter) = ;
 [argCount, underscoreCount, lastCharacter when
     argCount > underscoreCount
-    and lastCharacter != "_"
-    and lastCharacter != ":"
+    and lastCharacter != '_'
+    and lastCharacter != ':'
 ]
 overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
     = ":";
@@ -1027,12 +1026,12 @@ overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
     var lastCharacter = lastValue(..chars);
     return cat(
         ..mapValues(_identifierSelectorChar, ..chars),
-        .._extraColon(#argCount, #countOccurrences("_", ..chars), lastCharacter)
+        .._extraColon(#argCount, #countOccurrences(#'_', ..chars), lastCharacter)
     );
 }
 
 private var memoIdentifierSelector[identifier, argCount]
-    = _identifierSelector(#argCount, ..IdentifierChars(identifier));
+    = _identifierSelector(#argCount, ..stringLiteralStaticChars(identifier));
 
 [argCount] identifierSelector(identifier, #argCount)
     = memoIdentifierSelector[identifier, argCount];
@@ -1046,7 +1045,7 @@ private _ValidMethodIdentifier?(#identifier, #minArity)
 ValidMethodIdentifier?(#identifier) = true;
     //= _ValidMethodIdentifier?(
     //    #identifier,
-    //    #countOccurrences("_", ...IdentifierChars(identifier))
+    //    #countOccurrences(#'_', ...stringLiteralStaticChars(identifier))
     //);
 
 

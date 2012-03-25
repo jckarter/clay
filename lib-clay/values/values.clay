@@ -50,10 +50,10 @@ define countOccurrences;
 inline overload countOccurrences(value) = 0;
 [value1, value2]
 inline overload countOccurrences(#value1, #value2, forward ..xs)
-    = countOccurrences(value1, ..xs);
+    = countOccurrences(#value1, ..xs);
 [value]
 inline overload countOccurrences(#value, #value, forward ..xs)
-    = 1 + countOccurrences(value, ..xs);
+    = 1 + countOccurrences(#value, ..xs);
 
 inline firstValue(forward a, ..rest) = forward a;
 

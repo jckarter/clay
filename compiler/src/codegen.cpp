@@ -6048,7 +6048,7 @@ void codegenPrimOp(PrimOpPtr x,
         IdentifierPtr ident = valueToIdentifier(args, 0);
         assert(out->size() == ident->str.size());
         for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
-            CValuePtr outi = out->values[0];
+            CValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
             llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), ident->str[i]);
             ctx->builder->CreateStore(value, outi->llValue);

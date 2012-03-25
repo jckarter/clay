@@ -3,7 +3,6 @@ import cocoa.objc.*;
 import cocoa.nib.*;
 import cocoa.foundation.*;
 import maybe.*;
-import identifiers.*;
 
 public import cocoa.util.platform.*;
 
@@ -425,7 +424,7 @@ overload ReaderInstanceMethod(#ivarName)
 
 
 defaultWriterSelector(ivarName)
-    = "set" ++ IdentifierCapitalize(ivarName) ++ ":";
+    = "set" ++ stringLiteralCapitalize(ivarName) ++ ":";
 
 [ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
 WriterInstanceMethod(#ivarName, #writerSelector, T)
@@ -542,7 +541,7 @@ overload regularClassInitMethod(..fields)
     );
 
 private regularClassInitMethodName(field1, ..fields)
-    = cat("initWith", IdentifierCapitalize(field1.0), ":",
+    = cat("initWith", stringLiteralCapitalize(field1.0), ":",
         ..mapValues(x => (x.0, ":"), ..fields));
 
 private regularClassPropertyMethods(..fields)

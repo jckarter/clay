@@ -22,9 +22,9 @@ private initErrorNamesVector() {
 }
 
 private findCodeAndName(begin, end) {
-    var pos = findIf(begin, end, c => not space?(c));
+    var pos = findIf(begin, end, c => not asciiSpace?(c));
     var pos2 = findIf(pos, end, c => c == ',');
-    var pos3 = findIf(pos2+1, end, c => space?(c));
+    var pos3 = findIf(pos2+1, end, c => asciiSpace?(c));
     begin = pos3;
     return coordinateRange(pos, pos2), coordinateRange(pos2+1, pos3);
 }

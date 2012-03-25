@@ -4432,7 +4432,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         IdentifierPtr ident = valueToIdentifier(args, 0);
         assert(out->size() == ident->str.size());
         for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
-            EValuePtr outi = out->values[0];
+            EValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
             outi->as<int>() = ident->str[i];
         }
