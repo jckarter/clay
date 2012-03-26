@@ -1458,12 +1458,20 @@ struct If : public Statement {
 };
 
 struct Switch : public Statement {
+    vector<StatementPtr> exprStatements;
     ExprPtr expr;
     vector<CaseBlockPtr> caseBlocks;
     StatementPtr defaultCase;
 
     StatementPtr desugared;
 
+    Switch(const vector<StatementPtr> &exprStatements,
+           ExprPtr expr,
+           const vector<CaseBlockPtr> &caseBlocks,
+           StatementPtr defaultCase)
+        : Statement(SWITCH), exprStatements(exprStatements),
+          expr(expr), caseBlocks(caseBlocks),
+          defaultCase(defaultCase) {}
     Switch(ExprPtr expr,
            const vector<CaseBlockPtr> &caseBlocks,
            StatementPtr defaultCase)

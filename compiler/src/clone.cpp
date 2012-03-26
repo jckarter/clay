@@ -325,7 +325,8 @@ StatementPtr clone(StatementPtr x)
         Switch *y = (Switch *)x.ptr();
         vector<CaseBlockPtr> caseBlocks;
         clone(y->caseBlocks, caseBlocks);
-        out = new Switch(clone(y->expr),
+        out = new Switch(y->exprStatements,
+                         clone(y->expr),
                          caseBlocks,
                          cloneOpt(y->defaultCase));
         break;

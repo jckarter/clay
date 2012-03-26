@@ -223,6 +223,9 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     BlockPtr block = new Block();
     block->location = x->location;
 
+    block->statements.insert(block->statements.end(),
+        x->exprStatements.begin(), x->exprStatements.end());
+
     // %thing is the value being switched on
     IdentifierPtr thing = new Identifier("%case");
     thing->location = x->expr->location;

@@ -1,0 +1,10 @@
+main() {
+    var x = 100;
+    switch (x += 1; inc(x); var x = 200; x += 1; inc(x); x)
+    case (202)
+        println("inner ", x);
+    else
+        println("oops ", x);
+
+    println("outer ", x);
+}

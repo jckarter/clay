@@ -3471,7 +3471,7 @@ static EnvPtr codegenStatementExpressionStatements(vector<StatementPtr> const &s
             env2 = codegenBinding((Binding*)i->ptr(), env2, ctx);
             break;
         }
-        
+
         case ASSIGNMENT:
         case VARIADIC_ASSIGNMENT:
         case INIT_ASSIGNMENT:

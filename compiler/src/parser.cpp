@@ -1305,16 +1305,17 @@ static bool caseBlockList(vector<CaseBlockPtr> &x) {
 
 static bool switchStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
+    vector<StatementPtr> exprStmts;
     ExprPtr expr;
     if (!keyword("switch")) return false;
     if (!symbol("(")) return false;
-    if (!expression(expr)) return false;
+    if (!statementExpression(exprStmts, expr)) return false;
     if (!symbol(")")) return false;
     vector<CaseBlockPtr> caseBlocks;
     if (!caseBlockList(caseBlocks)) return false;
     StatementPtr defaultCase;
     if (!optElse(defaultCase)) return false;
-    x = new Switch(expr, caseBlocks, defaultCase);
+    x = new Switch(exprStmts, expr, caseBlocks, defaultCase);
     x->location = location;
     return true;
 }
