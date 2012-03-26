@@ -1,0 +1,24 @@
+import test.memory.(Canary, checkCanariesDestroyed);
+
+instance Exception (Int);
+
+main() {
+    while (var x = Canary(); false) { }
+    while (var x = Canary(); true)
+        break;
+
+    var i = 0;
+    while (var x = Canary(); inc(i); i < 5)
+        continue;
+
+    i = 0;
+    while (var x = Canary(); inc(i); i < 5) {}
+
+    try {
+        while (var x = Canary(); true)
+            throw 1;
+    } catch (ex) {}
+
+    if (checkCanariesDestroyed())
+        println("ok");
+}

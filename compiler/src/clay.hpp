@@ -1436,12 +1436,24 @@ struct Return : public Statement {
 };
 
 struct If : public Statement {
+    vector<StatementPtr> conditionStatements;
     ExprPtr condition;
+
     StatementPtr thenPart, elsePart;
+
     If(ExprPtr condition, StatementPtr thenPart)
         : Statement(IF), condition(condition), thenPart(thenPart) {}
     If(ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), condition(condition), thenPart(thenPart),
+          elsePart(elsePart) {}
+    If(const vector<StatementPtr> &conditionStatements,
+        ExprPtr condition, StatementPtr thenPart)
+        : Statement(IF), conditionStatements(conditionStatements),
+          condition(condition), thenPart(thenPart) {}
+    If(const vector<StatementPtr> &conditionStatements,
+        ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
+        : Statement(IF), conditionStatements(conditionStatements),
+          condition(condition), thenPart(thenPart),
           elsePart(elsePart) {}
 };
 
@@ -1473,10 +1485,17 @@ struct ExprStatement : public Statement {
 };
 
 struct While : public Statement {
+    vector<StatementPtr> conditionStatements;
     ExprPtr condition;
+
     StatementPtr body;
+
     While(ExprPtr condition, StatementPtr body)
         : Statement(WHILE), condition(condition), body(body) {}
+    While(const vector<StatementPtr> &conditionStatements,
+        ExprPtr condition, StatementPtr body)
+        : Statement(WHILE), conditionStatements(conditionStatements),
+          condition(condition), body(body) {}
 };
 
 struct Break : public Statement {

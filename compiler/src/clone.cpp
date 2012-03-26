@@ -316,7 +316,7 @@ StatementPtr clone(StatementPtr x)
 
     case IF : {
         If *y = (If *)x.ptr();
-        out = new If(clone(y->condition), clone(y->thenPart),
+        out = new If(y->conditionStatements, clone(y->condition), clone(y->thenPart),
                      cloneOpt(y->elsePart));
         break;
     }
@@ -339,7 +339,7 @@ StatementPtr clone(StatementPtr x)
 
     case WHILE : {
         While *y = (While *)x.ptr();
-        out = new While(clone(y->condition), clone(y->body));
+        out = new While(y->conditionStatements, clone(y->condition), clone(y->body));
         break;
     }
 

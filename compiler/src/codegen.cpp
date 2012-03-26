@@ -3456,6 +3456,64 @@ static void codegenBlockStatement(BlockPtr block,
     }
 }
 
+static EnvPtr codegenStatementExpressionStatements(vector<StatementPtr> const &stmts,
+    EnvPtr env,
+    CodegenContextPtr ctx)
+{
+    EnvPtr env2 = env;
+
+    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+         i != end;
+         ++i)
+    {
+        switch ((*i)->stmtKind) {
+        case BINDING: {
+            env2 = codegenBinding((Binding*)i->ptr(), env2, ctx);
+            break;
+        }
+        
+        case ASSIGNMENT:
+        case VARIADIC_ASSIGNMENT:
+        case INIT_ASSIGNMENT:
+        case EXPR_STATEMENT: {
+            bool terminated = codegenStatement(*i, env2, ctx);
+            assert(!terminated);
+            break;
+        }
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+    return env2;
+}
+
+static int codegenBeginScope(StatementPtr scopeStmt, CodegenContextPtr ctx)
+{
+    if (llvmDIBuilder != NULL) {
+        llvm::DILexicalBlock outerScope = ctx->getDebugScope();
+        int line, column;
+        llvm::DIFile file = getDebugLineCol(scopeStmt->location, line, column);
+        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+            outerScope,
+            file,
+            line,
+            column
+            ));
+    }
+    return cgMarkStack(ctx);
+}
+
+static void codegenEndScope(int marker, bool terminated, CodegenContextPtr ctx)
+{
+    if (!terminated)
+        cgDestroyStack(marker, ctx, false);
+    cgPopStack(marker, ctx);
+    if (llvmDIBuilder != NULL)
+        ctx->popDebugScope();
+}
+
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContextPtr ctx)
@@ -3466,28 +3524,13 @@ bool codegenStatement(StatementPtr stmt,
 
     case BLOCK : {
         Block *block = (Block *)stmt.ptr();
-        if (llvmDIBuilder != NULL) {
-            llvm::DILexicalBlock outerScope = ctx->getDebugScope();
-            int line, column;
-            llvm::DIFile file = getDebugLineCol(stmt->location, line, column);
-            ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
-                outerScope,
-                file,
-                line,
-                column
-                ));
-        }
-        int blockMarker = cgMarkStack(ctx);
+        int blockMarker = codegenBeginScope(stmt, ctx);
         codegenCollectLabels(block->statements, 0, ctx);
         bool terminated = false;
         for (unsigned i = 0; i < block->statements.size(); ++i) {
             codegenBlockStatement(block, i, block->statements[i], env, ctx, terminated);
         }
-        if (!terminated)
-            cgDestroyStack(blockMarker, ctx, false);
-        cgPopStack(blockMarker, ctx);
-        if (llvmDIBuilder != NULL)
-            ctx->popDebugScope();
+        codegenEndScope(blockMarker, terminated, ctx);
         return terminated;
     }
 
@@ -3697,9 +3740,13 @@ bool codegenStatement(StatementPtr stmt,
 
     case IF : {
         If *x = (If *)stmt.ptr();
+
+        int scopeMarker = codegenBeginScope(stmt, ctx);
+        EnvPtr env2 = codegenStatementExpressionStatements(x->conditionStatements, env, ctx);
+
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
+        CValuePtr cv = codegenOneAsRef(x->condition, env2, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
@@ -3714,7 +3761,7 @@ bool codegenStatement(StatementPtr stmt,
         bool terminated2 = false;
 
         ctx->builder->SetInsertPoint(trueBlock);
-        terminated1 = codegenStatement(x->thenPart, env, ctx);
+        terminated1 = codegenStatement(x->thenPart, env2, ctx);
         if (!terminated1) {
             if (!mergeBlock)
                 mergeBlock = newBasicBlock("ifMerge", ctx);
@@ -3723,7 +3770,7 @@ bool codegenStatement(StatementPtr stmt,
 
         ctx->builder->SetInsertPoint(falseBlock);
         if (x->elsePart.ptr())
-            terminated2 = codegenStatement(x->elsePart, env, ctx);
+            terminated2 = codegenStatement(x->elsePart, env2, ctx);
         if (!terminated2) {
             if (!mergeBlock)
                 mergeBlock = newBasicBlock("ifMerge", ctx);
@@ -3732,6 +3779,8 @@ bool codegenStatement(StatementPtr stmt,
 
         if (!terminated1 || !terminated2)
             ctx->builder->SetInsertPoint(mergeBlock);
+
+        codegenEndScope(scopeMarker, terminated1 && terminated2, ctx);
 
         return terminated1 && terminated2;
     }
@@ -3770,14 +3819,18 @@ bool codegenStatement(StatementPtr stmt,
 
         llvm::BasicBlock *whileBegin = newBasicBlock("whileBegin", ctx);
         llvm::BasicBlock *whileBody = newBasicBlock("whileBody", ctx);
+        llvm::BasicBlock *whileContinue = newBasicBlock("whileContinue", ctx);
         llvm::BasicBlock *whileEnd = newBasicBlock("whileEnd", ctx);
 
         ctx->builder->CreateBr(whileBegin);
         ctx->builder->SetInsertPoint(whileBegin);
 
+        int scopeMarker = codegenBeginScope(stmt, ctx);
+        EnvPtr env2 = codegenStatementExpressionStatements(x->conditionStatements, env, ctx);
+
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        CValuePtr cv = codegenOneAsRef(x->condition, env, ctx);
+        CValuePtr cv = codegenOneAsRef(x->condition, env2, ctx);
         llvm::Value *cond = codegenToBoolFlag(cv, ctx);
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
@@ -3785,11 +3838,16 @@ bool codegenStatement(StatementPtr stmt,
         ctx->builder->CreateCondBr(cond, whileBody, whileEnd);
 
         ctx->breaks.push_back(JumpTarget(whileEnd, cgMarkStack(ctx)));
-        ctx->continues.push_back(JumpTarget(whileBegin, cgMarkStack(ctx)));
+        ctx->continues.push_back(JumpTarget(whileContinue, cgMarkStack(ctx)));
         ctx->builder->SetInsertPoint(whileBody);
-        bool terminated = codegenStatement(x->body, env, ctx);
-        if (!terminated)
-            ctx->builder->CreateBr(whileBegin);
+        bool terminated = codegenStatement(x->body, env2, ctx);
+        if (!terminated) {
+            ctx->builder->CreateBr(whileContinue);
+        }
+        ctx->builder->SetInsertPoint(whileContinue);
+        cgDestroyStack(scopeMarker, ctx, false);
+        ctx->builder->CreateBr(whileBegin);
+
         bool breakUsed = (ctx->breaks.back().useCount > 0);
         ctx->breaks.pop_back();
         ctx->continues.pop_back();
@@ -3800,10 +3858,12 @@ bool codegenStatement(StatementPtr stmt,
             if (y->value) {
                 // it's a "while (true)" loop with no 'break'
                 ctx->builder->CreateUnreachable();
+                codegenEndScope(scopeMarker, true, ctx);
                 return true;
             }
         }
 
+        codegenEndScope(scopeMarker, false, ctx);
         return false;
     }
 

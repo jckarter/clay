@@ -1980,6 +1980,40 @@ void evalCallByName(InvokeEntryPtr entry,
 // evalStatement
 //
 
+static EnvPtr evalStatementExpressionStatements(vector<StatementPtr> const &stmts,
+    EnvPtr env,
+    EvalContextPtr ctx)
+{
+    EnvPtr env2 = env;
+
+    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+         i != end;
+         ++i)
+    {
+        switch ((*i)->stmtKind) {
+        case BINDING: {
+            env2 = evalBinding((Binding*)i->ptr(), env2);
+            break;
+        }
+
+        case ASSIGNMENT:
+        case VARIADIC_ASSIGNMENT:
+        case INIT_ASSIGNMENT:
+        case EXPR_STATEMENT: {
+            TerminationPtr term = evalStatement(*i, env2, ctx);
+            assert(term == NULL);
+            break;
+        }
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+    return env2;
+}
+
+
 TerminationPtr evalStatement(StatementPtr stmt,
                              EnvPtr env,
                              EvalContextPtr ctx)
@@ -2153,14 +2187,22 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case IF : {
         If *x = (If *)stmt.ptr();
-        int marker = evalMarkStack();
-        EValuePtr ev = evalOneAsRef(x->condition, env);
+
+        int scopeMarker = evalMarkStack();
+
+        EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
+
+        int tempMarker = evalMarkStack();
+        EValuePtr ev = evalOneAsRef(x->condition, env2);
         bool flag = evalToBoolFlag(ev);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(tempMarker);
         if (flag)
-            return evalStatement(x->thenPart, env, ctx);
+            return evalStatement(x->thenPart, env2, ctx);
         if (x->elsePart.ptr())
-            return evalStatement(x->elsePart, env, ctx);
+            return evalStatement(x->elsePart, env2, ctx);
+
+        evalDestroyAndPopStack(scopeMarker);
+
         return NULL;
     }
 
@@ -2193,21 +2235,31 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
+
+        int scopeMarker = evalMarkStack();
+
         while (true) {
-            int marker = evalMarkStack();
-            EValuePtr ev = evalOneAsRef(x->condition, env);
+            EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
+
+            int tempMarker = evalMarkStack();
+            EValuePtr ev = evalOneAsRef(x->condition, env2);
             bool flag = evalToBoolFlag(ev);
-            evalDestroyAndPopStack(marker);
+            evalDestroyAndPopStack(tempMarker);
+
             if (!flag) break;
-            TerminationPtr term = evalStatement(x->body, env, ctx);
+            TerminationPtr term = evalStatement(x->body, env2, ctx);
             if (term.ptr()) {
                 if (term->terminationKind == TERMINATE_BREAK)
                     break;
                 if (term->terminationKind == TERMINATE_CONTINUE)
-                    continue;
+                    goto whileContinue;
                 return term;
             }
+whileContinue:
+            evalDestroyStack(scopeMarker);
         }
+        evalDestroyAndPopStack(scopeMarker);
+
         return NULL;
     }
 

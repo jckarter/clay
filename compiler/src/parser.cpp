@@ -1124,6 +1124,30 @@ static bool blockItems(vector<StatementPtr> &stmts) {
     return true;
 }
 
+static bool statementExprStatement(StatementPtr &stmt);
+
+static bool statementExpression(vector<StatementPtr> &stmts, ExprPtr &expr) {
+    ExprPtr tailExpr;
+    StatementPtr stmt;
+    while (true) {
+        int p = save();
+        if (statementExprStatement(stmt)) {
+            stmts.push_back(stmt);
+        } else if (restore(p), expression(tailExpr)) {
+            int q = save();
+            if (symbol(";")) {
+                stmts.push_back(new ExprStatement(tailExpr));
+            } else {
+                restore(q);
+                expr = tailExpr;
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+}
+
 static bool block(StatementPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("{")) return false;
@@ -1231,15 +1255,16 @@ static bool optElse(StatementPtr &x) {
 
 static bool ifStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
+    vector<StatementPtr> condStmts;
     ExprPtr condition;
     StatementPtr thenPart, elsePart;
     if (!keyword("if")) return false;
     if (!symbol("(")) return false;
-    if (!expression(condition)) return false;
+    if (!statementExpression(condStmts, condition)) return false;
     if (!symbol(")")) return false;
     if (!statement(thenPart)) return false;
     if (!optElse(elsePart)) return false;
-    x = new If(condition, thenPart, elsePart);
+    x = new If(condStmts, condition, thenPart, elsePart);
     x->location = location;
     return true;
 }
@@ -1319,14 +1344,15 @@ static bool exprStatement(StatementPtr &x) {
 
 static bool whileStatement(StatementPtr &x) {
     LocationPtr location = currentLocation();
-    ExprPtr y;
-    StatementPtr z;
+    vector<StatementPtr> condStmts;
+    ExprPtr cond;
+    StatementPtr body;
     if (!keyword("while")) return false;
     if (!symbol("(")) return false;
-    if (!expression(y)) return false;
+    if (!statementExpression(condStmts, cond)) return false;
     if (!symbol(")")) return false;
-    if (!statement(z)) return false;
-    x = new While(y, z);
+    if (!statement(body)) return false;
+    x = new While(condStmts, cond, body);
     x->location = location;
     return true;
 }
@@ -1494,6 +1520,15 @@ static bool statement(StatementPtr &x) {
     if (restore(p), finallyStatement(x)) return true;
     if (restore(p), onerrorStatement(x)) return true;
 
+    return false;
+}
+
+static bool statementExprStatement(StatementPtr &stmt) {
+    int p = save();
+    if (localBinding(stmt)) return true;
+    if (restore(p), assignment(stmt)) return true;
+    if (restore(p), initAssignment(stmt)) return true;
+    if (restore(p), updateAssignment(stmt)) return true;
     return false;
 }
 
