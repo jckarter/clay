@@ -1,1 +1,1 @@
-(~~)(a, b) { println("~~"); }
+(~~)(a, b) { println("~~"); return a; }
