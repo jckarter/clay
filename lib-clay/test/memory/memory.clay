@@ -1,17 +1,17 @@
 import test.(expect, printFailure);
 
 alias UNINITIALIZED_CANARY = Greatest(SizeT);
-alias NOISY_CANARIES = false;
+alias NOISY_CANARIES = Flag?("test.memory.NoisyCanaries");
 
 noisyPrintln(forward ..values) {
     if (NOISY_CANARIES)
         println(..values);
 }
 
-enum CanaryState ( DESTROYED, ALIVE, MOVED, RESET, INVALID );
+enum CanaryState (DESTROYED, ALIVE, MOVED, RESET, INVALID);
 
 private var canaryTracker = Vector[CanaryState]();
-record Canary ( id: SizeT, throwOnCopy?: Bool );
+record Canary (id: SizeT, throwOnCopy?: Bool);
 
 overload RegularRecord?(static Canary) = false;
 
