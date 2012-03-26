@@ -1,0 +1,28 @@
+import foo;
+import foo.((~~));
+
+(**)(a, b) { println("**"); }
+
+overload (~~)(a:Float, b:Float) { println("~~ Float"); }
+overload foo.(~~)(a:Double, b:Double) { println("~~ Double"); }
+
+operatorAsStaticArg(#(~~)) { println("#(~~)"); }
+
+main() {
+    1 ** 2;
+    1 ~~ 2;
+    1f ~~ 2f;
+    1. ~~ 2.;
+
+    (**)(1, 2);
+    (~~)(1, 2);
+    (~~)(1f, 2f);
+    (~~)(1., 2.);
+
+    foo.(~~)(1, 2);
+    foo.(~~)(1f, 2f);
+    foo.(~~)(1., 2.);
+
+    operatorAsStaticArg((~~));
+    operatorAsStaticArg(foo.(~~));
+}
