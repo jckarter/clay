@@ -216,14 +216,11 @@ static bool opIdentifier(TokenPtr &x) {
     char c;
     if (!next(c)) return false;
     if (c != '(') return false;
-    string s,op;
-    s.push_back(c);
+    string op;
     if(!opstring(op)) return false;
-    s.append(op);
     if (!next(c)) return false;
     if (c != ')') return false;
-    s.push_back(c);
-    x = new Token(T_IDENTIFIER, s);
+    x = new Token(T_IDENTIFIER, op);
     return true;
 }
 

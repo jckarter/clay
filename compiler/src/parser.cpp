@@ -597,12 +597,7 @@ static bool operatorOp(string &op) {
         if (opsymbol(*a)) return false;
         restore(p);
     }
-    string x;
-    if (!opstring(x)) return false;
-    op.clear();
-    op.push_back('(');
-    op.append(x);
-    op.push_back(')');
+    if (!opstring(op)) return false;
     return true;
 }
 
@@ -1191,7 +1186,7 @@ static bool initAssignment(StatementPtr &x) {
 static bool updateopstring(string &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const string ops[] = {"(+)", "(-)", "(*)", "(/)", "(\\)", "(%)", "(++)"};
+    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (opsymbol(*a)) {
