@@ -157,7 +157,7 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(string op, const string &s) {
+static string cleanNumericSeparator(const string &op, const string &s) {
     string out;
     if (op == "-")
         out.push_back('-');
@@ -168,7 +168,7 @@ static string cleanNumericSeparator(string op, const string &s) {
     return out;
 }
 
-static bool intLiteral(string op, ExprPtr &x) {
+static bool intLiteral(const string &op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -186,7 +186,7 @@ static bool intLiteral(string op, ExprPtr &x) {
     return true;
 }
 
-static bool floatLiteral(string op, ExprPtr &x) {
+static bool floatLiteral(const string &op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -557,7 +557,7 @@ static bool plusOrMinus(string &op) {
         return false;
 }
 
-static bool signedLiteral(string op, ExprPtr &x) {
+static bool signedLiteral(const string &op, ExprPtr &x) {
     int p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;

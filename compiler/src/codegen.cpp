@@ -4847,15 +4847,6 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_ProcedureP : {
-        ensureArity(args, 1);
-        ObjectPtr obj = valueToStatic(args->values[0]);
-        bool isProcedure = (obj.ptr() && (obj->objKind == PROCEDURE));
-        ValueHolderPtr vh = boolToValueHolder(isProcedure);
-        codegenStaticObject(vh.ptr(), ctx, out);
-        break;
-    }
-
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
