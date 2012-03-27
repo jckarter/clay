@@ -1,0 +1,34 @@
+test(a) {
+    println(a);
+    var b = stringLiteralByteSlice(a, #0, #3);
+    println(b);
+    var c = stringLiteralByteSlice(a, #3, #size(a));
+    println(c);
+    var d = b ++ c;
+    println(d);
+    println(a == d);
+}
+
+main() {
+    test("foobar");
+    test("%#@% $#%\t*^*^");
+
+    println();
+    println(stringLiteralStartsWith?("foobar", "foo"));
+    println(stringLiteralStartsWith?("foobar", "bar"));
+    println(stringLiteralStartsWith?("foobar", "foobar"));
+    println(stringLiteralStartsWith?("foo", "foobar"));
+
+    println();
+    println(stringLiteralEndsWith?("foobar", "foo"));
+    println(stringLiteralEndsWith?("foobar", "bar"));
+    println(stringLiteralEndsWith?("foobar", "foobar"));
+    println(stringLiteralEndsWith?("foo", "foobar"));
+
+    println();
+    println(stringLiteralFind("foobarfoo", "foo"));
+    println(stringLiteralFind("foobarfoo", "bar"));
+    println(stringLiteralFind("foobarfoo", "bas"));
+    println(stringLiteralFind("foo", "foobarfoo"));
+    println(stringLiteralFind("foobarfoo", "foo", #1));
+}

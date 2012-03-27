@@ -872,7 +872,7 @@ void printName(ostream &out, ObjectPtr x)
                     out << "\\\"";
                     break;
                 default:
-                    if (ch >= '\x20' and ch <= '\x7E')
+                    if (ch >= '\x20' && ch <= '\x7E')
                         out << ch;
                     else
                         out << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (int)ch;

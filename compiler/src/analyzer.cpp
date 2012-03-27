@@ -2048,6 +2048,34 @@ static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, A
         return analyzeStatement(stmt, env, ctx);
 }
 
+static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &stmts, EnvPtr env)
+{
+    EnvPtr env2 = env;
+    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+         i != end;
+         ++i)
+    {
+        switch ((*i)->stmtKind) {
+        case BINDING:
+            env2 = analyzeBinding((Binding*)i->ptr(), env2);
+            if (env2 == NULL)
+                return NULL;
+            break;
+
+        case ASSIGNMENT:
+        case VARIADIC_ASSIGNMENT:
+        case INIT_ASSIGNMENT:
+        case EXPR_STATEMENT:
+            break;
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+    return env2;
+}
+
 StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
 {
     LocationContext loc(stmt->location);
@@ -2115,11 +2143,18 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case IF : {
         If *x = (If *)stmt.ptr();
+
+        EnvPtr env2 = analyzeStatementExpressionStatements(x->conditionStatements, env);
+        if (env2 == NULL) {
+            ctx->hasRecursivePropagation = true;
+            return SA_RECURSIVE;
+        }
+
         StatementAnalysis thenResult, elseResult;
-        thenResult = analyzeStatement(x->thenPart, env, ctx);
+        thenResult = analyzeStatement(x->thenPart, env2, ctx);
         elseResult = SA_FALLTHROUGH;
         if (x->elsePart.ptr())
-            elseResult = analyzeStatement(x->elsePart, env, ctx);
+            elseResult = analyzeStatement(x->elsePart, env2, ctx);
         return combineStatementAnalysis(thenResult, elseResult);
     }
 
@@ -2146,7 +2181,14 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
-        analyzeStatement(x->body, env, ctx);
+
+        EnvPtr env2 = analyzeStatementExpressionStatements(x->conditionStatements, env);
+        if (env2 == NULL) {
+            ctx->hasRecursivePropagation = true;
+            return SA_RECURSIVE;
+        }
+
+        analyzeStatement(x->body, env2, ctx);
         return SA_FALLTHROUGH;
     }
 
@@ -2853,6 +2895,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         MultiPValuePtr result = new MultiPValue();
         for (size_t i = 0, sz = ident->str.size(); i < sz; ++i)
             result->add(new PValue(cIntType, true));
+        return result;
     }
 
     case PRIM_stringLiteralByteSize :

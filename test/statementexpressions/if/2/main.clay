@@ -1,0 +1,24 @@
+import test.memory.(Canary, checkCanariesDestroyed);
+
+instance Exception (Int);
+
+main() {
+    if (var x = Canary(); true) { }
+
+    if (var x = Canary(); true)
+        goto foo;
+foo:
+
+    while (true) {
+        if (var x = Canary(); true)
+            break;
+    }
+
+    try {
+        if (var x = Canary(); true)
+            throw 1;
+    } catch (ex) {}
+
+    if (checkCanariesDestroyed())
+        println("ok");
+}

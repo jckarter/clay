@@ -1,8 +1,0 @@
-import identifiers.(ident);
-
-main() {
-    println(ident("hello", " ", "world"));
-    println(ident("use ", add, " to add numbers"));
-    println(ident("i see a ", Type([1, 2.0, '3'])));
-    println(ident(#17, " is the most random number"));
-}

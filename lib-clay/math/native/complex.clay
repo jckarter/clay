@@ -520,7 +520,7 @@ overload acos(z:T) {
  * arithmetic   domain     # trials      peak         rms
  *    DEC       -10,+10      5900       1.3e-16     7.8e-18
  *    IEEE      -10,+10     30000       2.3e-15     8.5e-17
- * The check catan( ctan(z) )  =  z, with |x| and wheny| < PI/2,
+ * The check catan( ctan(z) )  =  z, with |x| and |y| < PI/2,
  * had peak relative error 1.5e-16, rms relative error
  * 2.9e-17.  See also clog().
  */

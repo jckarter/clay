@@ -1,0 +1,31 @@
+import foo;
+import foo.((~~));
+
+(**)(a, b) { println("**"); return a; }
+
+overload (~~)(a:Float, b:Float) { println("~~ Float"); return a; }
+overload foo.(~~)(a:Double, b:Double) { println("~~ Double"); return a;  }
+
+operatorAsStaticArg1(#(~~)) { println("#(~~) 1"); }
+operatorAsStaticArg2(#foo.(~~)) { println("#(~~) 2"); }
+
+main() {
+    1 ** 2;
+    1 ~~ 2;
+    1f ~~ 2f;
+    1. ~~ 2.;
+
+    (**)(1, 2);
+    (~~)(1, 2);
+    (~~)(1f, 2f);
+    (~~)(1., 2.);
+
+    foo.(~~)(1, 2);
+    foo.(~~)(1f, 2f);
+    foo.(~~)(1., 2.);
+
+    operatorAsStaticArg1((~~));
+    operatorAsStaticArg1(foo.(~~));
+    operatorAsStaticArg2((~~));
+    operatorAsStaticArg2(foo.(~~));
+}

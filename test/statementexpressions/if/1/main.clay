@@ -1,0 +1,8 @@
+main() {
+    var x = 100;
+
+    if (x += 1; inc(x); var x = 200; x += 1; inc(x); x == 202) {
+        println(x);
+    }
+    println(x);
+}

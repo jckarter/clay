@@ -2552,7 +2552,7 @@ external ("_alphasort$INODE64") alphasort(
 external ("_closedir$UNIX2003") closedir(
     argument0 : Pointer[DIR]) : Int;
 
-external ("_getdirentries_is_not_available_|_64_bit_inodes_are_in_effect") getdirentries(
+external ("_getdirentries_is_not_available_when_64_bit_inodes_are_in_effect") getdirentries(
     argument0 : Int,
     argument1 : Pointer[CChar],
     argument2 : Int,

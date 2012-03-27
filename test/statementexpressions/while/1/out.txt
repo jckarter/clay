@@ -1,0 +1,5 @@
+inner x = 302 y = 201
+inner x = 302 y = 202
+inner x = 302 y = 203
+inner x = 302 y = 204
+outer x = 105 y = 205

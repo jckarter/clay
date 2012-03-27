@@ -57,7 +57,7 @@ inline overload index(#s, i:I) {
 
 [s, n when StringLiteral?(s) and n >= 0 and n < size(s)]
 inline overload staticIndex(#s, #n) {
-    return stringLiteralByteIndex(#s,#n);
+    return Char(stringLiteralByteIndex(#s,#n));
 }
 
 
@@ -98,3 +98,90 @@ AllStringLiterals?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
 
 [..SS when AllStringLiterals?(..SS)]
 inline overload cat(..ss:SS) = stringLiteralConcat(..ss);
+
+
+//
+// string literal manipulation
+//
+
+// stringLiteralStartsWith?
+
+stringLiteralStartsWith?(identifier, startsWith) = false;
+[identifier, startsWith when size(identifier) >= size(startsWith)]
+overload stringLiteralStartsWith?(#identifier, #startsWith)
+      = stringLiteralByteSlice(identifier, #0, #size(startsWith))
+        == startsWith;
+
+// stringLiteralEndsWith?
+
+stringLiteralEndsWith?(identifier, endsWith) = false;
+[identifier, endsWith when size(identifier) >= size(endsWith)]
+overload stringLiteralEndsWith?(#identifier, #endsWith)
+    = stringLiteralByteSlice(identifier,
+          #(size(identifier) - size(endsWith)),
+          #size(identifier)
+      ) == endsWith;
+
+// stringLiteralFind
+
+[identifier, sub, start when
+    StringLiteral?(identifier) and StringLiteral?(sub)
+]
+stringLiteralFind(#identifier, #sub, #start)
+    = stringLiteralFind(identifier, sub, #(start + 1));
+
+[identifier, sub, start when
+    StringLiteral?(identifier) and StringLiteral?(sub)
+    and size(identifier) < size(sub) + start
+]
+overload stringLiteralFind(#identifier, #sub, #start) = -1;
+
+[identifier, sub, start when
+    StringLiteral?(identifier) and StringLiteral?(sub)
+    and size(identifier) >= size(sub) + start
+    and stringLiteralByteSlice(identifier, #start, #(start + size(sub)))
+        == sub
+]
+overload stringLiteralFind(#identifier, #sub, #start) = start;
+
+overload stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub, #0);
+
+// strl
+
+define strl;
+
+overload strl(..xx) = cat(..mapValues(strl, ..xx));
+
+[x]
+overload strl(#x) = StaticName(#x);
+[i when StringLiteral?(i)]
+overload strl(#i) = i;
+
+overload strl() = "";
+
+// stringLiteralCapitalize, stringLiteralDecapitalize
+
+stringLiteralCapitalize("") = "";
+[s when StringLiteral?(s) and size(s) >= 1]
+overload stringLiteralCapitalize(#s)
+    = stringLiteralFromBytes(#(Int(asciiUpper(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+
+stringLiteralDecapitalize("") = "";
+[s when StringLiteral?(s) and size(s) >= 1]
+overload stringLiteralDecapitalize(#s)
+    = stringLiteralFromBytes(#(Int(asciiLower(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+
+// stringLiteralChars, stringLiteralStaticChars, stringLiteralFromChars
+// XXX utf8
+
+[s when StringLiteral?(s)]
+stringLiteralChars(#s) = ..mapValues(Char, ..stringLiteralBytes(s));
+
+[s when StringLiteral?(s)]
+stringLiteralStaticChars(#s) =
+    ..mapValues(n -> #Char(stringLiteralByteIndex(s, n)), ..staticIntegers(#size(s)));
+
+[c]
+private staticCharToByte(#c) = #Int(c);
+
+stringLiteralFromChars(..c) = stringLiteralFromBytes(..mapValues(staticCharToByte, ..c));
