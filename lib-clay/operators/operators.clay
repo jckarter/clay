@@ -395,11 +395,19 @@ inline overload infixOperator(forward ..args)
 
 [T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
 inline overload infixOperator(a:T, #Fn, b:U) = forward Fn(a,b);
+[T,U,Fn when integerEquals?(countValues(..CallOutputTypes(Fn,T,U)),0)]
+inline overload infixOperator(a:T, #Fn, b:U) {Fn(a,b);}
+
+[fn,T when integerEquals?(countValues(..CallOutputTypes(fn,T)),0)]
+inline overload prefixOperator(#fn, forward x:T) {fn(x);}
+
 
 inline overload prefixOperator(fn, forward ..xs)
     = forward fn(..prefixOperator(..xs));
 inline overload prefixOperator(fn, forward x) 
     = forward fn(x);
+[fn,T when integerEquals?(countValues(..CallOutputTypes(fn,T)),0)]
+inline overload prefixOperator(#fn, forward x:T) {fn(x);}
 
 
 private define foldBinaryOp;
@@ -420,9 +428,13 @@ inline overload binaryOp(#OP, forward a) = forward a;
 [OP]
 inline overload binaryOp(#OP,forward a,#OP,forward b, forward ..args)
     = forward ..binaryOp(OP,OP(a,b), ..args);
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+inline overload binaryOp(#OP,forward a:T,#OP,forward b:U, forward ..args) 
+    {OP(a,b);}
 [OP]
-inline overload binaryOp(#OP,forward a,#OP,forward b)
-    = forward OP(a,b);
+inline overload binaryOp(#OP,forward a,#OP,forward b) = forward OP(a,b);
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+inline overload binaryOp(#OP,forward a:T,#OP,forward b:U) {OP(a,b);}
 
 private define noPrecBinaryOp;
 [OP]
@@ -431,9 +443,14 @@ inline overload noPrecBinaryOp(forward a, #OP,forward ..args)
 [OP,T,U when BinaryOpDefined?(OP,T,U)]
 inline overload noPrecBinaryOp(forward a:T, #OP,forward b:U, forward ..args)
     = forward ..noPrecBinaryOp(OP(a,b), ..args);
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U, forward ..args) 
+    {OP(a,b);}
 [OP,T,U when BinaryOpDefined?(OP,T,U)]
 inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U)
     = forward OP(a,b);
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U) {OP(a,b);}
 inline overload noPrecBinaryOp(forward a) = forward a;
 
 private define compareOp;
