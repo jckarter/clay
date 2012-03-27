@@ -1,5 +1,4 @@
 
-import math.(fma);
 import numbers.floats.*;
 
 enum ComplexPart (REAL, IMAG);
@@ -205,7 +204,7 @@ inline overload multiply(z:T, y:U) {
     alias iz = imagValue(z);
     alias rz = real(z);
     var ac, bd = rz * ry, iz * iy;
-    return Complex(ac-bd, fma(rz+iz, ry+iy, -ac-bd));
+    return Complex(ac-bd, (rz+iz) * (ry+iy) + (-ac-bd));
 }
 
 [T,U when Complex?(T,U)]
@@ -216,12 +215,12 @@ inline overload divide(z:T, y:U) {
     alias rz = real(z);
     if(abs(ry) < abs(iy)){
         var rat = ry / iy;
-        var den = 1./(fma(rat,ry,iy));
-        return Complex(fma(rat,rz,iz) * den, fma(rat,iz,-rz) * den);
+        var den = 1./(rat*ry+iy);
+        return Complex((rat*rz+iz) * den, (rat*iz-rz) * den);
     }else{
         var rat = iy / ry;
-        var den = 1./(fma(rat,iy,ry));
-        return Complex(fma(rat,iz,rz) * den, fma(-rat,rz,iz) * den);
+        var den = 1./(rat*iy+ry);
+        return Complex((rat*iz+rz) * den, (-rat*rz+iz) * den);
     }
 }
 
