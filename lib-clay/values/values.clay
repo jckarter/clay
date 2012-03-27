@@ -72,30 +72,21 @@ overload lastValue(forward a) = forward a;
 inline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
 inline overload replicateValue(a, #0) = ;
 
-//inline allValues?(pred, ..rest) {
-//    ..for (x in rest) {
-//        if (not pred(x))
-//            return false;
-//    }
-//    return true;
-//}
+inline allValues?(pred, ..rest) {
+    ..for (x in rest) {
+        if (not pred(x))
+            return false;
+    }
+    return true;
+}
 
-inline allValues?(pred, first, ..rest)
-    = pred(first) and allValues?(pred, ..rest);
-inline overload allValues?(pred) = true;
-
-
-//inline anyValues?(pred, ..rest) {
-//    ..for (x in rest) {
-//        if (pred(x))
-//            return true;
-//    }
-//    return false;
-//}
-
-inline anyValues?(pred, first, ..rest)
-    = pred(first) or anyValues?(pred, ..rest);
-inline overload anyValues?(pred) = false;
+inline anyValues?(pred, ..rest) {
+    ..for (x in rest) {
+        if (pred(x))
+            return true;
+    }
+    return false;
+}
 
 inline equalValues?(a, ..rest) = allValues?(x => a == x, ..rest);
 
