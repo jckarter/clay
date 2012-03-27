@@ -229,8 +229,8 @@ static bool stringLiteral(ExprPtr &x) {
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
-    if (restore(p), intLiteral("(+)", x)) return true;
-    if (restore(p), floatLiteral("(+)", x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
+    if (restore(p), floatLiteral("+", x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     return false;
