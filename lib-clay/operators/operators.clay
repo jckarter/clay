@@ -37,30 +37,50 @@ public import __operators__.(
     ifExpression,
 );
 
-define equals?;
-define notEquals?;
-define lesser?;
-define lesserEquals?;
-define greater?;
-define greaterEquals?;
-
-define add;
-define subtract;
-define multiply;
-define divide;
-define quotient;
-define remainder;
-define cat;
 
 define inc;
 define dec;
 
-define bitshl;
-define bitshr;
-define bitand;
-define bitor;
-define bitxor;
-define bitnot;
+define (==);
+define (!=);
+define (>=);
+define (<=);
+define (>);
+define (<);
+define (++);
+define (~);
+define (&);
+define (|);
+define (<<);
+define (>>);
+define (+);
+define (-);
+define (%);
+define (\);
+define (/);
+define (*);
+
+alias equals? = (==);
+alias notEquals? = (!=);
+alias lesser? = (<);
+alias lesserEquals? = (<=);
+alias greater? = (>);
+alias greaterEquals? = (>=);
+
+alias add = (+);
+alias subtract = (-);
+alias multiply = (*);
+alias divide = (/);
+alias quotient = (\);
+alias remainder = (%);
+alias cat = (++);
+
+alias bitshl = (<<);
+alias bitshr = (>>);
+alias bitand = (&);
+alias bitor = (|);
+alias bitxor = (~);
+alias bitnot = (~);
 
 define moveUnsafe;
 define resetUnsafe;
@@ -83,9 +103,9 @@ CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
 
 RandomAccessCoordinate?(T) =
     Coordinate?(T) and
-    CallDefined?(add, T, Int) and
-    CallDefined?(subtract, T, Int) and
-    CallDefined?(subtract, T, T);
+    CallDefined?((+), T, Int) and
+    CallDefined?((-), T, Int) and
+    CallDefined?((-), T, T);
 
 LValueCoordinate?(T) =
     Coordinate?(T) and
@@ -239,24 +259,21 @@ inline overload updateAssign(#F, ref dest, forward ..src) {
     dest = infixOperator(dest,F, ..src);
 }
 
-inline overload notEquals?(a, b) = not equals?(a, b);
+inline overload (!=)(a, b) = not (==)(a, b);
 
-inline ordered?(a, b) = (a <= b) or (b <= a);
+inline ordered?(a, b) = (<=)(a, b) or (<=)(b, a);
 
-inline overload lesserEquals?(a, b) = not lesser?(b, a);
+inline overload (<=)(a, b) = not (<)(b, a);
 
-inline overload greater?(a, b) = lesser?(b, a);
+inline overload (>)(a, b) = (<)(b, a);
 
-inline overload greaterEquals?(a, b) = not lesser?(a, b);
+inline overload (>=)(a, b) = not (<)(a, b);
 
-inline overload bitand(a, b, c, ..rest) =
-    bitand(bitand(a,b), c, ..rest);
+inline overload (&)(a, b, c, ..rest) = (&)((&)(a, b), c, ..rest);
 
-inline overload bitor(a, b, c, ..rest) =
-    bitor(bitor(a,b), c, ..rest);
+inline overload (|)(a, b, c, ..rest) = (|)((|)(a, b), c, ..rest);
 
-inline overload bitxor(a, b, c, ..rest) =
-    bitxor(bitxor(a,b), c, ..rest);
+inline overload (~)(a, b, c, ..rest) = (~)((~)(a, b), c, ..rest);
 
 [FIELD]
 inline overload fieldRefAssign(dest, #FIELD, forward src) {
@@ -353,29 +370,9 @@ private define _countIndices;
 //  operators 
 //
 
-infixOps() = (++),(|),(@),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
+infixOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
 
 infixPrecedenceList() = ..infixOps();
-
-alias (==) = equals?;
-alias (!=) = notEquals?;
-alias (>=) = greaterEquals?;
-alias (<=) = lesserEquals?;
-alias (>)  = greater?;
-alias (<)  = lesser?;
-alias (++) = cat;
-alias (~)  = bitnot;
-alias (&)  = bitand;
-alias (|)  = bitor;
-alias (@)  = bitxor;
-alias (<<) = bitshl;
-alias (>>) = bitshr;
-alias (+)  = add;
-alias (-)  = subtract;
-alias (%)  = remainder;
-alias (\)  = quotient;
-alias (/)  = divide;
-alias (*)  = multiply;
 
 private define staticEquals?;
 [A, B]
@@ -558,9 +555,9 @@ alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralR
 // bitandc, bitblend
 //
 
-inline bitandc(a, b) = bitand(a, bitnot(b));
+inline bitandc(a, b) = (&)(a, (~)(b));
 inline bitblend(mask, ones, zeros)
-    = bitor(bitand(ones, mask), bitandc(zeros, mask));
+    = (|)((&)(ones, mask), bitandc(zeros, mask));
 
 
 
@@ -569,10 +566,10 @@ inline bitblend(mask, ones, zeros)
 //
 
 [I, J when Integer?(I) and Integer?(J)]
-bitrol(x:I, n:J) = bitor(wrapBitshl(x, n), bitshr(x, TypeSize(I)*8 - n));
+bitrol(x:I, n:J) = (|)(wrapBitshl(x, n), (>>)(x, TypeSize(I)*8 - n));
 
 [I, J when Integer?(I) and Integer?(J)]
-bitror(x:I, n:J) = bitor(bitshr(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
+bitror(x:I, n:J) = (|)((>>)(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 
 
@@ -704,7 +701,7 @@ inline isNot?(x, y) = not is?(x, y);
 
 inline overload case?(x, forward ..ys) : Bool {
     ..for (y in ..ys)
-        if (equals?(x, y))
+        if ((==)(x, y))
             return true;
     return false;
 }
