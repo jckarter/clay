@@ -169,10 +169,10 @@ overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
 //
 
 [T when Complex?(T)]
-inline overload minus(z:T) = Complex(-real(z),-imag(z));
+inline overload subtract(z:T) = Complex(-real(z),-imag(z));
 
 [T when Complex?(T)]
-inline overload plus(z:T) = z;
+inline overload add(z:T) = z;
 
 [T when Complex?(T)]
 inline conj(z:T) = Complex(real(z),-imag(z));

@@ -1152,10 +1152,9 @@ struct StaticIndexing : public Expr {
 enum VariadicOpKind {
     DEREFERENCE,
     ADDRESS_OF,
-    PLUS,
-    MINUS,
     NOT,
-    OPERATOR,
+    PREFIX_OP,
+    INFIX_OP,
     IF_EXPR,
 };
 

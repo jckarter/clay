@@ -564,24 +564,6 @@ static bool signedLiteral(string op, ExprPtr &x) {
     return false;
 }
 
-static bool signExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    string op;
-    if (!plusOrMinus(op)) return false;
-    ExprPtr b;
-    int p = save();
-    if (signedLiteral(op, x))
-        return true;
-    restore(p);
-    if (!prefixExpr(b)) return false;
-    if (op == "+")
-        x = new VariadicOp(PLUS, new ExprList(b));
-    else 
-        x = new VariadicOp(MINUS, new ExprList(b));    
-    x->location = location;
-    return true;
-}
-
 static bool dispatchExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!opsymbol("*")) return false;
@@ -602,20 +584,6 @@ static bool staticExpr(ExprPtr &x) {
     return true;
 }
 
-static bool prefixExpr(ExprPtr &x) {
-    int p = save();
-    if (signExpr(x)) return true;
-    if (restore(p), addressOfExpr(x)) return true;
-    if (restore(p), dispatchExpr(x)) return true;
-    if (restore(p), staticExpr(x)) return true;
-    if (restore(p), suffixExpr(x)) return true;
-    return false;
-}
-
-
-//
-// infix binary operator expr
-//
 
 static bool operatorOp(string &op) {
     int p = save();
@@ -638,6 +606,39 @@ static bool operatorOp(string &op) {
     return true;
 }
 
+static bool preopExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    string op;
+    int p = save();
+    if (plusOrMinus(op)) {
+        if (signedLiteral(op, x)) return true;
+    }
+    restore(p);
+    if (!operatorOp(op)) return false;
+    ExprPtr y;
+    if (!prefixExpr(y)) return false;
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    exprs->add(y);
+    x = new VariadicOp(PREFIX_OP, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool prefixExpr(ExprPtr &x) {
+    int p = save();
+    if (addressOfExpr(x)) return true;
+    if (restore(p), dispatchExpr(x)) return true;
+    if (restore(p), preopExpr(x)) return true;
+    if (restore(p), staticExpr(x)) return true;
+    if (restore(p), suffixExpr(x)) return true;
+    return false;
+}
+
+
+//
+// infix binary operator expr
+//
+
 
 static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
@@ -648,31 +649,24 @@ static bool operatorTail(VariadicOpPtr &x) {
     if (!operatorOp(op)) return false;
     while (true) {
         exprs->add(new NameRef(new Identifier(op)));
-        p = save();
-        if (prefixExpr(b))
-            exprs->add(b);
-        else
+        if (!prefixExpr(b)) {
             restore(p);
-        
+            break;
+        }
+        exprs->add(b);
         p = save();
         if (!operatorOp(op)) {
             restore(p);
             break;
         }
     }
-    x = new VariadicOp(OPERATOR, exprs);
+    x = new VariadicOp(INFIX_OP, exprs);
     x->location = location;
     return true;
 }
 
 static bool operatorExpr(ExprPtr &x) {
-    string op;
-    int p = save();
-    if (!prefixExpr(x)) {
-        restore(p);
-        if (!operatorOp(op)) return false;
-        restore(p);
-    }
+    if (!prefixExpr(x)) return false;
     while (true) {
         int p = save();
         VariadicOpPtr y;
@@ -680,8 +674,7 @@ static bool operatorExpr(ExprPtr &x) {
             restore(p);
             break;
         }
-        
-        if(op.empty()) y->exprs->insert(x);
+        y->exprs->insert(x);
         x = y.ptr();
     }
     return true;
@@ -1202,7 +1195,7 @@ static bool updateAssignment(StatementPtr &x) {
     } else {
         exprs->add(z);
     }
-    x = new VariadicAssignment(OPERATOR, exprs);
+    x = new VariadicAssignment(INFIX_OP, exprs);
     x->location = location;
     return true;
 }

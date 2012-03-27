@@ -160,17 +160,14 @@ static void printExpr(ostream &out, const Expr *x) {
         case ADDRESS_OF :
             out << "ADDRESS_OF";
             break;
-        case PLUS :
-            out << "PLUS";
-            break;
-        case MINUS :
-            out << "MINUS";
-            break;
         case NOT :
             out << "NOT";
             break;
-        case OPERATOR :
-            out << "OPERATOR";
+        case PREFIX_OP :
+            out << "PREFIX_OP";
+            break;
+        case INFIX_OP :
+            out << "INFIX_OP";
             break;
         case IF_EXPR :
             out << "IF_EXPR";
