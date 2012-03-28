@@ -79,7 +79,7 @@ overload cat(forward a:A, forward ..b:B) {
 [A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
 overload cat(forward a:A, forward ..x:T) {
     var result = Vector(a);
-    push(result, x);
+    push(result, ..x);
     return move(result);
 }
 
