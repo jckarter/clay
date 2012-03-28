@@ -71,11 +71,12 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
     try {
         var srcIter = iterator(s);
         while (ptr != last) {
-            assert(hasNext?(srcIter), "insufficient elements for array");
-            ptr^ <-- next(srcIter);
+            var srcValue = nextValue(srcIter);
+            assert(hasValue?(srcValue), "insufficient elements for array");
+            ptr^ <-- getValue(srcValue);
             inc(ptr);
         }
-        assert(not hasNext?(srcIter), "too many elements for array");
+        assert(not hasValue?(nextValue(srcIter)), "too many elements for array");
     }
     catch (e) {
         destroyMemory(first, ptr);
@@ -91,11 +92,12 @@ overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     try {
         var srcIter = iterator(s);
         while (ptr != last) {
-            assert(hasNext?(srcIter), "insufficient elements for array");
-            ptr^ <-- next(srcIter);
+            var srcValue = nextValue(srcIter);
+            assert(hasValue?(srcValue), "insufficient elements for array");
+            ptr^ <-- getValue(srcValue);
             inc(ptr);
         }
-        assert(not hasNext?(srcIter), "too many elements for array");
+        assert(not hasValue?(nextValue(srcIter)), "too many elements for array");
     }
     catch (e) {
         destroyMemory(first, ptr);
@@ -141,9 +143,8 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
-        var srcIter = iterator(s);
-        while (hasNext?(srcIter)) {
-            ptr^ <-- next(srcIter);
+        for (x in s) {
+            ptr^ <-- x;
             inc(ptr);
         }
     }

@@ -31,53 +31,28 @@ overload UnderlyingContainerConstructor(#Filtered[F,A]) =
 //
 
 [F, A]
-inline overload iterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(..next(iterator(null(A)^))));
-    return FilteredIterator(a.predicate,
-                            iterator(a.seq),
-                            false,
-                            T());
-}
+inline overload iterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, iterator(a.seq));
 
 [F, A when CallDefined?(reverseIterator, A)]
-inline overload reverseIterator(a:Filtered[F, A]) {
-    alias T = Type(captureValues(..next(reverseIterator(null(A)^))));
-    return FilteredIterator(a.predicate,
-                            reverseIterator(a.seq),
-                            false,
-                            T());
-}
-
+inline overload reverseIterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, reverseIterator(a.seq));
 
 
 //
 // FilteredIterator
 //
 
-private record FilteredIterator[F, ITER, VALS] (
+private record FilteredIterator[F, ITER] (
     predicate : F,
     iter : ITER,
-    hasQueued? : Bool,
-    queued : VALS,
 );
 
-[F, ITER, VALS]
-inline overload hasNext?(iter:FilteredIterator[F, ITER, VALS]) {
-    while (not iter.hasQueued?) {
-        if (not hasNext?(iter.iter))
-            return false;
-        iter.queued = captureValues(..next(iter.iter));
-        iter.hasQueued? = iter.predicate(..capturedRefs(iter.queued));
-    }
-    return true;
+[F, ITER]
+inline overload nextValue(iter:FilteredIterator[F, ITER]) {
+    var value = nextValue(iter.iter);
+    while (hasValue?(value) and not iter.predicate(..getValue(value)))
+        value = nextValue(iter.iter);
+    return move(value);
 }
 
-[F, ITER, VALS]
-inline overload next(iter:FilteredIterator[F, ITER, VALS]) {
-    if (not iter.hasQueued?) {
-        var result = hasNext?(iter);
-        assert(result);
-    }
-    iter.hasQueued? = false;
-    return forward ..forwardValues(iter.queued);
-}

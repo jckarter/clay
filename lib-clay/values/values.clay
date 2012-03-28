@@ -139,8 +139,11 @@ sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 [I when Iterator?(I)]
 iteratorValues(iter: I, #0) = ;
 [I, n when Iterator?(I) and n > 0]
-overload iteratorValues(iter: I, #n)
-    = forward next(iter), ..iteratorValues(iter, #(n-1));
+overload iteratorValues(iter: I, #n) {
+    var v = nextValue(iter);
+    assert["boundsChecks"](hasValue?(v));
+    return forward ..getValue(v), ..iteratorValues(iter, #(n-1));
+}
 
 
 

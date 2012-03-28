@@ -5,11 +5,17 @@
 // ValueCoordinate
 //
 
-record ValueCoordinate[T] (value : T);
-
+record ValueCoordinate[T] (hasValue? : Bool, value : T);
+[T] overload ValueCoordinate[T](value:T) = ValueCoordinate[T](true, value);
+[T] overload ValueCoordinate(value:T) = ValueCoordinate[T](true, value);
 
 [T]
 inline overload dereference(c:ValueCoordinate[T]) = c.value;
+
+[T]
+inline overload getValue(c:ValueCoordinate[T]) = c.value;
+[T]
+inline overload hasValue?(c:ValueCoordinate[T]) = c.hasValue?;
 
 [T,I when CallDefined?(add, T, I)]
 inline overload add(c:ValueCoordinate[T], i:I) =
@@ -77,6 +83,11 @@ record ReverseCoordinate[T] (coord : T);
 [T]
 inline overload dereference(c:ReverseCoordinate[T]) = forward ..(c.coord - 1)^;
 
+[T]
+inline overload getValue(c:ReverseCoordinate[T]) = forward ..getValue(c.coord - 1);
+[T]
+inline overload hasValue?(c:ReverseCoordinate[T]) = hasValue?(c.coord);
+
 [T,I when CallDefined?(subtract, T, I)]
 inline overload add(c:ReverseCoordinate[T], i:I) =
     ReverseCoordinate(T(c.coord - i));
@@ -97,37 +108,4 @@ inline overload inc(c:ReverseCoordinate[T]) {
 [T]
 inline overload dec(c:ReverseCoordinate[T]) {
     inc(c.coord);
-}
-
-
-
-//
-// ByValueCoordinate
-//
-
-record ByValueCoordinate[T] (coord : T);
-
-[T]
-inline overload dereference(c:ByValueCoordinate[T]) = ..c.coord^;
-
-[T,I when CallDefined?(add, T, I)]
-inline overload add(c:ByValueCoordinate[T], i:I) =
-    ByValueCoordinate(T(c.coord + i));
-
-[T,I when CallDefined?(subtract, T, I)]
-inline overload subtract(c:ByValueCoordinate[T], i:I) =
-    ByValueCoordinate(T(c.coord - i));
-
-[T when CallDefined?(subtract, T, T)]
-inline overload subtract(c1:ByValueCoordinate[T], c2:ByValueCoordinate[T]) =
-    c1.coord - c2.coord;
-
-[T]
-inline overload inc(c:ByValueCoordinate[T]) {
-    inc(c.coord);
-}
-
-[T]
-inline overload dec(c:ByValueCoordinate[T]) {
-    dec(c.coord);
 }

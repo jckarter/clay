@@ -80,3 +80,18 @@ inline overload require(forward m:Maybe[T]) {
         throw ValueMissing();
     return forward variantAs(m, T);
 }
+
+
+//
+// maybe as iterator value
+//
+
+[T] inline overload hasValue?(m:Maybe[T]) = just?(m);
+[T] inline overload getValue(forward m:Maybe[T]) = forward just(m);
+
+inline getMaybeValue(v) {
+    if (hasValue?(v))
+        return Maybe(getValue(v));
+    else
+        return nothing(Type(getValue(v)));
+}

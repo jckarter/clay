@@ -1,3 +1,4 @@
+import maybe.(Maybe, nothing);
 
 
 //
@@ -16,7 +17,7 @@ private record LineSequence (
     f : File,
 );
 
-overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
+overload iterator(x:LineSequence) = LineIterator(&x.f);
 
 
 
@@ -24,28 +25,13 @@ overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
 // LineIterator
 //
 
-private record LineIterator (
-    file : Pointer[File],
-    queued? : Bool,
-    string : String,
-);
+private record LineIterator (file : Pointer[File]);
 
-overload hasNext?(x:LineIterator) {
-    if (not x.queued?) {
-        x.queued? = true;
-        clear(x.string);
-        readLine(x.file^, x.string);
-    }
-    return size(x.string) > 0;
-}
-
-overload next(x:LineIterator) {
-    if (not x.queued?) {
-        clear(x.string);
-        readLine(x.file^, x.string);
-    }
-    else {
-        x.queued? = false;
-    }
-    return ref x.string;
+overload nextValue(x:LineIterator) {
+    var line = String();
+    readLine(x.file^, line);
+    if (empty?(line))
+        return nothing(String);
+    else
+        return Maybe(move(line));
 }

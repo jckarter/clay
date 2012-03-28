@@ -31,8 +31,9 @@ public import __operators__.(
 
     iterator,
 
-    hasNext?,
-    next,
+    nextValue,
+    hasValue?,
+    getValue,
 
     ifExpression,
 );
@@ -120,10 +121,23 @@ ContiguousCoordinate?(T) = false;
 // iterator type predicates
 //
 
-Iterator?(T) = CallDefined?(hasNext?, T) and CallDefined?(next, T);
-IteratorTargetType(T) = ..Type(..next(typeToLValue(T)));
+Iterator?(T) = CallDefined?(nextValue, T);
+IteratorTargetType(T) = ..Type(..getValue(nextValue(typeToLValue(T))));
 
+
+//
+// Default two-arg hasValue?
+//
 
+alias overload hasValue?(iter, coord) = hasValue?(coord);
+
+
+//
+// pointer as iterator value
+//
+
+[T] inline overload hasValue?(p:Pointer[T]) = not null?(p);
+[T] inline overload getValue(p:Pointer[T]) = ref p^;
 
 
 //
@@ -168,11 +182,11 @@ define StaticSize;
 //
 
 Sequence?(T) = CallDefined?(iterator, T);
-SequenceElementType(T) = ..Type(..next(iterator(typeToLValue(T))));
+SequenceElementType(T) = ..Type(..getValue(nextValue(iterator(typeToLValue(T)))));
 SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
 StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
-LValueSequence?(T) = Sequence?(T) and LValue?(next(iterator(typeToLValue(T))));
+LValueSequence?(T) = Sequence?(T) and LValue?(getValue(nextValue(iterator(typeToLValue(T)))));
 
 CoordinateSequence?(T) = Sequence?(T) and CallDefined?(begin, T) and CallDefined?(end, T);
 SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
@@ -190,7 +204,7 @@ SequenceContainer?(T) = false;
 
 // true if sequence is not single-valued (0 valued sequences are included).
 MultiValuedSequence?(T) =
-    Sequence?(T) and multiValued?(..Type(..next(iterator(typeToLValue(T)))));
+    Sequence?(T) and multiValued?(..Type(..getValue(nextValue(iterator(typeToLValue(T))))));
 
 private multiValued?(..x) = true;
 overload multiValued?(x) = false;

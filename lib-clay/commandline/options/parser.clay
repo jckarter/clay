@@ -30,16 +30,15 @@ parseOptions(ops : OptionSpecs, args) : ParseResult {
 
   var scanner = withPushback(iterator(mapped(x => String(x), args)));
 
-  while(hasNext?(scanner)){
-    var token = next(scanner);
+  while(var v = nextValue(scanner); hasValue?(v)){
+    var token = getValue(v);
 
     // -- acts as a separator. After -- all tokens are interpreted as arguments rather than options
     if(token == "--"){
       addSeparator(pr);
 
-      while(hasNext?(scanner)){
-        addArgument(pr, next(scanner));
-      }
+      while(var v = nextValue(scanner); hasValue?(v))
+        addArgument(pr, getValue(v));
     } else if(argument?(token)){
       addArgument(pr, token);
     } else {
@@ -108,9 +107,10 @@ private splitOption(token){
 
 private seekToken(pr, key, scanner){
   var nextToken = String("");
-  var nextToken? = hasNext?(scanner);
+  var v = nextValue(scanner);
+  var nextToken? = hasValue?(v);
 
-  if(nextToken?) nextToken = next(scanner);
+  if(nextToken?) nextToken = getValue(v);
 
   if(nextToken? and argument?(nextToken)){
     addOption(pr, key, nextToken);

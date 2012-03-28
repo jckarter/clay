@@ -9,15 +9,18 @@ alias log2 = introsort.log2;
 // reduce
 //
 
+private getNext(iter) {
+    var value = nextValue(iter);
+    assert(hasValue?(value));
+    return forward ..getValue(move(value));
+}
+
 [F, A when Sequence?(A)]
 reduce(f:F, a:A) {
     var iter = iterator(a);
-    assert(hasNext?(iter));
-    var result = next(iter);
-    while (hasNext?(iter)) {
-        forward v = next(iter);
-        result = f(result, v);
-    }
+    var result = getNext(iter);
+    for (x in iter)
+        result = f(result, x);
     return result;
 }
 
@@ -85,26 +88,20 @@ private define select;
 [A when Sequence?(A)]
 overload select(a:A, f) {
     var iter = iterator(a);
-    assert(hasNext?(iter));
-    var result = next(iter);
-    while (hasNext?(iter)) {
-        forward v = next(iter);
-        if (f(v, result))
-            result = v;
-    }
+    var result = getNext(iter);
+    for (x in iter)
+        if (f(x, result))
+            result = x;
     return result;
 }
 
 [A when LValueSequence?(A)]
 overload select(a:A, f) {
     var iter = iterator(a);
-    assert(hasNext?(iter));
-    var result = &next(iter);
-    while (hasNext?(iter)) {
-        forward v = next(iter);
-        if (f(v, result^))
-            result = &v;
-    }
+    var result = &getNext(iter);
+    for (x in iter)
+        if (f(x, result^))
+            result = &x;
     return ref result^;
 }
 

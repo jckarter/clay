@@ -25,17 +25,19 @@ overload LightweightSequence?(#Zipped[Tuple[..S]]) = true;
 [A]
 inline overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
 
-private record ZippedIterator[ITERS] (
-    iters : ITERS
-);
+private record ZippedIterator[ITERS] (iters : ITERS);
+
+private record ZippedValue[..V] (values:Tuple[..V]);
 
 [ITERS]
-inline overload hasNext?(iter:ZippedIterator[ITERS]) = multiHasNext?(iter.iters);
+inline overload nextValue(iter:ZippedIterator[ITERS]) =
+    ZippedValue([..mapValues(nextValue, ..unpackTupleRef(iter.iters))]);
 
-[ITERS]
-inline overload next(iter:ZippedIterator[ITERS]) =
-    forward ..mapValues(next, ..unpackTupleRef(iter.iters));
-
+[..V]
+inline overload hasValue?(v:ZippedValue[..V]) = allValues?(hasValue?, ..unpackTuple(v.values));
+[..V]
+inline overload getValue(forward v:ZippedValue[..V])
+    = forward ..mapValues(getValue, ..unpackTuple(v.values));
 
 
 //
@@ -44,7 +46,7 @@ inline overload next(iter:ZippedIterator[ITERS]) =
 
 private AllReversible?(A) {
     var reversible? = (T => CallDefined?(reverseIterator, T));
-    return multiValueAll?(reversible?, ..Type(..unpackSequences(null(A)^)));
+    return allValues?(reversible?, ..Type(..unpackSequences(null(A)^)));
 }
 
 [A when AllReversible?(A)]
@@ -59,7 +61,7 @@ inline overload reverseIterator(a:Zipped[A]) =
 
 private AllSized?(A) {
     var sizeDefined? = (T => CallDefined?(size, T));
-    return multiValueAll?(sizeDefined?, ..Type(..unpackSequences(null(A)^)));
+    return allValues?(sizeDefined?, ..Type(..unpackSequences(null(A)^)));
 }
 
 [A when AllSized?(A)]
@@ -79,7 +81,7 @@ overload StaticSize(#Zipped[A]) =
 
 private AllIndexable?(A, I) {
     var indexDefined? = (T => CallDefined?(index, T, I));
-    return multiValueAll?(indexDefined?, ..Type(unpackSequences(null(A)^)));
+    return allValues?(indexDefined?, ..Type(unpackSequences(null(A)^)));
 }
 
 [A, I when AllIndexable?(A, I)]
