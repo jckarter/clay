@@ -316,16 +316,20 @@ StatementPtr clone(StatementPtr x)
 
     case IF : {
         If *y = (If *)x.ptr();
-        out = new If(y->conditionStatements, clone(y->condition), clone(y->thenPart),
+        vector<StatementPtr> conditionStatements;
+        clone(y->conditionStatements, conditionStatements);
+        out = new If(conditionStatements, clone(y->condition), clone(y->thenPart),
                      cloneOpt(y->elsePart));
         break;
     }
 
     case SWITCH : {
         Switch *y = (Switch *)x.ptr();
+        vector<StatementPtr> exprStatements;
+        clone(y->exprStatements, exprStatements);
         vector<CaseBlockPtr> caseBlocks;
         clone(y->caseBlocks, caseBlocks);
-        out = new Switch(y->exprStatements,
+        out = new Switch(exprStatements,
                          clone(y->expr),
                          caseBlocks,
                          cloneOpt(y->defaultCase));
@@ -340,7 +344,9 @@ StatementPtr clone(StatementPtr x)
 
     case WHILE : {
         While *y = (While *)x.ptr();
-        out = new While(y->conditionStatements, clone(y->condition), clone(y->body));
+        vector<StatementPtr> conditionStatements;
+        clone(y->conditionStatements, conditionStatements);
+        out = new While(conditionStatements, clone(y->condition), clone(y->body));
         break;
     }
 
