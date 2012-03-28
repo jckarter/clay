@@ -380,9 +380,9 @@ overload staticEquals?(a:Static[A], b:Static[B]) = false;
 [A]
 overload staticEquals?(a:Static[A], b:Static[A]) = true;
 
-private BinaryOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+BinaryOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
-private CompareOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+CompareOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
 inline overload infixOperator(forward ..args)
@@ -394,10 +394,6 @@ inline overload infixOperator(forward ..args)
 inline overload infixOperator(a:T, #Fn, b:U) = forward Fn(a,b);
 [T,U,Fn when integerEquals?(countValues(..CallOutputTypes(Fn,T,U)),0)]
 inline overload infixOperator(a:T, #Fn, b:U) {Fn(a,b);}
-
-[fn,T when integerEquals?(countValues(..CallOutputTypes(fn,T)),0)]
-inline overload prefixOperator(#fn, forward x:T) {fn(x);}
-
 
 inline overload prefixOperator(fn, forward ..xs)
     = forward fn(..prefixOperator(..xs));
