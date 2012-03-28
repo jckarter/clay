@@ -17,10 +17,10 @@ Testing test test suite:
     but are:
       1, 2, 3
 
-    add isn't callable with the expected argument types:
+    + isn't callable with the expected argument types:
       Int32, Vector[Char]
 
-    cat shouldn't be callable with the expected argument types:
+    ++ shouldn't be callable with the expected argument types:
       Vector[Char], Vector[Char]
 
     primes iterator is expected to contain:

@@ -37,17 +37,14 @@ ExprPtr lookupCallable(int op) {
     case ADDRESS_OF :
         callable = primitive_expr_addressOf();
         break;
-    case PLUS :
-        callable = operator_expr_plus();
-        break;
-    case MINUS :
-        callable = operator_expr_minus();
-        break;
     case NOT :
         callable = primitive_expr_boolNot();
         break;
-    case OPERATOR :
-        callable = operator_expr_operatorCall();
+    case PREFIX_OP :
+        callable = operator_expr_prefixOperator();
+        break;
+    case INFIX_OP :
+        callable = operator_expr_infixOperator();
         break;
     case IF_EXPR :
         callable = operator_expr_ifExpression();

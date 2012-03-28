@@ -31,10 +31,10 @@ main() {
     println("or: ",  bitor(bitor(v1, v2), 3));
     println("xor: ", bitxor(bitxor(v1, v2), 3));
 
-    println("plus v1: ", plus(v1));
-    println("plus v2: ", plus(v2));
-    println("minus v1: ", minus(v1));
-    println("minus v2: ", minus(v2));
+    println("plus v1: ", add(v1));
+    println("plus v2: ", add(v2));
+    println("minus v1: ", subtract(v1));
+    println("minus v2: ", subtract(v2));
     println("bitnot v1: ", bitnot(v1));
     println("bitnot v2: ", bitnot(v2));
 

@@ -3538,6 +3538,28 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_SymbolP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        bool isSymbol; 
+        switch (obj->objKind) {
+        case TYPE :
+        case RECORD :
+        case VARIANT :
+        case PROCEDURE :
+        case GLOBAL_ALIAS:
+            isSymbol = obj.ptr();
+            break;
+        default :
+            isSymbol = false;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        out0->as<bool>() = isSymbol;
+        break;
+    }
+
     case PRIM_StaticCallDefinedP : {
         if (args->size() < 1)
             arityError2(1, args->size());
