@@ -221,10 +221,10 @@ inline overload bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
 //
 
 [T,n]
-inline overload plus(a:Vec[T,n]) = a;
+inline overload add(a:Vec[T,n]) = a;
 
 [T,n]
-inline overload minus(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
+inline overload subtract(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
 inline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);

@@ -1,10 +1,10 @@
 import foo;
 import foo.((~~));
 
-(**)(a, b) { println("**"); return a; }
+(**)(a, b) { println("**"); }
 
-overload (~~)(a:Float, b:Float) { println("~~ Float"); return a; }
-overload foo.(~~)(a:Double, b:Double) { println("~~ Double"); return a;  }
+overload (~~)(a:Float, b:Float) { println("~~ Float"); }
+overload foo.(~~)(a:Double, b:Double) { println("~~ Double"); }
 
 operatorAsStaticArg1(#(~~)) { println("#(~~) 1"); }
 operatorAsStaticArg2(#foo.(~~)) { println("#(~~) 2"); }

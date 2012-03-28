@@ -794,6 +794,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeSize);
     PRIMITIVE(TypeAlignment);
 
+    PRIMITIVE(SymbolP);
+    
     PRIMITIVE(StaticCallDefinedP);
     PRIMITIVE(StaticCallOutputTypes);
 
@@ -988,9 +990,8 @@ static ModulePtr makeOperatorsModule() {
 #define OPERATOR(x) addOperator(operators, toPrimStr(#x))
 
     OPERATOR(dereference);
-    OPERATOR(plus);
-    OPERATOR(minus);
-    OPERATOR(operatorCall);
+    OPERATOR(prefixOperator);
+    OPERATOR(infixOperator);
     OPERATOR(caseP);
     OPERATOR(tupleLiteral);
     OPERATOR(staticIndex);
@@ -1155,9 +1156,8 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
     }
 
 DEFINE_OPERATOR_ACCESSOR(dereference)
-DEFINE_OPERATOR_ACCESSOR(plus)
-DEFINE_OPERATOR_ACCESSOR(minus)
-DEFINE_OPERATOR_ACCESSOR(operatorCall)
+DEFINE_OPERATOR_ACCESSOR(prefixOperator)
+DEFINE_OPERATOR_ACCESSOR(infixOperator)
 DEFINE_OPERATOR_ACCESSOR(caseP)
 DEFINE_OPERATOR_ACCESSOR(tupleLiteral)
 DEFINE_OPERATOR_ACCESSOR(staticIndex)

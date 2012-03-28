@@ -1152,10 +1152,9 @@ struct StaticIndexing : public Expr {
 enum VariadicOpKind {
     DEREFERENCE,
     ADDRESS_OF,
-    PLUS,
-    MINUS,
     NOT,
-    OPERATOR,
+    PREFIX_OP,
+    INFIX_OP,
     IF_EXPR,
 };
 
@@ -2385,6 +2384,8 @@ enum PrimOpCode {
     PRIM_TypeSize,
     PRIM_TypeAlignment,
 
+    PRIM_SymbolP,
+    
     PRIM_StaticCallDefinedP,
     PRIM_StaticCallOutputTypes,
 

@@ -1,4 +1,4 @@
-add: add
++: +
 Vector[Char]: Vector[Char]
 Vec: Vec
 hash: hash

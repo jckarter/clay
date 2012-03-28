@@ -157,9 +157,9 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(int op, const string &s) {
+static string cleanNumericSeparator(const string &op, const string &s) {
     string out;
-    if (op == MINUS)
+    if (op == "-")
         out.push_back('-');
     for (unsigned i = 0; i < s.size(); ++i) {
         if (s[i] != '_')
@@ -168,7 +168,7 @@ static string cleanNumericSeparator(int op, const string &s) {
     return out;
 }
 
-static bool intLiteral(int op, ExprPtr &x) {
+static bool intLiteral(const string &op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -186,7 +186,7 @@ static bool intLiteral(int op, ExprPtr &x) {
     return true;
 }
 
-static bool floatLiteral(int op, ExprPtr &x) {
+static bool floatLiteral(const string &op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -229,8 +229,8 @@ static bool stringLiteral(ExprPtr &x) {
 static bool literal(ExprPtr &x) {
     int p = save();
     if (boolLiteral(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
-    if (restore(p), floatLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
+    if (restore(p), floatLiteral("+", x)) return true;
     if (restore(p), charLiteral(x)) return true;
     if (restore(p), stringLiteral(x)) return true;
     return false;
@@ -545,37 +545,23 @@ static bool addressOfExpr(ExprPtr &x) {
     return true;
 }
 
-static bool plusOrMinus(int &op) {
+static bool plusOrMinus(string &op) {
     int p = save();
-    if (opsymbol("+"))
-        op = PLUS;
-    else if (restore(p), opsymbol("-"))
-        op = MINUS;
-    else
+    if (opsymbol("+")) {
+        restore(p);
+        return opstring(op);
+    } else if (restore(p), opsymbol("-")) {
+        restore(p);
+        return opstring(op);
+    } else
         return false;
-    return true;
 }
 
-static bool signedLiteral(int op, ExprPtr &x) {
+static bool signedLiteral(const string &op, ExprPtr &x) {
     int p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;
     return false;
-}
-
-static bool signExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
-    int op;
-    if (!plusOrMinus(op)) return false;
-    ExprPtr b;
-    int p = save();
-    if (signedLiteral(op, x))
-        return true;
-    restore(p);
-    if (!prefixExpr(b)) return false;
-    x = new VariadicOp(op, new ExprList(b));
-    x->location = location;
-    return true;
 }
 
 static bool dispatchExpr(ExprPtr &x) {
@@ -598,21 +584,6 @@ static bool staticExpr(ExprPtr &x) {
     return true;
 }
 
-static bool prefixExpr(ExprPtr &x) {
-    int p = save();
-    if (signExpr(x)) return true;
-    if (restore(p), addressOfExpr(x)) return true;
-    if (restore(p), dispatchExpr(x)) return true;
-    if (restore(p), staticExpr(x)) return true;
-    if (restore(p), suffixExpr(x)) return true;
-    return false;
-}
-
-
-
-//
-// infix binary operator expr
-//
 
 static bool operatorOp(string &op) {
     int p = save();
@@ -626,14 +597,42 @@ static bool operatorOp(string &op) {
         if (opsymbol(*a)) return false;
         restore(p);
     }
-    string x;
-    if (!opstring(x)) return false;
-    op.clear();
-    op.push_back('(');
-    op.append(x);
-    op.push_back(')');
+    if (!opstring(op)) return false;
     return true;
 }
+
+static bool preopExpr(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    string op;
+    int p = save();
+    if (plusOrMinus(op)) {
+        if (signedLiteral(op, x)) return true;
+    }
+    restore(p);
+    if (!operatorOp(op)) return false;
+    ExprPtr y;
+    if (!prefixExpr(y)) return false;
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    exprs->add(y);
+    x = new VariadicOp(PREFIX_OP, exprs);
+    x->location = location;
+    return true;
+}
+
+static bool prefixExpr(ExprPtr &x) {
+    int p = save();
+    if (addressOfExpr(x)) return true;
+    if (restore(p), dispatchExpr(x)) return true;
+    if (restore(p), preopExpr(x)) return true;
+    if (restore(p), staticExpr(x)) return true;
+    if (restore(p), suffixExpr(x)) return true;
+    return false;
+}
+
+
+//
+// infix binary operator expr
+//
 
 
 static bool operatorTail(VariadicOpPtr &x) {
@@ -656,7 +655,7 @@ static bool operatorTail(VariadicOpPtr &x) {
             break;
         }
     }
-    x = new VariadicOp(OPERATOR, exprs);
+    x = new VariadicOp(INFIX_OP, exprs);
     x->location = location;
     return true;
 }
@@ -962,7 +961,7 @@ static bool dottedNameRef(ExprPtr &x) {
 static bool atomicPattern(ExprPtr &x) {
     int p = save();
     if (dottedNameRef(x)) return true;
-    if (restore(p), intLiteral(PLUS, x)) return true;
+    if (restore(p), intLiteral("+", x)) return true;
     return false;
 }
 
@@ -1187,7 +1186,7 @@ static bool initAssignment(StatementPtr &x) {
 static bool updateopstring(string &op) {
     int p = save();
     const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const string ops[] = {"(+)", "(-)", "(*)", "(/)", "(\\)", "(%)", "(++)"};
+    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
     for (const char **a = s; *a; ++a) {
         restore(p);
         if (opsymbol(*a)) {
@@ -1215,7 +1214,7 @@ static bool updateAssignment(StatementPtr &x) {
     } else {
         exprs->add(z);
     }
-    x = new VariadicAssignment(OPERATOR, exprs);
+    x = new VariadicAssignment(INFIX_OP, exprs);
     x->location = location;
     return true;
 }
