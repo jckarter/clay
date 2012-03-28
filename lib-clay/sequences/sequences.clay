@@ -1,7 +1,7 @@
 
 public import sequences.force.*;
 public import sequences.lazy.*;
-
+import numbers.(private BiggerNumeric?);
 
 
 //
@@ -17,6 +17,7 @@ alias slice(..args) = force(sliced(..args));
 alias sliceFrom(..args) = force(slicedFrom(..args));
 alias sliceUpto(..args) = force(slicedUpto(..args));
 alias group(..args) = force(grouped(..args));
+
 
 
 
@@ -63,13 +64,76 @@ overload lesser?(a:A, b:B) {
 }
 
 
+//
+// prefixOperator, infixOperator, updateAssign
+//
+
+[S,F when Sequence?(S)]
+overload updateAssign(#F, ret:S, ..args) {
+    for (i,r in enumerated(ret))
+        updateAssign(F, r, ..reduceToScalar(i,..args));
+}
+
+[..S when anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)]
+overload infixOperator(..args:S) {
+    var ret = Vector[seqType(Int8,..args)]();
+    resize(ret,seqSize(SizeT(0),..args));
+    for (i,r in enumerated(ret))
+        r = infixOperator(..reduceToScalar(i,..args));
+    return move(ret);
+}
+
+[S,U,F when Sequence?(S) and Sequence?(U) 
+    and CompareOpDefined?(F,SequenceElementType(S),SequenceElementType(U))]
+overload infixOperator(a:S, #F, b:U) = F(a,b);
+
+[..S when Sequence?(lastValue(..S)) and Numeric?(SequenceElementType(lastValue(..S)))]
+overload prefixOperator(..args:S) {
+    var ret = Vector[SequenceElementType(lastValue(..S))]();
+    resize(ret,size(lastValue(..args)));
+    for (i,r in enumerated(ret))
+        r =  prefixOperator(withoutNthValue(#(countValues(..S)-1),..args), 
+            lastValue(..args)[i]);
+    return move(ret);
+}
+
+private define seqType;
+[T when Numeric?(T)] 
+inline overload seqType(#T,a,..args) = ..seqType(T,..args);
+[T,U when Numeric?(T,U) and BiggerNumeric?(T,U)]
+inline overload seqType(#T,a:U,..args) = ..seqType(T,..args);
+[T,U when Numeric?(T,U) and BiggerNumeric?(U,T)]
+inline overload seqType(#T,a:U,..args) = ..seqType(U,..args);
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
+inline overload seqType(#T,a:S,..args) = ..seqType(T,..args);
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
+inline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
+[T when Numeric?(T)] overload seqType(#T) = T;
+
+private define seqSize;
+inline overload seqSize(s,a,..args) = ..seqSize(s,..args);
+[S when Sequence?(S)] 
+inline overload seqSize(s,a:S,..args) = ..seqSize(max(s,size(a)),..args);
+inline overload seqSize(s) = s;
+
+private define reduceToScalar;
+[F] 
+inline overload reduceToScalar( i, #F, ..args) =  F, ..reduceToScalar(i,..args);
+[S when Sequence?(S)] 
+inline overload reduceToScalar( i, a:S, ..args) = a[i],..reduceToScalar(i,..args);
+[T when Numeric?(T)] 
+inline overload reduceToScalar( i, a:T, ..args) = a,..reduceToScalar(i,..args);
+inline overload reduceToScalar( i) = ;
+
+
 
 //
 // concatenation
 //
 
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
-        and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
+        and equalValues?(SequenceElementType(A),
+            ..mapValues(SequenceElementType,..B))]
 overload cat(forward a:A, forward ..b:B) {
     var result = Vector(a);
     push(result, ..b);
@@ -87,7 +151,8 @@ overload cat(forward a:A, forward ..x:T) {
 overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
-        and equalValues?(SequenceElementType(A), ..mapValues(SequenceElementType,..B))]
+        and equalValues?(SequenceElementType(A), 
+            ..mapValues(SequenceElementType,..B))]
 overload updateAssign(#cat, ref a:A, forward ..b:B) {
     push(a, ..b);
 }
@@ -118,3 +183,6 @@ interleave(seq:S, betweenFn, fn) {
         }
     }
 }
+
+
+
