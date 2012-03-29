@@ -13,7 +13,7 @@ main(){
     println(a);
 
     var b = String("abc");
-    b ++= "def";
-    b ++= "ghi" ++ "jkl";
+    b ++: "def";
+    b ++: "ghi" ++ "jkl";
     println(b);
 }
