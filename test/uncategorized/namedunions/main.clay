@@ -33,7 +33,7 @@ private fieldIndex(name, ..fields) {
     ..for (field in fields) {
         if (name == field.0)
             goto end;
-        i +:= 1;
+        i +: 1;
     }
     end :
     return i;

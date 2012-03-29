@@ -40,7 +40,7 @@ main() {
     foo[10] = "hello";
     foo.20 = "hi";
     foo.bar = "hola";
-    foo[30] +:= 100;
-    foo.40 *:= 200;
-    foo.baz \:= 300;
+    foo[30] +: 100;
+    foo.40 *: 200;
+    foo.baz \: 300;
 }

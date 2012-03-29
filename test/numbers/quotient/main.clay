@@ -1,6 +1,6 @@
 main(){
 	println(10 \ 2 \ 2);
 	var a = 5;
-	a \:= 2;
+	a \: 2;
 	println(a);
 }

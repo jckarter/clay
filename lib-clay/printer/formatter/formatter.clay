@@ -126,14 +126,14 @@ widthInBase(n:N, base:B) {
     var nn = n;
     var len = SizeT(1);
     if (n < 0) {
-        len +:= 1;
+        len +: 1;
         while(nn <= -base) {
-            len +:= 1;
+            len +: 1;
             nn = Type(nn)(nn \ base);
         }
     } else {
         while(nn >= base) {
-            len +:= 1;
+            len +: 1;
             nn = Type(nn)(nn \ base);
         }
     }
@@ -211,7 +211,7 @@ overload printTo(stream, f: LeftAlignedFormatter[T]) {
     var i = f.filledWidth;
     while (i < f.width) {
         printTo(stream, f.pad);
-        i +:= 1;
+        i +: 1;
     }
 }
 [T]
@@ -219,7 +219,7 @@ overload printTo(stream, f: RightAlignedFormatter[T]) {
     var i = f.filledWidth;
     while (i < f.width) {
         printTo(stream, f.pad);
-        i +:= 1;
+        i +: 1;
     }
     printTo(stream, ..forwardValues(f.value));
 }

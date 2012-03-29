@@ -142,11 +142,11 @@ overload pow(x:Double, y:Double) {
 	    var n = 0;
 	/* take care subnormal number */
 	    if(ix<CV8) {
-			ax *:= two53; 
-			n -:= 53; 
+			ax *: two53; 
+			n -: 53; 
 			ix = GET_IEEE_HIGH(ax); 
 		}
-	    n  +:= bitshr(ix,20)-0x3ff;
+	    n  +: bitshr(ix,20)-0x3ff;
 	    var j = bitand(ix,NEM);
 	/* determine interval */
 	    ix = bitor(j,RM);		/* normalize ix */
@@ -154,8 +154,8 @@ overload pow(x:Double, y:Double) {
 	    else if(j<0xBB67A) k = 1;	/* |x|<sqrt(3)   */
 	    else {
 	    	k = 0;
-	    	n +:= 1;
-	    	ix -:= CV8;
+	    	n +: 1;
+	    	ix -: CV8;
 	    }
 	    ax = SET_IEEE_HIGH(ax,ix);
 
@@ -173,7 +173,7 @@ overload pow(x:Double, y:Double) {
 	/* compute log(ax) */
 	    var s2 = ss*ss;
 	    var r = s2*s2*(L1+s2*(L2+s2*(L3+s2*(L4+s2*(L5+s2*L6)))));
-	    r +:= s_l*(s_h+ss);
+	    r +: s_l*(s_h+ss);
 	    s2  = s_h*s_h;
 	    t_h = 3.0+s2+r;
 	    t_h = SET_IEEE_LOW(t_h,0);
@@ -226,7 +226,7 @@ overload pow(x:Double, y:Double) {
 	    t = SET_IEEE_HIGH(ZERO,bitandc(n , bitshr(NEM,k)));
 	    n = bitshr(bitor(bitand(n,NEM),CV8),20-k);
 	    if(j<0) n = -n;
-	    p_h -:= t;
+	    p_h -: t;
 	} 
 	t = SET_IEEE_LOW(p_l+p_h,0);
 	u = t*lg2_h;
@@ -238,7 +238,7 @@ overload pow(x:Double, y:Double) {
 	var r  = (z*t1)/(t1-TWO)-(w+z*w);
 	z = ONE-(r-z);
 	j = GET_IEEE_HIGH(z);
-	j +:= bitshl(n,20);
+	j +: bitshl(n,20);
 	if(bitshr(j,20)<=0) z = scalbn(z,n);	/* subnormal output */
 	else z = SET_IEEE_HIGH(z,j);
 	return s*z;

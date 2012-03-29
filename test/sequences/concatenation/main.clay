@@ -7,7 +7,7 @@ main(){
     println(h++" "++w++"!");
 
     var a = String("a");
-    a ++:= "b";
+    a ++: "b";
     updateAssign(cat,a,"c","d","e");
 
     println(a);

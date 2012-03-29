@@ -77,7 +77,7 @@ kernel_tan(tx, ty, iy) {
 		w * ta[12])))));
 	var s = z * x;
 	r = y + z * (s * (r + v) + y);
-	r +:= ta[0] * s;
+	r +: ta[0] * s;
 	w = x + r;
 	if (ix >= 0x3FE59428) {
 		v = Double(iy);

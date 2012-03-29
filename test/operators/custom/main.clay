@@ -9,6 +9,10 @@ overload foo.(~~)(a:Double, b:Double) { println("~~ Double"); }
 operatorAsStaticArg1(#(~~)) { println("#(~~) 1"); }
 operatorAsStaticArg2(#foo.(~~)) { println("#(~~) 2"); }
 
+bar(a, b) = (a \ b) * a \ b;
+
+alias (\*\) = bar;
+
 main() {
     1 ** 2;
     1 ~~ 2;
@@ -28,4 +32,9 @@ main() {
     operatorAsStaticArg1(foo.(~~));
     operatorAsStaticArg2((~~));
     operatorAsStaticArg2(foo.(~~));
+
+    var a = 8;
+    println(a \*\ 3);
+    a \*\: 3;
+    println(a);
 }

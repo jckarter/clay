@@ -4,7 +4,7 @@ import algorithms.permutations.*;
 
 fact(n){
   var result = 1;
-  for(i in range(1, n + 1)) result *:= i;
+  for(i in range(1, n + 1)) result *: i;
   return result;
 }
 
@@ -14,7 +14,7 @@ baseTestCase(n) =
 
     var counter = 0;
     eachPermutation(it, () -> {
-      counter +:= 1;
+      counter +: 1;
     });
 
     expectEqual(test, "number of permutations", fact(n), counter);

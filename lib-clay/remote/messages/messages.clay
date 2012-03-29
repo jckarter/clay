@@ -89,7 +89,7 @@ private consume(stream, bytes_) {
         var numRead = read(stream, begin(buf), min(SizeT(4096), bytes));
         if (numRead == 0)
             return;
-        bytes -:= numRead;
+        bytes -: numRead;
     }
 }
 

@@ -104,15 +104,15 @@ overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
         var n = min(pending, SizeT(end - src));
         if (n > 0) {
             copyNonoverlappingMemory(dest, src, src + n);
-            src +:= n;
-            dest +:= n;
-            pending -:= n;
+            src +: n;
+            dest +: n;
+            pending -: n;
         }
         else {
             src = begin(fd.readBuffer);
             end = src; // initialize 'end' too as read may throw
             var nRead = read(fd.file, src, SizeT(BUFFER_SIZE));
-            end +:= nRead;
+            end +: nRead;
             if (nRead == 0)
                 break;
         }
@@ -138,7 +138,7 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
             pendingNewlines = 0;
         }
 
-        pendingNewlines +:= SizeT(src^ == Byte('\n'));
+        pendingNewlines +: SizeT(src^ == Byte('\n'));
 
         dest^ = src^;
         inc(dest);

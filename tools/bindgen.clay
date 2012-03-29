@@ -227,7 +227,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         var name = str(clang_getCursorSpelling(cursor));
         if (empty?(name)) {
             name = str("?padding", unnamedFieldIndex);
-            unnamedFieldIndex +:= 1;
+            unnamedFieldIndex +: 1;
         }
         printlnTo(g_bindingsOut, "    ", clayIdentifier(name), " : ",
             convertType(type, cursor), ",");
@@ -516,26 +516,26 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
             if (arg + 1 >= argc)
                 throw MissingOutputFileName();
             options.outputFileName = Maybe(String(argv[arg + 1]));
-            arg +:= 2;
+            arg +: 2;
         }
         case ("-import") {
             if (arg + 1 >= argc)
                 throw MissingImportModuleName();
             push(options.imports, String(argv[arg + 1]));
-            arg +:= 2;
+            arg +: 2;
         }
         case ("-match") {
             if (arg + 1 >= argc)
                 throw MissingMatchPattern();
             push(options.matchPatterns, String(argv[arg + 1]));
-            arg +:= 2;
+            arg +: 2;
         }
         case ("-builtins") {
             options.matchBuiltins = true;
-            arg +:= 1;
+            arg +: 1;
         }
         case ("--") {
-            clang_argc +:= argc - arg;
+            clang_argc +: argc - arg;
             for (i in range(arg, argc))
                 push(clang_argv, argv[i]);
             break;
@@ -543,7 +543,7 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
         else {
             inc(clang_argc);
             push(clang_argv, argv[arg]);
-            arg +:= 1;
+            arg +: 1;
         }
     }
 

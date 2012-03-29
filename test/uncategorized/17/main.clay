@@ -3,6 +3,6 @@ var sum = 1000;
 
 main() {
     for (x in range(10))
-        sum +:= x+1;
+        sum +: x+1;
     println("sum = ", sum);
 }

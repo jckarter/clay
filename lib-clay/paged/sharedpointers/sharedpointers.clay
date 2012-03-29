@@ -41,7 +41,7 @@ overload SharedPointer[T]() {
 [T]
 overload SharedPointer[T](src:SharedPointer[T]) {
     if (not null?(src))
-        src.ptr^.refCount +:= 1;
+        src.ptr^.refCount +: 1;
     return SharedPointer(src.ptr);
 }
 
@@ -66,7 +66,7 @@ overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
 [T]
 overload destroy(p : SharedPointer[T]) {
     if (not null?(p)) {
-        p.ptr^.refCount -:= 1;
+        p.ptr^.refCount -: 1;
         if (p.ptr^.refCount == 0) {
             destroy(p.ptr^.value);
             freePaged(p.ptr);

@@ -114,16 +114,16 @@ overload sqrt(x:Float) {
             ix = bitshl(ix,1);
             inc(i);
         }
-        m -:= i-1;
+        m -: i-1;
     }
-    m -:= 127; /* unbias exponent */
+    m -: 127; /* unbias exponent */
     ix = bitor(bitand(ix,0x007fffff),0x00800000);
     if(bitand(m,1)) /* odd m, double x to make it even */
-        ix +:= ix;
+        ix +: ix;
     m = bitshr(m,1);  /* m = [m/2] */
 
       /* generate sqrt(x) bit by bit */
-    ix +:= ix;
+    ix +: ix;
     var q,s = 0,0;    /* q = sqrt(x) */
     var r = 0x01000000u;   /* r = moving bit from right to left */
 
@@ -131,10 +131,10 @@ overload sqrt(x:Float) {
         t = s+r;
         if(t<=ix) {
             s    = t+r;
-            ix  -:= t;
-            q   +:= r;
+            ix  -: t;
+            q   +: r;
         }
-        ix +:= ix;
+        ix +: ix;
         r = bitshr(r,1);
     }
 
@@ -145,12 +145,12 @@ overload sqrt(x:Float) {
         if (z>=ONE) {
             z = ONE+TINY;
       if (z>ONE)
-          q +:= 2;
+          q +: 2;
       else
-          q +:= bitand(q,1);
+          q +: bitand(q,1);
         }
     }
     ix = bitshr(q,1)+0x3f000000;
-    ix +:= bitshl(m,23);
+    ix +: bitshl(m,23);
     return SET_FLOAT_WORD(ix);
 }

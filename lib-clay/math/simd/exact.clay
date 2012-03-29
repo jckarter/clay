@@ -5,7 +5,7 @@ alias db_number = Union[Array[Int32,2], Int64, Float64];
 [T] inline Add12Cond(a:T, b:T) --> rs:Vec[T,2] {
     var s = a + b;
     var _u12 = Vec(s-a,s);
-    _u12[1] -:= _u12[0];
+    _u12[1] -: _u12[0];
     var _u34 = Vec(b,a) - _u12;
     rs <-- Vec(s,hadd(_u34));
 }
@@ -535,18 +535,18 @@ inline sqrt12(x:Double) --> resh:Double, resl:Double {
         // Handle subnormal case//
         if (xdb.0[1] < 0x00100000) {
             _e = -52;
-            xdb.2 *:= SQRTTWO52; 	  // make x a normal number//
+            xdb.2 *: SQRTTWO52; 	  // make x a normal number//
         }
 
         // Extract exponent E and mantissa m//
-        _e +:= bitshr(xdb.0[1],20) - 1023;
+        _e +: bitshr(xdb.0[1],20) - 1023;
         xdb.0[1] = bitor(bitand(xdb.0[1] , 0x000fffff) , 0x3ff00000);
         var m = xdb.2;
 
         // Make exponent even//
         if (Bool(bitand(_e , 0x00000001))) {
             inc(_e);
-            m *:= HALF;    // Suppose now 1/2 <= m <= 2//
+            m *: HALF;    // Suppose now 1/2 <= m <= 2//
         }
 
         // Construct sqrt(2^E) = 2^(E/2)//
@@ -614,18 +614,18 @@ inline sqrt13(x:Double) --> resh:Double, resm:Double, resl:Double {
         /* Handle subnormal case */
         if (_xdb.0[1] < 0x00100000) {
             _E = -52;
-            _xdb.2 *:= SQRTTWO52;/* make x a normal number */
+            _xdb.2 *: SQRTTWO52;/* make x a normal number */
         }
 
         /* Extract exponent E and mantissa m */
-        _E +:= bitshr(_xdb.0[1],20)-1023;
+        _E +: bitshr(_xdb.0[1],20)-1023;
         _xdb.0[1] = bitor(bitand(_xdb.0[1] , 0x000fffff) , 0x3ff00000);
         var _m = _xdb.2;
 
         /* Make exponent even */
         if (bitand(_E , 0x00000001)!=0) {
             inc(_E);
-            _m *:= 0.5;    /* Suppose now 1/2 <= m <= 2 */
+            _m *: 0.5;    /* Suppose now 1/2 <= m <= 2 */
         }
 
         /* Construct sqrt(2^E) = 2^(E/2) */

@@ -44,6 +44,14 @@ static bool opstring(string &op) {
     return true;
 }
 
+static bool uopstring(string &op) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_UOPSTRING))
+        return false;
+    op = t->str;
+    return true;
+}
+
 static bool opsymbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
@@ -608,7 +616,6 @@ static bool preopExpr(ExprPtr &x) {
     }
     restore(p);
     if (!operatorOp(op)) return false;
-    if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) == ":=") return false;
     ExprPtr y;
     if (!prefixExpr(y)) return false;
     ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
@@ -641,7 +648,6 @@ static bool operatorTail(VariadicOpPtr &x) {
     int p = save();
     if (!operatorOp(op)) return false;
     while (true) {
-        if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) == ":=") return false;
         exprs->add(new NameRef(new Identifier(op)));
         if (!prefixExpr(b)) {
             restore(p);
@@ -1186,11 +1192,10 @@ static bool updateAssignment(StatementPtr &x) {
     ExprPtr y,z;
     if (!expression(y)) return false;
     string op;
-    if (!operatorOp(op)) return false;
-    if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) != ":=") return false;
+    if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op.substr(0,op.size()-2))));
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
     exprs->add(y);
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();

@@ -26,7 +26,7 @@ main() {
     var n = 0;
     for (x in d1) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 20) {
             println();
             n = 0;
@@ -39,7 +39,7 @@ main() {
     var n = 0;
     for (x in reversed(d1)) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 20) {
             println();
             n = 0;
@@ -63,7 +63,7 @@ main() {
         var y = pop(d1);
 
         print(y, " ", x, " ");
-        n +:= 2;
+        n +: 2;
         if (n == 20) {
             println();
             n = 0;
@@ -169,7 +169,7 @@ main() {
     n = 0;
     for (x in d6) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 16) {
             println();
             n = 0;
@@ -182,7 +182,7 @@ main() {
     n = 0;
     for (x in d6) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 16) {
             println();
             n = 0;
@@ -195,7 +195,7 @@ main() {
     n = 0;
     for (x in d6) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 16) {
             println();
             n = 0;
@@ -208,7 +208,7 @@ main() {
     n = 0;
     for (x in d6) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 16) {
             println();
             n = 0;
@@ -221,7 +221,7 @@ main() {
     n = 0;
     for (x in d6) {
         print(x, " ");
-        n +:= 1;
+        n +: 1;
         if (n == 16) {
             println();
             n = 0;

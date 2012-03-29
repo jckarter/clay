@@ -14,15 +14,15 @@ overload log(x:Double) {
 	    if (bitor(bitand(GET_IEEE_HIGH(xdb),MM),GET_IEEE_LOW(xdb))==0) 
 			return negativeInfinity(Double);		/* log(+-0)=-inf */
 	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);	/* log(-#) = NaN */
-	    k -:= 54; 
+	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	} 
 	if (GET_IEEE_HIGH(xdb) >= EM) return infinity(Double);
-	k +:= bitshr(GET_IEEE_HIGH(xdb),20)-1023;
+	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),NEM);
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);
 	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	/* normalize x or x/2 */
-	k +:= bitshr(i,20);
+	k +: bitshr(i,20);
 	var f,R = GET_IEEE_DB(xdb)-ONE,0.;
 	if(bitand(NEM,2+GET_IEEE_HIGH(xdb))<3) {	/* -2**-20 <= f < 2**-20 */
 	    if(f==ZERO) {
@@ -83,14 +83,14 @@ overload log(x:Float) {
 			return -two25/ZERO;		/* log(+-0)=-inf */
 	    if (ix<0) 
 	    	return (x-x)/ZERO;	/* log(-#) = NaN */
-	    k -:= 25; 
+	    k -: 25; 
 	    ix = GET_FLOAT_SIGNED(x*two25); /* subnormal number, scale up x */
 	}
 	if (ix >= 0x7f800000) return x+x;
-	k +:= bitshr(ix,23)-127;
+	k +: bitshr(ix,23)-127;
 	ix = bitand(ix,0x007fffff);
 	var i = bitand(ix+bitshl(0x95f64,3),0x800000);
-	k +:= bitshr(i,23);
+	k +: bitshr(i,23);
 	var f = SET_FLOAT_WORD(bitor(ix,(bitxor(i,0x3f800000))))-1.f;
 	if(bitand(0x007fffff,(0x8000+ix))<0xc000) {	/* -2**-9 <= f < 2**-9 */
 	    if(f==ZERO) {

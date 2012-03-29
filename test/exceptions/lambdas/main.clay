@@ -10,9 +10,9 @@ main() {
     var throwing_lambda = () => { throw x; };
     var catching_block = (fn) -> {
         try {
-            tryCount +:= 1; fn();
+            tryCount +: 1; fn();
         } catch(e:Int) {
-            catchCount +:= 1; println("caught ", e);
+            catchCount +: 1; println("caught ", e);
         }
     };
 

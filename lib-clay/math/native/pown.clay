@@ -25,10 +25,10 @@ overload pow(x:T, n:I) {
 
     while (true) {
         if (bitand(m,1)!=0)
-            p *:= v;
+            p *: v;
         m = bitshr(m,1);
         if (m==0) break;
-        v *:= v;
+        v *: v;
     }
     return p;
 }
@@ -49,10 +49,10 @@ overload pow(x:I, n:J) {
         v = x;
         while (true){
             if (bitand(m,ONE)!=ZERO)
-                p *:= v;
+                p *: v;
             m = bitshr(m,ONE);
             if (m==ZERO) break;
-            v *:= v;
+            v *: v;
         }
     }
     return p;

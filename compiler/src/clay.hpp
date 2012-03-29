@@ -913,6 +913,7 @@ extern "C" void displayCompileContext();
 //
 
 enum TokenKind {
+    T_UOPSTRING,
     T_OPSTRING,
     T_SYMBOL,
     T_KEYWORD,

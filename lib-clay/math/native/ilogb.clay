@@ -25,13 +25,13 @@ overload ilogb(x:Double) {
 			if(GET_IEEE_HIGH(xdb)==0) {
 				ix = -1043;
 				while(GET_IEEE_LOW(xdb)>0){
-					ix -:= 1;
+					ix -: 1;
 					GET_IEEE_LOW(xdb) = wrapBitshl(GET_IEEE_LOW(xdb),1);
 				}
 			} else {
 				ix = -1022;
 				while(GET_IEEE_HIGH(xdb)>0){
-					ix -:= 1;
+					ix -: 1;
 					GET_IEEE_HIGH(xdb) = wrapBitshl(GET_IEEE_HIGH(xdb),1);
 				}
 			}

@@ -15,9 +15,9 @@ main() {
     println(nothing?(b));
 
     println(just(a));
-    just(a) +:= 1;
+    just(a) +: 1;
     println(just(a));
-    just(a) -:= 1;
+    just(a) -: 1;
 
     maybe(a, doIt);
     maybe(b, doIt);
@@ -32,7 +32,7 @@ main() {
     for (value in array(a,b)) {
         // test return-by-ref from 'maybe'
         ref y = maybe(value, x -> ref v[x], () -> ref v[0]);
-        y +:= 1;
+        y +: 1;
         maybe(value, x -> {println(v[x]);}, () -> {println(v[0]);});
     }
 
@@ -41,17 +41,17 @@ main() {
 
     // return-by-ref from 'require'
     ref y = require(a, x -> ref v[x]);
-    y +:= 1;
+    y +: 1;
     println( require(a, x -> v[x]) );
 
     // require (reference)
     ref y = require(a);
-    y *:= 100;
+    y *: 100;
     println(a);
 
     // require (value)
     forward y = require(copy(a));
-    y *:= 1000;
+    y *: 1000;
     println(a);
 
     var c = Maybe(100);

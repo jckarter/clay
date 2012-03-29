@@ -346,7 +346,7 @@ repeatedAs(#TokenInput, result:Result, min:Int, max:Int, forward _parser:Parser)
             var result = parser(input);
             if (nothing?(result))
                 break;
-            count +:= 1;
+            count +: 1;
         }
         if (count < min) {
             input = saved;

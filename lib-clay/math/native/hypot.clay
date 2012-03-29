@@ -33,9 +33,9 @@ import math.*;
 //	       return w;
 //	   }
 //	   /* scale a and b by 2**-600 */
-//	   ha -:= CV22; 
-//	   hb -:= CV22;	
-//	   k +:= 600;
+//	   ha -: CV22; 
+//	   hb -: CV22;	
+//	   k +: 600;
 //	   a = SET_IEEE_HIGH(a,ha);
 //	   b = SET_IEEE_HIGH(b,hb);
 //	}
@@ -44,13 +44,13 @@ import math.*;
 //		    var low = GET_IEEE_LOW(b);
 //			if(bitor(hb,low)==0) return a;
 //			var t1 = SET_IEEE_HIGH(ZERO,CV23);	/* t1=2^1022 */
-//			b *:= t1;
-//			a *:= t1;
-//			k -:= 1022;
+//			b *: t1;
+//			a *: t1;
+//			k -: 1022;
 //	    } else {		/* scale a and b by 2^600 */
-//	        ha +:= CV22; 	/* a *:= 2^600 */
-//			hb +:= CV22;	/* b *:= 2^600 */
-//			k -:= 600;
+//	        ha +: CV22; 	/* a *: 2^600 */
+//			hb +: CV22;	/* b *: 2^600 */
+//			k -: 600;
 //			a = SET_IEEE_HIGH(a,ha);
 //			b = SET_IEEE_HIGH(b,hb);
 //	    }
