@@ -18,7 +18,7 @@ main() {
         println(a[i]);
     println();
     for (i in range(3))
-        a[i] *= 10;
+        a[i] *:= 10;
     for (i in range(3))
         println(a[i]);
     println();

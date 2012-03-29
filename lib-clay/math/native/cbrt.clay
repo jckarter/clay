@@ -42,7 +42,7 @@ overload cbrt(x:Double) {
 		   return x;		/* cbrt(0) is itself */
 	    }
          SET_IEEE_HIGH(t,CV19); /* set t= 2**54 */
-	    GET_IEEE_DB(t) *= x;
+	    GET_IEEE_DB(t) *:= x;
 	    SET_IEEE(t,bitor(sign,bitand(GET_IEEE_HIGH(t),MM) \ 3+B2),0);
      } else
 	    SET_IEEE(t,bitor(sign,GET_IEEE_HIGH(xdb) \ 3+B1),0);
@@ -58,7 +58,7 @@ overload cbrt(x:Double) {
      * Try to optimize for parallel evaluation as in k_tanf.c.
      */
 	var r = (GET_IEEE_DB(t)*GET_IEEE_DB(t))*(GET_IEEE_DB(t)/x);
-	GET_IEEE_DB(t) *= ((CP0+r*(CP1+r*CP2))+((r*r)*r)*(CP3+r*CP4));
+	GET_IEEE_DB(t) *:= ((CP0+r*(CP1+r*CP2))+((r*r)*r)*(CP3+r*CP4));
 
     /*
      * Round t away from zero to 23 bits (sloppily except for ensuring that

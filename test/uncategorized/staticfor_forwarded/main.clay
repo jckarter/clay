@@ -7,7 +7,7 @@ var _nextId = 1;
 
 overload Foo() --> returned:Foo {
     returned.value = _nextId;
-    _nextId += 1;
+    _nextId +:= 1;
     println("Foo(): ", returned);
 }
 
@@ -31,7 +31,7 @@ makeArray(forward first:T, forward ..rest:A) --> returned:Array[T,countValues(T,
     var i = 0;
     ..for (x in first, ..rest) {
         returned[i] <-- x;
-        i += 1;
+        i +:= 1;
     }
 }
 

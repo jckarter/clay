@@ -81,7 +81,7 @@ overload readN(stream, n:SizeT, buf:V) {
         var numRead = read(stream, expected - current, buf);
         if (numRead == 0)
             throw PrematureEOF(expected-initial, current-initial);
-        current += numRead;
+        current +:= numRead;
     }
 }
 

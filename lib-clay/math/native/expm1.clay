@@ -84,7 +84,7 @@ overload expm1(a:T)  {
 	else {
 	    var twopk = MAKE_IEEE(RM+bitshl(k,20),0).2;	/* 2^k */
 	    e  = (x*(e-c)-c);
-	    e -= hxs;
+	    e -:= hxs;
 	    if(k == -1) return 0.5*(x-e)-0.5;
 	    if(k == 1) {
 	       	if(x < -0.25) return -2.0*(e-(x+0.5));
@@ -93,19 +93,19 @@ overload expm1(a:T)  {
 	    if (k <= -2 or k>56) {   /* suffice to return exp(x)-1 */
 	        y = ONE-(e-x);
 		if (k == 1024) y = y*2.0*0x1p1023;
-		else y *= twopk;
+		else y *:= twopk;
 	        return y-ONE;
 	    }
 	    t = ONE;
 	    if(k<20) {
 	        t = SET_IEEE_HIGH(t,RM - bitshr(CV20,k));  /* t=1-2^-k */
 	       	y = t-(e-x);
-			y *= twopk;
+			y *:= twopk;
 	   } else {
 			t = SET_IEEE_HIGH(t,bitshl(0x3ff-k,20));	/* 2^-k */
 	       	y = x-(e+t);
-	       	y += ONE;
-			y *= twopk;
+	       	y +:= ONE;
+			y *:= twopk;
 	    }
 	}
 	return y;

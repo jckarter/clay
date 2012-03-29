@@ -199,7 +199,7 @@ overload insert(a:V, i:I, seq:S) {
     var iter = iterator(seq);
     while (hasNext?(iter)) {
         insert(a, pos, next(iter));
-        pos += 1;
+        pos +:= 1;
     }
 }
 

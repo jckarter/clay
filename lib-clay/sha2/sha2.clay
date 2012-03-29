@@ -129,7 +129,7 @@ sha256(message: S) --> returned: SHA256 {
         sha256chunk(state, tempState, chunkSpace, tailChunk);
         messageTailSize = 0;
     } else {
-        messageTailSize += 1;
+        messageTailSize +:= 1;
     }
 
     zeroMemory(

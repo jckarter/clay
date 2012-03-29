@@ -65,7 +65,7 @@ private record GroupIterator[I] (
 
     while (hasNext?(giter.iter) and i < giter.groupSize) {
         push(v, next(giter.iter));
-        i += 1;
+        i +:= 1;
     }
     return move(v);
 }
@@ -166,11 +166,11 @@ overload subtract(i: RAGroupCoordinate[C], n: I)
     = RAGroupCoordinate(i.coord - n * i.groupSize, i.groupSize);
 [C, I when Integer?(I)]
 overload updateAssign(#add, i: RAGroupCoordinate[C], n: I) {
-    i.coord += n * i.groupSize;
+    i.coord +:= n * i.groupSize;
 }
 [C, I when Integer?(I)]
 overload updateAssign(#subtract, i: RAGroupCoordinate[C], n: I) {
-    i.coord -= n * i.groupSize;
+    i.coord -:= n * i.groupSize;
 }
 
 [C]
@@ -179,12 +179,12 @@ overload subtract(i: RAGroupCoordinate[C], j: RAGroupCoordinate[C])
 
 [C]
 overload inc(i: RAGroupCoordinate[C]) {
-    i.coord += i.groupSize;
+    i.coord +:= i.groupSize;
 }
 
 [C]
 overload dec(i: RAGroupCoordinate[C]) {
-    i.coord -= i.groupSize;
+    i.coord -:= i.groupSize;
 }
 
 [C]

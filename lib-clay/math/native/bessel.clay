@@ -126,8 +126,8 @@ overload j0(x:T) --> y:T {
     } else if (w < T(8.5)) {
         var t = w * w * T(0.0625);
         var k = Int(t);
-        t -= k + T(0.5);
-        k *= 13;
+        t -:= k + T(0.5);
+        k *:= 13;
         y <-- (((((((((((T(b[k]) * t + T(b[k + 1])) * t +
             T(b[k + 2])) * t + T(b[k + 3])) * t + T(b[k + 4])) * t +
             T(b[k + 5])) * t + T(b[k + 6])) * t + T(b[k + 7])) * t +
@@ -280,8 +280,8 @@ overload j1(x:T) --> y:T {
     } else if (w < T(8.5)) {
         var t = w * w * T(0.0625);
         var k = Int(t);
-        t -= k + T(0.5);
-        k *= 13;
+        t -:= k + T(0.5);
+        k *:= 13;
         y = ((((((((((((T(j1b[k]) * t + T(j1b[k + 1])) * t +
             T(j1b[k + 2])) * t + T(j1b[k + 3])) * t + T(j1b[k + 4])) * t +
             T(j1b[k + 5])) * t + T(j1b[k + 6])) * t + T(j1b[k + 7])) * t +
@@ -306,7 +306,7 @@ overload j1(x:T) --> y:T {
         var theta = (((((T(j1d[k + 7]) * t + T(j1d[k + 8])) * t +
             T(j1d[k + 9])) * t + T(j1d[k + 10])) * t + T(j1d[k + 11])) * t +
             T(j1d[k + 12])) * v - T(M_PI_4);
-        y *= sin(w + theta);
+        y *:= sin(w + theta);
     }
     y <-- if(x < T(0)) -y else y;
 }
@@ -767,8 +767,8 @@ overload i1(x:T) --> y:T {
 //     } else if (x < 4.5) {
 //         t = x - 4 / x;
 //         k = (int) (t + 4);
-//         t -= k - 3.5;
-//         k *= 14;
+//         t -:= k - 3.5;
+//         k *:= 14;
 //         y = ((((((((((((b[k] * t + b[k + 1]) * t +
 //             b[k + 2]) * t + b[k + 3]) * t + b[k + 4]) * t +
 //             b[k + 5]) * t + b[k + 6]) * t + b[k + 7]) * t +
@@ -793,7 +793,7 @@ overload i1(x:T) --> y:T {
 //         theta = (((((d[k + 7] * t + d[k + 8]) * t +
 //             d[k + 9]) * t + d[k + 10]) * t + d[k + 11]) * t +
 //             d[k + 12]) * v - 0.78539816339744830962;
-//         y *= sin(x + theta);
+//         y *:= sin(x + theta);
 //     }
 //     return y;
 // }
@@ -985,7 +985,7 @@ overload i1(x:T) --> y:T {
 //         t = x - 5 / x;
 //         k = (int) (t + 5);
 //         t = (k - 4) - t;
-//         k *= 14;
+//         k *:= 14;
 //         y = ((((((((((((b[k] * t + b[k + 1]) * t +
 //             b[k + 2]) * t + b[k + 3]) * t + b[k + 4]) * t +
 //             b[k + 5]) * t + b[k + 6]) * t + b[k + 7]) * t +
@@ -1201,7 +1201,7 @@ overload i1(x:T) --> y:T {
 //         t = x - v;
 //         k = (int) (t + 3);
 //         t = (k - 2) - t;
-//         k *= 15;
+//         k *:= 15;
 //         y = ((((((((((((((b[k] * t + b[k + 1]) * t +
 //             b[k + 2]) * t + b[k + 3]) * t + b[k + 4]) * t +
 //             b[k + 5]) * t + b[k + 6]) * t + b[k + 7]) * t +
@@ -1416,8 +1416,8 @@ overload i1(x:T) --> y:T {
 //         v = 4 / x;
 //         t = x - v;
 //         k = (int) (t + 4);
-//         t -= k - 3.5;
-//         k *= 14;
+//         t -:= k - 3.5;
+//         k *:= 14;
 //         y = (((((((((((((b[k] * t + b[k + 1]) * t +
 //             b[k + 2]) * t + b[k + 3]) * t + b[k + 4]) * t +
 //             b[k + 5]) * t + b[k + 6]) * t + b[k + 7]) * t +
@@ -1442,7 +1442,7 @@ overload i1(x:T) --> y:T {
 //         theta = (((((d[k + 7] * t + d[k + 8]) * t +
 //             d[k + 9]) * t + d[k + 10]) * t + d[k + 11]) * t +
 //             d[k + 12]) * v - 0.78539816339744830962;
-//         y *= -cos(x + theta);
+//         y *:= -cos(x + theta);
 //     }
 //     return y;
 // }

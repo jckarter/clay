@@ -20,8 +20,8 @@ returnNothing() : {
 }
 
 main() {
-    foo1() += 1;
-    foo2() += 1;
+    foo1() +:= 1;
+    foo2() +:= 1;
     println(x);
 
     var a, b = 1, 2;

@@ -9,7 +9,7 @@ private var _nextTypeId = 0;
 
 private nextTypeId() {
     var x = _nextTypeId;
-    _nextTypeId += 1;
+    _nextTypeId +:= 1;
     return x;
 }
 

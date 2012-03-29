@@ -184,7 +184,7 @@ retry:
         for (k in range(16))
         {
             if (th.tables[i][hash[i]].hashBytes[k] != 255)
-                entryCount[i] += 1;
+                entryCount[i] +:= 1;
         }
     }
     
@@ -199,7 +199,7 @@ retry:
     if (entryCount[1] < entryCount[0])
         bi = 1;
         
-    th.size += 1;
+    th.size +:= 1;
     return allocateInBucket(th, th.tables[bi][hash[bi]], entry, hash[2]);
 }
 
@@ -227,7 +227,7 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
 
     th.tables[i][j].hashBytes[k] = 255uss;
     destroy(th.tables[i][j].entries[k]);
-    th.size -= 1;
+    th.size -:= 1;
 }
 
 //
@@ -273,10 +273,10 @@ overload next(x: TwoHashEntries[E, F])
 [E, F]
 nextBucket(x: TwoHashEntries[E, F])
 {
-    x.j += 1;
+    x.j +:= 1;
     if (x.j == size(x.data^.tables[x.i]))
     {
-        x.i += 1;
+        x.i +:= 1;
         x.j = 0;
     }
 }
@@ -420,11 +420,11 @@ debugPrint(th: TwoHash[E])
                 var v = th.tables[i][j].hashBytes[k];
                 if (showBuckets and k != 15) print(v, ", ");
                 if (showBuckets and k == 15) println(v, "]");
-                if (v != 255) uses += 1;
+                if (v != 255) uses +:= 1;
             }
             var usage = Int( Double(uses)/(16) * 100 );
             if (showBuckets) println("bucket[", j,"] has ", usage, "% occupation");
-            table_uses += uses;
+            table_uses +:= uses;
             /*
             for (k, v in enumerated(th.tables[i][j].entries))
             {
@@ -436,7 +436,7 @@ debugPrint(th: TwoHash[E])
         }
         var usage = Int( Double(table_uses)/(16 * size(th.tables[i])) * 100 );
         println("table", i," has ", usage, "% occupation");
-        total_uses += table_uses;
+        total_uses +:= table_uses;
     }
     var usage = Int( Double(total_uses)/( 16 * (size(th.tables[0]) + size(th.tables[1])) ) * 100 );
     println("hashtable has ", usage, "% occupation");

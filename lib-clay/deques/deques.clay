@@ -45,13 +45,13 @@ record DequeCoordinate[T] (
 }
 
 [T, I when Integer?(I)] overload updateAssign(#add, ref i: DequeCoordinate[T], n: I) {
-    i += PtrInt(n);
+    i +:= PtrInt(n);
 }
 
 [T] overload updateAssign(#add, ref i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
     if (offset >= 0 and offset < DequeBufferSSize(T))
-        i.current += n;
+        i.current +:= n;
     else {
         var nodeOffset =
             if (offset > 0)
@@ -66,16 +66,16 @@ record DequeCoordinate[T] (
 
 [T, I when Integer?(I)] overload add(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
     j <-- i;
-    j += n;
+    j +:= n;
 }
 
 [T, I when Integer?(I)] overload updateAssign(#subtract, ref i: DequeCoordinate[T], n: I) {
-    i += (-PtrInt(n));
+    i +:= (-PtrInt(n));
 }
 
 [T, I when Integer?(I)] overload subtract(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
     j <-- i;
-    j += (-PtrInt(n));
+    j +:= (-PtrInt(n));
 }
 
 [T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
@@ -258,7 +258,7 @@ overload pushFront(deque: Deque[T], forward seq: S) {
 [T] overload push(deque: Deque[T], forward value) {
     if (deque.end.current != deque.end.last - 1) {
         deque.end.current^ <-- value;
-        deque.end.current += 1;
+        deque.end.current +:= 1;
     } else
         pushDeque1(deque, value);
 }
@@ -289,7 +289,7 @@ overload push(deque: Deque[T], forward seq: S) {
     assert["boundsChecks"](not empty?(deque), "popFront of empty ", Deque[T]);
     if (deque.begin.current != deque.begin.last - 1) {
         value <-- moveUnsafe(deque.begin.current^);
-        deque.begin.current += 1;
+        deque.begin.current +:= 1;
     } else
         value <-- popFrontDeque1(deque);
 }
@@ -297,7 +297,7 @@ overload push(deque: Deque[T], forward seq: S) {
 [T] overload pop(deque: Deque[T]) {
     assert["boundsChecks"](not empty?(deque), "pop of empty ", Deque[T]);
     if (deque.end.current != deque.end.first) {
-        deque.end.current -= 1;
+        deque.end.current -:= 1;
         return moveUnsafe(deque.end.current^);
     } else
         return popDeque1(deque);

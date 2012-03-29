@@ -6,13 +6,13 @@ foreach(f, a) {
 
 sumWithLambda(a) {
     var sum = 0;
-    foreach(x => { sum += x; }, a);
+    foreach(x => { sum +:= x; }, a);
     println("sum with lambda = ", sum);
 }
 
 sumWithBlock(a) {
     var sum = 0;
-    foreach(x -> { sum += x; }, a);
+    foreach(x -> { sum +:= x; }, a);
     println("sum with block = ", sum);
 }
 
@@ -20,7 +20,7 @@ testReturnByRef() {
     var a = array(0, 1, 2);
     var f = (i -> ref a[i]);
     for (x in a)
-        f(x) += 10;
+        f(x) +:= 10;
     for (x in a)
         println(x);
 }

@@ -5,7 +5,7 @@ heapSelect(first_, middle_, last_, compareLess?) {
     while (i < last) {
         if (compareLess?(i^, first^))
             popHeap(first, middle, i, compareLess?);
-        i += 1;
+        i +:= 1;
     }
 }
 
@@ -20,14 +20,14 @@ makeHeap(first_, last_, compareLess?) {
         adjustHeap(first, parent, len, move(value), compareLess?);
         if (parent == 0)
             return;
-        parent -= 1;
+        parent -:= 1;
     }
 }
 
 sortHeap(first_, last_, compareLess?) {
     var first, last = first_, last_;
     while (last - first > 1) {
-        last -= 1;
+        last -:= 1;
         popHeap(first, last, last, compareLess?);
     }
 }
@@ -61,7 +61,7 @@ adjustHeap(first_, holeIndex_, len_, rvalue value_, compareLess?) {
     while (secondChild < (len - 1) \ 2) {
         secondChild = 2 * (secondChild + 1);
         if(compareLess?((first + secondChild)^, (first + secondChild - 1)^))
-            secondChild -= 1;
+            secondChild -:= 1;
         (first + holeIndex)^ = move((first + secondChild)^);
         holeIndex = secondChild;
     }

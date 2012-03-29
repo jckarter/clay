@@ -45,8 +45,8 @@ record NumberConvertingString = newClass(NSString,
                 value = -value;
             }
             while (value > 0) {
-                length += 1;
-                value \= 10;
+                length +:= 1;
+                value \:= 10;
             }
             return length;
         }],
@@ -63,7 +63,7 @@ record NumberConvertingString = newClass(NSString,
             var pos = length - index - 1;
             var base = 1;
             for (n in range(pos))
-                base *= 10;
+                base *:= 10;
 
             var digit = (value\base) % 10;
             return unichar(Int('0') + digit);

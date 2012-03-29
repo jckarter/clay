@@ -15,7 +15,7 @@ main() {
     var x = Int(size(a));
     for (e in a) {
         e = 2*x;
-        x -= 1;
+        x -:= 1;
     }
 
     println("a[0], a[2] = ", a[0], ", ", a[2]);

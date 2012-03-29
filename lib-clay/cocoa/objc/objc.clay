@@ -1043,7 +1043,7 @@ private _ValidMethodIdentifier?(#identifier, #minArity)
 
 [identifier]
 ValidMethodIdentifier?(#identifier) = true;
-    //= _ValidMethodIdentifier?(
+    //:= _ValidMethodIdentifier?(
     //    #identifier,
     //    #countOccurrences(#'_', ...stringLiteralStaticChars(identifier))
     //);

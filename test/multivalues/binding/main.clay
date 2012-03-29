@@ -6,13 +6,13 @@ staticMultiValues() {
     var a, b = 0, 0.0;
 
     var x, y = multiValues();
-    a += x; b += y;
+    a +:= x; b +:= y;
 
     x, y = moreMultiValues();
-    a += x; b += y;
+    a +:= x; b +:= y;
 
     x, y <-- yetMoreMultiValues();
-    a += x; b += y;
+    a +:= x; b +:= y;
 
     return a, b;
 }
