@@ -160,9 +160,9 @@ overload cat(forward a:A, forward ..x:T) {
 overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
 private define removeCatFromList;
-overload removeCatFromList(a, ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(a, #cat, ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(a) = forward a;
+overload removeCatFromList(forward a, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a, #cat, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a) = forward a;
 
 [A, ..B when Sequence?(A)]
 overload updateAssign(#cat, forward a:A, forward ..b:B) {
