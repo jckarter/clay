@@ -180,7 +180,7 @@ static bool symbol(TokenPtr &x) {
 
 
 static const char *opchars[] = {
-    "<", ">","+", "-", "*", "/","\\","%", "=", "~", "|", "!", "&","@", NULL
+    "<", ">","+", "-", "*", "/","\\","%", "=", "~", "|", "!", "&", NULL
 };
 
 static bool opstring(string &x) {
