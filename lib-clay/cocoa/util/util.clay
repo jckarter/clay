@@ -93,14 +93,6 @@ fromNSValueUnsafe(#T, o: O) --> returned: T {
 [T, O when ObjectRef?(O)]
 overload fromNSValueUnsafe(#Pointer[T], o: O) = Pointer[T](o.pointerValue());
 
-
-
-//
-// Maybe[] conversion
-[T, O when ObjectRef?(O) and CallDefined?(T, O)]
-overload Maybe[T](o: O) = if (nil?(o)) nothing(T) else Maybe(T(o));
-
-
 
 //
 // primitive-as-object boxing
@@ -175,6 +167,8 @@ record NSFastEnumerationIterator (
     objects: Array[Id, FAST_ENUMERATION_BUFFER_SIZE]
 );
 
+overload iterator(x:NSFastEnumerationIterator) = x;
+
 private refreshIterator(i: NSFastEnumerationIterator) {
     i.n = NSUInteger(0);
     i.count = i.delegate(
@@ -189,12 +183,15 @@ overload iterator(o: O) --> returned: NSFastEnumerationIterator {
     refreshIterator(returned);
 }
 
-overload hasNext?(i: NSFastEnumerationIterator) = i.count != 0;
-overload next(i: NSFastEnumerationIterator) --> returned: Id {
-    returned = i.state.itemsPtr[i.n];
-    inc(i.n);
-    if (i.n == i.count)
-        refreshIterator(i);
+overload nextValue(i: NSFastEnumerationIterator) --> returned: Maybe[Id] {
+    if (i.count != 0) {
+        returned <-- Maybe(i.state.itemsPtr[i.n]);
+        inc(i.n);
+        if (i.n == i.count)
+            refreshIterator(i);
+    } else {
+        returned <-- nothing(Id);
+    }
 }
 
 [O when ObjectRef?(O)]
