@@ -4,7 +4,7 @@ overload PointerTypes(a, ..b) = Pointer[a], ..PointerTypes(..b);
 overload PointerTypes() = ;
 
 define pointerValues;
-overload pointerValues(a, ..b) = &a, ..pointerValues(..b);
+overload pointerValues(a, ..b) = @a, ..pointerValues(..b);
 overload pointerValues() = ;
 
 record PtrTuple[..T] (

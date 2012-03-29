@@ -227,7 +227,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         var name = str(clang_getCursorSpelling(cursor));
         if (empty?(name)) {
             name = str("?padding", unnamedFieldIndex);
-            unnamedFieldIndex += 1;
+            unnamedFieldIndex +: 1;
         }
         printlnTo(g_bindingsOut, "    ", clayIdentifier(name), " : ",
             convertType(type, cursor), ",");
@@ -304,7 +304,7 @@ withForwardDecl(cursor:CXCursor, f) {
 cursorMatchesPatterns(cursor:CXCursor, options:BindgenOptions) : Bool {
     var file = CXFile();
     clang_getSpellingLocation(clang_getCursorLocation(cursor),
-        &file, null(UInt), null(UInt), null(UInt));
+        @file, null(UInt), null(UInt), null(UInt));
 
     // builtin definitions have a null file
     if (null?(file)) {
@@ -345,7 +345,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             var unnamedFieldIndex = 0;
             printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
             clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
-                CXClientData(&unnamedFieldIndex));
+                CXClientData(@unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         }
         return CXChildVisit_Recurse;
@@ -375,7 +375,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX dllimport/dllexport
         var attributes = FunctionDeclAttributes();
         clang_visitChildren(cursor, CXCursorVisitor(visitFunctionAttr),
-            CXClientData(&attributes));
+            CXClientData(@attributes));
 
         var type = clang_getCursorType(cursor);
 
@@ -516,26 +516,26 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
             if (arg + 1 >= argc)
                 throw MissingOutputFileName();
             options.outputFileName = Maybe(String(argv[arg + 1]));
-            arg += 2;
+            arg +: 2;
         }
         case ("-import") {
             if (arg + 1 >= argc)
                 throw MissingImportModuleName();
             push(options.imports, String(argv[arg + 1]));
-            arg += 2;
+            arg +: 2;
         }
         case ("-match") {
             if (arg + 1 >= argc)
                 throw MissingMatchPattern();
             push(options.matchPatterns, String(argv[arg + 1]));
-            arg += 2;
+            arg +: 2;
         }
         case ("-builtins") {
             options.matchBuiltins = true;
-            arg += 1;
+            arg +: 1;
         }
         case ("--") {
-            clang_argc += argc - arg;
+            clang_argc +: argc - arg;
             for (i in range(arg, argc))
                 push(clang_argv, argv[i]);
             break;
@@ -543,7 +543,7 @@ parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
         else {
             inc(clang_argc);
             push(clang_argv, argv[arg]);
-            arg += 1;
+            arg +: 1;
         }
     }
 
@@ -611,6 +611,6 @@ main(argc, argv)
 
     var cursor = clang_getTranslationUnitCursor(unit);
 
-    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(&options));
+    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(@options));
     return 0;
 }

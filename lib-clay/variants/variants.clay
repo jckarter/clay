@@ -117,7 +117,7 @@ overload assign(ref dest:V, ref src:V) {
     ref srcRepr = variantRepr(src);
     var tag = destRepr.tag;
     if (tag != srcRepr.tag) {
-        if (&dest == &src)
+        if (@dest == @src)
             return;
         var temp = moveUnsafe(dest);
         try {
@@ -232,7 +232,7 @@ inline variantAsPtr(x:V, #T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     if (repr.tag == index)
-        return &staticIndex(repr.data, #index);
+        return @staticIndex(repr.data, #index);
     else
         return null(T);
 }
@@ -296,7 +296,7 @@ overload VariantRef[V]();
 [V]
 inline overload VariantRef[V](ref v:V) {
     ref repr = variantRepr(v);
-    return VariantRef[V](repr.tag, &repr.data);
+    return VariantRef[V](repr.tag, @repr.data);
 }
 
 [V]
@@ -305,7 +305,7 @@ inline overload VariantRef(ref v:V) = VariantRef[V](v);
 [V, T when VariantMember?(V, T)]
 inline overload VariantRef[V](ref v:T) {
     alias DataPointer = Pointer[Union[..VariantMembers(V)]];
-    return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(&v));
+    return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(@v));
 }
 
 [V]

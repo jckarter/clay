@@ -1,6 +1,6 @@
 main() {
     var x, y = 100, 200;
-    while (x += 1; inc(y); var x = 300; x += 1; inc(x); y < 205)
+    while (x +: 1; inc(y); var x = 300; x +: 1; inc(x); y < 205)
         println("inner x = ", x, " y = ", y);
 
     println("outer x = ", x, " y = ", y);

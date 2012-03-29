@@ -19,7 +19,7 @@ overload scalbn (x:Double, n:I) {
     var k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20);        /* extract exponent */
     if (k==0) {             /* 0 or subnormal x */
         if (bitor(GET_IEEE_LOW(xdb),bitand(GET_IEEE_HIGH(xdb),0x7fffffff))==0) return x; /* +-0 */
-        GET_IEEE_DB(xdb) *= two54;
+        GET_IEEE_DB(xdb) *: two54;
         k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20) - 54;
         if (n< -50000) return TINY*GET_IEEE_DB(xdb);   /*underflow*/
     }
@@ -34,7 +34,7 @@ overload scalbn (x:Double, n:I) {
         if (n > 50000)  /* in case integer overflow in n+k */
             return HUGE*copysign(HUGE,x);   /*overflow*/
         else return TINY*copysign(TINY,x);  /*underflow*/
-    k += 54;                /* subnormal result */
+    k +: 54;                /* subnormal result */
     SET_IEEE_HIGH(xdb,bitor(bitand(GET_IEEE_HIGH(xdb),bitcast(Int,0x800fffffu)),bitshl(k,20)));
     return GET_IEEE_DB(xdb)*twom54;
 }

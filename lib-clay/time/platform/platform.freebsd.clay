@@ -4,7 +4,7 @@ import os.errors.*;
 
 time() {
     var tv = unix.Struct_timeval();
-    var r = unix.gettimeofday(&tv, RawPointer(0));
+    var r = unix.gettimeofday(@tv, RawPointer(0));
     if (r == Type(r)(-1))
         throw GenericOSError(unix.errno());
     var secs = Double(tv.tv_sec);

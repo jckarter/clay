@@ -1,6 +1,6 @@
 main() {
     var x = 100;
-    switch (x += 1; inc(x); var x = 200; x += 1; inc(x); x)
+    switch (x +: 1; inc(x); var x = 200; x +: 1; inc(x); x)
     case (202)
         println("inner ", x);
     else

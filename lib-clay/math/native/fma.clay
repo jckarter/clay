@@ -35,9 +35,9 @@ add_adjusted(a, b) {
 	if (sum.lo != 0) {
 		var hibits = EXTRACT_WORD64(sum.hi);
 		if (bitand(hibits,1) == 0) {
-			/* hibits += (int)copysign(1.0, sum.hi * sum.lo) */
+			/* hibits +: (int)copysign(1.0, sum.hi * sum.lo) */
 			var lobits = EXTRACT_WORD64(sum.lo);
-			hibits += 1 - bitshr(bitxor(hibits,lobits),62);
+			hibits +: 1 - bitshr(bitxor(hibits,lobits),62);
 			sum.hi = INSERT_WORD64(hibits);
 		}
 	}
@@ -69,9 +69,9 @@ add_and_denormalize(a, b, scale) {
 		var hibits = EXTRACT_WORD64(sum.hi);
 		var bits_lost = -bitand(Int(bitshr(hibits,52)) , 0x7ffu) - scale + 1;
 		if (bits_lost != bitxor(1 , Int(bitand(hibits,1)))) {
-			/* hibits += (int)copysign(1.0, sum.hi * sum.lo) */
+			/* hibits +: (int)copysign(1.0, sum.hi * sum.lo) */
 			var lobits = EXTRACT_WORD64(sum.lo);
-			hibits += 1 - bitand(bitshr(bitxor(hibits,lobits),62),2);
+			hibits +: 1 - bitand(bitshr(bitxor(hibits,lobits),62),2);
 			sum.hi = INSERT_WORD64(hibits);
 		}
 	}
@@ -90,12 +90,12 @@ dd_mul(a, b) {
 
 	var p = a * split;
 	var ha = a - p;
-	ha += p;
+	ha +: p;
 	var la = a - ha;
 
 	p = b * split;
 	var hb = b - p;
-	hb += p;
+	hb +: p;
 	var lb = b - hb;
 
 	p = ha * hb;
@@ -145,9 +145,9 @@ overload fma(x:Double, y:Double, z:Double) {
 		return z;
 
 	var ex,ey,ez = 0,0,0;
-	var xs = frexp(x, &ex);
-	var ys = frexp(y, &ey);
-	var zs = frexp(z, &ez);
+	var xs = frexp(x, @ex);
+	var ys = frexp(y, @ey);
+	var zs = frexp(z, @ez);
 	var oround = fegetround();
 	var spread = ex + ey - ez;
 

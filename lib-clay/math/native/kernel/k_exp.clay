@@ -38,7 +38,7 @@ __frexp_exp(x:Double, expt:Pointer[Int]) {
 
 __ldexp_exp(x:Double, expt) {
 	var ex_expt = 0;
-	var exp_x = __frexp_exp(x, &ex_expt);
+	var exp_x = __frexp_exp(x, @ex_expt);
 	return exp_x*MAKE_IEEE(bitshl(0x3ff + expt + ex_expt , 20), 0).2;
 }
 
@@ -46,7 +46,7 @@ __ldexp_cexp(z:ComplexDouble, expt) {
 	var ex_expt = 0;
 	var x = real(z);
 	var y = imagValue(z);
-	var exp_x = __frexp_exp(x, &ex_expt);
+	var exp_x = __frexp_exp(x, @ex_expt);
 	var et = expt + ex_expt;
 
 	/*

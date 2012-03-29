@@ -6,7 +6,7 @@ main() {
     var b = mapped(addressOf, a);
     var c = mapped(dereference, b);
     for (x in c)
-        x += 2;
+        x +: 2;
     for (x in mapped(double, mapped(double, a)))
         println(x);
     for (x in mapped(double, range(5)))

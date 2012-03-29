@@ -35,10 +35,10 @@ inline overload reverseIterator(a:Array[T,n]) =
     reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-inline overload begin(a:Array[T,n]) = Pointer[T](&a);
+inline overload begin(a:Array[T,n]) = Pointer[T](@a);
 
 [T,n]
-inline overload end(a:Array[T,n]) = Pointer[T](&a + 1);
+inline overload end(a:Array[T,n]) = Pointer[T](@a + 1);
 
 [T,n]
 inline overload front(a:Array[T,n]) = ref a[0];

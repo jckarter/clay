@@ -2133,7 +2133,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
         if (pvLeft->isTemp)
             error(x->exprs->exprs[1], "cannot assign to a temporary");
-        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
+        CallPtr call;
+        if (x->op == PREFIX_OP)
+            call = new Call(operator_expr_prefixUpdateAssign(), new ExprList());
+        else
+            call = new Call(operator_expr_updateAssign(), new ExprList());        
         call->parenArgs->add(x->exprs);
         return evalStatement(new ExprStatement(call.ptr()), env, ctx);
     }

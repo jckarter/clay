@@ -3670,7 +3670,11 @@ bool codegenStatement(StatementPtr stmt,
                 return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
             }
         }
-        CallPtr call = new Call(operator_expr_updateAssign(), new ExprList());
+        CallPtr call;
+        if (x->op == PREFIX_OP)
+            call = new Call(operator_expr_prefixUpdateAssign(), new ExprList());
+        else
+            call = new Call(operator_expr_updateAssign(), new ExprList());        
         call->parenArgs->add(x->exprs);
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }

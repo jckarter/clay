@@ -132,7 +132,7 @@ overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
         f.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
-        &nRead,
+        @nRead,
         win32.LPOVERLAPPED(0));
     if (result == 0)
         throw GenericIOError(win32.GetLastError());
@@ -145,7 +145,7 @@ overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
         f.handle,
         win32.LPVOID(buffer),
         win32.DWORD(n),
-        &nWritten,
+        @nWritten,
         win32.LPOVERLAPPED(0));
     if (result == 0)
         throw GenericIOError(win32.GetLastError());
@@ -167,7 +167,7 @@ overload flush(f:RawFile) {
 
 overload fileSize(f:RawFile) {
     var size = Int64();
-    var result = win32.GetFileSizeEx(f.handle, &size);
+    var result = win32.GetFileSizeEx(f.handle, @size);
     if (result == 0)
         throw GenericIOError(win32.GetLastError());
     return size;
@@ -189,7 +189,7 @@ overload seek(f:RawFile, offset, whence) {
     var result = win32.SetFilePointerEx(
         f.handle,
         Int64(offset),
-        &newPos,
+        @newPos,
         seekMethod(whence));
     if (result == 0)
         throw GenericIOError(win32.GetLastError());

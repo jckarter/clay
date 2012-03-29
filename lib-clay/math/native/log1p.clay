@@ -38,7 +38,7 @@ overload log1p(x:Double) {
 			hu = GET_IEEE_HIGH(u);
 		    k  = bitshr(hu,20)-1023;
 		    c  = if(k>0) ONE-(u-x) else x-(u-ONE);/* correction term */
-			c /= u;
+			c /: u;
 	    } 
 	    else {
 			hu = GET_IEEE_HIGH(ix);
@@ -56,7 +56,7 @@ overload log1p(x:Double) {
 	    if(hu < 0x6a09e) {			/* u ~< sqrt(2) */
 	        u = SET_IEEE_HIGH(u,bitor(hu,RM));	/* normalize u */
 	    } else {
-	        k += 1;
+	        k +: 1;
 			u = SET_IEEE_HIGH(u,bitor(hu,CV3));	/* normalize u/2 */
 	        hu = bitshr(CV8-hu,2);
 	    }

@@ -34,7 +34,7 @@ inline overload Vec[T,n](..args:A) {
     var i = 0;
     ..for (x in args) {
         a[i] = x;
-        i += 1;
+        i +: 1;
     }
     return a;
 }

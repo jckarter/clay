@@ -31,7 +31,7 @@ client(args) {
     alias T = SizeT;
     var n = T(10);
     var conn = StreamSocket(Inet(INADDR_LOOPBACK, 27184));
-    write(conn, Pointer[Byte](&n), TypeSize(T));
+    write(conn, Pointer[Byte](@n), TypeSize(T));
     var data = readN(conn, n);
     println("expected ", n, " bytes. received ", size(data), " bytes.");
     return 0;

@@ -16,7 +16,7 @@ main() {
     var ptrs = mapped(x -> ref a[x], indices);
     var pi, pend = begin(ptrs), end(ptrs);
     while (pi != pend) {
-        pi^ *= 10;
+        pi^ *: 10;
         inc(pi);
     }
     printList(a);
@@ -25,8 +25,8 @@ main() {
     var i = 1;
     var bi, bend = begin(b), end(b);
     while (bi != bend) {
-        bi^ += i;
-        i += 1;
+        bi^ +: i;
+        i +: 1;
         inc(bi);
     }
     printList(a);

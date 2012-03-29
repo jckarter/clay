@@ -154,7 +154,7 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "..", "::", "^",  
+    "..", "::", "^", "@",  
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#",
     NULL
@@ -180,7 +180,7 @@ static bool symbol(TokenPtr &x) {
 
 
 static const char *opchars[] = {
-    "<", ">","+", "-", "*", "/","\\","%", "=", "~", "|", "!", "&", NULL
+    "=", "!", "<", ">", "+", "-", "*", "/","\\","%", "~", "|",  "&", NULL
 };
 
 static bool opstring(string &x) {
@@ -207,10 +207,16 @@ static bool opstring(string &x) {
 static bool op(TokenPtr &x) {
     string s;
     if(!opstring(s)) return false;
-    x = new Token(T_OPSTRING, s);
+    char c;
+    char *p = save();
+    if(next(c) && c == ':') {
+        x = new Token(T_UOPSTRING, s);
+    } else {
+        restore(p);
+        x = new Token(T_OPSTRING, s);
+    }
     return true;
 }
-
 
 static bool opIdentifier(TokenPtr &x) {
     char c;

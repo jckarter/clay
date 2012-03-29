@@ -118,7 +118,7 @@ overload flush(f:RawFile) {
 
 overload fileSize(f:RawFile) {
     var statBuf = unix.Struct_stat();
-    var result = unix.fstat(f.handle, &statBuf);
+    var result = unix.fstat(f.handle, @statBuf);
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno());
     return Int64(statBuf.st_size);

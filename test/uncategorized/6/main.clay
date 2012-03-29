@@ -2,7 +2,7 @@
 main() {
     var sum = 0;
     for (c in "Hello World!")
-        sum += Int32(c);
+        sum +: Int32(c);
     println("sum = ", sum);
     return 0;
 }

@@ -11,7 +11,7 @@ main() {
     var n = CFNumberCreate(
         kCFAllocatorDefault,
         CFIndex(kCFNumberIntType),
-        RawPointer(&_n)
+        RawPointer(@_n)
     );
 
     var string = CFStringCreateWithFormat(
