@@ -38,45 +38,45 @@ private _Canary(r: Canary, throwOnCopy?: Bool) {
 
 overload Canary() --> r:Canary {
     _Canary(r, false);
-    noisyPrintln("-- constructed ", &r, " ", r.id);
+    noisyPrintln("-- constructed ", @r, " ", r.id);
 }
 
 overload Canary(throwOnCopy?: Bool) --> r:Canary {
     _Canary(r, throwOnCopy?);
-    noisyPrintln("-- constructed ", &r, " ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
+    noisyPrintln("-- constructed ", @r, " ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
 }
 
 overload Canary(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
-        println("!! tried copy  ", &r, " from ", &x, " uninitialized!");
+        println("!! tried copy  ", @r, " from ", @x, " uninitialized!");
         r.id <-- UNINITIALIZED_CANARY;
         r.throwOnCopy? <-- true;
         throw UninitializedCanaryCopyException();
     }
     if (x.throwOnCopy?) {
-        noisyPrintln("-- throwing    ", &x, " ", x.id);
+        noisyPrintln("-- throwing    ", @x, " ", x.id);
         r.id <-- UNINITIALIZED_CANARY;
         r.throwOnCopy? <-- true;
         throw CanaryCopyException();
     }
 
     _Canary(r, false);
-    noisyPrintln("-- copied      ", &r, " ", r.id, " from ", &x, " ", x.id);
+    noisyPrintln("-- copied      ", @r, " ", r.id, " from ", @x, " ", x.id);
 }
 
 overload destroy(x: Canary) {
     if (x.id >= size(canaryTracker)) {
-        println("!! destroyed   ", &x, " uninitialized!");
+        println("!! destroyed   ", @x, " uninitialized!");
     } else if (canaryTracker[x.id] == DESTROYED) {
-        println("!! destroyed   ", &x, " ", x.id, " when already destroyed");
+        println("!! destroyed   ", @x, " ", x.id, " when already destroyed");
         canaryTracker[x.id] = INVALID;
     } else if (canaryTracker[x.id] == INVALID) {
-        println("!! destroyed   ", &x, " ", x.id, " in invalid state");
+        println("!! destroyed   ", @x, " ", x.id, " in invalid state");
     } else if (canaryTracker[x.id] == MOVED) {
-        println("!! destroyed   ", &x, " ", x.id, " without reset");
+        println("!! destroyed   ", @x, " ", x.id, " without reset");
         canaryTracker[x.id] = INVALID;
     } else {
-        noisyPrintln("-- destroyed   ", &x, " ", x.id);
+        noisyPrintln("-- destroyed   ", @x, " ", x.id);
         canaryTracker[x.id] = DESTROYED;
     }
 }
@@ -85,10 +85,10 @@ overload moveUnsafe(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
         r.id <-- UNINITIALIZED_CANARY;
         r.throwOnCopy? <-- true;
-        println("!! tried move  ", &r, " from ", &x, " uninitialized!");
+        println("!! tried move  ", @r, " from ", @x, " uninitialized!");
     } else {
         _Canary(r, x.throwOnCopy?);
-        noisyPrintln("-- moved       ", &r, " ", r.id, " from ", &x, " ", x.id);
+        noisyPrintln("-- moved       ", @r, " ", r.id, " from ", @x, " ", x.id);
         canaryTracker[x.id] = MOVED;
     }
 }
@@ -96,15 +96,15 @@ overload moveUnsafe(x: Canary) --> r:Canary {
 overload resetUnsafe(x: Canary) {
     if (x.id >= size(canaryTracker)) {
         _Canary(x, false);
-        noisyPrintln("-- reset       ", &x, " ", x.id, " from uninitialized");
+        noisyPrintln("-- reset       ", @x, " ", x.id, " from uninitialized");
         canaryTracker[x.id] = RESET;
     } else if (canaryTracker[x.id] == ALIVE) {
-        println("!! reset       ", &x, " ", x.id, " when still alive");
+        println("!! reset       ", @x, " ", x.id, " when still alive");
         canaryTracker[x.id] = INVALID;
     } else if (canaryTracker[x.id] == INVALID) {
-        println("!! reset       ", &x, " ", x.id, " in invalid state");
+        println("!! reset       ", @x, " ", x.id, " in invalid state");
     } else {
-        noisyPrintln("-- reset       ", &x, " ", x.id);
+        noisyPrintln("-- reset       ", @x, " ", x.id);
         canaryTracker[x.id] = RESET;
     }
 }

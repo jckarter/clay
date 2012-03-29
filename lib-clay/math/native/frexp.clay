@@ -2,11 +2,11 @@
 import math.*;
 
 // for non-zero x
-//  x = frexp(arg,&exp);
+//  x = frexp(arg,@exp);
 // return a double fp quantity x such that 0.5 <= |x| <1.0
 // and the corresponding binary exponent "exp". That is
 //  arg = x*2^exp.
-// If arg is inf, 0.0, or NaN, then frexp(arg,&exp) returns arg
+// If arg is inf, 0.0, or NaN, then frexp(arg,@exp) returns arg
 // with *exp=0.
 
 [T,I when Float?(T) and Integer?(I)]
@@ -19,7 +19,7 @@ overload frexp(x:T, eptr:Pointer[I]){
         k = floatBits(normalize(x));
         eptr^ = -(mantissaSize(T)+2);
     }
-    eptr^ += I(k-(exponentBias(T)-1)); 
+    eptr^ +: I(k-(exponentBias(T)-1)); 
     return floatFromBits(bitor(bitor(bitshl(bitshr(exponentMask(T),2),
         mantissaSize(T)+1), bitand(floatBits(x),bitnot(bitshl(exponentMask(T),
             mantissaSize(T))))),bitand(floatBits(x),mantissaMask(T))));
@@ -38,7 +38,7 @@ overload frexp(x:T, eptr:Pointer[I]){
 //        eptr^ = -(mantissaSize(T)+2);
 //    }
 //    if (k == exponentMask(T)) return x+x;           // NaN or Inf
-//    eptr^ -= (exponentBias(T)-1);
+//    eptr^ -: (exponentBias(T)-1);
     
 //    return floatFromBits(bitor(bitand(floatBits(x), bitnot(exponentMask(T))),bitshl(bitshr(exponentMask(T),1),mantissaSize(T)+1)));
 //}

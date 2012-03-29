@@ -15,20 +15,20 @@ main() {
     var x = Int(size(a));
     for (e in a) {
         e = 2*x;
-        x -= 1;
+        x -: 1;
     }
 
     println("a[0], a[2] = ", a[0], ", ", a[2]);
 
     var fp = makeCCodePointer(compare, Pointer[Int], Pointer[Int]);
 
-    println("compare test = ", fp(&a[0], &a[2]));
-    println("compare test = ", fp(&a[0], &a[0]));
-    println("compare test = ", fp(&a[2], &a[0]));
+    println("compare test = ", fp(@a[0], @a[2]));
+    println("compare test = ", fp(@a[0], @a[0]));
+    println("compare test = ", fp(@a[2], @a[0]));
 
     var fp2 = CCodePointer[[RawPointer, RawPointer], [Int]](fp);
 
-    qsort(RawPointer(&a[0]),
+    qsort(RawPointer(@a[0]),
           size(a),
           TypeSize(Int),
           fp2);

@@ -44,6 +44,14 @@ static bool opstring(string &op) {
     return true;
 }
 
+static bool uopstring(string &op) {
+    TokenPtr t;
+    if (!next(t) || (t->tokenKind != T_UOPSTRING))
+        return false;
+    op = t->str;
+    return true;
+}
+
 static bool opsymbol(const char *s) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
@@ -537,7 +545,7 @@ static bool prefixExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!opsymbol("&")) return false;
+    if (!symbol("@")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
     x = new VariadicOp(ADDRESS_OF, new ExprList(a));
@@ -589,9 +597,7 @@ static bool operatorOp(string &op) {
     int p = save();
     
     const char *s[] = {
-        "<--", "-->", "=>", "->", "=","++=",
-        "+=", "-=", "*=", "/=", "\\=", "%=",
-        NULL
+        "<--", "-->", "=>", "->", "=", NULL
     };
     for (const char **a = s; *a; ++a) {
         if (opsymbol(*a)) return false;
@@ -633,7 +639,6 @@ static bool prefixExpr(ExprPtr &x) {
 //
 // infix binary operator expr
 //
-
 
 static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
@@ -1182,20 +1187,23 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
-
-static bool updateopstring(string &op) {
-    int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
-    for (const char **a = s; *a; ++a) {
-        restore(p);
-        if (opsymbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
+static bool prefixUpdate(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr z;
+    string op;
+    if (!uopstring(op)) return false;
+    if (!expression(z)) return false;
+    if (!symbol(";")) return false;
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    if (z->exprKind == VARIADIC_OP) {
+        VariadicOp *y = (VariadicOp *)z.ptr();
+        exprs->add(y->exprs);
+    } else {
+        exprs->add(z);
     }
-    return false;
+    x = new VariadicAssignment(PREFIX_OP, exprs);
+    x->location = location;
+    return true;
 }
 
 static bool updateAssignment(StatementPtr &x) {
@@ -1203,7 +1211,7 @@ static bool updateAssignment(StatementPtr &x) {
     ExprPtr y,z;
     if (!expression(y)) return false;
     string op;
-    if (!updateopstring(op)) return false;
+    if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
     ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
@@ -1504,6 +1512,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), assignment(x)) return true;
     if (restore(p), initAssignment(x)) return true;
     if (restore(p), updateAssignment(x)) return true;
+    if (restore(p), prefixUpdate(x)) return true;
     if (restore(p), ifStatement(x)) return true;
     if (restore(p), gotoStatement(x)) return true;
     if (restore(p), switchStatement(x)) return true;

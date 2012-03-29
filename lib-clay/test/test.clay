@@ -35,9 +35,9 @@ alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT ++ TEST_CASE_INDENT;
 
 accumulateTestStatus(test: TestStatus, newTest: TestStatus) {
-    test.passed  += newTest.passed;
-    test.failed  += newTest.failed;
-    test.pending += newTest.pending;
+    test.passed  +: newTest.passed;
+    test.failed  +: newTest.failed;
+    test.pending +: newTest.pending;
 }
 
 reportTest(test: TestStatus, ..prefix) {
@@ -110,8 +110,8 @@ runTestCase(_case: TestCase) : TestStatus {
     return test;
 }
 
-passed(test) { test.passed += 1; }
-failed(test) { test.failed += 1; }
+passed(test) { test.passed +: 1; }
+failed(test) { test.failed +: 1; }
 
 // primitive assertion function
 expect(test: TestStatus, passed?: Bool, failReportFn) {

@@ -106,7 +106,7 @@ private record CapturedLValue[T] (
 
 define captureValue;
 inline overload captureValue(rvalue x) = move(x);
-inline overload captureValue(ref x) = CapturedLValue(&x);
+inline overload captureValue(ref x) = CapturedLValue(@x);
 
 define forwardValue;
 inline overload forwardValue(x) = move(x);

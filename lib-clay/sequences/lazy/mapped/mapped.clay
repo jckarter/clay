@@ -49,7 +49,7 @@ private record MappedValue[F, V] (mapper:Pointer[F], value:V);
 
 [F, ITER]
 inline overload nextValue(iter:MappedIterator[F, ITER])
-    = MappedValue(&iter.mapper, nextValue(iter.iter));
+    = MappedValue(@iter.mapper, nextValue(iter.iter));
 
 [F, V]
 inline overload hasValue?(v:MappedValue[F,V]) = hasValue?(v.value);

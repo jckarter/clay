@@ -11,7 +11,7 @@ import printer.formatter.(repr);
 parseIntWith(s:S, intType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
-    var value = convFunc(p, &end, 0);
+    var value = convFunc(p, @end, 0);
     var typeName = StaticName(intType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
@@ -24,7 +24,7 @@ parseIntWith(s:S, intType, convFunc) {
 parseFloatWith(s:S, floatType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
-    var value = convFunc(p, &end);
+    var value = convFunc(p, @end);
     var typeName = StaticName(floatType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
@@ -37,7 +37,7 @@ parseFloatWith(s:S, floatType, convFunc) {
 parseImagWith(s:S, imagType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
-    var value = convFunc(p, &end);
+    var value = convFunc(p, @end);
     var typeName = StaticName(imagType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));

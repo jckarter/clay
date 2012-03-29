@@ -255,7 +255,7 @@ fpclassify(x:T) --> res:Int {
         res <-- if(snan?(x)) FP_SNAN else FP_NAN;
     else if(infinity?(x)) res <-- FP_INFINITE;
     else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res += 6;
+    if(floatNegative?(x)) res +: 6;
 }
 
 // nextafter(x,y)
@@ -276,18 +276,18 @@ nextafter(x:Double, y:Double){
 	if(x == 0.) // x == 0 so return +-minsubnormal
 	    return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
 	if(hx >= 0)
-	    if(hx > hy or (hx == hy and lx > ly)) {	// x > y, x -= ulp
+	    if(hx > hy or (hx == hy and lx > ly)) {	// x > y, x -: ulp
             if(lx == 0) dec(hx);
             dec(lx);
-	    } else {	// x < y, x += ulp
+	    } else {	// x < y, x +: ulp
             inc(lx);
             if(lx == 0) inc(hx);
 	    }
 	else
-	    if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -= ulp
+	    if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -: ulp
             if(lx == 0) dec(hx);
             dec(lx);
-	    } else {		// x > y, x += ulp
+	    } else {		// x > y, x +: ulp
             inc(lx);
             if(lx == 0) inc(hx);
 	    }

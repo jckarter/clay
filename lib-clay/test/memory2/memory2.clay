@@ -14,8 +14,8 @@ record CanaryError();
 instance Exception (CanaryError);
 
 private var canaryCount = 0;
-private beginLife(x:Canary) { markAlive(x); canaryCount += 1; }
-private endLife(x:Canary) { unmarkAlive(x); canaryCount -= 1; }
+private beginLife(x:Canary) { markAlive(x); canaryCount +: 1; }
+private endLife(x:Canary) { unmarkAlive(x); canaryCount -: 1; }
 liveCount() = canaryCount;
 
 private var throwThreshold = -1;

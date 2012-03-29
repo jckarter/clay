@@ -9,7 +9,7 @@ private var _nextTypeId = 0;
 
 private nextTypeId() {
     var x = _nextTypeId;
-    _nextTypeId += 1;
+    _nextTypeId +: 1;
     return x;
 }
 
@@ -77,7 +77,7 @@ overload destroy(x:Any) {
 }
 
 overload assign(ref dest:Any, ref src:Any) {
-    if (&dest == &src)
+    if (@dest == @src)
         return;
     dest = Any(src);
 }

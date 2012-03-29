@@ -84,12 +84,12 @@ inline overload subtract(a:Pointer[T], b:Pointer[T]) {
 
 [T]
 inline overload inc(a:Pointer[T]) {
-    a += 1;
+    a +: 1;
 }
 
 [T]
 inline overload dec(a:Pointer[T]) {
-    a -= 1;
+    a -: 1;
 }
 
 

@@ -24,7 +24,7 @@ overload sin(x:Double) {
 	else if (ix>=EM) return x-x;
 	/* argument reduction needed */
 	else {
-	    var n = rem_pio2(x,&y[0]);
+	    var n = rem_pio2(x,@y[0]);
     	switch(bitand(n,3))
 		case (0) return  kernel_sin(y[0],y[1],1);
 		case (1) return  kernel_cos(y[0],y[1]);
@@ -55,7 +55,7 @@ overload cos(x:Double) {
 
     /* argument reduction needed */
 	else {
-	    var n = rem_pio2(x,&y[0]);
+	    var n = rem_pio2(x,@y[0]);
 	    switch(bitand(n,3))
 		case (0) return  kernel_cos(y[0],y[1]);
 		case (1) return -kernel_sin(y[0],y[1],1);
@@ -83,7 +83,7 @@ overload tan(x:Double) {
 
 	    /* argument reduction needed */
 		else {
-			var n = rem_pio2(x,&y[0]);
+			var n = rem_pio2(x,@y[0]);
 		    return kernel_tan(y[0],y[1],1-bitshl(bitand(n,0x1),1)); /*   1 -- n even
 								-1 -- n odd */
 		}
@@ -107,7 +107,7 @@ overload sinpi(x:Double) {
 	var z = floor(y);
 	var n = 0;
 	if(z != y) {				/* inexact anyway */
-	    y  *= 0.5;
+	    y  *: 0.5;
 	    y   = 2.0*(y - z);		/* y = |x| mod 2.0 */
 	    n   = Int(y*4.0);
 	} 

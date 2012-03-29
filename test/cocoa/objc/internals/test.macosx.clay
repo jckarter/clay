@@ -638,7 +638,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
 
         expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields^.isa);
         expectEqual(test, "constant string isa", 
-            ClassHandle(&cocoa.objc.platform.__CFConstantStringClassReference),
+            ClassHandle(@cocoa.objc.platform.__CFConstantStringClassReference),
             stringFields^.isa
         );
         expectEqual(test, "constant string flags",

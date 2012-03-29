@@ -24,10 +24,10 @@ foldTail(x) {
     var result = x.0;
     for (y in x.1) {
         switch (y.0)
-            case ('+') result += y.1;
-            case ('-') result -= y.1;
-            case ('*') result *= y.1;
-            case ('\\') result \= y.1;
+            case ('+') result +: y.1;
+            case ('-') result -: y.1;
+            case ('*') result *: y.1;
+            case ('\\') result \: y.1;
             else assert(false);
     }
     return result;

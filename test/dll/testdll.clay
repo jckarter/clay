@@ -6,6 +6,6 @@ external sayHello() {
 external factorial(n:Int) Int {
     var p = 1;
     for (i in range(2,n+1))
-        p *= i;
+        p *: i;
     return p;
 }

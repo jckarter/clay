@@ -13,6 +13,6 @@ main() {
     alias T = Int32;
     var x = 0;
     if (IsInt64(T) and Foo(T))
-        x += 1;
+        x +: 1;
     println("x = ", x);
 }

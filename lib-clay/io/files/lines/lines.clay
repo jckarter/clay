@@ -17,7 +17,7 @@ private record LineSequence (
     f : File,
 );
 
-overload iterator(x:LineSequence) = LineIterator(&x.f);
+overload iterator(x:LineSequence) = LineIterator(@x.f);
 
 
 

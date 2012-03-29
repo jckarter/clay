@@ -83,7 +83,7 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
     }
     ref bucket = a.buckets[i];
     bucket = UniqueValue(Node(key, value, move(bucket)));
-    a.size += 1;
+    a.size +: 1;
     if (a.size > (size(a.buckets) * 3 \ 4)) {
         grow(a);
     }
@@ -107,7 +107,7 @@ overload index(a:HashMap[K,V], key:K) {
     }
     ref bucket = a.buckets[i];
     bucket = UniqueValue(Node(key, V(), move(bucket)));
-    a.size += 1;
+    a.size +: 1;
     return ref bucket^.value;
 }
 
@@ -121,12 +121,12 @@ overload index(a:HashMap[K,V], key:K) {
 overload remove(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var prevNode = null(Node[K,V]);
-    var node = &a.buckets[i]^;
+    var node = @a.buckets[i]^;
     while (not null?(node)) {
         if (node^.key == key)
             break;
         prevNode = node;
-        node = &node^.next^;
+        node = @node^.next^;
     }
     if (null?(node))
         return false;
@@ -134,7 +134,7 @@ overload remove(a:HashMap[K,V], key:K) {
         a.buckets[i] = node^.next;
     else
         prevNode^.next = node^.next;
-    a.size -= 1;
+    a.size -: 1;
     return true;
 }
 
@@ -170,9 +170,9 @@ overload iterator(x:HashMapItems[C,K,V]) = x;
 [C,K,V]
 overload nextValue(x:HashMapItems[C,K,V]) {
     if (not null?(x.node))
-        x.node = &x.node^.next^;
+        x.node = @x.node^.next^;
     while (null?(x.node) and not empty?(x.bucketsIter))
-        x.node = &nextValue(x.bucketsIter)^^;
+        x.node = @nextValue(x.bucketsIter)^^;
     return HashMapItem[K,V](x.node);
 }
 
@@ -206,11 +206,11 @@ private bucketId(a:HashMap[K,V], key:K) =
 
 [K,V]
 private findInBucket(_node:NodePtr[K,V], key:K) {
-    var node = &_node^;
+    var node = @_node^;
     while (not null?(node)) {
         if (node^.key == key)
-            return &node^.value;
-        node = &node^.next^;
+            return @node^.value;
+        node = @node^.next^;
     }
     return null(V);
 }
@@ -223,10 +223,10 @@ private grow(a:HashMap[K,V]) {
     resize(a.buckets, size(oldbuckets) * 2);
 
     for(i in range(0, size(oldbuckets))) {
-        var node = &oldbuckets[i]^;
+        var node = @oldbuckets[i]^;
         while (not null?(node)) {
             put(a, move(node^.key), move(node^.value));
-            node = &node^.next^;
+            node = @node^.next^;
         }
     }
 }
