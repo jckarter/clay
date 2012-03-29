@@ -3,8 +3,8 @@ private external glutStrokeRoman : RawPointer;
 private external glutStrokeMonoRoman : RawPointer;
 
 /* Stroke font constants (use these in GLUT program). */
-alias GLUT_STROKE_ROMAN = RawPointer(&glutStrokeRoman);
-alias GLUT_STROKE_MONO_ROMAN = RawPointer(&glutStrokeMonoRoman);
+alias GLUT_STROKE_ROMAN = RawPointer(@glutStrokeRoman);
+alias GLUT_STROKE_MONO_ROMAN = RawPointer(@glutStrokeMonoRoman);
 
 /* Bitmap font opaque addresses (use constants instead in source code). */
 private external glutBitmap9By15 : RawPointer;

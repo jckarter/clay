@@ -61,7 +61,7 @@ private record DirentIterator (dir : Pointer[DIR]);
 overload nextValue(x:DirentIterator) {
     var entry = Struct_dirent();
     var ptr = Pointer[Struct_dirent]();
-    var returnCode = readdir_r(x.dir, &entry, &ptr);
+    var returnCode = readdir_r(x.dir, @x.entry, @ptr);
     if (returnCode != 0)
         throw GenericIOError(errno());
     if (null?(ptr))

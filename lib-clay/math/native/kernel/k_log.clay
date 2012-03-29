@@ -20,5 +20,5 @@ inline k_log1p(f:T) --> s:T {
 	var t1= w*(Lg2+w*(Lg4+w*Lg6));
 	var t2= z*(Lg1+w*(Lg3+w*(Lg5+w*Lg7)));
 	var R = t2+t1;
-	s *= (0.5*f*f+R);
+	s *: (0.5*f*f+R);
 }

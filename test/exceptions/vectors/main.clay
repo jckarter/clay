@@ -4,14 +4,14 @@ var _countdown = 7;
 testAndThrow() {
     if (_countdown <= 0)
         error("foo");
-    _countdown -= 1;
+    _countdown -: 1;
 }
 
 var _nextId = 0;
 
 nextId() {
     var id = _nextId;
-    _nextId += 1;
+    _nextId +: 1;
     return id;
 }
 

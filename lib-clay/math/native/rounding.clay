@@ -19,11 +19,11 @@ overload round(x:T) --> t:T {
 	if (x >= ZERO) {
 		t <-- floor(x);
 		if (t - x <= MHALF)
-			t += ONE;
+			t +: ONE;
 	} else {
 		t <-- floor(-x);
 		if (t + x <= MHALF)
-			t += ONE;
+			t +: ONE;
 		t = -t;
 	}
 }
@@ -105,7 +105,7 @@ overload floor(x:Double) {
 			var i = bitshr(NEM,j0);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
 			if(DHUGE+x>DZERO) {	/* raise inexact flag */
-			    if(GET_IEEE_HIGH(ix)<0) GET_IEEE_HIGH(ix) += bitshr(CV8,j0);
+			    if(GET_IEEE_HIGH(ix)<0) GET_IEEE_HIGH(ix) +: bitshr(CV8,j0);
 			    GET_IEEE_HIGH(ix) = bitandc(GET_IEEE_HIGH(ix),i);
 			    GET_IEEE_LOW(ix) = 0;
 			}
@@ -120,10 +120,10 @@ overload floor(x:Double) {
 	    	if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 	    	if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 				if(GET_IEEE_HIGH(ix)<0) {
-			    	if(j0==20) GET_IEEE_HIGH(ix)+=1;
+			    	if(j0==20) GET_IEEE_HIGH(ix)+:1;
 		    		else {
 						var j = GET_IEEE_LOW(ix)+bitshl(1,(52-j0));
-						if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix) +=1 ; 	/* got a carry */
+						if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix) +:1 ; 	/* got a carry */
 						GET_IEEE_LOW(ix)=j;
 		    		}
 				}
@@ -148,7 +148,7 @@ overload floor(x:Float){
 			var i = bitshr(0x007fffff,j0);
 			if(bitand(ix,i)==0) return x; /* x is integral */
 			if(FHUGE+x>FZERO) {	/* raise inexact flag */
-			    if(ix<0) ix += bitshr(0x00800000,j0);
+			    if(ix<0) ix +: bitshr(0x00800000,j0);
 			    ix = bitandc(ix,i);
 			}
 	    }
@@ -181,7 +181,7 @@ overload ceil(x:Double) {
 			var i = bitshr(NEM,j0);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
 			if(DHUGE+x>DZERO) {	/* raise inexact flag */
-			    if(GET_IEEE_HIGH(ix)>0) GET_IEEE_HIGH(ix) += bitshr(CV8,j0);
+			    if(GET_IEEE_HIGH(ix)>0) GET_IEEE_HIGH(ix) +: bitshr(CV8,j0);
 			    GET_IEEE_HIGH(ix) = bitandc(GET_IEEE_HIGH(ix),i); 
 			    GET_IEEE_LOW(ix) = 0;
 			}
@@ -194,10 +194,10 @@ overload ceil(x:Double) {
 	    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 	    if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 			if(GET_IEEE_HIGH(ix)>0) {
-			    if(j0==20) GET_IEEE_HIGH(ix)+=1;
+			    if(j0==20) GET_IEEE_HIGH(ix)+:1;
 			    else {
 					var j = GET_IEEE_LOW(ix) + bitshl(1,52-j0);
-					if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix)+=1;	/* got a carry */
+					if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix)+:1;	/* got a carry */
 					GET_IEEE_LOW(ix) = j;
 			    }
 			}
@@ -221,7 +221,7 @@ overload ceil(x:Float) {
 			var i = bitshr(0x007fffff,j0);
 			if(bitand(ix,i)==0) return x; /* x is integral */
 			if(FHUGE+x>FZERO) {	/* raise inexact flag */
-			    if(ix>0) ix += bitshr(0x00800000,j0);
+			    if(ix>0) ix +: bitshr(0x00800000,j0);
 			    ix = bitandc(ix,i);
 			}
 	    }

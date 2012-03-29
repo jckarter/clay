@@ -1003,6 +1003,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(move);
     OPERATOR(assign);
     OPERATOR(updateAssign);
+    OPERATOR(prefixUpdateAssign);
     OPERATOR(indexAssign);
     OPERATOR(indexUpdateAssign);
     OPERATOR(fieldRefAssign);
@@ -1170,6 +1171,7 @@ DEFINE_OPERATOR_ACCESSOR(copy)
 DEFINE_OPERATOR_ACCESSOR(move)
 DEFINE_OPERATOR_ACCESSOR(assign)
 DEFINE_OPERATOR_ACCESSOR(updateAssign)
+DEFINE_OPERATOR_ACCESSOR(prefixUpdateAssign)
 DEFINE_OPERATOR_ACCESSOR(indexAssign)
 DEFINE_OPERATOR_ACCESSOR(indexUpdateAssign)
 DEFINE_OPERATOR_ACCESSOR(fieldRefAssign)

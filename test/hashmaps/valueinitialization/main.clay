@@ -8,11 +8,11 @@ main() {
     remove(map, 0);
     println(map[0]);
 
-    map[1] += 1234;
+    map[1] +: 1234;
     println(map[1]);
     remove(map, 1);
 
-    map[1] += 1234;
+    map[1] +: 1234;
     println(map[1]);
 
     var vmap = HashMap[Int,Vector[Int]]();

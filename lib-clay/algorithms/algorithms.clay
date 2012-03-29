@@ -98,10 +98,10 @@ overload select(a:A, f) {
 [A when LValueSequence?(A)]
 overload select(a:A, f) {
     var iter = iterator(a);
-    var result = &getNext(iter);
+    var result = @getNext(iter);
     for (x in iter)
         if (f(x, result^))
-            result = &x;
+            result = @x;
     return ref result^;
 }
 

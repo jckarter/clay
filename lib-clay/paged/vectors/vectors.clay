@@ -111,7 +111,7 @@ overload destroy(a:Vector[T]) {
 overload Vector?(#Vector[T]) = true;
 
 [T]
-overload vectorData(a:Vector[T]) = &(a.data^);
+overload vectorData(a:Vector[T]) = @(a.data^);
 
 [T]
 overload vectorSize(a:Vector[T]) = a.size;

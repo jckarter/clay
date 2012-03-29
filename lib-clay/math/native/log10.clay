@@ -18,17 +18,17 @@ overload log10(x:Double) {
 	    if (bitor(bitand(GET_IEEE_HIGH(xdb),MM),GET_IEEE_LOW(xdb))==0)
 			return negativeInfinity(Double);		/* log(+-0)=-inf */
 	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);	/* log(-#) = NaN */
-	    k -= 54; 
+	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	}
 	if (GET_IEEE_HIGH(xdb) >= EM) return infinity(Double);
 	if (GET_IEEE_HIGH(xdb) == RM and GET_IEEE_LOW(xdb) == 0)
 	    return ZERO;			/* log(1) = +0 */
-	k += bitshr(GET_IEEE_HIGH(xdb),20)-1023;
+	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 	SET_IEEE_HIGH(xdb,bitand(GET_IEEE_HIGH(xdb),NEM));
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);
 	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	/* normalize x or x/2 */
-	k += bitshr(i,20);
+	k +: bitshr(i,20);
 	var f = GET_IEEE_DB(xdb) - 1.0;
 	var hfsq = 0.5*f*f;
 	var r = k_log1p(f);
@@ -41,7 +41,7 @@ overload log10(x:Double) {
 	var val_lo = k*log10_2lo + (lo+GET_IEEE_DB(xdb))*ivln10lo + lo*ivln10hi;
 
 	var w = y2 + val_hi;
-	val_lo += (y2 - w) + val_hi;
+	val_lo +: (y2 - w) + val_hi;
 	val_hi = w;
 	return val_lo + val_hi;
 }

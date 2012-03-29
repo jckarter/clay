@@ -39,7 +39,7 @@ interfaceType(..memberFunctions) = recordWithProperties(
 overload RegularRecord?(#I) = false;
 
 [I when InterfaceType?(I)]
-overload destroy(i: I) { invoke(destroy, &i); }
+overload destroy(i: I) { invoke(destroy, @i); }
 
 private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
     makeCodePointer(VtblSlotFunction(memFun), T, ..VtblSlotInputTypes(memFun))
@@ -59,10 +59,10 @@ BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 [I, T when InterfaceType?(I)]
 alias allocateBox(#I, this: T) : Pointer[I] {
     var ptr = Pointer[I](malloc(BoxSize(T)));
-    ptr^.vtbl = &interfaceVtbl[I, T];
+    ptr^.vtbl = @interfaceVtbl[I, T];
 
     try {
-        Pointer[T](&ptr^.this)^ <-- this;
+        Pointer[T](@ptr^.this)^ <-- this;
     }
     catch (ex) {
         free(RawPointer(ptr));

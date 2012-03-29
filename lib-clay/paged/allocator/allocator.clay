@@ -129,7 +129,7 @@ popFreeList(minSize) {
         ref head = state.freeListBuckets^[i];
         if (not nullBlock?(head))
             return popBucket(head);
-        i += 1;
+        i +: 1;
     }
     return nullBlock;
 }
@@ -220,12 +220,12 @@ overload subtract(a:PagedPointer[T], b:PagedPointer[T]) {
 
 [T]
 overload inc(p:PagedPointer[T]) {
-    p += 1;
+    p +: 1;
 }
 
 [T]
 overload dec(p:PagedPointer[T]) {
-    p -= 1;
+    p -: 1;
 }
 
 [T]
@@ -256,7 +256,7 @@ allocatePaged(#T, n_:I) {
     var n = SizeT(n_) * TypeSize(T);
 
     // include header in size and align up to 16
-    n += TypeSize(Header);
+    n +: TypeSize(Header);
     n = alignUp(n, 16u);
 
     var b = popFreeList(n);
