@@ -120,19 +120,19 @@ inline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args
 [T when Numeric?(T)] overload seqType(#T) = T;
 
 private define seqSize;
-inline overload seqSize(s,a,..args) = ..seqSize(s,..args);
+inline overload seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
 [S when Sequence?(S)] 
-inline overload seqSize(s,a:S,..args) = ..seqSize(max(s,size(a)),..args);
+inline overload seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
 inline overload seqSize(s) = s;
 
 private define reduceToScalar;
 [F] 
-inline overload reduceToScalar( i, #F, ..args) =  F, ..reduceToScalar(i,..args);
+inline overload reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
 [S when Sequence?(S)] 
-inline overload reduceToScalar( i, a:S, ..args) = a[i],..reduceToScalar(i,..args);
+inline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
 [T when Numeric?(T)] 
-inline overload reduceToScalar( i, a:T, ..args) = a,..reduceToScalar(i,..args);
-inline overload reduceToScalar( i) = ;
+inline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
+inline overload reduceToScalar(forward i) = ;
 
 
 
@@ -160,9 +160,9 @@ overload cat(forward a:A, forward ..x:T) {
 overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
 private define removeCatFromList;
-overload removeCatFromList(a, ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(a, #cat, ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(a) = forward a;
+overload removeCatFromList(forward a, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a, #cat, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a) = forward a;
 
 [A, ..B when Sequence?(A)]
 overload updateAssign(#cat, forward a:A, forward ..b:B) {
