@@ -235,21 +235,6 @@ Library changes:
     foo(x:Int) = Float(x);
     bar() = StdCallCodePointer(foo);
 
-* 
-  but instead overload 'quotient' (the '\' operator).
-
-    // 0.1
-    foo() {
-        return 3./2., 3/2; // 1.5, 1
-    }
-
-    // 0.2
-    foo() {
-        return 3./2., 3\2; // 1.5, 1
-    }
-
-  Thanks to Jeremy Clifford.
-
 * The StringConstant type has been replaced a new StringLiteralRef type.
   StringLiteralRef values can be constructed from string literals.
 
