@@ -1187,6 +1187,25 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
+static bool prefixUpdate(StatementPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr z;
+    string op;
+    if (!uopstring(op)) return false;
+    if (!expression(z)) return false;
+    if (!symbol(";")) return false;
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    if (z->exprKind == VARIADIC_OP) {
+        VariadicOp *y = (VariadicOp *)z.ptr();
+        exprs->add(y->exprs);
+    } else {
+        exprs->add(z);
+    }
+    x = new VariadicAssignment(PREFIX_OP, exprs);
+    x->location = location;
+    return true;
+}
+
 static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y,z;
@@ -1493,6 +1512,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), assignment(x)) return true;
     if (restore(p), initAssignment(x)) return true;
     if (restore(p), updateAssignment(x)) return true;
+    if (restore(p), prefixUpdate(x)) return true;
     if (restore(p), ifStatement(x)) return true;
     if (restore(p), gotoStatement(x)) return true;
     if (restore(p), switchStatement(x)) return true;

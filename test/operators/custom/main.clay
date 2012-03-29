@@ -37,4 +37,6 @@ main() {
     println(a \*\ 3);
     a \*\: 3;
     println(a);
+    -:a;
+    println(a);
 }

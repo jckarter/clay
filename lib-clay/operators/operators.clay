@@ -10,6 +10,7 @@ public import __operators__.(
     move,
     assign,
     updateAssign,
+    prefixUpdateAssign,
 
     case?,
 
@@ -271,6 +272,11 @@ inline overload assign(ref dest:T, rvalue src:T) {
 [F]
 inline overload updateAssign(#F, ref dest, forward ..src) {
     dest = infixOperator(dest,F, ..src);
+}
+
+[F]
+inline overload prefixUpdateAssign(#F, ref dest, forward ..src) {
+    dest = prefixOperator(F, dest, ..src);
 }
 
 inline overload (!=)(a, b) = not (==)(a, b);
