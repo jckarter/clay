@@ -7,44 +7,60 @@ main() = testMain(
         TestCase("iterator-only sequences", test => {
             var ustr = grouped(UTF8("abc123!!!"), 3);
             var iter = iterator(ustr);
-            
-            expectTrue(test, "first hasNext?", hasNext?(iter));
-            expectSequence(test, "first group", next(iter),
+
+            var v = nextValue(iter);
+
+            expectTrue(test, "first hasValue?", hasValue?(v));
+            expectSequence(test, "first group", getValue(v),
                 UniChar('a'), UniChar('b'), UniChar('c')
             );
 
-            expectTrue(test, "second hasNext?", hasNext?(iter));
-            expectSequence(test, "second group", next(iter),
+            v = nextValue(iter);
+
+            expectTrue(test, "second hasValue?", hasValue?(v));
+            expectSequence(test, "second group", getValue(v),
                 UniChar('1'), UniChar('2'), UniChar('3')
             );
 
-            expectTrue(test, "third hasNext?", hasNext?(iter));
-            expectSequence(test, "third group", next(iter),
+            v = nextValue(iter);
+
+            expectTrue(test, "third hasValue?", hasValue?(v));
+            expectSequence(test, "third group", getValue(v),
                 UniChar('!'), UniChar('!'), UniChar('!')
             );
 
-            expectFalse(test, "fourth hasNext?", hasNext?(iter));
+            v = nextValue(iter);
+
+            expectFalse(test, "fourth hasValue?", hasValue?(v));
         }),
         TestCase("random access coordinate sequences", test => {
             var str = grouped(String("abc123!!!"), 3);
             var iter = iterator(str);
-            
-            expectTrue(test, "first hasNext?", hasNext?(iter));
-            expectSequence(test, "first group", next(iter),
+
+            var v = nextValue(iter);
+
+            expectTrue(test, "first hasValue?", hasValue?(v));
+            expectSequence(test, "first group", getValue(v),
                 'a', 'b', 'c'
             );
 
-            expectTrue(test, "second hasNext?", hasNext?(iter));
-            expectSequence(test, "second group", next(iter),
+            v = nextValue(iter);
+
+            expectTrue(test, "second hasValue?", hasValue?(v));
+            expectSequence(test, "second group", getValue(v),
                 '1', '2', '3'
             );
 
-            expectTrue(test, "third hasNext?", hasNext?(iter));
-            expectSequence(test, "third group", next(iter),
+            v = nextValue(iter);
+
+            expectTrue(test, "third hasValue?", hasValue?(v));
+            expectSequence(test, "third group", getValue(v),
                 '!', '!', '!'
             );
 
-            expectFalse(test, "fourth hasNext?", hasNext?(iter));
+            v = nextValue(iter);
+
+            expectFalse(test, "fourth hasValue?", hasValue?(v));
 
             expectSequence(test, "str[0]", str[0],
                 'a', 'b', 'c'
@@ -74,14 +90,6 @@ main() = testMain(
             expectFalse(test, "begin(str) > begin(str)", begin(str) > begin(str));
             expectFalse(test, "begin(str) < begin(str)", begin(str) < begin(str));
             expectTrue(test, "begin(str) == begin(str)", begin(str) == begin(str));
-        }),
-        TestCase("#grouping", test => {
-            var str = String("abcABC123");
-            for (x, y, z in grouped(str, #3))
-                expectTrue(test, "#grouped iteration",
-                    Int(x) + 1 == Int(y)
-                    and Int(y) + 1 == Int(z)
-                );
         }),
     )),
 );

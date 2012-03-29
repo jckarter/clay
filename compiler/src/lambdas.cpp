@@ -264,6 +264,45 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
     convertFreeVars(x->body, env2, ctx);
 }
 
+static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaContext &ctx)
+{
+    convertFreeVars(binding->values, env, ctx);
+    EnvPtr env2 = new Env(env);
+    for (unsigned j = 0; j < binding->names.size(); ++j)
+        addLocal(env2, binding->names[j], binding->names[j].ptr());
+    return env2;
+}
+
+static EnvPtr convertFreeVarsFromStatementExpressionStatements(
+    vector<StatementPtr> const &stmts,
+    EnvPtr env,
+    LambdaContext &ctx)
+{
+    EnvPtr env2 = env;
+    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+         i != end;
+         ++i)
+    {
+        switch ((*i)->stmtKind) {
+        case BINDING:
+            env2 = convertFreeVarsFromBinding((Binding*)i->ptr(), env2, ctx);
+            break;
+
+        case ASSIGNMENT:
+        case VARIADIC_ASSIGNMENT:
+        case INIT_ASSIGNMENT:
+        case EXPR_STATEMENT:
+            convertFreeVars(*i, env2, ctx);
+            break;
+
+        default:
+            assert(false);
+            return NULL;
+        }
+    }
+    return env2;
+}
+
 void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 {
     switch (x->stmtKind) {
@@ -274,17 +313,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
             y->desugared = desugarBlock(y);
         for (unsigned i = 0; i < y->desugared->statements.size(); ++i) {
             StatementPtr z = y->desugared->statements[i];
-            if (z->stmtKind == BINDING) {
-                Binding *a = (Binding *)z.ptr();
-                convertFreeVars(a->values, env, ctx);
-                EnvPtr env2 = new Env(env);
-                for (unsigned j = 0; j < a->names.size(); ++j)
-                    addLocal(env2, a->names[j], a->names[j].ptr());
-                env = env2;
-            }
-            else {
+            if (z->stmtKind == BINDING)
+                env = convertFreeVarsFromBinding((Binding *)z.ptr(), env, ctx);
+            else
                 convertFreeVars(z, env, ctx);
-            }
         }
         break;
     }
@@ -326,6 +358,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case IF : {
         If *y = (If *)x.ptr();
+        env = convertFreeVarsFromStatementExpressionStatements(y->conditionStatements, env, ctx);
         convertFreeVars(y->condition, env, ctx);
         convertFreeVars(y->thenPart, env, ctx);
         if (y->elsePart.ptr())
@@ -335,6 +368,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case SWITCH : {
         Switch *y = (Switch *)x.ptr();
+        env = convertFreeVarsFromStatementExpressionStatements(y->exprStatements, env, ctx);
         convertFreeVars(y->expr, env, ctx);
         for (unsigned i = 0; i < y->caseBlocks.size(); ++i) {
             CaseBlockPtr z = y->caseBlocks[i];
@@ -360,6 +394,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case WHILE : {
         While *y = (While *)x.ptr();
+        env = convertFreeVarsFromStatementExpressionStatements(y->conditionStatements, env, ctx);
         convertFreeVars(y->condition, env, ctx);
         convertFreeVars(y->body, env, ctx);
         break;

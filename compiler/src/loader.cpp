@@ -1013,8 +1013,9 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(charLiteral);
     OPERATOR(wrapStatic);
     OPERATOR(iterator);
-    OPERATOR(hasNextP);
-    OPERATOR(next);
+    OPERATOR(nextValue);
+    OPERATOR(hasValueP);
+    OPERATOR(getValue);
     OPERATOR(throwValue);
     OPERATOR(exceptionIsP);
     OPERATOR(exceptionAs);
@@ -1178,8 +1179,9 @@ DEFINE_OPERATOR_ACCESSOR(staticIndexUpdateAssign)
 DEFINE_OPERATOR_ACCESSOR(callMain)
 DEFINE_OPERATOR_ACCESSOR(charLiteral)
 DEFINE_OPERATOR_ACCESSOR(iterator)
-DEFINE_OPERATOR_ACCESSOR(hasNextP)
-DEFINE_OPERATOR_ACCESSOR(next)
+DEFINE_OPERATOR_ACCESSOR(nextValue)
+DEFINE_OPERATOR_ACCESSOR(hasValueP)
+DEFINE_OPERATOR_ACCESSOR(getValue)
 DEFINE_OPERATOR_ACCESSOR(throwValue)
 DEFINE_OPERATOR_ACCESSOR(exceptionIsP)
 DEFINE_OPERATOR_ACCESSOR(exceptionAs)

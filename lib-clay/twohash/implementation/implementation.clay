@@ -242,6 +242,11 @@ record TwoHashEntries[E, F]
     entryMask: Int,
 );
 
+record TwoHashEntry[E, F]
+(
+    entry: Pointer[E],
+);
+
 [E, F]
 overload TwoHashEntries[E, F](th: TwoHash[E])
 {
@@ -254,21 +259,26 @@ overload TwoHashEntries[E, F](th: TwoHash[E])
 overload iterator(x: TwoHashEntries[E, F]) = x;
 
 [E, F]
-overload hasNext?(x: TwoHashEntries[E, F]) = x.entryMask != 0;
+overload nextValue(x: TwoHashEntries[E, F])
+{
+    if (x.entryMask != 0) {
+        var k = lowBit(x.entryMask);
+        x.entryMask = x.entryMask - bitshl(1, k);
+        ref e = x.data^.tables[x.i][x.j].entries[k];
+        if (x.entryMask == 0)
+        {
+            nextBucket(x);
+            refillMask(x);
+        }
+        return TwoHashEntry[E,F](&e);
+    } else
+        return TwoHashEntry[E,F]();
+}
 
 [E, F]
-overload next(x: TwoHashEntries[E, F])
-{
-    var k = lowBit(x.entryMask);
-    x.entryMask = x.entryMask - bitshl(1, k);
-    ref e = x.data^.tables[x.i][x.j].entries[k];
-    if (x.entryMask == 0)
-    {
-        nextBucket(x);
-        refillMask(x);
-    }
-    return ..F(e);
-}
+overload hasValue?(x: TwoHashEntry[E, F]) = not null?(x.entry);
+[E, F]
+overload getValue(x: TwoHashEntry[E, F]) = forward ..F(&x.entry);
 
 [E, F]
 nextBucket(x: TwoHashEntries[E, F])

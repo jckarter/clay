@@ -317,13 +317,12 @@ private record SetVectorItems[K]
 overload iterator(i: SetVectorItems[K]) = i;
 
 [K]
-overload hasNext?(i: SetVectorItems[K]) = (i.current^.next != i.sentinel);
-
-[K]
-overload next(i: SetVectorItems[K])
-{
-    i.current = i.current^.next;
-    return ref i.current^.key;
+overload nextValue(i: SetVectorItems[K]) {
+    if (i.current^.next != i.sentinel) {
+        i.current = i.current^.next;
+        return &i.current^.key;
+    } else
+        return null(Type(i.current^.key));
 }
 
 //

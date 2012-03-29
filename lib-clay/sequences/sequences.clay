@@ -28,13 +28,16 @@ alias group(..args) = force(grouped(..args));
 [A,B when Sequence?(A) and Sequence?(B)]
 overload equals?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (not hasNext?(j))
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (iv? != jv?)
             return false;
-        if (next(i) != next(j))
+        if (not iv?)
+            return true;
+        if (getValue(i) != getValue(j))
             return false;
     }
-    return not hasNext?(j);
 }
 
 [A,B when SizedSequence?(A) and SizedSequence?(B)]
@@ -42,25 +45,31 @@ overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
     var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (next(i) != next(j))
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        if (not hasValue?(iv))
+            return true;
+        if (getValue(iv) != getValue(jv))
             return false;
     }
-    return true;
 }
 
 
 [A,B when Sequence?(A) and Sequence?(B)]
 overload lesser?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
-    while (hasNext?(i)) {
-        if (not hasNext?(j))
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (not iv?)
+            return jv?;
+        if (not jv?)
             return false;
-        forward x, y = next(i), next(j);
+
+        forward x, y = getValue(iv), getValue(jv);
         if (x != y)
             return x < y;
     }
-    return hasNext?(j);
 }
 
 
@@ -175,11 +184,11 @@ overload updateAssign(#cat, forward x:T, forward a:A) {
 [S when Sequence?(S)]
 interleave(seq:S, betweenFn, fn) {
     var i = iterator(seq);
-    if (hasNext?(i)) {
-        fn(..next(i));
-        while (hasNext?(i)) {
+    if (var v = nextValue(i); hasValue?(v)) {
+        fn(..getValue(v));
+        while (v = nextValue(i); hasValue?(v)) {
             betweenFn();
-            fn(..next(i));
+            fn(..getValue(v));
         }
     }
 }

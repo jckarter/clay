@@ -139,9 +139,11 @@ ParseResult(#TokenInput, #Parser) {
 
 [TokenInput]
 nextToken(#TokenInput, input:TokenInput) {
-    if (not hasNext?(input))
+    var value = nextValue(input);
+    if (hasValue?(value))
+        return Maybe(getValue(value));
+    else
         return nothing(TokenType(TokenInput));
-    return Maybe(next(input));
 }
 
 

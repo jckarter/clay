@@ -1,3 +1,5 @@
+import maybe.(Maybe, nothing);
+
 record UTF8Decoder[Iterator] (
     iter: Iterator
 );
@@ -57,35 +59,40 @@ decodeFour(c, d, e, f) {
     }
 }
 
-[T] overload hasNext?(decoder: UTF8Decoder[T]) = hasNext?(decoder.iter);
+private inline getByte(v) = UInt8(getValue(v));
+private NEXT_VALUE_OR_EOF(varName) = """
+    v = nextValue(decoder.iter);
+    if (not hasValue?(v)) goto eof;
+    var """ ++ varName ++ """ = getByte(v);
+""";
 
-[T] overload next(decoder: UTF8Decoder[T]) {
-    var c = UInt8(next(decoder.iter));
+[T] overload nextValue(decoder: UTF8Decoder[T]) {
+    var v = nextValue(decoder.iter);
+    if (not hasValue?(v))
+        return nothing(UniChar);
+    var c = getByte(v);
     if (c < 0x80u) {
-        return UniChar(c);
+        return Maybe(UniChar(c));
     } else if (c < 0xC0u) {
-        return REPLACEMENT_CHAR;
+        return Maybe(REPLACEMENT_CHAR);
     } else {
         if (c < 0xE0u) {
-            if (not hasNext?(decoder.iter)) goto eof;
-            return decodeTwo(c, next(decoder.iter));
+            eval NEXT_VALUE_OR_EOF("d");
+            return Maybe(decodeTwo(c, d));
         } else if (c < 0xF0u) {
-            if (not hasNext?(decoder.iter)) goto eof;
-            var d = next(decoder.iter);
-            if (not hasNext?(decoder.iter)) goto eof;
-            return decodeThree(c, d, next(decoder.iter));
+            eval NEXT_VALUE_OR_EOF("d");
+            eval NEXT_VALUE_OR_EOF("e");
+            return Maybe(decodeThree(c, d, e));
         } else if (c < 0xF8u) {
-            if (not hasNext?(decoder.iter)) goto eof;
-            var d = next(decoder.iter);
-            if (not hasNext?(decoder.iter)) goto eof;
-            var e = next(decoder.iter);
-            if (not hasNext?(decoder.iter)) goto eof;
-            return decodeFour(c, d, e, next(decoder.iter));
+            eval NEXT_VALUE_OR_EOF("d");
+            eval NEXT_VALUE_OR_EOF("e");
+            eval NEXT_VALUE_OR_EOF("f");
+            return Maybe(decodeFour(c, d, e, f));
         }
     }
 
 eof:
-    return REPLACEMENT_CHAR;
+    return Maybe(REPLACEMENT_CHAR);
 }
 
 record UTF8[Sequence] (

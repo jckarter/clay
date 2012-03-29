@@ -1,5 +1,6 @@
 import unix.*;
 import io.errors.*;
+import maybe.(Maybe, nothing);
 
 
 
@@ -55,19 +56,16 @@ overload iterator(s:DirentSequence) = DirentIterator(s.dir, Struct_dirent());
 // DirentIterator
 //
 
-private record DirentIterator (
-    dir : Pointer[DIR],
-    entry : Struct_dirent,
-);
+private record DirentIterator (dir : Pointer[DIR]);
 
-overload hasNext?(x:DirentIterator) {
+overload nextValue(x:DirentIterator) {
+    var entry = Struct_dirent();
     var ptr = Pointer[Struct_dirent]();
-    var returnCode = readdir_r(x.dir, &x.entry, &ptr);
+    var returnCode = readdir_r(x.dir, &entry, &ptr);
     if (returnCode != 0)
         throw GenericIOError(errno());
-    return not null?(ptr);
-}
-
-overload next(x:DirentIterator) {
-    return x.entry;
+    if (null?(ptr))
+        return nothing(Struct_dirent);
+    else
+        return Maybe(entry);
 }

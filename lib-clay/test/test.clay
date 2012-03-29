@@ -209,11 +209,12 @@ expectCallUndefined(test: TestStatus, Proc, ..Types) {
     );
 }
 
-expectIterator(test: TestStatus, name, iter, ..expected) {
-    var expectedV = Vector[Type(next(iter))](..expected);
-    var resultV = Vector[Type(next(iter))]();
-    while (hasNext?(iter))
-        push(resultV, next(iter));
+[I]
+expectIterator(test: TestStatus, name, iter:I, ..expected) {
+    var expectedV = Vector[IteratorTargetType(I)](..expected);
+    var resultV = Vector[IteratorTargetType(I)]();
+    for (x in iter)
+        push(resultV, x);
     expect(
         test,
         expectedV == resultV,

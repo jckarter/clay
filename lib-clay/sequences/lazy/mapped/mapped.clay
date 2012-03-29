@@ -33,6 +33,9 @@ overload UnderlyingContainerConstructor(#Mapped[F,A]) =
 inline overload iterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, iterator(a.seq));
 
+[F,A]
+inline overload iterator(a:MappedIterator[F,A]) = a;
+
 [F,A when CallDefined?(reverseIterator, A)]
 inline overload reverseIterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, reverseIterator(a.seq));
@@ -42,13 +45,16 @@ private record MappedIterator[F, ITER] (
     iter : ITER,
 );
 
-[F, ITER]
-inline overload hasNext?(iter:MappedIterator[F, ITER]) = hasNext?(iter.iter);
+private record MappedValue[F, V] (mapper:Pointer[F], value:V);
 
 [F, ITER]
-inline overload next(iter:MappedIterator[F, ITER]) =
-    forward ..iter.mapper(..next(iter.iter));
+inline overload nextValue(iter:MappedIterator[F, ITER])
+    = MappedValue(&iter.mapper, nextValue(iter.iter));
 
+[F, V]
+inline overload hasValue?(v:MappedValue[F,V]) = hasValue?(v.value);
+[F, V]
+inline overload getValue(forward v:MappedValue[F,V]) = forward ..v.mapper^(..getValue(v.value));
 
 
 //

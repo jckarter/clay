@@ -1,3 +1,4 @@
+import maybe.(Maybe, nothing);
 
 
 //
@@ -25,13 +26,14 @@ inline overload iterator(a:Range[T]) = a;
 inline overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
 
 [T]
-inline overload hasNext?(a:Range[T]) = a.begin < a.end;
-
-[T]
-inline overload next(a:Range[T]) {
-    var temp = a.begin;
-    inc(a.begin);
-    return move(temp);
+inline overload nextValue(a:Range[T]) {
+    if (a.begin < a.end) {
+        var temp = Maybe(a.begin);
+        inc(a.begin);
+        return move(temp);
+    } else {
+        return nothing(T);
+    }
 }
 
 [T]
@@ -67,12 +69,13 @@ inline overload iterator(a:ReverseRange[T]) = a;
 inline overload reverseIterator(a:ReverseRange[T]) = Range(a.begin, a.end);
 
 [T]
-inline overload hasNext?(a:ReverseRange[T]) = a.end > a.begin;
-
-[T]
-inline overload next(a:ReverseRange[T]) {
-    dec(a.end);
-    return a.end;
+inline overload nextValue(a:ReverseRange[T]) {
+    if (a.begin < a.end) {
+        dec(a.end);
+        return Maybe(a.end);
+    } else {
+        return nothing(T);
+    }
 }
 
 [T]
@@ -155,14 +158,13 @@ inline overload reverseIterator(a:CoordinateRange[T]) =
     ReverseCoordinateRange(a.end, a.begin);
 
 [T]
-inline overload hasNext?(a:CoordinateRange[T]) = a.begin < a.end;
-
-[T]
-inline overload next(a:CoordinateRange[T]) {
-    assert["boundsChecks"](hasNext?(a), "next of empty ", CoordinateRange[T]);
-    var x = captureValues(..a.begin^);
-    inc(a.begin);
-    return forward ..forwardValues(x);
+inline overload nextValue(a:CoordinateRange[T]) {
+    if (a.begin < a.end) {
+        var p = a.begin;
+        inc(a.begin);
+        return move(p);
+    } else
+        return T();
 }
 
 [T]
@@ -170,7 +172,6 @@ inline overload begin(a:CoordinateRange[T]) = a.begin;
 
 [T]
 inline overload end(a:CoordinateRange[T]) = a.end;
-
 
 
 //
@@ -202,14 +203,14 @@ inline overload iterator(a:ReverseCoordinateRange[T]) = a;
 inline overload reverseIterator(a:ReverseCoordinateRange[T]) =
     CoordinateRange(a.begin, a.end);
 
+// FIXME multiple-value and rvalue coordinates
 [T]
-inline overload hasNext?(a:ReverseCoordinateRange[T]) = a.begin < a.end;
-
-[T]
-inline overload next(a:ReverseCoordinateRange[T]) {
-    assert["boundsChecks"](hasNext?(a), "next of empty ", ReverseCoordinateRange[T]);
-    dec(a.end);
-    return forward ..a.end^;
+inline overload nextValue(a:ReverseCoordinateRange[T]) {
+    if (a.begin < a.end) {
+        dec(a.end);
+        return a.end;
+    } else
+        return T();
 }
 
 [T]

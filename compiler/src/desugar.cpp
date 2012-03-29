@@ -69,11 +69,24 @@ static vector<IdentifierPtr> identV(IdentifierPtr x) {
     return v;
 }
 
+//  for (<vars> in <expr>) <body>
+// becomes:
+//  {
+//      forward %expr = <expr>;
+//      forward %iter = iterator(%expr);
+//      while (var %value = nextValue(%iter); hasValue?(%value)) {
+//          forward <vars> = getValue(%value);
+//          <body>
+//      }
+//  }
+
 StatementPtr desugarForStatement(ForPtr x) {
     IdentifierPtr exprVar = new Identifier("%expr");
     exprVar->location = x->location;
     IdentifierPtr iterVar = new Identifier("%iter");
     iterVar->location = x->location;
+    IdentifierPtr valueVar = new Identifier("%value");
+    valueVar->location = x->location;
 
     BlockPtr block = new Block();
     block->location = x->body->location;
@@ -87,30 +100,40 @@ StatementPtr desugarForStatement(ForPtr x) {
     ExprPtr exprName = new NameRef(exprVar);
     exprName->location = x->location;
     iteratorCall->parenArgs->add(exprName);
-    BindingPtr iteratorBinding = new Binding(VAR,
+    BindingPtr iteratorBinding = new Binding(FORWARD,
         identV(iterVar),
         new ExprList(iteratorCall.ptr()));
     iteratorBinding->location = x->body->location;
     bs.push_back(iteratorBinding.ptr());
 
-    CallPtr hasNextCall = new Call(operator_expr_hasNextP(), new ExprList());
-    hasNextCall->location = x->body->location;
-
+    vector<StatementPtr> valueStatements;
+    CallPtr nextValueCall = new Call(operator_expr_nextValue(), new ExprList());
+    nextValueCall->location = x->body->location;
     ExprPtr iterName = new NameRef(iterVar);
     iterName->location = x->body->location;
-    hasNextCall->parenArgs->add(iterName);
-    CallPtr nextCall = new Call(operator_expr_next(), new ExprList());
-    nextCall->location = x->body->location;
-    nextCall->parenArgs->add(iterName);
-    ExprPtr unpackNext = new Unpack(nextCall.ptr());
-    unpackNext->location = x->body->location;
+    nextValueCall->parenArgs->add(iterName);
+    BindingPtr nextValueBinding = new Binding(VAR,
+        identV(valueVar),
+        new ExprList(nextValueCall.ptr()));
+    nextValueBinding->location = x->body->location;
+    valueStatements.push_back(nextValueBinding.ptr());
+
+    CallPtr hasValueCall = new Call(operator_expr_hasValueP(), new ExprList());
+    hasValueCall->location = x->body->location;
+    ExprPtr valueName = new NameRef(valueVar);
+    valueName->location = x->body->location;
+    hasValueCall->parenArgs->add(valueName);
+
+    CallPtr getValueCall = new Call(operator_expr_getValue(), new ExprList());
+    getValueCall->location = x->body->location;
+    getValueCall->parenArgs->add(valueName);
     BlockPtr whileBody = new Block();
     whileBody->location = x->body->location;
     vector<StatementPtr> &ws = whileBody->statements;
-    ws.push_back(new Binding(FORWARD, x->variables, new ExprList(unpackNext)));
+    ws.push_back(new Binding(FORWARD, x->variables, new ExprList(getValueCall.ptr())));
     ws.push_back(x->body);
 
-    StatementPtr whileStmt = new While(hasNextCall.ptr(), whileBody.ptr());
+    StatementPtr whileStmt = new While(valueStatements, hasValueCall.ptr(), whileBody.ptr());
     whileStmt->location = x->location;
     bs.push_back(whileStmt);
     return block.ptr();

@@ -9,10 +9,10 @@ record OptionSpec(
 overload printTo(out, it : OptionSpec){
   var iter = iterator(it.names);
 
-  while(hasNext?(iter)){
-    printTo(out, next(iter));
-    if(hasNext?(iter)) printTo(out, "/");
-  }
+  interleave(it.names,
+    () -> { printTo(out, "/"); },
+    name -> { printTo(out, name); },
+  );
 }
 
 enum Flags( HAS_VALUE, REQUIRED, ALLOWS_REPEATS );

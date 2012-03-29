@@ -196,9 +196,8 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
 overload insert(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var pos = SizeT(i);
-    var iter = iterator(seq);
-    while (hasNext?(iter)) {
-        insert(a, pos, next(iter));
+    for (x in seq) {
+        insert(a, pos, x);
         pos += 1;
     }
 }
@@ -209,9 +208,8 @@ overload insert(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
-        var iter = iterator(seq);
-        while (hasNext?(iter)) {
-            first^ <-- next(iter);
+        for (x in seq) {
+            first^ <-- x;
             inc(first);
         }
     }
