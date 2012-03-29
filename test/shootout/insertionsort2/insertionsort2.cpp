@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void insertionSort(vector<int> @a) {
+void insertionSort(vector<int> &a) {
     vector<int>::iterator i = a.begin() + 1;
     while (i < a.end()) {
         int x = *i;
@@ -18,13 +18,13 @@ void insertionSort(vector<int> @a) {
     }
 }
 
-void swap(int @a, int @b) {
+void swap(int &a, int &b) {
     int temp = a;
     a = b;
     b = temp;
 }
 
-void reverse(vector<int> @a) {
+void reverse(vector<int> &a) {
     int n = a.size();
     for (int i = 0; i < n/2; ++i) {
         swap(a[i], a[n-i-1]);
