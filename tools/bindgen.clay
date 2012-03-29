@@ -304,7 +304,7 @@ withForwardDecl(cursor:CXCursor, f) {
 cursorMatchesPatterns(cursor:CXCursor, options:BindgenOptions) : Bool {
     var file = CXFile();
     clang_getSpellingLocation(clang_getCursorLocation(cursor),
-        &file, null(UInt), null(UInt), null(UInt));
+        @file, null(UInt), null(UInt), null(UInt));
 
     // builtin definitions have a null file
     if (null?(file)) {
@@ -345,7 +345,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             var unnamedFieldIndex = 0;
             printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
             clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
-                CXClientData(&unnamedFieldIndex));
+                CXClientData(@unnamedFieldIndex));
             printlnTo(g_bindingsOut, ");\n");
         }
         return CXChildVisit_Recurse;
@@ -375,7 +375,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         // XXX dllimport/dllexport
         var attributes = FunctionDeclAttributes();
         clang_visitChildren(cursor, CXCursorVisitor(visitFunctionAttr),
-            CXClientData(&attributes));
+            CXClientData(@attributes));
 
         var type = clang_getCursorType(cursor);
 
@@ -611,6 +611,6 @@ main(argc, argv)
 
     var cursor = clang_getTranslationUnitCursor(unit);
 
-    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(&options));
+    clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(@options));
     return 0;
 }

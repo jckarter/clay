@@ -228,7 +228,7 @@ overload printTo(stream, x:T) {
 //
 
 overload printTo(stream, x:Char) {
-    write(stream, Pointer[Byte](&x), SizeT(1));
+    write(stream, Pointer[Byte](@x), SizeT(1));
 }
 
 [S when String?(S)]

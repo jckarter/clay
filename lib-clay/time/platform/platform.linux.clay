@@ -4,7 +4,7 @@ import os.errors.*;
 
 time() {
     var tv = unix.Struct_timeval();
-    var r = unix.gettimeofday(&tv, unix.__timezone_ptr_t(0));
+    var r = unix.gettimeofday(@tv, unix.__timezone_ptr_t(0));
     if (r == Type(r)(-1))
         throw GenericOSError(unix.errno());
     var secs = Double(tv.tv_sec);
@@ -35,7 +35,7 @@ timer() = Timer();
 start(t:Timer) {
     if (not t.running) {
     	var tv = unix.Struct_timespec();
-    	var r = unix.clock_gettime(t.clock, &tv);
+    	var r = unix.clock_gettime(t.clock, @tv);
     	if (r == Type(r)(-1))
         	throw GenericOSError(unix.errno());
         t.startTicks = tv.tv_sec * 1000000000 + tv.tv_nsec;
@@ -46,7 +46,7 @@ start(t:Timer) {
 stop(t:Timer) {
     if (t.running) {
     	var tv = unix.Struct_timespec();
-    	var r =unix.clock_gettime(t.clock, &tv);
+    	var r =unix.clock_gettime(t.clock, @tv);
     	if (r == Type(r)(-1))
         	throw GenericOSError(unix.errno());
         t.elapsedTicks = tv.tv_sec * 1000000000 + tv.tv_nsec - t.startTicks;

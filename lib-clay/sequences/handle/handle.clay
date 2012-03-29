@@ -25,7 +25,7 @@ overload UnderlyingContainerConstructor(#SequenceHandle[A]) =
 //
 
 [A when Sequence?(A)]
-inline sequenceHandle(seq:A) = SequenceHandle(&seq);
+inline sequenceHandle(seq:A) = SequenceHandle(@seq);
 
 
 

@@ -235,5 +235,5 @@ overload gamma_r (x:Double, signgamp:Pointer[Int]) {
 }
 
 
-overload lgamma(x:Double) = lgamma_r(x,&signgam);
-overload tgamma(x:Double) = gamma_r(x,&signgam);
+overload lgamma(x:Double) = lgamma_r(x,@signgam);
+overload tgamma(x:Double) = gamma_r(x,@signgam);

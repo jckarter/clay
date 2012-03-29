@@ -8,7 +8,7 @@ main() {
     var a = array(1,2,3);
     var b = array(0,0,0);
 
-    libc.memcpy(&b, &a, TypeSize(Array[Int,3]));
+    libc.memcpy(@b, @a, TypeSize(Array[Int,3]));
 
     println(b);
 

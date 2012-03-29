@@ -121,12 +121,12 @@ overload index(a:HashMap[K,V], key:K) {
 overload remove(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var prevNode = null(Node[K,V]);
-    var node = &a.buckets[i]^;
+    var node = @a.buckets[i]^;
     while (not null?(node)) {
         if (node^.key == key)
             break;
         prevNode = node;
-        node = &node^.next^;
+        node = @node^.next^;
     }
     if (null?(node))
         return false;
@@ -148,7 +148,7 @@ overload remove(a:HashMap[K,V], key:K) {
 overload items(forward a:HashMap[K,V]) {
     var x = HashMapItems(captureValue(a), K, V);
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = &next(x.bucketsIter)^;
+        x.node = @next(x.bucketsIter)^;
     return move(x);
 }
 
@@ -181,9 +181,9 @@ overload hasNext?(x:HashMapItems[C,K,V]) = not null?(x.node);
 overload next(x:HashMapItems[C,K,V]) {
     assert(not null?(x.node));
     ref key, value = x.node^.key, x.node^.value;
-    x.node = &x.node^.next^;
+    x.node = @x.node^.next^;
     while (null?(x.node) and hasNext?(x.bucketsIter))
-        x.node = &next(x.bucketsIter)^;
+        x.node = @next(x.bucketsIter)^;
     return ref key, value;
 }
 
@@ -212,11 +212,11 @@ private bucketId(a:HashMap[K,V], key:K) =
 
 [K,V]
 private findInBucket(_node:NodePtr[K,V], key:K) {
-    var node = &_node^;
+    var node = @_node^;
     while (not null?(node)) {
         if (node^.key == key)
-            return &node^.value;
-        node = &node^.next^;
+            return @node^.value;
+        node = @node^.next^;
     }
     return null(V);
 }
@@ -229,10 +229,10 @@ private grow(a:HashMap[K,V]) {
     resize(a.buckets, size(oldbuckets) * 2);
 
     for(i in range(0, size(oldbuckets))) {
-        var node = &oldbuckets[i]^;
+        var node = @oldbuckets[i]^;
         while (not null?(node)) {
             put(a, move(node^.key), move(node^.value));
-            node = &node^.next^;
+            node = @node^.next^;
         }
     }
 }

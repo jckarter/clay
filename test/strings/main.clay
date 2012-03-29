@@ -13,7 +13,7 @@ main() {
     var str = String();
     var n = libc.strlen(cstr);
     resize(str, n+1);
-    libc.strcpy(Pointer[Int8](&str[0]), cstr);
+    libc.strcpy(Pointer[Int8](@str[0]), cstr);
     resize(str, n);
     println("size = ", n, ", str = ", str);
 }

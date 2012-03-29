@@ -16,7 +16,7 @@ private record LineSequence (
     f : File,
 );
 
-overload iterator(x:LineSequence) = LineIterator(&x.f, false, String());
+overload iterator(x:LineSequence) = LineIterator(@x.f, false, String());
 
 
 

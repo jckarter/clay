@@ -1,14 +1,14 @@
 var x = 0;
 
 main() {
-    atomicStore(OrderSeqCst, &x, 2);
-    println(atomicLoad(OrderSeqCst, &x));
-    println(atomicRMW(OrderSeqCst, RMWAdd, &x, 2));
+    atomicStore(OrderSeqCst, @x, 2);
+    println(atomicLoad(OrderSeqCst, @x));
+    println(atomicRMW(OrderSeqCst, RMWAdd, @x, 2));
 
-    println(atomicCompareExchange(OrderSeqCst, &x, 5, 17));
-    println(atomicCompareExchange(OrderSeqCst, &x, 4, 17));
+    println(atomicCompareExchange(OrderSeqCst, @x, 5, 17));
+    println(atomicCompareExchange(OrderSeqCst, @x, 4, 17));
 
-    println(atomicLoad(OrderSeqCst, &x));
+    println(atomicLoad(OrderSeqCst, @x));
 
     atomicFence(OrderSeqCst);
     var x0 = x;

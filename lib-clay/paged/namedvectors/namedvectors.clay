@@ -95,7 +95,7 @@ overload destroy(x:NamedVector[T]) {
 overload Vector?(#NamedVector[T]) = true;
 
 [T]
-overload vectorData(a:NamedVector[T]) = &(a.data^);
+overload vectorData(a:NamedVector[T]) = @(a.data^);
 
 [T]
 overload vectorSize(a:NamedVector[T]) = a.header^.size;

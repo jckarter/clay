@@ -234,7 +234,7 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
 
 [T]
 fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
-    var ptr = &value;
+    var ptr = @value;
     eachLocationWithCleanup(begin, end, x => { x <-- ptr^; });
 }
 
@@ -243,7 +243,7 @@ zeroMemory(begin:Pointer[T], end:Pointer[T]) {
     fillMemory(begin, end, T(0));
 }
 
-zeroObject(o) { zeroMemory(Pointer[UInt8](&o), Pointer[UInt8](&o + 1)); }
+zeroObject(o) { zeroMemory(Pointer[UInt8](@o), Pointer[UInt8](@o + 1)); }
 
 
 //

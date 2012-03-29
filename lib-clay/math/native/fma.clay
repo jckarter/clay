@@ -145,9 +145,9 @@ overload fma(x:Double, y:Double, z:Double) {
 		return z;
 
 	var ex,ey,ez = 0,0,0;
-	var xs = frexp(x, &ex);
-	var ys = frexp(y, &ey);
-	var zs = frexp(z, &ez);
+	var xs = frexp(x, @ex);
+	var ys = frexp(y, @ey);
+	var zs = frexp(z, @ez);
 	var oround = fegetround();
 	var spread = ex + ey - ez;
 

@@ -16,13 +16,13 @@ overload Complex?(#Complex80) = true;
 private define re;
 private define im;
 
-inline overload re(z:Complex32) = Pointer[Float](&z);
-inline overload re(z:Complex64) = Pointer[Double](&z);
-inline overload re(z:Complex80) = Pointer[LongDouble](&z);
+inline overload re(z:Complex32) = Pointer[Float](@z);
+inline overload re(z:Complex64) = Pointer[Double](@z);
+inline overload re(z:Complex80) = Pointer[LongDouble](@z);
 
-inline overload im(z:Complex32) = (Pointer[IFloat](&z)+1);
-inline overload im(z:Complex64) = (Pointer[IDouble](&z)+1);
-inline overload im(z:Complex80) = (Pointer[ILongDouble](&z)+1);
+inline overload im(z:Complex32) = (Pointer[IFloat](@z)+1);
+inline overload im(z:Complex64) = (Pointer[IDouble](@z)+1);
+inline overload im(z:Complex80) = (Pointer[ILongDouble](@z)+1);
 
 [C when Complex?(C)]
 inline real(z:C) = re(z)^;

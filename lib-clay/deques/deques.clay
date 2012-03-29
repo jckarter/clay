@@ -599,10 +599,10 @@ private allocateNode(T) = allocateRawMemory(T, DequeBufferSize(T));
 
 private printMap(deque) {
     for (x in CoordinateRange(deque.map, deque.map + deque.mapSize)) {
-        print(&x, " => ", x);
-        if (&x == deque.begin.node)
+        print(@x, " => ", x);
+        if (@x == deque.begin.node)
             println(" <- begin");
-        else if (&x == deque.end.node)
+        else if (@x == deque.end.node)
             println(" <- end");
         else
             println();

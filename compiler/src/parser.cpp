@@ -537,7 +537,7 @@ static bool prefixExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!opsymbol("&")) return false;
+    if (!symbol("@")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
     x = new VariadicOp(ADDRESS_OF, new ExprList(a));

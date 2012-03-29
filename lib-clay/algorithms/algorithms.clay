@@ -99,11 +99,11 @@ overload select(a:A, f) {
 overload select(a:A, f) {
     var iter = iterator(a);
     assert(hasNext?(iter));
-    var result = &next(iter);
+    var result = @next(iter);
     while (hasNext?(iter)) {
         forward v = next(iter);
         if (f(v, result^))
-            result = &v;
+            result = @v;
     }
     return ref result^;
 }

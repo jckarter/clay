@@ -687,7 +687,7 @@ overload BitwiseMoveAssignedType?(#T)
 // identity test
 //
 
-inline is?(x, y) = &x == &y;
+inline is?(x, y) = @x == @y;
 inline isNot?(x, y) = not is?(x, y);
 
 
