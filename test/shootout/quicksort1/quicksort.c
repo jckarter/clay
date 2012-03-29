@@ -16,10 +16,10 @@ void sortRange(int *a, int start, int end) {
         for (int i = start+1; i < end; ++i) {
             if (a[i] < a[start]) {
                 m += 1;
-                swap(@a[i], @a[m]);
+                swap(&a[i], &a[m]);
             }
         }
-        swap(@a[start], @a[m]);
+        swap(&a[start], &a[m]);
         sortRange(a, start, m);
         sortRange(a, m+1, end);
     }
@@ -27,7 +27,7 @@ void sortRange(int *a, int start, int end) {
 
 void reverse(int *a, int size) {
     for (int i = 0; i < size/2; ++i)
-        swap(@a[i], @a[size-i-1]);
+        swap(&a[i], &a[size-i-1]);
 }
 
 void swap(int *x, int *y) {
