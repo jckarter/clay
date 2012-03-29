@@ -82,7 +82,7 @@ alias EHOSTDOWN       = 64;         /* Host is down */
 alias EHOSTUNREACH    = 65;         /* No route to host */
 alias ENOTEMPTY       = 66;         /* Directory not empty */
 
-/* quotas & mush */
+/* quotas and mush */
 alias EPROCLIM        = 67;         /* Too many processes */
 alias EUSERS          = 68;         /* Too many users */
 alias EDQUOT          = 69;         /* Disc quota exceeded */

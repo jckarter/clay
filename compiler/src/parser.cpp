@@ -537,7 +537,7 @@ static bool prefixExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    if (!opsymbol("&")) return false;
+    if (!symbol("@")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
     x = new VariadicOp(ADDRESS_OF, new ExprList(a));
@@ -589,9 +589,7 @@ static bool operatorOp(string &op) {
     int p = save();
     
     const char *s[] = {
-        "<--", "-->", "=>", "->", "=","++=",
-        "+=", "-=", "*=", "/=", "\\=", "%=",
-        NULL
+        "<--", "-->", "=>", "->", "=", NULL
     };
     for (const char **a = s; *a; ++a) {
         if (opsymbol(*a)) return false;
@@ -610,6 +608,7 @@ static bool preopExpr(ExprPtr &x) {
     }
     restore(p);
     if (!operatorOp(op)) return false;
+    if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) == ":=") return false;
     ExprPtr y;
     if (!prefixExpr(y)) return false;
     ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
@@ -634,7 +633,6 @@ static bool prefixExpr(ExprPtr &x) {
 // infix binary operator expr
 //
 
-
 static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
@@ -643,6 +641,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     int p = save();
     if (!operatorOp(op)) return false;
     while (true) {
+        if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) == ":=") return false;
         exprs->add(new NameRef(new Identifier(op)));
         if (!prefixExpr(b)) {
             restore(p);
@@ -1182,31 +1181,16 @@ static bool initAssignment(StatementPtr &x) {
     return true;
 }
 
-
-static bool updateopstring(string &op) {
-    int p = save();
-    const char *s[] = {"+=", "-=", "*=", "/=","\\=", "%=", "++=", NULL};
-    const string ops[] = {"+", "-", "*", "/", "\\", "%", "++"};
-    for (const char **a = s; *a; ++a) {
-        restore(p);
-        if (opsymbol(*a)) {
-            int i = a - s;
-            op = ops[i];
-            return true;
-        }
-    }
-    return false;
-}
-
 static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y,z;
     if (!expression(y)) return false;
     string op;
-    if (!updateopstring(op)) return false;
+    if (!operatorOp(op)) return false;
+    if (op.size() > 2 && op.substr(op.size()-2,op.size()-1) != ":=") return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op.substr(0,op.size()-2))));
     exprs->add(y);
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();

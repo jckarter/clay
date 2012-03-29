@@ -3,7 +3,7 @@ var _nextId = 0;
 
 nextId() {
     var id = _nextId;
-    _nextId += 1;
+    _nextId +:= 1;
     return id;
 }
 

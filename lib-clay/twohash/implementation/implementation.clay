@@ -160,7 +160,7 @@ pEntryAt(th: TwoHash[E], key: K)
             {
                 ref entry = th.tables[i][hash[i]].entries[j];
                 if (keyMatch?(entry, key))
-                    return &entry;
+                    return @entry;
             }
         }
     }
@@ -184,7 +184,7 @@ retry:
         for (k in range(16))
         {
             if (th.tables[i][hash[i]].hashBytes[k] != 255)
-                entryCount[i] += 1;
+                entryCount[i] +:= 1;
         }
     }
     
@@ -199,7 +199,7 @@ retry:
     if (entryCount[1] < entryCount[0])
         bi = 1;
         
-    th.size += 1;
+    th.size +:= 1;
     return allocateInBucket(th, th.tables[bi][hash[bi]], entry, hash[2]);
 }
 
@@ -208,7 +208,7 @@ retry:
 //
 
 [P]
-overload inside(v, p: P) = (SizeT(p) >= SizeT(&v) and SizeT(p) < SizeT(&v+1));
+overload inside(v, p: P) = (SizeT(p) >= SizeT(@v) and SizeT(p) < SizeT(@v+1));
 
 [R, P when CallDefined?(begin, R)]
 inside(range: R, p: P) = (SizeT(p) >= SizeT(begin(range)) and SizeT(p) < SizeT(end(range)));
@@ -221,13 +221,13 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
     if (inside(th.tables[1], pEntry)) i = 1;
     assert(i>=0);
 
-    var j = (SizeT(pEntry)-SizeT(&th.tables[i][0].entries[0])) \ TypeSize(Bucket[E]);
-    var k = (SizeT(pEntry)-SizeT(&th.tables[i][j].entries[0])) \ TypeSize(E);
-    assert(&th.tables[i][j].entries[k] == pEntry);
+    var j = (SizeT(pEntry)-SizeT(@th.tables[i][0].entries[0])) \ TypeSize(Bucket[E]);
+    var k = (SizeT(pEntry)-SizeT(@th.tables[i][j].entries[0])) \ TypeSize(E);
+    assert(@th.tables[i][j].entries[k] == pEntry);
 
     th.tables[i][j].hashBytes[k] = 255uss;
     destroy(th.tables[i][j].entries[k]);
-    th.size -= 1;
+    th.size -:= 1;
 }
 
 //
@@ -250,7 +250,7 @@ record TwoHashEntry[E, F]
 [E, F]
 overload TwoHashEntries[E, F](th: TwoHash[E])
 {
-    var x = TwoHashEntries[E, F](&th, 0, 0, 0);
+    var x = TwoHashEntries[E, F](@th, 0, 0, 0);
     refillMask(x);
     return x;
 }
@@ -283,10 +283,10 @@ overload getValue(x: TwoHashEntry[E, F]) = forward ..F(&x.entry);
 [E, F]
 nextBucket(x: TwoHashEntries[E, F])
 {
-    x.j += 1;
+    x.j +:= 1;
     if (x.j == size(x.data^.tables[x.i]))
     {
-        x.i += 1;
+        x.i +:= 1;
         x.j = 0;
     }
 }
@@ -319,7 +319,7 @@ overload size(t: Table[B]) = bitshl(1, t.ln2_size);
 overload index(t: Table[B], idx) = ref t.ptr[idx];
 
 [B]
-overload begin(t: Table[B]) = &t.ptr[0];
+overload begin(t: Table[B]) = @t.ptr[0];
 
 [B]
 overload end(t: Table[B]) = begin(t) + size(t);
@@ -375,7 +375,7 @@ allocateInBucket(th, b: Bucket[E], entry: E, hashByte)
         if (b.hashBytes[k] == 255)
         {
             b.hashBytes[k] = Byte(hashByte);
-            var pEntry = &b.entries[k];
+            var pEntry = @b.entries[k];
             pEntry^ <-- moveEntry(entry, th);
             return pEntry;
         }
@@ -430,11 +430,11 @@ debugPrint(th: TwoHash[E])
                 var v = th.tables[i][j].hashBytes[k];
                 if (showBuckets and k != 15) print(v, ", ");
                 if (showBuckets and k == 15) println(v, "]");
-                if (v != 255) uses += 1;
+                if (v != 255) uses +:= 1;
             }
             var usage = Int( Double(uses)/(16) * 100 );
             if (showBuckets) println("bucket[", j,"] has ", usage, "% occupation");
-            table_uses += uses;
+            table_uses +:= uses;
             /*
             for (k, v in enumerated(th.tables[i][j].entries))
             {
@@ -446,7 +446,7 @@ debugPrint(th: TwoHash[E])
         }
         var usage = Int( Double(table_uses)/(16 * size(th.tables[i])) * 100 );
         println("table", i," has ", usage, "% occupation");
-        total_uses += table_uses;
+        total_uses +:= table_uses;
     }
     var usage = Int( Double(total_uses)/( 16 * (size(th.tables[0]) + size(th.tables[1])) ) * 100 );
     println("hashtable has ", usage, "% occupation");

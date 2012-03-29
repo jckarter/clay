@@ -109,5 +109,5 @@ private inline unboxAlong(x, Target, first, ..rest) {
 
 [Target]
 inline overload unboxAlong(x:Target, #Target) {
-    return &x;
+    return @x;
 }

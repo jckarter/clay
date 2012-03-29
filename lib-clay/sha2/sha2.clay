@@ -129,7 +129,7 @@ sha256(message: S) --> returned: SHA256 {
         sha256chunk(state, tempState, chunkSpace, tailChunk);
         messageTailSize = 0;
     } else {
-        messageTailSize += 1;
+        messageTailSize +:= 1;
     }
 
     zeroMemory(
@@ -142,7 +142,7 @@ sha256(message: S) --> returned: SHA256 {
     // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
     // we can safely use bitcast here. Need to add support for custom record
     // alignment.
-    ref returnedWords = Pointer[Array[UInt32, 8]](&returned.digest)^;
+    ref returnedWords = Pointer[Array[UInt32, 8]](@returned.digest)^;
     for (returnedWord, stateWord in zipped(returnedWords, state))
         returnedWord = hostToNetwork(stateWord);
 }

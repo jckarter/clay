@@ -83,7 +83,7 @@ makeSockaddrParams(addr: T)
         szsockaddr: SocklenT
 {
     sockaddr <-- makeSockaddr(addr);
-    psockaddr <-- Pointer[Sockaddr](&sockaddr);
+    psockaddr <-- Pointer[Sockaddr](@sockaddr);
     szsockaddr <-- SocklenT(TypeSize(Type(sockaddr)));
 }
 
@@ -105,13 +105,13 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     if (sockaddr.ss_family != AF_INET
         or szsockaddr < TypeSize(Sockaddr_in))
         throw InvalidInetAddress(sockaddr, szsockaddr);
-    var psockaddr_in = Pointer[Sockaddr_in](&sockaddr);
+    var psockaddr_in = Pointer[Sockaddr_in](@sockaddr);
     addr.host <-- psockaddr_in^.sin_addr;
     addr.port <-- networkToHost(psockaddr_in^.sin_port);
 }
 
 overload makeSockaddr(inet: Inet) --> sin: Sockaddr_in {
-    memset(RawPointer(&sin), 0, TypeSize(Sockaddr_in));
+    memset(RawPointer(@sin), 0, TypeSize(Sockaddr_in));
     sin.sin_family = AF_INET;
     sin.sin_port <-- hostToNetwork(inet.port);
     sin.sin_addr <-- inet.host;
@@ -196,7 +196,7 @@ overload ListenSocket(addr: T, backlog: I)
         var sockaddr, psockaddr, szsockaddr = ..makeSockaddrParams(addr);
         var sockoptValue = 1;
         socketCall(platform.setsockopt, socket.raw,
-            SOL_SOCKET, SO_REUSEADDR, platform.DataPointer(&sockoptValue), SocklenT(TypeSize(Int))
+            SOL_SOCKET, SO_REUSEADDR, platform.DataPointer(@sockoptValue), SocklenT(TypeSize(Int))
         );
         socketCall(platform.bind, socket.raw, psockaddr, szsockaddr);
         socketCall(platform.listen, socket.raw, Int(backlog));
@@ -215,10 +215,10 @@ accept(listener: ListenSocket[T])
         addr: T
 {
     var sockaddr = Sockaddr_storage();
-    var psockaddr = Pointer[Sockaddr](&sockaddr);
+    var psockaddr = Pointer[Sockaddr](@sockaddr);
     var szsockaddr = SocklenT(TypeSize(Sockaddr_storage));
 
-    socket.raw <-- socketCall(platform.accept, listener.raw, psockaddr, &szsockaddr);
+    socket.raw <-- socketCall(platform.accept, listener.raw, psockaddr, @szsockaddr);
     try {
         addr <-- T(sockaddr, szsockaddr);
     } catch (ex) {

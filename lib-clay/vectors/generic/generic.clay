@@ -198,7 +198,7 @@ overload insert(a:V, i:I, seq:S) {
     var pos = SizeT(i);
     for (x in seq) {
         insert(a, pos, x);
-        pos += 1;
+        pos +:= 1;
     }
 }
 

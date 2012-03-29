@@ -30,14 +30,14 @@ overload fmod(a:Double, b:Double) {
 	    if(GET_IEEE_HIGH(xdb)==0) {
 	    	ix,i = -1043, GET_IEEE_LOW(xdb);
 			while (i>0){ 
-				ix -=1;
+				ix -:=1;
 				i = bitshl(i,1);
 			}
 	    } 
 	    else {
 	    	ix,i = -1022, bitshl(GET_IEEE_HIGH(xdb),11);
 			while (i>0) { 
-				ix -=1;
+				ix -:=1;
 				i = bitshl(i,1);
 			}
 	    }
@@ -49,14 +49,14 @@ overload fmod(a:Double, b:Double) {
 		if(GET_IEEE_HIGH(ydb)==0) {
 	    	iy,i = -1043, GET_IEEE_LOW(ydb);
 			while (i>0){ 
-				iy -=1;
+				iy -:=1;
 				i = bitshl(i,1);
 			}
 	    } 
 	    else {
 	    	iy,i = -1022, bitshl(GET_IEEE_HIGH(ydb),11);
 			while (i>0) { 
-				iy -=1;
+				iy -:=1;
 				i = bitshl(i,1);
 			}
 	    }
@@ -98,7 +98,7 @@ overload fmod(a:Double, b:Double) {
 		dec(n);
 	    hz = GET_IEEE_HIGH(xdb)-GET_IEEE_HIGH(ydb);
 	    lz = GET_IEEE_LOW(xdb)-GET_IEEE_LOW(ydb); 
-	    if(GET_IEEE_LOW(xdb) < GET_IEEE_LOW(ydb)) hz -= 1;
+	    if(GET_IEEE_LOW(xdb) < GET_IEEE_LOW(ydb)) hz -:= 1;
 	    if(hz < 0){
 	    	GET_IEEE_HIGH(xdb) = GET_IEEE_HIGH(xdb)+GET_IEEE_HIGH(xdb)+bitshr(GET_IEEE_LOW(xdb),31); 
 	    	GET_IEEE_LOW(xdb) = GET_IEEE_LOW(xdb)+GET_IEEE_LOW(xdb);
@@ -112,7 +112,7 @@ overload fmod(a:Double, b:Double) {
 	}
 	hz=GET_IEEE_HIGH(xdb)-GET_IEEE_HIGH(ydb);
 	lz=GET_IEEE_LOW(xdb)-GET_IEEE_LOW(ydb); 
-	if(GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb)) hz -= 1;
+	if(GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb)) hz -:= 1;
 	if(hz>=0) {
 		GET_IEEE_HIGH(xdb)=hz;
 		GET_IEEE_LOW(xdb)=lz;
@@ -124,7 +124,7 @@ overload fmod(a:Double, b:Double) {
 	while(GET_IEEE_HIGH(xdb)<0x00100000) {		/* normalize x */
 	    GET_IEEE_HIGH(xdb) = GET_IEEE_HIGH(xdb)+GET_IEEE_HIGH(xdb)+bitshr(GET_IEEE_LOW(xdb),31);
 	    GET_IEEE_LOW(xdb) = GET_IEEE_LOW(xdb)+GET_IEEE_LOW(xdb);
-	    iy -= 1;
+	    iy -:= 1;
 	}
 	if(iy>= -1022) {	/* normalize output */
 	    GET_IEEE_HIGH(xdb) = bitor((GET_IEEE_HIGH(xdb)-0x00100000),bitshl((iy+1023),20));
@@ -145,7 +145,7 @@ overload fmod(a:Double, b:Double) {
 	    }
 	    SET_IEEE(xdb,bitor(GET_IEEE_HIGH(xdb),sx),GET_IEEE_LOW(xdb));
 	    x = GET_IEEE_DB(xdb);
-	    x *= ONE;		/* create necessary signal */
+	    x *:= ONE;		/* create necessary signal */
 	}
 	return x;		/* exact output */
 }

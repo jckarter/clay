@@ -86,7 +86,7 @@ overload unmarshalFrom(context, begin: Pointer[Byte], end: Pointer[Byte], #T)
     var newBegin_ = begin + TypeSize(T);
     if (newBegin_ > end)
         throw UnmarshalUnexpectedEOF();
-    copyNonoverlappingMemory(Pointer[Byte](&returned), begin, newBegin_);
+    copyNonoverlappingMemory(Pointer[Byte](@returned), begin, newBegin_);
     newBegin <-- newBegin_;
 }
 
@@ -274,7 +274,7 @@ overload marshaledSize(context, seq: S) = sequenceMarshaledSize(context, seq);
 overload marshalTo(context, buffer_: Pointer[Byte], forward seq: S) --> buffer: Pointer[Byte] {
     buffer <-- buffer_;
     var sizeBuffer = buffer;
-    buffer += TypeSize(MarshalSize);
+    buffer +:= TypeSize(MarshalSize);
     var n = MarshalSize(0);
     for (x in seq) {
         inc(n);
@@ -404,7 +404,7 @@ overload marshaledSize(context: MarshalContext, p: SharedPointer[T]) {
             var id = context.pointerCount;
             context.pointers[rawPtr]
                 = MarshalPointerTracker(id, true, false);
-            context.pointerCount += 1;
+            context.pointerCount +:= 1;
             return marshaledSize(context, SHARED_POINTER_DATA)
                 + marshaledSize(context, id)
                 + marshaledSize(context, p^);
@@ -431,7 +431,7 @@ overload marshalTo(context: MarshalContext, buffer_: Pointer[Byte], p: SharedPoi
             var id = context.pointerCount;
             context.pointers[rawPtr]
                 = MarshalPointerTracker(id, false, true);
-            context.pointerCount += 1;
+            context.pointerCount +:= 1;
             var buffer = marshalTo(context, buffer_, SHARED_POINTER_DATA);
             buffer = marshalTo(context, buffer, id);
             buffer = marshalTo(context, buffer, p^);
@@ -479,7 +479,7 @@ overload unmarshalFrom(context: UnmarshalContext,
             throw UnmarshalIncompleteObjectGraph();
 
         var ptr = Pointer[RefCounted[UnmarshaledType(T)]](pointerState^);
-        ptr^.refCount += 1;
+        ptr^.refCount +:= 1;
         return SharedPointer[UnmarshaledType(T)](ptr), begin;
     }
     case (SHARED_POINTER_DATA) {

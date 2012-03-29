@@ -70,7 +70,7 @@ overload cstring(o: O) = o.UTF8String();
 //
 [T]
 makeNSValue(value: T)
-    = NSValue.valueWithBytes_objCType(RawPointer(&value), cstring(encode(T)));
+    = NSValue.valueWithBytes_objCType(RawPointer(@value), cstring(encode(T)));
 [T when ObjectRef?(T)]
 overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
 
@@ -87,7 +87,7 @@ fromNSValue(#T, o: O) {
 
 [T, O when ObjectRef?(O)]
 fromNSValueUnsafe(#T, o: O) --> returned: T {
-    o.getValue(RawPointer(&returned));
+    o.getValue(RawPointer(@returned));
 }
 
 [T, O when ObjectRef?(O)]
@@ -172,7 +172,7 @@ overload iterator(x:NSFastEnumerationIterator) = x;
 private refreshIterator(i: NSFastEnumerationIterator) {
     i.n = NSUInteger(0);
     i.count = i.delegate(
-        &i.state, begin(i.objects), NSUInteger(FAST_ENUMERATION_BUFFER_SIZE)
+        @i.state, begin(i.objects), NSUInteger(FAST_ENUMERATION_BUFFER_SIZE)
     );
 }
 

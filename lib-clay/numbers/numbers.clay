@@ -344,12 +344,12 @@ inline overload (-)(a:A) = numericNegate(a);
 
 [A when Numeric?(A)]
 inline overload inc(a:A) {
-    a += A(1);
+    a +:= A(1);
 }
 
 [A when Numeric?(A)]
 inline overload dec(a:A) {
-    a -= A(1);
+    a -:= A(1);
 }
 
 

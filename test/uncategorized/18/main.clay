@@ -10,14 +10,14 @@ external compare(pa:RawPointer, pb:RawPointer) : Int {
     return 0;
 }
 
-testCompare(a, b) = compare(RawPointer(&a), RawPointer(&b));
+testCompare(a, b) = compare(RawPointer(@a), RawPointer(@b));
 
 main() {
     var a = Array[Int, 100]();
     var x = Int(size(a));
     for (e in a) {
         e = 2*x;
-        x -= 1;
+        x -:= 1;
     }
 
     println("a[0], a[2] = ", a[0], ", ", a[2]);
@@ -26,7 +26,7 @@ main() {
     println("compare test = ", testCompare(a[0], a[0]));
     println("compare test = ", testCompare(a[2], a[0]));
 
-    qsort(RawPointer(&a[0]),
+    qsort(RawPointer(@a[0]),
           size(a),
           TypeSize(Int),
           compare);

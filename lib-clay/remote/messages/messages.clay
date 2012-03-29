@@ -2,13 +2,13 @@ import remote.marshaling.*;
 import maybe.*;
 
 private readMarshalSize(stream) --> returned: MarshalSize {
-    readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+    readN(stream, Pointer[Byte](@returned), TypeSize(MarshalSize));
 }
 
 private maybeReadMarshalSize(stream) {
     var returned = MarshalSize();
     try {
-        readN(stream, Pointer[Byte](&returned), TypeSize(MarshalSize));
+        readN(stream, Pointer[Byte](@returned), TypeSize(MarshalSize));
         return Maybe(returned);
     }
     catch (e:PrematureEOF) {
@@ -17,7 +17,7 @@ private maybeReadMarshalSize(stream) {
 }
 
 private writeMarshalSize(stream, n: MarshalSize) {
-    write(stream, Pointer[Byte](&n), TypeSize(MarshalSize));
+    write(stream, Pointer[Byte](@n), TypeSize(MarshalSize));
 }
 
 
@@ -89,7 +89,7 @@ private consume(stream, bytes_) {
         var numRead = read(stream, begin(buf), min(SizeT(4096), bytes));
         if (numRead == 0)
             return;
-        bytes -= numRead;
+        bytes -:= numRead;
     }
 }
 

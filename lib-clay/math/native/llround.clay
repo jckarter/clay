@@ -15,7 +15,7 @@ overload llround(x:Float) {
         else if (j0 >= 23)
             result = numericConvert(Long,bitshl(i, (j0 - 23)));
         else {
-            i += bitshr(0x400000u,j0);
+            i +:= bitshr(0x400000u,j0);
             result = numericConvert(Long,bitshr(i,23 - j0));
         }
     }
@@ -36,7 +36,7 @@ overload llround (x:Double ) {
         if (j0 < 0)
             return if(j0 < -1) 0l else sign;
         else{
-            xdb.0[1] += bitshr(UM , j0);
+            xdb.0[1] +:= bitshr(UM , j0);
             result = Long(bitshr(xdb.0[1] , 20 - j0));
         }
     }

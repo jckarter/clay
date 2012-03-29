@@ -90,7 +90,7 @@ overload BigFloat(x:Double) : BigFloat {
         // range for exponent_remainder between 1 and BF_NB_BITS
 
         var exponent_remainder = exponent - 1022 - (BF_NB_BITS*ind);
-        result.index += ind;
+        result.index +:= ind;
 
         // now get the mantissa and add the implicit 1 in fp. format
         mantissa.1 = bitor(bitand(nb.1 , 0x000ffffffffffffful) , 0x0010000000000000ul);
@@ -177,15 +177,15 @@ overload Double(x:T) --> result:Double {
             // build the double 2^(X_IND*BF_NB_BITS)
             nb.0[1] = wrapBitshl(x.index*BF_NB_BITS +1023,20);
             nb.0[0] = 0;
-            res *= nb.2;     // exact multiplication
+            res *:= nb.2;     // exact multiplication
         }
         else {
             // offset the previous computation by 2^(2*BF_NB_BITS)
             // build the double 2^(X_IND*BF_NB_BITS)
             nb.0[1] = wrapBitshl(x.index*BF_NB_BITS +1023 + 2*BF_NB_BITS,20);
             nb.0[0] = 0;
-            res *= radix_mtwo_double;  // exact multiplication
-            res *= nb.2;                  // exact multiplication
+            res *:= radix_mtwo_double;  // exact multiplication
+            res *:= nb.2;                  // exact multiplication
         }
 
     }
@@ -225,8 +225,8 @@ overload Double(x:T) --> result:Double {
 
 private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
     tmp = bitshr(UInt64(r1),BF_NB_BITS);
-    r0 += tmp;
-    r1 -= wrapBitshl(tmp,BF_NB_BITS);
+    r0 +:= tmp;
+    r1 -:= wrapBitshl(tmp,BF_NB_BITS);
 }
 
 
@@ -415,13 +415,13 @@ private do_add(result, x, y) : {
         }
 
     // Carry propagation
-    var carry = bitshr(r7 , BF_NB_BITS); r6 += carry;  r7 = bitand(r7 , BF_MASK_RADIX);
-    carry = bitshr(r6 , BF_NB_BITS); r5 += carry;  r6 = bitand(r6 , BF_MASK_RADIX);
-    carry = bitshr(r5 , BF_NB_BITS); r4 += carry;  r5 = bitand(r5 , BF_MASK_RADIX);
-    carry = bitshr(r4 , BF_NB_BITS); r3 += carry;  r4 = bitand(r4 , BF_MASK_RADIX);
-    carry = bitshr(r3 , BF_NB_BITS); r2 += carry;  r3 = bitand(r3 , BF_MASK_RADIX);
-    carry = bitshr(r2 , BF_NB_BITS); r1 += carry;  r2 = bitand(r2 , BF_MASK_RADIX);
-    carry = bitshr(r1 , BF_NB_BITS); r0 += carry;  r1 = bitand(r1 , BF_MASK_RADIX);
+    var carry = bitshr(r7 , BF_NB_BITS); r6 +:= carry;  r7 = bitand(r7 , BF_MASK_RADIX);
+    carry = bitshr(r6 , BF_NB_BITS); r5 +:= carry;  r6 = bitand(r6 , BF_MASK_RADIX);
+    carry = bitshr(r5 , BF_NB_BITS); r4 +:= carry;  r5 = bitand(r5 , BF_MASK_RADIX);
+    carry = bitshr(r4 , BF_NB_BITS); r3 +:= carry;  r4 = bitand(r4 , BF_MASK_RADIX);
+    carry = bitshr(r3 , BF_NB_BITS); r2 +:= carry;  r3 = bitand(r3 , BF_MASK_RADIX);
+    carry = bitshr(r2 , BF_NB_BITS); r1 +:= carry;  r2 = bitand(r2 , BF_MASK_RADIX);
+    carry = bitshr(r1 , BF_NB_BITS); r0 +:= carry;  r1 = bitand(r1 , BF_MASK_RADIX);
     carry = bitshr(r0 , BF_NB_BITS);
 
     if (carry!=0){
@@ -511,7 +511,7 @@ private do_sub(result, x, y){
         while (res[i] == 0 and i < BF_NB_WORDS)
             inc(i);
         if(i > 0) { // cancellation, shift result
-            result.index -= i;
+            result.index -:= i;
             var j = 0;
             while(i < BF_NB_WORDS){
                 result.h_word[j] = res[i];
@@ -594,12 +594,12 @@ overload recip(x:T) --> result:T {
     // inv is a 53-bit approximation of 1/x
     var inv = 1./app_x;
     var res = BigFloat(inv);
-    res.index -= x.index;
+    res.index -:= x.index;
 
     // First Newton Iteration
     var res1 = x * res;
     res1 = bf_two - res1;
-    res *= res1;
+    res *:= res1;
 
     // Second Newton Iteration
     res1 = x * res;

@@ -347,9 +347,9 @@ alias DP3 = 1.14423774522196636802E-17;
 private inline redupi(x:T){
     var t = x/M_PI;
     if(t >= T() )
-        t += T(0.5);
+        t +:= T(0.5);
     else
-        t -= T(0.5);
+        t -:= T(0.5);
     var i = Long(t);    /* the multiple */
     t = T(i);
     return ((x - t * T(DP1)) - t * T(DP2)) - t * T(DP3);
@@ -370,23 +370,23 @@ private tans(z:C){
     var x2,y2,f,rn,d = ONE,ONE,ONE,ZERO,ZERO;
 loop1:
         inc(rn);
-        f *= rn;
+        f *:= rn;
         inc(rn);
-        f *= rn;
-        x2 *= x;
-        y2 *= y;
+        f *:= rn;
+        x2 *:= x;
+        y2 *:= y;
         var t = y2 + x2;
-        t /= f;
-        d += t;
+        t /:= f;
+        d +:= t;
         inc(rn);
-        f *= rn;
+        f *:= rn;
         inc(rn);
-        f *= rn;
-        x2 *= x;
-        y2 *= y;
+        f *:= rn;
+        x2 *:= x;
+        y2 *:= y;
         t = y2 - x2;
-        t /= f;
-        d += t;
+        t /:= f;
+        d +:= t;
     if(abs(t/d) > epsilon(T)) goto loop1;
     return d;
 }

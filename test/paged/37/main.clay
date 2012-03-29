@@ -4,6 +4,6 @@ main() {
     initializePaging("temppaged.data", 100*1000);
 
     var count = NamedScalar[Int]("temp_count.data", 100);
-    count^ += 1;
+    count^ +:= 1;
     println("count = ", count^);
 }

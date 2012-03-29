@@ -29,7 +29,7 @@ private var objcIvarOffset[Class, ivarName]
 
 private var objcConstantString[value]
     = CFConstantString(
-        Class(&__CFConstantStringClassReference),
+        Class(@__CFConstantStringClassReference),
         CFConstantStringID,
         cstring(StaticName(value)),
         size(value)
@@ -42,7 +42,7 @@ private var objcConstantString[value]
 //
 
 [value when StringLiteral?(value)]
-NSSTR(#value) = ObjectHandle(&objcConstantString[value]);
+NSSTR(#value) = ObjectHandle(@objcConstantString[value]);
 
 
 
@@ -1043,7 +1043,7 @@ private _ValidMethodIdentifier?(#identifier, #minArity)
 
 [identifier]
 ValidMethodIdentifier?(#identifier) = true;
-    //= _ValidMethodIdentifier?(
+    //:= _ValidMethodIdentifier?(
     //    #identifier,
     //    #countOccurrences(#'_', ...stringLiteralStaticChars(identifier))
     //);
@@ -1175,7 +1175,7 @@ overload callMethod(sup: SuperRef[T, Captured], #selector, forward ..args: Args)
     return forward ..msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
-        &super,
+        @super,
         selector,
         ..args
     );
@@ -1191,7 +1191,7 @@ overload call(method: SuperMethodRef[T, Captured, identifier], forward ..args: A
     return forward ..msgSend(
         SuperclassType(T),
         msgSenderSuper(SuperclassType(T), selector),
-        &super,
+        @super,
         selector,
         ..args
     );

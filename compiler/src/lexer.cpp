@@ -154,7 +154,7 @@ static bool keywordIdentifier(TokenPtr &x) {
 //
 
 static const char *symbols[] = {
-    "..", "::", "^",  
+    "..", "::", "^", "@",  
     "(", ")", "[", "]", "{", "}",
     ":", ";", ",", ".", "#",
     NULL
@@ -180,7 +180,7 @@ static bool symbol(TokenPtr &x) {
 
 
 static const char *opchars[] = {
-    "<", ">","+", "-", "*", "/","\\","%", "=", "~", "|", "!", "&", NULL
+    "=", "!", "<", ">", "+", "-", "*", "/","\\","%", ":", "~", "|",  "&", NULL
 };
 
 static bool opstring(string &x) {
