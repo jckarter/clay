@@ -9,7 +9,7 @@ def sortRange(a, start, end) :
         m = start
         for i in range(start+1, end) :
             if a[i] < a[start] :
-                m +: 1
+                m += 1
                 a[i], a[m] = a[m], a[i]
         a[start], a[m] = a[m], a[start]
         sortRange(a, start, m)

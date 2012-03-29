@@ -15,7 +15,7 @@ void sortRange(int *a, int start, int end) {
         int m = start;
         for (int i = start+1; i < end; ++i) {
             if (a[i] < a[start]) {
-                m +: 1;
+                m += 1;
                 swap(&a[i], &a[m]);
             }
         }
