@@ -270,7 +270,7 @@ overload nextValue(x: TwoHashEntries[E, F])
             nextBucket(x);
             refillMask(x);
         }
-        return TwoHashEntry[E,F](&e);
+        return TwoHashEntry[E,F](@e);
     } else
         return TwoHashEntry[E,F]();
 }
@@ -278,7 +278,7 @@ overload nextValue(x: TwoHashEntries[E, F])
 [E, F]
 overload hasValue?(x: TwoHashEntry[E, F]) = not null?(x.entry);
 [E, F]
-overload getValue(x: TwoHashEntry[E, F]) = forward ..F(&x.entry);
+overload getValue(x: TwoHashEntry[E, F]) = forward ..F(@x.entry);
 
 [E, F]
 nextBucket(x: TwoHashEntries[E, F])

@@ -320,7 +320,7 @@ overload iterator(i: SetVectorItems[K]) = i;
 overload nextValue(i: SetVectorItems[K]) {
     if (i.current^.next != i.sentinel) {
         i.current = i.current^.next;
-        return &i.current^.key;
+        return @i.current^.key;
     } else
         return null(Type(i.current^.key));
 }
