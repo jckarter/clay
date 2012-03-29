@@ -11,4 +11,9 @@ main(){
     updateAssign(cat,a,"c","d","e");
 
     println(a);
+
+    var b = String("abc");
+    b ++= "def";
+    b ++= "ghi" ++ "jkl";
+    println(b);
 }

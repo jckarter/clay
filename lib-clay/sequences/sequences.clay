@@ -159,22 +159,26 @@ overload cat(forward a:A, forward ..x:T) {
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
-[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
-        and equalValues?(SequenceElementType(A), 
-            ..mapValues(SequenceElementType,..B))]
-overload updateAssign(#cat, ref a:A, forward ..b:B) {
-    push(a, ..b);
+private define removeCatFromList;
+overload removeCatFromList(a, ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(a, #cat, ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(a) = forward a;
+
+[A, ..B when Sequence?(A)]
+overload updateAssign(#cat, forward a:A, forward ..b:B) {
+    push(a, ..removeCatFromList(..b));
 }
 
-[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A)]
 overload updateAssign(#cat, forward a:A, forward ..x:T) {
-    push(a, ..x);
+    push(a, ..removeCatFromList(..x));
 }
 
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload updateAssign(#cat, forward x:T, forward a:A) {
     insert(a,0,x);
 }
+
 
 // 
 //
