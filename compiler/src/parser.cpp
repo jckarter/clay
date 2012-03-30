@@ -393,6 +393,16 @@ static bool atomicExpr(ExprPtr &x) {
 // suffix expr
 //
 
+static bool stringLiteralSuffix(ExprPtr &x) {
+    LocationPtr location = currentLocation();
+    ExprPtr str;
+    if (!stringLiteral(str)) return false;
+    ExprListPtr strArgs = new ExprList(str);
+    x = new Call(NULL, strArgs, new ExprList());
+    x->location = location;
+    return true;
+}
+
 static bool indexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
     if (!symbol("[")) return false;
@@ -479,7 +489,8 @@ static bool dereferenceSuffix(ExprPtr &x) {
 
 static bool suffix(ExprPtr &x) {
     int p = save();
-    if (indexingSuffix(x)) return true;
+    if (stringLiteralSuffix(x)) return true;
+    if (restore(p), indexingSuffix(x)) return true;
     if (restore(p), callSuffix(x)) return true;
     if (restore(p), fieldRefSuffix(x)) return true;
     if (restore(p), staticIndexingSuffix(x)) return true;

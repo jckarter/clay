@@ -45,16 +45,22 @@ Language changes:
   singleton Static["string"] values. These static strings can now be
   iterated and indexed like StringConstants. lib-clay provides a
   StringLiteralRef type in order to reference constant strings at runtime.
+  A string literal may now also be used as a postfix operator; `foo"bar"` is
+  equivalent to `foo("bar")`.
 
     // 0.1
-    #foo        // value of type Static[#foo]
-    #"bar"      // value of type Static[#bar]
-    "bas"       // value of type StringConstant
+    #foo          // value of type Static[#foo]
+    #"bar"        // value of type Static[#bar]
+    "bas"         // value of type StringConstant
+    String("zim") // value of type String
+    octal(#"177") // octal value of type Int
 
     // 0.2
-    "foo"       // value of type Static["foo"]
-    "bar"       // value of type Static["bar"]
-    StringLiteralRef("bas") // value of type StringLiteralRef
+    "foo"                 // value of type Static["foo"]
+    "bar"                 // value of type Static["bar"]
+    StringLiteralRef"bas" // value of type StringLiteralRef
+    String"zim"           // value of type String
+    octal"177"            // octal value of type Int
 
 * The 'static' keyword has been replaced with the '#' operator in argument
   declarations and expressions. The '#' operator has the same precedence as
