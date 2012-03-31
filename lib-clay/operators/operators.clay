@@ -415,8 +415,11 @@ alias RIGHT = 1;
 alias VARIADIC = 2;
 alias BOOLEAN = 3;
 
-operatorPrecedence(T) = 10000;
-operatorAssociativity(T) = LEFT;
+define operatorPrecedence;
+define operatorAssociativity;
+
+[T] overload operatorPrecedence(#T) = 10000;
+[T] overload operatorAssociativity(#T) = LEFT;
 
 overload operatorPrecedence(#(*))   = 1000;
 overload operatorPrecedence(#(/))   = 1000;
