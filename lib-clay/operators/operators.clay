@@ -43,47 +43,6 @@ public import __operators__.(
 define inc;
 define dec;
 
-define (==);
-define (!=);
-define (>=);
-define (<=);
-define (>);
-define (<);
-define (++);
-define (~);
-define (&);
-define (|);
-define (<<);
-define (>>);
-define (+);
-define (-);
-define (%);
-define (\);
-define (/);
-define (*);
-
-alias equals? = (==);
-alias notEquals? = (!=);
-alias lesser? = (<);
-alias lesserEquals? = (<=);
-alias greater? = (>);
-alias greaterEquals? = (>=);
-
-alias add = (+);
-alias subtract = (-);
-alias multiply = (*);
-alias divide = (/);
-alias quotient = (\);
-alias remainder = (%);
-alias cat = (++);
-
-alias bitshl = (<<);
-alias bitshr = (>>);
-alias bitand = (&);
-alias bitor = (|);
-alias bitxor = (~);
-alias bitnot = (~);
-
 define moveUnsafe;
 define resetUnsafe;
 
@@ -415,6 +374,48 @@ alias RIGHT = 1;
 alias VARIADIC = 2;
 alias BOOLEAN = 3;
 
+define (==);
+define (!=);
+define (>=);
+define (<=);
+define (>);
+define (<);
+define (++);
+define (~);
+define (&);
+define (|);
+define (<<);
+define (>>);
+define (+);
+define (-);
+define (%);
+define (\);
+define (/);
+define (*);
+
+alias equals? = (==);
+alias notEquals? = (!=);
+alias lesser? = (<);
+alias lesserEquals? = (<=);
+alias greater? = (>);
+alias greaterEquals? = (>=);
+
+alias add = (+);
+alias subtract = (-);
+alias multiply = (*);
+alias divide = (/);
+alias quotient = (\);
+alias remainder = (%);
+alias cat = (++);
+
+alias bitshl = (<<);
+alias bitshr = (>>);
+alias bitand = (&);
+alias bitor = (|);
+alias bitxor = (~);
+alias bitnot = (~);
+
+
 define operatorPrecedence;
 define operatorAssociativity;
 
@@ -478,8 +479,9 @@ overload operatorAssociativity(#(>=))   = BOOLEAN;
 [OP] RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
 [OP1,OP2] overload RightAssoc?(#OP1,#OP2) = RightAssoc?(OP1) and RightAssoc?(OP2);
 
-[OP1,OP2] GreaterPrec?(#OP1,#OP2) = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
-[OP1,OP2] LowerPrec?(#OP1,#OP2) = integerLesser?(operatorPrecedence(OP2),operatorPrecedence(OP1));
+[OP1,OP2] GreaterPrec?(#OP1,#OP2) 
+    = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
+[OP1,OP2] LowerPrec?(#OP1,#OP2) = GreaterPrec?(OP2,OP1);
 
 
 private define binaryOp;
@@ -487,16 +489,20 @@ private define binaryOp;
 overload binaryOp(..args) = ..args;
 
 [OP,NX when RightAssoc?(OP)]
-overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+overload binaryOp(a, #OP, b, #NX, ..args) 
+    = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
 
 [OP,NX when LeftAssoc?(OP)]
-overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(OP(a,b), NX, ..args);
+overload binaryOp(a, #OP, b, #NX, ..args) 
+    = ..binaryOp(OP(a,b), NX, ..args);
 
 [OP,NX when LowerPrec?(OP,NX)]
-overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+overload binaryOp(a, #OP, b, #NX, ..args) 
+    = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
 
 [OP,NX when GreaterPrec?(OP,NX)]
-overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(OP(a,b), NX, ..args);
+overload binaryOp(a, #OP, b, #NX, ..args) 
+    = ..binaryOp(OP(a,b), NX, ..args);
 
 [OP when LeftAssoc?(OP) or RightAssoc?(OP)]
 overload binaryOp(a, #OP, b) = OP(a,b);
@@ -513,6 +519,10 @@ overload boolOp(a, #OP, b, #NX, ..args) = OP(a,b) and boolOp(b,NX,..args);
 
 [OP when BoolAssoc?(OP)]
 overload boolOp(a, #OP, b) = OP(a,b);
+
+[OP,T,U when BoolAssoc?(OP) 
+    and integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+overload binaryOp(a:T, #OP, b:U) {OP(a,b);}
 
 overload boolOp(a) = a;
 
