@@ -522,7 +522,7 @@ overload boolOp(a, #OP, b) = OP(a,b);
 
 [OP,T,U when BoolAssoc?(OP) 
     and integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
-overload binaryOp(a:T, #OP, b:U) {OP(a,b);}
+overload boolOp(a:T, #OP, b:U) {OP(a,b);}
 
 overload boolOp(a) = a;
 
