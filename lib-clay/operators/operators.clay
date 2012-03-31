@@ -271,7 +271,7 @@ inline overload assign(ref dest:T, rvalue src:T) {
 
 [F]
 inline overload updateAssign(#F, ref dest, forward ..src) {
-    dest = infixOperator(dest,F,  ..src);
+    dest = infixOperator(dest,F, ..src);
 }
 
 [F]
@@ -369,7 +369,7 @@ inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
                 dest,
                 ..takeValues(#(countIndices(..A)), ..indicesAndSrc)
             ),
-            F,  ..dropValues(#countIndices(..A), ..indicesAndSrc)
+            F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
         )
     );
 }
