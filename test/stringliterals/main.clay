@@ -31,4 +31,10 @@ main() {
     println(stringLiteralFind("foobarfoo", "bas"));
     println(stringLiteralFind("foo", "foobarfoo"));
     println(stringLiteralFind("foobarfoo", "foo", #1));
+
+    println();
+    var x = String"asdf";
+    x ++: "jkl;";
+    println(x);
+    println(octal"177");
 }

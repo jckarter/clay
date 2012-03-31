@@ -37,75 +37,35 @@ Language changes:
   with an alignment hint equal to the strictest alignment of the pointed-to
   destination and source types.
 
-* Operator functions are now implicitly defined in a special '__operators__'
-  module instead of looked up in the 'prelude' module.
-
-* A new '++' operator is provided for sequence concatenation. It desugars to
-  the 'cat' operator function. A series of concatenations desugars into a single
-  variadic 'cat' invocation.
-
-    // 0.2
-    foo() {
-        println("hello" ++ " " ++ "world");
-    }
-
-    // desugars to
-    foo() {
-        println(cat("hello", " ", "world"));
-    }
-
-  Thanks to Jeremy Clifford.
-
-* A new '\' operator is provided for truncating division. It desugars
-  to the 'quotient' operator function.
-  
-    // 0.2
-    foo() {
-        println(3\2);
-    }
-
-    // desugars to
-
-    foo() {
-        println(quotient(3, 2));
-    }
-
-  Thanks to Jeremy Clifford.
-
-* Comparison operators now chain as in Python.
-
-    // 0.1
-    foo() {
-        println(x >= 0 and x < 4);
-    }
-
-    // 0.2
-    foo() {
-        println(0 <= x < 4);
-    }
-
-  Thanks to Jeremy Clifford.
+* Compiler hook functions are now implicitly defined in a special
+  '__operators__' module instead of looked up in the 'prelude' module.
 
 * Static string literals and string constant literals have been combined.
   String literals now always behave like static strings and evaluate to
   singleton Static["string"] values. These static strings can now be
   iterated and indexed like StringConstants. lib-clay provides a
   StringLiteralRef type in order to reference constant strings at runtime.
+  A string literal may now also be used as a postfix operator; `foo"bar"` is
+  equivalent to `foo("bar")`.
 
     // 0.1
-    #foo        // value of type Static[#foo]
-    #"bar"      // value of type Static[#bar]
-    "bas"       // value of type StringConstant
+    #foo          // value of type Static[#foo]
+    #"bar"        // value of type Static[#bar]
+    "bas"         // value of type StringConstant
+    String("zim") // value of type String
+    octal(#"177") // octal value of type Int
 
     // 0.2
-    "foo"       // value of type Static["foo"]
-    "bar"       // value of type Static["bar"]
-    StringLiteralRef("bas") // value of type StringLiteralRef
+    "foo"                 // value of type Static["foo"]
+    "bar"                 // value of type Static["bar"]
+    StringLiteralRef"bas" // value of type StringLiteralRef
+    String"zim"           // value of type String
+    octal"177"            // octal value of type Int
 
 * The 'static' keyword has been replaced with the '#' operator in argument
   declarations and expressions. The '#' operator has the same precedence as
-  prefix '&', '+', and '-'. The '#' is now optional for static string literal
-  arguments.
+  prefix operators. In argument declarations, the '#' is now optional for
+  static string literal arguments.
 
     // 0.1
     foo(static Foo) {}
@@ -119,6 +79,117 @@ Language changes:
     bas("string") {}
     [n] zim(#n) = #(n+1);
 
+* User-defined operators are now supported. Any string consisting of the
+  characters "=!<>+-*/\%~|&" (except for the reserved tokens "-->", "<--",
+  "->", "=>", and "=") may be used as a prefix or infix operator. Operator
+  names may be used as identifiers by surrounding them with parens. Prefix
+  operator expressions desugar into calls to the `prefixOperator` function,
+  and infix operator expressions into calls to the `infixOperator` function,
+  as follows:
+
+    // 0.2
+    foo(a, b, c, d) {
+        a = +a;
+        a = b + c * d;
+    }
+    
+    // desugars to
+    foo(a, b, c, d) {
+        a = prefixOperator((+), a);
+        a = infixOperator(b, (+), c, (*), d);
+    }
+
+  As shown above, infix operator sequences are desugared into a single
+  variadic `infixOperator` call, which allows the library to control
+  precedence, implement custom composition behavior such as Python-style
+  comparison chaining, and to optimize certain sequences of operator
+  applications.
+
+  Thanks to Jeremy Clifford.
+
+* The address-of operator has been changed from prefix `&` to prefix `@`. `&`
+  is now a user-defined operator character.
+
+    // 0.1
+    foo(x, y) { memcpy(&x, &y, TypeSize(Type(x))); }
+
+    // 0.2
+    foo(x, y) { memcpy(@x, @y, TypeSize(Type(x))); }
+
+  Thanks to Jeremy Clifford.
+
+* The update-assignment statement syntax has been changed from `a <op>= b;` to
+  `a <op>: b;`. `<op>` can be any user-defined operator. Prefix operators
+  may now also be used in update assignment with the statement form `<op>: a;`.
+
+    // 0.1
+    foo(x, y) {
+        x += 1;
+        y = -y;
+    }
+
+    // 0.2
+    foo(x, y) {
+        x +: 1;
+        -: y;
+    }
+
+  Thanks to Jeremy Clifford.
+
+* Pattern guard syntax has been changed from `[T | Predicate?(T)]` to
+  `[T when Predicate?(T)]`. `|` is now a user-defined operator character.
+
+    // 0.1
+    [T | Sequence?(T)] foo(xs:T) { for (x in xs) println(x); }
+
+    // 0.2
+    [T when Sequence?(T)] foo(xs:T) { for (x in xs) println(x); }
+
+  Thanks to Jeremy Clifford.
+
+* If, switch, and while statements may now use variable binding, assignment,
+  or expression statements in the conditional before the condition expression.
+  Variables bound in the conditional are scoped for the body of the
+  subsequent statement. In a while loop, the statements are rerun on every
+  iteration.
+
+    // 0.2
+    foo() {
+        if (var x, y? = bar(); y?)
+            println(x);
+
+        var i = 0;
+        while (inc(i); i < 5)
+            println(i);
+    }
+
+* The iterator protocol used by the `for` loop has been changed. The `for`
+  syntax now desugars as follows:
+
+    // 0.2
+    foo(xs) {
+        for (a,b,c in xs)
+            bar();
+
+    // desugars to:
+    foo(xs) {
+        {
+            forward _sequence = xs;
+            forward _iter = iterator(_sequence);
+            while (var _value = nextValue(_iter); hasValue?(_value)) {
+                forward a,b,c = getValue(_value);
+                bar();
+            }
+        }
+    }
+
+  Iterators now need to implement a single function `nextValue`. The value
+  returned by `nextValue` must implement the functions `hasValue?`, which
+  returns true if the iterator successfully yielded a value or false if the
+  iterator is exhausted, and `getValue`, which returns the yielded value(s)
+  by reference or by value. The library implements `hasValue?` and `getValue`
+  for Pointer[T] and Maybe[T], so that those types may be used respectively in
+  by-reference and by-value iterators.
 
 Library changes:
 ----------------
@@ -170,8 +241,17 @@ Library changes:
     foo(x:Int) = Float(x);
     bar() = StdCallCodePointer(foo);
 
-* Sequences no longer overload 'add' (the '+' operator) for sequence
-  concatenation, but instead overload 'cat' (the '++' operator).
+* The StringConstant type has been replaced a new StringLiteralRef type.
+  StringLiteralRef values can be constructed from string literals.
+
+    // 0.1
+    "foo"
+
+    // 0.2
+    StringLiteralRef("foo")
+
+* A new '++' operator is defined for sequence concatenation.  Sequences no
+  longer overload the '+' operator for sequence concatenation.
 
     // 0.1
     foo() {
@@ -185,8 +265,8 @@ Library changes:
 
   Thanks to Jeremy Clifford.
 
-* Integers no longer overload 'divide' (the '/' operator) for integer division,
-  but instead overload 'quotient' (the '\' operator).
+* A new '\' operator is defined for truncating division. Integers no longer
+  overload the '/' operator for integer division.
 
     // 0.1
     foo() {
@@ -200,14 +280,45 @@ Library changes:
 
   Thanks to Jeremy Clifford.
 
-* The StringConstant type has been replaced a new StringLiteralRef type.
-  StringLiteralRef values can be constructed from string literals.
+* Comparison operators now chain as in Python.
 
     // 0.1
-    "foo"
+    foo() {
+        println(x >= 0 and x < 4);
+    }
 
     // 0.2
-    StringLiteralRef("foo")
+    foo() {
+        println(0 <= x < 4);
+    }
+
+  Thanks to Jeremy Clifford.
+
+* Bitwise operators are now defined. Prefix `~` performs bitwise-not;
+  infix `&` bitwise-and; infix `|` bitwise-or; infix `~` bitwise-xor;
+  infix `<<` left-shift; and infix `>>` right-shift.
+
+    // 0.1
+    foo(x, y) {
+        println(bitnot(x));
+        println(bitand(x, y));
+        println(bitor(x, y));
+        println(bitxor(x, y));
+        println(bitshl(x, y));
+        println(bitshr(x, y));
+    }
+
+    // 0.2
+    foo(x, y) {
+        println(~x);
+        println(x & y);
+        println(x | y);
+        println(x ~ y);
+        println(x << y);
+        println(x >> y);
+    }
+
+  Thanks to Jeremy Clifford.
 
 Compiler frontend changes:
 --------------------------
@@ -392,8 +503,8 @@ Language changes:
     // 0.1
     var a, b = multiValues();
 
-* Tuple syntax has been changed to use square brackets. Parens are now used only
-  for grouping.
+* Tuple syntax has been changed to use square brackets. Parens are now used
+  only for grouping.
     // 0.0
     ()
     (1,)
