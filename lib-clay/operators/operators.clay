@@ -271,7 +271,7 @@ inline overload assign(ref dest:T, rvalue src:T) {
 
 [F]
 inline overload updateAssign(#F, ref dest, forward ..src) {
-    dest = infixOperator(dest,F, ..src);
+    dest = infixOperator(dest,F,  ..src);
 }
 
 [F]
@@ -369,7 +369,7 @@ inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
                 dest,
                 ..takeValues(#(countIndices(..A)), ..indicesAndSrc)
             ),
-            F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
+            F,  ..dropValues(#countIndices(..A), ..indicesAndSrc)
         )
     );
 }
@@ -416,7 +416,7 @@ alias VARIADIC = 2;
 alias BOOLEAN = 3;
 
 operatorPrecedence(T) = 10000;
-operatorAssoc(T) = LEFT;
+operatorAssociativity(T) = LEFT;
 
 overload operatorPrecedence(#(*))   = 1000;
 overload operatorPrecedence(#(/))   = 1000;
@@ -443,79 +443,83 @@ overload operatorPrecedence(#(<=))  = 100000;
 overload operatorPrecedence(#(>=))  = 100000;
 
 
-overload operatorAssoc(#(*))    = LEFT;
-overload operatorAssoc(#(/))    = LEFT;
-overload operatorAssoc(#(\))    = LEFT;
-overload operatorAssoc(#(%))    = LEFT;
-overload operatorAssoc(#(-))    = LEFT;
-overload operatorAssoc(#(+))    = LEFT;
+overload operatorAssociativity(#(*))    = LEFT;
+overload operatorAssociativity(#(/))    = LEFT;
+overload operatorAssociativity(#(\))    = LEFT;
+overload operatorAssociativity(#(%))    = LEFT;
+overload operatorAssociativity(#(-))    = LEFT;
+overload operatorAssociativity(#(+))    = LEFT;
 
-overload operatorAssoc(#(<<))   = LEFT;
-overload operatorAssoc(#(>>))   = LEFT;
-overload operatorAssoc(#(&))    = LEFT;
-overload operatorAssoc(#(~))    = LEFT;
-overload operatorAssoc(#(|))    = LEFT;
+overload operatorAssociativity(#(<<))   = LEFT;
+overload operatorAssociativity(#(>>))   = LEFT;
+overload operatorAssociativity(#(&))    = LEFT;
+overload operatorAssociativity(#(~))    = LEFT;
+overload operatorAssociativity(#(|))    = LEFT;
 
-overload operatorAssoc(#(++))   = LEFT;
+overload operatorAssociativity(#(++))   = LEFT;
 
-overload operatorAssoc(#(==))   = BOOLEAN;
-overload operatorAssoc(#(!=))   = BOOLEAN;
-overload operatorAssoc(#(<))    = BOOLEAN;
-overload operatorAssoc(#(>))    = BOOLEAN;
-overload operatorAssoc(#(<=))   = BOOLEAN;
-overload operatorAssoc(#(>=))   = BOOLEAN;
+overload operatorAssociativity(#(==))   = BOOLEAN;
+overload operatorAssociativity(#(!=))   = BOOLEAN;
+overload operatorAssociativity(#(<))    = BOOLEAN;
+overload operatorAssociativity(#(>))    = BOOLEAN;
+overload operatorAssociativity(#(<=))   = BOOLEAN;
+overload operatorAssociativity(#(>=))   = BOOLEAN;
 
 
-[OP] BoolAssoc?(#OP) = integerEquals?(operatorAssoc(OP),BOOLEAN);
+[OP] BoolAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),BOOLEAN);
 [OP1,OP2] overload BoolAssoc?(#OP1,#OP2) = BoolAssoc?(OP1) and BoolAssoc?(OP2);
 
-[OP] LeftAssoc?(#OP) = integerEquals?(operatorAssoc(OP),LEFT);
+[OP] LeftAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),LEFT);
 [OP1,OP2] overload LeftAssoc?(#OP1,#OP2) = LeftAssoc?(OP1) and LeftAssoc?(OP2);
 
-[OP] RightAssoc?(#OP) = integerEquals?(operatorAssoc(OP),RIGHT);
+[OP] RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
 [OP1,OP2] overload RightAssoc?(#OP1,#OP2) = RightAssoc?(OP1) and RightAssoc?(OP2);
 
 [OP1,OP2] GreaterPrec?(#OP1,#OP2) = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
 [OP1,OP2] LowerPrec?(#OP1,#OP2) = integerLesser?(operatorPrecedence(OP2),operatorPrecedence(OP1));
 
 
-[OP1,OP2 when RightAssoc?(OP2)] 
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator(a,OP1,infixOperator(b,OP2,..args)); 
+private define binaryOp;
 
-[OP1,OP2 when LeftAssoc?(OP1)] 
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator(OP1(a,b),OP2,..args); 
+overload binaryOp(..args) = ..args;
 
-[OP1,OP2 when BoolAssoc?(OP1) and RightAssoc?(OP2)]
-overload infixOperator(a, #OP1, b, #OP2, ..args) =  infixOperator(a,OP1,infixOperator(b,OP2,..args)); 
+[OP,NX when RightAssoc?(OP)]
+overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
 
-[OP1,OP2 when RightAssoc?(OP1) and BoolAssoc?(OP2)]
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator( OP1(a,b),OP2,..args); 
+[OP,NX when LeftAssoc?(OP)]
+overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(OP(a,b), NX, ..args);
 
-[OP1,OP2 when BoolAssoc?(OP1) and LeftAssoc?(OP2)]
-overload infixOperator(a, #OP1, b, #OP2, ..args) =  infixOperator(a,OP1,infixOperator(b,OP2,..args)); 
+[OP,NX when LowerPrec?(OP,NX)]
+overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
 
-[OP1,OP2 when LeftAssoc?(OP1) and BoolAssoc?(OP2)]
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator(OP1(a,b),OP2,..args); 
+[OP,NX when GreaterPrec?(OP,NX)]
+overload binaryOp(a, #OP, b, #NX, ..args) = ..binaryOp(OP(a,b), NX, ..args);
 
-[OP1,OP2 when BoolAssoc?(OP1,OP2)]
-overload infixOperator(a, #OP1, b, #OP2, ..args) = OP1(a,b) and infixOperator(b,OP2,..args); 
+[OP when LeftAssoc?(OP) or RightAssoc?(OP)]
+overload binaryOp(a, #OP, b) = OP(a,b);
 
-[OP1,OP2 when LowerPrec?(OP1,OP2)] 
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator(a,OP1,infixOperator(b,OP2,..args)); 
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+overload binaryOp(a:T, #OP, b:U) {OP(a,b);}
 
-[OP1,OP2 when GreaterPrec?(OP1,OP2)] 
-overload infixOperator(a, #OP1, b, #OP2, ..args) = infixOperator(OP1(a,b),OP2,..args); 
+overload binaryOp(a) = a;
+
+private define boolOp;
+
+[OP,NX when BoolAssoc?(OP,NX)]
+overload boolOp(a, #OP, b, #NX, ..args) = OP(a,b) and boolOp(b,NX,..args);
+
+[OP when BoolAssoc?(OP)]
+overload boolOp(a, #OP, b) = OP(a,b);
+
+overload boolOp(a) = a;
 
 
-overload infixOperator(a) = a;
+inline overload infixOperator(..args) = boolOp(..binaryOp(..args));
+[OP]
+inline overload infixOperator(a, #OP, b) = OP(a,b);
 
-overload infixOperator(a,OP,b) = OP(a,b);
-
-[T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
-inline overload infixOperator(a:T, #Fn, b:U) = forward Fn(a,b);
-
-[T,U,Fn when integerEquals?(countValues(..CallOutputTypes(Fn,T,U)),0)]
-inline overload infixOperator(a:T, #Fn, b:U) {Fn(a,b);}
+[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
+inline overload infixOperator(a:T, #OP, b:U) {OP(a,b);}
 
 
 //
