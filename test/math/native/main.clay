@@ -28,7 +28,8 @@ oneArgFuncs() =
 
 
 twoArgFuncs() = 
-                pow,beta,atan2,
+                pow,
+                atan2,
                 ;
 
 

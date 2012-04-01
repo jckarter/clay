@@ -3,7 +3,9 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+	
 overload pow(x:Double, y:Double) {
+
 	alias bp = array(1.0, 1.5);
 	alias dp_h = array( 0.0, 5.84962487220764160156e-01); /* 0x3FE2B803, 0x40000000 */
 	alias dp_l = array( 0.0, 1.35003920212974897128e-08); /* 0x3E4CFDEB, 0x43CFD006 */
@@ -33,7 +35,7 @@ overload pow(x:Double, y:Double) {
 
 	var xdb = MAKE_IEEE(x);
 	var ydb = MAKE_IEEE(y);
-	var ix,iy = bitand(GET_IEEE_HIGH(xdb),MM), bitand(GET_IEEE_HIGH(ydb),0x7fffffff);
+	var ix,iy = bitand(GET_IEEE_HIGH(xdb),MM), bitand(GET_IEEE_HIGH(ydb),MM);
 	// y==zero: x**0 = 1
 	if(bitor(iy,GET_IEEE_LOW(ydb))==0) return ONE; 	
     
@@ -42,9 +44,9 @@ overload pow(x:Double, y:Double) {
     
     // y!=zero: result is NaN if either arg is NaN 
 	if(ix > EM or ((ix==EM) and (GET_IEEE_LOW(xdb)!=0)) or
-	   iy > EM or ((iy==EM) and (GET_IEEE_LOW(ydb)!=0))) 
+	   iy > EM or ((iy==EM) and (GET_IEEE_LOW(ydb)!=0))) {
 		return (x+0.0)+(y+0.0);
-    
+    }
     /* determine if y is an odd int when x < 0
      * yisint = 0	... y is not an integer
      * yisint = 1	... y is an odd int
@@ -109,8 +111,8 @@ overload pow(x:Double, y:Double) {
 	// n = (GET_IEEE_HIGH(xdb)>>31)+1;
     //   but ANSI C says a right shift of a signed negative quantity is
     //   implementation defined.
-	var n = bitshr(GET_IEEE_HIGH(xdb),31)-1;
-
+   
+	var n = bitcast(Int32,wrapSubtract(bitshr(bitcast(UInt32,GET_IEEE_HIGH(xdb)),31),1u));
     // (x<0)**(non-int) is NaN
 	if(bitor(n,yisint)==0) return (x-x)/(x-x);
 
@@ -201,29 +203,29 @@ overload pow(x:Double, y:Double) {
 	var p_h = y1*t1;
 	var z = p_l+p_h;
 	var j,i = GET_IEEE_HIGH(z),GET_IEEE_LOW(z);
-	if (j>=0x40900000u) {				/* z >= 1024 */
-		if(bitor(j-0x40900000u,i)!=0)			/* if z > 1024 */
+	if (j>=0x40900000) {				/* z >= 1024 */
+		if(bitor(j-0x40900000,i)!=0)			/* if z > 1024 */
 			return s*HUGE*HUGE;			/* overflow */
 	    else {
 			if(p_l+ovt>z-p_h) return s*HUGE*HUGE;	/* overflow */
 	    }
-	} else if(bitand(j,MM)>=0x4090cc00u) {	/* z <= -1075 */
-		if(bitor(j-0xc090cc00u,i)!=0) 		/* z < -1075 */
+	} else if(bitand(j,MM)>=0x4090cc00) {	/* z <= -1075 */
+		if(bitor(j-bitcast(Int32,0xc090cc00u),i)!=0) 		/* z < -1075 */
 			return s*TINY*TINY;		/* underflow */
 	    else {
 			if(p_l<=z-p_h) return s*TINY*TINY;	/* underflow */
 	    }
 	}
-    /*
+	/*
      * compute 2**(p_h+p_l)
      */
 	i = bitand(j,MM);
 	k = bitshr(i,20)-0x3ff;
 	n = 0;
 	if(i>CV3) {		/* if |z| > 0.5, set n = [z+0.5] */
-	    n = j+bitshr(CV8,k+1);
-	    k = bitshr(bitand(n,MM),20)-0x3ff;	/* new k for n */
-	    t = SET_IEEE_HIGH(ZERO,bitandc(n , bitshr(NEM,k)));
+	  	n = j+bitshr(CV8,k+1);
+	  	k = bitshr(bitand(n,MM),20)-0x3ff;	/* new k for n */
+	    t = SET_IEEE_HIGH(ZERO,Int32(bitandc(n , bitshr(NEM,k))));
 	    n = bitshr(bitor(bitand(n,NEM),CV8),20-k);
 	    if(j<0) n = -n;
 	    p_h -: t;
@@ -239,7 +241,10 @@ overload pow(x:Double, y:Double) {
 	z = ONE-(r-z);
 	j = GET_IEEE_HIGH(z);
 	j +: bitshl(n,20);
-	if(bitshr(j,20)<=0) z = scalbn(z,n);	/* subnormal output */
-	else z = SET_IEEE_HIGH(z,j);
+	if(bitshr(j,20)<=0) {	
+		z = scalbn(z,n);	/* subnormal output */
+	} else {
+		z = SET_IEEE_HIGH(z,j);
+	}
 	return s*z;
 }
