@@ -90,7 +90,6 @@ define lgamma;
 define lgamma_r;
 define gamma_r;
 alias gamma = tgamma;
-define beta;
 
 define j0;
 define j1;

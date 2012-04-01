@@ -219,12 +219,12 @@ overload gamma_r (x:Double, signgamp:Pointer[Int]) {
       signgamp^ = 0;
       return 1.0 / x;
   }
-  if (GET_IEEE_HIGH(xdb) < 0 and GET_IEEE_HIGH(xdb) < 0xfff00000u and rint(x) == x) {
+  if (GET_IEEE_HIGH(xdb) < 0 and GET_IEEE_HIGH(xdb) < bitcast(Int32,0xfff00000u) and rint(x) == x) {
       /* Return value for integer x < 0 is NaN with invalid exception.  */
       signgamp^ = 0;
       return (x - x) / (x - x);
     }
-  if (GET_IEEE_HIGH(xdb) == 0xfff00000u and GET_IEEE_LOW(xdb)==0) {
+  if (GET_IEEE_HIGH(xdb) == bitcast(Int32,0xfff00000u) and GET_IEEE_LOW(xdb)==0) {
       /* x == -Inf.  According to ISO this is NaN.  */
       signgamp^ = 0;
       return x - x;

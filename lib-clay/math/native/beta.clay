@@ -1,7 +1,0 @@
-import math.(beta,exp,lgamma);
-
-[T,U when Float?(T,U)]
-overload beta(x:T, w:U) = exp(lgamma(x)+lgamma(w)-lgamma(x+w));
-
-[T,U when Complex?(T,U)]
-overload beta(x:T, y:U) = exp(lgamma(x) + lgamma(y) - lgamma(x+y));
