@@ -66,7 +66,7 @@ add_executable(clay ${SOURCES})
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 
 if (UNIX)
-    set_target_properties(clay PROPERTIES LINK_FLAGS ${LLVM_LDFLAGS})
+    set_target_properties(clay PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
 endif(UNIX)
 
 install(TARGETS clay RUNTIME DESTINATION bin)
