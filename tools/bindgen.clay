@@ -215,7 +215,7 @@ convertType(type:CXType, refCursor:CXCursor) : String {
 
 }
 
-visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 {
     ref unnamedFieldIndex = Pointer[Int](data)^;
 
@@ -237,7 +237,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     return CXChildVisit_Continue;
 }
 
-visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 {
     assert(clang_getCursorKind(parent) == CXCursor_UnionDecl);
     var kind = clang_getCursorKind(cursor);
@@ -253,7 +253,7 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 
 record FunctionDeclAttributes (asmLabel:Maybe[String]);
 
-visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 {
     ref attributes = Pointer[FunctionDeclAttributes](data)^;
     switch (cursor.kind)
@@ -262,7 +262,7 @@ visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     return CXChildVisit_Continue;
 }
 
-visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 {
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
@@ -331,7 +331,7 @@ symbolVisited(name:String) : Bool
     return false;
 }
 
-visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
+visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 {
     ref options = Pointer[BindgenOptions](data)^;
 
@@ -444,6 +444,47 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         opaqueType(underlyingType);
 
         return CXChildVisit_Continue;
+    }
+    case (CXCursor_MacroDefinition) {
+        var name = str(clang_getCursorSpelling(cursor));
+        println("macro ", name);
+        if (clang_isMacroBuiltin(cursor) != 0)
+            println("  builtin");
+        if (clang_isMacroFunctionLike(cursor) != 0) {
+            println("  args:");
+            for (i in range(clang_getNumMacroArgs(cursor)))
+                println("    ", clang_getMacroArgName(cursor, i));
+            switch (clang_getMacroVarargsKind(cursor))
+            case (CXMacroVarargs_NotVariadic)
+                println("  not variadic");
+            case (CXMacroVarargs_C99)
+                println("  C99 variadic");
+            case (CXMacroVarargs_GNU)
+                println("  GNU variadic");
+        }
+        var numTokens = 0u;
+        var tokensPtr = null(CXToken);
+        clang_getMacroReplacementTokens(cursor, @tokensPtr, @numTokens);
+        var tu = clang_Cursor_getTranslationUnit(cursor);
+        finally clang_disposeTokens(tu, tokensPtr, numTokens);
+
+        println("  tokens:");
+        for (token in CoordinateRange(tokensPtr, tokensPtr + numTokens)) {
+            print("    ", clang_getTokenSpelling(tu, token));
+            switch (clang_getTokenKind(token))
+            case (CXToken_Punctuation)
+                println(" -- punctuation");
+            case (CXToken_Keyword)
+                println(" -- keyword");
+            case (CXToken_Identifier)
+                println(" -- identifier");
+            case (CXToken_Literal)
+                println(" -- literal");
+            case (CXToken_Comment)
+                println(" -- comment");
+            else
+                println();
+        }
     }
     case (CXCursor_FieldDecl) {
         return CXChildVisit_Continue;
@@ -583,7 +624,7 @@ main(argc, argv)
         clang_argc,
         null(Struct_CXUnsavedFile),
         0u,
-        0u,
+        CXTranslationUnit_DetailedPreprocessingRecord,
     );
     if (null?(unit)) {
         printlnTo(stderr, "no input files given");
