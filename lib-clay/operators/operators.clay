@@ -43,47 +43,6 @@ public import __operators__.(
 define inc;
 define dec;
 
-define (==);
-define (!=);
-define (>=);
-define (<=);
-define (>);
-define (<);
-define (++);
-define (~);
-define (&);
-define (|);
-define (<<);
-define (>>);
-define (+);
-define (-);
-define (%);
-define (\);
-define (/);
-define (*);
-
-alias equals? = (==);
-alias notEquals? = (!=);
-alias lesser? = (<);
-alias lesserEquals? = (<=);
-alias greater? = (>);
-alias greaterEquals? = (>=);
-
-alias add = (+);
-alias subtract = (-);
-alias multiply = (*);
-alias divide = (/);
-alias quotient = (\);
-alias remainder = (%);
-alias cat = (++);
-
-alias bitshl = (<<);
-alias bitshr = (>>);
-alias bitand = (&);
-alias bitor = (|);
-alias bitxor = (~);
-alias bitnot = (~);
-
 define moveUnsafe;
 define resetUnsafe;
 
@@ -381,98 +340,185 @@ inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
 
 private countIndices(..A) = _countIndices(#-1, ..A);
 private define _countIndices;
-[n] overload _countIndices(#n, a, ..A) 
+[n] inline overload _countIndices(#n, a, ..A) 
     = if(not Numeric?(a)) n else _countIndices(#(n+1), ..A);
-[n] overload _countIndices(#n) = n;
+[n] inline overload _countIndices(#n) = n;
 
 
 //
 //  operators 
 //
 
-infixOps() = (++),(|),(~),(&),(>>),(<<),(+),(-),(%),(\),(/),(*);
-
-infixPrecedenceList() = ..infixOps();
-
 private define staticEquals?;
 [A, B]
-overload staticEquals?(a:Static[A], b:Static[B]) = false;
+inline overload staticEquals?(a:Static[A], b:Static[B]) = false;
 [A]
-overload staticEquals?(a:Static[A], b:Static[A]) = true;
+inline overload staticEquals?(a:Static[A], b:Static[A]) = true;
 
 BinaryOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
 CompareOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
-inline overload infixOperator(forward ..args)
-    = forward compareOp(..noPrecBinaryOp(
-        ..foldBinaryOp(binaryOp, #countValues(
-        ..restValues(..infixPrecedenceList())), ..args)));
+[OP] inline overload prefixOperator(#OP, forward ..xs)
+    = forward OP(..prefixOperator(..xs));
+[OP] inline overload prefixOperator(#OP, forward x) 
+    = forward ..OP(x);
 
-[T,U,Fn when BinaryOpDefined?(Fn,T,U) or CompareOpDefined?(Fn,T,U)]
-inline overload infixOperator(a:T, #Fn, b:U) = forward Fn(a,b);
-[T,U,Fn when integerEquals?(countValues(..CallOutputTypes(Fn,T,U)),0)]
-inline overload infixOperator(a:T, #Fn, b:U) {Fn(a,b);}
+alias LEFT = 0;
+alias RIGHT = 1;
+alias VARIADIC = 2;
+alias BOOLEAN = 3;
 
-inline overload prefixOperator(fn, forward ..xs)
-    = forward fn(..prefixOperator(..xs));
-inline overload prefixOperator(fn, forward x) 
-    = forward fn(x);
-[fn,T when integerEquals?(countValues(..CallOutputTypes(fn,T)),0)]
-inline overload prefixOperator(#fn, forward x:T) {fn(x);}
+define (==);
+define (!=);
+define (>=);
+define (<=);
+define (>);
+define (<);
+define (++);
+define (~);
+define (&);
+define (|);
+define (<<);
+define (>>);
+define (+);
+define (-);
+define (%);
+define (\);
+define (/);
+define (*);
+
+alias equals? = (==);
+alias notEquals? = (!=);
+alias lesser? = (<);
+alias lesserEquals? = (<=);
+alias greater? = (>);
+alias greaterEquals? = (>=);
+
+alias add = (+);
+alias subtract = (-);
+alias multiply = (*);
+alias divide = (/);
+alias quotient = (\);
+alias remainder = (%);
+alias cat = (++);
+
+alias bitshl = (<<);
+alias bitshr = (>>);
+alias bitand = (&);
+alias bitor = (|);
+alias bitxor = (~);
+alias bitnot = (~);
 
 
-private define foldBinaryOp;
-[n]
-inline overload foldBinaryOp(fn, #n, forward ..xs)
-    = ..foldBinaryOp(fn, #numericSubtract(n,1), 
-        ..fn(nthValue(#n,..infixPrecedenceList()), ..xs));
-inline overload foldBinaryOp(fn, #0, forward ..xs) 
-    = forward ..fn(firstValue(..infixPrecedenceList()), ..xs);
+define operatorPrecedence;
+define operatorAssociativity;
+
+[T] overload operatorPrecedence(#T) = 10000;
+[T] overload operatorAssociativity(#T) = LEFT;
+
+overload operatorPrecedence(#(*))   = 1000;
+overload operatorPrecedence(#(/))   = 1000;
+overload operatorPrecedence(#(\))   = 1000;
+overload operatorPrecedence(#(%))   = 1000;
+
+overload operatorPrecedence(#(-))   = 2000;
+overload operatorPrecedence(#(+))   = 2000;
+
+overload operatorPrecedence(#(<<))  = 4000;
+overload operatorPrecedence(#(>>))  = 4000;
+
+overload operatorPrecedence(#(&))   = 5000;
+overload operatorPrecedence(#(~))   = 5000;
+overload operatorPrecedence(#(|))   = 5000;
+
+overload operatorPrecedence(#(++))  = 50000;
+
+overload operatorPrecedence(#(==))  = 100000;
+overload operatorPrecedence(#(!=))  = 100000;
+overload operatorPrecedence(#(<))   = 100000;
+overload operatorPrecedence(#(>))   = 100000;
+overload operatorPrecedence(#(<=))  = 100000;
+overload operatorPrecedence(#(>=))  = 100000;
+
+
+overload operatorAssociativity(#(*))    = LEFT;
+overload operatorAssociativity(#(/))    = LEFT;
+overload operatorAssociativity(#(\))    = LEFT;
+overload operatorAssociativity(#(%))    = LEFT;
+overload operatorAssociativity(#(-))    = LEFT;
+overload operatorAssociativity(#(+))    = LEFT;
+
+overload operatorAssociativity(#(<<))   = LEFT;
+overload operatorAssociativity(#(>>))   = LEFT;
+overload operatorAssociativity(#(&))    = LEFT;
+overload operatorAssociativity(#(~))    = LEFT;
+overload operatorAssociativity(#(|))    = LEFT;
+
+overload operatorAssociativity(#(++))   = LEFT;
+
+overload operatorAssociativity(#(==))   = BOOLEAN;
+overload operatorAssociativity(#(!=))   = BOOLEAN;
+overload operatorAssociativity(#(<))    = BOOLEAN;
+overload operatorAssociativity(#(>))    = BOOLEAN;
+overload operatorAssociativity(#(<=))   = BOOLEAN;
+overload operatorAssociativity(#(>=))   = BOOLEAN;
+
+
+[OP] inline BoolAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),BOOLEAN);
+[OP1,OP2] inline overload BoolAssoc?(#OP1,#OP2) = BoolAssoc?(OP1) and BoolAssoc?(OP2);
+
+[OP] inline LeftAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),LEFT);
+[OP1,OP2] inline overload LeftAssoc?(#OP1,#OP2) = LeftAssoc?(OP1) and LeftAssoc?(OP2);
+
+[OP] inline RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
+[OP1,OP2] inline overload RightAssoc?(#OP1,#OP2) = RightAssoc?(OP1) and RightAssoc?(OP2);
+
+[OP1,OP2] inline GreaterPrec?(#OP1,#OP2) 
+    = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
+[OP1,OP2] inline LowerPrec?(#OP1,#OP2) = GreaterPrec?(OP2,OP1);
 
 
 private define binaryOp;
-[OP,T]
-inline overload binaryOp(#OP,forward a,#T,forward ..args)
-    = forward a,T,..binaryOp(OP,..args);
-[OP]
-inline overload binaryOp(#OP, forward a) = forward a;
-[OP]
-inline overload binaryOp(#OP,forward a,#OP,forward b, forward ..args)
-    = forward ..binaryOp(OP,OP(a,b), ..args);
-[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
-inline overload binaryOp(#OP,forward a:T,#OP,forward b:U, forward ..args) 
-    {OP(a,b);}
-[OP]
-inline overload binaryOp(#OP,forward a,#OP,forward b) = forward OP(a,b);
-[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
-inline overload binaryOp(#OP,forward a:T,#OP,forward b:U) {OP(a,b);}
 
-private define noPrecBinaryOp;
+inline overload binaryOp(forward ..args) = forward ..args;
+
+[OP,NX when RightAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+
+[OP,NX when LeftAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(OP(a,b), NX, ..args);
+
+[OP,NX when LowerPrec?(OP,NX)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+
+[OP,NX when GreaterPrec?(OP,NX)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(OP(a,b), NX, ..args);
+
+[OP when LeftAssoc?(OP) or RightAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b) = forward ..OP(a,b);
+
+inline overload binaryOp(forward a) = forward a;
+
+private define boolOp;
+
+[OP,NX when BoolAssoc?(OP,NX)]
+inline overload boolOp(forward a, #OP, forward b, #NX, forward ..args) = forward OP(a,b) and boolOp(b,NX,..args);
+
+[OP when BoolAssoc?(OP)]
+inline overload boolOp(forward a, #OP, forward b) = forward ..OP(a,b);
+
+inline overload boolOp(forward a) = forward a;
+
+
+inline overload infixOperator(forward ..args) = forward boolOp(..binaryOp(..args));
 [OP]
-inline overload noPrecBinaryOp(forward a, #OP,forward ..args)
-    = forward a,OP,..noPrecBinaryOp(..args);
-[OP,T,U when BinaryOpDefined?(OP,T,U)]
-inline overload noPrecBinaryOp(forward a:T, #OP,forward b:U, forward ..args)
-    = forward ..noPrecBinaryOp(OP(a,b), ..args);
-[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
-inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U, forward ..args) 
-    {OP(a,b);}
-[OP,T,U when BinaryOpDefined?(OP,T,U)]
-inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U)
-    = forward OP(a,b);
-[OP,T,U when integerEquals?(countValues(..CallOutputTypes(OP,T,U)),0)]
-inline overload noPrecBinaryOp(forward a:T,#OP,forward b:U) {OP(a,b);}
-inline overload noPrecBinaryOp(forward a) = forward a;
-
-private define compareOp;
-inline overload compareOp(forward a, OP, forward b, forward ..args)
-    = forward OP(a, b) and compareOp(b, ..args);
-inline overload compareOp(forward a, OP, forward b) 
-    = forward OP(a, b);
-inline overload compareOp(forward a) = forward a;
-
+inline overload infixOperator(forward a, #OP, forward b) = forward ..OP(a,b);
 
 
 //

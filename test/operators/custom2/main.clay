@@ -1,0 +1,31 @@
+import math.(pow);
+import operators.*;
+
+(**)(a,b) = pow(a,b);
+(***)(a,b) = pow(a,b);
+(****)(a,b) = pow(a,b);
+
+overload operatorPrecedence(#(**)) = 900;
+overload operatorAssociativity(#(**)) = LEFT;
+
+overload operatorPrecedence(#(***)) = 900;
+overload operatorAssociativity(#(***)) = RIGHT;
+
+overload operatorPrecedence(#(****)) = 880;
+overload operatorAssociativity(#(****)) = RIGHT;
+
+main() {
+    
+    println(4 ** 3 ** 2);  //4096
+    println(4 *** 3 *** 2); //262144
+    println(4 **** 3 **** 2); //262144
+
+    println(4 ** 3 *** 2); //4096
+    println(4 *** 3 ** 2); //262144
+    
+    println(4 ** 3 **** 2); //262144
+    println(4 **** 3 ** 2); //4096
+    println(4 **** 3 *** 2); //4096
+    println(4 *** 3 **** 2); //262144
+
+}

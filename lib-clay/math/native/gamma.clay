@@ -94,7 +94,7 @@ overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
 	}
 	if(GET_IEEE_HIGH(xdb)<0) {
 	    if(ix>=0x43300000) 	/* |x|>=2**52, must be -integer */
-		return ONE/ZERO;
+			return ONE/ZERO;
 	    var t = sinpi(x);
 	    if(t==ZERO) return ONE/ZERO; /* -integer */
 	    nadj = log(M_PI/abs(t*x));
@@ -168,7 +168,7 @@ overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
 		else { 
 			var z = ONE;
 			if(ix<0x40200000) { 			/* x < 8.0 */
-			    i = Int(x);
+			    i = Int32(x);
 			    y = x-Double(i);
 			    p = y*(s0+y*(s1+y*(s2+y*(s3+y*(s4+y*(s5+y*s6))))));
 			    q = ONE+y*(r1+y*(r2+y*(r3+y*(r4+y*(r5+y*r6)))));
@@ -193,7 +193,7 @@ case3:				z *: (y+2.0);	/* FALLTHRU */
 			} 
 			else 
 				if (ix < 0x43900000) {
-				    z /: x;
+				    z = ONE/x;
 				    y = z*z;
 				    w = w0+z*(w1+y*(w2+y*(w3+y*(w4+y*(w5+y*w6)))));
 				    r = (x-HALF)*(log(x)-ONE)+w;
@@ -219,12 +219,12 @@ overload gamma_r (x:Double, signgamp:Pointer[Int]) {
       signgamp^ = 0;
       return 1.0 / x;
   }
-  if (GET_IEEE_HIGH(xdb) < 0 and GET_IEEE_HIGH(xdb) < 0xfff00000u and rint(x) == x) {
+  if (GET_IEEE_HIGH(xdb) < 0 and GET_IEEE_HIGH(xdb) < bitcast(Int32,0xfff00000u) and rint(x) == x) {
       /* Return value for integer x < 0 is NaN with invalid exception.  */
       signgamp^ = 0;
       return (x - x) / (x - x);
     }
-  if (GET_IEEE_HIGH(xdb) == 0xfff00000u and GET_IEEE_LOW(xdb)==0) {
+  if (GET_IEEE_HIGH(xdb) == bitcast(Int32,0xfff00000u) and GET_IEEE_LOW(xdb)==0) {
       /* x == -Inf.  According to ISO this is NaN.  */
       signgamp^ = 0;
       return x - x;

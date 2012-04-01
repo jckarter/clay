@@ -62,7 +62,8 @@ overload oneArgFuncs() =
 
 
 twoArgFuncs() = 
-                pow,beta,atan2,
+                pow,
+                atan2,
                 ;
 
 [when OS == Windows]
