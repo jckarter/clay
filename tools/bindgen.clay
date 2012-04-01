@@ -215,7 +215,7 @@ convertType(type:CXType, refCursor:CXCursor) : String {
 
 }
 
-visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
+visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Enum_CXVisitorResult
 {
     ref unnamedFieldIndex = Pointer[Int](data)^;
 
@@ -237,7 +237,7 @@ visitStruct(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
     return CXChildVisit_Continue;
 }
 
-visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
+visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Enum_CXVisitorResult
 {
     assert(clang_getCursorKind(parent) == CXCursor_UnionDecl);
     var kind = clang_getCursorKind(cursor);
@@ -253,7 +253,7 @@ visitUnion(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
 
 record FunctionDeclAttributes (asmLabel:Maybe[String]);
 
-visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
+visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Enum_CXVisitorResult
 {
     ref attributes = Pointer[FunctionDeclAttributes](data)^;
     switch (cursor.kind)
@@ -262,7 +262,7 @@ visitFunctionAttr(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
     return CXChildVisit_Continue;
 }
 
-visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
+visitEnum(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Enum_CXVisitorResult
 {
     switch (cursor.kind)
     case (CXCursor_EnumConstantDecl) {
@@ -331,7 +331,7 @@ symbolVisited(name:String) : Bool
     return false;
 }
 
-visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : UInt
+visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Enum_CXVisitorResult
 {
     ref options = Pointer[BindgenOptions](data)^;
 
