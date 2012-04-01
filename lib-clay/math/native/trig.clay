@@ -108,8 +108,8 @@ overload sinpi(x:Double) {
 	var n = 0;
 	if(z != y) {				/* inexact anyway */
 	    y  *: 0.5;
-	    y   = 2.0*(y - z);		/* y = |x| mod 2.0 */
-	    n   = Int(y*4.0);
+	    y   = 2.0*(y - floor(y));		/* y = |x| mod 2.0 */
+	    n   = Int32(y*4.0);
 	} 
 	else {
         if(ix>=0x43400000) {

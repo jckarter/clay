@@ -18,14 +18,13 @@ overload atan2(y:Double, x:Double) {
 	if(bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>0x7ff00000 or
 	   	bitor(iy,bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>0x7ff00000)	/* x or y is NaN */
 		return x+y;
-	if(bitor(wrapSubtract(Int(GET_IEEE_HIGH(xdb)),0x3ff00000),GET_IEEE_LOW(xdb))==0) return atan(y);   /* x=1.0 */
+	if(bitor(wrapSubtract(GET_IEEE_HIGH(xdb),0x3ff00000),GET_IEEE_LOW(xdb))==0) return atan(y);   /* x=1.0 */
 	var m = bitor(bitand(bitshr(GET_IEEE_HIGH(ydb),31),1),bitand(bitshr(GET_IEEE_HIGH(xdb),30),2));	/* 2*sign(x)+sign(y) */
 	
     /* when y = 0 */
 	if(bitor(iy,GET_IEEE_LOW(ydb))==0) {
 	    switch(m)
-		case (0) {}
-		case (1) return y; 	/* atan(+-0,+anything)=+-0 */
+		case (0,1) return y; 	/* atan(+-0,+anything)=+-0 */
 		case (2) return  M_PI+TINY;/* atan(+0,-anything) = pi */
 		case (3) return -M_PI-TINY;/* atan(-0,-anything) =-pi */
 	    
