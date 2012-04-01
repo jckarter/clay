@@ -18,7 +18,7 @@ overload atan2(y:Double, x:Double) {
 	if(bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>0x7ff00000 or
 	   	bitor(iy,bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>0x7ff00000)	/* x or y is NaN */
 		return x+y;
-	if(bitor(GET_IEEE_HIGH(xdb)-0x3ff00000,GET_IEEE_LOW(xdb))==0) return atan(y);   /* x=1.0 */
+	if(bitor(wrapSubtract(GET_IEEE_HIGH(xdb),0x3ff00000),GET_IEEE_LOW(xdb))==0) return atan(y);   /* x=1.0 */
 	var m = bitor(bitand(bitshr(GET_IEEE_HIGH(ydb),31),1),bitand(bitshr(GET_IEEE_HIGH(xdb),30),2));	/* 2*sign(x)+sign(y) */
 	
     /* when y = 0 */
