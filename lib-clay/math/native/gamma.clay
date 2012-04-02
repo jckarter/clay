@@ -73,14 +73,15 @@ alias w5  =  8.36339918996282139126e-04; /* 0x3F4B67BA, 0x4CDAD5D1 */
 alias w6  = -1.63092934096575273989e-03; /* 0xBF5AB89D, 0x0B9E43E4 */
 
 
-overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
+overload lgamma_r(xarg:Double, signgamp:Pointer[Int]) {
 	alias ONE = 1.;
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 
+	var x = xarg;
 	var xdb = MAKE_IEEE(x);
 	var nadj = ZERO;
-
+	
     /* purge off +-inf, NaN, +-0, tiny and negative arguments */
 	signgamp^ = 1;
 	var ix = bitand(GET_IEEE_HIGH(xdb),0x7fffffff);
@@ -92,6 +93,7 @@ overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
 	        return -log(-x);
 	    } else return -log(x);
 	}
+	    
 	if(GET_IEEE_HIGH(xdb)<0) {
 	    if(ix>=0x43300000) 	/* |x|>=2**52, must be -integer */
 			return ONE/ZERO;
@@ -106,9 +108,12 @@ overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
 	var p,p1,p2,p3 = ZERO,ZERO,ZERO,ZERO;
 		   
     /* purge off 1 and 2 */
-	if(bitor(ix-0x3ff00000,GET_IEEE_LOW(xdb))==0 or bitor(ix-0x40000000,GET_IEEE_LOW(xdb))==0) r = 0;
+	if(bitor(ix-0x3ff00000,GET_IEEE_LOW(xdb))==0 
+		or bitor(ix-0x40000000,GET_IEEE_LOW(xdb))==0) { 
+			r = 0;
     /* for x < 2.0 */
-	else 
+	} 
+	else {
 		if(ix<0x40000000) {
 		    if(ix<=0x3feccccc) { 	/* lgamma(x) = lgamma(x+1)-log(x) */
 				r = -log(x);
@@ -181,13 +186,14 @@ overload lgamma_r(x:Double, signgamp:Pointer[Int]) {
 				    case (5) goto case5;	/* FALLTHRU */
 				    case (4) goto case4;	/* FALLTHRU */
 				    case (3) goto case3;	/* FALLTHRU */
-				
+					case (2,1,0) goto default;
+
 case7:				z *: (y+6.0);	/* FALLTHRU */
 case6:				z *: (y+5.0);	/* FALLTHRU */
 case5:				z *: (y+4.0);	/* FALLTHRU */
 case4:				z *: (y+3.0);	/* FALLTHRU */
 case3:				z *: (y+2.0);	/* FALLTHRU */
-				
+default:			
 				r +: log(z);
 		    /* 8.0 <= x < 2**58 */
 			} 
@@ -202,6 +208,7 @@ case3:				z *: (y+2.0);	/* FALLTHRU */
 		    /* 2**58 <= x <= inf */
 			    	r =  x*(log(x)-ONE);
 		}
+	}
 	if(GET_IEEE_HIGH(xdb)<0) r = nadj - r;
 	return r;
 }
