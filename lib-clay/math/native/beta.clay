@@ -1,0 +1,4 @@
+import math.(exp,beta,lgamma);
+
+[T,U when Float?(T,U) or Complex?(T,U)]
+overload beta(x:T, y:U) = exp(lgamma(x)+lgamma(y)-lgamma(x+y));
