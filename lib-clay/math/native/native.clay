@@ -29,6 +29,7 @@ import math.native.log10.*;
 import math.native.log1p.*;
 import math.native.erf.*;
 import math.native.gamma.*;
+import math.native.beta.*;
 import math.native.bessel.*;
 import math.native.trig.*;
 import math.native.atanh.*;

@@ -492,28 +492,27 @@ inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args)
 inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
     = forward ..binaryOp(OP(a,b), NX, ..args);
 
-[OP,NX when LowerPrec?(OP,NX)]
+[OP,NX when (LeftAssoc?(NX) or RightAssoc?(NX)) and LowerPrec?(OP,NX)]
 inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
     = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
 
-[OP,NX when GreaterPrec?(OP,NX)]
+[OP,NX when (LeftAssoc?(OP) or RightAssoc?(OP)) and GreaterPrec?(OP,NX)]
 inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
     = forward ..binaryOp(OP(a,b), NX, ..args);
 
 [OP when LeftAssoc?(OP) or RightAssoc?(OP)]
 inline overload binaryOp(forward a, #OP, forward b) = forward ..OP(a,b);
 
-inline overload binaryOp(forward a) = forward a;
 
 private define boolOp;
+
+inline overload boolOp(forward ..args) = forward ..args;
 
 [OP,NX when BoolAssoc?(OP,NX)]
 inline overload boolOp(forward a, #OP, forward b, #NX, forward ..args) = forward OP(a,b) and boolOp(b,NX,..args);
 
 [OP when BoolAssoc?(OP)]
 inline overload boolOp(forward a, #OP, forward b) = forward ..OP(a,b);
-
-inline overload boolOp(forward a) = forward a;
 
 
 inline overload infixOperator(forward ..args) = forward boolOp(..binaryOp(..args));
