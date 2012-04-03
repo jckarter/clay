@@ -2360,7 +2360,7 @@ extern map<string, ModulePtr> globalModules;
 extern map<string, string> globalFlags;
 extern ModulePtr globalMainModule;
 
-void addProcedureOverload(ProcedurePtr proc, OverloadPtr x);
+void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
 
