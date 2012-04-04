@@ -445,9 +445,9 @@ poly:
     return;
 }
 
-void addProcedureOverload(ProcedurePtr proc, OverloadPtr x) {
+void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
     proc->overloads.insert(proc->overloads.begin(), x);
-    getProcedureMonoTypes(proc->mono, overloadPatternEnv(x),
+    getProcedureMonoTypes(proc->mono, env,
         x->code->formalArgs,
         x->code->formalVarArg);
 }
@@ -464,7 +464,7 @@ static void initOverload(OverloadPtr x) {
         switch (obj->objKind) {
         case PROCEDURE : {
             Procedure *proc = (Procedure *)obj.ptr();
-            addProcedureOverload(proc, x);
+            addProcedureOverload(proc, env, x);
             break;
         }
         case RECORD : {

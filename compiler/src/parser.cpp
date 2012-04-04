@@ -656,14 +656,11 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
     string op;
-    int p = save();
     if (!operatorOp(op)) return false;
+    int p = save();
     while (true) {
+        if (!prefixExpr(b)) return false;
         exprs->add(new NameRef(new Identifier(op)));
-        if (!prefixExpr(b)) {
-            restore(p);
-            break;
-        }
         exprs->add(b);
         p = save();
         if (!operatorOp(op)) {
