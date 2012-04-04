@@ -41,7 +41,6 @@ static bool opstring(string &op) {
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
     op = t->str;
-    std::cout<<t->str<<"\n";
     return true;
 }
 
