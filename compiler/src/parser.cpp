@@ -41,6 +41,7 @@ static bool opstring(string &op) {
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
     op = t->str;
+    std::cout<<t->str<<"\n";
     return true;
 }
 
@@ -656,8 +657,8 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
     string op;
-    int p = save();
     if (!operatorOp(op)) return false;
+    int p = save();
     while (true) {
         exprs->add(new NameRef(new Identifier(op)));
         if (!prefixExpr(b)) {
