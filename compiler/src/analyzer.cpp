@@ -3193,7 +3193,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             entry.second->callByName,
             entry.second->isInline);
         overload->env = entry.second->env;
-        addProcedureOverload(proc, overload);
+        addProcedureOverload(proc, entry.second->env, overload);
 
         return new MultiPValue(staticPValue(proc.ptr()));
     }

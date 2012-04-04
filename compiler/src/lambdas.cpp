@@ -222,7 +222,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     OverloadPtr overload = new Overload(procRef, code, false, false);
     overload->env = env;
     overload->location = x->location;
-    addProcedureOverload(x->lambdaProc, overload);
+    addProcedureOverload(x->lambdaProc, env, overload);
 
     x->converted = procRef;
 }
