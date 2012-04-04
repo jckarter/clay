@@ -1549,6 +1549,8 @@ void codegenExternalVariable(ExternalVariablePtr x)
 
 void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 {
+    CompileContextPusher pusher(x.ptr());
+
     ExternalTargetPtr target = getExternalTarget();
 
     if (x->llvmFunc != NULL && (!codegenBody || x->bodyCodegenned))
