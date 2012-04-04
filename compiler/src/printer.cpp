@@ -942,6 +942,11 @@ void printName(ostream &out, ObjectPtr x)
         }
         break;
     }
+    case EXTERNAL_PROCEDURE : {
+        ExternalProcedure *proc = (ExternalProcedure*)x.ptr();
+        out << "external " << proc->name->str;
+        break;
+    }
     default : {
         out << "UnknownNamedObject(" << x->objKind << ")";
         break;
