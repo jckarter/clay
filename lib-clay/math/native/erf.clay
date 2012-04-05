@@ -80,11 +80,12 @@ private var b = array(
 
 [T when Numeric?(T)]
 overload erf(x:T) {
+    if (nan?(x)) return x;
     var w = if(x < T(0)) -x else x;
     var y = T(0);
     if (w < T(2.2)) {
         var t = w * w;
-        var k = Int(t);
+        var k = wrapCast(Int32,t);
         t -: T(k);
         k *: 13;
         y = ((((((((((((T(a[k]) * t + T(a[k + 1])) * t +
@@ -93,7 +94,7 @@ overload erf(x:T) {
             T(a[k + 8])) * t + T(a[k + 9])) * t + T(a[k + 10])) * t +
             T(a[k + 11])) * t + T(a[k + 12])) * w;
     } else if (w < T(6.9)) {
-        var k = Int(w);
+        var k = wrapCast(Int32,w);
         var t = w - T(k);
         k = 13 * (k - 2);
         y = (((((((((((T(b[k]) * t + T(b[k + 1])) * t +
@@ -114,6 +115,7 @@ overload erf(x:T) {
 
 [T when Numeric?(T)]
 overload erfc(x:T){
+    if (nan?(x)) return x;
     var t = T(3.97886080735226) / (abs(x) + T(3.97886080735226));
     var u = t - T(0.5);
     var y = (((((((((T(0.00127109764952614092) * u + T(1.19314022838340944e-4)) * u -

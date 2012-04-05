@@ -169,8 +169,8 @@ k_rem_pio2(x:Pointer[Double], y:Pointer[Double], e0, nx, prec) {
 	var jx =  nx-1;
 	var jv = (e0-3) \ 24; 
 	if(jv<0) jv=0;
-	var q0 =  Int(e0-24*(jv+1));
-
+	var q0 =  wrapCast(Int32,e0-24*(jv+1));
+	
     /* set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk] */
 	var j = jv-jx;
 	var m = jx+jk;
@@ -193,8 +193,8 @@ recompute:
 	z = q[jz];
 	var i=0;
 	while(j>0) {
-	    fw    =  Double(Int(twon24* z));
-	    iq[i] =  Int(z-two24*fw);
+	    fw    =  Double(wrapCast(Int32,twon24* z));
+	    iq[i] =  wrapCast(Int32,z-two24*fw);
 	    z     =  q[j-1]+fw;
 		inc(i);
 		dec(j);
@@ -203,7 +203,7 @@ recompute:
     /* compute n */
 	z  = scalbn(z,q0);		/* actual value of z */
 	z -: 8.0*floor(z*0.125);		/* trim off integer >= 8 */
-	var n  = Int(z);
+	var n  = wrapCast(Int32,z);
 	z -: Double(n);
 	var ih = 0;
 	if(q0 > 0) {	/* need iq[jz-1] to determine n */
@@ -278,14 +278,14 @@ recompute:
 	else { /* break z into 24-bit if necessary */
 	    z = scalbn(z,-q0);
 	    if(z>=two24) { 
-			fw = Double(Int(twon24*z));
-			iq[jz] = Int(z-two24*fw);
+			fw = Double(wrapCast(Int32,twon24*z));
+			iq[jz] = wrapCast(Int32,z-two24*fw);
 			jz +: 1; 
 			q0 +: 24;
-			iq[jz] = Int(fw);
+			iq[jz] = wrapCast(Int32,fw);
 	    } 
 	    else 
-	    	iq[jz] = Int(z);
+	    	iq[jz] = wrapCast(Int32,z);
 	}
 
     /* convert integer "bit" chunk to floating-point value */

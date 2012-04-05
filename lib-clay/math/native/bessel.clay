@@ -125,7 +125,7 @@ overload j0(x:T) --> y:T {
             T(a[5])) * t + T(a[6])) * t + T(a[7]);
     } else if (w < T(8.5)) {
         var t = w * w * T(0.0625);
-        var k = Int(t);
+        var k = wrapCast(Int32,t);
         t -: k + T(0.5);
         k *: 13;
         y <-- (((((((((((T(b[k]) * t + T(b[k + 1])) * t +
@@ -134,7 +134,7 @@ overload j0(x:T) --> y:T {
             T(b[k + 8])) * t + T(b[k + 9])) * t + T(b[k + 10])) * t +
             T(b[k + 11])) * t + T(b[k + 12]);
     } else if (w < T(12.5)) {
-        var k = Int(w);
+        var k = wrapCast(Int32,w);
         var t = w - (k + T(0.5));
         k = 14 * (k - 8);
         y <-- ((((((((((((T(c[k]) * t + T(c[k + 1])) * t +
@@ -145,7 +145,7 @@ overload j0(x:T) --> y:T {
     } else {
         var v = T(24) / w;
         var t = v * v;
-        var k = 13 * Int(t);
+        var k = 13 * wrapCast(Int32,t);
         y = ((((((T(d[k]) * t + T(d[k + 1])) * t +
             T(d[k + 2])) * t + T(d[k + 3])) * t + T(d[k + 4])) * t +
             T(d[k + 5])) * t + T(d[k + 6])) * sqrt(v);
@@ -279,7 +279,7 @@ overload j1(x:T) --> y:T {
             T(j1a[5])) * t + T(j1a[6])) * t + T(j1a[7])) * w;
     } else if (w < T(8.5)) {
         var t = w * w * T(0.0625);
-        var k = Int(t);
+        var k = wrapCast(Int32,t);
         t -: k + T(0.5);
         k *: 13;
         y = ((((((((((((T(j1b[k]) * t + T(j1b[k + 1])) * t +
@@ -288,7 +288,7 @@ overload j1(x:T) --> y:T {
             T(j1b[k + 8])) * t + T(j1b[k + 9])) * t + T(j1b[k + 10])) * t +
             T(j1b[k + 11])) * t + T(j1b[k + 12])) * w;
     } else if (w < T(12.5)) {
-        var k = Int(w);
+        var k = wrapCast(Int32,w);
         var t = w - (k + T(0.5));
         k = 14 * (k - 8);
         y = ((((((((((((T(j1c[k]) * t + T(j1c[k + 1])) * t +
@@ -299,7 +299,7 @@ overload j1(x:T) --> y:T {
     } else {
         var v = T(24) / w;
         var t = v * v;
-        var k = 13 * Int(t);
+        var k = 13 * wrapCast(Int32,t);
         y = ((((((T(j1d[k]) * t + T(j1d[k + 1])) * t +
             T(j1d[k + 2])) * t + T(j1d[k + 3])) * t + T(j1d[k + 4])) * t +
             T(j1d[k + 5])) * t + T(j1d[k + 6])) * sqrt(v);
@@ -556,14 +556,14 @@ overload i1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(8.5)) {
         var t = w * w * T(0.0625);
-        var k = 12 * Int(t);
+        var k = 12 * wrapCast(Int32,t);
         y = (((((((((((T(i1a[k]) * t + T(i1a[k + 1])) * t +
             T(i1a[k + 2])) * t + T(i1a[k + 3])) * t + T(i1a[k + 4])) * t +
             T(i1a[k + 5])) * t + T(i1a[k + 6])) * t + T(i1a[k + 7])) * t +
             T(i1a[k + 8])) * t + T(i1a[k + 9])) * t + T(i1a[k + 10])) * t +
             T(i1a[k + 11])) * w;
     } else if (w < T(12.5)) {
-        var k = Int(w);
+        var k = wrapCast(Int32,w);
         var t = w - k;
         k = 14 * (k - 8);
         y = ((((((((((((T(i1b[k]) * t + T(i1b[k + 1])) * t +
@@ -573,7 +573,7 @@ overload i1(x:T) --> y:T {
             T(i1b[k + 11])) * t + T(i1b[k + 12])) * t + T(i1b[k + 13]);
     } else {
         var t = T(60) / w;
-        var k = 9 * Int(t);
+        var k = 9 * wrapCast(Int32,t);
         y = ((((((((T(i1c[k]) * t + T(i1c[k + 1])) * t +
             T(i1c[k + 2])) * t + T(i1c[k + 3])) * t + T(i1c[k + 4])) * t +
             T(i1c[k + 5])) * t + T(i1c[k + 6])) * t + T(i1c[k + 7])) * t +

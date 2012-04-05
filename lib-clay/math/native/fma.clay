@@ -67,8 +67,8 @@ add_and_denormalize(a, b, scale) {
 	 */
 	if (sum.lo != 0) {
 		var hibits = EXTRACT_WORD64(sum.hi);
-		var bits_lost = -bitand(Int(bitshr(hibits,52)) , 0x7ffu) - scale + 1;
-		if (bits_lost != bitxor(1 , Int(bitand(hibits,1)))) {
+		var bits_lost = -bitand(wrapCast(Int32,bitshr(hibits,52)) , 0x7ffu) - scale + 1;
+		if (bits_lost != bitxor(1 , wrapCast(Int32,bitand(hibits,1)))) {
 			/* hibits +: (int)copysign(1.0, sum.hi * sum.lo) */
 			var lobits = EXTRACT_WORD64(sum.lo);
 			hibits +: 1 - bitand(bitshr(bitxor(hibits,lobits),62),2);

@@ -21,7 +21,7 @@ overload log10(x:Double) {
 	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	}
-	if (GET_IEEE_HIGH(xdb) >= EM) return infinity(Double);
+	if (GET_IEEE_HIGH(xdb) >= EM) return x;
 	if (GET_IEEE_HIGH(xdb) == RM and GET_IEEE_LOW(xdb) == 0)
 	    return ZERO;			/* log(1) = +0 */
 	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;

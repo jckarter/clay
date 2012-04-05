@@ -523,7 +523,7 @@ inline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, 
 inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
 
 [A when SignedInteger?(A)]
-inline overload wrapSubtract(a:A) : A = numericNegate(a, b);
+inline overload wrapSubtract(a:A) : A = numericNegate(a);
 
 [A, B when Integer?(A) and Numeric?(B)]
 inline wrapCast(#A, b:B) : A = numericConvert(A, b);

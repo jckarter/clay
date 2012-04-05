@@ -95,7 +95,7 @@ medium:
 	    /* Use a specialized rint() to get fn.  Assume round-to-nearest. */
 	    var fn = x*invpio2+0x1.8p52;
 	    fn = fn-0x1.8p52;
-	    var n  = Int(fn);
+	    var n  = wrapCast(Int32,fn);
 	    var r  = x-fn*pio2_1;
 	    var w  = fn*pio2_1t;	/* 1st round good to 85 bit */
         var j  = bitshr(ix,20);
@@ -122,7 +122,7 @@ medium:
 	    y[1] = (r-y[0])-w;
 	    return n;
 	}
-    
+        
     // all other (large) arguments
     if(ix >= EM) {		/* x is inf or NaN */
 	    y[1] = x-x;
@@ -133,9 +133,9 @@ medium:
 	var low = GET_IEEE_LOW(x);
 	var e0 	= bitshr(ix,20)-1046;	/* e0 = ilogb(z)-23; */
 	z = MAKE_IEEE(ix - bitshl(e0,20), low).2;
-	tx[0] = Double(Int(z));
+	tx[0] = Double(wrapCast(Int32,z));
 	z     = (z-tx[0])*two24;
-	tx[1] = Double(Int(z));
+	tx[1] = Double(wrapCast(Int32,z));
 	z     = (z-tx[1])*two24;
 	tx[2] = z;
 	var nx = 3;
