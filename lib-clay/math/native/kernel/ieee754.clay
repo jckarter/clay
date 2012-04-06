@@ -72,9 +72,6 @@ alias SET_FLOAT_WORD(i)
 
 
 
-
-
-alias AM = bitcast(Int32,0xffffffffu);
 alias EM = 0x7ff00000;
 alias NEM = 0x000fffff;
 alias RM = 0x3ff00000;
