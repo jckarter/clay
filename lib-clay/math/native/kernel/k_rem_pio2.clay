@@ -157,10 +157,10 @@ alias twon24  =  5.96046447753906250000e-08; /* 0x3E700000, 0x00000000 */
 alias ZERO = 0.;
 alias ONE = 1.;
 	
-k_rem_pio2(x:Pointer[Double], y:Pointer[Double], e0, nx, prec) {
-	var iq = Array[Int,20]();
+k_rem_pio2(x:Array[Double,3], y:Array[Double,2], e0, nx, prec) {
+	var iq = Array[Int32,20]();
 	var f,fq,q = Array[Double,20](),Array[Double,20](),Array[Double,20]();
-	var fw=0.0;
+	var fw = 0.0;
     /* initialize jk*/
 	var jk = init_jk[prec];
 	var jp = jk;
@@ -169,7 +169,7 @@ k_rem_pio2(x:Pointer[Double], y:Pointer[Double], e0, nx, prec) {
 	var jx =  nx-1;
 	var jv = (e0-3) \ 24; 
 	if(jv<0) jv=0;
-	var q0 =  wrapCast(Int32,e0-24*(jv+1));
+	var q0 = e0-24*(jv+1);
 	
     /* set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk] */
 	var j = jv-jx;
@@ -193,7 +193,7 @@ recompute:
 	z = q[jz];
 	var i=0;
 	while(j>0) {
-	    fw    =  Double(wrapCast(Int32,twon24* z));
+	    fw    =  Double(wrapCast(Int32,twon24 * z));
 	    iq[i] =  wrapCast(Int32,z-two24*fw);
 	    z     =  q[j-1]+fw;
 		inc(i);
@@ -227,7 +227,7 @@ recompute:
 			    }
 			} 
 			else  
-				iq[i] = NEM - j;
+				iq[i] = 0xffffff - j;
 	    }
 	    if(q0>0) {		/* rare case: chance is 1 in 12 */
 	        switch(q0)
@@ -290,13 +290,16 @@ recompute:
 
     /* convert integer "bit" chunk to floating-point value */
 	fw = scalbn(ONE,q0);
-	for(i in reverseRange(jz)) {
+	i = jz;
+	while(i>=0) {
 	    q[i] = fw*Double(iq[i]); 
 	    fw *: twon24;
+	    dec(i);
 	}
 
     /* compute PIo2[0,...,jp]*q[jz,...,0] */
-	for(i in reverseRange(jz)) {
+	i = jz;
+	while(i >= 0) {
 	    fw = 0.;
 	    var k = 0;
 	    while(k<=jp and k<=jz-i) {
@@ -304,35 +307,47 @@ recompute:
 	    	inc(k);
 	    }
 	    fq[jz-i] = fw;
+	    dec(i);
 	}
 
     /* compress fq[] into y[] */
 	switch(prec)
 	    case (0) {
 			fw = 0.0;
-			for (i in reverseRange(jz)) fw +: fq[i];
+			i=jz;
+			while (i>=0) {
+				fw +: fq[i];
+				dec(i);
+			}
 			y[0] = if(ih==0) fw else -fw; 
 	    }
-	    case (1) {}
-	    case (2) {
+	    case (1,2) {
 			fw = 0.0;
-			for (i in reverseRange(jz)) fw +: fq[i]; 
-			fw <-- fw;
+			i=jz;
+			while (i>=0) {
+				fw +: fq[i];
+				dec(i); 
+			}
+			fw = fw;
 			y[0] = if(ih==0) fw else -fw; 
 			fw = fq[0]-fw;
 			for (i in range(1,jz+1)) fw +: fq[i];
 			y[1] = if(ih==0) fw else -fw; 
 	    }
 	    case (3) {	/* painful */
-			for (i in reverseRange(jz)) {
+			i=jz;
+			while (i>0) {
 			    fw      = fq[i-1]+fq[i]; 
 			    fq[i]  +: fq[i-1]-fw;
 			    fq[i-1] = fw;
+			    dec(i);
 			}
-			for (i in reverseRange(1,jz)) {
+			i=jz;
+			while (i>1) {
 			    fw      = fq[i-1]+fq[i]; 
 			    fq[i]  +: fq[i-1]-fw;
 			    fq[i-1] = fw;
+			    dec(i);
 			}
 			fw=0.0;
 			i=jz;
