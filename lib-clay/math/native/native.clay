@@ -55,10 +55,10 @@ overload recip(x:T) = T(1) / x;
 [I when Integer?(I)]
 inline overload abs(x:I) = if(x >= 0) x else -x;
 
-inline overload sign(x:Long) = bitor(bitshr(x,63),Long(bitshr(ULong(-x),63)));
-inline overload sign(x:Int) = bitor(bitshr(x,31),wrapCast(Int32,bitshr(UwrapCast(Int32,-x),31)));
-inline overload sign(x:Short) = bitor(bitshr(x,15),Short(bitshr(UShort(-x),15)));
-inline overload sign(x:Byte) = bitor(bitshr(x,7),Byte(bitshr(UByte(-x),7)));
+inline overload sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
+inline overload sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
+inline overload sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,wrapSubtract(x)),15)));
+inline overload sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));
 
 [T when Float?(T)]
 overload significand(x:T) = scalb(x,T(wrapSubtract(ilogb(x))));
