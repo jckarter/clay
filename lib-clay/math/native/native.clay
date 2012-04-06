@@ -76,7 +76,8 @@ clamp(x:T, lo:T, hi:T) {
 
 sec(z) = recip(cos(z));
 csc(z) = recip(sin(z));
-[T when Float?(T)] overload cot(z:T) = recip(tan(z));
+[T when Float?(T)] 
+overload cot(z:T) = recip(tan(z));
 asec(y) = acos(recip(y));
 acsc(y) = asin(recip(y));
 acot(y) = atan(recip(y));
