@@ -35,10 +35,10 @@ overload trunc(x:T) {
 	    	if(j0==0x400u) return x+x;	/* inf or NaN */
 	    	else return x;		/* x is integral */
 		} else {
-		    var i = bitshr(AM,j0-20);
+		    var i = bitshr(0xffffffffu,j0-20);
 		    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 		    if(HUGE+x>ZERO)		/* raise inexact flag */
-				GET_IEEE_LOW(ix) = bitand(GET_IEEE_LOW(ix),bitnot(i));
+				SET_IEEE_LOW(ix, bitcast(Int32,bitand(GET_IEEE_LOW(ix),bitnot(i))));
 		}
 	return GET_IEEE_DB(ix);
 }

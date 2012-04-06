@@ -272,7 +272,7 @@ alias Mul22cond = Mul22;
     if (_t4 != 0.0) {
         var _t3db = ieee_db(_t3);
         if (not Bool(bitand(_t3db.0[0], 0x00000001))) {
-            if (bitxor(Int(_t4 > 0.0), (bitand(_t3db.0[1], 0x80000000u) != 0)))
+            if (bitxor(wrapCast(Int32,_t4 > 0.0), (bitand(_t3db.0[1], 0x80000000u) != 0)))
                 inc(_t3db.1);
             else
                 dec(_t3db.1);

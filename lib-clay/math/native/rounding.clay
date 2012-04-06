@@ -42,19 +42,19 @@ overload rint(a:Double){
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
 	if(j0<20) {
 	    if(j0<0) {
-			if(bitor(bitand(GET_IEEE_HIGH(ix),MM),GET_IEEE_LOW(ix))==0) return x;
-			GET_IEEE_LOW(ix) = bitor(GET_IEEE_LOW(ix),bitand(GET_IEEE_HIGH(ix),0x0fffff));
-			GET_IEEE_HIGH(ix) = bitand(GET_IEEE_HIGH(ix),bitcast(Int32,0xfffe0000u));
-			GET_IEEE_HIGH(ix) = bitor(GET_IEEE_HIGH(ix),bitand(bitshr(bitor(GET_IEEE_LOW(ix),-GET_IEEE_LOW(ix)),12),0x80000));
+			if(bitor(bitand(GET_IEEE_HIGH(ix),0x7fffffff),GET_IEEE_LOW(ix))==0) return x;
+			SET_IEEE_LOW(ix,bitor(GET_IEEE_LOW(ix),bitand(GET_IEEE_HIGH(ix),0x0fffff)));
+			SET_IEEE_HIGH(ix,bitand(GET_IEEE_HIGH(ix),bitcast(Int32,0xfffe0000u)));
+			SET_IEEE_HIGH(ix,bitor(GET_IEEE_HIGH(ix),bitand(bitshr(bitor(GET_IEEE_LOW(ix),-GET_IEEE_LOW(ix)),12),0x80000)));
 			x = SET_IEEE_HIGH(x,GET_IEEE_HIGH(ix));
 		    var w = TWO52[sx]+x;
 		    var t = w-TWO52[sx];
-			GET_IEEE_HIGH(ix) = GET_IEEE_HIGH(t);
-			t = SET_IEEE_HIGH(t,bitor(bitand(GET_IEEE_HIGH(ix),MM),bitshl(sx,31)));
+			SET_IEEE_HIGH(ix,GET_IEEE_HIGH(t));
+			t = SET_IEEE_HIGH(t,bitor(bitand(GET_IEEE_HIGH(ix),0x7fffffff),bitshl(sx,31)));
 		    return t;
 	    } 
 	    else {
-			var i = bitshr(NEM,j0);
+			var i = bitshr(0x000fffff,j0);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
 			i = bitshr(i,1);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))!=0) {
@@ -66,19 +66,20 @@ overload rint(a:Double){
 			     * adjustment is trickiest for j0==18 and j0==19
 			     * since then it spans the word boundary.
 			     */
-			    if(j0==19) GET_IEEE_LOW(ix) = CV2; else
-			    if(j0==18) GET_IEEE_LOW(ix) = SM; else
-			    GET_IEEE_HIGH(ix) = bitor(bitandc(GET_IEEE_HIGH(ix),i),bitshr(0x20000,j0));
+			    if(j0==19) SET_IEEE_LOW(ix,0x40000000); else
+			    if(j0==18) SET_IEEE_LOW(ix,bitcast(Int32,0x80000000u)); else
+			    SET_IEEE_HIGH(ix,bitor(bitandc(GET_IEEE_HIGH(ix),i),bitshr(0x20000,j0)));
 			}
 	    }
 	} else if (j0>51) {
 	    if(j0==0x400) return x+x;	/* inf or NaN */
 	    else return x;		/* x is integral */
 	} else {
-	    var i = bitshr(AM,j0-20);
+	    var i = bitshr(0xffffffffu,j0-20);
 	    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 	    i = bitshr(i,1);
-	    if(bitand(GET_IEEE_LOW(ix),i)!=0) GET_IEEE_LOW(ix) = bitor(bitandc(GET_IEEE_LOW(ix),i),bitshr(CV2,j0-20));
+	    if(bitand(GET_IEEE_LOW(ix),i)!=0) 
+	    	SET_IEEE_LOW(ix,bitcast(Int32,bitor(bitandc(GET_IEEE_LOW(ix),i),bitshr(0x40000000,j0-20))));
 	}
 	var w = TWO52[sx]+GET_IEEE_DB(ix);
 	return w-TWO52[sx];
@@ -90,24 +91,22 @@ overload floor(x:Double) {
 	if(j0<20) {
 	    if(j0<0) { 	/* raise inexact if x != 0 */
 		if(DHUGE+x>DZERO) {/* return 0*sign(x) if |x|<1 */
-		    if(GET_IEEE_HIGH(ix)>=0) {
-		    	GET_IEEE_HIGH(ix)=0;
-		    	GET_IEEE_LOW(ix)=0;
-		    }
+		    if(GET_IEEE_HIGH(ix)>=0)
+		    	SET_IEEE(ix,0l);
 		    else 
-		    	if(bitor(bitand(GET_IEEE_HIGH(ix),MM),GET_IEEE_LOW(ix))!=0) { 
-					GET_IEEE_HIGH(ix)=CV21;
-					GET_IEEE_LOW(ix)=0;
+		    	if(bitor(bitand(GET_IEEE_HIGH(ix),0x7fffffff),GET_IEEE_LOW(ix))!=0) { 
+					SET_IEEE_HIGH(ix,bitcast(Int32,0xbff00000u));
+					SET_IEEE_LOW(ix,0);
 				}
 		}
 	    } 
 	    else {
-			var i = bitshr(NEM,j0);
+			var i = bitshr(0x000fffff,j0);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
 			if(DHUGE+x>DZERO) {	/* raise inexact flag */
-			    if(GET_IEEE_HIGH(ix)<0) GET_IEEE_HIGH(ix) +: bitshr(CV8,j0);
-			    GET_IEEE_HIGH(ix) = bitandc(GET_IEEE_HIGH(ix),i);
-			    GET_IEEE_LOW(ix) = 0;
+			    if(GET_IEEE_HIGH(ix)<0) GET_IEEE_HIGH(ix) +: bitshr(0x00100000,j0);
+			    SET_IEEE_HIGH(ix,bitandc(GET_IEEE_HIGH(ix),i));
+			    SET_IEEE_LOW(ix,0);
 			}
 	    }
 	} else 
@@ -116,7 +115,7 @@ overload floor(x:Double) {
 	    	else return x;		/* x is integral */
 		} 
 		else {
-	    	var i = bitshr(AM,j0-20);
+	    	var i = bitshr(0xffffffffu,j0-20);
 	    	if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 	    	if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 				if(GET_IEEE_HIGH(ix)<0) {
@@ -124,10 +123,10 @@ overload floor(x:Double) {
 		    		else {
 						var j = GET_IEEE_LOW(ix)+bitshl(1,(52-j0));
 						if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix) +:1 ; 	/* got a carry */
-						GET_IEEE_LOW(ix)=j;
+						SET_IEEE_LOW(ix,j);
 		    		}
 				}
-			GET_IEEE_LOW(ix) = bitandc(GET_IEEE_LOW(ix),i);
+			SET_IEEE_LOW(ix,bitcast(Int32,bitandc(GET_IEEE_LOW(ix),i)));
 	    	}
 		}
 	return GET_IEEE_DB(ix);
@@ -167,30 +166,30 @@ overload ceil(x:Double) {
 	    if(j0<0) { 	/* raise inexact if x != 0 */
 			if(DHUGE+x>DZERO) {/* return 0*sign(x) if |x|<1 */
 			    if(GET_IEEE_HIGH(ix)<0) {
-			    	GET_IEEE_HIGH(ix)=SM;
-			    	GET_IEEE_LOW(ix)=0;
+			    	SET_IEEE_HIGH(ix,bitcast(Int32,0x80000000u));
+			    	SET_IEEE_LOW(ix,0);
 			    }
 			    else 
 			    	if(bitor(GET_IEEE_HIGH(ix),GET_IEEE_LOW(ix))!=0) { 
-			    		GET_IEEE_HIGH(ix)=RM;
-			    		GET_IEEE_LOW(ix)=0;
+			    		SET_IEEE_HIGH(ix,0x3ff00000);
+			    		SET_IEEE_LOW(ix,0);
 			    	}
 			}
 	    } 
 	    else {
-			var i = bitshr(NEM,j0);
+			var i = bitshr(0x000fffff,j0);
 			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
 			if(DHUGE+x>DZERO) {	/* raise inexact flag */
-			    if(GET_IEEE_HIGH(ix)>0) GET_IEEE_HIGH(ix) +: bitshr(CV8,j0);
-			    GET_IEEE_HIGH(ix) = bitandc(GET_IEEE_HIGH(ix),i); 
-			    GET_IEEE_LOW(ix) = 0;
+			    if(GET_IEEE_HIGH(ix)>0) GET_IEEE_HIGH(ix) +: bitshr(0x00100000,j0);
+			    SET_IEEE_HIGH(ix, bitandc(GET_IEEE_HIGH(ix),i)); 
+			    SET_IEEE_LOW(ix, 0);
 			}
 	    }
 	} else if (j0>51) {
 	    if(j0==0x400u) return x+x;	/* inf or NaN */
 	    else return x;		/* x is integral */
 	} else {
-	    var i = bitshr(AM,j0-20);
+	    var i = bitshr(0xffffffffu,j0-20);
 	    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
 	    if(DHUGE+x>DZERO) { 		/* raise inexact flag */
 			if(GET_IEEE_HIGH(ix)>0) {
@@ -198,10 +197,10 @@ overload ceil(x:Double) {
 			    else {
 					var j = GET_IEEE_LOW(ix) + bitshl(1,52-j0);
 					if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix)+:1;	/* got a carry */
-					GET_IEEE_LOW(ix) = j;
+					SET_IEEE_LOW(ix, j);
 			    }
 			}
-			GET_IEEE_LOW(ix) = bitandc(GET_IEEE_LOW(ix),i);
+			SET_IEEE_LOW(ix, bitcast(Int32,bitandc(GET_IEEE_LOW(ix),i)));
 	    }
 	}
 	return GET_IEEE_DB(ix);

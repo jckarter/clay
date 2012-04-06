@@ -43,7 +43,7 @@ overload exp(a:Double) { /* default IEEE double exp */
 			k = 1-xsb-xsb;
 	    } 
 	    else {
-			k  = Int(IVLN2*x+halF[xsb]);
+			k  = wrapCast(Int32,IVLN2*x+halF[xsb]);
 			var t  = Double(k);
 			hi = x - t*ln2HI[0];	/* t*ln2HI is exact here */
 			lo = t*ln2LO[0];
@@ -118,7 +118,7 @@ overload exp(a:Float) {
 			k = 1-xsb-xsb;
 	    } 
 	    else {
-			k  = Int32(finvln2*x+fhalF[xsb]);
+			k  = wrapCast(Int32,finvln2*x+fhalF[xsb]);
 			var t  = k;
 			hi = x - t*fln2HI[0];	/* t*ln2HI is exact here */
 			lo = t*fln2LO[0];

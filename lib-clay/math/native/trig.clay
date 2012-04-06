@@ -15,7 +15,7 @@ overload sin(x:Double) {
 	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e500000)			/* |x| < 2**-26 */
-	       	if(Int(x)==0) return x;
+	       	if(wrapCast(Int32,x) == 0) return x;
 	    	/* generate inexact */
 	    return kernel_sin(x,0.,0);
 	}
@@ -45,7 +45,7 @@ overload cos(x:Double) {
 	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 	    if(ix<0x3e46a09e)			/* if x < 2**-27 * sqrt(2) */
-			if(Int(x)==0) 
+			if(wrapCast(Int32,x)==0) 
 				return 1.0;	/* generate inexact */
 	    return kernel_cos(x,0.);
 	}
@@ -74,7 +74,7 @@ overload tan(x:Double) {
 	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
 		if(ix<0x3e400000)			/* x < 2**-27 */
-			if(Int(x)==0) return x;		/* generate inexact */
+			if(wrapCast(Int32,x)==0) return x;		/* generate inexact */
 	    return kernel_tan(x,0.,1);
 	}
     /* tan(Inf or NaN) is NaN */
@@ -109,7 +109,7 @@ overload sinpi(x:Double) {
 	if(z != y) {				/* inexact anyway */
 	    y  *: 0.5;
 	    y   = 2.0*(y - floor(y));		/* y = |x| mod 2.0 */
-	    n   = Int32(y*4.0);
+	    n   = wrapCast(Int32,y*4.0);
 	} 
 	else {
         if(ix>=0x43400000) {

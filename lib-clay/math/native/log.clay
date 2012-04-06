@@ -17,7 +17,7 @@ overload log(x:Double) {
 	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	} 
-	if (GET_IEEE_HIGH(xdb) >= EM) return infinity(Double);
+	if (GET_IEEE_HIGH(xdb) >= EM) return x;
 	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),NEM);
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);

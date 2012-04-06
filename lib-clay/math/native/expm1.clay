@@ -55,7 +55,7 @@ overload expm1(a:T)  {
 			}
 	    } 
 	    else {
-			k  = Int(IVLN2*x+(if(xsb==0) 0.5 else -0.5));
+			k  = wrapCast(Int32,IVLN2*x+(if(xsb==0) 0.5 else -0.5));
 			var t  = Double(k);
 			hi = x - t*LN2HI;	/* t*ln2_hi is exact here */
 			lo = t*LN2LO;

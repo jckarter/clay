@@ -23,7 +23,7 @@ overload scalbn (x:Double, n:I) {
         k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20) - 54;
         if (n< -50000) return TINY*GET_IEEE_DB(xdb);   /*underflow*/
     }
-    if (k==0x7ff) return x+x;       /* NaN or Inf */
+    if (k>=0x7ff) return x+x;       /* NaN or Inf */
     k = k+n;
     if (k >  0x7fe) return HUGE*copysign(HUGE,x); /* overflow  */
     if (k > 0) {             /* normal result */
@@ -57,11 +57,14 @@ overload scalbln (x:T, n:Long) {
 overload scalb(x:T, fn:T){
     if (nan?(x) or nan?(fn)) return x*fn;
     if (not finite?(fn)) {
-        if(fn>0.0) return x*fn;
-        else       return x/(-fn);
+        if(fn>0.0) 
+            return x*fn;
+        else {
+            return x/(-fn);
+        }
     }
     if (rint(fn)!=fn) return (fn-fn)/(fn-fn);
     if ( fn > 65000.0) return scalbn(x, 65000);
     if (-fn > 65000.0) return scalbn(x,-65000);
-    return scalbn(x,Int(fn));
+    return scalbn(x,wrapCast(Int32,fn));
 }
