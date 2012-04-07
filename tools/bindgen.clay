@@ -293,11 +293,17 @@ opaqueType(type:CXType) {
     }
 }
 
-withForwardDecl(cursor:CXCursor, f) {
+withForwardDecl(cursor:CXCursor, data:CXClientData, f) {
     var definition = clang_getCursorDefinition(cursor);
-    if (cursor == definition)
-        f();
-    else if (noDefinition?(definition))
+    if (cursor == definition) {
+        var name = str(clang_getCursorSpelling(cursor));
+        var parent = clang_getCursorLexicalParent(cursor);
+        if (not empty?(name) or
+            parent.kind == CXCursor_StructDecl or
+            parent.kind == CXCursor_UnionDecl or
+            parent.kind == CXCursor_EnumDecl)
+                f(cursor, nameForDeclaration(cursor), data);
+    } else if (noDefinition?(definition))
         opaqueDeclaration(cursor);
 }
 
@@ -331,6 +337,27 @@ symbolVisited(name:String) : Bool
     return false;
 }
 
+structDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
+    var unnamedFieldIndex = 0;
+    printlnTo(g_bindingsOut, "record ", name, " (");
+    clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
+        CXClientData(@unnamedFieldIndex));
+    printlnTo(g_bindingsOut, ");\n");
+}
+
+unionDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
+    printlnTo(g_bindingsOut, "alias ", name, " = Union[");
+    clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
+    printlnTo(g_bindingsOut, "];\n");
+}
+
+
+enumDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
+    printlnTo(g_bindingsOut, "alias ", name, " = ",
+        convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
+    clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
+}
+
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref options = Pointer[BindgenOptions](data)^;
@@ -341,29 +368,15 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     var kind = clang_getCursorKind(cursor);
     switch (kind)
     case (CXCursor_StructDecl) {
-        withForwardDecl(cursor): () -> {
-            var unnamedFieldIndex = 0;
-            printlnTo(g_bindingsOut, "record ", nameForDeclaration(cursor), " (");
-            clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
-                CXClientData(@unnamedFieldIndex));
-            printlnTo(g_bindingsOut, ");\n");
-        }
+        withForwardDecl(cursor, data, structDefinition);
         return CXChildVisit_Recurse;
     }
     case (CXCursor_UnionDecl) {
-        withForwardDecl(cursor): () -> {
-            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = Union[");
-            clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
-            printlnTo(g_bindingsOut, "];\n");
-        }
+        withForwardDecl(cursor, data, unionDefinition);
         return CXChildVisit_Recurse;
     }
     case (CXCursor_EnumDecl) {
-        withForwardDecl(cursor): () -> {
-            printlnTo(g_bindingsOut, "alias ", nameForDeclaration(cursor), " = ",
-                convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
-            clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
-        }
+        withForwardDecl(cursor, data, enumDefinition);
         printlnTo(g_bindingsOut);
         return CXChildVisit_Continue;
     }
@@ -439,7 +452,30 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
         if (underlyingType.kind == CXType_Unexposed)
             underlyingType = clang_getCanonicalType(underlyingType);
-        printlnTo(g_bindingsOut, "alias ", clayIdentifier(name), " = ",
+
+        var decl = clang_getTypeDeclaration(underlyingType);
+        var typeId = clayIdentifier(name);
+
+        if (clang_isCursorDefinition(decl) != 0 and
+            empty?(str(clang_getCursorSpelling(decl)))) {
+
+            switch (decl.kind)
+            case (CXCursor_StructDecl) {
+                structDefinition(decl, typeId, data);
+                return CXChildVisit_Recurse;
+            }
+            case (CXCursor_UnionDecl) {
+                unionDefinition(decl, typeId, data);
+                return CXChildVisit_Recurse;
+            }
+            case (CXCursor_EnumDecl) {
+                enumDefinition(decl, typeId, data);
+                printlnTo(g_bindingsOut);
+                return CXChildVisit_Continue;
+            }
+        }
+
+        printlnTo(g_bindingsOut, "alias ", typeId, " = ",
             convertType(underlyingType, cursor), ";\n");
         opaqueType(underlyingType);
 
