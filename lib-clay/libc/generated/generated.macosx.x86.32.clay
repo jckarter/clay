@@ -24,12 +24,10 @@ alias __darwin_natural_t = UInt;
 
 alias __darwin_ct_rune_t = Int;
 
-alias Union_Unnamed1 = Union[
+alias __mbstate_t = Union[
     /* __mbstate8 */ Array[CChar, 128],
     /* _mbstateL */ Int64,
 ];
-
-alias __mbstate_t = Union_Unnamed1;
 
 alias __darwin_mbstate_t = __mbstate_t;
 
@@ -393,12 +391,11 @@ external (cdecl) __vsprintf_chk(arg0:Pointer[CChar], arg1:Int, arg2:size_t, arg3
 
 external (cdecl) __vsnprintf_chk(arg0:Pointer[CChar], arg1:size_t, arg2:Int, arg3:size_t, arg4:Pointer[CChar], arg5:va_list) : Int;
 
-alias Enum_Unnamed2 = UInt;
-alias P_ALL = 0;
-alias P_PID = 1;
-alias P_PGID = 2;
 
-alias idtype_t = Opaque /* unknown EnumDecl  */;
+alias idtype_t = UInt;
+alias P_ALL = UInt(0);
+alias P_PID = UInt(1);
+alias P_PGID = UInt(2);
 
 alias pid_t = __darwin_pid_t;
 
@@ -876,9 +873,22 @@ external (cdecl) _OSSwapInt64(arg0:__uint64_t) : __uint64_t;
 
 alias Union_wait = Union[
     /* w_status */ Int,
-    /* w_T */ Struct_Unnamed3,
-    /* w_S */ Struct_Unnamed4,
+    /* w_T */ Struct_Unnamed1,
+    /* w_S */ Struct_Unnamed2,
 ];
+
+record Struct_Unnamed1 (
+    w_Termsig : UInt,
+    w_Coredump : UInt,
+    w_Retcode : UInt,
+    w_Filler : UInt,
+);
+
+record Struct_Unnamed2 (
+    w_Stopval : UInt,
+    w_Stopsig : UInt,
+    w_Filler : UInt,
+);
 
 external (cdecl, "_wait\$UNIX2003") wait(arg0:Pointer[Int]) : pid_t;
 
@@ -898,26 +908,20 @@ alias rune_t = __darwin_rune_t;
 
 alias wchar_t = __darwin_wchar_t;
 
-record Struct_Unnamed5 (
+record div_t (
     quot : Int,
     rem : Int,
 );
 
-alias div_t = Struct_Unnamed5;
-
-record Struct_Unnamed6 (
+record ldiv_t (
     quot : CLong,
     rem : CLong,
 );
 
-alias ldiv_t = Struct_Unnamed6;
-
-record Struct_Unnamed7 (
+record lldiv_t (
     quot : Int64,
     rem : Int64,
 );
-
-alias lldiv_t = Struct_Unnamed7;
 
 external __mb_cur_max : Int;
 
