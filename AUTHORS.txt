@@ -15,5 +15,6 @@ Alfred Rossi <alfredr@gmail.com>
 Arvid Picciani <aep@exys.org>
 Doug Coleman <erg@factorcode.org>
 John Benediktsson <mrjbq7@gmail.com>
+Jyun-Yan You (github @crabtw)
 
 If your name is missing from this list, let me know at joe@duriansoftware.com.
