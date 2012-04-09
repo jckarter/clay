@@ -1,8 +1,6 @@
 
 import numbers.floats.*;
 
-enum ComplexPart (REAL, IMAG);
-
 alias ComplexFloat = Complex32;
 alias ComplexDouble = Complex64;
 alias ComplexLongDouble = Complex80;
