@@ -1,3 +1,8 @@
+import hashmaps.*;
+import algorithms.(reduce);
+import uniquepointers.(UniquePointer,nullUnique);
+import sharedpointers.(SharedPointer,nullShared,RefCounted);
+
 
 //
 // marshaling/unmarshaling context

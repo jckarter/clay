@@ -1,3 +1,5 @@
+import hashmaps.*;
+import algorithms.*;
 
 even?(x) = (x % 2 == 0);
 

@@ -1,6 +1,8 @@
 import llvm.libclang.*;
 import printer.formatter.(repr);
 import maybe.*;
+import hashmaps.*;
+import algorithms.(in?);
 
 var clayKeywords = array(
     "public", "private", "import", "as",

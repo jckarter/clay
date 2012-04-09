@@ -1,3 +1,4 @@
+import sharedpointers.(new);
 
 record Foo (
     value:Int

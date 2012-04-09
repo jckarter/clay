@@ -1,7 +1,7 @@
 +: operators
 Vector[Char]: vectors
 Vec: __primitives__
-hash: operators
+hash: hash
 Array: __primitives__
 Array[Bool, 10]: __primitives__
 HashMap: hashmaps

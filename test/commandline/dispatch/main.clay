@@ -1,4 +1,5 @@
 import commandline.dispatch.*;
+import algorithms.(reduce);
 
 add(args) {
     println(

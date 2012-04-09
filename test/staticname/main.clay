@@ -1,5 +1,6 @@
 
 import vectors.generic as vg;
+import hashmaps.(hash,HashMap);
 
 main() {
     disp(add);

@@ -1,3 +1,4 @@
+import sharedpointers.(SharedPointer,new);
 
 
 //
@@ -211,3 +212,36 @@ overload null?(x:T) = null?(referencePtr(x));
 
 [T when ReferenceType?(T)]
 overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
+
+
+
+
+//
+// printTo - reference types
+//
+
+[T when ReferenceType?(T)]
+overload printTo(stream, x:T) {
+    if (null?(x)) {
+        printTo(stream, "null");
+        return;
+    }
+    printTo(stream, T, "(", ..weaveValues(", ", ..referenceTypeFields(x)), ")");
+}
+
+
+//
+// printReprTo - reference types
+//
+
+[T when ReferenceType?(T)]
+overload printReprTo(stream, x:T) {
+    // FIXME: handle cycles
+    if (null?(x)) {
+        printTo(stream, "null");
+        return;
+    }
+    printTo(stream, T);
+    printReprArgumentsTo(stream, ..referenceTypeFields(x));
+}
+

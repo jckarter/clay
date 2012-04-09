@@ -1,3 +1,4 @@
+import algorithms.*;
 
 main() {
     var a = array("", "foo", "foobar", "afoobarfoo");

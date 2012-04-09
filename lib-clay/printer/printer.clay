@@ -245,46 +245,6 @@ overload printTo(stream, x:S) {
 
 
 //
-// printTo - SharedPointer
-//
-
-[T]
-overload printTo(stream, x:SharedPointer[T]) {
-    printTo(stream, SharedPointer[T], "(");
-    if (not null?(x))
-        printTo(stream, x^);
-    printTo(stream, ")");
-}
-
-
-
-//
-// printTo - reference types
-//
-
-[T when ReferenceType?(T)]
-overload printTo(stream, x:T) {
-    if (null?(x)) {
-        printTo(stream, "null");
-        return;
-    }
-    printTo(stream, T, "(", ..weaveValues(", ", ..referenceTypeFields(x)), ")");
-}
-
-
-
-//
-// printTo - HashMap
-//
-
-[K,V]
-overload printTo(stream, x:HashMap[K,V]) {
-    printReprTo(stream, x);
-}
-
-
-
-//
 // printReprTo
 //
 
@@ -544,84 +504,6 @@ overload printReprTo(stream, s:S) {
     printTo(stream, '"');
 }
 
-
-
-//
-// printReprTo - SharedPointer
-//
-
-[T]
-overload printReprTo(stream, x:SharedPointer[T]) {
-    // FIXME: handle cycles
-    printTo(stream, SharedPointer[T], "(");
-    if (not null?(x))
-        printReprTo(stream, x^);
-    printTo(stream, ")");
-}
-
-
-
-//
-// printReprTo - reference types
-//
-
-[T when ReferenceType?(T)]
-overload printReprTo(stream, x:T) {
-    // FIXME: handle cycles
-    if (null?(x)) {
-        printTo(stream, "null");
-        return;
-    }
-    printTo(stream, T);
-    printReprArgumentsTo(stream, ..referenceTypeFields(x));
-}
-
-
-
-//
-// printReprTo - HashMap
-//
-
-[K, V]
-overload printReprTo(stream, x:HashMap[K,V]) {
-    printTo(stream, HashMap[K,V], '(');
-    var first = true;
-    for (k, v in items(x)) {
-        if (first)
-            first = false;
-        else
-            printTo(stream, ", ");
-        printReprArgumentsTo(stream, k, v);
-    }
-    printTo(stream, ')');
-}
-
-
-//
-// printReprTo - UniqueValue
-//
-
-[T]
-overload printReprTo(stream, v:UniqueValue[T]) {
-    if (null?(v))
-        printTo(stream, UniqueValue[T], "()");
-    else {
-        printTo(stream, UniqueValue[T], "(");
-        printReprTo(stream, v^);
-        printTo(stream, ")");
-    }
-}
-
-[T]
-overload printTo(stream, v:UniqueValue[T]) {
-    if (null?(v))
-        printTo(stream, UniqueValue[T], "()");
-    else {
-        printTo(stream, UniqueValue[T], "(");
-        printTo(stream, v^);
-        printTo(stream, ")");
-    }
-}
 
 
 //

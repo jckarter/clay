@@ -1,4 +1,5 @@
 import numbers.floats.(infinity);
+import hash.*;
 
 main() {
     // just make sure hash() works without crashing or raising spurious overflows
