@@ -19,7 +19,7 @@ inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [T when Integer?(T)] inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T when Integer?(T)] inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
-[when MathMode?(LIBM)] inline overload abs(x:Int) = libc.libc.abs(x);
+[when MathMode?(LIBM)] inline overload abs(x:Int32) = libc.abs(x);
 [when MathMode?(LIBM)] inline overload abs(x:Long) = libc.llabs(x);
 [when MathMode?(LIBM)] inline overload abs(x:Float) = libc.fabsf(x);
 [when MathMode?(LIBM)] inline overload abs(x:Double) = libc.fabs(x);
@@ -156,10 +156,6 @@ inline overload ceil(x:LongDouble) = libc.ceill(x);
 [when MathMode?(LIBM)] inline overload round(x:Double) = libc.round(x);
 [when MathMode?(LIBM)] inline overload round(x:Float) = libc.roundf(x);
 [when MathMode?(LIBM)] inline overload round(x:LongDouble) = libc.roundl(x);
-
-[when MathMode?(LIBM)] inline overload significand(x:Double) = libc.significand(x);
-[when MathMode?(LIBM)] inline overload significand(x:Float) = libc.significandf(x);
-[when MathMode?(LIBM)] inline overload significand(x:LongDouble) = libc.significandl(x);
 
 [when MathMode?(LIBM)] inline overload fmod(x:Double,y:Double) = libc.fmod(x,y);
 inline overload fmod(x:Float,y:Float) = libc.fmodf(x,y);
@@ -335,16 +331,6 @@ inline overload remquo(x:LongDouble,y:LongDouble) {
 [when MathMode?(LIBM)] inline overload fpclassify(value:Double) = libc.__fpclassify(value);
 [when MathMode?(LIBM)] inline overload fpclassify(value:Float) = libc.__fpclassifyf(value);
 [when MathMode?(LIBM)] inline overload fpclassify(value:LongDouble) = libc.__fpclassifyl(value);
-
-[when MathMode?(LIBM)] inline overload scalb(x:Double,y:Double) = libc.scalb(x,y);
-inline overload scalb(x:Float,y:Float) = libc.scalbf(x,y);
-inline overload scalb(x:LongDouble,y:LongDouble) = libc.scalbl(x,y);
-[when MathMode?(LIBM)] inline overload scalb(x:Double,y:Float) = libc.scalb(x,Double(y));
-[when MathMode?(LIBM)] inline overload scalb(x:Float,y:Double) = libc.scalb(Double(x),y);
-inline overload scalb(x:Double,y:LongDouble) = libc.scalbl(LongDouble(x),y);
-inline overload scalb(x:LongDouble,y:Double) = libc.scalbl(x,LongDouble(y));
-inline overload scalb(x:Float,y:LongDouble) = libc.scalbl(LongDouble(x),y);
-inline overload scalb(x:LongDouble,y:Float) = libc.scalbl(x,LongDouble(y));
 
 [when MathMode?(LIBM)] inline overload llrint(x:Double) = libc.llrint(x);
 [when MathMode?(LIBM)] inline overload llrint(x:Float) = libc.llrintf(x);

@@ -52,19 +52,3 @@ overload scalbln (x:T, n:Long) {
     }
     return scalbn(x, i);
 }
-
-[T when Float?(T)]
-overload scalb(x:T, fn:T){
-    if (nan?(x) or nan?(fn)) return x*fn;
-    if (not finite?(fn)) {
-        if(fn>0.0) 
-            return x*fn;
-        else {
-            return x/(-fn);
-        }
-    }
-    if (rint(fn)!=fn) return (fn-fn)/(fn-fn);
-    if ( fn > 65000.0) return scalbn(x, 65000);
-    if (-fn > 65000.0) return scalbn(x,-65000);
-    return scalbn(x,wrapCast(Int32,fn));
-}

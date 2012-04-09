@@ -61,7 +61,7 @@ inline overload sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,
 inline overload sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));
 
 [T when Float?(T)]
-overload significand(x:T) = scalb(x,T(wrapSubtract(ilogb(x))));
+overload significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
 
 drem(x,y) = remainder(x,y);
 

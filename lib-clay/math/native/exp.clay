@@ -96,17 +96,19 @@ overload exp(a:Float) {
 	alias ONE = 1.f;
 	var x = a;
 	var hx = GET_FLOAT_WORD(x);
-	var xsb = bitand(bitshr(hx,31),1);		/* sign bit of x */
+	var xsb = wrapCast(Int32,bitand(bitshr(hx,31),1));		/* sign bit of x */
 	hx = bitand(hx,0x7fffffff);		/* high word of |x| */
 
     /* filter out non-finite argument */
 	if(hx >= 0x42b17218) {			/* if |x|>=88.721... */
-	    if(hx>0x7f800000)
-		 return x+x;	 		/* NaN */
-            if(hx==0x7f800000)
-		return if(xsb==0) x else 0.f;		/* exp(+-inf)={inf,0} */
-	    if(x > fo_threshold) return HUGE*HUGE; /* overflow */
-	    if(x < fu_threshold) return FTWOM1000*FTWOM1000; /* underflow */
+	    if(hx>0x7f800000) 
+	    	return x+x;	 		/* NaN */
+        if(hx==0x7f800000) 
+        	return if(xsb == 0) x else 0.f;/* exp(+-inf)={inf,0} */
+	    if(x > fo_threshold) 
+	    	return HUGE*HUGE; /* overflow */
+	    if(x < fu_threshold) 
+	    	return FTWOM1000*FTWOM1000; /* underflow */
 	}
 
 	var nx,hi,lo,k = 0.f,0.f,0.f,0;
@@ -116,7 +118,7 @@ overload exp(a:Float) {
 			hi = x-fln2HI[xsb]; 
 			lo = fln2LO[xsb]; 
 			k = 1-xsb-xsb;
-	    } 
+		} 
 	    else {
 			k  = wrapCast(Int32,finvln2*x+fhalF[xsb]);
 			var t  = k;
@@ -131,6 +133,7 @@ overload exp(a:Float) {
 	}
 	else k = 0;
 
+	
     /* x is now in primary range */
 	var t,twopk  = x*x,0.f;
 	if(k >= -125)

@@ -25,6 +25,10 @@ alias Float = Float32;
 alias Double = Float64;
 alias LongDouble = Float80;
 
+alias ComplexFloat = Complex32;
+alias ComplexDouble = Complex64;
+alias ComplexLongDouble = Complex80;
+
 alias IFloat = Imag32;
 alias IDouble = Imag64;
 alias ILongDouble = Imag80;
