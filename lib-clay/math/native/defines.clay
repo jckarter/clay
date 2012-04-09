@@ -12,7 +12,6 @@ define nearbyint;
 define frexp;
 define ldexp;
 
-define scalb;
 define scalbln;
 define scalbn;
 define fmod;
