@@ -3,3 +3,5 @@ public import libc.generated.*;
 var stdin = __stdinp;
 var stdout = __stdoutp;
 var stderr = __stderrp;
+
+alias log2f(x:Float32) = Float32(logf(Float64(x)));
