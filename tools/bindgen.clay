@@ -20,6 +20,7 @@ var clayKeywords = array(
 );
 
 var g_declNames = HashMap[CXCursor, String]();
+var g_unnamedDecl = HashMap[CXCursor, Bool]();
 var g_unnamedIndex = 0;
 var g_bindingsOut = stdoutFile();
 var g_visitedSymbols = HashMap[String, Bool]();
@@ -299,12 +300,11 @@ withForwardDecl(cursor:CXCursor, data:CXClientData, f) {
     var definition = clang_getCursorDefinition(cursor);
     if (cursor == definition) {
         var name = str(clang_getCursorSpelling(cursor));
-        var parent = clang_getCursorLexicalParent(cursor);
-        if (not empty?(name) or
-            parent.kind == CXCursor_StructDecl or
-            parent.kind == CXCursor_UnionDecl or
-            parent.kind == CXCursor_EnumDecl)
-                f(cursor, nameForDeclaration(cursor), data);
+        if (not empty?(name))
+            f(cursor, nameForDeclaration(cursor), data);
+        else
+            if (null?(lookup(g_unnamedDecl, cursor)))
+                g_unnamedDecl[cursor] = true;
     } else if (noDefinition?(definition))
         opaqueDeclaration(cursor);
 }
@@ -461,6 +461,8 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         if (clang_isCursorDefinition(decl) != 0 and
             empty?(str(clang_getCursorSpelling(decl)))) {
 
+            g_unnamedDecl[decl] = false;
+
             switch (decl.kind)
             case (CXCursor_StructDecl) {
                 structDefinition(decl, typeId, data);
@@ -487,6 +489,22 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         return CXChildVisit_Continue;
     }
     return CXChildVisit_Recurse;
+}
+
+visitUnnamedDecl(cursor:CXCursor, data:CXClientData) : {
+    var name = nameForDeclaration(cursor);
+
+    switch (cursor.kind)
+    case (CXCursor_StructDecl) {
+        structDefinition(cursor, name, data);
+    }
+    case (CXCursor_UnionDecl) {
+        unionDefinition(cursor, name, data);
+    }
+    case (CXCursor_EnumDecl) {
+        enumDefinition(cursor, name, data);
+        printlnTo(g_bindingsOut);
+    }
 }
 
 record Usage ();
@@ -650,5 +668,9 @@ main(argc, argv)
     var cursor = clang_getTranslationUnitCursor(unit);
 
     clang_visitChildren(cursor, CXCursorVisitor(visitToplevel), CXClientData(@options));
+    for (c, b in items(g_unnamedDecl))
+        if (b)
+            visitUnnamedDecl(c, CXClientData(@options));
+
     return 0;
 }
